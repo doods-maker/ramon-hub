@@ -20,6 +20,8 @@
 | `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | item Ramon no topo do `menuItems` computed | entrada na sidebar | 1 |
 | `app/javascript/dashboard/i18n/locale/en/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar | 1 |
 | `app/javascript/dashboard/i18n/locale/pt_BR/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar | 1 |
+| `app/javascript/dashboard/i18n/locale/en/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1 |
+| `app/javascript/dashboard/i18n/locale/pt_BR/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1 |
 
 ## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
 | Arquivo | Responsabilidade | Fase |
@@ -31,6 +33,8 @@
 | `app/javascript/dashboard/routes/dashboard/ramon/pages/RamonOverview.vue` | Centro de Comando (shell placeholder) | 1 |
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` | textos das telas ramon (inglês) | 1 |
 | `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | textos das telas ramon (português) | 1 |
+| `public/brand-assets/ramon-logo.jpeg` | logo do escritório (apontar via Super Admin) | 1 |
+| `public/brand-assets/ramon-monogram.png` | monograma/favicon (apontar via Super Admin) | 1 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
