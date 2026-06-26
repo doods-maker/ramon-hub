@@ -4,20 +4,17 @@ import { useI18n } from 'vue-i18n';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { DEFAULT_EXTERNAL_SHORTCUTS } from '../externalShortcutsDefaults';
 
 const { t } = useI18n();
 const { uiSettings, updateUISettings } = useUISettings();
 
-const DEFAULTS = [
-  { label: 'AdvBox', url: 'https://app.advbox.com.br', icon: 'i-lucide-scale' },
-  { label: 'Google Agenda', url: 'https://calendar.google.com', icon: 'i-lucide-calendar' },
-  { label: 'Google Drive', url: 'https://drive.google.com', icon: 'i-lucide-folder' },
-];
-
 const shortcuts = ref([]);
 watch(
   uiSettings,
-  v => { shortcuts.value = v.external_shortcuts ?? DEFAULTS.slice(); },
+  v => {
+    shortcuts.value = v.external_shortcuts ?? DEFAULT_EXTERNAL_SHORTCUTS.slice();
+  },
   { immediate: true }
 );
 

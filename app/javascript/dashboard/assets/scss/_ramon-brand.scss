@@ -12,6 +12,7 @@
   --surface-1: 255 255 255;
   --surface-2: 255 255 255;
   --card-color: 245 230 204;        // #f5e6cc
+  --ramon-rail: 230 216 189;        // #e6d8bd trilho — areia mais funda que a sidebar
 }
 
 /* ===== Tema ESCURO (.dark — default do app) — bronze sobre quase-preto ===== */
@@ -34,4 +35,10 @@
   --surface-2: 24 18 13;
   --card-color: 31 24 18;       // #1f1812 cards
   --button-color: 48 32 18;
+  --ramon-rail: 12 9 7;            // #0c0907 trilho — o mais escuro (profundidade)
+}
+
+/* Fundo do trilho (WorldRail) — sempre o tom mais fundo, distinto da sidebar */
+.ramon-rail {
+  background-color: rgb(var(--ramon-rail));
 }

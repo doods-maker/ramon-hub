@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import SidebarProfileMenu from 'next/sidebar/SidebarProfileMenu.vue';
+import { DEFAULT_EXTERNAL_SHORTCUTS } from '../externalShortcutsDefaults';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -12,7 +13,9 @@ const { accountScopedRoute } = useAccount();
 const { uiSettings } = useUISettings();
 
 const isIntranet = computed(() => route.meta?.world === 'intranet');
-const shortcuts = computed(() => uiSettings.value.external_shortcuts || []);
+const shortcuts = computed(
+  () => uiSettings.value.external_shortcuts ?? DEFAULT_EXTERNAL_SHORTCUTS
+);
 
 const worlds = computed(() => [
   { key: 'conversas', label: t('RAMON.RAIL.CONVERSAS'), icon: 'i-lucide-messages-square', to: accountScopedRoute('home'), active: !isIntranet.value },
@@ -21,7 +24,7 @@ const worlds = computed(() => [
 </script>
 
 <template>
-  <aside class="flex flex-col items-center flex-shrink-0 h-full py-3 w-[78px] bg-n-background border-r border-n-weak">
+  <aside class="flex flex-col items-center flex-shrink-0 h-full py-3 w-[78px] ramon-rail ltr:border-r rtl:border-l border-n-weak">
     <span class="mb-4 i-lucide-scale size-6 text-n-iris-11" />
 
     <p class="mb-1 text-[9px] tracking-widest uppercase text-n-slate-9">{{ t('RAMON.RAIL.INTERNOS') }}</p>
@@ -31,8 +34,8 @@ const worlds = computed(() => [
         :key="w.key"
         :to="w.to"
         :title="w.label"
-        class="flex flex-col items-center justify-center gap-1 rounded-xl w-14 h-14 text-n-slate-11 hover:bg-n-alpha-2"
-        :class="{ 'bg-n-alpha-2 text-n-slate-12': w.active }"
+        class="flex flex-col items-center justify-center gap-1 transition-colors rounded-xl w-14 h-14 text-n-slate-11 hover:bg-n-alpha-2"
+        :class="{ 'bg-n-alpha-2 text-n-iris-11': w.active }"
       >
         <span :class="w.icon" class="size-5" />
         <span class="text-[9px] leading-none">{{ w.label }}</span>
