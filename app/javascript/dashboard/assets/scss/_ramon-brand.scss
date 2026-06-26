@@ -1,0 +1,37 @@
+// Marca Ramon Antonio — override dos tokens do design system (vence _next-colors por ordem de @import).
+// RGB sem vírgula (Tailwind: rgb(var(--token) / <alpha-value>)). Valores iniciais do design-ref/_ds; calibrar no smoke.
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap');
+
+/* ===== Tema CLARO (default :root) — paleta creme/bronze ===== */
+:root {
+  --iris-9: 117 77 42;       // #754d2a acento/primária
+  --iris-10: 100 64 32;      // hover
+  --iris-11: 117 77 42;      // texto/ícone de acento
+  --iris-12: 42 29 18;       // #2a1d12 texto alto contraste
+  --background-color: 250 243 232;  // #faf3e8
+  --surface-1: 255 255 255;
+  --surface-2: 255 255 255;
+  --card-color: 245 230 204;        // #f5e6cc
+}
+
+/* ===== Tema ESCURO (.dark — default do app) — bronze sobre quase-preto ===== */
+.dark {
+  --iris-1: 20 14 10;
+  --iris-2: 26 19 13;
+  --iris-3: 38 27 17;
+  --iris-4: 48 33 20;
+  --iris-5: 59 40 24;
+  --iris-6: 74 50 30;
+  --iris-7: 92 62 37;
+  --iris-8: 117 79 47;
+  --iris-9: 117 77 42;      // #754d2a primária (botões)
+  --iris-10: 92 60 34;      // #5c3c22 hover
+  --iris-11: 196 168 130;   // #c4a882 acento (ícones/links/ativo)
+  --iris-12: 237 224 200;   // #ede0c8 texto alto contraste
+  --solid-iris: 59 32 16;   // #3b2010
+  --background-color: 18 13 9;  // #120d09 app
+  --surface-1: 21 16 11;        // #15100b sidebar
+  --surface-2: 24 18 13;
+  --card-color: 31 24 18;       // #1f1812 cards
+  --button-color: 48 32 18;
+}

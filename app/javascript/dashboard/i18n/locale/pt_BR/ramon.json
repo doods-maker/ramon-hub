@@ -1,0 +1,10 @@
+{
+  "RAMON": {
+    "OVERVIEW": {
+      "EYEBROW": "Centro de Comando",
+      "TITLE": "Visão Geral",
+      "PLACEHOLDER": "Os módulos aparecerão aqui conforme forem migrados.",
+      "KPI": { "LEADS": "Leads", "REUNIOES": "Reuniões", "FECHAMENTOS": "Fechamentos" }
+    }
+  }
+}
