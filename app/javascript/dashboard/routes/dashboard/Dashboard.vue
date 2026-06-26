@@ -2,6 +2,8 @@
 import { defineAsyncComponent, ref, computed } from 'vue';
 
 import NextSidebar from 'next/sidebar/Sidebar.vue';
+import WorldRail from './ramon/components/WorldRail.vue';
+import IntranetSidebar from './ramon/components/IntranetSidebar.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
@@ -29,6 +31,8 @@ import { useCallsStore } from 'dashboard/stores/calls';
 export default {
   components: {
     NextSidebar,
+    WorldRail,
+    IntranetSidebar,
     CommandBar,
     WootKeyShortcutModal,
     AddAccountModal,
@@ -66,6 +70,9 @@ export default {
   computed: {
     isSmallScreen() {
       return this.windowWidth < wootConstants.SMALL_SCREEN_BREAKPOINT;
+    },
+    isIntranetWorld() {
+      return this.$route.meta?.world === 'intranet';
     },
     showUpgradePage() {
       return this.upgradePageRef?.shouldShowUpgradePage;
@@ -131,7 +138,9 @@ export default {
 
 <template>
   <div class="flex flex-grow overflow-hidden text-n-slate-12">
+    <WorldRail />
     <NextSidebar
+      v-if="!isIntranetWorld"
       :is-mobile-sidebar-open="isMobileSidebarOpen"
       @toggle-account-modal="toggleAccountModal"
       @open-key-shortcut-modal="toggleKeyShortcutModal"
@@ -139,6 +148,7 @@ export default {
       @show-create-account-modal="openCreateAccountModal"
       @close-mobile-sidebar="closeMobileSidebar"
     />
+    <IntranetSidebar v-else />
 
     <main
       class="flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden bg-n-surface-1"

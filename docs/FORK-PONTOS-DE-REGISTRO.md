@@ -13,28 +13,32 @@
 ## Arquivos do core editados (manter mínimo)
 | Arquivo | Linhas/trecho | Motivo | Fase |
 |---|---|---|---|
-| `app/javascript/dashboard/assets/scss/_woot.scss` | +1 `@import 'ramon-brand'` após `next-colors` | rebrand fork-safe | 1 |
-| `app/javascript/dashboard/helper/themeHelper.js` | default `'auto'` → `'dark'` (linha 6) | marca é dark por padrão | 1 |
-| `tailwind.config.js` | +chave `cormorant` em `theme.fontFamily` | fonte de títulos | 1 |
-| `app/javascript/dashboard/routes/dashboard/dashboard.routes.js` | import `ramonRoutes` + `...ramonRoutes` no array children | seção Intranet | 1 |
-| `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | item Ramon no topo do `menuItems` computed | entrada na sidebar | 1 |
-| `app/javascript/dashboard/i18n/locale/en/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar | 1 |
-| `app/javascript/dashboard/i18n/locale/pt_BR/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar | 1 |
-| `app/javascript/dashboard/i18n/locale/en/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1 |
-| `app/javascript/dashboard/i18n/locale/pt_BR/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1 |
+| `app/javascript/dashboard/assets/scss/_woot.scss` | +1 `@import 'ramon-brand'` após `next-colors` | rebrand fork-safe | 1A |
+| `app/javascript/dashboard/helper/themeHelper.js` | default `'auto'` → `'dark'` (linha 6) | marca é dark por padrão | 1A |
+| `tailwind.config.js` | +chave `cormorant` em `theme.fontFamily` | fonte de títulos | 1A |
+| `app/javascript/dashboard/routes/dashboard/dashboard.routes.js` | import `ramonRoutes` + `...ramonRoutes` no array children | seção Intranet | 1A |
+| `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | item Ramon do `menuItems` **revertido** na 1B (trilho substitui o item) | o WorldRail faz a troca de mundo agora | 1B |
+| `app/javascript/dashboard/i18n/locale/en/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar (inofensivo, mantido) | 1A |
+| `app/javascript/dashboard/i18n/locale/pt_BR/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar (inofensivo, mantido) | 1A |
+| `app/javascript/dashboard/i18n/locale/en/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1A |
+| `app/javascript/dashboard/i18n/locale/pt_BR/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1A |
+| `app/javascript/dashboard/routes/dashboard/Dashboard.vue` | +imports `WorldRail`/`IntranetSidebar`; +computed `isIntranetWorld`; template: `WorldRail` antes de `NextSidebar` (v-if) + `IntranetSidebar` (v-else) | trilho de dois níveis | 1B |
 
 ## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
 | Arquivo | Responsabilidade | Fase |
 |---|---|---|
 | `.github/workflows/ramon-publish.yml` | build + publish da imagem do fork no GHCR | 0 |
 | `docs/FORK-PONTOS-DE-REGISTRO.md` | esta lista | 0 |
-| `app/javascript/dashboard/assets/scss/_ramon-brand.scss` | tokens de cor bronze (dark) e creme/bronze (light) | 1 |
-| `app/javascript/dashboard/routes/dashboard/ramon/ramon.routes.js` | rotas da seção Intranet | 1 |
-| `app/javascript/dashboard/routes/dashboard/ramon/pages/RamonOverview.vue` | Centro de Comando (shell placeholder) | 1 |
-| `app/javascript/dashboard/i18n/locale/en/ramon.json` | textos das telas ramon (inglês) | 1 |
-| `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | textos das telas ramon (português) | 1 |
-| `public/brand-assets/ramon-logo.jpeg` | logo do escritório (apontar via Super Admin) | 1 |
-| `public/brand-assets/ramon-monogram.png` | monograma/favicon (apontar via Super Admin) | 1 |
+| `app/javascript/dashboard/assets/scss/_ramon-brand.scss` | tokens de cor bronze (dark) e creme/bronze (light) | 1A |
+| `app/javascript/dashboard/routes/dashboard/ramon/ramon.routes.js` | rotas da seção Intranet (inclui `ramon_index` + `ramon_external_shortcuts`) | 1A/1B |
+| `app/javascript/dashboard/routes/dashboard/ramon/pages/RamonOverview.vue` | Centro de Comando (shell placeholder) | 1A |
+| `app/javascript/dashboard/routes/dashboard/ramon/pages/ExternalShortcuts.vue` | tela de gestão de atalhos externos (ui_settings) | 1B |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/WorldRail.vue` | rail externo 78px (mundos + externos + perfil) | 1B |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/IntranetSidebar.vue` | sidebar secundária do mundo Intranet | 1B |
+| `app/javascript/dashboard/i18n/locale/en/ramon.json` | textos das telas ramon (inglês) — blocos OVERVIEW, NAV, RAIL, SHORTCUTS | 1A/1B |
+| `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | textos das telas ramon (português) — blocos OVERVIEW, NAV, RAIL, SHORTCUTS | 1A/1B |
+| `public/brand-assets/ramon-logo.jpeg` | logo do escritório (apontar via Super Admin) | 1A |
+| `public/brand-assets/ramon-monogram.png` | monograma/favicon (apontar via Super Admin) | 1A |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

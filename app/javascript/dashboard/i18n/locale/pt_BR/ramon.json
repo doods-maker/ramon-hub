@@ -5,6 +5,14 @@
       "TITLE": "Visão Geral",
       "PLACEHOLDER": "Os módulos aparecerão aqui conforme forem migrados.",
       "KPI": { "LEADS": "Leads", "REUNIOES": "Reuniões", "FECHAMENTOS": "Fechamentos" }
-    }
+    },
+    "NAV": {
+      "TITLE": "Intranet", "SOON": "em breve",
+      "COMERCIAL": "Comercial", "JURIDICO": "Jurídico", "INTELIGENCIA": "Inteligência",
+      "OVERVIEW": "Centro de Comando", "FUNIL": "Funil de Leads", "SDR": "Painel do SDR",
+      "TRIAGEM": "Triagem de Iniciais", "AGENTES": "Agentes de IA"
+    },
+    "RAIL": { "INTERNOS": "Internos", "EXTERNOS": "Externos", "CONVERSAS": "Conversas", "INTRANET": "Intranet", "MANAGE": "Gerenciar atalhos" },
+    "SHORTCUTS": { "TITLE": "Atalhos externos", "LABEL": "Nome", "LABEL_PH": "AdvBox", "URL": "URL", "ICON": "Ícone (Lucide)", "ADD": "Adicionar" }
   }
 }

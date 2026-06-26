@@ -316,13 +316,6 @@ const reportRoutes = computed(() => newReportRoutes());
 const menuItems = computed(() => {
   return [
     {
-      name: 'Ramon',
-      label: t('SIDEBAR.RAMON'),
-      icon: 'i-lucide-layout-dashboard',
-      to: accountScopedRoute('ramon_index'),
-      activeOn: ['ramon_index'],
-    },
-    {
       name: 'Inbox',
       label: t('SIDEBAR.INBOX'),
       icon: 'i-lucide-inbox',

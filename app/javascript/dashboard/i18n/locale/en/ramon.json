@@ -5,6 +5,14 @@
       "TITLE": "Overview",
       "PLACEHOLDER": "Modules will appear here as they are migrated.",
       "KPI": { "LEADS": "Leads", "REUNIOES": "Meetings", "FECHAMENTOS": "Closings" }
-    }
+    },
+    "NAV": {
+      "TITLE": "Intranet", "SOON": "soon",
+      "COMERCIAL": "Commercial", "JURIDICO": "Legal", "INTELIGENCIA": "Intelligence",
+      "OVERVIEW": "Command Center", "FUNIL": "Pipeline", "SDR": "SDR Panel",
+      "TRIAGEM": "Case Intake", "AGENTES": "AI Agents"
+    },
+    "RAIL": { "INTERNOS": "Internal", "EXTERNOS": "External", "CONVERSAS": "Chats", "INTRANET": "Intranet", "MANAGE": "Manage shortcuts" },
+    "SHORTCUTS": { "TITLE": "External shortcuts", "LABEL": "Name", "LABEL_PH": "AdvBox", "URL": "URL", "ICON": "Icon (Lucide)", "ADD": "Add" }
   }
 }
