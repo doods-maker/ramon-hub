@@ -12,6 +12,9 @@ const route = useRoute();
 const { accountScopedRoute } = useAccount();
 const { uiSettings } = useUISettings();
 
+// Servido pelo Rails em /public — binding evita o Vite tentar resolver no build.
+const monogramUrl = '/brand-assets/ramon-monogram.png';
+
 const isIntranet = computed(() => route.meta?.world === 'intranet');
 const shortcuts = computed(
   () => uiSettings.value.external_shortcuts ?? DEFAULT_EXTERNAL_SHORTCUTS
@@ -25,7 +28,7 @@ const worlds = computed(() => [
 
 <template>
   <aside class="flex flex-col items-center flex-shrink-0 h-full py-3 w-[78px] ramon-rail ltr:border-r rtl:border-l border-n-weak">
-    <img src="/brand-assets/ramon-monogram.png" alt="Ramon Antonio" class="mb-4 rounded-lg size-9" />
+    <img :src="monogramUrl" alt="Ramon Antonio" class="mb-4 rounded-lg size-9" />
 
     <p class="mb-1 text-[9px] tracking-widest uppercase text-n-slate-9">{{ t('RAMON.RAIL.INTERNOS') }}</p>
     <nav class="flex flex-col items-center w-full gap-1">
