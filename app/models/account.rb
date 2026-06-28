@@ -113,6 +113,8 @@ class Account < ApplicationRecord
 
   before_validation :validate_limit_keys
   after_create_commit :notify_creation
+  # fase2a: after_create (NÃO _commit) — semeia na mesma transação da conta (atômico)
+  # e dispara sob fixtures transacionais nos specs. Não trocar por after_create_commit.
   after_create :seed_lead_config
   after_update_commit :clear_unread_conversation_counts_cache, if: :saved_change_to_feature_conversation_unread_counts?
   after_destroy :remove_account_sequences
