@@ -20,13 +20,13 @@ RSpec.describe RamonLeadListener do
 
   it 'não cria se a inbox não tem auto_create_lead' do
     inbox.update!(auto_create_lead: false)
-    expect { listener.conversation_created(event) }.not_to change { account.leads.count }
+    expect { listener.conversation_created(event) }.not_to(change { account.leads.count })
   end
 
   it 're-aponta a conversa do lead existente (dedup por contato)' do
     first = create(:conversation, account: account, inbox: inbox, contact: contact)
     listener.conversation_created(Events::Base.new('conversation.created', Time.zone.now, conversation: first))
-    expect { listener.conversation_created(event) }.not_to change { account.leads.count }
+    expect { listener.conversation_created(event) }.not_to(change { account.leads.count })
     expect(account.leads.last.conversation_id).to eq(conversation.id)
   end
 end

@@ -1,4 +1,4 @@
-class ActionCableListener < BaseListener
+class ActionCableListener < BaseListener # rubocop:disable Metrics/ClassLength
   include Events::Types
 
   def notification_created(event)
