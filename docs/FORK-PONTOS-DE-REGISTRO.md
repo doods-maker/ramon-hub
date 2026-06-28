@@ -16,6 +16,11 @@
 | `app/javascript/dashboard/assets/scss/_woot.scss` | +1 `@import 'ramon-brand'` após `next-colors` | rebrand fork-safe | 1A |
 | `app/javascript/dashboard/helper/themeHelper.js` | default `'auto'` → `'dark'` (linha 6) | marca é dark por padrão | 1A |
 | `tailwind.config.js` | +chave `cormorant` em `theme.fontFamily` | fonte de títulos | 1A |
+| `app/models/account.rb` | `has_many :benefit_types/:lead_priorities/:lead_stages/:leads` (após `:labels`) + `after_create :seed_lead_config` + método privado `seed_lead_config` | associações + seed automático do funil de leads | 2A |
+| `config/routes.rb` | `resource :lead_config, only: [:show]` dentro do bloco `namespace :accounts do` (ao lado de `resources :labels`) | endpoint de leitura da config do funil | 2A |
+| `config/routes.rb` | `resources :leads` dentro do bloco `namespace :accounts do` (após `resource :lead_config`) | API CRUD de leads (index/show/create/update/destroy) | 2A |
+| `app/javascript/dashboard/store/index.js` | `import leads/leadConfig` após `labels`; `leads, leadConfig,` no objeto `modules` | registra módulos Vuex do funil de leads | 2A |
+| `app/javascript/dashboard/store/mutation-types.js` | bloco `// Ramon — Leads` (SET_LEAD_UI_FLAG, SET_LEADS, ADD_LEAD, EDIT_LEAD, DELETE_LEAD, SET_LEAD_CONFIG) após bloco Labels | mutation types dos módulos leads/leadConfig | 2A |
 | `app/javascript/dashboard/routes/dashboard/dashboard.routes.js` | import `ramonRoutes` + `...ramonRoutes` no array children | seção Intranet | 1A |
 | `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | item Ramon do `menuItems` **revertido** na 1B (trilho substitui o item) | o WorldRail faz a troca de mundo agora | 1B |
 | `app/javascript/dashboard/i18n/locale/en/settings.json` | +`"RAMON": "Intranet"` dentro de `"SIDEBAR"` | i18n sidebar (inofensivo, mantido) | 1A |
@@ -23,6 +28,10 @@
 | `app/javascript/dashboard/i18n/locale/en/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1A |
 | `app/javascript/dashboard/i18n/locale/pt_BR/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1A |
 | `app/javascript/dashboard/routes/dashboard/Dashboard.vue` | +imports `WorldRail`/`IntranetSidebar`; +computed `isIntranetWorld`; template: `WorldRail` antes de `NextSidebar` (v-if) + `IntranetSidebar` (v-else) | trilho de dois níveis | 1B |
+| `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | item `KanbanBoard` no `menuItems` inserido após `Conversation` (icon `i-lucide-columns-3`, rota `kanban_board`) — ordem: Inbox → Conversation → Kanban Board | Kanban Board no mundo Conversas | 2A |
+| `app/javascript/dashboard/routes/dashboard/conversation/conversation.routes.js` | +rota `{ path: frontendURL('accounts/:accountId/kanban'), name: 'kanban_board', meta: { permissions: CONVERSATION_PERMISSIONS }, component: () => import('./KanbanView.vue') }` | Kanban Board no mundo Conversas | 2A |
+| `app/javascript/dashboard/i18n/locale/pt_BR/settings.json` | +`"KANBAN_BOARD": "Kanban Board"` dentro de `"SIDEBAR"` | rótulo do item de menu | 2A |
+| `app/javascript/dashboard/i18n/locale/en/settings.json` | +`"KANBAN_BOARD": "Kanban Board"` dentro de `"SIDEBAR"` | rótulo do item de menu | 2A |
 
 ## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
 | Arquivo | Responsabilidade | Fase |
@@ -40,6 +49,7 @@
 | `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | textos das telas ramon (português) — blocos OVERVIEW, NAV, RAIL, SHORTCUTS | 1A/1B |
 | `public/brand-assets/ramon-logo.jpeg` | logo do escritório (apontar via Super Admin) | 1A |
 | `public/brand-assets/ramon-monogram.png` | monograma/favicon (apontar via Super Admin) | 1A |
+| `app/javascript/dashboard/routes/dashboard/conversation/KanbanView.vue` | arquivo NOVO dentro de diretório core (não em `ramon/`) — wrapper que monta o `KanbanBoard` no mundo Conversas | 2A |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

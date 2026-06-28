@@ -13,6 +13,16 @@
       "TRIAGEM": "Triagem de Iniciais", "AGENTES": "Agentes de IA"
     },
     "RAIL": { "INTERNOS": "Internos", "EXTERNOS": "Externos", "CONVERSAS": "Conversas", "INTRANET": "Intranet", "MANAGE": "Gerenciar atalhos" },
-    "SHORTCUTS": { "TITLE": "Atalhos externos", "LABEL": "Nome", "LABEL_PH": "AdvBox", "URL": "URL", "ICON": "Ícone (Lucide)", "ADD": "Adicionar" }
+    "SHORTCUTS": { "TITLE": "Atalhos externos", "LABEL": "Nome", "LABEL_PH": "AdvBox", "URL": "URL", "ICON": "Ícone (Lucide)", "ADD": "Adicionar" },
+    "FUNIL": {
+      "TITLE": "Funil de Leads",
+      "NEW_LEAD": "Novo lead",
+      "LEAD_NAME": "Nome do lead",
+      "BENEFIT": "Tipo de benefício",
+      "PRIORITY": "Prioridade",
+      "OPEN_CONVERSATION": "Abrir conversa",
+      "CANCEL": "Cancelar",
+      "SAVE": "Salvar"
+    }
   }
 }

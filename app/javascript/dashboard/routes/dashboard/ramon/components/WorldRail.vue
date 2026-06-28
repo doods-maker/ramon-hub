@@ -21,16 +21,36 @@ const shortcuts = computed(
 );
 
 const worlds = computed(() => [
-  { key: 'conversas', label: t('RAMON.RAIL.CONVERSAS'), icon: 'i-lucide-messages-square', to: accountScopedRoute('home'), active: !isIntranet.value },
-  { key: 'intranet', label: t('RAMON.RAIL.INTRANET'), icon: 'i-lucide-scale', to: accountScopedRoute('ramon_index'), active: isIntranet.value },
+  {
+    key: 'conversas',
+    label: t('RAMON.RAIL.CONVERSAS'),
+    icon: 'i-lucide-messages-square',
+    to: accountScopedRoute('home'),
+    active: !isIntranet.value,
+  },
+  {
+    key: 'intranet',
+    label: t('RAMON.RAIL.INTRANET'),
+    icon: 'i-lucide-scale',
+    to: accountScopedRoute('ramon_index'),
+    active: isIntranet.value,
+  },
 ]);
 </script>
 
 <template>
-  <aside class="flex flex-col items-center flex-shrink-0 h-full py-3 w-[78px] ramon-rail ltr:border-r rtl:border-l border-n-weak">
-    <img :src="monogramUrl" alt="Ramon Antonio" class="mb-4 rounded-lg size-9" />
+  <aside
+    class="flex flex-col items-center flex-shrink-0 h-full py-3 w-[78px] ramon-rail ltr:border-r rtl:border-l border-n-weak"
+  >
+    <img
+      :src="monogramUrl"
+      alt="Ramon Antonio"
+      class="mb-4 rounded-lg size-9"
+    />
 
-    <p class="mb-1 text-[9px] tracking-widest uppercase text-n-slate-9">{{ t('RAMON.RAIL.INTERNOS') }}</p>
+    <p class="mb-1 text-[9px] tracking-widest uppercase text-n-slate-9">
+      {{ t('RAMON.RAIL.INTERNOS') }}
+    </p>
     <nav class="flex flex-col items-center w-full gap-1">
       <router-link
         v-for="w in worlds"
@@ -45,7 +65,9 @@ const worlds = computed(() => [
     </nav>
 
     <template v-if="shortcuts.length">
-      <p class="mt-4 mb-1 text-[9px] tracking-widest uppercase text-n-slate-9">{{ t('RAMON.RAIL.EXTERNOS') }}</p>
+      <p class="mt-4 mb-1 text-[9px] tracking-widest uppercase text-n-slate-9">
+        {{ t('RAMON.RAIL.EXTERNOS') }}
+      </p>
       <nav class="flex flex-col items-center w-full gap-1">
         <a
           v-for="s in shortcuts"
@@ -70,7 +92,7 @@ const worlds = computed(() => [
     </router-link>
 
     <div class="mt-auto">
-      <SidebarProfileMenu :is-collapsed="true" />
+      <SidebarProfileMenu is-collapsed />
     </div>
   </aside>
 </template>

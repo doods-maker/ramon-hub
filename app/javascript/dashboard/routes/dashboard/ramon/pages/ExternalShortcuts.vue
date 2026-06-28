@@ -13,7 +13,8 @@ const shortcuts = ref([]);
 watch(
   uiSettings,
   v => {
-    shortcuts.value = v.external_shortcuts ?? DEFAULT_EXTERNAL_SHORTCUTS.slice();
+    shortcuts.value =
+      v.external_shortcuts ?? DEFAULT_EXTERNAL_SHORTCUTS.slice();
   },
   { immediate: true }
 );
@@ -28,27 +29,65 @@ const add = () => {
   draft.value = { label: '', url: '', icon: 'i-lucide-external-link' };
   persist();
 };
-const remove = i => { shortcuts.value.splice(i, 1); persist(); };
+const remove = i => {
+  shortcuts.value.splice(i, 1);
+  persist();
+};
 </script>
 
 <template>
   <div class="flex flex-col w-full h-full p-8 overflow-auto bg-n-background">
-    <h1 class="mb-6 text-2xl font-cormorant text-n-slate-12">{{ t('RAMON.SHORTCUTS.TITLE') }}</h1>
+    <h1 class="mb-6 text-2xl font-cormorant text-n-slate-12">
+      {{ t('RAMON.SHORTCUTS.TITLE') }}
+    </h1>
 
     <ul class="flex flex-col gap-2 mb-6 max-w-xl">
-      <li v-for="(s, i) in shortcuts" :key="i" class="flex items-center gap-3 p-3 border rounded-lg border-n-weak bg-n-solid-1">
-        <span :class="s.icon || 'i-lucide-external-link'" class="size-4 text-n-slate-11" />
+      <li
+        v-for="(s, i) in shortcuts"
+        :key="i"
+        class="flex items-center gap-3 p-3 border rounded-lg border-n-weak bg-n-solid-1"
+      >
+        <span
+          :class="s.icon || 'i-lucide-external-link'"
+          class="size-4 text-n-slate-11"
+        />
         <span class="font-medium text-n-slate-12">{{ s.label }}</span>
         <span class="text-sm truncate text-n-slate-9">{{ s.url }}</span>
-        <Button class="ml-auto" icon="Trash2" color="ruby" variant="ghost" size="sm" @click="remove(i)" />
+        <Button
+          class="ml-auto"
+          icon="Trash2"
+          color="ruby"
+          variant="ghost"
+          size="sm"
+          @click="remove(i)"
+        />
       </li>
     </ul>
 
-    <div class="flex flex-col gap-3 max-w-xl p-4 border rounded-lg border-n-weak">
-      <Input v-model="draft.label" :label="t('RAMON.SHORTCUTS.LABEL')" :placeholder="t('RAMON.SHORTCUTS.LABEL_PH')" />
-      <Input v-model="draft.url" :label="t('RAMON.SHORTCUTS.URL')" placeholder="https://..." />
-      <Input v-model="draft.icon" :label="t('RAMON.SHORTCUTS.ICON')" placeholder="i-lucide-..." />
-      <Button :label="t('RAMON.SHORTCUTS.ADD')" icon="Plus" class="self-start" @click="add" />
+    <div
+      class="flex flex-col gap-3 max-w-xl p-4 border rounded-lg border-n-weak"
+    >
+      <Input
+        v-model="draft.label"
+        :label="t('RAMON.SHORTCUTS.LABEL')"
+        :placeholder="t('RAMON.SHORTCUTS.LABEL_PH')"
+      />
+      <Input
+        v-model="draft.url"
+        :label="t('RAMON.SHORTCUTS.URL')"
+        placeholder="https://..."
+      />
+      <Input
+        v-model="draft.icon"
+        :label="t('RAMON.SHORTCUTS.ICON')"
+        placeholder="i-lucide-..."
+      />
+      <Button
+        :label="t('RAMON.SHORTCUTS.ADD')"
+        icon="Plus"
+        class="self-start"
+        @click="add"
+      />
     </div>
   </div>
 </template>

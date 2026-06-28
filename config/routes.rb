@@ -282,6 +282,8 @@ Rails.application.routes.draw do
             end
           end
           resources :labels, only: [:index, :show, :create, :update, :destroy]
+          resource :lead_config, only: [:show], controller: 'lead_config'
+          resources :leads, only: [:index, :show, :create, :update, :destroy]
 
           resources :notifications, only: [:index, :update, :destroy] do
             collection do

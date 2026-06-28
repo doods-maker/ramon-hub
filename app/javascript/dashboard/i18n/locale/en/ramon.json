@@ -13,6 +13,16 @@
       "TRIAGEM": "Case Intake", "AGENTES": "AI Agents"
     },
     "RAIL": { "INTERNOS": "Internal", "EXTERNOS": "External", "CONVERSAS": "Chats", "INTRANET": "Intranet", "MANAGE": "Manage shortcuts" },
-    "SHORTCUTS": { "TITLE": "External shortcuts", "LABEL": "Name", "LABEL_PH": "AdvBox", "URL": "URL", "ICON": "Icon (Lucide)", "ADD": "Add" }
+    "SHORTCUTS": { "TITLE": "External shortcuts", "LABEL": "Name", "LABEL_PH": "AdvBox", "URL": "URL", "ICON": "Icon (Lucide)", "ADD": "Add" },
+    "FUNIL": {
+      "TITLE": "Lead Pipeline",
+      "NEW_LEAD": "New lead",
+      "LEAD_NAME": "Lead name",
+      "BENEFIT": "Benefit type",
+      "PRIORITY": "Priority",
+      "OPEN_CONVERSATION": "Open conversation",
+      "CANCEL": "Cancel",
+      "SAVE": "Save"
+    }
   }
 }

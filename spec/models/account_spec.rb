@@ -333,6 +333,16 @@ RSpec.describe Account do
     end
   end
 
+  # ramon(fase2a): seed automático de configuração de leads
+  describe 'seed de configuração de leads' do
+    it 'semeia a configuração de leads ao criar a conta' do
+      account = create(:account)
+      expect(account.lead_stages.count).to eq(8)
+      expect(account.benefit_types.count).to eq(7)
+      expect(account.lead_priorities.count).to eq(3)
+    end
+  end
+
   describe 'captain_preferences' do
     let(:account) { create(:account) }
 

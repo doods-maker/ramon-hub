@@ -233,5 +233,13 @@ export default {
         conversationType: 'participating',
       }),
     },
+    {
+      path: frontendURL('accounts/:accountId/kanban'),
+      name: 'kanban_board',
+      meta: {
+        permissions: CONVERSATION_PERMISSIONS,
+      },
+      component: () => import('./KanbanView.vue'),
+    },
   ],
 };

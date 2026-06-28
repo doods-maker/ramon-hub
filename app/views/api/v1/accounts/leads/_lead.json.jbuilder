@@ -1,0 +1,12 @@
+json.id lead.id
+json.name lead.name
+json.lead_stage_id lead.lead_stage_id
+json.benefit_type_id lead.benefit_type_id
+json.lead_priority_id lead.lead_priority_id
+json.contact_id lead.contact_id
+json.conversation_id lead.conversation_id
+json.sdr_id lead.sdr_id
+json.closer_id lead.closer_id
+json.position lead.position
+json.lost_reason lead.lost_reason
+json.custom_attributes lead.custom_attributes
