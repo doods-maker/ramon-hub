@@ -40,6 +40,10 @@ module Events::Types
   REPLY_CREATED = 'reply.created'
   MESSAGE_UPDATED = 'message.updated'
 
+  # Ramon — leads
+  LEAD_CREATED = 'lead.created'
+  LEAD_UPDATED = 'lead.updated'
+
   # contact events
   CONTACT_CREATED = 'contact.created'
   CONTACT_UPDATED = 'contact.updated'
