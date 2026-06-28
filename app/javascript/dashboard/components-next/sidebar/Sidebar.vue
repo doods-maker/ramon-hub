@@ -326,13 +326,6 @@ const menuItems = computed(() => {
       },
     },
     {
-      name: 'KanbanBoard',
-      label: t('SIDEBAR.KANBAN_BOARD'),
-      icon: 'i-lucide-columns-3',
-      to: accountScopedRoute('kanban_board'),
-      activeOn: ['kanban_board'],
-    },
-    {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),
       icon: 'i-lucide-message-circle',
@@ -440,6 +433,13 @@ const menuItems = computed(() => {
           })),
         },
       ],
+    },
+    {
+      name: 'KanbanBoard',
+      label: t('SIDEBAR.KANBAN_BOARD'),
+      icon: 'i-lucide-columns-3',
+      to: accountScopedRoute('kanban_board'),
+      activeOn: ['kanban_board'],
     },
     {
       name: 'Captain',
