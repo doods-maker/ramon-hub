@@ -1,4 +1,4 @@
-class ActionCableListener < BaseListener
+class ActionCableListener < BaseListener # rubocop:disable Metrics/ClassLength
   include Events::Types
 
   def notification_created(event)
@@ -165,6 +165,18 @@ class ActionCableListener < BaseListener
   def contact_merged(event)
     contact, account = extract_contact_and_account(event)
     broadcast(account, [account_token(account)], CONTACT_MERGED, contact.push_event_data)
+  end
+
+  def lead_created(event)
+    lead = event.data[:lead]
+    account = lead.account
+    broadcast(account, [account_token(account)], LEAD_CREATED, lead.push_event_data)
+  end
+
+  def lead_updated(event)
+    lead = event.data[:lead]
+    account = lead.account
+    broadcast(account, [account_token(account)], LEAD_UPDATED, lead.push_event_data)
   end
 
   def contact_deleted(event)

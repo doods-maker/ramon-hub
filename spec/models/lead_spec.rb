@@ -15,4 +15,19 @@ RSpec.describe Lead do
     lead = build(:lead, account: account, lead_stage: nil)
     expect(lead).not_to be_valid
   end
+
+  it 'dispara LEAD_CREATED ao criar' do
+    stage = create(:lead_stage, account: account, name: 'Etapa Disp')
+    expect(Rails.configuration.dispatcher).to receive(:dispatch)
+      .with(Events::Types::LEAD_CREATED, anything, hash_including(:lead))
+    create(:lead, account: account, lead_stage: stage)
+  end
+
+  it 'dispara LEAD_UPDATED ao atualizar' do
+    stage = create(:lead_stage, account: account, name: 'Etapa Disp2')
+    lead = create(:lead, account: account, lead_stage: stage)
+    expect(Rails.configuration.dispatcher).to receive(:dispatch)
+      .with(Events::Types::LEAD_UPDATED, anything, hash_including(:lead))
+    lead.update!(name: 'Novo Nome')
+  end
 end

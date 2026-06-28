@@ -232,6 +232,36 @@ describe ActionCableListener do
     end
   end
 
+  describe '#lead_created' do
+    let(:lead_stage) { create(:lead_stage, account: account, name: 'EtapaAC') }
+    let(:lead) { create(:lead, account: account, lead_stage: lead_stage) }
+    let(:event) { Events::Base.new('lead.created', Time.zone.now, lead: lead) }
+
+    it 'enfileira broadcast account-wide com push_event_data' do
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        ["account_#{account.id}"],
+        'lead.created',
+        lead.push_event_data.merge(account_id: account.id)
+      )
+      listener.lead_created(event)
+    end
+  end
+
+  describe '#lead_updated' do
+    let(:lead_stage) { create(:lead_stage, account: account, name: 'EtapaACU') }
+    let(:lead) { create(:lead, account: account, lead_stage: lead_stage) }
+    let(:event) { Events::Base.new('lead.updated', Time.zone.now, lead: lead) }
+
+    it 'enfileira broadcast account-wide com push_event_data' do
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        ["account_#{account.id}"],
+        'lead.updated',
+        lead.push_event_data.merge(account_id: account.id)
+      )
+      listener.lead_updated(event)
+    end
+  end
+
   describe '#conversation_unread_count_changed' do
     let(:event_name) { :'conversation.unread_count_changed' }
     let!(:agent_without_inbox_access) { create(:user, account: account, role: :agent) }
