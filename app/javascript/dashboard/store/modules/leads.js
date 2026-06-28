@@ -4,7 +4,12 @@ import LeadsAPI from '../../api/leads';
 
 export const state = {
   records: [],
-  uiFlags: { isFetching: false, isCreating: false, isUpdating: false, isDeleting: false },
+  uiFlags: {
+    isFetching: false,
+    isCreating: false,
+    isUpdating: false,
+    isDeleting: false,
+  },
 };
 
 export const getters = {
@@ -46,7 +51,10 @@ export const actions = {
     return response.data;
   },
   move: async ({ commit }, { id, leadStageId, position }) => {
-    const response = await LeadsAPI.update(id, { lead_stage_id: leadStageId, position });
+    const response = await LeadsAPI.update(id, {
+      lead_stage_id: leadStageId,
+      position,
+    });
     commit(types.EDIT_LEAD, response.data);
   },
   upsert: ({ commit }, lead) => {

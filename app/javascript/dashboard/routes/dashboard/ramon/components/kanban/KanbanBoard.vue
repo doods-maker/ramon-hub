@@ -8,7 +8,9 @@ const store = useStore();
 const getters = useStoreGetters();
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
-const benefitTypes = computed(() => getters['leadConfig/getBenefitTypes'].value);
+const benefitTypes = computed(
+  () => getters['leadConfig/getBenefitTypes'].value
+);
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const leadsByStage = stageId => getters['leads/getLeadsByStage'].value(stageId);
 
@@ -25,7 +27,9 @@ onMounted(() => {
 <template>
   <div class="flex flex-col h-full">
     <div class="flex items-center justify-between px-4 py-3">
-      <h1 class="text-xl font-cormorant text-n-slate-12">{{ $t('RAMON.FUNIL.TITLE') }}</h1>
+      <h1 class="text-xl font-cormorant text-n-slate-12">
+        {{ $t('RAMON.FUNIL.TITLE') }}
+      </h1>
       <button
         class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
         @click="emit('new-lead')"

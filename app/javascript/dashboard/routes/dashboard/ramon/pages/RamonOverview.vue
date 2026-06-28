@@ -25,6 +25,8 @@ const { t } = useI18n();
         <p class="mt-2 font-cormorant text-3xl text-n-slate-12">—</p>
       </div>
     </div>
-    <p class="mt-8 text-sm text-n-slate-11">{{ t('RAMON.OVERVIEW.PLACEHOLDER') }}</p>
+    <p class="mt-8 text-sm text-n-slate-11">
+      {{ t('RAMON.OVERVIEW.PLACEHOLDER') }}
+    </p>
   </div>
 </template>

@@ -29,12 +29,19 @@ const priorityName = computed(
         <span class="i-lucide-message-square size-4" />
       </button>
     </div>
-    <span v-if="benefitName" class="inline-block mt-2 px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11">
+    <span
+      v-if="benefitName"
+      class="inline-block mt-2 px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
+    >
       {{ benefitName }}
     </span>
     <div v-if="priorityName" class="mt-2">
-      <p class="text-[9px] tracking-widest uppercase text-n-slate-9">{{ $t('RAMON.FUNIL.PRIORITY') }}</p>
-      <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 text-[11px] rounded-full bg-n-iris-9 text-white">
+      <p class="text-[9px] tracking-widest uppercase text-n-slate-9">
+        {{ $t('RAMON.FUNIL.PRIORITY') }}
+      </p>
+      <span
+        class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 text-[11px] rounded-full bg-n-iris-9 text-white"
+      >
         <span class="i-lucide-flag size-3" />{{ priorityName }}
       </span>
     </div>
