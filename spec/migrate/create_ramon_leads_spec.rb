@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'create_ramon_leads migration schema' do
+RSpec.describe 'create_ramon_leads migration schema' do # rubocop:disable RSpec/DescribeClass
   it 'cria as 4 tabelas com as colunas-chave' do
     conn = ActiveRecord::Base.connection
     expect(conn.table_exists?(:lead_stages)).to be true

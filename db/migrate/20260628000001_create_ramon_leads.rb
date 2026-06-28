@@ -1,4 +1,5 @@
 class CreateRamonLeads < ActiveRecord::Migration[7.1]
+  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def change
     create_table :lead_stages do |t|
       t.references :account, null: false, index: false
@@ -50,4 +51,5 @@ class CreateRamonLeads < ActiveRecord::Migration[7.1]
       end
     end
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 end

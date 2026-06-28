@@ -2,6 +2,7 @@ import axios from 'axios';
 import { actions } from '../../leads';
 import types from '../../../mutation-types';
 
+global.axios = axios;
 vi.mock('axios');
 
 describe('leads actions', () => {
