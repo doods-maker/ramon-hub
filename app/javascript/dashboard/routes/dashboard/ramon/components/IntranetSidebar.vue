@@ -11,7 +11,7 @@ const sections = computed(() => [
     label: t('RAMON.NAV.COMERCIAL'),
     items: [
       { key: 'overview', label: t('RAMON.NAV.OVERVIEW'), icon: 'i-lucide-layout-dashboard', to: accountScopedRoute('ramon_index') },
-      { key: 'funil', label: t('RAMON.NAV.FUNIL'), icon: 'i-lucide-filter', soon: true },
+      { key: 'funil', label: t('RAMON.NAV.FUNIL'), icon: 'i-lucide-filter', to: accountScopedRoute('ramon_funil') },
       { key: 'sdr', label: t('RAMON.NAV.SDR'), icon: 'i-lucide-phone', soon: true },
     ],
   },

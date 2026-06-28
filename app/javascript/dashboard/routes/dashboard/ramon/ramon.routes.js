@@ -14,4 +14,10 @@ export const routes = [
     component: () => import('./pages/ExternalShortcuts.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
+  {
+    path: frontendURL('accounts/:accountId/ramon/funil'),
+    name: 'ramon_funil',
+    component: () => import('./pages/Funil.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
 ];
