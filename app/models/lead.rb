@@ -11,6 +11,9 @@ class Lead < ApplicationRecord
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
 
+  after_create_commit :dispatch_create_event
+  after_update_commit :dispatch_update_event
+
   def push_event_data
     {
       id: id,
@@ -22,5 +25,15 @@ class Lead < ApplicationRecord
       conversation_id: conversation_id,
       position: position
     }
+  end
+
+  private
+
+  def dispatch_create_event
+    Rails.configuration.dispatcher.dispatch(Events::Types::LEAD_CREATED, Time.zone.now, lead: self)
+  end
+
+  def dispatch_update_event
+    Rails.configuration.dispatcher.dispatch(Events::Types::LEAD_UPDATED, Time.zone.now, lead: self)
   end
 end
