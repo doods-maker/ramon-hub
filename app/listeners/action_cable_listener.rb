@@ -167,6 +167,18 @@ class ActionCableListener < BaseListener
     broadcast(account, [account_token(account)], CONTACT_MERGED, contact.push_event_data)
   end
 
+  def lead_created(event)
+    lead = event.data[:lead]
+    account = lead.account
+    broadcast(account, [account_token(account)], LEAD_CREATED, lead.push_event_data)
+  end
+
+  def lead_updated(event)
+    lead = event.data[:lead]
+    account = lead.account
+    broadcast(account, [account_token(account)], LEAD_UPDATED, lead.push_event_data)
+  end
+
   def contact_deleted(event)
     contact_data = event.data[:contact_data]
     account = Account.find_by(id: contact_data[:account_id])
