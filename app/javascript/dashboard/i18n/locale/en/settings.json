@@ -409,7 +409,8 @@
     "SECURITY": "Security",
     "CAPTAIN_AI": "Captain",
     "CONVERSATION_WORKFLOW": "Conversation Workflow",
-    "RAMON": "Intranet"
+    "RAMON": "Intranet",
+    "KANBAN_BOARD": "Kanban Board"
   },
   "CAPTAIN_SETTINGS": {
     "TITLE": "Captain Settings",

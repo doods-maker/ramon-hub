@@ -28,6 +28,10 @@
 | `app/javascript/dashboard/i18n/locale/en/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1A |
 | `app/javascript/dashboard/i18n/locale/pt_BR/index.js` | +import e spread de `ramon.json` | registra locale ramon | 1A |
 | `app/javascript/dashboard/routes/dashboard/Dashboard.vue` | +imports `WorldRail`/`IntranetSidebar`; +computed `isIntranetWorld`; template: `WorldRail` antes de `NextSidebar` (v-if) + `IntranetSidebar` (v-else) | trilho de dois níveis | 1B |
+| `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` | item `KanbanBoard` no `menuItems` inserido entre `Inbox` e `Conversation` (icon `i-lucide-columns-3`, rota `kanban_board`) | Kanban Board no mundo Conversas | 2A |
+| `app/javascript/dashboard/routes/dashboard/conversation/conversation.routes.js` | +rota `{ path: frontendURL('accounts/:accountId/kanban'), name: 'kanban_board', meta: { permissions: CONVERSATION_PERMISSIONS }, component: () => import('./KanbanView.vue') }` | Kanban Board no mundo Conversas | 2A |
+| `app/javascript/dashboard/i18n/locale/pt_BR/settings.json` | +`"KANBAN_BOARD": "Kanban Board"` dentro de `"SIDEBAR"` | rótulo do item de menu | 2A |
+| `app/javascript/dashboard/i18n/locale/en/settings.json` | +`"KANBAN_BOARD": "Kanban Board"` dentro de `"SIDEBAR"` | rótulo do item de menu | 2A |
 
 ## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
 | Arquivo | Responsabilidade | Fase |
