@@ -1,7 +1,7 @@
 class CreateRamonLeads < ActiveRecord::Migration[7.1]
   def change
     create_table :lead_stages do |t|
-      t.references :account, null: false, index: true
+      t.references :account, null: false, index: false
       t.string :name, null: false
       t.integer :position, null: false, default: 0
       t.boolean :is_won, null: false, default: false
@@ -11,7 +11,7 @@ class CreateRamonLeads < ActiveRecord::Migration[7.1]
     add_index :lead_stages, [:account_id, :name], unique: true
 
     create_table :benefit_types do |t|
-      t.references :account, null: false, index: true
+      t.references :account, null: false, index: false
       t.string :name, null: false
       t.integer :position, null: false, default: 0
       t.timestamps
@@ -19,7 +19,7 @@ class CreateRamonLeads < ActiveRecord::Migration[7.1]
     add_index :benefit_types, [:account_id, :name], unique: true
 
     create_table :lead_priorities do |t|
-      t.references :account, null: false, index: true
+      t.references :account, null: false, index: false
       t.string :name, null: false
       t.integer :weight, null: false, default: 0
       t.integer :position, null: false, default: 0
