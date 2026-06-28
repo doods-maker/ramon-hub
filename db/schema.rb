@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_11_184600) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_28_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -259,6 +259,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_11_184600) do
     t.datetime "updated_at", null: false
     t.boolean "active", default: true, null: false
     t.index ["account_id"], name: "index_automation_rules_on_account_id"
+  end
+
+  create_table "benefit_types", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "name"], name: "index_benefit_types_on_account_id_and_name", unique: true
   end
 
   create_table "calls", force: :cascade do |t|
@@ -944,6 +953,51 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_11_184600) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_labels_on_account_id"
     t.index ["title", "account_id"], name: "index_labels_on_title_and_account_id", unique: true
+  end
+
+  create_table "lead_priorities", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.integer "weight", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "name"], name: "index_lead_priorities_on_account_id_and_name", unique: true
+  end
+
+  create_table "lead_stages", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "is_won", default: false, null: false
+    t.boolean "is_lost", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "name"], name: "index_lead_stages_on_account_id_and_name", unique: true
+  end
+
+  create_table "leads", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id"
+    t.bigint "conversation_id"
+    t.bigint "lead_stage_id", null: false
+    t.bigint "benefit_type_id"
+    t.bigint "lead_priority_id"
+    t.string "name"
+    t.float "position", default: 0.0, null: false
+    t.bigint "sdr_id"
+    t.bigint "closer_id"
+    t.string "lost_reason"
+    t.jsonb "custom_attributes", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
+    t.index ["account_id"], name: "index_leads_on_account_id"
+    t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
+    t.index ["contact_id"], name: "index_leads_on_contact_id"
+    t.index ["conversation_id"], name: "index_leads_on_conversation_id"
+    t.index ["lead_priority_id"], name: "index_leads_on_lead_priority_id"
+    t.index ["lead_stage_id"], name: "index_leads_on_lead_stage_id"
   end
 
   create_table "leaves", force: :cascade do |t|
