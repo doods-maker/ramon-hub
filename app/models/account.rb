@@ -82,6 +82,10 @@ class Account < ApplicationRecord
   has_many :hooks, dependent: :destroy_async, class_name: 'Integrations::Hook'
   has_many :inboxes, dependent: :destroy_async
   has_many :labels, dependent: :destroy_async
+  has_many :benefit_types, dependent: :destroy_async
+  has_many :lead_priorities, dependent: :destroy_async
+  has_many :lead_stages, dependent: :destroy_async
+  has_many :leads, dependent: :destroy_async
   has_many :line_channels, dependent: :destroy_async, class_name: '::Channel::Line'
   has_many :mentions, dependent: :destroy_async
   has_many :messages, dependent: :destroy_async
@@ -109,6 +113,7 @@ class Account < ApplicationRecord
 
   before_validation :validate_limit_keys
   after_create_commit :notify_creation
+  after_create :seed_lead_config
   after_update_commit :clear_unread_conversation_counts_cache, if: :saved_change_to_feature_conversation_unread_counts?
   after_destroy :remove_account_sequences
 
@@ -178,6 +183,10 @@ class Account < ApplicationRecord
 
   def notify_creation
     Rails.configuration.dispatcher.dispatch(ACCOUNT_CREATED, Time.zone.now, account: self)
+  end
+
+  def seed_lead_config
+    Leads::SeedDefaultConfigService.new(self).perform
   end
 
   def clear_unread_conversation_counts_cache
