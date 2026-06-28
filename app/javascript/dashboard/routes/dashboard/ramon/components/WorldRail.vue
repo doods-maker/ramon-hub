@@ -19,13 +19,13 @@ const shortcuts = computed(
 
 const worlds = computed(() => [
   { key: 'conversas', label: t('RAMON.RAIL.CONVERSAS'), icon: 'i-lucide-messages-square', to: accountScopedRoute('home'), active: !isIntranet.value },
-  { key: 'intranet', label: t('RAMON.RAIL.INTRANET'), icon: 'i-lucide-layout-dashboard', to: accountScopedRoute('ramon_index'), active: isIntranet.value },
+  { key: 'intranet', label: t('RAMON.RAIL.INTRANET'), icon: 'i-lucide-scale', to: accountScopedRoute('ramon_index'), active: isIntranet.value },
 ]);
 </script>
 
 <template>
   <aside class="flex flex-col items-center flex-shrink-0 h-full py-3 w-[78px] ramon-rail ltr:border-r rtl:border-l border-n-weak">
-    <span class="mb-4 i-lucide-scale size-6 text-n-iris-11" />
+    <img src="/brand-assets/ramon-monogram.png" alt="Ramon Antonio" class="mb-4 rounded-lg size-9" />
 
     <p class="mb-1 text-[9px] tracking-widest uppercase text-n-slate-9">{{ t('RAMON.RAIL.INTERNOS') }}</p>
     <nav class="flex flex-col items-center w-full gap-1">
@@ -34,11 +34,10 @@ const worlds = computed(() => [
         :key="w.key"
         :to="w.to"
         :title="w.label"
-        class="flex flex-col items-center justify-center gap-1 transition-colors rounded-xl w-14 h-14 text-n-slate-11 hover:bg-n-alpha-2"
+        class="flex items-center justify-center transition-colors rounded-xl w-14 h-12 text-n-slate-11 hover:bg-n-alpha-2"
         :class="{ 'bg-n-alpha-2 text-n-iris-11': w.active }"
       >
-        <span :class="w.icon" class="size-5" />
-        <span class="text-[9px] leading-none">{{ w.label }}</span>
+        <span :class="w.icon" class="size-6" />
       </router-link>
     </nav>
 
