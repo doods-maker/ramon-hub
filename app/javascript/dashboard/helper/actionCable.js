@@ -54,12 +54,18 @@ class ActionCableConnector extends BaseActionCableConnector {
       'voice_call.outbound_connected': this.onVoiceCallOutboundConnected,
       'voice_call.outbound_accepted': this.onVoiceCallOutboundAccepted,
       'voice_call.ended': this.onVoiceCallEnded,
+      'lead.created': this.onLeadUpsert,
+      'lead.updated': this.onLeadUpsert,
     };
   }
 
   // eslint-disable-next-line class-methods-use-this
   onReconnect = () => {
     emitter.emit(BUS_EVENTS.WEBSOCKET_RECONNECT);
+  };
+
+  onLeadUpsert = data => {
+    this.app.$store.dispatch('leads/upsert', data);
   };
 
   // eslint-disable-next-line class-methods-use-this
