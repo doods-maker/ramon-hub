@@ -34,6 +34,7 @@
 | `app/javascript/dashboard/i18n/locale/en/settings.json` | +`"KANBAN_BOARD": "Kanban Board"` dentro de `"SIDEBAR"` | rótulo do item de menu | 2A |
 | `lib/events/types.rb` | +`LEAD_CREATED`/`LEAD_UPDATED` (bloco `# Ramon — leads` antes de `# contact events`) | constantes de evento para o canal realtime de leads | 2B |
 | `app/listeners/action_cable_listener.rb` | +`lead_created`/`lead_updated` após `contact_merged` — broadcast account-wide com `lead.push_event_data` | realtime de leads via ActionCable | 2B |
+| `app/dispatchers/async_dispatcher.rb` | +`RamonLeadListener.instance` no array `listeners` (após `WebhookListener.instance`) | registra listener de auto-criação de leads | 2B |
 
 ## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
 | Arquivo | Responsabilidade | Fase |
@@ -52,6 +53,9 @@
 | `public/brand-assets/ramon-logo.jpeg` | logo do escritório (apontar via Super Admin) | 1A |
 | `public/brand-assets/ramon-monogram.png` | monograma/favicon (apontar via Super Admin) | 1A |
 | `app/javascript/dashboard/routes/dashboard/conversation/KanbanView.vue` | arquivo NOVO dentro de diretório core (não em `ramon/`) — wrapper que monta o `KanbanBoard` no mundo Conversas | 2A |
+| `db/migrate/20260628000002_add_auto_create_lead_to_inboxes.rb` | migration: coluna `auto_create_lead` (boolean, default false) em `inboxes` | flag de auto-criação de lead por inbox | 2B |
+| `app/listeners/ramon_lead_listener.rb` | listener de auto-criação de lead em `conversation_created`; dedup por contato | funil de leads automático | 2B |
+| `spec/listeners/ramon_lead_listener_spec.rb` | specs: cria / inbox-off / dedup-relink | cobertura do RamonLeadListener | 2B |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
