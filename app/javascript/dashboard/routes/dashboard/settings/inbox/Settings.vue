@@ -87,6 +87,7 @@ export default {
       avatarUrl: '',
       greetingEnabled: true,
       greetingMessage: '',
+      autoCreateLead: false,
       emailCollectEnabled: false,
       senderNameType: 'friendly',
       businessName: '',
@@ -470,6 +471,7 @@ export default {
       this.businessName = this.inbox.business_name;
       this.allowMessagesAfterResolved =
         this.inbox.allow_messages_after_resolved;
+      this.autoCreateLead = this.inbox.auto_create_lead;
       this.continuityViaEmail = this.inbox.continuity_via_email;
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
@@ -583,6 +585,7 @@ export default {
           name: this.selectedInboxName?.trim(),
           enable_email_collect: this.emailCollectEnabled,
           allow_messages_after_resolved: this.allowMessagesAfterResolved,
+          auto_create_lead: this.autoCreateLead,
           greeting_enabled: this.greetingEnabled,
           greeting_message: this.greetingMessage || '',
           portal_id: this.selectedPortalSlug
@@ -1179,6 +1182,14 @@ export default {
                   />
                 </template>
               </SettingsToggleSection>
+
+              <SettingsToggleSection
+                v-model="autoCreateLead"
+                :header="$t('INBOX_MGMT.SETTINGS_POPUP.AUTO_CREATE_LEAD.LABEL')"
+                :description="
+                  $t('INBOX_MGMT.SETTINGS_POPUP.AUTO_CREATE_LEAD.SUB_TEXT')
+                "
+              />
 
               <SettingsToggleSection
                 v-if="isAWebWidgetInbox"
