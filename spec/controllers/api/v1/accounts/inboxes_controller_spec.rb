@@ -659,6 +659,16 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(response).to have_http_status(:success)
         expect(inbox.reload.allow_messages_after_resolved).to be_falsey
       end
+
+      it 'enables auto_create_lead on the inbox' do
+        patch "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}",
+              headers: admin.create_new_auth_token,
+              params: valid_params.merge({ auto_create_lead: true }),
+              as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(inbox.reload.auto_create_lead).to be true
+      end
     end
 
     context 'when an authenticated user updates email inbox' do

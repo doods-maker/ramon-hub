@@ -35,6 +35,10 @@
 | `lib/events/types.rb` | +`LEAD_CREATED`/`LEAD_UPDATED` (bloco `# Ramon — leads` antes de `# contact events`) | constantes de evento para o canal realtime de leads | 2B |
 | `app/listeners/action_cable_listener.rb` | +`lead_created`/`lead_updated` após `contact_merged` — broadcast account-wide com `lead.push_event_data` | realtime de leads via ActionCable | 2B |
 | `app/dispatchers/async_dispatcher.rb` | +`RamonLeadListener.instance` no array `listeners` (após `WebhookListener.instance`) | registra listener de auto-criação de leads | 2B |
+| `app/controllers/api/v1/accounts/inboxes_controller.rb` | `:auto_create_lead` adicionado ao array de `inbox_attributes` (método `inbox_attributes`, ~linha 160) | expõe parâmetro para o update da inbox | 2D |
+| `app/views/api/v1/models/_inbox.json.jbuilder` | +`json.auto_create_lead resource.auto_create_lead` após `json.business_name` (~linha 21) | serializa flag para o frontend | 2D |
+| `app/javascript/dashboard/routes/dashboard/settings/inbox/Settings.vue` | +`autoCreateLead` em `data()`, `syncInboxData()`, payload de `updateInbox()` e template (`SettingsToggleSection` sem `v-if`) | toggle UI da flag em todas as inboxes | 2D |
+| `app/javascript/dashboard/i18n/locale/en/inboxMgmt.json` e `pt_BR/inboxMgmt.json` | +`AUTO_CREATE_LEAD.LABEL`/`SUB_TEXT` dentro de `SETTINGS_POPUP` | i18n do toggle | 2D |
 
 ## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
 | Arquivo | Responsabilidade | Fase |
