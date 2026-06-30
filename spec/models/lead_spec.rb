@@ -30,4 +30,8 @@ RSpec.describe Lead do
       .with(Events::Types::LEAD_UPDATED, anything, hash_including(:lead))
     lead.update!(name: 'Novo Nome')
   end
+
+  it 'expõe as colunas A1 (value, source, notes)' do
+    expect(Lead.column_names).to include('value', 'source', 'notes')
+  end
 end
