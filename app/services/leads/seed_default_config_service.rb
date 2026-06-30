@@ -25,22 +25,14 @@ class Leads::SeedDefaultConfigService
 
   def perform
     seed_stages
-    ensure_stage_labels
     seed_benefits
     seed_priorities
   end
 
-  # Cria as Labels nativas do Chatwoot para cada etapa que tem `label`.
-  # Pública para o backfill da migração reusar em contas já existentes.
-  def ensure_stage_labels
-    @account.lead_stages.where.not(label: [nil, '']).find_each do |stage|
-      @account.labels.find_or_create_by!(title: stage.label) do |label|
-        label.color = self.class.color_for(stage.label)
-        label.show_on_sidebar = true
-      end
-    end
-  end
-
+  # NÃO criamos as Labels fase-* aqui: criá-las em toda conta poluiria a
+  # enumeração global de labels (vários specs nativos do Chatwoot assumem
+  # contas sem labels). As Labels fase-* nascem SOB DEMANDA em
+  # Ramon::StageLabelSync, quando uma etapa é de fato aplicada numa conversa.
   def self.color_for(label)
     STAGES.find { |s| s[:label] == label }&.dig(:color) || '#1f93ff'
   end

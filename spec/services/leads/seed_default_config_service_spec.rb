@@ -21,16 +21,13 @@ RSpec.describe Leads::SeedDefaultConfigService do
     expect(account.lead_stages.find_by(name: 'Última chance').label).to eq('fase-ultima-chance')
   end
 
-  it 'cria as Labels nativas fase-* (uma por etapa)' do
+  it 'NÃO cria Labels fase-* no seed (criadas sob demanda no StageLabelSync)' do
     account = create(:account)
-    titles = account.labels.pluck(:title)
-    expect(titles).to include('fase-novo', 'fase-qualificacao', 'fase-fechado', 'fase-perdido')
-    expect(account.labels.find_by(title: 'fase-novo').show_on_sidebar).to be(true)
+    expect(account.labels.where('title LIKE ?', 'fase-%')).to be_empty
   end
 
-  it 'é idempotente (re-rodar não duplica labels nem etapas)' do
+  it 'é idempotente (re-rodar não duplica etapas)' do
     account = create(:account)
-    expect { described_class.new(account).perform }
-      .to not_change { account.lead_stages.count }.and not_change { account.labels.count }
+    expect { described_class.new(account).perform }.not_to(change { account.lead_stages.count })
   end
 end

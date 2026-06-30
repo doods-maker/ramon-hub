@@ -16,6 +16,15 @@ RSpec.describe Ramon::StageLabelSync do
       expect(conversation.reload.label_list).to contain_exactly('fase-novo')
     end
 
+    it 'cria a Label fase-* sob demanda (cor canônica + show_on_sidebar) ao aplicar' do
+      lead = create(:lead, account: account, lead_stage: novo, conversation: conversation)
+      expect { described_class.apply_to_conversation(lead) }
+        .to change { account.labels.where(title: 'fase-novo').count }.from(0).to(1)
+      label = account.labels.find_by(title: 'fase-novo')
+      expect(label.show_on_sidebar).to be(true)
+      expect(label.color).to eq('#6b7280')
+    end
+
     it 'troca a fase-* antiga pela nova, preservando labels não-fase' do
       conversation.update_labels(%w[urgente fase-novo])
       lead = create(:lead, account: account, lead_stage: qualif, conversation: conversation)
