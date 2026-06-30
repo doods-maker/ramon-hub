@@ -20,4 +20,25 @@ class RamonLeadListener < BaseListener
       )
     end
   end
+
+  def lead_created(event)
+    Ramon::StageLabelSync.apply_to_conversation(event.data[:lead])
+  end
+
+  def lead_updated(event)
+    Ramon::StageLabelSync.apply_to_conversation(event.data[:lead])
+  end
+
+  def conversation_updated(event)
+    conversation = event.data[:conversation]
+    changes = event.data[:changed_attributes]
+    return if changes.blank?
+
+    label_change = changes['label_list'] || changes[:label_list]
+    return if label_change.blank?
+
+    old_labels, new_labels = label_change
+    added = Array(new_labels) - Array(old_labels)
+    Ramon::StageLabelSync.apply_to_lead(conversation, added)
+  end
 end
