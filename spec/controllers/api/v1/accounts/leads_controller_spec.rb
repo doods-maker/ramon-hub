@@ -52,4 +52,16 @@ RSpec.describe 'Leads API', type: :request do
     expect(body['contact_phone']).to eq('+5547999990000')
     expect(body['contact_email']).to eq('x@cli.com')
   end
+
+  it 'update aceita value/source/notes' do
+    lead = create(:lead, account: account, lead_stage: novo)
+    patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+          params: { value: 8500.25, source: 'Meta Ads', notes: 'cliente quente' },
+          headers: admin.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+    lead.reload
+    expect(lead.value).to eq(8500.25)
+    expect(lead.source).to eq('Meta Ads')
+    expect(lead.notes).to eq('cliente quente')
+  end
 end
