@@ -23,6 +23,18 @@
       "OPEN_CONVERSATION": "Abrir conversa",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar"
+    },
+    "DRAWER": {
+      "NAME": "Nome",
+      "STAGE": "Etapa",
+      "BENEFIT": "Tipo de benefício",
+      "PRIORITY": "Prioridade",
+      "SDR": "SDR",
+      "CLOSER": "Closer",
+      "VALUE": "Valor (R$)",
+      "SOURCE": "Origem",
+      "NOTES": "Notas",
+      "CONTACT": "Contato"
     }
   }
 }
