@@ -77,4 +77,31 @@ RSpec.describe Ramon::StageLabelSync do
         .not_to(change { lead.reload.updated_at })
     end
   end
+
+  describe '.rename_label' do
+    it 'cria a label nova, migra a conversa e remove a antiga' do
+      conversation = create(:conversation, account: account)
+      described_class.ensure_label(account, 'fase-negociacao', '#f59e0b')
+      conversation.update_labels(['fase-negociacao'])
+
+      described_class.rename_label(account, 'fase-negociacao', 'fase-proposta', '#f59e0b')
+
+      expect(account.labels.pluck(:title)).to include('fase-proposta')
+      expect(account.labels.pluck(:title)).not_to include('fase-negociacao')
+      expect(conversation.reload.label_list).to contain_exactly('fase-proposta')
+    end
+
+    it 'é no-op quando o rótulo não muda' do
+      expect { described_class.rename_label(account, 'fase-x', 'fase-x', '#fff') }
+        .not_to(change { account.labels.count })
+    end
+  end
+
+  describe '.recolor_label' do
+    it 'atualiza a cor da label existente' do
+      described_class.ensure_label(account, 'fase-novo', '#111111')
+      described_class.recolor_label(account, 'fase-novo', '#222222')
+      expect(account.labels.find_by(title: 'fase-novo').color).to eq('#222222')
+    end
+  end
 end
