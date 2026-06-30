@@ -31,4 +31,37 @@ RSpec.describe 'Leads API', type: :request do
         headers: admin.create_new_auth_token, as: :json
     expect(response.parsed_body['payload'].size).to eq(1)
   end
+
+  it 'serializa value/source/notes + nomes desnormalizados + contato', :aggregate_failures do
+    contact = create(:contact, account: account, name: 'Cliente X',
+                               phone_number: '+5547999990000', email: 'x@cli.com')
+    bt = account.benefit_types.find_by(name: 'Auxílio-acidente')
+    lead = create(:lead, account: account, lead_stage: novo, contact: contact,
+                         benefit_type: bt, value: 12_000.50, source: 'Meta Ads',
+                         notes: 'ligar à tarde')
+    get "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+        headers: admin.create_new_auth_token, as: :json
+    body = response.parsed_body
+    expect(body['value'].to_f).to eq(12_000.50)
+    expect(body['source']).to eq('Meta Ads')
+    expect(body['notes']).to eq('ligar à tarde')
+    expect(body['stage_name']).to eq('Novo')
+    expect(body['stage_color']).to eq('#6b7280')
+    expect(body['benefit_type_name']).to eq('Auxílio-acidente')
+    expect(body['contact_name']).to eq('Cliente X')
+    expect(body['contact_phone']).to eq('+5547999990000')
+    expect(body['contact_email']).to eq('x@cli.com')
+  end
+
+  it 'update aceita value/source/notes' do
+    lead = create(:lead, account: account, lead_stage: novo)
+    patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+          params: { value: 8500.25, source: 'Meta Ads', notes: 'cliente quente' },
+          headers: admin.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+    lead.reload
+    expect(lead.value).to eq(8500.25)
+    expect(lead.source).to eq('Meta Ads')
+    expect(lead.notes).to eq('cliente quente')
+  end
 end

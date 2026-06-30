@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_28_000004) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_30_000005) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -975,6 +975,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_28_000004) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "label"
+    t.string "color"
     t.index ["account_id", "label"], name: "index_lead_stages_on_account_id_and_label", unique: true
     t.index ["account_id", "name"], name: "index_lead_stages_on_account_id_and_name", unique: true
   end
@@ -994,6 +995,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_28_000004) do
     t.jsonb "custom_attributes", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "value", precision: 12, scale: 2
+    t.string "source"
+    t.text "notes"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"

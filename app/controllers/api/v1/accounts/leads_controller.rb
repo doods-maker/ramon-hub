@@ -31,6 +31,6 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def permitted_params
     params.permit(:name, :lead_stage_id, :benefit_type_id, :lead_priority_id,
                   :contact_id, :conversation_id, :sdr_id, :closer_id,
-                  :position, :lost_reason)
+                  :position, :lost_reason, :value, :source, :notes)
   end
 end

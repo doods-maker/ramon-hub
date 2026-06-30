@@ -30,4 +30,19 @@ RSpec.describe Lead do
       .with(Events::Types::LEAD_UPDATED, anything, hash_including(:lead))
     lead.update!(name: 'Novo Nome')
   end
+
+  it 'expõe as colunas A1 (value, source, notes)' do
+    expect(described_class.column_names).to include('value', 'source', 'notes')
+  end
+
+  it 'push_event_data inclui os campos do card rico' do
+    stage = account.lead_stages.find_by(name: 'Negociação')
+    lead = create(:lead, account: account, lead_stage: stage, value: 5000, source: 'Indicação')
+    data = lead.push_event_data
+    expect(data).to include(
+      value: lead.value, source: 'Indicação',
+      stage_name: 'Negociação', stage_color: '#f59e0b'
+    )
+    expect(data.keys).to include(:benefit_type_name, :lead_priority_name, :sdr_name, :closer_name, :contact_name)
+  end
 end

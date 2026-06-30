@@ -17,4 +17,8 @@ RSpec.describe LeadStage do
     primeira = account.lead_stages.create!(name: 'Etapa Topo 2A', position: -1)
     expect(account.lead_stages.first).to eq(primeira)
   end
+
+  it 'expõe a coluna color' do
+    expect(described_class.column_names).to include('color')
+  end
 end

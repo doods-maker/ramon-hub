@@ -30,4 +30,20 @@ RSpec.describe Leads::SeedDefaultConfigService do
     account = create(:account)
     expect { described_class.new(account).perform }.not_to(change { account.lead_stages.count })
   end
+
+  it 'grava a cor de cada etapa a partir de STAGES' do
+    described_class.new(account).perform
+    novo = account.lead_stages.find_by(name: 'Novo')
+    fechado = account.lead_stages.find_by(name: 'Fechado')
+    expect(novo.color).to eq('#6b7280')
+    expect(fechado.color).to eq('#22c55e')
+  end
+
+  it 'faz backfill da cor ao re-rodar quando a etapa está sem cor' do
+    described_class.new(account).perform
+    novo = account.lead_stages.find_by(name: 'Novo')
+    novo.update!(color: nil)
+    described_class.new(account).perform
+    expect(novo.reload.color).to eq('#6b7280')
+  end
 end

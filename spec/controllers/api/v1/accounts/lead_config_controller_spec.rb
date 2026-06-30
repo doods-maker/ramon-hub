@@ -13,4 +13,11 @@ RSpec.describe 'Lead Config API', type: :request do
     expect(body['benefit_types'].size).to eq(7)
     expect(body['priorities'].size).to eq(3)
   end
+
+  it 'expõe a cor de cada etapa' do
+    get "/api/v1/accounts/#{account.id}/lead_config",
+        headers: admin.create_new_auth_token, as: :json
+    novo = response.parsed_body['stages'].find { |s| s['name'] == 'Novo' }
+    expect(novo['color']).to eq('#6b7280')
+  end
 end

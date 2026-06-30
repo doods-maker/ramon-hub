@@ -2,25 +2,27 @@
 import { computed, onMounted } from 'vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanColumn from './KanbanColumn.vue';
+import LeadDrawer from './LeadDrawer.vue';
 
 const emit = defineEmits(['new-lead', 'open-conversation']);
 const store = useStore();
 const getters = useStoreGetters();
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
-const benefitTypes = computed(
-  () => getters['leadConfig/getBenefitTypes'].value
-);
-const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const leadsByStage = stageId => getters['leads/getLeadsByStage'].value(stageId);
 
 const onMove = ({ id, leadStageId, newIndex }) => {
   store.dispatch('leads/move', { id, leadStageId, position: newIndex });
 };
 
+const onOpenLead = lead => {
+  store.dispatch('leads/select', lead.id);
+};
+
 onMounted(() => {
   store.dispatch('leadConfig/get');
   store.dispatch('leads/get');
+  store.dispatch('agents/get');
 });
 </script>
 
@@ -43,11 +45,11 @@ onMounted(() => {
         :key="stage.id"
         :stage="stage"
         :leads="leadsByStage(stage.id)"
-        :benefit-types="benefitTypes"
-        :priorities="priorities"
         @move="onMove"
         @open-conversation="id => emit('open-conversation', id)"
+        @open-lead="onOpenLead"
       />
     </div>
+    <LeadDrawer @open-conversation="id => emit('open-conversation', id)" />
   </div>
 </template>
