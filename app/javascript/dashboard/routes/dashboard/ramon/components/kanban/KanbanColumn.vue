@@ -48,7 +48,9 @@ const onChange = evt => {
     class="flex flex-col w-72 flex-shrink-0 rounded-xl bg-[#17120d] border border-n-weak"
   >
     <div class="flex items-center justify-between px-3 py-2">
-      <span class="flex items-center gap-2 text-sm text-n-slate-12">
+      <span
+        class="flex items-center gap-2 text-sm text-n-slate-12 stage-drag-handle cursor-grab"
+      >
         <span
           class="rounded-full size-2.5"
           :style="{ backgroundColor: stage.color || '#71717a' }"
