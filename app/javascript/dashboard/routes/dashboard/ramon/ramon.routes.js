@@ -20,4 +20,10 @@ export const routes = [
     component: () => import('./pages/Funil.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
+  {
+    path: frontendURL('accounts/:accountId/ramon/config'),
+    name: 'ramon_funil_config',
+    component: () => import('./pages/FunilConfig.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
 ];

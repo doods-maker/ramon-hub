@@ -4,16 +4,40 @@
       "EYEBROW": "Centro de Comando",
       "TITLE": "Visão Geral",
       "PLACEHOLDER": "Os módulos aparecerão aqui conforme forem migrados.",
-      "KPI": { "LEADS": "Leads", "REUNIOES": "Reuniões", "FECHAMENTOS": "Fechamentos" }
+      "KPI": {
+        "LEADS": "Leads",
+        "REUNIOES": "Reuniões",
+        "FECHAMENTOS": "Fechamentos"
+      }
     },
     "NAV": {
-      "TITLE": "Intranet", "SOON": "em breve",
-      "COMERCIAL": "Comercial", "JURIDICO": "Jurídico", "INTELIGENCIA": "Inteligência",
-      "OVERVIEW": "Centro de Comando", "FUNIL": "Funil de Leads", "SDR": "Painel do SDR",
-      "TRIAGEM": "Triagem de Iniciais", "AGENTES": "Agentes de IA"
+      "TITLE": "Intranet",
+      "SOON": "em breve",
+      "COMERCIAL": "Comercial",
+      "JURIDICO": "Jurídico",
+      "INTELIGENCIA": "Inteligência",
+      "OVERVIEW": "Centro de Comando",
+      "FUNIL": "Funil de Leads",
+      "SDR": "Painel do SDR",
+      "TRIAGEM": "Triagem de Iniciais",
+      "AGENTES": "Agentes de IA",
+      "FUNIL_CONFIG": "Configurações do Funil"
     },
-    "RAIL": { "INTERNOS": "Internos", "EXTERNOS": "Externos", "CONVERSAS": "Conversas", "INTRANET": "Intranet", "MANAGE": "Gerenciar atalhos" },
-    "SHORTCUTS": { "TITLE": "Atalhos externos", "LABEL": "Nome", "LABEL_PH": "AdvBox", "URL": "URL", "ICON": "Ícone (Lucide)", "ADD": "Adicionar" },
+    "RAIL": {
+      "INTERNOS": "Internos",
+      "EXTERNOS": "Externos",
+      "CONVERSAS": "Conversas",
+      "INTRANET": "Intranet",
+      "MANAGE": "Gerenciar atalhos"
+    },
+    "SHORTCUTS": {
+      "TITLE": "Atalhos externos",
+      "LABEL": "Nome",
+      "LABEL_PH": "AdvBox",
+      "URL": "URL",
+      "ICON": "Ícone (Lucide)",
+      "ADD": "Adicionar"
+    },
     "FUNIL": {
       "TITLE": "Funil de Leads",
       "NEW_LEAD": "Novo lead",
@@ -22,7 +46,29 @@
       "PRIORITY": "Prioridade",
       "OPEN_CONVERSATION": "Abrir conversa",
       "CANCEL": "Cancelar",
-      "SAVE": "Salvar"
+      "SAVE": "Salvar",
+      "STAGE": {
+        "ADD": "Etapa",
+        "NEW_PROMPT": "Nome da nova etapa",
+        "RENAME": "Renomear",
+        "SAVE": "Salvar",
+        "TYPE_NORMAL": "Etapa normal",
+        "TYPE_WON": "Marcar como ganho",
+        "TYPE_LOST": "Marcar como perda",
+        "REMOVE": "Remover etapa",
+        "REMOVE_TITLE": "Remover \"{name}\" e mover os leads para:",
+        "REMOVE_PICK": "Escolha a etapa destino",
+        "REMOVE_CONFIRM": "Remover",
+        "CANCEL": "Cancelar"
+      }
+    },
+    "FUNIL_CONFIG": {
+      "TITLE": "Configurações do Funil",
+      "BENEFITS": "Tipos de benefício",
+      "PRIORITIES": "Prioridades",
+      "ADD": "Adicionar",
+      "BENEFIT_PLACEHOLDER": "Novo tipo de benefício",
+      "PRIORITY_PLACEHOLDER": "Nova prioridade"
     },
     "DRAWER": {
       "NAME": "Nome",
