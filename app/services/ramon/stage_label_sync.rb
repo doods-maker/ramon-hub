@@ -19,6 +19,9 @@ module Ramon
     # Conversa -> lead: a fase-* adicionada (última, se várias) define a etapa.
     def self.apply_to_lead(conversation, added_labels)
       added_fase = Array(added_labels).map(&:to_s).select { |l| l.start_with?(FASE_PREFIX) }
+      # Só agimos sobre fase-* ADICIONADA. Remover a única fase-* da conversa é
+      # no-op de propósito (decisão do plano 2C): o lead fica onde está e o
+      # self-heal repõe a label no próximo write do lead / no backfill.
       return if added_fase.empty?
 
       target = added_fase.last
@@ -30,6 +33,9 @@ module Ramon
       return if stage.nil?
 
       lead.update!(lead_stage: stage) unless lead.lead_stage_id == stage.id
+      # Self-heal INCONDICIONAL (mesmo se a etapa já estava certa): garante
+      # exatamente uma fase-* na conversa, removendo uma 2ª fase-* que tenha
+      # chegado junto. É o que faz valer a exclusividade "a adicionada vence".
       set_conversation_fase(conversation, target)
     end
 
