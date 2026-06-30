@@ -19,4 +19,19 @@ describe('leads actions', () => {
       { id: 1, name: 'João' },
     ]);
   });
+
+  it('upsert faz commit de MERGE_LEAD', () => {
+    const commit = vi.fn();
+    actions.upsert({ commit }, { id: 7, name: 'Live' });
+    expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD, {
+      id: 7,
+      name: 'Live',
+    });
+  });
+
+  it('select faz commit de SET_SELECTED_LEAD', () => {
+    const commit = vi.fn();
+    actions.select({ commit }, 42);
+    expect(commit).toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 42);
+  });
 });

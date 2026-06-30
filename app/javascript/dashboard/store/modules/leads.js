@@ -4,6 +4,7 @@ import LeadsAPI from '../../api/leads';
 
 export const state = {
   records: [],
+  selectedId: null,
   uiFlags: {
     isFetching: false,
     isCreating: false,
@@ -22,6 +23,9 @@ export const getters = {
       .sort((a, b) => a.position - b.position),
   getUIFlags(_state) {
     return _state.uiFlags;
+  },
+  getSelectedLead(_state) {
+    return _state.records.find(lead => lead.id === _state.selectedId) || null;
   },
 };
 
@@ -58,7 +62,10 @@ export const actions = {
     commit(types.EDIT_LEAD, response.data);
   },
   upsert: ({ commit }, lead) => {
-    commit(types.EDIT_LEAD, lead);
+    commit(types.MERGE_LEAD, lead);
+  },
+  select: ({ commit }, id) => {
+    commit(types.SET_SELECTED_LEAD, id);
   },
   delete: async ({ commit }, id) => {
     await LeadsAPI.delete(id);
@@ -74,6 +81,17 @@ export const mutations = {
   [types.ADD_LEAD]: MutationHelpers.create,
   [types.EDIT_LEAD]: MutationHelpers.setSingleRecord,
   [types.DELETE_LEAD]: MutationHelpers.destroy,
+  [types.MERGE_LEAD](_state, data) {
+    const index = _state.records.findIndex(record => record.id === data.id);
+    if (index > -1) {
+      _state.records[index] = { ..._state.records[index], ...data };
+    } else {
+      _state.records.push(data);
+    }
+  },
+  [types.SET_SELECTED_LEAD](_state, id) {
+    _state.selectedId = id;
+  },
 };
 
 export default { namespaced: true, state, getters, actions, mutations };
