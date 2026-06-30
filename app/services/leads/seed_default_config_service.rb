@@ -46,8 +46,10 @@ class Leads::SeedDefaultConfigService
         s.is_won = attrs[:is_won]
         s.is_lost = attrs[:is_lost]
         s.label = attrs[:label]
+        s.color = attrs[:color]
       end
       stage.update!(label: attrs[:label]) if stage.label != attrs[:label]
+      stage.update!(color: attrs[:color]) if stage.color != attrs[:color]
     end
   end
 
