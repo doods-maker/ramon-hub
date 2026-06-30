@@ -29,4 +29,36 @@ RSpec.describe RamonLeadListener do
     expect { listener.conversation_created(event) }.not_to(change { account.leads.count })
     expect(account.leads.last.conversation_id).to eq(conversation.id)
   end
+
+  describe '#lead_updated -> etiqueta a conversa' do
+    it 'aplica a fase-* da etapa do lead na conversa' do
+      lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
+                           conversation: conversation, contact: contact)
+      lead.update!(lead_stage: account.lead_stages.find_by(label: 'fase-qualificacao'))
+      ev = Events::Base.new('lead.updated', Time.zone.now, lead: lead)
+      listener.lead_updated(ev)
+      expect(conversation.reload.label_list).to contain_exactly('fase-qualificacao')
+    end
+  end
+
+  describe '#conversation_updated -> move o lead' do
+    it 'move o lead pra etapa da fase-* adicionada' do
+      lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
+                           conversation: conversation, contact: contact)
+      ev = Events::Base.new('conversation.updated', Time.zone.now,
+                            conversation: conversation,
+                            changed_attributes: { 'label_list' => [[], ['fase-qualificacao']] })
+      listener.conversation_updated(ev)
+      expect(lead.reload.lead_stage).to eq(account.lead_stages.find_by(label: 'fase-qualificacao'))
+    end
+
+    it 'ignora quando label_list não mudou' do
+      lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
+                           conversation: conversation, contact: contact)
+      ev = Events::Base.new('conversation.updated', Time.zone.now,
+                            conversation: conversation,
+                            changed_attributes: { 'status' => %w[open resolved] })
+      expect { listener.conversation_updated(ev) }.not_to(change { lead.reload.lead_stage_id })
+    end
+  end
 end
