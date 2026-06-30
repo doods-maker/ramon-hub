@@ -30,12 +30,18 @@ const buildStore = (updateSpy, selectSpy) =>
       leadConfig: {
         namespaced: true,
         getters: {
-          getStages: () => [{ id: 1, name: 'Novo' }, { id: 2, name: 'Negociação' }],
+          getStages: () => [
+            { id: 1, name: 'Novo' },
+            { id: 2, name: 'Negociação' },
+          ],
           getBenefitTypes: () => [{ id: 3, name: 'Auxílio-acidente' }],
           getPriorities: () => [{ id: 4, name: 'Alta' }],
         },
       },
-      agents: { namespaced: true, getters: { getAgents: () => [{ id: 8, name: 'Eduardo' }] } },
+      agents: {
+        namespaced: true,
+        getters: { getAgents: () => [{ id: 8, name: 'Eduardo' }] },
+      },
     },
   });
 
@@ -60,7 +66,10 @@ describe('LeadDrawer.vue', () => {
     const input = wrapper.find('[data-testid="field-name"]');
     await input.setValue('João Silva');
     await input.trigger('blur');
-    expect(update).toHaveBeenCalledWith(expect.anything(), { id: 10, name: 'João Silva' });
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 10,
+      name: 'João Silva',
+    });
   });
 
   it('NÃO salva no blur quando o valor não mudou', async () => {
@@ -75,7 +84,10 @@ describe('LeadDrawer.vue', () => {
     const wrapper = mountDrawer(update);
     const select = wrapper.find('[data-testid="field-stage"]');
     await select.setValue(2);
-    expect(update).toHaveBeenCalledWith(expect.anything(), { id: 10, lead_stage_id: 2 });
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 10,
+      lead_stage_id: 2,
+    });
   });
 
   it('fecha desselecionando o lead', async () => {
@@ -87,7 +99,16 @@ describe('LeadDrawer.vue', () => {
 
   it('emite open-conversation', async () => {
     const wrapper = mountDrawer();
-    await wrapper.find('[data-testid="drawer-open-conversation"]').trigger('click');
+    await wrapper
+      .find('[data-testid="drawer-open-conversation"]')
+      .trigger('click');
     expect(wrapper.emitted('open-conversation')[0][0]).toBe(77);
+  });
+
+  it('fecha ao apertar Esc (listener no documento)', async () => {
+    const select = vi.fn();
+    mountDrawer(vi.fn(), select);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(select).toHaveBeenCalledWith(expect.anything(), null);
   });
 });

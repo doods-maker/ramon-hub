@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 
 const emit = defineEmits(['open-conversation']);
@@ -59,17 +59,15 @@ const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
 
 const close = () => store.dispatch('leads/select', null);
 
-const onKeydown = e => {
+const onDocKeydown = e => {
   if (e.key === 'Escape') close();
 };
+onMounted(() => document.addEventListener('keydown', onDocKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
 </script>
 
 <template>
-  <div
-    v-if="lead"
-    class="fixed inset-0 z-40 flex justify-end"
-    @keydown="onKeydown"
-  >
+  <div v-if="lead" class="fixed inset-0 z-40 flex justify-end">
     <div
       class="absolute inset-0 bg-black/40"
       data-testid="drawer-overlay"
