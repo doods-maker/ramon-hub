@@ -23,7 +23,16 @@ class Lead < ApplicationRecord
       lead_priority_id: lead_priority_id,
       contact_id: contact_id,
       conversation_id: conversation_id,
-      position: position
+      position: position,
+      value: value,
+      source: source,
+      stage_name: lead_stage&.name,
+      stage_color: lead_stage&.color,
+      benefit_type_name: benefit_type&.name,
+      lead_priority_name: lead_priority&.name,
+      sdr_name: sdr&.name,
+      closer_name: closer&.name,
+      contact_name: contact&.name
     }
   end
 
