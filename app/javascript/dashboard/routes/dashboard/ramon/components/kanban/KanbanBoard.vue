@@ -3,15 +3,11 @@ import { computed, onMounted } from 'vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanColumn from './KanbanColumn.vue';
 
-const emit = defineEmits(['new-lead', 'open-conversation']);
+const emit = defineEmits(['new-lead', 'open-conversation', 'open-lead']);
 const store = useStore();
 const getters = useStoreGetters();
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
-const benefitTypes = computed(
-  () => getters['leadConfig/getBenefitTypes'].value
-);
-const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const leadsByStage = stageId => getters['leads/getLeadsByStage'].value(stageId);
 
 const onMove = ({ id, leadStageId, newIndex }) => {
@@ -43,10 +39,9 @@ onMounted(() => {
         :key="stage.id"
         :stage="stage"
         :leads="leadsByStage(stage.id)"
-        :benefit-types="benefitTypes"
-        :priorities="priorities"
         @move="onMove"
         @open-conversation="id => emit('open-conversation', id)"
+        @open-lead="lead => emit('open-lead', lead)"
       />
     </div>
   </div>

@@ -6,10 +6,8 @@ import LeadCard from './LeadCard.vue';
 const props = defineProps({
   stage: { type: Object, required: true },
   leads: { type: Array, default: () => [] },
-  benefitTypes: { type: Array, default: () => [] },
-  priorities: { type: Array, default: () => [] },
 });
-const emit = defineEmits(['move', 'open-conversation']);
+const emit = defineEmits(['move', 'open-conversation', 'open-lead']);
 
 // vuedraggable precisa de um array GRAVÁVEL (v-model) para mover o card de fato.
 // Ligar direto no getter (read-only via :model-value) fazia o card "voltar" ao
@@ -54,9 +52,8 @@ const onChange = evt => {
       <template #item="{ element }">
         <LeadCard
           :lead="element"
-          :benefit-types="benefitTypes"
-          :priorities="priorities"
           @open-conversation="id => emit('open-conversation', id)"
+          @open-lead="lead => emit('open-lead', lead)"
         />
       </template>
     </Draggable>

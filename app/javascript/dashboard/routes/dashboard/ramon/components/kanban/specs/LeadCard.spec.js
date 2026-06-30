@@ -1,0 +1,48 @@
+import { shallowMount } from '@vue/test-utils';
+import LeadCard from '../LeadCard.vue';
+
+const lead = {
+  id: 10,
+  name: 'João',
+  conversation_id: 99,
+  stage_name: 'Negociação',
+  stage_color: '#f59e0b',
+  benefit_type_name: 'Auxílio-acidente',
+  lead_priority_name: 'Alta',
+  value: '12000.50',
+  closer_name: 'Eduardo Schlata',
+};
+
+const mountCard = (props = {}) =>
+  shallowMount(LeadCard, {
+    props: { lead, ...props },
+    global: { mocks: { $t: k => k } },
+  });
+
+describe('LeadCard.vue', () => {
+  it('renderiza nome, benefício e valor formatado em BRL', () => {
+    const wrapper = mountCard();
+    expect(wrapper.text()).toContain('João');
+    expect(wrapper.text()).toContain('Auxílio-acidente');
+    expect(wrapper.text()).toContain('12.000,50');
+  });
+
+  it('aplica a cor da etapa no chip', () => {
+    const wrapper = mountCard();
+    const chip = wrapper.find('[data-testid="stage-chip"]');
+    expect(chip.attributes('style')).toContain('rgb(245, 158, 11)');
+  });
+
+  it('emite open-lead ao clicar no corpo', async () => {
+    const wrapper = mountCard();
+    await wrapper.find('[data-testid="lead-card-body"]').trigger('click');
+    expect(wrapper.emitted('open-lead')[0][0]).toEqual(lead);
+  });
+
+  it('emite open-conversation sem abrir a gaveta (click.stop)', async () => {
+    const wrapper = mountCard();
+    await wrapper.find('[data-testid="open-conversation"]').trigger('click');
+    expect(wrapper.emitted('open-conversation')[0][0]).toBe(99);
+    expect(wrapper.emitted('open-lead')).toBeFalsy();
+  });
+});
