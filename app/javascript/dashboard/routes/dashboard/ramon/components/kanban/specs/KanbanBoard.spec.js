@@ -38,7 +38,7 @@ describe('KanbanBoard.vue', () => {
 
   it('seleciona o lead ao receber open-lead de uma coluna', () => {
     const wrapper = mountBoard();
-    wrapper.findComponent(KanbanColumn).vm.$emit('open-lead', { id: 33 });
+    wrapper.findComponent(KanbanColumn).vm.$emit('openLead', { id: 33 });
     expect(dispatch).toHaveBeenCalledWith('leads/select', 33);
   });
 });

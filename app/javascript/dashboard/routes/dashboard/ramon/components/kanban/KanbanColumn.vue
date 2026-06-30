@@ -7,7 +7,7 @@ const props = defineProps({
   stage: { type: Object, required: true },
   leads: { type: Array, default: () => [] },
 });
-const emit = defineEmits(['move', 'open-conversation', 'open-lead']);
+const emit = defineEmits(['move', 'open-conversation', 'openLead']);
 
 // vuedraggable precisa de um array GRAVÁVEL (v-model) para mover o card de fato.
 // Ligar direto no getter (read-only via :model-value) fazia o card "voltar" ao
@@ -53,7 +53,7 @@ const onChange = evt => {
         <LeadCard
           :lead="element"
           @open-conversation="id => emit('open-conversation', id)"
-          @open-lead="lead => emit('open-lead', lead)"
+          @open-lead="lead => emit('openLead', lead)"
         />
       </template>
     </Draggable>

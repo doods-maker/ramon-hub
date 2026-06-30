@@ -14,7 +14,7 @@ class Lead < ApplicationRecord
   after_create_commit :dispatch_create_event
   after_update_commit :dispatch_update_event
 
-  def push_event_data
+  def push_event_data # rubocop:disable Metrics/CyclomaticComplexity
     {
       id: id,
       name: name,

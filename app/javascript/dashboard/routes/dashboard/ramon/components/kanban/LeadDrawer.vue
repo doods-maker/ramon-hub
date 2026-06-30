@@ -126,7 +126,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
             )
         "
       >
-        <option :value="''">—</option>
+        <option value="">—</option>
         <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
           {{ b.name }}
         </option>
@@ -146,7 +146,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
             )
         "
       >
-        <option :value="''">—</option>
+        <option value="">—</option>
         <option v-for="p in priorities" :key="p.id" :value="p.id">
           {{ p.name }}
         </option>
@@ -163,7 +163,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
             saveSelect('sdr_id', e.target.value ? Number(e.target.value) : null)
         "
       >
-        <option :value="''">—</option>
+        <option value="">—</option>
         <option v-for="a in agents" :key="a.id" :value="a.id">
           {{ a.name }}
         </option>
@@ -183,7 +183,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
             )
         "
       >
-        <option :value="''">—</option>
+        <option value="">—</option>
         <option v-for="a in agents" :key="a.id" :value="a.id">
           {{ a.name }}
         </option>

@@ -42,7 +42,7 @@ RSpec.describe Leads::SeedDefaultConfigService do
   it 'faz backfill da cor ao re-rodar quando a etapa está sem cor' do
     described_class.new(account).perform
     novo = account.lead_stages.find_by(name: 'Novo')
-    novo.update_column(:color, nil)
+    novo.update!(color: nil)
     described_class.new(account).perform
     expect(novo.reload.color).to eq('#6b7280')
   end

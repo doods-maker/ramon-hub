@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils';
+import { shallowMount, mount } from '@vue/test-utils';
 import Draggable from 'vuedraggable';
 import KanbanColumn from '../KanbanColumn.vue';
 import LeadCard from '../LeadCard.vue';
@@ -58,9 +58,12 @@ describe('KanbanColumn.vue', () => {
     expect(wrapper.find('.text-n-slate-9').text()).toBe('2');
   });
 
-  it('re-emite open-lead vindo do LeadCard', () => {
-    const wrapper = mountColumn();
-    wrapper.findComponent(LeadCard).vm.$emit('open-lead', { id: 10 });
-    expect(wrapper.emitted('open-lead')[0][0]).toEqual({ id: 10 });
+  it('re-emite openLead vindo do LeadCard', () => {
+    const wrapper = mount(KanbanColumn, {
+      props: { stage, leads },
+      global: { mocks: { $t: k => k } },
+    });
+    wrapper.findComponent(LeadCard).vm.$emit('openLead', { id: 10 });
+    expect(wrapper.emitted('openLead')[0][0]).toEqual({ id: 10 });
   });
 });

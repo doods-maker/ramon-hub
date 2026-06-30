@@ -32,7 +32,7 @@ RSpec.describe 'Leads API', type: :request do
     expect(response.parsed_body['payload'].size).to eq(1)
   end
 
-  it 'serializa value/source/notes + nomes desnormalizados + contato' do
+  it 'serializa value/source/notes + nomes desnormalizados + contato', :aggregate_failures do
     contact = create(:contact, account: account, name: 'Cliente X',
                                phone_number: '+5547999990000', email: 'x@cli.com')
     bt = account.benefit_types.find_by(name: 'Auxílio-acidente')

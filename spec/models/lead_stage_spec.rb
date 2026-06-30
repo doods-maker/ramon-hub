@@ -19,6 +19,6 @@ RSpec.describe LeadStage do
   end
 
   it 'expõe a coluna color' do
-    expect(LeadStage.column_names).to include('color')
+    expect(described_class.column_names).to include('color')
   end
 end

@@ -4,7 +4,7 @@ import { computed } from 'vue';
 const props = defineProps({
   lead: { type: Object, required: true },
 });
-const emit = defineEmits(['open-conversation', 'open-lead']);
+const emit = defineEmits(['open-conversation', 'openLead']);
 
 const formattedValue = computed(() => {
   const v = props.lead.value;
@@ -38,7 +38,7 @@ const ownerInitials = computed(() => {
       <button
         data-testid="lead-card-body"
         class="flex-1 text-left"
-        @click="emit('open-lead', lead)"
+        @click="emit('openLead', lead)"
       >
         <p class="text-sm font-medium text-n-slate-12">{{ lead.name }}</p>
       </button>

@@ -36,13 +36,13 @@ describe('LeadCard.vue', () => {
   it('emite open-lead ao clicar no corpo', async () => {
     const wrapper = mountCard();
     await wrapper.find('[data-testid="lead-card-body"]').trigger('click');
-    expect(wrapper.emitted('open-lead')[0][0]).toEqual(lead);
+    expect(wrapper.emitted('openLead')[0][0]).toEqual(lead);
   });
 
   it('emite open-conversation sem abrir a gaveta (click.stop)', async () => {
     const wrapper = mountCard();
     await wrapper.find('[data-testid="open-conversation"]').trigger('click');
     expect(wrapper.emitted('open-conversation')[0][0]).toBe(99);
-    expect(wrapper.emitted('open-lead')).toBeFalsy();
+    expect(wrapper.emitted('openLead')).toBeFalsy();
   });
 });
