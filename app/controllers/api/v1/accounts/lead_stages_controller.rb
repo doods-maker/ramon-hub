@@ -6,7 +6,7 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     authorize LeadStage
     @stage = Current.account.lead_stages.new(permitted_params)
     @stage.label = Ramon::StageSlug.label_for(@stage.name)
-    @stage.position ||= next_position
+    @stage.position = next_position
     @stage.save!
     render :show
   end
@@ -27,6 +27,7 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     authorize @stage
     return render_error('destino obrigatório') if params[:move_to_stage_id].blank?
     return render_error('não é possível remover a última etapa') if Current.account.lead_stages.count <= 1
+    return render_error('destino não pode ser a própria etapa') if params[:move_to_stage_id].to_s == @stage.id.to_s
 
     target = Current.account.lead_stages.find(params[:move_to_stage_id])
     ActiveRecord::Base.transaction do
@@ -47,7 +48,7 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     authorize LeadStage, :reorder?
     ActiveRecord::Base.transaction do
       Array(params[:ids]).each_with_index do |id, i|
-        Current.account.lead_stages.where(id: id).update_all(position: i)
+        Current.account.lead_stages.find(id).update!(position: i)
       end
     end
     @stages = Current.account.lead_stages
