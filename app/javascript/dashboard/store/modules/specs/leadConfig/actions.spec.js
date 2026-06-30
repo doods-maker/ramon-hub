@@ -22,6 +22,10 @@ describe('leadConfig actions', () => {
     axios.delete.mockResolvedValue({});
     await actions.deleteStage({ commit }, { id: 3, moveToStageId: 4 });
     expect(commit).toHaveBeenCalledWith(types.DELETE_LEAD_STAGE, 3);
+    expect(axios.delete).toHaveBeenCalledWith(
+      expect.stringContaining('/lead_stages/3'),
+      { params: { move_to_stage_id: 4 } }
+    );
   });
 
   it('reorderStages commita SET_LEAD_STAGES com a coleção', async () => {

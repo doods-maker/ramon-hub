@@ -9,6 +9,10 @@ class LeadStagesAPI extends ApiClient {
   reorder(ids) {
     return axios.post(`${this.url}/reorder`, { ids });
   }
+
+  delete(id, config) {
+    return axios.delete(`${this.url}/${id}`, config);
+  }
 }
 
 export default new LeadStagesAPI();
