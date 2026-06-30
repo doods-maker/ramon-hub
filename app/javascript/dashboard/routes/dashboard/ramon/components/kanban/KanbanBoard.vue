@@ -2,8 +2,9 @@
 import { computed, onMounted } from 'vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanColumn from './KanbanColumn.vue';
+import LeadDrawer from './LeadDrawer.vue';
 
-const emit = defineEmits(['new-lead', 'open-conversation', 'open-lead']);
+const emit = defineEmits(['new-lead', 'open-conversation']);
 const store = useStore();
 const getters = useStoreGetters();
 
@@ -14,9 +15,14 @@ const onMove = ({ id, leadStageId, newIndex }) => {
   store.dispatch('leads/move', { id, leadStageId, position: newIndex });
 };
 
+const onOpenLead = lead => {
+  store.dispatch('leads/select', lead.id);
+};
+
 onMounted(() => {
   store.dispatch('leadConfig/get');
   store.dispatch('leads/get');
+  store.dispatch('agents/get');
 });
 </script>
 
@@ -41,8 +47,9 @@ onMounted(() => {
         :leads="leadsByStage(stage.id)"
         @move="onMove"
         @open-conversation="id => emit('open-conversation', id)"
-        @open-lead="lead => emit('open-lead', lead)"
+        @open-lead="onOpenLead"
       />
     </div>
+    <LeadDrawer @open-conversation="id => emit('open-conversation', id)" />
   </div>
 </template>
