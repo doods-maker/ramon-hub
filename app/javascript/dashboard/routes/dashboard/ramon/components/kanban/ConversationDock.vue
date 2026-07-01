@@ -8,13 +8,17 @@ defineOptions({ name: 'ConversationDock' });
 const store = useStore();
 const dockId = useMapGetter('leads/getDockConversationId');
 const selectedLead = useMapGetter('leads/getSelectedLead');
+const activeChat = useMapGetter('conversations/getSelectedChat');
 
-const chat = computed(() =>
-  store.getters['conversations/getConversationById'](dockId.value)
-);
 const isOpen = computed(() => !!dockId.value);
 const drawerOpen = computed(() => !!selectedLead.value);
-const contactName = computed(() => chat.value?.meta?.sender?.name || '');
+// Só monta a ConversationBox nativa quando a conversa do dock já é a conversa
+// ATIVA no store. Montá-la antes (chat vazio) quebrava o render do dock inteiro
+// no caminho "conversa fria" (antes do setActiveChat async resolver).
+const isReady = computed(
+  () => !!dockId.value && Number(activeChat.value?.id) === Number(dockId.value)
+);
+const contactName = computed(() => activeChat.value?.meta?.sender?.name || '');
 
 const activate = async id => {
   if (!id) return;
@@ -51,7 +55,18 @@ const close = () => store.dispatch('leads/closeDock');
       </button>
     </header>
     <div class="flex-1 min-h-0">
-      <ConversationBox :inbox-id="chat?.inbox_id" :is-inbox-view="false" />
+      <ConversationBox
+        v-if="isReady"
+        :inbox-id="activeChat.inbox_id"
+        :is-inbox-view="false"
+      />
+      <div
+        v-else
+        data-testid="dock-loading"
+        class="flex items-center justify-center h-full text-sm text-n-slate-10"
+      >
+        {{ $t('RAMON.FUNIL.LOADING_CONVERSATION') }}
+      </div>
     </div>
   </div>
 </template>

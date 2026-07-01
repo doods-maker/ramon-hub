@@ -45,6 +45,7 @@
       "BENEFIT": "Tipo de benefício",
       "PRIORITY": "Prioridade",
       "OPEN_CONVERSATION": "Abrir conversa",
+      "LOADING_CONVERSATION": "Carregando conversa…",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar",
       "STAGE": {
