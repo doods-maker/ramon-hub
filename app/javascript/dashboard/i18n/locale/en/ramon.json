@@ -83,7 +83,7 @@
       "CONTACT": "Contact"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Summary" },
+      "TABS": { "SUMMARY": "Summary", "HISTORY": "History" },
       "DISCARD": "Not a lead",
       "HISTORY": {
         "SYSTEM": "System",

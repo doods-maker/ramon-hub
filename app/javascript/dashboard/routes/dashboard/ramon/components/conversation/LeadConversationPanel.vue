@@ -5,6 +5,7 @@ import LeadFields from 'dashboard/routes/dashboard/ramon/components/lead/LeadFie
 import ConversationAction from 'dashboard/routes/dashboard/conversation/ConversationAction.vue';
 import MacrosList from 'dashboard/routes/dashboard/conversation/Macros/List.vue';
 import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
+import LeadHistory from 'dashboard/routes/dashboard/ramon/components/conversation/LeadHistory.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -41,6 +42,13 @@ const discard = async () => {
         {{ $t('RAMON.LEAD_PANEL.TABS.SUMMARY') }}
       </button>
       <button
+        :class="{ 'font-semibold': activeTab === 'historico' }"
+        data-testid="tab-historico"
+        @click="activeTab = 'historico'"
+      >
+        {{ $t('RAMON.LEAD_PANEL.TABS.HISTORY') }}
+      </button>
+      <button
         class="ml-auto text-xs"
         data-testid="lead-discard"
         @click="discard"
@@ -49,12 +57,15 @@ const discard = async () => {
       </button>
     </div>
     <div v-if="lead" class="flex-1 overflow-y-auto p-3">
-      <div class="mb-4 flex flex-col gap-2">
-        <ConversationAction :conversation-id="conversationId" />
-        <MacrosList :conversation-id="conversationId" />
-        <ResolveAction />
-      </div>
-      <LeadFields :lead="lead" />
+      <template v-if="activeTab === 'resumo'">
+        <div class="mb-4 flex flex-col gap-2">
+          <ConversationAction :conversation-id="conversationId" />
+          <MacrosList :conversation-id="conversationId" />
+          <ResolveAction />
+        </div>
+        <LeadFields :lead="lead" />
+      </template>
+      <LeadHistory v-else-if="activeTab === 'historico'" :lead-id="lead.id" />
     </div>
   </div>
 </template>
