@@ -7,6 +7,7 @@ class Lead < ApplicationRecord
   belongs_to :lead_priority, optional: true
   belongs_to :sdr, class_name: 'User', optional: true
   belongs_to :closer, class_name: 'User', optional: true
+  has_many :lead_activities, dependent: :destroy_async
 
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
