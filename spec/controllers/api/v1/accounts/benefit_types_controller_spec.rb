@@ -4,6 +4,10 @@ RSpec.describe 'Benefit Types API', type: :request do
   let(:account) { create(:account) }
   let(:admin) { create(:user, account: account, role: :administrator) }
 
+  # A conta recém-criada já vem semeada (after_create), colidindo com as
+  # posições fixadas abaixo. Limpamos para partir de uma lista vazia.
+  before { account.benefit_types.delete_all }
+
   it 'cria posicionando no fim' do
     account.benefit_types.create!(name: 'A', position: 0)
     post "/api/v1/accounts/#{account.id}/benefit_types",
