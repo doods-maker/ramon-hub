@@ -6,6 +6,7 @@ RSpec.describe 'Lead Activities API', type: :request do
   let(:lead) { create(:lead, account: account) }
 
   it 'lists the activities of a lead in chronological order' do
+    lead.lead_activities.destroy_all # limpa a atividade "created" auto-gerada pelo callback
     lead.lead_activities.create!(account: account, kind: 'created', created_at: 2.days.ago)
     lead.lead_activities.create!(account: account, kind: 'stage_changed',
                                  from_value: 'Novo', to_value: 'Qualificação', user: admin, created_at: 1.hour.ago)

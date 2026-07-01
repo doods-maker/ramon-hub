@@ -2,6 +2,8 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadHistory from '../LeadHistory.vue';
 
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+
 const activities = [
   {
     id: 1,

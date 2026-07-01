@@ -11,8 +11,6 @@ class BackfillLeadCreatedActivities < ActiveRecord::Migration[7.1]
   end
 
   def down
-    # rubocop:disable Rails/SkipsModelValidations
     LeadActivity.where(kind: 'created').delete_all
-    # rubocop:enable Rails/SkipsModelValidations
   end
 end

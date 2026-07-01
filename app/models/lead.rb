@@ -53,7 +53,6 @@ class Lead < ApplicationRecord
     lead_activities.create!(account: account, user: Current.user, kind: 'created', to_value: source)
   end
 
-  # rubocop:disable Metrics/MethodLength
   def record_change_activities
     record_change('lead_stage_id', 'stage_changed') { |id| LeadStage.find_by(id: id)&.name }
     record_change('sdr_id', 'sdr_changed') { |id| User.find_by(id: id)&.name }
@@ -61,7 +60,6 @@ class Lead < ApplicationRecord
     record_change('lead_priority_id', 'priority_changed') { |id| LeadPriority.find_by(id: id)&.name }
     record_change('value', 'value_changed') { |v| v&.to_s }
   end
-  # rubocop:enable Metrics/MethodLength
 
   def record_change(attribute, kind)
     return unless saved_changes.key?(attribute)

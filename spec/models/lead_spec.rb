@@ -46,7 +46,7 @@ RSpec.describe Lead do
     expect(data.keys).to include(:benefit_type_name, :lead_priority_name, :sdr_name, :closer_name, :contact_name)
   end
 
-  context 'lead activities' do
+  context 'when recording lead activities' do
     before { Current.user = nil }
     after { Current.user = nil }
 
