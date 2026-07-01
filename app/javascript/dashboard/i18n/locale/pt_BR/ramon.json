@@ -84,7 +84,18 @@
     },
     "LEAD_PANEL": {
       "TABS": { "SUMMARY": "Resumo" },
-      "DISCARD": "Não é lead"
+      "DISCARD": "Não é lead",
+      "HISTORY": {
+        "SYSTEM": "Sistema",
+        "KIND": {
+          "CREATED": "criou o lead",
+          "STAGE_CHANGED": "moveu de etapa",
+          "SDR_CHANGED": "mudou o SDR",
+          "CLOSER_CHANGED": "mudou o Closer",
+          "PRIORITY_CHANGED": "mudou a prioridade",
+          "VALUE_CHANGED": "mudou o valor"
+        }
+      }
     }
   }
 }
