@@ -207,15 +207,18 @@ const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
         v-for="note in noteList"
         :key="note.id"
         data-testid="note-item"
-        class="pl-2 text-sm border-l-2 border-n-weak"
+        class="flex flex-col gap-1 pl-2 text-sm border-l-2 border-n-weak"
       >
-        <strong v-if="note.author_name">{{ note.author_name }}</strong>
-        <span>{{ note.body }}</span>
+        <strong v-if="note.author_name" class="text-xs opacity-60">{{
+          note.author_name
+        }}</strong>
+        <span class="whitespace-pre-wrap">{{ note.body }}</span>
       </div>
       <textarea
         v-model="newNote"
         data-testid="note-input"
         rows="2"
+        maxlength="1000"
         class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
         :placeholder="$t('RAMON.DRAWER.NOTES_ADD')"
       />
