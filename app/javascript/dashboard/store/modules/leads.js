@@ -79,6 +79,12 @@ export const actions = {
   closeDock: ({ commit }) => {
     commit(types.SET_DOCK_CONVERSATION, null);
   },
+  // Alterna: se o dock já mostra esta conversa, fecha; senão, abre.
+  toggleDock: ({ commit, state: dockState }, conversationId) => {
+    const isSame =
+      Number(dockState.dockConversationId) === Number(conversationId);
+    commit(types.SET_DOCK_CONVERSATION, isSame ? null : conversationId);
+  },
   delete: async ({ commit }, id) => {
     await LeadsAPI.delete(id);
     commit(types.DELETE_LEAD, id);
