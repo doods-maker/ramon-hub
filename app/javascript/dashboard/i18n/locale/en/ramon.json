@@ -81,6 +81,10 @@
       "SOURCE": "Source",
       "NOTES": "Notes",
       "CONTACT": "Contact"
+    },
+    "LEAD_PANEL": {
+      "TABS": { "SUMMARY": "Summary" },
+      "DISCARD": "Not a lead"
     }
   }
 }
