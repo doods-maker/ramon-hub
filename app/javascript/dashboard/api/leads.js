@@ -11,6 +11,10 @@ class LeadsAPI extends ApiClient {
       conversation_id: conversationId,
     });
   }
+
+  getActivities(leadId) {
+    return axios.get(`${this.url}/${leadId}/activities`);
+  }
 }
 
 export default new LeadsAPI();
