@@ -18,4 +18,8 @@ describe('leads getters', () => {
     const state = { records: [{ id: 1, conversation_id: 5 }] };
     expect(getters.getLeadByConversationId(state)(99)).toBeUndefined();
   });
+
+  it('getDockConversationId returns the dock id', () => {
+    expect(getters.getDockConversationId({ dockConversationId: 7 })).toBe(7);
+  });
 });

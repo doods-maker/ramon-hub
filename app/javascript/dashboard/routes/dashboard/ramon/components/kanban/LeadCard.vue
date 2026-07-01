@@ -4,7 +4,7 @@ import { computed } from 'vue';
 const props = defineProps({
   lead: { type: Object, required: true },
 });
-const emit = defineEmits(['open-conversation', 'openLead']);
+const emit = defineEmits(['openConversation', 'openLead']);
 
 const formattedValue = computed(() => {
   const v = props.lead.value;
@@ -41,15 +41,6 @@ const ownerInitials = computed(() => {
         @click="emit('openLead', lead)"
       >
         <p class="text-sm font-medium text-n-slate-12">{{ lead.name }}</p>
-      </button>
-      <button
-        v-if="lead.conversation_id"
-        data-testid="open-conversation"
-        :title="$t('RAMON.FUNIL.OPEN_CONVERSATION')"
-        class="text-n-slate-10 hover:text-n-iris-11"
-        @click.stop="emit('open-conversation', lead.conversation_id)"
-      >
-        <span class="i-lucide-message-square size-4" />
       </button>
     </div>
 
@@ -90,5 +81,16 @@ const ownerInitials = computed(() => {
         {{ ownerInitials }}
       </span>
     </div>
+
+    <button
+      v-if="lead.conversation_id"
+      data-testid="open-conversation"
+      class="flex items-center justify-center gap-1.5 w-full mt-2 px-2 py-1.5 text-xs rounded-lg border border-n-weak text-n-slate-11 hover:text-n-iris-11 hover:border-n-iris-8"
+      @click.stop="emit('openConversation', lead.conversation_id)"
+    >
+      <span class="i-lucide-message-square size-3.5" />{{
+        $t('RAMON.FUNIL.OPEN_CONVERSATION')
+      }}
+    </button>
   </div>
 </template>

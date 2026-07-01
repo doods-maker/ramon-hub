@@ -29,4 +29,16 @@ describe('leads mutations', () => {
     mutations[types.SET_SELECTED_LEAD](state, 5);
     expect(state.selectedId).toBe(5);
   });
+
+  it('SET_DOCK_CONVERSATION guarda o id da conversa no dock', () => {
+    const state = { dockConversationId: null };
+    mutations[types.SET_DOCK_CONVERSATION](state, 42);
+    expect(state.dockConversationId).toBe(42);
+  });
+
+  it('SET_DOCK_CONVERSATION limpa o dock com null', () => {
+    const state = { dockConversationId: 42 };
+    mutations[types.SET_DOCK_CONVERSATION](state, null);
+    expect(state.dockConversationId).toBeNull();
+  });
 });

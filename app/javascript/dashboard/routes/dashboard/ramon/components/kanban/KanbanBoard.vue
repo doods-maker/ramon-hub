@@ -5,9 +5,10 @@ import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanColumn from './KanbanColumn.vue';
 import LeadDrawer from './LeadDrawer.vue';
+import ConversationDock from './ConversationDock.vue';
 import RemoveStageModal from './RemoveStageModal.vue';
 
-const emit = defineEmits(['new-lead', 'open-conversation']);
+const emit = defineEmits(['new-lead']);
 const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
@@ -24,6 +25,7 @@ const onMove = ({ id, leadStageId, newIndex }) => {
 const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
 };
+const onOpenConversation = id => store.dispatch('leads/openDock', id);
 
 const onRenameStage = ({ id, name }) =>
   store.dispatch('leadConfig/updateStage', { id, name });
@@ -98,7 +100,7 @@ onMounted(() => {
             :stage="element"
             :leads="leadsByStage(element.id)"
             @move="onMove"
-            @open-conversation="id => emit('open-conversation', id)"
+            @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
             @rename-stage="onRenameStage"
             @recolor-stage="onRecolorStage"
@@ -114,7 +116,8 @@ onMounted(() => {
         <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.STAGE.ADD') }}
       </button>
     </div>
-    <LeadDrawer @open-conversation="id => emit('open-conversation', id)" />
+    <LeadDrawer @open-conversation="onOpenConversation" />
+    <ConversationDock />
     <RemoveStageModal
       v-if="stageToRemove"
       :stage="stageToRemove"

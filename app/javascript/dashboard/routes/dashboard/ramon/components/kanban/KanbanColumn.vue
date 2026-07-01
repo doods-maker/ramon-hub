@@ -10,7 +10,7 @@ const props = defineProps({
 });
 const emit = defineEmits([
   'move',
-  'open-conversation',
+  'openConversation',
   'openLead',
   'renameStage',
   'recolorStage',
@@ -86,7 +86,7 @@ const onChange = evt => {
       <template #item="{ element }">
         <LeadCard
           :lead="element"
-          @open-conversation="id => emit('open-conversation', id)"
+          @open-conversation="id => emit('openConversation', id)"
           @open-lead="lead => emit('openLead', lead)"
         />
       </template>

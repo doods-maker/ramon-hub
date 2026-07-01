@@ -73,3 +73,17 @@ describe('leads actions', () => {
     );
   });
 });
+
+describe('leads/openDock & closeDock', () => {
+  it('openDock commits SET_DOCK_CONVERSATION with the id', () => {
+    const commit = vi.fn();
+    actions.openDock({ commit }, 42);
+    expect(commit).toHaveBeenCalledWith(types.SET_DOCK_CONVERSATION, 42);
+  });
+
+  it('closeDock commits SET_DOCK_CONVERSATION with null', () => {
+    const commit = vi.fn();
+    actions.closeDock({ commit });
+    expect(commit).toHaveBeenCalledWith(types.SET_DOCK_CONVERSATION, null);
+  });
+});

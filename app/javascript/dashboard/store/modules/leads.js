@@ -5,6 +5,7 @@ import LeadsAPI from '../../api/leads';
 export const state = {
   records: [],
   selectedId: null,
+  dockConversationId: null,
   uiFlags: {
     isFetching: false,
     isCreating: false,
@@ -29,6 +30,9 @@ export const getters = {
   },
   getLeadByConversationId: _state => conversationId =>
     _state.records.find(lead => lead.conversation_id === conversationId),
+  getDockConversationId(_state) {
+    return _state.dockConversationId;
+  },
 };
 
 export const actions = {
@@ -68,6 +72,12 @@ export const actions = {
   },
   select: ({ commit }, id) => {
     commit(types.SET_SELECTED_LEAD, id);
+  },
+  openDock: ({ commit }, conversationId) => {
+    commit(types.SET_DOCK_CONVERSATION, conversationId);
+  },
+  closeDock: ({ commit }) => {
+    commit(types.SET_DOCK_CONVERSATION, null);
   },
   delete: async ({ commit }, id) => {
     await LeadsAPI.delete(id);
@@ -112,6 +122,9 @@ export const mutations = {
   },
   [types.SET_SELECTED_LEAD](_state, id) {
     _state.selectedId = id;
+  },
+  [types.SET_DOCK_CONVERSATION](_state, id) {
+    _state.dockConversationId = id;
   },
 };
 
