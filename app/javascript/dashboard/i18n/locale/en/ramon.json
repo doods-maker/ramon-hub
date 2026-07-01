@@ -45,6 +45,7 @@
       "BENEFIT": "Benefit type",
       "PRIORITY": "Priority",
       "OPEN_CONVERSATION": "Open conversation",
+      "LOADING_CONVERSATION": "Loading conversation…",
       "CANCEL": "Cancel",
       "SAVE": "Save",
       "STAGE": {

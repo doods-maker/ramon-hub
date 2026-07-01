@@ -26,6 +26,7 @@ const build = ({ startWithChat = true, lead = null } = {}) => {
         namespaced: true,
         getters: {
           getConversationById: () => () => (present ? chat : undefined),
+          getSelectedChat: () => (present ? chat : {}),
         },
         actions: { getConversation, setActiveChat },
       },
@@ -81,5 +82,43 @@ describe('ConversationDock', () => {
     expect(
       wrapper.find('[data-testid="conversation-dock"]').classes().join(' ')
     ).toContain('right-[25rem]');
+  });
+
+  it('shows a loading placeholder and no ConversationBox until the chat is active', async () => {
+    const store = createStore({
+      modules: {
+        leads: {
+          namespaced: true,
+          getters: {
+            getDockConversationId: () => 42,
+            getSelectedLead: () => null,
+          },
+          actions: { closeDock: vi.fn() },
+        },
+        conversations: {
+          namespaced: true,
+          getters: {
+            getConversationById: () => () => undefined,
+            getSelectedChat: () => ({}),
+          },
+          actions: {
+            getConversation: vi.fn().mockReturnValue(new Promise(() => {})),
+            setActiveChat: vi.fn(),
+          },
+        },
+      },
+    });
+    const wrapper = mount(ConversationDock, {
+      global: {
+        plugins: [store],
+        mocks: { $t: k => k },
+        stubs: { ConversationBox: true },
+      },
+    });
+    await flushPromises();
+    expect(wrapper.find('[data-testid="dock-loading"]').exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'ConversationBox' }).exists()).toBe(
+      false
+    );
   });
 });
