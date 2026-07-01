@@ -8,7 +8,7 @@ RSpec.describe 'Lead Stages API', type: :request do
   # A conta recém-criada já vem semeada (Leads::SeedDefaultConfigService no
   # after_create), o que colide com os nomes/posições fixados abaixo. Limpamos
   # para cada exemplo partir de um funil vazio.
-  before { account.lead_stages.delete_all }
+  before { account.lead_stages.destroy_all }
 
   describe 'POST create' do
     it 'cria a etapa derivando a etiqueta e posicionando no fim' do

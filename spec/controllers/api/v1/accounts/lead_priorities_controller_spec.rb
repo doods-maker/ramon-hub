@@ -6,7 +6,7 @@ RSpec.describe 'Lead Priorities API', type: :request do
 
   # A conta recém-criada já vem semeada (after_create) com Alta/Média/Baixa,
   # colidindo com os nomes/posições abaixo. Limpamos para partir do zero.
-  before { account.lead_priorities.delete_all }
+  before { account.lead_priorities.destroy_all }
 
   it 'cria com peso e posição no fim' do
     account.lead_priorities.create!(name: 'Alta', weight: 3, position: 0)
