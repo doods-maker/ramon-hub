@@ -13,7 +13,6 @@ json.custom_attributes lead.custom_attributes
 
 json.value lead.value
 json.source lead.source
-json.notes lead.notes
 
 json.stage_name lead.lead_stage&.name
 json.stage_color lead.lead_stage&.color

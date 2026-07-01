@@ -31,8 +31,8 @@ RSpec.describe Lead do
     lead.update!(name: 'Novo Nome')
   end
 
-  it 'expõe as colunas A1 (value, source, notes)' do
-    expect(described_class.column_names).to include('value', 'source', 'notes')
+  it 'expõe as colunas A1 (value, source)' do
+    expect(described_class.column_names).to include('value', 'source')
   end
 
   it 'push_event_data inclui os campos do card rico' do
