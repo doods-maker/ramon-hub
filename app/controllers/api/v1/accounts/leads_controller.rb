@@ -24,12 +24,31 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   def for_conversation
     conversation = Current.account.conversations.find(params[:conversation_id])
-    @lead = Current.account.leads.find_by(conversation_id: conversation.id)
-    @lead ||= create_lead_for(conversation)
+    @lead = find_or_create_lead_for(conversation)
     authorize(@lead, :show?)
   end
 
   private
+
+  def find_or_create_lead_for(conversation)
+    lead = Current.account.leads.find_by(conversation_id: conversation.id)
+    return lead if lead
+
+    lead = find_lead_for_contact(conversation)
+    return lead if lead
+
+    create_lead_for(conversation)
+  end
+
+  def find_lead_for_contact(conversation)
+    return if conversation.contact_id.blank?
+
+    lead = Current.account.leads.find_by(contact_id: conversation.contact_id)
+    return if lead.blank?
+
+    lead.update!(conversation_id: conversation.id) if lead.conversation_id != conversation.id
+    lead
+  end
 
   def fetch_lead
     @lead = Current.account.leads.find(params[:id])

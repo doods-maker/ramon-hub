@@ -92,5 +92,21 @@ RSpec.describe 'Leads API', type: :request do
       end.not_to(change(account.leads, :count))
       expect(response.parsed_body['id']).to eq(existing.id)
     end
+
+    it 'dedupes by contact when the same contact has a lead on a different conversation' do
+      existing = account.leads.create!(conversation: conversation, contact: contact,
+                                       lead_stage: account.lead_stages.order(:position).first,
+                                       name: 'X')
+      new_conversation = create(:conversation, account: account, contact: contact)
+
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+             params: { conversation_id: new_conversation.id },
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to(change(account.leads, :count))
+
+      expect(response.parsed_body['id']).to eq(existing.id)
+      expect(existing.reload.conversation_id).to eq(new_conversation.id)
+    end
   end
 end
