@@ -43,8 +43,12 @@
 | `app/models/lead.rb` | +callbacks `after_create_commit :record_created_activity` / `after_update_commit :record_change_activities` + métodos privados `record_created_activity`/`record_change_activities`/`record_change` | grava `lead_activities` (com autor via `Current.user`) na criação e em mudanças de `lead_stage_id`/`sdr_id`/`closer_id`/`lead_priority_id`/`value` | 1b-i |
 | `config/routes.rb` | `resources :activities, only: [:index], controller: 'lead_activities'` dentro do bloco `resources :leads` (após `collection { post :for_conversation }`) | endpoint read-only de timeline de atividades do lead | 1b-i |
 | `app/views/api/v1/models/_inbox.json.jbuilder` | +`json.auto_create_lead resource.auto_create_lead` após `json.business_name` (~linha 21) | serializa flag para o frontend | 2D |
+| `app/models/account.rb` | +`has_many :lead_notes, dependent: :destroy_async` (junto de `:lead_activities`, alfabético) | notas discretas do lead | 1b-ii |
+| `app/models/lead.rb` | +`has_many :lead_notes, dependent: :destroy_async` (junto de `:lead_activities`) | notas discretas do lead | 1b-ii |
 | `app/javascript/dashboard/routes/dashboard/settings/inbox/Settings.vue` | +`autoCreateLead` em `data()`, `syncInboxData()`, payload de `updateInbox()` e template (`SettingsToggleSection` sem `v-if`) | toggle UI da flag em todas as inboxes | 2D |
 | `app/javascript/dashboard/i18n/locale/en/inboxMgmt.json` e `pt_BR/inboxMgmt.json` | +`AUTO_CREATE_LEAD.LABEL`/`SUB_TEXT` dentro de `SETTINGS_POPUP` | i18n do toggle | 2D |
+| `app/views/api/v1/accounts/leads/_lead.json.jbuilder` | -`json.notes lead.notes` (removida, coluna dropada; notas viraram `lead_notes`) | fim do blob `leads.notes` | 1b-ii |
+| `app/controllers/api/v1/accounts/leads_controller.rb` | -`:notes` removido de `permitted_params` | fim do blob `leads.notes` | 1b-ii |
 
 ## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
 | Arquivo | Responsabilidade | Fase |
@@ -73,6 +77,16 @@
 | `app/policies/lead_activity_policy.rb` | policy com `index?` (evita `Pundit::NotDefinedError`) | autorização do endpoint de atividades | 1b-i |
 | `app/views/api/v1/accounts/lead_activities/index.json.jbuilder` e `_lead_activity.json.jbuilder` | serialização `{ payload: [...] }` da timeline | resposta JSON do endpoint de atividades | 1b-i |
 | `spec/controllers/api/v1/accounts/lead_activities_controller_spec.rb` | request spec: lista atividades em ordem cronológica, autor e valores | cobertura do endpoint de atividades | 1b-i |
+| `db/migrate/20260701000003_create_lead_notes.rb` | migration: tabela `lead_notes` (account_id, lead_id, user_id opcional, body:text, timestamps) + índice `[lead_id, created_at]` | notas discretas do lead | 1b-ii |
+| `app/models/lead_note.rb` | model `LeadNote` — validação de `body`, `default_scope` por `created_at` asc | notas discretas do lead | 1b-ii |
+| `spec/models/lead_note_spec.rb` | specs: válido com lead+body, exige body, belongs_to user opcional | cobertura do LeadNote | 1b-ii |
+| `config/routes.rb` | `resources :notes, only: [:index, :create], controller: 'lead_notes'` dentro do bloco `resources :leads` (após `resources :activities`) | endpoints index/create de notas discretas do lead | 1b-ii |
+| `app/controllers/api/v1/accounts/lead_notes_controller.rb` | controller `index`/`create` (fetch_lead + authorize via LeadPolicy#show? em cada action, sem `check_authorization`) | endpoints de notas discretas do lead | 1b-ii |
+| `app/policies/lead_note_policy.rb` | policy com `index?`/`create?` (defensiva, mesmo sem `check_authorization` declarado) | autorização do endpoint de notas | 1b-ii |
+| `app/views/api/v1/accounts/lead_notes/index.json.jbuilder`, `_lead_note.json.jbuilder` e `create.json.jbuilder` | serialização `{ payload: [...] }` da listagem e da nota criada (render implícito) | resposta JSON do endpoint de notas | 1b-ii |
+| `spec/controllers/api/v1/accounts/lead_notes_controller_spec.rb` | request spec: lista notas em ordem cronológica com autor; cria nota autorada pelo usuário atual | cobertura do endpoint de notas | 1b-ii |
+| `db/migrate/20260701000004_backfill_lead_notes_from_blob.rb` | migration idempotente: copia `leads.notes` (blob) → 1 `LeadNote` por lead (user nil, `created_at = lead.created_at`); `down` no-op | migração do blob para notas discretas | 1b-ii |
+| `db/migrate/20260701000005_remove_notes_from_leads.rb` | migration: `remove_column :leads, :notes, :text` | remoção definitiva do blob `leads.notes` | 1b-ii |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

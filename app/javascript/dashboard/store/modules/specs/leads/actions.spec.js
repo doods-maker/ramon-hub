@@ -54,4 +54,22 @@ describe('leads actions', () => {
     const result = await actions.fetchActivities({}, 7);
     expect(result).toEqual(activities);
   });
+
+  it('fetchNotes gets notes and returns the payload array', async () => {
+    const notes = [{ id: 1, body: 'a' }];
+    axios.get.mockResolvedValue({ data: { payload: notes } });
+    const result = await actions.fetchNotes({}, 5);
+    expect(result).toEqual(notes);
+  });
+
+  it('createNote posts a note and returns it', async () => {
+    const note = { id: 9, body: 'nova' };
+    axios.post.mockResolvedValue({ data: note });
+    const result = await actions.createNote({}, { leadId: 5, body: 'nova' });
+    expect(result).toEqual(note);
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/5/notes'),
+      { body: 'nova' }
+    );
+  });
 });

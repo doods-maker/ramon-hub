@@ -25,7 +25,12 @@ const buildStore = (updateSpy, selectSpy) =>
       leads: {
         namespaced: true,
         getters: { getSelectedLead: () => lead },
-        actions: { update: updateSpy, select: selectSpy },
+        actions: {
+          update: updateSpy,
+          select: selectSpy,
+          fetchNotes: vi.fn().mockResolvedValue([]),
+          createNote: vi.fn(),
+        },
       },
       leadConfig: {
         namespaced: true,

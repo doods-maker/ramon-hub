@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_01_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_01_000005) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -970,6 +970,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_01_000002) do
     t.index ["user_id"], name: "index_lead_activities_on_user_id"
   end
 
+  create_table "lead_notes", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "lead_id", null: false
+    t.bigint "user_id"
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_lead_notes_on_account_id"
+    t.index ["lead_id", "created_at"], name: "index_lead_notes_on_lead_id_and_created_at"
+    t.index ["lead_id"], name: "index_lead_notes_on_lead_id"
+    t.index ["user_id"], name: "index_lead_notes_on_user_id"
+  end
+
   create_table "lead_priorities", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "name", null: false
@@ -1011,7 +1024,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_01_000002) do
     t.datetime "updated_at", null: false
     t.decimal "value", precision: 12, scale: 2
     t.string "source"
-    t.text "notes"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -1424,6 +1436,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_01_000002) do
   add_foreign_key "lead_activities", "accounts"
   add_foreign_key "lead_activities", "leads"
   add_foreign_key "lead_activities", "users"
+  add_foreign_key "lead_notes", "accounts"
+  add_foreign_key "lead_notes", "leads"
+  add_foreign_key "lead_notes", "users"
   add_foreign_key "user_sessions", "users"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
