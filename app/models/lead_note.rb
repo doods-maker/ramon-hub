@@ -3,7 +3,7 @@ class LeadNote < ApplicationRecord
   belongs_to :lead
   belongs_to :user, optional: true
 
-  validates :body, presence: true
+  validates :body, presence: true, length: { maximum: 1000 }
 
   default_scope { order(created_at: :asc) }
 

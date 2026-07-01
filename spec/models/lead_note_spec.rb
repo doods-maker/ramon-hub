@@ -12,6 +12,10 @@ RSpec.describe LeadNote do
     expect(described_class.new(account: account, lead: lead, body: nil)).not_to be_valid
   end
 
+  it 'rejects a body longer than 1000 characters' do
+    expect(described_class.new(account: account, lead: lead, body: 'a' * 1001)).not_to be_valid
+  end
+
   it 'belongs to an optional author' do
     user = create(:user, account: account)
     note = described_class.create!(account: account, lead: lead, user: user, body: 'x')
