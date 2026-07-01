@@ -7,6 +7,10 @@ class LeadPolicy < ApplicationPolicy
     @account_user.administrator? || @account_user.agent?
   end
 
+  def for_conversation?
+    @account_user.administrator? || @account_user.agent?
+  end
+
   def create?
     @account_user.administrator? || @account_user.agent?
   end

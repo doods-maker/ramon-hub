@@ -64,4 +64,49 @@ RSpec.describe 'Leads API', type: :request do
     expect(lead.source).to eq('Meta Ads')
     expect(lead.notes).to eq('cliente quente')
   end
+
+  describe 'POST /api/v1/accounts/{account}/leads/for_conversation' do
+    let(:contact) { create(:contact, account: account) }
+    let(:conversation) { create(:conversation, account: account, contact: contact) }
+
+    it 'creates a lead in the default stage when none exists' do
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+             params: { conversation_id: conversation.id },
+             headers: admin.create_new_auth_token, as: :json
+      end.to change(account.leads, :count).by(1)
+      expect(response).to have_http_status(:success)
+      body = response.parsed_body
+      expect(body['conversation_id']).to eq(conversation.id)
+      expect(body['stage_name']).to be_present
+    end
+
+    it 'returns the existing lead without creating a duplicate' do
+      existing = account.leads.create!(conversation: conversation, contact: contact,
+                                       lead_stage: account.lead_stages.order(:position).first,
+                                       name: 'X')
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+             params: { conversation_id: conversation.id },
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to(change(account.leads, :count))
+      expect(response.parsed_body['id']).to eq(existing.id)
+    end
+
+    it 'dedupes by contact when the same contact has a lead on a different conversation' do
+      existing = account.leads.create!(conversation: conversation, contact: contact,
+                                       lead_stage: account.lead_stages.order(:position).first,
+                                       name: 'X')
+      new_conversation = create(:conversation, account: account, contact: contact)
+
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+             params: { conversation_id: new_conversation.id },
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to(change(account.leads, :count))
+
+      expect(response.parsed_body['id']).to eq(existing.id)
+      expect(existing.reload.conversation_id).to eq(new_conversation.id)
+    end
+  end
 end

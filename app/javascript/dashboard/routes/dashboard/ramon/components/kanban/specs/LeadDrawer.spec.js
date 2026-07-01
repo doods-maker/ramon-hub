@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadDrawer from '../LeadDrawer.vue';
 
@@ -46,7 +46,7 @@ const buildStore = (updateSpy, selectSpy) =>
   });
 
 const mountDrawer = (updateSpy = vi.fn(), selectSpy = vi.fn()) =>
-  shallowMount(LeadDrawer, {
+  mount(LeadDrawer, {
     global: {
       plugins: [buildStore(updateSpy, selectSpy)],
       mocks: { $t: k => k },

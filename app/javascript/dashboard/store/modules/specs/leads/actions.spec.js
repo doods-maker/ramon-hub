@@ -34,4 +34,17 @@ describe('leads actions', () => {
     actions.select({ commit }, 42);
     expect(commit).toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 42);
   });
+
+  it('ensureForConversation posts to for_conversation, merges and selects the lead', async () => {
+    const lead = { id: 7, conversation_id: 99 };
+    axios.post.mockResolvedValue({ data: lead });
+    const commit = vi.fn();
+    const result = await actions.ensureForConversation(
+      { commit },
+      { conversationId: 99 }
+    );
+    expect(result).toEqual(lead);
+    expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD, lead);
+    expect(commit).toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 7);
+  });
 });
