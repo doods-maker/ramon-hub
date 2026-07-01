@@ -10,7 +10,6 @@ defineOptions({ name: 'LeadConversationPanel' });
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
-  inboxId: { type: Number, default: undefined },
 });
 const emit = defineEmits(['discarded']);
 const store = useStore();

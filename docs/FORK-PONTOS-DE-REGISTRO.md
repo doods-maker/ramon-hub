@@ -20,6 +20,7 @@
 | `config/routes.rb` | `resource :lead_config, only: [:show]` dentro do bloco `namespace :accounts do` (ao lado de `resources :labels`) | endpoint de leitura da config do funil | 2A |
 | `config/routes.rb` | `resources :leads` dentro do bloco `namespace :accounts do` (após `resource :lead_config`) | API CRUD de leads (index/show/create/update/destroy) | 2A |
 | `config/routes.rb` | collection route `for_conversation` em `leads` | painel do lead na conversa acha-ou-cria | 1a |
+| `app/javascript/dashboard/components/widgets/conversation/ConversationSidebar.vue` | renderiza `LeadConversationPanel` no lugar do `ContactPanel` quando não-descartado (`discardedConversations` Set por conversationId) + largura ~metade (`md:w-[420px] 2xl:w-[480px]` vs `md:w-[320px] 2xl:w-[360px]`) | painel do lead na conversa | 1a |
 | `app/javascript/dashboard/store/index.js` | `import leads/leadConfig` após `labels`; `leads, leadConfig,` no objeto `modules` | registra módulos Vuex do funil de leads | 2A |
 | `app/javascript/dashboard/store/mutation-types.js` | bloco `// Ramon — Leads` (SET_LEAD_UI_FLAG, SET_LEADS, ADD_LEAD, EDIT_LEAD, DELETE_LEAD, SET_LEAD_CONFIG) após bloco Labels | mutation types dos módulos leads/leadConfig | 2A |
 | `app/javascript/dashboard/routes/dashboard/dashboard.routes.js` | import `ramonRoutes` + `...ramonRoutes` no array children | seção Intranet | 1A |
