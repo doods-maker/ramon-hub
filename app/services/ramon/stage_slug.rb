@@ -8,7 +8,7 @@ class Ramon::StageSlug
   def self.label_for(name)
     slug = I18n.transliterate(name.to_s.strip.downcase)
                .gsub(/[^a-z0-9]+/, '-')
-               .gsub(/-+/, '-')
+               .squeeze('-')
                .gsub(/\A-|-\z/, '')
     "#{PREFIX}#{slug}"
   end

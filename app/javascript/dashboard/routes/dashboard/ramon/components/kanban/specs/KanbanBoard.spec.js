@@ -32,7 +32,11 @@ const mountBoard = () => {
   const store = buildStore();
   store.dispatch = dispatch;
   return mount(KanbanBoard, {
-    global: { plugins: [store], mocks: { $t: k => k } },
+    global: {
+      plugins: [store],
+      mocks: { $t: k => k },
+      stubs: { LeadDrawer: true },
+    },
   });
 };
 
