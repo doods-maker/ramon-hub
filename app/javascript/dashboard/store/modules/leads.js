@@ -27,6 +27,8 @@ export const getters = {
   getSelectedLead(_state) {
     return _state.records.find(lead => lead.id === _state.selectedId) || null;
   },
+  getLeadByConversationId: _state => conversationId =>
+    _state.records.find(lead => lead.conversation_id === conversationId),
 };
 
 export const actions = {
@@ -70,6 +72,13 @@ export const actions = {
   delete: async ({ commit }, id) => {
     await LeadsAPI.delete(id);
     commit(types.DELETE_LEAD, id);
+  },
+  ensureForConversation: async ({ commit }, { conversationId }) => {
+    const response = await LeadsAPI.forConversation(conversationId);
+    const lead = response.data;
+    commit(types.MERGE_LEAD, lead);
+    commit(types.SET_SELECTED_LEAD, lead.id);
+    return lead;
   },
 };
 
