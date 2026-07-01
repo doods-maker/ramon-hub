@@ -40,6 +40,7 @@
 | `app/controllers/api/v1/accounts/inboxes_controller.rb` | `:auto_create_lead` adicionado ao array de `inbox_attributes` (método `inbox_attributes`, ~linha 160) | expõe parâmetro para o update da inbox | 2D |
 | `app/models/account.rb` | +`has_many :lead_activities, dependent: :destroy_async` (junto de `:lead_priorities`/`:lead_stages`/`:leads`) | timeline de atividades do lead | 1b-i |
 | `app/models/lead.rb` | +`has_many :lead_activities, dependent: :destroy_async` (junto das demais associações) | timeline de atividades do lead | 1b-i |
+| `app/models/lead.rb` | +callbacks `after_create_commit :record_created_activity` / `after_update_commit :record_change_activities` + métodos privados `record_created_activity`/`record_change_activities`/`record_change` | grava `lead_activities` (com autor via `Current.user`) na criação e em mudanças de `lead_stage_id`/`sdr_id`/`closer_id`/`lead_priority_id`/`value` | 1b-i |
 | `app/views/api/v1/models/_inbox.json.jbuilder` | +`json.auto_create_lead resource.auto_create_lead` após `json.business_name` (~linha 21) | serializa flag para o frontend | 2D |
 | `app/javascript/dashboard/routes/dashboard/settings/inbox/Settings.vue` | +`autoCreateLead` em `data()`, `syncInboxData()`, payload de `updateInbox()` e template (`SettingsToggleSection` sem `v-if`) | toggle UI da flag em todas as inboxes | 2D |
 | `app/javascript/dashboard/i18n/locale/en/inboxMgmt.json` e `pt_BR/inboxMgmt.json` | +`AUTO_CREATE_LEAD.LABEL`/`SUB_TEXT` dentro de `SETTINGS_POPUP` | i18n do toggle | 2D |
