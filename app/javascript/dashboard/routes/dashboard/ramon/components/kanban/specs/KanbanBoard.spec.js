@@ -35,13 +35,27 @@ const mountBoard = () => {
     global: {
       plugins: [store],
       mocks: { $t: k => k },
-      stubs: { LeadDrawer: true },
+      stubs: { LeadDrawer: true, ConversationDock: true },
     },
   });
 };
 
 describe('KanbanBoard.vue', () => {
   beforeEach(() => dispatch.mockClear());
+
+  it('opens the dock (dispatch leads/openDock) when a column emits open-conversation', async () => {
+    const wrapper = mountBoard();
+    wrapper.findComponent(KanbanColumn).vm.$emit('open-conversation', 55);
+    await wrapper.vm.$nextTick();
+    expect(dispatch).toHaveBeenCalledWith('leads/openDock', 55);
+  });
+
+  it('mounts the ConversationDock', () => {
+    const wrapper = mountBoard();
+    expect(wrapper.findComponent({ name: 'ConversationDock' }).exists()).toBe(
+      true
+    );
+  });
 
   it('busca leadConfig, leads e agents no mount', () => {
     mountBoard();
