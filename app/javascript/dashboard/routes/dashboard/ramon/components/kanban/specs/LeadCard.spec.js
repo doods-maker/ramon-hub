@@ -49,7 +49,7 @@ describe('LeadCard.vue', () => {
   it('emits open-conversation with the id and does not open the lead', async () => {
     const wrapper = mountCard({ lead: { ...lead, conversation_id: 99 } });
     await wrapper.find('[data-testid="open-conversation"]').trigger('click');
-    expect(wrapper.emitted('open-conversation')[0]).toEqual([99]);
+    expect(wrapper.emitted('openConversation')[0]).toEqual([99]);
     expect(wrapper.emitted('openLead')).toBeFalsy();
   });
 

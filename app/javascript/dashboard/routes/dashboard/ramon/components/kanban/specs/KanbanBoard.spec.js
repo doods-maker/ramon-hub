@@ -45,7 +45,7 @@ describe('KanbanBoard.vue', () => {
 
   it('opens the dock (dispatch leads/openDock) when a column emits open-conversation', async () => {
     const wrapper = mountBoard();
-    wrapper.findComponent(KanbanColumn).vm.$emit('open-conversation', 55);
+    wrapper.findComponent(KanbanColumn).vm.$emit('openConversation', 55);
     await wrapper.vm.$nextTick();
     expect(dispatch).toHaveBeenCalledWith('leads/openDock', 55);
   });

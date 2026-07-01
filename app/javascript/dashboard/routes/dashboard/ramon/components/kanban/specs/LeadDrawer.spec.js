@@ -107,7 +107,7 @@ describe('LeadDrawer.vue', () => {
     await wrapper
       .find('[data-testid="drawer-open-conversation"]')
       .trigger('click');
-    expect(wrapper.emitted('open-conversation')[0][0]).toBe(77);
+    expect(wrapper.emitted('openConversation')[0][0]).toBe(77);
   });
 
   it('fecha ao apertar Esc (listener no documento)', async () => {

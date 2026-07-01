@@ -4,7 +4,7 @@ import { computed } from 'vue';
 const props = defineProps({
   lead: { type: Object, required: true },
 });
-const emit = defineEmits(['open-conversation', 'openLead']);
+const emit = defineEmits(['openConversation', 'openLead']);
 
 const formattedValue = computed(() => {
   const v = props.lead.value;
@@ -86,7 +86,7 @@ const ownerInitials = computed(() => {
       v-if="lead.conversation_id"
       data-testid="open-conversation"
       class="flex items-center justify-center gap-1.5 w-full mt-2 px-2 py-1.5 text-xs rounded-lg border border-n-weak text-n-slate-11 hover:text-n-iris-11 hover:border-n-iris-8"
-      @click.stop="emit('open-conversation', lead.conversation_id)"
+      @click.stop="emit('openConversation', lead.conversation_id)"
     >
       <span class="i-lucide-message-square size-3.5" />{{
         $t('RAMON.FUNIL.OPEN_CONVERSATION')

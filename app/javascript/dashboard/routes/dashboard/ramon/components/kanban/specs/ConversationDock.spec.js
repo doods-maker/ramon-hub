@@ -5,8 +5,11 @@ import ConversationDock from '../ConversationDock.vue';
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 
 const chat = { id: 42, inbox_id: 3, meta: { sender: { name: 'Zé' } } };
-const build = ({ dockId = 42, hasChat = true, lead = null } = {}) => {
-  const getConversation = vi.fn().mockResolvedValue();
+const build = ({ startWithChat = true, lead = null } = {}) => {
+  let present = startWithChat;
+  const getConversation = vi.fn().mockImplementation(() => {
+    present = true;
+  });
   const setActiveChat = vi.fn();
   const closeDock = vi.fn();
   const store = createStore({
@@ -14,7 +17,7 @@ const build = ({ dockId = 42, hasChat = true, lead = null } = {}) => {
       leads: {
         namespaced: true,
         getters: {
-          getDockConversationId: () => dockId,
+          getDockConversationId: () => 42,
           getSelectedLead: () => lead,
         },
         actions: { closeDock },
@@ -22,7 +25,7 @@ const build = ({ dockId = 42, hasChat = true, lead = null } = {}) => {
       conversations: {
         namespaced: true,
         getters: {
-          getConversationById: () => id => (hasChat ? chat : undefined),
+          getConversationById: () => () => (present ? chat : undefined),
         },
         actions: { getConversation, setActiveChat },
       },
@@ -44,7 +47,9 @@ const mountDock = ctx => {
 
 describe('ConversationDock', () => {
   it('fetches the conversation when absent, then activates it', async () => {
-    const { getConversation, setActiveChat } = mountDock({ hasChat: false });
+    const { getConversation, setActiveChat } = mountDock({
+      startWithChat: false,
+    });
     await flushPromises();
     expect(getConversation).toHaveBeenCalledWith(expect.anything(), 42);
     expect(setActiveChat).toHaveBeenCalledWith(expect.anything(), {
@@ -53,7 +58,9 @@ describe('ConversationDock', () => {
   });
 
   it('does not refetch when the conversation is already in the store', async () => {
-    const { getConversation, setActiveChat } = mountDock({ hasChat: true });
+    const { getConversation, setActiveChat } = mountDock({
+      startWithChat: true,
+    });
     await flushPromises();
     expect(getConversation).not.toHaveBeenCalled();
     expect(setActiveChat).toHaveBeenCalledWith(expect.anything(), {

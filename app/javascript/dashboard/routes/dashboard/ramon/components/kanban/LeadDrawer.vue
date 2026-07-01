@@ -3,7 +3,7 @@ import { computed, onMounted, onBeforeUnmount } from 'vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import LeadFields from '../lead/LeadFields.vue';
 
-const emit = defineEmits(['open-conversation']);
+const emit = defineEmits(['openConversation']);
 const store = useStore();
 const getters = useStoreGetters();
 
@@ -45,7 +45,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
         v-if="lead.conversation_id"
         data-testid="drawer-open-conversation"
         class="flex items-center gap-1 mt-3 px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
-        @click="emit('open-conversation', lead.conversation_id)"
+        @click="emit('openConversation', lead.conversation_id)"
       >
         <span class="i-lucide-message-square size-4" />{{
           $t('RAMON.FUNIL.OPEN_CONVERSATION')
