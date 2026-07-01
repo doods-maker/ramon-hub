@@ -84,6 +84,14 @@ export const actions = {
     const response = await LeadsAPI.getActivities(leadId);
     return response.data.payload;
   },
+  fetchNotes: async (_ctx, leadId) => {
+    const response = await LeadsAPI.getNotes(leadId);
+    return response.data.payload;
+  },
+  createNote: async (_ctx, { leadId, body }) => {
+    const response = await LeadsAPI.createNote(leadId, body);
+    return response.data;
+  },
 };
 
 export const mutations = {
