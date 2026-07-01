@@ -288,6 +288,7 @@ Rails.application.routes.draw do
               post :for_conversation
             end
             resources :activities, only: [:index], controller: 'lead_activities'
+            resources :notes, only: [:index, :create], controller: 'lead_notes'
           end
           resources :lead_stages, only: [:create, :update, :destroy] do
             collection { post :reorder }

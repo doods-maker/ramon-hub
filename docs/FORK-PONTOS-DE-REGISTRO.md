@@ -78,6 +78,11 @@
 | `db/migrate/20260701000003_create_lead_notes.rb` | migration: tabela `lead_notes` (account_id, lead_id, user_id opcional, body:text, timestamps) + índice `[lead_id, created_at]` | notas discretas do lead | 1b-ii |
 | `app/models/lead_note.rb` | model `LeadNote` — validação de `body`, `default_scope` por `created_at` asc | notas discretas do lead | 1b-ii |
 | `spec/models/lead_note_spec.rb` | specs: válido com lead+body, exige body, belongs_to user opcional | cobertura do LeadNote | 1b-ii |
+| `config/routes.rb` | `resources :notes, only: [:index, :create], controller: 'lead_notes'` dentro do bloco `resources :leads` (após `resources :activities`) | endpoints index/create de notas discretas do lead | 1b-ii |
+| `app/controllers/api/v1/accounts/lead_notes_controller.rb` | controller `index`/`create` (fetch_lead + authorize via LeadPolicy#show? em cada action, sem `check_authorization`) | endpoints de notas discretas do lead | 1b-ii |
+| `app/policies/lead_note_policy.rb` | policy com `index?`/`create?` (defensiva, mesmo sem `check_authorization` declarado) | autorização do endpoint de notas | 1b-ii |
+| `app/views/api/v1/accounts/lead_notes/index.json.jbuilder`, `_lead_note.json.jbuilder` e `create.json.jbuilder` | serialização `{ payload: [...] }` da listagem e da nota criada (render implícito) | resposta JSON do endpoint de notas | 1b-ii |
+| `spec/controllers/api/v1/accounts/lead_notes_controller_spec.rb` | request spec: lista notas em ordem cronológica com autor; cria nota autorada pelo usuário atual | cobertura do endpoint de notas | 1b-ii |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
