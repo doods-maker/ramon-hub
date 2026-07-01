@@ -49,13 +49,30 @@ class Ramon::StageLabelSync
     conversation.update_labels(keep + [target])
   end
 
-  # Cria a Label nativa fase-* SOB DEMANDA (cor canônica + show_on_sidebar).
+  # Cria a Label nativa fase-* SOB DEMANDA (cor + show_on_sidebar).
   # Lazy de propósito: não semeamos em toda conta para não poluir a
   # enumeração global de labels (specs nativos do Chatwoot assumem conta limpa).
-  def self.ensure_label(account, title)
+  def self.ensure_label(account, title, color = nil)
     account.labels.find_or_create_by!(title: title) do |label|
-      label.color = Leads::SeedDefaultConfigService.color_for(title)
+      label.color = color || Leads::SeedDefaultConfigService.color_for(title)
       label.show_on_sidebar = true
     end
+  end
+
+  # Etapa renomeada: cria a label nova, move as conversas e remove a antiga.
+  def self.rename_label(account, old_label, new_label, color)
+    return if old_label.blank? || old_label == new_label
+
+    ensure_label(account, new_label, color)
+    account.conversations.tagged_with(old_label, on: :labels).find_each do |conv|
+      keep = conv.label_list.reject { |l| l.to_s == old_label.to_s }
+      conv.update_labels(keep + [new_label])
+    end
+    account.labels.find_by(title: old_label)&.destroy
+  end
+
+  # Etapa recolorida: propaga a cor para a Label fase-* correspondente.
+  def self.recolor_label(account, label_title, color)
+    account.labels.find_by(title: label_title)&.update!(color: color)
   end
 end

@@ -284,6 +284,15 @@ Rails.application.routes.draw do
           resources :labels, only: [:index, :show, :create, :update, :destroy]
           resource :lead_config, only: [:show], controller: 'lead_config'
           resources :leads, only: [:index, :show, :create, :update, :destroy]
+          resources :lead_stages, only: [:create, :update, :destroy] do
+            collection { post :reorder }
+          end
+          resources :benefit_types, only: [:create, :update, :destroy] do
+            collection { post :reorder }
+          end
+          resources :lead_priorities, only: [:create, :update, :destroy] do
+            collection { post :reorder }
+          end
 
           resources :notifications, only: [:index, :update, :destroy] do
             collection do

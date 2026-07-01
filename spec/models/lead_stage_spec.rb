@@ -21,4 +21,18 @@ RSpec.describe LeadStage do
   it 'expõe a coluna color' do
     expect(described_class.column_names).to include('color')
   end
+
+  it 'mantém no máximo uma etapa de ganho' do
+    a = account.lead_stages.create!(name: 'Ganho A', is_won: true)
+    b = account.lead_stages.create!(name: 'Ganho B', is_won: true)
+    expect(a.reload.is_won).to be(false)
+    expect(b.reload.is_won).to be(true)
+  end
+
+  it 'mantém no máximo uma etapa de perda' do
+    a = account.lead_stages.create!(name: 'Perda A', is_lost: true)
+    b = account.lead_stages.create!(name: 'Perda B', is_lost: true)
+    expect(a.reload.is_lost).to be(false)
+    expect(b.reload.is_lost).to be(true)
+  end
 end

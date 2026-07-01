@@ -2,12 +2,21 @@
 import { ref, watch } from 'vue';
 import Draggable from 'vuedraggable';
 import LeadCard from './LeadCard.vue';
+import StageHeaderMenu from './StageHeaderMenu.vue';
 
 const props = defineProps({
   stage: { type: Object, required: true },
   leads: { type: Array, default: () => [] },
 });
-const emit = defineEmits(['move', 'open-conversation', 'openLead']);
+const emit = defineEmits([
+  'move',
+  'open-conversation',
+  'openLead',
+  'renameStage',
+  'recolorStage',
+  'setStageType',
+  'removeStage',
+]);
 
 // vuedraggable precisa de um array GRAVÁVEL (v-model) para mover o card de fato.
 // Ligar direto no getter (read-only via :model-value) fazia o card "voltar" ao
@@ -39,8 +48,33 @@ const onChange = evt => {
     class="flex flex-col w-72 flex-shrink-0 rounded-xl bg-[#17120d] border border-n-weak"
   >
     <div class="flex items-center justify-between px-3 py-2">
-      <span class="text-sm text-n-slate-12">{{ stage.name }}</span>
-      <span class="text-xs text-n-slate-9">{{ localLeads.length }}</span>
+      <span
+        class="flex items-center gap-2 text-sm text-n-slate-12 stage-drag-handle cursor-grab"
+      >
+        <span
+          class="rounded-full size-2.5"
+          :style="{ backgroundColor: stage.color || '#71717a' }"
+        />
+        {{ stage.name }}
+        <span
+          v-if="stage.is_won"
+          class="i-lucide-trophy size-3 text-n-amber-11"
+        />
+        <span
+          v-if="stage.is_lost"
+          class="i-lucide-x-circle size-3 text-n-ruby-11"
+        />
+      </span>
+      <span class="flex items-center gap-2">
+        <span class="text-xs text-n-slate-9">{{ localLeads.length }}</span>
+        <StageHeaderMenu
+          :stage="stage"
+          @rename="name => emit('renameStage', { id: stage.id, name })"
+          @recolor="color => emit('recolorStage', { id: stage.id, color })"
+          @set-type="type => emit('setStageType', { id: stage.id, type })"
+          @remove="s => emit('removeStage', s)"
+        />
+      </span>
     </div>
     <Draggable
       v-model="localLeads"

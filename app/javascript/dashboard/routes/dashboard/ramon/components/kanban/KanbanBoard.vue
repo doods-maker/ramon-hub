@@ -1,23 +1,68 @@
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanColumn from './KanbanColumn.vue';
 import LeadDrawer from './LeadDrawer.vue';
+import RemoveStageModal from './RemoveStageModal.vue';
 
 const emit = defineEmits(['new-lead', 'open-conversation']);
 const store = useStore();
 const getters = useStoreGetters();
+const { t } = useI18n();
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
+const orderedStages = ref([]);
+const stageToRemove = ref(null);
+
 const leadsByStage = stageId => getters['leads/getLeadsByStage'].value(stageId);
 
 const onMove = ({ id, leadStageId, newIndex }) => {
   store.dispatch('leads/move', { id, leadStageId, position: newIndex });
 };
-
 const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
 };
+
+const onRenameStage = ({ id, name }) =>
+  store.dispatch('leadConfig/updateStage', { id, name });
+const onRecolorStage = ({ id, color }) =>
+  store.dispatch('leadConfig/updateStage', { id, color });
+const onSetStageType = ({ id, type }) =>
+  store.dispatch('leadConfig/updateStage', {
+    id,
+    is_won: type === 'won',
+    is_lost: type === 'lost',
+  });
+const onRemoveStage = stage => {
+  stageToRemove.value = stage;
+};
+const confirmRemove = async ({ id, moveToStageId }) => {
+  await store.dispatch('leadConfig/deleteStage', { id, moveToStageId });
+  stageToRemove.value = null;
+};
+const addStage = async () => {
+  // eslint-disable-next-line no-alert
+  const name = window.prompt(t('RAMON.FUNIL.STAGE.NEW_PROMPT'));
+  if (name && name.trim())
+    await store.dispatch('leadConfig/createStage', { name: name.trim() });
+};
+const onColumnsReorder = () => {
+  store.dispatch(
+    'leadConfig/reorderStages',
+    orderedStages.value.map(s => s.id)
+  );
+};
+
+// Espelha as stages do store num array local gravável para o vuedraggable.
+watch(
+  stages,
+  newStages => {
+    orderedStages.value = [...newStages];
+  },
+  { immediate: true }
+);
 
 onMounted(() => {
   store.dispatch('leadConfig/get');
@@ -40,16 +85,42 @@ onMounted(() => {
       </button>
     </div>
     <div class="flex flex-1 gap-3 px-4 pb-4 overflow-x-auto">
-      <KanbanColumn
-        v-for="stage in stages"
-        :key="stage.id"
-        :stage="stage"
-        :leads="leadsByStage(stage.id)"
-        @move="onMove"
-        @open-conversation="id => emit('open-conversation', id)"
-        @open-lead="onOpenLead"
-      />
+      <Draggable
+        v-model="orderedStages"
+        group="stages"
+        item-key="id"
+        class="flex gap-3"
+        handle=".stage-drag-handle"
+        @change="onColumnsReorder"
+      >
+        <template #item="{ element }">
+          <KanbanColumn
+            :stage="element"
+            :leads="leadsByStage(element.id)"
+            @move="onMove"
+            @open-conversation="id => emit('open-conversation', id)"
+            @open-lead="onOpenLead"
+            @rename-stage="onRenameStage"
+            @recolor-stage="onRecolorStage"
+            @set-stage-type="onSetStageType"
+            @remove-stage="onRemoveStage"
+          />
+        </template>
+      </Draggable>
+      <button
+        class="flex items-center self-start gap-1 px-3 py-2 text-sm rounded-lg text-n-slate-11 border border-dashed border-n-weak hover:text-n-slate-12"
+        @click="addStage"
+      >
+        <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.STAGE.ADD') }}
+      </button>
     </div>
     <LeadDrawer @open-conversation="id => emit('open-conversation', id)" />
+    <RemoveStageModal
+      v-if="stageToRemove"
+      :stage="stageToRemove"
+      :stages="stages"
+      @confirm="confirmRemove"
+      @cancel="stageToRemove = null"
+    />
   </div>
 </template>
