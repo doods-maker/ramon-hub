@@ -101,14 +101,12 @@ describe('LeadFields.vue', () => {
       .mockResolvedValue([
         { id: 1, body: 'oi', author_name: 'Ana', created_at: 'x' },
       ]);
-    const createNote = vi
-      .fn()
-      .mockResolvedValue({
-        id: 2,
-        body: 'nova',
-        author_name: 'Ana',
-        created_at: 'y',
-      });
+    const createNote = vi.fn().mockResolvedValue({
+      id: 2,
+      body: 'nova',
+      author_name: 'Ana',
+      created_at: 'y',
+    });
     const wrapper = mountFields(vi.fn(), fetchNotes, createNote);
     await flushPromises();
     expect(fetchNotes).toHaveBeenCalledWith(expect.anything(), 3);
