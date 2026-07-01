@@ -84,6 +84,7 @@ class Account < ApplicationRecord
   has_many :labels, dependent: :destroy_async
   has_many :benefit_types, dependent: :destroy_async
   has_many :lead_activities, dependent: :destroy_async
+  has_many :lead_notes, dependent: :destroy_async
   has_many :lead_priorities, dependent: :destroy_async
   has_many :lead_stages, dependent: :destroy_async
   has_many :leads, dependent: :destroy_async
