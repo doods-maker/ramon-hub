@@ -39,10 +39,24 @@ describe('LeadCard.vue', () => {
     expect(wrapper.emitted('openLead')[0][0]).toEqual(lead);
   });
 
-  it('emite open-conversation sem abrir a gaveta (click.stop)', async () => {
-    const wrapper = mountCard();
+  it('shows a labeled "open conversation" button in the footer only with conversation_id', () => {
+    const wrapper = mountCard({ lead: { ...lead, conversation_id: 99 } });
+    const btn = wrapper.find('[data-testid="open-conversation"]');
+    expect(btn.exists()).toBe(true);
+    expect(btn.text()).toContain('RAMON.FUNIL.OPEN_CONVERSATION');
+  });
+
+  it('emits open-conversation with the id and does not open the lead', async () => {
+    const wrapper = mountCard({ lead: { ...lead, conversation_id: 99 } });
     await wrapper.find('[data-testid="open-conversation"]').trigger('click');
-    expect(wrapper.emitted('open-conversation')[0][0]).toBe(99);
+    expect(wrapper.emitted('open-conversation')[0]).toEqual([99]);
     expect(wrapper.emitted('openLead')).toBeFalsy();
+  });
+
+  it('hides the button without conversation_id', () => {
+    const wrapper = mountCard({ lead: { ...lead, conversation_id: null } });
+    expect(wrapper.find('[data-testid="open-conversation"]').exists()).toBe(
+      false
+    );
   });
 });
