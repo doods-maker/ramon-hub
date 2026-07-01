@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_30_000005) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_01_000002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -956,6 +956,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_30_000005) do
     t.index ["title", "account_id"], name: "index_labels_on_title_and_account_id", unique: true
   end
 
+  create_table "lead_activities", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "lead_id", null: false
+    t.bigint "user_id"
+    t.string "kind", null: false
+    t.string "from_value"
+    t.string "to_value"
+    t.datetime "created_at", null: false
+    t.index ["account_id"], name: "index_lead_activities_on_account_id"
+    t.index ["lead_id", "created_at"], name: "index_lead_activities_on_lead_id_and_created_at"
+    t.index ["lead_id"], name: "index_lead_activities_on_lead_id"
+    t.index ["user_id"], name: "index_lead_activities_on_user_id"
+  end
+
   create_table "lead_priorities", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "name", null: false
@@ -1407,6 +1421,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_30_000005) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "inboxes", "portals"
+  add_foreign_key "lead_activities", "accounts"
+  add_foreign_key "lead_activities", "leads"
+  add_foreign_key "lead_activities", "users"
   add_foreign_key "user_sessions", "users"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").

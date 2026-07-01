@@ -40,6 +40,7 @@ const mountPanel = (
         MacrosList: true,
         ResolveAction: true,
         LeadFields: true,
+        LeadHistory: true,
       },
     },
   });
@@ -61,5 +62,12 @@ describe('LeadConversationPanel', () => {
     await wrapper.find('[data-testid="lead-discard"]').trigger('click');
     expect(del).toHaveBeenCalledWith(expect.anything(), 5);
     expect(wrapper.emitted('discarded')).toBeTruthy();
+  });
+
+  it('switches to the Histórico tab and renders LeadHistory', async () => {
+    const wrapper = mountPanel();
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-historico"]').trigger('click');
+    expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(true);
   });
 });

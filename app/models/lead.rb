@@ -7,12 +7,15 @@ class Lead < ApplicationRecord
   belongs_to :lead_priority, optional: true
   belongs_to :sdr, class_name: 'User', optional: true
   belongs_to :closer, class_name: 'User', optional: true
+  has_many :lead_activities, dependent: :destroy_async
 
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
 
   after_create_commit :dispatch_create_event
   after_update_commit :dispatch_update_event
+  after_create_commit :record_created_activity
+  after_update_commit :record_change_activities
 
   def push_event_data # rubocop:disable Metrics/CyclomaticComplexity
     {
@@ -44,5 +47,27 @@ class Lead < ApplicationRecord
 
   def dispatch_update_event
     Rails.configuration.dispatcher.dispatch(Events::Types::LEAD_UPDATED, Time.zone.now, lead: self)
+  end
+
+  def record_created_activity
+    lead_activities.create!(account: account, user: Current.user, kind: 'created', to_value: source)
+  end
+
+  def record_change_activities
+    record_change('lead_stage_id', 'stage_changed') { |id| LeadStage.find_by(id: id)&.name }
+    record_change('sdr_id', 'sdr_changed') { |id| User.find_by(id: id)&.name }
+    record_change('closer_id', 'closer_changed') { |id| User.find_by(id: id)&.name }
+    record_change('lead_priority_id', 'priority_changed') { |id| LeadPriority.find_by(id: id)&.name }
+    record_change('value', 'value_changed') { |v| v&.to_s }
+  end
+
+  def record_change(attribute, kind)
+    return unless saved_changes.key?(attribute)
+
+    old_raw, new_raw = saved_changes[attribute]
+    lead_activities.create!(
+      account: account, user: Current.user, kind: kind,
+      from_value: yield(old_raw), to_value: yield(new_raw)
+    )
   end
 end

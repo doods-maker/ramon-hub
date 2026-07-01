@@ -80,6 +80,10 @@ export const actions = {
     commit(types.SET_SELECTED_LEAD, lead.id);
     return lead;
   },
+  fetchActivities: async (_ctx, leadId) => {
+    const response = await LeadsAPI.getActivities(leadId);
+    return response.data.payload;
+  },
 };
 
 export const mutations = {

@@ -83,8 +83,19 @@
       "CONTACT": "Contact"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Summary" },
-      "DISCARD": "Not a lead"
+      "TABS": { "SUMMARY": "Summary", "HISTORY": "History" },
+      "DISCARD": "Not a lead",
+      "HISTORY": {
+        "SYSTEM": "System",
+        "KIND": {
+          "CREATED": "created the lead",
+          "STAGE_CHANGED": "moved stage",
+          "SDR_CHANGED": "changed the SDR",
+          "CLOSER_CHANGED": "changed the Closer",
+          "PRIORITY_CHANGED": "changed the priority",
+          "VALUE_CHANGED": "changed the value"
+        }
+      }
     }
   }
 }

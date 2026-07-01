@@ -47,4 +47,11 @@ describe('leads actions', () => {
     expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD, lead);
     expect(commit).toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 7);
   });
+
+  it('fetchActivities gets activities for a lead and returns the payload array', async () => {
+    const activities = [{ id: 1, kind: 'created' }];
+    axios.get.mockResolvedValue({ data: { payload: activities } });
+    const result = await actions.fetchActivities({}, 7);
+    expect(result).toEqual(activities);
+  });
 });

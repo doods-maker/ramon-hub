@@ -45,4 +45,37 @@ RSpec.describe Lead do
     )
     expect(data.keys).to include(:benefit_type_name, :lead_priority_name, :sdr_name, :closer_name, :contact_name)
   end
+
+  context 'when recording lead activities' do
+    before { Current.user = nil }
+    after { Current.user = nil }
+
+    it 'records a created activity on creation' do
+      lead = create(:lead, account: account)
+      activity = lead.lead_activities.find_by(kind: 'created')
+      expect(activity).to be_present
+      expect(activity.user).to be_nil
+    end
+
+    it 'records a stage_changed activity with labels and author on stage update' do
+      agent = create(:user, account: account)
+      novo = create(:lead_stage, account: account, name: 'Fase A')
+      prox = create(:lead_stage, account: account, name: 'Fase B')
+      lead = create(:lead, account: account, lead_stage: novo)
+      Current.user = agent
+      lead.update!(lead_stage: prox)
+      act = lead.lead_activities.find_by(kind: 'stage_changed')
+      expect(act.from_value).to eq('Fase A')
+      expect(act.to_value).to eq('Fase B')
+      expect(act.user).to eq(agent)
+    end
+
+    it 'records a value_changed activity' do
+      lead = create(:lead, account: account, value: 100)
+      lead.update!(value: 250)
+      act = lead.lead_activities.find_by(kind: 'value_changed')
+      expect(act.from_value).to eq('100.0')
+      expect(act.to_value).to eq('250.0')
+    end
+  end
 end
