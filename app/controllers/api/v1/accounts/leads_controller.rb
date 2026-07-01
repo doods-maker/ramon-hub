@@ -1,6 +1,6 @@
 class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   before_action :current_account
-  before_action :fetch_lead, except: [:index, :create]
+  before_action :fetch_lead, except: [:index, :create, :for_conversation]
   before_action :check_authorization
 
   def index
@@ -22,10 +22,35 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     head :ok
   end
 
+  def for_conversation
+    conversation = Current.account.conversations.find(params[:conversation_id])
+    @lead = Current.account.leads.find_by(conversation_id: conversation.id)
+    @lead ||= create_lead_for(conversation)
+    authorize(@lead, :show?)
+  end
+
   private
 
   def fetch_lead
     @lead = Current.account.leads.find(params[:id])
+  end
+
+  def create_lead_for(conversation)
+    Current.account.leads.create!(
+      conversation: conversation,
+      contact: conversation.contact,
+      lead_stage: default_lead_stage,
+      name: lead_name_for(conversation)
+    )
+  end
+
+  def default_lead_stage
+    Current.account.lead_stages.order(:position).first
+  end
+
+  def lead_name_for(conversation)
+    contact = conversation.contact
+    contact&.name.presence || contact&.phone_number.presence || contact&.identifier.presence || "Lead ##{conversation.display_id}"
   end
 
   def permitted_params

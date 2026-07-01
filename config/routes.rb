@@ -283,7 +283,11 @@ Rails.application.routes.draw do
           end
           resources :labels, only: [:index, :show, :create, :update, :destroy]
           resource :lead_config, only: [:show], controller: 'lead_config'
-          resources :leads, only: [:index, :show, :create, :update, :destroy]
+          resources :leads, only: [:index, :show, :create, :update, :destroy] do
+            collection do
+              post :for_conversation
+            end
+          end
           resources :lead_stages, only: [:create, :update, :destroy] do
             collection { post :reorder }
           end
