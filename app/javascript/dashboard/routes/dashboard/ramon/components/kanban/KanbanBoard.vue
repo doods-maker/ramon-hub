@@ -25,7 +25,7 @@ const onMove = ({ id, leadStageId, newIndex }) => {
 const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
 };
-const onOpenConversation = id => store.dispatch('leads/openDock', id);
+const onOpenConversation = id => store.dispatch('leads/toggleDock', id);
 
 const onRenameStage = ({ id, name }) =>
   store.dispatch('leadConfig/updateStage', { id, name });

@@ -86,4 +86,16 @@ describe('leads/openDock & closeDock', () => {
     actions.closeDock({ commit });
     expect(commit).toHaveBeenCalledWith(types.SET_DOCK_CONVERSATION, null);
   });
+
+  it('toggleDock opens when a different conversation is shown', () => {
+    const commit = vi.fn();
+    actions.toggleDock({ commit, state: { dockConversationId: null } }, 42);
+    expect(commit).toHaveBeenCalledWith(types.SET_DOCK_CONVERSATION, 42);
+  });
+
+  it('toggleDock closes when the same conversation is already shown', () => {
+    const commit = vi.fn();
+    actions.toggleDock({ commit, state: { dockConversationId: 42 } }, 42);
+    expect(commit).toHaveBeenCalledWith(types.SET_DOCK_CONVERSATION, null);
+  });
 });

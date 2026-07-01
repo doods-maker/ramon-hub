@@ -43,11 +43,11 @@ const mountBoard = () => {
 describe('KanbanBoard.vue', () => {
   beforeEach(() => dispatch.mockClear());
 
-  it('opens the dock (dispatch leads/openDock) when a column emits open-conversation', async () => {
+  it('toggles the dock (dispatch leads/toggleDock) when a column emits open-conversation', async () => {
     const wrapper = mountBoard();
     wrapper.findComponent(KanbanColumn).vm.$emit('openConversation', 55);
     await wrapper.vm.$nextTick();
-    expect(dispatch).toHaveBeenCalledWith('leads/openDock', 55);
+    expect(dispatch).toHaveBeenCalledWith('leads/toggleDock', 55);
   });
 
   it('mounts the ConversationDock', () => {
