@@ -41,6 +41,7 @@
 | `app/models/account.rb` | +`has_many :lead_activities, dependent: :destroy_async` (junto de `:lead_priorities`/`:lead_stages`/`:leads`) | timeline de atividades do lead | 1b-i |
 | `app/models/lead.rb` | +`has_many :lead_activities, dependent: :destroy_async` (junto das demais associações) | timeline de atividades do lead | 1b-i |
 | `app/models/lead.rb` | +callbacks `after_create_commit :record_created_activity` / `after_update_commit :record_change_activities` + métodos privados `record_created_activity`/`record_change_activities`/`record_change` | grava `lead_activities` (com autor via `Current.user`) na criação e em mudanças de `lead_stage_id`/`sdr_id`/`closer_id`/`lead_priority_id`/`value` | 1b-i |
+| `config/routes.rb` | `resources :activities, only: [:index], controller: 'lead_activities'` dentro do bloco `resources :leads` (após `collection { post :for_conversation }`) | endpoint read-only de timeline de atividades do lead | 1b-i |
 | `app/views/api/v1/models/_inbox.json.jbuilder` | +`json.auto_create_lead resource.auto_create_lead` após `json.business_name` (~linha 21) | serializa flag para o frontend | 2D |
 | `app/javascript/dashboard/routes/dashboard/settings/inbox/Settings.vue` | +`autoCreateLead` em `data()`, `syncInboxData()`, payload de `updateInbox()` e template (`SettingsToggleSection` sem `v-if`) | toggle UI da flag em todas as inboxes | 2D |
 | `app/javascript/dashboard/i18n/locale/en/inboxMgmt.json` e `pt_BR/inboxMgmt.json` | +`AUTO_CREATE_LEAD.LABEL`/`SUB_TEXT` dentro de `SETTINGS_POPUP` | i18n do toggle | 2D |
@@ -68,6 +69,10 @@
 | `db/migrate/20260701000001_create_lead_activities.rb` | migration: tabela `lead_activities` (account_id, lead_id, user_id opcional, kind, from_value, to_value, created_at; sem updated_at) | timeline de atividades do lead | 1b-i |
 | `app/models/lead_activity.rb` | model `LeadActivity` — validação de `kind`, `default_scope` por `created_at` asc | timeline de atividades do lead | 1b-i |
 | `spec/models/lead_activity_spec.rb` | specs: válido sem user, exige kind, belongs_to user opcional | cobertura do LeadActivity | 1b-i |
+| `app/controllers/api/v1/accounts/lead_activities_controller.rb` | controller read-only `index` (fetch_lead + authorize via LeadPolicy#show?) | endpoint de timeline de atividades do lead | 1b-i |
+| `app/policies/lead_activity_policy.rb` | policy com `index?` (evita `Pundit::NotDefinedError`) | autorização do endpoint de atividades | 1b-i |
+| `app/views/api/v1/accounts/lead_activities/index.json.jbuilder` e `_lead_activity.json.jbuilder` | serialização `{ payload: [...] }` da timeline | resposta JSON do endpoint de atividades | 1b-i |
+| `spec/controllers/api/v1/accounts/lead_activities_controller_spec.rb` | request spec: lista atividades em ordem cronológica, autor e valores | cobertura do endpoint de atividades | 1b-i |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
