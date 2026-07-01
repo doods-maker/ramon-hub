@@ -6,12 +6,12 @@ import ConversationAction from 'dashboard/routes/dashboard/conversation/Conversa
 import MacrosList from 'dashboard/routes/dashboard/conversation/Macros/List.vue';
 import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 
-defineOptions({ name: 'LeadConversationPanel' });
-
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
 });
 const emit = defineEmits(['discarded']);
+
+defineOptions({ name: 'LeadConversationPanel' });
 const store = useStore();
 const leadByConv = useMapGetter('leads/getLeadByConversationId');
 const activeTab = ref('resumo');
