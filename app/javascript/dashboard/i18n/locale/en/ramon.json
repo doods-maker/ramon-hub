@@ -80,6 +80,8 @@
       "VALUE": "Value (R$)",
       "SOURCE": "Source",
       "NOTES": "Notes",
+      "NOTES_ADD": "Write a note…",
+      "NOTES_ADD_BUTTON": "Add note",
       "CONTACT": "Contact"
     },
     "LEAD_PANEL": {
@@ -93,7 +95,8 @@
           "SDR_CHANGED": "changed the SDR",
           "CLOSER_CHANGED": "changed the Closer",
           "PRIORITY_CHANGED": "changed the priority",
-          "VALUE_CHANGED": "changed the value"
+          "VALUE_CHANGED": "changed the value",
+          "NOTE_ADDED": "added a note"
         }
       }
     }

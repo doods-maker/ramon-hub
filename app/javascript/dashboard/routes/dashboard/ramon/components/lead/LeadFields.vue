@@ -14,7 +14,6 @@ const agents = useMapGetter('agents/getAgents');
 const name = ref('');
 const value = ref('');
 const source = ref('');
-const notes = ref('');
 
 watch(
   () => props.lead,
@@ -22,10 +21,34 @@ watch(
     name.value = l?.name ?? '';
     value.value = l?.value ?? '';
     source.value = l?.source ?? '';
-    notes.value = l?.notes ?? '';
   },
   { immediate: true }
 );
+
+// notas discretas: lista + adicionar
+const noteList = ref([]);
+const newNote = ref('');
+
+const loadNotes = async () => {
+  noteList.value =
+    (await store.dispatch('leads/fetchNotes', props.lead.id)) || [];
+};
+
+watch(
+  () => props.lead?.id,
+  id => {
+    if (id) loadNotes();
+  },
+  { immediate: true }
+);
+
+const addNote = async () => {
+  const body = newNote.value.trim();
+  if (!body) return;
+  await store.dispatch('leads/createNote', { leadId: props.lead.id, body });
+  newNote.value = '';
+  await loadNotes();
+};
 
 const save = payload => {
   store.dispatch('leads/update', { id: props.lead.id, ...payload });
@@ -41,7 +64,6 @@ const saveText = (key, refVal, original) => {
 
 const saveName = () => saveText('name', name, props.lead?.name);
 const saveSource = () => saveText('source', source, props.lead?.source);
-const saveNotes = () => saveText('notes', notes, props.lead?.notes);
 const saveValue = () => {
   const next = value.value === '' ? null : Number(value.value);
   const prev = props.lead?.value == null ? null : Number(props.lead.value);
@@ -177,15 +199,34 @@ const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
       @blur="saveSource"
     />
 
-    <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.NOTES')
-    }}</label>
-    <textarea
-      v-model="notes"
-      rows="3"
-      class="w-full px-3 py-2 mb-4 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
-      @blur="saveNotes"
-    />
+    <div class="flex flex-col gap-2 mb-4">
+      <span class="text-xs uppercase text-n-slate-10">{{
+        $t('RAMON.DRAWER.NOTES')
+      }}</span>
+      <div
+        v-for="note in noteList"
+        :key="note.id"
+        data-testid="note-item"
+        class="pl-2 text-sm border-l-2 border-n-weak"
+      >
+        <strong v-if="note.author_name">{{ note.author_name }}</strong>
+        <span>{{ note.body }}</span>
+      </div>
+      <textarea
+        v-model="newNote"
+        data-testid="note-input"
+        rows="2"
+        class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        :placeholder="$t('RAMON.DRAWER.NOTES_ADD')"
+      />
+      <button
+        data-testid="note-add"
+        class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        @click="addNote"
+      >
+        {{ $t('RAMON.DRAWER.NOTES_ADD_BUTTON') }}
+      </button>
+    </div>
 
     <!-- Só leitura: contato -->
     <div class="pt-4 mt-2 border-t border-n-weak">
