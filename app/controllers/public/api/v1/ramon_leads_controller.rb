@@ -29,7 +29,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
   end
 
   def verify_capture_token
-    expected = ENV['RAMON_LEAD_CAPTURE_TOKEN']
+    expected = ENV.fetch('RAMON_LEAD_CAPTURE_TOKEN', nil)
     return head :unauthorized if expected.blank? || account.blank?
     return if ActiveSupport::SecurityUtils.secure_compare(params[:capture_token].to_s, expected)
 
@@ -37,7 +37,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
   end
 
   def account
-    @account ||= Account.find_by(id: ENV['RAMON_LEAD_CAPTURE_ACCOUNT_ID'])
+    @account ||= Account.find_by(id: ENV.fetch('RAMON_LEAD_CAPTURE_ACCOUNT_ID', nil))
   end
 
   def normalized_phone
