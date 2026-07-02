@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanColumn from './KanbanColumn.vue';
+import KanbanFilters from './KanbanFilters.vue';
 import LeadDrawer from './LeadDrawer.vue';
 import ConversationDock from './ConversationDock.vue';
 import RemoveStageModal from './RemoveStageModal.vue';
@@ -18,6 +19,8 @@ const orderedStages = ref([]);
 const stageToRemove = ref(null);
 
 const leadsByStage = stageId => getters['leads/getLeadsByStage'].value(stageId);
+const filters = computed(() => getters['leads/getFilters'].value);
+const onFilterUpdate = partial => store.dispatch('leads/setFilters', partial);
 
 const onMove = ({ id, leadStageId, newIndex }) => {
   store.dispatch('leads/move', { id, leadStageId, position: newIndex });
@@ -68,7 +71,7 @@ watch(
 
 onMounted(() => {
   store.dispatch('leadConfig/get');
-  store.dispatch('leads/get');
+  store.dispatch('leads/loadFilters');
   store.dispatch('agents/get');
 });
 </script>
@@ -86,6 +89,7 @@ onMounted(() => {
         <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.NEW_LEAD') }}
       </button>
     </div>
+    <KanbanFilters :filters="filters" @update="onFilterUpdate" />
     <div class="flex flex-1 gap-3 px-4 pb-4 overflow-x-auto">
       <Draggable
         v-model="orderedStages"

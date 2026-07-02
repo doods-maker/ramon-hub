@@ -23,3 +23,4 @@ json.priorities do
     json.position p.position
   end
 end
+json.sources @sources

@@ -61,6 +61,14 @@
         "REMOVE_PICK": "Choose the destination stage",
         "REMOVE_CONFIRM": "Remove",
         "CANCEL": "Cancel"
+      },
+      "FILTERS": {
+        "SEARCH": "Search name or contact…",
+        "BENEFIT": "Benefit",
+        "PRIORITY": "Priority",
+        "AGENT": "Owner",
+        "SOURCE": "Source",
+        "CLEAR": "Clear"
       }
     },
     "FUNIL_CONFIG": {

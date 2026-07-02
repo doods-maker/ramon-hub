@@ -106,4 +106,57 @@ RSpec.describe 'Leads API', type: :request do
       expect(existing.reload.conversation_id).to eq(new_conversation.id)
     end
   end
+
+  describe 'GET /api/v1/accounts/{account}/leads (filtros)' do
+    let(:bpc_teste) { account.benefit_types.create!(name: 'BPC-teste') }
+
+    def ids(response)
+      response.parsed_body['payload'].map { |l| l['id'] }
+    end
+
+    it 'sem params retorna todos os leads' do
+      a = account.leads.create!(name: 'A', lead_stage: novo)
+      b = account.leads.create!(name: 'B', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      expect(ids(response)).to contain_exactly(a.id, b.id)
+    end
+
+    it 'filtra por source' do
+      a = account.leads.create!(name: 'A', lead_stage: novo, source: 'meta-ads')
+      account.leads.create!(name: 'B', lead_stage: novo, source: 'indicacao')
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { source: 'meta-ads' },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([a.id])
+    end
+
+    it 'filtra por benefit_type_id' do
+      a = account.leads.create!(name: 'A', lead_stage: novo, benefit_type: bpc_teste)
+      account.leads.create!(name: 'B', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { benefit_type_id: bpc_teste.id },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([a.id])
+    end
+
+    it 'filtra por agent_id casando sdr OU closer' do
+      agent = create(:user, account: account, role: :agent)
+      as_sdr = account.leads.create!(name: 'S', lead_stage: novo, sdr_id: agent.id)
+      as_closer = account.leads.create!(name: 'C', lead_stage: novo, closer_id: agent.id)
+      account.leads.create!(name: 'N', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { agent_id: agent.id },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to contain_exactly(as_sdr.id, as_closer.id)
+    end
+
+    it 'busca q por nome do lead mesmo sem contato' do
+      hit = account.leads.create!(name: 'Joana Silva', lead_stage: novo)
+      account.leads.create!(name: 'Outro', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { q: 'joana' },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([hit.id])
+    end
+  end
 end

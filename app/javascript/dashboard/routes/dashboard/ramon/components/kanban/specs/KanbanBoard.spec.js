@@ -14,7 +14,16 @@ const buildStore = () =>
     modules: {
       leads: {
         namespaced: true,
-        getters: { getLeadsByStage: () => () => [] },
+        getters: {
+          getLeadsByStage: () => () => [],
+          getFilters: () => ({
+            q: '',
+            benefitTypeId: null,
+            leadPriorityId: null,
+            agentId: null,
+            source: '',
+          }),
+        },
       },
       leadConfig: {
         namespaced: true,
@@ -23,7 +32,14 @@ const buildStore = () =>
             { id: 1, name: 'Novo', color: '#000' },
             { id: 2, name: 'Qualificado', color: '#111' },
           ],
+          getBenefitTypes: () => [],
+          getPriorities: () => [],
+          getSources: () => [],
         },
+      },
+      agents: {
+        namespaced: true,
+        getters: { getAgents: () => [] },
       },
     },
   });
@@ -57,10 +73,10 @@ describe('KanbanBoard.vue', () => {
     );
   });
 
-  it('busca leadConfig, leads e agents no mount', () => {
+  it('busca leadConfig, filtros de leads e agents no mount', () => {
     mountBoard();
     expect(dispatch).toHaveBeenCalledWith('leadConfig/get');
-    expect(dispatch).toHaveBeenCalledWith('leads/get');
+    expect(dispatch).toHaveBeenCalledWith('leads/loadFilters');
     expect(dispatch).toHaveBeenCalledWith('agents/get');
   });
 
@@ -165,6 +181,15 @@ describe('KanbanBoard.vue', () => {
       expect.anything()
     );
     promptSpy.mockRestore();
+  });
+
+  it('carrega filtros no mount e reage ao update dos filtros', () => {
+    const wrapper = mountBoard();
+    expect(dispatch).toHaveBeenCalledWith('leads/loadFilters');
+    wrapper.findComponent({ name: 'KanbanFilters' }).vm.$emit('update', {
+      q: 'ana',
+    });
+    expect(dispatch).toHaveBeenCalledWith('leads/setFilters', { q: 'ana' });
   });
 
   it('reordenar colunas dispara reorderStages com a nova ordem de ids', async () => {
