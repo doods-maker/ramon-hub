@@ -63,10 +63,10 @@ export const getters = {
 };
 
 export const actions = {
-  get: async ({ commit, state = {} }) => {
+  get: async ({ commit, state: moduleState = {} }) => {
     commit(types.SET_LEAD_UI_FLAG, { isFetching: true });
     try {
-      const response = await LeadsAPI.get(toParams(state.filters));
+      const response = await LeadsAPI.get(toParams(moduleState.filters));
       commit(types.SET_LEADS, response.data.payload);
     } finally {
       commit(types.SET_LEAD_UI_FLAG, { isFetching: false });

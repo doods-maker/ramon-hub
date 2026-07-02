@@ -55,12 +55,16 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def filtered_leads
-    leads = policy_scope(Current.account.leads)
-    leads = leads.where(benefit_type_id: params[:benefit_type_id]) if params[:benefit_type_id].present?
-    leads = leads.where(lead_priority_id: params[:lead_priority_id]) if params[:lead_priority_id].present?
+    leads = apply_equality_filters(policy_scope(Current.account.leads))
     leads = leads.where('sdr_id = :a OR closer_id = :a', a: params[:agent_id]) if params[:agent_id].present?
-    leads = leads.where(source: params[:source]) if params[:source].present?
     leads = search_leads(leads, params[:q]) if params[:q].present?
+    leads
+  end
+
+  def apply_equality_filters(leads)
+    %i[benefit_type_id lead_priority_id source].each do |key|
+      leads = leads.where(key => params[key]) if params[key].present?
+    end
     leads
   end
 
