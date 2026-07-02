@@ -190,6 +190,11 @@ class Rack::Attack
     end
   end
 
+  ## Ramon — Prevent bombing of the public lead capture endpoint (landing pages) ###
+  throttle('public/ramon_leads', limit: 5, period: 1.minute) do |req|
+    req.ip if req.path.start_with?('/public/api/v1/ramon_leads') && req.post?
+  end
+
   ##-----------------------------------------------##
 
   ###-----------------------------------------------###

@@ -604,6 +604,9 @@ Rails.application.routes.draw do
         end
 
         resources :csat_survey, only: [:show, :update]
+
+        # Ramon — captação de leads das landing pages
+        post 'ramon_leads/:capture_token', to: 'ramon_leads#create'
       end
     end
   end
