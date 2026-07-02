@@ -22,8 +22,16 @@ const search = ref(props.filters.q);
 let timer = null;
 watch(search, value => {
   clearTimeout(timer);
+  if (value === props.filters.q) return;
   timer = setTimeout(() => emitUpdate({ q: value }), 300);
 });
+// loadFilters restaura o q persistido depois do setup — refletir na caixa
+watch(
+  () => props.filters.q,
+  value => {
+    if (value !== search.value) search.value = value ?? '';
+  }
+);
 
 const clearFilters = () => {
   emitUpdate({
