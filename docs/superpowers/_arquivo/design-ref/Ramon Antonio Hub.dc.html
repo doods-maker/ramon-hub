@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/ramon-antonio-brand-f6e54268-1510-46ae-85c8-a1191119e841/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/ramon-antonio-brand-f6e54268-1510-46ae-85c8-a1191119e841/tokens/colors.css">
+<link rel="stylesheet" href="_ds/ramon-antonio-brand-f6e54268-1510-46ae-85c8-a1191119e841/tokens/typography.css">
+<link rel="stylesheet" href="_ds/ramon-antonio-brand-f6e54268-1510-46ae-85c8-a1191119e841/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/ramon-antonio-brand-f6e54268-1510-46ae-85c8-a1191119e841/tokens/effects.css">
+<link rel="stylesheet" href="_ds/ramon-antonio-brand-f6e54268-1510-46ae-85c8-a1191119e841/styles.css">
+<script src="_ds/ramon-antonio-brand-f6e54268-1510-46ae-85c8-a1191119e841/_ds_bundle.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:#0c0907}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:rgba(237,224,200,0.14);border-radius:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#191310"/>
+    <rect x="30" y="30" width="40" height="40" rx="9" fill="#754d2a"/>
+    <text x="50" y="62" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#f5e6cc" text-anchor="middle">RA</text>
+  </svg>
+</template>
+
+<div style="position:relative;display:flex;height:100%;width:100%;overflow:hidden;font-family:var(--font-sans);background:#120d09;color:var(--ink-100);">
+
+  <!-- ============ RAIL ============ -->
+  <div style="width:78px;flex:0 0 78px;height:100%;background:#0c0907;border-right:1px solid rgba(237,224,200,0.07);display:flex;flex-direction:column;align-items:center;padding:14px 0 12px;">
+    <div style="width:42px;height:42px;border-radius:12px;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.5);margin-bottom:14px;">
+      <img src="assets/monogram.png" alt="Ramon Antonio" style="width:100%;height:100%;object-fit:cover;display:block;"/>
+    </div>
+
+    <div style="font:600 8px/1 var(--font-sans);letter-spacing:0.2em;color:#6f5d44;margin-bottom:8px;">INTERNOS</div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+      <button onClick="{{ goChat }}" title="Conversas — Chatwoot" style="{{ railChatStyle }}" style-hover="filter:brightness(1.18)">{{ ic.chat }}</button>
+      <button onClick="{{ goIntranet }}" title="Intranet — Centro de Comando" style="{{ railIntranetStyle }}" style-hover="filter:brightness(1.18)">{{ ic.grid }}</button>
+    </div>
+
+    <sc-if value="{{ showExternos }}" hint-placeholder-val="{{ true }}">
+      <div style="width:36px;height:1px;background:rgba(237,224,200,0.1);margin:16px 0 10px;"></div>
+      <div style="font:600 8px/1 var(--font-sans);letter-spacing:0.2em;color:#6f5d44;margin-bottom:8px;">EXTERNOS</div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <a href="https://app.advbox.com.br" target="_blank" rel="noopener" title="AdvBox — abre em nova aba" style="position:relative;width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#9c876a;text-decoration:none;border:1px solid rgba(237,224,200,0.08);background:rgba(237,224,200,0.02);transition:all .16s" style-hover="color:#e8d8bb;border-color:rgba(196,168,130,0.35)">{{ ic.adv }}<span style="position:absolute;top:5px;right:5px;color:#7a6a52;display:flex">{{ ic.ext }}</span></a>
+        <a href="https://meu.inss.gov.br" target="_blank" rel="noopener" title="Meu INSS — abre em nova aba" style="position:relative;width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#9c876a;text-decoration:none;border:1px solid rgba(237,224,200,0.08);background:rgba(237,224,200,0.02);transition:all .16s" style-hover="color:#e8d8bb;border-color:rgba(196,168,130,0.35)">{{ ic.inss }}<span style="position:absolute;top:5px;right:5px;color:#7a6a52;display:flex">{{ ic.ext }}</span></a>
+        <a href="https://calendar.google.com" target="_blank" rel="noopener" title="Google Agenda — abre em nova aba" style="position:relative;width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#9c876a;text-decoration:none;border:1px solid rgba(237,224,200,0.08);background:rgba(237,224,200,0.02);transition:all .16s" style-hover="color:#e8d8bb;border-color:rgba(196,168,130,0.35)">{{ ic.cal }}<span style="position:absolute;top:5px;right:5px;color:#7a6a52;display:flex">{{ ic.ext }}</span></a>
+      </div>
+    </sc-if>
+
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;align-items:center;">
+      <button title="Configurações" style="width:42px;height:42px;border-radius:11px;border:none;background:transparent;color:#9c876a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .16s" style-hover="color:#e8d8bb;background:rgba(237,224,200,0.05)">{{ ic.settings }}</button>
+      <div title="Ramon Antonio" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#754d2a,#9e7a52);display:flex;align-items:center;justify-content:center;font:600 13px var(--font-sans);color:#f5e6cc;border:1px solid rgba(237,224,200,0.18);">RA</div>
+    </div>
+  </div>
+
+  <!-- ============ CHAT MODE (Chatwoot) ============ -->
+  <sc-if value="{{ isChat }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex:1;min-width:0;height:100%;">
+
+    <!-- chat nav sidebar -->
+    <div style="width:272px;flex:0 0 272px;height:100%;background:#16110c;border-right:1px solid rgba(237,224,200,0.07);display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:11px;padding:16px 16px 14px;border-bottom:1px solid rgba(237,224,200,0.07);">
+        <div style="width:34px;height:34px;border-radius:9px;overflow:hidden;flex:0 0 auto;"><img src="assets/monogram.png" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>
+        <div style="line-height:1.05;">
+          <div style="font:700 16px var(--font-serif);color:#f3e7d2;letter-spacing:.01em;white-space:nowrap;">Ramon Antonio</div>
+          <div style="font:600 9px var(--font-sans);letter-spacing:.26em;color:#9e7a52;margin-top:2px;">INTRANET</div>
+        </div>
+      </div>
+      <div style="padding:12px 14px 8px;display:flex;gap:8px;align-items:center;">
+        <div style="flex:1;display:flex;align-items:center;gap:8px;background:#211a13;border:1px solid rgba(237,224,200,0.09);border-radius:9px;padding:8px 11px;color:#7a6a52;">{{ ic.search }}<span style="font-size:13px;color:#7a6a52;">Pesquisar...</span></div>
+        <button title="Nova conversa" style="width:36px;height:36px;flex:0 0 auto;border-radius:9px;border:1px solid rgba(237,224,200,0.09);background:#211a13;color:#c4a882;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="border-color:rgba(196,168,130,0.4)">{{ ic.pencil }}</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:6px 0 14px;">
+        <sc-for list="{{ chatNav }}" as="it" hint-placeholder-count="12">
+          <div onClick="{{ it.onClick }}" style="{{ it.rowStyle }}" style-hover="background:rgba(237,224,200,0.05)">
+            <span style="{{ it.iconStyle }}">{{ it.icon }}</span>
+            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ it.label }}</span>
+            <span style="{{ it.caretStyle }}">{{ it.caret }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <sc-if value="{{ isConversas }}" hint-placeholder-val="{{ true }}">
+    <!-- conversation list -->
+    <div style="width:352px;flex:0 0 352px;height:100%;background:#1b1510;border-right:1px solid rgba(237,224,200,0.07);display:flex;flex-direction:column;">
+      <div style="padding:18px 18px 4px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font:600 19px var(--font-sans);color:#f3e7d2;">Conversas</span>
+          <span style="font:600 11px var(--font-sans);color:#c4a882;background:rgba(196,168,130,0.15);border:1px solid rgba(196,168,130,0.28);border-radius:999px;padding:3px 10px;">Abertas</span>
+        </div>
+        <div style="display:flex;gap:6px;color:#9c876a;">
+          <button title="Filtrar" style="width:32px;height:32px;border:none;background:transparent;border-radius:8px;color:#9c876a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="background:rgba(237,224,200,0.06);color:#e8d8bb">{{ ic.filter }}</button>
+          <button title="Ordenar" style="width:32px;height:32px;border:none;background:transparent;border-radius:8px;color:#9c876a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="background:rgba(237,224,200,0.06);color:#e8d8bb">{{ ic.sort }}</button>
+          <button title="Recolher" style="width:32px;height:32px;border:none;background:transparent;border-radius:8px;color:#9c876a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="background:rgba(237,224,200,0.06);color:#e8d8bb">{{ ic.collapse }}</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:20px;padding:8px 18px 0;border-bottom:1px solid rgba(237,224,200,0.07);">
+        <div style="display:flex;align-items:center;gap:7px;padding:9px 0 11px;border-bottom:2px solid #c4a882;color:#f3e7d2;font:600 13px var(--font-sans);cursor:pointer;">Minhas<span style="font-size:11px;color:#c4a882;background:rgba(196,168,130,0.15);border-radius:999px;padding:1px 7px;">1</span></div>
+        <div style="display:flex;align-items:center;gap:7px;padding:9px 0 11px;color:#8c7a5f;font:500 13px var(--font-sans);cursor:pointer;" style-hover="color:#c4a882">Não atribuídas<span style="font-size:11px;color:#8c7a5f;background:rgba(237,224,200,0.06);border-radius:999px;padding:1px 7px;">0</span></div>
+        <div style="display:flex;align-items:center;gap:7px;padding:9px 0 11px;color:#8c7a5f;font:500 13px var(--font-sans);cursor:pointer;" style-hover="color:#c4a882">Todos<span style="font-size:11px;color:#8c7a5f;background:rgba(237,224,200,0.06);border-radius:999px;padding:1px 7px;">1</span></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;">
+        <div style="display:flex;gap:12px;padding:15px 18px;background:rgba(196,168,130,0.07);border-left:2px solid #c4a882;cursor:pointer;">
+          <div style="width:40px;height:40px;flex:0 0 auto;border-radius:10px;background:rgba(196,168,130,0.16);border:1px solid rgba(196,168,130,0.3);display:flex;align-items:center;justify-content:center;font:600 15px var(--font-sans);color:#c4a882;">T</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+              <span style="font:600 14px var(--font-sans);color:#f3e7d2;">Teste</span>
+              <span style="font-size:11px;color:#8c7a5f;flex:0 0 auto;">1d</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:3px;color:#9c876a;font-size:13px;">
+              <span style="color:#7a6a52;display:flex">{{ ic.reply }}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">teste</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;padding:26px 16px;color:#7a6a52;font-size:13px;">Todas as conversas carregadas 🎉</div>
+      </div>
+    </div>
+
+    <!-- conversation view -->
+    <div style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;background:#120d09;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid rgba(237,224,200,0.07);background:#16110c;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(196,168,130,0.16);border:1px solid rgba(196,168,130,0.3);display:flex;align-items:center;justify-content:center;font:600 14px var(--font-sans);color:#c4a882;">T</div>
+          <div>
+            <div style="font:600 15px var(--font-sans);color:#f3e7d2;">Teste</div>
+            <div style="font-size:12px;color:#8c7a5f;margin-top:1px;">via Canal Teste · Aberta</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:9px;align-items:center;">
+          <button onClick="{{ toggleLead }}" title="Mostrar/ocultar Painel do Lead" style="display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;border:1px solid rgba(196,168,130,0.32);background:rgba(196,168,130,0.1);color:#c4a882;font:600 13px var(--font-sans);cursor:pointer;" style-hover="background:rgba(196,168,130,0.16)"><span style="display:flex">{{ ic.lead }}</span>Painel do Lead</button>
+          <button style="display:flex;align-items:center;gap:7px;padding:8px 15px;border-radius:9px;border:1px solid rgba(196,168,130,0.32);background:transparent;color:#c4a882;font:600 13px var(--font-sans);cursor:pointer;" style-hover="background:rgba(196,168,130,0.1)">{{ ic.resolve }}Resolver</button>
+          <button style="width:36px;height:36px;border-radius:9px;border:1px solid rgba(237,224,200,0.09);background:transparent;color:#9c876a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="color:#e8d8bb">{{ ic.more }}</button>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+      <div style="flex:1;overflow-y:auto;padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
+        <div style="text-align:center;font-size:11px;color:#7a6a52;letter-spacing:.06em;">HOJE</div>
+        <div style="display:flex;gap:10px;max-width:62%;">
+          <div style="width:30px;height:30px;flex:0 0 auto;border-radius:8px;background:rgba(196,168,130,0.16);display:flex;align-items:center;justify-content:center;font:600 12px var(--font-sans);color:#c4a882;">T</div>
+          <div>
+            <div style="background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:4px 14px 14px 14px;padding:11px 15px;color:#e8d8bb;font-size:14px;line-height:1.5;">Olá, preciso de ajuda com a minha aposentadoria por tempo de contribuição.</div>
+            <div style="font-size:11px;color:#7a6a52;margin-top:5px;">09:12</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;max-width:62%;">
+          <div style="width:30px;height:30px;flex:0 0 auto;border-radius:8px;background:rgba(196,168,130,0.16);display:flex;align-items:center;justify-content:center;font:600 12px var(--font-sans);color:#c4a882;">T</div>
+          <div>
+            <div style="background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:4px 14px 14px 14px;padding:11px 15px;color:#e8d8bb;font-size:14px;line-height:1.5;">teste</div>
+            <div style="font-size:11px;color:#7a6a52;margin-top:5px;">09:13</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;max-width:62%;align-self:flex-end;flex-direction:row-reverse;">
+          <div style="width:30px;height:30px;flex:0 0 auto;border-radius:8px;background:linear-gradient(135deg,#754d2a,#9e7a52);display:flex;align-items:center;justify-content:center;font:600 11px var(--font-sans);color:#f5e6cc;">RA</div>
+          <div style="text-align:right;">
+            <div style="background:rgba(117,77,42,0.5);border:1px solid rgba(196,168,130,0.28);border-radius:14px 4px 14px 14px;padding:11px 15px;color:#f3e7d2;font-size:14px;line-height:1.5;text-align:left;">Olá! Claro, vamos te ajudar. Você acompanha cada etapa do processo. Pode me confirmar seu nome completo e CPF?</div>
+            <div style="font-size:11px;color:#7a6a52;margin-top:5px;">Ramon · 09:15</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 22px 18px;border-top:1px solid rgba(237,224,200,0.07);background:#16110c;">
+        <div style="display:flex;gap:18px;margin-bottom:10px;">
+          <span style="font:600 12px var(--font-sans);color:#c4a882;border-bottom:2px solid #c4a882;padding-bottom:5px;cursor:pointer;">Responder</span>
+          <span style="font:500 12px var(--font-sans);color:#8c7a5f;padding-bottom:5px;cursor:pointer;" style-hover="color:#c4a882">Nota privada</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;background:#211a13;border:1px solid rgba(237,224,200,0.1);border-radius:12px;padding:10px 12px;">
+          <span style="color:#8c7a5f;display:flex;cursor:pointer;">{{ ic.clip }}</span>
+          <span style="flex:1;color:#7a6a52;font-size:14px;">Digite a sua resposta...</span>
+          <button style="width:36px;height:36px;border-radius:9px;border:none;background:#754d2a;color:#f5e6cc;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="background:#8a5c33">{{ ic.send }}</button>
+        </div>
+      </div>
+        </div><!-- /coluna mensagens -->
+
+        <sc-if value="{{ isLeadPanel }}" hint-placeholder-val="{{ true }}">
+        <div style="width:42%;min-width:344px;max-width:470px;flex:0 0 auto;height:100%;border-left:1px solid rgba(237,224,200,0.07);background:#16110c;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(237,224,200,0.07);">
+            <span style="display:flex;align-items:center;gap:8px;font:600 14px var(--font-sans);color:#f3e7d2;"><span style="color:#c4a882;display:flex;">{{ ic.lead }}</span>Painel do Lead</span>
+            <button onClick="{{ toggleLead }}" title="Ocultar painel" style="width:30px;height:30px;border:none;background:transparent;border-radius:8px;color:#9c876a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="color:#e8d8bb;background:rgba(237,224,200,0.06)">{{ ic.chevR }}</button>
+          </div>
+          <div style="display:flex;gap:18px;padding:11px 18px 0;border-bottom:1px solid rgba(237,224,200,0.07);background:#16110c;">
+            <span onClick="{{ goResumo }}" style="{{ tabResumoStyle }}">Resumo</span>
+            <span onClick="{{ goHistorico }}" style="{{ tabHistoricoStyle }}">Histórico</span>
+            <span onClick="{{ goDocumentos }}" style="{{ tabDocumentosStyle }}">Documentos</span>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:16px;">
+          <sc-if value="{{ isResumo }}" hint-placeholder-val="{{ true }}">
+
+            <div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;">
+                <div style="width:46px;height:46px;border-radius:12px;background:rgba(196,168,130,0.16);border:1px solid rgba(196,168,130,0.3);display:flex;align-items:center;justify-content:center;font:600 17px var(--font-sans);color:#c4a882;flex:0 0 auto;">T</div>
+                <div style="flex:1;min-width:0;"><div style="font:600 16px var(--font-sans);color:#f3e7d2;">Teste</div><div style="font-size:12px;color:#8c7a5f;">Lead #2 · via Instagram</div></div>
+                <span style="display:flex;align-items:center;gap:5px;font:600 11px var(--font-sans);color:#c4a882;background:rgba(196,168,130,0.12);border:1px solid rgba(196,168,130,0.28);border-radius:999px;padding:4px 10px;flex:0 0 auto;">{{ ic.flame }}Quente</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;"><span style="font:600 10px var(--font-sans);letter-spacing:.18em;color:#9e7a52;">ETAPA NO FUNIL</span><button style="font:600 11px var(--font-sans);color:#c4a882;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:2px;padding:0;">Mover {{ ic.chevR }}</button></div>
+              <div style="display:flex;gap:4px;">
+                <span style="flex:1;height:6px;border-radius:3px;background:#754d2a;"></span>
+                <span style="flex:1;height:6px;border-radius:3px;background:#754d2a;"></span>
+                <span style="flex:1;height:6px;border-radius:3px;background:#c4a882;"></span>
+                <span style="flex:1;height:6px;border-radius:3px;background:rgba(237,224,200,0.08);"></span>
+                <span style="flex:1;height:6px;border-radius:3px;background:rgba(237,224,200,0.08);"></span>
+              </div>
+              <div style="font-size:12px;color:#b29a7d;margin-top:8px;">Em contato · há 2 dias nesta etapa</div>
+            </div>
+
+            <div style="height:1px;background:rgba(237,224,200,0.07);"></div>
+
+            <div>
+              <div style="font:600 10px var(--font-sans);letter-spacing:.18em;color:#9e7a52;margin-bottom:8px;">QUALIFICAÇÃO (SDR)</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;"><span style="color:#9c876a;">Tipo de benefício</span><span style="color:#e8d8bb;font-weight:600;">Aposentadoria</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;"><span style="color:#9c876a;">Situação no INSS</span><span style="color:#e8d8bb;font-weight:600;">Tempo de contribuição</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;"><span style="color:#9c876a;">Origem</span><span style="color:#e8d8bb;font-weight:600;">Instagram Ads</span></div>
+            </div>
+
+            <div>
+              <div style="font:600 10px var(--font-sans);letter-spacing:.18em;color:#9e7a52;margin-bottom:9px;">CHECKLIST DE QUALIFICAÇÃO</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;color:#e8d8bb;"><span style="color:#c4a882;display:flex;flex:0 0 auto;">{{ ic.checkSm }}</span>Tem direito ao benefício</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;color:#e8d8bb;"><span style="color:#c4a882;display:flex;flex:0 0 auto;">{{ ic.checkSm }}</span>É o decisor</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;color:#e8d8bb;"><span style="color:#c4a882;display:flex;flex:0 0 auto;">{{ ic.checkSm }}</span>Urgência / prazo definido</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;color:#9c876a;"><span style="width:15px;height:15px;border-radius:50%;border:1.6px solid #6f5d44;flex:0 0 auto;"></span>Documentação reunida</div>
+            </div>
+
+            <div style="height:1px;background:rgba(237,224,200,0.07);"></div>
+
+            <div>
+              <div style="font:600 10px var(--font-sans);letter-spacing:.18em;color:#9e7a52;margin-bottom:8px;">DADOS DO CONTATO</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;"><span style="color:#9c876a;">Telefone</span><span style="color:#e8d8bb;">(48) 9 9999-0000</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;"><span style="color:#9c876a;">Cidade</span><span style="color:#e8d8bb;">Tubarão / SC</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;"><span style="color:#9c876a;">Idade</span><span style="color:#e8d8bb;">58 anos</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;"><span style="color:#9c876a;">Tempo de contribuição</span><span style="color:#e8d8bb;">32 anos</span></div>
+            </div>
+
+            <div>
+              <div style="font:600 10px var(--font-sans);letter-spacing:.18em;color:#9e7a52;margin-bottom:10px;">ATRIBUIÇÃO</div>
+              <div style="display:flex;align-items:center;gap:10px;padding:5px 0;"><span style="width:28px;height:28px;border-radius:8px;background:rgba(196,168,130,0.14);color:#c4a882;display:flex;align-items:center;justify-content:center;font:600 11px var(--font-sans);flex:0 0 auto;">AN</span><div style="flex:1;"><div style="font-size:13px;color:#e8d8bb;">Ana Nunes</div><div style="font-size:11px;color:#7a6a52;">SDR responsável</div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;padding:5px 0;"><span style="width:28px;height:28px;border-radius:8px;background:rgba(196,168,130,0.14);color:#c4a882;display:flex;align-items:center;justify-content:center;font:600 11px var(--font-sans);flex:0 0 auto;">ES</span><div style="flex:1;"><div style="font-size:13px;color:#e8d8bb;">Eduardo Schlata</div><div style="font-size:11px;color:#7a6a52;">Closer</div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;background:rgba(196,168,130,0.08);border:1px solid rgba(196,168,130,0.2);border-radius:10px;"><span style="color:#c4a882;display:flex;flex:0 0 auto;">{{ ic.calSm }}</span><div style="flex:1;"><div style="font-size:13px;color:#f3e7d2;font-weight:600;">Enviar proposta</div><div style="font-size:11px;color:#b29a7d;">Próxima ação · amanhã, 14h</div></div></div>
+            </div>
+
+            <div>
+              <div style="font:600 10px var(--font-sans);letter-spacing:.18em;color:#9e7a52;margin-bottom:9px;">NOTAS INTERNAS</div>
+              <div style="background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:11px;padding:12px;font-size:13px;color:#e8d8bb;line-height:1.55;">Cliente já tem o tempo de contribuição comprovado no CNIS. Falta reunir comprovantes de vínculos rurais. Aberta a fechar nesta semana.<div style="font-size:11px;color:#7a6a52;margin-top:8px;">Ana Nunes · há 1 dia</div></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:9px;background:transparent;border:1px dashed rgba(237,224,200,0.16);border-radius:10px;padding:9px 12px;color:#9c876a;font-size:13px;cursor:pointer;" style-hover="border-color:rgba(196,168,130,0.4);color:#c4a882"><span style="display:flex">{{ ic.plusSm }}</span>Adicionar nota</div>
+            </div>
+
+            <div style="display:flex;gap:8px;">
+              <button style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;border:1px solid rgba(196,168,130,0.3);background:transparent;color:#c4a882;font:600 12.5px var(--font-sans);cursor:pointer;" style-hover="background:rgba(196,168,130,0.1)"><span style="display:flex">{{ ic.calSm }}</span>Agendar</button>
+              <button style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;border:none;background:#754d2a;color:#f5e6cc;font:600 12.5px var(--font-sans);cursor:pointer;" style-hover="background:#8a5c33"><span style="display:flex">{{ ic.target }}</span>Criar tarefa</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isHistorico }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;">
+            <div style="display:flex;gap:13px;padding-bottom:16px;border-left:1px solid rgba(237,224,200,0.1);margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#c4a882;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">Proposta enviada</div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">ontem, 16h · Eduardo Schlata</div></div></div>
+            <div style="display:flex;gap:13px;padding-bottom:16px;border-left:1px solid rgba(237,224,200,0.1);margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#9e7a52;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">Movido para <b style="color:#f3e7d2;">Negociação</b></div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">há 2 dias</div></div></div>
+            <div style="display:flex;gap:13px;padding-bottom:16px;border-left:1px solid rgba(237,224,200,0.1);margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#9e7a52;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">Reunião realizada — qualificado</div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">há 2 dias · Ana Nunes</div></div></div>
+            <div style="display:flex;gap:13px;padding-bottom:16px;border-left:1px solid rgba(237,224,200,0.1);margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#5c3c22;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">1º contato por telefone</div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">há 4 dias · Ana Nunes</div></div></div>
+            <div style="display:flex;gap:13px;margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#5c3c22;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">Lead criado via <b style="color:#f3e7d2;">Instagram Ads</b></div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">há 5 dias</div></div></div>
+          </div>
+          </sc-if>
+          <sc-if value="{{ isDocumentos }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:11px;padding:11px 12px;background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:11px;"><span style="color:#c4a882;display:flex;flex:0 0 auto;">{{ ic.file }}</span><span style="flex:1;font-size:13px;color:#e8d8bb;">CNIS</span><span style="font-size:10.5px;font-weight:600;color:#c4a882;background:rgba(196,168,130,0.14);border-radius:999px;padding:3px 9px;">Recebido</span></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:11px 12px;background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:11px;"><span style="color:#c4a882;display:flex;flex:0 0 auto;">{{ ic.file }}</span><span style="flex:1;font-size:13px;color:#e8d8bb;">RG e CPF</span><span style="font-size:10.5px;font-weight:600;color:#c4a882;background:rgba(196,168,130,0.14);border-radius:999px;padding:3px 9px;">Recebido</span></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:11px 12px;background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:11px;"><span style="color:#7a6a52;display:flex;flex:0 0 auto;">{{ ic.file }}</span><span style="flex:1;font-size:13px;color:#b29a7d;">Comprovante de residência</span><span style="font-size:10.5px;font-weight:600;color:#9c876a;background:rgba(237,224,200,0.06);border:1px solid rgba(237,224,200,0.12);border-radius:999px;padding:3px 9px;">Pendente</span></div>
+            <div style="display:flex;align-items:center;gap:11px;padding:11px 12px;background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:11px;"><span style="color:#7a6a52;display:flex;flex:0 0 auto;">{{ ic.file }}</span><span style="flex:1;font-size:13px;color:#b29a7d;">Comprovantes de vínculos rurais</span><span style="font-size:10.5px;font-weight:600;color:#9c876a;background:rgba(237,224,200,0.06);border:1px solid rgba(237,224,200,0.12);border-radius:999px;padding:3px 9px;">Pendente</span></div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:2px;border:1px dashed rgba(237,224,200,0.16);border-radius:10px;padding:11px 12px;color:#9c876a;font-size:13px;cursor:pointer;"><span style="display:flex">{{ ic.plusSm }}</span>Anexar documento</div>
+          </div>
+          </sc-if>
+          </div>
+        </div>
+        </sc-if>
+      </div><!-- /linha conversa+painel -->
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isKanban }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;background:#120d09;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid rgba(237,224,200,0.07);background:#16110c;">
+        <div>
+          <div style="display:flex;align-items:center;gap:11px;"><span style="font:600 18px var(--font-sans);color:#f3e7d2;">Kanban Board</span><span style="font:600 10px var(--font-sans);letter-spacing:.08em;color:#c4a882;background:rgba(196,168,130,0.12);border:1px solid rgba(196,168,130,0.28);border-radius:999px;padding:3px 10px;">Espelhado na Intranet</span></div>
+          <div style="font-size:12.5px;color:#8c7a5f;margin-top:3px;">Mesma base do Funil de Leads — mover um card aqui atualiza a Intranet</div>
+        </div>
+        <button style="display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:9px;border:none;background:#754d2a;color:#f5e6cc;font:600 13px var(--font-sans);cursor:pointer;" style-hover="background:#8a5c33">{{ ic.plus }}Novo lead</button>
+      </div>
+      <div style="flex:1;overflow:auto;padding:20px 24px;">
+        <div style="display:flex;gap:14px;align-items:flex-start;min-width:max-content;">
+          <sc-for list="{{ board }}" as="col" hint-placeholder-count="5">
+            <div style="width:250px;flex:0 0 250px;background:#17120d;border:1px solid rgba(237,224,200,0.07);border-radius:14px;padding:13px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 3px;">
+                <span style="display:flex;align-items:center;gap:7px;font:600 13px var(--font-sans);color:#e8d8bb;"><span style="{{ col.dotStyle }}"></span>{{ col.title }}</span>
+                <span style="font-size:11px;color:#8c7a5f;background:rgba(237,224,200,0.06);border-radius:999px;padding:1px 8px;">{{ col.count }}</span>
+              </div>
+              <div onDragOver="{{ col.onDragOver }}" onDrop="{{ col.onDrop }}" style="display:flex;flex-direction:column;gap:9px;min-height:80px;">
+                <sc-for list="{{ col.cards }}" as="card" hint-placeholder-count="2">
+                  <div draggable="true" onDragStart="{{ card.onDragStart }}" style="background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:11px;padding:12px;cursor:grab;" style-hover="border-color:rgba(196,168,130,0.32)">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;">
+                      <span style="font-size:13.5px;color:#f3e7d2;font-weight:600;line-height:1.3;">{{ card.name }}</span>
+                      <span style="display:flex;gap:8px;flex:0 0 auto;color:#6f5d44;"><span style="display:flex;cursor:pointer;">{{ card.eyeOff }}</span><span style="display:flex;cursor:pointer;">{{ card.eye }}</span></span>
+                    </div>
+                    <span style="font-size:11px;color:#c4a882;background:rgba(196,168,130,0.12);border-radius:6px;padding:2px 7px;">{{ card.benefit }}</span>
+                    <div style="font:600 9px var(--font-sans);letter-spacing:.16em;color:#7a6a52;margin:11px 0 6px;">PRIORIDADE</div>
+                    <span style="{{ card.prioStyle }}">{{ card.flag }}{{ card.prioLabel }}</span>
+                    <button onClick="{{ card.openConversa }}" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:11px;padding:7px;border-radius:8px;border:1px solid rgba(196,168,130,0.28);background:rgba(196,168,130,0.08);color:#c4a882;font:600 11.5px var(--font-sans);cursor:pointer;" style-hover="background:rgba(196,168,130,0.16)"><span style="display:flex">{{ card.chat }}</span>Abrir conversa</button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+  </div>
+  </sc-if>
+
+  <!-- ============ INTRANET MODE ============ -->
+  <sc-if value="{{ isIntranet }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex:1;min-width:0;height:100%;">
+
+    <!-- intranet nav sidebar -->
+    <div style="width:272px;flex:0 0 272px;height:100%;background:#15100b;border-right:1px solid rgba(237,224,200,0.07);display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:11px;padding:18px 18px 16px;border-bottom:1px solid rgba(237,224,200,0.07);">
+        <div style="width:38px;height:38px;border-radius:9px;overflow:hidden;flex:0 0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.4)"><img src="assets/monogram.png" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>
+        <div style="line-height:1.05;">
+          <div style="font:700 18px var(--font-serif);color:#f3e7d2;letter-spacing:.01em;white-space:nowrap;">Ramon Antonio</div>
+          <div style="font:600 9px var(--font-sans);letter-spacing:.28em;color:#9e7a52;margin-top:2px;">INTRANET</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:8px 0 18px;">
+        <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="5">
+          <div style="margin-top:14px;">
+            <div style="padding:0 18px 6px;font:600 9.5px var(--font-sans);letter-spacing:.2em;color:#6f5d44;">{{ sec.label }}</div>
+            <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="4">
+              <div onClick="{{ it.onClick }}" style="{{ it.rowStyle }}" style-hover="background:rgba(237,224,200,0.05)">
+                <span style="{{ it.iconStyle }}">{{ it.icon }}</span>
+                <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ it.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- intranet content -->
+    <div style="flex:1;min-width:0;height:100%;overflow-y:auto;background:#120d09;">
+
+      <!-- CENTRO DE COMANDO -->
+      <sc-if value="{{ isComando }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:30px 36px 44px;max-width:1280px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span style="width:18px;height:2px;background:linear-gradient(90deg,#754d2a,#c4a882);border-radius:2px;"></span><span style="font:600 10.5px var(--font-sans);letter-spacing:.24em;color:#9e7a52;">COMERCIAL</span></div>
+            <h1 style="margin:0;font:600 38px var(--font-serif);color:#f3e7d2;letter-spacing:-.01em;line-height:1.05;white-space:nowrap;">Centro de Comando</h1>
+            <p style="margin:8px 0 0;color:#9c876a;font-size:14px;">Visão geral do comercial — terça-feira, 26 de junho</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button style="display:flex;align-items:center;gap:8px;padding:9px 15px;border-radius:10px;border:1px solid rgba(237,224,200,0.12);background:#1f1812;color:#e8d8bb;font:600 13px var(--font-sans);cursor:pointer;">Hoje {{ ic.chevronDown }}</button>
+            <button style="width:40px;height:40px;border-radius:10px;border:1px solid rgba(237,224,200,0.1);background:#1f1812;color:#9c876a;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;" style-hover="color:#e8d8bb">{{ ic.bell }}<span style="position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:#c4a882;border:2px solid #1f1812;"></span></button>
+          </div>
+        </div>
+
+        <!-- KPI row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;">
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><span style="width:42px;height:42px;border-radius:11px;background:rgba(196,168,130,0.12);color:#c4a882;display:flex;align-items:center;justify-content:center;">{{ ic.userPlus }}</span><span style="display:flex;align-items:center;gap:3px;font:600 12px var(--font-sans);color:#c4a882;">{{ ic.up }}+3</span></div>
+            <div style="font:600 40px var(--font-serif);color:#f3e7d2;line-height:1;">12</div>
+            <div style="color:#9c876a;font-size:13px;margin-top:7px;">Leads novos hoje</div>
+          </div>
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><span style="width:42px;height:42px;border-radius:11px;background:rgba(196,168,130,0.12);color:#c4a882;display:flex;align-items:center;justify-content:center;">{{ ic.msg }}</span></div>
+            <div style="font:600 40px var(--font-serif);color:#f3e7d2;line-height:1;">38</div>
+            <div style="color:#9c876a;font-size:13px;margin-top:7px;">Em atendimento</div>
+          </div>
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><span style="width:42px;height:42px;border-radius:11px;background:rgba(196,168,130,0.12);color:#c4a882;display:flex;align-items:center;justify-content:center;">{{ ic.check }}</span></div>
+            <div style="font:600 40px var(--font-serif);color:#f3e7d2;line-height:1;">7</div>
+            <div style="color:#9c876a;font-size:13px;margin-top:7px;">Pra fechar esta semana</div>
+          </div>
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><span style="width:42px;height:42px;border-radius:11px;background:rgba(196,168,130,0.12);color:#c4a882;display:flex;align-items:center;justify-content:center;">{{ ic.trend }}</span><span style="display:flex;align-items:center;gap:3px;font:600 12px var(--font-sans);color:#c4a882;">{{ ic.up }}+2pts</span></div>
+            <div style="font:600 40px var(--font-serif);color:#f3e7d2;line-height:1;">24%</div>
+            <div style="color:#9c876a;font-size:13px;margin-top:7px;">Taxa de conversão</div>
+          </div>
+        </div>
+
+        <!-- two column -->
+        <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:22px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><span style="font:600 16px var(--font-sans);color:#f3e7d2;">Funil de leads</span><span style="font-size:12px;color:#8c7a5f;">103 leads ativos</span></div>
+              <div style="display:flex;flex-direction:column;gap:13px;">
+                <div style="display:flex;align-items:center;gap:14px;"><span style="width:96px;flex:0 0 auto;font-size:13px;color:#b29a7d;">Novo lead</span><div style="flex:1;height:30px;background:rgba(237,224,200,0.05);border-radius:7px;overflow:hidden;"><div style="width:100%;height:100%;background:linear-gradient(90deg,#754d2a,#c4a882);border-radius:7px;"></div></div><span style="width:34px;flex:0 0 auto;text-align:right;font:600 15px var(--font-serif);color:#f3e7d2;">42</span></div>
+                <div style="display:flex;align-items:center;gap:14px;"><span style="width:96px;flex:0 0 auto;font-size:13px;color:#b29a7d;">Triagem</span><div style="flex:1;height:30px;background:rgba(237,224,200,0.05);border-radius:7px;overflow:hidden;"><div style="width:67%;height:100%;background:linear-gradient(90deg,#6b4524,#b89a72);border-radius:7px;"></div></div><span style="width:34px;flex:0 0 auto;text-align:right;font:600 15px var(--font-serif);color:#f3e7d2;">28</span></div>
+                <div style="display:flex;align-items:center;gap:14px;"><span style="width:96px;flex:0 0 auto;font-size:13px;color:#b29a7d;">Em contato</span><div style="flex:1;height:30px;background:rgba(237,224,200,0.05);border-radius:7px;overflow:hidden;"><div style="width:45%;height:100%;background:linear-gradient(90deg,#5c3c22,#a88a62);border-radius:7px;"></div></div><span style="width:34px;flex:0 0 auto;text-align:right;font:600 15px var(--font-serif);color:#f3e7d2;">19</span></div>
+                <div style="display:flex;align-items:center;gap:14px;"><span style="width:96px;flex:0 0 auto;font-size:13px;color:#b29a7d;">Proposta</span><div style="flex:1;height:30px;background:rgba(237,224,200,0.05);border-radius:7px;overflow:hidden;"><div style="width:22%;height:100%;background:linear-gradient(90deg,#4d3119,#9e7a52);border-radius:7px;"></div></div><span style="width:34px;flex:0 0 auto;text-align:right;font:600 15px var(--font-serif);color:#f3e7d2;">9</span></div>
+                <div style="display:flex;align-items:center;gap:14px;"><span style="width:96px;flex:0 0 auto;font-size:13px;color:#b29a7d;">Fechado</span><div style="flex:1;height:30px;background:rgba(237,224,200,0.05);border-radius:7px;overflow:hidden;"><div style="width:12%;height:100%;background:linear-gradient(90deg,#3b2010,#754d2a);border-radius:7px;"></div></div><span style="width:34px;flex:0 0 auto;text-align:right;font:600 15px var(--font-serif);color:#f3e7d2;">5</span></div>
+              </div>
+            </div>
+
+            <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:22px;">
+              <div style="font:600 16px var(--font-sans);color:#f3e7d2;margin-bottom:16px;">Atividades recentes</div>
+              <div style="display:flex;flex-direction:column;gap:0;">
+                <div style="display:flex;gap:13px;padding-bottom:15px;border-left:1px solid rgba(237,224,200,0.1);margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#c4a882;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">Ana moveu <b style="color:#f3e7d2;">Maria Souza</b> para Proposta</div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">há 12 min · Aposentadoria</div></div></div>
+                <div style="display:flex;gap:13px;padding-bottom:15px;border-left:1px solid rgba(237,224,200,0.1);margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#9e7a52;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">Novo lead via <b style="color:#f3e7d2;">Instagram</b></div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">há 38 min · BPC/LOAS</div></div></div>
+                <div style="display:flex;gap:13px;padding-bottom:15px;border-left:1px solid rgba(237,224,200,0.1);margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#9e7a52;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">Reunião agendada com <b style="color:#f3e7d2;">João Lima</b></div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">há 1h · amanhã, 14h</div></div></div>
+                <div style="display:flex;gap:13px;margin-left:5px;padding-left:18px;position:relative;"><span style="position:absolute;left:-4px;top:2px;width:9px;height:9px;border-radius:50%;background:#5c3c22;"></span><div><div style="font-size:13.5px;color:#e8d8bb;">Triagem concluída — <b style="color:#f3e7d2;">processo apto</b></div><div style="font-size:11.5px;color:#7a6a52;margin-top:3px;">há 2h · Auxílio-doença</div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:22px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><span style="font:600 16px var(--font-sans);color:#f3e7d2;">Agenda de hoje</span><span style="color:#c4a882;display:flex;">{{ ic.calbig }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;gap:12px;"><span style="font:600 13px var(--font-serif);color:#c4a882;width:42px;flex:0 0 auto;">10:00</span><div style="border-left:2px solid rgba(196,168,130,0.4);padding-left:12px;"><div style="font-size:13.5px;color:#e8d8bb;">Reunião — Maria Souza</div><div style="font-size:11.5px;color:#7a6a52;">Proposta de honorários</div></div></div>
+                <div style="display:flex;gap:12px;"><span style="font:600 13px var(--font-serif);color:#c4a882;width:42px;flex:0 0 auto;">11:30</span><div style="border-left:2px solid rgba(196,168,130,0.4);padding-left:12px;"><div style="font-size:13.5px;color:#e8d8bb;">Ligação — João Lima</div><div style="font-size:11.5px;color:#7a6a52;">Follow-up triagem</div></div></div>
+                <div style="display:flex;gap:12px;"><span style="font:600 13px var(--font-serif);color:#c4a882;width:42px;flex:0 0 auto;">15:00</span><div style="border-left:2px solid rgba(196,168,130,0.4);padding-left:12px;"><div style="font-size:13.5px;color:#e8d8bb;">Audiência — Pedro Alves</div><div style="font-size:11.5px;color:#7a6a52;">Vara Federal · Tubarão</div></div></div>
+              </div>
+            </div>
+            <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:22px;">
+              <div style="font:600 16px var(--font-sans);color:#f3e7d2;margin-bottom:16px;">Pra fechar esta semana</div>
+              <div style="display:flex;flex-direction:column;gap:13px;">
+                <div style="display:flex;align-items:center;gap:11px;"><span style="width:32px;height:32px;border-radius:8px;background:rgba(196,168,130,0.14);color:#c4a882;display:flex;align-items:center;justify-content:center;font:600 12px var(--font-sans);">MS</span><div style="flex:1;"><div style="font-size:13.5px;color:#e8d8bb;">Maria Souza</div><div style="font-size:11px;color:#7a6a52;">Aposentadoria</div></div><span style="font-size:11px;color:#c4a882;background:rgba(196,168,130,0.12);border-radius:999px;padding:3px 9px;">Proposta</span></div>
+                <div style="display:flex;align-items:center;gap:11px;"><span style="width:32px;height:32px;border-radius:8px;background:rgba(196,168,130,0.14);color:#c4a882;display:flex;align-items:center;justify-content:center;font:600 12px var(--font-sans);">JL</span><div style="flex:1;"><div style="font-size:13.5px;color:#e8d8bb;">João Lima</div><div style="font-size:11px;color:#7a6a52;">Pensão por morte</div></div><span style="font-size:11px;color:#c4a882;background:rgba(196,168,130,0.12);border-radius:999px;padding:3px 9px;">Proposta</span></div>
+                <div style="display:flex;align-items:center;gap:11px;"><span style="width:32px;height:32px;border-radius:8px;background:rgba(196,168,130,0.14);color:#c4a882;display:flex;align-items:center;justify-content:center;font:600 12px var(--font-sans);">PA</span><div style="flex:1;"><div style="font-size:13.5px;color:#e8d8bb;">Pedro Alves</div><div style="font-size:11px;color:#7a6a52;">Auxílio-doença</div></div><span style="font-size:11px;color:#c4a882;background:rgba(196,168,130,0.12);border-radius:999px;padding:3px 9px;">Contato</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- FUNIL DE LEADS -->
+      <sc-if value="{{ isFunil }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:30px 36px 44px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span style="width:18px;height:2px;background:linear-gradient(90deg,#754d2a,#c4a882);border-radius:2px;"></span><span style="font:600 10.5px var(--font-sans);letter-spacing:.24em;color:#9e7a52;">COMERCIAL</span></div>
+            <div style="display:flex;align-items:center;gap:13px;flex-wrap:wrap;"><h1 style="margin:0;font:600 38px var(--font-serif);color:#f3e7d2;letter-spacing:-.01em;line-height:1.05;white-space:nowrap;">Funil de Leads</h1><span style="font:600 10px var(--font-sans);letter-spacing:.08em;color:#c4a882;background:rgba(196,168,130,0.12);border:1px solid rgba(196,168,130,0.28);border-radius:999px;padding:4px 11px;">Espelhado no Chatwoot</span></div>
+          </div>
+          <button style="display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;border:none;background:#754d2a;color:#f5e6cc;font:600 13px var(--font-sans);cursor:pointer;" style-hover="background:#8a5c33">{{ ic.plus }}Novo lead</button>
+        </div>
+        <div style="overflow-x:auto;padding-bottom:6px;">
+        <div style="display:flex;gap:14px;align-items:flex-start;min-width:max-content;">
+          <sc-for list="{{ board }}" as="col" hint-placeholder-count="5">
+            <div style="width:250px;flex:0 0 250px;background:#17120d;border:1px solid rgba(237,224,200,0.07);border-radius:14px;padding:13px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 3px;">
+                <span style="display:flex;align-items:center;gap:7px;font:600 13px var(--font-sans);color:#e8d8bb;"><span style="{{ col.dotStyle }}"></span>{{ col.title }}</span>
+                <span style="font-size:11px;color:#8c7a5f;background:rgba(237,224,200,0.06);border-radius:999px;padding:1px 8px;">{{ col.count }}</span>
+              </div>
+              <div onDragOver="{{ col.onDragOver }}" onDrop="{{ col.onDrop }}" style="display:flex;flex-direction:column;gap:9px;min-height:80px;">
+                <sc-for list="{{ col.cards }}" as="card" hint-placeholder-count="2">
+                  <div draggable="true" onDragStart="{{ card.onDragStart }}" style="background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:11px;padding:12px;cursor:grab;" style-hover="border-color:rgba(196,168,130,0.32)">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px;">
+                      <span style="font-size:13.5px;color:#f3e7d2;font-weight:600;line-height:1.3;">{{ card.name }}</span>
+                      <span style="display:flex;gap:8px;flex:0 0 auto;color:#6f5d44;"><span style="display:flex;cursor:pointer;">{{ card.eyeOff }}</span><span style="display:flex;cursor:pointer;">{{ card.eye }}</span></span>
+                    </div>
+                    <span style="font-size:11px;color:#c4a882;background:rgba(196,168,130,0.12);border-radius:6px;padding:2px 7px;">{{ card.benefit }}</span>
+                    <div style="font:600 9px var(--font-sans);letter-spacing:.16em;color:#7a6a52;margin:11px 0 6px;">PRIORIDADE</div>
+                    <span style="{{ card.prioStyle }}">{{ card.flag }}{{ card.prioLabel }}</span>
+                    <button onClick="{{ card.openConversa }}" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:11px;padding:7px;border-radius:8px;border:1px solid rgba(196,168,130,0.28);background:rgba(196,168,130,0.08);color:#c4a882;font:600 11.5px var(--font-sans);cursor:pointer;" style-hover="background:rgba(196,168,130,0.16)"><span style="display:flex">{{ card.chat }}</span>Abrir conversa</button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- PAINEL DO SDR -->
+      <sc-if value="{{ isSDR }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:30px 36px 44px;max-width:1180px;">
+        <div style="margin-bottom:26px;">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span style="width:18px;height:2px;background:linear-gradient(90deg,#754d2a,#c4a882);border-radius:2px;"></span><span style="font:600 10.5px var(--font-sans);letter-spacing:.24em;color:#9e7a52;">COMERCIAL</span></div>
+          <h1 style="margin:0;font:600 38px var(--font-serif);color:#f3e7d2;letter-spacing:-.01em;line-height:1.05;white-space:nowrap;">Painel do SDR</h1>
+          <p style="margin:8px 0 0;color:#9c876a;font-size:14px;">Produtividade da pré-venda — esta semana</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;">
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:20px;"><span style="width:42px;height:42px;border-radius:11px;background:rgba(196,168,130,0.12);color:#c4a882;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">{{ ic.phone }}</span><div style="font:600 38px var(--font-serif);color:#f3e7d2;line-height:1;">47</div><div style="color:#9c876a;font-size:13px;margin-top:7px;">Ligações hoje</div></div>
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:20px;"><span style="width:42px;height:42px;border-radius:11px;background:rgba(196,168,130,0.12);color:#c4a882;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">{{ ic.gauge }}</span><div style="font:600 38px var(--font-serif);color:#f3e7d2;line-height:1;">38%</div><div style="color:#9c876a;font-size:13px;margin-top:7px;">Taxa de conexão</div></div>
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:20px;"><span style="width:42px;height:42px;border-radius:11px;background:rgba(196,168,130,0.12);color:#c4a882;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">{{ ic.calbig }}</span><div style="font:600 38px var(--font-serif);color:#f3e7d2;line-height:1;">6</div><div style="color:#9c876a;font-size:13px;margin-top:7px;">Reuniões marcadas</div></div>
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:20px;"><span style="width:42px;height:42px;border-radius:11px;background:rgba(196,168,130,0.12);color:#c4a882;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">{{ ic.check }}</span><div style="font:600 38px var(--font-serif);color:#f3e7d2;line-height:1;">12</div><div style="color:#9c876a;font-size:13px;margin-top:7px;">Follow-ups pendentes</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:16px;">
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:22px;">
+            <div style="font:600 16px var(--font-sans);color:#f3e7d2;margin-bottom:18px;">Ranking de SDRs</div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <div><div style="display:flex;align-items:center;gap:11px;margin-bottom:7px;"><span style="font:600 14px var(--font-serif);color:#c4a882;width:18px;">1</span><span style="width:30px;height:30px;border-radius:8px;background:rgba(196,168,130,0.16);color:#c4a882;display:flex;align-items:center;justify-content:center;font:600 12px var(--font-sans);">AN</span><span style="flex:1;font-size:13.5px;color:#f3e7d2;">Ana Nunes</span><span style="font:600 14px var(--font-serif);color:#f3e7d2;">4 reuniões</span></div><div style="height:8px;background:rgba(237,224,200,0.05);border-radius:5px;margin-left:29px;"><div style="width:100%;height:100%;background:linear-gradient(90deg,#754d2a,#c4a882);border-radius:5px;"></div></div></div>
+              <div><div style="display:flex;align-items:center;gap:11px;margin-bottom:7px;"><span style="font:600 14px var(--font-serif);color:#9e7a52;width:18px;">2</span><span style="width:30px;height:30px;border-radius:8px;background:rgba(196,168,130,0.16);color:#c4a882;display:flex;align-items:center;justify-content:center;font:600 12px var(--font-sans);">LU</span><span style="flex:1;font-size:13.5px;color:#f3e7d2;">Lucas Reis</span><span style="font:600 14px var(--font-serif);color:#f3e7d2;">2 reuniões</span></div><div style="height:8px;background:rgba(237,224,200,0.05);border-radius:5px;margin-left:29px;"><div style="width:50%;height:100%;background:linear-gradient(90deg,#5c3c22,#a88a62);border-radius:5px;"></div></div></div>
+              <div><div style="display:flex;align-items:center;gap:11px;margin-bottom:7px;"><span style="font:600 14px var(--font-serif);color:#7a6a52;width:18px;">3</span><span style="width:30px;height:30px;border-radius:8px;background:rgba(196,168,130,0.16);color:#c4a882;display:flex;align-items:center;justify-content:center;font:600 12px var(--font-sans);">CA</span><span style="flex:1;font-size:13.5px;color:#f3e7d2;">Carlos Dias</span><span style="font:600 14px var(--font-serif);color:#f3e7d2;">0 reuniões</span></div><div style="height:8px;background:rgba(237,224,200,0.05);border-radius:5px;margin-left:29px;"><div style="width:8%;height:100%;background:linear-gradient(90deg,#3b2010,#754d2a);border-radius:5px;"></div></div></div>
+            </div>
+          </div>
+          <div style="background:#1f1812;border:1px solid rgba(237,224,200,0.09);border-radius:16px;padding:22px;">
+            <div style="font:600 16px var(--font-sans);color:#f3e7d2;margin-bottom:18px;">Ligações nos últimos 7 dias</div>
+            <div style="display:flex;align-items:flex-end;gap:13px;height:170px;padding-top:10px;">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><div style="width:100%;height:52%;background:linear-gradient(180deg,#9e7a52,#5c3c22);border-radius:7px 7px 0 0;"></div><span style="font-size:11px;color:#7a6a52;">Seg</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><div style="width:100%;height:70%;background:linear-gradient(180deg,#9e7a52,#5c3c22);border-radius:7px 7px 0 0;"></div><span style="font-size:11px;color:#7a6a52;">Ter</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><div style="width:100%;height:44%;background:linear-gradient(180deg,#9e7a52,#5c3c22);border-radius:7px 7px 0 0;"></div><span style="font-size:11px;color:#7a6a52;">Qua</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><div style="width:100%;height:86%;background:linear-gradient(180deg,#9e7a52,#5c3c22);border-radius:7px 7px 0 0;"></div><span style="font-size:11px;color:#7a6a52;">Qui</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><div style="width:100%;height:100%;background:linear-gradient(180deg,#c4a882,#754d2a);border-radius:7px 7px 0 0;"></div><span style="font-size:11px;color:#c4a882;font-weight:600;">Hoje</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><div style="width:100%;height:18%;background:rgba(237,224,200,0.08);border-radius:7px 7px 0 0;"></div><span style="font-size:11px;color:#7a6a52;">Sáb</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;"><div style="width:100%;height:8%;background:rgba(237,224,200,0.08);border-radius:7px 7px 0 0;"></div><span style="font-size:11px;color:#7a6a52;">Dom</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- PLACEHOLDER (demais módulos) -->
+      <sc-if value="{{ isPlaceholder }}" hint-placeholder-val="{{ false }}">
+      <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;text-align:center;">
+        <div style="width:74px;height:74px;border-radius:18px;background:rgba(196,168,130,0.1);border:1px solid rgba(196,168,130,0.22);color:#c4a882;display:flex;align-items:center;justify-content:center;margin-bottom:22px;">{{ placeholderIcon }}</div>
+        <h2 style="margin:0;font:600 30px var(--font-serif);color:#f3e7d2;">{{ placeholderTitle }}</h2>
+        <p style="margin:10px 0 0;color:#9c876a;font-size:14px;max-width:420px;line-height:1.6;">Módulo da intranet a ser construído neste fork. A navegação, a marca e a estrutura já estão definidas — esta tela é o ponto de partida para o Claude Code.</p>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- MINI CHAT (WhatsApp do lead, flutuante) -->
+  <sc-if value="{{ miniChatOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;right:22px;bottom:22px;width:332px;height:432px;background:#1b1510;border:1px solid rgba(196,168,130,0.3);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.55);display:flex;flex-direction:column;overflow:hidden;z-index:60;">
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#16110c;border-bottom:1px solid rgba(237,224,200,0.08);">
+      <div style="width:34px;height:34px;border-radius:9px;background:rgba(196,168,130,0.16);border:1px solid rgba(196,168,130,0.3);display:flex;align-items:center;justify-content:center;font:600 13px var(--font-sans);color:#c4a882;flex:0 0 auto;">{{ miniChatInitial }}</div>
+      <div style="flex:1;min-width:0;"><div style="font:600 14px var(--font-sans);color:#f3e7d2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ miniChatName }}</div><div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#8c7a5f;"><span style="width:6px;height:6px;border-radius:50%;background:#c4a882;"></span>WhatsApp · {{ miniChatBenefit }}</div></div>
+      <button onClick="{{ closeMini }}" title="Fechar" style="width:30px;height:30px;border:none;background:transparent;border-radius:8px;color:#9c876a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="color:#e8d8bb;background:rgba(237,224,200,0.06)">{{ ic.x }}</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px;background:#120d09;">
+      <div style="text-align:center;font-size:10px;color:#7a6a52;letter-spacing:.06em;">HOJE</div>
+      <div style="max-width:82%;background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:4px 12px 12px 12px;padding:9px 12px;color:#e8d8bb;font-size:13px;line-height:1.45;">Olá! Vi o anúncio de vocês sobre {{ miniChatBenefit }}.</div>
+      <div style="max-width:82%;align-self:flex-end;background:rgba(117,77,42,0.5);border:1px solid rgba(196,168,130,0.28);border-radius:12px 4px 12px 12px;padding:9px 12px;color:#f3e7d2;font-size:13px;line-height:1.45;">Olá, {{ miniChatName }}! Que bom falar com você. Você acompanha cada etapa do processo, com transparência. Pode me contar um pouco do seu caso?</div>
+      <div style="max-width:82%;background:#211a13;border:1px solid rgba(237,224,200,0.08);border-radius:4px 12px 12px 12px;padding:9px 12px;color:#e8d8bb;font-size:13px;line-height:1.45;">Tenho 32 anos de contribuição e queria saber se já posso me aposentar.</div>
+    </div>
+    <div style="padding:11px 12px;border-top:1px solid rgba(237,224,200,0.08);background:#16110c;display:flex;align-items:center;gap:9px;">
+      <span style="flex:1;background:#211a13;border:1px solid rgba(237,224,200,0.1);border-radius:10px;padding:9px 11px;color:#7a6a52;font-size:13px;">Mensagem...</span>
+      <button style="width:34px;height:34px;border-radius:9px;border:none;background:#754d2a;color:#f5e6cc;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;" style-hover="background:#8a5c33">{{ ic.send }}</button>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;intranet&quot;,&quot;chat&quot;],&quot;default&quot;:&quot;intranet&quot;,&quot;tsType&quot;:&quot;'intranet'|'chat'&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;comando&quot;,&quot;funil&quot;,&quot;sdr&quot;],&quot;default&quot;:&quot;comando&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showExternos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#c4a882&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  initialBoard() {
+    return [
+      { title: 'Novo', dot: '#c4a882', cards: [ { name: 'Carla Mendes', benefit: 'BPC/LOAS', prio: 'media' }, { name: 'Roberto Dias', benefit: 'Aposentadoria', prio: 'baixa' } ] },
+      { title: 'Qualificação', dot: '#c9ae84', cards: [ { name: 'Sandra Reis', benefit: 'Auxílio-doença', prio: 'media' } ] },
+      { title: 'Reunião agendada', dot: '#b89a72', cards: [ { name: 'João Pedro Podlasnik', benefit: 'Auxílio-doença', prio: 'alta' } ] },
+      { title: 'Reunião realizada', dot: '#a88a62', cards: [ { name: 'André Lima', benefit: 'Aposentadoria', prio: 'alta' } ] },
+      { title: 'Negociação', dot: '#9e7a52', cards: [ { name: 'Maria Souza', benefit: 'Aposentadoria', prio: 'alta' }, { name: 'João Lima', benefit: 'Pensão por morte', prio: 'media' } ] },
+      { title: 'Última chance', dot: '#8c6a44', cards: [ { name: 'Anderson', benefit: 'BPC/LOAS', prio: 'alta' } ] },
+      { title: 'Fechado', dot: '#754d2a', cards: [ { name: 'Lúcia Prado', benefit: 'Aposentadoria', prio: 'baixa' } ] },
+      { title: 'Perdido', dot: '#6b5640', cards: [ { name: 'Marcos Vieira', benefit: 'Aposentadoria', prio: 'baixa' } ] }
+    ];
+  }
+  moveCard(targetCi) {
+    const d = this.dragRef;
+    if (!d || d.ci === targetCi) { this.dragRef = null; return; }
+    const board = this.state.board.map(col => ({ ...col, cards: col.cards.slice() }));
+    const moved = board[d.ci].cards.splice(d.ki, 1)[0];
+    if (moved) board[targetCi].cards.push(moved);
+    this.dragRef = null;
+    this.setState({ board });
+  }
+
+  state = { mode: null, screen: null, chatActive: 'todas', leadPanel: true, chatView: 'conversas', leadTab: 'resumo', miniChat: null, board: this.initialBoard() };
+
+  ICONS = {
+    inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    messageCircle:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+    messageSquare:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    atSign:'<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>',
+    users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    columns:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/>',
+    braces:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+    bot:'<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+    contact:'<path d="M16 18a4 4 0 0 0-8 0"/><rect width="18" height="18" x="3" y="4" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 2v2"/><path d="M16 2v2"/>',
+    barChart:'<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    megaphone:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    bookOpen:'<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+    book:'<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>',
+    settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    pencil:'<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+    filter:'<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+    sort:'<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>',
+    collapse:'<path d="M17 12H3"/><path d="m11 18 6-6-6-6"/><path d="M21 5v14"/>',
+    layoutGrid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+    funnel:'<path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"/>',
+    gauge:'<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+    checkCircle:'<path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/>',
+    calendar:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+    layoutTemplate:'<rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/>',
+    scanLine:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+    history:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+    target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    terminal:'<path d="m4 17 6-6-6-6"/><path d="M12 19h8"/>',
+    externalLink:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    chevronDown:'<path d="m6 9 6 6 6-6"/>',
+    chevronRight:'<path d="m9 18 6-6-6-6"/>',
+    mapPin:'<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+    flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    eye:'<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+    eyeOff:'<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
+    flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>',
+    fileText:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+    x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    bell:'<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.41 5.956-2.738 7.326"/>',
+    trendingUp:'<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>',
+    phone:'<path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/>',
+    userPlus:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/>',
+    send:'<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+    paperclip:'<path d="M13.234 20.252 21 12.3"/><path d="m16 6-8.414 8.586a2 2 0 0 0 0 2.828 2 2 0 0 0 2.828 0l8.414-8.586a4 4 0 0 0 0-5.656 4 4 0 0 0-5.656 0l-8.415 8.585a6 6 0 1 0 8.486 8.486"/>',
+    more:'<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+    reply:'<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>',
+    scale:'<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+    briefcase:'<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/>',
+    landmark:'<path d="M10 18v-7"/><path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/>'
+  };
+
+  icon(name, size, stroke) {
+    return React.createElement('svg', {
+      width: size || 20, height: size || 20, viewBox: '0 0 24 24', fill: 'none',
+      stroke: 'currentColor', strokeWidth: stroke || 1.7, strokeLinecap: 'round', strokeLinejoin: 'round',
+      style: { display: 'block', flex: '0 0 auto' },
+      dangerouslySetInnerHTML: { __html: this.ICONS[name] || '' }
+    });
+  }
+
+  go(mode, screen) {
+    this.setState(s => ({ mode, screen: screen !== undefined ? screen : s.screen }));
+  }
+
+  renderVals() {
+    const I = (n, s, w) => this.icon(n, s, w);
+    const accent = this.props.accent || '#c4a882';
+    const mode = this.state.mode || (this.props.startView === 'chat' ? 'chat' : 'intranet');
+    const screen = this.state.screen || this.props.startScreen || 'comando';
+    const chatActive = this.state.chatActive;
+
+    // ---- rail buttons ----
+    const railBase = {
+      position: 'relative', width: '52px', height: '52px', borderRadius: '14px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+      border: '1px solid transparent', background: 'transparent', transition: 'all .16s'
+    };
+    const railActive = (on) => on
+      ? { ...railBase, background: 'color-mix(in srgb, ' + accent + ' 18%, transparent)', border: '1px solid ' + 'color-mix(in srgb, ' + accent + ' 42%, transparent)', color: accent, boxShadow: '0 4px 14px rgba(0,0,0,.35)' }
+      : { ...railBase, color: '#9c876a' };
+
+    // ---- chat nav ----
+    const chatRaw = [
+      { id: 'inbox', label: 'Caixa de Entrada', icon: 'inbox', indent: 0 },
+      { id: 'conversas', label: 'Conversas', icon: 'messageCircle', indent: 0, caret: true, group: true },
+      { id: 'todas', label: 'Todas as conversas', icon: 'messageSquare', indent: 1 },
+      { id: 'mencoes', label: 'Menções', icon: 'atSign', indent: 1 },
+      { id: 'participantes', label: 'Participantes', icon: 'users', indent: 1 },
+      { id: 'naoatendidas', label: 'Não atendidas', icon: 'clock', indent: 1 },
+      { id: 'canais', label: 'Canais', icon: 'columns', indent: 1, caret: true, group: true },
+      { id: 'teste', label: 'Teste', icon: 'braces', indent: 2 },
+      { id: 'kanban', label: 'Kanban Board', icon: 'columns', indent: 0 },
+      { id: 'capitao', label: 'Capitão', icon: 'bot', indent: 0 },
+      { id: 'contatos', label: 'Contatos', icon: 'contact', indent: 0 },
+      { id: 'relatorios', label: 'Relatórios', icon: 'barChart', indent: 0 },
+      { id: 'campanhas', label: 'Campanhas', icon: 'megaphone', indent: 0 },
+      { id: 'ajuda', label: 'Central de Ajuda', icon: 'book', indent: 0 },
+      { id: 'config', label: 'Configurações', icon: 'settings', indent: 0 }
+    ];
+    const chatView = this.state.chatView || 'conversas';
+    const chatNav = chatRaw.map(it => {
+      const active = it.id === 'kanban' ? chatView === 'kanban' : (chatView === 'conversas' && it.id === chatActive);
+      return {
+        label: it.label,
+        icon: I(it.icon, 18),
+        caret: it.caret ? I('chevronDown', 14) : null,
+        onClick: it.id === 'kanban' ? (() => this.setState({ chatView: 'kanban' })) : (() => this.setState({ chatView: 'conversas', chatActive: it.id })),
+        rowStyle: {
+          display: 'flex', alignItems: 'center', gap: '11px',
+          padding: '8px 14px 8px ' + (14 + (it.indent || 0) * 18) + 'px',
+          margin: '1px 8px', borderRadius: '9px', cursor: 'pointer',
+          fontSize: '13.5px', fontWeight: active ? 600 : 500,
+          color: active ? '#f3e7d2' : '#b29a7d',
+          background: active ? 'color-mix(in srgb, ' + accent + ' 15%, transparent)' : 'transparent'
+        },
+        iconStyle: { display: 'flex', color: active ? accent : '#8c7a5f', flex: '0 0 auto' },
+        caretStyle: { display: 'flex', color: '#6f5d44', flex: '0 0 auto' }
+      };
+    });
+
+    // ---- intranet sections ----
+    const sectionsRaw = [
+      { label: 'COMERCIAL', items: [
+        { id: 'comando', label: 'Centro de Comando', icon: 'layoutGrid' },
+        { id: 'funil', label: 'Funil de Leads', icon: 'funnel' },
+        { id: 'sdr', label: 'Painel do SDR', icon: 'gauge' },
+        { id: 'pra-fechar', label: 'Pra fechar', icon: 'checkCircle' },
+        { id: 'agenda', label: 'Agenda', icon: 'calendar' },
+        { id: 'modelos', label: 'Modelos', icon: 'layoutTemplate' },
+        { id: 'conversas', label: 'Conversas', icon: 'messageSquare', kind: 'chat' }
+      ]},
+      { label: 'JURÍDICO', items: [
+        { id: 'triagem', label: 'Triagem de Iniciais', icon: 'scanLine' },
+        { id: 'historico', label: 'Histórico', icon: 'history' }
+      ]},
+      { label: 'MARKETING', items: [
+        { id: 'marketing', label: 'Marketing', icon: 'megaphone' },
+        { id: 'campanhas', label: 'Campanhas', icon: 'target' },
+        { id: 'relatorios', label: 'Relatórios', icon: 'barChart' }
+      ]},
+      { label: 'INTELIGÊNCIA', items: [
+        { id: 'agentes', label: 'Agentes de IA', icon: 'bot' },
+        { id: 'base', label: 'Base de Conhecimento', icon: 'bookOpen' },
+        { id: 'prompts', label: 'Prompts', icon: 'terminal' }
+      ]},
+      { label: 'GESTÃO', items: [
+        { id: 'equipe', label: 'Equipe', icon: 'users' }
+      ]}
+    ];
+    const lookup = {};
+    sectionsRaw.forEach(sec => sec.items.forEach(it => { lookup[it.id] = it; }));
+    const sections = sectionsRaw.map(sec => ({
+      label: sec.label,
+      items: sec.items.map(it => {
+        const active = it.kind !== 'chat' && screen === it.id;
+        return {
+          label: it.label,
+          icon: I(it.icon, 18),
+          onClick: it.kind === 'chat' ? (() => this.go('chat')) : (() => this.go('intranet', it.id)),
+          rowStyle: {
+            display: 'flex', alignItems: 'center', gap: '12px',
+            padding: '9px 16px', margin: '1px 10px', borderRadius: '9px', cursor: 'pointer',
+            fontSize: '13.5px', fontWeight: active ? 600 : 500,
+            color: active ? '#f3e7d2' : '#b29a7d',
+            background: active ? 'color-mix(in srgb, ' + accent + ' 15%, transparent)' : 'transparent',
+            border: active ? '1px solid color-mix(in srgb, ' + accent + ' 28%, transparent)' : '1px solid transparent'
+          },
+          iconStyle: { display: 'flex', color: active ? accent : '#8c7a5f', flex: '0 0 auto' }
+        };
+      })
+    }));
+
+    // ---- kanban board (mesma fonte de dados: Chatwoot <-> Intranet) ----
+    const chipBase = { display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', fontWeight: 600, borderRadius: '999px', padding: '3px 9px', fontFamily: 'var(--font-sans)' };
+    const prioMap = {
+      alta: { label: 'Alta', style: { ...chipBase, background: '#754d2a', color: '#f5e6cc', border: '1px solid transparent' } },
+      media: { label: 'Média', style: { ...chipBase, background: 'color-mix(in srgb, ' + accent + ' 16%, transparent)', color: accent, border: '1px solid color-mix(in srgb, ' + accent + ' 30%, transparent)' } },
+      baixa: { label: 'Baixa', style: { ...chipBase, background: 'rgba(237,224,200,0.06)', color: '#9c876a', border: '1px solid rgba(237,224,200,0.1)' } }
+    };
+    const boardRaw = this.state.board;
+    const board = boardRaw.map((col, ci) => ({
+      title: col.title,
+      count: col.cards.length,
+      dotStyle: { width: '8px', height: '8px', borderRadius: '50%', background: col.dot, flex: '0 0 auto' },
+      onDragOver: (e) => e.preventDefault(),
+      onDrop: (e) => { e.preventDefault(); this.moveCard(ci); },
+      cards: col.cards.map((c, ki) => ({
+        name: c.name, benefit: c.benefit,
+        prioLabel: prioMap[c.prio].label,
+        prioStyle: prioMap[c.prio].style,
+        flag: I('flag', 11), eye: I('eye', 14), eyeOff: I('eyeOff', 14),
+        chat: I('messageCircle', 13),
+        onDragStart: (e) => { this.dragRef = { ci, ki }; if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', c.name); } catch (_) {} } },
+        openConversa: () => this.setState({ miniChat: { name: c.name, benefit: c.benefit } })
+      }))
+    }));
+
+    const leadTab = this.state.leadTab || 'resumo';
+    const tabStyle = (on) => ({ font: '600 12.5px var(--font-sans)', color: on ? accent : '#8c7a5f', borderBottom: on ? '2px solid ' + accent : '2px solid transparent', paddingBottom: '9px', cursor: 'pointer', whiteSpace: 'nowrap' });
+
+    const knownScreens = ['comando', 'funil', 'sdr'];
+    const isPlaceholder = mode === 'intranet' && !knownScreens.includes(screen);
+    const phItem = lookup[screen];
+
+    return {
+      isChat: mode === 'chat',
+      isIntranet: mode === 'intranet',
+      isComando: mode === 'intranet' && screen === 'comando',
+      isFunil: mode === 'intranet' && screen === 'funil',
+      isSDR: mode === 'intranet' && screen === 'sdr',
+      isPlaceholder,
+      placeholderTitle: phItem ? phItem.label : 'Módulo',
+      placeholderIcon: I(phItem ? phItem.icon : 'layoutGrid', 32),
+      showExternos: this.props.showExternos !== false,
+      isLeadPanel: this.state.leadPanel !== false,
+      toggleLead: () => this.setState(s => ({ leadPanel: !s.leadPanel })),
+      chatView,
+      isConversas: chatView === 'conversas',
+      isKanban: chatView === 'kanban',
+      board,
+      isResumo: leadTab === 'resumo',
+      isHistorico: leadTab === 'historico',
+      isDocumentos: leadTab === 'documentos',
+      goResumo: () => this.setState({ leadTab: 'resumo' }),
+      goHistorico: () => this.setState({ leadTab: 'historico' }),
+      goDocumentos: () => this.setState({ leadTab: 'documentos' }),
+      tabResumoStyle: tabStyle(leadTab === 'resumo'),
+      tabHistoricoStyle: tabStyle(leadTab === 'historico'),
+      tabDocumentosStyle: tabStyle(leadTab === 'documentos'),
+      miniChatOpen: !!this.state.miniChat,
+      miniChatName: this.state.miniChat ? this.state.miniChat.name : '',
+      miniChatBenefit: this.state.miniChat ? this.state.miniChat.benefit : '',
+      miniChatInitial: this.state.miniChat ? this.state.miniChat.name.charAt(0) : '',
+      closeMini: () => this.setState({ miniChat: null }),
+      goChat: () => this.go('chat'),
+      goIntranet: () => this.go('intranet', 'comando'),
+      railChatStyle: railActive(mode === 'chat'),
+      railIntranetStyle: railActive(mode === 'intranet'),
+      chatNav,
+      sections,
+      ic: {
+        chat: I('messageCircle', 22), grid: I('scale', 22),
+        search: I('search', 17), pencil: I('pencil', 16), filter: I('filter', 16),
+        sort: I('sort', 16), collapse: I('collapse', 17), bell: I('bell', 18),
+        chevronDown: I('chevronDown', 15), plus: I('plus', 16), send: I('send', 17),
+        clip: I('paperclip', 17), more: I('more', 18), settings: I('settings', 20),
+        ext: I('externalLink', 11), adv: I('briefcase', 20), inss: I('landmark', 20),
+        cal: I('calendar', 20), calbig: I('calendar', 16), reply: I('reply', 13),
+        resolve: I('checkCircle', 16), userPlus: I('userPlus', 18), msg: I('messageSquare', 18),
+        check: I('checkCircle', 18), trend: I('trendingUp', 18), up: I('trendingUp', 12),
+        phone: I('phone', 18), gauge: I('gauge', 18),
+        lead: I('contact', 16), chevR: I('chevronRight', 16), checkSm: I('checkCircle', 15),
+        pin: I('mapPin', 14), flame: I('flame', 14), target: I('target', 15),
+        calSm: I('calendar', 14), plusSm: I('plus', 14),
+        file: I('fileText', 16), kanban: I('columns', 18), x: I('x', 18), whats: I('messageCircle', 16)
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

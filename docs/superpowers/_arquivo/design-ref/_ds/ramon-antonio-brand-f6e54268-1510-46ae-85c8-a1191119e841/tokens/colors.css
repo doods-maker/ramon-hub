@@ -1,0 +1,48 @@
+/* ============================================================
+   COLORS — Ramon Antonio Advogados
+   Warm bronze palette. Base values + semantic aliases.
+   ============================================================ */
+:root {
+  /* --- Brand scale: Bronze --- */
+  --bronze-900: #3b2010; /* bronze escuro — títulos, fundo de destaque */
+  --bronze-700: #5c3c22; /* logo background tone */
+  --bronze-600: #754d2a; /* PRIMARY — botões, ícones, links */
+  --bronze-400: #9e7a52; /* bronze claro — acentos */
+  --bronze-300: #c4a882; /* bronze pálido — detalhes, divisores */
+
+  /* --- Neutrals: Cream & Ink --- */
+  --cream-100: #faf3e8; /* fundo base da página */
+  --cream-200: #f5e6cc; /* fundos claros, cards alternados */
+  --dark-900:  #191310; /* seções escuras, fundo de vídeo */
+  --ink-100:   #ede0c8; /* texto sobre fundo escuro */
+  --text-900:  #2a1d12; /* texto principal sobre fundo claro */
+  --text-600:  #6b5640; /* texto secundário / muted sobre claro */
+
+  --white: #ffffff;
+
+  /* --- Semantic aliases --- */
+  --color-primary:        var(--bronze-600);
+  --color-primary-hover:  var(--bronze-700);
+  --color-primary-press:  var(--bronze-900);
+  --color-accent:         var(--bronze-400);
+  --color-accent-pale:    var(--bronze-300);
+
+  --surface-page:    var(--cream-100);
+  --surface-card:    var(--white);
+  --surface-sunken:  var(--cream-200);
+  --surface-dark:    var(--dark-900);
+  --surface-brand:   var(--bronze-900);
+
+  --text-primary:    var(--text-900);
+  --text-secondary:  var(--text-600);
+  --text-on-dark:    var(--ink-100);
+  --text-on-brand:   var(--ink-100);
+  --text-on-primary: var(--cream-100);
+
+  --border-soft:   color-mix(in srgb, var(--bronze-600) 16%, transparent);
+  --border-strong: color-mix(in srgb, var(--bronze-600) 32%, transparent);
+  --border-on-dark: color-mix(in srgb, var(--ink-100) 16%, transparent);
+
+  /* Gradient used for short dividers & accents */
+  --gradient-bronze: linear-gradient(90deg, var(--bronze-600) 0%, var(--bronze-300) 100%);
+}

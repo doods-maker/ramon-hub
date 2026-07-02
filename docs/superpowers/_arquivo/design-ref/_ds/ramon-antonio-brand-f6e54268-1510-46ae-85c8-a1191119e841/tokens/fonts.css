@@ -1,0 +1,4 @@
+/* Webfonts — Cormorant Garamond (display serif) + Inter (UI sans).
+   Both are Google Fonts; loaded via the Google Fonts CSS API.
+   For fully offline/self-hosted use, swap these for local @font-face + .woff2 files. */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
