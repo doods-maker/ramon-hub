@@ -4,7 +4,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   before_action :check_authorization
 
   def index
-    @leads = policy_scope(Current.account.leads)
+    @leads = filtered_leads
   end
 
   def show; end
@@ -52,6 +52,22 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   def fetch_lead
     @lead = Current.account.leads.find(params[:id])
+  end
+
+  def filtered_leads
+    leads = policy_scope(Current.account.leads)
+    leads = leads.where(benefit_type_id: params[:benefit_type_id]) if params[:benefit_type_id].present?
+    leads = leads.where(lead_priority_id: params[:lead_priority_id]) if params[:lead_priority_id].present?
+    leads = leads.where('sdr_id = :a OR closer_id = :a', a: params[:agent_id]) if params[:agent_id].present?
+    leads = leads.where(source: params[:source]) if params[:source].present?
+    leads = search_leads(leads, params[:q]) if params[:q].present?
+    leads
+  end
+
+  def search_leads(leads, query)
+    like = "%#{query}%"
+    leads.left_joins(:contact)
+         .where('leads.name ILIKE :q OR contacts.name ILIKE :q OR contacts.phone_number ILIKE :q', q: like)
   end
 
   def create_lead_for(conversation)
