@@ -114,6 +114,21 @@ RSpec.describe 'Leads API', type: :request do
       response.parsed_body['payload'].map { |l| l['id'] }
     end
 
+    it 'sem params retorna todos os leads' do
+      a = account.leads.create!(name: 'A', lead_stage: novo)
+      b = account.leads.create!(name: 'B', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      expect(ids(response)).to contain_exactly(a.id, b.id)
+    end
+
+    it 'filtra por source' do
+      a = account.leads.create!(name: 'A', lead_stage: novo, source: 'meta-ads')
+      account.leads.create!(name: 'B', lead_stage: novo, source: 'indicacao')
+      get "/api/v1/accounts/#{account.id}/leads", params: { source: 'meta-ads' },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([a.id])
+    end
+
     it 'filtra por benefit_type_id' do
       a = account.leads.create!(name: 'A', lead_stage: novo, benefit_type: bpc_teste)
       account.leads.create!(name: 'B', lead_stage: novo)
