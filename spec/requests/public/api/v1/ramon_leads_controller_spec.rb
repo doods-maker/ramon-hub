@@ -82,7 +82,8 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       expect do
         post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
       end.to change(Lead, :count).by(1)
-      expect(Lead.last.lead_stage).to eq stage_novo
+      # Lead tem default_scope por (lead_stage_id, position, id) — `.last` não é o mais recente
+      expect(Lead.unscoped.order(:id).last.lead_stage).to eq stage_novo
     end
   end
 end
