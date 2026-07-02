@@ -8,7 +8,9 @@ const props = defineProps({
 const emit = defineEmits(['update']);
 
 const getters = useStoreGetters();
-const benefitTypes = computed(() => getters['leadConfig/getBenefitTypes'].value);
+const benefitTypes = computed(
+  () => getters['leadConfig/getBenefitTypes'].value
+);
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const sources = computed(() => getters['leadConfig/getSources'].value);
 const agents = computed(() => getters['agents/getAgents'].value);
@@ -72,7 +74,9 @@ const clearFilters = () => {
       @change="emitUpdate({ agentId: $event.target.value || null })"
     >
       <option value="">{{ $t('RAMON.FUNIL.FILTERS.AGENT') }}</option>
-      <option v-for="a in agents" :key="a.id" :value="a.id">{{ a.name }}</option>
+      <option v-for="a in agents" :key="a.id" :value="a.id">
+        {{ a.name }}
+      </option>
     </select>
     <select
       data-testid="filter-source"

@@ -13,7 +13,9 @@ const toParams = (filters = {}) => {
     q: filters.q,
   };
   return Object.fromEntries(
-    Object.entries(map).filter(([, v]) => v !== null && v !== undefined && v !== '')
+    Object.entries(map).filter(
+      ([, v]) => v !== null && v !== undefined && v !== ''
+    )
   );
 };
 
