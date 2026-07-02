@@ -56,8 +56,8 @@
 | `config/locales/pt_BR.yml` | +`ramon_lead_created: 'Novo lead da landing page: %{name}'` no bloco `notifications.notification_title` | título da notificação (português) | A-notif |
 | `app/javascript/dashboard/routes/dashboard/notifications/components/NotificationTable.vue` | `meta.assignee` → `meta?.assignee` (safe navigation operator) | guarda `meta?` para tipo Lead sem `assignee` | A-notif |
 | `app/javascript/dashboard/routes/dashboard/notifications/components/NotificationsView.vue` | +branch `if (notificationType === 'ramon_lead_created')` que navega `name: 'kanban_board'` | rota para o Kanban Board ao clicar na notificação | A-notif |
-| `app/javascript/dashboard/i18n/locale/en/generalSettings.json` | +`"ramon_lead_created": "New lead (LP)"` no bloco `NOTIFICATION_SETTINGS.TYPE_LABEL` | rótulo do tipo de notificação (inglês) | A-notif |
-| `app/javascript/dashboard/i18n/locale/pt_BR/generalSettings.json` | +`"ramon_lead_created": "Lead novo (LP)"` no bloco `NOTIFICATION_SETTINGS.TYPE_LABEL` | rótulo do tipo de notificação (português) | A-notif |
+| `app/javascript/dashboard/i18n/locale/en/generalSettings.json` | +`"ramon_lead_created": "New lead (LP)"` no bloco `NOTIFICATIONS_PAGE.TYPE_LABEL` | rótulo do tipo de notificação (inglês) | A-notif |
+| `app/javascript/dashboard/i18n/locale/pt_BR/generalSettings.json` | +`"ramon_lead_created": "Lead novo (LP)"` no bloco `NOTIFICATIONS_PAGE.TYPE_LABEL` | rótulo do tipo de notificação (português) | A-notif |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
