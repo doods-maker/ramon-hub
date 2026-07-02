@@ -20,4 +20,14 @@ RSpec.describe 'Lead Config API', type: :request do
     novo = response.parsed_body['stages'].find { |s| s['name'] == 'Novo' }
     expect(novo['color']).to eq('#6b7280')
   end
+
+  it 'retorna as origens distintas ordenadas' do
+    stage = account.lead_stages.first
+    account.leads.create!(name: 'A', lead_stage: stage, source: 'Meta Ads')
+    account.leads.create!(name: 'B', lead_stage: stage, source: 'Indicação')
+    account.leads.create!(name: 'C', lead_stage: stage, source: 'Meta Ads')
+    account.leads.create!(name: 'D', lead_stage: stage, source: nil)
+    get "/api/v1/accounts/#{account.id}/lead_config", headers: admin.create_new_auth_token
+    expect(response.parsed_body['sources']).to eq(['Indicação', 'Meta Ads'])
+  end
 end

@@ -5,5 +5,6 @@ class Api::V1::Accounts::LeadConfigController < Api::V1::Accounts::BaseControlle
     @stages = Current.account.lead_stages
     @benefit_types = Current.account.benefit_types
     @priorities = Current.account.lead_priorities
+    @sources = Current.account.leads.where.not(source: [nil, '']).distinct.pluck(:source).sort
   end
 end
