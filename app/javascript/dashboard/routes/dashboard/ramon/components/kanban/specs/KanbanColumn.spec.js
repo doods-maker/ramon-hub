@@ -50,12 +50,12 @@ describe('KanbanColumn.vue', () => {
 
   it('sincroniza a contagem local quando a prop leads muda', async () => {
     const wrapper = mountColumn();
-    expect(wrapper.find('.text-n-slate-9').text()).toBe('1');
+    expect(wrapper.find('[data-testid="stage-count"]').text()).toBe('1');
 
     await wrapper.setProps({
       leads: [...leads, { id: 11, name: 'Ana', lead_stage_id: 5, position: 1 }],
     });
-    expect(wrapper.find('.text-n-slate-9').text()).toBe('2');
+    expect(wrapper.find('[data-testid="stage-count"]').text()).toBe('2');
   });
 
   it('re-emite openLead vindo do LeadCard', () => {
@@ -65,5 +65,23 @@ describe('KanbanColumn.vue', () => {
     });
     wrapper.findComponent(LeadCard).vm.$emit('openLead', { id: 10 });
     expect(wrapper.emitted('openLead')[0][0]).toEqual({ id: 10 });
+  });
+
+  it('mostra a soma dos valores em BRL', () => {
+    const wrapper = mount(KanbanColumn, {
+      props: {
+        stage: { id: 1, name: 'Novo', color: '#fff' },
+        leads: [
+          { id: 1, lead_stage_id: 1, value: 1500 },
+          { id: 2, lead_stage_id: 1, value: null },
+          { id: 3, lead_stage_id: 1, value: 500.5 },
+        ],
+      },
+      global: { mocks: { $t: k => k } },
+    });
+    // 2000,50 formatado em pt-BR
+    expect(wrapper.find('[data-testid="stage-total"]').text()).toContain(
+      '2.000,50'
+    );
   });
 });

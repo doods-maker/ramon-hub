@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import Draggable from 'vuedraggable';
 import LeadCard from './LeadCard.vue';
 import StageHeaderMenu from './StageHeaderMenu.vue';
@@ -41,6 +41,14 @@ const onChange = evt => {
     newIndex: change.newIndex,
   });
 };
+
+const totalValue = computed(() =>
+  props.leads.reduce((sum, lead) => sum + (Number(lead.value) || 0), 0)
+);
+const brl = value =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+    value
+  );
 </script>
 
 <template>
@@ -66,7 +74,12 @@ const onChange = evt => {
         />
       </span>
       <span class="flex items-center gap-2">
-        <span class="text-xs text-n-slate-9">{{ localLeads.length }}</span>
+        <span data-testid="stage-total" class="text-xs text-n-slate-9">
+          {{ brl(totalValue) }}
+        </span>
+        <span data-testid="stage-count" class="text-xs text-n-slate-9">
+          {{ localLeads.length }}
+        </span>
         <StageHeaderMenu
           :stage="stage"
           @rename="name => emit('renameStage', { id: stage.id, name })"
