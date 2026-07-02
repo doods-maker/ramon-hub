@@ -8,6 +8,7 @@ export const state = {
   stages: [],
   benefitTypes: [],
   priorities: [],
+  sources: [],
   uiFlags: { isFetching: false },
 };
 
@@ -15,6 +16,7 @@ export const getters = {
   getStages: _state => _state.stages,
   getBenefitTypes: _state => _state.benefitTypes,
   getPriorities: _state => _state.priorities,
+  getSources: _state => _state.sources,
 };
 
 const bySortedPosition = (a, b) => a.position - b.position;
@@ -98,6 +100,7 @@ export const mutations = {
     _state.stages = data.stages || [];
     _state.benefitTypes = data.benefit_types || [];
     _state.priorities = data.priorities || [];
+    _state.sources = data.sources || [];
   },
 
   [types.SET_LEAD_STAGES](_state, data) {
