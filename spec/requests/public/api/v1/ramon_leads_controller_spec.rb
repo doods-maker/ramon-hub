@@ -74,6 +74,23 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       expect(lead.reload.lead_notes.pluck(:body).join).to include('auxilio-acidente')
     end
 
+    it 'notifica os usuários da conta quando cria lead novo' do
+      create(:user, account: account, role: :administrator)
+
+      expect do
+        post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
+      end.to change(Notification.where(notification_type: 'ramon_lead_created'), :count).by(1)
+    end
+
+    it 'notifica também na recaptura de lead aberto existente' do
+      create(:user, account: account, role: :administrator)
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
+
+      expect do
+        post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
+      end.to change(Notification.where(notification_type: 'ramon_lead_created'), :count).by(1)
+    end
+
     it 'lead do contato em etapa ganha/perdida NÃO bloqueia lead novo' do
       stage_ganho = account.lead_stages.find_by!(is_won: true)
       contact = create(:contact, account: account, phone_number: '+5548999887766')
