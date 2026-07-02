@@ -45,6 +45,14 @@ export default {
         unreadCount: this.meta.unreadCount,
       });
 
+      if (notificationType === 'ramon_lead_created') {
+        this.$router.push({
+          name: 'kanban_board',
+          params: { accountId: this.accountId },
+        });
+        return;
+      }
+
       this.$router.push(
         `/app/accounts/${this.accountId}/conversations/${conversationId}`
       );
