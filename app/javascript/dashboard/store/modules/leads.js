@@ -2,10 +2,32 @@ import * as MutationHelpers from 'shared/helpers/vuex/mutationHelpers';
 import types from '../mutation-types';
 import LeadsAPI from '../../api/leads';
 
+const FILTERS_KEY = 'ramon_lead_filters';
+
+const toParams = (filters = {}) => {
+  const map = {
+    benefit_type_id: filters.benefitTypeId,
+    lead_priority_id: filters.leadPriorityId,
+    agent_id: filters.agentId,
+    source: filters.source,
+    q: filters.q,
+  };
+  return Object.fromEntries(
+    Object.entries(map).filter(([, v]) => v !== null && v !== undefined && v !== '')
+  );
+};
+
 export const state = {
   records: [],
   selectedId: null,
   dockConversationId: null,
+  filters: {
+    benefitTypeId: null,
+    leadPriorityId: null,
+    agentId: null,
+    source: '',
+    q: '',
+  },
   uiFlags: {
     isFetching: false,
     isCreating: false,
@@ -33,17 +55,42 @@ export const getters = {
   getDockConversationId(_state) {
     return _state.dockConversationId;
   },
+  getFilters(_state) {
+    return _state.filters;
+  },
 };
 
 export const actions = {
-  get: async ({ commit }) => {
+  get: async ({ commit, state = {} }) => {
     commit(types.SET_LEAD_UI_FLAG, { isFetching: true });
     try {
-      const response = await LeadsAPI.get();
+      const response = await LeadsAPI.get(toParams(state.filters));
       commit(types.SET_LEADS, response.data.payload);
     } finally {
       commit(types.SET_LEAD_UI_FLAG, { isFetching: false });
     }
+  },
+  setFilters: async ({ commit, dispatch }, partial) => {
+    commit(types.SET_LEAD_FILTERS, partial);
+    try {
+      const merged = JSON.parse(localStorage.getItem(FILTERS_KEY) || '{}');
+      localStorage.setItem(
+        FILTERS_KEY,
+        JSON.stringify({ ...merged, ...partial })
+      );
+    } catch (e) {
+      // localStorage indisponível: seguimos sem persistir
+    }
+    await dispatch('get');
+  },
+  loadFilters: async ({ commit, dispatch }) => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(FILTERS_KEY) || '{}');
+      if (Object.keys(saved).length) commit(types.SET_LEAD_FILTERS, saved);
+    } catch (e) {
+      // localStorage indisponível/corrompido: ignora
+    }
+    await dispatch('get');
   },
   create: async ({ commit }, payload) => {
     commit(types.SET_LEAD_UI_FLAG, { isCreating: true });
@@ -131,6 +178,9 @@ export const mutations = {
   },
   [types.SET_DOCK_CONVERSATION](_state, id) {
     _state.dockConversationId = id;
+  },
+  [types.SET_LEAD_FILTERS](_state, partial) {
+    _state.filters = { ..._state.filters, ...partial };
   },
 };
 

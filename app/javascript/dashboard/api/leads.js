@@ -6,6 +6,10 @@ class LeadsAPI extends ApiClient {
     super('leads', { accountScoped: true });
   }
 
+  get(params = {}) {
+    return axios.get(this.url, { params });
+  }
+
   forConversation(conversationId) {
     return axios.post(`${this.url}/for_conversation`, {
       conversation_id: conversationId,
