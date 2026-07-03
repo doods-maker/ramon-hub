@@ -5,6 +5,7 @@ class Lead < ApplicationRecord
   belongs_to :conversation, optional: true
   belongs_to :benefit_type, optional: true
   belongs_to :lead_priority, optional: true
+  belongs_to :thesis, optional: true
   belongs_to :sdr, class_name: 'User', optional: true
   belongs_to :closer, class_name: 'User', optional: true
   has_many :lead_activities, dependent: :destroy_async
@@ -25,6 +26,7 @@ class Lead < ApplicationRecord
       lead_stage_id: lead_stage_id,
       benefit_type_id: benefit_type_id,
       lead_priority_id: lead_priority_id,
+      thesis_id: thesis_id,
       contact_id: contact_id,
       conversation_id: conversation_id,
       position: position,
@@ -34,6 +36,7 @@ class Lead < ApplicationRecord
       stage_color: lead_stage&.color,
       benefit_type_name: benefit_type&.name,
       lead_priority_name: lead_priority&.name,
+      thesis_name: thesis&.name,
       sdr_name: sdr&.name,
       closer_name: closer&.name,
       contact_name: contact&.name
@@ -59,6 +62,7 @@ class Lead < ApplicationRecord
     record_change('sdr_id', 'sdr_changed') { |id| User.find_by(id: id)&.name }
     record_change('closer_id', 'closer_changed') { |id| User.find_by(id: id)&.name }
     record_change('lead_priority_id', 'priority_changed') { |id| LeadPriority.find_by(id: id)&.name }
+    record_change('thesis_id', 'thesis_changed') { |id| Thesis.find_by(id: id)&.name }
     record_change('value', 'value_changed') { |v| v&.to_s }
   end
 

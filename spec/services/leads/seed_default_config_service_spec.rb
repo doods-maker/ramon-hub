@@ -46,4 +46,22 @@ RSpec.describe Leads::SeedDefaultConfigService do
     described_class.new(account).perform
     expect(novo.reload.color).to eq('#6b7280')
   end
+
+  it 'semeia as 5 teses de incapacidade com mais de 60 itens de playbook' do
+    expect(account.theses.count).to eq(5)
+    expect(ThesisItem.where(thesis: account.theses).count).to be > 60
+  end
+
+  it 'semeia a tese de auxílio-acidente com suas seções' do
+    tese = account.theses.find_by(name: 'Auxílio-acidente (B36)')
+    expect(tese.thesis_items.pluck(:section).uniq).to match_array(ThesisItem::SECTIONS)
+  end
+
+  it 'é idempotente ao rodar o seed de teses 2x (não duplica teses)' do
+    expect { described_class.new(account).perform }.not_to(change { account.theses.count })
+  end
+
+  it 'é idempotente ao rodar o seed de teses 2x (não duplica itens)' do
+    expect { described_class.new(account).perform }.not_to(change { ThesisItem.where(thesis: account.theses).count })
+  end
 end
