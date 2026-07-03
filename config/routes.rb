@@ -289,7 +289,11 @@ Rails.application.routes.draw do
             end
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :notes, only: [:index, :create], controller: 'lead_notes'
+            resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do
+              member { post :complete }
+            end
           end
+          resources :lead_tasks, only: [:index]
           resources :lead_stages, only: [:create, :update, :destroy] do
             collection { post :reorder }
           end

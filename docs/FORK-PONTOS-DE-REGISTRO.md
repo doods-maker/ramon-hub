@@ -68,6 +68,8 @@
 | `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Teses` com 5 tipos (SET_THESES_UI_FLAG, SET_THESES, ADD_THESIS, EDIT_THESIS, DELETE_THESIS) | mutation types do módulo teses | F2.1a |
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` | +blocos/strings para Playbooks (tela, labels, erros, placeholders) | i18n inglês para UI de teses e playbooks | F2.1a |
 | `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | +blocos/strings para Playbooks (tela, labels, erros, placeholders) | i18n português para UI de teses e playbooks | F2.1a |
+| `config/routes.rb` | `resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do member { post :complete } end` dentro do bloco `resources :leads` (após `resources :notes`) | API de tarefas (próxima ação) aninhada ao lead + rota member `complete` | PR-A t2 |
+| `config/routes.rb` | `resources :lead_tasks, only: [:index]` no nível da conta (após o bloco `resources :leads`) | coleção de tarefas da conta com `scope=open\|overdue\|today` (agenda) | PR-A t2 |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -144,6 +146,10 @@
 | `app/javascript/dashboard/components/kanban/specs/LeadDrawer.spec.js` (linha de changes) | — já existia; 4 linhas de contexto | drawer: sem mudança funcional | F2.1a |
 | `spec/factories/leads.rb` (não listado no diff?) | — possivelmente ya existía; confirmar se tem `thesis: association` | factory de lead com tese | F2.1a |
 | `spec/services/leads/seed_default_config_service_spec.rb` (linha de changes) | — já existia; 18 linhas p/ cobertura de seed de teses | cobertura de seed | F2.1a |
+| `app/controllers/api/v1/accounts/lead_tasks_controller.rb` | controller CRUD + `complete` (fetch_lead condicional, fetch_task, `authorize(LeadTask)`); index escopado ao lead ou à conta (`account_scope` com `includes(:lead)` + filtros open/overdue/today) | API de tarefas do lead | PR-A t2 |
+| `app/policies/lead_task_policy.rb` | policy `index?/create?/update?/complete?/destroy?` = admin+agent (molde `lead_note_policy`) | autorização das tarefas | PR-A t2 |
+| `app/views/api/v1/accounts/lead_tasks/{index,create,update}.json.jbuilder` + `_lead_task.json.jbuilder` | serialização `{ payload: [...] }` / task única; partial com `id lead_id user_id title kind due_at completed_at created_at` + `lead_name` (via `task.lead.name`) | resposta JSON das tarefas | PR-A t2 |
+| `spec/controllers/api/v1/accounts/lead_tasks_controller_spec.rb` | request spec: lista ordenada, cria (autor), atualiza, completa (`completed_at`), remove, nega estranho (401/404), coleção da conta `scope=overdue` | cobertura da API de tarefas | PR-A t2 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
