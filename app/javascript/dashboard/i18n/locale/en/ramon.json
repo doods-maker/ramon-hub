@@ -198,7 +198,11 @@
       "THESIS": "Thesis"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Summary", "HISTORY": "History", "PLAYBOOK": "Playbook" },
+      "TABS": {
+        "SUMMARY": "Summary",
+        "HISTORY": "History",
+        "PLAYBOOK": "Playbook"
+      },
       "DISCARD": "Not a lead",
       "HISTORY": {
         "SYSTEM": "System",
@@ -217,10 +221,28 @@
       "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",
       "COPY": "Copy",
       "COPIED": "Copied!",
+      "THIS_STAGE": "this stage",
       "SECTIONS": {
         "QUALIFICACAO": "Qualification",
+        "APRESENTACAO": "Presentation",
         "OBJECAO": "Objections",
         "DOCUMENTO": "Documents"
+      }
+    },
+    "DOCS": {
+      "TITLE": "Documents",
+      "COUNT": "{received}/{total} received",
+      "CHARGE": "Request pending",
+      "COPIED": "Draft copied — paste it into WhatsApp",
+      "STATUS": {
+        "PENDENTE": "Pending",
+        "SOLICITADO": "Requested",
+        "RECEBIDO": "Received"
+      },
+      "DRAFT": {
+        "GREETING": "Hi {name}, how are you? To move your case forward, I still need these documents:",
+        "ITEM": "• {item}",
+        "CLOSING": "Once you can send them over, we'll proceed with your request. Thank you!"
       }
     },
     "PLAYBOOKS": {

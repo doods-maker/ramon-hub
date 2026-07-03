@@ -198,7 +198,11 @@
       "THESIS": "Tese"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Resumo", "HISTORY": "Histórico", "PLAYBOOK": "Playbook" },
+      "TABS": {
+        "SUMMARY": "Resumo",
+        "HISTORY": "Histórico",
+        "PLAYBOOK": "Playbook"
+      },
       "DISCARD": "Não é lead",
       "HISTORY": {
         "SYSTEM": "Sistema",
@@ -217,10 +221,28 @@
       "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",
       "COPY": "Copiar",
       "COPIED": "Copiado!",
+      "THIS_STAGE": "nesta etapa",
       "SECTIONS": {
         "QUALIFICACAO": "Qualificação",
+        "APRESENTACAO": "Apresentação",
         "OBJECAO": "Objeções",
         "DOCUMENTO": "Documentos"
+      }
+    },
+    "DOCS": {
+      "TITLE": "Documentos",
+      "COUNT": "{received}/{total} recebidos",
+      "CHARGE": "Cobrar pendentes",
+      "COPIED": "Rascunho copiado — cole no WhatsApp",
+      "STATUS": {
+        "PENDENTE": "Pendente",
+        "SOLICITADO": "Solicitado",
+        "RECEBIDO": "Recebido"
+      },
+      "DRAFT": {
+        "GREETING": "Olá {name}, tudo bem? Para dar andamento ao seu caso, ainda preciso destes documentos:",
+        "ITEM": "• {item}",
+        "CLOSING": "Assim que puder me enviar, seguimos com o seu pedido. Obrigado!"
       }
     },
     "PLAYBOOKS": {

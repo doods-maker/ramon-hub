@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import LeadTasksList from './LeadTasksList.vue';
+import DocChecklist from './DocChecklist.vue';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -255,6 +256,8 @@ const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
     </template>
 
     <LeadTasksList v-if="lead.id" :lead-id="lead.id" />
+
+    <DocChecklist v-if="lead.thesis_id" :lead="lead" />
 
     <div class="flex flex-col gap-2 mb-4">
       <span class="text-xs uppercase text-n-slate-10">{{
