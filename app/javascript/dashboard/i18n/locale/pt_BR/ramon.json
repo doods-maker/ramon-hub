@@ -87,6 +87,7 @@
       "LOADING_CONVERSATION": "Carregando conversa…",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar",
+      "SAVE_ERROR": "Não foi possível salvar — tente de novo",
       "LOST": {
         "TITLE": "Por que este lead foi perdido?",
         "PICK": "Escolha um motivo",
@@ -171,7 +172,9 @@
       "OVERDUE": "Vencida",
       "TODAY": "Hoje",
       "IN_DAYS": "em {n}d",
-      "SCHEDULE_NEXT": "Agendar próxima?"
+      "SCHEDULE_NEXT": "Agendar próxima?",
+      "DATE_HINT": "Vazio = amanhã 9h",
+      "CREATE_ERROR": "Não foi possível criar a tarefa — tente de novo"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
@@ -213,7 +216,9 @@
           "CLOSER_CHANGED": "mudou o Closer",
           "PRIORITY_CHANGED": "mudou a prioridade",
           "VALUE_CHANGED": "mudou o valor",
-          "NOTE_ADDED": "adicionou nota"
+          "NOTE_ADDED": "adicionou nota",
+          "TASK_CREATED": "criou tarefa",
+          "TASK_COMPLETED": "concluiu tarefa"
         }
       }
     },

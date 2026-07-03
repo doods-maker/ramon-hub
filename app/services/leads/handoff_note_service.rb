@@ -18,8 +18,7 @@ class Leads::HandoffNoteService
   def recent_dossier?
     @lead.lead_notes
          .where('body LIKE ?', "#{DOSSIER_PREFIX}%")
-         .where(created_at: DUPLICATE_WINDOW.ago..)
-         .exists?
+         .exists?(created_at: DUPLICATE_WINDOW.ago..)
   end
 
   def body

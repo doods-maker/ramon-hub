@@ -87,6 +87,7 @@
       "LOADING_CONVERSATION": "Loading conversation…",
       "CANCEL": "Cancel",
       "SAVE": "Save",
+      "SAVE_ERROR": "Could not save — try again",
       "LOST": {
         "TITLE": "Why was this lead lost?",
         "PICK": "Choose a reason",
@@ -171,7 +172,9 @@
       "OVERDUE": "Overdue",
       "TODAY": "Today",
       "IN_DAYS": "in {n}d",
-      "SCHEDULE_NEXT": "Schedule next?"
+      "SCHEDULE_NEXT": "Schedule next?",
+      "DATE_HINT": "Empty = tomorrow 9am",
+      "CREATE_ERROR": "Could not create the task — try again"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",
@@ -213,7 +216,9 @@
           "CLOSER_CHANGED": "changed the Closer",
           "PRIORITY_CHANGED": "changed the priority",
           "VALUE_CHANGED": "changed the value",
-          "NOTE_ADDED": "added a note"
+          "NOTE_ADDED": "added a note",
+          "TASK_CREATED": "created task",
+          "TASK_COMPLETED": "completed task"
         }
       }
     },

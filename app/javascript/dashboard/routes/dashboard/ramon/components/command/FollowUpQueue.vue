@@ -50,7 +50,8 @@ const showTaskDone = computed(
     !!current.value?.taskId && completedLeadId.value !== current.value?.leadId
 );
 const showSchedule = computed(
-  () => !current.value?.taskId || completedLeadId.value === current.value?.leadId
+  () =>
+    !current.value?.taskId || completedLeadId.value === current.value?.leadId
 );
 
 // Fecha a esteira e reidrata o dashboard para refletir o que foi feito.
@@ -114,7 +115,9 @@ const openConversation = () => {
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     @click.self="finishAndClose"
   >
-    <div class="w-[26rem] max-w-[92vw] p-5 rounded-xl bg-n-solid-2 border border-n-weak">
+    <div
+      class="w-[26rem] max-w-[92vw] p-5 rounded-xl bg-n-solid-2 border border-n-weak"
+    >
       <!-- Cabeçalho: progresso + encerrar -->
       <div class="flex items-center justify-between mb-4">
         <span
@@ -213,7 +216,9 @@ const openConversation = () => {
         </div>
 
         <!-- Ações -->
-        <div class="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-n-weak">
+        <div
+          class="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-n-weak"
+        >
           <button
             v-if="showTaskDone"
             type="button"
@@ -259,7 +264,9 @@ const openConversation = () => {
 
       <!-- Conclusão -->
       <div v-else data-testid="queue-done" class="py-4 text-center">
-        <span class="inline-flex items-center justify-center mb-3 rounded-full size-12 bg-n-teal-3 text-n-teal-11">
+        <span
+          class="inline-flex items-center justify-center mb-3 rounded-full size-12 bg-n-teal-3 text-n-teal-11"
+        >
           <span class="i-lucide-check-check size-6" />
         </span>
         <p class="text-lg font-medium text-n-slate-12">

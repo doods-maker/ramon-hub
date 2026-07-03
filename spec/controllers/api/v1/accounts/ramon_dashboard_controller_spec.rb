@@ -53,6 +53,6 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     stranger = create(:user)
     get url, headers: stranger.create_new_auth_token, as: :json
     expect(response).not_to have_http_status(:success)
-    expect([401, 404]).to include(response.status)
+    expect(response).to have_http_status(:unauthorized).or have_http_status(:not_found)
   end
 end

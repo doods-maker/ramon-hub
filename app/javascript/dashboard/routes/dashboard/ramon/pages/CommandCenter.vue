@@ -197,9 +197,7 @@ const openStage = stageId => {
             @click="openQueue"
           >
             <span class="i-lucide-play size-4" />
-            {{
-              t('RAMON.COMMAND.QUEUE.RUN', { count: followUpQueue.length })
-            }}
+            {{ t('RAMON.COMMAND.QUEUE.RUN', { count: followUpQueue.length }) }}
           </button>
         </div>
         <div class="grid grid-cols-2 gap-4 md:grid-cols-5">

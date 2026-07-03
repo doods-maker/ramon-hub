@@ -93,7 +93,7 @@ class Lead < ApplicationRecord
   end
 
   def generate_handoff_note
-    return unless won_at.present?
+    return if won_at.blank?
 
     Leads::HandoffNoteService.new(lead: self).perform
   end

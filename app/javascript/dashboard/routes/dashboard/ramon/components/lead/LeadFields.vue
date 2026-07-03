@@ -1,12 +1,15 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { useAlert } from 'dashboard/composables';
 import LeadTasksList from './LeadTasksList.vue';
 import DocChecklist from './DocChecklist.vue';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
 const store = useStore();
+const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
 const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
 const priorities = useMapGetter('leadConfig/getPriorities');
@@ -27,12 +30,21 @@ const name = ref('');
 const value = ref('');
 const source = ref('');
 
+// Etapa controlada localmente para poder reverter o select quando a mudança
+// para uma etapa de perda é cancelada, ou quando o backend recusa o update.
+const stageId = ref(null);
+const lostPrompt = ref(false);
+const lostReasonName = ref('');
+
 watch(
   () => props.lead,
   l => {
     name.value = l?.name ?? '';
     value.value = l?.value ?? '';
     source.value = l?.source ?? '';
+    stageId.value = l?.lead_stage_id ?? null;
+    lostPrompt.value = false;
+    lostReasonName.value = '';
   },
   { immediate: true }
 );
@@ -85,6 +97,46 @@ const saveValue = () => {
 
 // select: salva direto no change
 const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
+
+// Etapa: envolve o update em try/catch e reverte o select em erro.
+const commitStage = async (targetId, lostReason) => {
+  try {
+    await store.dispatch('leads/update', {
+      id: props.lead.id,
+      lead_stage_id: targetId,
+      ...(lostReason ? { lost_reason: lostReason } : {}),
+    });
+    lostPrompt.value = false;
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    stageId.value = props.lead?.lead_stage_id ?? null;
+    lostPrompt.value = false;
+  }
+};
+
+// Mudar de etapa pelo select. Etapa de perda sem motivo → pede o motivo inline
+// antes de mandar (senão o backend recusa com 422 e o select fica dessincrono).
+const onStageChange = targetId => {
+  stageId.value = targetId;
+  const target = stages.value.find(s => s.id === targetId);
+  if (target?.is_lost && !props.lead?.lost_reason) {
+    lostReasonName.value = '';
+    lostPrompt.value = true;
+    return;
+  }
+  commitStage(targetId, null);
+};
+
+const confirmLostStage = () => {
+  if (!lostReasonName.value) return;
+  commitStage(stageId.value, lostReasonName.value);
+};
+
+const cancelLostStage = () => {
+  lostPrompt.value = false;
+  lostReasonName.value = '';
+  stageId.value = props.lead?.lead_stage_id ?? null;
+};
 </script>
 
 <template>
@@ -104,14 +156,49 @@ const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
     }}</label>
     <select
       data-testid="field-stage"
-      :value="lead.lead_stage_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
-      @change="e => saveSelect('lead_stage_id', Number(e.target.value))"
+      :value="stageId"
+      :class="lostPrompt ? 'mb-1' : 'mb-3'"
+      class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      @change="e => onStageChange(Number(e.target.value))"
     >
       <option v-for="s in stages" :key="s.id" :value="s.id">
         {{ s.name }}
       </option>
     </select>
+
+    <div
+      v-if="lostPrompt"
+      data-testid="stage-lost-prompt"
+      class="flex flex-col gap-2 p-2 mb-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+    >
+      <select
+        v-model="lostReasonName"
+        data-testid="stage-lost-reason"
+        class="w-full px-2 py-1.5 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+      >
+        <option value="" disabled>{{ $t('RAMON.FUNIL.LOST.PICK') }}</option>
+        <option v-for="r in lostReasons" :key="r.id" :value="r.name">
+          {{ r.name }}
+        </option>
+      </select>
+      <div class="flex justify-end gap-2">
+        <button
+          data-testid="stage-lost-cancel"
+          class="px-3 py-1 text-xs text-n-slate-11"
+          @click="cancelLostStage"
+        >
+          {{ $t('RAMON.FUNIL.LOST.CANCEL') }}
+        </button>
+        <button
+          data-testid="stage-lost-confirm"
+          class="px-3 py-1 text-xs rounded-lg bg-n-ruby-9 text-white disabled:opacity-50"
+          :disabled="!lostReasonName"
+          @click="confirmLostStage"
+        >
+          {{ $t('RAMON.FUNIL.LOST.CONFIRM') }}
+        </button>
+      </div>
+    </div>
 
     <label class="block mb-1 text-xs text-n-slate-10">{{
       $t('RAMON.DRAWER.BENEFIT')

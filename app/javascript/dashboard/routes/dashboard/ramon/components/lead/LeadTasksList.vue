@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { useAlert } from 'dashboard/composables';
 import TaskBellMenu from '../kanban/TaskBellMenu.vue';
 
 const props = defineProps({ leadId: { type: Number, required: true } });
@@ -66,17 +67,30 @@ const adding = ref(false);
 const newTitle = ref('');
 const newDate = ref('');
 
+// Sem data → amanhã 9h local (mesmo preset do TaskBellMenu); backend exige due_at.
+const tomorrowAt9 = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(9, 0, 0, 0);
+  return d;
+};
+
 const addTask = async () => {
   const title = newTitle.value.trim() || t('RAMON.KANBAN.BELL.DEFAULT_TITLE');
-  await store.dispatch('leadTasks/create', {
-    leadId: props.leadId,
-    title,
-    kind: 'follow_up',
-    dueAt: newDate.value ? new Date(newDate.value).toISOString() : null,
-  });
-  newTitle.value = '';
-  newDate.value = '';
-  adding.value = false;
+  const due = newDate.value ? new Date(newDate.value) : tomorrowAt9();
+  try {
+    await store.dispatch('leadTasks/create', {
+      leadId: props.leadId,
+      title,
+      kind: 'follow_up',
+      dueAt: due.toISOString(),
+    });
+    newTitle.value = '';
+    newDate.value = '';
+    adding.value = false;
+  } catch (e) {
+    useAlert(t('RAMON.TASKS.CREATE_ERROR'));
+  }
 };
 </script>
 
@@ -150,6 +164,7 @@ const addTask = async () => {
         v-model="newDate"
         data-testid="task-new-date"
         type="datetime-local"
+        :title="$t('RAMON.TASKS.DATE_HINT')"
         class="w-full px-2 py-1.5 text-sm rounded bg-n-alpha-1 text-n-slate-12 border border-n-weak"
       />
       <div class="flex gap-2">
