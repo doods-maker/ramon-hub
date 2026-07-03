@@ -43,12 +43,32 @@
       "TITLE": "Funil de Leads",
       "NEW_LEAD": "Novo lead",
       "LEAD_NAME": "Nome do lead",
+      "LEAD_PHONE": "Telefone",
       "BENEFIT": "Tipo de benefício",
       "PRIORITY": "Prioridade",
       "OPEN_CONVERSATION": "Abrir conversa",
       "LOADING_CONVERSATION": "Carregando conversa…",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar",
+      "LOST": {
+        "TITLE": "Por que este lead foi perdido?",
+        "PICK": "Escolha um motivo",
+        "DETAIL_PLACEHOLDER": "Detalhe (opcional)",
+        "CONFIRM": "Marcar como perda",
+        "CANCEL": "Cancelar"
+      },
+      "WON": {
+        "TITLE": "Negócio ganho! Valor fechado?",
+        "VALUE_LABEL": "Valor (R$)",
+        "SAVE": "Salvar",
+        "SKIP": "Pular"
+      },
+      "NEW": {
+        "SOURCE": "Origem",
+        "VALUE": "Valor (R$)",
+        "DEDUP": "Já existe lead aberto para este telefone: {name} ({stage})",
+        "OPEN_EXISTING": "Abrir existente"
+      },
       "STAGE": {
         "ADD": "Etapa",
         "NEW_PROMPT": "Nome da nova etapa",
@@ -105,6 +125,16 @@
         "WEIGHTED": "~{value} ponderado"
       }
     },
+    "TASKS": {
+      "TITLE": "Próximas ações",
+      "EMPTY": "Nenhuma tarefa aberta.",
+      "ADD": "+ Tarefa",
+      "ADD_TITLE_PLACEHOLDER": "Título da tarefa",
+      "OVERDUE": "Vencida",
+      "TODAY": "Hoje",
+      "IN_DAYS": "em {n}d",
+      "SCHEDULE_NEXT": "Agendar próxima?"
+    },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
       "BENEFITS": "Tipos de benefício",
@@ -122,6 +152,7 @@
       "CLOSER": "Closer",
       "VALUE": "Valor (R$)",
       "SOURCE": "Origem",
+      "LOST_REASON": "Motivo da perda",
       "NOTES": "Notas",
       "NOTES_ADD": "Escreva uma nota…",
       "NOTES_ADD_BUTTON": "Adicionar nota",

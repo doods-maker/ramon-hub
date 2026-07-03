@@ -43,12 +43,32 @@
       "TITLE": "Lead Pipeline",
       "NEW_LEAD": "New lead",
       "LEAD_NAME": "Lead name",
+      "LEAD_PHONE": "Phone",
       "BENEFIT": "Benefit type",
       "PRIORITY": "Priority",
       "OPEN_CONVERSATION": "Open conversation",
       "LOADING_CONVERSATION": "Loading conversation…",
       "CANCEL": "Cancel",
       "SAVE": "Save",
+      "LOST": {
+        "TITLE": "Why was this lead lost?",
+        "PICK": "Choose a reason",
+        "DETAIL_PLACEHOLDER": "Details (optional)",
+        "CONFIRM": "Mark as lost",
+        "CANCEL": "Cancel"
+      },
+      "WON": {
+        "TITLE": "Deal won! Closed value?",
+        "VALUE_LABEL": "Value (R$)",
+        "SAVE": "Save",
+        "SKIP": "Skip"
+      },
+      "NEW": {
+        "SOURCE": "Source",
+        "VALUE": "Value (R$)",
+        "DEDUP": "Open lead already exists for this phone: {name} ({stage})",
+        "OPEN_EXISTING": "Open existing"
+      },
       "STAGE": {
         "ADD": "Stage",
         "NEW_PROMPT": "New stage name",
@@ -105,6 +125,16 @@
         "WEIGHTED": "~{value} weighted"
       }
     },
+    "TASKS": {
+      "TITLE": "Next actions",
+      "EMPTY": "No open tasks.",
+      "ADD": "+ Task",
+      "ADD_TITLE_PLACEHOLDER": "Task title",
+      "OVERDUE": "Overdue",
+      "TODAY": "Today",
+      "IN_DAYS": "in {n}d",
+      "SCHEDULE_NEXT": "Schedule next?"
+    },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",
       "BENEFITS": "Benefit types",
@@ -122,6 +152,7 @@
       "CLOSER": "Closer",
       "VALUE": "Value (R$)",
       "SOURCE": "Source",
+      "LOST_REASON": "Loss reason",
       "NOTES": "Notes",
       "NOTES_ADD": "Write a note…",
       "NOTES_ADD_BUTTON": "Add note",

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import LeadTasksList from './LeadTasksList.vue';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -8,9 +9,17 @@ const store = useStore();
 const stages = useMapGetter('leadConfig/getStages');
 const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
 const priorities = useMapGetter('leadConfig/getPriorities');
+const lostReasons = useMapGetter('leadConfig/getLostReasons');
 const agents = useMapGetter('agents/getAgents');
 const theses = useMapGetter('theses/getTheses');
 const activeTheses = computed(() => theses.value.filter(t => t.active));
+
+// Motivo da perda só aparece quando o lead está numa etapa marcada como perda.
+const currentStage = computed(() =>
+  stages.value.find(s => s.id === props.lead?.lead_stage_id)
+);
+const isLostStage = computed(() => !!currentStage.value?.is_lost);
+const reasonNames = computed(() => lostReasons.value.map(r => r.name));
 
 // refs locais editáveis, ressincronizados sempre que o lead muda
 const name = ref('');
@@ -221,6 +230,31 @@ const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
       class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
       @blur="saveSource"
     />
+
+    <template v-if="isLostStage">
+      <label class="block mb-1 text-xs text-n-slate-10">{{
+        $t('RAMON.DRAWER.LOST_REASON')
+      }}</label>
+      <select
+        data-testid="field-lost-reason"
+        :value="lead.lost_reason"
+        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        @change="e => saveSelect('lost_reason', e.target.value)"
+      >
+        <option value="">—</option>
+        <option
+          v-if="lead.lost_reason && !reasonNames.includes(lead.lost_reason)"
+          :value="lead.lost_reason"
+        >
+          {{ lead.lost_reason }}
+        </option>
+        <option v-for="r in lostReasons" :key="r.id" :value="r.name">
+          {{ r.name }}
+        </option>
+      </select>
+    </template>
+
+    <LeadTasksList v-if="lead.id" :lead-id="lead.id" />
 
     <div class="flex flex-col gap-2 mb-4">
       <span class="text-xs uppercase text-n-slate-10">{{
