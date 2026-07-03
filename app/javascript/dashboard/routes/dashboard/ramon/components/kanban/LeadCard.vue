@@ -62,9 +62,9 @@ const borderClass = computed(() => {
     daysInStage.value != null &&
     daysInStage.value > 2 * limit
   ) {
-    return 'border-red-500';
+    return 'border-n-ruby-9';
   }
-  if (props.lead.stalled) return 'border-amber-500';
+  if (props.lead.stalled) return 'border-n-amber-9';
   return 'border-n-weak';
 });
 
