@@ -9,14 +9,18 @@ export const state = {
   benefitTypes: [],
   priorities: [],
   sources: [],
+  lostReasons: [],
   uiFlags: { isFetching: false },
 };
 
 export const getters = {
+  // stages guarda o objeto inteiro do stage → probability e
+  // stalled_after_days fazem pass-through sem tratamento extra.
   getStages: _state => _state.stages,
   getBenefitTypes: _state => _state.benefitTypes,
   getPriorities: _state => _state.priorities,
   getSources: _state => _state.sources,
+  getLostReasons: _state => _state.lostReasons,
 };
 
 const bySortedPosition = (a, b) => a.position - b.position;
@@ -101,6 +105,7 @@ export const mutations = {
     _state.benefitTypes = data.benefit_types || [];
     _state.priorities = data.priorities || [];
     _state.sources = data.sources || [];
+    _state.lostReasons = data.lost_reasons || [];
   },
 
   [types.SET_LEAD_STAGES](_state, data) {
