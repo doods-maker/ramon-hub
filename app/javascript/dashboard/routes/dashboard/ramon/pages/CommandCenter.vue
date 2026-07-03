@@ -46,7 +46,9 @@ const followUpQueue = computed(() => {
 
   section('tasks_overdue').items.forEach(task => {
     const leadId = task.lead_id;
-    if (!byLead.has(leadId)) order.push(leadId);
+    // itens vêm em due_at asc: a primeira task do lead é a mais atrasada
+    if (byLead.has(leadId)) return;
+    order.push(leadId);
     byLead.set(leadId, {
       leadId,
       leadName: task.lead_name,
