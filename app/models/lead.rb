@@ -10,7 +10,7 @@ class Lead < ApplicationRecord
   belongs_to :closer, class_name: 'User', optional: true
   has_many :lead_activities, dependent: :destroy_async
   has_many :lead_notes, dependent: :destroy_async
-  has_many :lead_tasks, dependent: :destroy_async
+  has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
 
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }

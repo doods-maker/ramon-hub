@@ -293,7 +293,7 @@ Rails.application.routes.draw do
               member { post :complete }
             end
           end
-          resources :lead_tasks, only: [:index]
+          resources :lead_tasks, only: [:index], as: :account_lead_tasks
           resources :lead_stages, only: [:create, :update, :destroy] do
             collection { post :reorder }
           end

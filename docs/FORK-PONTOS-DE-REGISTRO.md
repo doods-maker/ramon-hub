@@ -69,7 +69,8 @@
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` | +blocos/strings para Playbooks (tela, labels, erros, placeholders) | i18n inglês para UI de teses e playbooks | F2.1a |
 | `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | +blocos/strings para Playbooks (tela, labels, erros, placeholders) | i18n português para UI de teses e playbooks | F2.1a |
 | `config/routes.rb` | `resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do member { post :complete } end` dentro do bloco `resources :leads` (após `resources :notes`) | API de tarefas (próxima ação) aninhada ao lead + rota member `complete` | PR-A t2 |
-| `config/routes.rb` | `resources :lead_tasks, only: [:index]` no nível da conta (após o bloco `resources :leads`) | coleção de tarefas da conta com `scope=open\|overdue\|today` (agenda) | PR-A t2 |
+| `config/routes.rb` | `resources :lead_tasks, only: [:index], as: :account_lead_tasks` no nível da conta (após o bloco `resources :leads`; `as:` evita colisão de named route com o nested `tasks` do lead) | coleção de tarefas da conta com `scope=open\|overdue\|today` (agenda) | PR-A t2 |
+| `app/models/lead.rb` | +`inverse_of: :lead` no `has_many :lead_tasks` | evita N+1 de `task.lead.name` no index escopado ao lead | PR-A t2 |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
