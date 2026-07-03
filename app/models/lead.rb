@@ -21,6 +21,7 @@ class Lead < ApplicationRecord
   after_update_commit :dispatch_update_event
   after_create_commit :record_created_activity
   after_update_commit :record_change_activities
+  after_update_commit :generate_handoff_note, if: :saved_change_to_won_at?
 
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
   def push_event_data
@@ -89,6 +90,12 @@ class Lead < ApplicationRecord
 
   def existing_or_now(current)
     current || Time.current
+  end
+
+  def generate_handoff_note
+    return unless won_at.present?
+
+    Leads::HandoffNoteService.new(lead: self).perform
   end
 
   def dispatch_create_event
