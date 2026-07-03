@@ -1,13 +1,50 @@
 {
   "RAMON": {
-    "OVERVIEW": {
+    "COMMAND": {
       "EYEBROW": "Command Center",
-      "TITLE": "Overview",
-      "PLACEHOLDER": "Modules will appear here as they are migrated.",
-      "KPI": {
-        "LEADS": "Leads",
-        "REUNIOES": "Meetings",
-        "FECHAMENTOS": "Closings"
+      "TITLE": "Command Center",
+      "RELOAD": "Reload",
+      "TODAY": {
+        "TITLE": "Today",
+        "TASKS_OVERDUE": "Overdue tasks",
+        "TASKS_TODAY": "Tasks today",
+        "STALLED": "Stalled",
+        "NO_NEXT_ACTION": "No next action",
+        "NEW_FROM_LP": "New from LP",
+        "EMPTY_TASKS_OVERDUE": "No overdue tasks — you're on top of it.",
+        "EMPTY_TASKS_TODAY": "Nothing due today.",
+        "EMPTY_STALLED": "No stalled leads — the pipeline is moving.",
+        "EMPTY_NO_NEXT_ACTION": "Every lead has a next action scheduled.",
+        "EMPTY_NEW_FROM_LP": "No new leads from landing pages."
+      },
+      "QUEUE": {
+        "TITLE": "Follow-up run",
+        "RUN": "Run follow-ups ({count})",
+        "PROGRESS": "{current} of {total}",
+        "DUE": "Due {at}",
+        "COMPLETE": "Complete task",
+        "TASK_COMPLETED": "Task completed",
+        "SCHEDULE": "Schedule next",
+        "SCHEDULED": "Follow-up scheduled",
+        "OPEN_CONVERSATION": "Open conversation",
+        "SKIP": "Skip",
+        "CLOSE": "Close",
+        "DONE_TITLE": "Queue cleared",
+        "DONE_BODY": "Every lead in the run has been handled."
+      },
+      "FUNNEL": {
+        "TITLE": "Pipeline",
+        "EMPTY": "No stages configured yet — set up the funnel first."
+      },
+      "WEEK": {
+        "TITLE": "This week",
+        "CREATED": "Created",
+        "WON": "Won",
+        "LOST": "Lost",
+        "BY_SOURCE": "By source",
+        "LOST_REASONS": "Loss reasons (30d)",
+        "EMPTY_SOURCE": "No leads created this week.",
+        "EMPTY_LOST_REASONS": "No leads lost in the last 30 days."
       }
     },
     "NAV": {
@@ -50,6 +87,7 @@
       "LOADING_CONVERSATION": "Loading conversation…",
       "CANCEL": "Cancel",
       "SAVE": "Save",
+      "SAVE_ERROR": "Could not save — try again",
       "LOST": {
         "TITLE": "Why was this lead lost?",
         "PICK": "Choose a reason",
@@ -134,7 +172,9 @@
       "OVERDUE": "Overdue",
       "TODAY": "Today",
       "IN_DAYS": "in {n}d",
-      "SCHEDULE_NEXT": "Schedule next?"
+      "SCHEDULE_NEXT": "Schedule next?",
+      "DATE_HINT": "Empty = tomorrow 9am",
+      "CREATE_ERROR": "Could not create the task — try again"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",
@@ -161,7 +201,11 @@
       "THESIS": "Thesis"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Summary", "HISTORY": "History", "PLAYBOOK": "Playbook" },
+      "TABS": {
+        "SUMMARY": "Summary",
+        "HISTORY": "History",
+        "PLAYBOOK": "Playbook"
+      },
       "DISCARD": "Not a lead",
       "HISTORY": {
         "SYSTEM": "System",
@@ -172,7 +216,9 @@
           "CLOSER_CHANGED": "changed the Closer",
           "PRIORITY_CHANGED": "changed the priority",
           "VALUE_CHANGED": "changed the value",
-          "NOTE_ADDED": "added a note"
+          "NOTE_ADDED": "added a note",
+          "TASK_CREATED": "created task",
+          "TASK_COMPLETED": "completed task"
         }
       }
     },
@@ -180,10 +226,29 @@
       "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",
       "COPY": "Copy",
       "COPIED": "Copied!",
+      "THIS_STAGE": "this stage",
       "SECTIONS": {
         "QUALIFICACAO": "Qualification",
+        "APRESENTACAO": "Presentation",
         "OBJECAO": "Objections",
         "DOCUMENTO": "Documents"
+      }
+    },
+    "DOCS": {
+      "TITLE": "Documents",
+      "COUNT": "{received}/{total} received",
+      "CHARGE": "Request pending",
+      "COPIED": "Draft copied — paste it into WhatsApp",
+      "COPY_FAILED": "Could not copy — try again",
+      "STATUS": {
+        "PENDENTE": "Pending",
+        "SOLICITADO": "Requested",
+        "RECEBIDO": "Received"
+      },
+      "DRAFT": {
+        "GREETING": "Hi {name}, how are you? To move your case forward, I still need these documents:",
+        "ITEM": "• {item}",
+        "CLOSING": "Once you can send them over, we'll proceed with your request. Thank you!"
       }
     },
     "PLAYBOOKS": {

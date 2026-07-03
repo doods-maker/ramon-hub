@@ -1,22 +1,23 @@
 <script setup>
 import { ref } from 'vue';
 
-const emit = defineEmits(['confirmValue']);
+const emit = defineEmits(['confirmValue', 'cancelValue']);
 
 const value = ref('');
 
-// Salvar envia o valor; Pular (e o clique fora) segue o move sem valor.
+// Salvar envia o valor; Pular move sem valor; o clique fora cancela (reverte).
 const save = () =>
   emit('confirmValue', {
     value: value.value === '' ? null : Number(value.value),
   });
 const skip = () => emit('confirmValue', { value: null });
+const cancel = () => emit('cancelValue');
 </script>
 
 <template>
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click.self="skip"
+    @click.self="cancel"
   >
     <div class="w-80 p-4 rounded-xl bg-n-solid-2 border border-n-weak">
       <h3 class="mb-3 text-sm text-n-slate-12">

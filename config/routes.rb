@@ -283,6 +283,7 @@ Rails.application.routes.draw do
           end
           resources :labels, only: [:index, :show, :create, :update, :destroy]
           resource :lead_config, only: [:show], controller: 'lead_config'
+          resource :ramon_dashboard, only: [:show], controller: 'ramon_dashboard'
           resources :leads, only: [:index, :show, :create, :update, :destroy] do
             collection do
               post :for_conversation

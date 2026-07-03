@@ -52,13 +52,15 @@ const onMove = ({ id, leadStageId, newIndex }) => {
     lostModalOpen.value = true;
     return;
   }
-  // Demais casos persistem o movimento imediatamente.
-  store.dispatch('leads/move', { id, leadStageId, position: newIndex });
-  // Etapa de ganho sem valor: convida a informar o valor (não trava o move).
+  // Etapa de ganho de lead sem valor: segura o movimento e pede o valor, para
+  // o dossiê de ganho nascer já com o valor fechado (um único update no fim).
   if (stage?.is_won && !lead?.value) {
     pendingMove.value = { id, leadStageId, position: newIndex };
     wonModalOpen.value = true;
+    return;
   }
+  // Demais casos (inclui ganho de lead que já tem valor) persistem na hora.
+  store.dispatch('leads/move', { id, leadStageId, position: newIndex });
 };
 
 const confirmLost = async ({ lostReason }) => {
@@ -81,11 +83,23 @@ const cancelLost = () => {
 };
 
 const confirmWon = async ({ value }) => {
-  if (pendingMove.value && value != null) {
-    await store.dispatch('leads/update', { id: pendingMove.value.id, value });
-  }
+  if (!pendingMove.value) return;
+  const { id, leadStageId, position } = pendingMove.value;
+  // Um único update: move e (quando informado) grava o valor no mesmo passo.
+  await store.dispatch('leads/update', {
+    id,
+    lead_stage_id: leadStageId,
+    position,
+    ...(value != null ? { value } : {}),
+  });
   pendingMove.value = null;
   wonModalOpen.value = false;
+};
+
+const cancelWon = () => {
+  pendingMove.value = null;
+  wonModalOpen.value = false;
+  boardVersion.value += 1; // devolve o card à origem
 };
 const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
@@ -198,6 +212,10 @@ onMounted(() => {
       @confirm-move="confirmLost"
       @cancel-move="cancelLost"
     />
-    <WonValueModal v-if="wonModalOpen" @confirm-value="confirmWon" />
+    <WonValueModal
+      v-if="wonModalOpen"
+      @confirm-value="confirmWon"
+      @cancel-value="cancelWon"
+    />
   </div>
 </template>

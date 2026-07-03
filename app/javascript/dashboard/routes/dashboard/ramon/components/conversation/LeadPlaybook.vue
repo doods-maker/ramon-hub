@@ -9,12 +9,33 @@ defineOptions({ name: 'LeadPlaybook' });
 
 const store = useStore();
 const theses = useMapGetter('theses/getTheses');
+const stages = useMapGetter('leadConfig/getStages');
 
-// só estas 3 seções aparecem no painel de consulta durante a conversa
-const SECTIONS = ['qualificacao', 'objecao', 'documento'];
+// seções que aparecem no painel de consulta durante a conversa
+const SECTIONS = ['qualificacao', 'apresentacao', 'objecao', 'documento'];
+
+// mapa estático etapa (nome seedado) → seção destacada "nesta etapa".
+// Etapa custom sem match cai no comportamento padrão (nenhum destaque).
+const STAGE_SECTION = {
+  Novo: 'qualificacao',
+  Qualificação: 'qualificacao',
+  'Reunião agendada': 'apresentacao',
+  'Reunião realizada': 'apresentacao',
+  Negociação: 'objecao',
+  'Última chance': 'objecao',
+  Fechado: 'documento',
+};
 
 const thesis = computed(() =>
   theses.value.find(t => t.id === props.lead?.thesis_id)
+);
+
+const currentStageName = computed(
+  () => (stages.value || []).find(s => s.id === props.lead?.lead_stage_id)?.name
+);
+
+const highlightedSection = computed(
+  () => STAGE_SECTION[currentStageName.value] || null
 );
 
 const ensureItems = async () => {
@@ -29,10 +50,15 @@ watch(() => props.lead?.thesis_id, ensureItems, { immediate: true });
 
 const sections = computed(() => {
   const items = thesis.value?.items || [];
-  return SECTIONS.map(section => ({
+  const groups = SECTIONS.map(section => ({
     section,
     items: items.filter(item => item.section === section),
+    highlighted: section === highlightedSection.value,
   })).filter(group => group.items.length);
+  // a seção da etapa atual vai para o topo, expandida com o selo "nesta etapa"
+  return [...groups].sort(
+    (a, b) => Number(b.highlighted) - Number(a.highlighted)
+  );
 });
 
 const copiedId = ref(null);
@@ -68,8 +94,17 @@ const sectionLabelKey = section =>
         class="flex flex-col gap-2"
         data-testid="playbook-section"
       >
-        <span class="text-xs uppercase tracking-widest text-n-slate-9">
-          {{ $t(sectionLabelKey(group.section)) }}
+        <span class="flex items-center gap-2">
+          <span class="text-xs uppercase tracking-widest text-n-slate-9">
+            {{ $t(sectionLabelKey(group.section)) }}
+          </span>
+          <span
+            v-if="group.highlighted"
+            data-testid="playbook-stage-badge"
+            class="px-1.5 py-0.5 text-[10px] uppercase tracking-wide rounded bg-n-iris-3 text-n-iris-11 border border-n-iris-6"
+          >
+            {{ $t('RAMON.PLAYBOOK.THIS_STAGE') }}
+          </span>
         </span>
         <div
           v-for="item in group.items"

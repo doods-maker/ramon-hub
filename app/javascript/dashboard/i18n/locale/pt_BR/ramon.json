@@ -1,13 +1,50 @@
 {
   "RAMON": {
-    "OVERVIEW": {
+    "COMMAND": {
       "EYEBROW": "Centro de Comando",
-      "TITLE": "Visão Geral",
-      "PLACEHOLDER": "Os módulos aparecerão aqui conforme forem migrados.",
-      "KPI": {
-        "LEADS": "Leads",
-        "REUNIOES": "Reuniões",
-        "FECHAMENTOS": "Fechamentos"
+      "TITLE": "Centro de Comando",
+      "RELOAD": "Recarregar",
+      "TODAY": {
+        "TITLE": "Hoje",
+        "TASKS_OVERDUE": "Tarefas vencidas",
+        "TASKS_TODAY": "Tarefas de hoje",
+        "STALLED": "Parados",
+        "NO_NEXT_ACTION": "Sem próxima ação",
+        "NEW_FROM_LP": "Novos de LP",
+        "EMPTY_TASKS_OVERDUE": "Nenhuma tarefa vencida — está tudo em dia.",
+        "EMPTY_TASKS_TODAY": "Nada agendado para hoje.",
+        "EMPTY_STALLED": "Nenhum lead parado — o funil está andando.",
+        "EMPTY_NO_NEXT_ACTION": "Todo lead tem uma próxima ação agendada.",
+        "EMPTY_NEW_FROM_LP": "Nenhum lead novo das landing pages."
+      },
+      "QUEUE": {
+        "TITLE": "Rodada de follow-ups",
+        "RUN": "Rodar follow-ups ({count})",
+        "PROGRESS": "{current} de {total}",
+        "DUE": "Vencia em {at}",
+        "COMPLETE": "Concluir tarefa",
+        "TASK_COMPLETED": "Tarefa concluída",
+        "SCHEDULE": "Agendar próxima",
+        "SCHEDULED": "Follow-up agendado",
+        "OPEN_CONVERSATION": "Abrir conversa",
+        "SKIP": "Pular",
+        "CLOSE": "Encerrar",
+        "DONE_TITLE": "Fila zerada",
+        "DONE_BODY": "Todos os leads da rodada foram tratados."
+      },
+      "FUNNEL": {
+        "TITLE": "Funil",
+        "EMPTY": "Nenhuma etapa configurada — monte o funil primeiro."
+      },
+      "WEEK": {
+        "TITLE": "Na semana",
+        "CREATED": "Criados",
+        "WON": "Ganhos",
+        "LOST": "Perdidos",
+        "BY_SOURCE": "Por origem",
+        "LOST_REASONS": "Motivos de perda (30d)",
+        "EMPTY_SOURCE": "Nenhum lead criado nesta semana.",
+        "EMPTY_LOST_REASONS": "Nenhum lead perdido nos últimos 30 dias."
       }
     },
     "NAV": {
@@ -50,6 +87,7 @@
       "LOADING_CONVERSATION": "Carregando conversa…",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar",
+      "SAVE_ERROR": "Não foi possível salvar — tente de novo",
       "LOST": {
         "TITLE": "Por que este lead foi perdido?",
         "PICK": "Escolha um motivo",
@@ -134,7 +172,9 @@
       "OVERDUE": "Vencida",
       "TODAY": "Hoje",
       "IN_DAYS": "em {n}d",
-      "SCHEDULE_NEXT": "Agendar próxima?"
+      "SCHEDULE_NEXT": "Agendar próxima?",
+      "DATE_HINT": "Vazio = amanhã 9h",
+      "CREATE_ERROR": "Não foi possível criar a tarefa — tente de novo"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
@@ -161,7 +201,11 @@
       "THESIS": "Tese"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Resumo", "HISTORY": "Histórico", "PLAYBOOK": "Playbook" },
+      "TABS": {
+        "SUMMARY": "Resumo",
+        "HISTORY": "Histórico",
+        "PLAYBOOK": "Playbook"
+      },
       "DISCARD": "Não é lead",
       "HISTORY": {
         "SYSTEM": "Sistema",
@@ -172,7 +216,9 @@
           "CLOSER_CHANGED": "mudou o Closer",
           "PRIORITY_CHANGED": "mudou a prioridade",
           "VALUE_CHANGED": "mudou o valor",
-          "NOTE_ADDED": "adicionou nota"
+          "NOTE_ADDED": "adicionou nota",
+          "TASK_CREATED": "criou tarefa",
+          "TASK_COMPLETED": "concluiu tarefa"
         }
       }
     },
@@ -180,10 +226,29 @@
       "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",
       "COPY": "Copiar",
       "COPIED": "Copiado!",
+      "THIS_STAGE": "nesta etapa",
       "SECTIONS": {
         "QUALIFICACAO": "Qualificação",
+        "APRESENTACAO": "Apresentação",
         "OBJECAO": "Objeções",
         "DOCUMENTO": "Documentos"
+      }
+    },
+    "DOCS": {
+      "TITLE": "Documentos",
+      "COUNT": "{received}/{total} recebidos",
+      "CHARGE": "Cobrar pendentes",
+      "COPIED": "Rascunho copiado — cole no WhatsApp",
+      "COPY_FAILED": "Não foi possível copiar — tente de novo",
+      "STATUS": {
+        "PENDENTE": "Pendente",
+        "SOLICITADO": "Solicitado",
+        "RECEBIDO": "Recebido"
+      },
+      "DRAFT": {
+        "GREETING": "Olá {name}, tudo bem? Para dar andamento ao seu caso, ainda preciso destes documentos:",
+        "ITEM": "• {item}",
+        "CLOSING": "Assim que puder me enviar, seguimos com o seu pedido. Obrigado!"
       }
     },
     "PLAYBOOKS": {

@@ -41,6 +41,7 @@ import labels from './modules/labels';
 import leads from './modules/leads';
 import leadConfig from './modules/leadConfig';
 import leadTasks from './modules/leadTasks';
+import ramonDashboard from './modules/ramonDashboard';
 import macros from './modules/macros';
 import theses from './modules/theses';
 import notifications from './modules/notifications';
@@ -110,6 +111,7 @@ export default createStore({
     leads,
     leadConfig,
     leadTasks,
+    ramonDashboard,
     macros,
     theses,
     notifications,
