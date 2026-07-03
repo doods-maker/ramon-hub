@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_01_000005) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_03_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1024,6 +1024,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_01_000005) do
     t.datetime "updated_at", null: false
     t.decimal "value", precision: 12, scale: 2
     t.string "source"
+    t.bigint "thesis_id"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -1031,6 +1032,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_01_000005) do
     t.index ["conversation_id"], name: "index_leads_on_conversation_id"
     t.index ["lead_priority_id"], name: "index_leads_on_lead_priority_id"
     t.index ["lead_stage_id"], name: "index_leads_on_lead_stage_id"
+    t.index ["thesis_id"], name: "index_leads_on_thesis_id"
   end
 
   create_table "leaves", force: :cascade do |t|
@@ -1341,6 +1343,30 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_01_000005) do
     t.index ["name", "account_id"], name: "index_teams_on_name_and_account_id", unique: true
   end
 
+  create_table "theses", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.string "area"
+    t.boolean "active", default: true, null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "name"], name: "index_theses_on_account_id_and_name", unique: true
+  end
+
+  create_table "thesis_items", force: :cascade do |t|
+    t.bigint "thesis_id", null: false
+    t.string "section", null: false
+    t.string "title"
+    t.text "content"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["thesis_id", "section", "position"], name: "index_thesis_items_on_thesis_id_and_section_and_position"
+    t.index ["thesis_id"], name: "index_thesis_items_on_thesis_id"
+  end
+
   create_table "user_sessions", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "client_id", null: false
@@ -1439,6 +1465,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_01_000005) do
   add_foreign_key "lead_notes", "accounts"
   add_foreign_key "lead_notes", "leads"
   add_foreign_key "lead_notes", "users"
+  add_foreign_key "leads", "theses", on_delete: :nullify
+  add_foreign_key "thesis_items", "theses", on_delete: :cascade
   add_foreign_key "user_sessions", "users"
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
