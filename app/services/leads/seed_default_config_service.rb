@@ -72,7 +72,10 @@ class Leads::SeedDefaultConfigService
   end
 
   def seed_theses
-    return unless File.exist?(THESES_SEED_PATH)
+    unless File.exist?(THESES_SEED_PATH)
+      Rails.logger.warn("theses_seed.yml ausente — seed de teses pulado")
+      return
+    end
 
     YAML.safe_load_file(THESES_SEED_PATH)['theses'].each do |thesis_attrs|
       thesis = @account.theses.find_or_create_by!(name: thesis_attrs['name']) do |t|

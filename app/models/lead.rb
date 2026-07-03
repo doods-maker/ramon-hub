@@ -19,7 +19,7 @@ class Lead < ApplicationRecord
   after_create_commit :record_created_activity
   after_update_commit :record_change_activities
 
-  def push_event_data # rubocop:disable Metrics/CyclomaticComplexity
+  def push_event_data # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize
     {
       id: id,
       name: name,
@@ -42,6 +42,7 @@ class Lead < ApplicationRecord
       contact_name: contact&.name
     }
   end
+  # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize
 
   private
 
