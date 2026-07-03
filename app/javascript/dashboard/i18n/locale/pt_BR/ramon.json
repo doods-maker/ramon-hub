@@ -72,6 +72,28 @@
         "CLEAR": "Limpar"
       }
     },
+    "KANBAN": {
+      "CARD": {
+        "AGE": "{days}d",
+        "NO_NEXT_ACTION": "Sem próxima ação agendada",
+        "COPY_PHONE": "Copiar telefone",
+        "PHONE_COPIED": "Telefone copiado",
+        "WHATSAPP": "WhatsApp",
+        "TASK_SCHEDULED": "Follow-up agendado"
+      },
+      "BELL": {
+        "TITLE": "Agendar follow-up",
+        "DEFAULT_TITLE": "Follow-up",
+        "TITLE_PLACEHOLDER": "Título da tarefa (opcional)",
+        "TOMORROW": "Amanhã 9h",
+        "IN_3_DAYS": "Em 3 dias",
+        "IN_1_WEEK": "Em 1 semana",
+        "CONFIRM": "Agendar"
+      },
+      "COLUMN": {
+        "WEIGHTED": "~{value} ponderado"
+      }
+    },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
       "BENEFITS": "Tipos de benefício",
