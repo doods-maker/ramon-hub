@@ -3,6 +3,8 @@ class LeadStage < ApplicationRecord
   has_many :leads, dependent: :restrict_with_exception
 
   validates :name, presence: true, uniqueness: { scope: :account_id }
+  validates :probability, numericality: { in: 0..100 }
+  validates :stalled_after_days, numericality: { greater_than: 0 }, allow_nil: true
   default_scope { order(:position) }
 
   before_save :ensure_single_won_lost

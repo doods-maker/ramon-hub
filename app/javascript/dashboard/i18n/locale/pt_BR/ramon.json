@@ -43,12 +43,33 @@
       "TITLE": "Funil de Leads",
       "NEW_LEAD": "Novo lead",
       "LEAD_NAME": "Nome do lead",
+      "LEAD_PHONE": "Telefone",
       "BENEFIT": "Tipo de benefício",
       "PRIORITY": "Prioridade",
       "OPEN_CONVERSATION": "Abrir conversa",
       "LOADING_CONVERSATION": "Carregando conversa…",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar",
+      "LOST": {
+        "TITLE": "Por que este lead foi perdido?",
+        "PICK": "Escolha um motivo",
+        "DETAIL_PLACEHOLDER": "Detalhe (opcional)",
+        "CONFIRM": "Marcar como perda",
+        "CANCEL": "Cancelar"
+      },
+      "WON": {
+        "TITLE": "Negócio ganho! Valor fechado?",
+        "VALUE_LABEL": "Valor (R$)",
+        "SAVE": "Salvar",
+        "SKIP": "Pular"
+      },
+      "NEW": {
+        "SOURCE": "Origem",
+        "VALUE": "Valor (R$)",
+        "DEDUP": "Já existe lead aberto para este telefone: {name} ({stage})",
+        "OPEN_EXISTING": "Abrir existente",
+        "CONTACT_ERROR": "Não foi possível vincular o contato — lead criado sem contato"
+      },
       "STAGE": {
         "ADD": "Etapa",
         "NEW_PROMPT": "Nome da nova etapa",
@@ -69,8 +90,51 @@
         "PRIORITY": "Prioridade",
         "AGENT": "Responsável",
         "SOURCE": "Origem",
+        "STAGE": "Etapa",
+        "CREATED_AFTER": "Criado de",
+        "CREATED_BEFORE": "Criado até",
+        "STALLED": "Parados",
+        "NO_OPEN_TASK": "Sem próxima ação",
         "CLEAR": "Limpar"
+      },
+      "VIEWS": {
+        "SAVE": "Salvar view",
+        "SAVE_PROMPT": "Nome desta view",
+        "REMOVE": "Remover view",
+        "REMOVE_CONFIRM": "Remover esta view salva?"
       }
+    },
+    "KANBAN": {
+      "CARD": {
+        "AGE": "{days}d",
+        "NO_NEXT_ACTION": "Sem próxima ação agendada",
+        "COPY_PHONE": "Copiar telefone",
+        "PHONE_COPIED": "Telefone copiado",
+        "WHATSAPP": "WhatsApp",
+        "TASK_SCHEDULED": "Follow-up agendado"
+      },
+      "BELL": {
+        "TITLE": "Agendar follow-up",
+        "DEFAULT_TITLE": "Follow-up",
+        "TITLE_PLACEHOLDER": "Título da tarefa (opcional)",
+        "TOMORROW": "Amanhã 9h",
+        "IN_3_DAYS": "Em 3 dias",
+        "IN_1_WEEK": "Em 1 semana",
+        "CONFIRM": "Agendar"
+      },
+      "COLUMN": {
+        "WEIGHTED": "~{value} ponderado"
+      }
+    },
+    "TASKS": {
+      "TITLE": "Próximas ações",
+      "EMPTY": "Nenhuma tarefa aberta.",
+      "ADD": "+ Tarefa",
+      "ADD_TITLE_PLACEHOLDER": "Título da tarefa",
+      "OVERDUE": "Vencida",
+      "TODAY": "Hoje",
+      "IN_DAYS": "em {n}d",
+      "SCHEDULE_NEXT": "Agendar próxima?"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
@@ -89,6 +153,7 @@
       "CLOSER": "Closer",
       "VALUE": "Valor (R$)",
       "SOURCE": "Origem",
+      "LOST_REASON": "Motivo da perda",
       "NOTES": "Notas",
       "NOTES_ADD": "Escreva uma nota…",
       "NOTES_ADD_BUTTON": "Adicionar nota",

@@ -35,6 +35,27 @@ describe('leads filters', () => {
     });
   });
 
+  it('get envia os filtros de cadência, omitindo booleanos false', async () => {
+    axios.get.mockResolvedValue({ data: { payload: [] } });
+    const state = {
+      filters: {
+        leadStageId: 7,
+        createdAfter: '2026-07-01',
+        createdBefore: null,
+        stalled: true,
+        noOpenTask: false,
+      },
+    };
+    await actions.get({ commit, state });
+    expect(axios.get).toHaveBeenCalledWith(expect.any(String), {
+      params: {
+        lead_stage_id: 7,
+        created_after: '2026-07-01',
+        stalled: true,
+      },
+    });
+  });
+
   it('loadFilters lê do localStorage e busca', async () => {
     localStorage.setItem('ramon_lead_filters', JSON.stringify({ q: 'x' }));
     await actions.loadFilters({ commit, dispatch });

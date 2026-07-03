@@ -5,6 +5,7 @@ RSpec.describe 'Leads API', type: :request do
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:novo) { account.lead_stages.find_by(name: 'Novo') }
   let(:qualif) { account.lead_stages.find_by(name: 'Qualificação') }
+  let(:perdido) { account.lead_stages.find_by(is_lost: true) }
 
   it 'cria um lead na etapa Novo' do
     post "/api/v1/accounts/#{account.id}/leads",
@@ -157,6 +158,77 @@ RSpec.describe 'Leads API', type: :request do
           params: { q: 'joana' },
           headers: admin.create_new_auth_token
       expect(ids(response)).to eq([hit.id])
+    end
+
+    it 'filtra por lead_stage_id' do
+      a = account.leads.create!(name: 'A', lead_stage: qualif)
+      account.leads.create!(name: 'B', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { lead_stage_id: qualif.id },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([a.id])
+    end
+
+    it 'filtra por created_after' do
+      recente = account.leads.create!(name: 'Recente', lead_stage: novo)
+      antigo = account.leads.create!(name: 'Antigo', lead_stage: novo)
+      antigo.update_column(:created_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { created_after: 2.days.ago.to_date.to_s },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([recente.id])
+    end
+
+    it 'filtra por stalled numa etapa com stalled_after_days' do
+      parado = account.leads.create!(name: 'Parado', lead_stage: qualif)
+      parado.update_column(:stage_entered_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
+      account.leads.create!(name: 'Fresco', lead_stage: qualif)
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { stalled: 'true' },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([parado.id])
+    end
+
+    it 'filtra por no_open_task' do
+      sem_tarefa = account.leads.create!(name: 'Livre', lead_stage: novo)
+      com_tarefa = account.leads.create!(name: 'Ocupado', lead_stage: novo)
+      create(:lead_task, account: account, lead: com_tarefa)
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { no_open_task: 'true' },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([sem_tarefa.id])
+    end
+  end
+
+  describe 'trava de motivo de perda no update' do
+    it 'bloqueia mover para etapa perdida sem motivo com 422', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: novo, name: 'Sem motivo')
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { lead_stage_id: perdido.id },
+            headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to eq('LOST_REASON_REQUIRED')
+      expect(lead.reload.lead_stage).to eq(novo)
+    end
+
+    it 'permite mover para etapa perdida com motivo e grava lost_at', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: novo, name: 'Com motivo')
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { lead_stage_id: perdido.id, lost_reason: 'Honorário' },
+            headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      lead.reload
+      expect(lead.lead_stage).to eq(perdido)
+      expect(lead.lost_at).to be_present
+    end
+
+    it 'persiste custom_attributes no update' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { custom_attributes: { cpf: '123', origem: 'campanha' } },
+            headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(lead.reload.custom_attributes).to eq('cpf' => '123', 'origem' => 'campanha')
     end
   end
 end

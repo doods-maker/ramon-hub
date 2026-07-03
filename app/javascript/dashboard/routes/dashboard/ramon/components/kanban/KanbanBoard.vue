@@ -5,9 +5,12 @@ import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
+import SavedViews from './SavedViews.vue';
 import LeadDrawer from './LeadDrawer.vue';
 import ConversationDock from './ConversationDock.vue';
 import RemoveStageModal from './RemoveStageModal.vue';
+import LostReasonModal from './LostReasonModal.vue';
+import WonValueModal from './WonValueModal.vue';
 
 const emit = defineEmits(['new-lead']);
 const store = useStore();
@@ -15,15 +18,74 @@ const getters = useStoreGetters();
 const { t } = useI18n();
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
+const lostReasons = computed(() => getters['leadConfig/getLostReasons'].value);
 const orderedStages = ref([]);
 const stageToRemove = ref(null);
 
-const leadsByStage = stageId => getters['leads/getLeadsByStage'].value(stageId);
+// Guarda o movimento até o modal de perda/ganho resolver.
+const pendingMove = ref(null);
+const lostModalOpen = ref(false);
+const wonModalOpen = ref(false);
+// Bump para forçar o recomputo de stageLeads e devolver o card à origem quando
+// o usuário cancela um movimento para etapa de perda (o store não mudou).
+const boardVersion = ref(0);
+
+const findStage = id => stages.value.find(s => s.id === id);
+const findLead = id => getters['leads/getLeads'].value.find(l => l.id === id);
+
+// Lê boardVersion durante o render para criar dependência reativa: ao
+// incrementá-lo, o array de leads é recalculado (nova referência) e as colunas
+// ressincronizam sua cópia local, revertendo um drop não persistido.
+const stageLeads = stageId => {
+  const version = boardVersion.value;
+  return version >= 0 ? getters['leads/getLeadsByStage'].value(stageId) : [];
+};
 const filters = computed(() => getters['leads/getFilters'].value);
 const onFilterUpdate = partial => store.dispatch('leads/setFilters', partial);
 
 const onMove = ({ id, leadStageId, newIndex }) => {
+  const stage = findStage(leadStageId);
+  const lead = findLead(id);
+  // Etapa de perda sem motivo: segura o movimento e exige o motivo.
+  if (stage?.is_lost && !lead?.lost_reason) {
+    pendingMove.value = { id, leadStageId, position: newIndex };
+    lostModalOpen.value = true;
+    return;
+  }
+  // Demais casos persistem o movimento imediatamente.
   store.dispatch('leads/move', { id, leadStageId, position: newIndex });
+  // Etapa de ganho sem valor: convida a informar o valor (não trava o move).
+  if (stage?.is_won && !lead?.value) {
+    pendingMove.value = { id, leadStageId, position: newIndex };
+    wonModalOpen.value = true;
+  }
+};
+
+const confirmLost = async ({ lostReason }) => {
+  if (!pendingMove.value) return;
+  const { id, leadStageId, position } = pendingMove.value;
+  await store.dispatch('leads/update', {
+    id,
+    lead_stage_id: leadStageId,
+    position,
+    lost_reason: lostReason,
+  });
+  pendingMove.value = null;
+  lostModalOpen.value = false;
+};
+
+const cancelLost = () => {
+  pendingMove.value = null;
+  lostModalOpen.value = false;
+  boardVersion.value += 1; // devolve o card à origem
+};
+
+const confirmWon = async ({ value }) => {
+  if (pendingMove.value && value != null) {
+    await store.dispatch('leads/update', { id: pendingMove.value.id, value });
+  }
+  pendingMove.value = null;
+  wonModalOpen.value = false;
 };
 const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
@@ -89,6 +151,7 @@ onMounted(() => {
         <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.NEW_LEAD') }}
       </button>
     </div>
+    <SavedViews />
     <KanbanFilters :filters="filters" @update="onFilterUpdate" />
     <div class="flex flex-1 gap-3 px-4 pb-4 overflow-x-auto">
       <Draggable
@@ -102,7 +165,7 @@ onMounted(() => {
         <template #item="{ element }">
           <KanbanColumn
             :stage="element"
-            :leads="leadsByStage(element.id)"
+            :leads="stageLeads(element.id)"
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
@@ -129,5 +192,12 @@ onMounted(() => {
       @confirm="confirmRemove"
       @cancel="stageToRemove = null"
     />
+    <LostReasonModal
+      v-if="lostModalOpen"
+      :lost-reasons="lostReasons"
+      @confirm-move="confirmLost"
+      @cancel-move="cancelLost"
+    />
+    <WonValueModal v-if="wonModalOpen" @confirm-value="confirmWon" />
   </div>
 </template>

@@ -5,3 +5,5 @@ json.label @stage.label
 json.position @stage.position
 json.is_won @stage.is_won
 json.is_lost @stage.is_lost
+json.probability @stage.probability
+json.stalled_after_days @stage.stalled_after_days

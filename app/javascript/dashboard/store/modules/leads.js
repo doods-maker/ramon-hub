@@ -11,10 +11,16 @@ const toParams = (filters = {}) => {
     agent_id: filters.agentId,
     source: filters.source,
     q: filters.q,
+    lead_stage_id: filters.leadStageId,
+    created_after: filters.createdAfter,
+    created_before: filters.createdBefore,
+    // booleanos só entram na query quando true, para não sujar a URL.
+    stalled: filters.stalled || undefined,
+    no_open_task: filters.noOpenTask || undefined,
   };
   return Object.fromEntries(
     Object.entries(map).filter(
-      ([, v]) => v !== null && v !== undefined && v !== ''
+      ([, v]) => v !== null && v !== undefined && v !== '' && v !== false
     )
   );
 };
@@ -29,6 +35,11 @@ export const state = {
     agentId: null,
     source: '',
     q: '',
+    leadStageId: null,
+    createdAfter: null,
+    createdBefore: null,
+    stalled: false,
+    noOpenTask: false,
   },
   uiFlags: {
     isFetching: false,

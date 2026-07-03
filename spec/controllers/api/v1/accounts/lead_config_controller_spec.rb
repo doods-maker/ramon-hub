@@ -21,6 +21,16 @@ RSpec.describe 'Lead Config API', type: :request do
     expect(novo['color']).to eq('#6b7280')
   end
 
+  it 'expõe probability, stalled_after_days e lost_reasons', :aggregate_failures do
+    get "/api/v1/accounts/#{account.id}/lead_config",
+        headers: admin.create_new_auth_token, as: :json
+    body = response.parsed_body
+    qualif = body['stages'].find { |s| s['name'] == 'Qualificação' }
+    expect(qualif['probability']).to eq(20)
+    expect(qualif['stalled_after_days']).to eq(3)
+    expect(body['lost_reasons'].map { |r| r['name'] }).to include('Honorário')
+  end
+
   it 'retorna as origens distintas ordenadas' do
     stage = account.lead_stages.first
     account.leads.create!(name: 'A', lead_stage: stage, source: 'Meta Ads')

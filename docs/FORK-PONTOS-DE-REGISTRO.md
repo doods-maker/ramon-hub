@@ -68,6 +68,13 @@
 | `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Teses` com 5 tipos (SET_THESES_UI_FLAG, SET_THESES, ADD_THESIS, EDIT_THESIS, DELETE_THESIS) | mutation types do módulo teses | F2.1a |
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` | +blocos/strings para Playbooks (tela, labels, erros, placeholders) | i18n inglês para UI de teses e playbooks | F2.1a |
 | `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | +blocos/strings para Playbooks (tela, labels, erros, placeholders) | i18n português para UI de teses e playbooks | F2.1a |
+| `config/routes.rb` | `resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do member { post :complete } end` dentro do bloco `resources :leads` (após `resources :notes`) | API de tarefas (próxima ação) aninhada ao lead + rota member `complete` | PR-A t2 |
+| `config/routes.rb` | `resources :lead_tasks, only: [:index], as: :account_lead_tasks` no nível da conta (após o bloco `resources :leads`; `as:` evita colisão de named route com o nested `tasks` do lead) | coleção de tarefas da conta com `scope=open\|overdue\|today` (agenda) | PR-A t2 |
+| `app/models/lead.rb` | +`inverse_of: :lead` no `has_many :lead_tasks` | evita N+1 de `task.lead.name` no index escopado ao lead | PR-A t2 |
+| `app/javascript/dashboard/store/index.js` | +import e registro de `modules/leadTasks` (após `leadConfig`) | registra módulo Vuex de tarefas do lead | PR-A t4 |
+| `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Tarefas do lead (cadência)` (SET_LEAD_TASKS_UI_FLAG, MERGE_LEAD_TASKS, MERGE_LEAD_TASK, DELETE_LEAD_TASK) antes do bloco Teses | mutation types do módulo leadTasks | PR-A t4 |
+| `app/javascript/dashboard/store/modules/leadConfig.js` | +`lostReasons` no state, no `SET_LEAD_CONFIG` (`data.lost_reasons`) e getter `getLostReasons`; stages já guardam o objeto inteiro → `probability`/`stalled_after_days` fazem pass-through | motivos de perda + campos novos de stage no config | PR-A t4 |
+| `app/javascript/dashboard/store/modules/leads.js` | +filtros de cadência no state (`leadStageId`, `createdAfter`, `createdBefore`, `stalled`, `noOpenTask`) e no `toParams` (mapeia p/ `lead_stage_id`/`created_after`/`created_before`/`stalled`/`no_open_task`, booleanos só quando true) | filtros de cadência no Kanban | PR-A t4 |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -144,6 +151,15 @@
 | `app/javascript/dashboard/components/kanban/specs/LeadDrawer.spec.js` (linha de changes) | — já existia; 4 linhas de contexto | drawer: sem mudança funcional | F2.1a |
 | `spec/factories/leads.rb` (não listado no diff?) | — possivelmente ya existía; confirmar se tem `thesis: association` | factory de lead com tese | F2.1a |
 | `spec/services/leads/seed_default_config_service_spec.rb` (linha de changes) | — já existia; 18 linhas p/ cobertura de seed de teses | cobertura de seed | F2.1a |
+| `app/controllers/api/v1/accounts/lead_tasks_controller.rb` | controller CRUD + `complete` (fetch_lead condicional, fetch_task, `authorize(LeadTask)`); index escopado ao lead ou à conta (`account_scope` com `includes(:lead)` + filtros open/overdue/today) | API de tarefas do lead | PR-A t2 |
+| `app/policies/lead_task_policy.rb` | policy `index?/create?/update?/complete?/destroy?` = admin+agent (molde `lead_note_policy`) | autorização das tarefas | PR-A t2 |
+| `app/views/api/v1/accounts/lead_tasks/{index,create,update}.json.jbuilder` + `_lead_task.json.jbuilder` | serialização `{ payload: [...] }` / task única; partial com `id lead_id user_id title kind due_at completed_at created_at` + `lead_name` (via `task.lead.name`) | resposta JSON das tarefas | PR-A t2 |
+| `spec/controllers/api/v1/accounts/lead_tasks_controller_spec.rb` | request spec: lista ordenada, cria (autor), atualiza, completa (`completed_at`), remove, nega estranho (401/404), coleção da conta `scope=overdue` | cobertura da API de tarefas | PR-A t2 |
+| `app/javascript/dashboard/api/leadTasks.js` | client axios (base `leads` account-scoped): `get/create/update/complete/delete(leadId, ...)` nas rotas `/leads/:id/tasks` + `getAccountScope(scope)` em `/lead_tasks` | API client de tarefas do lead | PR-A t4 |
+| `app/javascript/dashboard/store/modules/leadTasks.js` | módulo Vuex: state `{ records, uiFlags }`; actions `fetchForLead/fetchAccountScope/create/complete/destroy`; getters `getByLead` (só abertas, due_at asc) e `getAccountTasks`; mutations fazem MERGE por id (upsert sem truncar records de outros leads) | estado das tarefas do lead | PR-A t4 |
+| `app/javascript/dashboard/store/modules/specs/leadTasks/{actions,getters,mutations}.spec.js` | specs vitest: merge por id no upsert, `getByLead` só abertas ordenadas, actions com axios mockado | cobertura do módulo leadTasks | PR-A t4 |
+| `app/javascript/dashboard/store/modules/specs/leadConfig/getters.spec.js` | specs vitest: `getLostReasons`, pass-through de probability/stalled_after_days | cobertura de leadConfig (novos campos) | PR-A t4 |
+| `app/javascript/dashboard/store/modules/specs/leads/filters.spec.js` (linha de changes) | +teste dos filtros de cadência (omite booleanos false) | cobertura dos filtros novos | PR-A t4 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

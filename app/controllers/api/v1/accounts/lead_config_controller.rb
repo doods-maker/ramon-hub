@@ -3,6 +3,7 @@ class Api::V1::Accounts::LeadConfigController < Api::V1::Accounts::BaseControlle
 
   def show
     @stages = Current.account.lead_stages
+    @lost_reasons = Current.account.lost_reasons
     @benefit_types = Current.account.benefit_types
     @priorities = Current.account.lead_priorities
     # reorder(nil) anula o default_scope do Lead — DISTINCT + ORDER BY de coluna

@@ -49,6 +49,21 @@ const brl = value =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
     value
   );
+const brlCompact = value =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value);
+
+// Forecast ponderado = soma × probabilidade da etapa. Só faz sentido quando a
+// etapa tem probabilidade > 0 (some p/ etapas de perda, que ficam em 0).
+const stageProbability = computed(() => Number(props.stage.probability) || 0);
+const showWeighted = computed(() => stageProbability.value > 0);
+const weightedValue = computed(
+  () => totalValue.value * (stageProbability.value / 100)
+);
 </script>
 
 <template>
@@ -74,8 +89,21 @@ const brl = value =>
         />
       </span>
       <span class="flex items-center gap-2">
-        <span data-testid="stage-total" class="text-xs text-n-slate-9">
-          {{ brl(totalValue) }}
+        <span class="flex flex-col items-end leading-tight">
+          <span data-testid="stage-total" class="text-xs text-n-slate-9">
+            {{ brl(totalValue) }}
+          </span>
+          <span
+            v-if="showWeighted"
+            data-testid="stage-weighted"
+            class="text-[10px] text-n-slate-10"
+          >
+            {{
+              $t('RAMON.KANBAN.COLUMN.WEIGHTED', {
+                value: brlCompact(weightedValue),
+              })
+            }}
+          </span>
         </span>
         <span data-testid="stage-count" class="text-xs text-n-slate-9">
           {{ localLeads.length }}

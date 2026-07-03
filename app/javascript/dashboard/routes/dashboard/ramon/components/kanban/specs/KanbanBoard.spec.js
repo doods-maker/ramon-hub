@@ -51,7 +51,7 @@ const mountBoard = () => {
     global: {
       plugins: [store],
       mocks: { $t: k => k },
-      stubs: { LeadDrawer: true, ConversationDock: true },
+      stubs: { LeadDrawer: true, ConversationDock: true, SavedViews: true },
     },
   });
 };
