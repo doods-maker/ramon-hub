@@ -21,7 +21,8 @@
       "SDR": "SDR Panel",
       "TRIAGEM": "Case Intake",
       "AGENTES": "AI Agents",
-      "FUNIL_CONFIG": "Funnel settings"
+      "FUNIL_CONFIG": "Funnel settings",
+      "PLAYBOOKS": "Playbooks"
     },
     "RAIL": {
       "INTERNOS": "Internal",
@@ -91,10 +92,11 @@
       "NOTES": "Notes",
       "NOTES_ADD": "Write a note…",
       "NOTES_ADD_BUTTON": "Add note",
-      "CONTACT": "Contact"
+      "CONTACT": "Contact",
+      "THESIS": "Thesis"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Summary", "HISTORY": "History" },
+      "TABS": { "SUMMARY": "Summary", "HISTORY": "History", "PLAYBOOK": "Playbook" },
       "DISCARD": "Not a lead",
       "HISTORY": {
         "SYSTEM": "System",
@@ -107,6 +109,45 @@
           "VALUE_CHANGED": "changed the value",
           "NOTE_ADDED": "added a note"
         }
+      }
+    },
+    "PLAYBOOK": {
+      "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",
+      "COPY": "Copy",
+      "COPIED": "Copied!",
+      "SECTIONS": {
+        "QUALIFICACAO": "Qualification",
+        "OBJECAO": "Objections",
+        "DOCUMENTO": "Documents"
+      }
+    },
+    "PLAYBOOKS": {
+      "TITLE": "Playbooks",
+      "LIST_TITLE": "Theses",
+      "ADD_PLACEHOLDER": "New thesis name",
+      "ADD": "Add",
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "EMPTY_LIST": "No theses registered yet.",
+      "EMPTY_DETAIL": "Select a thesis on the left to edit.",
+      "DELETE_CONFIRM": "Remove this thesis and all of its items?",
+      "MOVE_UP": "Move up",
+      "MOVE_DOWN": "Move down",
+      "NAME": "Name",
+      "DESCRIPTION": "Description",
+      "AREA": "Area",
+      "ACTIVE_TOGGLE": "Active thesis",
+      "ITEM_DELETE_CONFIRM": "Remove this playbook item?",
+      "ITEM_TITLE_PLACEHOLDER": "Item title",
+      "ITEM_CONTENT_PLACEHOLDER": "Content / script…",
+      "ITEM_ADD": "Add item",
+      "ITEM_EMPTY": "No items in this section yet.",
+      "SECTIONS": {
+        "ABERTURA": "Opening",
+        "APRESENTACAO": "Presentation",
+        "QUALIFICACAO": "Qualification",
+        "OBJECAO": "Objections",
+        "DOCUMENTO": "Documents"
       }
     }
   }

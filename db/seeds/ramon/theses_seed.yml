@@ -1,0 +1,302 @@
+# Seed das 5 teses nativas do Playbook do SDR — INCAPACIDADE (Direito Previdenciário).
+# Portado verbatim de intranet-ramon/supabase/12_playbook_seed_incapacidade.sql.
+# Consumido por Leads::SeedDefaultConfigService#seed_theses (idempotente por nome/tese
+# e por (section, title) dentro de cada tese).
+theses:
+  - name: "Auxílio por incapacidade temporária (auxílio-doença / B31)"
+    description: "Benefício para quem está temporariamente incapaz para o trabalho habitual por mais de 15 dias. Lei 8.213/91, arts. 59 a 63."
+    area: "previdenciario"
+    position: 1
+    items:
+      - section: "abertura"
+        title: "Quebra-gelo (afastado por doença)"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você está com dúvida sobre o auxílio-doença do INSS. Você está afastado do trabalho por algum problema de saúde neste momento?"
+        position: 0
+      - section: "abertura"
+        title: "Quebra-gelo (benefício negado/cessado)"
+        content: "Olá {{nome}}! O INSS negou ou cortou o seu auxílio-doença? Isso é muito comum e na maioria das vezes tem solução. Me conta rapidinho o que aconteceu que eu te oriento."
+        position: 1
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        content: "O auxílio por incapacidade temporária (antigo auxílio-doença, B31) é pago a quem fica incapaz para o seu trabalho por mais de 15 dias. Para o empregado, os 15 primeiros dias são pagos pela empresa e, do 16º em diante, o INSS assume. Exige qualidade de segurado e, em regra, 12 contribuições de carência — MAS a carência é dispensada em acidente de qualquer natureza e em doenças graves listadas em lei (ex.: câncer, cardiopatia grave, Parkinson). Depende de perícia médica."
+        position: 0
+      - section: "qualificacao"
+        title: "Você está afastado do trabalho por motivo de saúde? Há quanto tempo?"
+        content: "Qualificado: afastamento atual ou recente por mais de 15 dias, com incapacidade para a atividade habitual."
+        position: 0
+      - section: "qualificacao"
+        title: "Você tem laudos, exames ou atestados médicos com o CID?"
+        content: "Qualificado: possui documentação médica recente que comprove a doença/incapacidade. Sem prova médica, o caso enfraquece."
+        position: 1
+      - section: "qualificacao"
+        title: "Você contribui para o INSS? Quando foi a última contribuição?"
+        content: "Qualificado: mantém qualidade de segurado (contribuindo ou dentro do período de graça). Verificar carteira assinada, autônomo ou período de graça."
+        position: 2
+      - section: "qualificacao"
+        title: "Já pediu o benefício no INSS? Foi negado ou cortado? Qual o motivo?"
+        content: "Qualificado: já houve requerimento (DER) e indeferimento/cessação — abre via de recurso ou ação. Anotar o motivo (perícia, falta de carência, perda da qualidade)."
+        position: 3
+      - section: "objecao"
+        title: "O INSS negou, então eu não tenho direito."
+        content: "O indeferimento administrativo não é a palavra final. Boa parte das negativas cai por erro de perícia ou de análise de carência. Dá para recorrer administrativamente ou entrar com ação judicial revendo o caso com a documentação certa."
+        position: 0
+      - section: "objecao"
+        title: "Já voltei a trabalhar, não adianta mais."
+        content: "Mesmo tendo voltado, você pode ter direito ao período em que ficou afastado e sem receber. Esses valores atrasados podem ser cobrados."
+        position: 1
+      - section: "objecao"
+        title: "Tenho medo de ficar sem nada se entrar contra o INSS."
+        content: "Pedir o benefício não tira nenhum direito seu nem gera punição. Avaliamos o caso antes e só seguimos se houver viabilidade; trabalhamos com honorários combinados de forma transparente."
+        position: 2
+      - section: "documento"
+        title: "Documento de identidade e CPF"
+        content: "Para identificação do segurado."
+        position: 0
+      - section: "documento"
+        title: "CNIS / CTPS (carteira de trabalho)"
+        content: "Comprova vínculos, contribuições e a qualidade de segurado."
+        position: 1
+      - section: "documento"
+        title: "Laudos, exames e atestados médicos com CID"
+        content: "Toda a documentação médica, de preferência recente e legível."
+        position: 2
+      - section: "documento"
+        title: "Carta de indeferimento ou de cessação do INSS"
+        content: "Mostra o motivo da negativa/corte e a data — essencial para a estratégia."
+        position: 3
+      - section: "documento"
+        title: "Comprovante do requerimento (número do protocolo / DER)"
+        content: "Data de entrada do pedido no INSS."
+        position: 4
+
+  - name: "Aposentadoria por incapacidade permanente (invalidez / B32)"
+    description: "Para o segurado total e permanentemente incapaz, insuscetível de reabilitação. Lei 8.213/91, arts. 42 a 47."
+    area: "previdenciario"
+    position: 2
+    items:
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Você está recebendo auxílio-doença ou tem uma doença que te impede de voltar a trabalhar de forma definitiva? Posso te explicar como funciona a aposentadoria por incapacidade."
+        position: 0
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        content: "A aposentadoria por incapacidade permanente (antiga aposentadoria por invalidez, B32) é para quem está total e permanentemente incapaz e não pode ser reabilitado para outra função. Importante: a Justiça analisa não só a doença, mas também idade, escolaridade e histórico profissional (Súmula 47 da TNU) — ou seja, leva em conta a realidade da pessoa. Quem precisa de ajuda permanente de outra pessoa pode ainda receber +25%. Muitas vezes começa como auxílio-doença e é convertida em aposentadoria."
+        position: 0
+      - section: "qualificacao"
+        title: "Sua incapacidade é definitiva? Há chance de voltar a trabalhar?"
+        content: "Qualificado: incapacidade permanente, sem perspectiva real de retorno à atividade que garanta o sustento."
+        position: 0
+      - section: "qualificacao"
+        title: "Qual a sua idade, escolaridade e profissão habitual?"
+        content: "Qualificado: idade mais avançada, baixa escolaridade e profissão braçal reforçam a inviabilidade de reabilitação."
+        position: 1
+      - section: "qualificacao"
+        title: "Você já recebe auxílio-doença? Há quanto tempo?"
+        content: "Qualificado: benefício temporário que se arrasta e sem melhora — forte indício de caso de conversão em aposentadoria."
+        position: 2
+      - section: "qualificacao"
+        title: "Você precisa da ajuda de outra pessoa para as atividades do dia a dia?"
+        content: "Qualificado: dependência de terceiros abre direito ao acréscimo de 25% sobre o benefício."
+        position: 3
+      - section: "objecao"
+        title: "Achei que só aposenta por invalidez quem está à beira da morte."
+        content: "Não é isso. O critério é não ter mais condição de exercer atividade que garanta o seu sustento, considerando a sua doença junto com idade, estudo e profissão. Pessoas que ainda andam e se cuidam podem ter direito."
+        position: 0
+      - section: "objecao"
+        title: "O INSS quer me dar alta ou me mandar para reabilitação."
+        content: "Se a reabilitação não é viável no seu caso real, dá para contestar a alta. Avaliamos os laudos e o histórico para mostrar que o retorno ao trabalho não é possível."
+        position: 1
+      - section: "objecao"
+        title: "Tenho várias doenças, mas cada uma o perito disse que não incapacita."
+        content: "A análise deve ser do conjunto, não doença por doença isolada. A soma das limitações pode, sim, gerar incapacidade — e é isso que sustentamos no caso."
+        position: 2
+      - section: "documento"
+        title: "Documento de identidade e CPF"
+        content: "Identificação do segurado."
+        position: 0
+      - section: "documento"
+        title: "CNIS / CTPS"
+        content: "Comprova vínculos e qualidade de segurado."
+        position: 1
+      - section: "documento"
+        title: "Laudos e exames detalhados com CID e histórico da doença"
+        content: "Quanto mais completo o histórico médico, melhor."
+        position: 2
+      - section: "documento"
+        title: "Comunicados de perícia e cartas do INSS"
+        content: "Decisões, prorrogações, altas e indeferimentos."
+        position: 3
+      - section: "documento"
+        title: "Laudo atestando necessidade de cuidador (se houver)"
+        content: "Embasa o pedido do acréscimo de 25%."
+        position: 4
+
+  - name: "Auxílio-acidente (B36)"
+    description: "Indenização por sequela permanente que reduz a capacidade de trabalho. Lei 8.213/91, art. 86. Cumulável com salário."
+    area: "previdenciario"
+    position: 3
+    items:
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Você sofreu algum acidente ou ficou com alguma sequela que atrapalha o seu trabalho? Pode ser que você tenha direito a um benefício mensal do INSS, mesmo trabalhando."
+        position: 0
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        content: "O auxílio-acidente (B36) é uma indenização paga pelo INSS a quem fica com uma sequela permanente que REDUZ a capacidade de trabalho — não precisa estar totalmente incapaz. O acidente pode ser de qualquer natureza (Súmula 44 do STJ), não só de trabalho. Vale 50% do salário de benefício, é PAGO MESMO QUE A PESSOA CONTINUE TRABALHANDO e não tem carência. Caminho típico: acidente → auxílio-doença → na alta com sequela, vira auxílio-acidente."
+        position: 0
+      - section: "qualificacao"
+        title: "Você ficou com alguma sequela permanente depois de acidente ou doença?"
+        content: "Qualificado: sequela consolidada (já estabilizada) que reduz a capacidade para o trabalho habitual."
+        position: 0
+      - section: "qualificacao"
+        title: "Você recebeu auxílio-doença antes e teve alta?"
+        content: "Qualificado: alta de auxílio-doença com sequela é o cenário clássico de conversão em auxílio-acidente."
+        position: 1
+      - section: "qualificacao"
+        title: "Qual o seu tipo de vínculo? (empregado, doméstico, avulso, rural)"
+        content: "Qualificado: empregado, doméstico, trabalhador avulso e segurado especial (rural) têm direito. Contribuinte individual (autônomo) e facultativo, em regra, NÃO têm."
+        position: 2
+      - section: "objecao"
+        title: "Mas eu ainda consigo trabalhar, então não tenho direito."
+        content: "Justamente por isso existe o auxílio-acidente: ele é para quem teve a capacidade REDUZIDA mas continua trabalhando. É uma indenização que soma ao seu salário, não substitui."
+        position: 0
+      - section: "objecao"
+        title: "Meu acidente não foi no trabalho."
+        content: "Não precisa ser. O auxílio-acidente vale para acidente de qualquer natureza — em casa, no trânsito, no lazer. O que importa é a sequela que reduziu sua capacidade."
+        position: 1
+      - section: "objecao"
+        title: "O INSS me deu alta e não falou nada de auxílio-acidente."
+        content: "É comum o INSS não conceder de ofício. Se você ficou com sequela na alta, dá para pleitear o auxílio-acidente, inclusive valores retroativos."
+        position: 2
+      - section: "documento"
+        title: "Documento de identidade e CPF"
+        content: "Identificação do segurado."
+        position: 0
+      - section: "documento"
+        title: "CNIS / CTPS"
+        content: "Comprova vínculo e qualidade de segurado na data do acidente."
+        position: 1
+      - section: "documento"
+        title: "Laudos e exames com CID mostrando a sequela"
+        content: "Provam a consolidação e a redução de capacidade."
+        position: 2
+      - section: "documento"
+        title: "CAT (Comunicação de Acidente de Trabalho), se houver"
+        content: "Reforça o nexo, quando o acidente foi de trabalho."
+        position: 3
+      - section: "documento"
+        title: "Carta de cessação do auxílio-doença"
+        content: "Mostra a alta e a data — base para o pedido e os atrasados."
+        position: 4
+
+  - name: "BPC/LOAS por deficiência"
+    description: "Benefício assistencial de 1 salário mínimo a pessoa com deficiência de baixa renda. NÃO exige contribuição ao INSS. Lei 8.742/93, art. 20."
+    area: "previdenciario"
+    position: 4
+    items:
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Você ou alguém da sua família tem uma deficiência ou doença grave e a renda da casa é baixa? Existe um benefício de um salário mínimo que NÃO exige ter contribuído para o INSS. Posso te explicar?"
+        position: 0
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        content: "O BPC/LOAS é um benefício assistencial de 1 salário mínimo por mês para a pessoa com deficiência de baixa renda. O grande diferencial: NÃO precisa ter contribuído para o INSS. Exige dois pontos: (1) deficiência de longo prazo (efeitos por pelo menos 2 anos) que dificulta a participação na sociedade; e (2) baixa renda — em regra, renda familiar por pessoa abaixo de 1/4 do salário mínimo, com possibilidade de ampliação pela Justiça em razão de gastos com saúde. Não dá 13º e não deixa pensão por morte."
+        position: 0
+      - section: "qualificacao"
+        title: "Qual a renda total da casa e quantas pessoas moram juntas?"
+        content: "Qualificado: renda por pessoa abaixo de 1/4 do salário mínimo (ou perto disso, considerando gastos com saúde/deficiência)."
+        position: 0
+      - section: "qualificacao"
+        title: "A deficiência ou doença atrapalha há mais de 2 anos?"
+        content: "Qualificado: impedimento de longo prazo (físico, mental, intelectual ou sensorial) com efeitos por pelo menos 2 anos."
+        position: 1
+      - section: "qualificacao"
+        title: "A família está inscrita e com o CadÚnico atualizado?"
+        content: "Qualificado: CadÚnico atualizado é requisito obrigatório para o BPC; se não tiver, é o primeiro passo a orientar."
+        position: 2
+      - section: "qualificacao"
+        title: "A pessoa já recebe outro benefício do INSS?"
+        content: "Atenção: o BPC não pode ser acumulado com a maioria dos benefícios previdenciários. Verificar o que já recebe."
+        position: 3
+      - section: "objecao"
+        title: "Eu nunca contribuí para o INSS, então não tenho direito a nada."
+        content: "No BPC é exatamente o contrário: ele é assistencial, feito para quem NÃO contribuiu. O que conta é a deficiência e a baixa renda, não as contribuições."
+        position: 0
+      - section: "objecao"
+        title: "Em casa entra um salário mínimo, então não sou de baixa renda."
+        content: "O cálculo é por pessoa e a Justiça desconta gastos altos com saúde e medicamentos. Mesmo com um salário em casa, dependendo de quantas pessoas e dos gastos, pode haver direito."
+        position: 1
+      - section: "objecao"
+        title: "O INSS já negou dizendo que a deficiência não é grave."
+        content: "A perícia administrativa costuma ser rígida. Na via judicial é possível demonstrar, com laudos e perícia social, o impacto real da deficiência no dia a dia e na vida em sociedade."
+        position: 2
+      - section: "documento"
+        title: "Documento de identidade e CPF de todos da casa"
+        content: "Identificação do grupo familiar."
+        position: 0
+      - section: "documento"
+        title: "CadÚnico atualizado"
+        content: "Requisito obrigatório do BPC."
+        position: 1
+      - section: "documento"
+        title: "Comprovantes de renda de todos que moram juntos"
+        content: "Para o cálculo da renda por pessoa."
+        position: 2
+      - section: "documento"
+        title: "Laudos e exames da deficiência/doença com CID"
+        content: "Comprovam o impedimento de longo prazo."
+        position: 3
+      - section: "documento"
+        title: "Comprovante de residência e gastos com saúde"
+        content: "Embasa a despesa que reduz a renda disponível."
+        position: 4
+
+  - name: "Acréscimo de 25% (grande invalidez)"
+    description: "Adicional de 25% sobre a aposentadoria por incapacidade permanente quando o segurado precisa de ajuda permanente de outra pessoa. Lei 8.213/91, art. 45."
+    area: "previdenciario"
+    position: 5
+    items:
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Você é aposentado por invalidez e precisa da ajuda de outra pessoa no dia a dia? Pode ter direito a um acréscimo de 25% no seu benefício. Posso te explicar como funciona?"
+        position: 0
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        content: "O acréscimo de 25% (art. 45 da Lei 8.213/91) é um adicional pago sobre a aposentadoria por incapacidade permanente quando o aposentado precisa de assistência permanente de outra pessoa (por exemplo: cegueira total, paralisia, perda de membros, dependência para se alimentar, se higienizar ou se locomover). A lista da lei é exemplificativa. Pode ser pedido mesmo depois de já estar aposentado, com direito a valores retroativos."
+        position: 0
+      - section: "qualificacao"
+        title: "Você já é aposentado por incapacidade permanente (invalidez)?"
+        content: "Qualificado: o acréscimo incide sobre a aposentadoria por invalidez. Hoje, pelo entendimento do STF (Tema 1095), depende de lei para se estender a outras aposentadorias."
+        position: 0
+      - section: "qualificacao"
+        title: "Você precisa da ajuda de outra pessoa para tarefas básicas do dia a dia?"
+        content: "Qualificado: dependência permanente de terceiros para alimentar-se, higienizar-se, vestir-se ou locomover-se."
+        position: 1
+      - section: "qualificacao"
+        title: "Existe laudo médico atestando essa necessidade de cuidador?"
+        content: "Qualificado: laudo que comprove a necessidade de assistência permanente fortalece muito o pedido."
+        position: 2
+      - section: "objecao"
+        title: "Nunca me falaram desse acréscimo quando me aposentei."
+        content: "O INSS raramente concede de ofício. Se a necessidade de ajuda permanente existe, dá para requerer agora, inclusive cobrando os valores atrasados desde quando o direito surgiu."
+        position: 0
+      - section: "objecao"
+        title: "Eu recebo outra aposentadoria, não a por invalidez. Tenho direito?"
+        content: "Esse é um ponto sensível. O STF (Tema 1095) entendeu que, sem lei específica, o acréscimo fica restrito à aposentadoria por invalidez. Avaliamos seu caso concreto para ver a estratégia possível."
+        position: 1
+      - section: "objecao"
+        title: "Acho que dá muito trabalho para conseguir só 25% a mais."
+        content: "É 25% todo mês, para sempre, somados aos atrasados. Para quem tem despesa com cuidador e remédios, faz diferença real no orçamento — e o trâmite fica por nossa conta."
+        position: 2
+      - section: "documento"
+        title: "Documento de identidade e CPF"
+        content: "Identificação do segurado."
+        position: 0
+      - section: "documento"
+        title: "Carta de concessão da aposentadoria por invalidez"
+        content: "Comprova o benefício sobre o qual incide o acréscimo."
+        position: 1
+      - section: "documento"
+        title: "Laudos atestando a necessidade de ajuda permanente de terceiros"
+        content: "Documento central do pedido."
+        position: 2

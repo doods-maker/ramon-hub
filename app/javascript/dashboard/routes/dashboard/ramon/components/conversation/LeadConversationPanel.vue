@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import LeadFields from 'dashboard/routes/dashboard/ramon/components/lead/LeadFields.vue';
 import ConversationAction from 'dashboard/routes/dashboard/conversation/ConversationAction.vue';
 import MacrosList from 'dashboard/routes/dashboard/conversation/Macros/List.vue';
 import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import LeadHistory from 'dashboard/routes/dashboard/ramon/components/conversation/LeadHistory.vue';
+import LeadPlaybook from 'dashboard/routes/dashboard/ramon/components/conversation/LeadPlaybook.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -15,6 +16,7 @@ const emit = defineEmits(['discarded']);
 defineOptions({ name: 'LeadConversationPanel' });
 const store = useStore();
 const leadByConv = useMapGetter('leads/getLeadByConversationId');
+const theses = useMapGetter('theses/getTheses');
 const activeTab = ref('resumo');
 const lead = computed(() => leadByConv.value(Number(props.conversationId)));
 
@@ -24,6 +26,10 @@ const ensure = async () => {
   });
 };
 watch(() => props.conversationId, ensure, { immediate: true });
+
+onMounted(() => {
+  if (!theses.value.length) store.dispatch('theses/get');
+});
 
 const discard = async () => {
   if (!lead.value) return;
@@ -49,6 +55,13 @@ const discard = async () => {
         {{ $t('RAMON.LEAD_PANEL.TABS.HISTORY') }}
       </button>
       <button
+        :class="{ 'font-semibold': activeTab === 'playbook' }"
+        data-testid="tab-playbook"
+        @click="activeTab = 'playbook'"
+      >
+        {{ $t('RAMON.LEAD_PANEL.TABS.PLAYBOOK') }}
+      </button>
+      <button
         class="ml-auto text-xs"
         data-testid="lead-discard"
         @click="discard"
@@ -66,6 +79,7 @@ const discard = async () => {
         <LeadFields :lead="lead" />
       </template>
       <LeadHistory v-else-if="activeTab === 'historico'" :lead-id="lead.id" />
+      <LeadPlaybook v-else-if="activeTab === 'playbook'" :lead="lead" />
     </div>
   </div>
 </template>

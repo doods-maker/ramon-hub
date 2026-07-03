@@ -21,7 +21,8 @@
       "SDR": "Painel do SDR",
       "TRIAGEM": "Triagem de Iniciais",
       "AGENTES": "Agentes de IA",
-      "FUNIL_CONFIG": "Configurações do Funil"
+      "FUNIL_CONFIG": "Configurações do Funil",
+      "PLAYBOOKS": "Playbooks"
     },
     "RAIL": {
       "INTERNOS": "Internos",
@@ -91,10 +92,11 @@
       "NOTES": "Notas",
       "NOTES_ADD": "Escreva uma nota…",
       "NOTES_ADD_BUTTON": "Adicionar nota",
-      "CONTACT": "Contato"
+      "CONTACT": "Contato",
+      "THESIS": "Tese"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Resumo", "HISTORY": "Histórico" },
+      "TABS": { "SUMMARY": "Resumo", "HISTORY": "Histórico", "PLAYBOOK": "Playbook" },
       "DISCARD": "Não é lead",
       "HISTORY": {
         "SYSTEM": "Sistema",
@@ -107,6 +109,45 @@
           "VALUE_CHANGED": "mudou o valor",
           "NOTE_ADDED": "adicionou nota"
         }
+      }
+    },
+    "PLAYBOOK": {
+      "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",
+      "COPY": "Copiar",
+      "COPIED": "Copiado!",
+      "SECTIONS": {
+        "QUALIFICACAO": "Qualificação",
+        "OBJECAO": "Objeções",
+        "DOCUMENTO": "Documentos"
+      }
+    },
+    "PLAYBOOKS": {
+      "TITLE": "Playbooks",
+      "LIST_TITLE": "Teses",
+      "ADD_PLACEHOLDER": "Nome da nova tese",
+      "ADD": "Adicionar",
+      "ACTIVE": "Ativa",
+      "INACTIVE": "Inativa",
+      "EMPTY_LIST": "Nenhuma tese cadastrada ainda.",
+      "EMPTY_DETAIL": "Selecione uma tese à esquerda para editar.",
+      "DELETE_CONFIRM": "Remover esta tese e todos os seus itens?",
+      "MOVE_UP": "Mover para cima",
+      "MOVE_DOWN": "Mover para baixo",
+      "NAME": "Nome",
+      "DESCRIPTION": "Descrição",
+      "AREA": "Área",
+      "ACTIVE_TOGGLE": "Tese ativa",
+      "ITEM_DELETE_CONFIRM": "Remover este item do playbook?",
+      "ITEM_TITLE_PLACEHOLDER": "Título do item",
+      "ITEM_CONTENT_PLACEHOLDER": "Conteúdo / roteiro…",
+      "ITEM_ADD": "Adicionar item",
+      "ITEM_EMPTY": "Nenhum item nesta seção ainda.",
+      "SECTIONS": {
+        "ABERTURA": "Abertura",
+        "APRESENTACAO": "Apresentação",
+        "QUALIFICACAO": "Qualificação",
+        "OBJECAO": "Objeções",
+        "DOCUMENTO": "Documentos"
       }
     }
   }

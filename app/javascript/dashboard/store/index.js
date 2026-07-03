@@ -41,6 +41,7 @@ import labels from './modules/labels';
 import leads from './modules/leads';
 import leadConfig from './modules/leadConfig';
 import macros from './modules/macros';
+import theses from './modules/theses';
 import notifications from './modules/notifications';
 import portals from './modules/helpCenterPortals';
 import reports from './modules/reports';
@@ -108,6 +109,7 @@ export default createStore({
     leads,
     leadConfig,
     macros,
+    theses,
     notifications,
     portals,
     reports,

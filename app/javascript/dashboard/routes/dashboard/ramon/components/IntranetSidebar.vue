@@ -29,6 +29,12 @@ const sections = computed(() => [
         to: accountScopedRoute('ramon_funil_config'),
       },
       {
+        key: 'playbooks',
+        label: t('RAMON.NAV.PLAYBOOKS'),
+        icon: 'i-lucide-book-open',
+        to: accountScopedRoute('ramon_playbooks'),
+      },
+      {
         key: 'sdr',
         label: t('RAMON.NAV.SDR'),
         icon: 'i-lucide-phone',

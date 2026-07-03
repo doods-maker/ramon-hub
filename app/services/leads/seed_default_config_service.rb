@@ -19,6 +19,8 @@ class Leads::SeedDefaultConfigService
     { name: 'Baixa', weight: 1 }
   ].freeze
 
+  THESES_SEED_PATH = Rails.root.join('db/seeds/ramon/theses_seed.yml')
+
   def initialize(account)
     @account = account
   end
@@ -27,6 +29,7 @@ class Leads::SeedDefaultConfigService
     seed_stages
     seed_benefits
     seed_priorities
+    seed_theses
   end
 
   # NÃO criamos as Labels fase-* aqui: criá-las em toda conta poluiria a
@@ -64,6 +67,31 @@ class Leads::SeedDefaultConfigService
       @account.lead_priorities.find_or_create_by!(name: attrs[:name]) do |p|
         p.weight = attrs[:weight]
         p.position = i
+      end
+    end
+  end
+
+  def seed_theses
+    unless File.exist?(THESES_SEED_PATH)
+      Rails.logger.warn('theses_seed.yml ausente — seed de teses pulado')
+      return
+    end
+
+    YAML.safe_load_file(THESES_SEED_PATH)['theses'].each do |thesis_attrs|
+      thesis = @account.theses.find_or_create_by!(name: thesis_attrs['name']) do |t|
+        t.description = thesis_attrs['description']
+        t.area = thesis_attrs['area']
+        t.position = thesis_attrs['position']
+      end
+      seed_thesis_items(thesis, thesis_attrs['items'] || [])
+    end
+  end
+
+  def seed_thesis_items(thesis, items)
+    items.each do |item_attrs|
+      thesis.thesis_items.find_or_create_by!(section: item_attrs['section'], title: item_attrs['title']) do |i|
+        i.content = item_attrs['content']
+        i.position = item_attrs['position']
       end
     end
   end
