@@ -36,14 +36,17 @@ const relativeDue = dueAt => {
 };
 
 // Após concluir, oferece agendar a próxima (sugestão, nunca obrigatório).
-const schedulePromptFor = ref(null);
+// A task concluída sai do getter (completed_at preenchido) e a linha do v-for
+// desmonta no mesmo tick — por isso o prompt vive FORA do v-for, ancorado
+// numa cópia da task recém-concluída.
+const justCompleted = ref(null);
 
 const complete = async task => {
   await store.dispatch('leadTasks/complete', {
     leadId: props.leadId,
     taskId: task.id,
   });
-  schedulePromptFor.value = task.id;
+  justCompleted.value = task;
 };
 
 const onScheduleNext = async ({ dueAt, title }) => {
@@ -53,17 +56,16 @@ const onScheduleNext = async ({ dueAt, title }) => {
     kind: 'follow_up',
     dueAt,
   });
-  schedulePromptFor.value = null;
+  justCompleted.value = null;
 };
 
-// Nova tarefa manual (título + data opcional).
+// Nova tarefa manual (título opcional → default i18n, como no TaskBellMenu).
 const adding = ref(false);
 const newTitle = ref('');
 const newDate = ref('');
 
 const addTask = async () => {
-  const title = newTitle.value.trim();
-  if (!title) return;
+  const title = newTitle.value.trim() || t('RAMON.KANBAN.BELL.DEFAULT_TITLE');
   await store.dispatch('leadTasks/create', {
     leadId: props.leadId,
     title,
@@ -117,14 +119,22 @@ const addTask = async () => {
           {{ relativeDue(task.due_at).text }}
         </span>
       </div>
-      <div
-        v-if="schedulePromptFor === task.id"
-        data-testid="task-schedule-next"
-        class="flex items-center gap-2 pl-6 text-[11px] text-n-slate-10"
+    </div>
+
+    <div
+      v-if="justCompleted"
+      data-testid="task-schedule-next"
+      class="flex items-center gap-2 text-[11px] text-n-slate-10"
+    >
+      <span>{{ $t('RAMON.TASKS.SCHEDULE_NEXT') }}</span>
+      <TaskBellMenu @schedule="onScheduleNext" />
+      <button
+        data-testid="task-schedule-dismiss"
+        class="text-n-slate-9 hover:text-n-slate-11"
+        @click="justCompleted = null"
       >
-        <span>{{ $t('RAMON.TASKS.SCHEDULE_NEXT') }}</span>
-        <TaskBellMenu @schedule="onScheduleNext" />
-      </div>
+        <span class="i-lucide-x size-3.5" />
+      </button>
     </div>
 
     <div v-if="adding" class="flex flex-col gap-2">
@@ -150,8 +160,7 @@ const addTask = async () => {
         </button>
         <button
           data-testid="task-new-save"
-          class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
-          :disabled="!newTitle.trim()"
+          class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white"
           @click="addTask"
         >
           {{ $t('RAMON.FUNIL.SAVE') }}

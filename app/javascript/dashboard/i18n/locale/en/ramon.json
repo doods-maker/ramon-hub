@@ -67,7 +67,8 @@
         "SOURCE": "Source",
         "VALUE": "Value (R$)",
         "DEDUP": "Open lead already exists for this phone: {name} ({stage})",
-        "OPEN_EXISTING": "Open existing"
+        "OPEN_EXISTING": "Open existing",
+        "CONTACT_ERROR": "Could not link the contact — lead created without a contact"
       },
       "STAGE": {
         "ADD": "Stage",

@@ -1,12 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import { useAlert } from 'dashboard/composables';
 import LeadsAPI from 'dashboard/api/leads';
 import ContactAPI from 'dashboard/api/contacts';
 
 const emit = defineEmits(['close', 'created']);
 const store = useStore();
 const getters = useStoreGetters();
+const { t } = useI18n();
 
 const name = ref('');
 const phone = ref('+55 ');
@@ -60,22 +63,31 @@ const openExisting = () => {
 };
 
 // Reaproveita o contato nativo pelo telefone; cria se não existir.
+// Busca por dígitos SEM o "+": o `+` cru vira espaço na query (Rack) e o
+// ILIKE não casa. Comparamos os resultados normalizando ambos os lados
+// para só-dígitos. Se a resolução do contato falhar por completo, devolve
+// null — o lead nunca deixa de ser criado por causa do contato.
 const resolveContactId = async e164 => {
   const digits = e164.replace(/\D/g, '');
   try {
-    const { data } = await ContactAPI.search(e164);
+    const { data } = await ContactAPI.search(digits);
     const match = (data.payload || []).find(
       c => (c.phone_number || '').replace(/\D/g, '') === digits
     );
     if (match) return match.id;
   } catch (e) {
-    // sem match utilizável: cai para criação
+    // busca falhou: tenta a criação mesmo assim
   }
-  const { data } = await ContactAPI.create({
-    name: name.value.trim(),
-    phone_number: e164,
-  });
-  return data.payload.contact.id;
+  try {
+    const { data } = await ContactAPI.create({
+      name: name.value.trim(),
+      phone_number: e164,
+    });
+    return data.payload.contact.id;
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.NEW.CONTACT_ERROR'));
+    return null;
+  }
 };
 
 const submit = async () => {
