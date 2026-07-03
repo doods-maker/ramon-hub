@@ -4,7 +4,10 @@ class Ramon::LeadNotificationBuilder
   pattr_initialize [:lead!]
 
   def perform
-    lead.account.users.distinct.find_each do |user|
+    # SELECT DISTINCT users.* quebra no Postgres (users.tokens é json, sem
+    # operador de igualdade) — deduplicar pelos ids, não pelas linhas.
+    user_ids = lead.account.account_users.pluck(:user_id).uniq
+    User.where(id: user_ids).find_each do |user|
       user.notifications.create!(
         notification_type: 'ramon_lead_created',
         account: lead.account,
