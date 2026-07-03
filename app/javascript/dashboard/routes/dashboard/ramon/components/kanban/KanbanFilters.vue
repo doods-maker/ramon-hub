@@ -14,6 +14,8 @@ const benefitTypes = computed(
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const sources = computed(() => getters['leadConfig/getSources'].value);
 const agents = computed(() => getters['agents/getAgents'].value);
+// getter pode não existir em cenários de teste isolados — cai para lista vazia.
+const stages = computed(() => getters['leadConfig/getStages']?.value ?? []);
 
 const emitUpdate = partial => emit('update', partial);
 
@@ -40,6 +42,11 @@ const clearFilters = () => {
     agentId: null,
     source: '',
     q: '',
+    leadStageId: null,
+    createdAfter: null,
+    createdBefore: null,
+    stalled: false,
+    noOpenTask: false,
   });
   search.value = '';
 };
@@ -95,6 +102,57 @@ const clearFilters = () => {
       <option value="">{{ $t('RAMON.FUNIL.FILTERS.SOURCE') }}</option>
       <option v-for="s in sources" :key="s" :value="s">{{ s }}</option>
     </select>
+    <select
+      data-testid="filter-stage"
+      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :value="filters.leadStageId || ''"
+      @change="emitUpdate({ leadStageId: $event.target.value || null })"
+    >
+      <option value="">{{ $t('RAMON.FUNIL.FILTERS.STAGE') }}</option>
+      <option v-for="st in stages" :key="st.id" :value="st.id">
+        {{ st.name }}
+      </option>
+    </select>
+    <input
+      type="date"
+      data-testid="filter-created-after"
+      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :value="filters.createdAfter || ''"
+      :aria-label="$t('RAMON.FUNIL.FILTERS.CREATED_AFTER')"
+      :title="$t('RAMON.FUNIL.FILTERS.CREATED_AFTER')"
+      @change="emitUpdate({ createdAfter: $event.target.value || null })"
+    />
+    <input
+      type="date"
+      data-testid="filter-created-before"
+      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :value="filters.createdBefore || ''"
+      :aria-label="$t('RAMON.FUNIL.FILTERS.CREATED_BEFORE')"
+      :title="$t('RAMON.FUNIL.FILTERS.CREATED_BEFORE')"
+      @change="emitUpdate({ createdBefore: $event.target.value || null })"
+    />
+    <label
+      class="flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-lg cursor-pointer text-n-slate-11 hover:text-n-slate-12"
+    >
+      <input
+        type="checkbox"
+        data-testid="filter-stalled"
+        :checked="!!filters.stalled"
+        @change="emitUpdate({ stalled: $event.target.checked })"
+      />
+      {{ $t('RAMON.FUNIL.FILTERS.STALLED') }}
+    </label>
+    <label
+      class="flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-lg cursor-pointer text-n-slate-11 hover:text-n-slate-12"
+    >
+      <input
+        type="checkbox"
+        data-testid="filter-no-open-task"
+        :checked="!!filters.noOpenTask"
+        @change="emitUpdate({ noOpenTask: $event.target.checked })"
+      />
+      {{ $t('RAMON.FUNIL.FILTERS.NO_OPEN_TASK') }}
+    </label>
     <button
       data-testid="filter-clear"
       class="px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12"

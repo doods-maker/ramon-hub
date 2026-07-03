@@ -69,7 +69,18 @@
         "PRIORITY": "Prioridade",
         "AGENT": "Responsável",
         "SOURCE": "Origem",
+        "STAGE": "Etapa",
+        "CREATED_AFTER": "Criado de",
+        "CREATED_BEFORE": "Criado até",
+        "STALLED": "Parados",
+        "NO_OPEN_TASK": "Sem próxima ação",
         "CLEAR": "Limpar"
+      },
+      "VIEWS": {
+        "SAVE": "Salvar view",
+        "SAVE_PROMPT": "Nome desta view",
+        "REMOVE": "Remover view",
+        "REMOVE_CONFIRM": "Remover esta view salva?"
       }
     },
     "KANBAN": {

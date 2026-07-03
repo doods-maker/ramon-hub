@@ -5,6 +5,7 @@ import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
+import SavedViews from './SavedViews.vue';
 import LeadDrawer from './LeadDrawer.vue';
 import ConversationDock from './ConversationDock.vue';
 import RemoveStageModal from './RemoveStageModal.vue';
@@ -89,6 +90,7 @@ onMounted(() => {
         <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.NEW_LEAD') }}
       </button>
     </div>
+    <SavedViews />
     <KanbanFilters :filters="filters" @update="onFilterUpdate" />
     <div class="flex flex-1 gap-3 px-4 pb-4 overflow-x-auto">
       <Draggable
