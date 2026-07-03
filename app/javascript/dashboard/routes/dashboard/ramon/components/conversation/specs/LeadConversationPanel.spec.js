@@ -3,7 +3,7 @@ import { createStore } from 'vuex';
 import LeadConversationPanel from '../LeadConversationPanel.vue';
 
 const lead = { id: 5, conversation_id: 42, name: 'Zé' };
-const build = (ensureSpy, deleteSpy) =>
+const build = (ensureSpy, deleteSpy, thesesGetSpy = vi.fn()) =>
   createStore({
     modules: {
       leads: {
@@ -24,16 +24,22 @@ const build = (ensureSpy, deleteSpy) =>
         },
       },
       agents: { namespaced: true, getters: { getAgents: () => [] } },
+      theses: {
+        namespaced: true,
+        getters: { getTheses: () => [] },
+        actions: { get: thesesGetSpy },
+      },
     },
   });
 const mountPanel = (
   ensureSpy = vi.fn().mockResolvedValue(lead),
-  deleteSpy = vi.fn()
+  deleteSpy = vi.fn(),
+  thesesGetSpy = vi.fn()
 ) =>
   shallowMount(LeadConversationPanel, {
     props: { conversationId: 42, inboxId: 1 },
     global: {
-      plugins: [build(ensureSpy, deleteSpy)],
+      plugins: [build(ensureSpy, deleteSpy, thesesGetSpy)],
       mocks: { $t: k => k },
       stubs: {
         ConversationAction: true,
@@ -41,6 +47,7 @@ const mountPanel = (
         ResolveAction: true,
         LeadFields: true,
         LeadHistory: true,
+        LeadPlaybook: true,
       },
     },
   });
@@ -69,5 +76,21 @@ describe('LeadConversationPanel', () => {
     await flushPromises();
     await wrapper.find('[data-testid="tab-historico"]').trigger('click');
     expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(true);
+  });
+
+  it('switches to the Playbook tab and renders LeadPlaybook', async () => {
+    const wrapper = mountPanel();
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-playbook"]').trigger('click');
+    expect(wrapper.findComponent({ name: 'LeadPlaybook' }).exists()).toBe(
+      true
+    );
+  });
+
+  it('dispatches theses/get on mount when no theses are loaded yet', async () => {
+    const thesesGet = vi.fn();
+    mountPanel(vi.fn().mockResolvedValue(lead), vi.fn(), thesesGet);
+    await flushPromises();
+    expect(thesesGet).toHaveBeenCalled();
   });
 });

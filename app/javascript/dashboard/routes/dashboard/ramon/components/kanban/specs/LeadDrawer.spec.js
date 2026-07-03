@@ -47,6 +47,10 @@ const buildStore = (updateSpy, selectSpy) =>
         namespaced: true,
         getters: { getAgents: () => [{ id: 8, name: 'Eduardo' }] },
       },
+      theses: {
+        namespaced: true,
+        getters: { getTheses: () => [] },
+      },
     },
   });
 

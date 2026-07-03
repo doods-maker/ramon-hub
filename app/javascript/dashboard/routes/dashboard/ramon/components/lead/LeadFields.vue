@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 
 const props = defineProps({ lead: { type: Object, required: true } });
@@ -9,6 +9,8 @@ const stages = useMapGetter('leadConfig/getStages');
 const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
 const priorities = useMapGetter('leadConfig/getPriorities');
 const agents = useMapGetter('agents/getAgents');
+const theses = useMapGetter('theses/getTheses');
+const activeTheses = computed(() => theses.value.filter(t => t.active));
 
 // refs locais editáveis, ressincronizados sempre que o lead muda
 const name = ref('');
@@ -138,6 +140,27 @@ const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
       <option value="">—</option>
       <option v-for="p in priorities" :key="p.id" :value="p.id">
         {{ p.name }}
+      </option>
+    </select>
+
+    <label class="block mb-1 text-xs text-n-slate-10">{{
+      $t('RAMON.DRAWER.THESIS')
+    }}</label>
+    <select
+      data-testid="field-thesis"
+      :value="lead.thesis_id"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      @change="
+        e =>
+          saveSelect(
+            'thesis_id',
+            e.target.value ? Number(e.target.value) : null
+          )
+      "
+    >
+      <option value="">—</option>
+      <option v-for="t in activeTheses" :key="t.id" :value="t.id">
+        {{ t.name }}
       </option>
     </select>
 

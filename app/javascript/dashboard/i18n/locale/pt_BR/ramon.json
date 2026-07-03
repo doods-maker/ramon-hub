@@ -91,10 +91,11 @@
       "NOTES": "Notas",
       "NOTES_ADD": "Escreva uma nota…",
       "NOTES_ADD_BUTTON": "Adicionar nota",
-      "CONTACT": "Contato"
+      "CONTACT": "Contato",
+      "THESIS": "Tese"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Resumo", "HISTORY": "Histórico" },
+      "TABS": { "SUMMARY": "Resumo", "HISTORY": "Histórico", "PLAYBOOK": "Playbook" },
       "DISCARD": "Não é lead",
       "HISTORY": {
         "SYSTEM": "Sistema",
@@ -107,6 +108,16 @@
           "VALUE_CHANGED": "mudou o valor",
           "NOTE_ADDED": "adicionou nota"
         }
+      }
+    },
+    "PLAYBOOK": {
+      "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",
+      "COPY": "Copiar",
+      "COPIED": "Copiado!",
+      "SECTIONS": {
+        "QUALIFICACAO": "Qualificação",
+        "OBJECAO": "Objeções",
+        "DOCUMENTO": "Documentos"
       }
     }
   }

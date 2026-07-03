@@ -42,6 +42,14 @@ const build = (
         },
       },
       agents: { namespaced: true, getters: { getAgents: () => [] } },
+      theses: {
+        namespaced: true,
+        getters: {
+          getTheses: () => [
+            { id: 9, name: 'Auxílio-acidente', active: true },
+          ],
+        },
+      },
     },
   });
 
@@ -86,6 +94,17 @@ describe('LeadFields.vue', () => {
     expect(update).toHaveBeenCalledWith(expect.anything(), {
       id: 3,
       lead_stage_id: 1,
+    });
+  });
+
+  it('saves the thesis on change', async () => {
+    const update = vi.fn();
+    const wrapper = mountFields(update);
+    const select = wrapper.find('[data-testid="field-thesis"]');
+    await select.setValue(9);
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      thesis_id: 9,
     });
   });
 

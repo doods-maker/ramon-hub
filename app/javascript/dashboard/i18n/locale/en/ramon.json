@@ -91,10 +91,11 @@
       "NOTES": "Notes",
       "NOTES_ADD": "Write a note…",
       "NOTES_ADD_BUTTON": "Add note",
-      "CONTACT": "Contact"
+      "CONTACT": "Contact",
+      "THESIS": "Thesis"
     },
     "LEAD_PANEL": {
-      "TABS": { "SUMMARY": "Summary", "HISTORY": "History" },
+      "TABS": { "SUMMARY": "Summary", "HISTORY": "History", "PLAYBOOK": "Playbook" },
       "DISCARD": "Not a lead",
       "HISTORY": {
         "SYSTEM": "System",
@@ -107,6 +108,16 @@
           "VALUE_CHANGED": "changed the value",
           "NOTE_ADDED": "added a note"
         }
+      }
+    },
+    "PLAYBOOK": {
+      "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",
+      "COPY": "Copy",
+      "COPIED": "Copied!",
+      "SECTIONS": {
+        "QUALIFICACAO": "Qualification",
+        "OBJECAO": "Objections",
+        "DOCUMENTO": "Documents"
       }
     }
   }
