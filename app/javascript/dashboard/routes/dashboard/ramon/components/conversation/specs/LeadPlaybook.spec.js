@@ -30,7 +30,12 @@ const thesisWithItems = {
   ],
 };
 
-const thesisWithoutItems = { id: 2, name: 'BPC/LOAS', active: true, position: 1 };
+const thesisWithoutItems = {
+  id: 2,
+  name: 'BPC/LOAS',
+  active: true,
+  position: 1,
+};
 
 const build = (theses, showSpy = vi.fn()) =>
   createStore({
@@ -61,9 +66,7 @@ describe('LeadPlaybook.vue', () => {
 
   it('shows the empty state when the lead has no thesis', () => {
     const wrapper = mountPlaybook({ id: 1, thesis_id: null });
-    expect(wrapper.find('[data-testid="playbook-empty"]').exists()).toBe(
-      true
-    );
+    expect(wrapper.find('[data-testid="playbook-empty"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="playbook-section"]').exists()).toBe(
       false
     );

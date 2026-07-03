@@ -45,9 +45,7 @@ const build = (
       theses: {
         namespaced: true,
         getters: {
-          getTheses: () => [
-            { id: 9, name: 'Auxílio-acidente', active: true },
-          ],
+          getTheses: () => [{ id: 9, name: 'Auxílio-acidente', active: true }],
         },
       },
     },

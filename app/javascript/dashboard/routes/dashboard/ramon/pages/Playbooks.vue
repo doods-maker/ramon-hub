@@ -20,9 +20,7 @@ const uiFlags = computed(() => getters['theses/getUIFlags'].value);
 
 const selectedId = ref(null);
 const selectedThesis = computed(() =>
-  selectedId.value
-    ? getters['theses/getThesis'].value(selectedId.value)
-    : null
+  selectedId.value ? getters['theses/getThesis'].value(selectedId.value) : null
 );
 
 const newThesisName = ref('');
@@ -164,9 +162,7 @@ onMounted(() => store.dispatch('theses/get'));
           data-testid="playbooks-item"
           class="flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer"
           :class="
-            selectedId === thesis.id
-              ? 'bg-n-iris-3'
-              : 'hover:bg-n-alpha-2'
+            selectedId === thesis.id ? 'bg-n-iris-3' : 'hover:bg-n-alpha-2'
           "
           @click="selectThesis(thesis)"
         >

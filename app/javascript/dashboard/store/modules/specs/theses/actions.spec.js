@@ -32,7 +32,9 @@ describe('theses actions', () => {
     axios.get.mockResolvedValue({ data: thesis });
     const commit = vi.fn();
     const result = await actions.show({ commit }, 1);
-    expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/theses/1'));
+    expect(axios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/theses/1')
+    );
     expect(commit).toHaveBeenCalledWith(types.EDIT_THESIS, thesis);
     expect(result).toEqual(thesis);
   });

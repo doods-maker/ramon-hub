@@ -82,9 +82,7 @@ describe('LeadConversationPanel', () => {
     const wrapper = mountPanel();
     await flushPromises();
     await wrapper.find('[data-testid="tab-playbook"]').trigger('click');
-    expect(wrapper.findComponent({ name: 'LeadPlaybook' }).exists()).toBe(
-      true
-    );
+    expect(wrapper.findComponent({ name: 'LeadPlaybook' }).exists()).toBe(true);
   });
 
   it('dispatches theses/get on mount when no theses are loaded yet', async () => {
