@@ -1,11 +1,12 @@
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import StatBlock from '../components/command/StatBlock.vue';
 import LeadList from '../components/command/LeadList.vue';
+import FollowUpQueue from '../components/command/FollowUpQueue.vue';
 
 const { t } = useI18n();
 const store = useStore();
@@ -34,6 +35,63 @@ const funnel = computed(() => data.value?.funnel || []);
 const week = computed(() => data.value?.week || {});
 
 const section = key => today.value[key] || { count: 0, items: [] };
+
+// Fila de retomada (esteira): união client-side de tarefas vencidas + parados,
+// deduplicada por lead. A tarefa vence o desempate (entra primeiro e mantém
+// título/prazo); o item "parado" enriquece etapa/telefone/conversa quando o
+// mesmo lead aparece nos dois blocos. Shape interno unificado.
+const followUpQueue = computed(() => {
+  const byLead = new Map();
+  const order = [];
+
+  section('tasks_overdue').items.forEach(task => {
+    const leadId = task.lead_id;
+    if (!byLead.has(leadId)) order.push(leadId);
+    byLead.set(leadId, {
+      leadId,
+      leadName: task.lead_name,
+      stageName: null,
+      daysInStage: null,
+      taskId: task.id,
+      taskTitle: task.title,
+      dueAt: task.due_at,
+      conversationId: null,
+      contactPhone: null,
+    });
+  });
+
+  section('stalled').items.forEach(lead => {
+    const leadId = lead.id;
+    const existing = byLead.get(leadId);
+    if (existing) {
+      // Enriquecimento: nunca sobrescreve os campos de tarefa (task ganha).
+      existing.stageName = lead.stage_name;
+      existing.daysInStage = lead.days_in_stage;
+      existing.conversationId = lead.conversation_id;
+      existing.contactPhone = lead.contact_phone;
+      return;
+    }
+    order.push(leadId);
+    byLead.set(leadId, {
+      leadId,
+      leadName: lead.name,
+      stageName: lead.stage_name,
+      daysInStage: lead.days_in_stage,
+      taskId: null,
+      taskTitle: null,
+      dueAt: null,
+      conversationId: lead.conversation_id,
+      contactPhone: lead.contact_phone,
+    });
+  });
+
+  return order.map(leadId => byLead.get(leadId));
+});
+
+const isQueueOpen = ref(false);
+const openQueue = () => {
+  isQueueOpen.value = true;
+};
 
 const todayBlocks = computed(() => [
   {
@@ -125,9 +183,23 @@ const openStage = stageId => {
     <div v-else class="flex flex-col gap-10">
       <!-- Bloco Hoje -->
       <section>
-        <h2 class="mb-3 text-sm tracking-widest uppercase text-n-slate-9">
-          {{ t('RAMON.COMMAND.TODAY.TITLE') }}
-        </h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm tracking-widest uppercase text-n-slate-9">
+            {{ t('RAMON.COMMAND.TODAY.TITLE') }}
+          </h2>
+          <button
+            v-if="followUpQueue.length"
+            type="button"
+            data-testid="run-follow-ups"
+            class="inline-flex items-center h-8 gap-2 px-3 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+            @click="openQueue"
+          >
+            <span class="i-lucide-play size-4" />
+            {{
+              t('RAMON.COMMAND.QUEUE.RUN', { count: followUpQueue.length })
+            }}
+          </button>
+        </div>
         <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
           <StatBlock
             v-for="block in todayBlocks"
@@ -265,5 +337,11 @@ const openStage = stageId => {
         </div>
       </section>
     </div>
+
+    <FollowUpQueue
+      v-if="isQueueOpen"
+      :queue="followUpQueue"
+      @close="isQueueOpen = false"
+    />
   </div>
 </template>

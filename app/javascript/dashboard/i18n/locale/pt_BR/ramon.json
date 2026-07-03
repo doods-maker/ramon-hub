@@ -17,6 +17,21 @@
         "EMPTY_NO_NEXT_ACTION": "Todo lead tem uma próxima ação agendada.",
         "EMPTY_NEW_FROM_LP": "Nenhum lead novo das landing pages."
       },
+      "QUEUE": {
+        "TITLE": "Rodada de follow-ups",
+        "RUN": "Rodar follow-ups ({count})",
+        "PROGRESS": "{current} de {total}",
+        "DUE": "Vencia em {at}",
+        "COMPLETE": "Concluir tarefa",
+        "TASK_COMPLETED": "Tarefa concluída",
+        "SCHEDULE": "Agendar próxima",
+        "SCHEDULED": "Follow-up agendado",
+        "OPEN_CONVERSATION": "Abrir conversa",
+        "SKIP": "Pular",
+        "CLOSE": "Encerrar",
+        "DONE_TITLE": "Fila zerada",
+        "DONE_BODY": "Todos os leads da rodada foram tratados."
+      },
       "FUNNEL": {
         "TITLE": "Funil",
         "EMPTY": "Nenhuma etapa configurada — monte o funil primeiro."

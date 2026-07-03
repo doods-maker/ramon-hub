@@ -17,6 +17,21 @@
         "EMPTY_NO_NEXT_ACTION": "Every lead has a next action scheduled.",
         "EMPTY_NEW_FROM_LP": "No new leads from landing pages."
       },
+      "QUEUE": {
+        "TITLE": "Follow-up run",
+        "RUN": "Run follow-ups ({count})",
+        "PROGRESS": "{current} of {total}",
+        "DUE": "Due {at}",
+        "COMPLETE": "Complete task",
+        "TASK_COMPLETED": "Task completed",
+        "SCHEDULE": "Schedule next",
+        "SCHEDULED": "Follow-up scheduled",
+        "OPEN_CONVERSATION": "Open conversation",
+        "SKIP": "Skip",
+        "CLOSE": "Close",
+        "DONE_TITLE": "Queue cleared",
+        "DONE_BODY": "Every lead in the run has been handled."
+      },
       "FUNNEL": {
         "TITLE": "Pipeline",
         "EMPTY": "No stages configured yet — set up the funnel first."
