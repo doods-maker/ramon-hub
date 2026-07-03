@@ -1,5 +1,5 @@
 class CreateRamonTheses < ActiveRecord::Migration[7.1]
-  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+  # rubocop:disable Metrics/MethodLength
   def change
     create_table :theses do |t|
       t.references :account, null: false, index: false
@@ -30,5 +30,5 @@ class CreateRamonTheses < ActiveRecord::Migration[7.1]
       end
     end
   end
-  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+  # rubocop:enable Metrics/MethodLength
 end
