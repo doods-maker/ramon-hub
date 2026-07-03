@@ -84,7 +84,7 @@ const chipClass = item => {
 
 // "Cobrar pendentes": monta o rascunho, copia, avisa e marca os pendentes
 // como solicitados. Nada é enviado automaticamente.
-const chargePending = () => {
+const chargePending = async () => {
   const pending = docItems.value.filter(item => statusOf(item) !== 'recebido');
   if (!pending.length) return;
 
@@ -97,7 +97,12 @@ const chargePending = () => {
     '',
     t('RAMON.DOCS.DRAFT.CLOSING'),
   ];
-  copyTextToClipboard(lines.join('\n'));
+  try {
+    await copyTextToClipboard(lines.join('\n'));
+  } catch (error) {
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+    return;
+  }
   useAlert(t('RAMON.DOCS.COPIED'));
 
   // marca só os que estavam pendentes como solicitados (merge)

@@ -234,6 +234,7 @@
       "COUNT": "{received}/{total} recebidos",
       "CHARGE": "Cobrar pendentes",
       "COPIED": "Rascunho copiado — cole no WhatsApp",
+      "COPY_FAILED": "Não foi possível copiar — tente de novo",
       "STATUS": {
         "PENDENTE": "Pendente",
         "SOLICITADO": "Solicitado",

@@ -234,6 +234,7 @@
       "COUNT": "{received}/{total} received",
       "CHARGE": "Request pending",
       "COPIED": "Draft copied — paste it into WhatsApp",
+      "COPY_FAILED": "Could not copy — try again",
       "STATUS": {
         "PENDENTE": "Pending",
         "SOLICITADO": "Requested",
