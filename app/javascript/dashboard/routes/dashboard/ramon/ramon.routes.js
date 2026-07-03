@@ -26,4 +26,10 @@ export const routes = [
     component: () => import('./pages/FunilConfig.vue'),
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
+  {
+    path: frontendURL('accounts/:accountId/ramon/playbooks'),
+    name: 'ramon_playbooks',
+    component: () => import('./pages/Playbooks.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
 ];
