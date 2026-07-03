@@ -82,6 +82,6 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
   end
 
   def permitted_params
-    params.permit(:name, :color, :is_won, :is_lost)
+    params.permit(:name, :color, :is_won, :is_lost, :probability, :stalled_after_days)
   end
 end

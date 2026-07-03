@@ -6,6 +6,14 @@ json.stages do
     json.position stage.position
     json.is_won stage.is_won
     json.is_lost stage.is_lost
+    json.probability stage.probability
+    json.stalled_after_days stage.stalled_after_days
+  end
+end
+json.lost_reasons do
+  json.array! @lost_reasons do |reason|
+    json.id reason.id
+    json.name reason.name
   end
 end
 json.benefit_types do

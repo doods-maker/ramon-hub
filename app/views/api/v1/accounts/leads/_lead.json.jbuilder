@@ -15,6 +15,13 @@ json.custom_attributes lead.custom_attributes
 json.value lead.value
 json.source lead.source
 
+json.stage_entered_at lead.stage_entered_at
+json.won_at lead.won_at
+json.lost_at lead.lost_at
+json.stalled lead.stalled?
+json.open_tasks_count lead.lead_tasks.open_tasks.size
+json.next_task_due_at lead.lead_tasks.open_tasks.minimum(:due_at)
+
 json.stage_name lead.lead_stage&.name
 json.stage_color lead.lead_stage&.color
 json.benefit_type_name lead.benefit_type&.name

@@ -14,6 +14,9 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def update
+    ensure_lost_reason!
+    return if performed?
+
     @lead.update!(permitted_params)
   end
 
@@ -57,15 +60,42 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def filtered_leads
     leads = apply_equality_filters(policy_scope(Current.account.leads))
     leads = leads.where('sdr_id = :a OR closer_id = :a', a: params[:agent_id]) if params[:agent_id].present?
+    leads = apply_cadence_filters(apply_period_filters(leads))
     leads = search_leads(leads, params[:q]) if params[:q].present?
     leads
   end
 
   def apply_equality_filters(leads)
-    %i[benefit_type_id lead_priority_id source].each do |key|
+    %i[benefit_type_id lead_priority_id lead_stage_id source].each do |key|
       leads = leads.where(key => params[key]) if params[key].present?
     end
     leads
+  end
+
+  def apply_period_filters(leads)
+    leads = leads.where(created_at: Date.parse(params[:created_after]).beginning_of_day..) if params[:created_after].present?
+    leads = leads.where(created_at: ..Date.parse(params[:created_before]).end_of_day) if params[:created_before].present?
+    leads
+  end
+
+  def apply_cadence_filters(leads)
+    if params[:stalled].present?
+      leads = leads.joins(:lead_stage).where.not(lead_stages: { stalled_after_days: nil })
+                   .where("leads.stage_entered_at < NOW() - (lead_stages.stalled_after_days || ' days')::interval")
+    end
+    leads = leads.where.not(id: Current.account.lead_tasks.open_tasks.select(:lead_id)) if params[:no_open_task].present?
+    leads
+  end
+
+  def ensure_lost_reason!
+    target_stage_id = permitted_params[:lead_stage_id]
+    return if target_stage_id.blank?
+
+    stage = Current.account.lead_stages.find_by(id: target_stage_id)
+    return unless stage&.is_lost
+    return if permitted_params[:lost_reason].presence || @lead.lost_reason.presence
+
+    render json: { error: 'LOST_REASON_REQUIRED' }, status: :unprocessable_entity
   end
 
   def search_leads(leads, query)
@@ -95,6 +125,6 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def permitted_params
     params.permit(:name, :lead_stage_id, :benefit_type_id, :lead_priority_id, :thesis_id,
                   :contact_id, :conversation_id, :sdr_id, :closer_id,
-                  :position, :lost_reason, :value, :source)
+                  :position, :lost_reason, :value, :source, custom_attributes: {})
   end
 end
