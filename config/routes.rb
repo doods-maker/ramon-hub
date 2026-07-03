@@ -293,6 +293,12 @@ Rails.application.routes.draw do
           resources :lead_stages, only: [:create, :update, :destroy] do
             collection { post :reorder }
           end
+          resources :theses do
+            collection { post :reorder }
+            resources :thesis_items, only: [:create, :update, :destroy] do
+              collection { post :reorder }
+            end
+          end
           resources :benefit_types, only: [:create, :update, :destroy] do
             collection { post :reorder }
           end
