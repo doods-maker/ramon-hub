@@ -25,6 +25,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
       lead = create_lead(contact, phone)
       lead.lead_notes.create!(account: account, body: params[:mensagem].to_s.truncate(1000)) if params[:mensagem].present?
     end
+    Ramon::LeadNotificationBuilder.new(lead: lead).perform
     lead
   end
 
