@@ -87,7 +87,9 @@ class Account < ApplicationRecord
   has_many :lead_notes, dependent: :destroy_async
   has_many :lead_priorities, dependent: :destroy_async
   has_many :lead_stages, dependent: :destroy_async
+  has_many :lead_tasks, dependent: :destroy_async
   has_many :leads, dependent: :destroy_async
+  has_many :lost_reasons, dependent: :destroy_async
   has_many :theses, dependent: :destroy_async
   has_many :line_channels, dependent: :destroy_async, class_name: '::Channel::Line'
   has_many :mentions, dependent: :destroy_async

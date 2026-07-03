@@ -10,8 +10,18 @@ class Leads::SeedDefaultConfigService
     { name: 'Perdido', label: 'fase-perdido', color: '#71717a', is_won: false, is_lost: true }
   ].freeze
 
+  # [probability, stalled_after_days] por etapa — mesmos valores da migração AddCadenceToRamonCrm.
+  STAGE_CADENCE = {
+    'Novo' => [10, 2], 'Qualificação' => [20, 3], 'Reunião agendada' => [40, nil],
+    'Reunião realizada' => [60, 5], 'Negociação' => [75, 5], 'Última chance' => [50, 7],
+    'Fechado' => [100, nil], 'Perdido' => [0, nil]
+  }.freeze
+
   BENEFITS = ['Aposentadoria', 'BPC/LOAS', 'Auxílio-doença', 'Auxílio-acidente',
               'Pensão por morte', 'Trabalhista', 'Outro'].freeze
+
+  LOST_REASONS = ['Sem viabilidade', 'Sumiu / não respondeu', 'Honorário',
+                  'Foi para concorrente', 'Fora da área', 'Outro'].freeze
 
   PRIORITIES = [
     { name: 'Alta', weight: 3 },
@@ -29,6 +39,7 @@ class Leads::SeedDefaultConfigService
     seed_stages
     seed_benefits
     seed_priorities
+    seed_lost_reasons
     seed_theses
   end
 
@@ -44,15 +55,26 @@ class Leads::SeedDefaultConfigService
 
   def seed_stages
     STAGES.each_with_index do |attrs, i|
+      probability, stalled_after_days = STAGE_CADENCE[attrs[:name]]
       stage = @account.lead_stages.find_or_create_by!(name: attrs[:name]) do |s|
         s.position = i
         s.is_won = attrs[:is_won]
         s.is_lost = attrs[:is_lost]
         s.label = attrs[:label]
         s.color = attrs[:color]
+        s.probability = probability
+        s.stalled_after_days = stalled_after_days
       end
       stage.update!(label: attrs[:label]) if stage.label != attrs[:label]
       stage.update!(color: attrs[:color]) if stage.color != attrs[:color]
+      stage.update!(probability: probability) if stage.probability != probability
+      stage.update!(stalled_after_days: stalled_after_days) if stage.stalled_after_days != stalled_after_days
+    end
+  end
+
+  def seed_lost_reasons
+    LOST_REASONS.each_with_index do |name, i|
+      @account.lost_reasons.find_or_create_by!(name: name) { |r| r.position = i }
     end
   end
 
