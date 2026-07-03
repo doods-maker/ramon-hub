@@ -56,8 +56,7 @@ RSpec.describe 'Lead Tasks API', type: :request do
     stranger = create(:user)
     get "/api/v1/accounts/#{account.id}/leads/#{lead.id}/tasks",
         headers: stranger.create_new_auth_token, as: :json
-    expect(response).not_to have_http_status(:success)
-    expect([401, 404]).to include(response.status)
+    expect(response).to have_http_status(:unauthorized)
   end
 
   it 'filters the account collection by scope=overdue' do

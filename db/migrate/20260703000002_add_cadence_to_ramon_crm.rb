@@ -7,7 +7,7 @@ class AddCadenceToRamonCrm < ActiveRecord::Migration[7.1]
   LOST_REASONS = ['Sem viabilidade', 'Sumiu / não respondeu', 'Honorário',
                   'Foi para concorrente', 'Fora da área', 'Outro'].freeze
 
-  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+  # rubocop:disable Metrics/MethodLength
   def up
     create_table :lead_tasks do |t|
       t.references :account, null: false, index: false
@@ -28,6 +28,7 @@ class AddCadenceToRamonCrm < ActiveRecord::Migration[7.1]
       t.integer :position, null: false, default: 0
       t.timestamps
     end
+    add_index :lost_reasons, [:account_id, :name], unique: true
 
     add_column :lead_stages, :probability, :integer, null: false, default: 0
     add_column :lead_stages, :stalled_after_days, :integer
@@ -37,7 +38,7 @@ class AddCadenceToRamonCrm < ActiveRecord::Migration[7.1]
 
     backfill
   end
-  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+  # rubocop:enable Metrics/MethodLength
 
   def down
     drop_table :lead_tasks

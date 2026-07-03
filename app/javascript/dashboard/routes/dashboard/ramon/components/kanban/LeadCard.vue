@@ -186,7 +186,7 @@ const copyPhone = async () => {
         data-testid="wa-me"
         :href="`https://wa.me/${phoneDigits}`"
         target="_blank"
-        rel="noopener"
+        rel="noopener noreferrer"
         class="inline-flex items-center gap-1 text-n-slate-11 hover:text-n-iris-11"
         @click.stop
       >

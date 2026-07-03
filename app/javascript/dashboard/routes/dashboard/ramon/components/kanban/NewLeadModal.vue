@@ -34,9 +34,7 @@ const normalizedPhone = computed(() => {
   return `+${digits}`;
 });
 
-const existingStageName = computed(
-  () => existingLead.value?.stage_name || ''
-);
+const existingStageName = computed(() => existingLead.value?.stage_name || '');
 
 // Ao sair do campo telefone, procura lead já aberto (etapa ativa) com esse número.
 const onPhoneBlur = async () => {

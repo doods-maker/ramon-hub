@@ -55,21 +55,31 @@ class Leads::SeedDefaultConfigService
 
   def seed_stages
     STAGES.each_with_index do |attrs, i|
-      probability, stalled_after_days = STAGE_CADENCE[attrs[:name]]
+      cadence = STAGE_CADENCE[attrs[:name]]
       stage = @account.lead_stages.find_or_create_by!(name: attrs[:name]) do |s|
-        s.position = i
-        s.is_won = attrs[:is_won]
-        s.is_lost = attrs[:is_lost]
-        s.label = attrs[:label]
-        s.color = attrs[:color]
-        s.probability = probability
-        s.stalled_after_days = stalled_after_days
+        apply_stage_attributes(s, attrs, i, cadence)
       end
-      stage.update!(label: attrs[:label]) if stage.label != attrs[:label]
-      stage.update!(color: attrs[:color]) if stage.color != attrs[:color]
-      stage.update!(probability: probability) if stage.probability != probability
-      stage.update!(stalled_after_days: stalled_after_days) if stage.stalled_after_days != stalled_after_days
+      reconcile_stage(stage, attrs, cadence)
     end
+  end
+
+  def apply_stage_attributes(stage, attrs, index, cadence)
+    probability, stalled_after_days = cadence
+    stage.position = index
+    stage.is_won = attrs[:is_won]
+    stage.is_lost = attrs[:is_lost]
+    stage.label = attrs[:label]
+    stage.color = attrs[:color]
+    stage.probability = probability
+    stage.stalled_after_days = stalled_after_days
+  end
+
+  def reconcile_stage(stage, attrs, cadence)
+    probability, stalled_after_days = cadence
+    stage.update!(label: attrs[:label]) if stage.label != attrs[:label]
+    stage.update!(color: attrs[:color]) if stage.color != attrs[:color]
+    stage.update!(probability: probability) if stage.probability != probability
+    stage.update!(stalled_after_days: stalled_after_days) if stage.stalled_after_days != stalled_after_days
   end
 
   def seed_lost_reasons

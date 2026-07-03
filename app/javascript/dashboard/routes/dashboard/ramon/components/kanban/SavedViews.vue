@@ -86,7 +86,9 @@ const removeView = index => {
         @click="applyView(view)"
       >
         <span>{{ view.name }}</span>
-        <span class="text-xs text-n-slate-11">{{ countFor(view.filters) }}</span>
+        <span class="text-xs text-n-slate-11">
+          {{ countFor(view.filters) }}
+        </span>
       </button>
       <button
         data-testid="saved-view-remove"

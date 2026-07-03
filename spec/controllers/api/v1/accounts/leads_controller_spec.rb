@@ -172,7 +172,7 @@ RSpec.describe 'Leads API', type: :request do
     it 'filtra por created_after' do
       recente = account.leads.create!(name: 'Recente', lead_stage: novo)
       antigo = account.leads.create!(name: 'Antigo', lead_stage: novo)
-      antigo.update_column(:created_at, 10.days.ago)
+      antigo.update_column(:created_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
       get "/api/v1/accounts/#{account.id}/leads",
           params: { created_after: 2.days.ago.to_date.to_s },
           headers: admin.create_new_auth_token
@@ -181,7 +181,7 @@ RSpec.describe 'Leads API', type: :request do
 
     it 'filtra por stalled numa etapa com stalled_after_days' do
       parado = account.leads.create!(name: 'Parado', lead_stage: qualif)
-      parado.update_column(:stage_entered_at, 10.days.ago)
+      parado.update_column(:stage_entered_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
       account.leads.create!(name: 'Fresco', lead_stage: qualif)
       get "/api/v1/accounts/#{account.id}/leads",
           params: { stalled: 'true' },

@@ -38,9 +38,7 @@ const findLead = id => getters['leads/getLeads'].value.find(l => l.id === id);
 // ressincronizam sua cópia local, revertendo um drop não persistido.
 const stageLeads = stageId => {
   const version = boardVersion.value;
-  return version >= 0
-    ? getters['leads/getLeadsByStage'].value(stageId)
-    : [];
+  return version >= 0 ? getters['leads/getLeadsByStage'].value(stageId) : [];
 };
 const filters = computed(() => getters['leads/getFilters'].value);
 const onFilterUpdate = partial => store.dispatch('leads/setFilters', partial);

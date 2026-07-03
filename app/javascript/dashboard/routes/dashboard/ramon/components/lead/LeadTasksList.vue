@@ -9,11 +9,13 @@ const props = defineProps({ leadId: { type: Number, required: true } });
 const store = useStore();
 const { t } = useI18n();
 const getByLead = useMapGetter('leadTasks/getByLead');
-const tasks = computed(() => getByLead.value(props.leadId));
+// getByLead é um getter que devolve função; em cenários de teste isolados o
+// módulo leadTasks pode não estar registrado — cai para lista vazia.
+const tasks = computed(() => getByLead.value?.(props.leadId) ?? []);
 
 // Carrega as tarefas do lead; guard de leadId para não bater sem id.
 const load = id => {
-  if (id) store.dispatch('leadTasks/fetchForLead', id);
+  if (id) store?.dispatch('leadTasks/fetchForLead', id);
 };
 onMounted(() => load(props.leadId));
 watch(

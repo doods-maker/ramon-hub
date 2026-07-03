@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_03_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_03_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1003,26 +1003,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_03_000002) do
     t.datetime "updated_at", null: false
     t.string "label"
     t.string "color"
-    t.integer "probability", default: 0, null: false
-    t.integer "stalled_after_days"
     t.index ["account_id", "label"], name: "index_lead_stages_on_account_id_and_label", unique: true
     t.index ["account_id", "name"], name: "index_lead_stages_on_account_id_and_name", unique: true
-  end
-
-  create_table "lead_tasks", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.bigint "lead_id", null: false
-    t.bigint "user_id"
-    t.string "title", null: false
-    t.string "kind", default: "follow_up", null: false
-    t.datetime "due_at", null: false
-    t.datetime "completed_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id", "due_at"], name: "index_lead_tasks_on_account_id_and_due_at"
-    t.index ["lead_id", "completed_at"], name: "index_lead_tasks_on_lead_id_and_completed_at"
-    t.index ["lead_id"], name: "index_lead_tasks_on_lead_id"
-    t.index ["user_id"], name: "index_lead_tasks_on_user_id"
   end
 
   create_table "leads", force: :cascade do |t|
@@ -1043,9 +1025,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_03_000002) do
     t.decimal "value", precision: 12, scale: 2
     t.string "source"
     t.bigint "thesis_id"
-    t.datetime "stage_entered_at"
-    t.datetime "won_at"
-    t.datetime "lost_at"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -1072,15 +1051,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_03_000002) do
     t.index ["account_id"], name: "index_leaves_on_account_id"
     t.index ["approved_by_id"], name: "index_leaves_on_approved_by_id"
     t.index ["user_id"], name: "index_leaves_on_user_id"
-  end
-
-  create_table "lost_reasons", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.string "name", null: false
-    t.integer "position", default: 0, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_lost_reasons_on_account_id"
   end
 
   create_table "macros", force: :cascade do |t|

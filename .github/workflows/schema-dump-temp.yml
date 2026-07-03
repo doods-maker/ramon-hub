@@ -1,0 +1,45 @@
+name: Dump schema (temporario - remover antes do merge)
+permissions:
+  contents: read
+on:
+  push:
+    branches:
+      - feat/ramon-cadencia-kanban
+jobs:
+  schema-dump:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ''
+          POSTGRES_DB: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --mount type=tmpfs,destination=/var/lib/postgresql/data
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: --entrypoint redis-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Create database
+        run: bundle exec rake db:create
+      - name: Load schema and run pending migrations
+        run: bundle exec rake db:schema:load db:migrate db:schema:dump
+      - name: Upload regenerated schema
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-rb
+          path: db/schema.rb

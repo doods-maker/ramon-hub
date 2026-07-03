@@ -7,7 +7,9 @@ const value = ref('');
 
 // Salvar envia o valor; Pular (e o clique fora) segue o move sem valor.
 const save = () =>
-  emit('confirmValue', { value: value.value === '' ? null : Number(value.value) });
+  emit('confirmValue', {
+    value: value.value === '' ? null : Number(value.value),
+  });
 const skip = () => emit('confirmValue', { value: null });
 </script>
 

@@ -76,10 +76,19 @@ class Lead < ApplicationRecord
     return unless will_save_change_to_lead_stage_id? || new_record?
 
     self.stage_entered_at = Time.current
-    stage = LeadStage.find_by(id: lead_stage_id)
-    self.won_at = stage&.is_won ? (won_at || Time.current) : nil
-    self.lost_at = stage&.is_lost ? (lost_at || Time.current) : nil
-    self.lost_reason = nil unless stage&.is_lost
+    apply_stage_timestamps(LeadStage.find_by(id: lead_stage_id))
+  end
+
+  def apply_stage_timestamps(stage)
+    won = stage&.is_won
+    lost = stage&.is_lost
+    self.won_at = won ? existing_or_now(won_at) : nil
+    self.lost_at = lost ? existing_or_now(lost_at) : nil
+    self.lost_reason = nil unless lost
+  end
+
+  def existing_or_now(current)
+    current || Time.current
   end
 
   def dispatch_create_event
