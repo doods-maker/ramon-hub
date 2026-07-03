@@ -34,7 +34,11 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(response.parsed_body['week']['won']).to eq(1)
     row = response.parsed_body['funnel'].find { |r| r['stage_id'] == won_stage.id }
     expect(row['count']).to eq(1)
-    expect(row['total_value'].to_f).to eq(1500.0)
+    expect(row['total_value']).to eq(1500.0)
+    expect(row['total_value']).to be_a(Float)
+    empty_row = response.parsed_body['funnel'].find { |r| r['stage_id'] == active_stage.id }
+    expect(empty_row['total_value']).to eq(0.0)
+    expect(empty_row['weighted_value']).to be_a(Float)
   end
 
   it 'lists fresh landing-page leads without follow-up' do

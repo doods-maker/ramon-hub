@@ -20,16 +20,16 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
 
   def today_section
     {
-      tasks_overdue: block(account_tasks.overdue.order(:due_at)),
-      tasks_today: block(account_tasks.due_today.order(:due_at)),
-      stalled: block(stalled_leads),
-      no_next_action: block(no_next_action_leads),
-      new_from_lp: block(new_from_lp_leads)
+      tasks_overdue: limited_block(account_tasks.overdue.order(:due_at)),
+      tasks_today: limited_block(account_tasks.due_today.order(:due_at)),
+      stalled: limited_block(stalled_leads),
+      no_next_action: limited_block(no_next_action_leads),
+      new_from_lp: limited_block(new_from_lp_leads)
     }
   end
 
   # count sempre total da relação; items limitado a LIST_LIMIT.
-  def block(relation)
+  def limited_block(relation)
     { count: relation.count, items: relation.limit(LIST_LIMIT) }
   end
 
@@ -38,7 +38,8 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   end
 
   def active_leads
-    Current.account.leads.joins(:lead_stage).where(lead_stages: { is_won: false, is_lost: false })
+    Current.account.leads.joins(:lead_stage).includes(:lead_stage, :contact)
+           .where(lead_stages: { is_won: false, is_lost: false })
   end
 
   def stalled_leads
@@ -51,7 +52,7 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   end
 
   def new_from_lp_leads
-    Current.account.leads
+    Current.account.leads.includes(:lead_stage, :contact)
            .where.not(source: [nil, ''])
            .where(conversation_id: nil, created_at: 48.hours.ago..)
            .where.not(id: Current.account.lead_notes.select(:lead_id))
@@ -73,8 +74,8 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   def funnel_row(stage, count, total)
     {
       stage_id: stage.id, name: stage.name, color: stage.color,
-      count: count, total_value: total,
-      weighted_value: (total * stage.probability) / 100,
+      count: count, total_value: total.to_f,
+      weighted_value: (total.to_f * stage.probability) / 100,
       is_won: stage.is_won, is_lost: stage.is_lost
     }
   end
