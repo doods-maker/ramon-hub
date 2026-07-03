@@ -73,7 +73,7 @@ class Leads::SeedDefaultConfigService
 
   def seed_theses
     unless File.exist?(THESES_SEED_PATH)
-      Rails.logger.warn("theses_seed.yml ausente — seed de teses pulado")
+      Rails.logger.warn('theses_seed.yml ausente — seed de teses pulado')
       return
     end
 
