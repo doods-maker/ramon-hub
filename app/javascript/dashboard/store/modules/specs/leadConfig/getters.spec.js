@@ -24,9 +24,7 @@ describe('leadConfig getters', () => {
       lostReasons: [],
     };
     mutations[types.SET_LEAD_CONFIG](state, {
-      stages: [
-        { id: 1, name: 'Novo', probability: 10, stalled_after_days: 3 },
-      ],
+      stages: [{ id: 1, name: 'Novo', probability: 10, stalled_after_days: 3 }],
       lost_reasons: [{ id: 1, name: 'Sem interesse' }],
     });
     expect(state.lostReasons).toEqual([{ id: 1, name: 'Sem interesse' }]);

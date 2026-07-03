@@ -23,7 +23,11 @@ describe('leadTasks getters', () => {
         { id: 2, lead_id: 10, due_at: '2026-07-02', completed_at: null },
       ],
     };
-    expect(getters.getByLead(state)(10).map(t => t.id)).toEqual([2, 1]);
+    expect(
+      getters
+        .getByLead(state)(10)
+        .map(t => t.id)
+    ).toEqual([2, 1]);
   });
 
   it('getAccountTasks retorna todos os records ordenados por due_at asc', () => {
