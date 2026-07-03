@@ -58,6 +58,16 @@
 | `app/javascript/dashboard/routes/dashboard/notifications/components/NotificationsView.vue` | +branch `if (notificationType === 'ramon_lead_created')` que navega `name: 'kanban_board'` | rota para o Kanban Board ao clicar na notificação | A-notif |
 | `app/javascript/dashboard/i18n/locale/en/generalSettings.json` | +`"ramon_lead_created": "New lead (LP)"` no bloco `NOTIFICATIONS_PAGE.TYPE_LABEL` | rótulo do tipo de notificação (inglês) | A-notif |
 | `app/javascript/dashboard/i18n/locale/pt_BR/generalSettings.json` | +`"ramon_lead_created": "Lead novo (LP)"` no bloco `NOTIFICATIONS_PAGE.TYPE_LABEL` | rótulo do tipo de notificação (português) | A-notif |
+| `config/routes.rb` | `resources :theses do ... resources :thesis_items ... end` dentro do bloco `namespace :accounts do` (após `lead_stages`) | API CRUD de teses e itens de playbook | F2.1a |
+| `app/models/account.rb` | +`has_many :theses, dependent: :destroy_async` (junto das demais associações) | associação teses → account | F2.1a |
+| `app/models/lead.rb` | +`belongs_to :thesis, optional: true` + `thesis_id` em `push_event_data` + `thesis_name` em `push_event_data` + `record_change('thesis_id', 'thesis_changed')` | tese no lead; eventos realtime enriquecidos | F2.1a |
+| `app/services/leads/seed_default_config_service.rb` | +método `seed_theses` chamado em `seed_default_config`; seed das 5 teses de incapacidade nativas | seed automático das 5 teses padrão | F2.1a |
+| `app/controllers/api/v1/accounts/leads_controller.rb` | +`:thesis_id` em `permitted_params` | parâmetro thesis_id aceitável no update de lead | F2.1a |
+| `app/views/api/v1/accounts/leads/_lead.json.jbuilder` | +`json.thesis_id lead.thesis_id` e `json.thesis_name lead.thesis&.name` | serializa tese no lead (JSON) | F2.1a |
+| `app/javascript/dashboard/store/index.js` | +import e spread de `modules/theses` (após `leadConfig`) | registra módulo Vuex de teses | F2.1a |
+| `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Teses` com 5 tipos (SET_THESES_UI_FLAG, SET_THESES, ADD_THESIS, EDIT_THESIS, DELETE_THESIS) | mutation types do módulo teses | F2.1a |
+| `app/javascript/dashboard/i18n/locale/en/ramon.json` | +blocos/strings para Playbooks (tela, labels, erros, placeholders) | i18n inglês para UI de teses e playbooks | F2.1a |
+| `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | +blocos/strings para Playbooks (tela, labels, erros, placeholders) | i18n português para UI de teses e playbooks | F2.1a |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -102,6 +112,41 @@
 | `db/migrate/20260701000005_remove_notes_from_leads.rb` | migration: `remove_column :leads, :notes, :text` | remoção definitiva do blob `leads.notes` | 1b-ii |
 | `app/controllers/public/api/v1/ramon_leads_controller.rb` | endpoint público de captação: honeypot, token ENV (`RAMON_LEAD_CAPTURE_TOKEN` + `RAMON_LEAD_CAPTURE_ACCOUNT_ID`), contact find-or-create por telefone, dedup de lead aberto → nota | leads das LPs nascem no funil | A-leads |
 | `spec/requests/public/api/v1/ramon_leads_controller_spec.rb` | request spec do endpoint (criação, honeypot, 401, 422, dedup, won/lost) | cobertura CI | A-leads |
+| `db/migrate/20260703000001_create_ramon_theses.rb` | migration: tabelas `theses` (account_id, name, description, position, color, created_at/updated_at) e `thesis_items` (account_id, thesis_id, title, content, position, created_at/updated_at) com índices + reorder collection | teses (playbooks de venda) e itens | F2.1a |
+| `app/models/thesis.rb` | model `Thesis` — associações (belongs_to account, has_many thesis_items), validação de name, default_scope por position | tese/playbook | F2.1a |
+| `app/models/thesis_item.rb` | model `ThesisItem` — associações (belongs_to account/thesis), validação de title, default_scope por position | item de playbook (parágrafo/sessão) | F2.1a |
+| `app/policies/thesis_policy.rb` | pundit policy com `index?`, `show?`, `create?`, `update?`, `destroy?` (acesso irrestrito via account) | autorização de teses | F2.1a |
+| `app/policies/thesis_item_policy.rb` | pundit policy com `create?`, `update?`, `destroy?` (autoriza item se tese autorizada) | autorização de itens | F2.1a |
+| `app/controllers/api/v1/accounts/theses_controller.rb` | REST controller `index`/`show`/`create`/`update`/`destroy` com `reorder` collection; serializa com `thesis_items_attributes` no create/update | API de teses | F2.1a |
+| `app/controllers/api/v1/accounts/thesis_items_controller.rb` | REST controller `create`/`update`/`destroy` aninhado sob teses com `reorder` collection | API de itens (criar, editar, reordenar dentro de tese) | F2.1a |
+| `app/views/api/v1/accounts/theses/index.json.jbuilder` | serializa array de teses com `id`, `name`, `description`, `position`, `color`, contagem de itens | lista de teses (JSON) | F2.1a |
+| `app/views/api/v1/accounts/theses/show.json.jbuilder` | serializa tese com `id`, `name`, `description`, `position`, `color`, `thesis_items` (array inline) | detalhe de tese c/ itens (JSON) | F2.1a |
+| `app/views/api/v1/accounts/thesis_items/index.json.jbuilder` | serializa array de itens da tese com `id`, `title`, `content`, `position` | lista de itens de tese (JSON) | F2.1a |
+| `app/views/api/v1/accounts/thesis_items/show.json.jbuilder` | serializa item com `id`, `title`, `content`, `position`, `thesis_id` | detalhe de item (JSON) | F2.1a |
+| `app/javascript/dashboard/api/theses.js` | client HTTP: `get()`, `show()`, `create()`, `update()`, `destroy()`, `reorder()` (wrapper de Account API) | API client frontend para teses | F2.1a |
+| `app/javascript/dashboard/store/modules/theses.js` | módulo Vuex: state, getters, mutations, actions (CRUD + reorder; sync com backend realtime) | estado de teses no frontend | F2.1a |
+| `app/javascript/dashboard/routes/dashboard/ramon/pages/Playbooks.vue` | tela de gestão de teses (Intranet): listagem com CRUD inline, criação, edição em modal, reorder drag-drop, preview de playbook | UI de gestão de teses/playbooks | F2.1a |
+| `app/javascript/dashboard/ramon/components/conversation/LeadPlaybook.vue` | componente no painel do lead: dropdown de seleção de tese, card de preview de playbook (itens expand-collapse) | seletor/preview de tese na conversa | F2.1a |
+| `db/seeds/ramon/theses_seed.yml` | YAML de seed: 5 teses de incapacidade nativas c/ itens (auxílio-doença, auxílio-acidente, etc.) | dados default de teses | F2.1a |
+| `spec/factories/theses.rb` | factory `:thesis` (account, name, description, position, color) | factory de tese para specs | F2.1a |
+| `spec/factories/thesis_items.rb` | factory `:thesis_item` (account, thesis, title, content, position) | factory de item para specs | F2.1a |
+| `spec/models/thesis_spec.rb` | specs do model `Thesis` (validações, associações, posição default, dedup name) | cobertura do model Thesis | F2.1a |
+| `spec/models/thesis_item_spec.rb` | specs do model `ThesisItem` (validações, belongs_to, posição, content sanitizado) | cobertura do model ThesisItem | F2.1a |
+| `spec/controllers/api/v1/accounts/theses_controller_spec.rb` | request specs: index, show, create, update, destroy, reorder; autorização | cobertura do controller de teses | F2.1a |
+| `spec/controllers/api/v1/accounts/thesis_items_controller_spec.rb` | request specs: create, update, destroy, reorder dentro de tese; autorização | cobertura do controller de itens | F2.1a |
+| `app/javascript/dashboard/store/modules/specs/theses/actions.spec.js` | specs: fetch teses, criar, editar, deletar, reorder; sync realtime | cobertura de actions | F2.1a |
+| `app/javascript/dashboard/store/modules/specs/theses/getters.spec.js` | specs: getters (list, by id, count, etc.) | cobertura de getters | F2.1a |
+| `app/javascript/dashboard/store/modules/specs/theses/mutations.spec.js` | specs de mutations (SET_THESES, ADD_THESIS, EDIT_THESIS, DELETE_THESIS, UI_FLAG) | cobertura de mutations | F2.1a |
+| `app/javascript/dashboard/routes/dashboard/ramon/pages/specs/Playbooks.spec.js` | component specs: render listagem, criar/editar modals, reorder interação | cobertura de Playbooks.vue | F2.1a |
+| `app/javascript/dashboard/ramon/components/conversation/specs/LeadPlaybook.spec.js` | component specs: seletor de tese, preview playbook expand-collapse, integração com lead | cobertura de LeadPlaybook.vue | F2.1a |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/specs/IntranetSidebar.spec.js` (linha de changes) | — já existia; 6 linhas de contexto p/ novo menu item "Playbooks" | sidebar item novo | F2.1a |
+| `spec/controllers/api/v1/accounts/leads_controller_spec.rb` (linha de changes) | — já existia; 29 linhas p/ novo atributo `thesis_id` em lead | cobertura do novo campo | F2.1a |
+| `spec/models/lead_spec.rb` (linha de changes) | — já existia; lines para `belongs_to :thesis`, validação, activity record | cobertura do model | F2.1a |
+| `app/javascript/dashboard/routes/dashboard/conversation/specs/LeadConversationPanel.spec.js` (linha de changes) | — já existia; 29 linhas p/ novo componente `LeadPlaybook` na lista | cobertura de integração | F2.1a |
+| `app/javascript/dashboard/routes/dashboard/lead/specs/LeadFields.spec.js` (linha de changes) | — já existia; 19 linhas p/ novo campo `thesis_id` (dropdown) | cobertura do campo | F2.1a |
+| `app/javascript/dashboard/components/kanban/specs/LeadDrawer.spec.js` (linha de changes) | — já existia; 4 linhas de contexto | drawer: sem mudança funcional | F2.1a |
+| `spec/factories/leads.rb` (não listado no diff?) | — possivelmente ya existía; confirmar se tem `thesis: association` | factory de lead com tese | F2.1a |
+| `spec/services/leads/seed_default_config_service_spec.rb` (linha de changes) | — já existia; 18 linhas p/ cobertura de seed de teses | cobertura de seed | F2.1a |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
