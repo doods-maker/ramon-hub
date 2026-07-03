@@ -75,6 +75,10 @@
 | `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Tarefas do lead (cadência)` (SET_LEAD_TASKS_UI_FLAG, MERGE_LEAD_TASKS, MERGE_LEAD_TASK, DELETE_LEAD_TASK) antes do bloco Teses | mutation types do módulo leadTasks | PR-A t4 |
 | `app/javascript/dashboard/store/modules/leadConfig.js` | +`lostReasons` no state, no `SET_LEAD_CONFIG` (`data.lost_reasons`) e getter `getLostReasons`; stages já guardam o objeto inteiro → `probability`/`stalled_after_days` fazem pass-through | motivos de perda + campos novos de stage no config | PR-A t4 |
 | `app/javascript/dashboard/store/modules/leads.js` | +filtros de cadência no state (`leadStageId`, `createdAfter`, `createdBefore`, `stalled`, `noOpenTask`) e no `toParams` (mapeia p/ `lead_stage_id`/`created_after`/`created_before`/`stalled`/`no_open_task`, booleanos só quando true) | filtros de cadência no Kanban | PR-A t4 |
+| `app/javascript/dashboard/store/index.js` | +import e registro de `modules/ramonDashboard` (após `leadTasks`) | registra módulo Vuex do Centro de Comando | PR-B t3 |
+| `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Centro de Comando (dashboard agregado)` (SET_RAMON_DASHBOARD_UI_FLAG, SET_RAMON_DASHBOARD) antes do bloco Teses | mutation types do módulo ramonDashboard | PR-B t3 |
+| `app/javascript/dashboard/routes/dashboard/ramon/ramon.routes.js` | `ramon_index` passa a renderizar `CommandCenter.vue` (import estático) no lugar de `RamonOverview.vue` | Centro de Comando substitui o placeholder | PR-B t3 |
+| `app/javascript/dashboard/i18n/locale/en/ramon.json` e `pt_BR/ramon.json` | bloco `OVERVIEW` (órfão) trocado por `COMMAND.*` (EYEBROW, TITLE, RELOAD, TODAY, FUNNEL, WEEK) | i18n do Centro de Comando | PR-B t3 |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -87,7 +91,13 @@
 | `docs/FORK-PONTOS-DE-REGISTRO.md` | esta lista | 0 |
 | `app/javascript/dashboard/assets/scss/_ramon-brand.scss` | tokens de cor bronze (dark) e creme/bronze (light) | 1A |
 | `app/javascript/dashboard/routes/dashboard/ramon/ramon.routes.js` | rotas da seção Intranet (inclui `ramon_index` + `ramon_external_shortcuts`) | 1A/1B |
-| `app/javascript/dashboard/routes/dashboard/ramon/pages/RamonOverview.vue` | Centro de Comando (shell placeholder) | 1A |
+| ~~`app/javascript/dashboard/routes/dashboard/ramon/pages/RamonOverview.vue`~~ | **REMOVIDO na PR-B t3** — placeholder substituído pelo `CommandCenter.vue` | 1A → PR-B t3 |
+| `app/javascript/dashboard/api/ramonDashboard.js` | client account-scoped (ApiClient, endpoint singular `ramon_dashboard`, método `get()`) | API client do Centro de Comando | PR-B t3 |
+| `app/javascript/dashboard/store/modules/ramonDashboard.js` | módulo Vuex: state `{ data, uiFlags }`, action `fetch`, getters `getData`/`getUIFlags` | estado do Centro de Comando | PR-B t3 |
+| `app/javascript/dashboard/routes/dashboard/ramon/pages/CommandCenter.vue` | tela do Centro de Comando: blocos Hoje (5 StatBlocks), Funil (etapas clicáveis) e Semana; skeleton + recarregar | UI do Centro de Comando | PR-B t3 |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/command/StatBlock.vue` | cartão de número grande + rótulo + slot da lista | componente do Centro de Comando | PR-B t3 |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/command/LeadList.vue` | lista clicável de itens (task usa `lead_id`, lead usa `id`) → emite `select` | componente do Centro de Comando | PR-B t3 |
+| `app/javascript/dashboard/store/modules/specs/ramonDashboard/{actions,mutations}.spec.js` | specs vitest: fetch popula data e cicla isFetching; mutations | cobertura do módulo ramonDashboard | PR-B t3 |
 | `app/javascript/dashboard/routes/dashboard/ramon/pages/ExternalShortcuts.vue` | tela de gestão de atalhos externos (ui_settings) | 1B |
 | `app/javascript/dashboard/routes/dashboard/ramon/externalShortcutsDefaults.js` | atalhos padrão (rail + tela) | 1B |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/WorldRail.vue` | rail externo 78px (mundos + externos + perfil) | 1B |

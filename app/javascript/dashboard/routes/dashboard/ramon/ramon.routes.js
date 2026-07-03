@@ -1,11 +1,11 @@
 import { frontendURL } from '../../../helper/URLHelper';
-import RamonOverview from './pages/RamonOverview.vue';
+import CommandCenter from './pages/CommandCenter.vue';
 
 export const routes = [
   {
     path: frontendURL('accounts/:accountId/ramon'),
     name: 'ramon_index',
-    component: RamonOverview,
+    component: CommandCenter,
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
