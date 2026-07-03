@@ -67,10 +67,10 @@ const removeThesis = async thesis => {
 
 const moveThesis = (thesis, direction) => {
   const ordered = [...theses.value];
-  const index = ordered.findIndex(t => t.id === thesis.id);
+  const index = ordered.findIndex(th => th.id === thesis.id);
   const targetIndex = index + direction;
   if (index < 0 || targetIndex < 0 || targetIndex >= ordered.length) return;
-  const ids = ordered.map(t => t.id);
+  const ids = ordered.map(th => th.id);
   [ids[index], ids[targetIndex]] = [ids[targetIndex], ids[index]];
   store.dispatch('theses/reorder', ids);
 };
@@ -190,6 +190,7 @@ onMounted(() => store.dispatch('theses/get'));
           <button
             data-testid="playbooks-item-up"
             class="text-n-slate-9 disabled:opacity-30"
+            :aria-label="$t('RAMON.PLAYBOOKS.MOVE_UP')"
             :disabled="index === 0"
             @click.stop="moveThesis(thesis, -1)"
           >
@@ -198,6 +199,7 @@ onMounted(() => store.dispatch('theses/get'));
           <button
             data-testid="playbooks-item-down"
             class="text-n-slate-9 disabled:opacity-30"
+            :aria-label="$t('RAMON.PLAYBOOKS.MOVE_DOWN')"
             :disabled="index === theses.length - 1"
             @click.stop="moveThesis(thesis, 1)"
           >

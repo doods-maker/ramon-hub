@@ -80,7 +80,13 @@ export const mutations = {
   },
 
   [types.SET_THESES](_state, data) {
-    _state.records = [...data].sort(bySortedPosition);
+    const existingById = _state.records.reduce((acc, record) => {
+      acc[record.id] = record;
+      return acc;
+    }, {});
+    _state.records = data
+      .map(incoming => ({ ...existingById[incoming.id], ...incoming }))
+      .sort(bySortedPosition);
   },
 
   [types.ADD_THESIS](_state, data) {
