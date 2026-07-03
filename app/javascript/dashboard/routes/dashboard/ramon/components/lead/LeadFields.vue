@@ -16,7 +16,9 @@ const priorities = useMapGetter('leadConfig/getPriorities');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
 const agents = useMapGetter('agents/getAgents');
 const theses = useMapGetter('theses/getTheses');
-const activeTheses = computed(() => theses.value.filter(t => t.active));
+const activeTheses = computed(() =>
+  theses.value.filter(thesis => thesis.active)
+);
 
 // Motivo da perda só aparece quando o lead está numa etapa marcada como perda.
 const currentStage = computed(() =>
