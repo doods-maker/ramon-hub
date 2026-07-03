@@ -9,7 +9,7 @@ RSpec.describe Ramon::LeadNotificationBuilder do
   describe '#perform' do
     it 'cria uma notificação ramon_lead_created para cada usuário da conta' do
       expect { described_class.new(lead: lead).perform }.to change(Notification, :count).by(2)
-      expect(Notification.pluck(:user_id)).to match_array([admin.id, agent.id])
+      expect(Notification.pluck(:user_id)).to contain_exactly(admin.id, agent.id)
     end
 
     it 'aponta o lead como primary_actor e usa o tipo novo' do
