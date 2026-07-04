@@ -40,10 +40,15 @@ RSpec.describe Lead do
     lead = create(:lead, account: account, lead_stage: stage, value: 5000, source: 'Indicação')
     data = lead.push_event_data
     expect(data).to include(
-      value: lead.value, source: 'Indicação',
+      value: 5000.0, source: 'Indicação',
       stage_name: 'Negociação', stage_color: '#f59e0b'
     )
     expect(data.keys).to include(:benefit_type_name, :lead_priority_name, :sdr_name, :closer_name, :contact_name)
+  end
+
+  it 'push_event_data serializa value como Float (BigDecimal quebra o broadcast no Sidekiq)' do
+    lead = create(:lead, account: account, value: 5000)
+    expect(lead.push_event_data[:value]).to be_a(Float)
   end
 
   context 'when recording lead activities' do

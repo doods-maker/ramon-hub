@@ -36,7 +36,8 @@ class Lead < ApplicationRecord
       contact_id: contact_id,
       conversation_id: conversation_id,
       position: position,
-      value: value,
+      # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast
+      value: value&.to_f,
       source: source,
       stage_name: lead_stage&.name,
       stage_color: lead_stage&.color,
