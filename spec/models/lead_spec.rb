@@ -51,6 +51,13 @@ RSpec.describe Lead do
     expect(lead.push_event_data[:value]).to be_a(Float)
   end
 
+  it 'push_event_data expõe kit_status na latest_triage' do
+    lead = create(:lead, account: account)
+    agent = account.triage_agents.first
+    lead.lead_triages.create!(account: account, triage_agent: agent, status: 'done', kit_status: 'ready')
+    expect(lead.push_event_data[:latest_triage][:kit_status]).to eq('ready')
+  end
+
   context 'when recording lead activities' do
     before { Current.user = nil }
     after { Current.user = nil }

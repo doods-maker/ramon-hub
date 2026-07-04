@@ -64,4 +64,27 @@ RSpec.describe 'Lead Triages API', type: :request do
     get "/api/v1/accounts/#{account.id}/leads/#{lead.id}/triages", as: :json
     expect(response).to have_http_status(:unauthorized)
   end
+
+  describe 'POST .../triages/:id/kit' do
+    it 'enfileira o KitJob, marca running e devolve a triagem' do
+      agent = account.triage_agents.first
+      triage = lead.lead_triages.create!(account: account, triage_agent: agent, status: 'done', result: 'ok')
+
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/triages/#{triage.id}/kit",
+             headers: agent_user.create_new_auth_token, as: :json
+      end.to have_enqueued_job(Leads::KitJob).with(triage.id)
+      expect(response).to have_http_status(:success)
+      expect(triage.reload.kit_status).to eq('running')
+      expect(response.parsed_body['kit_status']).to eq('running')
+    end
+
+    it 'recusa quando a triagem não está done' do
+      agent = account.triage_agents.first
+      pending_triage = lead.lead_triages.create!(account: account, triage_agent: agent, status: 'running')
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/triages/#{pending_triage.id}/kit",
+           headers: agent_user.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
 end

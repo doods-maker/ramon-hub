@@ -1,6 +1,8 @@
 json.id lead_triage.id
 json.status lead_triage.status
 json.viability lead_triage.viability
+json.kit lead_triage.kit
+json.kit_status lead_triage.kit_status
 json.result lead_triage.result
 json.error_message lead_triage.error_message
 json.created_at lead_triage.created_at

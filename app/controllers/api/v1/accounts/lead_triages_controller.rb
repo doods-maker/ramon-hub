@@ -15,6 +15,15 @@ class Api::V1::Accounts::LeadTriagesController < Api::V1::Accounts::BaseControll
     render :show
   end
 
+  def kit
+    @lead_triage = @lead.lead_triages.find(params[:id])
+    return render_could_not_create_error('Triagem ainda não concluída') unless @lead_triage.status == 'done'
+
+    @lead_triage.update!(kit_status: 'running')
+    Leads::KitJob.perform_later(@lead_triage.id)
+    render :show
+  end
+
   private
 
   def fetch_lead

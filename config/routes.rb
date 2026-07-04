@@ -293,7 +293,11 @@ Rails.application.routes.draw do
             resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do
               member { post :complete }
             end
-            resources :triages, only: [:index, :create], controller: 'lead_triages'
+            resources :triages, only: [:index, :create], controller: 'lead_triages' do
+              member do
+                post :kit
+              end
+            end
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
           resources :lead_stages, only: [:create, :update, :destroy] do
