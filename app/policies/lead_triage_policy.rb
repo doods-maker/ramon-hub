@@ -6,4 +6,8 @@ class LeadTriagePolicy < ApplicationPolicy
   def create?
     @account_user.administrator? || @account_user.agent?
   end
+
+  def kit?
+    create?
+  end
 end
