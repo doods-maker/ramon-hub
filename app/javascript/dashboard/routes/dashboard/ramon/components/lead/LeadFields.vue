@@ -38,6 +38,8 @@ const source = ref('');
 const stageId = ref(null);
 const lostPrompt = ref(false);
 const lostReasonName = ref('');
+const wonPrompt = ref(false);
+const wonValue = ref('');
 
 watch(
   () => props.lead,
@@ -48,6 +50,8 @@ watch(
     stageId.value = l?.lead_stage_id ?? null;
     lostPrompt.value = false;
     lostReasonName.value = '';
+    wonPrompt.value = false;
+    wonValue.value = '';
   },
   { immediate: true }
 );
@@ -108,23 +112,25 @@ const saveValue = () => {
 const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
 
 // Etapa: envolve o update em try/catch e reverte o select em erro.
-const commitStage = async (targetId, lostReason) => {
+const commitStage = async (targetId, extra = {}) => {
   try {
     await store.dispatch('leads/update', {
       id: props.lead.id,
       lead_stage_id: targetId,
-      ...(lostReason ? { lost_reason: lostReason } : {}),
+      ...extra,
     });
-    lostPrompt.value = false;
   } catch (e) {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     stageId.value = props.lead?.lead_stage_id ?? null;
+  } finally {
     lostPrompt.value = false;
+    wonPrompt.value = false;
   }
 };
 
 // Mudar de etapa pelo select. Etapa de perda sem motivo → pede o motivo inline
 // antes de mandar (senão o backend recusa com 422 e o select fica dessincrono).
+// Etapa de ganho sem valor → pede o valor inline, mesmo padrão do drag no Kanban.
 const onStageChange = targetId => {
   stageId.value = targetId;
   const target = stages.value.find(s => s.id === targetId);
@@ -133,12 +139,17 @@ const onStageChange = targetId => {
     lostPrompt.value = true;
     return;
   }
-  commitStage(targetId, null);
+  if (target?.is_won && props.lead?.value == null) {
+    wonValue.value = '';
+    wonPrompt.value = true;
+    return;
+  }
+  commitStage(targetId);
 };
 
 const confirmLostStage = () => {
   if (!lostReasonName.value) return;
-  commitStage(stageId.value, lostReasonName.value);
+  commitStage(stageId.value, { lost_reason: lostReasonName.value });
 };
 
 const cancelLostStage = () => {
@@ -146,6 +157,13 @@ const cancelLostStage = () => {
   lostReasonName.value = '';
   stageId.value = props.lead?.lead_stage_id ?? null;
 };
+
+const confirmWonStage = () => {
+  const parsed = parseBrlInput(wonValue.value);
+  commitStage(stageId.value, parsed == null ? {} : { value: parsed });
+};
+
+const skipWonStage = () => commitStage(stageId.value);
 </script>
 
 <template>
@@ -166,7 +184,7 @@ const cancelLostStage = () => {
     <select
       data-testid="field-stage"
       :value="stageId"
-      :class="lostPrompt ? 'mb-1' : 'mb-3'"
+      :class="lostPrompt || wonPrompt ? 'mb-1' : 'mb-3'"
       class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
       @change="e => onStageChange(Number(e.target.value))"
     >
@@ -205,6 +223,40 @@ const cancelLostStage = () => {
           @click="confirmLostStage"
         >
           {{ $t('RAMON.FUNIL.LOST.CONFIRM') }}
+        </button>
+      </div>
+    </div>
+
+    <div
+      v-if="wonPrompt"
+      data-testid="stage-won-prompt"
+      class="flex flex-col gap-2 p-2 mb-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+    >
+      <label class="text-xs text-n-slate-10">{{
+        $t('RAMON.FUNIL.WON.VALUE_LABEL')
+      }}</label>
+      <input
+        v-model="wonValue"
+        data-testid="stage-won-value"
+        type="text"
+        inputmode="decimal"
+        class="w-full px-2 py-1.5 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+        @keyup.enter="confirmWonStage"
+      />
+      <div class="flex justify-end gap-2">
+        <button
+          data-testid="stage-won-skip"
+          class="px-3 py-1 text-xs text-n-slate-11"
+          @click="skipWonStage"
+        >
+          {{ $t('RAMON.FUNIL.WON.SKIP') }}
+        </button>
+        <button
+          data-testid="stage-won-save"
+          class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white"
+          @click="confirmWonStage"
+        >
+          {{ $t('RAMON.FUNIL.WON.SAVE') }}
         </button>
       </div>
     </div>

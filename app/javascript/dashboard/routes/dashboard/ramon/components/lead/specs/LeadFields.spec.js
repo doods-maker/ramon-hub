@@ -36,9 +36,13 @@ const build = (
       leadConfig: {
         namespaced: true,
         getters: {
-          getStages: () => [{ id: 1, name: 'Novo' }],
+          getStages: () => [
+            { id: 1, name: 'Novo' },
+            { id: 2, name: 'Fechado', is_won: true },
+          ],
           getBenefitTypes: () => [],
           getPriorities: () => [],
+          getLostReasons: () => [],
         },
       },
       agents: { namespaced: true, getters: { getAgents: () => [] } },
@@ -165,5 +169,53 @@ describe('LeadFields.vue', () => {
     const input = wrapper.find('[data-testid="field-value"]');
     expect(input.element.value).toContain('100');
     expect(input.element.value).toContain('R$');
+  });
+
+  it('prompts for value when moving to a won stage and lead has no value', async () => {
+    const update = vi.fn();
+    const wrapper = shallowMount(LeadFields, {
+      props: { lead: { ...lead, value: null } },
+      global: { plugins: [build(update)], mocks: { $t: k => k } },
+    });
+    await wrapper.find('[data-testid="field-stage"]').setValue(2);
+    expect(update).not.toHaveBeenCalled();
+    expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+      true
+    );
+
+    await wrapper.find('[data-testid="stage-won-value"]').setValue('2.500,00');
+    await wrapper.find('[data-testid="stage-won-save"]').trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      lead_stage_id: 2,
+      value: 2500,
+    });
+  });
+
+  it('skips the value and still moves the stage', async () => {
+    const update = vi.fn();
+    const wrapper = shallowMount(LeadFields, {
+      props: { lead: { ...lead, value: null } },
+      global: { plugins: [build(update)], mocks: { $t: k => k } },
+    });
+    await wrapper.find('[data-testid="field-stage"]').setValue(2);
+    await wrapper.find('[data-testid="stage-won-skip"]').trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      lead_stage_id: 2,
+    });
+  });
+
+  it('does not prompt when the lead already has a value', async () => {
+    const update = vi.fn();
+    const wrapper = mountFields(update); // lead.value = 100
+    await wrapper.find('[data-testid="field-stage"]').setValue(2);
+    expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+      false
+    );
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      lead_stage_id: 2,
+    });
   });
 });
