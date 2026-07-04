@@ -146,7 +146,7 @@ onMounted(() => store.dispatch('theses/get'));
 <template>
   <div class="flex h-full">
     <div
-      class="flex flex-col w-[280px] flex-shrink-0 h-full p-4 overflow-y-auto border-r border-n-weak"
+      class="flex flex-col w-[340px] flex-shrink-0 h-full p-4 overflow-y-auto border-r border-n-weak"
     >
       <h1 class="mb-4 text-lg font-cormorant text-n-slate-12">
         {{ $t('RAMON.PLAYBOOKS.TITLE') }}
@@ -221,13 +221,13 @@ onMounted(() => store.dispatch('theses/get'));
         <input
           v-model="newThesisName"
           data-testid="playbooks-add-input"
-          class="flex-1 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+          class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
           :placeholder="$t('RAMON.PLAYBOOKS.ADD_PLACEHOLDER')"
           @keyup.enter="addThesis"
         />
         <button
           data-testid="playbooks-add-button"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
+          class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
           @click="addThesis"
         >
           {{ $t('RAMON.PLAYBOOKS.ADD') }}
@@ -333,19 +333,19 @@ onMounted(() => store.dispatch('theses/get'));
             <input
               v-model="newItemDrafts[section].title"
               data-testid="playbooks-item-add-title"
-              class="w-40 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+              class="w-40 shrink-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
               :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
             />
             <input
               v-model="newItemDrafts[section].content"
               data-testid="playbooks-item-add-content"
-              class="flex-1 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+              class="flex-1 min-w-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
               :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
               @keyup.enter="addItem(section)"
             />
             <button
               data-testid="playbooks-item-add"
-              class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
+              class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
               @click="addItem(section)"
             >
               {{ $t('RAMON.PLAYBOOKS.ITEM_ADD') }}
