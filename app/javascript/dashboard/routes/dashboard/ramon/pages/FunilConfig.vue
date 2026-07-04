@@ -7,6 +7,16 @@ const getters = useStoreGetters();
 
 const benefits = computed(() => getters['leadConfig/getBenefitTypes'].value);
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
+const stages = computed(() => getters['leadConfig/getStages'].value);
+
+const saveStalled = (stage, raw) => {
+  const days = raw === '' ? null : Math.max(0, Math.floor(Number(raw)));
+  if (days === (stage.stalled_after_days ?? null)) return;
+  store.dispatch('leadConfig/updateStage', {
+    id: stage.id,
+    stalled_after_days: days,
+  });
+};
 
 const newBenefit = ref('');
 const newPriority = ref('');
@@ -124,6 +134,37 @@ onMounted(() => store.dispatch('leadConfig/get'));
           {{ $t('RAMON.FUNIL_CONFIG.ADD') }}
         </button>
       </div>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="mb-1 text-sm uppercase tracking-widest text-n-slate-9">
+        {{ $t('RAMON.FUNIL_CONFIG.CADENCE') }}
+      </h2>
+      <p class="mb-3 text-xs text-n-slate-10">
+        {{ $t('RAMON.FUNIL_CONFIG.CADENCE_HINT') }}
+      </p>
+      <ul>
+        <li
+          v-for="s in stages"
+          :key="s.id"
+          class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-n-alpha-2"
+        >
+          <span class="text-sm text-n-slate-12">{{ s.name }}</span>
+          <span class="flex items-center gap-2">
+            <input
+              :value="s.stalled_after_days"
+              data-testid="stage-stalled-days"
+              type="number"
+              min="0"
+              class="w-20 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+              @change="e => saveStalled(s, e.target.value)"
+            />
+            <span class="text-xs text-n-slate-9">{{
+              $t('RAMON.FUNIL_CONFIG.CADENCE_DAYS')
+            }}</span>
+          </span>
+        </li>
+      </ul>
     </section>
   </div>
 </template>

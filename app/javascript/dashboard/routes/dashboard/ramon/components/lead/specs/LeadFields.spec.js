@@ -36,9 +36,14 @@ const build = (
       leadConfig: {
         namespaced: true,
         getters: {
-          getStages: () => [{ id: 1, name: 'Novo' }],
+          getStages: () => [
+            { id: 1, name: 'Novo' },
+            { id: 2, name: 'Fechado', is_won: true },
+            { id: 3, name: 'Perdido', is_lost: true },
+          ],
           getBenefitTypes: () => [],
           getPriorities: () => [],
+          getLostReasons: () => [],
         },
       },
       agents: { namespaced: true, getters: { getAgents: () => [] } },
@@ -112,6 +117,26 @@ describe('LeadFields.vue', () => {
     expect(wrapper.text()).toContain('+55');
   });
 
+  it('copies the contact phone', async () => {
+    const wrapper = mountFields();
+    expect(wrapper.find('[data-testid="contact-copy-phone"]').exists()).toBe(
+      true
+    );
+  });
+
+  it('shows wa.me link only when the lead has no conversation', () => {
+    const withConv = shallowMount(LeadFields, {
+      props: { lead: { ...lead, conversation_id: 77 } },
+      global: { plugins: [build()], mocks: { $t: k => k } },
+    });
+    expect(withConv.find('[data-testid="contact-wa-me"]').exists()).toBe(false);
+
+    const withoutConv = mountFields();
+    const link = withoutConv.find('[data-testid="contact-wa-me"]');
+    expect(link.exists()).toBe(true);
+    expect(link.attributes('href')).toBe('https://wa.me/55');
+  });
+
   it('loads notes on mount and adds a note', async () => {
     const fetchNotes = vi
       .fn()
@@ -136,5 +161,103 @@ describe('LeadFields.vue', () => {
       leadId: 3,
       body: 'nova',
     });
+  });
+
+  it('parses BRL input on blur and saves a plain number', async () => {
+    const update = vi.fn();
+    const wrapper = mountFields(update);
+    const input = wrapper.find('[data-testid="field-value"]');
+    await input.setValue('1.234,56');
+    await input.trigger('blur');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      value: 1234.56,
+    });
+  });
+
+  it('reverts invalid BRL input on blur without saving', async () => {
+    const update = vi.fn();
+    const wrapper = mountFields(update);
+    const input = wrapper.find('[data-testid="field-value"]');
+    await input.setValue('abc');
+    await input.trigger('blur');
+    expect(update).not.toHaveBeenCalled();
+    expect(input.element.value).toContain('100');
+  });
+
+  it('shows the value formatted as BRL', () => {
+    const wrapper = mountFields();
+    const input = wrapper.find('[data-testid="field-value"]');
+    expect(input.element.value).toContain('100');
+    expect(input.element.value).toContain('R$');
+  });
+
+  it('prompts for value when moving to a won stage and lead has no value', async () => {
+    const update = vi.fn();
+    const wrapper = shallowMount(LeadFields, {
+      props: { lead: { ...lead, value: null } },
+      global: { plugins: [build(update)], mocks: { $t: k => k } },
+    });
+    await wrapper.find('[data-testid="field-stage"]').setValue(2);
+    expect(update).not.toHaveBeenCalled();
+    expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+      true
+    );
+
+    await wrapper.find('[data-testid="stage-won-value"]').setValue('2.500,00');
+    await wrapper.find('[data-testid="stage-won-save"]').trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      lead_stage_id: 2,
+      value: 2500,
+    });
+  });
+
+  it('skips the value and still moves the stage', async () => {
+    const update = vi.fn();
+    const wrapper = shallowMount(LeadFields, {
+      props: { lead: { ...lead, value: null } },
+      global: { plugins: [build(update)], mocks: { $t: k => k } },
+    });
+    await wrapper.find('[data-testid="field-stage"]').setValue(2);
+    await wrapper.find('[data-testid="stage-won-skip"]').trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      lead_stage_id: 2,
+    });
+  });
+
+  it('does not prompt when the lead already has a value', async () => {
+    const update = vi.fn();
+    const wrapper = mountFields(update); // lead.value = 100
+    await wrapper.find('[data-testid="field-stage"]').setValue(2);
+    expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+      false
+    );
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      lead_stage_id: 2,
+    });
+  });
+
+  it('closes the won prompt when switching to a lost stage', async () => {
+    const update = vi.fn();
+    const wrapper = shallowMount(LeadFields, {
+      props: { lead: { ...lead, value: null, lost_reason: null } },
+      global: { plugins: [build(update)], mocks: { $t: k => k } },
+    });
+    const select = wrapper.find('[data-testid="field-stage"]');
+    await select.setValue(2);
+    expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+      true
+    );
+
+    await select.setValue(3);
+    expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+      false
+    );
+    expect(wrapper.find('[data-testid="stage-lost-prompt"]').exists()).toBe(
+      true
+    );
   });
 });

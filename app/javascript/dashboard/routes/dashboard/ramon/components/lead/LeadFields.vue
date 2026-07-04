@@ -3,8 +3,11 @@ import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadTasksList from './LeadTasksList.vue';
 import DocChecklist from './DocChecklist.vue';
+import { formatBrl, parseBrlInput } from '../../helpers/currency';
+import { waMeUrl } from '../../helpers/phone';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -37,16 +40,20 @@ const source = ref('');
 const stageId = ref(null);
 const lostPrompt = ref(false);
 const lostReasonName = ref('');
+const wonPrompt = ref(false);
+const wonValue = ref('');
 
 watch(
   () => props.lead,
   l => {
     name.value = l?.name ?? '';
-    value.value = l?.value ?? '';
+    value.value = formatBrl(l?.value);
     source.value = l?.source ?? '';
     stageId.value = l?.lead_stage_id ?? null;
     lostPrompt.value = false;
     lostReasonName.value = '';
+    wonPrompt.value = false;
+    wonValue.value = '';
   },
   { immediate: true }
 );
@@ -91,8 +98,14 @@ const saveText = (key, refVal, original) => {
 const saveName = () => saveText('name', name, props.lead?.name);
 const saveSource = () => saveText('source', source, props.lead?.source);
 const saveValue = () => {
-  const next = value.value === '' ? null : Number(value.value);
+  const next = parseBrlInput(value.value);
+  // texto inválido não-vazio: reverte a exibição e não salva (evita apagar o valor)
+  if (next === null && String(value.value).trim() !== '') {
+    value.value = formatBrl(props.lead?.value);
+    return;
+  }
   const prev = props.lead?.value == null ? null : Number(props.lead.value);
+  value.value = formatBrl(next);
   if (next === prev) return;
   save({ value: next });
 };
@@ -101,43 +114,65 @@ const saveValue = () => {
 const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
 
 // Etapa: envolve o update em try/catch e reverte o select em erro.
-const commitStage = async (targetId, lostReason) => {
+const commitStage = async (targetId, extra = {}) => {
   try {
     await store.dispatch('leads/update', {
       id: props.lead.id,
       lead_stage_id: targetId,
-      ...(lostReason ? { lost_reason: lostReason } : {}),
+      ...extra,
     });
-    lostPrompt.value = false;
   } catch (e) {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     stageId.value = props.lead?.lead_stage_id ?? null;
+  } finally {
     lostPrompt.value = false;
+    wonPrompt.value = false;
   }
 };
 
 // Mudar de etapa pelo select. Etapa de perda sem motivo → pede o motivo inline
 // antes de mandar (senão o backend recusa com 422 e o select fica dessincrono).
+// Etapa de ganho sem valor → pede o valor inline, mesmo padrão do drag no Kanban.
 const onStageChange = targetId => {
   stageId.value = targetId;
+  // Trocar a seleção fecha qualquer prompt aberto da escolha anterior.
+  lostPrompt.value = false;
+  wonPrompt.value = false;
   const target = stages.value.find(s => s.id === targetId);
   if (target?.is_lost && !props.lead?.lost_reason) {
     lostReasonName.value = '';
     lostPrompt.value = true;
     return;
   }
-  commitStage(targetId, null);
+  if (target?.is_won && props.lead?.value == null) {
+    wonValue.value = '';
+    wonPrompt.value = true;
+    return;
+  }
+  commitStage(targetId);
 };
 
 const confirmLostStage = () => {
   if (!lostReasonName.value) return;
-  commitStage(stageId.value, lostReasonName.value);
+  commitStage(stageId.value, { lost_reason: lostReasonName.value });
 };
 
 const cancelLostStage = () => {
   lostPrompt.value = false;
   lostReasonName.value = '';
   stageId.value = props.lead?.lead_stage_id ?? null;
+};
+
+const confirmWonStage = () => {
+  const parsed = parseBrlInput(wonValue.value);
+  commitStage(stageId.value, parsed == null ? {} : { value: parsed });
+};
+
+const skipWonStage = () => commitStage(stageId.value);
+
+const copyPhone = async () => {
+  await copyTextToClipboard(props.lead.contact_phone);
+  useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
 };
 </script>
 
@@ -159,7 +194,7 @@ const cancelLostStage = () => {
     <select
       data-testid="field-stage"
       :value="stageId"
-      :class="lostPrompt ? 'mb-1' : 'mb-3'"
+      :class="lostPrompt || wonPrompt ? 'mb-1' : 'mb-3'"
       class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
       @change="e => onStageChange(Number(e.target.value))"
     >
@@ -198,6 +233,40 @@ const cancelLostStage = () => {
           @click="confirmLostStage"
         >
           {{ $t('RAMON.FUNIL.LOST.CONFIRM') }}
+        </button>
+      </div>
+    </div>
+
+    <div
+      v-if="wonPrompt"
+      data-testid="stage-won-prompt"
+      class="flex flex-col gap-2 p-2 mb-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+    >
+      <label class="text-xs text-n-slate-10">{{
+        $t('RAMON.FUNIL.WON.VALUE_LABEL')
+      }}</label>
+      <input
+        v-model="wonValue"
+        data-testid="stage-won-value"
+        type="text"
+        inputmode="decimal"
+        class="w-full px-2 py-1.5 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+        @keyup.enter="confirmWonStage"
+      />
+      <div class="flex justify-end gap-2">
+        <button
+          data-testid="stage-won-skip"
+          class="px-3 py-1 text-xs text-n-slate-11"
+          @click="skipWonStage"
+        >
+          {{ $t('RAMON.FUNIL.WON.SKIP') }}
+        </button>
+        <button
+          data-testid="stage-won-save"
+          class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white"
+          @click="confirmWonStage"
+        >
+          {{ $t('RAMON.FUNIL.WON.SAVE') }}
         </button>
       </div>
     </div>
@@ -306,8 +375,8 @@ const cancelLostStage = () => {
     <input
       v-model="value"
       data-testid="field-value"
-      type="number"
-      step="0.01"
+      type="text"
+      inputmode="decimal"
       class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
       @blur="saveValue"
     />
@@ -388,9 +457,31 @@ const cancelLostStage = () => {
       <p v-if="lead.contact_name" class="text-sm text-n-slate-12">
         {{ lead.contact_name }}
       </p>
-      <p v-if="lead.contact_phone" class="text-xs text-n-slate-10">
-        {{ lead.contact_phone }}
-      </p>
+      <div
+        v-if="lead.contact_phone"
+        class="flex items-center gap-2 text-xs text-n-slate-10"
+      >
+        <button
+          data-testid="contact-copy-phone"
+          :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
+          class="inline-flex items-center gap-1 hover:text-n-slate-12"
+          @click="copyPhone"
+        >
+          <span class="i-lucide-phone size-3.5" />{{ lead.contact_phone }}
+        </button>
+        <a
+          v-if="!lead.conversation_id"
+          data-testid="contact-wa-me"
+          :href="waMeUrl(lead.contact_phone)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1 hover:text-n-iris-11"
+        >
+          <span class="i-lucide-message-circle size-3.5" />{{
+            $t('RAMON.KANBAN.CARD.WHATSAPP')
+          }}
+        </a>
+      </div>
       <p v-if="lead.contact_email" class="text-xs text-n-slate-10">
         {{ lead.contact_email }}
       </p>
