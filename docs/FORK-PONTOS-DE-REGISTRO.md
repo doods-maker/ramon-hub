@@ -171,6 +171,19 @@
 | `app/javascript/dashboard/store/modules/specs/leadConfig/getters.spec.js` | specs vitest: `getLostReasons`, pass-through de probability/stalled_after_days | cobertura de leadConfig (novos campos) | PR-A t4 |
 | `app/javascript/dashboard/store/modules/specs/leads/filters.spec.js` (linha de changes) | +teste dos filtros de cadência (omite booleanos false) | cobertura dos filtros novos | PR-A t4 |
 
+| `db/migrate/20260703000003_create_ramon_triage.rb` + tabelas `triage_agents`/`lead_triages` | migração própria (não conflita com core) — colunas kit/kit_status já reservadas | dados da triagem/kit | F2.1b |
+| `app/models/{triage_agent,lead_triage}.rb` + `lib/ramon/llm_client.rb` + `app/services/leads/triage_service.rb` + `app/jobs/leads/triage_job.rb` | arquivos NOVOS em namespace próprio: agente de IA (provider/model/prompt/sensitive), triagem assíncrona via RubyLLM, trava LGPD | triagem IA nativa | F2.1b |
+| `config/routes.rb` (linha ~296) | `resources :triages` aninhado em leads + `resources :triage_agents`; **F2.1c**: `member { post :kit }` em triages | rotas da triagem/kit | F2.1b/c |
+| `app/controllers/api/v1/accounts/{lead_triages,triage_agents}_controller.rb` + jbuilders + policies | API da triagem (sweep de órfãs no create) e CRUD de agentes; **F2.1c**: action `kit` (guarda status done, enfileira KitJob) e `kit`/`kit_status` no partial | API triagem/kit | F2.1b/c |
+| `app/models/lead.rb` (`push_event_data`) | `latest_triage:` slice compacto no broadcast; **F2.1c**: inclui `:kit_status`; (fix #25: `value&.to_f` — BigDecimal quebra strict_args) | realtime do painel | F2.1b/c |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadTriage.vue` + `pages/TriageAgents.vue` + store `triageAgents` + `db/seeds/ramon/triage_agents_seed.yml` | aba Triagem (markdown via MessageFormatter, fix #26) e tela Agentes de IA (toggle LGPD) | UI da triagem | F2.1b |
+| `app/services/leads/kit_service.rb` + `app/jobs/leads/kit_job.rb` | NOVOS: 2ª passada de IA (prompt fixo portado da intranet, parse tolerante de JSON com cercas), grava `kit` jsonb + `kit_status` | Kit do Closer | F2.1c |
+| `app/javascript/dashboard/routes/dashboard/ramon/helpers/kitBlocks.js` | NOVO helper puro: `stageMode(lead)` (won/lost→encerrado; reuniões→closer; default sdr) e `kitBlocks(mode)` | blocos por etapa | F2.1c |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadKit.vue` | NOVO: aba "Kit" no painel do lead — gerar/regerar, blocos por modo com copiar | UI do kit | F2.1c |
+| `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; `getTriages/createTriage` (F2.1b) + `createKit` (F2.1c) | API client | F2.1b/c |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; abas Triagem (b) e Kit (c); X de fechar + discard no rodapé (#26) | painel do lead | F2.1b/c |
+| specs das fatias (services, controllers, models, componentes, helper) | cobertura CI de triagem e kit | specs | F2.1b/c |
+
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
 2. `git switch ramon && git rebase vX.Y.Z`
