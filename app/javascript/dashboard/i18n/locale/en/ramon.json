@@ -300,7 +300,14 @@
     "TRIAGE_AGENTS": {
       "TITLE": "AI Agents",
       "DESCRIPTION": "Agents that run viability triage on leads.",
+      "LIST_TITLE": "Agents",
+      "ADD_PLACEHOLDER": "New agent name",
       "ADD": "New agent",
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "EMPTY_LIST": "No agents registered yet.",
+      "EMPTY_DETAIL": "Select an agent on the left to edit.",
+      "DELETE_CONFIRM": "Delete this agent?",
       "NAME": "Name",
       "AREA": "Area",
       "PROVIDER": "Provider",
@@ -308,8 +315,17 @@
       "SYSTEM_PROMPT": "Instructions (system prompt)",
       "SENSITIVE": "Sensitive data (LGPD)",
       "SENSITIVE_HINT": "On: blocks DeepSeek; only Anthropic/OpenAI process this agent.",
-      "ACTIVE": "Active",
-      "DELETE_CONFIRM": "Delete this agent?"
+      "ACTIVE_TOGGLE": "Active agent",
+      "AREA_OPTIONS": {
+        "PREVIDENCIARIO": "Social security",
+        "TRABALHISTA": "Labor",
+        "OUTRO": "Other"
+      },
+      "PROVIDER_OPTIONS": {
+        "DEEPSEEK": "DeepSeek",
+        "ANTHROPIC": "Anthropic",
+        "OPENAI": "OpenAI"
+      }
     }
   }
 }
