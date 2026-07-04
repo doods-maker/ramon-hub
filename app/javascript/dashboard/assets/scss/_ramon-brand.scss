@@ -1,44 +1,54 @@
 // Marca Ramon Antonio — override dos tokens do design system (vence _next-colors por ordem de @import).
-// RGB sem vírgula (Tailwind: rgb(var(--token) / <alpha-value>)). Valores iniciais do design-ref/_ds; calibrar no smoke.
+// RGB sem vírgula (Tailwind: rgb(var(--token) / <alpha-value>)).
+// Paleta "Marfim & Bronze Polido" (aprovada 04/07/2026): a marca vive no ACENTO
+// (bronze/dourado), nunca no fundo — claro = off-white + superfícies brancas;
+// escuro = grafite quente "dim" (não quase-preto).
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap');
 
-/* ===== Tema CLARO (default :root) — paleta creme/bronze ===== */
+/* ===== Tema CLARO (default :root) — off-white + branco, bronze de acento ===== */
 :root {
-  --iris-9: 117 77 42;       // #754d2a acento/primária
-  --iris-10: 100 64 32;      // hover
-  --iris-11: 117 77 42;      // texto/ícone de acento
-  --iris-12: 42 29 18;       // #2a1d12 texto alto contraste
-  --background-color: 250 243 232;  // #faf3e8
+  --iris-9: 125 84 50; // #7d5432 acento/primária (botões)
+  --iris-10: 107 70 40; // #6b4628 hover
+  --iris-11: 125 84 50; // texto/ícone de acento
+  --iris-12: 38 33 27; // #26211b texto alto contraste
+  --background-color: 247 244 239; // #f7f4ef off-white quente
   --surface-1: 255 255 255;
   --surface-2: 255 255 255;
-  --card-color: 245 230 204;        // #f5e6cc
-  --ramon-rail: 230 216 189;        // #e6d8bd trilho — areia mais funda que a sidebar
+  --card-color: 255 255 255; // cards brancos (contraste sobre o off-white)
+  --ramon-rail: 236 232 225; // #ece8e1 trilho — um degrau mais fundo
+  --ramon-column: 241 237 230; // #f1ede6 coluna do Kanban (entre fundo e card)
 }
 
-/* ===== Tema ESCURO (.dark — default do app) — bronze sobre quase-preto ===== */
+/* ===== Tema ESCURO (.dark — default do app) — grafite quente "dim" ===== */
 .dark {
-  --iris-1: 20 14 10;
-  --iris-2: 26 19 13;
-  --iris-3: 38 27 17;
-  --iris-4: 48 33 20;
-  --iris-5: 59 40 24;
-  --iris-6: 74 50 30;
-  --iris-7: 92 62 37;
-  --iris-8: 117 79 47;
-  --iris-9: 117 77 42;      // #754d2a primária (botões)
-  --iris-10: 92 60 34;      // #5c3c22 hover
-  --iris-11: 196 168 130;   // #c4a882 acento (ícones/links/ativo)
-  --iris-12: 237 224 200;   // #ede0c8 texto alto contraste
-  --solid-iris: 59 32 16;   // #3b2010
-  --background-color: 18 13 9;  // #120d09 app
-  --surface-1: 21 16 11;        // #15100b sidebar
-  --surface-2: 24 18 13;
-  --card-color: 31 24 18;       // #1f1812 cards
-  --button-color: 48 32 18;
-  --ramon-rail: 12 9 7;            // #0c0907 trilho — o mais escuro (profundidade)
+  --iris-1: 38 35 32;
+  --iris-2: 43 40 37;
+  --iris-3: 51 48 44;
+  --iris-4: 59 56 51;
+  --iris-5: 69 65 59;
+  --iris-6: 81 76 68;
+  --iris-7: 99 91 78;
+  --iris-8: 125 106 80;
+  --iris-9: 138 92 51; // #8a5c33 primária (botões)
+  --iris-10: 122 80 41; // #7a5029 hover
+  --iris-11: 201 169 124; // #c9a97c acento dourado (ícones/links/ativo)
+  --iris-12: 236 231 223; // #ece7df texto alto contraste
+  --solid-iris: 70 53 40; // #463528
+  --background-color: 38 35 32; // #262320 app — dim, não quase-preto
+  --surface-1: 43 40 37; // #2b2825 sidebar
+  --surface-2: 46 43 39;
+  --card-color: 51 48 44; // #33302c cards
+  --button-color: 69 63 55;
+  --ramon-rail: 30 27 25; // #1e1b19 trilho — o mais escuro (profundidade)
+  --ramon-column: 43 40 37; // #2b2825 coluna do Kanban
 }
 
 /* Fundo do trilho (WorldRail) — sempre o tom mais fundo, distinto da sidebar */
 .ramon-rail {
   background-color: rgb(var(--ramon-rail));
+}
+
+/* Fundo das colunas do Kanban — camada entre o app e os cards */
+.ramon-column {
+  background-color: rgb(var(--ramon-column));
 }

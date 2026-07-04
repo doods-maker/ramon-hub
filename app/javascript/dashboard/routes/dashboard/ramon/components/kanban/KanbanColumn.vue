@@ -92,7 +92,7 @@ const toggleCollapsed = () => {
   <button
     v-if="collapsed"
     data-testid="stage-expand"
-    class="flex flex-col items-center gap-2 w-10 flex-shrink-0 rounded-xl bg-[#17120d] border border-n-weak py-3 cursor-pointer"
+    class="flex flex-col items-center gap-2 w-10 flex-shrink-0 rounded-xl ramon-column border border-n-weak py-3 cursor-pointer"
     :title="$t('RAMON.KANBAN.COLUMN.EXPAND')"
     @click="toggleCollapsed"
   >
@@ -111,7 +111,7 @@ const toggleCollapsed = () => {
   </button>
   <div
     v-else
-    class="flex flex-col w-72 flex-shrink-0 rounded-xl bg-[#17120d] border border-n-weak"
+    class="flex flex-col w-72 flex-shrink-0 rounded-xl ramon-column border border-n-weak"
   >
     <div class="flex items-center justify-between px-3 py-2">
       <span
