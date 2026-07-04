@@ -182,7 +182,10 @@
       "PRIORITIES": "Priorities",
       "ADD": "Add",
       "BENEFIT_PLACEHOLDER": "New benefit type",
-      "PRIORITY_PLACEHOLDER": "New priority"
+      "PRIORITY_PLACEHOLDER": "New priority",
+      "CADENCE": "Stage cadence",
+      "CADENCE_HINT": "Days without progress until the lead is flagged as stalled (empty = no limit; twice that turns red)",
+      "CADENCE_DAYS": "days"
     },
     "DRAWER": {
       "NAME": "Name",

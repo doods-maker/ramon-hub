@@ -182,7 +182,10 @@
       "PRIORITIES": "Prioridades",
       "ADD": "Adicionar",
       "BENEFIT_PLACEHOLDER": "Novo tipo de benefício",
-      "PRIORITY_PLACEHOLDER": "Nova prioridade"
+      "PRIORITY_PLACEHOLDER": "Nova prioridade",
+      "CADENCE": "Cadência por etapa",
+      "CADENCE_HINT": "Dias sem andamento até o lead ser marcado como parado (vazio = sem limite; o dobro fica vermelho)",
+      "CADENCE_DAYS": "dias"
     },
     "DRAWER": {
       "NAME": "Nome",
