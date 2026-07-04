@@ -22,9 +22,9 @@ class Leads::TriageService
 
   def mark_error(error)
     @triage.update!(status: 'error', error_message: error.message.truncate(1000))
-  rescue StandardError => persist_error
+  rescue StandardError => e
     Rails.logger.error(
-      "TriageService: falha ao gravar erro da triage #{@triage.id}: #{persist_error.message}"
+      "TriageService: falha ao gravar erro da triage #{@triage.id}: #{e.message}"
     )
   end
 

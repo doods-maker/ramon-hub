@@ -22,12 +22,10 @@ class Api::V1::Accounts::LeadTriagesController < Api::V1::Accounts::BaseControll
   end
 
   def fetch_agent
-    if params[:triage_agent_id].present?
-      Current.account.triage_agents.active.find(params[:triage_agent_id])
-    else
-      Current.account.triage_agents.active.order(:id).first or
-        raise ActiveRecord::RecordNotFound, 'no active triage agent'
-    end
+    return Current.account.triage_agents.active.find(params[:triage_agent_id]) if params[:triage_agent_id].present?
+
+    Current.account.triage_agents.active.order(:id).first or
+      raise ActiveRecord::RecordNotFound, 'no active triage agent'
   end
 
   # destrava o botão da UI quando um worker morre no meio (deploy/OOM):

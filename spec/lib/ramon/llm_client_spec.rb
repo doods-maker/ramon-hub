@@ -16,7 +16,7 @@ RSpec.describe Ramon::LlmClient do
         allow(chat).to receive(:with_instructions).and_return(chat)
         allow(chat).to receive(:ask).and_return(instance_double(RubyLLM::Message, content: 'ok'))
         result = described_class.complete(provider: 'anthropic', model: 'claude-haiku-4-5-20251001',
-                                           system: 's', user: 'u', sensitive: true)
+                                          system: 's', user: 'u', sensitive: true)
         expect(result).to eq('ok')
       end
     end

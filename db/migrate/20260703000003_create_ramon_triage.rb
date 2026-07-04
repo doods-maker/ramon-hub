@@ -1,5 +1,5 @@
 class CreateRamonTriage < ActiveRecord::Migration[7.1]
-  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
   def change
     create_table :triage_agents do |t|
       t.references :account, null: false, index: false
@@ -36,7 +36,7 @@ class CreateRamonTriage < ActiveRecord::Migration[7.1]
       dir.up { seed_default_agents }
     end
   end
-  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 
   private
 

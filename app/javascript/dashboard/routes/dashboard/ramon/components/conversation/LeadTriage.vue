@@ -121,10 +121,7 @@ const copyResult = async () => {
           {{ $t('RAMON.TRIAGE.VIABILITY.LABEL') }}:
           {{ $t(viabilityLabelKey(latest.viability)) }}
         </span>
-        <span
-          v-if="latest.triage_agent?.name"
-          class="text-xs text-n-slate-10"
-        >
+        <span v-if="latest.triage_agent?.name" class="text-xs text-n-slate-10">
           {{ $t('RAMON.TRIAGE.AGENT_LABEL') }}: {{ latest.triage_agent.name }}
         </span>
       </div>

@@ -50,7 +50,10 @@ describe('LeadTriage.vue', () => {
         },
       ],
     });
-    const wrapper = mountTriage({ id: 3, latest_triage: { id: 1, status: 'done', viability: 'alta' } });
+    const wrapper = mountTriage({
+      id: 3,
+      latest_triage: { id: 1, status: 'done', viability: 'alta' },
+    });
     await flushPromises();
     const badge = wrapper.find('[data-testid="triage-viability-badge"]');
     expect(badge.exists()).toBe(true);
@@ -61,7 +64,10 @@ describe('LeadTriage.vue', () => {
     LeadsAPI.getTriages.mockResolvedValue({
       data: [{ id: 2, status: 'running', viability: null }],
     });
-    const wrapper = mountTriage({ id: 3, latest_triage: { id: 2, status: 'running' } });
+    const wrapper = mountTriage({
+      id: 3,
+      latest_triage: { id: 2, status: 'running' },
+    });
     await flushPromises();
     expect(
       wrapper.find('[data-testid="triage-run"]').attributes('disabled')
