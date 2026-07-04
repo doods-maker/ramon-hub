@@ -298,6 +298,27 @@
       },
       "STARTED": "Triage started — the result appears here shortly"
     },
+    "KIT": {
+      "TAB": "Kit",
+      "GENERATE": "Generate Closer Kit",
+      "REGENERATE": "Regenerate",
+      "GENERATING": "Generating kit…",
+      "STARTED": "Kit generation started",
+      "ERROR": "Kit generation failed",
+      "EMPTY": "Run a triage first — the kit is built from its analysis.",
+      "NEED_DONE": "The triage must finish before generating the kit.",
+      "CLOSED": "Lead closed — no kit for this stage.",
+      "COPY_BLOCK": "Copy",
+      "MODE_LABEL": "Mode",
+      "MODE": { "SDR": "Qualifying (SDR)", "CLOSER": "Closing (Closer)" },
+      "BLOCKS": {
+        "RESUMO": "Plain-language summary",
+        "ROTEIRO": "Question script",
+        "DOCUMENTOS": "Documents to request",
+        "VENDA_OBJECOES": "Pitch and objections",
+        "PROXIMO_PASSO": "Next step"
+      }
+    },
     "TRIAGE_AGENTS": {
       "TITLE": "AI Agents",
       "DESCRIPTION": "Agents that run viability triage on leads.",

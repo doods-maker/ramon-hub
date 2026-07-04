@@ -48,6 +48,8 @@ const mountPanel = (
         LeadFields: true,
         LeadHistory: true,
         LeadPlaybook: true,
+        LeadTriage: true,
+        LeadKit: true,
       },
     },
   });
@@ -97,5 +99,12 @@ describe('LeadConversationPanel', () => {
     mountPanel(vi.fn().mockResolvedValue(lead), vi.fn(), thesesGet);
     await flushPromises();
     expect(thesesGet).toHaveBeenCalled();
+  });
+
+  it('switches to the Kit tab and renders LeadKit', async () => {
+    const wrapper = mountPanel();
+    await flushPromises();
+    await wrapper.find('[data-testid="tab-kit"]').trigger('click');
+    expect(wrapper.findComponent({ name: 'LeadKit' }).exists()).toBe(true);
   });
 });
