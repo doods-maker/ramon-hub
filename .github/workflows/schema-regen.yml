@@ -3,6 +3,9 @@ permissions:
   contents: read
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feat/ramon-triagem-nativa
 
 jobs:
   schema-regen:
