@@ -7,6 +7,7 @@ import MacrosList from 'dashboard/routes/dashboard/conversation/Macros/List.vue'
 import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import LeadHistory from 'dashboard/routes/dashboard/ramon/components/conversation/LeadHistory.vue';
 import LeadPlaybook from 'dashboard/routes/dashboard/ramon/components/conversation/LeadPlaybook.vue';
+import LeadTriage from 'dashboard/routes/dashboard/ramon/components/conversation/LeadTriage.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -62,6 +63,13 @@ const discard = async () => {
         {{ $t('RAMON.LEAD_PANEL.TABS.PLAYBOOK') }}
       </button>
       <button
+        :class="{ 'font-semibold': activeTab === 'triagem' }"
+        data-testid="tab-triagem"
+        @click="activeTab = 'triagem'"
+      >
+        {{ $t('RAMON.TRIAGE.TAB') }}
+      </button>
+      <button
         class="ml-auto text-xs"
         data-testid="lead-discard"
         @click="discard"
@@ -80,6 +88,7 @@ const discard = async () => {
       </template>
       <LeadHistory v-else-if="activeTab === 'historico'" :lead-id="lead.id" />
       <LeadPlaybook v-else-if="activeTab === 'playbook'" :lead="lead" />
+      <LeadTriage v-else-if="activeTab === 'triagem'" :lead="lead" />
     </div>
   </div>
 </template>
