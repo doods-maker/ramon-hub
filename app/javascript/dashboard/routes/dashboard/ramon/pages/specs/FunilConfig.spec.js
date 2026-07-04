@@ -58,6 +58,25 @@ it('renders one cadence input per stage and saves on change', async () => {
   });
 });
 
+it('truncates decimals before saving', async () => {
+  const updateStage = vi.fn();
+  const wrapper = mountPage({ updateStage });
+  const first = wrapper.findAll('[data-testid="stage-stalled-days"]')[0];
+  await first.setValue('2.5');
+  expect(updateStage).toHaveBeenCalledWith(expect.anything(), {
+    id: 1,
+    stalled_after_days: 2,
+  });
+});
+
+it('does not save when the value is unchanged', async () => {
+  const updateStage = vi.fn();
+  const wrapper = mountPage({ updateStage });
+  const first = wrapper.findAll('[data-testid="stage-stalled-days"]')[0];
+  await first.setValue('3');
+  expect(updateStage).not.toHaveBeenCalled();
+});
+
 it('clears the limit when the input is emptied', async () => {
   const updateStage = vi.fn();
   const wrapper = mountPage({ updateStage });

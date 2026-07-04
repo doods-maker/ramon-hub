@@ -10,7 +10,7 @@ const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const stages = computed(() => getters['leadConfig/getStages'].value);
 
 const saveStalled = (stage, raw) => {
-  const days = raw === '' ? null : Math.max(0, Number(raw));
+  const days = raw === '' ? null : Math.max(0, Math.floor(Number(raw)));
   if (days === (stage.stalled_after_days ?? null)) return;
   store.dispatch('leadConfig/updateStage', {
     id: stage.id,
