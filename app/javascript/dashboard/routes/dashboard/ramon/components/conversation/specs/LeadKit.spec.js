@@ -54,9 +54,7 @@ describe('LeadKit.vue', () => {
 
   it('gera o kit da triagem mais recente done', async () => {
     LeadsAPI.getTriages.mockResolvedValue({
-      data: [
-        { id: 11, status: 'done', kit_status: 'pending', kit: null },
-      ],
+      data: [{ id: 11, status: 'done', kit_status: 'pending', kit: null }],
     });
     LeadsAPI.createKit.mockResolvedValue({ data: {} });
     const wrapper = mountKit({ id: 3, stage_name: 'Qualificação' });
@@ -69,9 +67,7 @@ describe('LeadKit.vue', () => {
 
   it('renderiza só os blocos do modo sdr', async () => {
     LeadsAPI.getTriages.mockResolvedValue({
-      data: [
-        { id: 12, status: 'done', kit_status: 'ready', kit: kitData },
-      ],
+      data: [{ id: 12, status: 'done', kit_status: 'ready', kit: kitData }],
     });
     const wrapper = mountKit({ id: 3, stage_name: 'Qualificação' });
     await flushPromises();
@@ -88,9 +84,7 @@ describe('LeadKit.vue', () => {
 
   it('renderiza os blocos do modo closer', async () => {
     LeadsAPI.getTriages.mockResolvedValue({
-      data: [
-        { id: 13, status: 'done', kit_status: 'ready', kit: kitData },
-      ],
+      data: [{ id: 13, status: 'done', kit_status: 'ready', kit: kitData }],
     });
     const wrapper = mountKit({ id: 3, stage_name: 'Negociação' });
     await flushPromises();
@@ -100,9 +94,9 @@ describe('LeadKit.vue', () => {
     expect(
       wrapper.find('[data-testid="kit-block-venda_objecoes"]').exists()
     ).toBe(true);
-    expect(
-      wrapper.find('[data-testid="kit-block-documentos"]').exists()
-    ).toBe(true);
+    expect(wrapper.find('[data-testid="kit-block-documentos"]').exists()).toBe(
+      true
+    );
     expect(
       wrapper.find('[data-testid="kit-block-proximo_passo"]').exists()
     ).toBe(true);
@@ -124,9 +118,7 @@ describe('LeadKit.vue', () => {
 
   it('copia o texto do bloco', async () => {
     LeadsAPI.getTriages.mockResolvedValue({
-      data: [
-        { id: 14, status: 'done', kit_status: 'ready', kit: kitData },
-      ],
+      data: [{ id: 14, status: 'done', kit_status: 'ready', kit: kitData }],
     });
     const wrapper = mountKit({ id: 3, stage_name: 'Qualificação' });
     await flushPromises();
@@ -139,9 +131,7 @@ describe('LeadKit.vue', () => {
 
   it('recarrega quando latest_triage.kit_status muda', async () => {
     LeadsAPI.getTriages.mockResolvedValue({
-      data: [
-        { id: 20, status: 'done', kit_status: 'running', kit: null },
-      ],
+      data: [{ id: 20, status: 'done', kit_status: 'running', kit: null }],
     });
     const wrapper = mountKit({
       id: 3,
@@ -152,9 +142,7 @@ describe('LeadKit.vue', () => {
     expect(LeadsAPI.getTriages).toHaveBeenCalledTimes(1);
 
     LeadsAPI.getTriages.mockResolvedValue({
-      data: [
-        { id: 20, status: 'done', kit_status: 'ready', kit: kitData },
-      ],
+      data: [{ id: 20, status: 'done', kit_status: 'ready', kit: kitData }],
     });
     await wrapper.setProps({
       lead: {

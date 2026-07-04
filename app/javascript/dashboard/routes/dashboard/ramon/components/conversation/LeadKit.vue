@@ -55,18 +55,19 @@ const kit = computed(() =>
   doneTriage.value?.kit_status === 'ready' ? doneTriage.value.kit : null
 );
 const kitError = computed(() =>
-  doneTriage.value?.kit_status === 'error'
-    ? doneTriage.value.kit?.error
-    : null
+  doneTriage.value?.kit_status === 'error' ? doneTriage.value.kit?.error : null
 );
-const isGenerating = computed(
-  () => doneTriage.value?.kit_status === 'running'
-);
+const isGenerating = computed(() => doneTriage.value?.kit_status === 'running');
 
 const mode = computed(() => stageMode(props.lead));
-const blocks = computed(() =>
-  kit.value ? kitBlocks(mode.value).filter(hasContent) : []
-);
+
+function blockField(block) {
+  return block === 'resumo' ? 'resumo_leigo' : block;
+}
+
+function blockKey(block) {
+  return block === 'roteiro' ? 'roteiro_perguntas' : blockField(block);
+}
 
 function hasContent(block) {
   const value = kit.value?.[blockKey(block)];
@@ -76,12 +77,9 @@ function hasContent(block) {
   return Array.isArray(value) ? value.length > 0 : Boolean(value);
 }
 
-function blockKey(block) {
-  return block === 'roteiro' ? 'roteiro_perguntas' : blockField(block);
-}
-function blockField(block) {
-  return block === 'resumo' ? 'resumo_leigo' : block;
-}
+const blocks = computed(() =>
+  kit.value ? kitBlocks(mode.value).filter(hasContent) : []
+);
 
 const blockText = block => {
   const value = kit.value?.[blockKey(block)];
