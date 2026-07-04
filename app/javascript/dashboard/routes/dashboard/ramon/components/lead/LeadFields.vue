@@ -133,6 +133,9 @@ const commitStage = async (targetId, extra = {}) => {
 // Etapa de ganho sem valor → pede o valor inline, mesmo padrão do drag no Kanban.
 const onStageChange = targetId => {
   stageId.value = targetId;
+  // Trocar a seleção fecha qualquer prompt aberto da escolha anterior.
+  lostPrompt.value = false;
+  wonPrompt.value = false;
   const target = stages.value.find(s => s.id === targetId);
   if (target?.is_lost && !props.lead?.lost_reason) {
     lostReasonName.value = '';

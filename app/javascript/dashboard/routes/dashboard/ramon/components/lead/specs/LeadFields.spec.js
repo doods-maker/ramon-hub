@@ -39,6 +39,7 @@ const build = (
           getStages: () => [
             { id: 1, name: 'Novo' },
             { id: 2, name: 'Fechado', is_won: true },
+            { id: 3, name: 'Perdido', is_lost: true },
           ],
           getBenefitTypes: () => [],
           getPriorities: () => [],
@@ -217,5 +218,26 @@ describe('LeadFields.vue', () => {
       id: 3,
       lead_stage_id: 2,
     });
+  });
+
+  it('closes the won prompt when switching to a lost stage', async () => {
+    const update = vi.fn();
+    const wrapper = shallowMount(LeadFields, {
+      props: { lead: { ...lead, value: null, lost_reason: null } },
+      global: { plugins: [build(update)], mocks: { $t: k => k } },
+    });
+    const select = wrapper.find('[data-testid="field-stage"]');
+    await select.setValue(2);
+    expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+      true
+    );
+
+    await select.setValue(3);
+    expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+      false
+    );
+    expect(wrapper.find('[data-testid="stage-lost-prompt"]').exists()).toBe(
+      true
+    );
   });
 });
