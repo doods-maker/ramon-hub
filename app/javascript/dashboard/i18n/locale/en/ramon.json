@@ -164,7 +164,8 @@
       "COLUMN": {
         "WEIGHTED": "~{value} weighted",
         "COLLAPSE": "Collapse column",
-        "EXPAND": "Expand column"
+        "EXPAND": "Expand column",
+        "EMPTY": "No leads here — drag a card or create one."
       },
       "MOVE_DONE": "Stage updated",
       "MOVE_UNDO": "Undo"
@@ -207,6 +208,7 @@
       "NOTES_ADD_BUTTON": "Add note",
       "CONTACT": "Contact",
       "THESIS": "Thesis",
+      "NO_THESIS_HINT": "Pick a thesis to unlock the document checklist and playbook.",
       "NOTE_TEMPLATES": {
         "LABEL": "Note template…",
         "ITEMS": {

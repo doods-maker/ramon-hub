@@ -168,6 +168,13 @@ const toggleCollapsed = () => {
         />
       </span>
     </div>
+    <p
+      v-if="!localLeads.length"
+      data-testid="column-empty"
+      class="px-3 pt-3 text-xs text-center text-n-slate-9"
+    >
+      {{ $t('RAMON.KANBAN.COLUMN.EMPTY') }}
+    </p>
     <Draggable
       v-model="localLeads"
       group="leads"

@@ -345,6 +345,13 @@ const copyPhone = async () => {
         {{ t.name }}
       </option>
     </select>
+    <p
+      v-if="!lead.thesis_id"
+      data-testid="no-thesis-hint"
+      class="text-xs text-n-slate-9"
+    >
+      {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
+    </p>
 
     <label class="block mb-1 text-xs text-n-slate-10">{{
       $t('RAMON.DRAWER.SDR')
