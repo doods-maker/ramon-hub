@@ -11,6 +11,7 @@ class Lead < ApplicationRecord
   has_many :lead_activities, dependent: :destroy_async
   has_many :lead_notes, dependent: :destroy_async
   has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
+  has_many :lead_triages, dependent: :destroy_async
 
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
@@ -44,7 +45,8 @@ class Lead < ApplicationRecord
       thesis_name: thesis&.name,
       sdr_name: sdr&.name,
       closer_name: closer&.name,
-      contact_name: contact&.name
+      contact_name: contact&.name,
+      latest_triage: latest_triage&.slice(:id, :status, :viability)
     }.merge(cadence_event_data)
   end
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
@@ -57,6 +59,10 @@ class Lead < ApplicationRecord
 
   def dispatch_task_update
     dispatch_update_event
+  end
+
+  def latest_triage
+    lead_triages.order(:id).last
   end
 
   private

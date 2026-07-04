@@ -279,6 +279,53 @@
         "OBJECAO": "Objeções",
         "DOCUMENTO": "Documentos"
       }
+    },
+    "TRIAGE": {
+      "TAB": "Triagem",
+      "RUN": "Rodar triagem",
+      "RUNNING": "Analisando…",
+      "RERUN": "Rodar de novo",
+      "EMPTY": "Nenhuma triagem ainda. Rode a análise de viabilidade com IA.",
+      "ERROR": "A triagem falhou",
+      "AGENT_LABEL": "Agente",
+      "VIABILITY": {
+        "LABEL": "Viabilidade",
+        "ALTA": "Alta",
+        "MEDIA": "Média",
+        "BAIXA": "Baixa",
+        "UNKNOWN": "Não detectada"
+      },
+      "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes"
+    },
+    "TRIAGE_AGENTS": {
+      "TITLE": "Agentes de IA",
+      "DESCRIPTION": "Agentes que fazem a triagem de viabilidade dos leads.",
+      "LIST_TITLE": "Agentes",
+      "ADD_PLACEHOLDER": "Nome do novo agente",
+      "ADD": "Novo agente",
+      "ACTIVE": "Ativo",
+      "INACTIVE": "Inativo",
+      "EMPTY_LIST": "Nenhum agente cadastrado ainda.",
+      "EMPTY_DETAIL": "Selecione um agente à esquerda para editar.",
+      "DELETE_CONFIRM": "Apagar este agente?",
+      "NAME": "Nome",
+      "AREA": "Área",
+      "PROVIDER": "Provedor",
+      "MODEL": "Modelo",
+      "SYSTEM_PROMPT": "Instruções (prompt do sistema)",
+      "SENSITIVE": "Dados sensíveis (LGPD)",
+      "SENSITIVE_HINT": "Ligado: bloqueia DeepSeek; só Anthropic/OpenAI processam este agente.",
+      "ACTIVE_TOGGLE": "Agente ativo",
+      "AREA_OPTIONS": {
+        "PREVIDENCIARIO": "Previdenciário",
+        "TRABALHISTA": "Trabalhista",
+        "OUTRO": "Outro"
+      },
+      "PROVIDER_OPTIONS": {
+        "DEEPSEEK": "DeepSeek",
+        "ANTHROPIC": "Anthropic",
+        "OPENAI": "OpenAI"
+      }
     }
   }
 }

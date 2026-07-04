@@ -30,6 +30,7 @@ class Leads::SeedDefaultConfigService
   ].freeze
 
   THESES_SEED_PATH = Rails.root.join('db/seeds/ramon/theses_seed.yml')
+  TRIAGE_AGENTS_SEED_PATH = Rails.root.join('db/seeds/ramon/triage_agents_seed.yml')
 
   def initialize(account)
     @account = account
@@ -41,6 +42,7 @@ class Leads::SeedDefaultConfigService
     seed_priorities
     seed_lost_reasons
     seed_theses
+    seed_triage_agents
   end
 
   # NÃO criamos as Labels fase-* aqui: criá-las em toda conta poluiria a
@@ -142,6 +144,18 @@ class Leads::SeedDefaultConfigService
       thesis.thesis_items.find_or_create_by!(section: item_attrs['section'], title: item_attrs['title']) do |i|
         i.content = item_attrs['content']
         i.position = item_attrs['position']
+      end
+    end
+  end
+
+  def seed_triage_agents
+    # tabela nasce na 20260703000003; mesmo guard das colunas de cadência
+    return unless TriageAgent.table_exists?
+    return unless File.exist?(TRIAGE_AGENTS_SEED_PATH)
+
+    YAML.safe_load_file(TRIAGE_AGENTS_SEED_PATH)['agents'].each do |attrs|
+      @account.triage_agents.find_or_create_by!(name: attrs['name']) do |agent|
+        agent.assign_attributes(attrs.except('name'))
       end
     end
   end

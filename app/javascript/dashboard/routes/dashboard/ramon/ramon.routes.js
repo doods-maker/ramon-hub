@@ -32,4 +32,10 @@ export const routes = [
     component: () => import('./pages/Playbooks.vue'),
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
+  {
+    path: frontendURL('accounts/:accountId/ramon/agentes'),
+    name: 'ramon_triage_agents',
+    component: () => import('./pages/TriageAgents.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
 ];

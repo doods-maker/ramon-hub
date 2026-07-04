@@ -293,6 +293,7 @@ Rails.application.routes.draw do
             resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do
               member { post :complete }
             end
+            resources :triages, only: [:index, :create], controller: 'lead_triages'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
           resources :lead_stages, only: [:create, :update, :destroy] do
@@ -304,6 +305,7 @@ Rails.application.routes.draw do
               collection { post :reorder }
             end
           end
+          resources :triage_agents, except: [:new, :edit]
           resources :benefit_types, only: [:create, :update, :destroy] do
             collection { post :reorder }
           end

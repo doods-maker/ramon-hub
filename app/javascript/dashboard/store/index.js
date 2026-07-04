@@ -44,6 +44,7 @@ import leadTasks from './modules/leadTasks';
 import ramonDashboard from './modules/ramonDashboard';
 import macros from './modules/macros';
 import theses from './modules/theses';
+import triageAgents from './modules/triageAgents';
 import notifications from './modules/notifications';
 import portals from './modules/helpCenterPortals';
 import reports from './modules/reports';
@@ -114,6 +115,7 @@ export default createStore({
     ramonDashboard,
     macros,
     theses,
+    triageAgents,
     notifications,
     portals,
     reports,

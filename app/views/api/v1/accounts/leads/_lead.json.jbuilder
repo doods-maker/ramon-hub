@@ -33,3 +33,13 @@ json.closer_name lead.closer&.name
 json.contact_name lead.contact&.name
 json.contact_phone lead.contact&.phone_number
 json.contact_email lead.contact&.email
+
+if lead.latest_triage
+  json.latest_triage do
+    json.id lead.latest_triage.id
+    json.status lead.latest_triage.status
+    json.viability lead.latest_triage.viability
+  end
+else
+  json.latest_triage nil
+end

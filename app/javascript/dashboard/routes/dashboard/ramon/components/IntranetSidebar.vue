@@ -60,7 +60,7 @@ const sections = computed(() => [
         key: 'agentes',
         label: t('RAMON.NAV.AGENTES'),
         icon: 'i-lucide-bot',
-        soon: true,
+        to: accountScopedRoute('ramon_triage_agents'),
       },
     ],
   },

@@ -27,6 +27,15 @@ class LeadsAPI extends ApiClient {
   createNote(leadId, body) {
     return axios.post(`${this.url}/${leadId}/notes`, { body });
   }
+
+  getTriages(leadId) {
+    return axios.get(`${this.url}/${leadId}/triages`);
+  }
+
+  createTriage(leadId, triageAgentId) {
+    const payload = triageAgentId ? { triage_agent_id: triageAgentId } : {};
+    return axios.post(`${this.url}/${leadId}/triages`, payload);
+  }
 }
 
 export default new LeadsAPI();

@@ -1,0 +1,68 @@
+require 'rails_helper'
+
+RSpec.describe Leads::TriageService do
+  let(:account) { create(:account) }
+  let(:agent) { account.triage_agents.first } # seedado pelo create(:account)
+  let(:conversation) { create(:conversation, account: account) }
+  let(:lead) { create(:lead, account: account, conversation: conversation) }
+  let(:triage) { lead.lead_triages.create!(account: account, triage_agent: agent) }
+
+  before do
+    create(:message, account: account, conversation: conversation,
+                     message_type: :incoming, content: 'Sofri um acidente em 2024')
+    create(:message, account: account, conversation: conversation,
+                     message_type: :outgoing, content: 'Pode me contar mais?')
+    create(:message, account: account, conversation: conversation,
+                     message_type: :incoming, content: 'nota interna', private: true)
+  end
+
+  it 'monta o texto-fonte com as mensagens públicas e dados do lead' do
+    allow(Ramon::LlmClient).to receive(:complete).and_return("análise...\nVIABILIDADE: alta")
+    described_class.new(triage).perform
+    expect(triage.reload.source_text).to include('Sofri um acidente em 2024')
+    expect(triage.source_text).to include('Pode me contar mais?')
+    expect(triage.source_text).not_to include('nota interna')
+  end
+
+  it 'extrai a viabilidade da linha VIABILIDADE e conclui done' do
+    allow(Ramon::LlmClient).to receive(:complete).and_return("Resumo...\nVIABILIDADE: média")
+    described_class.new(triage).perform
+    triage.reload
+    expect(triage.status).to eq('done')
+    expect(triage.viability).to eq('media')
+    expect(triage.result).to include('Resumo')
+    expect(triage.finished_at).to be_present
+  end
+
+  it 'passa o flag sensitive do agente pro LlmClient' do
+    agent.update!(sensitive: true, provider: 'anthropic', model: 'claude-haiku-4-5-20251001')
+    expect(Ramon::LlmClient).to receive(:complete)
+      .with(hash_including(sensitive: true, provider: 'anthropic')).and_return('VIABILIDADE: baixa')
+    described_class.new(triage).perform
+  end
+
+  it 'marca error com a mensagem quando o LLM falha' do
+    allow(Ramon::LlmClient).to receive(:complete).and_raise(StandardError, 'boom')
+    described_class.new(triage).perform
+    triage.reload
+    expect(triage.status).to eq('error')
+    expect(triage.error_message).to include('boom')
+  end
+
+  it 'não propaga exceção quando o LLM falha e o próprio update! de erro também falha' do
+    allow(Ramon::LlmClient).to receive(:complete).and_raise(StandardError, 'boom')
+    allow(triage).to receive(:update!).with(status: 'running').and_call_original
+    allow(triage).to receive(:update!).with(hash_including(status: 'error')).and_raise(StandardError, 'db down')
+    expect(Rails.logger).to receive(:error).with(/falha ao gravar erro da triage/)
+    expect { described_class.new(triage).perform }.not_to raise_error
+  end
+
+  it 'funciona sem conversa (só ficha do lead) e sem viabilidade detectável' do
+    lead.update!(conversation: nil)
+    allow(Ramon::LlmClient).to receive(:complete).and_return('resposta sem a linha esperada')
+    described_class.new(triage).perform
+    triage.reload
+    expect(triage.status).to eq('done')
+    expect(triage.viability).to be_nil
+  end
+end
