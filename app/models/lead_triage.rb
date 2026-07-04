@@ -1,7 +1,7 @@
 class LeadTriage < ApplicationRecord
   STATUSES = %w[pending running done error].freeze
   VIABILITIES = %w[alta media baixa].freeze
-  KIT_STATUSES = %w[pending ready error].freeze
+  KIT_STATUSES = %w[pending running ready error].freeze
 
   belongs_to :account
   belongs_to :lead
