@@ -1,15 +1,13 @@
 <script setup>
 import { ref } from 'vue';
+import { parseBrlInput } from '../../helpers/currency';
 
 const emit = defineEmits(['confirmValue', 'cancelValue']);
 
 const value = ref('');
 
 // Salvar envia o valor; Pular move sem valor; o clique fora cancela (reverte).
-const save = () =>
-  emit('confirmValue', {
-    value: value.value === '' ? null : Number(value.value),
-  });
+const save = () => emit('confirmValue', { value: parseBrlInput(value.value) });
 const skip = () => emit('confirmValue', { value: null });
 const cancel = () => emit('cancelValue');
 </script>
@@ -29,8 +27,8 @@ const cancel = () => emit('cancelValue');
       <input
         v-model="value"
         data-testid="won-value-input"
-        type="number"
-        step="0.01"
+        type="text"
+        inputmode="decimal"
         class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
         @keyup.enter="save"
       />

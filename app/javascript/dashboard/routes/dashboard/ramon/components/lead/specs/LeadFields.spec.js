@@ -137,4 +137,23 @@ describe('LeadFields.vue', () => {
       body: 'nova',
     });
   });
+
+  it('parses BRL input on blur and saves a plain number', async () => {
+    const update = vi.fn();
+    const wrapper = mountFields(update);
+    const input = wrapper.find('[data-testid="field-value"]');
+    await input.setValue('1.234,56');
+    await input.trigger('blur');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      value: 1234.56,
+    });
+  });
+
+  it('shows the value formatted as BRL', () => {
+    const wrapper = mountFields();
+    const input = wrapper.find('[data-testid="field-value"]');
+    expect(input.element.value).toContain('100');
+    expect(input.element.value).toContain('R$');
+  });
 });
