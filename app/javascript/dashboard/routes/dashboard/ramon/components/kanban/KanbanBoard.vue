@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n';
 import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import { downloadCsvFile } from 'dashboard/helper/downloadHelper';
+import { leadsToCsv } from '../../helpers/leadsCsv';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
 import SavedViews from './SavedViews.vue';
@@ -170,6 +172,12 @@ onMounted(() => {
   store.dispatch('leads/loadFilters');
   store.dispatch('agents/get');
 });
+
+const exportCsv = () => {
+  const all = orderedStages.value.flatMap(s => stageLeads(s.id));
+  const date = new Date().toISOString().slice(0, 10);
+  downloadCsvFile(`funil-${date}.csv`, leadsToCsv(all));
+};
 </script>
 
 <template>
@@ -178,12 +186,23 @@ onMounted(() => {
       <h1 class="text-xl font-cormorant text-n-slate-12">
         {{ $t('RAMON.FUNIL.TITLE') }}
       </h1>
-      <button
-        class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
-        @click="emit('new-lead')"
-      >
-        <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.NEW_LEAD') }}
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          data-testid="export-csv"
+          class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:text-n-slate-12"
+          @click="exportCsv"
+        >
+          <span class="i-lucide-download size-4" />{{
+            $t('RAMON.FUNIL.EXPORT_CSV')
+          }}
+        </button>
+        <button
+          class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+          @click="emit('new-lead')"
+        >
+          <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.NEW_LEAD') }}
+        </button>
+      </div>
     </div>
     <SavedViews />
     <KanbanFilters :filters="filters" @update="onFilterUpdate" />

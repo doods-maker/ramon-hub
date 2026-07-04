@@ -79,6 +79,7 @@
     "FUNIL": {
       "TITLE": "Funil de Leads",
       "NEW_LEAD": "Novo lead",
+      "EXPORT_CSV": "Exportar CSV",
       "LEAD_NAME": "Nome do lead",
       "LEAD_PHONE": "Telefone",
       "BENEFIT": "Tipo de benefício",
