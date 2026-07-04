@@ -11,6 +11,7 @@ class Lead < ApplicationRecord
   has_many :lead_activities, dependent: :destroy_async
   has_many :lead_notes, dependent: :destroy_async
   has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
+  has_many :lead_triages, dependent: :destroy_async
 
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
@@ -57,6 +58,10 @@ class Lead < ApplicationRecord
 
   def dispatch_task_update
     dispatch_update_event
+  end
+
+  def latest_triage
+    lead_triages.order(:id).last
   end
 
   private

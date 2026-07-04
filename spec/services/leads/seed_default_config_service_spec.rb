@@ -64,4 +64,10 @@ RSpec.describe Leads::SeedDefaultConfigService do
   it 'é idempotente ao rodar o seed de teses 2x (não duplica itens)' do
     expect { described_class.new(account).perform }.not_to(change { ThesisItem.where(thesis: account.theses).count })
   end
+
+  it 'semeia 1 agente de triagem deepseek e é idempotente' do
+    expect(account.triage_agents.count).to eq(1)
+    expect(account.triage_agents.first.provider).to eq('deepseek')
+    expect { described_class.new(account).perform }.not_to(change { account.triage_agents.count })
+  end
 end
