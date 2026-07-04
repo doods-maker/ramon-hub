@@ -9,6 +9,7 @@ const leads = [{ id: 10, name: 'João', lead_stage_id: 5, position: 0 }];
 const mountColumn = (props = {}) =>
   shallowMount(KanbanColumn, {
     props: { stage, leads, ...props },
+    global: { mocks: { $t: k => k } },
   });
 
 describe('KanbanColumn.vue', () => {
@@ -83,5 +84,54 @@ describe('KanbanColumn.vue', () => {
     expect(wrapper.find('[data-testid="stage-total"]').text()).toContain(
       '2.000,50'
     );
+  });
+
+  describe('coluna colapsável', () => {
+    beforeEach(() => localStorage.clear());
+
+    it('colapsa ao clicar no toggle e esconde a lista de cards', async () => {
+      const wrapper = mount(KanbanColumn, {
+        props: { stage, leads },
+        global: { mocks: { $t: k => k } },
+      });
+      await wrapper
+        .find('[data-testid="stage-collapse-toggle"]')
+        .trigger('click');
+      expect(wrapper.findComponent(Draggable).exists()).toBe(false);
+      // contador continua visível na faixa colapsada
+      expect(wrapper.find('[data-testid="stage-count"]').text()).toBe('1');
+    });
+
+    it('expande de volta ao clicar na faixa colapsada', async () => {
+      const wrapper = mount(KanbanColumn, {
+        props: { stage, leads },
+        global: { mocks: { $t: k => k } },
+      });
+      await wrapper
+        .find('[data-testid="stage-collapse-toggle"]')
+        .trigger('click');
+      await wrapper.find('[data-testid="stage-expand"]').trigger('click');
+      expect(wrapper.findComponent(Draggable).exists()).toBe(true);
+    });
+
+    it('persiste o estado em localStorage por stage id', async () => {
+      const wrapper = mount(KanbanColumn, {
+        props: { stage, leads },
+        global: { mocks: { $t: k => k } },
+      });
+      await wrapper
+        .find('[data-testid="stage-collapse-toggle"]')
+        .trigger('click');
+      expect(
+        JSON.parse(localStorage.getItem('ramon_kanban_collapsed'))
+      ).toContain(stage.id);
+
+      // um remount da mesma etapa nasce colapsado
+      const wrapper2 = mount(KanbanColumn, {
+        props: { stage, leads },
+        global: { mocks: { $t: k => k } },
+      });
+      expect(wrapper2.findComponent(Draggable).exists()).toBe(false);
+    });
   });
 });

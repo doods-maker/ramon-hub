@@ -161,8 +161,12 @@
         "CONFIRM": "Schedule"
       },
       "COLUMN": {
-        "WEIGHTED": "~{value} weighted"
-      }
+        "WEIGHTED": "~{value} weighted",
+        "COLLAPSE": "Collapse column",
+        "EXPAND": "Expand column"
+      },
+      "MOVE_DONE": "Stage updated",
+      "MOVE_UNDO": "Undo"
     },
     "TASKS": {
       "TITLE": "Next actions",
@@ -201,7 +205,15 @@
       "NOTES_ADD": "Write a note…",
       "NOTES_ADD_BUTTON": "Add note",
       "CONTACT": "Contact",
-      "THESIS": "Thesis"
+      "THESIS": "Thesis",
+      "NOTE_TEMPLATES": {
+        "LABEL": "Note template…",
+        "ITEMS": {
+          "TRIED_CONTACT": "Tried to contact — no answer.",
+          "AWAITING_DOCS": "Waiting for lead documents.",
+          "MEETING_SCHEDULED": "Meeting scheduled."
+        }
+      }
     },
     "LEAD_PANEL": {
       "TABS": {

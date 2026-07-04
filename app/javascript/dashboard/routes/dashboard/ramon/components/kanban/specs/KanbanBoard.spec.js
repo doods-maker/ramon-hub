@@ -8,6 +8,12 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
 }));
 
+import { useAlert } from 'dashboard/composables';
+
+vi.mock('dashboard/composables', () => ({
+  useAlert: vi.fn(),
+}));
+
 const dispatch = vi.fn();
 const buildStore = () =>
   createStore({
@@ -16,6 +22,7 @@ const buildStore = () =>
         namespaced: true,
         getters: {
           getLeadsByStage: () => () => [],
+          getLeads: () => [{ id: 10, lead_stage_id: 1, position: 0 }],
           getFilters: () => ({
             q: '',
             benefitTypeId: null,
@@ -31,7 +38,9 @@ const buildStore = () =>
           getStages: () => [
             { id: 1, name: 'Novo', color: '#000' },
             { id: 2, name: 'Qualificado', color: '#111' },
+            { id: 9, name: 'Perdido', color: '#222', is_lost: true },
           ],
+          getLostReasons: () => [],
           getBenefitTypes: () => [],
           getPriorities: () => [],
           getSources: () => [],
@@ -203,5 +212,57 @@ describe('KanbanBoard.vue', () => {
     await draggable.vm.$emit('change');
 
     expect(dispatch).toHaveBeenCalledWith('leadConfig/reorderStages', [2, 1]);
+  });
+
+  describe('undo do drag & drop', () => {
+    beforeEach(() => useAlert.mockClear());
+
+    it('dispara toast com Desfazer após mover para etapa comum', async () => {
+      const wrapper = mountBoard();
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 2, newIndex: 3 });
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+
+      expect(dispatch).toHaveBeenCalledWith('leads/move', {
+        id: 10,
+        leadStageId: 2,
+        position: 3,
+      });
+      expect(useAlert).toHaveBeenCalled();
+      const [, action] = useAlert.mock.calls.at(-1);
+      expect(action.type).toBe('button');
+    });
+
+    it('o onClick do toast reverte para a etapa e posição originais', async () => {
+      const wrapper = mountBoard();
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 2, newIndex: 3 });
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+
+      const [, action] = useAlert.mock.calls.at(-1);
+      dispatch.mockClear();
+      action.onClick();
+
+      expect(dispatch).toHaveBeenCalledWith('leads/move', {
+        id: 10,
+        leadStageId: 1,
+        position: 0,
+      });
+    });
+
+    it('NÃO mostra toast quando o movimento cai no modal de perda', async () => {
+      const wrapper = mountBoard();
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 9, newIndex: 0 });
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+
+      expect(useAlert).not.toHaveBeenCalled();
+    });
   });
 });

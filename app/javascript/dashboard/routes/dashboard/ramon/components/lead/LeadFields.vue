@@ -62,6 +62,20 @@ watch(
 const noteList = ref([]);
 const newNote = ref('');
 
+// Templates de nota rápida (item 8 do 4b): chaves fixas, texto no i18n.
+const NOTE_TEMPLATE_KEYS = [
+  'TRIED_CONTACT',
+  'AWAITING_DOCS',
+  'MEETING_SCHEDULED',
+];
+const noteTemplate = ref('');
+const applyNoteTemplate = () => {
+  if (!noteTemplate.value) return;
+  const text = t(`RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.${noteTemplate.value}`);
+  newNote.value = newNote.value ? `${newNote.value}\n${text}` : text;
+  noteTemplate.value = '';
+};
+
 const loadNotes = async () => {
   noteList.value =
     (await store.dispatch('leads/fetchNotes', props.lead.id)) || [];
@@ -432,6 +446,19 @@ const copyPhone = async () => {
         }}</strong>
         <span class="whitespace-pre-wrap">{{ note.body }}</span>
       </div>
+      <select
+        v-model="noteTemplate"
+        data-testid="note-template-select"
+        class="w-full px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11 border border-n-weak"
+        @change="applyNoteTemplate"
+      >
+        <option value="">
+          {{ $t('RAMON.DRAWER.NOTE_TEMPLATES.LABEL') }}
+        </option>
+        <option v-for="key in NOTE_TEMPLATE_KEYS" :key="key" :value="key">
+          {{ $t(`RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.${key}`) }}
+        </option>
+      </select>
       <textarea
         v-model="newNote"
         data-testid="note-input"

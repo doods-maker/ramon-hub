@@ -64,10 +64,53 @@ const showWeighted = computed(() => stageProbability.value > 0);
 const weightedValue = computed(
   () => totalValue.value * (stageProbability.value / 100)
 );
+
+// Persistência do colapso por etapa (mesmo padrão do FILTERS_KEY em leads.js).
+const COLLAPSED_KEY = 'ramon_kanban_collapsed';
+const readCollapsed = () => {
+  try {
+    return JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+};
+const collapsed = ref(readCollapsed().includes(props.stage.id));
+const toggleCollapsed = () => {
+  collapsed.value = !collapsed.value;
+  try {
+    const ids = readCollapsed().filter(id => id !== props.stage.id);
+    if (collapsed.value) ids.push(props.stage.id);
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify(ids));
+  } catch (e) {
+    // localStorage indisponível: seguimos sem persistir
+  }
+};
 </script>
 
 <template>
+  <!-- faixa colapsada: só nome vertical + contador; clique expande -->
+  <button
+    v-if="collapsed"
+    data-testid="stage-expand"
+    class="flex flex-col items-center gap-2 w-10 flex-shrink-0 rounded-xl bg-[#17120d] border border-n-weak py-3 cursor-pointer"
+    :title="$t('RAMON.KANBAN.COLUMN.EXPAND')"
+    @click="toggleCollapsed"
+  >
+    <span
+      class="rounded-full size-2.5 flex-shrink-0"
+      :style="{ backgroundColor: stage.color || '#71717a' }"
+    />
+    <span data-testid="stage-count" class="text-xs text-n-slate-9">
+      {{ localLeads.length }}
+    </span>
+    <span
+      class="text-sm text-n-slate-12 [writing-mode:vertical-rl] whitespace-nowrap overflow-hidden"
+    >
+      {{ stage.name }}
+    </span>
+  </button>
   <div
+    v-else
     class="flex flex-col w-72 flex-shrink-0 rounded-xl bg-[#17120d] border border-n-weak"
   >
     <div class="flex items-center justify-between px-3 py-2">
@@ -108,6 +151,14 @@ const weightedValue = computed(
         <span data-testid="stage-count" class="text-xs text-n-slate-9">
           {{ localLeads.length }}
         </span>
+        <button
+          data-testid="stage-collapse-toggle"
+          class="flex items-center text-n-slate-9 hover:text-n-slate-12"
+          :title="$t('RAMON.KANBAN.COLUMN.COLLAPSE')"
+          @click="toggleCollapsed"
+        >
+          <span class="i-lucide-chevrons-left-right size-3.5 rotate-90" />
+        </button>
         <StageHeaderMenu
           :stage="stage"
           @rename="name => emit('renameStage', { id: stage.id, name })"

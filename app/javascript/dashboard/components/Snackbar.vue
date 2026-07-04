@@ -33,6 +33,14 @@ export default {
         >
           {{ action.message }}
         </router-link>
+        <button
+          v-if="action.type == 'button'"
+          data-testid="snackbar-action-button"
+          class="font-medium cursor-pointer select-none text-n-blue-10 hover:text-n-brand"
+          @click="action.onClick && action.onClick()"
+        >
+          {{ action.message }}
+        </button>
       </div>
     </div>
   </div>
