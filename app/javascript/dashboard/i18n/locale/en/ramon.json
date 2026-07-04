@@ -207,6 +207,7 @@
         "PLAYBOOK": "Playbook"
       },
       "DISCARD": "Not a lead",
+      "CLOSE": "Close panel",
       "HISTORY": {
         "SYSTEM": "System",
         "KIND": {
