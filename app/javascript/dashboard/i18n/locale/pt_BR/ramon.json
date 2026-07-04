@@ -161,7 +161,9 @@
         "CONFIRM": "Agendar"
       },
       "COLUMN": {
-        "WEIGHTED": "~{value} ponderado"
+        "WEIGHTED": "~{value} ponderado",
+        "COLLAPSE": "Recolher coluna",
+        "EXPAND": "Expandir coluna"
       },
       "MOVE_DONE": "Etapa alterada",
       "MOVE_UNDO": "Desfazer"

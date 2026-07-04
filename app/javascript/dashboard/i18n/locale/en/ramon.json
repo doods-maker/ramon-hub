@@ -161,7 +161,9 @@
         "CONFIRM": "Schedule"
       },
       "COLUMN": {
-        "WEIGHTED": "~{value} weighted"
+        "WEIGHTED": "~{value} weighted",
+        "COLLAPSE": "Collapse column",
+        "EXPAND": "Expand column"
       },
       "MOVE_DONE": "Stage updated",
       "MOVE_UNDO": "Undo"
