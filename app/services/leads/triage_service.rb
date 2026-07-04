@@ -15,10 +15,18 @@ class Leads::TriageService
     @triage.update!(status: 'done', result: result, source_text: source,
                     viability: detect_viability(result), finished_at: Time.zone.now)
   rescue StandardError => e
-    @triage.update!(status: 'error', error_message: e.message.truncate(1000))
+    mark_error(e)
   end
 
   private
+
+  def mark_error(error)
+    @triage.update!(status: 'error', error_message: error.message.truncate(1000))
+  rescue StandardError => persist_error
+    Rails.logger.error(
+      "TriageService: falha ao gravar erro da triage #{@triage.id}: #{persist_error.message}"
+    )
+  end
 
   def call_llm(source)
     user_prompt = "Documento do caso para triagem:\n\n#{source}\n\n" \

@@ -49,6 +49,14 @@ RSpec.describe Leads::TriageService do
     expect(triage.error_message).to include('boom')
   end
 
+  it 'não propaga exceção quando o LLM falha e o próprio update! de erro também falha' do
+    allow(Ramon::LlmClient).to receive(:complete).and_raise(StandardError, 'boom')
+    allow(triage).to receive(:update!).with(status: 'running').and_call_original
+    allow(triage).to receive(:update!).with(hash_including(status: 'error')).and_raise(StandardError, 'db down')
+    expect(Rails.logger).to receive(:error).with(/falha ao gravar erro da triage/)
+    expect { described_class.new(triage).perform }.not_to raise_error
+  end
+
   it 'funciona sem conversa (só ficha do lead) e sem viabilidade detectável' do
     lead.update!(conversation: nil)
     allow(Ramon::LlmClient).to receive(:complete).and_return('resposta sem a linha esperada')
