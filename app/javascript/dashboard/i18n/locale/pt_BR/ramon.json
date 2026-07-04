@@ -162,7 +162,9 @@
       },
       "COLUMN": {
         "WEIGHTED": "~{value} ponderado"
-      }
+      },
+      "MOVE_DONE": "Etapa alterada",
+      "MOVE_UNDO": "Desfazer"
     },
     "TASKS": {
       "TITLE": "Próximas ações",

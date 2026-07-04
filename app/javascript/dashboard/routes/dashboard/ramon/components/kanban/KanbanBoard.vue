@@ -3,6 +3,7 @@ import { computed, ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import { useAlert } from 'dashboard/composables';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
 import SavedViews from './SavedViews.vue';
@@ -43,7 +44,7 @@ const stageLeads = stageId => {
 const filters = computed(() => getters['leads/getFilters'].value);
 const onFilterUpdate = partial => store.dispatch('leads/setFilters', partial);
 
-const onMove = ({ id, leadStageId, newIndex }) => {
+const onMove = async ({ id, leadStageId, newIndex }) => {
   const stage = findStage(leadStageId);
   const lead = findLead(id);
   // Etapa de perda sem motivo: segura o movimento e exige o motivo.
@@ -59,8 +60,27 @@ const onMove = ({ id, leadStageId, newIndex }) => {
     wonModalOpen.value = true;
     return;
   }
+  // Guarda a origem ANTES de persistir, para o desfazer do toast.
+  const previous = {
+    leadStageId: lead?.lead_stage_id,
+    position: lead?.position,
+  };
   // Demais casos (inclui ganho de lead que já tem valor) persistem na hora.
-  store.dispatch('leads/move', { id, leadStageId, position: newIndex });
+  await store.dispatch('leads/move', { id, leadStageId, position: newIndex });
+  // Só oferece desfazer quando trocou de coluna (reordenar não pede undo).
+  if (previous.leadStageId && previous.leadStageId !== leadStageId) {
+    useAlert(t('RAMON.KANBAN.MOVE_DONE'), {
+      type: 'button',
+      message: t('RAMON.KANBAN.MOVE_UNDO'),
+      duration: 5000,
+      onClick: () =>
+        store.dispatch('leads/move', {
+          id,
+          leadStageId: previous.leadStageId,
+          position: previous.position ?? 0,
+        }),
+    });
+  }
 };
 
 const confirmLost = async ({ lostReason }) => {

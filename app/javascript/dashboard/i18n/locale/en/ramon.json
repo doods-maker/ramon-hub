@@ -162,7 +162,9 @@
       },
       "COLUMN": {
         "WEIGHTED": "~{value} weighted"
-      }
+      },
+      "MOVE_DONE": "Stage updated",
+      "MOVE_UNDO": "Undo"
     },
     "TASKS": {
       "TITLE": "Next actions",
