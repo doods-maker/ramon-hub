@@ -93,6 +93,11 @@ const saveName = () => saveText('name', name, props.lead?.name);
 const saveSource = () => saveText('source', source, props.lead?.source);
 const saveValue = () => {
   const next = parseBrlInput(value.value);
+  // texto inválido não-vazio: reverte a exibição e não salva (evita apagar o valor)
+  if (next === null && String(value.value).trim() !== '') {
+    value.value = formatBrl(props.lead?.value);
+    return;
+  }
   const prev = props.lead?.value == null ? null : Number(props.lead.value);
   value.value = formatBrl(next);
   if (next === prev) return;

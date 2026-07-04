@@ -150,6 +150,16 @@ describe('LeadFields.vue', () => {
     });
   });
 
+  it('reverts invalid BRL input on blur without saving', async () => {
+    const update = vi.fn();
+    const wrapper = mountFields(update);
+    const input = wrapper.find('[data-testid="field-value"]');
+    await input.setValue('abc');
+    await input.trigger('blur');
+    expect(update).not.toHaveBeenCalled();
+    expect(input.element.value).toContain('100');
+  });
+
   it('shows the value formatted as BRL', () => {
     const wrapper = mountFields();
     const input = wrapper.find('[data-testid="field-value"]');

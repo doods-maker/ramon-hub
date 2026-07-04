@@ -7,7 +7,12 @@ const emit = defineEmits(['confirmValue', 'cancelValue']);
 const value = ref('');
 
 // Salvar envia o valor; Pular move sem valor; o clique fora cancela (reverte).
-const save = () => emit('confirmValue', { value: parseBrlInput(value.value) });
+const save = () => {
+  const parsed = parseBrlInput(value.value);
+  // texto inválido não-vazio: não emite (senão viraria "Pular" silencioso)
+  if (parsed === null && value.value.trim() !== '') return;
+  emit('confirmValue', { value: parsed });
+};
 const skip = () => emit('confirmValue', { value: null });
 const cancel = () => emit('cancelValue');
 </script>
