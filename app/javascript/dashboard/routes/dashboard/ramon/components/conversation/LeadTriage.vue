@@ -55,6 +55,8 @@ const runTriage = async () => {
     await LeadsAPI.createTriage(props.lead.id);
     useAlert(t('RAMON.TRIAGE.STARTED'));
     await loadTriages();
+  } catch (error) {
+    useAlert(t('RAMON.TRIAGE.ERROR'));
   } finally {
     isStarting.value = false;
   }
