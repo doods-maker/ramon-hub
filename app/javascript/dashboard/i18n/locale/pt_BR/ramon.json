@@ -279,6 +279,37 @@
         "OBJECAO": "Objeções",
         "DOCUMENTO": "Documentos"
       }
+    },
+    "TRIAGE": {
+      "TAB": "Triagem",
+      "RUN": "Rodar triagem",
+      "RUNNING": "Analisando…",
+      "RERUN": "Rodar de novo",
+      "EMPTY": "Nenhuma triagem ainda. Rode a análise de viabilidade com IA.",
+      "ERROR": "A triagem falhou",
+      "AGENT_LABEL": "Agente",
+      "VIABILITY": {
+        "LABEL": "Viabilidade",
+        "ALTA": "Alta",
+        "MEDIA": "Média",
+        "BAIXA": "Baixa",
+        "UNKNOWN": "Não detectada"
+      },
+      "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes"
+    },
+    "TRIAGE_AGENTS": {
+      "TITLE": "Agentes de IA",
+      "DESCRIPTION": "Agentes que fazem a triagem de viabilidade dos leads.",
+      "ADD": "Novo agente",
+      "NAME": "Nome",
+      "AREA": "Área",
+      "PROVIDER": "Provedor",
+      "MODEL": "Modelo",
+      "SYSTEM_PROMPT": "Instruções (prompt do sistema)",
+      "SENSITIVE": "Dados sensíveis (LGPD)",
+      "SENSITIVE_HINT": "Ligado: bloqueia DeepSeek; só Anthropic/OpenAI processam este agente.",
+      "ACTIVE": "Ativo",
+      "DELETE_CONFIRM": "Apagar este agente?"
     }
   }
 }

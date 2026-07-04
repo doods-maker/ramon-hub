@@ -279,6 +279,37 @@
         "OBJECAO": "Objections",
         "DOCUMENTO": "Documents"
       }
+    },
+    "TRIAGE": {
+      "TAB": "Triage",
+      "RUN": "Run triage",
+      "RUNNING": "Analyzing…",
+      "RERUN": "Run again",
+      "EMPTY": "No triage yet. Run the AI viability analysis.",
+      "ERROR": "Triage failed",
+      "AGENT_LABEL": "Agent",
+      "VIABILITY": {
+        "LABEL": "Viability",
+        "ALTA": "High",
+        "MEDIA": "Medium",
+        "BAIXA": "Low",
+        "UNKNOWN": "Not detected"
+      },
+      "STARTED": "Triage started — the result appears here shortly"
+    },
+    "TRIAGE_AGENTS": {
+      "TITLE": "AI Agents",
+      "DESCRIPTION": "Agents that run viability triage on leads.",
+      "ADD": "New agent",
+      "NAME": "Name",
+      "AREA": "Area",
+      "PROVIDER": "Provider",
+      "MODEL": "Model",
+      "SYSTEM_PROMPT": "Instructions (system prompt)",
+      "SENSITIVE": "Sensitive data (LGPD)",
+      "SENSITIVE_HINT": "On: blocks DeepSeek; only Anthropic/OpenAI process this agent.",
+      "ACTIVE": "Active",
+      "DELETE_CONFIRM": "Delete this agent?"
     }
   }
 }
