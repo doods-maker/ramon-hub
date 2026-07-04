@@ -29,4 +29,10 @@ RSpec.describe LeadTriage do
       .with(Events::Types::LEAD_UPDATED, anything, lead: lead)
     triage.update!(status: 'done', result: 'ok')
   end
+
+  it 'inclui latest_triage compacto no push_event_data' do
+    triage = lead.lead_triages.create!(account: account, triage_agent: agent, status: 'done', viability: 'alta')
+    data = lead.reload.push_event_data
+    expect(data[:latest_triage]).to eq(triage.slice(:id, :status, :viability))
+  end
 end
