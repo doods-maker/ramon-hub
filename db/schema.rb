@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_03_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_03_000003) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1025,6 +1025,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_03_000002) do
     t.index ["user_id"], name: "index_lead_tasks_on_user_id"
   end
 
+  create_table "lead_triages", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "lead_id", null: false
+    t.bigint "triage_agent_id"
+    t.string "status", default: "pending", null: false
+    t.text "result"
+    t.string "viability"
+    t.text "error_message"
+    t.text "source_text"
+    t.jsonb "kit"
+    t.string "kit_status", default: "pending", null: false
+    t.datetime "finished_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "status"], name: "index_lead_triages_on_account_id_and_status"
+    t.index ["lead_id", "id"], name: "index_lead_triages_on_lead_id_and_id"
+    t.index ["lead_id"], name: "index_lead_triages_on_lead_id"
+    t.index ["triage_agent_id"], name: "index_lead_triages_on_triage_agent_id"
+  end
+
   create_table "leads", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "contact_id"
@@ -1398,6 +1418,21 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_03_000002) do
     t.index ["thesis_id"], name: "index_thesis_items_on_thesis_id"
   end
 
+  create_table "triage_agents", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.string "area", default: "previdenciario", null: false
+    t.text "system_prompt", null: false
+    t.string "provider", default: "deepseek", null: false
+    t.string "model", default: "deepseek-chat", null: false
+    t.boolean "sensitive", default: false, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "name"], name: "index_triage_agents_on_account_id_and_name", unique: true
+  end
+
   create_table "user_sessions", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "client_id", null: false
@@ -1496,6 +1531,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_03_000002) do
   add_foreign_key "lead_notes", "accounts"
   add_foreign_key "lead_notes", "leads"
   add_foreign_key "lead_notes", "users"
+  add_foreign_key "lead_triages", "leads", on_delete: :cascade
+  add_foreign_key "lead_triages", "triage_agents", on_delete: :nullify
   add_foreign_key "leads", "theses", on_delete: :nullify
   add_foreign_key "thesis_items", "theses", on_delete: :cascade
   add_foreign_key "user_sessions", "users"
