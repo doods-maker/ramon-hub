@@ -48,6 +48,13 @@ const closeContactPanel = () => {
     });
   }
 };
+
+const closeSidebar = () => {
+  updateUISettings({
+    is_contact_sidebar_open: false,
+    is_copilot_panel_open: false,
+  });
+};
 </script>
 
 <template>
@@ -79,6 +86,7 @@ const closeContactPanel = () => {
         v-show="activeTab === 0"
         :conversation-id="currentChat.id"
         @discarded="onDiscard(currentChat.id)"
+        @close="closeSidebar"
       />
       <ContactPanel
         v-else

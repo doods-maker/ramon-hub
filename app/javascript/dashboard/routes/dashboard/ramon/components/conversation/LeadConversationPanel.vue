@@ -12,7 +12,7 @@ import LeadTriage from 'dashboard/routes/dashboard/ramon/components/conversation
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
 });
-const emit = defineEmits(['discarded']);
+const emit = defineEmits(['discarded', 'close']);
 
 defineOptions({ name: 'LeadConversationPanel' });
 const store = useStore();
@@ -70,11 +70,13 @@ const discard = async () => {
         {{ $t('RAMON.TRIAGE.TAB') }}
       </button>
       <button
-        class="ml-auto text-xs"
-        data-testid="lead-discard"
-        @click="discard"
+        class="ml-auto text-n-slate-10 hover:text-n-slate-12"
+        data-testid="lead-panel-close"
+        :aria-label="$t('RAMON.LEAD_PANEL.CLOSE')"
+        :title="$t('RAMON.LEAD_PANEL.CLOSE')"
+        @click="emit('close')"
       >
-        {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
+        <span class="i-lucide-x size-4" />
       </button>
     </div>
     <div v-if="lead" class="flex-1 overflow-y-auto p-3">
@@ -85,6 +87,15 @@ const discard = async () => {
           <ResolveAction />
         </div>
         <LeadFields :lead="lead" />
+        <div class="mt-6 pt-3 border-t border-n-weak">
+          <button
+            class="text-xs text-n-ruby-11 hover:underline"
+            data-testid="lead-discard"
+            @click="discard"
+          >
+            {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
+          </button>
+        </div>
       </template>
       <LeadHistory v-else-if="activeTab === 'historico'" :lead-id="lead.id" />
       <LeadPlaybook v-else-if="activeTab === 'playbook'" :lead="lead" />

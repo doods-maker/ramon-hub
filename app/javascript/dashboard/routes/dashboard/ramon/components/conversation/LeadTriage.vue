@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 
@@ -11,6 +12,7 @@ const props = defineProps({
 defineOptions({ name: 'LeadTriage' });
 
 const { t } = useI18n();
+const { formatMessage } = useMessageFormatter();
 const triages = ref([]);
 const isLoading = ref(false);
 const isStarting = ref(false);
@@ -135,12 +137,11 @@ const copyResult = async () => {
       </p>
 
       <template v-else-if="latest.result">
-        <p
-          class="text-sm whitespace-pre-wrap text-n-slate-12"
+        <div
+          class="text-sm text-n-slate-12 [&_strong]:font-semibold [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:ps-4 [&_ol]:ps-4 [&_p]:mb-2 [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_table]:w-full [&_table]:text-xs [&_th]:border [&_th]:border-n-weak [&_th]:px-1.5 [&_th]:py-0.5 [&_th]:text-start [&_td]:border [&_td]:border-n-weak [&_td]:px-1.5 [&_td]:py-0.5"
           data-testid="triage-result"
-        >
-          {{ latest.result }}
-        </p>
+          v-html="formatMessage(latest.result)"
+        />
         <button
           type="button"
           data-testid="triage-copy"

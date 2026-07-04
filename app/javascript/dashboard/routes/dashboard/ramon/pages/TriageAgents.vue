@@ -171,13 +171,13 @@ onMounted(() => store.dispatch('triageAgents/get'));
         <input
           v-model="newAgentName"
           data-testid="triage-agents-add-input"
-          class="flex-1 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+          class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
           :placeholder="$t('RAMON.TRIAGE_AGENTS.ADD_PLACEHOLDER')"
           @keyup.enter="addAgent"
         />
         <button
           data-testid="triage-agents-add-button"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
+          class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
           @click="addAgent"
         >
           {{ $t('RAMON.TRIAGE_AGENTS.ADD') }}

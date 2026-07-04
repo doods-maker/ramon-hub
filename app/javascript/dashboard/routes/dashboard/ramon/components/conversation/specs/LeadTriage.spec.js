@@ -60,6 +60,28 @@ describe('LeadTriage.vue', () => {
     expect(badge.text()).toContain('RAMON.TRIAGE.VIABILITY.ALTA');
   });
 
+  it('renders the triage result as markdown', async () => {
+    LeadsAPI.getTriages.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          status: 'done',
+          viability: 'alta',
+          result: '**Viável** pela Súmula 47.',
+          created_at: '2026-07-01',
+        },
+      ],
+    });
+    const wrapper = mountTriage({
+      id: 3,
+      latest_triage: { id: 1, status: 'done', viability: 'alta' },
+    });
+    await flushPromises();
+    const result = wrapper.find('[data-testid="triage-result"]');
+    expect(result.html()).toContain('<strong>Viável</strong>');
+    expect(result.text()).not.toContain('**');
+  });
+
   it('disables the run button while the latest triage is running', async () => {
     LeadsAPI.getTriages.mockResolvedValue({
       data: [{ id: 2, status: 'running', viability: null }],

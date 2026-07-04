@@ -71,6 +71,13 @@ describe('LeadConversationPanel', () => {
     expect(wrapper.emitted('discarded')).toBeTruthy();
   });
 
+  it('emits close when clicking the close button', async () => {
+    const wrapper = mountPanel();
+    await flushPromises();
+    await wrapper.find('[data-testid="lead-panel-close"]').trigger('click');
+    expect(wrapper.emitted('close')).toBeTruthy();
+  });
+
   it('switches to the Histórico tab and renders LeadHistory', async () => {
     const wrapper = mountPanel();
     await flushPromises();
