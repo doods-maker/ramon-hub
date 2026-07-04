@@ -220,7 +220,7 @@ onMounted(() => store.dispatch('triageAgents/get'));
             v-model="detail.area"
             data-testid="triage-agents-area-select"
             class="flex-1 px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-            @blur="saveDetail"
+            @change="saveDetail"
           >
             <option value="" disabled>
               {{ $t('RAMON.TRIAGE_AGENTS.AREA') }}
@@ -234,7 +234,7 @@ onMounted(() => store.dispatch('triageAgents/get'));
             v-model="detail.provider"
             data-testid="triage-agents-provider-select"
             class="flex-1 px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-            @blur="saveDetail"
+            @change="saveDetail"
           >
             <option value="" disabled>
               {{ $t('RAMON.TRIAGE_AGENTS.PROVIDER') }}
