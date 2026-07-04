@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { waMeUrl } from '../../helpers/phone';
 import TaskBellMenu from './TaskBellMenu.vue';
 
 const props = defineProps({
@@ -77,9 +78,6 @@ const showNoNextAction = computed(
 );
 
 // wa.me só quando há telefone e ainda não existe conversa vinculada.
-const phoneDigits = computed(() =>
-  (props.lead.contact_phone || '').replace(/\D/g, '')
-);
 const showWhatsApp = computed(
   () => !!props.lead.contact_phone && !props.lead.conversation_id
 );
@@ -184,7 +182,7 @@ const copyPhone = async () => {
       <a
         v-if="showWhatsApp"
         data-testid="wa-me"
-        :href="`https://wa.me/${phoneDigits}`"
+        :href="waMeUrl(lead.contact_phone)"
         target="_blank"
         rel="noopener noreferrer"
         class="inline-flex items-center gap-1 text-n-slate-11 hover:text-n-iris-11"

@@ -117,6 +117,26 @@ describe('LeadFields.vue', () => {
     expect(wrapper.text()).toContain('+55');
   });
 
+  it('copies the contact phone', async () => {
+    const wrapper = mountFields();
+    expect(wrapper.find('[data-testid="contact-copy-phone"]').exists()).toBe(
+      true
+    );
+  });
+
+  it('shows wa.me link only when the lead has no conversation', () => {
+    const withConv = shallowMount(LeadFields, {
+      props: { lead: { ...lead, conversation_id: 77 } },
+      global: { plugins: [build()], mocks: { $t: k => k } },
+    });
+    expect(withConv.find('[data-testid="contact-wa-me"]').exists()).toBe(false);
+
+    const withoutConv = mountFields();
+    const link = withoutConv.find('[data-testid="contact-wa-me"]');
+    expect(link.exists()).toBe(true);
+    expect(link.attributes('href')).toBe('https://wa.me/55');
+  });
+
   it('loads notes on mount and adds a note', async () => {
     const fetchNotes = vi
       .fn()

@@ -3,9 +3,11 @@ import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadTasksList from './LeadTasksList.vue';
 import DocChecklist from './DocChecklist.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
+import { waMeUrl } from '../../helpers/phone';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -167,6 +169,11 @@ const confirmWonStage = () => {
 };
 
 const skipWonStage = () => commitStage(stageId.value);
+
+const copyPhone = async () => {
+  await copyTextToClipboard(props.lead.contact_phone);
+  useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
+};
 </script>
 
 <template>
@@ -450,9 +457,31 @@ const skipWonStage = () => commitStage(stageId.value);
       <p v-if="lead.contact_name" class="text-sm text-n-slate-12">
         {{ lead.contact_name }}
       </p>
-      <p v-if="lead.contact_phone" class="text-xs text-n-slate-10">
-        {{ lead.contact_phone }}
-      </p>
+      <div
+        v-if="lead.contact_phone"
+        class="flex items-center gap-2 text-xs text-n-slate-10"
+      >
+        <button
+          data-testid="contact-copy-phone"
+          :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
+          class="inline-flex items-center gap-1 hover:text-n-slate-12"
+          @click="copyPhone"
+        >
+          <span class="i-lucide-phone size-3.5" />{{ lead.contact_phone }}
+        </button>
+        <a
+          v-if="!lead.conversation_id"
+          data-testid="contact-wa-me"
+          :href="waMeUrl(lead.contact_phone)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1 hover:text-n-iris-11"
+        >
+          <span class="i-lucide-message-circle size-3.5" />{{
+            $t('RAMON.KANBAN.CARD.WHATSAPP')
+          }}
+        </a>
+      </div>
       <p v-if="lead.contact_email" class="text-xs text-n-slate-10">
         {{ lead.contact_email }}
       </p>
