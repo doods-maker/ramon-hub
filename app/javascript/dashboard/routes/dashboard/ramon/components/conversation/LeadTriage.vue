@@ -30,8 +30,13 @@ onMounted(() => {
 });
 
 watch(
-  () => props.lead?.latest_triage,
-  (next, prev) => {
+  () => [props.lead?.id, props.lead?.latest_triage],
+  ([leadId, next], [prevLeadId, prev] = []) => {
+    if (leadId !== prevLeadId) {
+      triages.value = [];
+      if (leadId) loadTriages();
+      return;
+    }
     if (!next) return;
     if (next.id !== prev?.id || next.status !== prev?.status) loadTriages();
   }

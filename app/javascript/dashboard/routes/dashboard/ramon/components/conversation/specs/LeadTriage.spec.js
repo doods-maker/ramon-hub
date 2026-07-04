@@ -79,4 +79,32 @@ describe('LeadTriage.vue', () => {
     expect(alertSpy).toHaveBeenCalledWith('RAMON.TRIAGE.STARTED');
     expect(LeadsAPI.getTriages).toHaveBeenCalledTimes(2);
   });
+
+  it('clears the previous lead triages and reloads when switching to a lead without a latest_triage', async () => {
+    LeadsAPI.getTriages.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          status: 'done',
+          viability: 'alta',
+          result: 'Caso viável.',
+          created_at: '2026-07-01',
+        },
+      ],
+    });
+    const wrapper = mountTriage({
+      id: 3,
+      latest_triage: { id: 1, status: 'done', viability: 'alta' },
+    });
+    await flushPromises();
+    expect(wrapper.find('[data-testid="triage-latest"]').exists()).toBe(true);
+
+    LeadsAPI.getTriages.mockResolvedValue({ data: [] });
+    await wrapper.setProps({ lead: { id: 4, latest_triage: null } });
+    await flushPromises();
+
+    expect(LeadsAPI.getTriages).toHaveBeenCalledWith(4);
+    expect(wrapper.find('[data-testid="triage-latest"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="triage-empty"]').exists()).toBe(true);
+  });
 });
