@@ -53,6 +53,11 @@ class AddCadenceToRamonCrm < ActiveRecord::Migration[7.1]
   private
 
   def backfill
+    # a 000001 pode ter carregado o cache de colunas de LeadStage/Lead antes
+    # destas colunas existirem (via SeedDefaultConfigService)
+    LeadStage.reset_column_information
+    Lead.reset_column_information
+
     DEFAULTS.each do |name, (probability, stalled)|
       # rubocop:disable Rails/SkipsModelValidations
       LeadStage.where(name: name).update_all(probability: probability, stalled_after_days: stalled)

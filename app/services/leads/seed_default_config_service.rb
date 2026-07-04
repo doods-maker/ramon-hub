@@ -64,25 +64,43 @@ class Leads::SeedDefaultConfigService
   end
 
   def apply_stage_attributes(stage, attrs, index, cadence)
-    probability, stalled_after_days = cadence
     stage.position = index
     stage.is_won = attrs[:is_won]
     stage.is_lost = attrs[:is_lost]
     stage.label = attrs[:label]
     stage.color = attrs[:color]
-    stage.probability = probability
-    stage.stalled_after_days = stalled_after_days
+    apply_stage_cadence(stage, cadence) if cadence_columns?
+  end
+
+  def apply_stage_cadence(stage, cadence)
+    stage.probability, stage.stalled_after_days = cadence
   end
 
   def reconcile_stage(stage, attrs, cadence)
-    probability, stalled_after_days = cadence
     stage.update!(label: attrs[:label]) if stage.label != attrs[:label]
     stage.update!(color: attrs[:color]) if stage.color != attrs[:color]
+    reconcile_stage_cadence(stage, cadence) if cadence_columns?
+  end
+
+  def reconcile_stage_cadence(stage, cadence)
+    probability, stalled_after_days = cadence
     stage.update!(probability: probability) if stage.probability != probability
     stage.update!(stalled_after_days: stalled_after_days) if stage.stalled_after_days != stalled_after_days
   end
 
+  # probability/stalled_after_days e a tabela lost_reasons nascem na migração
+  # 20260703000002, mas este service é chamado pela 20260703000001 — num install
+  # incremental que roda as migrações em ordem, esses guards evitam quebrar;
+  # o backfill da 000002 completa o que ficou faltando.
+  def cadence_columns?
+    return @cadence_columns if defined?(@cadence_columns)
+
+    @cadence_columns = LeadStage.column_names.include?('probability')
+  end
+
   def seed_lost_reasons
+    return unless LostReason.table_exists?
+
     LOST_REASONS.each_with_index do |name, i|
       @account.lost_reasons.find_or_create_by!(name: name) { |r| r.position = i }
     end
