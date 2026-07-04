@@ -205,7 +205,15 @@
       "NOTES_ADD": "Escreva uma nota…",
       "NOTES_ADD_BUTTON": "Adicionar nota",
       "CONTACT": "Contato",
-      "THESIS": "Tese"
+      "THESIS": "Tese",
+      "NOTE_TEMPLATES": {
+        "LABEL": "Modelo de nota…",
+        "ITEMS": {
+          "TRIED_CONTACT": "Tentou contato — sem resposta.",
+          "AWAITING_DOCS": "Aguardando documentos do lead.",
+          "MEETING_SCHEDULED": "Reunião marcada."
+        }
+      }
     },
     "LEAD_PANEL": {
       "TABS": {

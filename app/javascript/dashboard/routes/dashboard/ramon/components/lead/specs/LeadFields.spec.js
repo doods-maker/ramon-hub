@@ -260,4 +260,25 @@ describe('LeadFields.vue', () => {
       true
     );
   });
+
+  describe('template de nota rápida', () => {
+    it('preenche o textarea ao escolher um template', async () => {
+      const wrapper = mountFields();
+      const select = wrapper.find('[data-testid="note-template-select"]');
+      await select.setValue('TRIED_CONTACT');
+      const textarea = wrapper.find('[data-testid="note-input"]');
+      expect(textarea.element.value).toBe('Tried to contact — no answer.');
+      // select resetou pro placeholder
+      expect(select.element.value).toBe('');
+    });
+
+    it('anexa em nova linha quando o textarea já tem texto', async () => {
+      const wrapper = mountFields();
+      const textarea = wrapper.find('[data-testid="note-input"]');
+      await textarea.setValue('já tinha isso');
+      const select = wrapper.find('[data-testid="note-template-select"]');
+      await select.setValue('MEETING_SCHEDULED');
+      expect(textarea.element.value).toBe('já tinha isso\nMeeting scheduled.');
+    });
+  });
 });
