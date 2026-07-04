@@ -298,6 +298,27 @@
       },
       "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes"
     },
+    "KIT": {
+      "TAB": "Kit",
+      "GENERATE": "Gerar Kit do Closer",
+      "REGENERATE": "Gerar novamente",
+      "GENERATING": "Gerando kit…",
+      "STARTED": "Geração do kit iniciada",
+      "ERROR": "Falha ao gerar o kit",
+      "EMPTY": "Rode uma triagem primeiro — o kit nasce da análise dela.",
+      "NEED_DONE": "A triagem precisa terminar antes de gerar o kit.",
+      "CLOSED": "Lead encerrado — sem kit para esta etapa.",
+      "COPY_BLOCK": "Copiar",
+      "MODE_LABEL": "Modo",
+      "MODE": { "SDR": "Qualificação (SDR)", "CLOSER": "Fechamento (Closer)" },
+      "BLOCKS": {
+        "RESUMO": "Resumo em linguagem simples",
+        "ROTEIRO": "Roteiro de perguntas",
+        "DOCUMENTOS": "Documentos a pedir",
+        "VENDA_OBJECOES": "Venda e objeções",
+        "PROXIMO_PASSO": "Próximo passo"
+      }
+    },
     "TRIAGE_AGENTS": {
       "TITLE": "Agentes de IA",
       "DESCRIPTION": "Agentes que fazem a triagem de viabilidade dos leads.",

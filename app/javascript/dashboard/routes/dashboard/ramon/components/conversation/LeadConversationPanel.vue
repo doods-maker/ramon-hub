@@ -8,6 +8,7 @@ import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import LeadHistory from 'dashboard/routes/dashboard/ramon/components/conversation/LeadHistory.vue';
 import LeadPlaybook from 'dashboard/routes/dashboard/ramon/components/conversation/LeadPlaybook.vue';
 import LeadTriage from 'dashboard/routes/dashboard/ramon/components/conversation/LeadTriage.vue';
+import LeadKit from 'dashboard/routes/dashboard/ramon/components/conversation/LeadKit.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -70,6 +71,13 @@ const discard = async () => {
         {{ $t('RAMON.TRIAGE.TAB') }}
       </button>
       <button
+        :class="{ 'font-semibold': activeTab === 'kit' }"
+        data-testid="tab-kit"
+        @click="activeTab = 'kit'"
+      >
+        {{ $t('RAMON.KIT.TAB') }}
+      </button>
+      <button
         class="ml-auto text-n-slate-10 hover:text-n-slate-12"
         data-testid="lead-panel-close"
         :aria-label="$t('RAMON.LEAD_PANEL.CLOSE')"
@@ -100,6 +108,7 @@ const discard = async () => {
       <LeadHistory v-else-if="activeTab === 'historico'" :lead-id="lead.id" />
       <LeadPlaybook v-else-if="activeTab === 'playbook'" :lead="lead" />
       <LeadTriage v-else-if="activeTab === 'triagem'" :lead="lead" />
+      <LeadKit v-else-if="activeTab === 'kit'" :lead="lead" />
     </div>
   </div>
 </template>

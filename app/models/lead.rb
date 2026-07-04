@@ -47,7 +47,7 @@ class Lead < ApplicationRecord
       sdr_name: sdr&.name,
       closer_name: closer&.name,
       contact_name: contact&.name,
-      latest_triage: latest_triage&.slice(:id, :status, :viability)
+      latest_triage: latest_triage&.slice(:id, :status, :viability, :kit_status)
     }.merge(cadence_event_data)
   end
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity

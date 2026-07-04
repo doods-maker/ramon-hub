@@ -36,6 +36,10 @@ class LeadsAPI extends ApiClient {
     const payload = triageAgentId ? { triage_agent_id: triageAgentId } : {};
     return axios.post(`${this.url}/${leadId}/triages`, payload);
   }
+
+  createKit(leadId, triageId) {
+    return axios.post(`${this.url}/${leadId}/triages/${triageId}/kit`);
+  }
 }
 
 export default new LeadsAPI();
