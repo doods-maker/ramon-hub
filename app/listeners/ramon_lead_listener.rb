@@ -21,6 +21,24 @@ class RamonLeadListener < BaseListener
     end
   end
 
+  # Atribuição: o referral da Meta (click-to-WhatsApp) chega na primeira
+  # mensagem, depois do conversation_created — por isso o hook é aqui.
+  def message_created(event)
+    message = event.data[:message]
+    return unless message.incoming?
+
+    referral = message.content_attributes.with_indifferent_access[:referral]
+    return if referral.blank?
+
+    lead = message.account.leads.find_by(conversation_id: message.conversation_id)
+    return if lead.blank?
+
+    meta = referral.slice('source_id', 'source_type', 'source_url', 'headline', 'ctwa_clid').compact_blank
+    attrs = { custom_attributes: lead.custom_attributes.merge('meta_referral' => meta) }
+    attrs[:source] = referral_source_label(referral) if lead.source.blank?
+    lead.update!(attrs)
+  end
+
   def lead_created(event)
     Ramon::StageLabelSync.apply_to_conversation(event.data[:lead])
   end
@@ -40,5 +58,12 @@ class RamonLeadListener < BaseListener
     old_labels, new_labels = label_change
     added = Array(new_labels) - Array(old_labels)
     Ramon::StageLabelSync.apply_to_lead(conversation, added)
+  end
+
+  private
+
+  def referral_source_label(referral)
+    detail = referral['source_id'].presence || referral['headline'].presence
+    ['anuncio-meta', detail].compact.join(': ').truncate(255)
   end
 end

@@ -622,7 +622,9 @@ Rails.application.routes.draw do
 
         resources :csat_survey, only: [:show, :update]
 
-        # Ramon — captação de leads das landing pages
+        # Ramon — captação de leads das landing pages (token via header X-Capture-Token;
+        # a rota com token no path fica por compatibilidade até as LPs migrarem)
+        post 'ramon_leads', to: 'ramon_leads#create'
         post 'ramon_leads/:capture_token', to: 'ramon_leads#create'
       end
     end

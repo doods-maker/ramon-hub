@@ -32,7 +32,9 @@ class Public::Api::V1::RamonLeadsController < PublicController
   def verify_capture_token
     expected = ENV.fetch('RAMON_LEAD_CAPTURE_TOKEN', nil)
     return head :unauthorized if expected.blank? || account.blank?
-    return if ActiveSupport::SecurityUtils.secure_compare(params[:capture_token].to_s, expected)
+
+    provided = request.headers['X-Capture-Token'].presence || params[:capture_token].to_s
+    return if ActiveSupport::SecurityUtils.secure_compare(provided, expected)
 
     head :unauthorized
   end
@@ -60,13 +62,21 @@ class Public::Api::V1::RamonLeadsController < PublicController
            .first
   end
 
+  UTM_KEYS = %w[utm_source utm_medium utm_campaign utm_content].freeze
+
   def create_lead(contact, phone)
     account.leads.create!(
       name: params[:nome].to_s.strip.presence || phone,
       lead_stage: account.lead_stages.order(:position).first,
       contact_id: contact.id,
-      source: params[:campanha].to_s.presence
+      source: params[:campanha].to_s.presence,
+      custom_attributes: utm_attributes
     )
+  end
+
+  def utm_attributes
+    utm = UTM_KEYS.index_with { |key| params[key].to_s.strip.first(255).presence }.compact
+    utm.present? ? { 'utm' => utm } : {}
   end
 
   def recapture_note_body

@@ -30,6 +30,44 @@ RSpec.describe RamonLeadListener do
     expect(account.leads.last.conversation_id).to eq(conversation.id)
   end
 
+  describe '#message_created -> atribuição do referral da Meta' do
+    let(:lead) do
+      create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
+                    conversation: conversation, contact: contact)
+    end
+    let(:referral) do
+      { 'source_id' => '12034', 'source_type' => 'ad', 'source_url' => 'https://fb.me/xyz',
+        'headline' => 'Machucou no trabalho?', 'ctwa_clid' => 'clid-abc' }
+    end
+    let(:message) do
+      create(:message, account: account, conversation: conversation, message_type: :incoming,
+                       content: 'oi', content_attributes: { referral: referral })
+    end
+
+    it 'grava source e meta_referral (com ctwa_clid) no lead' do
+      lead
+      listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message))
+      lead.reload
+      expect(lead.source).to eq('anuncio-meta: 12034')
+      expect(lead.custom_attributes['meta_referral']).to include('ctwa_clid' => 'clid-abc', 'source_id' => '12034')
+    end
+
+    it 'não sobrescreve source já preenchido, mas guarda o referral' do
+      lead.update!(source: 'bpc-loas')
+      listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message))
+      lead.reload
+      expect(lead.source).to eq('bpc-loas')
+      expect(lead.custom_attributes['meta_referral']).to include('ctwa_clid' => 'clid-abc')
+    end
+
+    it 'ignora mensagem sem referral' do
+      lead
+      plain = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: plain)) }
+        .not_to(change { lead.reload.custom_attributes })
+    end
+  end
+
   describe '#lead_updated -> etiqueta a conversa' do
     it 'aplica a fase-* da etapa do lead na conversa' do
       lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
