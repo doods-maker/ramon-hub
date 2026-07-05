@@ -281,4 +281,24 @@ describe('LeadFields.vue', () => {
       expect(textarea.element.value).toBe('já tinha isso\nMeeting scheduled.');
     });
   });
+
+  describe('hint de lead sem tese', () => {
+    it('mostra o hint quando thesis_id é null', () => {
+      const wrapper = mountFields();
+      expect(wrapper.find('[data-testid="no-thesis-hint"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('esconde o hint quando o lead tem tese', () => {
+      const update = vi.fn();
+      const wrapper = shallowMount(LeadFields, {
+        props: { lead: { ...lead, thesis_id: 9 } },
+        global: { plugins: [build(update)], mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="no-thesis-hint"]').exists()).toBe(
+        false
+      );
+    });
+  });
 });

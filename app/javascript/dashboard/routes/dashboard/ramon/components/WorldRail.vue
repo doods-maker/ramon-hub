@@ -1,11 +1,12 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import SidebarProfileMenu from 'next/sidebar/SidebarProfileMenu.vue';
 import { DEFAULT_EXTERNAL_SHORTCUTS } from '../externalShortcutsDefaults';
+import { applyWorldChrome } from '../helpers/worldChrome';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -16,6 +17,8 @@ const { uiSettings } = useUISettings();
 const monogramUrl = '/brand-assets/ramon-monogram.png';
 
 const isIntranet = computed(() => route.meta?.world === 'intranet');
+watch(isIntranet, applyWorldChrome, { immediate: true });
+
 const shortcuts = computed(
   () => uiSettings.value.external_shortcuts ?? DEFAULT_EXTERNAL_SHORTCUTS
 );

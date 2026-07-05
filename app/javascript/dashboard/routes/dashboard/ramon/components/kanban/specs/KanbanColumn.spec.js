@@ -134,4 +134,24 @@ describe('KanbanColumn.vue', () => {
       expect(wrapper2.findComponent(Draggable).exists()).toBe(false);
     });
   });
+
+  describe('empty state da coluna', () => {
+    beforeEach(() => localStorage.clear());
+
+    it('mostra hint quando não há leads', () => {
+      const wrapper = mount(KanbanColumn, {
+        props: { stage, leads: [] },
+        global: { mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="column-empty"]').exists()).toBe(true);
+    });
+
+    it('não mostra hint quando há leads', () => {
+      const wrapper = mount(KanbanColumn, {
+        props: { stage, leads },
+        global: { mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="column-empty"]').exists()).toBe(false);
+    });
+  });
 });

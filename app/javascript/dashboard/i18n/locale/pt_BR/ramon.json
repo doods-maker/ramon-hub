@@ -79,6 +79,7 @@
     "FUNIL": {
       "TITLE": "Funil de Leads",
       "NEW_LEAD": "Novo lead",
+      "EXPORT_CSV": "Exportar CSV",
       "LEAD_NAME": "Nome do lead",
       "LEAD_PHONE": "Telefone",
       "BENEFIT": "Tipo de benefício",
@@ -163,7 +164,8 @@
       "COLUMN": {
         "WEIGHTED": "~{value} ponderado",
         "COLLAPSE": "Recolher coluna",
-        "EXPAND": "Expandir coluna"
+        "EXPAND": "Expandir coluna",
+        "EMPTY": "Sem leads aqui — arraste um card ou crie um novo."
       },
       "MOVE_DONE": "Etapa alterada",
       "MOVE_UNDO": "Desfazer"
@@ -206,6 +208,7 @@
       "NOTES_ADD_BUTTON": "Adicionar nota",
       "CONTACT": "Contato",
       "THESIS": "Tese",
+      "NO_THESIS_HINT": "Escolha a tese para liberar o checklist de documentos e o playbook.",
       "NOTE_TEMPLATES": {
         "LABEL": "Modelo de nota…",
         "ITEMS": {
