@@ -7,7 +7,7 @@ class Ramon::Pseudonymizer
   CPF = /\b\d{3}\.\d{3}\.\d{3}-?\d{2}\b|\b\d{11}\b/
   # Formatos BR (ex.: "(48) 99999-8888", "48 99999 8888", "999998888");
   # dinheiro e datas não casam (usam , . / e grupos curtos de dígitos).
-  PHONE = /(?:\+?55[\s.-]?)?(?:\(\d{2}\)[\s.-]?|\b\d{2}[\s.-])?9?\s?\d{4,5}[\s.-]?\d{4}\b/
+  PHONE = /(?:\+?55[\s.-]?)?(?:\(\d{2}\)[\s.-]?|\b\d{2}[\s.-])?9?\d{4,5}[\s.-]?\d{4}\b/
   # ponytail: só mascara endereço com número ("Rua X, 123") — sem número o nome
   # da rua passa, pra não engolir frases comuns tipo "caí na rua e machuquei".
   ADDRESS = /\b(?:rua|avenida|av\.|travessa|rodovia|estrada|alameda|servid[ãa]o)\s+[^\n,;.]{3,40},?\s*(?:n[ºo°.]?\s*)?\d+\b/i
