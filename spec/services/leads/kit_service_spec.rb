@@ -44,6 +44,15 @@ RSpec.describe Leads::KitService do
     described_class.new(triage).perform
   end
 
+  it 'pseudonimiza o nome do cliente no prompt (LGPD)' do
+    expect(Ramon::LlmClient).to receive(:complete) do |user:, **|
+      expect(user).to include('Cliente: [nome]')
+      expect(user).not_to include('João')
+      kit_json
+    end
+    described_class.new(triage).perform
+  end
+
   it 'tolera cercas ```json e texto em volta' do
     allow(Ramon::LlmClient).to receive(:complete)
       .and_return("Claro! Aqui está:\n```json\n#{kit_json}\n```\nEspero ter ajudado.")

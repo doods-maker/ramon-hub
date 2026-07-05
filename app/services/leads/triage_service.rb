@@ -44,8 +44,10 @@ class Leads::TriageService
     match[1].tr('éí', 'ei')
   end
 
+  # Pseudonimizado (LGPD) — o source_text gravado é exatamente o que foi pro LLM.
   def build_source_text
-    [lead_sheet, conversation_transcript].compact_blank.join("\n\n")
+    text = [lead_sheet, conversation_transcript].compact_blank.join("\n\n")
+    Ramon::Pseudonymizer.mask(text, names: [@lead.name, @lead.contact&.name])
   end
 
   def lead_sheet
