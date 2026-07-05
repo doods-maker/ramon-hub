@@ -42,7 +42,7 @@ class Leads::KitService
   end
 
   def user_prompt
-    [
+    text = [
       "Cliente: #{@lead.name}",
       @agent.area.present? ? "Área: #{@agent.area}" : nil,
       "Viabilidade apurada: #{@triage.viability.presence || 'não informada'}",
@@ -50,6 +50,7 @@ class Leads::KitService
       'Análise jurídica da triagem:',
       @triage.result
     ].compact.join("\n")
+    Ramon::Pseudonymizer.mask(text, names: [@lead.name, @lead.contact&.name])
   end
 
   # Porta o parse tolerante de lib/kit-closer.ts: aceita cercas ```json e

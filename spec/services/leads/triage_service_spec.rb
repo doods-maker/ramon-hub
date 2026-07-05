@@ -24,6 +24,17 @@ RSpec.describe Leads::TriageService do
     expect(triage.source_text).not_to include('nota interna')
   end
 
+  it 'pseudonimiza nome, CPF e telefone antes de mandar pro LLM (LGPD)' do
+    create(:message, account: account, conversation: conversation, message_type: :incoming,
+                     content: 'Sou Maria das Dores, CPF 123.456.789-01, fone (48) 99999-8888')
+    allow(Ramon::LlmClient).to receive(:complete).and_return('VIABILIDADE: alta')
+    described_class.new(triage).perform
+    triage.reload
+    expect(triage.source_text).to include('Lead: [nome]').and include('[cpf]').and include('[telefone]')
+    expect(triage.source_text).not_to include('Maria')
+    expect(triage.source_text).not_to include('123.456.789-01')
+  end
+
   it 'extrai a viabilidade da linha VIABILIDADE e conclui done' do
     allow(Ramon::LlmClient).to receive(:complete).and_return("Resumo...\nVIABILIDADE: média")
     described_class.new(triage).perform
