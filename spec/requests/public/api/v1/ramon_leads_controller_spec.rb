@@ -91,6 +91,34 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       end.to change(Notification.where(notification_type: 'ramon_lead_created'), :count).by(1)
     end
 
+    it 'aceita o token via header X-Capture-Token na rota sem token no path' do
+      expect do
+        post '/public/api/v1/ramon_leads', params: payload, headers: { 'X-Capture-Token' => token }, as: :json
+      end.to change(Lead, :count).by(1)
+      expect(response).to have_http_status(:created)
+    end
+
+    it 'header com token errado devolve 401' do
+      post '/public/api/v1/ramon_leads', params: payload, headers: { 'X-Capture-Token' => 'errado' }, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(Lead.count).to eq 0
+    end
+
+    it 'grava os parâmetros utm_* em custom_attributes.utm do lead' do
+      post '/public/api/v1/ramon_leads',
+           params: payload.merge(utm_source: 'facebook', utm_medium: 'cpc', utm_campaign: 'aa-julho', utm_content: 'video-1'),
+           headers: { 'X-Capture-Token' => token }, as: :json
+
+      expect(Lead.last.custom_attributes['utm']).to eq(
+        'utm_source' => 'facebook', 'utm_medium' => 'cpc', 'utm_campaign' => 'aa-julho', 'utm_content' => 'video-1'
+      )
+    end
+
+    it 'sem utm_* não grava chave utm' do
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
+      expect(Lead.last.custom_attributes).not_to have_key('utm')
+    end
+
     it 'lead do contato em etapa ganha/perdida NÃO bloqueia lead novo' do
       stage_ganho = account.lead_stages.find_by!(is_won: true)
       contact = create(:contact, account: account, phone_number: '+5548999887766')
