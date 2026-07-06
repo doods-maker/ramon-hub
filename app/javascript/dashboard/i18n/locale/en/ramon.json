@@ -150,7 +150,10 @@
         "COPY_PHONE": "Copy phone number",
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
-        "TASK_SCHEDULED": "Follow-up scheduled"
+        "TASK_SCHEDULED": "Follow-up scheduled",
+        "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
+        "PRESCRIPTION_LOST": "{count} installments lost to prescription",
+        "PRESCRIPTION_SOON": "prescribes in {months}mo"
       },
       "BELL": {
         "TITLE": "Schedule follow-up",
@@ -209,6 +212,8 @@
       "CONTACT": "Contact",
       "THESIS": "Thesis",
       "NO_THESIS_HINT": "Pick a thesis to unlock the document checklist and playbook.",
+      "DCB_LABEL": "DCB (benefit cessation date)",
+      "BENEFIT_MONTHLY_LABEL": "Estimated monthly benefit",
       "NOTE_TEMPLATES": {
         "LABEL": "Note template…",
         "ITEMS": {

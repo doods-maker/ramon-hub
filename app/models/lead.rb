@@ -1,4 +1,6 @@
 class Lead < ApplicationRecord
+  PRESCRIPTION_WINDOW_MONTHS = 60
+
   belongs_to :account
   belongs_to :lead_stage
   belongs_to :contact, optional: true
@@ -66,6 +68,21 @@ class Lead < ApplicationRecord
     lead_triages.order(:id).last
   end
 
+  def prescription
+    return nil if dcb_em.blank?
+
+    today = Time.zone.today
+    months = ((today.year - dcb_em.year) * 12) + (today.month - dcb_em.month)
+    months -= 1 if today.day < dcb_em.day
+    months = 0 if months.negative?
+    lost = [months - PRESCRIPTION_WINDOW_MONTHS, 0].max
+    {
+      months_since_dcb: months,
+      lost_installments: lost,
+      lost_value: benefit_monthly_value.present? ? benefit_monthly_value * lost : nil
+    }
+  end
+
   private
 
   def cadence_event_data
@@ -76,7 +93,10 @@ class Lead < ApplicationRecord
       stalled: stalled?,
       open_tasks_count: lead_tasks.open_tasks.size,
       next_task_due_at: lead_tasks.open_tasks.minimum(:due_at),
-      contact_phone: contact&.phone_number
+      contact_phone: contact&.phone_number,
+      dcb_em: dcb_em,
+      # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast (mesmo motivo de `value` acima)
+      benefit_monthly_value: benefit_monthly_value&.to_f
     }
   end
 

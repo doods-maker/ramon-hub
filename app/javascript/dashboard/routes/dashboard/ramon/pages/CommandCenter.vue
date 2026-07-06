@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
+import { prescriptionInfo } from '../helpers/prescription';
 import StatBlock from '../components/command/StatBlock.vue';
 import LeadList from '../components/command/LeadList.vue';
 import FollowUpQueue from '../components/command/FollowUpQueue.vue';
@@ -59,6 +60,8 @@ const followUpQueue = computed(() => {
       dueAt: task.due_at,
       conversationId: null,
       contactPhone: null,
+      dcbEm: task.dcb_em,
+      benefitMonthlyValue: task.benefit_monthly_value,
     });
   });
 
@@ -71,6 +74,8 @@ const followUpQueue = computed(() => {
       existing.daysInStage = lead.days_in_stage;
       existing.conversationId = lead.conversation_id;
       existing.contactPhone = lead.contact_phone;
+      existing.dcbEm = lead.dcb_em;
+      existing.benefitMonthlyValue = lead.benefit_monthly_value;
       return;
     }
     order.push(leadId);
@@ -84,10 +89,24 @@ const followUpQueue = computed(() => {
       dueAt: null,
       conversationId: lead.conversation_id,
       contactPhone: lead.contact_phone,
+      dcbEm: lead.dcb_em,
+      benefitMonthlyValue: lead.benefit_monthly_value,
     });
   });
 
-  return order.map(leadId => byLead.get(leadId));
+  // Dinheiro prescrevendo desc; sort é estável (V8), empates preservam a
+  // ordem atual (tasks vencidas antes de stalled).
+  const bleedRate = item => {
+    const p = prescriptionInfo({
+      dcb_em: item.dcbEm,
+      benefit_monthly_value: item.benefitMonthlyValue,
+    });
+    return p && p.lostInstallments > 0 && p.monthlyValue ? p.monthlyValue : 0;
+  };
+
+  return order
+    .map(leadId => byLead.get(leadId))
+    .sort((a, b) => bleedRate(b) - bleedRate(a));
 });
 
 const isQueueOpen = ref(false);

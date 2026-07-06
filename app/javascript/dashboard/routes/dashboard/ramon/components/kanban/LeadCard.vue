@@ -5,6 +5,8 @@ import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { waMeUrl } from '../../helpers/phone';
+import { formatBrl } from '../../helpers/currency';
+import { prescriptionInfo } from '../../helpers/prescription';
 import TaskBellMenu from './TaskBellMenu.vue';
 
 const props = defineProps({
@@ -25,6 +27,32 @@ const formattedValue = computed(() => {
     currency: 'BRL',
   }).format(Number(v));
 });
+
+// Badge de prescrição: sangramento (parcelas já prescritas) tem prioridade
+// sobre o alerta preventivo de proximidade do prazo (soon).
+const prescription = computed(() => prescriptionInfo(props.lead));
+const prescriptionLabel = computed(() => {
+  const p = prescription.value;
+  if (!p) return null;
+  if (p.lostInstallments > 0 && p.monthlyValue)
+    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_BLEEDING', {
+      value: formatBrl(p.monthlyValue),
+    })}`;
+  if (p.lostInstallments > 0)
+    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_LOST', {
+      count: p.lostInstallments,
+    })}`;
+  if (p.monthsToCliff <= 6)
+    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_SOON', {
+      months: p.monthsToCliff,
+    })}`;
+  return null;
+});
+const prescriptionBadgeClass = computed(() =>
+  prescription.value?.lostInstallments > 0
+    ? 'bg-n-ruby-9 text-white'
+    : 'bg-n-amber-9 text-white'
+);
 
 const ownerName = computed(
   () => props.lead.closer_name || props.lead.sdr_name || null
@@ -143,6 +171,14 @@ const copyPhone = async () => {
         class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
       >
         {{ lead.benefit_type_name }}
+      </span>
+      <span
+        v-if="prescriptionLabel"
+        data-testid="prescription-badge"
+        class="inline-block px-2 py-0.5 text-[11px] rounded-full"
+        :class="prescriptionBadgeClass"
+      >
+        {{ prescriptionLabel }}
       </span>
     </div>
 

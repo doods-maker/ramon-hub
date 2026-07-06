@@ -8,6 +8,7 @@ RSpec.describe Leads::KitService do
     lead.lead_triages.create!(account: account, triage_agent: agent, status: 'done',
                               viability: 'alta', result: 'Análise: caso viável pela Súmula 47.')
   end
+  let(:service) { described_class.new(triage) }
 
   def kit_json
     {
@@ -81,6 +82,15 @@ RSpec.describe Leads::KitService do
     triage.reload
     expect(triage.kit_status).to eq('error')
     expect(triage.kit['error']).to include('DEEPSEEK_API_KEY')
+  end
+
+  it 'includes prescription block when dcb_em is set' do
+    lead.update!(dcb_em: Date.new(2020, 1, 15), benefit_monthly_value: 800)
+    travel_to Date.new(2026, 7, 6) do
+      prompt = service.send(:user_prompt)
+      expect(prompt).to include('Prescricao (Art. 103')
+      expect(prompt).to include('17 parcelas ja prescritas')
+    end
   end
 
   it 'não sobrescreve status nem result da triagem' do

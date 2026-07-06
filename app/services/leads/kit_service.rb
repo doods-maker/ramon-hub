@@ -42,15 +42,29 @@ class Leads::KitService
   end
 
   def user_prompt
-    text = [
+    parts = [
       "Cliente: #{@lead.name}",
       @agent.area.present? ? "Área: #{@agent.area}" : nil,
       "Viabilidade apurada: #{@triage.viability.presence || 'não informada'}",
       '',
       'Análise jurídica da triagem:',
-      @triage.result
-    ].compact.join("\n")
+      @triage.result,
+      prescription_prompt_line
+    ]
+    text = parts.compact.join("\n")
     Ramon::Pseudonymizer.mask(text, names: [@lead.name, @lead.contact&.name])
+  end
+
+  def prescription_prompt_line
+    presc = @lead.prescription
+    return if presc.nil?
+
+    bleeding = presc[:lost_installments].positive?
+    monthly = @lead.benefit_monthly_value
+    "Prescricao (Art. 103 par. unico, Lei 8.213/91): DCB em #{I18n.l(@lead.dcb_em)}, " \
+      "#{presc[:months_since_dcb]} meses atras. #{presc[:lost_installments]} parcelas ja prescritas" \
+      "#{bleeding && presc[:lost_value] ? " (~R$ #{presc[:lost_value].to_i})" : ''}." \
+      "#{bleeding && monthly.present? ? " A cada mes sem acao, mais R$ #{monthly.to_i} prescrevem." : ''}"
   end
 
   # Porta o parse tolerante de lib/kit-closer.ts: aceita cercas ```json e
