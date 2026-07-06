@@ -12,8 +12,11 @@ class Leads::TriageService
     @triage.update!(status: 'running')
     source = build_source_text
     result = call_llm(source)
-    @triage.update!(status: 'done', result: result, source_text: source,
-                    viability: detect_viability(result), finished_at: Time.zone.now)
+    @triage.update!(status: 'done', result: result.content, source_text: source,
+                    viability: detect_viability(result.content), finished_at: Time.zone.now)
+    record_usage(result)
+  rescue Ramon::LlmClient::TransientError
+    raise
   rescue StandardError => e
     mark_error(e)
   end
@@ -26,6 +29,14 @@ class Leads::TriageService
     Rails.logger.error(
       "TriageService: falha ao gravar erro da triage #{@triage.id}: #{e.message}"
     )
+  end
+
+  # ponytail: record_usage duplicado nos 2 services; extrair concern se surgir um 3º consumidor.
+  def record_usage(result)
+    # rubocop:disable Rails/SkipsModelValidations
+    @triage.increment!(:input_tokens, result.input_tokens.to_i)
+    @triage.increment!(:output_tokens, result.output_tokens.to_i)
+    # rubocop:enable Rails/SkipsModelValidations
   end
 
   def call_llm(source)

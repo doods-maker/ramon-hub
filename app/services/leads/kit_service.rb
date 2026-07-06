@@ -1,5 +1,5 @@
 class Leads::KitService
-  SYSTEM_PROMPT = <<~PROMPT.freeze
+  KIT_SYSTEM_PROMPT_DEFAULT = <<~PROMPT.freeze
     Você transforma uma análise jurídica de viabilidade em um "Kit do Closer": material em linguagem simples para um vendedor SEM formação jurídica usar numa conversa de WhatsApp com o cliente.
 
     Responda APENAS com um objeto JSON válido (sem texto fora do JSON, sem cercas de código), nesta forma exata:
@@ -21,8 +21,11 @@ class Leads::KitService
 
   def perform
     @triage.update!(kit_status: 'running')
-    raw = call_llm
-    @triage.update!(kit: parse_kit(raw), kit_status: 'ready')
+    result = call_llm
+    @triage.update!(kit: parse_kit(result.content), kit_status: 'ready')
+    record_usage(result)
+  rescue Ramon::LlmClient::TransientError
+    raise
   rescue StandardError => e
     mark_error(e)
   end
@@ -35,10 +38,18 @@ class Leads::KitService
     Rails.logger.error("KitService: falha ao gravar erro do kit da triage #{@triage.id}: #{e.message}")
   end
 
+  # ponytail: record_usage duplicado nos 2 services; extrair concern se surgir um 3º consumidor.
+  def record_usage(result)
+    # rubocop:disable Rails/SkipsModelValidations
+    @triage.increment!(:input_tokens, result.input_tokens.to_i)
+    @triage.increment!(:output_tokens, result.output_tokens.to_i)
+    # rubocop:enable Rails/SkipsModelValidations
+  end
+
   def call_llm
     Ramon::LlmClient.complete(provider: @agent.provider, model: @agent.model,
-                              system: SYSTEM_PROMPT, user: user_prompt,
-                              sensitive: @agent.sensitive)
+                              system: @agent.kit_system_prompt.presence || KIT_SYSTEM_PROMPT_DEFAULT,
+                              user: user_prompt, sensitive: @agent.sensitive)
   end
 
   def user_prompt

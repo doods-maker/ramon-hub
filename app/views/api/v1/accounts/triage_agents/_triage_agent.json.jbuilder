@@ -3,6 +3,7 @@ json.name triage_agent.name
 json.description triage_agent.description
 json.area triage_agent.area
 json.system_prompt triage_agent.system_prompt
+json.kit_system_prompt triage_agent.kit_system_prompt
 json.provider triage_agent.provider
 json.model triage_agent.model
 json.sensitive triage_agent.sensitive

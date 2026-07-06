@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_06_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_06_100002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1039,6 +1039,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_06_000001) do
     t.datetime "finished_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "input_tokens", default: 0, null: false
+    t.integer "output_tokens", default: 0, null: false
     t.index ["account_id", "status"], name: "index_lead_triages_on_account_id_and_status"
     t.index ["lead_id", "id"], name: "index_lead_triages_on_lead_id_and_id"
     t.index ["lead_id"], name: "index_lead_triages_on_lead_id"
@@ -1432,6 +1434,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_06_000001) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "kit_system_prompt"
     t.index ["account_id", "name"], name: "index_triage_agents_on_account_id_and_name", unique: true
   end
 

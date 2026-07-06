@@ -57,3 +57,6 @@ agents:
       5. O que falta (documentos/esclarecimentos).
       6. Score + veredito.
       7. Em linha isolada: VIABILIDADE: alta (ou media, ou baixa).
+    # kit_system_prompt fica em branco de propósito: o loader preenche com
+    # Leads::KitService::KIT_SYSTEM_PROMPT_DEFAULT (fonte única). Para um kit
+    # prompt customizado por agente, defina kit_system_prompt aqui e o loader respeita.
