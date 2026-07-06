@@ -15,6 +15,8 @@ class Leads::TriageService
     @triage.update!(status: 'done', result: result.content, source_text: source,
                     viability: detect_viability(result.content), finished_at: Time.zone.now)
     record_usage(result)
+  rescue Ramon::LlmClient::TransientError
+    raise
   rescue StandardError => e
     mark_error(e)
   end

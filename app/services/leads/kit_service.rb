@@ -24,6 +24,8 @@ class Leads::KitService
     result = call_llm
     @triage.update!(kit: parse_kit(result.content), kit_status: 'ready')
     record_usage(result)
+  rescue Ramon::LlmClient::TransientError
+    raise
   rescue StandardError => e
     mark_error(e)
   end
