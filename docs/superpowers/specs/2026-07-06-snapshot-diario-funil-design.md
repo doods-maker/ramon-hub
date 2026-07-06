@@ -111,16 +111,23 @@ migration (lição 03/07: migration não chama service de app que evolui).
 
 ### 4.4 Leitura mínima (não é o Placar do Dono)
 
-**Endpoint** `GET /api/v1/accounts/:account_id/funnel_snapshots?days=30`
-(default 30). Controller + policy nova (leitura admin). Retorna as linhas do
-período, ou já roladas por dia — decisão fina fica pro plano; o suficiente pra
-alimentar o painel.
+Reaproveita o endpoint **existente** `GET .../ramon_dashboard` (que já serve o
+Centro de Comando com `today`/`funnel`/`week`) em vez de criar endpoint/store
+novos (mais lazy, mesmo seam do futuro Placar). Ganha uma chave `history`:
+últimos 30 dias, uma entrada por dia `{ date, leads_count, value_sum }`, rolada
+sobre as **etapas abertas** (is_won=false, is_lost=false) — o "pipeline vivo"
+ao longo do tempo. O store `ramonDashboard` já guarda a resposta inteira, então
+o front lê `data.history` sem mudança de store.
 
-**Painel** no `RamonOverview` (hoje placeholder): "Funil nos últimos 30 dias" —
-uma **tabela compacta** (por dia: nº de leads ativos + R$ total em pipeline) e
-um **sparkline SVG inline** do valor total em pipeline no período, com **filtro
-de tese opcional**. Sem dependência de chart nova (SVG na mão). Objetivo é
-verificação/smoke visual, não análise — o Placar completo é Onda 4.
+**Painel** no **Centro de Comando** (`CommandCenter.vue`, a superfície que
+sucedeu o RamonOverview placeholder): seção "Funil nos últimos 30 dias" — uma
+**tabela compacta** (por dia: nº de leads ativos + R$ em pipeline) e um
+**sparkline SVG inline** (helper puro `sparklinePath`, sem dependência de chart
+nova). Objetivo é verificação/smoke visual, não análise.
+
+**Adiado (YAGNI, sem retrato dedicado agora):** filtro por tese no painel e
+endpoint dedicado. O dado gravado já tem a quebra por tese (§4.1), então ambos
+entram sem retrabalho quando o Placar do Dono (Onda 4) precisar.
 
 ## 5. Fora de escopo
 
