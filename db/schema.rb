@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_06_100002) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_06_130001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -863,6 +863,25 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_06_100002) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "funnel_snapshots", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.date "snapshot_date", null: false
+    t.bigint "lead_stage_id"
+    t.string "stage_name", null: false
+    t.integer "stage_position", default: 0, null: false
+    t.boolean "is_won", default: false, null: false
+    t.boolean "is_lost", default: false, null: false
+    t.bigint "thesis_id"
+    t.string "thesis_name"
+    t.integer "leads_count", default: 0, null: false
+    t.decimal "value_sum", precision: 14, scale: 2, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "snapshot_date"], name: "index_funnel_snapshots_on_account_id_and_snapshot_date"
+    t.index ["lead_stage_id"], name: "index_funnel_snapshots_on_lead_stage_id"
+    t.index ["thesis_id"], name: "index_funnel_snapshots_on_thesis_id"
+  end
+
   create_table "inbox_assignment_policies", force: :cascade do |t|
     t.bigint "inbox_id", null: false
     t.bigint "assignment_policy_id", null: false
@@ -1529,6 +1548,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_06_100002) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "funnel_snapshots", "lead_stages", on_delete: :nullify
+  add_foreign_key "funnel_snapshots", "theses", on_delete: :nullify
   add_foreign_key "inboxes", "portals"
   add_foreign_key "lead_activities", "accounts"
   add_foreign_key "lead_activities", "leads"
