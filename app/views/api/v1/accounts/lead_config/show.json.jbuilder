@@ -31,4 +31,5 @@ json.priorities do
     json.position p.position
   end
 end
+json.channels @channels
 json.sources @sources

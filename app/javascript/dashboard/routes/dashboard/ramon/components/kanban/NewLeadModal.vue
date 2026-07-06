@@ -16,6 +16,7 @@ const phone = ref('+55 ');
 const benefitTypeId = ref(null);
 const priorityId = ref(null);
 const source = ref('');
+const channel = ref('');
 const value = ref('');
 const existingLead = ref(null);
 
@@ -25,6 +26,7 @@ const benefitTypes = computed(
 );
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const sources = computed(() => getters['leadConfig/getSources'].value);
+const channels = computed(() => getters['leadConfig/getChannels'].value);
 
 // E.164 a partir do que o usuário digitou; só considera telefone real quando há
 // dígitos além do DDI (evita disparar em "+55 " default).
@@ -102,6 +104,7 @@ const submit = async () => {
     benefit_type_id: benefitTypeId.value,
     lead_priority_id: priorityId.value,
     source: source.value.trim() || null,
+    channel: channel.value || null,
     value: value.value === '' ? null : Number(value.value),
     contact_id: contactId,
   });
@@ -183,6 +186,20 @@ const submit = async () => {
       <datalist id="new-lead-sources">
         <option v-for="s in sources" :key="s" :value="s" />
       </datalist>
+
+      <label class="block mb-1 text-xs text-n-slate-10">{{
+        $t('RAMON.FUNIL.NEW.CHANNEL')
+      }}</label>
+      <select
+        v-model="channel"
+        data-testid="new-lead-channel"
+        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      >
+        <option value="">{{ $t('RAMON.FUNIL.NEW.CHANNEL_PLACEHOLDER') }}</option>
+        <option v-for="c in channels" :key="c.key" :value="c.key">
+          {{ c.label }}
+        </option>
+      </select>
 
       <div class="flex gap-3">
         <div class="flex-1">

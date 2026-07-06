@@ -66,7 +66,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def apply_equality_filters(leads)
-    %i[benefit_type_id lead_priority_id lead_stage_id source].each do |key|
+    %i[benefit_type_id lead_priority_id lead_stage_id source channel].each do |key|
       leads = leads.where(key => params[key]) if params[key].present?
     end
     leads
@@ -125,7 +125,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def permitted_params
     params.permit(:name, :lead_stage_id, :benefit_type_id, :lead_priority_id, :thesis_id,
                   :contact_id, :conversation_id, :sdr_id, :closer_id,
-                  :position, :lost_reason, :value, :source, :dcb_em, :benefit_monthly_value,
+                  :position, :lost_reason, :value, :source, :channel, :dcb_em, :benefit_monthly_value,
                   custom_attributes: {})
   end
 end

@@ -43,6 +43,7 @@ const build = (
           ],
           getBenefitTypes: () => [],
           getPriorities: () => [],
+          getChannels: () => [],
           getLostReasons: () => [],
         },
       },

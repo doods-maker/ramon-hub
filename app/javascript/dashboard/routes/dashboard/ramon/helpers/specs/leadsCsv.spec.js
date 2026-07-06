@@ -2,29 +2,33 @@ import { leadsToCsv } from '../leadsCsv';
 
 describe('leadsToCsv', () => {
   it('gera cabecalho + linhas com ; e BOM', () => {
-    const csv = leadsToCsv([
-      {
-        name: 'Joao',
-        contact_phone: '+554899999',
-        stage_name: 'Novo',
-        thesis_name: null,
-        benefit_type_name: 'Auxilio-acidente',
-        lead_priority_name: null,
-        value: 9800.5,
-        source: 'lp-meta',
-        sdr_name: null,
-        closer_name: null,
-        lost_reason: null,
-      },
-    ]);
+    const csv = leadsToCsv(
+      [
+        {
+          name: 'Joao',
+          contact_phone: '+554899999',
+          stage_name: 'Novo',
+          thesis_name: null,
+          benefit_type_name: 'Auxilio-acidente',
+          lead_priority_name: null,
+          value: 9800.5,
+          source: 'lp-meta',
+          channel: 'meta_ads',
+          sdr_name: null,
+          closer_name: null,
+          lost_reason: null,
+        },
+      ],
+      [{ key: 'meta_ads', label: 'Meta Ads' }]
+    );
     // BOM sempre via escape \uFEFF, nunca o caractere literal
     expect(csv.startsWith('\uFEFF')).toBe(true);
     const [header, row] = csv.slice(1).split('\n');
     expect(header).toBe(
-      'nome;telefone;etapa;tese;beneficio;prioridade;valor;origem;sdr;closer;motivo_perda'
+      'nome;telefone;etapa;tese;beneficio;prioridade;valor;origem;canal;sdr;closer;motivo_perda'
     );
     expect(row).toBe(
-      'Joao;+554899999;Novo;;Auxilio-acidente;;9800.5;lp-meta;;;'
+      'Joao;+554899999;Novo;;Auxilio-acidente;;9800.5;lp-meta;Meta Ads;;;'
     );
   });
 

@@ -35,7 +35,10 @@ class RamonLeadListener < BaseListener
 
     meta = referral.slice('source_id', 'source_type', 'source_url', 'headline', 'ctwa_clid').compact_blank
     attrs = { custom_attributes: lead.custom_attributes.merge('meta_referral' => meta) }
-    attrs[:source] = referral_source_label(referral) if lead.source.blank?
+    if lead.source.blank?
+      attrs[:source] = referral_source_label(referral)
+      attrs[:channel] = 'meta_ads'
+    end
     lead.update!(attrs)
   end
 

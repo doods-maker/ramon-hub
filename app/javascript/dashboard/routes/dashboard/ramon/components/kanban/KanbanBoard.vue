@@ -176,7 +176,8 @@ onMounted(() => {
 const exportCsv = () => {
   const all = orderedStages.value.flatMap(s => stageLeads(s.id));
   const date = new Date().toISOString().slice(0, 10);
-  downloadCsvFile(`funil-${date}.csv`, leadsToCsv(all));
+  const channels = getters['leadConfig/getChannels'].value;
+  downloadCsvFile(`funil-${date}.csv`, leadsToCsv(all, channels));
 };
 </script>
 

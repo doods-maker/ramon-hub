@@ -141,6 +141,15 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to eq([a.id])
     end
 
+    it 'filtra por channel' do
+      a = account.leads.create!(name: 'A', lead_stage: novo, channel: 'meta_ads')
+      account.leads.create!(name: 'B', lead_stage: novo, channel: 'indicacao')
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { channel: 'meta_ads' },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([a.id])
+    end
+
     it 'filtra por benefit_type_id' do
       a = account.leads.create!(name: 'A', lead_stage: novo, benefit_type: bpc_teste)
       account.leads.create!(name: 'B', lead_stage: novo)

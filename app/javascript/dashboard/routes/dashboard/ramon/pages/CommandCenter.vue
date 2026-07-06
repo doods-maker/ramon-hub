@@ -317,23 +317,23 @@ const openStage = stageId => {
 
           <div class="p-4 border rounded-xl border-n-weak bg-n-solid-2">
             <p class="mb-2 text-xs uppercase tracking-wide text-n-slate-11">
-              {{ t('RAMON.COMMAND.WEEK.BY_SOURCE') }}
+              {{ t('RAMON.COMMAND.WEEK.BY_CHANNEL') }}
             </p>
             <ul
-              v-if="week.created_by_source && week.created_by_source.length"
+              v-if="week.created_by_channel && week.created_by_channel.length"
               class="flex flex-col gap-1"
             >
               <li
-                v-for="row in week.created_by_source"
-                :key="row.source"
+                v-for="row in week.created_by_channel"
+                :key="row.key"
                 class="flex items-center justify-between text-sm text-n-slate-12"
               >
-                <span class="truncate">{{ row.source }}</span>
+                <span class="truncate">{{ row.label }}</span>
                 <span class="text-n-slate-10">{{ row.count }}</span>
               </li>
             </ul>
             <p v-else class="text-xs text-n-slate-10">
-              {{ t('RAMON.COMMAND.WEEK.EMPTY_SOURCE') }}
+              {{ t('RAMON.COMMAND.WEEK.EMPTY_CHANNEL') }}
             </p>
           </div>
 

@@ -19,6 +19,7 @@ class Lead < ApplicationRecord
   default_scope { order(:lead_stage_id, :position, :id) }
 
   before_save :track_stage_cycle
+  before_save :assign_channel
 
   after_create_commit :dispatch_create_event
   after_update_commit :dispatch_update_event
@@ -41,6 +42,7 @@ class Lead < ApplicationRecord
       # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast
       value: value&.to_f,
       source: source,
+      channel: channel,
       stage_name: lead_stage&.name,
       stage_color: lead_stage&.color,
       benefit_type_name: benefit_type&.name,
@@ -98,6 +100,12 @@ class Lead < ApplicationRecord
       # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast (mesmo motivo de `value` acima)
       benefit_monthly_value: benefit_monthly_value&.to_f
     }
+  end
+
+  def assign_channel
+    return if channel.present?
+
+    self.channel = Ramon::SourceCatalog.derive(source) || 'outro'
   end
 
   def track_stage_cycle

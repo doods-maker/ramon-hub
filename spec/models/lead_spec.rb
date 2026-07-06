@@ -85,6 +85,23 @@ RSpec.describe Lead do
     end
   end
 
+  describe '#assign_channel' do
+    it 'canal manual explícito vence e não é sobrescrito pelo derive' do
+      lead = create(:lead, account: account, source: 'anuncio-meta: 1', channel: 'whatsapp_direto')
+      expect(lead.channel).to eq('whatsapp_direto')
+    end
+
+    it 'deriva o canal do source quando channel fica em branco' do
+      lead = create(:lead, account: account, source: 'Indicação da Maria')
+      expect(lead.channel).to eq('indicacao')
+    end
+
+    it 'cai em outro quando nenhuma regra casa' do
+      lead = create(:lead, account: account, source: 'campanha desconhecida')
+      expect(lead.channel).to eq('outro')
+    end
+  end
+
   context 'when recording lead activities' do
     before { Current.user = nil }
     after { Current.user = nil }
