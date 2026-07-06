@@ -63,6 +63,16 @@ RSpec.describe 'Leads API', type: :request do
     expect(lead.source).to eq('Meta Ads')
   end
 
+  it 'updates dcb_em and benefit_monthly_value' do
+    lead = create(:lead, account: account, lead_stage: novo)
+    patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+          params: { dcb_em: '2020-01-15', benefit_monthly_value: 800 },
+          headers: admin.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+    expect(lead.reload.dcb_em).to eq(Date.new(2020, 1, 15))
+    expect(lead.benefit_monthly_value).to eq(BigDecimal('800'))
+  end
+
   describe 'POST /api/v1/accounts/{account}/leads/for_conversation' do
     let(:contact) { create(:contact, account: account) }
     let(:conversation) { create(:conversation, account: account, contact: contact) }

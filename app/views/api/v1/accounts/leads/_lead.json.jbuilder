@@ -18,6 +18,8 @@ json.source lead.source
 json.stage_entered_at lead.stage_entered_at
 json.won_at lead.won_at
 json.lost_at lead.lost_at
+json.dcb_em lead.dcb_em
+json.benefit_monthly_value lead.benefit_monthly_value
 json.stalled lead.stalled?
 json.open_tasks_count lead.lead_tasks.open_tasks.size
 json.next_task_due_at lead.lead_tasks.open_tasks.minimum(:due_at)

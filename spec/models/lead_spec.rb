@@ -58,6 +58,33 @@ RSpec.describe Lead do
     expect(lead.push_event_data[:latest_triage][:kit_status]).to eq('ready')
   end
 
+  describe '#prescription' do
+    let(:stage) { account.lead_stages.first }
+
+    it 'returns nil without dcb_em' do
+      lead = create(:lead, account: account, lead_stage: stage)
+      expect(lead.prescription).to be_nil
+    end
+
+    it 'computes months and lost installments past the 60-month window' do
+      lead = create(:lead, account: account, lead_stage: stage,
+                           dcb_em: Date.new(2020, 1, 15), benefit_monthly_value: 800)
+      travel_to Date.new(2026, 7, 6) do
+        p = lead.prescription
+        expect(p[:months_since_dcb]).to eq(77)
+        expect(p[:lost_installments]).to eq(17)
+        expect(p[:lost_value]).to eq(BigDecimal('13600'))
+      end
+    end
+
+    it 'reports zero lost inside the window and nil value without monthly' do
+      lead = create(:lead, account: account, lead_stage: stage, dcb_em: 2.years.ago.to_date)
+      p = lead.prescription
+      expect(p[:lost_installments]).to eq(0)
+      expect(p[:lost_value]).to be_nil
+    end
+  end
+
   context 'when recording lead activities' do
     before { Current.user = nil }
     after { Current.user = nil }
