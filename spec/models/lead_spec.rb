@@ -73,7 +73,7 @@ RSpec.describe Lead do
         p = lead.prescription
         expect(p[:months_since_dcb]).to eq(77)
         expect(p[:lost_installments]).to eq(17)
-        expect(p[:lost_value]).to eq(BigDecimal('13600'))
+        expect(p[:lost_value]).to eq(BigDecimal(13_600))
       end
     end
 

@@ -70,7 +70,7 @@ RSpec.describe 'Leads API', type: :request do
           headers: admin.create_new_auth_token, as: :json
     expect(response).to have_http_status(:success)
     expect(lead.reload.dcb_em).to eq(Date.new(2020, 1, 15))
-    expect(lead.benefit_monthly_value).to eq(BigDecimal('800'))
+    expect(lead.benefit_monthly_value).to eq(BigDecimal(800))
   end
 
   describe 'POST /api/v1/accounts/{account}/leads/for_conversation' do
