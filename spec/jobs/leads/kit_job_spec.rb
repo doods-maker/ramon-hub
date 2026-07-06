@@ -43,6 +43,6 @@ RSpec.describe Leads::KitJob do
 
     expect(service).to have_received(:perform).exactly(3).times
     expect(triage.reload.kit_status).to eq('error')
-    expect(triage.error_message).to include('timeout')
+    expect(triage.kit['error']).to include('timeout')
   end
 end

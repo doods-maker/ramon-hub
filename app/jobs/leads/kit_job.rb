@@ -3,7 +3,7 @@ class Leads::KitJob < ApplicationJob
 
   retry_on Ramon::LlmClient::TransientError, wait: :polynomially_longer, attempts: 3 do |job, error|
     triage = LeadTriage.find_by(id: job.arguments.first)
-    triage&.update(kit_status: 'error', error_message: error.message.truncate(1000))
+    triage&.update(kit_status: 'error', kit: { 'error' => error.message.truncate(500) })
   end
 
   def perform(triage_id)
