@@ -116,7 +116,7 @@ RSpec.describe Leads::KitService do
   end
 
   it 'falls back to the default kit prompt when the agent has none' do
-    agent.update_column(:kit_system_prompt, nil)
+    agent.update_column(:kit_system_prompt, nil) # rubocop:disable Rails/SkipsModelValidations
     expect(Ramon::LlmClient).to receive(:complete)
       .with(hash_including(system: Leads::KitService::KIT_SYSTEM_PROMPT_DEFAULT))
       .and_return(llm_result(kit_json))

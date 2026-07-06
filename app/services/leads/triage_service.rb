@@ -33,8 +33,10 @@ class Leads::TriageService
 
   # ponytail: record_usage duplicado nos 2 services; extrair concern se surgir um 3º consumidor.
   def record_usage(result)
+    # rubocop:disable Rails/SkipsModelValidations
     @triage.increment!(:input_tokens, result.input_tokens.to_i)
     @triage.increment!(:output_tokens, result.output_tokens.to_i)
+    # rubocop:enable Rails/SkipsModelValidations
   end
 
   def call_llm(source)
