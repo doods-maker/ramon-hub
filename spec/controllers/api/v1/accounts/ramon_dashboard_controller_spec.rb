@@ -49,6 +49,24 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(block['items'].first['source']).to eq('lp-auxilio-acidente')
   end
 
+  it 'rola o histórico de 30 dias somando só etapas abertas' do
+    open_stage = account.lead_stages.find_by(name: 'Novo')
+    won_stage = account.lead_stages.find_by(is_won: true)
+    FunnelSnapshot.create!(account: account, snapshot_date: 2.days.ago.to_date,
+                           lead_stage: open_stage, stage_name: 'Novo', stage_position: 0,
+                           is_won: false, is_lost: false, leads_count: 4, value_sum: 4000)
+    FunnelSnapshot.create!(account: account, snapshot_date: 2.days.ago.to_date,
+                           lead_stage: won_stage, stage_name: 'Fechado', stage_position: 5,
+                           is_won: true, is_lost: false, leads_count: 9, value_sum: 90_000)
+
+    get url, headers: agent.create_new_auth_token, as: :json
+
+    history = response.parsed_body['history']
+    row = history.find { |h| h['date'] == 2.days.ago.to_date.to_s }
+    expect(row['leads_count']).to eq(4)
+    expect(row['value_sum']).to eq(4000.0)
+  end
+
   it 'denies a user without access to the account' do
     stranger = create(:user)
     get url, headers: stranger.create_new_auth_token, as: :json

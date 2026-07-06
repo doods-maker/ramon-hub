@@ -8,6 +8,7 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     @today = today_section
     @funnel = funnel_section
     @week = week_section
+    @history = history_section
   end
 
   private
@@ -102,5 +103,18 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     Current.account.leads.where(lost_at: 30.days.ago..)
            .reorder(nil).group(:lost_reason).count
            .sort_by { |_reason, count| -count }
+  end
+
+  # ---- Histórico (snapshots diários) ------------------------------------
+
+  # 2 sums agregadas por dia sobre etapas abertas (estoque de pipeline vivo).
+  def history_section
+    scope = FunnelSnapshot.where(account_id: Current.account.id, is_won: false, is_lost: false)
+                          .where(snapshot_date: 29.days.ago.to_date..)
+    counts = scope.group(:snapshot_date).sum(:leads_count)
+    values = scope.group(:snapshot_date).sum(:value_sum)
+    counts.keys.sort.map do |date|
+      { date: date, leads_count: counts[date].to_i, value_sum: values[date].to_f }
+    end
   end
 end
