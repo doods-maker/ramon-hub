@@ -209,6 +209,8 @@
       "CONTACT": "Contact",
       "THESIS": "Thesis",
       "NO_THESIS_HINT": "Pick a thesis to unlock the document checklist and playbook.",
+      "DCB_LABEL": "DCB (benefit cessation date)",
+      "BENEFIT_MONTHLY_LABEL": "Estimated monthly benefit",
       "NOTE_TEMPLATES": {
         "LABEL": "Note template…",
         "ITEMS": {
