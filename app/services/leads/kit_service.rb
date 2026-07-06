@@ -42,14 +42,22 @@ class Leads::KitService
   end
 
   def user_prompt
-    text = [
+    parts = [
       "Cliente: #{@lead.name}",
       @agent.area.present? ? "Área: #{@agent.area}" : nil,
       "Viabilidade apurada: #{@triage.viability.presence || 'não informada'}",
       '',
       'Análise jurídica da triagem:',
       @triage.result
-    ].compact.join("\n")
+    ]
+    if @lead.dcb_em.present? && (presc = @lead.prescription)
+      monthly = @lead.benefit_monthly_value
+      parts << "Prescricao (Art. 103 par. unico, Lei 8.213/91): DCB em #{I18n.l(@lead.dcb_em)}, " \
+               "#{presc[:months_since_dcb]} meses atras. #{presc[:lost_installments]} parcelas ja prescritas" \
+               "#{presc[:lost_value] ? " (~R$ #{presc[:lost_value].to_i})" : ''}." \
+               "#{monthly.present? && presc[:lost_installments].positive? ? " A cada mes sem acao, mais R$ #{monthly.to_i} prescrevem." : ''}"
+    end
+    text = parts.compact.join("\n")
     Ramon::Pseudonymizer.mask(text, names: [@lead.name, @lead.contact&.name])
   end
 
