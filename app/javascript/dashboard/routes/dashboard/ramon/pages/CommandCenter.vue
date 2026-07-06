@@ -60,10 +60,8 @@ const followUpQueue = computed(() => {
       dueAt: task.due_at,
       conversationId: null,
       contactPhone: null,
-      // O bloco "task" não traz dcb_em/benefit_monthly_value; se o mesmo lead
-      // também aparecer em "stalled", o enriquecimento abaixo preenche.
-      dcbEm: null,
-      benefitMonthlyValue: null,
+      dcbEm: task.dcb_em,
+      benefitMonthlyValue: task.benefit_monthly_value,
     });
   });
 
