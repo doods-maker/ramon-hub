@@ -45,6 +45,13 @@
         "LOST_REASONS": "Motivos de perda (30d)",
         "EMPTY_SOURCE": "Nenhum lead criado nesta semana.",
         "EMPTY_LOST_REASONS": "Nenhum lead perdido nos últimos 30 dias."
+      },
+      "HISTORY": {
+        "TITLE": "Funil nos últimos 30 dias",
+        "EMPTY": "Ainda sem retratos — o primeiro é capturado na virada do dia.",
+        "COL_DATE": "Dia",
+        "COL_LEADS": "Leads ativos",
+        "COL_VALUE": "Pipeline"
       }
     },
     "NAV": {
