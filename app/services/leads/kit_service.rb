@@ -48,17 +48,23 @@ class Leads::KitService
       "Viabilidade apurada: #{@triage.viability.presence || 'não informada'}",
       '',
       'Análise jurídica da triagem:',
-      @triage.result
+      @triage.result,
+      prescription_prompt_line
     ]
-    if @lead.dcb_em.present? && (presc = @lead.prescription)
-      monthly = @lead.benefit_monthly_value
-      parts << "Prescricao (Art. 103 par. unico, Lei 8.213/91): DCB em #{I18n.l(@lead.dcb_em)}, " \
-               "#{presc[:months_since_dcb]} meses atras. #{presc[:lost_installments]} parcelas ja prescritas" \
-               "#{presc[:lost_value] ? " (~R$ #{presc[:lost_value].to_i})" : ''}." \
-               "#{monthly.present? && presc[:lost_installments].positive? ? " A cada mes sem acao, mais R$ #{monthly.to_i} prescrevem." : ''}"
-    end
     text = parts.compact.join("\n")
     Ramon::Pseudonymizer.mask(text, names: [@lead.name, @lead.contact&.name])
+  end
+
+  def prescription_prompt_line
+    presc = @lead.prescription
+    return if presc.nil?
+
+    bleeding = presc[:lost_installments].positive?
+    monthly = @lead.benefit_monthly_value
+    "Prescricao (Art. 103 par. unico, Lei 8.213/91): DCB em #{I18n.l(@lead.dcb_em)}, " \
+      "#{presc[:months_since_dcb]} meses atras. #{presc[:lost_installments]} parcelas ja prescritas" \
+      "#{bleeding && presc[:lost_value] ? " (~R$ #{presc[:lost_value].to_i})" : ''}." \
+      "#{bleeding && monthly.present? ? " A cada mes sem acao, mais R$ #{monthly.to_i} prescrevem." : ''}"
   end
 
   # Porta o parse tolerante de lib/kit-closer.ts: aceita cercas ```json e
