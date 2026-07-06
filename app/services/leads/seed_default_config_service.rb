@@ -156,6 +156,7 @@ class Leads::SeedDefaultConfigService
     YAML.safe_load_file(TRIAGE_AGENTS_SEED_PATH)['agents'].each do |attrs|
       @account.triage_agents.find_or_create_by!(name: attrs['name']) do |agent|
         agent.assign_attributes(attrs.except('name'))
+        agent.kit_system_prompt ||= Leads::KitService::KIT_SYSTEM_PROMPT_DEFAULT
       end
     end
   end

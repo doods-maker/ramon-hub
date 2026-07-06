@@ -57,15 +57,6 @@ agents:
       5. O que falta (documentos/esclarecimentos).
       6. Score + veredito.
       7. Em linha isolada: VIABILIDADE: alta (ou media, ou baixa).
-    kit_system_prompt: |
-      Você transforma uma análise jurídica de viabilidade em um "Kit do Closer": material em linguagem simples para um vendedor SEM formação jurídica usar numa conversa de WhatsApp com o cliente.
-
-      Responda APENAS com um objeto JSON válido (sem texto fora do JSON, sem cercas de código), nesta forma exata:
-      {
-        "resumo_leigo": "3-4 linhas, sem juridiquês, do que se trata e por que vale a pena",
-        "roteiro_perguntas": ["pergunta 1 exata pro WhatsApp", "pergunta 2"],
-        "documentos": [{"documento": "nome", "porque": "motivo curto"}],
-        "venda_objecoes": {"pitch": "como explicar a viabilidade em linguagem de venda", "objecoes": [{"objecao": "...", "resposta": "..."}]},
-        "proximo_passo": "frase curta de fechamento: assinar contrato e agendar reunião com o jurídico"
-      }
-      Não invente fatos fora da análise. Português do Brasil.
+    # kit_system_prompt fica em branco de propósito: o loader preenche com
+    # Leads::KitService::KIT_SYSTEM_PROMPT_DEFAULT (fonte única). Para um kit
+    # prompt customizado por agente, defina kit_system_prompt aqui e o loader respeita.
