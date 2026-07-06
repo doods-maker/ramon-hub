@@ -150,7 +150,10 @@
         "COPY_PHONE": "Copy phone number",
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
-        "TASK_SCHEDULED": "Follow-up scheduled"
+        "TASK_SCHEDULED": "Follow-up scheduled",
+        "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
+        "PRESCRIPTION_LOST": "{count} installments lost to prescription",
+        "PRESCRIPTION_SOON": "prescribes in {months}mo"
       },
       "BELL": {
         "TITLE": "Schedule follow-up",
