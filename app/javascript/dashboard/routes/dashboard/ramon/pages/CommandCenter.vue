@@ -8,6 +8,7 @@ import { prescriptionInfo } from '../helpers/prescription';
 import StatBlock from '../components/command/StatBlock.vue';
 import LeadList from '../components/command/LeadList.vue';
 import FollowUpQueue from '../components/command/FollowUpQueue.vue';
+import Sparkline from '../components/command/Sparkline.vue';
 
 const { t } = useI18n();
 const store = useStore();
@@ -34,6 +35,10 @@ const brl = value =>
 const today = computed(() => data.value?.today || {});
 const funnel = computed(() => data.value?.funnel || []);
 const week = computed(() => data.value?.week || {});
+const history = computed(() => data.value?.history || []);
+const historyPoints = computed(() =>
+  history.value.map(h => Number(h.value_sum) || 0)
+);
 
 const section = key => today.value[key] || { count: 0, items: [] };
 
@@ -354,6 +359,48 @@ const openStage = stageId => {
             </p>
           </div>
         </div>
+      </section>
+
+      <!-- Bloco Histórico (Organismo, Onda 0) -->
+      <section>
+        <h2 class="mb-3 text-sm tracking-widest uppercase text-n-slate-9">
+          {{ t('RAMON.COMMAND.HISTORY.TITLE') }}
+        </h2>
+        <div
+          v-if="history.length"
+          class="p-4 border rounded-xl border-n-weak bg-n-solid-2"
+        >
+          <Sparkline :points="historyPoints" :width="320" :height="48" />
+          <table class="w-full mt-4 text-sm">
+            <thead>
+              <tr class="text-xs uppercase text-n-slate-10">
+                <th class="py-1 font-normal text-left">
+                  {{ t('RAMON.COMMAND.HISTORY.COL_DATE') }}
+                </th>
+                <th class="py-1 font-normal text-right">
+                  {{ t('RAMON.COMMAND.HISTORY.COL_LEADS') }}
+                </th>
+                <th class="py-1 font-normal text-right">
+                  {{ t('RAMON.COMMAND.HISTORY.COL_VALUE') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in history"
+                :key="row.date"
+                class="border-t border-n-weak text-n-slate-12"
+              >
+                <td class="py-1 text-left">{{ row.date }}</td>
+                <td class="py-1 text-right">{{ row.leads_count }}</td>
+                <td class="py-1 text-right">{{ brl(row.value_sum) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p v-else class="text-sm text-n-slate-10">
+          {{ t('RAMON.COMMAND.HISTORY.EMPTY') }}
+        </p>
       </section>
     </div>
 

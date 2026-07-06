@@ -45,6 +45,13 @@
         "LOST_REASONS": "Loss reasons (30d)",
         "EMPTY_SOURCE": "No leads created this week.",
         "EMPTY_LOST_REASONS": "No leads lost in the last 30 days."
+      },
+      "HISTORY": {
+        "TITLE": "Funnel over the last 30 days",
+        "EMPTY": "No snapshots yet — the first one is captured overnight.",
+        "COL_DATE": "Day",
+        "COL_LEADS": "Active leads",
+        "COL_VALUE": "Pipeline"
       }
     },
     "NAV": {

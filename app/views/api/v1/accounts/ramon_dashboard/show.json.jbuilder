@@ -47,3 +47,9 @@ json.week do
     json.count count
   end
 end
+
+json.history @history do |row|
+  json.date row[:date]
+  json.leads_count row[:leads_count]
+  json.value_sum row[:value_sum]
+end

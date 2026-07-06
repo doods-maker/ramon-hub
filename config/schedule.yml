@@ -74,3 +74,10 @@ remove_orphan_conversations_job:
   cron: '0 */12 * * *'
   class: 'Internal::RemoveOrphanConversationsJob'
   queue: housekeeping
+
+# executed daily at 0305 UTC = 00:05 America/Sao_Paulo (UTC-3)
+# tira o retrato agregado do funil na virada do dia (Organismo, Onda 0)
+ramon_daily_funnel_snapshot_job:
+  cron: '5 3 * * *'
+  class: 'Ramon::DailyFunnelSnapshotJob'
+  queue: scheduled_jobs
