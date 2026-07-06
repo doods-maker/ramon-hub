@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_06_130001) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_06_160001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1089,9 +1089,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_06_130001) do
     t.datetime "lost_at"
     t.date "dcb_em"
     t.decimal "benefit_monthly_value", precision: 12, scale: 2
+    t.string "channel"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
+    t.index ["channel"], name: "index_leads_on_channel"
     t.index ["contact_id"], name: "index_leads_on_contact_id"
     t.index ["conversation_id"], name: "index_leads_on_conversation_id"
     t.index ["lead_priority_id"], name: "index_leads_on_lead_priority_id"
