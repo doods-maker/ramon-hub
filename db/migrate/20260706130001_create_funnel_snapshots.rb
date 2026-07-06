@@ -1,5 +1,4 @@
 class CreateFunnelSnapshots < ActiveRecord::Migration[7.1]
-  # rubocop:disable Metrics/MethodLength
   def change
     create_table :funnel_snapshots do |t|
       t.references :account, null: false, index: false
@@ -17,5 +16,4 @@ class CreateFunnelSnapshots < ActiveRecord::Migration[7.1]
     end
     add_index :funnel_snapshots, [:account_id, :snapshot_date]
   end
-  # rubocop:enable Metrics/MethodLength
 end

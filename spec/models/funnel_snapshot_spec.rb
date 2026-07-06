@@ -5,7 +5,7 @@ RSpec.describe FunnelSnapshot, type: :model do
   let(:stage) { account.lead_stages.find_by(name: 'Novo') }
 
   it 'persists a snapshot row with denormalized labels' do
-    snap = FunnelSnapshot.create!(
+    snap = described_class.create!(
       account: account, snapshot_date: Time.zone.today,
       lead_stage: stage, stage_name: stage.name, stage_position: stage.position,
       is_won: false, is_lost: false, thesis_id: nil, thesis_name: nil,
@@ -17,7 +17,7 @@ RSpec.describe FunnelSnapshot, type: :model do
   end
 
   it 'allows a null lead_stage and thesis (history survives deletes)' do
-    snap = FunnelSnapshot.create!(
+    snap = described_class.create!(
       account: account, snapshot_date: Time.zone.today,
       stage_name: 'Etapa Removida', stage_position: 9,
       leads_count: 0, value_sum: 0
