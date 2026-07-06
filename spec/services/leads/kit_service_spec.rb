@@ -107,6 +107,22 @@ RSpec.describe Leads::KitService do
     end
   end
 
+  it 'uses the agent kit_system_prompt when present' do
+    agent.update!(kit_system_prompt: 'PROMPT CUSTOM DO KIT')
+    expect(Ramon::LlmClient).to receive(:complete)
+      .with(hash_including(system: 'PROMPT CUSTOM DO KIT'))
+      .and_return(llm_result(kit_json))
+    service.perform
+  end
+
+  it 'falls back to the default kit prompt when the agent has none' do
+    agent.update_column(:kit_system_prompt, nil)
+    expect(Ramon::LlmClient).to receive(:complete)
+      .with(hash_including(system: Leads::KitService::KIT_SYSTEM_PROMPT_DEFAULT))
+      .and_return(llm_result(kit_json))
+    service.perform
+  end
+
   it 'não sobrescreve status nem result da triagem' do
     allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(kit_json))
     described_class.new(triage).perform

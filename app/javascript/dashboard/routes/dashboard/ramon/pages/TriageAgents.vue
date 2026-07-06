@@ -27,6 +27,7 @@ const detail = reactive({
   provider: '',
   model: '',
   system_prompt: '',
+  kit_system_prompt: '',
   sensitive: false,
   active: true,
 });
@@ -41,6 +42,7 @@ watch(
     detail.provider = agent.provider || '';
     detail.model = agent.model || '';
     detail.system_prompt = agent.system_prompt || '';
+    detail.kit_system_prompt = agent.kit_system_prompt || '';
     detail.sensitive = !!agent.sensitive;
     detail.active = agent.active !== false;
   },
@@ -81,6 +83,7 @@ const saveDetail = () => {
     provider: detail.provider,
     model: detail.model,
     system_prompt: detail.system_prompt,
+    kit_system_prompt: detail.kit_system_prompt,
   });
 };
 
@@ -263,6 +266,15 @@ onMounted(() => store.dispatch('triageAgents/get'));
           rows="12"
           class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 text-n-slate-12"
           :placeholder="$t('RAMON.TRIAGE_AGENTS.SYSTEM_PROMPT')"
+          @blur="saveDetail"
+        />
+
+        <textarea
+          v-model="detail.kit_system_prompt"
+          data-testid="triage-agents-kit-system-prompt-input"
+          rows="12"
+          class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 text-n-slate-12"
+          :placeholder="$t('RAMON.TRIAGE_AGENTS.KIT_SYSTEM_PROMPT')"
           @blur="saveDetail"
         />
 

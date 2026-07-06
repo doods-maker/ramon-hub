@@ -31,6 +31,7 @@ class Api::V1::Accounts::TriageAgentsController < Api::V1::Accounts::BaseControl
   end
 
   def permitted_params
-    params.permit(:name, :description, :area, :system_prompt, :provider, :model, :sensitive, :active)
+    params.permit(:name, :description, :area, :system_prompt, :kit_system_prompt, :provider, :model, :sensitive,
+                  :active)
   end
 end

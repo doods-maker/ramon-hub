@@ -358,6 +358,7 @@
       "PROVIDER": "Provider",
       "MODEL": "Model",
       "SYSTEM_PROMPT": "Instructions (system prompt)",
+      "KIT_SYSTEM_PROMPT": "Kit prompt (Closer)",
       "SENSITIVE": "Sensitive data (LGPD)",
       "SENSITIVE_HINT": "On: blocks DeepSeek; only Anthropic/OpenAI process this agent.",
       "ACTIVE_TOGGLE": "Active agent",
