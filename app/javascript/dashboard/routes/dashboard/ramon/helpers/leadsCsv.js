@@ -23,9 +23,7 @@ const cell = value => {
 // channels = cat\u00E1logo do leadConfig store ([{ key, label }]) para traduzir a
 // chave crua do lead na coluna leg\u00EDvel.
 export const leadsToCsv = (leads, channels = []) => {
-  const channelLabels = Object.fromEntries(
-    channels.map(c => [c.key, c.label])
-  );
+  const channelLabels = Object.fromEntries(channels.map(c => [c.key, c.label]));
   const columns = buildColumns(channelLabels);
   const header = columns.map(([label]) => label).join(';');
   const rows = leads.map(lead =>

@@ -195,7 +195,9 @@ const submit = async () => {
         data-testid="new-lead-channel"
         class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
       >
-        <option value="">{{ $t('RAMON.FUNIL.NEW.CHANNEL_PLACEHOLDER') }}</option>
+        <option value="">
+          {{ $t('RAMON.FUNIL.NEW.CHANNEL_PLACEHOLDER') }}
+        </option>
         <option v-for="c in channels" :key="c.key" :value="c.key">
           {{ c.label }}
         </option>
