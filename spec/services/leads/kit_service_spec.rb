@@ -20,8 +20,12 @@ RSpec.describe Leads::KitService do
     }.to_json
   end
 
+  def llm_result(content, input_tokens: 40, output_tokens: 20)
+    Ramon::LlmClient::Result.new(content: content, input_tokens: input_tokens, output_tokens: output_tokens)
+  end
+
   it 'gera o kit e grava ready' do
-    allow(Ramon::LlmClient).to receive(:complete).and_return(kit_json)
+    allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(kit_json))
     described_class.new(triage).perform
     triage.reload
     expect(triage.kit_status).to eq('ready')
@@ -40,7 +44,7 @@ RSpec.describe Leads::KitService do
       expect(user).to include('Viabilidade apurada: alta')
       expect(user).to include('Súmula 47')
       expect(sensitive).to be(false)
-      kit_json
+      llm_result(kit_json)
     end
     described_class.new(triage).perform
   end
@@ -49,20 +53,20 @@ RSpec.describe Leads::KitService do
     expect(Ramon::LlmClient).to receive(:complete) do |user:, **|
       expect(user).to include('Cliente: [nome]')
       expect(user).not_to include('João')
-      kit_json
+      llm_result(kit_json)
     end
     described_class.new(triage).perform
   end
 
   it 'tolera cercas ```json e texto em volta' do
     allow(Ramon::LlmClient).to receive(:complete)
-      .and_return("Claro! Aqui está:\n```json\n#{kit_json}\n```\nEspero ter ajudado.")
+      .and_return(llm_result("Claro! Aqui está:\n```json\n#{kit_json}\n```\nEspero ter ajudado."))
     described_class.new(triage).perform
     expect(triage.reload.kit_status).to eq('ready')
   end
 
   it 'marca error quando a resposta não tem JSON utilizável' do
-    allow(Ramon::LlmClient).to receive(:complete).and_return('não consigo')
+    allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('não consigo'))
     described_class.new(triage).perform
     triage.reload
     expect(triage.kit_status).to eq('error')
@@ -70,9 +74,19 @@ RSpec.describe Leads::KitService do
   end
 
   it 'marca error quando o JSON vem sem resumo_leigo' do
-    allow(Ramon::LlmClient).to receive(:complete).and_return('{"roteiro_perguntas": []}')
+    allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('{"roteiro_perguntas": []}'))
     described_class.new(triage).perform
     expect(triage.reload.kit_status).to eq('error')
+  end
+
+  it 'accumulates kit token usage on top of existing triage usage' do
+    triage.update!(input_tokens: 100, output_tokens: 30)
+    allow(Ramon::LlmClient).to receive(:complete)
+      .and_return(llm_result(kit_json, input_tokens: 40, output_tokens: 20))
+    described_class.new(triage).perform
+    triage.reload
+    expect(triage.input_tokens).to eq(140)
+    expect(triage.output_tokens).to eq(50)
   end
 
   it 'marca error quando o LlmClient levanta exceção' do
@@ -94,7 +108,7 @@ RSpec.describe Leads::KitService do
   end
 
   it 'não sobrescreve status nem result da triagem' do
-    allow(Ramon::LlmClient).to receive(:complete).and_return(kit_json)
+    allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(kit_json))
     described_class.new(triage).perform
     triage.reload
     expect(triage.status).to eq('done')

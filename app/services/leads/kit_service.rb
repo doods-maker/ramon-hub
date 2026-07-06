@@ -21,8 +21,9 @@ class Leads::KitService
 
   def perform
     @triage.update!(kit_status: 'running')
-    raw = call_llm
-    @triage.update!(kit: parse_kit(raw), kit_status: 'ready')
+    result = call_llm
+    @triage.update!(kit: parse_kit(result.content), kit_status: 'ready')
+    record_usage(result)
   rescue StandardError => e
     mark_error(e)
   end
@@ -33,6 +34,12 @@ class Leads::KitService
     @triage.update!(kit_status: 'error', kit: { 'error' => error.message.truncate(500) })
   rescue StandardError => e
     Rails.logger.error("KitService: falha ao gravar erro do kit da triage #{@triage.id}: #{e.message}")
+  end
+
+  # ponytail: record_usage duplicado nos 2 services; extrair concern se surgir um 3º consumidor.
+  def record_usage(result)
+    @triage.increment!(:input_tokens, result.input_tokens.to_i)
+    @triage.increment!(:output_tokens, result.output_tokens.to_i)
   end
 
   def call_llm
