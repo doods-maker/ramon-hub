@@ -74,10 +74,16 @@ class Leads::TriageService
     return nil if conversation.blank?
 
     messages = conversation.messages.where(message_type: [:incoming, :outgoing], private: false)
-                           .where.not(content: [nil, '']).order(:created_at).last(MAX_MESSAGES)
-    return nil if messages.empty?
+                           .order(:created_at).last(MAX_MESSAGES)
+    lines = messages.filter_map do |m|
+      text = m.content_for_llm
+      next if text.blank?
+      next if text == '[Attachment]'
 
-    lines = messages.map { |m| "#{m.incoming? ? 'Cliente' : 'Atendimento'}: #{m.content}" }
+      "#{m.incoming? ? 'Cliente' : 'Atendimento'}: #{text}"
+    end
+    return nil if lines.empty?
+
     "Conversa (WhatsApp/chat):\n#{lines.join("\n")}"
   end
 end

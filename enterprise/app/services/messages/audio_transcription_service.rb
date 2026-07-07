@@ -1,7 +1,6 @@
 class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
   include Integrations::LlmInstrumentation
 
-  TRANSCRIPTION_MODEL = 'gpt-4o-mini-transcribe'.freeze
   # OpenAI's transcription endpoint hard limit is 25 MB *decimal* (25_000_000), not
   # binary (25.megabytes = 26_214_400) — using the binary form leaks the 25.0–26.2 MB
   # range to the API as 413s. Long audio (~70+ min Opus) keeps the attachment but skips
@@ -32,11 +31,10 @@ class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
 
   private
 
+  # ramon: transcrição roda no nosso faster-whisper local (grátis), sem Captain/cota.
+  # Interruptor por conta = account.audio_transcriptions.
   def can_transcribe?
-    return false unless account.feature_enabled?('captain_integration')
-    return false if account.audio_transcriptions.blank?
-
-    account.usage_limits[:captain][:responses][:current_available].positive?
+    account.audio_transcriptions
   end
 
   def audio_too_large?
@@ -81,7 +79,7 @@ class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
       # behaviour across OpenAI transcription models.
       response = @client.audio.transcribe(
         parameters: {
-          model: TRANSCRIPTION_MODEL,
+          model: @model,
           file: file,
           temperature: 0.0
         }
@@ -98,7 +96,7 @@ class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
   def instrumentation_params(file_path)
     {
       span_name: 'llm.messages.audio_transcription',
-      model: TRANSCRIPTION_MODEL,
+      model: @model,
       account_id: account&.id,
       feature_name: 'audio_transcription',
       file_path: file_path
@@ -110,7 +108,6 @@ class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
 
     attachment.update!(meta: { transcribed_text: transcribed_text })
     message.reload.send_update_event
-    message.account.increment_response_usage
 
     return unless ChatwootApp.advanced_search_allowed?
 
