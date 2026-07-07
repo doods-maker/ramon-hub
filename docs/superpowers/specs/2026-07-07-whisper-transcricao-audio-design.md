@@ -20,8 +20,11 @@ reusando o pipeline de transcrição que o fork já tem (camada Enterprise).
 
 ## Decisões de produto (fechadas com o Eduardo)
 
-1. **Gatilho:** todo áudio **inbound** (cliente→banca), em qualquer conversa.
-   Áudio outbound (da banca) não é transcrito.
+1. **Gatilho:** todo áudio recebido do cliente vira texto. Nota de implementação:
+   o pipeline EE dispara pra **todo** anexo de áudio (inbound e outbound), sem
+   guard de direção. Optamos por **não** adicionar esse guard — áudio outbound
+   (da banca) é baixo volume, transcrevê-lo é inócuo/barato e ainda dá contexto
+   na triagem ("Atendimento: [Voice Message] ..."). O foco de produto é o inbound.
 2. **Visibilidade:** só interna — o texto aparece pra equipe abaixo do player
    (comportamento nativo EE) e alimenta a triagem. Cliente nunca vê.
 3. **Modelo:** padrão `faster-whisper-medium` — o público (50+, interior de SC,
@@ -135,7 +138,8 @@ pedidos; este é o único ponto de lógica não-trivial nova).
 
 ## Fora de escopo (YAGNI)
 
-- Transcrever áudio outbound (da banca).
+- Guard de direção pra pular áudio outbound (transcreve todo áudio; ver decisão 1).
+- Filtrar áudio da timeline/triagem por lead vinculado (todo áudio transcreve).
 - UI nova (a nativa já mostra).
 - Listener Ramon novo (o gancho `after_create_commit` EE já dispara).
 - Tocar no `Ramon::LlmClient` (é texto, não áudio).
