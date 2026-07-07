@@ -14,5 +14,7 @@ class Ramon::LeadNotificationBuilder
         primary_actor: lead
       )
     end
+
+    Ramon::NtfyPushJob.perform_later(lead.id) if ENV['NTFY_TOPIC'].present?
   end
 end
