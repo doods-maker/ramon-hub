@@ -15,6 +15,6 @@ class Ramon::LeadNotificationBuilder
       )
     end
 
-    Ramon::NtfyPushJob.perform_later(lead.id) if ENV['NTFY_TOPIC'].present?
+    Ramon::NtfyPushJob.perform_later(lead.id) if ENV.fetch('NTFY_TOPIC', nil).present?
   end
 end

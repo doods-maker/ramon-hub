@@ -2,7 +2,7 @@ class Ramon::NtfyPushJob < ApplicationJob
   queue_as :low
 
   def perform(lead_id)
-    topic = ENV['NTFY_TOPIC']
+    topic = ENV.fetch('NTFY_TOPIC', nil)
     return if topic.blank?           # feature desligada até o Eduardo setar o tópico
 
     lead = Lead.find_by(id: lead_id)
@@ -38,9 +38,12 @@ class Ramon::NtfyPushJob < ApplicationJob
 
   # O corpo pode ter acentos normalmente (é o payload, não header).
   def body_for(lead)
-    parts = []
-    parts << (lead.benefit_type&.name || lead.thesis&.name)
-    parts << "via #{lead.channel.presence || lead.source}" if lead.channel.present? || lead.source.present?
+    parts = [lead.benefit_type&.name || lead.thesis&.name, via_line_for(lead)]
     parts.compact.join(' · ').presence || 'Lead sem detalhes'
+  end
+
+  def via_line_for(lead)
+    source = lead.channel.presence || lead.source.presence
+    "via #{source}" if source
   end
 end
