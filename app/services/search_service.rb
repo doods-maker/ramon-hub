@@ -15,8 +15,10 @@ class SearchService
       { contacts: filter_contacts }
     when 'Article'
       { articles: filter_articles }
+    when 'Lead'
+      { leads: filter_leads }
     else
-      { contacts: filter_contacts, messages: filter_messages, conversations: filter_conversations, articles: filter_articles }
+      { contacts: filter_contacts, messages: filter_messages, conversations: filter_conversations, articles: filter_articles, leads: filter_leads }
     end
   end
 
@@ -172,6 +174,17 @@ class SearchService
     @contacts = contacts_query.resolved_contacts(
       use_crm_v2: current_account.feature_enabled?('crm_v2')
     ).order_on_last_activity_at('desc').page(params[:page]).per(15)
+  end
+
+  def filter_leads
+    return Lead.none unless account_user&.administrator? || account_user&.agent?
+
+    @leads = current_account.leads.left_joins(:contact)
+                            .where('leads.name ILIKE :search OR contacts.name ILIKE :search OR contacts.phone_number ILIKE :search',
+                                   search: "%#{search_query}%")
+                            .reorder('leads.created_at DESC')
+                            .page(params[:page])
+                            .per(15)
   end
 
   def filter_articles
