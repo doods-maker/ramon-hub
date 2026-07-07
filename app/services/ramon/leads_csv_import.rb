@@ -58,7 +58,7 @@ module Ramon
     def find_contact(cpf, phone, email)
       (cpf && @account.contacts.find_by(cpf: cpf)) ||
         (phone && @account.contacts.find_by(phone_number: phone)) ||
-        (email && @account.contacts.from_email(email)&.then { |c| c.account_id == @account.id ? c : nil })
+        (email && @account.contacts.find_by(email: email.downcase))
     end
 
     def fill_blank(contact, attribute, value)
@@ -76,13 +76,15 @@ module Ramon
       stage = target_stage(attrs['etapa'], won_at)
       return if duplicate_case?(contact, benefit, won_at)
 
-      lead = @account.leads.create!(
+      # won_at vai no create: track_stage_cycle preserva valor existente e o
+      # after_update do dossiê de handoff NÃO dispara (import histórico não
+      # deve gerar dossiê de passagem).
+      @account.leads.create!(
         name: contact.name, contact_id: contact.id, lead_stage: stage,
-        benefit_type: benefit, thesis: thesis,
+        benefit_type: benefit, thesis: thesis, won_at: won_at,
         value: parse_decimal(attrs['valor']),
         source: attrs['origem'], channel: valid_channel(attrs['canal'])
       )
-      lead.update!(won_at: won_at) if won_at.present?
     end
 
     def target_stage(etapa_name, won_at)

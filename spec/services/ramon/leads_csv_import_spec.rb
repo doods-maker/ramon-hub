@@ -48,6 +48,8 @@ RSpec.describe Ramon::LeadsCsvImport do
     expect(lead.benefit_type.name).to eq('Auxílio-acidente')
     expect(lead.value).to eq(1500)
     expect(lead.source).to eq('advbox')
+    # import histórico não gera dossiê de passagem (handoff dispara só em update de won_at)
+    expect(lead.lead_notes.where('body LIKE ?', '📋 DOSSIÊ%')).to be_empty
   end
 
   it 'cria caso aberto na primeira etapa quando etapa não informada' do
