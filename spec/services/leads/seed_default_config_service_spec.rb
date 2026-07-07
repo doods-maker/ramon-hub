@@ -57,6 +57,12 @@ RSpec.describe Leads::SeedDefaultConfigService do
     expect(tese.thesis_items.pluck(:section).uniq).to match_array(ThesisItem::SECTIONS)
   end
 
+  it 'seeda o honorário padrão do auxílio-acidente (30% + 3 mensalidades)' do
+    tese = account.theses.find_by!(name: 'Auxílio-acidente (B36)')
+    expect(tese.honorario_percentual).to eq(30)
+    expect(tese.honorario_n_mensalidades).to eq(3)
+  end
+
   it 'é idempotente ao rodar o seed de teses 2x (não duplica teses)' do
     expect { described_class.new(account).perform }.not_to(change { account.theses.count })
   end

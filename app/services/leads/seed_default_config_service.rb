@@ -134,6 +134,8 @@ class Leads::SeedDefaultConfigService
         t.description = thesis_attrs['description']
         t.area = thesis_attrs['area']
         t.position = thesis_attrs['position']
+        t.honorario_percentual = thesis_attrs['honorario_percentual']
+        t.honorario_n_mensalidades = thesis_attrs['honorario_n_mensalidades']
       end
       seed_thesis_items(thesis, thesis_attrs['items'] || [])
     end
