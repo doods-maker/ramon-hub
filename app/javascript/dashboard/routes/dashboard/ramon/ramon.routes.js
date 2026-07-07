@@ -38,4 +38,10 @@ export const routes = [
     component: () => import('./pages/TriageAgents.vue'),
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
+  {
+    path: frontendURL('accounts/:accountId/ramon/pessoa/:contactId'),
+    name: 'ramon_linha_da_vida',
+    component: () => import('./pages/LinhaDaVida.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
 ];
