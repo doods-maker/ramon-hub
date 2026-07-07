@@ -24,5 +24,19 @@ RSpec.describe Ramon::LeadNotificationBuilder do
       expect(Notification.first.push_message_title).to include('Maria da LP')
       expect(Notification.first.push_message_body).to include('Maria da LP')
     end
+
+    it 'enfileira o push ntfy quando NTFY_TOPIC está setado' do
+      with_modified_env NTFY_TOPIC: 'ramon-leads' do
+        builder = described_class.new(lead: lead)
+        expect { builder.perform }.to have_enqueued_job(Ramon::NtfyPushJob).with(lead.id)
+      end
+    end
+
+    it 'não enfileira o push ntfy quando NTFY_TOPIC está em branco' do
+      with_modified_env NTFY_TOPIC: '' do
+        builder = described_class.new(lead: lead)
+        expect { builder.perform }.not_to have_enqueued_job(Ramon::NtfyPushJob)
+      end
+    end
   end
 end
