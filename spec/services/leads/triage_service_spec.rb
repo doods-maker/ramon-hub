@@ -99,4 +99,13 @@ RSpec.describe Leads::TriageService do
     described_class.new(triage).perform
     expect(triage.reload.source_text).to include('recebi a carta do INSS ontem')
   end
+
+  it 'não inclui o placeholder [Attachment] de anexo não-áudio no texto-fonte' do
+    file_msg = create(:message, account: account, conversation: conversation,
+                                message_type: :incoming, content: nil)
+    file_msg.attachments.create!(account: account, file_type: :file)
+    allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('VIABILIDADE: alta'))
+    described_class.new(triage).perform
+    expect(triage.reload.source_text).not_to include('[Attachment]')
+  end
 end

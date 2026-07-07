@@ -78,6 +78,7 @@ class Leads::TriageService
     lines = messages.filter_map do |m|
       text = m.content_for_llm
       next if text.blank?
+      next if text == '[Attachment]'
 
       "#{m.incoming? ? 'Cliente' : 'Atendimento'}: #{text}"
     end
