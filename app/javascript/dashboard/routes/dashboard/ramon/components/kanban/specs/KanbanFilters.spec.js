@@ -6,6 +6,7 @@ const stubStore = {
     'leadConfig/getBenefitTypes': [{ id: 1, name: 'BPC' }],
     'leadConfig/getPriorities': [{ id: 2, name: 'Alta' }],
     'leadConfig/getSources': ['Meta Ads'],
+    'leadConfig/getChannels': [{ key: 'meta_ads', label: 'Meta Ads' }],
     'agents/getAgents': [{ id: 3, name: 'Eduardo' }],
   },
 };

@@ -14,6 +14,7 @@ json.custom_attributes lead.custom_attributes
 
 json.value lead.value
 json.source lead.source
+json.channel lead.channel
 
 json.stage_entered_at lead.stage_entered_at
 json.won_at lead.won_at

@@ -9,6 +9,7 @@ export const state = {
   benefitTypes: [],
   priorities: [],
   sources: [],
+  channels: [],
   lostReasons: [],
   uiFlags: { isFetching: false },
 };
@@ -20,6 +21,7 @@ export const getters = {
   getBenefitTypes: _state => _state.benefitTypes,
   getPriorities: _state => _state.priorities,
   getSources: _state => _state.sources,
+  getChannels: _state => _state.channels,
   getLostReasons: _state => _state.lostReasons,
 };
 
@@ -105,6 +107,7 @@ export const mutations = {
     _state.benefitTypes = data.benefit_types || [];
     _state.priorities = data.priorities || [];
     _state.sources = data.sources || [];
+    _state.channels = data.channels || [];
     _state.lostReasons = data.lost_reasons || [];
   },
 

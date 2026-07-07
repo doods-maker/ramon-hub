@@ -1,6 +1,6 @@
 // Export do funil (item 14 do 4b). Separador ';' + BOM = abre certo no
 // Excel pt-BR sem assistente de importacao.
-const COLUMNS = [
+const buildColumns = channelLabels => [
   ['nome', l => l.name],
   ['telefone', l => l.contact_phone],
   ['etapa', l => l.stage_name],
@@ -9,6 +9,7 @@ const COLUMNS = [
   ['prioridade', l => l.lead_priority_name],
   ['valor', l => l.value],
   ['origem', l => l.source],
+  ['canal', l => channelLabels[l.channel] || l.channel || ''],
   ['sdr', l => l.sdr_name],
   ['closer', l => l.closer_name],
   ['motivo_perda', l => l.lost_reason],
@@ -19,10 +20,14 @@ const cell = value => {
   return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-export const leadsToCsv = leads => {
-  const header = COLUMNS.map(([label]) => label).join(';');
+// channels = cat\u00E1logo do leadConfig store ([{ key, label }]) para traduzir a
+// chave crua do lead na coluna leg\u00EDvel.
+export const leadsToCsv = (leads, channels = []) => {
+  const channelLabels = Object.fromEntries(channels.map(c => [c.key, c.label]));
+  const columns = buildColumns(channelLabels);
+  const header = columns.map(([label]) => label).join(';');
   const rows = leads.map(lead =>
-    COLUMNS.map(([, pick]) => cell(pick(lead))).join(';')
+    columns.map(([, pick]) => cell(pick(lead))).join(';')
   );
   return `\uFEFF${[header, ...rows].join('\n')}`;
 };

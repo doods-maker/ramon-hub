@@ -41,9 +41,9 @@
         "CREATED": "Created",
         "WON": "Won",
         "LOST": "Lost",
-        "BY_SOURCE": "By source",
+        "BY_CHANNEL": "By channel",
         "LOST_REASONS": "Loss reasons (30d)",
-        "EMPTY_SOURCE": "No leads created this week.",
+        "EMPTY_CHANNEL": "No leads created this week.",
         "EMPTY_LOST_REASONS": "No leads lost in the last 30 days."
       },
       "HISTORY": {
@@ -111,6 +111,8 @@
       },
       "NEW": {
         "SOURCE": "Source",
+        "CHANNEL": "Channel",
+        "CHANNEL_PLACEHOLDER": "— select —",
         "VALUE": "Value (R$)",
         "DEDUP": "Open lead already exists for this phone: {name} ({stage})",
         "OPEN_EXISTING": "Open existing",
@@ -136,6 +138,7 @@
         "PRIORITY": "Priority",
         "AGENT": "Owner",
         "SOURCE": "Source",
+        "CHANNEL": "Channel",
         "STAGE": "Stage",
         "CREATED_AFTER": "Created from",
         "CREATED_BEFORE": "Created until",
@@ -212,6 +215,7 @@
       "CLOSER": "Closer",
       "VALUE": "Value (R$)",
       "SOURCE": "Source",
+      "CHANNEL": "Channel",
       "LOST_REASON": "Loss reason",
       "NOTES": "Notes",
       "NOTES_ADD": "Write a note…",

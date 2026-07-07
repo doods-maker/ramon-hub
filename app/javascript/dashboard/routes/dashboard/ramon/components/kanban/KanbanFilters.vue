@@ -13,6 +13,7 @@ const benefitTypes = computed(
 );
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const sources = computed(() => getters['leadConfig/getSources'].value);
+const channels = computed(() => getters['leadConfig/getChannels'].value);
 const agents = computed(() => getters['agents/getAgents'].value);
 // getter pode não existir em cenários de teste isolados — cai para lista vazia.
 const stages = computed(() => getters['leadConfig/getStages']?.value ?? []);
@@ -41,6 +42,7 @@ const clearFilters = () => {
     leadPriorityId: null,
     agentId: null,
     source: '',
+    channel: '',
     q: '',
     leadStageId: null,
     createdAfter: null,
@@ -101,6 +103,17 @@ const clearFilters = () => {
     >
       <option value="">{{ $t('RAMON.FUNIL.FILTERS.SOURCE') }}</option>
       <option v-for="s in sources" :key="s" :value="s">{{ s }}</option>
+    </select>
+    <select
+      data-testid="filter-channel"
+      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :value="filters.channel || ''"
+      @change="emitUpdate({ channel: $event.target.value || '' })"
+    >
+      <option value="">{{ $t('RAMON.FUNIL.FILTERS.CHANNEL') }}</option>
+      <option v-for="c in channels" :key="c.key" :value="c.key">
+        {{ c.label }}
+      </option>
     </select>
     <select
       data-testid="filter-stage"

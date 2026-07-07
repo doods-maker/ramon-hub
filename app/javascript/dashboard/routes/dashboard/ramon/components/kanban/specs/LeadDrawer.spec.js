@@ -41,6 +41,7 @@ const buildStore = (updateSpy, selectSpy) =>
           ],
           getBenefitTypes: () => [{ id: 3, name: 'Auxílio-acidente' }],
           getPriorities: () => [{ id: 4, name: 'Alta' }],
+          getChannels: () => [],
         },
       },
       agents: {

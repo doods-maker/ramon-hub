@@ -44,6 +44,7 @@ const buildStore = () =>
           getBenefitTypes: () => [],
           getPriorities: () => [],
           getSources: () => [],
+          getChannels: () => [],
         },
       },
       agents: {

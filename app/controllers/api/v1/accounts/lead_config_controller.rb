@@ -6,6 +6,7 @@ class Api::V1::Accounts::LeadConfigController < Api::V1::Accounts::BaseControlle
     @lost_reasons = Current.account.lost_reasons
     @benefit_types = Current.account.benefit_types
     @priorities = Current.account.lead_priorities
+    @channels = Ramon::SourceCatalog::CHANNELS
     # reorder(nil) anula o default_scope do Lead — DISTINCT + ORDER BY de coluna
     # fora do SELECT é erro no Postgres
     @sources = Current.account.leads.where.not(source: [nil, '']).reorder(nil).distinct.pluck(:source).sort

@@ -16,6 +16,7 @@ const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
 const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
 const priorities = useMapGetter('leadConfig/getPriorities');
+const channels = useMapGetter('leadConfig/getChannels');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
 const agents = useMapGetter('agents/getAgents');
 const theses = useMapGetter('theses/getTheses');
@@ -432,6 +433,21 @@ const copyPhone = async () => {
       class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
       @blur="saveSource"
     />
+
+    <label class="block mb-1 text-xs text-n-slate-10">{{
+      $t('RAMON.DRAWER.CHANNEL')
+    }}</label>
+    <select
+      data-testid="field-channel"
+      :value="lead.channel"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      @change="e => saveSelect('channel', e.target.value)"
+    >
+      <option value="">—</option>
+      <option v-for="c in channels" :key="c.key" :value="c.key">
+        {{ c.label }}
+      </option>
+    </select>
 
     <label class="block mb-1 text-xs text-n-slate-10">{{
       $t('RAMON.DRAWER.DCB_LABEL')

@@ -35,9 +35,10 @@ json.funnel do
 end
 
 json.week do
-  json.created_by_source @week[:created_by_source] do |source, count|
-    json.source source.presence || '—'
-    json.count count
+  json.created_by_channel @week[:created_by_channel] do |row|
+    json.key row[:key]
+    json.label row[:label]
+    json.count row[:count]
   end
   json.won @week[:won]
   json.lost @week[:lost]

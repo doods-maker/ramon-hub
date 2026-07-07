@@ -85,7 +85,7 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
 
   def week_section
     {
-      created_by_source: created_by_source,
+      created_by_channel: created_by_channel,
       won: Current.account.leads.where(won_at: 7.days.ago..).count,
       lost: Current.account.leads.where(lost_at: 7.days.ago..).count,
       created: Current.account.leads.where(created_at: 7.days.ago..).count,
@@ -93,10 +93,11 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     }
   end
 
-  def created_by_source
-    Current.account.leads.where(created_at: 7.days.ago..)
-           .reorder(nil).group(:source).count
-           .sort_by { |_source, count| -count }
+  def created_by_channel
+    counts = Current.account.leads.where(created_at: 7.days.ago..).reorder(nil).group(:channel).count
+    Ramon::SourceCatalog::CHANNELS.map do |c|
+      { key: c[:key], label: c[:label], count: counts[c[:key]].to_i }
+    end
   end
 
   def lost_reasons_30d

@@ -70,6 +70,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
       lead_stage: account.lead_stages.order(:position).first,
       contact_id: contact.id,
       source: params[:campanha].to_s.presence,
+      channel: 'landing_page',
       custom_attributes: utm_attributes
     )
   end
