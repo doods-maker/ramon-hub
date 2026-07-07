@@ -8,7 +8,7 @@ class RamonLeadListener < BaseListener
     contact = conversation.contact
     return if contact.blank?
 
-    lead = account.leads.find_by(contact_id: contact.id)
+    lead = account.leads.open.find_by(contact_id: contact.id)
     if lead
       lead.update!(conversation_id: conversation.id)
     else

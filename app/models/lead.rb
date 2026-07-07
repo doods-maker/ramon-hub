@@ -18,6 +18,10 @@ class Lead < ApplicationRecord
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
 
+  # Lead "vivo" no funil — nem ganho nem perdido. É o critério de reengajamento
+  # (pessoa ≠ caso): aberto reengaja, fechado não trava lead novo.
+  scope :open, -> { joins(:lead_stage).where(lead_stages: { is_won: false, is_lost: false }) }
+
   before_save :track_stage_cycle
   before_save :assign_channel
 

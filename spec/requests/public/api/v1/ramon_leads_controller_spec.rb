@@ -130,5 +130,15 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       # Lead tem default_scope por (lead_stage_id, position, id) — `.last` não é o mais recente
       expect(Lead.unscoped.order(:id).last.lead_stage).to eq stage_novo
     end
+
+    it 'cria lead novo quando os leads do contato estão todos fechados' do
+      contact = account.contacts.create!(name: 'Maria', phone_number: '+5548999990000')
+      won_stage = account.lead_stages.find_by(is_won: true)
+      account.leads.create!(name: 'Caso antigo', contact_id: contact.id, lead_stage: won_stage)
+
+      expect do
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(telefone: '48 99999-0000', nome: 'Maria'), as: :json
+      end.to change { account.leads.count }.by(1)
+    end
   end
 end

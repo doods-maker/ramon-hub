@@ -116,6 +116,19 @@ RSpec.describe 'Leads API', type: :request do
       expect(response.parsed_body['id']).to eq(existing.id)
       expect(existing.reload.conversation_id).to eq(new_conversation.id)
     end
+
+    it 'cria lead novo no for_conversation quando os leads do contato estão fechados' do
+      lost_stage = account.lead_stages.find_by(is_lost: true)
+      contact = create(:contact, account: account)
+      create(:lead, account: account, contact: contact, lead_stage: lost_stage, lost_reason: 'sem viabilidade')
+      conversation = create(:conversation, account: account, contact: contact)
+
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+             params: { conversation_id: conversation.id },
+             headers: admin.create_new_auth_token
+      end.to change { account.leads.count }.by(1)
+    end
   end
 
   describe 'GET /api/v1/accounts/{account}/leads (filtros)' do
