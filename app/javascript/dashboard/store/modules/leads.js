@@ -1,6 +1,7 @@
 import * as MutationHelpers from 'shared/helpers/vuex/mutationHelpers';
 import types from '../mutation-types';
 import LeadsAPI from '../../api/leads';
+import ContactAPI from '../../api/contacts';
 
 const FILTERS_KEY = 'ramon_lead_filters';
 
@@ -169,6 +170,24 @@ export const actions = {
   createNote: async (_ctx, { leadId, body }) => {
     const response = await LeadsAPI.createNote(leadId, body);
     return response.data;
+  },
+  async updateContactFields(
+    { commit, state: moduleState },
+    { leadId, contactId, payload }
+  ) {
+    await ContactAPI.update(contactId, payload);
+    const lead = moduleState.records.find(r => r.id === leadId);
+    if (!lead) return;
+    commit(types.EDIT_LEAD, {
+      ...lead,
+      contact_cpf: payload.cpf !== undefined ? payload.cpf : lead.contact_cpf,
+      contact_data_nascimento:
+        payload.data_nascimento !== undefined
+          ? payload.data_nascimento
+          : lead.contact_data_nascimento,
+      contact_sexo:
+        payload.sexo !== undefined ? payload.sexo : lead.contact_sexo,
+    });
   },
 };
 

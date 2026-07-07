@@ -225,6 +225,13 @@
       "NO_THESIS_HINT": "Pick a thesis to unlock the document checklist and playbook.",
       "DCB_LABEL": "DCB (benefit cessation date)",
       "BENEFIT_MONTHLY_LABEL": "Estimated monthly benefit",
+      "PESSOA": {
+        "CPF": "CPF",
+        "BIRTHDATE": "Birth date",
+        "SEX": "Sex",
+        "SEX_M": "Male",
+        "SEX_F": "Female"
+      },
       "NOTE_TEMPLATES": {
         "LABEL": "Note template…",
         "ITEMS": {

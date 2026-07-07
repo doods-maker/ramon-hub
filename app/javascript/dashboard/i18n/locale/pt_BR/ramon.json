@@ -220,6 +220,13 @@
       "CONTACT": "Contato",
       "THESIS": "Tese",
       "NO_THESIS_HINT": "Escolha a tese para liberar o checklist de documentos e o playbook.",
+      "PESSOA": {
+        "CPF": "CPF",
+        "BIRTHDATE": "Data de nascimento",
+        "SEX": "Sexo",
+        "SEX_M": "Masculino",
+        "SEX_F": "Feminino"
+      },
       "NOTE_TEMPLATES": {
         "LABEL": "Modelo de nota…",
         "ITEMS": {
