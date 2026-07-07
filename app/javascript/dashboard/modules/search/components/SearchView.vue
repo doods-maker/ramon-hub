@@ -24,6 +24,7 @@ import SearchResultConversationsList from './SearchResultConversationsList.vue';
 import SearchResultMessagesList from './SearchResultMessagesList.vue';
 import SearchResultContactsList from './SearchResultContactsList.vue';
 import SearchResultArticlesList from './SearchResultArticlesList.vue';
+import SearchResultLeadsList from './SearchResultLeadsList.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -38,6 +39,7 @@ const pages = ref({
   conversations: 1,
   messages: 1,
   articles: 1,
+  leads: 1,
 });
 
 const contactRecords = useMapGetter('conversationSearch/getContactRecords');
@@ -46,6 +48,7 @@ const conversationRecords = useMapGetter(
 );
 const messageRecords = useMapGetter('conversationSearch/getMessageRecords');
 const articleRecords = useMapGetter('conversationSearch/getArticleRecords');
+const leadRecords = useMapGetter('conversationSearch/getLeadRecords');
 const uiFlags = useMapGetter('conversationSearch/getUIFlags');
 
 const addTypeToRecords = (records, type) =>
@@ -63,6 +66,7 @@ const mappedMessages = computed(() =>
 const mappedArticles = computed(() =>
   addTypeToRecords(articleRecords, 'article')
 );
+const mappedLeads = computed(() => addTypeToRecords(leadRecords, 'lead'));
 
 const isSelectedTabAll = computed(() => selectedTab.value === 'all');
 
@@ -78,6 +82,7 @@ const contacts = computed(() => sliceRecordsIfAllTab(mappedContacts));
 const conversations = computed(() => sliceRecordsIfAllTab(mappedConversations));
 const messages = computed(() => sliceRecordsIfAllTab(mappedMessages));
 const articles = computed(() => sliceRecordsIfAllTab(mappedArticles));
+const leads = computed(() => sliceRecordsIfAllTab(mappedLeads));
 
 const filterByTab = tab =>
   computed(() => selectedTab.value === tab || isSelectedTabAll.value);
@@ -86,6 +91,7 @@ const filterContacts = filterByTab('contacts');
 const filterConversations = filterByTab('conversations');
 const filterMessages = filterByTab('messages');
 const filterArticles = filterByTab('articles');
+const filterLeads = filterByTab('leads');
 
 const { shouldShow, isFeatureFlagEnabled } = usePolicy();
 
@@ -102,6 +108,10 @@ const TABS_CONFIG = {
   contacts: {
     permissions: [...ROLES, CONTACT_PERMISSIONS],
     count: () => mappedContacts.value.length,
+  },
+  leads: {
+    permissions: [...ROLES],
+    count: () => mappedLeads.value.length,
   },
   conversations: {
     permissions: [...ROLES, ...CONVERSATION_PERMISSIONS],
@@ -156,6 +166,10 @@ const totalSearchResultsCount = computed(() => {
       featureFlag: FEATURE_FLAGS.HELP_CENTER,
       count: () => articles.value.length,
     },
+    {
+      permissions: [...ROLES],
+      count: () => leads.value.length,
+    },
   ];
 
   return permissionCounts
@@ -182,13 +196,15 @@ const activeTabIndex = computed(() => {
 });
 
 const isFetchingAny = computed(() => {
-  const { contact, message, conversation, article, isFetching } = uiFlags.value;
+  const { contact, message, conversation, article, lead, isFetching } =
+    uiFlags.value;
   return (
     isFetching ||
     contact.isFetching ||
     message.isFetching ||
     conversation.isFetching ||
-    article.isFetching
+    article.isFetching ||
+    lead.isFetching
   );
 });
 
@@ -217,6 +233,7 @@ const showLoadMore = computed(() => {
     conversations: mappedConversations.value,
     messages: mappedMessages.value,
     articles: mappedArticles.value,
+    leads: mappedLeads.value,
   }[selectedTab.value];
 
   return (
@@ -232,6 +249,7 @@ const showViewMore = computed(() => ({
     mappedConversations.value?.length > 5 && isSelectedTabAll.value,
   messages: mappedMessages.value?.length > 5 && isSelectedTabAll.value,
   articles: mappedArticles.value?.length > 5 && isSelectedTabAll.value,
+  leads: mappedLeads.value?.length > 5 && isSelectedTabAll.value,
 }));
 
 const filters = ref({
@@ -241,7 +259,13 @@ const filters = ref({
 });
 
 const clearSearchResult = () => {
-  pages.value = { contacts: 1, conversations: 1, messages: 1, articles: 1 };
+  pages.value = {
+    contacts: 1,
+    conversations: 1,
+    messages: 1,
+    articles: 1,
+    leads: 1,
+  };
   store.dispatch('conversationSearch/clearSearchResults');
 };
 
@@ -315,6 +339,7 @@ const loadMore = () => {
     conversations: 'conversationSearch/conversationSearch',
     messages: 'conversationSearch/messageSearch',
     articles: 'conversationSearch/articleSearch',
+    leads: 'conversationSearch/leadSearch',
   };
 
   if (uiFlags.value.isFetching || selectedTab.value === 'all') return;
@@ -409,6 +434,29 @@ onUnmounted(() => {
                 sm
                 outline
                 @click="selectedTab = 'contacts'"
+              />
+            </Policy>
+
+            <Policy
+              :permissions="[...ROLES]"
+              class="flex flex-col justify-center"
+            >
+              <SearchResultLeadsList
+                v-if="filterLeads"
+                :leads="leads"
+                :query="query"
+                :is-fetching="uiFlags.lead.isFetching"
+                :show-title="isSelectedTabAll"
+                :class="searchResultSectionClass"
+              />
+              <NextButton
+                v-if="showViewMore.leads"
+                :label="t(`SEARCH.VIEW_MORE`)"
+                icon="i-lucide-eye"
+                slate
+                sm
+                outline
+                @click="selectedTab = 'leads'"
               />
             </Policy>
 
