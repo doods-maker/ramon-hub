@@ -7,6 +7,7 @@ import StageHeaderMenu from './StageHeaderMenu.vue';
 const props = defineProps({
   stage: { type: Object, required: true },
   leads: { type: Array, default: () => [] },
+  focusedLeadId: { type: Number, default: null },
 });
 const emit = defineEmits([
   'move',
@@ -185,6 +186,7 @@ const toggleCollapsed = () => {
       <template #item="{ element }">
         <LeadCard
           :lead="element"
+          :focused="element.id === focusedLeadId"
           @open-conversation="id => emit('openConversation', id)"
           @open-lead="lead => emit('openLead', lead)"
         />
