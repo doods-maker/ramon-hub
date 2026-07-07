@@ -54,6 +54,8 @@ class Contact < ApplicationRecord
   validates :phone_number,
             allow_blank: true, uniqueness: { scope: [:account_id] },
             format: { with: /\+[1-9]\d{1,14}\z/, message: I18n.t('errors.contacts.phone_number.invalid') }
+  validates :cpf, allow_nil: true, uniqueness: { scope: [:account_id] }, cpf: true
+  validates :sexo, allow_nil: true, inclusion: { in: %w[M F] }
 
   belongs_to :account
   has_many :conversations, dependent: :destroy_async
@@ -62,6 +64,7 @@ class Contact < ApplicationRecord
   has_many :inboxes, through: :contact_inboxes
   has_many :messages, as: :sender, dependent: :destroy_async
   has_many :notes, dependent: :destroy_async
+  has_many :leads, dependent: :nullify
   before_validation :prepare_contact_attributes
   after_create_commit :dispatch_create_event, :ip_lookup
   after_update_commit :dispatch_update_event
@@ -218,6 +221,11 @@ class Contact < ApplicationRecord
   def prepare_contact_attributes
     prepare_email_attribute
     prepare_jsonb_attributes
+    prepare_cpf_attribute
+  end
+
+  def prepare_cpf_attribute
+    self.cpf = cpf.to_s.gsub(/\D/, '').presence if will_save_change_to_cpf?
   end
 
   def prepare_email_attribute
