@@ -296,6 +296,8 @@
       "NAME": "Nome",
       "DESCRIPTION": "Descrição",
       "AREA": "Área",
+      "HONORARIO_PERCENT": "Honorário: % dos atrasados",
+      "HONORARIO_INSTALLMENTS": "Honorário: nº de mensalidades",
       "ACTIVE_TOGGLE": "Tese ativa",
       "ITEM_DELETE_CONFIRM": "Remover este item do playbook?",
       "ITEM_TITLE_PLACEHOLDER": "Título do item",

@@ -25,7 +25,14 @@ const selectedThesis = computed(() =>
 
 const newThesisName = ref('');
 
-const detail = reactive({ name: '', description: '', area: '', active: true });
+const detail = reactive({
+  name: '',
+  description: '',
+  area: '',
+  active: true,
+  honorarioPercentual: '',
+  honorarioNMensalidades: '',
+});
 
 watch(
   selectedThesis,
@@ -35,6 +42,8 @@ watch(
     detail.description = thesis.description || '';
     detail.area = thesis.area || '';
     detail.active = thesis.active !== false;
+    detail.honorarioPercentual = thesis.honorario_percentual ?? '';
+    detail.honorarioNMensalidades = thesis.honorario_n_mensalidades ?? '';
   },
   { immediate: true }
 );
@@ -80,6 +89,8 @@ const saveDetail = () => {
     name: detail.name,
     description: detail.description,
     area: detail.area,
+    honorario_percentual: detail.honorarioPercentual,
+    honorario_n_mensalidades: detail.honorarioNMensalidades,
   });
 };
 
@@ -268,6 +279,29 @@ onMounted(() => store.dispatch('theses/get'));
             :placeholder="$t('RAMON.PLAYBOOKS.AREA')"
             @blur="saveDetail"
           />
+          <div class="flex gap-3">
+            <input
+              v-model="detail.honorarioPercentual"
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              data-testid="playbooks-honorario-percentual-input"
+              class="flex-1 px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+              :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_PERCENT')"
+              @blur="saveDetail"
+            />
+            <input
+              v-model="detail.honorarioNMensalidades"
+              type="number"
+              min="0"
+              step="1"
+              data-testid="playbooks-honorario-mensalidades-input"
+              class="flex-1 px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+              :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS')"
+              @blur="saveDetail"
+            />
+          </div>
           <label class="flex items-center gap-2 text-sm text-n-slate-12">
             <input
               v-model="detail.active"

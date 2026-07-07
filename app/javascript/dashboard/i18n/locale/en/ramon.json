@@ -301,6 +301,8 @@
       "NAME": "Name",
       "DESCRIPTION": "Description",
       "AREA": "Area",
+      "HONORARIO_PERCENT": "Fee: % of past-due amount",
+      "HONORARIO_INSTALLMENTS": "Fee: nº of monthly benefits",
       "ACTIVE_TOGGLE": "Active thesis",
       "ITEM_DELETE_CONFIRM": "Remove this playbook item?",
       "ITEM_TITLE_PLACEHOLDER": "Item title",
