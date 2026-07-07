@@ -57,7 +57,17 @@ services:
     ports:
       - '127.0.0.1:6379:6379'
 
+  whisper:
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
+    restart: always
+    environment:
+      - HF_HOME=/data
+      - WHISPER__TTL=-1
+    volumes:
+      - whisper_data:/data
+
 volumes:
   storage_data:
   postgres_data:
   redis_data:
+  whisper_data:
