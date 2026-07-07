@@ -36,6 +36,9 @@ json.closer_name lead.closer&.name
 json.contact_name lead.contact&.name
 json.contact_phone lead.contact&.phone_number
 json.contact_email lead.contact&.email
+json.contact_cpf lead.contact&.cpf
+json.contact_data_nascimento lead.contact&.data_nascimento
+json.contact_sexo lead.contact&.sexo
 
 if lead.latest_triage
   json.latest_triage do
