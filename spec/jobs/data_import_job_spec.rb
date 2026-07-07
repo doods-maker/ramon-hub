@@ -30,6 +30,19 @@ RSpec.describe DataImportJob do
     end
   end
 
+  it 'delega import de leads ao servico ramon' do
+    account = create(:account)
+    import = account.data_imports.new(data_type: 'leads')
+    import.import_file.attach(io: StringIO.new("nome\n"), filename: 'l.csv', content_type: 'text/csv')
+    import.save!
+
+    service = instance_double(Ramon::LeadsCsvImport, perform: true)
+    allow(Ramon::LeadsCsvImport).to receive(:new).with(import).and_return(service)
+
+    described_class.perform_now(import)
+    expect(service).to have_received(:perform)
+  end
+
   describe 'importing data' do
     context 'when the data is valid' do
       it 'imports data into the account' do

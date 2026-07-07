@@ -10,6 +10,8 @@ class DataImportJob < ApplicationJob
   CONTACT_TAGGABLE_TYPE = 'Contact'.freeze
 
   def perform(data_import)
+    return Ramon::LeadsCsvImport.new(data_import).perform if data_import.data_type == 'leads'
+
     @data_import = data_import
     @contact_manager = DataImport::ContactManager.new(@data_import.account)
     begin
