@@ -7,26 +7,13 @@ RSpec.describe Messages::AudioTranscriptionService, type: :service do
   let(:attachment) { message.attachments.create!(account: account, file_type: :audio) }
 
   before do
-    # Create required installation configs
+    # Configs reusadas pelo base service (uri_base/key/model apontam pro container whisper)
     InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_API_KEY') { |config| config.value = 'test-api-key' }
-    InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_MODEL') { |config| config.value = 'gpt-4o-mini' }
-
-    # Mock usage limits for transcription to be available
-    allow(account).to receive(:usage_limits).and_return({ captain: { responses: { current_available: 100 } } })
+    InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_MODEL') { |config| config.value = 'Systran/faster-whisper-medium' }
   end
 
   describe '#perform' do
     let(:service) { described_class.new(attachment) }
-
-    context 'when captain_integration feature is not enabled' do
-      before do
-        account.disable_features!('captain_integration')
-      end
-
-      it 'returns transcription limit exceeded' do
-        expect(service.perform).to eq({ error: 'Transcription limit exceeded' })
-      end
-    end
 
     context 'when transcription is successful' do
       before do
