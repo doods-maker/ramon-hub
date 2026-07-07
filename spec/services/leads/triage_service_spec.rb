@@ -89,4 +89,14 @@ RSpec.describe Leads::TriageService do
     expect(triage.status).to eq('done')
     expect(triage.viability).to be_nil
   end
+
+  it 'inclui a transcrição de mensagem só de áudio no texto-fonte' do
+    audio_msg = create(:message, account: account, conversation: conversation,
+                                 message_type: :incoming, content: nil)
+    audio_msg.attachments.create!(account: account, file_type: :audio,
+                                  meta: { transcribed_text: 'recebi a carta do INSS ontem' })
+    allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('VIABILIDADE: alta'))
+    described_class.new(triage).perform
+    expect(triage.reload.source_text).to include('recebi a carta do INSS ontem')
+  end
 end
