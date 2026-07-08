@@ -42,7 +42,7 @@ RSpec.describe Contact do
   it 'tem N leads (has_many) e anula contact_id ao destruir a pessoa' do
     contact = create(:contact, account: account)
     lead = create(:lead, account: account, contact: contact,
-                        lead_stage: account.lead_stages.order(:position).first)
+                         lead_stage: account.lead_stages.order(:position).first)
     expect(contact.leads).to contain_exactly(lead)
     contact.destroy!
     expect(lead.reload.contact_id).to be_nil

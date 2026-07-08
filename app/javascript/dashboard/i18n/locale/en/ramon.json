@@ -227,6 +227,7 @@
       "BENEFIT_MONTHLY_LABEL": "Estimated monthly benefit",
       "PESSOA": {
         "CPF": "CPF",
+        "CPF_PLACEHOLDER": "000.000.000-00",
         "BIRTHDATE": "Birth date",
         "SEX": "Sex",
         "SEX_M": "Male",

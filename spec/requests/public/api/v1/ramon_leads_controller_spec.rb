@@ -137,7 +137,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       account.leads.create!(name: 'Caso antigo', contact_id: contact.id, lead_stage: won_stage)
 
       expect do
-        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(telefone: '48 99999-0000', nome: 'Maria'), as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(telefone: '55 48 99999-0000', nome: 'Maria'), as: :json
       end.to change { account.leads.count }.by(1)
     end
   end

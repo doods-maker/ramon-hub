@@ -626,7 +626,7 @@ const saveContactSexo = () =>
           data-testid="field-contact-cpf"
           type="text"
           inputmode="numeric"
-          placeholder="000.000.000-00"
+          :placeholder="$t('RAMON.DRAWER.PESSOA.CPF_PLACEHOLDER')"
           class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
           @blur="saveContactCpf"
         />
