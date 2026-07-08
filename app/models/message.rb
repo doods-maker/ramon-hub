@@ -452,7 +452,9 @@ class Message < ApplicationRecord
   end
 
   def reindex_for_search
-    reindex(mode: :async)
+    # searchkick só é instalado no load da classe quando advanced_search_allowed?;
+    # em specs a classe pode carregar sem ele (ordem de load) e should_index? ser stubado.
+    reindex(mode: :async) if respond_to?(:reindex)
   end
 end
 

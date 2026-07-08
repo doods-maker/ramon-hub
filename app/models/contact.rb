@@ -41,7 +41,8 @@
 
 # rubocop:enable Layout/LineLength
 
-class Contact < ApplicationRecord
+# O modelo nativo já vive no teto do cop; o fork só somou o include RamonPessoa.
+class Contact < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Avatarable
   include AvailabilityStatusable
   include Labelable
