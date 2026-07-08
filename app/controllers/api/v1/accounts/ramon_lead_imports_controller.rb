@@ -2,6 +2,11 @@ class Api::V1::Accounts::RamonLeadImportsController < Api::V1::Accounts::BaseCon
   before_action :current_account
   before_action :check_authorization
 
+  def show
+    import = Current.account.data_imports.where(data_type: 'leads').find(params[:id])
+    render json: import.slice(:id, :status, :total_records, :processed_records)
+  end
+
   def create
     return render json: { error: 'import_file ausente' }, status: :unprocessable_entity if params[:import_file].blank?
 
@@ -9,11 +14,6 @@ class Api::V1::Accounts::RamonLeadImportsController < Api::V1::Accounts::BaseCon
     import.import_file.attach(params[:import_file])
     import.save!
     render json: { id: import.id, status: import.status }
-  end
-
-  def show
-    import = Current.account.data_imports.where(data_type: 'leads').find(params[:id])
-    render json: import.slice(:id, :status, :total_records, :processed_records)
   end
 
   private
