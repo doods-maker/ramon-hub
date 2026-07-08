@@ -4,6 +4,10 @@ RSpec.describe SearchService do
   let(:account) { create(:account) }
   let(:user) { create(:user, account: account, role: :agent) }
 
+  # filtros nativos (messages/conversations) do tipo 'all' dependem de Current.account
+  before { Current.account = account }
+  after { Current.account = nil }
+
   def search(query, type: 'Lead')
     described_class.new(current_user: user, current_account: account,
                         search_type: type, params: { q: query }).perform

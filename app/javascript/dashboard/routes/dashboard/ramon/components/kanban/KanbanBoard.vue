@@ -139,7 +139,8 @@ const moveFocus = delta => {
   const all = flatLeads();
   if (!all.length) return;
   const idx = all.findIndex(l => l.id === focusedLeadId.value);
-  const next = idx === -1 ? (delta > 0 ? 0 : all.length - 1) : idx + delta;
+  let next = idx + delta;
+  if (idx === -1) next = delta > 0 ? 0 : all.length - 1;
   const clamped = Math.max(0, Math.min(all.length - 1, next));
   focusedLeadId.value = all[clamped].id;
 };
