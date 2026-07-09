@@ -70,8 +70,9 @@ class Ramon::DossieService
       id: triage.id,
       status: triage.status,
       viability: triage.viability,
-      # done sem viabilidade detectada = precisa de olho humano
-      awaiting_human: triage.status == 'done' && triage.viability.blank?,
+      # status awaiting_human (handoff por confiança, PR #48) ou triagem antiga
+      # concluída sem viabilidade detectada = precisa de olho humano
+      awaiting_human: triage.status == 'awaiting_human' || (triage.status == 'done' && triage.viability.blank?),
       result: triage.result,
       error_message: triage.error_message,
       finished_at: triage.finished_at,

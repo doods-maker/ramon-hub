@@ -10,6 +10,12 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def show; end
 
   def create
+    existing = duplicate_open_lead
+    if existing
+      render json: { error: 'DUPLICATE_LEAD', existing: existing.push_event_data }, status: :conflict
+      return
+    end
+
     @lead = Current.account.leads.create!(permitted_params)
   end
 
@@ -51,6 +57,15 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
     lead.update!(conversation_id: conversation.id) if lead.conversation_id != conversation.id
     lead
+  end
+
+  # Dedup por telefone na criação manual: o front resolve o contato pelo
+  # telefone antes do create, então mesmo telefone == mesmo contact_id.
+  # `force` presente = usuário confirmou "criar mesmo assim" após o 409.
+  def duplicate_open_lead
+    return if params[:force].present? || permitted_params[:contact_id].blank?
+
+    Current.account.leads.open.find_by(contact_id: permitted_params[:contact_id])
   end
 
   def fetch_lead

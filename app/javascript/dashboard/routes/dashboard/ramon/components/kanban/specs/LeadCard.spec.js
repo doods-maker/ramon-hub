@@ -59,4 +59,25 @@ describe('LeadCard.vue', () => {
       false
     );
   });
+
+  it('shows the awaiting-human triage badge when the latest triage awaits a human', () => {
+    const wrapper = mountCard({
+      lead: { ...lead, latest_triage: { id: 1, status: 'awaiting_human' } },
+    });
+    const badge = wrapper.find('[data-testid="triage-awaiting-human-badge"]');
+    expect(badge.exists()).toBe(true);
+    expect(badge.text()).toContain('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN');
+  });
+
+  it('hides the awaiting-human badge for done triages', () => {
+    const wrapper = mountCard({
+      lead: {
+        ...lead,
+        latest_triage: { id: 1, status: 'done', viability: 'alta' },
+      },
+    });
+    expect(
+      wrapper.find('[data-testid="triage-awaiting-human-badge"]').exists()
+    ).toBe(false);
+  });
 });

@@ -62,7 +62,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       expect(Lead.count).to eq 0
     end
 
-    it 'telefone repetido reusa o Contact e, com lead ABERTO existente, cria nota em vez de duplicar' do
+    it 'telefone repetido reusa o Contact e, com lead ABERTO existente, registra atividade em vez de duplicar' do
       contact = create(:contact, account: account, phone_number: '+5548999887766')
       lead = create(:lead, account: account, lead_stage: stage_reuniao, contact: contact)
 
@@ -71,7 +71,9 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       expect(Lead.count).to eq 1
       expect(Contact.count).to eq 1
       expect(response).to have_http_status(:created)
-      expect(lead.reload.lead_notes.pluck(:body).join).to include('auxilio-acidente')
+      activity = lead.lead_activities.find_by(kind: 'lp_recaptured')
+      expect(activity&.to_value).to eq 'auxilio-acidente'
+      expect(lead.lead_notes.pluck(:body)).to include('Sofri acidente em 2023')
     end
 
     it 'notifica os usuários da conta quando cria lead novo' do

@@ -20,11 +20,12 @@ class Public::Api::V1::RamonLeadsController < PublicController
   def register_lead(contact, phone)
     lead = open_lead_for(contact)
     if lead
-      lead.lead_notes.create!(account: account, body: recapture_note_body)
+      # Lead ainda vivo no funil → não duplica: registra atividade na Linha da Vida.
+      lead.lead_activities.create!(account: account, kind: 'lp_recaptured', to_value: recapture_source)
     else
       lead = create_lead(contact, phone)
-      lead.lead_notes.create!(account: account, body: params[:mensagem].to_s.truncate(1000)) if params[:mensagem].present?
     end
+    lead.lead_notes.create!(account: account, body: params[:mensagem].to_s.truncate(1000)) if params[:mensagem].present?
     Ramon::LeadNotificationBuilder.new(lead: lead).perform
     lead
   end
@@ -77,9 +78,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
     utm.present? ? { 'utm' => utm } : {}
   end
 
-  def recapture_note_body
-    body = "Novo envio pela landing page (campanha: #{params[:campanha].presence || 'desconhecida'})."
-    body += " Mensagem: #{params[:mensagem]}" if params[:mensagem].present?
-    body.truncate(1000)
+  def recapture_source
+    (params[:campanha].presence || utm_attributes.dig('utm', 'utm_campaign') || 'desconhecida').to_s.truncate(255)
   end
 end

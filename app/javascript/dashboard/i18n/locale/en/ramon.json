@@ -117,6 +117,8 @@
         "VALUE": "Value (R$)",
         "DEDUP": "Open lead already exists for this phone: {name} ({stage})",
         "OPEN_EXISTING": "Open existing",
+        "CREATE_ANYWAY": "Create anyway",
+        "CREATE_ERROR": "Could not create the lead",
         "CONTACT_ERROR": "Could not link the contact — lead created without a contact"
       },
       "STAGE": {
@@ -162,6 +164,7 @@
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
         "TASK_SCHEDULED": "Follow-up scheduled",
+        "TRIAGE_AWAITING_HUMAN": "Triage: awaiting human",
         "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
         "PRESCRIPTION_LOST": "{count} installments lost to prescription",
         "PRESCRIPTION_SOON": "prescribes in {months}mo"
@@ -328,7 +331,11 @@
           "NOTE_ADDED": "added a note",
           "TASK_CREATED": "created task",
           "TASK_COMPLETED": "completed task",
+<<<<<<< HEAD
           "THESIS_CHANGED": "changed the thesis"
+=======
+          "LP_RECAPTURED": "received a new landing page form"
+>>>>>>> origin/ramon
         }
       }
     },
@@ -407,6 +414,8 @@
         "BAIXA": "Low",
         "UNKNOWN": "Not detected"
       },
+      "AWAITING_HUMAN": "Awaiting human",
+      "AWAITING_HUMAN_HINT": "The AI did not classify with confidence — review the conversation and set the viability yourself.",
       "STARTED": "Triage started — the result appears here shortly"
     },
     "KIT": {
