@@ -247,6 +247,32 @@ const saveContactNascimento = () =>
 
 const saveContactSexo = () =>
   saveContactField({ sexo: contactSexo.value || null });
+
+// Consentimento LGPD de marketing (custom_attributes.consent_marketing do contato)
+const consent = computed(() => props.lead?.contact_consent_marketing || null);
+const consentGranted = computed(() => consent.value?.granted === true);
+const consentStatusText = computed(() => {
+  if (!consent.value) return t('RAMON.DRAWER.CONSENT.NONE');
+  const date = consent.value.at
+    ? new Date(consent.value.at).toLocaleDateString()
+    : '—';
+  if (consentGranted.value)
+    return t('RAMON.DRAWER.CONSENT.GRANTED', {
+      date,
+      source: consent.value.source || '—',
+    });
+  return t('RAMON.DRAWER.CONSENT.REVOKED', { date });
+});
+const toggleConsent = () =>
+  saveContactField({
+    custom_attributes: {
+      consent_marketing: {
+        granted: !consentGranted.value,
+        at: new Date().toISOString(),
+        source: 'manual',
+      },
+    },
+  });
 </script>
 
 <template>
@@ -655,6 +681,38 @@ const saveContactSexo = () =>
           <option value="M">{{ $t('RAMON.DRAWER.PESSOA.SEX_M') }}</option>
           <option value="F">{{ $t('RAMON.DRAWER.PESSOA.SEX_F') }}</option>
         </select>
+
+        <label class="block mb-1 text-xs text-n-slate-10">{{
+          $t('RAMON.DRAWER.CONSENT.LABEL')
+        }}</label>
+        <div
+          class="flex items-center justify-between gap-2 px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 border border-n-weak"
+        >
+          <span
+            data-testid="consent-status"
+            class="flex items-center gap-1.5 text-xs"
+            :class="consentGranted ? 'text-n-teal-11' : 'text-n-slate-10'"
+          >
+            <span
+              :class="
+                consentGranted ? 'i-lucide-shield-check' : 'i-lucide-shield-off'
+              "
+              class="size-3.5"
+            />
+            {{ consentStatusText }}
+          </span>
+          <button
+            data-testid="consent-toggle"
+            class="px-2 py-1 text-xs rounded-lg bg-n-alpha-2 text-n-slate-12 hover:bg-n-alpha-3"
+            @click="toggleConsent"
+          >
+            {{
+              consentGranted
+                ? $t('RAMON.DRAWER.CONSENT.REVOKE')
+                : $t('RAMON.DRAWER.CONSENT.GRANT')
+            }}
+          </button>
+        </div>
 
         <router-link
           data-testid="field-linha-da-vida-link"

@@ -243,6 +243,14 @@
         "SEX_M": "Masculino",
         "SEX_F": "Feminino"
       },
+      "CONSENT": {
+        "LABEL": "Consentimento de marketing (LGPD)",
+        "GRANTED": "Concedido em {date} via {source}",
+        "REVOKED": "Revogado em {date}",
+        "NONE": "Não registrado",
+        "GRANT": "Registrar",
+        "REVOKE": "Revogar"
+      },
       "NOTE_TEMPLATES": {
         "LABEL": "Modelo de nota…",
         "ITEMS": {

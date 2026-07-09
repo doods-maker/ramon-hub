@@ -81,6 +81,9 @@
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` e `pt_BR/ramon.json` | bloco `OVERVIEW` (órfão) trocado por `COMMAND.*` (EYEBROW, TITLE, RELOAD, TODAY, FUNNEL, WEEK) | i18n do Centro de Comando | PR-B t3 |
 | `config/routes.rb` | `resource :ramon_copilot, only: [:create], controller: 'ramon_copilot'` dentro do `scope module: :conversations` (após `resource :draft_messages`) | endpoint do Copilot da conversa (resumo + rascunho sugerido) | copilot |
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` e `pt_BR/ramon.json` | +bloco `COPILOT.*` dentro de `RAMON` | i18n do Copilot da conversa | copilot |
+| `app/services/whatsapp/oneoff_campaign_service.rb` | +guard LGPD em `process_contact` (pula contato sem `custom_attributes.consent_marketing.granted == true`) + contador `@skipped_without_consent` logado em `process_audience` + método privado `marketing_consent_granted?` | campanha em massa respeita consentimento LGPD | consent |
+| `spec/services/whatsapp/oneoff_campaign_service_spec.rb` | contatos existentes ganham trait `:with_marketing_consent`; +3 exemplos (pula sem consent + log de contagem, pula revogado, envia só p/ consentido) | cobertura do guard LGPD | consent |
+| `spec/factories/contacts.rb` | +trait `:with_marketing_consent` (custom_attributes.consent_marketing granted) | factory p/ specs de consentimento | consent |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -185,6 +188,7 @@
 | `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; `getTriages/createTriage` (F2.1b) + `createKit` (F2.1c) | API client | F2.1b/c |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; abas Triagem (b) e Kit (c); X de fechar + discard no rodapé (#26) | painel do lead | F2.1b/c |
 | specs das fatias (services, controllers, models, componentes, helper) | cobertura CI de triagem e kit | specs | F2.1b/c |
+| `spec/requests/ramon/contact_marketing_consent_spec.rb` | NOVO: request spec do toggle manual de consentimento via `contacts#update` (merge de `custom_attributes.consent_marketing`, preserva demais chaves) | cobertura do consentimento manual | consent |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

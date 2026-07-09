@@ -83,7 +83,7 @@ describe Whatsapp::OneoffCampaignService do
       end
 
       it 'marks the campaign completed after processing the audience' do
-        contact = create(:contact, :with_phone_number, account: account)
+        contact = create(:contact, :with_phone_number, :with_marketing_consent, account: account)
         contact.update_labels([label1.title])
 
         expect(whatsapp_channel).to receive(:send_template) do
@@ -97,12 +97,47 @@ describe Whatsapp::OneoffCampaignService do
 
       it 'processes contacts with matching labels' do
         contact_with_label1, contact_with_label2, contact_with_both_labels =
-          create_list(:contact, 3, :with_phone_number, account: account)
+          create_list(:contact, 3, :with_phone_number, :with_marketing_consent, account: account)
         contact_with_label1.update_labels([label1.title])
         contact_with_label2.update_labels([label2.title])
         contact_with_both_labels.update_labels([label1.title, label2.title])
 
         expect(whatsapp_channel).to receive(:send_template).exactly(3).times
+
+        described_class.new(campaign: campaign).perform
+      end
+
+      it 'skips contacts without marketing consent (LGPD) and logs the count' do
+        contact = create(:contact, :with_phone_number, account: account)
+        contact.update_labels([label1.title])
+
+        expect(whatsapp_channel).not_to receive(:send_template)
+        expect(Rails.logger).to receive(:info).with("Skipping contact #{contact.name} - no marketing consent (LGPD)")
+        expect(Rails.logger).to receive(:info).with("Campaign #{campaign.id}: 1 contact(s) skipped without marketing consent (LGPD)")
+        allow(Rails.logger).to receive(:info)
+
+        described_class.new(campaign: campaign).perform
+        expect(campaign.reload.completed?).to be true
+      end
+
+      it 'skips contacts whose consent is explicitly revoked' do
+        contact = create(:contact, :with_phone_number,
+                         account: account,
+                         custom_attributes: { 'consent_marketing' => { 'granted' => false, 'source' => 'manual' } })
+        contact.update_labels([label1.title])
+
+        expect(whatsapp_channel).not_to receive(:send_template)
+
+        described_class.new(campaign: campaign).perform
+      end
+
+      it 'sends to consented contacts and skips the rest' do
+        consented = create(:contact, :with_phone_number, :with_marketing_consent, account: account)
+        not_consented = create(:contact, :with_phone_number, account: account)
+        consented.update_labels([label1.title])
+        not_consented.update_labels([label1.title])
+
+        expect(whatsapp_channel).to receive(:send_template).with(consented.phone_number, anything, nil).once
 
         described_class.new(campaign: campaign).perform
       end
@@ -117,7 +152,7 @@ describe Whatsapp::OneoffCampaignService do
       end
 
       it 'uses template processor service to process templates' do
-        contact = create(:contact, :with_phone_number, account: account)
+        contact = create(:contact, :with_phone_number, :with_marketing_consent, account: account)
         contact.update_labels([label1.title])
 
         expect(Whatsapp::TemplateProcessorService).to receive(:new)
@@ -128,7 +163,7 @@ describe Whatsapp::OneoffCampaignService do
       end
 
       it 'sends template message with correct parameters' do
-        contact = create(:contact, :with_phone_number, account: account)
+        contact = create(:contact, :with_phone_number, :with_marketing_consent, account: account)
         contact.update_labels([label1.title])
 
         expect(whatsapp_channel).to receive(:send_template).with(
@@ -154,7 +189,7 @@ describe Whatsapp::OneoffCampaignService do
       end
 
       it 'processes liquid variables in template parameters' do
-        contact = create(:contact, :with_phone_number, account: account, name: 'Jane Smith', email: 'jane@example.com')
+        contact = create(:contact, :with_phone_number, :with_marketing_consent, account: account, name: 'Jane Smith', email: 'jane@example.com')
         contact.update_labels([label1.title])
 
         campaign_with_liquid = create(:campaign, inbox: whatsapp_inbox, account: account,
@@ -197,7 +232,7 @@ describe Whatsapp::OneoffCampaignService do
       end
 
       it 'skips contacts when liquid variables resolve to blank values' do
-        contact = create(:contact, :with_phone_number, account: account, name: 'Jane', email: nil)
+        contact = create(:contact, :with_phone_number, :with_marketing_consent, account: account, name: 'Jane', email: nil)
         contact.update_labels([label1.title])
 
         campaign_with_blank_liquid = create(:campaign, inbox: whatsapp_inbox, account: account,
@@ -225,7 +260,7 @@ describe Whatsapp::OneoffCampaignService do
       let(:template_params) { nil }
 
       it 'skips contacts and logs error' do
-        contact = create(:contact, :with_phone_number, account: account)
+        contact = create(:contact, :with_phone_number, :with_marketing_consent, account: account)
         contact.update_labels([label1.title])
 
         expect(Rails.logger).to receive(:error)
@@ -238,7 +273,7 @@ describe Whatsapp::OneoffCampaignService do
 
     context 'when send_template raises an error' do
       it 'logs error and continues processing remaining contacts' do
-        contact_error, contact_success = create_list(:contact, 2, :with_phone_number, account: account)
+        contact_error, contact_success = create_list(:contact, 2, :with_phone_number, :with_marketing_consent, account: account)
         contact_error.update_labels([label1.title])
         contact_success.update_labels([label1.title])
         error_message = 'WhatsApp API error'
