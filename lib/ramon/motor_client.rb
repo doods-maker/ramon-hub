@@ -18,7 +18,7 @@ class Ramon::MotorClient
                              open_timeout: OPEN_TIMEOUT,
                              read_timeout: READ_TIMEOUT)
     handle(response)
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Net::OpenTimeout, Net::ReadTimeout, Timeout::Error => e
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
     raise UnavailableError, "motor indisponível: #{e.message}"
   end
 
