@@ -29,16 +29,23 @@ class Ramon::DossieService
     {
       lead_id: @lead.id,
       lead_name: @lead.name,
-      contact_id: @contact&.id,
-      contact_name: @contact&.name,
-      phone_number: @contact&.phone_number,
-      idade: idade,
-      cidade: @contact&.additional_attributes&.dig('city'),
       stage_name: @lead.lead_stage&.name,
       stage_color: @lead.lead_stage&.color,
       value: @lead.value&.to_f,
-      consent_marketing: @contact&.custom_attributes&.dig('consent_marketing'),
       conversation_id: @lead.conversation_id
+    }.merge(contact_fields)
+  end
+
+  def contact_fields
+    return %i[contact_id contact_name phone_number idade cidade consent_marketing].index_with { nil } if @contact.blank?
+
+    {
+      contact_id: @contact.id,
+      contact_name: @contact.name,
+      phone_number: @contact.phone_number,
+      idade: idade,
+      cidade: @contact.additional_attributes&.dig('city'),
+      consent_marketing: @contact.custom_attributes&.dig('consent_marketing')
     }
   end
 
@@ -99,7 +106,10 @@ class Ramon::DossieService
     pct_text = (pct % 1).zero? ? pct.to_i.to_s : pct.to_f.to_s.tr('.', ',')
     text = "#{pct_text}% dos atrasados"
     n = @thesis.honorario_n_mensalidades.to_i
-    n.positive? ? "#{text} + #{n} #{n == 1 ? 'mensalidade' : 'mensalidades'}" : text
+    return text unless n.positive?
+
+    palavra = n == 1 ? 'mensalidade' : 'mensalidades'
+    "#{text} + #{n} #{palavra}"
   end
 
   def thesis_items_by_section(section)
