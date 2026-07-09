@@ -121,8 +121,9 @@ describe Whatsapp::OneoffCampaignService do
       end
 
       it 'skips contacts whose consent is explicitly revoked' do
-        contact = create(:contact, :with_phone_number, account: account,
-                                   custom_attributes: { 'consent_marketing' => { 'granted' => false, 'source' => 'manual' } })
+        contact = create(:contact, :with_phone_number,
+                         account: account,
+                         custom_attributes: { 'consent_marketing' => { 'granted' => false, 'source' => 'manual' } })
         contact.update_labels([label1.title])
 
         expect(whatsapp_channel).not_to receive(:send_template)
