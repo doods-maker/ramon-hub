@@ -1,9 +1,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
+import RamonLeadImportsAPI from 'dashboard/api/ramonLeadImports';
 
 const store = useStore();
 const getters = useStoreGetters();
+const { t } = useI18n();
 
 const benefits = computed(() => getters['leadConfig/getBenefitTypes'].value);
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
@@ -43,6 +47,24 @@ const addPriority = async () => {
 const removePriority = id => store.dispatch('leadConfig/deletePriority', id);
 
 onMounted(() => store.dispatch('leadConfig/get'));
+
+const importFileInput = ref(null);
+const importing = ref(false);
+
+const submitImport = async () => {
+  const file = importFileInput.value?.files?.[0];
+  if (!file) return;
+  importing.value = true;
+  try {
+    await RamonLeadImportsAPI.create(file);
+    useAlert(t('RAMON.IMPORT.SENT'));
+    importFileInput.value.value = '';
+  } catch (e) {
+    useAlert(t('RAMON.IMPORT.ERROR'));
+  } finally {
+    importing.value = false;
+  }
+};
 </script>
 
 <template>
@@ -165,6 +187,39 @@ onMounted(() => store.dispatch('leadConfig/get'));
           </span>
         </li>
       </ul>
+    </section>
+
+    <section class="mt-8" data-testid="import-leads-section">
+      <h2 class="mb-1 text-sm uppercase tracking-widest text-n-slate-9">
+        {{ $t('RAMON.IMPORT.TITLE') }}
+      </h2>
+      <p class="mb-3 text-xs text-n-slate-10">
+        {{ $t('RAMON.IMPORT.HINT') }}
+        <a
+          href="/downloads/import-leads-sample.csv"
+          download
+          class="text-n-iris-11 hover:underline"
+        >
+          {{ $t('RAMON.IMPORT.SAMPLE') }}
+        </a>
+      </p>
+      <div class="flex items-center gap-2">
+        <input
+          ref="importFileInput"
+          data-testid="import-leads-file"
+          type="file"
+          accept=".csv"
+          class="text-sm text-n-slate-11"
+        />
+        <button
+          data-testid="import-leads-submit"
+          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
+          :disabled="importing"
+          @click="submitImport"
+        >
+          {{ $t('RAMON.IMPORT.SUBMIT') }}
+        </button>
+      </div>
     </section>
   </div>
 </template>

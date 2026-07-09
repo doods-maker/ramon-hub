@@ -203,6 +203,14 @@
       "CADENCE_HINT": "Dias sem andamento até o lead ser marcado como parado (vazio = sem limite; o dobro fica vermelho)",
       "CADENCE_DAYS": "dias"
     },
+    "IMPORT": {
+      "TITLE": "Importar leads (CSV)",
+      "HINT": "Cria/atualiza pessoas (match por CPF → telefone → email) e, quando as colunas de caso vierem preenchidas, os casos. Linhas inválidas voltam num CSV de rejeitadas.",
+      "SAMPLE": "Baixar modelo",
+      "SUBMIT": "Importar",
+      "SENT": "Import na fila — processa em cerca de um minuto.",
+      "ERROR": "Falha no import — confira o arquivo e tente de novo."
+    },
     "DRAWER": {
       "NAME": "Nome",
       "STAGE": "Etapa",

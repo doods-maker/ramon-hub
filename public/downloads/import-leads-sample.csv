@@ -1,0 +1,3 @@
+nome,telefone,email,cpf,data_nascimento,sexo,beneficio,tese,etapa,valor,ganho_em,canal,origem
+Maria Silva,48 99999-0000,maria@example.com,529.982.247-25,15/03/1970,F,Auxílio-acidente,,,"1.500,00",10/01/2024,,advbox
+João Souza,48 98888-1111,,,,M,Auxílio-doença,,Qualificação,,,,indicacao-dr-carlos

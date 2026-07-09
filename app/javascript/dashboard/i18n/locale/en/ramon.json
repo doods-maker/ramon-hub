@@ -206,6 +206,14 @@
       "CADENCE_HINT": "Days without progress until the lead is flagged as stalled (empty = no limit; twice that turns red)",
       "CADENCE_DAYS": "days"
     },
+    "IMPORT": {
+      "TITLE": "Import leads (CSV)",
+      "HINT": "Creates/updates people (matched by CPF → phone → email) and, when case columns are present, their cases. Invalid rows come back as a rejected-rows CSV.",
+      "SAMPLE": "Download template",
+      "SUBMIT": "Import",
+      "SENT": "Import queued — it runs in about a minute.",
+      "ERROR": "Import failed — check the file and try again."
+    },
     "DRAWER": {
       "NAME": "Name",
       "STAGE": "Stage",
