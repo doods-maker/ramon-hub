@@ -1,5 +1,6 @@
 class Leads::TriageService
   VIABILITY_PATTERN = /viabilidade\s*[:\-]?\s*(alta|m[ée]dia|baixa)/i
+  CONFIDENCE_PATTERN = /confian[çc]a\s*[:\-]?\s*(alta|m[ée]dia|baixa)/i
   MAX_MESSAGES = 200
 
   def initialize(triage)
@@ -12,8 +13,8 @@ class Leads::TriageService
     @triage.update!(status: 'running')
     source = build_source_text
     result = call_llm(source)
-    @triage.update!(status: 'done', result: result.content, source_text: source,
-                    viability: detect_viability(result.content), finished_at: Time.zone.now)
+    @triage.update!(result: result.content, source_text: source,
+                    finished_at: Time.zone.now, **classification(result.content))
     record_usage(result)
   rescue Ramon::LlmClient::TransientError
     raise
@@ -42,14 +43,30 @@ class Leads::TriageService
   def call_llm(source)
     user_prompt = "Documento do caso para triagem:\n\n#{source}\n\n" \
                   'Faça a análise conforme suas instruções. Ao final, escreva em uma ' \
-                  'linha isolada: "VIABILIDADE: alta" (ou media, ou baixa).'
+                  'linha isolada: "VIABILIDADE: alta" (ou media, ou baixa). Na linha ' \
+                  'seguinte, escreva: "CONFIANCA: alta" (ou media, ou baixa) — use ' \
+                  'baixa quando faltarem elementos para classificar com segurança.'
     Ramon::LlmClient.complete(provider: @agent.provider, model: @agent.model,
                               system: @agent.system_prompt, user: user_prompt,
                               sensitive: @agent.sensitive)
   end
 
+  # Handoff bot→humano: sem linha VIABILIDADE (parse falho / sem tese clara) ou
+  # CONFIANCA baixa → não aplica chute, marca aguardando humano. Resposta antiga
+  # (sem linha CONFIANCA) com viabilidade clara segue o fluxo normal.
+  def classification(text)
+    viability = detect_viability(text)
+    return { status: 'awaiting_human', viability: nil } if viability.blank? || detect_line(text, CONFIDENCE_PATTERN) == 'baixa'
+
+    { status: 'done', viability: viability }
+  end
+
   def detect_viability(text)
-    match = text.to_s.downcase.match(VIABILITY_PATTERN)
+    detect_line(text, VIABILITY_PATTERN)
+  end
+
+  def detect_line(text, pattern)
+    match = text.to_s.downcase.match(pattern)
     return nil if match.blank?
 
     match[1].tr('éí', 'ei')

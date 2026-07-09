@@ -1,4 +1,4 @@
-# Sala de Fechamento — Design (parcial, decisões de 07/07)
+# Sala de Fechamento — Design (parcial, decisões de 07/07; colheita estruturada 09/07)
 
 **Contexto:** Onda 2 do "Organismo" (`comercial\docs\specs\2026-07-05-plano-sem-freios.md`).
 Esta spec registra as decisões destravadas em 07/07 e separa o que já dá pra codar do
@@ -41,6 +41,29 @@ fixo, % sobre benefício anual, etc.).
   ar) → mineração de argumentos/objeções por tese → playbook se reescreve (proposta, humano
   aprova). Gate: **texto de consentimento de gravação** (rascunho do Claude, aprovação do
   Eduardo).
+
+## Colheita estruturada da reunião (aprovado pelo Eduardo 09/07)
+
+**Princípio (engenharia reversa):** a petição inicial define o que a reunião precisa colher.
+Do acervo real de petições do jurídico (03/07), extrair por tese — começando por
+auxílio-acidente — **4 artefatos**:
+
+1. **Checklist de colheita** — o que a reunião PRECISA cobrir, em qualquer ordem; aparece ao
+   vivo no **Kit do Closer** (já no ar) com "o que ainda falta perguntar".
+2. **Schema de extração** — campos canônicos de fatos/direito que a IA preenche a partir da
+   transcrição (a extração por LLM não exige conversa ordenada; exige schema).
+3. **Lista de documentos por tese** — cada fato do schema aponta o documento que o prova;
+   lacuna no schema vira pedido de documento (rascunho, Eduardo aprova).
+4. **Roteiro sugerido** — ordem de perguntas recomendada como apoio humano ao closer/advogado
+   (guia, não trilho: a extração funciona mesmo se a conversa fugir da ordem).
+
+**Fluxo completo:** reunião gravada (gate consentimento) → Whisper → extração contra o schema
+da tese → preenche o caso + aponta lacunas → alimenta dossiê W3, notas do caso no AdvBox
+(item 21 do plano mestre) e, adiante, fatos/direito da inicial. Isso **upgrada a Caixa-preta**:
+de "minerar objeções pro playbook" para extração estruturada de fatos também.
+
+**Primeiro passo (sem código, sem gate):** sessão de engenharia reversa sobre o acervo de
+petições → produzir os 4 artefatos de auxílio-acidente como rascunho pra aprovação do Eduardo.
 
 ## Ordem sugerida
 1. Tabela de honorário por tese (pronto) — pequeno, habilita o simulador.
