@@ -117,6 +117,8 @@
         "VALUE": "Valor (R$)",
         "DEDUP": "Já existe lead aberto para este telefone: {name} ({stage})",
         "OPEN_EXISTING": "Abrir existente",
+        "CREATE_ANYWAY": "Criar mesmo assim",
+        "CREATE_ERROR": "Não foi possível criar o lead",
         "CONTACT_ERROR": "Não foi possível vincular o contato — lead criado sem contato"
       },
       "STAGE": {
@@ -290,7 +292,8 @@
           "VALUE_CHANGED": "mudou o valor",
           "NOTE_ADDED": "adicionou nota",
           "TASK_CREATED": "criou tarefa",
-          "TASK_COMPLETED": "concluiu tarefa"
+          "TASK_COMPLETED": "concluiu tarefa",
+          "LP_RECAPTURED": "recebeu novo formulário da LP"
         }
       }
     },
