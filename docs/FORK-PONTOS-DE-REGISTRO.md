@@ -79,6 +79,7 @@
 | `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Centro de Comando (dashboard agregado)` (SET_RAMON_DASHBOARD_UI_FLAG, SET_RAMON_DASHBOARD) antes do bloco Teses | mutation types do módulo ramonDashboard | PR-B t3 |
 | `app/javascript/dashboard/routes/dashboard/ramon/ramon.routes.js` | `ramon_index` passa a renderizar `CommandCenter.vue` (import estático) no lugar de `RamonOverview.vue` | Centro de Comando substitui o placeholder | PR-B t3 |
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` e `pt_BR/ramon.json` | bloco `OVERVIEW` (órfão) trocado por `COMMAND.*` (EYEBROW, TITLE, RELOAD, TODAY, FUNNEL, WEEK) | i18n do Centro de Comando | PR-B t3 |
+| `config/routes.rb` | `member { get :dossie, to: 'lead_dossies#show' }` dentro do bloco `resources :leads` (após o `collection`) | endpoint agregador do Dossiê de 30 segundos | dossiê |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 

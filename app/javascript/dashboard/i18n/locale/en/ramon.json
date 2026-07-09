@@ -274,6 +274,39 @@
         "bpc_loas_idoso": "Reaches BPC/LOAS age (elderly)"
       }
     },
+    "DOSSIE": {
+      "OPEN": "Dossier",
+      "TITLE": "30-second dossier",
+      "LOADING": "Loading…",
+      "ERROR": "Could not load the dossier",
+      "COPY": "Copy dossier",
+      "COPIED": "Dossier copied!",
+      "COPY_FAILED": "Could not copy",
+      "WHO": "Who they are",
+      "AGE": "{age} years old",
+      "AGE_LABEL": "Age",
+      "PHONE": "Phone",
+      "CITY": "City",
+      "STAGE": "Stage",
+      "VALUE": "Case value",
+      "CONSENT": "LGPD consent",
+      "CONSENT_YES": "recorded",
+      "CONSENT_NO": "not recorded",
+      "ORIGIN": "Where they came from",
+      "REFERRAL": "Came by referral",
+      "TRIAGE": "What triage detected",
+      "TRIAGE_EMPTY": "No triage run yet.",
+      "TRIAGE_AWAITING_HUMAN": "Awaiting human review",
+      "THESIS": "Thesis and arguments",
+      "THESIS_EMPTY": "No thesis set for this case.",
+      "FEE": "Fee",
+      "OBJECTIONS": "Likely objections",
+      "TIMELINE": "Recent timeline",
+      "TIMELINE_EMPTY": "Nothing recorded yet.",
+      "PENDING": "Pending items",
+      "PENDING_EMPTY": "No open pending items.",
+      "DOC_PREFIX": "Document:"
+    },
     "LEAD_PANEL": {
       "TITLE": "Lead",
       "TABS": {
@@ -294,7 +327,8 @@
           "VALUE_CHANGED": "changed the value",
           "NOTE_ADDED": "added a note",
           "TASK_CREATED": "created task",
-          "TASK_COMPLETED": "completed task"
+          "TASK_COMPLETED": "completed task",
+          "THESIS_CHANGED": "changed the thesis"
         }
       }
     },

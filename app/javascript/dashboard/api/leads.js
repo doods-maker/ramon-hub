@@ -28,6 +28,10 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/notes`, { body });
   }
 
+  getDossie(leadId) {
+    return axios.get(`${this.url}/${leadId}/dossie`);
+  }
+
   getTriages(leadId) {
     return axios.get(`${this.url}/${leadId}/triages`);
   }
