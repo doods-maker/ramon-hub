@@ -64,7 +64,7 @@ RSpec.describe Ramon::EsteiraBuilder do
     cheap = create(:lead, account: account, lead_stage: active_stage, source: 'lp-x', value: 100)
     rich = create(:lead, account: account, lead_stage: active_stage, source: 'lp-y', value: 9000)
     bleeding = create(:lead, account: account, lead_stage: active_stage,
-                      dcb_em: 65.months.ago.to_date, benefit_monthly_value: 500, value: 50)
+                             dcb_em: 65.months.ago.to_date, benefit_monthly_value: 500, value: 50)
     result = build
     expect(result[:items].pluck(:lead_id)).to eq([bleeding.id, rich.id, cheap.id])
     expect(result[:board][:total]).to eq(3)

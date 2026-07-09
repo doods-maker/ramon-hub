@@ -58,7 +58,7 @@ class Ramon::EsteiraBuilder
   end
 
   def collect_prescription
-    Ramon::LeadRadar.active_leads(@account).where.not(dcb_em: nil).each do |lead|
+    Ramon::LeadRadar.active_leads(@account).where.not(dcb_em: nil).find_each do |lead|
       add_prescription_reason(lead, lead.prescription)
     end
   end
@@ -86,7 +86,7 @@ class Ramon::EsteiraBuilder
   # na ramon — antes dele a query só devolve vazio, sem quebrar nada.
   def collect_awaiting_human
     triaged_ids = @account.lead_triages.where(status: 'awaiting_human').select(:lead_id)
-    Ramon::LeadRadar.active_leads(@account).where(id: triaged_ids).each do |lead|
+    Ramon::LeadRadar.active_leads(@account).where(id: triaged_ids).find_each do |lead|
       add(lead, 'AWAITING_HUMAN')
     end
   end
