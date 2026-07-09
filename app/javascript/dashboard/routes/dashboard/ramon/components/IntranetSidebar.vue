@@ -23,6 +23,12 @@ const sections = computed(() => [
         to: accountScopedRoute('ramon_funil'),
       },
       {
+        key: 'agenda',
+        label: t('RAMON.NAV.AGENDA'),
+        icon: 'i-lucide-calendar-days',
+        to: accountScopedRoute('ramon_agenda'),
+      },
+      {
         key: 'funil_config',
         label: t('RAMON.NAV.FUNIL_CONFIG'),
         icon: 'i-lucide-sliders-horizontal',

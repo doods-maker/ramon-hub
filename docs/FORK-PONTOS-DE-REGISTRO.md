@@ -90,6 +90,8 @@
 | `app/javascript/dashboard/api/contacts.js` | +método `exportTitular(contactId)` (GET `contacts/:id/titular_export`) | client do export LGPD | 7c |
 | `app/javascript/dashboard/components-next/Contacts/Pages/ContactDetails.vue` | +import `ContactAPI`; +handler `exportTitularData` (download blob JSON); +seção "Exportar dados do titular" no bloco admin, antes da seção de delete | botão de export LGPD no painel do contato | 7c |
 | `app/javascript/dashboard/i18n/locale/en/contact.json` e `pt_BR/contact.json` | +bloco `CONTACTS_LAYOUT.DETAILS.TITULAR_EXPORT`; textos `DELETE_CONTACT*`/`DELETE_DIALOG` reescritos para "anonimizar" | i18n do export + wording honesto do delete | 7c |
+| `config/routes.rb` | `post 'calcom_webhooks'` no namespace `public/api/v1` (após `ramon_leads`) | webhook do Cal.com (agenda) | 9c-agenda |
+| `config/initializers/rack_attack.rb` | throttle `public/calcom_webhooks` (30 POST/min por IP) | anti-abuso do webhook Cal.com | 9c-agenda |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -200,6 +202,10 @@
 | `app/controllers/api/v1/accounts/titular_exports_controller.rb` | GET show → `render json` do `Ramon::TitularExport` | endpoint do export | 7c |
 | `app/policies/titular_export_policy.rb` | `show?` só administrator | autorização do export | 7c |
 | `spec/services/ramon/{contact_anonymizer,titular_export}_spec.rb` + `spec/controllers/api/v1/accounts/titular_exports_controller_spec.rb` + `spec/models/concerns/ramon_pessoa_spec.rb` | cobertura: anonimização + redação + purge de audits; export com conversas/mensagens; endpoint (admin ok / agent 401); audited grava PII e ignora não-PII | specs | 7c |
+| `app/controllers/public/api/v1/calcom_webhooks_controller.rb` | webhook Cal.com: HMAC `X-Cal-Signature-256` (`CALCOM_WEBHOOK_SECRET`), BOOKING_CREATED/CANCELLED/RESCHEDULED → lead_activity + lead_task `meeting`; sem match cria contact+lead+notificação (conta de `RAMON_LEAD_CAPTURE_ACCOUNT_ID`) | agenda Cal.com → funil | 9c-agenda |
+| `spec/requests/public/api/v1/calcom_webhooks_spec.rb` | specs: assinatura válida/inválida, match fone/email, sem match, cancel/reschedule | cobertura do webhook Cal.com | 9c-agenda |
+| `app/javascript/dashboard/routes/dashboard/ramon/pages/Agenda.vue` | visão calendário semanal (7 colunas) das lead_tasks abertas; card → Funil + drawer do lead | aba Agenda | 9c-agenda |
+| `ramon.routes.js` + `IntranetSidebar.vue` + `ramon.json` (en/pt_BR) | rota `ramon_agenda`, item de menu e i18n (NAV.AGENDA, AGENDA.*, KIND.MEETING_*) | aba Agenda | 9c-agenda |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
