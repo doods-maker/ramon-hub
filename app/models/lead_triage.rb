@@ -1,5 +1,5 @@
 class LeadTriage < ApplicationRecord
-  STATUSES = %w[pending running done error].freeze
+  STATUSES = %w[pending running done awaiting_human error].freeze
   VIABILITIES = %w[alta media baixa].freeze
   KIT_STATUSES = %w[pending running ready error].freeze
 

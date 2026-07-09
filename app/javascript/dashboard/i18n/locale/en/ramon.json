@@ -162,6 +162,7 @@
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
         "TASK_SCHEDULED": "Follow-up scheduled",
+        "TRIAGE_AWAITING_HUMAN": "Triage: awaiting human",
         "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
         "PRESCRIPTION_LOST": "{count} installments lost to prescription",
         "PRESCRIPTION_SOON": "prescribes in {months}mo"
@@ -373,6 +374,8 @@
         "BAIXA": "Low",
         "UNKNOWN": "Not detected"
       },
+      "AWAITING_HUMAN": "Awaiting human",
+      "AWAITING_HUMAN_HINT": "The AI did not classify with confidence — review the conversation and set the viability yourself.",
       "STARTED": "Triage started — the result appears here shortly"
     },
     "KIT": {
