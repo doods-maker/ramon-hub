@@ -483,16 +483,23 @@
     "DETAILS": {
       "CREATED_AT": "Criado {date}",
       "LAST_ACTIVITY": "Última atividade {date}",
-      "DELETE_CONTACT_DESCRIPTION": "Excluir permanentemente este contato. Esta ação é irreversível",
-      "DELETE_CONTACT": "Excluir contato",
+      "DELETE_CONTACT_DESCRIPTION": "Anonimizar este contato (LGPD): os dados pessoais são apagados e redigidos nas mensagens; conversas e estatísticas são preservadas. Esta ação é irreversível",
+      "DELETE_CONTACT": "Excluir contato (anonimizar)",
       "DELETE_DIALOG": {
-        "TITLE": "Confirmar exclusão",
-        "DESCRIPTION": "Tem certeza de que deseja excluir este contato?",
-        "CONFIRM": "Sim, excluir",
+        "TITLE": "Confirmar anonimização",
+        "DESCRIPTION": "Tem certeza? Os dados pessoais do contato serão apagados e redigidos nas mensagens. As conversas são preservadas. Ação irreversível.",
+        "CONFIRM": "Sim, anonimizar",
         "API": {
-          "SUCCESS_MESSAGE": "Contato excluído com sucesso",
-          "ERROR_MESSAGE": "Não foi possível excluir o contato. Por favor, tente novamente mais tarde."
+          "SUCCESS_MESSAGE": "Contato anonimizado com sucesso",
+          "ERROR_MESSAGE": "Não foi possível anonimizar o contato. Por favor, tente novamente mais tarde."
         }
+      },
+      "TITULAR_EXPORT": {
+        "TITLE": "Exportar dados do titular (LGPD)",
+        "DESCRIPTION": "Baixa o JSON completo com dados cadastrais, leads, notas e conversas do titular, para atender pedido de acesso (LGPD art. 18).",
+        "BUTTON": "Exportar dados do titular",
+        "SUCCESS_MESSAGE": "Dados do titular exportados com sucesso",
+        "ERROR_MESSAGE": "Não foi possível exportar os dados do titular. Tente novamente mais tarde."
       },
       "AVATAR": {
         "UPLOAD": {

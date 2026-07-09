@@ -288,6 +288,7 @@ Rails.application.routes.draw do
           resource :ramon_dashboard, only: [:show], controller: 'ramon_dashboard'
           resources :ramon_lead_imports, only: [:create, :show]
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
+          get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'
           resources :leads, only: [:index, :show, :create, :update, :destroy] do
             collection do
               post :for_conversation
