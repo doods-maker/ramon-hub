@@ -329,6 +329,39 @@
         "bpc_loas_idoso": "Atinge a idade do BPC/LOAS (idoso)"
       }
     },
+    "DOSSIE": {
+      "OPEN": "Dossiê",
+      "TITLE": "Dossiê de 30 segundos",
+      "LOADING": "Carregando…",
+      "ERROR": "Não foi possível carregar o dossiê",
+      "COPY": "Copiar dossiê",
+      "COPIED": "Dossiê copiado!",
+      "COPY_FAILED": "Não foi possível copiar",
+      "WHO": "Quem é",
+      "AGE": "{age} anos",
+      "AGE_LABEL": "Idade",
+      "PHONE": "Telefone",
+      "CITY": "Cidade",
+      "STAGE": "Etapa",
+      "VALUE": "Valor do caso",
+      "CONSENT": "Consentimento LGPD",
+      "CONSENT_YES": "registrado",
+      "CONSENT_NO": "não registrado",
+      "ORIGIN": "De onde veio",
+      "REFERRAL": "Veio por indicação",
+      "TRIAGE": "O que a triagem detectou",
+      "TRIAGE_EMPTY": "Nenhuma triagem feita ainda.",
+      "TRIAGE_AWAITING_HUMAN": "Aguardando revisão humana",
+      "THESIS": "Tese e argumentos",
+      "THESIS_EMPTY": "Nenhuma tese definida para este caso.",
+      "FEE": "Honorário",
+      "OBJECTIONS": "Objeções prováveis",
+      "TIMELINE": "Linha do tempo recente",
+      "TIMELINE_EMPTY": "Nada registrado ainda.",
+      "PENDING": "Pendências",
+      "PENDING_EMPTY": "Nenhuma pendência aberta.",
+      "DOC_PREFIX": "Documento:"
+    },
     "LEAD_PANEL": {
       "TITLE": "Lead",
       "TABS": {
@@ -353,6 +386,7 @@
           "MEETING_SCHEDULED": "agendou reunião via Cal.com",
           "MEETING_CANCELLED": "reunião cancelada via Cal.com",
           "ESTEIRA_DONE": "resolveu na Esteira",
+          "THESIS_CHANGED": "mudou a tese",
           "LP_RECAPTURED": "recebeu novo formulário da LP"
         }
       }

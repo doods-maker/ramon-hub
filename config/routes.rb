@@ -297,6 +297,7 @@ Rails.application.routes.draw do
             collection do
               post :for_conversation
             end
+            member { get :dossie, to: 'lead_dossies#show' }
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :notes, only: [:index, :create], controller: 'lead_notes'
             resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do

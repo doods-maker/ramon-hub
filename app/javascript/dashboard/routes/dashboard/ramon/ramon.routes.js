@@ -56,4 +56,10 @@ export const routes = [
     component: () => import('./pages/LinhaDaVida.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
+  {
+    path: frontendURL('accounts/:accountId/ramon/lead/:leadId/dossie'),
+    name: 'ramon_lead_dossie',
+    component: () => import('./pages/Dossie.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
 ];
