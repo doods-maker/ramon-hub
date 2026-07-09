@@ -155,6 +155,8 @@
         "VALUE": "Valor (R$)",
         "DEDUP": "Já existe lead aberto para este telefone: {name} ({stage})",
         "OPEN_EXISTING": "Abrir existente",
+        "CREATE_ANYWAY": "Criar mesmo assim",
+        "CREATE_ERROR": "Não foi possível criar o lead",
         "CONTACT_ERROR": "Não foi possível vincular o contato — lead criado sem contato"
       },
       "STAGE": {
@@ -199,7 +201,8 @@
         "COPY_PHONE": "Copiar telefone",
         "PHONE_COPIED": "Telefone copiado",
         "WHATSAPP": "WhatsApp",
-        "TASK_SCHEDULED": "Follow-up agendado"
+        "TASK_SCHEDULED": "Follow-up agendado",
+        "TRIAGE_AWAITING_HUMAN": "Triagem: aguardando humano"
       },
       "BELL": {
         "TITLE": "Agendar follow-up",
@@ -308,6 +311,7 @@
       }
     },
     "LEAD_PANEL": {
+      "TITLE": "Lead",
       "TABS": {
         "SUMMARY": "Resumo",
         "HISTORY": "Histórico",
@@ -327,7 +331,8 @@
           "NOTE_ADDED": "adicionou nota",
           "TASK_CREATED": "criou tarefa",
           "TASK_COMPLETED": "concluiu tarefa",
-          "ESTEIRA_DONE": "resolveu na Esteira"
+          "ESTEIRA_DONE": "resolveu na Esteira",
+          "LP_RECAPTURED": "recebeu novo formulário da LP"
         }
       }
     },
@@ -406,6 +411,8 @@
         "BAIXA": "Baixa",
         "UNKNOWN": "Não detectada"
       },
+      "AWAITING_HUMAN": "Aguardando humano",
+      "AWAITING_HUMAN_HINT": "A IA não classificou com confiança — revise a conversa e defina a viabilidade você mesmo.",
       "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes"
     },
     "KIT": {
