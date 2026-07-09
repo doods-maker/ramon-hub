@@ -362,6 +362,15 @@
         "DOCUMENTO": "Documents"
       }
     },
+    "COPILOT": {
+      "SUMMARIZE": "Summarize conversation",
+      "SUGGEST": "Suggest reply draft",
+      "WORKING": "Generating…",
+      "SUMMARY_TITLE": "Conversation summary",
+      "DRAFT_READY": "Draft inserted into the editor — review before sending",
+      "ERROR": "Could not generate. Try again.",
+      "CLOSE": "Close summary"
+    },
     "TRIAGE": {
       "TAB": "Triage",
       "RUN": "Run triage",
