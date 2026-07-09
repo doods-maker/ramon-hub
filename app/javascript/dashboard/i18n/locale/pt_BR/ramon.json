@@ -352,6 +352,15 @@
         "DOCUMENTO": "Documentos"
       }
     },
+    "COPILOT": {
+      "SUMMARIZE": "Resumir a conversa",
+      "SUGGEST": "Sugerir rascunho de resposta",
+      "WORKING": "Gerando…",
+      "SUMMARY_TITLE": "Resumo da conversa",
+      "DRAFT_READY": "Rascunho inserido no editor — revise antes de enviar",
+      "ERROR": "Não foi possível gerar. Tente de novo.",
+      "CLOSE": "Fechar resumo"
+    },
     "TRIAGE": {
       "TAB": "Triagem",
       "RUN": "Rodar triagem",

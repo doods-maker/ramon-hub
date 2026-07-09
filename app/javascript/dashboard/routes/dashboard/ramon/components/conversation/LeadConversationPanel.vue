@@ -9,6 +9,7 @@ import LeadHistory from 'dashboard/routes/dashboard/ramon/components/conversatio
 import LeadPlaybook from 'dashboard/routes/dashboard/ramon/components/conversation/LeadPlaybook.vue';
 import LeadTriage from 'dashboard/routes/dashboard/ramon/components/conversation/LeadTriage.vue';
 import LeadKit from 'dashboard/routes/dashboard/ramon/components/conversation/LeadKit.vue';
+import LeadCopilot from 'dashboard/routes/dashboard/ramon/components/conversation/LeadCopilot.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -94,6 +95,7 @@ const discard = async () => {
           <MacrosList :conversation-id="conversationId" />
           <ResolveAction />
         </div>
+        <LeadCopilot :conversation-id="conversationId" class="mb-4" />
         <LeadFields :lead="lead" />
         <div class="mt-6 pt-3 border-t border-n-weak">
           <button
