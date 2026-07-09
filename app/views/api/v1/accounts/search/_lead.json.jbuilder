@@ -4,6 +4,7 @@ json.stage_name lead.lead_stage&.name
 json.stage_color lead.lead_stage&.color
 json.benefit_type_name lead.benefit_type&.name
 json.conversation_id lead.conversation_id
+json.contact_id lead.contact_id
 json.contact_name lead.contact&.name
 json.contact_phone lead.contact&.phone_number
 json.created_at lead.created_at

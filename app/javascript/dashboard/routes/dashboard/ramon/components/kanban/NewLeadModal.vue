@@ -98,18 +98,31 @@ const submit = async () => {
   const e164 = normalizedPhone.value;
   if (e164) contactId = await resolveContactId(e164);
 
-  const lead = await store.dispatch('leads/create', {
-    name: name.value.trim(),
-    lead_stage_id: firstStage.id,
-    benefit_type_id: benefitTypeId.value,
-    lead_priority_id: priorityId.value,
-    source: source.value.trim() || null,
-    channel: channel.value || null,
-    value: value.value === '' ? null : Number(value.value),
-    contact_id: contactId,
-  });
-  emit('created', lead);
-  emit('close');
+  try {
+    const lead = await store.dispatch('leads/create', {
+      name: name.value.trim(),
+      lead_stage_id: firstStage.id,
+      benefit_type_id: benefitTypeId.value,
+      lead_priority_id: priorityId.value,
+      source: source.value.trim() || null,
+      channel: channel.value || null,
+      value: value.value === '' ? null : Number(value.value),
+      contact_id: contactId,
+      // banner de duplicado visível → o botão já diz "Criar mesmo assim",
+      // então este clique é a confirmação explícita.
+      force: existingLead.value ? true : undefined,
+    });
+    emit('created', lead);
+    emit('close');
+  } catch (error) {
+    const existing = error?.response?.data?.existing;
+    if (error?.response?.status === 409 && existing) {
+      // gate do servidor (cobre corrida em que o blur não rodou a tempo)
+      existingLead.value = existing;
+    } else {
+      useAlert(t('RAMON.FUNIL.NEW.CREATE_ERROR'));
+    }
+  }
 };
 </script>
 
@@ -245,7 +258,11 @@ const submit = async () => {
           class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
           @click="submit"
         >
-          {{ $t('RAMON.FUNIL.SAVE') }}
+          {{
+            existingLead
+              ? $t('RAMON.FUNIL.NEW.CREATE_ANYWAY')
+              : $t('RAMON.FUNIL.SAVE')
+          }}
         </button>
       </div>
     </div>

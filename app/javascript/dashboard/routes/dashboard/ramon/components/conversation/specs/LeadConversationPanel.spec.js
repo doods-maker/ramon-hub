@@ -42,6 +42,10 @@ const mountPanel = (
       plugins: [build(ensureSpy, deleteSpy, thesesGetSpy)],
       mocks: { $t: k => k },
       stubs: {
+        // AccordionItem real p/ testar abrir/recolher; filhos stubados.
+        AccordionItem: false,
+        EmojiOrIcon: true,
+        FluentIcon: true,
         ConversationAction: true,
         MacrosList: true,
         ResolveAction: true,
@@ -54,7 +58,12 @@ const mountPanel = (
     },
   });
 
+const toggleSection = (wrapper, id) =>
+  wrapper.find(`[data-testid="section-${id}"] button`).trigger('click');
+
 describe('LeadConversationPanel', () => {
+  beforeEach(() => localStorage.clear());
+
   it('ensures the lead on mount', async () => {
     const ensure = vi.fn().mockResolvedValue(lead);
     mountPanel(ensure);
@@ -80,18 +89,54 @@ describe('LeadConversationPanel', () => {
     expect(wrapper.emitted('close')).toBeTruthy();
   });
 
-  it('switches to the Histórico tab and renders LeadHistory', async () => {
+  it('starts with Resumo open and the other sections collapsed', async () => {
     const wrapper = mountPanel();
     await flushPromises();
-    await wrapper.find('[data-testid="tab-historico"]').trigger('click');
+    expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(false);
+    expect(wrapper.findComponent({ name: 'LeadKit' }).exists()).toBe(false);
+  });
+
+  it('opens the Histórico section and renders LeadHistory', async () => {
+    const wrapper = mountPanel();
+    await flushPromises();
+    await toggleSection(wrapper, 'historico');
     expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(true);
   });
 
-  it('switches to the Playbook tab and renders LeadPlaybook', async () => {
+  it('opens the Playbook section and renders LeadPlaybook', async () => {
     const wrapper = mountPanel();
     await flushPromises();
-    await wrapper.find('[data-testid="tab-playbook"]').trigger('click');
+    await toggleSection(wrapper, 'playbook');
     expect(wrapper.findComponent({ name: 'LeadPlaybook' }).exists()).toBe(true);
+  });
+
+  it('opens the Kit section and renders LeadKit', async () => {
+    const wrapper = mountPanel();
+    await flushPromises();
+    await toggleSection(wrapper, 'kit');
+    expect(wrapper.findComponent({ name: 'LeadKit' }).exists()).toBe(true);
+  });
+
+  it('persists the open/collapsed state per section in localStorage', async () => {
+    const wrapper = mountPanel();
+    await flushPromises();
+    await toggleSection(wrapper, 'kit');
+    await toggleSection(wrapper, 'resumo');
+    const saved = JSON.parse(localStorage.getItem('ramon_lead_panel_sections'));
+    expect(saved.kit).toBe(true);
+    expect(saved.resumo).toBe(false);
+  });
+
+  it('restores the persisted state on mount', async () => {
+    localStorage.setItem(
+      'ramon_lead_panel_sections',
+      JSON.stringify({ resumo: false, kit: true })
+    );
+    const wrapper = mountPanel();
+    await flushPromises();
+    expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(false);
+    expect(wrapper.findComponent({ name: 'LeadKit' }).exists()).toBe(true);
   });
 
   it('dispatches theses/get on mount when no theses are loaded yet', async () => {
@@ -99,12 +144,5 @@ describe('LeadConversationPanel', () => {
     mountPanel(vi.fn().mockResolvedValue(lead), vi.fn(), thesesGet);
     await flushPromises();
     expect(thesesGet).toHaveBeenCalled();
-  });
-
-  it('switches to the Kit tab and renders LeadKit', async () => {
-    const wrapper = mountPanel();
-    await flushPromises();
-    await wrapper.find('[data-testid="tab-kit"]').trigger('click');
-    expect(wrapper.findComponent({ name: 'LeadKit' }).exists()).toBe(true);
   });
 });
