@@ -79,6 +79,7 @@
 | `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Centro de Comando (dashboard agregado)` (SET_RAMON_DASHBOARD_UI_FLAG, SET_RAMON_DASHBOARD) antes do bloco Teses | mutation types do módulo ramonDashboard | PR-B t3 |
 | `app/javascript/dashboard/routes/dashboard/ramon/ramon.routes.js` | `ramon_index` passa a renderizar `CommandCenter.vue` (import estático) no lugar de `RamonOverview.vue` | Centro de Comando substitui o placeholder | PR-B t3 |
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` e `pt_BR/ramon.json` | bloco `OVERVIEW` (órfão) trocado por `COMMAND.*` (EYEBROW, TITLE, RELOAD, TODAY, FUNNEL, WEEK) | i18n do Centro de Comando | PR-B t3 |
+| `config/routes.rb` | `resource :simulacao, only: [:create], controller: 'lead_simulacoes'` dentro do bloco `resources :leads` (após `resources :triages`) | endpoint do Simulador ao vivo (Sala de Fechamento) | Onda 2 |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -183,6 +184,12 @@
 | `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; `getTriages/createTriage` (F2.1b) + `createKit` (F2.1c) | API client | F2.1b/c |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; abas Triagem (b) e Kit (c); X de fechar + discard no rodapé (#26) | painel do lead | F2.1b/c |
 | specs das fatias (services, controllers, models, componentes, helper) | cobertura CI de triagem e kit | specs | F2.1b/c |
+| `lib/ramon/motor_client.rb` | NOVO: cliente HTTP (HTTParty) do motor de cálculos (`ENV MOTOR_CALCULOS_URL`, timeouts 5s/15s, `UnavailableError`/`ValidationError`) | integração hub↔motor | Onda 2 |
+| `app/controllers/api/v1/accounts/lead_simulacoes_controller.rb` | NOVO: `POST /leads/:id/simulacao` — monta payload do motor (12 competências do salário médio), estima atrasados (mensal × meses DER→hoje) e aplica honorário da tese; 422/503 com mensagem | Simulador ao vivo | Onda 2 |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadSimulador.vue` | NOVO: seção "Simulador" do painel do lead (form mínimo, cartão de resultado, disclaimer OAB fixo, estado motor-fora-do-ar) | Simulador ao vivo | Onda 2 |
+| `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; +`simulate(leadId, payload)` | API client | Onda 2 |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; +AccordionItem "Simulador" (recolhido por padrão, após o Kit) | painel do lead | Onda 2 |
+| `spec/controllers/api/v1/accounts/lead_simulacoes_controller_spec.rb` + `.../specs/LeadSimulador.spec.js` | specs: sucesso (WebMock), 422 do motor, motor fora do ar/sem ENV, honorário da tese, pré-preenchimento e estados do form | cobertura CI | Onda 2 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

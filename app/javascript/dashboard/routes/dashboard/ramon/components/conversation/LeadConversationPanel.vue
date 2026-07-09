@@ -10,6 +10,7 @@ import LeadHistory from 'dashboard/routes/dashboard/ramon/components/conversatio
 import LeadPlaybook from 'dashboard/routes/dashboard/ramon/components/conversation/LeadPlaybook.vue';
 import LeadTriage from 'dashboard/routes/dashboard/ramon/components/conversation/LeadTriage.vue';
 import LeadKit from 'dashboard/routes/dashboard/ramon/components/conversation/LeadKit.vue';
+import LeadSimulador from 'dashboard/routes/dashboard/ramon/components/conversation/LeadSimulador.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -38,6 +39,7 @@ const openSections = ref({
   playbook: false,
   triagem: false,
   kit: false,
+  simulador: false,
   ...readSections(),
 });
 const toggleSection = id => {
@@ -137,6 +139,14 @@ const discard = async () => {
         @toggle="toggleSection('kit')"
       >
         <LeadKit :lead="lead" />
+      </AccordionItem>
+      <AccordionItem
+        :title="$t('RAMON.SIMULADOR.TAB')"
+        :is-open="openSections.simulador"
+        data-testid="section-simulador"
+        @toggle="toggleSection('simulador')"
+      >
+        <LeadSimulador :lead="lead" />
       </AccordionItem>
     </div>
   </div>

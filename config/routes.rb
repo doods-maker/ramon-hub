@@ -301,6 +301,7 @@ Rails.application.routes.draw do
                 post :kit
               end
             end
+            resource :simulacao, only: [:create], controller: 'lead_simulacoes'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
           resources :lead_stages, only: [:create, :update, :destroy] do
