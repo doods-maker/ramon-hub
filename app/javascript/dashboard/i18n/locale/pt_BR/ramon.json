@@ -161,7 +161,8 @@
         "COPY_PHONE": "Copiar telefone",
         "PHONE_COPIED": "Telefone copiado",
         "WHATSAPP": "WhatsApp",
-        "TASK_SCHEDULED": "Follow-up agendado"
+        "TASK_SCHEDULED": "Follow-up agendado",
+        "TRIAGE_AWAITING_HUMAN": "Triagem: aguardando humano"
       },
       "BELL": {
         "TITLE": "Agendar follow-up",
@@ -367,6 +368,8 @@
         "BAIXA": "Baixa",
         "UNKNOWN": "Não detectada"
       },
+      "AWAITING_HUMAN": "Aguardando humano",
+      "AWAITING_HUMAN_HINT": "A IA não classificou com confiança — revise a conversa e defina a viabilidade você mesmo.",
       "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes"
     },
     "KIT": {

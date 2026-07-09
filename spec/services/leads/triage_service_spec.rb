@@ -81,13 +81,39 @@ RSpec.describe Leads::TriageService do
     expect { described_class.new(triage).perform }.not_to raise_error
   end
 
-  it 'funciona sem conversa (só ficha do lead) e sem viabilidade detectável' do
+  it 'pede o nível de confiança no prompt enviado ao LLM' do
+    expect(Ramon::LlmClient).to receive(:complete)
+      .with(hash_including(user: include('CONFIANCA'))).and_return(llm_result('VIABILIDADE: alta'))
+    described_class.new(triage).perform
+  end
+
+  it 'marca aguardando humano (sem chute) quando não há linha VIABILIDADE' do
     lead.update!(conversation: nil)
     allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('resposta sem a linha esperada'))
     described_class.new(triage).perform
     triage.reload
-    expect(triage.status).to eq('done')
+    expect(triage.status).to eq('awaiting_human')
     expect(triage.viability).to be_nil
+    expect(triage.result).to include('resposta sem a linha esperada')
+    expect(triage.finished_at).to be_present
+  end
+
+  it 'marca aguardando humano quando o LLM declara CONFIANCA baixa, descartando a viabilidade chutada' do
+    allow(Ramon::LlmClient).to receive(:complete)
+      .and_return(llm_result("Análise...\nVIABILIDADE: alta\nCONFIANÇA: baixa"))
+    described_class.new(triage).perform
+    triage.reload
+    expect(triage.status).to eq('awaiting_human')
+    expect(triage.viability).to be_nil
+  end
+
+  it 'conclui done normalmente quando o LLM declara CONFIANCA alta' do
+    allow(Ramon::LlmClient).to receive(:complete)
+      .and_return(llm_result("Análise...\nVIABILIDADE: media\nCONFIANCA: alta"))
+    described_class.new(triage).perform
+    triage.reload
+    expect(triage.status).to eq('done')
+    expect(triage.viability).to eq('media')
   end
 
   it 'inclui a transcrição de mensagem só de áudio no texto-fonte' do

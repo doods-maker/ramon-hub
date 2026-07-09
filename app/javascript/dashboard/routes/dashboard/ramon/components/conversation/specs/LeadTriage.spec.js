@@ -60,6 +60,34 @@ describe('LeadTriage.vue', () => {
     expect(badge.text()).toContain('RAMON.TRIAGE.VIABILITY.ALTA');
   });
 
+  it('renders the awaiting-human badge and hint instead of the viability badge', async () => {
+    LeadsAPI.getTriages.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          status: 'awaiting_human',
+          viability: null,
+          result: 'Análise inconclusiva.',
+          created_at: '2026-07-01',
+        },
+      ],
+    });
+    const wrapper = mountTriage({
+      id: 3,
+      latest_triage: { id: 1, status: 'awaiting_human', viability: null },
+    });
+    await flushPromises();
+    const badge = wrapper.find('[data-testid="triage-awaiting-human-badge"]');
+    expect(badge.exists()).toBe(true);
+    expect(badge.text()).toContain('RAMON.TRIAGE.AWAITING_HUMAN');
+    expect(
+      wrapper.find('[data-testid="triage-awaiting-human-hint"]').exists()
+    ).toBe(true);
+    expect(
+      wrapper.find('[data-testid="triage-viability-badge"]').exists()
+    ).toBe(false);
+  });
+
   it('renders the triage result as markdown', async () => {
     LeadsAPI.getTriages.mockResolvedValue({
       data: [
