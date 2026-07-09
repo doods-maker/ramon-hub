@@ -51,6 +51,21 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
           $t('RAMON.FUNIL.OPEN_CONVERSATION')
         }}
       </button>
+
+      <router-link
+        v-if="lead.contact_id"
+        data-testid="drawer-linha-da-vida"
+        :to="{
+          name: 'ramon_linha_da_vida',
+          params: { contactId: lead.contact_id },
+        }"
+        class="flex items-center gap-1 mt-2 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak hover:bg-n-alpha-2"
+        @click="close"
+      >
+        <span class="i-lucide-git-commit-vertical size-4" />{{
+          $t('RAMON.LINHA_DA_VIDA.OPEN')
+        }}
+      </router-link>
     </aside>
   </div>
 </template>

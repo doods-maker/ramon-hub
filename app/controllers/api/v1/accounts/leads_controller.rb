@@ -46,7 +46,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def find_lead_for_contact(conversation)
     return if conversation.contact_id.blank?
 
-    lead = Current.account.leads.find_by(contact_id: conversation.contact_id)
+    lead = Current.account.leads.open.find_by(contact_id: conversation.contact_id)
     return if lead.blank?
 
     lead.update!(conversation_id: conversation.id) if lead.conversation_id != conversation.id

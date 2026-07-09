@@ -18,6 +18,10 @@ class Lead < ApplicationRecord
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
 
+  # Lead "vivo" no funil — nem ganho nem perdido. É o critério de reengajamento
+  # (pessoa ≠ caso): aberto reengaja, fechado não trava lead novo.
+  scope :open, -> { joins(:lead_stage).where(lead_stages: { is_won: false, is_lost: false }) }
+
   before_save :track_stage_cycle
   before_save :assign_channel
 
@@ -96,6 +100,10 @@ class Lead < ApplicationRecord
       open_tasks_count: lead_tasks.open_tasks.size,
       next_task_due_at: lead_tasks.open_tasks.minimum(:due_at),
       contact_phone: contact&.phone_number,
+      contact_cpf: contact&.cpf,
+      # Date segue o precedente de dcb_em no mesmo hash
+      contact_data_nascimento: contact&.data_nascimento,
+      contact_sexo: contact&.sexo,
       dcb_em: dcb_em,
       # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast (mesmo motivo de `value` acima)
       benefit_monthly_value: benefit_monthly_value&.to_f

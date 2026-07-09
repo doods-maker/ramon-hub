@@ -56,10 +56,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
   end
 
   def open_lead_for(contact)
-    account.leads
-           .joins(:lead_stage)
-           .where(contact_id: contact.id, lead_stages: { is_won: false, is_lost: false })
-           .first
+    account.leads.open.find_by(contact_id: contact.id)
   end
 
   UTM_KEYS = %w[utm_source utm_medium utm_campaign utm_content].freeze

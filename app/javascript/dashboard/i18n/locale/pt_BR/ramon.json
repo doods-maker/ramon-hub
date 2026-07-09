@@ -220,6 +220,14 @@
       "CONTACT": "Contato",
       "THESIS": "Tese",
       "NO_THESIS_HINT": "Escolha a tese para liberar o checklist de documentos e o playbook.",
+      "PESSOA": {
+        "CPF": "CPF",
+        "CPF_PLACEHOLDER": "000.000.000-00",
+        "BIRTHDATE": "Data de nascimento",
+        "SEX": "Sexo",
+        "SEX_M": "Masculino",
+        "SEX_F": "Feminino"
+      },
       "NOTE_TEMPLATES": {
         "LABEL": "Modelo de nota…",
         "ITEMS": {
@@ -227,6 +235,29 @@
           "AWAITING_DOCS": "Aguardando documentos do lead.",
           "MEETING_SCHEDULED": "Reunião marcada."
         }
+      }
+    },
+    "LINHA_DA_VIDA": {
+      "OPEN": "Linha da Vida",
+      "LOADING": "Carregando…",
+      "ERROR": "Não foi possível carregar a linha da vida",
+      "BORN_AT": "nascimento",
+      "NO_BIRTHDATE_HINT": "Cadastre a data de nascimento para ver o calendário de direitos.",
+      "FUTURE": "Futuro",
+      "FUTURE_EMPTY": "Nenhum marco à vista.",
+      "PRESENT": "Presente",
+      "PRESENT_EMPTY": "Nenhum caso aberto no funil.",
+      "PAST": "Passado",
+      "PAST_EMPTY": "Nenhum caso fechado ainda.",
+      "WON": "ganho",
+      "LOST": "perdido",
+      "DCB_OF": "Cessação do benefício (DCB) — {name}",
+      "PRESCRIPTION_OF": "Começa a perder parcelas (prescrição quinquenal) — {name}",
+      "DISCLAIMER": "Radar de oportunidade por idade — não é parecer jurídico.",
+      "MARCOS": {
+        "aposentadoria_idade_urbana": "Atinge a idade da aposentadoria urbana",
+        "aposentadoria_idade_rural": "Atinge a idade da aposentadoria rural",
+        "bpc_loas_idoso": "Atinge a idade do BPC/LOAS (idoso)"
       }
     },
     "LEAD_PANEL": {

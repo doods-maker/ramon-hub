@@ -41,11 +41,13 @@
 
 # rubocop:enable Layout/LineLength
 
-class Contact < ApplicationRecord
+# O modelo nativo já vive no teto do cop; o fork só somou o include RamonPessoa.
+class Contact < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Avatarable
   include AvailabilityStatusable
   include Labelable
   include LlmFormattable
+  include RamonPessoa
 
   validates :account_id, presence: true
   validates :email, allow_blank: true, uniqueness: { scope: [:account_id], case_sensitive: false },
@@ -218,6 +220,7 @@ class Contact < ApplicationRecord
   def prepare_contact_attributes
     prepare_email_attribute
     prepare_jsonb_attributes
+    prepare_cpf_attribute
   end
 
   def prepare_email_attribute

@@ -225,6 +225,14 @@
       "NO_THESIS_HINT": "Pick a thesis to unlock the document checklist and playbook.",
       "DCB_LABEL": "DCB (benefit cessation date)",
       "BENEFIT_MONTHLY_LABEL": "Estimated monthly benefit",
+      "PESSOA": {
+        "CPF": "CPF",
+        "CPF_PLACEHOLDER": "000.000.000-00",
+        "BIRTHDATE": "Birth date",
+        "SEX": "Sex",
+        "SEX_M": "Male",
+        "SEX_F": "Female"
+      },
       "NOTE_TEMPLATES": {
         "LABEL": "Note template…",
         "ITEMS": {
@@ -232,6 +240,29 @@
           "AWAITING_DOCS": "Waiting for lead documents.",
           "MEETING_SCHEDULED": "Meeting scheduled."
         }
+      }
+    },
+    "LINHA_DA_VIDA": {
+      "OPEN": "Life timeline",
+      "LOADING": "Loading…",
+      "ERROR": "Could not load this person's timeline",
+      "BORN_AT": "born",
+      "NO_BIRTHDATE_HINT": "Add the birth date to unlock the rights calendar.",
+      "FUTURE": "Future",
+      "FUTURE_EMPTY": "No upcoming milestones.",
+      "PRESENT": "Present",
+      "PRESENT_EMPTY": "No open case in the funnel.",
+      "PAST": "Past",
+      "PAST_EMPTY": "No closed cases yet.",
+      "WON": "won",
+      "LOST": "lost",
+      "DCB_OF": "Benefit cessation (DCB) — {name}",
+      "PRESCRIPTION_OF": "Starts losing installments (5-year limit) — {name}",
+      "DISCLAIMER": "Opportunity radar based on age only — not legal advice.",
+      "MARCOS": {
+        "aposentadoria_idade_urbana": "Reaches urban retirement age",
+        "aposentadoria_idade_rural": "Reaches rural retirement age",
+        "bpc_loas_idoso": "Reaches BPC/LOAS age (elderly)"
       }
     },
     "LEAD_PANEL": {

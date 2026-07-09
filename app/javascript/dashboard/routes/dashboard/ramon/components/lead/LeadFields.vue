@@ -8,6 +8,7 @@ import LeadTasksList from './LeadTasksList.vue';
 import DocChecklist from './DocChecklist.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
+import { formatCpf, stripCpf } from '../../helpers/cpf';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -37,6 +38,9 @@ const value = ref('');
 const source = ref('');
 const dcbEm = ref('');
 const benefitMonthlyValue = ref('');
+const contactCpf = ref('');
+const contactNascimento = ref('');
+const contactSexo = ref('');
 
 // Etapa controlada localmente para poder reverter o select quando a mudança
 // para uma etapa de perda é cancelada, ou quando o backend recusa o update.
@@ -54,6 +58,9 @@ watch(
     source.value = l?.source ?? '';
     dcbEm.value = l?.dcb_em ?? '';
     benefitMonthlyValue.value = formatBrl(l?.benefit_monthly_value);
+    contactCpf.value = formatCpf(l?.contact_cpf);
+    contactNascimento.value = l?.contact_data_nascimento ?? '';
+    contactSexo.value = l?.contact_sexo ?? '';
     stageId.value = l?.lead_stage_id ?? null;
     lostPrompt.value = false;
     lostReasonName.value = '';
@@ -211,6 +218,35 @@ const copyPhone = async () => {
   await copyTextToClipboard(props.lead.contact_phone);
   useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
 };
+
+const saveContactField = async payload => {
+  if (!props.lead?.contact_id) return;
+  try {
+    await store.dispatch('leads/updateContactFields', {
+      leadId: props.lead.id,
+      contactId: props.lead.contact_id,
+      payload,
+    });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    contactCpf.value = formatCpf(props.lead?.contact_cpf);
+    contactNascimento.value = props.lead?.contact_data_nascimento ?? '';
+    contactSexo.value = props.lead?.contact_sexo ?? '';
+  }
+};
+
+const saveContactCpf = () => {
+  const digits = stripCpf(contactCpf.value);
+  if (digits === stripCpf(props.lead?.contact_cpf)) return;
+  contactCpf.value = formatCpf(digits);
+  saveContactField({ cpf: digits || null });
+};
+
+const saveContactNascimento = () =>
+  saveContactField({ data_nascimento: contactNascimento.value || null });
+
+const saveContactSexo = () =>
+  saveContactField({ sexo: contactSexo.value || null });
 </script>
 
 <template>
@@ -580,6 +616,59 @@ const copyPhone = async () => {
       <p v-if="lead.contact_email" class="text-xs text-n-slate-10">
         {{ lead.contact_email }}
       </p>
+
+      <template v-if="lead.contact_id">
+        <label class="block mt-3 mb-1 text-xs text-n-slate-10">{{
+          $t('RAMON.DRAWER.PESSOA.CPF')
+        }}</label>
+        <input
+          v-model="contactCpf"
+          data-testid="field-contact-cpf"
+          type="text"
+          inputmode="numeric"
+          :placeholder="$t('RAMON.DRAWER.PESSOA.CPF_PLACEHOLDER')"
+          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+          @blur="saveContactCpf"
+        />
+
+        <label class="block mb-1 text-xs text-n-slate-10">{{
+          $t('RAMON.DRAWER.PESSOA.BIRTHDATE')
+        }}</label>
+        <input
+          v-model="contactNascimento"
+          data-testid="field-contact-nascimento"
+          type="date"
+          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+          @change="saveContactNascimento"
+        />
+
+        <label class="block mb-1 text-xs text-n-slate-10">{{
+          $t('RAMON.DRAWER.PESSOA.SEX')
+        }}</label>
+        <select
+          v-model="contactSexo"
+          data-testid="field-contact-sexo"
+          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+          @change="saveContactSexo"
+        >
+          <option value="">—</option>
+          <option value="M">{{ $t('RAMON.DRAWER.PESSOA.SEX_M') }}</option>
+          <option value="F">{{ $t('RAMON.DRAWER.PESSOA.SEX_F') }}</option>
+        </select>
+
+        <router-link
+          data-testid="field-linha-da-vida-link"
+          :to="{
+            name: 'ramon_linha_da_vida',
+            params: { contactId: lead.contact_id },
+          }"
+          class="inline-flex items-center gap-1 text-xs text-n-iris-11 hover:underline"
+        >
+          <span class="i-lucide-git-commit-vertical size-3.5" />{{
+            $t('RAMON.LINHA_DA_VIDA.OPEN')
+          }}
+        </router-link>
+      </template>
     </div>
   </div>
 </template>

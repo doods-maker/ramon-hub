@@ -30,6 +30,19 @@ RSpec.describe RamonLeadListener do
     expect(account.leads.last.conversation_id).to eq(conversation.id)
   end
 
+  it 'cria lead NOVO quando os leads do contato estão todos fechados (pessoa ≠ caso)' do
+    won_stage = account.lead_stages.find_by(is_won: true)
+    old_conversation = create(:conversation, account: account, inbox: inbox, contact: contact)
+    old_lead = create(:lead, account: account, contact: contact, conversation: old_conversation,
+                             lead_stage: won_stage)
+
+    expect { listener.conversation_created(event) }.to change { account.leads.count }.by(1)
+    new_lead = account.leads.reorder(:id).last
+    expect(new_lead.id).not_to eq(old_lead.id)
+    expect(new_lead.lead_stage).to eq(account.lead_stages.order(:position).first)
+    expect(old_lead.reload.conversation_id).to eq(old_conversation.id)
+  end
+
   describe '#message_created -> atribuição do referral da Meta' do
     let(:lead) do
       create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
