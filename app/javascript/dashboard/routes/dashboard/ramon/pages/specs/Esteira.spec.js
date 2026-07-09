@@ -58,7 +58,8 @@ const payload = {
 };
 
 const mountEsteira = async (data = payload) => {
-  RamonEsteiraAPI.get.mockResolvedValue({ data });
+  // O componente muta a fila (shift/push) — clona pra não vazar entre testes.
+  RamonEsteiraAPI.get.mockResolvedValue({ data: structuredClone(data) });
   const wrapper = mount(Esteira, { global: { mocks: { $t: k => k } } });
   await flushPromises();
   return wrapper;
