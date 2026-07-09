@@ -10,10 +10,15 @@ deploy = `git pull` + `docker compose up --build`).
 
 ## ⚠️ Regras inegociáveis
 
-- **Deploy em produção só com OK explícito do Eduardo.** Nada sobe pra VPS sem
-  aprovação, mesmo que o merge já tenha acontecido.
+- **Merge e deploy autônomos (regime desde 09/07/2026, ordem do Eduardo):**
+  o Claude pode mergear PR com CI 100% verde e deployar na VPS sem OK caso a
+  caso. Contrapartida obrigatória: registrar tudo que foi mergeado/deployado
+  + roteiros de smoke em doc pro Eduardo revisar depois.
 - **Sem ambiente de teste local** → quem valida é **PR + CI**. Não mergear com
   CI vermelho.
+- **Conteúdo que fala com cliente continua gate do Eduardo** (mensagens,
+  auto-respostas, textos de campanha): o código sobe, o texto só é ativado
+  com aprovação explícita dele.
 
 ## Lições de engenharia (aprendidas no fork — não reaprender do zero)
 
