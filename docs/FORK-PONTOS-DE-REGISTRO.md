@@ -79,6 +79,8 @@
 | `app/javascript/dashboard/store/mutation-types.js` | +bloco `// Ramon — Centro de Comando (dashboard agregado)` (SET_RAMON_DASHBOARD_UI_FLAG, SET_RAMON_DASHBOARD) antes do bloco Teses | mutation types do módulo ramonDashboard | PR-B t3 |
 | `app/javascript/dashboard/routes/dashboard/ramon/ramon.routes.js` | `ramon_index` passa a renderizar `CommandCenter.vue` (import estático) no lugar de `RamonOverview.vue` | Centro de Comando substitui o placeholder | PR-B t3 |
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` e `pt_BR/ramon.json` | bloco `OVERVIEW` (órfão) trocado por `COMMAND.*` (EYEBROW, TITLE, RELOAD, TODAY, FUNNEL, WEEK) | i18n do Centro de Comando | PR-B t3 |
+| `config/routes.rb` | `post 'calcom_webhooks'` no namespace `public/api/v1` (após `ramon_leads`) | webhook do Cal.com (agenda) | 9c-agenda |
+| `config/initializers/rack_attack.rb` | throttle `public/calcom_webhooks` (30 POST/min por IP) | anti-abuso do webhook Cal.com | 9c-agenda |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -183,6 +185,10 @@
 | `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; `getTriages/createTriage` (F2.1b) + `createKit` (F2.1c) | API client | F2.1b/c |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; abas Triagem (b) e Kit (c); X de fechar + discard no rodapé (#26) | painel do lead | F2.1b/c |
 | specs das fatias (services, controllers, models, componentes, helper) | cobertura CI de triagem e kit | specs | F2.1b/c |
+| `app/controllers/public/api/v1/calcom_webhooks_controller.rb` | webhook Cal.com: HMAC `X-Cal-Signature-256` (`CALCOM_WEBHOOK_SECRET`), BOOKING_CREATED/CANCELLED/RESCHEDULED → lead_activity + lead_task `meeting`; sem match cria contact+lead+notificação (conta de `RAMON_LEAD_CAPTURE_ACCOUNT_ID`) | agenda Cal.com → funil | 9c-agenda |
+| `spec/requests/public/api/v1/calcom_webhooks_spec.rb` | specs: assinatura válida/inválida, match fone/email, sem match, cancel/reschedule | cobertura do webhook Cal.com | 9c-agenda |
+| `app/javascript/dashboard/routes/dashboard/ramon/pages/Agenda.vue` | visão calendário semanal (7 colunas) das lead_tasks abertas; card → Funil + drawer do lead | aba Agenda | 9c-agenda |
+| `ramon.routes.js` + `IntranetSidebar.vue` + `ramon.json` (en/pt_BR) | rota `ramon_agenda`, item de menu e i18n (NAV.AGENDA, AGENDA.*, KIND.MEETING_*) | aba Agenda | 9c-agenda |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

@@ -195,6 +195,11 @@ class Rack::Attack
     req.ip if req.path.start_with?('/public/api/v1/ramon_leads') && req.post?
   end
 
+  ## Ramon — Cal.com webhook (agenda); folga p/ retries do Cal.com ###
+  throttle('public/calcom_webhooks', limit: 30, period: 1.minute) do |req|
+    req.ip if req.path.start_with?('/public/api/v1/calcom_webhooks') && req.post?
+  end
+
   ##-----------------------------------------------##
 
   ###-----------------------------------------------###

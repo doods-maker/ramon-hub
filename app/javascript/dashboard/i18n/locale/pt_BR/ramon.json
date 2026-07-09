@@ -1,5 +1,12 @@
 {
   "RAMON": {
+    "AGENDA": {
+      "TITLE": "Agenda",
+      "TODAY": "Hoje",
+      "PREV_WEEK": "Semana anterior",
+      "NEXT_WEEK": "Próxima semana",
+      "EMPTY": "Nenhum compromisso nesta semana."
+    },
     "COMMAND": {
       "EYEBROW": "Centro de Comando",
       "TITLE": "Centro de Comando",
@@ -62,6 +69,7 @@
       "INTELIGENCIA": "Inteligência",
       "OVERVIEW": "Centro de Comando",
       "FUNIL": "Funil de Leads",
+      "AGENDA": "Agenda",
       "SDR": "Painel do SDR",
       "TRIAGEM": "Triagem de Iniciais",
       "AGENTES": "Agentes de IA",
@@ -288,7 +296,9 @@
           "VALUE_CHANGED": "mudou o valor",
           "NOTE_ADDED": "adicionou nota",
           "TASK_CREATED": "criou tarefa",
-          "TASK_COMPLETED": "concluiu tarefa"
+          "TASK_COMPLETED": "concluiu tarefa",
+          "MEETING_SCHEDULED": "agendou reunião via Cal.com",
+          "MEETING_CANCELLED": "reunião cancelada via Cal.com"
         }
       }
     },

@@ -21,6 +21,12 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/agenda'),
+    name: 'ramon_agenda',
+    component: () => import('./pages/Agenda.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/config'),
     name: 'ramon_funil_config',
     component: () => import('./pages/FunilConfig.vue'),

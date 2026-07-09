@@ -1,5 +1,12 @@
 {
   "RAMON": {
+    "AGENDA": {
+      "TITLE": "Agenda",
+      "TODAY": "Today",
+      "PREV_WEEK": "Previous week",
+      "NEXT_WEEK": "Next week",
+      "EMPTY": "No appointments this week."
+    },
     "COMMAND": {
       "EYEBROW": "Command Center",
       "TITLE": "Command Center",
@@ -62,6 +69,7 @@
       "INTELIGENCIA": "Intelligence",
       "OVERVIEW": "Command Center",
       "FUNIL": "Pipeline",
+      "AGENDA": "Agenda",
       "SDR": "SDR Panel",
       "TRIAGEM": "Case Intake",
       "AGENTES": "AI Agents",
@@ -293,7 +301,9 @@
           "VALUE_CHANGED": "changed the value",
           "NOTE_ADDED": "added a note",
           "TASK_CREATED": "created task",
-          "TASK_COMPLETED": "completed task"
+          "TASK_COMPLETED": "completed task",
+          "MEETING_SCHEDULED": "scheduled a meeting via Cal.com",
+          "MEETING_CANCELLED": "meeting cancelled via Cal.com"
         }
       }
     },
