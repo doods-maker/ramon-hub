@@ -270,6 +270,7 @@
       }
     },
     "LEAD_PANEL": {
+      "TITLE": "Lead",
       "TABS": {
         "SUMMARY": "Resumo",
         "HISTORY": "Histórico",
