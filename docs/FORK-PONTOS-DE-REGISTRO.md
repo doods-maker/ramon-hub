@@ -92,6 +92,7 @@
 | `app/javascript/dashboard/i18n/locale/en/contact.json` e `pt_BR/contact.json` | +bloco `CONTACTS_LAYOUT.DETAILS.TITULAR_EXPORT`; textos `DELETE_CONTACT*`/`DELETE_DIALOG` reescritos para "anonimizar" | i18n do export + wording honesto do delete | 7c |
 | `config/routes.rb` | `post 'calcom_webhooks'` no namespace `public/api/v1` (após `ramon_leads`) | webhook do Cal.com (agenda) | 9c-agenda |
 | `config/initializers/rack_attack.rb` | throttle `public/calcom_webhooks` (30 POST/min por IP) | anti-abuso do webhook Cal.com | 9c-agenda |
+| `config/routes.rb` | `resource :ramon_esteira, only: [:show] do post :done; post :snooze end` (após `resource :ramon_dashboard`) | fila do dia (Esteira) + ações Feito/Adiar | Esteira |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 

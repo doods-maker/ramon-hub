@@ -68,6 +68,7 @@
       "JURIDICO": "Legal",
       "INTELIGENCIA": "Intelligence",
       "OVERVIEW": "Command Center",
+      "ESTEIRA": "Esteira",
       "FUNIL": "Pipeline",
       "AGENDA": "Agenda",
       "SDR": "SDR Panel",
@@ -75,6 +76,43 @@
       "AGENTES": "AI Agents",
       "FUNIL_CONFIG": "Funnel settings",
       "PLAYBOOKS": "Playbooks"
+    },
+    "ESTEIRA": {
+      "EYEBROW": "Production line",
+      "TITLE": "Esteira",
+      "RELOAD": "Reload",
+      "BOARD": {
+        "ACTIONS": "Actions queued",
+        "VALUE": "Value at stake",
+        "DONE": "Done today"
+      },
+      "ACTION": {
+        "CONTACT": "Contact the lead now",
+        "TASK": "Complete the task",
+        "REPLY": "Reply",
+        "FOLLOW_UP": "Follow up"
+      },
+      "REASON": {
+        "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
+        "PRESCRIPTION_LOST": "{count} installments already lost",
+        "PRESCRIPTION_SOON": "prescribes in {months} months",
+        "TASK_OVERDUE": "overdue task: {title}",
+        "TASK_TODAY": "task due today: {title}",
+        "NEW_FROM_LP": "new LP lead ({source}) without reply",
+        "AWAITING_HUMAN": "triage awaiting a human",
+        "STALLED": "{days} days stalled in stage"
+      },
+      "OPEN_CONVERSATION": "Open conversation",
+      "OPEN_LIFELINE": "Lifeline",
+      "DONE": "Done",
+      "SKIP": "Skip",
+      "SNOOZE": "Snooze",
+      "DONE_TOAST": "Logged — next!",
+      "SNOOZED_TOAST": "Snoozed until tomorrow",
+      "NEXT_TITLE": "Up next",
+      "EMPTY_TITLE": "All clear",
+      "EMPTY_BODY": "Nothing urgent right now — check the pipeline.",
+      "EMPTY_CTA": "Open pipeline"
     },
     "RAIL": {
       "INTERNOS": "Internal",
@@ -316,6 +354,7 @@
           "TASK_COMPLETED": "completed task",
           "MEETING_SCHEDULED": "scheduled a meeting via Cal.com",
           "MEETING_CANCELLED": "meeting cancelled via Cal.com",
+          "ESTEIRA_DONE": "resolved in the Esteira",
           "LP_RECAPTURED": "received a new landing page form"
         }
       }

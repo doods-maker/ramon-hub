@@ -286,6 +286,10 @@ Rails.application.routes.draw do
           resources :labels, only: [:index, :show, :create, :update, :destroy]
           resource :lead_config, only: [:show], controller: 'lead_config'
           resource :ramon_dashboard, only: [:show], controller: 'ramon_dashboard'
+          resource :ramon_esteira, only: [:show], controller: 'ramon_esteira' do
+            post :done
+            post :snooze
+          end
           resources :ramon_lead_imports, only: [:create, :show]
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'

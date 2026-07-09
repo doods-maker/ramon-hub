@@ -68,6 +68,7 @@
       "JURIDICO": "Jurídico",
       "INTELIGENCIA": "Inteligência",
       "OVERVIEW": "Centro de Comando",
+      "ESTEIRA": "Esteira",
       "FUNIL": "Funil de Leads",
       "AGENDA": "Agenda",
       "SDR": "Painel do SDR",
@@ -75,6 +76,43 @@
       "AGENTES": "Agentes de IA",
       "FUNIL_CONFIG": "Configurações do Funil",
       "PLAYBOOKS": "Playbooks"
+    },
+    "ESTEIRA": {
+      "EYEBROW": "Linha de produção",
+      "TITLE": "Esteira",
+      "RELOAD": "Recarregar",
+      "BOARD": {
+        "ACTIONS": "Ações na fila",
+        "VALUE": "R$ em jogo",
+        "DONE": "Feitas hoje"
+      },
+      "ACTION": {
+        "CONTACT": "Falar com o lead agora",
+        "TASK": "Cumprir a tarefa",
+        "REPLY": "Responder",
+        "FOLLOW_UP": "Retomar contato"
+      },
+      "REASON": {
+        "PRESCRIPTION_BLEEDING": "{value}/mês prescrevendo",
+        "PRESCRIPTION_LOST": "{count} parcelas já prescritas",
+        "PRESCRIPTION_SOON": "prescreve em {months} meses",
+        "TASK_OVERDUE": "tarefa vencida: {title}",
+        "TASK_TODAY": "tarefa de hoje: {title}",
+        "NEW_FROM_LP": "lead novo da LP ({source}) sem resposta",
+        "AWAITING_HUMAN": "triagem aguardando humano",
+        "STALLED": "{days} dias parado na etapa"
+      },
+      "OPEN_CONVERSATION": "Abrir conversa",
+      "OPEN_LIFELINE": "Linha da Vida",
+      "DONE": "Feito",
+      "SKIP": "Pular",
+      "SNOOZE": "Adiar",
+      "DONE_TOAST": "Registrado — próximo!",
+      "SNOOZED_TOAST": "Adiado para amanhã",
+      "NEXT_TITLE": "Próximos na fila",
+      "EMPTY_TITLE": "Esteira zerada",
+      "EMPTY_BODY": "Nada urgente agora — veja o funil.",
+      "EMPTY_CTA": "Abrir funil"
     },
     "RAIL": {
       "INTERNOS": "Internos",
@@ -314,6 +352,7 @@
           "TASK_COMPLETED": "concluiu tarefa",
           "MEETING_SCHEDULED": "agendou reunião via Cal.com",
           "MEETING_CANCELLED": "reunião cancelada via Cal.com",
+          "ESTEIRA_DONE": "resolveu na Esteira",
           "LP_RECAPTURED": "recebeu novo formulário da LP"
         }
       }
