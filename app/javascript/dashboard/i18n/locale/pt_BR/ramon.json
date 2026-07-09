@@ -164,7 +164,10 @@
         "PHONE_COPIED": "Telefone copiado",
         "WHATSAPP": "WhatsApp",
         "TASK_SCHEDULED": "Follow-up agendado",
-        "TRIAGE_AWAITING_HUMAN": "Triagem: aguardando humano"
+        "TRIAGE_AWAITING_HUMAN": "Triagem: aguardando humano",
+        "PRESCRIPTION_BLEEDING": "{value}/mês evaporando",
+        "PRESCRIPTION_LOST": "{count} parcelas perdidas na prescrição",
+        "PRESCRIPTION_SOON": "prescreve em {months}m"
       },
       "BELL": {
         "TITLE": "Agendar follow-up",
