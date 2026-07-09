@@ -326,11 +326,8 @@
           "NOTE_ADDED": "adicionou nota",
           "TASK_CREATED": "criou tarefa",
           "TASK_COMPLETED": "concluiu tarefa",
-<<<<<<< HEAD
-          "THESIS_CHANGED": "mudou a tese"
-=======
+          "THESIS_CHANGED": "mudou a tese",
           "LP_RECAPTURED": "recebeu novo formulário da LP"
->>>>>>> origin/ramon
         }
       }
     },

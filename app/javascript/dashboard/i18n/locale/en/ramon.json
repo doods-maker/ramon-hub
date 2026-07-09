@@ -331,11 +331,8 @@
           "NOTE_ADDED": "added a note",
           "TASK_CREATED": "created task",
           "TASK_COMPLETED": "completed task",
-<<<<<<< HEAD
-          "THESIS_CHANGED": "changed the thesis"
-=======
+          "THESIS_CHANGED": "changed the thesis",
           "LP_RECAPTURED": "received a new landing page form"
->>>>>>> origin/ramon
         }
       }
     },
