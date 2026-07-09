@@ -4,7 +4,7 @@ describe Ramon::TitularExport do
   let(:account) { create(:account) }
   let(:contact) { create(:contact, :with_email, account: account) }
   let(:conversation) { create(:conversation, account: account, contact: contact) }
-  let!(:message) do
+  before do
     create(:message, conversation: conversation, account: account, inbox: conversation.inbox,
                      sender: contact, content: 'Ola, quero saber do meu beneficio')
   end
