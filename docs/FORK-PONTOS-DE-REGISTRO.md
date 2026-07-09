@@ -93,6 +93,7 @@
 | `config/routes.rb` | `post 'calcom_webhooks'` no namespace `public/api/v1` (após `ramon_leads`) | webhook do Cal.com (agenda) | 9c-agenda |
 | `config/initializers/rack_attack.rb` | throttle `public/calcom_webhooks` (30 POST/min por IP) | anti-abuso do webhook Cal.com | 9c-agenda |
 | `config/routes.rb` | `resource :ramon_esteira, only: [:show] do post :done; post :snooze end` (após `resource :ramon_dashboard`) | fila do dia (Esteira) + ações Feito/Adiar | Esteira |
+| `config/routes.rb` | `resource :simulacao, only: [:create], controller: 'lead_simulacoes'` dentro do bloco `resources :leads` (após `resources :triages`) | endpoint do Simulador ao vivo (Sala de Fechamento) | Onda 2 |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -207,6 +208,12 @@
 | `spec/requests/public/api/v1/calcom_webhooks_spec.rb` | specs: assinatura válida/inválida, match fone/email, sem match, cancel/reschedule | cobertura do webhook Cal.com | 9c-agenda |
 | `app/javascript/dashboard/routes/dashboard/ramon/pages/Agenda.vue` | visão calendário semanal (7 colunas) das lead_tasks abertas; card → Funil + drawer do lead | aba Agenda | 9c-agenda |
 | `ramon.routes.js` + `IntranetSidebar.vue` + `ramon.json` (en/pt_BR) | rota `ramon_agenda`, item de menu e i18n (NAV.AGENDA, AGENDA.*, KIND.MEETING_*) | aba Agenda | 9c-agenda |
+| `lib/ramon/motor_client.rb` | NOVO: cliente HTTP (HTTParty) do motor de cálculos (`ENV MOTOR_CALCULOS_URL`, timeouts 5s/15s, `UnavailableError`/`ValidationError`) | integração hub↔motor | Onda 2 |
+| `app/controllers/api/v1/accounts/lead_simulacoes_controller.rb` | NOVO: `POST /leads/:id/simulacao` — monta payload do motor (12 competências do salário médio), estima atrasados (mensal × meses DER→hoje) e aplica honorário da tese; 422/503 com mensagem | Simulador ao vivo | Onda 2 |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadSimulador.vue` | NOVO: seção "Simulador" do painel do lead (form mínimo, cartão de resultado, disclaimer OAB fixo, estado motor-fora-do-ar) | Simulador ao vivo | Onda 2 |
+| `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; +`simulate(leadId, payload)` | API client | Onda 2 |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; +AccordionItem "Simulador" (recolhido por padrão, após o Kit) | painel do lead | Onda 2 |
+| `spec/controllers/api/v1/accounts/lead_simulacoes_controller_spec.rb` + `.../specs/LeadSimulador.spec.js` | specs: sucesso (WebMock), 422 do motor, motor fora do ar/sem ENV, honorário da tese, pré-preenchimento e estados do form | cobertura CI | Onda 2 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

@@ -40,6 +40,10 @@ class LeadsAPI extends ApiClient {
   createKit(leadId, triageId) {
     return axios.post(`${this.url}/${leadId}/triages/${triageId}/kit`);
   }
+
+  simulate(leadId, payload) {
+    return axios.post(`${this.url}/${leadId}/simulacao`, payload);
+  }
 }
 
 export default new LeadsAPI();
