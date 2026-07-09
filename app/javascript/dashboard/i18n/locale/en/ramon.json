@@ -275,6 +275,7 @@
       }
     },
     "LEAD_PANEL": {
+      "TITLE": "Lead",
       "TABS": {
         "SUMMARY": "Summary",
         "HISTORY": "History",
