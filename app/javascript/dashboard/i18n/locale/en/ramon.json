@@ -86,6 +86,7 @@
     "FUNIL": {
       "TITLE": "Lead Pipeline",
       "NEW_LEAD": "New lead",
+      "HOTKEYS_HINT": "j/k navigate · e edit · c conversation",
       "EXPORT_CSV": "Export CSV",
       "LEAD_NAME": "Lead name",
       "LEAD_PHONE": "Phone",

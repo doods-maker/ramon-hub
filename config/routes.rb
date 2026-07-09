@@ -175,6 +175,7 @@ Rails.application.routes.draw do
               get :messages
               get :contacts
               get :articles
+              get :leads
             end
           end
 

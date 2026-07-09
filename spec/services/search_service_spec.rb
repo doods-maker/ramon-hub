@@ -32,7 +32,7 @@ describe SearchService do
       it 'returns all for all' do
         search_type = 'all'
         search = described_class.new(current_user: user, current_account: account, params: params, search_type: search_type)
-        expect(search.perform.keys).to match_array(%i[contacts messages conversations articles])
+        expect(search.perform.keys).to match_array(%i[contacts messages conversations articles leads])
       end
 
       it 'returns contacts for contacts' do

@@ -59,6 +59,17 @@ class SearchAPI extends ApiClient {
       },
     });
   }
+
+  leads({ q, page = 1, since, until }) {
+    return axios.get(`${this.url}/leads`, {
+      params: {
+        q,
+        page: page,
+        since,
+        until,
+      },
+    });
+  }
 }
 
 export default new SearchAPI();

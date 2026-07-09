@@ -38,7 +38,7 @@ RSpec.describe 'Search', type: :request do
         response_data = JSON.parse(response.body, symbolize_names: true)
 
         expect(response_data[:payload][:messages].first[:content]).to eq 'test2'
-        expect(response_data[:payload].keys).to contain_exactly(:contacts, :conversations, :messages, :articles)
+        expect(response_data[:payload].keys).to contain_exactly(:contacts, :conversations, :messages, :articles, :leads)
         expect(response_data[:payload][:messages].length).to eq 2
         expect(response_data[:payload][:conversations].length).to eq 1
         expect(response_data[:payload][:contacts].length).to eq 1

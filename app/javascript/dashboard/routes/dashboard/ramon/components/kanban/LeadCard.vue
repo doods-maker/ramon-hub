@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -11,8 +11,18 @@ import TaskBellMenu from './TaskBellMenu.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
+  focused: { type: Boolean, default: false },
 });
 const emit = defineEmits(['openConversation', 'openLead']);
+
+const cardEl = ref(null);
+watch(
+  () => props.focused,
+  isFocused => {
+    if (isFocused)
+      cardEl.value?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+);
 
 const { t } = useI18n();
 // useStore não lança fora de um app com store (retorna undefined); leituras de
@@ -128,8 +138,9 @@ const copyPhone = async () => {
 
 <template>
   <div
+    ref="cardEl"
     class="p-3 mb-2 rounded-xl bg-n-solid-2 border cursor-pointer hover:border-n-iris-8"
-    :class="borderClass"
+    :class="[borderClass, { 'ring-2 ring-n-iris-9': focused }]"
   >
     <div class="flex items-start justify-between gap-2">
       <button

@@ -6,6 +6,7 @@ export const initialState = {
   conversationRecords: [],
   messageRecords: [],
   articleRecords: [],
+  leadRecords: [],
   uiFlags: {
     isFetching: false,
     isSearchCompleted: false,
@@ -13,6 +14,7 @@ export const initialState = {
     conversation: { isFetching: false },
     message: { isFetching: false },
     article: { isFetching: false },
+    lead: { isFetching: false },
   },
 };
 
@@ -31,6 +33,9 @@ export const getters = {
   },
   getArticleRecords(state) {
     return state.articleRecords;
+  },
+  getLeadRecords(state) {
+    return state.leadRecords;
   },
   getUIFlags(state) {
     return state.uiFlags;
@@ -72,6 +77,7 @@ export const actions = {
         dispatch('conversationSearch', { q, ...filters }),
         dispatch('messageSearch', { q, ...filters }),
         dispatch('articleSearch', { q, ...filters }),
+        dispatch('leadSearch', { q, ...filters }),
       ]);
     } catch (error) {
       // Ignore error
@@ -130,6 +136,18 @@ export const actions = {
       commit(types.ARTICLE_SEARCH_SET_UI_FLAG, { isFetching: false });
     }
   },
+  async leadSearch({ commit }, payload) {
+    const { page = 1, ...searchParams } = payload;
+    commit(types.LEAD_SEARCH_SET_UI_FLAG, { isFetching: true });
+    try {
+      const { data } = await SearchAPI.leads({ ...searchParams, page });
+      commit(types.LEAD_SEARCH_SET, data.payload.leads);
+    } catch (error) {
+      // Ignore error
+    } finally {
+      commit(types.LEAD_SEARCH_SET_UI_FLAG, { isFetching: false });
+    }
+  },
   async clearSearchResults({ commit }) {
     commit(types.CLEAR_SEARCH_RESULTS);
   },
@@ -169,11 +187,18 @@ export const mutations = {
   [types.ARTICLE_SEARCH_SET_UI_FLAG](state, uiFlags) {
     state.uiFlags.article = { ...state.uiFlags.article, ...uiFlags };
   },
+  [types.LEAD_SEARCH_SET](state, records) {
+    state.leadRecords = [...state.leadRecords, ...records];
+  },
+  [types.LEAD_SEARCH_SET_UI_FLAG](state, uiFlags) {
+    state.uiFlags.lead = { ...state.uiFlags.lead, ...uiFlags };
+  },
   [types.CLEAR_SEARCH_RESULTS](state) {
     state.contactRecords = [];
     state.conversationRecords = [];
     state.messageRecords = [];
     state.articleRecords = [];
+    state.leadRecords = [];
   },
 };
 

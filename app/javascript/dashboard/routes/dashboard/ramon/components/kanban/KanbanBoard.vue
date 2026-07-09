@@ -5,6 +5,7 @@ import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { downloadCsvFile } from 'dashboard/helper/downloadHelper';
+import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { leadsToCsv } from '../../helpers/leadsCsv';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
@@ -128,6 +129,41 @@ const onOpenLead = lead => {
 };
 const onOpenConversation = id => store.dispatch('leads/toggleDock', id);
 
+// Atalhos (item 13 do 4b): j/k navegam entre cards, e abre a gaveta, c abre a
+// conversa. Lista achatada na ordem visual das colunas.
+const focusedLeadId = ref(null);
+
+const flatLeads = () => orderedStages.value.flatMap(s => stageLeads(s.id));
+
+const moveFocus = delta => {
+  const all = flatLeads();
+  if (!all.length) return;
+  const idx = all.findIndex(l => l.id === focusedLeadId.value);
+  let next = idx + delta;
+  if (idx === -1) next = delta > 0 ? 0 : all.length - 1;
+  const clamped = Math.max(0, Math.min(all.length - 1, next));
+  focusedLeadId.value = all[clamped].id;
+};
+
+const focusedLead = () => flatLeads().find(l => l.id === focusedLeadId.value);
+
+useKeyboardEvents({
+  KeyJ: { action: () => moveFocus(1) },
+  KeyK: { action: () => moveFocus(-1) },
+  KeyE: {
+    action: () => {
+      const lead = focusedLead();
+      if (lead) onOpenLead(lead);
+    },
+  },
+  KeyC: {
+    action: () => {
+      const lead = focusedLead();
+      if (lead?.conversation_id) onOpenConversation(lead.conversation_id);
+    },
+  },
+});
+
 const onRenameStage = ({ id, name }) =>
   store.dispatch('leadConfig/updateStage', { id, name });
 const onRecolorStage = ({ id, color }) =>
@@ -187,6 +223,9 @@ const exportCsv = () => {
       <h1 class="text-xl font-cormorant text-n-slate-12">
         {{ $t('RAMON.FUNIL.TITLE') }}
       </h1>
+      <span class="hidden lg:inline text-xs text-n-slate-9">
+        {{ $t('RAMON.FUNIL.HOTKEYS_HINT') }}
+      </span>
       <div class="flex items-center gap-2">
         <button
           data-testid="export-csv"
@@ -220,6 +259,7 @@ const exportCsv = () => {
           <KanbanColumn
             :stage="element"
             :leads="stageLeads(element.id)"
+            :focused-lead-id="focusedLeadId"
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
