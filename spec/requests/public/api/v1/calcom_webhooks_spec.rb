@@ -44,7 +44,7 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
 
-    context 'quando o telefone bate num contact com lead aberto' do
+    context 'when o telefone bate num contact com lead aberto' do
       let!(:contact) { create(:contact, account: account, phone_number: '+5548999887766') }
       let!(:lead) { create(:lead, account: account, lead_stage: stage_novo, contact: contact) }
 
@@ -98,7 +98,8 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
     it 'sem match cria contact + lead na primeira etapa e notifica a conta' do
       create(:user, account: account, role: :administrator)
 
-      expect { post_webhook(booking_payload) }.to change(Lead, :count).by(1)
+      expect { post_webhook(booking_payload) }
+        .to change(Lead, :count).by(1)
         .and change(Contact, :count).by(1)
         .and change(Notification, :count).by(1)
 

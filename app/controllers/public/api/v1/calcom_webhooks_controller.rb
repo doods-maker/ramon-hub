@@ -129,7 +129,7 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
   end
 
   def find_contact_by_email
-    attendee_email && account.contacts.find_by(email: attendee_email)
+    attendee_email && account.contacts.from_email(attendee_email)
   end
 
   def open_lead_for(contact)
