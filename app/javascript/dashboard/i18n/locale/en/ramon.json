@@ -242,6 +242,14 @@
         "SEX_M": "Male",
         "SEX_F": "Female"
       },
+      "CONSENT": {
+        "LABEL": "Marketing consent (LGPD)",
+        "GRANTED": "Granted on {date} via {source}",
+        "REVOKED": "Revoked on {date}",
+        "NONE": "Not recorded",
+        "GRANT": "Record",
+        "REVOKE": "Revoke"
+      },
       "NOTE_TEMPLATES": {
         "LABEL": "Note template…",
         "ITEMS": {

@@ -119,6 +119,39 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       expect(Lead.last.custom_attributes).not_to have_key('utm')
     end
 
+    it 'com consent no payload grava consent_marketing no contact (aceite + timestamp + origem lp:)' do
+      post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(consent: 'true'), as: :json
+
+      consent = Contact.last.custom_attributes['consent_marketing']
+      expect(consent['granted']).to be true
+      expect(consent['source']).to eq 'lp:auxilio-acidente'
+      expect(Time.zone.parse(consent['at'])).to be_within(1.minute).of(Time.current)
+    end
+
+    it 'sem campanha usa utm_campaign na origem do consentimento' do
+      post "/public/api/v1/ramon_leads/#{token}",
+           params: payload.merge(consent: '1', campanha: '', utm_campaign: 'aa-julho'), as: :json
+
+      expect(Contact.last.custom_attributes.dig('consent_marketing', 'source')).to eq 'lp:aa-julho'
+    end
+
+    it 'sem consent (ou consent falso) não grava consent_marketing' do
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
+      expect(Contact.last.custom_attributes).not_to have_key('consent_marketing')
+
+      post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(consent: 'false'), as: :json
+      expect(Contact.last.custom_attributes).not_to have_key('consent_marketing')
+    end
+
+    it 'recaptura de lead aberto com consent grava no contact existente' do
+      contact = create(:contact, account: account, phone_number: '+5548999887766')
+      create(:lead, account: account, lead_stage: stage_reuniao, contact: contact)
+
+      post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(consent: 'on'), as: :json
+
+      expect(contact.reload.custom_attributes.dig('consent_marketing', 'granted')).to be true
+    end
+
     it 'lead do contato em etapa ganha/perdida NÃO bloqueia lead novo' do
       stage_ganho = account.lead_stages.find_by!(is_won: true)
       contact = create(:contact, account: account, phone_number: '+5548999887766')

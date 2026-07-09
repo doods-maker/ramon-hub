@@ -8,6 +8,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
     return head :unprocessable_entity if phone.blank?
 
     contact = find_or_create_contact(phone)
+    record_marketing_consent(contact) if consent_given?
     register_lead(contact, phone)
 
     head :created
@@ -75,6 +76,23 @@ class Public::Api::V1::RamonLeadsController < PublicController
   def utm_attributes
     utm = UTM_KEYS.index_with { |key| params[key].to_s.strip.first(255).presence }.compact
     utm.present? ? { 'utm' => utm } : {}
+  end
+
+  # Consentimento LGPD de marketing (item 20 do plano mestre).
+  # O form da LP manda o campo opcional `consent` (checkbox: "true"/"1"/"on").
+  # Só CONCEDE por aqui — revogação é manual no painel do lead.
+  def consent_given?
+    params[:consent].present? && ActiveModel::Type::Boolean.new.cast(params[:consent])
+  end
+
+  def record_marketing_consent(contact)
+    contact.update!(custom_attributes: contact.custom_attributes.merge(
+      'consent_marketing' => {
+        'granted' => true,
+        'at' => Time.current.iso8601,
+        'source' => "lp:#{params[:campanha].to_s.strip.presence || params[:utm_campaign].to_s.strip.presence || 'desconhecida'}"
+      }
+    ))
   end
 
   def recapture_note_body

@@ -39,6 +39,7 @@ json.contact_email lead.contact&.email
 json.contact_cpf lead.contact&.cpf
 json.contact_data_nascimento lead.contact&.data_nascimento
 json.contact_sexo lead.contact&.sexo
+json.contact_consent_marketing lead.contact&.custom_attributes&.dig('consent_marketing')
 
 if lead.latest_triage
   json.latest_triage do

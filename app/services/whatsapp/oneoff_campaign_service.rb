@@ -52,6 +52,14 @@ class Whatsapp::OneoffCampaignService
       return
     end
 
+    # Ramon fork (LGPD): campanha em massa só dispara pra quem tem consentimento
+    # de marketing registrado no contato (custom_attributes.consent_marketing).
+    unless marketing_consent_granted?(contact)
+      @skipped_without_consent += 1
+      Rails.logger.info "Skipping contact #{contact.name} - no marketing consent (LGPD)"
+      return
+    end
+
     if campaign.template_params.blank?
       Rails.logger.error "Skipping contact #{contact.name} - no template_params found for WhatsApp campaign"
       return
@@ -67,9 +75,15 @@ class Whatsapp::OneoffCampaignService
     contacts = campaign.account.contacts.tagged_with(audience_labels, any: true)
     Rails.logger.info "Processing #{contacts.count} contacts for campaign #{campaign.id}"
 
+    @skipped_without_consent = 0
     contacts.each { |contact| process_contact(contact) }
 
+    Rails.logger.info "Campaign #{campaign.id}: #{@skipped_without_consent} contact(s) skipped without marketing consent (LGPD)"
     Rails.logger.info "Campaign #{campaign.id} processing completed"
+  end
+
+  def marketing_consent_granted?(contact)
+    contact.custom_attributes&.dig('consent_marketing', 'granted') == true
   end
 
   def process_liquid_template_params(contact)
