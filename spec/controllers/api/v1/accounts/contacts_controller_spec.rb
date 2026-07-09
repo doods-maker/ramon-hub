@@ -729,17 +729,18 @@ RSpec.describe 'Contacts API', type: :request do
       let(:admin) { create(:user, account: account, role: :administrator) }
       let(:agent) { create(:user, account: account, role: :agent) }
 
-      it 'deletes the contact for administrator user' do
+      it 'anonymizes the contact for administrator user (LGPD, no physical destroy)' do
         allow(OnlineStatusTracker).to receive(:get_presence).and_return(false)
+        conversation
+
         delete "/api/v1/accounts/#{account.id}/contacts/#{contact.id}",
                headers: admin.create_new_auth_token
 
-        expect(contact.conversations).to be_empty
-        expect(contact.inboxes).to be_empty
-        expect(contact.contact_inboxes).to be_empty
-        expect(contact.csat_survey_responses).to be_empty
-        expect { contact.reload }.to raise_error(ActiveRecord::RecordNotFound)
         expect(response).to have_http_status(:success)
+        expect(contact.reload.name).to eq("Titular anonimizado ##{contact.id}")
+        expect(contact.email).to be_nil
+        expect(contact.phone_number).to be_nil
+        expect(contact.conversations).not_to be_empty
       end
 
       it 'does not delete the contact if online' do

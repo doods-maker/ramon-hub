@@ -5,6 +5,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 
+import ContactAPI from 'dashboard/api/contacts';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ContactLabels from 'dashboard/components-next/Contacts/ContactLabels/ContactLabels.vue';
@@ -83,6 +84,29 @@ const updateContact = async () => {
 
 const openConfirmDeleteContactDialog = () => {
   confirmDeleteContactDialogRef.value?.dialogRef.open();
+};
+
+// Ramon (LGPD art. 18): baixa o JSON completo do titular
+const isExportingTitular = ref(false);
+const exportTitularData = async () => {
+  try {
+    isExportingTitular.value = true;
+    const { data } = await ContactAPI.exportTitular(props.selectedContact.id);
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('download', `titular-${props.selectedContact.id}.json`);
+    link.setAttribute('href', url);
+    link.click();
+    URL.revokeObjectURL(url);
+    useAlert(t('CONTACTS_LAYOUT.DETAILS.TITULAR_EXPORT.SUCCESS_MESSAGE'));
+  } catch (error) {
+    useAlert(t('CONTACTS_LAYOUT.DETAILS.TITULAR_EXPORT.ERROR_MESSAGE'));
+  } finally {
+    isExportingTitular.value = false;
+  }
 };
 
 const handleAvatarUpload = async ({ file, url }) => {
@@ -176,6 +200,25 @@ const handleAvatarDelete = async () => {
       />
     </div>
     <Policy :permissions="['administrator']">
+      <div
+        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-strong"
+      >
+        <div class="flex flex-col gap-2">
+          <h6 class="text-base font-medium text-n-slate-12">
+            {{ t('CONTACTS_LAYOUT.DETAILS.TITULAR_EXPORT.TITLE') }}
+          </h6>
+          <span class="text-sm text-n-slate-11">
+            {{ t('CONTACTS_LAYOUT.DETAILS.TITULAR_EXPORT.DESCRIPTION') }}
+          </span>
+        </div>
+        <Button
+          :label="t('CONTACTS_LAYOUT.DETAILS.TITULAR_EXPORT.BUTTON')"
+          size="sm"
+          :is-loading="isExportingTitular"
+          :disabled="isExportingTitular"
+          @click="exportTitularData"
+        />
+      </div>
       <div
         class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-strong"
       >

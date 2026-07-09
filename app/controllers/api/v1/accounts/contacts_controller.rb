@@ -105,7 +105,9 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
                           :unprocessable_entity)
     end
 
-    @contact.destroy!
+    # Ramon (LGPD): o delete da UI anonimiza em vez de destruir — preserva
+    # conversas e estatísticas. Ver Ramon::ContactAnonymizer.
+    Ramon::ContactAnonymizer.new(@contact).perform
     head :ok
   end
 
