@@ -4,14 +4,14 @@ describe Ramon::TitularExport do
   let(:account) { create(:account) }
   let(:contact) { create(:contact, :with_email, account: account) }
   let(:conversation) { create(:conversation, account: account, contact: contact) }
+  let!(:lead) { create(:lead, account: account, contact: contact) }
+  let(:payload) { described_class.new(contact).payload }
+
   before do
     create(:message, conversation: conversation, account: account, inbox: conversation.inbox,
                      sender: contact, content: 'Ola, quero saber do meu beneficio')
+    create(:note, contact: contact, account: account, content: 'Nota sobre o titular')
   end
-  let!(:lead) { create(:lead, account: account, contact: contact) }
-  let!(:note) { create(:note, contact: contact, account: account, content: 'Nota sobre o titular') }
-
-  let(:payload) { described_class.new(contact).payload }
 
   it 'includes the contact data and leads' do
     expect(payload[:titular]['name']).to eq(contact.name)

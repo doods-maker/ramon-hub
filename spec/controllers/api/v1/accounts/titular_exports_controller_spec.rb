@@ -6,6 +6,7 @@ RSpec.describe 'Titular Export API', type: :request do
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:contact) { create(:contact, :with_email, account: account) }
   let(:conversation) { create(:conversation, account: account, contact: contact) }
+
   before do
     create(:message, conversation: conversation, account: account, inbox: conversation.inbox,
                      sender: contact, content: 'Mensagem do titular')
