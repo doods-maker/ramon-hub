@@ -135,6 +135,8 @@ theses:
     description: "Indenização por sequela permanente que reduz a capacidade de trabalho. Lei 8.213/91, art. 86. Cumulável com salário."
     area: "previdenciario"
     position: 3
+    honorario_percentual: 30
+    honorario_n_mensalidades: 3
     items:
       - section: "abertura"
         title: "Quebra-gelo"

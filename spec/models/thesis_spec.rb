@@ -42,4 +42,25 @@ RSpec.describe Thesis do
 
     expect(lead.reload.thesis_id).to be_nil
   end
+
+  it 'aceita honorário não configurado (nil)' do
+    thesis = account.theses.build(
+      name: 'Tese Sem Honorário',
+      honorario_percentual: nil,
+      honorario_n_mensalidades: nil
+    )
+    expect(thesis).to be_valid
+  end
+
+  it 'rejeita percentual de honorário fora de 0..100' do
+    thesis = account.theses.build(name: 'Tese Percentual Ruim', honorario_percentual: 101)
+    expect(thesis).not_to be_valid
+  end
+
+  it 'rejeita número de mensalidades negativo ou fracionário' do
+    negativa = account.theses.build(name: 'Tese N Negativo', honorario_n_mensalidades: -1)
+    fracionada = account.theses.build(name: 'Tese N Fracionário', honorario_n_mensalidades: 1.5)
+    expect(negativa).not_to be_valid
+    expect(fracionada).not_to be_valid
+  end
 end

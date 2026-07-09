@@ -4,6 +4,8 @@ json.description @thesis.description
 json.area @thesis.area
 json.active @thesis.active
 json.position @thesis.position
+json.honorario_percentual @thesis.honorario_percentual
+json.honorario_n_mensalidades @thesis.honorario_n_mensalidades
 
 json.items @thesis.thesis_items do |item|
   json.id item.id

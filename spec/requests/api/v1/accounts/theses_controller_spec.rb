@@ -28,6 +28,15 @@ RSpec.describe 'Theses API', type: :request do
       expect(body['name']).to eq('Tese Show')
       expect(body['items'].map { |i| i['content'] }).to eq(%w[A B])
     end
+
+    it 'expõe os campos de honorário no show' do
+      thesis = account.theses.create!(name: 'Tese Show Honorário', position: 51,
+                                      honorario_percentual: 30, honorario_n_mensalidades: 3)
+      get "/api/v1/accounts/#{account.id}/theses/#{thesis.id}", headers: agent.create_new_auth_token
+      body = response.parsed_body
+      expect(body['honorario_percentual'].to_f).to eq(30.0)
+      expect(body['honorario_n_mensalidades']).to eq(3)
+    end
   end
 
   describe 'POST create' do
@@ -61,6 +70,16 @@ RSpec.describe 'Theses API', type: :request do
       patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}",
             params: { name: 'X' }, headers: agent.create_new_auth_token
       expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'atualiza o honorário da tese (admin)' do
+      thesis = account.theses.create!(name: 'Tese Honorário', position: 50)
+      patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}",
+            params: { honorario_percentual: 30, honorario_n_mensalidades: 3 },
+            headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:success)
+      expect(thesis.reload.honorario_percentual).to eq(30)
+      expect(thesis.reload.honorario_n_mensalidades).to eq(3)
     end
   end
 
