@@ -25,12 +25,20 @@ defineProps({
 
 const accountId = useMapGetter('getCurrentAccountId');
 
-const leadUrl = lead =>
-  lead.conversationId
-    ? frontendURL(
-        `accounts/${accountId.value}/conversations/${lead.conversationId}`
-      )
-    : frontendURL(`accounts/${accountId.value}/ramon/funil`);
+// Destino primário: Linha da Vida da pessoa (rota ramon_linha_da_vida).
+const leadUrl = lead => {
+  if (lead.contactId) {
+    return frontendURL(
+      `accounts/${accountId.value}/ramon/pessoa/${lead.contactId}`
+    );
+  }
+  if (lead.conversationId) {
+    return frontendURL(
+      `accounts/${accountId.value}/conversations/${lead.conversationId}`
+    );
+  }
+  return frontendURL(`accounts/${accountId.value}/ramon/funil`);
+};
 </script>
 
 <template>

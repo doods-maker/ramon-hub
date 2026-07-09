@@ -116,6 +116,15 @@ const copyResult = async () => {
     >
       <div class="flex items-center justify-between gap-2">
         <span
+          v-if="latest.status === 'awaiting_human'"
+          data-testid="triage-awaiting-human-badge"
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-n-amber-3 text-n-amber-11"
+        >
+          <span class="i-lucide-user-round size-3" />
+          {{ $t('RAMON.TRIAGE.AWAITING_HUMAN') }}
+        </span>
+        <span
+          v-else
           data-testid="triage-viability-badge"
           class="inline-block px-2 py-0.5 text-xs rounded-full"
           :class="viabilityClass(latest.viability)"
@@ -127,6 +136,14 @@ const copyResult = async () => {
           {{ $t('RAMON.TRIAGE.AGENT_LABEL') }}: {{ latest.triage_agent.name }}
         </span>
       </div>
+
+      <p
+        v-if="latest.status === 'awaiting_human'"
+        class="text-sm text-n-slate-11"
+        data-testid="triage-awaiting-human-hint"
+      >
+        {{ $t('RAMON.TRIAGE.AWAITING_HUMAN_HINT') }}
+      </p>
 
       <p
         v-if="latest.status === 'error'"

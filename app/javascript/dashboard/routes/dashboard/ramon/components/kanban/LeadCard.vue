@@ -191,6 +191,16 @@ const copyPhone = async () => {
       >
         {{ prescriptionLabel }}
       </span>
+      <span
+        v-if="lead.latest_triage?.status === 'awaiting_human'"
+        data-testid="triage-awaiting-human-badge"
+        :title="$t('RAMON.TRIAGE.AWAITING_HUMAN_HINT')"
+        class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-n-amber-3 text-n-amber-11"
+      >
+        <span class="i-lucide-user-round size-3" />{{
+          $t('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN')
+        }}
+      </span>
     </div>
 
     <div class="flex items-center justify-between mt-2">

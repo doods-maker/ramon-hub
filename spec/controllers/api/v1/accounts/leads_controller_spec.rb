@@ -16,6 +16,43 @@ RSpec.describe 'Leads API', type: :request do
     expect(account.leads.count).to eq(1)
   end
 
+  describe 'dedup por telefone na criação manual (contato já resolvido pelo front)' do
+    let(:contact) { create(:contact, account: account, phone_number: '+5548999887766') }
+
+    it 'devolve 409 com o lead ABERTO existente do mesmo contato, sem criar' do
+      existing = create(:lead, account: account, lead_stage: novo, contact: contact, name: 'Ana')
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads",
+             params: { name: 'Ana de novo', lead_stage_id: novo.id, contact_id: contact.id },
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to change(account.leads, :count)
+      expect(response).to have_http_status(:conflict)
+      expect(response.parsed_body['error']).to eq('DUPLICATE_LEAD')
+      expect(response.parsed_body['existing']['id']).to eq(existing.id)
+      expect(response.parsed_body['existing']['stage_name']).to eq('Novo')
+    end
+
+    it 'force cria mesmo assim, apesar do lead aberto existente' do
+      create(:lead, account: account, lead_stage: novo, contact: contact)
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads",
+             params: { name: 'Ana de novo', lead_stage_id: novo.id, contact_id: contact.id, force: true },
+             headers: admin.create_new_auth_token, as: :json
+      end.to change(account.leads, :count).by(1)
+      expect(response).to have_http_status(:success)
+    end
+
+    it 'lead fechado (perdido) do contato não bloqueia a criação' do
+      create(:lead, account: account, lead_stage: perdido, contact: contact, lost_reason: 'x')
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads",
+             params: { name: 'Ana volta', lead_stage_id: novo.id, contact_id: contact.id },
+             headers: admin.create_new_auth_token, as: :json
+      end.to change(account.leads, :count).by(1)
+      expect(response).to have_http_status(:success)
+    end
+  end
+
   it 'move um lead de etapa via update' do
     lead = create(:lead, account: account, lead_stage: novo, name: 'Ana')
     patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
