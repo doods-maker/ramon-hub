@@ -38,14 +38,13 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     Current.account.lead_tasks.includes(:lead)
   end
 
+  # Consultas compartilhadas com a Esteira vivem em Ramon::LeadRadar.
   def active_leads
-    Current.account.leads.joins(:lead_stage).includes(:lead_stage, :contact)
-           .where(lead_stages: { is_won: false, is_lost: false })
+    Ramon::LeadRadar.active_leads(Current.account)
   end
 
   def stalled_leads
-    active_leads.where.not(lead_stages: { stalled_after_days: nil })
-                .where("leads.stage_entered_at < NOW() - (lead_stages.stalled_after_days || ' days')::interval")
+    Ramon::LeadRadar.stalled_leads(Current.account)
   end
 
   def no_next_action_leads
@@ -53,11 +52,7 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   end
 
   def new_from_lp_leads
-    Current.account.leads.includes(:lead_stage, :contact)
-           .where.not(source: [nil, ''])
-           .where(conversation_id: nil, created_at: 48.hours.ago..)
-           .where.not(id: Current.account.lead_notes.select(:lead_id))
-           .where.not(id: Current.account.lead_tasks.select(:lead_id))
+    Ramon::LeadRadar.new_from_lp_leads(Current.account)
   end
 
   # ---- Funil ------------------------------------------------------------
