@@ -10,30 +10,21 @@
 # Regra de aprovação: nenhum fluxo fala com o cliente — mensagens viram
 # LeadNote "RASCUNHO" e quem envia é o Eduardo.
 class Ramon::AdvboxEventProcessor
-  # nomes já normalizados (sem acento, upcase) → handler
+  # handler → nomes de etapa/tarefa já normalizados (sem acento, upcase);
+  # invertido em RULES (nome → handler) na carga da classe.
   RULES = {
-    'CONTRATO FECHADO' => :contrato_fechado,
-    'CONTRATO FECHADO / AG. DOCTOS' => :contrato_fechado,
-    'REQUERIMENTO PROTOCOLADO' => :requerimento_protocolado,
-    'NEGADO / AVISAR CLIENTE' => :indeferimento,
-    'DECISAO PROFERIDA' => :decisao,
-    'DECISAO DO RECURSO PROFERIDA' => :decisao,
-    'CARTA DE EXIGENCIAS' => :exigencia,
-    'BENEFICIO FUTURO / ANOTAR NA AGENDA' => :reativacao_futura,
-    'AGUARDAR - APOSENTADORIA FUTURA' => :reativacao_futura,
-    'CHAMAR - APOSENTADORIA PROXIMA' => :reativacao_futura,
-    'PAGAMENTO RECEBIDO / PAGAR CLIENTE' => :exito,
-    'RPV / PRECATORIO EMITIDO' => :exito,
-    'SENTENCA PROFERIDA' => :marco,
-    'RECURSO JULGADO' => :marco,
-    'PERICIA AGENDADA' => :marco,
-    'AUDIENCIA / PERICIA REALIZADA' => :marco,
-    'BENEFICIO CONCEDIDO / IMPLANTACAO' => :concessao,
-    'ARQUIVADO/ENCERRADO' => :arquivado,
-    'ARQUIVADO POR DESINTERESSE CLIENTE' => :arquivado,
-    'ARQUIVADO POR DETERMINACAO JUDICIAL' => :arquivado,
-    'ANALISADO E NAO DISTRIBUIDO' => :arquivado
-  }.freeze
+    contrato_fechado: ['CONTRATO FECHADO', 'CONTRATO FECHADO / AG. DOCTOS'],
+    requerimento_protocolado: ['REQUERIMENTO PROTOCOLADO'],
+    indeferimento: ['NEGADO / AVISAR CLIENTE'],
+    decisao: ['DECISAO PROFERIDA', 'DECISAO DO RECURSO PROFERIDA'],
+    exigencia: ['CARTA DE EXIGENCIAS'],
+    reativacao_futura: ['BENEFICIO FUTURO / ANOTAR NA AGENDA', 'AGUARDAR - APOSENTADORIA FUTURA', 'CHAMAR - APOSENTADORIA PROXIMA'],
+    exito: ['PAGAMENTO RECEBIDO / PAGAR CLIENTE', 'RPV / PRECATORIO EMITIDO'],
+    marco: ['SENTENCA PROFERIDA', 'RECURSO JULGADO', 'PERICIA AGENDADA', 'AUDIENCIA / PERICIA REALIZADA'],
+    concessao: ['BENEFICIO CONCEDIDO / IMPLANTACAO'],
+    arquivado: ['ARQUIVADO/ENCERRADO', 'ARQUIVADO POR DESINTERESSE CLIENTE', 'ARQUIVADO POR DETERMINACAO JUDICIAL',
+                'ANALISADO E NAO DISTRIBUIDO']
+  }.each_with_object({}) { |(handler, names), map| names.each { |name| map[name] = handler } }.freeze
 
   IDENTITY_PHONE_KEYS = /phone|telefone|celular|fone|whats/i
   IDENTITY_CPF_KEYS = /cpf/i
