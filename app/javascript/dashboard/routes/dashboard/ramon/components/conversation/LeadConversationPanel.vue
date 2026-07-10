@@ -71,7 +71,12 @@ const discard = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full" data-testid="lead-conversation-panel">
+  <!-- overflow-x-hidden + min-w-0: o painel NUNCA rola na horizontal; conteúdo
+       largo (tabelas) rola dentro do próprio bloco, que já tem overflow-x-auto -->
+  <div
+    class="flex flex-col h-full min-w-0 max-w-full overflow-x-hidden"
+    data-testid="lead-conversation-panel"
+  >
     <div class="flex items-center gap-2 border-b border-n-weak px-3 py-2">
       <span class="text-sm font-semibold text-n-slate-12">
         {{ $t('RAMON.LEAD_PANEL.TITLE') }}
@@ -86,20 +91,28 @@ const discard = async () => {
         <span class="i-lucide-x size-4" />
       </button>
     </div>
-    <div v-if="lead" class="flex flex-col gap-2 flex-1 overflow-y-auto p-3">
+    <div
+      v-if="lead"
+      class="flex flex-col gap-2 flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-3"
+    >
       <AccordionItem
         :title="$t('RAMON.LEAD_PANEL.TABS.SUMMARY')"
         :is-open="openSections.resumo"
         data-testid="section-resumo"
         @toggle="toggleSection('resumo')"
       >
-        <div class="mb-4 flex flex-col gap-2">
+        <div class="mb-4 flex flex-col gap-2 min-w-0">
           <ConversationAction :conversation-id="conversationId" />
           <MacrosList :conversation-id="conversationId" />
           <ResolveAction />
         </div>
-        <LeadCopilot :conversation-id="conversationId" class="mb-4" />
-        <LeadFields :lead="lead" />
+        <LeadCopilot
+          :conversation-id="conversationId"
+          class="pt-3 mb-4 border-t border-n-weak"
+        />
+        <div class="pt-3 border-t border-n-weak">
+          <LeadFields :lead="lead" />
+        </div>
         <div class="mt-6 pt-3 border-t border-n-weak">
           <button
             class="text-xs text-n-ruby-11 hover:underline"
