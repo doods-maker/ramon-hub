@@ -112,7 +112,8 @@ onMounted(() => store.dispatch('triageAgents/get'));
 </script>
 
 <template>
-  <div class="flex h-full">
+  <!-- w-full explícito: sem ele a página encolhe pro conteúdo (router é flex) -->
+  <div class="flex w-full h-full bg-n-background">
     <div
       class="flex flex-col w-[280px] flex-shrink-0 h-full p-4 overflow-y-auto border-r border-n-weak"
     >
@@ -286,33 +287,36 @@ onMounted(() => store.dispatch('triageAgents/get'));
           />
         </label>
 
-        <label class="flex flex-col gap-1">
-          <span class="text-xs text-n-slate-10">
-            {{ $t('RAMON.TRIAGE_AGENTS.SYSTEM_PROMPT') }}
-          </span>
-          <textarea
-            v-model="detail.system_prompt"
-            data-testid="triage-agents-system-prompt-input"
-            rows="12"
-            class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-            :placeholder="$t('RAMON.TRIAGE_AGENTS.SYSTEM_PROMPT')"
-            @blur="saveDetail"
-          />
-        </label>
+        <!-- prompts lado a lado em tela larga: são os campos que mais pedem espaço -->
+        <div class="grid gap-3 xl:grid-cols-2">
+          <label class="flex flex-col gap-1">
+            <span class="text-xs text-n-slate-10">
+              {{ $t('RAMON.TRIAGE_AGENTS.SYSTEM_PROMPT') }}
+            </span>
+            <textarea
+              v-model="detail.system_prompt"
+              data-testid="triage-agents-system-prompt-input"
+              rows="14"
+              class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              :placeholder="$t('RAMON.TRIAGE_AGENTS.SYSTEM_PROMPT')"
+              @blur="saveDetail"
+            />
+          </label>
 
-        <label class="flex flex-col gap-1">
-          <span class="text-xs text-n-slate-10">
-            {{ $t('RAMON.TRIAGE_AGENTS.KIT_SYSTEM_PROMPT') }}
-          </span>
-          <textarea
-            v-model="detail.kit_system_prompt"
-            data-testid="triage-agents-kit-system-prompt-input"
-            rows="12"
-            class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-            :placeholder="$t('RAMON.TRIAGE_AGENTS.KIT_SYSTEM_PROMPT')"
-            @blur="saveDetail"
-          />
-        </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs text-n-slate-10">
+              {{ $t('RAMON.TRIAGE_AGENTS.KIT_SYSTEM_PROMPT') }}
+            </span>
+            <textarea
+              v-model="detail.kit_system_prompt"
+              data-testid="triage-agents-kit-system-prompt-input"
+              rows="14"
+              class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              :placeholder="$t('RAMON.TRIAGE_AGENTS.KIT_SYSTEM_PROMPT')"
+              @blur="saveDetail"
+            />
+          </label>
+        </div>
 
         <label class="flex items-center gap-2 text-sm text-n-slate-12">
           <input

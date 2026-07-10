@@ -69,7 +69,7 @@ const submitImport = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full p-6 overflow-y-auto">
+  <div class="flex flex-col w-full h-full p-6 overflow-y-auto bg-n-background">
     <RamonPageHeader compact :title="$t('RAMON.FUNIL_CONFIG.TITLE')" />
 
     <section class="mb-8 max-w-2xl">

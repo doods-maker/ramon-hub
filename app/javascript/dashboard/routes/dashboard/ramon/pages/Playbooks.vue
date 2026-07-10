@@ -155,7 +155,9 @@ onMounted(() => store.dispatch('theses/get'));
 </script>
 
 <template>
-  <div class="flex h-full">
+  <!-- w-full explícito: sem ele a página encolhe pro conteúdo e sobra um
+       deserto à direita (o container do router é flex) -->
+  <div class="flex w-full h-full bg-n-background">
     <div
       class="flex flex-col w-[340px] flex-shrink-0 h-full p-4 overflow-y-auto border-r border-n-weak"
     >
@@ -257,19 +259,35 @@ onMounted(() => store.dispatch('theses/get'));
       </p>
 
       <template v-else>
-        <div class="flex flex-col gap-3 mb-6" data-testid="playbooks-detail">
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-n-slate-10">
-              {{ $t('RAMON.PLAYBOOKS.NAME') }}
-            </span>
-            <input
-              v-model="detail.name"
-              data-testid="playbooks-name-input"
-              class="px-3 py-2 text-lg font-cormorant rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-              :placeholder="$t('RAMON.PLAYBOOKS.NAME')"
-              @blur="saveDetail"
-            />
-          </label>
+        <div
+          class="flex flex-col gap-3 p-4 mb-6 border rounded-xl border-n-weak bg-n-solid-1"
+          data-testid="playbooks-detail"
+        >
+          <div class="flex flex-wrap items-end gap-3">
+            <label class="flex flex-col flex-1 min-w-64 gap-1">
+              <span class="text-xs text-n-slate-10">
+                {{ $t('RAMON.PLAYBOOKS.NAME') }}
+              </span>
+              <input
+                v-model="detail.name"
+                data-testid="playbooks-name-input"
+                class="px-3 py-2 text-lg font-cormorant rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+                :placeholder="$t('RAMON.PLAYBOOKS.NAME')"
+                @blur="saveDetail"
+              />
+            </label>
+            <label
+              class="flex items-center gap-2 pb-2.5 text-sm text-n-slate-12 whitespace-nowrap"
+            >
+              <input
+                v-model="detail.active"
+                type="checkbox"
+                data-testid="playbooks-active-toggle"
+                @change="saveActive"
+              />
+              {{ $t('RAMON.PLAYBOOKS.ACTIVE_TOGGLE') }}
+            </label>
+          </div>
           <label class="flex flex-col gap-1">
             <span class="text-xs text-n-slate-10">
               {{ $t('RAMON.PLAYBOOKS.DESCRIPTION') }}
@@ -283,20 +301,20 @@ onMounted(() => store.dispatch('theses/get'));
               @blur="saveDetail"
             />
           </label>
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-n-slate-10">
-              {{ $t('RAMON.PLAYBOOKS.AREA') }}
-            </span>
-            <input
-              v-model="detail.area"
-              data-testid="playbooks-area-input"
-              class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-              :placeholder="$t('RAMON.PLAYBOOKS.AREA')"
-              @blur="saveDetail"
-            />
-          </label>
-          <div class="flex gap-3">
-            <label class="flex flex-col flex-1 gap-1">
+          <div class="grid gap-3 md:grid-cols-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-xs text-n-slate-10">
+                {{ $t('RAMON.PLAYBOOKS.AREA') }}
+              </span>
+              <input
+                v-model="detail.area"
+                data-testid="playbooks-area-input"
+                class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+                :placeholder="$t('RAMON.PLAYBOOKS.AREA')"
+                @blur="saveDetail"
+              />
+            </label>
+            <label class="flex flex-col gap-1">
               <span class="text-xs text-n-slate-10">
                 {{ $t('RAMON.PLAYBOOKS.HONORARIO_PERCENT') }}
               </span>
@@ -312,7 +330,7 @@ onMounted(() => store.dispatch('theses/get'));
                 @blur="saveDetail"
               />
             </label>
-            <label class="flex flex-col flex-1 gap-1">
+            <label class="flex flex-col gap-1">
               <span class="text-xs text-n-slate-10">
                 {{ $t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS') }}
               </span>
@@ -328,91 +346,85 @@ onMounted(() => store.dispatch('theses/get'));
               />
             </label>
           </div>
-          <label class="flex items-center gap-2 text-sm text-n-slate-12">
-            <input
-              v-model="detail.active"
-              type="checkbox"
-              data-testid="playbooks-active-toggle"
-              @change="saveActive"
-            />
-            {{ $t('RAMON.PLAYBOOKS.ACTIVE_TOGGLE') }}
-          </label>
         </div>
 
-        <section
-          v-for="section in SECTIONS"
-          :key="section"
-          class="mb-6"
-          data-testid="playbooks-section"
-        >
-          <h3 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
-            {{ $t(sectionLabelKey(section)) }}
-          </h3>
+        <!-- Seções lado a lado em telas largas: usa a tela cheia de verdade -->
+        <div class="grid items-start gap-6 xl:grid-cols-2">
+          <section
+            v-for="section in SECTIONS"
+            :key="section"
+            class="p-4 border rounded-xl border-n-weak bg-n-solid-1"
+            data-testid="playbooks-section"
+          >
+            <h3 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
+              {{ $t(sectionLabelKey(section)) }}
+            </h3>
 
-          <ul class="flex flex-col mb-3 gap-2">
-            <li
-              v-for="item in itemsBySection[section]"
-              :key="item.id"
-              data-testid="playbooks-item-row"
-              class="flex flex-col gap-1 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
-            >
-              <div class="flex items-center gap-2">
-                <input
-                  :value="item.title"
-                  data-testid="playbooks-item-title-input"
-                  class="flex-1 px-2 py-1 text-sm font-medium rounded-lg bg-n-alpha-2 text-n-slate-12"
-                  :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
-                  @blur="e => updateItem(item, { title: e.target.value })"
+            <ul class="flex flex-col mb-3 gap-2">
+              <li
+                v-for="item in itemsBySection[section]"
+                :key="item.id"
+                data-testid="playbooks-item-row"
+                class="flex flex-col gap-1 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+              >
+                <div class="flex items-center gap-2">
+                  <input
+                    :value="item.title"
+                    data-testid="playbooks-item-title-input"
+                    class="flex-1 px-2 py-1 text-sm font-medium rounded-lg bg-n-alpha-2 text-n-slate-12"
+                    :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
+                    @blur="e => updateItem(item, { title: e.target.value })"
+                  />
+                  <button
+                    data-testid="playbooks-item-remove-item"
+                    class="text-n-slate-9 hover:text-n-ruby-11"
+                    :title="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
+                    @click="removeItem(item)"
+                  >
+                    <span class="i-lucide-trash-2 size-3.5" />
+                  </button>
+                </div>
+                <textarea
+                  :value="item.content"
+                  data-testid="playbooks-item-content-input"
+                  rows="2"
+                  class="px-2 py-1 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+                  :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
+                  @blur="e => updateItem(item, { content: e.target.value })"
                 />
-                <button
-                  data-testid="playbooks-item-remove-item"
-                  class="text-n-slate-9 hover:text-n-ruby-11"
-                  :title="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
-                  @click="removeItem(item)"
-                >
-                  <span class="i-lucide-trash-2 size-3.5" />
-                </button>
-              </div>
-              <textarea
-                :value="item.content"
-                data-testid="playbooks-item-content-input"
-                rows="2"
-                class="px-2 py-1 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-                :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
-                @blur="e => updateItem(item, { content: e.target.value })"
-              />
-            </li>
-            <li
-              v-if="!itemsBySection[section].length"
-              class="px-1 text-xs text-n-slate-9"
-            >
-              {{ $t('RAMON.PLAYBOOKS.ITEM_EMPTY') }}
-            </li>
-          </ul>
+              </li>
+              <li
+                v-if="!itemsBySection[section].length"
+                class="px-1 text-xs text-n-slate-9"
+              >
+                {{ $t('RAMON.PLAYBOOKS.ITEM_EMPTY') }}
+              </li>
+            </ul>
 
-          <div class="flex gap-2">
-            <input
-              v-model="newItemDrafts[section].title"
-              data-testid="playbooks-item-add-title"
-              class="w-40 shrink-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-              :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
-            />
-            <input
-              v-model="newItemDrafts[section].content"
-              data-testid="playbooks-item-add-content"
-              class="flex-1 min-w-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-              :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
-              @keyup.enter="addItem(section)"
-            />
-            <button
-              data-testid="playbooks-item-add"
-              class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
-              @click="addItem(section)"
-            >
-              {{ $t('RAMON.PLAYBOOKS.ITEM_ADD') }}
-            </button>
-          </div>
-        </section>
+            <div class="flex gap-2">
+              <input
+                v-model="newItemDrafts[section].title"
+                data-testid="playbooks-item-add-title"
+                class="w-40 shrink-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+                :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
+              />
+              <input
+                v-model="newItemDrafts[section].content"
+                data-testid="playbooks-item-add-content"
+                class="flex-1 min-w-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+                :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
+                @keyup.enter="addItem(section)"
+              />
+              <button
+                data-testid="playbooks-item-add"
+                class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
+                @click="addItem(section)"
+              >
+                {{ $t('RAMON.PLAYBOOKS.ITEM_ADD') }}
+              </button>
+            </div>
+          </section>
+        </div>
       </template>
     </div>
   </div>
