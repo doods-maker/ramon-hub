@@ -38,7 +38,7 @@ const generate = async mode => {
 
 <template>
   <div class="flex flex-col gap-2" data-testid="lead-copilot">
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       <button
         type="button"
         data-testid="copilot-summarize"
