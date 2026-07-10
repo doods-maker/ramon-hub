@@ -97,6 +97,25 @@ RSpec.describe 'Lead Simulacoes API', type: :request do
       expect(WebMock).to matcher
     end
 
+    it 'asks the motor for the memoria de calculo only when requested' do
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/simulacao",
+             params: simulacao_params.merge(memoria_calculo: true), headers: admin.create_new_auth_token, as: :json
+      end
+      matcher = have_requested(:post, "#{motor_url}/incapacidade")
+                .with { |req| JSON.parse(req.body)['memoria_calculo'] == true }
+      expect(WebMock).to matcher
+    end
+
+    it 'defaults memoria_calculo to false' do
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        simulate
+      end
+      matcher = have_requested(:post, "#{motor_url}/incapacidade")
+                .with { |req| JSON.parse(req.body)['memoria_calculo'] == false }
+      expect(WebMock).to matcher
+    end
+
     it 'flags when the lead thesis has no honorario config' do
       lead.update!(thesis: create(:thesis, account: account, name: 'Sem honorário'))
       with_modified_env MOTOR_CALCULOS_URL: motor_url do

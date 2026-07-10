@@ -34,6 +34,15 @@ const motorDown = ref(false);
 const errorMessage = ref('');
 const cnis = ref(props.lead.cnis_resumo || null);
 const cnisLoading = ref(false);
+// PDF fica só na memória do browser (LGPD): reprocessar com ajustes reenvia
+// o mesmo arquivo; depois de F5 é preciso selecionar o PDF de novo.
+const cnisFile = ref(null);
+const vinculos = ref([]);
+const excluidos = ref([]);
+const mensalidades = ref({});
+const ajustesOpen = ref(false);
+const memoria = ref(null);
+const memoriaLoading = ref(false);
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -49,30 +58,86 @@ const canSimulate = computed(() =>
 );
 
 const honorario = computed(() => resultado.value?.honorario || null);
+const motorInfo = computed(() => resultado.value?.motor || {});
 
-const onCnisFile = async event => {
-  const file = event.target.files[0];
-  if (!file) return;
+const handleMotorError = error => {
+  if (error?.response?.status === 503) {
+    motorDown.value = true;
+  } else {
+    errorMessage.value =
+      error?.response?.data?.error || t('RAMON.SIMULADOR.GENERIC_ERROR');
+  }
+};
+
+const applyCnis = data => {
+  cnis.value = data;
+  vinculos.value = data.vinculos_detalhe || [];
+  const parametros = data.parametros || {};
+  excluidos.value = parametros.excluir_seqs
+    ? parametros.excluir_seqs.split(',').map(Number)
+    : [];
+  mensalidades.value = parametros.mensalidades
+    ? JSON.parse(parametros.mensalidades)
+    : {};
+};
+
+const mensalidadesJson = () => {
+  const entries = Object.entries(mensalidades.value).filter(([, v]) => v);
+  return entries.length ? JSON.stringify(Object.fromEntries(entries)) : '';
+};
+
+const tituloDe = v => [v.seq, v.tipo, v.origem].filter(Boolean).join(' · ');
+const periodoDe = v => (v.inicio ? `${v.inicio} → ${v.fim || '…'}` : '');
+
+const uploadCnis = async opts => {
   cnisLoading.value = true;
   motorDown.value = false;
   errorMessage.value = '';
   try {
     const { data } = await LeadsAPI.uploadCnis(
       props.lead.id,
-      file,
-      form.value.sexo
+      cnisFile.value,
+      form.value.sexo,
+      opts
     );
-    cnis.value = data;
+    applyCnis(data);
+    resultado.value = null;
+    memoria.value = null;
   } catch (error) {
-    if (error?.response?.status === 503) {
-      motorDown.value = true;
-    } else {
-      errorMessage.value =
-        error?.response?.data?.error || t('RAMON.SIMULADOR.GENERIC_ERROR');
-    }
+    handleMotorError(error);
   } finally {
     cnisLoading.value = false;
-    event.target.value = '';
+  }
+};
+
+const onCnisFile = async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  cnisFile.value = file;
+  await uploadCnis({});
+  event.target.value = '';
+};
+
+// Depois de F5 o PDF não está mais na memória — reanexar para poder reaplicar.
+const onRefile = event => {
+  cnisFile.value = event.target.files[0] || null;
+};
+
+const reaplicar = () =>
+  uploadCnis({
+    excluirSeqs: excluidos.value.join(','),
+    mensalidades: mensalidadesJson(),
+  });
+
+const toggleAjustes = async () => {
+  ajustesOpen.value = !ajustesOpen.value;
+  if (ajustesOpen.value && !vinculos.value.length) {
+    try {
+      const { data } = await LeadsAPI.getCnis(props.lead.id);
+      applyCnis(data);
+    } catch {
+      errorMessage.value = t('RAMON.SIMULADOR.GENERIC_ERROR');
+    }
   }
 };
 
@@ -81,7 +146,13 @@ const removeCnis = async () => {
   try {
     await LeadsAPI.deleteCnis(props.lead.id);
     cnis.value = null;
+    cnisFile.value = null;
+    vinculos.value = [];
+    excluidos.value = [];
+    mensalidades.value = {};
+    ajustesOpen.value = false;
     resultado.value = null;
+    memoria.value = null;
   } catch {
     errorMessage.value = t('RAMON.SIMULADOR.GENERIC_ERROR');
   }
@@ -92,6 +163,7 @@ const simulate = async () => {
   motorDown.value = false;
   errorMessage.value = '';
   resultado.value = null;
+  memoria.value = null;
   try {
     const { data } = await LeadsAPI.simulate(props.lead.id, {
       ...form.value,
@@ -99,14 +171,34 @@ const simulate = async () => {
     });
     resultado.value = data;
   } catch (error) {
-    if (error?.response?.status === 503) {
-      motorDown.value = true;
-    } else {
-      errorMessage.value =
-        error?.response?.data?.error || t('RAMON.SIMULADOR.GENERIC_ERROR');
-    }
+    handleMotorError(error);
   } finally {
     isLoading.value = false;
+  }
+};
+
+// Memória de cálculo do motor (competência/índice/corrigido): re-simula com o
+// flag opt-in — payload grande, só quando o advogado pede.
+const verMemoria = async () => {
+  if (memoria.value) {
+    memoria.value = null;
+    return;
+  }
+  memoriaLoading.value = true;
+  motorDown.value = false;
+  errorMessage.value = '';
+  try {
+    const { data } = await LeadsAPI.simulate(props.lead.id, {
+      ...form.value,
+      usar_cnis: Boolean(cnis.value),
+      memoria_calculo: true,
+    });
+    resultado.value = data;
+    memoria.value = data.motor?.memoria_calculo || null;
+  } catch (error) {
+    handleMotorError(error);
+  } finally {
+    memoriaLoading.value = false;
   }
 };
 
@@ -150,6 +242,75 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
       >
         <li v-for="(aviso, i) in cnis.avisos" :key="i">{{ aviso }}</li>
       </ul>
+      <button
+        type="button"
+        data-testid="sim-cnis-ajustes-toggle"
+        class="self-start text-xs underline text-n-slate-11"
+        @click="toggleAjustes"
+      >
+        {{ $t('RAMON.SIMULADOR.VINCULOS_TOGGLE') }}
+      </button>
+      <div
+        v-if="ajustesOpen"
+        class="flex flex-col gap-2 pt-1"
+        data-testid="sim-cnis-vinculos"
+      >
+        <div
+          v-for="v in vinculos"
+          :key="v.seq"
+          class="flex flex-col gap-1 p-1.5 rounded-lg border border-n-weak"
+        >
+          <span class="text-xs text-n-slate-12 truncate">
+            {{ tituloDe(v) }}
+          </span>
+          <span v-if="v.inicio" class="text-xs text-n-slate-10">
+            {{ periodoDe(v) }}
+          </span>
+          <label class="flex items-center gap-2 text-xs text-n-slate-11">
+            <input
+              v-model="excluidos"
+              type="checkbox"
+              :value="v.seq"
+              :data-testid="`sim-vinculo-excluir-${v.seq}`"
+            />
+            {{ $t('RAMON.SIMULADOR.VINCULO_EXCLUIR') }}
+          </label>
+          <label v-if="v.tipo === 'BENEFICIO'" :class="labelClass">
+            {{ $t('RAMON.SIMULADOR.VINCULO_MENSALIDADE') }}
+            <input
+              v-model="mensalidades[v.seq]"
+              type="number"
+              min="0"
+              step="0.01"
+              :class="fieldClass"
+              :data-testid="`sim-vinculo-mensalidade-${v.seq}`"
+            />
+          </label>
+        </div>
+        <label v-if="!cnisFile" :class="labelClass">
+          {{ $t('RAMON.SIMULADOR.VINCULOS_REUPLOAD_HINT') }}
+          <input
+            type="file"
+            accept="application/pdf"
+            data-testid="sim-cnis-refile"
+            :class="fieldClass"
+            @change="onRefile"
+          />
+        </label>
+        <button
+          type="button"
+          data-testid="sim-cnis-reaplicar"
+          class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="!cnisFile || cnisLoading"
+          @click="reaplicar"
+        >
+          {{
+            cnisLoading
+              ? $t('RAMON.SIMULADOR.CNIS_LOADING')
+              : $t('RAMON.SIMULADOR.VINCULOS_REAPLICAR')
+          }}
+        </button>
+      </div>
     </div>
     <label v-else :class="labelClass">
       {{
@@ -329,6 +490,18 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
           })
         }}
       </p>
+      <p
+        v-if="motorInfo.rmi_com_descartes"
+        class="text-xs text-n-slate-10"
+        data-testid="sim-duas-medias"
+      >
+        {{
+          $t('RAMON.SIMULADOR.DUAS_MEDIAS', {
+            rmi: money(motorInfo.rmi),
+            descartes: money(motorInfo.rmi_com_descartes),
+          })
+        }}
+      </p>
       <ul
         v-if="resultado.avisos && resultado.avisos.length"
         class="flex flex-col gap-1 text-xs text-n-slate-10 list-disc ps-4"
@@ -336,6 +509,60 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
       >
         <li v-for="(aviso, i) in resultado.avisos" :key="i">{{ aviso }}</li>
       </ul>
+      <button
+        type="button"
+        data-testid="sim-memoria-toggle"
+        class="self-start text-xs underline text-n-slate-11 disabled:opacity-40"
+        :disabled="memoriaLoading"
+        @click="verMemoria"
+      >
+        {{
+          memoriaLoading
+            ? $t('RAMON.SIMULADOR.MEMORIA_LOADING')
+            : memoria
+              ? $t('RAMON.SIMULADOR.MEMORIA_HIDE')
+              : $t('RAMON.SIMULADOR.MEMORIA_SHOW')
+        }}
+      </button>
+      <div v-if="memoria" class="flex flex-col gap-1" data-testid="sim-memoria">
+        <div class="max-h-64 overflow-y-auto rounded-lg border border-n-weak">
+          <table class="w-full text-xs text-n-slate-11">
+            <thead class="sticky top-0 bg-n-solid-2">
+              <tr class="text-n-slate-10">
+                <th class="p-1 text-start font-medium">
+                  {{ $t('RAMON.SIMULADOR.MEMORIA_COMPETENCIA') }}
+                </th>
+                <th class="p-1 text-end font-medium">
+                  {{ $t('RAMON.SIMULADOR.MEMORIA_SALARIO') }}
+                </th>
+                <th class="p-1 text-end font-medium">
+                  {{ $t('RAMON.SIMULADOR.MEMORIA_INDICE') }}
+                </th>
+                <th class="p-1 text-end font-medium">
+                  {{ $t('RAMON.SIMULADOR.MEMORIA_CORRIGIDO') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="linha in memoria.salarios" :key="linha.competencia">
+                <td class="p-1">{{ linha.competencia }}</td>
+                <td class="p-1 text-end">{{ money(linha.salario) }}</td>
+                <td class="p-1 text-end">{{ linha.indice }}</td>
+                <td class="p-1 text-end">{{ money(linha.corrigido) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-n-slate-10" data-testid="sim-memoria-resumo">
+          {{
+            $t('RAMON.SIMULADOR.MEMORIA_RESUMO', {
+              soma: money(memoria.soma),
+              divisor: memoria.divisor,
+              media: money(memoria.media),
+            })
+          }}
+        </p>
+      </div>
     </div>
 
     <p

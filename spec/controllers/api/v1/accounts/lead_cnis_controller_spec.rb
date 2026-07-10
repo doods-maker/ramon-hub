@@ -55,6 +55,50 @@ RSpec.describe 'Lead CNIS API', type: :request do
       expect(response.parsed_body['avisos']).to eq(['03/2013: indicador pendente', 'tabela de correção defasada'])
       expect(lead.reload.cnis.dig('entrada', 'competencias').length).to eq(2)
     end
+
+    it 'returns the vinculos detail so the UI can offer adjustments' do
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        upload
+      end
+      expect(response.parsed_body['vinculos_detalhe']).to eq([{ 'seq' => 1, 'tipo' => 'EMPREGO', 'origem' => 'ACME LTDA' }])
+      expect(response.parsed_body['parametros']).to eq({})
+    end
+
+    it 'forwards excluir_seqs and mensalidades to the motor and stores them' do
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/cnis",
+             params: { arquivo: arquivo, sexo: 'M', excluir_seqs: '3,7', mensalidades: '{"5":"1286.00"}' },
+             headers: admin.create_new_auth_token
+      end
+      matcher = have_requested(:post, "#{motor_url}/cnis")
+                .with { |req| req.body.include?('3,7') && req.body.include?('{"5":"1286.00"}') }
+      expect(WebMock).to matcher
+      expect(response.parsed_body['parametros']).to eq('excluir_seqs' => '3,7', 'mensalidades' => '{"5":"1286.00"}')
+      expect(lead.reload.cnis['parametros']).to eq('excluir_seqs' => '3,7', 'mensalidades' => '{"5":"1286.00"}')
+    end
+  end
+
+  describe 'GET' do
+    it 'returns not found when the lead has no CNIS' do
+      get "/api/v1/accounts/#{account.id}/leads/#{lead.id}/cnis",
+          headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'returns the stored detail for the adjustments UI' do
+      lead.update!(cnis: {
+                     'filename' => 'sample.pdf',
+                     'entrada' => { 'competencias' => [] },
+                     'vinculos' => [{ 'seq' => 2, 'tipo' => 'BENEFICIO', 'origem' => 'Benefício 31' }],
+                     'parametros' => { 'excluir_seqs' => '2' },
+                     'avisos' => []
+                   })
+      get "/api/v1/accounts/#{account.id}/leads/#{lead.id}/cnis",
+          headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['vinculos_detalhe']).to eq([{ 'seq' => 2, 'tipo' => 'BENEFICIO', 'origem' => 'Benefício 31' }])
+      expect(response.parsed_body['parametros']).to eq('excluir_seqs' => '2')
+    end
   end
 
   it 'returns unprocessable entity when the motor rejects the PDF' do

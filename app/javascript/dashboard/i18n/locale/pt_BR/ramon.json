@@ -531,7 +531,21 @@
       "CNIS_HINT": "Com o CNIS, a simulação usa o histórico real de salários.",
       "CNIS_LOADING": "Lendo CNIS…",
       "CNIS_LOADED": "{competencias} competências · {vinculos} vínculos — simulação com histórico real",
-      "CNIS_REMOVE": "Remover"
+      "CNIS_REMOVE": "Remover",
+      "VINCULOS_TOGGLE": "Ajustar vínculos (exclusão / mensalidade)",
+      "VINCULO_EXCLUIR": "Fora da base da média (escolha do advogado)",
+      "VINCULO_MENSALIDADE": "Mensalidade real do benefício (R$)",
+      "VINCULOS_REAPLICAR": "Reaplicar com ajustes",
+      "VINCULOS_REUPLOAD_HINT": "O PDF não fica no servidor — selecione o arquivo de novo para reaplicar.",
+      "DUAS_MEDIAS": "RMI a 100% do PBC: {rmi} · com Regra dos Descartes: {descartes}",
+      "MEMORIA_SHOW": "Ver memória de cálculo",
+      "MEMORIA_HIDE": "Ocultar memória de cálculo",
+      "MEMORIA_LOADING": "Calculando…",
+      "MEMORIA_COMPETENCIA": "Competência",
+      "MEMORIA_SALARIO": "Salário",
+      "MEMORIA_INDICE": "Índice",
+      "MEMORIA_CORRIGIDO": "Corrigido",
+      "MEMORIA_RESUMO": "Soma {soma} · divisor {divisor} · média {media}"
     },
     "TRIAGE_AGENTS": {
       "TITLE": "Agentes de IA",

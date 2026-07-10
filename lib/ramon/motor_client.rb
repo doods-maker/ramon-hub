@@ -25,13 +25,17 @@ class Ramon::MotorClient
   end
 
   # arquivo = upload Rack/ActionDispatch (respond_to? :read/:path) — HTTParty monta o multipart.
-  def self.cnis(arquivo, sexo:)
+  # excluir_seqs ("3,7") e mensalidades (JSON {"5":"1286.00"}) vão crus: quem valida é o motor (422).
+  def self.cnis(arquivo, sexo:, excluir_seqs: nil, mensalidades: nil)
     base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
     raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
 
+    corpo = { arquivo: arquivo, sexo: sexo }
+    corpo[:excluir_seqs] = excluir_seqs if excluir_seqs.present?
+    corpo[:mensalidades] = mensalidades if mensalidades.present?
     response = HTTParty.post("#{base.chomp('/')}/cnis",
                              multipart: true,
-                             body: { arquivo: arquivo, sexo: sexo },
+                             body: corpo,
                              open_timeout: OPEN_TIMEOUT,
                              read_timeout: CNIS_READ_TIMEOUT)
     handle(response)
