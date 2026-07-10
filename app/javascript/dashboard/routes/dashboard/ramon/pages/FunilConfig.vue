@@ -4,6 +4,7 @@ import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import RamonLeadImportsAPI from 'dashboard/api/ramonLeadImports';
+import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 const store = useStore();
 const getters = useStoreGetters();
@@ -69,9 +70,7 @@ const submitImport = async () => {
 
 <template>
   <div class="flex flex-col h-full p-6 overflow-y-auto">
-    <h1 class="mb-6 text-xl font-cormorant text-n-slate-12">
-      {{ $t('RAMON.FUNIL_CONFIG.TITLE') }}
-    </h1>
+    <RamonPageHeader compact :title="$t('RAMON.FUNIL_CONFIG.TITLE')" />
 
     <section class="mb-8 max-w-2xl">
       <h2 class="mb-3 text-sm uppercase tracking-widest text-n-slate-9">

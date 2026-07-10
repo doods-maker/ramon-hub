@@ -93,10 +93,15 @@ const toggleCollapsed = () => {
   <button
     v-if="collapsed"
     data-testid="stage-expand"
-    class="flex flex-col items-center gap-2 w-10 flex-shrink-0 rounded-xl ramon-column border border-n-weak py-3 cursor-pointer"
+    class="flex flex-col items-center gap-2 w-10 flex-shrink-0 rounded-xl ramon-column border border-n-weak pb-3 cursor-pointer overflow-hidden"
     :title="$t('RAMON.KANBAN.COLUMN.EXPAND')"
     @click="toggleCollapsed"
   >
+    <!-- acento estrutural: a cor da etapa marca o topo da coluna -->
+    <span
+      class="h-0.5 w-full flex-shrink-0"
+      :style="{ backgroundColor: stage.color || '#71717a' }"
+    />
     <span
       class="rounded-full size-2.5 flex-shrink-0"
       :style="{ backgroundColor: stage.color || '#71717a' }"
@@ -112,8 +117,13 @@ const toggleCollapsed = () => {
   </button>
   <div
     v-else
-    class="flex flex-col w-72 max-h-full flex-shrink-0 rounded-xl ramon-column border border-n-weak"
+    class="flex flex-col w-72 max-h-full flex-shrink-0 rounded-xl ramon-column border border-n-weak overflow-hidden"
   >
+    <!-- acento estrutural: a cor da etapa marca o topo da coluna -->
+    <div
+      class="h-0.5 flex-shrink-0"
+      :style="{ backgroundColor: stage.color || '#71717a' }"
+    />
     <div class="flex items-center justify-between px-3 py-2">
       <span
         class="flex items-center gap-2 text-sm text-n-slate-12 stage-drag-handle cursor-grab"
@@ -134,13 +144,16 @@ const toggleCollapsed = () => {
       </span>
       <span class="flex items-center gap-2">
         <span class="flex flex-col items-end leading-tight">
-          <span data-testid="stage-total" class="text-xs text-n-slate-9">
+          <span
+            data-testid="stage-total"
+            class="text-xs tabular-nums text-n-slate-9"
+          >
             {{ brl(totalValue) }}
           </span>
           <span
             v-if="showWeighted"
             data-testid="stage-weighted"
-            class="text-[10px] text-n-slate-10"
+            class="text-[10px] tabular-nums text-n-slate-10"
           >
             {{
               $t('RAMON.KANBAN.COLUMN.WEIGHTED', {
@@ -180,6 +193,7 @@ const toggleCollapsed = () => {
       v-model="localLeads"
       group="leads"
       item-key="id"
+      ghost-class="ramon-drag-ghost"
       class="flex-1 px-2 pb-2 min-h-[120px] overflow-y-auto"
       @change="onChange"
     >

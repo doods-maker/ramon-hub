@@ -5,7 +5,18 @@
       "TODAY": "Hoje",
       "PREV_WEEK": "Semana anterior",
       "NEXT_WEEK": "Próxima semana",
-      "EMPTY": "Nenhum compromisso nesta semana."
+      "EMPTY": "Nenhum compromisso nesta semana.",
+      "VIEW_DAY": "Dia",
+      "VIEW_WEEK": "Semana",
+      "VIEW_MONTH": "Mês",
+      "FILTER_ALL": "Todas",
+      "FILTER_MEETING": "Reuniões",
+      "FILTER_FOLLOW_UP": "Follow-ups",
+      "PICK_MONTH": "Mês",
+      "EMPTY_DAY": "Nada agendado neste dia.",
+      "MORE": "+{count} mais",
+      "PREV": "Anterior",
+      "NEXT": "Próximo"
     },
     "COMMAND": {
       "EYEBROW": "Centro de Comando",

@@ -52,3 +52,12 @@
 .ramon-column {
   background-color: rgb(var(--ramon-column));
 }
+
+/* Fantasma do drag (vuedraggable ghost-class): marca o destino do drop
+   com tracejado bronze em vez de o card simplesmente "sumir" */
+.ramon-drag-ghost {
+  opacity: 0.4;
+  outline: 2px dashed rgb(var(--iris-9));
+  outline-offset: -2px;
+  border-radius: 0.75rem;
+}
