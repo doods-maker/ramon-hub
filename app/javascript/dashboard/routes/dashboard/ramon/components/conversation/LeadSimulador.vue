@@ -82,7 +82,10 @@ const applyCnis = data => {
 };
 
 const mensalidadesJson = () => {
-  const entries = Object.entries(mensalidades.value).filter(([, v]) => v);
+  // valores como string: o motor converte pra Decimal sem artefato de float
+  const entries = Object.entries(mensalidades.value)
+    .filter(([, v]) => v)
+    .map(([k, v]) => [k, String(v)]);
   return entries.length ? JSON.stringify(Object.fromEntries(entries)) : '';
 };
 

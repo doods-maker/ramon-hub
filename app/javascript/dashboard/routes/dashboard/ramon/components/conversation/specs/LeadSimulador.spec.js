@@ -4,7 +4,12 @@ import LeadSimulador from '../LeadSimulador.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/api/leads', () => ({
-  default: { simulate: vi.fn(), uploadCnis: vi.fn(), deleteCnis: vi.fn() },
+  default: {
+    simulate: vi.fn(),
+    uploadCnis: vi.fn(),
+    getCnis: vi.fn(),
+    deleteCnis: vi.fn(),
+  },
 }));
 
 const resultado = {
@@ -52,6 +57,7 @@ describe('LeadSimulador.vue', () => {
   beforeEach(() => {
     LeadsAPI.simulate.mockReset();
     LeadsAPI.uploadCnis.mockReset();
+    LeadsAPI.getCnis.mockReset();
     LeadsAPI.deleteCnis.mockReset();
   });
 
@@ -132,9 +138,109 @@ describe('LeadSimulador.vue', () => {
     Object.defineProperty(input.element, 'files', { value: [file] });
     await input.trigger('change');
     await flushPromises();
-    expect(LeadsAPI.uploadCnis).toHaveBeenCalledWith(7, file, 'F');
+    expect(LeadsAPI.uploadCnis).toHaveBeenCalledWith(7, file, 'F', {});
     expect(wrapper.find('[data-testid="sim-cnis-chip"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="sim-salario"]').exists()).toBe(false);
+  });
+
+  it('abre os ajustes de vínculos, busca o detalhe e reaplica com o PDF em memória', async () => {
+    LeadsAPI.uploadCnis.mockResolvedValue({
+      data: {
+        ...cnisResumo,
+        vinculos_detalhe: [
+          { seq: 1, tipo: 'EMPREGO', origem: 'ACME' },
+          { seq: 2, tipo: 'BENEFICIO', origem: 'Benefício 31' },
+        ],
+        parametros: {},
+      },
+    });
+    const wrapper = mountSim();
+    const input = wrapper.find('[data-testid="sim-cnis-file"]');
+    const file = new File(['%PDF'], 'cnis.pdf', { type: 'application/pdf' });
+    Object.defineProperty(input.element, 'files', { value: [file] });
+    await input.trigger('change');
+    await flushPromises();
+
+    await wrapper
+      .find('[data-testid="sim-cnis-ajustes-toggle"]')
+      .trigger('click');
+    expect(LeadsAPI.getCnis).not.toHaveBeenCalled(); // detalhe veio no upload
+    await wrapper.find('[data-testid="sim-vinculo-excluir-2"]').setValue(true);
+    await wrapper
+      .find('[data-testid="sim-vinculo-mensalidade-2"]')
+      .setValue('1286.57');
+    await wrapper.find('[data-testid="sim-cnis-reaplicar"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.uploadCnis).toHaveBeenLastCalledWith(7, file, 'F', {
+      excluirSeqs: '2',
+      mensalidades: '{"2":"1286.57"}',
+    });
+  });
+
+  it('depois de F5 busca o detalhe via GET e desabilita reaplicar sem o PDF', async () => {
+    LeadsAPI.getCnis.mockResolvedValue({
+      data: {
+        ...cnisResumo,
+        vinculos_detalhe: [{ seq: 1, tipo: 'EMPREGO', origem: 'ACME' }],
+        parametros: { excluir_seqs: '1' },
+      },
+    });
+    const wrapper = mountSim({ lead: { ...lead, cnis_resumo: cnisResumo } });
+    await wrapper
+      .find('[data-testid="sim-cnis-ajustes-toggle"]')
+      .trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.getCnis).toHaveBeenCalledWith(7);
+    expect(
+      wrapper.find('[data-testid="sim-vinculo-excluir-1"]').element.checked
+    ).toBe(true);
+    expect(
+      wrapper.find('[data-testid="sim-cnis-reaplicar"]').element.disabled
+    ).toBe(true);
+    expect(wrapper.find('[data-testid="sim-cnis-refile"]').exists()).toBe(true);
+  });
+
+  it('pede a memória de cálculo sob demanda e renderiza a tabela', async () => {
+    const comMemoria = {
+      ...resultado,
+      motor: {
+        rmi: '1600.00',
+        rmi_com_descartes: '1800.00',
+        memoria_calculo: {
+          salarios: [
+            {
+              competencia: '01/2024',
+              salario: '3000.00',
+              indice: '1.088517',
+              corrigido: '3265.55',
+            },
+          ],
+          soma: '3265.55',
+          divisor: 1,
+          media: '3265.55',
+        },
+      },
+    };
+    LeadsAPI.simulate.mockResolvedValue({ data: comMemoria });
+    const wrapper = mountSim();
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="sim-duas-medias"]').text()).toContain(
+      'DUAS_MEDIAS'
+    );
+    await wrapper.find('[data-testid="sim-memoria-toggle"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.simulate).toHaveBeenLastCalledWith(
+      7,
+      expect.objectContaining({ memoria_calculo: true })
+    );
+    expect(wrapper.find('[data-testid="sim-memoria"]').text()).toContain(
+      '01/2024'
+    );
+    expect(wrapper.find('[data-testid="sim-memoria-resumo"]').exists()).toBe(
+      true
+    );
   });
 
   it('remove o CNIS e volta pros campos manuais', async () => {
