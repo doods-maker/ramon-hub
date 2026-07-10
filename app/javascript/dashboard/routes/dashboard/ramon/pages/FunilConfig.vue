@@ -73,20 +73,24 @@ const submitImport = async () => {
       {{ $t('RAMON.FUNIL_CONFIG.TITLE') }}
     </h1>
 
-    <section class="mb-8">
+    <section class="mb-8 max-w-2xl">
       <h2 class="mb-3 text-sm uppercase tracking-widest text-n-slate-9">
         {{ $t('RAMON.FUNIL_CONFIG.BENEFITS') }}
       </h2>
-      <ul class="mb-3">
+      <ul
+        v-if="benefits.length"
+        class="mb-3 rounded-lg border border-n-weak divide-y divide-n-weak"
+      >
         <li
           v-for="b in benefits"
           :key="b.id"
-          class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-n-alpha-2"
+          class="flex items-center justify-between px-3 py-2 hover:bg-n-alpha-2"
         >
           <span class="text-sm text-n-slate-12">{{ b.name }}</span>
           <button
             data-testid="benefit-remove"
-            class="text-n-ruby-11"
+            class="text-n-slate-9 hover:text-n-ruby-11"
+            :title="$t('RAMON.FUNIL_CONFIG.REMOVE')"
             @click="removeBenefit(b.id)"
           >
             <span class="i-lucide-trash-2 size-4" />
@@ -111,22 +115,28 @@ const submitImport = async () => {
       </div>
     </section>
 
-    <section>
+    <section class="max-w-2xl">
       <h2 class="mb-3 text-sm uppercase tracking-widest text-n-slate-9">
         {{ $t('RAMON.FUNIL_CONFIG.PRIORITIES') }}
       </h2>
-      <ul class="mb-3">
+      <ul
+        v-if="priorities.length"
+        class="mb-3 rounded-lg border border-n-weak divide-y divide-n-weak"
+      >
         <li
           v-for="p in priorities"
           :key="p.id"
-          class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-n-alpha-2"
+          class="flex items-center justify-between px-3 py-2 hover:bg-n-alpha-2"
         >
           <span class="text-sm text-n-slate-12">{{ p.name }}</span>
           <span class="flex items-center gap-3">
-            <span class="text-xs text-n-slate-9">{{ p.weight }}</span>
+            <span class="text-xs text-n-slate-9">
+              {{ $t('RAMON.FUNIL_CONFIG.WEIGHT_OF', { weight: p.weight }) }}
+            </span>
             <button
               data-testid="priority-remove"
-              class="text-n-ruby-11"
+              class="text-n-slate-9 hover:text-n-ruby-11"
+              :title="$t('RAMON.FUNIL_CONFIG.REMOVE')"
               @click="removePriority(p.id)"
             >
               <span class="i-lucide-trash-2 size-4" />
@@ -142,12 +152,15 @@ const submitImport = async () => {
           :placeholder="$t('RAMON.FUNIL_CONFIG.PRIORITY_PLACEHOLDER')"
           @keyup.enter="addPriority"
         />
-        <input
-          v-model="newWeight"
-          type="number"
-          data-testid="priority-weight"
-          class="w-20 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-        />
+        <label class="flex items-center gap-1.5 text-xs text-n-slate-10">
+          {{ $t('RAMON.FUNIL_CONFIG.WEIGHT') }}
+          <input
+            v-model="newWeight"
+            type="number"
+            data-testid="priority-weight"
+            class="w-16 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+          />
+        </label>
         <button
           data-testid="priority-add"
           class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
@@ -158,18 +171,18 @@ const submitImport = async () => {
       </div>
     </section>
 
-    <section class="mt-8">
+    <section class="mt-8 max-w-2xl">
       <h2 class="mb-1 text-sm uppercase tracking-widest text-n-slate-9">
         {{ $t('RAMON.FUNIL_CONFIG.CADENCE') }}
       </h2>
       <p class="mb-3 text-xs text-n-slate-10">
         {{ $t('RAMON.FUNIL_CONFIG.CADENCE_HINT') }}
       </p>
-      <ul>
+      <ul class="rounded-lg border border-n-weak divide-y divide-n-weak">
         <li
           v-for="s in stages"
           :key="s.id"
-          class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-n-alpha-2"
+          class="flex items-center justify-between px-3 py-2 hover:bg-n-alpha-2"
         >
           <span class="text-sm text-n-slate-12">{{ s.name }}</span>
           <span class="flex items-center gap-2">
@@ -189,7 +202,7 @@ const submitImport = async () => {
       </ul>
     </section>
 
-    <section class="mt-8" data-testid="import-leads-section">
+    <section class="mt-8 max-w-2xl" data-testid="import-leads-section">
       <h2 class="mb-1 text-sm uppercase tracking-widest text-n-slate-9">
         {{ $t('RAMON.IMPORT.TITLE') }}
       </h2>

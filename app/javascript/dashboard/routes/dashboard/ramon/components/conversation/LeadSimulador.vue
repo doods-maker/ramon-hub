@@ -418,7 +418,7 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
     <button
       type="button"
       data-testid="sim-run"
-      class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
+      class="px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
       :disabled="!canSimulate || isLoading"
       @click="simulate"
     >

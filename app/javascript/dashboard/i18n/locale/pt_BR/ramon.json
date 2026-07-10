@@ -179,7 +179,8 @@
         "REMOVE_TITLE": "Remover \"{name}\" e mover os leads para:",
         "REMOVE_PICK": "Escolha a etapa destino",
         "REMOVE_CONFIRM": "Remover",
-        "CANCEL": "Cancelar"
+        "CANCEL": "Cancelar",
+        "MENU": "Opções da etapa"
       },
       "FILTERS": {
         "SEARCH": "Buscar nome ou contato…",
@@ -200,7 +201,8 @@
         "SAVE_PROMPT": "Nome desta view",
         "REMOVE": "Remover view",
         "REMOVE_CONFIRM": "Remover esta view salva?"
-      }
+      },
+      "DOCK_CLOSE": "Fechar conversa"
     },
     "KANBAN": {
       "CARD": {
@@ -243,7 +245,8 @@
       "IN_DAYS": "em {n}d",
       "SCHEDULE_NEXT": "Agendar próxima?",
       "DATE_HINT": "Vazio = amanhã 9h",
-      "CREATE_ERROR": "Não foi possível criar a tarefa — tente de novo"
+      "CREATE_ERROR": "Não foi possível criar a tarefa — tente de novo",
+      "COMPLETE": "Concluir tarefa"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
@@ -254,7 +257,10 @@
       "PRIORITY_PLACEHOLDER": "Nova prioridade",
       "CADENCE": "Cadência por etapa",
       "CADENCE_HINT": "Dias sem andamento até o lead ser marcado como parado (vazio = sem limite; o dobro fica vermelho)",
-      "CADENCE_DAYS": "dias"
+      "CADENCE_DAYS": "dias",
+      "REMOVE": "Remover",
+      "WEIGHT": "Peso",
+      "WEIGHT_OF": "peso {weight}"
     },
     "IMPORT": {
       "TITLE": "Importar leads (CSV)",
@@ -304,7 +310,9 @@
           "AWAITING_DOCS": "Aguardando documentos do lead.",
           "MEETING_SCHEDULED": "Reunião marcada."
         }
-      }
+      },
+      "BENEFIT_MONTHLY_LABEL": "Benefício mensal estimado",
+      "DCB_LABEL": "DCB (data de cessação do benefício)"
     },
     "LINHA_DA_VIDA": {
       "OPEN": "Linha da Vida",
@@ -388,8 +396,10 @@
           "ESTEIRA_DONE": "resolveu na Esteira",
           "THESIS_CHANGED": "mudou a tese",
           "LP_RECAPTURED": "recebeu novo formulário da LP"
-        }
-      }
+        },
+        "EMPTY": "Nenhuma atividade registrada ainda."
+      },
+      "LOADING": "Carregando lead…"
     },
     "PLAYBOOK": {
       "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",
@@ -418,7 +428,8 @@
         "GREETING": "Olá {name}, tudo bem? Para dar andamento ao seu caso, ainda preciso destes documentos:",
         "ITEM": "• {item}",
         "CLOSING": "Assim que puder me enviar, seguimos com o seu pedido. Obrigado!"
-      }
+      },
+      "CYCLE_HINT": "Clique para alternar: pendente → solicitado → recebido"
     },
     "PLAYBOOKS": {
       "TITLE": "Playbooks",
@@ -449,7 +460,9 @@
         "QUALIFICACAO": "Qualificação",
         "OBJECAO": "Objeções",
         "DOCUMENTO": "Documentos"
-      }
+      },
+      "DELETE": "Remover tese",
+      "ITEM_DELETE": "Remover item"
     },
     "COPILOT": {
       "SUMMARIZE": "Resumir a conversa",
@@ -477,7 +490,8 @@
       },
       "AWAITING_HUMAN": "Aguardando humano",
       "AWAITING_HUMAN_HINT": "A IA não classificou com confiança — revise a conversa e defina a viabilidade você mesmo.",
-      "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes"
+      "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes",
+      "LOADING": "Carregando triagens…"
     },
     "KIT": {
       "TAB": "Kit",
@@ -491,14 +505,18 @@
       "CLOSED": "Lead encerrado — sem kit para esta etapa.",
       "COPY_BLOCK": "Copiar",
       "MODE_LABEL": "Modo",
-      "MODE": { "SDR": "Qualificação (SDR)", "CLOSER": "Fechamento (Closer)" },
+      "MODE": {
+        "SDR": "Qualificação (SDR)",
+        "CLOSER": "Fechamento (Closer)"
+      },
       "BLOCKS": {
         "RESUMO": "Resumo em linguagem simples",
         "ROTEIRO": "Roteiro de perguntas",
         "DOCUMENTOS": "Documentos a pedir",
         "VENDA_OBJECOES": "Venda e objeções",
         "PROXIMO_PASSO": "Próximo passo"
-      }
+      },
+      "LOADING": "Carregando kit…"
     },
     "SIMULADOR": {
       "TAB": "Simulador",
@@ -575,7 +593,10 @@
         "DEEPSEEK": "DeepSeek",
         "ANTHROPIC": "Anthropic",
         "OPENAI": "OpenAI"
-      }
+      },
+      "DELETE": "Remover agente",
+      "FIELD_DESCRIPTION": "Descrição",
+      "KIT_SYSTEM_PROMPT": "Prompt do kit (Closer)"
     }
   }
 }

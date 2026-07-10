@@ -180,8 +180,8 @@ const fmtDate = value => {
             <div class="flex items-center justify-between gap-2">
               <span class="text-sm text-n-slate-12">{{ lead.name }}</span>
               <span
-                class="px-2 py-0.5 text-xs rounded-full"
-                :style="{ backgroundColor: lead.stage_color || 'transparent' }"
+                class="px-2 py-0.5 text-xs rounded-full text-white shrink-0"
+                :style="{ backgroundColor: lead.stage_color || '#71717a' }"
               >
                 {{ lead.stage_name }}
               </span>

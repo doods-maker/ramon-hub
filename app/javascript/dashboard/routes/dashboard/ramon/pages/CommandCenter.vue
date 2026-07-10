@@ -32,6 +32,13 @@ const brl = value =>
     maximumFractionDigits: 1,
   }).format(Number(value) || 0);
 
+// Datas do histórico chegam ISO (yyyy-mm-dd); exibir dd/mm.
+const fmtDay = value =>
+  new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString(
+    'pt-BR',
+    { day: '2-digit', month: '2-digit' }
+  );
+
 const today = computed(() => data.value?.today || {});
 const funnel = computed(() => data.value?.funnel || []);
 const week = computed(() => data.value?.week || {});
@@ -391,7 +398,9 @@ const openStage = stageId => {
                 :key="row.date"
                 class="border-t border-n-weak text-n-slate-12"
               >
-                <td class="py-1 text-left">{{ row.date }}</td>
+                <td class="py-1 text-left tabular-nums">
+                  {{ fmtDay(row.date) }}
+                </td>
                 <td class="py-1 text-right">{{ row.leads_count }}</td>
                 <td class="py-1 text-right">{{ brl(row.value_sum) }}</td>
               </tr>

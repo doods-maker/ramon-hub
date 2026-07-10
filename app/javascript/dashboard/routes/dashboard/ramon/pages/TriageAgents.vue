@@ -156,7 +156,8 @@ onMounted(() => store.dispatch('triageAgents/get'));
           </span>
           <button
             data-testid="triage-agents-item-remove"
-            class="text-n-ruby-11"
+            class="text-n-slate-9 hover:text-n-ruby-11"
+            :title="$t('RAMON.TRIAGE_AGENTS.DELETE')"
             @click.stop="removeAgent(agent)"
           >
             <span class="i-lucide-trash-2 size-3.5" />
@@ -202,81 +203,116 @@ onMounted(() => store.dispatch('triageAgents/get'));
         class="flex flex-col gap-3"
         data-testid="triage-agents-detail"
       >
-        <input
-          v-model="detail.name"
-          data-testid="triage-agents-name-input"
-          class="px-3 py-2 text-lg font-cormorant rounded-lg bg-n-alpha-2 text-n-slate-12"
-          :placeholder="$t('RAMON.TRIAGE_AGENTS.NAME')"
-          @blur="saveDetail"
-        />
-        <textarea
-          v-model="detail.description"
-          data-testid="triage-agents-description-input"
-          rows="2"
-          class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-          :placeholder="$t('RAMON.TRIAGE_AGENTS.DESCRIPTION')"
-          @blur="saveDetail"
-        />
+        <label class="flex flex-col gap-1">
+          <span class="text-xs text-n-slate-10">
+            {{ $t('RAMON.TRIAGE_AGENTS.NAME') }}
+          </span>
+          <input
+            v-model="detail.name"
+            data-testid="triage-agents-name-input"
+            class="px-3 py-2 text-lg font-cormorant rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+            :placeholder="$t('RAMON.TRIAGE_AGENTS.NAME')"
+            @blur="saveDetail"
+          />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-xs text-n-slate-10">
+            {{ $t('RAMON.TRIAGE_AGENTS.FIELD_DESCRIPTION') }}
+          </span>
+          <textarea
+            v-model="detail.description"
+            data-testid="triage-agents-description-input"
+            rows="2"
+            class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+            :placeholder="$t('RAMON.TRIAGE_AGENTS.FIELD_DESCRIPTION')"
+            @blur="saveDetail"
+          />
+        </label>
 
         <div class="flex gap-3">
-          <select
-            v-model="detail.area"
-            data-testid="triage-agents-area-select"
-            class="flex-1 px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-            @change="saveDetail"
-          >
-            <option value="" disabled>
+          <label class="flex flex-col flex-1 gap-1">
+            <span class="text-xs text-n-slate-10">
               {{ $t('RAMON.TRIAGE_AGENTS.AREA') }}
-            </option>
-            <option v-for="area in AREAS" :key="area" :value="area">
-              {{ $t(areaOptionKey(area)) }}
-            </option>
-          </select>
-
-          <select
-            v-model="detail.provider"
-            data-testid="triage-agents-provider-select"
-            class="flex-1 px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-            @change="saveDetail"
-          >
-            <option value="" disabled>
-              {{ $t('RAMON.TRIAGE_AGENTS.PROVIDER') }}
-            </option>
-            <option
-              v-for="provider in PROVIDERS"
-              :key="provider"
-              :value="provider"
+            </span>
+            <select
+              v-model="detail.area"
+              data-testid="triage-agents-area-select"
+              class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              @change="saveDetail"
             >
-              {{ $t(providerOptionKey(provider)) }}
-            </option>
-          </select>
+              <option value="" disabled>
+                {{ $t('RAMON.TRIAGE_AGENTS.AREA') }}
+              </option>
+              <option v-for="area in AREAS" :key="area" :value="area">
+                {{ $t(areaOptionKey(area)) }}
+              </option>
+            </select>
+          </label>
+
+          <label class="flex flex-col flex-1 gap-1">
+            <span class="text-xs text-n-slate-10">
+              {{ $t('RAMON.TRIAGE_AGENTS.PROVIDER') }}
+            </span>
+            <select
+              v-model="detail.provider"
+              data-testid="triage-agents-provider-select"
+              class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              @change="saveDetail"
+            >
+              <option value="" disabled>
+                {{ $t('RAMON.TRIAGE_AGENTS.PROVIDER') }}
+              </option>
+              <option
+                v-for="provider in PROVIDERS"
+                :key="provider"
+                :value="provider"
+              >
+                {{ $t(providerOptionKey(provider)) }}
+              </option>
+            </select>
+          </label>
         </div>
 
-        <input
-          v-model="detail.model"
-          data-testid="triage-agents-model-input"
-          class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-          :placeholder="$t('RAMON.TRIAGE_AGENTS.MODEL')"
-          @blur="saveDetail"
-        />
+        <label class="flex flex-col gap-1">
+          <span class="text-xs text-n-slate-10">
+            {{ $t('RAMON.TRIAGE_AGENTS.MODEL') }}
+          </span>
+          <input
+            v-model="detail.model"
+            data-testid="triage-agents-model-input"
+            class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+            :placeholder="$t('RAMON.TRIAGE_AGENTS.MODEL')"
+            @blur="saveDetail"
+          />
+        </label>
 
-        <textarea
-          v-model="detail.system_prompt"
-          data-testid="triage-agents-system-prompt-input"
-          rows="12"
-          class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 text-n-slate-12"
-          :placeholder="$t('RAMON.TRIAGE_AGENTS.SYSTEM_PROMPT')"
-          @blur="saveDetail"
-        />
+        <label class="flex flex-col gap-1">
+          <span class="text-xs text-n-slate-10">
+            {{ $t('RAMON.TRIAGE_AGENTS.SYSTEM_PROMPT') }}
+          </span>
+          <textarea
+            v-model="detail.system_prompt"
+            data-testid="triage-agents-system-prompt-input"
+            rows="12"
+            class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+            :placeholder="$t('RAMON.TRIAGE_AGENTS.SYSTEM_PROMPT')"
+            @blur="saveDetail"
+          />
+        </label>
 
-        <textarea
-          v-model="detail.kit_system_prompt"
-          data-testid="triage-agents-kit-system-prompt-input"
-          rows="12"
-          class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 text-n-slate-12"
-          :placeholder="$t('RAMON.TRIAGE_AGENTS.KIT_SYSTEM_PROMPT')"
-          @blur="saveDetail"
-        />
+        <label class="flex flex-col gap-1">
+          <span class="text-xs text-n-slate-10">
+            {{ $t('RAMON.TRIAGE_AGENTS.KIT_SYSTEM_PROMPT') }}
+          </span>
+          <textarea
+            v-model="detail.kit_system_prompt"
+            data-testid="triage-agents-kit-system-prompt-input"
+            rows="12"
+            class="px-3 py-2 text-xs font-mono rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+            :placeholder="$t('RAMON.TRIAGE_AGENTS.KIT_SYSTEM_PROMPT')"
+            @blur="saveDetail"
+          />
+        </label>
 
         <label class="flex items-center gap-2 text-sm text-n-slate-12">
           <input

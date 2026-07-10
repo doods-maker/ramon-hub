@@ -214,7 +214,8 @@ onMounted(() => store.dispatch('theses/get'));
           </button>
           <button
             data-testid="playbooks-item-remove"
-            class="text-n-ruby-11"
+            class="text-n-slate-9 hover:text-n-ruby-11"
+            :title="$t('RAMON.PLAYBOOKS.DELETE')"
             @click.stop="removeThesis(thesis)"
           >
             <span class="i-lucide-trash-2 size-3.5" />
@@ -257,50 +258,75 @@ onMounted(() => store.dispatch('theses/get'));
 
       <template v-else>
         <div class="flex flex-col gap-3 mb-6" data-testid="playbooks-detail">
-          <input
-            v-model="detail.name"
-            data-testid="playbooks-name-input"
-            class="px-3 py-2 text-lg font-cormorant rounded-lg bg-n-alpha-2 text-n-slate-12"
-            :placeholder="$t('RAMON.PLAYBOOKS.NAME')"
-            @blur="saveDetail"
-          />
-          <textarea
-            v-model="detail.description"
-            data-testid="playbooks-description-input"
-            rows="2"
-            class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-            :placeholder="$t('RAMON.PLAYBOOKS.DESCRIPTION')"
-            @blur="saveDetail"
-          />
-          <input
-            v-model="detail.area"
-            data-testid="playbooks-area-input"
-            class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-            :placeholder="$t('RAMON.PLAYBOOKS.AREA')"
-            @blur="saveDetail"
-          />
+          <label class="flex flex-col gap-1">
+            <span class="text-xs text-n-slate-10">
+              {{ $t('RAMON.PLAYBOOKS.NAME') }}
+            </span>
+            <input
+              v-model="detail.name"
+              data-testid="playbooks-name-input"
+              class="px-3 py-2 text-lg font-cormorant rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              :placeholder="$t('RAMON.PLAYBOOKS.NAME')"
+              @blur="saveDetail"
+            />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs text-n-slate-10">
+              {{ $t('RAMON.PLAYBOOKS.DESCRIPTION') }}
+            </span>
+            <textarea
+              v-model="detail.description"
+              data-testid="playbooks-description-input"
+              rows="2"
+              class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              :placeholder="$t('RAMON.PLAYBOOKS.DESCRIPTION')"
+              @blur="saveDetail"
+            />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs text-n-slate-10">
+              {{ $t('RAMON.PLAYBOOKS.AREA') }}
+            </span>
+            <input
+              v-model="detail.area"
+              data-testid="playbooks-area-input"
+              class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              :placeholder="$t('RAMON.PLAYBOOKS.AREA')"
+              @blur="saveDetail"
+            />
+          </label>
           <div class="flex gap-3">
-            <input
-              v-model="detail.honorarioPercentual"
-              type="number"
-              min="0"
-              max="100"
-              step="0.5"
-              data-testid="playbooks-honorario-percentual-input"
-              class="flex-1 px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-              :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_PERCENT')"
-              @blur="saveDetail"
-            />
-            <input
-              v-model="detail.honorarioNMensalidades"
-              type="number"
-              min="0"
-              step="1"
-              data-testid="playbooks-honorario-mensalidades-input"
-              class="flex-1 px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-              :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS')"
-              @blur="saveDetail"
-            />
+            <label class="flex flex-col flex-1 gap-1">
+              <span class="text-xs text-n-slate-10">
+                {{ $t('RAMON.PLAYBOOKS.HONORARIO_PERCENT') }}
+              </span>
+              <input
+                v-model="detail.honorarioPercentual"
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                data-testid="playbooks-honorario-percentual-input"
+                class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+                :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_PERCENT')"
+                @blur="saveDetail"
+              />
+            </label>
+            <label class="flex flex-col flex-1 gap-1">
+              <span class="text-xs text-n-slate-10">
+                {{ $t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS') }}
+              </span>
+              <input
+                v-model="detail.honorarioNMensalidades"
+                type="number"
+                min="0"
+                step="1"
+                data-testid="playbooks-honorario-mensalidades-input"
+                class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+                :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS')"
+                @blur="saveDetail"
+              />
+            </label>
           </div>
           <label class="flex items-center gap-2 text-sm text-n-slate-12">
             <input
@@ -340,7 +366,8 @@ onMounted(() => store.dispatch('theses/get'));
                 />
                 <button
                   data-testid="playbooks-item-remove-item"
-                  class="text-n-ruby-11"
+                  class="text-n-slate-9 hover:text-n-ruby-11"
+                  :title="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
                   @click="removeItem(item)"
                 >
                   <span class="i-lucide-trash-2 size-3.5" />

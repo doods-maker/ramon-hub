@@ -85,7 +85,7 @@ const removeView = index => {
         class="flex items-center gap-1.5 py-1 pl-3 pr-1.5 text-sm rounded-l-full hover:bg-n-alpha-3"
         @click="applyView(view)"
       >
-        <span>{{ view.name }}</span>
+        <span class="max-w-40 truncate">{{ view.name }}</span>
         <span class="text-xs text-n-slate-11">
           {{ countFor(view.filters) }}
         </span>

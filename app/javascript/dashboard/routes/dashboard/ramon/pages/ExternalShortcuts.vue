@@ -52,7 +52,9 @@ const remove = i => {
           class="size-4 text-n-slate-11"
         />
         <span class="font-medium text-n-slate-12">{{ s.label }}</span>
-        <span class="text-sm truncate text-n-slate-9">{{ s.url }}</span>
+        <span class="flex-1 min-w-0 text-sm truncate text-n-slate-9">{{
+          s.url
+        }}</span>
         <Button
           class="ml-auto"
           icon="Trash2"

@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
+import { vOnClickOutside } from '@vueuse/components';
 
 const props = defineProps({
   stage: { type: Object, required: true },
@@ -21,15 +22,23 @@ const PALETTE = [
 ];
 
 const open = ref(false);
+const toggleRef = ref(null);
+const renameInput = ref(null);
 const editingName = ref('');
 const renaming = ref(false);
 
+const close = () => {
+  open.value = false;
+  renaming.value = false;
+};
 const toggle = () => {
-  open.value = !open.value;
+  if (open.value) close();
+  else open.value = true;
 };
 const startRename = () => {
   editingName.value = props.stage.name;
   renaming.value = true;
+  nextTick(() => renameInput.value?.focus());
 };
 const confirmRename = () => {
   const name = editingName.value.trim();
@@ -54,7 +63,9 @@ const remove = () => {
 <template>
   <div class="relative">
     <button
+      ref="toggleRef"
       data-testid="stage-menu-toggle"
+      :title="$t('RAMON.FUNIL.STAGE.MENU')"
       class="text-n-slate-9 hover:text-n-slate-12"
       @click="toggle"
     >
@@ -62,10 +73,12 @@ const remove = () => {
     </button>
     <div
       v-if="open"
+      v-on-click-outside="[close, { ignore: [toggleRef] }]"
       class="absolute right-0 z-10 mt-1 w-48 p-2 rounded-lg shadow-lg bg-n-solid-2 border border-n-weak"
     >
       <template v-if="renaming">
         <input
+          ref="renameInput"
           v-model="editingName"
           data-testid="stage-rename-input"
           class="w-full px-2 py-1 mb-2 text-sm rounded bg-n-alpha-2 text-n-slate-12"
@@ -92,6 +105,7 @@ const remove = () => {
             v-for="color in PALETTE"
             :key="color"
             data-testid="stage-color"
+            :title="color"
             class="rounded-full size-5 border border-n-weak"
             :style="{ backgroundColor: color }"
             @click="pickColor(color)"
