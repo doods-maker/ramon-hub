@@ -230,6 +230,8 @@
 | `spec/requests/public/api/v1/advbox_webhooks_spec.rb` + `spec/services/ramon/advbox_event_processor_spec.rb` | specs: auth/idempotência/captura + roteamento dos fluxos | cobertura CI | Flowter |
 | `lib/ramon/motor_client.rb` + `app/controllers/api/v1/accounts/lead_cnis_controller.rb` (linhas de changes) | `/cnis` repassa `excluir_seqs`/`mensalidades` crus ao motor (validação lá) e guarda em `cnis['parametros']`; +GET show p/ a UI de ajustes; PDF NÃO fica no servidor (reaplicar = reenviar) | Simulador ajustes CNIS | Parâmetros motor |
 | `app/controllers/api/v1/accounts/lead_simulacoes_controller.rb` (linha de changes) | repassa `memoria_calculo` (opt-in) ao motor — relatório competência-a-competência | Simulador memória | Parâmetros motor |
+| `app/javascript/dashboard/components-next/Contacts/Pages/ContactDetails.vue` | +botão "Linha da Vida" no cabeçalho do contato (router → `ramon_linha_da_vida`) | atalho contato→lifeline | polimento-2 |
+| `app/javascript/dashboard/i18n/locale/{en,pt_BR}/contact.json` | +`CONTACTS_LAYOUT.DETAILS.LIFELINE_BUTTON` | i18n do botão | polimento-2 |
 | `.../ramon/components/conversation/LeadSimulador.vue` (linhas de changes) | painel "Ajustar vínculos" (checkbox fora-da-média + mensalidade real), duas médias (RMI 100% × descartes) e tabela de memória de cálculo | Simulador | Parâmetros motor |
 
 ## Checklist de rebase (a cada nova release upstream)

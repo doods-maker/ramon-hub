@@ -287,7 +287,7 @@
       "NAME": "Nome",
       "STAGE": "Etapa",
       "BENEFIT": "Tipo de benefício",
-      "PRIORITY": "Prioridade",
+      "PRIORITY": "Prioridade do lead",
       "SDR": "SDR",
       "CLOSER": "Closer",
       "VALUE": "Valor (R$)",
@@ -615,6 +615,9 @@
       "DELETE": "Remover agente",
       "FIELD_DESCRIPTION": "Descrição",
       "KIT_SYSTEM_PROMPT": "Prompt do kit (Closer)"
+    },
+    "MODAL": {
+      "CANCEL": "Cancelar"
     }
   }
 }

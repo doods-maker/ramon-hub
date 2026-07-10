@@ -510,7 +510,8 @@
           "SUCCESS_MESSAGE": "Avatar excluído com sucesso",
           "ERROR_MESSAGE": "Não foi possível excluir o avatar. Por favor, tente novamente mais tarde."
         }
-      }
+      },
+      "LIFELINE_BUTTON": "Linha da Vida"
     },
     "SIDEBAR": {
       "TABS": {

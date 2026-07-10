@@ -1,9 +1,8 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import ConfirmModal from '../components/ConfirmModal.vue';
 
-const { t } = useI18n();
 const store = useStore();
 const getters = useStoreGetters();
 
@@ -66,11 +65,15 @@ const addAgent = async () => {
   }
 };
 
-const removeAgent = async agent => {
-  // eslint-disable-next-line no-alert
-  if (!window.confirm(t('RAMON.TRIAGE_AGENTS.DELETE_CONFIRM'))) return;
+const agentToRemove = ref(null);
+const removeAgent = agent => {
+  agentToRemove.value = agent;
+};
+const confirmRemoveAgent = async () => {
+  const agent = agentToRemove.value;
   await store.dispatch('triageAgents/delete', agent.id);
   if (selectedId.value === agent.id) selectedId.value = null;
+  agentToRemove.value = null;
 };
 
 const saveDetail = () => {
@@ -345,5 +348,12 @@ onMounted(() => store.dispatch('triageAgents/get'));
         </p>
       </div>
     </div>
+    <ConfirmModal
+      v-if="agentToRemove"
+      :title="$t('RAMON.TRIAGE_AGENTS.DELETE_CONFIRM')"
+      :confirm-label="$t('RAMON.TRIAGE_AGENTS.DELETE')"
+      @confirm="confirmRemoveAgent"
+      @cancel="agentToRemove = null"
+    />
   </div>
 </template>

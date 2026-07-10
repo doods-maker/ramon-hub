@@ -290,7 +290,6 @@
       "ID": "(ID: {identifier})"
     }
   },
-
   "CONTACTS_LAYOUT": {
     "HEADER": {
       "TITLE": "Contacts",
@@ -511,7 +510,8 @@
           "SUCCESS_MESSAGE": "Avatar deleted successfully",
           "ERROR_MESSAGE": "Could not delete avatar. Please try again later."
         }
-      }
+      },
+      "LIFELINE_BUTTON": "Lifeline"
     },
     "SIDEBAR": {
       "TABS": {
@@ -616,7 +616,6 @@
       "CONFIRM_SINGLE": "Delete contact"
     }
   },
-
   "COMPOSE_NEW_CONVERSATION": {
     "CONTACT_SEARCH": {
       "ERROR_MESSAGE": "We couldn’t complete the search. Please try again."

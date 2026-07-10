@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -24,6 +25,19 @@ const emit = defineEmits(['goToContactsList']);
 
 const { t } = useI18n();
 const store = useStore();
+const route = useRoute();
+const router = useRouter();
+
+// Atalho pro mundo Intranet: Linha da Vida da pessoa (fork Ramon).
+const openLifeline = () => {
+  router.push({
+    name: 'ramon_linha_da_vida',
+    params: {
+      accountId: route.params.accountId,
+      contactId: props.selectedContact.id,
+    },
+  });
+};
 
 const confirmDeleteContactDialogRef = ref(null);
 
@@ -183,6 +197,14 @@ const handleAvatarDelete = async () => {
         </div>
       </div>
       <ContactLabels :contact-id="selectedContact?.id" />
+      <Button
+        :label="t('CONTACTS_LAYOUT.DETAILS.LIFELINE_BUTTON')"
+        icon="i-lucide-heart-pulse"
+        size="sm"
+        variant="faded"
+        class="self-start"
+        @click="openLifeline"
+      />
     </div>
     <div class="flex flex-col items-start gap-6">
       <ContactsForm

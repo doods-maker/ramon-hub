@@ -287,7 +287,7 @@
       "NAME": "Name",
       "STAGE": "Stage",
       "BENEFIT": "Benefit type",
-      "PRIORITY": "Priority",
+      "PRIORITY": "Lead priority",
       "SDR": "SDR",
       "CLOSER": "Closer",
       "VALUE": "Value (R$)",
@@ -615,6 +615,9 @@
       },
       "DELETE": "Delete agent",
       "FIELD_DESCRIPTION": "Description"
+    },
+    "MODAL": {
+      "CANCEL": "Cancel"
     }
   }
 }
