@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { computed } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import AccordionItem from 'dashboard/components/Accordion/AccordionItem.vue';
 import LeadFields from 'dashboard/routes/dashboard/ramon/components/lead/LeadFields.vue';
@@ -8,6 +9,7 @@ import LeadPlaybook from 'dashboard/routes/dashboard/ramon/components/conversati
 import LeadTriage from 'dashboard/routes/dashboard/ramon/components/conversation/LeadTriage.vue';
 import LeadKit from 'dashboard/routes/dashboard/ramon/components/conversation/LeadKit.vue';
 import LeadSimulador from 'dashboard/routes/dashboard/ramon/components/conversation/LeadSimulador.vue';
+import { useLeadPanelSections } from 'dashboard/routes/dashboard/ramon/composables/useLeadPanelSections';
 
 const emit = defineEmits(['openConversation']);
 const store = useStore();
@@ -17,39 +19,11 @@ const lead = computed(() => getters['leads/getSelectedLead'].value);
 
 const close = () => store.dispatch('leads/select', null);
 
-const onDocKeydown = e => {
-  if (e.key === 'Escape') close();
-};
-onMounted(() => document.addEventListener('keydown', onDocKeydown));
-onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
+onKeyStroke('Escape', close);
 
 // MESMO storage do LeadConversationPanel: gaveta e painel da conversa mantêm
 // as seções abertas/recolhidas sincronizadas.
-const SECTIONS_KEY = 'ramon_lead_panel_sections';
-const readSections = () => {
-  try {
-    return JSON.parse(localStorage.getItem(SECTIONS_KEY) || '{}');
-  } catch (e) {
-    return {};
-  }
-};
-const openSections = ref({
-  resumo: true,
-  historico: false,
-  playbook: false,
-  triagem: false,
-  kit: false,
-  simulador: false,
-  ...readSections(),
-});
-const toggleSection = id => {
-  openSections.value[id] = !openSections.value[id];
-  try {
-    localStorage.setItem(SECTIONS_KEY, JSON.stringify(openSections.value));
-  } catch (e) {
-    // localStorage indisponível: seguimos sem persistir
-  }
-};
+const { openSections, toggleSection } = useLeadPanelSections();
 </script>
 
 <template>

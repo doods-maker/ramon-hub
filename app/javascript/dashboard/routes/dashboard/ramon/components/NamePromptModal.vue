@@ -1,6 +1,7 @@
 <script setup>
 // Substituto do window.prompt: pergunta um nome no padrão visual da casa.
-import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, nextTick, onMounted } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 
 defineProps({
   title: { type: String, required: true },
@@ -18,14 +19,10 @@ const confirm = () => {
   emit('confirm', value);
 };
 
-const onDocKeydown = e => {
-  if (e.key === 'Escape') emit('cancel');
-};
+onKeyStroke('Escape', () => emit('cancel'));
 onMounted(() => {
-  document.addEventListener('keydown', onDocKeydown);
   nextTick(() => input.value?.focus());
 });
-onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
 </script>
 
 <template>

@@ -6,6 +6,7 @@
       "PREV_WEEK": "Semana anterior",
       "NEXT_WEEK": "Próxima semana",
       "EMPTY": "Nenhum compromisso nesta semana.",
+      "EMPTY_MONTH": "Nenhum compromisso neste mês.",
       "VIEW_DAY": "Dia",
       "VIEW_WEEK": "Semana",
       "VIEW_MONTH": "Mês",
@@ -417,7 +418,9 @@
         },
         "EMPTY": "Nenhuma atividade registrada ainda."
       },
-      "LOADING": "Carregando lead…"
+      "LOADING": "Carregando lead…",
+      "LOAD_ERROR": "Não foi possível carregar o lead desta conversa.",
+      "RETRY": "Tentar novamente"
     },
     "PLAYBOOK": {
       "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",

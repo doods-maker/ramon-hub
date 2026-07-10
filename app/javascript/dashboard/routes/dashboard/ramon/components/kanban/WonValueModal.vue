@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 import { parseBrlInput } from '../../helpers/currency';
 
 const emit = defineEmits(['confirmValue', 'cancelValue']);
@@ -20,11 +21,7 @@ const skip = () => emit('confirmValue', { value: null });
 const cancel = () => emit('cancelValue');
 
 // Esc cancela (reverte o drag), igual ao clique no backdrop.
-const onDocKeydown = e => {
-  if (e.key === 'Escape') cancel();
-};
-onMounted(() => document.addEventListener('keydown', onDocKeydown));
-onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
+onKeyStroke('Escape', cancel);
 </script>
 
 <template>

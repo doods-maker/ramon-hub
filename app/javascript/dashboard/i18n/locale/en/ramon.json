@@ -6,6 +6,7 @@
       "PREV_WEEK": "Previous week",
       "NEXT_WEEK": "Next week",
       "EMPTY": "No appointments this week.",
+      "EMPTY_MONTH": "No appointments this month.",
       "VIEW_DAY": "Day",
       "VIEW_WEEK": "Week",
       "VIEW_MONTH": "Month",
@@ -417,7 +418,9 @@
         },
         "EMPTY": "No activity recorded yet."
       },
-      "LOADING": "Loading lead…"
+      "LOADING": "Loading lead…",
+      "LOAD_ERROR": "Couldn't load the lead for this conversation.",
+      "RETRY": "Try again"
     },
     "PLAYBOOK": {
       "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",

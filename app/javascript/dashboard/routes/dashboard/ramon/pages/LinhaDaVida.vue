@@ -42,22 +42,37 @@ const query = ref('');
 const results = ref([]);
 const searching = ref(false);
 let searchTimer = null;
+let searchAbort = null;
 watch(query, value => {
   clearTimeout(searchTimer);
   const term = value.trim();
   if (term.length < 2) {
+    searchAbort?.abort();
     results.value = [];
+    searching.value = false;
     return;
   }
   searchTimer = setTimeout(async () => {
+    // Aborta a request anterior: resposta velha não sobrescreve a atual.
+    searchAbort?.abort();
+    const controller = new AbortController();
+    searchAbort = controller;
     searching.value = true;
     try {
-      const { data: resp } = await ContactAPI.search(term, 1, 'name');
+      // encodeURIComponent: telefone com "+" (e termos com &/#) chegam
+      // intactos na query — o endpoint recebe o termo cru interpolado.
+      const { data: resp } = await ContactAPI.search(
+        encodeURIComponent(term),
+        1,
+        'name',
+        '',
+        { signal: controller.signal }
+      );
       results.value = resp.payload || [];
     } catch (e) {
-      results.value = [];
+      if (!controller.signal.aborted) results.value = [];
     } finally {
-      searching.value = false;
+      if (searchAbort === controller) searching.value = false;
     }
   }, 300);
 });

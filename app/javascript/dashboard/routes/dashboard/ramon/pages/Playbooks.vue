@@ -70,9 +70,11 @@ const removeThesis = thesis => {
 };
 const confirmRemoveThesis = async () => {
   const thesis = thesisToRemove.value;
+  if (!thesis) return;
+  // Fecha o modal antes do await: sem janela pra duplo-clique despachar 2x.
+  thesisToRemove.value = null;
   await store.dispatch('theses/delete', thesis.id);
   if (selectedId.value === thesis.id) selectedId.value = null;
-  thesisToRemove.value = null;
 };
 
 const moveThesis = (thesis, direction) => {
