@@ -246,12 +246,14 @@ const exportCsv = () => {
     </div>
     <SavedViews />
     <KanbanFilters :filters="filters" @update="onFilterUpdate" />
-    <div class="flex flex-1 gap-3 px-4 pb-4 overflow-x-auto">
+    <!-- min-h-0 permite a faixa encolher dentro do flex pai; sem isso a coluna
+         cresce além da viewport e os cards abaixo da dobra ficam inacessíveis -->
+    <div class="flex flex-1 min-h-0 gap-3 px-4 pb-4 overflow-x-auto">
       <Draggable
         v-model="orderedStages"
         group="stages"
         item-key="id"
-        class="flex gap-3"
+        class="flex items-start h-full gap-3"
         handle=".stage-drag-handle"
         @change="onColumnsReorder"
       >

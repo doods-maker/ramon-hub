@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -12,7 +12,17 @@ const getters = useStoreGetters();
 const { t } = useI18n();
 
 const name = ref('');
+const nameInput = ref(null);
 const phone = ref('+55 ');
+
+const onDocKeydown = e => {
+  if (e.key === 'Escape') emit('close');
+};
+onMounted(() => {
+  document.addEventListener('keydown', onDocKeydown);
+  nextTick(() => nameInput.value?.focus());
+});
+onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
 const benefitTypeId = ref(null);
 const priorityId = ref(null);
 const source = ref('');
@@ -131,7 +141,9 @@ const submit = async () => {
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     @click.self="emit('close')"
   >
-    <div class="w-96 p-5 rounded-2xl bg-n-solid-1 border border-n-weak">
+    <div
+      class="w-96 max-w-[92vw] max-h-[90vh] overflow-y-auto p-5 rounded-2xl bg-n-solid-1 border border-n-weak"
+    >
       <h2 class="mb-4 text-lg font-cormorant text-n-slate-12">
         {{ $t('RAMON.FUNIL.NEW_LEAD') }}
       </h2>
@@ -140,6 +152,7 @@ const submit = async () => {
         $t('RAMON.FUNIL.LEAD_NAME')
       }}</label>
       <input
+        ref="nameInput"
         v-model="name"
         data-testid="new-lead-name"
         class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
@@ -255,7 +268,8 @@ const submit = async () => {
         </button>
         <button
           data-testid="new-lead-save"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
+          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
+          :disabled="!name.trim()"
           @click="submit"
         >
           {{

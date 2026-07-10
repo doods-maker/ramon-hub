@@ -74,6 +74,18 @@ const viabilityClass = viability => {
 const viabilityLabelKey = viability =>
   `RAMON.TRIAGE.VIABILITY.${(viability || 'unknown').toUpperCase()}`;
 
+// mesma máscara do fmtDateTime do Dossie.vue
+const fmtDateTime = value => {
+  if (!value) return '';
+  return new Date(value).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 const copyResult = async () => {
   try {
     await copyTextToClipboard(latest.value.result);
@@ -102,7 +114,15 @@ const copyResult = async () => {
     </button>
 
     <p
-      v-if="!isLoading && !latest"
+      v-if="isLoading && !latest"
+      class="text-sm text-n-slate-10"
+      data-testid="triage-loading"
+    >
+      {{ $t('RAMON.TRIAGE.LOADING') }}
+    </p>
+
+    <p
+      v-else-if="!latest"
       class="text-sm text-n-slate-10"
       data-testid="triage-empty"
     >
@@ -155,7 +175,7 @@ const copyResult = async () => {
 
       <template v-else-if="latest.result">
         <div
-          class="text-sm text-n-slate-12 [&_strong]:font-semibold [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:ps-4 [&_ol]:ps-4 [&_p]:mb-2 [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_table]:w-full [&_table]:text-xs [&_th]:border [&_th]:border-n-weak [&_th]:px-1.5 [&_th]:py-0.5 [&_th]:text-start [&_td]:border [&_td]:border-n-weak [&_td]:px-1.5 [&_td]:py-0.5"
+          class="overflow-x-auto text-sm text-n-slate-12 [&_strong]:font-semibold [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:ps-4 [&_ol]:ps-4 [&_p]:mb-2 [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_table]:w-full [&_table]:text-xs [&_th]:border [&_th]:border-n-weak [&_th]:px-1.5 [&_th]:py-0.5 [&_th]:text-start [&_td]:border [&_td]:border-n-weak [&_td]:px-1.5 [&_td]:py-0.5"
           data-testid="triage-result"
           v-html="formatMessage(latest.result)"
         />
@@ -177,7 +197,7 @@ const copyResult = async () => {
         data-testid="triage-old-row"
         class="flex items-center justify-between gap-2 text-xs text-n-slate-10"
       >
-        <span>{{ triage.created_at }}</span>
+        <span>{{ fmtDateTime(triage.created_at) }}</span>
         <span
           class="inline-block px-1.5 py-0.5 rounded-full"
           :class="viabilityClass(triage.viability)"

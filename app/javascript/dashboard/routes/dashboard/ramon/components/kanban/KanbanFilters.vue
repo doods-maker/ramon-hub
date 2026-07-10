@@ -20,6 +20,28 @@ const stages = computed(() => getters['leadConfig/getStages']?.value ?? []);
 
 const emitUpdate = partial => emit('update', partial);
 
+// Borda destaca o controle com filtro ativo; transparente mantém o tamanho.
+const ctl =
+  'px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 border text-n-slate-12 outline-none focus:border-n-slate-8';
+const activeClass = value => (value ? 'border-n-iris-8' : 'border-transparent');
+
+const hasActive = computed(() => {
+  const f = props.filters;
+  return !!(
+    f.q ||
+    f.benefitTypeId ||
+    f.leadPriorityId ||
+    f.agentId ||
+    f.source ||
+    f.channel ||
+    f.leadStageId ||
+    f.createdAfter ||
+    f.createdBefore ||
+    f.stalled ||
+    f.noOpenTask
+  );
+});
+
 // Busca com debounce ~300ms para não disparar um request por tecla.
 const search = ref(props.filters.q);
 let timer = null;
@@ -59,12 +81,13 @@ const clearFilters = () => {
     <input
       v-model="search"
       data-testid="filter-search"
-      class="px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      class="px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border text-n-slate-12 outline-none focus:border-n-slate-8"
+      :class="activeClass(filters.q)"
       :placeholder="$t('RAMON.FUNIL.FILTERS.SEARCH')"
     />
     <select
       data-testid="filter-benefit"
-      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :class="[ctl, activeClass(filters.benefitTypeId)]"
       :value="filters.benefitTypeId || ''"
       @change="emitUpdate({ benefitTypeId: $event.target.value || null })"
     >
@@ -75,7 +98,7 @@ const clearFilters = () => {
     </select>
     <select
       data-testid="filter-priority"
-      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :class="[ctl, activeClass(filters.leadPriorityId)]"
       :value="filters.leadPriorityId || ''"
       @change="emitUpdate({ leadPriorityId: $event.target.value || null })"
     >
@@ -86,7 +109,7 @@ const clearFilters = () => {
     </select>
     <select
       data-testid="filter-agent"
-      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :class="[ctl, activeClass(filters.agentId)]"
       :value="filters.agentId || ''"
       @change="emitUpdate({ agentId: $event.target.value || null })"
     >
@@ -97,7 +120,7 @@ const clearFilters = () => {
     </select>
     <select
       data-testid="filter-source"
-      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :class="[ctl, activeClass(filters.source)]"
       :value="filters.source || ''"
       @change="emitUpdate({ source: $event.target.value || '' })"
     >
@@ -106,7 +129,7 @@ const clearFilters = () => {
     </select>
     <select
       data-testid="filter-channel"
-      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :class="[ctl, activeClass(filters.channel)]"
       :value="filters.channel || ''"
       @change="emitUpdate({ channel: $event.target.value || '' })"
     >
@@ -117,7 +140,7 @@ const clearFilters = () => {
     </select>
     <select
       data-testid="filter-stage"
-      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+      :class="[ctl, activeClass(filters.leadStageId)]"
       :value="filters.leadStageId || ''"
       @change="emitUpdate({ leadStageId: $event.target.value || null })"
     >
@@ -126,26 +149,39 @@ const clearFilters = () => {
         {{ st.name }}
       </option>
     </select>
-    <input
-      type="date"
-      data-testid="filter-created-after"
-      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-      :value="filters.createdAfter || ''"
-      :aria-label="$t('RAMON.FUNIL.FILTERS.CREATED_AFTER')"
-      :title="$t('RAMON.FUNIL.FILTERS.CREATED_AFTER')"
-      @change="emitUpdate({ createdAfter: $event.target.value || null })"
-    />
-    <input
-      type="date"
-      data-testid="filter-created-before"
-      class="px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-      :value="filters.createdBefore || ''"
-      :aria-label="$t('RAMON.FUNIL.FILTERS.CREATED_BEFORE')"
-      :title="$t('RAMON.FUNIL.FILTERS.CREATED_BEFORE')"
-      @change="emitUpdate({ createdBefore: $event.target.value || null })"
-    />
     <label
-      class="flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-lg cursor-pointer text-n-slate-11 hover:text-n-slate-12"
+      class="flex items-center gap-1.5 text-xs text-n-slate-10"
+      :class="{ 'text-n-iris-11': filters.createdAfter }"
+    >
+      {{ $t('RAMON.FUNIL.FILTERS.CREATED_AFTER') }}
+      <input
+        type="date"
+        data-testid="filter-created-after"
+        :class="[ctl, activeClass(filters.createdAfter)]"
+        :value="filters.createdAfter || ''"
+        @change="emitUpdate({ createdAfter: $event.target.value || null })"
+      />
+    </label>
+    <label
+      class="flex items-center gap-1.5 text-xs text-n-slate-10"
+      :class="{ 'text-n-iris-11': filters.createdBefore }"
+    >
+      {{ $t('RAMON.FUNIL.FILTERS.CREATED_BEFORE') }}
+      <input
+        type="date"
+        data-testid="filter-created-before"
+        :class="[ctl, activeClass(filters.createdBefore)]"
+        :value="filters.createdBefore || ''"
+        @change="emitUpdate({ createdBefore: $event.target.value || null })"
+      />
+    </label>
+    <label
+      class="flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-lg cursor-pointer"
+      :class="
+        filters.stalled
+          ? 'text-n-iris-11'
+          : 'text-n-slate-11 hover:text-n-slate-12'
+      "
     >
       <input
         type="checkbox"
@@ -156,7 +192,12 @@ const clearFilters = () => {
       {{ $t('RAMON.FUNIL.FILTERS.STALLED') }}
     </label>
     <label
-      class="flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-lg cursor-pointer text-n-slate-11 hover:text-n-slate-12"
+      class="flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-lg cursor-pointer"
+      :class="
+        filters.noOpenTask
+          ? 'text-n-iris-11'
+          : 'text-n-slate-11 hover:text-n-slate-12'
+      "
     >
       <input
         type="checkbox"
@@ -167,10 +208,12 @@ const clearFilters = () => {
       {{ $t('RAMON.FUNIL.FILTERS.NO_OPEN_TASK') }}
     </label>
     <button
+      v-if="hasActive"
       data-testid="filter-clear"
-      class="px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12"
+      class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2"
       @click="clearFilters"
     >
+      <span class="i-lucide-x size-3.5" />
       {{ $t('RAMON.FUNIL.FILTERS.CLEAR') }}
     </button>
   </div>

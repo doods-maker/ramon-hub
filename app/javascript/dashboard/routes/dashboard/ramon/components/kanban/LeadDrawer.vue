@@ -26,7 +26,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
       @click="close"
     />
     <aside
-      class="relative z-10 w-96 h-full overflow-y-auto bg-n-solid-1 border-l border-n-weak p-5"
+      class="relative z-10 w-96 max-w-full h-full overflow-y-auto bg-n-solid-1 border-l border-n-weak p-5"
     >
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-cormorant text-n-slate-12">{{ lead.name }}</h2>

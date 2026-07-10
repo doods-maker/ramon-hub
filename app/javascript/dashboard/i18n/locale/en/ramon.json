@@ -179,7 +179,8 @@
         "REMOVE_TITLE": "Remove \"{name}\" and move leads to:",
         "REMOVE_PICK": "Choose the destination stage",
         "REMOVE_CONFIRM": "Remove",
-        "CANCEL": "Cancel"
+        "CANCEL": "Cancel",
+        "MENU": "Stage options"
       },
       "FILTERS": {
         "SEARCH": "Search name or contact…",
@@ -200,7 +201,8 @@
         "SAVE_PROMPT": "Name for this view",
         "REMOVE": "Remove view",
         "REMOVE_CONFIRM": "Remove this saved view?"
-      }
+      },
+      "DOCK_CLOSE": "Close conversation"
     },
     "KANBAN": {
       "CARD": {
@@ -243,7 +245,8 @@
       "IN_DAYS": "in {n}d",
       "SCHEDULE_NEXT": "Schedule next?",
       "DATE_HINT": "Empty = tomorrow 9am",
-      "CREATE_ERROR": "Could not create the task — try again"
+      "CREATE_ERROR": "Could not create the task — try again",
+      "COMPLETE": "Complete task"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",
@@ -254,7 +257,10 @@
       "PRIORITY_PLACEHOLDER": "New priority",
       "CADENCE": "Stage cadence",
       "CADENCE_HINT": "Days without progress until the lead is flagged as stalled (empty = no limit; twice that turns red)",
-      "CADENCE_DAYS": "days"
+      "CADENCE_DAYS": "days",
+      "REMOVE": "Remove",
+      "WEIGHT": "Weight",
+      "WEIGHT_OF": "weight {weight}"
     },
     "IMPORT": {
       "TITLE": "Import leads (CSV)",
@@ -390,8 +396,10 @@
           "ESTEIRA_DONE": "resolved in the Esteira",
           "THESIS_CHANGED": "changed the thesis",
           "LP_RECAPTURED": "received a new landing page form"
-        }
-      }
+        },
+        "EMPTY": "No activity recorded yet."
+      },
+      "LOADING": "Loading lead…"
     },
     "PLAYBOOK": {
       "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",
@@ -420,7 +428,8 @@
         "GREETING": "Hi {name}, how are you? To move your case forward, I still need these documents:",
         "ITEM": "• {item}",
         "CLOSING": "Once you can send them over, we'll proceed with your request. Thank you!"
-      }
+      },
+      "CYCLE_HINT": "Click to cycle: pending → requested → received"
     },
     "PLAYBOOKS": {
       "TITLE": "Playbooks",
@@ -451,7 +460,9 @@
         "QUALIFICACAO": "Qualification",
         "OBJECAO": "Objections",
         "DOCUMENTO": "Documents"
-      }
+      },
+      "DELETE": "Delete thesis",
+      "ITEM_DELETE": "Delete item"
     },
     "COPILOT": {
       "SUMMARIZE": "Summarize conversation",
@@ -479,7 +490,8 @@
       },
       "AWAITING_HUMAN": "Awaiting human",
       "AWAITING_HUMAN_HINT": "The AI did not classify with confidence — review the conversation and set the viability yourself.",
-      "STARTED": "Triage started — the result appears here shortly"
+      "STARTED": "Triage started — the result appears here shortly",
+      "LOADING": "Loading triages…"
     },
     "KIT": {
       "TAB": "Kit",
@@ -493,14 +505,18 @@
       "CLOSED": "Lead closed — no kit for this stage.",
       "COPY_BLOCK": "Copy",
       "MODE_LABEL": "Mode",
-      "MODE": { "SDR": "Qualifying (SDR)", "CLOSER": "Closing (Closer)" },
+      "MODE": {
+        "SDR": "Qualifying (SDR)",
+        "CLOSER": "Closing (Closer)"
+      },
       "BLOCKS": {
         "RESUMO": "Plain-language summary",
         "ROTEIRO": "Question script",
         "DOCUMENTOS": "Documents to request",
         "VENDA_OBJECOES": "Pitch and objections",
         "PROXIMO_PASSO": "Next step"
-      }
+      },
+      "LOADING": "Loading kit…"
     },
     "SIMULADOR": {
       "TAB": "Simulator",
@@ -578,7 +594,9 @@
         "DEEPSEEK": "DeepSeek",
         "ANTHROPIC": "Anthropic",
         "OPENAI": "OpenAI"
-      }
+      },
+      "DELETE": "Delete agent",
+      "FIELD_DESCRIPTION": "Description"
     }
   }
 }

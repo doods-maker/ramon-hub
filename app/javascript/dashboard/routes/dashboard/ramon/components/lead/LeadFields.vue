@@ -283,7 +283,7 @@ const toggleConsent = () =>
     <input
       v-model="name"
       data-testid="field-name"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @blur="saveName"
     />
 
@@ -294,7 +294,7 @@ const toggleConsent = () =>
       data-testid="field-stage"
       :value="stageId"
       :class="lostPrompt || wonPrompt ? 'mb-1' : 'mb-3'"
-      class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="e => onStageChange(Number(e.target.value))"
     >
       <option v-for="s in stages" :key="s.id" :value="s.id">
@@ -310,7 +310,7 @@ const toggleConsent = () =>
       <select
         v-model="lostReasonName"
         data-testid="stage-lost-reason"
-        class="w-full px-2 py-1.5 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+        class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       >
         <option value="" disabled>{{ $t('RAMON.FUNIL.LOST.PICK') }}</option>
         <option v-for="r in lostReasons" :key="r.id" :value="r.name">
@@ -349,7 +349,7 @@ const toggleConsent = () =>
         data-testid="stage-won-value"
         type="text"
         inputmode="decimal"
-        class="w-full px-2 py-1.5 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+        class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
         @keyup.enter="confirmWonStage"
       />
       <div class="flex justify-end gap-2">
@@ -375,7 +375,7 @@ const toggleConsent = () =>
     }}</label>
     <select
       :value="lead.benefit_type_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="
         e =>
           saveSelect(
@@ -395,7 +395,7 @@ const toggleConsent = () =>
     }}</label>
     <select
       :value="lead.lead_priority_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="
         e =>
           saveSelect(
@@ -416,7 +416,7 @@ const toggleConsent = () =>
     <select
       data-testid="field-thesis"
       :value="lead.thesis_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="
         e =>
           saveSelect(
@@ -443,7 +443,7 @@ const toggleConsent = () =>
     }}</label>
     <select
       :value="lead.sdr_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="
         e =>
           saveSelect('sdr_id', e.target.value ? Number(e.target.value) : null)
@@ -460,7 +460,7 @@ const toggleConsent = () =>
     }}</label>
     <select
       :value="lead.closer_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="
         e =>
           saveSelect(
@@ -483,7 +483,7 @@ const toggleConsent = () =>
       data-testid="field-value"
       type="text"
       inputmode="decimal"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @blur="saveValue"
     />
 
@@ -492,7 +492,7 @@ const toggleConsent = () =>
     }}</label>
     <input
       v-model="source"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @blur="saveSource"
     />
 
@@ -502,7 +502,7 @@ const toggleConsent = () =>
     <select
       data-testid="field-channel"
       :value="lead.channel"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="e => saveSelect('channel', e.target.value)"
     >
       <option value="">—</option>
@@ -518,7 +518,7 @@ const toggleConsent = () =>
       v-model="dcbEm"
       data-testid="field-dcb-em"
       type="date"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="saveDcbEm"
     />
 
@@ -530,7 +530,7 @@ const toggleConsent = () =>
       data-testid="field-benefit-monthly-value"
       type="text"
       inputmode="decimal"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @blur="saveBenefitMonthlyValue"
     />
 
@@ -541,7 +541,7 @@ const toggleConsent = () =>
       <select
         data-testid="field-lost-reason"
         :value="lead.lost_reason"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
         @change="e => saveSelect('lost_reason', e.target.value)"
       >
         <option value="">—</option>
@@ -561,7 +561,7 @@ const toggleConsent = () =>
 
     <DocChecklist v-if="lead.thesis_id" :lead="lead" />
 
-    <div class="flex flex-col gap-2 mb-4">
+    <div class="flex flex-col gap-2 mb-4 pt-3 border-t border-n-weak">
       <span class="text-xs uppercase text-n-slate-10">{{
         $t('RAMON.DRAWER.NOTES')
       }}</span>
@@ -579,7 +579,7 @@ const toggleConsent = () =>
       <select
         v-model="noteTemplate"
         data-testid="note-template-select"
-        class="w-full px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11 border border-n-weak"
+        class="w-full px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11 border border-n-weak outline-none focus:border-n-slate-8"
         @change="applyNoteTemplate"
       >
         <option value="">
@@ -594,7 +594,7 @@ const toggleConsent = () =>
         data-testid="note-input"
         rows="2"
         maxlength="1000"
-        class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
         :placeholder="$t('RAMON.DRAWER.NOTES_ADD')"
       />
       <button
@@ -608,7 +608,7 @@ const toggleConsent = () =>
 
     <!-- Só leitura: contato -->
     <div class="pt-4 mt-2 border-t border-n-weak">
-      <p class="mb-2 text-[9px] tracking-widest uppercase text-n-slate-9">
+      <p class="mb-2 text-xs tracking-widest uppercase text-n-slate-9">
         {{ $t('RAMON.DRAWER.CONTACT') }}
       </p>
       <p v-if="lead.contact_name" class="text-sm text-n-slate-12">
@@ -653,7 +653,7 @@ const toggleConsent = () =>
           type="text"
           inputmode="numeric"
           :placeholder="$t('RAMON.DRAWER.PESSOA.CPF_PLACEHOLDER')"
-          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
           @blur="saveContactCpf"
         />
 
@@ -664,7 +664,7 @@ const toggleConsent = () =>
           v-model="contactNascimento"
           data-testid="field-contact-nascimento"
           type="date"
-          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
           @change="saveContactNascimento"
         />
 
@@ -674,7 +674,7 @@ const toggleConsent = () =>
         <select
           v-model="contactSexo"
           data-testid="field-contact-sexo"
-          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
           @change="saveContactSexo"
         >
           <option value="">—</option>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { vOnClickOutside } from '@vueuse/components';
 
@@ -11,15 +11,54 @@ const bellRef = ref(null);
 const title = ref('');
 const customDate = ref('');
 
+// O menu é teleportado pro body com position:fixed — a lista de cards da
+// coluna tem overflow-y-auto e cortaria um dropdown absolute dentro do card.
+const MENU_WIDTH = 224; // w-56
+const MENU_HEIGHT = 300; // estimativa p/ decidir abrir pra cima
+const pos = ref({ top: 0, left: 0 });
+
 const close = () => {
   open.value = false;
   title.value = '';
   customDate.value = '';
 };
-const toggle = () => {
-  if (open.value) close();
-  else open.value = true;
+
+const onDocKeydown = e => {
+  if (e.key === 'Escape') close();
 };
+// Qualquer scroll (coluna, board, página) desalinha o menu fixo → fecha.
+const onAnyScroll = () => close();
+
+const bindGlobal = () => {
+  document.addEventListener('keydown', onDocKeydown);
+  document.addEventListener('scroll', onAnyScroll, true);
+};
+const unbindGlobal = () => {
+  document.removeEventListener('keydown', onDocKeydown);
+  document.removeEventListener('scroll', onAnyScroll, true);
+};
+
+const toggle = () => {
+  if (open.value) {
+    close();
+    return;
+  }
+  const rect = bellRef.value.getBoundingClientRect();
+  let top = rect.bottom + 4;
+  if (top + MENU_HEIGHT > window.innerHeight) {
+    top = Math.max(8, rect.top - 4 - MENU_HEIGHT);
+  }
+  const left = Math.max(8, rect.right - MENU_WIDTH);
+  pos.value = { top, left };
+  open.value = true;
+};
+
+// listeners globais acompanham o estado aberto/fechado
+watch(open, isOpen => {
+  if (isOpen) bindGlobal();
+  else unbindGlobal();
+});
+onBeforeUnmount(unbindGlobal);
 
 // título opcional; sem texto → default i18n "Follow-up"
 const resolvedTitle = () =>
@@ -55,57 +94,61 @@ const confirmCustom = () => {
     >
       <span class="i-lucide-bell-plus size-4" />
     </button>
-    <div
-      v-if="open"
-      v-on-click-outside="[close, { ignore: [bellRef] }]"
-      data-testid="task-bell-menu"
-      class="absolute right-0 z-20 mt-1 w-56 p-2 rounded-lg shadow-lg bg-n-solid-2 border border-n-weak"
-    >
-      <input
-        v-model="title"
-        data-testid="task-bell-title"
-        :placeholder="t('RAMON.KANBAN.BELL.TITLE_PLACEHOLDER')"
-        class="w-full px-2 py-1 mb-2 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+    <Teleport to="body">
+      <div
+        v-if="open"
+        v-on-click-outside="[close, { ignore: [bellRef] }]"
+        data-testid="task-bell-menu"
+        class="fixed z-50 w-56 p-2 rounded-lg shadow-lg bg-n-solid-2 border border-n-weak"
+        :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"
         @click.stop
-      />
-      <button
-        data-testid="task-bell-tomorrow"
-        class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
-        @click.stop="inDaysAt9(1)"
       >
-        {{ t('RAMON.KANBAN.BELL.TOMORROW') }}
-      </button>
-      <button
-        data-testid="task-bell-3-days"
-        class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
-        @click.stop="inDaysAt9(3)"
-      >
-        {{ t('RAMON.KANBAN.BELL.IN_3_DAYS') }}
-      </button>
-      <button
-        data-testid="task-bell-1-week"
-        class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
-        @click.stop="inDaysAt9(7)"
-      >
-        {{ t('RAMON.KANBAN.BELL.IN_1_WEEK') }}
-      </button>
-      <div class="flex flex-col gap-1 pt-2 mt-1 border-t border-n-weak">
         <input
-          v-model="customDate"
-          data-testid="task-bell-date"
-          type="datetime-local"
-          class="w-full px-2 py-1 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+          v-model="title"
+          data-testid="task-bell-title"
+          :placeholder="t('RAMON.KANBAN.BELL.TITLE_PLACEHOLDER')"
+          class="w-full px-2 py-1 mb-2 text-sm rounded bg-n-alpha-2 text-n-slate-12"
           @click.stop
         />
         <button
-          data-testid="task-bell-confirm"
-          class="w-full px-2 py-1 text-sm rounded bg-n-iris-9 text-white disabled:opacity-50"
-          :disabled="!customDate"
-          @click.stop="confirmCustom"
+          data-testid="task-bell-tomorrow"
+          class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
+          @click.stop="inDaysAt9(1)"
         >
-          {{ t('RAMON.KANBAN.BELL.CONFIRM') }}
+          {{ t('RAMON.KANBAN.BELL.TOMORROW') }}
         </button>
+        <button
+          data-testid="task-bell-3-days"
+          class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
+          @click.stop="inDaysAt9(3)"
+        >
+          {{ t('RAMON.KANBAN.BELL.IN_3_DAYS') }}
+        </button>
+        <button
+          data-testid="task-bell-1-week"
+          class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
+          @click.stop="inDaysAt9(7)"
+        >
+          {{ t('RAMON.KANBAN.BELL.IN_1_WEEK') }}
+        </button>
+        <div class="flex flex-col gap-1 pt-2 mt-1 border-t border-n-weak">
+          <input
+            v-model="customDate"
+            data-testid="task-bell-date"
+            type="datetime-local"
+            class="w-full px-2 py-1 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+            @click.stop
+          />
+          <button
+            data-testid="task-bell-confirm"
+            class="w-full px-2 py-1 text-sm rounded bg-n-iris-9 text-white disabled:opacity-50"
+            :disabled="!customDate"
+            @click.stop="confirmCustom"
+          >
+            {{ t('RAMON.KANBAN.BELL.CONFIRM') }}
+          </button>
+        </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>

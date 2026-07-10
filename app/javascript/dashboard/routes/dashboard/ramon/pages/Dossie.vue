@@ -216,8 +216,8 @@ const copyDossie = async () => {
           </p>
           <p class="mt-1 text-sm text-n-slate-11">
             <span
-              class="px-2 py-0.5 text-xs rounded-full"
-              :style="{ backgroundColor: pessoa.stage_color || 'transparent' }"
+              class="px-2 py-0.5 text-xs rounded-full text-white"
+              :style="{ backgroundColor: pessoa.stage_color || '#71717a' }"
             >
               {{ pessoa.stage_name }}
             </span>

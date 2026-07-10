@@ -112,7 +112,7 @@ const toggleCollapsed = () => {
   </button>
   <div
     v-else
-    class="flex flex-col w-72 flex-shrink-0 rounded-xl ramon-column border border-n-weak"
+    class="flex flex-col w-72 max-h-full flex-shrink-0 rounded-xl ramon-column border border-n-weak"
   >
     <div class="flex items-center justify-between px-3 py-2">
       <span
@@ -180,7 +180,7 @@ const toggleCollapsed = () => {
       v-model="localLeads"
       group="leads"
       item-key="id"
-      class="flex-1 px-2 pb-2 min-h-[120px]"
+      class="flex-1 px-2 pb-2 min-h-[120px] overflow-y-auto"
       @change="onChange"
     >
       <template #item="{ element }">

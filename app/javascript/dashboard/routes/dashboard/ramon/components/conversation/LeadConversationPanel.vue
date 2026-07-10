@@ -72,7 +72,7 @@ const discard = async () => {
 
 <template>
   <div class="flex flex-col h-full" data-testid="lead-conversation-panel">
-    <div class="flex items-center gap-2 border-b px-3 py-2">
+    <div class="flex items-center gap-2 border-b border-n-weak px-3 py-2">
       <span class="text-sm font-semibold text-n-slate-12">
         {{ $t('RAMON.LEAD_PANEL.TITLE') }}
       </span>
@@ -150,6 +150,9 @@ const discard = async () => {
       >
         <LeadSimulador :lead="lead" />
       </AccordionItem>
+    </div>
+    <div v-else class="flex-1 p-3 text-sm text-n-slate-10">
+      {{ $t('RAMON.LEAD_PANEL.LOADING') }}
     </div>
   </div>
 </template>

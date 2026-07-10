@@ -137,7 +137,15 @@ const blockLabelKey = block => `RAMON.KIT.BLOCKS.${block.toUpperCase()}`;
 
     <template v-else>
       <p
-        v-if="!isLoading && !doneTriage"
+        v-if="isLoading && !doneTriage"
+        class="text-sm text-n-slate-10"
+        data-testid="kit-loading"
+      >
+        {{ $t('RAMON.KIT.LOADING') }}
+      </p>
+
+      <p
+        v-else-if="!doneTriage"
         class="text-sm text-n-slate-10"
         data-testid="kit-empty"
       >

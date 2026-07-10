@@ -39,7 +39,7 @@ const close = () => store.dispatch('leads/closeDock');
   <div
     v-if="isOpen"
     data-testid="conversation-dock"
-    class="fixed z-50 inset-0 flex flex-col overflow-hidden bg-n-solid-1 border-n-weak shadow-lg md:inset-auto md:bottom-4 md:h-[560px] md:w-[440px] md:rounded-lg md:border"
+    class="fixed z-50 inset-0 flex flex-col overflow-hidden bg-n-solid-1 border-n-weak shadow-lg md:inset-auto md:bottom-4 md:h-[560px] md:max-h-[calc(100vh-2rem)] md:w-[440px] md:rounded-lg md:border"
     :class="drawerOpen ? 'md:right-[25rem]' : 'md:right-4'"
   >
     <header class="flex items-center gap-2 px-3 py-2 border-b border-n-weak">
@@ -48,6 +48,7 @@ const close = () => store.dispatch('leads/closeDock');
       }}</span>
       <button
         data-testid="dock-close"
+        :title="$t('RAMON.FUNIL.DOCK_CLOSE')"
         class="text-n-slate-10 hover:text-n-slate-12"
         @click="close"
       >

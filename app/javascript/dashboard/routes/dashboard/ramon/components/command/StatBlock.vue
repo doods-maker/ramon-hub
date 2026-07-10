@@ -19,7 +19,9 @@ defineProps({
     <p class="mt-1 text-xs tracking-wide uppercase text-n-slate-11">
       {{ label }}
     </p>
-    <div class="mt-2 -mx-1 overflow-y-auto grow">
+    <!-- max-h dá teto ao slot: sem ele o grow nunca ativa o scroll e listas
+         longas estouram o layout da página -->
+    <div class="mt-2 -mx-1 max-h-48 overflow-y-auto grow">
       <slot />
     </div>
   </div>

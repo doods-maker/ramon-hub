@@ -117,7 +117,7 @@ const chargePending = async () => {
 <template>
   <div
     v-if="lead?.thesis_id && docItems.length"
-    class="flex flex-col gap-2 mb-4"
+    class="flex flex-col gap-2 mb-4 pt-3 border-t border-n-weak"
     data-testid="doc-checklist"
   >
     <div class="flex items-center justify-between">
@@ -139,6 +139,7 @@ const chargePending = async () => {
       data-testid="doc-chip"
       class="flex items-center justify-between gap-2 px-3 py-2 text-sm text-left rounded-lg border transition-colors"
       :class="chipClass(item)"
+      :title="$t('RAMON.DOCS.CYCLE_HINT')"
       @click="cycle(item)"
     >
       <span class="truncate">{{ itemLabel(item) }}</span>

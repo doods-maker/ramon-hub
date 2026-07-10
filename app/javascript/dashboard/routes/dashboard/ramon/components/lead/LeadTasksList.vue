@@ -95,7 +95,7 @@ const addTask = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 mb-4">
+  <div class="flex flex-col gap-2 mb-4 pt-3 border-t border-n-weak">
     <span class="text-xs uppercase text-n-slate-10">{{
       $t('RAMON.TASKS.TITLE')
     }}</span>
@@ -119,6 +119,7 @@ const addTask = async () => {
           type="checkbox"
           data-testid="task-complete"
           class="shrink-0"
+          :title="$t('RAMON.TASKS.COMPLETE')"
           @change="complete(task)"
         />
         <span class="flex-1 text-sm text-n-slate-12">{{ task.title }}</span>
@@ -158,16 +159,16 @@ const addTask = async () => {
         v-model="newTitle"
         data-testid="task-new-title"
         :placeholder="$t('RAMON.TASKS.ADD_TITLE_PLACEHOLDER')"
-        class="w-full px-2 py-1.5 text-sm rounded bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       />
       <input
         v-model="newDate"
         data-testid="task-new-date"
         type="datetime-local"
         :title="$t('RAMON.TASKS.DATE_HINT')"
-        class="w-full px-2 py-1.5 text-sm rounded bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       />
-      <div class="flex gap-2">
+      <div class="flex justify-end gap-2">
         <button
           data-testid="task-new-cancel"
           class="px-3 py-1 text-xs text-n-slate-11"
