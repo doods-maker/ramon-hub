@@ -151,9 +151,13 @@ class Ramon::DossieService
     return [] if @thesis.blank?
 
     status_map = @lead.custom_attributes&.dig('doc_status') || {}
-    thesis_items_by_section('documento').filter_map do |item|
-      status = status_map[item.id.to_s].presence || 'pendente'
-      { title: item.title.presence || item.content, status: status } unless status == 'recebido'
-    end
+    thesis_items_by_section('documento').filter_map { |item| missing_doc(item, status_map) }
+  end
+
+  def missing_doc(item, status_map)
+    status = status_map[item.id.to_s].presence || 'pendente'
+    return if status == 'recebido'
+
+    { title: item.title.presence || item.content, status: status }
   end
 end
