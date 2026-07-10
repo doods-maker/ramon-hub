@@ -533,7 +533,21 @@
       "CNIS_HINT": "With the CNIS, the simulation uses the real salary history.",
       "CNIS_LOADING": "Reading CNIS…",
       "CNIS_LOADED": "{competencias} contribution months · {vinculos} employment records — simulation with real history",
-      "CNIS_REMOVE": "Remove"
+      "CNIS_REMOVE": "Remove",
+      "VINCULOS_TOGGLE": "Adjust employment records (exclusion / benefit amount)",
+      "VINCULO_EXCLUIR": "Out of the average base (lawyer's choice)",
+      "VINCULO_MENSALIDADE": "Actual benefit monthly amount (R$)",
+      "VINCULOS_REAPLICAR": "Reapply with adjustments",
+      "VINCULOS_REUPLOAD_HINT": "The PDF is not kept on the server — select the file again to reapply.",
+      "DUAS_MEDIAS": "RMI at 100% of the period: {rmi} · with the Discard Rule: {descartes}",
+      "MEMORIA_SHOW": "View calculation report",
+      "MEMORIA_HIDE": "Hide calculation report",
+      "MEMORIA_LOADING": "Calculating…",
+      "MEMORIA_COMPETENCIA": "Month",
+      "MEMORIA_SALARIO": "Salary",
+      "MEMORIA_INDICE": "Index",
+      "MEMORIA_CORRIGIDO": "Adjusted",
+      "MEMORIA_RESUMO": "Sum {soma} · divisor {divisor} · average {media}"
     },
     "TRIAGE_AGENTS": {
       "TITLE": "AI Agents",

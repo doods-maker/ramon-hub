@@ -49,11 +49,17 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/simulacao`, payload);
   }
 
-  uploadCnis(leadId, file, sexo) {
+  uploadCnis(leadId, file, sexo, { excluirSeqs = '', mensalidades = '' } = {}) {
     const data = new FormData();
     data.append('arquivo', file);
     data.append('sexo', sexo);
+    if (excluirSeqs) data.append('excluir_seqs', excluirSeqs);
+    if (mensalidades) data.append('mensalidades', mensalidades);
     return axios.post(`${this.url}/${leadId}/cnis`, data);
+  }
+
+  getCnis(leadId) {
+    return axios.get(`${this.url}/${leadId}/cnis`);
   }
 
   deleteCnis(leadId) {

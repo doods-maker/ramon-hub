@@ -22,7 +22,7 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
   end
 
   def permitted
-    params.permit(:nascimento, :sexo, :der, :salario, :beneficio, :origem, :acrescimo_25, :usar_cnis)
+    params.permit(:nascimento, :sexo, :der, :salario, :beneficio, :origem, :acrescimo_25, :usar_cnis, :memoria_calculo)
   end
 
   def usar_cnis?
@@ -44,7 +44,9 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
       competencias: usar_cnis? ? @lead.cnis.dig('entrada', 'competencias') : competencias,
       beneficio: permitted[:beneficio],
       origem: permitted[:origem].presence || 'previdenciaria',
-      acrescimo_25: ActiveModel::Type::Boolean.new.cast(permitted[:acrescimo_25]) || false
+      acrescimo_25: ActiveModel::Type::Boolean.new.cast(permitted[:acrescimo_25]) || false,
+      # relatório competência-a-competência do motor (opt-in — payload grande)
+      memoria_calculo: ActiveModel::Type::Boolean.new.cast(permitted[:memoria_calculo]) || false
     }
   end
 
