@@ -150,24 +150,30 @@ class Ramon::AdvboxEventProcessor
 
   def first_value_for(key_pattern, obj = @event.payload)
     case obj
-    when Hash
-      obj.each do |key, value|
-        return value.to_s if key.to_s.match?(key_pattern) && value.present? && !value.is_a?(Enumerable)
-
-        found = first_value_for(key_pattern, value)
-        return found if found
-      end
-      nil
-    when Array
-      obj.lazy.filter_map { |item| first_value_for(key_pattern, item) }.first
+    when Hash then hash_value_for(key_pattern, obj)
+    when Array then obj.lazy.filter_map { |item| first_value_for(key_pattern, item) }.first
     end
   end
 
-  def each_string(obj, &block)
+  def hash_value_for(key_pattern, hash)
+    hash.each do |key, value|
+      return value.to_s if identity_leaf?(key_pattern, key, value)
+
+      found = first_value_for(key_pattern, value)
+      return found if found
+    end
+    nil
+  end
+
+  def identity_leaf?(key_pattern, key, value)
+    key.to_s.match?(key_pattern) && value.present? && !value.is_a?(Enumerable)
+  end
+
+  def each_string(obj, &)
     case obj
     when String then yield(obj)
-    when Hash then obj.each_value { |value| each_string(value, &block) }
-    when Array then obj.each { |item| each_string(item, &block) }
+    when Hash then obj.each_value { |value| each_string(value, &) }
+    when Array then obj.each { |item| each_string(item, &) }
     end
   end
 

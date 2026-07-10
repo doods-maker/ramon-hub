@@ -65,7 +65,8 @@ RSpec.describe Ramon::AdvboxEventProcessor do
 
     expect(event.status).to eq 'processed'
     expect(lead.lead_activities.where(kind: 'advbox_exito')).to be_present
-    expect(lead.lead_notes.first.body).to include 'êxito'
+    # o handoff note do won_at também cria uma nota — buscar o rascunho pelo prefixo
+    expect(lead.lead_notes.find_by("body LIKE 'RASCUNHO%'").body).to include 'êxito'
   end
 
   it 'ARQUIVADO encerra os follow-ups abertos do lead' do
