@@ -1,14 +1,16 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import LinhaDaVidaAPI from 'dashboard/api/linhaDaVida';
+import ContactAPI from 'dashboard/api/contacts';
 import { formatCpf } from '../helpers/cpf';
 import { formatBrl } from '../helpers/currency';
 import { frontendURL } from '../../../../helper/URLHelper';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 const route = useRoute();
+const router = useRouter();
 const { t } = useI18n();
 
 const data = ref(null);
@@ -16,6 +18,11 @@ const loading = ref(false);
 const error = ref(false);
 
 const fetchData = async () => {
+  // Sem contactId a página está no modo busca (entrada pelo menu).
+  if (!route.params.contactId) {
+    data.value = null;
+    return;
+  }
   loading.value = true;
   error.value = false;
   try {
@@ -29,6 +36,37 @@ const fetchData = async () => {
 };
 
 watch(() => route.params.contactId, fetchData, { immediate: true });
+
+// ---- modo busca (rota sem contactId): achar a pessoa pela busca de contatos
+const query = ref('');
+const results = ref([]);
+const searching = ref(false);
+let searchTimer = null;
+watch(query, value => {
+  clearTimeout(searchTimer);
+  const term = value.trim();
+  if (term.length < 2) {
+    results.value = [];
+    return;
+  }
+  searchTimer = setTimeout(async () => {
+    searching.value = true;
+    try {
+      const { data: resp } = await ContactAPI.search(term, 1, 'name');
+      results.value = resp.payload || [];
+    } catch (e) {
+      results.value = [];
+    } finally {
+      searching.value = false;
+    }
+  }, 300);
+});
+
+const openPessoa = contact =>
+  router.push({
+    name: 'ramon_linha_da_vida',
+    params: { contactId: contact.id },
+  });
 
 const contact = computed(() => data.value?.contact ?? null);
 const leads = computed(() => data.value?.leads ?? []);
@@ -98,9 +136,53 @@ const conversationUrl = lead =>
 </script>
 
 <template>
-  <div class="flex-1 h-full p-6 overflow-y-auto">
+  <div class="flex-1 w-full h-full p-6 overflow-y-auto bg-n-background">
+    <!-- Modo busca: rota sem contactId (entrada "Linha da Vida" do menu) -->
+    <template v-if="!route.params.contactId">
+      <RamonPageHeader
+        compact
+        :title="$t('RAMON.LINHA_DA_VIDA.TITLE')"
+        :subtitle="$t('RAMON.LINHA_DA_VIDA.SEARCH_HINT')"
+      />
+      <div class="max-w-xl">
+        <input
+          v-model="query"
+          data-testid="pessoa-search"
+          class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+          :placeholder="$t('RAMON.LINHA_DA_VIDA.SEARCH_PLACEHOLDER')"
+        />
+        <p v-if="searching" class="mt-3 text-sm text-n-slate-10">
+          {{ $t('RAMON.LINHA_DA_VIDA.SEARCHING') }}
+        </p>
+        <ul
+          v-else-if="results.length"
+          class="mt-3 rounded-lg border border-n-weak divide-y divide-n-weak"
+        >
+          <li v-for="c in results" :key="c.id">
+            <button
+              data-testid="pessoa-result"
+              class="flex items-center justify-between w-full gap-3 px-3 py-2 text-left hover:bg-n-alpha-2"
+              @click="openPessoa(c)"
+            >
+              <span class="text-sm truncate text-n-slate-12">
+                {{ c.name }}
+              </span>
+              <span class="text-xs shrink-0 text-n-slate-10">
+                {{ c.phone_number || c.email || '' }}
+              </span>
+            </button>
+          </li>
+        </ul>
+        <p
+          v-else-if="query.trim().length >= 2"
+          class="mt-3 text-sm text-n-slate-10"
+        >
+          {{ $t('RAMON.LINHA_DA_VIDA.SEARCH_EMPTY') }}
+        </p>
+      </div>
+    </template>
     <div
-      v-if="loading"
+      v-else-if="loading"
       class="flex flex-col max-w-2xl gap-4 animate-pulse"
       data-testid="lifeline-skeleton"
     >

@@ -86,7 +86,8 @@
       "TRIAGEM": "Triagem de Iniciais",
       "AGENTES": "Agentes de IA",
       "FUNIL_CONFIG": "Configurações do Funil",
-      "PLAYBOOKS": "Playbooks"
+      "PLAYBOOKS": "Playbooks",
+      "LINHA_DA_VIDA": "Linha da Vida"
     },
     "ESTEIRA": {
       "EYEBROW": "Linha de produção",
@@ -347,7 +348,12 @@
         "aposentadoria_idade_urbana": "Atinge a idade da aposentadoria urbana",
         "aposentadoria_idade_rural": "Atinge a idade da aposentadoria rural",
         "bpc_loas_idoso": "Atinge a idade do BPC/LOAS (idoso)"
-      }
+      },
+      "TITLE": "Linha da Vida",
+      "SEARCH_HINT": "Busque a pessoa para abrir a linha da vida dela.",
+      "SEARCH_PLACEHOLDER": "Nome, telefone ou e-mail…",
+      "SEARCHING": "Buscando…",
+      "SEARCH_EMPTY": "Ninguém encontrado com esse termo."
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

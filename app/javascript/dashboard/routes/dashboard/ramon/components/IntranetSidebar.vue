@@ -35,6 +35,12 @@ const sections = computed(() => [
         to: accountScopedRoute('ramon_agenda'),
       },
       {
+        key: 'pessoas',
+        label: t('RAMON.NAV.LINHA_DA_VIDA'),
+        icon: 'i-lucide-heart-pulse',
+        to: accountScopedRoute('ramon_pessoas'),
+      },
+      {
         key: 'funil_config',
         label: t('RAMON.NAV.FUNIL_CONFIG'),
         icon: 'i-lucide-sliders-horizontal',
