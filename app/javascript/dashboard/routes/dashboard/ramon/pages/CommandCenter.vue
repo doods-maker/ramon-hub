@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { prescriptionInfo } from '../helpers/prescription';
+import RamonPageHeader from '../components/RamonPageHeader.vue';
 import StatBlock from '../components/command/StatBlock.vue';
 import LeadList from '../components/command/LeadList.vue';
 import FollowUpQueue from '../components/command/FollowUpQueue.vue';
@@ -41,6 +42,15 @@ const fmtDay = value =>
 
 const today = computed(() => data.value?.today || {});
 const funnel = computed(() => data.value?.funnel || []);
+// Barra proporcional à contagem; etapa não vazia tem largura mínima visível.
+const funnelMax = computed(() =>
+  Math.max(1, ...funnel.value.map(stage => Number(stage.count) || 0))
+);
+const funnelBarWidth = stage => {
+  const count = Number(stage.count) || 0;
+  if (!count) return '0%';
+  return `${Math.max(2, (count / funnelMax.value) * 100)}%`;
+};
 const week = computed(() => data.value?.week || {});
 const history = computed(() => data.value?.history || []);
 const historyPoints = computed(() =>
@@ -180,26 +190,23 @@ const openStage = stageId => {
 
 <template>
   <div class="flex flex-col w-full h-full overflow-auto bg-n-background p-8">
-    <header class="flex items-center justify-between mb-8">
-      <div>
-        <p class="text-xs tracking-[0.2em] uppercase text-n-slate-11">
-          {{ t('RAMON.COMMAND.EYEBROW') }}
-        </p>
-        <h1 class="font-cormorant text-4xl font-semibold text-n-slate-12">
-          {{ t('RAMON.COMMAND.TITLE') }}
-        </h1>
-      </div>
-      <button
-        type="button"
-        data-testid="reload"
-        class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12"
-        :disabled="isFetching"
-        @click="reload"
-      >
-        <span class="i-lucide-refresh-cw size-4" />
-        {{ t('RAMON.COMMAND.RELOAD') }}
-      </button>
-    </header>
+    <RamonPageHeader
+      :eyebrow="t('RAMON.COMMAND.EYEBROW')"
+      :title="t('RAMON.COMMAND.TITLE')"
+    >
+      <template #actions>
+        <button
+          type="button"
+          data-testid="reload"
+          class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12"
+          :disabled="isFetching"
+          @click="reload"
+        >
+          <span class="i-lucide-refresh-cw size-4" />
+          {{ t('RAMON.COMMAND.RELOAD') }}
+        </button>
+      </template>
+    </RamonPageHeader>
 
     <div v-if="isLoading" class="flex flex-col gap-8 animate-pulse">
       <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
@@ -257,28 +264,38 @@ const openStage = stageId => {
         <h2 class="mb-3 text-sm tracking-widest uppercase text-n-slate-9">
           {{ t('RAMON.COMMAND.FUNNEL.TITLE') }}
         </h2>
-        <div v-if="funnel.length" class="flex flex-wrap gap-3">
+        <div
+          v-if="funnel.length"
+          class="flex flex-col gap-1 p-4 border rounded-xl border-n-weak bg-n-solid-2"
+        >
           <button
             v-for="stage in funnel"
             :key="stage.stage_id"
             type="button"
-            class="flex flex-col items-start px-4 py-3 border rounded-xl border-n-weak bg-n-solid-2 hover:bg-n-alpha-2 min-w-[140px]"
+            data-testid="funnel-stage"
+            class="grid grid-cols-[minmax(6rem,11rem)_1fr_auto] items-center w-full gap-3 px-2 py-1.5 text-left rounded-lg hover:bg-n-alpha-2"
             @click="openStage(stage.stage_id)"
           >
-            <span class="flex items-center gap-2">
+            <span class="text-sm truncate text-n-slate-12">
+              {{ stage.name }}
+            </span>
+            <!-- trilho + barra proporcional à contagem, na cor da etapa -->
+            <span class="h-2.5 overflow-hidden rounded-full bg-n-alpha-2">
               <span
-                class="inline-block rounded-full size-2"
-                :style="{ backgroundColor: stage.color }"
+                class="block h-full rounded-full"
+                :style="{
+                  width: funnelBarWidth(stage),
+                  backgroundColor: stage.color || '#71717a',
+                }"
               />
-              <span class="text-xs uppercase tracking-wide text-n-slate-11">
-                {{ stage.name }}
+            </span>
+            <span class="flex flex-col items-end leading-tight min-w-[72px]">
+              <span class="text-sm tabular-nums text-n-slate-12">
+                {{ stage.count }}
               </span>
-            </span>
-            <span class="mt-1 text-2xl font-cormorant text-n-slate-12">
-              {{ stage.count }}
-            </span>
-            <span class="text-xs text-n-slate-10">
-              {{ brl(stage.weighted_value) }}
+              <span class="text-xs tabular-nums text-n-slate-10">
+                {{ brl(stage.weighted_value) }}
+              </span>
             </span>
           </button>
         </div>

@@ -5,6 +5,7 @@ import { useUISettings } from 'dashboard/composables/useUISettings';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { DEFAULT_EXTERNAL_SHORTCUTS } from '../externalShortcutsDefaults';
+import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 const { t } = useI18n();
 const { uiSettings, updateUISettings } = useUISettings();
@@ -37,9 +38,7 @@ const remove = i => {
 
 <template>
   <div class="flex flex-col w-full h-full p-8 overflow-auto bg-n-background">
-    <h1 class="mb-6 text-2xl font-cormorant text-n-slate-12">
-      {{ t('RAMON.SHORTCUTS.TITLE') }}
-    </h1>
+    <RamonPageHeader :title="t('RAMON.SHORTCUTS.TITLE')" />
 
     <ul class="flex flex-col gap-2 mb-6 max-w-xl">
       <li

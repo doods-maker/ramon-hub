@@ -5,7 +5,18 @@
       "TODAY": "Today",
       "PREV_WEEK": "Previous week",
       "NEXT_WEEK": "Next week",
-      "EMPTY": "No appointments this week."
+      "EMPTY": "No appointments this week.",
+      "VIEW_DAY": "Day",
+      "VIEW_WEEK": "Week",
+      "VIEW_MONTH": "Month",
+      "FILTER_ALL": "All",
+      "FILTER_MEETING": "Meetings",
+      "FILTER_FOLLOW_UP": "Follow-ups",
+      "PICK_MONTH": "Month",
+      "EMPTY_DAY": "Nothing scheduled for this day.",
+      "MORE": "+{count} more",
+      "PREV": "Previous",
+      "NEXT": "Next"
     },
     "COMMAND": {
       "EYEBROW": "Command Center",

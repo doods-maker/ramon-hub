@@ -142,47 +142,39 @@ const copyPhone = async () => {
     class="p-3 mb-2 rounded-xl bg-n-solid-2 border cursor-pointer hover:border-n-iris-8"
     :class="[borderClass, { 'ring-2 ring-n-iris-9': focused }]"
   >
-    <div class="flex items-start justify-between gap-2">
+    <!-- Linha 1: nome + valor (o que se escaneia) e ações rápidas -->
+    <div class="flex items-center gap-1.5">
       <button
         data-testid="lead-card-body"
-        class="flex-1 text-left"
+        class="flex-1 min-w-0 text-left"
         @click="emit('openLead', lead)"
       >
-        <p class="text-sm font-medium text-n-slate-12">{{ lead.name }}</p>
+        <p class="text-sm font-medium truncate text-n-slate-12">
+          {{ lead.name }}
+        </p>
       </button>
-      <div class="flex items-center gap-1">
-        <span
-          v-if="showNoNextAction"
-          data-testid="no-next-action"
-          :title="$t('RAMON.KANBAN.CARD.NO_NEXT_ACTION')"
-          class="i-lucide-alert-circle size-4 text-n-amber-11"
-        />
-        <TaskBellMenu @schedule="onSchedule" />
-      </div>
+      <span
+        v-if="showNoNextAction"
+        data-testid="no-next-action"
+        :title="$t('RAMON.KANBAN.CARD.NO_NEXT_ACTION')"
+        class="i-lucide-alert-circle size-4 shrink-0 text-n-amber-11"
+      />
+      <TaskBellMenu @schedule="onSchedule" />
+      <span
+        v-if="formattedValue"
+        class="text-sm font-semibold tabular-nums shrink-0 text-n-slate-12"
+      >
+        {{ formattedValue }}
+      </span>
     </div>
 
-    <div class="flex flex-wrap items-center gap-1.5 mt-2">
-      <span
-        v-if="lead.stage_name"
-        data-testid="stage-chip"
-        class="inline-block px-2 py-0.5 text-[11px] rounded-full text-white"
-        :style="{ backgroundColor: lead.stage_color || '#71717a' }"
-      >
-        {{ lead.stage_name }}
-      </span>
-      <span
-        v-if="daysInStage !== null"
-        data-testid="stage-age"
-        class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
-      >
-        {{ $t('RAMON.KANBAN.CARD.AGE', { days: daysInStage }) }}
-      </span>
-      <span
-        v-if="lead.benefit_type_name"
-        class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
-      >
-        {{ lead.benefit_type_name }}
-      </span>
+    <!-- Linha 2: só o que grita (risco) mantém cor forte -->
+    <div
+      v-if="
+        prescriptionLabel || lead.latest_triage?.status === 'awaiting_human'
+      "
+      class="flex flex-wrap items-center gap-1.5 mt-2"
+    >
       <span
         v-if="prescriptionLabel"
         data-testid="prescription-badge"
@@ -203,32 +195,51 @@ const copyPhone = async () => {
       </span>
     </div>
 
-    <div class="flex items-center justify-between mt-2">
-      <div class="flex items-center gap-2">
-        <span
-          v-if="lead.lead_priority_name"
-          class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-n-iris-9 text-white"
-        >
-          <span class="i-lucide-flag size-3" />{{ lead.lead_priority_name }}
-        </span>
-        <span v-if="formattedValue" class="text-xs font-medium text-n-slate-12">
-          {{ formattedValue }}
-        </span>
-      </div>
+    <!-- Linha 3: metadados discretos (cor só na semântica da etapa, via borda) -->
+    <div
+      v-if="
+        lead.stage_name ||
+        daysInStage !== null ||
+        lead.benefit_type_name ||
+        lead.lead_priority_name
+      "
+      class="flex flex-wrap items-center gap-1.5 mt-2"
+    >
       <span
-        v-if="ownerInitials"
-        :title="ownerName"
-        class="inline-flex items-center justify-center size-6 text-[10px] rounded-full bg-n-alpha-2 text-n-slate-11"
+        v-if="lead.stage_name"
+        data-testid="stage-chip"
+        class="inline-block px-2 py-0.5 text-[11px] rounded-full border bg-n-alpha-2 text-n-slate-11"
+        :style="{ borderColor: lead.stage_color || '#71717a' }"
       >
-        {{ ownerInitials }}
+        {{ lead.stage_name }}
+      </span>
+      <span
+        v-if="daysInStage !== null"
+        data-testid="stage-age"
+        class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
+      >
+        {{ $t('RAMON.KANBAN.CARD.AGE', { days: daysInStage }) }}
+      </span>
+      <span
+        v-if="lead.benefit_type_name"
+        class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
+      >
+        {{ lead.benefit_type_name }}
+      </span>
+      <span
+        v-if="lead.lead_priority_name"
+        class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
+      >
+        <span class="i-lucide-flag size-3" />{{ lead.lead_priority_name }}
       </span>
     </div>
 
     <div
-      v-if="lead.contact_phone"
+      v-if="lead.contact_phone || ownerInitials"
       class="flex items-center gap-2 mt-2 text-xs text-n-slate-11"
     >
       <button
+        v-if="lead.contact_phone"
         data-testid="copy-phone"
         :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
         class="inline-flex items-center gap-1 hover:text-n-slate-12"
@@ -249,6 +260,13 @@ const copyPhone = async () => {
           $t('RAMON.KANBAN.CARD.WHATSAPP')
         }}
       </a>
+      <span
+        v-if="ownerInitials"
+        :title="ownerName"
+        class="inline-flex items-center justify-center ml-auto size-6 text-[10px] rounded-full bg-n-alpha-2 text-n-slate-11"
+      >
+        {{ ownerInitials }}
+      </span>
     </div>
 
     <button

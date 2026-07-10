@@ -7,6 +7,7 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
 import StatBlock from '../components/command/StatBlock.vue';
+import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 const { t } = useI18n();
 const store = useStore();
@@ -105,26 +106,23 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
 
 <template>
   <div class="flex flex-col w-full h-full overflow-auto bg-n-background p-8">
-    <header class="flex items-center justify-between mb-8">
-      <div>
-        <p class="text-xs tracking-[0.2em] uppercase text-n-slate-11">
-          {{ t('RAMON.ESTEIRA.EYEBROW') }}
-        </p>
-        <h1 class="font-cormorant text-4xl font-semibold text-n-slate-12">
-          {{ t('RAMON.ESTEIRA.TITLE') }}
-        </h1>
-      </div>
-      <button
-        type="button"
-        data-testid="esteira-reload"
-        class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12"
-        :disabled="isLoading"
-        @click="fetchEsteira"
-      >
-        <span class="i-lucide-refresh-cw size-4" />
-        {{ t('RAMON.ESTEIRA.RELOAD') }}
-      </button>
-    </header>
+    <RamonPageHeader
+      :eyebrow="t('RAMON.ESTEIRA.EYEBROW')"
+      :title="t('RAMON.ESTEIRA.TITLE')"
+    >
+      <template #actions>
+        <button
+          type="button"
+          data-testid="esteira-reload"
+          class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12"
+          :disabled="isLoading"
+          @click="fetchEsteira"
+        >
+          <span class="i-lucide-refresh-cw size-4" />
+          {{ t('RAMON.ESTEIRA.RELOAD') }}
+        </button>
+      </template>
+    </RamonPageHeader>
 
     <div v-if="isLoading" class="flex flex-col gap-6 animate-pulse">
       <div class="grid grid-cols-3 gap-4 max-w-2xl">

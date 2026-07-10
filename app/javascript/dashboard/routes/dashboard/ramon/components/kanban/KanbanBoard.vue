@@ -253,6 +253,7 @@ const exportCsv = () => {
         v-model="orderedStages"
         group="stages"
         item-key="id"
+        ghost-class="ramon-drag-ghost"
         class="flex items-start h-full gap-3"
         handle=".stage-drag-handle"
         @change="onColumnsReorder"

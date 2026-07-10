@@ -7,6 +7,7 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import { formatBrl } from '../helpers/currency';
 import { waMeUrl } from '../helpers/phone';
+import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 defineOptions({ name: 'RamonDossie' });
 
@@ -160,35 +161,39 @@ const copyDossie = async () => {
 
 <template>
   <div class="flex-1 h-full p-6 overflow-y-auto">
-    <p v-if="loading" class="text-sm text-n-slate-9">
-      {{ $t('RAMON.DOSSIE.LOADING') }}
-    </p>
+    <div
+      v-if="loading"
+      class="flex flex-col max-w-2xl gap-4 animate-pulse"
+      data-testid="dossie-skeleton"
+    >
+      <div class="w-1/3 h-8 rounded bg-n-solid-2" />
+      <div class="h-24 rounded-xl bg-n-solid-2" />
+      <div class="h-24 rounded-xl bg-n-solid-2" />
+      <div class="h-40 rounded-xl bg-n-solid-2" />
+    </div>
     <p v-else-if="error" class="text-sm text-n-ruby-11">
       {{ $t('RAMON.DOSSIE.ERROR') }}
     </p>
 
     <div v-else-if="data" class="max-w-2xl">
-      <!-- Cabeçalho -->
-      <div class="flex items-start justify-between gap-3 mb-6">
-        <div>
-          <p class="text-xs uppercase tracking-widest text-n-slate-9">
-            {{ $t('RAMON.DOSSIE.TITLE') }}
-          </p>
-          <h1 class="text-2xl font-cormorant text-n-slate-12">
-            {{ pessoa.lead_name }}
-          </h1>
-        </div>
-        <button
-          type="button"
-          data-testid="dossie-copy"
-          class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak hover:bg-n-alpha-2 shrink-0"
-          @click="copyDossie"
-        >
-          <span class="i-lucide-clipboard-copy size-4" />{{
-            $t('RAMON.DOSSIE.COPY')
-          }}
-        </button>
-      </div>
+      <RamonPageHeader
+        compact
+        :eyebrow="$t('RAMON.DOSSIE.TITLE')"
+        :title="pessoa.lead_name"
+      >
+        <template #actions>
+          <button
+            type="button"
+            data-testid="dossie-copy"
+            class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak hover:bg-n-alpha-2 shrink-0"
+            @click="copyDossie"
+          >
+            <span class="i-lucide-clipboard-copy size-4" />{{
+              $t('RAMON.DOSSIE.COPY')
+            }}
+          </button>
+        </template>
+      </RamonPageHeader>
 
       <!-- 1. Quem é -->
       <section class="mb-6" data-testid="dossie-pessoa">

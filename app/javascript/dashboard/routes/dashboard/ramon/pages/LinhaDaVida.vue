@@ -1,12 +1,15 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import LinhaDaVidaAPI from 'dashboard/api/linhaDaVida';
 import { formatCpf } from '../helpers/cpf';
 import { formatBrl } from '../helpers/currency';
 import { frontendURL } from '../../../../helper/URLHelper';
+import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 const route = useRoute();
+const { t } = useI18n();
 
 const data = ref(null);
 const loading = ref(false);
@@ -29,6 +32,27 @@ watch(() => route.params.contactId, fetchData, { immediate: true });
 
 const contact = computed(() => data.value?.contact ?? null);
 const leads = computed(() => data.value?.leads ?? []);
+
+const fmtDate = value => {
+  if (!value) return '';
+  return new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString(
+    'pt-BR'
+  );
+};
+
+// Subtítulo do cabeçalho: CPF · nascimento · telefone (só o que existir).
+const headerSubtitle = computed(() => {
+  const c = contact.value;
+  if (!c) return '';
+  const parts = [];
+  if (c.cpf) parts.push(formatCpf(c.cpf));
+  if (c.data_nascimento)
+    parts.push(
+      `${t('RAMON.LINHA_DA_VIDA.BORN_AT')} ${fmtDate(c.data_nascimento)}`
+    );
+  if (c.phone_number) parts.push(c.phone_number);
+  return parts.join(' · ');
+});
 
 // Presente = casos vivos no funil; passado = fechados (ganhos e perdidos).
 const openLeads = computed(() =>
@@ -71,45 +95,37 @@ const conversationUrl = lead =>
   frontendURL(
     `accounts/${route.params.accountId}/conversations/${lead.conversation_id}`
   );
-
-const fmtDate = value => {
-  if (!value) return '';
-  return new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString(
-    'pt-BR'
-  );
-};
 </script>
 
 <template>
   <div class="flex-1 h-full p-6 overflow-y-auto">
-    <p v-if="loading" class="text-sm text-n-slate-9">
-      {{ $t('RAMON.LINHA_DA_VIDA.LOADING') }}
-    </p>
+    <div
+      v-if="loading"
+      class="flex flex-col max-w-2xl gap-4 animate-pulse"
+      data-testid="lifeline-skeleton"
+    >
+      <div class="w-1/3 h-8 rounded bg-n-solid-2" />
+      <div class="h-24 rounded-xl bg-n-solid-2" />
+      <div class="h-24 rounded-xl bg-n-solid-2" />
+      <div class="h-40 rounded-xl bg-n-solid-2" />
+    </div>
     <p v-else-if="error" class="text-sm text-n-ruby-11">
       {{ $t('RAMON.LINHA_DA_VIDA.ERROR') }}
     </p>
 
     <template v-else-if="contact">
-      <div class="mb-6">
-        <h1 class="text-2xl font-cormorant text-n-slate-12">
-          {{ contact.name }}
-        </h1>
-        <p class="text-sm text-n-slate-10">
-          <span v-if="contact.cpf">{{ formatCpf(contact.cpf) }} · </span>
-          <span v-if="contact.data_nascimento">
-            {{ $t('RAMON.LINHA_DA_VIDA.BORN_AT') }}
-            {{ fmtDate(contact.data_nascimento) }}
-          </span>
-          <span v-if="contact.phone_number"> · {{ contact.phone_number }}</span>
-        </p>
-        <p
-          v-if="!contact.data_nascimento"
-          data-testid="lifeline-no-birthdate"
-          class="mt-1 text-xs text-n-amber-11"
-        >
-          {{ $t('RAMON.LINHA_DA_VIDA.NO_BIRTHDATE_HINT') }}
-        </p>
-      </div>
+      <RamonPageHeader
+        compact
+        :title="contact.name"
+        :subtitle="headerSubtitle"
+      />
+      <p
+        v-if="!contact.data_nascimento"
+        data-testid="lifeline-no-birthdate"
+        class="-mt-4 mb-6 text-xs text-n-amber-11"
+      >
+        {{ $t('RAMON.LINHA_DA_VIDA.NO_BIRTHDATE_HINT') }}
+      </p>
 
       <!-- FUTURO -->
       <section class="mb-8" data-testid="lifeline-future">
