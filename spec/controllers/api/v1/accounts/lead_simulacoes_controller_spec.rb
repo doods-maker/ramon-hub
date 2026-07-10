@@ -68,6 +68,35 @@ RSpec.describe 'Lead Simulacoes API', type: :request do
       expect(WebMock).to matcher
     end
 
+    it 'uses the stored CNIS competencias and segurado when usar_cnis is sent' do
+      lead.update!(cnis: {
+                     'entrada' => {
+                       'segurado' => { 'nascimento' => '1975-01-20', 'sexo' => 'F' },
+                       'competencias' => [{ 'ano' => 2023, 'mes' => 5, 'salario' => '2500.00' }]
+                     }
+                   })
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/simulacao",
+             params: simulacao_params.merge(usar_cnis: true), headers: admin.create_new_auth_token, as: :json
+      end
+      matcher = have_requested(:post, "#{motor_url}/incapacidade").with do |req|
+        body = JSON.parse(req.body)
+        body['competencias'] == [{ 'ano' => 2023, 'mes' => 5, 'salario' => '2500.00' }] &&
+          body['segurado'] == { 'nascimento' => '1975-01-20', 'sexo' => 'F' }
+      end
+      expect(WebMock).to matcher
+    end
+
+    it 'keeps the manual estimate when usar_cnis is sent but the lead has no CNIS' do
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/simulacao",
+             params: simulacao_params.merge(usar_cnis: true), headers: admin.create_new_auth_token, as: :json
+      end
+      matcher = have_requested(:post, "#{motor_url}/incapacidade")
+                .with { |req| doze_competencias?(JSON.parse(req.body)['competencias']) }
+      expect(WebMock).to matcher
+    end
+
     it 'flags when the lead thesis has no honorario config' do
       lead.update!(thesis: create(:thesis, account: account, name: 'Sem honorário'))
       with_modified_env MOTOR_CALCULOS_URL: motor_url do

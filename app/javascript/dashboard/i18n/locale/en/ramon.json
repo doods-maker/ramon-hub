@@ -528,7 +528,12 @@
       "ESTIMATIVA_BASE": "Back pay = monthly value × {meses} months between the DER and today (estimate).",
       "MOTOR_DOWN": "Calculation engine unavailable right now — the simulator comes back when the service is up (MOTOR_CALCULOS_URL).",
       "GENERIC_ERROR": "Could not simulate — check the fields.",
-      "DISCLAIMER": "Estimate for conversation only — not a promise of outcome nor a guaranteed amount (OAB)."
+      "DISCLAIMER": "Estimate for conversation only — not a promise of outcome nor a guaranteed amount (OAB).",
+      "CNIS_LABEL": "CNIS (PDF)",
+      "CNIS_HINT": "With the CNIS, the simulation uses the real salary history.",
+      "CNIS_LOADING": "Reading CNIS…",
+      "CNIS_LOADED": "{competencias} contribution months · {vinculos} employment records — simulation with real history",
+      "CNIS_REMOVE": "Remove"
     },
     "TRIAGE_AGENTS": {
       "TITLE": "AI Agents",

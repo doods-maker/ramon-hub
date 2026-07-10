@@ -215,6 +215,13 @@
 | `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; +`simulate(leadId, payload)` | API client | Onda 2 |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; +AccordionItem "Simulador" (recolhido por padrão, após o Kit) | painel do lead | Onda 2 |
 | `spec/controllers/api/v1/accounts/lead_simulacoes_controller_spec.rb` + `.../specs/LeadSimulador.spec.js` | specs: sucesso (WebMock), 422 do motor, motor fora do ar/sem ENV, honorário da tese, pré-preenchimento e estados do form | cobertura CI | Onda 2 |
+| `db/migrate/20260710000001_add_cnis_to_leads.rb` | NOVO: coluna `cnis` (jsonb) no Lead — CNIS parseado por caso | CNIS no Simulador | Onda 3b |
+| `app/controllers/api/v1/accounts/lead_cnis_controller.rb` | NOVO: `POST/DELETE /leads/:id/cnis` — proxy multipart pro motor `/cnis`, guarda entrada+vínculos+avisos no lead | CNIS no Simulador | Onda 3b |
+| `lib/ramon/motor_client.rb` (linha de changes) | já existia; +`cnis(arquivo, sexo:)` multipart, read_timeout 60s | cliente do motor | Onda 3b |
+| `app/models/lead.rb` (linha de changes) | já existia; +`cnis_resumo` (JSON nativo, entra no `push_event_data`) | CNIS no Simulador | Onda 3b |
+| `app/controllers/api/v1/accounts/lead_simulacoes_controller.rb` (linha de changes) | já existia; +`usar_cnis` — segurado e competências reais do CNIS substituem a estimativa 12× salário | CNIS no Simulador | Onda 3b |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadSimulador.vue` (linha de changes) | já existia; +bloco CNIS (upload PDF, chip com resumo/avisos, remover; esconde campos manuais) | CNIS no Simulador | Onda 3b |
+| `spec/controllers/api/v1/accounts/lead_cnis_controller_spec.rb` | specs: upload/resumo/422/503/sem arquivo/DELETE | cobertura CI | Onda 3b |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
