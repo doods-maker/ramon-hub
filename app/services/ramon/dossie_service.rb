@@ -55,7 +55,7 @@ class Ramon::DossieService
 
     today = Time.zone.today
     age = today.year - born.year
-    age -= 1 if [today.month, today.day] < [born.month, born.day]
+    age -= 1 if ([today.month, today.day] <=> [born.month, born.day]).negative?
     age
   end
 

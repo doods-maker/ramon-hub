@@ -23,18 +23,20 @@ RSpec.describe LeadTask do
   end
 
   describe 'scopes' do
+    # Comparação por id (não por objeto): igualdade de AR depende de identidade
+    # de classe, que quebra em shard com reload (ver nota de specs no AGENTS.md).
     it 'open_tasks excludes completed tasks' do
       open = create(:lead_task, account: account, lead: lead)
       done = create(:lead_task, account: account, lead: lead, completed_at: Time.current)
-      expect(described_class.open_tasks).to include(open)
-      expect(described_class.open_tasks).not_to include(done)
+      expect(described_class.open_tasks.ids).to include(open.id)
+      expect(described_class.open_tasks.ids).not_to include(done.id)
     end
 
     it 'overdue returns open tasks whose due_at is in the past' do
       past = create(:lead_task, account: account, lead: lead, due_at: 1.hour.ago)
       future = create(:lead_task, account: account, lead: lead, due_at: 1.hour.from_now)
-      expect(described_class.overdue).to include(past)
-      expect(described_class.overdue).not_to include(future)
+      expect(described_class.overdue.ids).to include(past.id)
+      expect(described_class.overdue.ids).not_to include(future.id)
     end
   end
 
