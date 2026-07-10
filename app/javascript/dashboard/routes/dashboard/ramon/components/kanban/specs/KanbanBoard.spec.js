@@ -167,30 +167,38 @@ describe('KanbanBoard.vue', () => {
     );
   });
 
-  it('addStage pede o nome via prompt e dispara createStage', async () => {
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('Nova etapa');
+  it('addStage abre o modal de nome e confirma criando a etapa', async () => {
     const wrapper = mountBoard();
 
     await wrapper.find('button.border-dashed').trigger('click');
 
-    expect(promptSpy).toHaveBeenCalled();
+    const modal = wrapper.findComponent({ name: 'NamePromptModal' });
+    expect(modal.exists()).toBe(true);
+    await modal
+      .find('[data-testid="name-prompt-input"]')
+      .setValue('Nova etapa');
+    await modal.find('[data-testid="name-prompt-confirm"]').trigger('click');
+
     expect(dispatch).toHaveBeenCalledWith('leadConfig/createStage', {
       name: 'Nova etapa',
     });
-    promptSpy.mockRestore();
   });
 
-  it('addStage não dispara createStage se o prompt for cancelado', async () => {
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null);
+  it('addStage cancelado fecha o modal sem criar etapa', async () => {
     const wrapper = mountBoard();
 
     await wrapper.find('button.border-dashed').trigger('click');
+    const modal = wrapper.findComponent({ name: 'NamePromptModal' });
+    await modal.find('[data-testid="name-prompt-cancel"]').trigger('click');
+    await wrapper.vm.$nextTick();
 
+    expect(wrapper.findComponent({ name: 'NamePromptModal' }).exists()).toBe(
+      false
+    );
     expect(dispatch).not.toHaveBeenCalledWith(
       'leadConfig/createStage',
       expect.anything()
     );
-    promptSpy.mockRestore();
   });
 
   it('carrega filtros no mount e reage ao update dos filtros', () => {

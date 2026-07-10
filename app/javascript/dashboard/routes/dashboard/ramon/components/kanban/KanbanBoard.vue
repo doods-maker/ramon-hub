@@ -15,6 +15,8 @@ import ConversationDock from './ConversationDock.vue';
 import RemoveStageModal from './RemoveStageModal.vue';
 import LostReasonModal from './LostReasonModal.vue';
 import WonValueModal from './WonValueModal.vue';
+import NamePromptModal from '../NamePromptModal.vue';
+import RamonPageHeader from '../RamonPageHeader.vue';
 
 const emit = defineEmits(['new-lead']);
 const store = useStore();
@@ -202,11 +204,13 @@ const confirmRemove = async ({ id, moveToStageId }) => {
   await store.dispatch('leadConfig/deleteStage', { id, moveToStageId });
   stageToRemove.value = null;
 };
-const addStage = async () => {
-  // eslint-disable-next-line no-alert
-  const name = window.prompt(t('RAMON.FUNIL.STAGE.NEW_PROMPT'));
-  if (name && name.trim())
-    await store.dispatch('leadConfig/createStage', { name: name.trim() });
+const newStageModalOpen = ref(false);
+const addStage = () => {
+  newStageModalOpen.value = true;
+};
+const confirmAddStage = async name => {
+  await store.dispatch('leadConfig/createStage', { name });
+  newStageModalOpen.value = false;
 };
 const onColumnsReorder = () => {
   store.dispatch(
@@ -240,50 +244,52 @@ const exportCsv = () => {
 
 <template>
   <div class="flex flex-col h-full">
-    <div class="flex items-center justify-between px-4 py-3">
-      <h1 class="text-xl font-cormorant text-n-slate-12">
-        {{ $t('RAMON.FUNIL.TITLE') }}
-      </h1>
-      <span class="hidden lg:inline text-xs text-n-slate-9">
-        {{ $t('RAMON.FUNIL.HOTKEYS_HINT') }}
-      </span>
-      <div class="flex items-center gap-2">
-        <button
-          data-testid="filters-toggle"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border hover:text-n-slate-12"
-          :class="
-            filtersOpen || activeFilterCount
-              ? 'border-n-iris-8 text-n-iris-11'
-              : 'border-n-weak text-n-slate-11'
-          "
-          @click="filtersOpen = !filtersOpen"
-        >
-          <span class="i-lucide-sliders-horizontal size-4" />
-          {{ $t('RAMON.FUNIL.FILTERS.TOGGLE') }}
-          <span
-            v-if="activeFilterCount"
-            data-testid="filters-active-count"
-            class="flex items-center justify-center min-w-4 h-4 px-1 text-[10px] rounded-full bg-n-iris-9 text-white"
+    <div class="px-4 pt-3">
+      <RamonPageHeader
+        compact
+        :title="$t('RAMON.FUNIL.TITLE')"
+        :subtitle="$t('RAMON.FUNIL.HOTKEYS_HINT')"
+      >
+        <template #actions>
+          <button
+            data-testid="filters-toggle"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border hover:text-n-slate-12"
+            :class="
+              filtersOpen || activeFilterCount
+                ? 'border-n-iris-8 text-n-iris-11'
+                : 'border-n-weak text-n-slate-11'
+            "
+            @click="filtersOpen = !filtersOpen"
           >
-            {{ activeFilterCount }}
-          </span>
-        </button>
-        <button
-          data-testid="export-csv"
-          class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:text-n-slate-12"
-          @click="exportCsv"
-        >
-          <span class="i-lucide-download size-4" />{{
-            $t('RAMON.FUNIL.EXPORT_CSV')
-          }}
-        </button>
-        <button
-          class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
-          @click="emit('new-lead')"
-        >
-          <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.NEW_LEAD') }}
-        </button>
-      </div>
+            <span class="i-lucide-sliders-horizontal size-4" />
+            {{ $t('RAMON.FUNIL.FILTERS.TOGGLE') }}
+            <span
+              v-if="activeFilterCount"
+              data-testid="filters-active-count"
+              class="flex items-center justify-center min-w-4 h-4 px-1 text-[10px] rounded-full bg-n-iris-9 text-white"
+            >
+              {{ activeFilterCount }}
+            </span>
+          </button>
+          <button
+            data-testid="export-csv"
+            class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:text-n-slate-12"
+            @click="exportCsv"
+          >
+            <span class="i-lucide-download size-4" />{{
+              $t('RAMON.FUNIL.EXPORT_CSV')
+            }}
+          </button>
+          <button
+            class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+            @click="emit('new-lead')"
+          >
+            <span class="i-lucide-plus size-4" />{{
+              $t('RAMON.FUNIL.NEW_LEAD')
+            }}
+          </button>
+        </template>
+      </RamonPageHeader>
     </div>
     <!-- v-show (não v-if): o board reage ao evento update do KanbanFilters
          mesmo com o painel fechado, e abrir/fechar não perde o estado da busca -->
@@ -344,6 +350,14 @@ const exportCsv = () => {
       v-if="wonModalOpen"
       @confirm-value="confirmWon"
       @cancel-value="cancelWon"
+    />
+    <NamePromptModal
+      v-if="newStageModalOpen"
+      :title="$t('RAMON.FUNIL.STAGE.NEW_PROMPT')"
+      :placeholder="$t('RAMON.FUNIL.STAGE.NEW_PROMPT')"
+      :confirm-label="$t('RAMON.FUNIL.STAGE.ADD')"
+      @confirm="confirmAddStage"
+      @cancel="newStageModalOpen = false"
     />
   </div>
 </template>

@@ -1,8 +1,10 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import NamePromptModal from '../NamePromptModal.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 
 const store = useStore();
 const getters = useStoreGetters();
@@ -50,22 +52,24 @@ const applyView = view => {
   store.dispatch('leads/setFilters', { ...view.filters });
 };
 
+const saveModalOpen = ref(false);
 const saveCurrentView = () => {
-  // eslint-disable-next-line no-alert
-  const name = window.prompt(t('RAMON.FUNIL.VIEWS.SAVE_PROMPT'));
-  if (!name || !name.trim()) return;
-  const next = [
-    ...views.value,
-    { name: name.trim(), filters: { ...currentFilters.value } },
-  ];
+  saveModalOpen.value = true;
+};
+const confirmSaveView = name => {
+  const next = [...views.value, { name, filters: { ...currentFilters.value } }];
   updateUISettings({ ramon_lead_views: next });
+  saveModalOpen.value = false;
 };
 
+const viewToRemove = ref(null); // índice da view aguardando confirmação
 const removeView = index => {
-  // eslint-disable-next-line no-alert
-  if (!window.confirm(t('RAMON.FUNIL.VIEWS.REMOVE_CONFIRM'))) return;
-  const next = views.value.filter((_, i) => i !== index);
+  viewToRemove.value = index;
+};
+const confirmRemoveView = () => {
+  const next = views.value.filter((_, i) => i !== viewToRemove.value);
   updateUISettings({ ramon_lead_views: next });
+  viewToRemove.value = null;
 };
 </script>
 
@@ -117,4 +121,19 @@ const removeView = index => {
       <span class="i-lucide-plus size-3.5" />{{ $t('RAMON.FUNIL.VIEWS.SAVE') }}
     </button>
   </div>
+  <NamePromptModal
+    v-if="saveModalOpen"
+    :title="t('RAMON.FUNIL.VIEWS.SAVE_PROMPT')"
+    :placeholder="t('RAMON.FUNIL.VIEWS.SAVE_PROMPT')"
+    :confirm-label="t('RAMON.FUNIL.VIEWS.SAVE')"
+    @confirm="confirmSaveView"
+    @cancel="saveModalOpen = false"
+  />
+  <ConfirmModal
+    v-if="viewToRemove !== null"
+    :title="t('RAMON.FUNIL.VIEWS.REMOVE_CONFIRM')"
+    :confirm-label="t('RAMON.FUNIL.VIEWS.REMOVE')"
+    @confirm="confirmRemoveView"
+    @cancel="viewToRemove = null"
+  />
 </template>

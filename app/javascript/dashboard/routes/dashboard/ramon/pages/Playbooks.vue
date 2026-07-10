@@ -1,9 +1,8 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import ConfirmModal from '../components/ConfirmModal.vue';
 
-const { t } = useI18n();
 const store = useStore();
 const getters = useStoreGetters();
 
@@ -65,11 +64,15 @@ const addThesis = async () => {
   }
 };
 
-const removeThesis = async thesis => {
-  // eslint-disable-next-line no-alert
-  if (!window.confirm(t('RAMON.PLAYBOOKS.DELETE_CONFIRM'))) return;
+const thesisToRemove = ref(null);
+const removeThesis = thesis => {
+  thesisToRemove.value = thesis;
+};
+const confirmRemoveThesis = async () => {
+  const thesis = thesisToRemove.value;
   await store.dispatch('theses/delete', thesis.id);
   if (selectedId.value === thesis.id) selectedId.value = null;
+  thesisToRemove.value = null;
 };
 
 const moveThesis = (thesis, direction) => {
@@ -139,13 +142,16 @@ const updateItem = (item, attrs) => {
   });
 };
 
+const itemToRemove = ref(null);
 const removeItem = item => {
-  // eslint-disable-next-line no-alert
-  if (!window.confirm(t('RAMON.PLAYBOOKS.ITEM_DELETE_CONFIRM'))) return;
+  itemToRemove.value = item;
+};
+const confirmRemoveItem = () => {
   store.dispatch('theses/deleteItem', {
     thesisId: selectedThesis.value.id,
-    id: item.id,
+    id: itemToRemove.value.id,
   });
+  itemToRemove.value = null;
 };
 
 const sectionLabelKey = section =>
@@ -384,11 +390,12 @@ onMounted(() => store.dispatch('theses/get'));
                     <span class="i-lucide-trash-2 size-3.5" />
                   </button>
                 </div>
+                <!-- field-sizing: auto-cresce com o roteiro (fallback = rows fixo) -->
                 <textarea
                   :value="item.content"
                   data-testid="playbooks-item-content-input"
                   rows="2"
-                  class="px-2 py-1 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+                  class="px-2 py-1 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 [field-sizing:content] min-h-16 max-h-64"
                   :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
                   @blur="e => updateItem(item, { content: e.target.value })"
                 />
@@ -427,5 +434,19 @@ onMounted(() => store.dispatch('theses/get'));
         </div>
       </template>
     </div>
+    <ConfirmModal
+      v-if="thesisToRemove"
+      :title="$t('RAMON.PLAYBOOKS.DELETE_CONFIRM')"
+      :confirm-label="$t('RAMON.PLAYBOOKS.DELETE')"
+      @confirm="confirmRemoveThesis"
+      @cancel="thesisToRemove = null"
+    />
+    <ConfirmModal
+      v-if="itemToRemove"
+      :title="$t('RAMON.PLAYBOOKS.ITEM_DELETE_CONFIRM')"
+      :confirm-label="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
+      @confirm="confirmRemoveItem"
+      @cancel="itemToRemove = null"
+    />
   </div>
 </template>
