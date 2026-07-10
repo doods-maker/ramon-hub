@@ -22,7 +22,11 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
   end
 
   def permitted
-    params.permit(:nascimento, :sexo, :der, :salario, :beneficio, :origem, :acrescimo_25)
+    params.permit(:nascimento, :sexo, :der, :salario, :beneficio, :origem, :acrescimo_25, :usar_cnis)
+  end
+
+  def usar_cnis?
+    @usar_cnis ||= @lead.cnis.present? && ActiveModel::Type::Boolean.new.cast(permitted[:usar_cnis]) == true
   end
 
   def der
@@ -35,13 +39,20 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
 
   def motor_payload
     {
-      segurado: { nascimento: permitted[:nascimento], sexo: permitted[:sexo] },
+      segurado: segurado,
       der: der.iso8601,
-      competencias: competencias,
+      competencias: usar_cnis? ? @lead.cnis.dig('entrada', 'competencias') : competencias,
       beneficio: permitted[:beneficio],
       origem: permitted[:origem].presence || 'previdenciaria',
       acrescimo_25: ActiveModel::Type::Boolean.new.cast(permitted[:acrescimo_25]) || false
     }
+  end
+
+  # Com CNIS anexado ao caso (Onda 3b), o histórico real substitui a estimativa.
+  def segurado
+    return @lead.cnis.dig('entrada', 'segurado') if usar_cnis?
+
+    { nascimento: permitted[:nascimento], sexo: permitted[:sexo] }
   end
 
   # ponytail: salário médio repetido nas 12 competências anteriores à DER —

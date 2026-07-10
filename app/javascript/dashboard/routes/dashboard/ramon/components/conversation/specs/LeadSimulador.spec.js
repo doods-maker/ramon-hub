@@ -4,7 +4,7 @@ import LeadSimulador from '../LeadSimulador.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/api/leads', () => ({
-  default: { simulate: vi.fn() },
+  default: { simulate: vi.fn(), uploadCnis: vi.fn(), deleteCnis: vi.fn() },
 }));
 
 const resultado = {
@@ -39,9 +39,20 @@ const fillForm = async wrapper => {
   await wrapper.find('[data-testid="sim-salario"]').setValue('3000');
 };
 
+const cnisResumo = {
+  filename: 'cnis.pdf',
+  uploaded_at: '2026-07-10T10:00:00Z',
+  nascimento: '1980-05-10',
+  competencias: 110,
+  vinculos: 9,
+  avisos: ['03/2013: indicador pendente'],
+};
+
 describe('LeadSimulador.vue', () => {
   beforeEach(() => {
     LeadsAPI.simulate.mockReset();
+    LeadsAPI.uploadCnis.mockReset();
+    LeadsAPI.deleteCnis.mockReset();
   });
 
   it('pré-preenche nascimento/sexo do contato e benefício pela tese', () => {
@@ -91,6 +102,49 @@ describe('LeadSimulador.vue', () => {
     await flushPromises();
     expect(wrapper.find('[data-testid="sim-motor-down"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="sim-resultado"]').exists()).toBe(false);
+  });
+
+  it('com CNIS no caso, esconde os campos manuais e simula com usar_cnis', async () => {
+    LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+    const wrapper = mountSim({ lead: { ...lead, cnis_resumo: cnisResumo } });
+    expect(wrapper.find('[data-testid="sim-cnis-chip"]').text()).toContain(
+      'cnis.pdf'
+    );
+    expect(wrapper.find('[data-testid="sim-salario"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="sim-nascimento"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="sim-cnis-avisos"]').text()).toContain(
+      'indicador pendente'
+    );
+    await wrapper.find('[data-testid="sim-der"]').setValue('2025-09-01');
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.simulate).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ usar_cnis: true, der: '2025-09-01' })
+    );
+  });
+
+  it('faz upload do CNIS e mostra o chip com o resumo', async () => {
+    LeadsAPI.uploadCnis.mockResolvedValue({ data: cnisResumo });
+    const wrapper = mountSim();
+    const input = wrapper.find('[data-testid="sim-cnis-file"]');
+    const file = new File(['%PDF'], 'cnis.pdf', { type: 'application/pdf' });
+    Object.defineProperty(input.element, 'files', { value: [file] });
+    await input.trigger('change');
+    await flushPromises();
+    expect(LeadsAPI.uploadCnis).toHaveBeenCalledWith(7, file, 'F');
+    expect(wrapper.find('[data-testid="sim-cnis-chip"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="sim-salario"]').exists()).toBe(false);
+  });
+
+  it('remove o CNIS e volta pros campos manuais', async () => {
+    LeadsAPI.deleteCnis.mockResolvedValue({});
+    const wrapper = mountSim({ lead: { ...lead, cnis_resumo: cnisResumo } });
+    await wrapper.find('[data-testid="sim-cnis-remove"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.deleteCnis).toHaveBeenCalledWith(7);
+    expect(wrapper.find('[data-testid="sim-cnis-chip"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="sim-salario"]').exists()).toBe(true);
   });
 
   it('mostra o erro do motor em entrada inválida (422)', async () => {

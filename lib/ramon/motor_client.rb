@@ -7,6 +7,8 @@ class Ramon::MotorClient
 
   OPEN_TIMEOUT = 5
   READ_TIMEOUT = 15
+  # Parse de PDF grande (pdfplumber) é mais lento que um cálculo.
+  CNIS_READ_TIMEOUT = 60
 
   def self.incapacidade(payload)
     base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
@@ -17,6 +19,21 @@ class Ramon::MotorClient
                              body: payload.to_json,
                              open_timeout: OPEN_TIMEOUT,
                              read_timeout: READ_TIMEOUT)
+    handle(response)
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
+    raise UnavailableError, "motor indisponível: #{e.message}"
+  end
+
+  # arquivo = upload Rack/ActionDispatch (respond_to? :read/:path) — HTTParty monta o multipart.
+  def self.cnis(arquivo, sexo:)
+    base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
+    raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
+
+    response = HTTParty.post("#{base.chomp('/')}/cnis",
+                             multipart: true,
+                             body: { arquivo: arquivo, sexo: sexo },
+                             open_timeout: OPEN_TIMEOUT,
+                             read_timeout: CNIS_READ_TIMEOUT)
     handle(response)
   rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
     raise UnavailableError, "motor indisponível: #{e.message}"

@@ -32,6 +32,8 @@ const isLoading = ref(false);
 const resultado = ref(null);
 const motorDown = ref(false);
 const errorMessage = ref('');
+const cnis = ref(props.lead.cnis_resumo || null);
+const cnisLoading = ref(false);
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -39,11 +41,51 @@ const brl = new Intl.NumberFormat('pt-BR', {
 });
 const money = value => brl.format(Number(value || 0));
 
-const canSimulate = computed(
-  () => form.value.nascimento && form.value.der && form.value.salario
+// Com CNIS anexado, nascimento/sexo/salário vêm do histórico real.
+const canSimulate = computed(() =>
+  cnis.value
+    ? Boolean(form.value.der)
+    : Boolean(form.value.nascimento && form.value.der && form.value.salario)
 );
 
 const honorario = computed(() => resultado.value?.honorario || null);
+
+const onCnisFile = async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  cnisLoading.value = true;
+  motorDown.value = false;
+  errorMessage.value = '';
+  try {
+    const { data } = await LeadsAPI.uploadCnis(
+      props.lead.id,
+      file,
+      form.value.sexo
+    );
+    cnis.value = data;
+  } catch (error) {
+    if (error?.response?.status === 503) {
+      motorDown.value = true;
+    } else {
+      errorMessage.value =
+        error?.response?.data?.error || t('RAMON.SIMULADOR.GENERIC_ERROR');
+    }
+  } finally {
+    cnisLoading.value = false;
+    event.target.value = '';
+  }
+};
+
+const removeCnis = async () => {
+  errorMessage.value = '';
+  try {
+    await LeadsAPI.deleteCnis(props.lead.id);
+    cnis.value = null;
+    resultado.value = null;
+  } catch {
+    errorMessage.value = t('RAMON.SIMULADOR.GENERIC_ERROR');
+  }
+};
 
 const simulate = async () => {
   isLoading.value = true;
@@ -53,6 +95,7 @@ const simulate = async () => {
   try {
     const { data } = await LeadsAPI.simulate(props.lead.id, {
       ...form.value,
+      usar_cnis: Boolean(cnis.value),
     });
     resultado.value = data;
   } catch (error) {
@@ -74,8 +117,61 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
 
 <template>
   <div class="flex flex-col gap-3 p-1" data-testid="lead-simulador">
+    <div
+      v-if="cnis"
+      class="flex flex-col gap-1 p-2 rounded-lg bg-n-alpha-1 border border-n-weak"
+      data-testid="sim-cnis-chip"
+    >
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs font-medium text-n-slate-12">
+          {{ cnis.filename }}
+        </span>
+        <button
+          type="button"
+          data-testid="sim-cnis-remove"
+          class="text-xs text-n-ruby-11"
+          @click="removeCnis"
+        >
+          {{ $t('RAMON.SIMULADOR.CNIS_REMOVE') }}
+        </button>
+      </div>
+      <span class="text-xs text-n-slate-10">
+        {{
+          $t('RAMON.SIMULADOR.CNIS_LOADED', {
+            competencias: cnis.competencias,
+            vinculos: cnis.vinculos,
+          })
+        }}
+      </span>
+      <ul
+        v-if="cnis.avisos && cnis.avisos.length"
+        class="flex flex-col gap-1 text-xs text-n-amber-11 list-disc ps-4"
+        data-testid="sim-cnis-avisos"
+      >
+        <li v-for="(aviso, i) in cnis.avisos" :key="i">{{ aviso }}</li>
+      </ul>
+    </div>
+    <label v-else :class="labelClass">
+      {{
+        cnisLoading
+          ? $t('RAMON.SIMULADOR.CNIS_LOADING')
+          : $t('RAMON.SIMULADOR.CNIS_LABEL')
+      }}
+      <input
+        type="file"
+        accept="application/pdf"
+        data-testid="sim-cnis-file"
+        :disabled="cnisLoading"
+        :class="fieldClass"
+        @change="onCnisFile"
+      />
+      <span class="text-n-slate-10">
+        {{ $t('RAMON.SIMULADOR.CNIS_HINT') }}
+      </span>
+    </label>
+
     <div class="grid grid-cols-2 gap-2">
-      <label :class="labelClass">
+      <label v-if="!cnis" :class="labelClass">
         {{ $t('RAMON.SIMULADOR.NASCIMENTO') }}
         <input
           v-model="form.nascimento"
@@ -84,7 +180,7 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
           :class="fieldClass"
         />
       </label>
-      <label :class="labelClass">
+      <label v-if="!cnis" :class="labelClass">
         {{ $t('RAMON.SIMULADOR.SEXO') }}
         <select v-model="form.sexo" data-testid="sim-sexo" :class="fieldClass">
           <option value="M">{{ $t('RAMON.SIMULADOR.SEXO_M') }}</option>
@@ -100,7 +196,7 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
           :class="fieldClass"
         />
       </label>
-      <label :class="labelClass">
+      <label v-if="!cnis" :class="labelClass">
         {{ $t('RAMON.SIMULADOR.SALARIO') }}
         <input
           v-model="form.salario"

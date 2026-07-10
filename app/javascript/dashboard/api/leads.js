@@ -48,6 +48,17 @@ class LeadsAPI extends ApiClient {
   simulate(leadId, payload) {
     return axios.post(`${this.url}/${leadId}/simulacao`, payload);
   }
+
+  uploadCnis(leadId, file, sexo) {
+    const data = new FormData();
+    data.append('arquivo', file);
+    data.append('sexo', sexo);
+    return axios.post(`${this.url}/${leadId}/cnis`, data);
+  }
+
+  deleteCnis(leadId) {
+    return axios.delete(`${this.url}/${leadId}/cnis`);
+  }
 }
 
 export default new LeadsAPI();

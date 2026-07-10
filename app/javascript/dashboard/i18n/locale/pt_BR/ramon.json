@@ -526,7 +526,12 @@
       "ESTIMATIVA_BASE": "Atrasados = valor mensal × {meses} meses entre a DER e hoje (estimativa).",
       "MOTOR_DOWN": "Motor de cálculos indisponível agora — o simulador volta quando o serviço subir (MOTOR_CALCULOS_URL).",
       "GENERIC_ERROR": "Não deu para simular — confira os campos.",
-      "DISCLAIMER": "Estimativa para conversa — não é promessa de resultado nem valor garantido (OAB)."
+      "DISCLAIMER": "Estimativa para conversa — não é promessa de resultado nem valor garantido (OAB).",
+      "CNIS_LABEL": "CNIS (PDF)",
+      "CNIS_HINT": "Com o CNIS, a simulação usa o histórico real de salários.",
+      "CNIS_LOADING": "Lendo CNIS…",
+      "CNIS_LOADED": "{competencias} competências · {vinculos} vínculos — simulação com histórico real",
+      "CNIS_REMOVE": "Remover"
     },
     "TRIAGE_AGENTS": {
       "TITLE": "Agentes de IA",

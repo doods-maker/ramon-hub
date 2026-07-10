@@ -74,6 +74,20 @@ class Lead < ApplicationRecord
     lead_triages.order(:id).last
   end
 
+  # Resumo do CNIS anexado ao caso (Onda 3b) — só JSON nativo (vai no broadcast).
+  def cnis_resumo
+    return nil if cnis.blank?
+
+    {
+      filename: cnis['filename'],
+      uploaded_at: cnis['uploaded_at'],
+      nascimento: cnis.dig('entrada', 'segurado', 'nascimento'),
+      competencias: cnis.dig('entrada', 'competencias')&.size || 0,
+      vinculos: cnis['vinculos']&.size || 0,
+      avisos: cnis['avisos'] || []
+    }
+  end
+
   def prescription
     return nil if dcb_em.blank?
 
@@ -106,7 +120,8 @@ class Lead < ApplicationRecord
       contact_sexo: contact&.sexo,
       dcb_em: dcb_em,
       # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast (mesmo motivo de `value` acima)
-      benefit_monthly_value: benefit_monthly_value&.to_f
+      benefit_monthly_value: benefit_monthly_value&.to_f,
+      cnis_resumo: cnis_resumo
     }
   end
 
