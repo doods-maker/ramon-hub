@@ -51,6 +51,13 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
+    // Sem contactId a mesma página vira a busca de pessoa (entrada do menu).
+    path: frontendURL('accounts/:accountId/ramon/pessoa'),
+    name: 'ramon_pessoas',
+    component: () => import('./pages/LinhaDaVida.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/pessoa/:contactId'),
     name: 'ramon_linha_da_vida',
     component: () => import('./pages/LinhaDaVida.vue'),

@@ -86,7 +86,8 @@
       "TRIAGEM": "Case Intake",
       "AGENTES": "AI Agents",
       "FUNIL_CONFIG": "Funnel settings",
-      "PLAYBOOKS": "Playbooks"
+      "PLAYBOOKS": "Playbooks",
+      "LINHA_DA_VIDA": "Lifeline"
     },
     "ESTEIRA": {
       "EYEBROW": "Production line",
@@ -347,7 +348,12 @@
         "aposentadoria_idade_urbana": "Reaches urban retirement age",
         "aposentadoria_idade_rural": "Reaches rural retirement age",
         "bpc_loas_idoso": "Reaches BPC/LOAS age (elderly)"
-      }
+      },
+      "TITLE": "Lifeline",
+      "SEARCH_HINT": "Search for a person to open their lifeline.",
+      "SEARCH_PLACEHOLDER": "Name, phone or email…",
+      "SEARCHING": "Searching…",
+      "SEARCH_EMPTY": "No one found for that term."
     },
     "DOSSIE": {
       "OPEN": "Dossier",
