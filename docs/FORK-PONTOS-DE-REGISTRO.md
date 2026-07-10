@@ -222,6 +222,12 @@
 | `app/controllers/api/v1/accounts/lead_simulacoes_controller.rb` (linha de changes) | já existia; +`usar_cnis` — segurado e competências reais do CNIS substituem a estimativa 12× salário | CNIS no Simulador | Onda 3b |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadSimulador.vue` (linha de changes) | já existia; +bloco CNIS (upload PDF, chip com resumo/avisos, remover; esconde campos manuais) | CNIS no Simulador | Onda 3b |
 | `spec/controllers/api/v1/accounts/lead_cnis_controller_spec.rb` | specs: upload/resumo/422/503/sem arquivo/DELETE | cobertura CI | Onda 3b |
+| `db/migrate/20260710120001_create_advbox_events.rb` + `app/models/advbox_event.rb` | tabela `advbox_events` (payload cru jsonb + event_key único = idempotência/replay) | webhook ADVBOX | Flowter |
+| `app/controllers/public/api/v1/advbox_webhooks_controller.rb` | `POST /public/api/v1/advbox_webhooks` — Bearer estático (Flowter não assina HMAC), captura payload cru, enfileira job | webhook ADVBOX | Flowter |
+| `app/jobs/ramon/advbox_event_job.rb` + `app/services/ramon/advbox_event_processor.rb` | roteia evento por nome de etapa/tarefa (normalizado sem acento) → won/atividade/follow-up/rascunho; match por CPF→telefone | webhook ADVBOX | Flowter |
+| `app/jobs/ramon/ntfy_push_job.rb` (linha de changes) | já existia; +kwargs `title:`/`body:` opcionais p/ push custom (retrocompatível) | notificação ADVBOX | Flowter |
+| `config/routes.rb` + `config/initializers/rack_attack.rb` (linhas de changes) | rota pública advbox_webhooks + throttle 60/min | webhook ADVBOX | Flowter |
+| `spec/requests/public/api/v1/advbox_webhooks_spec.rb` + `spec/services/ramon/advbox_event_processor_spec.rb` | specs: auth/idempotência/captura + roteamento dos fluxos | cobertura CI | Flowter |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

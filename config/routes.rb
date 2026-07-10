@@ -641,6 +641,9 @@ Rails.application.routes.draw do
 
         # Ramon — webhook do Cal.com (agenda); assinatura HMAC no header X-Cal-Signature-256
         post 'calcom_webhooks', to: 'calcom_webhooks#create'
+
+        # Ramon — webhook do Flowter/ADVBOX (Bearer estático — o Flowter não assina HMAC)
+        post 'advbox_webhooks', to: 'advbox_webhooks#create'
       end
     end
   end

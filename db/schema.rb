@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_10_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_10_120001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -111,6 +111,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_10_000001) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "advbox_events", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "event_key", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "status", default: "received", null: false
+    t.string "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "event_key"], name: "index_advbox_events_on_account_id_and_event_key", unique: true
+    t.index ["account_id"], name: "index_advbox_events_on_account_id"
   end
 
   create_table "agent_bot_inboxes", force: :cascade do |t|
