@@ -26,6 +26,9 @@ class Ramon::AdvboxEventProcessor
     'RPV / PRECATORIO EMITIDO' => :exito,
     'SENTENCA PROFERIDA' => :marco,
     'RECURSO JULGADO' => :marco,
+    'PERICIA AGENDADA' => :marco,
+    'AUDIENCIA / PERICIA REALIZADA' => :marco,
+    'BENEFICIO CONCEDIDO / IMPLANTACAO' => :concessao,
     'ARQUIVADO/ENCERRADO' => :arquivado,
     'ARQUIVADO POR DESINTERESSE CLIENTE' => :arquivado,
     'ARQUIVADO POR DETERMINACAO JUDICIAL' => :arquivado,
@@ -108,6 +111,15 @@ class Ramon::AdvboxEventProcessor
       Se puder, sua avaliação no Google ajuda muito outras pessoas a nos encontrarem."
     NOTA
     notify(lead, 'Exito: pagamento no ADVBOX', "#{lead.name}: rascunho de comunicado pronto no caso")
+  end
+
+  def concessao(lead, name)
+    activity(lead, 'advbox_concessao', "ADVBOX: #{name}")
+    draft_note(lead, <<~NOTA)
+      RASCUNHO (revisar antes de enviar) — benefício concedido:
+      "#{first_name(lead)}, notícia boa! 🎉 O INSS CONCEDEU o seu benefício. Agora vamos conferir a implantação e os valores — te aviso de cada passo."
+    NOTA
+    notify(lead, 'Beneficio CONCEDIDO (ADVBOX)', "#{lead.name}: rascunho de boa notícia pronto no caso")
   end
 
   def marco(lead, name)

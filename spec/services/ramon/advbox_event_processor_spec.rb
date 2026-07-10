@@ -94,6 +94,21 @@ RSpec.describe Ramon::AdvboxEventProcessor do
     expect(lead.reload.lead_stage).to eq stage_novo
   end
 
+  it 'BENEFÍCIO CONCEDIDO registra concessão e deixa rascunho de boa notícia' do
+    event = process({ 'etapa' => 'BENEFÍCIO CONCEDIDO / IMPLANTAÇÃO', 'cpf' => '52998224725' })
+
+    expect(event.status).to eq 'processed'
+    expect(lead.lead_activities.where(kind: 'advbox_concessao')).to be_present
+    expect(lead.lead_notes.first.body).to include 'CONCEDEU'
+  end
+
+  it 'PERICIA AGENDADA vira marco na Linha da Vida' do
+    event = process({ 'etapa' => 'PERICIA AGENDADA', 'cpf' => '52998224725' })
+
+    expect(event.status).to eq 'processed'
+    expect(lead.lead_activities.where(kind: 'advbox_marco')).to be_present
+  end
+
   it 'notifica via ntfy com título custom quando o tópico está configurado' do
     with_modified_env(NTFY_TOPIC: 'ramon-teste') do
       expect { process({ 'etapa' => 'SENTENÇA PROFERIDA', 'cpf' => '52998224725' }) }
