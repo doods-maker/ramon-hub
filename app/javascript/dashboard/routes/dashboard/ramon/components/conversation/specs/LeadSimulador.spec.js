@@ -68,7 +68,7 @@ describe('LeadSimulador.vue', () => {
     await flushPromises();
     expect(LeadsAPI.simulate).toHaveBeenCalledWith(
       7,
-      expect.objectContaining({ beneficio: 'acidente', salario: '3000' })
+      expect.objectContaining({ beneficio: 'acidente', salario: 3000 })
     );
     expect(wrapper.find('[data-testid="sim-atrasados"]').text()).toContain(
       '17.000,00'
