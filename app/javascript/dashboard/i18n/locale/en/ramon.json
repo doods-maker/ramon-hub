@@ -1,5 +1,12 @@
 {
   "RAMON": {
+    "AGENDA": {
+      "TITLE": "Agenda",
+      "TODAY": "Today",
+      "PREV_WEEK": "Previous week",
+      "NEXT_WEEK": "Next week",
+      "EMPTY": "No appointments this week."
+    },
     "COMMAND": {
       "EYEBROW": "Command Center",
       "TITLE": "Command Center",
@@ -61,12 +68,51 @@
       "JURIDICO": "Legal",
       "INTELIGENCIA": "Intelligence",
       "OVERVIEW": "Command Center",
+      "ESTEIRA": "Esteira",
       "FUNIL": "Pipeline",
+      "AGENDA": "Agenda",
       "SDR": "SDR Panel",
       "TRIAGEM": "Case Intake",
       "AGENTES": "AI Agents",
       "FUNIL_CONFIG": "Funnel settings",
       "PLAYBOOKS": "Playbooks"
+    },
+    "ESTEIRA": {
+      "EYEBROW": "Production line",
+      "TITLE": "Esteira",
+      "RELOAD": "Reload",
+      "BOARD": {
+        "ACTIONS": "Actions queued",
+        "VALUE": "Value at stake",
+        "DONE": "Done today"
+      },
+      "ACTION": {
+        "CONTACT": "Contact the lead now",
+        "TASK": "Complete the task",
+        "REPLY": "Reply",
+        "FOLLOW_UP": "Follow up"
+      },
+      "REASON": {
+        "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
+        "PRESCRIPTION_LOST": "{count} installments already lost",
+        "PRESCRIPTION_SOON": "prescribes in {months} months",
+        "TASK_OVERDUE": "overdue task: {title}",
+        "TASK_TODAY": "task due today: {title}",
+        "NEW_FROM_LP": "new LP lead ({source}) without reply",
+        "AWAITING_HUMAN": "triage awaiting a human",
+        "STALLED": "{days} days stalled in stage"
+      },
+      "OPEN_CONVERSATION": "Open conversation",
+      "OPEN_LIFELINE": "Lifeline",
+      "DONE": "Done",
+      "SKIP": "Skip",
+      "SNOOZE": "Snooze",
+      "DONE_TOAST": "Logged — next!",
+      "SNOOZED_TOAST": "Snoozed until tomorrow",
+      "NEXT_TITLE": "Up next",
+      "EMPTY_TITLE": "All clear",
+      "EMPTY_BODY": "Nothing urgent right now — check the pipeline.",
+      "EMPTY_CTA": "Open pipeline"
     },
     "RAIL": {
       "INTERNOS": "Internal",
@@ -245,6 +291,14 @@
         "SEX_M": "Male",
         "SEX_F": "Female"
       },
+      "CONSENT": {
+        "LABEL": "Marketing consent (LGPD)",
+        "GRANTED": "Granted on {date} via {source}",
+        "REVOKED": "Revoked on {date}",
+        "NONE": "Not recorded",
+        "GRANT": "Record",
+        "REVOKE": "Revoke"
+      },
       "NOTE_TEMPLATES": {
         "LABEL": "Note template…",
         "ITEMS": {
@@ -277,6 +331,39 @@
         "bpc_loas_idoso": "Reaches BPC/LOAS age (elderly)"
       }
     },
+    "DOSSIE": {
+      "OPEN": "Dossier",
+      "TITLE": "30-second dossier",
+      "LOADING": "Loading…",
+      "ERROR": "Could not load the dossier",
+      "COPY": "Copy dossier",
+      "COPIED": "Dossier copied!",
+      "COPY_FAILED": "Could not copy",
+      "WHO": "Who they are",
+      "AGE": "{age} years old",
+      "AGE_LABEL": "Age",
+      "PHONE": "Phone",
+      "CITY": "City",
+      "STAGE": "Stage",
+      "VALUE": "Case value",
+      "CONSENT": "LGPD consent",
+      "CONSENT_YES": "recorded",
+      "CONSENT_NO": "not recorded",
+      "ORIGIN": "Where they came from",
+      "REFERRAL": "Came by referral",
+      "TRIAGE": "What triage detected",
+      "TRIAGE_EMPTY": "No triage run yet.",
+      "TRIAGE_AWAITING_HUMAN": "Awaiting human review",
+      "THESIS": "Thesis and arguments",
+      "THESIS_EMPTY": "No thesis set for this case.",
+      "FEE": "Fee",
+      "OBJECTIONS": "Likely objections",
+      "TIMELINE": "Recent timeline",
+      "TIMELINE_EMPTY": "Nothing recorded yet.",
+      "PENDING": "Pending items",
+      "PENDING_EMPTY": "No open pending items.",
+      "DOC_PREFIX": "Document:"
+    },
     "LEAD_PANEL": {
       "TITLE": "Lead",
       "TABS": {
@@ -298,6 +385,10 @@
           "NOTE_ADDED": "added a note",
           "TASK_CREATED": "created task",
           "TASK_COMPLETED": "completed task",
+          "MEETING_SCHEDULED": "scheduled a meeting via Cal.com",
+          "MEETING_CANCELLED": "meeting cancelled via Cal.com",
+          "ESTEIRA_DONE": "resolved in the Esteira",
+          "THESIS_CHANGED": "changed the thesis",
           "LP_RECAPTURED": "received a new landing page form"
         }
       }
@@ -410,6 +501,34 @@
         "VENDA_OBJECOES": "Pitch and objections",
         "PROXIMO_PASSO": "Next step"
       }
+    },
+    "SIMULADOR": {
+      "TAB": "Simulator",
+      "NASCIMENTO": "Date of birth",
+      "SEXO": "Sex",
+      "SEXO_M": "Male",
+      "SEXO_F": "Female",
+      "DER": "DER (claim filing date)",
+      "SALARIO": "Average salary (R$)",
+      "BENEFICIO": "Benefit",
+      "BENEFICIO_TEMPORARIA": "Temporary disability (B31)",
+      "BENEFICIO_PERMANENTE": "Permanent disability (B32)",
+      "BENEFICIO_ACIDENTE": "Accident allowance (B36)",
+      "ORIGEM": "Origin",
+      "ORIGEM_PREVIDENCIARIA": "Social security",
+      "ORIGEM_ACIDENTARIA": "Work accident",
+      "ACRESCIMO": "25% addition (severe disability)",
+      "SIMULAR": "Simulate",
+      "SIMULANDO": "Simulating…",
+      "ATRASADOS": "Estimated back pay",
+      "PERDA_MENSAL": "Waiting, you lose {value}/month",
+      "HONORARIO": "Estimated fee",
+      "HONORARIO_FORMULA": "{percentual}% of back pay + {n} monthly benefits ({tese})",
+      "NO_FEE_CONFIG": "The lead's thesis has no fee configured (% and monthly benefits) — set it up in Playbooks.",
+      "ESTIMATIVA_BASE": "Back pay = monthly value × {meses} months between the DER and today (estimate).",
+      "MOTOR_DOWN": "Calculation engine unavailable right now — the simulator comes back when the service is up (MOTOR_CALCULOS_URL).",
+      "GENERIC_ERROR": "Could not simulate — check the fields.",
+      "DISCLAIMER": "Estimate for conversation only — not a promise of outcome nor a guaranteed amount (OAB)."
     },
     "TRIAGE_AGENTS": {
       "TITLE": "AI Agents",

@@ -81,6 +81,20 @@
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` e `pt_BR/ramon.json` | bloco `OVERVIEW` (órfão) trocado por `COMMAND.*` (EYEBROW, TITLE, RELOAD, TODAY, FUNNEL, WEEK) | i18n do Centro de Comando | PR-B t3 |
 | `config/routes.rb` | `resource :ramon_copilot, only: [:create], controller: 'ramon_copilot'` dentro do `scope module: :conversations` (após `resource :draft_messages`) | endpoint do Copilot da conversa (resumo + rascunho sugerido) | copilot |
 | `app/javascript/dashboard/i18n/locale/en/ramon.json` e `pt_BR/ramon.json` | +bloco `COPILOT.*` dentro de `RAMON` | i18n do Copilot da conversa | copilot |
+| `app/services/whatsapp/oneoff_campaign_service.rb` | +guard LGPD em `process_contact` (pula contato sem `custom_attributes.consent_marketing.granted == true`) + contador `@skipped_without_consent` logado em `process_audience` + método privado `marketing_consent_granted?` | campanha em massa respeita consentimento LGPD | consent |
+| `spec/services/whatsapp/oneoff_campaign_service_spec.rb` | contatos existentes ganham trait `:with_marketing_consent`; +3 exemplos (pula sem consent + log de contagem, pula revogado, envia só p/ consentido) | cobertura do guard LGPD | consent |
+| `spec/factories/contacts.rb` | +trait `:with_marketing_consent` (custom_attributes.consent_marketing granted) | factory p/ specs de consentimento | consent |
+| `app/controllers/api/v1/accounts/contacts_controller.rb` | `destroy` (~linha 108): `@contact.destroy!` → `Ramon::ContactAnonymizer.new(@contact).perform` (guard de presença online mantido) | LGPD: delete da UI anonimiza em vez de destruir; merge de contatos e demais fluxos internos seguem com destroy físico | 7c |
+| `config/routes.rb` | `get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'` (logo após a rota `linha_da_vida`) | endpoint de export LGPD (art. 18) do titular | 7c |
+| `app/models/concerns/ramon_pessoa.rb` (arquivo do fork, mas muda comportamento do model core `Contact`) | +`audited only: %w[name email phone_number identifier cpf data_nascimento sexo blocked], associated_with: :account` | trilha de auditoria de PII do Contact (gem `audited` já no Gemfile; tabela `audits` já existia — SEM migração) | 7c |
+| `app/javascript/dashboard/api/contacts.js` | +método `exportTitular(contactId)` (GET `contacts/:id/titular_export`) | client do export LGPD | 7c |
+| `app/javascript/dashboard/components-next/Contacts/Pages/ContactDetails.vue` | +import `ContactAPI`; +handler `exportTitularData` (download blob JSON); +seção "Exportar dados do titular" no bloco admin, antes da seção de delete | botão de export LGPD no painel do contato | 7c |
+| `app/javascript/dashboard/i18n/locale/en/contact.json` e `pt_BR/contact.json` | +bloco `CONTACTS_LAYOUT.DETAILS.TITULAR_EXPORT`; textos `DELETE_CONTACT*`/`DELETE_DIALOG` reescritos para "anonimizar" | i18n do export + wording honesto do delete | 7c |
+| `config/routes.rb` | `post 'calcom_webhooks'` no namespace `public/api/v1` (após `ramon_leads`) | webhook do Cal.com (agenda) | 9c-agenda |
+| `config/initializers/rack_attack.rb` | throttle `public/calcom_webhooks` (30 POST/min por IP) | anti-abuso do webhook Cal.com | 9c-agenda |
+| `config/routes.rb` | `resource :ramon_esteira, only: [:show] do post :done; post :snooze end` (após `resource :ramon_dashboard`) | fila do dia (Esteira) + ações Feito/Adiar | Esteira |
+| `config/routes.rb` | `resource :simulacao, only: [:create], controller: 'lead_simulacoes'` dentro do bloco `resources :leads` (após `resources :triages`) | endpoint do Simulador ao vivo (Sala de Fechamento) | Onda 2 |
+| `config/routes.rb` | `member { get :dossie, to: 'lead_dossies#show' }` dentro do bloco `resources :leads` (após o `collection`) | endpoint agregador do Dossiê de 30 segundos | dossiê |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -185,6 +199,22 @@
 | `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; `getTriages/createTriage` (F2.1b) + `createKit` (F2.1c) | API client | F2.1b/c |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; abas Triagem (b) e Kit (c); X de fechar + discard no rodapé (#26) | painel do lead | F2.1b/c |
 | specs das fatias (services, controllers, models, componentes, helper) | cobertura CI de triagem e kit | specs | F2.1b/c |
+| `spec/requests/ramon/contact_marketing_consent_spec.rb` | NOVO: request spec do toggle manual de consentimento via `contacts#update` (merge de `custom_attributes.consent_marketing`, preserva demais chaves) | cobertura do consentimento manual | consent |
+| `app/services/ramon/contact_anonymizer.rb` | anonimiza o titular (nome → "Titular anonimizado #id", zera email/phone/identifier/cpf/data_nascimento/sexo/attrs, purga avatar), redige PII de mensagens e notas via `Ramon::Pseudonymizer` e purga a trilha do audited | LGPD art. 16 | 7c |
+| `app/services/ramon/titular_export.rb` | dump JSON completo do titular: dados cadastrais, leads (atividades/notas/tarefas/triagens), notas do contato, conversas com mensagens | LGPD art. 18 | 7c |
+| `app/controllers/api/v1/accounts/titular_exports_controller.rb` | GET show → `render json` do `Ramon::TitularExport` | endpoint do export | 7c |
+| `app/policies/titular_export_policy.rb` | `show?` só administrator | autorização do export | 7c |
+| `spec/services/ramon/{contact_anonymizer,titular_export}_spec.rb` + `spec/controllers/api/v1/accounts/titular_exports_controller_spec.rb` + `spec/models/concerns/ramon_pessoa_spec.rb` | cobertura: anonimização + redação + purge de audits; export com conversas/mensagens; endpoint (admin ok / agent 401); audited grava PII e ignora não-PII | specs | 7c |
+| `app/controllers/public/api/v1/calcom_webhooks_controller.rb` | webhook Cal.com: HMAC `X-Cal-Signature-256` (`CALCOM_WEBHOOK_SECRET`), BOOKING_CREATED/CANCELLED/RESCHEDULED → lead_activity + lead_task `meeting`; sem match cria contact+lead+notificação (conta de `RAMON_LEAD_CAPTURE_ACCOUNT_ID`) | agenda Cal.com → funil | 9c-agenda |
+| `spec/requests/public/api/v1/calcom_webhooks_spec.rb` | specs: assinatura válida/inválida, match fone/email, sem match, cancel/reschedule | cobertura do webhook Cal.com | 9c-agenda |
+| `app/javascript/dashboard/routes/dashboard/ramon/pages/Agenda.vue` | visão calendário semanal (7 colunas) das lead_tasks abertas; card → Funil + drawer do lead | aba Agenda | 9c-agenda |
+| `ramon.routes.js` + `IntranetSidebar.vue` + `ramon.json` (en/pt_BR) | rota `ramon_agenda`, item de menu e i18n (NAV.AGENDA, AGENDA.*, KIND.MEETING_*) | aba Agenda | 9c-agenda |
+| `lib/ramon/motor_client.rb` | NOVO: cliente HTTP (HTTParty) do motor de cálculos (`ENV MOTOR_CALCULOS_URL`, timeouts 5s/15s, `UnavailableError`/`ValidationError`) | integração hub↔motor | Onda 2 |
+| `app/controllers/api/v1/accounts/lead_simulacoes_controller.rb` | NOVO: `POST /leads/:id/simulacao` — monta payload do motor (12 competências do salário médio), estima atrasados (mensal × meses DER→hoje) e aplica honorário da tese; 422/503 com mensagem | Simulador ao vivo | Onda 2 |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadSimulador.vue` | NOVO: seção "Simulador" do painel do lead (form mínimo, cartão de resultado, disclaimer OAB fixo, estado motor-fora-do-ar) | Simulador ao vivo | Onda 2 |
+| `app/javascript/dashboard/api/leads.js` (linha de changes) | já existia; +`simulate(leadId, payload)` | API client | Onda 2 |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/conversation/LeadConversationPanel.vue` (linha de changes) | já existia; +AccordionItem "Simulador" (recolhido por padrão, após o Kit) | painel do lead | Onda 2 |
+| `spec/controllers/api/v1/accounts/lead_simulacoes_controller_spec.rb` + `.../specs/LeadSimulador.spec.js` | specs: sucesso (WebMock), 422 do motor, motor fora do ar/sem ENV, honorário da tese, pré-preenchimento e estados do form | cobertura CI | Onda 2 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

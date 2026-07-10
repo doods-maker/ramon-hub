@@ -54,6 +54,7 @@ const mountPanel = (
         LeadPlaybook: true,
         LeadTriage: true,
         LeadKit: true,
+        LeadSimulador: true,
       },
     },
   });

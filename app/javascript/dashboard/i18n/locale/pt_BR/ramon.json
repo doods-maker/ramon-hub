@@ -1,5 +1,12 @@
 {
   "RAMON": {
+    "AGENDA": {
+      "TITLE": "Agenda",
+      "TODAY": "Hoje",
+      "PREV_WEEK": "Semana anterior",
+      "NEXT_WEEK": "Próxima semana",
+      "EMPTY": "Nenhum compromisso nesta semana."
+    },
     "COMMAND": {
       "EYEBROW": "Centro de Comando",
       "TITLE": "Centro de Comando",
@@ -61,12 +68,51 @@
       "JURIDICO": "Jurídico",
       "INTELIGENCIA": "Inteligência",
       "OVERVIEW": "Centro de Comando",
+      "ESTEIRA": "Esteira",
       "FUNIL": "Funil de Leads",
+      "AGENDA": "Agenda",
       "SDR": "Painel do SDR",
       "TRIAGEM": "Triagem de Iniciais",
       "AGENTES": "Agentes de IA",
       "FUNIL_CONFIG": "Configurações do Funil",
       "PLAYBOOKS": "Playbooks"
+    },
+    "ESTEIRA": {
+      "EYEBROW": "Linha de produção",
+      "TITLE": "Esteira",
+      "RELOAD": "Recarregar",
+      "BOARD": {
+        "ACTIONS": "Ações na fila",
+        "VALUE": "R$ em jogo",
+        "DONE": "Feitas hoje"
+      },
+      "ACTION": {
+        "CONTACT": "Falar com o lead agora",
+        "TASK": "Cumprir a tarefa",
+        "REPLY": "Responder",
+        "FOLLOW_UP": "Retomar contato"
+      },
+      "REASON": {
+        "PRESCRIPTION_BLEEDING": "{value}/mês prescrevendo",
+        "PRESCRIPTION_LOST": "{count} parcelas já prescritas",
+        "PRESCRIPTION_SOON": "prescreve em {months} meses",
+        "TASK_OVERDUE": "tarefa vencida: {title}",
+        "TASK_TODAY": "tarefa de hoje: {title}",
+        "NEW_FROM_LP": "lead novo da LP ({source}) sem resposta",
+        "AWAITING_HUMAN": "triagem aguardando humano",
+        "STALLED": "{days} dias parado na etapa"
+      },
+      "OPEN_CONVERSATION": "Abrir conversa",
+      "OPEN_LIFELINE": "Linha da Vida",
+      "DONE": "Feito",
+      "SKIP": "Pular",
+      "SNOOZE": "Adiar",
+      "DONE_TOAST": "Registrado — próximo!",
+      "SNOOZED_TOAST": "Adiado para amanhã",
+      "NEXT_TITLE": "Próximos na fila",
+      "EMPTY_TITLE": "Esteira zerada",
+      "EMPTY_BODY": "Nada urgente agora — veja o funil.",
+      "EMPTY_CTA": "Abrir funil"
     },
     "RAIL": {
       "INTERNOS": "Internos",
@@ -243,6 +289,14 @@
         "SEX_M": "Masculino",
         "SEX_F": "Feminino"
       },
+      "CONSENT": {
+        "LABEL": "Consentimento de marketing (LGPD)",
+        "GRANTED": "Concedido em {date} via {source}",
+        "REVOKED": "Revogado em {date}",
+        "NONE": "Não registrado",
+        "GRANT": "Registrar",
+        "REVOKE": "Revogar"
+      },
       "NOTE_TEMPLATES": {
         "LABEL": "Modelo de nota…",
         "ITEMS": {
@@ -275,6 +329,39 @@
         "bpc_loas_idoso": "Atinge a idade do BPC/LOAS (idoso)"
       }
     },
+    "DOSSIE": {
+      "OPEN": "Dossiê",
+      "TITLE": "Dossiê de 30 segundos",
+      "LOADING": "Carregando…",
+      "ERROR": "Não foi possível carregar o dossiê",
+      "COPY": "Copiar dossiê",
+      "COPIED": "Dossiê copiado!",
+      "COPY_FAILED": "Não foi possível copiar",
+      "WHO": "Quem é",
+      "AGE": "{age} anos",
+      "AGE_LABEL": "Idade",
+      "PHONE": "Telefone",
+      "CITY": "Cidade",
+      "STAGE": "Etapa",
+      "VALUE": "Valor do caso",
+      "CONSENT": "Consentimento LGPD",
+      "CONSENT_YES": "registrado",
+      "CONSENT_NO": "não registrado",
+      "ORIGIN": "De onde veio",
+      "REFERRAL": "Veio por indicação",
+      "TRIAGE": "O que a triagem detectou",
+      "TRIAGE_EMPTY": "Nenhuma triagem feita ainda.",
+      "TRIAGE_AWAITING_HUMAN": "Aguardando revisão humana",
+      "THESIS": "Tese e argumentos",
+      "THESIS_EMPTY": "Nenhuma tese definida para este caso.",
+      "FEE": "Honorário",
+      "OBJECTIONS": "Objeções prováveis",
+      "TIMELINE": "Linha do tempo recente",
+      "TIMELINE_EMPTY": "Nada registrado ainda.",
+      "PENDING": "Pendências",
+      "PENDING_EMPTY": "Nenhuma pendência aberta.",
+      "DOC_PREFIX": "Documento:"
+    },
     "LEAD_PANEL": {
       "TITLE": "Lead",
       "TABS": {
@@ -296,6 +383,10 @@
           "NOTE_ADDED": "adicionou nota",
           "TASK_CREATED": "criou tarefa",
           "TASK_COMPLETED": "concluiu tarefa",
+          "MEETING_SCHEDULED": "agendou reunião via Cal.com",
+          "MEETING_CANCELLED": "reunião cancelada via Cal.com",
+          "ESTEIRA_DONE": "resolveu na Esteira",
+          "THESIS_CHANGED": "mudou a tese",
           "LP_RECAPTURED": "recebeu novo formulário da LP"
         }
       }
@@ -408,6 +499,34 @@
         "VENDA_OBJECOES": "Venda e objeções",
         "PROXIMO_PASSO": "Próximo passo"
       }
+    },
+    "SIMULADOR": {
+      "TAB": "Simulador",
+      "NASCIMENTO": "Nascimento",
+      "SEXO": "Sexo",
+      "SEXO_M": "Masculino",
+      "SEXO_F": "Feminino",
+      "DER": "DER (data do requerimento)",
+      "SALARIO": "Salário médio (R$)",
+      "BENEFICIO": "Benefício",
+      "BENEFICIO_TEMPORARIA": "Incapacidade temporária (B31)",
+      "BENEFICIO_PERMANENTE": "Incapacidade permanente (B32)",
+      "BENEFICIO_ACIDENTE": "Auxílio-acidente (B36)",
+      "ORIGEM": "Origem",
+      "ORIGEM_PREVIDENCIARIA": "Previdenciária",
+      "ORIGEM_ACIDENTARIA": "Acidentária",
+      "ACRESCIMO": "Acréscimo de 25% (grande invalidez)",
+      "SIMULAR": "Simular",
+      "SIMULANDO": "Simulando…",
+      "ATRASADOS": "Atrasados estimados",
+      "PERDA_MENSAL": "Esperando, você perde {value}/mês",
+      "HONORARIO": "Honorário estimado",
+      "HONORARIO_FORMULA": "{percentual}% dos atrasados + {n} mensalidades ({tese})",
+      "NO_FEE_CONFIG": "A tese do lead está sem honorário configurado (% e nº de mensalidades) — cadastre em Playbooks.",
+      "ESTIMATIVA_BASE": "Atrasados = valor mensal × {meses} meses entre a DER e hoje (estimativa).",
+      "MOTOR_DOWN": "Motor de cálculos indisponível agora — o simulador volta quando o serviço subir (MOTOR_CALCULOS_URL).",
+      "GENERIC_ERROR": "Não deu para simular — confira os campos.",
+      "DISCLAIMER": "Estimativa para conversa — não é promessa de resultado nem valor garantido (OAB)."
     },
     "TRIAGE_AGENTS": {
       "TITLE": "Agentes de IA",

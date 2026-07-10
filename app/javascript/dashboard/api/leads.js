@@ -28,6 +28,10 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/notes`, { body });
   }
 
+  getDossie(leadId) {
+    return axios.get(`${this.url}/${leadId}/dossie`);
+  }
+
   getTriages(leadId) {
     return axios.get(`${this.url}/${leadId}/triages`);
   }
@@ -39,6 +43,10 @@ class LeadsAPI extends ApiClient {
 
   createKit(leadId, triageId) {
     return axios.post(`${this.url}/${leadId}/triages/${triageId}/kit`);
+  }
+
+  simulate(leadId, payload) {
+    return axios.post(`${this.url}/${leadId}/simulacao`, payload);
   }
 }
 

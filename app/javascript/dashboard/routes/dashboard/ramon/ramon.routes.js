@@ -9,6 +9,12 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/esteira'),
+    name: 'ramon_esteira',
+    component: () => import('./pages/Esteira.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/atalhos'),
     name: 'ramon_external_shortcuts',
     component: () => import('./pages/ExternalShortcuts.vue'),
@@ -18,6 +24,12 @@ export const routes = [
     path: frontendURL('accounts/:accountId/ramon/funil'),
     name: 'ramon_funil',
     component: () => import('./pages/Funil.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
+    path: frontendURL('accounts/:accountId/ramon/agenda'),
+    name: 'ramon_agenda',
+    component: () => import('./pages/Agenda.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
@@ -42,6 +54,12 @@ export const routes = [
     path: frontendURL('accounts/:accountId/ramon/pessoa/:contactId'),
     name: 'ramon_linha_da_vida',
     component: () => import('./pages/LinhaDaVida.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
+    path: frontendURL('accounts/:accountId/ramon/lead/:leadId/dossie'),
+    name: 'ramon_lead_dossie',
+    component: () => import('./pages/Dossie.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
 ];

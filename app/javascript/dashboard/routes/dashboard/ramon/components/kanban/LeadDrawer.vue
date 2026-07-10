@@ -66,6 +66,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
           $t('RAMON.LINHA_DA_VIDA.OPEN')
         }}
       </router-link>
+
+      <router-link
+        data-testid="drawer-dossie"
+        :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
+        class="flex items-center gap-1 mt-2 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak hover:bg-n-alpha-2"
+        @click="close"
+      >
+        <span class="i-lucide-file-text size-4" />{{ $t('RAMON.DOSSIE.OPEN') }}
+      </router-link>
     </aside>
   </div>
 </template>

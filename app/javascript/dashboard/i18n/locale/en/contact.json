@@ -484,16 +484,23 @@
     "DETAILS": {
       "CREATED_AT": "Created {date}",
       "LAST_ACTIVITY": "Last active {date}",
-      "DELETE_CONTACT_DESCRIPTION": "Permanently delete this contact. This action is irreversible",
-      "DELETE_CONTACT": "Delete contact",
+      "DELETE_CONTACT_DESCRIPTION": "Anonymize this contact (LGPD): personal data is erased and redacted from messages; conversations and statistics are kept. This action is irreversible",
+      "DELETE_CONTACT": "Delete contact (anonymize)",
       "DELETE_DIALOG": {
-        "TITLE": "Confirm Deletion",
-        "DESCRIPTION": "Are you sure you want to delete this contact?",
-        "CONFIRM": "Yes, Delete",
+        "TITLE": "Confirm anonymization",
+        "DESCRIPTION": "Are you sure? The contact's personal data will be erased and redacted from messages. Conversations are kept. This is irreversible.",
+        "CONFIRM": "Yes, anonymize",
         "API": {
-          "SUCCESS_MESSAGE": "Contact deleted successfully",
-          "ERROR_MESSAGE": "Could not delete contact. Please try again later."
+          "SUCCESS_MESSAGE": "Contact anonymized successfully",
+          "ERROR_MESSAGE": "Could not anonymize contact. Please try again later."
         }
+      },
+      "TITULAR_EXPORT": {
+        "TITLE": "Export subject data (LGPD)",
+        "DESCRIPTION": "Download the full JSON with the contact's data, leads, notes and conversations, to answer a data subject access request (LGPD art. 18).",
+        "BUTTON": "Export subject data",
+        "SUCCESS_MESSAGE": "Subject data exported successfully",
+        "ERROR_MESSAGE": "Could not export subject data. Please try again later."
       },
       "AVATAR": {
         "UPLOAD": {

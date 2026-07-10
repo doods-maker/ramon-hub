@@ -286,12 +286,18 @@ Rails.application.routes.draw do
           resources :labels, only: [:index, :show, :create, :update, :destroy]
           resource :lead_config, only: [:show], controller: 'lead_config'
           resource :ramon_dashboard, only: [:show], controller: 'ramon_dashboard'
+          resource :ramon_esteira, only: [:show], controller: 'ramon_esteira' do
+            post :done
+            post :snooze
+          end
           resources :ramon_lead_imports, only: [:create, :show]
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
+          get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'
           resources :leads, only: [:index, :show, :create, :update, :destroy] do
             collection do
               post :for_conversation
             end
+            member { get :dossie, to: 'lead_dossies#show' }
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :notes, only: [:index, :create], controller: 'lead_notes'
             resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do
@@ -302,6 +308,7 @@ Rails.application.routes.draw do
                 post :kit
               end
             end
+            resource :simulacao, only: [:create], controller: 'lead_simulacoes'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
           resources :lead_stages, only: [:create, :update, :destroy] do
@@ -630,6 +637,9 @@ Rails.application.routes.draw do
         # a rota com token no path fica por compatibilidade até as LPs migrarem)
         post 'ramon_leads', to: 'ramon_leads#create'
         post 'ramon_leads/:capture_token', to: 'ramon_leads#create'
+
+        # Ramon — webhook do Cal.com (agenda); assinatura HMAC no header X-Cal-Signature-256
+        post 'calcom_webhooks', to: 'calcom_webhooks#create'
       end
     end
   end

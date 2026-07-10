@@ -16,5 +16,10 @@ FactoryBot.define do
     trait :with_phone_number do
       phone_number { Faker::PhoneNumber.cell_phone_in_e164 }
     end
+
+    # Ramon fork (LGPD): consentimento de marketing registrado
+    trait :with_marketing_consent do
+      custom_attributes { { 'consent_marketing' => { 'granted' => true, 'at' => '2026-01-01T00:00:00Z', 'source' => 'manual' } } }
+    end
   end
 end

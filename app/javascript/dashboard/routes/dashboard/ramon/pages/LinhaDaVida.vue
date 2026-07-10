@@ -200,6 +200,13 @@ const fmtDate = value => {
             >
               {{ $t('RAMON.FUNIL.OPEN_CONVERSATION') }}
             </router-link>
+            <router-link
+              data-testid="lifeline-dossie-link"
+              :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
+              class="ml-3 text-xs text-n-iris-11 hover:underline"
+            >
+              {{ $t('RAMON.DOSSIE.OPEN') }}
+            </router-link>
           </li>
         </ul>
       </section>

@@ -17,10 +17,22 @@ const sections = computed(() => [
         to: accountScopedRoute('ramon_index'),
       },
       {
+        key: 'esteira',
+        label: t('RAMON.NAV.ESTEIRA'),
+        icon: 'i-lucide-zap',
+        to: accountScopedRoute('ramon_esteira'),
+      },
+      {
         key: 'funil',
         label: t('RAMON.NAV.FUNIL'),
         icon: 'i-lucide-filter',
         to: accountScopedRoute('ramon_funil'),
+      },
+      {
+        key: 'agenda',
+        label: t('RAMON.NAV.AGENDA'),
+        icon: 'i-lucide-calendar-days',
+        to: accountScopedRoute('ramon_agenda'),
       },
       {
         key: 'funil_config',

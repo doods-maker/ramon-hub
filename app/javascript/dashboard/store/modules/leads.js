@@ -187,6 +187,10 @@ export const actions = {
           : lead.contact_data_nascimento,
       contact_sexo:
         payload.sexo !== undefined ? payload.sexo : lead.contact_sexo,
+      contact_consent_marketing:
+        payload.custom_attributes?.consent_marketing !== undefined
+          ? payload.custom_attributes.consent_marketing
+          : lead.contact_consent_marketing,
     });
   },
 };

@@ -107,6 +107,11 @@ class ContactAPI extends ApiClient {
   exportContacts(queryPayload) {
     return axios.post(`${this.url}/export`, queryPayload);
   }
+
+  // Ramon (LGPD art. 18): dump JSON completo do titular
+  exportTitular(contactId) {
+    return axios.get(`${this.url}/${contactId}/titular_export`);
+  }
 }
 
 export default new ContactAPI();

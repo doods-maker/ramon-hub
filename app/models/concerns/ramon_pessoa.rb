@@ -7,6 +7,12 @@ module RamonPessoa
     validates :cpf, allow_nil: true, uniqueness: { scope: [:account_id] }, cpf: true
     validates :sexo, allow_nil: true, inclusion: { in: %w[M F] }
     has_many :leads, dependent: :nullify
+
+    # LGPD: trilha de auditoria (gem audited, tabela audits já existente no
+    # schema) das mudanças em dados pessoais do titular. Limitada às colunas
+    # de PII pra não inflar a tabela com last_activity_at e afins.
+    audited only: %w[name email phone_number identifier cpf data_nascimento sexo blocked],
+            associated_with: :account
   end
 
   private
