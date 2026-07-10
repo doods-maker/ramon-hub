@@ -205,7 +205,8 @@
         "CREATED_BEFORE": "Criado até",
         "STALLED": "Parados",
         "NO_OPEN_TASK": "Sem próxima ação",
-        "CLEAR": "Limpar"
+        "CLEAR": "Limpar",
+        "TOGGLE": "Filtros"
       },
       "VIEWS": {
         "SAVE": "Salvar view",
