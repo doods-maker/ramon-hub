@@ -47,6 +47,27 @@ const stageLeads = stageId => {
 const filters = computed(() => getters['leads/getFilters'].value);
 const onFilterUpdate = partial => store.dispatch('leads/setFilters', partial);
 
+// Painel de filtros recolhido por padrão — o kanban é o protagonista da tela.
+// O badge no botão mostra quantos filtros estão ativos mesmo com o painel fechado.
+const filtersOpen = ref(false);
+const FILTER_KEYS = [
+  'q',
+  'benefitTypeId',
+  'leadPriorityId',
+  'agentId',
+  'source',
+  'channel',
+  'leadStageId',
+  'createdAfter',
+  'createdBefore',
+  'stalled',
+  'noOpenTask',
+];
+const activeFilterCount = computed(() => {
+  const f = filters.value || {};
+  return FILTER_KEYS.filter(key => f[key]).length;
+});
+
 const onMove = async ({ id, leadStageId, newIndex }) => {
   const stage = findStage(leadStageId);
   const lead = findLead(id);
@@ -228,6 +249,26 @@ const exportCsv = () => {
       </span>
       <div class="flex items-center gap-2">
         <button
+          data-testid="filters-toggle"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border hover:text-n-slate-12"
+          :class="
+            filtersOpen || activeFilterCount
+              ? 'border-n-iris-8 text-n-iris-11'
+              : 'border-n-weak text-n-slate-11'
+          "
+          @click="filtersOpen = !filtersOpen"
+        >
+          <span class="i-lucide-sliders-horizontal size-4" />
+          {{ $t('RAMON.FUNIL.FILTERS.TOGGLE') }}
+          <span
+            v-if="activeFilterCount"
+            data-testid="filters-active-count"
+            class="flex items-center justify-center min-w-4 h-4 px-1 text-[10px] rounded-full bg-n-iris-9 text-white"
+          >
+            {{ activeFilterCount }}
+          </span>
+        </button>
+        <button
           data-testid="export-csv"
           class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:text-n-slate-12"
           @click="exportCsv"
@@ -244,8 +285,12 @@ const exportCsv = () => {
         </button>
       </div>
     </div>
-    <SavedViews />
-    <KanbanFilters :filters="filters" @update="onFilterUpdate" />
+    <!-- v-show (não v-if): o board reage ao evento update do KanbanFilters
+         mesmo com o painel fechado, e abrir/fechar não perde o estado da busca -->
+    <div v-show="filtersOpen" class="pb-1 border-b border-n-weak">
+      <SavedViews />
+      <KanbanFilters :filters="filters" @update="onFilterUpdate" />
+    </div>
     <!-- min-h-0 permite a faixa encolher dentro do flex pai; sem isso a coluna
          cresce além da viewport e os cards abaixo da dobra ficam inacessíveis -->
     <div class="flex flex-1 min-h-0 gap-3 px-4 pb-4 overflow-x-auto">
@@ -254,7 +299,7 @@ const exportCsv = () => {
         group="stages"
         item-key="id"
         ghost-class="ramon-drag-ghost"
-        class="flex items-start h-full gap-3"
+        class="flex h-full gap-3"
         handle=".stage-drag-handle"
         @change="onColumnsReorder"
       >

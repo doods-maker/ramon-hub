@@ -21,8 +21,10 @@ const stages = computed(() => getters['leadConfig/getStages']?.value ?? []);
 const emitUpdate = partial => emit('update', partial);
 
 // Borda destaca o controle com filtro ativo; transparente mantém o tamanho.
+// w-44 explícito: o CSS global do Chatwoot põe width:100% em select/input e
+// cada controle viraria uma linha inteira (paredão de filtros).
 const ctl =
-  'px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 border text-n-slate-12 outline-none focus:border-n-slate-8';
+  'w-44 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 border text-n-slate-12 outline-none focus:border-n-slate-8';
 const activeClass = value => (value ? 'border-n-iris-8' : 'border-transparent');
 
 const hasActive = computed(() => {
@@ -81,7 +83,7 @@ const clearFilters = () => {
     <input
       v-model="search"
       data-testid="filter-search"
-      class="px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border text-n-slate-12 outline-none focus:border-n-slate-8"
+      class="w-56 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border text-n-slate-12 outline-none focus:border-n-slate-8"
       :class="activeClass(filters.q)"
       :placeholder="$t('RAMON.FUNIL.FILTERS.SEARCH')"
     />
@@ -150,7 +152,7 @@ const clearFilters = () => {
       </option>
     </select>
     <label
-      class="flex items-center gap-1.5 text-xs text-n-slate-10"
+      class="flex items-center gap-1.5 text-xs whitespace-nowrap text-n-slate-10"
       :class="{ 'text-n-iris-11': filters.createdAfter }"
     >
       {{ $t('RAMON.FUNIL.FILTERS.CREATED_AFTER') }}
@@ -163,7 +165,7 @@ const clearFilters = () => {
       />
     </label>
     <label
-      class="flex items-center gap-1.5 text-xs text-n-slate-10"
+      class="flex items-center gap-1.5 text-xs whitespace-nowrap text-n-slate-10"
       :class="{ 'text-n-iris-11': filters.createdBefore }"
     >
       {{ $t('RAMON.FUNIL.FILTERS.CREATED_BEFORE') }}
