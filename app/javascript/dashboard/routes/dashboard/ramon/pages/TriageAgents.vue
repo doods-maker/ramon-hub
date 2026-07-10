@@ -71,9 +71,11 @@ const removeAgent = agent => {
 };
 const confirmRemoveAgent = async () => {
   const agent = agentToRemove.value;
+  if (!agent) return;
+  // Fecha o modal antes do await: sem janela pra duplo-clique despachar 2x.
+  agentToRemove.value = null;
   await store.dispatch('triageAgents/delete', agent.id);
   if (selectedId.value === agent.id) selectedId.value = null;
-  agentToRemove.value = null;
 };
 
 const saveDetail = () => {

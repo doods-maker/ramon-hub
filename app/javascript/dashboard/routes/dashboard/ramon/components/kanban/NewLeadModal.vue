@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -15,20 +16,31 @@ const name = ref('');
 const nameInput = ref(null);
 const phone = ref('+55 ');
 
-const onDocKeydown = e => {
-  if (e.key === 'Escape') emit('close');
-};
 onMounted(() => {
-  document.addEventListener('keydown', onDocKeydown);
   nextTick(() => nameInput.value?.focus());
 });
-onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
 const benefitTypeId = ref(null);
 const priorityId = ref(null);
 const source = ref('');
 const channel = ref('');
 const value = ref('');
 const existingLead = ref(null);
+
+// Esc só fecha com o formulário intocado — Esc por reflexo não pode
+// descartar um lead meio digitado (fechar explícito = Cancelar/backdrop).
+const isDirty = computed(
+  () =>
+    Boolean(name.value.trim()) ||
+    phone.value.replace(/\D/g, '') !== '55' ||
+    benefitTypeId.value !== null ||
+    priorityId.value !== null ||
+    Boolean(source.value.trim()) ||
+    Boolean(channel.value) ||
+    value.value !== ''
+);
+onKeyStroke('Escape', () => {
+  if (!isDirty.value) emit('close');
+});
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
 const benefitTypes = computed(

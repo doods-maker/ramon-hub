@@ -12,6 +12,7 @@ import LeadTriage from 'dashboard/routes/dashboard/ramon/components/conversation
 import LeadKit from 'dashboard/routes/dashboard/ramon/components/conversation/LeadKit.vue';
 import LeadCopilot from 'dashboard/routes/dashboard/ramon/components/conversation/LeadCopilot.vue';
 import LeadSimulador from 'dashboard/routes/dashboard/ramon/components/conversation/LeadSimulador.vue';
+import { useLeadPanelSections } from 'dashboard/routes/dashboard/ramon/composables/useLeadPanelSections';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -24,38 +25,19 @@ const leadByConv = useMapGetter('leads/getLeadByConversationId');
 const theses = useMapGetter('theses/getTheses');
 const lead = computed(() => leadByConv.value(Number(props.conversationId)));
 
-// Persistência do aberto/recolhido por seção (mesmo padrão do
-// COLLAPSED_KEY em KanbanColumn.vue) — por seção, não por lead.
-const SECTIONS_KEY = 'ramon_lead_panel_sections';
-const readSections = () => {
-  try {
-    return JSON.parse(localStorage.getItem(SECTIONS_KEY) || '{}');
-  } catch (e) {
-    return {};
-  }
-};
-const openSections = ref({
-  resumo: true,
-  historico: false,
-  playbook: false,
-  triagem: false,
-  kit: false,
-  simulador: false,
-  ...readSections(),
-});
-const toggleSection = id => {
-  openSections.value[id] = !openSections.value[id];
-  try {
-    localStorage.setItem(SECTIONS_KEY, JSON.stringify(openSections.value));
-  } catch (e) {
-    // localStorage indisponível: seguimos sem persistir
-  }
-};
+// Persistência do aberto/recolhido por seção (compartilhada com a gaveta).
+const { openSections, toggleSection } = useLeadPanelSections();
 
+const ensureFailed = ref(false);
 const ensure = async () => {
-  await store.dispatch('leads/ensureForConversation', {
-    conversationId: Number(props.conversationId),
-  });
+  ensureFailed.value = false;
+  try {
+    await store.dispatch('leads/ensureForConversation', {
+      conversationId: Number(props.conversationId),
+    });
+  } catch (e) {
+    ensureFailed.value = true;
+  }
 };
 watch(() => props.conversationId, ensure, { immediate: true });
 
@@ -163,6 +145,16 @@ const discard = async () => {
       >
         <LeadSimulador :lead="lead" />
       </AccordionItem>
+    </div>
+    <div v-else-if="ensureFailed" class="flex-1 p-3 text-sm">
+      <p class="text-n-ruby-11">{{ $t('RAMON.LEAD_PANEL.LOAD_ERROR') }}</p>
+      <button
+        class="mt-2 text-xs text-n-iris-11 hover:underline"
+        data-testid="lead-panel-retry"
+        @click="ensure"
+      >
+        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
     </div>
     <div v-else class="flex-1 p-3 text-sm text-n-slate-10">
       {{ $t('RAMON.LEAD_PANEL.LOADING') }}

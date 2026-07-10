@@ -72,7 +72,9 @@ const days = computed(() => {
   const first = startOfMonth(anchor.value);
   const start = startOfWeek(first);
   const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
-  const weeks = Math.ceil(((last - start) / 86400000 + 1) / 7);
+  // round, não ceil: a transição de horário de verão desloca o span em ±1h e
+  // ceil inflaria um mês exato de 5 semanas para 6.
+  const weeks = Math.round(((last - start) / 86400000 + 1) / 7);
   return Array.from({ length: weeks * 7 }, (_, i) => addDays(start, i));
 });
 
@@ -136,7 +138,8 @@ const monthValue = computed(() => {
 });
 const onMonthPick = event => {
   const value = event.target.value;
-  if (!value) return;
+  // Firefox desktop renderiza type="month" como texto livre: só aceita YYYY-MM.
+  if (!/^\d{4}-\d{2}$/.test(value)) return;
   const [year, month] = value.split('-').map(Number);
   anchor.value = new Date(year, month - 1, 1);
 };
@@ -410,11 +413,16 @@ const hasVisibleTasks = computed(() =>
       </div>
     </div>
 
+    <!-- Visão dia já tem o próprio EMPTY_DAY dentro do card -->
     <p
-      v-if="!isFetching && !hasVisibleTasks"
+      v-if="!isFetching && !hasVisibleTasks && view !== 'day'"
       class="mt-4 text-sm text-center text-n-slate-10"
     >
-      {{ t('RAMON.AGENDA.EMPTY') }}
+      {{
+        view === 'week'
+          ? t('RAMON.AGENDA.EMPTY')
+          : t('RAMON.AGENDA.EMPTY_MONTH')
+      }}
     </p>
   </div>
 </template>

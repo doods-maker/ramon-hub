@@ -115,10 +115,13 @@ describe('LeadDrawer.vue', () => {
     expect(wrapper.emitted('openConversation')[0][0]).toBe(77);
   });
 
-  it('fecha ao apertar Esc (listener no documento)', async () => {
+  it('fecha ao apertar Esc', async () => {
     const select = vi.fn();
     mountDrawer(vi.fn(), select);
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    // bubbles: como um keydown real, o evento sobe até a window (onKeyStroke)
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    );
     expect(select).toHaveBeenCalledWith(expect.anything(), null);
   });
 });

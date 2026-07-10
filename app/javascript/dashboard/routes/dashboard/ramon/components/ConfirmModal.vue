@@ -1,6 +1,6 @@
 <script setup>
 // Substituto do window.confirm para ações destrutivas, no padrão da casa.
-import { onMounted, onBeforeUnmount } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 
 defineProps({
   title: { type: String, required: true },
@@ -9,11 +9,7 @@ defineProps({
 });
 const emit = defineEmits(['confirm', 'cancel']);
 
-const onDocKeydown = e => {
-  if (e.key === 'Escape') emit('cancel');
-};
-onMounted(() => document.addEventListener('keydown', onDocKeydown));
-onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
+onKeyStroke('Escape', () => emit('cancel'));
 </script>
 
 <template>

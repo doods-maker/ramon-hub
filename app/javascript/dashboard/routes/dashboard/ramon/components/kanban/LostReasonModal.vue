@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 
 const props = defineProps({
   lostReasons: { type: Array, default: () => [] },
@@ -23,11 +24,7 @@ const confirm = () => {
 };
 
 // Esc cancela (reverte o drag), igual ao clique no backdrop.
-const onDocKeydown = e => {
-  if (e.key === 'Escape') emit('cancelMove');
-};
-onMounted(() => document.addEventListener('keydown', onDocKeydown));
-onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
+onKeyStroke('Escape', () => emit('cancelMove'));
 </script>
 
 <template>

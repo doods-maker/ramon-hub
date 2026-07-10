@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 
 const props = defineProps({
   stage: { type: Object, required: true },
@@ -17,11 +18,7 @@ const confirm = () => {
   emit('confirm', { id: props.stage.id, moveToStageId: targetId.value });
 };
 
-const onDocKeydown = e => {
-  if (e.key === 'Escape') emit('cancel');
-};
-onMounted(() => document.addEventListener('keydown', onDocKeydown));
-onBeforeUnmount(() => document.removeEventListener('keydown', onDocKeydown));
+onKeyStroke('Escape', () => emit('cancel'));
 </script>
 
 <template>
