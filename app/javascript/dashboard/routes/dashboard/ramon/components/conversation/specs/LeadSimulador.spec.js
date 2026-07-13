@@ -9,6 +9,7 @@ vi.mock('dashboard/api/leads', () => ({
     uploadCnis: vi.fn(),
     getCnis: vi.fn(),
     deleteCnis: vi.fn(),
+    painel: vi.fn(),
   },
 }));
 
@@ -251,6 +252,93 @@ describe('LeadSimulador.vue', () => {
     expect(LeadsAPI.deleteCnis).toHaveBeenCalledWith(7);
     expect(wrapper.find('[data-testid="sim-cnis-chip"]').exists()).toBe(false);
     expect(wrapper.find('[data-testid="sim-salario"]').exists()).toBe(true);
+  });
+
+  it('calcula o painel com vínculo manual e renderiza os cartões', async () => {
+    LeadsAPI.painel.mockResolvedValue({
+      data: {
+        resumo: {
+          idade: '57a, 10m e 23d',
+          tempo_contribuicao: '34a, 11m e 3d',
+          tempo_na_reforma: '28a, 7m e 15d',
+          carencia: 425,
+          media: '3651.92',
+        },
+        cartoes: [
+          {
+            id: 'idade_pre',
+            titulo: 'Aposentadoria por idade',
+            subtitulo: 'Pré-reforma. Aposentadoria. Idade.',
+            elegivel: false,
+            rmi: '3396.58',
+            requisitos: [
+              {
+                nome: 'idade',
+                atual: '51a, 3m e 5d',
+                exigido: '65a',
+                faltou: '13a, 8m e 25d',
+              },
+            ],
+            previsao: '2033-08-08',
+          },
+          {
+            id: 'invalidez_pre',
+            titulo: 'Aposentadoria por invalidez',
+            subtitulo: 'Pré-reforma.',
+            elegivel: null,
+            depende_de: 'incapacidade laborativa permanente',
+            rmi: '4207.99',
+            rmi_com_descartes: '4300.00',
+            requisitos: [],
+          },
+        ],
+        avisos: [],
+      },
+    });
+    const wrapper = mountSim();
+    await wrapper.find('[data-testid="sim-der"]').setValue('2026-06-30');
+    await wrapper
+      .find('[data-testid="sim-vinculo-extra-add"]')
+      .trigger('click');
+    const extra = wrapper.find('[data-testid="sim-vinculo-extra-0"]');
+    await extra.find('input[type="date"]').setValue('1980-08-07');
+    await extra.findAll('input[type="date"]')[1].setValue('1988-04-30');
+    await wrapper.find('[data-testid="sim-painel-run"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.painel).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        der: '2026-06-30',
+        vinculos_extras: [
+          expect.objectContaining({ inicio: '1980-08-07', fim: '1988-04-30' }),
+        ],
+      })
+    );
+    expect(wrapper.find('[data-testid="sim-painel-resumo"]').exists()).toBe(
+      true
+    );
+    const cartao = wrapper.find('[data-testid="sim-cartao-idade_pre"]');
+    expect(cartao.text()).toContain('3.396,58');
+    // $t mockado devolve a chave — presença = requisito faltante e previsão renderizados
+    expect(cartao.text()).toContain('RAMON.SIMULADOR.PAINEL_FALTOU');
+    expect(cartao.text()).toContain('RAMON.SIMULADOR.PAINEL_PREVISAO');
+    expect(
+      wrapper.find('[data-testid="sim-cartao-invalidez_pre"]').text()
+    ).toContain('4.207,99');
+  });
+
+  it('com CNIS no caso, o painel calcula só com a DER', async () => {
+    LeadsAPI.painel.mockResolvedValue({
+      data: { resumo: { media: '1.00' }, cartoes: [], avisos: [] },
+    });
+    const wrapper = mountSim({ lead: { ...lead, cnis_resumo: cnisResumo } });
+    expect(
+      wrapper.find('[data-testid="sim-painel-run"]').element.disabled
+    ).toBe(true);
+    await wrapper.find('[data-testid="sim-der"]').setValue('2026-06-30');
+    expect(
+      wrapper.find('[data-testid="sim-painel-run"]').element.disabled
+    ).toBe(false);
   });
 
   it('mostra o erro do motor em entrada inválida (422)', async () => {

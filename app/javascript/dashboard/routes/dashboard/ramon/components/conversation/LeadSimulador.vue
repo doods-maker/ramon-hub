@@ -205,6 +205,57 @@ const verMemoria = async () => {
   }
 };
 
+// Painel de possibilidades (todas as regras, estilo Previdenciarista):
+// CNIS e/ou vínculos manuais (ex.: atividade rural que não está no CNIS).
+const painelLoading = ref(false);
+const painel = ref(null);
+const vinculosExtras = ref([]);
+
+const addVinculoExtra = () =>
+  vinculosExtras.value.push({
+    inicio: '',
+    fim: '',
+    tipo: 'EMPREGO',
+    salario: '',
+  });
+const removeVinculoExtra = index => vinculosExtras.value.splice(index, 1);
+
+const canPainel = computed(() =>
+  Boolean(
+    form.value.der &&
+      (cnis.value ||
+        (form.value.nascimento &&
+          vinculosExtras.value.some(v => v.inicio && v.fim)))
+  )
+);
+
+const calcularPainel = async () => {
+  painelLoading.value = true;
+  motorDown.value = false;
+  errorMessage.value = '';
+  try {
+    const { data } = await LeadsAPI.painel(props.lead.id, {
+      der: form.value.der,
+      nascimento: form.value.nascimento,
+      sexo: form.value.sexo,
+      vinculos_extras: vinculosExtras.value.filter(v => v.inicio && v.fim),
+    });
+    painel.value = data;
+  } catch (error) {
+    handleMotorError(error);
+  } finally {
+    painelLoading.value = false;
+  }
+};
+
+const bordaDe = cartao => {
+  if (cartao.elegivel === true) return 'border-s-4 border-n-teal-9';
+  if (cartao.elegivel === false) return 'border-s-4 border-n-ruby-9';
+  return 'border-s-4 border-n-amber-9';
+};
+
+const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
+
 const fieldClass =
   'w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12 outline-none focus:border-n-slate-8';
 const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
@@ -565,6 +616,165 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
             })
           }}
         </p>
+      </div>
+    </div>
+
+    <div
+      class="flex flex-col gap-2 border-t border-n-weak pt-2"
+      data-testid="sim-painel-secao"
+    >
+      <span class="text-xs font-medium text-n-slate-12">
+        {{ $t('RAMON.SIMULADOR.PAINEL_TITULO') }}
+      </span>
+      <div
+        v-for="(v, i) in vinculosExtras"
+        :key="i"
+        class="flex flex-col gap-1 p-1.5 rounded-lg border border-n-weak"
+        :data-testid="`sim-vinculo-extra-${i}`"
+      >
+        <div class="grid grid-cols-2 gap-1">
+          <label :class="labelClass">
+            {{ $t('RAMON.SIMULADOR.VINCULO_INICIO') }}
+            <input v-model="v.inicio" type="date" :class="fieldClass" />
+          </label>
+          <label :class="labelClass">
+            {{ $t('RAMON.SIMULADOR.VINCULO_FIM') }}
+            <input v-model="v.fim" type="date" :class="fieldClass" />
+          </label>
+          <label :class="labelClass">
+            {{ $t('RAMON.SIMULADOR.VINCULO_TIPO') }}
+            <select v-model="v.tipo" :class="fieldClass">
+              <option value="EMPREGO">
+                {{ $t('RAMON.SIMULADOR.VINCULO_TIPO_EMPREGO') }}
+              </option>
+              <option value="RECOLHIMENTO">
+                {{ $t('RAMON.SIMULADOR.VINCULO_TIPO_RECOLHIMENTO') }}
+              </option>
+            </select>
+          </label>
+          <label :class="labelClass">
+            {{ $t('RAMON.SIMULADOR.VINCULO_SALARIO') }}
+            <input
+              v-model="v.salario"
+              type="number"
+              min="0"
+              step="0.01"
+              :class="fieldClass"
+            />
+          </label>
+        </div>
+        <button
+          type="button"
+          class="self-start text-xs text-n-ruby-11"
+          @click="removeVinculoExtra(i)"
+        >
+          {{ $t('RAMON.SIMULADOR.VINCULO_REMOVER') }}
+        </button>
+      </div>
+      <button
+        type="button"
+        data-testid="sim-vinculo-extra-add"
+        class="self-start text-xs underline text-n-slate-11"
+        @click="addVinculoExtra"
+      >
+        {{ $t('RAMON.SIMULADOR.VINCULO_ADICIONAR') }}
+      </button>
+      <button
+        type="button"
+        data-testid="sim-painel-run"
+        class="px-3 py-1.5 text-xs rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-40 disabled:cursor-not-allowed"
+        :disabled="!canPainel || painelLoading"
+        @click="calcularPainel"
+      >
+        {{
+          painelLoading
+            ? $t('RAMON.SIMULADOR.PAINEL_CALCULANDO')
+            : $t('RAMON.SIMULADOR.PAINEL_CALCULAR')
+        }}
+      </button>
+
+      <div
+        v-if="painel"
+        class="flex flex-col gap-2"
+        data-testid="sim-painel-resultado"
+      >
+        <p class="text-xs text-n-slate-11" data-testid="sim-painel-resumo">
+          {{
+            $t('RAMON.SIMULADOR.PAINEL_RESUMO', {
+              idade: painel.resumo.idade,
+              tempo: painel.resumo.tempo_contribuicao,
+              tempoReforma: painel.resumo.tempo_na_reforma,
+              carencia: painel.resumo.carencia,
+              media: money(painel.resumo.media),
+            })
+          }}
+        </p>
+        <div
+          v-for="cartao in painel.cartoes"
+          :key="cartao.id"
+          class="flex flex-col gap-1 p-2 rounded-lg bg-n-alpha-1 border border-n-weak"
+          :class="bordaDe(cartao)"
+          :data-testid="`sim-cartao-${cartao.id}`"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <span class="text-xs font-medium text-n-slate-12">
+              {{ cartao.titulo }}
+            </span>
+            <span
+              class="text-sm font-semibold text-n-slate-12 whitespace-nowrap"
+            >
+              {{ money(cartao.rmi) }}
+            </span>
+          </div>
+          <span class="text-xs text-n-slate-10">{{ cartao.subtitulo }}</span>
+          <span
+            v-if="cartao.elegivel === true"
+            class="text-xs text-n-teal-11 font-medium"
+          >
+            {{ $t('RAMON.SIMULADOR.PAINEL_ELEGIVEL') }}
+          </span>
+          <span
+            v-else-if="cartao.elegivel === null && cartao.depende_de"
+            class="text-xs text-n-amber-11"
+          >
+            {{
+              $t('RAMON.SIMULADOR.PAINEL_DEPENDE', { de: cartao.depende_de })
+            }}
+          </span>
+          <template v-for="req in cartao.requisitos || []" :key="req.nome">
+            <span v-if="req.faltou" class="text-xs text-n-ruby-11">
+              {{
+                $t('RAMON.SIMULADOR.PAINEL_FALTOU', {
+                  requisito: $t(
+                    `RAMON.SIMULADOR.REQ_${req.nome.toUpperCase()}`
+                  ),
+                  atual: req.atual,
+                  faltou: req.faltou,
+                })
+              }}
+            </span>
+          </template>
+          <span v-if="cartao.rmi_com_descartes" class="text-xs text-n-slate-10">
+            {{
+              $t('RAMON.SIMULADOR.PAINEL_DESCARTES', {
+                valor: money(cartao.rmi_com_descartes),
+              })
+            }}
+          </span>
+          <span v-if="cartao.previsao" class="text-xs text-n-slate-10">
+            {{
+              $t('RAMON.SIMULADOR.PAINEL_PREVISAO', {
+                data: dataBr(cartao.previsao),
+              })
+            }}
+          </span>
+        </div>
+        <ul
+          v-if="painel.avisos && painel.avisos.length"
+          class="flex flex-col gap-1 text-xs text-n-slate-10 list-disc ps-4"
+        >
+          <li v-for="(aviso, i) in painel.avisos" :key="i">{{ aviso }}</li>
+        </ul>
       </div>
     </div>
 

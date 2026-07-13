@@ -309,6 +309,7 @@ Rails.application.routes.draw do
               end
             end
             resource :simulacao, only: [:create], controller: 'lead_simulacoes'
+            resource :painel, only: [:create], controller: 'lead_paineis'
             resource :cnis, only: [:show, :create, :destroy], controller: 'lead_cnis'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
