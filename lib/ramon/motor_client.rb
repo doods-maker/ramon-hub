@@ -11,14 +11,24 @@ class Ramon::MotorClient
   CNIS_READ_TIMEOUT = 60
 
   def self.incapacidade(payload)
+    post_json('/incapacidade', payload)
+  end
+
+  # Painel de possibilidades (estilo Previdenciarista): todos os cartões de
+  # benefício, elegível ou não, com faltas e previsão de cumprimento.
+  def self.painel(payload)
+    post_json('/painel', payload, read_timeout: 30)
+  end
+
+  def self.post_json(path, payload, read_timeout: READ_TIMEOUT)
     base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
     raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
 
-    response = HTTParty.post("#{base.chomp('/')}/incapacidade",
+    response = HTTParty.post("#{base.chomp('/')}#{path}",
                              headers: { 'Content-Type' => 'application/json' },
                              body: payload.to_json,
                              open_timeout: OPEN_TIMEOUT,
-                             read_timeout: READ_TIMEOUT)
+                             read_timeout: read_timeout)
     handle(response)
   rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
     raise UnavailableError, "motor indisponível: #{e.message}"
@@ -54,5 +64,5 @@ class Ramon::MotorClient
     detail = response.parsed_response.is_a?(Hash) ? response.parsed_response['detail'] : nil
     (detail.presence || response.body).to_s
   end
-  private_class_method :handle, :detail_de
+  private_class_method :post_json, :handle, :detail_de
 end
