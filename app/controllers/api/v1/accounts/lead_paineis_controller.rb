@@ -49,14 +49,16 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
   # Vínculos manuais: contam tempo/carência no motor; com salário informado
   # também entram na média (competências mensais geradas aqui).
   def extras
-    @extras ||= (permitted[:vinculos_extras] || []).filter_map do |v|
-      inicio = data(v[:inicio])
-      fim = data(v[:fim])
-      next if inicio.blank? || fim.blank? || fim < inicio
+    @extras ||= (permitted[:vinculos_extras] || []).filter_map { |v| extra_de(v) }
+  end
 
-      { inicio: inicio, fim: fim, tipo: v[:tipo].presence || 'EMPREGO',
-        salario: v[:salario] }
-    end
+  def extra_de(vinculo)
+    inicio = data(vinculo[:inicio])
+    fim = data(vinculo[:fim])
+    return if inicio.blank? || fim.blank? || fim < inicio
+
+    { inicio: inicio, fim: fim, tipo: vinculo[:tipo].presence || 'EMPREGO',
+      salario: vinculo[:salario] }
   end
 
   def competencias_de(extra)
