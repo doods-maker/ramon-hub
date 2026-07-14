@@ -137,8 +137,8 @@ const generalMenuItems = computed(() => {
   }
 
   items.push({
-    label: t('INTEGRATION_SETTINGS.OPEN_AI.REPLY_OPTIONS.ASK_COPILOT'),
-    key: 'ask_copilot',
+    label: t('INTEGRATION_SETTINGS.OPEN_AI.REPLY_OPTIONS.ASK_ADVBOX'),
+    key: 'ask_advbox',
     icon: 'i-fluent-circle-sparkle-24-regular',
   });
 

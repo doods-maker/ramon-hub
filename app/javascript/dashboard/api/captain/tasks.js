@@ -91,6 +91,22 @@ class TasksAPI extends ApiClient {
    * @param {AbortSignal} [signal] - AbortSignal to cancel the request.
    * @returns {Promise} A promise that resolves with the follow-up response and updated follow-up context.
    */
+  /**
+   * Pergunta ao AdvBox: processos e andamentos do cliente da conversa.
+   * @param {string} conversationId - The conversation ID.
+   * @param {AbortSignal} [signal] - AbortSignal to cancel the request.
+   * @returns {Promise} A promise that resolves with the answer and follow-up context.
+   */
+  askAdvbox(conversationId, signal) {
+    return axios.post(
+      `${this.url}/advbox`,
+      {
+        conversation_display_id: conversationId,
+      },
+      { signal }
+    );
+  }
+
   followUp({ followUpContext, message, conversationId }, signal) {
     return axios.post(
       `${this.url}/follow_up`,
