@@ -205,6 +205,11 @@ class Rack::Attack
     req.ip if req.path.start_with?('/public/api/v1/advbox_webhooks') && req.post?
   end
 
+  ## Ramon — MCP dos coworks; cada pergunta do Claude vira poucas chamadas ###
+  throttle('public/mcp', limit: 120, period: 1.minute) do |req|
+    req.ip if req.path.start_with?('/public/api/v1/mcp')
+  end
+
   ##-----------------------------------------------##
 
   ###-----------------------------------------------###

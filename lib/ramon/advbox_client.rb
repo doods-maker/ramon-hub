@@ -3,7 +3,8 @@
 # Calibrado contra a API real 13/07/2026: busca parcial por nome do cliente em
 # /lawsuits?name=, andamentos em /movements/{lawsuit_id} e publicações em
 # /publications/{lawsuit_id}. O Cloudflare deles bloqueia requisição sem
-# User-Agent — sempre mandar um.
+# User-Agent — sempre mandar um. Todos os métodos são somente leitura (GET);
+# filtros são combinados com AND e a paginação é via limit/offset.
 class Ramon::AdvboxClient
   class UnavailableError < StandardError; end
 
@@ -11,8 +12,12 @@ class Ramon::AdvboxClient
   OPEN_TIMEOUT = 5
   READ_TIMEOUT = 20
 
-  def self.lawsuits(name:)
-    get('/lawsuits', name: name)
+  def self.lawsuits(params = {})
+    get('/lawsuits', params)
+  end
+
+  def self.lawsuit(id)
+    get("/lawsuits/#{id}")
   end
 
   def self.movements(lawsuit_id, limit: 8)
@@ -21,6 +26,28 @@ class Ramon::AdvboxClient
 
   def self.publications(lawsuit_id, limit: 2)
     get("/publications/#{lawsuit_id}", limit: limit)
+  end
+
+  def self.history(lawsuit_id)
+    get("/history/#{lawsuit_id}")
+  end
+
+  def self.last_movements(params = {})
+    get('/last_movements', params)
+  end
+
+  def self.customers(params = {})
+    get('/customers', params)
+  end
+
+  def self.customer(id)
+    get("/customers/#{id}")
+  end
+
+  # "Posts" na API do AdvBox = tarefas/anotações (inclusive com prazo:
+  # deadline_start/deadline_end filtram o vencimento).
+  def self.posts(params = {})
+    get('/posts', params)
   end
 
   def self.get(path, params = {})

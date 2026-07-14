@@ -646,6 +646,11 @@ Rails.application.routes.draw do
 
         # Ramon — webhook do Flowter/ADVBOX (Bearer estático — o Flowter não assina HMAC)
         post 'advbox_webhooks', to: 'advbox_webhooks#create'
+
+        # Ramon — servidor MCP p/ os Claude Cowork (item 29): token longo no path,
+        # somente leitura (AdvBox). GET/DELETE = 405 (sem stream SSE).
+        post 'mcp/:token', to: 'mcp#create'
+        match 'mcp/:token', to: 'mcp#not_allowed', via: [:get, :delete]
       end
     end
   end
