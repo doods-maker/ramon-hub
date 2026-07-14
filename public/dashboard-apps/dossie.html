@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dossiê do lead</title>
+    <style>
+      /* Dossiê de 30s como Dashboard App (mesmo host do hub — herda sessão e SAMEORIGIN).
+     Página estática sem dado embutido: tudo vem das APIs já autenticadas do hub. */
+      :root {
+        --bg: #262320;
+        --card: #33302c;
+        --line: #45413b;
+        --txt: #ece7df;
+        --dim: #a89f92;
+        --accent: #c9a97c;
+        --primary: #8a5c33;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+        background: var(--bg);
+        color: var(--txt);
+        font:
+          14px/1.55 system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      .estado {
+        color: var(--dim);
+      }
+      .erro {
+        color: #e08f8f;
+      }
+      button {
+        background: var(--primary);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        padding: 6px 14px;
+        cursor: pointer;
+        font: inherit;
+      }
+      .grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 14px;
+      }
+      .bloco {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+      }
+      .bloco h2 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+      }
+      .bloco.largo {
+        grid-column: 1/-1;
+      }
+      dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 12px;
+      }
+      dt {
+        color: var(--dim);
+      }
+      dd {
+        margin: 0;
+      }
+      .etapa {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 99px;
+        font-size: 12px;
+        border: 1px solid var(--line);
+      }
+      .alerta {
+        display: inline-block;
+        background: #5a3b23;
+        color: #f0c9a0;
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 12px;
+      }
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      li {
+        margin: 2px 0;
+      }
+      .tl-item {
+        border-left: 2px solid var(--line);
+        padding: 2px 0 2px 10px;
+        margin: 6px 0;
+      }
+      .tl-meta {
+        color: var(--dim);
+        font-size: 12px;
+      }
+      details {
+        margin: 6px 0;
+      }
+      summary {
+        cursor: pointer;
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"><p class="estado">Aguardando contexto da conversa…</p></div>
+    <script>
+      (() => {
+        const app = document.getElementById('app');
+        let carregouPara = null;
+
+        const cookie = name => {
+          const m = document.cookie.match(
+            new RegExp('(?:^|; )' + name + '=([^;]*)')
+          );
+          return m ? decodeURIComponent(m[1]) : null;
+        };
+
+        const authHeaders = () => {
+          const raw = cookie('cw_d_session_info');
+          if (!raw)
+            throw new Error('sessão do hub não encontrada (faça login no hub)');
+          const s = JSON.parse(raw);
+          return {
+            'access-token': s['access-token'],
+            client: s.client,
+            uid: s.uid,
+            'token-type': s['token-type'] || 'Bearer',
+            'Content-Type': 'application/json',
+          };
+        };
+
+        const req = async (method, url, body) => {
+          const r = await fetch(url, {
+            method,
+            headers: authHeaders(),
+            body: body ? JSON.stringify(body) : undefined,
+          });
+          if (!r.ok) throw new Error(`${method} ${url} → HTTP ${r.status}`);
+          return r.json();
+        };
+
+        const esc = v =>
+          String(v ?? '—').replace(
+            /[&<>"]/g,
+            c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]
+          );
+        const brl = v =>
+          v == null
+            ? '—'
+            : Number(v).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              });
+        const dt = v =>
+          v
+            ? new Date(v).toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : '—';
+        const par = (rotulo, valor) => `<dt>${rotulo}</dt><dd>${valor}</dd>`;
+
+        const render = d => {
+          const p = d.pessoa || {},
+            o = d.origem || {},
+            t = d.triagem,
+            te = d.tese,
+            pend = d.pendencias || {},
+            tl = d.timeline || [];
+          const utm = Object.entries(o.utm || {})
+            .map(([k, v]) => `${esc(k)}=${esc(v)}`)
+            .join(' · ');
+          app.innerHTML = `
+    <div class="grade">
+      <div class="bloco"><h2>Pessoa</h2><dl>
+        ${par('Nome', esc(p.contact_name || p.lead_name))}
+        ${par('Telefone', esc(p.phone_number))}
+        ${par('Idade', esc(p.idade))}
+        ${par('Cidade', esc(p.cidade))}
+        ${par('Etapa', `<span class="etapa" style="border-color:${esc(p.stage_color || 'var(--line)')}">${esc(p.stage_name)}</span>`)}
+        ${par('Valor', brl(p.value))}
+        ${par('Consent. mkt', p.consent_marketing?.granted ? 'sim' : 'não')}
+      </dl></div>
+      <div class="bloco"><h2>Origem</h2><dl>
+        ${par('Canal', esc(o.channel_label || o.channel))}
+        ${par('Source', esc(o.source))}
+        ${utm ? par('UTM', utm) : ''}
+      </dl></div>
+      <div class="bloco"><h2>Triagem</h2>${
+        t
+          ? `<dl>
+        ${par('Status', `${esc(t.status)}${t.awaiting_human ? ' <span class="alerta">precisa de olho humano</span>' : ''}`)}
+        ${par('Viabilidade', esc(t.viability))}
+        ${par('Concluída', dt(t.finished_at))}
+      </dl>`
+          : '<p class="estado">sem triagem</p>'
+      }</div>
+      <div class="bloco"><h2>Tese &amp; honorário</h2>${
+        te
+          ? `<dl>
+        ${par('Tese', esc(te.name))}
+        ${par('Honorário', esc(te.honorario_text))}
+      </dl>${(te.objecoes || []).map(ob => `<details><summary>${esc(ob.title)}</summary><div>${esc(ob.content)}</div></details>`).join('')}`
+          : '<p class="estado">sem tese definida</p>'
+      }</div>
+      <div class="bloco"><h2>Pendências</h2>
+        ${
+          (pend.tasks || []).length
+            ? `<ul>${pend.tasks
+                .map(
+                  k =>
+                    `<li>${esc(k.title)} <span class="tl-meta">(${esc(k.kind)}${k.due_at ? ' · ' + dt(k.due_at) : ''})</span></li>`
+                )
+                .join('')}</ul>`
+            : '<p class="estado">sem tarefas abertas</p>'
+        }
+        ${(pend.docs_missing || []).length ? `<p class="tl-meta">Docs faltando:</p><ul>${pend.docs_missing.map(x => `<li>${esc(x.title || x)}</li>`).join('')}</ul>` : ''}
+      </div>
+      <div class="bloco largo"><h2>Timeline</h2>
+        ${
+          tl.length
+            ? tl
+                .map(
+                  i =>
+                    `<div class="tl-item">${
+                      i.type === 'note'
+                        ? esc(i.body)
+                        : `${esc(i.kind)}: ${esc(i.from_value)} → ${esc(i.to_value)}`
+                    }<div class="tl-meta">${esc(i.author_name)} · ${dt(i.created_at)}</div></div>`
+                )
+                .join('')
+            : '<p class="estado">sem eventos</p>'
+        }
+      </div>
+    </div>`;
+        };
+
+        const carregar = async ctx => {
+          const conv = ctx?.conversation;
+          if (!conv?.id || !conv?.account_id) {
+            app.innerHTML =
+              '<p class="estado">Abra a aba com uma conversa selecionada.</p>';
+            return;
+          }
+          if (carregouPara === conv.id) return; // contexto reenviado da mesma conversa
+          carregouPara = conv.id;
+          app.innerHTML = '<p class="estado">Carregando dossiê…</p>';
+          try {
+            const base = `/api/v1/accounts/${conv.account_id}/leads`;
+            const lead = await req('POST', `${base}/for_conversation`, {
+              conversation_id: conv.id,
+            });
+            render(await req('GET', `${base}/${lead.id}/dossie`));
+          } catch (e) {
+            carregouPara = null;
+            app.innerHTML = `<p class="erro">Não deu pra carregar o dossiê: ${esc(e.message)}</p>
+        <button id="retry">Tentar de novo</button>`;
+            document.getElementById('retry').onclick = () =>
+              window.parent.postMessage(
+                'chatwoot-dashboard-app:fetch-info',
+                '*'
+              );
+          }
+        };
+
+        window.addEventListener('message', e => {
+          let msg;
+          try {
+            msg = JSON.parse(e.data);
+          } catch {
+            return;
+          }
+          if (msg.event === 'appContext') carregar(msg.data);
+        });
+        window.parent.postMessage('chatwoot-dashboard-app:fetch-info', '*');
+      })();
+    </script>
+  </body>
+</html>

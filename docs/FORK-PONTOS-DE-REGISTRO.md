@@ -233,6 +233,8 @@
 | `app/javascript/dashboard/components-next/Contacts/Pages/ContactDetails.vue` | +botão "Linha da Vida" no cabeçalho do contato (router → `ramon_linha_da_vida`) | atalho contato→lifeline | polimento-2 |
 | `app/javascript/dashboard/i18n/locale/{en,pt_BR}/contact.json` | +`CONTACTS_LAYOUT.DETAILS.LIFELINE_BUTTON` | i18n do botão | polimento-2 |
 | `.../ramon/components/conversation/LeadSimulador.vue` (linhas de changes) | painel "Ajustar vínculos" (checkbox fora-da-média + mensalidade real), duas médias (RMI 100% × descartes) e tabela de memória de cálculo | Simulador | Parâmetros motor |
+| `public/dashboard-apps/{espelho,dossie}.html` | páginas estáticas p/ Dashboard Apps nativos (mesmo host → herda sessão, passa no SAMEORIGIN); espelho imprime o appContext, dossie renderiza o Dossiê 30s via APIs existentes | Dashboard Apps | F3 Chatwoot 14/07 |
+| `app/controllers/api/v1/accounts/leads_controller.rb` (1 linha) | `for_conversation` resolve por `display_id` (o que a SPA manda), não pela PK global — bug latente enquanto id==display_id por conta única | fix | F3 Chatwoot 14/07 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
