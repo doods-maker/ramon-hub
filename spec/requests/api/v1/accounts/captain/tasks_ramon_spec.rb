@@ -80,7 +80,9 @@ RSpec.describe 'Captain Tasks (fork: copiloto da banca)', type: :request do
       end
       expect(response).to have_http_status(:success), lambda {
         corpo = response.body.to_s
-        "HTTP #{response.status}: #{corpo[%r{<h1[^>]*>.*?</h1>}m]} | #{corpo[%r{(app|lib)/[\w/.]+\.rb:\d+[^<"]{0,80}}]}"
+        detalhe = corpo[/undefined method[^<]{0,140}/] || corpo[%r{<h1[^>]*>.*?</h1>}m]
+        trace = corpo.scan(/[\w\/.-]+\.rb:\d+/).first(4).join(' | ')
+        "HTTP #{response.status}: #{detalhe} TRACE: #{trace}"
       }
       expect(response.parsed_body['message']).to eq('processo protocolado, aguardando')
       expect(response.parsed_body['follow_up_context']['advbox']).to be(true)
