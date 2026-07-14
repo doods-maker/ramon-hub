@@ -44,8 +44,10 @@ class Ramon::MotorClient
     raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
 
     uri = URI("#{base.chomp('/')}/cnis")
-    form = [['arquivo', arquivo, { filename: arquivo.original_filename,
-                                   content_type: arquivo.content_type.presence || 'application/pdf' }],
+    # conteúdo em memória (não streaming): o motor capa em 20MB e assim o corpo
+    # fica inspecionável (WebMock nos specs)
+    form = [['arquivo', arquivo.read, { filename: arquivo.original_filename,
+                                        content_type: arquivo.content_type.presence || 'application/pdf' }],
             ['sexo', sexo]]
     form << ['excluir_seqs', excluir_seqs] if excluir_seqs.present?
     form << ['mensalidades', mensalidades] if mensalidades.present?
@@ -55,7 +57,7 @@ class Ramon::MotorClient
                                open_timeout: OPEN_TIMEOUT,
                                read_timeout: CNIS_READ_TIMEOUT) { |http| http.request(request) }
     handle_net(response)
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error, Net::ReadTimeout => e
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
     raise UnavailableError, "motor indisponível: #{e.message}"
   end
 
