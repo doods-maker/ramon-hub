@@ -52,9 +52,12 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
       expect(response.parsed_body['error']['code']).to eq(-32_601)
     end
 
+    # Com Content-Type application/json o middleware do Rails já barra corpo
+    # malformado com 400 antes do controller; o handler -32700 cobre os demais
+    # content-types (o transporte MCP não obriga o header).
     it 'corpo não-JSON vira erro -32700' do
       with_modified_env(RAMON_MCP_TOKEN: token) do
-        post "/public/api/v1/mcp/#{token}", params: 'não é json', headers: { 'CONTENT_TYPE' => 'application/json' }
+        post "/public/api/v1/mcp/#{token}", params: 'não é json', headers: { 'CONTENT_TYPE' => 'text/plain' }
       end
       expect(response).to have_http_status(:bad_request)
       expect(response.parsed_body['error']['code']).to eq(-32_700)
