@@ -3,7 +3,8 @@ require 'rails_helper'
 RSpec.describe 'Captain Tasks (fork: copiloto da banca)', type: :request do
   let(:account) { create(:account) }
   let(:admin) { create(:user, account: account, role: :administrator) }
-  let(:conversation) { create(:conversation, account: account) }
+  let(:contact) { create(:contact, account: account, name: 'CLIENTE TESTE') }
+  let(:conversation) { create(:conversation, account: account, contact: contact) }
 
   def llm_result(content)
     Ramon::LlmClient::Result.new(content: content, input_tokens: 10, output_tokens: 5)

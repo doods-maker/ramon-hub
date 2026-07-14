@@ -60,14 +60,17 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
 
   private
 
-  ERROS_RAMON = [
-    Ramon::ConversationCopilotService::EmptyConversationError,
-    Ramon::AdvboxPerguntaService::SemClienteError,
-    Ramon::AdvboxPerguntaService::SemProcessoError,
-    Ramon::AdvboxClient::UnavailableError,
-    Ramon::LlmClient::MissingApiKeyError,
-    Ramon::LlmClient::TransientError
-  ].freeze
+  # método (não constante congelada): em ambiente com reload as classes são
+  # recriadas e um Array congelado no load guardaria as versões antigas —
+  # o rescue nunca casaria (specs viravam 500)
+  def erros_ramon
+    [Ramon::ConversationCopilotService::EmptyConversationError,
+     Ramon::AdvboxPerguntaService::SemClienteError,
+     Ramon::AdvboxPerguntaService::SemProcessoError,
+     Ramon::AdvboxClient::UnavailableError,
+     Ramon::LlmClient::MissingApiKeyError,
+     Ramon::LlmClient::TransientError]
+  end
 
   def conversa
     Current.account.conversations.find_by(display_id: params[:conversation_display_id])
@@ -79,7 +82,7 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
 
     content = Ramon::ConversationCopilotService.new(conversation, mode).perform
     render json: { message: content }
-  rescue *ERROS_RAMON => e
+  rescue *erros_ramon => e
     render json: { error: e.message }, status: :unprocessable_content
   end
 
@@ -91,7 +94,7 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
       conversation, pergunta: pergunta, contexto: contexto, historico: historico
     ).perform
     render json: { message: resultado[:message], follow_up_context: resultado[:follow_up_context] }
-  rescue *ERROS_RAMON => e
+  rescue *erros_ramon => e
     render json: { error: e.message }, status: :unprocessable_content
   end
 
