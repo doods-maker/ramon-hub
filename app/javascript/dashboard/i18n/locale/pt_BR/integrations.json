@@ -183,7 +183,8 @@
         "GRAMMAR": "Corrigir gramática e ortografia",
         "SUGGESTION": "Sugerir uma resposta",
         "SUMMARIZE": "Resumir a conversa",
-        "ASK_COPILOT": "Perguntar ao Copiloto"
+        "ASK_COPILOT": "Perguntar ao Copiloto",
+        "ASK_ADVBOX": "Perguntar ao AdvBox"
       },
       "ASSISTANCE_MODAL": {
         "DRAFT_TITLE": "Conteúdo do rascunho",

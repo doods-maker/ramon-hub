@@ -34,10 +34,21 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
     render_result(result)
   end
 
+  # Fork: "Perguntar ao AdvBox" — processos, andamentos e publicações do
+  # cliente vindos da API do AdvBox + DeepSeek. O contexto volta no
+  # follow_up_context para as perguntas seguintes (follow_up abaixo).
+  def advbox
+    render_advbox(pergunta: params[:message])
+  end
+
   def follow_up
+    ctx = params[:follow_up_context]&.to_unsafe_h
+    return render_advbox(pergunta: params[:message], contexto: ctx['contexto'],
+                         historico: ctx['historico']) if ctx.present? && ctx['advbox']
+
     result = Captain::FollowUpService.new(
       account: Current.account,
-      follow_up_context: params[:follow_up_context]&.to_unsafe_h,
+      follow_up_context: ctx,
       user_message: params[:message],
       conversation_display_id: params[:conversation_display_id]
     ).perform
@@ -47,15 +58,38 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
 
   private
 
+  ERROS_RAMON = [
+    Ramon::ConversationCopilotService::EmptyConversationError,
+    Ramon::AdvboxPerguntaService::SemClienteError,
+    Ramon::AdvboxPerguntaService::SemProcessoError,
+    Ramon::AdvboxClient::UnavailableError,
+    Ramon::LlmClient::MissingApiKeyError,
+    Ramon::LlmClient::TransientError
+  ].freeze
+
+  def conversa
+    Current.account.conversations.find_by(display_id: params[:conversation_display_id])
+  end
+
   def render_ramon_copilot(mode)
-    conversation = Current.account.conversations.find_by(display_id: params[:conversation_display_id])
+    conversation = conversa
     return render json: { error: 'Conversa não encontrada' }, status: :unprocessable_content if conversation.nil?
 
     content = Ramon::ConversationCopilotService.new(conversation, mode).perform
     render json: { message: content }
-  rescue Ramon::ConversationCopilotService::EmptyConversationError,
-         Ramon::LlmClient::MissingApiKeyError,
-         Ramon::LlmClient::TransientError => e
+  rescue *ERROS_RAMON => e
+    render json: { error: e.message }, status: :unprocessable_content
+  end
+
+  def render_advbox(pergunta:, contexto: nil, historico: [])
+    conversation = conversa
+    return render json: { error: 'Conversa não encontrada' }, status: :unprocessable_content if conversation.nil?
+
+    resultado = Ramon::AdvboxPerguntaService.new(
+      conversation, pergunta: pergunta, contexto: contexto, historico: historico
+    ).perform
+    render json: { message: resultado[:message], follow_up_context: resultado[:follow_up_context] }
+  rescue *ERROS_RAMON => e
     render json: { error: e.message }, status: :unprocessable_content
   end
 

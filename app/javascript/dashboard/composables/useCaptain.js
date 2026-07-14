@@ -209,7 +209,26 @@ export function useCaptain() {
    * @param {AbortSignal} [options.signal] - AbortSignal to cancel the request.
    * @returns {Promise<{message: string, followUpContext?: Object}>} The generated message and optional follow-up context.
    */
+  const askAdvbox = async (options = {}) => {
+    try {
+      const result = await TasksAPI.askAdvbox(
+        conversationId.value,
+        options.signal
+      );
+      const {
+        data: { message: generatedMessage, follow_up_context: followUpContext },
+      } = result;
+      return { message: generatedMessage, followUpContext };
+    } catch (error) {
+      handleAPIError(error);
+      return { message: '', errorType: getErrorType(error) };
+    }
+  };
+
   const processEvent = async (type = 'improve', content = '', options = {}) => {
+    if (type === 'ask_advbox') {
+      return askAdvbox(options);
+    }
     if (type === 'summarize') {
       return summarizeConversation(options);
     }
