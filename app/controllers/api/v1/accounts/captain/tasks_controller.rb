@@ -43,8 +43,10 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
 
   def follow_up
     ctx = params[:follow_up_context]&.to_unsafe_h
-    return render_advbox(pergunta: params[:message], contexto: ctx['contexto'],
-                         historico: ctx['historico']) if ctx.present? && ctx['advbox']
+    if ctx.present? && ctx['advbox']
+      return render_advbox(pergunta: params[:message], contexto: ctx['contexto'],
+                           historico: ctx['historico'])
+    end
 
     result = Captain::FollowUpService.new(
       account: Current.account,

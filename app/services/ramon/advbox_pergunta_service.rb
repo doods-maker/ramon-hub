@@ -74,7 +74,7 @@ class Ramon::AdvboxPerguntaService
               "Tipo: #{processo['type']} (#{processo['group']})",
               "Fase: #{processo['stage']} · Etapa: #{processo['step']}",
               "Responsável: #{processo['responsible']}"]
-    linhas << "Partes: #{processo['customers'].to_a.map { |c| c['name'] }.join(' × ')}"
+    linhas << "Partes: #{processo['customers'].to_a.pluck('name').join(' × ')}"
     linhas << andamentos_de(processo['id'])
     linhas << publicacoes_de(processo['id'])
     linhas.compact.join("\n")

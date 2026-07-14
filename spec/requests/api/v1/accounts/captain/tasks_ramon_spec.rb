@@ -96,7 +96,7 @@ RSpec.describe 'Captain Tasks (fork: copiloto da banca)', type: :request do
       end
       expect(response).to have_http_status(:success)
       expect(response.parsed_body['message']).to eq('sim, houve intimação em 15/05')
-      expect(WebMock).not_to have_requested(:get, %r{app\.advbox\.com\.br})
+      expect(WebMock).not_to have_requested(:get, /app\.advbox\.com\.br/)
     end
 
     it 'devolve 422 com mensagem clara sem o token do AdvBox' do
