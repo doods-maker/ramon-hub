@@ -78,12 +78,7 @@ RSpec.describe 'Captain Tasks (fork: copiloto da banca)', type: :request do
              params: { conversation_display_id: conversation.display_id },
              headers: admin.create_new_auth_token, as: :json
       end
-      expect(response).to have_http_status(:success), lambda {
-        corpo = response.body.to_s
-        detalhe = corpo[/undefined method[^<]{0,140}/] || corpo[%r{<h1[^>]*>.*?</h1>}m]
-        trace = corpo.scan(/[\w\/.-]+\.rb:\d+/).first(4).join(' | ')
-        "HTTP #{response.status}: #{detalhe} TRACE: #{trace}"
-      }
+      expect(response).to have_http_status(:success)
       expect(response.parsed_body['message']).to eq('processo protocolado, aguardando')
       expect(response.parsed_body['follow_up_context']['advbox']).to be(true)
       expect(response.parsed_body['follow_up_context']['contexto']).to include('0000518-86.2012.5.12.0041')
