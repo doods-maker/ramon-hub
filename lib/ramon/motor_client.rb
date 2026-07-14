@@ -45,14 +45,7 @@ class Ramon::MotorClient
     base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
     raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
 
-    # conteúdo em memória (não streaming): o motor capa em 20MB
-    form = [['arquivo', arquivo.read.to_s,
-             { filename: arquivo.original_filename.to_s.gsub('"', ''),
-               content_type: arquivo.content_type.presence || 'application/pdf' }],
-            ['sexo', sexo]]
-    form << ['excluir_seqs', excluir_seqs] if excluir_seqs.present?
-    form << ['mensalidades', mensalidades] if mensalidades.present?
-
+    form = form_cnis(arquivo, sexo, excluir_seqs, mensalidades)
     uri = URI("#{base.chomp('/')}/cnis")
     boundary = "ramon-#{SecureRandom.hex(16)}"
     request = Net::HTTP::Post.new(uri)
@@ -66,9 +59,20 @@ class Ramon::MotorClient
     raise UnavailableError, "motor indisponível: #{e.message}"
   end
 
+  # conteúdo em memória (não streaming): o motor capa em 20MB
+  def self.form_cnis(arquivo, sexo, excluir_seqs, mensalidades)
+    form = [['arquivo', arquivo.read.to_s,
+             { filename: arquivo.original_filename.to_s.delete('"'),
+               content_type: arquivo.content_type.presence || 'application/pdf' }],
+            ['sexo', sexo]]
+    form << ['excluir_seqs', excluir_seqs] if excluir_seqs.present?
+    form << ['mensalidades', mensalidades] if mensalidades.present?
+    form
+  end
+
   def self.corpo_multipart(form, boundary)
     partes = form.map do |nome, valor, opts|
-      cabecalho = +"Content-Disposition: form-data; name=\"#{nome}\""
+      cabecalho = "Content-Disposition: form-data; name=\"#{nome}\""
       cabecalho << "; filename=\"#{opts[:filename]}\"" if opts&.key?(:filename)
       cabecalho << "\r\nContent-Type: #{opts[:content_type]}" if opts&.key?(:content_type)
       "--#{boundary}\r\n#{cabecalho}\r\n\r\n#{valor}\r\n"
@@ -103,5 +107,5 @@ class Ramon::MotorClient
     detail = response.parsed_response.is_a?(Hash) ? response.parsed_response['detail'] : nil
     (detail.presence || response.body).to_s
   end
-  private_class_method :post_json, :corpo_multipart, :handle, :handle_net, :detail_de
+  private_class_method :post_json, :form_cnis, :corpo_multipart, :handle, :handle_net, :detail_de
 end
