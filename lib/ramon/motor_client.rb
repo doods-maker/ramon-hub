@@ -34,22 +34,28 @@ class Ramon::MotorClient
     raise UnavailableError, "motor indisponível: #{e.message}"
   end
 
-  # arquivo = upload Rack/ActionDispatch (respond_to? :read/:path) — HTTParty monta o multipart.
+  # arquivo = upload Rack/ActionDispatch (respond_to? :read) — multipart montado
+  # pelo stdlib (Net::HTTP#set_form): o corpo que o HTTParty monta à mão é
+  # rejeitado pelo parser estrito do motor (python-multipart 0.0.32: "invalid
+  # character 13 in header" → 400, que aparecia como "motor indisponível").
   # excluir_seqs ("3,7") e mensalidades (JSON {"5":"1286.00"}) vão crus: quem valida é o motor (422).
   def self.cnis(arquivo, sexo:, excluir_seqs: nil, mensalidades: nil)
     base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
     raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
 
-    corpo = { arquivo: arquivo, sexo: sexo }
-    corpo[:excluir_seqs] = excluir_seqs if excluir_seqs.present?
-    corpo[:mensalidades] = mensalidades if mensalidades.present?
-    response = HTTParty.post("#{base.chomp('/')}/cnis",
-                             multipart: true,
-                             body: corpo,
-                             open_timeout: OPEN_TIMEOUT,
-                             read_timeout: CNIS_READ_TIMEOUT)
-    handle(response)
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
+    uri = URI("#{base.chomp('/')}/cnis")
+    form = [['arquivo', arquivo, { filename: arquivo.original_filename,
+                                   content_type: arquivo.content_type.presence || 'application/pdf' }],
+            ['sexo', sexo]]
+    form << ['excluir_seqs', excluir_seqs] if excluir_seqs.present?
+    form << ['mensalidades', mensalidades] if mensalidades.present?
+    request = Net::HTTP::Post.new(uri)
+    request.set_form(form, 'multipart/form-data')
+    response = Net::HTTP.start(uri.hostname, uri.port,
+                               open_timeout: OPEN_TIMEOUT,
+                               read_timeout: CNIS_READ_TIMEOUT) { |http| http.request(request) }
+    handle_net(response)
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error, Net::ReadTimeout => e
     raise UnavailableError, "motor indisponível: #{e.message}"
   end
 
@@ -60,9 +66,25 @@ class Ramon::MotorClient
     raise UnavailableError, "motor indisponível: respondeu HTTP #{response.code}"
   end
 
+  def self.handle_net(response)
+    parsed = begin
+      JSON.parse(response.body)
+    rescue JSON::ParserError, TypeError
+      nil
+    end
+    return parsed if response.is_a?(Net::HTTPSuccess)
+
+    if %w[400 422].include?(response.code)
+      detail = parsed.is_a?(Hash) ? parsed['detail'] : nil
+      raise ValidationError, (detail.presence || response.body).to_s
+    end
+
+    raise UnavailableError, "motor indisponível: respondeu HTTP #{response.code}"
+  end
+
   def self.detail_de(response)
     detail = response.parsed_response.is_a?(Hash) ? response.parsed_response['detail'] : nil
     (detail.presence || response.body).to_s
   end
-  private_class_method :post_json, :handle, :detail_de
+  private_class_method :post_json, :handle, :handle_net, :detail_de
 end
