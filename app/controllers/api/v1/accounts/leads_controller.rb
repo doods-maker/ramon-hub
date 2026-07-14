@@ -32,7 +32,8 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def for_conversation
-    conversation = Current.account.conversations.find(params[:conversation_id])
+    # o front manda o id do objeto de conversa da SPA, que é o display_id (por conta)
+    conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])
     @lead = find_or_create_lead_for(conversation)
     authorize(@lead, :show?)
   end

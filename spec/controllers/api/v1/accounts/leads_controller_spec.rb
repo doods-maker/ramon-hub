@@ -117,7 +117,7 @@ RSpec.describe 'Leads API', type: :request do
     it 'creates a lead in the default stage when none exists' do
       expect do
         post "/api/v1/accounts/#{account.id}/leads/for_conversation",
-             params: { conversation_id: conversation.id },
+             params: { conversation_id: conversation.display_id },
              headers: admin.create_new_auth_token, as: :json
       end.to change(account.leads, :count).by(1)
       expect(response).to have_http_status(:success)
@@ -132,7 +132,7 @@ RSpec.describe 'Leads API', type: :request do
                                        name: 'X')
       expect do
         post "/api/v1/accounts/#{account.id}/leads/for_conversation",
-             params: { conversation_id: conversation.id },
+             params: { conversation_id: conversation.display_id },
              headers: admin.create_new_auth_token, as: :json
       end.not_to(change(account.leads, :count))
       expect(response.parsed_body['id']).to eq(existing.id)
@@ -146,7 +146,7 @@ RSpec.describe 'Leads API', type: :request do
 
       expect do
         post "/api/v1/accounts/#{account.id}/leads/for_conversation",
-             params: { conversation_id: new_conversation.id },
+             params: { conversation_id: new_conversation.display_id },
              headers: admin.create_new_auth_token, as: :json
       end.not_to(change(account.leads, :count))
 
@@ -162,9 +162,22 @@ RSpec.describe 'Leads API', type: :request do
 
       expect do
         post "/api/v1/accounts/#{account.id}/leads/for_conversation",
-             params: { conversation_id: conversation.id },
+             params: { conversation_id: conversation.display_id },
              headers: admin.create_new_auth_token
       end.to change { account.leads.count }.by(1)
+    end
+
+    it 'resolve a conversa pelo display_id, não pela PK global' do
+      create(:conversation) # noutra conta: desloca a PK global da tabela
+      conversation = create(:conversation, account: account, contact: contact)
+      expect(conversation.id).not_to eq(conversation.display_id)
+
+      post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+           params: { conversation_id: conversation.display_id },
+           headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['conversation_id']).to eq(conversation.id)
     end
   end
 

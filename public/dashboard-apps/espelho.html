@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Espelho do appContext</title>
+    <style>
+      /* Página-espelho de Dashboard App: só imprime o contexto que o hub envia.
+     Serve pra inspecionar o payload real antes de construir apps novos. */
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #262320;
+        color: #ece7df;
+        font:
+          13px/1.5 ui-monospace,
+          SFMono-Regular,
+          Consolas,
+          monospace;
+      }
+      h1 {
+        font-size: 14px;
+        color: #c9a97c;
+        margin: 0 0 4px;
+      }
+      p {
+        margin: 0 0 12px;
+        color: #a89f92;
+        font-family: system-ui, sans-serif;
+      }
+      pre {
+        background: #33302c;
+        border: 1px solid #45413b;
+        border-radius: 8px;
+        padding: 12px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Espelho do appContext</h1>
+    <p>
+      Payload real que o hub (Frame.vue) envia a este Dashboard App via
+      postMessage.
+    </p>
+    <pre id="out">
+aguardando appContext… (abra a aba com uma conversa selecionada)</pre
+    >
+    <script>
+      window.addEventListener('message', e => {
+        let msg;
+        try {
+          msg = JSON.parse(e.data);
+        } catch {
+          return;
+        }
+        if (msg.event !== 'appContext') return;
+        document.getElementById('out').textContent = JSON.stringify(
+          msg.data,
+          null,
+          2
+        );
+      });
+      // Frame.vue reenvia o contexto quando a página pede.
+      window.parent.postMessage('chatwoot-dashboard-app:fetch-info', '*');
+    </script>
+  </body>
+</html>
