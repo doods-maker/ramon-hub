@@ -561,6 +561,32 @@ const toggleConsent = () =>
 
     <DocChecklist v-if="lead.thesis_id" :lead="lead" />
 
+    <div
+      v-if="lead.custom_attributes?.advbox"
+      class="flex items-center gap-2 mb-4 pt-3 border-t border-n-weak text-xs"
+      data-testid="advbox-sync"
+    >
+      <span class="uppercase text-n-slate-10">{{
+        $t('RAMON.ADVBOX.TITLE')
+      }}</span>
+      <span
+        v-if="lead.custom_attributes.advbox.lawsuits_id"
+        class="text-n-teal-11"
+      >
+        {{
+          $t('RAMON.ADVBOX.SYNCED', {
+            lawsuit: lead.custom_attributes.advbox.lawsuits_id,
+          })
+        }}
+      </span>
+      <span
+        v-else-if="lead.custom_attributes.advbox.erro"
+        class="text-n-ruby-11"
+      >
+        {{ $t('RAMON.ADVBOX.ERROR') }}
+      </span>
+    </div>
+
     <div class="flex flex-col gap-2 mb-4 pt-3 border-t border-n-weak">
       <span class="text-xs uppercase text-n-slate-10">{{
         $t('RAMON.DRAWER.NOTES')
