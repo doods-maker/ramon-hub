@@ -6,6 +6,7 @@ class Ramon::ColheitaExtractionService
   # ponytail: schema aprovado só p/ auxílio-acidente; schema por tese quando houver outra colheita aprovada.
   THESIS_MATCH = /auxílio-acidente/i
   MAX_MESSAGES = 200
+  AUXILIO_DOENCA = %w[B31 B91].freeze
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você extrai dados estruturados da conversa entre a equipe de um escritório previdenciário e um cliente com possível caso de auxílio-acidente.
@@ -143,7 +144,7 @@ class Ramon::ColheitaExtractionService
   def extracted_dcb(dados)
     Array(dados['beneficios']).filter_map do |b|
       next unless b.is_a?(Hash)
-      next unless %w[B31 B91].include?(b['especie'].to_s.upcase)
+      next unless AUXILIO_DOENCA.include?(b['especie'].to_s.upcase)
       next unless b['situacao'].to_s == 'cessado'
 
       parse_date(b['dcb'])
