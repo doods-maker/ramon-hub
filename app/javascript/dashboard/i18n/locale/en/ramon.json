@@ -434,6 +434,17 @@
         "DOCUMENTO": "Documents"
       }
     },
+    "ZAPSIGN": {
+      "TITLE": "Contract",
+      "GENERATE": "Generate contract (ZapSign)",
+      "GENERATING": "Generating…",
+      "CREATED": "Contract + power of attorney created — open the link to collect the signature",
+      "MISSING": "Created with {count} blank field(s) — fill them before signing",
+      "ERROR": "Could not generate the contract — try again",
+      "OPEN": "Open signature link",
+      "COPY": "Copy link",
+      "COPIED": "Signature link copied"
+    },
     "ADVBOX": {
       "TITLE": "AdvBox",
       "SYNCED": "Lawsuit #{lawsuit} created on close",
