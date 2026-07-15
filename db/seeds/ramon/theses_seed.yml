@@ -190,6 +190,46 @@ theses:
         title: "Carta de cessação do auxílio-doença"
         content: "Mostra a alta e a data — base para o pedido e os atrasados."
         position: 4
+      - section: "roteiro"
+        title: "Como usar este roteiro"
+        content: "Guia da reunião de fechamento — NÃO é trilho: a ordem pode mudar conforme a conversa. Voz 'médico de confiança': acolher, explicar simples, honorário transparente. Nunca prometer resultado, nunca cravar prazo do INSS — em nenhuma frase."
+        position: 0
+      - section: "roteiro"
+        title: "1. Acolhida (5 min)"
+        content: "Receber, agradecer a vinda, retomar o que já se sabe do WhatsApp ('me conta de novo com calma, do seu jeito'). Deixar a pessoa contar a história do acidente inteira, sem interromper — a narrativa espontânea preenche metade do que precisamos."
+        position: 1
+      - section: "roteiro"
+        title: "2. A história e a sequela (10 min)"
+        content: "Aprofundar em linguagem de cliente: 'Depois do acidente, o que você deixou de conseguir fazer no serviço?' · 'Ainda está em tratamento ou os médicos já disseram que ficou assim?' · 'Por quais médicos e hospitais você passou?'. Anotar épocas e nomes (mapa dos prontuários)."
+        position: 2
+      - section: "roteiro"
+        title: "3. O caminho no INSS (5 min)"
+        content: "Auxílio-doença: quando começou, quando cortaram (DCB!), era B31 ou B91. Já pediu o auxílio-acidente? Tem as cartas? Emitir CNIS e cartas no Meu INSS junto com o cliente, na hora, se ele tiver o app."
+        position: 3
+      - section: "roteiro"
+        title: "4. Explicar o direito, simples (5 min)"
+        content: "Frases sugeridas: 'Esse benefício é uma indenização: ele não substitui seu salário — ele vem JUNTO. Você continua trabalhando e recebendo normalmente.' (derruba a objeção nº 1) · 'Ele existe justamente pra quem ficou com uma sequela e continua na ativa.' · 'Cada mês que passa sem pedir é parcela antiga que vai ficando pra trás — a lei só paga os últimos 5 anos.' (urgência verdadeira, sem alarmismo)."
+        position: 4
+      - section: "roteiro"
+        title: "5. Simulador (5 min)"
+        content: "Rodar o Simulador do hub na frente do cliente (com CNIS anexado, se emitido no passo 3): atrasados estimados, perda mensal, honorário. Frase sugerida: 'Isso é uma estimativa para conversarmos — o valor certo quem define é o INSS ou a Justiça. Mas te dá uma ideia honesta do tamanho do seu direito.'"
+        position: 5
+      - section: "roteiro"
+        title: "6. Honorário, transparente (3 min)"
+        content: "'Nosso combinado é simples e sem letra miúda: a gente só recebe se você receber — 30% do valor atrasado que vier, mais 3 parcelas do benefício. Sem entrada, sem mensalidade, sem custo escondido.'"
+        position: 6
+      - section: "roteiro"
+        title: "7. Objeções (o tempo que precisar)"
+        content: "Preço → reforçar que só há honorário sobre êxito. 'Ainda trabalho' → passo 4. 'Vou pensar' → acolher sem pressão + lembrar a janela de 5 anos + deixar próximo passo marcado. Desconfiança → +20 anos de banca, +10.000 benefícios, escritório físico em Tubarão."
+        position: 7
+      - section: "roteiro"
+        title: "8. Fecho (5 min)"
+        content: "Contrato = a proposta (não existe orçamento separado): apresentar e assinar na própria reunião via ZapSign, junto com a procuração. Se não assinar, anotar o motivo e o próximo passo combinado."
+        position: 8
+      - section: "roteiro"
+        title: "9. Saída organizada (2 min)"
+        content: "Recapitular com o cliente o que ficou pendente, como enviar (WhatsApp) e o que acontece agora (onboarding com o jurídico) — sem prometer data de protocolo nem prazo do INSS. Anotar tudo → dossiê de passagem (W3)."
+        position: 9
 
   - name: "BPC/LOAS por deficiência"
     description: "Benefício assistencial de 1 salário mínimo a pessoa com deficiência de baixa renda. NÃO exige contribuição ao INSS. Lei 8.742/93, art. 20."

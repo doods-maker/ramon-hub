@@ -12,6 +12,7 @@ const SECTIONS = [
   'qualificacao',
   'objecao',
   'documento',
+  'roteiro',
 ];
 
 const theses = computed(() => getters['theses/getTheses'].value);

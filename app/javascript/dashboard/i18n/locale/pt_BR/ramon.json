@@ -480,7 +480,8 @@
         "APRESENTACAO": "Apresentação",
         "QUALIFICACAO": "Qualificação",
         "OBJECAO": "Objeções",
-        "DOCUMENTO": "Documentos"
+        "DOCUMENTO": "Documentos",
+        "ROTEIRO": "Roteiro da reunião"
       },
       "DELETE": "Remover tese",
       "ITEM_DELETE": "Remover item"
