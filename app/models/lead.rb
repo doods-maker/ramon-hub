@@ -121,7 +121,9 @@ class Lead < ApplicationRecord
       dcb_em: dcb_em,
       # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast (mesmo motivo de `value` acima)
       benefit_monthly_value: benefit_monthly_value&.to_f,
-      cnis_resumo: cnis_resumo
+      cnis_resumo: cnis_resumo,
+      # jsonb já é JSON nativo; painel aberto recebe colheita/doc_status ao vivo
+      custom_attributes: custom_attributes || {}
     }
   end
 

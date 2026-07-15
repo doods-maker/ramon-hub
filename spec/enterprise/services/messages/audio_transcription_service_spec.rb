@@ -69,6 +69,20 @@ RSpec.describe Messages::AudioTranscriptionService, type: :service do
     end
   end
 
+  describe '#update_transcription' do
+    let(:service) { described_class.new(attachment) }
+
+    it 'enfileira a extração da colheita quando a transcrição é gravada' do
+      expect { service.send(:update_transcription, 'oi, sofri um acidente') }
+        .to have_enqueued_job(Ramon::ColheitaExtractionJob).with(message.id)
+    end
+
+    it 'não enfileira nada com transcrição em branco' do
+      expect { service.send(:update_transcription, '') }
+        .not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
+    end
+  end
+
   describe '#fetch_audio_file' do
     let(:service) { described_class.new(attachment) }
 

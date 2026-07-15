@@ -434,6 +434,19 @@
         "DOCUMENTO": "Documents"
       }
     },
+    "COLHEITA": {
+      "TITLE": "Still to ask",
+      "COUNT": "{done}/{total} collected",
+      "LACUNAS_TITLE": "Meeting gaps (AI)",
+      "EXTRACTED_AT": "Extracted from the conversation at {date}",
+      "CHARGE": "Request gap documents",
+      "COPIED": "Draft copied — review and paste into WhatsApp",
+      "DRAFT": {
+        "GREETING": "Hi {name}, how are you? From our conversation, just a few documents are missing to complete your case:",
+        "ITEM": "• {item}",
+        "CLOSING": "Send them here whenever you can and we'll move forward. Any questions, just message me!"
+      }
+    },
     "DOCS": {
       "TITLE": "Documents",
       "COUNT": "{received}/{total} received",
@@ -481,7 +494,8 @@
         "QUALIFICACAO": "Qualification",
         "OBJECAO": "Objections",
         "DOCUMENTO": "Documents",
-        "ROTEIRO": "Meeting script"
+        "ROTEIRO": "Meeting script",
+        "COLHEITA": "Meeting harvest"
       },
       "DELETE": "Delete thesis",
       "ITEM_DELETE": "Delete item"

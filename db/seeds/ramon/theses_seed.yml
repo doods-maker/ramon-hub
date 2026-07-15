@@ -230,6 +230,117 @@ theses:
         title: "9. Saída organizada (2 min)"
         content: "Recapitular com o cliente o que ficou pendente, como enviar (WhatsApp) e o que acontece agora (onboarding com o jurídico) — sem prometer data de protocolo nem prazo do INSS. Anotar tudo → dossiê de passagem (W3)."
         position: 9
+      # Checklist de colheita da reunião (artefato 1 da colheita estruturada,
+      # aprovada pelo Eduardo em 15/07/2026). Cada item é verificável: colhido
+      # ou não colhido — é o que o Kit do Closer mostra como "o que falta perguntar".
+      - section: "colheita"
+        title: "Nome completo, CPF, RG e data de nascimento"
+        content: "Identificação civil — a inicial exige (espelho do modelo da banca)."
+        position: 0
+      - section: "colheita"
+        title: "Estado civil, profissão e nacionalidade"
+        content: "A profissão é a ATIVIDADE HABITUAL — importa pro mérito: a redução de capacidade é medida contra ela."
+        position: 1
+      - section: "colheita"
+        title: "Endereço completo e WhatsApp de contato"
+        content: "Qualificação civil da inicial + canal de contato."
+        position: 2
+      - section: "colheita"
+        title: "Renda aproximada (gratuidade judiciária)"
+        content: "Condição financeira p/ pedir gratuidade. O critério final de renda é do jurídico — anotar o valor declarado."
+        position: 3
+      - section: "colheita"
+        title: "É aposentado?"
+        content: "Aposentado desqualifica: o auxílio-acidente não acumula com aposentadoria (art. 86, §3º, Lei 8.213/91)."
+        position: 4
+      - section: "colheita"
+        title: "Tinha qualidade de segurado na época do acidente? Como?"
+        content: "Carteira assinada ou outra cobertura do INSS na data do acidente — registrar como estava coberto."
+        position: 5
+      - section: "colheita"
+        title: "Já recebeu auxílio-doença (B31/B91)?"
+        content: "Sinal forte da régua de qualificação da tese."
+        position: 6
+      - section: "colheita"
+        title: "Data (ou período) do acidente"
+        content: "Base da linha do tempo do caso."
+        position: 7
+      - section: "colheita"
+        title: "Tipo do acidente: trabalho, trajeto ou qualquer natureza"
+        content: "Todos servem — a Lei 9.032/95 estendeu o art. 86 a acidentes de qualquer natureza."
+        position: 8
+      - section: "colheita"
+        title: "O que aconteceu, em uma história contável"
+        content: "Vira o 'dos fatos' da inicial — deixar a pessoa contar inteira, sem interromper."
+        position: 9
+      - section: "colheita"
+        title: "CAT emitida? Por quem?"
+        content: "Se acidente de trabalho. Sem CAT: sindicato, médico ou o próprio acidentado podem emitir (art. 22, §2º, Lei 8.213/91)."
+        position: 10
+      - section: "colheita"
+        title: "Trabalhava em quê, para quem, na época"
+        content: "Empregador e função na data do acidente."
+        position: 11
+      - section: "colheita"
+        title: "Qual a sequela e em que parte do corpo (CID se souber)"
+        content: "O coração da tese: sequela definitiva que reduz a capacidade pro trabalho habitual (art. 86)."
+        position: 12
+      - section: "colheita"
+        title: "Lesões consolidadas ou ainda em tratamento?"
+        content: "Tratamento ativo = atenção ao timing da ação."
+        position: 13
+      - section: "colheita"
+        title: "Como limita o trabalho habitual, em termos concretos"
+        content: "Não precisa impedir — qualquer grau de redução basta (Tema 416/STJ)."
+        position: 14
+      - section: "colheita"
+        title: "Tratamentos, cirurgias, médicos e hospitais (nomes e épocas)"
+        content: "Mapa dos prontuários a buscar."
+        position: 15
+      - section: "colheita"
+        title: "Auxílios-doença recebidos: NB, espécie e DCB de cada um"
+        content: "A DCB do auxílio-doença ligado ao acidente é o termo inicial do auxílio-acidente — dia seguinte à cessação (Tema 862/STJ)."
+        position: 16
+      - section: "colheita"
+        title: "Outros benefícios ou requerimentos (inclusive indeferidos)"
+        content: "Histórico completo no INSS: NB, espécie, DIB, DCB."
+        position: 17
+      - section: "colheita"
+        title: "Já requereu auxílio-acidente? (DER, NB, resultado, motivo)"
+        content: "Via administrativa percorrida e o motivo do indeferimento, se houve."
+        position: 18
+      - section: "colheita"
+        title: "Tem as cartas do INSS (concessão/cessação/indeferimento)?"
+        content: "Se tiver o app Meu INSS, emitir junto na reunião — documento que sai pronto é follow-up a menos."
+        position: 19
+      - section: "colheita"
+        title: "Janela de prescrição calculada e explicada"
+        content: "Parcelas vencidas há mais de 5 anos prescrevem (art. 103, § único, Lei 8.213/91). Carência NÃO é objeção: auxílio-acidente não tem carência (art. 26, I)."
+        position: 20
+      - section: "colheita"
+        title: "Honorário apresentado com transparência total"
+        content: "30% dos atrasados + 3 benefícios — padrão fixo da tese; sem entrada, sem parcela, sem nada além."
+        position: 21
+      - section: "colheita"
+        title: "Simulação mostrada (sempre como estimativa)"
+        content: "Simulador do hub: atrasados estimados, perda mensal, honorário — nunca como promessa de valor."
+        position: 22
+      - section: "colheita"
+        title: "Objeções tratadas"
+        content: "Preço, 'ainda trabalho', 'vou pensar', desconfiança — ver a seção de objeções do playbook."
+        position: 23
+      - section: "colheita"
+        title: "Contrato assinado na reunião (ZapSign) — ou motivo anotado"
+        content: "Se não assinou: por quê + próximo passo combinado."
+        position: 24
+      - section: "colheita"
+        title: "Pendências e combinados anotados"
+        content: "Alimenta o dossiê de passagem pro jurídico (W3)."
+        position: 25
+      - section: "colheita"
+        title: "Sensibilidades do cliente"
+        content: "Medos, experiência ruim anterior, pressa, família — vai no dossiê."
+        position: 26
 
   - name: "BPC/LOAS por deficiência"
     description: "Benefício assistencial de 1 salário mínimo a pessoa com deficiência de baixa renda. NÃO exige contribuição ao INSS. Lei 8.742/93, art. 20."

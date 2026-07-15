@@ -434,6 +434,19 @@
         "DOCUMENTO": "Documentos"
       }
     },
+    "COLHEITA": {
+      "TITLE": "O que falta perguntar",
+      "COUNT": "{done}/{total} colhidos",
+      "LACUNAS_TITLE": "Lacunas da reunião (IA)",
+      "EXTRACTED_AT": "Extraído da conversa em {date}",
+      "CHARGE": "Pedir documentos das lacunas",
+      "COPIED": "Rascunho copiado — revise e cole no WhatsApp",
+      "DRAFT": {
+        "GREETING": "Olá {name}, tudo bem? Da nossa conversa, ficaram só alguns documentos pra completar o seu caso:",
+        "ITEM": "• {item}",
+        "CLOSING": "Assim que conseguir, me manda por aqui mesmo que a gente já dá andamento. Qualquer dúvida, me chama!"
+      }
+    },
     "DOCS": {
       "TITLE": "Documentos",
       "COUNT": "{received}/{total} recebidos",
@@ -481,7 +494,8 @@
         "QUALIFICACAO": "Qualificação",
         "OBJECAO": "Objeções",
         "DOCUMENTO": "Documentos",
-        "ROTEIRO": "Roteiro da reunião"
+        "ROTEIRO": "Roteiro da reunião",
+        "COLHEITA": "Colheita da reunião"
       },
       "DELETE": "Remover tese",
       "ITEM_DELETE": "Remover item"

@@ -1,5 +1,5 @@
 class ThesisItem < ApplicationRecord
-  SECTIONS = %w[abertura apresentacao qualificacao objecao documento roteiro].freeze
+  SECTIONS = %w[abertura apresentacao qualificacao objecao documento roteiro colheita].freeze
 
   belongs_to :thesis
 

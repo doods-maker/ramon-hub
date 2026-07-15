@@ -108,6 +108,8 @@ class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
 
     attachment.update!(meta: { transcribed_text: transcribed_text })
     message.reload.send_update_event
+    # ramon: transcrição pronta → extração estruturada da colheita da reunião
+    Ramon::ColheitaExtractionJob.perform_later(message.id)
 
     return unless ChatwootApp.advanced_search_allowed?
 

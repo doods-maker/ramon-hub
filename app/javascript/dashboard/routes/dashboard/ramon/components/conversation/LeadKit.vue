@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
+import ColheitaChecklist from 'dashboard/routes/dashboard/ramon/components/conversation/ColheitaChecklist.vue';
 import {
   stageMode,
   kitBlocks,
@@ -136,6 +137,8 @@ const blockLabelKey = block => `RAMON.KIT.BLOCKS.${block.toUpperCase()}`;
     </p>
 
     <template v-else>
+      <ColheitaChecklist :lead="lead" />
+
       <p
         v-if="isLoading && !doneTriage"
         class="text-sm text-n-slate-10"
