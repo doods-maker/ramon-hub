@@ -438,7 +438,14 @@
       "TITLE": "O que falta perguntar",
       "COUNT": "{done}/{total} colhidos",
       "LACUNAS_TITLE": "Lacunas da reunião (IA)",
-      "EXTRACTED_AT": "Extraído da conversa em {date}"
+      "EXTRACTED_AT": "Extraído da conversa em {date}",
+      "CHARGE": "Pedir documentos das lacunas",
+      "COPIED": "Rascunho copiado — revise e cole no WhatsApp",
+      "DRAFT": {
+        "GREETING": "Olá {name}, tudo bem? Da nossa conversa, ficaram só alguns documentos pra completar o seu caso:",
+        "ITEM": "• {item}",
+        "CLOSING": "Assim que conseguir, me manda por aqui mesmo que a gente já dá andamento. Qualquer dúvida, me chama!"
+      }
     },
     "DOCS": {
       "TITLE": "Documentos",

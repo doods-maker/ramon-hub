@@ -1,12 +1,16 @@
 <script setup>
 import { computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { useAlert } from 'dashboard/composables';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 
 const props = defineProps({
   lead: { type: Object, required: true },
 });
 defineOptions({ name: 'ColheitaChecklist' });
 
+const { t } = useI18n();
 const store = useStore();
 const theses = useMapGetter('theses/getTheses');
 
@@ -64,6 +68,30 @@ const extractedAt = computed(() => {
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('pt-BR');
 });
+
+// artefato 3 da colheita: cada lacuna vira pedido de documento RASCUNHO —
+// copia pro clipboard; quem revisa e envia é o humano, nada sai sozinho.
+const chargeLacunas = async () => {
+  if (!lacunas.value.length) return;
+  const lines = [
+    t('RAMON.COLHEITA.DRAFT.GREETING', { name: props.lead?.name || '' }),
+    '',
+    ...lacunas.value.map(lacuna =>
+      t('RAMON.COLHEITA.DRAFT.ITEM', {
+        item: lacuna.como_obter || lacuna.campo,
+      })
+    ),
+    '',
+    t('RAMON.COLHEITA.DRAFT.CLOSING'),
+  ];
+  try {
+    await copyTextToClipboard(lines.join('\n'));
+  } catch (error) {
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+    return;
+  }
+  useAlert(t('RAMON.COLHEITA.COPIED'));
+};
 </script>
 
 <template>
@@ -125,6 +153,14 @@ const extractedAt = computed(() => {
       <span v-if="extractedAt" class="text-xs text-n-slate-10">{{
         $t('RAMON.COLHEITA.EXTRACTED_AT', { date: extractedAt })
       }}</span>
+      <button
+        type="button"
+        data-testid="colheita-charge"
+        class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        @click="chargeLacunas"
+      >
+        {{ $t('RAMON.COLHEITA.CHARGE') }}
+      </button>
     </div>
   </div>
 </template>

@@ -4,6 +4,15 @@ import ColheitaChecklist from '../ColheitaChecklist.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 
+const alertSpy = vi.fn();
+const clipboardSpy = vi.fn();
+vi.mock('dashboard/composables', () => ({
+  useAlert: (...a) => alertSpy(...a),
+}));
+vi.mock('shared/helpers/clipboard', () => ({
+  copyTextToClipboard: (...a) => clipboardSpy(...a),
+}));
+
 const thesis = {
   id: 1,
   name: 'Auxílio-acidente (B36)',
@@ -94,6 +103,23 @@ describe('ColheitaChecklist.vue', () => {
     expect(block.exists()).toBe(true);
     expect(block.text()).toContain('beneficios[0].dcb');
     expect(block.text()).toContain('Meu INSS');
+  });
+
+  it('copies a document-request draft built from the lacunas', async () => {
+    clipboardSpy.mockClear();
+    alertSpy.mockClear();
+    const lead = {
+      ...baseLead,
+      custom_attributes: {
+        colheita: {
+          lacunas: [{ campo: 'beneficios[0].dcb', como_obter: 'Meu INSS' }],
+        },
+      },
+    };
+    const wrapper = mountChecklist(lead);
+    await wrapper.find('[data-testid="colheita-charge"]').trigger('click');
+    expect(clipboardSpy).toHaveBeenCalledTimes(1);
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.COLHEITA.COPIED');
   });
 
   it('hides the lacunas block without extraction data', () => {
