@@ -434,6 +434,11 @@
         "DOCUMENTO": "Documents"
       }
     },
+    "ADVBOX": {
+      "TITLE": "AdvBox",
+      "SYNCED": "Lawsuit #{lawsuit} created on close",
+      "ERROR": "Failed to create the AdvBox lawsuit — re-mark as won to retry"
+    },
     "COLHEITA": {
       "TITLE": "Still to ask",
       "COUNT": "{done}/{total} collected",

@@ -134,4 +134,23 @@ RSpec.describe Lead do
       expect(act.to_value).to eq('250.0')
     end
   end
+  describe 'fechamento -> AdvBox (item 21)' do
+    it 'enfileira o job quando o lead vira ganho com token configurado' do
+      with_modified_env ADVBOX_API_TOKEN: 'tok' do
+        lead = create(:lead, account: account)
+        won = account.lead_stages.find_by!(is_won: true)
+        expect { lead.update!(lead_stage: won) }
+          .to have_enqueued_job(Ramon::AdvboxClosingJob).with(lead.id)
+      end
+    end
+
+    it 'nao enfileira sem ADVBOX_API_TOKEN' do
+      with_modified_env ADVBOX_API_TOKEN: nil do
+        lead = create(:lead, account: account)
+        won = account.lead_stages.find_by!(is_won: true)
+        expect { lead.update!(lead_stage: won) }
+          .not_to have_enqueued_job(Ramon::AdvboxClosingJob)
+      end
+    end
+  end
 end

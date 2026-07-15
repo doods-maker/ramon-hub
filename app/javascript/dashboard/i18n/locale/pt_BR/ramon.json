@@ -434,6 +434,11 @@
         "DOCUMENTO": "Documentos"
       }
     },
+    "ADVBOX": {
+      "TITLE": "AdvBox",
+      "SYNCED": "Caso #{lawsuit} criado no fechamento",
+      "ERROR": "Falha ao criar o caso no AdvBox — tentar de novo é marcar como ganho novamente"
+    },
     "COLHEITA": {
       "TITLE": "O que falta perguntar",
       "COUNT": "{done}/{total} colhidos",
