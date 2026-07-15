@@ -434,6 +434,17 @@
         "DOCUMENTO": "Documentos"
       }
     },
+    "ZAPSIGN": {
+      "TITLE": "Contrato",
+      "GENERATE": "Gerar contrato (ZapSign)",
+      "GENERATING": "Gerando…",
+      "CREATED": "Contrato + procuração criados — abra o link pra colher a assinatura",
+      "MISSING": "Criado com {count} campo(s) em branco — complete antes de assinar",
+      "ERROR": "Não foi possível gerar o contrato — tente de novo",
+      "OPEN": "Abrir link de assinatura",
+      "COPY": "Copiar link",
+      "COPIED": "Link de assinatura copiado"
+    },
     "ADVBOX": {
       "TITLE": "AdvBox",
       "SYNCED": "Caso #{lawsuit} criado no fechamento",

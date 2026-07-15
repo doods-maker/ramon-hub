@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import LeadsAPI from 'dashboard/api/leads';
 import LeadTasksList from './LeadTasksList.vue';
 import DocChecklist from './DocChecklist.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
@@ -41,6 +42,37 @@ const benefitMonthlyValue = ref('');
 const contactCpf = ref('');
 const contactNascimento = ref('');
 const contactSexo = ref('');
+
+// ZapSign (item 21, fluxo A): botão gera contrato+procuração pré-preenchidos
+// e devolve o link de assinatura — nada é enviado ao cliente automaticamente.
+const zapsign = computed(() => props.lead?.custom_attributes?.zapsign || null);
+const zapsignEligible = computed(() =>
+  (props.lead?.thesis_name || '').toLowerCase().includes('acidente')
+);
+const zapsignLoading = ref(false);
+const generateZapsign = async () => {
+  zapsignLoading.value = true;
+  try {
+    const { data } = await LeadsAPI.createZapsign(props.lead.id);
+    useAlert(
+      data.faltando?.length
+        ? t('RAMON.ZAPSIGN.MISSING', { count: data.faltando.length })
+        : t('RAMON.ZAPSIGN.CREATED')
+    );
+  } catch (error) {
+    useAlert(t('RAMON.ZAPSIGN.ERROR'));
+  } finally {
+    zapsignLoading.value = false;
+  }
+};
+const copyZapsignLink = async () => {
+  try {
+    await copyTextToClipboard(zapsign.value.sign_url);
+    useAlert(t('RAMON.ZAPSIGN.COPIED'));
+  } catch (error) {
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+  }
+};
 
 // Etapa controlada localmente para poder reverter o select quando a mudança
 // para uma etapa de perda é cancelada, ou quando o backend recusa o update.
@@ -560,6 +592,56 @@ const toggleConsent = () =>
     <LeadTasksList v-if="lead.id" :lead-id="lead.id" />
 
     <DocChecklist v-if="lead.thesis_id" :lead="lead" />
+
+    <div
+      v-if="zapsignEligible"
+      class="flex flex-wrap items-center gap-2 mb-4 pt-3 border-t border-n-weak text-xs"
+      data-testid="zapsign-block"
+    >
+      <span class="uppercase text-n-slate-10">{{
+        $t('RAMON.ZAPSIGN.TITLE')
+      }}</span>
+      <template v-if="zapsign?.sign_url">
+        <a
+          :href="zapsign.sign_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-n-teal-11 underline"
+          data-testid="zapsign-link"
+        >
+          {{ $t('RAMON.ZAPSIGN.OPEN') }}
+        </a>
+        <button
+          type="button"
+          data-testid="zapsign-copy"
+          class="px-2 py-0.5 rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+          @click="copyZapsignLink"
+        >
+          {{ $t('RAMON.ZAPSIGN.COPY') }}
+        </button>
+      </template>
+      <button
+        v-else
+        type="button"
+        data-testid="zapsign-generate"
+        :disabled="zapsignLoading"
+        class="px-3 py-1.5 rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
+        @click="generateZapsign"
+      >
+        {{
+          zapsignLoading
+            ? $t('RAMON.ZAPSIGN.GENERATING')
+            : $t('RAMON.ZAPSIGN.GENERATE')
+        }}
+      </button>
+      <span
+        v-if="zapsign?.faltando?.length"
+        class="text-n-amber-11"
+        data-testid="zapsign-missing"
+      >
+        {{ $t('RAMON.ZAPSIGN.MISSING', { count: zapsign.faltando.length }) }}
+      </span>
+    </div>
 
     <div
       v-if="lead.custom_attributes?.advbox"
