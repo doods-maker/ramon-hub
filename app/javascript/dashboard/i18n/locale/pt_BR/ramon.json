@@ -487,7 +487,8 @@
         "QUALIFICACAO": "Qualificação",
         "OBJECAO": "Objeções",
         "DOCUMENTO": "Documentos",
-        "ROTEIRO": "Roteiro da reunião"
+        "ROTEIRO": "Roteiro da reunião",
+        "COLHEITA": "Colheita da reunião"
       },
       "DELETE": "Remover tese",
       "ITEM_DELETE": "Remover item"

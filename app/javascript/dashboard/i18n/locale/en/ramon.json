@@ -487,7 +487,8 @@
         "QUALIFICACAO": "Qualification",
         "OBJECAO": "Objections",
         "DOCUMENTO": "Documents",
-        "ROTEIRO": "Meeting script"
+        "ROTEIRO": "Meeting script",
+        "COLHEITA": "Meeting harvest"
       },
       "DELETE": "Delete thesis",
       "ITEM_DELETE": "Delete item"

@@ -13,6 +13,7 @@ const SECTIONS = [
   'objecao',
   'documento',
   'roteiro',
+  'colheita',
 ];
 
 const theses = computed(() => getters['theses/getTheses'].value);
