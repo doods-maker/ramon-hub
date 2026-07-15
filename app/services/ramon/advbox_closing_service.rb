@@ -75,12 +75,24 @@ class Ramon::AdvboxClosingService
     {
       users_id: USERS_ID,
       customers_origins_id: origin_id,
-      name: @contact&.name.presence || @lead.name,
+      name: customer_name,
       identification: cpf,
-      cellphone: @contact&.phone_number&.delete('^0-9'),
-      birthdate: @contact&.data_nascimento&.iso8601,
+      cellphone: cellphone,
+      birthdate: birthdate,
       notes: "Lead ##{@lead.id} do ramon-hub · tese: #{@lead.thesis&.name || '—'}"
     }.compact
+  end
+
+  def customer_name
+    @contact&.name.presence || @lead.name
+  end
+
+  def cellphone
+    @contact&.phone_number&.delete('^0-9')
+  end
+
+  def birthdate
+    @contact&.data_nascimento&.iso8601
   end
 
   def lawsuit_payload(customer_id)

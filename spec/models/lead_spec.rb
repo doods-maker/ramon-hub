@@ -134,6 +134,7 @@ RSpec.describe Lead do
       expect(act.to_value).to eq('250.0')
     end
   end
+
   describe 'fechamento -> AdvBox (item 21)' do
     it 'enfileira o job quando o lead vira ganho com token configurado' do
       with_modified_env ADVBOX_API_TOKEN: 'tok' do

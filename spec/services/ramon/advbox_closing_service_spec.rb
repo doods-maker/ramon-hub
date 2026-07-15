@@ -5,7 +5,7 @@ RSpec.describe Ramon::AdvboxClosingService do
   let(:thesis) { account.theses.find_by!(name: 'Auxílio-acidente (B36)') }
   let(:contact) do
     create(:contact, account: account, name: 'João da Silva', phone_number: '+5548999990000',
-                     cpf: '123.456.789-00')
+                     cpf: '529.982.247-25')
   end
   let(:conversation) { create(:conversation, account: account, contact: contact) }
   let(:won_stage) { account.lead_stages.find_by!(is_won: true) }
@@ -65,7 +65,7 @@ RSpec.describe Ramon::AdvboxClosingService do
                          'errors' => { 'duplicate' => ['Client with this name already exists.'] } }.to_json,
                  headers: { 'Content-Type' => 'application/json' })
     busca = stub_request(:get, 'https://app.advbox.com.br/api/v1/customers')
-            .with(query: { 'identification' => '12345678900' })
+            .with(query: { 'identification' => '52998224725' })
             .to_return(status: 200, body: { 'data' => [{ 'id' => 999 }] }.to_json,
                        headers: { 'Content-Type' => 'application/json' })
     stub_create('lawsuits', 'lawsuits_id', 222)
@@ -80,7 +80,7 @@ RSpec.describe Ramon::AdvboxClosingService do
   it 'não refaz nada quando o lead já está sincronizado (idempotente)' do
     lead.update!(custom_attributes: { 'advbox' => { 'lawsuits_id' => 222 } })
     described_class.new(lead).perform
-    expect(WebMock).not_to have_requested(:post, %r{app\.advbox\.com\.br})
+    expect(WebMock).not_to have_requested(:post, /app\.advbox\.com\.br/)
   end
 
   it 'repropaga UnavailableError (5xx) para o retry do job' do
@@ -102,6 +102,6 @@ RSpec.describe Ramon::AdvboxClosingService do
   it 'não faz nada em lead que não é ganho' do
     aberto = create(:lead, account: account)
     described_class.new(aberto).perform
-    expect(WebMock).not_to have_requested(:post, %r{app\.advbox\.com\.br})
+    expect(WebMock).not_to have_requested(:post, /app\.advbox\.com\.br/)
   end
 end
