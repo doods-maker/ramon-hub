@@ -434,6 +434,12 @@
         "DOCUMENTO": "Documentos"
       }
     },
+    "COLHEITA": {
+      "TITLE": "O que falta perguntar",
+      "COUNT": "{done}/{total} colhidos",
+      "LACUNAS_TITLE": "Lacunas da reunião (IA)",
+      "EXTRACTED_AT": "Extraído da conversa em {date}"
+    },
     "DOCS": {
       "TITLE": "Documentos",
       "COUNT": "{received}/{total} recebidos",

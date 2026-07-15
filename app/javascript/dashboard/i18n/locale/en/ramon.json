@@ -434,6 +434,12 @@
         "DOCUMENTO": "Documents"
       }
     },
+    "COLHEITA": {
+      "TITLE": "Still to ask",
+      "COUNT": "{done}/{total} collected",
+      "LACUNAS_TITLE": "Meeting gaps (AI)",
+      "EXTRACTED_AT": "Extracted from the conversation at {date}"
+    },
     "DOCS": {
       "TITLE": "Documents",
       "COUNT": "{received}/{total} received",
