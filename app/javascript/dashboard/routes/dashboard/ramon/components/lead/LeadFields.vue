@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import LeadsAPI from 'dashboard/api/leads';
 import LeadTasksList from './LeadTasksList.vue';
 import DocChecklist from './DocChecklist.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
@@ -41,6 +42,39 @@ const benefitMonthlyValue = ref('');
 const contactCpf = ref('');
 const contactNascimento = ref('');
 const contactSexo = ref('');
+
+// ZapSign (item 21, fluxo A): botão gera contrato+procuração pré-preenchidos
+// e devolve o link de assinatura — nada é enviado ao cliente automaticamente.
+const zapsign = computed(
+  () => props.lead?.custom_attributes?.zapsign || null
+);
+const zapsignEligible = computed(() =>
+  (props.lead?.thesis_name || '').toLowerCase().includes('acidente')
+);
+const zapsignLoading = ref(false);
+const generateZapsign = async () => {
+  zapsignLoading.value = true;
+  try {
+    const { data } = await LeadsAPI.createZapsign(props.lead.id);
+    useAlert(
+      data.faltando?.length
+        ? t('RAMON.ZAPSIGN.MISSING', { count: data.faltando.length })
+        : t('RAMON.ZAPSIGN.CREATED')
+    );
+  } catch (error) {
+    useAlert(t('RAMON.ZAPSIGN.ERROR'));
+  } finally {
+    zapsignLoading.value = false;
+  }
+};
+const copyZapsignLink = async () => {
+  try {
+    await copyTextToClipboard(zapsign.value.sign_url);
+    useAlert(t('RAMON.ZAPSIGN.COPIED'));
+  } catch (error) {
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+  }
+};
 
 // Etapa controlada localmente para poder reverter o select quando a mudança
 // para uma etapa de perda é cancelada, ou quando o backend recusa o update.

@@ -69,6 +69,10 @@ class LeadsAPI extends ApiClient {
   deleteCnis(leadId) {
     return axios.delete(`${this.url}/${leadId}/cnis`);
   }
+
+  createZapsign(leadId) {
+    return axios.post(`${this.url}/${leadId}/zapsign`);
+  }
 }
 
 export default new LeadsAPI();
