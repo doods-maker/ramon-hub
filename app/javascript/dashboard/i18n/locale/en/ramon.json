@@ -480,7 +480,8 @@
         "APRESENTACAO": "Presentation",
         "QUALIFICACAO": "Qualification",
         "OBJECAO": "Objections",
-        "DOCUMENTO": "Documents"
+        "DOCUMENTO": "Documents",
+        "ROTEIRO": "Meeting script"
       },
       "DELETE": "Delete thesis",
       "ITEM_DELETE": "Delete item"
