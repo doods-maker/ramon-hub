@@ -607,6 +607,8 @@
       "VINCULO_MENSALIDADE": "Actual benefit monthly amount (R$)",
       "VINCULOS_REAPLICAR": "Reapply with adjustments",
       "VINCULOS_REUPLOAD_HINT": "The PDF is not kept on the server — select the file again to reapply.",
+      "ESPECIAL_LABEL": "Special activity",
+      "ESPECIAL_NAO": "None",
       "DUAS_MEDIAS": "RMI at 100% of the period: {rmi} · with the Discard Rule: {descartes}",
       "MEMORIA_SHOW": "View calculation report",
       "MEMORIA_HIDE": "Hide calculation report",

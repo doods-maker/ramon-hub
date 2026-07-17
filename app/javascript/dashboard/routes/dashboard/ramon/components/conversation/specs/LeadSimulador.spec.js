@@ -60,6 +60,7 @@ describe('LeadSimulador.vue', () => {
     LeadsAPI.uploadCnis.mockReset();
     LeadsAPI.getCnis.mockReset();
     LeadsAPI.deleteCnis.mockReset();
+    LeadsAPI.painel.mockReset();
   });
 
   it('pré-preenche nascimento/sexo do contato e benefício pela tese', () => {
@@ -339,6 +340,96 @@ describe('LeadSimulador.vue', () => {
     expect(
       wrapper.find('[data-testid="sim-painel-run"]').element.disabled
     ).toBe(false);
+  });
+
+  it('marca vínculo como especial e envia especiais no payload do painel', async () => {
+    LeadsAPI.uploadCnis.mockResolvedValue({
+      data: {
+        ...cnisResumo,
+        vinculos_detalhe: [{ seq: 3, tipo: 'EMPREGO', origem: 'ACME' }],
+        parametros: {},
+      },
+    });
+    LeadsAPI.painel.mockResolvedValue({
+      data: { resumo: { media: '1.00' }, cartoes: [], avisos: [] },
+    });
+    const wrapper = mountSim();
+    const input = wrapper.find('[data-testid="sim-cnis-file"]');
+    const file = new File(['%PDF'], 'cnis.pdf', { type: 'application/pdf' });
+    Object.defineProperty(input.element, 'files', { value: [file] });
+    await input.trigger('change');
+    await flushPromises();
+    await wrapper
+      .find('[data-testid="sim-cnis-ajustes-toggle"]')
+      .trigger('click');
+    await wrapper.find('[data-testid="sim-especial-grau-3"]').setValue('25');
+    await wrapper.find('[data-testid="sim-der"]').setValue('2026-06-30');
+    await wrapper.find('[data-testid="sim-painel-run"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.painel).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        especiais: JSON.stringify({ 3: { grau: 25, inicio: null, fim: null } }),
+      })
+    );
+  });
+
+  it('trecho parcial vai junto quando preenchido', async () => {
+    LeadsAPI.uploadCnis.mockResolvedValue({
+      data: {
+        ...cnisResumo,
+        vinculos_detalhe: [{ seq: 3, tipo: 'EMPREGO', origem: 'ACME' }],
+        parametros: {},
+      },
+    });
+    LeadsAPI.painel.mockResolvedValue({
+      data: { resumo: { media: '1.00' }, cartoes: [], avisos: [] },
+    });
+    const wrapper = mountSim();
+    const input = wrapper.find('[data-testid="sim-cnis-file"]');
+    const file = new File(['%PDF'], 'cnis.pdf', { type: 'application/pdf' });
+    Object.defineProperty(input.element, 'files', { value: [file] });
+    await input.trigger('change');
+    await flushPromises();
+    await wrapper
+      .find('[data-testid="sim-cnis-ajustes-toggle"]')
+      .trigger('click');
+    await wrapper.find('[data-testid="sim-especial-grau-3"]').setValue('20');
+    await wrapper
+      .find('[data-testid="sim-especial-inicio-3"]')
+      .setValue('2010-01-01');
+    await wrapper
+      .find('[data-testid="sim-especial-fim-3"]')
+      .setValue('2015-06-30');
+    await wrapper.find('[data-testid="sim-der"]').setValue('2026-06-30');
+    await wrapper.find('[data-testid="sim-painel-run"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.painel).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        especiais: JSON.stringify({
+          3: { grau: 20, inicio: '2010-01-01', fim: '2015-06-30' },
+        }),
+      })
+    );
+  });
+
+  it('parametros.especiais persistidos pré-populam os selects', async () => {
+    LeadsAPI.getCnis.mockResolvedValue({
+      data: {
+        ...cnisResumo,
+        vinculos_detalhe: [{ seq: 3, tipo: 'EMPREGO', origem: 'ACME' }],
+        parametros: { especiais: '{"3":{"grau":15}}' },
+      },
+    });
+    const wrapper = mountSim({ lead: { ...lead, cnis_resumo: cnisResumo } });
+    await wrapper
+      .find('[data-testid="sim-cnis-ajustes-toggle"]')
+      .trigger('click');
+    await flushPromises();
+    expect(
+      wrapper.find('[data-testid="sim-especial-grau-3"]').element.value
+    ).toBe('15');
   });
 
   it('mostra o erro do motor em entrada inválida (422)', async () => {

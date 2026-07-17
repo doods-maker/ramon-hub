@@ -40,6 +40,9 @@ const cnisFile = ref(null);
 const vinculos = ref([]);
 const excluidos = ref([]);
 const mensalidades = ref({});
+const especiaisGrau = ref({});
+const especiaisInicio = ref({});
+const especiaisFim = ref({});
 const ajustesOpen = ref(false);
 const memoria = ref(null);
 const memoriaLoading = ref(false);
@@ -79,6 +82,17 @@ const applyCnis = data => {
   mensalidades.value = parametros.mensalidades
     ? JSON.parse(parametros.mensalidades)
     : {};
+  const especiais = parametros.especiais
+    ? JSON.parse(parametros.especiais)
+    : {};
+  especiaisGrau.value = {};
+  especiaisInicio.value = {};
+  especiaisFim.value = {};
+  Object.entries(especiais).forEach(([seq, v]) => {
+    especiaisGrau.value[seq] = v.grau;
+    if (v.inicio) especiaisInicio.value[seq] = v.inicio;
+    if (v.fim) especiaisFim.value[seq] = v.fim;
+  });
 };
 
 const mensalidadesJson = () => {
@@ -88,6 +102,25 @@ const mensalidadesJson = () => {
     .map(([k, v]) => [k, String(v)]);
   return entries.length ? JSON.stringify(Object.fromEntries(entries)) : '';
 };
+
+// Espelha mensalidadesJson: filtra vínculos sem grau marcado; trecho
+// (inicio/fim) é opcional — vazio vira null (motor aceita ausência de trecho
+// = período todo).
+const especiaisJson = () => {
+  const entries = Object.entries(especiaisGrau.value)
+    .filter(([, grau]) => grau)
+    .map(([seq, grau]) => [
+      seq,
+      {
+        grau: Number(grau),
+        inicio: especiaisInicio.value[seq] || null,
+        fim: especiaisFim.value[seq] || null,
+      },
+    ]);
+  return entries.length ? JSON.stringify(Object.fromEntries(entries)) : '';
+};
+
+const GRAUS_ESPECIAIS = [15, 20, 25];
 
 const tituloDe = v => [v.seq, v.tipo, v.origem].filter(Boolean).join(' · ');
 const periodoDe = v => (v.inicio ? `${v.inicio} → ${v.fim || '…'}` : '');
@@ -153,6 +186,9 @@ const removeCnis = async () => {
     vinculos.value = [];
     excluidos.value = [];
     mensalidades.value = {};
+    especiaisGrau.value = {};
+    especiaisInicio.value = {};
+    especiaisFim.value = {};
     ajustesOpen.value = false;
     resultado.value = null;
     memoria.value = null;
@@ -217,8 +253,27 @@ const addVinculoExtra = () =>
     fim: '',
     tipo: 'EMPREGO',
     salario: '',
+    especialGrau: undefined,
+    especialInicio: '',
+    especialFim: '',
   });
 const removeVinculoExtra = index => vinculosExtras.value.splice(index, 1);
+
+const vinculosExtrasJson = () =>
+  vinculosExtras.value
+    .filter(v => v.inicio && v.fim)
+    .map(({ especialGrau, especialInicio, especialFim, ...v }) => ({
+      ...v,
+      ...(especialGrau
+        ? {
+            especial: {
+              grau: Number(especialGrau),
+              inicio: especialInicio || null,
+              fim: especialFim || null,
+            },
+          }
+        : {}),
+    }));
 
 const canPainel = computed(() =>
   Boolean(
@@ -238,7 +293,8 @@ const calcularPainel = async () => {
       der: form.value.der,
       nascimento: form.value.nascimento,
       sexo: form.value.sexo,
-      vinculos_extras: vinculosExtras.value.filter(v => v.inicio && v.fim),
+      vinculos_extras: vinculosExtrasJson(),
+      especiais: especiaisJson(),
     });
     painel.value = data;
   } catch (error) {
@@ -340,6 +396,40 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
               :data-testid="`sim-vinculo-mensalidade-${v.seq}`"
             />
           </label>
+          <div
+            v-if="v.tipo !== 'BENEFICIO'"
+            class="flex flex-wrap items-center gap-2"
+          >
+            <label class="text-xs text-n-slate-11">
+              {{ $t('RAMON.SIMULADOR.ESPECIAL_LABEL') }}
+            </label>
+            <select
+              v-model="especiaisGrau[v.seq]"
+              :data-testid="`sim-especial-grau-${v.seq}`"
+              :class="fieldClass"
+            >
+              <option :value="undefined">
+                {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
+              </option>
+              <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
+                {{ g }}
+              </option>
+            </select>
+            <template v-if="especiaisGrau[v.seq]">
+              <input
+                v-model="especiaisInicio[v.seq]"
+                type="date"
+                :data-testid="`sim-especial-inicio-${v.seq}`"
+                :class="fieldClass"
+              />
+              <input
+                v-model="especiaisFim[v.seq]"
+                type="date"
+                :data-testid="`sim-especial-fim-${v.seq}`"
+                :class="fieldClass"
+              />
+            </template>
+          </div>
         </div>
         <label v-if="!cnisFile" :class="labelClass">
           {{ $t('RAMON.SIMULADOR.VINCULOS_REUPLOAD_HINT') }}
@@ -662,6 +752,37 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
               :class="fieldClass"
             />
           </label>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-xs text-n-slate-11">
+            {{ $t('RAMON.SIMULADOR.ESPECIAL_LABEL') }}
+          </label>
+          <select
+            v-model="v.especialGrau"
+            :data-testid="`sim-vinculo-extra-especial-grau-${i}`"
+            :class="fieldClass"
+          >
+            <option :value="undefined">
+              {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
+            </option>
+            <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
+              {{ g }}
+            </option>
+          </select>
+          <template v-if="v.especialGrau">
+            <input
+              v-model="v.especialInicio"
+              type="date"
+              :data-testid="`sim-vinculo-extra-especial-inicio-${i}`"
+              :class="fieldClass"
+            />
+            <input
+              v-model="v.especialFim"
+              type="date"
+              :data-testid="`sim-vinculo-extra-especial-fim-${i}`"
+              :class="fieldClass"
+            />
+          </template>
         </div>
         <button
           type="button"
