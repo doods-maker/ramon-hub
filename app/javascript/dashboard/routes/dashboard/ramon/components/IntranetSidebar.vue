@@ -41,6 +41,12 @@ const sections = computed(() => [
         to: accountScopedRoute('ramon_pessoas'),
       },
       {
+        key: 'calculos',
+        label: t('RAMON.NAV.CALCULOS'),
+        icon: 'i-lucide-calculator',
+        to: accountScopedRoute('ramon_calculos'),
+      },
+      {
         key: 'funil_config',
         label: t('RAMON.NAV.FUNIL_CONFIG'),
         icon: 'i-lucide-sliders-horizontal',

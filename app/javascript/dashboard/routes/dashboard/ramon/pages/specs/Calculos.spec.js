@@ -1,0 +1,164 @@
+import { mount, flushPromises } from '@vue/test-utils';
+import { reactive } from 'vue';
+import Calculos from '../Calculos.vue';
+import ContactAPI from 'dashboard/api/contacts';
+import LeadsAPI from 'dashboard/api/leads';
+
+// Rota simulada: reativa pra que router.push (mockado) dispare o watch do
+// componente, do mesmo jeito que a navegação real faria.
+const routeParams = reactive({});
+const push = vi.fn(({ params }) => {
+  Object.keys(routeParams).forEach(key => delete routeParams[key]);
+  Object.assign(routeParams, params);
+});
+
+vi.mock('vue-router', () => ({
+  useRoute: () => ({ params: routeParams }),
+  useRouter: () => ({ push }),
+}));
+vi.mock('dashboard/api/contacts', () => ({
+  default: { search: vi.fn() },
+}));
+vi.mock('dashboard/api/leads', () => ({
+  default: { get: vi.fn(), show: vi.fn() },
+}));
+// LeadSimulador tem specs próprios — aqui só confirmamos que recebeu o lead certo.
+vi.mock('../../components/conversation/LeadSimulador.vue', () => ({
+  default: {
+    name: 'LeadSimulador',
+    props: ['lead'],
+    template: '<div data-testid="stub-simulador">{{ lead.id }}</div>',
+  },
+}));
+
+const mountOptions = {
+  global: {
+    mocks: {
+      $t: (key, params) => (params ? `${key} ${JSON.stringify(params)}` : key),
+    },
+  },
+};
+
+const search = async (wrapper, term) => {
+  await wrapper.find('[data-testid="pessoa-search"]').setValue(term);
+  await new Promise(resolve => {
+    setTimeout(resolve, 320); // debounce de 300ms
+  });
+  await flushPromises();
+};
+
+beforeEach(() => {
+  Object.keys(routeParams).forEach(key => delete routeParams[key]);
+  push.mockClear();
+  ContactAPI.search.mockReset();
+  LeadsAPI.get.mockReset();
+  LeadsAPI.show.mockReset();
+});
+
+describe('Calculos.vue', () => {
+  it('busca pessoa e, com 1 lead só, navega e renderiza o Simulador direto', async () => {
+    ContactAPI.search.mockResolvedValue({
+      data: {
+        payload: [
+          { id: 1, name: 'Maria das Dores', phone_number: '+5548999990000' },
+        ],
+      },
+    });
+    LeadsAPI.get.mockResolvedValue({
+      data: { payload: [{ id: 9, name: 'Lead único' }] },
+    });
+    LeadsAPI.show.mockResolvedValue({
+      data: {
+        id: 9,
+        name: 'Lead único',
+        contact_name: 'Maria das Dores',
+        thesis_name: 'Auxílio-acidente',
+      },
+    });
+
+    const wrapper = mount(Calculos, mountOptions);
+    await search(wrapper, 'Maria');
+
+    expect(wrapper.find('[data-testid="pessoa-result"]').text()).toContain(
+      'Maria das Dores'
+    );
+
+    await wrapper.find('[data-testid="pessoa-result"]').trigger('click');
+    await flushPromises();
+
+    expect(LeadsAPI.get).toHaveBeenCalledWith({ contact_id: 1 });
+    expect(push).toHaveBeenCalledWith({
+      name: 'ramon_calculos_lead',
+      params: { leadId: 9 },
+    });
+
+    await flushPromises();
+    expect(LeadsAPI.show).toHaveBeenCalledWith(9);
+    const stub = wrapper.findComponent({ name: 'LeadSimulador' });
+    expect(stub.exists()).toBe(true);
+    expect(stub.props('lead').id).toBe(9);
+  });
+
+  it('com mais de um lead, lista tese/data pra escolher antes de simular', async () => {
+    ContactAPI.search.mockResolvedValue({
+      data: { payload: [{ id: 2, name: 'João Pedro' }] },
+    });
+    LeadsAPI.get.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            id: 10,
+            thesis_name: 'Auxílio-doença',
+            stage_entered_at: '2026-01-05',
+          },
+          {
+            id: 11,
+            thesis_name: 'Aposentadoria',
+            stage_entered_at: '2026-03-10',
+          },
+        ],
+      },
+    });
+    LeadsAPI.show.mockResolvedValue({
+      data: { id: 11, name: 'Lead 11', contact_name: 'João Pedro' },
+    });
+
+    const wrapper = mount(Calculos, mountOptions);
+    await search(wrapper, 'João');
+    await wrapper.find('[data-testid="pessoa-result"]').trigger('click');
+    await flushPromises();
+
+    expect(push).not.toHaveBeenCalled();
+    const items = wrapper.findAll('[data-testid="calculos-lead-item"]');
+    expect(items).toHaveLength(2);
+    expect(items[1].text()).toContain('Aposentadoria');
+
+    await items[1].trigger('click');
+    expect(push).toHaveBeenCalledWith({
+      name: 'ramon_calculos_lead',
+      params: { leadId: 11 },
+    });
+
+    await flushPromises();
+    const stub = wrapper.findComponent({ name: 'LeadSimulador' });
+    expect(stub.props('lead').id).toBe(11);
+  });
+
+  it('sem lead pro contato, mostra estado vazio com orientação', async () => {
+    ContactAPI.search.mockResolvedValue({
+      data: { payload: [{ id: 3, name: 'Ana Beatriz' }] },
+    });
+    LeadsAPI.get.mockResolvedValue({ data: { payload: [] } });
+
+    const wrapper = mount(Calculos, mountOptions);
+    await search(wrapper, 'Ana');
+    await wrapper.find('[data-testid="pessoa-result"]').trigger('click');
+    await flushPromises();
+
+    expect(push).not.toHaveBeenCalled();
+    const empty = wrapper.find('[data-testid="calculos-empty"]');
+    expect(empty.exists()).toBe(true);
+    expect(empty.text()).toContain('RAMON.CALCULOS.EMPTY_NO_LEAD');
+    expect(empty.text()).toContain('Ana Beatriz');
+  });
+});

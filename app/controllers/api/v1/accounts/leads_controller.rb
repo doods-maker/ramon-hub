@@ -82,7 +82,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def apply_equality_filters(leads)
-    %i[benefit_type_id lead_priority_id lead_stage_id source channel].each do |key|
+    %i[benefit_type_id lead_priority_id lead_stage_id source channel contact_id].each do |key|
       leads = leads.where(key => params[key]) if params[key].present?
     end
     leads

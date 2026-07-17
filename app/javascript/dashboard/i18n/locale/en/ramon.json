@@ -88,7 +88,8 @@
       "AGENTES": "AI Agents",
       "FUNIL_CONFIG": "Funnel settings",
       "PLAYBOOKS": "Playbooks",
-      "LINHA_DA_VIDA": "Lifeline"
+      "LINHA_DA_VIDA": "Lifeline",
+      "CALCULOS": "Calculations"
     },
     "ESTEIRA": {
       "EYEBROW": "Production line",
@@ -356,6 +357,16 @@
       "SEARCHING": "Searching…",
       "SEARCH_EMPTY": "No one found for that term."
     },
+    "CALCULOS": {
+      "TITLE": "Calculations",
+      "SEARCH_HINT": "Search for a person to open the calculation simulator.",
+      "SEARCH_PLACEHOLDER": "Name, phone or email…",
+      "SEARCHING": "Searching…",
+      "SEARCH_EMPTY": "No one found for that term.",
+      "LOADING_LEADS": "Looking up their cases…",
+      "ERROR": "Could not load this calculation",
+      "EMPTY_NO_LEAD": "{name} has no case in the pipeline yet — create a lead to run the simulator."
+    },
     "DOSSIE": {
       "OPEN": "Dossier",
       "TITLE": "30-second dossier",
@@ -607,6 +618,8 @@
       "VINCULO_MENSALIDADE": "Actual benefit monthly amount (R$)",
       "VINCULOS_REAPLICAR": "Reapply with adjustments",
       "VINCULOS_REUPLOAD_HINT": "The PDF is not kept on the server — select the file again to reapply.",
+      "ESPECIAL_LABEL": "Special activity",
+      "ESPECIAL_NAO": "None",
       "DUAS_MEDIAS": "RMI at 100% of the period: {rmi} · with the Discard Rule: {descartes}",
       "MEMORIA_SHOW": "View calculation report",
       "MEMORIA_HIDE": "Hide calculation report",
