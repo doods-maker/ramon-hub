@@ -80,11 +80,19 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
   end
 
   def persistir_especiais
-    return if permitted[:especiais].blank?
+    # o front sempre envia a chave (mesmo vazia ao desmarcar tudo) — chave
+    # ausente = não mexeu; chave vazia = limpou (remove a marcação persistida,
+    # senão marca velha "fantasma" reaparece no reload)
+    return unless params.key?(:especiais)
     return if @lead.cnis.blank?
 
-    cnis = @lead.cnis || {}
-    cnis['parametros'] = (cnis['parametros'] || {}).merge('especiais' => permitted[:especiais])
+    cnis = @lead.cnis
+    parametros = cnis['parametros'] || {}
+    cnis['parametros'] = if permitted[:especiais].present?
+                           parametros.merge('especiais' => permitted[:especiais])
+                         else
+                           parametros.except('especiais')
+                         end
     @lead.update!(cnis: cnis)
   end
 

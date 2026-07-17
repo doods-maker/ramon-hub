@@ -134,6 +134,20 @@ RSpec.describe 'Lead Paineis API', type: :request do
       expect(lead.reload.cnis.dig('parametros', 'especiais')).to be_present
     end
 
+    it 'remove a marcacao persistida quando reaplica com especiais vazio (desmarcou tudo)' do
+      lead.update!(cnis: cnis_com_dois_vinculos.merge('parametros' => { 'especiais' => { '3' => { 'grau' => 25 } }.to_json }))
+      stub_request(:post, "#{motor_url}/painel")
+        .to_return(status: 200, body: { resumo: {}, cartoes: [], avisos: [] }.to_json,
+                   headers: { 'Content-Type' => 'application/json' })
+
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        calcular(painel_params.merge(vinculos_extras: [], especiais: ''))
+      end
+
+      expect(response).to have_http_status(:success)
+      expect(lead.reload.cnis.dig('parametros', 'especiais')).to be_nil
+    end
+
     it 'pula a fusao (sem 500) quando entrada.vinculos e cnis[vinculos] tem tamanhos diferentes' do
       cnis = cnis_com_dois_vinculos
       cnis['vinculos'] = [cnis['vinculos'].first] # dado velho/corrompido: só 1 detalhe pra 2 vinculos
