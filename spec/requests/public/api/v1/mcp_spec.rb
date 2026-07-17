@@ -193,6 +193,43 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
       expect(result['content'].first['text']).to include 'YYYY-MM-DD'
     end
 
+    it 'criar cliente normaliza o celular e mapeia os campos pro POST /customers' do
+      stub = stub_request(:post, 'https://app.advbox.com.br/api/v1/customers')
+             .with(body: hash_including('name' => 'Maria de Teste', 'users_id' => 266_778, 'customers_origins_id' => 5,
+                                        'cellphone' => '48999990000', 'identification' => '529.982.247-25'))
+             .to_return(status: 200, body: '{}', headers: { 'Content-Type' => 'application/json' })
+
+      post_mcp(rpc('tools/call', { name: 'advbox_criar_cliente',
+                                   arguments: { nome: 'Maria de Teste', responsavel_id: 266_778, origem_id: 5,
+                                                celular: '(48) 99999-0000', cpf: '529.982.247-25' } }))
+
+      expect(stub).to have_been_requested
+      expect(response.parsed_body['result']['isError']).to be false
+    end
+
+    it 'criar processo vincula os clientes via customers_id no POST /lawsuits' do
+      stub = stub_request(:post, 'https://app.advbox.com.br/api/v1/lawsuits')
+             .with(body: hash_including('customers_id' => [11, 22], 'users_id' => 1, 'stages_id' => 2, 'type_lawsuits_id' => 3))
+             .to_return(status: 200, body: '{}', headers: { 'Content-Type' => 'application/json' })
+
+      post_mcp(rpc('tools/call', { name: 'advbox_criar_processo',
+                                   arguments: { cliente_ids: [11, 22], responsavel_id: 1, etapa_id: 2, tipo_id: 3 } }))
+
+      expect(stub).to have_been_requested
+      expect(response.parsed_body['result']['isError']).to be false
+    end
+
+    it 'editar transação manda só os campos alterados via PUT /transactions' do
+      stub = stub_request(:put, 'https://app.advbox.com.br/api/v1/transactions/9')
+             .with(body: { amount: '2500,00' }.to_json)
+             .to_return(status: 200, body: '{}', headers: { 'Content-Type' => 'application/json' })
+
+      post_mcp(rpc('tools/call', { name: 'advbox_editar_transacao', arguments: { id: 9, valor: 2500 } }))
+
+      expect(stub).to have_been_requested
+      expect(response.parsed_body['result']['isError']).to be false
+    end
+
     it 'consulta as configurações da conta (GET /settings)' do
       stub = stub_request(:get, 'https://app.advbox.com.br/api/v1/settings')
              .to_return(status: 200, body: { users: [{ id: 1, name: 'Eduardo' }] }.to_json, headers: { 'Content-Type' => 'application/json' })
@@ -201,6 +238,73 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
 
       expect(stub).to have_been_requested
       expect(response.parsed_body['result']['content'].first['text']).to include 'Eduardo'
+    end
+  end
+
+  # O server não valida inputSchema — input fora do contrato tem que degradar
+  # em isError ou erro JSON-RPC, nunca 500 cru (revisão adversarial do PR #80).
+  describe 'robustez contra input fora do schema' do
+    it 'argumento de tipo errado (valor booleano) vira isError, não 500' do
+      post_mcp(rpc('tools/call', { name: 'advbox_criar_transacao',
+                                   arguments: { tipo: 'receita', valor: true, vencimento: '2026-08-01', responsavel_id: 1,
+                                                conta_id: 2, categoria_id: 3, centro_custo_id: 4 } }))
+
+      result = response.parsed_body['result']
+      expect(result['isError']).to be true
+      expect(result['content'].first['text']).to include 'Argumento inválido'
+    end
+
+    it 'tipo de transação fora do enum vira isError em vez de sumir do payload em silêncio' do
+      post_mcp(rpc('tools/call', { name: 'advbox_criar_transacao',
+                                   arguments: { tipo: 'Receita', valor: 10, vencimento: '2026-08-01', responsavel_id: 1,
+                                                conta_id: 2, categoria_id: 3, centro_custo_id: 4 } }))
+
+      result = response.parsed_body['result']
+      expect(result['isError']).to be true
+      expect(result['content'].first['text']).to include 'Argumento inválido'
+    end
+
+    it 'data null na movimentação usa a data de hoje em vez de estourar' do
+      stub = stub_request(:post, 'https://app.advbox.com.br/api/v1/lawsuits/movement')
+             .with(body: hash_including('date' => Time.zone.today.strftime('%d/%m/%Y')))
+             .to_return(status: 200, body: '{}', headers: { 'Content-Type' => 'application/json' })
+
+      post_mcp(rpc('tools/call', { name: 'advbox_criar_movimentacao',
+                                   arguments: { processo_id: 1, descricao: 'movimentação de teste', data: nil } }))
+
+      expect(stub).to have_been_requested
+      expect(response.parsed_body['result']['isError']).to be false
+    end
+
+    it 'params que não é objeto vira isError de ferramenta desconhecida' do
+      post_mcp(rpc('tools/call', 'não sou um hash'))
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['result']['isError']).to be true
+    end
+
+    it 'arguments que não é objeto vira isError de argumento' do
+      post_mcp(rpc('tools/call', { name: 'advbox_cliente', arguments: [1] }))
+      result = response.parsed_body['result']
+      expect(result['isError']).to be true
+      expect(result['content'].first['text']).to include 'Argumento inválido'
+    end
+
+    it 'initialize com params fora do formato responde com a versão padrão' do
+      post_mcp(rpc('initialize', 'x'))
+      expect(response.parsed_body['result']['protocolVersion']).to eq '2025-06-18'
+    end
+
+    it 'exceção inesperada vira erro JSON-RPC -32603, não 500 cru do Rails' do
+      allow(Ramon::AdvboxMcpService).to receive(:handle).and_raise(RuntimeError, 'boom')
+      post_mcp(rpc('tools/list'))
+      expect(response).to have_http_status(:internal_server_error)
+      expect(response.parsed_body['error']['code']).to eq(-32_603)
+    end
+
+    it 'batch acima de 20 entradas vira -32600' do
+      post_mcp(Array.new(21) { |i| rpc('ping', {}, id: i + 1) })
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body['error']['code']).to eq(-32_600)
     end
   end
 end
