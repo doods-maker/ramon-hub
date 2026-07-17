@@ -31,7 +31,7 @@ class Ramon::AdvboxClient
   # job) — fora da lista cairia no rescue genérico do chamador como erro
   # permanente (ECONNRESET do Cloudflare é o caso comum).
   NETWORK_ERRORS = [Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ECONNRESET, Errno::ETIMEDOUT,
-                    SocketError, Timeout::Error, OpenSSL::SSL::SSLError, EOFError].freeze
+                    SocketError, Timeout::Error, OpenSSL::SSL::SSLError, EOFError, JSON::ParserError].freeze
 
   def self.lawsuits(params = {})
     get('/lawsuits', params)

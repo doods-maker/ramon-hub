@@ -119,7 +119,9 @@ class Ramon::AdvboxMcpService
                                    data_pagamento: { type: 'string', description: 'YYYY-MM-DD, não pode ser futura' } },
                      required: %w[tipo valor vencimento responsavel_id conta_id categoria_id centro_custo_id] } },
     { name: 'advbox_editar_transacao',
-      description: 'Altera uma transação financeira existente — mande só os campos que mudam (valor, vencimento, pagamento etc.).',
+      description: 'Altera uma transação financeira existente — mande só os campos que mudam (valor, vencimento, pagamento etc.). ' \
+                   'Ao trocar categoria_id, mande tipo junto (a API valida o par). Não dá para reabrir transação paga por aqui ' \
+                   '(limpar data_pagamento exige null explícito, não suportado).',
       inputSchema: { type: 'object',
                      properties: { id: { type: 'integer' }, tipo: { type: 'string', enum: %w[receita despesa] }, valor: { type: 'number' },
                                    vencimento: { type: 'string', description: 'YYYY-MM-DD' }, responsavel_id: { type: 'integer' },
@@ -127,7 +129,7 @@ class Ramon::AdvboxMcpService
                                    cliente_id: { type: 'integer' }, processo_id: { type: 'integer' }, descricao: { type: 'string' },
                                    data_pagamento: { type: 'string', description: 'YYYY-MM-DD' } },
                      required: ['id'] } }
-  ].freeze
+  ].each { |t| t[:inputSchema][:additionalProperties] = false }.freeze
 
   PROCESSO_FILTROS = { nome: :name, cpf: :identification, numero_processo: :process_number,
                        pasta: :folder, etapa: :stage, responsavel: :responsible }.freeze
@@ -149,7 +151,7 @@ class Ramon::AdvboxMcpService
     'advbox_criar_tarefa' => ->(a) { Ramon::AdvboxClient.create_post(tarefa_payload(a)) },
     'advbox_criar_movimentacao' => lambda { |a|
       Ramon::AdvboxClient.create_movement(lawsuit_id: a.fetch('processo_id'), description: a.fetch('descricao'),
-                                          date: data_br(a.fetch('data', Time.zone.today.iso8601)))
+                                          date: data_br(a['data'].presence || Time.zone.today.iso8601))
     },
     'advbox_criar_cliente' => ->(a) { Ramon::AdvboxClient.create_customer(cliente_payload(a)) },
     'advbox_criar_processo' => ->(a) { Ramon::AdvboxClient.create_lawsuit(processo_payload(a).merge(customers_id: a.fetch('cliente_ids'))) },
@@ -172,7 +174,7 @@ class Ramon::AdvboxMcpService
   end
 
   def self.initialize_result(message)
-    requested = message.dig('params', 'protocolVersion')
+    requested = message['params'].is_a?(Hash) ? message['params']['protocolVersion'] : nil
     { protocolVersion: PROTOCOL_VERSIONS.include?(requested) ? requested : PROTOCOL_VERSIONS.first,
       capabilities: { tools: { listChanged: false } },
       serverInfo: SERVER_INFO,
@@ -182,14 +184,17 @@ class Ramon::AdvboxMcpService
   # Erro de FERRAMENTA (AdvBox fora do ar, argumento faltando) vira resultado
   # com isError — o protocolo reserva o erro JSON-RPC para falha do protocolo.
   def self.call_tool(message)
-    name = message.dig('params', 'name')
-    args = message.dig('params', 'arguments') || {}
+    params = message['params'].is_a?(Hash) ? message['params'] : {}
+    name = params['name']
+    args = params['arguments'].is_a?(Hash) ? params['arguments'] : {}
     fetcher = FETCHERS.fetch(name) { raise KeyError, "ferramenta desconhecida: #{name}" }
     Rails.logger.info("AdvboxMcp escrita: #{name} #{args.to_json}") if ESCRITAS.include?(name)
     { content: [{ type: 'text', text: JSON.generate(fetcher.call(args)) }], isError: false }
   rescue Date::Error
     { content: [{ type: 'text', text: 'Data inválida — use o formato YYYY-MM-DD' }], isError: true }
-  rescue KeyError, ArgumentError => e
+  rescue KeyError, ArgumentError, TypeError, NoMethodError => e
+    # TypeError/NoMethodError: o server não valida inputSchema — argumento de
+    # tipo errado (valor booleano, celular numérico) tem que virar isError, não 500.
     { content: [{ type: 'text', text: "Argumento inválido — #{e.message}" }], isError: true }
   rescue Ramon::AdvboxClient::RequestError => e
     { content: [{ type: 'text', text: "AdvBox recusou (HTTP #{e.code}): #{e.body.to_json}" }], isError: true }
@@ -207,7 +212,7 @@ class Ramon::AdvboxMcpService
   def self.tarefa_payload(args)
     responsavel = args.fetch('responsavel_id')
     { from: responsavel.to_s, guests: [responsavel], tasks_id: args.fetch('tipo_tarefa_id').to_s,
-      lawsuits_id: args.fetch('processo_id').to_s, start_date: args.fetch('data', Time.zone.today.iso8601),
+      lawsuits_id: args.fetch('processo_id').to_s, start_date: args['data'].presence || Time.zone.today.iso8601,
       date_deadline: args['prazo'], comments: args['descricao'],
       urgent: args['urgente'], important: args['importante'] }.compact
   end
@@ -229,7 +234,7 @@ class Ramon::AdvboxMcpService
   TIPO_TRANSACAO = { 'receita' => 'income', 'despesa' => 'expense' }.freeze
 
   def self.transacao_payload(args)
-    { entry_type: TIPO_TRANSACAO[args['tipo']], amount: args['valor'] && format('%.2f', Float(args['valor'])).tr('.', ','),
+    { entry_type: args['tipo'] && TIPO_TRANSACAO.fetch(args['tipo']), amount: args['valor'] && format('%.2f', Float(args['valor'])).tr('.', ','),
       date_due: args['vencimento'], users_id: args['responsavel_id'], debit_account: args['conta_id'],
       categories_id: args['categoria_id'], cost_centers_id: args['centro_custo_id'], customers_id: args['cliente_id'],
       lawsuits_id: args['processo_id'], description: args['descricao'], date_payment: args['data_pagamento'] }.compact
