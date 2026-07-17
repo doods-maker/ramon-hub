@@ -93,6 +93,58 @@ RSpec.describe 'Lead Paineis API', type: :request do
     end
   end
 
+  context 'with tempo especial (especiais)' do
+    it 'funde especiais nos vinculos por seq e persiste nos parametros' do
+      lead.update!(cnis: {
+                     'entrada' => {
+                       'segurado' => { 'nascimento' => '1975-01-20', 'sexo' => 'F' },
+                       'competencias' => [],
+                       'vinculos' => [{ 'seq' => 3, 'inicio' => '2010-01-01', 'fim' => '2015-12-31',
+                                        'tipo' => 'EMPREGO', 'indicadores' => [] }]
+                     }
+                   })
+      corpo_enviado = nil
+      stub_request(:post, "#{motor_url}/painel").with { |req| corpo_enviado = JSON.parse(req.body); true }
+        .to_return(status: 200, body: { resumo: {}, cartoes: [], avisos: [] }.to_json,
+                   headers: { 'Content-Type' => 'application/json' })
+
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        calcular(painel_params.merge(vinculos_extras: [], especiais: { '3' => { 'grau' => 25 } }.to_json))
+      end
+
+      expect(response).to have_http_status(:success)
+      v3 = corpo_enviado['vinculos'].find { |v| v['seq'] == 3 }
+      expect(v3['especial']).to eq('grau' => 25, 'inicio' => nil, 'fim' => nil)
+      expect(lead.reload.cnis.dig('parametros', 'especiais')).to be_present
+    end
+
+    it 'passa especial dos vinculos_extras adiante' do
+      corpo_enviado = nil
+      stub_request(:post, "#{motor_url}/painel").with { |req| corpo_enviado = JSON.parse(req.body); true }
+        .to_return(status: 200, body: { resumo: {}, cartoes: [], avisos: [] }.to_json,
+                   headers: { 'Content-Type' => 'application/json' })
+
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        calcular(painel_params.merge(vinculos_extras: [
+                                        { inicio: '2005-01-01', fim: '2010-01-01', tipo: 'EMPREGO',
+                                          especial: { grau: 15 } }
+                                      ]))
+      end
+
+      expect(response).to have_http_status(:success)
+      extra = corpo_enviado['vinculos'].find { |v| v['inicio'] == '2005-01-01' }
+      expect(extra['especial']).to eq('grau' => 15, 'inicio' => nil, 'fim' => nil)
+    end
+
+    it 'especiais invalido (JSON quebrado) devolve 422 sem 500' do
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        calcular(painel_params.merge(especiais: '{nao-e-json'))
+      end
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to be_present
+    end
+  end
+
   it 'returns unprocessable entity when the motor rejects the input' do
     stub_request(:post, "#{motor_url}/painel")
       .to_return(status: 422, body: { detail: 'histórico sem salários no PBC' }.to_json,
