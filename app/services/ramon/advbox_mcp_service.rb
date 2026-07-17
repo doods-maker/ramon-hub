@@ -187,11 +187,9 @@ class Ramon::AdvboxMcpService
     fetcher = FETCHERS.fetch(name) { raise KeyError, "ferramenta desconhecida: #{name}" }
     Rails.logger.info("AdvboxMcp escrita: #{name} #{args.to_json}") if ESCRITAS.include?(name)
     { content: [{ type: 'text', text: JSON.generate(fetcher.call(args)) }], isError: false }
-  rescue KeyError => e
-    { content: [{ type: 'text', text: "Argumento inválido — #{e.message}" }], isError: true }
   rescue Date::Error
     { content: [{ type: 'text', text: 'Data inválida — use o formato YYYY-MM-DD' }], isError: true }
-  rescue ArgumentError => e
+  rescue KeyError, ArgumentError => e
     { content: [{ type: 'text', text: "Argumento inválido — #{e.message}" }], isError: true }
   rescue Ramon::AdvboxClient::RequestError => e
     { content: [{ type: 'text', text: "AdvBox recusou (HTTP #{e.code}): #{e.body.to_json}" }], isError: true }
