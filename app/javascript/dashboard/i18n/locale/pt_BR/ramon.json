@@ -88,7 +88,8 @@
       "AGENTES": "Agentes de IA",
       "FUNIL_CONFIG": "Configurações do Funil",
       "PLAYBOOKS": "Playbooks",
-      "LINHA_DA_VIDA": "Linha da Vida"
+      "LINHA_DA_VIDA": "Linha da Vida",
+      "CALCULOS": "Cálculos"
     },
     "ESTEIRA": {
       "EYEBROW": "Linha de produção",
@@ -355,6 +356,16 @@
       "SEARCH_PLACEHOLDER": "Nome, telefone ou e-mail…",
       "SEARCHING": "Buscando…",
       "SEARCH_EMPTY": "Ninguém encontrado com esse termo."
+    },
+    "CALCULOS": {
+      "TITLE": "Cálculos",
+      "SEARCH_HINT": "Busque a pessoa para abrir o simulador de cálculo.",
+      "SEARCH_PLACEHOLDER": "Nome, telefone ou e-mail…",
+      "SEARCHING": "Buscando…",
+      "SEARCH_EMPTY": "Ninguém encontrado com esse termo.",
+      "LOADING_LEADS": "Buscando os casos da pessoa…",
+      "ERROR": "Não foi possível carregar esse cálculo",
+      "EMPTY_NO_LEAD": "{name} ainda não tem um caso no funil — crie um lead para simular o cálculo."
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

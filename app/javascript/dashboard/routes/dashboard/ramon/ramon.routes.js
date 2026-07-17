@@ -69,4 +69,17 @@ export const routes = [
     component: () => import('./pages/Dossie.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
+  {
+    // Sem leadId a mesma página vira a busca de pessoa (entrada do menu).
+    path: frontendURL('accounts/:accountId/ramon/calculos'),
+    name: 'ramon_calculos',
+    component: () => import('./pages/Calculos.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
+    path: frontendURL('accounts/:accountId/ramon/calculos/:leadId'),
+    name: 'ramon_calculos_lead',
+    component: () => import('./pages/Calculos.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
 ];

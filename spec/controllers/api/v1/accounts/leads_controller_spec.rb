@@ -213,6 +213,16 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to eq([a.id])
     end
 
+    it 'filtra por contact_id' do
+      contact = create(:contact, account: account)
+      a = account.leads.create!(name: 'A', lead_stage: novo, contact: contact)
+      account.leads.create!(name: 'B', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { contact_id: contact.id },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([a.id])
+    end
+
     it 'filtra por benefit_type_id' do
       a = account.leads.create!(name: 'A', lead_stage: novo, benefit_type: bpc_teste)
       account.leads.create!(name: 'B', lead_stage: novo)

@@ -88,7 +88,8 @@
       "AGENTES": "AI Agents",
       "FUNIL_CONFIG": "Funnel settings",
       "PLAYBOOKS": "Playbooks",
-      "LINHA_DA_VIDA": "Lifeline"
+      "LINHA_DA_VIDA": "Lifeline",
+      "CALCULOS": "Calculations"
     },
     "ESTEIRA": {
       "EYEBROW": "Production line",
@@ -355,6 +356,16 @@
       "SEARCH_PLACEHOLDER": "Name, phone or email…",
       "SEARCHING": "Searching…",
       "SEARCH_EMPTY": "No one found for that term."
+    },
+    "CALCULOS": {
+      "TITLE": "Calculations",
+      "SEARCH_HINT": "Search for a person to open the calculation simulator.",
+      "SEARCH_PLACEHOLDER": "Name, phone or email…",
+      "SEARCHING": "Searching…",
+      "SEARCH_EMPTY": "No one found for that term.",
+      "LOADING_LEADS": "Looking up their cases…",
+      "ERROR": "Could not load this calculation",
+      "EMPTY_NO_LEAD": "{name} has no case in the pipeline yet — create a lead to run the simulator."
     },
     "DOSSIE": {
       "OPEN": "Dossier",
