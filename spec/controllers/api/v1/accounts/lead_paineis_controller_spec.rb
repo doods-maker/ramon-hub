@@ -117,7 +117,8 @@ RSpec.describe 'Lead Paineis API', type: :request do
     it 'funde especiais nos vinculos por posicao (via cnis[vinculos]/vinculos_detalhe) e persiste nos parametros' do
       lead.update!(cnis: cnis_com_dois_vinculos)
       corpo_enviado = nil
-      stub_request(:post, "#{motor_url}/painel").with { |req| corpo_enviado = JSON.parse(req.body); true }
+      stub_request(:post, "#{motor_url}/painel")
+        .with { |req| corpo_enviado = JSON.parse(req.body) }
         .to_return(status: 200, body: { resumo: {}, cartoes: [], avisos: [] }.to_json,
                    headers: { 'Content-Type' => 'application/json' })
 
@@ -153,7 +154,8 @@ RSpec.describe 'Lead Paineis API', type: :request do
       cnis['vinculos'] = [cnis['vinculos'].first] # dado velho/corrompido: só 1 detalhe pra 2 vinculos
       lead.update!(cnis: cnis)
       corpo_enviado = nil
-      stub_request(:post, "#{motor_url}/painel").with { |req| corpo_enviado = JSON.parse(req.body); true }
+      stub_request(:post, "#{motor_url}/painel")
+        .with { |req| corpo_enviado = JSON.parse(req.body) }
         .to_return(status: 200, body: { resumo: {}, cartoes: [], avisos: [] }.to_json,
                    headers: { 'Content-Type' => 'application/json' })
 
@@ -168,15 +170,14 @@ RSpec.describe 'Lead Paineis API', type: :request do
 
     it 'passa especial dos vinculos_extras adiante' do
       corpo_enviado = nil
-      stub_request(:post, "#{motor_url}/painel").with { |req| corpo_enviado = JSON.parse(req.body); true }
+      stub_request(:post, "#{motor_url}/painel")
+        .with { |req| corpo_enviado = JSON.parse(req.body) }
         .to_return(status: 200, body: { resumo: {}, cartoes: [], avisos: [] }.to_json,
                    headers: { 'Content-Type' => 'application/json' })
+      extra = { inicio: '2005-01-01', fim: '2010-01-01', tipo: 'EMPREGO', especial: { grau: 15 } }
 
       with_modified_env MOTOR_CALCULOS_URL: motor_url do
-        calcular(painel_params.merge(vinculos_extras: [
-                                        { inicio: '2005-01-01', fim: '2010-01-01', tipo: 'EMPREGO',
-                                          especial: { grau: 15 } }
-                                      ]))
+        calcular(painel_params.merge(vinculos_extras: [extra]))
       end
 
       expect(response).to have_http_status(:success)
@@ -207,7 +208,7 @@ RSpec.describe 'Lead Paineis API', type: :request do
     end
   end
 
-  context 'persistencia de especiais sem CNIS anexado' do
+  context 'without a CNIS attached to the lead' do
     it 'nao cria lead.cnis do zero so pra guardar parametros de especiais' do
       stub_request(:post, "#{motor_url}/painel")
         .to_return(status: 200, body: motor_body, headers: { 'Content-Type' => 'application/json' })

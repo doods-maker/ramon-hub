@@ -45,7 +45,7 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
   def especiais_invalidos?
     return false if permitted[:especiais].blank?
 
-    !especiais_map.is_a?(Hash) || !especiais_map.values.all? { |v| v.is_a?(Hash) }
+    !especiais_map.is_a?(Hash) || !especiais_map.values.all?(Hash)
   end
 
   # Normaliza {grau, inicio, fim} vindo tanto do mapa `especiais` (Hash cru do
@@ -68,15 +68,15 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
   # corrompido), pula a fusão inteira em vez de arriscar casar posição errada.
   def vinculos_com_especial
     vinculos = cnis_entrada['vinculos'] || []
-    return vinculos if especiais_map.blank?
-
     detalhe = @lead.cnis&.dig('vinculos') || []
-    return vinculos if detalhe.length != vinculos.length
+    return vinculos if especiais_map.blank? || detalhe.length != vinculos.length
 
-    vinculos.each_with_index.map do |v, i|
-      especial = especial_normalizado(especiais_map[detalhe[i]['seq'].to_s])
-      especial.present? ? v.merge('especial' => especial) : v
-    end
+    vinculos.each_with_index.map { |v, i| com_especial(v, especiais_map[detalhe[i]['seq'].to_s]) }
+  end
+
+  def com_especial(vinculo, bruto)
+    especial = especial_normalizado(bruto)
+    especial.present? ? vinculo.merge('especial' => especial) : vinculo
   end
 
   def persistir_especiais
@@ -148,12 +148,16 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
       segurado: segurado,
       der: der.iso8601,
       competencias: (cnis_entrada['competencias'] || []) + extras.flat_map { |e| competencias_de(e) },
-      vinculos: vinculos_com_especial + extras.map do |e|
-        item = { inicio: e[:inicio].iso8601, fim: e[:fim].iso8601, tipo: e[:tipo], indicadores: [] }
-        especial = especial_normalizado(e[:especial])
-        especial.present? ? item.merge(especial: especial) : item
-      end,
+      vinculos: vinculos_com_especial + extras_vinculos,
       memoria_calculo: ActiveModel::Type::Boolean.new.cast(permitted[:memoria_calculo]) || false
     }
+  end
+
+  def extras_vinculos
+    extras.map do |e|
+      item = { inicio: e[:inicio].iso8601, fim: e[:fim].iso8601, tipo: e[:tipo], indicadores: [] }
+      especial = especial_normalizado(e[:especial])
+      especial.present? ? item.merge(especial: especial) : item
+    end
   end
 end
