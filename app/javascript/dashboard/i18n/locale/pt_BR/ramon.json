@@ -607,6 +607,8 @@
       "VINCULO_MENSALIDADE": "Mensalidade real do benefício (R$)",
       "VINCULOS_REAPLICAR": "Reaplicar com ajustes",
       "VINCULOS_REUPLOAD_HINT": "O PDF não fica no servidor — selecione o arquivo de novo para reaplicar.",
+      "ESPECIAL_LABEL": "Atividade especial",
+      "ESPECIAL_NAO": "Não",
       "DUAS_MEDIAS": "RMI a 100% do PBC: {rmi} · com Regra dos Descartes: {descartes}",
       "MEMORIA_SHOW": "Ver memória de cálculo",
       "MEMORIA_HIDE": "Ocultar memória de cálculo",
