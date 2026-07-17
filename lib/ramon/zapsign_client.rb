@@ -35,7 +35,8 @@ class Ramon::ZapsignClient
     raise UnavailableError, "ZapSign respondeu HTTP #{response.code}" if response.code >= 500
 
     raise RequestError.new(response.code, response.parsed_response)
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ECONNRESET, Errno::ETIMEDOUT,
+         SocketError, Timeout::Error, OpenSSL::SSL::SSLError, EOFError => e
     raise UnavailableError, "ZapSign indisponível: #{e.message}"
   end
 end

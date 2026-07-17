@@ -98,6 +98,17 @@ RSpec.describe Ramon::ColheitaExtractionService do
     expect(lead.reload.custom_attributes).not_to have_key('colheita')
   end
 
+  it 'não sobrescreve colheita existente com JSON válido fora do schema' do
+    colheita_boa = { 'colheita' => { 'dados' => { 'cliente' => { 'profissao' => 'montador' } } } }
+    lead.update!(custom_attributes: lead.custom_attributes.merge(colheita_boa))
+    fora_do_schema = { resposta: 'não há dados suficientes' }.to_json
+    allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(fora_do_schema))
+    allow(Rails.logger).to receive(:error)
+    described_class.new(lead).perform
+    expect(Rails.logger).to have_received(:error).with(/ColheitaExtraction/)
+    expect(lead.reload.custom_attributes.dig('colheita', 'dados', 'cliente', 'profissao')).to eq('montador')
+  end
+
   it 'repropaga TransientError para o retry do job' do
     allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, '429')
     expect { described_class.new(lead).perform }.to raise_error(Ramon::LlmClient::TransientError)

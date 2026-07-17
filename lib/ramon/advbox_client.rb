@@ -26,6 +26,11 @@ class Ramon::AdvboxClient
   BASE = 'https://app.advbox.com.br/api/v1'.freeze
   OPEN_TIMEOUT = 5
   READ_TIMEOUT = 20
+  # Tudo que é falha transitória de rede/TLS vira UnavailableError (retry no
+  # job) — fora da lista cairia no rescue genérico do chamador como erro
+  # permanente (ECONNRESET do Cloudflare é o caso comum).
+  NETWORK_ERRORS = [Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ECONNRESET, Errno::ETIMEDOUT,
+                    SocketError, Timeout::Error, OpenSSL::SSL::SSLError, EOFError].freeze
 
   def self.lawsuits(params = {})
     get('/lawsuits', params)
@@ -86,7 +91,7 @@ class Ramon::AdvboxClient
     raise UnavailableError, "AdvBox respondeu HTTP #{response.code}" unless response.success?
 
     response.parsed_response
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
+  rescue *NETWORK_ERRORS => e
     raise UnavailableError, "AdvBox indisponível: #{e.message}"
   end
   private_class_method :get
@@ -101,7 +106,7 @@ class Ramon::AdvboxClient
     raise UnavailableError, "AdvBox respondeu HTTP #{response.code}" if response.code >= 500
 
     raise RequestError.new(response.code, response.parsed_response)
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
+  rescue *NETWORK_ERRORS => e
     raise UnavailableError, "AdvBox indisponível: #{e.message}"
   end
   private_class_method :post

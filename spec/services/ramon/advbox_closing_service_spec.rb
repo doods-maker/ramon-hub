@@ -78,9 +78,35 @@ RSpec.describe Ramon::AdvboxClosingService do
   end
 
   it 'não refaz nada quando o lead já está sincronizado (idempotente)' do
-    lead.update!(custom_attributes: { 'advbox' => { 'lawsuits_id' => 222 } })
+    lead.update!(custom_attributes: { 'advbox' => { 'lawsuits_id' => 222,
+                                                    'sincronizado_em' => '2026-07-15T10:00:00-03:00' } })
     described_class.new(lead).perform
     expect(WebMock).not_to have_requested(:post, /app\.advbox\.com\.br/)
+  end
+
+  it 'retoma do passo que faltou sem recriar cliente/caso (retry após falha parcial)' do
+    lead.update!(custom_attributes: { 'advbox' => { 'customers_id' => 111, 'lawsuits_id' => 222 } })
+    posts = stub_create('posts', 'posts_id', 333)
+
+    described_class.new(lead).perform
+
+    expect(posts).to have_been_requested
+    expect(WebMock).not_to have_requested(:post, %r{app\.advbox\.com\.br/api/v1/(customers|lawsuits)})
+    advbox = lead.reload.custom_attributes['advbox']
+    expect(advbox).to include('customers_id' => 111, 'lawsuits_id' => 222, 'posts_id' => 333)
+    expect(advbox['sincronizado_em']).to be_present
+  end
+
+  it 'persiste o caso já criado quando a tarefa falha com 5xx (retry não duplica o caso)' do
+    stub_create('customers', 'customers_id', 111)
+    stub_create('lawsuits', 'lawsuits_id', 222)
+    stub_request(:post, 'https://app.advbox.com.br/api/v1/posts').to_return(status: 502)
+
+    expect { described_class.new(lead).perform }.to raise_error(Ramon::AdvboxClient::UnavailableError)
+
+    advbox = lead.reload.custom_attributes['advbox']
+    expect(advbox).to include('customers_id' => 111, 'lawsuits_id' => 222)
+    expect(advbox['sincronizado_em']).to be_blank
   end
 
   it 'repropaga UnavailableError (5xx) para o retry do job' do
