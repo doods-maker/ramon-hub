@@ -29,17 +29,19 @@ RSpec.describe Internal::ReconcilePlanConfigService do
       end
 
       it 'will not create a premium config reset warning if config is not modified' do
-        create(:installation_config, name: 'INSTALLATION_NAME', value: 'Chatwoot')
+        create(:installation_config, name: 'INSTALLATION_NAME', value: 'Ramon Hub')
         service.perform
         expect(Redis::Alfred.get(Redis::Alfred::CHATWOOT_INSTALLATION_CONFIG_RESET_WARNING)).to be_nil
       end
 
+      # Fork ramon: o yml premium carrega a marca da banca — o "reset" reforça o
+      # branding próprio em vez do padrão Chatwoot.
       it 'updates the premium configs to default' do
         create(:installation_config, name: 'INSTALLATION_NAME', value: 'custom-name')
         create(:installation_config, name: 'LOGO', value: '/custom-path/logo.svg')
         service.perform
-        expect(InstallationConfig.find_by(name: 'INSTALLATION_NAME').value).to eq('Chatwoot')
-        expect(InstallationConfig.find_by(name: 'LOGO').value).to eq('/brand-assets/logo.svg')
+        expect(InstallationConfig.find_by(name: 'INSTALLATION_NAME').value).to eq('Ramon Hub')
+        expect(InstallationConfig.find_by(name: 'LOGO').value).to eq('/brand-assets/ramon-logo.jpeg')
       end
     end
 

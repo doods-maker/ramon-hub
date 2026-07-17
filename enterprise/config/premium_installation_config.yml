@@ -1,22 +1,26 @@
 # ------- Branding Related Config ------- #
+# Fork ramon: estes valores são a FONTE do Internal::ReconcilePlanConfigService,
+# que no plano community "reseta" o branding pra cá diariamente — então aqui
+# vive a marca da banca, e o reset passa a reforçá-la (decisão 17/07/2026;
+# assets em public/brand-assets/, registrados no FORK-PONTOS-DE-REGISTRO.md).
 - name: INSTALLATION_NAME
-  value: 'Chatwoot'
+  value: 'Ramon Hub'
 - name: LOGO_THUMBNAIL
-  value: '/brand-assets/logo_thumbnail.svg'
+  value: '/brand-assets/ramon-monogram.png'
 - name: LOGO
-  value: '/brand-assets/logo.svg'
+  value: '/brand-assets/ramon-logo.jpeg'
 - name: LOGO_DARK
-  value: '/brand-assets/logo_dark.svg'
+  value: '/brand-assets/ramon-logo-dark.png'
 - name: BRAND_URL
-  value: 'https://www.chatwoot.com'
+  value: 'https://ramonantonio.adv.br'
 - name: WIDGET_BRAND_URL
-  value: 'https://www.chatwoot.com'
+  value: 'https://ramonantonio.adv.br'
 - name: BRAND_NAME
-  value: 'Chatwoot'
+  value: 'Ramon Antonio Advogados'
 - name: TERMS_URL
-  value: 'https://www.chatwoot.com/terms-of-service'
+  value: 'https://ramonantonio.adv.br'
 - name: PRIVACY_URL
-  value: 'https://www.chatwoot.com/privacy-policy'
+  value: 'https://ramonantonio.adv.br/lp/politica-de-privacidade/'
 - name: DISPLAY_MANIFEST
   value: true
 # ------- End of Branding Related Config ------- #
