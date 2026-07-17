@@ -89,6 +89,25 @@ RSpec.describe 'Leads API', type: :request do
     expect(body['contact_email']).to eq('x@cli.com')
   end
 
+  it 'show expõe cnis_resumo pra pagina Calculos reconhecer CNIS a frio', :aggregate_failures do
+    lead = create(:lead, account: account, lead_stage: novo,
+                         cnis: { 'filename' => 'cnis.pdf', 'vinculos' => [{ 'seq' => 1 }],
+                                 'entrada' => { 'competencias' => [{ 'ano' => 2020, 'mes' => 1 }] } })
+    get "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+        headers: admin.create_new_auth_token, as: :json
+    resumo = response.parsed_body['cnis_resumo']
+    expect(resumo).to be_present
+    expect(resumo['filename']).to eq('cnis.pdf')
+    expect(resumo['vinculos']).to eq(1)
+  end
+
+  it 'show devolve cnis_resumo nulo quando o lead nao tem CNIS' do
+    lead = create(:lead, account: account, lead_stage: novo)
+    get "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+        headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['cnis_resumo']).to be_nil
+  end
+
   it 'update aceita value/source' do
     lead = create(:lead, account: account, lead_stage: novo)
     patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
