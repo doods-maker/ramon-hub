@@ -18,6 +18,8 @@ Metrics/ClassLength:
   Exclude:
     - 'app/models/message.rb'
     - 'app/models/conversation.rb'
+    # catálogo de ferramentas MCP: quase tudo é schema declarativo, não lógica
+    - 'app/services/ramon/advbox_mcp_service.rb'
 
 Metrics/MethodLength:
   Max: 19

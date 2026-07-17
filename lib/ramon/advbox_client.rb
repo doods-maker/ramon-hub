@@ -4,7 +4,8 @@
 # /lawsuits?name=, andamentos em /movements/{lawsuit_id} e publicações em
 # /publications/{lawsuit_id}. O Cloudflare deles bloqueia requisição sem
 # User-Agent — sempre mandar um. Filtros são combinados com AND e a paginação
-# é via limit/offset. Escrita (item 21): create_* via POST, limite 500/dia por rota.
+# é via limit/offset. Escrita (itens 21 e 29): create_*/update_* via POST/PUT,
+# limite 500/dia por rota; não há DELETE nem edição/conclusão de tarefa na API.
 class Ramon::AdvboxClient
   class UnavailableError < StandardError; end
 
@@ -70,6 +71,12 @@ class Ramon::AdvboxClient
     get('/posts', params)
   end
 
+  # IDs de configuração da conta (users, stages, tasks, lawsuit_types, origins,
+  # financial) — referência obrigatória pra qualquer escrita.
+  def self.settings
+    get('/settings')
+  end
+
   def self.create_customer(body)
     post('/customers', body)
   end
@@ -80,6 +87,24 @@ class Ramon::AdvboxClient
 
   def self.create_post(body)
     post('/posts', body)
+  end
+
+  # Movimentação/andamento manual. A API exige date em DD/MM/YYYY e description
+  # com ao menos 10 caracteres.
+  def self.create_movement(body)
+    post('/lawsuits/movement', body)
+  end
+
+  def self.create_transaction(body)
+    post('/transactions', body)
+  end
+
+  def self.update_lawsuit(id, body)
+    put("/lawsuits/#{id}", body)
+  end
+
+  def self.update_transaction(id, body)
+    put("/transactions/#{id}", body)
   end
 
   def self.get(path, params = {})
@@ -97,11 +122,21 @@ class Ramon::AdvboxClient
   private_class_method :get
 
   def self.post(path, body)
-    response = HTTParty.post("#{BASE}#{path}",
-                             body: body.to_json,
-                             headers: headers.merge('Content-Type' => 'application/json'),
-                             open_timeout: OPEN_TIMEOUT,
-                             read_timeout: READ_TIMEOUT)
+    write(:post, path, body)
+  end
+  private_class_method :post
+
+  def self.put(path, body)
+    write(:put, path, body)
+  end
+  private_class_method :put
+
+  def self.write(verb, path, body)
+    response = HTTParty.public_send(verb, "#{BASE}#{path}",
+                                    body: body.to_json,
+                                    headers: headers.merge('Content-Type' => 'application/json'),
+                                    open_timeout: OPEN_TIMEOUT,
+                                    read_timeout: READ_TIMEOUT)
     return response.parsed_response if response.success?
     raise UnavailableError, "AdvBox respondeu HTTP #{response.code}" if response.code >= 500
 
@@ -109,7 +144,7 @@ class Ramon::AdvboxClient
   rescue *NETWORK_ERRORS => e
     raise UnavailableError, "AdvBox indisponível: #{e.message}"
   end
-  private_class_method :post
+  private_class_method :write
 
   def self.headers
     token = ENV.fetch('ADVBOX_API_TOKEN', nil)
