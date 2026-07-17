@@ -107,7 +107,7 @@ class Ramon::ColheitaExtractionService
     obj = JSON.parse(body[ini..fim])
     raise ArgumentError, 'Colheita sem objeto raiz.' unless obj.is_a?(Hash)
     # JSON válido mas fora do schema (LLM divagou) não pode sobrescrever colheita boa.
-    raise ArgumentError, 'JSON fora do schema da colheita.' if (obj.keys & SCHEMA_SECTIONS).empty?
+    raise ArgumentError, 'JSON fora do schema da colheita.' unless obj.keys.intersect?(SCHEMA_SECTIONS)
 
     obj
   rescue JSON::ParserError
