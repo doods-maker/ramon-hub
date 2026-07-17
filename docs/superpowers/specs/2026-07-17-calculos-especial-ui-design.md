@@ -20,12 +20,14 @@ e devolvem cartões `especial_pre|especial_ec103|especial_pontos` + avisos.
   selecionado, 2 campos de data opcionais (início/fim do trecho de exposição —
   vazios = vínculo inteiro).
 - Vínculos manuais (`vinculosExtras`, ex.: rural) ganham o mesmo select/campos.
-- **Transporte:** parâmetro novo `especiais` (JSON string, mapa `seq → {grau,
-  inicio?, fim?}`), mesmo padrão cru de `excluir_seqs`/`mensalidades`: front envia
-  string, backend NÃO interpreta valores — o `Ramon::MotorClient` (ou serviço que
-  monta o corpo) **funde** a marcação nos itens de `vinculos` por `seq` antes do
-  POST; pros `vinculos_extras`, o campo `especial` vai embutido no próprio item.
-  Persistência no jsonb `parametros` da simulação, como os ajustes atuais.
+- **Transporte (corrigido pós-exploração do código):** parâmetro novo `especiais`
+  (JSON string, mapa `seq → {grau, inicio?, fim?}`) enviado no **POST
+  `leads/:id/painel`** — não no `/cnis`: especial não afeta o parse do CNIS, só o
+  painel, então **não exige re-upload do PDF** (UX melhor que excluir/mensalidade).
+  O `LeadPaineisController#motor_payload` funde a marcação nos itens de `vinculos`
+  por `seq`; `vinculos_extras` ganham campo `especial` embutido no item. O
+  controller também persiste `especiais` em `lead.cnis['parametros']` (onde já
+  vivem `excluir_seqs`/`mensalidades`) pra marcação sobreviver ao reload.
 - **Erros:** 422 do motor (trecho fora do vínculo, graus sobrepostos, benefício
   marcado como especial) já chega com mensagem em pt — exibir no mesmo lugar dos
   erros atuais do painel, sem tradução extra.
