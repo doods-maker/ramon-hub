@@ -11,6 +11,13 @@ class Ramon::Pseudonymizer
   # ponytail: só mascara endereço com número ("Rua X, 123") — sem número o nome
   # da rua passa, pra não engolir frases comuns tipo "caí na rua e machuquei".
   ADDRESS = /\b(?:rua|avenida|av\.|travessa|rodovia|estrada|alameda|servid[ãa]o)\s+[^\n,;.]{3,40},?\s*(?:n[ºo°.]?\s*)?\d+\b/i
+  # RG dito na reunião (o prompt da colheita pede RG explicitamente): número
+  # logo depois da palavra "RG" ou no formato pontuado clássico. Roda DEPOIS
+  # do CPF (que consome os 11 dígitos/pontuado próprio); lookahead evita comer
+  # a casa de milhão de um valor em R$. ponytail: RG solto sem rótulo nem
+  # pontuação não casa — indistinguível de número comum.
+  RG_LABELED = /\bRG\b[^\d\n]{0,8}\d[\d.\s-]{4,12}\d/i
+  RG_PUNCT = /\b\d{1,2}\.\d{3}\.\d{3}(?:-?\d)?\b(?!,\d)/
   NAME_STOPWORDS = %w[dos das de da do e].freeze
 
   def self.mask(text, names: [])
@@ -19,6 +26,8 @@ class Ramon::Pseudonymizer
     masked.gsub!(EMAIL, '[email]')
     masked.gsub!(CEP, '[cep]')
     masked.gsub!(CPF, '[cpf]')
+    masked.gsub!(RG_LABELED, '[rg]')
+    masked.gsub!(RG_PUNCT, '[rg]')
     masked.gsub!(PHONE, '[telefone]')
     masked.gsub!(ADDRESS, '[endereco]')
     masked

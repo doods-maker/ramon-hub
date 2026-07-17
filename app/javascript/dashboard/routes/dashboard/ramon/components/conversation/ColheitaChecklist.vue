@@ -130,7 +130,7 @@ const chargeLacunas = async () => {
         isDone(item) ? '✓' : '○'
       }}</span>
       <span :class="isDone(item) ? 'line-through opacity-70' : ''">{{
-        item.title
+        item.title || item.content
       }}</span>
     </button>
 

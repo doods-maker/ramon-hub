@@ -24,6 +24,9 @@ class Ramon::ZapsignContractService
       'faltando' => faltando,
       'criado_em' => Time.zone.now.iso8601
     }
+    # reload: a chamada HTTP demora e um snapshot velho reverteria gravações
+    # paralelas em custom_attributes (colheita/AdvBox/painel).
+    @lead.reload
     @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('zapsign' => stored))
     stored
   end

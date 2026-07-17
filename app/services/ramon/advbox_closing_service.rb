@@ -33,10 +33,10 @@ class Ramon::AdvboxClosingService
   def perform
     return if @lead.won_at.blank? || synced?
 
-    customer_id = find_or_create_customer
-    lawsuit_id = Ramon::AdvboxClient.create_lawsuit(lawsuit_payload(customer_id))['lawsuits_id']
-    post_id = Ramon::AdvboxClient.create_post(post_payload(lawsuit_id))['posts_id']
-    write_back(customer_id, lawsuit_id, post_id)
+    customer_id = step('customers_id') { find_or_create_customer }
+    lawsuit_id = step('lawsuits_id') { Ramon::AdvboxClient.create_lawsuit(lawsuit_payload(customer_id))['lawsuits_id'] }
+    step('posts_id') { Ramon::AdvboxClient.create_post(post_payload(lawsuit_id))['posts_id'] }
+    merge_advbox('sincronizado_em' => Time.zone.now.iso8601, 'erro' => nil, 'em' => nil)
   rescue Ramon::AdvboxClient::UnavailableError
     raise # retry no job (rede/5xx)
   rescue StandardError => e
@@ -46,7 +46,22 @@ class Ramon::AdvboxClosingService
   private
 
   def synced?
-    @lead.custom_attributes&.dig('advbox', 'lawsuits_id').present?
+    advbox['sincronizado_em'].present?
+  end
+
+  # Persiste cada id assim que o recurso nasce no AdvBox: se o passo seguinte
+  # falhar (5xx/timeout), o retry do job retoma daqui e não duplica cliente/caso/
+  # tarefa lá. ponytail: 2 jobs simultâneos do MESMO lead ainda podem correr no
+  # intervalo de um passo; lock por job (sidekiq-unique/Redis) se acontecer.
+  def step(key)
+    existing = advbox[key]
+    return existing if existing.present?
+
+    yield.tap { |value| merge_advbox(key => value) }
+  end
+
+  def advbox
+    @lead.custom_attributes&.dig('advbox') || {}
   end
 
   # 422 de CPF duplicado não traz o id — buscar por identification resolve.
@@ -144,17 +159,16 @@ class Ramon::AdvboxClosingService
     ORIGINS.find { |pattern, _| haystack.match?(pattern) }&.last || ORIGIN_DEFAULT
   end
 
-  def write_back(customer_id, lawsuit_id, post_id)
-    merge_advbox('customers_id' => customer_id, 'lawsuits_id' => lawsuit_id,
-                 'posts_id' => post_id, 'sincronizado_em' => Time.zone.now.iso8601)
-  end
-
   def mark_error(error)
     Rails.logger.error("AdvboxClosing: falha no lead #{@lead.id}: #{error.message}")
     merge_advbox('erro' => error.message.truncate(300), 'em' => Time.zone.now.iso8601)
   end
 
+  # Merge sobre estado FRESCO e só na chave advbox: o painel/outros jobs gravam
+  # custom_attributes em paralelo e um snapshot velho reverteria essas gravações.
   def merge_advbox(payload)
-    @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('advbox' => payload))
+    @lead.reload
+    attrs = @lead.custom_attributes || {}
+    @lead.update!(custom_attributes: attrs.merge('advbox' => (attrs['advbox'] || {}).merge(payload).compact))
   end
 end

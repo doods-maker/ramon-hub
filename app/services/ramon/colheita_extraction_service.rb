@@ -7,6 +7,7 @@ class Ramon::ColheitaExtractionService
   THESIS_MATCH = /auxílio-acidente/i
   MAX_MESSAGES = 200
   AUXILIO_DOENCA = %w[B31 B91].freeze
+  SCHEMA_SECTIONS = %w[cliente qualificacao acidente sequela beneficios fechamento].freeze
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você extrai dados estruturados da conversa entre a equipe de um escritório previdenciário e um cliente com possível caso de auxílio-acidente.
@@ -30,7 +31,7 @@ class Ramon::ColheitaExtractionService
     - Datas no formato YYYY-MM-DD. acidente.tipo em [trabalho, trajeto, outra_natureza];
       cat_emitida em [sim, nao, nao_sabe]; sequela.consolidada em [sim, em_tratamento, nao_sabe].
     - Valor dito de forma incerta na fala: preencha e liste o caminho do campo em "confirmar".
-    - Tokens de máscara ([cpf], [telefone], [endereco], [email], [cep], [nome]) significam dado protegido: deixe o campo null e registre em "lacunas" com como_obter "confirmar no cadastro/documento".
+    - Tokens de máscara ([cpf], [rg], [telefone], [endereco], [email], [cep], [nome]) significam dado protegido: deixe o campo null e registre em "lacunas" com como_obter "confirmar no cadastro/documento".
     - "profissao" é a atividade habitual; "sequela.limitacao_concreta" é como a sequela reduz esse trabalho, em fatos.
     Português do Brasil.
   PROMPT
@@ -105,13 +106,19 @@ class Ramon::ColheitaExtractionService
 
     obj = JSON.parse(body[ini..fim])
     raise ArgumentError, 'Colheita sem objeto raiz.' unless obj.is_a?(Hash)
+    # JSON válido mas fora do schema (LLM divagou) não pode sobrescrever colheita boa.
+    raise ArgumentError, 'JSON fora do schema da colheita.' unless obj.keys.intersect?(SCHEMA_SECTIONS)
 
     obj
   rescue JSON::ParserError
     raise ArgumentError, 'JSON da colheita inválido.'
   end
 
+  # A chamada de LLM demora — reload antes do merge, senão o snapshot velho
+  # reverte o que painel/ZapSign/AdvBox gravaram nesse meio-tempo (e o guard
+  # do dcb_em avaliaria dado obsoleto, sobrescrevendo valor humano).
   def write_back(dados)
+    @lead.reload
     attrs = {
       custom_attributes: (@lead.custom_attributes || {}).merge('colheita' => colheita_payload(dados))
     }

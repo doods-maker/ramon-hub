@@ -45,7 +45,18 @@ const contactSexo = ref('');
 
 // ZapSign (item 21, fluxo A): botão gera contrato+procuração pré-preenchidos
 // e devolve o link de assinatura — nada é enviado ao cliente automaticamente.
-const zapsign = computed(() => props.lead?.custom_attributes?.zapsign || null);
+// Fallback local da resposta: se o websocket estiver caído, o lead da store não
+// recebe o zapsign novo e o botão continuaria armado — 2º clique = 2º contrato.
+const zapsignLocal = ref(null);
+watch(
+  () => props.lead?.id,
+  () => {
+    zapsignLocal.value = null;
+  }
+);
+const zapsign = computed(
+  () => props.lead?.custom_attributes?.zapsign || zapsignLocal.value
+);
 const zapsignEligible = computed(() =>
   (props.lead?.thesis_name || '').toLowerCase().includes('acidente')
 );
@@ -54,6 +65,7 @@ const generateZapsign = async () => {
   zapsignLoading.value = true;
   try {
     const { data } = await LeadsAPI.createZapsign(props.lead.id);
+    zapsignLocal.value = data;
     useAlert(
       data.faltando?.length
         ? t('RAMON.ZAPSIGN.MISSING', { count: data.faltando.length })

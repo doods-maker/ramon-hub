@@ -11,6 +11,16 @@ RSpec.describe Ramon::Pseudonymizer do
     expect(out).to eq('CPF [cpf] ou [cpf]')
   end
 
+  it 'mascara RG rotulado e no formato pontuado' do
+    out = described_class.mask('Meu RG é 4567890, da esposa é 12.345.678-9 e o RG: 1.234.567 também.')
+    expect(out).to eq('Meu [rg], da esposa é [rg] e o [rg] também.')
+  end
+
+  it 'não confunde RG com valores em reais na casa do milhão' do
+    text = 'O acordo foi de R$ 1.234.567,89 no total.'
+    expect(described_class.mask(text)).to eq(text)
+  end
+
   it 'mascara telefones nos formatos BR comuns' do
     out = described_class.mask('Fones: (48) 99999-8888, +55 48 3622-1234 e 999998888')
     expect(out).to eq('Fones: [telefone], [telefone] e [telefone]')
