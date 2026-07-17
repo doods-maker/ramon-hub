@@ -74,10 +74,12 @@ watch(query, value => {
 const selectedContact = ref(null);
 const contactLeads = ref([]);
 const loadingLeads = ref(false);
+const leadsError = ref(false);
 
 const openPessoa = async contact => {
   selectedContact.value = contact;
   contactLeads.value = [];
+  leadsError.value = false;
   loadingLeads.value = true;
   try {
     const { data } = await LeadsAPI.get({ contact_id: contact.id });
@@ -90,6 +92,8 @@ const openPessoa = async contact => {
     } else {
       contactLeads.value = leads;
     }
+  } catch {
+    leadsError.value = true;
   } finally {
     loadingLeads.value = false;
   }
@@ -180,6 +184,14 @@ const fmtDate = value => {
           data-testid="calculos-loading-leads"
         >
           {{ $t('RAMON.CALCULOS.LOADING_LEADS') }}
+        </p>
+
+        <p
+          v-else-if="leadsError"
+          class="mt-4 text-sm text-n-ruby-11"
+          data-testid="calculos-leads-error"
+        >
+          {{ $t('RAMON.CALCULOS.ERROR') }}
         </p>
 
         <template v-else-if="selectedContact">
