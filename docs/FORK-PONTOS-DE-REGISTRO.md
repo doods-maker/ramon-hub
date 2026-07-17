@@ -122,6 +122,8 @@
 | `app/javascript/dashboard/i18n/locale/pt_BR/ramon.json` | textos das telas ramon (português) — blocos OVERVIEW, NAV, RAIL, SHORTCUTS | 1A/1B |
 | `public/brand-assets/ramon-logo.jpeg` | logo do escritório (apontar via Super Admin) | 1A |
 | `public/brand-assets/ramon-monogram.png` | monograma/favicon (apontar via Super Admin) | 1A |
+| `public/brand-assets/ramon-logo-dark.png` | logo alpha (texto claro) p/ dark mode — LOGO_DARK | branding 17/07 |
+| `enterprise/config/premium_installation_config.yml` | valores da marca da banca como fonte do ReconcilePlanConfigService (o "reset premium" do plano community passa a reforçar o branding próprio) — specs do serviço ajustados junto | branding 17/07 |
 | `app/javascript/dashboard/routes/dashboard/conversation/KanbanView.vue` | arquivo NOVO dentro de diretório core (não em `ramon/`) — wrapper que monta o `KanbanBoard` no mundo Conversas | 2A |
 | `db/migrate/20260628000002_add_auto_create_lead_to_inboxes.rb` | migration: coluna `auto_create_lead` (boolean, default false) em `inboxes` | flag de auto-criação de lead por inbox | 2B |
 | `app/listeners/ramon_lead_listener.rb` | listener de auto-criação de lead em `conversation_created`; dedup por contato | funil de leads automático | 2B |
