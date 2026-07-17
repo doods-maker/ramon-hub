@@ -39,8 +39,13 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
     @especiais_map = nil
   end
 
+  # nil (JSON quebrado) OU JSON válido mas de forma errada (array, número,
+  # mapa com valor que não é um hash de especial) — tudo 422, nunca chega
+  # no merge/motor pra virar 500.
   def especiais_invalidos?
-    permitted[:especiais].present? && especiais_map.nil?
+    return false if permitted[:especiais].blank?
+
+    !especiais_map.is_a?(Hash) || !especiais_map.values.all? { |v| v.is_a?(Hash) }
   end
 
   # Normaliza {grau, inicio, fim} vindo tanto do mapa `especiais` (Hash cru do
@@ -52,13 +57,31 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
     { 'grau' => h[:grau], 'inicio' => h[:inicio], 'fim' => h[:fim] }
   end
 
-  def vinculo_com_especial(vinculo)
-    especial = especial_normalizado(especiais_map[vinculo['seq'].to_s])
-    especial.present? ? vinculo.merge('especial' => especial) : vinculo
+  # entrada.vinculos (usado no motor_payload) NÃO tem seq — quem tem é
+  # cnis['vinculos'] (o vinculos_detalhe do /cnis). Invariante verificado no
+  # motor (fonte da verdade): os dois vêm da MESMA comprehension 1:1 sobre
+  # resultado.vinculos (montagem.py `vinculos = [Vinculo(...) for v in
+  # res.vinculos]` + api/main.py `"vinculos": [... for v_ in
+  # resultado.vinculos]`) — mesma ordem, sem filtro. Por isso a fusão é por
+  # posição (índice i -> detalhe[i]['seq']), não por um campo 'seq' que não
+  # existe em entrada.vinculos. Se os tamanhos divergirem (dado velho/
+  # corrompido), pula a fusão inteira em vez de arriscar casar posição errada.
+  def vinculos_com_especial
+    vinculos = cnis_entrada['vinculos'] || []
+    return vinculos if especiais_map.blank?
+
+    detalhe = @lead.cnis&.dig('vinculos') || []
+    return vinculos if detalhe.length != vinculos.length
+
+    vinculos.each_with_index.map do |v, i|
+      especial = especial_normalizado(especiais_map[detalhe[i]['seq'].to_s])
+      especial.present? ? v.merge('especial' => especial) : v
+    end
   end
 
   def persistir_especiais
     return if permitted[:especiais].blank?
+    return if @lead.cnis.blank?
 
     cnis = @lead.cnis || {}
     cnis['parametros'] = (cnis['parametros'] || {}).merge('especiais' => permitted[:especiais])
@@ -117,7 +140,7 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
       segurado: segurado,
       der: der.iso8601,
       competencias: (cnis_entrada['competencias'] || []) + extras.flat_map { |e| competencias_de(e) },
-      vinculos: (cnis_entrada['vinculos'] || []).map { |v| vinculo_com_especial(v) } + extras.map do |e|
+      vinculos: vinculos_com_especial + extras.map do |e|
         item = { inicio: e[:inicio].iso8601, fim: e[:fim].iso8601, tipo: e[:tipo], indicadores: [] }
         especial = especial_normalizado(e[:especial])
         especial.present? ? item.merge(especial: especial) : item

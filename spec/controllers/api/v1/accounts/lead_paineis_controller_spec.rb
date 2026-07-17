@@ -94,15 +94,28 @@ RSpec.describe 'Lead Paineis API', type: :request do
   end
 
   context 'with tempo especial (especiais)' do
-    it 'funde especiais nos vinculos por seq e persiste nos parametros' do
-      lead.update!(cnis: {
-                     'entrada' => {
-                       'segurado' => { 'nascimento' => '1975-01-20', 'sexo' => 'F' },
-                       'competencias' => [],
-                       'vinculos' => [{ 'seq' => 3, 'inicio' => '2010-01-01', 'fim' => '2015-12-31',
-                                        'tipo' => 'EMPREGO', 'indicadores' => [] }]
-                     }
-                   })
+    # forma real: entrada.vinculos NÃO tem seq (só quem tem é cnis['vinculos'],
+    # o vinculos_detalhe) — mesma fixture do lead_cnis_controller_spec.rb.
+    # A fusão é por posição: 1º de entrada.vinculos <-> 1º de cnis['vinculos'].
+    let(:cnis_com_dois_vinculos) do
+      {
+        'entrada' => {
+          'segurado' => { 'nascimento' => '1975-01-20', 'sexo' => 'F' },
+          'competencias' => [],
+          'vinculos' => [
+            { 'inicio' => '2005-01-01', 'fim' => '2009-12-31', 'tipo' => 'EMPREGO', 'indicadores' => [] },
+            { 'inicio' => '2010-01-01', 'fim' => '2015-12-31', 'tipo' => 'EMPREGO', 'indicadores' => [] }
+          ]
+        },
+        'vinculos' => [
+          { 'seq' => 1, 'tipo' => 'EMPREGO', 'origem' => 'OUTRA LTDA' },
+          { 'seq' => 3, 'tipo' => 'EMPREGO', 'origem' => 'ACME LTDA' }
+        ]
+      }
+    end
+
+    it 'funde especiais nos vinculos por posicao (via cnis[vinculos]/vinculos_detalhe) e persiste nos parametros' do
+      lead.update!(cnis: cnis_com_dois_vinculos)
       corpo_enviado = nil
       stub_request(:post, "#{motor_url}/painel").with { |req| corpo_enviado = JSON.parse(req.body); true }
         .to_return(status: 200, body: { resumo: {}, cartoes: [], avisos: [] }.to_json,
@@ -113,9 +126,30 @@ RSpec.describe 'Lead Paineis API', type: :request do
       end
 
       expect(response).to have_http_status(:success)
-      v3 = corpo_enviado['vinculos'].find { |v| v['seq'] == 3 }
-      expect(v3['especial']).to eq('grau' => 25, 'inicio' => nil, 'fim' => nil)
+      # seq 3 é o 2º de cnis['vinculos'] -> deve cair no 2º de entrada.vinculos
+      alvo = corpo_enviado['vinculos'].find { |v| v['inicio'] == '2010-01-01' }
+      outro = corpo_enviado['vinculos'].find { |v| v['inicio'] == '2005-01-01' }
+      expect(alvo['especial']).to eq('grau' => 25, 'inicio' => nil, 'fim' => nil)
+      expect(outro['especial']).to be_nil
       expect(lead.reload.cnis.dig('parametros', 'especiais')).to be_present
+    end
+
+    it 'pula a fusao (sem 500) quando entrada.vinculos e cnis[vinculos] tem tamanhos diferentes' do
+      cnis = cnis_com_dois_vinculos
+      cnis['vinculos'] = [cnis['vinculos'].first] # dado velho/corrompido: só 1 detalhe pra 2 vinculos
+      lead.update!(cnis: cnis)
+      corpo_enviado = nil
+      stub_request(:post, "#{motor_url}/painel").with { |req| corpo_enviado = JSON.parse(req.body); true }
+        .to_return(status: 200, body: { resumo: {}, cartoes: [], avisos: [] }.to_json,
+                   headers: { 'Content-Type' => 'application/json' })
+
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        calcular(painel_params.merge(vinculos_extras: [], especiais: { '3' => { 'grau' => 25 } }.to_json))
+      end
+
+      expect(response).to have_http_status(:success)
+      expect(corpo_enviado['vinculos'].length).to eq(2)
+      expect(corpo_enviado['vinculos'].none? { |v| v['especial'] }).to be true
     end
 
     it 'passa especial dos vinculos_extras adiante' do
@@ -142,6 +176,35 @@ RSpec.describe 'Lead Paineis API', type: :request do
       end
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body['error']).to be_present
+    end
+
+    # JSON válido mas de forma errada (não é um mapa seq => {grau,...}) —
+    # sem a checagem de forma isso passava e explodia depois com TypeError/
+    # NoMethodError no merge/motor.
+    ['[]', '123', '{"3":"x"}'].each do |especiais_malformado|
+      it "especiais com forma invalida (#{especiais_malformado}) devolve 422 sem chamar o motor" do
+        with_modified_env MOTOR_CALCULOS_URL: motor_url do
+          calcular(painel_params.merge(especiais: especiais_malformado))
+        end
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body['error']).to be_present
+        expect(WebMock).not_to have_requested(:post, "#{motor_url}/painel")
+      end
+    end
+  end
+
+  context 'persistencia de especiais sem CNIS anexado' do
+    it 'nao cria lead.cnis do zero so pra guardar parametros de especiais' do
+      stub_request(:post, "#{motor_url}/painel")
+        .to_return(status: 200, body: motor_body, headers: { 'Content-Type' => 'application/json' })
+
+      expect(lead.cnis).to be_blank
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        calcular(painel_params.merge(especiais: { '3' => { 'grau' => 25 } }.to_json))
+      end
+
+      expect(response).to have_http_status(:success)
+      expect(lead.reload.cnis).to be_blank
     end
   end
 
