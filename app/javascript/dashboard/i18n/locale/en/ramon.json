@@ -583,6 +583,8 @@
     },
     "SIMULADOR": {
       "TAB": "Simulator",
+      "ABA_POSSIBILIDADES": "Possibilities",
+      "ABA_HONORARIO": "Fee (work accident)",
       "NASCIMENTO": "Date of birth",
       "SEXO": "Sex",
       "SEXO_M": "Male",

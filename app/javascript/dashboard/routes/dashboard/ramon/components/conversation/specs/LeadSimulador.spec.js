@@ -444,4 +444,27 @@ describe('LeadSimulador.vue', () => {
       'benefício inválido'
     );
   });
+
+  describe('abas', () => {
+    it('abre na aba Possibilidades com o fluxo de honorário oculto', () => {
+      const wrapper = mountSim();
+      expect(wrapper.find('[data-testid="sim-painel-secao"]').isVisible()).toBe(
+        true
+      );
+      expect(
+        wrapper.find('[data-testid="sim-secao-honorario"]').isVisible()
+      ).toBe(false);
+    });
+
+    it('troca pra aba Honorário mantendo o painel montado', async () => {
+      const wrapper = mountSim();
+      await wrapper.find('[data-testid="sim-aba-honorario"]').trigger('click');
+      expect(
+        wrapper.find('[data-testid="sim-secao-honorario"]').isVisible()
+      ).toBe(true);
+      expect(wrapper.find('[data-testid="sim-painel-secao"]').exists()).toBe(
+        true
+      );
+    });
+  });
 });

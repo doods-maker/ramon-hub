@@ -315,6 +315,10 @@ const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
 const fieldClass =
   'w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12 outline-none focus:border-n-slate-8';
 const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
+
+// Aba padrão = Possibilidades (uso "hub = Previdenciarista"); o fluxo de
+// honorário do auxílio-acidente vive na 2ª aba, intacto.
+const aba = ref('painel');
 </script>
 
 <template>
@@ -501,74 +505,36 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
           :class="fieldClass"
         />
       </label>
-      <label v-if="!cnis" :class="labelClass">
-        {{ $t('RAMON.SIMULADOR.SALARIO') }}
-        <input
-          v-model="form.salario"
-          type="number"
-          min="0"
-          step="0.01"
-          data-testid="sim-salario"
-          :class="fieldClass"
-        />
-      </label>
-      <label :class="labelClass">
-        {{ $t('RAMON.SIMULADOR.BENEFICIO') }}
-        <select
-          v-model="form.beneficio"
-          data-testid="sim-beneficio"
-          :class="fieldClass"
-        >
-          <option value="temporaria">
-            {{ $t('RAMON.SIMULADOR.BENEFICIO_TEMPORARIA') }}
-          </option>
-          <option value="permanente">
-            {{ $t('RAMON.SIMULADOR.BENEFICIO_PERMANENTE') }}
-          </option>
-          <option value="acidente">
-            {{ $t('RAMON.SIMULADOR.BENEFICIO_ACIDENTE') }}
-          </option>
-        </select>
-      </label>
-      <label :class="labelClass">
-        {{ $t('RAMON.SIMULADOR.ORIGEM') }}
-        <select
-          v-model="form.origem"
-          data-testid="sim-origem"
-          :class="fieldClass"
-        >
-          <option value="previdenciaria">
-            {{ $t('RAMON.SIMULADOR.ORIGEM_PREVIDENCIARIA') }}
-          </option>
-          <option value="acidentaria">
-            {{ $t('RAMON.SIMULADOR.ORIGEM_ACIDENTARIA') }}
-          </option>
-        </select>
-      </label>
     </div>
 
-    <label class="flex items-center gap-2 text-xs text-n-slate-11">
-      <input
-        v-model="form.acrescimo_25"
-        type="checkbox"
-        data-testid="sim-acrescimo"
-      />
-      {{ $t('RAMON.SIMULADOR.ACRESCIMO') }}
-    </label>
-
-    <button
-      type="button"
-      data-testid="sim-run"
-      class="px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
-      :disabled="!canSimulate || isLoading"
-      @click="simulate"
-    >
-      {{
-        isLoading
-          ? $t('RAMON.SIMULADOR.SIMULANDO')
-          : $t('RAMON.SIMULADOR.SIMULAR')
-      }}
-    </button>
+    <div class="flex gap-1 border-b border-n-weak" data-testid="sim-abas">
+      <button
+        type="button"
+        data-testid="sim-aba-painel"
+        class="px-3 py-1.5 text-xs rounded-t-lg"
+        :class="
+          aba === 'painel'
+            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+            : 'text-n-slate-10'
+        "
+        @click="aba = 'painel'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_POSSIBILIDADES') }}
+      </button>
+      <button
+        type="button"
+        data-testid="sim-aba-honorario"
+        class="px-3 py-1.5 text-xs rounded-t-lg"
+        :class="
+          aba === 'honorario'
+            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+            : 'text-n-slate-10'
+        "
+        @click="aba = 'honorario'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_HONORARIO') }}
+      </button>
+    </div>
 
     <p
       v-if="motorDown"
@@ -586,131 +552,216 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
     </p>
 
     <div
-      v-if="resultado"
-      class="flex flex-col gap-2 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
-      data-testid="sim-resultado"
+      v-show="aba === 'honorario'"
+      class="flex flex-col gap-3"
+      data-testid="sim-secao-honorario"
     >
-      <p class="text-sm text-n-slate-12">
-        <span class="text-n-slate-10">
-          {{ $t('RAMON.SIMULADOR.ATRASADOS') }}:
-        </span>
-        <span class="font-semibold" data-testid="sim-atrasados">
-          {{ `~${money(resultado.atrasados)}` }}
-        </span>
-      </p>
-      <p class="text-sm text-n-slate-12" data-testid="sim-perda-mensal">
-        {{
-          $t('RAMON.SIMULADOR.PERDA_MENSAL', {
-            value: money(resultado.perda_mensal),
-          })
-        }}
-      </p>
-      <p
-        v-if="honorario && honorario.valor"
-        class="text-sm text-n-slate-12"
-        data-testid="sim-honorario"
-      >
-        <span class="text-n-slate-10">
-          {{ $t('RAMON.SIMULADOR.HONORARIO') }}:
-        </span>
-        <span class="font-semibold">{{ `~${money(honorario.valor)}` }}</span>
-        <span class="text-xs text-n-slate-10">
-          ({{
-            $t('RAMON.SIMULADOR.HONORARIO_FORMULA', {
-              percentual: honorario.percentual,
-              n: honorario.n_mensalidades,
-              tese: honorario.tese,
-            })
-          }})
-        </span>
-      </p>
-      <p v-else class="text-xs text-n-amber-11" data-testid="sim-sem-honorario">
-        {{ $t('RAMON.SIMULADOR.NO_FEE_CONFIG') }}
-      </p>
-      <p class="text-xs text-n-slate-10">
-        {{
-          $t('RAMON.SIMULADOR.ESTIMATIVA_BASE', {
-            meses: resultado.atrasados_estimativa?.meses || 0,
-          })
-        }}
-      </p>
-      <p
-        v-if="motorInfo.rmi_com_descartes"
-        class="text-xs text-n-slate-10"
-        data-testid="sim-duas-medias"
-      >
-        {{
-          $t('RAMON.SIMULADOR.DUAS_MEDIAS', {
-            rmi: money(motorInfo.rmi),
-            descartes: money(motorInfo.rmi_com_descartes),
-          })
-        }}
-      </p>
-      <ul
-        v-if="resultado.avisos && resultado.avisos.length"
-        class="flex flex-col gap-1 text-xs text-n-slate-10 list-disc ps-4"
-        data-testid="sim-avisos"
-      >
-        <li v-for="(aviso, i) in resultado.avisos" :key="i">{{ aviso }}</li>
-      </ul>
+      <div class="grid grid-cols-2 gap-2">
+        <label v-if="!cnis" :class="labelClass">
+          {{ $t('RAMON.SIMULADOR.SALARIO') }}
+          <input
+            v-model="form.salario"
+            type="number"
+            min="0"
+            step="0.01"
+            data-testid="sim-salario"
+            :class="fieldClass"
+          />
+        </label>
+        <label :class="labelClass">
+          {{ $t('RAMON.SIMULADOR.BENEFICIO') }}
+          <select
+            v-model="form.beneficio"
+            data-testid="sim-beneficio"
+            :class="fieldClass"
+          >
+            <option value="temporaria">
+              {{ $t('RAMON.SIMULADOR.BENEFICIO_TEMPORARIA') }}
+            </option>
+            <option value="permanente">
+              {{ $t('RAMON.SIMULADOR.BENEFICIO_PERMANENTE') }}
+            </option>
+            <option value="acidente">
+              {{ $t('RAMON.SIMULADOR.BENEFICIO_ACIDENTE') }}
+            </option>
+          </select>
+        </label>
+        <label :class="labelClass">
+          {{ $t('RAMON.SIMULADOR.ORIGEM') }}
+          <select
+            v-model="form.origem"
+            data-testid="sim-origem"
+            :class="fieldClass"
+          >
+            <option value="previdenciaria">
+              {{ $t('RAMON.SIMULADOR.ORIGEM_PREVIDENCIARIA') }}
+            </option>
+            <option value="acidentaria">
+              {{ $t('RAMON.SIMULADOR.ORIGEM_ACIDENTARIA') }}
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <label class="flex items-center gap-2 text-xs text-n-slate-11">
+        <input
+          v-model="form.acrescimo_25"
+          type="checkbox"
+          data-testid="sim-acrescimo"
+        />
+        {{ $t('RAMON.SIMULADOR.ACRESCIMO') }}
+      </label>
+
       <button
         type="button"
-        data-testid="sim-memoria-toggle"
-        class="self-start text-xs underline text-n-slate-11 disabled:opacity-40"
-        :disabled="memoriaLoading"
-        @click="verMemoria"
+        data-testid="sim-run"
+        class="px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
+        :disabled="!canSimulate || isLoading"
+        @click="simulate"
       >
         {{
-          memoriaLoading
-            ? $t('RAMON.SIMULADOR.MEMORIA_LOADING')
-            : memoria
-              ? $t('RAMON.SIMULADOR.MEMORIA_HIDE')
-              : $t('RAMON.SIMULADOR.MEMORIA_SHOW')
+          isLoading
+            ? $t('RAMON.SIMULADOR.SIMULANDO')
+            : $t('RAMON.SIMULADOR.SIMULAR')
         }}
       </button>
-      <div v-if="memoria" class="flex flex-col gap-1" data-testid="sim-memoria">
-        <div class="max-h-64 overflow-y-auto rounded-lg border border-n-weak">
-          <table class="w-full text-xs text-n-slate-11">
-            <thead class="sticky top-0 bg-n-solid-2">
-              <tr class="text-n-slate-10">
-                <th class="p-1 text-start font-medium">
-                  {{ $t('RAMON.SIMULADOR.MEMORIA_COMPETENCIA') }}
-                </th>
-                <th class="p-1 text-end font-medium">
-                  {{ $t('RAMON.SIMULADOR.MEMORIA_SALARIO') }}
-                </th>
-                <th class="p-1 text-end font-medium">
-                  {{ $t('RAMON.SIMULADOR.MEMORIA_INDICE') }}
-                </th>
-                <th class="p-1 text-end font-medium">
-                  {{ $t('RAMON.SIMULADOR.MEMORIA_CORRIGIDO') }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="linha in memoria.salarios" :key="linha.competencia">
-                <td class="p-1">{{ linha.competencia }}</td>
-                <td class="p-1 text-end">{{ money(linha.salario) }}</td>
-                <td class="p-1 text-end">{{ linha.indice }}</td>
-                <td class="p-1 text-end">{{ money(linha.corrigido) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="text-xs text-n-slate-10" data-testid="sim-memoria-resumo">
+
+      <div
+        v-if="resultado"
+        class="flex flex-col gap-2 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+        data-testid="sim-resultado"
+      >
+        <p class="text-sm text-n-slate-12">
+          <span class="text-n-slate-10">
+            {{ $t('RAMON.SIMULADOR.ATRASADOS') }}:
+          </span>
+          <span class="font-semibold" data-testid="sim-atrasados">
+            {{ `~${money(resultado.atrasados)}` }}
+          </span>
+        </p>
+        <p class="text-sm text-n-slate-12" data-testid="sim-perda-mensal">
           {{
-            $t('RAMON.SIMULADOR.MEMORIA_RESUMO', {
-              soma: money(memoria.soma),
-              divisor: memoria.divisor,
-              media: money(memoria.media),
+            $t('RAMON.SIMULADOR.PERDA_MENSAL', {
+              value: money(resultado.perda_mensal),
             })
           }}
         </p>
+        <p
+          v-if="honorario && honorario.valor"
+          class="text-sm text-n-slate-12"
+          data-testid="sim-honorario"
+        >
+          <span class="text-n-slate-10">
+            {{ $t('RAMON.SIMULADOR.HONORARIO') }}:
+          </span>
+          <span class="font-semibold">{{ `~${money(honorario.valor)}` }}</span>
+          <span class="text-xs text-n-slate-10">
+            ({{
+              $t('RAMON.SIMULADOR.HONORARIO_FORMULA', {
+                percentual: honorario.percentual,
+                n: honorario.n_mensalidades,
+                tese: honorario.tese,
+              })
+            }})
+          </span>
+        </p>
+        <p
+          v-else
+          class="text-xs text-n-amber-11"
+          data-testid="sim-sem-honorario"
+        >
+          {{ $t('RAMON.SIMULADOR.NO_FEE_CONFIG') }}
+        </p>
+        <p class="text-xs text-n-slate-10">
+          {{
+            $t('RAMON.SIMULADOR.ESTIMATIVA_BASE', {
+              meses: resultado.atrasados_estimativa?.meses || 0,
+            })
+          }}
+        </p>
+        <p
+          v-if="motorInfo.rmi_com_descartes"
+          class="text-xs text-n-slate-10"
+          data-testid="sim-duas-medias"
+        >
+          {{
+            $t('RAMON.SIMULADOR.DUAS_MEDIAS', {
+              rmi: money(motorInfo.rmi),
+              descartes: money(motorInfo.rmi_com_descartes),
+            })
+          }}
+        </p>
+        <ul
+          v-if="resultado.avisos && resultado.avisos.length"
+          class="flex flex-col gap-1 text-xs text-n-slate-10 list-disc ps-4"
+          data-testid="sim-avisos"
+        >
+          <li v-for="(aviso, i) in resultado.avisos" :key="i">{{ aviso }}</li>
+        </ul>
+        <button
+          type="button"
+          data-testid="sim-memoria-toggle"
+          class="self-start text-xs underline text-n-slate-11 disabled:opacity-40"
+          :disabled="memoriaLoading"
+          @click="verMemoria"
+        >
+          {{
+            memoriaLoading
+              ? $t('RAMON.SIMULADOR.MEMORIA_LOADING')
+              : memoria
+                ? $t('RAMON.SIMULADOR.MEMORIA_HIDE')
+                : $t('RAMON.SIMULADOR.MEMORIA_SHOW')
+          }}
+        </button>
+        <div
+          v-if="memoria"
+          class="flex flex-col gap-1"
+          data-testid="sim-memoria"
+        >
+          <div class="max-h-64 overflow-y-auto rounded-lg border border-n-weak">
+            <table class="w-full text-xs text-n-slate-11">
+              <thead class="sticky top-0 bg-n-solid-2">
+                <tr class="text-n-slate-10">
+                  <th class="p-1 text-start font-medium">
+                    {{ $t('RAMON.SIMULADOR.MEMORIA_COMPETENCIA') }}
+                  </th>
+                  <th class="p-1 text-end font-medium">
+                    {{ $t('RAMON.SIMULADOR.MEMORIA_SALARIO') }}
+                  </th>
+                  <th class="p-1 text-end font-medium">
+                    {{ $t('RAMON.SIMULADOR.MEMORIA_INDICE') }}
+                  </th>
+                  <th class="p-1 text-end font-medium">
+                    {{ $t('RAMON.SIMULADOR.MEMORIA_CORRIGIDO') }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="linha in memoria.salarios" :key="linha.competencia">
+                  <td class="p-1">{{ linha.competencia }}</td>
+                  <td class="p-1 text-end">{{ money(linha.salario) }}</td>
+                  <td class="p-1 text-end">{{ linha.indice }}</td>
+                  <td class="p-1 text-end">{{ money(linha.corrigido) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-xs text-n-slate-10" data-testid="sim-memoria-resumo">
+            {{
+              $t('RAMON.SIMULADOR.MEMORIA_RESUMO', {
+                soma: money(memoria.soma),
+                divisor: memoria.divisor,
+                media: money(memoria.media),
+              })
+            }}
+          </p>
+        </div>
       </div>
     </div>
 
     <div
-      class="flex flex-col gap-2 border-t border-n-weak pt-2"
+      v-show="aba === 'painel'"
+      class="flex flex-col gap-2"
       data-testid="sim-painel-secao"
     >
       <span class="text-xs font-medium text-n-slate-12">

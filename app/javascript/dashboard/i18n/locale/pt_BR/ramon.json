@@ -583,6 +583,8 @@
     },
     "SIMULADOR": {
       "TAB": "Simulador",
+      "ABA_POSSIBILIDADES": "Possibilidades",
+      "ABA_HONORARIO": "Honorário (auxílio-acidente)",
       "NASCIMENTO": "Nascimento",
       "SEXO": "Sexo",
       "SEXO_M": "Masculino",
