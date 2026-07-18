@@ -220,10 +220,8 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
           {{ $t('RAMON.LIQUIDACAO.HON_SUC') }}
           <input
             v-model="form.honorarios_sucumbenciais_pct"
-            type="number"
-            min="0"
-            max="100"
-            step="0.01"
+            type="text"
+            inputmode="decimal"
             data-testid="liq-hon-suc"
             :class="fieldClass"
           />
@@ -232,10 +230,8 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
           {{ $t('RAMON.LIQUIDACAO.HON_CONTR') }}
           <input
             v-model="form.honorarios_contratuais_pct"
-            type="number"
-            min="0"
-            max="100"
-            step="0.01"
+            type="text"
+            inputmode="decimal"
             data-testid="liq-hon-contr"
             :class="fieldClass"
           />
