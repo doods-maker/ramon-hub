@@ -515,9 +515,15 @@ const aba = ref('painel');
       </label>
     </div>
 
-    <div class="flex gap-1 border-b border-n-weak" data-testid="sim-abas">
+    <div
+      class="flex gap-1 border-b border-n-weak"
+      role="tablist"
+      data-testid="sim-abas"
+    >
       <button
         type="button"
+        role="tab"
+        :aria-selected="aba === 'painel'"
         data-testid="sim-aba-painel"
         class="px-3 py-1.5 text-xs rounded-t-lg"
         :class="
@@ -531,6 +537,8 @@ const aba = ref('painel');
       </button>
       <button
         type="button"
+        role="tab"
+        :aria-selected="aba === 'honorario'"
         data-testid="sim-aba-honorario"
         class="px-3 py-1.5 text-xs rounded-t-lg"
         :class="

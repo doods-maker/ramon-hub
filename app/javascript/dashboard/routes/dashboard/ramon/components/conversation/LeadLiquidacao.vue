@@ -1,11 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 
 const props = defineProps({
   lead: { type: Object, required: true },
 });
 defineOptions({ name: 'LeadLiquidacao' });
+
+const { t } = useI18n();
 
 const form = ref({
   rmi: '',
@@ -39,8 +42,12 @@ const brl = new Intl.NumberFormat('pt-BR', {
 });
 const money = value => brl.format(Number(value || 0));
 
+// "1518", "1518.50" ou "1518,50" — nunca "1.518" (milhar) que vira 1000x menor.
+const decimalValido = v => /^\d+([.,]\d{1,2})?$/.test(v);
+const normDecimal = v => String(v).replace(',', '.');
+
 const canCalcular = computed(
-  () => Number(form.value.rmi) > 0 && Boolean(form.value.dib)
+  () => decimalValido(form.value.rmi) && Boolean(form.value.dib)
 );
 
 // Pré-preenche a RMI a partir de um cartão do painel (Task 5).
@@ -65,33 +72,54 @@ const DATAS = [
 const payload = () => {
   const f = form.value;
   const p = {
-    rmi: String(f.rmi),
+    rmi: normDecimal(f.rmi),
     dib: f.dib,
     no_piso: f.no_piso,
     regime_pos_ec136: f.regime_pos_ec136,
     abatimentos: abatimentos.value
-      .filter(a => a.ano && a.mes && a.valor)
+      .filter(a => a.ano && a.mes && a.valor && decimalValido(a.valor))
       .map(a => ({
         ano: Number(a.ano),
         mes: Number(a.mes),
-        valor: String(a.valor),
+        valor: normDecimal(a.valor),
       })),
   };
   DATAS.forEach(k => {
     if (f[k]) p[k] = f[k];
   });
   ['honorarios_sucumbenciais_pct', 'honorarios_contratuais_pct'].forEach(k => {
-    if (f[k]) p[k] = String(f[k]);
+    if (f[k]) p[k] = normDecimal(f[k]);
   });
   return p;
 };
 
-const handleError = error => {
+// jsdom (specs) não implementa Blob.text() — FileReader funciona nos dois.
+const blobToText = blob =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(blob);
+  });
+
+// liquidacaoPdf usa responseType: 'blob', então em erro o axios entrega
+// error.response.data como Blob (não JSON) — precisa ler o texto antes.
+const handleError = async error => {
   if (error?.response?.status === 503) {
     motorDown.value = true;
-  } else {
-    errorMessage.value = error?.response?.data?.error || error?.message || '';
+    return;
   }
+  const data = error?.response?.data;
+  if (data instanceof Blob) {
+    try {
+      const parsed = JSON.parse(await blobToText(data));
+      errorMessage.value = parsed.error || t('RAMON.SIMULADOR.GENERIC_ERROR');
+    } catch {
+      errorMessage.value = t('RAMON.SIMULADOR.GENERIC_ERROR');
+    }
+    return;
+  }
+  errorMessage.value = data?.error || t('RAMON.SIMULADOR.GENERIC_ERROR');
 };
 
 const calcular = async () => {
@@ -103,7 +131,7 @@ const calcular = async () => {
     const { data } = await LeadsAPI.liquidacao(props.lead.id, payload());
     resultado.value = data;
   } catch (error) {
-    handleError(error);
+    await handleError(error);
   } finally {
     isLoading.value = false;
   }
@@ -125,7 +153,7 @@ const baixarPdf = async () => {
     link.click();
     URL.revokeObjectURL(url);
   } catch (error) {
-    handleError(error);
+    await handleError(error);
   } finally {
     pdfLoading.value = false;
   }
@@ -448,7 +476,7 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
         type="button"
         data-testid="liq-pdf-run"
         class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
-        :disabled="pdfLoading"
+        :disabled="pdfLoading || !canCalcular"
         @click="baixarPdf"
       >
         {{

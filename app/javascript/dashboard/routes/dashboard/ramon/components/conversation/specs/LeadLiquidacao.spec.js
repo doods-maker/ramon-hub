@@ -68,6 +68,59 @@ describe('LeadLiquidacao', () => {
     );
   });
 
+  it('mostra o erro do PDF mesmo vindo como blob (responseType: blob)', async () => {
+    LeadsAPI.liquidacao.mockResolvedValue({
+      data: { total_geral: '1.00', honorarios: {}, avisos: [] },
+    });
+    LeadsAPI.liquidacaoPdf.mockRejectedValue({
+      response: {
+        status: 422,
+        data: new Blob(
+          [JSON.stringify({ error: 'data_citacao anterior a dib' })],
+          { type: 'application/json' }
+        ),
+      },
+    });
+    const wrapper = mountLiq();
+    await wrapper.find('[data-testid="liq-rmi"]').setValue('1518.00');
+    await wrapper.find('[data-testid="liq-dib"]').setValue('2022-03-10');
+    await wrapper.find('[data-testid="liq-run"]').trigger('click');
+    await flushPromises();
+    await wrapper.find('[data-testid="liq-pdf-run"]').trigger('click');
+    await flushPromises();
+    await new Promise(resolve => {
+      setTimeout(resolve, 0);
+    });
+    await flushPromises();
+    expect(wrapper.find('[data-testid="liq-error"]').text()).toContain(
+      'data_citacao anterior a dib'
+    );
+  });
+
+  it('rmi com ponto de milhar ("1.518") desabilita calcular', async () => {
+    const wrapper = mountLiq();
+    await wrapper.find('[data-testid="liq-rmi"]').setValue('1.518');
+    await wrapper.find('[data-testid="liq-dib"]').setValue('2022-03-10');
+    expect(
+      wrapper.find('[data-testid="liq-run"]').attributes('disabled')
+    ).toBeDefined();
+  });
+
+  it('rmi com vírgula decimal ("1518,50") normaliza para ponto no payload', async () => {
+    LeadsAPI.liquidacao.mockResolvedValue({
+      data: { total_geral: '1.00', honorarios: {}, avisos: [] },
+    });
+    const wrapper = mountLiq();
+    await wrapper.find('[data-testid="liq-rmi"]').setValue('1518,50');
+    await wrapper.find('[data-testid="liq-dib"]').setValue('2022-03-10');
+    await wrapper.find('[data-testid="liq-run"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.liquidacao).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ rmi: '1518.50' })
+    );
+  });
+
   it('preencher() seta a RMI vinda do cartao', async () => {
     const wrapper = mountLiq();
     wrapper.vm.preencher('3396.58');
