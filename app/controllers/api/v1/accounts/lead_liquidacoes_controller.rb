@@ -97,18 +97,25 @@ class Api::V1::Accounts::LeadLiquidacoesController < Api::V1::Accounts::BaseCont
   end
 
   def motor_payload
-    payload = {
+    {
       rmi: format('%.2f', rmi),
       dib: permitted[:dib],
       no_piso: ActiveModel::Type::Boolean.new.cast(permitted[:no_piso]) || false,
       regime_pos_ec136: permitted[:regime_pos_ec136].presence || 'art406',
-      abatimentos: abatimentos.map { |a| { ano: a[:ano].to_i, mes: a[:mes].to_i, valor: format('%.2f', decimal(a[:valor])) } }
-    }
-    DATAS_OPCIONAIS.each { |campo| payload[campo] = permitted[campo] if permitted[campo].present? }
-    %i[honorarios_sucumbenciais_pct honorarios_contratuais_pct].each do |campo|
-      payload[campo] = permitted[campo].to_s if permitted[campo].present?
-    end
-    payload
+      abatimentos: abatimentos.map { |a| abatimento_payload(a) }
+    }.merge(payload_opcionais)
+  end
+
+  def abatimento_payload(abatimento)
+    { ano: abatimento[:ano].to_i, mes: abatimento[:mes].to_i, valor: format('%.2f', decimal(abatimento[:valor])) }
+  end
+
+  # datas passam cruas (já validadas ISO); percentuais viram string
+  def payload_opcionais
+    datas = DATAS_OPCIONAIS.select { |c| permitted[c].present? }.index_with { |c| permitted[c] }
+    pcts = %i[honorarios_sucumbenciais_pct honorarios_contratuais_pct]
+           .select { |c| permitted[c].present? }.index_with { |c| permitted[c].to_s }
+    datas.merge(pcts)
   end
 
   def cabecalho
