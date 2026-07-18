@@ -312,6 +312,9 @@ Rails.application.routes.draw do
             resource :simulacao, only: [:create], controller: 'lead_simulacoes'
             resource :painel, only: [:create], controller: 'lead_paineis'
             resource :cnis, only: [:show, :create, :destroy], controller: 'lead_cnis'
+            resource :liquidacao, only: [:create], controller: 'lead_liquidacoes' do
+              post :pdf
+            end
             resource :zapsign, only: [:create], controller: 'lead_zapsign'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
