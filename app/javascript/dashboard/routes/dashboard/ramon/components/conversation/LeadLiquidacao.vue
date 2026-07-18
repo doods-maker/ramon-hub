@@ -47,7 +47,10 @@ const decimalValido = v => /^\d+([.,]\d{1,2})?$/.test(v);
 const normDecimal = v => String(v).replace(',', '.');
 
 const canCalcular = computed(
-  () => decimalValido(form.value.rmi) && Boolean(form.value.dib)
+  () =>
+    decimalValido(form.value.rmi) &&
+    Number(normDecimal(form.value.rmi)) > 0 &&
+    Boolean(form.value.dib)
 );
 
 // Pré-preenche a RMI a partir de um cartão do painel (Task 5).
