@@ -648,6 +648,7 @@
       "PAINEL_FALTOU": "{requisito}: {atual} — faltou {faltou}",
       "PAINEL_DESCARTES": "Com Regra dos Descartes: {valor}",
       "PAINEL_PREVISAO": "Previsão de cumprimento: {data}",
+      "PAINEL_LIQUIDAR": "Gerar liquidação",
       "REQ_IDADE": "Idade",
       "REQ_TEMPO_CONTRIBUICAO": "Tempo de contribuição",
       "REQ_PONTOS": "Pontos",

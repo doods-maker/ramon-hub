@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
+import LeadLiquidacao from './LeadLiquidacao.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -302,6 +303,13 @@ const calcularPainel = async () => {
   } finally {
     painelLoading.value = false;
   }
+};
+
+const liquidacaoRef = ref(null);
+
+// RMI com descartes é a que o advogado usa na conta quando existe (é a maior).
+const liquidarCartao = cartao => {
+  liquidacaoRef.value?.preencher(cartao.rmi_com_descartes || cartao.rmi);
 };
 
 const bordaDe = cartao => {
@@ -940,6 +948,15 @@ const aba = ref('painel');
               })
             }}
           </span>
+          <button
+            v-if="cartao.rmi"
+            type="button"
+            class="self-start text-xs underline text-n-slate-11"
+            :data-testid="`sim-cartao-liquidar-${cartao.id}`"
+            @click="liquidarCartao(cartao)"
+          >
+            {{ $t('RAMON.SIMULADOR.PAINEL_LIQUIDAR') }}
+          </button>
         </div>
         <ul
           v-if="painel.avisos && painel.avisos.length"
@@ -948,6 +965,7 @@ const aba = ref('painel');
           <li v-for="(aviso, i) in painel.avisos" :key="i">{{ aviso }}</li>
         </ul>
       </div>
+      <LeadLiquidacao ref="liquidacaoRef" :lead="lead" />
     </div>
 
     <p

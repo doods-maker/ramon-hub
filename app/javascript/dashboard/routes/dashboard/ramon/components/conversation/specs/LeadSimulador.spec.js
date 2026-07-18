@@ -1,4 +1,4 @@
-import { shallowMount, flushPromises } from '@vue/test-utils';
+import { shallowMount, mount, flushPromises } from '@vue/test-utils';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadSimulador from '../LeadSimulador.vue';
 
@@ -52,6 +52,42 @@ const cnisResumo = {
   competencias: 110,
   vinculos: 9,
   avisos: ['03/2013: indicador pendente'],
+};
+
+// mount (não shallowMount) porque este fluxo precisa do LeadLiquidacao real,
+// não do stub, para checar o valor pré-preenchido no campo liq-rmi.
+const montarComPainelCalculado = async () => {
+  LeadsAPI.painel.mockResolvedValue({
+    data: {
+      resumo: {
+        idade: '51a, 3m e 5d',
+        tempo_contribuicao: '30a',
+        tempo_na_reforma: '25a',
+        carencia: 400,
+        media: '3651.92',
+      },
+      cartoes: [
+        {
+          id: 'idade_pre',
+          titulo: 'Aposentadoria por idade',
+          subtitulo: 'Pré-reforma. Aposentadoria. Idade.',
+          elegivel: false,
+          rmi: '3396.58',
+          rmi_com_descartes: '3500.00',
+          requisitos: [],
+        },
+      ],
+      avisos: [],
+    },
+  });
+  const wrapper = mount(LeadSimulador, {
+    props: { lead: { ...lead, cnis_resumo: cnisResumo } },
+    global: { mocks: { $t: k => k } },
+  });
+  await wrapper.find('[data-testid="sim-der"]').setValue('2026-06-30');
+  await wrapper.find('[data-testid="sim-painel-run"]').trigger('click');
+  await flushPromises();
+  return wrapper;
 };
 
 describe('LeadSimulador.vue', () => {
@@ -442,6 +478,16 @@ describe('LeadSimulador.vue', () => {
     await flushPromises();
     expect(wrapper.find('[data-testid="sim-error"]').text()).toContain(
       'benefício inválido'
+    );
+  });
+
+  it('gerar liquidacao pre-preenche a RMI do cartao (com descartes quando houver)', async () => {
+    const wrapper = await montarComPainelCalculado();
+    await wrapper
+      .find('[data-testid="sim-cartao-liquidar-idade_pre"]')
+      .trigger('click');
+    expect(wrapper.find('[data-testid="liq-rmi"]').element.value).toBe(
+      '3500.00'
     );
   });
 

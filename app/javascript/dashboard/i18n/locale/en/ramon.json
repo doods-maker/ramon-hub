@@ -648,6 +648,7 @@
       "PAINEL_FALTOU": "{requisito}: {atual} — missing {faltou}",
       "PAINEL_DESCARTES": "With discard rule: {valor}",
       "PAINEL_PREVISAO": "Expected fulfillment: {data}",
+      "PAINEL_LIQUIDAR": "Generate liquidation",
       "REQ_IDADE": "Age",
       "REQ_TEMPO_CONTRIBUICAO": "Contribution time",
       "REQ_PONTOS": "Points",
