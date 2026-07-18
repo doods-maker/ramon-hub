@@ -70,6 +70,16 @@ class LeadsAPI extends ApiClient {
     return axios.delete(`${this.url}/${leadId}/cnis`);
   }
 
+  liquidacao(leadId, payload) {
+    return axios.post(`${this.url}/${leadId}/liquidacao`, payload);
+  }
+
+  liquidacaoPdf(leadId, payload) {
+    return axios.post(`${this.url}/${leadId}/liquidacao/pdf`, payload, {
+      responseType: 'blob',
+    });
+  }
+
   createZapsign(leadId) {
     return axios.post(`${this.url}/${leadId}/zapsign`);
   }
