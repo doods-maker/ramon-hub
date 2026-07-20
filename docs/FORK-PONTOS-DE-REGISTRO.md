@@ -242,6 +242,7 @@
 | `app/javascript/dashboard/components-next/Conversation/SidepanelSwitch.vue` | prop `hideContact` — ConversationView esconde a pílula flutuante (só Copilot a mantém viva) | painel do lead saiu da pílula | painel-lead 20/07 |
 | `app/javascript/dashboard/routes/dashboard/conversation/ConversationView.vue` (1 linha) | `hide-contact` no SidepanelSwitch | idem | painel-lead 20/07 |
 | `app/javascript/dashboard/i18n/locale/pt_BR/conversation.json` (1 linha) | `CONVERSATION.SIDEBAR.CONTACT`: "Contatos" → "Painel do lead" | rótulo real do painel | painel-lead 20/07 |
+| `app/services/search_service.rb` (1 token) | `filter_leads` (bloco já do fork) ganhou `.funil` — caso de cálculo fora do Cmd+K | Cálculos-AdvBox 20/07 | calculos-advbox 20/07 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
