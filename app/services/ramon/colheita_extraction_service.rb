@@ -1,7 +1,9 @@
-# Extração estruturada da colheita da reunião (artefato 2 da colheita
-# aprovada em 15/07/2026) a partir do transcript da conversa — roda após
-# cada transcrição de áudio do Whisper. Preenche lead.custom_attributes['colheita']
-# (dados + lacunas) e dcb_em quando ainda vazio (relógio de prescrição).
+# Extração estruturada da colheita (artefato 2 da colheita aprovada em
+# 15/07/2026) a partir do transcript da conversa — roda após cada transcrição
+# de áudio do Whisper e, com debounce, após mensagens de chat do lead.
+# Preenche lead.custom_attributes['colheita'] (dados + lacunas), marca 'ia'
+# nos itens do checklist já respondidos (colheita_status, sem sobrescrever
+# escolha humana) e dcb_em quando ainda vazio (relógio de prescrição).
 class Ramon::ColheitaExtractionService
   # ponytail: schema aprovado só p/ auxílio-acidente; schema por tese quando houver outra colheita aprovada.
   THESIS_MATCH = /auxílio-acidente/i
@@ -24,7 +26,8 @@ class Ramon::ColheitaExtractionService
       "fechamento": {"honorario_apresentado": null, "simulacao_mostrada": null, "contrato_assinado": null,
                      "motivo_nao_assinatura": null, "objecoes": [], "sensibilidades": null},
       "confirmar": ["caminho.do.campo dito de forma incerta"],
-      "lacunas": [{"campo": "caminho.do.campo", "como_obter": "documento/fonte que resolve"}]
+      "lacunas": [{"campo": "caminho.do.campo", "como_obter": "documento/fonte que resolve"}],
+      "checklist_ok": [123]
     }
     Regras invioláveis:
     - NUNCA invente um dado. Campo não mencionado na conversa = null (ou lista vazia) + entrada em "lacunas".
@@ -33,6 +36,7 @@ class Ramon::ColheitaExtractionService
     - Valor dito de forma incerta na fala: preencha e liste o caminho do campo em "confirmar".
     - Tokens de máscara ([cpf], [rg], [telefone], [endereco], [email], [cep], [nome]) significam dado protegido: deixe o campo null e registre em "lacunas" com como_obter "confirmar no cadastro/documento".
     - "profissao" é a atividade habitual; "sequela.limitacao_concreta" é como a sequela reduz esse trabalho, em fatos.
+    - "checklist_ok": ids (números) dos itens do checklist listados na entrada que a conversa JÁ responde com clareza; na dúvida, NÃO inclua o item.
     Português do Brasil.
   PROMPT
 
@@ -76,10 +80,21 @@ class Ramon::ColheitaExtractionService
   end
 
   def call_llm(transcript)
-    text = "Tese: #{@lead.thesis.name}\n\n#{transcript}"
+    text = "Tese: #{@lead.thesis.name}\n\n#{checklist_block}#{transcript}"
     text = Ramon::Pseudonymizer.mask(text, names: [@lead.name, @lead.contact&.name]) unless sensitive_ok?
     Ramon::LlmClient.complete(provider: provider, model: model,
                               system: SYSTEM_PROMPT, user: text, sensitive: sensitive_ok?)
+  end
+
+  def checklist_items
+    @checklist_items ||= @lead.thesis.thesis_items.where(section: 'colheita')
+  end
+
+  def checklist_block
+    return '' if checklist_items.empty?
+
+    lines = checklist_items.map { |item| "#{item.id}: #{item.title.presence || item.content}" }
+    "Itens do checklist da colheita (id: item):\n#{lines.join("\n")}\n\n"
   end
 
   def conversation_transcript
@@ -119,17 +134,32 @@ class Ramon::ColheitaExtractionService
   # do dcb_em avaliaria dado obsoleto, sobrescrevendo valor humano).
   def write_back(dados)
     @lead.reload
-    attrs = {
-      custom_attributes: (@lead.custom_attributes || {}).merge('colheita' => colheita_payload(dados))
-    }
+    attrs = { custom_attributes: merged_custom_attributes(dados) }
     dcb = extracted_dcb(dados)
     attrs[:dcb_em] = dcb if dcb && @lead.dcb_em.blank?
     @lead.update!(attrs)
   end
 
+  def merged_custom_attributes(dados)
+    merged = (@lead.custom_attributes || {}).merge('colheita' => colheita_payload(dados))
+    status = checklist_status_with_ai(dados, merged['colheita_status'] || {})
+    merged['colheita_status'] = status if status
+    merged
+  end
+
+  # Itens do checklist que a conversa já responde ganham 'ia' — mas SÓ em chave
+  # que o humano nunca tocou: true (marcou) e false (desmarcou = veto) são dele.
+  def checklist_status_with_ai(dados, current)
+    valid_ids = checklist_items.map { |item| item.id.to_s }
+    additions = (Array(dados['checklist_ok']).map(&:to_s) & valid_ids).reject { |id| current.key?(id) }
+    return nil if additions.empty?
+
+    current.merge(additions.index_with { 'ia' })
+  end
+
   def colheita_payload(dados)
     {
-      'dados' => dados.except('lacunas', 'confirmar'),
+      'dados' => dados.except('lacunas', 'confirmar', 'checklist_ok'),
       'lacunas' => lacuna_list(dados['lacunas']),
       'confirmar' => Array(dados['confirmar']).map(&:to_s).reject(&:empty?),
       'extraida_em' => Time.zone.now.iso8601,

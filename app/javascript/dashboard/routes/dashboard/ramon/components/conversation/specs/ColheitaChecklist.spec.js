@@ -78,13 +78,54 @@ describe('ColheitaChecklist.vue', () => {
     });
   });
 
-  it('unchecks a checked item removing it from the map', async () => {
+  it('unchecks a checked item writing an explicit false (AI veto)', async () => {
     const update = vi.fn();
     const wrapper = mountChecklist(baseLead, update);
     await wrapper.findAll('[data-testid="colheita-item"]')[0].trigger('click');
     expect(update).toHaveBeenCalledWith(expect.anything(), {
       id: 3,
-      custom_attributes: { foo: 'bar', colheita_status: {} },
+      custom_attributes: { foo: 'bar', colheita_status: { 7: false } },
+    });
+  });
+
+  it('counts AI-checked items as done and shows the AI badge', () => {
+    const lead = {
+      ...baseLead,
+      custom_attributes: { colheita_status: { 7: 'ia' } },
+    };
+    const wrapper = mountChecklist(lead);
+    const badges = wrapper.findAll('[data-testid="colheita-ai-badge"]');
+    expect(badges).toHaveLength(1);
+    const items = wrapper.findAll('[data-testid="colheita-item"]');
+    expect(items[0].classes()).toContain('bg-n-teal-3');
+    expect(items[1].classes()).toContain('bg-n-amber-3');
+  });
+
+  it('unchecking an AI-checked item also writes false', async () => {
+    const update = vi.fn();
+    const lead = {
+      ...baseLead,
+      custom_attributes: { colheita_status: { 7: 'ia' } },
+    };
+    const wrapper = mountChecklist(lead, update);
+    await wrapper.findAll('[data-testid="colheita-item"]')[0].trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      custom_attributes: { colheita_status: { 7: false } },
+    });
+  });
+
+  it('re-checks a vetoed item back to a manual true', async () => {
+    const update = vi.fn();
+    const lead = {
+      ...baseLead,
+      custom_attributes: { colheita_status: { 7: false } },
+    };
+    const wrapper = mountChecklist(lead, update);
+    await wrapper.findAll('[data-testid="colheita-item"]')[0].trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      custom_attributes: { colheita_status: { 7: true } },
     });
   });
 

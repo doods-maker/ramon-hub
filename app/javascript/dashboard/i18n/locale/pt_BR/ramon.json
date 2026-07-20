@@ -494,6 +494,8 @@
       "COUNT": "{done}/{total} colhidos",
       "LACUNAS_TITLE": "Lacunas da reunião (IA)",
       "EXTRACTED_AT": "Extraído da conversa em {date}",
+      "AI_BADGE": "✨ IA",
+      "AI_BADGE_TIP": "Marcado pela IA a partir da conversa — clique para desfazer",
       "CHARGE": "Pedir documentos das lacunas",
       "COPIED": "Rascunho copiado — revise e cole no WhatsApp",
       "DRAFT": {
