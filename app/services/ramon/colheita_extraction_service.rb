@@ -3,7 +3,8 @@
 # de áudio do Whisper e, com debounce, após mensagens de chat do lead.
 # Preenche lead.custom_attributes['colheita'] (dados + lacunas), marca 'ia'
 # nos itens do checklist já respondidos (colheita_status, sem sobrescrever
-# escolha humana) e dcb_em quando ainda vazio (relógio de prescrição).
+# escolha humana), CPF/nascimento vazios do contato (cadastro) e dcb_em
+# quando ainda vazio (relógio de prescrição).
 class Ramon::ColheitaExtractionService
   # ponytail: schema aprovado só p/ auxílio-acidente; schema por tese quando houver outra colheita aprovada.
   THESIS_MATCH = /auxílio-acidente/i
@@ -134,10 +135,36 @@ class Ramon::ColheitaExtractionService
   # do dcb_em avaliaria dado obsoleto, sobrescrevendo valor humano).
   def write_back(dados)
     @lead.reload
+    fill_contact_blanks(dados['cliente'])
     attrs = { custom_attributes: merged_custom_attributes(dados) }
     dcb = extracted_dcb(dados)
     attrs[:dcb_em] = dcb if dcb && @lead.dcb_em.blank?
     @lead.update!(attrs)
+  end
+
+  # Cadastro: CPF e nascimento têm coluna própria no contato (Linha da Vida,
+  # ZapSign) — a extração preenche SÓ campo vazio; dado humano nunca é tocado.
+  # Roda antes do update! do lead pro broadcast já sair com o contato novo.
+  def fill_contact_blanks(cliente)
+    contact = @lead.contact
+    return if contact.blank? || !cliente.is_a?(Hash)
+
+    updates = contact_updates(contact, cliente)
+    return if updates.empty?
+    return if contact.update(updates)
+
+    # CPF inválido/duplicado não pode derrubar a colheita: tenta sem ele.
+    updates.delete(:cpf)
+    contact.reload.update(updates) if updates.any?
+  end
+
+  def contact_updates(contact, cliente)
+    updates = {}
+    cpf = cliente['cpf'].to_s.gsub(/\D/, '')
+    updates[:cpf] = cpf if contact.cpf.blank? && cpf.present?
+    nascimento = parse_date(cliente['nascimento'])
+    updates[:data_nascimento] = nascimento if contact.data_nascimento.blank? && nascimento
+    updates
   end
 
   def merged_custom_attributes(dados)

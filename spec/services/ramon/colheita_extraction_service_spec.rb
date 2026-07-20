@@ -150,6 +150,49 @@ RSpec.describe Ramon::ColheitaExtractionService do
     end
   end
 
+  describe 'cadastro do contato a partir da colheita' do
+    let(:contact) { create(:contact, account: account, name: 'João') }
+    let(:lead) do
+      create(:lead, account: account, name: 'João da Silva', thesis: thesis,
+                    conversation: conversation, contact: contact)
+    end
+
+    def colheita_json_cliente(cliente)
+      base = JSON.parse(colheita_json)
+      base['cliente'] = base['cliente'].merge(cliente)
+      base.to_json
+    end
+
+    it 'preenche cpf e nascimento vazios do contato' do
+      json = colheita_json_cliente('cpf' => '529.982.247-25', 'nascimento' => '1985-03-10')
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(json))
+      described_class.new(lead).perform
+      contact.reload
+      expect(contact.cpf).to eq('52998224725')
+      expect(contact.data_nascimento).to eq(Date.new(1985, 3, 10))
+    end
+
+    it 'não sobrescreve cpf/nascimento já preenchidos por humano' do
+      contact.update!(cpf: '52998224725', data_nascimento: Date.new(1990, 1, 1))
+      json = colheita_json_cliente('cpf' => '111.111.111-11', 'nascimento' => '1985-03-10')
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(json))
+      described_class.new(lead).perform
+      contact.reload
+      expect(contact.cpf).to eq('52998224725')
+      expect(contact.data_nascimento).to eq(Date.new(1990, 1, 1))
+    end
+
+    it 'cpf inválido não entra nem derruba a colheita (nascimento ainda preenche)' do
+      json = colheita_json_cliente('cpf' => '123.456.789-00', 'nascimento' => '1985-03-10')
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(json))
+      described_class.new(lead).perform
+      contact.reload
+      expect(contact.cpf).to be_nil
+      expect(contact.data_nascimento).to eq(Date.new(1985, 3, 10))
+      expect(lead.reload.custom_attributes.dig('colheita', 'dados', 'acidente', 'tipo')).to eq('trabalho')
+    end
+  end
+
   it 'repropaga TransientError para o retry do job' do
     allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, '429')
     expect { described_class.new(lead).perform }.to raise_error(Ramon::LlmClient::TransientError)
