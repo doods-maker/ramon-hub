@@ -20,6 +20,31 @@ class Ramon::MotorClient
     post_json('/painel', payload, read_timeout: 30)
   end
 
+  # Liquidação de sentença (F3 do motor): parcelas devidas + atualização +
+  # honorários. Payload JSON (rmi/dib obrigatórios; ver LiquidacaoIn no motor).
+  def self.liquidacao(payload)
+    post_json('/liquidacao', payload, read_timeout: 30)
+  end
+
+  # Mesma conta em PDF (A4 paisagem). Devolve os BYTES crus — sem parse — pro
+  # controller repassar via send_data.
+  def self.liquidacao_pdf(payload)
+    base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
+    raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
+
+    response = HTTParty.post("#{base.chomp('/')}/liquidacao/pdf",
+                             headers: { 'Content-Type' => 'application/json' },
+                             body: payload.to_json,
+                             open_timeout: OPEN_TIMEOUT,
+                             read_timeout: 30)
+    return response.body if response.success?
+    raise ValidationError, detail_de(response) if response.code == 422
+
+    raise UnavailableError, "motor indisponível: respondeu HTTP #{response.code}"
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
+    raise UnavailableError, "motor indisponível: #{e.message}"
+  end
+
   def self.post_json(path, payload, read_timeout: READ_TIMEOUT)
     base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
     raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
