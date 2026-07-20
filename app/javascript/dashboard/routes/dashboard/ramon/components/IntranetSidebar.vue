@@ -140,10 +140,10 @@ const isActive = item => item.names?.includes(route.name);
           :title="item.label"
           class="flex items-center h-8 gap-2 px-2 text-sm rounded-lg"
           :class="[
-            item.soon
-              ? 'text-n-slate-9 cursor-default'
-              : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12',
-            isActive(item) ? 'bg-n-alpha-2 text-n-iris-11' : '',
+            item.soon ? 'text-n-slate-9 cursor-default' : 'hover:bg-n-alpha-2',
+            !item.soon && isActive(item)
+              ? 'bg-n-alpha-2 text-n-iris-11'
+              : !item.soon && 'text-n-slate-11 hover:text-n-slate-12',
           ]"
         >
           <span :class="item.icon" class="flex-shrink-0 size-4" />

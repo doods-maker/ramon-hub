@@ -40,6 +40,18 @@ const normalizeUrl = raw => {
   return parseHttpUrl(url) || parseHttpUrl(`https://${url}`);
 };
 
+// Blur da URL inline passa pela MESMA validação do add (bloqueia javascript:
+// e URL vazia/inválida — senão o rail renderizava href cru).
+const persistUrl = s => {
+  const url = normalizeUrl(s.url || '');
+  if (!url) {
+    urlError.value = true;
+    return;
+  }
+  s.url = url;
+  persist();
+};
+
 const add = () => {
   if (!draft.value.label || !draft.value.url) return;
   const url = normalizeUrl(draft.value.url);
@@ -87,7 +99,8 @@ const confirmRemove = () => {
           data-testid="shortcut-url-input"
           class="flex-1 min-w-0 px-2 py-1 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
           :placeholder="t('RAMON.SHORTCUTS.URL')"
-          @blur="persist"
+          @blur="persistUrl(s)"
+          @input="urlError = false"
         />
         <button
           data-testid="shortcut-remove"

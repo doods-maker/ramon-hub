@@ -203,7 +203,7 @@ const blockLabelKey = block => `RAMON.KIT.BLOCKS.${block.toUpperCase()}`;
           class="self-start text-xs text-n-slate-10 hover:underline"
           @click="loadTriages"
         >
-          {{ $t('RAMON.TRIAGE.REFRESH') }}
+          {{ $t('RAMON.KIT.REFRESH') }}
         </button>
 
         <p

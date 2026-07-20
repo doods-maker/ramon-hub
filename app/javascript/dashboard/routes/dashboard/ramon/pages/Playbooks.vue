@@ -207,11 +207,15 @@ const removeItem = item => {
 const confirmRemoveItem = () => {
   const item = itemToRemove.value;
   itemToRemove.value = null;
-  delete itemDrafts[item.id];
-  store.dispatch('theses/deleteItem', {
-    thesisId: selectedThesis.value.id,
-    id: item.id,
-  });
+  // o draft só pode sumir DEPOIS do item sair do store (o template lê
+  // itemDrafts[item.id] enquanto o refetch não resolve)
+  store
+    .dispatch('theses/deleteItem', {
+      thesisId: selectedThesis.value.id,
+      id: item.id,
+    })
+    .then(() => delete itemDrafts[item.id])
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
 const sectionLabelKey = section =>

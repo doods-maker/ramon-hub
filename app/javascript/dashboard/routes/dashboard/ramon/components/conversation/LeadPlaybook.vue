@@ -110,6 +110,21 @@ const sectionLabelKey = section =>
     >
       {{ $t('RAMON.PLAYBOOK.LOADING') }}
     </p>
+    <div
+      v-else-if="loadFailed"
+      class="flex items-center gap-2"
+      data-testid="playbook-error"
+    >
+      <p class="text-sm text-n-slate-10">
+        {{ $t('RAMON.PLAYBOOK.LOAD_ERROR') }}
+      </p>
+      <button
+        class="text-sm text-n-iris-11 hover:underline"
+        @click="ensureItems"
+      >
+        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
+    </div>
     <p
       v-else-if="!sections.length"
       class="text-sm text-n-slate-10"

@@ -270,8 +270,13 @@ const submit = async () => {
             data-testid="new-lead-value"
             type="text"
             inputmode="decimal"
-            class="w-full px-3 py-2 mb-4 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
+            class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border outline-none focus:border-n-slate-8"
+            :class="isValueInvalid ? 'border-n-ruby-8' : 'border-transparent'"
           />
+          <p v-if="isValueInvalid" class="mt-1 mb-2 text-xs text-n-ruby-11">
+            {{ $t('RAMON.FUNIL.WON.INVALID') }}
+          </p>
+          <div v-else class="mb-4" />
         </div>
         <div class="flex-1">
           <label class="block mb-1 text-xs text-n-slate-10">{{

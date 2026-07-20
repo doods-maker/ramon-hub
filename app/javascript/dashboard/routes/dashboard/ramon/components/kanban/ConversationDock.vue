@@ -4,6 +4,11 @@ import { onKeyStroke } from '@vueuse/core';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import ConversationBox from 'dashboard/components/widgets/conversation/ConversationBox.vue';
 
+const props = defineProps({
+  // Board com modal aberto: Esc é do modal, não do dock.
+  suspendEsc: { type: Boolean, default: false },
+});
+
 defineOptions({ name: 'ConversationDock' });
 
 const store = useStore();
@@ -46,7 +51,7 @@ const retry = () => activate(dockId.value);
 
 const close = () => store.dispatch('leads/closeDock');
 onKeyStroke('Escape', () => {
-  if (isOpen.value) close();
+  if (isOpen.value && !props.suspendEsc) close();
 });
 </script>
 

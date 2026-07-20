@@ -204,9 +204,8 @@
         "REMOVE_CONFIRM": "Remover",
         "CANCEL": "Cancelar",
         "MENU": "Opções da etapa",
-        "REMOVE_TITLE_EMPTY": "Remover \"{name}\"?",
-        "REMOVE_COUNT": "{count} lead(s) nesta etapa serão movidos para a etapa destino.",
-        "REMOVE_EMPTY": "Etapa vazia — pode remover direto.",
+        "REMOVE_COUNT": "{count} lead(s) visíveis nesta etapa serão movidos para a etapa destino.",
+        "REMOVE_EMPTY": "Nenhum lead visível nesta etapa — se houver leads fora do filtro atual, serão movidos para a etapa destino.",
         "REMOVE_NO_TARGET": "Não há outra etapa para receber os leads — crie uma antes de remover."
       },
       "FILTERS": {
@@ -471,7 +470,8 @@
         "DOCUMENTO": "Documentos"
       },
       "LOADING": "Carregando playbook…",
-      "NO_ITEMS": "Nenhum item de playbook nesta tese ainda."
+      "NO_ITEMS": "Nenhum item de playbook nesta tese ainda.",
+      "LOAD_ERROR": "Não foi possível carregar o playbook."
     },
     "ZAPSIGN": {
       "TITLE": "Contrato",
@@ -609,7 +609,8 @@
         "VENDA_OBJECOES": "Venda e objeções",
         "PROXIMO_PASSO": "Próximo passo"
       },
-      "LOADING": "Carregando kit…"
+      "LOADING": "Carregando kit…",
+      "REFRESH": "Atualizar"
     },
     "SIMULADOR": {
       "TAB": "Simulador",

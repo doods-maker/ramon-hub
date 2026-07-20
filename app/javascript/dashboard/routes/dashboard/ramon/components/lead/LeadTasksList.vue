@@ -46,8 +46,13 @@ const justCompleted = ref(null);
 
 // checkbox controlado + guard durante o voo: falha deixava marcado sem concluir
 const completingId = ref(null);
-const complete = async task => {
-  if (completingId.value) return;
+const complete = async (task, event) => {
+  if (completingId.value) {
+    // outra conclusão em voo: desfaz o toggle nativo que o clique já pintou
+    // (o vnode não repatcha porque o :checked bound não mudou)
+    if (event?.target) event.target.checked = Boolean(task.completed_at);
+    return;
+  }
   completingId.value = task.id;
   try {
     await store.dispatch('leadTasks/complete', {
@@ -138,7 +143,7 @@ const addTask = async () => {
           :title="$t('RAMON.TASKS.COMPLETE')"
           :checked="Boolean(task.completed_at) || completingId === task.id"
           :disabled="completingId === task.id"
-          @change="complete(task)"
+          @change="complete(task, $event)"
         />
         <span class="flex-1 text-sm text-n-slate-12">{{ task.title }}</span>
         <span

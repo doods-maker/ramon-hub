@@ -204,9 +204,8 @@
         "REMOVE_CONFIRM": "Remove",
         "CANCEL": "Cancel",
         "MENU": "Stage options",
-        "REMOVE_TITLE_EMPTY": "Remove \"{name}\"?",
-        "REMOVE_COUNT": "{count} lead(s) in this stage will be moved to the target stage.",
-        "REMOVE_EMPTY": "Empty stage — safe to remove.",
+        "REMOVE_COUNT": "{count} visible lead(s) in this stage will be moved to the target stage.",
+        "REMOVE_EMPTY": "No visible leads in this stage — any leads outside the current filter will be moved to the target stage.",
         "REMOVE_NO_TARGET": "There's no other stage to receive the leads — create one before removing."
       },
       "FILTERS": {
@@ -471,7 +470,8 @@
         "DOCUMENTO": "Documents"
       },
       "LOADING": "Loading playbook…",
-      "NO_ITEMS": "No playbook items for this thesis yet."
+      "NO_ITEMS": "No playbook items for this thesis yet.",
+      "LOAD_ERROR": "Could not load the playbook."
     },
     "ZAPSIGN": {
       "TITLE": "Contract",
@@ -609,7 +609,8 @@
         "VENDA_OBJECOES": "Pitch and objections",
         "PROXIMO_PASSO": "Next step"
       },
-      "LOADING": "Loading kit…"
+      "LOADING": "Loading kit…",
+      "REFRESH": "Refresh"
     },
     "SIMULADOR": {
       "TAB": "Simulator",

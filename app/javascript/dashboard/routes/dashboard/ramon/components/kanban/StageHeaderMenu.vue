@@ -49,10 +49,12 @@ const onAnyScroll = () => close();
 const bindGlobal = () => {
   document.addEventListener('keydown', onDocKeydown);
   document.addEventListener('scroll', onAnyScroll, true);
+  window.addEventListener('resize', onAnyScroll);
 };
 const unbindGlobal = () => {
   document.removeEventListener('keydown', onDocKeydown);
   document.removeEventListener('scroll', onAnyScroll, true);
+  window.removeEventListener('resize', onAnyScroll);
 };
 
 const toggle = () => {

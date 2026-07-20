@@ -259,8 +259,12 @@ const onRemoveStage = stage => {
   stageToRemove.value = stage;
 };
 const confirmRemove = async ({ id, moveToStageId }) => {
-  await store.dispatch('leadConfig/deleteStage', { id, moveToStageId });
-  stageToRemove.value = null;
+  try {
+    await store.dispatch('leadConfig/deleteStage', { id, moveToStageId });
+    stageToRemove.value = null;
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  }
 };
 const addStage = () => {
   newStageModalOpen.value = true;
@@ -269,7 +273,11 @@ const confirmAddStage = async name => {
   // Fechar antes do dispatch = guard contra duplo-fire do confirm.
   if (!newStageModalOpen.value) return;
   newStageModalOpen.value = false;
-  await store.dispatch('leadConfig/createStage', { name });
+  try {
+    await store.dispatch('leadConfig/createStage', { name });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  }
 };
 const onColumnsReorder = () => {
   store.dispatch(
@@ -382,7 +390,7 @@ const exportCsv = () => {
       <div
         v-for="n in 4"
         :key="n"
-        class="w-72 h-full max-h-72 flex-shrink-0 rounded-xl bg-n-alpha-2 animate-pulse"
+        class="w-72 h-full flex-shrink-0 rounded-xl bg-n-alpha-2 animate-pulse"
       />
     </div>
     <!-- min-h-0 permite a faixa encolher dentro do flex pai; sem isso a coluna
@@ -420,7 +428,7 @@ const exportCsv = () => {
       </button>
     </div>
     <LeadDrawer @open-conversation="onOpenConversation" />
-    <ConversationDock />
+    <ConversationDock :suspend-esc="anyModalOpen()" />
     <Transition
       enter-active-class="transition-opacity duration-150"
       leave-active-class="transition-opacity duration-150"
