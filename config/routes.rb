@@ -315,6 +315,7 @@ Rails.application.routes.draw do
             end
             resource :simulacao, only: [:create], controller: 'lead_simulacoes'
             resource :painel, only: [:create], controller: 'lead_paineis'
+            resource :colheita, only: [:create], controller: 'lead_colheitas'
             resource :cnis, only: [:show, :create, :destroy], controller: 'lead_cnis'
             resource :liquidacao, only: [:create], controller: 'lead_liquidacoes' do
               post :pdf
@@ -657,13 +658,10 @@ Rails.application.routes.draw do
 
         # Ramon — servidor MCP p/ os Claude Cowork (item 29): leitura e escrita
         # (AdvBox). GET/DELETE = 405 (sem stream SSE). Token via ?token= (o
-        # filter_parameters mascara no log); a variante no path é legado até os
-        # connectors do Cowork trocarem de URL — ela vaza o token na linha
-        # "Started POST" do log.
+        # filter_parameters mascara no log). A rota antiga com o token no PATH
+        # foi removida 20/07 (vazava o token no log) — connectors migrados.
         post 'mcp', to: 'mcp#create'
         match 'mcp', to: 'mcp#not_allowed', via: [:get, :delete]
-        post 'mcp/:token', to: 'mcp#create'
-        match 'mcp/:token', to: 'mcp#not_allowed', via: [:get, :delete]
       end
     end
   end

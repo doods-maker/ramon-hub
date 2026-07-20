@@ -83,6 +83,10 @@ class LeadsAPI extends ApiClient {
   createZapsign(leadId) {
     return axios.post(`${this.url}/${leadId}/zapsign`);
   }
+
+  extractColheita(leadId) {
+    return axios.post(`${this.url}/${leadId}/colheita`);
+  }
 }
 
 export default new LeadsAPI();

@@ -498,6 +498,8 @@
     "COLHEITA": {
       "TITLE": "O que falta perguntar",
       "COUNT": "{done}/{total} colhidos",
+      "EXTRACT": "Extrair da conversa",
+      "EXTRACT_REQUESTED": "Extração pedida — a colheita atualiza em alguns segundos",
       "LACUNAS_TITLE": "Lacunas da reunião (IA)",
       "EXTRACTED_AT": "Extraído da conversa em {date}",
       "AI_BADGE": "✨ IA",

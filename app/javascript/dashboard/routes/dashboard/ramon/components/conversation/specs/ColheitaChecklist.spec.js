@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils';
+import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import ColheitaChecklist from '../ColheitaChecklist.vue';
 
@@ -6,11 +6,15 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 
 const alertSpy = vi.fn();
 const clipboardSpy = vi.fn();
+const extractSpy = vi.fn(() => Promise.resolve());
 vi.mock('dashboard/composables', () => ({
   useAlert: (...a) => alertSpy(...a),
 }));
 vi.mock('shared/helpers/clipboard', () => ({
   copyTextToClipboard: (...a) => clipboardSpy(...a),
+}));
+vi.mock('dashboard/api/leads', () => ({
+  default: { extractColheita: (...a) => extractSpy(...a) },
 }));
 
 const thesis = {
@@ -168,5 +172,15 @@ describe('ColheitaChecklist.vue', () => {
     expect(wrapper.find('[data-testid="colheita-lacunas"]').exists()).toBe(
       false
     );
+  });
+
+  it('requests an on-demand extraction and alerts', async () => {
+    extractSpy.mockClear();
+    alertSpy.mockClear();
+    const wrapper = mountChecklist(baseLead);
+    await wrapper.find('[data-testid="colheita-extract"]').trigger('click');
+    await flushPromises();
+    expect(extractSpy).toHaveBeenCalledWith(3);
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.COLHEITA.EXTRACT_REQUESTED');
   });
 });

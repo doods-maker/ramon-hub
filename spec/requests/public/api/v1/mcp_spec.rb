@@ -5,7 +5,7 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
 
   def post_mcp(body, path_token: token, mcp_token: 'token-mcp-teste', advbox_token: 'token-advbox')
     with_modified_env(RAMON_MCP_TOKEN: mcp_token, ADVBOX_API_TOKEN: advbox_token) do
-      post "/public/api/v1/mcp/#{path_token}", params: body.to_json, headers: { 'CONTENT_TYPE' => 'application/json' }
+      post "/public/api/v1/mcp?token=#{path_token}", params: body.to_json, headers: { 'CONTENT_TYPE' => 'application/json' }
     end
   end
 
@@ -22,13 +22,6 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
     it 'rejeita quando o token não está configurado no servidor' do
       post_mcp(rpc('tools/list'), mcp_token: nil)
       expect(response).to have_http_status(:unauthorized)
-    end
-
-    it 'GET responde 405 (sem stream SSE)' do
-      with_modified_env(RAMON_MCP_TOKEN: token) do
-        get "/public/api/v1/mcp/#{token}"
-      end
-      expect(response).to have_http_status(:method_not_allowed)
     end
 
     it 'aceita o token via query string (rota sem token no path)' do

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import LeadsAPI from 'dashboard/api/leads';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -65,6 +66,22 @@ const toggle = async item => {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
   } finally {
     pendingIds.value.delete(item.id);
+  }
+};
+
+// extração sob demanda (decisão 20/07): o botão dispara o job; o resultado
+// chega pelo broadcast do lead (custom_attributes.colheita) em alguns segundos.
+const extracting = ref(false);
+const extractColheita = async () => {
+  if (extracting.value) return;
+  extracting.value = true;
+  try {
+    await LeadsAPI.extractColheita(props.lead.id);
+    useAlert(t('RAMON.COLHEITA.EXTRACT_REQUESTED'));
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    extracting.value = false;
   }
 };
 
@@ -131,6 +148,24 @@ const chargeLacunas = async () => {
         })
       }}</span>
     </div>
+
+    <button
+      type="button"
+      data-testid="colheita-extract"
+      class="self-start flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-60 disabled:cursor-not-allowed"
+      :disabled="extracting"
+      @click="extractColheita"
+    >
+      <span
+        class="size-3.5"
+        :class="
+          extracting
+            ? 'i-lucide-loader-circle animate-spin'
+            : 'i-lucide-sparkles'
+        "
+      />
+      {{ $t('RAMON.COLHEITA.EXTRACT') }}
+    </button>
 
     <button
       v-for="item in colheitaItems"

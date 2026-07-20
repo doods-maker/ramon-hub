@@ -21,8 +21,6 @@ class RamonLeadListener < BaseListener
     end
   end
 
-  COLHEITA_DEBOUNCE = 3.minutes
-
   def message_created(event)
     message = event.data[:message]
     return unless message.incoming?
@@ -31,7 +29,6 @@ class RamonLeadListener < BaseListener
     return if lead.blank?
 
     apply_meta_referral(lead, message)
-    schedule_colheita(lead, message)
   end
 
   def lead_created(event)
@@ -70,14 +67,6 @@ class RamonLeadListener < BaseListener
       attrs[:channel] = 'meta_ads'
     end
     lead.update!(attrs)
-  end
-
-  # Colheita automática: mensagem nova do lead agenda a extração da conversa
-  # com debounce — o job só roda se ainda for a última mensagem da rajada.
-  def schedule_colheita(lead, message)
-    return unless lead.thesis&.name&.match?(Ramon::ColheitaExtractionService::THESIS_MATCH)
-
-    Ramon::ColheitaExtractionJob.set(wait: COLHEITA_DEBOUNCE).perform_later(message.id, debounce: true)
   end
 
   def referral_source_label(referral)

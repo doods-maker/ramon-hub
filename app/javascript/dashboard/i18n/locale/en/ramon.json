@@ -498,6 +498,8 @@
     "COLHEITA": {
       "TITLE": "Still to ask",
       "COUNT": "{done}/{total} collected",
+      "EXTRACT": "Extract from conversation",
+      "EXTRACT_REQUESTED": "Extraction requested — the harvest updates in a few seconds",
       "LACUNAS_TITLE": "Meeting gaps (AI)",
       "EXTRACTED_AT": "Extracted from the conversation at {date}",
       "AI_BADGE": "✨ AI",
