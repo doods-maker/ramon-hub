@@ -8,7 +8,7 @@
 # concluir/editar/apagar tarefa nem delete de nada.
 class Ramon::AdvboxMcpService
   PROTOCOL_VERSIONS = %w[2025-06-18 2025-03-26 2024-11-05].freeze
-  SERVER_INFO = { name: 'ramon-hub-advbox', version: '1.1.0' }.freeze
+  SERVER_INFO = { name: 'ramon-hub-advbox', version: '1.2.0' }.freeze
   INSTRUCTIONS = 'Consulta e escrita na gestão processual (AdvBox) da banca Ramon Antônio Advogados. ' \
                  'Datas no formato YYYY-MM-DD. Resultados são JSON cru da API; pagine com "limite" quando a lista vier grande. ' \
                  'As ferramentas advbox_criar_*/advbox_editar_* gravam DE VERDADE no AdvBox: antes de usar, chame advbox_configuracoes ' \
@@ -66,11 +66,14 @@ class Ramon::AdvboxMcpService
                    'financeiro (contas, categorias, centros de custo). Consulte SEMPRE antes de qualquer advbox_criar_*/advbox_editar_*.',
       inputSchema: { type: 'object', properties: {}, required: [] } },
     { name: 'advbox_criar_tarefa',
-      description: 'Cria uma tarefa num processo do AdvBox. IDs vêm de advbox_configuracoes (tipo_tarefa_id = tasks; responsavel_id = users).',
+      description: 'Cria uma tarefa num processo do AdvBox. IDs vêm de advbox_configuracoes (tipo_tarefa_id = tasks; responsavel_id = users). ' \
+                   'Com hora_inicio a tarefa entra no calendário/agenda do AdvBox (ex.: reunião com horário marcado).',
       inputSchema: { type: 'object',
                      properties: { processo_id: { type: 'integer' }, tipo_tarefa_id: { type: 'integer' },
                                    responsavel_id: { type: 'integer', description: 'Usuário responsável (também assina como criador)' },
                                    data: { type: 'string', description: 'Início, YYYY-MM-DD (padrão: hoje)' },
+                                   hora_inicio: { type: 'string', description: 'HH:MM — com hora a tarefa cai no calendário' },
+                                   hora_fim: { type: 'string', description: 'HH:MM — término (no mesmo dia do início)' },
                                    prazo: { type: 'string', description: 'Prazo fatal, YYYY-MM-DD' },
                                    descricao: { type: 'string' }, urgente: { type: 'boolean' }, importante: { type: 'boolean' } },
                      required: %w[processo_id tipo_tarefa_id responsavel_id] } },
@@ -211,8 +214,12 @@ class Ramon::AdvboxMcpService
 
   def self.tarefa_payload(args)
     responsavel = args.fetch('responsavel_id')
+    inicio = args['data'].presence || Time.zone.today.iso8601
     { from: responsavel.to_s, guests: [responsavel], tasks_id: args.fetch('tipo_tarefa_id').to_s,
-      lawsuits_id: args.fetch('processo_id').to_s, start_date: args['data'].presence || Time.zone.today.iso8601,
+      lawsuits_id: args.fetch('processo_id').to_s, start_date: inicio,
+      start_time: args['hora_inicio'].presence,
+      # A API ignora end_time sem end_date — tarefa com hora é sempre no mesmo dia.
+      end_time: args['hora_fim'].presence, end_date: args['hora_fim'].presence && inicio,
       date_deadline: args['prazo'], comments: args['descricao'],
       urgent: args['urgente'], important: args['importante'] }.compact
   end
