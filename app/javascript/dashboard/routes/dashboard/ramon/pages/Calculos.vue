@@ -37,10 +37,18 @@ watch(() => route.params.leadId, fetchLead, { immediate: true });
 const query = ref('');
 const results = ref([]);
 const searching = ref(false);
+const selectedContact = ref(null);
+const contactLeads = ref([]);
+const loadingLeads = ref(false);
+const leadsError = ref(false);
 let searchTimer = null;
 let searchAbort = null;
 watch(query, value => {
   clearTimeout(searchTimer);
+  // Nova busca limpa a seleção anterior: sem duas pessoas na tela.
+  selectedContact.value = null;
+  contactLeads.value = [];
+  leadsError.value = false;
   const term = value.trim();
   if (term.length < 2) {
     searchAbort?.abort();
@@ -70,11 +78,6 @@ watch(query, value => {
     }
   }, 300);
 });
-
-const selectedContact = ref(null);
-const contactLeads = ref([]);
-const loadingLeads = ref(false);
-const leadsError = ref(false);
 
 const openPessoa = async contact => {
   selectedContact.value = contact;
@@ -111,7 +114,7 @@ const fmtDate = value => {
 </script>
 
 <template>
-  <div class="flex-1 w-full h-full p-6 overflow-y-auto bg-n-background">
+  <div class="flex-1 w-full h-full p-8 overflow-y-auto bg-n-background">
     <!-- Deep-link: rota com leadId -->
     <template v-if="route.params.leadId">
       <div
@@ -122,15 +125,33 @@ const fmtDate = value => {
         <div class="w-1/3 h-8 rounded bg-n-solid-2" />
         <div class="h-40 rounded-xl bg-n-solid-2" />
       </div>
-      <p v-else-if="errorLead" class="text-sm text-n-ruby-11">
-        {{ $t('RAMON.CALCULOS.ERROR') }}
-      </p>
+      <div v-else-if="errorLead" class="flex items-center gap-3">
+        <p class="text-sm text-n-ruby-11">
+          {{ $t('RAMON.CALCULOS.ERROR') }}
+        </p>
+        <button
+          data-testid="calculos-retry"
+          class="text-sm text-n-iris-11 hover:underline"
+          @click="fetchLead"
+        >
+          {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+        </button>
+      </div>
       <template v-else-if="lead">
         <RamonPageHeader
-          compact
           :title="lead.contact_name || lead.name"
           :subtitle="lead.thesis_name || ''"
-        />
+        >
+          <template #actions>
+            <button
+              data-testid="calculos-back-to-search"
+              class="text-sm text-n-iris-11 hover:underline"
+              @click="router.push({ name: 'ramon_calculos' })"
+            >
+              {{ $t('RAMON.CALCULOS.BACK_TO_SEARCH') }}
+            </button>
+          </template>
+        </RamonPageHeader>
         <LeadSimulador :lead="lead" />
       </template>
     </template>
@@ -138,7 +159,6 @@ const fmtDate = value => {
     <!-- Busca de pessoa (entrada "Cálculos" do menu) -->
     <template v-else>
       <RamonPageHeader
-        compact
         :title="$t('RAMON.CALCULOS.TITLE')"
         :subtitle="$t('RAMON.CALCULOS.SEARCH_HINT')"
       />

@@ -1,11 +1,13 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import { parseBrlInput } from '../../helpers/currency';
 
 const emit = defineEmits(['confirmValue', 'cancelValue']);
 
 const value = ref('');
+const valueInput = ref(null);
+onMounted(() => valueInput.value?.focus());
 
 // texto inválido não-vazio desabilita Salvar (senão viraria "Pular" silencioso)
 const isInvalid = computed(
@@ -39,14 +41,27 @@ onKeyStroke('Escape', cancel);
         $t('RAMON.FUNIL.WON.VALUE_LABEL')
       }}</label>
       <input
+        ref="valueInput"
         v-model="value"
         data-testid="won-value-input"
         type="text"
         inputmode="decimal"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border outline-none"
+        :class="
+          isInvalid
+            ? 'border-n-ruby-8'
+            : 'border-transparent focus:border-n-slate-8'
+        "
         @keyup.enter="save"
       />
-      <div class="flex justify-end gap-2">
+      <p
+        v-if="isInvalid"
+        data-testid="won-value-error"
+        class="mt-1 text-xs text-n-ruby-11"
+      >
+        {{ $t('RAMON.FUNIL.WON.INVALID') }}
+      </p>
+      <div class="flex justify-end gap-2 mt-3">
         <button
           data-testid="won-value-skip"
           class="px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12"
@@ -56,7 +71,7 @@ onKeyStroke('Escape', cancel);
         </button>
         <button
           data-testid="won-value-save"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
+          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
           :disabled="isInvalid"
           @click="save"
         >

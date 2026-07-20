@@ -1,5 +1,6 @@
 <script setup>
 // Substituto do window.confirm para ações destrutivas, no padrão da casa.
+import { ref, onMounted } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 
 defineProps({
@@ -8,6 +9,10 @@ defineProps({
   confirmLabel: { type: String, required: true },
 });
 const emit = defineEmits(['confirm', 'cancel']);
+
+// Foco no confirmar ao abrir: Enter confirma, Esc cancela.
+const confirmButton = ref(null);
+onMounted(() => confirmButton.value?.focus());
 
 onKeyStroke('Escape', () => emit('cancel'));
 </script>
@@ -31,6 +36,7 @@ onKeyStroke('Escape', () => emit('cancel'));
           {{ $t('RAMON.MODAL.CANCEL') }}
         </button>
         <button
+          ref="confirmButton"
           data-testid="confirm-modal-confirm"
           class="px-3 py-1.5 text-sm rounded-lg bg-n-ruby-9 text-white hover:bg-n-ruby-10 disabled:opacity-50"
           @click="emit('confirm')"

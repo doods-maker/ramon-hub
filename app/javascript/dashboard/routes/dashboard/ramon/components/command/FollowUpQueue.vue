@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
@@ -34,7 +35,7 @@ const dueLabel = computed(() => {
   if (!due) return null;
   const d = new Date(due);
   if (Number.isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -60,6 +61,13 @@ const finishAndClose = () => {
   emit('close');
 };
 
+// Esc fecha o modal — mas se o menu do sino (teleportado pro body) estiver
+// aberto, o listener próprio dele fecha só o menu e a esteira fica.
+onKeyStroke('Escape', () => {
+  if (document.querySelector('[data-testid="task-bell-menu"]')) return;
+  finishAndClose();
+});
+
 // Avança para o próximo item, limpando o marcador de conclusão local.
 const advance = () => {
   completedLeadId.value = null;
@@ -72,30 +80,47 @@ const copyPhone = async () => {
   useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
 };
 
+// Guarda compartilhada: evita duplo-clique/duplo-agendamento durante o await.
+const isActing = ref(false);
+
 const completeTask = async () => {
   const item = current.value;
-  if (!item?.taskId) return;
-  await store.dispatch('leadTasks/complete', {
-    leadId: item.leadId,
-    taskId: item.taskId,
-  });
-  useAlert(t('RAMON.COMMAND.QUEUE.TASK_COMPLETED'));
-  // Não avança: revela o agendamento da próxima tarefa para o mesmo lead.
-  completedLeadId.value = item.leadId;
+  if (!item?.taskId || isActing.value) return;
+  isActing.value = true;
+  try {
+    await store.dispatch('leadTasks/complete', {
+      leadId: item.leadId,
+      taskId: item.taskId,
+    });
+    useAlert(t('RAMON.COMMAND.QUEUE.TASK_COMPLETED'));
+    // Não avança: revela o agendamento da próxima tarefa para o mesmo lead.
+    completedLeadId.value = item.leadId;
+  } catch (e) {
+    useAlert(t('RAMON.COMMAND.QUEUE.COMPLETE_ERROR'));
+  } finally {
+    isActing.value = false;
+  }
 };
 
 // TaskBellMenu → cria a próxima tarefa e segue a esteira.
 const onSchedule = async ({ dueAt, title }) => {
   const item = current.value;
-  if (!item) return;
-  await store.dispatch('leadTasks/create', {
-    leadId: item.leadId,
-    title,
-    kind: 'follow_up',
-    dueAt,
-  });
-  useAlert(t('RAMON.COMMAND.QUEUE.SCHEDULED'));
-  advance();
+  if (!item || isActing.value) return;
+  isActing.value = true;
+  try {
+    await store.dispatch('leadTasks/create', {
+      leadId: item.leadId,
+      title,
+      kind: 'follow_up',
+      dueAt,
+    });
+    useAlert(t('RAMON.COMMAND.QUEUE.SCHEDULED'));
+    advance();
+  } catch (e) {
+    useAlert(t('RAMON.TASKS.CREATE_ERROR'));
+  } finally {
+    isActing.value = false;
+  }
 };
 
 // Abrir conversa: sai do Centro de Comando, então fecha a esteira antes de
@@ -223,7 +248,8 @@ const openConversation = () => {
             v-if="showTaskDone"
             type="button"
             data-testid="queue-complete"
-            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10"
+            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-50"
+            :disabled="isActing"
             @click="completeTask"
           >
             <span class="i-lucide-check size-4" />{{

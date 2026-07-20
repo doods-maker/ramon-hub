@@ -3,8 +3,6 @@
     "AGENDA": {
       "TITLE": "Agenda",
       "TODAY": "Hoje",
-      "PREV_WEEK": "Semana anterior",
-      "NEXT_WEEK": "Próxima semana",
       "EMPTY": "Nenhum compromisso nesta semana.",
       "EMPTY_MONTH": "Nenhum compromisso neste mês.",
       "VIEW_DAY": "Dia",
@@ -17,10 +15,10 @@
       "EMPTY_DAY": "Nada agendado neste dia.",
       "MORE": "+{count} mais",
       "PREV": "Anterior",
-      "NEXT": "Próximo"
+      "NEXT": "Próximo",
+      "LOAD_ERROR": "Não foi possível carregar a agenda"
     },
     "COMMAND": {
-      "EYEBROW": "Centro de Comando",
       "TITLE": "Centro de Comando",
       "RELOAD": "Recarregar",
       "TODAY": {
@@ -49,7 +47,8 @@
         "SKIP": "Pular",
         "CLOSE": "Encerrar",
         "DONE_TITLE": "Fila zerada",
-        "DONE_BODY": "Todos os leads da rodada foram tratados."
+        "DONE_BODY": "Todos os leads da rodada foram tratados.",
+        "COMPLETE_ERROR": "Não foi possível concluir a tarefa — tente de novo"
       },
       "FUNNEL": {
         "TITLE": "Funil",
@@ -71,7 +70,8 @@
         "COL_DATE": "Dia",
         "COL_LEADS": "Leads ativos",
         "COL_VALUE": "Pipeline"
-      }
+      },
+      "LOAD_ERROR": "Não foi possível carregar o Centro de Comando"
     },
     "NAV": {
       "TITLE": "Intranet",
@@ -126,7 +126,9 @@
       "NEXT_TITLE": "Próximos na fila",
       "EMPTY_TITLE": "Esteira zerada",
       "EMPTY_BODY": "Nada urgente agora — veja o funil.",
-      "EMPTY_CTA": "Abrir funil"
+      "EMPTY_CTA": "Abrir funil",
+      "LOAD_ERROR": "Não foi possível carregar a esteira",
+      "ACTION_ERROR": "Não deu certo — tente de novo"
     },
     "RAIL": {
       "INTERNOS": "Internos",
@@ -141,7 +143,11 @@
       "LABEL_PH": "AdvBox",
       "URL": "URL",
       "ICON": "Ícone (Lucide)",
-      "ADD": "Adicionar"
+      "ADD": "Adicionar",
+      "URL_PH": "https://…",
+      "ICON_PH": "i-lucide-…",
+      "URL_INVALID": "URL inválida — confira o endereço.",
+      "REMOVE_CONFIRM": "Remover este atalho?"
     },
     "FUNIL": {
       "TITLE": "Funil de Leads",
@@ -162,13 +168,16 @@
         "PICK": "Escolha um motivo",
         "DETAIL_PLACEHOLDER": "Detalhe (opcional)",
         "CONFIRM": "Marcar como perda",
-        "CANCEL": "Cancelar"
+        "CANCEL": "Cancelar",
+        "NO_REASONS": "Nenhum motivo de perda cadastrado ainda.",
+        "CONFIG_LINK": "Cadastrar motivos na Config do Funil"
       },
       "WON": {
         "TITLE": "Negócio ganho! Valor fechado?",
         "VALUE_LABEL": "Valor (R$)",
         "SAVE": "Salvar",
-        "SKIP": "Pular"
+        "SKIP": "Pular",
+        "INVALID": "Valor inválido — use números, ex.: 1.500,00"
       },
       "NEW": {
         "SOURCE": "Origem",
@@ -194,7 +203,10 @@
         "REMOVE_PICK": "Escolha a etapa destino",
         "REMOVE_CONFIRM": "Remover",
         "CANCEL": "Cancelar",
-        "MENU": "Opções da etapa"
+        "MENU": "Opções da etapa",
+        "REMOVE_COUNT": "{count} lead(s) visíveis nesta etapa serão movidos para a etapa destino.",
+        "REMOVE_EMPTY": "Nenhum lead visível nesta etapa — se houver leads fora do filtro atual, serão movidos para a etapa destino.",
+        "REMOVE_NO_TARGET": "Não há outra etapa para receber os leads — crie uma antes de remover."
       },
       "FILTERS": {
         "SEARCH": "Buscar nome ou contato…",
@@ -217,7 +229,9 @@
         "REMOVE": "Remover view",
         "REMOVE_CONFIRM": "Remover esta view salva?"
       },
-      "DOCK_CLOSE": "Fechar conversa"
+      "DOCK_CLOSE": "Fechar conversa",
+      "LOAD_ERROR": "Não foi possível carregar o funil",
+      "CONVERSATION_ERROR": "Não foi possível carregar a conversa"
     },
     "KANBAN": {
       "CARD": {
@@ -275,7 +289,13 @@
       "CADENCE_DAYS": "dias",
       "REMOVE": "Remover",
       "WEIGHT": "Peso",
-      "WEIGHT_OF": "peso {weight}"
+      "WEIGHT_OF": "peso {weight}",
+      "LOAD_ERROR": "Não foi possível carregar as configurações do funil",
+      "REMOVE_ERROR": "Não foi possível remover — tente de novo",
+      "REMOVE_BENEFIT_CONFIRM": "Remover este tipo de benefício?",
+      "REMOVE_PRIORITY_CONFIRM": "Remover esta prioridade?",
+      "BENEFITS_EMPTY": "Nenhum tipo de benefício ainda.",
+      "PRIORITIES_EMPTY": "Nenhuma prioridade ainda."
     },
     "IMPORT": {
       "TITLE": "Importar leads (CSV)",
@@ -365,7 +385,8 @@
       "SEARCH_EMPTY": "Ninguém encontrado com esse termo.",
       "LOADING_LEADS": "Buscando os casos da pessoa…",
       "ERROR": "Não foi possível carregar esse cálculo",
-      "EMPTY_NO_LEAD": "{name} ainda não tem um caso no funil — crie um lead para simular o cálculo."
+      "EMPTY_NO_LEAD": "{name} ainda não tem um caso no funil — crie um lead para simular o cálculo.",
+      "BACK_TO_SEARCH": "Voltar à busca"
     },
     "DOSSIE": {
       "OPEN": "Dossiê",
@@ -427,11 +448,15 @@
           "THESIS_CHANGED": "mudou a tese",
           "LP_RECAPTURED": "recebeu novo formulário da LP"
         },
-        "EMPTY": "Nenhuma atividade registrada ainda."
+        "EMPTY": "Nenhuma atividade registrada ainda.",
+        "LOADING": "Carregando histórico…",
+        "LOAD_ERROR": "Não foi possível carregar o histórico."
       },
       "LOADING": "Carregando lead…",
       "LOAD_ERROR": "Não foi possível carregar o lead desta conversa.",
-      "RETRY": "Tentar novamente"
+      "RETRY": "Tentar novamente",
+      "DISCARD_CONFIRM": "Remover este lead do funil? A conversa continua no Chatwoot.",
+      "DISCARD_ERROR": "Não foi possível remover o lead — tente de novo"
     },
     "PLAYBOOK": {
       "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",
@@ -443,7 +468,10 @@
         "APRESENTACAO": "Apresentação",
         "OBJECAO": "Objeções",
         "DOCUMENTO": "Documentos"
-      }
+      },
+      "LOADING": "Carregando playbook…",
+      "NO_ITEMS": "Nenhum item de playbook nesta tese ainda.",
+      "LOAD_ERROR": "Não foi possível carregar o playbook."
     },
     "ZAPSIGN": {
       "TITLE": "Contrato",
@@ -554,7 +582,9 @@
       "AWAITING_HUMAN": "Aguardando humano",
       "AWAITING_HUMAN_HINT": "A IA não classificou com confiança — revise a conversa e defina a viabilidade você mesmo.",
       "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes",
-      "LOADING": "Carregando triagens…"
+      "LOADING": "Carregando triagens…",
+      "LOAD_ERROR": "Não foi possível carregar as triagens.",
+      "REFRESH": "atualizar"
     },
     "KIT": {
       "TAB": "Kit",
@@ -579,7 +609,8 @@
         "VENDA_OBJECOES": "Venda e objeções",
         "PROXIMO_PASSO": "Próximo passo"
       },
-      "LOADING": "Carregando kit…"
+      "LOADING": "Carregando kit…",
+      "REFRESH": "Atualizar"
     },
     "SIMULADOR": {
       "TAB": "Simulador",
@@ -682,7 +713,8 @@
       },
       "DELETE": "Remover agente",
       "FIELD_DESCRIPTION": "Descrição",
-      "KIT_SYSTEM_PROMPT": "Prompt do kit (Closer)"
+      "KIT_SYSTEM_PROMPT": "Prompt do kit (Closer)",
+      "DEFAULT_PROMPT": "Escreva aqui as instruções do agente."
     },
     "MODAL": {
       "CANCEL": "Cancelar"

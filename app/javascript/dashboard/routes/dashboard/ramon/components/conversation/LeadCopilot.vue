@@ -85,7 +85,9 @@ const generate = async mode => {
           <span class="i-lucide-x size-4" />
         </button>
       </div>
-      <p class="text-sm whitespace-pre-wrap text-n-slate-12">{{ summary }}</p>
+      <p class="text-sm whitespace-pre-wrap break-words text-n-slate-12">
+        {{ summary }}
+      </p>
     </div>
   </div>
 </template>

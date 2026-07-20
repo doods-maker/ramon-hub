@@ -3,7 +3,7 @@ import RamonDashboardAPI from '../../api/ramonDashboard';
 
 export const state = {
   data: null,
-  uiFlags: { isFetching: false },
+  uiFlags: { isFetching: false, hasError: false },
 };
 
 export const getters = {
@@ -13,10 +13,16 @@ export const getters = {
 
 export const actions = {
   fetch: async ({ commit }) => {
-    commit(types.SET_RAMON_DASHBOARD_UI_FLAG, { isFetching: true });
+    commit(types.SET_RAMON_DASHBOARD_UI_FLAG, {
+      isFetching: true,
+      hasError: false,
+    });
     try {
       const response = await RamonDashboardAPI.get();
       commit(types.SET_RAMON_DASHBOARD, response.data);
+    } catch (e) {
+      // Erro fica na flag: a página mostra retry em vez de "tudo em dia".
+      commit(types.SET_RAMON_DASHBOARD_UI_FLAG, { hasError: true });
     } finally {
       commit(types.SET_RAMON_DASHBOARD_UI_FLAG, { isFetching: false });
     }

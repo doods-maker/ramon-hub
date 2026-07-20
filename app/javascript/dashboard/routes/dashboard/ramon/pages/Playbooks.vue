@@ -1,10 +1,14 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 const store = useStore();
 const getters = useStoreGetters();
+const { t } = useI18n();
 
 const SECTIONS = [
   'abertura',
@@ -35,34 +39,45 @@ const detail = reactive({
   honorarioNMensalidades: '',
 });
 
-watch(
-  selectedThesis,
-  thesis => {
-    if (!thesis) return;
-    detail.name = thesis.name || '';
-    detail.description = thesis.description || '';
-    detail.area = thesis.area || '';
-    detail.active = thesis.active !== false;
-    detail.honorarioPercentual = thesis.honorario_percentual ?? '';
-    detail.honorarioNMensalidades = thesis.honorario_n_mensalidades ?? '';
-  },
-  { immediate: true }
-);
+const syncDetail = () => {
+  const thesis = selectedThesis.value;
+  if (!thesis) return;
+  detail.name = thesis.name || '';
+  detail.description = thesis.description || '';
+  detail.area = thesis.area || '';
+  detail.active = thesis.active !== false;
+  detail.honorarioPercentual = thesis.honorario_percentual ?? '';
+  detail.honorarioNMensalidades = thesis.honorario_n_mensalidades ?? '';
+};
+
+// Observa só o ID: resposta de PATCH mutando o record no store não pode
+// resetar os campos enquanto o usuário digita.
+watch(selectedId, syncDetail);
 
 const selectThesis = async thesis => {
   selectedId.value = thesis.id;
   if (!thesis.items) {
     await store.dispatch('theses/show', thesis.id);
+    // show() pode trazer campos que o index não traz — resync pontual, sem raça.
+    syncDetail();
   }
 };
 
+const addingThesis = ref(false);
 const addThesis = async () => {
   const name = newThesisName.value.trim();
-  if (!name) return;
-  const created = await store.dispatch('theses/create', { name });
-  newThesisName.value = '';
-  if (created?.id) {
-    selectThesis(created);
+  if (!name || addingThesis.value) return;
+  addingThesis.value = true;
+  try {
+    const created = await store.dispatch('theses/create', { name });
+    newThesisName.value = '';
+    if (created?.id) {
+      selectThesis(created);
+    }
+  } catch {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    addingThesis.value = false;
   }
 };
 
@@ -91,22 +106,26 @@ const moveThesis = (thesis, direction) => {
 
 const saveDetail = () => {
   if (!selectedThesis.value) return;
-  store.dispatch('theses/update', {
-    id: selectedThesis.value.id,
-    name: detail.name,
-    description: detail.description,
-    area: detail.area,
-    honorario_percentual: detail.honorarioPercentual,
-    honorario_n_mensalidades: detail.honorarioNMensalidades,
-  });
+  store
+    .dispatch('theses/update', {
+      id: selectedThesis.value.id,
+      name: detail.name,
+      description: detail.description,
+      area: detail.area,
+      honorario_percentual: detail.honorarioPercentual,
+      honorario_n_mensalidades: detail.honorarioNMensalidades,
+    })
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
 const saveActive = () => {
   if (!selectedThesis.value) return;
-  store.dispatch('theses/update', {
-    id: selectedThesis.value.id,
-    active: detail.active,
-  });
+  store
+    .dispatch('theses/update', {
+      id: selectedThesis.value.id,
+      active: detail.active,
+    })
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
 const itemsBySection = computed(() => {
@@ -124,26 +143,61 @@ const newItemDrafts = reactive(
   }, {})
 );
 
+const addingItem = ref('');
 const addItem = async section => {
   const draft = newItemDrafts[section];
   const content = draft.content.trim();
-  if (!content) return;
-  await store.dispatch('theses/createItem', {
-    thesisId: selectedThesis.value.id,
-    section,
-    title: draft.title.trim(),
-    content,
-  });
-  draft.title = '';
-  draft.content = '';
+  if (!content || addingItem.value === section) return;
+  addingItem.value = section;
+  try {
+    await store.dispatch('theses/createItem', {
+      thesisId: selectedThesis.value.id,
+      section,
+      title: draft.title.trim(),
+      content,
+    });
+    draft.title = '';
+    draft.content = '';
+  } catch {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    addingItem.value = '';
+  }
 };
 
-const updateItem = (item, attrs) => {
-  store.dispatch('theses/updateItem', {
-    thesisId: selectedThesis.value.id,
-    id: item.id,
-    ...attrs,
-  });
+// Rascunho local por item: o refetch pós-save (show) não pode re-sincronizar
+// um campo focado no meio da digitação. flush sync = draft existe antes do render.
+const itemDrafts = reactive({});
+watch(
+  () => selectedThesis.value?.items,
+  items => {
+    (items || []).forEach(item => {
+      if (!itemDrafts[item.id]) {
+        itemDrafts[item.id] = {
+          title: item.title || '',
+          content: item.content || '',
+        };
+      }
+    });
+  },
+  { immediate: true, flush: 'sync' }
+);
+
+const saveItem = item => {
+  const draft = itemDrafts[item.id];
+  if (
+    draft.title === (item.title || '') &&
+    draft.content === (item.content || '')
+  )
+    return;
+  store
+    .dispatch('theses/updateItem', {
+      thesisId: selectedThesis.value.id,
+      id: item.id,
+      title: draft.title,
+      content: draft.content,
+    })
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
 const itemToRemove = ref(null);
@@ -151,11 +205,17 @@ const removeItem = item => {
   itemToRemove.value = item;
 };
 const confirmRemoveItem = () => {
-  store.dispatch('theses/deleteItem', {
-    thesisId: selectedThesis.value.id,
-    id: itemToRemove.value.id,
-  });
+  const item = itemToRemove.value;
   itemToRemove.value = null;
+  // o draft só pode sumir DEPOIS do item sair do store (o template lê
+  // itemDrafts[item.id] enquanto o refetch não resolve)
+  store
+    .dispatch('theses/deleteItem', {
+      thesisId: selectedThesis.value.id,
+      id: item.id,
+    })
+    .then(() => delete itemDrafts[item.id])
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
 const sectionLabelKey = section =>
@@ -171,9 +231,7 @@ onMounted(() => store.dispatch('theses/get'));
     <div
       class="flex flex-col w-[340px] flex-shrink-0 h-full p-4 overflow-y-auto border-r border-n-weak"
     >
-      <h1 class="mb-4 text-lg font-cormorant text-n-slate-12">
-        {{ $t('RAMON.PLAYBOOKS.TITLE') }}
-      </h1>
+      <RamonPageHeader compact :title="$t('RAMON.PLAYBOOKS.TITLE')" />
       <h2 class="mb-2 text-xs uppercase tracking-widest text-n-slate-9">
         {{ $t('RAMON.PLAYBOOKS.LIST_TITLE') }}
       </h2>
@@ -245,13 +303,14 @@ onMounted(() => store.dispatch('theses/get'));
         <input
           v-model="newThesisName"
           data-testid="playbooks-add-input"
-          class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+          class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
           :placeholder="$t('RAMON.PLAYBOOKS.ADD_PLACEHOLDER')"
           @keyup.enter="addThesis"
         />
         <button
           data-testid="playbooks-add-button"
-          class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
+          class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
+          :disabled="addingThesis"
           @click="addThesis"
         >
           {{ $t('RAMON.PLAYBOOKS.ADD') }}
@@ -366,7 +425,7 @@ onMounted(() => store.dispatch('theses/get'));
             class="p-4 border rounded-xl border-n-weak bg-n-solid-1"
             data-testid="playbooks-section"
           >
-            <h3 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
+            <h3 class="mb-2 text-xs uppercase tracking-widest text-n-slate-9">
               {{ $t(sectionLabelKey(section)) }}
             </h3>
 
@@ -379,11 +438,11 @@ onMounted(() => store.dispatch('theses/get'));
               >
                 <div class="flex items-center gap-2">
                   <input
-                    :value="item.title"
+                    v-model="itemDrafts[item.id].title"
                     data-testid="playbooks-item-title-input"
-                    class="flex-1 px-2 py-1 text-sm font-medium rounded-lg bg-n-alpha-2 text-n-slate-12"
+                    class="flex-1 px-2 py-1 text-sm font-medium rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
                     :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
-                    @blur="e => updateItem(item, { title: e.target.value })"
+                    @blur="saveItem(item)"
                   />
                   <button
                     data-testid="playbooks-item-remove-item"
@@ -396,12 +455,12 @@ onMounted(() => store.dispatch('theses/get'));
                 </div>
                 <!-- field-sizing: auto-cresce com o roteiro (fallback = rows fixo) -->
                 <textarea
-                  :value="item.content"
+                  v-model="itemDrafts[item.id].content"
                   data-testid="playbooks-item-content-input"
                   rows="2"
-                  class="px-2 py-1 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 [field-sizing:content] min-h-16 max-h-64"
+                  class="px-2 py-1 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12 [field-sizing:content] min-h-16 max-h-64"
                   :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
-                  @blur="e => updateItem(item, { content: e.target.value })"
+                  @blur="saveItem(item)"
                 />
               </li>
               <li
@@ -416,19 +475,21 @@ onMounted(() => store.dispatch('theses/get'));
               <input
                 v-model="newItemDrafts[section].title"
                 data-testid="playbooks-item-add-title"
-                class="w-40 shrink-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+                class="w-40 shrink-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
                 :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
+                @keyup.enter="addItem(section)"
               />
               <input
                 v-model="newItemDrafts[section].content"
                 data-testid="playbooks-item-add-content"
-                class="flex-1 min-w-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+                class="flex-1 min-w-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
                 :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
                 @keyup.enter="addItem(section)"
               />
               <button
                 data-testid="playbooks-item-add"
-                class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
+                class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
+                :disabled="addingItem === section"
                 @click="addItem(section)"
               >
                 {{ $t('RAMON.PLAYBOOKS.ITEM_ADD') }}

@@ -44,12 +44,27 @@ const relativeDue = dueAt => {
 // numa cópia da task recém-concluída.
 const justCompleted = ref(null);
 
-const complete = async task => {
-  await store.dispatch('leadTasks/complete', {
-    leadId: props.leadId,
-    taskId: task.id,
-  });
-  justCompleted.value = task;
+// checkbox controlado + guard durante o voo: falha deixava marcado sem concluir
+const completingId = ref(null);
+const complete = async (task, event) => {
+  if (completingId.value) {
+    // outra conclusão em voo: desfaz o toggle nativo que o clique já pintou
+    // (o vnode não repatcha porque o :checked bound não mudou)
+    if (event?.target) event.target.checked = Boolean(task.completed_at);
+    return;
+  }
+  completingId.value = task.id;
+  try {
+    await store.dispatch('leadTasks/complete', {
+      leadId: props.leadId,
+      taskId: task.id,
+    });
+    justCompleted.value = task;
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    completingId.value = null;
+  }
 };
 
 const onScheduleNext = async ({ dueAt, title }) => {
@@ -75,7 +90,11 @@ const tomorrowAt9 = () => {
   return d;
 };
 
+// guard de duplo-clique: dois cliques rápidos criavam a tarefa em dobro
+const savingTask = ref(false);
 const addTask = async () => {
+  if (savingTask.value) return;
+  savingTask.value = true;
   const title = newTitle.value.trim() || t('RAMON.KANBAN.BELL.DEFAULT_TITLE');
   const due = newDate.value ? new Date(newDate.value) : tomorrowAt9();
   try {
@@ -90,6 +109,8 @@ const addTask = async () => {
     adding.value = false;
   } catch (e) {
     useAlert(t('RAMON.TASKS.CREATE_ERROR'));
+  } finally {
+    savingTask.value = false;
   }
 };
 </script>
@@ -120,7 +141,9 @@ const addTask = async () => {
           data-testid="task-complete"
           class="shrink-0"
           :title="$t('RAMON.TASKS.COMPLETE')"
-          @change="complete(task)"
+          :checked="Boolean(task.completed_at) || completingId === task.id"
+          :disabled="completingId === task.id"
+          @change="complete(task, $event)"
         />
         <span class="flex-1 text-sm text-n-slate-12">{{ task.title }}</span>
         <span
@@ -178,7 +201,8 @@ const addTask = async () => {
         </button>
         <button
           data-testid="task-new-save"
-          class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white"
+          class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
+          :disabled="savingTask"
           @click="addTask"
         >
           {{ $t('RAMON.FUNIL.SAVE') }}

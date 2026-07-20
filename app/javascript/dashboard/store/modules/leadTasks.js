@@ -3,7 +3,7 @@ import LeadTasksAPI from '../../api/leadTasks';
 
 export const state = {
   records: [],
-  uiFlags: { isFetching: false, isCreating: false },
+  uiFlags: { isFetching: false, isCreating: false, hasError: false },
 };
 
 // Ordena por due_at ascendente; tarefas sem prazo vão para o fim.
@@ -36,10 +36,13 @@ export const actions = {
   },
 
   fetchAccountScope: async ({ commit }, scope) => {
-    commit(types.SET_LEAD_TASKS_UI_FLAG, { isFetching: true });
+    commit(types.SET_LEAD_TASKS_UI_FLAG, { isFetching: true, hasError: false });
     try {
       const { data } = await LeadTasksAPI.getAccountScope(scope);
       commit(types.MERGE_LEAD_TASKS, data.payload);
+    } catch (e) {
+      // Erro fica na flag: a Agenda mostra retry em vez de "sem compromissos".
+      commit(types.SET_LEAD_TASKS_UI_FLAG, { hasError: true });
     } finally {
       commit(types.SET_LEAD_TASKS_UI_FLAG, { isFetching: false });
     }

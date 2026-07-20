@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import { formatBrl } from '../helpers/currency';
+import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import { waMeUrl } from '../helpers/phone';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 
@@ -160,7 +161,7 @@ const copyDossie = async () => {
 </script>
 
 <template>
-  <div class="flex-1 h-full p-6 overflow-y-auto">
+  <div class="flex-1 w-full h-full p-8 overflow-y-auto bg-n-background">
     <div
       v-if="loading"
       class="flex flex-col max-w-2xl gap-4 animate-pulse"
@@ -171,9 +172,17 @@ const copyDossie = async () => {
       <div class="h-24 rounded-xl bg-n-solid-2" />
       <div class="h-40 rounded-xl bg-n-solid-2" />
     </div>
-    <p v-else-if="error" class="text-sm text-n-ruby-11">
-      {{ $t('RAMON.DOSSIE.ERROR') }}
-    </p>
+    <div v-else-if="error" class="text-sm" data-testid="dossie-error">
+      <p class="text-n-ruby-11">{{ $t('RAMON.DOSSIE.ERROR') }}</p>
+      <button
+        type="button"
+        data-testid="dossie-retry"
+        class="mt-2 text-xs text-n-iris-11 hover:underline"
+        @click="fetchData"
+      >
+        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
+    </div>
 
     <div v-else-if="data" class="max-w-2xl">
       <RamonPageHeader
@@ -221,9 +230,14 @@ const copyDossie = async () => {
           </p>
           <p class="mt-1 text-sm text-n-slate-11">
             <span
-              class="px-2 py-0.5 text-xs rounded-full text-white"
-              :style="{ backgroundColor: pessoa.stage_color || '#71717a' }"
+              class="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded-full bg-n-alpha-2 text-n-slate-11"
             >
+              <span
+                class="rounded-full size-2 shrink-0"
+                :style="{
+                  backgroundColor: pessoa.stage_color || DEFAULT_STAGE_COLOR,
+                }"
+              />
               {{ pessoa.stage_name }}
             </span>
             <span v-if="pessoa.value"> · {{ formatBrl(pessoa.value) }}</span>
@@ -324,7 +338,7 @@ const copyDossie = async () => {
             >
               {{ $t('RAMON.DOSSIE.FEE') }}: {{ tese.honorario_text }}
             </p>
-            <template v-if="tese.objecoes.length">
+            <template v-if="tese.objecoes?.length">
               <p class="mt-3 mb-1 text-xs uppercase text-n-slate-10">
                 {{ $t('RAMON.DOSSIE.OBJECTIONS') }}
               </p>

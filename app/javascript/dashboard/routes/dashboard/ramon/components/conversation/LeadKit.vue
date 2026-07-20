@@ -19,12 +19,16 @@ const { t } = useI18n();
 const triages = ref([]);
 const isLoading = ref(false);
 const isStarting = ref(false);
+const hasError = ref(false);
 
 const loadTriages = async () => {
   isLoading.value = true;
+  hasError.value = false;
   try {
     const { data } = await LeadsAPI.getTriages(props.lead.id);
     triages.value = data;
+  } catch (e) {
+    hasError.value = true;
   } finally {
     isLoading.value = false;
   }
@@ -147,6 +151,20 @@ const blockLabelKey = block => `RAMON.KIT.BLOCKS.${block.toUpperCase()}`;
         {{ $t('RAMON.KIT.LOADING') }}
       </p>
 
+      <div v-else-if="hasError && !doneTriage" data-testid="kit-load-error">
+        <p class="text-sm text-n-ruby-11">
+          {{ $t('RAMON.TRIAGE.LOAD_ERROR') }}
+        </p>
+        <button
+          type="button"
+          data-testid="kit-load-retry"
+          class="mt-1 text-xs text-n-iris-11 hover:underline"
+          @click="loadTriages"
+        >
+          {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+        </button>
+      </div>
+
       <p
         v-else-if="!doneTriage"
         class="text-sm text-n-slate-10"
@@ -175,6 +193,18 @@ const blockLabelKey = block => `RAMON.KIT.BLOCKS.${block.toUpperCase()}`;
             {{ $t(`RAMON.KIT.MODE.${mode.toUpperCase()}`) }}
           </span>
         </div>
+
+        <!-- durante a geração, atualizar manual (websocket perdido não deixa
+             o "Gerando kit…" eterno) -->
+        <button
+          v-if="isGenerating"
+          type="button"
+          data-testid="kit-refresh"
+          class="self-start text-xs text-n-slate-10 hover:underline"
+          @click="loadTriages"
+        >
+          {{ $t('RAMON.KIT.REFRESH') }}
+        </button>
 
         <p
           v-if="kitError"
