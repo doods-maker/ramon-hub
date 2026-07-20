@@ -70,7 +70,11 @@ class Ramon::AdvboxMcpService
                    'Com hora_inicio a tarefa entra no calendário/agenda do AdvBox (ex.: reunião com horário marcado).',
       inputSchema: { type: 'object',
                      properties: { processo_id: { type: 'integer' }, tipo_tarefa_id: { type: 'integer' },
-                                   responsavel_id: { type: 'integer', description: 'Usuário responsável (também assina como criador)' },
+                                   responsavel_id: { type: 'integer', description: 'Usuário responsável pela tarefa' },
+                                   criador_id: { type: 'integer',
+                                                 description: 'Quem está criando a tarefa (from). Identifique quem está falando com você ' \
+                                                              'batendo o nome com os users de advbox_configuracoes; pergunte se houver ' \
+                                                              'dúvida. Padrão: o responsável.' },
                                    data: { type: 'string', description: 'Início, YYYY-MM-DD (padrão: hoje)' },
                                    hora_inicio: { type: 'string', description: 'HH:MM — com hora a tarefa cai no calendário' },
                                    hora_fim: { type: 'string', description: 'HH:MM — término (no mesmo dia do início)' },
@@ -215,7 +219,7 @@ class Ramon::AdvboxMcpService
   def self.tarefa_payload(args)
     responsavel = args.fetch('responsavel_id')
     inicio = args['data'].presence || Time.zone.today.iso8601
-    { from: responsavel.to_s, guests: [responsavel], tasks_id: args.fetch('tipo_tarefa_id').to_s,
+    { from: (args['criador_id'] || responsavel).to_s, guests: [responsavel], tasks_id: args.fetch('tipo_tarefa_id').to_s,
       lawsuits_id: args.fetch('processo_id').to_s, start_date: inicio,
       start_time: args['hora_inicio'].presence,
       # A API ignora end_time sem end_date — tarefa com hora é sempre no mesmo dia.
