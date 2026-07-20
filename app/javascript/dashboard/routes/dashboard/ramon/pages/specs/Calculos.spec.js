@@ -3,6 +3,7 @@ import { reactive } from 'vue';
 import Calculos from '../Calculos.vue';
 import ContactAPI from 'dashboard/api/contacts';
 import LeadsAPI from 'dashboard/api/leads';
+import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
 
 // Rota simulada: reativa pra que router.push (mockado) dispare o watch do
 // componente, do mesmo jeito que a navegação real faria.
@@ -21,6 +22,9 @@ vi.mock('dashboard/api/contacts', () => ({
 }));
 vi.mock('dashboard/api/leads', () => ({
   default: { get: vi.fn(), show: vi.fn() },
+}));
+vi.mock('dashboard/api/ramonCalculos', () => ({
+  default: { advboxCustomers: vi.fn(), criarCaso: vi.fn() },
 }));
 // LeadSimulador tem specs próprios — aqui só confirmamos que recebeu o lead certo.
 vi.mock('../../components/conversation/LeadSimulador.vue', () => ({
@@ -53,6 +57,8 @@ beforeEach(() => {
   ContactAPI.search.mockReset();
   LeadsAPI.get.mockReset();
   LeadsAPI.show.mockReset();
+  RamonCalculosAPI.advboxCustomers.mockReset();
+  RamonCalculosAPI.criarCaso.mockReset();
 });
 
 describe('Calculos.vue', () => {
@@ -160,5 +166,122 @@ describe('Calculos.vue', () => {
     expect(empty.exists()).toBe(true);
     expect(empty.text()).toContain('RAMON.CALCULOS.EMPTY_NO_LEAD');
     expect(empty.text()).toContain('Ana Beatriz');
+  });
+
+  it('busca no AdvBox só sob demanda e lista cadastros', async () => {
+    ContactAPI.search.mockResolvedValue({ data: { payload: [] } });
+    RamonCalculosAPI.advboxCustomers.mockResolvedValue({
+      data: {
+        payload: [
+          { id: 7, name: 'José do AdvBox', identification: '52998224725' },
+        ],
+      },
+    });
+
+    const wrapper = mount(Calculos, mountOptions);
+    await search(wrapper, 'José');
+
+    // Digitar não chama o AdvBox — só o clique no botão.
+    expect(RamonCalculosAPI.advboxCustomers).not.toHaveBeenCalled();
+
+    await wrapper.find('[data-testid="advbox-search"]').trigger('click');
+    await flushPromises();
+
+    expect(RamonCalculosAPI.advboxCustomers).toHaveBeenCalledTimes(1);
+    expect(RamonCalculosAPI.advboxCustomers).toHaveBeenCalledWith('José');
+    const result = wrapper.find('[data-testid="advbox-result"]');
+    expect(result.text()).toContain('José do AdvBox');
+    expect(result.text()).toContain('52998224725');
+  });
+
+  it('escolher cadastro do AdvBox cria caso e navega pro lead', async () => {
+    ContactAPI.search.mockResolvedValue({ data: { payload: [] } });
+    RamonCalculosAPI.advboxCustomers.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            id: 7,
+            name: 'José do AdvBox',
+            identification: '52998224725',
+            cellphone: '48999887766',
+            birthdate: '1980-05-10',
+            email: null,
+          },
+        ],
+      },
+    });
+    RamonCalculosAPI.criarCaso.mockResolvedValue({
+      data: { contact: { id: 4, name: 'José do AdvBox' }, leads: [{ id: 33 }] },
+    });
+    LeadsAPI.show.mockResolvedValue({
+      data: { id: 33, name: 'José do AdvBox', contact_name: 'José do AdvBox' },
+    });
+
+    const wrapper = mount(Calculos, mountOptions);
+    await search(wrapper, 'José');
+    await wrapper.find('[data-testid="advbox-search"]').trigger('click');
+    await flushPromises();
+    await wrapper.find('[data-testid="advbox-result"]').trigger('click');
+    await flushPromises();
+
+    expect(RamonCalculosAPI.criarCaso).toHaveBeenCalledWith({
+      nome: 'José do AdvBox',
+      cpf: '52998224725',
+      telefone: '48999887766',
+      nascimento: '1980-05-10',
+      email: null,
+    });
+    expect(push).toHaveBeenCalledWith({
+      name: 'ramon_calculos_lead',
+      params: { leadId: 33 },
+    });
+  });
+
+  it('contato do hub sem lead ganha botão de criar caso de cálculo', async () => {
+    ContactAPI.search.mockResolvedValue({
+      data: { payload: [{ id: 3, name: 'Ana Beatriz' }] },
+    });
+    LeadsAPI.get.mockResolvedValue({ data: { payload: [] } });
+    RamonCalculosAPI.criarCaso.mockResolvedValue({
+      data: { contact: { id: 3, name: 'Ana Beatriz' }, leads: [{ id: 44 }] },
+    });
+    LeadsAPI.show.mockResolvedValue({
+      data: { id: 44, name: 'Ana Beatriz', contact_name: 'Ana Beatriz' },
+    });
+
+    const wrapper = mount(Calculos, mountOptions);
+    await search(wrapper, 'Ana');
+    await wrapper.find('[data-testid="pessoa-result"]').trigger('click');
+    await flushPromises();
+
+    await wrapper.find('[data-testid="create-case"]').trigger('click');
+    await flushPromises();
+
+    expect(RamonCalculosAPI.criarCaso).toHaveBeenCalledWith({ contact_id: 3 });
+    expect(push).toHaveBeenCalledWith({
+      name: 'ramon_calculos_lead',
+      params: { leadId: 44 },
+    });
+  });
+
+  it('erro do AdvBox mostra mensagem e permite tentar de novo', async () => {
+    ContactAPI.search.mockResolvedValue({ data: { payload: [] } });
+    RamonCalculosAPI.advboxCustomers.mockRejectedValueOnce(new Error('down'));
+
+    const wrapper = mount(Calculos, mountOptions);
+    await search(wrapper, 'José');
+    await wrapper.find('[data-testid="advbox-search"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="advbox-error"]').exists()).toBe(true);
+
+    RamonCalculosAPI.advboxCustomers.mockResolvedValueOnce({
+      data: { payload: [] },
+    });
+    await wrapper.find('[data-testid="advbox-search"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="advbox-error"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="advbox-empty"]').exists()).toBe(true);
   });
 });
