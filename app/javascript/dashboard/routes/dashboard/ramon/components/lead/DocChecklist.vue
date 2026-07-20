@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -54,21 +54,34 @@ const hasChargeable = computed(() =>
 const itemLabel = item => item.title || item.content || '';
 
 // grava o doc_status novo mesclando com o custom_attributes existente,
-// sem sobrescrever nenhuma outra chave.
-const persist = docStatusNext => {
-  store.dispatch('leads/update', {
-    id: props.lead.id,
-    custom_attributes: {
-      ...(props.lead.custom_attributes || {}),
-      doc_status: docStatusNext,
-    },
-  });
+// sem sobrescrever nenhuma outra chave. try/catch aqui cobre os dois
+// chamadores (cycle e chargePending).
+const persist = async docStatusNext => {
+  try {
+    await store.dispatch('leads/update', {
+      id: props.lead.id,
+      custom_attributes: {
+        ...(props.lead.custom_attributes || {}),
+        doc_status: docStatusNext,
+      },
+    });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  }
 };
 
-const cycle = item => {
+// guard por item: dois cliques rápidos pulavam um status do ciclo
+const pendingIds = ref(new Set());
+const cycle = async item => {
+  if (pendingIds.value.has(item.id)) return;
+  pendingIds.value.add(item.id);
   const currentIndex = CYCLE.indexOf(statusOf(item));
   const next = CYCLE[(currentIndex + 1) % CYCLE.length];
-  persist({ ...docStatus.value, [item.id]: next });
+  try {
+    await persist({ ...docStatus.value, [item.id]: next });
+  } finally {
+    pendingIds.value.delete(item.id);
+  }
 };
 
 const chipClass = item => {
@@ -137,9 +150,10 @@ const chargePending = async () => {
       :key="item.id"
       type="button"
       data-testid="doc-chip"
-      class="flex items-center justify-between gap-2 px-3 py-2 text-sm text-left rounded-lg border transition-colors"
+      class="flex items-center justify-between gap-2 px-3 py-2 text-sm text-left rounded-lg border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       :class="chipClass(item)"
       :title="$t('RAMON.DOCS.CYCLE_HINT')"
+      :disabled="pendingIds.has(item.id)"
       @click="cycle(item)"
     >
       <span class="truncate">{{ itemLabel(item) }}</span>

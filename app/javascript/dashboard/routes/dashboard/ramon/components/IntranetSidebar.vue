@@ -1,94 +1,121 @@
 <script setup>
 import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 
 const { t } = useI18n();
+const route = useRoute();
 const { accountScopedRoute } = useAccount();
+const { isAdmin } = useAdmin();
 
-const sections = computed(() => [
-  {
-    label: t('RAMON.NAV.COMERCIAL'),
-    items: [
-      {
-        key: 'overview',
-        label: t('RAMON.NAV.OVERVIEW'),
-        icon: 'i-lucide-layout-dashboard',
-        to: accountScopedRoute('ramon_index'),
-      },
-      {
-        key: 'esteira',
-        label: t('RAMON.NAV.ESTEIRA'),
-        icon: 'i-lucide-zap',
-        to: accountScopedRoute('ramon_esteira'),
-      },
-      {
-        key: 'funil',
-        label: t('RAMON.NAV.FUNIL'),
-        icon: 'i-lucide-filter',
-        to: accountScopedRoute('ramon_funil'),
-      },
-      {
-        key: 'agenda',
-        label: t('RAMON.NAV.AGENDA'),
-        icon: 'i-lucide-calendar-days',
-        to: accountScopedRoute('ramon_agenda'),
-      },
-      {
-        key: 'pessoas',
-        label: t('RAMON.NAV.LINHA_DA_VIDA'),
-        icon: 'i-lucide-heart-pulse',
-        to: accountScopedRoute('ramon_pessoas'),
-      },
-      {
-        key: 'calculos',
-        label: t('RAMON.NAV.CALCULOS'),
-        icon: 'i-lucide-calculator',
-        to: accountScopedRoute('ramon_calculos'),
-      },
-      {
-        key: 'funil_config',
-        label: t('RAMON.NAV.FUNIL_CONFIG'),
-        icon: 'i-lucide-sliders-horizontal',
-        to: accountScopedRoute('ramon_funil_config'),
-      },
-      {
-        key: 'playbooks',
-        label: t('RAMON.NAV.PLAYBOOKS'),
-        icon: 'i-lucide-book-open',
-        to: accountScopedRoute('ramon_playbooks'),
-      },
-      {
-        key: 'sdr',
-        label: t('RAMON.NAV.SDR'),
-        icon: 'i-lucide-phone',
-        soon: true,
-      },
-    ],
-  },
-  {
-    label: t('RAMON.NAV.JURIDICO'),
-    items: [
-      {
-        key: 'triagem',
-        label: t('RAMON.NAV.TRIAGEM'),
-        icon: 'i-lucide-gavel',
-        soon: true,
-      },
-    ],
-  },
-  {
-    label: t('RAMON.NAV.INTELIGENCIA'),
-    items: [
-      {
-        key: 'agentes',
-        label: t('RAMON.NAV.AGENTES'),
-        icon: 'i-lucide-bot',
-        to: accountScopedRoute('ramon_triage_agents'),
-      },
-    ],
-  },
-]);
+// `names` = rotas que acendem o item (deep-links contextuais acendem o irmão:
+// ex. Cálculos por lead acende "Cálculos"). `adminOnly` espelha o guard da rota.
+const sections = computed(() =>
+  [
+    {
+      label: t('RAMON.NAV.COMERCIAL'),
+      items: [
+        {
+          key: 'overview',
+          label: t('RAMON.NAV.OVERVIEW'),
+          icon: 'i-lucide-layout-dashboard',
+          to: accountScopedRoute('ramon_index'),
+          names: ['ramon_index'],
+        },
+        {
+          key: 'esteira',
+          label: t('RAMON.NAV.ESTEIRA'),
+          icon: 'i-lucide-zap',
+          to: accountScopedRoute('ramon_esteira'),
+          names: ['ramon_esteira'],
+        },
+        {
+          key: 'funil',
+          label: t('RAMON.NAV.FUNIL'),
+          icon: 'i-lucide-filter',
+          to: accountScopedRoute('ramon_funil'),
+          names: ['ramon_funil'],
+        },
+        {
+          key: 'agenda',
+          label: t('RAMON.NAV.AGENDA'),
+          icon: 'i-lucide-calendar-days',
+          to: accountScopedRoute('ramon_agenda'),
+          names: ['ramon_agenda'],
+        },
+        {
+          key: 'pessoas',
+          label: t('RAMON.NAV.LINHA_DA_VIDA'),
+          icon: 'i-lucide-heart-pulse',
+          to: accountScopedRoute('ramon_pessoas'),
+          names: ['ramon_pessoas', 'ramon_linha_da_vida', 'ramon_lead_dossie'],
+        },
+        {
+          key: 'calculos',
+          label: t('RAMON.NAV.CALCULOS'),
+          icon: 'i-lucide-calculator',
+          to: accountScopedRoute('ramon_calculos'),
+          names: ['ramon_calculos', 'ramon_calculos_lead'],
+        },
+        {
+          key: 'funil_config',
+          label: t('RAMON.NAV.FUNIL_CONFIG'),
+          icon: 'i-lucide-sliders-horizontal',
+          to: accountScopedRoute('ramon_funil_config'),
+          names: ['ramon_funil_config'],
+          adminOnly: true,
+        },
+        {
+          key: 'playbooks',
+          label: t('RAMON.NAV.PLAYBOOKS'),
+          icon: 'i-lucide-book-open',
+          to: accountScopedRoute('ramon_playbooks'),
+          names: ['ramon_playbooks'],
+          adminOnly: true,
+        },
+        {
+          key: 'sdr',
+          label: t('RAMON.NAV.SDR'),
+          icon: 'i-lucide-phone',
+          soon: true,
+        },
+      ],
+    },
+    {
+      label: t('RAMON.NAV.JURIDICO'),
+      items: [
+        {
+          key: 'triagem',
+          label: t('RAMON.NAV.TRIAGEM'),
+          icon: 'i-lucide-gavel',
+          soon: true,
+        },
+      ],
+    },
+    {
+      label: t('RAMON.NAV.INTELIGENCIA'),
+      items: [
+        {
+          key: 'agentes',
+          label: t('RAMON.NAV.AGENTES'),
+          icon: 'i-lucide-bot',
+          to: accountScopedRoute('ramon_triage_agents'),
+          names: ['ramon_triage_agents'],
+          adminOnly: true,
+        },
+      ],
+    },
+  ]
+    .map(section => ({
+      ...section,
+      items: section.items.filter(item => !item.adminOnly || isAdmin.value),
+    }))
+    .filter(section => section.items.length)
+);
+
+const isActive = item => item.names?.includes(route.name);
 </script>
 
 <template>
@@ -112,11 +139,12 @@ const sections = computed(() => [
           :to="item.soon ? undefined : item.to"
           :title="item.label"
           class="flex items-center h-8 gap-2 px-2 text-sm rounded-lg"
-          :class="
+          :class="[
             item.soon
               ? 'text-n-slate-9 cursor-default'
-              : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
-          "
+              : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12',
+            isActive(item) ? 'bg-n-alpha-2 text-n-iris-11' : '',
+          ]"
         >
           <span :class="item.icon" class="flex-shrink-0 size-4" />
           <span class="truncate">{{ item.label }}</span>

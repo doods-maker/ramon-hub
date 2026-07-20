@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import Draggable from 'vuedraggable';
+import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import LeadCard from './LeadCard.vue';
 import StageHeaderMenu from './StageHeaderMenu.vue';
 
@@ -100,11 +101,11 @@ const toggleCollapsed = () => {
     <!-- acento estrutural: a cor da etapa marca o topo da coluna -->
     <span
       class="h-0.5 w-full flex-shrink-0"
-      :style="{ backgroundColor: stage.color || '#71717a' }"
+      :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
     />
     <span
       class="rounded-full size-2.5 flex-shrink-0"
-      :style="{ backgroundColor: stage.color || '#71717a' }"
+      :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
     />
     <span data-testid="stage-count" class="text-xs text-n-slate-9">
       {{ localLeads.length }}
@@ -122,7 +123,7 @@ const toggleCollapsed = () => {
     <!-- acento estrutural: a cor da etapa marca o topo da coluna -->
     <div
       class="h-0.5 flex-shrink-0"
-      :style="{ backgroundColor: stage.color || '#71717a' }"
+      :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
     />
     <div class="flex items-center justify-between px-3 py-2">
       <span
@@ -130,7 +131,7 @@ const toggleCollapsed = () => {
       >
         <span
           class="rounded-full size-2.5"
-          :style="{ backgroundColor: stage.color || '#71717a' }"
+          :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
         />
         {{ stage.name }}
         <span
@@ -145,6 +146,7 @@ const toggleCollapsed = () => {
       <span class="flex items-center gap-2">
         <span class="flex flex-col items-end leading-tight">
           <span
+            v-if="totalValue"
             data-testid="stage-total"
             class="text-xs tabular-nums text-n-slate-9"
           >
@@ -201,6 +203,7 @@ const toggleCollapsed = () => {
         <LeadCard
           :lead="element"
           :focused="element.id === focusedLeadId"
+          hide-stage
           @open-conversation="id => emit('openConversation', id)"
           @open-lead="lead => emit('openLead', lead)"
         />

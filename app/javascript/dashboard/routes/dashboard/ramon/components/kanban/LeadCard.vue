@@ -7,11 +7,14 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { waMeUrl } from '../../helpers/phone';
 import { formatBrl } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
+import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import TaskBellMenu from './TaskBellMenu.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
   focused: { type: Boolean, default: false },
+  // No board o card já está na coluna da etapa — o chip seria redundante.
+  hideStage: { type: Boolean, default: false },
 });
 const emit = defineEmits(['openConversation', 'openLead']);
 
@@ -121,13 +124,17 @@ const showWhatsApp = computed(
 );
 
 const onSchedule = async ({ dueAt, title }) => {
-  await store.dispatch('leadTasks/create', {
-    leadId: props.lead.id,
-    title,
-    kind: 'follow_up',
-    dueAt,
-  });
-  useAlert(t('RAMON.KANBAN.CARD.TASK_SCHEDULED'));
+  try {
+    await store.dispatch('leadTasks/create', {
+      leadId: props.lead.id,
+      title,
+      kind: 'follow_up',
+      dueAt,
+    });
+    useAlert(t('RAMON.KANBAN.CARD.TASK_SCHEDULED'));
+  } catch (e) {
+    useAlert(t('RAMON.TASKS.CREATE_ERROR'));
+  }
 };
 
 const copyPhone = async () => {
@@ -139,15 +146,23 @@ const copyPhone = async () => {
 <template>
   <div
     ref="cardEl"
-    class="p-3 mb-2 rounded-xl bg-n-solid-2 border cursor-pointer hover:border-n-iris-8"
-    :class="[borderClass, { 'ring-2 ring-n-iris-9': focused }]"
+    class="p-3 mb-2 rounded-xl bg-n-solid-2 border cursor-pointer"
+    :class="[
+      borderClass,
+      {
+        // hover só sobre a borda neutra — não apaga o sinal âmbar/ruby de risco
+        'hover:border-n-iris-8': borderClass === 'border-n-weak',
+        'ring-2 ring-n-iris-9': focused,
+      },
+    ]"
+    @click="emit('openLead', lead)"
   >
     <!-- Linha 1: nome + valor (o que se escaneia) e ações rápidas -->
     <div class="flex items-center gap-1.5">
       <button
         data-testid="lead-card-body"
         class="flex-1 min-w-0 text-left"
-        @click="emit('openLead', lead)"
+        @click.stop="emit('openLead', lead)"
       >
         <p class="text-sm font-medium truncate text-n-slate-12">
           {{ lead.name }}
@@ -198,7 +213,7 @@ const copyPhone = async () => {
     <!-- Linha 3: metadados discretos (cor só na semântica da etapa, via borda) -->
     <div
       v-if="
-        lead.stage_name ||
+        (lead.stage_name && !hideStage) ||
         daysInStage !== null ||
         lead.benefit_type_name ||
         lead.lead_priority_name
@@ -206,10 +221,10 @@ const copyPhone = async () => {
       class="flex flex-wrap items-center gap-1.5 mt-2"
     >
       <span
-        v-if="lead.stage_name"
+        v-if="lead.stage_name && !hideStage"
         data-testid="stage-chip"
         class="inline-block px-2 py-0.5 text-[11px] rounded-full border bg-n-alpha-2 text-n-slate-11"
-        :style="{ borderColor: lead.stage_color || '#71717a' }"
+        :style="{ borderColor: lead.stage_color || DEFAULT_STAGE_COLOR }"
       >
         {{ lead.stage_name }}
       </span>

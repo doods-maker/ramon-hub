@@ -32,6 +32,14 @@ const matchesFilters = (lead, filters = {}) => {
   )
     return false;
   if (filters.source && !eq(lead.source, filters.source)) return false;
+  // agentId no servidor casa SDR ou Closer (leads_controller).
+  if (
+    filters.agentId &&
+    !eq(lead.sdr_id, filters.agentId) &&
+    !eq(lead.closer_id, filters.agentId)
+  )
+    return false;
+  if (filters.channel && !eq(lead.channel, filters.channel)) return false;
   if (filters.stalled && !lead.stalled) return false;
   if (filters.noOpenTask && lead.open_tasks_count !== 0) return false;
   // created_at é ISO; comparar só a data (YYYY-MM-DD) evita ruído de fuso.

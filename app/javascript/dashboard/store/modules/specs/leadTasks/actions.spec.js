@@ -36,6 +36,17 @@ describe('leadTasks actions', () => {
     expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD_TASKS, payload);
   });
 
+  it('fetchAccountScope marca hasError e desliga o isFetching na falha', async () => {
+    axios.get.mockRejectedValue(new Error('boom'));
+    await actions.fetchAccountScope({ commit });
+    expect(commit).toHaveBeenCalledWith(types.SET_LEAD_TASKS_UI_FLAG, {
+      hasError: true,
+    });
+    expect(commit).toHaveBeenLastCalledWith(types.SET_LEAD_TASKS_UI_FLAG, {
+      isFetching: false,
+    });
+  });
+
   it('create posta com due_at snake_case e faz MERGE_LEAD_TASK', async () => {
     const task = { id: 3, lead_id: 10, title: 'Ligar' };
     axios.post.mockResolvedValue({ data: task });

@@ -88,6 +88,8 @@ const leads = computed(() => data.value?.leads ?? []);
 
 const fmtDate = value => {
   if (!value) return '';
+  // Prescrição chega como Date (addMonths); marcos/DCB chegam string ISO.
+  if (value instanceof Date) return value.toLocaleDateString('pt-BR');
   return new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString(
     'pt-BR'
   );
@@ -151,11 +153,10 @@ const conversationUrl = lead =>
 </script>
 
 <template>
-  <div class="flex-1 w-full h-full p-6 overflow-y-auto bg-n-background">
+  <div class="flex-1 w-full h-full p-8 overflow-y-auto bg-n-background">
     <!-- Modo busca: rota sem contactId (entrada "Linha da Vida" do menu) -->
     <template v-if="!route.params.contactId">
       <RamonPageHeader
-        compact
         :title="$t('RAMON.LINHA_DA_VIDA.TITLE')"
         :subtitle="$t('RAMON.LINHA_DA_VIDA.SEARCH_HINT')"
       />
@@ -206,16 +207,21 @@ const conversationUrl = lead =>
       <div class="h-24 rounded-xl bg-n-solid-2" />
       <div class="h-40 rounded-xl bg-n-solid-2" />
     </div>
-    <p v-else-if="error" class="text-sm text-n-ruby-11">
-      {{ $t('RAMON.LINHA_DA_VIDA.ERROR') }}
-    </p>
+    <div v-else-if="error" class="flex items-center gap-3">
+      <p class="text-sm text-n-ruby-11">
+        {{ $t('RAMON.LINHA_DA_VIDA.ERROR') }}
+      </p>
+      <button
+        data-testid="lifeline-retry"
+        class="text-sm text-n-iris-11 hover:underline"
+        @click="fetchData"
+      >
+        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
+    </div>
 
     <template v-else-if="contact">
-      <RamonPageHeader
-        compact
-        :title="contact.name"
-        :subtitle="headerSubtitle"
-      />
+      <RamonPageHeader :title="contact.name" :subtitle="headerSubtitle" />
       <p
         v-if="!contact.data_nascimento"
         data-testid="lifeline-no-birthdate"
@@ -229,7 +235,7 @@ const conversationUrl = lead =>
         <h2 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
           {{ $t('RAMON.LINHA_DA_VIDA.FUTURE') }}
         </h2>
-        <p v-if="!futureItems.length" class="text-sm text-n-slate-9">
+        <p v-if="!futureItems.length" class="text-sm text-n-slate-10">
           {{ $t('RAMON.LINHA_DA_VIDA.FUTURE_EMPTY') }}
         </p>
         <ul class="flex flex-col gap-2">
@@ -281,7 +287,7 @@ const conversationUrl = lead =>
         <h2 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
           {{ $t('RAMON.LINHA_DA_VIDA.PRESENT') }}
         </h2>
-        <p v-if="!openLeads.length" class="text-sm text-n-slate-9">
+        <p v-if="!openLeads.length" class="text-sm text-n-slate-10">
           {{ $t('RAMON.LINHA_DA_VIDA.PRESENT_EMPTY') }}
         </p>
         <ul class="flex flex-col gap-2">
@@ -293,8 +299,17 @@ const conversationUrl = lead =>
             <div class="flex items-center justify-between gap-2">
               <span class="text-sm text-n-slate-12">{{ lead.name }}</span>
               <span
-                class="px-2 py-0.5 text-xs rounded-full text-white shrink-0"
-                :style="{ backgroundColor: lead.stage_color || '#71717a' }"
+                class="px-2 py-0.5 text-xs rounded-full shrink-0"
+                :class="
+                  lead.stage_color
+                    ? 'text-white'
+                    : 'bg-n-alpha-2 text-n-slate-11'
+                "
+                :style="
+                  lead.stage_color
+                    ? { backgroundColor: lead.stage_color }
+                    : undefined
+                "
               >
                 {{ lead.stage_name }}
               </span>
@@ -329,7 +344,7 @@ const conversationUrl = lead =>
         <h2 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
           {{ $t('RAMON.LINHA_DA_VIDA.PAST') }}
         </h2>
-        <p v-if="!closedLeads.length" class="text-sm text-n-slate-9">
+        <p v-if="!closedLeads.length" class="text-sm text-n-slate-10">
           {{ $t('RAMON.LINHA_DA_VIDA.PAST_EMPTY') }}
         </p>
         <ul class="flex flex-col gap-2">

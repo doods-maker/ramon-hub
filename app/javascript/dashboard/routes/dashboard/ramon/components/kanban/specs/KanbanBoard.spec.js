@@ -23,6 +23,7 @@ const buildStore = () =>
         getters: {
           getLeadsByStage: () => () => [],
           getLeads: () => [{ id: 10, lead_stage_id: 1, position: 0 }],
+          getUIFlags: () => ({ isFetching: false }),
           getFilters: () => ({
             q: '',
             benefitTypeId: null,
@@ -61,7 +62,15 @@ const mountBoard = () => {
     global: {
       plugins: [store],
       mocks: { $t: k => k },
-      stubs: { LeadDrawer: true, ConversationDock: true, SavedViews: true },
+      stubs: {
+        LeadDrawer: true,
+        ConversationDock: true,
+        SavedViews: true,
+        // sem stub, o leave dos modais em <Transition> atrasa o unmount
+        transition: true,
+        // LostReasonModal linka pra Config do Funil; sem router no teste
+        RouterLink: true,
+      },
     },
   });
 };

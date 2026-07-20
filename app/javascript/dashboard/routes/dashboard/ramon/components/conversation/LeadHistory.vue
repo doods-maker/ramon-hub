@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
+import { formatBrl } from 'dashboard/routes/dashboard/ramon/helpers/currency';
 
 const props = defineProps({
   leadId: { type: [Number, String], required: true },
@@ -9,14 +10,26 @@ const props = defineProps({
 defineOptions({ name: 'LeadHistory' });
 
 const store = useStore();
-const { t } = useI18n();
+const { t, te } = useI18n();
 const activities = ref([]);
+const isLoading = ref(false);
+const hasError = ref(false);
 
 const load = async () => {
-  activities.value = await store.dispatch(
-    'leads/fetchActivities',
-    Number(props.leadId)
-  );
+  // zera antes de buscar: nunca mostrar a timeline do lead anterior
+  activities.value = [];
+  isLoading.value = true;
+  hasError.value = false;
+  try {
+    activities.value = await store.dispatch(
+      'leads/fetchActivities',
+      Number(props.leadId)
+    );
+  } catch (e) {
+    hasError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
 };
 watch(() => props.leadId, load, { immediate: true });
 
@@ -25,9 +38,21 @@ const ordered = computed(() => [...activities.value].reverse());
 
 const labelKey = kind => `RAMON.LEAD_PANEL.HISTORY.KIND.${kind.toUpperCase()}`;
 
+// kind desconhecido não vaza chave crua (padrão do Dossie)
+const label = kind => {
+  const key = labelKey(kind);
+  return te(key) ? t(key) : kind;
+};
+
 const detail = activity => {
-  let text = ` · ${t(labelKey(activity.kind))}`;
-  if (activity.to_value) text += ` → ${activity.to_value}`;
+  let text = ` · ${label(activity.kind)}`;
+  if (activity.to_value) {
+    const toValue =
+      activity.kind === 'value_changed'
+        ? formatBrl(activity.to_value)
+        : activity.to_value;
+    text += ` → ${toValue}`;
+  }
   return text;
 };
 
@@ -47,7 +72,26 @@ const fmtDateTime = value => {
 <template>
   <div class="flex flex-col gap-3 p-1">
     <p
-      v-if="!ordered.length"
+      v-if="isLoading"
+      data-testid="history-loading"
+      class="text-xs text-n-slate-9"
+    >
+      {{ $t('RAMON.LEAD_PANEL.HISTORY.LOADING') }}
+    </p>
+    <template v-else-if="hasError">
+      <p data-testid="history-error" class="text-xs text-n-ruby-11">
+        {{ $t('RAMON.LEAD_PANEL.HISTORY.LOAD_ERROR') }}
+      </p>
+      <button
+        data-testid="history-retry"
+        class="self-start text-xs text-n-iris-11 hover:underline"
+        @click="load"
+      >
+        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
+    </template>
+    <p
+      v-else-if="!ordered.length"
       data-testid="history-empty"
       class="text-xs text-n-slate-9"
     >

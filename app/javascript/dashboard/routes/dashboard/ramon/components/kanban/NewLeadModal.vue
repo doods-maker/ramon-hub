@@ -6,6 +6,7 @@ import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import LeadsAPI from 'dashboard/api/leads';
 import ContactAPI from 'dashboard/api/contacts';
+import { parseBrlInput } from '../../helpers/currency';
 
 const emit = defineEmits(['close', 'created']);
 const store = useStore();
@@ -41,6 +42,10 @@ const isDirty = computed(
 onKeyStroke('Escape', () => {
   if (!isDirty.value) emit('close');
 });
+// Mesmo guard no backdrop: misclick não descarta um formulário sujo.
+const onBackdrop = () => {
+  if (!isDirty.value) emit('close');
+};
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
 const benefitTypes = computed(
@@ -112,38 +117,52 @@ const resolveContactId = async e164 => {
   }
 };
 
+// Valor em formato BRL livre ("1.500,00"); texto inválido bloqueia o salvar.
+const isValueInvalid = computed(
+  () => value.value.trim() !== '' && parseBrlInput(value.value) === null
+);
+
+// Guard contra duplo-clique: o segundo submit espera o primeiro terminar.
+const submitting = ref(false);
+
 const submit = async () => {
   const firstStage = stages.value[0];
   if (!name.value.trim() || !firstStage) return;
-
-  let contactId = null;
-  const e164 = normalizedPhone.value;
-  if (e164) contactId = await resolveContactId(e164);
+  if (submitting.value || isValueInvalid.value) return;
+  submitting.value = true;
 
   try {
-    const lead = await store.dispatch('leads/create', {
-      name: name.value.trim(),
-      lead_stage_id: firstStage.id,
-      benefit_type_id: benefitTypeId.value,
-      lead_priority_id: priorityId.value,
-      source: source.value.trim() || null,
-      channel: channel.value || null,
-      value: value.value === '' ? null : Number(value.value),
-      contact_id: contactId,
-      // banner de duplicado visível → o botão já diz "Criar mesmo assim",
-      // então este clique é a confirmação explícita.
-      force: existingLead.value ? true : undefined,
-    });
-    emit('created', lead);
-    emit('close');
-  } catch (error) {
-    const existing = error?.response?.data?.existing;
-    if (error?.response?.status === 409 && existing) {
-      // gate do servidor (cobre corrida em que o blur não rodou a tempo)
-      existingLead.value = existing;
-    } else {
-      useAlert(t('RAMON.FUNIL.NEW.CREATE_ERROR'));
+    let contactId = null;
+    const e164 = normalizedPhone.value;
+    if (e164) contactId = await resolveContactId(e164);
+
+    try {
+      const lead = await store.dispatch('leads/create', {
+        name: name.value.trim(),
+        lead_stage_id: firstStage.id,
+        benefit_type_id: benefitTypeId.value,
+        lead_priority_id: priorityId.value,
+        source: source.value.trim() || null,
+        channel: channel.value || null,
+        value: value.value.trim() === '' ? null : parseBrlInput(value.value),
+        contact_id: contactId,
+        // banner de duplicado visível → o botão já diz "Criar mesmo assim",
+        // então este clique é a confirmação explícita.
+        force: existingLead.value ? true : undefined,
+      });
+      emit('created', lead);
+      emit('close');
+    } catch (error) {
+      const existing = error?.response?.data?.existing;
+      if (error?.response?.status === 409 && existing) {
+        // gate do servidor (cobre corrida em que o blur não rodou a tempo)
+        existingLead.value = existing;
+      } else {
+        useAlert(t('RAMON.FUNIL.NEW.CREATE_ERROR'));
+      }
     }
+  } finally {
+    submitting.value = false;
   }
 };
 </script>
@@ -151,7 +170,7 @@ const submit = async () => {
 <template>
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click.self="emit('close')"
+    @click.self="onBackdrop"
   >
     <div
       class="w-96 max-w-[92vw] max-h-[90vh] overflow-y-auto p-5 rounded-2xl bg-n-solid-1 border border-n-weak"
@@ -167,7 +186,7 @@ const submit = async () => {
         ref="nameInput"
         v-model="name"
         data-testid="new-lead-name"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
       />
 
       <label class="block mb-1 text-xs text-n-slate-10">{{
@@ -176,7 +195,7 @@ const submit = async () => {
       <input
         v-model="phone"
         data-testid="new-lead-phone"
-        class="w-full px-3 py-2 mb-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-3 py-2 mb-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
         @blur="onPhoneBlur"
       />
       <div
@@ -204,7 +223,7 @@ const submit = async () => {
       }}</label>
       <select
         v-model="benefitTypeId"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
       >
         <option :value="null">—</option>
         <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
@@ -219,7 +238,7 @@ const submit = async () => {
         v-model="source"
         list="new-lead-sources"
         data-testid="new-lead-source"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
       />
       <datalist id="new-lead-sources">
         <option v-for="s in sources" :key="s" :value="s" />
@@ -231,7 +250,7 @@ const submit = async () => {
       <select
         v-model="channel"
         data-testid="new-lead-channel"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
       >
         <option value="">
           {{ $t('RAMON.FUNIL.NEW.CHANNEL_PLACEHOLDER') }}
@@ -249,9 +268,9 @@ const submit = async () => {
           <input
             v-model="value"
             data-testid="new-lead-value"
-            type="number"
-            step="0.01"
-            class="w-full px-3 py-2 mb-4 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+            type="text"
+            inputmode="decimal"
+            class="w-full px-3 py-2 mb-4 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
           />
         </div>
         <div class="flex-1">
@@ -261,7 +280,7 @@ const submit = async () => {
           <select
             v-model="priorityId"
             data-testid="new-lead-priority"
-            class="w-full px-3 py-2 mb-4 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+            class="w-full px-3 py-2 mb-4 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
           >
             <option :value="null">—</option>
             <option v-for="p in priorities" :key="p.id" :value="p.id">
@@ -280,8 +299,10 @@ const submit = async () => {
         </button>
         <button
           data-testid="new-lead-save"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
-          :disabled="!name.trim()"
+          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+          :disabled="
+            !name.trim() || submitting || !stages.length || isValueInvalid
+          "
           @click="submit"
         >
           {{

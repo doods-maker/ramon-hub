@@ -94,22 +94,61 @@ const lostReasonName = ref('');
 const wonPrompt = ref(false);
 const wonValue = ref('');
 
+// ressincroniza TUDO — usada na troca de lead e na reversão pós-erro de save
+const syncAll = l => {
+  name.value = l?.name ?? '';
+  value.value = formatBrl(l?.value);
+  source.value = l?.source ?? '';
+  dcbEm.value = l?.dcb_em ?? '';
+  benefitMonthlyValue.value = formatBrl(l?.benefit_monthly_value);
+  contactCpf.value = formatCpf(l?.contact_cpf);
+  contactNascimento.value = l?.contact_data_nascimento ?? '';
+  contactSexo.value = l?.contact_sexo ?? '';
+  stageId.value = l?.lead_stage_id ?? null;
+  lostPrompt.value = false;
+  lostReasonName.value = '';
+  wonPrompt.value = false;
+  wonValue.value = '';
+};
+
+// [data-testid do input, ref local, leitura do lead] — p/ absorver broadcasts
+// sem apagar o que o usuário está digitando (só atualiza campo SEM foco).
+const FIELD_SYNC = [
+  ['field-name', name, l => l?.name ?? ''],
+  ['field-value', value, l => formatBrl(l?.value)],
+  ['field-source', source, l => l?.source ?? ''],
+  ['field-dcb-em', dcbEm, l => l?.dcb_em ?? ''],
+  [
+    'field-benefit-monthly-value',
+    benefitMonthlyValue,
+    l => formatBrl(l?.benefit_monthly_value),
+  ],
+  ['field-contact-cpf', contactCpf, l => formatCpf(l?.contact_cpf)],
+  [
+    'field-contact-nascimento',
+    contactNascimento,
+    l => l?.contact_data_nascimento ?? '',
+  ],
+  ['field-contact-sexo', contactSexo, l => l?.contact_sexo ?? ''],
+];
+
 watch(
   () => props.lead,
-  l => {
-    name.value = l?.name ?? '';
-    value.value = formatBrl(l?.value);
-    source.value = l?.source ?? '';
-    dcbEm.value = l?.dcb_em ?? '';
-    benefitMonthlyValue.value = formatBrl(l?.benefit_monthly_value);
-    contactCpf.value = formatCpf(l?.contact_cpf);
-    contactNascimento.value = l?.contact_data_nascimento ?? '';
-    contactSexo.value = l?.contact_sexo ?? '';
-    stageId.value = l?.lead_stage_id ?? null;
-    lostPrompt.value = false;
-    lostReasonName.value = '';
-    wonPrompt.value = false;
-    wonValue.value = '';
+  (l, prev) => {
+    // lead trocou: ressincroniza tudo e fecha prompts
+    if (l?.id !== prev?.id) {
+      syncAll(l);
+      return;
+    }
+    // mesmo lead (EDIT/MERGE/broadcast): preserva o campo em digitação
+    const focused = document.activeElement?.dataset?.testid;
+    FIELD_SYNC.forEach(([testId, target, read]) => {
+      if (testId !== focused) target.value = read(l);
+    });
+    // etapa: não mexer com prompt aberto (escolha pendente do usuário)
+    if (!lostPrompt.value && !wonPrompt.value && focused !== 'field-stage') {
+      stageId.value = l?.lead_stage_id ?? null;
+    }
   },
   { immediate: true }
 );
@@ -145,16 +184,31 @@ watch(
   { immediate: true }
 );
 
+const savingNote = ref(false);
 const addNote = async () => {
   const body = newNote.value.trim();
-  if (!body) return;
-  await store.dispatch('leads/createNote', { leadId: props.lead.id, body });
-  newNote.value = '';
-  await loadNotes();
+  if (!body || savingNote.value) return;
+  savingNote.value = true;
+  try {
+    await store.dispatch('leads/createNote', { leadId: props.lead.id, body });
+    newNote.value = '';
+    await loadNotes();
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    savingNote.value = false;
+  }
 };
 
-const save = payload => {
-  store.dispatch('leads/update', { id: props.lead.id, ...payload });
+// try/catch aqui cobre saveText/saveValue/saveSelect e cia; no erro,
+// ressincroniza os refs com o lead da store (padrão do commitStage).
+const save = async payload => {
+  try {
+    await store.dispatch('leads/update', { id: props.lead.id, ...payload });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    syncAll(props.lead);
+  }
 };
 
 // texto: salva no blur só se mudou
@@ -259,8 +313,12 @@ const confirmWonStage = () => {
 const skipWonStage = () => commitStage(stageId.value);
 
 const copyPhone = async () => {
-  await copyTextToClipboard(props.lead.contact_phone);
-  useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
+  try {
+    await copyTextToClipboard(props.lead.contact_phone);
+    useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
+  } catch (error) {
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+  }
 };
 
 const saveContactField = async payload => {
@@ -298,7 +356,7 @@ const consentGranted = computed(() => consent.value?.granted === true);
 const consentStatusText = computed(() => {
   if (!consent.value) return t('RAMON.DRAWER.CONSENT.NONE');
   const date = consent.value.at
-    ? new Date(consent.value.at).toLocaleDateString()
+    ? new Date(consent.value.at).toLocaleDateString('pt-BR')
     : '—';
   if (consentGranted.value)
     return t('RAMON.DRAWER.CONSENT.GRANTED', {
@@ -536,6 +594,7 @@ const toggleConsent = () =>
     }}</label>
     <input
       v-model="source"
+      data-testid="field-source"
       class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @blur="saveSource"
     />
@@ -719,7 +778,8 @@ const toggleConsent = () =>
       />
       <button
         data-testid="note-add"
-        class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+        class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
+        :disabled="savingNote"
         @click="addNote"
       >
         {{ $t('RAMON.DRAWER.NOTES_ADD_BUTTON') }}

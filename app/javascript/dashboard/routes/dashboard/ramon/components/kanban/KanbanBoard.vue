@@ -27,6 +27,29 @@ const stages = computed(() => getters['leadConfig/getStages'].value);
 const lostReasons = computed(() => getters['leadConfig/getLostReasons'].value);
 const orderedStages = ref([]);
 const stageToRemove = ref(null);
+const newStageModalOpen = ref(false);
+
+// Estado do primeiro carregamento: skeleton enquanto busca, erro com retry.
+const uiFlags = computed(() => getters['leads/getUIFlags'].value);
+const hasLoadedOnce = ref(false);
+watch(
+  () => uiFlags.value.isFetching,
+  (now, prev) => {
+    if (prev && !now) hasLoadedOnce.value = true;
+  }
+);
+const initialLoading = computed(
+  () => uiFlags.value.isFetching && !hasLoadedOnce.value
+);
+const loadError = ref(false);
+const loadLeads = async () => {
+  loadError.value = false;
+  try {
+    await store.dispatch('leads/loadFilters');
+  } catch (e) {
+    loadError.value = true;
+  }
+};
 
 // Guarda o movimento até o modal de perda/ganho resolver.
 const pendingMove = ref(null);
@@ -92,7 +115,13 @@ const onMove = async ({ id, leadStageId, newIndex }) => {
     position: lead?.position,
   };
   // Demais casos (inclui ganho de lead que já tem valor) persistem na hora.
-  await store.dispatch('leads/move', { id, leadStageId, position: newIndex });
+  try {
+    await store.dispatch('leads/move', { id, leadStageId, position: newIndex });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    boardVersion.value += 1; // devolve o card à origem
+    return;
+  }
   // Só oferece desfazer quando trocou de coluna (reordenar não pede undo).
   if (previous.leadStageId && previous.leadStageId !== leadStageId) {
     useAlert(t('RAMON.KANBAN.MOVE_DONE'), {
@@ -112,12 +141,18 @@ const onMove = async ({ id, leadStageId, newIndex }) => {
 const confirmLost = async ({ lostReason }) => {
   if (!pendingMove.value) return;
   const { id, leadStageId, position } = pendingMove.value;
-  await store.dispatch('leads/update', {
-    id,
-    lead_stage_id: leadStageId,
-    position,
-    lost_reason: lostReason,
-  });
+  try {
+    await store.dispatch('leads/update', {
+      id,
+      lead_stage_id: leadStageId,
+      position,
+      lost_reason: lostReason,
+    });
+  } catch (e) {
+    // modal fica aberto para o retry
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    return;
+  }
   pendingMove.value = null;
   lostModalOpen.value = false;
 };
@@ -132,12 +167,18 @@ const confirmWon = async ({ value }) => {
   if (!pendingMove.value) return;
   const { id, leadStageId, position } = pendingMove.value;
   // Um único update: move e (quando informado) grava o valor no mesmo passo.
-  await store.dispatch('leads/update', {
-    id,
-    lead_stage_id: leadStageId,
-    position,
-    ...(value != null ? { value } : {}),
-  });
+  try {
+    await store.dispatch('leads/update', {
+      id,
+      lead_stage_id: leadStageId,
+      position,
+      ...(value != null ? { value } : {}),
+    });
+  } catch (e) {
+    // modal fica aberto para o retry
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    return;
+  }
   pendingMove.value = null;
   wonModalOpen.value = false;
 };
@@ -170,17 +211,34 @@ const moveFocus = delta => {
 
 const focusedLead = () => flatLeads().find(l => l.id === focusedLeadId.value);
 
+// Com qualquer modal aberto, os atalhos do board ficam mudos.
+const anyModalOpen = () =>
+  lostModalOpen.value ||
+  wonModalOpen.value ||
+  !!stageToRemove.value ||
+  newStageModalOpen.value;
+
 useKeyboardEvents({
-  KeyJ: { action: () => moveFocus(1) },
-  KeyK: { action: () => moveFocus(-1) },
+  KeyJ: {
+    action: () => {
+      if (!anyModalOpen()) moveFocus(1);
+    },
+  },
+  KeyK: {
+    action: () => {
+      if (!anyModalOpen()) moveFocus(-1);
+    },
+  },
   KeyE: {
     action: () => {
+      if (anyModalOpen()) return;
       const lead = focusedLead();
       if (lead) onOpenLead(lead);
     },
   },
   KeyC: {
     action: () => {
+      if (anyModalOpen()) return;
       const lead = focusedLead();
       if (lead?.conversation_id) onOpenConversation(lead.conversation_id);
     },
@@ -204,13 +262,14 @@ const confirmRemove = async ({ id, moveToStageId }) => {
   await store.dispatch('leadConfig/deleteStage', { id, moveToStageId });
   stageToRemove.value = null;
 };
-const newStageModalOpen = ref(false);
 const addStage = () => {
   newStageModalOpen.value = true;
 };
 const confirmAddStage = async name => {
-  await store.dispatch('leadConfig/createStage', { name });
+  // Fechar antes do dispatch = guard contra duplo-fire do confirm.
+  if (!newStageModalOpen.value) return;
   newStageModalOpen.value = false;
+  await store.dispatch('leadConfig/createStage', { name });
 };
 const onColumnsReorder = () => {
   store.dispatch(
@@ -230,7 +289,7 @@ watch(
 
 onMounted(() => {
   store.dispatch('leadConfig/get');
-  store.dispatch('leads/loadFilters');
+  loadLeads();
   store.dispatch('agents/get');
 });
 
@@ -297,9 +356,38 @@ const exportCsv = () => {
       <SavedViews />
       <KanbanFilters :filters="filters" @update="onFilterUpdate" />
     </div>
+    <!-- fetch inicial falhou: mensagem + retry no lugar de um board vazio -->
+    <div
+      v-if="loadError"
+      data-testid="board-load-error"
+      class="flex flex-col items-center justify-center flex-1 gap-3 px-4 pb-4"
+    >
+      <p class="text-sm text-n-slate-11">
+        {{ $t('RAMON.FUNIL.LOAD_ERROR') }}
+      </p>
+      <button
+        data-testid="board-load-retry"
+        class="px-3 py-1.5 text-sm rounded-lg border border-n-weak text-n-slate-11 hover:text-n-slate-12"
+        @click="loadLeads"
+      >
+        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
+    </div>
+    <!-- primeiro fetch: skeleton em vez de colunas "vazias" mentirosas -->
+    <div
+      v-else-if="initialLoading"
+      data-testid="board-skeleton"
+      class="flex flex-1 min-h-0 gap-3 px-4 pb-4 overflow-x-hidden"
+    >
+      <div
+        v-for="n in 4"
+        :key="n"
+        class="w-72 h-full max-h-72 flex-shrink-0 rounded-xl bg-n-alpha-2 animate-pulse"
+      />
+    </div>
     <!-- min-h-0 permite a faixa encolher dentro do flex pai; sem isso a coluna
          cresce além da viewport e os cards abaixo da dobra ficam inacessíveis -->
-    <div class="flex flex-1 min-h-0 gap-3 px-4 pb-4 overflow-x-auto">
+    <div v-else class="flex flex-1 min-h-0 gap-3 px-4 pb-4 overflow-x-auto">
       <Draggable
         v-model="orderedStages"
         group="stages"
@@ -333,31 +421,60 @@ const exportCsv = () => {
     </div>
     <LeadDrawer @open-conversation="onOpenConversation" />
     <ConversationDock />
-    <RemoveStageModal
-      v-if="stageToRemove"
-      :stage="stageToRemove"
-      :stages="stages"
-      @confirm="confirmRemove"
-      @cancel="stageToRemove = null"
-    />
-    <LostReasonModal
-      v-if="lostModalOpen"
-      :lost-reasons="lostReasons"
-      @confirm-move="confirmLost"
-      @cancel-move="cancelLost"
-    />
-    <WonValueModal
-      v-if="wonModalOpen"
-      @confirm-value="confirmWon"
-      @cancel-value="cancelWon"
-    />
-    <NamePromptModal
-      v-if="newStageModalOpen"
-      :title="$t('RAMON.FUNIL.STAGE.NEW_PROMPT')"
-      :placeholder="$t('RAMON.FUNIL.STAGE.NEW_PROMPT')"
-      :confirm-label="$t('RAMON.FUNIL.STAGE.ADD')"
-      @confirm="confirmAddStage"
-      @cancel="newStageModalOpen = false"
-    />
+    <Transition
+      enter-active-class="transition-opacity duration-150"
+      leave-active-class="transition-opacity duration-150"
+      enter-from-class="opacity-0"
+      leave-to-class="opacity-0"
+    >
+      <RemoveStageModal
+        v-if="stageToRemove"
+        :stage="stageToRemove"
+        :stages="stages"
+        :leads-count="stageLeads(stageToRemove.id).length"
+        @confirm="confirmRemove"
+        @cancel="stageToRemove = null"
+      />
+    </Transition>
+    <Transition
+      enter-active-class="transition-opacity duration-150"
+      leave-active-class="transition-opacity duration-150"
+      enter-from-class="opacity-0"
+      leave-to-class="opacity-0"
+    >
+      <LostReasonModal
+        v-if="lostModalOpen"
+        :lost-reasons="lostReasons"
+        @confirm-move="confirmLost"
+        @cancel-move="cancelLost"
+      />
+    </Transition>
+    <Transition
+      enter-active-class="transition-opacity duration-150"
+      leave-active-class="transition-opacity duration-150"
+      enter-from-class="opacity-0"
+      leave-to-class="opacity-0"
+    >
+      <WonValueModal
+        v-if="wonModalOpen"
+        @confirm-value="confirmWon"
+        @cancel-value="cancelWon"
+      />
+    </Transition>
+    <Transition
+      enter-active-class="transition-opacity duration-150"
+      leave-active-class="transition-opacity duration-150"
+      enter-from-class="opacity-0"
+      leave-to-class="opacity-0"
+    >
+      <NamePromptModal
+        v-if="newStageModalOpen"
+        :title="$t('RAMON.FUNIL.STAGE.NEW_PROMPT')"
+        :placeholder="$t('RAMON.FUNIL.STAGE.NEW_PROMPT')"
+        :confirm-label="$t('RAMON.FUNIL.STAGE.ADD')"
+        @confirm="confirmAddStage"
+        @cancel="newStageModalOpen = false"
+      />
+    </Transition>
   </div>
 </template>

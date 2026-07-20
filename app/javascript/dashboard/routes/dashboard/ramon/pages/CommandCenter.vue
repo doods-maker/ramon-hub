@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { prescriptionInfo } from '../helpers/prescription';
+import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import StatBlock from '../components/command/StatBlock.vue';
 import LeadList from '../components/command/LeadList.vue';
@@ -21,6 +22,7 @@ const data = computed(() => getters['ramonDashboard/getData'].value);
 const uiFlags = computed(() => getters['ramonDashboard/getUIFlags'].value);
 const isFetching = computed(() => uiFlags.value.isFetching);
 const isLoading = computed(() => isFetching.value && !data.value);
+const hasError = computed(() => uiFlags.value.hasError);
 
 const reload = () => store.dispatch('ramonDashboard/fetch');
 onMounted(reload);
@@ -191,14 +193,14 @@ const openStage = stageId => {
 <template>
   <div class="flex flex-col w-full h-full overflow-auto bg-n-background p-8">
     <RamonPageHeader
-      :eyebrow="t('RAMON.COMMAND.EYEBROW')"
+      :eyebrow="t('RAMON.NAV.COMERCIAL')"
       :title="t('RAMON.COMMAND.TITLE')"
     >
       <template #actions>
         <button
           type="button"
           data-testid="reload"
-          class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12"
+          class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12 disabled:opacity-50 disabled:pointer-events-none"
           :disabled="isFetching"
           @click="reload"
         >
@@ -218,6 +220,19 @@ const openStage = stageId => {
       </div>
       <div class="h-24 rounded-xl bg-n-solid-2" />
       <div class="h-24 rounded-xl bg-n-solid-2" />
+    </div>
+
+    <!-- Erro de carga: mostra retry em vez de fingir "tudo em dia" -->
+    <div v-else-if="hasError" data-testid="command-error" class="text-sm">
+      <p class="text-n-ruby-11">{{ t('RAMON.COMMAND.LOAD_ERROR') }}</p>
+      <button
+        type="button"
+        data-testid="command-retry"
+        class="mt-2 text-xs text-n-iris-11 hover:underline"
+        @click="reload"
+      >
+        {{ t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
     </div>
 
     <div v-else class="flex flex-col gap-10">
@@ -285,7 +300,7 @@ const openStage = stageId => {
                 class="block h-full rounded-full"
                 :style="{
                   width: funnelBarWidth(stage),
-                  backgroundColor: stage.color || '#71717a',
+                  backgroundColor: stage.color || DEFAULT_STAGE_COLOR,
                 }"
               />
             </span>
@@ -394,7 +409,12 @@ const openStage = stageId => {
           v-if="history.length"
           class="p-4 border rounded-xl border-n-weak bg-n-solid-2"
         >
-          <Sparkline :points="historyPoints" :width="320" :height="48" />
+          <Sparkline
+            v-if="historyPoints.length > 1"
+            :points="historyPoints"
+            :width="320"
+            :height="48"
+          />
           <table class="w-full mt-4 text-sm">
             <thead>
               <tr class="text-xs uppercase text-n-slate-10">

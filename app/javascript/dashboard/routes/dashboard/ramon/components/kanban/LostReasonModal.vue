@@ -23,8 +23,16 @@ const confirm = () => {
   emit('confirmMove', { lostReason: text });
 };
 
-// Esc cancela (reverte o drag), igual ao clique no backdrop.
-onKeyStroke('Escape', () => emit('cancelMove'));
+// Esc cancela (reverte o drag), igual ao clique no backdrop — exceto com o
+// textarea focado e com texto: Esc por reflexo não descarta o detalhe digitado.
+onKeyStroke('Escape', () => {
+  if (
+    document.activeElement?.tagName === 'TEXTAREA' &&
+    detail.value.trim() !== ''
+  )
+    return;
+  emit('cancelMove');
+});
 </script>
 
 <template>
@@ -38,26 +46,40 @@ onKeyStroke('Escape', () => emit('cancelMove'));
       <h3 class="mb-3 text-sm text-n-slate-12">
         {{ $t('RAMON.FUNIL.LOST.TITLE') }}
       </h3>
-      <select
-        v-model="reasonId"
-        data-testid="lost-reason-select"
-        class="w-full px-2 py-1.5 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
-      >
-        <option :value="null" disabled>
-          {{ $t('RAMON.FUNIL.LOST.PICK') }}
-        </option>
-        <option v-for="r in lostReasons" :key="r.id" :value="r.id">
-          {{ r.name }}
-        </option>
-      </select>
-      <textarea
-        v-model="detail"
-        data-testid="lost-reason-detail"
-        rows="2"
-        maxlength="500"
-        :placeholder="$t('RAMON.FUNIL.LOST.DETAIL_PLACEHOLDER')"
-        class="w-full px-2 py-1.5 mb-3 text-sm rounded-lg resize-none bg-n-alpha-2 text-n-slate-12"
-      />
+      <!-- sem motivos cadastrados: aponta pra Config em vez do beco sem saída -->
+      <template v-if="!lostReasons.length">
+        <p data-testid="lost-no-reasons" class="mb-3 text-sm text-n-slate-11">
+          {{ $t('RAMON.FUNIL.LOST.NO_REASONS') }}
+        </p>
+        <router-link
+          :to="{ name: 'ramon_funil_config' }"
+          class="inline-block mb-3 text-sm underline text-n-iris-11 hover:text-n-iris-12"
+        >
+          {{ $t('RAMON.FUNIL.LOST.CONFIG_LINK') }}
+        </router-link>
+      </template>
+      <template v-else>
+        <select
+          v-model="reasonId"
+          data-testid="lost-reason-select"
+          class="w-full px-2 py-1.5 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
+        >
+          <option :value="null" disabled>
+            {{ $t('RAMON.FUNIL.LOST.PICK') }}
+          </option>
+          <option v-for="r in lostReasons" :key="r.id" :value="r.id">
+            {{ r.name }}
+          </option>
+        </select>
+        <textarea
+          v-model="detail"
+          data-testid="lost-reason-detail"
+          rows="2"
+          maxlength="500"
+          :placeholder="$t('RAMON.FUNIL.LOST.DETAIL_PLACEHOLDER')"
+          class="w-full px-2 py-1.5 mb-3 text-sm rounded-lg resize-none bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
+        />
+      </template>
       <div class="flex justify-end gap-2">
         <button
           class="px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12"
@@ -66,6 +88,7 @@ onKeyStroke('Escape', () => emit('cancelMove'));
           {{ $t('RAMON.FUNIL.LOST.CANCEL') }}
         </button>
         <button
+          v-if="lostReasons.length"
           data-testid="lost-reason-confirm"
           class="px-3 py-1.5 text-sm rounded-lg bg-n-ruby-9 text-white disabled:opacity-50"
           :disabled="!selectedReason"
