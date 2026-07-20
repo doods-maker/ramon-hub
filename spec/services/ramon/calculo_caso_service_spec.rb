@@ -62,12 +62,13 @@ RSpec.describe Ramon::CalculoCasoService do
     expect(result[:leads].sole.source).to eq(Lead::FONTE_CALCULO)
   end
 
-  it 'CPF que pertence a OUTRO contato não fica sujo em memória no contato reusado' do
-    create(:contact, account: account, cpf: '52998224725')
+  it 'CPF inválido não fica sujo em memória no contato reusado e o resto ainda salva' do
     reusado = create(:contact, account: account, phone_number: '+5548999887766', cpf: nil)
-    result = perform(nome: 'Fulano', telefone: '48999887766', cpf: '52998224725')
+    result = perform(nome: 'Fulano', telefone: '48999887766', cpf: '111.111.111-11',
+                     nascimento: '1980-05-10')
     expect(result[:contact]).to eq(reusado)
     expect(result[:contact].cpf).to be_nil
+    expect(reusado.reload.data_nascimento).to eq(Date.new(1980, 5, 10))
   end
 
   it 'com contact_id cria caso pro contato do hub sem lead' do
