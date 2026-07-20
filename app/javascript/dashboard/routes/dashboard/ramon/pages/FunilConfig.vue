@@ -126,7 +126,9 @@ const submitImport = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full p-8 overflow-y-auto bg-n-background">
+  <div
+    class="flex flex-col w-full h-full p-4 sm:p-8 overflow-y-auto bg-n-background"
+  >
     <RamonPageHeader :title="$t('RAMON.FUNIL_CONFIG.TITLE')" />
 
     <div

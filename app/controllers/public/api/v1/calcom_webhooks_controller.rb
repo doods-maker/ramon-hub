@@ -4,7 +4,14 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
   TIME_ZONE = 'America/Sao_Paulo'.freeze
   TASK_TITLE_PREFIX = 'Reunião Cal.com'.freeze
 
+  # ponytail: janela de dedup no cache Redis já existente — sem tabela nova. Um
+  # corpo validamente assinado só é processado 1x por 24h; cobre replay (o mesmo
+  # POST reenviado) e a entrega at-least-once do Cal.com. Ceiling: replay após a
+  # janela passa — se precisar de garantia permanente, persistir o uid do booking.
+  REPLAY_TTL = 24.hours
+
   before_action :verify_signature
+  before_action :reject_replay
 
   def create
     status = case params[:triggerEvent]
@@ -29,6 +36,13 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
     return if ActiveSupport::SecurityUtils.secure_compare(provided, expected)
 
     head :unauthorized
+  end
+
+  # A assinatura é HMAC do corpo cru → chave única por corpo distinto.
+  def reject_replay
+    signature = request.headers['X-Cal-Signature-256'].to_s
+    key = "ramon:calcom:seen:#{signature}"
+    return head :ok unless Rails.cache.write(key, true, unless_exist: true, expires_in: REPLAY_TTL)
   end
 
   # Mesma conta única do endpoint de leads das LPs.

@@ -36,11 +36,17 @@ class Ramon::LlmClient
                output_tokens: message.output_tokens)
   end
 
+  # Copilot e "Perguntar ao AdvBox" chamam isto SÍNCRONO na thread do Puma; sem
+  # teto, um provider travado segura a thread indefinidamente e esvazia o pool.
+  # 90s cobre a colheita de 200 msgs (roda em job) sem prender o request interativo.
+  REQUEST_TIMEOUT = 90
+
   def self.ask(provider:, model:, system:, user:)
     context = RubyLLM.context do |config|
       config.deepseek_api_key = ENV.fetch('DEEPSEEK_API_KEY', nil)
       config.anthropic_api_key = ENV.fetch('ANTHROPIC_API_KEY', nil)
       config.openai_api_key = ENV.fetch('OPENAI_API_KEY', nil)
+      config.request_timeout = REQUEST_TIMEOUT
     end
     chat = context.chat(model: model, provider: provider.to_sym, assume_model_exists: true)
     chat.with_instructions(system).ask(user)

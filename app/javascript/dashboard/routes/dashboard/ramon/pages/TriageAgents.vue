@@ -135,9 +135,9 @@ onMounted(() => store.dispatch('triageAgents/get'));
 
 <template>
   <!-- w-full explícito: sem ele a página encolhe pro conteúdo (router é flex) -->
-  <div class="flex w-full h-full bg-n-background">
+  <div class="flex flex-col md:flex-row w-full h-full bg-n-background">
     <div
-      class="flex flex-col w-[280px] flex-shrink-0 h-full p-4 overflow-y-auto border-r border-n-weak"
+      class="flex flex-col w-full md:w-[280px] md:flex-shrink-0 max-h-[40vh] md:max-h-none md:h-full p-4 overflow-y-auto border-b md:border-b-0 md:border-r border-n-weak"
     >
       <RamonPageHeader
         compact

@@ -3,7 +3,8 @@ class Api::V1::Accounts::LeadActivitiesController < Api::V1::Accounts::BaseContr
 
   def index
     authorize(@lead, :show?)
-    @activities = @lead.lead_activities
+    # includes(:user): o partial toca activity.user&.name por linha (N+1 na timeline).
+    @activities = @lead.lead_activities.includes(:user)
   end
 
   private

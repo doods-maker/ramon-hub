@@ -12,7 +12,7 @@ defineProps({
 
 <template>
   <header
-    class="flex items-start justify-between gap-4"
+    class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2"
     :class="compact ? 'mb-6' : 'mb-8'"
   >
     <div class="min-w-0">
@@ -32,7 +32,7 @@ defineProps({
         {{ subtitle }}
       </p>
     </div>
-    <div v-if="$slots.actions" class="flex items-center gap-2 pt-1 shrink-0">
+    <div v-if="$slots.actions" class="flex flex-wrap items-center gap-2 pt-1">
       <slot name="actions" />
     </div>
   </header>

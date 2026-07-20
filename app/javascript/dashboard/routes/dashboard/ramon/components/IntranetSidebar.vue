@@ -5,6 +5,15 @@ import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 
+defineProps({
+  isMobileSidebarOpen: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const emit = defineEmits(['closeMobileSidebar']);
+
 const { t } = useI18n();
 const route = useRoute();
 const { accountScopedRoute } = useAccount();
@@ -119,8 +128,19 @@ const isActive = item => item.names?.includes(route.name);
 </script>
 
 <template>
+  <!-- Backdrop mobile: toque fecha o drawer (desktop = sem backdrop) -->
+  <div
+    v-if="isMobileSidebarOpen"
+    class="fixed inset-0 z-30 bg-black/40 md:hidden"
+    @click="emit('closeMobileSidebar')"
+  />
   <aside
-    class="flex flex-col flex-shrink-0 w-[220px] h-full py-3 overflow-y-auto bg-n-solid-1 border-r border-n-weak"
+    class="flex flex-col w-[220px] h-full py-3 overflow-y-auto bg-n-solid-1 border-r border-n-weak fixed top-0 ltr:left-0 rtl:right-0 z-40 md:relative md:flex-shrink-0 md:ltr:translate-x-0 md:rtl:translate-x-0 transition-transform duration-200 ease-out"
+    :class="{
+      'shadow-lg md:shadow-none': isMobileSidebarOpen,
+      'ltr:-translate-x-full rtl:translate-x-full md:translate-x-0':
+        !isMobileSidebarOpen,
+    }"
   >
     <h2 class="px-4 mb-4 text-xl font-cormorant text-n-slate-12">
       {{ t('RAMON.NAV.TITLE') }}

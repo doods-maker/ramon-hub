@@ -77,6 +77,7 @@ class Ramon::MotorClient
     request['Content-Type'] = "multipart/form-data; boundary=#{boundary}"
     request.body = corpo_multipart(form, boundary)
     response = Net::HTTP.start(uri.hostname, uri.port,
+                               use_ssl: uri.scheme == 'https',
                                open_timeout: OPEN_TIMEOUT,
                                read_timeout: CNIS_READ_TIMEOUT) { |http| http.request(request) }
     handle_net(response)
