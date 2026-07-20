@@ -20,6 +20,6 @@ class Ramon::ColheitaExtractionJob < ApplicationJob
   private
 
   def newer_incoming?(message)
-    message.conversation.messages.where(message_type: :incoming).where(id: (message.id + 1)..).exists?
+    message.conversation.messages.where(message_type: :incoming).exists?(id: (message.id + 1)..)
   end
 end
