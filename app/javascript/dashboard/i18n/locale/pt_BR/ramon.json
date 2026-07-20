@@ -385,8 +385,14 @@
       "SEARCH_EMPTY": "Ninguém encontrado com esse termo.",
       "LOADING_LEADS": "Buscando os casos da pessoa…",
       "ERROR": "Não foi possível carregar esse cálculo",
-      "EMPTY_NO_LEAD": "{name} ainda não tem um caso no funil — crie um lead para simular o cálculo.",
-      "BACK_TO_SEARCH": "Voltar à busca"
+      "EMPTY_NO_LEAD": "{name} ainda não tem um caso pra pendurar o cálculo.",
+      "BACK_TO_SEARCH": "Voltar à busca",
+      "ADVBOX_SEARCH": "Buscar no AdvBox",
+      "ADVBOX_TITLE": "No AdvBox",
+      "ADVBOX_EMPTY": "Nenhum cadastro no AdvBox com esse termo.",
+      "ADVBOX_ERROR": "Não deu pra consultar o AdvBox agora. Tente de novo.",
+      "CREATE_CASE": "Criar caso de cálculo",
+      "CREATE_ERROR": "Não deu pra criar o caso de cálculo. Tente de novo."
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

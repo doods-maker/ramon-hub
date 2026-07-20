@@ -74,7 +74,10 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def filtered_leads
-    leads = apply_equality_filters(policy_scope(Current.account.leads))
+    leads = policy_scope(Current.account.leads)
+    # Caso de cálculo só aparece nas visões por pessoa (Cálculos, gaveta, Linha da Vida).
+    leads = leads.funil if params[:contact_id].blank?
+    leads = apply_equality_filters(leads)
     leads = leads.where('sdr_id = :a OR closer_id = :a', a: params[:agent_id]) if params[:agent_id].present?
     leads = apply_cadence_filters(apply_period_filters(leads))
     leads = search_leads(leads, params[:q]) if params[:q].present?

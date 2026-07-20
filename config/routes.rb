@@ -291,6 +291,10 @@ Rails.application.routes.draw do
             post :done
             post :snooze
           end
+          resource :ramon_calculos, only: [], controller: 'ramon_calculos' do
+            get :advbox_customers
+            post :criar_caso
+          end
           resources :ramon_lead_imports, only: [:create, :show]
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'

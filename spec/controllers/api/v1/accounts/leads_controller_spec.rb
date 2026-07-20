@@ -70,6 +70,35 @@ RSpec.describe 'Leads API', type: :request do
     expect(response.parsed_body['payload'].size).to eq(1)
   end
 
+  describe 'caso de cálculo (source calculo-advbox)' do
+    let(:contact) { create(:contact, account: account) }
+    let!(:caso) do
+      create(:lead, account: account, lead_stage: novo, contact: contact, source: Lead::FONTE_CALCULO)
+    end
+
+    it 'não aparece no board (sem contact_id)' do
+      get "/api/v1/accounts/#{account.id}/leads",
+          headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['payload'].pluck('id')).not_to include(caso.id)
+    end
+
+    it 'aparece na visão por pessoa (contact_id)' do
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { contact_id: contact.id },
+          headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['payload'].pluck('id')).to include(caso.id)
+    end
+
+    it 'não bloqueia a criação de lead comercial do mesmo contato (dedup ignora)' do
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads",
+             params: { name: 'Lead real', lead_stage_id: novo.id, contact_id: contact.id },
+             headers: admin.create_new_auth_token, as: :json
+      end.to change(account.leads.reorder(nil), :count).by(1)
+      expect(response).to have_http_status(:success)
+    end
+  end
+
   it 'serializa value/source + nomes desnormalizados + contato', :aggregate_failures do
     contact = create(:contact, account: account, name: 'Cliente X',
                                phone_number: '+5547999990000', email: 'x@cli.com')

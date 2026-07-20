@@ -38,6 +38,11 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     Current.account.lead_tasks.includes(:lead)
   end
 
+  # Placar comercial não conta caso de cálculo (tela Cálculos ← AdvBox).
+  def leads_funil
+    Current.account.leads.funil
+  end
+
   # Consultas compartilhadas com a Esteira vivem em Ramon::LeadRadar.
   def active_leads
     Ramon::LeadRadar.active_leads(Current.account)
@@ -60,8 +65,8 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   # 2 queries agregadas + stages em memória (sem N+1). reorder(nil) anula o
   # default_scope de ordenação do Lead, que quebra o GROUP BY no Postgres.
   def funnel_section
-    counts = Current.account.leads.reorder(nil).group(:lead_stage_id).count
-    values = Current.account.leads.reorder(nil).group(:lead_stage_id).sum(:value)
+    counts = leads_funil.reorder(nil).group(:lead_stage_id).count
+    values = leads_funil.reorder(nil).group(:lead_stage_id).sum(:value)
     Current.account.lead_stages.map do |stage|
       funnel_row(stage, counts[stage.id].to_i, values[stage.id] || 0)
     end
@@ -81,24 +86,24 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   def week_section
     {
       created_by_channel: created_by_channel,
-      won: Current.account.leads.where(won_at: 7.days.ago..).count,
-      lost: Current.account.leads.where(lost_at: 7.days.ago..).count,
-      created: Current.account.leads.where(created_at: 7.days.ago..).count,
+      won: leads_funil.where(won_at: 7.days.ago..).count,
+      lost: leads_funil.where(lost_at: 7.days.ago..).count,
+      created: leads_funil.where(created_at: 7.days.ago..).count,
       lost_reasons_30d: lost_reasons_30d
     }
   end
 
   def created_by_channel
-    counts = Current.account.leads.where(created_at: 7.days.ago..).reorder(nil).group(:channel).count
+    counts = leads_funil.where(created_at: 7.days.ago..).reorder(nil).group(:channel).count
     Ramon::SourceCatalog::CHANNELS.map do |c|
       { key: c[:key], label: c[:label], count: counts[c[:key]].to_i }
     end
   end
 
   def lost_reasons_30d
-    Current.account.leads.where(lost_at: 30.days.ago..)
-           .reorder(nil).group(:lost_reason).count
-           .sort_by { |_reason, count| -count }
+    leads_funil.where(lost_at: 30.days.ago..)
+               .reorder(nil).group(:lost_reason).count
+               .sort_by { |_reason, count| -count }
   end
 
   # ---- Histórico (snapshots diários) ------------------------------------

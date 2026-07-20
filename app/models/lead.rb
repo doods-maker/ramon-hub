@@ -18,9 +18,17 @@ class Lead < ApplicationRecord
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
 
-  # Lead "vivo" no funil — nem ganho nem perdido. É o critério de reengajamento
-  # (pessoa ≠ caso): aberto reengaja, fechado não trava lead novo.
-  scope :open, -> { joins(:lead_stage).where(lead_stages: { is_won: false, is_lost: false }) }
+  # Caso de cálculo (tela Cálculos ← AdvBox): vive fora do funil comercial.
+  FONTE_CALCULO = 'calculo-advbox'.freeze
+
+  # NULL-safe: where.not(source:) excluiria os leads com source NULL junto.
+  scope :funil, -> { where('leads.source IS DISTINCT FROM ?', FONTE_CALCULO) }
+
+  # Lead "vivo" no funil — nem ganho nem perdido, e nunca caso de cálculo
+  # (senão lead real de entrada seria adotado por um caso invisível no Kanban).
+  # É o critério de reengajamento (pessoa ≠ caso): aberto reengaja, fechado
+  # não trava lead novo.
+  scope :open, -> { funil.joins(:lead_stage).where(lead_stages: { is_won: false, is_lost: false }) }
 
   before_save :track_stage_cycle
   before_save :assign_channel

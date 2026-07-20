@@ -179,7 +179,7 @@ class SearchService
   def filter_leads
     return Lead.none unless account_user&.administrator? || account_user&.agent?
 
-    @leads = current_account.leads.left_joins(:contact)
+    @leads = current_account.leads.funil.left_joins(:contact)
                             .where('leads.name ILIKE :search OR contacts.name ILIKE :search OR contacts.phone_number ILIKE :search',
                                    search: "%#{search_query}%")
                             .reorder('leads.created_at DESC')

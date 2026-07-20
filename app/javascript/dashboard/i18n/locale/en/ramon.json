@@ -385,8 +385,14 @@
       "SEARCH_EMPTY": "No one found for that term.",
       "LOADING_LEADS": "Looking up their cases…",
       "ERROR": "Could not load this calculation",
-      "EMPTY_NO_LEAD": "{name} has no case in the pipeline yet — create a lead to run the simulator.",
-      "BACK_TO_SEARCH": "Back to search"
+      "EMPTY_NO_LEAD": "{name} has no case to attach the calculation to yet.",
+      "BACK_TO_SEARCH": "Back to search",
+      "ADVBOX_SEARCH": "Search AdvBox",
+      "ADVBOX_TITLE": "In AdvBox",
+      "ADVBOX_EMPTY": "No AdvBox record matches that term.",
+      "ADVBOX_ERROR": "Could not reach AdvBox right now. Try again.",
+      "CREATE_CASE": "Create calculation case",
+      "CREATE_ERROR": "Could not create the calculation case. Try again."
     },
     "DOSSIE": {
       "OPEN": "Dossier",
