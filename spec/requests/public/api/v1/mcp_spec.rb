@@ -137,6 +137,22 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
       expect(response.parsed_body['result']['isError']).to be false
     end
 
+    it 'criar tarefa com hora e criador manda start_time/end_time (com o end_date que a API exige) e o from separado do responsável' do
+      stub = stub_request(:post, 'https://app.advbox.com.br/api/v1/posts')
+             .with(body: hash_including('start_date' => '2026-07-22', 'start_time' => '14:30',
+                                        'end_time' => '15:00', 'end_date' => '2026-07-22',
+                                        'from' => '999', 'guests' => [266_778], 'display_schedule' => true))
+             .to_return(status: 200, body: { posts_id: 1 }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      post_mcp(rpc('tools/call', { name: 'advbox_criar_tarefa',
+                                   arguments: { processo_id: 123, tipo_tarefa_id: 8_745_394, responsavel_id: 266_778,
+                                                criador_id: 999, data: '2026-07-22', hora_inicio: '14:30', hora_fim: '15:00',
+                                                exibir_agenda: true } }))
+
+      expect(stub).to have_been_requested
+      expect(response.parsed_body['result']['isError']).to be false
+    end
+
     it 'criar movimentação converte a data ISO pro DD/MM/YYYY que a API exige' do
       stub = stub_request(:post, 'https://app.advbox.com.br/api/v1/lawsuits/movement')
              .with(body: hash_including('lawsuit_id' => 123, 'date' => '15/07/2026', 'description' => 'Cliente trouxe o laudo médico'))

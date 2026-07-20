@@ -29,6 +29,12 @@ describe('leads actions', () => {
     });
   });
 
+  it('upsert ignora caso de cálculo (broadcast não injeta o card no board)', () => {
+    const commit = vi.fn();
+    actions.upsert({ commit }, { id: 8, source: 'calculo-advbox' });
+    expect(commit).not.toHaveBeenCalled();
+  });
+
   it('select faz commit de SET_SELECTED_LEAD', () => {
     const commit = vi.fn();
     actions.select({ commit }, 42);

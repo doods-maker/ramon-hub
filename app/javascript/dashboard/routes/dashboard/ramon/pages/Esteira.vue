@@ -19,13 +19,18 @@ const { accountScopedRoute } = useAccount();
 const items = ref([]);
 const doneCount = ref(0);
 const isLoading = ref(true);
+const hasError = ref(false);
 
 const fetchEsteira = async () => {
   isLoading.value = true;
+  hasError.value = false;
   try {
     const { data } = await RamonEsteiraAPI.get();
     items.value = data.items || [];
     doneCount.value = data.board?.done_today || 0;
+  } catch (e) {
+    // Erro de API não pode virar "esteira zerada" comemorativa.
+    hasError.value = true;
   } finally {
     isLoading.value = false;
   }
@@ -67,21 +72,38 @@ const jumpTo = index => {
   items.value.unshift(item);
 };
 
+// Guarda compartilhada: duplo-clique em Feito/Adiar comia o próximo da fila.
+const isActing = ref(false);
+
 const markDone = async () => {
   const item = current.value;
-  if (!item) return;
-  await RamonEsteiraAPI.done(item.lead_id);
-  doneCount.value += 1;
-  items.value.shift();
-  useAlert(t('RAMON.ESTEIRA.DONE_TOAST'));
+  if (!item || isActing.value) return;
+  isActing.value = true;
+  try {
+    await RamonEsteiraAPI.done(item.lead_id);
+    doneCount.value += 1;
+    items.value.shift();
+    useAlert(t('RAMON.ESTEIRA.DONE_TOAST'));
+  } catch (e) {
+    useAlert(t('RAMON.ESTEIRA.ACTION_ERROR'));
+  } finally {
+    isActing.value = false;
+  }
 };
 
 const snooze = async () => {
   const item = current.value;
-  if (!item) return;
-  await RamonEsteiraAPI.snooze(item.lead_id, item.task_id);
-  items.value.shift();
-  useAlert(t('RAMON.ESTEIRA.SNOOZED_TOAST'));
+  if (!item || isActing.value) return;
+  isActing.value = true;
+  try {
+    await RamonEsteiraAPI.snooze(item.lead_id, item.task_id);
+    items.value.shift();
+    useAlert(t('RAMON.ESTEIRA.SNOOZED_TOAST'));
+  } catch (e) {
+    useAlert(t('RAMON.ESTEIRA.ACTION_ERROR'));
+  } finally {
+    isActing.value = false;
+  }
 };
 
 // Abrir conversa (padrão do fork: funil + dock); sem conversa → Linha da Vida.
@@ -114,7 +136,7 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
         <button
           type="button"
           data-testid="esteira-reload"
-          class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12"
+          class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12 disabled:opacity-50 disabled:pointer-events-none"
           :disabled="isLoading"
           @click="fetchEsteira"
         >
@@ -133,6 +155,25 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
         />
       </div>
       <div class="h-56 rounded-xl bg-n-solid-2 max-w-2xl" />
+    </div>
+
+    <!-- Erro de carga: distinto do estado "esteira zerada" -->
+    <div
+      v-else-if="hasError"
+      data-testid="esteira-error"
+      class="py-10 text-center border rounded-xl border-n-weak bg-n-solid-2 max-w-2xl"
+    >
+      <p class="text-sm text-n-ruby-11">
+        {{ t('RAMON.ESTEIRA.LOAD_ERROR') }}
+      </p>
+      <button
+        type="button"
+        data-testid="esteira-retry"
+        class="mt-2 text-xs text-n-iris-11 hover:underline"
+        @click="fetchEsteira"
+      >
+        {{ t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
     </div>
 
     <div v-else class="flex flex-col gap-8 max-w-2xl">
@@ -209,7 +250,8 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
           <button
             type="button"
             data-testid="esteira-done"
-            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10"
+            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-50"
+            :disabled="isActing"
             @click="markDone"
           >
             <span class="i-lucide-check size-4" />
@@ -218,7 +260,8 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
           <button
             type="button"
             data-testid="esteira-snooze"
-            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2"
+            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
+            :disabled="isActing"
             @click="snooze"
           >
             <span class="i-lucide-alarm-clock size-4" />

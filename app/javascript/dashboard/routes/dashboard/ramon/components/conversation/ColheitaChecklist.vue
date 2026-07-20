@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -33,28 +33,39 @@ const colheitaItems = computed(() =>
   (thesis.value?.items || []).filter(item => item.section === 'colheita')
 );
 
-// mapa { "<item_id>": true } vindo de custom_attributes.colheita_status
+// mapa vindo de custom_attributes.colheita_status:
+// true = marcado à mão · 'ia' = marcado pela IA · false = desmarcado à mão
+// (veto explícito — a IA nunca re-marca chave existente)
 const colheitaStatus = computed(
   () => props.lead?.custom_attributes?.colheita_status || {}
 );
 
 const isDone = item => Boolean(colheitaStatus.value[item.id]);
+const isAI = item => colheitaStatus.value[item.id] === 'ia';
 
 const doneCount = computed(() => colheitaItems.value.filter(isDone).length);
 
 // grava o colheita_status novo mesclando com o custom_attributes existente,
-// sem sobrescrever nenhuma outra chave.
-const toggle = item => {
-  const next = { ...colheitaStatus.value };
-  if (next[item.id]) delete next[item.id];
-  else next[item.id] = true;
-  store.dispatch('leads/update', {
-    id: props.lead.id,
-    custom_attributes: {
-      ...(props.lead.custom_attributes || {}),
-      colheita_status: next,
-    },
-  });
+// sem sobrescrever nenhuma outra chave. Guard por item: dois cliques rápidos
+// no mesmo item invertiam o estado desejado.
+const pendingIds = ref(new Set());
+const toggle = async item => {
+  if (pendingIds.value.has(item.id)) return;
+  pendingIds.value.add(item.id);
+  const next = { ...colheitaStatus.value, [item.id]: !isDone(item) };
+  try {
+    await store.dispatch('leads/update', {
+      id: props.lead.id,
+      custom_attributes: {
+        ...(props.lead.custom_attributes || {}),
+        colheita_status: next,
+      },
+    });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    pendingIds.value.delete(item.id);
+  }
 };
 
 // extração da reunião feita pela IA (Ramon::ColheitaExtractionService)
@@ -66,7 +77,16 @@ const extractedAt = computed(() => {
   const iso = colheitaIA.value?.extraida_em;
   if (!iso) return '';
   const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('pt-BR');
+  // mesma máscara do fmtDateTime dos irmãos (sem segundos)
+  return Number.isNaN(date.getTime())
+    ? ''
+    : date.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
 });
 
 // artefato 3 da colheita: cada lacuna vira pedido de documento RASCUNHO —
@@ -117,21 +137,31 @@ const chargeLacunas = async () => {
       :key="item.id"
       type="button"
       data-testid="colheita-item"
-      class="flex items-start gap-2 px-3 py-2 text-sm text-left rounded-lg border transition-colors"
+      class="flex items-start gap-2 px-3 py-2 text-sm text-left rounded-lg border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       :class="
         isDone(item)
           ? 'bg-n-teal-3 text-n-teal-11 border-n-teal-6'
           : 'bg-n-amber-3 text-n-amber-11 border-n-amber-6'
       "
       :title="item.content"
+      :disabled="pendingIds.has(item.id)"
       @click="toggle(item)"
     >
-      <span class="shrink-0 mt-0.5 text-xs">{{
-        isDone(item) ? '✓' : '○'
-      }}</span>
+      <span
+        class="shrink-0 mt-0.5 size-3.5"
+        :class="isDone(item) ? 'i-lucide-check' : 'i-lucide-circle'"
+      />
       <span :class="isDone(item) ? 'line-through opacity-70' : ''">{{
         item.title || item.content
       }}</span>
+      <span
+        v-if="isAI(item)"
+        class="shrink-0 ms-auto text-[10px] uppercase tracking-wide opacity-80"
+        data-testid="colheita-ai-badge"
+        :title="$t('RAMON.COLHEITA.AI_BADGE_TIP')"
+      >
+        {{ $t('RAMON.COLHEITA.AI_BADGE') }}
+      </span>
     </button>
 
     <div

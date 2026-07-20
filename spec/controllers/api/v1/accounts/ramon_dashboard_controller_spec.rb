@@ -41,6 +41,14 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(empty_row['weighted_value']).to be_a(Float)
   end
 
+  it 'caso de cálculo fica fora do funil, da semana e do radar' do
+    create(:lead, account: account, lead_stage: active_stage, value: 999, source: Lead::FONTE_CALCULO)
+    get url, headers: agent.create_new_auth_token, as: :json
+    row = response.parsed_body['funnel'].find { |r| r['stage_id'] == active_stage.id }
+    expect(row['count']).to eq(0)
+    expect(response.parsed_body['week']['created']).to eq(0)
+  end
+
   it 'lists fresh landing-page leads without follow-up' do
     create(:lead, account: account, lead_stage: active_stage, source: 'lp-auxilio-acidente')
     get url, headers: agent.create_new_auth_token, as: :json

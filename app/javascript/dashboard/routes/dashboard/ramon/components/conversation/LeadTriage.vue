@@ -16,12 +16,16 @@ const { formatMessage } = useMessageFormatter();
 const triages = ref([]);
 const isLoading = ref(false);
 const isStarting = ref(false);
+const hasError = ref(false);
 
 const loadTriages = async () => {
   isLoading.value = true;
+  hasError.value = false;
   try {
     const { data } = await LeadsAPI.getTriages(props.lead.id);
     triages.value = data;
+  } catch (e) {
+    hasError.value = true;
   } finally {
     isLoading.value = false;
   }
@@ -121,6 +125,20 @@ const copyResult = async () => {
       {{ $t('RAMON.TRIAGE.LOADING') }}
     </p>
 
+    <div v-else-if="hasError && !latest" data-testid="triage-load-error">
+      <p class="text-sm text-n-ruby-11">
+        {{ $t('RAMON.TRIAGE.LOAD_ERROR') }}
+      </p>
+      <button
+        type="button"
+        data-testid="triage-load-retry"
+        class="mt-1 text-xs text-n-iris-11 hover:underline"
+        @click="loadTriages"
+      >
+        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
+    </div>
+
     <p
       v-else-if="!latest"
       class="text-sm text-n-slate-10"
@@ -142,6 +160,24 @@ const copyResult = async () => {
         >
           <span class="i-lucide-user-round size-3" />
           {{ $t('RAMON.TRIAGE.AWAITING_HUMAN') }}
+        </span>
+        <!-- pending/running: chip "em análise" + atualizar manual (websocket
+             perdido deixava "Analisando…" eterno), sem badge "Viabilidade: —" -->
+        <span
+          v-else-if="isRunning"
+          data-testid="triage-running-chip"
+          class="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded-full bg-n-iris-3 text-n-iris-11"
+        >
+          <span class="i-lucide-loader-2 animate-spin size-3" />
+          {{ $t('RAMON.TRIAGE.RUNNING') }}
+          <button
+            type="button"
+            data-testid="triage-refresh"
+            class="hover:underline"
+            @click="loadTriages"
+          >
+            {{ $t('RAMON.TRIAGE.REFRESH') }}
+          </button>
         </span>
         <span
           v-else

@@ -18,7 +18,7 @@ const path = computed(() =>
     :width="width"
     :height="height"
     :viewBox="`0 0 ${width} ${height}`"
-    class="text-n-iris-9"
+    class="max-w-full overflow-visible text-n-iris-9"
   >
     <path
       v-if="path"

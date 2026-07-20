@@ -24,7 +24,10 @@ const buildStore = (updateSpy, selectSpy) =>
     modules: {
       leads: {
         namespaced: true,
-        getters: { getSelectedLead: () => lead },
+        getters: {
+          getSelectedLead: () => lead,
+          getDockConversationId: () => null,
+        },
         actions: {
           update: updateSpy,
           select: selectSpy,

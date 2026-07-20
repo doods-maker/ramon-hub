@@ -21,6 +21,7 @@
 | `config/routes.rb` | `resources :leads` dentro do bloco `namespace :accounts do` (após `resource :lead_config`) | API CRUD de leads (index/show/create/update/destroy) | 2A |
 | `config/routes.rb` | collection route `for_conversation` em `leads` | painel do lead na conversa acha-ou-cria | 1a |
 | `app/javascript/dashboard/components/widgets/conversation/ConversationSidebar.vue` | renderiza `LeadConversationPanel` no lugar do `ContactPanel` quando não-descartado (`discardedConversations` Set por conversationId) + largura ~metade (`md:w-[420px] 2xl:w-[480px]` vs `md:w-[320px] 2xl:w-[360px]`) | painel do lead na conversa | 1a |
+| `app/javascript/dashboard/components/widgets/conversation/ConversationSidebar.vue` (1 linha) | `:key="currentChat.id"` no `<LeadConversationPanel>` — remonta o painel ao trocar de conversa e mata estado obsoleto (Simulador/Copilot/History do lead anterior) | fix estado obsoleto | revisão UX 20/07 |
 | `app/javascript/dashboard/store/index.js` | `import leads/leadConfig` após `labels`; `leads, leadConfig,` no objeto `modules` | registra módulos Vuex do funil de leads | 2A |
 | `app/javascript/dashboard/store/mutation-types.js` | bloco `// Ramon — Leads` (SET_LEAD_UI_FLAG, SET_LEADS, ADD_LEAD, EDIT_LEAD, DELETE_LEAD, SET_LEAD_CONFIG) após bloco Labels | mutation types dos módulos leads/leadConfig | 2A |
 | `app/javascript/dashboard/routes/dashboard/dashboard.routes.js` | import `ramonRoutes` + `...ramonRoutes` no array children | seção Intranet | 1A |
@@ -237,6 +238,11 @@
 | `.../ramon/components/conversation/LeadSimulador.vue` (linhas de changes) | painel "Ajustar vínculos" (checkbox fora-da-média + mensalidade real), duas médias (RMI 100% × descartes) e tabela de memória de cálculo | Simulador | Parâmetros motor |
 | `public/dashboard-apps/{espelho,dossie}.html` | páginas estáticas p/ Dashboard Apps nativos (mesmo host → herda sessão, passa no SAMEORIGIN); espelho imprime o appContext, dossie renderiza o Dossiê 30s via APIs existentes | Dashboard Apps | F3 Chatwoot 14/07 |
 | `app/controllers/api/v1/accounts/leads_controller.rb` (1 linha) | `for_conversation` resolve por `display_id` (o que a SPA manda), não pela PK global — bug latente enquanto id==display_id por conta única | fix | F3 Chatwoot 14/07 |
+| `app/javascript/dashboard/components/widgets/conversation/ConversationHeader.vue` (2 linhas) | +`LeadPanelToggle` (botão rotulado "Painel do lead" nas ações do cabeçalho) | acesso claro ao painel do lead | painel-lead 20/07 |
+| `app/javascript/dashboard/components-next/Conversation/SidepanelSwitch.vue` | prop `hideContact` — ConversationView esconde a pílula flutuante (só Copilot a mantém viva) | painel do lead saiu da pílula | painel-lead 20/07 |
+| `app/javascript/dashboard/routes/dashboard/conversation/ConversationView.vue` (1 linha) | `hide-contact` no SidepanelSwitch | idem | painel-lead 20/07 |
+| `app/javascript/dashboard/i18n/locale/pt_BR/conversation.json` (1 linha) | `CONVERSATION.SIDEBAR.CONTACT`: "Contatos" → "Painel do lead" | rótulo real do painel | painel-lead 20/07 |
+| `app/services/search_service.rb` (1 token) | `filter_leads` (bloco já do fork) ganhou `.funil` — caso de cálculo fora do Cmd+K | Cálculos-AdvBox 20/07 | calculos-advbox 20/07 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

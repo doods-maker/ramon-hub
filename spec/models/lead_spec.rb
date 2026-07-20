@@ -58,6 +58,22 @@ RSpec.describe Lead do
     expect(lead.push_event_data[:latest_triage][:kit_status]).to eq('ready')
   end
 
+  describe 'scopes de funil (caso de cálculo)' do
+    let(:stage) { account.lead_stages.order(:position).first }
+    let!(:lead_normal) { create(:lead, account: account, lead_stage: stage, source: nil) }
+    let!(:lead_lp) { create(:lead, account: account, lead_stage: stage, source: 'lp-auxilio-acidente') }
+    let!(:caso_calculo) { create(:lead, account: account, lead_stage: stage, source: Lead::FONTE_CALCULO) }
+
+    it 'funil exclui caso de cálculo e mantém source NULL (IS DISTINCT FROM)' do
+      expect(account.leads.funil).to contain_exactly(lead_normal, lead_lp)
+    end
+
+    it 'open não adota caso de cálculo como lead vivo' do
+      expect(account.leads.open).to include(lead_normal)
+      expect(account.leads.open).not_to include(caso_calculo)
+    end
+  end
+
   describe '#prescription' do
     let(:stage) { account.lead_stages.first }
 

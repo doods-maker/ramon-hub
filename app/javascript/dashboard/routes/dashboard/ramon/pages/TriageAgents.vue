@@ -1,10 +1,14 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 const store = useStore();
 const getters = useStoreGetters();
+const { t } = useI18n();
 
 const AREAS = ['previdenciario', 'trabalhista', 'outro'];
 const PROVIDERS = ['deepseek', 'anthropic', 'openai'];
@@ -31,37 +35,44 @@ const detail = reactive({
   active: true,
 });
 
-watch(
-  selectedAgent,
-  agent => {
-    if (!agent) return;
-    detail.name = agent.name || '';
-    detail.description = agent.description || '';
-    detail.area = agent.area || '';
-    detail.provider = agent.provider || '';
-    detail.model = agent.model || '';
-    detail.system_prompt = agent.system_prompt || '';
-    detail.kit_system_prompt = agent.kit_system_prompt || '';
-    detail.sensitive = !!agent.sensitive;
-    detail.active = agent.active !== false;
-  },
-  { immediate: true }
-);
+// Observa só o ID: resposta de PATCH mutando o record no store não pode
+// resetar um prompt longo no meio da digitação.
+watch(selectedId, () => {
+  const agent = selectedAgent.value;
+  if (!agent) return;
+  detail.name = agent.name || '';
+  detail.description = agent.description || '';
+  detail.area = agent.area || '';
+  detail.provider = agent.provider || '';
+  detail.model = agent.model || '';
+  detail.system_prompt = agent.system_prompt || '';
+  detail.kit_system_prompt = agent.kit_system_prompt || '';
+  detail.sensitive = !!agent.sensitive;
+  detail.active = agent.active !== false;
+});
 
 const selectAgent = agent => {
   selectedId.value = agent.id;
 };
 
+const addingAgent = ref(false);
 const addAgent = async () => {
   const name = newAgentName.value.trim();
-  if (!name) return;
-  const created = await store.dispatch('triageAgents/create', {
-    name,
-    system_prompt: 'Escreva aqui as instruções do agente.',
-  });
-  newAgentName.value = '';
-  if (created?.id) {
-    selectAgent(created);
+  if (!name || addingAgent.value) return;
+  addingAgent.value = true;
+  try {
+    const created = await store.dispatch('triageAgents/create', {
+      name,
+      system_prompt: t('RAMON.TRIAGE_AGENTS.DEFAULT_PROMPT'),
+    });
+    newAgentName.value = '';
+    if (created?.id) {
+      selectAgent(created);
+    }
+  } catch {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    addingAgent.value = false;
   }
 };
 
@@ -80,32 +91,38 @@ const confirmRemoveAgent = async () => {
 
 const saveDetail = () => {
   if (!selectedAgent.value) return;
-  store.dispatch('triageAgents/update', {
-    id: selectedAgent.value.id,
-    name: detail.name,
-    description: detail.description,
-    area: detail.area,
-    provider: detail.provider,
-    model: detail.model,
-    system_prompt: detail.system_prompt,
-    kit_system_prompt: detail.kit_system_prompt,
-  });
+  store
+    .dispatch('triageAgents/update', {
+      id: selectedAgent.value.id,
+      name: detail.name,
+      description: detail.description,
+      area: detail.area,
+      provider: detail.provider,
+      model: detail.model,
+      system_prompt: detail.system_prompt,
+      kit_system_prompt: detail.kit_system_prompt,
+    })
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
 const saveActive = () => {
   if (!selectedAgent.value) return;
-  store.dispatch('triageAgents/update', {
-    id: selectedAgent.value.id,
-    active: detail.active,
-  });
+  store
+    .dispatch('triageAgents/update', {
+      id: selectedAgent.value.id,
+      active: detail.active,
+    })
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
 const saveSensitive = () => {
   if (!selectedAgent.value) return;
-  store.dispatch('triageAgents/update', {
-    id: selectedAgent.value.id,
-    sensitive: detail.sensitive,
-  });
+  store
+    .dispatch('triageAgents/update', {
+      id: selectedAgent.value.id,
+      sensitive: detail.sensitive,
+    })
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
 const areaOptionKey = area =>
@@ -122,12 +139,11 @@ onMounted(() => store.dispatch('triageAgents/get'));
     <div
       class="flex flex-col w-[280px] flex-shrink-0 h-full p-4 overflow-y-auto border-r border-n-weak"
     >
-      <h1 class="mb-1 text-lg font-cormorant text-n-slate-12">
-        {{ $t('RAMON.TRIAGE_AGENTS.TITLE') }}
-      </h1>
-      <p class="mb-4 text-xs text-n-slate-10">
-        {{ $t('RAMON.TRIAGE_AGENTS.DESCRIPTION') }}
-      </p>
+      <RamonPageHeader
+        compact
+        :title="$t('RAMON.TRIAGE_AGENTS.TITLE')"
+        :subtitle="$t('RAMON.TRIAGE_AGENTS.DESCRIPTION')"
+      />
       <h2 class="mb-2 text-xs uppercase tracking-widest text-n-slate-9">
         {{ $t('RAMON.TRIAGE_AGENTS.LIST_TITLE') }}
       </h2>
@@ -181,13 +197,14 @@ onMounted(() => store.dispatch('triageAgents/get'));
         <input
           v-model="newAgentName"
           data-testid="triage-agents-add-input"
-          class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12"
+          class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
           :placeholder="$t('RAMON.TRIAGE_AGENTS.ADD_PLACEHOLDER')"
           @keyup.enter="addAgent"
         />
         <button
           data-testid="triage-agents-add-button"
-          class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white"
+          class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+          :disabled="addingAgent"
           @click="addAgent"
         >
           {{ $t('RAMON.TRIAGE_AGENTS.ADD') }}

@@ -12,7 +12,8 @@ const stage = {
 const stub = (props = {}) =>
   mount(StageHeaderMenu, {
     props: { stage, ...props },
-    global: { mocks: { $t: k => k } },
+    // o menu é teleportado pro body; o stub o mantém no wrapper p/ os finds
+    global: { mocks: { $t: k => k }, stubs: { teleport: true } },
   });
 
 describe('StageHeaderMenu', () => {

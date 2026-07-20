@@ -3,8 +3,6 @@
     "AGENDA": {
       "TITLE": "Agenda",
       "TODAY": "Today",
-      "PREV_WEEK": "Previous week",
-      "NEXT_WEEK": "Next week",
       "EMPTY": "No appointments this week.",
       "EMPTY_MONTH": "No appointments this month.",
       "VIEW_DAY": "Day",
@@ -17,10 +15,10 @@
       "EMPTY_DAY": "Nothing scheduled for this day.",
       "MORE": "+{count} more",
       "PREV": "Previous",
-      "NEXT": "Next"
+      "NEXT": "Next",
+      "LOAD_ERROR": "Couldn't load the agenda"
     },
     "COMMAND": {
-      "EYEBROW": "Command Center",
       "TITLE": "Command Center",
       "RELOAD": "Reload",
       "TODAY": {
@@ -49,7 +47,8 @@
         "SKIP": "Skip",
         "CLOSE": "Close",
         "DONE_TITLE": "Queue cleared",
-        "DONE_BODY": "Every lead in the run has been handled."
+        "DONE_BODY": "Every lead in the run has been handled.",
+        "COMPLETE_ERROR": "Couldn't complete the task — try again"
       },
       "FUNNEL": {
         "TITLE": "Pipeline",
@@ -71,7 +70,8 @@
         "COL_DATE": "Day",
         "COL_LEADS": "Active leads",
         "COL_VALUE": "Pipeline"
-      }
+      },
+      "LOAD_ERROR": "Couldn't load the Command Center"
     },
     "NAV": {
       "TITLE": "Intranet",
@@ -126,7 +126,9 @@
       "NEXT_TITLE": "Up next",
       "EMPTY_TITLE": "All clear",
       "EMPTY_BODY": "Nothing urgent right now — check the pipeline.",
-      "EMPTY_CTA": "Open pipeline"
+      "EMPTY_CTA": "Open pipeline",
+      "LOAD_ERROR": "Couldn't load the queue",
+      "ACTION_ERROR": "That didn't work — try again"
     },
     "RAIL": {
       "INTERNOS": "Internal",
@@ -141,7 +143,11 @@
       "LABEL_PH": "AdvBox",
       "URL": "URL",
       "ICON": "Icon (Lucide)",
-      "ADD": "Add"
+      "ADD": "Add",
+      "URL_PH": "https://…",
+      "ICON_PH": "i-lucide-…",
+      "URL_INVALID": "Invalid URL — check the address.",
+      "REMOVE_CONFIRM": "Remove this shortcut?"
     },
     "FUNIL": {
       "TITLE": "Lead Pipeline",
@@ -162,13 +168,16 @@
         "PICK": "Choose a reason",
         "DETAIL_PLACEHOLDER": "Details (optional)",
         "CONFIRM": "Mark as lost",
-        "CANCEL": "Cancel"
+        "CANCEL": "Cancel",
+        "NO_REASONS": "No lost reasons configured yet.",
+        "CONFIG_LINK": "Set up reasons in Funnel Settings"
       },
       "WON": {
         "TITLE": "Deal won! Closed value?",
         "VALUE_LABEL": "Value (R$)",
         "SAVE": "Save",
-        "SKIP": "Skip"
+        "SKIP": "Skip",
+        "INVALID": "Invalid value — numbers only, e.g. 1,500.00"
       },
       "NEW": {
         "SOURCE": "Source",
@@ -194,7 +203,10 @@
         "REMOVE_PICK": "Choose the destination stage",
         "REMOVE_CONFIRM": "Remove",
         "CANCEL": "Cancel",
-        "MENU": "Stage options"
+        "MENU": "Stage options",
+        "REMOVE_COUNT": "{count} visible lead(s) in this stage will be moved to the target stage.",
+        "REMOVE_EMPTY": "No visible leads in this stage — any leads outside the current filter will be moved to the target stage.",
+        "REMOVE_NO_TARGET": "There's no other stage to receive the leads — create one before removing."
       },
       "FILTERS": {
         "SEARCH": "Search name or contact…",
@@ -217,7 +229,9 @@
         "REMOVE": "Remove view",
         "REMOVE_CONFIRM": "Remove this saved view?"
       },
-      "DOCK_CLOSE": "Close conversation"
+      "DOCK_CLOSE": "Close conversation",
+      "LOAD_ERROR": "Couldn't load the pipeline",
+      "CONVERSATION_ERROR": "Couldn't load the conversation"
     },
     "KANBAN": {
       "CARD": {
@@ -275,7 +289,13 @@
       "CADENCE_DAYS": "days",
       "REMOVE": "Remove",
       "WEIGHT": "Weight",
-      "WEIGHT_OF": "weight {weight}"
+      "WEIGHT_OF": "weight {weight}",
+      "LOAD_ERROR": "Could not load funnel settings",
+      "REMOVE_ERROR": "Could not remove — try again",
+      "REMOVE_BENEFIT_CONFIRM": "Remove this benefit type?",
+      "REMOVE_PRIORITY_CONFIRM": "Remove this priority?",
+      "BENEFITS_EMPTY": "No benefit types yet.",
+      "PRIORITIES_EMPTY": "No priorities yet."
     },
     "IMPORT": {
       "TITLE": "Import leads (CSV)",
@@ -365,7 +385,14 @@
       "SEARCH_EMPTY": "No one found for that term.",
       "LOADING_LEADS": "Looking up their cases…",
       "ERROR": "Could not load this calculation",
-      "EMPTY_NO_LEAD": "{name} has no case in the pipeline yet — create a lead to run the simulator."
+      "EMPTY_NO_LEAD": "{name} has no case to attach the calculation to yet.",
+      "BACK_TO_SEARCH": "Back to search",
+      "ADVBOX_SEARCH": "Search AdvBox",
+      "ADVBOX_TITLE": "In AdvBox",
+      "ADVBOX_EMPTY": "No AdvBox record matches that term.",
+      "ADVBOX_ERROR": "Could not reach AdvBox right now. Try again.",
+      "CREATE_CASE": "Create calculation case",
+      "CREATE_ERROR": "Could not create the calculation case. Try again."
     },
     "DOSSIE": {
       "OPEN": "Dossier",
@@ -427,11 +454,15 @@
           "THESIS_CHANGED": "changed the thesis",
           "LP_RECAPTURED": "received a new landing page form"
         },
-        "EMPTY": "No activity recorded yet."
+        "EMPTY": "No activity recorded yet.",
+        "LOADING": "Loading history…",
+        "LOAD_ERROR": "Could not load the history."
       },
       "LOADING": "Loading lead…",
       "LOAD_ERROR": "Couldn't load the lead for this conversation.",
-      "RETRY": "Try again"
+      "RETRY": "Try again",
+      "DISCARD_CONFIRM": "Remove this lead from the funnel? The conversation stays in Chatwoot.",
+      "DISCARD_ERROR": "Could not remove the lead — try again"
     },
     "PLAYBOOK": {
       "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",
@@ -443,7 +474,10 @@
         "APRESENTACAO": "Presentation",
         "OBJECAO": "Objections",
         "DOCUMENTO": "Documents"
-      }
+      },
+      "LOADING": "Loading playbook…",
+      "NO_ITEMS": "No playbook items for this thesis yet.",
+      "LOAD_ERROR": "Could not load the playbook."
     },
     "ZAPSIGN": {
       "TITLE": "Contract",
@@ -466,6 +500,8 @@
       "COUNT": "{done}/{total} collected",
       "LACUNAS_TITLE": "Meeting gaps (AI)",
       "EXTRACTED_AT": "Extracted from the conversation at {date}",
+      "AI_BADGE": "✨ AI",
+      "AI_BADGE_TIP": "Checked by the AI from the conversation — click to undo",
       "CHARGE": "Request gap documents",
       "COPIED": "Draft copied — review and paste into WhatsApp",
       "DRAFT": {
@@ -554,7 +590,9 @@
       "AWAITING_HUMAN": "Awaiting human",
       "AWAITING_HUMAN_HINT": "The AI did not classify with confidence — review the conversation and set the viability yourself.",
       "STARTED": "Triage started — the result appears here shortly",
-      "LOADING": "Loading triages…"
+      "LOADING": "Loading triages…",
+      "LOAD_ERROR": "Could not load the triages.",
+      "REFRESH": "refresh"
     },
     "KIT": {
       "TAB": "Kit",
@@ -579,7 +617,8 @@
         "VENDA_OBJECOES": "Pitch and objections",
         "PROXIMO_PASSO": "Next step"
       },
-      "LOADING": "Loading kit…"
+      "LOADING": "Loading kit…",
+      "REFRESH": "Refresh"
     },
     "SIMULADOR": {
       "TAB": "Simulator",
@@ -722,7 +761,8 @@
         "OPENAI": "OpenAI"
       },
       "DELETE": "Delete agent",
-      "FIELD_DESCRIPTION": "Description"
+      "FIELD_DESCRIPTION": "Description",
+      "DEFAULT_PROMPT": "Write the agent's instructions here."
     },
     "MODAL": {
       "CANCEL": "Cancel"

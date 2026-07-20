@@ -84,6 +84,7 @@ const closeSidebar = () => {
       <LeadConversationPanel
         v-if="showLeadPanel"
         v-show="activeTab === 0"
+        :key="currentChat.id"
         :conversation-id="currentChat.id"
         @discarded="onDiscard(currentChat.id)"
         @close="closeSidebar"

@@ -1,12 +1,16 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 
 const props = defineProps({
   lead: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadPlaybook' });
 
+const { t } = useI18n();
 const store = useStore();
 const theses = useMapGetter('theses/getTheses');
 const stages = useMapGetter('leadConfig/getStages');
@@ -27,7 +31,7 @@ const STAGE_SECTION = {
 };
 
 const thesis = computed(() =>
-  theses.value.find(t => t.id === props.lead?.thesis_id)
+  theses.value.find(x => x.id === props.lead?.thesis_id)
 );
 
 const currentStageName = computed(
@@ -38,15 +42,26 @@ const highlightedSection = computed(
   () => STAGE_SECTION[currentStageName.value] || null
 );
 
+const loadFailed = ref(false);
 const ensureItems = async () => {
   const thesisId = props.lead?.thesis_id;
   if (!thesisId) return;
-  const current = theses.value.find(t => t.id === thesisId);
+  loadFailed.value = false;
+  const current = theses.value.find(x => x.id === thesisId);
   if (!current || !current.items) {
-    await store.dispatch('theses/show', thesisId);
+    try {
+      await store.dispatch('theses/show', thesisId);
+    } catch (e) {
+      loadFailed.value = true;
+    }
   }
 };
 watch(() => props.lead?.thesis_id, ensureItems, { immediate: true });
+
+// itens ainda não carregados (undefined) e sem falha = carregando
+const itemsLoading = computed(
+  () => !Array.isArray(thesis.value?.items) && !loadFailed.value
+);
 
 const sections = computed(() => {
   const items = thesis.value?.items || [];
@@ -64,14 +79,15 @@ const sections = computed(() => {
 const copiedId = ref(null);
 const copy = async item => {
   try {
-    await navigator.clipboard.writeText(item.content);
-    copiedId.value = item.id;
-    setTimeout(() => {
-      if (copiedId.value === item.id) copiedId.value = null;
-    }, 1500);
+    await copyTextToClipboard(item.content);
   } catch (e) {
-    // navegador sem permissão/API de clipboard: falha silenciosa, sem quebrar a UI
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+    return;
   }
+  copiedId.value = item.id;
+  setTimeout(() => {
+    if (copiedId.value === item.id) copiedId.value = null;
+  }, 1500);
 };
 
 const sectionLabelKey = section =>
@@ -86,6 +102,35 @@ const sectionLabelKey = section =>
       data-testid="playbook-empty"
     >
       {{ $t('RAMON.PLAYBOOK.EMPTY') }}
+    </p>
+    <p
+      v-else-if="itemsLoading"
+      class="text-sm text-n-slate-10"
+      data-testid="playbook-loading"
+    >
+      {{ $t('RAMON.PLAYBOOK.LOADING') }}
+    </p>
+    <div
+      v-else-if="loadFailed"
+      class="flex items-center gap-2"
+      data-testid="playbook-error"
+    >
+      <p class="text-sm text-n-slate-10">
+        {{ $t('RAMON.PLAYBOOK.LOAD_ERROR') }}
+      </p>
+      <button
+        class="text-sm text-n-iris-11 hover:underline"
+        @click="ensureItems"
+      >
+        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
+    </div>
+    <p
+      v-else-if="!sections.length"
+      class="text-sm text-n-slate-10"
+      data-testid="playbook-no-items"
+    >
+      {{ $t('RAMON.PLAYBOOK.NO_ITEMS') }}
     </p>
     <template v-else>
       <div

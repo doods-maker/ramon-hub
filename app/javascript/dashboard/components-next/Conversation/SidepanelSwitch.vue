@@ -7,6 +7,12 @@ import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 
+// ramon: com hideContact o acesso ao painel do lead vive no cabeçalho
+// (LeadPanelToggle) — a pílula só aparece se houver Copilot pra abrigar.
+const props = defineProps({
+  hideContact: { type: Boolean, default: false },
+});
+
 const { updateUISettings } = useUISettings();
 
 const currentAccountId = useMapGetter('getCurrentAccountId');
@@ -57,9 +63,11 @@ useKeyboardEvents(keyboardEvents);
 
 <template>
   <ButtonGroup
+    v-if="!props.hideContact || showCopilotTab"
     class="flex flex-col justify-center items-center absolute top-36 xl:top-24 ltr:right-2 rtl:left-2 bg-n-solid-2/90 backdrop-blur-lg border border-n-weak/50 rounded-full gap-1.5 p-1.5 shadow-sm transition-shadow duration-200 hover:shadow !z-20"
   >
     <Button
+      v-if="!props.hideContact"
       v-tooltip.top="$t('CONVERSATION.SIDEBAR.CONTACT')"
       ghost
       slate

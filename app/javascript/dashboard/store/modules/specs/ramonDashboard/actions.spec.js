@@ -24,6 +24,7 @@ describe('ramonDashboard actions', () => {
     );
     expect(commit).toHaveBeenCalledWith(types.SET_RAMON_DASHBOARD_UI_FLAG, {
       isFetching: true,
+      hasError: false,
     });
     expect(commit).toHaveBeenCalledWith(types.SET_RAMON_DASHBOARD, data);
     expect(commit).toHaveBeenLastCalledWith(types.SET_RAMON_DASHBOARD_UI_FLAG, {
@@ -31,11 +32,14 @@ describe('ramonDashboard actions', () => {
     });
   });
 
-  it('fetch desliga o isFetching mesmo quando a requisição falha', async () => {
+  it('fetch marca hasError e desliga o isFetching quando a requisição falha', async () => {
     axios.get.mockRejectedValue(new Error('boom'));
 
-    await expect(actions.fetch({ commit })).rejects.toThrow('boom');
+    await actions.fetch({ commit });
 
+    expect(commit).toHaveBeenCalledWith(types.SET_RAMON_DASHBOARD_UI_FLAG, {
+      hasError: true,
+    });
     expect(commit).toHaveBeenLastCalledWith(types.SET_RAMON_DASHBOARD_UI_FLAG, {
       isFetching: false,
     });

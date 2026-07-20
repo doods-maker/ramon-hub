@@ -17,6 +17,14 @@ const MENU_WIDTH = 224; // w-56
 const MENU_HEIGHT = 300; // estimativa p/ decidir abrir pra cima
 const pos = ref({ top: 0, left: 0 });
 
+// Piso do datetime-local: agora, em horário local (YYYY-MM-DDTHH:mm) —
+// não faz sentido agendar follow-up no passado. Recalculado a cada abertura.
+const localNow = () =>
+  new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+const minDate = ref(localNow());
+
 const close = () => {
   open.value = false;
   title.value = '';
@@ -32,10 +40,12 @@ const onAnyScroll = () => close();
 const bindGlobal = () => {
   document.addEventListener('keydown', onDocKeydown);
   document.addEventListener('scroll', onAnyScroll, true);
+  window.addEventListener('resize', onAnyScroll);
 };
 const unbindGlobal = () => {
   document.removeEventListener('keydown', onDocKeydown);
   document.removeEventListener('scroll', onAnyScroll, true);
+  window.removeEventListener('resize', onAnyScroll);
 };
 
 const toggle = () => {
@@ -50,6 +60,7 @@ const toggle = () => {
   }
   const left = Math.max(8, rect.right - MENU_WIDTH);
   pos.value = { top, left };
+  minDate.value = localNow();
   open.value = true;
 };
 
@@ -107,26 +118,26 @@ const confirmCustom = () => {
           v-model="title"
           data-testid="task-bell-title"
           :placeholder="t('RAMON.KANBAN.BELL.TITLE_PLACEHOLDER')"
-          class="w-full px-2 py-1 mb-2 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+          class="w-full px-2 py-1 mb-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
           @click.stop
         />
         <button
           data-testid="task-bell-tomorrow"
-          class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
+          class="block w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
           @click.stop="inDaysAt9(1)"
         >
           {{ t('RAMON.KANBAN.BELL.TOMORROW') }}
         </button>
         <button
           data-testid="task-bell-3-days"
-          class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
+          class="block w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
           @click.stop="inDaysAt9(3)"
         >
           {{ t('RAMON.KANBAN.BELL.IN_3_DAYS') }}
         </button>
         <button
           data-testid="task-bell-1-week"
-          class="block w-full px-2 py-1 text-sm text-left rounded text-n-slate-11 hover:bg-n-alpha-2"
+          class="block w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
           @click.stop="inDaysAt9(7)"
         >
           {{ t('RAMON.KANBAN.BELL.IN_1_WEEK') }}
@@ -136,12 +147,13 @@ const confirmCustom = () => {
             v-model="customDate"
             data-testid="task-bell-date"
             type="datetime-local"
-            class="w-full px-2 py-1 text-sm rounded bg-n-alpha-2 text-n-slate-12"
+            :min="minDate"
+            class="w-full px-2 py-1 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
             @click.stop
           />
           <button
             data-testid="task-bell-confirm"
-            class="w-full px-2 py-1 text-sm rounded bg-n-iris-9 text-white disabled:opacity-50"
+            class="w-full px-2 py-1 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
             :disabled="!customDate"
             @click.stop="confirmCustom"
           >

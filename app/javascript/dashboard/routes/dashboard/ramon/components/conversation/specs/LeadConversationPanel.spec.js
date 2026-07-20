@@ -2,6 +2,8 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadConversationPanel from '../LeadConversationPanel.vue';
 
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+
 const lead = { id: 5, conversation_id: 42, name: 'Zé' };
 const build = (ensureSpy, deleteSpy, thesesGetSpy = vi.fn()) =>
   createStore({
@@ -74,13 +76,27 @@ describe('LeadConversationPanel', () => {
     });
   });
 
-  it('discards the lead and emits discarded', async () => {
+  it('discards the lead only after inline confirmation', async () => {
+    const del = vi.fn();
+    const wrapper = mountPanel(vi.fn().mockResolvedValue(lead), del);
+    await flushPromises();
+    // 1º clique abre o prompt — nada é deletado ainda
+    await wrapper.find('[data-testid="lead-discard"]').trigger('click');
+    expect(del).not.toHaveBeenCalled();
+    await wrapper.find('[data-testid="lead-discard-confirm"]').trigger('click');
+    await flushPromises();
+    expect(del).toHaveBeenCalledWith(expect.anything(), 5);
+    expect(wrapper.emitted('discarded')).toBeTruthy();
+  });
+
+  it('cancels the discard prompt without deleting', async () => {
     const del = vi.fn();
     const wrapper = mountPanel(vi.fn().mockResolvedValue(lead), del);
     await flushPromises();
     await wrapper.find('[data-testid="lead-discard"]').trigger('click');
-    expect(del).toHaveBeenCalledWith(expect.anything(), 5);
-    expect(wrapper.emitted('discarded')).toBeTruthy();
+    await wrapper.find('[data-testid="lead-discard-cancel"]').trigger('click');
+    expect(del).not.toHaveBeenCalled();
+    expect(wrapper.find('[data-testid="lead-discard"]').exists()).toBe(true);
   });
 
   it('emits close when clicking the close button', async () => {
