@@ -79,7 +79,8 @@ class Ramon::AdvboxMcpService
                                    hora_inicio: { type: 'string', description: 'HH:MM — com hora a tarefa cai no calendário' },
                                    hora_fim: { type: 'string', description: 'HH:MM — término (no mesmo dia do início)' },
                                    prazo: { type: 'string', description: 'Prazo fatal, YYYY-MM-DD' },
-                                   descricao: { type: 'string' }, urgente: { type: 'boolean' }, importante: { type: 'boolean' } },
+                                   descricao: { type: 'string' }, urgente: { type: 'boolean' }, importante: { type: 'boolean' },
+                                   exibir_agenda: { type: 'boolean', description: 'Exibir na agenda do AdvBox (use true em reunião marcada)' } },
                      required: %w[processo_id tipo_tarefa_id responsavel_id] } },
     { name: 'advbox_criar_movimentacao',
       description: 'Registra uma movimentação/andamento manual num processo (mínimo 10 caracteres na descrição).',
@@ -225,7 +226,7 @@ class Ramon::AdvboxMcpService
       # A API ignora end_time sem end_date — tarefa com hora é sempre no mesmo dia.
       end_time: args['hora_fim'].presence, end_date: args['hora_fim'].presence && inicio,
       date_deadline: args['prazo'], comments: args['descricao'],
-      urgent: args['urgente'], important: args['importante'] }.compact
+      urgent: args['urgente'], important: args['importante'], display_schedule: args['exibir_agenda'] }.compact
   end
 
   def self.cliente_payload(args)
