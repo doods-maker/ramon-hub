@@ -74,7 +74,9 @@ const confirmRemove = () => {
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full p-8 overflow-auto bg-n-background">
+  <div
+    class="flex flex-col w-full h-full p-4 sm:p-8 overflow-auto bg-n-background"
+  >
     <RamonPageHeader :title="t('RAMON.SHORTCUTS.TITLE')" />
 
     <ul class="flex flex-col gap-2 mb-6 max-w-xl">

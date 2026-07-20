@@ -734,7 +734,9 @@ const aba = ref('painel');
           class="flex flex-col gap-1"
           data-testid="sim-memoria"
         >
-          <div class="max-h-64 overflow-y-auto rounded-lg border border-n-weak">
+          <div
+            class="max-h-64 overflow-y-auto overflow-x-auto rounded-lg border border-n-weak"
+          >
             <table class="w-full text-xs text-n-slate-11">
               <thead class="sticky top-0 bg-n-solid-2">
                 <tr class="text-n-slate-10">
@@ -754,10 +756,16 @@ const aba = ref('painel');
               </thead>
               <tbody>
                 <tr v-for="linha in memoria.salarios" :key="linha.competencia">
-                  <td class="p-1">{{ linha.competencia }}</td>
-                  <td class="p-1 text-end">{{ money(linha.salario) }}</td>
-                  <td class="p-1 text-end">{{ linha.indice }}</td>
-                  <td class="p-1 text-end">{{ money(linha.corrigido) }}</td>
+                  <td class="p-1 whitespace-nowrap">{{ linha.competencia }}</td>
+                  <td class="p-1 text-end whitespace-nowrap">
+                    {{ money(linha.salario) }}
+                  </td>
+                  <td class="p-1 text-end whitespace-nowrap">
+                    {{ linha.indice }}
+                  </td>
+                  <td class="p-1 text-end whitespace-nowrap">
+                    {{ money(linha.corrigido) }}
+                  </td>
                 </tr>
               </tbody>
             </table>

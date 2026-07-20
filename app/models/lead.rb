@@ -80,7 +80,11 @@ class Lead < ApplicationRecord
   end
 
   def latest_triage
-    lead_triages.order(:id).last
+    # Pré-carregado (índice do Kanban via includes): resolve na coleção em
+    # memória — o jbuilder chama isto 4x/lead sem novas queries (mata o N+1).
+    # Solto: ORDER+LIMIT 1, fresco a cada chamada. SEM memoização por instância:
+    # `reload` limpa a associação mas não limparia um ivar, servindo triagem velha.
+    lead_triages.loaded? ? lead_triages.max_by(&:id) : lead_triages.order(:id).last
   end
 
   # Resumo do CNIS anexado ao caso (Onda 3b) — só JSON nativo (vai no broadcast).

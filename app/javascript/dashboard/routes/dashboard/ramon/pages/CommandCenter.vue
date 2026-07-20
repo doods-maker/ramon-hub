@@ -191,7 +191,9 @@ const openStage = stageId => {
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full overflow-auto bg-n-background p-8">
+  <div
+    class="flex flex-col w-full h-full overflow-auto bg-n-background p-4 sm:p-8"
+  >
     <RamonPageHeader
       :eyebrow="t('RAMON.NAV.COMERCIAL')"
       :title="t('RAMON.COMMAND.TITLE')"

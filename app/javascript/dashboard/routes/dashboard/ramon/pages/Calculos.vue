@@ -177,7 +177,7 @@ const fmtDate = value => {
 </script>
 
 <template>
-  <div class="flex-1 w-full h-full p-8 overflow-y-auto bg-n-background">
+  <div class="flex-1 w-full h-full p-4 sm:p-8 overflow-y-auto bg-n-background">
     <!-- Deep-link: rota com leadId -->
     <template v-if="route.params.leadId">
       <div

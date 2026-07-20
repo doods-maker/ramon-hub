@@ -5,20 +5,11 @@ import { useAlert } from 'dashboard/composables';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import { THESIS_SECTIONS as SECTIONS } from '../helpers/sections';
 
 const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
-
-const SECTIONS = [
-  'abertura',
-  'apresentacao',
-  'qualificacao',
-  'objecao',
-  'documento',
-  'roteiro',
-  'colheita',
-];
 
 const theses = computed(() => getters['theses/getTheses'].value);
 const uiFlags = computed(() => getters['theses/getUIFlags'].value);
@@ -227,9 +218,9 @@ onMounted(() => store.dispatch('theses/get'));
 <template>
   <!-- w-full explícito: sem ele a página encolhe pro conteúdo e sobra um
        deserto à direita (o container do router é flex) -->
-  <div class="flex w-full h-full bg-n-background">
+  <div class="flex flex-col md:flex-row w-full h-full bg-n-background">
     <div
-      class="flex flex-col w-[340px] flex-shrink-0 h-full p-4 overflow-y-auto border-r border-n-weak"
+      class="flex flex-col w-full md:w-[340px] md:flex-shrink-0 max-h-[40vh] md:max-h-none md:h-full p-4 overflow-y-auto border-b md:border-b-0 md:border-r border-n-weak"
     >
       <RamonPageHeader compact :title="$t('RAMON.PLAYBOOKS.TITLE')" />
       <h2 class="mb-2 text-xs uppercase tracking-widest text-n-slate-9">
@@ -333,7 +324,7 @@ onMounted(() => store.dispatch('theses/get'));
           data-testid="playbooks-detail"
         >
           <div class="flex flex-wrap items-end gap-3">
-            <label class="flex flex-col flex-1 min-w-64 gap-1">
+            <label class="flex flex-col flex-1 min-w-0 md:min-w-64 gap-1">
               <span class="text-xs text-n-slate-10">
                 {{ $t('RAMON.PLAYBOOKS.NAME') }}
               </span>

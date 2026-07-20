@@ -237,7 +237,10 @@ class Ramon::AdvboxMcpService
     name = params['name']
     args = params['arguments'].is_a?(Hash) ? params['arguments'] : {}
     fetcher = FETCHERS.fetch(name) { raise KeyError, "ferramenta desconhecida: #{name}" }
-    Rails.logger.info("AdvboxMcp escrita: #{name} #{args.to_json}") if ESCRITAS.include?(name)
+    # Só os NOMES dos campos no log — args carrega PII (CPF, nascimento, e-mail,
+    # celular) em criar_cliente; interpolar o valor escaparia o filter_parameters
+    # e vazaria dado de cliente no log (LGPD).
+    Rails.logger.info("AdvboxMcp escrita: #{name} campos=#{args.keys.sort.join(',')}") if ESCRITAS.include?(name)
     { content: [{ type: 'text', text: JSON.generate(fetcher.call(args)) }], isError: false }
   rescue Date::Error
     { content: [{ type: 'text', text: 'Data inválida — use o formato YYYY-MM-DD' }], isError: true }

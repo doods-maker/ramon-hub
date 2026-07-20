@@ -127,7 +127,9 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full overflow-auto bg-n-background p-8">
+  <div
+    class="flex flex-col w-full h-full overflow-auto bg-n-background p-4 sm:p-8"
+  >
     <RamonPageHeader
       :eyebrow="t('RAMON.ESTEIRA.EYEBROW')"
       :title="t('RAMON.ESTEIRA.TITLE')"
@@ -147,7 +149,7 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
     </RamonPageHeader>
 
     <div v-if="isLoading" class="flex flex-col gap-6 animate-pulse">
-      <div class="grid grid-cols-3 gap-4 max-w-2xl">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
         <div
           v-for="n in 3"
           :key="n"
@@ -178,7 +180,10 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
 
     <div v-else class="flex flex-col gap-8 max-w-2xl">
       <!-- Placar do dia -->
-      <div class="grid grid-cols-3 gap-4" data-testid="esteira-board">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        data-testid="esteira-board"
+      >
         <StatBlock :label="t('RAMON.ESTEIRA.BOARD.ACTIONS')" :value="total" />
         <StatBlock
           :label="t('RAMON.ESTEIRA.BOARD.VALUE')"

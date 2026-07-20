@@ -186,7 +186,9 @@ const hasVisibleTasks = computed(() =>
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full overflow-y-auto bg-n-background p-8">
+  <div
+    class="flex flex-col w-full h-full overflow-y-auto bg-n-background p-4 sm:p-8"
+  >
     <RamonPageHeader :title="t('RAMON.AGENDA.TITLE')" :subtitle="rangeLabel">
       <template #actions>
         <button

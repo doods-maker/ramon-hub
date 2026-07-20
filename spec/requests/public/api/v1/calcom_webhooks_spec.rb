@@ -73,6 +73,16 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
         expect(lead.lead_activities.where(kind: 'meeting_cancelled')).to be_present
       end
 
+      it 'ignora replay do mesmo POST assinado (idempotência)' do
+        # o null_store do ambiente de teste nunca "lembra" — memory store real p/ exercitar o guard
+        allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new)
+        post_webhook(booking_payload)
+        expect(response).to have_http_status(:created)
+
+        expect { post_webhook(booking_payload) }.not_to change(LeadTask, :count)
+        expect(response).to have_http_status(:ok)
+      end
+
       it 'BOOKING_RESCHEDULED troca a tarefa antiga pela do novo horário' do
         post_webhook(booking_payload)
 

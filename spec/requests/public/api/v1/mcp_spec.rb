@@ -30,6 +30,28 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
       end
       expect(response).to have_http_status(:method_not_allowed)
     end
+
+    it 'aceita o token via query string (rota sem token no path)' do
+      with_modified_env(RAMON_MCP_TOKEN: token, ADVBOX_API_TOKEN: 'token-advbox') do
+        post "/public/api/v1/mcp?token=#{token}", params: rpc('tools/list').to_json, headers: { 'CONTENT_TYPE' => 'application/json' }
+      end
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['result']).to have_key 'tools'
+    end
+
+    it 'rejeita token errado na query string com 401' do
+      with_modified_env(RAMON_MCP_TOKEN: token, ADVBOX_API_TOKEN: 'token-advbox') do
+        post '/public/api/v1/mcp?token=errado', params: rpc('tools/list').to_json, headers: { 'CONTENT_TYPE' => 'application/json' }
+      end
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'GET na rota por query responde 405' do
+      with_modified_env(RAMON_MCP_TOKEN: token) do
+        get "/public/api/v1/mcp?token=#{token}"
+      end
+      expect(response).to have_http_status(:method_not_allowed)
+    end
   end
 
   describe 'protocolo' do

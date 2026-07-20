@@ -153,7 +153,7 @@ const conversationUrl = lead =>
 </script>
 
 <template>
-  <div class="flex-1 w-full h-full p-8 overflow-y-auto bg-n-background">
+  <div class="flex-1 w-full h-full p-4 sm:p-8 overflow-y-auto bg-n-background">
     <!-- Modo busca: rota sem contactId (entrada "Linha da Vida" do menu) -->
     <template v-if="!route.params.contactId">
       <RamonPageHeader

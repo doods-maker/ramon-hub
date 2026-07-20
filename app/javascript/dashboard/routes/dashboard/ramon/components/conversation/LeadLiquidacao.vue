@@ -446,7 +446,7 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
         <li v-for="(aviso, i) in resultado.avisos" :key="i">{{ aviso }}</li>
       </ul>
 
-      <div class="grid grid-cols-3 gap-1 pt-2">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 pt-2">
         <label :class="labelClass">
           {{ $t('RAMON.LIQUIDACAO.PDF_NOME') }}
           <input

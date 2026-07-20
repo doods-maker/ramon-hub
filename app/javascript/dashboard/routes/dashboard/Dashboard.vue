@@ -148,7 +148,11 @@ export default {
       @show-create-account-modal="openCreateAccountModal"
       @close-mobile-sidebar="closeMobileSidebar"
     />
-    <IntranetSidebar v-else />
+    <IntranetSidebar
+      v-else
+      :is-mobile-sidebar-open="isMobileSidebarOpen"
+      @close-mobile-sidebar="closeMobileSidebar"
+    />
 
     <main
       class="flex flex-1 h-full w-full min-h-0 px-0 overflow-hidden bg-n-surface-1"

@@ -161,7 +161,7 @@ const copyDossie = async () => {
 </script>
 
 <template>
-  <div class="flex-1 w-full h-full p-8 overflow-y-auto bg-n-background">
+  <div class="flex-1 w-full h-full p-4 sm:p-8 overflow-y-auto bg-n-background">
     <div
       v-if="loading"
       class="flex flex-col max-w-2xl gap-4 animate-pulse"

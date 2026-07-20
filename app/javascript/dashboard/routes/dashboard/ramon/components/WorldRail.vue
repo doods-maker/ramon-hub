@@ -43,7 +43,7 @@ const worlds = computed(() => [
 
 <template>
   <aside
-    class="flex flex-col items-center flex-shrink-0 h-full py-3 w-[78px] ramon-rail ltr:border-r rtl:border-l border-n-weak"
+    class="hidden md:flex flex-col items-center flex-shrink-0 h-full py-3 w-[78px] ramon-rail ltr:border-r rtl:border-l border-n-weak"
   >
     <img
       :src="monogramUrl"
