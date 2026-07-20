@@ -4,7 +4,7 @@ module Ramon::LeadRadar
   module_function
 
   def active_leads(account)
-    account.leads.joins(:lead_stage).includes(:lead_stage, :contact)
+    account.leads.funil.joins(:lead_stage).includes(:lead_stage, :contact)
            .where(lead_stages: { is_won: false, is_lost: false })
   end
 
@@ -15,7 +15,7 @@ module Ramon::LeadRadar
   end
 
   def new_from_lp_leads(account)
-    account.leads.includes(:lead_stage, :contact)
+    account.leads.funil.includes(:lead_stage, :contact)
            .where.not(source: [nil, ''])
            .where(conversation_id: nil, created_at: 48.hours.ago..)
            .where.not(id: account.lead_notes.select(:lead_id))
