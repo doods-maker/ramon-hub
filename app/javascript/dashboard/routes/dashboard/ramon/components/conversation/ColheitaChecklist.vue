@@ -33,12 +33,15 @@ const colheitaItems = computed(() =>
   (thesis.value?.items || []).filter(item => item.section === 'colheita')
 );
 
-// mapa { "<item_id>": true } vindo de custom_attributes.colheita_status
+// mapa vindo de custom_attributes.colheita_status:
+// true = marcado à mão · 'ia' = marcado pela IA · false = desmarcado à mão
+// (veto explícito — a IA nunca re-marca chave existente)
 const colheitaStatus = computed(
   () => props.lead?.custom_attributes?.colheita_status || {}
 );
 
 const isDone = item => Boolean(colheitaStatus.value[item.id]);
+const isAI = item => colheitaStatus.value[item.id] === 'ia';
 
 const doneCount = computed(() => colheitaItems.value.filter(isDone).length);
 
@@ -49,9 +52,7 @@ const pendingIds = ref(new Set());
 const toggle = async item => {
   if (pendingIds.value.has(item.id)) return;
   pendingIds.value.add(item.id);
-  const next = { ...colheitaStatus.value };
-  if (next[item.id]) delete next[item.id];
-  else next[item.id] = true;
+  const next = { ...colheitaStatus.value, [item.id]: !isDone(item) };
   try {
     await store.dispatch('leads/update', {
       id: props.lead.id,
@@ -153,6 +154,14 @@ const chargeLacunas = async () => {
       <span :class="isDone(item) ? 'line-through opacity-70' : ''">{{
         item.title || item.content
       }}</span>
+      <span
+        v-if="isAI(item)"
+        class="shrink-0 ms-auto text-[10px] uppercase tracking-wide opacity-80"
+        data-testid="colheita-ai-badge"
+        :title="$t('RAMON.COLHEITA.AI_BADGE_TIP')"
+      >
+        {{ $t('RAMON.COLHEITA.AI_BADGE') }}
+      </span>
     </button>
 
     <div

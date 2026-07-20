@@ -238,6 +238,10 @@
 | `.../ramon/components/conversation/LeadSimulador.vue` (linhas de changes) | painel "Ajustar vínculos" (checkbox fora-da-média + mensalidade real), duas médias (RMI 100% × descartes) e tabela de memória de cálculo | Simulador | Parâmetros motor |
 | `public/dashboard-apps/{espelho,dossie}.html` | páginas estáticas p/ Dashboard Apps nativos (mesmo host → herda sessão, passa no SAMEORIGIN); espelho imprime o appContext, dossie renderiza o Dossiê 30s via APIs existentes | Dashboard Apps | F3 Chatwoot 14/07 |
 | `app/controllers/api/v1/accounts/leads_controller.rb` (1 linha) | `for_conversation` resolve por `display_id` (o que a SPA manda), não pela PK global — bug latente enquanto id==display_id por conta única | fix | F3 Chatwoot 14/07 |
+| `app/javascript/dashboard/components/widgets/conversation/ConversationHeader.vue` (2 linhas) | +`LeadPanelToggle` (botão rotulado "Painel do lead" nas ações do cabeçalho) | acesso claro ao painel do lead | painel-lead 20/07 |
+| `app/javascript/dashboard/components-next/Conversation/SidepanelSwitch.vue` | prop `hideContact` — ConversationView esconde a pílula flutuante (só Copilot a mantém viva) | painel do lead saiu da pílula | painel-lead 20/07 |
+| `app/javascript/dashboard/routes/dashboard/conversation/ConversationView.vue` (1 linha) | `hide-contact` no SidepanelSwitch | idem | painel-lead 20/07 |
+| `app/javascript/dashboard/i18n/locale/pt_BR/conversation.json` (1 linha) | `CONVERSATION.SIDEBAR.CONTACT`: "Contatos" → "Painel do lead" | rótulo real do painel | painel-lead 20/07 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

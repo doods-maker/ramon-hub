@@ -81,6 +81,35 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe '#message_created -> colheita automática' do
+    let(:thesis) { account.theses.find_by!(name: 'Auxílio-acidente (B36)') }
+    let(:lead) do
+      create(:lead, account: account, thesis: thesis, conversation: conversation, contact: contact)
+    end
+    let(:message) do
+      create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'me machuquei')
+    end
+
+    it 'agenda a extração com debounce pra mensagem do lead de auxílio-acidente' do
+      lead
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message)) }
+        .to have_enqueued_job(Ramon::ColheitaExtractionJob).with(message.id, debounce: true)
+    end
+
+    it 'não agenda quando a tese do lead não é auxílio-acidente' do
+      lead.update!(thesis: account.theses.where.not(id: thesis.id).first)
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message)) }
+        .not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
+    end
+
+    it 'não agenda pra mensagem outgoing' do
+      lead
+      out = create(:message, account: account, conversation: conversation, message_type: :outgoing, content: 'oi')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: out)) }
+        .not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
+    end
+  end
+
   describe '#lead_updated -> etiqueta a conversa' do
     it 'aplica a fase-* da etapa do lead na conversa' do
       lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),

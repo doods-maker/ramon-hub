@@ -21,25 +21,17 @@ class RamonLeadListener < BaseListener
     end
   end
 
-  # Atribuição: o referral da Meta (click-to-WhatsApp) chega na primeira
-  # mensagem, depois do conversation_created — por isso o hook é aqui.
+  COLHEITA_DEBOUNCE = 3.minutes
+
   def message_created(event)
     message = event.data[:message]
     return unless message.incoming?
 
-    referral = message.content_attributes.with_indifferent_access[:referral]
-    return if referral.blank?
-
     lead = message.account.leads.find_by(conversation_id: message.conversation_id)
     return if lead.blank?
 
-    meta = referral.slice('source_id', 'source_type', 'source_url', 'headline', 'ctwa_clid').compact_blank
-    attrs = { custom_attributes: lead.custom_attributes.merge('meta_referral' => meta) }
-    if lead.source.blank?
-      attrs[:source] = referral_source_label(referral)
-      attrs[:channel] = 'meta_ads'
-    end
-    lead.update!(attrs)
+    apply_meta_referral(lead, message)
+    schedule_colheita(lead, message)
   end
 
   def lead_created(event)
@@ -64,6 +56,29 @@ class RamonLeadListener < BaseListener
   end
 
   private
+
+  # Atribuição: o referral da Meta (click-to-WhatsApp) chega na primeira
+  # mensagem, depois do conversation_created — por isso o hook é aqui.
+  def apply_meta_referral(lead, message)
+    referral = message.content_attributes.with_indifferent_access[:referral]
+    return if referral.blank?
+
+    meta = referral.slice('source_id', 'source_type', 'source_url', 'headline', 'ctwa_clid').compact_blank
+    attrs = { custom_attributes: lead.custom_attributes.merge('meta_referral' => meta) }
+    if lead.source.blank?
+      attrs[:source] = referral_source_label(referral)
+      attrs[:channel] = 'meta_ads'
+    end
+    lead.update!(attrs)
+  end
+
+  # Colheita automática: mensagem nova do lead agenda a extração da conversa
+  # com debounce — o job só roda se ainda for a última mensagem da rajada.
+  def schedule_colheita(lead, message)
+    return unless lead.thesis&.name&.match?(Ramon::ColheitaExtractionService::THESIS_MATCH)
+
+    Ramon::ColheitaExtractionJob.set(wait: COLHEITA_DEBOUNCE).perform_later(message.id, debounce: true)
+  end
 
   def referral_source_label(referral)
     detail = referral['source_id'].presence || referral['headline'].presence

@@ -109,6 +109,47 @@ RSpec.describe Ramon::ColheitaExtractionService do
     expect(lead.reload.custom_attributes.dig('colheita', 'dados', 'cliente', 'profissao')).to eq('montador')
   end
 
+  describe 'checklist automático da colheita' do
+    let(:checklist_ids) { thesis.thesis_items.where(section: 'colheita').pluck(:id) }
+
+    def colheita_json_with(checklist_ok)
+      JSON.parse(colheita_json).merge('checklist_ok' => checklist_ok).to_json
+    end
+
+    it 'manda os itens da colheita no prompt e marca ia nos que a conversa responde' do
+      first_id, second_id = checklist_ids.first(2)
+      expect(Ramon::LlmClient).to receive(:complete) do |user:, **|
+        expect(user).to include('Itens do checklist da colheita')
+        expect(user).to include("#{first_id}: ")
+        llm_result(colheita_json_with([first_id, second_id]))
+      end
+      described_class.new(lead).perform
+      status = lead.reload.custom_attributes['colheita_status']
+      expect(status[first_id.to_s]).to eq('ia')
+      expect(status[second_id.to_s]).to eq('ia')
+      expect(lead.custom_attributes.dig('colheita', 'dados')).not_to have_key('checklist_ok')
+    end
+
+    it 'não sobrescreve escolha humana: true (marcou) e false (veto) ficam' do
+      first_id, second_id = checklist_ids.first(2)
+      humano = { first_id.to_s => true, second_id.to_s => false }
+      lead.update!(custom_attributes: lead.custom_attributes.merge('colheita_status' => humano))
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result(colheita_json_with([first_id, second_id])))
+      described_class.new(lead).perform
+      status = lead.reload.custom_attributes['colheita_status']
+      expect(status[first_id.to_s]).to be(true)
+      expect(status[second_id.to_s]).to be(false)
+    end
+
+    it 'ignora ids que não são itens de colheita da tese' do
+      intruso = thesis.thesis_items.where.not(section: 'colheita').first
+      allow(Ramon::LlmClient).to receive(:complete)
+        .and_return(llm_result(colheita_json_with([intruso.id, 999_999])))
+      described_class.new(lead).perform
+      expect(lead.reload.custom_attributes['colheita_status']).to be_nil
+    end
+  end
+
   it 'repropaga TransientError para o retry do job' do
     allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, '429')
     expect { described_class.new(lead).perform }.to raise_error(Ramon::LlmClient::TransientError)

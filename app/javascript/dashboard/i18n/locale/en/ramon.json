@@ -494,6 +494,8 @@
       "COUNT": "{done}/{total} collected",
       "LACUNAS_TITLE": "Meeting gaps (AI)",
       "EXTRACTED_AT": "Extracted from the conversation at {date}",
+      "AI_BADGE": "✨ AI",
+      "AI_BADGE_TIP": "Checked by the AI from the conversation — click to undo",
       "CHARGE": "Request gap documents",
       "COPIED": "Draft copied — review and paste into WhatsApp",
       "DRAFT": {
