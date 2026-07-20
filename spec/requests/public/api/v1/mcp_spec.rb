@@ -127,11 +127,14 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
       stubs = [
         stub_request(:get, 'https://app.advbox.com.br/api/v1/lawsuits/123')
           .to_return(status: 200, body: { id: 123 }.to_json, headers: { 'Content-Type' => 'application/json' }),
-        stub_request(:get, 'https://app.advbox.com.br/api/v1/movements/123').with(query: { limit: 10 })
+        stub_request(:get, 'https://app.advbox.com.br/api/v1/movements/123')
+          .with(query: { limit: 10 })
           .to_return(status: 200, body: '[]', headers: { 'Content-Type' => 'application/json' }),
-        stub_request(:get, 'https://app.advbox.com.br/api/v1/publications/123').with(query: { limit: 5 })
+        stub_request(:get, 'https://app.advbox.com.br/api/v1/publications/123')
+          .with(query: { limit: 5 })
           .to_return(status: 200, body: '[]', headers: { 'Content-Type' => 'application/json' }),
-        stub_request(:get, 'https://app.advbox.com.br/api/v1/posts').with(query: { lawsuit_id: 123, limit: 50 })
+        stub_request(:get, 'https://app.advbox.com.br/api/v1/posts')
+          .with(query: { lawsuit_id: 123, limit: 50 })
           .to_return(status: 200, body: '[]', headers: { 'Content-Type' => 'application/json' }),
         stub_request(:get, 'https://app.advbox.com.br/api/v1/history/123')
           .to_return(status: 200, body: '[]', headers: { 'Content-Type' => 'application/json' })
@@ -139,7 +142,7 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
 
       post_mcp(rpc('tools/call', { name: 'advbox_dossie', arguments: { processo_id: 123 } }))
 
-      stubs.each { |s| expect(s).to have_been_requested }
+      expect(stubs).to all(have_been_requested)
       result = response.parsed_body['result']
       expect(result['isError']).to be false
       expect(result['content'].first['text']).to include('"processo"', '"movimentacoes"', '"historico_tarefas"')
