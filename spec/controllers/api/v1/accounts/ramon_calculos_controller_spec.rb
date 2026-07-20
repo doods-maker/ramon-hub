@@ -40,6 +40,11 @@ RSpec.describe 'Ramon Calculos API', type: :request do
       expect(response.parsed_body['payload']).to eq([])
     end
 
+    it 'q curto não consulta o AdvBox (quota) e devolve vazio' do
+      get url, params: { q: 'a' }, headers: agent.create_new_auth_token, as: :json
+      expect(response.parsed_body['payload']).to eq([])
+    end
+
     it 'AdvBox fora do ar vira 503 com erro nomeado' do
       stub_request(:get, 'https://app.advbox.com.br/api/v1/customers')
         .with(query: hash_including('name' => 'Silva')).to_timeout

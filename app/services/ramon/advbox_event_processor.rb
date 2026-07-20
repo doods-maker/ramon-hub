@@ -142,7 +142,7 @@ class Ramon::AdvboxEventProcessor
     return if contact.blank?
 
     @account.leads.open.find_by(contact_id: contact.id) ||
-      @account.leads.where(contact_id: contact.id).reorder(created_at: :desc).first
+      @account.leads.funil.where(contact_id: contact.id).reorder(created_at: :desc).first
   end
 
   def contact_by_cpf

@@ -27,6 +27,8 @@ class Api::V1::Accounts::RamonCalculosController < Api::V1::Accounts::BaseContro
   # Termo com cara de CPF (11 dígitos) vira busca por identification.
   def advbox_list
     q = params[:q].to_s.strip
+    return [] if q.length < 2 # não queima quota (500/dia) com busca vazia
+
     digits = q.gsub(/\D/, '')
     filtro = digits.length == 11 ? { identification: digits } : { name: q }
     resposta = Ramon::AdvboxClient.customers(filtro.merge(limit: LIMIT))

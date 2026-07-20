@@ -67,8 +67,9 @@ class Ramon::CalculoCasoService
     )
     return contact if contact.save
 
-    # CPF inválido/duplicado não derruba o fluxo: tenta sem ele.
-    contact.cpf = nil
+    # CPF inválido ou e-mail/telefone já de outro contato não derrubam o
+    # fluxo: o caso de cálculo nasce sem o campo problemático.
+    contact.errors.attribute_names.each { |attr| contact[attr] = nil unless attr == :name }
     contact.save!
     contact
   end
@@ -76,8 +77,11 @@ class Ramon::CalculoCasoService
   def save_tolerando_cpf(contact, updates)
     return if updates.empty? || contact.update(updates)
 
+    # reload sempre: senão o objeto segue com o CPF que FALHOU em salvar
+    # (de outra pessoa) e ele vazaria no push_event_data do caso.
+    contact.reload
     updates.delete(:cpf)
-    contact.reload.update(updates) if updates.any?
+    contact.update(updates) if updates.any?
   end
 
   def criar_caso(contact)

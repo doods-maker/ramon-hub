@@ -103,7 +103,7 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   def lost_reasons_30d
     leads_funil.where(lost_at: 30.days.ago..)
                .reorder(nil).group(:lost_reason).count
-           .sort_by { |_reason, count| -count }
+               .sort_by { |_reason, count| -count }
   end
 
   # ---- Histórico (snapshots diários) ------------------------------------

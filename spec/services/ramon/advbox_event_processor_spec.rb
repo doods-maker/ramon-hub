@@ -69,6 +69,16 @@ RSpec.describe Ramon::AdvboxEventProcessor do
     expect(lead.lead_notes.find_by("body LIKE 'RASCUNHO%'").body).to include 'êxito'
   end
 
+  it 'contato só com caso de cálculo fica unmatched (fallback não adota caso oculto)' do
+    outro = create(:contact, account: account, cpf: '11144477735')
+    create(:lead, account: account, lead_stage: stage_novo, contact: outro, source: Lead::FONTE_CALCULO)
+
+    event = process({ 'process' => { 'stage' => 'REQUERIMENTO PROTOCOLADO' },
+                      'client' => { 'cpf' => '111.444.777-35' } })
+
+    expect(event.status).to eq 'unmatched'
+  end
+
   it 'ARQUIVADO encerra os follow-ups abertos do lead' do
     lead.lead_tasks.create!(account: account, kind: 'follow_up', title: 'Cobrar doc', due_at: 2.days.from_now)
 

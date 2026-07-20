@@ -131,6 +131,9 @@ export const actions = {
     commit(types.EDIT_LEAD, response.data);
   },
   upsert: ({ commit }, lead) => {
+    // Caso de cálculo (tela Cálculos ← AdvBox) não entra no board: o index já
+    // filtra no server, mas o broadcast re-injetaria o card aqui.
+    if (lead.source === 'calculo-advbox') return;
     commit(types.MERGE_LEAD, lead);
   },
   select: ({ commit }, id) => {

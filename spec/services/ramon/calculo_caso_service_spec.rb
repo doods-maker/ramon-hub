@@ -54,6 +54,22 @@ RSpec.describe Ramon::CalculoCasoService do
     expect(contact.reload.data_nascimento).to eq(Date.new(1980, 5, 10))
   end
 
+  it 'e-mail já usado por outro contato não derruba: cria contato sem e-mail' do
+    create(:contact, account: account, email: 'familia@exemplo.com')
+    result = perform(nome: 'Cônjuge', cpf: '529.982.247-25', email: 'familia@exemplo.com')
+    expect(result[:contact].email).to be_nil
+    expect(result[:contact].cpf).to eq('52998224725')
+    expect(result[:leads].sole.source).to eq(Lead::FONTE_CALCULO)
+  end
+
+  it 'CPF que pertence a OUTRO contato não fica sujo em memória no contato reusado' do
+    create(:contact, account: account, cpf: '52998224725')
+    reusado = create(:contact, account: account, phone_number: '+5548999887766', cpf: nil)
+    result = perform(nome: 'Fulano', telefone: '48999887766', cpf: '52998224725')
+    expect(result[:contact]).to eq(reusado)
+    expect(result[:contact].cpf).to be_nil
+  end
+
   it 'com contact_id cria caso pro contato do hub sem lead' do
     contact = create(:contact, account: account)
     result = perform(contact_id: contact.id)
