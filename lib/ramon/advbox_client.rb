@@ -71,6 +71,27 @@ class Ramon::AdvboxClient
     get('/posts', params)
   end
 
+  # Arquivos anexados (a tarefas, clientes ou transações — NÃO há filtro por
+  # processo). Exige ao menos um filtro: name (mín. 3 chars), customer_id,
+  # post_id ou transaction_id.
+  def self.documents(params = {})
+    get('/documents', params)
+  end
+
+  # Link temporário de download (S3, ~5 min). A API pode responder JSON com a
+  # URL ou redirecionar direto — não seguimos o redirect pra devolver o link.
+  def self.document_download(id)
+    response = HTTParty.get("#{BASE}/documents/#{id}/download",
+                            headers: headers, follow_redirects: false,
+                            open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT)
+    return { 'url' => response.headers['location'] } if response.code.between?(300, 399)
+    raise UnavailableError, "AdvBox respondeu HTTP #{response.code}" unless response.success?
+
+    response.parsed_response
+  rescue *NETWORK_ERRORS => e
+    raise UnavailableError, "AdvBox indisponível: #{e.message}"
+  end
+
   # IDs de configuração da conta (users, stages, tasks, lawsuit_types, origins,
   # financial) — referência obrigatória pra qualquer escrita.
   def self.settings

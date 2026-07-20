@@ -8,7 +8,7 @@
 # concluir/editar/apagar tarefa nem delete de nada.
 class Ramon::AdvboxMcpService
   PROTOCOL_VERSIONS = %w[2025-06-18 2025-03-26 2024-11-05].freeze
-  SERVER_INFO = { name: 'ramon-hub-advbox', version: '1.2.0' }.freeze
+  SERVER_INFO = { name: 'ramon-hub-advbox', version: '1.3.0' }.freeze
   INSTRUCTIONS = 'Consulta e escrita na gestão processual (AdvBox) da banca Ramon Antônio Advogados. ' \
                  'Datas no formato YYYY-MM-DD. Resultados são JSON cru da API; pagine com "limite" quando a lista vier grande. ' \
                  'As ferramentas advbox_criar_*/advbox_editar_* gravam DE VERDADE no AdvBox: antes de usar, chame advbox_configuracoes ' \
@@ -61,6 +61,22 @@ class Ramon::AdvboxMcpService
     { name: 'advbox_cliente',
       description: 'Ficha completa de um cliente pelo ID do AdvBox.',
       inputSchema: { type: 'object', properties: { id: { type: 'integer', description: 'ID do contato no AdvBox' } }, required: ['id'] } },
+    { name: 'advbox_dossie',
+      description: 'Dossiê completo de um processo numa chamada só: dados do processo (com clientes), últimas 10 movimentações, ' \
+                   '5 publicações, tarefas e histórico de tarefas. Prefira ao invés de 5 consultas separadas.',
+      inputSchema: { type: 'object', properties: { processo_id: { type: 'integer' } }, required: ['processo_id'] } },
+    { name: 'advbox_documentos',
+      description: 'Lista arquivos anexados no AdvBox. Exige ao menos UM filtro: nome (parcial, mín. 3 letras), cliente_id, ' \
+                   'tarefa_id ou transacao_id — NÃO há filtro por processo (use o cliente do processo). ' \
+                   'Baixe com advbox_documento_link.',
+      inputSchema: { type: 'object',
+                     properties: { nome: { type: 'string', description: 'Nome (parcial) do arquivo, mín. 3 letras' },
+                                   cliente_id: { type: 'integer' }, tarefa_id: { type: 'integer' },
+                                   transacao_id: { type: 'integer' }, limite: LIMITE },
+                     required: [] } },
+    { name: 'advbox_documento_link',
+      description: 'Gera o link temporário de download (~5 min) de um documento pelo ID (vem de advbox_documentos).',
+      inputSchema: { type: 'object', properties: { id: { type: 'integer' } }, required: ['id'] } },
     { name: 'advbox_configuracoes',
       description: 'IDs de configuração da conta AdvBox: usuários, origens de cliente, tipos de tarefa, etapas, tipos de processo e ' \
                    'financeiro (contas, categorias, centros de custo). Consulte SEMPRE antes de qualquer advbox_criar_*/advbox_editar_*.',
@@ -82,6 +98,26 @@ class Ramon::AdvboxMcpService
                                    descricao: { type: 'string' }, urgente: { type: 'boolean' }, importante: { type: 'boolean' },
                                    exibir_agenda: { type: 'boolean', description: 'Exibir na agenda do AdvBox (use true em reunião marcada)' } },
                      required: %w[processo_id tipo_tarefa_id responsavel_id] } },
+    { name: 'advbox_criar_esteira',
+      description: 'Cria VÁRIAS tarefas de uma vez num processo (esteira). Proponha a sequência na conversa, confirme com o usuário ' \
+                   'e só então chame. responsavel_id/criador_id do topo valem como padrão; cada item aceita os mesmos campos de ' \
+                   'advbox_criar_tarefa (sem processo_id) e pode sobrescrever o padrão. Falha em um item não impede os demais — ' \
+                   'o resultado vem item a item, na ordem.',
+      inputSchema: { type: 'object',
+                     properties: { processo_id: { type: 'integer' },
+                                   responsavel_id: { type: 'integer', description: 'Responsável padrão das tarefas' },
+                                   criador_id: { type: 'integer', description: 'Criador padrão (from) — mesma regra de advbox_criar_tarefa' },
+                                   tarefas: { type: 'array', minItems: 1,
+                                              items: { type: 'object',
+                                                       properties: { tipo_tarefa_id: { type: 'integer' }, responsavel_id: { type: 'integer' },
+                                                                     criador_id: { type: 'integer' },
+                                                                     data: { type: 'string', description: 'YYYY-MM-DD (padrão: hoje)' },
+                                                                     hora_inicio: { type: 'string' }, hora_fim: { type: 'string' },
+                                                                     prazo: { type: 'string', description: 'YYYY-MM-DD' },
+                                                                     descricao: { type: 'string' }, urgente: { type: 'boolean' },
+                                                                     importante: { type: 'boolean' }, exibir_agenda: { type: 'boolean' } },
+                                                       required: ['tipo_tarefa_id'] } } },
+                     required: %w[processo_id responsavel_id tarefas] } },
     { name: 'advbox_criar_movimentacao',
       description: 'Registra uma movimentação/andamento manual num processo (mínimo 10 caracteres na descrição).',
       inputSchema: { type: 'object',
@@ -144,6 +180,7 @@ class Ramon::AdvboxMcpService
   TAREFA_FILTROS = { processo_id: :lawsuit_id, responsavel: :user_name, prazo_de: :deadline_start,
                      prazo_ate: :deadline_end, data_de: :date_start, data_ate: :date_end }.freeze
   CLIENTE_FILTROS = { nome: :name, cpf: :identification, telefone: :phone, cidade: :city }.freeze
+  DOCUMENTO_FILTROS = { nome: :name, cliente_id: :customer_id, tarefa_id: :post_id, transacao_id: :transaction_id }.freeze
 
   FETCHERS = {
     'advbox_buscar_processos' => ->(a) { Ramon::AdvboxClient.lawsuits(filtros(a, PROCESSO_FILTROS).merge(limit: a.fetch('limite', 20))) },
@@ -156,7 +193,11 @@ class Ramon::AdvboxMcpService
     'advbox_buscar_clientes' => ->(a) { Ramon::AdvboxClient.customers(filtros(a, CLIENTE_FILTROS).merge(limit: a.fetch('limite', 20))) },
     'advbox_cliente' => ->(a) { Ramon::AdvboxClient.customer(a.fetch('id')) },
     'advbox_configuracoes' => ->(_a) { Ramon::AdvboxClient.settings },
+    'advbox_dossie' => ->(a) { dossie(a.fetch('processo_id')) },
+    'advbox_documentos' => ->(a) { Ramon::AdvboxClient.documents(filtros(a, DOCUMENTO_FILTROS).merge(limit: a.fetch('limite', 20))) },
+    'advbox_documento_link' => ->(a) { Ramon::AdvboxClient.document_download(a.fetch('id')) },
     'advbox_criar_tarefa' => ->(a) { Ramon::AdvboxClient.create_post(tarefa_payload(a)) },
+    'advbox_criar_esteira' => ->(a) { criar_esteira(a) },
     'advbox_criar_movimentacao' => lambda { |a|
       Ramon::AdvboxClient.create_movement(lawsuit_id: a.fetch('processo_id'), description: a.fetch('descricao'),
                                           date: data_br(a['data'].presence || Time.zone.today.iso8601))
@@ -214,6 +255,27 @@ class Ramon::AdvboxMcpService
     mapping.each_with_object({}) do |(pt, api), query|
       value = args[pt.to_s]
       query[api] = value if value.present?
+    end
+  end
+
+  def self.dossie(processo_id)
+    { processo: Ramon::AdvboxClient.lawsuit(processo_id),
+      movimentacoes: Ramon::AdvboxClient.movements(processo_id, limit: 10),
+      publicacoes: Ramon::AdvboxClient.publications(processo_id, limit: 5),
+      tarefas: Ramon::AdvboxClient.posts(lawsuit_id: processo_id, limit: 50),
+      historico_tarefas: Ramon::AdvboxClient.history(processo_id) }
+  end
+
+  # Monta TODOS os payloads antes de gravar (erro de argumento não deixa
+  # esteira pela metade); depois cria um a um, e recusa da API num item não
+  # derruba os demais.
+  def self.criar_esteira(args)
+    base = args.slice('responsavel_id', 'criador_id').merge('processo_id' => args.fetch('processo_id'))
+    payloads = args.fetch('tarefas').map { |t| tarefa_payload(base.merge(t)) }
+    payloads.map do |payload|
+      Ramon::AdvboxClient.create_post(payload)
+    rescue Ramon::AdvboxClient::RequestError => e
+      { erro: "AdvBox recusou (HTTP #{e.code})", detalhe: e.body, tarefa: payload }
     end
   end
 
