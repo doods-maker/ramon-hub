@@ -73,11 +73,11 @@ class Ramon::ColheitaExtractionService
     ENV.fetch('RAMON_COLHEITA_MODEL', 'deepseek-chat')
   end
 
-  # Com provider autorizado p/ dado sensível (anthropic/openai) o transcript vai
-  # íntegro e a extração cobre identificação civil; senão (deepseek, padrão) vai
+  # Com provider autorizado p/ dado sensível (lista configurável no LlmClient)
+  # o transcript vai íntegro e a extração cobre identificação civil; senão vai
   # pseudonimizado (LGPD) — PII mascarada vira lacuna, datas/valores extraem normal.
   def sensitive_ok?
-    Ramon::LlmClient::SENSITIVE_OK_PROVIDERS.include?(provider)
+    Ramon::LlmClient.sensitive_ok_providers.include?(provider)
   end
 
   def call_llm(transcript)

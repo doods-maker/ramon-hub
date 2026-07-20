@@ -21,6 +21,19 @@ RSpec.describe Ramon::LlmClient do
         expect(result.content).to eq('ok')
       end
     end
+
+    it 'libera deepseek sensitive quando o env autoriza (decisão 20/07)' do
+      with_modified_env RAMON_LLM_SENSITIVE_OK_PROVIDERS: 'anthropic,openai,deepseek', DEEPSEEK_API_KEY: 'k' do
+        chat = instance_double(RubyLLM::Chat)
+        allow(RubyLLM).to receive(:context).and_return(instance_double(RubyLLM::Context, chat: chat))
+        allow(chat).to receive(:with_instructions).and_return(chat)
+        message = instance_double(RubyLLM::Message, content: 'ok', input_tokens: 10, output_tokens: 5)
+        allow(chat).to receive(:ask).and_return(message)
+        result = described_class.complete(provider: 'deepseek', model: 'deepseek-chat',
+                                          system: 's', user: 'u', sensitive: true)
+        expect(result.content).to eq('ok')
+      end
+    end
   end
 
   it 'falha cedo sem a API key do provider' do

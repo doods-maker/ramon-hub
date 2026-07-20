@@ -77,6 +77,19 @@ RSpec.describe Ramon::ColheitaExtractionService do
     end
   end
 
+  it 'deepseek autorizado via env manda transcript íntegro (decisão 20/07)' do
+    with_modified_env RAMON_LLM_SENSITIVE_OK_PROVIDERS: 'anthropic,openai,deepseek' do
+      expect(Ramon::LlmClient).to receive(:complete) do |provider:, user:, sensitive:, **|
+        expect(provider).to eq('deepseek')
+        expect(user).to include('123.456.789-00')
+        expect(sensitive).to be(true)
+        llm_result(colheita_json)
+      end
+      described_class.new(lead).perform
+      expect(lead.reload.custom_attributes.dig('colheita', 'mascarada')).to be(false)
+    end
+  end
+
   it 'não chama o LLM quando a tese do lead não é auxílio-acidente' do
     other = account.theses.where.not(id: thesis.id).first
     lead.update!(thesis: other)

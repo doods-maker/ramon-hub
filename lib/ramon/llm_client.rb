@@ -7,15 +7,23 @@ class Ramon::LlmClient
 
   Result = Data.define(:content, :input_tokens, :output_tokens)
 
-  SENSITIVE_OK_PROVIDERS = %w[anthropic openai].freeze
+  DEFAULT_SENSITIVE_OK_PROVIDERS = %w[anthropic openai].freeze
   PROVIDER_ENV_KEYS = {
     'deepseek' => 'DEEPSEEK_API_KEY',
     'anthropic' => 'ANTHROPIC_API_KEY',
     'openai' => 'OPENAI_API_KEY'
   }.freeze
 
+  # Providers autorizados a receber dado pessoal (LGPD). Configurável via env
+  # RAMON_LLM_SENSITIVE_OK_PROVIDERS (decisão do Eduardo 20/07/2026: deepseek
+  # entra na lista da VPS pra colheita ler CPF/endereço da conversa).
+  def self.sensitive_ok_providers
+    ENV.fetch('RAMON_LLM_SENSITIVE_OK_PROVIDERS', DEFAULT_SENSITIVE_OK_PROVIDERS.join(','))
+       .split(',').map(&:strip).reject(&:empty?)
+  end
+
   def self.complete(provider:, model:, system:, user:, sensitive: false)
-    if sensitive && SENSITIVE_OK_PROVIDERS.exclude?(provider)
+    if sensitive && sensitive_ok_providers.exclude?(provider)
       raise SensitiveProviderError, "Agente sensível (LGPD): provider #{provider} não autorizado"
     end
 
