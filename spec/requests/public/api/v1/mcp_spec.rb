@@ -122,6 +122,55 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
     end
   end
 
+  describe 'tools/call do dossiê e documentos (v1.3)' do
+    it 'dossiê agrega processo, movimentações, publicações, tarefas e histórico numa chamada' do
+      stubs = [
+        stub_request(:get, 'https://app.advbox.com.br/api/v1/lawsuits/123')
+          .to_return(status: 200, body: { id: 123 }.to_json, headers: { 'Content-Type' => 'application/json' }),
+        stub_request(:get, 'https://app.advbox.com.br/api/v1/movements/123')
+          .with(query: { limit: 10 })
+          .to_return(status: 200, body: '[]', headers: { 'Content-Type' => 'application/json' }),
+        stub_request(:get, 'https://app.advbox.com.br/api/v1/publications/123')
+          .with(query: { limit: 5 })
+          .to_return(status: 200, body: '[]', headers: { 'Content-Type' => 'application/json' }),
+        stub_request(:get, 'https://app.advbox.com.br/api/v1/posts')
+          .with(query: { lawsuit_id: 123, limit: 50 })
+          .to_return(status: 200, body: '[]', headers: { 'Content-Type' => 'application/json' }),
+        stub_request(:get, 'https://app.advbox.com.br/api/v1/history/123')
+          .to_return(status: 200, body: '[]', headers: { 'Content-Type' => 'application/json' })
+      ]
+
+      post_mcp(rpc('tools/call', { name: 'advbox_dossie', arguments: { processo_id: 123 } }))
+
+      expect(stubs).to all(have_been_requested)
+      result = response.parsed_body['result']
+      expect(result['isError']).to be false
+      expect(result['content'].first['text']).to include('"processo"', '"movimentacoes"', '"historico_tarefas"')
+    end
+
+    it 'documentos mapeia os filtros PT-BR pros da API' do
+      stub = stub_request(:get, 'https://app.advbox.com.br/api/v1/documents')
+             .with(query: { name: 'cnis', customer_id: 55, limit: 20 })
+             .to_return(status: 200, body: { totalCount: 1 }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      post_mcp(rpc('tools/call', { name: 'advbox_documentos', arguments: { nome: 'cnis', cliente_id: 55 } }))
+
+      expect(stub).to have_been_requested
+      expect(response.parsed_body['result']['isError']).to be false
+    end
+
+    it 'link de documento devolve a URL do redirect sem segui-lo' do
+      stub_request(:get, 'https://app.advbox.com.br/api/v1/documents/9/download')
+        .to_return(status: 302, headers: { 'Location' => 'https://s3.example.com/arquivo.pdf?assinado' })
+
+      post_mcp(rpc('tools/call', { name: 'advbox_documento_link', arguments: { id: 9 } }))
+
+      result = response.parsed_body['result']
+      expect(result['isError']).to be false
+      expect(result['content'].first['text']).to include 's3.example.com/arquivo.pdf'
+    end
+  end
+
   describe 'tools/call de escrita (fase 2 do item 29)' do
     it 'criar tarefa mapeia os argumentos PT-BR pro payload de POST /posts' do
       stub = stub_request(:post, 'https://app.advbox.com.br/api/v1/posts')
@@ -151,6 +200,24 @@ RSpec.describe 'Public MCP (AdvBox) API', type: :request do
 
       expect(stub).to have_been_requested
       expect(response.parsed_body['result']['isError']).to be false
+    end
+
+    it 'criar esteira grava as tarefas em ordem e recusa num item não derruba os demais' do
+      stub = stub_request(:post, 'https://app.advbox.com.br/api/v1/posts')
+             .to_return({ status: 200, body: { posts_id: 1 }.to_json, headers: { 'Content-Type' => 'application/json' } },
+                        { status: 422, body: { error: 'tipo inválido' }.to_json, headers: { 'Content-Type' => 'application/json' } },
+                        { status: 200, body: { posts_id: 3 }.to_json, headers: { 'Content-Type' => 'application/json' } })
+
+      post_mcp(rpc('tools/call', { name: 'advbox_criar_esteira',
+                                   arguments: { processo_id: 123, responsavel_id: 266_778, criador_id: 999,
+                                                tarefas: [{ tipo_tarefa_id: 1, descricao: 'Protocolar' },
+                                                          { tipo_tarefa_id: 0 },
+                                                          { tipo_tarefa_id: 2, prazo: '2026-08-01', responsavel_id: 111 }] } }))
+
+      expect(stub).to have_been_requested.times(3)
+      result = response.parsed_body['result']
+      expect(result['isError']).to be false
+      expect(result['content'].first['text']).to include('"posts_id":1', 'AdvBox recusou (HTTP 422)', '"posts_id":3')
     end
 
     it 'criar movimentação converte a data ISO pro DD/MM/YYYY que a API exige' do
