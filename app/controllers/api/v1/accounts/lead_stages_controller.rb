@@ -30,7 +30,7 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     return render_error('não é possível remover a última etapa') if Current.account.lead_stages.count <= 1
 
     target = Current.account.lead_stages.find(params[:move_to_stage_id])
-    move_leads_and_destroy(target)
+    enqueue_stage_merge(target)
     head :ok
   rescue ActiveRecord::RecordNotFound
     render_error('etapa destino inválida')
@@ -53,16 +53,10 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     @stage = Current.account.lead_stages.find(params[:id])
   end
 
-  def move_leads_and_destroy(target)
-    ActiveRecord::Base.transaction do
-      @stage.leads.find_each do |lead|
-        lead.update!(lead_stage: target)
-        Ramon::StageLabelSync.apply_to_conversation(lead)
-      end
-      deleted_label = @stage.label
-      @stage.destroy!
-      Current.account.labels.find_by(title: deleted_label)&.destroy
-    end
+  # Mover N leads é trabalho de fundo (com centenas, travava o request);
+  # a etapa some do config na hora e os cards migram via broadcast.
+  def enqueue_stage_merge(target)
+    Ramon::StageMergeJob.perform_later(@stage.id, target.id, Current.user&.id)
   end
 
   def next_position

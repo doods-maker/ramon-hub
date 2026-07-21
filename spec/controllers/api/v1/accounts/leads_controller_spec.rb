@@ -243,6 +243,14 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to contain_exactly(a.id, b.id)
     end
 
+    it 'index é slim (sem custom_attributes); show traz o jsonb completo' do
+      lead = account.leads.create!(name: 'A', lead_stage: novo, custom_attributes: { 'colheita_status' => { 'x' => true } })
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      expect(response.parsed_body['payload'].first).not_to have_key('custom_attributes')
+      get "/api/v1/accounts/#{account.id}/leads/#{lead.id}", headers: admin.create_new_auth_token
+      expect(response.parsed_body['custom_attributes']).to eq('colheita_status' => { 'x' => true })
+    end
+
     it 'filtra por source' do
       a = account.leads.create!(name: 'A', lead_stage: novo, source: 'meta-ads')
       account.leads.create!(name: 'B', lead_stage: novo, source: 'indicacao')
@@ -369,6 +377,18 @@ RSpec.describe 'Leads API', type: :request do
             headers: admin.create_new_auth_token, as: :json
       expect(response).to have_http_status(:success)
       expect(lead.reload.custom_attributes).to eq('cpf' => '123', 'origem' => 'campanha')
+    end
+
+    it 'update parcial de custom_attributes faz merge — não apaga as demais chaves' do
+      lead = create(:lead, account: account, lead_stage: novo,
+                           custom_attributes: { 'colheita_status' => { 'a' => true }, 'advbox' => { 'lawsuits_id' => 9 } })
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { custom_attributes: { doc_status: { 'rg' => true } } },
+            headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(lead.reload.custom_attributes).to eq(
+        'colheita_status' => { 'a' => true }, 'advbox' => { 'lawsuits_id' => 9 }, 'doc_status' => { 'rg' => true }
+      )
     end
   end
 end

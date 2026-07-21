@@ -163,6 +163,8 @@
       "CANCEL": "Cancelar",
       "SAVE": "Salvar",
       "SAVE_ERROR": "Não foi possível salvar — tente de novo",
+      "STAGE_MERGE_QUEUED": "Etapa removida — os leads estão sendo movidos em segundo plano",
+      "DRAWER_LOAD_ERROR": "Não foi possível carregar os detalhes do lead — checklists podem estar desatualizados",
       "LOST": {
         "TITLE": "Por que este lead foi perdido?",
         "PICK": "Escolha um motivo",

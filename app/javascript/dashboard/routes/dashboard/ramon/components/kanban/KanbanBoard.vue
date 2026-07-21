@@ -262,6 +262,8 @@ const confirmRemove = async ({ id, moveToStageId }) => {
   try {
     await store.dispatch('leadConfig/deleteStage', { id, moveToStageId });
     stageToRemove.value = null;
+    // A movimentação roda em job; os cards migram conforme os broadcasts chegam.
+    useAlert(t('RAMON.FUNIL.STAGE_MERGE_QUEUED'));
   } catch (e) {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
   }

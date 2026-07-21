@@ -2,6 +2,13 @@ import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadDrawer from '../LeadDrawer.vue';
 
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
+// A gaveta busca o lead completo ao abrir (índice slim, sem custom_attributes)
+vi.mock('dashboard/api/leads', () => ({
+  default: { show: vi.fn().mockResolvedValue({ data: { id: 10 } }) },
+}));
+
 const lead = {
   id: 10,
   name: 'João',
@@ -31,6 +38,7 @@ const buildStore = (updateSpy, selectSpy) =>
         actions: {
           update: updateSpy,
           select: selectSpy,
+          upsert: vi.fn(),
           fetchNotes: vi.fn().mockResolvedValue([]),
           createNote: vi.fn(),
         },

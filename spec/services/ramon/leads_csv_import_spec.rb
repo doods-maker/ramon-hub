@@ -25,6 +25,17 @@ RSpec.describe Ramon::LeadsCsvImport do
     expect(account.leads.where(contact_id: contact.id)).to be_empty
   end
 
+  it 'não dispara eventos por linha (lead/contact) e limpa o guard ao terminar' do
+    account # materializa antes do spy — a criação da conta dispara eventos próprios
+    allow(Rails.configuration.dispatcher).to receive(:dispatch)
+    run_import(<<~CSV)
+      nome,telefone,email,cpf,data_nascimento,sexo,beneficio,tese,etapa,valor,ganho_em,canal,origem
+      João,4899990001,,,,M,Auxílio-acidente,,,"1500,00",10/01/2024,,advbox
+    CSV
+    expect(Rails.configuration.dispatcher).not_to have_received(:dispatch)
+    expect(Current.suppress_import_events).to be_nil
+  end
+
   it 'faz match por cpf e só preenche campos vazios do contato' do
     existente = create(:contact, account: account, name: 'Maria', cpf: '52998224725')
     run_import(<<~CSV)

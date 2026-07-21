@@ -30,7 +30,24 @@ RSpec.describe 'Lead Stages API', type: :request do
   end
 
   describe 'DELETE destroy' do
-    it 'move os leads para a etapa destino e remove a etapa' do
+    it 'move os leads para a etapa destino e remove a etapa (via job)' do
+      origem = account.lead_stages.create!(name: 'Origem', position: 0)
+      destino = account.lead_stages.create!(name: 'Destino', position: 1)
+      lead = account.leads.create!(name: 'L', lead_stage: origem)
+
+      # only: sem o filtro, o Avatar job do contato tenta HTTP real (WebMock barra)
+      perform_enqueued_jobs(only: Ramon::StageMergeJob) do
+        delete "/api/v1/accounts/#{account.id}/lead_stages/#{origem.id}",
+               params: { move_to_stage_id: destino.id },
+               headers: admin.create_new_auth_token
+      end
+
+      expect(response).to have_http_status(:success)
+      expect(account.lead_stages.exists?(origem.id)).to be(false)
+      expect(lead.reload.lead_stage_id).to eq(destino.id)
+    end
+
+    it 'responde na hora e deixa a movimentação pro job' do
       origem = account.lead_stages.create!(name: 'Origem', position: 0)
       destino = account.lead_stages.create!(name: 'Destino', position: 1)
       lead = account.leads.create!(name: 'L', lead_stage: origem)
@@ -40,8 +57,8 @@ RSpec.describe 'Lead Stages API', type: :request do
              headers: admin.create_new_auth_token
 
       expect(response).to have_http_status(:success)
-      expect(account.lead_stages.exists?(origem.id)).to be(false)
-      expect(lead.reload.lead_stage_id).to eq(destino.id)
+      expect(Ramon::StageMergeJob).to have_been_enqueued.with(origem.id, destino.id, admin.id)
+      expect(lead.reload.lead_stage_id).to eq(origem.id)
     end
 
     it 'recusa sem destino válido' do

@@ -163,6 +163,8 @@
       "CANCEL": "Cancel",
       "SAVE": "Save",
       "SAVE_ERROR": "Could not save — try again",
+      "STAGE_MERGE_QUEUED": "Stage removed — leads are being moved in the background",
+      "DRAWER_LOAD_ERROR": "Could not load lead details — checklists may be stale",
       "LOST": {
         "TITLE": "Why was this lead lost?",
         "PICK": "Choose a reason",

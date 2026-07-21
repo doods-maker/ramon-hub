@@ -145,6 +145,15 @@ const isActive = item => item.names?.includes(route.name);
     <h2 class="px-4 mb-4 text-xl font-cormorant text-n-slate-12">
       {{ t('RAMON.NAV.TITLE') }}
     </h2>
+    <!-- Mobile: a rail de mundos fica oculta — atalho pro outro mundo aqui -->
+    <router-link
+      :to="accountScopedRoute('home')"
+      class="md:hidden flex items-center gap-2 mx-2 mb-3 px-2 py-1.5 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-1"
+      @click="emit('closeMobileSidebar')"
+    >
+      <span class="i-lucide-messages-square size-4" />
+      {{ t('RAMON.RAIL.CONVERSAS') }}
+    </router-link>
     <template v-for="section in sections" :key="section.label">
       <p
         class="px-4 pt-3 pb-1 text-[10px] tracking-widest uppercase text-n-slate-9"

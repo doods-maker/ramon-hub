@@ -23,7 +23,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     ensure_lost_reason!
     return if performed?
 
-    @lead.update!(permitted_params)
+    @lead.update!(merged_params)
   end
 
   def destroy
@@ -149,5 +149,15 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
                   :contact_id, :conversation_id, :sdr_id, :closer_id,
                   :position, :lost_reason, :value, :source, :channel, :dcb_em, :benefit_monthly_value,
                   custom_attributes: {})
+  end
+
+  # PATCH parcial de custom_attributes: o cliente pode mandar só a chave que
+  # mudou (checklists) sem apagar as demais (colheita/advbox/zapsign) — o merge
+  # da base atual acontece AQUI, não no cliente (que pode ter um record slim).
+  def merged_params
+    attrs = permitted_params
+    return attrs if attrs[:custom_attributes].nil?
+
+    attrs.merge(custom_attributes: @lead.custom_attributes.to_h.deep_merge(attrs[:custom_attributes].to_h))
   end
 end

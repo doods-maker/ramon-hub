@@ -16,10 +16,15 @@ class Ramon::LeadsCsvImport
 
   def perform
     @data_import.update!(status: :processing)
+    # Sem eventos por linha (broadcast + EventDispatcherJob por lead/contato);
+    # o board recarrega no F5 — import é ação de admin, não fluxo ao vivo.
+    Current.suppress_import_events = true
     csv_rows.each { |row| import_row(row) }
     finish!
   rescue CSV::MalformedCSVError => e
     @data_import.update!(status: :failed, processing_errors: e.message)
+  ensure
+    Current.suppress_import_events = nil
   end
 
   private
