@@ -11,29 +11,25 @@ RSpec.describe Ramon::ColheitaExtractionJob do
 
   before { allow(Ramon::ColheitaExtractionService).to receive(:new).and_return(service) }
 
-  it 'roda a extração quando a mensagem ainda é a última da rajada' do
-    described_class.perform_now(message.id, debounce: true)
-    expect(Ramon::ColheitaExtractionService).to have_received(:new).with(lead)
-  end
-
-  it 'pula com debounce quando chegou incoming mais nova (rajada converge no último job)' do
-    message
-    create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'mais uma')
-    described_class.perform_now(message.id, debounce: true)
-    expect(Ramon::ColheitaExtractionService).not_to have_received(:new)
-  end
-
-  it 'sem debounce roda mesmo com mensagem mais nova (caminho da transcrição)' do
-    message
-    create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'mais uma')
+  it 'roda a extração pelo message_id (caminho da transcrição do Whisper)' do
     described_class.perform_now(message.id)
     expect(Ramon::ColheitaExtractionService).to have_received(:new).with(lead)
   end
 
-  it 'sai em silêncio quando a conversa não tem lead' do
+  it 'roda a extração pelo lead_id (caminho sob demanda do botão)' do
+    described_class.perform_now(lead_id: lead.id)
+    expect(Ramon::ColheitaExtractionService).to have_received(:new).with(lead)
+  end
+
+  it 'sai em silêncio quando a conversa da mensagem não tem lead' do
     orphan = create(:conversation, account: account)
     msg = create(:message, account: account, conversation: orphan, message_type: :incoming, content: 'oi')
     described_class.perform_now(msg.id)
+    expect(Ramon::ColheitaExtractionService).not_to have_received(:new)
+  end
+
+  it 'sai em silêncio quando o lead_id não existe' do
+    described_class.perform_now(lead_id: 0)
     expect(Ramon::ColheitaExtractionService).not_to have_received(:new)
   end
 end
