@@ -238,10 +238,16 @@ class Contact < ApplicationRecord # rubocop:disable Metrics/ClassLength
   end
 
   def dispatch_create_event
+    # FORK(ramon): import CSV em massa silencia eventos por linha
+    return if Current.suppress_import_events
+
     Rails.configuration.dispatcher.dispatch(CONTACT_CREATED, Time.zone.now, contact: self)
   end
 
   def dispatch_update_event
+    # FORK(ramon): import CSV em massa silencia eventos por linha
+    return if Current.suppress_import_events
+
     Rails.configuration.dispatcher.dispatch(CONTACT_UPDATED, Time.zone.now, contact: self, changed_attributes: previous_changes)
   end
 

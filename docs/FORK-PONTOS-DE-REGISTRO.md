@@ -243,6 +243,8 @@
 | `app/javascript/dashboard/routes/dashboard/conversation/ConversationView.vue` (1 linha) | `hide-contact` no SidepanelSwitch | idem | painel-lead 20/07 |
 | `app/javascript/dashboard/i18n/locale/pt_BR/conversation.json` (1 linha) | `CONVERSATION.SIDEBAR.CONTACT`: "Contatos" → "Painel do lead" | rótulo real do painel | painel-lead 20/07 |
 | `app/services/search_service.rb` (1 token) | `filter_leads` (bloco já do fork) ganhou `.funil` — caso de cálculo fora do Cmd+K | Cálculos-AdvBox 20/07 | calculos-advbox 20/07 |
+| `app/models/contact.rb` (2 guards) | `dispatch_create/update_event` respeitam `Current.suppress_import_events` (import CSV em massa não estoura 1 broadcast/linha) | import 10k | hardening-2 21/07 |
+| `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` (1 bloco `md:hidden`) | atalho "Intranet" no topo do nav mobile — a rail de mundos é `hidden` no celular | troca de mundo no celular | hardening-2 21/07 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

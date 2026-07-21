@@ -10,7 +10,9 @@ json.sdr_id lead.sdr_id
 json.closer_id lead.closer_id
 json.position lead.position
 json.lost_reason lead.lost_reason
-json.custom_attributes lead.custom_attributes
+# slim = índice do Kanban: o card não lê custom_attributes (colheita/advbox/
+# zapsign) e o jsonb inteiro × N leads incha o payload — a gaveta busca o show.
+json.custom_attributes lead.custom_attributes unless local_assigns[:slim]
 
 json.value lead.value
 json.source lead.source

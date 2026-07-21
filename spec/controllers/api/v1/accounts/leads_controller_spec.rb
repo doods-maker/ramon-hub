@@ -243,6 +243,14 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to contain_exactly(a.id, b.id)
     end
 
+    it 'index é slim (sem custom_attributes); show traz o jsonb completo' do
+      lead = account.leads.create!(name: 'A', lead_stage: novo, custom_attributes: { 'colheita_status' => { 'x' => true } })
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      expect(response.parsed_body['payload'].first).not_to have_key('custom_attributes')
+      get "/api/v1/accounts/#{account.id}/leads/#{lead.id}", headers: admin.create_new_auth_token
+      expect(response.parsed_body['custom_attributes']).to eq('colheita_status' => { 'x' => true })
+    end
+
     it 'filtra por source' do
       a = account.leads.create!(name: 'A', lead_stage: novo, source: 'meta-ads')
       account.leads.create!(name: 'B', lead_stage: novo, source: 'indicacao')

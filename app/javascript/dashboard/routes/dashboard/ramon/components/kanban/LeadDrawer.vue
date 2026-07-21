@@ -1,7 +1,10 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import LeadsAPI from 'dashboard/api/leads';
 import AccordionItem from 'dashboard/components/Accordion/AccordionItem.vue';
 import LeadFields from 'dashboard/routes/dashboard/ramon/components/lead/LeadFields.vue';
 import LeadHistory from 'dashboard/routes/dashboard/ramon/components/conversation/LeadHistory.vue';
@@ -15,7 +18,25 @@ const emit = defineEmits(['openConversation']);
 const store = useStore();
 const getters = useStoreGetters();
 
+const { t } = useI18n();
 const lead = computed(() => getters['leads/getSelectedLead'].value);
+
+// O índice do Kanban vem slim (sem custom_attributes) — ao abrir a gaveta,
+// busca o lead completo pro checklist/colheita/advbox; broadcasts seguem
+// atualizando ao vivo por cima.
+watch(
+  () => lead.value?.id,
+  async id => {
+    if (!id) return;
+    try {
+      const { data } = await LeadsAPI.show(id);
+      store.dispatch('leads/upsert', data);
+    } catch (e) {
+      useAlert(t('RAMON.FUNIL.DRAWER_LOAD_ERROR'));
+    }
+  },
+  { immediate: true }
+);
 
 const close = () => store.dispatch('leads/select', null);
 

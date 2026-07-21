@@ -179,10 +179,14 @@ class Lead < ApplicationRecord
   end
 
   def dispatch_create_event
+    return if Current.suppress_import_events
+
     Rails.configuration.dispatcher.dispatch(Events::Types::LEAD_CREATED, Time.zone.now, lead: self)
   end
 
   def dispatch_update_event
+    return if Current.suppress_import_events
+
     Rails.configuration.dispatcher.dispatch(Events::Types::LEAD_UPDATED, Time.zone.now, lead: self)
   end
 
