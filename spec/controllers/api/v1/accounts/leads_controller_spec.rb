@@ -381,7 +381,7 @@ RSpec.describe 'Leads API', type: :request do
 
     it 'update parcial de custom_attributes faz merge — não apaga as demais chaves' do
       lead = create(:lead, account: account, lead_stage: novo,
-                    custom_attributes: { 'colheita_status' => { 'a' => true }, 'advbox' => { 'lawsuits_id' => 9 } })
+                           custom_attributes: { 'colheita_status' => { 'a' => true }, 'advbox' => { 'lawsuits_id' => 9 } })
       patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
             params: { custom_attributes: { doc_status: { 'rg' => true } } },
             headers: admin.create_new_auth_token, as: :json

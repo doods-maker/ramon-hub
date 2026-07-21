@@ -35,7 +35,8 @@ RSpec.describe 'Lead Stages API', type: :request do
       destino = account.lead_stages.create!(name: 'Destino', position: 1)
       lead = account.leads.create!(name: 'L', lead_stage: origem)
 
-      perform_enqueued_jobs do
+      # only: sem o filtro, o Avatar job do contato tenta HTTP real (WebMock barra)
+      perform_enqueued_jobs(only: Ramon::StageMergeJob) do
         delete "/api/v1/accounts/#{account.id}/lead_stages/#{origem.id}",
                params: { move_to_stage_id: destino.id },
                headers: admin.create_new_auth_token

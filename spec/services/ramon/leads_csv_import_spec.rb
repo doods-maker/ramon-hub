@@ -26,6 +26,7 @@ RSpec.describe Ramon::LeadsCsvImport do
   end
 
   it 'não dispara eventos por linha (lead/contact) e limpa o guard ao terminar' do
+    account # materializa antes do spy — a criação da conta dispara eventos próprios
     allow(Rails.configuration.dispatcher).to receive(:dispatch)
     run_import(<<~CSV)
       nome,telefone,email,cpf,data_nascimento,sexo,beneficio,tese,etapa,valor,ganho_em,canal,origem

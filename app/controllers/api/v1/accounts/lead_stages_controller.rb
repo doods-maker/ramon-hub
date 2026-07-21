@@ -30,9 +30,7 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     return render_error('não é possível remover a última etapa') if Current.account.lead_stages.count <= 1
 
     target = Current.account.lead_stages.find(params[:move_to_stage_id])
-    # Mover N leads é trabalho de fundo (com centenas, travava o request);
-    # a etapa some do config na hora e os cards migram via broadcast.
-    Ramon::StageMergeJob.perform_later(@stage.id, target.id, Current.user&.id)
+    enqueue_stage_merge(target)
     head :ok
   rescue ActiveRecord::RecordNotFound
     render_error('etapa destino inválida')
@@ -53,6 +51,12 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
 
   def fetch_stage
     @stage = Current.account.lead_stages.find(params[:id])
+  end
+
+  # Mover N leads é trabalho de fundo (com centenas, travava o request);
+  # a etapa some do config na hora e os cards migram via broadcast.
+  def enqueue_stage_merge(target)
+    Ramon::StageMergeJob.perform_later(@stage.id, target.id, Current.user&.id)
   end
 
   def next_position
