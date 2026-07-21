@@ -378,5 +378,17 @@ RSpec.describe 'Leads API', type: :request do
       expect(response).to have_http_status(:success)
       expect(lead.reload.custom_attributes).to eq('cpf' => '123', 'origem' => 'campanha')
     end
+
+    it 'update parcial de custom_attributes faz merge — não apaga as demais chaves' do
+      lead = create(:lead, account: account, lead_stage: novo,
+                    custom_attributes: { 'colheita_status' => { 'a' => true }, 'advbox' => { 'lawsuits_id' => 9 } })
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { custom_attributes: { doc_status: { 'rg' => true } } },
+            headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(lead.reload.custom_attributes).to eq(
+        'colheita_status' => { 'a' => true }, 'advbox' => { 'lawsuits_id' => 9 }, 'doc_status' => { 'rg' => true }
+      )
+    end
   end
 end

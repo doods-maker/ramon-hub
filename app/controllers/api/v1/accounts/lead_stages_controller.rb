@@ -32,7 +32,7 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     target = Current.account.lead_stages.find(params[:move_to_stage_id])
     # Mover N leads é trabalho de fundo (com centenas, travava o request);
     # a etapa some do config na hora e os cards migram via broadcast.
-    Ramon::StageMergeJob.perform_later(@stage.id, target.id)
+    Ramon::StageMergeJob.perform_later(@stage.id, target.id, Current.user&.id)
     head :ok
   rescue ActiveRecord::RecordNotFound
     render_error('etapa destino inválida')

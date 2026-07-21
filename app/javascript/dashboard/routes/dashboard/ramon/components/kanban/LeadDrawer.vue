@@ -30,6 +30,9 @@ watch(
     if (!id) return;
     try {
       const { data } = await LeadsAPI.show(id);
+      // Resposta atrasada com a gaveta já em outro lead: descarta — o upsert
+      // re-injetaria no board um lead que o filtro atual pode ter removido.
+      if (getters['leads/getSelectedLead'].value?.id !== id) return;
       store.dispatch('leads/upsert', data);
     } catch (e) {
       useAlert(t('RAMON.FUNIL.DRAWER_LOAD_ERROR'));

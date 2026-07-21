@@ -56,7 +56,7 @@ RSpec.describe 'Lead Stages API', type: :request do
              headers: admin.create_new_auth_token
 
       expect(response).to have_http_status(:success)
-      expect(Ramon::StageMergeJob).to have_been_enqueued.with(origem.id, destino.id)
+      expect(Ramon::StageMergeJob).to have_been_enqueued.with(origem.id, destino.id, admin.id)
       expect(lead.reload.lead_stage_id).to eq(origem.id)
     end
 

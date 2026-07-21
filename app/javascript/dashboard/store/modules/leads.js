@@ -202,7 +202,20 @@ export const mutations = {
   [types.SET_LEAD_UI_FLAG](_state, data) {
     _state.uiFlags = { ..._state.uiFlags, ...data };
   },
-  [types.SET_LEADS]: MutationHelpers.set,
+  // O índice vem slim (sem custom_attributes) — um refetch do board não pode
+  // descartar o jsonb já hidratado por show/broadcast (checklists da gaveta).
+  [types.SET_LEADS](_state, records) {
+    const prev = new Map(
+      _state.records
+        .filter(r => r.custom_attributes !== undefined)
+        .map(r => [r.id, r.custom_attributes])
+    );
+    _state.records = records.map(r =>
+      r.custom_attributes === undefined && prev.has(r.id)
+        ? { ...r, custom_attributes: prev.get(r.id) }
+        : r
+    );
+  },
   [types.ADD_LEAD]: MutationHelpers.create,
   [types.EDIT_LEAD]: MutationHelpers.setSingleRecord,
   [types.DELETE_LEAD]: MutationHelpers.destroy,

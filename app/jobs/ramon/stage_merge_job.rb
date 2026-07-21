@@ -4,11 +4,16 @@
 class Ramon::StageMergeJob < ApplicationJob
   queue_as :low
 
-  def perform(stage_id, target_id)
+  def perform(stage_id, target_id, user_id = nil)
     stage = LeadStage.find_by(id: stage_id)
     target = LeadStage.find_by(id: target_id)
-    return if stage.blank? || target.blank? || stage.id == target.id
+    if stage.blank? || target.blank? || stage.id == target.id
+      Rails.logger.warn("StageMergeJob: etapa/destino ausente (stage=#{stage_id} target=#{target_id}) — nada movido")
+      return
+    end
 
+    # Autoria das atividades stage_changed (no request era o admin logado).
+    Current.user = User.find_by(id: user_id)
     # Sem transação global: retry retoma de onde parou (leads já movidos saem
     # do escopo). StageLabelSync roda via listener do lead_updated — o chamado
     # explícito que dobrava o trabalho por lead morreu junto com o caminho síncrono.
@@ -16,5 +21,7 @@ class Ramon::StageMergeJob < ApplicationJob
     deleted_label = stage.label
     stage.destroy!
     stage.account.labels.find_by(title: deleted_label)&.destroy
+  ensure
+    Current.reset
   end
 end
