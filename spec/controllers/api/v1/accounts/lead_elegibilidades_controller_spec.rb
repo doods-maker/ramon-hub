@@ -96,7 +96,10 @@ RSpec.describe 'Lead Elegibilidades API', type: :request do
 
     it 'nao envia decisoes/simular_lacunas/data_referencia quando ausentes' do
       payload_recebido = nil
-      allow(Ramon::MotorClient).to receive(:elegibilidade) { |payload| payload_recebido = payload; motor_response }
+      allow(Ramon::MotorClient).to receive(:elegibilidade) do |payload|
+        payload_recebido = payload
+        motor_response
+      end
       analisar
       expect(payload_recebido.keys).to match_array(%i[segurado der competencias vinculos])
     end

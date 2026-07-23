@@ -3,6 +3,9 @@ require 'rails_helper'
 RSpec.describe DeviseOverrides::SessionsController, type: :controller do
   include Devise::Test::ControllerHelpers
 
+  # knapsack pode co-locar poluidor de travel_to (licao 20/07) — garante relogio real
+  before { travel_back }
+
   before do
     request.env['devise.mapping'] = Devise.mappings[:user]
   end
