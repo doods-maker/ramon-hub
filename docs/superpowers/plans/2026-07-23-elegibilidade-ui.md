@@ -147,7 +147,7 @@ datas: formatar com o helper de data já usado no LeadSimulador (conferir e reus
   como no restante (lição: sempre o formatador existente)
 ```
 
-- [ ] **Step 3: aba no LeadSimulador.vue** — 3º botão na tab bar (`data-testid="sim-aba-elegibilidade"`, i18n `ABA_ELEGIBILIDADE`), seção `v-show="aba === 'elegibilidade'"` montando `<LeadElegibilidade :lead="lead" :der="form.der" />`; gating: mesmo `canPainel` (precisa de CNIS/vínculos + DER) — sem canPainel, mostrar o mesmo hint que o painel usa.
+- [ ] **Step 3: aba no LeadSimulador.vue** — 3º botão na tab bar (`data-testid="sim-aba-elegibilidade"`, i18n `ABA_ELEGIBILIDADE`), seção `v-show="aba === 'elegibilidade'"` montando `<LeadElegibilidade :lead="lead" :der="form.der" />`; **gating (decisão da review da Task 1): `canElegibilidade = form.der && cnis` — CNIS presente OBRIGATÓRIO, NÃO usar o canPainel** (o endpoint de elegibilidade não aceita vínculos manuais — fluxo sem-CNIS ficaria silenciosamente errado; suporte a vínculos manuais = fatia 2). Sem canElegibilidade, hint próprio i18n `ELEG_PRECISA_CNIS` ("Anexe o CNIS para analisar a elegibilidade").
 
 - [ ] **Step 4: i18n** — chaves novas no `RAMON.SIMULADOR` (PT-BR): `ABA_ELEGIBILIDADE: "Elegibilidade"`, `ELEG_ANALISAR`, `ELEG_MANTIDA`, `ELEG_PERDIDA`, `ELEG_SEM_DESEMPREGO`, `ELEG_COM_DESEMPREGO`, `ELEG_PENDENCIAS`, `ELEG_SIM`, `ELEG_NAO`, `ELEG_CARENCIA`, `ELEG_LACUNAS`, `ELEG_SIMULAR`, `ELEG_GRACA_COBRIU`, `ELEG_GANHO`, `ELEG_ANTES`, `ELEG_DEPOIS`, `ELEG_ERRO` (+ retry). Textos em PT-BR claros de advogado.
 
