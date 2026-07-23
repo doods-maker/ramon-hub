@@ -42,6 +42,7 @@ import leads from './modules/leads';
 import leadConfig from './modules/leadConfig';
 import leadTasks from './modules/leadTasks';
 import ramonDashboard from './modules/ramonDashboard';
+import copilotSuggestions from './modules/copilotSuggestions';
 import macros from './modules/macros';
 import theses from './modules/theses';
 import triageAgents from './modules/triageAgents';
@@ -113,6 +114,7 @@ export default createStore({
     leadConfig,
     leadTasks,
     ramonDashboard,
+    copilotSuggestions,
     macros,
     theses,
     triageAgents,

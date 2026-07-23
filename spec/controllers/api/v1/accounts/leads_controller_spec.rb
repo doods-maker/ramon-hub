@@ -467,4 +467,26 @@ RSpec.describe 'Leads API', type: :request do
       )
     end
   end
+
+  describe 'POST /api/v1/accounts/:account_id/leads/:id/portal_link' do
+    it 'gera o token e devolve a URL pública completa; segunda chamada reusa o mesmo token' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/portal_link",
+           headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      url = response.parsed_body['url']
+      expect(url).to include("/portal/#{lead.reload.portal_token}")
+
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/portal_link",
+           headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['url']).to eq(url)
+    end
+
+    it 'devolve 401 sem autenticação' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/portal_link", as: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
 end

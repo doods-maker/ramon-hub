@@ -16,6 +16,7 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     @agenda_today = cockpit.agenda_today
     @losses_by_thesis = cockpit.losses_by_thesis
     @sla_today = cockpit.sla_today
+    @tv = Ramon::TvMetrics.new(Current.account).tv
   end
 
   private

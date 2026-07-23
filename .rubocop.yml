@@ -106,6 +106,7 @@ Rails/ApplicationController:
     - 'app/controllers/widgets_controller.rb'
     - 'app/controllers/platform_controller.rb'
     - 'app/controllers/public_controller.rb'
+    - 'app/controllers/public/portal_controller.rb'
     - 'app/controllers/survey/responses_controller.rb'
 
 Rails/FindEach:

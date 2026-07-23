@@ -111,3 +111,6 @@ json.sla_today do
   json.breached @sla_today[:breached]
   json.avg_first_response_minutes @sla_today[:avg_first_response_minutes]
 end
+
+# Placar de TV (/tv): hash pronto do CockpitMetrics — jbuilder serializa direto.
+json.tv @tv

@@ -2,6 +2,15 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadFields from '../LeadFields.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
+import LeadsAPI from 'dashboard/api/leads';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
+
+vi.mock('dashboard/api/leads', () => ({
+  default: { portalLink: vi.fn() },
+}));
+vi.mock('shared/helpers/clipboard', () => ({
+  copyTextToClipboard: vi.fn(),
+}));
 
 const lead = {
   id: 3,
@@ -369,6 +378,21 @@ describe('LeadFields.vue', () => {
       const select = wrapper.find('[data-testid="note-template-select"]');
       await select.setValue('MEETING_SCHEDULED');
       expect(textarea.element.value).toBe('já tinha isso\nMeeting scheduled.');
+    });
+  });
+
+  describe('portal do cliente', () => {
+    it('gera o link no backend e copia pro clipboard', async () => {
+      LeadsAPI.portalLink.mockResolvedValue({
+        data: { url: 'https://hub/portal/tok123' },
+      });
+      const wrapper = mountFields();
+      await wrapper.find('[data-testid="portal-copy-link"]').trigger('click');
+      await flushPromises();
+      expect(LeadsAPI.portalLink).toHaveBeenCalledWith(3);
+      expect(copyTextToClipboard).toHaveBeenCalledWith(
+        'https://hub/portal/tok123'
+      );
     });
   });
 

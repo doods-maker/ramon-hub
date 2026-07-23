@@ -14,6 +14,7 @@ class Lead < ApplicationRecord
   has_many :lead_notes, dependent: :destroy_async
   has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
   has_many :lead_triages, dependent: :destroy_async
+  has_many :copilot_suggestions, dependent: :destroy_async
 
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
@@ -127,6 +128,14 @@ class Lead < ApplicationRecord
       replied_at: conversation.first_reply_created_at,
       minutes: minutes
     }
+  end
+
+  # Portal do cliente (link mágico): token nasce sob demanda, nunca por callback.
+  def ensure_portal_token!
+    return portal_token if portal_token.present?
+
+    update!(portal_token: SecureRandom.urlsafe_base64(24))
+    portal_token
   end
 
   def prescription

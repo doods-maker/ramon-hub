@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import LeadsAPI from 'dashboard/api/leads';
 import LeadTasksList from './LeadTasksList.vue';
 import DocChecklist from './DocChecklist.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
@@ -300,6 +301,17 @@ const saveNps = async () => {
   } catch (e) {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     npsScore.value = currentNps.value?.score ?? '';
+  }
+};
+
+// Portal do cliente: gera/reusa o token no backend e copia a URL pública.
+const copyPortalLink = async () => {
+  try {
+    const { data } = await LeadsAPI.portalLink(props.lead.id);
+    await copyTextToClipboard(data.url);
+    useAlert(t('RAMON.PORTAL.COPIED'));
+  } catch (error) {
+    useAlert(t('RAMON.PORTAL.ERROR'));
   }
 };
 
@@ -722,6 +734,23 @@ const toggleConsent = () =>
         @click="addNote"
       >
         {{ $t('RAMON.DRAWER.NOTES_ADD_BUTTON') }}
+      </button>
+    </div>
+
+    <div
+      class="flex items-center justify-between gap-2 pt-3 mb-4 border-t border-n-weak"
+    >
+      <span class="text-xs uppercase text-n-slate-10">{{
+        $t('RAMON.PORTAL.LABEL')
+      }}</span>
+      <button
+        data-testid="portal-copy-link"
+        class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg bg-n-alpha-2 text-n-slate-12 hover:bg-n-alpha-3"
+        @click="copyPortalLink"
+      >
+        <span class="i-lucide-link size-3.5" />{{
+          $t('RAMON.PORTAL.COPY_LINK')
+        }}
       </button>
     </div>
 

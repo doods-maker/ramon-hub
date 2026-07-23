@@ -1,12 +1,17 @@
 class Ramon::NtfyPushJob < ApplicationJob
   queue_as :low
 
-  def perform(lead_id, title: nil, body: nil)
+  def perform(lead_id = nil, title: nil, body: nil)
     topic = ENV.fetch('NTFY_TOPIC', nil)
     return if topic.blank?           # feature desligada até o Eduardo setar o tópico
 
-    lead = Lead.find_by(id: lead_id)
-    return if lead.blank?
+    lead = nil
+    if lead_id.present?
+      lead = Lead.find_by(id: lead_id)
+      return if lead.blank?
+    elsif title.blank? || body.blank?
+      return # push sem lead (ex.: resumo diário) exige título e corpo prontos
+    end
 
     server = ENV.fetch('NTFY_SERVER', 'https://ntfy.sh')
     post_ntfy(server, topic, lead, custom_title: title, custom_body: body)
@@ -25,15 +30,16 @@ class Ramon::NtfyPushJob < ApplicationJob
     http.read_timeout = 5
 
     req = Net::HTTP::Post.new(uri)
-    req['Title'] = custom_title ? I18n.transliterate(custom_title) : title_for(lead) # header HTTP → só ASCII (ver abaixo)
+    req['Title'] = ascii_title(custom_title.presence || "Novo lead: #{lead.name}")
     req['Tags'] = 'bell'
     req.body = custom_body.presence || body_for(lead)
     http.request(req)
   end
 
-  # Header HTTP não aceita não-ASCII → transliterar o nome (acentos) p/ ASCII.
-  def title_for(lead)
-    I18n.transliterate("Novo lead: #{lead.name}")
+  # Header HTTP não aceita não-ASCII → transliterar (acentos) p/ ASCII;
+  # '·' (separador padrão dos títulos) viraria '?' — mapear pra '-'.
+  def ascii_title(title)
+    I18n.transliterate(title.tr('·', '-'))
   end
 
   # O corpo pode ter acentos normalmente (é o payload, não header).

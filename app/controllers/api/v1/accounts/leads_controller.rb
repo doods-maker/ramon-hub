@@ -31,6 +31,11 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     head :ok
   end
 
+  # Portal do cliente: gera (ou reusa) o token e devolve a URL pública completa.
+  def portal_link
+    render json: { url: "#{ENV.fetch('FRONTEND_URL', '')}/portal/#{@lead.ensure_portal_token!}" }
+  end
+
   def for_conversation
     # o front manda o id do objeto de conversa da SPA, que é o display_id (por conta)
     conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])

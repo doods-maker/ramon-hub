@@ -100,6 +100,28 @@
       },
       "LOAD_ERROR": "Não foi possível carregar o Centro de Comando"
     },
+    "NIGHT_COPILOT": {
+      "TITLE": "Enquanto você dormia",
+      "SUBTITLE": "o copiloto revisou {leads} leads às {time} · {count} sugestões aguardam aprovação",
+      "APPROVE_ALL": "Aprovar todas ({count})",
+      "TAG_DRAFT": "Rascunho",
+      "TAG_MOVE_STAGE": "Mover etapa",
+      "TAG_ALERT": "Alerta",
+      "MOVE_TO": "Sugestão: mover para {stage}",
+      "STALLED_FOR": "parado há {days} dias",
+      "SAVE_NOTE": "Salvar como nota",
+      "APPLY": "Aplicar",
+      "DISMISS": "Descartar",
+      "OK": "OK",
+      "ESCALATE": "Subir na esteira",
+      "ESCALATE_TASK_TITLE": "Priorizar contato (alerta do copiloto)",
+      "APPLIED": "Sugestão aplicada",
+      "APPLIED_ALL": "Sugestões aplicadas — os rascunhos viraram notas nos leads",
+      "ESCALATED": "Tarefa criada — o lead subiu na esteira de hoje",
+      "APPLY_ERROR": "Não foi possível aplicar a sugestão — tente de novo",
+      "LOAD_ERROR": "Não foi possível carregar as sugestões do copiloto",
+      "RETRY": "Tentar de novo"
+    },
     "NAV": {
       "TITLE": "Intranet",
       "SOON": "em breve",
@@ -116,7 +138,26 @@
       "FUNIL_CONFIG": "Configurações do Funil",
       "PLAYBOOKS": "Playbooks",
       "LINHA_DA_VIDA": "Linha da Vida",
-      "CALCULOS": "Cálculos"
+      "CALCULOS": "Cálculos",
+      "RADAR": "Radar de prescrição",
+      "TV": "Placar de TV"
+    },
+    "RADAR": {
+      "TITLE": "Radar de prescrição",
+      "SUBTITLE": "toda a base · atualizado agora",
+      "PER_MONTH": "/mês",
+      "SUMMARY_BLEEDING": "prescrevendo em {count} leads",
+      "SUMMARY_RISK": "entram em risco nos próximos 90 dias",
+      "DCB": "DCB {date}",
+      "LOST_CHIP": "Perdemos (reativar?)",
+      "CAMPAIGN_CTA": "Criar campanha de resgate ({count})",
+      "CAMPAIGN_TOOLTIP": "só contatos com consentimento LGPD ({n} de {m})",
+      "CAMPAIGN_MODAL_TITLE": "Criar campanha de resgate",
+      "CAMPAIGN_MODAL_MESSAGE": "Vamos abrir a tela de campanhas do WhatsApp para montar o resgate com os {n} contatos com consentimento LGPD (de {m} no radar). Nada é enviado automaticamente.",
+      "CAMPAIGN_MODAL_CONFIRM": "Abrir campanhas",
+      "LOAD_ERROR": "Não deu para carregar o radar.",
+      "RETRY": "Tentar de novo",
+      "EMPTY": "Nenhum lead em risco."
     },
     "ESTEIRA": {
       "EYEBROW": "Linha de produção",
@@ -647,6 +688,12 @@
       "SYNCED": "Caso #{lawsuit} criado no fechamento",
       "ERROR": "Falha ao criar o caso no AdvBox — tentar de novo é marcar como ganho novamente"
     },
+    "PORTAL": {
+      "LABEL": "Portal do cliente",
+      "COPY_LINK": "Copiar link",
+      "COPIED": "Link do portal copiado",
+      "ERROR": "Não foi possível gerar o link do portal — tente de novo"
+    },
     "COLHEITA": {
       "TITLE": "O que falta perguntar",
       "COUNT": "{done}/{total} colhidos",
@@ -934,6 +981,35 @@
       "TITLE": "NPS",
       "RESPONSES": "{count} resposta(s)",
       "EMPTY": "Nenhuma resposta ainda."
+    },
+    "TV": {
+      "EYEBROW": "Ramon Antonio",
+      "LIVE": "ao vivo",
+      "MONTH_WON": "Ganhos no mês",
+      "GOAL": "Meta {value}",
+      "DAYS_LEFT": "faltam {count} dias úteis",
+      "TODAY": "Hoje",
+      "TODAY_WON": "ganhos",
+      "TODAY_NEW": "novos",
+      "TODAY_RESPONSE": "1ª resposta",
+      "BY_THESIS": "Por tese",
+      "LEADS_SUB": "leads · +{count} na semana",
+      "WON_SUB": "ganhos · {pct}%",
+      "WON_SUB_EMPTY": "ganhos",
+      "NOTE_PRESCRIBING": "{count} prescrevendo",
+      "NOTE_BEST": "melhor conversão do mês",
+      "NOTE_STALLED": "{count} parados há +10d",
+      "NOTE_STABLE": "estável",
+      "FUNNEL_LINE": "{count} leads ativos no funil — {stages}",
+      "RACE": "Corrida do mês",
+      "RACE_EMPTY": "Ainda sem ganho no mês.",
+      "PRESCRIBING": "Dinheiro prescrevendo",
+      "PRESCRIBING_MONTH": "{value}/mês",
+      "PRESCRIBING_SUB": "em {count} leads — agir hoje",
+      "NEXT": "Próximo compromisso",
+      "NEXT_EMPTY": "sem compromisso agendado",
+      "TICKER_NOW": "Agora:",
+      "TICKER": "{closer} fechou {lead} — {value} · {benefit}"
     }
   }
 }

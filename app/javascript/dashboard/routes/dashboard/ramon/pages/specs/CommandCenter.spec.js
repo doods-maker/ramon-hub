@@ -149,9 +149,12 @@ const payload = () => ({
   sla_today: { breached: 2, avg_first_response_minutes: 12.5 },
 });
 
+// NightCopilot tem store/specs próprios — aqui entra como stub.
 const mountPage = async (data = payload()) => {
   dataRef.value = data;
-  const wrapper = mount(CommandCenter, { global: { mocks: { $t: k => k } } });
+  const wrapper = mount(CommandCenter, {
+    global: { mocks: { $t: k => k }, stubs: { NightCopilot: true } },
+  });
   await flushPromises();
   return wrapper;
 };

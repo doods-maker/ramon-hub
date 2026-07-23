@@ -43,6 +43,16 @@ export default {
       component: OnboardingAccountDetails,
     },
     {
+      // Placar de TV: fora do AppContainer de propósito — página standalone
+      // sem chrome, pensada pra ficar aberta numa TV do escritório.
+      path: frontendURL('accounts/:accountId/tv'),
+      name: 'ramon_tv',
+      meta: {
+        permissions: ['administrator', 'agent'],
+      },
+      component: () => import('./ramon/pages/TvBoard.vue'),
+    },
+    {
       path: frontendURL('accounts/:accountId/suspended'),
       name: 'account_suspended',
       meta: {

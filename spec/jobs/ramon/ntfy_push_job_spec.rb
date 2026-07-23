@@ -33,6 +33,28 @@ RSpec.describe Ramon::NtfyPushJob do
       end
     end
 
+    context 'without a lead (resumo diário)' do
+      it 'posta com título ASCII (· vira -) e o corpo dado' do
+        with_modified_env NTFY_TOPIC: 'ramon-leads' do
+          stub = stub_request(:post, 'https://ntfy.sh/ramon-leads')
+                 .with(headers: { 'Title' => 'Ramon Hub - seu dia' }, body: '3 tarefas vencidas · R$ 391 mil em jogo')
+                 .to_return(status: 200)
+
+          described_class.perform_now(title: 'Ramon Hub · seu dia', body: '3 tarefas vencidas · R$ 391 mil em jogo')
+
+          expect(stub).to have_been_requested
+        end
+      end
+
+      it 'sem título ou corpo não faz request' do
+        with_modified_env NTFY_TOPIC: 'ramon-leads' do
+          described_class.perform_now(title: 'Só título')
+
+          expect(a_request(:post, /ntfy\.sh/)).not_to have_been_made
+        end
+      end
+    end
+
     context 'when ntfy fails' do
       it 'não levanta exceção' do
         with_modified_env NTFY_TOPIC: 'ramon-leads' do

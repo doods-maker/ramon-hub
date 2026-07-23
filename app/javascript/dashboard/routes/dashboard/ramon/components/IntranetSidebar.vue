@@ -69,6 +69,20 @@ const sections = computed(() =>
           names: ['ramon_calculos', 'ramon_calculos_lead'],
         },
         {
+          key: 'radar',
+          label: t('RAMON.NAV.RADAR'),
+          icon: 'i-lucide-radar',
+          to: accountScopedRoute('ramon_radar'),
+          names: ['ramon_radar'],
+        },
+        {
+          key: 'tv',
+          label: t('RAMON.NAV.TV'),
+          icon: 'i-lucide-tv',
+          to: accountScopedRoute('ramon_tv'),
+          names: ['ramon_tv'],
+        },
+        {
           key: 'funil_config',
           label: t('RAMON.NAV.FUNIL_CONFIG'),
           icon: 'i-lucide-sliders-horizontal',

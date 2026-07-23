@@ -10,6 +10,7 @@ import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { prescriptionInfo } from '../helpers/prescription';
 import { brlCompact } from '../helpers/currency';
 import AgendaToday from '../components/command/AgendaToday.vue';
+import NightCopilot from '../components/command/NightCopilot.vue';
 import FunnelConversion from '../components/command/FunnelConversion.vue';
 import TeamWeek from '../components/command/TeamWeek.vue';
 import LossesByThesis from '../components/command/LossesByThesis.vue';
@@ -429,6 +430,9 @@ useKeyboardEvents({
         </button>
       </div>
     </header>
+
+    <!-- Enquanto você dormia (copiloto noturno) — some quando 0 pendentes -->
+    <NightCopilot />
 
     <div v-if="isLoading" class="flex flex-col gap-5 animate-pulse">
       <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5">

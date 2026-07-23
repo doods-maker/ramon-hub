@@ -1,0 +1,84 @@
+<% first_name = (@lead.contact&.name.presence || @lead.name.presence || 'cliente').split.first %>
+<p class="eyebrow">Olá, <%= first_name %></p>
+
+<% if @lead.won_at.present? %>
+  <h1>Seu atendimento avançou com a nossa equipe</h1>
+<% elsif @current_index %>
+  <h1>Seu caso está em: <%= @stages[@current_index].name %></h1>
+<% else %>
+  <%# Lead fora do fluxo normal (inclui perdido): nunca expor "perdido" ao cliente %>
+  <h1>Seu caso está em análise da equipe</h1>
+<% end %>
+<div class="divider"></div>
+
+<% if flash[:portal_notice] %>
+  <p class="flash flash-notice"><%= flash[:portal_notice] %></p>
+<% end %>
+<% if flash[:portal_alert] %>
+  <p class="flash flash-alert"><%= flash[:portal_alert] %></p>
+<% end %>
+
+<% if @lead.won_at.present? || @current_index %>
+  <div class="timeline">
+    <% @stages.each_with_index do |stage, index| %>
+      <% done = @lead.won_at.present? || index < @current_index %>
+      <% current = @current_index && index == @current_index %>
+      <% last = index == @stages.size - 1 %>
+      <div class="step">
+        <div class="step-rail">
+          <% if done %>
+            <span class="dot-done">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>
+            </span>
+          <% elsif current %>
+            <span class="dot-current"><span></span></span>
+          <% else %>
+            <span class="dot-future"></span>
+          <% end %>
+          <% unless last %>
+            <span class="<%= done ? 'rail-done' : 'rail-future' %>"></span>
+          <% end %>
+        </div>
+        <div class="step-text">
+          <% if done || current %>
+            <p class="step-title">
+              <%= stage.name %>
+              <% if current %><span class="pill-now">agora</span><% end %>
+            </p>
+            <% if current %>
+              <p class="step-sub">Estamos cuidando desta etapa agora. Avisamos você a cada avanço.</p>
+            <% end %>
+          <% else %>
+            <p class="step-title-future"><%= stage.name %></p>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <% if @lead.won_at.present? %>
+    <div class="neutral-card">Todas as etapas do seu atendimento comercial foram concluídas. A nossa equipe segue cuidando do seu caso e fala com você pelos canais de sempre.</div>
+  <% end %>
+<% else %>
+  <div class="neutral-card">Nossa equipe está avaliando o seu caso. Se precisar de algo, fale com a gente pelo WhatsApp da equipe.</div>
+<% end %>
+
+<% if @docs_missing.any? && @lead.lost_at.blank? %>
+  <div class="docs-card">
+    <p class="docs-title">
+      <%= @docs_missing.size == 1 ? 'Falta 1 documento' : "Faltam #{@docs_missing.size} documentos" %>
+    </p>
+    <ul>
+      <% @docs_missing.each do |doc| %>
+        <li><%= doc %></li>
+      <% end %>
+    </ul>
+    <% if @lead.conversation.present? %>
+      <%= form_tag ramon_portal_upload_path(@lead.portal_token), multipart: true, class: 'upload-form' do %>
+        <%= file_field_tag :file, accept: 'application/pdf,image/jpeg,image/png,image/heic,image/heif', required: true %>
+        <%= submit_tag 'Enviar documento', class: 'btn-bronze' %>
+      <% end %>
+    <% else %>
+      <p class="docs-hint">Envie pelo WhatsApp da equipe — no mesmo número em que falamos com você.</p>
+    <% end %>
+  </div>
+<% end %>

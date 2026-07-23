@@ -100,6 +100,28 @@
       },
       "LOAD_ERROR": "Couldn't load the Command Center"
     },
+    "NIGHT_COPILOT": {
+      "TITLE": "While you were sleeping",
+      "SUBTITLE": "the copilot reviewed {leads} leads at {time} · {count} suggestions awaiting approval",
+      "APPROVE_ALL": "Approve all ({count})",
+      "TAG_DRAFT": "Draft",
+      "TAG_MOVE_STAGE": "Move stage",
+      "TAG_ALERT": "Alert",
+      "MOVE_TO": "Suggestion: move to {stage}",
+      "STALLED_FOR": "stalled for {days} days",
+      "SAVE_NOTE": "Save as note",
+      "APPLY": "Apply",
+      "DISMISS": "Dismiss",
+      "OK": "OK",
+      "ESCALATE": "Push to pipeline",
+      "ESCALATE_TASK_TITLE": "Prioritize contact (copilot alert)",
+      "APPLIED": "Suggestion applied",
+      "APPLIED_ALL": "Suggestions applied — drafts became notes on the leads",
+      "ESCALATED": "Task created — the lead is on today's pipeline",
+      "APPLY_ERROR": "Couldn't apply the suggestion — try again",
+      "LOAD_ERROR": "Couldn't load the copilot suggestions",
+      "RETRY": "Retry"
+    },
     "NAV": {
       "TITLE": "Intranet",
       "SOON": "soon",
@@ -116,7 +138,26 @@
       "FUNIL_CONFIG": "Funnel settings",
       "PLAYBOOKS": "Playbooks",
       "LINHA_DA_VIDA": "Lifeline",
-      "CALCULOS": "Calculations"
+      "CALCULOS": "Calculations",
+      "RADAR": "Prescription radar",
+      "TV": "TV scoreboard"
+    },
+    "RADAR": {
+      "TITLE": "Prescription radar",
+      "SUBTITLE": "whole base · updated now",
+      "PER_MONTH": "/mo",
+      "SUMMARY_BLEEDING": "prescribing across {count} leads",
+      "SUMMARY_RISK": "become at risk in the next 90 days",
+      "DCB": "DCB {date}",
+      "LOST_CHIP": "We lost them (reactivate?)",
+      "CAMPAIGN_CTA": "Create rescue campaign ({count})",
+      "CAMPAIGN_TOOLTIP": "only contacts with LGPD consent ({n} of {m})",
+      "CAMPAIGN_MODAL_TITLE": "Create rescue campaign",
+      "CAMPAIGN_MODAL_MESSAGE": "We will open the WhatsApp campaigns screen to build the rescue with the {n} contacts with LGPD consent (out of {m} on the radar). Nothing is sent automatically.",
+      "CAMPAIGN_MODAL_CONFIRM": "Open campaigns",
+      "LOAD_ERROR": "Could not load the radar.",
+      "RETRY": "Retry",
+      "EMPTY": "No leads at risk."
     },
     "ESTEIRA": {
       "EYEBROW": "Production line",
@@ -647,6 +688,12 @@
       "SYNCED": "Lawsuit #{lawsuit} created on close",
       "ERROR": "Failed to create the AdvBox lawsuit — re-mark as won to retry"
     },
+    "PORTAL": {
+      "LABEL": "Client portal",
+      "COPY_LINK": "Copy link",
+      "COPIED": "Portal link copied",
+      "ERROR": "Could not generate the portal link — try again"
+    },
     "COLHEITA": {
       "TITLE": "Still to ask",
       "COUNT": "{done}/{total} collected",
@@ -934,6 +981,35 @@
       "TITLE": "NPS",
       "RESPONSES": "{count} response(s)",
       "EMPTY": "No responses yet."
+    },
+    "TV": {
+      "EYEBROW": "Ramon Antonio",
+      "LIVE": "live",
+      "MONTH_WON": "Won this month",
+      "GOAL": "Goal {value}",
+      "DAYS_LEFT": "{count} business days left",
+      "TODAY": "Today",
+      "TODAY_WON": "won",
+      "TODAY_NEW": "new",
+      "TODAY_RESPONSE": "1st response",
+      "BY_THESIS": "By thesis",
+      "LEADS_SUB": "leads · +{count} this week",
+      "WON_SUB": "won · {pct}%",
+      "WON_SUB_EMPTY": "won",
+      "NOTE_PRESCRIBING": "{count} prescribing",
+      "NOTE_BEST": "best conversion this month",
+      "NOTE_STALLED": "{count} stalled +10d",
+      "NOTE_STABLE": "steady",
+      "FUNNEL_LINE": "{count} active leads in the funnel — {stages}",
+      "RACE": "Race of the month",
+      "RACE_EMPTY": "No wins this month yet.",
+      "PRESCRIBING": "Money prescribing",
+      "PRESCRIBING_MONTH": "{value}/month",
+      "PRESCRIBING_SUB": "across {count} leads — act today",
+      "NEXT": "Next appointment",
+      "NEXT_EMPTY": "Nothing scheduled.",
+      "TICKER_NOW": "Now:",
+      "TICKER": "{closer} closed {lead} — {value} · {benefit}"
     }
   }
 }

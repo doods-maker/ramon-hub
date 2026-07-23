@@ -192,6 +192,83 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(sla['avg_first_response_minutes']).to be_nil
   end
 
+  describe 'seção tv (Placar de TV)' do
+    let(:won_stage) { account.lead_stages.find_by(is_won: true) }
+    let(:thesis) { account.theses.first || create(:thesis, account: account) }
+    let(:closer) { create(:user, account: account, role: :agent) }
+    let(:benefit) { create(:benefit_type, account: account, name: 'Auxílio-acidente') }
+    let!(:won) do
+      create(:lead, account: account, lead_stage: won_stage, value: 30_000,
+                    closer: closer, thesis: thesis, benefit_type: benefit)
+    end
+    let!(:meeting) do
+      create(:lead_task, account: account, lead: won, kind: 'meeting',
+                         title: 'Fechamento', due_at: 2.hours.from_now, user: closer)
+    end
+
+    before do
+      create(:lead, account: account, lead_stage: active_stage, thesis: thesis,
+                    dcb_em: 10.years.ago.to_date, benefit_monthly_value: 1412)
+      create(:lead, account: account, lead_stage: active_stage) # sem tese
+      get url, headers: agent.create_new_auth_token, as: :json
+    end
+
+    it 'soma o mês (sem meta por padrão) e o placar de hoje' do
+      tv = response.parsed_body['tv']
+      expect(tv['month']['won_value']).to eq(30_000.0)
+      expect(tv['month']['won_count']).to eq(1)
+      expect(tv['month']['goal']).to eq(0.0)
+      expect(tv['month']['business_days_left']).to be_between(0, 23) # 0 só se o mês acabar num fim de semana
+      expect(tv['month']['today']['won_count']).to eq(1)
+      expect(tv['month']['today']['new_count']).to eq(3)
+    end
+
+    it 'quebra por tese com conversão do mês e prescrição' do
+      row = response.parsed_body['tv']['by_thesis'].find { |r| r['thesis_id'] == thesis.id }
+      expect(row['leads_count']).to eq(1) # só o aberto; o ganho não é lead aberto
+      expect(row['new_week']).to eq(2)
+      expect(row['won_month']).to eq(1)
+      expect(row['won_value_month']).to eq(30_000.0)
+      expect(row['conversion_pct']).to eq(100)
+      expect(row['prescribing_count']).to eq(1)
+      expect(row['prescribing_monthly']).to eq(1412.0)
+    end
+
+    it 'agrupa lead sem tese em "Sem tese"' do
+      sem_tese = response.parsed_body['tv']['by_thesis'].find { |r| r['thesis_id'].nil? }
+      expect(sem_tese['name']).to eq('Sem tese')
+      expect(sem_tese['leads_count']).to eq(1)
+    end
+
+    it 'expõe corrida, prescrição total, próximo compromisso e último ganho' do
+      tv = response.parsed_body['tv']
+      expect(tv['race'].first).to include('name' => closer.name, 'won_count' => 1, 'won_value' => 30_000.0)
+      expect(tv['prescribing_total_monthly']).to eq(1412.0)
+      expect(tv['next_meeting']).to include('lead_name' => won.name, 'user_name' => closer.name)
+      expect(Time.zone.parse(tv['next_meeting']['at'])).to be_within(1.minute).of(meeting.due_at)
+      expect(tv['last_won']).to include('lead_name' => won.name, 'closer_name' => closer.name,
+                                        'value' => 30_000.0, 'benefit' => 'Auxílio-acidente')
+    end
+  end
+
+  describe 'seção tv sem fechamento no mês' do
+    let(:thesis) { account.theses.first || create(:thesis, account: account) }
+
+    it 'lê a meta mensal do env e devolve conversão nula sem fechamento' do
+      create(:lead, account: account, lead_stage: active_stage, thesis: thesis)
+      with_modified_env RAMON_MONTHLY_GOAL_BRL: '400000' do
+        get url, headers: agent.create_new_auth_token, as: :json
+      end
+      tv = response.parsed_body['tv']
+      expect(tv['month']['goal']).to eq(400_000.0)
+      row = tv['by_thesis'].find { |r| r['thesis_id'] == thesis.id }
+      expect(row['conversion_pct']).to be_nil
+      expect(tv['last_won']).to be_nil
+      expect(tv['next_meeting']).to be_nil
+      expect(tv['race']).to eq([])
+    end
+  end
+
   it 'denies a user without access to the account' do
     stranger = create(:user)
     get url, headers: stranger.create_new_auth_token, as: :json
