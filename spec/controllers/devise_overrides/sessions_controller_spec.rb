@@ -210,10 +210,6 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
         3.times { |i| seed_token("expired#{i}", expiry_offset_days: -1, with_session: false) }
         2.times { |i| seed_token("active#{i}", expiry_offset_days: 30) }
 
-        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
-        # (poda gem-level no save!), nao no controller
-        expect(user.reload.tokens.size).to be >= 5
-
         post :create, params: login_params
 
         expect(response).to have_http_status(:success)
@@ -231,7 +227,18 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       end
 
       it 'returns 409 with the session list (picker)' do
+        # diagnostico shard (remover depois): estado exato pre-request
+        now_i = Time.current.to_i
+        diag = user.reload.tokens.transform_values { |v| v['expiry'].to_i - now_i }
+        puts "[DIAG] MAX_SESSIONS=#{DeviseOverrides::SessionsController::MAX_SESSIONS} " \
+             "Time.current=#{Time.current.iso8601} Time.now=#{Time.now.iso8601} " \
+             "tokens_expiry_delta=#{diag.inspect} " \
+             "ativos=#{user.tokens.count { |_, v| v['expiry'].to_i > now_i }} " \
+             "user_sessions=#{user.user_sessions.count}"
+
         post :create, params: login_params
+
+        puts "[DIAG] status=#{response.status} body=#{response.body.truncate(200)}"
 
         expect(response).to have_http_status(:conflict)
         body = response.parsed_body
