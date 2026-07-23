@@ -128,7 +128,31 @@
       "EMPTY_BODY": "Nothing urgent right now — check the pipeline.",
       "EMPTY_CTA": "Open pipeline",
       "LOAD_ERROR": "Couldn't load the queue",
-      "ACTION_ERROR": "That didn't work — try again"
+      "ACTION_ERROR": "That didn't work — try again",
+      "FOCUS_TITLE": "Today's line",
+      "FOCUS_EXIT": "Exit focus · Esc",
+      "PROGRESS": "{done} of {total}",
+      "AT_STAKE": "{value} at stake",
+      "SUGGESTED": "Suggested action · {action}",
+      "SCRIPT_TITLE": "Playbook script · {thesis}",
+      "SCRIPT_OBJECTIONS_SHOW": "see objections ▸",
+      "SCRIPT_OBJECTIONS_HIDE": "hide objections ▾",
+      "LAST_MESSAGE": "Last message",
+      "LAST_SIMULATION": "Simulator · last simulation",
+      "LAST_SIMULATION_HINT": "estimated arrears",
+      "LAST_SIMULATION_EMPTY": "No simulation yet — run one from the lead's conversation.",
+      "LAST_SIMULATION_RMI": "RMI {value}",
+      "LAST_SIMULATION_DER": "DER {value}",
+      "LAST_SIMULATION_FEE": "fee {value}",
+      "LAST_SIMULATION_AT": "on {date}",
+      "AFTER_THIS": "After this one",
+      "KEY": {
+        "OPEN": "C",
+        "DONE": "F",
+        "SNOOZE": "A",
+        "SKIP": "Space",
+        "EXIT": "Esc"
+      }
     },
     "RAIL": {
       "INTERNOS": "Internal",
@@ -239,6 +263,12 @@
       "CARD": {
         "AGE": "{days}d",
         "NO_NEXT_ACTION": "No next action scheduled",
+        "NEXT_NONE": "no next action",
+        "NEXT_OVERDUE": "overdue: {title}",
+        "NEXT_TODAY": "today: {title}",
+        "NEXT_TOMORROW": "tomorrow: {title}",
+        "NEXT_IN_DAYS": "in {days}d: {title}",
+        "DOSSIE": "30s dossier",
         "COPY_PHONE": "Copy phone number",
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
@@ -259,6 +289,8 @@
       },
       "COLUMN": {
         "WEIGHTED": "~{value} weighted",
+        "STALLED": "{count} no contact >24h",
+        "PRESCRIBING": "{value}/mo prescribing",
         "COLLAPSE": "Collapse column",
         "EXPAND": "Expand column",
         "EMPTY": "No leads here — drag a card or create one."
@@ -434,8 +466,30 @@
       "TABS": {
         "SUMMARY": "Summary",
         "HISTORY": "History",
-        "PLAYBOOK": "Playbook"
+        "PLAYBOOK": "Playbook",
+        "IA": "AI",
+        "SIMULADOR": "Simulator"
       },
+      "NEXT_ACTION": {
+        "TITLE": "Next action",
+        "DONE": "Done ✓",
+        "SNOOZE": "Snooze 1d",
+        "RESCHEDULE": "Reschedule",
+        "ERROR": "Could not update the task — try again"
+      },
+      "ACTIONS": {
+        "DOSSIE": "30s Dossier"
+      },
+      "FIELDS": {
+        "BENEFIT": "Benefit",
+        "THESIS": "Thesis",
+        "OWNERS": "SDR / Closer",
+        "DCB": "DCB on",
+        "PHONE": "Phone",
+        "CPF": "CPF"
+      },
+      "EDIT_ALL_FIELDS": "edit all fields",
+      "EDIT_ALL_FIELDS_CLOSE": "collapse fields",
       "DISCARD": "Not a lead",
       "CLOSE": "Close panel",
       "HISTORY": {
@@ -483,7 +537,13 @@
     },
     "ZAPSIGN": {
       "TITLE": "Contract",
+      "ELIGIBLE_TITLE": "ZapSign contract · eligible thesis",
+      "PREPARED": "Contract + power of attorney pre-filled — generate and collect the signature in the meeting.",
+      "MISSING_COUNT": "{count} field(s) missing",
+      "MISSING_HINT": "Missing:",
+      "COMPLETE_DATA": "Complete data",
       "GENERATE": "Generate contract (ZapSign)",
+      "GENERATE_SHORT": "Generate contract",
       "GENERATING": "Generating…",
       "CREATED": "Contract + power of attorney created — open the link to collect the signature",
       "MISSING": "Created with {count} blank field(s) — fill them before signing",

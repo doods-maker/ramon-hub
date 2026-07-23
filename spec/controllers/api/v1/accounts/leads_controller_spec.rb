@@ -282,6 +282,25 @@ RSpec.describe 'Leads API', type: :request do
       expect(row).not_to have_key('custom_attributes')
     end
 
+    it 'expõe next_task_due_at e next_task_title da tarefa aberta mais próxima no índice slim' do
+      lead = account.leads.create!(name: 'A', lead_stage: novo)
+      create(:lead_task, account: account, lead: lead, title: 'Depois', due_at: 3.days.from_now)
+      create(:lead_task, account: account, lead: lead, title: 'Ligar pós-perícia', due_at: 1.day.from_now)
+      create(:lead_task, account: account, lead: lead, title: 'Feita', due_at: 1.hour.from_now, completed_at: Time.current)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['next_task_title']).to eq('Ligar pós-perícia')
+      expect(Time.zone.parse(row['next_task_due_at'])).to be_within(1.minute).of(1.day.from_now)
+    end
+
+    it 'lead sem tarefa aberta expõe next_task_due_at e next_task_title nulos' do
+      account.leads.create!(name: 'A', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['next_task_due_at']).to be_nil
+      expect(row['next_task_title']).to be_nil
+    end
+
     it 'lead sem retomadas expõe follow_up_count zero' do
       account.leads.create!(name: 'A', lead_stage: novo)
       get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token

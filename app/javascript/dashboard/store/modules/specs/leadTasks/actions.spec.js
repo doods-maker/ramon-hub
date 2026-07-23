@@ -62,6 +62,21 @@ describe('leadTasks actions', () => {
     expect(result).toEqual(task);
   });
 
+  it('update faz PATCH parcial (adiar/reagendar) e MERGE_LEAD_TASK', async () => {
+    const task = { id: 3, due_at: '2026-07-24T09:00:00Z' };
+    axios.patch.mockResolvedValue({ data: task });
+    const result = await actions.update(
+      { commit },
+      { leadId: 10, taskId: 3, payload: { due_at: '2026-07-24T09:00:00Z' } }
+    );
+    expect(axios.patch).toHaveBeenCalledWith(
+      expect.stringContaining('/leads/10/tasks/3'),
+      { due_at: '2026-07-24T09:00:00Z' }
+    );
+    expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD_TASK, task);
+    expect(result).toEqual(task);
+  });
+
   it('complete atualiza o record local e não refaz fetch de leads', async () => {
     const task = { id: 3, completed_at: '2026-07-03T12:00:00Z' };
     axios.post.mockResolvedValue({ data: task });

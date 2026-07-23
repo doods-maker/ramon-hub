@@ -8,8 +8,18 @@ const routerPush = vi.fn();
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: routerPush }) }));
 
 const dispatchSpy = vi.fn();
+const thesesRef = { value: [] };
 vi.mock('dashboard/composables/store', () => ({
   useStore: () => ({ dispatch: dispatchSpy }),
+  useMapGetter: () => thesesRef,
+}));
+
+// Captura o mapa de atalhos pra disparar as ações direto nos testes.
+let keyHandlers = {};
+vi.mock('dashboard/composables/useKeyboardEvents', () => ({
+  useKeyboardEvents: events => {
+    keyHandlers = events;
+  },
 }));
 
 vi.mock('dashboard/composables/useAccount', () => ({
@@ -65,9 +75,36 @@ const mountEsteira = async (data = payload) => {
   return wrapper;
 };
 
+// Item enriquecido do Modo Foco: tese, última mensagem e última simulação.
+const enrichedPayload = () => ({
+  ...payload,
+  items: [
+    {
+      ...payload.items[0],
+      thesis_id: 5,
+      last_message: {
+        content: 'Doutor, remarcaram minha perícia de novo…',
+        at: 1752900000,
+        incoming: true,
+      },
+      ultima_simulacao: {
+        mensal: '1412.00',
+        atrasados: '46900.00',
+        honorario_valor: '14070.00',
+        tese: 'Restabelecimento B31',
+        em: '2026-07-20T10:00:00Z',
+        parametros: { der: '2023-03-01' },
+      },
+    },
+    payload.items[1],
+  ],
+});
+
 describe('Esteira.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    thesesRef.value = [];
+    keyHandlers = {};
   });
 
   it('renders the current item and the upcoming list', async () => {
@@ -129,5 +166,98 @@ describe('Esteira.vue', () => {
       board: { total: 0, value_sum: 0, done_today: 0 },
     });
     expect(wrapper.find('[data-testid="esteira-empty"]').exists()).toBe(true);
+  });
+
+  it('renders progress, last message and last simulation of the current item', async () => {
+    const wrapper = await mountEsteira(enrichedPayload());
+    expect(wrapper.find('[data-testid="esteira-progress"]').text()).toContain(
+      'RAMON.ESTEIRA.PROGRESS'
+    );
+    expect(
+      wrapper.find('[data-testid="esteira-last-message"]').text()
+    ).toContain('remarcaram minha perícia');
+    expect(
+      wrapper.find('[data-testid="esteira-last-simulation"]').text()
+    ).toContain('46.900');
+    expect(wrapper.find('[data-testid="esteira-sim-params"]').text()).toContain(
+      'RAMON.ESTEIRA.LAST_SIMULATION_RMI'
+    );
+  });
+
+  it('hides last message and shows the simulation hint when the lead has neither', async () => {
+    const wrapper = await mountEsteira();
+    expect(wrapper.find('[data-testid="esteira-last-message"]').exists()).toBe(
+      false
+    );
+    expect(wrapper.find('[data-testid="esteira-sim-empty"]').exists()).toBe(
+      true
+    );
+  });
+
+  it('renders the playbook script from the cached thesis without refetching', async () => {
+    thesesRef.value = [
+      {
+        id: 5,
+        name: 'Restabelecimento B31',
+        items: [{ id: 1, section: 'abertura', content: 'Dona Maria, vi que…' }],
+      },
+    ];
+    const wrapper = await mountEsteira(enrichedPayload());
+    expect(wrapper.find('[data-testid="esteira-script"]').text()).toContain(
+      'Dona Maria, vi que…'
+    );
+    expect(dispatchSpy).not.toHaveBeenCalledWith('theses/show', 5);
+  });
+
+  it('fetches the thesis items when they are not cached yet', async () => {
+    await mountEsteira(enrichedPayload());
+    expect(dispatchSpy).toHaveBeenCalledWith('theses/show', 5);
+  });
+
+  it('hides the script block when the lead has no thesis', async () => {
+    const wrapper = await mountEsteira();
+    expect(wrapper.find('[data-testid="esteira-script"]').exists()).toBe(false);
+  });
+
+  it('marks done with the F shortcut', async () => {
+    RamonEsteiraAPI.done.mockResolvedValue({});
+    const wrapper = await mountEsteira();
+    keyHandlers.KeyF.action();
+    await flushPromises();
+    expect(RamonEsteiraAPI.done).toHaveBeenCalledWith(1);
+    expect(wrapper.find('[data-testid="esteira-current"]').text()).toContain(
+      'João'
+    );
+  });
+
+  it('skips with Space and opens the conversation with C', async () => {
+    const wrapper = await mountEsteira();
+    const preventDefault = vi.fn();
+    keyHandlers.Space.action({ preventDefault });
+    await flushPromises();
+    expect(preventDefault).toHaveBeenCalled();
+    expect(wrapper.find('[data-testid="esteira-current"]').text()).toContain(
+      'João'
+    );
+    keyHandlers.KeyC.action();
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ramon_funil',
+      params: undefined,
+    });
+  });
+
+  it('exits focus mode with Escape and with the exit button', async () => {
+    const wrapper = await mountEsteira();
+    keyHandlers.Escape.action();
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ramon_index',
+      params: undefined,
+    });
+    routerPush.mockClear();
+    await wrapper.find('[data-testid="esteira-exit"]').trigger('click');
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ramon_index',
+      params: undefined,
+    });
   });
 });

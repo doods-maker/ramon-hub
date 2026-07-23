@@ -88,6 +88,17 @@ class Lead < ApplicationRecord
     lead_triages.loaded? ? lead_triages.max_by(&:id) : lead_triages.order(:id).last
   end
 
+  # Tarefa aberta com o menor due_at — fonte de next_task_due_at/next_task_title
+  # no jbuilder e no broadcast. Mesmo padrão do latest_triage: com lead_tasks
+  # pré-carregada (índice do Kanban via includes) resolve em memória, sem query.
+  def next_open_task
+    if lead_tasks.loaded?
+      lead_tasks.select { |t| t.completed_at.nil? }.min_by(&:due_at)
+    else
+      lead_tasks.open_tasks.order(:due_at).first
+    end
+  end
+
   # Resumo do CNIS anexado ao caso (Onda 3b) — só JSON nativo (vai no broadcast).
   def cnis_resumo
     return nil if cnis.blank?
@@ -120,13 +131,15 @@ class Lead < ApplicationRecord
   private
 
   def cadence_event_data
+    next_task = next_open_task
     {
       stage_entered_at: stage_entered_at,
       won_at: won_at,
       lost_at: lost_at,
       stalled: stalled?,
       open_tasks_count: lead_tasks.open_tasks.size,
-      next_task_due_at: lead_tasks.open_tasks.minimum(:due_at),
+      next_task_due_at: next_task&.due_at,
+      next_task_title: next_task&.title,
       contact_phone: contact&.phone_number,
       contact_cpf: contact&.cpf,
       # Date segue o precedente de dcb_em no mesmo hash

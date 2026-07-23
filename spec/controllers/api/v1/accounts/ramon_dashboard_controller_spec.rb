@@ -92,6 +92,106 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(nps['respostas']).to eq(0)
   end
 
+  it 'conta na meta do dia só as atividades esteira_done de hoje' do
+    lead = create(:lead, account: account, lead_stage: active_stage)
+    lead.lead_activities.create!(account: account, kind: 'esteira_done')
+    lead.lead_activities.create!(account: account, kind: 'esteira_done', created_at: 2.days.ago)
+    get url, headers: agent.create_new_auth_token, as: :json
+    goal = response.parsed_body['goal']
+    expect(goal['target']).to eq(12)
+    expect(goal['done']).to eq(1)
+  end
+
+  it 'soma a previsão ponderada só das etapas abertas' do
+    won_stage = account.lead_stages.find_by(is_won: true)
+    create(:lead, account: account, lead_stage: active_stage, value: 1000) # Novo, probability 10
+    create(:lead, account: account, lead_stage: won_stage, value: 5000)    # ganho fica fora
+    get url, headers: agent.create_new_auth_token, as: :json
+    expect(response.parsed_body['forecast_total']).to eq(100.0)
+  end
+
+  it 'mede a conversão etapa→etapa na janela de 90 dias' do
+    qualificacao = account.lead_stages.find_by(name: 'Qualificação')
+    advanced_lead = create(:lead, account: account, lead_stage: qualificacao)
+    stuck_lead = create(:lead, account: account, lead_stage: qualificacao)
+    advanced_lead.lead_activities.create!(account: account, kind: 'stage_changed', to_value: 'Qualificação', created_at: 3.days.ago)
+    advanced_lead.lead_activities.create!(account: account, kind: 'stage_changed', to_value: 'Reunião agendada', created_at: 2.days.ago)
+    stuck_lead.lead_activities.create!(account: account, kind: 'stage_changed', to_value: 'Qualificação', created_at: 3.days.ago)
+    get url, headers: agent.create_new_auth_token, as: :json
+    row = response.parsed_body['conversion'].find { |r| r['name'] == 'Qualificação' }
+    expect(row['entered']).to eq(2)
+    expect(row['advanced']).to eq(1)
+    expect(row['rate']).to eq(50)
+  end
+
+  it 'ranqueia o time da semana por valor ganho, com fallback pro SDR' do
+    won_stage = account.lead_stages.find_by(is_won: true)
+    closer = create(:user, account: account, role: :agent)
+    sdr = create(:user, account: account, role: :agent)
+    create(:lead, account: account, lead_stage: won_stage, value: 3000, closer: closer)
+    create(:lead, account: account, lead_stage: won_stage, value: 1000, sdr: sdr)
+    get url, headers: agent.create_new_auth_token, as: :json
+    team = response.parsed_body['team_week']
+    expect(team.first['user_id']).to eq(closer.id)
+    expect(team.first['won_value']).to eq(3000.0)
+    expect(team.map { |r| r['user_id'] }).to include(sdr.id)
+  end
+
+  it 'lista só as reuniões de hoje na agenda' do
+    lead = create(:lead, account: account, lead_stage: active_stage, source: 'lp-auxilio-acidente')
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião de amanhã', due_at: 1.day.from_now)
+    create(:lead_task, account: account, lead: lead, title: 'Follow-up de hoje', due_at: Time.current)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião de fechamento', due_at: Time.current, user: agent)
+    get url, headers: agent.create_new_auth_token, as: :json
+    agenda = response.parsed_body['agenda_today']
+    expect(agenda.size).to eq(1)
+    expect(agenda.first['title']).to eq('Reunião de fechamento')
+    expect(agenda.first['lead_name']).to eq(lead.name)
+    expect(agenda.first['user_name']).to eq(agent.name)
+    expect(agenda.first['source']).to eq('lp-auxilio-acidente')
+  end
+
+  it 'agrupa as perdas por tese com motivos e trimestre anterior' do
+    lost_stage = account.lead_stages.find_by(is_lost: true)
+    thesis = account.theses.first || create(:thesis, account: account)
+    create(:lead, account: account, lead_stage: lost_stage, thesis: thesis, lost_reason: 'Honorário')
+    create(:lead, account: account, lead_stage: lost_stage, thesis: thesis, lost_reason: 'Honorário')
+    create(:lead, account: account, lead_stage: lost_stage, lost_reason: 'Sumiu')
+    create(:lead, account: account, lead_stage: lost_stage, thesis: thesis)
+      .update_column(:lost_at, 120.days.ago) # rubocop:disable Rails/SkipsModelValidations
+    get url, headers: agent.create_new_auth_token, as: :json
+    block = response.parsed_body['losses_by_thesis']
+    expect(block['window_days']).to eq(90)
+    row = block['theses'].find { |t| t['thesis_id'] == thesis.id }
+    expect(row['total']).to eq(2)
+    expect(row['prev_total']).to eq(1)
+    expect(row['reasons'].first).to eq('reason' => 'Honorário', 'count' => 2)
+    sem_tese = block['theses'].find { |t| t['thesis_id'].nil? }
+    expect(sem_tese['name']).to eq('Sem tese')
+    expect(sem_tese['total']).to eq(1)
+  end
+
+  it 'mede o SLA de 1ª resposta de hoje nas inboxes de lead' do
+    travel_to Time.utc(2026, 7, 22, 15, 0, 0) do # 12h em São Paulo — longe da virada do dia
+      inbox = create(:inbox, account: account, auto_create_lead: true)
+      breached = create(:conversation, account: account, inbox: inbox)
+      breached.update_columns(created_at: 2.hours.ago) # rubocop:disable Rails/SkipsModelValidations
+      replied = create(:conversation, account: account, inbox: inbox)
+      replied.update_columns(created_at: 30.minutes.ago, first_reply_created_at: 20.minutes.ago) # rubocop:disable Rails/SkipsModelValidations
+      get url, headers: agent.create_new_auth_token, as: :json
+      sla = response.parsed_body['sla_today']
+      expect(sla['breached']).to eq(1)
+      expect(sla['avg_first_response_minutes']).to eq(10.0)
+    end
+  end
+
+  it 'sem conversa respondida hoje a média de 1ª resposta vem nula' do
+    get url, headers: agent.create_new_auth_token, as: :json
+    sla = response.parsed_body['sla_today']
+    expect(sla['breached']).to eq(0)
+    expect(sla['avg_first_response_minutes']).to be_nil
+  end
+
   it 'denies a user without access to the account' do
     stranger = create(:user)
     get url, headers: stranger.create_new_auth_token, as: :json

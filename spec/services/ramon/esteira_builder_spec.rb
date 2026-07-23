@@ -71,6 +71,29 @@ RSpec.describe Ramon::EsteiraBuilder do
     expect(result[:board][:value_sum]).to eq(9150.0)
   end
 
+  it 'exposes thesis, persisted simulation and the last visible message' do
+    thesis = create(:thesis, account: account)
+    conversation = create(:conversation, account: account)
+    lead = create(:lead, account: account, lead_stage: active_stage, source: 'lp-x',
+                         thesis: thesis, conversation: conversation,
+                         custom_attributes: { 'ultima_simulacao' => { 'atrasados' => '17000.00' } })
+    create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'a' * 300)
+    create(:message, account: account, conversation: conversation, message_type: :outgoing, private: true, content: 'nota interna')
+    item = build[:items].first
+    expect(item[:lead_id]).to eq(lead.id)
+    expect(item[:thesis_id]).to eq(thesis.id)
+    expect(item[:ultima_simulacao]).to eq({ 'atrasados' => '17000.00' })
+    expect(item[:last_message]).to include(incoming: true, content: 'a' * 197 + '...')
+    expect(item[:last_message][:at]).to be_a(Integer)
+  end
+
+  it 'returns nil last_message and ultima_simulacao when the lead has neither' do
+    create(:lead, account: account, lead_stage: active_stage, source: 'lp-x')
+    item = build[:items].first
+    expect(item[:last_message]).to be_nil
+    expect(item[:ultima_simulacao]).to be_nil
+  end
+
   it 'drops leads already marked done today and counts them on the board' do
     done_lead = create(:lead, account: account, lead_stage: active_stage, source: 'lp-x')
     create(:lead, account: account, lead_stage: active_stage, source: 'lp-y', name: 'Fica')

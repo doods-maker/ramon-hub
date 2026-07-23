@@ -63,6 +63,13 @@ export const actions = {
     }
   },
 
+  // Adiar/reagendar: PATCH parcial (ex.: { due_at }) e merge do retorno.
+  update: async ({ commit }, { leadId, taskId, payload }) => {
+    const { data } = await LeadTasksAPI.update(leadId, taskId, payload);
+    commit(types.MERGE_LEAD_TASK, data);
+    return data;
+  },
+
   // Marca como concluída e atualiza só o record local. Não refaz fetch de
   // leads: o broadcast lead.updated cuida de atualizar o card no Kanban.
   complete: async ({ commit }, { leadId, taskId }) => {

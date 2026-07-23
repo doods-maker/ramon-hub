@@ -112,11 +112,13 @@ class Ramon::EsteiraBuilder
   end
 
   def build_items
-    @entries.except(*done_today_lead_ids).values.map { |entry| item_for(entry) }
-            .sort_by { |item| [-item[:score], -item[:value].to_f] }
+    entries = @entries.except(*done_today_lead_ids).values
+    messages = last_messages_for(entries)
+    entries.map { |entry| item_for(entry, messages) }
+           .sort_by { |item| [-item[:score], -item[:value].to_f] }
   end
 
-  def item_for(entry)
+  def item_for(entry, messages)
     lead = entry[:lead]
     reasons = entry[:reasons].sort_by { |r| -WEIGHTS.fetch(r[:key]) }
     {
@@ -126,10 +128,31 @@ class Ramon::EsteiraBuilder
       conversation_id: lead.conversation_id, contact_id: lead.contact_id,
       contact_phone: lead.contact&.phone_number,
       task_id: entry[:task_id],
+      thesis_id: lead.thesis_id,
+      ultima_simulacao: (lead.custom_attributes || {})['ultima_simulacao'],
+      last_message: last_message_payload(messages[lead.conversation_id]),
       score: WEIGHTS.fetch(reasons.first[:key]),
       suggested_action: ACTIONS.fetch(reasons.first[:key]),
       reasons: reasons
     }
+  end
+
+  # Última mensagem visível (não-privada) de cada conversa da fila, numa query
+  # só (DISTINCT ON) — a fila é pequena, mas sem N+1 mesmo assim.
+  def last_messages_for(entries)
+    conversation_ids = entries.filter_map { |entry| entry[:lead].conversation_id }
+    return {} if conversation_ids.blank?
+
+    Message.where(conversation_id: conversation_ids, private: false, message_type: [:incoming, :outgoing])
+           .select('DISTINCT ON (conversation_id) messages.*')
+           .order(:conversation_id, created_at: :desc)
+           .index_by(&:conversation_id)
+  end
+
+  def last_message_payload(message)
+    return if message.nil?
+
+    { content: message.content.to_s.truncate(200), at: message.created_at.to_i, incoming: message.incoming? }
   end
 
   # "Feito" tira o lead da fila do dia inteiro, independente da fonte.

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -192,6 +193,12 @@ const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
 };
 const onOpenConversation = id => store.dispatch('leads/toggleDock', id);
+const router = useRouter();
+const onOpenDossie = lead =>
+  router.push({ name: 'ramon_lead_dossie', params: { leadId: lead.id } });
+// ponytail: seleção em lote é visual por ora — a store/barra de ações chega na
+// fase das ações em lote; o handler existe para o evento não cair no vazio.
+const onToggleSelect = () => {};
 
 // Atalhos (item 13 do 4b): j/k navegam entre cards, e abre a gaveta, c abre a
 // conversa. Lista achatada na ordem visual das colunas.
@@ -415,6 +422,8 @@ const exportCsv = () => {
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
+            @open-dossie="onOpenDossie"
+            @toggle-select="onToggleSelect"
             @rename-stage="onRenameStage"
             @recolor-stage="onRecolorStage"
             @set-stage-type="onSetStageType"

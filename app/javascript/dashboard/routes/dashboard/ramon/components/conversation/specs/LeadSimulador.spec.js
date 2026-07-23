@@ -6,6 +6,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/api/leads', () => ({
   default: {
     simulate: vi.fn(),
+    update: vi.fn(),
     uploadCnis: vi.fn(),
     getCnis: vi.fn(),
     deleteCnis: vi.fn(),
@@ -93,6 +94,8 @@ const montarComPainelCalculado = async () => {
 describe('LeadSimulador.vue', () => {
   beforeEach(() => {
     LeadsAPI.simulate.mockReset();
+    LeadsAPI.update.mockReset();
+    LeadsAPI.update.mockResolvedValue({ data: {} });
     LeadsAPI.uploadCnis.mockReset();
     LeadsAPI.getCnis.mockReset();
     LeadsAPI.deleteCnis.mockReset();
@@ -134,6 +137,40 @@ describe('LeadSimulador.vue', () => {
     expect(wrapper.find('[data-testid="sim-avisos"]').text()).toContain(
       'qualidade de segurado'
     );
+  });
+
+  it('persiste a última simulação no lead após simular com sucesso', async () => {
+    LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+    const wrapper = mountSim();
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.update).toHaveBeenCalledWith(7, {
+      custom_attributes: {
+        ultima_simulacao: expect.objectContaining({
+          mensal: '1700.00',
+          atrasados: '17000.00',
+          honorario_valor: '10200.00',
+          tese: 'Auxílio-acidente (B36)',
+          em: expect.any(String),
+          parametros: expect.objectContaining({
+            der: '2025-09-01',
+            usar_cnis: false,
+          }),
+        }),
+      },
+    });
+  });
+
+  it('falha do PATCH de persistência não esconde o resultado da simulação', async () => {
+    LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+    LeadsAPI.update.mockRejectedValue(new Error('offline'));
+    const wrapper = mountSim();
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="sim-resultado"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="sim-error"]').exists()).toBe(false);
   });
 
   it('mostra estado explicativo quando o motor está fora do ar (503)', async () => {

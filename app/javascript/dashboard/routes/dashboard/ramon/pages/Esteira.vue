@@ -1,13 +1,14 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { useStore } from 'dashboard/composables/store';
+import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
+import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { dynamicTime } from 'shared/helpers/timeHelper';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
-import StatBlock from '../components/command/StatBlock.vue';
-import RamonPageHeader from '../components/RamonPageHeader.vue';
 
 const { t } = useI18n();
 const store = useStore();
@@ -45,12 +46,26 @@ const brl = value =>
     maximumFractionDigits: 1,
   }).format(Number(value) || 0);
 
+const money = value =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+
 const total = computed(() => items.value.length);
 const valueSum = computed(() =>
   items.value.reduce((sum, item) => sum + (Number(item.value) || 0), 0)
 );
 const current = computed(() => items.value[0] || null);
 const upcoming = computed(() => items.value.slice(1));
+const nextThree = computed(() => upcoming.value.slice(0, 3));
+
+// Progresso do dia: feitas / (feitas + na fila) — a barra bronze do topo.
+const dayTotal = computed(() => doneCount.value + total.value);
+const progressPct = computed(() =>
+  dayTotal.value ? Math.round((doneCount.value / dayTotal.value) * 100) : 0
+);
 
 // Motivo legível: chaves i18n vindas do backend; moeda formatada aqui.
 const reasonLabel = reason =>
@@ -60,8 +75,101 @@ const reasonLabel = reason =>
       ? { value: brl(reason.params.monthly) }
       : reason.params
   );
-const reasonsText = item => item.reasons.map(reasonLabel).join(' + ');
 
+// Chips de motivo com severidade (mock 1h): prescrição ruby sólido,
+// tarefa âmbar, resto neutro.
+const reasonChipClass = key => {
+  if (key.startsWith('PRESCRIPTION')) return 'bg-n-ruby-9 text-white';
+  if (key.startsWith('TASK')) return 'bg-n-amber-3 text-n-amber-11';
+  return 'bg-n-alpha-2 text-n-slate-11';
+};
+
+// Dot de severidade do "Depois desta".
+const severityDotClass = item => {
+  const key = item.reasons[0]?.key || '';
+  if (key.startsWith('PRESCRIPTION')) return 'bg-n-ruby-9';
+  if (key === 'TASK_OVERDUE' || key === 'STALLED') return 'bg-n-amber-9';
+  return 'bg-n-teal-9';
+};
+
+// ---- Script do playbook (tese do lead atual) -----------------------------
+const theses = useMapGetter('theses/getTheses');
+const thesis = computed(() =>
+  current.value?.thesis_id
+    ? theses.value.find(x => x.id === current.value.thesis_id)
+    : null
+);
+
+const ensureThesisItems = async () => {
+  const thesisId = current.value?.thesis_id;
+  if (!thesisId) return;
+  const cached = theses.value.find(x => x.id === thesisId);
+  if (cached?.items) return;
+  try {
+    await store.dispatch('theses/show', thesisId);
+  } catch (e) {
+    // sem tese carregada = bloco de script simplesmente não aparece
+  }
+};
+watch(() => current.value?.thesis_id, ensureThesisItems, { immediate: true });
+
+const sectionItems = section =>
+  (thesis.value?.items || []).filter(i => i.section === section).slice(0, 2);
+const scriptItems = computed(() => sectionItems('abertura'));
+const objecaoItems = computed(() => sectionItems('objecao'));
+const showScript = computed(
+  () => scriptItems.value.length > 0 || objecaoItems.value.length > 0
+);
+const objecoesOpen = ref(false);
+
+const copiedId = ref(null);
+const copyScript = async item => {
+  try {
+    await copyTextToClipboard(item.content);
+  } catch (e) {
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+    return;
+  }
+  copiedId.value = item.id;
+  setTimeout(() => {
+    if (copiedId.value === item.id) copiedId.value = null;
+  }, 1500);
+};
+
+// ---- Última mensagem / última simulação ----------------------------------
+const lastMessage = computed(() => current.value?.last_message || null);
+const lastMessageTime = computed(() =>
+  lastMessage.value ? dynamicTime(lastMessage.value.at) : ''
+);
+
+const sim = computed(() => current.value?.ultima_simulacao || null);
+const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
+const simParamsLine = computed(() => {
+  if (!sim.value) return '';
+  const parts = [];
+  if (sim.value.mensal)
+    parts.push(
+      t('RAMON.ESTEIRA.LAST_SIMULATION_RMI', { value: money(sim.value.mensal) })
+    );
+  if (sim.value.parametros?.der)
+    parts.push(
+      t('RAMON.ESTEIRA.LAST_SIMULATION_DER', {
+        value: dataBr(sim.value.parametros.der),
+      })
+    );
+  if (sim.value.honorario_valor)
+    parts.push(
+      t('RAMON.ESTEIRA.LAST_SIMULATION_FEE', {
+        value: money(sim.value.honorario_valor),
+      })
+    );
+  return parts.join(' · ');
+});
+const simDate = computed(() =>
+  sim.value?.em ? new Date(sim.value.em).toLocaleDateString() : ''
+);
+
+// ---- Ações ---------------------------------------------------------------
 const skip = () => {
   if (items.value.length > 1) items.value.push(items.value.shift());
 };
@@ -72,7 +180,7 @@ const jumpTo = index => {
   items.value.unshift(item);
 };
 
-// Guarda compartilhada: duplo-clique em Feito/Adiar comia o próximo da fila.
+// Guarda compartilhada: duplo-acionamento em Feito/Adiar comia o próximo.
 const isActing = ref(false);
 
 const markDone = async () => {
@@ -124,39 +232,102 @@ const openConversation = () => {
 };
 
 const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
+const exitFocus = () => router.push(accountScopedRoute('ramon_index'));
+
+// Atalhos do Modo Foco (mudos em campo focado — o composable cuida disso;
+// a página não tem modais). isActing segue guardando o duplo-acionamento.
+const canAct = () => !isLoading.value && !hasError.value && !!current.value;
+
+useKeyboardEvents({
+  KeyC: {
+    action: () => {
+      if (canAct()) openConversation();
+    },
+  },
+  KeyF: {
+    action: () => {
+      if (canAct()) markDone();
+    },
+  },
+  KeyA: {
+    action: () => {
+      if (canAct()) snooze();
+    },
+  },
+  Space: {
+    action: e => {
+      if (!canAct()) return;
+      e.preventDefault();
+      skip();
+    },
+  },
+  Escape: {
+    action: exitFocus,
+  },
+});
 </script>
 
 <template>
   <div
-    class="flex flex-col w-full h-full overflow-auto bg-n-background p-4 sm:p-8"
+    class="flex flex-col w-full h-full overflow-auto ramon-rail p-4 sm:px-10 sm:py-6"
   >
-    <RamonPageHeader
-      :eyebrow="t('RAMON.ESTEIRA.EYEBROW')"
-      :title="t('RAMON.ESTEIRA.TITLE')"
-    >
-      <template #actions>
-        <button
-          type="button"
-          data-testid="esteira-reload"
-          class="flex items-center h-8 gap-2 px-3 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-2 hover:text-n-slate-12 disabled:opacity-50 disabled:pointer-events-none"
-          :disabled="isLoading"
-          @click="fetchEsteira"
+    <!-- Topo: título + progresso do dia + valor em jogo + sair -->
+    <div class="flex flex-wrap items-center gap-4 mb-7">
+      <h1
+        class="font-cormorant text-[22px] font-semibold leading-none text-n-slate-12"
+      >
+        {{ t('RAMON.ESTEIRA.FOCUS_TITLE') }}
+      </h1>
+      <div
+        class="flex items-center flex-1 min-w-[160px] gap-2.5"
+        data-testid="esteira-progress"
+      >
+        <span
+          class="block flex-1 h-[5px] overflow-hidden rounded-full bg-n-alpha-2"
         >
-          <span class="i-lucide-refresh-cw size-4" />
-          {{ t('RAMON.ESTEIRA.RELOAD') }}
-        </button>
-      </template>
-    </RamonPageHeader>
-
-    <div v-if="isLoading" class="flex flex-col gap-6 animate-pulse">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
-        <div
-          v-for="n in 3"
-          :key="n"
-          class="h-[120px] rounded-xl bg-n-solid-2"
-        />
+          <span
+            class="block h-full rounded-full bg-gradient-to-r from-[#8a5c33] to-[#c9a97c] transition-all duration-200"
+            :style="{ width: `${progressPct}%` }"
+          />
+        </span>
+        <span
+          class="text-[13px] font-semibold tabular-nums text-n-iris-11 whitespace-nowrap"
+        >
+          {{
+            t('RAMON.ESTEIRA.PROGRESS', { done: doneCount, total: dayTotal })
+          }}
+        </span>
       </div>
-      <div class="h-56 rounded-xl bg-n-solid-2 max-w-2xl" />
+      <span class="text-xs text-n-slate-9 whitespace-nowrap">
+        {{ t('RAMON.ESTEIRA.AT_STAKE', { value: brl(valueSum) }) }}
+      </span>
+      <button
+        type="button"
+        data-testid="esteira-reload"
+        :title="t('RAMON.ESTEIRA.RELOAD')"
+        class="flex items-center justify-center rounded-full size-7 text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12 disabled:opacity-50 disabled:pointer-events-none"
+        :disabled="isLoading"
+        @click="fetchEsteira"
+      >
+        <span class="i-lucide-refresh-cw size-4" />
+      </button>
+      <button
+        type="button"
+        data-testid="esteira-exit"
+        class="px-2.5 py-1 text-[11px] rounded-full border border-n-weak text-n-slate-10 hover:text-n-slate-12 hover:bg-n-alpha-2"
+        @click="exitFocus"
+      >
+        {{ t('RAMON.ESTEIRA.FOCUS_EXIT') }}
+      </button>
+    </div>
+
+    <div v-if="isLoading" class="flex flex-col gap-5 animate-pulse">
+      <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-5">
+        <div class="h-96 rounded-2xl bg-n-solid-2" />
+        <div class="flex flex-col gap-3">
+          <div v-for="n in 3" :key="n" class="h-28 rounded-xl bg-n-solid-2" />
+        </div>
+      </div>
     </div>
 
     <!-- Erro de carga: distinto do estado "esteira zerada" -->
@@ -178,168 +349,317 @@ const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
       </button>
     </div>
 
-    <div v-else class="flex flex-col gap-8 max-w-2xl">
-      <!-- Placar do dia -->
-      <div
-        class="grid grid-cols-1 sm:grid-cols-3 gap-4"
-        data-testid="esteira-board"
+    <!-- Esteira zerada -->
+    <div
+      v-else-if="!current"
+      data-testid="esteira-empty"
+      class="py-10 text-center border rounded-xl border-n-weak bg-n-solid-2 max-w-2xl"
+    >
+      <span
+        class="inline-flex items-center justify-center mb-3 rounded-full size-12 bg-n-teal-3 text-n-teal-11"
       >
-        <StatBlock :label="t('RAMON.ESTEIRA.BOARD.ACTIONS')" :value="total" />
-        <StatBlock
-          :label="t('RAMON.ESTEIRA.BOARD.VALUE')"
-          :value="brl(valueSum)"
-        />
-        <StatBlock :label="t('RAMON.ESTEIRA.BOARD.DONE')" :value="doneCount" />
-      </div>
+        <span class="i-lucide-check-check size-6" />
+      </span>
+      <p class="text-lg font-medium text-n-slate-12">
+        {{ t('RAMON.ESTEIRA.EMPTY_TITLE') }}
+      </p>
+      <p class="mt-1 text-sm text-n-slate-10">
+        {{ t('RAMON.ESTEIRA.EMPTY_BODY') }}
+      </p>
+      <button
+        type="button"
+        data-testid="esteira-empty-cta"
+        class="inline-flex items-center h-9 gap-2 px-4 mt-5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+        @click="openFunnel"
+      >
+        {{ t('RAMON.ESTEIRA.EMPTY_CTA') }}
+      </button>
+    </div>
 
-      <!-- Item atual -->
+    <div v-else class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-5">
+      <!-- Card hero: o item atual -->
       <div
-        v-if="current"
         data-testid="esteira-current"
-        class="p-6 border rounded-xl border-n-weak bg-n-solid-2"
+        class="flex flex-col p-6 rounded-2xl border border-[#c9a97c]/25 bg-gradient-to-br from-[#33302c] to-[#2b2825] shadow-[0_8px_28px_rgba(0,0,0,0.4)]"
       >
-        <div class="flex items-start justify-between gap-4">
+        <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <p class="font-cormorant text-3xl font-semibold text-n-slate-12">
+            <p
+              class="text-[10.5px] font-semibold tracking-[.14em] uppercase text-n-iris-11"
+            >
+              {{
+                t('RAMON.ESTEIRA.SUGGESTED', {
+                  action: t(
+                    `RAMON.ESTEIRA.ACTION.${current.suggested_action.toUpperCase()}`
+                  ),
+                })
+              }}
+            </p>
+            <p
+              class="mt-1 font-cormorant text-[34px] font-semibold leading-[1.05] text-n-slate-12"
+            >
               {{ current.name }}
             </p>
-            <div class="flex flex-wrap items-center gap-1.5 mt-2">
-              <span
-                v-if="current.stage_name"
-                class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
-              >
-                {{ current.stage_name }}
-              </span>
-              <span
-                v-if="current.value"
-                class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
-              >
-                {{ brl(current.value) }}
-              </span>
-            </div>
           </div>
           <span
-            class="flex-shrink-0 px-2 py-1 text-[11px] uppercase tracking-wide rounded-lg bg-n-iris-3 text-n-iris-11"
+            v-if="current.value"
+            class="flex-none text-base font-semibold tabular-nums text-n-iris-11"
           >
-            {{
-              t(
-                `RAMON.ESTEIRA.ACTION.${current.suggested_action.toUpperCase()}`
-              )
-            }}
+            {{ money(current.value) }}
           </span>
         </div>
 
-        <p
-          data-testid="esteira-reasons"
-          class="mt-4 text-sm text-n-slate-12 bg-n-alpha-2 rounded-lg p-3"
-        >
-          {{ reasonsText(current) }}
-        </p>
+        <div data-testid="esteira-reasons" class="flex flex-wrap gap-1.5 mt-3">
+          <span
+            v-for="reason in current.reasons"
+            :key="reason.key"
+            class="px-2.5 py-0.5 text-[11px] rounded-full"
+            :class="reasonChipClass(reason.key)"
+          >
+            {{ reasonLabel(reason) }}
+          </span>
+          <span
+            v-if="current.stage_name"
+            class="px-2.5 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
+          >
+            {{ current.stage_name }}
+          </span>
+        </div>
 
+        <!-- Script do playbook da tese -->
         <div
-          class="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-n-weak"
+          v-if="showScript"
+          data-testid="esteira-script"
+          class="mt-4 p-4 rounded-xl bg-n-alpha-2 border border-[#c9a97c]/10"
         >
+          <p
+            class="text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
+          >
+            {{
+              t('RAMON.ESTEIRA.SCRIPT_TITLE', { thesis: thesis?.name || '' })
+            }}
+          </p>
+          <div
+            v-for="item in scriptItems"
+            :key="item.id"
+            class="mt-2"
+            data-testid="esteira-script-item"
+          >
+            <p class="text-[13px] leading-relaxed text-n-slate-11">
+              {{ item.content }}
+            </p>
+            <button
+              type="button"
+              class="mt-1 text-[11px] text-n-iris-11 hover:underline"
+              :data-testid="`esteira-script-copy-${item.id}`"
+              @click="copyScript(item)"
+            >
+              {{
+                copiedId === item.id
+                  ? t('RAMON.PLAYBOOK.COPIED')
+                  : t('RAMON.PLAYBOOK.COPY')
+              }}
+            </button>
+          </div>
+          <template v-if="objecaoItems.length">
+            <button
+              type="button"
+              data-testid="esteira-script-objections-toggle"
+              class="mt-2 text-[11px] text-n-iris-11 hover:underline"
+              @click="objecoesOpen = !objecoesOpen"
+            >
+              {{
+                objecoesOpen
+                  ? t('RAMON.ESTEIRA.SCRIPT_OBJECTIONS_HIDE')
+                  : t('RAMON.ESTEIRA.SCRIPT_OBJECTIONS_SHOW')
+              }}
+            </button>
+            <div v-if="objecoesOpen" data-testid="esteira-script-objections">
+              <div v-for="item in objecaoItems" :key="item.id" class="mt-2">
+                <p class="text-[13px] leading-relaxed text-n-slate-11">
+                  {{ item.content }}
+                </p>
+                <button
+                  type="button"
+                  class="mt-1 text-[11px] text-n-iris-11 hover:underline"
+                  @click="copyScript(item)"
+                >
+                  {{
+                    copiedId === item.id
+                      ? t('RAMON.PLAYBOOK.COPIED')
+                      : t('RAMON.PLAYBOOK.COPY')
+                  }}
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Ações com atalho visível -->
+        <div class="flex flex-wrap items-center gap-2.5 pt-5 mt-auto">
           <button
             type="button"
             data-testid="esteira-open-conversation"
-            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+            class="inline-flex items-center h-10 gap-2 px-5 text-sm font-semibold rounded-[11px] bg-n-iris-9 text-white hover:bg-n-iris-10 shadow-md"
             @click="openConversation"
           >
-            <span class="i-lucide-message-square size-4" />
             {{
               current.conversation_id
                 ? t('RAMON.ESTEIRA.OPEN_CONVERSATION')
                 : t('RAMON.ESTEIRA.OPEN_LIFELINE')
             }}
+            <kbd
+              class="px-1 text-[10px] font-sans rounded border border-white/25 bg-white/10"
+            >
+              {{ t('RAMON.ESTEIRA.KEY.OPEN') }}
+            </kbd>
           </button>
           <button
             type="button"
             data-testid="esteira-done"
-            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-50"
+            class="inline-flex items-center h-10 gap-2 px-4 text-sm font-semibold rounded-[11px] bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-50"
             :disabled="isActing"
             @click="markDone"
           >
-            <span class="i-lucide-check size-4" />
             {{ t('RAMON.ESTEIRA.DONE') }}
+            <kbd
+              class="px-1 text-[10px] font-sans rounded border border-white/25 bg-white/10"
+            >
+              {{ t('RAMON.ESTEIRA.KEY.DONE') }}
+            </kbd>
           </button>
           <button
             type="button"
             data-testid="esteira-snooze"
-            class="inline-flex items-center h-8 gap-1.5 px-3 text-sm rounded-lg border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
+            class="inline-flex items-center h-10 gap-2 px-4 text-sm rounded-[11px] border border-[#c9a97c]/20 text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
             :disabled="isActing"
             @click="snooze"
           >
-            <span class="i-lucide-alarm-clock size-4" />
             {{ t('RAMON.ESTEIRA.SNOOZE') }}
+            <kbd
+              class="px-1 text-[10px] font-sans rounded border border-n-weak text-n-slate-10"
+            >
+              {{ t('RAMON.ESTEIRA.KEY.SNOOZE') }}
+            </kbd>
           </button>
           <button
             type="button"
             data-testid="esteira-skip"
-            class="inline-flex items-center h-8 gap-1.5 px-3 ml-auto text-sm rounded-lg text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
+            class="inline-flex items-center h-10 gap-2 px-3.5 ml-auto text-[13px] rounded-[11px] text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12"
             @click="skip"
           >
             {{ t('RAMON.ESTEIRA.SKIP') }}
-            <span class="i-lucide-chevron-right size-4" />
+            <kbd
+              class="px-1 text-[10px] font-sans rounded border border-n-weak text-n-slate-10"
+            >
+              {{ t('RAMON.ESTEIRA.KEY.SKIP') }}
+            </kbd>
           </button>
         </div>
       </div>
 
-      <!-- Esteira zerada -->
-      <div
-        v-else
-        data-testid="esteira-empty"
-        class="py-10 text-center border rounded-xl border-n-weak bg-n-solid-2"
-      >
-        <span
-          class="inline-flex items-center justify-center mb-3 rounded-full size-12 bg-n-teal-3 text-n-teal-11"
+      <!-- Coluna de contexto -->
+      <div class="flex flex-col gap-3 min-w-0">
+        <!-- Última mensagem -->
+        <div
+          v-if="lastMessage"
+          data-testid="esteira-last-message"
+          class="p-4 rounded-xl border border-n-weak bg-n-solid-2"
         >
-          <span class="i-lucide-check-check size-6" />
-        </span>
-        <p class="text-lg font-medium text-n-slate-12">
-          {{ t('RAMON.ESTEIRA.EMPTY_TITLE') }}
-        </p>
-        <p class="mt-1 text-sm text-n-slate-10">
-          {{ t('RAMON.ESTEIRA.EMPTY_BODY') }}
-        </p>
-        <button
-          type="button"
-          data-testid="esteira-empty-cta"
-          class="inline-flex items-center h-9 gap-2 px-4 mt-5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
-          @click="openFunnel"
-        >
-          {{ t('RAMON.ESTEIRA.EMPTY_CTA') }}
-        </button>
-      </div>
+          <p
+            class="mb-2 text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
+          >
+            {{ t('RAMON.ESTEIRA.LAST_MESSAGE') }} · {{ lastMessageTime }}
+          </p>
+          <div
+            class="p-3 rounded-xl max-w-[90%] bg-n-alpha-2"
+            :class="
+              lastMessage.incoming ? 'rounded-tl-sm' : 'rounded-tr-sm ml-auto'
+            "
+          >
+            <p class="text-[12.5px] leading-relaxed text-n-slate-11">
+              {{ lastMessage.content }}
+            </p>
+          </div>
+        </div>
 
-      <!-- Próximos da fila -->
-      <section v-if="upcoming.length">
-        <h2 class="mb-3 text-sm tracking-widest uppercase text-n-slate-9">
-          {{ t('RAMON.ESTEIRA.NEXT_TITLE') }}
-        </h2>
-        <ul class="flex flex-col gap-1">
-          <li v-for="(item, index) in upcoming" :key="item.lead_id">
+        <!-- Simulador · última simulação -->
+        <div
+          data-testid="esteira-last-simulation"
+          class="p-4 rounded-xl border border-n-weak bg-n-solid-2"
+        >
+          <p
+            class="mb-1.5 text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
+          >
+            {{ t('RAMON.ESTEIRA.LAST_SIMULATION') }}
+          </p>
+          <template v-if="sim">
+            <div class="flex items-baseline gap-2">
+              <span
+                class="font-cormorant text-2xl font-semibold text-n-slate-12"
+              >
+                {{ money(sim.atrasados) }}
+              </span>
+              <span class="text-[11px] text-n-slate-10">
+                {{ t('RAMON.ESTEIRA.LAST_SIMULATION_HINT') }}
+              </span>
+            </div>
+            <p
+              v-if="simParamsLine"
+              class="mt-1 text-[11px] text-n-slate-9"
+              data-testid="esteira-sim-params"
+            >
+              {{ simParamsLine }}
+            </p>
+            <p v-if="simDate" class="mt-0.5 text-[11px] text-n-slate-9">
+              {{ t('RAMON.ESTEIRA.LAST_SIMULATION_AT', { date: simDate }) }}
+            </p>
+          </template>
+          <p
+            v-else
+            class="text-xs text-n-slate-10"
+            data-testid="esteira-sim-empty"
+          >
+            {{ t('RAMON.ESTEIRA.LAST_SIMULATION_EMPTY') }}
+          </p>
+        </div>
+
+        <!-- Depois desta -->
+        <div
+          v-if="nextThree.length"
+          data-testid="esteira-after-this"
+          class="p-4 rounded-xl border border-n-weak bg-n-solid-2"
+        >
+          <p
+            class="mb-2 text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
+          >
+            {{ t('RAMON.ESTEIRA.AFTER_THIS') }}
+          </p>
+          <div class="flex flex-col gap-1">
             <button
+              v-for="(item, index) in nextThree"
+              :key="item.lead_id"
               type="button"
               data-testid="esteira-next-item"
-              class="flex items-center w-full gap-3 px-3 py-2 text-left rounded-lg hover:bg-n-alpha-2"
+              class="flex items-center w-full gap-2.5 px-1.5 py-1 text-left rounded-lg hover:bg-n-alpha-2"
               @click="jumpTo(index)"
             >
-              <span class="text-sm truncate text-n-slate-12">
+              <span
+                class="flex-none rounded-full size-[5px]"
+                :class="severityDotClass(item)"
+              />
+              <span class="text-[12.5px] truncate text-n-slate-11">
                 {{ item.name }}
               </span>
-              <span class="text-xs truncate text-n-slate-10">
-                {{ reasonLabel(item.reasons[0]) }}
-              </span>
               <span
-                v-if="item.value"
-                class="ml-auto text-xs flex-shrink-0 text-n-slate-11"
+                class="flex-shrink-0 ml-auto text-[11px] tabular-nums text-n-slate-9"
               >
-                {{ brl(item.value) }}
+                {{ item.value ? brl(item.value) : '—' }}
               </span>
             </button>
-          </li>
-        </ul>
-      </section>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

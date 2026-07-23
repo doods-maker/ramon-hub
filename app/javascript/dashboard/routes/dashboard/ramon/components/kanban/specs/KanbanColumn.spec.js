@@ -68,7 +68,7 @@ describe('KanbanColumn.vue', () => {
     expect(wrapper.emitted('openLead')[0][0]).toEqual({ id: 10 });
   });
 
-  it('mostra a soma dos valores em BRL', () => {
+  it('mostra a soma dos valores em BRL compacto no header', () => {
     const wrapper = mount(KanbanColumn, {
       props: {
         stage: { id: 1, name: 'Novo', color: '#fff' },
@@ -80,10 +80,72 @@ describe('KanbanColumn.vue', () => {
       },
       global: { mocks: { $t: k => k } },
     });
-    // 2000,50 formatado em pt-BR
-    expect(wrapper.find('[data-testid="stage-total"]').text()).toContain(
-      '2.000,50'
+    // 2000,50 vira "R$ 2 mil" na forma compacta
+    expect(wrapper.find('[data-testid="stage-total"]').text()).toMatch(
+      /R\$\s?2\s?mil/
     );
+  });
+
+  describe('alertas agregados no header', () => {
+    const mountWith = columnLeads =>
+      mount(KanbanColumn, {
+        props: { stage: { id: 1, name: 'Novo' }, leads: columnLeads },
+        global: { mocks: { $t: (k, v) => `${k}:${JSON.stringify(v)}` } },
+      });
+
+    it('mostra a contagem âmbar de leads parados', () => {
+      const wrapper = mountWith([
+        { id: 1, lead_stage_id: 1, stalled: true },
+        { id: 2, lead_stage_id: 1, stalled: true },
+        { id: 3, lead_stage_id: 1 },
+      ]);
+      const alert = wrapper.find('[data-testid="column-alert-stalled"]');
+      expect(alert.exists()).toBe(true);
+      expect(alert.text()).toContain('"count":2');
+      expect(
+        wrapper.find('[data-testid="column-alert-prescribing"]').exists()
+      ).toBe(false);
+    });
+
+    it('prioriza o alerta ruby de R$/mês prescrevendo sobre o de parados', () => {
+      const wrapper = mountWith([
+        // dcb_em bem além da janela de 60m => lostInstallments > 0
+        {
+          id: 1,
+          lead_stage_id: 1,
+          stalled: true,
+          dcb_em: '2019-01-01',
+          benefit_monthly_value: 1412,
+        },
+      ]);
+      const ruby = wrapper.find('[data-testid="column-alert-prescribing"]');
+      expect(ruby.exists()).toBe(true);
+      expect(ruby.text()).toContain('1,4');
+      expect(
+        wrapper.find('[data-testid="column-alert-stalled"]').exists()
+      ).toBe(false);
+    });
+
+    it('não mostra alerta nenhum quando a coluna está saudável', () => {
+      const wrapper = mountWith([{ id: 1, lead_stage_id: 1 }]);
+      expect(
+        wrapper.find('[data-testid="column-alert-stalled"]').exists()
+      ).toBe(false);
+      expect(
+        wrapper.find('[data-testid="column-alert-prescribing"]').exists()
+      ).toBe(false);
+    });
+  });
+
+  it('repassa openDossie e toggleSelect do card para cima', () => {
+    const wrapper = mount(KanbanColumn, {
+      props: { stage, leads, selectable: true },
+      global: { mocks: { $t: k => k } },
+    });
+    wrapper.findComponent(LeadCard).vm.$emit('openDossie', { id: 10 });
+    wrapper.findComponent(LeadCard).vm.$emit('toggleSelect', { id: 10 });
+    expect(wrapper.emitted('openDossie')[0][0]).toEqual({ id: 10 });
+    expect(wrapper.emitted('toggleSelect')[0][0]).toEqual({ id: 10 });
   });
 
   describe('coluna colapsável', () => {
