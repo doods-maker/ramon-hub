@@ -182,13 +182,24 @@ const iaDot = computed(() => {
 const simuladorDot = computed(() =>
   props.lead?.custom_attributes?.ultima_simulacao ? 'bg-n-teal-9' : null
 );
-const TABS = [
+// mesma elegibilidade do LeadZapsignCard: a aba Contrato só existe pra tese
+// de acidente — nos demais leads ela some e a aba salva cai no Resumo
+const zapsignEligible = computed(() =>
+  (props.lead?.thesis_name || '').toLowerCase().includes('acidente')
+);
+const TABS = computed(() => [
   { id: 'resumo', label: 'SUMMARY' },
   { id: 'playbook', label: 'PLAYBOOK' },
   { id: 'ia', label: 'IA', dot: iaDot },
   { id: 'simulador', label: 'SIMULADOR', dot: simuladorDot },
+  ...(zapsignEligible.value ? [{ id: 'contrato', label: 'CONTRACT' }] : []),
   { id: 'historico', label: 'HISTORY' },
-];
+]);
+const shownTab = computed(() =>
+  activeTab.value === 'contrato' && !zapsignEligible.value
+    ? 'resumo'
+    : activeTab.value
+);
 
 // ----- "editar todos os campos": LeadFields completo recolhido por padrão -----
 const fieldsExpanded = ref(false);
@@ -392,12 +403,9 @@ const discard = async () => {
         </div>
       </div>
 
-      <!-- ZapSign em destaque (3d): sobe do fim do formulário pro cabeçalho -->
-      <LeadZapsignCard
-        :lead="lead"
-        class="mt-3"
-        @complete-data="onCompleteData"
-      />
+      <!-- Próxima ação fixa no cabeçalho: a cadência vive onde o SDR trabalha,
+           visível em qualquer aba (pedido do Eduardo 23/07 — ZapSign virou aba) -->
+      <LeadNextAction :lead-id="lead.id" class="mt-3" />
 
       <!-- abas segmentadas com dot de status -->
       <div class="flex mt-2 -mb-px overflow-x-auto" role="tablist">
@@ -405,11 +413,11 @@ const discard = async () => {
           v-for="tab in TABS"
           :key="tab.id"
           role="tab"
-          :aria-selected="activeTab === tab.id"
+          :aria-selected="shownTab === tab.id"
           :data-testid="`lead-tab-${tab.id}`"
           class="flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-[12.5px]"
           :class="
-            activeTab === tab.id
+            shownTab === tab.id
               ? 'border-n-iris-11 font-semibold text-n-iris-11'
               : 'border-transparent text-n-slate-10 hover:text-n-slate-11'
           "
@@ -430,9 +438,7 @@ const discard = async () => {
     <div
       class="flex flex-col flex-1 gap-3 min-w-0 overflow-y-auto overflow-x-hidden p-3"
     >
-      <template v-if="activeTab === 'resumo'">
-        <LeadNextAction :lead-id="lead.id" />
-
+      <template v-if="shownTab === 'resumo'">
         <LeadCopilot
           v-if="inConversation && conversationId"
           :conversation-id="conversationId"
@@ -552,9 +558,9 @@ const discard = async () => {
         </div>
       </template>
 
-      <LeadPlaybook v-else-if="activeTab === 'playbook'" :lead="lead" />
+      <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
 
-      <template v-else-if="activeTab === 'ia'">
+      <template v-else-if="shownTab === 'ia'">
         <div>
           <p
             class="mb-2 text-xs font-semibold uppercase tracking-widest text-n-slate-9"
@@ -578,9 +584,15 @@ const discard = async () => {
         />
       </template>
 
-      <LeadSimulador v-else-if="activeTab === 'simulador'" :lead="lead" />
+      <LeadSimulador v-else-if="shownTab === 'simulador'" :lead="lead" />
 
-      <LeadHistory v-else-if="activeTab === 'historico'" :lead-id="lead.id" />
+      <LeadZapsignCard
+        v-else-if="shownTab === 'contrato'"
+        :lead="lead"
+        @complete-data="onCompleteData"
+      />
+
+      <LeadHistory v-else-if="shownTab === 'historico'" :lead-id="lead.id" />
     </div>
   </div>
 </template>
