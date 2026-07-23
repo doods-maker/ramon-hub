@@ -42,7 +42,7 @@ const generate = async mode => {
       <button
         type="button"
         data-testid="copilot-summarize"
-        class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
+        class="px-3 py-1 text-[11.5px] rounded-[7px] bg-n-alpha-1 text-n-slate-11 hover:bg-n-alpha-2 disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="Boolean(loading)"
         @click="generate('summary')"
       >
@@ -55,7 +55,7 @@ const generate = async mode => {
       <button
         type="button"
         data-testid="copilot-suggest"
-        class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
+        class="px-3 py-1 text-[11.5px] font-semibold rounded-[7px] bg-[#c9a97c]/[.14] text-n-iris-11 hover:bg-[#c9a97c]/[.22] disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="Boolean(loading)"
         @click="generate('draft')"
       >

@@ -253,10 +253,12 @@ const discard = async () => {
       </h2>
 
       <div class="flex flex-wrap items-center gap-1.5 mt-1.5 min-w-0">
+        <!-- h-auto + bg-none: o CSS global de <select> (_base.scss) impõe h-10
+             e seta de fundo — sem isso o chip vira caixa de formulário -->
         <select
           data-testid="panel-stage"
           :value="stageId"
-          class="max-w-40 appearance-none truncate rounded-full border border-n-weak bg-n-alpha-1 px-2.5 py-0.5 text-[11px] text-n-slate-11 outline-none focus:border-n-slate-8"
+          class="max-w-40 appearance-none truncate rounded-full border border-n-weak bg-n-alpha-1 h-auto bg-none px-2.5 py-0.5 text-[11px] text-n-slate-11 outline-none focus:border-n-slate-8"
           @change="e => onStageChange(Number(e.target.value))"
         >
           <option v-for="s in stages" :key="s.id" :value="s.id">
@@ -362,7 +364,7 @@ const discard = async () => {
           {{ $t('RAMON.LEAD_PANEL.ACTIONS.DOSSIE') }}
         </router-link>
         <div v-if="inConversation" class="flex flex-1 min-w-0 [&>*]:w-full">
-          <ResolveAction />
+          <ResolveAction color="teal" variant="faded" />
         </div>
       </div>
 
