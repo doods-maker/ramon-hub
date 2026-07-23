@@ -39,8 +39,9 @@ describe('#messageTimestamp', () => {
 
 describe('#dynamicTime', () => {
   it('returns correct value', () => {
+    // FORK-PONTO: locale ptBR fixado no helper (instalação PT-BR única)
     Date.now = vi.fn(() => new Date(Date.UTC(2023, 1, 14)).valueOf());
-    expect(dynamicTime(1612971343)).toEqual('about 2 years ago');
+    expect(dynamicTime(1612971343)).toEqual('há cerca de 2 anos');
   });
 });
 

@@ -1,9 +1,10 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
+import { dynamicTime } from 'shared/helpers/timeHelper';
 import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
 
 const props = defineProps({
@@ -13,7 +14,12 @@ defineOptions({ name: 'LeadCopilot' });
 
 const { t } = useI18n();
 const summary = ref('');
+const generatedAt = ref(null);
 const loading = ref(''); // '' | 'summary' | 'draft'
+
+const generatedAgo = computed(() =>
+  generatedAt.value ? dynamicTime(generatedAt.value / 1000) : null
+);
 
 const generate = async mode => {
   if (loading.value) return;
@@ -22,6 +28,7 @@ const generate = async mode => {
     const { data } = await RamonCopilotAPI.generate(props.conversationId, mode);
     if (mode === 'summary') {
       summary.value = data.content;
+      generatedAt.value = Date.now();
     } else {
       // Cai como rascunho no editor de resposta (ReplyBox escuta este evento);
       // nada é enviado — quem envia é o Eduardo.
@@ -37,21 +44,33 @@ const generate = async mode => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-2" data-testid="lead-copilot">
-    <div class="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        data-testid="copilot-summarize"
-        class="px-3 py-1 text-[11.5px] rounded-[7px] bg-n-alpha-1 text-n-slate-11 hover:bg-n-alpha-2 disabled:opacity-40 disabled:cursor-not-allowed"
-        :disabled="Boolean(loading)"
-        @click="generate('summary')"
+  <!-- Card "Resumo da IA" do mock 1f: header + texto + chips de ação -->
+  <div
+    data-testid="lead-copilot"
+    class="p-3 rounded-xl bg-n-solid-2 border border-n-weak"
+  >
+    <div class="flex items-center justify-between gap-2">
+      <p
+        class="text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10"
       >
-        {{
-          loading === 'summary'
-            ? $t('RAMON.COPILOT.WORKING')
-            : $t('RAMON.COPILOT.SUMMARIZE')
-        }}
-      </button>
+        {{ $t('RAMON.COPILOT.SUMMARY_TITLE') }}
+      </p>
+      <span
+        v-if="generatedAgo"
+        data-testid="copilot-summary-time"
+        class="text-[10.5px] text-n-slate-9"
+      >
+        {{ generatedAgo }}
+      </span>
+    </div>
+    <p
+      data-testid="copilot-summary"
+      class="mt-1.5 text-[12.5px] leading-[1.55] whitespace-pre-wrap break-words"
+      :class="summary ? 'text-n-slate-11' : 'text-n-slate-9'"
+    >
+      {{ summary || $t('RAMON.COPILOT.EMPTY') }}
+    </p>
+    <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
       <button
         type="button"
         data-testid="copilot-suggest"
@@ -65,29 +84,19 @@ const generate = async mode => {
             : $t('RAMON.COPILOT.SUGGEST')
         }}
       </button>
-    </div>
-    <div
-      v-if="summary"
-      data-testid="copilot-summary"
-      class="flex flex-col gap-2 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
-    >
-      <div class="flex items-center justify-between gap-2">
-        <h4 class="text-xs uppercase tracking-widest text-n-slate-9">
-          {{ $t('RAMON.COPILOT.SUMMARY_TITLE') }}
-        </h4>
-        <button
-          type="button"
-          data-testid="copilot-summary-close"
-          class="text-n-slate-10 hover:text-n-slate-12"
-          :aria-label="$t('RAMON.COPILOT.CLOSE')"
-          @click="summary = ''"
-        >
-          <span class="i-lucide-x size-4" />
-        </button>
-      </div>
-      <p class="text-sm whitespace-pre-wrap break-words text-n-slate-12">
-        {{ summary }}
-      </p>
+      <button
+        type="button"
+        data-testid="copilot-summarize"
+        class="px-3 py-1 text-[11.5px] rounded-[7px] bg-n-alpha-1 text-n-slate-11 hover:bg-n-alpha-2 disabled:opacity-40 disabled:cursor-not-allowed"
+        :disabled="Boolean(loading)"
+        @click="generate('summary')"
+      >
+        {{
+          loading === 'summary'
+            ? $t('RAMON.COPILOT.WORKING')
+            : $t('RAMON.COPILOT.REFRESH')
+        }}
+      </button>
     </div>
   </div>
 </template>

@@ -602,6 +602,13 @@
         "SIMULADOR": "Simulator",
         "CONTRACT": "Contract"
       },
+      "NOTES": {
+        "TITLE": "Notes",
+        "PLACEHOLDER": "Add a note…",
+        "SAVE_ERROR": "Could not save the note — try again",
+        "HIDDEN": "+{count} older in the History tab",
+        "SYSTEM": "System"
+      },
       "NEXT_ACTION": {
         "TITLE": "Next action",
         "DONE": "Done ✓",
@@ -767,12 +774,13 @@
     },
     "COPILOT": {
       "SUMMARIZE": "Summarize conversation",
-      "SUGGEST": "Suggest reply draft",
+      "SUGGEST": "Suggest reply",
+      "REFRESH": "Refresh",
       "WORKING": "Generating…",
-      "SUMMARY_TITLE": "Conversation summary",
+      "SUMMARY_TITLE": "AI summary",
+      "EMPTY": "No summary yet — click Refresh to generate one from the conversation.",
       "DRAFT_READY": "Draft inserted into the editor — review before sending",
-      "ERROR": "Could not generate. Try again.",
-      "CLOSE": "Close summary"
+      "ERROR": "Could not generate. Try again."
     },
     "TRIAGE": {
       "TAB": "Triage",

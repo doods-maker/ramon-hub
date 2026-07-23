@@ -441,11 +441,12 @@ const exportCsv = () => {
         class="flex items-center gap-1.5 text-xs text-n-slate-10"
       >
         {{ $t('RAMON.KANBAN.VIEW.GROUP_BY') }}
-        <!-- w-28 explícito: CSS global põe width:100% em select -->
+        <!-- w-28 explícito: CSS global põe width:100% em select;
+             h-auto + bg-none anulam o h-10 + seta do mesmo CSS global -->
         <select
           v-model="groupBy"
           data-testid="lanes-group-by"
-          class="w-28 px-2 py-1 text-xs rounded-lg bg-n-alpha-2 border border-transparent text-n-slate-12 outline-none focus:border-n-slate-8"
+          class="w-28 h-auto bg-none appearance-none px-2 py-1 text-xs rounded-lg bg-n-alpha-2 border border-transparent text-n-slate-12 outline-none focus:border-n-slate-8"
         >
           <option
             v-for="group in ['thesis', 'sdr', 'channel', 'priority']"

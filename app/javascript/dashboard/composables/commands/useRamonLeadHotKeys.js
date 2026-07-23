@@ -6,12 +6,26 @@ import { useAlert } from 'dashboard/composables';
 import { brlCompact } from 'dashboard/routes/dashboard/ramon/helpers/currency';
 import { prescriptionInfo } from 'dashboard/routes/dashboard/ramon/helpers/prescription';
 import {
-  ICON_CONTACT_DASHBOARD,
   ICON_ASSIGN_TEAM,
   ICON_SNOOZE_UNTIL_TOMORRROW,
   ICON_SEND_TRANSCRIPT,
   ICON_REPORTS_OVERVIEW,
 } from 'dashboard/helper/commandbar/icons';
+
+// Tile de iniciais bronze (mock 3b) no lugar do ícone genérico de contato.
+// Só letras/números entram nas iniciais — nome vira HTML via unsafeHTML.
+const initials = name =>
+  (name || '')
+    .trim()
+    .split(/\s+/)
+    .map(word => (word.match(/[\p{L}\p{N}]/u) || [''])[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+const leadIcon = lead =>
+  `<svg role="img" class="ninja-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#463528"/><text x="12" y="12.5" text-anchor="middle" dominant-baseline="central" font-family="Inter, sans-serif" font-size="9" font-weight="600" fill="#ece7df">${initials(lead.name)}</text></svg>`;
 
 const MAX_LEADS = 15;
 const PANEL_TAB_KEY = 'ramon_lead_panel_tab';
@@ -117,7 +131,7 @@ export function useRamonLeadHotKeys() {
         section,
         title: leadTitle(lead),
         keywords: [lead.name, lead.contact_phone].filter(Boolean).join(' '),
-        icon: ICON_CONTACT_DASHBOARD,
+        icon: leadIcon(lead),
         children: [
           `${base}_move`,
           `${base}_task`,

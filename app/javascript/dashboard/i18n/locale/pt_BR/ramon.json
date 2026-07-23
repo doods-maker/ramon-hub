@@ -602,6 +602,13 @@
         "SIMULADOR": "Simulador",
         "CONTRACT": "Contrato"
       },
+      "NOTES": {
+        "TITLE": "Notas",
+        "PLACEHOLDER": "Adicionar nota…",
+        "SAVE_ERROR": "Não foi possível salvar a nota — tente de novo",
+        "HIDDEN": "+{count} anteriores na aba Histórico",
+        "SYSTEM": "Sistema"
+      },
       "NEXT_ACTION": {
         "TITLE": "Próxima ação",
         "DONE": "Feito ✓",
@@ -767,12 +774,13 @@
     },
     "COPILOT": {
       "SUMMARIZE": "Resumir a conversa",
-      "SUGGEST": "Sugerir rascunho de resposta",
+      "SUGGEST": "Sugerir resposta",
+      "REFRESH": "Atualizar",
       "WORKING": "Gerando…",
-      "SUMMARY_TITLE": "Resumo da conversa",
+      "SUMMARY_TITLE": "Resumo da IA",
+      "EMPTY": "Sem resumo ainda — clique em Atualizar para gerar a partir da conversa.",
       "DRAFT_READY": "Rascunho inserido no editor — revise antes de enviar",
-      "ERROR": "Não foi possível gerar. Tente de novo.",
-      "CLOSE": "Fechar resumo"
+      "ERROR": "Não foi possível gerar. Tente de novo."
     },
     "TRIAGE": {
       "TAB": "Triagem",
