@@ -100,10 +100,34 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(
         true
       );
+      // Próxima ação vive no cabeçalho: continua visível em qualquer aba
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
-        false
+        true
       );
       expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('historico');
+    });
+
+    it('só mostra a aba Contrato pra tese elegível (acidente)', () => {
+      expect(
+        mountBody().find('[data-testid="lead-tab-contrato"]').exists()
+      ).toBe(false);
+      const wrapper = mountBody({
+        props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
+      });
+      expect(wrapper.find('[data-testid="lead-tab-contrato"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('aba Contrato persistida cai no Resumo quando o lead não é elegível', () => {
+      localStorage.setItem('ramon_lead_panel_tab', 'contrato');
+      const wrapper = mountBody();
+      expect(wrapper.findComponent({ name: 'LeadCopilot' }).exists()).toBe(
+        true
+      );
+      expect(wrapper.findComponent({ name: 'LeadZapsignCard' }).exists()).toBe(
+        false
+      );
     });
 
     it('agrupa Triagem + Kit na aba IA', async () => {
@@ -265,8 +289,11 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(true);
     });
 
-    it('completeData do ZapSign expande e rola até o formulário', async () => {
-      const wrapper = mountBody();
+    it('completeData do ZapSign (aba Contrato) volta pro Resumo com o formulário aberto', async () => {
+      const wrapper = mountBody({
+        props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
+      });
+      await wrapper.find('[data-testid="lead-tab-contrato"]').trigger('click');
       wrapper
         .findComponent({ name: 'LeadZapsignCard' })
         .vm.$emit('completeData');

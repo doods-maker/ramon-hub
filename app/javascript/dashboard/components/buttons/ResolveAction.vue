@@ -20,6 +20,13 @@ import ButtonGroup from 'dashboard/components-next/buttonGroup/ButtonGroup.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ConversationResolveAttributesModal from 'dashboard/components-next/ConversationWorkflow/ConversationResolveAttributesModal.vue';
 
+// FORK-PONTO: painel do lead pinta o Resolver de teal-soft (mock 1f do
+// redesign) — cor/variante viram props com o default original (slate/solid).
+defineProps({
+  color: { type: String, default: 'slate' },
+  variant: { type: String, default: null },
+});
+
 const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
@@ -180,7 +187,8 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
         v-if="isOpen"
         :label="t('CONVERSATION.HEADER.RESOLVE_ACTION')"
         size="sm"
-        color="slate"
+        :color="color"
+        :variant="variant"
         no-animation
         class="ltr:rounded-r-none rtl:rounded-l-none !outline-0"
         :is-loading="isLoading"
@@ -190,7 +198,8 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
         v-else-if="isResolved"
         :label="t('CONVERSATION.HEADER.REOPEN_ACTION')"
         size="sm"
-        color="slate"
+        :color="color"
+        :variant="variant"
         no-animation
         class="ltr:rounded-r-none rtl:rounded-l-none !outline-0"
         :is-loading="isLoading"
@@ -200,7 +209,8 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
         v-else-if="showOpenButton"
         :label="t('CONVERSATION.HEADER.OPEN_ACTION')"
         size="sm"
-        color="slate"
+        :color="color"
+        :variant="variant"
         no-animation
         :is-loading="isLoading"
         @click="onCmdOpenConversation"
@@ -213,7 +223,8 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
         size="sm"
         no-animation
         class="ltr:rounded-l-none rtl:rounded-r-none !outline-0"
-        color="slate"
+        :color="color"
+        :variant="variant"
         trailing-icon
         @click="openDropdown"
       />

@@ -9,6 +9,7 @@ export const LEAD_PANEL_TABS = [
   'playbook',
   'ia',
   'simulador',
+  'contrato',
   'historico',
 ];
 

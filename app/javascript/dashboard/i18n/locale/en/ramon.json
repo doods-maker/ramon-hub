@@ -599,7 +599,8 @@
         "HISTORY": "History",
         "PLAYBOOK": "Playbook",
         "IA": "AI",
-        "SIMULADOR": "Simulator"
+        "SIMULADOR": "Simulator",
+        "CONTRACT": "Contract"
       },
       "NEXT_ACTION": {
         "TITLE": "Next action",
