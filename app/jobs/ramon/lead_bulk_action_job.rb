@@ -29,9 +29,23 @@ class Ramon::LeadBulkActionJob < ApplicationJob
 
   def apply(lead, params)
     fields = (params[:fields] || {}).slice(*FIELD_KEYS).compact_blank
+    guard_lost_reason!(lead, fields)
     lead.update!(fields) if fields.present?
     create_follow_up(lead, params[:task])
     run_triage(lead) if params[:triage].present?
+  end
+
+  # Etapa de perda exige motivo: sem lost_reason no lote nem no lead, o item é
+  # pulado e cai no agregado de erros (mesmo mecanismo do rescue por item).
+  def guard_lost_reason!(lead, fields)
+    stage_id = fields[:lead_stage_id]
+    return if stage_id.blank?
+
+    stage = lead.account.lead_stages.find_by(id: stage_id)
+    return unless stage&.is_lost
+    return if fields[:lost_reason].present? || lead.lost_reason.present?
+
+    raise ArgumentError, 'etapa de perda sem lost_reason — lead pulado'
   end
 
   def create_follow_up(lead, task)

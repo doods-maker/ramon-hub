@@ -35,6 +35,22 @@ RSpec.describe Ramon::LeadBulkActionJob do
     expect(lead_a.reload.lost_reason).to eq('Sem retorno')
   end
 
+  it 'skips the move to a lost stage when there is no lost reason anywhere' do
+    lost_stage = create(:lead_stage, account: account, name: 'Perda lote', is_lost: true)
+    run('ids' => [lead_a.id, lead_b.id], 'fields' => { 'lead_stage_id' => lost_stage.id })
+
+    expect(lead_a.reload.lead_stage_id).to eq(stage.id)
+    expect(lead_b.reload.lead_stage_id).to eq(stage.id)
+  end
+
+  it 'moves to a lost stage when the lead already carries a lost reason' do
+    lost_stage = create(:lead_stage, account: account, name: 'Perda lote', is_lost: true)
+    lead_a.update_column(:lost_reason, 'Sem retorno') # rubocop:disable Rails/SkipsModelValidations
+    run('ids' => [lead_a.id], 'fields' => { 'lead_stage_id' => lost_stage.id })
+
+    expect(lead_a.reload.lead_stage_id).to eq(lost_stage.id)
+  end
+
   it 'creates a follow_up task per lead' do
     due_at = 2.days.from_now.change(usec: 0)
     run('ids' => [lead_a.id, lead_b.id], 'task' => { 'due_at' => due_at.iso8601, 'title' => 'Retomar' })

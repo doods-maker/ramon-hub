@@ -44,6 +44,15 @@ RSpec.describe Ramon::DailyDigestService do
       expect(service.push_body).to be_nil
     end
 
+    it 'usa o SLA da própria inbox quando definido (COALESCE por conversa)' do
+      travel_to noon_brt(23) do
+        inbox = create(:inbox, account: account, auto_create_lead: true, first_response_sla_minutes: 60)
+        create(:conversation, account: account, inbox: inbox).update_columns(created_at: 30.minutes.ago) # rubocop:disable Rails/SkipsModelValidations
+
+        expect(service.push_body).to be_nil
+      end
+    end
+
     it 'conta lead parado no valor em jogo mesmo sem tarefa vencida' do
       lead = create(:lead, account: account, lead_stage: stage_novo, benefit_monthly_value: 800)
       lead.update_column(:stage_entered_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
@@ -59,7 +68,8 @@ RSpec.describe Ramon::DailyDigestService do
         create_list(:lead, 2, account: account, lead_stage: stage_novo).each do |lead|
           lead.update_column(:created_at, yesterday) # rubocop:disable Rails/SkipsModelValidations
         end
-        create(:lead, account: account, lead_stage: stage_novo, value: 71_000).update_column(:won_at, yesterday) # rubocop:disable Rails/SkipsModelValidations
+        won_lead = create(:lead, account: account, lead_stage: stage_novo, value: 71_000)
+        won_lead.update_column(:won_at, yesterday) # rubocop:disable Rails/SkipsModelValidations
         create(:lead, account: account, lead_stage: stage_novo)
           .update_columns(lost_at: yesterday, lost_reason: 'sem carência') # rubocop:disable Rails/SkipsModelValidations
         inbox = create(:inbox, account: account, auto_create_lead: true)

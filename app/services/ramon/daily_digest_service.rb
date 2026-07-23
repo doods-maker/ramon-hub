@@ -70,18 +70,25 @@ class Ramon::DailyDigestService
 
   # Mesmo critério do Cockpit: conversa nascida hoje em inbox de lead
   # (auto_create_lead) sem 1ª resposta além do SLA, ou respondida além dele.
+  # N por conversa: SLA da própria inbox, com fallback no env (COALESCE por linha).
   def sla_breached_count
-    minutes = ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i
+    threshold = sla_threshold_sql
     scope = sla_conversations(today_range)
-    waiting = scope.where(first_reply_created_at: nil).where(created_at: ...minutes.minutes.ago).count
-    over = scope.where('EXTRACT(EPOCH FROM (first_reply_created_at - created_at)) > ?', minutes * 60).count
+    waiting = scope.where(first_reply_created_at: nil)
+                   .where("conversations.created_at < ? - (#{threshold}) * INTERVAL '1 minute'", Time.current).count
+    over = scope.where("EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) > (#{threshold}) * 60").count
     waiting + over
   end
 
+  # Interpolação segura: só o inteiro do env entra na string.
+  def sla_threshold_sql
+    "COALESCE(inboxes.first_response_sla_minutes, #{ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i})"
+  end
+
   def sla_conversations(range)
-    @account.conversations
-            .where(inbox_id: @account.inboxes.where(auto_create_lead: true).select(:id))
-            .where(created_at: range)
+    @account.conversations.joins(:inbox)
+            .where(inboxes: { auto_create_lead: true })
+            .where(conversations: { created_at: range })
   end
 
   # Próxima reunião ainda por vir hoje (aberta ou não — a agenda mostra o dia).
@@ -117,7 +124,7 @@ class Ramon::DailyDigestService
 
   def first_response_label
     replied = sla_conversations(yesterday_range).where.not(first_reply_created_at: nil)
-    avg = replied.average(Arel.sql('EXTRACT(EPOCH FROM (first_reply_created_at - created_at)) / 60.0'))
+    avg = replied.average(Arel.sql('EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) / 60.0'))
     "#{avg.to_f.round}min" if avg.present?
   end
 

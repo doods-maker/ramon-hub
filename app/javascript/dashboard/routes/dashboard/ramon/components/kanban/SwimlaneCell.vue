@@ -29,7 +29,9 @@ watch(
 );
 
 const onChange = evt => {
-  const change = evt.added || evt.moved;
+  // ponytail: só `added` (troca de etapa) grava — `moved` (reorder dentro da
+  // célula) não persiste posição no server, então não fingimos um save.
+  const change = evt.added;
   if (!change) return;
   emit('move', {
     id: change.element.id,

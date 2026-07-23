@@ -77,6 +77,15 @@ RSpec.describe 'Portal do cliente (link mágico)', type: :request do
       expect(response).to redirect_to("/portal/#{lead.portal_token}")
     end
 
+    it 'recusa arquivo com content_type mentiroso (magic bytes mandam)' do
+      fake_pdf = fixture_file_upload(Rails.root.join('spec/assets/contacts.csv'), 'application/pdf')
+
+      expect do
+        post "/portal/#{lead.ensure_portal_token!}/upload", params: { file: fake_pdf }
+      end.not_to change(Message, :count)
+      expect(response).to redirect_to("/portal/#{lead.portal_token}")
+    end
+
     it 'token inválido devolve 404 sem criar nada' do
       expect do
         post '/portal/token-invalido/upload', params: { file: file }

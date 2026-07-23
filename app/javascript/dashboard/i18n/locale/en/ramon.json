@@ -418,8 +418,8 @@
       },
       "BULK": {
         "SELECTED": "{count} selected",
-        "MOVE": "Move stage",
-        "ASSIGN": "Assign SDR",
+        "MOVE": "Move stage ▾",
+        "ASSIGN": "Assign SDR ▾",
         "FOLLOW_UP": "Schedule follow-up",
         "FOLLOW_UP_CONFIRM": "Schedule",
         "TRIAGE": "Run AI triage",

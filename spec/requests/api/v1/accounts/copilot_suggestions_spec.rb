@@ -45,6 +45,35 @@ RSpec.describe 'Copilot Suggestions API', type: :request do
     expect(suggestion.reload.status).to eq('applied')
   end
 
+  it 'does not apply move_stage into a won stage (LLM nunca marca ganho/perdido)' do
+    won = account.lead_stages.find_by!(is_won: true)
+    suggestion = create(:copilot_suggestion, account: account, lead: lead, kind: 'move_stage',
+                                             payload: { 'etapa_sugerida' => won.name })
+    original_stage_id = lead.lead_stage_id
+
+    post "/api/v1/accounts/#{account.id}/copilot_suggestions/#{suggestion.id}/apply",
+         headers: agent.create_new_auth_token, as: :json
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(lead.reload.lead_stage_id).to eq(original_stage_id)
+    expect(suggestion.reload.status).to eq('pending')
+  end
+
+  it 'is idempotent: applying twice does not duplicate the draft note' do
+    suggestion = create(:copilot_suggestion, account: account, lead: lead)
+
+    post "/api/v1/accounts/#{account.id}/copilot_suggestions/#{suggestion.id}/apply",
+         headers: agent.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+
+    expect do
+      post "/api/v1/accounts/#{account.id}/copilot_suggestions/#{suggestion.id}/apply",
+           headers: agent.create_new_auth_token, as: :json
+    end.not_to change(lead.lead_notes, :count)
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(suggestion.reload.status).to eq('applied')
+  end
+
   it 'does not apply move_stage when the suggested stage name does not resolve' do
     suggestion = create(:copilot_suggestion, account: account, lead: lead, kind: 'move_stage',
                                              payload: { 'etapa_sugerida' => 'Etapa Inexistente' })

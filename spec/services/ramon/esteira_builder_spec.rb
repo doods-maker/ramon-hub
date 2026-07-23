@@ -106,6 +106,8 @@ RSpec.describe Ramon::EsteiraBuilder do
     lead = create(:lead, account: account, lead_stage: active_stage, source: 'lp-x',
                          thesis: thesis, conversation: conversation,
                          custom_attributes: { 'ultima_simulacao' => { 'atrasados' => '17000.00' } })
+    # o lead precisa entrar na fila por algum coletor: task vencida
+    create(:lead_task, account: account, lead: lead, due_at: 2.days.ago)
     create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'a' * 300)
     create(:message, account: account, conversation: conversation, message_type: :outgoing, private: true, content: 'nota interna')
     item = build[:items].first

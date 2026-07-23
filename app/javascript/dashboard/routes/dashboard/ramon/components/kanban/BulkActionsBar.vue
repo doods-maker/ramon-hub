@@ -120,7 +120,7 @@ onKeyStroke('Escape', () => {
         class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-2 text-n-iris-11 hover:bg-n-alpha-3"
         @click="toggleMenu('stage')"
       >
-        {{ $t('RAMON.KANBAN.BULK.MOVE') }} ▾
+        {{ $t('RAMON.KANBAN.BULK.MOVE') }}
       </button>
       <div
         v-show="openMenu === 'stage'"
@@ -148,7 +148,7 @@ onKeyStroke('Escape', () => {
         class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-2 text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-3"
         @click="toggleMenu('sdr')"
       >
-        {{ $t('RAMON.KANBAN.BULK.ASSIGN') }} ▾
+        {{ $t('RAMON.KANBAN.BULK.ASSIGN') }}
       </button>
       <div
         v-show="openMenu === 'sdr'"

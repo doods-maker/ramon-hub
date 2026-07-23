@@ -148,21 +148,28 @@ class Ramon::CockpitMetrics
   end
 
   def sla_conversations
-    @account.conversations
-            .where(inbox_id: @account.inboxes.where(auto_create_lead: true).select(:id))
-            .where(created_at: today_range)
+    @account.conversations.joins(:inbox)
+            .where(inboxes: { auto_create_lead: true })
+            .where(conversations: { created_at: today_range })
   end
 
   # Estourou = sem resposta e criada há mais de N min, OU respondida além de N.
+  # N por conversa: SLA da própria inbox, com fallback no env (COALESCE por linha).
   def sla_breached_count(replied)
-    minutes = ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i
-    waiting = sla_conversations.where(first_reply_created_at: nil).where(created_at: ...minutes.minutes.ago).count
-    over = replied.where('EXTRACT(EPOCH FROM (first_reply_created_at - created_at)) > ?', minutes * 60).count
+    threshold = sla_threshold_sql
+    waiting = sla_conversations.where(first_reply_created_at: nil)
+                               .where("conversations.created_at < ? - (#{threshold}) * INTERVAL '1 minute'", Time.current).count
+    over = replied.where("EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) > (#{threshold}) * 60").count
     waiting + over
   end
 
+  # Interpolação segura: só o inteiro do env entra na string.
+  def sla_threshold_sql
+    "COALESCE(inboxes.first_response_sla_minutes, #{ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i})"
+  end
+
   def sla_average_minutes(replied)
-    avg = replied.average(Arel.sql('EXTRACT(EPOCH FROM (first_reply_created_at - created_at)) / 60.0'))
+    avg = replied.average(Arel.sql('EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) / 60.0'))
     avg&.to_f&.round(1)
   end
 end

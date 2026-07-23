@@ -24,7 +24,7 @@ class Api::V1::Accounts::CopilotSuggestionsController < Api::V1::Accounts::BaseC
   # move_stage NÃO entra no apply_all: mudança de funil em massa exige olho
   # humano, cartão a cartão. Só draft (vira nota RASCUNHO) e alert (só marca).
   def apply_all
-    @copilot_suggestions = pending_scope.where(kind: %w[draft alert]).to_a
+    @copilot_suggestions = pending_scope.where(kind: %w[draft alert]).includes(:lead).to_a
     @copilot_suggestions.each { |suggestion| suggestion.apply!(user: Current.user) }
     render :index
   end

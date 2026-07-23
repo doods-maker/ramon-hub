@@ -94,6 +94,8 @@ export const actions = {
   },
   setFilters: async ({ commit, dispatch }, partial) => {
     commit(types.SET_LEAD_FILTERS, partial);
+    // Filtro novo = outro universo de cards: seleção em lote antiga não vale.
+    commit(types.SET_LEAD_SELECTION, []);
     try {
       const merged = JSON.parse(localStorage.getItem(FILTERS_KEY) || '{}');
       localStorage.setItem(
@@ -262,7 +264,11 @@ export const mutations = {
   },
   [types.ADD_LEAD]: MutationHelpers.create,
   [types.EDIT_LEAD]: MutationHelpers.setSingleRecord,
-  [types.DELETE_LEAD]: MutationHelpers.destroy,
+  [types.DELETE_LEAD](_state, id) {
+    MutationHelpers.destroy(_state, id);
+    // lead removido não pode sobrar na seleção em lote
+    _state.selectedIds = _state.selectedIds.filter(item => item !== id);
+  },
   [types.MERGE_LEAD](_state, data) {
     const index = _state.records.findIndex(record => record.id === data.id);
     if (index > -1) {

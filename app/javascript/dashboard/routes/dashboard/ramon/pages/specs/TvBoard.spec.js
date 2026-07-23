@@ -194,17 +194,18 @@ describe('TvBoard.vue', () => {
     const wrapper = await mountPage();
     dispatchSpy.mockClear();
 
-    subscribers.forEach(fn => fn({ type: 'MERGE_LEAD' }));
-    subscribers.forEach(fn => fn({ type: 'MERGE_LEAD' }));
+    subscribers.forEach(fn => fn({ type: 'leads/MERGE_LEAD' }));
+    subscribers.forEach(fn => fn({ type: 'leads/MERGE_LEAD' }));
     vi.advanceTimersByTime(4999);
     expect(dispatchSpy).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect(dispatchSpy).toHaveBeenCalledTimes(1);
     expect(dispatchSpy).toHaveBeenCalledWith('ramonDashboard/fetch');
 
-    // mutação de outro módulo não agenda nada
+    // mutação de outro módulo (ou type sem namespace) não agenda nada
     dispatchSpy.mockClear();
-    subscribers.forEach(fn => fn({ type: 'SET_LEAD_SELECTION' }));
+    subscribers.forEach(fn => fn({ type: 'leads/SET_LEAD_SELECTION' }));
+    subscribers.forEach(fn => fn({ type: 'MERGE_LEAD' }));
     vi.advanceTimersByTime(5000);
     expect(dispatchSpy).not.toHaveBeenCalled();
 

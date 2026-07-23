@@ -65,4 +65,21 @@ describe('leads selection (lote)', () => {
     mutations[types.SET_LEAD_SELECTION](moduleState, [7, 8]);
     expect(moduleState.selectedIds).toEqual([7, 8]);
   });
+
+  it('setFilters limpa a seleção em lote (outro universo de cards)', async () => {
+    const commit = vi.fn();
+    const dispatch = vi.fn();
+    await actions.setFilters({ commit, dispatch }, { q: 'ana' });
+    expect(commit).toHaveBeenCalledWith(types.SET_LEAD_SELECTION, []);
+  });
+
+  it('mutation DELETE_LEAD expurga o id da seleção', () => {
+    const moduleState = {
+      records: [{ id: 1 }, { id: 2 }],
+      selectedIds: [1, 2],
+    };
+    mutations[types.DELETE_LEAD](moduleState, 1);
+    expect(moduleState.records.map(r => r.id)).toEqual([2]);
+    expect(moduleState.selectedIds).toEqual([2]);
+  });
 });

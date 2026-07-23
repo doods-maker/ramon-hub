@@ -54,8 +54,11 @@ class Public::PortalController < ActionController::Base
 
   def valid_upload?
     file = params[:file]
-    file.respond_to?(:content_type) &&
-      ALLOWED_CONTENT_TYPES.include?(file.content_type.to_s.downcase) &&
+    return false unless file.respond_to?(:tempfile)
+
+    # Tipo real por magic bytes (Marcel, já vem com o Rails) — o content_type
+    # declarado pelo browser/cliente mente fácil.
+    ALLOWED_CONTENT_TYPES.include?(Marcel::MimeType.for(file.tempfile)) &&
       file.size.to_i.positive? && file.size <= MAX_UPLOAD_BYTES
   end
 

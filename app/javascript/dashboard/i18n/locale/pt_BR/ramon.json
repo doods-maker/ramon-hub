@@ -418,8 +418,8 @@
       },
       "BULK": {
         "SELECTED": "{count} selecionado(s)",
-        "MOVE": "Mover etapa",
-        "ASSIGN": "Atribuir SDR",
+        "MOVE": "Mover etapa ▾",
+        "ASSIGN": "Atribuir SDR ▾",
         "FOLLOW_UP": "Agendar follow-up",
         "FOLLOW_UP_CONFIRM": "Agendar",
         "TRIAGE": "Rodar triagem IA",

@@ -55,7 +55,8 @@ onMounted(() => {
   // Broadcast lead.created/updated já faz leads/upsert (MERGE_LEAD):
   // qualquer mexida em lead agenda um re-fetch com debounce de 5s.
   unsubscribe = store.subscribe(mutation => {
-    if (mutation.type !== 'MERGE_LEAD') return;
+    // módulo leads é namespaced: o type chega prefixado
+    if (mutation.type !== 'leads/MERGE_LEAD') return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(refetch, 5000);
   });

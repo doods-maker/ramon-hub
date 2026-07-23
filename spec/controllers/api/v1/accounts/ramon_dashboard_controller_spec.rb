@@ -185,6 +185,16 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     end
   end
 
+  it 'respeita o SLA da própria inbox quando definido (COALESCE por conversa)' do
+    travel_to Time.utc(2026, 7, 22, 15, 0, 0) do # 12h em São Paulo — longe da virada do dia
+      inbox = create(:inbox, account: account, auto_create_lead: true, first_response_sla_minutes: 60)
+      waiting = create(:conversation, account: account, inbox: inbox)
+      waiting.update_columns(created_at: 30.minutes.ago) # rubocop:disable Rails/SkipsModelValidations
+      get url, headers: agent.create_new_auth_token, as: :json
+      expect(response.parsed_body['sla_today']['breached']).to eq(0)
+    end
+  end
+
   it 'sem conversa respondida hoje a média de 1ª resposta vem nula' do
     get url, headers: agent.create_new_auth_token, as: :json
     sla = response.parsed_body['sla_today']

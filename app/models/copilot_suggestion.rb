@@ -16,11 +16,16 @@ class CopilotSuggestion < ApplicationRecord
   # Aplica a sugestão. Retorna false quando move_stage não resolve a etapa
   # sugerida pelo nome (fallback = não aplica; olho humano decide).
   def apply!(user: nil)
+    # Idempotência: aplicar de novo (clique duplo / apply_all repetido) não
+    # duplica nota nem re-move etapa.
+    return false unless status == 'pending'
+
     case kind
     when 'draft'
       lead.lead_notes.create!(account: account, user: user, body: draft_note_body)
     when 'move_stage'
-      stage = account.lead_stages.find_by(name: payload['etapa_sugerida'])
+      # A LLM nunca marca ganho/perdido: só etapa aberta resolve por nome.
+      stage = account.lead_stages.where(is_won: false, is_lost: false).find_by(name: payload['etapa_sugerida'])
       return false if stage.blank?
 
       lead.update!(lead_stage_id: stage.id)

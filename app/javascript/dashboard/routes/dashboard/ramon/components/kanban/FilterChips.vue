@@ -30,7 +30,7 @@ const nameOf = (list, id) =>
   list.find(item => String(item.id) === String(id))?.name || String(id);
 
 const dateBr = iso => {
-  const [year, month, day] = String(iso).split('-');
+  const [, month, day] = String(iso).split('-');
   return day && month ? `${day}/${month}` : iso;
 };
 
