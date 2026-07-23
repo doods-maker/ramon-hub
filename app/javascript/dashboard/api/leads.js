@@ -54,6 +54,10 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/painel`, payload);
   }
 
+  elegibilidade(leadId, payload) {
+    return axios.post(`${this.url}/${leadId}/elegibilidade`, payload);
+  }
+
   uploadCnis(leadId, file, sexo, { excluirSeqs = '', mensalidades = '' } = {}) {
     const data = new FormData();
     data.append('arquivo', file);

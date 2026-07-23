@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadLiquidacao from './LeadLiquidacao.vue';
+import LeadElegibilidade from './LeadElegibilidade.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -285,6 +286,10 @@ const canPainel = computed(() =>
   )
 );
 
+// A elegibilidade não aceita vínculos manuais (sem suporte no motor ainda) —
+// CNIS é obrigatório, diferente do canPainel (que aceita vínculos avulsos).
+const canElegibilidade = computed(() => Boolean(form.value.der && cnis.value));
+
 const calcularPainel = async () => {
   painelLoading.value = true;
   motorDown.value = false;
@@ -549,6 +554,21 @@ const aba = ref('painel');
         @click="aba = 'honorario'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_HONORARIO') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="aba === 'elegibilidade'"
+        data-testid="sim-aba-elegibilidade"
+        class="px-3 py-1.5 text-xs rounded-t-lg"
+        :class="
+          aba === 'elegibilidade'
+            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+            : 'text-n-slate-10'
+        "
+        @click="aba = 'elegibilidade'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_ELEGIBILIDADE') }}
       </button>
     </div>
 
@@ -982,6 +1002,21 @@ const aba = ref('painel');
         </ul>
       </div>
       <LeadLiquidacao ref="liquidacaoRef" :lead="lead" />
+    </div>
+
+    <div
+      v-show="aba === 'elegibilidade'"
+      class="flex flex-col gap-2"
+      data-testid="sim-elegibilidade-secao"
+    >
+      <p
+        v-if="!canElegibilidade"
+        class="text-xs text-n-amber-11"
+        data-testid="sim-elegibilidade-hint"
+      >
+        {{ $t('RAMON.SIMULADOR.ELEG_PRECISA_CNIS') }}
+      </p>
+      <LeadElegibilidade v-else :lead="lead" :der="form.der" />
     </div>
 
     <p
