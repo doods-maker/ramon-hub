@@ -227,18 +227,21 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       end
 
       it 'returns 409 with the session list (picker)' do
-        # diagnostico shard (remover depois): estado exato pre-request
-        now_i = Time.current.to_i
-        diag = user.reload.tokens.transform_values { |v| v['expiry'].to_i - now_i }
-        puts "[DIAG] MAX_SESSIONS=#{DeviseOverrides::SessionsController::MAX_SESSIONS} " \
-             "Time.current=#{Time.current.iso8601} Time.now=#{Time.now.iso8601} " \
-             "tokens_expiry_delta=#{diag.inspect} " \
-             "ativos=#{user.tokens.count { |_, v| v['expiry'].to_i > now_i }} " \
-             "user_sessions=#{user.user_sessions.count}"
+        # diagnostico shard v3 (remover depois)
+        puts "[DIAG] create_source=#{DeviseOverrides::SessionsController.instance_method(:create).source_location.inspect}"
+        puts "[DIAG] enforce_defined=#{DeviseOverrides::SessionsController.private_method_defined?(:enforce_session_limit_for_password_login)}"
+        puts "[DIAG] controller_class=#{controller.class} ancestors_head=#{controller.class.ancestors.first(5).inspect}"
+        allow_any_instance_of(DeviseOverrides::SessionsController).to receive(:enforce_session_limit_for_password_login).and_wrap_original do |m, *args|
+          u = args.first
+          puts "[DIAG] enforce CALLED user_id=#{u&.id} tokens=#{u&.tokens&.size} ativos=#{(u&.tokens || {}).count { |_, v| v['expiry'].to_i > Time.current.to_i }} max=#{DeviseOverrides::SessionsController::MAX_SESSIONS}"
+          r = m.call(*args)
+          puts "[DIAG] enforce RESULT=#{r.inspect}"
+          r
+        end
 
         post :create, params: login_params
 
-        puts "[DIAG] status=#{response.status} body=#{response.body.truncate(200)}"
+        puts "[DIAG] status=#{response.status} body=#{response.body.inspect[0, 300]}"
 
         expect(response).to have_http_status(:conflict)
         body = response.parsed_body
