@@ -131,8 +131,32 @@ describe('LeadSimulador.vue', () => {
     expect(wrapper.find('[data-testid="sim-honorario"]').text()).toContain(
       '10.200,00'
     );
-    expect(wrapper.find('[data-testid="sim-avisos"]').text()).toContain(
-      'qualidade de segurado'
+    expect(
+      wrapper.find('[data-testid="sim-aviso-qualidade"]').text()
+    ).toContain('qualidade de segurado');
+  });
+
+  it('mostra o banner de qualidade em risco quando o aviso cita o art. 27-A', async () => {
+    LeadsAPI.simulate.mockResolvedValue({
+      data: { ...resultado, avisos: ['risco pelo art. 27-A da Lei 8.213/91'] },
+    });
+    const wrapper = mountSim();
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(
+      wrapper.find('[data-testid="sim-aviso-qualidade"]').text()
+    ).toContain('art. 27-A');
+  });
+
+  it('não mostra o banner de qualidade quando não há aviso de risco', async () => {
+    LeadsAPI.simulate.mockResolvedValue({ data: { ...resultado, avisos: [] } });
+    const wrapper = mountSim();
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="sim-aviso-qualidade"]').exists()).toBe(
+      false
     );
   });
 

@@ -716,7 +716,8 @@
       "ELEG_ERRO": "Could not analyze eligibility — check the DER and try again.",
       "ELEG_ART27A": "Art. 27-A — {exigencia} ({status})",
       "ELEG_MESES": "{n}m",
-      "ELEG_GANHO_FMT": "Gain: +{tempo}m / +{carencia}c"
+      "ELEG_GANHO_FMT": "Gain: +{tempo}m / +{carencia}c",
+      "ELEG_VER_ABA": "Check the Eligibility tab for the full assessment"
     },
     "LIQUIDACAO": {
       "TITULO": "Judgment liquidation",

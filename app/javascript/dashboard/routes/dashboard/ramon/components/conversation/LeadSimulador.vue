@@ -64,6 +64,16 @@ const canSimulate = computed(() =>
 
 const honorario = computed(() => resultado.value?.honorario || null);
 const motorInfo = computed(() => resultado.value?.motor || {});
+const avisosQualidade = computed(() =>
+  (resultado.value?.avisos || []).filter(a =>
+    /qualidade de segurado|27-A|Tema 1360/i.test(a)
+  )
+);
+const avisosGerais = computed(() =>
+  (resultado.value?.avisos || []).filter(
+    a => !avisosQualidade.value.includes(a)
+  )
+);
 
 const handleMotorError = error => {
   if (error?.response?.status === 503) {
@@ -682,6 +692,16 @@ const aba = ref('painel');
             })
           }}
         </p>
+        <div
+          v-if="avisosQualidade.length"
+          class="flex flex-col gap-1 p-2 rounded-lg border border-n-ruby-9 bg-n-ruby-3 text-xs text-n-ruby-11"
+          data-testid="sim-aviso-qualidade"
+        >
+          <p v-for="(aviso, i) in avisosQualidade" :key="i">{{ aviso }}</p>
+          <p class="font-medium">
+            {{ $t('RAMON.SIMULADOR.ELEG_VER_ABA') }}
+          </p>
+        </div>
         <p
           v-if="honorario && honorario.valor"
           class="text-sm text-n-slate-12"
@@ -728,11 +748,11 @@ const aba = ref('painel');
           }}
         </p>
         <ul
-          v-if="resultado.avisos && resultado.avisos.length"
+          v-if="avisosGerais.length"
           class="flex flex-col gap-1 text-xs text-n-slate-10 list-disc ps-4"
           data-testid="sim-avisos"
         >
-          <li v-for="(aviso, i) in resultado.avisos" :key="i">{{ aviso }}</li>
+          <li v-for="(aviso, i) in avisosGerais" :key="i">{{ aviso }}</li>
         </ul>
         <button
           type="button"
