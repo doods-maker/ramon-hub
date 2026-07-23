@@ -169,13 +169,6 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
   describe 'session limit enforcement' do
     before do
       stub_const('DeviseOverrides::SessionsController::MAX_SESSIONS', 5)
-      # DeviceTokenAuth's own gem-level eviction (User#save, via DeviseTokenAuth::Concerns::User)
-      # silently prunes `tokens` once size > max_number_of_devices — independent of our MAX_SESSIONS
-      # check. A shard co-located spec that leaks this mattr_accessor (`config/initializers/
-      # devise_token_auth.rb`, default 25) to a low value would have `seed_token`'s own `user.save!`
-      # calls drop tokens before our enforcement even runs, undercounting active_token_count and
-      # masking the 5-session cap (409 becomes 200, oldest tokens "already gone" instead of evicted
-      # by our code). Pin it so this describe never depends on whatever ran before it.
     end
 
     let(:user) { create(:user, password: 'Test@123456') }
@@ -220,28 +213,10 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       before do
         request.env['HTTP_USER_AGENT'] = browser_ua
         5.times { |i| seed_token("c#{i}", expiry_offset_days: 30) }
-
-        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
-        # (poda gem-level no save!), nao no controller
-        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'returns 409 with the session list (picker)' do
-        # diagnostico shard v3 (remover depois)
-        puts "[DIAG] create_source=#{DeviseOverrides::SessionsController.instance_method(:create).source_location.inspect}"
-        puts "[DIAG] enforce_defined=#{DeviseOverrides::SessionsController.private_method_defined?(:enforce_session_limit_for_password_login)}"
-        puts "[DIAG] controller_class=#{controller.class} ancestors_head=#{controller.class.ancestors.first(5).inspect}"
-        allow_any_instance_of(DeviseOverrides::SessionsController).to receive(:enforce_session_limit_for_password_login).and_wrap_original do |m, *args|
-          u = args.first
-          puts "[DIAG] enforce CALLED user_id=#{u&.id} tokens=#{u&.tokens&.size} ativos=#{(u&.tokens || {}).count { |_, v| v['expiry'].to_i > Time.current.to_i }} max=#{DeviseOverrides::SessionsController::MAX_SESSIONS}"
-          r = m.call(*args)
-          puts "[DIAG] enforce RESULT=#{r.inspect}"
-          r
-        end
-
         post :create, params: login_params
-
-        puts "[DIAG] status=#{response.status} body=#{response.body.inspect[0, 300]}"
 
         expect(response).to have_http_status(:conflict)
         body = response.parsed_body
@@ -258,10 +233,6 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       before do
         request.env['HTTP_USER_AGENT'] = mobile_ua
         5.times { |i| seed_token("c#{i}", expiry_offset_days: 30 + i, with_session: false) }
-
-        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
-        # (poda gem-level no save!), nao no controller
-        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'silently evicts the oldest token and lets login proceed' do
@@ -278,10 +249,6 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
         # one tracked, four legacy (no user_session rows)
         seed_token('tracked', expiry_offset_days: 60, with_session: true)
         4.times { |i| seed_token("legacy#{i}", expiry_offset_days: 10 + i, with_session: false) }
-
-        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
-        # (poda gem-level no save!), nao no controller
-        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'silent-evicts instead of showing a partial picker' do
@@ -308,10 +275,6 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
           seed_token("tracked#{i}", expiry_offset_days: 30)
           user.user_sessions.find_by(client_id: "tracked#{i}").update!(last_activity_at: (5 - i).days.ago)
         end
-
-        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
-        # (poda gem-level no save!), nao no controller
-        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'evicts the oldest tracked session by last_activity_at' do
@@ -328,10 +291,6 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       before do
         request.env['HTTP_USER_AGENT'] = browser_ua
         5.times { |i| seed_token("c#{i}", expiry_offset_days: 30) }
-
-        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
-        # (poda gem-level no save!), nao no controller
-        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'revokes the chosen session and proceeds with login' do
@@ -349,10 +308,6 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       before do
         request.env['HTTP_USER_AGENT'] = browser_ua
         5.times { |i| seed_token("c#{i}", expiry_offset_days: 30) }
-
-        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
-        # (poda gem-level no save!), nao no controller
-        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'wipes all sessions and tokens, then proceeds with login' do
