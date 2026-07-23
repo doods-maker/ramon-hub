@@ -18,58 +18,85 @@
       "NEXT": "Next",
       "LOAD_ERROR": "Couldn't load the agenda"
     },
+    "CMDK": {
+      "SECTION": "Leads",
+      "MOVE": "Move to stage… (M)",
+      "MOVE_ERROR": "Could not move the lead — try again",
+      "TASK": "Create follow-up task… (T)",
+      "DOSSIE": "Open 30s Dossier (D)",
+      "SIMULATE": "Simulate benefit (S)"
+    },
     "COMMAND": {
       "TITLE": "Command Center",
       "RELOAD": "Reload",
-      "TODAY": {
-        "TITLE": "Today",
-        "TASKS_OVERDUE": "Overdue tasks",
-        "TASKS_TODAY": "Tasks today",
+      "GREETING_MORNING": "Good morning, {name}",
+      "GREETING_AFTERNOON": "Good afternoon, {name}",
+      "GREETING_EVENING": "Good evening, {name}",
+      "GOAL_LABEL": "Daily goal · follow-ups",
+      "GOAL_PROGRESS": "{done}/{target}",
+      "START_DAY": "Start the day",
+      "KPI": {
+        "OVERDUE": "Overdue",
+        "TODAY": "Due today",
         "STALLED": "Stalled",
-        "NO_NEXT_ACTION": "No next action",
         "NEW_FROM_LP": "New from LP",
-        "EMPTY_TASKS_OVERDUE": "No overdue tasks — you're on top of it.",
-        "EMPTY_TASKS_TODAY": "Nothing due today.",
-        "EMPTY_STALLED": "No stalled leads — the pipeline is moving.",
-        "EMPTY_NO_NEXT_ACTION": "Every lead has a next action scheduled.",
-        "EMPTY_NEW_FROM_LP": "No new leads from landing pages."
+        "WON_WEEK": "Won this week",
+        "FORECAST": "Weighted forecast"
+      },
+      "SLA": {
+        "BREACHED": "Outside SLA: {count}",
+        "AVG": "Avg. first response: {minutes}min",
+        "AVG_EMPTY": "Avg. first response: —"
       },
       "QUEUE": {
-        "TITLE": "Follow-up run",
-        "RUN": "Run follow-ups ({count})",
-        "PROGRESS": "{current} of {total}",
-        "DUE": "Due {at}",
-        "COMPLETE": "Complete task",
-        "TASK_COMPLETED": "Task completed",
-        "SCHEDULE": "Schedule next",
-        "SCHEDULED": "Follow-up scheduled",
+        "TITLE": "Your queue now",
+        "SORTED_BY": "sorted by money prescribing",
         "OPEN_CONVERSATION": "Open conversation",
-        "SKIP": "Skip",
-        "CLOSE": "Close",
-        "DONE_TITLE": "Queue cleared",
-        "DONE_BODY": "Every lead in the run has been handled.",
-        "COMPLETE_ERROR": "Couldn't complete the task — try again"
+        "AI_DRAFT": "AI draft",
+        "DONE": "Done ✓",
+        "HINT": "Space skips · F done",
+        "STAGE_AGE": "{stage} · {days}d",
+        "CHIP_BLEEDING": "Prescribing {value}/mo",
+        "CHIP_OVERDUE": "Overdue task: {title}",
+        "CHIP_STALLED": "Stalled for {days}d",
+        "ROW_OVERDUE": "{title} · overdue",
+        "ROW_STALLED": "Stalled for {days}d in {stage}",
+        "MONTHLY": "{value}/mo",
+        "TASK_COMPLETED": "Task completed",
+        "COMPLETE_ERROR": "Couldn't complete the task — try again",
+        "EMPTY_TITLE": "Queue cleared",
+        "EMPTY_BODY": "Nothing overdue or stalled — the pipeline is moving."
+      },
+      "AGENDA": {
+        "TITLE": "Today's agenda",
+        "EMPTY": "No meetings today.",
+        "VIEW_WEEK": "see the whole week → Agenda"
       },
       "FUNNEL": {
-        "TITLE": "Pipeline",
-        "EMPTY": "No stages configured yet — set up the funnel first."
+        "TITLE": "Pipeline · conversion",
+        "EMPTY": "No stages configured yet — set up the funnel first.",
+        "ADVANCE": "↳ {rate}% advance"
       },
-      "WEEK": {
-        "TITLE": "This week",
-        "CREATED": "Created",
-        "WON": "Won",
-        "LOST": "Lost",
-        "BY_CHANNEL": "By channel",
-        "LOST_REASONS": "Loss reasons (30d)",
-        "EMPTY_CHANNEL": "No leads created this week.",
-        "EMPTY_LOST_REASONS": "No leads lost in the last 30 days."
+      "TEAM": {
+        "TITLE": "Week · team",
+        "WON": "{count} · {value}",
+        "ACTIONS": "{count} actions",
+        "EMPTY": "No team activity this week.",
+        "NPS_LINE": "Week NPS: {media} · {count} responses"
+      },
+      "LOSSES": {
+        "TITLE": "Losses · last {days} days",
+        "TOTAL": "{count} leads lost",
+        "ALL": "All theses",
+        "DELTA_UP": "{count} losses · ↑ {pct}% vs. quarter",
+        "DELTA_DOWN": "{count} losses · ↓ {pct}% vs. quarter",
+        "DELTA_STABLE": "{count} losses · stable",
+        "DELTA_NONE": "{count} losses",
+        "SIGNAL": "Signal: {pct}% of losses come from \"{reason}\" — review the thesis script."
       },
       "HISTORY": {
         "TITLE": "Funnel over the last 30 days",
-        "EMPTY": "No snapshots yet — the first one is captured overnight.",
-        "COL_DATE": "Day",
-        "COL_LEADS": "Active leads",
-        "COL_VALUE": "Pipeline"
+        "LATEST": "today: {leads} active leads · {value} in pipeline"
       },
       "LOAD_ERROR": "Couldn't load the Command Center"
     },
@@ -113,6 +140,7 @@
         "TASK_OVERDUE": "overdue task: {title}",
         "TASK_TODAY": "task due today: {title}",
         "NEW_FROM_LP": "new LP lead ({source}) without reply",
+        "SLA_BREACH": "no first reply — {minutes}min SLA breached",
         "AWAITING_HUMAN": "triage awaiting a human",
         "STALLED": "{days} days stalled in stage"
       },
@@ -255,6 +283,24 @@
         "REMOVE": "Remove view",
         "REMOVE_CONFIRM": "Remove this saved view?"
       },
+      "CHIPS": {
+        "REMOVE": "Remove filter",
+        "SUMMARY": "{count} leads · {total} · forecast",
+        "FORECAST": "{forecast}"
+      },
+      "BOARDS": {
+        "LABEL": "Board",
+        "ALL": "All leads",
+        "TITLE": "My boards",
+        "NEW": "New board (from current filters)",
+        "NEW_PROMPT": "Name for the new board",
+        "CREATE": "Create board",
+        "RENAME": "Rename",
+        "RENAME_PROMPT": "New board name",
+        "DELETE": "Delete",
+        "DELETE_CONFIRM": "Delete this board? Leads are not affected.",
+        "SAVE_TO_BOARD": "Save to board"
+      },
       "DOCK_CLOSE": "Close conversation",
       "LOAD_ERROR": "Couldn't load the pipeline",
       "CONVERSATION_ERROR": "Couldn't load the conversation"
@@ -287,6 +333,13 @@
         "IN_1_WEEK": "In 1 week",
         "CONFIRM": "Schedule"
       },
+      "SLA": {
+        "REMAINING": "SLA · {time} left",
+        "OVERDUE_SINCE": "SLA breached {time} ago",
+        "REPLIED_IN": "✓ {time}",
+        "COL_BREACHED": "{count} outside SLA",
+        "RESPOND_NOW": "Reply now"
+      },
       "COLUMN": {
         "WEIGHTED": "~{value} weighted",
         "STALLED": "{count} no contact >24h",
@@ -296,7 +349,44 @@
         "EMPTY": "No leads here — drag a card or create one."
       },
       "MOVE_DONE": "Stage updated",
-      "MOVE_UNDO": "Undo"
+      "MOVE_UNDO": "Undo",
+      "VIEW": {
+        "COLUMNS": "Columns",
+        "LANES": "Lanes",
+        "LIST": "List",
+        "GROUP_BY": "group by",
+        "GROUP": {
+          "THESIS": "thesis",
+          "SDR": "owner",
+          "CHANNEL": "channel",
+          "PRIORITY": "priority"
+        }
+      },
+      "LANES": {
+        "NO_GROUP": "No group"
+      },
+      "LIST": {
+        "NAME": "Name",
+        "STAGE": "Stage",
+        "VALUE": "Value",
+        "NEXT": "Next action",
+        "SDR": "SDR",
+        "THESIS": "Thesis",
+        "PHONE": "Phone",
+        "EMPTY": "No leads in the current filter."
+      },
+      "BULK": {
+        "SELECTED": "{count} selected",
+        "MOVE": "Move stage",
+        "ASSIGN": "Assign SDR",
+        "FOLLOW_UP": "Schedule follow-up",
+        "FOLLOW_UP_CONFIRM": "Schedule",
+        "TRIAGE": "Run AI triage",
+        "CLEAR": "Clear",
+        "ESC_HINT": "Esc cancels",
+        "QUEUED": "Batch queued — cards will refresh shortly",
+        "ERROR": "Couldn't run the batch — try again"
+      }
     },
     "TASKS": {
       "TITLE": "Next actions",

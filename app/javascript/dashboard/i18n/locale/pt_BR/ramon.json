@@ -18,58 +18,85 @@
       "NEXT": "Próximo",
       "LOAD_ERROR": "Não foi possível carregar a agenda"
     },
+    "CMDK": {
+      "SECTION": "Leads",
+      "MOVE": "Mover para etapa… (M)",
+      "MOVE_ERROR": "Não foi possível mover o lead — tente de novo",
+      "TASK": "Criar tarefa de follow-up… (T)",
+      "DOSSIE": "Abrir Dossiê 30s (D)",
+      "SIMULATE": "Simular benefício (S)"
+    },
     "COMMAND": {
       "TITLE": "Centro de Comando",
       "RELOAD": "Recarregar",
-      "TODAY": {
-        "TITLE": "Hoje",
-        "TASKS_OVERDUE": "Tarefas vencidas",
-        "TASKS_TODAY": "Tarefas de hoje",
+      "GREETING_MORNING": "Bom dia, {name}",
+      "GREETING_AFTERNOON": "Boa tarde, {name}",
+      "GREETING_EVENING": "Boa noite, {name}",
+      "GOAL_LABEL": "Meta do dia · follow-ups",
+      "GOAL_PROGRESS": "{done}/{target}",
+      "START_DAY": "Começar o dia",
+      "KPI": {
+        "OVERDUE": "Vencidas",
+        "TODAY": "Para hoje",
         "STALLED": "Parados",
-        "NO_NEXT_ACTION": "Sem próxima ação",
-        "NEW_FROM_LP": "Novos de LP",
-        "EMPTY_TASKS_OVERDUE": "Nenhuma tarefa vencida — está tudo em dia.",
-        "EMPTY_TASKS_TODAY": "Nada agendado para hoje.",
-        "EMPTY_STALLED": "Nenhum lead parado — o funil está andando.",
-        "EMPTY_NO_NEXT_ACTION": "Todo lead tem uma próxima ação agendada.",
-        "EMPTY_NEW_FROM_LP": "Nenhum lead novo das landing pages."
+        "NEW_FROM_LP": "Novos da LP",
+        "WON_WEEK": "Ganhos na semana",
+        "FORECAST": "Previsão ponderada"
+      },
+      "SLA": {
+        "BREACHED": "Fora do SLA: {count}",
+        "AVG": "1ª resposta média: {minutes}min",
+        "AVG_EMPTY": "1ª resposta média: —"
       },
       "QUEUE": {
-        "TITLE": "Rodada de follow-ups",
-        "RUN": "Rodar follow-ups ({count})",
-        "PROGRESS": "{current} de {total}",
-        "DUE": "Vencia em {at}",
-        "COMPLETE": "Concluir tarefa",
-        "TASK_COMPLETED": "Tarefa concluída",
-        "SCHEDULE": "Agendar próxima",
-        "SCHEDULED": "Follow-up agendado",
+        "TITLE": "Sua fila agora",
+        "SORTED_BY": "ordenada por dinheiro prescrevendo",
         "OPEN_CONVERSATION": "Abrir conversa",
-        "SKIP": "Pular",
-        "CLOSE": "Encerrar",
-        "DONE_TITLE": "Fila zerada",
-        "DONE_BODY": "Todos os leads da rodada foram tratados.",
-        "COMPLETE_ERROR": "Não foi possível concluir a tarefa — tente de novo"
+        "AI_DRAFT": "Rascunho da IA",
+        "DONE": "Feito ✓",
+        "HINT": "Espaço pula · F feito",
+        "STAGE_AGE": "{stage} · {days}d",
+        "CHIP_BLEEDING": "Prescrevendo {value}/mês",
+        "CHIP_OVERDUE": "Tarefa vencida: {title}",
+        "CHIP_STALLED": "Parado há {days}d",
+        "ROW_OVERDUE": "{title} · vencida",
+        "ROW_STALLED": "Parado há {days}d em {stage}",
+        "MONTHLY": "{value}/mês",
+        "TASK_COMPLETED": "Tarefa concluída",
+        "COMPLETE_ERROR": "Não foi possível concluir a tarefa — tente de novo",
+        "EMPTY_TITLE": "Fila zerada",
+        "EMPTY_BODY": "Nada vencido nem parado — o funil está andando."
+      },
+      "AGENDA": {
+        "TITLE": "Hoje na agenda",
+        "EMPTY": "Sem reuniões hoje.",
+        "VIEW_WEEK": "ver semana inteira → Agenda"
       },
       "FUNNEL": {
-        "TITLE": "Funil",
-        "EMPTY": "Nenhuma etapa configurada — monte o funil primeiro."
+        "TITLE": "Funil · conversão",
+        "EMPTY": "Nenhuma etapa configurada — monte o funil primeiro.",
+        "ADVANCE": "↳ {rate}% avançam"
       },
-      "WEEK": {
-        "TITLE": "Na semana",
-        "CREATED": "Criados",
-        "WON": "Ganhos",
-        "LOST": "Perdidos",
-        "BY_CHANNEL": "Por canal",
-        "LOST_REASONS": "Motivos de perda (30d)",
-        "EMPTY_CHANNEL": "Nenhum lead criado nesta semana.",
-        "EMPTY_LOST_REASONS": "Nenhum lead perdido nos últimos 30 dias."
+      "TEAM": {
+        "TITLE": "Semana · time",
+        "WON": "{count} · {value}",
+        "ACTIONS": "{count} ações",
+        "EMPTY": "Sem atividade do time na semana.",
+        "NPS_LINE": "NPS da semana: {media} · {count} respostas"
+      },
+      "LOSSES": {
+        "TITLE": "Perdas · últimos {days} dias",
+        "TOTAL": "{count} leads perdidos",
+        "ALL": "Todas as teses",
+        "DELTA_UP": "{count} perdas · ↑ {pct}% vs. trimestre",
+        "DELTA_DOWN": "{count} perdas · ↓ {pct}% vs. trimestre",
+        "DELTA_STABLE": "{count} perdas · estável",
+        "DELTA_NONE": "{count} perdas",
+        "SIGNAL": "Sinal: {pct}% das perdas caem por \"{reason}\" — revisar o script da tese."
       },
       "HISTORY": {
         "TITLE": "Funil nos últimos 30 dias",
-        "EMPTY": "Ainda sem retratos — o primeiro é capturado na virada do dia.",
-        "COL_DATE": "Dia",
-        "COL_LEADS": "Leads ativos",
-        "COL_VALUE": "Pipeline"
+        "LATEST": "hoje: {leads} leads ativos · {value} em pipeline"
       },
       "LOAD_ERROR": "Não foi possível carregar o Centro de Comando"
     },
@@ -113,6 +140,7 @@
         "TASK_OVERDUE": "tarefa vencida: {title}",
         "TASK_TODAY": "tarefa de hoje: {title}",
         "NEW_FROM_LP": "lead novo da LP ({source}) sem resposta",
+        "SLA_BREACH": "sem 1ª resposta — SLA de {minutes}min estourado",
         "AWAITING_HUMAN": "triagem aguardando humano",
         "STALLED": "{days} dias parado na etapa"
       },
@@ -255,6 +283,24 @@
         "REMOVE": "Remover view",
         "REMOVE_CONFIRM": "Remover esta view salva?"
       },
+      "CHIPS": {
+        "REMOVE": "Remover filtro",
+        "SUMMARY": "{count} leads · {total} · previsão",
+        "FORECAST": "{forecast}"
+      },
+      "BOARDS": {
+        "LABEL": "Quadro",
+        "ALL": "Todos os leads",
+        "TITLE": "Meus quadros",
+        "NEW": "Novo quadro (a partir dos filtros atuais)",
+        "NEW_PROMPT": "Nome do novo quadro",
+        "CREATE": "Criar quadro",
+        "RENAME": "Renomear",
+        "RENAME_PROMPT": "Novo nome do quadro",
+        "DELETE": "Excluir",
+        "DELETE_CONFIRM": "Excluir este quadro? Os leads não são afetados.",
+        "SAVE_TO_BOARD": "Salvar no quadro"
+      },
       "DOCK_CLOSE": "Fechar conversa",
       "LOAD_ERROR": "Não foi possível carregar o funil",
       "CONVERSATION_ERROR": "Não foi possível carregar a conversa"
@@ -287,6 +333,13 @@
         "IN_1_WEEK": "Em 1 semana",
         "CONFIRM": "Agendar"
       },
+      "SLA": {
+        "REMAINING": "SLA · restam {time}",
+        "OVERDUE_SINCE": "SLA estourado há {time}",
+        "REPLIED_IN": "✓ {time}",
+        "COL_BREACHED": "{count} fora do SLA",
+        "RESPOND_NOW": "Responder agora"
+      },
       "COLUMN": {
         "WEIGHTED": "~{value} ponderado",
         "STALLED": "{count} sem contato >24h",
@@ -296,7 +349,44 @@
         "EMPTY": "Sem leads aqui — arraste um card ou crie um novo."
       },
       "MOVE_DONE": "Etapa alterada",
-      "MOVE_UNDO": "Desfazer"
+      "MOVE_UNDO": "Desfazer",
+      "VIEW": {
+        "COLUMNS": "Colunas",
+        "LANES": "Raias",
+        "LIST": "Lista",
+        "GROUP_BY": "agrupar por",
+        "GROUP": {
+          "THESIS": "tese",
+          "SDR": "dono",
+          "CHANNEL": "canal",
+          "PRIORITY": "prioridade"
+        }
+      },
+      "LANES": {
+        "NO_GROUP": "Sem grupo"
+      },
+      "LIST": {
+        "NAME": "Nome",
+        "STAGE": "Etapa",
+        "VALUE": "Valor",
+        "NEXT": "Próxima ação",
+        "SDR": "SDR",
+        "THESIS": "Tese",
+        "PHONE": "Telefone",
+        "EMPTY": "Nenhum lead no filtro atual."
+      },
+      "BULK": {
+        "SELECTED": "{count} selecionado(s)",
+        "MOVE": "Mover etapa",
+        "ASSIGN": "Atribuir SDR",
+        "FOLLOW_UP": "Agendar follow-up",
+        "FOLLOW_UP_CONFIRM": "Agendar",
+        "TRIAGE": "Rodar triagem IA",
+        "CLEAR": "Limpar",
+        "ESC_HINT": "Esc cancela",
+        "QUEUED": "Lote na fila — os cards atualizam em instantes",
+        "ERROR": "Não foi possível executar o lote — tente de novo"
+      }
     },
     "TASKS": {
       "TITLE": "Próximas ações",

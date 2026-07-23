@@ -2,6 +2,7 @@ import * as MutationHelpers from 'shared/helpers/vuex/mutationHelpers';
 import types from '../mutation-types';
 import LeadsAPI from '../../api/leads';
 import ContactAPI from '../../api/contacts';
+import BulkActionsAPI from '../../api/bulkActions';
 
 const FILTERS_KEY = 'ramon_lead_filters';
 
@@ -30,6 +31,8 @@ const toParams = (filters = {}) => {
 export const state = {
   records: [],
   selectedId: null,
+  // Seleção em lote (checkboxes dos cards / linhas da lista).
+  selectedIds: [],
   dockConversationId: null,
   filters: {
     benefitTypeId: null,
@@ -73,6 +76,9 @@ export const getters = {
   },
   getFilters(_state) {
     return _state.filters;
+  },
+  getSelectedIds(_state) {
+    return _state.selectedIds;
   },
 };
 
@@ -138,6 +144,35 @@ export const actions = {
   },
   select: ({ commit }, id) => {
     commit(types.SET_SELECTED_LEAD, id);
+  },
+  toggleSelection: ({ commit, state: moduleState }, id) => {
+    const next = moduleState.selectedIds.includes(id)
+      ? moduleState.selectedIds.filter(item => item !== id)
+      : [...moduleState.selectedIds, id];
+    commit(types.SET_LEAD_SELECTION, next);
+  },
+  selectMany: ({ commit, state: moduleState }, ids) => {
+    commit(types.SET_LEAD_SELECTION, [
+      ...new Set([...moduleState.selectedIds, ...ids]),
+    ]);
+  },
+  clearSelection: ({ commit }) => {
+    commit(types.SET_LEAD_SELECTION, []);
+  },
+  // Enfileira o lote no backend (Ramon::LeadBulkActionJob). O board se atualiza
+  // pelos broadcasts lead.updated de cada item — sem refetch aqui.
+  bulkAction: async (
+    { commit, state: moduleState },
+    { fields, task, triage } = {}
+  ) => {
+    await BulkActionsAPI.create({
+      type: 'Lead',
+      ids: moduleState.selectedIds,
+      ...(fields ? { fields } : {}),
+      ...(task ? { task } : {}),
+      ...(triage ? { triage: true } : {}),
+    });
+    commit(types.SET_LEAD_SELECTION, []);
   },
   openDock: ({ commit }, conversationId) => {
     commit(types.SET_DOCK_CONVERSATION, conversationId);
@@ -238,6 +273,9 @@ export const mutations = {
   },
   [types.SET_SELECTED_LEAD](_state, id) {
     _state.selectedId = id;
+  },
+  [types.SET_LEAD_SELECTION](_state, ids) {
+    _state.selectedIds = ids;
   },
   [types.SET_DOCK_CONVERSATION](_state, id) {
     _state.dockConversationId = id;

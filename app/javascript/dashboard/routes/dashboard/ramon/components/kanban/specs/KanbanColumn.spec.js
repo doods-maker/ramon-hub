@@ -92,6 +92,11 @@ describe('KanbanColumn.vue', () => {
         props: { stage: { id: 1, name: 'Novo' }, leads: columnLeads },
         global: { mocks: { $t: (k, v) => `${k}:${JSON.stringify(v)}` } },
       });
+    const breachedSla = {
+      due_at: new Date(Date.now() - 3600000).toISOString(),
+      replied_at: null,
+      minutes: 60,
+    };
 
     it('mostra a contagem âmbar de leads parados', () => {
       const wrapper = mountWith([
@@ -101,13 +106,37 @@ describe('KanbanColumn.vue', () => {
       ]);
       const alert = wrapper.find('[data-testid="column-alert-stalled"]');
       expect(alert.exists()).toBe(true);
-      expect(alert.text()).toContain('"count":2');
+      expect(alert.text()).toContain('2');
       expect(
         wrapper.find('[data-testid="column-alert-prescribing"]').exists()
       ).toBe(false);
     });
 
-    it('prioriza o alerta ruby de R$/mês prescrevendo sobre o de parados', () => {
+    it('conta os leads fora do SLA sem resposta no badge ruby', () => {
+      const wrapper = mountWith([
+        { id: 1, lead_stage_id: 1, sla: breachedSla },
+        {
+          id: 2,
+          lead_stage_id: 1,
+          sla: { ...breachedSla, replied_at: new Date().toISOString() },
+        },
+        {
+          id: 3,
+          lead_stage_id: 1,
+          sla: {
+            ...breachedSla,
+            due_at: new Date(Date.now() + 3600000).toISOString(),
+          },
+        },
+        { id: 4, lead_stage_id: 1 },
+      ]);
+      const alert = wrapper.find('[data-testid="column-alert-sla"]');
+      expect(alert.exists()).toBe(true);
+      expect(alert.text()).toContain('1');
+      expect(alert.classes()).toContain('text-n-ruby-11');
+    });
+
+    it('prioriza prescrevendo > SLA > parados e mostra até 2 alertas', () => {
       const wrapper = mountWith([
         // dcb_em bem além da janela de 60m => lostInstallments > 0
         {
@@ -116,11 +145,16 @@ describe('KanbanColumn.vue', () => {
           stalled: true,
           dcb_em: '2019-01-01',
           benefit_monthly_value: 1412,
+          sla: breachedSla,
         },
       ]);
       const ruby = wrapper.find('[data-testid="column-alert-prescribing"]');
       expect(ruby.exists()).toBe(true);
       expect(ruby.text()).toContain('1,4');
+      expect(wrapper.find('[data-testid="column-alert-sla"]').exists()).toBe(
+        true
+      );
+      // o 3º (parados) cai fora do limite de 2
       expect(
         wrapper.find('[data-testid="column-alert-stalled"]').exists()
       ).toBe(false);
@@ -134,6 +168,9 @@ describe('KanbanColumn.vue', () => {
       expect(
         wrapper.find('[data-testid="column-alert-prescribing"]').exists()
       ).toBe(false);
+      expect(wrapper.find('[data-testid="column-alert-sla"]').exists()).toBe(
+        false
+      );
     });
   });
 

@@ -88,6 +88,7 @@ export default {
       greetingEnabled: true,
       greetingMessage: '',
       autoCreateLead: false,
+      firstResponseSlaMinutes: null,
       emailCollectEnabled: false,
       senderNameType: 'friendly',
       businessName: '',
@@ -472,6 +473,7 @@ export default {
       this.allowMessagesAfterResolved =
         this.inbox.allow_messages_after_resolved;
       this.autoCreateLead = this.inbox.auto_create_lead;
+      this.firstResponseSlaMinutes = this.inbox.first_response_sla_minutes;
       this.continuityViaEmail = this.inbox.continuity_via_email;
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
@@ -586,6 +588,9 @@ export default {
           enable_email_collect: this.emailCollectEnabled,
           allow_messages_after_resolved: this.allowMessagesAfterResolved,
           auto_create_lead: this.autoCreateLead,
+          first_response_sla_minutes: this.firstResponseSlaMinutes
+            ? Number(this.firstResponseSlaMinutes)
+            : null,
           greeting_enabled: this.greetingEnabled,
           greeting_message: this.greetingMessage || '',
           portal_id: this.selectedPortalSlug
@@ -1189,7 +1194,28 @@ export default {
                 :description="
                   $t('INBOX_MGMT.SETTINGS_POPUP.AUTO_CREATE_LEAD.SUB_TEXT')
                 "
-              />
+              >
+                <template v-if="autoCreateLead" #editor>
+                  <woot-input
+                    v-model="firstResponseSlaMinutes"
+                    type="number"
+                    class="[&>input]:!mb-0"
+                    :label="
+                      $t('INBOX_MGMT.SETTINGS_POPUP.AUTO_CREATE_LEAD.SLA_LABEL')
+                    "
+                    :placeholder="
+                      $t(
+                        'INBOX_MGMT.SETTINGS_POPUP.AUTO_CREATE_LEAD.SLA_PLACEHOLDER'
+                      )
+                    "
+                    :help-text="
+                      $t(
+                        'INBOX_MGMT.SETTINGS_POPUP.AUTO_CREATE_LEAD.SLA_SUB_TEXT'
+                      )
+                    "
+                  />
+                </template>
+              </SettingsToggleSection>
 
               <SettingsToggleSection
                 v-if="isAWebWidgetInbox"

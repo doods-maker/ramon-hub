@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -91,14 +91,89 @@ const daysInStage = computed(() => {
   return Math.max(0, Math.floor(diff / 86400000));
 });
 
-// Risco = borda ESQUERDA 3px: ruby (prescrevendo / apodrecendo forte) tem
-// prioridade sobre âmbar (parado). O hover bronze re-afirma a cor da esquerda
-// para nunca apagar o sinal de risco.
+// SLA de 1º contato (mock 3a): relógio de 30s para o timer regressivo andar
+// sem re-fetch. Cleanup no unmounted (regra do fork para timers).
+const now = ref(Date.now());
+let slaTimer = null;
+onMounted(() => {
+  slaTimer = setInterval(() => {
+    now.value = Date.now();
+  }, 30000);
+});
+onUnmounted(() => clearInterval(slaTimer));
+
+// "41min" / "2h 47min" — mesmo formato do mock.
+const formatDuration = ms => {
+  const minutes = Math.max(0, Math.round(ms / 60000));
+  const hours = Math.floor(minutes / 60);
+  return hours ? `${hours}h ${minutes % 60}min` : `${minutes}min`;
+};
+
+// 1ª etapa do funil (menor position): depois de respondido, o pill teal só
+// faz sentido enquanto o lead ainda está na coluna de entrada.
+const firstStageId = computed(() => {
+  const stages = store?.getters?.['leadConfig/getStages'] || [];
+  if (!stages.length) return null;
+  return [...stages].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]
+    .id;
+});
+
+// Estado do SLA a partir de lead.sla { due_at, replied_at, minutes }.
+const slaState = computed(() => {
+  const sla = props.lead.sla;
+  if (!sla?.due_at) return null;
+  const due = new Date(sla.due_at).getTime();
+  if (Number.isNaN(due)) return null;
+  if (sla.replied_at) {
+    // fora da 1ª etapa, respondido = história antiga; some do card
+    if (
+      firstStageId.value !== null &&
+      props.lead.lead_stage_id !== firstStageId.value
+    )
+      return null;
+    const startedAt = due - (Number(sla.minutes) || 0) * 60000;
+    return {
+      kind: 'replied',
+      time: formatDuration(new Date(sla.replied_at).getTime() - startedAt),
+    };
+  }
+  if (now.value < due)
+    return { kind: 'within', time: formatDuration(due - now.value) };
+  return { kind: 'overdue', time: formatDuration(now.value - due) };
+});
+const slaOverdue = computed(() => slaState.value?.kind === 'overdue');
+
+// Pill: âmbar regressivo dentro do SLA, ruby sólido estourado, teal respondido.
+const slaPill = computed(() => {
+  const state = slaState.value;
+  if (!state) return null;
+  if (state.kind === 'replied')
+    return {
+      class: 'bg-n-teal-9/20 text-n-teal-11',
+      label: t('RAMON.KANBAN.SLA.REPLIED_IN', { time: state.time }),
+      title: null,
+    };
+  if (state.kind === 'within')
+    return {
+      class: 'bg-n-amber-9/20 text-n-amber-11',
+      label: state.time,
+      title: t('RAMON.KANBAN.SLA.REMAINING', { time: state.time }),
+    };
+  return {
+    class: 'bg-n-ruby-9 text-white',
+    label: state.time,
+    title: t('RAMON.KANBAN.SLA.OVERDUE_SINCE', { time: state.time }),
+  };
+});
+
+// Risco = borda ESQUERDA 3px: ruby (prescrevendo / apodrecendo forte / SLA
+// estourado) tem prioridade sobre âmbar (parado). O hover bronze re-afirma a
+// cor da esquerda para nunca apagar o sinal de risco.
 const riskClass = computed(() => {
   const limit = stage.value?.stalled_after_days;
   const rotten =
     limit != null && daysInStage.value != null && daysInStage.value > 2 * limit;
-  if (prescription.value?.lostInstallments > 0 || rotten)
+  if (prescription.value?.lostInstallments > 0 || rotten || slaOverdue.value)
     return 'border-l-[3px] border-l-n-ruby-9 hover:border-l-n-ruby-9';
   if (props.lead.stalled)
     return 'border-l-[3px] border-l-n-amber-9 hover:border-l-n-amber-9';
@@ -208,6 +283,16 @@ const onSchedule = async ({ dueAt, title }) => {
           {{ lead.name }}
         </p>
       </button>
+      <!-- Timer do SLA de 1º contato (mock 3a), à direita do nome -->
+      <span
+        v-if="slaPill"
+        data-testid="sla-pill"
+        :title="slaPill.title || undefined"
+        class="px-2 py-0.5 rounded-full text-[10.5px] font-semibold tabular-nums shrink-0"
+        :class="slaPill.class"
+      >
+        {{ slaPill.label }}
+      </span>
       <span
         data-testid="lead-value"
         class="text-xs tabular-nums shrink-0"
@@ -290,6 +375,15 @@ const onSchedule = async ({ dueAt, title }) => {
       class="hidden group-hover:flex items-center gap-1 mt-1.5"
       :class="selectable ? 'pl-[22px]' : 'pl-0'"
     >
+      <!-- SLA estourado: CTA explícito de resposta (reusa a ação de conversa) -->
+      <button
+        v-if="slaOverdue && lead.conversation_id"
+        data-testid="sla-respond-now"
+        class="px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-white bg-n-iris-9 hover:bg-n-iris-10"
+        @click.stop="emit('openConversation', lead.conversation_id)"
+      >
+        {{ $t('RAMON.KANBAN.SLA.RESPOND_NOW') }}
+      </button>
       <button
         v-if="lead.conversation_id"
         data-testid="open-conversation"

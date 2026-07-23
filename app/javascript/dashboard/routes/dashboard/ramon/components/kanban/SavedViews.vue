@@ -1,21 +1,71 @@
 <script setup>
-import { ref, computed } from 'vue';
+// Quadros salvos (mock 2a): as antigas Smart Views promovidas a entidade
+// nomeada com cor + estado (filtros, colunas colapsadas, visualização,
+// agrupamento), em ui_settings.ramon_lead_boards. O legado ramon_lead_views
+// é convertido UMA vez na leitura e persistido no formato novo.
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { vOnClickOutside } from '@vueuse/components';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import { BOARD_PALETTE, legacyToBoards } from '../../helpers/leadBoards';
 import NamePromptModal from '../NamePromptModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
+
+const props = defineProps({
+  view: { type: String, default: 'columns' },
+  groupBy: { type: String, default: 'thesis' },
+});
+const emit = defineEmits(['apply']);
 
 const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
 const { uiSettings, updateUISettings } = useUISettings();
 
-// Smart Views ficam em ui_settings.ramon_lead_views (sem backend próprio),
-// no mesmo mecanismo dos atalhos externos: [{ name, filters }].
-const views = computed(() => uiSettings.value?.ramon_lead_views ?? []);
+const ACTIVE_KEY = 'ramon_lead_board_active';
+const COLLAPSED_KEY = 'ramon_kanban_collapsed';
+
+const boards = computed(() => uiSettings.value?.ramon_lead_boards ?? []);
 const leads = computed(() => getters['leads/getLeads']?.value ?? []);
 const currentFilters = computed(() => getters['leads/getFilters']?.value ?? {});
+
+// Conversão do legado: roda uma única vez quando os ui_settings chegam com
+// ramon_lead_views mas ainda sem ramon_lead_boards.
+const migrated = ref(false);
+// getter (não o ref cru): funciona igual com o ref real e com stubs de teste.
+watch(
+  () => uiSettings.value,
+  settings => {
+    if (migrated.value || !settings) return;
+    const legacy = settings.ramon_lead_views;
+    if (settings.ramon_lead_boards === undefined && legacy?.length) {
+      migrated.value = true;
+      updateUISettings({ ramon_lead_boards: legacyToBoards(legacy) });
+    }
+  },
+  { immediate: true }
+);
+
+const readActiveId = () => {
+  try {
+    return JSON.parse(localStorage.getItem(ACTIVE_KEY) || 'null');
+  } catch (e) {
+    return null;
+  }
+};
+const activeBoardId = ref(readActiveId());
+const persistActive = id => {
+  try {
+    localStorage.setItem(ACTIVE_KEY, JSON.stringify(id));
+  } catch (e) {
+    // localStorage indisponível: seguimos sem persistir
+  }
+};
+
+const activeBoard = computed(
+  () => boards.value.find(board => board.id === activeBoardId.value) || null
+);
 
 const eq = (a, b) => String(a) === String(b);
 
@@ -54,94 +104,263 @@ const matchesFilters = (lead, filters = {}) => {
 const countFor = filters =>
   leads.value.filter(lead => matchesFilters(lead, filters)).length;
 
-const applyView = view => {
-  // filters da view é o snapshot completo dos filtros → o merge do setFilters
-  // equivale a substituir tudo, zerando o que a view não define.
-  store.dispatch('leads/setFilters', { ...view.filters });
+const open = ref(false);
+const close = () => {
+  open.value = false;
 };
 
-const saveModalOpen = ref(false);
-const saveCurrentView = () => {
-  saveModalOpen.value = true;
-};
-const confirmSaveView = name => {
-  const next = [...views.value, { name, filters: { ...currentFilters.value } }];
-  updateUISettings({ ramon_lead_views: next });
-  saveModalOpen.value = false;
+// Snapshot completo → o merge do setFilters equivale a substituir tudo,
+// zerando o que o quadro não define.
+const EMPTY_FILTERS = {
+  benefitTypeId: null,
+  leadPriorityId: null,
+  agentId: null,
+  source: '',
+  channel: '',
+  q: '',
+  leadStageId: null,
+  createdAfter: null,
+  createdBefore: null,
+  stalled: false,
+  noOpenTask: false,
 };
 
-const viewToRemove = ref(null); // índice da view aguardando confirmação
-const removeView = index => {
-  viewToRemove.value = index;
+const readCollapsed = () => {
+  try {
+    return JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
 };
-const confirmRemoveView = () => {
-  const next = views.value.filter((_, i) => i !== viewToRemove.value);
-  updateUISettings({ ramon_lead_views: next });
-  viewToRemove.value = null;
+const writeCollapsed = ids => {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify(ids || []));
+  } catch (e) {
+    // localStorage indisponível: seguimos sem persistir
+  }
+};
+
+const applyBoard = board => {
+  close();
+  activeBoardId.value = board?.id ?? null;
+  persistActive(activeBoardId.value);
+  if (board) writeCollapsed(board.collapsed || []);
+  store.dispatch('leads/setFilters', {
+    ...EMPTY_FILTERS,
+    ...(board?.filters || {}),
+  });
+  emit('apply', board);
+};
+
+// "Salvar no quadro": aparece quando os filtros atuais divergem do snapshot
+// do quadro ativo — normaliza falsy pra null pra não acusar '' vs null.
+const FILTER_KEYS = Object.keys(EMPTY_FILTERS);
+const normalized = filters =>
+  FILTER_KEYS.map(key => (filters?.[key] ? String(filters[key]) : null)).join(
+    '|'
+  );
+const isDirty = computed(
+  () =>
+    !!activeBoard.value &&
+    normalized(currentFilters.value) !== normalized(activeBoard.value.filters)
+);
+
+const persistBoards = next => updateUISettings({ ramon_lead_boards: next });
+
+const saveToActiveBoard = () => {
+  const next = boards.value.map(board =>
+    board.id === activeBoardId.value
+      ? {
+          ...board,
+          filters: { ...currentFilters.value },
+          collapsed: readCollapsed(),
+          view: props.view,
+          groupBy: props.groupBy,
+        }
+      : board
+  );
+  persistBoards(next);
+};
+
+const newModalOpen = ref(false);
+const confirmNewBoard = name => {
+  newModalOpen.value = false;
+  const board = {
+    id: Date.now(),
+    name,
+    color: BOARD_PALETTE[boards.value.length % BOARD_PALETTE.length],
+    filters: { ...currentFilters.value },
+    collapsed: readCollapsed(),
+    view: props.view,
+    groupBy: props.groupBy,
+  };
+  persistBoards([...boards.value, board]);
+  activeBoardId.value = board.id;
+  persistActive(board.id);
+  emit('apply', board);
+};
+
+const boardToRename = ref(null);
+const confirmRename = name => {
+  const next = boards.value.map(board =>
+    board.id === boardToRename.value.id ? { ...board, name } : board
+  );
+  persistBoards(next);
+  boardToRename.value = null;
+};
+
+const boardToRemove = ref(null);
+const confirmRemove = () => {
+  const removedId = boardToRemove.value.id;
+  persistBoards(boards.value.filter(board => board.id !== removedId));
+  boardToRemove.value = null;
+  if (activeBoardId.value === removedId) applyBoard(null);
 };
 </script>
 
 <template>
-  <div
-    v-if="views.length"
-    class="flex flex-wrap items-center gap-2 px-4 pt-2"
-    data-testid="saved-views"
-  >
-    <div
-      v-for="(view, index) in views"
-      :key="index"
-      class="flex items-center rounded-full bg-n-alpha-2 text-n-slate-12"
-    >
+  <div v-on-click-outside="close" class="relative" data-testid="saved-views">
+    <div class="flex items-center gap-1.5">
       <button
-        data-testid="saved-view-chip"
-        class="flex items-center gap-1.5 py-1 pl-3 pr-1.5 text-sm rounded-l-full hover:bg-n-alpha-3"
-        @click="applyView(view)"
+        data-testid="board-dropdown-toggle"
+        class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-n-weak text-n-slate-12 hover:border-n-iris-8"
+        @click="open = !open"
       >
-        <span class="max-w-40 truncate">{{ view.name }}</span>
-        <span class="text-xs text-n-slate-11">
-          {{ countFor(view.filters) }}
+        <span
+          class="size-2 rounded-sm shrink-0"
+          :style="{ backgroundColor: activeBoard?.color || '#8d867d' }"
+        />
+        <span
+          data-testid="board-active-name"
+          class="max-w-56 truncate font-medium"
+        >
+          {{ $t('RAMON.FUNIL.BOARDS.LABEL') }}:
+          {{ activeBoard?.name || $t('RAMON.FUNIL.BOARDS.ALL') }}
         </span>
+        <span class="i-lucide-chevron-down size-3.5 text-n-slate-10" />
       </button>
       <button
-        data-testid="saved-view-remove"
-        class="flex items-center pr-2 pl-1 text-n-slate-10 hover:text-n-slate-12"
-        :aria-label="$t('RAMON.FUNIL.VIEWS.REMOVE')"
-        :title="$t('RAMON.FUNIL.VIEWS.REMOVE')"
-        @click="removeView(index)"
+        v-if="isDirty"
+        data-testid="board-save-current"
+        class="px-2.5 py-1 text-xs rounded-full text-n-iris-11 bg-n-alpha-2 hover:bg-n-alpha-3"
+        :title="$t('RAMON.FUNIL.BOARDS.SAVE_TO_BOARD')"
+        @click="saveToActiveBoard"
       >
-        <span class="i-lucide-x size-3.5" />
+        {{ $t('RAMON.FUNIL.BOARDS.SAVE_TO_BOARD') }}
       </button>
     </div>
-    <button
-      data-testid="saved-view-add"
-      class="flex items-center gap-1 px-3 py-1 text-sm rounded-full text-n-slate-11 border border-dashed border-n-weak hover:text-n-slate-12"
-      @click="saveCurrentView"
+    <div
+      v-show="open"
+      data-testid="board-dropdown"
+      class="absolute top-full left-0 z-50 mt-2 w-80 p-2 rounded-xl bg-n-solid-2 border border-n-weak shadow-lg"
     >
-      <span class="i-lucide-plus size-3.5" />{{ $t('RAMON.FUNIL.VIEWS.SAVE') }}
-    </button>
+      <p
+        class="mb-1.5 px-2 pt-1 text-[10px] font-semibold tracking-[0.14em] uppercase text-n-slate-9"
+      >
+        {{ $t('RAMON.FUNIL.BOARDS.TITLE') }}
+      </p>
+      <div class="flex flex-col gap-0.5">
+        <button
+          data-testid="board-item-all"
+          class="flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded-lg"
+          :class="
+            activeBoard
+              ? 'text-n-slate-11 hover:bg-n-alpha-2'
+              : 'bg-n-alpha-2 text-n-slate-12 font-medium'
+          "
+          @click="applyBoard(null)"
+        >
+          <span class="size-2 rounded-sm shrink-0 bg-n-slate-9" />
+          <span class="flex-1 truncate">
+            {{ $t('RAMON.FUNIL.BOARDS.ALL') }}
+          </span>
+          <span class="text-xs text-n-slate-10">{{ leads.length }}</span>
+        </button>
+        <div
+          v-for="board in boards"
+          :key="board.id"
+          class="flex items-center gap-1 group"
+        >
+          <button
+            data-testid="board-item"
+            class="flex items-center flex-1 min-w-0 gap-2 px-2 py-1.5 text-sm text-left rounded-lg"
+            :class="
+              board.id === activeBoardId
+                ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+                : 'text-n-slate-11 hover:bg-n-alpha-2'
+            "
+            @click="applyBoard(board)"
+          >
+            <span
+              class="size-2 rounded-sm shrink-0"
+              :style="{ backgroundColor: board.color }"
+            />
+            <span class="flex-1 truncate">{{ board.name }}</span>
+            <span
+              data-testid="board-count"
+              class="text-xs"
+              :class="
+                board.id === activeBoardId
+                  ? 'text-n-iris-11'
+                  : 'text-n-slate-10'
+              "
+            >
+              {{ countFor(board.filters) }}
+            </span>
+          </button>
+          <button
+            data-testid="board-rename"
+            class="hidden group-hover:flex items-center p-1 rounded text-n-slate-10 hover:text-n-slate-12"
+            :aria-label="$t('RAMON.FUNIL.BOARDS.RENAME')"
+            :title="$t('RAMON.FUNIL.BOARDS.RENAME')"
+            @click="boardToRename = board"
+          >
+            <span class="i-lucide-pencil size-3.5" />
+          </button>
+          <button
+            data-testid="board-remove"
+            class="hidden group-hover:flex items-center p-1 rounded text-n-slate-10 hover:text-n-ruby-11"
+            :aria-label="$t('RAMON.FUNIL.BOARDS.DELETE')"
+            :title="$t('RAMON.FUNIL.BOARDS.DELETE')"
+            @click="boardToRemove = board"
+          >
+            <span class="i-lucide-trash-2 size-3.5" />
+          </button>
+        </div>
+      </div>
+      <button
+        data-testid="board-new"
+        class="w-full mt-1.5 px-2 py-1.5 text-xs text-left rounded-lg border-t border-n-weak text-n-iris-11 hover:bg-n-alpha-2"
+        @click="
+          newModalOpen = true;
+          close();
+        "
+      >
+        + {{ $t('RAMON.FUNIL.BOARDS.NEW') }}
+      </button>
+    </div>
+    <NamePromptModal
+      v-if="newModalOpen"
+      :title="t('RAMON.FUNIL.BOARDS.NEW_PROMPT')"
+      :placeholder="t('RAMON.FUNIL.BOARDS.NEW_PROMPT')"
+      :confirm-label="t('RAMON.FUNIL.BOARDS.CREATE')"
+      @confirm="confirmNewBoard"
+      @cancel="newModalOpen = false"
+    />
+    <NamePromptModal
+      v-if="boardToRename"
+      :title="t('RAMON.FUNIL.BOARDS.RENAME_PROMPT')"
+      :placeholder="boardToRename.name"
+      :confirm-label="t('RAMON.FUNIL.BOARDS.RENAME')"
+      @confirm="confirmRename"
+      @cancel="boardToRename = null"
+    />
+    <ConfirmModal
+      v-if="boardToRemove"
+      :title="t('RAMON.FUNIL.BOARDS.DELETE_CONFIRM')"
+      :confirm-label="t('RAMON.FUNIL.BOARDS.DELETE')"
+      @confirm="confirmRemove"
+      @cancel="boardToRemove = null"
+    />
   </div>
-  <div v-else class="flex items-center px-4 pt-2" data-testid="saved-views">
-    <button
-      data-testid="saved-view-add"
-      class="flex items-center gap-1 px-3 py-1 text-sm rounded-full text-n-slate-11 border border-dashed border-n-weak hover:text-n-slate-12"
-      @click="saveCurrentView"
-    >
-      <span class="i-lucide-plus size-3.5" />{{ $t('RAMON.FUNIL.VIEWS.SAVE') }}
-    </button>
-  </div>
-  <NamePromptModal
-    v-if="saveModalOpen"
-    :title="t('RAMON.FUNIL.VIEWS.SAVE_PROMPT')"
-    :placeholder="t('RAMON.FUNIL.VIEWS.SAVE_PROMPT')"
-    :confirm-label="t('RAMON.FUNIL.VIEWS.SAVE')"
-    @confirm="confirmSaveView"
-    @cancel="saveModalOpen = false"
-  />
-  <ConfirmModal
-    v-if="viewToRemove !== null"
-    :title="t('RAMON.FUNIL.VIEWS.REMOVE_CONFIRM')"
-    :confirm-label="t('RAMON.FUNIL.VIEWS.REMOVE')"
-    @confirm="confirmRemoveView"
-    @cancel="viewToRemove = null"
-  />
 </template>

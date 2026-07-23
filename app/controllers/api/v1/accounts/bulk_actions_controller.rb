@@ -8,6 +8,9 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
       check_authorization_for_contact_action
       enqueue_contact_job
       head :ok
+    when 'Lead'
+      enqueue_lead_job
+      head :ok
     else
       render json: { success: false }, status: :unprocessable_entity
     end
@@ -32,6 +35,24 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
       @current_account.id,
       current_user.id,
       contact_params
+    )
+  end
+
+  def enqueue_lead_job
+    # .to_h: hash simples serializa no ActiveJob sem depender de Parameters.
+    Ramon::LeadBulkActionJob.perform_later(
+      @current_account.id,
+      current_user.id,
+      lead_params.to_h
+    )
+  end
+
+  def lead_params
+    params.permit(
+      :triage,
+      ids: [],
+      fields: [:lead_stage_id, :sdr_id, :lost_reason],
+      task: [:due_at, :title]
     )
   end
 

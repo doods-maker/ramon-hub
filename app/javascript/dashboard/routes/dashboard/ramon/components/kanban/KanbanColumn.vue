@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Draggable from 'vuedraggable';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import { brlCompact } from '../../helpers/currency';
@@ -63,8 +64,10 @@ const weightedValue = computed(
   () => totalValue.value * (stageProbability.value / 100)
 );
 
-// Alertas agregados do header: âmbar (parados) e ruby (R$/mês prescrevendo).
-// Quando os dois existem, o ruby (dinheiro evaporando) tem prioridade.
+const { t } = useI18n();
+
+// Alertas agregados do header — prioridade: prescrevendo (ruby) > fora do
+// SLA (ruby) > parados (âmbar); mostramos até 2.
 const stalledCount = computed(
   () => props.leads.filter(lead => lead.stalled).length
 );
@@ -75,6 +78,52 @@ const prescribingMonthly = computed(() =>
       ? sum + (Number(lead.benefit_monthly_value) || 0)
       : sum;
   }, 0)
+);
+
+// Relógio de 30s: o "fora do SLA" atravessa o due_at sem esperar re-fetch.
+const now = ref(Date.now());
+let slaTimer = null;
+onMounted(() => {
+  slaTimer = setInterval(() => {
+    now.value = Date.now();
+  }, 30000);
+});
+onUnmounted(() => clearInterval(slaTimer));
+
+const slaBreachedCount = computed(
+  () =>
+    props.leads.filter(
+      lead =>
+        lead.sla?.due_at &&
+        !lead.sla.replied_at &&
+        new Date(lead.sla.due_at).getTime() < now.value
+    ).length
+);
+
+const alerts = computed(() =>
+  [
+    prescribingMonthly.value > 0 && {
+      key: 'prescribing',
+      class: 'text-n-ruby-11',
+      label: t('RAMON.KANBAN.COLUMN.PRESCRIBING', {
+        value: brlCompact(prescribingMonthly.value),
+      }),
+    },
+    slaBreachedCount.value > 0 && {
+      key: 'sla',
+      class: 'text-n-ruby-11',
+      label: t('RAMON.KANBAN.SLA.COL_BREACHED', {
+        count: slaBreachedCount.value,
+      }),
+    },
+    stalledCount.value > 0 && {
+      key: 'stalled',
+      class: 'text-n-amber-11',
+      label: t('RAMON.KANBAN.COLUMN.STALLED', { count: stalledCount.value }),
+    },
+  ]
+    .filter(Boolean)
+    .slice(0, 2)
 );
 
 // Persistência do colapso por etapa (mesmo padrão do FILTERS_KEY em leads.js).
@@ -178,22 +227,13 @@ const toggleCollapsed = () => {
       </span>
       <span class="flex items-center gap-2 ms-auto min-w-0">
         <span
-          v-if="prescribingMonthly > 0"
-          data-testid="column-alert-prescribing"
-          class="text-[10.5px] truncate text-n-ruby-11"
+          v-for="alert in alerts"
+          :key="alert.key"
+          :data-testid="`column-alert-${alert.key}`"
+          class="text-[10.5px] truncate"
+          :class="alert.class"
         >
-          {{
-            $t('RAMON.KANBAN.COLUMN.PRESCRIBING', {
-              value: brlCompact(prescribingMonthly),
-            })
-          }}
-        </span>
-        <span
-          v-else-if="stalledCount > 0"
-          data-testid="column-alert-stalled"
-          class="text-[10.5px] truncate text-n-amber-11"
-        >
-          {{ $t('RAMON.KANBAN.COLUMN.STALLED', { count: stalledCount }) }}
+          {{ alert.label }}
         </span>
         <button
           data-testid="stage-collapse-toggle"

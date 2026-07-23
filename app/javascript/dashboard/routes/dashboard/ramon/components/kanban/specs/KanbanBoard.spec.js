@@ -23,6 +23,8 @@ const buildStore = () =>
         getters: {
           getLeadsByStage: () => () => [],
           getLeads: () => [{ id: 10, lead_stage_id: 1, position: 0 }],
+          getSelectedIds: () => [],
+          getDockConversationId: () => null,
           getUIFlags: () => ({ isFetching: false }),
           getFilters: () => ({
             q: '',

@@ -20,6 +20,7 @@ json.lock_to_single_conversation resource.lock_to_single_conversation
 json.sender_name_type resource.sender_name_type
 json.business_name resource.business_name
 json.auto_create_lead resource.auto_create_lead
+json.first_response_sla_minutes resource.first_response_sla_minutes
 
 if resource.portal.present?
   json.help_center do

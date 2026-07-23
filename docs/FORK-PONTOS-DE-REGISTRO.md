@@ -245,6 +245,7 @@
 | `app/services/search_service.rb` (1 token) | `filter_leads` (bloco já do fork) ganhou `.funil` — caso de cálculo fora do Cmd+K | Cálculos-AdvBox 20/07 | calculos-advbox 20/07 |
 | `app/models/contact.rb` (2 guards) | `dispatch_create/update_event` respeitam `Current.suppress_import_events` (import CSV em massa não estoura 1 broadcast/linha) | import 10k | hardening-2 21/07 |
 | `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` (1 bloco `md:hidden`) | atalho "Intranet" no topo do nav mobile — a rail de mundos é `hidden` no celular | troca de mundo no celular | hardening-2 21/07 |
+| `inboxes.first_response_sla_minutes` (migração + `inboxes_controller`/`_inbox.json.jbuilder`/`Settings.vue` — linhas de changes nos mesmos pontos do `auto_create_lead`) | SLA de 1ª resposta por inbox: campo numérico junto do toggle, `Lead#sla_info` no índice/broadcast, timer no card, badge de coluna e motivo `SLA_BREACH` na Esteira | SLA 1º contato (mock 3a) | redesign 23/07 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

@@ -10,7 +10,11 @@ import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { leadsToCsv } from '../../helpers/leadsCsv';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
+import FilterChips from './FilterChips.vue';
 import SavedViews from './SavedViews.vue';
+import SwimlaneBoard from './SwimlaneBoard.vue';
+import LeadListView from './LeadListView.vue';
+import BulkActionsBar from './BulkActionsBar.vue';
 import LeadDrawer from './LeadDrawer.vue';
 import ConversationDock from './ConversationDock.vue';
 import RemoveStageModal from './RemoveStageModal.vue';
@@ -196,15 +200,58 @@ const onOpenConversation = id => store.dispatch('leads/toggleDock', id);
 const router = useRouter();
 const onOpenDossie = lead =>
   router.push({ name: 'ramon_lead_dossie', params: { leadId: lead.id } });
-// ponytail: seleção em lote é visual por ora — a store/barra de ações chega na
-// fase das ações em lote; o handler existe para o evento não cair no vazio.
-const onToggleSelect = () => {};
+
+// Seleção em lote: checkbox no card/linha alimenta leads.selectedIds; a barra
+// de ações aparece embaixo enquanto houver seleção.
+const selectedIds = computed(
+  () => getters['leads/getSelectedIds']?.value ?? []
+);
+const onToggleSelect = lead => store.dispatch('leads/toggleSelection', lead.id);
+
+// Toggle Colunas / Raias / Lista + agrupador das raias, persistidos por
+// usuário (mesmo padrão localStorage dos filtros).
+const VIEW_KEY = 'ramon_kanban_view';
+const readViewState = () => {
+  try {
+    return JSON.parse(localStorage.getItem(VIEW_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+};
+const savedViewState = readViewState();
+const VIEW_MODES = ['columns', 'lanes', 'list'];
+const GROUP_BYS = ['thesis', 'sdr', 'channel', 'priority'];
+const viewMode = ref(
+  VIEW_MODES.includes(savedViewState.view) ? savedViewState.view : 'columns'
+);
+const groupBy = ref(
+  GROUP_BYS.includes(savedViewState.groupBy) ? savedViewState.groupBy : 'thesis'
+);
+watch([viewMode, groupBy], ([view, group]) => {
+  try {
+    localStorage.setItem(VIEW_KEY, JSON.stringify({ view, groupBy: group }));
+  } catch (e) {
+    // localStorage indisponível: seguimos sem persistir
+  }
+});
+
+// Aplicar um quadro remonta as colunas (:key) para relerem o colapso salvo.
+const columnsKey = ref(0);
+const onApplyBoard = board => {
+  viewMode.value = VIEW_MODES.includes(board?.view) ? board.view : 'columns';
+  groupBy.value = GROUP_BYS.includes(board?.groupBy) ? board.groupBy : 'thesis';
+  columnsKey.value += 1;
+};
 
 // Atalhos (item 13 do 4b): j/k navegam entre cards, e abre a gaveta, c abre a
 // conversa. Lista achatada na ordem visual das colunas.
 const focusedLeadId = ref(null);
 
-const flatLeads = () => orderedStages.value.flatMap(s => stageLeads(s.id));
+// Lista achatada na ordem visual das colunas — também alimenta raias e lista.
+const allLeads = computed(() =>
+  orderedStages.value.flatMap(s => stageLeads(s.id))
+);
+const flatLeads = () => allLeads.value;
 
 const moveFocus = delta => {
   const all = flatLeads();
@@ -311,7 +358,7 @@ onMounted(() => {
 });
 
 const exportCsv = () => {
-  const all = orderedStages.value.flatMap(s => stageLeads(s.id));
+  const all = allLeads.value;
   const date = new Date().toISOString().slice(0, 10);
   const channels = getters['leadConfig/getChannels'].value;
   downloadCsvFile(`funil-${date}.csv`, leadsToCsv(all, channels));
@@ -367,10 +414,54 @@ const exportCsv = () => {
         </template>
       </RamonPageHeader>
     </div>
+    <!-- linha de controle: quadro ativo + toggle Colunas/Raias/Lista + agrupador -->
+    <div class="flex flex-wrap items-center gap-3 px-4 pb-1">
+      <SavedViews :view="viewMode" :group-by="groupBy" @apply="onApplyBoard" />
+      <div
+        class="flex gap-0.5 rounded-lg p-0.5 bg-[#1e1b19]"
+        data-testid="view-toggle"
+      >
+        <button
+          v-for="mode in ['columns', 'lanes', 'list']"
+          :key="mode"
+          :data-testid="`view-toggle-${mode}`"
+          class="px-3 py-1 text-xs rounded-md"
+          :class="
+            viewMode === mode
+              ? 'bg-[#33302c] text-n-slate-12 font-medium'
+              : 'text-n-slate-10 hover:text-n-slate-12'
+          "
+          @click="viewMode = mode"
+        >
+          {{ $t(`RAMON.KANBAN.VIEW.${mode.toUpperCase()}`) }}
+        </button>
+      </div>
+      <label
+        v-show="viewMode === 'lanes'"
+        class="flex items-center gap-1.5 text-xs text-n-slate-10"
+      >
+        {{ $t('RAMON.KANBAN.VIEW.GROUP_BY') }}
+        <!-- w-28 explícito: CSS global põe width:100% em select -->
+        <select
+          v-model="groupBy"
+          data-testid="lanes-group-by"
+          class="w-28 px-2 py-1 text-xs rounded-lg bg-n-alpha-2 border border-transparent text-n-slate-12 outline-none focus:border-n-slate-8"
+        >
+          <option
+            v-for="group in ['thesis', 'sdr', 'channel', 'priority']"
+            :key="group"
+            :value="group"
+          >
+            {{ $t(`RAMON.KANBAN.VIEW.GROUP.${group.toUpperCase()}`) }}
+          </option>
+        </select>
+      </label>
+    </div>
+    <!-- chips removíveis dos filtros ativos + resumo do pipeline -->
+    <FilterChips :filters="filters" @update="onFilterUpdate" />
     <!-- v-show (não v-if): o board reage ao evento update do KanbanFilters
          mesmo com o painel fechado, e abrir/fechar não perde o estado da busca -->
     <div v-show="filtersOpen" class="pb-1 border-b border-n-weak">
-      <SavedViews />
       <KanbanFilters :filters="filters" @update="onFilterUpdate" />
     </div>
     <!-- fetch inicial falhou: mensagem + retry no lugar de um board vazio -->
@@ -404,8 +495,12 @@ const exportCsv = () => {
     </div>
     <!-- min-h-0 permite a faixa encolher dentro do flex pai; sem isso a coluna
          cresce além da viewport e os cards abaixo da dobra ficam inacessíveis -->
-    <div v-else class="flex flex-1 min-h-0 gap-3 px-4 pb-4 overflow-x-auto">
+    <div
+      v-else-if="viewMode === 'columns'"
+      class="flex flex-1 min-h-0 gap-3 px-4 pb-4 overflow-x-auto"
+    >
       <Draggable
+        :key="columnsKey"
         v-model="orderedStages"
         group="stages"
         item-key="id"
@@ -419,6 +514,8 @@ const exportCsv = () => {
             :stage="element"
             :leads="stageLeads(element.id)"
             :focused-lead-id="focusedLeadId"
+            selectable
+            :selected-lead-ids="selectedIds"
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
@@ -438,6 +535,27 @@ const exportCsv = () => {
         <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.STAGE.ADD') }}
       </button>
     </div>
+    <SwimlaneBoard
+      v-else-if="viewMode === 'lanes'"
+      :stages="orderedStages"
+      :leads="allLeads"
+      :group-by="groupBy"
+      :selected-lead-ids="selectedIds"
+      @move="onMove"
+      @open-conversation="onOpenConversation"
+      @open-lead="onOpenLead"
+      @open-dossie="onOpenDossie"
+      @toggle-select="onToggleSelect"
+    />
+    <LeadListView
+      v-else
+      :leads="allLeads"
+      :stages="orderedStages"
+      :selected-lead-ids="selectedIds"
+      @open-lead="onOpenLead"
+      @toggle-select="onToggleSelect"
+    />
+    <BulkActionsBar v-if="selectedIds.length" :suspend-esc="anyModalOpen()" />
     <LeadDrawer @open-conversation="onOpenConversation" />
     <ConversationDock :suspend-esc="anyModalOpen()" />
     <Transition

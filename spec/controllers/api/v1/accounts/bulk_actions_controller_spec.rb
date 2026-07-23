@@ -301,6 +301,33 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
 
         expect(response).to have_http_status(:unauthorized)
       end
+
+      it 'enqueues Ramon::LeadBulkActionJob for Lead type with the permitted payload' do
+        lead = create(:lead, account: account)
+
+        expect do
+          post "/api/v1/accounts/#{account.id}/bulk_actions",
+               headers: agent.create_new_auth_token,
+               params: {
+                 type: 'Lead',
+                 ids: [lead.id],
+                 fields: { sdr_id: agent_1.id, extra: 'ignored' },
+                 task: { due_at: '2026-08-01T12:00:00Z', title: 'Retomar' },
+                 triage: 'true'
+               }
+        end.to have_enqueued_job(Ramon::LeadBulkActionJob).with(
+          account.id,
+          agent.id,
+          hash_including(
+            'ids' => [lead.id.to_s],
+            'fields' => { 'sdr_id' => agent_1.id.to_s },
+            'task' => hash_including('due_at' => '2026-08-01T12:00:00Z'),
+            'triage' => 'true'
+          )
+        )
+
+        expect(response).to have_http_status(:success)
+      end
     end
   end
 end

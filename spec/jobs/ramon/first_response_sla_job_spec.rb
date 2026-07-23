@@ -17,6 +17,17 @@ RSpec.describe Ramon::FirstResponseSlaJob do
       .with(lead.id, title: 'Lead aguardando 1a resposta', body: include('Maria da Silva'))
   end
 
+  it 'usa o SLA da inbox no texto quando configurado' do
+    conversation.inbox.update!(first_response_sla_minutes: 60)
+
+    travel_to Time.zone.parse('2026-07-23 13:00:00 UTC') do
+      described_class.perform_now(conversation.id)
+    end
+
+    expect(Ramon::NtfyPushJob).to have_received(:perform_now)
+      .with(lead.id, title: 'Lead aguardando 1a resposta', body: include('60min'))
+  end
+
   it 'não apita se a 1ª resposta já saiu' do
     conversation.update!(first_reply_created_at: Time.current)
 

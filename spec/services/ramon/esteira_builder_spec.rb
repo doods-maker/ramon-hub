@@ -60,6 +60,35 @@ RSpec.describe Ramon::EsteiraBuilder do
     expect(items.last[:reasons].first[:key]).to eq('AWAITING_HUMAN')
   end
 
+  describe 'SLA de 1º contato' do
+    let(:inbox) { create(:inbox, account: account, auto_create_lead: true, first_response_sla_minutes: 30) }
+
+    def conversation_created_at(time)
+      conversation = nil
+      travel_to(time) { conversation = create(:conversation, account: account, inbox: inbox) }
+      conversation
+    end
+
+    it 'flags leads past the first-response SLA with the SLA_BREACH reason' do
+      conversation = conversation_created_at(2.hours.ago)
+      lead = create(:lead, account: account, lead_stage: active_stage, conversation: conversation)
+      item = build[:items].first
+      expect(item[:lead_id]).to eq(lead.id)
+      expect(item[:reasons].first).to eq({ key: 'SLA_BREACH', params: { minutes: 30 } })
+      expect(item[:score]).to eq(82)
+      expect(item[:suggested_action]).to eq('reply')
+    end
+
+    it 'skips replied and still-within-SLA conversations' do
+      replied = conversation_created_at(2.hours.ago)
+      replied.update!(first_reply_created_at: Time.current)
+      fresh = create(:conversation, account: account, inbox: inbox)
+      create(:lead, account: account, lead_stage: active_stage, conversation: replied)
+      create(:lead, account: account, lead_stage: active_stage, conversation: fresh, name: 'Fresca')
+      expect(build[:items]).to be_empty
+    end
+  end
+
   it 'orders by score then by value and sums the board' do
     cheap = create(:lead, account: account, lead_stage: active_stage, source: 'lp-x', value: 100)
     rich = create(:lead, account: account, lead_stage: active_stage, source: 'lp-y', value: 9000)

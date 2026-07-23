@@ -17,6 +17,16 @@ json.custom_attributes lead.custom_attributes unless local_assigns[:slim]
 # badge do card precisa deles sem carregar o jsonb inteiro.
 json.follow_up_count lead.custom_attributes&.dig('follow_up', 'tentativas').to_i
 json.follow_up_last_at lead.custom_attributes&.dig('follow_up', 'ultima_em')
+# SLA de 1ª resposta (slim TAMBÉM: o timer do card precisa dele no índice).
+if (sla = lead.sla_info)
+  json.sla do
+    json.due_at sla[:due_at]
+    json.replied_at sla[:replied_at]
+    json.minutes sla[:minutes]
+  end
+else
+  json.sla nil
+end
 
 json.value lead.value
 json.source lead.source

@@ -113,6 +113,22 @@ class Lead < ApplicationRecord
     }
   end
 
+  # SLA de 1ª resposta calculado da conversa do lead (mesma regra do
+  # FirstResponseSlaJob): nil sem conversa ou com inbox fora do funil de
+  # entrada (sem auto_create_lead). Vai no jbuilder (slim e completo) e no
+  # broadcast — o card do Kanban desenha o timer a partir daqui.
+  def sla_info
+    inbox = conversation&.inbox
+    return nil unless inbox&.auto_create_lead?
+
+    minutes = inbox.first_response_sla_minutes || ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i
+    {
+      due_at: conversation.created_at + minutes.minutes,
+      replied_at: conversation.first_reply_created_at,
+      minutes: minutes
+    }
+  end
+
   def prescription
     return nil if dcb_em.blank?
 
@@ -149,6 +165,7 @@ class Lead < ApplicationRecord
       # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast (mesmo motivo de `value` acima)
       benefit_monthly_value: benefit_monthly_value&.to_f,
       cnis_resumo: cnis_resumo,
+      sla: sla_info,
       # jsonb já é JSON nativo; painel aberto recebe colheita/doc_status ao vivo
       custom_attributes: custom_attributes || {}
     }.merge(follow_up_event_data)

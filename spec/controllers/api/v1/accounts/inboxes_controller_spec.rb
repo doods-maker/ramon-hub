@@ -669,6 +669,16 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(response).to have_http_status(:success)
         expect(inbox.reload.auto_create_lead).to be true
       end
+
+      it 'sets the first-response SLA minutes on the inbox' do
+        patch "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}",
+              headers: admin.create_new_auth_token,
+              params: valid_params.merge({ first_response_sla_minutes: 60 }),
+              as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(inbox.reload.first_response_sla_minutes).to eq(60)
+      end
     end
 
     context 'when an authenticated user updates email inbox' do

@@ -156,6 +156,75 @@ describe('LeadCard.vue', () => {
     });
   });
 
+  describe('pill de SLA de 1º contato', () => {
+    const minute = 60000;
+
+    it('dentro do SLA = pill âmbar com o tempo restante', () => {
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          sla: {
+            due_at: new Date(Date.now() + 41 * minute).toISOString(),
+            replied_at: null,
+            minutes: 60,
+          },
+        },
+      });
+      const pill = wrapper.find('[data-testid="sla-pill"]');
+      expect(pill.exists()).toBe(true);
+      expect(pill.text()).toBe('41min');
+      expect(pill.classes()).toContain('text-n-amber-11');
+      // dentro do SLA não muda a borda nem mostra o CTA
+      expect(wrapper.classes()).not.toContain('border-l-n-ruby-9');
+    });
+
+    it('estourado = pill ruby, borda ruby e CTA "Responder agora"', async () => {
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          sla: {
+            due_at: new Date(Date.now() - 167 * minute).toISOString(),
+            replied_at: null,
+            minutes: 60,
+          },
+        },
+      });
+      const pill = wrapper.find('[data-testid="sla-pill"]');
+      expect(pill.text()).toBe('2h 47min');
+      expect(pill.classes()).toContain('bg-n-ruby-9');
+      expect(wrapper.classes()).toContain('border-l-n-ruby-9');
+      await wrapper.find('[data-testid="sla-respond-now"]').trigger('click');
+      expect(wrapper.emitted('openConversation')[0]).toEqual([99]);
+    });
+
+    it('respondido = pill teal com o tempo até a 1ª resposta', () => {
+      const due = Date.now();
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          sla: {
+            due_at: new Date(due).toISOString(),
+            // começou em due-60min; respondeu 12min depois do início
+            replied_at: new Date(due - 48 * minute).toISOString(),
+            minutes: 60,
+          },
+        },
+      });
+      const pill = wrapper.find('[data-testid="sla-pill"]');
+      expect(pill.exists()).toBe(true);
+      expect(pill.text()).toContain('12min');
+      expect(pill.classes()).toContain('text-n-teal-11');
+    });
+
+    it('lead sem sla não mostra pill nem CTA', () => {
+      const wrapper = mountCard();
+      expect(wrapper.find('[data-testid="sla-pill"]').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="sla-respond-now"]').exists()).toBe(
+        false
+      );
+    });
+  });
+
   it('shows the awaiting-human triage badge when the latest triage awaits a human', () => {
     const wrapper = mountCard({
       lead: { ...lead, latest_triage: { id: 1, status: 'awaiting_human' } },

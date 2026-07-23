@@ -10,6 +10,7 @@ import { useInboxHotKeys } from 'dashboard/composables/commands/useInboxHotKeys'
 import { useGoToCommandHotKeys } from 'dashboard/composables/commands/useGoToCommandHotKeys';
 import { useBulkActionsHotKeys } from 'dashboard/composables/commands/useBulkActionsHotKeys';
 import { useConversationHotKeys } from 'dashboard/composables/commands/useConversationHotKeys';
+import { useRamonLeadHotKeys } from 'dashboard/composables/commands/useRamonLeadHotKeys';
 import wootConstants from 'dashboard/constants/globals';
 import {
   GENERAL_EVENTS,
@@ -40,6 +41,7 @@ const { inboxHotKeys } = useInboxHotKeys();
 const { goToCommandHotKeys } = useGoToCommandHotKeys();
 const { bulkActionsHotKeys } = useBulkActionsHotKeys();
 const { conversationHotKeys } = useConversationHotKeys();
+const { ramonLeadHotKeys, ensureLeadsLoaded } = useRamonLeadHotKeys();
 
 const SNOOZE_PARENT_IDS = [
   'snooze_conversation',
@@ -69,6 +71,7 @@ const hotKeys = computed(() => {
     ...goToAppearanceHotKeys.value,
     ...bulkActionsHotKeys.value,
     ...conversationHotKeys.value,
+    ...ramonLeadHotKeys.value,
   ];
   // When dynamic NLP snooze suggestions exist, hide all preset snooze actions to avoid duplication
   if (!dynamicSnoozeActions.value.length) return allActions;
@@ -143,6 +146,7 @@ const patchNinjaKeysOpenClose = el => {
     const [options = {}] = args;
     currentCommandRoot.value = options.parent || null;
     dynamicSnoozeActions.value = [];
+    ensureLeadsLoaded();
     return originalOpen(...args);
   };
 

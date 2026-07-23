@@ -301,6 +301,26 @@ RSpec.describe 'Leads API', type: :request do
       expect(row['next_task_title']).to be_nil
     end
 
+    it 'expõe o bloco sla calculado da conversa no índice slim' do
+      inbox = create(:inbox, account: account, auto_create_lead: true, first_response_sla_minutes: 60)
+      conversation = create(:conversation, account: account, inbox: inbox)
+      account.leads.create!(name: 'A', lead_stage: novo, conversation_id: conversation.id)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      sla = response.parsed_body['payload'].first['sla']
+      expect(sla['minutes']).to eq(60)
+      expect(Time.zone.parse(sla['due_at'])).to be_within(1.minute).of(conversation.created_at + 60.minutes)
+      expect(sla['replied_at']).to be_nil
+    end
+
+    it 'lead sem conversa ou com inbox sem auto_create_lead expõe sla nulo' do
+      inbox = create(:inbox, account: account, auto_create_lead: false, first_response_sla_minutes: 60)
+      conversation = create(:conversation, account: account, inbox: inbox)
+      account.leads.create!(name: 'Sem conversa', lead_stage: novo)
+      account.leads.create!(name: 'Inbox comum', lead_stage: novo, conversation_id: conversation.id)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      expect(response.parsed_body['payload'].pluck('sla')).to eq([nil, nil])
+    end
+
     it 'lead sem retomadas expõe follow_up_count zero' do
       account.leads.create!(name: 'A', lead_stage: novo)
       get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token

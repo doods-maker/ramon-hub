@@ -7,6 +7,7 @@ class Ramon::EsteiraBuilder
     'PRESCRIPTION_BLEEDING' => 100,
     'PRESCRIPTION_LOST' => 100,
     'PRESCRIPTION_SOON' => 85,
+    'SLA_BREACH' => 82,
     'TASK_OVERDUE' => 80,
     'TASK_TODAY' => 75,
     'NEW_FROM_LP' => 70,
@@ -19,6 +20,7 @@ class Ramon::EsteiraBuilder
     'PRESCRIPTION_BLEEDING' => 'contact',
     'PRESCRIPTION_LOST' => 'contact',
     'PRESCRIPTION_SOON' => 'contact',
+    'SLA_BREACH' => 'reply',
     'TASK_OVERDUE' => 'task',
     'TASK_TODAY' => 'task',
     'NEW_FROM_LP' => 'reply',
@@ -37,6 +39,7 @@ class Ramon::EsteiraBuilder
   def perform
     collect_tasks
     collect_prescription
+    collect_sla_breach
     collect_new_from_lp
     collect_awaiting_human
     collect_stalled
@@ -73,6 +76,18 @@ class Ramon::EsteiraBuilder
     else
       months_to_cliff = Lead::PRESCRIPTION_WINDOW_MONTHS - info[:months_since_dcb]
       add(lead, 'PRESCRIPTION_SOON', { months: months_to_cliff }) if months_to_cliff <= PRESCRIPTION_SOON_MONTHS
+    end
+  end
+
+  # SLA de 1º contato estourado (mock 3a): conversa aberta, sem 1ª resposta,
+  # além do SLA da inbox (ou do padrão do env) — o lead sobe na Esteira.
+  def collect_sla_breach
+    Ramon::LeadRadar.active_leads(@account)
+                    .joins(:conversation).includes(conversation: :inbox)
+                    .where(conversations: { first_reply_created_at: nil, status: Conversation.statuses[:open] })
+                    .find_each do |lead|
+      sla = lead.sla_info
+      add(lead, 'SLA_BREACH', { minutes: sla[:minutes] }) if sla.present? && sla[:due_at] < Time.current
     end
   end
 
