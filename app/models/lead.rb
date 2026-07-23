@@ -39,6 +39,7 @@ class Lead < ApplicationRecord
   after_update_commit :record_change_activities
   after_update_commit :generate_handoff_note, if: :saved_change_to_won_at?
   after_update_commit :enqueue_advbox_closing, if: :saved_change_to_won_at?
+  after_update_commit :enqueue_nps_draft, if: :saved_change_to_won_at?
 
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
   def push_event_data
@@ -176,6 +177,13 @@ class Lead < ApplicationRecord
     return if won_at.blank? || ENV.fetch('ADVBOX_API_TOKEN', nil).blank?
 
     Ramon::AdvboxClosingJob.perform_later(id)
+  end
+
+  # NPS pós-fechamento (mapa comercial): rascunho de pesquisa quando vira ganho.
+  def enqueue_nps_draft
+    return if won_at.blank?
+
+    Ramon::NpsDraftJob.perform_later(id)
   end
 
   def dispatch_create_event

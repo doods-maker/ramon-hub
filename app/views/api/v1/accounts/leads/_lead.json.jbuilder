@@ -13,6 +13,10 @@ json.lost_reason lead.lost_reason
 # slim = índice do Kanban: o card não lê custom_attributes (colheita/advbox/
 # zapsign) e o jsonb inteiro × N leads incha o payload — a gaveta busca o show.
 json.custom_attributes lead.custom_attributes unless local_assigns[:slim]
+# Retomadas (cadência de follow-up): escalares presentes TAMBÉM no slim — o
+# badge do card precisa deles sem carregar o jsonb inteiro.
+json.follow_up_count lead.custom_attributes&.dig('follow_up', 'tentativas').to_i
+json.follow_up_last_at lead.custom_attributes&.dig('follow_up', 'ultima_em')
 
 json.value lead.value
 json.source lead.source

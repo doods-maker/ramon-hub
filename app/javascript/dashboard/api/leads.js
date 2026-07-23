@@ -10,9 +10,10 @@ class LeadsAPI extends ApiClient {
     return axios.get(this.url, { params });
   }
 
-  forConversation(conversationId) {
+  forConversation(conversationId, { readonly = false } = {}) {
     return axios.post(`${this.url}/for_conversation`, {
       conversation_id: conversationId,
+      ...(readonly ? { readonly: true } : {}),
     });
   }
 

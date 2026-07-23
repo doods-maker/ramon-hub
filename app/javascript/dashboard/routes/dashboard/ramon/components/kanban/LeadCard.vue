@@ -110,6 +110,24 @@ const borderClass = computed(() => {
   return 'border-n-weak';
 });
 
+// Badge de retomadas (cadência de follow-up): tooltip com a data da última.
+const followUpTitle = computed(() => {
+  const count = Number(props.lead.follow_up_count) || 0;
+  if (!count) return null;
+  const last = props.lead.follow_up_last_at
+    ? new Date(props.lead.follow_up_last_at)
+    : null;
+  if (!last || Number.isNaN(last.getTime()))
+    return t('RAMON.FOLLOW_UP.CARD_TITLE_NO_DATE', { count });
+  return t('RAMON.FOLLOW_UP.CARD_TITLE', {
+    count,
+    date: last.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+    }),
+  });
+});
+
 // "Sem próxima ação": nenhuma tarefa aberta e etapa ainda ativa (nem won/lost).
 const showNoNextAction = computed(
   () =>
@@ -216,7 +234,8 @@ const copyPhone = async () => {
         (lead.stage_name && !hideStage) ||
         daysInStage !== null ||
         lead.benefit_type_name ||
-        lead.lead_priority_name
+        lead.lead_priority_name ||
+        lead.follow_up_count > 0
       "
       class="flex flex-wrap items-center gap-1.5 mt-2"
     >
@@ -246,6 +265,14 @@ const copyPhone = async () => {
         class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
       >
         <span class="i-lucide-flag size-3" />{{ lead.lead_priority_name }}
+      </span>
+      <span
+        v-if="lead.follow_up_count > 0"
+        data-testid="follow-up-badge"
+        :title="followUpTitle"
+        class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
+      >
+        <span class="i-lucide-history size-3" />{{ lead.follow_up_count }}
       </span>
     </div>
 

@@ -34,11 +34,22 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def for_conversation
     # o front manda o id do objeto de conversa da SPA, que é o display_id (por conta)
     conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])
-    @lead = find_or_create_lead_for(conversation)
+    # readonly: só consulta (banner da conversa) — nunca cria nem adota lead
+    @lead = params[:readonly] ? find_readonly_lead_for(conversation) : find_or_create_lead_for(conversation)
+    return head :no_content if @lead.nil?
+
     authorize(@lead, :show?)
   end
 
   private
+
+  def find_readonly_lead_for(conversation)
+    lead = Current.account.leads.find_by(conversation_id: conversation.id)
+    return lead if lead
+    return if conversation.contact_id.blank?
+
+    Current.account.leads.open.find_by(contact_id: conversation.contact_id)
+  end
 
   def find_or_create_lead_for(conversation)
     lead = Current.account.leads.find_by(conversation_id: conversation.id)

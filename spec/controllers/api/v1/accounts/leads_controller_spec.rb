@@ -202,6 +202,27 @@ RSpec.describe 'Leads API', type: :request do
       expect(existing.reload.conversation_id).to eq(new_conversation.id)
     end
 
+    it 'readonly: devolve o lead existente sem adotar a conversa' do
+      other_conversation = create(:conversation, account: account, contact: contact)
+      existing = account.leads.create!(conversation: other_conversation, contact: contact,
+                                       lead_stage: account.lead_stages.order(:position).first,
+                                       name: 'X')
+      post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+           params: { conversation_id: conversation.display_id, readonly: true },
+           headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['id']).to eq(existing.id)
+      expect(existing.reload.conversation_id).to eq(other_conversation.id)
+    end
+
+    it 'readonly: 204 sem criar lead quando a conversa não tem funil' do
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+             params: { conversation_id: conversation.display_id, readonly: true },
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to(change(account.leads, :count))
+      expect(response).to have_http_status(:no_content)
+    end
+
     it 'cria lead novo no for_conversation quando os leads do contato estão fechados' do
       lost_stage = account.lead_stages.find_by(is_lost: true)
       contact = create(:contact, account: account)
@@ -249,6 +270,22 @@ RSpec.describe 'Leads API', type: :request do
       expect(response.parsed_body['payload'].first).not_to have_key('custom_attributes')
       get "/api/v1/accounts/#{account.id}/leads/#{lead.id}", headers: admin.create_new_auth_token
       expect(response.parsed_body['custom_attributes']).to eq('colheita_status' => { 'x' => true })
+    end
+
+    it 'expõe follow_up_count e follow_up_last_at também no índice slim (badge do card)' do
+      account.leads.create!(name: 'A', lead_stage: novo,
+                            custom_attributes: { 'follow_up' => { 'tentativas' => 2, 'ultima_em' => '2026-07-20T11:00:00Z' } })
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['follow_up_count']).to eq(2)
+      expect(row['follow_up_last_at']).to eq('2026-07-20T11:00:00Z')
+      expect(row).not_to have_key('custom_attributes')
+    end
+
+    it 'lead sem retomadas expõe follow_up_count zero' do
+      account.leads.create!(name: 'A', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      expect(response.parsed_body['payload'].first['follow_up_count']).to eq(0)
     end
 
     it 'filtra por source' do

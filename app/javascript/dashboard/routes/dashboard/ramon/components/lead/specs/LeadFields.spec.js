@@ -1,6 +1,7 @@
 import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadFields from '../LeadFields.vue';
+import LostReasonModal from '../../kanban/LostReasonModal.vue';
 
 const lead = {
   id: 3,
@@ -244,7 +245,9 @@ describe('LeadFields.vue', () => {
   it('closes the won prompt when switching to a lost stage', async () => {
     const update = vi.fn();
     const wrapper = shallowMount(LeadFields, {
-      props: { lead: { ...lead, value: null, lost_reason: null } },
+      props: {
+        lead: { ...structuredClone(lead), value: null, lost_reason: null },
+      },
       global: { plugins: [build(update)], mocks: { $t: k => k } },
     });
     const select = wrapper.find('[data-testid="field-stage"]');
@@ -257,9 +260,95 @@ describe('LeadFields.vue', () => {
     expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
       false
     );
-    expect(wrapper.find('[data-testid="stage-lost-prompt"]').exists()).toBe(
-      true
-    );
+    expect(wrapper.findComponent(LostReasonModal).exists()).toBe(true);
+  });
+
+  describe('motivo de perda via LostReasonModal', () => {
+    const mountLost = update =>
+      shallowMount(LeadFields, {
+        props: { lead: { ...structuredClone(lead), lost_reason: null } },
+        global: { plugins: [build(update)], mocks: { $t: k => k } },
+      });
+
+    it('opens the modal on a lost stage without patching', async () => {
+      const update = vi.fn();
+      const wrapper = mountLost(update);
+      await wrapper.find('[data-testid="field-stage"]').setValue(3);
+      expect(update).not.toHaveBeenCalled();
+      expect(wrapper.findComponent(LostReasonModal).exists()).toBe(true);
+    });
+
+    it('patches stage + lost_reason when the modal confirms', async () => {
+      const update = vi.fn();
+      const wrapper = mountLost(update);
+      await wrapper.find('[data-testid="field-stage"]').setValue(3);
+      wrapper
+        .findComponent(LostReasonModal)
+        .vm.$emit('confirmMove', { lostReason: 'Sem retorno' });
+      await flushPromises();
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 3,
+        lead_stage_id: 3,
+        lost_reason: 'Sem retorno',
+      });
+      expect(wrapper.findComponent(LostReasonModal).exists()).toBe(false);
+    });
+
+    it('restores the select and skips the patch when the modal cancels', async () => {
+      const update = vi.fn();
+      const wrapper = mountLost(update);
+      const select = wrapper.find('[data-testid="field-stage"]');
+      await select.setValue(3);
+      wrapper.findComponent(LostReasonModal).vm.$emit('cancelMove');
+      await flushPromises();
+      expect(update).not.toHaveBeenCalled();
+      expect(wrapper.findComponent(LostReasonModal).exists()).toBe(false);
+      expect(select.element.value).toBe('1');
+    });
+  });
+
+  describe('NPS pós-ganho', () => {
+    const wonLead = {
+      ...structuredClone(lead),
+      won_at: '2026-07-20T12:00:00Z',
+    };
+    const mountWon = (update, extra = {}) =>
+      shallowMount(LeadFields, {
+        props: { lead: { ...wonLead, ...extra } },
+        global: { plugins: [build(update)], mocks: { $t: k => k } },
+      });
+
+    it('hides the NPS input without won_at', () => {
+      const wrapper = mountFields();
+      expect(wrapper.find('[data-testid="field-nps"]').exists()).toBe(false);
+    });
+
+    it('saves the score under custom_attributes.nps on blur', async () => {
+      const update = vi.fn();
+      const wrapper = mountWon(update);
+      const input = wrapper.find('[data-testid="field-nps"]');
+      await input.setValue('9');
+      await input.trigger('blur');
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 3,
+        custom_attributes: {
+          nps: { score: 9, em: expect.any(String) },
+        },
+      });
+    });
+
+    it('shows the stored score and reverts out-of-range input', async () => {
+      const update = vi.fn();
+      const wrapper = mountWon(update, {
+        custom_attributes: { nps: { score: 7, em: '2026-07-21T10:00:00Z' } },
+      });
+      const input = wrapper.find('[data-testid="field-nps"]');
+      expect(input.element.value).toBe('7');
+      await input.setValue('11');
+      await input.trigger('blur');
+      expect(update).not.toHaveBeenCalled();
+      expect(input.element.value).toBe('7');
+    });
   });
 
   describe('template de nota rápida', () => {

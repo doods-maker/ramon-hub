@@ -86,6 +86,32 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
       kind: 'meeting',
       due_at: start_at
     )
+    confirmation_draft(lead)
+    enqueue_reminders(lead)
+  end
+
+  DIAS_SEMANA = %w[domingo segunda terça quarta quinta sexta sábado].freeze
+
+  # Rascunho de confirmação (gatilho do compromisso) — estático, sem LLM.
+  def confirmation_draft(lead)
+    local = start_at.in_time_zone(TIME_ZONE)
+    quando = "#{DIAS_SEMANA[local.wday]}, #{local.strftime('%d/%m')} às #{local.strftime('%H:%M')}"
+    first = lead.name.to_s.split.first.presence || 'cliente'
+    lead.lead_notes.create!(account: account, body: <<~NOTA.strip.truncate(1000))
+      RASCUNHO (revisar antes de enviar) — confirmação de reunião:
+      "Oi #{first}! Nossa conversa está confirmada pra #{quando}. Vou te esperar, tá? Se não puder comparecer, me avise com antecedência que a gente remarca sem problema."
+    NOTA
+  end
+
+  # Lembretes anti no-show: só offsets ainda no futuro; cancel/reschedule não
+  # desagenda — o guard do job mata o lembrete órfão.
+  def enqueue_reminders(lead)
+    Ramon::MeetingReminderJob::OFFSETS.each do |offset, label|
+      fire_at = start_at - offset
+      next if fire_at.past?
+
+      Ramon::MeetingReminderJob.set(wait_until: fire_at).perform_later(lead.id, start_at.iso8601, label)
+    end
   end
 
   def purge_calcom_tasks(lead, due_at: nil)

@@ -54,6 +54,15 @@ const funnelBarWidth = stage => {
   return `${Math.max(2, (count / funnelMax.value) * 100)}%`;
 };
 const week = computed(() => data.value?.week || {});
+// NPS: média all-time com 1 decimal (pt-BR usa vírgula); "—" sem respostas.
+const nps = computed(() => week.value.nps || { media: null, respostas: 0 });
+const npsMedia = computed(() => {
+  if (!nps.value.respostas || nps.value.media == null) return '—';
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(Number(nps.value.media));
+});
 const history = computed(() => data.value?.history || []);
 const historyPoints = computed(() =>
   history.value.map(h => Number(h.value_sum) || 0)
@@ -326,7 +335,7 @@ const openStage = stageId => {
         <h2 class="mb-3 text-sm tracking-widest uppercase text-n-slate-9">
           {{ t('RAMON.COMMAND.WEEK.TITLE') }}
         </h2>
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div
             class="grid grid-cols-3 gap-3 p-4 border rounded-xl border-n-weak bg-n-solid-2 md:col-span-1"
           >
@@ -397,6 +406,31 @@ const openStage = stageId => {
             </ul>
             <p v-else class="text-xs text-n-slate-10">
               {{ t('RAMON.COMMAND.WEEK.EMPTY_LOST_REASONS') }}
+            </p>
+          </div>
+
+          <div
+            data-testid="nps-card"
+            class="p-4 border rounded-xl border-n-weak bg-n-solid-2"
+          >
+            <p class="mb-2 text-xs uppercase tracking-wide text-n-slate-11">
+              {{ t('RAMON.NPS.TITLE') }}
+            </p>
+            <span
+              data-testid="nps-media"
+              class="text-3xl font-cormorant text-n-slate-12"
+            >
+              {{ npsMedia }}
+            </span>
+            <p
+              v-if="nps.respostas > 0"
+              data-testid="nps-responses"
+              class="mt-1 text-xs text-n-slate-10"
+            >
+              {{ t('RAMON.NPS.RESPONSES', { count: nps.respostas }) }}
+            </p>
+            <p v-else class="mt-1 text-xs text-n-slate-10">
+              {{ t('RAMON.NPS.EMPTY') }}
             </p>
           </div>
         </div>

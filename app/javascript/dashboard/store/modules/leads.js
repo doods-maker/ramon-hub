@@ -162,6 +162,15 @@ export const actions = {
     commit(types.SET_SELECTED_LEAD, lead.id);
     return lead;
   },
+  // Só consulta (banner): nunca cria lead nem mexe na seleção.
+  peekForConversation: async ({ commit }, { conversationId }) => {
+    const response = await LeadsAPI.forConversation(conversationId, {
+      readonly: true,
+    });
+    const lead = response.status === 204 ? null : response.data;
+    if (lead?.id) commit(types.MERGE_LEAD, lead);
+    return lead;
+  },
   fetchActivities: async (_ctx, leadId) => {
     const response = await LeadsAPI.getActivities(leadId);
     return response.data.payload;

@@ -89,7 +89,8 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
       won: leads_funil.where(won_at: 7.days.ago..).count,
       lost: leads_funil.where(lost_at: 7.days.ago..).count,
       created: leads_funil.where(created_at: 7.days.ago..).count,
-      lost_reasons_30d: lost_reasons_30d
+      lost_reasons_30d: lost_reasons_30d,
+      nps: nps_section
     }
   end
 
@@ -104,6 +105,15 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     leads_funil.where(lost_at: 30.days.ago..)
                .reorder(nil).group(:lost_reason).count
                .sort_by { |_reason, count| -count }
+  end
+
+  # NPS all-time dos leads com nota (custom_attributes.nps.score). Path jsonb
+  # literal fixo — nada do usuário entra no SQL.
+  def nps_section
+    scope = Current.account.leads.reorder(nil).where("(custom_attributes #> '{nps,score}') IS NOT NULL")
+    respostas = scope.count
+    media = respostas.zero? ? nil : scope.average(Arel.sql("(custom_attributes #>> '{nps,score}')::numeric")).to_f.round(1)
+    { media: media, respostas: respostas }
   end
 
   # ---- Histórico (snapshots diários) ------------------------------------

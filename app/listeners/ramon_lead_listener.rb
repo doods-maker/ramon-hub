@@ -19,6 +19,7 @@ class RamonLeadListener < BaseListener
         conversation_id: conversation.id
       )
     end
+    enqueue_first_response_sla(conversation)
   end
 
   def message_created(event)
@@ -53,6 +54,13 @@ class RamonLeadListener < BaseListener
   end
 
   private
+
+  # SLA de 1ª resposta (mapa comercial): o vigia dispara N min depois e só
+  # apita se a conversa seguir aberta e sem resposta.
+  def enqueue_first_response_sla(conversation)
+    minutes = ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i
+    Ramon::FirstResponseSlaJob.set(wait: minutes.minutes).perform_later(conversation.id)
+  end
 
   # Atribuição: o referral da Meta (click-to-WhatsApp) chega na primeira
   # mensagem, depois do conversation_created — por isso o hook é aqui.

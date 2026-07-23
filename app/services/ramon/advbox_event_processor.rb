@@ -105,6 +105,7 @@ class Ramon::AdvboxEventProcessor
       "#{first_name(lead)}, ótima notícia! 🎉 Saiu o pagamento do seu processo. Foi uma alegria acompanhar seu caso até aqui.
       Se puder, sua avaliação no Google ajuda muito outras pessoas a nos encontrarem."
     NOTA
+    nps_draft(lead)
     notify(lead, 'Exito: pagamento no ADVBOX', "#{lead.name}: rascunho de comunicado pronto no caso")
   end
 
@@ -114,6 +115,7 @@ class Ramon::AdvboxEventProcessor
       RASCUNHO (revisar antes de enviar) — benefício concedido:
       "#{first_name(lead)}, notícia boa! 🎉 O INSS CONCEDEU o seu benefício. Agora vamos conferir a implantação e os valores — te aviso de cada passo."
     NOTA
+    nps_draft(lead)
     notify(lead, 'Beneficio CONCEDIDO (ADVBOX)', "#{lead.name}: rascunho de boa notícia pronto no caso")
   end
 
@@ -209,6 +211,12 @@ class Ramon::AdvboxEventProcessor
 
   def draft_note(lead, body)
     lead.lead_notes.create!(account: @account, body: body.strip.truncate(1000))
+  end
+
+  # Pesquisa NPS da fase de êxito — o guard nps.pedido_exito_em (dentro do job)
+  # garante que a fase pede uma vez só.
+  def nps_draft(lead)
+    Ramon::NpsDraftJob.perform_later(lead.id, fase: 'exito')
   end
 
   def notify(lead, title, body)

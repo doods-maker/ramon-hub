@@ -94,6 +94,33 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
         expect(tasks.count).to eq 1
         expect(tasks.first.due_at).to eq Time.zone.parse('2026-07-20T17:00:00Z')
       end
+
+      it 'enfileira lembretes só nos offsets ainda futuros' do
+        # 12:30 → reunião 14:00: sobram 1h, 30min e 5min antes (24h e 8h já passaram)
+        travel_to Time.zone.parse('2026-07-15T12:30:00Z') do
+          expect { post_webhook(booking_payload) }
+            .to have_enqueued_job(Ramon::MeetingReminderJob).exactly(3).times
+        end
+      end
+
+      it 'cria o rascunho de confirmação com data/hora pt-BR e pedido de aviso' do
+        post_webhook(booking_payload)
+
+        note = lead.lead_notes.find_by("body LIKE 'RASCUNHO%'")
+        expect(note.body).to include('quarta, 15/07 às 11:00')
+        expect(note.body).to include('me avise com antecedência')
+      end
+
+      it 'BOOKING_RESCHEDULED reenfileira os lembretes pro novo horário' do
+        travel_to Time.zone.parse('2026-07-15T12:30:00Z') do
+          post_webhook(booking_payload)
+
+          reschedule = booking_payload.deep_merge(triggerEvent: 'BOOKING_RESCHEDULED',
+                                                  payload: { startTime: '2026-07-20T17:00:00Z' })
+          expect { post_webhook(reschedule) }
+            .to have_enqueued_job(Ramon::MeetingReminderJob).with(lead.id, '2026-07-20T17:00:00Z', '24h antes')
+        end
+      end
     end
 
     it 'faz match por email quando não há telefone' do
