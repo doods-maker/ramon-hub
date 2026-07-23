@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 
@@ -13,6 +13,7 @@ const { t } = useI18n();
 
 const isLoading = ref(false);
 const simulando = ref(false);
+const ocupado = computed(() => isLoading.value || simulando.value);
 const hasError = ref(false);
 const errorMessage = ref('');
 const resultado = ref(null);
@@ -102,7 +103,7 @@ const cenarioTexto = cenario =>
       type="button"
       data-testid="eleg-analisar"
       class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
-      :disabled="!der || isLoading"
+      :disabled="!der || ocupado"
       @click="analisar"
     >
       {{
@@ -241,7 +242,7 @@ const cenarioTexto = cenario =>
               type="button"
               data-testid="eleg-pendencia-sim"
               class="px-2 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
-              :disabled="isLoading"
+              :disabled="ocupado"
               @click="responder(pend.tipo, true)"
             >
               {{ $t('RAMON.SIMULADOR.ELEG_SIM') }}
@@ -250,7 +251,7 @@ const cenarioTexto = cenario =>
               type="button"
               data-testid="eleg-pendencia-nao"
               class="px-2 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
-              :disabled="isLoading"
+              :disabled="ocupado"
               @click="responder(pend.tipo, false)"
             >
               {{ $t('RAMON.SIMULADOR.ELEG_NAO') }}
@@ -329,7 +330,7 @@ const cenarioTexto = cenario =>
           type="button"
           data-testid="eleg-simular"
           class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-40 disabled:cursor-not-allowed"
-          :disabled="simulando"
+          :disabled="ocupado"
           @click="simular"
         >
           {{

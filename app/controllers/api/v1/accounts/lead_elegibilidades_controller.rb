@@ -40,8 +40,8 @@ class Api::V1::Accounts::LeadElegibilidadesController < Api::V1::Accounts::BaseC
   end
 
   # Sem CNIS anexado, cai pro nascimento/sexo do contato (o front só libera
-  # esta aba com canPainel, que já exige CNIS/vínculos — este fallback é
-  # defesa de fronteira, não caminho esperado).
+  # esta aba com canElegibilidade = der && cnis — CNIS é obrigatório; este
+  # fallback é defesa de fronteira, não caminho esperado).
   def segurado
     cnis_entrada['segurado'].presence ||
       { nascimento: @lead.contact&.data_nascimento&.iso8601, sexo: @lead.contact&.sexo.presence || 'M' }
