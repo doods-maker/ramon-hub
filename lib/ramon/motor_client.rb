@@ -20,6 +20,12 @@ class Ramon::MotorClient
     post_json('/painel', payload, read_timeout: 30)
   end
 
+  # Elegibilidade (qualidade de segurado, pendências, lacunas + simulação):
+  # ver contrato completo em docs/superpowers/plans/2026-07-23-elegibilidade-ui.md.
+  def self.elegibilidade(payload)
+    post_json('/elegibilidade', payload, read_timeout: 30)
+  end
+
   # Liquidação de sentença (F3 do motor): parcelas devidas + atualização +
   # honorários. Payload JSON (rmi/dib obrigatórios; ver LiquidacaoIn no motor).
   def self.liquidacao(payload)

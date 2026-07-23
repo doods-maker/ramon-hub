@@ -96,6 +96,7 @@
 | `config/routes.rb` | `resource :ramon_esteira, only: [:show] do post :done; post :snooze end` (após `resource :ramon_dashboard`) | fila do dia (Esteira) + ações Feito/Adiar | Esteira |
 | `config/routes.rb` | `resource :simulacao, only: [:create], controller: 'lead_simulacoes'` dentro do bloco `resources :leads` (após `resources :triages`) | endpoint do Simulador ao vivo (Sala de Fechamento) | Onda 2 |
 | `config/routes.rb` | `member { get :dossie, to: 'lead_dossies#show' }` dentro do bloco `resources :leads` (após o `collection`) | endpoint agregador do Dossiê de 30 segundos | dossiê |
+| `config/routes.rb` | `resource :elegibilidade, only: [:create], controller: 'lead_elegibilidades'` dentro do bloco `resources :leads` (após `resource :painel`) | endpoint de elegibilidade (qualidade de segurado, pendências, lacunas) | elegibilidade-ui |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 

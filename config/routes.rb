@@ -319,6 +319,7 @@ Rails.application.routes.draw do
             end
             resource :simulacao, only: [:create], controller: 'lead_simulacoes'
             resource :painel, only: [:create], controller: 'lead_paineis'
+            resource :elegibilidade, only: [:create], controller: 'lead_elegibilidades'
             resource :colheita, only: [:create], controller: 'lead_colheitas'
             resource :cnis, only: [:show, :create, :destroy], controller: 'lead_cnis'
             resource :liquidacao, only: [:create], controller: 'lead_liquidacoes' do
