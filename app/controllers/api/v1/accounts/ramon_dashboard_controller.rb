@@ -110,7 +110,8 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   # NPS all-time dos leads com nota (custom_attributes.nps.score). Path jsonb
   # literal fixo — nada do usuário entra no SQL.
   def nps_section
-    scope = Current.account.leads.reorder(nil).where("(custom_attributes #> '{nps,score}') IS NOT NULL")
+    # #>> (texto) normaliza JSON null → SQL NULL; #> contaria {score: null} como resposta
+    scope = Current.account.leads.reorder(nil).where("(custom_attributes #>> '{nps,score}') IS NOT NULL")
     respostas = scope.count
     media = respostas.zero? ? nil : scope.average(Arel.sql("(custom_attributes #>> '{nps,score}')::numeric")).to_f.round(1)
     { media: media, respostas: respostas }

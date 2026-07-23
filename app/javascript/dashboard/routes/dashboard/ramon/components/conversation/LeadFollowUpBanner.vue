@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
@@ -14,22 +14,29 @@ const currentChat = useMapGetter('getSelectedChat');
 const leadByConv = useMapGetter('leads/getLeadByConversationId');
 
 const conversationId = computed(() => currentChat.value?.id ?? null);
-const lead = computed(() =>
-  conversationId.value
+// Lead achado por contato (fallback do peek) não casa com o getter por
+// conversa — guardamos o retorno pra ele também acender o banner.
+const peeked = ref(null);
+const lead = computed(() => {
+  const byConv = conversationId.value
     ? leadByConv.value(Number(conversationId.value))
-    : undefined
-);
+    : undefined;
+  return byConv || peeked.value || undefined;
+});
 
 // Consulta somente-leitura: nunca cria lead pra conversa fora do funil.
 // Watch pelo id, não pelo objeto; falha na busca só silencia o banner.
 watch(
   conversationId,
   async id => {
+    peeked.value = null;
     if (!id || lead.value) return;
     try {
-      await store.dispatch('leads/peekForConversation', {
+      const result = await store.dispatch('leads/peekForConversation', {
         conversationId: Number(id),
       });
+      // guard contra resposta atrasada após troca de conversa
+      if (conversationId.value === id) peeked.value = result;
     } catch (e) {
       // conversa sem lead: o banner simplesmente não aparece
     }

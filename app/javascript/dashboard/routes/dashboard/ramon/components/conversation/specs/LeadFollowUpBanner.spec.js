@@ -97,6 +97,33 @@ describe('LeadFollowUpBanner.vue', () => {
     );
   });
 
+  it('shows the banner from the peek result when the getter misses (contact fallback)', async () => {
+    // lead achado por contato: conversation_id aponta pra OUTRA conversa
+    const fallbackLead = structuredClone({
+      ...baseLead,
+      conversation_id: 7,
+      stalled: true,
+    });
+    const ensure = vi.fn().mockResolvedValue(fallbackLead);
+    const store = createStore({
+      getters: { getSelectedChat: () => ({ id: 42 }) },
+      modules: {
+        leads: {
+          namespaced: true,
+          getters: { getLeadByConversationId: () => () => undefined },
+          actions: { peekForConversation: ensure },
+        },
+      },
+    });
+    const wrapper = mount(LeadFollowUpBanner, {
+      global: { plugins: [store], mocks: { $t: k => k } },
+    });
+    await flushPromises();
+    expect(
+      wrapper.find('[data-testid="lead-follow-up-banner"]').exists()
+    ).toBe(true);
+  });
+
   it('does not dispatch when the lead is already in the store', async () => {
     const { ensure } = mountBanner({
       lead: structuredClone({ ...baseLead, stalled: true }),

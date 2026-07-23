@@ -42,15 +42,26 @@ class Ramon::FollowUpDraftService
     return false if lead.lead_tasks.open_tasks.exists?(kind: 'follow_up')
 
     last_at = lead.custom_attributes.dig('follow_up', 'ultima_em')
-    last_at.blank? || Time.zone.parse(last_at) <= MIN_GAP_DAYS.days.ago
+    return true if last_at.blank?
+
+    parsed = begin
+      Time.zone.parse(last_at.to_s)
+    rescue ArgumentError
+      nil
+    end
+    # data venenosa (API grava qualquer coisa no jsonb) → trata como "nunca"
+    parsed.nil? || parsed <= MIN_GAP_DAYS.days.ago
   end
 
   def draft_for(lead)
     attempt = lead.custom_attributes.dig('follow_up', 'tentativas').to_i + 1
     body = "RASCUNHO (revisar antes de enviar) — retomada nº #{attempt}:\n#{message_for(lead, attempt)}"
-    lead.lead_notes.create!(account: @account, body: body.truncate(1000))
-    lead.lead_tasks.create!(account: @account, kind: 'follow_up', title: "Retomada nº #{attempt}", due_at: Time.current.end_of_day)
-    register_attempt(lead, attempt)
+    # atômico: falha parcial deixaria nota órfã sem task/contador → retomada duplicada amanhã
+    lead.transaction do
+      lead.lead_notes.create!(account: @account, body: body.truncate(1000))
+      lead.lead_tasks.create!(account: @account, kind: 'follow_up', title: "Retomada nº #{attempt}", due_at: Time.current.end_of_day)
+      register_attempt(lead, attempt)
+    end
   end
 
   def message_for(lead, attempt)

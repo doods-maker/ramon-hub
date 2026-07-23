@@ -22,6 +22,8 @@ class Ramon::MeetingReminderJob < ApplicationJob
     unless lead && meeting_open?(lead, start_at)
       return Rails.logger.info("MeetingReminderJob: lead #{lead_id} sem reunião aberta em #{start_at_iso} — lembrete órfão descartado")
     end
+    # dedup: reschedule ida-e-volta re-enfileira os mesmos offsets — só o 1º apita
+    return unless Rails.cache.write("ramon:reminder:#{lead_id}:#{start_at_iso}:#{label}", true, unless_exist: true, expires_in: 25.hours)
 
     hora = start_at.in_time_zone(TIME_ZONE).strftime('%d/%m %H:%M')
     # timing já resolvido pelo wait_until — push direto, sem re-enfileirar
