@@ -4,9 +4,8 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
   include Devise::Test::ControllerHelpers
 
   # knapsack pode co-locar poluidor de travel_to (licao 20/07) — garante relogio real
-  before { travel_back }
-
   before do
+    travel_back
     request.env['devise.mapping'] = Devise.mappings[:user]
   end
 
@@ -168,7 +167,17 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
   end
 
   describe 'session limit enforcement' do
-    before { stub_const('DeviseOverrides::SessionsController::MAX_SESSIONS', 5) }
+    before do
+      stub_const('DeviseOverrides::SessionsController::MAX_SESSIONS', 5)
+      # DeviceTokenAuth's own gem-level eviction (User#save, via DeviseTokenAuth::Concerns::User)
+      # silently prunes `tokens` once size > max_number_of_devices — independent of our MAX_SESSIONS
+      # check. A shard co-located spec that leaks this mattr_accessor (`config/initializers/
+      # devise_token_auth.rb`, default 25) to a low value would have `seed_token`'s own `user.save!`
+      # calls drop tokens before our enforcement even runs, undercounting active_token_count and
+      # masking the 5-session cap (409 becomes 200, oldest tokens "already gone" instead of evicted
+      # by our code). Pin it so this describe never depends on whatever ran before it.
+      allow(DeviceTokenAuth).to receive(:max_number_of_devices).and_return(25)
+    end
 
     let(:user) { create(:user, password: 'Test@123456') }
     let(:browser_ua) { 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15' }
