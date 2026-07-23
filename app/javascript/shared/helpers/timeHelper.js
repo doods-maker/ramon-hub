@@ -5,6 +5,9 @@ import {
   formatDistanceToNow,
   differenceInDays,
 } from 'date-fns';
+// FORK-PONTO: instalação PT-BR única — tempo relativo em português ("há 3 dias"
+// em vez de "3 days ago"); date-fns 2.21 não tem setDefaultOptions.
+import { ptBR } from 'date-fns/locale';
 
 /**
  * Formats a Unix timestamp into a human-readable time format.
@@ -40,7 +43,7 @@ export const messageTimestamp = (time, dateFormat = 'MMM d, yyyy') => {
  */
 export const dynamicTime = time => {
   const unixTime = fromUnixTime(time);
-  return formatDistanceToNow(unixTime, { addSuffix: true });
+  return formatDistanceToNow(unixTime, { addSuffix: true, locale: ptBR });
 };
 
 /**
