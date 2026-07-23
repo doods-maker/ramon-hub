@@ -136,11 +136,16 @@ class Lead < ApplicationRecord
       # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast (mesmo motivo de `value` acima)
       benefit_monthly_value: benefit_monthly_value&.to_f,
       cnis_resumo: cnis_resumo,
-      # espelho do jbuilder: o badge do card/banner lê os escalares, não o jsonb
-      follow_up_count: custom_attributes&.dig('follow_up', 'tentativas').to_i,
-      follow_up_last_at: custom_attributes&.dig('follow_up', 'ultima_em'),
       # jsonb já é JSON nativo; painel aberto recebe colheita/doc_status ao vivo
       custom_attributes: custom_attributes || {}
+    }.merge(follow_up_event_data)
+  end
+
+  # espelho do jbuilder: o badge do card/banner lê os escalares, não o jsonb
+  def follow_up_event_data
+    {
+      follow_up_count: custom_attributes.dig('follow_up', 'tentativas').to_i,
+      follow_up_last_at: custom_attributes.dig('follow_up', 'ultima_em')
     }
   end
 

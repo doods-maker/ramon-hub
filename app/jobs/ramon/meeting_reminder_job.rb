@@ -28,7 +28,7 @@ class Ramon::MeetingReminderJob < ApplicationJob
     hora = start_at.in_time_zone(TIME_ZONE).strftime('%d/%m %H:%M')
     # timing já resolvido pelo wait_until — push direto, sem re-enfileirar
     Ramon::NtfyPushJob.perform_now(lead_id, title: "Reunião #{lead.name} em #{label}",
-                                   body: "#{hora} — hora de mandar a mensagem de confirmação pro cliente")
+                                            body: "#{hora} — hora de mandar a mensagem de confirmação pro cliente")
   end
 
   private

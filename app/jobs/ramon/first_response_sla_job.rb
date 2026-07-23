@@ -16,7 +16,7 @@ class Ramon::FirstResponseSlaJob < ApplicationJob
 
     minutes = ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15')
     Ramon::NtfyPushJob.perform_now(lead.id, title: 'Lead aguardando 1a resposta',
-                                   body: "Lead aguardando 1ª resposta há #{minutes}min: #{lead.name}")
+                                            body: "Lead aguardando 1ª resposta há #{minutes}min: #{lead.name}")
   end
 
   private

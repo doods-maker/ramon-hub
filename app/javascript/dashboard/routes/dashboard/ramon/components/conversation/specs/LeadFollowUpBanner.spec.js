@@ -119,9 +119,9 @@ describe('LeadFollowUpBanner.vue', () => {
       global: { plugins: [store], mocks: { $t: k => k } },
     });
     await flushPromises();
-    expect(
-      wrapper.find('[data-testid="lead-follow-up-banner"]').exists()
-    ).toBe(true);
+    expect(wrapper.find('[data-testid="lead-follow-up-banner"]').exists()).toBe(
+      true
+    );
   });
 
   it('does not dispatch when the lead is already in the store', async () => {

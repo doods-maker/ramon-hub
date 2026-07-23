@@ -140,6 +140,6 @@ class Ramon::FollowUpDraftService
     return if batch.empty? || ENV.fetch('NTFY_TOPIC', nil).blank?
 
     Ramon::NtfyPushJob.perform_later(batch.last.id, title: 'Retomadas prontas pra revisar',
-                                     body: "#{batch.size} rascunho(s) de retomada esperando revisão no hub")
+                                                    body: "#{batch.size} rascunho(s) de retomada esperando revisão no hub")
   end
 end
