@@ -713,7 +713,10 @@
       "ELEG_GANHO": "Ganho",
       "ELEG_ANTES": "Antes",
       "ELEG_DEPOIS": "Depois",
-      "ELEG_ERRO": "Não deu para analisar a elegibilidade — confira a DER e tente de novo."
+      "ELEG_ERRO": "Não deu para analisar a elegibilidade — confira a DER e tente de novo.",
+      "ELEG_ART27A": "Art. 27-A — {exigencia} ({status})",
+      "ELEG_MESES": "{n}m",
+      "ELEG_GANHO_FMT": "Ganho: +{tempo}m / +{carencia}c"
     },
     "LIQUIDACAO": {
       "TITULO": "Liquidação de sentença",

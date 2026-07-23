@@ -713,7 +713,10 @@
       "ELEG_GANHO": "Gain",
       "ELEG_ANTES": "Before",
       "ELEG_DEPOIS": "After",
-      "ELEG_ERRO": "Could not analyze eligibility — check the DER and try again."
+      "ELEG_ERRO": "Could not analyze eligibility — check the DER and try again.",
+      "ELEG_ART27A": "Art. 27-A — {exigencia} ({status})",
+      "ELEG_MESES": "{n}m",
+      "ELEG_GANHO_FMT": "Gain: +{tempo}m / +{carencia}c"
     },
     "LIQUIDACAO": {
       "TITULO": "Judgment liquidation",

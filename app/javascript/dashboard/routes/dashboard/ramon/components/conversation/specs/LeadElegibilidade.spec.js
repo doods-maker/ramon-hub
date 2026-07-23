@@ -2,7 +2,11 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadElegibilidade from '../LeadElegibilidade.vue';
 
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+// mock ecoa os params na saída (ex.: "KEY:6,Sim") pra testes poderem
+// checar que a interpolação de fato aconteceu, sem reimplementar vue-i18n.
+const tWithParams = (k, params) =>
+  params ? `${k}:${Object.values(params).join(',')}` : k;
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: tWithParams }) }));
 vi.mock('dashboard/api/leads', () => ({
   default: { elegibilidade: vi.fn() },
 }));
@@ -13,7 +17,7 @@ const der = '2026-06-30';
 const mountEleg = (props = {}) =>
   shallowMount(LeadElegibilidade, {
     props: { lead, der, ...props },
-    global: { mocks: { $t: k => k } },
+    global: { mocks: { $t: tWithParams } },
   });
 
 const doisCenarios = {
@@ -27,7 +31,11 @@ const doisCenarios = {
       },
     },
   },
-  carencia: { total: 180, perda_qualidade_anterior: false, art_27a: null },
+  carencia: {
+    total: 180,
+    perda_qualidade_anterior: false,
+    art_27a: { aplicavel: true, exigencia_incapacidade: 6, cumprida: true },
+  },
   lacunas: [],
   decisoes_pendentes: [
     {
@@ -80,6 +88,28 @@ describe('LeadElegibilidade', () => {
     expect(wrapper.find('[data-testid="eleg-pendencia-0"]').text()).toContain(
       'O segurado recebeu seguro-desemprego nesse período?'
     );
+    expect(wrapper.find('[data-testid="eleg-art27a"]').text()).toContain('6');
+  });
+
+  it('art_27a não aplicável não renderiza o bloco', async () => {
+    LeadsAPI.elegibilidade.mockResolvedValue({
+      data: {
+        ...cenarioUnico,
+        carencia: {
+          total: 180,
+          art_27a: {
+            aplicavel: false,
+            exigencia_incapacidade: 0,
+            cumprida: false,
+          },
+        },
+      },
+    });
+    const wrapper = mountEleg();
+    await wrapper.find('[data-testid="eleg-analisar"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="eleg-art27a"]').exists()).toBe(false);
   });
 
   it('clique em Sim re-chama com decisoes.desemprego=true e colapsa pra cenário único', async () => {
@@ -102,6 +132,22 @@ describe('LeadElegibilidade', () => {
     expect(
       wrapper.find('[data-testid="eleg-cenario-sem-desemprego"]').exists()
     ).toBe(false);
+  });
+
+  it('clique em Não re-chama com decisoes.desemprego=false explícito', async () => {
+    LeadsAPI.elegibilidade.mockResolvedValueOnce({ data: doisCenarios });
+    const wrapper = mountEleg();
+    await wrapper.find('[data-testid="eleg-analisar"]').trigger('click');
+    await flushPromises();
+
+    LeadsAPI.elegibilidade.mockResolvedValueOnce({ data: cenarioUnico });
+    await wrapper.find('[data-testid="eleg-pendencia-nao"]').trigger('click');
+    await flushPromises();
+
+    expect(LeadsAPI.elegibilidade).toHaveBeenLastCalledWith(7, {
+      der,
+      decisoes: { desemprego: false },
+    });
   });
 
   it('erro de rede mostra erro+retry, não vazio', async () => {

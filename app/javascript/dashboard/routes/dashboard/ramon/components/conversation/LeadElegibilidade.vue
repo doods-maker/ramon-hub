@@ -271,14 +271,15 @@ const cenarioTexto = cenario =>
           {{ resultado.carencia.total }}
         </p>
         <p
-          v-if="resultado.carencia.art_27a"
+          v-if="resultado.carencia.art_27a?.aplicavel"
           class="text-xs text-n-amber-11"
           data-testid="eleg-art27a"
         >
           {{
-            `Art. 27-A — ${resultado.carencia.art_27a.exigencia} (${simNao(
-              resultado.carencia.art_27a.cumprida
-            )})`
+            $t('RAMON.SIMULADOR.ELEG_ART27A', {
+              exigencia: resultado.carencia.art_27a.exigencia_incapacidade,
+              status: simNao(resultado.carencia.art_27a.cumprida),
+            })
           }}
         </p>
       </div>
@@ -303,7 +304,7 @@ const cenarioTexto = cenario =>
                   {{ dataBr(lac.inicio) }} – {{ dataBr(lac.fim) }}
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
-                  {{ `${lac.meses}m` }}
+                  {{ $t('RAMON.SIMULADOR.ELEG_MESES', { n: lac.meses }) }}
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
                   {{
@@ -314,9 +315,10 @@ const cenarioTexto = cenario =>
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
                   {{
-                    `${$t('RAMON.SIMULADOR.ELEG_GANHO')}: +${
-                      lac.ganho_tempo_meses
-                    }m / +${lac.ganho_carencia}c`
+                    $t('RAMON.SIMULADOR.ELEG_GANHO_FMT', {
+                      tempo: lac.ganho_tempo_meses,
+                      carencia: lac.ganho_carencia,
+                    })
                   }}
                 </td>
               </tr>
