@@ -47,6 +47,10 @@ json.week do
     json.reason reason.presence || '—'
     json.count count
   end
+  json.nps do
+    json.media @week[:nps][:media]
+    json.respostas @week[:nps][:respostas]
+  end
 end
 
 json.history @history do |row|

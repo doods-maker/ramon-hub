@@ -158,6 +158,27 @@ theses:
         title: "Qual o seu tipo de vínculo? (empregado, doméstico, avulso, rural)"
         content: "Qualificado: empregado, doméstico, trabalhador avulso e segurado especial (rural) têm direito. Contribuinte individual (autônomo) e facultativo, em regra, NÃO têm."
         position: 2
+      # Perfis de comunicador + SPIN (mapa comercial 23/07): como falar, não o que perguntar.
+      - section: "qualificacao"
+        title: "Perfil comunicador — Intuitivo"
+        content: "Reconhecer: fala rápido, quer saber logo o resultado, pouca paciência pra detalhe. Agir: ir direto ao ponto e mostrar o ganho ('um valor mensal do INSS além do seu salário') — sem enrolação e sem juridiquês."
+        position: 3
+      - section: "qualificacao"
+        title: "Perfil comunicador — Pessoal"
+        content: "Reconhecer: conta a história com emoção, fala da família, busca vínculo e confiança. Agir: acolher primeiro, chamar pelo nome, ouvir a história inteira — a relação fecha antes do argumento."
+        position: 4
+      - section: "qualificacao"
+        title: "Perfil comunicador — Funcional"
+        content: "Reconhecer: pergunta 'como funciona', quer passo a passo, cauteloso com cada etapa. Agir: explicar o caminho em etapas simples (análise → documentos → pedido) e o que acontece em cada uma."
+        position: 5
+      - section: "qualificacao"
+        title: "Perfil comunicador — Analítico"
+        content: "Reconhecer: pede números, lei, prova, compara antes de decidir. Agir: trazer o fundamento (art. 86 da Lei 8.213/91, Súmula 44 do STJ) e os números da banca (+20 anos, +10.000 benefícios), sem pressa."
+        position: 6
+      - section: "qualificacao"
+        title: "Perguntas SPIN"
+        content: "Situação: 'Como está o seu trabalho hoje, depois do acidente?' · Problema: 'O que você deixou de conseguir fazer no serviço?' · Implicação: 'Como isso vem afetando sua renda e seu dia a dia?' · Necessidade: 'Se existir um valor mensal do INSS pra compensar essa perda, sem você precisar parar de trabalhar, vale a pena a gente analisar?'"
+        position: 7
       - section: "objecao"
         title: "Mas eu ainda consigo trabalhar, então não tenho direito."
         content: "Justamente por isso existe o auxílio-acidente: ele é para quem teve a capacidade REDUZIDA mas continua trabalhando. É uma indenização que soma ao seu salário, não substitui."
@@ -170,6 +191,41 @@ theses:
         title: "O INSS me deu alta e não falou nada de auxílio-acidente."
         content: "É comum o INSS não conceder de ofício. Se você ficou com sequela na alta, dá para pleitear o auxílio-acidente, inclusive valores retroativos."
         position: 2
+      # Scripts de objeção do mapa comercial (23/07), adaptados à régua da banca:
+      # honorário = 30% dos atrasados + 3 benefícios, SEM entrada e SEM parcelamento;
+      # nunca prometer resultado nem cravar prazo do INSS.
+      - section: "objecao"
+        title: "Não tenho tempo pra cuidar disso."
+        content: "Concordar ('sei que a rotina é puxada') e tirar o peso: quem corre atrás de quase tudo somos nós. De você a gente precisa dos documentos e de alguns minutos no WhatsApp — e a conversa é no horário que servir pra você."
+        position: 3
+      - section: "objecao"
+        title: "Tá caro. / Quanto vou ter que pagar?"
+        content: "Transparência total: você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, mais 3 parcelas do benefício — sem entrada, sem mensalidade, sem custo escondido. Se não vier nada, você não paga nada. NUNCA oferecer parcelamento ou desconto: a resposta é o risco zero, não o preço."
+        position: 4
+      - section: "objecao"
+        title: "Tenho medo de ser golpe."
+        content: "Acolher a desconfiança — ela é saudável. Somos escritório físico em Tubarão/SC, +20 anos de atuação, +10.000 benefícios conquistados, registro na OAB. Convidar: 'pesquisa nosso nome no Google, vem tomar um café no escritório'. Nunca pedir dinheiro adiantado — só há honorário se você receber."
+        position: 5
+      - section: "objecao"
+        title: "Preciso falar com minha esposa/família primeiro."
+        content: "Legítimo — decisão de família se respeita. Oferecer: 'traz ela junto na conversa, ou me fala um horário em que vocês dois possam'. Deixar um resumo simples por escrito pra pessoa mostrar em casa e combinar a data do retorno."
+        position: 6
+      - section: "objecao"
+        title: "Preciso pensar."
+        content: "Acolher sem pressão: 'claro, é uma decisão sua'. Lembrar com honestidade a janela legal: a lei só paga os últimos 5 anos — cada mês que passa é parcela antiga que fica pra trás. Fechar com próximo passo combinado: 'te chamo na sexta pra ver o que você decidiu?'"
+        position: 7
+      - section: "objecao"
+        title: "E se não der certo?"
+        content: "Ser honesto: nenhum advogado sério promete resultado. O que a gente promete é análise honesta e trabalho bem feito — e se não vier benefício, você não paga honorário. O risco financeiro é nosso, não seu."
+        position: 8
+      - section: "objecao"
+        title: "Vou deixar pra depois."
+        content: "Urgência verdadeira, sem alarmismo: o direito não some, mas as parcelas antigas sim — a lei paga só os últimos 5 anos (prescrição). 'Deixar pra depois' custa dinheiro de verdade. Propor o menor passo possível agora: mandar os documentos por WhatsApp."
+        position: 9
+      - section: "objecao"
+        title: "Sem direito → pedir que salve o contato"
+        content: "Quando a análise mostrar que não há direito, dizer com a mesma honestidade: 'no seu caso, hoje, não vale entrar'. Orientar o que mudaria isso e pedir: 'salva o nosso contato — qualquer questão com o INSS, sua ou de alguém da família, a gente tá aqui'. Lead sem direito bem atendido vira indicação."
+        position: 10
       - section: "documento"
         title: "Documento de identidade e CPF"
         content: "Identificação do segurado."

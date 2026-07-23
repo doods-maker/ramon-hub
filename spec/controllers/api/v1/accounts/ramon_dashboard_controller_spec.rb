@@ -75,6 +75,23 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(row['value_sum']).to eq(4000.0)
   end
 
+  it 'expõe o NPS (média e nº de respostas) na semana' do
+    create(:lead, account: account, lead_stage: active_stage, custom_attributes: { 'nps' => { 'score' => 10 } })
+    create(:lead, account: account, lead_stage: active_stage, custom_attributes: { 'nps' => { 'score' => 7 } })
+    create(:lead, account: account, lead_stage: active_stage) # sem score não entra na conta
+    get url, headers: agent.create_new_auth_token, as: :json
+    nps = response.parsed_body['week']['nps']
+    expect(nps['media']).to eq(8.5)
+    expect(nps['respostas']).to eq(2)
+  end
+
+  it 'sem nenhuma resposta o NPS vem com média nula' do
+    get url, headers: agent.create_new_auth_token, as: :json
+    nps = response.parsed_body['week']['nps']
+    expect(nps['media']).to be_nil
+    expect(nps['respostas']).to eq(0)
+  end
+
   it 'denies a user without access to the account' do
     stranger = create(:user)
     get url, headers: stranger.create_new_auth_token, as: :json

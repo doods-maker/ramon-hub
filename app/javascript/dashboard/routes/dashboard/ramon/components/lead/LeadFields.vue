@@ -7,6 +7,7 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadTasksList from './LeadTasksList.vue';
 import DocChecklist from './DocChecklist.vue';
+import LostReasonModal from '../kanban/LostReasonModal.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
 import { formatCpf, stripCpf } from '../../helpers/cpf';
@@ -42,6 +43,7 @@ const benefitMonthlyValue = ref('');
 const contactCpf = ref('');
 const contactNascimento = ref('');
 const contactSexo = ref('');
+const npsScore = ref('');
 
 // ZapSign (item 21, fluxo A): botão gera contrato+procuração pré-preenchidos
 // e devolve o link de assinatura — nada é enviado ao cliente automaticamente.
@@ -89,8 +91,7 @@ const copyZapsignLink = async () => {
 // Etapa controlada localmente para poder reverter o select quando a mudança
 // para uma etapa de perda é cancelada, ou quando o backend recusa o update.
 const stageId = ref(null);
-const lostPrompt = ref(false);
-const lostReasonName = ref('');
+const lostModalOpen = ref(false);
 const wonPrompt = ref(false);
 const wonValue = ref('');
 
@@ -104,9 +105,9 @@ const syncAll = l => {
   contactCpf.value = formatCpf(l?.contact_cpf);
   contactNascimento.value = l?.contact_data_nascimento ?? '';
   contactSexo.value = l?.contact_sexo ?? '';
+  npsScore.value = l?.custom_attributes?.nps?.score ?? '';
   stageId.value = l?.lead_stage_id ?? null;
-  lostPrompt.value = false;
-  lostReasonName.value = '';
+  lostModalOpen.value = false;
   wonPrompt.value = false;
   wonValue.value = '';
 };
@@ -130,6 +131,7 @@ const FIELD_SYNC = [
     l => l?.contact_data_nascimento ?? '',
   ],
   ['field-contact-sexo', contactSexo, l => l?.contact_sexo ?? ''],
+  ['field-nps', npsScore, l => l?.custom_attributes?.nps?.score ?? ''],
 ];
 
 watch(
@@ -146,7 +148,7 @@ watch(
       if (testId !== focused) target.value = read(l);
     });
     // etapa: não mexer com prompt aberto (escolha pendente do usuário)
-    if (!lostPrompt.value && !wonPrompt.value && focused !== 'field-stage') {
+    if (!lostModalOpen.value && !wonPrompt.value && focused !== 'field-stage') {
       stageId.value = l?.lead_stage_id ?? null;
     }
   },
@@ -267,23 +269,23 @@ const commitStage = async (targetId, extra = {}) => {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     stageId.value = props.lead?.lead_stage_id ?? null;
   } finally {
-    lostPrompt.value = false;
+    lostModalOpen.value = false;
     wonPrompt.value = false;
   }
 };
 
-// Mudar de etapa pelo select. Etapa de perda sem motivo → pede o motivo inline
-// antes de mandar (senão o backend recusa com 422 e o select fica dessincrono).
+// Mudar de etapa pelo select. Etapa de perda sem motivo → abre o LostReasonModal
+// (mesmo fluxo do drag no Kanban) antes de mandar — senão o backend recusa com
+// 422 e o select fica dessincrono.
 // Etapa de ganho sem valor → pede o valor inline, mesmo padrão do drag no Kanban.
 const onStageChange = targetId => {
   stageId.value = targetId;
   // Trocar a seleção fecha qualquer prompt aberto da escolha anterior.
-  lostPrompt.value = false;
+  lostModalOpen.value = false;
   wonPrompt.value = false;
   const target = stages.value.find(s => s.id === targetId);
   if (target?.is_lost && !props.lead?.lost_reason) {
-    lostReasonName.value = '';
-    lostPrompt.value = true;
+    lostModalOpen.value = true;
     return;
   }
   if (target?.is_won && props.lead?.value == null) {
@@ -294,14 +296,11 @@ const onStageChange = targetId => {
   commitStage(targetId);
 };
 
-const confirmLostStage = () => {
-  if (!lostReasonName.value) return;
-  commitStage(stageId.value, { lost_reason: lostReasonName.value });
-};
+const confirmLostStage = ({ lostReason }) =>
+  commitStage(stageId.value, { lost_reason: lostReason });
 
 const cancelLostStage = () => {
-  lostPrompt.value = false;
-  lostReasonName.value = '';
+  lostModalOpen.value = false;
   stageId.value = props.lead?.lead_stage_id ?? null;
 };
 
@@ -311,6 +310,42 @@ const confirmWonStage = () => {
 };
 
 const skipWonStage = () => commitStage(stageId.value);
+
+// NPS pós-ganho: grava só a chave nps (o PATCH faz deep_merge server-side).
+const currentNps = computed(() => props.lead?.custom_attributes?.nps || null);
+const npsRecordedAt = computed(() => {
+  const em = currentNps.value?.em;
+  if (!em) return null;
+  const date = new Date(em);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('pt-BR');
+});
+const saveNps = async () => {
+  const raw = String(npsScore.value).trim();
+  if (raw === '') {
+    npsScore.value = currentNps.value?.score ?? '';
+    return;
+  }
+  const score = Number(raw);
+  // fora de 0–10 ou não inteiro: reverte sem salvar
+  if (!Number.isInteger(score) || score < 0 || score > 10) {
+    npsScore.value = currentNps.value?.score ?? '';
+    return;
+  }
+  if (score === currentNps.value?.score) return;
+  try {
+    await store.dispatch('leads/update', {
+      id: props.lead.id,
+      custom_attributes: {
+        nps: { score, em: new Date().toISOString() },
+      },
+    });
+    useAlert(t('RAMON.NPS.SAVED'));
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    npsScore.value = currentNps.value?.score ?? '';
+  }
+};
 
 const copyPhone = async () => {
   try {
@@ -395,7 +430,7 @@ const toggleConsent = () =>
     <select
       data-testid="field-stage"
       :value="stageId"
-      :class="lostPrompt || wonPrompt ? 'mb-1' : 'mb-3'"
+      :class="wonPrompt ? 'mb-1' : 'mb-3'"
       class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
       @change="e => onStageChange(Number(e.target.value))"
     >
@@ -404,39 +439,12 @@ const toggleConsent = () =>
       </option>
     </select>
 
-    <div
-      v-if="lostPrompt"
-      data-testid="stage-lost-prompt"
-      class="flex flex-col gap-2 p-2 mb-3 rounded-lg bg-n-alpha-1 border border-n-weak"
-    >
-      <select
-        v-model="lostReasonName"
-        data-testid="stage-lost-reason"
-        class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
-      >
-        <option value="" disabled>{{ $t('RAMON.FUNIL.LOST.PICK') }}</option>
-        <option v-for="r in lostReasons" :key="r.id" :value="r.name">
-          {{ r.name }}
-        </option>
-      </select>
-      <div class="flex justify-end gap-2">
-        <button
-          data-testid="stage-lost-cancel"
-          class="px-3 py-1 text-xs text-n-slate-11"
-          @click="cancelLostStage"
-        >
-          {{ $t('RAMON.FUNIL.LOST.CANCEL') }}
-        </button>
-        <button
-          data-testid="stage-lost-confirm"
-          class="px-3 py-1 text-xs rounded-lg bg-n-ruby-9 text-white disabled:opacity-50"
-          :disabled="!lostReasonName"
-          @click="confirmLostStage"
-        >
-          {{ $t('RAMON.FUNIL.LOST.CONFIRM') }}
-        </button>
-      </div>
-    </div>
+    <LostReasonModal
+      v-if="lostModalOpen"
+      :lost-reasons="lostReasons"
+      @confirm-move="confirmLostStage"
+      @cancel-move="cancelLostStage"
+    />
 
     <div
       v-if="wonPrompt"
@@ -658,6 +666,31 @@ const toggleConsent = () =>
           {{ r.name }}
         </option>
       </select>
+    </template>
+
+    <template v-if="lead.won_at">
+      <label class="block mb-1 text-xs text-n-slate-10">{{
+        $t('RAMON.NPS.LABEL')
+      }}</label>
+      <input
+        v-model="npsScore"
+        data-testid="field-nps"
+        type="number"
+        min="0"
+        max="10"
+        step="1"
+        inputmode="numeric"
+        class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+        :class="npsRecordedAt ? 'mb-1' : 'mb-3'"
+        @blur="saveNps"
+      />
+      <p
+        v-if="npsRecordedAt"
+        data-testid="nps-recorded-at"
+        class="mb-3 text-xs text-n-slate-9"
+      >
+        {{ $t('RAMON.NPS.RECORDED_AT', { date: npsRecordedAt }) }}
+      </p>
     </template>
 
     <LeadTasksList v-if="lead.id" :lead-id="lead.id" />

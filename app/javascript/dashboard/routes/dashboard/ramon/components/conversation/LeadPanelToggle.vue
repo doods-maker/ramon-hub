@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import LeadFollowUpBanner from './LeadFollowUpBanner.vue';
 
 defineOptions({ name: 'LeadPanelToggle' });
 
@@ -20,6 +21,7 @@ const toggle = () => {
 </script>
 
 <template>
+  <LeadFollowUpBanner />
   <Button
     ghost
     slate

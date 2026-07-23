@@ -54,6 +54,30 @@ describe('leads actions', () => {
     expect(commit).toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 7);
   });
 
+  it('peekForConversation merges the lead without selecting it', async () => {
+    const lead = { id: 7, conversation_id: 99 };
+    axios.post.mockResolvedValue({ status: 200, data: lead });
+    const commit = vi.fn();
+    const result = await actions.peekForConversation(
+      { commit },
+      { conversationId: 99 }
+    );
+    expect(result).toEqual(lead);
+    expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD, lead);
+    expect(commit).not.toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 7);
+  });
+
+  it('peekForConversation returns null on 204 without committing', async () => {
+    axios.post.mockResolvedValue({ status: 204, data: '' });
+    const commit = vi.fn();
+    const result = await actions.peekForConversation(
+      { commit },
+      { conversationId: 99 }
+    );
+    expect(result).toBeNull();
+    expect(commit).not.toHaveBeenCalled();
+  });
+
   it('fetchActivities gets activities for a lead and returns the payload array', async () => {
     const activities = [{ id: 1, kind: 'created' }];
     axios.get.mockResolvedValue({ data: { payload: activities } });

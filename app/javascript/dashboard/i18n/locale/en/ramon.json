@@ -770,6 +770,20 @@
     },
     "MODAL": {
       "CANCEL": "Cancel"
+    },
+    "FOLLOW_UP": {
+      "CARD_TITLE": "{count} follow-up(s) · last {date}",
+      "CARD_TITLE_NO_DATE": "{count} follow-up(s)",
+      "BANNER_STALLED": "Stalled for {days}d",
+      "BANNER_RETRIES": "{count} follow-up(s)"
+    },
+    "NPS": {
+      "LABEL": "NPS (0–10)",
+      "RECORDED_AT": "recorded on {date}",
+      "SAVED": "NPS saved.",
+      "TITLE": "NPS",
+      "RESPONSES": "{count} response(s)",
+      "EMPTY": "No responses yet."
     }
   }
 }

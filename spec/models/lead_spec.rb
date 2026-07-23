@@ -170,4 +170,20 @@ RSpec.describe Lead do
       end
     end
   end
+
+  describe 'NPS pós-fechamento (mapa comercial)' do
+    it 'enfileira o NpsDraftJob quando o lead vira ganho' do
+      lead = create(:lead, account: account)
+      won = account.lead_stages.find_by!(is_won: true)
+      expect { lead.update!(lead_stage: won) }
+        .to have_enqueued_job(Ramon::NpsDraftJob).with(lead.id)
+    end
+
+    it 'não enfileira quando o lead sai de ganho (won_at limpo)' do
+      lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by!(is_won: true))
+      open_stage = account.lead_stages.find_by(is_won: false, is_lost: false)
+      expect { lead.update!(lead_stage: open_stage) }
+        .not_to have_enqueued_job(Ramon::NpsDraftJob)
+    end
+  end
 end

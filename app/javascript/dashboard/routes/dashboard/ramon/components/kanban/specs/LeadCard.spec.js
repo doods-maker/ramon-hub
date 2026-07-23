@@ -69,6 +69,28 @@ describe('LeadCard.vue', () => {
     expect(badge.text()).toContain('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN');
   });
 
+  it('shows the follow-up badge with count when follow_up_count > 0', () => {
+    const wrapper = mountCard({
+      lead: {
+        ...structuredClone(lead),
+        follow_up_count: 2,
+        follow_up_last_at: '2026-07-20T12:00:00Z',
+      },
+    });
+    const badge = wrapper.find('[data-testid="follow-up-badge"]');
+    expect(badge.exists()).toBe(true);
+    expect(badge.text()).toContain('2');
+  });
+
+  it('hides the follow-up badge when follow_up_count is 0', () => {
+    const wrapper = mountCard({
+      lead: { ...structuredClone(lead), follow_up_count: 0 },
+    });
+    expect(wrapper.find('[data-testid="follow-up-badge"]').exists()).toBe(
+      false
+    );
+  });
+
   it('hides the awaiting-human badge for done triages', () => {
     const wrapper = mountCard({
       lead: {

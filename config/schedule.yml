@@ -81,3 +81,10 @@ ramon_daily_funnel_snapshot_job:
   cron: '5 3 * * *'
   class: 'Ramon::DailyFunnelSnapshotJob'
   queue: scheduled_jobs
+
+# executed daily at 1400 UTC = 11:00 America/Sao_Paulo (UTC-3)
+# gera rascunhos de retomada pros leads parados (cadência do mapa comercial)
+ramon_daily_follow_up_job:
+  cron: '0 14 * * *'
+  class: 'Ramon::DailyFollowUpJob'
+  queue: scheduled_jobs

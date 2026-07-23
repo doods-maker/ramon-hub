@@ -14,6 +14,7 @@ class Ramon::ConversationCopilotService
     **Tese provável** — qual benefício/tese previdenciária parece se aplicar e por quê.
     **Pendências** — o que falta perguntar, confirmar ou receber (documentos, datas, respostas).
     **Próximo passo** — a ação concreta mais importante agora.
+    **Perfil de comunicação** — qual dos 4 perfis o cliente aparenta (intuitivo, pessoal, funcional ou analítico) e como agir com ele, em 1 linha.
 
     Seja fiel à conversa; não invente fatos. Se algo não apareceu na conversa, diga "não informado".
     Dados pessoais aparecem mascarados como [nome], [cpf], [telefone] — mantenha os marcadores como estão.
@@ -27,6 +28,12 @@ class Ramon::ConversationCopilotService
     - NUNCA prometa resultado do caso nem prazo do INSS (regra da OAB).
     - Não invente fatos que não estejam na conversa.
     - Se precisar chamar o cliente pelo nome, escreva exatamente [nome].
+    - Detecte o perfil de comunicação do cliente e adapte o tom: intuitivo (quer resultado) → direto ao ponto;
+      pessoal (busca vínculo) → mais afeto e acolhimento; funcional (quer o passo a passo) → caminho em etapas simples;
+      analítico (quer detalhe e prova) → traga o fundamento com clareza.
+    - Se a última mensagem do cliente contém uma objeção, contorne em 4 passos na própria resposta:
+      concorde com a preocupação → amenize com empatia ou prova social → contorne com segurança → avance com um próximo passo.
+    - Use no máximo 1 gatilho mental adequado por mensagem — nunca empilhe gatilhos.
     Responda APENAS com o texto da mensagem, sem aspas, sem comentários e sem assinatura.
   PROMPT
 
