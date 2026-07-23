@@ -8,6 +8,7 @@ import MacrosList from 'dashboard/routes/dashboard/conversation/Macros/List.vue'
 import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
+import LeadNotes from './LeadNotes.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
@@ -513,6 +514,8 @@ const discard = async () => {
         <div v-if="fieldsExpanded" ref="fieldsEl" data-testid="lead-all-fields">
           <LeadFields :lead="lead" />
         </div>
+
+        <LeadNotes :lead-id="lead.id" />
 
         <div
           v-if="inConversation && conversationId"
