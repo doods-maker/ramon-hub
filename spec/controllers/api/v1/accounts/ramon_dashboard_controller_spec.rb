@@ -206,7 +206,7 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     let(:won_stage) { account.lead_stages.find_by(is_won: true) }
     let(:thesis) { account.theses.first || create(:thesis, account: account) }
     let(:closer) { create(:user, account: account, role: :agent) }
-    let(:benefit) { create(:benefit_type, account: account, name: 'Auxílio-acidente') }
+    let(:benefit) { account.benefit_types.find_or_create_by!(name: 'Auxílio-acidente') }
     let!(:won) do
       create(:lead, account: account, lead_stage: won_stage, value: 30_000,
                     closer: closer, thesis: thesis, benefit_type: benefit)

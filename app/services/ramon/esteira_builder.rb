@@ -136,17 +136,22 @@ class Ramon::EsteiraBuilder
   def item_for(entry, messages)
     lead = entry[:lead]
     reasons = entry[:reasons].sort_by { |r| -WEIGHTS.fetch(r[:key]) }
+    lead_fields(lead).merge(
+      task_id: entry[:task_id],
+      score: WEIGHTS.fetch(reasons.first[:key]),
+      suggested_action: ACTIONS.fetch(reasons.first[:key]),
+      reasons: reasons
+    ).merge(context_fields(lead, messages))
+  end
+
+  def lead_fields(lead)
     {
       lead_id: lead.id, name: lead.name,
       stage_name: lead.lead_stage&.name, stage_color: lead.lead_stage&.color,
       value: lead.value&.to_f,
       conversation_id: lead.conversation_id, contact_id: lead.contact_id,
-      contact_phone: lead.contact&.phone_number,
-      task_id: entry[:task_id],
-      score: WEIGHTS.fetch(reasons.first[:key]),
-      suggested_action: ACTIONS.fetch(reasons.first[:key]),
-      reasons: reasons
-    }.merge(context_fields(lead, messages))
+      contact_phone: lead.contact&.phone_number
+    }
   end
 
   # Contexto de trabalho do item: tese, última simulação e última mensagem.
