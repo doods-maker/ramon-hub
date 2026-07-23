@@ -149,6 +149,32 @@ describe('LeadSimulador.vue', () => {
     ).toContain('art. 27-A');
   });
 
+  it('pina dedup banner x lista de avisos no Honorario', async () => {
+    LeadsAPI.simulate.mockResolvedValue({
+      data: {
+        ...resultado,
+        avisos: [
+          'risco pelo art. 27-A da Lei 8.213/91',
+          'tabelas atualizadas até 2026-06',
+        ],
+      },
+    });
+    const wrapper = mountSim();
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    // quality banner renderiza com art. 27-A
+    expect(
+      wrapper.find('[data-testid="sim-aviso-qualidade"]').text()
+    ).toContain('art. 27-A');
+    // generic list renderiza e contém o aviso não-quality
+    const avisosList = wrapper.find('[data-testid="sim-avisos"]');
+    expect(avisosList.exists()).toBe(true);
+    expect(avisosList.text()).toContain('tabelas atualizadas até 2026-06');
+    // generic list NÃO contém art. 27-A (quality aviso only em banner)
+    expect(avisosList.text()).not.toContain('27-A');
+  });
+
   it('não mostra o banner de qualidade quando não há aviso de risco', async () => {
     LeadsAPI.simulate.mockResolvedValue({ data: { ...resultado, avisos: [] } });
     const wrapper = mountSim();
