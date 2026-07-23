@@ -176,7 +176,6 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       # calls drop tokens before our enforcement even runs, undercounting active_token_count and
       # masking the 5-session cap (409 becomes 200, oldest tokens "already gone" instead of evicted
       # by our code). Pin it so this describe never depends on whatever ran before it.
-      allow(DeviceTokenAuth).to receive(:max_number_of_devices).and_return(25)
     end
 
     let(:user) { create(:user, password: 'Test@123456') }
@@ -211,6 +210,10 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
         3.times { |i| seed_token("expired#{i}", expiry_offset_days: -1, with_session: false) }
         2.times { |i| seed_token("active#{i}", expiry_offset_days: 30) }
 
+        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
+        # (poda gem-level no save!), nao no controller
+        expect(user.reload.tokens.size).to be >= 5
+
         post :create, params: login_params
 
         expect(response).to have_http_status(:success)
@@ -221,6 +224,10 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       before do
         request.env['HTTP_USER_AGENT'] = browser_ua
         5.times { |i| seed_token("c#{i}", expiry_offset_days: 30) }
+
+        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
+        # (poda gem-level no save!), nao no controller
+        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'returns 409 with the session list (picker)' do
@@ -241,6 +248,10 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       before do
         request.env['HTTP_USER_AGENT'] = mobile_ua
         5.times { |i| seed_token("c#{i}", expiry_offset_days: 30 + i, with_session: false) }
+
+        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
+        # (poda gem-level no save!), nao no controller
+        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'silently evicts the oldest token and lets login proceed' do
@@ -257,6 +268,10 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
         # one tracked, four legacy (no user_session rows)
         seed_token('tracked', expiry_offset_days: 60, with_session: true)
         4.times { |i| seed_token("legacy#{i}", expiry_offset_days: 10 + i, with_session: false) }
+
+        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
+        # (poda gem-level no save!), nao no controller
+        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'silent-evicts instead of showing a partial picker' do
@@ -283,6 +298,10 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
           seed_token("tracked#{i}", expiry_offset_days: 30)
           user.user_sessions.find_by(client_id: "tracked#{i}").update!(last_activity_at: (5 - i).days.ago)
         end
+
+        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
+        # (poda gem-level no save!), nao no controller
+        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'evicts the oldest tracked session by last_activity_at' do
@@ -299,6 +318,10 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       before do
         request.env['HTTP_USER_AGENT'] = browser_ua
         5.times { |i| seed_token("c#{i}", expiry_offset_days: 30) }
+
+        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
+        # (poda gem-level no save!), nao no controller
+        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'revokes the chosen session and proceeds with login' do
@@ -316,6 +339,10 @@ RSpec.describe DeviseOverrides::SessionsController, type: :controller do
       before do
         request.env['HTTP_USER_AGENT'] = browser_ua
         5.times { |i| seed_token("c#{i}", expiry_offset_days: 30) }
+
+        # diagnostico flake shard: se falhar aqui, os tokens somem JA no seed
+        # (poda gem-level no save!), nao no controller
+        expect(user.reload.tokens.size).to be >= 5
       end
 
       it 'wipes all sessions and tokens, then proceeds with login' do
