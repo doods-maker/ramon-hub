@@ -64,6 +64,12 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/radar'),
+    name: 'ramon_radar',
+    component: () => import('./pages/RadarPrescricao.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/lead/:leadId/dossie'),
     name: 'ramon_lead_dossie',
     component: () => import('./pages/Dossie.vue'),

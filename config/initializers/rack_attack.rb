@@ -210,6 +210,16 @@ class Rack::Attack
     req.ip if req.path.start_with?('/public/api/v1/mcp')
   end
 
+  ## Ramon — Portal do cliente (link mágico): página pública por token ###
+  throttle('public/portal', limit: 30, period: 5.minutes) do |req|
+    req.ip if req.path.start_with?('/portal/')
+  end
+
+  ## Ramon — uploads do portal, por token (evita bombing num link vazado) ###
+  throttle('public/portal_upload', limit: 10, period: 1.hour) do |req|
+    req.path.split('/')[2] if req.post? && req.path.match?(%r{\A/portal/[^/]+/upload\z})
+  end
+
   ##-----------------------------------------------##
 
   ###-----------------------------------------------###

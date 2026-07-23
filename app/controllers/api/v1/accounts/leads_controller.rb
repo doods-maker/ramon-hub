@@ -31,6 +31,11 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     head :ok
   end
 
+  # Portal do cliente: gera (ou reusa) o token e devolve a URL pública completa.
+  def portal_link
+    render json: { url: "#{ENV.fetch('FRONTEND_URL', '')}/portal/#{@lead.ensure_portal_token!}" }
+  end
+
   def for_conversation
     # o front manda o id do objeto de conversa da SPA, que é o display_id (por conta)
     conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])
@@ -88,7 +93,8 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     # includes mata o N+1 do índice do Kanban: o partial toca 7 belongs_to +
     # lead_triages (latest_triage) por lead. Sem isto, board de N leads = ~10N SELECTs.
     leads = policy_scope(Current.account.leads)
-            .includes(:lead_stage, :benefit_type, :lead_priority, :thesis, :sdr, :closer, :contact, :lead_triages)
+            .includes(:lead_stage, :benefit_type, :lead_priority, :thesis, :sdr, :closer, :contact, :lead_triages, :lead_tasks,
+                      { conversation: :inbox })
     # Caso de cálculo só aparece nas visões por pessoa (Cálculos, gaveta, Linha da Vida).
     leads = leads.funil if params[:contact_id].blank?
     leads = apply_equality_filters(leads)

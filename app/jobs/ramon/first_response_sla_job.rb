@@ -14,7 +14,7 @@ class Ramon::FirstResponseSlaJob < ApplicationJob
     lead = conversation.account.leads.find_by(conversation_id: conversation.id)
     return if lead.blank?
 
-    minutes = ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15')
+    minutes = conversation.inbox.first_response_sla_minutes || ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i
     Ramon::NtfyPushJob.perform_now(lead.id, title: 'Lead aguardando 1a resposta',
                                             body: "Lead aguardando 1ª resposta há #{minutes}min: #{lead.name}")
   end

@@ -88,3 +88,18 @@ ramon_daily_follow_up_job:
   cron: '0 14 * * *'
   class: 'Ramon::DailyFollowUpJob'
   queue: scheduled_jobs
+
+# executed daily at 0800 UTC = 05:00 America/Sao_Paulo (UTC-3)
+# copiloto noturno: revisa leads parados de madrugada e deixa sugestões
+# pendentes de aprovação humana no Cockpit (nada é enviado ao cliente)
+ramon_night_copilot_job:
+  cron: '0 8 * * *'
+  class: 'Ramon::NightCopilotJob'
+  queue: scheduled_jobs
+
+# executed daily at 1100 UTC = 08:00 America/Sao_Paulo (UTC-3)
+# resumo diário (mock 3f): push ntfy pro SDR + e-mail digest pra gestão
+ramon_daily_digest_job:
+  cron: '0 11 * * *'
+  class: 'Ramon::DailyDigestJob'
+  queue: scheduled_jobs

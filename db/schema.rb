@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_10_120001) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_23_000003) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -765,6 +765,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_10_120001) do
     t.index ["copilot_thread_id"], name: "index_copilot_messages_on_copilot_thread_id"
   end
 
+  create_table "copilot_suggestions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "lead_id", null: false
+    t.string "kind", null: false
+    t.jsonb "payload", default: {}
+    t.string "status", default: "pending"
+    t.datetime "run_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "status"], name: "index_copilot_suggestions_on_account_id_and_status"
+    t.index ["account_id"], name: "index_copilot_suggestions_on_account_id"
+    t.index ["lead_id"], name: "index_copilot_suggestions_on_lead_id"
+  end
+
   create_table "copilot_threads", force: :cascade do |t|
     t.string "title", null: false
     t.bigint "user_id", null: false
@@ -951,6 +965,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_10_120001) do
     t.string "business_name"
     t.jsonb "csat_config", default: {}, null: false
     t.boolean "auto_create_lead", default: false, null: false
+    t.integer "first_response_sla_minutes"
     t.index ["account_id"], name: "index_inboxes_on_account_id"
     t.index ["channel_id", "channel_type"], name: "index_inboxes_on_channel_id_and_channel_type"
     t.index ["portal_id"], name: "index_inboxes_on_portal_id"
@@ -1107,6 +1122,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_10_120001) do
     t.decimal "benefit_monthly_value", precision: 12, scale: 2
     t.string "channel"
     t.jsonb "cnis"
+    t.string "portal_token"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -1115,6 +1131,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_10_120001) do
     t.index ["conversation_id"], name: "index_leads_on_conversation_id"
     t.index ["lead_priority_id"], name: "index_leads_on_lead_priority_id"
     t.index ["lead_stage_id"], name: "index_leads_on_lead_stage_id"
+    t.index ["portal_token"], name: "index_leads_on_portal_token", unique: true
     t.index ["thesis_id"], name: "index_leads_on_thesis_id"
   end
 
@@ -1569,6 +1586,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_10_120001) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "copilot_suggestions", "accounts"
+  add_foreign_key "copilot_suggestions", "leads"
   add_foreign_key "funnel_snapshots", "lead_stages", on_delete: :nullify
   add_foreign_key "funnel_snapshots", "theses", on_delete: :nullify
   add_foreign_key "inboxes", "portals"

@@ -296,13 +296,17 @@ Rails.application.routes.draw do
             post :criar_caso
           end
           resources :ramon_lead_imports, only: [:create, :show]
+          resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'
           resources :leads, only: [:index, :show, :create, :update, :destroy] do
             collection do
               post :for_conversation
             end
-            member { get :dossie, to: 'lead_dossies#show' }
+            member do
+              get :dossie, to: 'lead_dossies#show'
+              post :portal_link
+            end
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :notes, only: [:index, :create], controller: 'lead_notes'
             resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do
@@ -323,6 +327,13 @@ Rails.application.routes.draw do
             resource :zapsign, only: [:create], controller: 'lead_zapsign'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
+          resources :copilot_suggestions, only: [:index] do
+            collection { post :apply_all }
+            member do
+              post :apply
+              post :dismiss
+            end
+          end
           resources :lead_stages, only: [:create, :update, :destroy] do
             collection { post :reorder }
           end
@@ -665,6 +676,11 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # Ramon — Portal do cliente: página HTML pública com link mágico por lead
+  # (fora do namespace :public, que força format json; a página é server-rendered ERB)
+  get 'portal/:token', to: 'public/portal#show', as: :ramon_portal
+  post 'portal/:token/upload', to: 'public/portal#upload', as: :ramon_portal_upload
 
   get 'hc/:slug', to: 'public/api/v1/portals#show'
   get 'hc/:slug/sitemap.xml', to: 'public/api/v1/portals#sitemap'

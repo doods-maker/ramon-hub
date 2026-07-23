@@ -1,32 +1,25 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadDrawer from '../LeadDrawer.vue';
+import LeadsAPI from 'dashboard/api/leads';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 // A gaveta busca o lead completo ao abrir (índice slim, sem custom_attributes)
 vi.mock('dashboard/api/leads', () => ({
-  default: { show: vi.fn().mockResolvedValue({ data: { id: 10 } }) },
+  default: { show: vi.fn() },
 }));
 
 const lead = {
   id: 10,
   name: 'João',
   lead_stage_id: 1,
-  benefit_type_id: null,
-  lead_priority_id: null,
-  sdr_id: null,
-  closer_id: null,
-  value: '5000.00',
-  source: 'Meta Ads',
-  notes: 'nota',
   conversation_id: 77,
   contact_name: 'João Cliente',
   contact_phone: '+55479999',
-  contact_email: 'j@cli.com',
 };
 
-const buildStore = (updateSpy, selectSpy) =>
+const buildStore = (selectSpy, upsertSpy = vi.fn()) =>
   createStore({
     modules: {
       leads: {
@@ -35,100 +28,65 @@ const buildStore = (updateSpy, selectSpy) =>
           getSelectedLead: () => lead,
           getDockConversationId: () => null,
         },
-        actions: {
-          update: updateSpy,
-          select: selectSpy,
-          upsert: vi.fn(),
-          fetchNotes: vi.fn().mockResolvedValue([]),
-          createNote: vi.fn(),
-        },
-      },
-      leadConfig: {
-        namespaced: true,
-        getters: {
-          getStages: () => [
-            { id: 1, name: 'Novo' },
-            { id: 2, name: 'Negociação' },
-          ],
-          getBenefitTypes: () => [{ id: 3, name: 'Auxílio-acidente' }],
-          getPriorities: () => [{ id: 4, name: 'Alta' }],
-          getChannels: () => [],
-        },
-      },
-      agents: {
-        namespaced: true,
-        getters: { getAgents: () => [{ id: 8, name: 'Eduardo' }] },
-      },
-      theses: {
-        namespaced: true,
-        getters: { getTheses: () => [] },
+        actions: { select: selectSpy, upsert: upsertSpy },
       },
     },
   });
 
-const mountDrawer = (updateSpy = vi.fn(), selectSpy = vi.fn()) =>
+const mountDrawer = (selectSpy = vi.fn(), upsertSpy = vi.fn()) =>
   mount(LeadDrawer, {
     global: {
-      plugins: [buildStore(updateSpy, selectSpy)],
+      plugins: [buildStore(selectSpy, upsertSpy)],
       mocks: { $t: k => k },
+      stubs: { LeadPanelBody: true },
     },
   });
 
 describe('LeadDrawer.vue', () => {
-  it('carrega o lead selecionado e mostra dados de contato (só leitura)', () => {
+  // mockReset do vitest.config zera implementações — re-arma a cada teste
+  beforeEach(() => LeadsAPI.show.mockResolvedValue({ data: { id: 10 } }));
+
+  it('busca o lead completo ao abrir e faz upsert na store', async () => {
+    const upsert = vi.fn();
+    mountDrawer(vi.fn(), upsert);
+    await flushPromises();
+    expect(LeadsAPI.show).toHaveBeenCalledWith(10);
+    expect(upsert).toHaveBeenCalledWith(expect.anything(), { id: 10 });
+  });
+
+  it('renderiza o corpo compartilhado no contexto drawer', () => {
     const wrapper = mountDrawer();
-    expect(wrapper.text()).toContain('João Cliente');
-    expect(wrapper.text()).toContain('+55479999');
-  });
-
-  it('salva o nome no blur quando muda', async () => {
-    const update = vi.fn();
-    const wrapper = mountDrawer(update);
-    const input = wrapper.find('[data-testid="field-name"]');
-    await input.setValue('João Silva');
-    await input.trigger('blur');
-    expect(update).toHaveBeenCalledWith(expect.anything(), {
-      id: 10,
-      name: 'João Silva',
-    });
-  });
-
-  it('NÃO salva no blur quando o valor não mudou', async () => {
-    const update = vi.fn();
-    const wrapper = mountDrawer(update);
-    await wrapper.find('[data-testid="field-name"]').trigger('blur');
-    expect(update).not.toHaveBeenCalled();
-  });
-
-  it('salva a etapa no change', async () => {
-    const update = vi.fn();
-    const wrapper = mountDrawer(update);
-    const select = wrapper.find('[data-testid="field-stage"]');
-    await select.setValue(2);
-    expect(update).toHaveBeenCalledWith(expect.anything(), {
-      id: 10,
-      lead_stage_id: 2,
-    });
+    const body = wrapper.findComponent({ name: 'LeadPanelBody' });
+    expect(body.exists()).toBe(true);
+    expect(body.props('context')).toBe('drawer');
+    expect(body.props('lead')).toEqual(lead);
   });
 
   it('fecha desselecionando o lead', async () => {
     const select = vi.fn();
-    const wrapper = mountDrawer(vi.fn(), select);
+    const wrapper = mountDrawer(select);
     await wrapper.find('[data-testid="drawer-close"]').trigger('click');
     expect(select).toHaveBeenCalledWith(expect.anything(), null);
   });
 
-  it('emite open-conversation', async () => {
+  it('repassa openConversation vindo do corpo', () => {
     const wrapper = mountDrawer();
-    await wrapper
-      .find('[data-testid="drawer-open-conversation"]')
-      .trigger('click');
+    wrapper
+      .findComponent({ name: 'LeadPanelBody' })
+      .vm.$emit('openConversation', 77);
     expect(wrapper.emitted('openConversation')[0][0]).toBe(77);
+  });
+
+  it('fecha quando o corpo navega (Dossiê)', () => {
+    const select = vi.fn();
+    const wrapper = mountDrawer(select);
+    wrapper.findComponent({ name: 'LeadPanelBody' }).vm.$emit('navigate');
+    expect(select).toHaveBeenCalledWith(expect.anything(), null);
   });
 
   it('fecha ao apertar Esc', async () => {
     const select = vi.fn();
-    mountDrawer(vi.fn(), select);
+    mountDrawer(select);
     // bubbles: como um keydown real, o evento sobe até a window (onKeyStroke)
     window.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })

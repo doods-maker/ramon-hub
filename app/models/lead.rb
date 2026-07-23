@@ -1,4 +1,6 @@
 class Lead < ApplicationRecord
+  include LeadCadence
+
   PRESCRIPTION_WINDOW_MONTHS = 60
 
   belongs_to :account
@@ -14,6 +16,7 @@ class Lead < ApplicationRecord
   has_many :lead_notes, dependent: :destroy_async
   has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
   has_many :lead_triages, dependent: :destroy_async
+  has_many :copilot_suggestions, dependent: :destroy_async
 
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }
@@ -102,6 +105,14 @@ class Lead < ApplicationRecord
     }
   end
 
+  # Portal do cliente (link mágico): token nasce sob demanda, nunca por callback.
+  def ensure_portal_token!
+    return portal_token if portal_token.present?
+
+    update!(portal_token: SecureRandom.urlsafe_base64(24))
+    portal_token
+  end
+
   def prescription
     return nil if dcb_em.blank?
 
@@ -118,36 +129,6 @@ class Lead < ApplicationRecord
   end
 
   private
-
-  def cadence_event_data
-    {
-      stage_entered_at: stage_entered_at,
-      won_at: won_at,
-      lost_at: lost_at,
-      stalled: stalled?,
-      open_tasks_count: lead_tasks.open_tasks.size,
-      next_task_due_at: lead_tasks.open_tasks.minimum(:due_at),
-      contact_phone: contact&.phone_number,
-      contact_cpf: contact&.cpf,
-      # Date segue o precedente de dcb_em no mesmo hash
-      contact_data_nascimento: contact&.data_nascimento,
-      contact_sexo: contact&.sexo,
-      dcb_em: dcb_em,
-      # BigDecimal não é JSON nativo — Sidekiq strict_args rejeita no broadcast (mesmo motivo de `value` acima)
-      benefit_monthly_value: benefit_monthly_value&.to_f,
-      cnis_resumo: cnis_resumo,
-      # jsonb já é JSON nativo; painel aberto recebe colheita/doc_status ao vivo
-      custom_attributes: custom_attributes || {}
-    }.merge(follow_up_event_data)
-  end
-
-  # espelho do jbuilder: o badge do card/banner lê os escalares, não o jsonb
-  def follow_up_event_data
-    {
-      follow_up_count: custom_attributes.dig('follow_up', 'tentativas').to_i,
-      follow_up_last_at: custom_attributes.dig('follow_up', 'ultima_em')
-    }
-  end
 
   def assign_channel
     return if channel.present?

@@ -34,6 +34,12 @@
   --iris-11: 201 169 124; // #c9a97c acento dourado (ícones/links/ativo)
   --iris-12: 236 231 223; // #ece7df texto alto contraste
   --solid-iris: 70 53 40; // #463528
+  // Superfícies quentes (redesign 07/2026): cards/menus deixam o cinza-azulado
+  // do _next-colors e entram na mesma família do fundo #262320.
+  --solid-1: 46 43 39; // #2e2b27
+  --solid-2: 46 43 39; // #2e2b27 (cards quentes)
+  --solid-3: 51 48 44; // #33302c
+  --border-weak: 61 55 47; // ~rgba(201,169,124,.10) sobre #262320
   --background-color: 38 35 32; // #262320 app — dim, não quase-preto
   --surface-1: 43 40 37; // #2b2825 sidebar
   --surface-2: 46 43 39;

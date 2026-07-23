@@ -19,6 +19,10 @@ class LeadPolicy < ApplicationPolicy
     @account_user.administrator? || @account_user.agent?
   end
 
+  def portal_link?
+    @account_user.administrator? || @account_user.agent?
+  end
+
   def destroy?
     @account_user.administrator?
   end

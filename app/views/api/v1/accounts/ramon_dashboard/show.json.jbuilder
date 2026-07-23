@@ -58,3 +58,59 @@ json.history @history do |row|
   json.leads_count row[:leads_count]
   json.value_sum row[:value_sum]
 end
+
+json.goal do
+  json.target @goal[:target]
+  json.done @goal[:done]
+end
+
+json.forecast_total @forecast_total
+
+json.conversion @conversion do |row|
+  json.stage_id row[:stage_id]
+  json.name row[:name]
+  json.entered row[:entered]
+  json.advanced row[:advanced]
+  json.rate row[:rate]
+end
+
+json.team_week @team_week do |row|
+  json.user_id row[:user_id]
+  json.name row[:name]
+  json.avatar_url row[:avatar_url]
+  json.won_count row[:won_count]
+  json.won_value row[:won_value]
+  json.activities_count row[:activities_count]
+end
+
+json.agenda_today @agenda_today do |row|
+  json.id row[:id]
+  json.lead_id row[:lead_id]
+  json.lead_name row[:lead_name]
+  json.title row[:title]
+  json.due_at row[:due_at]
+  json.user_name row[:user_name]
+  json.source row[:source]
+end
+
+json.losses_by_thesis do
+  json.window_days @losses_by_thesis[:window_days]
+  json.theses @losses_by_thesis[:theses] do |thesis|
+    json.thesis_id thesis[:thesis_id]
+    json.name thesis[:name]
+    json.total thesis[:total]
+    json.prev_total thesis[:prev_total]
+    json.reasons thesis[:reasons] do |reason|
+      json.reason reason[:reason]
+      json.count reason[:count]
+    end
+  end
+end
+
+json.sla_today do
+  json.breached @sla_today[:breached]
+  json.avg_first_response_minutes @sla_today[:avg_first_response_minutes]
+end
+
+# Placar de TV (/tv): hash pronto do CockpitMetrics — jbuilder serializa direto.
+json.tv @tv

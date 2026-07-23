@@ -806,7 +806,10 @@
       "ALLOW_MESSAGES_AFTER_RESOLVED_SUB_TEXT": "Allow the end-users to send messages even after the conversation is resolved.",
       "AUTO_CREATE_LEAD": {
         "LABEL": "Auto-create lead in funnel",
-        "SUB_TEXT": "When a new conversation is created in this inbox, a lead is automatically created in the funnel."
+        "SUB_TEXT": "When a new conversation is created in this inbox, a lead is automatically created in the funnel.",
+        "SLA_LABEL": "First-response SLA (min)",
+        "SLA_PLACEHOLDER": "15",
+        "SLA_SUB_TEXT": "Minutes until the card timer breaches. Empty = system default."
       },
       "WHATSAPP_SECTION_SUBHEADER": "This API Key is used for the integration with the WhatsApp APIs.",
       "WHATSAPP_SECTION_UPDATE_SUBHEADER": "Enter the new API key to be used for the integration with the WhatsApp APIs.",

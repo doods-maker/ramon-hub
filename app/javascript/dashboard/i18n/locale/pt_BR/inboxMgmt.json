@@ -802,7 +802,10 @@
       "ALLOW_MESSAGES_AFTER_RESOLVED_SUB_TEXT": "Permite que os usuários finais enviem mensagens mesmo depois que a conversa for resolvida.",
       "AUTO_CREATE_LEAD": {
         "LABEL": "Auto-criar lead no funil",
-        "SUB_TEXT": "Ao criar uma nova conversa nesta caixa, um lead é criado automaticamente no funil."
+        "SUB_TEXT": "Ao criar uma nova conversa nesta caixa, um lead é criado automaticamente no funil.",
+        "SLA_LABEL": "SLA de 1ª resposta (min)",
+        "SLA_PLACEHOLDER": "15",
+        "SLA_SUB_TEXT": "Minutos até o timer do card estourar. Vazio = padrão do sistema."
       },
       "WHATSAPP_SECTION_SUBHEADER": "Esta chave de API é usada para a integração com as APIs do WhatsApp.",
       "WHATSAPP_SECTION_UPDATE_SUBHEADER": "Insira a nova chave API a ser utilizada para integração com as APIs do WhatsApp.",

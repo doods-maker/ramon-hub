@@ -198,6 +198,35 @@ const removeCnis = async () => {
   }
 };
 
+// Persiste o essencial da última simulação no lead (o Modo Foco da Esteira
+// lê custom_attributes.ultima_simulacao; o PATCH faz deep_merge no server).
+// Best-effort: falha do PATCH nunca esconde o resultado já exibido.
+const persistirUltimaSimulacao = async data => {
+  try {
+    await LeadsAPI.update(props.lead.id, {
+      custom_attributes: {
+        ultima_simulacao: {
+          mensal: data.mensal,
+          atrasados: data.atrasados,
+          honorario_valor: data.honorario?.valor || null,
+          tese: data.honorario?.tese || props.lead.thesis_name || null,
+          em: new Date().toISOString(),
+          parametros: {
+            der: form.value.der,
+            salario: form.value.salario,
+            beneficio: form.value.beneficio,
+            origem: form.value.origem,
+            acrescimo_25: form.value.acrescimo_25,
+            usar_cnis: Boolean(cnis.value),
+          },
+        },
+      },
+    });
+  } catch {
+    // silêncio: persistência é conveniência, o resultado na tela é a fonte
+  }
+};
+
 const simulate = async () => {
   isLoading.value = true;
   motorDown.value = false;
@@ -210,6 +239,7 @@ const simulate = async () => {
       usar_cnis: Boolean(cnis.value),
     });
     resultado.value = data;
+    await persistirUltimaSimulacao(data);
   } catch (error) {
     handleMotorError(error);
   } finally {

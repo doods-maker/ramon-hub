@@ -45,49 +45,6 @@ const contactNascimento = ref('');
 const contactSexo = ref('');
 const npsScore = ref('');
 
-// ZapSign (item 21, fluxo A): botão gera contrato+procuração pré-preenchidos
-// e devolve o link de assinatura — nada é enviado ao cliente automaticamente.
-// Fallback local da resposta: se o websocket estiver caído, o lead da store não
-// recebe o zapsign novo e o botão continuaria armado — 2º clique = 2º contrato.
-const zapsignLocal = ref(null);
-watch(
-  () => props.lead?.id,
-  () => {
-    zapsignLocal.value = null;
-  }
-);
-const zapsign = computed(
-  () => props.lead?.custom_attributes?.zapsign || zapsignLocal.value
-);
-const zapsignEligible = computed(() =>
-  (props.lead?.thesis_name || '').toLowerCase().includes('acidente')
-);
-const zapsignLoading = ref(false);
-const generateZapsign = async () => {
-  zapsignLoading.value = true;
-  try {
-    const { data } = await LeadsAPI.createZapsign(props.lead.id);
-    zapsignLocal.value = data;
-    useAlert(
-      data.faltando?.length
-        ? t('RAMON.ZAPSIGN.MISSING', { count: data.faltando.length })
-        : t('RAMON.ZAPSIGN.CREATED')
-    );
-  } catch (error) {
-    useAlert(t('RAMON.ZAPSIGN.ERROR'));
-  } finally {
-    zapsignLoading.value = false;
-  }
-};
-const copyZapsignLink = async () => {
-  try {
-    await copyTextToClipboard(zapsign.value.sign_url);
-    useAlert(t('RAMON.ZAPSIGN.COPIED'));
-  } catch (error) {
-    useAlert(t('RAMON.DOCS.COPY_FAILED'));
-  }
-};
-
 // Etapa controlada localmente para poder reverter o select quando a mudança
 // para uma etapa de perda é cancelada, ou quando o backend recusa o update.
 const stageId = ref(null);
@@ -344,6 +301,17 @@ const saveNps = async () => {
   } catch (e) {
     useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
     npsScore.value = currentNps.value?.score ?? '';
+  }
+};
+
+// Portal do cliente: gera/reusa o token no backend e copia a URL pública.
+const copyPortalLink = async () => {
+  try {
+    const { data } = await LeadsAPI.portalLink(props.lead.id);
+    await copyTextToClipboard(data.url);
+    useAlert(t('RAMON.PORTAL.COPIED'));
+  } catch (error) {
+    useAlert(t('RAMON.PORTAL.ERROR'));
   }
 };
 
@@ -698,56 +666,6 @@ const toggleConsent = () =>
     <DocChecklist v-if="lead.thesis_id" :lead="lead" />
 
     <div
-      v-if="zapsignEligible"
-      class="flex flex-wrap items-center gap-2 mb-4 pt-3 border-t border-n-weak text-xs"
-      data-testid="zapsign-block"
-    >
-      <span class="uppercase text-n-slate-10">{{
-        $t('RAMON.ZAPSIGN.TITLE')
-      }}</span>
-      <template v-if="zapsign?.sign_url">
-        <a
-          :href="zapsign.sign_url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-n-teal-11 underline"
-          data-testid="zapsign-link"
-        >
-          {{ $t('RAMON.ZAPSIGN.OPEN') }}
-        </a>
-        <button
-          type="button"
-          data-testid="zapsign-copy"
-          class="px-2 py-0.5 rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
-          @click="copyZapsignLink"
-        >
-          {{ $t('RAMON.ZAPSIGN.COPY') }}
-        </button>
-      </template>
-      <button
-        v-else
-        type="button"
-        data-testid="zapsign-generate"
-        :disabled="zapsignLoading"
-        class="px-3 py-1.5 rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
-        @click="generateZapsign"
-      >
-        {{
-          zapsignLoading
-            ? $t('RAMON.ZAPSIGN.GENERATING')
-            : $t('RAMON.ZAPSIGN.GENERATE')
-        }}
-      </button>
-      <span
-        v-if="zapsign?.faltando?.length"
-        class="text-n-amber-11"
-        data-testid="zapsign-missing"
-      >
-        {{ $t('RAMON.ZAPSIGN.MISSING', { count: zapsign.faltando.length }) }}
-      </span>
-    </div>
-
-    <div
       v-if="lead.custom_attributes?.advbox"
       class="flex items-center gap-2 mb-4 pt-3 border-t border-n-weak text-xs"
       data-testid="advbox-sync"
@@ -816,6 +734,23 @@ const toggleConsent = () =>
         @click="addNote"
       >
         {{ $t('RAMON.DRAWER.NOTES_ADD_BUTTON') }}
+      </button>
+    </div>
+
+    <div
+      class="flex items-center justify-between gap-2 pt-3 mb-4 border-t border-n-weak"
+    >
+      <span class="text-xs uppercase text-n-slate-10">{{
+        $t('RAMON.PORTAL.LABEL')
+      }}</span>
+      <button
+        data-testid="portal-copy-link"
+        class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg bg-n-alpha-2 text-n-slate-12 hover:bg-n-alpha-3"
+        @click="copyPortalLink"
+      >
+        <span class="i-lucide-link size-3.5" />{{
+          $t('RAMON.PORTAL.COPY_LINK')
+        }}
       </button>
     </div>
 

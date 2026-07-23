@@ -282,6 +282,45 @@ RSpec.describe 'Leads API', type: :request do
       expect(row).not_to have_key('custom_attributes')
     end
 
+    it 'expõe next_task_due_at e next_task_title da tarefa aberta mais próxima no índice slim' do
+      lead = account.leads.create!(name: 'A', lead_stage: novo)
+      create(:lead_task, account: account, lead: lead, title: 'Depois', due_at: 3.days.from_now)
+      create(:lead_task, account: account, lead: lead, title: 'Ligar pós-perícia', due_at: 1.day.from_now)
+      create(:lead_task, account: account, lead: lead, title: 'Feita', due_at: 1.hour.from_now, completed_at: Time.current)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['next_task_title']).to eq('Ligar pós-perícia')
+      expect(Time.zone.parse(row['next_task_due_at'])).to be_within(1.minute).of(1.day.from_now)
+    end
+
+    it 'lead sem tarefa aberta expõe next_task_due_at e next_task_title nulos' do
+      account.leads.create!(name: 'A', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['next_task_due_at']).to be_nil
+      expect(row['next_task_title']).to be_nil
+    end
+
+    it 'expõe o bloco sla calculado da conversa no índice slim' do
+      inbox = create(:inbox, account: account, auto_create_lead: true, first_response_sla_minutes: 60)
+      conversation = create(:conversation, account: account, inbox: inbox)
+      account.leads.create!(name: 'A', lead_stage: novo, conversation_id: conversation.id)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      sla = response.parsed_body['payload'].first['sla']
+      expect(sla['minutes']).to eq(60)
+      expect(Time.zone.parse(sla['due_at'])).to be_within(1.minute).of(conversation.created_at + 60.minutes)
+      expect(sla['replied_at']).to be_nil
+    end
+
+    it 'lead sem conversa ou com inbox sem auto_create_lead expõe sla nulo' do
+      inbox = create(:inbox, account: account, auto_create_lead: false, first_response_sla_minutes: 60)
+      conversation = create(:conversation, account: account, inbox: inbox)
+      account.leads.create!(name: 'Sem conversa', lead_stage: novo)
+      account.leads.create!(name: 'Inbox comum', lead_stage: novo, conversation_id: conversation.id)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      expect(response.parsed_body['payload'].pluck('sla')).to eq([nil, nil])
+    end
+
     it 'lead sem retomadas expõe follow_up_count zero' do
       account.leads.create!(name: 'A', lead_stage: novo)
       get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
@@ -426,6 +465,28 @@ RSpec.describe 'Leads API', type: :request do
       expect(lead.reload.custom_attributes).to eq(
         'colheita_status' => { 'a' => true }, 'advbox' => { 'lawsuits_id' => 9 }, 'doc_status' => { 'rg' => true }
       )
+    end
+  end
+
+  describe 'POST /api/v1/accounts/:account_id/leads/:id/portal_link' do
+    it 'gera o token e devolve a URL pública completa; segunda chamada reusa o mesmo token' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/portal_link",
+           headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      url = response.parsed_body['url']
+      expect(url).to include("/portal/#{lead.reload.portal_token}")
+
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/portal_link",
+           headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['url']).to eq(url)
+    end
+
+    it 'devolve 401 sem autenticação' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/portal_link", as: :json
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 end

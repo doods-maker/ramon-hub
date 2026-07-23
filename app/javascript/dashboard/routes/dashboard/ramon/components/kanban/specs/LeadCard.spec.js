@@ -20,17 +20,20 @@ const mountCard = (props = {}) =>
   });
 
 describe('LeadCard.vue', () => {
-  it('renderiza nome, benefício e valor formatado em BRL', () => {
+  it('renderiza nome, benefício e valor compacto dourado', () => {
     const wrapper = mountCard();
     expect(wrapper.text()).toContain('João');
     expect(wrapper.text()).toContain('Auxílio-acidente');
-    expect(wrapper.text()).toContain('12.000,50');
+    const value = wrapper.find('[data-testid="lead-value"]');
+    expect(value.text()).toMatch(/R\$\s?12\s?mil/);
+    expect(value.classes()).toContain('text-n-iris-11');
   });
 
-  it('aplica a cor da etapa no chip', () => {
-    const wrapper = mountCard();
-    const chip = wrapper.find('[data-testid="stage-chip"]');
-    expect(chip.attributes('style')).toContain('rgb(245, 158, 11)');
+  it('mostra traço no lugar do valor quando o lead não tem valor', () => {
+    const wrapper = mountCard({ lead: { ...lead, value: null } });
+    const value = wrapper.find('[data-testid="lead-value"]');
+    expect(value.text()).toBe('—');
+    expect(value.classes()).not.toContain('text-n-iris-11');
   });
 
   it('emite open-lead ao clicar no corpo', async () => {
@@ -39,25 +42,187 @@ describe('LeadCard.vue', () => {
     expect(wrapper.emitted('openLead')[0][0]).toEqual(lead);
   });
 
-  it('shows a labeled "open conversation" button in the footer only with conversation_id', () => {
-    const wrapper = mountCard({ lead: { ...lead, conversation_id: 99 } });
-    const btn = wrapper.find('[data-testid="open-conversation"]');
-    expect(btn.exists()).toBe(true);
-    expect(btn.text()).toContain('RAMON.FUNIL.OPEN_CONVERSATION');
+  describe('linha de próxima ação', () => {
+    it('tarefa vencida = dot/texto ruby', () => {
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          next_task_due_at: '2020-01-01T09:00:00Z',
+          next_task_title: 'Ligar pós-perícia',
+        },
+      });
+      const action = wrapper.find('[data-testid="next-action"]');
+      expect(action.exists()).toBe(true);
+      expect(action.classes()).toContain('text-n-ruby-11');
+    });
+
+    it('tarefa de hoje = âmbar', () => {
+      // fim do dia local: sempre "hoje" e ainda no futuro
+      const due = new Date();
+      due.setHours(23, 59, 59, 0);
+      const wrapper = mountCard({
+        lead: { ...lead, next_task_due_at: due.toISOString() },
+      });
+      expect(wrapper.find('[data-testid="next-action"]').classes()).toContain(
+        'text-n-amber-11'
+      );
+    });
+
+    it('tarefa futura = teal', () => {
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          next_task_due_at: new Date(Date.now() + 5 * 86400000).toISOString(),
+        },
+      });
+      expect(wrapper.find('[data-testid="next-action"]').classes()).toContain(
+        'text-n-teal-11'
+      );
+    });
+
+    it('sem tarefa aberta mostra o alerta "sem próxima ação"', () => {
+      const wrapper = mountCard({
+        lead: { ...lead, open_tasks_count: 0, next_task_due_at: null },
+      });
+      const alert = wrapper.find('[data-testid="no-next-action"]');
+      expect(alert.exists()).toBe(true);
+      expect(alert.classes()).toContain('text-n-ruby-11');
+    });
   });
 
-  it('emits open-conversation with the id and does not open the lead', async () => {
-    const wrapper = mountCard({ lead: { ...lead, conversation_id: 99 } });
-    await wrapper.find('[data-testid="open-conversation"]').trigger('click');
-    expect(wrapper.emitted('openConversation')[0]).toEqual([99]);
-    expect(wrapper.emitted('openLead')).toBeFalsy();
+  describe('checkbox de seleção em lote', () => {
+    it('não renderiza quando selectable é false', () => {
+      const wrapper = mountCard();
+      expect(wrapper.find('[data-testid="select-toggle"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('emite toggleSelect sem abrir o lead', async () => {
+      const wrapper = mountCard({ selectable: true });
+      await wrapper.find('[data-testid="select-toggle"]').trigger('click');
+      expect(wrapper.emitted('toggleSelect')[0][0]).toEqual(lead);
+      expect(wrapper.emitted('openLead')).toBeFalsy();
+    });
+
+    it('marca bronze quando selected', () => {
+      const wrapper = mountCard({ selectable: true, selected: true });
+      expect(wrapper.find('[data-testid="select-toggle"]').classes()).toContain(
+        'bg-n-iris-9'
+      );
+    });
   });
 
-  it('hides the button without conversation_id', () => {
-    const wrapper = mountCard({ lead: { ...lead, conversation_id: null } });
-    expect(wrapper.find('[data-testid="open-conversation"]').exists()).toBe(
-      false
-    );
+  describe('ações rápidas do hover', () => {
+    it('emite open-conversation com o id e não abre o lead', async () => {
+      const wrapper = mountCard({ lead: { ...lead, conversation_id: 99 } });
+      await wrapper.find('[data-testid="open-conversation"]').trigger('click');
+      expect(wrapper.emitted('openConversation')[0]).toEqual([99]);
+      expect(wrapper.emitted('openLead')).toBeFalsy();
+    });
+
+    it('esconde o botão de conversa sem conversation_id', () => {
+      const wrapper = mountCard({ lead: { ...lead, conversation_id: null } });
+      expect(wrapper.find('[data-testid="open-conversation"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('emite openDossie com o lead', async () => {
+      const wrapper = mountCard();
+      await wrapper.find('[data-testid="open-dossie"]').trigger('click');
+      expect(wrapper.emitted('openDossie')[0][0]).toEqual(lead);
+      expect(wrapper.emitted('openLead')).toBeFalsy();
+    });
+  });
+
+  describe('risco na borda esquerda', () => {
+    it('prescrevendo (parcelas perdidas) = borda ruby', () => {
+      const wrapper = mountCard({
+        lead: { ...lead, dcb_em: '2019-01-01', benefit_monthly_value: 1412 },
+      });
+      expect(wrapper.classes()).toContain('border-l-n-ruby-9');
+      expect(wrapper.classes()).toContain('border-l-[3px]');
+    });
+
+    it('parado (stalled) = borda âmbar', () => {
+      const wrapper = mountCard({ lead: { ...lead, stalled: true } });
+      expect(wrapper.classes()).toContain('border-l-n-amber-9');
+    });
+
+    it('sem risco = sem borda de 3px', () => {
+      const wrapper = mountCard();
+      expect(wrapper.classes()).not.toContain('border-l-[3px]');
+    });
+  });
+
+  describe('pill de SLA de 1º contato', () => {
+    const minute = 60000;
+
+    it('dentro do SLA = pill âmbar com o tempo restante', () => {
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          sla: {
+            due_at: new Date(Date.now() + 41 * minute).toISOString(),
+            replied_at: null,
+            minutes: 60,
+          },
+        },
+      });
+      const pill = wrapper.find('[data-testid="sla-pill"]');
+      expect(pill.exists()).toBe(true);
+      expect(pill.text()).toBe('41min');
+      expect(pill.classes()).toContain('text-n-amber-11');
+      // dentro do SLA não muda a borda nem mostra o CTA
+      expect(wrapper.classes()).not.toContain('border-l-n-ruby-9');
+    });
+
+    it('estourado = pill ruby, borda ruby e CTA "Responder agora"', async () => {
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          sla: {
+            due_at: new Date(Date.now() - 167 * minute).toISOString(),
+            replied_at: null,
+            minutes: 60,
+          },
+        },
+      });
+      const pill = wrapper.find('[data-testid="sla-pill"]');
+      expect(pill.text()).toBe('2h 47min');
+      expect(pill.classes()).toContain('bg-n-ruby-9');
+      expect(wrapper.classes()).toContain('border-l-n-ruby-9');
+      await wrapper.find('[data-testid="sla-respond-now"]').trigger('click');
+      expect(wrapper.emitted('openConversation')[0]).toEqual([99]);
+    });
+
+    it('respondido = pill teal com o tempo até a 1ª resposta', () => {
+      const due = Date.now();
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          sla: {
+            due_at: new Date(due).toISOString(),
+            // começou em due-60min; respondeu 12min depois do início
+            replied_at: new Date(due - 48 * minute).toISOString(),
+            minutes: 60,
+          },
+        },
+      });
+      const pill = wrapper.find('[data-testid="sla-pill"]');
+      expect(pill.exists()).toBe(true);
+      expect(pill.text()).toContain('12min');
+      expect(pill.classes()).toContain('text-n-teal-11');
+    });
+
+    it('lead sem sla não mostra pill nem CTA', () => {
+      const wrapper = mountCard();
+      expect(wrapper.find('[data-testid="sla-pill"]').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="sla-respond-now"]').exists()).toBe(
+        false
+      );
+    });
   });
 
   it('shows the awaiting-human triage badge when the latest triage awaits a human', () => {

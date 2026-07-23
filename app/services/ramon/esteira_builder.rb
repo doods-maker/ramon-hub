@@ -7,6 +7,7 @@ class Ramon::EsteiraBuilder
     'PRESCRIPTION_BLEEDING' => 100,
     'PRESCRIPTION_LOST' => 100,
     'PRESCRIPTION_SOON' => 85,
+    'SLA_BREACH' => 82,
     'TASK_OVERDUE' => 80,
     'TASK_TODAY' => 75,
     'NEW_FROM_LP' => 70,
@@ -19,6 +20,7 @@ class Ramon::EsteiraBuilder
     'PRESCRIPTION_BLEEDING' => 'contact',
     'PRESCRIPTION_LOST' => 'contact',
     'PRESCRIPTION_SOON' => 'contact',
+    'SLA_BREACH' => 'reply',
     'TASK_OVERDUE' => 'task',
     'TASK_TODAY' => 'task',
     'NEW_FROM_LP' => 'reply',
@@ -37,6 +39,7 @@ class Ramon::EsteiraBuilder
   def perform
     collect_tasks
     collect_prescription
+    collect_sla_breach
     collect_new_from_lp
     collect_awaiting_human
     collect_stalled
@@ -76,6 +79,18 @@ class Ramon::EsteiraBuilder
     end
   end
 
+  # SLA de 1º contato estourado (mock 3a): conversa aberta, sem 1ª resposta,
+  # além do SLA da inbox (ou do padrão do env) — o lead sobe na Esteira.
+  def collect_sla_breach
+    Ramon::LeadRadar.active_leads(@account)
+                    .joins(:conversation).includes(conversation: :inbox)
+                    .where(conversations: { first_reply_created_at: nil, status: Conversation.statuses[:open] })
+                    .find_each do |lead|
+      sla = lead.sla_info
+      add(lead, 'SLA_BREACH', { minutes: sla[:minutes] }) if sla.present? && sla[:due_at] < Time.current
+    end
+  end
+
   def collect_new_from_lp
     Ramon::LeadRadar.new_from_lp_leads(@account).each do |lead|
       add(lead, 'NEW_FROM_LP', { source: lead.source })
@@ -112,24 +127,60 @@ class Ramon::EsteiraBuilder
   end
 
   def build_items
-    @entries.except(*done_today_lead_ids).values.map { |entry| item_for(entry) }
-            .sort_by { |item| [-item[:score], -item[:value].to_f] }
+    entries = @entries.except(*done_today_lead_ids).values
+    messages = last_messages_for(entries)
+    entries.map { |entry| item_for(entry, messages) }
+           .sort_by { |item| [-item[:score], -item[:value].to_f] }
   end
 
-  def item_for(entry)
+  def item_for(entry, messages)
     lead = entry[:lead]
     reasons = entry[:reasons].sort_by { |r| -WEIGHTS.fetch(r[:key]) }
+    lead_fields(lead).merge(
+      task_id: entry[:task_id],
+      score: WEIGHTS.fetch(reasons.first[:key]),
+      suggested_action: ACTIONS.fetch(reasons.first[:key]),
+      reasons: reasons
+    ).merge(context_fields(lead, messages))
+  end
+
+  def lead_fields(lead)
     {
       lead_id: lead.id, name: lead.name,
       stage_name: lead.lead_stage&.name, stage_color: lead.lead_stage&.color,
       value: lead.value&.to_f,
       conversation_id: lead.conversation_id, contact_id: lead.contact_id,
-      contact_phone: lead.contact&.phone_number,
-      task_id: entry[:task_id],
-      score: WEIGHTS.fetch(reasons.first[:key]),
-      suggested_action: ACTIONS.fetch(reasons.first[:key]),
-      reasons: reasons
+      contact_phone: lead.contact&.phone_number
     }
+  end
+
+  # Contexto de trabalho do item: tese, última simulação e última mensagem.
+  def context_fields(lead, messages)
+    {
+      thesis_id: lead.thesis_id,
+      ultima_simulacao: (lead.custom_attributes || {})['ultima_simulacao'],
+      last_message: last_message_payload(messages[lead.conversation_id])
+    }
+  end
+
+  # Última mensagem visível (não-privada) de cada conversa da fila, numa query
+  # só (DISTINCT ON) — a fila é pequena, mas sem N+1 mesmo assim.
+  def last_messages_for(entries)
+    conversation_ids = entries.filter_map { |entry| entry[:lead].conversation_id }
+    return {} if conversation_ids.blank?
+
+    # reorder (não order): o default_scope do Message ordena por created_at e o
+    # ORDER BY inicial precisa começar pelo conversation_id do DISTINCT ON.
+    Message.where(conversation_id: conversation_ids, private: false, message_type: [:incoming, :outgoing])
+           .select('DISTINCT ON (conversation_id) messages.*')
+           .reorder('conversation_id, created_at DESC')
+           .index_by(&:conversation_id)
+  end
+
+  def last_message_payload(message)
+    return if message.nil?
+
+    { content: message.content.to_s.truncate(200), at: message.created_at.to_i, incoming: message.incoming? }
   end
 
   # "Feito" tira o lead da fila do dia inteiro, independente da fonte.

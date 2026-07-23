@@ -9,6 +9,14 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     @funnel = funnel_section
     @week = week_section
     @history = history_section
+    @goal = cockpit.goal
+    @forecast_total = forecast_total
+    @conversion = cockpit.conversion
+    @team_week = cockpit.team_week
+    @agenda_today = cockpit.agenda_today
+    @losses_by_thesis = cockpit.losses_by_thesis
+    @sla_today = cockpit.sla_today
+    @tv = Ramon::TvMetrics.new(Current.account).tv
   end
 
   private
@@ -115,6 +123,20 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     respostas = scope.count
     media = respostas.zero? ? nil : scope.average(Arel.sql("(custom_attributes #>> '{nps,score}')::numeric")).to_f.round(1)
     { media: media, respostas: respostas }
+  end
+
+  # ---- Cockpit (agregados novos do redesign) ----------------------------
+
+  # Meta do dia, conversão, time da semana, agenda, perdas por tese e SLA
+  # vivem em Ramon::CockpitMetrics (mesmo padrão do Ramon::LeadRadar).
+  def cockpit
+    @cockpit ||= Ramon::CockpitMetrics.new(Current.account)
+  end
+
+  # Σ weighted_value das etapas abertas — reusa as linhas já calculadas em
+  # funnel_section (@funnel é montado antes no show).
+  def forecast_total
+    @funnel.reject { |row| row[:is_won] || row[:is_lost] }.sum { |row| row[:weighted_value] }
   end
 
   # ---- Histórico (snapshots diários) ------------------------------------

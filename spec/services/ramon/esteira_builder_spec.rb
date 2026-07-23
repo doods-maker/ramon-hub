@@ -60,6 +60,35 @@ RSpec.describe Ramon::EsteiraBuilder do
     expect(items.last[:reasons].first[:key]).to eq('AWAITING_HUMAN')
   end
 
+  describe 'SLA de 1º contato' do
+    let(:inbox) { create(:inbox, account: account, auto_create_lead: true, first_response_sla_minutes: 30) }
+
+    def conversation_created_at(time)
+      conversation = nil
+      travel_to(time) { conversation = create(:conversation, account: account, inbox: inbox) }
+      conversation
+    end
+
+    it 'flags leads past the first-response SLA with the SLA_BREACH reason' do
+      conversation = conversation_created_at(2.hours.ago)
+      lead = create(:lead, account: account, lead_stage: active_stage, conversation: conversation)
+      item = build[:items].first
+      expect(item[:lead_id]).to eq(lead.id)
+      expect(item[:reasons].first).to eq({ key: 'SLA_BREACH', params: { minutes: 30 } })
+      expect(item[:score]).to eq(82)
+      expect(item[:suggested_action]).to eq('reply')
+    end
+
+    it 'skips replied and still-within-SLA conversations' do
+      replied = conversation_created_at(2.hours.ago)
+      replied.update!(first_reply_created_at: Time.current)
+      fresh = create(:conversation, account: account, inbox: inbox)
+      create(:lead, account: account, lead_stage: active_stage, conversation: replied)
+      create(:lead, account: account, lead_stage: active_stage, conversation: fresh, name: 'Fresca')
+      expect(build[:items]).to be_empty
+    end
+  end
+
   it 'orders by score then by value and sums the board' do
     cheap = create(:lead, account: account, lead_stage: active_stage, source: 'lp-x', value: 100)
     rich = create(:lead, account: account, lead_stage: active_stage, source: 'lp-y', value: 9000)
@@ -69,6 +98,31 @@ RSpec.describe Ramon::EsteiraBuilder do
     expect(result[:items].pluck(:lead_id)).to eq([bleeding.id, rich.id, cheap.id])
     expect(result[:board][:total]).to eq(3)
     expect(result[:board][:value_sum]).to eq(9150.0)
+  end
+
+  it 'exposes thesis, persisted simulation and the last visible message' do
+    thesis = create(:thesis, account: account)
+    conversation = create(:conversation, account: account)
+    lead = create(:lead, account: account, lead_stage: active_stage, source: 'lp-x',
+                         thesis: thesis, conversation: conversation,
+                         custom_attributes: { 'ultima_simulacao' => { 'atrasados' => '17000.00' } })
+    # o lead precisa entrar na fila por algum coletor: task vencida
+    create(:lead_task, account: account, lead: lead, due_at: 2.days.ago)
+    create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'a' * 300)
+    create(:message, account: account, conversation: conversation, message_type: :outgoing, private: true, content: 'nota interna')
+    item = build[:items].first
+    expect(item[:lead_id]).to eq(lead.id)
+    expect(item[:thesis_id]).to eq(thesis.id)
+    expect(item[:ultima_simulacao]).to eq({ 'atrasados' => '17000.00' })
+    expect(item[:last_message]).to include(incoming: true, content: "#{'a' * 197}...")
+    expect(item[:last_message][:at]).to be_a(Integer)
+  end
+
+  it 'returns nil last_message and ultima_simulacao when the lead has neither' do
+    create(:lead, account: account, lead_stage: active_stage, source: 'lp-x')
+    item = build[:items].first
+    expect(item[:last_message]).to be_nil
+    expect(item[:ultima_simulacao]).to be_nil
   end
 
   it 'drops leads already marked done today and counts them on the board' do

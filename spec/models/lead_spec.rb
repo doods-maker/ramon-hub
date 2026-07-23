@@ -186,4 +186,22 @@ RSpec.describe Lead do
         .not_to have_enqueued_job(Ramon::NpsDraftJob)
     end
   end
+
+  describe '#ensure_portal_token!' do
+    it 'gera o token sob demanda, persiste e reusa nas chamadas seguintes' do
+      lead = create(:lead, account: account)
+      expect(lead.portal_token).to be_nil
+
+      token = lead.ensure_portal_token!
+      expect(token).to be_present
+      expect(lead.reload.portal_token).to eq(token)
+      expect(lead.ensure_portal_token!).to eq(token)
+    end
+
+    it 'gera tokens diferentes para leads diferentes' do
+      first = create(:lead, account: account)
+      second = create(:lead, account: account)
+      expect(first.ensure_portal_token!).not_to eq(second.ensure_portal_token!)
+    end
+  end
 end
