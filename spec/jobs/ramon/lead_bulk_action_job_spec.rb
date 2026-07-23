@@ -62,16 +62,16 @@ RSpec.describe Ramon::LeadBulkActionJob do
   end
 
   it 'keeps processing the batch when one lead fails' do
-    allow_any_instance_of(Lead).to receive(:update!).and_wrap_original do |original, *args|
-      raise 'boom' if original.receiver.id == lead_a.id
-
-      original.call(*args)
-    end
+    # Falha real por item: etapa de perda sem lost_reason derruba só o lead_a
+    # (guard_lost_reason!); o lead_b, que já carrega motivo, segue no lote.
+    lost_stage = create(:lead_stage, account: account, name: 'Perda lote', is_lost: true)
+    lead_b.update!(lost_reason: 'Sem retorno')
 
     expect do
-      run('ids' => [lead_a.id, lead_b.id], 'fields' => { 'lead_stage_id' => target.id })
+      run('ids' => [lead_a.id, lead_b.id], 'fields' => { 'lead_stage_id' => lost_stage.id })
     end.not_to raise_error
-    expect(lead_b.reload.lead_stage_id).to eq(target.id)
+    expect(lead_a.reload.lead_stage_id).to eq(stage.id)
+    expect(lead_b.reload.lead_stage_id).to eq(lost_stage.id)
   end
 
   it 'creates a triage per lead and enqueues the TriageJob when an active agent exists' do
@@ -84,7 +84,7 @@ RSpec.describe Ramon::LeadBulkActionJob do
   end
 
   it 'skips the triage silently when there is no active agent' do
-    account.triage_agents.update_all(active: false)
+    account.triage_agents.find_each { |agent| agent.update!(active: false) }
 
     expect do
       run('ids' => [lead_a.id], 'triage' => 'true')

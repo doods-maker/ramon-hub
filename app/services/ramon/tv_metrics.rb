@@ -66,14 +66,25 @@ class Ramon::TvMetrics < Ramon::CockpitMetrics
   end
 
   def tv_thesis_aggregates
+    in_memory_thesis_aggregates.merge(sql_thesis_aggregates)
+  end
+
+  # Agregados que dependem de regra por lead (prescription/stalled?) — vêm
+  # da coleção open_leads já em memória.
+  def in_memory_thesis_aggregates
     {
       open: open_leads.group_by(&:thesis_id).transform_values(&:size),
+      prescribing: open_prescribing.group_by(&:thesis_id),
+      stalled: open_leads.select(&:stalled?).group_by(&:thesis_id)
+    }
+  end
+
+  def sql_thesis_aggregates
+    {
       new_week: leads_funil.where(created_at: 7.days.ago..).reorder(nil).group(:thesis_id).count,
       won: month_wins.group(:thesis_id).count,
       won_value: month_wins.group(:thesis_id).sum(:value),
       lost: leads_funil.where(lost_at: month_range).reorder(nil).group(:thesis_id).count,
-      prescribing: open_prescribing.group_by(&:thesis_id),
-      stalled: open_leads.select(&:stalled?).group_by(&:thesis_id),
       names: @account.theses.pluck(:id, :name).to_h
     }
   end
@@ -81,12 +92,18 @@ class Ramon::TvMetrics < Ramon::CockpitMetrics
   def tv_thesis_row(thesis_id, agg)
     won = agg[:won][thesis_id].to_i
     lost = agg[:lost][thesis_id].to_i
-    prescribing = agg[:prescribing][thesis_id] || []
     {
       thesis_id: thesis_id, name: agg[:names][thesis_id] || 'Sem tese',
       leads_count: agg[:open][thesis_id].to_i, new_week: agg[:new_week][thesis_id].to_i,
       won_month: won, won_value_month: agg[:won_value][thesis_id].to_f,
-      conversion_pct: (won + lost).zero? ? nil : (won * 100.0 / (won + lost)).round,
+      conversion_pct: (won + lost).zero? ? nil : (won * 100.0 / (won + lost)).round
+    }.merge(tv_thesis_risk(thesis_id, agg))
+  end
+
+  # Fatia de risco da linha: prescrição sangrando + parados na etapa.
+  def tv_thesis_risk(thesis_id, agg)
+    prescribing = agg[:prescribing][thesis_id] || []
+    {
       prescribing_count: prescribing.size,
       prescribing_monthly: prescribing.sum { |lead| lead.benefit_monthly_value.to_f },
       stalled_count: (agg[:stalled][thesis_id] || []).size

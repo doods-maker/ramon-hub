@@ -59,10 +59,14 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
     bleeding = rows.select { |row| row[:lost_installments].positive? }
     at_risk = rows.select { |row| row[:lost_installments].zero? && row[:months_to_cliff] <= 3 }
     {
-      bleeding_monthly: bleeding.sum { |row| row[:monthly_value] || 0.0 },
+      bleeding_monthly: monthly_sum(bleeding),
       bleeding_count: bleeding.size,
-      at_risk_90d_monthly: at_risk.sum { |row| row[:monthly_value] || 0.0 },
+      at_risk_90d_monthly: monthly_sum(at_risk),
       at_risk_90d_count: at_risk.size
     }
+  end
+
+  def monthly_sum(rows)
+    rows.sum { |row| row[:monthly_value] || 0.0 }
   end
 end

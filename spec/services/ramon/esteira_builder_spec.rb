@@ -114,7 +114,7 @@ RSpec.describe Ramon::EsteiraBuilder do
     expect(item[:lead_id]).to eq(lead.id)
     expect(item[:thesis_id]).to eq(thesis.id)
     expect(item[:ultima_simulacao]).to eq({ 'atrasados' => '17000.00' })
-    expect(item[:last_message]).to include(incoming: true, content: 'a' * 197 + '...')
+    expect(item[:last_message]).to include(incoming: true, content: "#{'a' * 197}...")
     expect(item[:last_message][:at]).to be_a(Integer)
   end
 

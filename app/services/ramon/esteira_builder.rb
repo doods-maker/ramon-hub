@@ -143,12 +143,18 @@ class Ramon::EsteiraBuilder
       conversation_id: lead.conversation_id, contact_id: lead.contact_id,
       contact_phone: lead.contact&.phone_number,
       task_id: entry[:task_id],
-      thesis_id: lead.thesis_id,
-      ultima_simulacao: (lead.custom_attributes || {})['ultima_simulacao'],
-      last_message: last_message_payload(messages[lead.conversation_id]),
       score: WEIGHTS.fetch(reasons.first[:key]),
       suggested_action: ACTIONS.fetch(reasons.first[:key]),
       reasons: reasons
+    }.merge(context_fields(lead, messages))
+  end
+
+  # Contexto de trabalho do item: tese, última simulação e última mensagem.
+  def context_fields(lead, messages)
+    {
+      thesis_id: lead.thesis_id,
+      ultima_simulacao: (lead.custom_attributes || {})['ultima_simulacao'],
+      last_message: last_message_payload(messages[lead.conversation_id])
     }
   end
 
@@ -158,9 +164,11 @@ class Ramon::EsteiraBuilder
     conversation_ids = entries.filter_map { |entry| entry[:lead].conversation_id }
     return {} if conversation_ids.blank?
 
+    # reorder (não order): o default_scope do Message ordena por created_at e o
+    # ORDER BY inicial precisa começar pelo conversation_id do DISTINCT ON.
     Message.where(conversation_id: conversation_ids, private: false, message_type: [:incoming, :outgoing])
            .select('DISTINCT ON (conversation_id) messages.*')
-           .order(:conversation_id, created_at: :desc)
+           .reorder('conversation_id, created_at DESC')
            .index_by(&:conversation_id)
   end
 

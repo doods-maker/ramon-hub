@@ -95,14 +95,24 @@ class Ramon::CockpitMetrics
     entered = 0
     advanced = 0
     activities_by_lead.each_value do |acts|
-      entry = acts.select { |(_id, _at, to)| to == stage.name }.min_by { |(_id, at, _to)| at }
+      entry = first_entry_into(acts, stage)
       next if entry.nil?
 
       entered += 1
-      advanced += 1 if acts.any? { |(_id, at, to)| at > entry[1] && position_by_name.fetch(to, -1) > stage.position }
+      advanced += 1 if advanced_after?(acts, entry, stage, position_by_name)
     end
     { stage_id: stage.id, name: stage.name, entered: entered, advanced: advanced,
       rate: entered.zero? ? 0 : (advanced * 100.0 / entered).round }
+  end
+
+  # 1º stage_changed que entrou NESTA etapa (o mais antigo).
+  def first_entry_into(acts, stage)
+    acts.select { |(_id, _at, to)| to == stage.name }.min_by { |(_id, at, _to)| at }
+  end
+
+  # Algum stage_changed posterior à entrada foi para etapa de position maior?
+  def advanced_after?(acts, entry, stage, position_by_name)
+    acts.any? { |(_id, at, to)| at > entry[1] && position_by_name.fetch(to, -1) > stage.position }
   end
 
   # won atribuído ao closer; sem closer, cai pro SDR.
@@ -157,9 +167,11 @@ class Ramon::CockpitMetrics
   # N por conversa: SLA da própria inbox, com fallback no env (COALESCE por linha).
   def sla_breached_count(replied)
     threshold = sla_threshold_sql
+    # Epoch em vez de aritmética de interval: o bind de Time entrava como
+    # literal de tipo desconhecido e o PG tentava resolvê-lo como interval.
     waiting = sla_conversations.where(first_reply_created_at: nil)
-                               .where("conversations.created_at < ? - (#{threshold}) * INTERVAL '1 minute'", Time.current).count
-    over = replied.where("EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) > (#{threshold}) * 60").count
+                               .where("EXTRACT(EPOCH FROM (? - conversations.created_at)) / 60.0 > (#{threshold})", Time.current).count
+    over = replied.where("EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) / 60.0 > (#{threshold})").count
     waiting + over
   end
 

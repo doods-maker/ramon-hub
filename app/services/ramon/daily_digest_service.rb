@@ -74,9 +74,11 @@ class Ramon::DailyDigestService
   def sla_breached_count
     threshold = sla_threshold_sql
     scope = sla_conversations(today_range)
+    # Epoch em vez de aritmética de interval: o bind de Time entrava como
+    # literal de tipo desconhecido e o PG tentava resolvê-lo como interval.
     waiting = scope.where(first_reply_created_at: nil)
-                   .where("conversations.created_at < ? - (#{threshold}) * INTERVAL '1 minute'", Time.current).count
-    over = scope.where("EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) > (#{threshold}) * 60").count
+                   .where("EXTRACT(EPOCH FROM (? - conversations.created_at)) / 60.0 > (#{threshold})", Time.current).count
+    over = scope.where("EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) / 60.0 > (#{threshold})").count
     waiting + over
   end
 

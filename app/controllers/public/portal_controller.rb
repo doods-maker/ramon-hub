@@ -43,13 +43,16 @@ class Public::PortalController < ActionController::Base
   def docs_missing
     return [] if @lead.thesis.blank?
 
-    status_map = @lead.custom_attributes&.dig('doc_status') || {}
     @lead.thesis.thesis_items.where(section: 'documento').filter_map do |item|
-      status = status_map[item.id.to_s].presence || 'pendente'
-      next if status == 'recebido'
+      next if doc_received?(item)
 
       item.title.presence || item.content
     end
+  end
+
+  def doc_received?(item)
+    status_map = @lead.custom_attributes&.dig('doc_status') || {}
+    (status_map[item.id.to_s].presence || 'pendente') == 'recebido'
   end
 
   def valid_upload?
