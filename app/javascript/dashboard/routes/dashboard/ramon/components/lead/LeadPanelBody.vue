@@ -99,6 +99,18 @@ watch(
   }
 );
 
+// Chip de etapa colorido (mock 1f: pílula soft na cor da etapa) — :style é o
+// precedente do fork p/ cor dinâmica (KanbanColumn); sem cor, fica neutro.
+const stageChipStyle = computed(() => {
+  const color = stages.value?.find(s => s.id === stageId.value)?.color;
+  if (!color) return null;
+  return {
+    backgroundColor: `${color}2E`,
+    borderColor: `${color}59`,
+    color,
+  };
+});
+
 const commitStage = async (targetId, extra = {}) => {
   try {
     await store.dispatch('leads/update', {
@@ -231,6 +243,10 @@ const owners = computed(() => {
   return `${sdr || '—'} / ${closer || '—'}`;
 });
 
+// ----- seções nativas do Chatwoot (agente/time/prioridade/etiquetas/macros)
+// recolhidas: não existem no mock 1f e "sujavam" o fim do Resumo -----
+const conversationExtrasOpen = ref(false);
+
 // ----- "Não é lead" (destrutivo: confirmação inline, só na conversa) -----
 const discardPrompt = ref(false);
 const discarding = ref(false);
@@ -266,6 +282,7 @@ const discard = async () => {
           data-testid="panel-stage"
           :value="stageId"
           class="max-w-40 appearance-none truncate rounded-full border border-n-weak bg-n-alpha-1 h-auto bg-none px-2.5 py-0.5 text-[11px] text-n-slate-11 outline-none focus:border-n-slate-8"
+          :style="stageChipStyle"
           @change="e => onStageChange(Number(e.target.value))"
         >
           <option v-for="s in stages" :key="s.id" :value="s.id">
@@ -525,16 +542,36 @@ const discard = async () => {
 
         <div
           v-if="inConversation && conversationId"
-          class="flex flex-col gap-2 pt-3 border-t border-n-weak min-w-0"
+          class="pt-3 border-t border-n-weak min-w-0"
         >
-          <ConversationAction :conversation-id="conversationId" />
-          <div class="pt-3 border-t border-n-weak">
-            <p
-              class="mb-2 text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10"
-            >
-              {{ $t('RAMON.LEAD_PANEL.MACROS_TITLE') }}
-            </p>
-            <MacrosList :conversation-id="conversationId" />
+          <button
+            data-testid="conversation-extras-toggle"
+            class="flex items-center w-full gap-1.5 text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10 hover:text-n-slate-12"
+            @click="conversationExtrasOpen = !conversationExtrasOpen"
+          >
+            {{ $t('RAMON.LEAD_PANEL.CONVERSATION_EXTRAS') }}
+            <span
+              class="size-3.5 shrink-0"
+              :class="
+                conversationExtrasOpen
+                  ? 'i-lucide-chevron-up'
+                  : 'i-lucide-chevron-down'
+              "
+            />
+          </button>
+          <div
+            v-if="conversationExtrasOpen"
+            class="flex flex-col gap-2 mt-3 min-w-0"
+          >
+            <ConversationAction :conversation-id="conversationId" />
+            <div class="pt-3 border-t border-n-weak">
+              <p
+                class="mb-2 text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10"
+              >
+                {{ $t('RAMON.LEAD_PANEL.MACROS_TITLE') }}
+              </p>
+              <MacrosList :conversation-id="conversationId" />
+            </div>
           </div>
         </div>
 

@@ -604,6 +604,7 @@
         "CONTRACT": "Contract"
       },
       "MACROS_TITLE": "Conversation macros",
+      "CONVERSATION_EXTRAS": "More from the conversation",
       "NOTES": {
         "TITLE": "Notes",
         "PLACEHOLDER": "Add a note…",

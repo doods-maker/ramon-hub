@@ -316,6 +316,20 @@ describe('LeadPanelBody', () => {
       expect(wrapper.emitted('discarded')).toBeTruthy();
     });
 
+    it('seções nativas da conversa ficam recolhidas atrás de "Mais da conversa"', async () => {
+      const wrapper = mountBody();
+      expect(
+        wrapper.findComponent({ name: 'ConversationAction' }).exists()
+      ).toBe(false);
+      await wrapper
+        .find('[data-testid="conversation-extras-toggle"]')
+        .trigger('click');
+      expect(
+        wrapper.findComponent({ name: 'ConversationAction' }).exists()
+      ).toBe(true);
+      expect(wrapper.findComponent({ name: 'MacrosList' }).exists()).toBe(true);
+    });
+
     it('no drawer não há "Não é lead" nem ações nativas da conversa', () => {
       const wrapper = mountBody({ props: { context: 'drawer' } });
       expect(wrapper.find('[data-testid="lead-discard"]').exists()).toBe(false);
