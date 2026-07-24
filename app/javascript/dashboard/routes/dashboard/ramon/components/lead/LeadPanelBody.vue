@@ -522,16 +522,24 @@ const discard = async () => {
           class="flex flex-col gap-2 pt-3 border-t border-n-weak min-w-0"
         >
           <ConversationAction :conversation-id="conversationId" />
-          <MacrosList :conversation-id="conversationId" />
+          <div class="pt-3 border-t border-n-weak">
+            <p
+              class="mb-2 text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10"
+            >
+              {{ $t('RAMON.LEAD_PANEL.MACROS_TITLE') }}
+            </p>
+            <MacrosList :conversation-id="conversationId" />
+          </div>
         </div>
 
         <div v-if="inConversation" class="pt-3 border-t border-n-weak">
           <button
             v-if="!discardPrompt"
-            class="text-xs text-n-ruby-11 hover:underline"
+            class="inline-flex items-center gap-1 rounded-full bg-n-ruby-9/10 px-2.5 py-1 text-[11px] text-n-ruby-11 hover:bg-n-ruby-9/20"
             data-testid="lead-discard"
             @click="discardPrompt = true"
           >
+            <span class="i-lucide-user-x size-3 shrink-0" />
             {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
           </button>
           <div

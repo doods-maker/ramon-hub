@@ -89,8 +89,12 @@ const gridStyle = computed(() => ({
 <template>
   <div class="flex-1 min-h-0 overflow-auto px-4 pb-4" data-testid="swimlanes">
     <div class="w-max min-w-full">
-      <!-- header: nome de cada etapa com o dot da cor, alinhado ao grid -->
-      <div class="grid gap-x-2.5 items-center pb-1" :style="gridStyle">
+      <!-- header: nome de cada etapa com o dot da cor, alinhado ao grid;
+           px-[11px] espelha borda (1px) + padding (10px) das raias abaixo -->
+      <div
+        class="grid gap-x-2.5 items-center pb-1 px-[11px]"
+        :style="gridStyle"
+      >
         <span />
         <span
           v-for="stage in stages"

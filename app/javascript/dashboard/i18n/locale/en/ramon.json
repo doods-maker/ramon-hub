@@ -602,6 +602,7 @@
         "SIMULADOR": "Simulator",
         "CONTRACT": "Contract"
       },
+      "MACROS_TITLE": "Conversation macros",
       "NOTES": {
         "TITLE": "Notes",
         "PLACEHOLDER": "Add a note…",

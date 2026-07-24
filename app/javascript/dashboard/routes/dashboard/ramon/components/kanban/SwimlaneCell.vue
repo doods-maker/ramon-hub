@@ -47,7 +47,7 @@ const onChange = evt => {
     :group="`lane-${laneKey}`"
     item-key="id"
     ghost-class="ramon-drag-ghost"
-    class="flex flex-col min-h-[56px]"
+    class="flex flex-col gap-1.5 min-h-[56px] p-1.5 rounded-lg bg-n-alpha-1"
     data-testid="swimlane-cell"
     @change="onChange"
   >
