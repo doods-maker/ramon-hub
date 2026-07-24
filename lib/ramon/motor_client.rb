@@ -26,6 +26,25 @@ class Ramon::MotorClient
     post_json('/elegibilidade', payload, read_timeout: 30)
   end
 
+  # Pensão por morte (fatia 2 do motor): qualidade do falecido, quotas por
+  # dependente, decisões pendentes (união >=2 anos, desemprego). Payload JSON
+  # (data_obito+dependentes obrigatórios; ver PensaoIn no motor).
+  def self.pensao(payload)
+    post_json('/pensao', payload, read_timeout: 30)
+  end
+
+  # Salário-maternidade (fatia 2 do motor): RMI, carência (sempre 0) e
+  # duração (120 dias). Payload JSON (data_evento+categoria obrigatórios).
+  def self.maternidade(payload)
+    post_json('/maternidade', payload, read_timeout: 30)
+  end
+
+  # Planejamento de aposentadoria (fatia 3 do motor): roda o painel várias
+  # vezes por cenário/ano — read_timeout maior que os demais endpoints.
+  def self.planejamento(payload)
+    post_json('/planejamento', payload, read_timeout: 60)
+  end
+
   # Liquidação de sentença (F3 do motor): parcelas devidas + atualização +
   # honorários. Payload JSON (rmi/dib obrigatórios; ver LiquidacaoIn no motor).
   def self.liquidacao(payload)
@@ -43,6 +62,26 @@ class Ramon::MotorClient
                              body: payload.to_json,
                              open_timeout: OPEN_TIMEOUT,
                              read_timeout: 30)
+    return response.body if response.success?
+    raise ValidationError, detail_de(response) if response.code == 422
+
+    raise UnavailableError, "motor indisponível: respondeu HTTP #{response.code}"
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
+    raise UnavailableError, "motor indisponível: #{e.message}"
+  end
+
+  # Mesma conta do planejamento em PDF consultivo. Devolve os BYTES crus —
+  # sem parse — pro controller repassar via send_data. read_timeout 60 pelo
+  # mesmo motivo de .planejamento (roda o painel várias vezes).
+  def self.planejamento_pdf(payload)
+    base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
+    raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
+
+    response = HTTParty.post("#{base.chomp('/')}/planejamento/pdf",
+                             headers: { 'Content-Type' => 'application/json' },
+                             body: payload.to_json,
+                             open_timeout: OPEN_TIMEOUT,
+                             read_timeout: 60)
     return response.body if response.success?
     raise ValidationError, detail_de(response) if response.code == 422
 
