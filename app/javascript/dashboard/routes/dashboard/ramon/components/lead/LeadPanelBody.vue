@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
@@ -39,6 +39,12 @@ const store = useStore();
 const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
+
+// Etapas/motivos só eram buscados pelo Funil: abrir a conversa direto (F5)
+// deixava o chip de etapa VAZIO e o modal de perda sem motivos.
+onMounted(() => {
+  if (!stages.value?.length) store.dispatch('leadConfig/get');
+});
 
 const inConversation = computed(() => props.context === 'conversation');
 

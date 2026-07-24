@@ -243,7 +243,8 @@
       "REMOVE_CONFIRM": "Remover este atalho?"
     },
     "FUNIL": {
-      "TITLE": "Funil de Leads",
+      "TITLE": "Funil",
+      "SEARCH_HINT": "Buscar (Ctrl K)",
       "NEW_LEAD": "Novo lead",
       "HOTKEYS_HINT": "j/k navegar · e editar · c conversa",
       "EXPORT_CSV": "Exportar CSV",

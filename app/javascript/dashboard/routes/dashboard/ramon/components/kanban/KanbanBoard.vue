@@ -357,6 +357,9 @@ onMounted(() => {
   store.dispatch('agents/get');
 });
 
+// Busca do header abre o command palette (mesmo padrão do ResolveAction)
+const openPalette = () => document.querySelector('ninja-keys')?.open();
+
 const exportCsv = () => {
   const all = allLeads.value;
   const date = new Date().toISOString().slice(0, 10);
@@ -368,12 +371,18 @@ const exportCsv = () => {
 <template>
   <div class="flex flex-col h-full">
     <div class="px-4 pt-3">
-      <RamonPageHeader
-        compact
-        :title="$t('RAMON.FUNIL.TITLE')"
-        :subtitle="$t('RAMON.FUNIL.HOTKEYS_HINT')"
-      >
+      <!-- mock 1d: título curto, sem subtítulo; busca abre o palette (⌘K) -->
+      <RamonPageHeader compact :title="$t('RAMON.FUNIL.TITLE')">
         <template #actions>
+          <button
+            data-testid="funil-search"
+            :title="$t('RAMON.FUNIL.HOTKEYS_HINT')"
+            class="hidden md:flex items-center gap-1.5 w-44 px-3 py-1.5 text-sm rounded-lg ramon-rail border border-n-weak text-n-slate-9 hover:text-n-slate-11"
+            @click="openPalette"
+          >
+            <span class="i-lucide-search size-3.5" />
+            {{ $t('RAMON.FUNIL.SEARCH_HINT') }}
+          </button>
           <button
             data-testid="filters-toggle"
             class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border hover:text-n-slate-12"

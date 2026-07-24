@@ -243,7 +243,8 @@
       "REMOVE_CONFIRM": "Remove this shortcut?"
     },
     "FUNIL": {
-      "TITLE": "Lead Pipeline",
+      "TITLE": "Pipeline",
+      "SEARCH_HINT": "Search (Ctrl K)",
       "NEW_LEAD": "New lead",
       "HOTKEYS_HINT": "j/k navigate · e edit · c conversation",
       "EXPORT_CSV": "Export CSV",
