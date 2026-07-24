@@ -9,6 +9,7 @@ class Api::V1::Accounts::LeadMaternidadesController < Api::V1::Accounts::BaseCon
   def create
     authorize(@lead, :show?)
     return render json: { error: 'data do evento inválida — use o formato AAAA-MM-DD' }, status: :unprocessable_entity if data_evento.blank?
+
     unless categoria_valida?
       return render json: { error: 'categoria inválida — use empregada, ci_facultativa ou especial' },
                     status: :unprocessable_entity
