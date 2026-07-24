@@ -436,27 +436,31 @@ const exportCsv = () => {
           {{ $t(`RAMON.KANBAN.VIEW.${mode.toUpperCase()}`) }}
         </button>
       </div>
-      <label
+      <!-- mock 2b: "agrupar por: tese · dono · canal · prioridade" inline,
+           ativo em dourado — sem select (o CSS global de select desalinha) -->
+      <div
         v-show="viewMode === 'lanes'"
-        class="flex items-center gap-1.5 text-xs text-n-slate-10"
+        data-testid="lanes-group-by"
+        class="flex items-center gap-0.5 text-xs text-n-slate-10"
       >
-        {{ $t('RAMON.KANBAN.VIEW.GROUP_BY') }}
-        <!-- w-28 explícito: CSS global põe width:100% em select;
-             h-auto + bg-none anulam o h-10 + seta do mesmo CSS global -->
-        <select
-          v-model="groupBy"
-          data-testid="lanes-group-by"
-          class="w-28 h-auto bg-none appearance-none px-2 py-1 text-xs rounded-lg bg-n-alpha-2 border border-transparent text-n-slate-12 outline-none focus:border-n-slate-8"
+        <span class="ltr:mr-1 rtl:ml-1">{{
+          $t('RAMON.KANBAN.VIEW.GROUP_BY')
+        }}</span>
+        <button
+          v-for="group in ['thesis', 'sdr', 'channel', 'priority']"
+          :key="group"
+          :data-testid="`lanes-group-${group}`"
+          class="rounded-md px-1.5 py-1 text-xs"
+          :class="
+            groupBy === group
+              ? 'bg-n-alpha-2 font-medium text-n-iris-11'
+              : 'text-n-slate-10 hover:text-n-slate-12'
+          "
+          @click="groupBy = group"
         >
-          <option
-            v-for="group in ['thesis', 'sdr', 'channel', 'priority']"
-            :key="group"
-            :value="group"
-          >
-            {{ $t(`RAMON.KANBAN.VIEW.GROUP.${group.toUpperCase()}`) }}
-          </option>
-        </select>
-      </label>
+          {{ $t(`RAMON.KANBAN.VIEW.GROUP.${group.toUpperCase()}`) }}
+        </button>
+      </div>
     </div>
     <!-- chips removíveis dos filtros ativos + resumo do pipeline -->
     <FilterChips :filters="filters" @update="onFilterUpdate" />
