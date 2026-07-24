@@ -14,7 +14,11 @@ const isLoading = ref(false);
 const hasError = ref(false);
 const errorMessage = ref('');
 const resultado = ref(null);
-const decisoes = ref({ desemprego: null, facultativo: null, uniao_2_anos: null });
+const decisoes = ref({
+  desemprego: null,
+  facultativo: null,
+  uniao_2_anos: null,
+});
 
 const dataObito = ref('');
 const valorBeneficioObito = ref('');
@@ -322,8 +326,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
             </p>
             <p class="text-xs text-n-slate-10">
               {{
-                resultado.qualidade_falecido.cenarios.sem_desemprego
-                  .fundamento
+                resultado.qualidade_falecido.cenarios.sem_desemprego.fundamento
               }}
             </p>
           </div>
@@ -364,8 +367,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
             </p>
             <p class="text-xs text-n-slate-10">
               {{
-                resultado.qualidade_falecido.cenarios.com_desemprego
-                  .fundamento
+                resultado.qualidade_falecido.cenarios.com_desemprego.fundamento
               }}
             </p>
           </div>

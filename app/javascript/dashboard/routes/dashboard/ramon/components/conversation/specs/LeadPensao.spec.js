@@ -75,9 +75,9 @@ describe('LeadPensao', () => {
   it('calcular renderiza quotas (incluindo cessa_em como dict)', async () => {
     LeadsAPI.pensao.mockResolvedValue({ data: resultadoComQuotas });
     const wrapper = mountPensao();
-    await wrapper.find('[data-testid="pensao-data-obito"]').setValue(
-      '2026-01-10'
-    );
+    await wrapper
+      .find('[data-testid="pensao-data-obito"]')
+      .setValue('2026-01-10');
     await wrapper.find('[data-testid="pensao-calcular"]').trigger('click');
     await flushPromises();
 
@@ -87,21 +87,19 @@ describe('LeadPensao', () => {
       decisoes: {},
     });
     expect(wrapper.find('[data-testid="pensao-quotas"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="pensao-quota-0"]').exists()).toBe(
-      true
-    );
+    expect(wrapper.find('[data-testid="pensao-quota-0"]').exists()).toBe(true);
     expect(
       wrapper.find('[data-testid="pensao-quota-cessa-dict-0"]').exists()
     ).toBe(true);
-    expect(wrapper.find('[data-testid="pensao-quota-cessa-dict-0"]').text()).toContain(
-      'RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA'
-    );
+    expect(
+      wrapper.find('[data-testid="pensao-quota-cessa-dict-0"]').text()
+    ).toContain('RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA');
     expect(wrapper.find('[data-testid="pensao-quota-1"]').text()).toContain(
       '2040-05-10'.split('-').reverse().join('/')
     );
-    expect(wrapper.find('[data-testid="pensao-cenario-unico"]').text()).toContain(
-      '2027-06-15'.split('-').reverse().join('/')
-    );
+    expect(
+      wrapper.find('[data-testid="pensao-cenario-unico"]').text()
+    ).toContain('2027-06-15'.split('-').reverse().join('/'));
     expect(wrapper.find('[data-testid="pensao-pendencia-0"]').text()).toContain(
       'quota vitalícia'
     );
@@ -122,9 +120,7 @@ describe('LeadPensao', () => {
     LeadsAPI.pensao.mockResolvedValueOnce({
       data: { ...resultadoComQuotas, decisoes_pendentes: [] },
     });
-    await wrapper
-      .find('[data-testid="pensao-pendencia-nao"]')
-      .trigger('click');
+    await wrapper.find('[data-testid="pensao-pendencia-nao"]').trigger('click');
     await flushPromises();
 
     expect(LeadsAPI.pensao).toHaveBeenLastCalledWith(9, {
@@ -136,7 +132,9 @@ describe('LeadPensao', () => {
 
   it('erro de rede mostra erro+retry, não vazio; retry refaz a chamada', async () => {
     LeadsAPI.pensao.mockRejectedValueOnce({
-      response: { data: { error: 'dependentes obrigatório — informe ao menos 1' } },
+      response: {
+        data: { error: 'dependentes obrigatório — informe ao menos 1' },
+      },
     });
     const wrapper = mountPensao();
     await wrapper
@@ -149,20 +147,14 @@ describe('LeadPensao', () => {
       'dependentes obrigatório — informe ao menos 1'
     );
     expect(wrapper.find('[data-testid="pensao-retry"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="pensao-quotas"]').exists()).toBe(
-      false
-    );
+    expect(wrapper.find('[data-testid="pensao-quotas"]').exists()).toBe(false);
 
     LeadsAPI.pensao.mockResolvedValueOnce({ data: resultadoComQuotas });
     await wrapper.find('[data-testid="pensao-retry"]').trigger('click');
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="pensao-error"]').exists()).toBe(
-      false
-    );
-    expect(wrapper.find('[data-testid="pensao-quotas"]').exists()).toBe(
-      true
-    );
+    expect(wrapper.find('[data-testid="pensao-error"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="pensao-quotas"]').exists()).toBe(true);
   });
 
   it('adiciona e remove dependentes dinamicamente', async () => {
@@ -170,7 +162,9 @@ describe('LeadPensao', () => {
     expect(wrapper.find('[data-testid="pensao-dependente-0"]').exists()).toBe(
       true
     );
-    await wrapper.find('[data-testid="pensao-dependente-add"]').trigger('click');
+    await wrapper
+      .find('[data-testid="pensao-dependente-add"]')
+      .trigger('click');
     expect(wrapper.find('[data-testid="pensao-dependente-1"]').exists()).toBe(
       true
     );

@@ -38,9 +38,7 @@ describe('LeadMaternidade', () => {
     await wrapper
       .find('[data-testid="maternidade-categoria"]')
       .setValue('especial');
-    await wrapper
-      .find('[data-testid="maternidade-calcular"]')
-      .trigger('click');
+    await wrapper.find('[data-testid="maternidade-calcular"]').trigger('click');
     await flushPromises();
 
     expect(LeadsAPI.maternidade).toHaveBeenCalledWith(11, {
@@ -56,9 +54,9 @@ describe('LeadMaternidade', () => {
     expect(
       wrapper.find('[data-testid="maternidade-duracao"]').text()
     ).toContain('120');
-    expect(
-      wrapper.find('[data-testid="maternidade-avisos"]').text()
-    ).toContain('regra de transição aplicada');
+    expect(wrapper.find('[data-testid="maternidade-avisos"]').text()).toContain(
+      'regra de transição aplicada'
+    );
   });
 
   it('erro de rede mostra erro+retry, não vazio; retry refaz a chamada', async () => {
@@ -69,20 +67,18 @@ describe('LeadMaternidade', () => {
     await wrapper
       .find('[data-testid="maternidade-data-evento"]')
       .setValue('2026-03-01');
-    await wrapper
-      .find('[data-testid="maternidade-calcular"]')
-      .trigger('click');
+    await wrapper.find('[data-testid="maternidade-calcular"]').trigger('click');
     await flushPromises();
 
-    expect(
-      wrapper.find('[data-testid="maternidade-error"]').text()
-    ).toContain('categoria inválida');
-    expect(
-      wrapper.find('[data-testid="maternidade-retry"]').exists()
-    ).toBe(true);
-    expect(
-      wrapper.find('[data-testid="maternidade-resultado"]').exists()
-    ).toBe(false);
+    expect(wrapper.find('[data-testid="maternidade-error"]').text()).toContain(
+      'categoria inválida'
+    );
+    expect(wrapper.find('[data-testid="maternidade-retry"]').exists()).toBe(
+      true
+    );
+    expect(wrapper.find('[data-testid="maternidade-resultado"]').exists()).toBe(
+      false
+    );
 
     LeadsAPI.maternidade.mockResolvedValueOnce({ data: resultado });
     await wrapper.find('[data-testid="maternidade-retry"]').trigger('click');
@@ -91,8 +87,8 @@ describe('LeadMaternidade', () => {
     expect(wrapper.find('[data-testid="maternidade-error"]').exists()).toBe(
       false
     );
-    expect(
-      wrapper.find('[data-testid="maternidade-resultado"]').exists()
-    ).toBe(true);
+    expect(wrapper.find('[data-testid="maternidade-resultado"]').exists()).toBe(
+      true
+    );
   });
 });
