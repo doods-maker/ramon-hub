@@ -4,6 +4,9 @@ import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadLiquidacao from './LeadLiquidacao.vue';
 import LeadElegibilidade from './LeadElegibilidade.vue';
+import LeadPensao from './LeadPensao.vue';
+import LeadMaternidade from './LeadMaternidade.vue';
+import LeadPlanejamento from './LeadPlanejamento.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -330,6 +333,12 @@ const canPainel = computed(() =>
 // CNIS é obrigatório, diferente do canPainel (que aceita vínculos avulsos).
 const canElegibilidade = computed(() => Boolean(form.value.der && cnis.value));
 
+// Pensão e maternidade usam data própria (data_obito/data_evento) dentro do
+// componente filho — o gate da aba é só o CNIS, igual à elegibilidade.
+const canPensao = computed(() => Boolean(cnis.value));
+const canMaternidade = computed(() => Boolean(cnis.value));
+const canPlanejamento = computed(() => Boolean(cnis.value));
+
 const calcularPainel = async () => {
   painelLoading.value = true;
   motorDown.value = false;
@@ -561,7 +570,7 @@ const aba = ref('painel');
     </div>
 
     <div
-      class="flex gap-1 border-b border-n-weak"
+      class="flex flex-wrap gap-1 border-b border-n-weak"
       role="tablist"
       data-testid="sim-abas"
     >
@@ -609,6 +618,51 @@ const aba = ref('painel');
         @click="aba = 'elegibilidade'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_ELEGIBILIDADE') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="aba === 'pensao'"
+        data-testid="sim-aba-pensao"
+        class="px-3 py-1.5 text-xs rounded-t-lg"
+        :class="
+          aba === 'pensao'
+            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+            : 'text-n-slate-10'
+        "
+        @click="aba = 'pensao'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_PENSAO') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="aba === 'maternidade'"
+        data-testid="sim-aba-maternidade"
+        class="px-3 py-1.5 text-xs rounded-t-lg"
+        :class="
+          aba === 'maternidade'
+            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+            : 'text-n-slate-10'
+        "
+        @click="aba = 'maternidade'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_MATERNIDADE') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="aba === 'planejamento'"
+        data-testid="sim-aba-planejamento"
+        class="px-3 py-1.5 text-xs rounded-t-lg"
+        :class="
+          aba === 'planejamento'
+            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+            : 'text-n-slate-10'
+        "
+        @click="aba = 'planejamento'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_PLANEJAMENTO') }}
       </button>
     </div>
 
@@ -1067,6 +1121,51 @@ const aba = ref('painel');
         {{ $t('RAMON.SIMULADOR.ELEG_PRECISA_CNIS') }}
       </p>
       <LeadElegibilidade v-else :lead="lead" :der="form.der" />
+    </div>
+
+    <div
+      v-show="aba === 'pensao'"
+      class="flex flex-col gap-2"
+      data-testid="sim-pensao-secao"
+    >
+      <p
+        v-if="!canPensao"
+        class="text-xs text-n-amber-11"
+        data-testid="sim-pensao-hint"
+      >
+        {{ $t('RAMON.SIMULADOR.PENSAO_PRECISA_CNIS') }}
+      </p>
+      <LeadPensao v-else :lead="lead" />
+    </div>
+
+    <div
+      v-show="aba === 'maternidade'"
+      class="flex flex-col gap-2"
+      data-testid="sim-maternidade-secao"
+    >
+      <p
+        v-if="!canMaternidade"
+        class="text-xs text-n-amber-11"
+        data-testid="sim-maternidade-hint"
+      >
+        {{ $t('RAMON.SIMULADOR.MATERNIDADE_PRECISA_CNIS') }}
+      </p>
+      <LeadMaternidade v-else :lead="lead" />
+    </div>
+
+    <div
+      v-show="aba === 'planejamento'"
+      class="flex flex-col gap-2"
+      data-testid="sim-planejamento-secao"
+    >
+      <p
+        v-if="!canPlanejamento"
+        class="text-xs text-n-amber-11"
+        data-testid="sim-planejamento-hint"
+      >
+        {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PRECISA_CNIS') }}
+      </p>
+      <LeadPlanejamento v-else :lead="lead" />
     </div>
 
     <p

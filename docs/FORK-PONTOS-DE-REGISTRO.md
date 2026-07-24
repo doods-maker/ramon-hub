@@ -97,6 +97,7 @@
 | `config/routes.rb` | `resource :simulacao, only: [:create], controller: 'lead_simulacoes'` dentro do bloco `resources :leads` (após `resources :triages`) | endpoint do Simulador ao vivo (Sala de Fechamento) | Onda 2 |
 | `config/routes.rb` | `member { get :dossie, to: 'lead_dossies#show' }` dentro do bloco `resources :leads` (após o `collection`) | endpoint agregador do Dossiê de 30 segundos | dossiê |
 | `config/routes.rb` | `resource :elegibilidade, only: [:create], controller: 'lead_elegibilidades'` dentro do bloco `resources :leads` (após `resource :painel`) | endpoint de elegibilidade (qualidade de segurado, pendências, lacunas) | elegibilidade-ui |
+| `config/routes.rb` | `resource :pensao`/`resource :maternidade`/`resource :planejamento` (com `post :pdf`) dentro do bloco `resources :leads` (após `resource :elegibilidade`) | endpoints de pensão por morte, salário-maternidade e planejamento de aposentadoria (+ PDF consultivo) | ui-motor-pensao-maternidade-planejamento |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -247,6 +248,11 @@
 | `app/models/contact.rb` (2 guards) | `dispatch_create/update_event` respeitam `Current.suppress_import_events` (import CSV em massa não estoura 1 broadcast/linha) | import 10k | hardening-2 21/07 |
 | `app/javascript/dashboard/components-next/sidebar/Sidebar.vue` (1 bloco `md:hidden`) | atalho "Intranet" no topo do nav mobile — a rail de mundos é `hidden` no celular | troca de mundo no celular | hardening-2 21/07 |
 | `inboxes.first_response_sla_minutes` (migração + `inboxes_controller`/`_inbox.json.jbuilder`/`Settings.vue` — linhas de changes nos mesmos pontos do `auto_create_lead`) | SLA de 1ª resposta por inbox: campo numérico junto do toggle, `Lead#sla_info` no índice/broadcast, timer no card, badge de coluna e motivo `SLA_BREACH` na Esteira | SLA 1º contato (mock 3a) | redesign 23/07 |
+| `lib/ramon/motor_client.rb` (linha de changes) | já existia; +`pensao(payload)`/`maternidade(payload)`/`planejamento(payload)` via `post_json` (planejamento com `read_timeout: 60`) + `planejamento_pdf(payload)` espelhando `liquidacao_pdf` (bytes crus, `read_timeout: 60`) | cliente do motor — fatias 2-3 (pensão/maternidade/planejamento) | ui-motor-pensao-maternidade-planejamento |
+| `app/controllers/api/v1/accounts/lead_pensoes_controller.rb` | NOVO: `POST /leads/:id/pensao` — mirror `lead_elegibilidades_controller` (CNIS do lead, fallback pro contato); valida `data_obito`/`dependentes` (min 1, repassado cru); `decisoes` (desemprego/facultativo/uniao_2_anos, false explícito) | proxy pensão por morte | ui-motor-pensao-maternidade-planejamento |
+| `app/controllers/api/v1/accounts/lead_maternidades_controller.rb` | NOVO: `POST /leads/:id/maternidade` — mirror `lead_elegibilidades_controller`; valida `data_evento` + `categoria` (empregada/ci_facultativa/especial) | proxy salário-maternidade | ui-motor-pensao-maternidade-planejamento |
+| `app/controllers/api/v1/accounts/lead_planejamentos_controller.rb` | NOVO: `POST /leads/:id/planejamento` + `POST .../planejamento/pdf` — mirror `lead_liquidacoes_controller` (`responder` compartilhado); `cenarios` repassado cru; PDF usa `segurado_nome` (default nome do contato) | proxy planejamento de aposentadoria + PDF consultivo | ui-motor-pensao-maternidade-planejamento |
+| `spec/controllers/api/v1/accounts/{lead_pensoes,lead_maternidades,lead_planejamentos}_controller_spec.rb` | cobertura: 401, sucesso (CNIS/fallback contato, payload montado), campos obrigatórios ausentes → 422, `ValidationError` → 422, `UnavailableError` → 503; planejamento#pdf → `send_data` `application/pdf` | specs CI | ui-motor-pensao-maternidade-planejamento |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
