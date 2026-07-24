@@ -93,6 +93,16 @@ class LeadsAPI extends ApiClient {
     });
   }
 
+  planejamento(leadId, payload) {
+    return axios.post(`${this.url}/${leadId}/planejamento`, payload);
+  }
+
+  planejamentoPdf(leadId, payload) {
+    return axios.post(`${this.url}/${leadId}/planejamento/pdf`, payload, {
+      responseType: 'blob',
+    });
+  }
+
   createZapsign(leadId) {
     return axios.post(`${this.url}/${leadId}/zapsign`);
   }

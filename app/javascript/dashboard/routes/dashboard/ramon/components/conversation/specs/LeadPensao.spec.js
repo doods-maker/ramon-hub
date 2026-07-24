@@ -20,7 +20,11 @@ const mountPensao = (props = {}) =>
 const resultadoComQuotas = {
   qualidade_falecido: {
     cenarios: {
-      unico: { mantida: true, fundamento: 'em atividade no óbito' },
+      unico: {
+        mantida: true,
+        ate: '2027-06-15',
+        fundamento: 'em atividade no óbito',
+      },
     },
   },
   direito_adquirido: false,
@@ -91,6 +95,15 @@ describe('LeadPensao', () => {
     ).toBe(true);
     expect(wrapper.find('[data-testid="pensao-quota-1"]').text()).toContain(
       '2040-05-10'.split('-').reverse().join('/')
+    );
+    expect(wrapper.find('[data-testid="pensao-cenario-unico"]').text()).toContain(
+      '2027-06-15'.split('-').reverse().join('/')
+    );
+    expect(wrapper.find('[data-testid="pensao-pendencia-0"]').text()).toContain(
+      'quota vitalícia'
+    );
+    expect(wrapper.find('[data-testid="pensao-pendencia-0"]').text()).toContain(
+      'quota temporária'
     );
   });
 

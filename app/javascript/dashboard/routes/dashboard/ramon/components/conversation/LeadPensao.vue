@@ -276,6 +276,9 @@ const isCessaDict = v => v !== null && typeof v === 'object';
                 ? $t('RAMON.SIMULADOR.ELEG_MANTIDA')
                 : $t('RAMON.SIMULADOR.ELEG_PERDIDA')
             }}
+            <template v-if="resultado.qualidade_falecido.cenarios.unico.ate">
+              — {{ dataBr(resultado.qualidade_falecido.cenarios.unico.ate) }}
+            </template>
           </p>
           <p class="text-xs text-n-slate-10">
             {{ resultado.qualidade_falecido.cenarios.unico.fundamento }}
@@ -306,6 +309,16 @@ const isCessaDict = v => v !== null && typeof v === 'object';
                   ? $t('RAMON.SIMULADOR.ELEG_MANTIDA')
                   : $t('RAMON.SIMULADOR.ELEG_PERDIDA')
               }}
+              <template
+                v-if="resultado.qualidade_falecido.cenarios.sem_desemprego.ate"
+              >
+                —
+                {{
+                  dataBr(
+                    resultado.qualidade_falecido.cenarios.sem_desemprego.ate
+                  )
+                }}
+              </template>
             </p>
             <p class="text-xs text-n-slate-10">
               {{
@@ -338,6 +351,16 @@ const isCessaDict = v => v !== null && typeof v === 'object';
                   ? $t('RAMON.SIMULADOR.ELEG_MANTIDA')
                   : $t('RAMON.SIMULADOR.ELEG_PERDIDA')
               }}
+              <template
+                v-if="resultado.qualidade_falecido.cenarios.com_desemprego.ate"
+              >
+                —
+                {{
+                  dataBr(
+                    resultado.qualidade_falecido.cenarios.com_desemprego.ate
+                  )
+                }}
+              </template>
             </p>
             <p class="text-xs text-n-slate-10">
               {{
@@ -366,6 +389,14 @@ const isCessaDict = v => v !== null && typeof v === 'object';
           :data-testid="`pensao-pendencia-${i}`"
         >
           <p class="text-xs text-n-amber-11 font-medium">{{ pend.pergunta }}</p>
+          <p class="text-xs text-n-slate-11">
+            {{ $t('RAMON.SIMULADOR.ELEG_SIM') }}:
+            {{ pend.efeito_por_resposta?.sim }}
+          </p>
+          <p class="text-xs text-n-slate-11">
+            {{ $t('RAMON.SIMULADOR.ELEG_NAO') }}:
+            {{ pend.efeito_por_resposta?.nao }}
+          </p>
           <div class="flex gap-2">
             <button
               type="button"

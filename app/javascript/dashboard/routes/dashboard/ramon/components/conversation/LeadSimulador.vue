@@ -6,6 +6,7 @@ import LeadLiquidacao from './LeadLiquidacao.vue';
 import LeadElegibilidade from './LeadElegibilidade.vue';
 import LeadPensao from './LeadPensao.vue';
 import LeadMaternidade from './LeadMaternidade.vue';
+import LeadPlanejamento from './LeadPlanejamento.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -336,6 +337,7 @@ const canElegibilidade = computed(() => Boolean(form.value.der && cnis.value));
 // componente filho — o gate da aba é só o CNIS, igual à elegibilidade.
 const canPensao = computed(() => Boolean(cnis.value));
 const canMaternidade = computed(() => Boolean(cnis.value));
+const canPlanejamento = computed(() => Boolean(cnis.value));
 
 const calcularPainel = async () => {
   painelLoading.value = true;
@@ -646,6 +648,21 @@ const aba = ref('painel');
         @click="aba = 'maternidade'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_MATERNIDADE') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="aba === 'planejamento'"
+        data-testid="sim-aba-planejamento"
+        class="px-3 py-1.5 text-xs rounded-t-lg"
+        :class="
+          aba === 'planejamento'
+            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
+            : 'text-n-slate-10'
+        "
+        @click="aba = 'planejamento'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_PLANEJAMENTO') }}
       </button>
     </div>
 
@@ -1134,6 +1151,21 @@ const aba = ref('painel');
         {{ $t('RAMON.SIMULADOR.MATERNIDADE_PRECISA_CNIS') }}
       </p>
       <LeadMaternidade v-else :lead="lead" />
+    </div>
+
+    <div
+      v-show="aba === 'planejamento'"
+      class="flex flex-col gap-2"
+      data-testid="sim-planejamento-secao"
+    >
+      <p
+        v-if="!canPlanejamento"
+        class="text-xs text-n-amber-11"
+        data-testid="sim-planejamento-hint"
+      >
+        {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PRECISA_CNIS') }}
+      </p>
+      <LeadPlanejamento v-else :lead="lead" />
     </div>
 
     <p
