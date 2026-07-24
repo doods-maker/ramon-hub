@@ -489,11 +489,19 @@ const isCessaDict = v => v !== null && typeof v === 'object';
             >
               <span>
                 {{ $t('RAMON.SIMULADOR.PENSAO_UNIAO_MENOR2') }}:
-                {{ dataBr(q.cessa_em.uniao_menor_2_anos) }}
+                {{
+                  q.cessa_em.uniao_menor_2_anos
+                    ? dataBr(q.cessa_em.uniao_menor_2_anos)
+                    : $t('RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA')
+                }}
               </span>
               <span>
                 {{ $t('RAMON.SIMULADOR.PENSAO_UNIAO_2OUMAIS') }}:
-                {{ dataBr(q.cessa_em.uniao_2_anos_ou_mais) }}
+                {{
+                  q.cessa_em.uniao_2_anos_ou_mais
+                    ? dataBr(q.cessa_em.uniao_2_anos_ou_mais)
+                    : $t('RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA')
+                }}
               </span>
             </div>
           </template>

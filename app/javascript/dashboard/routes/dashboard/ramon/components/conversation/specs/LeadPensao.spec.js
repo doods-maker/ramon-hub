@@ -93,6 +93,9 @@ describe('LeadPensao', () => {
     expect(
       wrapper.find('[data-testid="pensao-quota-cessa-dict-0"]').exists()
     ).toBe(true);
+    expect(wrapper.find('[data-testid="pensao-quota-cessa-dict-0"]').text()).toContain(
+      'RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA'
+    );
     expect(wrapper.find('[data-testid="pensao-quota-1"]').text()).toContain(
       '2040-05-10'.split('-').reverse().join('/')
     );

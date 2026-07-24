@@ -570,7 +570,7 @@ const aba = ref('painel');
     </div>
 
     <div
-      class="flex gap-1 border-b border-n-weak"
+      class="flex flex-wrap gap-1 border-b border-n-weak"
       role="tablist"
       data-testid="sim-abas"
     >
