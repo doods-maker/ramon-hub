@@ -42,8 +42,16 @@ module Concerns::Agentable
     []  # Default implementation, override if needed
   end
 
+  # FORK-PONTO (ramon): nesta instalacao o InstallationConfig CAPTAIN_OPEN_AI_MODEL
+  # NAO pertence ao Captain — ele guarda o modelo do faster-whisper local
+  # (Systran/faster-whisper-medium), lido por Messages::AudioTranscriptionService via
+  # Llm::LegacyBaseOpenAiService. Apontar aquele valor para um LLM de chat quebra a
+  # transcricao de audio do WhatsApp. Por isso o agente ganha env propria: sem
+  # RAMON_CAPTAIN_MODEL o comportamento e identico ao upstream.
   def agent_model
-    InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value.presence || LlmConstants::DEFAULT_MODEL
+    ENV.fetch('RAMON_CAPTAIN_MODEL', nil).presence ||
+      InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value.presence ||
+      LlmConstants::DEFAULT_MODEL
   end
 
   def agent_response_schema

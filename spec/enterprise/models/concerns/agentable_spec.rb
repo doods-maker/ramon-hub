@@ -175,6 +175,20 @@ RSpec.describe Concerns::Agentable do
 
       expect(dummy_instance.send(:agent_model)).to eq('gpt-4.1')
     end
+
+    # FORK-PONTO (ramon): CAPTAIN_OPEN_AI_MODEL guarda o modelo do whisper local nesta
+    # instalacao, entao o agente precisa de env propria. Ver comentario no concern.
+    it 'prefere RAMON_CAPTAIN_MODEL ao InstallationConfig quando a env esta setada' do
+      with_modified_env RAMON_CAPTAIN_MODEL: 'deepseek-v4-pro' do
+        expect(dummy_instance.send(:agent_model)).to eq('deepseek-v4-pro')
+      end
+    end
+
+    it 'ignora RAMON_CAPTAIN_MODEL vazia e cai no InstallationConfig' do
+      with_modified_env RAMON_CAPTAIN_MODEL: '' do
+        expect(dummy_instance.send(:agent_model)).to eq('gpt-4-turbo')
+      end
+    end
   end
 
   describe '#agent_response_schema' do
