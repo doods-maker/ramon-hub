@@ -26,7 +26,8 @@ class Captain::Tools::BuscarProcessoAdvboxTool < Captain::Tools::BasePublicTool
 
   def montar_filtros(nome, cpf)
     filtros = {}
-    filtros[:identification] = cpf.delete('^0-9') if cpf.present?
+    digitos = cpf.to_s.delete('^0-9')
+    filtros[:identification] = digitos if digitos.present?
     filtros[:name] = nome if nome.present?
     filtros
   end

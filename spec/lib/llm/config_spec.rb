@@ -14,7 +14,7 @@ RSpec.describe Llm::Config do
       end
     end
 
-    it 'nao quebra quando a env do deepseek esta ausente' do
+    it 'nao levanta KeyError quando a env esta ausente' do
       with_modified_env DEEPSEEK_API_KEY: nil do
         expect { described_class.initialize! }.not_to raise_error
       end

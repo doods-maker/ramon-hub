@@ -29,6 +29,10 @@ RSpec.describe Captain::Tools::BuscarProcessoAdvboxTool, type: :model do
       expect(tool.perform(tool_context)).to eq('Informe o nome ou o CPF para buscar.')
     end
 
+    it 'ignora cpf sem nenhum digito, tratando como criterio ausente' do
+      expect(tool.perform(tool_context, cpf: 'nao sei')).to eq('Informe o nome ou o CPF para buscar.')
+    end
+
     it 'devolve mensagem quando o advbox recusa' do
       allow(Ramon::AdvboxClient).to receive(:lawsuits)
         .and_raise(Ramon::AdvboxClient::RequestError.new(422, 'erro'))

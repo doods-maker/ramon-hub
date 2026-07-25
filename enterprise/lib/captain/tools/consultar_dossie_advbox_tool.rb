@@ -11,7 +11,7 @@ class Captain::Tools::ConsultarDossieAdvboxTool < Captain::Tools::BasePublicTool
   MAX_CHARS = 20_000
 
   def perform(_tool_context, processo_id:)
-    id = Integer(processo_id.to_s, exception: false)
+    id = Integer(processo_id.to_s, 10, exception: false)
     return 'Informe o id numerico do processo no AdvBox.' if id.nil?
 
     log_tool_usage('consultar_dossie_advbox', { processo_id: id })
