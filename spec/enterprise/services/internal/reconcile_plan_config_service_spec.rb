@@ -17,8 +17,10 @@ RSpec.describe Internal::ReconcilePlanConfigService do
         disable_branding_account = create(:account)
         disable_branding_account.enable_features!('disable_branding')
         service.perform
-        expect(account.reload.enabled_features.keys).not_to include('captain_integration', 'disable_branding', 'audit_logs')
-        expect(account_with_captain.reload.enabled_features.keys).not_to include('captain_integration')
+        # captain_integration saiu da lista de premium features por decisão da banca
+        # (o Captain é usado internamente e não pode ser desligado pelo reconcile diário)
+        expect(account.reload.enabled_features.keys).not_to include('disable_branding', 'audit_logs')
+        expect(account_with_captain.reload.enabled_features.keys).to include('captain_integration')
         expect(disable_branding_account.reload.enabled_features.keys).not_to include('disable_branding')
       end
 
@@ -88,7 +90,6 @@ RSpec.describe Internal::ReconcilePlanConfigService do
 
     it 'nao desliga captain_integration no reconcile diario' do
       account.enable_features!('captain_integration')
-      account.save!
 
       described_class.new.perform
 
@@ -97,7 +98,6 @@ RSpec.describe Internal::ReconcilePlanConfigService do
 
     it 'continua desligando as demais features premium' do
       account.enable_features!('audit_logs')
-      account.save!
 
       described_class.new.perform
 
