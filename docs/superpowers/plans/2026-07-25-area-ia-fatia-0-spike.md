@@ -553,16 +553,54 @@ docker compose exec chatwoot-web bundle exec rails runner \
 
 Expected: `deepseek-v4-pro`. Nada de endpoint ou chave — o registry resolve o provider e a Task 2 entrega a credencial.
 
-- [ ] **Step 5: Provar que o modelo responde**
+- [ ] **Step 5: Provar que a config GLOBAL do RubyLLM está povoada**
+
+> Revisado após a revisão final da branch. A versão anterior deste step chamava
+> `Llm::Config.initialize!` na mão antes de perguntar — o que **testava o caminho
+> errado**: passaria verde enquanto o Playground falhava, porque o runner do agente
+> lê a config global, não a que aquela chamada monta sob demanda. O commit
+> `9cec26774` passou a chamar `Llm::Config.initialize!` no
+> `config/initializers/ai_agents.rb`; este step existe para conferir se funcionou.
+
+**Sem** chamar `Llm::Config.initialize!` — o boot já deve ter feito:
 
 ```bash
 docker compose exec chatwoot-web bundle exec rails runner \
-  "Llm::Config.initialize!; puts RubyLLM.chat(model: 'deepseek-v4-pro').ask('responda apenas: ok').content"
+  "puts RubyLLM.config.deepseek_api_key.present?; puts RubyLLM.config.model_registry_file"
+```
+
+Expected: `true` e um caminho terminando em `config/llm_models.json`.
+
+Se vier `false` ou o `models.json` da gem, o initializer não surtiu efeito — parar e
+investigar antes de seguir; nada adiante vai funcionar.
+
+- [ ] **Step 5b: Provar que o modelo responde**
+
+```bash
+docker compose exec chatwoot-web bundle exec rails runner \
+  "puts RubyLLM.chat(model: 'deepseek-v4-pro').ask('responda apenas: ok').content"
 ```
 
 Expected: `ok`.
 
-Falhando por credencial, revisar a Task 2. Falhando por modelo desconhecido, tentar `deepseek-v4-flash` e depois `deepseek-chat` — os três estão no registry.
+Falhando por credencial, voltar ao Step 5. Falhando por modelo desconhecido, tentar
+`deepseek-v4-flash` e depois `deepseek-chat` — os três estão no registry.
+
+- [ ] **Step 5c: Rodar no container os specs que o CI não roda**
+
+O workflow `run_foss_spec.yml` faz `rm -rf spec/enterprise` (linhas 105-106) e não há
+workflow de spec EE. Dos 5 arquivos de spec desta branch, **só `spec/lib/llm/config_spec.rb`
+roda no CI**. Os outros quatro precisam ser rodados à mão:
+
+```bash
+docker compose exec chatwoot-web bundle exec rspec \
+  spec/enterprise/lib/captain/tools/buscar_processo_advbox_tool_spec.rb \
+  spec/enterprise/lib/captain/tools/consultar_dossie_advbox_tool_spec.rb \
+  spec/enterprise/services/internal/reconcile_plan_config_service_spec.rb
+```
+
+Expected: tudo verde. Este step **não é opcional** — é o que substitui a cobertura que
+o CI não dá.
 
 - [ ] **Step 6: Criar o agente e a skill pela UI**
 
@@ -586,6 +624,17 @@ Registrar o veredito em um de três níveis:
 - **Chamou a 1ª mas não a 2ª, ou inventou o id** → risco 2 parcial; apertar a instrução da skill e repetir (é dado, não código) antes de qualquer conclusão.
 - **Não chamou tool nenhuma** → risco 2 confirmado. Sem fallback de provedor: a Fatia 1 muda de forma (skills de passo único, uma tool por skill). Levar ao Eduardo antes de codar.
 
+- [ ] **Step 7b: Conferir a normalização do CPF contra o caminho que já roda**
+
+A tool nova manda o CPF **só com dígitos**; o `advbox_buscar_processos` do MCP, que já
+está em produção, manda o CPF **como veio**. Se o AdvBox indexar CPF formatado, a tool
+acha zero onde o MCP acha — e isso pareceria "o modelo não encadeou", quando o problema
+seria de normalização.
+
+Buscar **a mesma pessoa** pelos dois caminhos (o MCP e o Playground) e comparar. Se
+divergir, o problema é o formato do CPF, não o DeepSeek — anotar isso no veredito antes
+de culpar o modelo.
+
 - [ ] **Step 8: Conferir o log de execução**
 
 ```bash
@@ -608,9 +657,19 @@ Criar `comercial/docs/2026-07-25-roteiro-fatia-0-area-ia.md` contendo, nesta ord
 
 ## Definição de pronto
 
-- Tasks 1–4 com specs verdes e rubocop limpo.
-- CI verde no PR.
+> ⚠️ Revisada após a revisão final da branch. **"CI verde" cobre muito menos do que
+> a versão anterior deste plano supunha:** `run_foss_spec.yml` remove `spec/enterprise`
+> antes de rodar, e não existe workflow de spec EE. Dos 5 arquivos de spec desta
+> branch, o CI executa **um**. O que o CI de fato garante é o `rubocop --parallel`
+> (job `lint-backend`, que roda em checkout limpo, antes do strip) — esse cobre os
+> arquivos novos.
+
+- Tasks 1–4 escritas conforme os briefs, revisadas por leitura (nenhum spec pôde ser
+  executado na máquina de desenvolvimento — sem Ruby/bundle/Docker).
+- CI verde no PR — valendo por **rubocop + `spec/lib/llm/config_spec.rb`**, e por mais nada.
 - Deploy conferido por label na VPS.
+- **Step 5c executado**: os quatro specs de `spec/enterprise` rodados à mão no
+  container, verdes. Sem isso, as duas tools e o reconcile estão sem cobertura provada.
 - Steps 5 e 7 da Task 5 executados, com veredito escrito sobre o risco 2.
 - Roteiro de smoke entregue ao Eduardo.
 
