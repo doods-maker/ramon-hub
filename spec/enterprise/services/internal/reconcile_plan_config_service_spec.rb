@@ -17,8 +17,10 @@ RSpec.describe Internal::ReconcilePlanConfigService do
         disable_branding_account = create(:account)
         disable_branding_account.enable_features!('disable_branding')
         service.perform
-        expect(account.reload.enabled_features.keys).not_to include('captain_integration', 'disable_branding', 'audit_logs')
-        expect(account_with_captain.reload.enabled_features.keys).not_to include('captain_integration')
+        # captain_integration saiu da lista de premium features por decisão da banca
+        # (o Captain é usado internamente e não pode ser desligado pelo reconcile diário)
+        expect(account.reload.enabled_features.keys).not_to include('disable_branding', 'audit_logs')
+        expect(account_with_captain.reload.enabled_features.keys).to include('captain_integration')
         expect(disable_branding_account.reload.enabled_features.keys).not_to include('disable_branding')
       end
 
@@ -76,6 +78,30 @@ RSpec.describe Internal::ReconcilePlanConfigService do
         expect(InstallationConfig.find_by(name: 'INSTALLATION_NAME').value).to eq('custom-name')
         expect(InstallationConfig.find_by(name: 'LOGO').value).to eq('/custom-path/logo.svg')
       end
+    end
+  end
+
+  describe 'captain no plano community' do
+    let(:account) { create(:account) }
+
+    before do
+      allow(ChatwootHub).to receive(:pricing_plan).and_return('community')
+    end
+
+    it 'nao desliga captain_integration no reconcile diario' do
+      account.enable_features!('captain_integration')
+
+      described_class.new.perform
+
+      expect(account.reload.feature_enabled?('captain_integration')).to be(true)
+    end
+
+    it 'continua desligando as demais features premium' do
+      account.enable_features!('audit_logs')
+
+      described_class.new.perform
+
+      expect(account.reload.feature_enabled?('audit_logs')).to be(false)
     end
   end
 end

@@ -7,6 +7,11 @@ Rails.application.config.after_initialize do
   model = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value.presence || LlmConstants::DEFAULT_MODEL
   api_endpoint = InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_ENDPOINT')&.value || LlmConstants::OPENAI_API_ENDPOINT
 
+  # O runner do agente (Agents::Runner) le a config global do RubyLLM, nao a
+  # daqui embaixo. Sem chamar isso, nem o registry de modelos customizado
+  # (config/llm_models.json) nem a credencial do DeepSeek chegam nele.
+  Llm::Config.initialize!
+
   if api_key.present?
     Agents.configure do |config|
       config.openai_api_key = api_key
