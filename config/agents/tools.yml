@@ -39,3 +39,8 @@
   title: 'Handoff to Human'
   description: 'Hand off the conversation to a human agent'
   icon: 'user-switch'
+
+- id: buscar_processo_advbox
+  title: 'Buscar processo no AdvBox'
+  description: 'Busca processos no AdvBox por nome do cliente ou CPF'
+  icon: 'search'
