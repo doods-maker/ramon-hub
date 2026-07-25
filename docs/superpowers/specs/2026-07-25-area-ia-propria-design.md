@@ -59,14 +59,27 @@ para algum sistema externo futuro.
 
 ## 4. Motor: DeepSeek
 
-Ambos os caminhos de LLM do Captain leem os mesmos três `InstallationConfig`:
+> Revisado em 25/07 ao escrever o plano da Fatia 0 — a versão anterior desta seção
+> mandava configurar endpoint e chave à mão. Não é preciso.
 
-- `CAPTAIN_OPEN_AI_API_KEY`
-- `CAPTAIN_OPEN_AI_ENDPOINT` → `https://api.deepseek.com`
-- `CAPTAIN_OPEN_AI_MODEL` → `deepseek-chat`
+O registry do RubyLLM (`config/llm_models.json`) **já conhece o DeepSeek**: quatro
+modelos com `provider: deepseek` — `deepseek-chat`, `deepseek-reasoner`,
+`deepseek-v4-flash`, `deepseek-v4-pro` — todos com `function_calling` e contexto de
+1M. Os dois V4 declaram também `structured_output`.
 
-Caminhos: `lib/llm/config.rb` (RubyLLM, moderno) e
-`enterprise/app/services/llm/legacy_base_open_ai_service.rb` (legado, PDF/files).
+Portanto:
+
+- **Modelo:** `InstallationConfig` `CAPTAIN_OPEN_AI_MODEL` = `deepseek-v4-pro`
+  (`deepseek-v4-flash` tem as mesmas capabilities e é mais barato — trocar é mudar
+  esse valor).
+- **Credencial:** `lib/llm/config.rb` precisa de **uma linha** configurando
+  `config.deepseek_api_key` a partir de `ENV['DEEPSEEK_API_KEY']` — a env já existe
+  na VPS e `Ramon::LlmClient` já a usa (`lib/ramon/llm_client.rb:46`). Sem isso, o
+  RubyLLM resolve o modelo para o provider `deepseek` e não encontra credencial.
+- **Não configurar** `CAPTAIN_OPEN_AI_ENDPOINT` nem `CAPTAIN_OPEN_AI_API_KEY`.
+
+`enterprise/app/services/llm/legacy_base_open_ai_service.rb` (legado, PDF/files) fica
+intocado — não é usado pelo agente.
 
 **Sem fallback.** Se o DeepSeek não atender, o projeto muda de forma — não troca de
 provedor. Decisão do Eduardo, 25/07.
@@ -152,7 +165,7 @@ O **Watchdog** não é motor novo: `Ramon::DailyFollowUpJob` (cron 11:00 BRT) e 
 
 | # | Risco | Verificação | Se der ruim |
 |---|---|---|---|
-| 1 | `config/llm_models.json` (registry RubyLLM) pode não conhecer `deepseek-chat` | Fatia 0 | registrar o modelo no arquivo |
+| 1 | ~~registry pode não conhecer o modelo~~ **MORTO 25/07** — o registry já traz 4 modelos DeepSeek com `function_calling`. No lugar dele: `lib/llm/config.rb` não configura `deepseek_api_key`, então o provider resolvido fica sem credencial | — | 1 linha em `lib/llm/config.rb` (Task 2 do plano da Fatia 0) |
 | 2 | Captain V2 roda sobre o gem `ai-agents` com function calling encadeado; DeepSeek suporta, mas encadeamento é onde modelo barato escorrega | Fatia 0 | **sem fallback** — o projeto muda de forma (ex.: skills de passo único) |
 | 3 | **`captain_integration` está em `enterprise/config/premium_features.yml`**; `Internal::ReconcilePlanConfigService#reconcile_premium_features` roda diário e chama `disable_features!` → **liga hoje, desliga amanhã** | — | remover a linha do YAML (mesmo fix do branding, PR #82; Eduardo já dispensou a regra "não tocar em enterprise/" para uso interno) |
 | 4 | **LGPD:** o Captain envia a conversa **crua** ao LLM, sem o `Pseudonymizer` que a camada `Ramon::LlmClient` aplica | — | coberto pela decisão de 20/07 que autorizou o deepseek a receber PII (`RAMON_LLM_SENSITIVE_OK_PROVIDERS`); registrado aqui para ficar explícito |
