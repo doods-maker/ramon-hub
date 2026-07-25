@@ -35,6 +35,9 @@ module Llm::Config
       RubyLLM.configure do |config|
         config.openai_api_key = system_api_key if system_api_key.present?
         config.openai_api_base = openai_endpoint.chomp('/') if openai_endpoint.present?
+        # O registry resolve deepseek-* para o provider :deepseek, que pede a
+        # credencial propria - mesma env que Ramon::LlmClient ja usa.
+        config.deepseek_api_key = ENV.fetch('DEEPSEEK_API_KEY', nil)
         config.model_registry_file = Rails.root.join('config/llm_models.json').to_s
         config.logger = Rails.logger
       end
