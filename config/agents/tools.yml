@@ -44,3 +44,8 @@
   title: 'Buscar processo no AdvBox'
   description: 'Busca processos no AdvBox por nome do cliente ou CPF'
   icon: 'search'
+
+- id: consultar_dossie_advbox
+  title: 'Consultar dossie no AdvBox'
+  description: 'Dossie completo de um processo do AdvBox numa chamada so'
+  icon: 'document'
