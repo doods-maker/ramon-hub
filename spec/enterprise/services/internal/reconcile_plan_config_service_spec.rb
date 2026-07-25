@@ -78,4 +78,30 @@ RSpec.describe Internal::ReconcilePlanConfigService do
       end
     end
   end
+
+  describe 'captain no plano community' do
+    let(:account) { create(:account) }
+
+    before do
+      allow(ChatwootHub).to receive(:pricing_plan).and_return('community')
+    end
+
+    it 'nao desliga captain_integration no reconcile diario' do
+      account.enable_features!('captain_integration')
+      account.save!
+
+      described_class.new.perform
+
+      expect(account.reload.feature_enabled?('captain_integration')).to be(true)
+    end
+
+    it 'continua desligando as demais features premium' do
+      account.enable_features!('audit_logs')
+      account.save!
+
+      described_class.new.perform
+
+      expect(account.reload.feature_enabled?('audit_logs')).to be(false)
+    end
+  end
 end
