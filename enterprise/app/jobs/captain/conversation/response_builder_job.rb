@@ -188,14 +188,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   # cliente: a resposta vira nota privada no proprio painel da conversa, com o
   # mesmo prefixo RASCUNHO do resto do hub, e quem revisa e envia e o atendente.
   def create_draft_note(message_content)
-    @conversation.messages.create!(
-      message_type: :outgoing,
-      private: true,
-      account_id: account.id,
-      inbox_id: inbox.id,
-      sender: @assistant,
-      content: "RASCUNHO (revisar antes de enviar):\n#{message_content}"
-    )
+    @conversation.messages.create!(message_type: :outgoing, private: true, account_id: account.id,
+                                   inbox_id: inbox.id, sender: @assistant,
+                                   content: "RASCUNHO (revisar antes de enviar):\n#{message_content}")
   end
 
   def handle_error(error)
