@@ -11,23 +11,23 @@ RSpec.describe Messages::AudioTranscriptionService, type: :service do
     InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_API_KEY') { |config| config.value = 'test-api-key' }
   end
 
-  describe 'destino da transcrição' do
+  describe 'transcription target' do
     let(:service) { described_class.new(attachment) }
 
-    context 'quando as configs do Captain apontam para um LLM de chat' do
+    context 'when the Captain configs point to a chat LLM' do
       before do
         InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_MODEL') { |config| config.value = 'deepseek-v4-pro' }
         InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_ENDPOINT') { |config| config.value = 'https://api.openai.com/' }
       end
 
-      it 'segue falando com o faster-whisper local' do
+      it 'keeps talking to the local faster-whisper' do
         expect(service.model).to eq('Systran/faster-whisper-medium')
         expect(service.send(:uri_base)).to eq('http://whisper:8000/')
       end
     end
 
-    context 'quando as envs do whisper estão setadas' do
-      it 'usa endpoint e modelo das envs' do
+    context 'when the whisper envs are set' do
+      it 'uses the endpoint and model from the envs' do
         with_modified_env RAMON_WHISPER_ENDPOINT: 'http://whisper-gpu:8000/', RAMON_WHISPER_MODEL: 'Systran/faster-whisper-large-v3' do
           expect(service.model).to eq('Systran/faster-whisper-large-v3')
           expect(service.send(:uri_base)).to eq('http://whisper-gpu:8000/')
