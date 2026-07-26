@@ -1102,5 +1102,36 @@
       "TICKER_NOW": "Now:",
       "TICKER": "{closer} closed {lead} — {value} · {benefit}"
     }
+  },
+  "CAPTAIN_RAMON": {
+    "LOADING": "Loading...",
+    "LOAD_ERROR": "Could not load right now.",
+    "RETRY": "Try again",
+    "EXECUCOES": {
+      "TITLE": "Executions",
+      "SUBTITLE": "Everything the agent ran: which tool, with which data, and what came back.",
+      "TOTAL_24H": "Runs 24h",
+      "ERROS_24H": "Errors 24h",
+      "TOOLS_USADAS": "Tools used",
+      "ALL_TOOLS": "All tools",
+      "ALL_STATUS": "All statuses",
+      "SHOW_RESULT": "show result",
+      "HIDE_RESULT": "hide",
+      "EMPTY": "No runs recorded yet."
+    },
+    "WATCHDOG": {
+      "TITLE": "Watchdog",
+      "SUBTITLE": "The watchdog already running: stalled-case follow-ups and the night copilot.",
+      "PARADOS": "Stalled now",
+      "RETOMADAS_24H": "Follow-ups 24h",
+      "PENDENTES": "Pending suggestions",
+      "EXECUCOES_24H": "Runs 24h",
+      "REGUA": "Rule: up to {cap} follow-ups a day, at least {gap} days apart. Follow-ups at {retomada}; night copilot at {copiloto}.",
+      "TENTATIVAS": "follow-up #{count}",
+      "PARADO_HA": "stalled for {days} days",
+      "ULTIMA": "last follow-up:",
+      "COM_TAREFA": "task already open",
+      "EMPTY": "No stalled cases in the funnel right now."
+    }
   }
 }

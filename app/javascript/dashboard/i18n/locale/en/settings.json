@@ -329,6 +329,8 @@
     "CAPTAIN_TOOLS": "Tools",
     "CAPTAIN_SCENARIOS": "Skills",
     "CAPTAIN_PLAYGROUND": "Playground",
+    "CAPTAIN_EXECUCOES": "Executions",
+    "CAPTAIN_WATCHDOG": "Watchdog",
     "CAPTAIN_INBOXES": "Inboxes",
     "CAPTAIN_SETTINGS": "Settings",
     "HOME": "Home",
