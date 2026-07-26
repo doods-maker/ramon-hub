@@ -1102,5 +1102,39 @@
       "TICKER_NOW": "Agora:",
       "TICKER": "{closer} fechou {lead} — {value} · {benefit}"
     }
+  },
+  "CAPTAIN_RAMON": {
+    "LOADING": "Carregando...",
+    "LOAD_ERROR": "Não consegui carregar agora.",
+    "RETRY": "Tentar de novo",
+    "EXECUCOES": {
+      "TITLE": "Execuções",
+      "SUBTITLE": "Tudo que o agente executou: qual tool, com quais dados e o que voltou.",
+      "TOTAL_24H": "Execuções 24h",
+      "ERROS_24H": "Erros 24h",
+      "TOOLS_USADAS": "Tools usadas",
+      "ALL_TOOLS": "Todas as tools",
+      "ALL_STATUS": "Todos os status",
+      "SHOW_RESULT": "ver o que voltou",
+      "HIDE_RESULT": "esconder",
+      "EMPTY": "Nenhuma execução registrada ainda.",
+      "STATUS_OK": "ok",
+      "STATUS_ERRO": "erro",
+      "CASO": "caso"
+    },
+    "WATCHDOG": {
+      "TITLE": "Watchdog",
+      "SUBTITLE": "O vigia que já roda: retomada dos casos parados e copiloto noturno.",
+      "PARADOS": "Parados agora",
+      "RETOMADAS_24H": "Retomadas 24h",
+      "PENDENTES": "Sugestões pendentes",
+      "EXECUCOES_24H": "Execuções 24h",
+      "REGUA": "Régua: até {cap} retomadas por dia, no mínimo {gap} dias entre uma e outra. Retomada às {retomada}; copiloto noturno às {copiloto}.",
+      "TENTATIVAS": "{count}ª retomada",
+      "PARADO_HA": "parado há {days} dias",
+      "ULTIMA": "última retomada:",
+      "COM_TAREFA": "já tem tarefa aberta",
+      "EMPTY": "Nenhum caso parado no funil agora."
+    }
   }
 }

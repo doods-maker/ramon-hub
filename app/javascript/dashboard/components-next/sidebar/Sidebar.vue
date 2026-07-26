@@ -505,6 +505,18 @@ const menuItems = computed(() => {
           }),
         },
         {
+          name: 'Execucoes',
+          label: t('SIDEBAR.CAPTAIN_EXECUCOES'),
+          activeOn: ['captain_execucoes_index'],
+          to: accountScopedRoute('captain_execucoes_index'),
+        },
+        {
+          name: 'Watchdog',
+          label: t('SIDEBAR.CAPTAIN_WATCHDOG'),
+          activeOn: ['captain_watchdog_index'],
+          to: accountScopedRoute('captain_watchdog_index'),
+        },
+        {
           name: 'Settings',
           label: t('SIDEBAR.CAPTAIN_SETTINGS'),
           activeOn: [

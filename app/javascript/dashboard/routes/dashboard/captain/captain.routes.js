@@ -113,6 +113,20 @@ const assistantRoutes = [
       ],
     },
   },
+  // ramon: telas da área de IA que são da conta, não de um assistente —
+  // precisam vir ANTES do catch-all :navigationPath.
+  {
+    path: frontendURL('accounts/:accountId/captain/execucoes'),
+    component: () => import('./pages/Execucoes.vue'),
+    name: 'captain_execucoes_index',
+    meta,
+  },
+  {
+    path: frontendURL('accounts/:accountId/captain/watchdog'),
+    component: () => import('./pages/Watchdog.vue'),
+    name: 'captain_watchdog_index',
+    meta,
+  },
   {
     path: frontendURL('accounts/:accountId/captain/:navigationPath'),
     component: AssistantsIndexPage,

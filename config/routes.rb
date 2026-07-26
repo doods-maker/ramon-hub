@@ -297,6 +297,8 @@ Rails.application.routes.draw do
           end
           resources :ramon_lead_imports, only: [:create, :show]
           resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'
+          resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
+          resources :captain_tool_runs, only: [:index]
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'
           resources :leads, only: [:index, :show, :create, :update, :destroy] do
