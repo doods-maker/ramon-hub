@@ -12,7 +12,10 @@ RSpec.describe 'Ramon Watchdog API', type: :request do
     parado = create(:lead, account: account, lead_stage: stage, name: 'Parado')
     insistido = create(:lead, account: account, lead_stage: stage, name: 'Insistido',
                               custom_attributes: { 'follow_up' => { 'tentativas' => 2, 'ultima_em' => 2.days.ago.iso8601 } })
-    [parado, insistido].each { |lead| lead.update_column(:stage_entered_at, 10.days.ago) }
+    # rubocop:disable Rails/SkipsModelValidations
+    # stage_entered_at é reescrito pelo before_save do Lead — só update_all deixa o lead "parado" no passado.
+    Lead.where(id: [parado.id, insistido.id]).update_all(stage_entered_at: 10.days.ago)
+    # rubocop:enable Rails/SkipsModelValidations
 
     get url, headers: agent.create_new_auth_token, as: :json
 
