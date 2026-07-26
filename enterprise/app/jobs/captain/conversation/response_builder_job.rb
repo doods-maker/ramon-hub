@@ -167,6 +167,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
+    return create_draft_note(message_content) if @assistant.modo_rascunho?
+
     additional_attrs = {}
     additional_attrs[:agent_name] = agent_name if agent_name.present?
 
@@ -178,6 +180,21 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       content: message_content,
       additional_attributes: additional_attrs,
       preserve_waiting_since: preserve_waiting_since
+    )
+  end
+
+  # ramon: agente de atendimento com humano no meio (Fatia 2 da area de IA).
+  # Com o modo rascunho ligado no assistente, NADA que ele escreve chega ao
+  # cliente: a resposta vira nota privada no proprio painel da conversa, com o
+  # mesmo prefixo RASCUNHO do resto do hub, e quem revisa e envia e o atendente.
+  def create_draft_note(message_content)
+    @conversation.messages.create!(
+      message_type: :outgoing,
+      private: true,
+      account_id: account.id,
+      inbox_id: inbox.id,
+      sender: @assistant,
+      content: "RASCUNHO (revisar antes de enviar):\n#{message_content}"
     )
   end
 

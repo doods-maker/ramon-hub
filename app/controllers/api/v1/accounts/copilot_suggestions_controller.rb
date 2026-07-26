@@ -12,8 +12,9 @@ class Api::V1::Accounts::CopilotSuggestionsController < Api::V1::Accounts::BaseC
   def apply
     return if @copilot_suggestion.apply!(user: Current.user)
 
-    # etapa sugerida por nome não resolveu = não aplica; olho humano decide
-    render_could_not_create_error('Etapa sugerida não encontrada no funil — mova manualmente')
+    # ação não executada (etapa que não resolve, ZapSign fora do ar, caso ainda
+    # não ganho) = sugestão continua pendente; olho humano decide
+    render_could_not_create_error(@copilot_suggestion.motivo_da_recusa || 'Não foi possível aplicar esta sugestão')
   end
 
   def dismiss
