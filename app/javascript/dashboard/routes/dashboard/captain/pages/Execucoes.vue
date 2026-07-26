@@ -54,6 +54,11 @@ const paramsResumo = run => {
 const toggle = id => {
   aberto.value = aberto.value === id ? null : id;
 };
+
+// texto montado no script: o template não aceita string crua (eslint i18n)
+const linhaTempo = run => `${fmtHora(run.created_at)} · ${run.duration_ms}ms`;
+const linhaCaso = run =>
+  run.lead_id ? ` · ${t('CAPTAIN_RAMON.EXECUCOES.CASO')} #${run.lead_id}` : '';
 </script>
 
 <template>
@@ -134,8 +139,12 @@ const toggle = id => {
             <option value="">
               {{ t('CAPTAIN_RAMON.EXECUCOES.ALL_STATUS') }}
             </option>
-            <option value="ok">ok</option>
-            <option value="erro">erro</option>
+            <option value="ok">
+              {{ t('CAPTAIN_RAMON.EXECUCOES.STATUS_OK') }}
+            </option>
+            <option value="erro">
+              {{ t('CAPTAIN_RAMON.EXECUCOES.STATUS_ERRO') }}
+            </option>
           </select>
         </div>
 
@@ -172,12 +181,11 @@ const toggle = id => {
                 {{ run.tool_name }}
               </span>
               <span class="ml-auto text-[11px] text-n-slate-9">
-                {{ fmtHora(run.created_at) }} · {{ run.duration_ms }}ms
+                {{ linhaTempo(run) }}
               </span>
             </div>
             <p class="mt-1 text-xs text-n-slate-11">
-              {{ paramsResumo(run) }}
-              <span v-if="run.lead_id"> · caso #{{ run.lead_id }}</span>
+              {{ paramsResumo(run) }}{{ linhaCaso(run) }}
             </p>
             <button
               type="button"
@@ -190,10 +198,12 @@ const toggle = id => {
                   : t('CAPTAIN_RAMON.EXECUCOES.SHOW_RESULT')
               }}
             </button>
-            <pre
+            <div
               v-if="aberto === run.id"
-              class="p-2 mt-1 overflow-auto text-[11px] whitespace-pre-wrap rounded-lg bg-n-solid-2 text-n-slate-11 max-h-64"
-              >{{ run.resultado }}</pre>
+              class="p-2 mt-1 overflow-auto font-mono text-[11px] whitespace-pre-wrap rounded-lg bg-n-solid-2 text-n-slate-11 max-h-64"
+            >
+              {{ run.resultado }}
+            </div>
           </div>
         </div>
       </template>

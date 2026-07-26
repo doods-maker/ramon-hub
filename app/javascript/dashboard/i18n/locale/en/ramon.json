@@ -1117,7 +1117,10 @@
       "ALL_STATUS": "All statuses",
       "SHOW_RESULT": "show result",
       "HIDE_RESULT": "hide",
-      "EMPTY": "No runs recorded yet."
+      "EMPTY": "No runs recorded yet.",
+      "STATUS_OK": "ok",
+      "STATUS_ERRO": "error",
+      "CASO": "case"
     },
     "WATCHDOG": {
       "TITLE": "Watchdog",

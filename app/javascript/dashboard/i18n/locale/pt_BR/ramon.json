@@ -1117,7 +1117,10 @@
       "ALL_STATUS": "Todos os status",
       "SHOW_RESULT": "ver o que voltou",
       "HIDE_RESULT": "esconder",
-      "EMPTY": "Nenhuma execução registrada ainda."
+      "EMPTY": "Nenhuma execução registrada ainda.",
+      "STATUS_OK": "ok",
+      "STATUS_ERRO": "erro",
+      "CASO": "caso"
     },
     "WATCHDOG": {
       "TITLE": "Watchdog",
