@@ -195,6 +195,19 @@ RSpec.describe Concerns::Agentable do
     it 'returns Captain::ResponseSchema' do
       expect(dummy_instance.send(:agent_response_schema)).to eq(Captain::ResponseSchema)
     end
+
+    # ramon: o deepseek recusa response_format json_schema e devolve resposta vazia
+    it 'returns nil when the model is a deepseek one' do
+      with_modified_env RAMON_CAPTAIN_MODEL: 'deepseek-v4-pro' do
+        expect(dummy_instance.send(:agent_response_schema)).to be_nil
+      end
+    end
+
+    it 'keeps the schema for any other provider' do
+      with_modified_env RAMON_CAPTAIN_MODEL: 'gpt-4.1-mini' do
+        expect(dummy_instance.send(:agent_response_schema)).to eq(Captain::ResponseSchema)
+      end
+    end
   end
 
   describe 'required methods' do
