@@ -54,7 +54,15 @@ module Concerns::Agentable
       LlmConstants::DEFAULT_MODEL
   end
 
+  # FORK-PONTO (ramon): o DeepSeek — unico provedor desta instalacao — recusa
+  # response_format do tipo json_schema ("This response_format type is
+  # unavailable now"), e o agente devolve resposta VAZIA: o job trata isso como
+  # erro e cai em handoff. Sem schema o modelo responde em texto puro, que o
+  # process_agent_result ja sabe embrulhar em {response:, reasoning:}. Para
+  # qualquer outro provedor o comportamento segue o do upstream.
   def agent_response_schema
+    return nil if agent_model.to_s.downcase.start_with?('deepseek')
+
     Captain::ResponseSchema
   end
 

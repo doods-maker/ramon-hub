@@ -21,14 +21,23 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   # instrumentation nativo do Captain so grava com OpenTelemetry ligado, e aqui
   # nao esta — sem isto nao ha o que auditar. Registrar nunca pode derrubar a
   # tool: falha de gravacao vira linha de log e o resultado segue.
+  # ramon: tool que estoura NAO pode derrubar a resposta inteira. O runner do
+  # agente devolve output nil quando uma tool levanta, o job trata isso como
+  # resposta em branco e transfere a conversa — foi o que aconteceu com o
+  # faq_lookup, que depende de embeddings da OpenAI (esta instalacao so tem
+  # DeepSeek). O erro vira String pro LLM, que segue a conversa sem a tool, e
+  # fica registrado com status 'erro' na tela Execucoes.
+  ERRO_NA_TOOL = 'A ferramenta falhou agora. Siga sem ela e avise que esse dado nao pode ser consultado no momento.'.freeze
+
   def execute(tool_context, **params)
     inicio = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     resultado = super
     registrar_execucao(tool_context, params, resultado, 'ok', inicio)
     resultado
   rescue StandardError => e
+    Rails.logger.error("#{self.class.name}: falhou (#{e.class}: #{e.message})")
     registrar_execucao(tool_context, params, "#{e.class}: #{e.message}", 'erro', inicio)
-    raise
+    ERRO_NA_TOOL
   end
 
   private

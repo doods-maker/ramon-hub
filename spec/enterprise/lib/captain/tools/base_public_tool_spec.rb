@@ -21,11 +21,11 @@ RSpec.describe Captain::Tools::BasePublicTool, type: :model do
       expect(run.duration_ms).to be >= 0
     end
 
-    it 'registra erro e deixa a excecao subir' do
+    it 'registra o erro e devolve mensagem ao llm em vez de derrubar a resposta' do
       tool = Captain::Tools::ChecarPrescricaoTool.new(assistant)
       allow(tool).to receive(:perform).and_raise(StandardError, 'boom')
 
-      expect { tool.execute(tool_context, lead_id: lead.id.to_s) }.to raise_error(StandardError, 'boom')
+      expect(tool.execute(tool_context, lead_id: lead.id.to_s)).to eq(described_class::ERRO_NA_TOOL)
       expect(Captain::ToolRun.last).to have_attributes(status: 'erro')
       expect(Captain::ToolRun.last.resultado).to include('boom')
     end
