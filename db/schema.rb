@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_23_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_26_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -434,6 +434,21 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_23_000003) do
     t.index ["assistant_id", "enabled"], name: "index_captain_scenarios_on_assistant_id_and_enabled"
     t.index ["assistant_id"], name: "index_captain_scenarios_on_assistant_id"
     t.index ["enabled"], name: "index_captain_scenarios_on_enabled"
+  end
+
+  create_table "captain_tool_runs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "assistant_id"
+    t.bigint "conversation_id"
+    t.bigint "lead_id"
+    t.string "tool_name", null: false
+    t.string "status", default: "ok", null: false
+    t.integer "duration_ms"
+    t.jsonb "params", default: {}
+    t.text "resultado"
+    t.datetime "created_at", null: false
+    t.index ["account_id", "created_at"], name: "index_captain_tool_runs_on_account_id_and_created_at"
+    t.index ["account_id"], name: "index_captain_tool_runs_on_account_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -1586,6 +1601,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_23_000003) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "captain_tool_runs", "accounts"
   add_foreign_key "copilot_suggestions", "accounts"
   add_foreign_key "copilot_suggestions", "leads"
   add_foreign_key "funnel_snapshots", "lead_stages", on_delete: :nullify
