@@ -101,11 +101,15 @@ class Captain::Assistant < ApplicationRecord
     name.parameterize(separator: '_')
   end
 
+  # FORK-PONTO (ramon): faq_lookup so entra quando existe FAQ cadastrada. Sem
+  # base ela nao tem o que responder e, nesta instalacao, nem chega a buscar —
+  # depende de embeddings da OpenAI e aqui so ha credencial de DeepSeek. O
+  # agente estava gastando o turno numa tool que sempre falha em vez de
+  # responder com o que sabe.
   def agent_tools
-    [
-      self.class.resolve_tool_class('faq_lookup').new(self),
-      self.class.resolve_tool_class('handoff').new(self)
-    ]
+    tools = [self.class.resolve_tool_class('handoff').new(self)]
+    tools.unshift(self.class.resolve_tool_class('faq_lookup').new(self)) if responses.exists?
+    tools
   end
 
   def prompt_context
