@@ -12,10 +12,10 @@ class Captain::Tools::BuscarProcessoAdvboxTool < Captain::Tools::BasePublicTool
     return 'Informe o nome ou o CPF para buscar.' if filtros.empty?
 
     log_tool_usage('buscar_processo_advbox', { filtros: filtros.keys })
-    processos = Ramon::AdvboxClient.lawsuits(filtros.merge(limit: LIMITE))
-    return 'Nenhum processo encontrado no AdvBox.' if processos.blank?
+    lista = extrair_lista(Ramon::AdvboxClient.lawsuits(filtros.merge(limit: LIMITE)))
+    return 'Nenhum processo encontrado no AdvBox.' if lista.blank?
 
-    processos.to_json
+    lista.to_json
   rescue Ramon::AdvboxClient::RequestError => e
     "O AdvBox recusou a consulta (HTTP #{e.code})."
   rescue Ramon::AdvboxClient::UnavailableError
@@ -23,6 +23,18 @@ class Captain::Tools::BuscarProcessoAdvboxTool < Captain::Tools::BasePublicTool
   end
 
   private
+
+  # A API do AdvBox NAO devolve um Array: devolve o envelope
+  # {offset, limit, totalCount, data, query}. Uma busca sem resultado traz `data` vazio
+  # dentro de um Hash que NAO e blank? — sem extrair a lista, a mensagem de "nenhum
+  # processo" nunca dispararia e o modelo receberia um envelope vazio para interpretar
+  # (com risco de afirmar que encontrou algo). Verificado contra a API real em 25/07.
+  def extrair_lista(resposta)
+    return resposta if resposta.is_a?(Array)
+    return [] unless resposta.is_a?(Hash)
+
+    Array(resposta['data'] || resposta[:data])
+  end
 
   def montar_filtros(nome, cpf)
     filtros = {}
