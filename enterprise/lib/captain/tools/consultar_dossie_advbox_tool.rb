@@ -5,10 +5,13 @@ class Captain::Tools::ConsultarDossieAdvboxTool < Captain::Tools::BasePublicTool
               'publicacoes, tarefas e historico. Use o id devolvido por buscar_processo_advbox.'
   param :processo_id, type: 'string', desc: 'Id do processo no AdvBox'
 
-  # ponytail: teto burro de caracteres so para nao estourar o contexto num
-  # processo com historico enorme. Se comecar a cortar dossie util, o upgrade
-  # e limitar por secao (tarefas/historico) em vez do JSON inteiro.
-  MAX_CHARS = 20_000
+  # ponytail: teto burro de caracteres so para nao estourar o contexto num processo
+  # com historico enorme. Subido de 20k para 40k em 25/07: um dossie REAL medido na
+  # producao deu 17.199 chars, perto demais do teto anterior — e o corte devolve JSON
+  # invalido. O deepseek-v4-pro tem 1M de contexto, entao 40k e folgado. Se comecar a
+  # cortar dossie util, o upgrade e limitar por secao (tarefas/historico) em vez do
+  # JSON inteiro.
+  MAX_CHARS = 40_000
 
   def perform(_tool_context, processo_id:)
     id = Integer(processo_id.to_s, 10, exception: false)
