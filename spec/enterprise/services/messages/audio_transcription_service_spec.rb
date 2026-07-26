@@ -7,9 +7,33 @@ RSpec.describe Messages::AudioTranscriptionService, type: :service do
   let(:attachment) { message.attachments.create!(account: account, file_type: :audio) }
 
   before do
-    # Configs reusadas pelo base service (uri_base/key/model apontam pro container whisper)
+    # O base service exige a chave; endpoint e modelo são próprios do whisper (ver serviço)
     InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_API_KEY') { |config| config.value = 'test-api-key' }
-    InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_MODEL') { |config| config.value = 'Systran/faster-whisper-medium' }
+  end
+
+  describe 'transcription target' do
+    let(:service) { described_class.new(attachment) }
+
+    context 'when the Captain configs point to a chat LLM' do
+      before do
+        InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_MODEL') { |config| config.value = 'deepseek-v4-pro' }
+        InstallationConfig.find_or_create_by!(name: 'CAPTAIN_OPEN_AI_ENDPOINT') { |config| config.value = 'https://api.openai.com/' }
+      end
+
+      it 'keeps talking to the local faster-whisper' do
+        expect(service.model).to eq('Systran/faster-whisper-medium')
+        expect(service.send(:uri_base)).to eq('http://whisper:8000/')
+      end
+    end
+
+    context 'when the whisper envs are set' do
+      it 'uses the endpoint and model from the envs' do
+        with_modified_env RAMON_WHISPER_ENDPOINT: 'http://whisper-gpu:8000/', RAMON_WHISPER_MODEL: 'Systran/faster-whisper-large-v3' do
+          expect(service.model).to eq('Systran/faster-whisper-large-v3')
+          expect(service.send(:uri_base)).to eq('http://whisper-gpu:8000/')
+        end
+      end
+    end
   end
 
   describe '#perform' do
