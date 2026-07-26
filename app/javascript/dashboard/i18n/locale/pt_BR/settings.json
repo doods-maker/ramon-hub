@@ -311,12 +311,12 @@
     "ACTIVE": "Ativo",
     "COMPANIES": "Empresas",
     "ALL_COMPANIES": "Todas as empresas",
-    "CAPTAIN": "Capitão",
+    "CAPTAIN": "Inteligência",
     "CAPTAIN_ASSISTANTS": "Assistentes",
     "CAPTAIN_DOCUMENTS": "Documentos",
     "CAPTAIN_RESPONSES": "FAQs",
-    "CAPTAIN_TOOLS": "Ferramentas",
-    "CAPTAIN_SCENARIOS": "Cenários",
+    "CAPTAIN_TOOLS": "Tools",
+    "CAPTAIN_SCENARIOS": "Skills",
     "CAPTAIN_PLAYGROUND": "Playground",
     "CAPTAIN_INBOXES": "Caixas de Entrada",
     "CAPTAIN_SETTINGS": "Configurações",
@@ -381,17 +381,17 @@
     },
     "DOCS": "Ler documentos",
     "SECURITY": "Segurança",
-    "CAPTAIN_AI": "Capitão",
+    "CAPTAIN_AI": "Inteligência",
     "CONVERSATION_WORKFLOW": "Fluxo de Conversa",
     "RAMON": "Intranet",
     "KANBAN_BOARD": "Kanban Board"
   },
   "CAPTAIN_SETTINGS": {
-    "TITLE": "Configurações do Capitão",
-    "DESCRIPTION": "Configure seus modelos e recursos de IA para o Capitão. O Capitão utiliza um modelo de cobrança baseado em créditos; você será cobrado em créditos por cada ação que o Capitão realizar, dependendo do modelo selecionado.",
-    "LOADING": "Carregando configurações do Capitão...",
-    "LINK_TEXT": "Saiba mais sobre os Créditos do Capitão",
-    "NOT_ENABLED": "O Capitão não está habilitado para a sua conta. Atualize seu plano para acessar os recursos do Capitão.",
+    "TITLE": "Configurações da Inteligência",
+    "DESCRIPTION": "Configure seus modelos e recursos de IA para a Inteligência. A Inteligência utiliza um modelo de cobrança baseado em créditos; você será cobrado em créditos por cada ação que a Inteligência realizar, dependendo do modelo selecionado.",
+    "LOADING": "Carregando configurações da Inteligência...",
+    "LINK_TEXT": "Saiba mais sobre os Créditos da Inteligência",
+    "NOT_ENABLED": "A Inteligência não está habilitada para a sua conta. Atualize seu plano para acessar os recursos da Inteligência.",
     "MODEL_CONFIG": {
       "TITLE": "Configuração do Modelo",
       "DESCRIPTION": "Selecione modelos de IA para diferentes recursos.",
@@ -430,8 +430,8 @@
       }
     },
     "API": {
-      "SUCCESS": "Configurações do Capitão atualizadas com sucesso.",
-      "ERROR": "Falha ao atualizar as configurações do Capitão. Por favor, tente novamente."
+      "SUCCESS": "Configurações da Inteligência atualizadas com sucesso.",
+      "ERROR": "Falha ao atualizar as configurações da Inteligência. Por favor, tente novamente."
     }
   },
   "BILLING_SETTINGS": {
@@ -450,7 +450,7 @@
       "BUTTON_TXT": "Ir para o portal de cobrança"
     },
     "CAPTAIN": {
-      "TITLE": "Capitão",
+      "TITLE": "Inteligência",
       "DESCRIPTION": "Gerenciar uso e créditos para o Captain AI.",
       "BUTTON_TXT": "Comprar mais créditos",
       "DOCUMENTS": "Documentos",
@@ -467,7 +467,7 @@
     "TOPUP": {
       "BUY_CREDITS": "Comprar mais créditos",
       "MODAL_TITLE": "Comprar Créditos de IA",
-      "MODAL_DESCRIPTION": "Comprar créditos adicionais para o Capitão IA.",
+      "MODAL_DESCRIPTION": "Comprar créditos adicionais para a Inteligência.",
       "CREDITS": "CRÉDITOS",
       "ONE_TIME": "único",
       "POPULAR": "Mais populares",

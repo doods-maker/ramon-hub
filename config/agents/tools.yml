@@ -49,3 +49,23 @@
   title: 'Consultar dossie no AdvBox'
   description: 'Dossie completo de um processo do AdvBox numa chamada so'
   icon: 'document'
+
+- id: calcular_beneficio
+  title: 'Calcular beneficio no motor'
+  description: 'Calcula renda mensal e atrasados estimados do caso no motor de calculos'
+  icon: 'calculator'
+
+- id: checar_prescricao
+  title: 'Checar prescricao'
+  description: 'Prescricao quinquenal do caso: parcelas ja perdidas e meses ate o corte'
+  icon: 'clock'
+
+- id: linha_da_vida
+  title: 'Linha da vida da pessoa'
+  description: 'Todos os casos da pessoa no hub e os marcos etarios que ainda vencem'
+  icon: 'timeline'
+
+- id: documentacao_faltante
+  title: 'O que falta no caso'
+  description: 'Documentos pendentes, lacunas da colheita e tarefas em aberto do caso'
+  icon: 'clipboard'
