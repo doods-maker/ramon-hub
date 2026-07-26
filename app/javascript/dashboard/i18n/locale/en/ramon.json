@@ -107,6 +107,7 @@
       "TAG_DRAFT": "Draft",
       "TAG_MOVE_STAGE": "Move stage",
       "TAG_ALERT": "Alert",
+      "TAG_ACAO": "AI action",
       "MOVE_TO": "Suggestion: move to {stage}",
       "STALLED_FOR": "stalled for {days} days",
       "SAVE_NOTE": "Save as note",

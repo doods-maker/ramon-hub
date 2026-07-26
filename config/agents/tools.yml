@@ -69,3 +69,23 @@
   title: 'O que falta no caso'
   description: 'Documentos pendentes, lacunas da colheita e tarefas em aberto do caso'
   icon: 'clipboard'
+
+- id: preparar_contrato_zapsign
+  title: 'Preparar contrato no ZapSign'
+  description: 'Sugere gerar contrato + procuracao no ZapSign (o humano aprova antes)'
+  icon: 'signature'
+
+- id: preparar_caso_advbox
+  title: 'Abrir caso no AdvBox'
+  description: 'Sugere abrir cliente, caso e primeira tarefa no AdvBox (o humano aprova antes)'
+  icon: 'briefcase'
+
+- id: agendar_reuniao
+  title: 'Agendar reuniao'
+  description: 'Sugere data da reuniao de fechamento; aprovada, vira tarefa na Esteira'
+  icon: 'calendar'
+
+- id: mover_etapa
+  title: 'Mover de etapa'
+  description: 'Sugere mover o caso para outra etapa do funil (o humano aprova antes)'
+  icon: 'columns'

@@ -107,6 +107,7 @@
       "TAG_DRAFT": "Rascunho",
       "TAG_MOVE_STAGE": "Mover etapa",
       "TAG_ALERT": "Alerta",
+      "TAG_ACAO": "Ação da IA",
       "MOVE_TO": "Sugestão: mover para {stage}",
       "STALLED_FOR": "parado há {days} dias",
       "SAVE_NOTE": "Salvar como nota",

@@ -36,7 +36,17 @@ class Captain::Assistant < ApplicationRecord
   has_many :copilot_threads, dependent: :destroy_async
   has_many :scenarios, class_name: 'Captain::Scenario', dependent: :destroy_async
 
-  store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name
+  store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name,
+                 :ramon_modo_rascunho
+
+  # ramon: agente de atendimento com humano no meio (Fatia 2 da area de IA).
+  # Ligado, nada que o agente escreve chega ao cliente — a resposta vira nota
+  # privada RASCUNHO na conversa e quem envia e o atendente. Sem tela: ligar e
+  # desligar e operacao de console, de proposito (desligar solta a IA no
+  # cliente, e isso e decisao do Eduardo, nao de um clique).
+  def modo_rascunho?
+    ActiveModel::Type::Boolean.new.cast(ramon_modo_rascunho).present?
+  end
 
   validates :name, presence: true
   validates :description, presence: true

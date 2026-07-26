@@ -18,9 +18,12 @@ const uiFlags = computed(() => getters['copilotSuggestions/getUIFlags'].value);
 
 onMounted(() => store.dispatch('copilotSuggestions/fetch'));
 
-// "Aprovar todas" cobre só draft/alert — move_stage é cartão a cartão.
+// "Aprovar todas" cobre só draft/alert — move_stage e acao são cartão a
+// cartão, porque tocam funil e sistema externo (ZapSign/AdvBox/Esteira).
 const bulkCount = computed(
-  () => suggestions.value.filter(s => s.kind !== 'move_stage').length
+  () =>
+    suggestions.value.filter(s => s.kind === 'draft' || s.kind === 'alert')
+      .length
 );
 
 const runTime = computed(() => {
@@ -45,13 +48,18 @@ const TAGS = {
     label: 'RAMON.NIGHT_COPILOT.TAG_ALERT',
     class: 'bg-n-ruby-3 text-n-ruby-11',
   },
+  acao: {
+    label: 'RAMON.NIGHT_COPILOT.TAG_ACAO',
+    class: 'bg-n-teal-3 text-n-teal-11',
+  },
 };
 const tagFor = kind => TAGS[kind] || TAGS.alert;
 
-const bodyText = s =>
-  s.kind === 'draft'
-    ? `"${s.payload.texto || ''}"`
-    : s.payload.justificativa || '';
+const bodyText = s => {
+  if (s.kind === 'draft') return `"${s.payload.texto || ''}"`;
+  if (s.kind === 'acao') return s.payload.texto || '';
+  return s.payload.justificativa || '';
+};
 
 // Guard de duplo-clique por cartão.
 const actingId = ref(null);
@@ -64,7 +72,8 @@ const apply = async suggestion => {
     await store.dispatch('copilotSuggestions/apply', suggestion.id);
     useAlert(t('RAMON.NIGHT_COPILOT.APPLIED'));
   } catch (e) {
-    useAlert(t('RAMON.NIGHT_COPILOT.APPLY_ERROR'));
+    // o motivo real (ZapSign fora do ar, caso não ganho) vem do servidor
+    useAlert(e?.response?.data?.error || t('RAMON.NIGHT_COPILOT.APPLY_ERROR'));
   } finally {
     actingId.value = null;
   }
@@ -234,7 +243,11 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
               {{ t('RAMON.NIGHT_COPILOT.SAVE_NOTE') }}
             </button>
           </template>
-          <template v-else-if="suggestion.kind === 'move_stage'">
+          <template
+            v-else-if="
+              suggestion.kind === 'move_stage' || suggestion.kind === 'acao'
+            "
+          >
             <button
               type="button"
               data-testid="night-copilot-apply"
