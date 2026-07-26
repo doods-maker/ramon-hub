@@ -7,6 +7,10 @@ class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
   # transcription.
   TRANSCRIPTION_BYTE_LIMIT = 25_000_000
 
+  # ramon: destino da transcrição. Ver FORK-PONTO em #uri_base.
+  WHISPER_ENDPOINT = 'http://whisper:8000/'.freeze
+  WHISPER_MODEL = 'Systran/faster-whisper-medium'.freeze
+
   attr_reader :attachment, :message, :account
 
   def initialize(attachment)
@@ -35,6 +39,24 @@ class Messages::AudioTranscriptionService< Llm::LegacyBaseOpenAiService
   # Interruptor por conta = account.audio_transcriptions.
   def can_transcribe?
     account.audio_transcriptions
+  end
+
+  # FORK-PONTO (ramon): o faster-whisper local NÃO é o provedor de chat do Captain.
+  # Enquanto os dois dividiam as InstallationConfigs `CAPTAIN_OPEN_AI_*`, toda chamada
+  # de CHAT do Captain (auto-resolver conversa, copiloto nativo, tradução de artigo,
+  # tagline, Agents SDK) caía no container de transcrição — e mexer nelas pelo lado do
+  # Captain quebrava a transcrição de áudio. Aqui a transcrição passa a ter endpoint e
+  # modelo próprios; as `CAPTAIN_OPEN_AI_*` voltam a significar o que significam no
+  # upstream. Calibráveis sem redeploy pelo chatwoot.env.
+  # ponytail: a `CAPTAIN_OPEN_AI_API_KEY` continua compartilhada (o base monta o client
+  # no initialize) — o speaches ignora o token, e a credencial real do chat do Captain
+  # vem da `DEEPSEEK_API_KEY`. Separar também a chave só se ela virar segredo de verdade.
+  def uri_base
+    ENV.fetch('RAMON_WHISPER_ENDPOINT', nil).presence || WHISPER_ENDPOINT
+  end
+
+  def setup_model
+    @model = ENV.fetch('RAMON_WHISPER_MODEL', nil).presence || WHISPER_MODEL
   end
 
   def audio_too_large?
