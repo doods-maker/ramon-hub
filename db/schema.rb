@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_26_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_27_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -280,6 +280,24 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_26_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "name"], name: "index_benefit_types_on_account_id_and_name", unique: true
+  end
+
+  create_table "calculos", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "lead_id", null: false
+    t.bigint "user_id"
+    t.string "tipo", null: false
+    t.string "segurado_nome"
+    t.string "segurado_cpf"
+    t.date "der"
+    t.jsonb "snapshot", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "created_at"], name: "index_calculos_on_account_id_and_created_at"
+    t.index ["account_id", "segurado_nome"], name: "index_calculos_on_account_id_and_segurado_nome"
+    t.index ["account_id"], name: "index_calculos_on_account_id"
+    t.index ["lead_id"], name: "index_calculos_on_lead_id"
+    t.index ["user_id"], name: "index_calculos_on_user_id"
   end
 
   create_table "calls", force: :cascade do |t|
@@ -1601,6 +1619,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_26_000001) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "calculos", "accounts"
+  add_foreign_key "calculos", "leads"
+  add_foreign_key "calculos", "users"
   add_foreign_key "captain_tool_runs", "accounts"
   add_foreign_key "copilot_suggestions", "accounts"
   add_foreign_key "copilot_suggestions", "leads"
