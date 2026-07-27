@@ -4,6 +4,7 @@ import Calculos from '../Calculos.vue';
 import ContactAPI from 'dashboard/api/contacts';
 import LeadsAPI from 'dashboard/api/leads';
 import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
+import CalculosAPI from 'dashboard/api/calculos';
 
 // Rota simulada: reativa pra que router.push (mockado) dispare o watch do
 // componente, do mesmo jeito que a navegação real faria.
@@ -26,11 +27,14 @@ vi.mock('dashboard/api/leads', () => ({
 vi.mock('dashboard/api/ramonCalculos', () => ({
   default: { advboxCustomers: vi.fn(), criarCaso: vi.fn(), rascunho: vi.fn() },
 }));
+vi.mock('dashboard/api/calculos', () => ({
+  default: { historico: vi.fn(), reabrir: vi.fn(), delete: vi.fn() },
+}));
 // LeadSimulador tem specs próprios — aqui só confirmamos que recebeu o lead certo.
 vi.mock('../../components/conversation/LeadSimulador.vue', () => ({
   default: {
     name: 'LeadSimulador',
-    props: ['lead'],
+    props: ['lead', 'inicial'],
     template: '<div data-testid="stub-simulador">{{ lead.id }}</div>',
   },
 }));
@@ -71,6 +75,10 @@ beforeEach(() => {
   RamonCalculosAPI.rascunho.mockResolvedValue({
     data: { id: 77, name: 'Cálculo rápido' },
   });
+  CalculosAPI.historico.mockReset();
+  CalculosAPI.reabrir.mockReset();
+  CalculosAPI.delete.mockReset();
+  CalculosAPI.historico.mockResolvedValue({ data: { payload: [] } });
 });
 
 describe('Calculos.vue', () => {
@@ -82,6 +90,86 @@ describe('Calculos.vue', () => {
     expect(wrapper.find('[data-testid="pessoa-search"]').exists()).toBe(false);
     const stub = wrapper.findComponent({ name: 'LeadSimulador' });
     expect(stub.props('lead').id).toBe(77);
+  });
+
+  it('histórico lista cálculo com data/hora e filtra por cliente', async () => {
+    CalculosAPI.historico.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            id: 5,
+            tipo: 'painel',
+            lead_id: 77,
+            segurado_nome: 'Maria das Dores',
+            der: '2026-03-10',
+            created_at: '2026-07-27T14:32:00.000Z',
+          },
+        ],
+      },
+    });
+    const wrapper = mount(Calculos, mountOptions);
+    await flushPromises();
+
+    await wrapper
+      .find('[data-testid="calculos-historico-toggle"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(CalculosAPI.historico).toHaveBeenCalledWith('');
+    const item = wrapper.find('[data-testid="calculos-historico-item"]');
+    expect(item.text()).toContain('Maria das Dores');
+    expect(item.text()).toContain('HIST_LINHA_DER');
+
+    await wrapper
+      .find('[data-testid="calculos-historico-busca"]')
+      .setValue('Maria');
+    await new Promise(resolve => {
+      setTimeout(resolve, 320); // debounce de 300ms
+    });
+    await flushPromises();
+    expect(CalculosAPI.historico).toHaveBeenLastCalledWith('Maria');
+  });
+
+  it('reabrir cálculo do rascunho remonta o simulador com o estado salvo', async () => {
+    CalculosAPI.historico.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            id: 5,
+            tipo: 'pensao',
+            lead_id: 77,
+            segurado_nome: 'Maria das Dores',
+            created_at: '2026-07-27T14:32:00.000Z',
+          },
+        ],
+      },
+    });
+    CalculosAPI.reabrir.mockResolvedValue({
+      data: {
+        lead_id: 77,
+        tipo: 'pensao',
+        params: { der: '2026-03-10' },
+        cnis: { filename: 'cnis.pdf' },
+      },
+    });
+    const wrapper = mount(Calculos, mountOptions);
+    await flushPromises();
+    await wrapper
+      .find('[data-testid="calculos-historico-toggle"]')
+      .trigger('click');
+    await flushPromises();
+
+    await wrapper
+      .find('[data-testid="calculos-historico-item"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(CalculosAPI.reabrir).toHaveBeenCalledWith(5);
+    // mesmo lead do rascunho: fica na tela, sem navegar
+    expect(push).not.toHaveBeenCalled();
+    const stub = wrapper.findComponent({ name: 'LeadSimulador' });
+    expect(stub.props('inicial').tipo).toBe('pensao');
+    expect(stub.props('inicial').cnis.filename).toBe('cnis.pdf');
   });
 
   it('erro ao abrir a calculadora permite tentar de novo', async () => {

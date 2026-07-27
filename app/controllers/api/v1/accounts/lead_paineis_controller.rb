@@ -4,6 +4,7 @@
 # advogado (ex.: atividade rural que não está no CNIS).
 class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseController
   before_action :fetch_lead
+  include RegistraCalculo
 
   def create
     authorize(@lead, :show?)
@@ -12,6 +13,7 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
 
     render json: Ramon::MotorClient.painel(motor_payload)
     persistir_especiais
+    registrar_calculo('painel')
   rescue Ramon::MotorClient::ValidationError => e
     render json: { error: e.message }, status: :unprocessable_entity
   rescue Ramon::MotorClient::UnavailableError => e

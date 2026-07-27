@@ -3,6 +3,7 @@
 # efêmero — sem persistência.
 class Api::V1::Accounts::LeadMaternidadesController < Api::V1::Accounts::BaseController
   before_action :fetch_lead
+  include RegistraCalculo
 
   CATEGORIAS = %w[empregada ci_facultativa especial].freeze
 
@@ -16,6 +17,7 @@ class Api::V1::Accounts::LeadMaternidadesController < Api::V1::Accounts::BaseCon
     end
 
     render json: Ramon::MotorClient.maternidade(motor_payload)
+    registrar_calculo('maternidade')
   rescue Ramon::MotorClient::ValidationError => e
     render json: { error: e.message }, status: :unprocessable_entity
   rescue Ramon::MotorClient::UnavailableError => e

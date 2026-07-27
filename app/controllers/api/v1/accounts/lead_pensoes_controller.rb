@@ -5,6 +5,7 @@
 # persistência, igual ao elegibilidades/painel.
 class Api::V1::Accounts::LeadPensoesController < Api::V1::Accounts::BaseController
   before_action :fetch_lead
+  include RegistraCalculo
 
   def create
     authorize(@lead, :show?)
@@ -12,6 +13,7 @@ class Api::V1::Accounts::LeadPensoesController < Api::V1::Accounts::BaseControll
     return render json: { error: 'dependentes obrigatório — informe ao menos 1' }, status: :unprocessable_entity if dependentes.blank?
 
     render json: Ramon::MotorClient.pensao(motor_payload)
+    registrar_calculo('pensao')
   rescue Ramon::MotorClient::ValidationError => e
     render json: { error: e.message }, status: :unprocessable_entity
   rescue Ramon::MotorClient::UnavailableError => e

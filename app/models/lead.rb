@@ -13,6 +13,7 @@ class Lead < ApplicationRecord
   belongs_to :sdr, class_name: 'User', optional: true
   belongs_to :closer, class_name: 'User', optional: true
   has_many :lead_activities, dependent: :destroy_async
+  has_many :calculos, dependent: :destroy_async
   has_many :lead_notes, dependent: :destroy_async
   has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
   has_many :lead_triages, dependent: :destroy_async
@@ -103,6 +104,17 @@ class Lead < ApplicationRecord
       vinculos: cnis['vinculos']&.size || 0,
       avisos: cnis['avisos'] || []
     }
+  end
+
+  # Detalhe do CNIS que o Simulador consome (resumo + vínculos + ajustes) —
+  # mesmo formato no upload, no GET /cnis e ao reabrir um cálculo do histórico.
+  def cnis_detalhe
+    return nil if cnis.blank?
+
+    cnis_resumo.merge(
+      vinculos_detalhe: cnis['vinculos'],
+      parametros: cnis['parametros'] || {}
+    )
   end
 
   # Portal do cliente (link mágico): token nasce sob demanda, nunca por callback.

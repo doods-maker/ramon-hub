@@ -3,12 +3,14 @@
 # igual ao painel. Cálculo efêmero — sem persistência.
 class Api::V1::Accounts::LeadElegibilidadesController < Api::V1::Accounts::BaseController
   before_action :fetch_lead
+  include RegistraCalculo
 
   def create
     authorize(@lead, :show?)
     return render json: { error: 'DER inválida — use o formato AAAA-MM-DD' }, status: :unprocessable_entity if der.blank?
 
     render json: Ramon::MotorClient.elegibilidade(motor_payload)
+    registrar_calculo('elegibilidade')
   rescue Ramon::MotorClient::ValidationError => e
     render json: { error: e.message }, status: :unprocessable_entity
   rescue Ramon::MotorClient::UnavailableError => e

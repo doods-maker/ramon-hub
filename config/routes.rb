@@ -296,6 +296,9 @@ Rails.application.routes.draw do
             post :criar_caso
             post :rascunho
           end
+          resources :calculos, only: [:index, :destroy] do
+            member { post :reabrir }
+          end
           resources :ramon_lead_imports, only: [:create, :show]
           resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'
           resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
