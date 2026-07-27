@@ -79,4 +79,32 @@ RSpec.describe 'Ramon Calculos API', type: :request do
       expect(response.parsed_body['leads'].sole['contact_id']).to eq(contact.id)
     end
   end
+
+  describe 'POST /rascunho' do
+    let(:url) { "/api/v1/accounts/#{account.id}/ramon_calculos/rascunho" }
+
+    it 'exige login' do
+      post url
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'abre um caso de rascunho sem contato, fora do funil' do
+      post url, headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['contact_id']).to be_nil
+      expect(response.parsed_body['source']).to eq(Lead::FONTE_CALCULO)
+      expect(account.leads.funil).to be_empty
+    end
+
+    it 'reaproveita o mesmo rascunho e limpa o CNIS do cálculo anterior' do
+      post url, headers: agent.create_new_auth_token, as: :json
+      lead = account.leads.find(response.parsed_body['id'])
+      lead.update!(cnis: { 'filename' => 'cnis-de-outra-pessoa.pdf' })
+
+      expect { post url, headers: agent.create_new_auth_token, as: :json }.not_to change(account.leads, :count)
+      expect(response.parsed_body['id']).to eq(lead.id)
+      expect(response.parsed_body['cnis_resumo']).to be_nil
+      expect(lead.reload.cnis).to be_nil
+    end
+  end
 end

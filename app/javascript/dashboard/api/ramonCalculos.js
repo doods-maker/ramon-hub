@@ -13,6 +13,10 @@ class RamonCalculosAPI extends ApiClient {
   criarCaso(payload) {
     return axios.post(`${this.url}/criar_caso`, payload);
   }
+
+  rascunho() {
+    return axios.post(`${this.url}/rascunho`);
+  }
 }
 
 export default new RamonCalculosAPI();

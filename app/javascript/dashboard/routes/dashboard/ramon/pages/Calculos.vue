@@ -15,9 +15,33 @@ const lead = ref(null);
 const loadingLead = ref(false);
 const errorLead = ref(false);
 
+// ---- calculadora sem cliente (padrão da tela, uso "hub = Previdenciarista"):
+// abre num caso de rascunho invisível no funil; a busca de pessoa fica a um
+// clique, pra quando o cálculo tem que ficar pendurado no cliente.
+const modo = ref('calculadora');
+const rascunho = ref(null);
+const rascunhoLoading = ref(false);
+const rascunhoError = ref(false);
+
+const abrirCalculadora = async () => {
+  modo.value = 'calculadora';
+  if (rascunho.value || rascunhoLoading.value) return;
+  rascunhoLoading.value = true;
+  rascunhoError.value = false;
+  try {
+    const { data } = await RamonCalculosAPI.rascunho();
+    rascunho.value = data;
+  } catch (e) {
+    rascunhoError.value = true;
+  } finally {
+    rascunhoLoading.value = false;
+  }
+};
+
 const fetchLead = async () => {
   if (!route.params.leadId) {
     lead.value = null;
+    abrirCalculadora();
     return;
   }
   loadingLead.value = true;
@@ -207,11 +231,11 @@ const fmtDate = value => {
         >
           <template #actions>
             <button
-              data-testid="calculos-back-to-search"
+              data-testid="calculos-novo-calculo"
               class="text-sm text-n-iris-11 hover:underline"
               @click="router.push({ name: 'ramon_calculos' })"
             >
-              {{ $t('RAMON.CALCULOS.BACK_TO_SEARCH') }}
+              {{ $t('RAMON.CALCULOS.NOVO_CALCULO') }}
             </button>
           </template>
         </RamonPageHeader>
@@ -219,13 +243,64 @@ const fmtDate = value => {
       </template>
     </template>
 
-    <!-- Busca de pessoa (entrada "Cálculos" do menu) -->
+    <!-- Entrada "Cálculos" do menu: calculadora direto; busca a um clique -->
     <template v-else>
       <RamonPageHeader
         :title="$t('RAMON.CALCULOS.TITLE')"
-        :subtitle="$t('RAMON.CALCULOS.SEARCH_HINT')"
-      />
-      <div class="max-w-xl">
+        :subtitle="
+          modo === 'calculadora'
+            ? $t('RAMON.CALCULOS.RASCUNHO_HINT')
+            : $t('RAMON.CALCULOS.SEARCH_HINT')
+        "
+      >
+        <template #actions>
+          <button
+            v-if="modo === 'calculadora'"
+            data-testid="calculos-modo-busca"
+            class="text-sm text-n-iris-11 hover:underline"
+            @click="modo = 'busca'"
+          >
+            {{ $t('RAMON.CALCULOS.OPEN_SEARCH') }}
+          </button>
+          <button
+            v-else
+            data-testid="calculos-modo-calculadora"
+            class="text-sm text-n-iris-11 hover:underline"
+            @click="abrirCalculadora"
+          >
+            {{ $t('RAMON.CALCULOS.OPEN_RASCUNHO') }}
+          </button>
+        </template>
+      </RamonPageHeader>
+
+      <template v-if="modo === 'calculadora'">
+        <div
+          v-if="rascunhoLoading"
+          class="flex flex-col max-w-2xl gap-4 animate-pulse"
+          data-testid="calculos-rascunho-skeleton"
+        >
+          <div class="w-1/3 h-8 rounded bg-n-solid-2" />
+          <div class="h-40 rounded-xl bg-n-solid-2" />
+        </div>
+        <div v-else-if="rascunhoError" class="flex items-center gap-3">
+          <p
+            class="text-sm text-n-ruby-11"
+            data-testid="calculos-rascunho-error"
+          >
+            {{ $t('RAMON.CALCULOS.RASCUNHO_ERROR') }}
+          </p>
+          <button
+            data-testid="calculos-rascunho-retry"
+            class="text-sm text-n-iris-11 hover:underline"
+            @click="abrirCalculadora"
+          >
+            {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+          </button>
+        </div>
+        <LeadSimulador v-else-if="rascunho" :lead="rascunho" />
+      </template>
+
+      <div v-else class="max-w-xl">
         <input
           v-model="query"
           data-testid="pessoa-search"
