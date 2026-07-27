@@ -294,6 +294,7 @@ Rails.application.routes.draw do
           resource :ramon_calculos, only: [], controller: 'ramon_calculos' do
             get :advbox_customers
             post :criar_caso
+            post :rascunho
           end
           resources :ramon_lead_imports, only: [:create, :show]
           resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'

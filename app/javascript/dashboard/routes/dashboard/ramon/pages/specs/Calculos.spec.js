@@ -24,7 +24,7 @@ vi.mock('dashboard/api/leads', () => ({
   default: { get: vi.fn(), show: vi.fn() },
 }));
 vi.mock('dashboard/api/ramonCalculos', () => ({
-  default: { advboxCustomers: vi.fn(), criarCaso: vi.fn() },
+  default: { advboxCustomers: vi.fn(), criarCaso: vi.fn(), rascunho: vi.fn() },
 }));
 // LeadSimulador tem specs próprios — aqui só confirmamos que recebeu o lead certo.
 vi.mock('../../components/conversation/LeadSimulador.vue', () => ({
@@ -43,6 +43,14 @@ const mountOptions = {
   },
 };
 
+// A tela abre na calculadora (cálculo rápido); a busca de pessoa é o outro modo.
+const mountBusca = async () => {
+  const wrapper = mount(Calculos, mountOptions);
+  await flushPromises();
+  await wrapper.find('[data-testid="calculos-modo-busca"]').trigger('click');
+  return wrapper;
+};
+
 const search = async (wrapper, term) => {
   await wrapper.find('[data-testid="pessoa-search"]').setValue(term);
   await new Promise(resolve => {
@@ -59,9 +67,41 @@ beforeEach(() => {
   LeadsAPI.show.mockReset();
   RamonCalculosAPI.advboxCustomers.mockReset();
   RamonCalculosAPI.criarCaso.mockReset();
+  RamonCalculosAPI.rascunho.mockReset();
+  RamonCalculosAPI.rascunho.mockResolvedValue({
+    data: { id: 77, name: 'Cálculo rápido' },
+  });
 });
 
 describe('Calculos.vue', () => {
+  it('abre na calculadora, sem pedir nome', async () => {
+    const wrapper = mount(Calculos, mountOptions);
+    await flushPromises();
+
+    expect(RamonCalculosAPI.rascunho).toHaveBeenCalledTimes(1);
+    expect(wrapper.find('[data-testid="pessoa-search"]').exists()).toBe(false);
+    const stub = wrapper.findComponent({ name: 'LeadSimulador' });
+    expect(stub.props('lead').id).toBe(77);
+  });
+
+  it('erro ao abrir a calculadora permite tentar de novo', async () => {
+    RamonCalculosAPI.rascunho.mockRejectedValueOnce(new Error('down'));
+    const wrapper = mount(Calculos, mountOptions);
+    await flushPromises();
+
+    expect(
+      wrapper.find('[data-testid="calculos-rascunho-error"]').exists()
+    ).toBe(true);
+    await wrapper
+      .find('[data-testid="calculos-rascunho-retry"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(
+      wrapper.findComponent({ name: 'LeadSimulador' }).props('lead').id
+    ).toBe(77);
+  });
+
   it('busca pessoa e, com 1 lead só, navega e renderiza o Simulador direto', async () => {
     ContactAPI.search.mockResolvedValue({
       data: {
@@ -82,7 +122,7 @@ describe('Calculos.vue', () => {
       },
     });
 
-    const wrapper = mount(Calculos, mountOptions);
+    const wrapper = await mountBusca();
     await search(wrapper, 'Maria');
 
     expect(wrapper.find('[data-testid="pessoa-result"]').text()).toContain(
@@ -129,7 +169,7 @@ describe('Calculos.vue', () => {
       data: { id: 11, name: 'Lead 11', contact_name: 'João Pedro' },
     });
 
-    const wrapper = mount(Calculos, mountOptions);
+    const wrapper = await mountBusca();
     await search(wrapper, 'João');
     await wrapper.find('[data-testid="pessoa-result"]').trigger('click');
     await flushPromises();
@@ -156,7 +196,7 @@ describe('Calculos.vue', () => {
     });
     LeadsAPI.get.mockResolvedValue({ data: { payload: [] } });
 
-    const wrapper = mount(Calculos, mountOptions);
+    const wrapper = await mountBusca();
     await search(wrapper, 'Ana');
     await wrapper.find('[data-testid="pessoa-result"]').trigger('click');
     await flushPromises();
@@ -178,7 +218,7 @@ describe('Calculos.vue', () => {
       },
     });
 
-    const wrapper = mount(Calculos, mountOptions);
+    const wrapper = await mountBusca();
     await search(wrapper, 'José');
 
     // Digitar não chama o AdvBox — só o clique no botão.
@@ -217,7 +257,7 @@ describe('Calculos.vue', () => {
       data: { id: 33, name: 'José do AdvBox', contact_name: 'José do AdvBox' },
     });
 
-    const wrapper = mount(Calculos, mountOptions);
+    const wrapper = await mountBusca();
     await search(wrapper, 'José');
     await wrapper.find('[data-testid="advbox-search"]').trigger('click');
     await flushPromises();
@@ -249,7 +289,7 @@ describe('Calculos.vue', () => {
       data: { id: 44, name: 'Ana Beatriz', contact_name: 'Ana Beatriz' },
     });
 
-    const wrapper = mount(Calculos, mountOptions);
+    const wrapper = await mountBusca();
     await search(wrapper, 'Ana');
     await wrapper.find('[data-testid="pessoa-result"]').trigger('click');
     await flushPromises();
@@ -268,7 +308,7 @@ describe('Calculos.vue', () => {
     ContactAPI.search.mockResolvedValue({ data: { payload: [] } });
     RamonCalculosAPI.advboxCustomers.mockRejectedValueOnce(new Error('down'));
 
-    const wrapper = mount(Calculos, mountOptions);
+    const wrapper = await mountBusca();
     await search(wrapper, 'José');
     await wrapper.find('[data-testid="advbox-search"]').trigger('click');
     await flushPromises();

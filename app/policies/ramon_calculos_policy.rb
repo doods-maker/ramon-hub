@@ -6,4 +6,8 @@ class RamonCalculosPolicy < ApplicationPolicy
   def criar_caso?
     advbox_customers?
   end
+
+  def rascunho?
+    advbox_customers?
+  end
 end
