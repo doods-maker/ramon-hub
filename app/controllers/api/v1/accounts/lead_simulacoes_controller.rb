@@ -2,6 +2,7 @@
 # fórmula de honorário da tese do lead (percentual × atrasados + N × mensalidades).
 class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseController
   before_action :fetch_lead
+  include RegistraCalculo
 
   def create
     authorize(@lead, :show?)
@@ -9,6 +10,7 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
 
     resultado = Ramon::MotorClient.incapacidade(motor_payload)
     render json: simulacao(resultado)
+    registrar_calculo('honorario')
   rescue Ramon::MotorClient::ValidationError => e
     render json: { error: e.message }, status: :unprocessable_entity
   rescue Ramon::MotorClient::UnavailableError => e

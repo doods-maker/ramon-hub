@@ -10,6 +10,9 @@ import LeadPlanejamento from './LeadPlanejamento.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
+  // Cálculo reaberto do histórico: { tipo, params, cnis }. O componente é
+  // remontado com :key, então basta semear o estado inicial aqui.
+  inicial: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadSimulador' });
 
@@ -23,14 +26,17 @@ const guessBeneficio = name => {
   return 'temporaria';
 };
 
+const ini = props.inicial?.params || {};
+
 const form = ref({
-  nascimento: props.lead.contact_data_nascimento || '',
-  sexo: props.lead.contact_sexo || 'M',
-  der: '',
-  salario: '',
-  beneficio: guessBeneficio(props.lead.thesis_name),
-  origem: 'previdenciaria',
-  acrescimo_25: (props.lead.thesis_name || '').includes('25%'),
+  nascimento: ini.nascimento || props.lead.contact_data_nascimento || '',
+  sexo: ini.sexo || props.lead.contact_sexo || 'M',
+  der: ini.der || '',
+  salario: ini.salario || '',
+  beneficio: ini.beneficio || guessBeneficio(props.lead.thesis_name),
+  origem: ini.origem || 'previdenciaria',
+  acrescimo_25:
+    ini.acrescimo_25 ?? (props.lead.thesis_name || '').includes('25%'),
 });
 
 const isLoading = ref(false);
@@ -109,6 +115,10 @@ const applyCnis = data => {
     if (v.fim) especiaisFim.value[seq] = v.fim;
   });
 };
+
+// Cálculo reaberto: o CNIS já vem processado do histórico (nada de reanexar o
+// PDF). O servidor já devolveu esse mesmo CNIS pro caso, então recalcular vale.
+if (props.inicial?.cnis) applyCnis(props.inicial.cnis);
 
 const mensalidadesJson = () => {
   // valores como string: o motor converte pra Decimal sem artefato de float
@@ -379,8 +389,13 @@ const fieldClass =
 const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
 
 // Aba padrão = Possibilidades (uso "hub = Previdenciarista"); o fluxo de
-// honorário do auxílio-acidente vive na 2ª aba, intacto.
-const aba = ref('painel');
+// honorário do auxílio-acidente vive na 2ª aba, intacto. Cálculo reaberto do
+// histórico volta na aba em que foi feito.
+// ponytail: o reabrir restaura o que é caro (CNIS + nascimento/sexo/DER +
+// ajustes de vínculo). Campos próprios das abas pensão/maternidade/
+// planejamento ficam guardados no snapshot mas não são repreenchidos —
+// preencher de novo é digitação de segundos. Ligar se incomodar.
+const aba = ref(props.inicial?.tipo || 'painel');
 </script>
 
 <template>

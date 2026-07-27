@@ -4,10 +4,12 @@
 # elegibilidade/liquidação). PDF é a mesma conta em documento consultivo.
 class Api::V1::Accounts::LeadPlanejamentosController < Api::V1::Accounts::BaseController
   before_action :fetch_lead
+  include RegistraCalculo
 
   def create
     authorize(@lead, :show?)
     responder { render json: Ramon::MotorClient.planejamento(motor_payload) }
+    registrar_calculo('planejamento')
   end
 
   def pdf

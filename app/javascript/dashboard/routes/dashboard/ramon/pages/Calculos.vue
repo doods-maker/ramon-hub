@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import ContactAPI from 'dashboard/api/contacts';
 import LeadsAPI from 'dashboard/api/leads';
 import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
+import CalculosAPI from 'dashboard/api/calculos';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import LeadSimulador from '../components/conversation/LeadSimulador.vue';
 
@@ -22,21 +23,105 @@ const modo = ref('calculadora');
 const rascunho = ref(null);
 const rascunhoLoading = ref(false);
 const rascunhoError = ref(false);
+// Cálculo reaberto do histórico + chave que remonta o simulador com ele.
+const restaurado = ref(null);
+const simuladorKey = ref(0);
 
+// Entrar na calculadora é sempre entrada LIMPA: repete o POST (que zera o CNIS
+// do rascunho no servidor — é lá que o cálculo lê o histórico) e remonta o
+// simulador. Sem isso, um cálculo reaberto antes ficaria de resíduo no servidor.
 const abrirCalculadora = async () => {
   modo.value = 'calculadora';
-  if (rascunho.value || rascunhoLoading.value) return;
+  restaurado.value = null;
+  if (rascunhoLoading.value) return;
   rascunhoLoading.value = true;
   rascunhoError.value = false;
   try {
     const { data } = await RamonCalculosAPI.rascunho();
     rascunho.value = data;
+    simuladorKey.value += 1;
   } catch (e) {
     rascunhoError.value = true;
   } finally {
     rascunhoLoading.value = false;
   }
 };
+
+// ---- histórico: todo cálculo que roda fica guardado com CNIS processado,
+// então reabrir volta ao estado exato sem reanexar o PDF.
+const historicoOpen = ref(false);
+const historico = ref([]);
+const historicoQuery = ref('');
+const historicoLoading = ref(false);
+const historicoError = ref(false);
+let historicoTimer = null;
+
+const carregarHistorico = async () => {
+  historicoLoading.value = true;
+  historicoError.value = false;
+  try {
+    const { data } = await CalculosAPI.historico(historicoQuery.value.trim());
+    historico.value = data.payload || [];
+  } catch (e) {
+    historicoError.value = true;
+  } finally {
+    historicoLoading.value = false;
+  }
+};
+
+const toggleHistorico = () => {
+  historicoOpen.value = !historicoOpen.value;
+  if (historicoOpen.value) carregarHistorico();
+};
+
+watch(historicoQuery, () => {
+  clearTimeout(historicoTimer);
+  historicoTimer = setTimeout(carregarHistorico, 300);
+});
+
+const reabrirCalculo = async item => {
+  historicoError.value = false;
+  try {
+    const { data } = await CalculosAPI.reabrir(item.id);
+    restaurado.value = data;
+    simuladorKey.value += 1;
+    historicoOpen.value = false;
+    if (rascunho.value && data.lead_id === rascunho.value.id) {
+      modo.value = 'calculadora';
+    } else {
+      router.push({
+        name: 'ramon_calculos_lead',
+        params: { leadId: data.lead_id },
+      });
+    }
+  } catch (e) {
+    historicoError.value = true;
+  }
+};
+
+const apagarCalculo = async item => {
+  try {
+    await CalculosAPI.delete(item.id);
+    historico.value = historico.value.filter(c => c.id !== item.id);
+  } catch (e) {
+    historicoError.value = true;
+  }
+};
+
+const TIPO_LABEL = {
+  painel: 'RAMON.SIMULADOR.ABA_POSSIBILIDADES',
+  honorario: 'RAMON.SIMULADOR.ABA_HONORARIO',
+  elegibilidade: 'RAMON.SIMULADOR.ABA_ELEGIBILIDADE',
+  pensao: 'RAMON.SIMULADOR.ABA_PENSAO',
+  maternidade: 'RAMON.SIMULADOR.ABA_MATERNIDADE',
+  planejamento: 'RAMON.SIMULADOR.ABA_PLANEJAMENTO',
+};
+
+const fmtDateTime = iso =>
+  new Date(iso).toLocaleString('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
 
 const fetchLead = async () => {
   if (!route.params.leadId) {
@@ -239,7 +324,7 @@ const fmtDate = value => {
             </button>
           </template>
         </RamonPageHeader>
-        <LeadSimulador :lead="lead" />
+        <LeadSimulador :key="simuladorKey" :lead="lead" :inicial="restaurado" />
       </template>
     </template>
 
@@ -254,6 +339,13 @@ const fmtDate = value => {
         "
       >
         <template #actions>
+          <button
+            data-testid="calculos-historico-toggle"
+            class="text-sm text-n-iris-11 hover:underline"
+            @click="toggleHistorico"
+          >
+            {{ $t('RAMON.CALCULOS.HIST_TOGGLE') }}
+          </button>
           <button
             v-if="modo === 'calculadora'"
             data-testid="calculos-modo-busca"
@@ -272,6 +364,81 @@ const fmtDate = value => {
           </button>
         </template>
       </RamonPageHeader>
+
+      <!-- Histórico: mesmo painel nos dois modos, some ao reabrir um cálculo -->
+      <div
+        v-if="historicoOpen"
+        class="max-w-2xl p-3 mb-4 rounded-xl border border-n-weak bg-n-alpha-1"
+        data-testid="calculos-historico"
+      >
+        <input
+          v-model="historicoQuery"
+          data-testid="calculos-historico-busca"
+          class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+          :placeholder="$t('RAMON.CALCULOS.HIST_PLACEHOLDER')"
+        />
+        <p v-if="historicoLoading" class="mt-3 text-sm text-n-slate-10">
+          {{ $t('RAMON.CALCULOS.SEARCHING') }}
+        </p>
+        <p
+          v-else-if="historicoError"
+          class="mt-3 text-sm text-n-ruby-11"
+          data-testid="calculos-historico-error"
+        >
+          {{ $t('RAMON.CALCULOS.HIST_ERROR') }}
+        </p>
+        <ul
+          v-else-if="historico.length"
+          class="mt-3 rounded-lg border border-n-weak divide-y divide-n-weak"
+        >
+          <li
+            v-for="item in historico"
+            :key="item.id"
+            class="flex items-center justify-between gap-3 px-3 py-2 hover:bg-n-alpha-2"
+          >
+            <button
+              data-testid="calculos-historico-item"
+              class="flex flex-col flex-1 min-w-0 text-left"
+              @click="reabrirCalculo(item)"
+            >
+              <span class="text-sm truncate text-n-slate-12">
+                {{ item.segurado_nome || $t('RAMON.CALCULOS.HIST_SEM_NOME') }}
+              </span>
+              <span v-if="item.der" class="text-xs text-n-slate-10">
+                {{
+                  $t('RAMON.CALCULOS.HIST_LINHA_DER', {
+                    quando: fmtDateTime(item.created_at),
+                    tipo: $t(TIPO_LABEL[item.tipo] || 'RAMON.CALCULOS.TITLE'),
+                    der: fmtDate(item.der),
+                  })
+                }}
+              </span>
+              <span v-else class="text-xs text-n-slate-10">
+                {{
+                  $t('RAMON.CALCULOS.HIST_LINHA', {
+                    quando: fmtDateTime(item.created_at),
+                    tipo: $t(TIPO_LABEL[item.tipo] || 'RAMON.CALCULOS.TITLE'),
+                  })
+                }}
+              </span>
+            </button>
+            <button
+              :data-testid="`calculos-historico-apagar-${item.id}`"
+              class="text-xs shrink-0 text-n-ruby-11 hover:underline"
+              @click="apagarCalculo(item)"
+            >
+              {{ $t('RAMON.CALCULOS.HIST_APAGAR') }}
+            </button>
+          </li>
+        </ul>
+        <p
+          v-else
+          class="mt-3 text-sm text-n-slate-10"
+          data-testid="calculos-historico-vazio"
+        >
+          {{ $t('RAMON.CALCULOS.HIST_VAZIO') }}
+        </p>
+      </div>
 
       <template v-if="modo === 'calculadora'">
         <div
@@ -297,7 +464,12 @@ const fmtDate = value => {
             {{ $t('RAMON.LEAD_PANEL.RETRY') }}
           </button>
         </div>
-        <LeadSimulador v-else-if="rascunho" :lead="rascunho" />
+        <LeadSimulador
+          v-else-if="rascunho"
+          :key="simuladorKey"
+          :lead="rascunho"
+          :inicial="restaurado"
+        />
       </template>
 
       <div v-else class="max-w-xl">

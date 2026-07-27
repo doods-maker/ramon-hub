@@ -600,4 +600,31 @@ describe('LeadSimulador.vue', () => {
       );
     });
   });
+
+  describe('cálculo reaberto do histórico', () => {
+    it('semeia DER, CNIS e aba sem reanexar o PDF', () => {
+      const wrapper = mount(LeadSimulador, {
+        props: {
+          lead,
+          inicial: {
+            tipo: 'elegibilidade',
+            params: { der: '2026-03-10', sexo: 'M' },
+            cnis: { ...cnisResumo, vinculos_detalhe: [], parametros: {} },
+          },
+        },
+        global: { mocks: { $t: k => k } },
+      });
+
+      expect(wrapper.find('[data-testid="sim-der"]').element.value).toBe(
+        '2026-03-10'
+      );
+      expect(wrapper.find('[data-testid="sim-cnis-chip"]').text()).toContain(
+        'cnis.pdf'
+      );
+      // volta na aba em que o cálculo foi feito
+      expect(
+        wrapper.find('[data-testid="sim-elegibilidade-secao"]').isVisible()
+      ).toBe(true);
+    });
+  });
 });

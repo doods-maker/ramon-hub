@@ -43,16 +43,17 @@ class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
   end
 
   def detalhe
-    @lead.cnis_resumo.merge(
-      vinculos_detalhe: @lead.cnis['vinculos'],
-      parametros: @lead.cnis['parametros'] || {}
-    )
+    @lead.cnis_detalhe
   end
 
   def stored(resultado)
     {
       entrada: resultado['entrada_calcular'],
       vinculos: resultado['vinculos'],
+      # identificação do cabeçalho do CNIS: nomeia o cálculo no histórico sem
+      # o advogado digitar (motor só passou a devolver em 27/07 — pode vir nil)
+      segurado_nome: resultado['segurado_nome'],
+      segurado_cpf: resultado['segurado_cpf'],
       avisos: avisos_de(resultado),
       parametros: {
         excluir_seqs: params[:excluir_seqs].to_s,
