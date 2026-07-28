@@ -19,11 +19,8 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
 
   def create
     audio = params[:audio]
-    return render_error('Áudio ausente') if audio.blank?
-    return render_error('Áudio acima do limite de 25 MB') if audio.size > AUDIO_BYTE_LIMIT
-    # respond_to?(:content_type) cobre o caso de audio vir string (params malformado).
-    return render_error('Arquivo não é áudio') unless audio.respond_to?(:content_type)
-    return render_error('Arquivo não é áudio') unless audio.content_type.to_s.start_with?('audio/')
+    erro = audio_invalido(audio)
+    return render_error(erro) if erro
 
     reuniao = Current.account.reunioes.create!(
       user: Current.user,
@@ -60,6 +57,15 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
 
   def render_error(mensagem)
     render json: { error: mensagem }, status: :unprocessable_entity
+  end
+
+  # respond_to?(:content_type) cobre o caso de audio vir string (params malformado).
+  def audio_invalido(audio)
+    return 'Áudio ausente' if audio.blank?
+    return 'Áudio acima do limite de 25 MB' if audio.size > AUDIO_BYTE_LIMIT
+    return 'Arquivo não é áudio' unless audio.respond_to?(:content_type) && audio.content_type.to_s.start_with?('audio/')
+
+    nil
   end
 
   def linha(reuniao)
