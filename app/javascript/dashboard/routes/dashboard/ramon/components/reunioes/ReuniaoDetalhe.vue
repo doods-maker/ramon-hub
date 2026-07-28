@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import ReunioesAPI from 'dashboard/api/reunioes';
 import { useAlert } from 'dashboard/composables';
+import ConfirmModal from '../ConfirmModal.vue';
 
 const props = defineProps({
   reuniaoId: { type: [String, Number], required: true },
@@ -19,6 +20,7 @@ const { formatMessage } = useMessageFormatter();
 const reuniao = ref(null);
 const hasError = ref(false);
 const mostrarTranscricao = ref(false);
+const showDeleteConfirm = ref(false);
 let poll = null;
 
 // ponytail: polling de 10s enquanto processa — sem canal ActionCable novo.
@@ -53,9 +55,8 @@ const reprocessar = async () => {
   }
 };
 
-const apagar = async () => {
-  // eslint-disable-next-line no-alert
-  if (!window.confirm(t('RAMON.REUNIOES.DELETE_CONFIRM'))) return;
+const confirmarApagar = async () => {
+  showDeleteConfirm.value = false;
   await ReunioesAPI.delete(props.reuniaoId);
   emit('deleted');
 };
@@ -79,7 +80,7 @@ onBeforeUnmount(() => clearInterval(poll));
         type="button"
         class="shrink-0 text-sm text-n-ruby-11"
         data-testid="reuniao-delete"
-        @click="apagar"
+        @click="showDeleteConfirm = true"
       >
         {{ t('RAMON.REUNIOES.DELETE') }}
       </button>
@@ -142,6 +143,15 @@ onBeforeUnmount(() => clearInterval(poll));
         {{ reuniao.transcricao }}
       </p>
     </section>
+
+    <ConfirmModal
+      v-if="showDeleteConfirm"
+      :title="t('RAMON.REUNIOES.DELETE')"
+      :message="t('RAMON.REUNIOES.DELETE_CONFIRM')"
+      :confirm-label="t('RAMON.REUNIOES.DELETE')"
+      @confirm="confirmarApagar"
+      @cancel="showDeleteConfirm = false"
+    />
   </div>
   <div
     v-else-if="hasError"

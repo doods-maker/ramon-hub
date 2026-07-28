@@ -62,4 +62,27 @@ describe('ReuniaoDetalhe', () => {
     await wrapper.find('[data-testid="reuniao-reprocess"]').trigger('click');
     expect(ReunioesAPI.reprocessar).toHaveBeenCalledWith(1);
   });
+
+  it('deletes via ConfirmModal after confirming', async () => {
+    ReunioesAPI.show.mockResolvedValue({ data: detalhe() });
+    ReunioesAPI.delete.mockResolvedValue({});
+    const wrapper = mount(ReuniaoDetalhe, { props: { reuniaoId: 1 } });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="confirm-modal-confirm"]').exists()).toBe(
+      false
+    );
+    await wrapper.find('[data-testid="reuniao-delete"]').trigger('click');
+    expect(wrapper.find('[data-testid="confirm-modal-confirm"]').exists()).toBe(
+      true
+    );
+
+    await wrapper
+      .find('[data-testid="confirm-modal-confirm"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(ReunioesAPI.delete).toHaveBeenCalledWith(1);
+    expect(wrapper.emitted('deleted')).toBeTruthy();
+  });
 });
