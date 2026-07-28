@@ -12,19 +12,29 @@ class Ramon::ReuniaoAtaService
     Recebe a transcrição bruta de uma reunião presencial e redige a ATA em
     português do Brasil, em markdown, EXATAMENTE nesta estrutura:
 
+    ## Participantes
+    - (deduza pelo conteúdo do diálogo quem participou — ex.: advogado, cliente,
+      familiar; use o nome quando dito na conversa, senão o papel; se não der
+      pra distinguir, escreva "Não foi possível distinguir os participantes.")
+
     ## Resumo
     (um parágrafo com o essencial da reunião)
 
     ## Decisões
-    - (uma decisão por linha; se nenhuma, escreva "Nenhuma decisão registrada.")
+    - (uma decisão por linha, atribuída ao participante quando dedutível — ex.:
+      "[Dr. Ramon] ficou de..."; se nenhuma, escreva "Nenhuma decisão registrada.")
 
     ## Pendências
-    - (uma por linha, "Ação — responsável — prazo"; responsável e prazo só
-      quando citados; se nenhuma, escreva "Nenhuma pendência.")
+    - (uma por linha, "Ação — responsável — prazo"; o responsável é o
+      participante deduzido; prazo só quando citado; se nenhuma, escreva
+      "Nenhuma pendência.")
 
-    Não invente nada que não esteja na transcrição. Não use JSON nem cerca de
-    código — só o markdown acima.
+    A transcrição NÃO separa vozes: a atribuição de falas é dedução pelo
+    contexto — em dúvida, não atribua. Não invente nada que não esteja na
+    transcrição. Não use JSON nem cerca de código — só o markdown acima.
   PROMPT
+
+  ATA_SEM_FALA = 'Nenhuma fala detectada no áudio.'.freeze
 
   def initialize(reuniao)
     @reuniao = reuniao
@@ -33,7 +43,8 @@ class Ramon::ReuniaoAtaService
   def perform
     transcricao = @reuniao.transcricao.presence || transcrever
     @reuniao.update!(transcricao: transcricao)
-    ata = gerar_ata(transcricao)
+    # Transcrição vazia (silêncio/áudio mudo): sem LLM — ele inventaria uma ata.
+    ata = transcricao.blank? ? ATA_SEM_FALA : gerar_ata(transcricao)
     @reuniao.update!(ata: ata, status: 'pronta', erro: nil)
   end
 

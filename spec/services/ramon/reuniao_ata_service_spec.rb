@@ -28,4 +28,15 @@ RSpec.describe Ramon::ReuniaoAtaService do
       expect(reuniao.reload.ata).to eq('## Resumo')
     end
   end
+
+  context 'when transcription comes back empty' do
+    it 'skips the LLM and records a fixed ata' do
+      stub_request(:post, 'http://whisper:8000/v1/audio/transcriptions')
+        .to_return(status: 200, body: { text: '' }.to_json,
+                   headers: { 'Content-Type' => 'application/json' })
+      described_class.new(reuniao).perform
+      expect(Ramon::LlmClient).not_to have_received(:complete)
+      expect(reuniao.reload).to have_attributes(ata: described_class::ATA_SEM_FALA, status: 'pronta')
+    end
+  end
 end
