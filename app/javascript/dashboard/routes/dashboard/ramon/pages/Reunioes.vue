@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import ReunioesAPI from 'dashboard/api/reunioes';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import ReuniaoRecorder from '../components/reunioes/ReuniaoRecorder.vue';
+import ReuniaoDetalhe from '../components/reunioes/ReuniaoDetalhe.vue';
 
 defineOptions({ name: 'RamonReunioes' });
 
@@ -122,7 +123,18 @@ onMounted(carregar);
         </li>
       </ul>
     </template>
-    <!-- Task 7 substitui este placeholder pelo ReuniaoDetalhe -->
-    <div v-else />
+    <template v-else>
+      <button
+        type="button"
+        class="mb-4 self-start text-sm text-n-iris-11 hover:underline"
+        @click="router.push({ name: 'ramon_reunioes' })"
+      >
+        {{ t('RAMON.REUNIOES.BACK') }}
+      </button>
+      <ReuniaoDetalhe
+        :reuniao-id="reuniaoId"
+        @deleted="router.push({ name: 'ramon_reunioes' })"
+      />
+    </template>
   </div>
 </template>
