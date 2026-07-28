@@ -1,6 +1,7 @@
 <script setup>
 import { onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { onBeforeRouteLeave } from 'vue-router';
 import ReunioesAPI from 'dashboard/api/reunioes';
 import { useAlert } from 'dashboard/composables';
 
@@ -111,6 +112,13 @@ const encerrar = () => {
 const descartar = () => limpar();
 
 onBeforeUnmount(limpar);
+
+// ponytail: window.confirm aqui de propósito — guard de rota precisa de
+// resposta síncrona; ConfirmModal não segura a navegação.
+onBeforeRouteLeave(() => {
+  if (estado.value === 'parado') return true;
+  return window.confirm(t('RAMON.REUNIOES.LEAVE_WARNING'));
+});
 </script>
 
 <template>

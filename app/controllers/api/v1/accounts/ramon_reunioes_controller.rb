@@ -21,6 +21,9 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
     audio = params[:audio]
     return render_error('Áudio ausente') if audio.blank?
     return render_error('Áudio acima do limite de 25 MB') if audio.size > AUDIO_BYTE_LIMIT
+    # respond_to?(:content_type) cobre o caso de audio vir string (params malformado).
+    return render_error('Arquivo não é áudio') unless audio.respond_to?(:content_type)
+    return render_error('Arquivo não é áudio') unless audio.content_type.to_s.start_with?('audio/')
 
     reuniao = Current.account.reunioes.create!(
       user: Current.user,

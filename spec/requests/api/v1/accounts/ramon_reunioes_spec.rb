@@ -28,7 +28,10 @@ RSpec.describe 'Ramon Reunioes API', type: :request do
       end
 
       it 'rejects audio above the byte limit' do
-        allow_any_instance_of(Rack::Test::UploadedFile).to receive(:size).and_return(26_000_000) # rubocop:disable RSpec/AnyInstance
+        # O controller recebe ActionDispatch::Http::UploadedFile (Rack::Test::UploadedFile
+        # é só o que a spec envia; o Rails re-parseia o multipart). Stubar a classe errada
+        # faz o stub nunca ser consultado e a spec passar mesmo com o guard quebrado.
+        allow_any_instance_of(ActionDispatch::Http::UploadedFile).to receive(:size).and_return(26_000_000) # rubocop:disable RSpec/AnyInstance
         post "/api/v1/accounts/#{account.id}/ramon_reunioes",
              params: { audio: audio }, headers: agent.create_new_auth_token
         expect(response).to have_http_status(:unprocessable_entity)
@@ -37,6 +40,19 @@ RSpec.describe 'Ramon Reunioes API', type: :request do
       it 'rejects missing audio' do
         post "/api/v1/accounts/#{account.id}/ramon_reunioes",
              params: {}, headers: agent.create_new_auth_token
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'rejects audio with a non-audio content_type' do
+        texto = Rack::Test::UploadedFile.new(StringIO.new('nao e audio'), 'text/plain', original_filename: 'nota.txt')
+        post "/api/v1/accounts/#{account.id}/ramon_reunioes",
+             params: { audio: texto }, headers: agent.create_new_auth_token
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'rejects audio param sent as a plain string' do
+        post "/api/v1/accounts/#{account.id}/ramon_reunioes",
+             params: { audio: 'string' }, headers: agent.create_new_auth_token
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end

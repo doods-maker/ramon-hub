@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import ReunioesAPI from 'dashboard/api/reunioes';
@@ -58,6 +58,12 @@ const formatoDuracao = total => {
 };
 
 onMounted(carregar);
+
+// O router reusa a instância entre lista e detalhe (mesmo componente); sem
+// isso, voltar do detalhe mostra a lista desatualizada (padrão do Calculos.vue).
+watch(reuniaoId, id => {
+  if (!id) carregar();
+});
 </script>
 
 <template>

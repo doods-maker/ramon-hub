@@ -1,12 +1,14 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import ReuniaoRecorder from '../../components/reunioes/ReuniaoRecorder.vue';
 import ReunioesAPI from 'dashboard/api/reunioes';
+import { onBeforeRouteLeave } from 'vue-router';
 
 vi.mock('dashboard/api/reunioes', () => ({
   default: { criar: vi.fn() },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
+vi.mock('vue-router', () => ({ onBeforeRouteLeave: vi.fn() }));
 
 /* eslint-disable class-methods-use-this */
 class FakeMediaRecorder {
@@ -32,6 +34,7 @@ FakeMediaRecorder.isTypeSupported = () => true;
 
 describe('ReuniaoRecorder', () => {
   beforeEach(() => {
+    onBeforeRouteLeave.mockClear();
     vi.stubGlobal('MediaRecorder', FakeMediaRecorder);
     vi.stubGlobal('navigator', {
       mediaDevices: {
@@ -41,6 +44,19 @@ describe('ReuniaoRecorder', () => {
     ReunioesAPI.criar.mockResolvedValue({
       data: { id: 7, status: 'transcrevendo' },
     });
+  });
+
+  it('registers a leave guard that only blocks navigation while recording', async () => {
+    const wrapper = mount(ReuniaoRecorder);
+    const guard = onBeforeRouteLeave.mock.calls[0][0];
+
+    expect(guard()).toBe(true); // estado 'parado' — nada pra perder
+
+    await wrapper.find('[data-testid="recorder-start"]').trigger('click');
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    expect(guard()).toBe(false);
+    expect(confirmSpy).toHaveBeenCalledWith('RAMON.REUNIOES.LEAVE_WARNING');
+    confirmSpy.mockRestore();
   });
 
   it('records, uploads and emits created', async () => {

@@ -51,7 +51,11 @@ class Ramon::ReuniaoAtaService
   end
 
   def client
-    OpenAI::Client.new(access_token: 'local-whisper', uri_base: whisper_endpoint, log_errors: false)
+    # Default do gem é 120s; reunião de 30–60min em CPU passa disso de longe.
+    OpenAI::Client.new(
+      access_token: 'local-whisper', uri_base: whisper_endpoint, log_errors: false,
+      request_timeout: ENV.fetch('RAMON_WHISPER_TIMEOUT', 3600).to_i
+    )
   end
 
   def whisper_endpoint
