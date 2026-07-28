@@ -69,6 +69,13 @@ const sections = computed(() =>
           names: ['ramon_calculos', 'ramon_calculos_lead'],
         },
         {
+          key: 'reunioes',
+          label: t('RAMON.NAV.REUNIOES'),
+          icon: 'i-lucide-mic',
+          to: accountScopedRoute('ramon_reunioes'),
+          names: ['ramon_reunioes', 'ramon_reuniao'],
+        },
+        {
           key: 'radar',
           label: t('RAMON.NAV.RADAR'),
           icon: 'i-lucide-radar',
