@@ -65,7 +65,16 @@ onMounted(carregar);
       <RamonPageHeader :title="t('RAMON.REUNIOES.TITLE')" />
       <ReuniaoRecorder class="mb-6" @created="onCreated" />
       <div
-        v-if="hasError"
+        v-if="isLoading"
+        class="flex flex-col gap-3 animate-pulse"
+        data-testid="reunioes-skeleton"
+      >
+        <div class="h-12 rounded-lg bg-n-solid-2" />
+        <div class="h-12 rounded-lg bg-n-solid-2" />
+        <div class="h-12 rounded-lg bg-n-solid-2" />
+      </div>
+      <div
+        v-else-if="hasError"
         class="flex items-center gap-2 text-sm text-n-ruby-11"
       >
         {{ t('RAMON.REUNIOES.LOAD_ERROR') }}
@@ -77,10 +86,7 @@ onMounted(carregar);
           {{ t('RAMON.LEAD_PANEL.RETRY') }}
         </button>
       </div>
-      <p
-        v-else-if="!isLoading && !reunioes.length"
-        class="text-sm text-n-slate-11"
-      >
+      <p v-else-if="!reunioes.length" class="text-sm text-n-slate-11">
         {{ t('RAMON.REUNIOES.EMPTY') }}
       </p>
       <ul v-else class="flex flex-col divide-y divide-n-weak">

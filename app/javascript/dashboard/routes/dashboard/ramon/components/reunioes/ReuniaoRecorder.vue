@@ -7,7 +7,7 @@ import { useAlert } from 'dashboard/composables';
 const emit = defineEmits(['created']);
 defineOptions({ name: 'ReuniaoRecorder' });
 const { t } = useI18n();
-const estado = ref('parado'); // parado | gravando | pausado | enviando
+const estado = ref('parado'); // parado | gravando | pausado | enviando | falha
 const segundos = ref(0);
 const titulo = ref('');
 const progresso = ref(0);
@@ -95,7 +95,10 @@ const enviar = async () => {
     limpar();
   } catch {
     useAlert(t('RAMON.REUNIOES.UPLOAD_ERROR'));
-    estado.value = 'pausado';
+    // recorder já está inactive (stop() foi chamado em encerrar()) — não dá
+    // pra retomar gravação, só reenviar os chunks que já estão em memória.
+    stream?.getTracks().forEach(track => track.stop());
+    estado.value = 'falha';
   }
 };
 
@@ -141,7 +144,7 @@ onBeforeUnmount(limpar);
       >
         {{ t('RAMON.REUNIOES.RECORD') }}
       </button>
-      <template v-else-if="estado !== 'enviando'">
+      <template v-else-if="estado === 'gravando' || estado === 'pausado'">
         <button
           v-if="estado === 'gravando'"
           type="button"
@@ -165,6 +168,23 @@ onBeforeUnmount(limpar);
           @click="encerrar"
         >
           {{ t('RAMON.REUNIOES.STOP') }}
+        </button>
+        <button
+          type="button"
+          class="rounded-lg px-3 py-2 text-sm text-n-slate-11"
+          @click="descartar"
+        >
+          {{ t('RAMON.REUNIOES.CANCEL') }}
+        </button>
+      </template>
+      <template v-else-if="estado === 'falha'">
+        <button
+          type="button"
+          class="rounded-lg bg-n-brand px-4 py-2 text-sm font-medium text-white"
+          data-testid="recorder-retry"
+          @click="enviar"
+        >
+          {{ t('RAMON.REUNIOES.RETRY_UPLOAD') }}
         </button>
         <button
           type="button"

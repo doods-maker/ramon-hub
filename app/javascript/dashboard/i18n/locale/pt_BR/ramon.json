@@ -588,6 +588,7 @@
       "MIC_ERROR": "Não foi possível acessar o microfone — verifique a permissão do navegador",
       "UPLOADING": "Enviando áudio… {progress}%",
       "UPLOAD_ERROR": "Falha ao enviar o áudio — tente de novo",
+      "RETRY_UPLOAD": "Tentar reenviar",
       "LEAVE_WARNING": "Gravação em andamento",
       "STATUS_TRANSCREVENDO": "Transcrevendo…",
       "STATUS_PRONTA": "Ata pronta",

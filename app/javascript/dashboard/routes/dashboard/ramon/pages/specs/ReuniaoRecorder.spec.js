@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import ReuniaoRecorder from '../../components/reunioes/ReuniaoRecorder.vue';
 import ReunioesAPI from 'dashboard/api/reunioes';
 
@@ -56,6 +56,31 @@ describe('ReuniaoRecorder', () => {
     expect(formData.get('audio')).toBeTruthy();
     expect(wrapper.emitted('created')[0][0]).toEqual({
       id: 7,
+      status: 'transcrevendo',
+    });
+  });
+
+  it('retries the upload after a failure and emits created on success', async () => {
+    ReunioesAPI.criar
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValueOnce({ data: { id: 9, status: 'transcrevendo' } });
+
+    const wrapper = mount(ReuniaoRecorder);
+    await wrapper.find('[data-testid="recorder-start"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    await wrapper.find('[data-testid="recorder-stop"]').trigger('click');
+    await flushPromises();
+
+    expect(ReunioesAPI.criar).toHaveBeenCalledTimes(1);
+    const retryButton = wrapper.find('[data-testid="recorder-retry"]');
+    expect(retryButton.exists()).toBe(true);
+
+    await retryButton.trigger('click');
+    await flushPromises();
+
+    expect(ReunioesAPI.criar).toHaveBeenCalledTimes(2);
+    expect(wrapper.emitted('created')[0][0]).toEqual({
+      id: 9,
       status: 'transcrevendo',
     });
   });

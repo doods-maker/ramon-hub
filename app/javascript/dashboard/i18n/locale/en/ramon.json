@@ -588,6 +588,7 @@
       "MIC_ERROR": "Could not access the microphone — check the browser permission",
       "UPLOADING": "Uploading audio… {progress}%",
       "UPLOAD_ERROR": "Failed to upload the audio — try again",
+      "RETRY_UPLOAD": "Retry upload",
       "LEAVE_WARNING": "Recording in progress",
       "STATUS_TRANSCREVENDO": "Transcribing…",
       "STATUS_PRONTA": "Minutes ready",
