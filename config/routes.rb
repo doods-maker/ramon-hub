@@ -296,6 +296,9 @@ Rails.application.routes.draw do
             post :criar_caso
             post :rascunho
           end
+          resources :ramon_reunioes, only: [:index, :show, :create, :destroy], controller: 'ramon_reunioes' do
+            member { post :reprocessar }
+          end
           resources :calculos, only: [:index, :destroy] do
             member { post :reabrir }
           end

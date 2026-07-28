@@ -88,4 +88,16 @@ export const routes = [
     component: () => import('./pages/Calculos.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
+  {
+    path: frontendURL('accounts/:accountId/ramon/reunioes'),
+    name: 'ramon_reunioes',
+    component: () => import('./pages/Reunioes.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
+    path: frontendURL('accounts/:accountId/ramon/reunioes/:reuniaoId'),
+    name: 'ramon_reuniao',
+    component: () => import('./pages/Reunioes.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
 ];
