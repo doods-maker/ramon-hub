@@ -19,9 +19,10 @@ module RegistraCalculo
     Rails.logger.warn("[calculo] não registrou o histórico: #{e.class} #{e.message}")
   end
 
-  # Cliente do hub manda no nome (é o cadastro); sem contato, vale o cabeçalho
-  # do CNIS — é o que existe no cálculo rápido, que nasce sem cliente.
+  # Nome digitado na tela (cálculo rápido de quem ainda não é cliente) vence;
+  # depois o cadastro do hub; por fim o cabeçalho do CNIS. Leitura direta de
+  # params: é só registro, não mass-assignment.
   def nome_do_segurado
-    @lead.contact&.name.presence || @lead.cnis&.dig('segurado_nome')
+    params[:segurado_nome].presence || @lead.contact&.name.presence || @lead.cnis&.dig('segurado_nome')
   end
 end

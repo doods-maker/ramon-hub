@@ -103,5 +103,20 @@ RSpec.describe 'Calculos API', type: :request do
       expect(calculo.segurado_nome).to eq('MARIA DAS DORES')
       expect(calculo.cnis_snapshot['filename']).to eq('cnis.pdf')
     end
+
+    it 'nome digitado na tela vence o do CNIS no registro' do
+      lead.update!(cnis: cnis)
+      stub_request(:post, 'http://motor:8000/painel')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
+                   body: { resumo: {}, cartoes: [], avisos: [] }.to_json)
+
+      with_modified_env MOTOR_CALCULOS_URL: 'http://motor:8000' do
+        post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/painel",
+             params: { der: '2026-03-10', nascimento: '1980-05-10', sexo: 'F', segurado_nome: 'Dona Zilda' },
+             headers: agent.create_new_auth_token, as: :json
+      end
+
+      expect(Calculo.last.segurado_nome).to eq('Dona Zilda')
+    end
   end
 end

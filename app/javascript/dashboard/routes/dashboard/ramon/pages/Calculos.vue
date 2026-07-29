@@ -23,6 +23,9 @@ const modo = ref('calculadora');
 const rascunho = ref(null);
 const rascunhoLoading = ref(false);
 const rascunhoError = ref(false);
+// Nome de quem ainda não é cliente (consulta rápida): vai junto de cada
+// cálculo e vira o segurado_nome do histórico — dá pra reencontrar na busca.
+const seguradoNome = ref('');
 // Cálculo reaberto do histórico + chave que remonta o simulador com ele.
 const restaurado = ref(null);
 const simuladorKey = ref(0);
@@ -33,6 +36,7 @@ const simuladorKey = ref(0);
 const abrirCalculadora = async () => {
   modo.value = 'calculadora';
   restaurado.value = null;
+  seguradoNome.value = '';
   if (rascunhoLoading.value) return;
   rascunhoLoading.value = true;
   rascunhoError.value = false;
@@ -88,6 +92,7 @@ const reabrirCalculo = async item => {
     historicoOpen.value = false;
     if (rascunho.value && data.lead_id === rascunho.value.id) {
       modo.value = 'calculadora';
+      seguradoNome.value = item.segurado_nome || '';
     } else {
       router.push({
         name: 'ramon_calculos_lead',
@@ -464,12 +469,22 @@ const fmtDate = value => {
             {{ $t('RAMON.LEAD_PANEL.RETRY') }}
           </button>
         </div>
-        <LeadSimulador
-          v-else-if="rascunho"
-          :key="simuladorKey"
-          :lead="rascunho"
-          :inicial="restaurado"
-        />
+        <template v-else-if="rascunho">
+          <div class="max-w-2xl mb-4">
+            <input
+              v-model="seguradoNome"
+              data-testid="calculos-segurado-nome"
+              class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              :placeholder="$t('RAMON.CALCULOS.NOME_PLACEHOLDER')"
+            />
+          </div>
+          <LeadSimulador
+            :key="simuladorKey"
+            :lead="rascunho"
+            :inicial="restaurado"
+            :segurado-nome="seguradoNome"
+          />
+        </template>
       </template>
 
       <div v-else class="max-w-xl">

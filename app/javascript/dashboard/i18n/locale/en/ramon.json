@@ -556,6 +556,7 @@
       "HIST_SEM_NOME": "No name",
       "HIST_APAGAR": "Delete",
       "RASCUNHO_HINT": "Attach the CNIS, set the DER and calculate — no client record needed.",
+      "NOME_PLACEHOLDER": "Name (optional) — saved in the history so you can find it later",
       "RASCUNHO_ERROR": "Could not open the calculator",
       "OPEN_SEARCH": "Calculate for a client",
       "OPEN_RASCUNHO": "Quick calculation",

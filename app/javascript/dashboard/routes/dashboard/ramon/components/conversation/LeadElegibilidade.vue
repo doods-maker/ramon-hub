@@ -6,6 +6,7 @@ import LeadsAPI from 'dashboard/api/leads';
 const props = defineProps({
   lead: { type: Object, required: true },
   der: { type: String, default: '' },
+  seguradoNome: { type: String, default: '' },
 });
 defineOptions({ name: 'LeadElegibilidade' });
 
@@ -48,6 +49,7 @@ const chamar = async (extra = {}) => {
     const { data } = await LeadsAPI.elegibilidade(props.lead.id, {
       der: props.der,
       decisoes: decisoesPreenchidas(),
+      segurado_nome: props.seguradoNome || undefined,
       ...extra,
     });
     resultado.value = data;
