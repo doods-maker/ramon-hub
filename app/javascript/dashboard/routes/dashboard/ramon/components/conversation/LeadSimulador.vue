@@ -13,6 +13,10 @@ const props = defineProps({
   // Cálculo reaberto do histórico: { tipo, params, cnis }. O componente é
   // remontado com :key, então basta semear o estado inicial aqui.
   inicial: { type: Object, default: null },
+  // Nome digitado no cálculo rápido (tela Cálculos, sem cliente): vai junto
+  // de cada POST de cálculo e vira o segurado_nome do histórico. Só a
+  // instância do rascunho recebe — lead real usa o contato, como sempre.
+  seguradoNome: { type: String, default: '' },
 });
 defineOptions({ name: 'LeadSimulador' });
 
@@ -261,6 +265,7 @@ const simulate = async () => {
     const { data } = await LeadsAPI.simulate(props.lead.id, {
       ...form.value,
       usar_cnis: Boolean(cnis.value),
+      segurado_nome: props.seguradoNome || undefined,
     });
     resultado.value = data;
     await persistirUltimaSimulacao(data);
@@ -286,6 +291,7 @@ const verMemoria = async () => {
       ...form.value,
       usar_cnis: Boolean(cnis.value),
       memoria_calculo: true,
+      segurado_nome: props.seguradoNome || undefined,
     });
     resultado.value = data;
     memoria.value = data.motor?.memoria_calculo || null;
@@ -360,6 +366,7 @@ const calcularPainel = async () => {
       sexo: form.value.sexo,
       vinculos_extras: vinculosExtrasJson(),
       especiais: especiaisJson(),
+      segurado_nome: props.seguradoNome || undefined,
     });
     painel.value = data;
   } catch (error) {
@@ -1135,7 +1142,12 @@ const aba = ref(props.inicial?.tipo || 'painel');
       >
         {{ $t('RAMON.SIMULADOR.ELEG_PRECISA_CNIS') }}
       </p>
-      <LeadElegibilidade v-else :lead="lead" :der="form.der" />
+      <LeadElegibilidade
+        v-else
+        :lead="lead"
+        :der="form.der"
+        :segurado-nome="seguradoNome"
+      />
     </div>
 
     <div
@@ -1150,7 +1162,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
       >
         {{ $t('RAMON.SIMULADOR.PENSAO_PRECISA_CNIS') }}
       </p>
-      <LeadPensao v-else :lead="lead" />
+      <LeadPensao v-else :lead="lead" :segurado-nome="seguradoNome" />
     </div>
 
     <div
@@ -1165,7 +1177,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
       >
         {{ $t('RAMON.SIMULADOR.MATERNIDADE_PRECISA_CNIS') }}
       </p>
-      <LeadMaternidade v-else :lead="lead" />
+      <LeadMaternidade v-else :lead="lead" :segurado-nome="seguradoNome" />
     </div>
 
     <div
@@ -1180,7 +1192,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
       >
         {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PRECISA_CNIS') }}
       </p>
-      <LeadPlanejamento v-else :lead="lead" />
+      <LeadPlanejamento v-else :lead="lead" :segurado-nome="seguradoNome" />
     </div>
 
     <p

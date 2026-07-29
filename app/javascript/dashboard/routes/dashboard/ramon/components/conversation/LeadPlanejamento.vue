@@ -5,6 +5,7 @@ import LeadsAPI from 'dashboard/api/leads';
 
 const props = defineProps({
   lead: { type: Object, required: true },
+  seguradoNome: { type: String, default: '' },
 });
 defineOptions({ name: 'LeadPlanejamento' });
 
@@ -60,7 +61,9 @@ const planejar = async () => {
   hasError.value = false;
   errorMessage.value = '';
   try {
-    const { data } = await LeadsAPI.planejamento(props.lead.id, {});
+    const { data } = await LeadsAPI.planejamento(props.lead.id, {
+      segurado_nome: props.seguradoNome || undefined,
+    });
     resultado.value = data;
   } catch (error) {
     await handleError(error);

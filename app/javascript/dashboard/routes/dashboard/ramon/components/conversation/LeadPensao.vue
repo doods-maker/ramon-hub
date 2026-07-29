@@ -5,6 +5,7 @@ import LeadsAPI from 'dashboard/api/leads';
 
 const props = defineProps({
   lead: { type: Object, required: true },
+  seguradoNome: { type: String, default: '' },
 });
 defineOptions({ name: 'LeadPensao' });
 
@@ -71,6 +72,7 @@ const payload = () => {
     data_obito: dataObito.value,
     dependentes: dependentesPayload(),
     decisoes: decisoesPreenchidas(),
+    segurado_nome: props.seguradoNome || undefined,
   };
   if (valorBeneficioObito.value && decimalValido(valorBeneficioObito.value)) {
     p.valor_beneficio_obito = normDecimal(valorBeneficioObito.value);

@@ -34,7 +34,7 @@ vi.mock('dashboard/api/calculos', () => ({
 vi.mock('../../components/conversation/LeadSimulador.vue', () => ({
   default: {
     name: 'LeadSimulador',
-    props: ['lead', 'inicial'],
+    props: ['lead', 'inicial', 'seguradoNome'],
     template: '<div data-testid="stub-simulador">{{ lead.id }}</div>',
   },
 }));
@@ -170,6 +170,61 @@ describe('Calculos.vue', () => {
     const stub = wrapper.findComponent({ name: 'LeadSimulador' });
     expect(stub.props('inicial').tipo).toBe('pensao');
     expect(stub.props('inicial').cnis.filename).toBe('cnis.pdf');
+  });
+
+  it('nome digitado vai pro simulador e some ao reentrar na calculadora', async () => {
+    const wrapper = mount(Calculos, mountOptions);
+    await flushPromises();
+
+    await wrapper
+      .find('[data-testid="calculos-segurado-nome"]')
+      .setValue('Dona Zilda');
+    const stub = wrapper.findComponent({ name: 'LeadSimulador' });
+    expect(stub.props('seguradoNome')).toBe('Dona Zilda');
+
+    // sair pra busca e voltar = entrada limpa, como o CNIS
+    await wrapper.find('[data-testid="calculos-modo-busca"]').trigger('click');
+    await wrapper
+      .find('[data-testid="calculos-modo-calculadora"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(
+      wrapper.find('[data-testid="calculos-segurado-nome"]').element.value
+    ).toBe('');
+  });
+
+  it('reabrir cálculo do rascunho repõe o nome do histórico', async () => {
+    CalculosAPI.historico.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            id: 5,
+            tipo: 'painel',
+            lead_id: 77,
+            segurado_nome: 'Dona Zilda',
+            created_at: '2026-07-27T14:32:00.000Z',
+          },
+        ],
+      },
+    });
+    CalculosAPI.reabrir.mockResolvedValue({
+      data: { lead_id: 77, tipo: 'painel', params: {}, cnis: null },
+    });
+    const wrapper = mount(Calculos, mountOptions);
+    await flushPromises();
+    await wrapper
+      .find('[data-testid="calculos-historico-toggle"]')
+      .trigger('click');
+    await flushPromises();
+    await wrapper
+      .find('[data-testid="calculos-historico-item"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(
+      wrapper.find('[data-testid="calculos-segurado-nome"]').element.value
+    ).toBe('Dona Zilda');
   });
 
   it('erro ao abrir a calculadora permite tentar de novo', async () => {

@@ -5,6 +5,7 @@ import LeadsAPI from 'dashboard/api/leads';
 
 const props = defineProps({
   lead: { type: Object, required: true },
+  seguradoNome: { type: String, default: '' },
 });
 defineOptions({ name: 'LeadMaternidade' });
 
@@ -32,6 +33,7 @@ const calcular = async () => {
     const { data } = await LeadsAPI.maternidade(props.lead.id, {
       data_evento: dataEvento.value,
       categoria: categoria.value,
+      segurado_nome: props.seguradoNome || undefined,
     });
     resultado.value = data;
   } catch (error) {

@@ -556,6 +556,7 @@
       "HIST_SEM_NOME": "Sem nome",
       "HIST_APAGAR": "Apagar",
       "RASCUNHO_HINT": "Anexe o CNIS, informe a DER e calcule — sem precisar de cadastro.",
+      "NOME_PLACEHOLDER": "Nome (opcional) — fica no histórico pra reencontrar depois",
       "RASCUNHO_ERROR": "Não foi possível abrir a calculadora",
       "OPEN_SEARCH": "Calcular para um cliente",
       "OPEN_RASCUNHO": "Cálculo rápido",
