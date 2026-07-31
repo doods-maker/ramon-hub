@@ -21,8 +21,8 @@ RSpec.describe 'Ramon Relatorios API', type: :request do
   end
 
   it 'devolve configured false sem envs' do
-    with_modified_env('RAMON_METABASE_SITE_URL' => nil, 'RAMON_METABASE_SECRET_KEY' => nil,
-                       'RAMON_METABASE_DASHBOARD_ID' => nil) do
+    sem_envs = { 'RAMON_METABASE_SITE_URL' => nil, 'RAMON_METABASE_SECRET_KEY' => nil, 'RAMON_METABASE_DASHBOARD_ID' => nil }
+    with_modified_env(sem_envs) do
       get url, headers: admin.create_new_auth_token, as: :json
     end
     expect(response).to have_http_status(:success)
