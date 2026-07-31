@@ -100,4 +100,10 @@ export const routes = [
     component: () => import('./pages/Reunioes.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
+  {
+    path: frontendURL('accounts/:accountId/ramon/relatorios'),
+    name: 'ramon_relatorios',
+    component: () => import('./pages/Relatorios.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
 ];

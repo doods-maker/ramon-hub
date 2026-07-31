@@ -106,6 +106,14 @@ const sections = computed(() =>
           adminOnly: true,
         },
         {
+          key: 'relatorios',
+          label: t('RAMON.NAV.RELATORIOS'),
+          icon: 'i-lucide-bar-chart-3',
+          to: accountScopedRoute('ramon_relatorios'),
+          names: ['ramon_relatorios'],
+          adminOnly: true,
+        },
+        {
           key: 'sdr',
           label: t('RAMON.NAV.SDR'),
           icon: 'i-lucide-phone',
