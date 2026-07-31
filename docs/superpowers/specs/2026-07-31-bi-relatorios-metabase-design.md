@@ -19,14 +19,16 @@
 
 ### 2. Dashboard novo "Análise Comercial" (Metabase, via API)
 
-Filtro de período no topo; 4 blocos, ~16 cartões, todos com o filtro de casos de cálculo:
+4 blocos, ~13 cartões, todos com o filtro de casos de cálculo. **Sem filtro global de período** (ajuste pós-exploração 31/07: cada cartão tem semântica de data própria — criação × fechamento × perda — então cada um usa janela fixa declarada no título, 12 meses nas tendências; filtro global fica como evolução se fizer falta):
 
 | Bloco | Cartões |
 |---|---|
 | Tendência | Leads novos/mês · contratos fechados/mês · valor fechado/mês · taxa de conversão/mês · tempo médio lead→contrato |
 | Funil profundo | Tempo médio por etapa · conversão etapa→etapa · ranking de motivos de perda |
 | Origem e tese | Conversão e valor por canal (source) · por tese · por campanha (UTM) |
-| Atendimento e agenda | SLA 1ª resposta histórico · reuniões marcadas × realizadas · follow-ups × contratos · NPS médio |
+| Atendimento e agenda | SLA 1ª resposta histórico · reuniões marcadas × realizadas · follow-ups × contratos |
+
+**NPS caiu do escopo** (ajuste pós-exploração 31/07): o banco só grava *quando o NPS foi pedido* (`custom_attributes.nps.pedido_em`) — o score respondido não é persistido em lugar nenhum. Cartão de NPS só quando existir dado estruturado.
 
 **Ressalva declarada:** "tempo por etapa" e "conversão etapa→etapa" dependem do histórico de mudança de etapa na timeline do lead (atividades). Validar granularidade na implementação; se não bastar, entregar a melhor aproximação e avisar o Eduardo qual foi.
 
