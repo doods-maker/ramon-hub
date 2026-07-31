@@ -237,6 +237,7 @@
 | `app/jobs/ramon/advbox_event_job.rb` + `app/services/ramon/advbox_event_processor.rb` | roteia evento por nome de etapa/tarefa (normalizado sem acento) → won/atividade/follow-up/rascunho; match por CPF→telefone | webhook ADVBOX | Flowter |
 | `app/jobs/ramon/ntfy_push_job.rb` (linha de changes) | já existia; +kwargs `title:`/`body:` opcionais p/ push custom (retrocompatível) | notificação ADVBOX | Flowter |
 | `config/routes.rb` + `config/initializers/rack_attack.rb` (linhas de changes) | rota pública advbox_webhooks + throttle 60/min | webhook ADVBOX | Flowter |
+| `config/routes.rb` | `resource :ramon_relatorios, only: [:show]` na seção ramon (junto de `ramon_watchdog`) | página Relatórios (embed Metabase) | BI |
 | `spec/requests/public/api/v1/advbox_webhooks_spec.rb` + `spec/services/ramon/advbox_event_processor_spec.rb` | specs: auth/idempotência/captura + roteamento dos fluxos | cobertura CI | Flowter |
 | `lib/ramon/motor_client.rb` + `app/controllers/api/v1/accounts/lead_cnis_controller.rb` (linhas de changes) | `/cnis` repassa `excluir_seqs`/`mensalidades` crus ao motor (validação lá) e guarda em `cnis['parametros']`; +GET show p/ a UI de ajustes; PDF NÃO fica no servidor (reaplicar = reenviar) | Simulador ajustes CNIS | Parâmetros motor |
 | `app/controllers/api/v1/accounts/lead_simulacoes_controller.rb` (linha de changes) | repassa `memoria_calculo` (opt-in) ao motor — relatório competência-a-competência | Simulador memória | Parâmetros motor |
