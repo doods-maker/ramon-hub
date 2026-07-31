@@ -21,7 +21,16 @@ RSpec.describe 'Ramon Relatorios API', type: :request do
   end
 
   it 'devolve configured false sem envs' do
-    with_modified_env('RAMON_METABASE_SITE_URL' => nil) do
+    with_modified_env('RAMON_METABASE_SITE_URL' => nil, 'RAMON_METABASE_SECRET_KEY' => nil,
+                       'RAMON_METABASE_DASHBOARD_ID' => nil) do
+      get url, headers: admin.create_new_auth_token, as: :json
+    end
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body['configured']).to be(false)
+  end
+
+  it 'devolve configured false com dashboard_id nao numerico' do
+    with_modified_env(envs.merge('RAMON_METABASE_DASHBOARD_ID' => 'abc')) do
       get url, headers: admin.create_new_auth_token, as: :json
     end
     expect(response).to have_http_status(:success)
