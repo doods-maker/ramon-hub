@@ -142,7 +142,8 @@
       "CALCULOS": "Calculations",
       "REUNIOES": "Meetings",
       "RADAR": "Prescription radar",
-      "TV": "TV scoreboard"
+      "TV": "TV scoreboard",
+      "RELATORIOS": "Reports"
     },
     "RADAR": {
       "TITLE": "Prescription radar",
@@ -160,6 +161,13 @@
       "LOAD_ERROR": "Could not load the radar.",
       "RETRY": "Retry",
       "EMPTY": "No leads at risk."
+    },
+    "RELATORIOS": {
+      "TITLE": "Reports",
+      "SUBTITLE": "Commercial analysis — trends, pipeline, source and service",
+      "NOT_CONFIGURED": "BI is not configured in this environment yet. Set RAMON_METABASE_SITE_URL, RAMON_METABASE_SECRET_KEY and RAMON_METABASE_DASHBOARD_ID.",
+      "LOAD_ERROR": "Could not load the report.",
+      "RETRY": "Retry"
     },
     "ESTEIRA": {
       "EYEBROW": "Production line",

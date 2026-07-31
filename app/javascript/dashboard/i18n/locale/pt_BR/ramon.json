@@ -142,7 +142,8 @@
       "CALCULOS": "Cálculos",
       "REUNIOES": "Reuniões",
       "RADAR": "Radar de prescrição",
-      "TV": "Placar de TV"
+      "TV": "Placar de TV",
+      "RELATORIOS": "Relatórios"
     },
     "RADAR": {
       "TITLE": "Radar de prescrição",
@@ -160,6 +161,13 @@
       "LOAD_ERROR": "Não deu para carregar o radar.",
       "RETRY": "Tentar de novo",
       "EMPTY": "Nenhum lead em risco."
+    },
+    "RELATORIOS": {
+      "TITLE": "Relatórios",
+      "SUBTITLE": "Análise comercial — tendências, funil, origem e atendimento",
+      "NOT_CONFIGURED": "A BI ainda não está configurada neste ambiente. Defina RAMON_METABASE_SITE_URL, RAMON_METABASE_SECRET_KEY e RAMON_METABASE_DASHBOARD_ID.",
+      "LOAD_ERROR": "Não foi possível carregar o relatório.",
+      "RETRY": "Tentar de novo"
     },
     "ESTEIRA": {
       "EYEBROW": "Linha de produção",
