@@ -5,7 +5,7 @@
 # motor (pydantic) volta como lista em inglês; os 422 de domínio do motor
 # (datas fora de ordem, DIB < 2010) já vêm em pt e passam direto.
 class Api::V1::Accounts::LeadLiquidacoesController < Api::V1::Accounts::BaseController
-  before_action :fetch_lead
+  include CalculoProxy
 
   DATAS_OPCIONAIS = %i[data_citacao data_ajuizamento data_sentenca_ou_acordao data_fim data_calculo].freeze
   REGIMES = %w[art406 selic].freeze
@@ -32,23 +32,11 @@ class Api::V1::Accounts::LeadLiquidacoesController < Api::V1::Accounts::BaseCont
 
   private
 
-  def fetch_lead
-    @lead = Current.account.leads.find(params[:lead_id])
-  end
-
   def permitted
     params.permit(:rmi, :dib, :no_piso, :data_citacao, :data_ajuizamento, :data_sentenca_ou_acordao,
                   :data_fim, :data_calculo, :honorarios_sucumbenciais_pct, :honorarios_contratuais_pct,
                   :regime_pos_ec136, :segurado_nome, :numero_processo, :numero_beneficio,
                   abatimentos: [:ano, :mes, :valor])
-  end
-
-  def responder
-    yield
-  rescue Ramon::MotorClient::ValidationError => e
-    render json: { error: e.message }, status: :unprocessable_entity
-  rescue Ramon::MotorClient::UnavailableError => e
-    render json: { error: e.message }, status: :service_unavailable
   end
 
   def erro_de_validacao
@@ -126,19 +114,5 @@ class Api::V1::Accounts::LeadLiquidacoesController < Api::V1::Accounts::BaseCont
 
   def rmi
     @rmi ||= decimal(permitted[:rmi])
-  end
-
-  def data(valor)
-    Date.iso8601(valor.to_s)
-  rescue ArgumentError
-    nil
-  end
-
-  def decimal(valor)
-    return if valor.blank?
-
-    BigDecimal(valor.to_s)
-  rescue ArgumentError
-    nil
   end
 end

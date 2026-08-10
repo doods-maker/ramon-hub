@@ -3,7 +3,7 @@
 # previsão. Usa o CNIS anexado ao lead (quando houver) + vínculos manuais do
 # advogado (ex.: atividade rural que não está no CNIS).
 class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseController
-  before_action :fetch_lead
+  include CalculoProxy
   include RegistraCalculo
 
   def create
@@ -11,20 +11,14 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
     return render json: { error: 'DER inválida — use o formato AAAA-MM-DD' }, status: :unprocessable_entity if der.blank?
     return render json: { error: 'especiais: JSON inválido' }, status: :unprocessable_entity if especiais_invalidos?
 
-    render json: Ramon::MotorClient.painel(motor_payload)
-    persistir_especiais
-    registrar_calculo('painel')
-  rescue Ramon::MotorClient::ValidationError => e
-    render json: { error: e.message }, status: :unprocessable_entity
-  rescue Ramon::MotorClient::UnavailableError => e
-    render json: { error: e.message }, status: :service_unavailable
+    responder do
+      render json: Ramon::MotorClient.painel(motor_payload)
+      persistir_especiais
+      registrar_calculo('painel')
+    end
   end
 
   private
-
-  def fetch_lead
-    @lead = Current.account.leads.find(params[:lead_id])
-  end
 
   def permitted
     params.permit(:nascimento, :sexo, :der, :memoria_calculo, :especiais,
@@ -102,16 +96,8 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
     @der ||= data(permitted[:der])
   end
 
-  def data(valor)
-    Date.iso8601(valor.to_s)
-  rescue ArgumentError
-    nil
-  end
-
-  def cnis_entrada
-    @cnis_entrada ||= @lead.cnis&.dig('entrada') || {}
-  end
-
+  # Diferente do fallback do concern: aqui nascimento/sexo vêm do formulário
+  # (cálculo rápido sem contato preenchido), não do cadastro.
   def segurado
     cnis_entrada['segurado'].presence ||
       { nascimento: permitted[:nascimento], sexo: permitted[:sexo].presence || 'M' }

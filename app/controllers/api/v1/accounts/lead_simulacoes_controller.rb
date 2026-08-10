@@ -1,27 +1,20 @@
 # Simulador ao vivo (Sala de Fechamento): chama o motor de cálculos e aplica a
 # fórmula de honorário da tese do lead (percentual × atrasados + N × mensalidades).
 class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseController
-  before_action :fetch_lead
+  include CalculoProxy
   include RegistraCalculo
 
   def create
     authorize(@lead, :show?)
     return render json: { error: 'DER inválida — use o formato AAAA-MM-DD' }, status: :unprocessable_entity if der.blank?
 
-    resultado = Ramon::MotorClient.incapacidade(motor_payload)
-    render json: simulacao(resultado)
-    registrar_calculo('honorario')
-  rescue Ramon::MotorClient::ValidationError => e
-    render json: { error: e.message }, status: :unprocessable_entity
-  rescue Ramon::MotorClient::UnavailableError => e
-    render json: { error: e.message }, status: :service_unavailable
+    responder do
+      render json: simulacao(Ramon::MotorClient.incapacidade(motor_payload))
+      registrar_calculo('honorario')
+    end
   end
 
   private
-
-  def fetch_lead
-    @lead = Current.account.leads.find(params[:lead_id])
-  end
 
   def permitted
     params.permit(:nascimento, :sexo, :der, :salario, :beneficio, :origem, :acrescimo_25, :usar_cnis, :memoria_calculo)
@@ -32,11 +25,7 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
   end
 
   def der
-    @der ||= begin
-      Date.iso8601(permitted[:der].to_s)
-    rescue ArgumentError
-      nil
-    end
+    @der ||= data(permitted[:der])
   end
 
   def motor_payload
@@ -102,14 +91,6 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
   def meses_desde_der
     hoje = Date.current
     [((hoje.year - der.year) * 12) + (hoje.month - der.month), 0].max
-  end
-
-  def decimal(valor)
-    return if valor.blank?
-
-    BigDecimal(valor.to_s)
-  rescue ArgumentError
-    nil
   end
 
   def money(valor)
