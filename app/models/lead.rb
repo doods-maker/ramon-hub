@@ -75,9 +75,7 @@ class Lead < ApplicationRecord
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 
   def stalled?
-    return false if lead_stage&.stalled_after_days.blank? || stage_entered_at.blank?
-
-    stage_entered_at < lead_stage.stalled_after_days.days.ago
+    Ramon::Cadencia.parado?(self)
   end
 
   def dispatch_task_update

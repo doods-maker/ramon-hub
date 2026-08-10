@@ -118,10 +118,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def apply_cadence_filters(leads)
-    if params[:stalled].present?
-      leads = leads.joins(:lead_stage).where.not(lead_stages: { stalled_after_days: nil })
-                   .where("leads.stage_entered_at < NOW() - (lead_stages.stalled_after_days || ' days')::interval")
-    end
+    leads = Ramon::Cadencia.parados(leads) if params[:stalled].present?
     leads = leads.where.not(id: Current.account.lead_tasks.open_tasks.select(:lead_id)) if params[:no_open_task].present?
     leads
   end

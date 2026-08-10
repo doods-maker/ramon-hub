@@ -23,7 +23,7 @@ module LeadCadence
     inbox = conversation&.inbox
     return nil unless inbox&.auto_create_lead?
 
-    minutes = inbox.first_response_sla_minutes || ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i
+    minutes = Ramon::Cadencia.sla_minutes(inbox)
     {
       due_at: conversation.created_at + minutes.minutes,
       replied_at: conversation.first_reply_created_at,

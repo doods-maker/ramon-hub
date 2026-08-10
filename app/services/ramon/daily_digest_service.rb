@@ -68,29 +68,13 @@ class Ramon::DailyDigestService
     @account.lead_tasks.overdue.joins(:lead).merge(Lead.funil).reorder(nil)
   end
 
-  # Mesmo critério do Cockpit: conversa nascida hoje em inbox de lead
-  # (auto_create_lead) sem 1ª resposta além do SLA, ou respondida além dele.
-  # N por conversa: SLA da própria inbox, com fallback no env (COALESCE por linha).
+  # Mesmo critério do Cockpit — a regra vive em Ramon::Cadencia.
   def sla_breached_count
-    threshold = sla_threshold_sql
-    scope = sla_conversations(today_range)
-    # Epoch em vez de aritmética de interval: o bind de Time entrava como
-    # literal de tipo desconhecido e o PG tentava resolvê-lo como interval.
-    waiting = scope.where(first_reply_created_at: nil)
-                   .where("EXTRACT(EPOCH FROM (? - conversations.created_at)) / 60.0 > (#{threshold})", Time.current).count
-    over = scope.where("EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) / 60.0 > (#{threshold})").count
-    waiting + over
-  end
-
-  # Interpolação segura: só o inteiro do env entra na string.
-  def sla_threshold_sql
-    "COALESCE(inboxes.first_response_sla_minutes, #{ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i})"
+    Ramon::Cadencia.sla_breached_count(sla_conversations(today_range))
   end
 
   def sla_conversations(range)
-    @account.conversations.joins(:inbox)
-            .where(inboxes: { auto_create_lead: true })
-            .where(conversations: { created_at: range })
+    Ramon::Cadencia.sla_conversations(@account, range)
   end
 
   # Próxima reunião ainda por vir hoje (aberta ou não — a agenda mostra o dia).
