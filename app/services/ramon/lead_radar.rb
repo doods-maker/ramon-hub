@@ -12,9 +12,7 @@ module Ramon::LeadRadar
   end
 
   def stalled_leads(account)
-    active_leads(account)
-      .where.not(lead_stages: { stalled_after_days: nil })
-      .where("leads.stage_entered_at < NOW() - (lead_stages.stalled_after_days || ' days')::interval")
+    Ramon::Cadencia.parados(active_leads(account))
   end
 
   def new_from_lp_leads(account)

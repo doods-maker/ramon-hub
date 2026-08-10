@@ -59,7 +59,7 @@ class RamonLeadListener < BaseListener
   # apita se a conversa seguir aberta e sem resposta. N = SLA da inbox,
   # senão o padrão do env — mesma regra do job e do Lead#sla_info.
   def enqueue_first_response_sla(conversation)
-    minutes = conversation.inbox.first_response_sla_minutes || ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i
+    minutes = Ramon::Cadencia.sla_minutes(conversation.inbox)
     Ramon::FirstResponseSlaJob.set(wait: minutes.minutes).perform_later(conversation.id)
   end
 

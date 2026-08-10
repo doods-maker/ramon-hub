@@ -158,26 +158,12 @@ class Ramon::CockpitMetrics
   end
 
   def sla_conversations
-    @account.conversations.joins(:inbox)
-            .where(inboxes: { auto_create_lead: true })
-            .where(conversations: { created_at: today_range })
+    Ramon::Cadencia.sla_conversations(@account, today_range)
   end
 
-  # Estourou = sem resposta e criada há mais de N min, OU respondida além de N.
-  # N por conversa: SLA da própria inbox, com fallback no env (COALESCE por linha).
+  # Estourou = mesma regra do digest — vive em Ramon::Cadencia.
   def sla_breached_count(replied)
-    threshold = sla_threshold_sql
-    # Epoch em vez de aritmética de interval: o bind de Time entrava como
-    # literal de tipo desconhecido e o PG tentava resolvê-lo como interval.
-    waiting = sla_conversations.where(first_reply_created_at: nil)
-                               .where("EXTRACT(EPOCH FROM (? - conversations.created_at)) / 60.0 > (#{threshold})", Time.current).count
-    over = replied.where("EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) / 60.0 > (#{threshold})").count
-    waiting + over
-  end
-
-  # Interpolação segura: só o inteiro do env entra na string.
-  def sla_threshold_sql
-    "COALESCE(inboxes.first_response_sla_minutes, #{ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i})"
+    Ramon::Cadencia.sla_breached_count(sla_conversations, replied: replied)
   end
 
   def sla_average_minutes(replied)
