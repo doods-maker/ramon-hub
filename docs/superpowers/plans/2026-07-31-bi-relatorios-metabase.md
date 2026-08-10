@@ -1,6 +1,6 @@
 # BI "Relatórios" (Metabase no hub) — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **⚠️ ENTREGUE E ENCERRADO — DOCUMENTO HISTÓRICO, NÃO EXECUTAR.** Implementado nos PRs #117 e #118, no ar na VPS desde 31/07/2026. Re-executar as Tasks 1–3 mutaria o Metabase de produção: a Task 3 regeneraria o `embedding-secret-key` (derrubando o embed que está no ar até re-sincronizar as envs da VPS) e os scripts usam ids fixos (`/dashboard/1`, `database: 2`, cards 40–47) válidos apenas no estado de 31/07 — hoje arquivariam/reescreveriam conteúdo legítimo.
 
 **Goal:** Consertar e destrinchar a BI: faxina + correção do Metabase, dashboard novo "Análise Comercial" (13 cartões), e página "Relatórios" admin-only dentro do hub via static embedding.
 
@@ -34,7 +34,7 @@
 import json, urllib.request
 
 BASE = 'https://bi.ramonantonio.adv.br/api'
-KEY = 'mb_yCvMOczeqjlBi3E9du9z+uGL29DonAW/aK+WK1vI7Ik='
+KEY = '<API key admin — ler de conhecimento\\metabase-credenciais.txt; NUNCA commitar>'
 
 def api(method, path, body=None):
     req = urllib.request.Request(BASE + path, method=method,

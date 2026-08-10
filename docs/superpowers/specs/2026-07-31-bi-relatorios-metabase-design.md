@@ -32,13 +32,13 @@
 
 **Ressalva declarada:** "tempo por etapa" e "conversão etapa→etapa" dependem do histórico de mudança de etapa na timeline do lead (atividades). Validar granularidade na implementação; se não bastar, entregar a melhor aproximação e avisar o Eduardo qual foi.
 
-Fontes de dado já existentes no banco: `leads` (etapa/valor/tese/source/won_at), `lead_stages`, atividades do lead, `conversations` (SLA/first reply), contatos com UTM (PR #34), `lost_reason` obrigatório (PR #94/#96), contador de follow-up (PR #94), NPS em `custom_attributes` (PR #94). ROI de ads está **fora** (custo vive no Gerenciador da Meta; segue na skill comercial-analise-ads).
+Fontes de dado já existentes no banco: `leads` (etapa/valor/tese/source/won_at), `lead_stages`, atividades do lead, `conversations` (SLA/first reply), UTM em `leads.custom_attributes['utm']` (PR #34 — o UTM vive no **lead**, não no contato; queries usam `l.custom_attributes #>> '{utm,...}'`), `lost_reason` obrigatório (PR #94/#96), contador de follow-up (PR #94), NPS em `custom_attributes` (PR #94). ROI de ads está **fora** (custo vive no Gerenciador da Meta; segue na skill comercial-analise-ads).
 
 ### 3. Página "Relatórios" no hub (código no fork)
 
 - Item **Relatórios** no menu da Intranet, **admin-only** (padrão `useAdmin` existente; sidebar já filtra admin-only).
 - Página Vue = iframe do dashboard via **static embedding** do Metabase OSS (gratuito): endpoint Rails admin-only gera JWT (HS256, secret compartilhado, exp curto) e devolve a URL embed; iframe carrega sem login no Metabase.
-- Envs novos na VPS (`chatwoot.env`, com backup e OK do Eduardo na hora): `RAMON_METABASE_EMBED_SECRET` + `RAMON_METABASE_URL`. Env ausente → página mostra aviso amigável, nada quebra.
+- Envs novos na VPS (`chatwoot.env`, com backup e OK do Eduardo na hora): `RAMON_METABASE_SITE_URL` + `RAMON_METABASE_SECRET_KEY` + `RAMON_METABASE_DASHBOARD_ID` (nomes que o controller lê — `ramon_relatorios_controller.rb`). Env ausente → página mostra aviso amigável, nada quebra.
 - No Metabase: ligar embedding, habilitar o dashboard pra embed (via API), gerar o secret.
 
 ### 4. Validação
