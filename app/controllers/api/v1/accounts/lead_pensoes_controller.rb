@@ -4,7 +4,7 @@
 # só avisa — o hub não valida de quem é o CNIS). Cálculo efêmero — sem
 # persistência, igual ao elegibilidades/painel.
 class Api::V1::Accounts::LeadPensoesController < Api::V1::Accounts::BaseController
-  before_action :fetch_lead
+  include CalculoProxy
   include RegistraCalculo
 
   def create
@@ -12,19 +12,13 @@ class Api::V1::Accounts::LeadPensoesController < Api::V1::Accounts::BaseControll
     return render json: { error: 'data do óbito inválida — use o formato AAAA-MM-DD' }, status: :unprocessable_entity if data_obito.blank?
     return render json: { error: 'dependentes obrigatório — informe ao menos 1' }, status: :unprocessable_entity if dependentes.blank?
 
-    render json: Ramon::MotorClient.pensao(motor_payload)
-    registrar_calculo('pensao')
-  rescue Ramon::MotorClient::ValidationError => e
-    render json: { error: e.message }, status: :unprocessable_entity
-  rescue Ramon::MotorClient::UnavailableError => e
-    render json: { error: e.message }, status: :service_unavailable
+    responder do
+      render json: Ramon::MotorClient.pensao(motor_payload)
+      registrar_calculo('pensao')
+    end
   end
 
   private
-
-  def fetch_lead
-    @lead = Current.account.leads.find(params[:lead_id])
-  end
 
   def permitted
     params.permit(:data_obito, :valor_beneficio_obito,
@@ -36,27 +30,10 @@ class Api::V1::Accounts::LeadPensoesController < Api::V1::Accounts::BaseControll
     @data_obito ||= data(permitted[:data_obito])
   end
 
-  def data(valor)
-    Date.iso8601(valor.to_s)
-  rescue ArgumentError
-    nil
-  end
-
   # repassado cru pro motor — só a presença (min 1) é checada aqui, o
   # conteúdo (tipo/datas) é validado lá.
   def dependentes
     @dependentes ||= (permitted[:dependentes] || []).map(&:to_h)
-  end
-
-  def cnis_entrada
-    @cnis_entrada ||= @lead.cnis&.dig('entrada') || {}
-  end
-
-  # Sem CNIS anexado, cai pro nascimento/sexo do contato — mesmo fallback do
-  # elegibilidades (defesa de fronteira, o front gateia por CNIS presente).
-  def segurado
-    cnis_entrada['segurado'].presence ||
-      { nascimento: @lead.contact&.data_nascimento&.iso8601, sexo: @lead.contact&.sexo.presence || 'M' }
   end
 
   # decisoes chega como {desemprego, facultativo, uniao_2_anos} com
@@ -70,7 +47,7 @@ class Api::V1::Accounts::LeadPensoesController < Api::V1::Accounts::BaseControll
 
   def motor_payload
     payload = {
-      segurado: segurado,
+      segurado: segurado_do_cnis_ou_contato,
       data_obito: data_obito.iso8601,
       competencias: cnis_entrada['competencias'] || [],
       vinculos: cnis_entrada['vinculos'] || [],

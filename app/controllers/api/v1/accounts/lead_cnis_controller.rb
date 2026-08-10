@@ -3,7 +3,7 @@
 # Ajustes do advogado (excluir_seqs/mensalidades) vão junto do upload: o PDF
 # não fica no servidor (LGPD) — reprocessar = reenviar o arquivo com os params.
 class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
-  before_action :fetch_lead
+  include CalculoProxy
 
   def show
     authorize(@lead, :show?)
@@ -16,18 +16,16 @@ class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
     authorize(@lead, :show?)
     return render json: { error: 'arquivo (PDF do CNIS) é obrigatório' }, status: :unprocessable_entity if params[:arquivo].blank?
 
-    resultado = Ramon::MotorClient.cnis(
-      params[:arquivo],
-      sexo: params[:sexo].to_s,
-      excluir_seqs: params[:excluir_seqs].to_s,
-      mensalidades: params[:mensalidades].to_s
-    )
-    @lead.update!(cnis: stored(resultado))
-    render json: detalhe
-  rescue Ramon::MotorClient::ValidationError => e
-    render json: { error: e.message }, status: :unprocessable_entity
-  rescue Ramon::MotorClient::UnavailableError => e
-    render json: { error: e.message }, status: :service_unavailable
+    responder do
+      resultado = Ramon::MotorClient.cnis(
+        params[:arquivo],
+        sexo: params[:sexo].to_s,
+        excluir_seqs: params[:excluir_seqs].to_s,
+        mensalidades: params[:mensalidades].to_s
+      )
+      @lead.update!(cnis: stored(resultado))
+      render json: detalhe
+    end
   end
 
   def destroy
@@ -37,10 +35,6 @@ class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
   end
 
   private
-
-  def fetch_lead
-    @lead = Current.account.leads.find(params[:lead_id])
-  end
 
   def detalhe
     @lead.cnis_detalhe
