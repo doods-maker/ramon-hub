@@ -51,46 +51,19 @@ class Ramon::MotorClient
     post_json('/liquidacao', payload, read_timeout: 30)
   end
 
-  # Mesma conta em PDF (A4 paisagem). Devolve os BYTES crus — sem parse — pro
-  # controller repassar via send_data.
+  # Mesma conta em PDF (A4 paisagem). raw: devolve os BYTES crus — sem parse —
+  # pro controller repassar via send_data.
   def self.liquidacao_pdf(payload)
-    base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
-    raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
-
-    response = HTTParty.post("#{base.chomp('/')}/liquidacao/pdf",
-                             headers: { 'Content-Type' => 'application/json' },
-                             body: payload.to_json,
-                             open_timeout: OPEN_TIMEOUT,
-                             read_timeout: 30)
-    return response.body if response.success?
-    raise ValidationError, detail_de(response) if response.code == 422
-
-    raise UnavailableError, "motor indisponível: respondeu HTTP #{response.code}"
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
-    raise UnavailableError, "motor indisponível: #{e.message}"
+    post_json('/liquidacao/pdf', payload, read_timeout: 30, raw: true)
   end
 
-  # Mesma conta do planejamento em PDF consultivo. Devolve os BYTES crus —
-  # sem parse — pro controller repassar via send_data. read_timeout 60 pelo
-  # mesmo motivo de .planejamento (roda o painel várias vezes).
+  # Mesma conta do planejamento em PDF consultivo. read_timeout 60 pelo mesmo
+  # motivo de .planejamento (roda o painel várias vezes).
   def self.planejamento_pdf(payload)
-    base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
-    raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
-
-    response = HTTParty.post("#{base.chomp('/')}/planejamento/pdf",
-                             headers: { 'Content-Type' => 'application/json' },
-                             body: payload.to_json,
-                             open_timeout: OPEN_TIMEOUT,
-                             read_timeout: 60)
-    return response.body if response.success?
-    raise ValidationError, detail_de(response) if response.code == 422
-
-    raise UnavailableError, "motor indisponível: respondeu HTTP #{response.code}"
-  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
-    raise UnavailableError, "motor indisponível: #{e.message}"
+    post_json('/planejamento/pdf', payload, read_timeout: 60, raw: true)
   end
 
-  def self.post_json(path, payload, read_timeout: READ_TIMEOUT)
+  def self.post_json(path, payload, read_timeout: READ_TIMEOUT, raw: false)
     base = ENV.fetch('MOTOR_CALCULOS_URL', nil)
     raise UnavailableError, 'motor indisponível: MOTOR_CALCULOS_URL não configurada' if base.blank?
 
@@ -99,7 +72,7 @@ class Ramon::MotorClient
                              body: payload.to_json,
                              open_timeout: OPEN_TIMEOUT,
                              read_timeout: read_timeout)
-    handle(response)
+    handle(response, raw: raw)
   rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError, Timeout::Error => e
     raise UnavailableError, "motor indisponível: #{e.message}"
   end
@@ -151,8 +124,8 @@ class Ramon::MotorClient
     "#{partes.join}--#{boundary}--\r\n".b
   end
 
-  def self.handle(response)
-    return response.parsed_response if response.success?
+  def self.handle(response, raw: false)
+    return (raw ? response.body : response.parsed_response) if response.success?
     raise ValidationError, detail_de(response) if response.code == 422
 
     raise UnavailableError, "motor indisponível: respondeu HTTP #{response.code}"
