@@ -664,6 +664,12 @@
         "HIDDEN": "+{count} anteriores na aba Histórico",
         "SYSTEM": "Sistema"
       },
+      "QUIZ": {
+        "TITLE": "Triagem da LP",
+        "QUALIFIED": "Qualificado no quiz",
+        "DISQUALIFIED": "Reprovado no quiz",
+        "DOUBT": "⚠ Ponto de atenção: {doubt}"
+      },
       "NEXT_ACTION": {
         "TITLE": "Próxima ação",
         "DONE": "Feito ✓",

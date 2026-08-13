@@ -9,6 +9,7 @@ import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
 import LeadNotes from './LeadNotes.vue';
+import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
@@ -538,6 +539,7 @@ const discard = async () => {
           <LeadFields :lead="lead" />
         </div>
 
+        <LeadQuizResumo :lead="lead" />
         <LeadNotes :lead-id="lead.id" />
 
         <div
