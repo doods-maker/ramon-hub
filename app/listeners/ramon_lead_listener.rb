@@ -30,6 +30,7 @@ class RamonLeadListener < BaseListener
     return if lead.blank?
 
     apply_meta_referral(lead, message)
+    derive_channel_from_first_contact(lead, message)
   end
 
   def lead_created(event)
@@ -81,5 +82,19 @@ class RamonLeadListener < BaseListener
   def referral_source_label(referral)
     detail = referral['source_id'].presence || referral['headline'].presence
     ['anuncio-meta', detail].compact.join(': ').truncate(255)
+  end
+
+  # Regra de negócio (13/08, design funil-estrategico): nos números da banca,
+  # quem chega sem anúncio e sem assinatura de site/LP/bio veio por indicação.
+  # 'outro' é o sentinela de "não derivado" — canal manual ou já derivado
+  # (landing_page, meta_ads) nunca é sobrescrito.
+  def derive_channel_from_first_contact(lead, message)
+    return unless lead.channel == 'outro'
+
+    channel, source = Ramon::SourceCatalog.derive_from_message(message.content)
+    channel ||= message.inbox&.channel_type == 'Channel::Instagram' ? 'instagram' : 'indicacao'
+    attrs = { channel: channel }
+    attrs[:source] = source if source.present? && lead.source.blank?
+    lead.update!(attrs)
   end
 end
