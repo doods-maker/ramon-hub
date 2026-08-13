@@ -175,5 +175,52 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
         post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(telefone: '55 48 99999-0000', nome: 'Maria'), as: :json
       end.to change { account.leads.count }.by(1)
     end
+
+    context 'with structured quiz payload' do
+      let(:quiz_params) do
+        {
+          qualificado: true,
+          duvidas: ['Renda familiar'],
+          respostas: [
+            { id: 'sequela', pergunta: 'Sequela permanente', resposta: 'Sim, tenho sequela', valor: 'sim' },
+            { id: 'renda', pergunta: 'Renda por pessoa', resposta: 'Perto de meio salário', valor: 'meio-salario', duvida: true }
+          ]
+        }
+      end
+
+      it 'stores the quiz under custom_attributes and starts at qualificacao' do
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(quiz_params), as: :json
+
+        lead = Lead.last
+        expect(lead.custom_attributes['quiz']).to include(
+          'qualificado' => true,
+          'duvidas' => ['Renda familiar']
+        )
+        expect(lead.custom_attributes['quiz']['respostas'].length).to eq(2)
+        expect(lead.lead_stage.label).to eq('fase-qualificacao')
+      end
+
+      it 'starts a disqualified quiz lead at the first stage' do
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(quiz_params, qualificado: false), as: :json
+        expect(Lead.last.lead_stage).to eq stage_novo
+      end
+
+      it 'merges the quiz into an existing open lead without moving its stage' do
+        contact = create(:contact, account: account, phone_number: '+5548999887766')
+        existing = create(:lead, account: account, contact: contact, lead_stage: stage_reuniao)
+
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(quiz_params), as: :json
+
+        expect(existing.reload.custom_attributes.dig('quiz', 'qualificado')).to be(true)
+        expect(existing.lead_stage).to eq stage_reuniao
+      end
+    end
+
+    context 'without quiz payload' do
+      it 'keeps the lead at the first stage' do
+        post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
+        expect(Lead.last.lead_stage).to eq stage_novo
+      end
+    end
   end
 end
