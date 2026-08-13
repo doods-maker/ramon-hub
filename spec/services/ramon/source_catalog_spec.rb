@@ -34,4 +34,34 @@ RSpec.describe Ramon::SourceCatalog do
       expect(described_class.valid?('inexistente')).to be false
     end
   end
+
+  describe '.derive_from_message' do
+    it 'derives google_seo from the institutional site signature' do
+      expect(described_class.derive_from_message('Olá! Vim pelo site do escritório e gostaria de falar com a equipe.'))
+        .to eq(%w[google_seo site-institucional])
+    end
+
+    it 'derives landing_page from the classic LP signature' do
+      expect(described_class.derive_from_message('Olá, vim pelo site e gostaria de tirar dúvidas sobre o auxílio-acidente.'))
+        .to eq(%w[landing_page lp:whatsapp])
+    end
+
+    it 'derives landing_page from the triage quiz signature' do
+      expect(described_class.derive_from_message("Olá! Fiz a triagem de auxílio-acidente no site.\nTriagem — Auxílio-acidente"))
+        .to eq(%w[landing_page lp:triagem])
+    end
+
+    it 'derives instagram from the bio link signature' do
+      expect(described_class.derive_from_message('Olá! Vim pelo Instagram e quero avaliar meu caso.'))
+        .to eq(%w[instagram instagram-bio])
+    end
+
+    it 'returns nil for unsigned text' do
+      expect(described_class.derive_from_message('oi, tudo bem?')).to be_nil
+    end
+
+    it 'returns nil for blank text' do
+      expect(described_class.derive_from_message(nil)).to be_nil
+    end
+  end
 end

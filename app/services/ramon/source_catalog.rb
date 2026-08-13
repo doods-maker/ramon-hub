@@ -21,6 +21,17 @@ class Ramon::SourceCatalog
     [/google|\bseo\b/i, 'google_seo']
   ].freeze
 
+  # Assinaturas do texto pré-preenchido dos botões wa.me (1ª mensagem da conversa).
+  # A mais específica vem primeiro: "site do escritório" (site institucional) tem
+  # que vencer "vim pelo site e gostaria" (texto atual das LPs em produção —
+  # mudar esses textos quebra a derivação; ver plano onda1-aquisicao-limpa).
+  SIGNATURES = [
+    [/vim pelo site do escrit[óo]rio/i, %w[google_seo site-institucional]],
+    [/vim pelo site e gostaria/i, %w[landing_page lp:whatsapp]],
+    [/fiz a triagem/i, %w[landing_page lp:triagem]],
+    [/vim pelo instagram/i, %w[instagram instagram-bio]]
+  ].freeze
+
   def self.labels
     @labels ||= CHANNELS.to_h { |c| [c[:key], c[:label]] }
   end
@@ -33,5 +44,11 @@ class Ramon::SourceCatalog
     return nil if source.blank?
 
     RULES.find { |pattern, _key| source.match?(pattern) }&.last
+  end
+
+  def self.derive_from_message(text)
+    return nil if text.blank?
+
+    SIGNATURES.find { |pattern, _result| text.match?(pattern) }&.last
   end
 end
