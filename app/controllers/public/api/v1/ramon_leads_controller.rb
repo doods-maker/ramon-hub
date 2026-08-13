@@ -23,6 +23,9 @@ class Public::Api::V1::RamonLeadsController < PublicController
     if lead
       # Lead ainda vivo no funil → não duplica: registra atividade na Linha da Vida.
       lead.lead_activities.create!(account: account, kind: 'lp_recaptured', to_value: recapture_source)
+      # Triagem nova vale registrar; a etapa NÃO anda sozinha (um lead em
+      # Negociação não pode regredir porque refez o quiz).
+      lead.update!(custom_attributes: lead.custom_attributes.merge(quiz_attributes)) if quiz_attributes.present?
     else
       lead = create_lead(contact, phone)
     end
@@ -66,17 +69,52 @@ class Public::Api::V1::RamonLeadsController < PublicController
   def create_lead(contact, phone)
     account.leads.create!(
       name: params[:nome].to_s.strip.presence || phone,
-      lead_stage: account.lead_stages.order(:position).first,
+      lead_stage: initial_stage,
       contact_id: contact.id,
       source: params[:campanha].to_s.presence,
       channel: 'landing_page',
-      custom_attributes: utm_attributes
+      custom_attributes: utm_attributes.merge(quiz_attributes)
     )
   end
 
   def utm_attributes
     utm = UTM_KEYS.index_with { |key| params[key].to_s.strip.first(255).presence }.compact
     utm.present? ? { 'utm' => utm } : {}
+  end
+
+  # Lead qualificado pelo quiz nasce em Qualificação (design 13/08, decisão 4):
+  # o SDR confirma com documento — não recomeça do "chegou alguém".
+  def initial_stage
+    (quiz_qualificado? && account.lead_stages.find_by(label: 'fase-qualificacao')) ||
+      account.lead_stages.order(:position).first
+  end
+
+  def quiz_qualificado?
+    quiz_attributes.dig('quiz', 'qualificado') == true
+  end
+
+  QUIZ_RESPOSTA_KEYS = %i[id pergunta resposta valor reprova duvida].freeze
+
+  def quiz_attributes
+    @quiz_attributes ||= begin
+      respostas = quiz_respostas
+      respostas.empty? ? {} : { 'quiz' => quiz_payload(respostas) }
+    end
+  end
+
+  def quiz_respostas
+    Array.wrap(params[:respostas]).first(20).filter_map do |r|
+      r.permit(*QUIZ_RESPOSTA_KEYS).to_h.compact_blank if r.respond_to?(:permit)
+    end
+  end
+
+  def quiz_payload(respostas)
+    {
+      'qualificado' => ActiveModel::Type::Boolean.new.cast(params[:qualificado]) == true,
+      'duvidas' => Array.wrap(params[:duvidas]).map { |d| d.to_s.first(120) }.first(10),
+      'respostas' => respostas,
+      'em' => Time.current.iso8601
+    }
   end
 
   # Consentimento LGPD de marketing (item 20 do plano mestre).

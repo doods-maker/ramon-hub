@@ -664,6 +664,12 @@
         "HIDDEN": "+{count} older in the History tab",
         "SYSTEM": "System"
       },
+      "QUIZ": {
+        "TITLE": "LP triage",
+        "QUALIFIED": "Quiz-qualified",
+        "DISQUALIFIED": "Quiz-disqualified",
+        "DOUBT": "⚠ Attention point: {doubt}"
+      },
       "NEXT_ACTION": {
         "TITLE": "Next action",
         "DONE": "Done ✓",

@@ -79,6 +79,41 @@ RSpec.describe RamonLeadListener do
       expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: plain)) }
         .not_to(change { lead.reload.custom_attributes })
     end
+
+    context 'when deriving channel on first contact' do
+      it 'turns an unsigned whatsapp lead into indicacao' do
+        lead.update!(channel: 'outro', source: nil)
+        incoming = create(:message, account: account, conversation: conversation, message_type: :incoming,
+                                    content: 'oi, tudo bem?')
+        listener.message_created(Events::Base.new('message.created', Time.zone.now, message: incoming))
+        expect(lead.reload.channel).to eq('indicacao')
+      end
+
+      it 'derives channel and source from a signature message' do
+        lead.update!(channel: 'outro', source: nil)
+        incoming = create(:message, account: account, conversation: conversation, message_type: :incoming,
+                                    content: 'Olá! Vim pelo site do escritório e gostaria de falar com a equipe.')
+        listener.message_created(Events::Base.new('message.created', Time.zone.now, message: incoming))
+        expect(lead.reload).to have_attributes(channel: 'google_seo', source: 'site-institucional')
+      end
+
+      it 'does not override a channel that is already derived' do
+        lead.update!(channel: 'landing_page', source: 'auxilio-acidente')
+        incoming = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
+        listener.message_created(Events::Base.new('message.created', Time.zone.now, message: incoming))
+        expect(lead.reload.channel).to eq('landing_page')
+      end
+
+      it 'derives instagram from an instagram inbox without signature' do
+        instagram_inbox = create(:channel_instagram, account: account).inbox
+        instagram_conversation = create(:conversation, account: account, inbox: instagram_inbox, contact: contact)
+        lead.update!(channel: 'outro', source: nil, conversation: instagram_conversation)
+        incoming = create(:message, account: account, conversation: instagram_conversation, message_type: :incoming,
+                                    content: 'vi o perfil de vocês')
+        listener.message_created(Events::Base.new('message.created', Time.zone.now, message: incoming))
+        expect(lead.reload.channel).to eq('instagram')
+      end
+    end
   end
 
   # Colheita NÃO é mais automática por mensagem (decisão 20/07: só sob demanda
