@@ -34,6 +34,10 @@ class Ramon::DriveExportService
   end
 
   def exportar(item, attachment)
+    @lead.reload # recheck contra estado fresco: outro job pode ter subido este item desde a listagem
+    # ponytail: ainda cabe corrida na janela de segundos entre 2 jobs quase simultâneos — lock por lead se aparecer na prática
+    return if drive_state.dig('itens', item.id.to_s).present?
+
     nome_item = item.title.presence || item.content.truncate(60)
     pdf_io, content_type, ext = to_pdf(attachment)
     file_id = Ramon::DriveClient.upload(name: "#{nome_item} — #{nome_cliente}#{ext}", io: pdf_io,
@@ -44,7 +48,8 @@ class Ramon::DriveExportService
   end
 
   # jpg/png viram PDF de 1 página via prawn; PDF passa direto; heic/etc sobem
-  # no formato original. ponytail: conversão além disso só se aparecer na prática.
+  # no formato original. ponytail: conversão além disso só se aparecer na prática;
+  # imagem corrompida levanta e o job morre sem retry — tratar se aparecer na prática.
   def to_pdf(attachment)
     bytes = attachment.file.download
     case attachment.file.content_type

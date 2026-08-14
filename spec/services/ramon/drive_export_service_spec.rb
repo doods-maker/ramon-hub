@@ -69,6 +69,27 @@ RSpec.describe Ramon::DriveExportService do
       expect(Ramon::DriveClient).not_to have_received(:shortcut)
     end
 
+    # race: outro job grava drive.itens pro mesmo item entre a listagem (feita
+    # sobre o @lead em memória) e o upload (exportar recheca via reload antes de subir)
+    it 'nao sobe de novo quando outro job ja gravou drive.itens pro item entre a listagem e o export' do
+      attachment = attachment_for('sample.pdf', 'application/pdf')
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'pendente' },
+                        'doc_anexos' => { item_a.id.to_s => attachment.id }
+                      })
+      # simula o job concorrente: grava direto no banco, por fora do objeto
+      # `lead` em memória — pendentes_de_export ainda o lista como pendente
+      Lead.find(lead.id).update_columns(
+        custom_attributes: lead.custom_attributes.merge('drive' => { 'itens' => { item_a.id.to_s => 'concorrente' } })
+      )
+
+      described_class.new(lead).perform
+
+      expect(Ramon::DriveClient).not_to have_received(:upload)
+      expect(Ramon::DriveClient).not_to have_received(:shortcut)
+      expect(lead.reload.custom_attributes.dig('drive', 'itens', item_a.id.to_s)).to eq('concorrente')
+    end
+
     # (d) checklist completo -> rename com "— COMPLETO" + concluido_em gravado
     it 'conclui a pasta quando o checklist ja esta 100% exportado' do
       lead = won_lead(custom_attributes: {

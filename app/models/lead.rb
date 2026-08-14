@@ -207,7 +207,7 @@ class Lead < ApplicationRecord
 
   # Ponte Drive (ADR-0002): export incremental dos docs conferidos de lead ganho.
   def enqueue_drive_export
-    return if won_at.blank? || ENV.fetch('RAMON_DRIVE_CREDENTIALS', nil).blank?
+    return if won_at.blank? || !Ramon::DriveClient.configured?
 
     # Job barato e idempotente: o service filtra o que já subiu; disparar em todo
     # update de custom_attributes de lead ganho é aceitável e cobre o backlog
