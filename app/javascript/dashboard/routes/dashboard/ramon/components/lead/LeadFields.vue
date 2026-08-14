@@ -6,7 +6,6 @@ import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadTasksList from './LeadTasksList.vue';
-import DocChecklist from './DocChecklist.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
@@ -662,8 +661,6 @@ const toggleConsent = () =>
     </template>
 
     <LeadTasksList v-if="lead.id" :lead-id="lead.id" />
-
-    <DocChecklist v-if="lead.thesis_id" :lead="lead" />
 
     <div
       v-if="lead.custom_attributes?.advbox"

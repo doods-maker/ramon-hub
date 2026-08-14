@@ -7,6 +7,8 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 
 const props = defineProps({
   lead: { type: Object, required: true },
+  // ainda não lido aqui — chega pronto pra Task 2 (contexto conversa/gaveta)
+  context: { type: String, default: 'drawer' }, // eslint-disable-line vue/no-unused-properties
 });
 defineOptions({ name: 'DocChecklist' });
 

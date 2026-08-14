@@ -653,6 +653,7 @@
         "PLAYBOOK": "Playbook",
         "IA": "IA",
         "SIMULADOR": "Simulador",
+        "DOCUMENTS": "Documentos",
         "CONTRACT": "Contrato"
       },
       "MACROS_TITLE": "Macros da conversa",

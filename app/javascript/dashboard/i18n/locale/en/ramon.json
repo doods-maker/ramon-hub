@@ -653,6 +653,7 @@
         "PLAYBOOK": "Playbook",
         "IA": "AI",
         "SIMULADOR": "Simulator",
+        "DOCUMENTS": "Documents",
         "CONTRACT": "Contract"
       },
       "MACROS_TITLE": "Conversation macros",

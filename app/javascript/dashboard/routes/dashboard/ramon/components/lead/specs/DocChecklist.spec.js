@@ -35,9 +35,9 @@ const build = (updateSpy = vi.fn()) =>
     },
   });
 
-const mountChecklist = (lead, updateSpy = vi.fn()) =>
+const mountChecklist = (lead, updateSpy = vi.fn(), extraProps = {}) =>
   shallowMount(DocChecklist, {
-    props: { lead },
+    props: { lead, ...extraProps },
     global: { plugins: [build(updateSpy)], mocks: { $t: k => k } },
   });
 
@@ -95,6 +95,13 @@ describe('DocChecklist.vue', () => {
         doc_status: { 5: 'recebido', 4: 'solicitado' },
       },
     });
+  });
+
+  it('aceita o prop context sem mudar o render', () => {
+    const wrapper = mountChecklist(baseLead, vi.fn(), {
+      context: 'conversation',
+    });
+    expect(wrapper.find('[data-testid="doc-count"]').exists()).toBe(true);
   });
 
   it('disables the charge button when every document is received', () => {
