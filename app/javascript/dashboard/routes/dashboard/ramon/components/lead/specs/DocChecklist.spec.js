@@ -136,4 +136,51 @@ describe('DocChecklist.vue', () => {
       wrapper.find('[data-testid="doc-charge"]').attributes('disabled')
     ).toBeDefined();
   });
+
+  it('mostra o chip quando ha doc_sugestao pendente e some quando resolvida', () => {
+    const leadPendente = {
+      ...baseLead,
+      custom_attributes: {
+        ...baseLead.custom_attributes,
+        doc_sugestao: { item_id: 4, attachment_id: 77, resolvida: false },
+      },
+    };
+    const wrapperPendente = mountChecklist(leadPendente);
+    expect(wrapperPendente.find('[data-testid="doc-sugestao"]').exists()).toBe(
+      true
+    );
+
+    const leadResolvida = {
+      ...baseLead,
+      custom_attributes: {
+        ...baseLead.custom_attributes,
+        doc_sugestao: { item_id: 4, attachment_id: 77, resolvida: true },
+      },
+    };
+    const wrapperResolvida = mountChecklist(leadResolvida);
+    expect(wrapperResolvida.find('[data-testid="doc-sugestao"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('confirmar marca recebido, vincula anexo e resolve a sugestao', async () => {
+    const update = vi.fn();
+    const lead = {
+      ...baseLead,
+      custom_attributes: {
+        ...baseLead.custom_attributes,
+        doc_sugestao: { item_id: 4, attachment_id: 77, resolvida: false },
+      },
+    };
+    const wrapper = mountChecklist(lead, update);
+    await wrapper.find('[data-testid="doc-sugestao-confirm"]').trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      custom_attributes: {
+        doc_status: { 4: 'recebido' },
+        doc_anexos: { 4: 77 },
+        doc_sugestao: { resolvida: true },
+      },
+    });
+  });
 });

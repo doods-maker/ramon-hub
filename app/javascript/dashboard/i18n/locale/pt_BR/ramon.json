@@ -812,7 +812,12 @@
         "ITEM": "• {item}",
         "CLOSING": "Assim que puder me enviar, seguimos com o seu pedido. Obrigado!"
       },
-      "CYCLE_HINT": "Clique para alternar: pendente → solicitado → recebido"
+      "CYCLE_HINT": "Clique para alternar: pendente → solicitado → recebido",
+      "SUGESTAO": {
+        "TEXTO": "Parece \"{item}\" — marcar como recebido?",
+        "CONFIRMAR": "Marcar recebido",
+        "DISPENSAR": "Dispensar"
+      }
     },
     "PLAYBOOKS": {
       "TITLE": "Playbooks",

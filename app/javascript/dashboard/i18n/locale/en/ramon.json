@@ -812,7 +812,12 @@
         "ITEM": "• {item}",
         "CLOSING": "Once you can send them over, we'll proceed with your request. Thank you!"
       },
-      "CYCLE_HINT": "Click to cycle: pending → requested → received"
+      "CYCLE_HINT": "Click to cycle: pending → requested → received",
+      "SUGESTAO": {
+        "TEXTO": "Looks like \"{item}\" — mark as received?",
+        "CONFIRMAR": "Mark received",
+        "DISPENSAR": "Dismiss"
+      }
     },
     "PLAYBOOKS": {
       "TITLE": "Playbooks",
