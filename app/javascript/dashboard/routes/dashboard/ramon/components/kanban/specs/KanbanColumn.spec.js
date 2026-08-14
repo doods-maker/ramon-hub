@@ -3,7 +3,7 @@ import Draggable from 'vuedraggable';
 import KanbanColumn from '../KanbanColumn.vue';
 import LeadCard from '../LeadCard.vue';
 
-const stage = { id: 5, name: 'Qualificação' };
+const stage = { id: 5, name: 'Qualificação', probability: 40 };
 const leads = [{ id: 10, name: 'João', lead_stage_id: 5, position: 0 }];
 
 const mountColumn = (props = {}) =>
@@ -84,6 +84,55 @@ describe('KanbanColumn.vue', () => {
     expect(wrapper.find('[data-testid="stage-total"]').text()).toMatch(
       /R\$\s?2\s?mil/
     );
+  });
+
+  describe('ponderado e conversão no header', () => {
+    it('mostra o ponderado visível (não sr-only) quando a etapa tem probability', () => {
+      const wrapper = mount(KanbanColumn, {
+        props: {
+          stage: { id: 1, name: 'Novo', probability: 40 },
+          leads: [{ id: 1, lead_stage_id: 1, value: 1000 }],
+        },
+        global: { mocks: { $t: k => k } },
+      });
+      const weighted = wrapper.find('[data-testid="stage-weighted"]');
+      expect(weighted.exists()).toBe(true);
+      expect(weighted.classes()).not.toContain('sr-only');
+      expect(weighted.text()).toMatch(/~R\$/);
+    });
+
+    it('não mostra o ponderado quando probability é 0 (ex.: Perdido)', () => {
+      const wrapper = mount(KanbanColumn, {
+        props: {
+          stage: { id: 1, name: 'Perdido', probability: 0 },
+          leads: [{ id: 1, lead_stage_id: 1, value: 1000 }],
+        },
+        global: { mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="stage-weighted"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('renderiza a conversão quando a prop conversionRate é passada', () => {
+      const wrapper = mount(KanbanColumn, {
+        props: { stage, leads, conversionRate: 35 },
+        global: { mocks: { $t: (k, v) => (v ? `${k}:${v.rate}` : k) } },
+      });
+      const conversion = wrapper.find('[data-testid="stage-conversion"]');
+      expect(conversion.exists()).toBe(true);
+      expect(conversion.text()).toContain('35');
+    });
+
+    it('não renderiza a conversão sem a prop (default null)', () => {
+      const wrapper = mount(KanbanColumn, {
+        props: { stage, leads },
+        global: { mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="stage-conversion"]').exists()).toBe(
+        false
+      );
+    });
   });
 
   describe('alertas agregados no header', () => {

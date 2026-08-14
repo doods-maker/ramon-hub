@@ -13,8 +13,13 @@ const buildStore = ({ updateStage = vi.fn() } = {}) =>
             { id: 1, name: 'Alta', weight: 3, position: 0 },
           ],
           getStages: () => [
-            { id: 1, name: 'Novo', stalled_after_days: 3 },
-            { id: 2, name: 'Qualificação', stalled_after_days: null },
+            { id: 1, name: 'Novo', stalled_after_days: 3, probability: 20 },
+            {
+              id: 2,
+              name: 'Qualificação',
+              stalled_after_days: null,
+              probability: null,
+            },
           ],
         },
         actions: {
@@ -85,5 +90,49 @@ it('clears the limit when the input is emptied', async () => {
   expect(updateStage).toHaveBeenCalledWith(expect.anything(), {
     id: 1,
     stalled_after_days: null,
+  });
+});
+
+it('renders one probability input per stage and saves on change', async () => {
+  const updateStage = vi.fn();
+  const wrapper = mountPage({ updateStage });
+  const inputs = wrapper.findAll('[data-testid="stage-probability"]');
+  expect(inputs).toHaveLength(2);
+  expect(inputs[0].element.value).toBe('20');
+
+  await inputs[1].setValue('50');
+  expect(updateStage).toHaveBeenCalledWith(expect.anything(), {
+    id: 2,
+    probability: 50,
+  });
+});
+
+it('clamps probability above 100 before saving', async () => {
+  const updateStage = vi.fn();
+  const wrapper = mountPage({ updateStage });
+  const first = wrapper.findAll('[data-testid="stage-probability"]')[0];
+  await first.setValue('150');
+  expect(updateStage).toHaveBeenCalledWith(expect.anything(), {
+    id: 1,
+    probability: 100,
+  });
+});
+
+it('does not save probability when the value is unchanged', async () => {
+  const updateStage = vi.fn();
+  const wrapper = mountPage({ updateStage });
+  const first = wrapper.findAll('[data-testid="stage-probability"]')[0];
+  await first.setValue('20');
+  expect(updateStage).not.toHaveBeenCalled();
+});
+
+it('clears probability when the input is emptied', async () => {
+  const updateStage = vi.fn();
+  const wrapper = mountPage({ updateStage });
+  const first = wrapper.findAll('[data-testid="stage-probability"]')[0];
+  await first.setValue('');
+  expect(updateStage).toHaveBeenCalledWith(expect.anything(), {
+    id: 1,
+    probability: null,
   });
 });

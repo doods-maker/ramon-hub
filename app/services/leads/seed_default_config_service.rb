@@ -137,8 +137,22 @@ class Leads::SeedDefaultConfigService
         t.honorario_percentual = thesis_attrs['honorario_percentual']
         t.honorario_n_mensalidades = thesis_attrs['honorario_n_mensalidades']
       end
+      reconcile_thesis_honorario(thesis, thesis_attrs)
       seed_thesis_items(thesis, thesis_attrs['items'] || [])
     end
+  end
+
+  # find_or_create_by! só roda o bloco na criação — tese já existente (ex.: seed
+  # rodado antes do honorário 30/3 existir no YAML) nunca ganhava o valor. Só
+  # preenche quando os DOIS campos estão nulos: honorário customizado à mão
+  # (ex. 25% + 2) nunca é sobrescrito pelo re-seed.
+  def reconcile_thesis_honorario(thesis, thesis_attrs)
+    return unless thesis.honorario_percentual.nil? && thesis.honorario_n_mensalidades.nil?
+
+    thesis.update!(
+      honorario_percentual: thesis_attrs['honorario_percentual'],
+      honorario_n_mensalidades: thesis_attrs['honorario_n_mensalidades']
+    )
   end
 
   def seed_thesis_items(thesis, items)

@@ -7,6 +7,8 @@ theses:
     description: "Benefício para quem está temporariamente incapaz para o trabalho habitual por mais de 15 dias. Lei 8.213/91, arts. 59 a 63."
     area: "previdenciario"
     position: 1
+    honorario_percentual: 30
+    honorario_n_mensalidades: 3
     items:
       - section: "abertura"
         title: "Quebra-gelo (afastado por doença)"
@@ -73,6 +75,8 @@ theses:
     description: "Para o segurado total e permanentemente incapaz, insuscetível de reabilitação. Lei 8.213/91, arts. 42 a 47."
     area: "previdenciario"
     position: 2
+    honorario_percentual: 30
+    honorario_n_mensalidades: 3
     items:
       - section: "abertura"
         title: "Quebra-gelo"
@@ -402,6 +406,8 @@ theses:
     description: "Benefício assistencial de 1 salário mínimo a pessoa com deficiência de baixa renda. NÃO exige contribuição ao INSS. Lei 8.742/93, art. 20."
     area: "previdenciario"
     position: 4
+    honorario_percentual: 30
+    honorario_n_mensalidades: 3
     items:
       - section: "abertura"
         title: "Quebra-gelo"
@@ -464,6 +470,8 @@ theses:
     description: "Adicional de 25% sobre a aposentadoria por incapacidade permanente quando o segurado precisa de ajuda permanente de outra pessoa. Lei 8.213/91, art. 45."
     area: "previdenciario"
     position: 5
+    honorario_percentual: 30
+    honorario_n_mensalidades: 3
     items:
       - section: "abertura"
         title: "Quebra-gelo"

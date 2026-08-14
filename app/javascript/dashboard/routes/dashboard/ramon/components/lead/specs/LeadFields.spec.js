@@ -4,6 +4,7 @@ import LeadFields from '../LeadFields.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
 import LeadsAPI from 'dashboard/api/leads';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { formatBrl } from '../../../helpers/currency';
 
 vi.mock('dashboard/api/leads', () => ({
   default: { portalLink: vi.fn() },
@@ -203,6 +204,45 @@ describe('LeadFields.vue', () => {
     expect(input.element.value).toContain('R$');
   });
 
+  describe('badge de valor estimado automático', () => {
+    it('mostra o badge quando origem é auto', () => {
+      const wrapper = shallowMount(LeadFields, {
+        props: {
+          lead: {
+            ...lead,
+            custom_attributes: { valor_estimado: { origem: 'auto' } },
+          },
+        },
+        global: { plugins: [build()], mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('esconde o badge quando origem é manual', () => {
+      const wrapper = shallowMount(LeadFields, {
+        props: {
+          lead: {
+            ...lead,
+            custom_attributes: { valor_estimado: { origem: 'manual' } },
+          },
+        },
+        global: { plugins: [build()], mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('esconde o badge quando não há flag', () => {
+      const wrapper = mountFields();
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        false
+      );
+    });
+  });
+
   it('prompts for value when moving to a won stage and lead has no value', async () => {
     const update = vi.fn();
     const wrapper = shallowMount(LeadFields, {
@@ -238,16 +278,23 @@ describe('LeadFields.vue', () => {
     });
   });
 
-  it('does not prompt when the lead already has a value', async () => {
+  it('prompts prefilled with the current value when the lead already has one', async () => {
     const update = vi.fn();
     const wrapper = mountFields(update); // lead.value = 100
     await wrapper.find('[data-testid="field-stage"]').setValue(2);
+    expect(update).not.toHaveBeenCalled();
     expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
-      false
+      true
     );
+    expect(wrapper.find('[data-testid="stage-won-value"]').element.value).toBe(
+      formatBrl(100)
+    );
+
+    await wrapper.find('[data-testid="stage-won-save"]').trigger('click');
     expect(update).toHaveBeenCalledWith(expect.anything(), {
       id: 3,
       lead_stage_id: 2,
+      value: 100,
     });
   });
 

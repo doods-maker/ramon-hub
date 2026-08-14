@@ -26,6 +26,15 @@ const saveStalled = (stage, raw) => {
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
+const saveProbability = (stage, raw) => {
+  const value =
+    raw === '' ? null : Math.max(0, Math.min(100, Math.floor(Number(raw))));
+  if (value === (stage.probability ?? null)) return;
+  store
+    .dispatch('leadConfig/updateStage', { id: stage.id, probability: value })
+    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
+};
+
 const newBenefit = ref('');
 const newPriority = ref('');
 const newWeight = ref(1);
@@ -273,6 +282,19 @@ const submitImport = async () => {
             />
             <span class="text-xs text-n-slate-9">{{
               $t('RAMON.FUNIL_CONFIG.CADENCE_DAYS')
+            }}</span>
+            <input
+              :value="s.probability"
+              data-testid="stage-probability"
+              type="number"
+              min="0"
+              max="100"
+              :title="$t('RAMON.FUNIL_CONFIG.PROBABILITY_HINT')"
+              class="w-20 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              @change="e => saveProbability(s, e.target.value)"
+            />
+            <span class="text-xs text-n-slate-9">{{
+              $t('RAMON.FUNIL_CONFIG.PROBABILITY')
             }}</span>
           </span>
         </li>

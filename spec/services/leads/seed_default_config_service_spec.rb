@@ -63,6 +63,31 @@ RSpec.describe Leads::SeedDefaultConfigService do
     expect(tese.honorario_n_mensalidades).to eq(3)
   end
 
+  it 'seeda honorário 30% + 3 mensalidades em TODAS as teses (decisão Eduardo 14/08)' do
+    expect(account.theses.pluck(:honorario_percentual)).to all(eq(30))
+    expect(account.theses.pluck(:honorario_n_mensalidades)).to all(eq(3))
+  end
+
+  it 'preenche o honorário no re-seed quando a tese existente está com os dois campos nulos' do
+    tese = account.theses.find_by!(name: 'BPC/LOAS por deficiência')
+    tese.update!(honorario_percentual: nil, honorario_n_mensalidades: nil)
+
+    described_class.new(account).perform
+
+    expect(tese.reload.honorario_percentual).to eq(30)
+    expect(tese.reload.honorario_n_mensalidades).to eq(3)
+  end
+
+  it 'NÃO sobrescreve honorário customizado da tese no re-seed' do
+    tese = account.theses.find_by!(name: 'BPC/LOAS por deficiência')
+    tese.update!(honorario_percentual: 25, honorario_n_mensalidades: 2)
+
+    described_class.new(account).perform
+
+    expect(tese.reload.honorario_percentual).to eq(25)
+    expect(tese.reload.honorario_n_mensalidades).to eq(2)
+  end
+
   it 'é idempotente ao rodar o seed de teses 2x (não duplica teses)' do
     expect { described_class.new(account).perform }.not_to(change { account.theses.count })
   end

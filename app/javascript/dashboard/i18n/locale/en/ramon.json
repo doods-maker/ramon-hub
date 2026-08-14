@@ -406,7 +406,8 @@
         "RESPOND_NOW": "Reply now"
       },
       "COLUMN": {
-        "WEIGHTED": "~{value} weighted",
+        "CONVERSION": "↳ {rate}%",
+        "CONVERSION_TIP": "% of leads that advance from this stage (90d)",
         "STALLED": "{count} no contact >24h",
         "PRESCRIBING": "{value}/mo prescribing",
         "COLLAPSE": "Collapse column",
@@ -476,6 +477,8 @@
       "CADENCE": "Stage cadence",
       "CADENCE_HINT": "Days without progress until the lead is flagged as stalled (empty = no limit; twice that turns red)",
       "CADENCE_DAYS": "days",
+      "PROBABILITY": "Probability (%)",
+      "PROBABILITY_HINT": "used in the weighted forecast",
       "REMOVE": "Remove",
       "WEIGHT": "Weight",
       "WEIGHT_OF": "weight {weight}",
@@ -502,6 +505,8 @@
       "SDR": "SDR",
       "CLOSER": "Closer",
       "VALUE": "Value (R$)",
+      "VALUE_AUTO": "estimated",
+      "VALUE_AUTO_TIP": "Automatically estimated by the thesis rule — editing the field locks it as manual",
       "SOURCE": "Source",
       "CHANNEL": "Channel",
       "LOST_REASON": "Loss reason",

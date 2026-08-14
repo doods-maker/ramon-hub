@@ -29,6 +29,20 @@ const getters = useStoreGetters();
 const { t } = useI18n();
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
+
+// Conversão por etapa (do dashboard): mapa stage_id → rate, só quando alguém
+// de fato entrou na etapa na janela — mesma guarda de FunnelConversion.vue.
+const conversion = computed(
+  () => getters['ramonDashboard/getData']?.value?.conversion || []
+);
+const rateByStage = computed(() =>
+  Object.fromEntries(
+    conversion.value
+      .filter(row => row.entered > 0)
+      .map(row => [row.stage_id, row.rate])
+  )
+);
+const rateFor = stageId => rateByStage.value[stageId] ?? null;
 const lostReasons = computed(() => getters['leadConfig/getLostReasons'].value);
 const orderedStages = ref([]);
 const stageToRemove = ref(null);
@@ -107,9 +121,10 @@ const onMove = async ({ id, leadStageId, newIndex }) => {
     lostModalOpen.value = true;
     return;
   }
-  // Etapa de ganho de lead sem valor: segura o movimento e pede o valor, para
-  // o dossiê de ganho nascer já com o valor fechado (um único update no fim).
-  if (stage?.is_won && !lead?.value) {
+  // Etapa de ganho de lead: SEMPRE segura o movimento e pede confirmação do
+  // valor (pré-preenchido quando já existe), para o valor estimado automático
+  // nunca virar "valor de contrato" sem 1 clique/Enter humano.
+  if (stage?.is_won) {
     pendingMove.value = { id, leadStageId, position: newIndex };
     wonModalOpen.value = true;
     return;
@@ -119,7 +134,7 @@ const onMove = async ({ id, leadStageId, newIndex }) => {
     leadStageId: lead?.lead_stage_id,
     position: lead?.position,
   };
-  // Demais casos (inclui ganho de lead que já tem valor) persistem na hora.
+  // Demais casos persistem na hora.
   try {
     await store.dispatch('leads/move', { id, leadStageId, position: newIndex });
   } catch (e) {
@@ -530,6 +545,7 @@ const exportCsv = () => {
             :focused-lead-id="focusedLeadId"
             selectable
             :selected-lead-ids="selectedIds"
+            :conversion-rate="rateFor(element.id)"
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
@@ -608,6 +624,7 @@ const exportCsv = () => {
     >
       <WonValueModal
         v-if="wonModalOpen"
+        :initial-value="findLead(pendingMove?.id)?.value ?? null"
         @confirm-value="confirmWon"
         @cancel-value="cancelWon"
       />
