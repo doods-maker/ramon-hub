@@ -31,6 +31,9 @@ class RamonLeadListener < BaseListener
 
     apply_meta_referral(lead, message)
     derive_channel_from_first_contact(lead, message)
+
+    # Anexo de documento → IA sugere o item do checklist (confirmação humana no painel).
+    Ramon::DocMatchJob.perform_later(message.id) if message.attachments.any? { |a| %w[image file].include?(a.file_type) }
   end
 
   def lead_created(event)

@@ -142,8 +142,21 @@
       "CALCULOS": "Calculations",
       "REUNIOES": "Meetings",
       "RADAR": "Prescription radar",
+      "POS_VENDA": "Post-sale",
       "TV": "TV scoreboard",
       "RELATORIOS": "Reports"
+    },
+    "POS_VENDA": {
+      "TITLE": "Post-sale",
+      "SUBTITLE": "Wins awaiting documents — oldest to newest",
+      "DIAS": "{dias} days since the win",
+      "DOCS": "docs {received}/{total}",
+      "EMPTY": "No wins with pending documents 🎉",
+      "ERROR": "Could not load post-sale.",
+      "RETRY": "Retry",
+      "CONCLUIDOS": "Completed ({count})",
+      "DRIVE_CHIP": "on Drive",
+      "OPEN_CONVERSATION": "Conversation"
     },
     "RADAR": {
       "TITLE": "Prescription radar",
@@ -653,6 +666,7 @@
         "PLAYBOOK": "Playbook",
         "IA": "AI",
         "SIMULADOR": "Simulator",
+        "DOCUMENTS": "Documents",
         "CONTRACT": "Contract"
       },
       "MACROS_TITLE": "Conversation macros",
@@ -782,10 +796,12 @@
     },
     "DOCS": {
       "TITLE": "Documents",
+      "CARD_TITLE": "Documents: {received} of {total} received",
       "COUNT": "{received}/{total} received",
       "CHARGE": "Request pending",
       "COPIED": "Draft copied — paste it into WhatsApp",
       "COPY_FAILED": "Could not copy — try again",
+      "DRAFT_READY": "Draft added to the reply box — review and send",
       "STATUS": {
         "PENDENTE": "Pending",
         "SOLICITADO": "Requested",
@@ -796,7 +812,12 @@
         "ITEM": "• {item}",
         "CLOSING": "Once you can send them over, we'll proceed with your request. Thank you!"
       },
-      "CYCLE_HINT": "Click to cycle: pending → requested → received"
+      "CYCLE_HINT": "Click to cycle: pending → requested → received",
+      "SUGESTAO": {
+        "TEXTO": "Looks like \"{item}\" — mark as received?",
+        "CONFIRMAR": "Mark received",
+        "DISPENSAR": "Dismiss"
+      }
     },
     "PLAYBOOKS": {
       "TITLE": "Playbooks",

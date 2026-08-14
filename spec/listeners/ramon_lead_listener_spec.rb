@@ -116,6 +116,33 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe '#message_created -> IA casa anexo com item do checklist' do
+    let(:lead) do
+      create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
+                    conversation: conversation, contact: contact)
+    end
+
+    context 'when the incoming message has an image attachment' do
+      it 'enqueues Ramon::DocMatchJob' do
+        lead
+        message = create(:message, account: account, conversation: conversation, message_type: :incoming)
+        message.attachments.create!(account_id: account.id, file_type: :image,
+                                    file: fixture_file_upload(Rails.root.join('spec/assets/avatar.png'), 'image/png'))
+        expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message)) }
+          .to have_enqueued_job(Ramon::DocMatchJob).with(message.id)
+      end
+    end
+
+    context 'when the incoming message has no attachment' do
+      it 'does not enqueue Ramon::DocMatchJob' do
+        lead
+        message = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
+        expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message)) }
+          .not_to have_enqueued_job(Ramon::DocMatchJob)
+      end
+    end
+  end
+
   # Colheita NÃO é mais automática por mensagem (decisão 20/07: só sob demanda
   # pelo botão do painel / LeadColheitasController) — sem gatilho no message_created.
   describe '#message_created -> NÃO agenda colheita automática' do

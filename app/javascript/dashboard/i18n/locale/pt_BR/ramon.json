@@ -142,8 +142,21 @@
       "CALCULOS": "Cálculos",
       "REUNIOES": "Reuniões",
       "RADAR": "Radar de prescrição",
+      "POS_VENDA": "Pós-venda",
       "TV": "Placar de TV",
       "RELATORIOS": "Relatórios"
+    },
+    "POS_VENDA": {
+      "TITLE": "Pós-venda",
+      "SUBTITLE": "Ganhos aguardando documentos — do mais antigo pro mais novo",
+      "DIAS": "{dias} dias desde o ganho",
+      "DOCS": "docs {received}/{total}",
+      "EMPTY": "Nenhum ganho com documentos pendentes 🎉",
+      "ERROR": "Não deu para carregar o pós-venda.",
+      "RETRY": "Tentar de novo",
+      "CONCLUIDOS": "Concluídos ({count})",
+      "DRIVE_CHIP": "no Drive",
+      "OPEN_CONVERSATION": "Conversa"
     },
     "RADAR": {
       "TITLE": "Radar de prescrição",
@@ -653,6 +666,7 @@
         "PLAYBOOK": "Playbook",
         "IA": "IA",
         "SIMULADOR": "Simulador",
+        "DOCUMENTS": "Documentos",
         "CONTRACT": "Contrato"
       },
       "MACROS_TITLE": "Macros da conversa",
@@ -782,10 +796,12 @@
     },
     "DOCS": {
       "TITLE": "Documentos",
+      "CARD_TITLE": "Documentos: {received} de {total} recebidos",
       "COUNT": "{received}/{total} recebidos",
       "CHARGE": "Cobrar pendentes",
       "COPIED": "Rascunho copiado — cole no WhatsApp",
       "COPY_FAILED": "Não foi possível copiar — tente de novo",
+      "DRAFT_READY": "Rascunho na caixa de resposta — revise e envie",
       "STATUS": {
         "PENDENTE": "Pendente",
         "SOLICITADO": "Solicitado",
@@ -796,7 +812,12 @@
         "ITEM": "• {item}",
         "CLOSING": "Assim que puder me enviar, seguimos com o seu pedido. Obrigado!"
       },
-      "CYCLE_HINT": "Clique para alternar: pendente → solicitado → recebido"
+      "CYCLE_HINT": "Clique para alternar: pendente → solicitado → recebido",
+      "SUGESTAO": {
+        "TEXTO": "Parece \"{item}\" — marcar como recebido?",
+        "CONFIRMAR": "Marcar recebido",
+        "DISPENSAR": "Dispensar"
+      }
     },
     "PLAYBOOKS": {
       "TITLE": "Playbooks",

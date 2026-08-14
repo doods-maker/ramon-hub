@@ -1,8 +1,17 @@
 import { shallowMount } from '@vue/test-utils';
 import { createStore } from 'vuex';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 import DocChecklist from '../DocChecklist.vue';
 
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+// t: identidade, exceto DRAFT.ITEM — reproduz o "• {item}" real pra poder
+// conferir que o rascunho monta a lista com marcador.
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({
+    t: (key, params) =>
+      key === 'RAMON.DOCS.DRAFT.ITEM' ? `• ${params.item}` : key,
+  }),
+}));
 
 const alertSpy = vi.fn();
 const clipboardSpy = vi.fn();
@@ -35,9 +44,9 @@ const build = (updateSpy = vi.fn()) =>
     },
   });
 
-const mountChecklist = (lead, updateSpy = vi.fn()) =>
+const mountChecklist = (lead, updateSpy = vi.fn(), extraProps = {}) =>
   shallowMount(DocChecklist, {
-    props: { lead },
+    props: { lead, ...extraProps },
     global: { plugins: [build(updateSpy)], mocks: { $t: k => k } },
   });
 
@@ -97,6 +106,26 @@ describe('DocChecklist.vue', () => {
     });
   });
 
+  it('aceita o prop context sem mudar o render', () => {
+    const wrapper = mountChecklist(baseLead, vi.fn(), {
+      context: 'conversation',
+    });
+    expect(wrapper.find('[data-testid="doc-count"]').exists()).toBe(true);
+  });
+
+  it('no contexto conversa, cobrar pendentes emite INSERT_INTO_NORMAL_EDITOR e nao copia', async () => {
+    const wrapper = mountChecklist(baseLead, vi.fn(), {
+      context: 'conversation',
+    });
+    const spy = vi.spyOn(emitter, 'emit');
+    await wrapper.find('[data-testid="doc-charge"]').trigger('click');
+    expect(spy).toHaveBeenCalledWith(
+      BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR,
+      expect.stringContaining('•')
+    );
+    expect(clipboardSpy).not.toHaveBeenCalled();
+  });
+
   it('disables the charge button when every document is received', () => {
     const lead = {
       ...baseLead,
@@ -106,5 +135,52 @@ describe('DocChecklist.vue', () => {
     expect(
       wrapper.find('[data-testid="doc-charge"]').attributes('disabled')
     ).toBeDefined();
+  });
+
+  it('mostra o chip quando ha doc_sugestao pendente e some quando resolvida', () => {
+    const leadPendente = {
+      ...baseLead,
+      custom_attributes: {
+        ...baseLead.custom_attributes,
+        doc_sugestao: { item_id: 4, attachment_id: 77, resolvida: false },
+      },
+    };
+    const wrapperPendente = mountChecklist(leadPendente);
+    expect(wrapperPendente.find('[data-testid="doc-sugestao"]').exists()).toBe(
+      true
+    );
+
+    const leadResolvida = {
+      ...baseLead,
+      custom_attributes: {
+        ...baseLead.custom_attributes,
+        doc_sugestao: { item_id: 4, attachment_id: 77, resolvida: true },
+      },
+    };
+    const wrapperResolvida = mountChecklist(leadResolvida);
+    expect(wrapperResolvida.find('[data-testid="doc-sugestao"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('confirmar marca recebido, vincula anexo e resolve a sugestao', async () => {
+    const update = vi.fn();
+    const lead = {
+      ...baseLead,
+      custom_attributes: {
+        ...baseLead.custom_attributes,
+        doc_sugestao: { item_id: 4, attachment_id: 77, resolvida: false },
+      },
+    };
+    const wrapper = mountChecklist(lead, update);
+    await wrapper.find('[data-testid="doc-sugestao-confirm"]').trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      custom_attributes: {
+        doc_status: { 4: 'recebido' },
+        doc_anexos: { 4: 77 },
+        doc_sugestao: { resolvida: true },
+      },
+    });
   });
 });

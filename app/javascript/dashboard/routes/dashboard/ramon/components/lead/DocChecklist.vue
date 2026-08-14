@@ -4,9 +4,12 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const props = defineProps({
   lead: { type: Object, required: true },
+  context: { type: String, default: 'drawer' },
 });
 defineOptions({ name: 'DocChecklist' });
 
@@ -70,6 +73,40 @@ const persist = async docStatusNext => {
   }
 };
 
+// sugestão da IA (Task 5: custom_attributes.doc_sugestao) — chip de confirmação
+const sugestao = computed(() => {
+  const s = props.lead?.custom_attributes?.doc_sugestao;
+  if (!s || s.resolvida) return null;
+  const item = docItems.value.find(i => i.id === s.item_id);
+  // Sugestão de item já recebido não ajuda — trata como resolvida visualmente.
+  if (!item || statusOf(item) === 'recebido') return null;
+  return { ...s, item };
+});
+
+// guard: evita duplo clique enquanto a confirmação/dispensa está em voo
+const sugestaoPending = ref(false);
+const resolverSugestao = async aceitar => {
+  if (sugestaoPending.value) return;
+  sugestaoPending.value = true;
+  const patch = { doc_sugestao: { resolvida: true } };
+  if (aceitar) {
+    patch.doc_status = { [sugestao.value.item.id]: 'recebido' };
+    patch.doc_anexos = {
+      [sugestao.value.item.id]: sugestao.value.attachment_id,
+    };
+  }
+  try {
+    await store.dispatch('leads/update', {
+      id: props.lead.id,
+      custom_attributes: patch,
+    });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    sugestaoPending.value = false;
+  }
+};
+
 // guard por item: dois cliques rápidos pulavam um status do ciclo
 const pendingIds = ref(new Set());
 const cycle = async item => {
@@ -110,13 +147,20 @@ const chargePending = async () => {
     '',
     t('RAMON.DOCS.DRAFT.CLOSING'),
   ];
-  try {
-    await copyTextToClipboard(lines.join('\n'));
-  } catch (error) {
-    useAlert(t('RAMON.DOCS.COPY_FAILED'));
-    return;
+  // Princípio de aprovação: o texto cai como RASCUNHO no editor — quem envia é
+  // o Eduardo. Na gaveta (sem ReplyBox montado) o clipboard continua o caminho.
+  if (props.context === 'conversation') {
+    emitter.emit(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, lines.join('\n'));
+    useAlert(t('RAMON.DOCS.DRAFT_READY'));
+  } else {
+    try {
+      await copyTextToClipboard(lines.join('\n'));
+    } catch (error) {
+      useAlert(t('RAMON.DOCS.COPY_FAILED'));
+      return;
+    }
+    useAlert(t('RAMON.DOCS.COPIED'));
   }
-  useAlert(t('RAMON.DOCS.COPIED'));
 
   // marca só os que estavam pendentes como solicitados (merge)
   const next = { ...docStatus.value };
@@ -143,6 +187,37 @@ const chargePending = async () => {
           total: docItems.length,
         })
       }}</span>
+    </div>
+
+    <div
+      v-if="sugestao"
+      data-testid="doc-sugestao"
+      class="flex items-center gap-2 rounded-lg bg-n-amber-9/10 px-3 py-2 text-n-amber-11"
+    >
+      <span class="i-lucide-sparkles size-3.5" />
+      <span class="text-xs">{{
+        $t('RAMON.DOCS.SUGESTAO.TEXTO', {
+          item: sugestao.item.title || sugestao.item.content,
+        })
+      }}</span>
+      <button
+        type="button"
+        data-testid="doc-sugestao-confirm"
+        class="text-xs font-semibold underline disabled:opacity-60"
+        :disabled="sugestaoPending"
+        @click="resolverSugestao(true)"
+      >
+        {{ $t('RAMON.DOCS.SUGESTAO.CONFIRMAR') }}
+      </button>
+      <button
+        type="button"
+        data-testid="doc-sugestao-dismiss"
+        class="text-xs underline opacity-70 disabled:opacity-40"
+        :disabled="sugestaoPending"
+        @click="resolverSugestao(false)"
+      >
+        {{ $t('RAMON.DOCS.SUGESTAO.DISPENSAR') }}
+      </button>
     </div>
 
     <button

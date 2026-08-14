@@ -187,6 +187,64 @@ RSpec.describe Lead do
     end
   end
 
+  describe 'ponte Drive (ADR-0002)' do
+    let(:drive_env) { { RAMON_DRIVE_CREDENTIALS: 'path/to/creds.json', RAMON_DRIVE_ROOT_ID: 'root-id' } }
+
+    it 'enfileira o DriveExportJob quando o lead vira ganho com as duas envs configuradas' do
+      with_modified_env drive_env do
+        lead = create(:lead, account: account)
+        won = account.lead_stages.find_by!(is_won: true)
+        expect { lead.update!(lead_stage: won) }
+          .to have_enqueued_job(Ramon::DriveExportJob).with(lead.id)
+      end
+    end
+
+    it 'nao enfileira sem RAMON_DRIVE_CREDENTIALS' do
+      with_modified_env drive_env.merge(RAMON_DRIVE_CREDENTIALS: nil) do
+        lead = create(:lead, account: account)
+        won = account.lead_stages.find_by!(is_won: true)
+        expect { lead.update!(lead_stage: won) }
+          .not_to have_enqueued_job(Ramon::DriveExportJob)
+      end
+    end
+
+    it 'nao enfileira sem RAMON_DRIVE_ROOT_ID mesmo com RAMON_DRIVE_CREDENTIALS setada' do
+      with_modified_env drive_env.merge(RAMON_DRIVE_ROOT_ID: nil) do
+        lead = create(:lead, account: account)
+        won = account.lead_stages.find_by!(is_won: true)
+        expect { lead.update!(lead_stage: won) }
+          .not_to have_enqueued_job(Ramon::DriveExportJob)
+      end
+    end
+
+    it 'reenfileira em qualquer update de custom_attributes de lead ja ganho' do
+      with_modified_env drive_env do
+        lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by!(is_won: true))
+        expect { lead.update!(custom_attributes: { 'doc_status' => { '1' => 'recebido' } }) }
+          .to have_enqueued_job(Ramon::DriveExportJob).with(lead.id)
+      end
+    end
+  end
+
+  describe '#docs_counts' do
+    let(:thesis) { create(:thesis, account: account) }
+    let!(:doc_item) { create(:thesis_item, thesis: thesis, section: 'documento', content: 'RG') }
+
+    # item de outra seção não pode entrar na contagem
+    before { create(:thesis_item, thesis: thesis, section: 'colheita', content: 'Renda') }
+
+    it 'conta so itens de documento, com recebido vindo do doc_status' do
+      lead = create(:lead, account: account, thesis: thesis,
+                           custom_attributes: { 'doc_status' => { doc_item.id.to_s => 'recebido' } })
+      expect(lead.docs_counts).to eq(received: 1, total: 1)
+    end
+
+    it 'zera sem tese' do
+      lead = create(:lead, account: account)
+      expect(lead.docs_counts).to eq(received: 0, total: 0)
+    end
+  end
+
   describe '#ensure_portal_token!' do
     it 'gera o token sob demanda, persiste e reusa nas chamadas seguintes' do
       lead = create(:lead, account: account)

@@ -1,0 +1,216 @@
+require 'rails_helper'
+
+RSpec.describe Ramon::DriveExportService do
+  let(:account) { create(:account) }
+  let(:contact) { create(:contact, account: account, name: 'Maria das Dores', cpf: '529.982.247-25') }
+  let(:thesis) { create(:thesis, account: account) }
+  let!(:item_a) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'RG') }
+  let!(:item_b) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS') }
+  # A etapa precisa ser is_won: o before_save do Lead (apply_stage_timestamps)
+  # zera won_at passado direto quando a etapa nao e' de ganho.
+  let(:won_stage) { create(:lead_stage, account: account, is_won: true) }
+
+  def attachment_for(fixture, content_type, file_type: :file)
+    message = create(:message, account: account, conversation: create(:conversation, account: account))
+    message.attachments.create!(account_id: account.id, file_type: file_type,
+                                file: fixture_file_upload(Rails.root.join("spec/assets/#{fixture}"), content_type))
+  end
+
+  def won_lead(custom_attributes: {})
+    create(:lead, account: account, contact: contact, thesis: thesis, lead_stage: won_stage,
+                  won_at: Time.zone.now, custom_attributes: custom_attributes)
+  end
+
+  before do
+    allow(Ramon::DriveClient).to receive(:root_id).and_return('root-id')
+    allow(Ramon::DriveClient).to receive(:ensure_folder) { |name, _parent_id| "folder-#{name}" }
+    allow(Ramon::DriveClient).to receive(:upload).and_return('file-id')
+    allow(Ramon::DriveClient).to receive(:shortcut).and_return('shortcut-id')
+    allow(Ramon::DriveClient).to receive(:rename)
+  end
+
+  # (a) sem env: perform retorna sem tocar o client
+  it 'nao faz nada quando o DriveClient nao esta configurado' do
+    allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
+    lead = won_lead
+    expect(Ramon::DriveClient).not_to receive(:upload)
+    described_class.new(lead).perform
+  end
+
+  context 'when configured' do
+    before { allow(Ramon::DriveClient).to receive(:configured?).and_return(true) }
+
+    # (b) item recebido com anexo vinculado e ainda nao exportado -> upload + shortcut + drive.itens
+    it 'exporta um item recebido com anexo vinculado ainda nao exportado' do
+      attachment = attachment_for('sample.pdf', 'application/pdf')
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'pendente' },
+                        'doc_anexos' => { item_a.id.to_s => attachment.id }
+                      })
+
+      described_class.new(lead).perform
+
+      expect(Ramon::DriveClient).to have_received(:upload).once
+      expect(Ramon::DriveClient).to have_received(:shortcut).once
+      lead.reload
+      expect(lead.custom_attributes.dig('drive', 'itens', item_a.id.to_s)).to eq('file-id')
+      expect(lead.custom_attributes.dig('drive', 'concluido_em')).to be_nil
+    end
+
+    # (c) item ja em drive.itens -> nao re-exporta
+    it 'nao re-exporta item que ja esta em drive.itens' do
+      attachment = attachment_for('sample.pdf', 'application/pdf')
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'pendente' },
+                        'doc_anexos' => { item_a.id.to_s => attachment.id },
+                        'drive' => { 'pasta_id' => 'folder-existente', 'itens' => { item_a.id.to_s => 'ja-exportado' } }
+                      })
+
+      described_class.new(lead).perform
+
+      expect(Ramon::DriveClient).not_to have_received(:upload)
+      expect(Ramon::DriveClient).not_to have_received(:shortcut)
+    end
+
+    # race: outro job grava drive.itens pro mesmo item entre a listagem (feita
+    # sobre o @lead em memória) e o upload (exportar recheca via reload antes de subir)
+    it 'nao sobe de novo quando outro job ja gravou drive.itens pro item entre a listagem e o export' do
+      attachment = attachment_for('sample.pdf', 'application/pdf')
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'pendente' },
+                        'doc_anexos' => { item_a.id.to_s => attachment.id }
+                      })
+      # simula o job concorrente: grava direto no banco, por fora do objeto
+      # `lead` em memória — pendentes_de_export ainda o lista como pendente
+      # rubocop:disable Rails/SkipsModelValidations
+      Lead.where(id: lead.id).update_all(
+        custom_attributes: lead.custom_attributes.merge('drive' => { 'itens' => { item_a.id.to_s => 'concorrente' } })
+      )
+      # rubocop:enable Rails/SkipsModelValidations
+
+      described_class.new(lead).perform
+
+      expect(Ramon::DriveClient).not_to have_received(:upload)
+      expect(Ramon::DriveClient).not_to have_received(:shortcut)
+      expect(lead.reload.custom_attributes.dig('drive', 'itens', item_a.id.to_s)).to eq('concorrente')
+    end
+
+    # (d) checklist completo -> rename com "— COMPLETO" + concluido_em gravado
+    it 'conclui a pasta quando o checklist ja esta 100% exportado' do
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                        'drive' => { 'pasta_id' => 'folder-cliente',
+                                     'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } }
+                      })
+
+      described_class.new(lead).perform
+
+      expect(Ramon::DriveClient).to have_received(:rename).with('folder-cliente', 'Maria das Dores — 52998224725 — COMPLETO')
+      lead.reload
+      expect(lead.custom_attributes.dig('drive', 'concluido_em')).to be_present
+    end
+
+    it 'nao conclui de novo quando concluido_em ja esta gravado' do
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                        'drive' => { 'pasta_id' => 'folder-cliente',
+                                     'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' },
+                                     'concluido_em' => '2026-08-01T10:00:00Z' }
+                      })
+
+      described_class.new(lead).perform
+
+      expect(Ramon::DriveClient).not_to have_received(:rename)
+    end
+
+    # (e) anexo png -> conteudo enviado vira PDF (nome termina em .pdf)
+    it 'converte anexo png para PDF de 1 pagina antes de subir' do
+      attachment = attachment_for('sample.png', 'image/png', file_type: :image)
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'pendente' },
+                        'doc_anexos' => { item_a.id.to_s => attachment.id }
+                      })
+
+      expect(Ramon::DriveClient).to receive(:upload) do |name:, io:, content_type:, parent_id:|
+        expect(name).to end_with('.pdf')
+        expect(content_type).to eq('application/pdf')
+        expect(io.read[0, 4]).to eq('%PDF')
+        expect(parent_id).to eq('folder-Maria das Dores — 52998224725')
+        'file-id'
+      end
+
+      described_class.new(lead).perform
+    end
+
+    # (f) pasta conclui com envs do ADVBOX setadas -> cria tarefa pra controller
+    it 'cria a tarefa ADVBOX pra controller quando a pasta fecha e as envs estao setadas' do
+      with_modified_env(RAMON_ADVBOX_CONTROLLER_ID: '111', RAMON_ADVBOX_DOCS_TASK_ID: '222', ADVBOX_API_TOKEN: 'tok') do
+        lead = won_lead(custom_attributes: {
+                          'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                          'drive' => { 'pasta_id' => 'folder-cliente',
+                                       'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                          'advbox' => { 'lawsuits_id' => '999' }
+                        })
+        expect(Ramon::AdvboxClient).to receive(:create_post)
+          .with(hash_including(from: '111', guests: [111], tasks_id: '222', lawsuits_id: '999',
+                               comments: a_string_including("Lead ##{lead.id}")))
+          .and_return({ 'posts_id' => 555 })
+
+        described_class.new(lead).perform
+
+        expect(lead.reload.custom_attributes.dig('drive', 'advbox_task_id')).to eq(555)
+      end
+    end
+
+    # (g) sem as envs do ADVBOX -> nao chama o client
+    it 'nao cria a tarefa ADVBOX quando falta env' do
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                        'drive' => { 'pasta_id' => 'folder-cliente',
+                                     'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                        'advbox' => { 'lawsuits_id' => '999' }
+                      })
+      expect(Ramon::AdvboxClient).not_to receive(:create_post)
+
+      described_class.new(lead).perform
+    end
+
+    # (h) advbox_task_id ja gravado -> nao chama de novo, pelo caminho real (perform completo)
+    it 'nao cria a tarefa ADVBOX de novo quando advbox_task_id ja esta gravado' do
+      with_modified_env(RAMON_ADVBOX_CONTROLLER_ID: '111', RAMON_ADVBOX_DOCS_TASK_ID: '222', ADVBOX_API_TOKEN: 'tok') do
+        lead = won_lead(custom_attributes: {
+                          'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                          'drive' => { 'pasta_id' => 'folder-cliente',
+                                       'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' },
+                                       'advbox_task_id' => 555 },
+                          'advbox' => { 'lawsuits_id' => '999' }
+                        })
+        expect(Ramon::AdvboxClient).not_to receive(:create_post)
+
+        described_class.new(lead).perform
+      end
+    end
+
+    # (i) create_post indisponivel na 1a chamada -> perform propaga e concluido_em NAO fica gravado,
+    # pra retry do job re-entrar em concluir (rename e' idempotente, guard advbox_task_id evita duplicar)
+    it 'nao grava concluido_em quando o ADVBOX fica indisponivel, e o retry tenta create_post de novo' do
+      with_modified_env(RAMON_ADVBOX_CONTROLLER_ID: '111', RAMON_ADVBOX_DOCS_TASK_ID: '222', ADVBOX_API_TOKEN: 'tok') do
+        lead = won_lead(custom_attributes: {
+                          'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                          'drive' => { 'pasta_id' => 'folder-cliente',
+                                       'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                          'advbox' => { 'lawsuits_id' => '999' }
+                        })
+        allow(Ramon::AdvboxClient).to receive(:create_post).and_raise(Ramon::AdvboxClient::UnavailableError)
+
+        expect { described_class.new(lead).perform }.to raise_error(Ramon::AdvboxClient::UnavailableError)
+        expect(lead.reload.custom_attributes.dig('drive', 'concluido_em')).to be_nil
+
+        expect(Ramon::AdvboxClient).to receive(:create_post).and_return({ 'posts_id' => 555 })
+        described_class.new(lead).perform
+
+        expect(lead.reload.custom_attributes.dig('drive', 'concluido_em')).to be_present
+      end
+    end
+  end
+end

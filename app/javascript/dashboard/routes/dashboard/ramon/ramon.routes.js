@@ -70,6 +70,12 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/pos-venda'),
+    name: 'ramon_pos_venda',
+    component: () => import('./pages/PosVenda.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/lead/:leadId/dossie'),
     name: 'ramon_lead_dossie',
     component: () => import('./pages/Dossie.vue'),

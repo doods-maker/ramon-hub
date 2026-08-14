@@ -327,6 +327,27 @@ RSpec.describe 'Leads API', type: :request do
       expect(response.parsed_body['payload'].first['follow_up_count']).to eq(0)
     end
 
+    it 'expõe docs_received e docs_total também no índice slim (badge do card)' do
+      thesis = create(:thesis, account: account)
+      doc_item = create(:thesis_item, thesis: thesis, section: 'documento', content: 'RG')
+      create(:thesis_item, thesis: thesis, section: 'colheita', content: 'Renda')
+      account.leads.create!(name: 'A', lead_stage: novo, thesis: thesis,
+                            custom_attributes: { 'doc_status' => { doc_item.id.to_s => 'recebido' } })
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['docs_received']).to eq(1)
+      expect(row['docs_total']).to eq(1)
+      expect(row).not_to have_key('custom_attributes')
+    end
+
+    it 'lead sem tese expõe docs_received e docs_total zerados' do
+      account.leads.create!(name: 'A', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['docs_received']).to eq(0)
+      expect(row['docs_total']).to eq(0)
+    end
+
     it 'filtra por source' do
       a = account.leads.create!(name: 'A', lead_stage: novo, source: 'meta-ads')
       account.leads.create!(name: 'B', lead_stage: novo, source: 'indicacao')

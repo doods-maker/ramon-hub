@@ -83,6 +83,13 @@ const sections = computed(() =>
           names: ['ramon_radar'],
         },
         {
+          key: 'posvenda',
+          label: t('RAMON.NAV.POS_VENDA'),
+          icon: 'i-lucide-package-check',
+          to: accountScopedRoute('ramon_pos_venda'),
+          names: ['ramon_pos_venda'],
+        },
+        {
           key: 'tv',
           label: t('RAMON.NAV.TV'),
           icon: 'i-lucide-tv',

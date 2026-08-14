@@ -101,7 +101,9 @@ controller quando preciso); só então o trabalho vira do jurídico.
 
 **Checklist de Documentos**:
 A lista, definida por Tese, dos documentos que o caso exige, com o status de
-cada um (pendente, solicitado, recebido).
+cada um (pendente, solicitado, recebido). "Recebido" é sempre veredito humano —
+a IA no máximo sugere; é o que o ADR-0002 chama de documento "conferido".
+_Avoid_: conferido como quarto status (é sinônimo de recebido)
 
 **Coleta de Documentos**:
 A atividade do Pós-venda: cobrar, receber e conferir os itens do Checklist

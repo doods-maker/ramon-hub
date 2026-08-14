@@ -91,10 +91,11 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   def filtered_leads
     # includes mata o N+1 do índice do Kanban: o partial toca 7 belongs_to +
-    # lead_triages (latest_triage) por lead. Sem isto, board de N leads = ~10N SELECTs.
+    # lead_triages (latest_triage) + thesis_items (docs_counts) por lead. Sem
+    # isto, board de N leads = ~10N SELECTs.
     leads = policy_scope(Current.account.leads)
-            .includes(:lead_stage, :benefit_type, :lead_priority, :thesis, :sdr, :closer, :contact, :lead_triages, :lead_tasks,
-                      { conversation: :inbox })
+            .includes(:lead_stage, :benefit_type, :lead_priority, { thesis: :thesis_items }, :sdr, :closer, :contact,
+                      :lead_triages, :lead_tasks, { conversation: :inbox })
     # Caso de cálculo só aparece nas visões por pessoa (Cálculos, gaveta, Linha da Vida).
     leads = leads.funil if params[:contact_id].blank?
     leads = apply_equality_filters(leads)

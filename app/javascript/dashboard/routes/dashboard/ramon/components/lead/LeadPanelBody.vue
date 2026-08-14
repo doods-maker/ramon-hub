@@ -18,6 +18,7 @@ import LeadPlaybook from '../conversation/LeadPlaybook.vue';
 import LeadTriage from '../conversation/LeadTriage.vue';
 import LeadKit from '../conversation/LeadKit.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
+import DocChecklist from './DocChecklist.vue';
 import { useLeadPanelTabs } from '../../composables/useLeadPanelSections';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
@@ -202,6 +203,14 @@ const iaDot = computed(() => {
 const simuladorDot = computed(() =>
   props.lead?.custom_attributes?.ultima_simulacao ? 'bg-n-teal-9' : null
 );
+// Dot âmbar: existe item de documento ainda não recebido (docs_total/received
+// vêm do jbuilder — Task 3; antes dela o dot fica apagado, sem erro).
+const docsDot = computed(() =>
+  props.lead?.docs_total > 0 &&
+  props.lead?.docs_received < props.lead?.docs_total
+    ? 'bg-n-amber-9'
+    : null
+);
 // mesma elegibilidade do LeadZapsignCard: a aba Contrato só existe pra tese
 // de acidente — nos demais leads ela some e a aba salva cai no Resumo
 const zapsignEligible = computed(() =>
@@ -212,14 +221,18 @@ const TABS = computed(() => [
   { id: 'playbook', label: 'PLAYBOOK' },
   { id: 'ia', label: 'IA', dot: iaDot },
   { id: 'simulador', label: 'SIMULADOR', dot: simuladorDot },
+  ...(props.lead?.thesis_id
+    ? [{ id: 'documentos', label: 'DOCUMENTS', dot: docsDot }]
+    : []),
   ...(zapsignEligible.value ? [{ id: 'contrato', label: 'CONTRACT' }] : []),
   { id: 'historico', label: 'HISTORY' },
 ]);
-const shownTab = computed(() =>
-  activeTab.value === 'contrato' && !zapsignEligible.value
-    ? 'resumo'
-    : activeTab.value
-);
+const shownTab = computed(() => {
+  if (activeTab.value === 'contrato' && !zapsignEligible.value) return 'resumo';
+  if (activeTab.value === 'documentos' && !props.lead?.thesis_id)
+    return 'resumo';
+  return activeTab.value;
+});
 
 // ----- "editar todos os campos": LeadFields completo recolhido por padrão -----
 const fieldsExpanded = ref(false);
@@ -643,6 +656,10 @@ const discard = async () => {
       </template>
 
       <LeadSimulador v-else-if="shownTab === 'simulador'" :lead="lead" />
+
+      <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-3">
+        <DocChecklist :lead="lead" :context="context" />
+      </div>
 
       <LeadZapsignCard
         v-else-if="shownTab === 'contrato'"
