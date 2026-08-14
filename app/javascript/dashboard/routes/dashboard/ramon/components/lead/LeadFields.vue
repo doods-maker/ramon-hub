@@ -250,8 +250,10 @@ const onStageChange = targetId => {
     lostModalOpen.value = true;
     return;
   }
-  if (target?.is_won && props.lead?.value == null) {
-    wonValue.value = '';
+  // Ganho: SEMPRE pede confirmação, pré-preenchida quando o lead já tem valor
+  // (o automático da Onda 3 não pode virar "valor de contrato" em silêncio).
+  if (target?.is_won) {
+    wonValue.value = formatBrl(props.lead?.value);
     wonPrompt.value = true;
     return;
   }

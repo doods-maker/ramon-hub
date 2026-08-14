@@ -262,6 +262,13 @@ RSpec.describe Lead do
       expect(lead.custom_attributes.dig('valor_estimado', 'base')).to eq('simulacao')
     end
 
+    it 'string suja na simulacao (parcialmente numerica) nao estoura o save, cai pro piso das mensalidades' do
+      lead = create(:lead, account: account, thesis: thesis, benefit_monthly_value: 2000,
+                           custom_attributes: { 'ultima_simulacao' => { 'honorario_valor' => '12abc' } })
+      expect(lead.value).to eq(6000)
+      expect(lead.custom_attributes.dig('valor_estimado', 'base')).to eq('mensalidades')
+    end
+
     it 'nao toca valor manual nem lead ganho' do
       lead = create(:lead, account: account, thesis: thesis, value: 1234,
                            custom_attributes: { 'valor_estimado' => { 'origem' => 'manual' } })

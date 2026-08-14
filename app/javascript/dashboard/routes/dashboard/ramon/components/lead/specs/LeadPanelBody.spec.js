@@ -2,6 +2,7 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadPanelBody from '../LeadPanelBody.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
+import { formatBrl } from '../../../helpers/currency';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
@@ -254,13 +255,23 @@ describe('LeadPanelBody', () => {
       });
     });
 
-    it('troca direto quando não há guarda a acionar', async () => {
+    it('pede confirmação pré-preenchida quando o lead já tem valor (ganho nunca é silencioso)', async () => {
       const update = vi.fn();
-      const wrapper = mountBody({ spies: { update } });
+      const wrapper = mountBody({ spies: { update } }); // lead.value = 48000
       await wrapper.find('[data-testid="panel-stage"]').setValue(2);
+      expect(update).not.toHaveBeenCalled();
+      expect(wrapper.find('[data-testid="stage-won-prompt"]').exists()).toBe(
+        true
+      );
+      expect(
+        wrapper.find('[data-testid="stage-won-value"]').element.value
+      ).toBe(formatBrl(48000));
+
+      await wrapper.find('[data-testid="stage-won-save"]').trigger('click');
       expect(update).toHaveBeenCalledWith(expect.anything(), {
         id: 7,
         lead_stage_id: 2,
+        value: 48000,
       });
     });
   });

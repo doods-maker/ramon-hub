@@ -1,11 +1,17 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
-import { parseBrlInput } from '../../helpers/currency';
+import { formatBrl, parseBrlInput } from '../../helpers/currency';
 
+const props = defineProps({
+  initialValue: { type: [Number, String], default: null },
+});
 const emit = defineEmits(['confirmValue', 'cancelValue']);
 
-const value = ref('');
+// Ganho sem confirmação humana vira valor de contrato em silêncio: o modal
+// SEMPRE abre no movimento pra etapa ganha, pré-preenchido quando o lead já
+// tem valor — confirmar (1 clique/Enter) é a confirmação humana que faltava.
+const value = ref(formatBrl(props.initialValue));
 const valueInput = ref(null);
 onMounted(() => valueInput.value?.focus());
 

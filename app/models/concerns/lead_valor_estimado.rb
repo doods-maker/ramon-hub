@@ -37,7 +37,12 @@ module LeadValorEstimado
 
   def estimativa
     simulado = custom_attributes&.dig('ultima_simulacao', 'honorario_valor')
-    return [BigDecimal(simulado.to_s), 'simulacao'] if simulado.present? && simulado.to_f.positive?
+    if simulado.present? && simulado.to_f.positive?
+      # string parcialmente numerica ("12abc") passa no guard acima mas nao parseia:
+      # exception: false devolve nil em vez de estourar o save inteiro.
+      valor = BigDecimal(simulado.to_s, exception: false)
+      return [valor, 'simulacao'] if valor
+    end
 
     n = thesis&.honorario_n_mensalidades
     return [nil, nil] if n.blank? || n.zero? || benefit_monthly_value.blank?

@@ -2,7 +2,7 @@ require 'rails_helper'
 
 # Views versionadas com scenic (Onda 3, Task 5). Sem model dedicado —
 # consultamos direto via SQL, do jeito que o Metabase/BI vai consumir.
-RSpec.describe 'BI views (bi_leads, bi_stage_transitions)' do
+RSpec.describe 'BI views (bi_leads, bi_stage_transitions)' do # rubocop:disable RSpec/DescribeClass
   let(:account) { create(:account) }
   let(:stage) { create(:lead_stage, account: account, probability: 40) }
 
