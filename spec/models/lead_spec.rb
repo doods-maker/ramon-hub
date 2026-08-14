@@ -245,6 +245,50 @@ RSpec.describe Lead do
     end
   end
 
+  describe 'valor estimado automático' do
+    let(:thesis) { create(:thesis, account: account, honorario_percentual: 30, honorario_n_mensalidades: 3) }
+
+    it 'preenche pelo piso das mensalidades quando o benefício mensal é conhecido' do
+      lead = create(:lead, account: account, thesis: thesis, benefit_monthly_value: 2000)
+      expect(lead.value).to eq(6000)
+      expect(lead.custom_attributes.dig('valor_estimado', 'origem')).to eq('auto')
+      expect(lead.custom_attributes.dig('valor_estimado', 'base')).to eq('mensalidades')
+    end
+
+    it 'prefere o honorário exato da simulação quando existe' do
+      lead = create(:lead, account: account, thesis: thesis, benefit_monthly_value: 2000,
+                           custom_attributes: { 'ultima_simulacao' => { 'honorario_valor' => 9500.0 } })
+      expect(lead.value).to eq(9500)
+      expect(lead.custom_attributes.dig('valor_estimado', 'base')).to eq('simulacao')
+    end
+
+    it 'nao toca valor manual nem lead ganho' do
+      lead = create(:lead, account: account, thesis: thesis, value: 1234,
+                           custom_attributes: { 'valor_estimado' => { 'origem' => 'manual' } })
+      lead.update!(benefit_monthly_value: 2000)
+      expect(lead.reload.value).to eq(1234)
+    end
+
+    it 'valor preenchido sem flag (legado) e tratado como manual' do
+      lead = create(:lead, account: account, thesis: thesis, value: 500)
+      lead.update!(benefit_monthly_value: 2000)
+      expect(lead.reload.value).to eq(500)
+    end
+
+    it 'sem honorario configurado na tese, nao estima' do
+      tese_sem = create(:thesis, account: account)
+      lead = create(:lead, account: account, thesis: tese_sem, benefit_monthly_value: 2000)
+      expect(lead.value).to be_nil
+    end
+
+    it 'lead ganho com value ja setado nunca eh recalculado, mesmo elegivel pro automatico' do
+      won = account.lead_stages.find_by!(is_won: true)
+      lead = create(:lead, account: account, thesis: thesis, lead_stage: won, value: 7777)
+      lead.update!(benefit_monthly_value: 2000)
+      expect(lead.reload.value).to eq(7777)
+    end
+  end
+
   describe '#ensure_portal_token!' do
     it 'gera o token sob demanda, persiste e reusa nas chamadas seguintes' do
       lead = create(:lead, account: account)

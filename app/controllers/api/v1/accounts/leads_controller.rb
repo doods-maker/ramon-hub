@@ -171,8 +171,18 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   # da base atual acontece AQUI, não no cliente (que pode ter um record slim).
   def merged_params
     attrs = permitted_params
+    attrs = mark_valor_manual(attrs) if attrs[:value].present?
     return attrs if attrs[:custom_attributes].nil?
 
     attrs.merge(custom_attributes: @lead.custom_attributes.to_h.deep_merge(attrs[:custom_attributes].to_h))
+  end
+
+  # Onda 3 (LeadValorEstimado): PATCH com :value é mão humana editando
+  # o campo — grava a flag de origem manual pro before_save nunca mais pisar
+  # nesse valor. Deep-merge aqui (não substitui) pra não apagar custom_attributes
+  # que o cliente tenha mandado junto no mesmo PATCH.
+  def mark_valor_manual(attrs)
+    flag = { 'valor_estimado' => { 'origem' => 'manual', 'em' => Time.zone.now.iso8601 } }
+    attrs.merge(custom_attributes: (attrs[:custom_attributes] || {}).to_h.deep_merge(flag))
   end
 end

@@ -489,6 +489,39 @@ RSpec.describe 'Leads API', type: :request do
     end
   end
 
+  describe 'valor estimado: flag de origem manual no PATCH' do
+    it 'PATCH com value marca origem manual em custom_attributes' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { value: 4321 },
+            headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(lead.reload.custom_attributes.dig('valor_estimado', 'origem')).to eq('manual')
+    end
+
+    it 'PATCH sem value nao cria a flag' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { source: 'Meta Ads' },
+            headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(lead.reload.custom_attributes).not_to have_key('valor_estimado')
+    end
+
+    it 'PATCH com value e custom_attributes junto preserva as duas chaves (deep merge)' do
+      lead = create(:lead, account: account, lead_stage: novo,
+                           custom_attributes: { 'colheita_status' => { 'a' => true } })
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { value: 999, custom_attributes: { doc_status: { 'rg' => true } } },
+            headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      attrs = lead.reload.custom_attributes
+      expect(attrs.dig('valor_estimado', 'origem')).to eq('manual')
+      expect(attrs.dig('doc_status', 'rg')).to eq(true)
+      expect(attrs.dig('colheita_status', 'a')).to eq(true)
+    end
+  end
+
   describe 'POST /api/v1/accounts/:account_id/leads/:id/portal_link' do
     it 'gera o token e devolve a URL pública completa; segunda chamada reusa o mesmo token' do
       lead = create(:lead, account: account, lead_stage: novo)

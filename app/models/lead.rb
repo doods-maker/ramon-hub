@@ -37,6 +37,9 @@ class Lead < ApplicationRecord
 
   before_save :track_stage_cycle
   before_save :assign_channel
+  # Depois de track_stage_cycle de propósito (comentário no concern): precisa
+  # do won_at fresco do mesmo save.
+  include LeadValorEstimado
 
   after_create_commit :dispatch_create_event
   after_update_commit :dispatch_update_event
