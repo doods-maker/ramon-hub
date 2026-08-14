@@ -25,6 +25,13 @@ RSpec.describe Ramon::DocMatchService do
     expect(sugestao['message_id']).to eq(message.id)
   end
 
+  it 'grava doc_sugestao quando o LLM devolve item_id como string' do
+    allow(Ramon::LlmClient).to receive(:complete)
+      .and_return(Ramon::LlmClient::Result.new(content: %({"item_id": "#{rg.id}"}), input_tokens: 1, output_tokens: 1))
+    described_class.new(message).perform
+    expect(lead.reload.custom_attributes.dig('doc_sugestao', 'item_id')).to eq(rg.id)
+  end
+
   it 'nao grava com item fora do checklist' do
     allow(Ramon::LlmClient).to receive(:complete)
       .and_return(Ramon::LlmClient::Result.new(content: '{"item_id": 999999}', input_tokens: 1, output_tokens: 1))

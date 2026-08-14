@@ -29,7 +29,12 @@ class Ramon::DocMatchService
     return if attachment.blank?
 
     item_id = ask_llm(lead, itens, attachment)
-    return if item_id.blank? || itens.none? { |i| i.id == item_id }
+    return if item_id.blank?
+
+    unless itens.any? { |i| i.id == item_id }
+      Rails.logger.info("[Ramon::DocMatchService] item_id=#{item_id} fora do checklist pendente, message=#{@message.id}")
+      return
+    end
 
     gravar_sugestao(lead, item_id, attachment)
   end
@@ -53,9 +58,14 @@ class Ramon::DocMatchService
     parse_item_id(result.content)
   end
 
+  # DeepSeek roda sem json_schema — nada garante item_id numérico no wire (hábito
+  # comum de LLM é devolver "42" string). Integer(..., exception: false) aceita
+  # ambos e descarta silenciosamente qualquer outra coisa (null incluso) como nil.
   def parse_item_id(content)
     parsed = JSON.parse(content.to_s.sub(/\A```(?:json)?\s*/, '').sub(/```\s*\z/, ''))
-    parsed.is_a?(Hash) ? parsed['item_id'] : nil
+    return nil unless parsed.is_a?(Hash)
+
+    Integer(parsed['item_id'].to_s, exception: false)
   rescue JSON::ParserError
     Rails.logger.warn("[Ramon::DocMatchService] resposta não-JSON do LLM para message=#{@message.id}")
     nil
