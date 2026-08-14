@@ -142,8 +142,21 @@
       "CALCULOS": "Calculations",
       "REUNIOES": "Meetings",
       "RADAR": "Prescription radar",
+      "POS_VENDA": "Post-sale",
       "TV": "TV scoreboard",
       "RELATORIOS": "Reports"
+    },
+    "POS_VENDA": {
+      "TITLE": "Post-sale",
+      "SUBTITLE": "Wins awaiting documents — oldest to newest",
+      "DIAS": "{dias} days since the win",
+      "DOCS": "docs {received}/{total}",
+      "EMPTY": "No wins with pending documents 🎉",
+      "ERROR": "Could not load post-sale.",
+      "RETRY": "Retry",
+      "CONCLUIDOS": "Completed ({count})",
+      "DRIVE_CHIP": "on Drive",
+      "OPEN_CONVERSATION": "Conversation"
     },
     "RADAR": {
       "TITLE": "Prescription radar",

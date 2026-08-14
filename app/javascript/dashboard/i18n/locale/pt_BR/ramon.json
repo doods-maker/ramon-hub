@@ -142,8 +142,21 @@
       "CALCULOS": "Cálculos",
       "REUNIOES": "Reuniões",
       "RADAR": "Radar de prescrição",
+      "POS_VENDA": "Pós-venda",
       "TV": "Placar de TV",
       "RELATORIOS": "Relatórios"
+    },
+    "POS_VENDA": {
+      "TITLE": "Pós-venda",
+      "SUBTITLE": "Ganhos aguardando documentos — do mais antigo pro mais novo",
+      "DIAS": "{dias} dias desde o ganho",
+      "DOCS": "docs {received}/{total}",
+      "EMPTY": "Nenhum ganho com documentos pendentes 🎉",
+      "ERROR": "Não deu para carregar o pós-venda.",
+      "RETRY": "Tentar de novo",
+      "CONCLUIDOS": "Concluídos ({count})",
+      "DRIVE_CHIP": "no Drive",
+      "OPEN_CONVERSATION": "Conversa"
     },
     "RADAR": {
       "TITLE": "Radar de prescrição",

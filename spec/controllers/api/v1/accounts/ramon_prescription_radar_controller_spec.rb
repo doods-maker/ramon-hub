@@ -50,3 +50,32 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
     expect(consents.values).to contain_exactly(true, false)
   end
 end
+
+RSpec.describe 'Ramon Pos Venda API', type: :request do
+  let(:account) { create(:account) }
+  let(:agent) { create(:user, account: account, role: :agent) }
+  let(:url) { "/api/v1/accounts/#{account.id}/ramon_pos_venda" }
+  let(:won_stage) { account.lead_stages.find_by(is_won: true) }
+
+  it 'separa ganhos com doc pendente dos concluidos, e ganho sem item de documento na tese fica fora' do
+    thesis = create(:thesis, account: account)
+    doc_item = create(:thesis_item, thesis: thesis, section: 'documento')
+
+    pendente = create(:lead, account: account, lead_stage: won_stage, thesis: thesis)
+    concluido = create(:lead, account: account, lead_stage: won_stage, thesis: thesis,
+                        custom_attributes: { 'doc_status' => { doc_item.id.to_s => 'recebido' } })
+
+    thesis_sem_documento = create(:thesis, account: account)
+    create(:thesis_item, thesis: thesis_sem_documento, section: 'colheita')
+    fora = create(:lead, account: account, lead_stage: won_stage, thesis: thesis_sem_documento)
+
+    get url, headers: agent.create_new_auth_token, as: :json
+
+    expect(response).to have_http_status(:success)
+    body = response.parsed_body
+    expect(body['pendentes'].pluck('id')).to eq([pendente.id])
+    expect(body['pendentes'].first).to include('docs_received' => 0, 'docs_total' => 1)
+    expect(body['concluidos'].pluck('id')).to eq([concluido.id])
+    expect((body['pendentes'] + body['concluidos']).pluck('id')).not_to include(fora.id)
+  end
+end

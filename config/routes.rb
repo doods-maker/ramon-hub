@@ -304,6 +304,7 @@ Rails.application.routes.draw do
           end
           resources :ramon_lead_imports, only: [:create, :show]
           resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'
+          resource :ramon_pos_venda, only: [:show], controller: 'ramon_pos_venda'
           resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
           resource :ramon_relatorios, only: [:show], controller: 'ramon_relatorios'
           resources :captain_tool_runs, only: [:index]

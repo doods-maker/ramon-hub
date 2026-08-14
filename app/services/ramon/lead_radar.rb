@@ -22,4 +22,15 @@ module Ramon::LeadRadar
            .where.not(id: account.lead_notes.select(:lead_id))
            .where.not(id: account.lead_tasks.select(:lead_id))
   end
+
+  # Pós-venda (ADR-0001): ganhos ficam em "Fechado"; aqui a visão deriva o
+  # estado — pendente = checklist de documento incompleto; concluído = completo.
+  # Ganho sem item de documento na tese fica fora (nada a coletar).
+  def pos_venda(account)
+    ganhos = account.leads.funil.where.not(won_at: nil)
+                    .includes(:contact, thesis: :thesis_items)
+    com_docs = ganhos.select { |l| l.docs_counts[:total].positive? }
+    pendentes, concluidos = com_docs.partition { |l| l.docs_counts[:received] < l.docs_counts[:total] }
+    { pendentes: pendentes.sort_by(&:won_at), concluidos: concluidos.sort_by(&:won_at).reverse.first(20) }
+  end
 end
