@@ -15,6 +15,7 @@ const props = defineProps({
   // Seleção em lote (repassada ao card; a store de seleção chega em outra fase).
   selectable: { type: Boolean, default: false },
   selectedLeadIds: { type: Array, default: () => [] },
+  conversionRate: { type: Number, default: null },
 });
 const emit = defineEmits([
   'move',
@@ -202,27 +203,26 @@ const toggleCollapsed = () => {
           class="i-lucide-x-circle size-3 shrink-0 text-n-ruby-11"
         />
       </span>
-      <!-- "N · R$ X mil": contagem + soma compacta coladas no nome (mock 1d) -->
-      <span
-        class="text-[11px] tabular-nums whitespace-nowrap text-n-slate-9"
-        :title="
-          showWeighted
-            ? $t('RAMON.KANBAN.COLUMN.WEIGHTED', {
-                value: brlCompact(weightedValue),
-              })
-            : undefined
-        "
-      >
+      <!-- "N · R$ X mil · ~R$ Y ponderado ↳ Z%": cabeça da coluna (mock 1d) -->
+      <span class="text-[11px] tabular-nums whitespace-nowrap text-n-slate-9">
         <span data-testid="stage-count">{{ localLeads.length }}</span>
         <span v-if="totalValue" data-testid="stage-total">
           {{ `· ${brlCompact(totalValue)}` }}
         </span>
-        <span v-if="showWeighted" data-testid="stage-weighted" class="sr-only">
-          {{
-            $t('RAMON.KANBAN.COLUMN.WEIGHTED', {
-              value: brlCompact(weightedValue),
-            })
-          }}
+        <span
+          v-if="showWeighted"
+          data-testid="stage-weighted"
+          class="text-n-iris-11/80"
+        >
+          {{ `· ~${brlCompact(weightedValue)}` }}
+        </span>
+        <span
+          v-if="conversionRate != null"
+          data-testid="stage-conversion"
+          :title="$t('RAMON.KANBAN.COLUMN.CONVERSION_TIP')"
+          class="text-[10px] text-n-slate-10"
+        >
+          {{ $t('RAMON.KANBAN.COLUMN.CONVERSION', { rate: conversionRate }) }}
         </span>
       </span>
       <span class="flex items-center gap-2 ms-auto min-w-0">

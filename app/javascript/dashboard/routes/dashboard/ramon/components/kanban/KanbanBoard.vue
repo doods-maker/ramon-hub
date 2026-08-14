@@ -29,6 +29,20 @@ const getters = useStoreGetters();
 const { t } = useI18n();
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
+
+// Conversão por etapa (do dashboard): mapa stage_id → rate, só quando alguém
+// de fato entrou na etapa na janela — mesma guarda de FunnelConversion.vue.
+const conversion = computed(
+  () => getters['ramonDashboard/getData']?.value?.conversion || []
+);
+const rateByStage = computed(() =>
+  Object.fromEntries(
+    conversion.value
+      .filter(row => row.entered > 0)
+      .map(row => [row.stage_id, row.rate])
+  )
+);
+const rateFor = stageId => rateByStage.value[stageId] ?? null;
 const lostReasons = computed(() => getters['leadConfig/getLostReasons'].value);
 const orderedStages = ref([]);
 const stageToRemove = ref(null);
@@ -530,6 +544,7 @@ const exportCsv = () => {
             :focused-lead-id="focusedLeadId"
             selectable
             :selected-lead-ids="selectedIds"
+            :conversion-rate="rateFor(element.id)"
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"

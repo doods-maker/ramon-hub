@@ -406,7 +406,8 @@
         "RESPOND_NOW": "Responder agora"
       },
       "COLUMN": {
-        "WEIGHTED": "~{value} ponderado",
+        "CONVERSION": "↳ {rate}%",
+        "CONVERSION_TIP": "% de leads que avançam desta etapa (90d)",
         "STALLED": "{count} sem contato >24h",
         "PRESCRIBING": "{value}/mês prescrevendo",
         "COLLAPSE": "Recolher coluna",
@@ -476,6 +477,8 @@
       "CADENCE": "Cadência por etapa",
       "CADENCE_HINT": "Dias sem andamento até o lead ser marcado como parado (vazio = sem limite; o dobro fica vermelho)",
       "CADENCE_DAYS": "dias",
+      "PROBABILITY": "Probabilidade (%)",
+      "PROBABILITY_HINT": "usada na previsão ponderada",
       "REMOVE": "Remover",
       "WEIGHT": "Peso",
       "WEIGHT_OF": "peso {weight}",
