@@ -18,6 +18,10 @@ class Ramon::DossieService
       origem: origem_block,
       triagem: triagem_block,
       tese: tese_block,
+      esteira: esteira_block,
+      docs: docs_block,
+      calculos: calculos_block,
+      reunioes: reunioes_block,
       timeline: timeline_block,
       pendencias: { tasks: open_tasks, docs_missing: docs_missing }
     }
@@ -32,7 +36,11 @@ class Ramon::DossieService
       stage_name: @lead.lead_stage&.name,
       stage_color: @lead.lead_stage&.color,
       value: @lead.value&.to_f,
-      conversation_id: @lead.conversation_id
+      conversation_id: @lead.conversation_id,
+      probability: @lead.lead_stage&.probability,
+      stage_entered_at: @lead.stage_entered_at,
+      valor_estimado_origem: @lead.custom_attributes&.dig('valor_estimado', 'origem'),
+      thesis_name: @thesis&.name
     }.merge(contact_fields)
   end
 
@@ -114,6 +122,45 @@ class Ramon::DossieService
 
   def thesis_items_by_section(section)
     @thesis.thesis_items.select { |item| item.section == section }
+  end
+
+  # Esteira: todas as etapas da conta, com a atual marcada e a data de entrada
+  # conhecida (atual = stage_entered_at; passadas = último stage_changed cujo
+  # to_value bate com o nome — rename de etapa perde a data, aceitável).
+  def esteira_block
+    entered = @lead.lead_activities.where(kind: 'stage_changed')
+                   .order(:created_at).pluck(:to_value, :created_at).to_h
+    @lead.account.lead_stages.order(:position).map do |stage|
+      current = stage.id == @lead.lead_stage_id
+      {
+        id: stage.id, name: stage.name, color: stage.color, position: stage.position,
+        is_won: stage.is_won, is_lost: stage.is_lost, current: current,
+        entered_at: current ? @lead.stage_entered_at : entered[stage.name]
+      }
+    end
+  end
+
+  # Checklist completo (o docs_missing das pendências segue só com faltantes).
+  def docs_block
+    counts = @lead.docs_counts
+    status_map = @lead.custom_attributes&.dig('doc_status') || {}
+    itens = @thesis.blank? ? [] : thesis_items_by_section('documento').map do |item|
+      { id: item.id, title: item.title.presence || item.content,
+        status: status_map[item.id.to_s].presence || 'pendente' }
+    end
+    { received: counts[:received], total: counts[:total], itens: itens }
+  end
+
+  def calculos_block
+    @lead.calculos.reorder(created_at: :desc).limit(5).map do |c|
+      { id: c.id, tipo: c.tipo, segurado_nome: c.segurado_nome, created_at: c.created_at }
+    end
+  end
+
+  def reunioes_block
+    @lead.reunioes.reorder(created_at: :desc).limit(5).map do |r|
+      { id: r.id, titulo: r.titulo_exibicao, status: r.status, created_at: r.created_at }
+    end
   end
 
   def timeline_block
