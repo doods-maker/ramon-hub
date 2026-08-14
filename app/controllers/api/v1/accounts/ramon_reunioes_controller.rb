@@ -25,7 +25,8 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
     reuniao = Current.account.reunioes.create!(
       user: Current.user,
       titulo: params[:titulo].presence,
-      duracao_segundos: params[:duracao_segundos].to_i
+      duracao_segundos: params[:duracao_segundos].to_i,
+      lead: Current.account.leads.find_by(id: params[:lead_id])
     )
     reuniao.audio.attach(audio)
     Ramon::ReuniaoAtaJob.perform_later(reuniao.id)
@@ -75,7 +76,9 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
       status: reuniao.status,
       duracao_segundos: reuniao.duracao_segundos,
       created_at: reuniao.created_at.iso8601,
-      user_name: reuniao.user&.name
+      user_name: reuniao.user&.name,
+      lead_id: reuniao.lead_id,
+      lead_name: reuniao.lead&.name
     }
   end
 

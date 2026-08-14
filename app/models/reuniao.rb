@@ -7,6 +7,7 @@ class Reuniao < ApplicationRecord
 
   belongs_to :account
   belongs_to :user, optional: true
+  belongs_to :lead, optional: true
   has_one_attached :audio
 
   validates :status, inclusion: { in: STATUSES }
