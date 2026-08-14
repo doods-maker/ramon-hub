@@ -517,8 +517,8 @@ RSpec.describe 'Leads API', type: :request do
       expect(response).to have_http_status(:success)
       attrs = lead.reload.custom_attributes
       expect(attrs.dig('valor_estimado', 'origem')).to eq('manual')
-      expect(attrs.dig('doc_status', 'rg')).to eq(true)
-      expect(attrs.dig('colheita_status', 'a')).to eq(true)
+      expect(attrs.dig('doc_status', 'rg')).to be(true)
+      expect(attrs.dig('colheita_status', 'a')).to be(true)
     end
   end
 

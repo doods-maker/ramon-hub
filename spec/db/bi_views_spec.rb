@@ -28,7 +28,9 @@ RSpec.describe 'BI views (bi_leads, bi_stage_transitions)' do # rubocop:disable 
 
   it 'coalesces a nil channel to outro' do
     lead = create(:lead, account: account, lead_stage: stage)
-    lead.update_column(:channel, nil) # bypass Lead#assign_channel — simula linha antiga sem canal
+    # rubocop:disable Rails/SkipsModelValidations
+    Lead.where(id: lead.id).update_all(channel: nil) # bypass Lead#assign_channel — simula linha antiga sem canal
+    # rubocop:enable Rails/SkipsModelValidations
 
     expect(bi_leads_row(lead.id)['channel']).to eq('outro')
   end
