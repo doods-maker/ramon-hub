@@ -187,6 +187,34 @@ RSpec.describe Lead do
     end
   end
 
+  describe 'ponte Drive (ADR-0002)' do
+    it 'enfileira o DriveExportJob quando o lead vira ganho com RAMON_DRIVE_CREDENTIALS configurada' do
+      with_modified_env RAMON_DRIVE_CREDENTIALS: 'path/to/creds.json' do
+        lead = create(:lead, account: account)
+        won = account.lead_stages.find_by!(is_won: true)
+        expect { lead.update!(lead_stage: won) }
+          .to have_enqueued_job(Ramon::DriveExportJob).with(lead.id)
+      end
+    end
+
+    it 'nao enfileira sem RAMON_DRIVE_CREDENTIALS' do
+      with_modified_env RAMON_DRIVE_CREDENTIALS: nil do
+        lead = create(:lead, account: account)
+        won = account.lead_stages.find_by!(is_won: true)
+        expect { lead.update!(lead_stage: won) }
+          .not_to have_enqueued_job(Ramon::DriveExportJob)
+      end
+    end
+
+    it 'reenfileira em qualquer update de custom_attributes de lead ja ganho' do
+      with_modified_env RAMON_DRIVE_CREDENTIALS: 'path/to/creds.json' do
+        lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by!(is_won: true))
+        expect { lead.update!(custom_attributes: { 'doc_status' => { '1' => 'recebido' } }) }
+          .to have_enqueued_job(Ramon::DriveExportJob).with(lead.id)
+      end
+    end
+  end
+
   describe '#docs_counts' do
     let(:thesis) { create(:thesis, account: account) }
     let!(:doc_item) { create(:thesis_item, thesis: thesis, section: 'documento', content: 'RG') }

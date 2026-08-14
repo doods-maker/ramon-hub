@@ -44,6 +44,8 @@ class Lead < ApplicationRecord
   after_update_commit :generate_handoff_note, if: :saved_change_to_won_at?
   after_update_commit :enqueue_advbox_closing, if: :saved_change_to_won_at?
   after_update_commit :enqueue_nps_draft, if: :saved_change_to_won_at?
+  after_update_commit :enqueue_drive_export, if: :saved_change_to_won_at?
+  after_update_commit :enqueue_drive_export, if: :saved_change_to_custom_attributes?
 
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
   def push_event_data
@@ -201,6 +203,18 @@ class Lead < ApplicationRecord
     return if won_at.blank?
 
     Ramon::NpsDraftJob.perform_later(id)
+  end
+
+  # Ponte Drive (ADR-0002): export incremental dos docs conferidos de lead ganho.
+  def enqueue_drive_export
+    return if won_at.blank? || ENV.fetch('RAMON_DRIVE_CREDENTIALS', nil).blank?
+
+    # Job barato e idempotente: o service filtra o que já subiu; disparar em todo
+    # update de custom_attributes de lead ganho é aceitável e cobre o backlog
+    # (docs recebidos antes do ganho sobem no 1º update pós-ganho). Loop: o job
+    # atualiza custom_attributes → re-dispara este callback → 1 job extra que
+    # não acha mais nada pendente e não escreve nada → converge.
+    Ramon::DriveExportJob.perform_later(id)
   end
 
   def dispatch_create_event
