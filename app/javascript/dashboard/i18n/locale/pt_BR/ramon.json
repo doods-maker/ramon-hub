@@ -787,6 +787,7 @@
       "CHARGE": "Cobrar pendentes",
       "COPIED": "Rascunho copiado — cole no WhatsApp",
       "COPY_FAILED": "Não foi possível copiar — tente de novo",
+      "DRAFT_READY": "Rascunho na caixa de resposta — revise e envie",
       "STATUS": {
         "PENDENTE": "Pendente",
         "SOLICITADO": "Solicitado",

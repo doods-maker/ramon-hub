@@ -4,11 +4,12 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const props = defineProps({
   lead: { type: Object, required: true },
-  // ainda não lido aqui — chega pronto pra Task 2 (contexto conversa/gaveta)
-  context: { type: String, default: 'drawer' }, // eslint-disable-line vue/no-unused-properties
+  context: { type: String, default: 'drawer' },
 });
 defineOptions({ name: 'DocChecklist' });
 
@@ -112,13 +113,20 @@ const chargePending = async () => {
     '',
     t('RAMON.DOCS.DRAFT.CLOSING'),
   ];
-  try {
-    await copyTextToClipboard(lines.join('\n'));
-  } catch (error) {
-    useAlert(t('RAMON.DOCS.COPY_FAILED'));
-    return;
+  // Princípio de aprovação: o texto cai como RASCUNHO no editor — quem envia é
+  // o Eduardo. Na gaveta (sem ReplyBox montado) o clipboard continua o caminho.
+  if (props.context === 'conversation') {
+    emitter.emit(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, lines.join('\n'));
+    useAlert(t('RAMON.DOCS.DRAFT_READY'));
+  } else {
+    try {
+      await copyTextToClipboard(lines.join('\n'));
+    } catch (error) {
+      useAlert(t('RAMON.DOCS.COPY_FAILED'));
+      return;
+    }
+    useAlert(t('RAMON.DOCS.COPIED'));
   }
-  useAlert(t('RAMON.DOCS.COPIED'));
 
   // marca só os que estavam pendentes como solicitados (merge)
   const next = { ...docStatus.value };

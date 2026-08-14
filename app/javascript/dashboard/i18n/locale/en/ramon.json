@@ -787,6 +787,7 @@
       "CHARGE": "Request pending",
       "COPIED": "Draft copied — paste it into WhatsApp",
       "COPY_FAILED": "Could not copy — try again",
+      "DRAFT_READY": "Draft added to the reply box — review and send",
       "STATUS": {
         "PENDENTE": "Pending",
         "SOLICITADO": "Requested",

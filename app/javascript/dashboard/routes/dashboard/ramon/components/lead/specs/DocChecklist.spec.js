@@ -1,8 +1,17 @@
 import { shallowMount } from '@vue/test-utils';
 import { createStore } from 'vuex';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 import DocChecklist from '../DocChecklist.vue';
 
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+// t: identidade, exceto DRAFT.ITEM — reproduz o "• {item}" real pra poder
+// conferir que o rascunho monta a lista com marcador.
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({
+    t: (key, params) =>
+      key === 'RAMON.DOCS.DRAFT.ITEM' ? `• ${params.item}` : key,
+  }),
+}));
 
 const alertSpy = vi.fn();
 const clipboardSpy = vi.fn();
@@ -102,6 +111,19 @@ describe('DocChecklist.vue', () => {
       context: 'conversation',
     });
     expect(wrapper.find('[data-testid="doc-count"]').exists()).toBe(true);
+  });
+
+  it('no contexto conversa, cobrar pendentes emite INSERT_INTO_NORMAL_EDITOR e nao copia', async () => {
+    const wrapper = mountChecklist(baseLead, vi.fn(), {
+      context: 'conversation',
+    });
+    const spy = vi.spyOn(emitter, 'emit');
+    await wrapper.find('[data-testid="doc-charge"]').trigger('click');
+    expect(spy).toHaveBeenCalledWith(
+      BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR,
+      expect.stringContaining('•')
+    );
+    expect(clipboardSpy).not.toHaveBeenCalled();
   });
 
   it('disables the charge button when every document is received', () => {
