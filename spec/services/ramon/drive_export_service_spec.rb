@@ -118,6 +118,25 @@ RSpec.describe Ramon::DriveExportService do
       expect(Ramon::DriveClient).not_to have_received(:rename)
     end
 
+    # (e) anexo png -> conteudo enviado vira PDF (nome termina em .pdf)
+    it 'converte anexo png para PDF de 1 pagina antes de subir' do
+      attachment = attachment_for('sample.png', 'image/png', file_type: :image)
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'pendente' },
+                        'doc_anexos' => { item_a.id.to_s => attachment.id }
+                      })
+
+      expect(Ramon::DriveClient).to receive(:upload) do |name:, io:, content_type:, parent_id:|
+        expect(name).to end_with('.pdf')
+        expect(content_type).to eq('application/pdf')
+        expect(io.read[0, 4]).to eq('%PDF')
+        expect(parent_id).to eq('folder-Maria das Dores — 52998224725')
+        'file-id'
+      end
+
+      described_class.new(lead).perform
+    end
+
     # (f) pasta conclui com envs do ADVBOX setadas -> cria tarefa pra controller
     it 'cria a tarefa ADVBOX pra controller quando a pasta fecha e as envs estao setadas' do
       with_modified_env(RAMON_ADVBOX_CONTROLLER_ID: '111', RAMON_ADVBOX_DOCS_TASK_ID: '222', ADVBOX_API_TOKEN: 'tok') do
@@ -151,36 +170,42 @@ RSpec.describe Ramon::DriveExportService do
       described_class.new(lead).perform
     end
 
-    # (h) advbox_task_id ja gravado -> nao chama de novo (idempotencia do service isolado)
+    # (h) advbox_task_id ja gravado -> nao chama de novo, pelo caminho real (perform completo)
     it 'nao cria a tarefa ADVBOX de novo quando advbox_task_id ja esta gravado' do
       with_modified_env(RAMON_ADVBOX_CONTROLLER_ID: '111', RAMON_ADVBOX_DOCS_TASK_ID: '222', ADVBOX_API_TOKEN: 'tok') do
         lead = won_lead(custom_attributes: {
-                          'drive' => { 'advbox_task_id' => 555 },
+                          'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                          'drive' => { 'pasta_id' => 'folder-cliente',
+                                      'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' },
+                                      'advbox_task_id' => 555 },
                           'advbox' => { 'lawsuits_id' => '999' }
                         })
         expect(Ramon::AdvboxClient).not_to receive(:create_post)
 
-        Ramon::AdvboxDocsTaskService.new(lead).perform
+        described_class.new(lead).perform
       end
     end
 
-    # (e) anexo png -> conteudo enviado vira PDF (nome termina em .pdf)
-    it 'converte anexo png para PDF de 1 pagina antes de subir' do
-      attachment = attachment_for('sample.png', 'image/png', file_type: :image)
-      lead = won_lead(custom_attributes: {
-                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'pendente' },
-                        'doc_anexos' => { item_a.id.to_s => attachment.id }
-                      })
+    # (i) create_post indisponivel na 1a chamada -> perform propaga e concluido_em NAO fica gravado,
+    # pra retry do job re-entrar em concluir (rename e' idempotente, guard advbox_task_id evita duplicar)
+    it 'nao grava concluido_em quando o ADVBOX fica indisponivel, e o retry tenta create_post de novo' do
+      with_modified_env(RAMON_ADVBOX_CONTROLLER_ID: '111', RAMON_ADVBOX_DOCS_TASK_ID: '222', ADVBOX_API_TOKEN: 'tok') do
+        lead = won_lead(custom_attributes: {
+                          'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                          'drive' => { 'pasta_id' => 'folder-cliente',
+                                      'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                          'advbox' => { 'lawsuits_id' => '999' }
+                        })
+        allow(Ramon::AdvboxClient).to receive(:create_post).and_raise(Ramon::AdvboxClient::UnavailableError)
 
-      expect(Ramon::DriveClient).to receive(:upload) do |name:, io:, content_type:, parent_id:|
-        expect(name).to end_with('.pdf')
-        expect(content_type).to eq('application/pdf')
-        expect(io.read[0, 4]).to eq('%PDF')
-        expect(parent_id).to eq('folder-Maria das Dores — 52998224725')
-        'file-id'
+        expect { described_class.new(lead).perform }.to raise_error(Ramon::AdvboxClient::UnavailableError)
+        expect(lead.reload.custom_attributes.dig('drive', 'concluido_em')).to be_nil
+
+        expect(Ramon::AdvboxClient).to receive(:create_post).and_return({ 'posts_id' => 555 })
+        described_class.new(lead).perform
+
+        expect(lead.reload.custom_attributes.dig('drive', 'concluido_em')).to be_present
       end
-
-      described_class.new(lead).perform
     end
   end
 end
