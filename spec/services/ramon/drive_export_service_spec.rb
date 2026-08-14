@@ -118,6 +118,52 @@ RSpec.describe Ramon::DriveExportService do
       expect(Ramon::DriveClient).not_to have_received(:rename)
     end
 
+    # (f) pasta conclui com envs do ADVBOX setadas -> cria tarefa pra controller
+    it 'cria a tarefa ADVBOX pra controller quando a pasta fecha e as envs estao setadas' do
+      with_modified_env(RAMON_ADVBOX_CONTROLLER_ID: '111', RAMON_ADVBOX_DOCS_TASK_ID: '222', ADVBOX_API_TOKEN: 'tok') do
+        lead = won_lead(custom_attributes: {
+                          'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                          'drive' => { 'pasta_id' => 'folder-cliente',
+                                      'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                          'advbox' => { 'lawsuits_id' => '999' }
+                        })
+        expect(Ramon::AdvboxClient).to receive(:create_post)
+          .with(hash_including(from: '111', guests: [111], tasks_id: '222', lawsuits_id: '999',
+                                comments: a_string_including("Lead ##{lead.id}")))
+          .and_return({ 'posts_id' => 555 })
+
+        described_class.new(lead).perform
+
+        expect(lead.reload.custom_attributes.dig('drive', 'advbox_task_id')).to eq(555)
+      end
+    end
+
+    # (g) sem as envs do ADVBOX -> nao chama o client
+    it 'nao cria a tarefa ADVBOX quando falta env' do
+      lead = won_lead(custom_attributes: {
+                        'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
+                        'drive' => { 'pasta_id' => 'folder-cliente',
+                                    'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                        'advbox' => { 'lawsuits_id' => '999' }
+                      })
+      expect(Ramon::AdvboxClient).not_to receive(:create_post)
+
+      described_class.new(lead).perform
+    end
+
+    # (h) advbox_task_id ja gravado -> nao chama de novo (idempotencia do service isolado)
+    it 'nao cria a tarefa ADVBOX de novo quando advbox_task_id ja esta gravado' do
+      with_modified_env(RAMON_ADVBOX_CONTROLLER_ID: '111', RAMON_ADVBOX_DOCS_TASK_ID: '222', ADVBOX_API_TOKEN: 'tok') do
+        lead = won_lead(custom_attributes: {
+                          'drive' => { 'advbox_task_id' => 555 },
+                          'advbox' => { 'lawsuits_id' => '999' }
+                        })
+        expect(Ramon::AdvboxClient).not_to receive(:create_post)
+
+        Ramon::AdvboxDocsTaskService.new(lead).perform
+      end
+    end
+
     # (e) anexo png -> conteudo enviado vira PDF (nome termina em .pdf)
     it 'converte anexo png para PDF de 1 pagina antes de subir' do
       attachment = attachment_for('sample.png', 'image/png', file_type: :image)

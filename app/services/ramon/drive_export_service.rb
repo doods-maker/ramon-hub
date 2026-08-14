@@ -94,6 +94,7 @@ class Ramon::DriveExportService
   def concluir
     Ramon::DriveClient.rename(pasta_cliente_id, "#{pasta_nome_atual} — COMPLETO")
     merge_drive('concluido_em' => Time.zone.now.iso8601)
+    Ramon::AdvboxDocsTaskService.new(@lead).perform
   end
 
   def pasta_nome_atual
