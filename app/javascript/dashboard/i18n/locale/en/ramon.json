@@ -783,6 +783,7 @@
     },
     "DOCS": {
       "TITLE": "Documents",
+      "CARD_TITLE": "Documents: {received} of {total} received",
       "COUNT": "{received}/{total} received",
       "CHARGE": "Request pending",
       "COPIED": "Draft copied — paste it into WhatsApp",

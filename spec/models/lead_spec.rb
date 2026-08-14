@@ -187,6 +187,23 @@ RSpec.describe Lead do
     end
   end
 
+  describe '#docs_counts' do
+    let(:thesis) { create(:thesis, account: account) }
+    let!(:doc_item) { create(:thesis_item, thesis: thesis, section: 'documento', content: 'RG') }
+    let!(:outro_item) { create(:thesis_item, thesis: thesis, section: 'colheita', content: 'Renda') }
+
+    it 'conta so itens de documento, com recebido vindo do doc_status' do
+      lead = create(:lead, account: account, thesis: thesis,
+                           custom_attributes: { 'doc_status' => { doc_item.id.to_s => 'recebido' } })
+      expect(lead.docs_counts).to eq(received: 1, total: 1)
+    end
+
+    it 'zera sem tese' do
+      lead = create(:lead, account: account)
+      expect(lead.docs_counts).to eq(received: 0, total: 0)
+    end
+  end
+
   describe '#ensure_portal_token!' do
     it 'gera o token sob demanda, persiste e reusa nas chamadas seguintes' do
       lead = create(:lead, account: account)

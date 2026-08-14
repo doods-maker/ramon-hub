@@ -358,6 +358,26 @@ const onSchedule = async ({ dueAt, title }) => {
       >
         <span class="i-lucide-history size-3" />{{ lead.follow_up_count }}
       </span>
+      <span
+        v-if="lead.docs_total > 0"
+        data-testid="docs-badge"
+        :title="
+          $t('RAMON.DOCS.CARD_TITLE', {
+            received: lead.docs_received,
+            total: lead.docs_total,
+          })
+        "
+        class="inline-flex items-center gap-0.5"
+        :class="
+          lead.docs_received >= lead.docs_total
+            ? 'text-n-teal-11'
+            : 'text-n-slate-10'
+        "
+      >
+        <span class="i-lucide-file-check size-3" />{{ lead.docs_received }}/{{
+          lead.docs_total
+        }}
+      </span>
       <span v-if="lead.benefit_type_name" class="text-n-slate-10">
         {{ lead.benefit_type_name }}
       </span>

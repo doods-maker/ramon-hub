@@ -47,6 +47,7 @@ class Lead < ApplicationRecord
 
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
   def push_event_data
+    docs = docs_counts
     {
       id: id,
       name: name,
@@ -69,7 +70,10 @@ class Lead < ApplicationRecord
       sdr_name: sdr&.name,
       closer_name: closer&.name,
       contact_name: contact&.name,
-      latest_triage: latest_triage&.slice(:id, :status, :viability, :kit_status)
+      latest_triage: latest_triage&.slice(:id, :status, :viability, :kit_status),
+      # espelho do jbuilder — inteiros, JSON-nativos (Sidekiq strict_args rejeita BigDecimal)
+      docs_received: docs[:received],
+      docs_total: docs[:total]
     }.merge(cadence_event_data)
   end
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
@@ -121,6 +125,20 @@ class Lead < ApplicationRecord
 
     update!(portal_token: SecureRandom.urlsafe_base64(24))
     portal_token
+  end
+
+  # Contagem do checklist de documentos (badge do card + visão Pós-venda).
+  # Loaded-aware: o índice do Kanban precarrega thesis_items — sem query por lead.
+  def docs_counts
+    return { received: 0, total: 0 } if thesis_id.blank? || thesis.nil?
+
+    items = if thesis.association(:thesis_items).loaded?
+              thesis.thesis_items.select { |i| i.section == 'documento' }
+            else
+              thesis.thesis_items.where(section: 'documento').to_a
+            end
+    status = custom_attributes&.dig('doc_status') || {}
+    { received: items.count { |i| status[i.id.to_s] == 'recebido' }, total: items.size }
   end
 
   def prescription
