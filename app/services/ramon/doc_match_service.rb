@@ -48,7 +48,8 @@ class Ramon::DocMatchService
 
   def ask_llm(lead, itens, attachment)
     checklist = itens.map { |i| "#{i.id}: #{i.title.presence || i.content}" }.join("\n")
-    arquivo = "arquivo: #{attachment.file.filename} (#{attachment.file.content_type})"
+    filename = Ramon::Pseudonymizer.mask(attachment.file.filename.to_s, names: [lead.contact&.name].compact)
+    arquivo = "arquivo: #{filename} (#{attachment.file.content_type})"
     conversa = Ramon::Pseudonymizer.mask(transcript(lead), names: [lead.contact&.name].compact)
     result = Ramon::LlmClient.complete(
       provider: PROVIDER, model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),

@@ -18,7 +18,8 @@ class Ramon::AdvboxDocsTaskService
       from: controller_id.to_s, guests: [controller_id.to_i],
       tasks_id: task_type_id.to_s, lawsuits_id: lawsuit_id.to_s,
       start_date: Time.zone.today.iso8601,
-      comments: "Documentos completos no Drive (pasta \"#{pasta}\") — subir ao ADVBOX e apagar o atalho do dia. Lead ##{@lead.id}."
+      comments: "Checklist de documentos completo — #{itens_no_drive} arquivo(s) no Drive " \
+                "(pasta \"#{pasta}\") — subir ao ADVBOX e apagar o atalho do dia. Lead ##{@lead.id}."
     )
     gravar(resp)
   rescue Ramon::AdvboxClient::RequestError => e
@@ -31,6 +32,10 @@ class Ramon::AdvboxDocsTaskService
     nome = (@lead.contact&.name.presence || @lead.name).to_s.strip
     cpf = @lead.contact&.cpf
     "#{[nome, cpf.presence].compact.join(' — ')} — COMPLETO"
+  end
+
+  def itens_no_drive
+    @lead.custom_attributes&.dig('drive', 'itens')&.size.to_i
   end
 
   def gravar(resp)
