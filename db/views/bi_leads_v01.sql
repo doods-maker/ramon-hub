@@ -4,6 +4,7 @@ SELECT
   l.id,
   l.account_id,
   l.contact_id,
+  l.conversation_id,
   l.created_at,
   l.won_at,
   l.lost_at,

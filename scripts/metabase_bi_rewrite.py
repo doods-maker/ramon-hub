@@ -159,8 +159,7 @@ SELECT date_trunc('month', c.created_at)::date AS mes,
          WHERE c.first_reply_created_at - c.created_at <= (COALESCE(i.first_response_sla_minutes, 15) || ' minutes')::interval
        ) / COUNT(*), 1) AS dentro_do_sla_pct
 FROM bi_leads l
-JOIN leads l_raw ON l_raw.id = l.id
-JOIN conversations c ON c.id = l_raw.conversation_id
+JOIN conversations c ON c.id = l.conversation_id
 JOIN inboxes i ON i.id = c.inbox_id
 WHERE l.account_id = 2 AND c.first_reply_created_at IS NOT NULL
   AND c.created_at >= date_trunc('month', now()) - interval '11 months'

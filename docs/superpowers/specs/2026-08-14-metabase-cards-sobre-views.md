@@ -34,16 +34,14 @@ Colunas das views: `db/views/bi_leads_v01.sql` e `db/views/bi_stage_transitions_
   sem `date_trunc`) fica **byte-idêntica** ao card original — só a fonte muda,
   nunca a métrica.
 
-## ⚠️ Gap encontrado: card 11 precisa de `conversation_id`, ausente em `bi_leads`
-
-`bi_leads` não expõe `conversation_id` (não estava nas colunas pedidas pela
-Task 5 — só entra em cena no card 11, SLA de 1ª resposta). Sem essa coluna não
-dá pra chegar em `conversations` a partir da view. Solução mínima, sem tocar
-na view (fora de escopo desta task): um `JOIN leads l_raw ON l_raw.id = l.id`
-1:1 só pra pegar essa coluna — o filtro de funil continua 100% garantido por
-`bi_leads` (que já restringe `l.id` aos leads corretos); o join extra não abre
-brecha nenhuma, é só um lookup de coluna. Registrar como pendência pra uma
-`bi_leads_v02` futura (acrescentar `conversation_id`) se isso incomodar depois.
+> **Nota:** `bi_leads` agora expõe `conversation_id` (view ainda não lançada
+> nesta branch — acrescentado direto, sem `v02`), então o card 11 (SLA) junta
+> `conversations` direto pela view, sem contorno.
+>
+> **Nota (minor do review):** em `bi_stage_transitions`, `account_id` vem do
+> **lead** (via `bi_leads`), não da `lead_activity` como no SQL antigo
+> (`la.account_id = 2`). Na prática é equivalente — conta única (2) — mas é
+> uma pequena diferença de letra em relação à query original.
 
 ---
 
@@ -203,17 +201,15 @@ SELECT date_trunc('month', c.created_at)::date AS mes,
          WHERE c.first_reply_created_at - c.created_at <= (COALESCE(i.first_response_sla_minutes, 15) || ' minutes')::interval
        ) / COUNT(*), 1) AS dentro_do_sla_pct
 FROM bi_leads l
-JOIN leads l_raw ON l_raw.id = l.id
-JOIN conversations c ON c.id = l_raw.conversation_id
+JOIN conversations c ON c.id = l.conversation_id
 JOIN inboxes i ON i.id = c.inbox_id
 WHERE l.account_id = 2 AND c.first_reply_created_at IS NOT NULL
   AND c.created_at >= date_trunc('month', now()) - interval '11 months'
 GROUP BY 1 ORDER BY 1
 ```
 
-O que a view absorveu: o filtro de funil. O `JOIN leads l_raw ON l_raw.id = l.id`
-é só pra pegar `conversation_id` (ausente em `bi_leads` — ver gap acima); não
-reabre a exclusão de calculo-advbox porque `l.id` já vem restrito por `bi_leads`.
+O que a view absorveu: o filtro de funil e o join com `conversations` — agora
+direto por `l.conversation_id`, que a view já expõe.
 
 ## Card 12 — Reuniões: marcadas × realizadas (12m)
 

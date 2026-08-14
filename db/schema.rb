@@ -1643,6 +1643,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_14_000001) do
         l.id,
         l.account_id,
         l.contact_id,
+        l.conversation_id,
         l.created_at,
         l.won_at,
         l.lost_at,
