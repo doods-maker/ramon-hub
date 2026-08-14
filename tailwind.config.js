@@ -42,7 +42,7 @@ const tailwindConfig = {
         sans: defaultSansFonts,
         inter: ['Inter', ...defaultSansFonts],
         interDisplay: ['InterDisplay', ...defaultSansFonts],
-        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        cormorant: ['Fraunces', 'Georgia', 'serif'],
       },
       fontWeight: {
         420: '420',
