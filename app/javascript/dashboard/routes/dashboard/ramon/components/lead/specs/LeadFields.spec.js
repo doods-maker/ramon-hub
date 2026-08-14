@@ -203,6 +203,45 @@ describe('LeadFields.vue', () => {
     expect(input.element.value).toContain('R$');
   });
 
+  describe('badge de valor estimado automático', () => {
+    it('mostra o badge quando origem é auto', () => {
+      const wrapper = shallowMount(LeadFields, {
+        props: {
+          lead: {
+            ...lead,
+            custom_attributes: { valor_estimado: { origem: 'auto' } },
+          },
+        },
+        global: { plugins: [build()], mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('esconde o badge quando origem é manual', () => {
+      const wrapper = shallowMount(LeadFields, {
+        props: {
+          lead: {
+            ...lead,
+            custom_attributes: { valor_estimado: { origem: 'manual' } },
+          },
+        },
+        global: { plugins: [build()], mocks: { $t: k => k } },
+      });
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('esconde o badge quando não há flag', () => {
+      const wrapper = mountFields();
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        false
+      );
+    });
+  });
+
   it('prompts for value when moving to a won stage and lead has no value', async () => {
     const update = vi.fn();
     const wrapper = shallowMount(LeadFields, {

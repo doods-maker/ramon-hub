@@ -171,6 +171,43 @@ describe('LeadPanelBody', () => {
     });
   });
 
+  describe('badge de valor estimado automático no chip', () => {
+    it('mostra o badge quando origem é auto', () => {
+      const wrapper = mountBody({
+        props: {
+          lead: {
+            ...lead,
+            custom_attributes: { valor_estimado: { origem: 'auto' } },
+          },
+        },
+      });
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('esconde o badge quando origem é manual', () => {
+      const wrapper = mountBody({
+        props: {
+          lead: {
+            ...lead,
+            custom_attributes: { valor_estimado: { origem: 'manual' } },
+          },
+        },
+      });
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('esconde o badge quando não há flag', () => {
+      const wrapper = mountBody();
+      expect(wrapper.find('[data-testid="value-auto-badge"]').exists()).toBe(
+        false
+      );
+    });
+  });
+
   describe('chip de etapa com guarda', () => {
     it('abre o LostReasonModal em etapa de perda sem motivo, sem PATCH', async () => {
       const update = vi.fn();

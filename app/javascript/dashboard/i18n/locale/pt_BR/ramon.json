@@ -502,6 +502,8 @@
       "SDR": "SDR",
       "CLOSER": "Closer",
       "VALUE": "Valor (R$)",
+      "VALUE_AUTO": "estimado",
+      "VALUE_AUTO_TIP": "Estimado automaticamente pela regra da tese — editar o campo trava como manual",
       "SOURCE": "Origem",
       "CHANNEL": "Canal",
       "LOST_REASON": "Motivo da perda",

@@ -77,6 +77,11 @@ const formattedValue = computed(() =>
     : formatBrl(props.lead.value)
 );
 
+// Badge "estimado": mesmo computed do LeadFields, dentro do chip de valor.
+const valorEstimadoAuto = computed(
+  () => props.lead?.custom_attributes?.valor_estimado?.origem === 'auto'
+);
+
 // ----- etapa editável no chip (mesma guarda do LeadFields: perda pede motivo,
 // ganho sem valor pede valor — senão o backend recusa com 422) -----
 const stageId = ref(props.lead?.lead_stage_id ?? null);
@@ -314,9 +319,19 @@ const discard = async () => {
         <span
           v-if="formattedValue"
           data-testid="panel-value-chip"
-          class="rounded-full bg-n-alpha-2 px-2.5 py-0.5 text-[11px] text-n-slate-11"
+          class="inline-flex items-center gap-1 rounded-full bg-n-alpha-2 px-2.5 py-0.5 text-[11px] text-n-slate-11"
         >
           {{ formattedValue }}
+          <span
+            v-if="valorEstimadoAuto"
+            data-testid="value-auto-badge"
+            :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
+            class="inline-flex items-center gap-0.5 rounded bg-n-iris-9/10 px-1 text-[10px] text-n-iris-11"
+          >
+            <span class="i-lucide-sparkles size-2.5" />{{
+              $t('RAMON.DRAWER.VALUE_AUTO')
+            }}
+          </span>
         </span>
       </div>
 

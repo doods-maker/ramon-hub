@@ -33,6 +33,12 @@ const currentStage = computed(() =>
 const isLostStage = computed(() => !!currentStage.value?.is_lost);
 const reasonNames = computed(() => lostReasons.value.map(r => r.name));
 
+// Badge "estimado": valor_estimado.origem === 'auto' vem da Task 1 (regra da
+// tese calculou sozinha); some assim que o campo é editado à mão.
+const valorEstimadoAuto = computed(
+  () => props.lead?.custom_attributes?.valor_estimado?.origem === 'auto'
+);
+
 // refs locais editáveis, ressincronizados sempre que o lead muda
 const name = ref('');
 const value = ref('');
@@ -552,9 +558,19 @@ const toggleConsent = () =>
       </option>
     </select>
 
-    <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.VALUE')
-    }}</label>
+    <label class="block mb-1 text-xs text-n-slate-10">
+      {{ $t('RAMON.DRAWER.VALUE') }}
+      <span
+        v-if="valorEstimadoAuto"
+        data-testid="value-auto-badge"
+        :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
+        class="ms-1 inline-flex items-center gap-0.5 rounded bg-n-iris-9/10 px-1 text-[10px] text-n-iris-11"
+      >
+        <span class="i-lucide-sparkles size-2.5" />{{
+          $t('RAMON.DRAWER.VALUE_AUTO')
+        }}
+      </span>
+    </label>
     <input
       v-model="value"
       data-testid="field-value"

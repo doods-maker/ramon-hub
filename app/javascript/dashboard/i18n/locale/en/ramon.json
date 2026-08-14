@@ -502,6 +502,8 @@
       "SDR": "SDR",
       "CLOSER": "Closer",
       "VALUE": "Value (R$)",
+      "VALUE_AUTO": "estimated",
+      "VALUE_AUTO_TIP": "Automatically estimated by the thesis rule — editing the field locks it as manual",
       "SOURCE": "Source",
       "CHANNEL": "Channel",
       "LOST_REASON": "Loss reason",
