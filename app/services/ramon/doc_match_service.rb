@@ -20,26 +20,30 @@ class Ramon::DocMatchService
 
   def perform
     lead = @message.account.leads.find_by(conversation_id: @message.conversation_id)
-    return if lead.blank? || lead.thesis_id.blank?
+    return if lead.blank? || lead.thesis_id.blank? || attachment.blank?
 
     itens = pendentes(lead)
     return if itens.empty?
 
-    attachment = @message.attachments.detect { |a| %w[image file].include?(a.file_type) }
-    return if attachment.blank?
-
     item_id = ask_llm(lead, itens, attachment)
-    return if item_id.blank?
-
-    unless itens.any? { |i| i.id == item_id }
-      Rails.logger.info("[Ramon::DocMatchService] item_id=#{item_id} fora do checklist pendente, message=#{@message.id}")
-      return
-    end
+    return unless item_valido?(item_id, itens)
 
     gravar_sugestao(lead, item_id, attachment)
   end
 
   private
+
+  def attachment
+    @attachment ||= @message.attachments.detect { |a| %w[image file].include?(a.file_type) }
+  end
+
+  def item_valido?(item_id, itens)
+    return false if item_id.blank?
+    return true if itens.any? { |i| i.id == item_id }
+
+    Rails.logger.info("[Ramon::DocMatchService] item_id=#{item_id} fora do checklist pendente, message=#{@message.id}")
+    false
+  end
 
   def pendentes(lead)
     status = lead.custom_attributes&.dig('doc_status') || {}

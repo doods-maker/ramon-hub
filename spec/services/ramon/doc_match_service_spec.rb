@@ -21,7 +21,7 @@ RSpec.describe Ramon::DocMatchService do
     described_class.new(message).perform
     expect(lead.reload.custom_attributes.dig('doc_sugestao', 'item_id')).to eq(rg.id)
     sugestao = lead.custom_attributes['doc_sugestao']
-    expect(sugestao['resolvida']).to eq(false)
+    expect(sugestao['resolvida']).to be(false)
     expect(sugestao['message_id']).to eq(message.id)
   end
 

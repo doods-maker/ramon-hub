@@ -25,12 +25,16 @@ class Ramon::DriveExportService
     status = @lead.custom_attributes&.dig('doc_status') || {}
     exportados = drive_state['itens'] || {}
     @lead.thesis.thesis_items.where(section: 'documento').filter_map do |item|
-      key = item.id.to_s
-      next unless status[key] == 'recebido' && doc_anexos[key].present? && exportados[key].blank?
+      next unless exportavel?(item, status, exportados)
 
-      attachment = Attachment.find_by(id: doc_anexos[key], account_id: @lead.account_id)
+      attachment = Attachment.find_by(id: doc_anexos[item.id.to_s], account_id: @lead.account_id)
       attachment && [item, attachment]
     end
+  end
+
+  def exportavel?(item, status, exportados)
+    key = item.id.to_s
+    status[key] == 'recebido' && doc_anexos[key].present? && exportados[key].blank?
   end
 
   def exportar(item, attachment)
@@ -51,7 +55,7 @@ class Ramon::DriveExportService
   # no formato original. ponytail: conversão além disso só se aparecer na prática;
   # imagem corrompida levanta e o job morre sem retry — tratar se aparecer na prática.
   def to_pdf(attachment)
-    bytes = attachment.file.download
+    bytes = attachment.file.blob.open(&:read)
     case attachment.file.content_type
     when 'application/pdf'
       [StringIO.new(bytes), 'application/pdf', '.pdf']

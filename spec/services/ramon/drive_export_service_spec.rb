@@ -6,6 +6,9 @@ RSpec.describe Ramon::DriveExportService do
   let(:thesis) { create(:thesis, account: account) }
   let!(:item_a) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'RG') }
   let!(:item_b) { create(:thesis_item, thesis: thesis, section: 'documento', title: 'CNIS') }
+  # A etapa precisa ser is_won: o before_save do Lead (apply_stage_timestamps)
+  # zera won_at passado direto quando a etapa nao e' de ganho.
+  let(:won_stage) { create(:lead_stage, account: account, is_won: true) }
 
   def attachment_for(fixture, content_type, file_type: :file)
     message = create(:message, account: account, conversation: create(:conversation, account: account))
@@ -14,8 +17,8 @@ RSpec.describe Ramon::DriveExportService do
   end
 
   def won_lead(custom_attributes: {})
-    create(:lead, account: account, contact: contact, thesis: thesis, won_at: Time.zone.now,
-                  custom_attributes: custom_attributes)
+    create(:lead, account: account, contact: contact, thesis: thesis, lead_stage: won_stage,
+                  won_at: Time.zone.now, custom_attributes: custom_attributes)
   end
 
   before do
@@ -79,9 +82,11 @@ RSpec.describe Ramon::DriveExportService do
                       })
       # simula o job concorrente: grava direto no banco, por fora do objeto
       # `lead` em memória — pendentes_de_export ainda o lista como pendente
-      Lead.find(lead.id).update_columns(
+      # rubocop:disable Rails/SkipsModelValidations
+      Lead.where(id: lead.id).update_all(
         custom_attributes: lead.custom_attributes.merge('drive' => { 'itens' => { item_a.id.to_s => 'concorrente' } })
       )
+      # rubocop:enable Rails/SkipsModelValidations
 
       described_class.new(lead).perform
 
@@ -95,7 +100,7 @@ RSpec.describe Ramon::DriveExportService do
       lead = won_lead(custom_attributes: {
                         'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
                         'drive' => { 'pasta_id' => 'folder-cliente',
-                                    'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } }
+                                     'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } }
                       })
 
       described_class.new(lead).perform
@@ -109,8 +114,8 @@ RSpec.describe Ramon::DriveExportService do
       lead = won_lead(custom_attributes: {
                         'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
                         'drive' => { 'pasta_id' => 'folder-cliente',
-                                    'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' },
-                                    'concluido_em' => '2026-08-01T10:00:00Z' }
+                                     'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' },
+                                     'concluido_em' => '2026-08-01T10:00:00Z' }
                       })
 
       described_class.new(lead).perform
@@ -143,12 +148,12 @@ RSpec.describe Ramon::DriveExportService do
         lead = won_lead(custom_attributes: {
                           'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
                           'drive' => { 'pasta_id' => 'folder-cliente',
-                                      'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                                       'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
                           'advbox' => { 'lawsuits_id' => '999' }
                         })
         expect(Ramon::AdvboxClient).to receive(:create_post)
           .with(hash_including(from: '111', guests: [111], tasks_id: '222', lawsuits_id: '999',
-                                comments: a_string_including("Lead ##{lead.id}")))
+                               comments: a_string_including("Lead ##{lead.id}")))
           .and_return({ 'posts_id' => 555 })
 
         described_class.new(lead).perform
@@ -162,7 +167,7 @@ RSpec.describe Ramon::DriveExportService do
       lead = won_lead(custom_attributes: {
                         'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
                         'drive' => { 'pasta_id' => 'folder-cliente',
-                                    'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                                     'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
                         'advbox' => { 'lawsuits_id' => '999' }
                       })
       expect(Ramon::AdvboxClient).not_to receive(:create_post)
@@ -176,8 +181,8 @@ RSpec.describe Ramon::DriveExportService do
         lead = won_lead(custom_attributes: {
                           'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
                           'drive' => { 'pasta_id' => 'folder-cliente',
-                                      'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' },
-                                      'advbox_task_id' => 555 },
+                                       'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' },
+                                       'advbox_task_id' => 555 },
                           'advbox' => { 'lawsuits_id' => '999' }
                         })
         expect(Ramon::AdvboxClient).not_to receive(:create_post)
@@ -193,7 +198,7 @@ RSpec.describe Ramon::DriveExportService do
         lead = won_lead(custom_attributes: {
                           'doc_status' => { item_a.id.to_s => 'recebido', item_b.id.to_s => 'recebido' },
                           'drive' => { 'pasta_id' => 'folder-cliente',
-                                      'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
+                                       'itens' => { item_a.id.to_s => 'f1', item_b.id.to_s => 'f2' } },
                           'advbox' => { 'lawsuits_id' => '999' }
                         })
         allow(Ramon::AdvboxClient).to receive(:create_post).and_raise(Ramon::AdvboxClient::UnavailableError)

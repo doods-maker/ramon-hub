@@ -1,5 +1,6 @@
 class Lead < ApplicationRecord
   include LeadCadence
+  include LeadDocs
 
   PRESCRIPTION_WINDOW_MONTHS = 60
 
@@ -126,20 +127,6 @@ class Lead < ApplicationRecord
 
     update!(portal_token: SecureRandom.urlsafe_base64(24))
     portal_token
-  end
-
-  # Contagem do checklist de documentos (badge do card + visão Pós-venda).
-  # Loaded-aware: o índice do Kanban precarrega thesis_items — sem query por lead.
-  def docs_counts
-    return { received: 0, total: 0 } if thesis_id.blank? || thesis.nil?
-
-    items = if thesis.association(:thesis_items).loaded?
-              thesis.thesis_items.select { |i| i.section == 'documento' }
-            else
-              thesis.thesis_items.where(section: 'documento').to_a
-            end
-    status = custom_attributes&.dig('doc_status') || {}
-    { received: items.count { |i| status[i.id.to_s] == 'recebido' }, total: items.size }
   end
 
   def prescription

@@ -229,7 +229,9 @@ RSpec.describe Lead do
   describe '#docs_counts' do
     let(:thesis) { create(:thesis, account: account) }
     let!(:doc_item) { create(:thesis_item, thesis: thesis, section: 'documento', content: 'RG') }
-    let!(:outro_item) { create(:thesis_item, thesis: thesis, section: 'colheita', content: 'Renda') }
+
+    # item de outra seção não pode entrar na contagem
+    before { create(:thesis_item, thesis: thesis, section: 'colheita', content: 'Renda') }
 
     it 'conta so itens de documento, com recebido vindo do doc_status' do
       lead = create(:lead, account: account, thesis: thesis,

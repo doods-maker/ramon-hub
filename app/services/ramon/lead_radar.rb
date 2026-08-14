@@ -33,6 +33,6 @@ module Ramon::LeadRadar
                     .includes(:contact, thesis: :thesis_items)
     com_docs = ganhos.select { |l| l.docs_counts[:total].positive? }
     pendentes, concluidos = com_docs.partition { |l| l.docs_counts[:received] < l.docs_counts[:total] }
-    { pendentes: pendentes.sort_by(&:won_at), concluidos: concluidos.sort_by(&:won_at).reverse.first(20) }
+    { pendentes: pendentes.sort_by(&:won_at), concluidos: concluidos.sort_by(&:won_at).last(20).reverse }
   end
 end
