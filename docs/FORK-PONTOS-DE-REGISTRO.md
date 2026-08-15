@@ -98,6 +98,8 @@
 | `config/routes.rb` | `member { get :dossie, to: 'lead_dossies#show' }` dentro do bloco `resources :leads` (após o `collection`) | endpoint agregador do Dossiê de 30 segundos | dossiê |
 | `config/routes.rb` | `resource :elegibilidade, only: [:create], controller: 'lead_elegibilidades'` dentro do bloco `resources :leads` (após `resource :painel`) | endpoint de elegibilidade (qualidade de segurado, pendências, lacunas) | elegibilidade-ui |
 | `config/routes.rb` | `resource :pensao`/`resource :maternidade`/`resource :planejamento` (com `post :pdf`) dentro do bloco `resources :leads` (após `resource :elegibilidade`) | endpoints de pensão por morte, salário-maternidade e planejamento de aposentadoria (+ PDF consultivo) | ui-motor-pensao-maternidade-planejamento |
+| `tailwind.config.js` | chave `fontFamily.cormorant` passa a apontar para `['Fraunces', 'Georgia', 'serif']` (nome da chave mantido de propósito) | fonte de títulos trocada | Onda A |
+| `app/javascript/dashboard/helper/specs/themeHelper.spec.js` | expects do default atualizados para `'light'` (corrige teste que já checava o valor errado) | cobertura do default do tema | Onda A |
 
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
@@ -260,15 +262,11 @@
 | `app/controllers/api/v1/accounts/lead_planejamentos_controller.rb` | NOVO: `POST /leads/:id/planejamento` + `POST .../planejamento/pdf` — mirror `lead_liquidacoes_controller` (`responder` compartilhado); `cenarios` repassado cru; PDF usa `segurado_nome` (default nome do contato) | proxy planejamento de aposentadoria + PDF consultivo | ui-motor-pensao-maternidade-planejamento |
 | `spec/controllers/api/v1/accounts/{lead_pensoes,lead_maternidades,lead_planejamentos}_controller_spec.rb` | cobertura: 401, sucesso (CNIS/fallback contato, payload montado), campos obrigatórios ausentes → 422, `ValidationError` → 422, `UnavailableError` → 503; planejamento#pdf → `send_data` `application/pdf` | specs CI | ui-motor-pensao-maternidade-planejamento |
 | `app/javascript/dashboard/helper/themeHelper.js` | default `'dark'` → `'light'` (linha 6) | marca é light por padrão (Onda A) | Onda A |
-
-## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
-| Arquivo | Responsabilidade | Fase |
-|---|---|---|
-| `db/migrate/20260814000002_add_lead_to_ramon_reunioes.rb` | migration: coluna `lead_id` (FK cascade) em `ramon_reunioes` | associação reunião → lead para contexto da ficha | Onda A |
+| `db/migrate/20260814000002_add_lead_to_ramon_reunioes.rb` | migration: `add_reference :lead` (FK simples, coluna nullable) em `ramon_reunioes`; o nullify na exclusão vem do `has_many :reunioes, dependent: :nullify` no model `Lead` | associação reunião → lead para contexto da ficha | Onda A |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/ficha/EsteiraEtapas.vue` | NOVO: componente visual das etapas da esteira na ficha (barra com status) | UI da ficha — Onda A | Onda A |
 | `app/javascript/dashboard/routes/dashboard/ramon/components/ficha/specs/EsteiraEtapas.spec.js` | specs vitest: render das etapas, marcação de ativa, rótulos | cobertura do componente EsteiraEtapas | Onda A |
-| `spec/models/reuniao_spec.rb` | specs do model `Reuniao` (validações, associações, relação com lead via Onda A) | cobertura do model Reuniao | Onda A |
-| `spec/services/ramon/dossie_service_spec.rb` | specs do service `DossieService` (agregar dados da ficha: lead, reuniões, etapas) | cobertura do serviço de agreg. da ficha | Onda A |
+| `spec/models/reuniao_spec.rb` (linha de changes) | já existia; +specs da associação com lead / `dependent: :nullify` (Onda A) | cobertura do model Reuniao | Onda A |
+| `spec/services/ramon/dossie_service_spec.rb` (linha de changes) | já existia; +specs de esteira/docs/calculos/reuniões agregados na ficha (Onda A) | cobertura do serviço de agreg. da ficha | Onda A |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
