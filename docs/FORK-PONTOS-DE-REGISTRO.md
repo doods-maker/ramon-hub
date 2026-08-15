@@ -259,6 +259,16 @@
 | `app/controllers/api/v1/accounts/lead_maternidades_controller.rb` | NOVO: `POST /leads/:id/maternidade` — mirror `lead_elegibilidades_controller`; valida `data_evento` + `categoria` (empregada/ci_facultativa/especial) | proxy salário-maternidade | ui-motor-pensao-maternidade-planejamento |
 | `app/controllers/api/v1/accounts/lead_planejamentos_controller.rb` | NOVO: `POST /leads/:id/planejamento` + `POST .../planejamento/pdf` — mirror `lead_liquidacoes_controller` (`responder` compartilhado); `cenarios` repassado cru; PDF usa `segurado_nome` (default nome do contato) | proxy planejamento de aposentadoria + PDF consultivo | ui-motor-pensao-maternidade-planejamento |
 | `spec/controllers/api/v1/accounts/{lead_pensoes,lead_maternidades,lead_planejamentos}_controller_spec.rb` | cobertura: 401, sucesso (CNIS/fallback contato, payload montado), campos obrigatórios ausentes → 422, `ValidationError` → 422, `UnavailableError` → 503; planejamento#pdf → `send_data` `application/pdf` | specs CI | ui-motor-pensao-maternidade-planejamento |
+| `app/javascript/dashboard/helper/themeHelper.js` | default `'dark'` → `'light'` (linha 6) | marca é light por padrão (Onda A) | Onda A |
+
+## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
+| Arquivo | Responsabilidade | Fase |
+|---|---|---|
+| `db/migrate/20260814000002_add_lead_to_ramon_reunioes.rb` | migration: coluna `lead_id` (FK cascade) em `ramon_reunioes` | associação reunião → lead para contexto da ficha | Onda A |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/ficha/EsteiraEtapas.vue` | NOVO: componente visual das etapas da esteira na ficha (barra com status) | UI da ficha — Onda A | Onda A |
+| `app/javascript/dashboard/routes/dashboard/ramon/components/ficha/specs/EsteiraEtapas.spec.js` | specs vitest: render das etapas, marcação de ativa, rótulos | cobertura do componente EsteiraEtapas | Onda A |
+| `spec/models/reuniao_spec.rb` | specs do model `Reuniao` (validações, associações, relação com lead via Onda A) | cobertura do model Reuniao | Onda A |
+| `spec/services/ramon/dossie_service_spec.rb` | specs do service `DossieService` (agregar dados da ficha: lead, reuniões, etapas) | cobertura do serviço de agreg. da ficha | Onda A |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`
