@@ -50,7 +50,8 @@ RSpec.describe Ramon::DocMatchService do
 
   it 'chama o LLM só 1 vez mesmo com vários itens pendentes no checklist' do
     create(:thesis_item, thesis: thesis, section: 'documento', content: 'CNIS')
-    expect(Ramon::LlmClient).to receive(:complete).once
+    expect(Ramon::LlmClient).to receive(:complete)
+      .once
       .and_return(Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1))
     described_class.new(message).perform
     expect(lead.reload.custom_attributes.dig('doc_sugestao', 'item_id')).to eq(rg.id)
