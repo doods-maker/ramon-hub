@@ -131,4 +131,44 @@ describe('LeadFollowUpBanner.vue', () => {
     await flushPromises();
     expect(ensure).not.toHaveBeenCalled();
   });
+
+  describe('chip de SLA', () => {
+    const mountWithSla = async sla => {
+      const { wrapper } = mountBanner({
+        lead: structuredClone({ ...baseLead, sla }),
+      });
+      await flushPromises();
+      return wrapper;
+    };
+
+    it('respondido dentro do prazo → chip ok com minutos gastos', async () => {
+      const due = new Date('2026-08-15T12:15:00Z');
+      const wrapper = await mountWithSla({
+        due_at: due.toISOString(),
+        replied_at: '2026-08-15T12:05:00Z',
+        minutes: 15,
+      });
+      const chip = wrapper.find('[data-testid="lead-sla-chip"]');
+      expect(chip.exists()).toBe(true);
+      expect(chip.classes().join(' ')).toContain('n-teal');
+    });
+
+    it('pendente e vencido → chip estourado', async () => {
+      const wrapper = await mountWithSla({
+        due_at: '2020-01-01T00:00:00Z',
+        replied_at: null,
+        minutes: 15,
+      });
+      expect(
+        wrapper.find('[data-testid="lead-sla-chip"]').classes().join(' ')
+      ).toContain('n-ruby');
+    });
+
+    it('sem sla no payload → sem chip', async () => {
+      const wrapper = await mountWithSla(null);
+      expect(wrapper.find('[data-testid="lead-sla-chip"]').exists()).toBe(
+        false
+      );
+    });
+  });
 });

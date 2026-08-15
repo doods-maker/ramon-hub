@@ -1160,6 +1160,11 @@
       "BANNER_STALLED": "Stalled for {days}d",
       "BANNER_RETRIES": "{count} follow-up(s)"
     },
+    "SLA": {
+      "CHIP_OK": "First-response SLA · {minutes} min",
+      "CHIP_PENDING": "SLA · reply within {minutes} min",
+      "CHIP_BREACHED": "SLA breached"
+    },
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "recorded on {date}",

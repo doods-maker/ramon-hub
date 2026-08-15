@@ -1160,6 +1160,11 @@
       "BANNER_STALLED": "Parado há {days}d",
       "BANNER_RETRIES": "{count} retomada(s)"
     },
+    "SLA": {
+      "CHIP_OK": "SLA 1º contato · {minutes} min",
+      "CHIP_PENDING": "SLA · responde em {minutes} min",
+      "CHIP_BREACHED": "SLA estourado"
+    },
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "registrado em {date}",
