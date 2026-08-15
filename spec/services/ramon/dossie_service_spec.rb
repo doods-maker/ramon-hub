@@ -112,4 +112,37 @@ RSpec.describe Ramon::DossieService do
       expect(payload[:pendencias]).to eq(tasks: [], docs_missing: [])
     end
   end
+
+  describe 'esteira, docs, calculos e reunioes (Ficha)' do
+    # A conta já vem semeada com o funil padrão (Leads::SeedDefaultConfigService,
+    # 8 etapas incl. 'Novo'/'Negociação') — usamos essas etapas em vez de criar
+    # nomes novos, pra não colidir com a uniqueness de lead_stages#name.
+    subject(:payload) { described_class.new(lead: lead).perform }
+
+    let(:lead) { create(:lead, account: account, lead_stage: account.lead_stages.find_by!(name: 'Negociação')) }
+
+    it 'monta a esteira ordenada com a etapa atual marcada' do
+      esteira = payload[:esteira]
+      expect(esteira.map { |e| e[:name] }).to eq(account.lead_stages.order(:position).pluck(:name))
+      current = esteira.find { |e| e[:current] }
+      expect(current[:name]).to eq('Negociação')
+      expect(current[:entered_at]).to eq(lead.stage_entered_at)
+    end
+
+    it 'expõe probability e origem do valor estimado em pessoa' do
+      lead.update!(custom_attributes: (lead.custom_attributes || {}).merge('valor_estimado' => { 'origem' => 'auto' }))
+      expect(payload[:pessoa][:probability]).to eq(75)
+      expect(payload[:pessoa][:valor_estimado_origem]).to eq('auto')
+    end
+
+    it 'lista calculos e reunioes recentes do lead' do
+      reuniao = Reuniao.create!(account: account, user: create(:user, account: account), lead: lead, titulo: 'Fechamento')
+      expect(payload[:reunioes].first).to include(id: reuniao.id, titulo: 'Fechamento')
+      expect(payload[:calculos]).to eq([])
+    end
+
+    it 'docs traz o checklist completo com status' do
+      expect(payload[:docs]).to include(:received, :total, :itens)
+    end
+  end
 end

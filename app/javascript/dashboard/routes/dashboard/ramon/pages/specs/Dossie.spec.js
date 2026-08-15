@@ -69,7 +69,7 @@ const payload = {
 const mountDossie = async () => {
   LeadsAPI.getDossie.mockResolvedValue({ data: payload });
   const wrapper = mount(Dossie, {
-    global: { mocks: { $t: key => key } },
+    global: { mocks: { $t: key => key }, stubs: { RouterLink: true } },
   });
   await flushPromises();
   return wrapper;

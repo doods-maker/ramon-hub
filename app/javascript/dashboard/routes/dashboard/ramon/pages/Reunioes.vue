@@ -70,7 +70,11 @@ watch(reuniaoId, id => {
   <div class="flex h-full w-full flex-col overflow-y-auto p-8">
     <template v-if="!reuniaoId">
       <RamonPageHeader :title="t('RAMON.REUNIOES.TITLE')" />
-      <ReuniaoRecorder class="mb-6" @created="onCreated" />
+      <ReuniaoRecorder
+        class="mb-6"
+        :lead-id="route.query.leadId"
+        @created="onCreated"
+      />
       <div
         v-if="isLoading"
         class="flex flex-col gap-3 animate-pulse"
