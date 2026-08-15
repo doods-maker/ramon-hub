@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_14_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_14_000002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1373,8 +1373,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_14_000001) do
     t.text "ata"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "lead_id"
     t.index ["account_id", "created_at"], name: "index_ramon_reunioes_on_account_id_and_created_at"
     t.index ["account_id"], name: "index_ramon_reunioes_on_account_id"
+    t.index ["lead_id"], name: "index_ramon_reunioes_on_lead_id"
     t.index ["user_id"], name: "index_ramon_reunioes_on_user_id"
   end
 
@@ -1633,54 +1635,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_14_000001) do
     t.index ["inbox_id"], name: "index_working_hours_on_inbox_id"
   end
 
-  # Hand-added (sem Ruby/Postgres local pra rodar `bin/rails db:schema:dump`):
-  # sql_definition abaixo é o texto bruto de db/views/*_v01.sql, byte-a-byte;
-  # o dump canônico (forma que o Postgres normaliza) é regenerado na VPS no deploy.
-  create_view "bi_leads", sql_definition: <<-SQL
-      -- Regra canônica de "lead de funil" (espelho de Lead.funil — lead.rb:27-36).
-      -- Mudou a regra no modelo → mude AQUI na mesma PR (decisão 13 da spec 13/08).
-      SELECT
-        l.id,
-        l.account_id,
-        l.contact_id,
-        l.conversation_id,
-        l.created_at,
-        l.won_at,
-        l.lost_at,
-        l.lost_reason,
-        l.value,
-        l.benefit_monthly_value,
-        l.source,
-        COALESCE(l.channel, 'outro') AS channel,
-        l.thesis_id,
-        t.name  AS thesis_name,
-        s.id    AS stage_id,
-        s.name  AS stage_name,
-        s.probability AS stage_probability,
-        s.is_won,
-        s.is_lost,
-        (l.custom_attributes #>> '{utm,utm_campaign}') AS utm_campaign,
-        (l.custom_attributes #>> '{valor_estimado,origem}') AS valor_origem
-      FROM leads l
-      LEFT JOIN theses t ON t.id = l.thesis_id
-      LEFT JOIN lead_stages s ON s.id = l.lead_stage_id
-      WHERE l.source IS DISTINCT FROM 'calculo-advbox'
-  SQL
-
-  create_view "bi_stage_transitions", sql_definition: <<-SQL
-      -- Transições de etapa dos leads de funil (fonte: lead_activities stage_changed;
-      -- etapa por NOME — renomear etapa mantém o nome antigo no histórico).
-      SELECT
-        la.lead_id,
-        b.account_id,
-        la.from_value,
-        la.to_value,
-        la.created_at
-      FROM lead_activities la
-      JOIN bi_leads b ON b.id = la.lead_id
-      WHERE la.kind = 'stage_changed'
-  SQL
-
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "calculos", "accounts"
@@ -1702,9 +1656,48 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_14_000001) do
   add_foreign_key "lead_triages", "triage_agents", on_delete: :nullify
   add_foreign_key "leads", "theses", on_delete: :nullify
   add_foreign_key "ramon_reunioes", "accounts"
+  add_foreign_key "ramon_reunioes", "leads"
   add_foreign_key "ramon_reunioes", "users"
   add_foreign_key "thesis_items", "theses", on_delete: :cascade
   add_foreign_key "user_sessions", "users"
+
+  create_view "bi_leads", sql_definition: <<-SQL
+      SELECT l.id,
+      l.account_id,
+      l.contact_id,
+      l.conversation_id,
+      l.created_at,
+      l.won_at,
+      l.lost_at,
+      l.lost_reason,
+      l.value,
+      l.benefit_monthly_value,
+      l.source,
+      COALESCE(l.channel, 'outro'::character varying) AS channel,
+      l.thesis_id,
+      t.name AS thesis_name,
+      s.id AS stage_id,
+      s.name AS stage_name,
+      s.probability AS stage_probability,
+      s.is_won,
+      s.is_lost,
+      (l.custom_attributes #>> '{utm,utm_campaign}'::text[]) AS utm_campaign,
+      (l.custom_attributes #>> '{valor_estimado,origem}'::text[]) AS valor_origem
+     FROM ((leads l
+       LEFT JOIN theses t ON ((t.id = l.thesis_id)))
+       LEFT JOIN lead_stages s ON ((s.id = l.lead_stage_id)))
+    WHERE ((l.source)::text IS DISTINCT FROM 'calculo-advbox'::text);
+  SQL
+  create_view "bi_stage_transitions", sql_definition: <<-SQL
+      SELECT la.lead_id,
+      b.account_id,
+      la.from_value,
+      la.to_value,
+      la.created_at
+     FROM (lead_activities la
+       JOIN bi_leads b ON ((b.id = la.lead_id)))
+    WHERE ((la.kind)::text = 'stage_changed'::text);
+  SQL
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
       after(:insert).
