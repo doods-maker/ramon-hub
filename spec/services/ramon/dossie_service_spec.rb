@@ -117,9 +117,9 @@ RSpec.describe Ramon::DossieService do
     # A conta já vem semeada com o funil padrão (Leads::SeedDefaultConfigService,
     # 8 etapas incl. 'Novo'/'Negociação') — usamos essas etapas em vez de criar
     # nomes novos, pra não colidir com a uniqueness de lead_stages#name.
-    let(:lead) { create(:lead, account: account, lead_stage: account.lead_stages.find_by!(name: 'Negociação')) }
-
     subject(:payload) { described_class.new(lead: lead).perform }
+
+    let(:lead) { create(:lead, account: account, lead_stage: account.lead_stages.find_by!(name: 'Negociação')) }
 
     it 'monta a esteira ordenada com a etapa atual marcada' do
       esteira = payload[:esteira]

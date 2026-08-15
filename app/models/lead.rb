@@ -19,7 +19,7 @@ class Lead < ApplicationRecord
   has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
   has_many :lead_triages, dependent: :destroy_async
   has_many :copilot_suggestions, dependent: :destroy_async
-  has_many :reunioes, dependent: :nullify
+  has_many :reunioes, class_name: 'Reuniao', dependent: :nullify
 
   validates :lead_stage, presence: true
   default_scope { order(:lead_stage_id, :position, :id) }

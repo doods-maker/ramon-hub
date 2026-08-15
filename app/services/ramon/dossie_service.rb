@@ -143,12 +143,17 @@ class Ramon::DossieService
   # Checklist completo (o docs_missing das pendências segue só com faltantes).
   def docs_block
     counts = @lead.docs_counts
+    { received: counts[:received], total: counts[:total], itens: docs_itens }
+  end
+
+  def docs_itens
+    return [] if @thesis.blank?
+
     status_map = @lead.custom_attributes&.dig('doc_status') || {}
-    itens = @thesis.blank? ? [] : thesis_items_by_section('documento').map do |item|
+    thesis_items_by_section('documento').map do |item|
       { id: item.id, title: item.title.presence || item.content,
         status: status_map[item.id.to_s].presence || 'pendente' }
     end
-    { received: counts[:received], total: counts[:total], itens: itens }
   end
 
   def calculos_block

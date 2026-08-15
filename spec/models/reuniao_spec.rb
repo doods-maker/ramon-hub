@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe Reuniao do
+  let(:account) { create(:account) }
+  let(:lead_stage) { create(:lead_stage, account: account) }
+  let(:lead) { create(:lead, account: account, lead_stage: lead_stage) }
+
   it { is_expected.to belong_to(:account) }
   it { is_expected.to validate_inclusion_of(:status).in_array(described_class::STATUSES) }
 
@@ -15,10 +19,6 @@ RSpec.describe Reuniao do
       expect(reuniao.titulo_exibicao).to include(reuniao.created_at.strftime('%d/%m'))
     end
   end
-
-  let(:account) { create(:account) }
-  let(:lead_stage) { create(:lead_stage, account: account) }
-  let(:lead) { create(:lead, account: account, lead_stage: lead_stage) }
 
   it 'aceita reuniao sem lead (avulsa segue valendo)' do
     reuniao = described_class.create!(account: account, user: create(:user, account: account))
