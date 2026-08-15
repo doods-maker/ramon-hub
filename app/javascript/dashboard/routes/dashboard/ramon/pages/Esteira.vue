@@ -380,7 +380,7 @@ useKeyboardEvents({
       <!-- Card hero: o item atual -->
       <div
         data-testid="esteira-current"
-        class="flex flex-col p-6 rounded-2xl border border-[#c9a97c]/25 bg-gradient-to-br from-[#33302c] to-[#2b2825] shadow-[0_8px_28px_rgba(0,0,0,0.4)]"
+        class="flex flex-col p-6 rounded-2xl border border-[#c9a97c]/25 bg-gradient-to-br from-n-solid-3 to-n-surface-1 shadow-[0_8px_28px_rgba(0,0,0,0.4)]"
       >
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">

@@ -442,7 +442,7 @@ const exportCsv = () => {
     <div class="flex flex-wrap items-center gap-3 px-4 pb-1">
       <SavedViews :view="viewMode" :group-by="groupBy" @apply="onApplyBoard" />
       <div
-        class="flex gap-0.5 rounded-lg p-0.5 bg-[#1e1b19]"
+        class="flex gap-0.5 rounded-lg p-0.5 bg-n-alpha-2"
         data-testid="view-toggle"
       >
         <button
@@ -452,7 +452,7 @@ const exportCsv = () => {
           class="px-3 py-1 text-xs rounded-md"
           :class="
             viewMode === mode
-              ? 'bg-[#33302c] text-n-slate-12 font-medium'
+              ? 'bg-n-solid-1 text-n-slate-12 font-medium shadow-sm'
               : 'text-n-slate-10 hover:text-n-slate-12'
           "
           @click="viewMode = mode"
