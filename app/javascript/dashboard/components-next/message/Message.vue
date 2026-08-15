@@ -26,6 +26,7 @@ import Avatar from 'next/avatar/Avatar.vue';
 
 import TextBubble from './bubbles/Text/Index.vue';
 import ActivityBubble from './bubbles/Activity.vue';
+import RamonEventBubble from './bubbles/RamonEvent.vue';
 import ImageBubble from './bubbles/Image.vue';
 import FileBubble from './bubbles/File.vue';
 import AudioBubble from './bubbles/Audio.vue';
@@ -533,7 +534,8 @@ provideMessageContext({
     ]"
   >
     <div v-if="variant === MESSAGE_VARIANTS.ACTIVITY">
-      <ActivityBubble :content="content" />
+      <RamonEventBubble v-if="contentAttributes.ramonEvent" />
+      <ActivityBubble v-else :content="content" />
     </div>
     <div
       v-else
