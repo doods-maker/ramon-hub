@@ -711,9 +711,6 @@
         "RESCHEDULE": "Reagendar",
         "ERROR": "Não foi possível atualizar a tarefa — tente de novo"
       },
-      "ACTIONS": {
-        "DOSSIE": "Dossiê 30s"
-      },
       "FIELDS": {
         "BENEFIT": "Benefício",
         "THESIS": "Tese",

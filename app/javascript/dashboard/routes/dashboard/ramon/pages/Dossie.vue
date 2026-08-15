@@ -7,6 +7,7 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import { formatBrl } from '../helpers/currency';
 import { waMeUrl } from '../helpers/phone';
+import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import EsteiraEtapas from '../components/ficha/EsteiraEtapas.vue';
 
 defineOptions({ name: 'RamonDossie' });
@@ -40,6 +41,9 @@ const timeline = computed(() => data.value?.timeline ?? []);
 const tasks = computed(() => data.value?.pendencias?.tasks ?? []);
 const docsMissing = computed(() => data.value?.pendencias?.docs_missing ?? []);
 const esteira = computed(() => data.value?.esteira ?? []);
+// Lead de etapa órfã (fora da esteira configurada, ou sem esteira nenhuma):
+// nenhum item marca `current` — sem isso o cabeçalho fica sem etapa visível.
+const esteiraSemAtual = computed(() => esteira.value.every(s => !s.current));
 const docs = computed(
   () => data.value?.docs ?? { received: 0, total: 0, itens: [] }
 );
@@ -254,6 +258,19 @@ const copyDossie = async () => {
                 {{ pessoa.thesis_name }}
               </span>
               <span
+                v-if="esteiraSemAtual && pessoa.stage_name"
+                data-testid="ficha-stage-chip-fallback"
+                class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-n-alpha-2 text-n-slate-11"
+              >
+                <span
+                  class="size-1.5 rounded-full"
+                  :style="{
+                    backgroundColor: pessoa.stage_color || DEFAULT_STAGE_COLOR,
+                  }"
+                />
+                {{ pessoa.stage_name }}
+              </span>
+              <span
                 v-if="origem.channel_label"
                 class="px-2 py-0.5 text-xs rounded-full bg-n-alpha-2 text-n-slate-11"
               >
@@ -323,7 +340,7 @@ const copyDossie = async () => {
           </div>
         </div>
 
-        <div class="pt-4 mt-6 border-t border-n-weak">
+        <div v-if="esteira.length" class="pt-4 mt-6 border-t border-n-weak">
           <EsteiraEtapas :stages="esteira" />
         </div>
       </section>

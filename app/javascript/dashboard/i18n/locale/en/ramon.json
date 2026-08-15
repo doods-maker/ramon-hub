@@ -711,9 +711,6 @@
         "RESCHEDULE": "Reschedule",
         "ERROR": "Could not update the task — try again"
       },
-      "ACTIONS": {
-        "DOSSIE": "30s Dossier"
-      },
       "FIELDS": {
         "BENEFIT": "Benefit",
         "THESIS": "Thesis",

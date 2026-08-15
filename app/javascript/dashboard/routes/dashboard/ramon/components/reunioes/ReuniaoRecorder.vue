@@ -5,6 +5,9 @@ import { onBeforeRouteLeave } from 'vue-router';
 import ReunioesAPI from 'dashboard/api/reunioes';
 import { useAlert } from 'dashboard/composables';
 
+const props = defineProps({
+  leadId: { type: [Number, String], default: null },
+});
 const emit = defineEmits(['created']);
 defineOptions({ name: 'ReuniaoRecorder' });
 const { t } = useI18n();
@@ -87,6 +90,7 @@ const enviar = async () => {
   dados.append('audio', blob, `reuniao.${extensao}`);
   if (titulo.value.trim()) dados.append('titulo', titulo.value.trim());
   dados.append('duracao_segundos', segundos.value);
+  if (props.leadId) dados.append('lead_id', props.leadId);
   try {
     const { data } = await ReunioesAPI.criar(dados, event => {
       progresso.value = Math.round((event.loaded / (event.total || 1)) * 100);

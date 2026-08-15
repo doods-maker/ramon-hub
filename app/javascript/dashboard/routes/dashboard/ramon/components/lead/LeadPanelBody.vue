@@ -290,6 +290,18 @@ const discard = async () => {
   <div class="flex flex-col flex-1 h-full min-w-0 overflow-hidden">
     <!-- cabeçalho fixo: quem e quanto sem rolar -->
     <div class="shrink-0 px-3 pt-3 border-b border-n-weak">
+      <router-link
+        v-if="lead?.id"
+        data-testid="lead-abrir-ficha"
+        :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
+        class="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-n-iris-9 px-3 py-2 text-sm font-semibold text-white hover:bg-n-iris-10"
+        @click="emit('navigate')"
+      >
+        <span class="i-lucide-contact size-4" />{{
+          $t('RAMON.FICHA.OPEN_FULL')
+        }}
+      </router-link>
+
       <h2
         class="font-cormorant text-[21px] font-semibold leading-tight text-n-slate-12 truncate"
       >
@@ -410,14 +422,6 @@ const discard = async () => {
         >
           {{ $t('RAMON.TASKS.ADD') }}
         </button>
-        <router-link
-          data-testid="panel-dossie"
-          :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
-          class="flex flex-1 items-center justify-center rounded-lg bg-n-alpha-1 px-1 py-1.5 text-xs text-n-slate-11 hover:bg-n-alpha-2"
-          @click="emit('navigate')"
-        >
-          {{ $t('RAMON.LEAD_PANEL.ACTIONS.DOSSIE') }}
-        </router-link>
         <div v-if="inConversation" class="flex flex-1 min-w-0 [&>*]:w-full">
           <ResolveAction color="teal" variant="faded" />
         </div>
