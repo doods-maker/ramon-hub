@@ -88,8 +88,12 @@ const reschedule = ({ dueAt }) =>
   <div
     v-if="task"
     data-testid="lead-next-action"
-    class="rounded-xl p-3 bg-gradient-to-br from-[#332e28] to-[#2e2b27] border"
-    :class="dueInfo.overdue ? 'border-n-amber-9/40' : 'border-n-weak'"
+    class="rounded-xl p-3 bg-n-solid-1 border shadow-sm border-l-4"
+    :class="
+      dueInfo.overdue
+        ? 'border-n-amber-9/40 border-l-n-amber-9'
+        : 'border-n-weak border-l-n-iris-9'
+    "
   >
     <p
       class="text-[10.5px] font-semibold uppercase tracking-widest"

@@ -708,19 +708,26 @@
         "DOUBT": "⚠ Attention point: {doubt}"
       },
       "NEXT_ACTION": {
-        "TITLE": "Next action",
+        "TITLE": "Next step",
         "DONE": "Done ✓",
         "SNOOZE": "Snooze 1d",
         "RESCHEDULE": "Reschedule",
         "ERROR": "Could not update the task — try again"
       },
+      "ANDAMENTO": {
+        "TITLE": "Progress",
+        "IN_STAGE": "In this stage for {days} d"
+      },
+      "CASE_TITLE": "Case",
+      "CONTACT_DATA": "Contact data",
       "FIELDS": {
         "BENEFIT": "Benefit",
         "THESIS": "Thesis",
         "OWNERS": "SDR / Closer",
         "DCB": "DCB on",
         "PHONE": "Phone",
-        "CPF": "CPF"
+        "CPF": "CPF",
+        "CHANNEL": "Channel"
       },
       "EDIT_ALL_FIELDS": "edit all fields",
       "EDIT_ALL_FIELDS_CLOSE": "collapse fields",

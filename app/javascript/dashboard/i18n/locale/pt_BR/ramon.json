@@ -708,19 +708,26 @@
         "DOUBT": "⚠ Ponto de atenção: {doubt}"
       },
       "NEXT_ACTION": {
-        "TITLE": "Próxima ação",
+        "TITLE": "Próximo passo",
         "DONE": "Feito ✓",
         "SNOOZE": "Adiar 1d",
         "RESCHEDULE": "Reagendar",
         "ERROR": "Não foi possível atualizar a tarefa — tente de novo"
       },
+      "ANDAMENTO": {
+        "TITLE": "Andamento",
+        "IN_STAGE": "Nesta etapa há {days} d"
+      },
+      "CASE_TITLE": "Caso",
+      "CONTACT_DATA": "Dados do contato",
       "FIELDS": {
         "BENEFIT": "Benefício",
         "THESIS": "Tese",
         "OWNERS": "SDR / Closer",
         "DCB": "DCB em",
         "PHONE": "Telefone",
-        "CPF": "CPF"
+        "CPF": "CPF",
+        "CHANNEL": "Canal"
       },
       "EDIT_ALL_FIELDS": "editar todos os campos",
       "EDIT_ALL_FIELDS_CLOSE": "recolher campos",
