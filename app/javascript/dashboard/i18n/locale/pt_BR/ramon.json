@@ -18,6 +18,9 @@
       "NEXT": "Próximo",
       "LOAD_ERROR": "Não foi possível carregar a agenda"
     },
+    "AUDIO": {
+      "TRANSCRIBED": "transcrito na hora"
+    },
     "CMDK": {
       "SECTION": "Leads",
       "MOVE": "Mover para etapa… (M)",

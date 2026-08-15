@@ -18,6 +18,9 @@
       "NEXT": "Next",
       "LOAD_ERROR": "Couldn't load the agenda"
     },
+    "AUDIO": {
+      "TRANSCRIBED": "transcribed"
+    },
     "CMDK": {
       "SECTION": "Leads",
       "MOVE": "Move to stage… (M)",
