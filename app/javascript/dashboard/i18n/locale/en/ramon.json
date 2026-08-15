@@ -721,8 +721,6 @@
       "CASE_TITLE": "Case",
       "CONTACT_DATA": "Contact data",
       "FIELDS": {
-        "BENEFIT": "Benefit",
-        "THESIS": "Thesis",
         "OWNERS": "SDR / Closer",
         "DCB": "DCB on",
         "PHONE": "Phone",

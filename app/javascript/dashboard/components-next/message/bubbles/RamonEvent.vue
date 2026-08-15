@@ -22,9 +22,13 @@ const isDocMatch = computed(
 const sugestaoAtiva = computed(() => {
   if (!isDocMatch.value) return false;
   const s = lead.value?.custom_attributes?.doc_sugestao;
+  const itemId = contentAttributes.value?.itemId;
+  const jaRecebido =
+    lead.value?.custom_attributes?.doc_status?.[itemId] === 'recebido';
   return (
     !!s &&
     !s.resolvida &&
+    !jaRecebido &&
     Number(s.attachment_id) === Number(contentAttributes.value?.attachmentId)
   );
 });

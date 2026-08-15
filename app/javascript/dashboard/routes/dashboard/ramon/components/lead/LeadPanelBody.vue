@@ -41,6 +41,7 @@ defineOptions({ name: 'LeadPanelBody' });
 const store = useStore();
 const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
+const channels = useMapGetter('leadConfig/getChannels');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
 
 // Etapas/motivos só eram buscados pelo Funil: abrir a conversa direto (F5)
@@ -287,7 +288,7 @@ const onCompleteData = async () => {
   fieldsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-// ----- grid read-only do Resumo -----
+// ----- campos derivados dos cartões -----
 const dcbFormatted = computed(() => {
   if (!props.lead?.dcb_em) return null;
   const d = new Date(`${props.lead.dcb_em}T00:00:00`);
@@ -299,6 +300,11 @@ const owners = computed(() => {
   if (!sdr && !closer) return null;
   return `${sdr || '—'} / ${closer || '—'}`;
 });
+const channelLabel = computed(
+  () =>
+    channels.value?.find(c => c.key === props.lead?.channel)?.label ??
+    props.lead?.channel
+);
 
 // ----- seções nativas do Chatwoot (agente/time/prioridade/etiquetas/macros)
 // recolhidas: não existem no mock 1f e "sujavam" o fim do Resumo -----
@@ -616,7 +622,7 @@ const discard = async () => {
                 {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
               </p>
               <p class="text-[13px] text-n-slate-12">
-                {{ lead.channel || '—' }}
+                {{ channelLabel || '—' }}
               </p>
             </div>
           </div>

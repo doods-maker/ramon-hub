@@ -28,7 +28,7 @@ class Ramon::DocMatchService
     item_id = ask_llm(lead, itens, attachment)
     item = itens.find { |i| i.id == item_id }
     if item.blank?
-      Rails.logger.info("[Ramon::DocMatchService] item fora do checklist pendente ou nulo, message=#{@message.id}")
+      Rails.logger.info("[Ramon::DocMatchService] item fora do checklist pendente ou nulo, item_id=#{item_id.inspect}, message=#{@message.id}")
       return
     end
 

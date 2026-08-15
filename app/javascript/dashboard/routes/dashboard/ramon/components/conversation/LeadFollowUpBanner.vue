@@ -87,7 +87,7 @@ const slaChip = computed(() => {
       text: t('RAMON.SLA.CHIP_OK', { minutes: taken }),
     };
   }
-  const leftMin = Math.round((due - Date.now()) / 60000);
+  const leftMin = Math.floor((due - Date.now()) / 60000);
   if (leftMin >= 0)
     return {
       tone: 'bg-n-amber-3 text-n-amber-11',

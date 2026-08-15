@@ -153,6 +153,17 @@ describe('LeadFollowUpBanner.vue', () => {
       expect(chip.classes().join(' ')).toContain('n-teal');
     });
 
+    it('pendente e dentro do prazo → chip âmbar', async () => {
+      const wrapper = await mountWithSla({
+        due_at: '2099-01-01T00:00:00Z',
+        replied_at: null,
+        minutes: 15,
+      });
+      expect(
+        wrapper.find('[data-testid="lead-sla-chip"]').classes().join(' ')
+      ).toContain('n-amber');
+    });
+
     it('pendente e vencido → chip estourado', async () => {
       const wrapper = await mountWithSla({
         due_at: '2020-01-01T00:00:00Z',
