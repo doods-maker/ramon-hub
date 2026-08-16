@@ -8,6 +8,7 @@ import MacrosList from 'dashboard/routes/dashboard/conversation/Macros/List.vue'
 import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
+import MiniEsteira from './MiniEsteira.vue';
 import LeadNotes from './LeadNotes.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
@@ -40,6 +41,7 @@ defineOptions({ name: 'LeadPanelBody' });
 const store = useStore();
 const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
+const channels = useMapGetter('leadConfig/getChannels');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
 
 // Etapas/motivos só eram buscados pelo Funil: abrir a conversa direto (F5)
@@ -117,6 +119,40 @@ const stageChipStyle = computed(() => {
     color,
   };
 });
+
+// ----- Onda B: cartões do resumo -----
+const CARD = 'rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-3';
+const stageName = computed(
+  () => stages.value?.find(s => s.id === stageId.value)?.name || ''
+);
+const probability = computed(() => {
+  const p = stages.value?.find(s => s.id === stageId.value)?.probability;
+  return p == null ? null : Number(p);
+});
+// stage_entered_at porque created_at NÃO está no payload do lead (verificado
+// no _lead.json.jbuilder) — e "nesta etapa há Xd" casa com a régua de parado.
+const daysInStage = computed(() => {
+  if (!props.lead?.stage_entered_at) return null;
+  const diff = Date.now() - new Date(props.lead.stage_entered_at).getTime();
+  return Number.isNaN(diff) ? null : Math.max(0, Math.floor(diff / 86400000));
+});
+const andamentoApoio = computed(() =>
+  [
+    daysInStage.value != null
+      ? t('RAMON.LEAD_PANEL.ANDAMENTO.IN_STAGE', { days: daysInStage.value })
+      : null,
+    formattedValue.value,
+    probability.value != null ? `${probability.value}%` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+);
+const docsPct = computed(() => {
+  const total = Number(props.lead?.docs_total) || 0;
+  if (!total) return 0;
+  return Math.round(((Number(props.lead?.docs_received) || 0) / total) * 100);
+});
+const contactOpen = ref(false);
 
 const commitStage = async (targetId, extra = {}) => {
   try {
@@ -246,12 +282,13 @@ const fieldsExpanded = ref(false);
 const fieldsEl = ref(null);
 const onCompleteData = async () => {
   setTab('resumo');
+  contactOpen.value = true;
   fieldsExpanded.value = true;
   await nextTick();
   fieldsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-// ----- grid read-only do Resumo -----
+// ----- campos derivados dos cartões -----
 const dcbFormatted = computed(() => {
   if (!props.lead?.dcb_em) return null;
   const d = new Date(`${props.lead.dcb_em}T00:00:00`);
@@ -263,6 +300,11 @@ const owners = computed(() => {
   if (!sdr && !closer) return null;
   return `${sdr || '—'} / ${closer || '—'}`;
 });
+const channelLabel = computed(
+  () =>
+    channels.value?.find(c => c.key === props.lead?.channel)?.label ??
+    props.lead?.channel
+);
 
 // ----- seções nativas do Chatwoot (agente/time/prioridade/etiquetas/macros)
 // recolhidas: não existem no mock 1f e "sujavam" o fim do Resumo -----
@@ -464,10 +506,6 @@ const discard = async () => {
         </div>
       </div>
 
-      <!-- Próxima ação fixa no cabeçalho: a cadência vive onde o SDR trabalha,
-           visível em qualquer aba (pedido do Eduardo 23/07 — ZapSign virou aba) -->
-      <LeadNextAction :lead-id="lead.id" class="mt-3" />
-
       <!-- abas segmentadas com dot de status -->
       <div class="flex mt-2 -mb-px overflow-x-auto" role="tablist">
         <button
@@ -505,76 +543,154 @@ const discard = async () => {
           :conversation-id="conversationId"
         />
 
-        <div class="grid grid-cols-2 gap-x-3 gap-y-2">
-          <div>
-            <p class="text-[10.5px] text-n-slate-9">
-              {{ $t('RAMON.LEAD_PANEL.FIELDS.BENEFIT') }}
-            </p>
-            <p class="text-[13px] text-n-slate-12">
-              {{ lead.benefit_type_name || '—' }}
-            </p>
-          </div>
-          <div>
-            <p class="text-[10.5px] text-n-slate-9">
-              {{ $t('RAMON.LEAD_PANEL.FIELDS.THESIS') }}
-            </p>
-            <p class="text-[13px] text-n-slate-12">
-              {{ lead.thesis_name || '—' }}
-            </p>
-          </div>
-          <div>
-            <p class="text-[10.5px] text-n-slate-9">
-              {{ $t('RAMON.LEAD_PANEL.FIELDS.OWNERS') }}
-            </p>
-            <p class="text-[13px] text-n-slate-12">{{ owners || '—' }}</p>
-          </div>
-          <div>
-            <p class="text-[10.5px] text-n-slate-9">
-              {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
-            </p>
-            <p
-              data-testid="panel-dcb"
-              class="text-[13px]"
-              :class="bleeding ? 'text-n-ruby-11' : 'text-n-slate-12'"
-            >
-              {{ dcbFormatted || '—' }}
-            </p>
-          </div>
-          <div>
-            <p class="text-[10.5px] text-n-slate-9">
-              {{ $t('RAMON.LEAD_PANEL.FIELDS.PHONE') }}
-            </p>
-            <p class="text-[13px] text-n-slate-12">
-              {{ lead.contact_phone || '—' }}
-            </p>
-          </div>
-          <div>
-            <p class="text-[10.5px] text-n-slate-9">
-              {{ $t('RAMON.LEAD_PANEL.FIELDS.CPF') }}
-            </p>
-            <p class="text-[13px] text-n-slate-12">
-              {{ formatCpf(lead.contact_cpf) || '—' }}
-            </p>
-          </div>
+        <!-- Andamento -->
+        <div :class="CARD" data-testid="panel-card-andamento">
+          <p
+            class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
+          >
+            {{ $t('RAMON.LEAD_PANEL.ANDAMENTO.TITLE') }}
+          </p>
+          <p class="mt-1 text-[13px] font-semibold text-n-iris-11">
+            {{ stageName || '—' }}
+          </p>
+          <MiniEsteira class="mt-2" :stages="stages" :current-id="stageId" />
+          <p v-if="andamentoApoio" class="mt-1.5 text-xs text-n-slate-11">
+            {{ andamentoApoio }}
+          </p>
         </div>
 
+        <!-- Próximo passo (era LeadNextAction do header) -->
+        <LeadNextAction :lead-id="lead.id" />
+
+        <!-- Documentos -->
         <button
-          data-testid="lead-edit-all-toggle"
-          class="self-center text-[11px] text-n-slate-10 hover:text-n-slate-12"
-          @click="fieldsExpanded = !fieldsExpanded"
+          v-if="lead.thesis_id && lead.docs_total"
+          :class="CARD"
+          class="text-left w-full hover:border-n-iris-9/40"
+          data-testid="panel-card-docs"
+          @click="setTab('documentos')"
         >
-          {{
-            fieldsExpanded
-              ? `${$t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS_CLOSE')} ▴`
-              : `${$t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS')} ▾`
-          }}
+          <div class="flex items-center justify-between">
+            <p
+              class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
+            >
+              {{ $t('RAMON.DOCS.TITLE') }}
+            </p>
+            <span class="text-xs font-semibold text-n-slate-12">
+              {{
+                $t('RAMON.DOCS.COUNT', {
+                  received: lead.docs_received || 0,
+                  total: lead.docs_total,
+                })
+              }}
+            </span>
+          </div>
+          <div class="mt-2 h-1.5 rounded-full bg-n-alpha-2 overflow-hidden">
+            <div class="h-full bg-n-iris-9" :style="{ width: `${docsPct}%` }" />
+          </div>
         </button>
-        <div v-if="fieldsExpanded" ref="fieldsEl" data-testid="lead-all-fields">
-          <LeadFields :lead="lead" />
+
+        <!-- Caso -->
+        <div :class="CARD" data-testid="panel-card-caso">
+          <p
+            class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
+          >
+            {{ $t('RAMON.LEAD_PANEL.CASE_TITLE') }}
+          </p>
+          <p class="mt-1 text-[13px] font-semibold text-n-slate-12">
+            {{
+              [lead.thesis_name, lead.benefit_type_name]
+                .filter(Boolean)
+                .join(' · ') || '—'
+            }}
+          </p>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-2">
+            <div>
+              <p class="text-[10.5px] text-n-slate-9">
+                {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
+              </p>
+              <p
+                data-testid="panel-dcb"
+                class="text-[13px]"
+                :class="bleeding ? 'text-n-ruby-11' : 'text-n-slate-12'"
+              >
+                {{ dcbFormatted || '—' }}
+              </p>
+            </div>
+            <div>
+              <p class="text-[10.5px] text-n-slate-9">
+                {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
+              </p>
+              <p class="text-[13px] text-n-slate-12">
+                {{ channelLabel || '—' }}
+              </p>
+            </div>
+          </div>
         </div>
 
         <LeadQuizResumo :lead="lead" />
         <LeadNotes :lead-id="lead.id" />
+
+        <!-- Dados do contato (recolhido — mesmo padrão do "Mais da conversa") -->
+        <div class="pt-3 border-t border-n-weak min-w-0">
+          <button
+            data-testid="contact-data-toggle"
+            class="flex items-center w-full gap-1.5 text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10 hover:text-n-slate-12"
+            @click="contactOpen = !contactOpen"
+          >
+            {{ $t('RAMON.LEAD_PANEL.CONTACT_DATA') }}
+            <span
+              class="size-3.5 shrink-0"
+              :class="
+                contactOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'
+              "
+            />
+          </button>
+          <div v-if="contactOpen" class="flex flex-col gap-2 mt-3 min-w-0">
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2">
+              <div>
+                <p class="text-[10.5px] text-n-slate-9">
+                  {{ $t('RAMON.LEAD_PANEL.FIELDS.PHONE') }}
+                </p>
+                <p class="text-[13px] text-n-slate-12">
+                  {{ lead.contact_phone || '—' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-[10.5px] text-n-slate-9">
+                  {{ $t('RAMON.LEAD_PANEL.FIELDS.CPF') }}
+                </p>
+                <p class="text-[13px] text-n-slate-12">
+                  {{ formatCpf(lead.contact_cpf) || '—' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-[10.5px] text-n-slate-9">
+                  {{ $t('RAMON.LEAD_PANEL.FIELDS.OWNERS') }}
+                </p>
+                <p class="text-[13px] text-n-slate-12">{{ owners || '—' }}</p>
+              </div>
+            </div>
+            <button
+              data-testid="lead-edit-all-toggle"
+              class="self-center text-[11px] text-n-slate-10 hover:text-n-slate-12"
+              @click="fieldsExpanded = !fieldsExpanded"
+            >
+              {{
+                fieldsExpanded
+                  ? `${$t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS_CLOSE')} ▴`
+                  : `${$t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS')} ▾`
+              }}
+            </button>
+            <div
+              v-if="fieldsExpanded"
+              ref="fieldsEl"
+              data-testid="lead-all-fields"
+            >
+              <LeadFields :lead="lead" />
+            </div>
+          </div>
+        </div>
 
         <div
           v-if="inConversation && conversationId"

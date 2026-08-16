@@ -18,6 +18,9 @@
       "NEXT": "Próximo",
       "LOAD_ERROR": "Não foi possível carregar a agenda"
     },
+    "AUDIO": {
+      "TRANSCRIBED": "transcrito na hora"
+    },
     "CMDK": {
       "SECTION": "Leads",
       "MOVE": "Mover para etapa… (M)",
@@ -705,19 +708,24 @@
         "DOUBT": "⚠ Ponto de atenção: {doubt}"
       },
       "NEXT_ACTION": {
-        "TITLE": "Próxima ação",
+        "TITLE": "Próximo passo",
         "DONE": "Feito ✓",
         "SNOOZE": "Adiar 1d",
         "RESCHEDULE": "Reagendar",
         "ERROR": "Não foi possível atualizar a tarefa — tente de novo"
       },
+      "ANDAMENTO": {
+        "TITLE": "Andamento",
+        "IN_STAGE": "Nesta etapa há {days} d"
+      },
+      "CASE_TITLE": "Caso",
+      "CONTACT_DATA": "Dados do contato",
       "FIELDS": {
-        "BENEFIT": "Benefício",
-        "THESIS": "Tese",
         "OWNERS": "SDR / Closer",
         "DCB": "DCB em",
         "PHONE": "Telefone",
-        "CPF": "CPF"
+        "CPF": "CPF",
+        "CHANNEL": "Canal"
       },
       "EDIT_ALL_FIELDS": "editar todos os campos",
       "EDIT_ALL_FIELDS_CLOSE": "recolher campos",
@@ -1159,6 +1167,11 @@
       "CARD_TITLE_NO_DATE": "{count} retomada(s)",
       "BANNER_STALLED": "Parado há {days}d",
       "BANNER_RETRIES": "{count} retomada(s)"
+    },
+    "SLA": {
+      "CHIP_OK": "SLA 1º contato · {minutes} min",
+      "CHIP_PENDING": "SLA · responde em {minutes} min",
+      "CHIP_BREACHED": "SLA estourado"
     },
     "NPS": {
       "LABEL": "NPS (0–10)",

@@ -74,7 +74,7 @@ const generate = async mode => {
       <button
         type="button"
         data-testid="copilot-suggest"
-        class="px-3 py-1 text-[11.5px] font-semibold rounded-[7px] bg-[#c9a97c]/[.14] text-n-iris-11 hover:bg-[#c9a97c]/[.22] disabled:opacity-40 disabled:cursor-not-allowed"
+        class="px-3 py-1 text-[11.5px] font-semibold rounded-[7px] bg-n-iris-9/10 text-n-iris-11 hover:bg-n-iris-9/20 disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="Boolean(loading)"
         @click="generate('draft')"
       >

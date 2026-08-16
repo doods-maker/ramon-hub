@@ -26,23 +26,19 @@ class Ramon::DocMatchService
     return if itens.empty?
 
     item_id = ask_llm(lead, itens, attachment)
-    return unless item_valido?(item_id, itens)
+    item = itens.find { |i| i.id == item_id }
+    if item.blank?
+      Rails.logger.info("[Ramon::DocMatchService] item fora do checklist pendente ou nulo, item_id=#{item_id.inspect}, message=#{@message.id}")
+      return
+    end
 
-    gravar_sugestao(lead, item_id, attachment)
+    gravar_sugestao(lead, item, attachment)
   end
 
   private
 
   def attachment
     @attachment ||= @message.attachments.detect { |a| %w[image file].include?(a.file_type) }
-  end
-
-  def item_valido?(item_id, itens)
-    return false if item_id.blank?
-    return true if itens.any? { |i| i.id == item_id }
-
-    Rails.logger.info("[Ramon::DocMatchService] item_id=#{item_id} fora do checklist pendente, message=#{@message.id}")
-    false
   end
 
   def pendentes(lead)
@@ -83,12 +79,19 @@ class Ramon::DocMatchService
         .reject { |t| t == '[Attachment]' }.join("\n")
   end
 
-  def gravar_sugestao(lead, item_id, attachment)
+  def gravar_sugestao(lead, item, attachment)
     lead.reload # padrão advbox: merge sobre o estado atual, só a chave nova
     lead.update!(custom_attributes: lead.custom_attributes.to_h.merge(
-      'doc_sugestao' => { 'item_id' => item_id, 'attachment_id' => attachment.id,
+      'doc_sugestao' => { 'item_id' => item.id, 'attachment_id' => attachment.id,
                           'message_id' => @message.id, 'em' => Time.zone.now.iso8601,
                           'resolvida' => false }
     ))
+    titulo = item.title.presence || item.content
+    Ramon::EventoInline.registrar(
+      @message.conversation,
+      "✦ IA do hub leu o anexo e sugeriu: é \"#{titulo}\" — confirme aqui ou na aba Documentos.",
+      tipo: 'doc_match',
+      extra: { 'item_id' => item.id, 'attachment_id' => attachment.id, 'lead_id' => lead.id }
+    )
   end
 end

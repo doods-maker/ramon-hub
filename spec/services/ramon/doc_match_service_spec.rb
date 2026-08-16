@@ -25,9 +25,34 @@ RSpec.describe Ramon::DocMatchService do
     expect(sugestao['message_id']).to eq(message.id)
   end
 
+  it 'registra evento de automação doc_match na conversa' do
+    allow(Ramon::LlmClient).to receive(:complete)
+      .and_return(Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1))
+    expect { described_class.new(message).perform }
+      .to have_enqueued_job(Conversations::ActivityMessageJob).with(
+        message.conversation,
+        hash_including(
+          message_type: :activity,
+          content_attributes: hash_including(
+            'ramon_event' => 'doc_match',
+            'item_id' => rg.id
+          )
+        )
+      )
+  end
+
   it 'grava doc_sugestao quando o LLM devolve item_id como string' do
     allow(Ramon::LlmClient).to receive(:complete)
       .and_return(Ramon::LlmClient::Result.new(content: %({"item_id": "#{rg.id}"}), input_tokens: 1, output_tokens: 1))
+    described_class.new(message).perform
+    expect(lead.reload.custom_attributes.dig('doc_sugestao', 'item_id')).to eq(rg.id)
+  end
+
+  it 'chama o LLM só 1 vez mesmo com vários itens pendentes no checklist' do
+    create(:thesis_item, thesis: thesis, section: 'documento', content: 'CNIS')
+    expect(Ramon::LlmClient).to receive(:complete)
+      .once
+      .and_return(Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1))
     described_class.new(message).perform
     expect(lead.reload.custom_attributes.dig('doc_sugestao', 'item_id')).to eq(rg.id)
   end

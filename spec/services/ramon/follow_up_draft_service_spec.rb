@@ -31,6 +31,21 @@ RSpec.describe Ramon::FollowUpDraftService do
     expect(follow_up['ultima_em']).to be_present
   end
 
+  it 'registra evento de automação na conversa (activity via job)' do
+    lead = stalled_lead
+    allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('Oi [nome], vamos retomar seu caso?'))
+
+    expect do
+      described_class.new(account: account).perform
+    end.to have_enqueued_job(Conversations::ActivityMessageJob).with(
+      lead.conversation,
+      hash_including(
+        message_type: :activity,
+        content_attributes: hash_including('ramon_event' => 'cadencia_follow_up')
+      )
+    )
+  end
+
   it 'pula lead que já tem tarefa follow_up aberta' do
     lead = stalled_lead
     create(:lead_task, account: account, lead: lead, kind: 'follow_up', due_at: 1.day.from_now)

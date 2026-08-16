@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
+import { useDocSugestao } from '../../composables/useDocSugestao';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -83,29 +84,14 @@ const sugestao = computed(() => {
   return { ...s, item };
 });
 
-// guard: evita duplo clique enquanto a confirmação/dispensa está em voo
-const sugestaoPending = ref(false);
-const resolverSugestao = async aceitar => {
-  if (sugestaoPending.value) return;
-  sugestaoPending.value = true;
-  const patch = { doc_sugestao: { resolvida: true } };
-  if (aceitar) {
-    patch.doc_status = { [sugestao.value.item.id]: 'recebido' };
-    patch.doc_anexos = {
-      [sugestao.value.item.id]: sugestao.value.attachment_id,
-    };
-  }
-  try {
-    await store.dispatch('leads/update', {
-      id: props.lead.id,
-      custom_attributes: patch,
-    });
-  } catch (e) {
-    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
-  } finally {
-    sugestaoPending.value = false;
-  }
-};
+const { pending: sugestaoPending, resolver } = useDocSugestao(
+  computed(() => props.lead)
+);
+const resolverSugestao = aceitar =>
+  resolver(aceitar, {
+    itemId: sugestao.value.item.id,
+    attachmentId: sugestao.value.attachment_id,
+  });
 
 // guard por item: dois cliques rápidos pulavam um status do ciclo
 const pendingIds = ref(new Set());

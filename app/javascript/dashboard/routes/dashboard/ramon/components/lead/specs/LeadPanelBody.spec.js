@@ -101,9 +101,10 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(
         true
       );
-      // Próxima ação vive no cabeçalho: continua visível em qualquer aba
+      // Próxima ação agora vive no corpo do Resumo (cartões enxutos, D3):
+      // some ao trocar de aba.
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
-        true
+        false
       );
       expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('historico');
     });
@@ -319,18 +320,54 @@ describe('LeadPanelBody', () => {
   });
 
   describe('resumo', () => {
-    it('mostra o grid read-only com os dados do lead', () => {
+    it('mostra o cartão Caso com tese e benefício sem precisar abrir nada', () => {
       const wrapper = mountBody();
       expect(wrapper.text()).toContain('Restabelecimento B31');
+    });
+
+    it('mostra telefone/CPF/donos só depois de abrir "Dados do contato"', async () => {
+      const wrapper = mountBody();
+      expect(wrapper.text()).not.toContain('Eduardo / Camila');
+      expect(wrapper.text()).not.toContain('052.318.774-90');
+      await wrapper
+        .find('[data-testid="contact-data-toggle"]')
+        .trigger('click');
       expect(wrapper.text()).toContain('Eduardo / Camila');
       expect(wrapper.text()).toContain('052.318.774-90');
     });
 
-    it('expande o formulário completo pelo link "editar todos os campos"', async () => {
+    it('Andamento mostra a etapa atual e a mini-esteira', () => {
+      const wrapper = mountBody();
+      expect(wrapper.findComponent({ name: 'MiniEsteira' }).exists()).toBe(
+        true
+      );
+      expect(
+        wrapper.find('[data-testid="panel-card-andamento"]').text()
+      ).toContain('Novo');
+    });
+
+    it('cartão Documentos leva pra aba documentos', async () => {
+      const wrapper = mountBody({
+        props: {
+          lead: { ...lead, thesis_id: 3, docs_total: 4, docs_received: 1 },
+        },
+      });
+      await wrapper.find('[data-testid="panel-card-docs"]').trigger('click');
+      expect(
+        wrapper
+          .find('[data-testid="lead-tab-documentos"]')
+          .attributes('aria-selected')
+      ).toBe('true');
+    });
+
+    it('expande o formulário completo pelo link "editar todos os campos" (dentro de Dados do contato)', async () => {
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(
         false
       );
+      await wrapper
+        .find('[data-testid="contact-data-toggle"]')
+        .trigger('click');
       await wrapper
         .find('[data-testid="lead-edit-all-toggle"]')
         .trigger('click');

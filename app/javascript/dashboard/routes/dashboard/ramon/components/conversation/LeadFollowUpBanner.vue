@@ -64,6 +64,43 @@ const label = computed(() => {
   return parts.join(' · ');
 });
 
+// Chip de SLA de 1ª resposta (Ramon::Cadencia via payload do lead).
+// replied_at presente → verde com o tempo gasto (due - alvo = criação);
+// pendente no prazo → âmbar com contagem; vencido → ruby. Date.now() aqui
+// não é reativo — o chip re-renderiza quando o lead muda (broadcast), o que
+// basta: o estado "estourado" chega junto com qualquer atividade nova.
+const slaChip = computed(() => {
+  const sla = lead.value?.sla;
+  if (!sla?.due_at) return null;
+  const due = new Date(sla.due_at).getTime();
+  const targetMs = (Number(sla.minutes) || 0) * 60000;
+  if (sla.replied_at) {
+    const taken = Math.max(
+      0,
+      Math.round(
+        (new Date(sla.replied_at).getTime() - (due - targetMs)) / 60000
+      )
+    );
+    return {
+      tone: 'bg-n-teal-3 text-n-teal-11',
+      icon: 'i-lucide-check',
+      text: t('RAMON.SLA.CHIP_OK', { minutes: taken }),
+    };
+  }
+  const leftMin = Math.floor((due - Date.now()) / 60000);
+  if (leftMin >= 0)
+    return {
+      tone: 'bg-n-amber-3 text-n-amber-11',
+      icon: 'i-lucide-timer',
+      text: t('RAMON.SLA.CHIP_PENDING', { minutes: leftMin }),
+    };
+  return {
+    tone: 'bg-n-ruby-3 text-n-ruby-11',
+    icon: 'i-lucide-timer-off',
+    text: t('RAMON.SLA.CHIP_BREACHED'),
+  };
+});
+
 // Mesmo efeito do LeadPanelToggle: abre o painel do lead (e fecha o Copilot).
 const openPanel = () => {
   updateUISettings({
@@ -74,15 +111,30 @@ const openPanel = () => {
 </script>
 
 <template>
-  <button
-    v-if="label"
-    type="button"
-    data-testid="lead-follow-up-banner"
-    :title="label"
-    class="hidden sm:inline-flex items-center gap-1 min-w-0 max-w-48 px-2 py-1 text-xs rounded-full bg-n-amber-3 text-n-amber-11 hover:bg-n-amber-4"
-    @click="openPanel"
+  <span
+    v-if="label || slaChip"
+    class="hidden sm:inline-flex items-center gap-1.5"
   >
-    <span class="i-lucide-history size-3.5 shrink-0" />
-    <span class="truncate">{{ label }}</span>
-  </button>
+    <span
+      v-if="slaChip"
+      data-testid="lead-sla-chip"
+      :title="slaChip.text"
+      class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full"
+      :class="slaChip.tone"
+    >
+      <span class="size-3.5 shrink-0" :class="slaChip.icon" />
+      <span class="truncate max-w-40">{{ slaChip.text }}</span>
+    </span>
+    <button
+      v-if="label"
+      type="button"
+      data-testid="lead-follow-up-banner"
+      :title="label"
+      class="inline-flex items-center gap-1 min-w-0 max-w-48 px-2 py-1 text-xs rounded-full bg-n-amber-3 text-n-amber-11 hover:bg-n-amber-4"
+      @click="openPanel"
+    >
+      <span class="i-lucide-history size-3.5 shrink-0" />
+      <span class="truncate">{{ label }}</span>
+    </button>
+  </span>
 </template>

@@ -18,6 +18,9 @@
       "NEXT": "Next",
       "LOAD_ERROR": "Couldn't load the agenda"
     },
+    "AUDIO": {
+      "TRANSCRIBED": "transcribed"
+    },
     "CMDK": {
       "SECTION": "Leads",
       "MOVE": "Move to stage… (M)",
@@ -705,19 +708,24 @@
         "DOUBT": "⚠ Attention point: {doubt}"
       },
       "NEXT_ACTION": {
-        "TITLE": "Next action",
+        "TITLE": "Next step",
         "DONE": "Done ✓",
         "SNOOZE": "Snooze 1d",
         "RESCHEDULE": "Reschedule",
         "ERROR": "Could not update the task — try again"
       },
+      "ANDAMENTO": {
+        "TITLE": "Progress",
+        "IN_STAGE": "In this stage for {days} d"
+      },
+      "CASE_TITLE": "Case",
+      "CONTACT_DATA": "Contact data",
       "FIELDS": {
-        "BENEFIT": "Benefit",
-        "THESIS": "Thesis",
         "OWNERS": "SDR / Closer",
         "DCB": "DCB on",
         "PHONE": "Phone",
-        "CPF": "CPF"
+        "CPF": "CPF",
+        "CHANNEL": "Channel"
       },
       "EDIT_ALL_FIELDS": "edit all fields",
       "EDIT_ALL_FIELDS_CLOSE": "collapse fields",
@@ -1159,6 +1167,11 @@
       "CARD_TITLE_NO_DATE": "{count} follow-up(s)",
       "BANNER_STALLED": "Stalled for {days}d",
       "BANNER_RETRIES": "{count} follow-up(s)"
+    },
+    "SLA": {
+      "CHIP_OK": "First-response SLA · {minutes} min",
+      "CHIP_PENDING": "SLA · reply within {minutes} min",
+      "CHIP_BREACHED": "SLA breached"
     },
     "NPS": {
       "LABEL": "NPS (0–10)",

@@ -62,6 +62,9 @@ class Ramon::FollowUpDraftService
       lead.lead_tasks.create!(account: @account, kind: 'follow_up', title: "Retomada nº #{attempt}", due_at: Time.current.end_of_day)
       register_attempt(lead, attempt)
     end
+    Ramon::EventoInline.registrar(lead.conversation,
+                                  "⟳ Cadência do hub preparou o rascunho de retomada nº #{attempt} — revise e envie pelo painel.",
+                                  tipo: 'cadencia_follow_up')
   end
 
   def message_for(lead, attempt)

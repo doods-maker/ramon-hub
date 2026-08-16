@@ -224,8 +224,16 @@ const downloadAudio = async () => {
 
     <div
       v-if="attachment.transcribedText && showTranscribedText"
-      class="text-n-slate-12 p-3 text-sm bg-n-alpha-1 rounded-lg w-full break-words"
+      data-testid="audio-transcript"
+      class="text-n-slate-12 p-3 text-sm bg-n-alpha-1 rounded-lg w-full break-words border-l-2 border-n-iris-9"
     >
+      <!-- eslint-disable vue/no-bare-strings-in-template -->
+      <p
+        class="mb-1 text-[10px] font-semibold uppercase tracking-widest text-n-iris-11"
+      >
+        ✦ {{ $t('RAMON.AUDIO.TRANSCRIBED') }}
+      </p>
+      <!-- eslint-enable vue/no-bare-strings-in-template -->
       {{ displayedTranscript }}
       <button
         v-if="isTranscriptLong"
