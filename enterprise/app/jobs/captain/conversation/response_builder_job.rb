@@ -172,6 +172,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
     # Onda C: o modo POR CONVERSA decide. Rascunho continua sendo o default e
     # também o fallback do flag global antigo (assistant.modo_rascunho?).
+    # O `||` é belt-and-suspenders: `perform` sempre seta @copiloto_modo antes
+    # de chegar aqui (hoje inalcançável), mas evita nil se algum caller futuro
+    # (ex.: um teste chamando este método direto) pular esse passo.
     modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
     return create_draft_note(message_content) unless Ramon::CopilotoModo.piloto?(modo)
 
