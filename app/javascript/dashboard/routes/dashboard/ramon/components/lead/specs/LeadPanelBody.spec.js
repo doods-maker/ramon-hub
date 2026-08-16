@@ -3,6 +3,7 @@ import { createStore } from 'vuex';
 import LeadPanelBody from '../LeadPanelBody.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
 import { formatBrl } from '../../../helpers/currency';
+import { useAlert } from 'dashboard/composables';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
@@ -26,12 +27,15 @@ const build = ({
   update = vi.fn(),
   del = vi.fn(),
   createTask = vi.fn(),
+  followUpDraft = vi.fn(),
+  chatMessages = [],
 } = {}) =>
   createStore({
+    getters: { getSelectedChat: () => ({ id: 42, messages: chatMessages }) },
     modules: {
       leads: {
         namespaced: true,
-        actions: { update, delete: del },
+        actions: { update, delete: del, followUpDraft },
       },
       leadConfig: {
         namespaced: true,
@@ -421,6 +425,80 @@ describe('LeadPanelBody', () => {
       expect(
         wrapper.findComponent({ name: 'ConversationAction' }).exists()
       ).toBe(false);
+    });
+  });
+
+  describe('temperatura e risco de esfriar', () => {
+    const hotMessage = {
+      message_type: 0,
+      created_at: Math.floor(Date.now() / 1000) - 10 * 60,
+      content: 'oi tudo bem por aí',
+      private: false,
+    };
+
+    it('mostra o cartão Temperatura só na conversa, com mensagens do chat', () => {
+      const wrapper = mountBody({
+        spies: { chatMessages: [hotMessage] },
+      });
+      const card = wrapper.find('[data-testid="panel-card-termometro"]');
+      expect(card.exists()).toBe(true);
+      expect(card.text()).toContain('RAMON.TERMOMETRO.QUENTE');
+    });
+
+    it('sem mensagens incoming no chat, o cartão Temperatura não aparece', () => {
+      const wrapper = mountBody();
+      expect(
+        wrapper.find('[data-testid="panel-card-termometro"]').exists()
+      ).toBe(false);
+    });
+
+    it('no drawer não mostra o cartão Temperatura mesmo com mensagens', () => {
+      const wrapper = mountBody({
+        props: { context: 'drawer' },
+        spies: { chatMessages: [hotMessage] },
+      });
+      expect(
+        wrapper.find('[data-testid="panel-card-termometro"]').exists()
+      ).toBe(false);
+    });
+
+    it('mostra o cartão Risco quando o lead está stalled', () => {
+      const wrapper = mountBody({
+        props: { lead: { ...lead, stalled: true } },
+      });
+      expect(wrapper.find('[data-testid="panel-card-risco"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('sem stalled, o cartão Risco não aparece', () => {
+      const wrapper = mountBody();
+      expect(wrapper.find('[data-testid="panel-card-risco"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('clicar em "Preparar retomada" dispara leads/followUpDraft', async () => {
+      const followUpDraft = vi.fn();
+      const wrapper = mountBody({
+        props: { lead: { ...lead, stalled: true } },
+        spies: { followUpDraft },
+      });
+      await wrapper
+        .find('[data-testid="risco-preparar-retomada"]')
+        .trigger('click');
+      await flushPromises();
+      expect(followUpDraft).toHaveBeenCalledWith(expect.anything(), 7);
+      expect(useAlert).toHaveBeenCalledWith('RAMON.RISCO.PREPARADO');
+    });
+
+    it('risco continua funcional no drawer (a action é independente de contexto)', () => {
+      const wrapper = mountBody({
+        props: { context: 'drawer', lead: { ...lead, stalled: true } },
+      });
+      expect(wrapper.find('[data-testid="panel-card-risco"]').exists()).toBe(
+        true
+      );
     });
   });
 });

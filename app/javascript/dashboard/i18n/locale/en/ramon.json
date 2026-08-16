@@ -1177,6 +1177,19 @@
       "CHIP_PENDING": "SLA · reply within {minutes} min",
       "CHIP_BREACHED": "SLA breached"
     },
+    "TERMOMETRO": {
+      "TITLE": "Temperature",
+      "QUENTE": "Hot",
+      "MORNA": "Warm",
+      "FRIA": "Cold",
+      "HESITANDO": "Hesitation signal in the latest messages."
+    },
+    "RISCO": {
+      "TITLE": "Risk of cooling off",
+      "APOIO": "In this stage for {days}d · {count} follow-up(s) already done.",
+      "PREPARAR": "Prepare follow-up (W4) →",
+      "PREPARADO": "Follow-up being prepared — the draft appears in notes and the event in the conversation."
+    },
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "recorded on {date}",

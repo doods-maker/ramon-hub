@@ -1177,6 +1177,19 @@
       "CHIP_PENDING": "SLA · responde em {minutes} min",
       "CHIP_BREACHED": "SLA estourado"
     },
+    "TERMOMETRO": {
+      "TITLE": "Temperatura",
+      "QUENTE": "Quente",
+      "MORNA": "Morna",
+      "FRIA": "Fria",
+      "HESITANDO": "Sinal de hesitação nas últimas mensagens."
+    },
+    "RISCO": {
+      "TITLE": "Risco de esfriar",
+      "APOIO": "Nesta etapa há {days} d · {count} retomada(s) já feitas.",
+      "PREPARAR": "Preparar retomada (W4) →",
+      "PREPARADO": "Retomada em preparo — o rascunho aparece nas notas e o evento na conversa."
+    },
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "registrado em {date}",
