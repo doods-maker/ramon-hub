@@ -69,7 +69,9 @@ onBeforeUnmount(() => clearInterval(poll));
   <div v-if="reuniao" class="mx-auto flex w-full max-w-3xl flex-col gap-6">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <h1 class="truncate text-xl font-semibold text-n-slate-12">
+        <h1
+          class="truncate font-cormorant text-2xl font-semibold text-n-slate-12"
+        >
           {{ reuniao.titulo }}
         </h1>
         <p v-if="reuniao.user_name" class="text-sm text-n-slate-11">
@@ -109,7 +111,10 @@ onBeforeUnmount(() => clearInterval(poll));
       </button>
     </div>
 
-    <section v-if="reuniao.ata">
+    <section
+      v-if="reuniao.ata"
+      class="rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-4"
+    >
       <h2 class="mb-2 text-sm font-semibold uppercase text-n-slate-11">
         {{ t('RAMON.REUNIOES.ATA_TITLE') }}
       </h2>
@@ -120,14 +125,20 @@ onBeforeUnmount(() => clearInterval(poll));
       />
     </section>
 
-    <section v-if="reuniao.audio_url">
+    <section
+      v-if="reuniao.audio_url"
+      class="rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-4"
+    >
       <h2 class="mb-2 text-sm font-semibold uppercase text-n-slate-11">
         {{ t('RAMON.REUNIOES.AUDIO_TITLE') }}
       </h2>
       <audio controls :src="reuniao.audio_url" class="w-full" />
     </section>
 
-    <section v-if="reuniao.transcricao">
+    <section
+      v-if="reuniao.transcricao"
+      class="rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-4"
+    >
       <button
         type="button"
         class="mb-2 text-sm font-semibold uppercase text-n-slate-11 underline"

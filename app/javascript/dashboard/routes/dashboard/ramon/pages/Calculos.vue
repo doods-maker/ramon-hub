@@ -373,7 +373,7 @@ const fmtDate = value => {
       <!-- Histórico: mesmo painel nos dois modos, some ao reabrir um cálculo -->
       <div
         v-if="historicoOpen"
-        class="max-w-2xl p-3 mb-4 rounded-xl border border-n-weak bg-n-alpha-1"
+        class="max-w-2xl p-3 mb-4 rounded-xl border border-n-weak bg-n-solid-1 shadow-sm"
         data-testid="calculos-historico"
       >
         <input
