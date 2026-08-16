@@ -1190,6 +1190,13 @@
       "PREPARAR": "Preparar retomada (W4) →",
       "PREPARADO": "Retomada em preparo — o rascunho aparece nas notas e o evento na conversa."
     },
+    "QUALIFICACAO": {
+      "TITLE": "Qualificação",
+      "COUNT": "{ok}/{total}",
+      "CYCLE_HINT": "Clique: confirmado → falta → limpar",
+      "PERGUNTAR": "perguntar →",
+      "PERGUNTA_INSERIDA": "Pergunta inserida no editor — ajuste e envie."
+    },
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "registrado em {date}",

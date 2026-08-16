@@ -340,6 +340,15 @@ describe('LeadPanelBody', () => {
       expect(wrapper.text()).toContain('052.318.774-90');
     });
 
+    it('mostra o cartão Qualificação viva logo após o cartão Caso', () => {
+      const wrapper = mountBody({
+        props: { lead: { ...lead, thesis_id: 3 } },
+      });
+      expect(wrapper.findComponent({ name: 'QualificacaoViva' }).exists()).toBe(
+        true
+      );
+    });
+
     it('Andamento mostra a etapa atual e a mini-esteira', () => {
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'MiniEsteira' }).exists()).toBe(

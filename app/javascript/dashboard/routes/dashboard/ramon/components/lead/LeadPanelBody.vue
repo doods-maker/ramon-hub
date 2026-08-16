@@ -20,6 +20,7 @@ import LeadTriage from '../conversation/LeadTriage.vue';
 import LeadKit from '../conversation/LeadKit.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
 import DocChecklist from './DocChecklist.vue';
+import QualificacaoViva from './QualificacaoViva.vue';
 import { useLeadPanelTabs } from '../../composables/useLeadPanelSections';
 import { useTemperatura } from '../../composables/useTemperatura';
 import { prescriptionInfo } from '../../helpers/prescription';
@@ -721,6 +722,8 @@ const discard = async () => {
             </div>
           </div>
         </div>
+
+        <QualificacaoViva :lead="lead" :context="context" />
 
         <LeadQuizResumo :lead="lead" />
         <LeadNotes :lead-id="lead.id" />

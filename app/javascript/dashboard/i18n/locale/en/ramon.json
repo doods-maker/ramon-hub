@@ -1190,6 +1190,13 @@
       "PREPARAR": "Prepare follow-up (W4) →",
       "PREPARADO": "Follow-up being prepared — the draft appears in notes and the event in the conversation."
     },
+    "QUALIFICACAO": {
+      "TITLE": "Qualification",
+      "COUNT": "{ok}/{total}",
+      "CYCLE_HINT": "Click: confirmed → missing → clear",
+      "PERGUNTAR": "ask →",
+      "PERGUNTA_INSERIDA": "Question inserted in the editor — adjust and send."
+    },
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "recorded on {date}",
