@@ -46,4 +46,23 @@ describe('EsteiraEtapas', () => {
     expect(selos[0].classes().join(' ')).toContain('bg-n-iris-9');
     expect(selos[2].text()).toBe('3');
   });
+
+  it('lead em etapa perdida não marca a etapa de ganho como concluída', () => {
+    const lostStages = stages.map(stage =>
+      stage.id === 2 ? { ...stage, is_lost: true } : stage
+    );
+    const wrapper = mount(EsteiraEtapas, { props: { stages: lostStages } });
+    const selos = wrapper.findAll('[data-testid="esteira-selo"]');
+    expect(selos[2].find('.i-lucide-check').exists()).toBe(false);
+    expect(selos[2].text()).toBe('3');
+  });
+
+  it('etapa atual perdida usa selo em tom ruby', () => {
+    const lostStages = stages.map(stage =>
+      stage.id === 2 ? { ...stage, is_lost: true } : stage
+    );
+    const wrapper = mount(EsteiraEtapas, { props: { stages: lostStages } });
+    const selos = wrapper.findAll('[data-testid="esteira-selo"]');
+    expect(selos[1].classes().join(' ')).toContain('bg-n-ruby-9');
+  });
 });
