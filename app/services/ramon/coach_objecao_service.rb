@@ -28,8 +28,10 @@ class Ramon::CoachObjecaoService
   def perform
     return if @message.content.to_s.strip.length < MIN_CHARS
     return if recente?
+    return if playbook.blank?
 
     parsed = ask_llm
+    marcar_ultima_em
     return if parsed.blank? || parsed['objecao'].blank? || parsed['objecao'] == 'nenhuma'
 
     opcoes = Array(parsed['opcoes']).first(2).filter_map do |o|
@@ -40,7 +42,6 @@ class Ramon::CoachObjecaoService
     return if opcoes.empty?
 
     registrar_evento(parsed['objecao'].to_s, opcoes)
-    marcar_ultima_em
   rescue StandardError => e
     Rails.logger.warn("[Ramon::CoachObjecaoService] silêncio (#{e.class}: #{e.message}) message=#{@message.id}")
   end
@@ -54,9 +55,12 @@ class Ramon::CoachObjecaoService
     false
   end
 
+  def playbook
+    @playbook ||= @lead.thesis.thesis_items.where(section: 'objecao')
+                        .map { |i| "- #{i.title}: #{i.content}" }.join("\n")
+  end
+
   def ask_llm
-    playbook = @lead.thesis.thesis_items.where(section: 'objecao')
-                    .map { |i| "- #{i.title}: #{i.content}" }.join("\n")
     texto = Ramon::Pseudonymizer.mask(@message.content.to_s, names: [@lead.name, @lead.contact&.name].compact)
     result = Ramon::LlmClient.complete(
       provider: PROVIDER, model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
@@ -66,6 +70,7 @@ class Ramon::CoachObjecaoService
     parsed = JSON.parse(result.content.to_s.sub(/\A```(?:json)?\s*/, '').sub(/```\s*\z/, ''))
     parsed.is_a?(Hash) ? parsed : nil
   rescue JSON::ParserError
+    Rails.logger.debug("[Ramon::CoachObjecaoService] parse nil message=#{@message.id}")
     nil
   end
 

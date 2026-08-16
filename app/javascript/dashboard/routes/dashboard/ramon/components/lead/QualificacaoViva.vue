@@ -46,7 +46,8 @@ const pendingIds = ref(new Set());
 const cycle = async item => {
   if (pendingIds.value.has(item.id)) return;
   pendingIds.value.add(item.id);
-  const next = { null: 'ok', ok: 'falta', falta: null }[String(statusOf(item))];
+  const next =
+    { null: 'ok', ok: 'falta', falta: null }[String(statusOf(item))] ?? 'ok';
   try {
     await store.dispatch('leads/update', {
       id: props.lead.id,

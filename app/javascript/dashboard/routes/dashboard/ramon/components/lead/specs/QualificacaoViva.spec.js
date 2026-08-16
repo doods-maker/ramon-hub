@@ -92,6 +92,22 @@ describe('QualificacaoViva.vue', () => {
     });
   });
 
+  it('clicking a criterio with an unexpected status self-heals to ok', async () => {
+    const update = vi.fn();
+    const leadComLixo = {
+      ...baseLead,
+      custom_attributes: { qualificacao_status: { 2: 'xyz' } },
+    };
+    const wrapper = mountQualificacao(leadComLixo, update);
+    await wrapper
+      .findAll('[data-testid="qualificacao-toggle"]')[0]
+      .trigger('click');
+    expect(update).toHaveBeenCalledWith(expect.anything(), {
+      id: 3,
+      custom_attributes: { qualificacao_status: { 2: 'ok' } },
+    });
+  });
+
   it('"perguntar ->" in conversation context emits insertIntoNormalEditor with the item title', async () => {
     const wrapper = mountQualificacao(baseLead, vi.fn(), {
       context: 'conversation',
