@@ -1209,6 +1209,19 @@
       "NEXT_EMPTY": "Nothing scheduled.",
       "TICKER_NOW": "Now:",
       "TICKER": "{closer} closed {lead} — {value} · {benefit}"
+    },
+    "COPILOTO": {
+      "BTN": "Copilot: {modo}",
+      "TITULO": "Copilot mode — this conversation only",
+      "MODOS": {
+        "manual": { "NOME": "Manual", "DESC": "The AI suggests nothing. You write everything." },
+        "rascunho": { "NOME": "Draft", "DESC": "The AI prepares replies; nothing goes out until you hit Send." },
+        "piloto_limitado": { "NOME": "Limited autopilot", "DESC": "The AI sends on its own ONLY logistics messages: requesting documents, confirming a time, cadence messages.", "NOTA": "Never sends: amounts, case analysis, promises. Every sent message is flagged in the conversation and you can pause it with 1 click." },
+        "piloto_total": { "NOME": "Full autopilot", "DESC": "The AI replies to everything on its own. Every message is stamped and you can pause it with 1 click." }
+      },
+      "CARIMBO": "sent by the autopilot ({modo})",
+      "PAUSAR": "Pause autopilot",
+      "PAUSADO": "Autopilot paused — back to Draft mode."
     }
   },
   "CAPTAIN_RAMON": {
