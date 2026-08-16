@@ -265,6 +265,22 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         described_class.perform_now(conversation, assistant)
         expect(conversation.messages.last.private).to be(true)
       end
+
+      it 'piloto_limitado: logística sai, não-logística vira rascunho' do
+        set_modo('piloto_limitado')
+        allow(Ramon::PilotoLogisticaService).to receive(:logistica?).and_return(false)
+        described_class.perform_now(conversation, assistant)
+        expect(conversation.messages.last.private).to be(true)
+      end
+
+      it 'piloto_limitado: logística sai outgoing pública com carimbo ramon_piloto' do
+        set_modo('piloto_limitado')
+        allow(Ramon::PilotoLogisticaService).to receive(:logistica?).and_return(true)
+        described_class.perform_now(conversation, assistant)
+        msg = conversation.messages.last
+        expect(msg).to have_attributes(message_type: 'outgoing', private: false)
+        expect(msg.content_attributes['ramon_piloto']).to include('modo' => 'piloto_limitado')
+      end
     end
 
     context 'when captain_v2 handoff tool fires during agent execution' do

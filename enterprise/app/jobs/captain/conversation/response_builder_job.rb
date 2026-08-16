@@ -154,6 +154,10 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def create_handoff_message(preserve_waiting_since: false)
+    # Handoff é logística por definição (constraint global) — nunca vira rascunho
+    # em piloto_limitado. Único call site (v1 e v2 passam por aqui), então o flag
+    # é setado uma vez só, imediatamente antes da chamada.
+    @enviando_handoff = true
     create_outgoing_message(
       @assistant.config['handoff_message'].presence || I18n.t('conversations.captain.handoff'),
       preserve_waiting_since: preserve_waiting_since
@@ -177,6 +181,10 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     # (ex.: um teste chamando este método direto) pular esse passo.
     modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
     return create_draft_note(message_content) unless Ramon::CopilotoModo.piloto?(modo)
+
+    if modo == 'piloto_limitado' && !@enviando_handoff && !Ramon::PilotoLogisticaService.logistica?(message_content)
+      return create_draft_note(message_content)
+    end
 
     additional_attrs = {}
     additional_attrs[:agent_name] = agent_name if agent_name.present?
