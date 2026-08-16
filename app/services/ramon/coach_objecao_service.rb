@@ -66,8 +66,7 @@ class Ramon::CoachObjecaoService
   end
 
   def playbook
-    @playbook ||= @lead.thesis.thesis_items.where(section: 'objecao')
-                        .map { |i| "- #{i.title}: #{i.content}" }.join("\n")
+    @playbook ||= @lead.thesis.thesis_items.where(section: 'objecao').map { |i| "- #{i.title}: #{i.content}" }.join("\n")
   end
 
   def ask_llm
@@ -80,7 +79,7 @@ class Ramon::CoachObjecaoService
     parsed = JSON.parse(result.content.to_s.sub(/\A```(?:json)?\s*/, '').sub(/```\s*\z/, ''))
     parsed.is_a?(Hash) ? parsed : nil
   rescue JSON::ParserError
-    Rails.logger.debug("[Ramon::CoachObjecaoService] parse nil message=#{@message.id}")
+    Rails.logger.debug { "[Ramon::CoachObjecaoService] parse nil message=#{@message.id}" }
     nil
   end
 

@@ -3,7 +3,7 @@ require 'rails_helper'
 describe Ramon::CoachObjecaoService do
   let(:account) { create(:account) }
   let(:thesis) { create(:thesis, account: account) }
-  let!(:objecao_item) do
+  before do
     create(:thesis_item, thesis: thesis, section: 'objecao',
                          title: 'Advogado é caro', content: 'A análise é gratuita e o honorário é no êxito.')
   end
