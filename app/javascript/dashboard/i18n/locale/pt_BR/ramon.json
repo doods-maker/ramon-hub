@@ -889,6 +889,10 @@
       "DRAFT_READY": "Rascunho inserido no editor — revise antes de enviar",
       "ERROR": "Não foi possível gerar. Tente de novo."
     },
+    "COACH": {
+      "USAR": "Usar →",
+      "USADO": "Resposta inserida no editor — revise antes de enviar."
+    },
     "TRIAGE": {
       "TAB": "Triagem",
       "RUN": "Rodar triagem",

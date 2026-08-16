@@ -889,6 +889,10 @@
       "DRAFT_READY": "Draft inserted into the editor — review before sending",
       "ERROR": "Could not generate. Try again."
     },
+    "COACH": {
+      "USAR": "Use →",
+      "USADO": "Reply inserted in the editor — review before sending."
+    },
     "TRIAGE": {
       "TAB": "Triage",
       "RUN": "Run triage",

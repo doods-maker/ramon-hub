@@ -1,8 +1,12 @@
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useMessageContext } from '../provider.js';
 import { useDocSugestao } from 'dashboard/routes/dashboard/ramon/composables/useDocSugestao';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
+import { useAlert } from 'dashboard/composables';
 
 const { content, contentAttributes } = useMessageContext();
 
@@ -39,6 +43,17 @@ const responder = aceitar =>
     itemId: contentAttributes.value?.itemId,
     attachmentId: contentAttributes.value?.attachmentId,
   });
+
+const { t } = useI18n();
+const isCoach = computed(() => contentAttributes.value?.ramonEvent === 'coach');
+const opcoes = computed(() =>
+  isCoach.value ? contentAttributes.value?.opcoes || [] : []
+);
+
+const usar = opcao => {
+  emitter.emit(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, opcao.texto);
+  useAlert(t('RAMON.COACH.USADO'));
+};
 </script>
 
 <template>
@@ -68,6 +83,23 @@ const responder = aceitar =>
         @click="responder(false)"
       >
         {{ $t('RAMON.DOCS.SUGESTAO.DISPENSAR') }}
+      </button>
+    </div>
+    <div v-if="opcoes.length" class="mt-2 flex flex-col gap-1.5 text-left">
+      <button
+        v-for="(opcao, index) in opcoes"
+        :key="index"
+        type="button"
+        data-testid="coach-usar"
+        class="flex items-start gap-2 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-xs text-n-slate-12 hover:border-n-iris-9"
+        @click="usar(opcao)"
+      >
+        <span class="min-w-0"
+          ><b>{{ opcao.titulo }}:</b> {{ opcao.texto }}</span
+        >
+        <span class="ml-auto shrink-0 font-bold text-n-iris-11">{{
+          $t('RAMON.COACH.USAR')
+        }}</span>
       </button>
     </div>
   </div>
