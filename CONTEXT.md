@@ -123,3 +123,46 @@ benefício assim que conhecidos. Ajustável à mão; vira Valor do Contrato no G
 **Previsão**:
 A receita esperada do funil: soma dos Valores Estimados ponderados pela
 probabilidade da Etapa de cada lead.
+
+### Inteligência
+
+**Assistente**:
+Um agente de IA configurado na área Inteligência, com público definido —
+hoje dois: o de *Atendimento* (fala com o lead, humano no meio) e o *Copiloto do
+Escritório* (responde à equipe). Cresce por Skills, não por multiplicação de
+assistentes.
+_Avoid_: agente (genérico), bot, capitão
+
+**Skill**:
+Uma situação que o Assistente sabe conduzir (qualificar lead novo, preparar
+reunião, cobrar documento…): instrução + Tools permitidas. Editável na tela,
+sem código.
+_Avoid_: cenário, scenario
+
+**Tool**:
+Uma capacidade que o Assistente pode invocar (calcular benefício, buscar no
+ADVBOX…). Tool de leitura responde; Tool de escrita nunca executa — gera uma
+Sugestão pendente.
+
+**Sugestão**:
+Uma ação proposta pela IA à espera do clique humano (rascunho, alerta, mover
+etapa, ação externa). Aplicar ou dispensar é sempre decisão de pessoa.
+_Avoid_: ação automática
+
+**Execução**:
+O registro auditável de uma Tool invocada: quando, com o quê, o que voltou,
+quanto demorou.
+
+**Modo do Copiloto**:
+O grau de autonomia da IA numa conversa específica: manual (não age),
+rascunho (propõe, humano envia), piloto limitado (envia sozinha só logística),
+piloto total. Padrão é rascunho.
+
+**FAQ**:
+Pergunta que o *lead* faz e a resposta aprovada da banca, por Tese; o
+Assistente consulta antes de responder.
+
+**Documento (da Inteligência)**:
+Material de referência que o *Assistente* consulta (guia da tese, política de
+honorários, checklist) — distinto de Documento do cliente no Checklist.
+_Avoid_: usar "documento" sem qualificar quando o contexto for pós-venda
