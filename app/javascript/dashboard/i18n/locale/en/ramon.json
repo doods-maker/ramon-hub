@@ -889,6 +889,10 @@
       "DRAFT_READY": "Draft inserted into the editor — review before sending",
       "ERROR": "Could not generate. Try again."
     },
+    "COACH": {
+      "USAR": "Use →",
+      "USADO": "Reply inserted in the editor — review before sending."
+    },
     "TRIAGE": {
       "TAB": "Triage",
       "RUN": "Run triage",
@@ -1172,6 +1176,26 @@
       "CHIP_OK": "First-response SLA · {minutes} min",
       "CHIP_PENDING": "SLA · reply within {minutes} min",
       "CHIP_BREACHED": "SLA breached"
+    },
+    "TERMOMETRO": {
+      "TITLE": "Temperature",
+      "QUENTE": "Hot",
+      "MORNA": "Warm",
+      "FRIA": "Cold",
+      "HESITANDO": "Hesitation signal in the latest messages."
+    },
+    "RISCO": {
+      "TITLE": "Risk of cooling off",
+      "APOIO": "In this stage for {days}d · {count} follow-up(s) already done.",
+      "PREPARAR": "Prepare follow-up (W4) →",
+      "PREPARADO": "Follow-up being prepared — the draft appears in notes and the event in the conversation."
+    },
+    "QUALIFICACAO": {
+      "TITLE": "Qualification",
+      "COUNT": "{ok}/{total}",
+      "CYCLE_HINT": "Click: confirmed → missing → clear",
+      "PERGUNTAR": "ask →",
+      "PERGUNTA_INSERIDA": "Question inserted in the editor — adjust and send."
     },
     "NPS": {
       "LABEL": "NPS (0–10)",

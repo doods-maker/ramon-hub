@@ -889,6 +889,10 @@
       "DRAFT_READY": "Rascunho inserido no editor — revise antes de enviar",
       "ERROR": "Não foi possível gerar. Tente de novo."
     },
+    "COACH": {
+      "USAR": "Usar →",
+      "USADO": "Resposta inserida no editor — revise antes de enviar."
+    },
     "TRIAGE": {
       "TAB": "Triagem",
       "RUN": "Rodar triagem",
@@ -1172,6 +1176,26 @@
       "CHIP_OK": "SLA 1º contato · {minutes} min",
       "CHIP_PENDING": "SLA · responde em {minutes} min",
       "CHIP_BREACHED": "SLA estourado"
+    },
+    "TERMOMETRO": {
+      "TITLE": "Temperatura",
+      "QUENTE": "Quente",
+      "MORNA": "Morna",
+      "FRIA": "Fria",
+      "HESITANDO": "Sinal de hesitação nas últimas mensagens."
+    },
+    "RISCO": {
+      "TITLE": "Risco de esfriar",
+      "APOIO": "Nesta etapa há {days} d · {count} retomada(s) já feitas.",
+      "PREPARAR": "Preparar retomada (W4) →",
+      "PREPARADO": "Retomada em preparo — o rascunho aparece nas notas e o evento na conversa."
+    },
+    "QUALIFICACAO": {
+      "TITLE": "Qualificação",
+      "COUNT": "{ok}/{total}",
+      "CYCLE_HINT": "Clique: confirmado → falta → limpar",
+      "PERGUNTAR": "perguntar →",
+      "PERGUNTA_INSERIDA": "Pergunta inserida no editor — ajuste e envie."
     },
     "NPS": {
       "LABEL": "NPS (0–10)",

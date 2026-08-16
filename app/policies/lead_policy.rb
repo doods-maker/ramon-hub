@@ -23,6 +23,10 @@ class LeadPolicy < ApplicationPolicy
     @account_user.administrator? || @account_user.agent?
   end
 
+  def follow_up_draft?
+    @account_user.administrator? || @account_user.agent?
+  end
+
   def destroy?
     @account_user.administrator?
   end

@@ -36,6 +36,13 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     render json: { url: "#{ENV.fetch('FRONTEND_URL', '')}/portal/#{@lead.ensure_portal_token!}" }
   end
 
+  # Retomada W4 sob demanda (Onda D): botão "Preparar retomada" do painel.
+  # Resultado (nota RASCUNHO + tarefa) chega pelos broadcasts de sempre.
+  def follow_up_draft
+    Ramon::FollowUpDraftJob.perform_later(@lead.id)
+    head :accepted
+  end
+
   def for_conversation
     # o front manda o id do objeto de conversa da SPA, que é o display_id (por conta)
     conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])

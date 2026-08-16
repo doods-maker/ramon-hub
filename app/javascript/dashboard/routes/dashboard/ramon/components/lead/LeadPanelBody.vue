@@ -20,7 +20,9 @@ import LeadTriage from '../conversation/LeadTriage.vue';
 import LeadKit from '../conversation/LeadKit.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
 import DocChecklist from './DocChecklist.vue';
+import QualificacaoViva from './QualificacaoViva.vue';
 import { useLeadPanelTabs } from '../../composables/useLeadPanelSections';
+import { useTemperatura } from '../../composables/useTemperatura';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
@@ -147,6 +149,25 @@ const andamentoApoio = computed(() =>
     .filter(Boolean)
     .join(' · ')
 );
+// ----- Temperatura (heurística local, só na conversa) + Risco de esfriar -----
+const currentChat = useMapGetter('getSelectedChat');
+const chatMessages = computed(() => currentChat.value?.messages || []);
+const { nivel, hesitando } = useTemperatura(chatMessages);
+const risco = computed(() => Boolean(props.lead?.stalled));
+const followUpPending = ref(false);
+const prepararRetomada = async () => {
+  if (followUpPending.value) return;
+  followUpPending.value = true;
+  try {
+    await store.dispatch('leads/followUpDraft', props.lead.id);
+    useAlert(t('RAMON.RISCO.PREPARADO'));
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  } finally {
+    followUpPending.value = false;
+  }
+};
+
 const docsPct = computed(() => {
   const total = Number(props.lead?.docs_total) || 0;
   if (!total) return 0;
@@ -562,6 +583,80 @@ const discard = async () => {
         <!-- Próximo passo (era LeadNextAction do header) -->
         <LeadNextAction :lead-id="lead.id" />
 
+        <!-- Temperatura (só na conversa; heurística local) -->
+        <div
+          v-if="inConversation && nivel"
+          :class="CARD"
+          data-testid="panel-card-termometro"
+        >
+          <p
+            class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
+          >
+            {{ $t('RAMON.TERMOMETRO.TITLE') }}
+          </p>
+          <div class="mt-2 flex items-center gap-2">
+            <div
+              class="relative h-1.5 flex-1 rounded-full bg-gradient-to-r from-n-ruby-9 via-n-amber-9 to-n-teal-9 opacity-80"
+            >
+              <span
+                class="absolute -top-1 h-3.5 w-1 rounded bg-n-slate-12"
+                :style="{
+                  left:
+                    nivel === 'quente'
+                      ? '85%'
+                      : nivel === 'morna'
+                        ? '48%'
+                        : '10%',
+                }"
+              />
+            </div>
+            <span
+              class="text-[11px] font-bold uppercase"
+              :class="
+                nivel === 'quente'
+                  ? 'text-n-teal-11'
+                  : nivel === 'morna'
+                    ? 'text-n-amber-11'
+                    : 'text-n-ruby-11'
+              "
+            >
+              {{ $t(`RAMON.TERMOMETRO.${nivel.toUpperCase()}`) }}
+            </span>
+          </div>
+          <p v-if="hesitando" class="mt-1.5 text-xs text-n-slate-11">
+            {{ $t('RAMON.TERMOMETRO.HESITANDO') }}
+          </p>
+        </div>
+
+        <!-- Risco de esfriar (stalled) -->
+        <div
+          v-if="risco"
+          :class="CARD"
+          class="border-l-4 border-l-n-ruby-9 bg-n-ruby-9/5"
+          data-testid="panel-card-risco"
+        >
+          <p class="text-[12.5px] font-bold text-n-ruby-11">
+            {{ $t('RAMON.RISCO.TITLE') }}
+          </p>
+          <p class="mt-0.5 text-xs text-n-slate-11">
+            {{
+              $t('RAMON.RISCO.APOIO', {
+                days: daysInStage ?? 0,
+                count: Number(lead.follow_up_count) || 0,
+              })
+            }}
+          </p>
+          <button
+            type="button"
+            data-testid="risco-preparar-retomada"
+            class="mt-2 text-[11.5px] font-bold text-n-iris-11 underline disabled:opacity-50"
+            :disabled="followUpPending"
+            @click="prepararRetomada"
+          >
+            {{ $t('RAMON.RISCO.PREPARAR') }}
+          </button>
+        </div>
+
         <!-- Documentos -->
         <button
           v-if="lead.thesis_id && lead.docs_total"
@@ -627,6 +722,8 @@ const discard = async () => {
             </div>
           </div>
         </div>
+
+        <QualificacaoViva :lead="lead" :context="context" />
 
         <LeadQuizResumo :lead="lead" />
         <LeadNotes :lead-id="lead.id" />

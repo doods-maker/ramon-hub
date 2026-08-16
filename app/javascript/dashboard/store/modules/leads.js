@@ -220,6 +220,10 @@ export const actions = {
     const response = await LeadsAPI.createNote(leadId, body);
     return response.data;
   },
+  // Só dispara o job; o rascunho (nota + task) chega pelo broadcast do lead.
+  followUpDraft: async (_ctx, leadId) => {
+    await LeadsAPI.followUpDraft(leadId);
+  },
   async updateContactFields(
     { commit, state: moduleState },
     { leadId, contactId, payload }

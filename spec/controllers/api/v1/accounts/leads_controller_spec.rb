@@ -543,4 +543,21 @@ RSpec.describe 'Leads API', type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
   end
+
+  describe 'POST /api/v1/accounts/:account_id/leads/:id/follow_up_draft' do
+    it 'enfileira o job de retomada e devolve 202' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/follow_up_draft",
+             headers: admin.create_new_auth_token, as: :json
+      end.to have_enqueued_job(Ramon::FollowUpDraftJob).with(lead.id)
+      expect(response).to have_http_status(:accepted)
+    end
+
+    it 'devolve 401 sem autenticação' do
+      lead = create(:lead, account: account, lead_stage: novo)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/follow_up_draft", as: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
 end

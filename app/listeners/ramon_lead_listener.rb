@@ -34,6 +34,9 @@ class RamonLeadListener < BaseListener
 
     # Anexo de documento → IA sugere o item do checklist (confirmação humana no painel).
     Ramon::DocMatchJob.perform_later(message.id) if message.attachments.any? { |a| %w[image file].include?(a.file_type) }
+
+    # Objeção no texto → coach sugere 2 respostas prontas do playbook (Onda D).
+    Ramon::CoachObjecaoJob.perform_later(message.id) if message.content.to_s.strip.length >= 20
   end
 
   def lead_created(event)

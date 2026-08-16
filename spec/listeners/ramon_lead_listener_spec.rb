@@ -143,6 +143,29 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe '#message_created -> coach de objeção' do
+    let(:thesis) { account.theses.find_by!(name: 'Auxílio-acidente (B36)') }
+    let(:lead) do
+      create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
+                    conversation: conversation, contact: contact, thesis: thesis)
+    end
+
+    it 'enfileira Ramon::CoachObjecaoJob para incoming com texto e lead com tese' do
+      lead
+      message = create(:message, account: account, conversation: conversation, message_type: :incoming,
+                                 content: 'vou pensar mais um pouco, tá caro pra mim')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message)) }
+        .to have_enqueued_job(Ramon::CoachObjecaoJob).with(message.id)
+    end
+
+    it 'não enfileira para incoming curta (< 20 chars)' do
+      lead
+      message = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message)) }
+        .not_to have_enqueued_job(Ramon::CoachObjecaoJob)
+    end
+  end
+
   # Colheita NÃO é mais automática por mensagem (decisão 20/07: só sob demanda
   # pelo botão do painel / LeadColheitasController) — sem gatilho no message_created.
   describe '#message_created -> NÃO agenda colheita automática' do
