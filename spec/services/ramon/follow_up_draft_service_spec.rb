@@ -97,6 +97,25 @@ RSpec.describe Ramon::FollowUpDraftService do
     expect(note.body).to include('ainda tem interesse')
   end
 
+  describe '#perform_for' do
+    it 'gera rascunho pra 1 lead elegível (nota + task + evento) e retorna true' do
+      lead = stalled_lead
+      allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('Oi [nome], vamos retomar seu caso?'))
+
+      expect(described_class.new(account: account).perform_for(lead)).to be(true)
+      expect(lead.lead_notes.last.body).to include('RASCUNHO')
+      expect(lead.lead_tasks.open_tasks.where(kind: 'follow_up')).to exist
+    end
+
+    it 'lead inelegível (task follow_up aberta) → false e nada criado' do
+      lead = stalled_lead
+      lead.lead_tasks.create!(account: account, kind: 'follow_up', title: 'x', due_at: 1.day.from_now)
+
+      expect { expect(described_class.new(account: account).perform_for(lead)).to be(false) }
+        .not_to change(lead.lead_notes, :count)
+    end
+  end
+
   it 'manda 1 push resumo por conta ao final (não 1 por lead)' do
     with_modified_env(NTFY_TOPIC: 'ramon-teste') do
       stalled_lead(name: 'Maria da Silva')

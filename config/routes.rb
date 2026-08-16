@@ -317,6 +317,7 @@ Rails.application.routes.draw do
             member do
               get :dossie, to: 'lead_dossies#show'
               post :portal_link
+              post :follow_up_draft
             end
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :notes, only: [:index, :create], controller: 'lead_notes'

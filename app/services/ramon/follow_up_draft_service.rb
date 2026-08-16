@@ -35,6 +35,15 @@ class Ramon::FollowUpDraftService
     batch.size
   end
 
+  # Retomada sob demanda pra UM lead (botão "Preparar retomada" do painel,
+  # Onda D). Mesmos guards do lote (eligible?), sem o teto diário.
+  def perform_for(lead)
+    return false unless eligible?(lead)
+
+    draft_for(lead)
+    true
+  end
+
   private
 
   def eligible?(lead)

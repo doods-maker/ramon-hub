@@ -114,6 +114,10 @@ class LeadsAPI extends ApiClient {
   portalLink(leadId) {
     return axios.post(`${this.url}/${leadId}/portal_link`);
   }
+
+  followUpDraft(leadId) {
+    return axios.post(`${this.url}/${leadId}/follow_up_draft`);
+  }
 }
 
 export default new LeadsAPI();
