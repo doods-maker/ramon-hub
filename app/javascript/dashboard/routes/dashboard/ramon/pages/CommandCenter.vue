@@ -390,10 +390,10 @@ useKeyboardEvents({
           </p>
           <div class="flex items-center gap-2 mt-1">
             <span
-              class="block w-40 h-1.5 overflow-hidden rounded-full bg-[#c9a97c]/[.15]"
+              class="block w-40 h-1.5 overflow-hidden rounded-full bg-n-alpha-2"
             >
               <span
-                class="block h-full rounded-full bg-gradient-to-r from-[#8a5c33] to-[#c9a97c] transition-all duration-200"
+                class="block h-full rounded-full bg-n-iris-9 transition-all duration-200"
                 :style="{ width: `${goalPct}%` }"
               />
             </span>
@@ -513,7 +513,7 @@ useKeyboardEvents({
           <div
             v-if="current"
             data-testid="queue-hero"
-            class="p-5 rounded-[14px] border border-[#c9a97c]/[.28] bg-gradient-to-br from-[#33302c] to-[#2e2b27] shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+            class="p-5 rounded-[14px] border border-n-weak bg-n-solid-1 shadow-sm"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
@@ -525,7 +525,7 @@ useKeyboardEvents({
                   </p>
                   <span
                     v-if="current.stageName"
-                    class="px-2 py-0.5 text-[10.5px] rounded-full bg-[#c9a97c]/[.14] text-n-iris-11 border border-[#c9a97c]/[.25]"
+                    class="px-2 py-0.5 text-[10.5px] rounded-full bg-n-iris-3 text-n-iris-11 border border-n-weak"
                   >
                     {{ stageAge(current) }}
                   </span>
@@ -551,7 +551,7 @@ useKeyboardEvents({
               </span>
             </div>
             <div
-              class="flex flex-wrap items-center gap-2 mt-4 pt-3.5 border-t border-[#c9a97c]/[.12]"
+              class="flex flex-wrap items-center gap-2 mt-4 pt-3.5 border-t border-n-weak"
             >
               <button
                 type="button"
@@ -565,7 +565,7 @@ useKeyboardEvents({
               <button
                 type="button"
                 data-testid="queue-ai-draft"
-                class="inline-flex items-center h-[34px] gap-1.5 px-3.5 text-[13px] rounded-[9px] border border-[#c9a97c]/[.2] text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2"
+                class="inline-flex items-center h-[34px] gap-1.5 px-3.5 text-[13px] rounded-[9px] border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2"
                 @click="openConversation(current)"
               >
                 {{ t('RAMON.COMMAND.QUEUE.AI_DRAFT') }}
@@ -573,7 +573,7 @@ useKeyboardEvents({
               <button
                 type="button"
                 data-testid="queue-done"
-                class="inline-flex items-center h-[34px] gap-1.5 px-3.5 text-[13px] rounded-[9px] border border-[#c9a97c]/[.2] text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
+                class="inline-flex items-center h-[34px] gap-1.5 px-3.5 text-[13px] rounded-[9px] border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
                 :disabled="isActing"
                 @click="markDone"
               >

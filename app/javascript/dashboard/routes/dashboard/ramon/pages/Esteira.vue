@@ -286,7 +286,7 @@ useKeyboardEvents({
           class="block flex-1 h-[5px] overflow-hidden rounded-full bg-n-alpha-2"
         >
           <span
-            class="block h-full rounded-full bg-gradient-to-r from-[#8a5c33] to-[#c9a97c] transition-all duration-200"
+            class="block h-full rounded-full bg-n-iris-9 transition-all duration-200"
             :style="{ width: `${progressPct}%` }"
           />
         </span>
@@ -380,7 +380,7 @@ useKeyboardEvents({
       <!-- Card hero: o item atual -->
       <div
         data-testid="esteira-current"
-        class="flex flex-col p-6 rounded-2xl border border-[#c9a97c]/25 bg-gradient-to-br from-n-solid-3 to-n-surface-1 shadow-[0_8px_28px_rgba(0,0,0,0.4)]"
+        class="flex flex-col p-6 rounded-2xl border border-n-weak bg-n-solid-1 shadow-sm"
       >
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
@@ -430,7 +430,7 @@ useKeyboardEvents({
         <div
           v-if="showScript"
           data-testid="esteira-script"
-          class="mt-4 p-4 rounded-xl bg-n-alpha-2 border border-[#c9a97c]/10"
+          class="mt-4 p-4 rounded-xl bg-n-alpha-2 border border-n-weak"
         >
           <p
             class="text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
@@ -531,7 +531,7 @@ useKeyboardEvents({
           <button
             type="button"
             data-testid="esteira-snooze"
-            class="inline-flex items-center h-10 gap-2 px-4 text-sm rounded-[11px] border border-[#c9a97c]/20 text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
+            class="inline-flex items-center h-10 gap-2 px-4 text-sm rounded-[11px] border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
             :disabled="isActing"
             @click="snooze"
           >

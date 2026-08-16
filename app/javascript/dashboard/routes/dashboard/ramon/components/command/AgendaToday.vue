@@ -44,7 +44,7 @@ const metaLine = item =>
       >
         <span
           class="flex-none w-[52px] py-1 text-center rounded-lg"
-          :class="item.id === nextId ? 'bg-[#c9a97c]/[.12]' : 'bg-n-alpha-2'"
+          :class="item.id === nextId ? 'bg-n-iris-3' : 'bg-n-alpha-2'"
         >
           <span
             class="block text-sm font-semibold tabular-nums"
