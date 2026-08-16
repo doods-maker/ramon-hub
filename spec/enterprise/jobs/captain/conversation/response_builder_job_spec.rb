@@ -222,6 +222,45 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       end
     end
 
+    describe 'modos do copiloto por conversa (Onda C)' do
+      before do
+        allow(account).to receive(:feature_enabled?).and_return(false)
+        allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
+      end
+
+      def set_modo(modo)
+        conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('copiloto_modo' => modo))
+      end
+
+      it 'manual: não chama o LLM nem cria mensagem' do
+        set_modo('manual')
+        expect(Captain::Llm::AssistantChatService).not_to receive(:new)
+        expect { described_class.perform_now(conversation, assistant) }
+          .not_to change(conversation.messages, :count)
+      end
+
+      it 'rascunho (default, chave ausente): resposta vira nota privada RASCUNHO' do
+        described_class.perform_now(conversation, assistant)
+        nota = conversation.messages.last
+        expect(nota).to have_attributes(private: true)
+        expect(nota.content).to start_with('RASCUNHO')
+      end
+
+      it 'piloto_total: resposta sai outgoing pública com carimbo ramon_piloto' do
+        set_modo('piloto_total')
+        described_class.perform_now(conversation, assistant)
+        msg = conversation.messages.last
+        expect(msg).to have_attributes(message_type: 'outgoing', private: false)
+        expect(msg.content_attributes['ramon_piloto']).to include('modo' => 'piloto_total')
+      end
+
+      it 'valor inválido em copiloto_modo comporta como rascunho' do
+        set_modo('xablau')
+        described_class.perform_now(conversation, assistant)
+        expect(conversation.messages.last.private).to be(true)
+      end
+    end
+
     context 'when captain_v2 handoff tool fires during agent execution' do
       before do
         allow(account).to receive(:feature_enabled?).and_return(false)

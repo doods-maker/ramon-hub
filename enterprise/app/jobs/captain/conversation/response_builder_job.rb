@@ -12,6 +12,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
     return unless conversation_pending?
 
+    @copiloto_modo = Ramon::CopilotoModo.of(@conversation)
+    return if @copiloto_modo == 'manual' # IA quieta: nem gasta LLM
+
     Current.executed_by = @assistant
 
     if captain_v2_enabled?
@@ -167,7 +170,10 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
-    return create_draft_note(message_content) if @assistant.modo_rascunho?
+    # Onda C: o modo POR CONVERSA decide. Rascunho continua sendo o default e
+    # também o fallback do flag global antigo (assistant.modo_rascunho?).
+    modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
+    return create_draft_note(message_content) unless Ramon::CopilotoModo.piloto?(modo)
 
     additional_attrs = {}
     additional_attrs[:agent_name] = agent_name if agent_name.present?
@@ -179,6 +185,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       sender: @assistant,
       content: message_content,
       additional_attributes: additional_attrs,
+      content_attributes: { 'ramon_piloto' => { 'modo' => modo, 'em' => Time.zone.now.iso8601 } },
       preserve_waiting_since: preserve_waiting_since
     )
   end
