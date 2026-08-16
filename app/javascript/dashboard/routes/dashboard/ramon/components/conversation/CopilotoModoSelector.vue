@@ -18,7 +18,14 @@ const modo = computed(() => {
 });
 
 const escolher = async novoModo => {
-  if (saving.value || novoModo === modo.value) return;
+  // Comparar com o valor CRU (não normalizado) — com um valor inválido salvo
+  // (ex.: "xablau"), modo.value já cai pra 'rascunho' e clicar em Rascunho
+  // viraria no-op, deixando o lixo salvo.
+  if (
+    saving.value ||
+    novoModo === currentChat.value?.custom_attributes?.copiloto_modo
+  )
+    return;
   saving.value = true;
   try {
     // backend SUBSTITUI o hash: mandar sempre o merge completo

@@ -8,6 +8,7 @@ const translations = {
   'RAMON.COPILOTO.MODOS.piloto_limitado.NOME': () => 'Piloto com limites',
   'RAMON.COPILOTO.PAUSAR': () => 'Pausar piloto',
   'RAMON.COPILOTO.PAUSADO': () => 'Piloto pausado — voltou pro modo Rascunho.',
+  'RAMON.COPILOTO.PAUSA_FALHOU': () => 'Não consegui pausar — tente de novo.',
 };
 
 vi.mock('vue-i18n', () => ({
@@ -19,8 +20,17 @@ vi.mock('vue-i18n', () => ({
   }),
 }));
 
-const dispatch = vi.fn().mockResolvedValue();
 const currentChat = ref(null);
+// Por padrão simula o PATCH indo OK: a mutation do Vuex só comita quando o
+// dispatch de fato tem sucesso, então mutar o getter mockado aqui reproduz
+// isso. O teste de falha sobrescreve com um dispatch que resolve mas NÃO
+// muta nada — reproduzindo o PATCH engolido pela action.
+const dispatch = vi.fn(async (action, { customAttributes }) => {
+  currentChat.value = {
+    ...currentChat.value,
+    custom_attributes: customAttributes,
+  };
+});
 vi.mock('dashboard/composables/store', () => ({
   useStore: () => ({ dispatch: (...args) => dispatch(...args) }),
   useMapGetter: () => currentChat,
@@ -76,6 +86,34 @@ describe('PilotoCarimbo.vue', () => {
       customAttributes: { copiloto_modo: 'rascunho', foo: 'bar' },
     });
     expect(useAlert).toHaveBeenCalledWith(
+      'Piloto pausado — voltou pro modo Rascunho.'
+    );
+  });
+
+  it('clicking Pausar when the PATCH silently fails (state stays piloto_*) shows PAUSA_FALHOU instead of a false PAUSADO', async () => {
+    currentChat.value = {
+      id: 42,
+      custom_attributes: { copiloto_modo: 'piloto_total', foo: 'bar' },
+    };
+    contentAttributes.value = {
+      ramonPiloto: { modo: 'piloto_total', em: '2026-08-15T10:00:00Z' },
+    };
+    // updateCustomAttributes engole o erro do PATCH: resolve sem rejeitar, mas
+    // a mutation nunca comita — o getter mockado continua igual.
+    dispatch.mockImplementationOnce(async () => {});
+
+    const wrapper = mount(PilotoCarimbo);
+    await wrapper.find('[data-testid="piloto-pausar"]').trigger('click');
+    await flushPromises();
+
+    expect(dispatch).toHaveBeenCalledWith('updateCustomAttributes', {
+      conversationId: 42,
+      customAttributes: { copiloto_modo: 'rascunho', foo: 'bar' },
+    });
+    expect(useAlert).toHaveBeenCalledWith(
+      'Não consegui pausar — tente de novo.'
+    );
+    expect(useAlert).not.toHaveBeenCalledWith(
       'Piloto pausado — voltou pro modo Rascunho.'
     );
   });

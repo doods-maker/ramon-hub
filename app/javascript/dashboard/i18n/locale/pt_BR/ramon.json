@@ -1221,7 +1221,8 @@
       },
       "CARIMBO": "enviada pelo piloto ({modo})",
       "PAUSAR": "Pausar piloto",
-      "PAUSADO": "Piloto pausado — voltou pro modo Rascunho."
+      "PAUSADO": "Piloto pausado — voltou pro modo Rascunho.",
+      "PAUSA_FALHOU": "Não consegui pausar — tente de novo."
     }
   },
   "CAPTAIN_RAMON": {

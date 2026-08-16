@@ -74,6 +74,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
       process_v1_handoff
     elsif conversation_pending?
+      # Classifica ANTES da transação: o roundtrip do LLM (PilotoLogisticaService) não
+      # pode ficar preso segurando lock de transaction aberta.
+      @logistica_ok = Ramon::PilotoLogisticaService.logistica?(@response['response']) if @copiloto_modo == 'piloto_limitado'
       ActiveRecord::Base.transaction do
         create_messages
         Rails.logger.info("[CAPTAIN][ResponseBuilderJob] Incrementing response usage for #{account.id}")
@@ -182,7 +185,11 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
     return create_draft_note(message_content) unless Ramon::CopilotoModo.piloto?(modo)
 
-    if modo == 'piloto_limitado' && !@enviando_handoff && !Ramon::PilotoLogisticaService.logistica?(message_content)
+    if modo == 'piloto_limitado' && !@enviando_handoff && !@logistica_ok
+      # @logistica_ok é calculado ANTES da transação em process_response (fora do
+      # ActiveRecord::Base.transaction, pra tirar o roundtrip do LLM de dentro do
+      # lock). nil (caller inesperado, ex.: teste chamando este método direto) cai
+      # no `!` e vira fail-safe: trata como NÃO logística, ou seja, rascunho.
       return create_draft_note(message_content)
     end
 

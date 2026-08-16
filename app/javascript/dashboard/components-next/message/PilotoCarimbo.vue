@@ -30,7 +30,14 @@ const pausar = async () => {
         copiloto_modo: 'rascunho',
       },
     });
-    useAlert(t('RAMON.COPILOTO.PAUSADO'));
+    // updateCustomAttributes engole erro de PATCH sem rejeitar a Promise — só a
+    // mutation confirma sucesso. Ler o estado ao vivo em vez de assumir que o
+    // dispatch funcionou.
+    if (aindaEmPiloto.value) {
+      useAlert(t('RAMON.COPILOTO.PAUSA_FALHOU'));
+    } else {
+      useAlert(t('RAMON.COPILOTO.PAUSADO'));
+    }
   } finally {
     pausando.value = false;
   }
@@ -41,7 +48,7 @@ const pausar = async () => {
   <div
     v-if="piloto"
     data-testid="piloto-carimbo"
-    class="mt-0.5 flex items-center gap-2 self-end text-[10.5px] text-n-teal-11"
+    class="flex items-center gap-2 text-[10.5px] text-n-teal-11"
   >
     <!-- eslint-disable vue/no-bare-strings-in-template -->
     <span

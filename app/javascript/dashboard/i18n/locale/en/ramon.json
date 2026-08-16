@@ -1221,7 +1221,8 @@
       },
       "CARIMBO": "sent by the autopilot ({modo})",
       "PAUSAR": "Pause autopilot",
-      "PAUSADO": "Autopilot paused — back to Draft mode."
+      "PAUSADO": "Autopilot paused — back to Draft mode.",
+      "PAUSA_FALHOU": "Couldn't pause — try again."
     }
   },
   "CAPTAIN_RAMON": {
