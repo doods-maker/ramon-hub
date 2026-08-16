@@ -3,15 +3,16 @@ require 'rails_helper'
 describe Ramon::CoachObjecaoService do
   let(:account) { create(:account) }
   let(:thesis) { create(:thesis, account: account) }
-  before do
-    create(:thesis_item, thesis: thesis, section: 'objecao',
-                         title: 'Advogado é caro', content: 'A análise é gratuita e o honorário é no êxito.')
-  end
   let(:conversation) { create(:conversation, account: account) }
   let(:lead) { create(:lead, account: account, conversation: conversation, thesis: thesis) }
   let(:message) do
     create(:message, account: account, conversation: conversation, message_type: :incoming,
                      content: 'minha vizinha pagou caro e o INSS negou, vou pensar mais um pouco')
+  end
+
+  before do
+    create(:thesis_item, thesis: thesis, section: 'objecao',
+                         title: 'Advogado é caro', content: 'A análise é gratuita e o honorário é no êxito.')
   end
 
   def llm(content)
