@@ -2,7 +2,7 @@ require 'rails_helper'
 
 # FORK-PONTO (ramon): documento com conteudo colado direto (sem link nem PDF).
 # Depende do codigo enterprise (o CI FOSS remove a pasta), por isso o guard.
-RSpec.describe 'Captain::Document com conteudo direto', type: :model, if: ChatwootApp.enterprise? do
+RSpec.describe 'Captain::Document com conteudo direto', if: ChatwootApp.enterprise?, type: :model do
   let(:account) { create(:account) }
   let(:assistant) { create(:captain_assistant, account: account) }
 

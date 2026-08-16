@@ -2,7 +2,7 @@ require 'rails_helper'
 
 # FORK-PONTO (ramon): busca textual da FAQ (Ramon::FaqBusca). Depende do codigo
 # enterprise (o CI FOSS remove a pasta), por isso o guard.
-RSpec.describe 'Captain::AssistantResponse busca textual', type: :model, if: ChatwootApp.enterprise? do
+RSpec.describe 'Captain::AssistantResponse busca textual', if: ChatwootApp.enterprise?, type: :model do
   let(:account) { create(:account) }
   let(:assistant) { create(:captain_assistant, account: account) }
 

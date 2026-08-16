@@ -6,7 +6,7 @@ RSpec.describe Ramon::Honorario do
   it 'aplica percentual dos atrasados + N mensalidades' do
     tese = create(:thesis, account: account, name: 'Auxílio', honorario_percentual: 30, honorario_n_mensalidades: 3)
 
-    resultado = described_class.calcular(tese, atrasados: BigDecimal('10000'), mensal: BigDecimal('1500'))
+    resultado = described_class.calcular(tese, atrasados: BigDecimal(10_000), mensal: BigDecimal(1500))
 
     expect(resultado).to eq(valor: '7500.00', percentual: 30.0, n_mensalidades: 3, tese: 'Auxílio')
   end

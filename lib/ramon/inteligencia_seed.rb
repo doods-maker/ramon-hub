@@ -14,7 +14,7 @@ class Ramon::InteligenciaSeed
   # @return [Hash] contagens (criados/atualizados/pulados) por tipo
   def run
     YAML.safe_load(DIR.join('assistentes.yml').read).fetch('assistentes').each { |dados| seed_assistente(dados) }
-    Dir[DIR.join('faq', '*.md').to_s].sort.each { |arquivo| seed_faq(arquivo) }
+    Dir[DIR.join('faq', '*.md').to_s].each { |arquivo| seed_faq(arquivo) }
     @contagem
   end
 

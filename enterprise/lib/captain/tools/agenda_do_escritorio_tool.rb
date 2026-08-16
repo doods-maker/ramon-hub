@@ -63,13 +63,15 @@ class Captain::Tools::AgendaDoEscritorioTool < Captain::Tools::BasePublicTool
   def tarefas_advbox(dia)
     resposta = Ramon::AdvboxClient.posts(deadline_start: dia.iso8601, deadline_end: dia.iso8601, limit: 50)
     lista = resposta.is_a?(Hash) ? Array(resposta['data']) : Array(resposta)
-    lista.map do |t|
-      cliente = t.dig('lawsuit', 'customers')&.first&.dig('name')
-      quem = Array(t['users']).filter_map { |u| u['name'] }.join(', ')
-      "- #{t['task']} — #{cliente || 'sem cliente'} (#{quem.presence || 'sem responsavel'}, processo #{t['lawsuits_id']})"
-    end
+    lista.map { |t| linha_advbox(t) }
   rescue StandardError => e
     Rails.logger.warn("AgendaDoEscritorioTool: AdvBox falhou (#{e.class}: #{e.message})")
     [ADVBOX_FORA]
+  end
+
+  def linha_advbox(tarefa)
+    cliente = tarefa.dig('lawsuit', 'customers')&.first&.dig('name') || 'sem cliente'
+    quem = Array(tarefa['users']).filter_map { |u| u['name'] }.join(', ').presence || 'sem responsavel'
+    "- #{tarefa['task']} — #{cliente} (#{quem}, processo #{tarefa['lawsuits_id']})"
   end
 end
