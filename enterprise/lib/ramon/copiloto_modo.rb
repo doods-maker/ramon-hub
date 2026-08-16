@@ -15,4 +15,14 @@ module Ramon::CopilotoModo
   def piloto?(modo)
     modo.start_with?('piloto_')
   end
+
+  # Handoff é logística por definição (constraint global) — nunca vira rascunho
+  # em piloto_limitado. logistica_ok nil (não classificado) é fail-safe: rascunho.
+  def envia?(modo, handoff:, logistica_ok:)
+    piloto?(modo) && (handoff || modo != 'piloto_limitado' || logistica_ok == true)
+  end
+
+  def carimbo(modo)
+    { 'ramon_piloto' => { 'modo' => modo, 'em' => Time.zone.now.iso8601 } }
+  end
 end

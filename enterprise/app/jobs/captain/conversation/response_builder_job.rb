@@ -74,8 +74,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
       process_v1_handoff
     elsif conversation_pending?
-      # Classifica ANTES da transação: o roundtrip do LLM (PilotoLogisticaService) não
-      # pode ficar preso segurando lock de transaction aberta.
+      # Classifica ANTES da transação: roundtrip do LLM não pode segurar o lock.
       @logistica_ok = Ramon::PilotoLogisticaService.logistica?(@response['response']) if @copiloto_modo == 'piloto_limitado'
       ActiveRecord::Base.transaction do
         create_messages
@@ -92,8 +91,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       .where(private: false)
       .map do |message|
       message_hash = {
-        content: prepare_multimodal_message_content(message),
-        role: determine_role(message)
+        content: Captain::OpenAiMessageBuilderService.new(message: message).generate_content,
+        role: message.message_type == 'incoming' ? 'user' : 'assistant'
       }
 
       # Include agent_name if present in additional_attributes
@@ -101,14 +100,6 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
       message_hash
     end
-  end
-
-  def determine_role(message)
-    message.message_type == 'incoming' ? 'user' : 'assistant'
-  end
-
-  def prepare_multimodal_message_content(message)
-    Captain::OpenAiMessageBuilderService.new(message: message).generate_content
   end
 
   def v1_handoff_requested?
@@ -168,33 +159,19 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def create_messages
-    validate_message_content!(@response['response'])
+    raise ArgumentError, 'Message content cannot be blank' if @response['response'].blank?
+
     create_outgoing_message(@response['response'], agent_name: @response['agent_name'])
   end
 
-  def validate_message_content!(content)
-    raise ArgumentError, 'Message content cannot be blank' if content.blank?
-  end
-
   def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
-    # Onda C: o modo POR CONVERSA decide. Rascunho continua sendo o default e
-    # também o fallback do flag global antigo (assistant.modo_rascunho?).
-    # O `||` é belt-and-suspenders: `perform` sempre seta @copiloto_modo antes
-    # de chegar aqui (hoje inalcançável), mas evita nil se algum caller futuro
-    # (ex.: um teste chamando este método direto) pular esse passo.
+    # `||`: belt-and-suspenders pro caso de um caller futuro pular `perform`.
     modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
-    return create_draft_note(message_content) unless Ramon::CopilotoModo.piloto?(modo)
-
-    if modo == 'piloto_limitado' && !@enviando_handoff && !@logistica_ok
-      # @logistica_ok é calculado ANTES da transação em process_response (fora do
-      # ActiveRecord::Base.transaction, pra tirar o roundtrip do LLM de dentro do
-      # lock). nil (caller inesperado, ex.: teste chamando este método direto) cai
-      # no `!` e vira fail-safe: trata como NÃO logística, ou seja, rascunho.
+    unless Ramon::CopilotoModo.envia?(modo, handoff: @enviando_handoff, logistica_ok: @logistica_ok)
       return create_draft_note(message_content)
     end
 
-    additional_attrs = {}
-    additional_attrs[:agent_name] = agent_name if agent_name.present?
+    additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
 
     @conversation.messages.create!(
       message_type: :outgoing,
@@ -203,7 +180,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       sender: @assistant,
       content: message_content,
       additional_attributes: additional_attrs,
-      content_attributes: { 'ramon_piloto' => { 'modo' => modo, 'em' => Time.zone.now.iso8601 } },
+      content_attributes: Ramon::CopilotoModo.carimbo(modo),
       preserve_waiting_since: preserve_waiting_since
     )
   end
