@@ -75,13 +75,19 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       process_v1_handoff
     elsif conversation_pending?
       # Classifica ANTES da transação: roundtrip do LLM não pode segurar o lock.
-      @logistica_ok = Ramon::PilotoLogisticaService.logistica?(@response['response']) if @copiloto_modo == 'piloto_limitado'
+      memoizar_logistica(@response['response'])
       ActiveRecord::Base.transaction do
         create_messages
         Rails.logger.info("[CAPTAIN][ResponseBuilderJob] Incrementing response usage for #{account.id}")
         account.increment_response_usage
       end
     end
+  end
+
+  def memoizar_logistica(content)
+    return unless @copiloto_modo == 'piloto_limitado'
+
+    @logistica_ok = Ramon::PilotoLogisticaService.logistica?(content)
   end
 
   def collect_previous_messages
@@ -167,9 +173,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
     # `||`: belt-and-suspenders pro caso de um caller futuro pular `perform`.
     modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
-    unless Ramon::CopilotoModo.envia?(modo, handoff: @enviando_handoff, logistica_ok: @logistica_ok)
-      return create_draft_note(message_content)
-    end
+    return create_draft_note(message_content) unless Ramon::CopilotoModo.envia?(modo, handoff: @enviando_handoff, logistica_ok: @logistica_ok)
 
     additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
 

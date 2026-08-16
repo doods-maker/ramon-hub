@@ -232,12 +232,12 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
       end
 
-      def set_modo(modo)
+      def definir_modo(modo)
         conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('copiloto_modo' => modo))
       end
 
       it 'manual: não chama o LLM nem cria mensagem' do
-        set_modo('manual')
+        definir_modo('manual')
         # Este contexto roda com captain_integration_v2 habilitado (before acima),
         # então o serviço em jogo é o AgentRunnerService, não o AssistantChatService.
         expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
@@ -253,7 +253,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       end
 
       it 'piloto_total: resposta sai outgoing pública com carimbo ramon_piloto' do
-        set_modo('piloto_total')
+        definir_modo('piloto_total')
         described_class.perform_now(conversation, assistant)
         msg = conversation.messages.last
         expect(msg).to have_attributes(message_type: 'outgoing', private: false)
@@ -261,20 +261,20 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       end
 
       it 'valor inválido em copiloto_modo comporta como rascunho' do
-        set_modo('xablau')
+        definir_modo('xablau')
         described_class.perform_now(conversation, assistant)
         expect(conversation.messages.last.private).to be(true)
       end
 
       it 'piloto_limitado: logística sai, não-logística vira rascunho' do
-        set_modo('piloto_limitado')
+        definir_modo('piloto_limitado')
         allow(Ramon::PilotoLogisticaService).to receive(:logistica?).and_return(false)
         described_class.perform_now(conversation, assistant)
         expect(conversation.messages.last.private).to be(true)
       end
 
       it 'piloto_limitado: logística sai outgoing pública com carimbo ramon_piloto' do
-        set_modo('piloto_limitado')
+        definir_modo('piloto_limitado')
         allow(Ramon::PilotoLogisticaService).to receive(:logistica?).and_return(true)
         described_class.perform_now(conversation, assistant)
         msg = conversation.messages.last
