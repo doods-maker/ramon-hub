@@ -36,9 +36,7 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
     unique_faqs = []
 
     faqs.each do |faq|
-      combined_text = "#{faq['question']}: #{faq['answer']}"
-      embedding = Captain::Llm::EmbeddingService.new(account_id: @conversation.account_id).get_embedding(combined_text)
-      similar_faqs = find_similar_faqs(embedding)
+      similar_faqs = similar_faqs_for(faq)
 
       if similar_faqs.any?
         duplicate_faqs << { faq: faq, similar_faqs: similar_faqs }
@@ -48,6 +46,15 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
     end
 
     [duplicate_faqs, unique_faqs]
+  end
+
+  # FORK-PONTO (ramon): em modo texto nao ha embedding — duplicata = mesma pergunta (case-insensitive).
+  def similar_faqs_for(faq)
+    return assistant.responses.where('LOWER(question) = ?', faq['question'].to_s.downcase).to_a if Ramon::FaqBusca.textual?
+
+    combined_text = "#{faq['question']}: #{faq['answer']}"
+    embedding = Captain::Llm::EmbeddingService.new(account_id: @conversation.account_id).get_embedding(combined_text)
+    find_similar_faqs(embedding)
   end
 
   def find_similar_faqs(embedding)

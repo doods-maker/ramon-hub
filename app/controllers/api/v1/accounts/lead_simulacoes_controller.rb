@@ -78,14 +78,7 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
   end
 
   def honorario(atrasados, mensal)
-    tese = @lead.thesis
-    configurada = tese && (tese.honorario_percentual.present? || tese.honorario_n_mensalidades.present?)
-    return { valor: nil, motivo: 'tese do lead sem honorário configurado (% e nº de mensalidades)' } unless configurada
-
-    percentual = tese.honorario_percentual || 0
-    n_mensalidades = tese.honorario_n_mensalidades || 0
-    valor = (atrasados * percentual / 100) + (mensal * n_mensalidades)
-    { valor: money(valor), percentual: percentual.to_f, n_mensalidades: n_mensalidades, tese: tese.name }
+    Ramon::Honorario.calcular(@lead.thesis, atrasados: atrasados, mensal: mensal)
   end
 
   def meses_desde_der

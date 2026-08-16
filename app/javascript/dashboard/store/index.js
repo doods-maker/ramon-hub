@@ -45,7 +45,6 @@ import ramonDashboard from './modules/ramonDashboard';
 import copilotSuggestions from './modules/copilotSuggestions';
 import macros from './modules/macros';
 import theses from './modules/theses';
-import triageAgents from './modules/triageAgents';
 import notifications from './modules/notifications';
 import portals from './modules/helpCenterPortals';
 import reports from './modules/reports';
@@ -117,7 +116,6 @@ export default createStore({
     copilotSuggestions,
     macros,
     theses,
-    triageAgents,
     notifications,
     portals,
     reports,

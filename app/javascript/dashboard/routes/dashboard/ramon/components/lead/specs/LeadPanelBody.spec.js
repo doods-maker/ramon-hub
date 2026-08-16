@@ -63,8 +63,6 @@ const stubs = {
   LeadFields: true,
   LeadHistory: true,
   LeadPlaybook: true,
-  LeadTriage: true,
-  LeadKit: true,
   LeadSimulador: true,
   ConversationAction: true,
   MacrosList: true,
@@ -136,33 +134,12 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('agrupa Triagem + Kit na aba IA', async () => {
-      const wrapper = mountBody();
-      await wrapper.find('[data-testid="lead-tab-ia"]').trigger('click');
-      expect(wrapper.findComponent({ name: 'LeadTriage' }).exists()).toBe(true);
-      expect(wrapper.findComponent({ name: 'LeadKit' }).exists()).toBe(true);
-      expect(wrapper.findComponent({ name: 'LeadCopilot' }).exists()).toBe(
-        true
-      );
-    });
-
     it('restaura a aba persistida', () => {
       localStorage.setItem('ramon_lead_panel_tab', 'simulador');
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadSimulador' }).exists()).toBe(
         true
       );
-    });
-
-    it('mostra dot âmbar na IA quando a triagem aguarda humano', () => {
-      const wrapper = mountBody({
-        props: {
-          lead: { ...lead, latest_triage: { status: 'awaiting_human' } },
-        },
-      });
-      const dot = wrapper.find('[data-testid="lead-tab-dot-ia"]');
-      expect(dot.exists()).toBe(true);
-      expect(dot.classes()).toContain('bg-n-amber-9');
     });
 
     it('mostra dot verde no Simulador quando há última simulação', () => {

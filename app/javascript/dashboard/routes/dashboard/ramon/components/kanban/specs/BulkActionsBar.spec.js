@@ -102,14 +102,6 @@ describe('BulkActionsBar', () => {
     );
   });
 
-  it('rodar triagem IA dispara bulkAction com triage', async () => {
-    const wrapper = mountBar();
-    await wrapper.find('[data-testid="bulk-triage"]').trigger('click');
-    expect(dispatch).toHaveBeenCalledWith('leads/bulkAction', {
-      triage: true,
-    });
-  });
-
   it('Limpar dispara clearSelection', async () => {
     const wrapper = mountBar();
     await wrapper.find('[data-testid="bulk-clear"]').trigger('click');

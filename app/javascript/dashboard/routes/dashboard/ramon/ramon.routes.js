@@ -45,12 +45,6 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
-    path: frontendURL('accounts/:accountId/ramon/agentes'),
-    name: 'ramon_triage_agents',
-    component: () => import('./pages/TriageAgents.vue'),
-    meta: { permissions: ['administrator'], world: 'intranet' },
-  },
-  {
     // Sem contactId a mesma página vira a busca de pessoa (entrada do menu).
     path: frontendURL('accounts/:accountId/ramon/pessoa'),
     name: 'ramon_pessoas',

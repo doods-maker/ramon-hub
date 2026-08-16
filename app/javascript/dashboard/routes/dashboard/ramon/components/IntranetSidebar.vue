@@ -128,30 +128,6 @@ const sections = computed(() =>
         },
       ],
     },
-    {
-      label: t('RAMON.NAV.JURIDICO'),
-      items: [
-        {
-          key: 'triagem',
-          label: t('RAMON.NAV.TRIAGEM'),
-          icon: 'i-lucide-gavel',
-          soon: true,
-        },
-      ],
-    },
-    {
-      label: t('RAMON.NAV.INTELIGENCIA'),
-      items: [
-        {
-          key: 'agentes',
-          label: t('RAMON.NAV.AGENTES'),
-          icon: 'i-lucide-bot',
-          to: accountScopedRoute('ramon_triage_agents'),
-          names: ['ramon_triage_agents'],
-          adminOnly: true,
-        },
-      ],
-    },
   ]
     .map(section => ({
       ...section,
