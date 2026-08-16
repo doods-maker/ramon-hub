@@ -107,7 +107,7 @@ watch(reuniaoId, id => {
         <li v-for="reuniao in reunioes" :key="reuniao.id">
           <button
             type="button"
-            class="flex w-full items-center justify-between gap-4 py-3 text-start"
+            class="flex w-full items-center justify-between gap-4 py-3 px-4 text-start"
             @click="abrir(reuniao.id)"
           >
             <span

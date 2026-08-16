@@ -155,7 +155,7 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
       <span
         class="flex items-center justify-center flex-none rounded-[10px] size-[34px] bg-n-iris-9"
       >
-        <span class="i-lucide-bot size-[17px] text-n-slate-12" />
+        <span class="i-lucide-bot size-[17px] text-white" />
       </span>
       <div class="min-w-0">
         <p class="text-sm font-semibold text-n-slate-12">
