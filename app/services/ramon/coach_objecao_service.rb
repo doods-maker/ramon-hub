@@ -26,27 +26,37 @@ class Ramon::CoachObjecaoService
   end
 
   def perform
-    return if @message.content.to_s.strip.length < MIN_CHARS
-    return if recente?
-    return if playbook.blank?
+    return unless elegivel?
 
     parsed = ask_llm
     marcar_ultima_em
-    return if parsed.blank? || parsed['objecao'].blank? || parsed['objecao'] == 'nenhuma'
-
-    opcoes = Array(parsed['opcoes']).first(2).filter_map do |o|
-      next if o['texto'].blank?
-
-      { 'titulo' => o['titulo'].to_s.presence || 'Opção', 'texto' => o['texto'].to_s }
-    end
-    return if opcoes.empty?
-
-    registrar_evento(parsed['objecao'].to_s, opcoes)
+    processar(parsed)
   rescue StandardError => e
     Rails.logger.warn("[Ramon::CoachObjecaoService] silêncio (#{e.class}: #{e.message}) message=#{@message.id}")
   end
 
   private
+
+  def elegivel?
+    @message.content.to_s.strip.length >= MIN_CHARS && !recente? && playbook.present?
+  end
+
+  def processar(parsed)
+    return if parsed.blank? || parsed['objecao'].blank? || parsed['objecao'] == 'nenhuma'
+
+    opcoes = normalizar_opcoes(parsed)
+    return if opcoes.empty?
+
+    registrar_evento(parsed['objecao'].to_s, opcoes)
+  end
+
+  def normalizar_opcoes(parsed)
+    Array(parsed['opcoes']).first(2).filter_map do |o|
+      next if o['texto'].blank?
+
+      { 'titulo' => o['titulo'].to_s.presence || 'Opção', 'texto' => o['texto'].to_s }
+    end
+  end
 
   def recente?
     ultima = @lead.custom_attributes.dig('coach', 'ultima_em')
