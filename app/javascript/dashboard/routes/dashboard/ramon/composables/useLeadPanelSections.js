@@ -7,7 +7,6 @@ const TAB_KEY = 'ramon_lead_panel_tab';
 export const LEAD_PANEL_TABS = [
   'resumo',
   'playbook',
-  'ia',
   'simulador',
   'documentos',
   'contrato',

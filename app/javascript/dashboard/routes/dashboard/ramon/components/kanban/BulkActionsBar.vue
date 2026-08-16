@@ -85,8 +85,6 @@ const confirmFollowUp = () => {
   followUpDate.value = '';
 };
 
-const runTriage = () => runBulk({ triage: true });
-
 const clearSelection = () => store.dispatch('leads/clearSelection');
 
 // Esc: fecha menu aberto → senão limpa a seleção. Mudo com modal (do board ou
@@ -195,13 +193,6 @@ onKeyStroke('Escape', () => {
         </button>
       </div>
     </div>
-    <button
-      data-testid="bulk-triage"
-      class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-2 text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-3"
-      @click="runTriage"
-    >
-      {{ $t('RAMON.KANBAN.BULK.TRIAGE') }}
-    </button>
     <button
       data-testid="bulk-clear"
       class="px-3 py-1.5 text-xs rounded-lg text-n-slate-10 hover:text-n-slate-12"

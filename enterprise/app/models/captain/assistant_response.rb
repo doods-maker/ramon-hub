@@ -46,9 +46,31 @@ class Captain::AssistantResponse < ApplicationRecord
 
   enum status: { pending: 0, approved: 1 }
 
+  # FORK-PONTO (ramon): sem OpenAI aqui — em modo texto (padrao) a busca e full-text
+  # em portugues (websearch; fallback OR das palavras). Ver Ramon::FaqBusca.
+  TSV_PT = "to_tsvector('portuguese', question || ' ' || answer)".freeze
+
   def self.search(query, account_id: nil)
+    return search_textual(query) if Ramon::FaqBusca.textual?
+
     embedding = Captain::Llm::EmbeddingService.new(account_id: account_id).get_embedding(query)
     nearest_neighbors(:embedding, embedding, distance: 'cosine').limit(5)
+  end
+
+  def self.search_textual(query)
+    ranked = search_tsquery("websearch_to_tsquery('portuguese', ?)", query)
+    return ranked if ranked.exists?
+
+    palavras = query.to_s.scan(/[[:alpha:]]{3,}/).uniq
+    return none if palavras.empty?
+
+    search_tsquery("to_tsquery('portuguese', ?)", palavras.join(' | '))
+  end
+
+  def self.search_tsquery(tsquery_sql, arg)
+    where("#{TSV_PT} @@ #{tsquery_sql}", arg)
+      .order(Arel.sql(sanitize_sql_array(["ts_rank(#{TSV_PT}, #{tsquery_sql}) DESC", arg])))
+      .limit(5)
   end
 
   private
@@ -66,6 +88,7 @@ class Captain::AssistantResponse < ApplicationRecord
   end
 
   def update_response_embedding
+    return if Ramon::FaqBusca.textual? # FORK-PONTO (ramon): sem embedding em modo texto
     return unless saved_change_to_question? || saved_change_to_answer? || embedding.nil?
 
     Captain::Llm::UpdateEmbeddingJob.perform_later(self, "#{question}: #{answer}")

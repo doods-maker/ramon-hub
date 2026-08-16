@@ -16,8 +16,6 @@ import LostReasonModal from '../kanban/LostReasonModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
 import LeadHistory from '../conversation/LeadHistory.vue';
 import LeadPlaybook from '../conversation/LeadPlaybook.vue';
-import LeadTriage from '../conversation/LeadTriage.vue';
-import LeadKit from '../conversation/LeadKit.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
 import DocChecklist from './DocChecklist.vue';
 import QualificacaoViva from './QualificacaoViva.vue';
@@ -258,12 +256,6 @@ const addTask = async () => {
 
 // ----- abas -----
 const { activeTab, setTab } = useLeadPanelTabs();
-const iaDot = computed(() => {
-  if (props.lead?.latest_triage?.status === 'awaiting_human')
-    return 'bg-n-amber-9';
-  if (props.lead?.latest_triage?.kit_status === 'ready') return 'bg-n-teal-9';
-  return null;
-});
 const simuladorDot = computed(() =>
   props.lead?.custom_attributes?.ultima_simulacao ? 'bg-n-teal-9' : null
 );
@@ -283,7 +275,6 @@ const zapsignEligible = computed(() =>
 const TABS = computed(() => [
   { id: 'resumo', label: 'SUMMARY' },
   { id: 'playbook', label: 'PLAYBOOK' },
-  { id: 'ia', label: 'IA', dot: iaDot },
   { id: 'simulador', label: 'SIMULADOR', dot: simuladorDot },
   ...(props.lead?.thesis_id
     ? [{ id: 'documentos', label: 'DOCUMENTS', dot: docsDot }]
@@ -864,30 +855,6 @@ const discard = async () => {
       </template>
 
       <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
-
-      <template v-else-if="shownTab === 'ia'">
-        <div>
-          <p
-            class="mb-2 text-xs font-semibold uppercase tracking-widest text-n-slate-9"
-          >
-            {{ $t('RAMON.TRIAGE.TAB') }}
-          </p>
-          <LeadTriage :lead="lead" />
-        </div>
-        <div class="pt-3 border-t border-n-weak">
-          <p
-            class="mb-2 text-xs font-semibold uppercase tracking-widest text-n-slate-9"
-          >
-            {{ $t('RAMON.KIT.TAB') }}
-          </p>
-          <LeadKit :lead="lead" />
-        </div>
-        <LeadCopilot
-          v-if="inConversation && conversationId"
-          :conversation-id="conversationId"
-          class="pt-3 border-t border-n-weak"
-        />
-      </template>
 
       <LeadSimulador v-else-if="shownTab === 'simulador'" :lead="lead" />
 

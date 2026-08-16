@@ -267,6 +267,8 @@
 | `app/javascript/dashboard/routes/dashboard/ramon/components/ficha/specs/EsteiraEtapas.spec.js` | specs vitest: render das etapas, marcação de ativa, rótulos | cobertura do componente EsteiraEtapas | Onda A |
 | `spec/models/reuniao_spec.rb` (linha de changes) | já existia; +specs da associação com lead / `dependent: :nullify` (Onda A) | cobertura do model Reuniao | Onda A |
 | `spec/services/ramon/dossie_service_spec.rb` (linha de changes) | já existia; +specs de esteira/docs/calculos/reuniões agregados na ficha (Onda A) | cobertura do serviço de agreg. da ficha | Onda A |
+| `enterprise/lib/captain/tools/{playbook_da_tese,simular_honorario,historico_do_contato,link_agendamento,agenda_do_escritorio,funil_hoje,publicacoes_advbox}_tool.rb` (+ specs em `spec/enterprise/lib/captain/tools/`) | 7 tools de LEITURA para o Assistente (playbook/honorário/histórico/link Cal.com/agenda do dia/placar do funil/publicações AdvBox); todas devolvem String e `rescue` de indisponibilidade | Inteligência Onda 2 | inteligencia 16/08 |
+| `config/agents/tools.yml` (linha de changes) | +7 ids acima; `faq_lookup` descrito como "Busca textual nas FAQs aprovadas" (Onda 1); **`resolve_conversation` REMOVIDO** do catálogo (D11: o assistente não fecha conversa sozinho — a classe `ResolveConversationTool` fica no repo, só sai do catálogo) | Inteligência Ondas 1+2 | inteligencia 16/08 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

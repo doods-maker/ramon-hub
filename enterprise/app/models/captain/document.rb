@@ -46,6 +46,7 @@ class Captain::Document < ApplicationRecord
   validate :validate_file_attachment, if: -> { pdf_file.attached? }
   before_validation :ensure_account_id
   before_validation :set_external_link_for_pdf
+  before_validation :set_external_link_for_text, on: :create
   before_validation :normalize_external_link
 
   enum status: {
@@ -64,7 +65,8 @@ class Captain::Document < ApplicationRecord
 
   scope :for_account, ->(account_id) { where(account_id: account_id) }
   scope :for_assistant, ->(assistant_id) { where(assistant_id: assistant_id) }
-  scope :syncable, -> { where("external_link NOT LIKE 'PDF:%' AND external_link NOT LIKE '%.pdf'") }
+  # FORK-PONTO (ramon): documento de texto direto ('TEXT:') nao e crawlavel/sincronizavel.
+  scope :syncable, -> { where("external_link NOT LIKE 'PDF:%' AND external_link NOT LIKE '%.pdf' AND external_link NOT LIKE 'TEXT:%'") }
   scope :pdf_documents, -> { where("external_link LIKE 'PDF:%' OR external_link LIKE '%.pdf'") }
   scope :sync_in_progress, -> { sync_syncing.where(arel_table[:last_sync_attempted_at].gteq(SYNC_STALE_TIMEOUT.ago)) }
   scope :stale, lambda { |stale_before|
@@ -107,8 +109,12 @@ class Captain::Document < ApplicationRecord
     { document_id: id, assistant_id: assistant_id, external_link: external_link }
   end
 
+  def text_document?
+    external_link.to_s.start_with?('TEXT:')
+  end
+
   def syncable?
-    !pdf_document?
+    !pdf_document? && !text_document?
   end
 
   def sync_stale?
@@ -176,6 +182,16 @@ class Captain::Document < ApplicationRecord
     # Format: PDF: filename_timestamp (without extension)
     timestamp = Time.current.strftime('%Y%m%d%H%M%S')
     self.external_link = "PDF: #{pdf_file.filename.base}_#{timestamp}"
+  end
+
+  # FORK-PONTO (ramon): conteudo colado direto (sem link nem PDF) — ganha um external_link
+  # placeholder (coluna NOT NULL + unique por assistente), nasce available e pula o CrawlJob;
+  # o after_commit ja dispara o ResponseBuilderJob porque ha content.
+  def set_external_link_for_text
+    return unless content.present? && external_link.blank? && !pdf_file.attached?
+
+    self.external_link = "TEXT: #{name.presence || 'documento'}_#{Time.current.strftime('%Y%m%d%H%M%S%L')}"
+    self.status = :available
   end
 
   def normalize_external_link

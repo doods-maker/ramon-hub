@@ -27,13 +27,8 @@
 
 - id: faq_lookup
   title: 'FAQ Lookup'
-  description: 'Search FAQ responses using semantic similarity'
+  description: 'Busca textual nas FAQs aprovadas'
   icon: 'search'
-
-- id: resolve_conversation
-  title: 'Resolve Conversation'
-  description: 'Resolve a conversation when the issue has been addressed'
-  icon: 'checkmark'
 
 - id: handoff
   title: 'Handoff to Human'
@@ -89,3 +84,38 @@
   title: 'Mover de etapa'
   description: 'Sugere mover o caso para outra etapa do funil (o humano aprova antes)'
   icon: 'columns'
+
+- id: playbook_da_tese
+  title: 'Playbook da tese'
+  description: 'Criterios, objecoes, apresentacao, documentos e honorario de uma tese'
+  icon: 'clipboard'
+
+- id: simular_honorario
+  title: 'Simular honorario'
+  description: 'Honorario estimado pela regra da tese sobre atrasados e mensal'
+  icon: 'calculator'
+
+- id: historico_do_contato
+  title: 'Historico do contato'
+  description: 'Casos, conversas e notas anteriores da pessoa no hub'
+  icon: 'timeline'
+
+- id: link_agendamento
+  title: 'Link de agendamento'
+  description: 'Link para o lead escolher dia e horario da conversa'
+  icon: 'calendar'
+
+- id: agenda_do_escritorio
+  title: 'Agenda do dia'
+  description: 'Reunioes, tarefas do hub (do dia e atrasadas) e prazos do AdvBox no dia'
+  icon: 'calendar'
+
+- id: funil_hoje
+  title: 'Funil de hoje'
+  description: 'Meta do dia, conversao por etapa com gargalo, SLA e perdas por tese'
+  icon: 'columns'
+
+- id: publicacoes_advbox
+  title: 'Publicacoes do processo no AdvBox'
+  description: 'Ultimas publicacoes de um processo do AdvBox (data e trecho)'
+  icon: 'document'
