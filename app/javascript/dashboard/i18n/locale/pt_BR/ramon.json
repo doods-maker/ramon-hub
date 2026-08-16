@@ -1209,6 +1209,20 @@
       "NEXT_EMPTY": "sem compromisso agendado",
       "TICKER_NOW": "Agora:",
       "TICKER": "{closer} fechou {lead} — {value} · {benefit}"
+    },
+    "COPILOTO": {
+      "BTN": "Copiloto: {modo}",
+      "TITULO": "Modo do copiloto — só nesta conversa",
+      "MODOS": {
+        "manual": { "NOME": "Manual", "DESC": "A IA não sugere nada. Você escreve tudo." },
+        "rascunho": { "NOME": "Rascunho", "DESC": "A IA prepara respostas; nada sai sem você apertar Enviar." },
+        "piloto_limitado": { "NOME": "Piloto com limites", "DESC": "A IA envia sozinha SÓ mensagens de logística: cobrança de documentos, confirmação de horário, mensagem de cadência.", "NOTA": "Nunca envia: valores, análise do caso, promessas. Toda mensagem enviada fica marcada na conversa e você pode pausar com 1 clique." },
+        "piloto_total": { "NOME": "Piloto total", "DESC": "A IA responde tudo sozinha. Toda mensagem fica carimbada e você pode pausar com 1 clique." }
+      },
+      "CARIMBO": "enviada pelo piloto ({modo})",
+      "PAUSAR": "Pausar piloto",
+      "PAUSADO": "Piloto pausado — voltou pro modo Rascunho.",
+      "PAUSA_FALHOU": "Não consegui pausar — tente de novo."
     }
   },
   "CAPTAIN_RAMON": {

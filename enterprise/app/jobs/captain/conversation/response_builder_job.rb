@@ -12,6 +12,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
     return unless conversation_pending?
 
+    @copiloto_modo = Ramon::CopilotoModo.of(@conversation)
+    return if @copiloto_modo == 'manual' # IA quieta: nem gasta LLM
+
     Current.executed_by = @assistant
 
     if captain_v2_enabled?
@@ -71,12 +74,20 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
       process_v1_handoff
     elsif conversation_pending?
+      # Classifica ANTES da transação: roundtrip do LLM não pode segurar o lock.
+      memoizar_logistica(@response['response'])
       ActiveRecord::Base.transaction do
         create_messages
         Rails.logger.info("[CAPTAIN][ResponseBuilderJob] Incrementing response usage for #{account.id}")
         account.increment_response_usage
       end
     end
+  end
+
+  def memoizar_logistica(content)
+    return unless @copiloto_modo == 'piloto_limitado'
+
+    @logistica_ok = Ramon::PilotoLogisticaService.logistica?(content)
   end
 
   def collect_previous_messages
@@ -86,8 +97,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       .where(private: false)
       .map do |message|
       message_hash = {
-        content: prepare_multimodal_message_content(message),
-        role: determine_role(message)
+        content: Captain::OpenAiMessageBuilderService.new(message: message).generate_content,
+        role: message.message_type == 'incoming' ? 'user' : 'assistant'
       }
 
       # Include agent_name if present in additional_attributes
@@ -95,14 +106,6 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
       message_hash
     end
-  end
-
-  def determine_role(message)
-    message.message_type == 'incoming' ? 'user' : 'assistant'
-  end
-
-  def prepare_multimodal_message_content(message)
-    Captain::OpenAiMessageBuilderService.new(message: message).generate_content
   end
 
   def v1_handoff_requested?
@@ -151,6 +154,10 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def create_handoff_message(preserve_waiting_since: false)
+    # Handoff é logística por definição (constraint global) — nunca vira rascunho
+    # em piloto_limitado. Único call site (v1 e v2 passam por aqui), então o flag
+    # é setado uma vez só, imediatamente antes da chamada.
+    @enviando_handoff = true
     create_outgoing_message(
       @assistant.config['handoff_message'].presence || I18n.t('conversations.captain.handoff'),
       preserve_waiting_since: preserve_waiting_since
@@ -158,19 +165,17 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def create_messages
-    validate_message_content!(@response['response'])
+    raise ArgumentError, 'Message content cannot be blank' if @response['response'].blank?
+
     create_outgoing_message(@response['response'], agent_name: @response['agent_name'])
   end
 
-  def validate_message_content!(content)
-    raise ArgumentError, 'Message content cannot be blank' if content.blank?
-  end
-
   def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
-    return create_draft_note(message_content) if @assistant.modo_rascunho?
+    # `||`: belt-and-suspenders pro caso de um caller futuro pular `perform`.
+    modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
+    return create_draft_note(message_content) unless Ramon::CopilotoModo.envia?(modo, handoff: @enviando_handoff, logistica_ok: @logistica_ok)
 
-    additional_attrs = {}
-    additional_attrs[:agent_name] = agent_name if agent_name.present?
+    additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
 
     @conversation.messages.create!(
       message_type: :outgoing,
@@ -179,6 +184,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       sender: @assistant,
       content: message_content,
       additional_attributes: additional_attrs,
+      content_attributes: Ramon::CopilotoModo.carimbo(modo),
       preserve_waiting_since: preserve_waiting_since
     )
   end
