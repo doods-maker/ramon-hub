@@ -196,7 +196,9 @@ export const actions = {
     const response = await LeadsAPI.forConversation(conversationId);
     const lead = response.data;
     commit(types.MERGE_LEAD, lead);
-    commit(types.SET_SELECTED_LEAD, lead.id);
+    // Não seleciona: selectedId é da gaveta do Kanban — o painel da conversa
+    // lê por getLeadByConversationId. Selecionar aqui fazia a gaveta abrir
+    // sozinha ao entrar no Funil com o último lead visto na conversa.
     return lead;
   },
   // Só consulta (banner): nunca cria lead nem mexe na seleção.

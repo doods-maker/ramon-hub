@@ -41,7 +41,7 @@ describe('leads actions', () => {
     expect(commit).toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 42);
   });
 
-  it('ensureForConversation posts to for_conversation, merges and selects the lead', async () => {
+  it('ensureForConversation posts to for_conversation, merges and does NOT select the lead', async () => {
     const lead = { id: 7, conversation_id: 99 };
     axios.post.mockResolvedValue({ data: lead });
     const commit = vi.fn();
@@ -51,7 +51,7 @@ describe('leads actions', () => {
     );
     expect(result).toEqual(lead);
     expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD, lead);
-    expect(commit).toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 7);
+    expect(commit).not.toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 7);
   });
 
   it('peekForConversation merges the lead without selecting it', async () => {
