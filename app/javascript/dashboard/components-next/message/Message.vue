@@ -44,6 +44,7 @@ import FormBubble from './bubbles/Form.vue';
 import VoiceCallBubble from './bubbles/VoiceCall.vue';
 
 import MessageError from './MessageError.vue';
+import PilotoCarimbo from './PilotoCarimbo.vue';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
 import { useBranding } from 'shared/composables/useBranding';
 
@@ -574,6 +575,11 @@ provideMessageContext({
         :class="flexOrientationClass"
         :error="contentAttributes.externalError"
         @retry="emit('retry')"
+      />
+      <PilotoCarimbo
+        v-if="contentAttributes.ramonPiloto"
+        class="[grid-area:meta]"
+        :class="flexOrientationClass"
       />
     </div>
     <div v-if="shouldShowContextMenu" class="context-menu-wrap">
