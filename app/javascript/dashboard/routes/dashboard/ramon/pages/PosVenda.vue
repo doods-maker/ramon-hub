@@ -100,7 +100,7 @@ const openConversation = conversationId => {
           v-for="item in pendentes"
           :key="item.id"
           data-testid="pos-venda-row"
-          class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl bg-n-solid-2 border border-n-weak border-l-[3px] cursor-pointer hover:bg-n-alpha-2"
+          class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl bg-n-solid-1 shadow-sm border border-n-weak border-l-[3px] cursor-pointer hover:bg-n-alpha-2"
           :class="item.dias > 7 ? 'border-l-n-amber-9' : 'border-l-n-weak'"
           @click="openLead(item.id)"
         >
@@ -150,7 +150,7 @@ const openConversation = conversationId => {
             v-for="item in concluidos"
             :key="item.id"
             data-testid="pos-venda-row-concluido"
-            class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl bg-n-solid-2 border border-n-weak cursor-pointer hover:bg-n-alpha-2"
+            class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl bg-n-solid-1 shadow-sm border border-n-weak cursor-pointer hover:bg-n-alpha-2"
             @click="openLead(item.id)"
           >
             <div class="flex items-center gap-2 min-w-0">

@@ -9,7 +9,7 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
   before_action :check_authorization
 
   def index
-    reunioes = Current.account.reunioes.recentes.limit(LIMIT)
+    reunioes = Current.account.reunioes.includes(:user, :lead).recentes.limit(LIMIT)
     render json: { payload: reunioes.map { |reuniao| linha(reuniao) } }
   end
 

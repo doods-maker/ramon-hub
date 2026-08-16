@@ -49,10 +49,10 @@ const deltaClass = th => {
 
 // Gradações de ruby por posição (as razões já vêm ordenadas desc do backend).
 const SEGMENT_CLASSES = [
-  'bg-[#e54666] text-white font-semibold',
-  'bg-[#e54666]/[.55] text-white',
-  'bg-[#e54666]/[.30] text-[#ffd2e1]',
-  'bg-[#9399b0]/[.18] text-n-slate-11',
+  'bg-n-ruby-9 text-white font-semibold',
+  'bg-n-ruby-7 text-white',
+  'bg-n-ruby-5 text-n-ruby-11',
+  'bg-n-alpha-2 text-n-slate-11',
 ];
 const segmentClass = index =>
   SEGMENT_CLASSES[Math.min(index, SEGMENT_CLASSES.length - 1)];

@@ -45,7 +45,7 @@ const npsMedia = media =>
       />
       <span
         v-else
-        class="flex items-center justify-center flex-none rounded-full size-[26px] bg-[#463528] text-[10px] font-semibold text-n-slate-12"
+        class="flex items-center justify-center flex-none rounded-full size-[26px] bg-n-iris-3 text-[10px] font-semibold text-n-slate-12"
       >
         {{ initials(row.name) }}
       </span>

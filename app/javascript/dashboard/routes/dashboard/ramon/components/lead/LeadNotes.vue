@@ -71,7 +71,7 @@ const noteTime = createdAt =>
     <div
       v-for="note in visible"
       :key="note.id"
-      class="pl-2.5 border-l-2 border-[#c9a97c]/[.3]"
+      class="pl-2.5 border-l-2 border-n-iris-9/40"
     >
       <p class="text-[10.5px] text-n-slate-10">
         {{ note.author_name || $t('RAMON.LEAD_PANEL.NOTES.SYSTEM') }} ·

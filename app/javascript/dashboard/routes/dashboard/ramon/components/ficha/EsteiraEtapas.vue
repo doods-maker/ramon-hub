@@ -11,10 +11,16 @@ defineOptions({ name: 'EsteiraEtapas' });
 const currentIndex = computed(() =>
   props.stages.findIndex(stage => stage.current)
 );
+const currentIsLost = computed(
+  () => props.stages[currentIndex.value]?.is_lost === true
+);
 const decorated = computed(() =>
   props.stages.map((stage, index) => ({
     ...stage,
-    done: currentIndex.value >= 0 && index < currentIndex.value,
+    done:
+      currentIndex.value >= 0 &&
+      index < currentIndex.value &&
+      !(currentIsLost.value && stage.is_won),
   }))
 );
 
@@ -45,7 +51,9 @@ const fmtDate = value => {
         class="relative z-10 mx-auto mb-1.5 flex size-7 items-center justify-center rounded-full border-2 text-xs font-semibold"
         :class="[
           stage.done || stage.current
-            ? 'bg-n-iris-9 border-n-iris-9 text-white'
+            ? stage.current && currentIsLost
+              ? 'bg-n-ruby-9 border-n-ruby-9 text-white'
+              : 'bg-n-iris-9 border-n-iris-9 text-white'
             : 'bg-n-solid-1 border-n-weak text-n-slate-10',
           stage.current ? 'ring-4 ring-n-iris-9/15' : '',
         ]"

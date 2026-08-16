@@ -100,11 +100,14 @@ watch(reuniaoId, id => {
       <p v-else-if="!reunioes.length" class="text-sm text-n-slate-11">
         {{ t('RAMON.REUNIOES.EMPTY') }}
       </p>
-      <ul v-else class="flex flex-col divide-y divide-n-weak">
+      <ul
+        v-else
+        class="flex flex-col divide-y divide-n-weak rounded-xl border border-n-weak bg-n-solid-1 shadow-sm overflow-hidden"
+      >
         <li v-for="reuniao in reunioes" :key="reuniao.id">
           <button
             type="button"
-            class="flex w-full items-center justify-between gap-4 py-3 text-start"
+            class="flex w-full items-center justify-between gap-4 py-3 px-4 text-start"
             @click="abrir(reuniao.id)"
           >
             <span

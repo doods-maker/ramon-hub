@@ -44,12 +44,8 @@ describe('AgendaToday.vue', () => {
   it('highlights the time block of the next upcoming meeting only', () => {
     const wrapper = mountAgenda();
     const rows = wrapper.findAll('[data-testid="agenda-item"]');
-    expect(rows[0].find('.bg-\\[\\#c9a97c\\]\\/\\[\\.12\\]').exists()).toBe(
-      false
-    );
-    expect(rows[1].find('.bg-\\[\\#c9a97c\\]\\/\\[\\.12\\]').exists()).toBe(
-      true
-    );
+    expect(rows[0].find('.bg-n-iris-3').exists()).toBe(false);
+    expect(rows[1].find('.bg-n-iris-3').exists()).toBe(true);
   });
 
   it('emits select with the lead id and viewWeek from the footer', async () => {

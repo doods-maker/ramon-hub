@@ -38,7 +38,7 @@ const runTime = computed(() => {
 const TAGS = {
   draft: {
     label: 'RAMON.NIGHT_COPILOT.TAG_DRAFT',
-    class: 'bg-[#c9a97c]/[.16] text-n-iris-11',
+    class: 'bg-n-iris-3 text-n-iris-11',
   },
   move_stage: {
     label: 'RAMON.NIGHT_COPILOT.TAG_MOVE_STAGE',
@@ -153,9 +153,9 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
   >
     <div class="flex items-center gap-2.5 mb-3.5">
       <span
-        class="flex items-center justify-center flex-none rounded-[10px] size-[34px] bg-gradient-to-br from-[#463528] to-[#8a5c33]"
+        class="flex items-center justify-center flex-none rounded-[10px] size-[34px] bg-n-iris-9"
       >
-        <span class="i-lucide-bot size-[17px] text-n-slate-12" />
+        <span class="i-lucide-bot size-[17px] text-white" />
       </span>
       <div class="min-w-0">
         <p class="text-sm font-semibold text-n-slate-12">
@@ -190,9 +190,7 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
         data-testid="night-copilot-card"
         class="px-3.5 py-3 rounded-[11px] bg-n-solid-2 border"
         :class="
-          suggestion.kind === 'alert'
-            ? 'border-n-ruby-5'
-            : 'border-[#c9a97c]/[.12]'
+          suggestion.kind === 'alert' ? 'border-n-ruby-5' : 'border-n-weak'
         "
       >
         <div class="flex items-center gap-2">

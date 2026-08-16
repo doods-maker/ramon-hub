@@ -75,7 +75,7 @@ const copyLink = async () => {
   <div
     v-if="eligible"
     data-testid="zapsign-card"
-    class="rounded-xl p-3 bg-gradient-to-br from-[#332e28] to-[#2e2b27] border border-n-iris-11/30"
+    class="rounded-xl p-3 bg-n-solid-1 border border-n-weak"
   >
     <div class="flex items-center gap-2">
       <span class="i-lucide-pen-line size-4 shrink-0 text-n-iris-11" />

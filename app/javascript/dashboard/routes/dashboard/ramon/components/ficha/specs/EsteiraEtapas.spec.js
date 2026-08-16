@@ -46,4 +46,29 @@ describe('EsteiraEtapas', () => {
     expect(selos[0].classes().join(' ')).toContain('bg-n-iris-9');
     expect(selos[2].text()).toBe('3');
   });
+
+  it('lead em etapa perdida não marca a etapa de ganho anterior como concluída', () => {
+    // is_won ANTES da etapa atual perdida — é o cenário real do bug (a esteira
+    // reaproveita a etapa "Fechado" quando o lead é reaberto e perdido depois).
+    const lostStages = [
+      stages[0],
+      { ...stages[2], id: 2, current: false },
+      { ...stages[1], id: 3, current: true, is_lost: true },
+    ];
+    const wrapper = mount(EsteiraEtapas, { props: { stages: lostStages } });
+    const selos = wrapper.findAll('[data-testid="esteira-selo"]');
+    expect(selos[1].find('.i-lucide-check').exists()).toBe(false);
+    expect(selos[1].text()).toBe('2');
+  });
+
+  it('etapa atual perdida usa selo em tom ruby', () => {
+    const lostStages = [
+      stages[0],
+      { ...stages[2], id: 2, current: false },
+      { ...stages[1], id: 3, current: true, is_lost: true },
+    ];
+    const wrapper = mount(EsteiraEtapas, { props: { stages: lostStages } });
+    const selos = wrapper.findAll('[data-testid="esteira-selo"]');
+    expect(selos[2].classes().join(' ')).toContain('bg-n-ruby-9');
+  });
 });

@@ -127,7 +127,7 @@ onBeforeRouteLeave(() => {
 
 <template>
   <div
-    class="flex flex-col gap-3 rounded-lg border border-n-weak bg-n-solid-2 p-4"
+    class="flex flex-col gap-3 rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-4"
   >
     <input
       v-model="titulo"
@@ -150,7 +150,7 @@ onBeforeRouteLeave(() => {
       <button
         v-if="estado === 'parado'"
         type="button"
-        class="rounded-lg bg-n-brand px-4 py-2 text-sm font-medium text-white"
+        class="rounded-lg bg-n-iris-9 px-4 py-2 text-sm font-medium text-white"
         data-testid="recorder-start"
         @click="gravar"
       >
@@ -175,7 +175,7 @@ onBeforeRouteLeave(() => {
         </button>
         <button
           type="button"
-          class="rounded-lg bg-n-brand px-4 py-2 text-sm font-medium text-white"
+          class="rounded-lg bg-n-iris-9 px-4 py-2 text-sm font-medium text-white"
           data-testid="recorder-stop"
           @click="encerrar"
         >
@@ -192,7 +192,7 @@ onBeforeRouteLeave(() => {
       <template v-else-if="estado === 'falha'">
         <button
           type="button"
-          class="rounded-lg bg-n-brand px-4 py-2 text-sm font-medium text-white"
+          class="rounded-lg bg-n-iris-9 px-4 py-2 text-sm font-medium text-white"
           data-testid="recorder-retry"
           @click="enviar"
         >

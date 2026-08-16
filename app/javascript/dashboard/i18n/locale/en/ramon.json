@@ -667,19 +667,19 @@
       "DOC_PREFIX": "Document:"
     },
     "FICHA": {
-      "TITLE": "Ficha do Cliente",
-      "PROBABILITY": "probabilidade",
-      "ESTIMATED": "estimado",
-      "OPEN_CONVERSATION": "Abrir conversa",
-      "NEXT_TITLE": "Próximo passo",
-      "NEXT_EMPTY": "Nenhuma tarefa aberta — defina o próximo passo.",
-      "DOCS_TITLE": "Documentos",
-      "CALCULOS_TITLE": "Cálculos",
-      "CALCULOS_EMPTY": "Nenhum cálculo feito ainda.",
-      "REUNIOES_TITLE": "Reuniões",
-      "REUNIOES_EMPTY": "Nenhuma reunião ainda. Ao gravar, a ata entra aqui.",
-      "RECORD_MEETING": "Gravar reunião",
-      "OPEN_FULL": "Abrir ficha completa"
+      "TITLE": "Client File",
+      "PROBABILITY": "probability",
+      "ESTIMATED": "estimated",
+      "OPEN_CONVERSATION": "Open conversation",
+      "NEXT_TITLE": "Next step",
+      "NEXT_EMPTY": "No open task — set the next step.",
+      "DOCS_TITLE": "Documents",
+      "CALCULOS_TITLE": "Calculations",
+      "CALCULOS_EMPTY": "No calculations yet.",
+      "REUNIOES_TITLE": "Meetings",
+      "REUNIOES_EMPTY": "No meetings yet. Record one and the minutes will appear here.",
+      "RECORD_MEETING": "Record meeting",
+      "OPEN_FULL": "Open full file"
     },
     "LEAD_PANEL": {
       "TITLE": "Lead",
