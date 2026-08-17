@@ -21,6 +21,21 @@ RSpec.describe Ramon::AgenteContextoService do
     expect(payload[:lead]).to be_nil
   end
 
+  # O sender Captain::Assistant vive em enterprise/: insert_all evita instanciá-lo (roda no CI FOSS).
+  it 'descarta rascunho do Copiloto mas mantém nota do AgentBot' do
+    # rubocop:disable Rails/SkipsModelValidations
+    Message.insert_all([{ account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id,
+                          message_type: 1, private: true, sender_type: 'Captain::Assistant', sender_id: 1,
+                          content: 'rascunho do copiloto', created_at: Time.current, updated_at: Time.current }])
+    # rubocop:enable Rails/SkipsModelValidations
+    create(:message, account: account, conversation: conversation, inbox: inbox, message_type: :outgoing, private: true,
+                     sender: create(:agent_bot, account: account, name: 'Claude'), content: 'nota do Claude')
+
+    textos = described_class.new(conversation).perform[:conversa][:mensagens].map { |m| m[:texto] }
+
+    expect(textos).to eq(['nota do Claude'])
+  end
+
   it 'inclui o dossiê e o id do lead da conversa' do
     lead = create(:lead, account: account, contact: contact, conversation: conversation)
 

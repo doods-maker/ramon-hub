@@ -22,8 +22,13 @@ class Ramon::AgenteContextoService
 
   private
 
+  # Rascunho do Copiloto (Captain::Assistant) fica de fora: é sugestão não enviada, viraria eco.
+  # Nota do AgentBot fica — é o que o próprio agente já escreveu. IS DISTINCT FROM: where.not
+  # descartaria também as mensagens de sender_type NULL (campanha, template).
   def mensagens
-    @conversation.messages.where.not(message_type: :activity).reorder(created_at: :desc).limit(LIMITE_MENSAGENS).to_a.reverse.map do |m|
+    @conversation.messages.where.not(message_type: :activity)
+                 .where("messages.sender_type IS DISTINCT FROM 'Captain::Assistant'")
+                 .reorder(created_at: :desc, id: :desc).limit(LIMITE_MENSAGENS).to_a.reverse.map do |m|
       {
         id: m.id, em: m.created_at.iso8601, de: papel(m), autor: m.sender.try(:name),
         texto: m.content.to_s,
@@ -42,14 +47,8 @@ class Ramon::AgenteContextoService
   def contato
     return nil if @contact.blank?
 
+    # ponytail: idade não sai daqui — vem pronta em lead[:pessoa][:idade] do DossieService.
     { nome: @contact.name, telefone: @contact.phone_number, email: @contact.email, cpf: @contact.try(:cpf),
-      cidade: @contact.additional_attributes&.dig('city'), uf: @contact.additional_attributes&.dig('state'), idade: idade }
-  end
-
-  def idade
-    born = @contact.try(:data_nascimento)
-    return nil if born.blank?
-
-    (Time.zone.today.strftime('%Y%m%d').to_i - born.strftime('%Y%m%d').to_i) / 10_000
+      cidade: @contact.additional_attributes&.dig('city'), uf: @contact.additional_attributes&.dig('state') }
   end
 end

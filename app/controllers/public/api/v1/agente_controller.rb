@@ -32,7 +32,7 @@ class Public::Api::V1::AgenteController < PublicController
   def execucoes
     exec = @account.agente_execucoes.create!(
       pedido: params[:pedido], status: params[:status], resumo: params[:resumo], modelo: params[:modelo],
-      esforco: params[:esforco], duracao_ms: params[:duracao_ms], lead_id: params[:lead_id],
+      esforco: params[:esforco], duracao_ms: params[:duracao_ms], lead_id: @account.leads.where(id: params[:lead_id]).pick(:id),
       conversation_id: conversation_pk(params[:conversation_id]), acoes: acoes
     )
     render json: { id: exec.id }, status: :created
