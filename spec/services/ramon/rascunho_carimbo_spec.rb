@@ -46,7 +46,7 @@ RSpec.describe Ramon::RascunhoCarimbo do
 
     it 'carimba igual quando o humano manda o rascunho como estava' do
       nota = rascunho('Ola Maria, tudo bem? Preciso do seu CNIS.')
-      msg = humano("Ola Maria, tudo bem?  Preciso do seu CNIS. ")
+      msg = humano('Ola Maria, tudo bem?  Preciso do seu CNIS. ')
 
       expect(msg.content_attributes['ramon_rascunho_ia']).to include('nota_id' => nota.id, 'desfecho' => 'igual')
     end

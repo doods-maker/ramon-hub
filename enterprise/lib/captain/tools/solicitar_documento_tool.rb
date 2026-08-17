@@ -31,7 +31,7 @@ class Captain::Tools::SolicitarDocumentoTool < Captain::Tools::RamonBaseTool
     informados = documentos.to_s.split(',').map(&:strip).reject(&:blank?)
     return informados if informados.any?
 
-    Ramon::DossieService.new(lead: lead).perform.dig(:pendencias, :docs_missing).to_a.map { |d| d[:title] }
+    Ramon::DossieService.new(lead: lead).perform.dig(:pendencias, :docs_missing).to_a.pluck(:title)
   rescue StandardError => e
     Rails.logger.warn("[solicitar_documento] dossie falhou: #{e.message}")
     nil
