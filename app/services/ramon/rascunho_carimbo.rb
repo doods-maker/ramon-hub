@@ -17,22 +17,30 @@ module Ramon::RascunhoCarimbo
     nota = nota_elegivel(message.conversation)
     return if nota.blank?
 
-    sim = similaridade(nota.content.delete_prefix(PREFIXO), message.content)
-    desfecho = if normal(nota.content.delete_prefix(PREFIXO)) == normal(message.content) then 'igual'
-               elsif sim >= 0.3 then 'editado'
-               else 'descartado'
-               end
-    message.content_attributes = (message.content_attributes || {}).merge(
+    texto_nota = normal(nota.content.delete_prefix(PREFIXO))
+    sim = similaridade(texto_nota, message.content)
+    desfecho = desfecho_de(texto_nota, message.content, sim)
+    message.content_attributes = message.content_attributes.merge(
       CHAVE => { 'nota_id' => nota.id, 'desfecho' => desfecho, 'similaridade' => sim.round(2) }
     )
   end
 
+  def desfecho_de(texto_nota_normal, texto_msg, sim)
+    return 'igual' if texto_nota_normal == normal(texto_msg)
+    return 'editado' if sim >= 0.3
+
+    'descartado'
+  end
+
+  # A ultima nota-rascunho e a mais NOVA criada depois da ultima fala do cliente
+  # (reorder pisa no default_scope asc do Message — sem isso o .order gruda no
+  # asc e devolve a mais antiga).
   def nota_elegivel(conversation)
     ultima_do_cliente = conversation.messages.incoming.maximum(:created_at)
     notas = conversation.messages.where(private: true, sender_type: 'Captain::Assistant')
                         .where('content LIKE ?', "#{PREFIXO}%")
     notas = notas.where('created_at > ?', ultima_do_cliente) if ultima_do_cliente
-    notas.order(created_at: :desc).first
+    notas.reorder(created_at: :desc).first
   end
 
   def normal(texto) = texto.to_s.downcase.gsub(/\s+/, ' ').strip

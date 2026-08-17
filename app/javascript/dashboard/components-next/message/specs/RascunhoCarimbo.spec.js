@@ -11,22 +11,33 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: k => (translations[k] ? translations[k]() : k) }),
 }));
 
-const contentAttributes = {
-  value: { ramonRascunhoIa: { notaId: 1, desfecho: 'editado' } },
-};
+const contentAttributes = { value: {} };
 vi.mock('../provider.js', () => ({
   useMessageContext: () => ({ contentAttributes }),
 }));
 
 describe('RascunhoCarimbo', () => {
+  beforeEach(() => {
+    contentAttributes.value = {};
+  });
+
   it('mostra o desfecho', () => {
+    contentAttributes.value = {
+      ramonRascunhoIa: { notaId: 1, desfecho: 'editado' },
+    };
     const w = mount(RascunhoCarimbo);
     expect(w.text()).toContain('rascunho da IA, editado');
   });
+
   it('cai no texto de descartado', () => {
     contentAttributes.value = {
       ramonRascunhoIa: { notaId: 2, desfecho: 'descartado' },
     };
     expect(mount(RascunhoCarimbo).text()).toContain('descartado');
+  });
+
+  it('nao renderiza nada sem ramonRascunhoIa', () => {
+    const w = mount(RascunhoCarimbo);
+    expect(w.find('[data-testid="rascunho-carimbo"]').exists()).toBe(false);
   });
 });

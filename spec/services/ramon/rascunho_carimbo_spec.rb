@@ -36,6 +36,16 @@ RSpec.describe Ramon::RascunhoCarimbo do
       .content_attributes.dig('ramon_rascunho_ia', 'desfecho')).to eq('descartado')
   end
 
+  it 'usa a nota mais nova quando ha duas rascunho depois da ultima mensagem do cliente' do
+    create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'oi')
+    rascunho('Bom dia! Podemos marcar para quinta?')
+    nota_nova = rascunho('Boa tarde! Ficou pronto o documento?')
+
+    msg = humano('Boa tarde! Ficou pronto o documento?')
+
+    expect(msg.content_attributes['ramon_rascunho_ia']).to include('nota_id' => nota_nova.id, 'desfecho' => 'igual')
+  end
+
   it 'nao carimba sem rascunho depois da ultima mensagem do cliente, nem nota privada, nem mensagem do bot' do
     rascunho('x')
     create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'oi')
