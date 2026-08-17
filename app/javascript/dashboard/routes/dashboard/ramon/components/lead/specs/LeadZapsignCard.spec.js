@@ -58,6 +58,17 @@ describe('LeadZapsignCard', () => {
     );
   });
 
+  it('recalcula o modelo ao trocar de lead', async () => {
+    const wrapper = await mountCard(eligibleLead);
+    const sel = () => wrapper.find('[data-testid="zapsign-template"]').element;
+    expect(sel().value).toBe('t1');
+    await wrapper.setProps({
+      lead: { ...eligibleLead, id: 10, thesis_name: 'Aposentadoria por idade' },
+    });
+    await flushPromises();
+    expect(sel().value).toBe('t2');
+  });
+
   it('gera com o modelo escolhido', async () => {
     LeadsAPI.createZapsign.mockResolvedValue({
       data: { sign_url: 'https://zapsign/abc', faltando: [] },

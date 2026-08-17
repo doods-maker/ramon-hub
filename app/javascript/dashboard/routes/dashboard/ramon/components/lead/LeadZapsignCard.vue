@@ -17,12 +17,6 @@ const { t } = useI18n();
 // Fallback local da resposta: se o websocket estiver caído, o lead da store não
 // recebe o zapsign novo e o botão continuaria armado — 2º clique = 2º contrato.
 const zapsignLocal = ref(null);
-watch(
-  () => props.lead?.id,
-  () => {
-    zapsignLocal.value = null;
-  }
-);
 const zapsign = computed(
   () => props.lead?.custom_attributes?.zapsign || zapsignLocal.value
 );
@@ -49,6 +43,15 @@ const guessTemplate = list => {
   );
   return (match || list[0])?.token || null;
 };
+
+// Troca de lead: zera o link local e re-chuta o modelo pela tese do lead novo.
+watch(
+  () => props.lead?.id,
+  () => {
+    zapsignLocal.value = null;
+    templateId.value = guessTemplate(templates.value);
+  }
+);
 
 onMounted(async () => {
   try {
@@ -135,12 +138,9 @@ const copyLink = async () => {
     </p>
 
     <template v-if="!zapsign?.sign_url">
-      <label class="sr-only" for="zapsign-template">
-        {{ $t('RAMON.ZAPSIGN.TEMPLATE_LABEL') }}
-      </label>
       <select
-        id="zapsign-template"
         v-model="templateId"
+        :aria-label="$t('RAMON.ZAPSIGN.TEMPLATE_LABEL')"
         data-testid="zapsign-template"
         :disabled="templatesError || !templates.length"
         class="w-full mt-2 text-xs rounded-lg border border-n-weak bg-n-solid-1 px-2 py-1"

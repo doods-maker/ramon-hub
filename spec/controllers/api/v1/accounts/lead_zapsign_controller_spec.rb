@@ -5,6 +5,10 @@ RSpec.describe 'Lead ZapSign API', type: :request do
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:lead) { create(:lead, account: account) }
 
+  # perform consulta os modelos pra gravar 'template_name' — sem stub o WebMock
+  # barra o GET /templates/ e o erro não cai nos rescues do controller.
+  before { allow(Ramon::ZapsignClient).to receive(:templates).and_return([]) }
+
   def gerar(headers = admin.create_new_auth_token)
     post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/zapsign", headers: headers
   end
