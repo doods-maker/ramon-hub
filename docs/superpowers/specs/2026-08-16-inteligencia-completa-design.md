@@ -73,7 +73,7 @@ depois (gem nova = bundle lock na VPS) — dito ao Eduardo.
 
 ### Onda 3 — Tools de escrita + qualificação
 `registrar_qualificacao` (escreve `qualificacao_status`, interno) ·
-`criar_tarefa_cadencia` · `marcar_perdido` (Sugestão) · `solicitar_documento`
+`criar_tarefa_esteira` · `marcar_perdido` (Sugestão) · `solicitar_documento`
 e `enviar_link_portal` (rascunho na conversa). Carimbo "veio de rascunho da IA"
 na mensagem enviada (base da métrica).
 

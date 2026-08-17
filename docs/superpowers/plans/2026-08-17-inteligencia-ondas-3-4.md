@@ -16,7 +16,7 @@
 - Sem Ruby local: specs rodam só no CI. Specs de tools em `spec/enterprise/lib/captain/tools/` (rubocop-only no CI) **e** o que precisa RODAR vai fora de enterprise (`spec/models/`, `spec/services/ramon/`, `spec/lib/ramon/`). Specs de model que tocam `Ramon::CopilotoModo` (enterprise/lib) usam guard `if: ChatwootApp.enterprise?`.
 - Toda tool: account-scoped, nunca levanta — devolve String; `lead_id` chega como string; `log_tool_usage('<id>', {...})` antes de agir.
 - Nenhuma tool manda mensagem pública. "Rascunho na conversa" = a resposta do Assistente segue o modo da conversa (rascunho → nota privada `RASCUNHO (revisar antes de enviar):`).
-- `tool_id.classify` singulariza a última palavra — ids terminam em singular (`registrar_qualificacao`, `criar_tarefa_cadencia`, `marcar_perdido`, `solicitar_documento`, `enviar_link_portal`).
+- `tool_id.classify` singulariza a última palavra pelas regras INGLESAS do Rails (`/([ti])a$/` → `um`: `cadencia`→`Cadencium`, `dia`→`dium`) — por isso o id é `criar_tarefa_esteira` (achado no seed em produção 17/08; o `Scenario` valida o id contra a classe). Ids: `registrar_qualificacao`, `criar_tarefa_esteira`, `marcar_perdido`, `solicitar_documento`, `enviar_link_portal`.
 - Envs novas documentadas em `.env.example` (bloco ramon) e fork-pontos em `docs/FORK-PONTOS-DE-REGISTRO.md`.
 - Comentários em PT-BR sem acento nos `.rb` (padrão do fork). Editor: conferir que o arquivo saiu LF (autocrlf).
 - Merge+deploy autorizados em pares (D9). Migração da view **à mão** na VPS (entrypoint não migra) + `\dv` no psql.
@@ -151,11 +151,11 @@ end
 
 - [ ] **Step 4: commit** `feat(inteligencia): tool registrar_qualificacao`
 
-### Task 2: `criar_tarefa_cadencia` — tarefa interna na Esteira
+### Task 2: `criar_tarefa_esteira` — tarefa interna na Esteira
 
 **Files:**
-- Create: `enterprise/lib/captain/tools/criar_tarefa_cadencia_tool.rb`
-- Create: `spec/enterprise/lib/captain/tools/criar_tarefa_cadencia_tool_spec.rb`
+- Create: `enterprise/lib/captain/tools/criar_tarefa_esteira_tool.rb`
+- Create: `spec/enterprise/lib/captain/tools/criar_tarefa_esteira_tool_spec.rb`
 - Modify: `config/agents/tools.yml`
 
 **Interfaces:**
@@ -167,7 +167,7 @@ end
 ```ruby
 require 'rails_helper'
 
-RSpec.describe Captain::Tools::CriarTarefaCadenciaTool, type: :model do
+RSpec.describe Captain::Tools::CriarTarefaEsteiraTool, type: :model do
   let(:account) { create(:account) }
   let(:assistant) { create(:captain_assistant, account: account) }
   let(:tool) { described_class.new(assistant) }
@@ -209,7 +209,7 @@ end
 # Escrita INTERNA: cria a tarefa de cadencia do caso na Esteira (lead_tasks).
 # Nada chega ao cliente — a tarefa e o lembrete do humano. Por isso nao passa
 # por Sugestao pendente (mesma regra do "Subir na esteira" do Cockpit).
-class Captain::Tools::CriarTarefaCadenciaTool < Captain::Tools::RamonBaseTool
+class Captain::Tools::CriarTarefaEsteiraTool < Captain::Tools::RamonBaseTool
   TZ = 'America/Sao_Paulo'.freeze
 
   description 'Cria uma tarefa de cadencia do caso na Esteira (lembrete interno para a equipe: cobrar documento, ' \
@@ -234,7 +234,7 @@ class Captain::Tools::CriarTarefaCadenciaTool < Captain::Tools::RamonBaseTool
     return 'Informe o titulo da tarefa.' if nome.blank?
     return "Ja existe a tarefa aberta \"#{nome}\" no caso #{lead.name}." if lead.lead_tasks.open_tasks.any? { |t| t.title.casecmp?(nome) }
 
-    log_tool_usage('criar_tarefa_cadencia', { lead_id: lead.id, kind: kind, due_at: due.iso8601 })
+    log_tool_usage('criar_tarefa_esteira', { lead_id: lead.id, kind: kind, due_at: due.iso8601 })
     lead.lead_tasks.create!(account: lead.account, kind: kind, title: nome, due_at: due)
     "Tarefa \"#{nome}\" criada na Esteira do caso #{lead.name} para #{due.in_time_zone(TZ).strftime('%d/%m/%Y %H:%M')}."
   end
@@ -254,13 +254,13 @@ end
 - [ ] **Step 3: tools.yml**
 
 ```yaml
-- id: criar_tarefa_cadencia
+- id: criar_tarefa_esteira
   title: 'Criar tarefa de cadência'
   description: 'Cria um lembrete interno na Esteira do caso (cobrar, retomar, ligar) com data e hora'
   icon: 'calendar-clock'
 ```
 
-- [ ] **Step 4: commit** `feat(inteligencia): tool criar_tarefa_cadencia`
+- [ ] **Step 4: commit** `feat(inteligencia): tool criar_tarefa_esteira`
 
 ### Task 3: `marcar_perdido` — Sugestão pendente `acao: 'perdido'` + aplicação
 
@@ -802,8 +802,8 @@ const desfecho = computed(
 - [ ] **Step 1:** editar as instructions (adicionar parágrafo "Registrar/agir" com os links `[Rótulo](tool://id)`):
   - "Triagem e qualificação do lead novo": ao confirmar/descartar um critério, `[Registrar qualificação](tool://registrar_qualificacao)` com `status` ok|falta; nunca perguntar de novo o que já está ok.
   - "Dúvidas do lead e objeções": se o lead disser que desistiu/não tem interesse/já resolveu, `[Marcar como perdido](tool://marcar_perdido)` com o motivo mais próximo do catálogo (a sugestão fica pendente pro humano).
-  - "Agendar conversa com o advogado": quando o lead pedir pra retomar depois ("me chama semana que vem"), `[Criar tarefa de cadência](tool://criar_tarefa_cadencia)` com a data que ele disse.
-  - "Pós-venda — cobrar e receber documentos": usar `[Pedir documentos](tool://solicitar_documento)` pro texto da cobrança e `[Link do portal do cliente](tool://enviar_link_portal)` quando ele preferir mandar pelo celular; depois `[Criar tarefa de cadência](tool://criar_tarefa_cadencia)` "Conferir documentos de <nome>" pra 3 dias.
+  - "Agendar conversa com o advogado": quando o lead pedir pra retomar depois ("me chama semana que vem"), `[Criar tarefa de cadência](tool://criar_tarefa_esteira)` com a data que ele disse.
+  - "Pós-venda — cobrar e receber documentos": usar `[Pedir documentos](tool://solicitar_documento)` pro texto da cobrança e `[Link do portal do cliente](tool://enviar_link_portal)` quando ele preferir mandar pelo celular; depois `[Criar tarefa de cadência](tool://criar_tarefa_esteira)` "Conferir documentos de <nome>" pra 3 dias.
   - Copiloto "Revisao de documentos do caso": `[Pedir documentos](tool://solicitar_documento)` gera o texto pronto.
 - [ ] **Step 2:** conferir que todo `tool://id` novo existe em `config/agents/tools.yml` (`grep -o 'tool://[a-z_]*' db/seeds/ramon/inteligencia/assistentes.yml | sort -u` vs `grep '^- id:' config/agents/tools.yml`).
 - [ ] **Step 3: commit** `feat(inteligencia): skills usam as tools de escrita da onda 3`
@@ -1065,6 +1065,6 @@ end
 6. Smoke doc + atualizar caderno de provas (D8) com 1 conversa por tool nova; memória `inteligencia-area-completa.md`.
 
 ## Self-review (feito ao escrever)
-- Spec Onda 3: registrar_qualificacao ✔ T1 · criar_tarefa_cadencia ✔ T2 · marcar_perdido (Sugestão) ✔ T3 · solicitar_documento/enviar_link_portal (rascunho) ✔ T4 · carimbo ✔ T5+T6 · skills ✔ T7. Onda 4: env ✔ T8 · `bi_ia` + bloco Metabase ✔ T9 + pós-merge 5. Objeções (D8) NÃO têm dado estruturado — fora (dito no plano; se quiser, kind novo em `lead_activities` numa onda futura).
+- Spec Onda 3: registrar_qualificacao ✔ T1 · criar_tarefa_esteira ✔ T2 · marcar_perdido (Sugestão) ✔ T3 · solicitar_documento/enviar_link_portal (rascunho) ✔ T4 · carimbo ✔ T5+T6 · skills ✔ T7. Onda 4: env ✔ T8 · `bi_ia` + bloco Metabase ✔ T9 + pós-merge 5. Objeções (D8) NÃO têm dado estruturado — fora (dito no plano; se quiser, kind novo em `lead_activities` numa onda futura).
 - Nomes cruzados: `ramon_rascunho_ia` (T5/T6/T9), `Ramon::CopilotoModo.default` (T8), `copilotoModoDe` (T8), payload `lost_reason` (T3), prefixo `RASCUNHO (revisar antes de enviar):` (T5/T9 = `response_builder_job.rb`).
 - Conferidos antes de executar: `content_attributes` é json → cast `::jsonb` (T9); `with_modified_env` (spec_helper L16); `motivo_da_recusa` reader (model L20); CI usa `db:schema:load`.

@@ -1,7 +1,8 @@
-# Escrita INTERNA: cria a tarefa de cadencia do caso na Esteira (lead_tasks).
+# Escrita INTERNA (id "esteira" e nao "cadencia": tool_id.classify singulariza
+# "cadencia" -> "Cadencium" e a Skill recusa o id): cria a tarefa de cadencia do caso na Esteira (lead_tasks).
 # Nada chega ao cliente — a tarefa e o lembrete do humano. Por isso nao passa
 # por Sugestao pendente (mesma regra do "Subir na esteira" do Cockpit).
-class Captain::Tools::CriarTarefaCadenciaTool < Captain::Tools::RamonBaseTool
+class Captain::Tools::CriarTarefaEsteiraTool < Captain::Tools::RamonBaseTool
   TZ = 'America/Sao_Paulo'.freeze
 
   description 'Cria uma tarefa de cadencia do caso na Esteira (lembrete interno para a equipe: cobrar documento, ' \
@@ -21,7 +22,7 @@ class Captain::Tools::CriarTarefaCadenciaTool < Captain::Tools::RamonBaseTool
     erro = recusa(kind, due, nome, lead)
     return erro if erro
 
-    log_tool_usage('criar_tarefa_cadencia', { lead_id: lead.id, kind: kind, due_at: due.iso8601 })
+    log_tool_usage('criar_tarefa_esteira', { lead_id: lead.id, kind: kind, due_at: due.iso8601 })
     lead.lead_tasks.create!(account: lead.account, kind: kind, title: nome, due_at: due)
     confirmacao(lead, nome, due)
   end
