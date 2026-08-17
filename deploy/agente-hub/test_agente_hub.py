@@ -54,5 +54,17 @@ class TestNota(unittest.TestCase):
         self.assertFalse(ah.detecta_limite('tudo certo'))
 
 
+class TestCmd(unittest.TestCase):
+    def test_flags(self):
+        cfg = ah.Cfg({'CLAUDE_CODE_OAUTH_TOKEN': 't', 'HUB_URL': 'h', 'ACCOUNT_ID': '2', 'HUB_AGENTE_TOKEN': 'a',
+                      'HUB_MCP_TOKEN': 'm', 'WEBHOOK_SECRET': 's', 'EDUARDO_EMAIL': 'e'})
+        cmd = ah.montar_cmd(cfg, os.path.join(os.path.dirname(__file__), 'README.md'), 'medium')
+        self.assertNotIn('--bare', cmd)  # --bare ignora CLAUDE_CODE_OAUTH_TOKEN
+        self.assertIn('--strict-mcp-config', cmd)
+        self.assertIn('--json-schema', cmd)
+        self.assertIn('medium', cmd)
+        self.assertNotIn('Bash', cmd[cmd.index('--allowedTools') + 1])
+
+
 if __name__ == '__main__':
     unittest.main()

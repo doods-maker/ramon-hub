@@ -1,0 +1,14 @@
+[Unit]
+Description=Agente do hub (Claude Code headless, usuario agente)
+After=network-online.target docker.service
+[Service]
+User=agente
+Group=agente
+WorkingDirectory=/opt/agente-hub
+ExecStart=/usr/bin/python3 /opt/agente-hub/agente_hub.py
+Restart=always
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+[Install]
+WantedBy=multi-user.target
