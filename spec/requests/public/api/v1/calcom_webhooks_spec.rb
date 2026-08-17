@@ -69,8 +69,9 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
         post_webhook(booking_payload)
 
         cancel = booking_payload.merge(triggerEvent: 'BOOKING_CANCELLED')
+        canceladas = Notification.where(notification_type: 'ramon_meeting_cancelled')
         expect { post_webhook(cancel) }.to change { lead.lead_tasks.open_tasks.where(kind: 'meeting').count }.by(-1)
-                                                                                                             .and change(Notification.where(notification_type: 'ramon_meeting_cancelled'), :count).by(1)
+                                                                                                             .and change(canceladas, :count).by(1)
         expect(response).to have_http_status(:ok)
         expect(lead.lead_activities.where(kind: 'meeting_cancelled')).to be_present
       end
