@@ -776,7 +776,7 @@
     },
     "ZAPSIGN": {
       "TITLE": "Contrato",
-      "ELIGIBLE_TITLE": "Contrato ZapSign · tese elegível",
+      "CARD_TITLE": "Contrato ZapSign",
       "PREPARED": "Contrato + procuração pré-preenchidos — gere e colha a assinatura na reunião.",
       "MISSING_COUNT": "{count} dado(s) faltando",
       "MISSING_HINT": "Faltam:",

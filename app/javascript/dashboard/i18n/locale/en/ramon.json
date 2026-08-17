@@ -776,7 +776,7 @@
     },
     "ZAPSIGN": {
       "TITLE": "Contract",
-      "ELIGIBLE_TITLE": "ZapSign contract · eligible thesis",
+      "CARD_TITLE": "ZapSign contract",
       "PREPARED": "Contract + power of attorney pre-filled — generate and collect the signature in the meeting.",
       "MISSING_COUNT": "{count} field(s) missing",
       "MISSING_HINT": "Missing:",

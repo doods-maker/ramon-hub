@@ -46,6 +46,18 @@ describe('LeadZapsignCard', () => {
     expect(select.element.value).toBe('t1');
   });
 
+  // ordem invertida de propósito: se a pré-seleção caísse no fallback list[0],
+  // viria 't2' — só casa 't1' quem compara "acidente" com "Aux. Acidente"
+  it('casa a tese pelo acento/palavra certa, não pela ordem da lista', async () => {
+    LeadsAPI.zapsignTemplates.mockResolvedValue({
+      data: [...TEMPLATES].reverse(),
+    });
+    const wrapper = await mountCard(eligibleLead);
+    expect(wrapper.find('[data-testid="zapsign-template"]').element.value).toBe(
+      't1'
+    );
+  });
+
   it('gera com o modelo escolhido', async () => {
     LeadsAPI.createZapsign.mockResolvedValue({
       data: { sign_url: 'https://zapsign/abc', faltando: [] },

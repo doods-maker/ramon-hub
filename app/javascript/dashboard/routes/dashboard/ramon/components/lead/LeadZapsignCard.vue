@@ -32,13 +32,21 @@ const templates = ref([]);
 const templateId = ref(null);
 const templatesError = ref(false);
 
-const guessTemplate = list => {
-  const word = (props.lead?.thesis_name || '')
+const semAcento = texto =>
+  (texto || '')
     .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '');
+
+// ponytail: casa qualquer palavra (>3 letras) da tese no nome do modelo — chute
+// grosseiro, o closer confirma no select. Sinônimo/apelido de modelo pede mapa.
+const guessTemplate = list => {
+  const palavras = semAcento(props.lead?.thesis_name)
     .split(/[\s-]+/)
-    .find(w => w.length > 3);
-  const match =
-    word && list.find(tpl => (tpl.name || '').toLowerCase().includes(word));
+    .filter(w => w.length > 3);
+  const match = list.find(tpl =>
+    palavras.some(palavra => semAcento(tpl.name).includes(palavra))
+  );
   return (match || list[0])?.token || null;
 };
 
@@ -104,7 +112,7 @@ const copyLink = async () => {
     <div class="flex items-center gap-2">
       <span class="i-lucide-pen-line size-4 shrink-0 text-n-iris-11" />
       <p class="text-xs font-semibold text-n-iris-11">
-        {{ $t('RAMON.ZAPSIGN.ELIGIBLE_TITLE') }}
+        {{ $t('RAMON.ZAPSIGN.CARD_TITLE') }}
       </p>
       <span
         v-if="missing.length"
