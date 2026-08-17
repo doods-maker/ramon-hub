@@ -9,7 +9,8 @@ user = account.users.find_by!(email: EMAIL)
 
 MACROS = {
   'Claude · Dossiê pro jurídico' =>
-    '@claude monta o dossiê de passagem deste lead pro jurídico (tese do lead), com análise, riscos, documentos que faltam '     'e próximo passo; salva no Drive e cria a tarefa no ADVBOX pro responsável.',
+    '@claude monta o dossiê de passagem deste lead pro jurídico (tese do lead), com análise, riscos, documentos que faltam e ' +
+    'próximo passo; salva no Drive e cria a tarefa no ADVBOX pro responsável.',
   'Claude · Análise de andamentos' =>
     '@claude lê os últimos andamentos e publicações do(s) processo(s) deste cliente no ADVBOX e me diz se há prazo ou providência pendente.',
   'Claude · Próximo passo' =>
