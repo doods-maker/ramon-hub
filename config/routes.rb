@@ -692,6 +692,12 @@ Rails.application.routes.draw do
         # foi removida 20/07 (vazava o token no log) — connectors migrados.
         post 'mcp', to: 'mcp#create'
         match 'mcp', to: 'mcp#not_allowed', via: [:get, :delete]
+
+        # Ramon — API do agente do hub (Claude na VPS). Token via ?token=.
+        get  'agente/contexto',  to: 'agente#contexto'
+        post 'agente/nota',      to: 'agente#nota'
+        post 'agente/arquivo',   to: 'agente#arquivo'
+        post 'agente/execucoes', to: 'agente#execucoes'
       end
     end
   end
