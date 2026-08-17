@@ -119,3 +119,8 @@
   title: 'Publicacoes do processo no AdvBox'
   description: 'Ultimas publicacoes de um processo do AdvBox (data e trecho)'
   icon: 'document'
+
+- id: registrar_qualificacao
+  title: 'Registrar qualificação'
+  description: 'Marca no caso se um critério de qualificação da tese foi confirmado ou não atendido'
+  icon: 'checkmark-circle'
