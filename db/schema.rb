@@ -1657,8 +1657,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_17_000003) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "agente_execucoes", "accounts"
-  add_foreign_key "agente_execucoes", "conversations"
-  add_foreign_key "agente_execucoes", "leads"
+  add_foreign_key "agente_execucoes", "conversations", on_delete: :nullify
+  add_foreign_key "agente_execucoes", "leads", on_delete: :nullify
   add_foreign_key "calculos", "accounts"
   add_foreign_key "calculos", "leads"
   add_foreign_key "calculos", "users"
