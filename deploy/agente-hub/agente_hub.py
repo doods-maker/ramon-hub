@@ -130,7 +130,8 @@ def montar_cmd(cfg, prompt_path, esforco):
     # --strict-mcp-config: confirmado no CLI 2.1.220 (ignora ~/.claude.json e .mcp.json do projeto).
     return [cfg.CLAUDE_BIN, '-p', '--model', cfg.MODELO, '--effort', esforco,
             '--permission-mode', 'dontAsk', '--allowedTools', ','.join(ALLOWED), '--max-turns', '40',
-            '--add-dir', cfg.SEDE_DIR, '--system-prompt-file', os.path.join(cfg.BASE, 'prompts', 'sistema.md'),
+            '--add-dir', cfg.SEDE_DIR, '--add-dir', os.path.join(cfg.BASE, 'prompts'),
+            '--system-prompt-file', os.path.join(cfg.BASE, 'prompts', 'sistema.md'),
             '--mcp-config', os.path.join(cfg.BASE, 'mcp.json'), '--strict-mcp-config',
             '--json-schema', open(os.path.join(cfg.BASE, 'schema.json')).read(), '--output-format', 'json',
             open(prompt_path).read()]
