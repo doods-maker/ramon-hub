@@ -95,7 +95,7 @@ assistentes:
           fase, use [Mover de etapa](tool://mover_etapa) com o nome exato da etapa (também é só sugestão).
 
           Se o lead pedir para retomar depois ("me chama semana que vem"), registre com
-          [Criar tarefa de cadência](tool://criar_tarefa_cadencia) usando a data que ele disse.
+          [Criar tarefa de cadência](tool://criar_tarefa_esteira) usando a data que ele disse.
       - title: Fechar contrato
         description: O lead decidiu fechar — preparar contrato e caso, sempre com aprovação humana.
         instruction: |
@@ -116,7 +116,7 @@ assistentes:
 
           Para montar o texto da cobrança, use [Pedir documentos](tool://solicitar_documento); se o cliente
           preferir mandar pelo celular, ofereça o [Link do portal do cliente](tool://enviar_link_portal).
-          Depois de cobrar, registre [Criar tarefa de cadência](tool://criar_tarefa_cadencia) com o título
+          Depois de cobrar, registre [Criar tarefa de cadência](tool://criar_tarefa_esteira) com o título
           "Conferir documentos de <nome>" para daqui a 3 dias.
 
   - name: Copiloto do Escritorio
