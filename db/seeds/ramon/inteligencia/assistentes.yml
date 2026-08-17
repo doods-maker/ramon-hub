@@ -52,6 +52,10 @@ assistentes:
           skill de agendamento). Se for baixa, diga com honestidade e sem juridiquês que, pelo que foi contado,
           hoje não parece haver direito, o que mudaria isso, e convide a salvar o contato. Se o assunto fugir
           do previdenciário/trabalhista ou a pessoa pedir um advogado, use [Passar para humano](tool://handoff).
+
+          Registrar e agir: à medida que for confirmando ou descartando cada requisito da tese, use
+          [Registrar qualificação](tool://registrar_qualificacao) com status ok ou falta — isso evita perguntar
+          de novo o que já ficou definido.
       - title: Dúvidas do lead e objeções
         description: Responder perguntas sobre o benefício, o escritório e o honorário; acolher objeções sem pressão.
         instruction: |
@@ -67,6 +71,10 @@ assistentes:
           físico em Tubarão/SC, +20 anos, +10.000 benefícios, pode pesquisar e vir tomar um café.
           Nunca ofereça desconto ou parcelamento. Se a pergunta exigir análise jurídica do caso concreto,
           diga que vai levar ao advogado e use [Passar para humano](tool://handoff).
+
+          Registrar e agir: se o lead disser que desistiu, não tem mais interesse ou já resolveu o caso de
+          outra forma, use [Marcar como perdido](tool://marcar_perdido) com o motivo mais próximo do catálogo
+          do funil — isso só cria uma sugestão pendente para o humano confirmar no Cockpit.
       - title: Estimar valor do benefício e honorário
         description: Quando o lead pergunta "quanto vou receber", dar uma estimativa honesta só com base em dado real.
         instruction: |
@@ -85,6 +93,9 @@ assistentes:
           data e a hora (AAAA-MM-DD HH:MM) — isso só cria uma sugestão para o humano confirmar; diga ao lead
           que você vai confirmar e retorna, nunca que está confirmado. Quando o caso claramente avançou de
           fase, use [Mover de etapa](tool://mover_etapa) com o nome exato da etapa (também é só sugestão).
+
+          Se o lead pedir para retomar depois ("me chama semana que vem"), registre com
+          [Criar tarefa de cadência](tool://criar_tarefa_cadencia) usando a data que ele disse.
       - title: Fechar contrato
         description: O lead decidiu fechar — preparar contrato e caso, sempre com aprovação humana.
         instruction: |
@@ -102,6 +113,11 @@ assistentes:
           não tem o documento, oriente a emitir pelo Meu INSS). Quando o cliente enviar algo, agradeça e
           diga que a equipe vai conferir — quem marca como recebido é a equipe, não você. Se faltar muito,
           proponha um horário para fazer juntos por chamada. Nunca dê prazo de protocolo nem do INSS.
+
+          Para montar o texto da cobrança, use [Pedir documentos](tool://solicitar_documento); se o cliente
+          preferir mandar pelo celular, ofereça o [Link do portal do cliente](tool://enviar_link_portal).
+          Depois de cobrar, registre [Criar tarefa de cadência](tool://criar_tarefa_cadencia) com o título
+          "Conferir documentos de <nome>" para daqui a 3 dias.
 
   - name: Copiloto do Escritorio
     description: >-
@@ -154,9 +170,9 @@ assistentes:
         description: O que já chegou, o que falta e o que pedir ao cliente — com o texto pronto da cobrança.
         instruction: |
           Use [O que falta no caso](tool://documentacao_faltante). Responda em três blocos: (1) recebidos;
-          (2) pendentes, dizendo para cada um por que importa; (3) uma mensagem curta de cobrança pronta
-          para colar no WhatsApp, na voz de médico de confiança, pedindo um documento por vez e explicando
-          como enviar. Não marque nada como recebido — isso é decisão da equipe na tela.
+          (2) pendentes, dizendo para cada um por que importa; (3) o texto pronto de cobrança para colar no
+          WhatsApp — gere com [Pedir documentos](tool://solicitar_documento) em vez de escrever do zero. Não
+          marque nada como recebido — isso é decisão da equipe na tela.
       - title: Funil hoje
         description: Números do funil e do dia — meta, conversão por etapa, SLA, perdas por tese.
         instruction: |
