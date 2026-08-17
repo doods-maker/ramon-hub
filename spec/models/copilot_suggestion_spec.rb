@@ -71,7 +71,8 @@ RSpec.describe CopilotSuggestion do
 
   describe '#apply! com acao perdido' do
     let!(:aberta) { create(:lead_stage, account: account, name: 'Contato', is_lost: false, position: 1) }
-    let!(:perdida) { create(:lead_stage, account: account, name: 'Perdido', is_lost: true, position: 9) }
+    # 'Perdido' ja nasce seedado em Account#seed_lead_config (uniqueness name+account) — usa o seedado.
+    let(:perdida) { account.lead_stages.find_by!(is_lost: true) }
 
     it 'move o caso para a etapa perdida com o motivo' do
       lead.update!(lead_stage: aberta)

@@ -2,7 +2,9 @@ require 'rails_helper'
 
 # Views versionadas com scenic (Onda 3, Task 9). Sem model dedicado —
 # consultamos direto via SQL, do jeito que o Metabase/BI vai consumir.
-RSpec.describe 'views bi_ia' do # rubocop:disable RSpec/DescribeClass
+# FORK-PONTO (ramon): usa mensagem de Captain::Assistant, que vive no
+# enterprise/ (o CI FOSS remove a pasta), por isso o guard.
+RSpec.describe 'views bi_ia', if: ChatwootApp.enterprise? do # rubocop:disable RSpec/DescribeClass
   let(:account) { create(:account) }
   let(:inbox) { create(:inbox, account: account) }
   let(:conversation) { create(:conversation, account: account, inbox: inbox) }

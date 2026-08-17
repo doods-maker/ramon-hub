@@ -1,6 +1,33 @@
 require 'rails_helper'
 
+# Cobertura pura do hook (sem Captain::Assistant) — roda tambem no CI FOSS.
 RSpec.describe Ramon::RascunhoCarimbo do
+  describe '.candidata?' do
+    it 'aceita mensagem publica outgoing do humano e recusa a privada' do
+      publica = Message.new(message_type: :outgoing, private: false, sender_type: 'User', content: 'oi')
+      privada = Message.new(message_type: :outgoing, private: true, sender_type: 'User', content: 'oi')
+
+      expect(described_class.candidata?(publica)).to be(true)
+      expect(described_class.candidata?(privada)).to be(false)
+    end
+  end
+
+  describe '.normal' do
+    it 'baixa a caixa e colapsa espacos' do
+      expect(described_class.normal("  Ola   Maria,  tudo bem?  \n")).to eq('ola maria, tudo bem?')
+    end
+  end
+
+  describe '.similaridade' do
+    it 'calcula jaccard das palavras (>=3 letras)' do
+      expect(described_class.similaridade('preciso do cnis e do laudo', 'preciso do cnis e do documento')).to be_within(0.01).of(0.5)
+    end
+  end
+end
+
+# FORK-PONTO (ramon): fluxo completo do carimbo depende de mensagem de
+# Captain::Assistant, que vive no enterprise/ (o CI FOSS remove a pasta).
+RSpec.describe 'Ramon::RascunhoCarimbo carimbo completo', if: ChatwootApp.enterprise?, type: :model do
   let(:account) { create(:account) }
   let(:inbox) { create(:inbox, account: account) }
   let(:conversation) { create(:conversation, account: account, inbox: inbox) }

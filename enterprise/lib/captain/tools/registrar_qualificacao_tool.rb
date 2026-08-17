@@ -22,7 +22,7 @@ class Captain::Tools::RegistrarQualificacaoTool < Captain::Tools::RamonBaseTool
     return "A tese #{lead.thesis.name} nao tem criterios de qualificacao cadastrados." if itens.empty?
 
     item = achar(itens, criterio)
-    return "Nao achei esse criterio. Os criterios da tese sao: #{itens.map { |i| rotulo(i) }.join(' | ')}." if item.blank?
+    return "Nao achei esse criterio. Os criterios da tese sao: #{lista(itens)}." if item.blank?
 
     log_tool_usage('registrar_qualificacao', { lead_id: lead.id, item_id: item.id, status: status })
     gravar(lead, item, status)
@@ -40,6 +40,10 @@ class Captain::Tools::RegistrarQualificacaoTool < Captain::Tools::RamonBaseTool
 
   def rotulo(item)
     item.title.presence || item.content.to_s.truncate(60)
+  end
+
+  def lista(itens)
+    itens.map { |i| rotulo(i) }.join(' | ')
   end
 
   def normal(texto)

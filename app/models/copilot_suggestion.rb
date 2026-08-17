@@ -99,7 +99,7 @@ class CopilotSuggestion < ApplicationRecord
     return recusar('O caso ja esta ganho — nao da para marcar perdido') if lead.won_at.present?
     return recusar('O caso ja esta marcado como perdido') if lead.lost_at.present?
 
-    etapa = account.lead_stages.where(is_lost: true).order(:position).first
+    etapa = account.lead_stages.find_by(is_lost: true)
     return recusar('Nao ha etapa de perdido configurada no funil') if etapa.blank?
 
     lead.update!(lead_stage: etapa, lost_reason: payload['lost_reason'].presence || 'Sugerido pelo agente')
