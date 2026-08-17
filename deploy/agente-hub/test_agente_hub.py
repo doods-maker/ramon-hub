@@ -58,7 +58,9 @@ class TestCmd(unittest.TestCase):
     def test_flags(self):
         cfg = ah.Cfg({'CLAUDE_CODE_OAUTH_TOKEN': 't', 'HUB_URL': 'h', 'ACCOUNT_ID': '2', 'HUB_AGENTE_TOKEN': 'a',
                       'HUB_MCP_TOKEN': 'm', 'WEBHOOK_SECRET': 's', 'EDUARDO_EMAIL': 'e'})
-        cmd = ah.montar_cmd(cfg, os.path.join(os.path.dirname(__file__), 'README.md'), 'medium')
+        cmd = ah.montar_cmd(cfg, 'medium')
+        readme = open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8').read()
+        self.assertNotIn(readme, cmd)  # prompt vai por stdin, nunca como argumento
         self.assertNotIn('--bare', cmd)  # --bare ignora CLAUDE_CODE_OAUTH_TOKEN
         self.assertIn('--strict-mcp-config', cmd)
         self.assertIn('--json-schema', cmd)

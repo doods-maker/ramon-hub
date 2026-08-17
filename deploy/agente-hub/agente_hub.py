@@ -125,7 +125,8 @@ def mcp_call(cfg, tool, args):
         return json.loads(r.read())
 
 
-def montar_cmd(cfg, prompt_path, esforco):
+def montar_cmd(cfg, esforco):
+    # o prompt vai por stdin, não como argumento: contexto grande estoura MAX_ARG_STRLEN (~128 KB) no Linux.
     # sem --bare: nesse modo o CLI ignora CLAUDE_CODE_OAUTH_TOKEN ("Not logged in") — testado na VPS 17/08.
     # --strict-mcp-config: confirmado no CLI 2.1.220 (ignora ~/.claude.json e .mcp.json do projeto).
     return [cfg.CLAUDE_BIN, '-p', '--model', cfg.MODELO, '--effort', esforco,
@@ -133,8 +134,7 @@ def montar_cmd(cfg, prompt_path, esforco):
             '--add-dir', cfg.SEDE_DIR, '--add-dir', os.path.join(cfg.BASE, 'prompts'),
             '--system-prompt-file', os.path.join(cfg.BASE, 'prompts', 'sistema.md'),
             '--mcp-config', os.path.join(cfg.BASE, 'mcp.json'), '--strict-mcp-config',
-            '--json-schema', open(os.path.join(cfg.BASE, 'schema.json')).read(), '--output-format', 'json',
-            open(prompt_path).read()]
+            '--json-schema', open(os.path.join(cfg.BASE, 'schema.json')).read(), '--output-format', 'json']
 
 
 def executar(cfg, cap, job):
@@ -152,7 +152,7 @@ def executar(cfg, cap, job):
             open(prompt_path, 'w').write(montar_prompt(cfg, p, ctx))
             work = os.path.join(cfg.BASE, 'work')  # dir vazio: sem CLAUDE.md/.mcp.json/hooks de projeto
             os.makedirs(work, exist_ok=True)
-            r = subprocess.run(montar_cmd(cfg, prompt_path, p['esforco']), capture_output=True, text=True, timeout=360,
+            r = subprocess.run(montar_cmd(cfg, p['esforco']), input=open(prompt_path).read(), capture_output=True, text=True, timeout=360,
                                cwd=work, env={**os.environ, 'CLAUDE_CODE_OAUTH_TOKEN': cfg.CLAUDE_CODE_OAUTH_TOKEN, 'HOME': os.path.expanduser('~')})
             saida = r.stdout or ''
             if detecta_limite(saida + (r.stderr or '')):
