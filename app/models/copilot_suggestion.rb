@@ -5,7 +5,7 @@
 # real (ZapSign, AdvBox, Esteira) SOMENTE quando o humano clica em aplicar.
 class CopilotSuggestion < ApplicationRecord
   KINDS = %w[draft move_stage alert acao].freeze
-  ACOES = %w[zapsign advbox reuniao].freeze
+  ACOES = %w[zapsign advbox reuniao perdido].freeze
   STATUSES = %w[pending applied dismissed].freeze
 
   belongs_to :account
@@ -56,6 +56,7 @@ class CopilotSuggestion < ApplicationRecord
     when 'zapsign' then preparar_zapsign(user)
     when 'advbox' then abrir_caso_advbox(user)
     when 'reuniao' then agendar_reuniao(user)
+    when 'perdido' then marcar_perdido
     else recusar('Ação desconhecida nesta sugestão')
     end
   end
@@ -91,6 +92,17 @@ class CopilotSuggestion < ApplicationRecord
     lead.lead_tasks.create!(account: account, user: user, kind: 'meeting',
                             title: payload['titulo'].presence || 'Reunião de fechamento', due_at: horario)
     true
+  end
+
+  # Perdido e reversivel no Kanban (arrastar de volta), mas so o humano decide.
+  def marcar_perdido
+    return recusar('O caso ja esta ganho — nao da para marcar perdido') if lead.won_at.present?
+    return recusar('O caso ja esta marcado como perdido') if lead.lost_at.present?
+
+    etapa = account.lead_stages.where(is_lost: true).order(:position).first
+    return recusar('Nao ha etapa de perdido configurada no funil') if etapa.blank?
+
+    lead.update!(lead_stage: etapa, lost_reason: payload['lost_reason'].presence || 'Sugerido pelo agente')
   end
 
   def criar_nota(user, body)
