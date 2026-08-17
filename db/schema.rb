@@ -1708,12 +1708,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_17_000001) do
              FROM messages m
             WHERE ((m.private = true) AND ((m.sender_type)::text = 'Captain::Assistant'::text) AND ((m.content)::text ~~ 'RASCUNHO (revisar antes de enviar):%'::text))
           ), enviadas AS (
-           SELECT ((((m.content_attributes)::jsonb -> 'ramon_rascunho_ia'::text) ->> 'nota_id'::text))::bigint AS nota_id,
+           SELECT DISTINCT ON (nota_id) ((((m.content_attributes)::jsonb -> 'ramon_rascunho_ia'::text) ->> 'nota_id'::text))::bigint AS nota_id,
               m.id AS mensagem_id,
               m.created_at AS enviada_em,
               (((m.content_attributes)::jsonb -> 'ramon_rascunho_ia'::text) ->> 'desfecho'::text) AS desfecho
              FROM messages m
             WHERE ((m.content_attributes)::jsonb ? 'ramon_rascunho_ia'::text)
+            ORDER BY nota_id, m.created_at
           )
       SELECT n.nota_id,
       n.account_id,

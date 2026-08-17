@@ -6,11 +6,13 @@ WITH notas AS (
     AND m.content LIKE 'RASCUNHO (revisar antes de enviar):%'
 ),
 enviadas AS (
-  SELECT ((m.content_attributes::jsonb)->'ramon_rascunho_ia'->>'nota_id')::bigint AS nota_id,
+  SELECT DISTINCT ON (nota_id)
+         ((m.content_attributes::jsonb)->'ramon_rascunho_ia'->>'nota_id')::bigint AS nota_id,
          m.id AS mensagem_id, m.created_at AS enviada_em,
          (m.content_attributes::jsonb)->'ramon_rascunho_ia'->>'desfecho' AS desfecho
   FROM messages m
   WHERE (m.content_attributes::jsonb) ? 'ramon_rascunho_ia'
+  ORDER BY nota_id, m.created_at
 )
 SELECT n.nota_id, n.account_id, n.conversation_id, n.inbox_id, n.criado_em,
        COALESCE(e.desfecho,
@@ -20,4 +22,4 @@ SELECT n.nota_id, n.account_id, n.conversation_id, n.inbox_id, n.criado_em,
        e.mensagem_id,
        ROUND(EXTRACT(EPOCH FROM (e.enviada_em - n.criado_em)) / 60.0, 1) AS minutos_ate_envio
 FROM notas n
-LEFT JOIN enviadas e ON e.nota_id = n.nota_id;
+LEFT JOIN enviadas e ON e.nota_id = n.nota_id

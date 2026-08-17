@@ -46,6 +46,15 @@ RSpec.describe Ramon::RascunhoCarimbo do
     expect(msg.content_attributes['ramon_rascunho_ia']).to include('nota_id' => nota_nova.id, 'desfecho' => 'igual')
   end
 
+  it 'consome o rascunho na 1a resposta humana e nao carimba a 2a resposta sem novo incoming' do
+    rascunho('Ola Maria, tudo bem?')
+    msg_a = humano('Ola Maria, tudo bem?')
+    msg_b = humano('Ainda por ai?')
+
+    expect(msg_a.content_attributes['ramon_rascunho_ia']).to include('desfecho' => 'igual')
+    expect(msg_b.content_attributes['ramon_rascunho_ia']).to be_nil
+  end
+
   it 'nao carimba sem rascunho depois da ultima mensagem do cliente, nem nota privada, nem mensagem do bot' do
     rascunho('x')
     create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'oi')

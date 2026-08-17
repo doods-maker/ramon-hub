@@ -9,7 +9,7 @@ RSpec.describe 'views bi_ia' do # rubocop:disable RSpec/DescribeClass
   let(:agent) { create(:user, account: account) }
   let(:assistant) { create(:captain_assistant, account: account) }
 
-  def sql(q) = ActiveRecord::Base.connection.select_all(q).to_a
+  def sql(query) = ActiveRecord::Base.connection.select_all(query).to_a
 
   it 'bi_ia_rascunhos classifica a nota pelo carimbo' do
     create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'oi')

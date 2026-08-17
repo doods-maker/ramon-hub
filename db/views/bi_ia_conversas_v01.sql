@@ -18,4 +18,4 @@ SELECT b.conversation_id, b.account_id, b.inbox_id, b.iniciada_em, b.primeira_re
        (SELECT COUNT(*) FROM reporting_events r
          WHERE r.conversation_id = b.conversation_id AND r.name = 'conversation_bot_handoff') AS handoffs
 FROM base b
-WHERE b.iniciada_em IS NOT NULL;
+WHERE b.iniciada_em IS NOT NULL

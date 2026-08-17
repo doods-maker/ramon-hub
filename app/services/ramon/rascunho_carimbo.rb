@@ -33,22 +33,26 @@ module Ramon::RascunhoCarimbo
   end
 
   # A ultima nota-rascunho e a mais NOVA criada depois da ultima fala do cliente
+  # E depois da ultima resposta publica humana (uma vez respondido, rascunhos
+  # anteriores estao consumidos — sem isso duas respostas humanas seguidas
+  # carimbam a MESMA nota, e o bi_ia_rascunhos duplica a linha).
   # (reorder pisa no default_scope asc do Message — sem isso o .order gruda no
   # asc e devolve a mais antiga).
   def nota_elegivel(conversation)
-    ultima_do_cliente = conversation.messages.incoming.maximum(:created_at)
+    limite = [conversation.messages.incoming.maximum(:created_at),
+              conversation.messages.outgoing.where(private: false, sender_type: 'User').maximum(:created_at)].compact.max
     notas = conversation.messages.where(private: true, sender_type: 'Captain::Assistant')
                         .where('content LIKE ?', "#{PREFIXO}%")
-    notas = notas.where('created_at > ?', ultima_do_cliente) if ultima_do_cliente
+    notas = notas.where('created_at > ?', limite) if limite
     notas.reorder(created_at: :desc).first
   end
 
   def normal(texto) = texto.to_s.downcase.gsub(/\s+/, ' ').strip
 
   # ponytail: Jaccard de palavras (>=3 letras); se confundir editado x descartado, trocar por Levenshtein.
-  def similaridade(a, b)
-    pa = palavras(a)
-    pb = palavras(b)
+  def similaridade(texto_a, texto_b)
+    pa = palavras(texto_a)
+    pb = palavras(texto_b)
     return 0.0 if pa.empty? || pb.empty?
 
     (pa & pb).size.to_f / (pa | pb).size
