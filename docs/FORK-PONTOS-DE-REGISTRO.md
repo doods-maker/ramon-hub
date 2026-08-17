@@ -270,6 +270,7 @@
 | `enterprise/lib/captain/tools/{playbook_da_tese,simular_honorario,historico_do_contato,link_agendamento,agenda_do_escritorio,funil_hoje,publicacoes_advbox}_tool.rb` (+ specs em `spec/enterprise/lib/captain/tools/`) | 7 tools de LEITURA para o Assistente (playbook/honorário/histórico/link Cal.com/agenda do dia/placar do funil/publicações AdvBox); todas devolvem String e `rescue` de indisponibilidade | Inteligência Onda 2 | inteligencia 16/08 |
 | `config/agents/tools.yml` (linha de changes) | +7 ids acima; `faq_lookup` descrito como "Busca textual nas FAQs aprovadas" (Onda 1); **`resolve_conversation` REMOVIDO** do catálogo (D11: o assistente não fecha conversa sozinho — a classe `ResolveConversationTool` fica no repo, só sai do catálogo) | Inteligência Ondas 1+2 | inteligencia 16/08 |
 | `app/models/message.rb` | `before_create :ramon_carimbar_rascunho, if: -> { Ramon::RascunhoCarimbo.candidata?(self) }` (após `after_create_commit :execute_after_create_commit_callbacks`) → `Ramon::RascunhoCarimbo` | carimbo "veio de rascunho da IA" na mensagem humana | inteligencia 17/08 |
+| `app/views/layouts/vueapp.html.erb` (1 linha) | +`ramonCopilotoModoDefault` em `window.chatwootConfig` (`Ramon::CopilotoModo.default` se enterprise, senão `'rascunho'`) | expor o default do copiloto (env `RAMON_COPILOTO_MODO_DEFAULT`) pro front | inteligencia 17/08 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

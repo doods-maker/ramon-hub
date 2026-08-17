@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import { copilotoModoDe } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 import { useMessageContext } from './provider.js';
 
 defineOptions({ name: 'PilotoCarimbo' });
@@ -14,9 +15,7 @@ const { contentAttributes } = useMessageContext();
 const piloto = computed(() => contentAttributes.value?.ramonPiloto || null);
 const pausando = ref(false);
 const aindaEmPiloto = computed(() =>
-  (currentChat.value?.custom_attributes?.copiloto_modo || '').startsWith(
-    'piloto_'
-  )
+  copilotoModoDe(currentChat.value).startsWith('piloto_')
 );
 
 const pausar = async () => {
