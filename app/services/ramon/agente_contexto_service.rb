@@ -33,7 +33,7 @@ class Ramon::AgenteContextoService
   # Nota do AgentBot fica — é o que o próprio agente já escreveu. IS DISTINCT FROM: where.not
   # descartaria também as mensagens de sender_type NULL (campanha, template).
   def mensagens
-    @conversation.messages.where.not(message_type: :activity)
+    @conversation.messages.includes(:attachments).where.not(message_type: :activity)
                  .where("messages.sender_type IS DISTINCT FROM 'Captain::Assistant'")
                  .reorder(created_at: :desc, id: :desc).limit(LIMITE_MENSAGENS).to_a.reverse.map do |m|
       {

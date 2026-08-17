@@ -4,6 +4,7 @@
 # nem duplica o bloco RAMON_AGENTE_* no chatwoot.env.
 #   bash /opt/agente-hub/preparar-env.sh
 set -euo pipefail
+umask 077
 
 ENV_AGENTE=/opt/agente-hub/env
 CHATWOOT_ENV=/opt/intranet-ramon/chatwoot.env
@@ -13,13 +14,12 @@ EDUARDO_EMAIL=${EDUARDO_EMAIL:-adveduardoschlata@gmail.com}
 if [ -f "$ENV_AGENTE" ]; then
   echo ">> $ENV_AGENTE já existe — não mexo."
 else
-  OA=$(sed -n 's/^export CLAUDE_CODE_OAUTH_TOKEN=//p; s/^CLAUDE_CODE_OAUTH_TOKEN=//p' "$ENV_ANTIGO" | head -1 | tr -d "\"'")
+  OA=$(bash -c ". $ENV_ANTIGO 2>/dev/null; printf %s \"\${CLAUDE_CODE_OAUTH_TOKEN:-}\"")   # o env antigo usa export; sourcing cobre os dois formatos
   MCP=$(sed -n 's/^RAMON_MCP_TOKEN=//p' "$CHATWOOT_ENV" | head -1)
   [ -n "$OA" ]  || { echo "!! token da assinatura não achado em $ENV_ANTIGO (rode: claude setup-token)"; exit 1; }
   [ -n "$MCP" ] || { echo "!! RAMON_MCP_TOKEN não achado em $CHATWOOT_ENV"; exit 1; }
   AG=$(openssl rand -hex 24)
   WS=$(openssl rand -hex 24)
-  umask 077
   cat > "$ENV_AGENTE" <<EOF
 CLAUDE_CODE_OAUTH_TOKEN=$OA
 HUB_URL=https://chat.ramonantonio.adv.br

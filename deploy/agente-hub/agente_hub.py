@@ -83,7 +83,10 @@ def formatar_nota(status, duracao_s, resposta, acoes):
 LEITURA_ADVBOX = ['advbox_buscar_processos', 'advbox_processo', 'advbox_movimentacoes', 'advbox_publicacoes',
                   'advbox_historico_tarefas', 'advbox_dossie', 'advbox_buscar_clientes', 'advbox_cliente',
                   'advbox_documentos', 'advbox_tarefas', 'advbox_ultimas_movimentacoes', 'advbox_configuracoes']
-ALLOWED = ['Read', 'Grep', 'Glob'] + [f'mcp__advbox__{t}' for t in LEITURA_ADVBOX]
+# Leitura só na sede e nos prompts (padrão de regra: '//' = caminho absoluto). Sem escopo, Read/Grep
+# alcançariam /opt/agente-hub/env (token da assinatura) via injeção no texto do lead.
+LEITURA_DIRS = ['/opt/sede', '/opt/agente-hub/prompts']
+ALLOWED = [f'{t}(/{d}/**)' for t in ('Read', 'Grep', 'Glob') for d in LEITURA_DIRS] + [f'mcp__advbox__{t}' for t in LEITURA_ADVBOX]
 
 
 class Cfg:
@@ -179,7 +182,8 @@ def executar(cfg, cap, job):
             else:
                 est = extrair_estruturado(saida)
                 if not est:
-                    raise RuntimeError(f'saída sem JSON estruturado (rc={r.returncode}): {saida[:300]} {r.stderr[:300]}')
+                    print(f'claude rc={r.returncode} stderr: {(r.stderr or "")[:500]}', file=sys.stderr)
+                    raise RuntimeError(f'saída sem JSON estruturado (rc={r.returncode}); ver journal do agente-hub')
                 resposta = est.get('resposta', '')
                 if est.get('arquivo'):
                     if lead_id:

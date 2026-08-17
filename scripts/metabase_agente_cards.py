@@ -66,7 +66,7 @@ def sql_atual(card):
 
 def ensure_cards(apply_):
     """Devolve {nome: card_id} criando/atualizando conforme preciso."""
-    existing = {c["name"]: c for c in api("GET", f"/card?f=all") if c.get("collection_id") == COLLECTION_ID}
+    existing = {c["name"]: c for c in api("GET", "/card?f=all") if c.get("collection_id") == COLLECTION_ID}
     ids = {}
     for name, spec in CARDS.items():
         card = existing.get(name)

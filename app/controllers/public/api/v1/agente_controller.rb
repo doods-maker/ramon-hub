@@ -14,7 +14,7 @@ class Public::Api::V1::AgenteController < PublicController
     conversation = fetch_conversation
     message = conversation.messages.create!(
       account: @account, inbox: conversation.inbox, message_type: :outgoing, private: true,
-      content: params[:texto].to_s, sender: @account.agent_bots.find_by(name: 'Claude')
+      content: params[:texto].to_s, sender: @account.agent_bots.find_by!(name: 'Claude')
     )
     render json: { id: message.id }, status: :created
   end

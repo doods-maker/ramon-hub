@@ -15,7 +15,9 @@ chmod 600 /opt/agente-hub/env; chown agente:agente /opt/agente-hub/env
 # claude no home do agente (instalador oficial, não root)
 sudo -u agente -H bash -c 'command -v ~/.local/bin/claude >/dev/null || curl -fsSL https://claude.ai/install.sh | bash'
 
-# mcp.json com token expandido
+# mcp.json com token expandido (exige env preenchido — preparar-env.sh — e envsubst do gettext-base)
+command -v envsubst >/dev/null || { echo '!! envsubst ausente: apt-get install -y gettext-base'; exit 1; }
+grep -q '^HUB_MCP_TOKEN=.' /opt/agente-hub/env || { echo '!! /opt/agente-hub/env sem HUB_MCP_TOKEN — rode preparar-env.sh antes'; exit 1; }
 sudo -u agente -H bash -c 'set -a; . /opt/agente-hub/env; set +a; envsubst < /opt/agente-hub/mcp.json.example > /opt/agente-hub/mcp.json; chmod 600 /opt/agente-hub/mcp.json'
 
 # sede legível pelo agente (sem escrita) — espelho sem credenciais por design
@@ -23,7 +25,8 @@ chmod -R o+rX /opt/sede
 
 install -m 644 /opt/agente-hub/agente-hub.service /etc/systemd/system/agente-hub.service
 systemctl daemon-reload
-systemctl enable --now agente-hub
+systemctl enable agente-hub
+systemctl restart agente-hub   # restart (não --now): re-rodar o install atualiza o código em execução
 systemctl --no-pager status agente-hub | head -5
 
 echo ">> checando saude:"
