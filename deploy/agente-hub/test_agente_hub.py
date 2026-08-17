@@ -54,6 +54,18 @@ class TestNota(unittest.TestCase):
         self.assertFalse(ah.detecta_limite('tudo certo'))
 
 
+class TestExtrair(unittest.TestCase):
+    def test_structured_output(self):
+        self.assertEqual(ah.extrair_estruturado('{"structured_output": {"resposta": "oi"}}'), {'resposta': 'oi'})
+
+    def test_result_string(self):
+        self.assertEqual(ah.extrair_estruturado('{"result": "{\\"resposta\\": \\"oi\\"}"}'), {'resposta': 'oi'})
+
+    def test_lixo(self):
+        for s in ['', 'Not logged in', '{quebrado', '{"result": "texto solto"}']:
+            self.assertEqual(ah.extrair_estruturado(s), {})
+
+
 class TestCmd(unittest.TestCase):
     def test_flags(self):
         cfg = ah.Cfg({'CLAUDE_CODE_OAUTH_TOKEN': 't', 'HUB_URL': 'h', 'ACCOUNT_ID': '2', 'HUB_AGENTE_TOKEN': 'a',

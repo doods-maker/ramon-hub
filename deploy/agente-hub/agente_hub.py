@@ -137,9 +137,28 @@ def montar_cmd(cfg, esforco):
             '--json-schema', open(os.path.join(cfg.BASE, 'schema.json')).read(), '--output-format', 'json']
 
 
+def extrair_estruturado(saida):
+    """JSON do `claude -p --output-format json --json-schema`: structured_output (dict) ou result (string JSON)."""
+    try:
+        out = json.loads(saida) if (saida or '').strip().startswith('{') else {}
+    except ValueError:
+        return {}
+    est = out.get('structured_output')
+    if isinstance(est, dict) and est:
+        return est
+    res = out.get('result')
+    if isinstance(res, str) and res.strip().startswith('{'):
+        try:
+            return json.loads(res)
+        except ValueError:
+            return {}
+    return {}
+
+
 def executar(cfg, cap, job):
     t0 = time.time(); p = parse_pedido(job['content']); acoes = []; status = 'ok'; resposta = ''
     conv, lead_id = job['conversation_id'], job.get('lead_id')
+    prompt_path = None
     try:
         if not cap.pode():
             status = 'cap' if not cap.pausado() else 'limite'
@@ -158,14 +177,16 @@ def executar(cfg, cap, job):
             if detecta_limite(saida + (r.stderr or '')):
                 status = 'limite'; cap.pausar_ate_amanha(); resposta = 'Limite de uso da assinatura detectado — pausei até amanhã.'
             else:
-                out = json.loads(saida) if saida.strip().startswith('{') else {}
-                est = out.get('structured_output') or (json.loads(out['result']) if isinstance(out.get('result'), str) and out['result'].strip().startswith('{') else {})
+                est = extrair_estruturado(saida)
                 if not est:
                     raise RuntimeError(f'saída sem JSON estruturado (rc={r.returncode}): {saida[:300]} {r.stderr[:300]}')
                 resposta = est.get('resposta', '')
-                if est.get('arquivo') and lead_id:
-                    a = est['arquivo']; up = hub(cfg, 'POST', 'arquivo', {'lead_id': lead_id, 'nome': a['nome'], 'conteudo': a['conteudo_md']})
-                    acoes.append({'tipo': 'drive', 'ref': up.get('url')})
+                if est.get('arquivo'):
+                    if lead_id:
+                        a = est['arquivo']; up = hub(cfg, 'POST', 'arquivo', {'lead_id': lead_id, 'nome': a['nome'], 'conteudo': a['conteudo_md']})
+                        acoes.append({'tipo': 'drive', 'ref': up.get('url')})
+                    else:
+                        resposta += '\n\n(arquivo não salvo: conversa sem lead)'
                 if est.get('tarefa_advbox'):
                     ta = est['tarefa_advbox']; texto = ta['texto'] + (f"\nArquivo: {acoes[-1]['ref']}" if acoes else '')
                     res = mcp_call(cfg, 'advbox_criar_tarefa', {'processo_id': ta['lawsuit_id'],
@@ -178,6 +199,12 @@ def executar(cfg, cap, job):
         status, resposta = 'timeout', 'Estourou 6 min. Tente com pedido menor.'
     except Exception as e:  # noqa
         status, resposta = 'erro', f'Erro: {type(e).__name__}: {str(e)[:400]}'
+    finally:
+        if prompt_path:  # contexto do lead não fica em disco
+            try:
+                os.remove(prompt_path)
+            except OSError:
+                pass
     dur = time.time() - t0
     try:
         hub(cfg, 'POST', 'nota', {'conversation_id': conv, 'texto': formatar_nota(status, dur, resposta, acoes)})
