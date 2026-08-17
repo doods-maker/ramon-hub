@@ -31,6 +31,10 @@ assistentes:
       - title: Triagem e qualificação do lead novo
         description: Lead novo chegou pelo WhatsApp — acolher, entender o caso, avaliar viabilidade e registrar para a equipe.
         instruction: |
+          Antes de perguntar qualquer coisa, consulte [Triagem da LP](tool://triagem_da_lp): quem chegou pela
+          landing page já respondeu ao quiz — aproveite o que veio (não repita pergunta respondida; confirme
+          só o que estiver marcado como dúvida ou reprova) e comece pelo que falta.
+
           Acolha primeiro (chame pelo nome se souber), depois entenda o caso em perguntas curtas, uma por vez:
           o que aconteceu, quando, se ainda trabalha, se já recebeu benefício do INSS (qual e até quando),
           se está em tratamento ou a lesão já estabilizou. Adapte o ritmo ao perfil (quem quer resposta rápida

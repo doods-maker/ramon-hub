@@ -100,6 +100,11 @@
   description: 'Casos, conversas e notas anteriores da pessoa no hub'
   icon: 'timeline'
 
+- id: triagem_da_lp
+  title: 'Triagem da LP'
+  description: 'Quiz que o lead respondeu na landing page antes de chamar: veredito, respostas e dúvidas'
+  icon: 'clipboard'
+
 - id: link_agendamento
   title: 'Link de agendamento'
   description: 'Link para o lead escolher dia e horario da conversa'
