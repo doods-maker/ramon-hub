@@ -16,22 +16,31 @@ class Captain::Tools::CriarTarefaCadenciaTool < Captain::Tools::RamonBaseTool
     return SEM_LEAD if lead.blank?
 
     kind = tipo.presence || 'follow_up'
-    return "Tipo invalido. Use: #{LeadTask::KINDS.join(', ')}." unless LeadTask::KINDS.include?(kind)
-
     due = horario_de(quando)
-    return 'Nao entendi a data. Use AAAA-MM-DD ou AAAA-MM-DD HH:MM.' if due.blank?
-    return 'A data ja passou. Use uma data futura.' if due < Time.current
-
     nome = titulo.to_s.strip
-    return 'Informe o titulo da tarefa.' if nome.blank?
-    return "Ja existe a tarefa aberta \"#{nome}\" no caso #{lead.name}." if lead.lead_tasks.open_tasks.any? { |t| t.title.casecmp?(nome) }
+    erro = recusa(kind, due, nome, lead)
+    return erro if erro
 
     log_tool_usage('criar_tarefa_cadencia', { lead_id: lead.id, kind: kind, due_at: due.iso8601 })
     lead.lead_tasks.create!(account: lead.account, kind: kind, title: nome, due_at: due)
-    "Tarefa \"#{nome}\" criada na Esteira do caso #{lead.name} para #{due.in_time_zone(TZ).strftime('%d/%m/%Y %H:%M')}."
+    confirmacao(lead, nome, due)
   end
 
   private
+
+  def recusa(kind, due, nome, lead)
+    return "Tipo invalido. Use: #{LeadTask::KINDS.join(', ')}." unless LeadTask::KINDS.include?(kind)
+    return 'Nao entendi a data. Use AAAA-MM-DD ou AAAA-MM-DD HH:MM.' if due.blank?
+    return 'A data ja passou. Use uma data futura.' if due < Time.current
+    return 'Informe o titulo da tarefa.' if nome.blank?
+    return "Ja existe a tarefa aberta \"#{nome}\" no caso #{lead.name}." if lead.lead_tasks.open_tasks.any? { |t| t.title.casecmp?(nome) }
+
+    nil
+  end
+
+  def confirmacao(lead, nome, due)
+    "Tarefa \"#{nome}\" criada na Esteira do caso #{lead.name} para #{due.in_time_zone(TZ).strftime('%d/%m/%Y %H:%M')}."
+  end
 
   def horario_de(quando)
     texto = quando.to_s.strip

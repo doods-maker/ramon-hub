@@ -17,7 +17,9 @@ RSpec.describe Captain::Tools::EnviarLinkPortalTool, type: :model do
 
   it 'reusa o token existente' do
     lead.update!(portal_token: 'abc123')
-    expect(tool.perform(tool_context, lead_id: lead.id.to_s)).to include('/portal/abc123')
+    with_modified_env FRONTEND_URL: 'https://chat.exemplo.br' do
+      expect(tool.perform(tool_context, lead_id: lead.id.to_s)).to include('/portal/abc123')
+    end
   end
 
   it 'sem FRONTEND_URL avisa que o link nao esta disponivel' do

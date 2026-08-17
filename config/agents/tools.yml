@@ -134,6 +134,7 @@
   title: 'Pedir documentos'
   description: 'Texto pronto pedindo ao cliente os documentos pendentes do caso'
   icon: 'document-add'
+
 - id: enviar_link_portal
   title: 'Link do portal do cliente'
   description: 'Link seguro para o cliente enviar documentos pelo celular, com frase pronta'

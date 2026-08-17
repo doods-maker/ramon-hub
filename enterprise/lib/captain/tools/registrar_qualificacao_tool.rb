@@ -13,19 +13,30 @@ class Captain::Tools::RegistrarQualificacaoTool < Captain::Tools::RamonBaseTool
   def perform(tool_context, criterio: nil, status: nil, lead_id: nil)
     lead = resolver_lead(tool_context.state, lead_id)
     return SEM_LEAD if lead.blank?
-    return 'Status invalido: use ok, falta ou limpar.' unless STATUS.include?(status.to_s.strip.downcase)
-    return "O caso #{lead.name} esta sem tese definida — nao ha criterios para marcar." if lead.thesis.blank?
 
-    itens = lead.thesis.thesis_items.where(section: 'qualificacao').order(:position)
+    status = status.to_s.strip.downcase
+    erro = recusa(lead, status)
+    return erro if erro
+
+    itens = lead.thesis.thesis_items.where(section: 'qualificacao')
+    return "A tese #{lead.thesis.name} nao tem criterios de qualificacao cadastrados." if itens.empty?
+
     item = achar(itens, criterio)
     return "Nao achei esse criterio. Os criterios da tese sao: #{itens.map { |i| rotulo(i) }.join(' | ')}." if item.blank?
 
     log_tool_usage('registrar_qualificacao', { lead_id: lead.id, item_id: item.id, status: status })
-    gravar(lead, item, status.to_s.strip.downcase)
+    gravar(lead, item, status)
     "#{rotulo(item)} marcado como #{status}. Placar: #{placar(lead, itens)}."
   end
 
   private
+
+  def recusa(lead, status)
+    return 'Status invalido: use ok, falta ou limpar.' unless STATUS.include?(status)
+    return "O caso #{lead.name} esta sem tese definida — nao ha criterios para marcar." if lead.thesis.blank?
+
+    nil
+  end
 
   def rotulo(item)
     item.title.presence || item.content.to_s.truncate(60)
@@ -45,7 +56,11 @@ class Captain::Tools::RegistrarQualificacaoTool < Captain::Tools::RamonBaseTool
   def gravar(lead, item, status)
     atual = (lead.custom_attributes || {}).dup
     mapa = (atual['qualificacao_status'] || {}).dup
-    status == 'limpar' ? mapa.delete(item.id.to_s) : mapa[item.id.to_s] = status
+    if status == 'limpar'
+      mapa.delete(item.id.to_s)
+    else
+      mapa[item.id.to_s] = status
+    end
     lead.update!(custom_attributes: atual.merge('qualificacao_status' => mapa))
   end
 

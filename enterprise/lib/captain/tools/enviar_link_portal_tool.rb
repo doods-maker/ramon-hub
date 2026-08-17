@@ -15,8 +15,8 @@ class Captain::Tools::EnviarLinkPortalTool < Captain::Tools::RamonBaseTool
     base = ENV.fetch('FRONTEND_URL', '').strip
     return SEM_URL if base.blank?
 
-    token = lead.ensure_portal_token!
     log_tool_usage('enviar_link_portal', { lead_id: lead.id })
+    token = lead.ensure_portal_token!
     "Link do portal do cliente: #{base}/portal/#{token}\n" \
       "Frase sugerida: \"Para facilitar, voce pode enviar os documentos por este link seguro, direto do celular: #{base}/portal/#{token}\""
   end
