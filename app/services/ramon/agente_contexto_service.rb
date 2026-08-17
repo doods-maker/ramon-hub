@@ -12,11 +12,18 @@ class Ramon::AgenteContextoService
   def perform
     {
       conversa: { id: @conversation.display_id, status: @conversation.status, inbox: @conversation.inbox&.name, mensagens: mensagens },
-      contato: contato,
-      lead: (@lead ? Ramon::DossieService.new(lead: @lead).perform : nil),
-      lead_id: @lead&.id,
-      thesis_name: @lead&.thesis&.name,
-      advbox_lawsuit_id: @lead&.custom_attributes&.dig('advbox', 'lawsuits_id')
+      contato: contato
+    }.merge(lead_block)
+  end
+
+  def lead_block
+    return { lead: nil, lead_id: nil, thesis_name: nil, advbox_lawsuit_id: nil } if @lead.blank?
+
+    {
+      lead: Ramon::DossieService.new(lead: @lead).perform,
+      lead_id: @lead.id,
+      thesis_name: @lead.thesis&.name,
+      advbox_lawsuit_id: @lead.custom_attributes&.dig('advbox', 'lawsuits_id')
     }
   end
 

@@ -1015,7 +1015,7 @@ O `montar_prompt` (Task 7) não precisa embutir isso: o `sistema.md` manda ler `
 **Files:**
 - Create: `deploy/agente-hub/install.sh` (idempotente, roda como root na VPS)
 - Create: `scripts/metabase_agente_cards.py` (mesmo padrão de `scripts/metabase_bi_ia_cards.py`: 3 cards SQL sobre `agente_execucoes` — execuções/dia por status; últimas 20; duração média/dia)
-- Create: `docs/agente-hub-macros.rb` (script pra `rails runner`: cria as 5 macros "Claude · …" da spec §2 com `visibility: global`, `actions: [{ action_name: 'add_private_note', action_params: ['<texto>'] }]`, `created_by`/`updated_by` = usuário do Eduardo)
+- Create: `docs/agente_hub_macros.rb` (script pra `rails runner`: cria as 5 macros "Claude · …" da spec §2 com `visibility: global`, `actions: [{ action_name: 'add_private_note', action_params: ['<texto>'] }]`, `created_by`/`updated_by` = usuário do Eduardo)
 
 **Interfaces:** envs novos no `chatwoot.env` da VPS: `RAMON_AGENTE_TOKEN`, `RAMON_AGENTE_SECRET`, `RAMON_AGENTE_RUNNER_URL=http://172.18.0.1:8765/hub`, `RAMON_AGENTE_EDUARDO_EMAIL`.
 
@@ -1046,7 +1046,7 @@ systemctl daemon-reload; systemctl enable --now agente-hub; systemctl --no-pager
   4. `chatwoot.env`: acrescentar os 4 envs `RAMON_AGENTE_*` (edição de env remoto = comando `!` do Eduardo, como no Buzz — preparar o bloco pronto pra colar).
   5. `bash /opt/agente-hub/install.sh`; `curl -s http://172.18.0.1:8765/saude`.
   6. Teste manual do `claude -p` como agente: `sudo -u agente -H bash -c 'cd /opt/sede && CLAUDE_CODE_OAUTH_TOKEN=... ~/.local/bin/claude -p --bare --model opus --effort low --output-format json --json-schema "{\"type\":\"object\",\"required\":[\"ok\"],\"properties\":{\"ok\":{\"type\":\"boolean\"}}}" "responda ok=true"'` → conferir onde o JSON aparece (`structured_output`?) e ajustar `executar()`.
-  7. Após deploy do hub (Task 10): `docker exec … rails db:migrate` (à mão!), `rails ramon:agente:bot[2]`, `rails runner docs/agente-hub-macros.rb`, `docker compose restart chatwoot-web chatwoot-worker` (envs novos), `python3 scripts/metabase_agente_cards.py` (dry-run → aplicar).
+  7. Após deploy do hub (Task 10): `docker exec … rails db:migrate` (à mão!), `rails ramon:agente:bot[2]`, `rails runner docs/agente_hub_macros.rb`, `docker compose restart chatwoot-web chatwoot-worker` (envs novos), `python3 scripts/metabase_agente_cards.py` (dry-run → aplicar).
 - [ ] **Step 3: commit dos arquivos** `git commit -m "feat(agente): install.sh, macros, cards Metabase"`
 
 ---
