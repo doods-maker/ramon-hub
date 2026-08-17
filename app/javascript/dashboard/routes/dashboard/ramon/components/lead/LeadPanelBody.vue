@@ -267,11 +267,6 @@ const docsDot = computed(() =>
     ? 'bg-n-amber-9'
     : null
 );
-// mesma elegibilidade do LeadZapsignCard: a aba Contrato só existe pra tese
-// de acidente — nos demais leads ela some e a aba salva cai no Resumo
-const zapsignEligible = computed(() =>
-  (props.lead?.thesis_name || '').toLowerCase().includes('acidente')
-);
 const TABS = computed(() => [
   { id: 'resumo', label: 'SUMMARY' },
   { id: 'playbook', label: 'PLAYBOOK' },
@@ -279,11 +274,10 @@ const TABS = computed(() => [
   ...(props.lead?.thesis_id
     ? [{ id: 'documentos', label: 'DOCUMENTS', dot: docsDot }]
     : []),
-  ...(zapsignEligible.value ? [{ id: 'contrato', label: 'CONTRACT' }] : []),
+  { id: 'contrato', label: 'CONTRACT' },
   { id: 'historico', label: 'HISTORY' },
 ]);
 const shownTab = computed(() => {
-  if (activeTab.value === 'contrato' && !zapsignEligible.value) return 'resumo';
   if (activeTab.value === 'documentos' && !props.lead?.thesis_id)
     return 'resumo';
   return activeTab.value;

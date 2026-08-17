@@ -789,7 +789,10 @@
       "ERROR": "Could not generate the contract — try again",
       "OPEN": "Open signature link",
       "COPY": "Copy link",
-      "COPIED": "Signature link copied"
+      "COPIED": "Signature link copied",
+      "TEMPLATE_LABEL": "Contract template",
+      "TEMPLATES_ERROR": "Could not load ZapSign templates",
+      "TEMPLATE_USED": "Template: {name}"
     },
     "ADVBOX": {
       "TITLE": "AdvBox",

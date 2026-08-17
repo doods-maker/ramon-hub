@@ -789,7 +789,10 @@
       "ERROR": "Não foi possível gerar o contrato — tente de novo",
       "OPEN": "Abrir link de assinatura",
       "COPY": "Copiar link",
-      "COPIED": "Link de assinatura copiado"
+      "COPIED": "Link de assinatura copiado",
+      "TEMPLATE_LABEL": "Modelo do contrato",
+      "TEMPLATES_ERROR": "Não foi possível carregar os modelos do ZapSign",
+      "TEMPLATE_USED": "Modelo: {name}"
     },
     "ADVBOX": {
       "TITLE": "AdvBox",
