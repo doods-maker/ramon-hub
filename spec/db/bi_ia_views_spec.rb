@@ -2,21 +2,28 @@ require 'rails_helper'
 
 # Views versionadas com scenic (Onda 3, Task 9). Sem model dedicado —
 # consultamos direto via SQL, do jeito que o Metabase/BI vai consumir.
-# FORK-PONTO (ramon): usa mensagem de Captain::Assistant, que vive no
-# enterprise/ (o CI FOSS remove a pasta), por isso o guard.
-RSpec.describe 'views bi_ia', if: ChatwootApp.enterprise? do # rubocop:disable RSpec/DescribeClass
+# A mensagem do Assistente (Captain::Assistant, enterprise/) e inserida por
+# insert_all, sem instanciar o sender — assim a spec roda no CI FOSS.
+# content_attributes vai como STRING JSON, igual ao store (coder: JSON) grava.
+RSpec.describe 'views bi_ia' do # rubocop:disable RSpec/DescribeClass
   let(:account) { create(:account) }
   let(:inbox) { create(:inbox, account: account) }
   let(:conversation) { create(:conversation, account: account, inbox: inbox) }
   let(:agent) { create(:user, account: account) }
-  let(:assistant) { create(:captain_assistant, account: account) }
 
   def sql(query) = ActiveRecord::Base.connection.select_all(query).to_a
 
+  def do_assistente(content, privada: false, content_attributes: {}, created_at: Time.current)
+    id = Message.insert_all([{ account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id,
+                               message_type: 1, private: privada, sender_type: 'Captain::Assistant', sender_id: 1,
+                               content: content, content_attributes: content_attributes.to_json,
+                               created_at: created_at, updated_at: created_at }], returning: :id).first['id']
+    Message.find(id)
+  end
+
   it 'bi_ia_rascunhos classifica a nota pelo carimbo' do
     create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'oi')
-    nota = create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, private: true,
-                            sender: assistant, content: "RASCUNHO (revisar antes de enviar):\nOla, tudo bem?")
+    nota = do_assistente("RASCUNHO (revisar antes de enviar):\nOla, tudo bem?", privada: true)
     create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: agent,
                      content: 'Ola, tudo bem?')
 
@@ -28,12 +35,21 @@ RSpec.describe 'views bi_ia', if: ChatwootApp.enterprise? do # rubocop:disable R
   it 'bi_ia_conversas mede a primeira resposta e marca com_ia' do
     create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'oi',
                      created_at: 10.minutes.ago)
-    create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: assistant,
-                     content: 'Ola!', content_attributes: { 'ramon_piloto' => { 'modo' => 'piloto_limitado' } })
+    do_assistente('Ola!', content_attributes: { 'ramon_piloto' => { 'modo' => 'piloto_limitado' } })
 
     linha = sql("SELECT * FROM bi_ia_conversas WHERE conversation_id = #{conversation.id}").first
     expect(linha['com_ia']).to be(true)
     expect(linha['pilotos_enviados']).to eq(1)
     expect(linha['minutos_primeira_resposta'].to_f).to be_between(9, 11)
+  end
+
+  it 'bi_ia_conversas nao mede primeira resposta quando o agente falou antes do cliente' do
+    create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing, sender: agent,
+                     content: 'Ola, aqui e do escritorio', created_at: 10.minutes.ago)
+    create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :incoming, content: 'oi')
+
+    linha = sql("SELECT * FROM bi_ia_conversas WHERE conversation_id = #{conversation.id}").first
+    expect(linha['minutos_primeira_resposta']).to be_nil
+    expect(linha['com_ia']).to be(false)
   end
 end

@@ -24,19 +24,25 @@ RSpec.describe Ramon::RascunhoCarimbo do
     end
   end
 
-  # FORK-PONTO (ramon): fluxo completo do carimbo depende de mensagem de
-  # Captain::Assistant, que vive no enterprise/ (o CI FOSS remove a pasta).
-  describe 'carimbo completo', if: ChatwootApp.enterprise? do
+  # A mensagem do Assistente (Captain::Assistant, enterprise/) e inserida por
+  # insert_all, sem instanciar o sender — assim o fluxo roda no CI FOSS.
+  describe 'carimbo completo' do
     let(:account) { create(:account) }
     let(:inbox) { create(:inbox, account: account) }
     let(:conversation) { create(:conversation, account: account, inbox: inbox) }
     let(:agent) { create(:user, account: account) }
-    let(:assistant) { create(:captain_assistant, account: account) }
     let(:prefixo) { 'RASCUNHO (revisar antes de enviar):' }
 
+    def do_assistente(texto, privada:)
+      id = Message.insert_all([{ account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id,
+                                 message_type: 1, private: privada, sender_type: 'Captain::Assistant', sender_id: 1,
+                                 content: texto, created_at: Time.current, updated_at: Time.current }],
+                              returning: :id).first['id']
+      Message.find(id)
+    end
+
     def rascunho(texto)
-      create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing,
-                       private: true, sender: assistant, content: "#{prefixo}\n#{texto}")
+      do_assistente("#{prefixo}\n#{texto}", privada: true)
     end
 
     def humano(texto)
@@ -90,8 +96,7 @@ RSpec.describe Ramon::RascunhoCarimbo do
       nota = create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing,
                               private: true, sender: agent, content: 'nota interna')
       expect(nota.content_attributes['ramon_rascunho_ia']).to be_nil
-      bot = create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :outgoing,
-                             sender: assistant, content: 'y')
+      bot = do_assistente('y', privada: false)
       expect(bot.content_attributes['ramon_rascunho_ia']).to be_nil
     end
   end
