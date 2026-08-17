@@ -136,6 +136,9 @@ class Message < ApplicationRecord
 
   after_create_commit :execute_after_create_commit_callbacks
 
+  # FORK-PONTO (ramon): carimbo "veio de rascunho da IA" — Ramon::RascunhoCarimbo.
+  before_create :ramon_carimbar_rascunho, if: -> { Ramon::RascunhoCarimbo.candidata?(self) }
+
   after_update_commit :dispatch_update_event
   after_commit :reindex_for_search, if: :should_index?, on: [:create, :update]
 
@@ -455,6 +458,12 @@ class Message < ApplicationRecord
     # searchkick só é instalado no load da classe quando advanced_search_allowed?;
     # em specs a classe pode carregar sem ele (ordem de load) e should_index? ser stubado.
     reindex(mode: :async) if respond_to?(:reindex)
+  end
+
+  def ramon_carimbar_rascunho
+    Ramon::RascunhoCarimbo.aplicar(self)
+  rescue StandardError => e
+    Rails.logger.warn("[ramon_rascunho_ia] #{e.class}: #{e.message}")
   end
 end
 
