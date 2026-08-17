@@ -7,7 +7,10 @@ RSpec.describe Captain::Tools::MarcarPerdidoTool, type: :model do
   let(:tool_context) { Struct.new(:state).new({}) }
   let(:lead) { create(:lead, account: account, name: 'Ana') }
 
-  before { account.lost_reasons.create!(name: 'Sem direito', position: 1); account.lost_reasons.create!(name: 'Sem retorno', position: 2) }
+  before do
+    account.lost_reasons.create!(name: 'Sem direito', position: 1)
+    account.lost_reasons.create!(name: 'Sem retorno', position: 2)
+  end
 
   it 'cria a sugestao pendente com o motivo do catalogo, sem mover o caso' do
     out = tool.perform(tool_context, lead_id: lead.id.to_s, motivo: 'sem retorno')

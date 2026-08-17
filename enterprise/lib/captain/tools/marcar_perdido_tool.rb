@@ -12,7 +12,9 @@ class Captain::Tools::MarcarPerdidoTool < Captain::Tools::RamonEscritaTool
     return "O caso #{lead.name} ja esta ganho — nao da para marcar perdido." if lead.won_at.present?
     return "O caso #{lead.name} ja esta marcado como perdido." if lead.lost_at.present?
 
-    motivos = lead.account.lost_reasons.map(&:name)
+    motivos = lead.account.lost_reasons.pluck(:name)
+    return 'O funil ainda nao tem motivos de perda cadastrados.' if motivos.blank?
+
     escolhido = casar(motivos, motivo)
     return "Motivo nao encontrado. Os motivos do funil sao: #{motivos.join(', ')}." if escolhido.blank?
 
