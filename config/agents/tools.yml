@@ -124,3 +124,8 @@
   title: 'Registrar qualificação'
   description: 'Marca no caso se um critério de qualificação da tese foi confirmado ou não atendido'
   icon: 'checkmark-circle'
+
+- id: criar_tarefa_cadencia
+  title: 'Criar tarefa de cadência'
+  description: 'Cria um lembrete interno na Esteira do caso (cobrar, retomar, ligar) com data e hora'
+  icon: 'calendar-clock'
