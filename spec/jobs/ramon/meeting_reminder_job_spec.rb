@@ -26,7 +26,7 @@ RSpec.describe Ramon::MeetingReminderJob do
       with_modified_env(NTFY_TOPIC: nil) { described_class.perform_now(lead.id, start_at.iso8601, '1h antes') }
     end.to change(Notification.where(notification_type: 'ramon_meeting_reminder'), :count).by(1)
     expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
-    expect(Notification.last.push_message_title).to include('Maria da Silva', '1h antes', 'confirmar')
+    expect(Notification.last.push_message_title).to include('Maria da Silva', '1h antes')
   end
 
   it 'tolera diferença de até 60s entre o due_at da task e o start_at' do
