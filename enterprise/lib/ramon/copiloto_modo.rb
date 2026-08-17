@@ -11,7 +11,7 @@ module Ramon::CopilotoModo
   # ponytail: a env vale pra TODA conversa sem atributo (antigas inclusive) — antes de virar,
   # carimbar copiloto_modo=rascunho nas abertas antigas pelo console.
   def default
-    env = ENV.fetch('RAMON_COPILOTO_MODO_DEFAULT', DEFAULT).to_s.strip
+    env = ENV.fetch('RAMON_COPILOTO_MODO_DEFAULT', DEFAULT).strip
     MODOS.include?(env) ? env : DEFAULT
   end
 

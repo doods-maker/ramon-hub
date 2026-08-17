@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Ramon::CopilotoModo default por env', if: ChatwootApp.enterprise? do
+RSpec.describe 'Ramon::CopilotoModo default por env', if: ChatwootApp.enterprise? do # rubocop:disable RSpec/DescribeClass
   let(:conversation) { create(:conversation) }
 
   it 'usa rascunho sem env' do
