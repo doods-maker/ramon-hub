@@ -13,8 +13,8 @@ class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
     return SEM_LEAD if lead.blank?
 
     horario = horario_de(quando)
-    return 'Nao entendi a data. Use o formato AAAA-MM-DD HH:MM.' if horario.blank?
-    return 'A data proposta ja passou. Sugira uma data futura.' if horario < Time.current
+    return "Nao entendi a data (hoje e #{hoje_br}). Use o formato AAAA-MM-DD HH:MM." if horario.blank?
+    return "A data proposta ja passou (hoje e #{hoje_br}). Sugira uma data futura." if horario < Time.current
 
     log_tool_usage('agendar_reuniao', { lead_id: lead.id, quando: horario.iso8601 })
     titulo = assunto.presence || 'Reuniao de fechamento'
@@ -23,6 +23,10 @@ class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
   end
 
   private
+
+  def hoje_br
+    Time.current.in_time_zone('America/Sao_Paulo').strftime('%d/%m/%Y')
+  end
 
   def horario_de(quando)
     Time.zone.parse(quando.to_s)

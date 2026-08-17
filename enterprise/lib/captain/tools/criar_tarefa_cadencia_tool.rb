@@ -17,12 +17,12 @@ class Captain::Tools::CriarTarefaCadenciaTool < Captain::Tools::RamonBaseTool
 
     kind = tipo.presence || 'follow_up'
     due = horario_de(quando)
-    nome = titulo.to_s.strip
+    nome = titulo.to_s.strip.truncate(255)
     erro = recusa(kind, due, nome, lead)
     return erro if erro
 
     log_tool_usage('criar_tarefa_cadencia', { lead_id: lead.id, kind: kind, due_at: due.iso8601 })
-    lead.lead_tasks.create!(account: lead.account, kind: kind, title: nome.truncate(255), due_at: due)
+    lead.lead_tasks.create!(account: lead.account, kind: kind, title: nome, due_at: due)
     confirmacao(lead, nome, due)
   end
 
