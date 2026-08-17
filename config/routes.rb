@@ -313,6 +313,7 @@ Rails.application.routes.draw do
           resources :leads, only: [:index, :show, :create, :update, :destroy] do
             collection do
               post :for_conversation
+              get :zapsign_templates, to: 'lead_zapsign#templates'
             end
             member do
               get :dossie, to: 'lead_dossies#show'

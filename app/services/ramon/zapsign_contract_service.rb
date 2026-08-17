@@ -10,9 +10,10 @@ class Ramon::ZapsignContractService
   BLANK = '________'.freeze
   MESES = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
 
-  def initialize(lead)
+  def initialize(lead, template_id: nil)
     @lead = lead
     @contact = lead.contact
+    @template_id = template_id.presence || TEMPLATE_ID
   end
 
   # => { 'sign_url' =>, 'doc_token' =>, 'faltando' => [...] }
@@ -22,6 +23,8 @@ class Ramon::ZapsignContractService
       'doc_token' => result['token'],
       'sign_url' => result.dig('signers', 0, 'sign_url'),
       'faltando' => faltando,
+      'template_id' => @template_id,
+      'template_name' => template_name,
       'criado_em' => Time.zone.now.iso8601
     }
     # reload: a chamada HTTP demora e um snapshot velho reverteria gravações
@@ -33,9 +36,17 @@ class Ramon::ZapsignContractService
 
   private
 
+  # Nome do modelo escolhido, só pra mostrar no painel depois de gerado.
+  # ZapSign fora do ar não pode derrubar um contrato já criado.
+  def template_name
+    Ramon::ZapsignClient.templates.find { |t| t['token'] == @template_id }&.dig('name')
+  rescue Ramon::ZapsignClient::UnavailableError, Ramon::ZapsignClient::RequestError
+    nil
+  end
+
   def payload
     {
-      template_id: TEMPLATE_ID,
+      template_id: @template_id,
       signer_name: nome,
       send_automatic_email: false,
       send_automatic_whatsapp: false,
