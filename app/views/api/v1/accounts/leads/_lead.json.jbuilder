@@ -47,6 +47,7 @@ json.open_tasks_count lead.lead_tasks.open_tasks.size
 next_task = lead.next_open_task
 json.next_task_due_at next_task&.due_at
 json.next_task_title next_task&.title
+json.next_task_kind next_task&.kind
 
 json.stage_name lead.lead_stage&.name
 json.stage_color lead.lead_stage&.color

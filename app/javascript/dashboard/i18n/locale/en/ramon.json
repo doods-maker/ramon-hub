@@ -378,6 +378,7 @@
         "AGE": "{days}d",
         "NO_NEXT_ACTION": "No next action scheduled",
         "NEXT_NONE": "no next action",
+        "NEXT_MEETING": "Meeting {when}",
         "NEXT_OVERDUE": "overdue: {title}",
         "NEXT_TODAY": "today: {title}",
         "NEXT_TOMORROW": "tomorrow: {title}",
@@ -708,6 +709,8 @@
         "DOUBT": "⚠ Attention point: {doubt}"
       },
       "NEXT_ACTION": {
+        "MEETING_TITLE": "Meeting booked",
+        "SEE_AGENDA": "See in Agenda →",
         "TITLE": "Next step",
         "DONE": "Done ✓",
         "SNOOZE": "Snooze 1d",

@@ -9,7 +9,7 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
     {
       triggerEvent: 'BOOKING_CREATED',
       payload: {
-        title: 'Consulta previdenciária',
+        title: 'Consulta previdenciária between Maria da Silva and Eduardo',
         startTime: '2026-07-15T14:00:00Z',
         attendees: [{ name: 'Maria da Silva', email: 'maria@example.com', timeZone: 'America/Sao_Paulo' }],
         responses: { phone: { value: '+55 48 99988-7766' } }
@@ -64,13 +64,32 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
         expect(activity.to_value).to eq 'Consulta previdenciária em 15/07/2026 11:00'
       end
 
-      it 'BOOKING_CANCELLED apaga a tarefa da reunião e registra a atividade' do
+      it 'BOOKING_CANCELLED apaga a tarefa da reunião, registra a atividade e avisa no sino' do
+        create(:user, account: account, role: :administrator)
         post_webhook(booking_payload)
 
         cancel = booking_payload.merge(triggerEvent: 'BOOKING_CANCELLED')
         expect { post_webhook(cancel) }.to change { lead.lead_tasks.open_tasks.where(kind: 'meeting').count }.by(-1)
+                                                                                                             .and change(Notification.where(notification_type: 'ramon_meeting_cancelled'), :count).by(1)
         expect(response).to have_http_status(:ok)
         expect(lead.lead_activities.where(kind: 'meeting_cancelled')).to be_present
+      end
+
+      it 'anda o lead para Reunião agendada sem regredir quem já passou dela' do
+        post_webhook(booking_payload)
+        expect(lead.reload.lead_stage.label).to eq 'fase-reuniao-agendada'
+
+        negociacao = account.lead_stages.find_by!(label: 'fase-negociacao')
+        lead.update!(lead_stage: negociacao)
+        post_webhook(booking_payload.merge(triggerEvent: 'BOOKING_RESCHEDULED'))
+        expect(lead.reload.lead_stage).to eq negociacao
+      end
+
+      it 'prefere o eventTitle do payload no título da tarefa' do
+        payload = booking_payload.deep_merge(payload: { eventTitle: 'Primeiro Atendimento' })
+        post_webhook(payload)
+
+        expect(lead.lead_tasks.find_by(kind: 'meeting').title).to eq 'Reunião Cal.com: Primeiro Atendimento'
       end
 
       it 'ignora replay do mesmo POST assinado (idempotência)' do
@@ -138,10 +157,11 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
       expect { post_webhook(booking_payload) }
         .to change(Lead, :count).by(1)
         .and change(Contact, :count).by(1)
-        .and change(Notification, :count).by(1)
+        .and change(Notification, :count).by(2)
 
       lead = account.leads.find_by(source: 'calcom-agenda')
-      expect(lead.lead_stage).to eq stage_novo
+      expect(lead.lead_stage.label).to eq 'fase-reuniao-agendada'
+      expect(Notification.where(notification_type: 'ramon_meeting_scheduled').last.meta['quando']).to eq 'quarta, 15/07 às 11:00'
       expect(lead.contact.phone_number).to eq '+5548999887766'
       expect(lead.lead_tasks.where(kind: 'meeting')).to be_present
     end

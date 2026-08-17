@@ -35,7 +35,7 @@ const mountCard = (storeOpts = {}) =>
     global: {
       plugins: [build(storeOpts)],
       mocks: { $t: k => k },
-      stubs: { TaskBellMenu: true },
+      stubs: { TaskBellMenu: true, RouterLink: true },
     },
   });
 
@@ -54,6 +54,23 @@ describe('LeadNextAction', () => {
     expect(wrapper.text()).toContain('Ligar após perícia');
     // due_at no passado (2026-07-22 < hoje 23/07) → vencida
     expect(wrapper.text()).toContain('RAMON.TASKS.OVERDUE');
+  });
+
+  it('reunião marcada mostra o cabeçalho de reunião com dia e hora absolutos', () => {
+    const futuro = new Date(Date.now() + 3 * 86400000);
+    futuro.setHours(14, 0, 0, 0);
+    const wrapper = mountCard({
+      tasks: [{ ...task, kind: 'meeting', due_at: futuro.toISOString() }],
+    });
+    expect(wrapper.text()).toContain(
+      'RAMON.LEAD_PANEL.NEXT_ACTION.MEETING_TITLE'
+    );
+    const when = wrapper.find('[data-testid="next-action-meeting-when"]');
+    expect(when.exists()).toBe(true);
+    expect(when.text()).toContain('14:00');
+    expect(
+      wrapper.find('[data-testid="next-action-agenda-link"]').exists()
+    ).toBe(true);
   });
 
   it('não renderiza nada sem tarefa aberta', () => {

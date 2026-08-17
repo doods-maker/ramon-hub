@@ -1,7 +1,9 @@
 class Ramon::LeadNotificationBuilder
   # Builder próprio (não usar o NotificationBuilder core): as guardas de
   # contact.blocked?/conversation de lá assumem primary_actor Conversation.
-  pattr_initialize [:lead!]
+  # notification_type/meta opcionais: reunião marcada/lembrete/cancelada reusam
+  # o mesmo sino (primary_actor = Lead) com o texto vindo do meta.
+  pattr_initialize [:lead!, :notification_type, :meta]
 
   def perform
     # SELECT DISTINCT users.* quebra no Postgres (users.tokens é json, sem
@@ -9,11 +11,14 @@ class Ramon::LeadNotificationBuilder
     user_ids = lead.account.account_users.pluck(:user_id).uniq
     User.where(id: user_ids).find_each do |user|
       user.notifications.create!(
-        notification_type: 'ramon_lead_created',
+        notification_type: notification_type || 'ramon_lead_created',
         account: lead.account,
-        primary_actor: lead
+        primary_actor: lead,
+        meta: meta || {}
       )
     end
+
+    return if notification_type.present? # push do ntfy só no lead novo (reunião tem o seu no MeetingReminderJob)
 
     Ramon::NtfyPushJob.perform_later(lead.id) if ENV.fetch('NTFY_TOPIC', nil).present?
   end

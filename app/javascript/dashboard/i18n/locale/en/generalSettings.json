@@ -168,7 +168,10 @@
       "sla_missed_first_response": "SLA Missed",
       "sla_missed_next_response": "SLA Missed",
       "sla_missed_resolution": "SLA Missed",
-      "ramon_lead_created": "New lead (LP)"
+      "ramon_lead_created": "New lead (LP)",
+      "ramon_meeting_scheduled": "Meeting booked",
+      "ramon_meeting_reminder": "Meeting reminder",
+      "ramon_meeting_cancelled": "Meeting cancelled"
     }
   },
   "NETWORK": {

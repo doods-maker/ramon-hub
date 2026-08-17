@@ -56,6 +56,20 @@ describe('LeadCard.vue', () => {
       expect(action.classes()).toContain('text-n-ruby-11');
     });
 
+    it('reunião marcada = íris com data e hora, não contagem de dias', () => {
+      const wrapper = mountCard({
+        lead: {
+          ...lead,
+          next_task_due_at: new Date(Date.now() + 5 * 86400000).toISOString(),
+          next_task_title: 'Reunião Cal.com: Primeiro Atendimento',
+          next_task_kind: 'meeting',
+        },
+      });
+      const action = wrapper.find('[data-testid="next-action"]');
+      expect(action.classes()).toContain('text-n-iris-11');
+      expect(action.text()).toContain('RAMON.KANBAN.CARD.NEXT_MEETING');
+    });
+
     it('tarefa de hoje = âmbar', () => {
       // fim do dia local: sempre "hoje" e ainda no futuro
       const due = new Date();

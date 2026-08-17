@@ -378,6 +378,7 @@
         "AGE": "{days}d",
         "NO_NEXT_ACTION": "Sem próxima ação agendada",
         "NEXT_NONE": "sem próxima ação",
+        "NEXT_MEETING": "Reunião {when}",
         "NEXT_OVERDUE": "venceu: {title}",
         "NEXT_TODAY": "hoje: {title}",
         "NEXT_TOMORROW": "amanhã: {title}",
@@ -708,6 +709,8 @@
         "DOUBT": "⚠ Ponto de atenção: {doubt}"
       },
       "NEXT_ACTION": {
+        "MEETING_TITLE": "Reunião marcada",
+        "SEE_AGENDA": "Ver na Agenda →",
         "TITLE": "Próximo passo",
         "DONE": "Feito ✓",
         "SNOOZE": "Adiar 1d",

@@ -63,6 +63,7 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
 
     purge_calcom_tasks(lead, due_at: start_at)
     lead.lead_activities.create!(account: account, kind: 'meeting_cancelled', to_value: meeting_summary)
+    notify(lead, 'ramon_meeting_cancelled')
     :ok
   end
 
@@ -82,20 +83,50 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
     lead.lead_activities.create!(account: account, kind: 'meeting_scheduled', to_value: meeting_summary)
     lead.lead_tasks.create!(
       account: account,
-      title: "#{TASK_TITLE_PREFIX}: #{booking[:title]}".truncate(255),
+      title: "#{TASK_TITLE_PREFIX}: #{event_title}".truncate(255),
       kind: 'meeting',
       due_at: start_at
     )
+    advance_to_meeting_stage(lead)
     confirmation_draft(lead)
     enqueue_reminders(lead)
+    notify(lead, 'ramon_meeting_scheduled')
+  end
+
+  # Reunião marcada = o lead anda pra "Reunião agendada" (label fixo do seed),
+  # nunca regride: quem já está em Negociação e remarcou fica onde está.
+  def advance_to_meeting_stage(lead)
+    stage = account.lead_stages.find_by(label: 'fase-reuniao-agendada')
+    return if stage.blank? || lead.lead_stage.position >= stage.position
+
+    lead.update!(lead_stage: stage)
+  end
+
+  # Sino do hub pra todo mundo da conta (o mesmo do lead novo da LP).
+  def notify(lead, type)
+    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: type, meta: { 'quando' => quando_humano }).perform
+  end
+
+  # "quinta, 20/08 às 14:00" — texto único pra sino e rascunho.
+  def quando_humano
+    return '' if start_at.blank?
+
+    local = start_at.in_time_zone(TIME_ZONE)
+    "#{DIAS_SEMANA[local.wday]}, #{local.strftime('%d/%m')} às #{local.strftime('%H:%M')}"
+  end
+
+  # Nome do tipo de evento ("Primeiro Atendimento"), não o título do booking
+  # ("Primeiro Atendimento between X and Y") que o Cal.com monta.
+  def event_title
+    booking[:eventTitle].presence || booking.dig(:eventType, :title).presence ||
+      booking[:title].to_s.sub(/ between .*\z/, '')
   end
 
   DIAS_SEMANA = %w[domingo segunda terça quarta quinta sexta sábado].freeze
 
   # Rascunho de confirmação (gatilho do compromisso) — estático, sem LLM.
   def confirmation_draft(lead)
-    local = start_at.in_time_zone(TIME_ZONE)
-    quando = "#{DIAS_SEMANA[local.wday]}, #{local.strftime('%d/%m')} às #{local.strftime('%H:%M')}"
+    quando = quando_humano
     first = lead.name.to_s.split.first.presence || 'cliente'
     lead.lead_notes.create!(account: account, body: <<~NOTA.strip.truncate(1000))
       RASCUNHO (revisar antes de enviar) — confirmação de reunião:
@@ -122,7 +153,7 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
 
   def meeting_summary
     when_text = start_at ? start_at.in_time_zone(TIME_ZONE).strftime('%d/%m/%Y %H:%M') : ''
-    "#{booking[:title]} em #{when_text}".strip.truncate(255)
+    "#{event_title} em #{when_text}".strip.truncate(255)
   end
 
   def booking

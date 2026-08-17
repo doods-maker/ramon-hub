@@ -14,6 +14,23 @@ const { t } = useI18n();
 const getByLead = useMapGetter('leadTasks/getByLead');
 // 1ª tarefa aberta (o getter já ordena por due_at asc).
 const task = computed(() => getByLead.value?.(props.leadId)?.[0] ?? null);
+const isMeeting = computed(() => task.value?.kind === 'meeting');
+// "quinta, 20/08 às 14:00" — reunião mostra quando é, não "em 3 dias".
+const meetingWhen = computed(() => {
+  if (!isMeeting.value || !task.value?.due_at) return '';
+  const d = new Date(task.value.due_at);
+  if (Number.isNaN(d.getTime())) return '';
+  const dia = d.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+  });
+  const hora = d.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${dia} às ${hora}`;
+});
 
 const load = id => {
   if (id) store?.dispatch('leadTasks/fetchForLead', id);
@@ -92,17 +109,51 @@ const reschedule = ({ dueAt }) =>
     :class="
       dueInfo.overdue
         ? 'border-n-amber-9/40 border-l-n-amber-9'
-        : 'border-n-weak border-l-n-iris-9'
+        : isMeeting
+          ? 'border-n-iris-9/40 border-l-n-iris-9 bg-n-iris-9/5'
+          : 'border-n-weak border-l-n-iris-9'
     "
   >
     <p
       class="text-[10.5px] font-semibold uppercase tracking-widest"
-      :class="dueInfo.overdue ? 'text-n-amber-11' : 'text-n-slate-10'"
+      :class="
+        dueInfo.overdue
+          ? 'text-n-amber-11'
+          : isMeeting
+            ? 'text-n-iris-11'
+            : 'text-n-slate-10'
+      "
     >
-      {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.TITLE') }}
+      <template v-if="isMeeting">
+        <span
+          class="i-lucide-calendar-clock inline-block size-3 align-[-2px]"
+        />
+        {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.MEETING_TITLE') }}
+      </template>
+      <template v-else>{{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.TITLE') }}</template>
       <template v-if="dueInfo.text">· {{ dueInfo.text }}</template>
     </p>
-    <p class="mt-1 text-sm text-n-slate-12">{{ task.title }}</p>
+    <p
+      v-if="isMeeting && meetingWhen"
+      data-testid="next-action-meeting-when"
+      class="mt-1 text-sm font-semibold text-n-slate-12 capitalize"
+    >
+      {{ meetingWhen }}
+    </p>
+    <p
+      class="text-sm text-n-slate-12"
+      :class="isMeeting ? 'text-xs text-n-slate-11' : 'mt-1'"
+    >
+      {{ task.title }}
+    </p>
+    <router-link
+      v-if="isMeeting"
+      :to="{ name: 'ramon_agenda' }"
+      class="mt-1 inline-block text-xs text-n-iris-11 hover:underline"
+      data-testid="next-action-agenda-link"
+    >
+      {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.SEE_AGENDA') }}
+    </router-link>
     <div class="flex items-center gap-1.5 mt-2.5">
       <button
         data-testid="next-action-done"
