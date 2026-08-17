@@ -4,7 +4,7 @@ require 'rails_helper'
 # consultamos direto via SQL, do jeito que o Metabase/BI vai consumir.
 # A mensagem do Assistente (Captain::Assistant, enterprise/) e inserida por
 # insert_all, sem instanciar o sender — assim a spec roda no CI FOSS.
-# content_attributes vai como STRING JSON, igual ao store (coder: JSON) grava.
+# insert_all grava content_attributes como OBJETO json (o store grava STRING) — a view v2 le os dois.
 RSpec.describe 'views bi_ia' do # rubocop:disable RSpec/DescribeClass
   let(:account) { create(:account) }
   let(:inbox) { create(:inbox, account: account) }
@@ -14,10 +14,12 @@ RSpec.describe 'views bi_ia' do # rubocop:disable RSpec/DescribeClass
   def sql(query) = ActiveRecord::Base.connection.select_all(query).to_a
 
   def do_assistente(content, privada: false, content_attributes: {}, created_at: Time.current)
+    # rubocop:disable Rails/SkipsModelValidations
     id = Message.insert_all([{ account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id,
                                message_type: 1, private: privada, sender_type: 'Captain::Assistant', sender_id: 1,
-                               content: content, content_attributes: content_attributes.to_json,
+                               content: content, content_attributes: content_attributes,
                                created_at: created_at, updated_at: created_at }], returning: :id).first['id']
+    # rubocop:enable Rails/SkipsModelValidations
     Message.find(id)
   end
 

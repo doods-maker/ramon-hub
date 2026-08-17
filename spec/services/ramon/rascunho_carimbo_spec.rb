@@ -34,10 +34,12 @@ RSpec.describe Ramon::RascunhoCarimbo do
     let(:prefixo) { 'RASCUNHO (revisar antes de enviar):' }
 
     def do_assistente(texto, privada:)
+      # rubocop:disable Rails/SkipsModelValidations
       id = Message.insert_all([{ account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id,
                                  message_type: 1, private: privada, sender_type: 'Captain::Assistant', sender_id: 1,
                                  content: texto, created_at: Time.current, updated_at: Time.current }],
                               returning: :id).first['id']
+      # rubocop:enable Rails/SkipsModelValidations
       Message.find(id)
     end
 
