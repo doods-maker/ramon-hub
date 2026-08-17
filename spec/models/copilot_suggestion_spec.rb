@@ -69,6 +69,34 @@ RSpec.describe CopilotSuggestion do
     end
   end
 
+  describe '#apply! com acao perdido' do
+    let!(:aberta) { create(:lead_stage, account: account, name: 'Contato', is_lost: false, position: 1) }
+    # 'Perdido' ja nasce seedado em Account#seed_lead_config (uniqueness name+account) — usa o seedado.
+    let(:perdida) { account.lead_stages.find_by!(is_lost: true) }
+
+    it 'move o caso para a etapa perdida com o motivo' do
+      lead.update!(lead_stage: aberta)
+      suggestion = sugestao('perdido', 'lost_reason' => 'Sem direito')
+
+      expect(suggestion.apply!).to be(true)
+      expect(lead.reload).to have_attributes(lead_stage_id: perdida.id, lost_reason: 'Sem direito')
+      expect(lead.lost_at).to be_present
+    end
+
+    it 'recusa quando o caso ja esta ganho' do
+      lead.update!(lead_stage: create(:lead_stage, account: account, name: 'Ganho', is_won: true, position: 8))
+      suggestion = sugestao('perdido', 'lost_reason' => 'Sem direito')
+
+      expect(suggestion.apply!).to be(false)
+      expect(suggestion.motivo_da_recusa).to include('ganho')
+    end
+
+    it 'recusa sem etapa perdida configurada' do
+      perdida.destroy!
+      expect(sugestao('perdido', 'lost_reason' => 'x').apply!).to be(false)
+    end
+  end
+
   describe '#apply! nos tipos antigos' do
     it 'draft continua virando nota rascunho' do
       suggestion = account.copilot_suggestions.create!(lead: lead, kind: 'draft', status: 'pending',

@@ -1246,7 +1246,8 @@
       "CARIMBO": "enviada pelo piloto ({modo})",
       "PAUSAR": "Pausar piloto",
       "PAUSADO": "Piloto pausado — voltou pro modo Rascunho.",
-      "PAUSA_FALHOU": "Não consegui pausar — tente de novo."
+      "PAUSA_FALHOU": "Não consegui pausar — tente de novo.",
+      "RASCUNHO_IA": { "igual": "rascunho da IA enviado como estava", "editado": "rascunho da IA, editado", "descartado": "rascunho da IA descartado" }
     }
   },
   "CAPTAIN_RAMON": {

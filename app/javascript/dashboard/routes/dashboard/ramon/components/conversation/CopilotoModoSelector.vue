@@ -2,20 +2,17 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { MODOS, copilotoModoDe } from '../../helpers/copilotoModo';
 
 defineOptions({ name: 'CopilotoModoSelector' });
 const { t } = useI18n();
 const store = useStore();
 const currentChat = useMapGetter('getSelectedChat');
 
-const MODOS = ['manual', 'rascunho', 'piloto_limitado', 'piloto_total'];
 const open = ref(false);
 const saving = ref(false);
 
-const modo = computed(() => {
-  const m = currentChat.value?.custom_attributes?.copiloto_modo;
-  return MODOS.includes(m) ? m : 'rascunho';
-});
+const modo = computed(() => copilotoModoDe(currentChat.value));
 
 const escolher = async novoModo => {
   // Comparar com o valor CRU (não normalizado) — com um valor inválido salvo

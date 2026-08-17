@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_14_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_17_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1697,6 +1697,79 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_14_000002) do
      FROM (lead_activities la
        JOIN bi_leads b ON ((b.id = la.lead_id)))
     WHERE ((la.kind)::text = 'stage_changed'::text);
+  SQL
+  create_view "bi_ia_rascunhos", sql_definition: <<-SQL
+      WITH notas AS (
+           SELECT m.id AS nota_id,
+              m.account_id,
+              m.conversation_id,
+              m.inbox_id,
+              m.created_at AS criado_em
+             FROM messages m
+            WHERE ((m.private = true) AND ((m.sender_type)::text = 'Captain::Assistant'::text) AND ((m.content)::text ~~ 'RASCUNHO (revisar antes de enviar):%'::text))
+          ), enviadas AS (
+           SELECT DISTINCT ON (nota_id) ((((m.content_attributes)::jsonb -> 'ramon_rascunho_ia'::text) ->> 'nota_id'::text))::bigint AS nota_id,
+              m.id AS mensagem_id,
+              m.created_at AS enviada_em,
+              (((m.content_attributes)::jsonb -> 'ramon_rascunho_ia'::text) ->> 'desfecho'::text) AS desfecho
+             FROM messages m
+            WHERE ((m.content_attributes)::jsonb ? 'ramon_rascunho_ia'::text)
+            ORDER BY nota_id, m.created_at
+          )
+      SELECT n.nota_id,
+      n.account_id,
+      n.conversation_id,
+      n.inbox_id,
+      n.criado_em,
+      COALESCE(e.desfecho,
+          CASE
+              WHEN (EXISTS ( SELECT 1
+                 FROM messages i
+                WHERE ((i.conversation_id = n.conversation_id) AND (i.message_type = 0) AND (i.created_at > n.criado_em)))) THEN 'sem_resposta'::text
+              ELSE 'pendente'::text
+          END) AS desfecho,
+      e.mensagem_id,
+      round((EXTRACT(epoch FROM (e.enviada_em - n.criado_em)) / 60.0), 1) AS minutos_ate_envio
+     FROM (notas n
+       LEFT JOIN enviadas e ON ((e.nota_id = n.nota_id)));
+  SQL
+  create_view "bi_ia_conversas", sql_definition: <<-SQL
+      WITH base AS (
+           SELECT c.id AS conversation_id,
+              c.account_id,
+              c.inbox_id,
+              MIN(
+                  CASE
+                      WHEN (m.message_type = 0) THEN m.created_at
+                      ELSE NULL::timestamp without time zone
+                  END) AS iniciada_em,
+              MIN(
+                  CASE
+                      WHEN ((m.message_type = 1) AND (m.private = false)) THEN m.created_at
+                      ELSE NULL::timestamp without time zone
+                  END) AS primeira_resposta_em,
+              COUNT(*) FILTER (WHERE ((m.content_attributes)::jsonb ? 'ramon_piloto'::text)) AS pilotos_enviados,
+              COUNT(*) FILTER (WHERE ((m.private = true) AND ((m.sender_type)::text = 'Captain::Assistant'::text) AND ((m.content)::text ~~ 'RASCUNHO (revisar antes de enviar):%'::text))) AS rascunhos,
+              COUNT(*) FILTER (WHERE ((m.content_attributes)::jsonb ? 'ramon_rascunho_ia'::text)) AS rascunhos_usados
+             FROM (conversations c
+               JOIN messages m ON ((m.conversation_id = c.id)))
+            GROUP BY c.id, c.account_id, c.inbox_id
+          )
+      SELECT b.conversation_id,
+      b.account_id,
+      b.inbox_id,
+      b.iniciada_em,
+      b.primeira_resposta_em,
+      round((EXTRACT(epoch FROM (b.primeira_resposta_em - b.iniciada_em)) / 60.0), 1) AS minutos_primeira_resposta,
+      ((b.pilotos_enviados + b.rascunhos_usados) > 0) AS com_ia,
+      b.pilotos_enviados,
+      b.rascunhos,
+      b.rascunhos_usados,
+      ( SELECT COUNT(*) AS count
+             FROM reporting_events r
+            WHERE ((r.conversation_id = b.conversation_id) AND ((r.name)::text = 'conversation_bot_handoff'::text))) AS handoffs
+     FROM base b
+    WHERE (b.iniciada_em IS NOT NULL);
   SQL
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").

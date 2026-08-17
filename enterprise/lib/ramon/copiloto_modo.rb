@@ -1,15 +1,23 @@
 # Modo do copiloto POR CONVERSA (Onda C, spec D5). Fonte única da leitura:
-# custom_attributes['copiloto_modo'], default rascunho — piloto é opt-in
-# explícito por conversa (decisão Eduardo 14/08).
+# custom_attributes['copiloto_modo'], default = RAMON_COPILOTO_MODO_DEFAULT,
+# rascunho se vazia — piloto é opt-in explícito por conversa (decisão Eduardo 14/08).
 module Ramon::CopilotoModo
   MODOS = %w[manual rascunho piloto_limitado piloto_total].freeze
   DEFAULT = 'rascunho'.freeze
 
   module_function
 
+  # D7: piloto_limitado vira padrao por env depois de ~20 conversas revisadas.
+  # ponytail: a env vale pra TODA conversa sem atributo (antigas inclusive) — antes de virar,
+  # carimbar copiloto_modo=rascunho nas abertas antigas pelo console.
+  def default
+    env = ENV.fetch('RAMON_COPILOTO_MODO_DEFAULT', DEFAULT).strip
+    MODOS.include?(env) ? env : DEFAULT
+  end
+
   def of(conversation)
     modo = conversation&.custom_attributes&.[]('copiloto_modo').to_s
-    MODOS.include?(modo) ? modo : DEFAULT
+    MODOS.include?(modo) ? modo : default
   end
 
   def piloto?(modo)
