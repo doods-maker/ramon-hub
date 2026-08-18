@@ -45,7 +45,7 @@ export default {
         unreadCount: this.meta.unreadCount,
       });
 
-      if (notificationType === 'ramon_lead_created') {
+      if (notificationType.startsWith('ramon_')) {
         this.$router.push({
           name: 'kanban_board',
           params: { accountId: this.accountId },

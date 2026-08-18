@@ -6,6 +6,8 @@ RSpec.describe Ramon::MeetingReminderJob do
   let(:start_at) { 2.hours.from_now.change(usec: 0) }
 
   before { allow(Ramon::NtfyPushJob).to receive(:perform_now) }
+  # ntfy ligado por padrao nos cenarios de push; o teste do sino desliga.
+  around { |ex| with_modified_env(NTFY_TOPIC: 'ramon') { ex.run } }
 
   it 'com reunião aberta no horário dispara o push com o label' do
     create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião Cal.com: consulta', due_at: start_at)
@@ -14,6 +16,17 @@ RSpec.describe Ramon::MeetingReminderJob do
 
     expect(Ramon::NtfyPushJob).to have_received(:perform_now)
       .with(lead.id, title: 'Reunião Maria da Silva em 1h antes', body: include('confirmação'))
+  end
+
+  it 'avisa no sino do hub mesmo sem ntfy configurado' do
+    create(:user, account: account, role: :administrator)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião Cal.com: consulta', due_at: start_at)
+
+    expect do
+      with_modified_env(NTFY_TOPIC: nil) { described_class.perform_now(lead.id, start_at.iso8601, '1h antes') }
+    end.to change(Notification.where(notification_type: 'ramon_meeting_reminder'), :count).by(1)
+    expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
+    expect(Notification.last.push_message_title).to include('Maria da Silva', '1h antes')
   end
 
   it 'tolera diferença de até 60s entre o due_at da task e o start_at' do

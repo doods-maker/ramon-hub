@@ -26,6 +26,11 @@ class Ramon::MeetingReminderJob < ApplicationJob
     return unless Rails.cache.write("ramon:reminder:#{lead_id}:#{start_at_iso}:#{label}", true, unless_exist: true, expires_in: 25.hours)
 
     hora = start_at.in_time_zone(TIME_ZONE).strftime('%d/%m %H:%M')
+    # sino do hub (todo usuário da conta) — o ntfy é opcional, o hub não
+    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_meeting_reminder',
+                                       meta: { 'quando' => hora, 'label' => label }).perform
+    return if ENV.fetch('NTFY_TOPIC', nil).blank?
+
     # timing já resolvido pelo wait_until — push direto, sem re-enfileirar
     Ramon::NtfyPushJob.perform_now(lead_id, title: "Reunião #{lead.name} em #{label}",
                                             body: "#{hora} — hora de mandar a mensagem de confirmação pro cliente")

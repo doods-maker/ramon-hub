@@ -228,6 +228,9 @@ pt_BR:
       sla_missed_next_response: 'Meta de SLA de Próxima Resposta não alcançada para a conversa (#%{display_id})'
       sla_missed_resolution: 'Meta de SLA de Resolução não alcançada para a conversa (#%{display_id})'
       ramon_lead_created: 'Novo lead da landing page: %{name}'
+      ramon_meeting_scheduled: 'Reunião marcada com %{name}: %{quando}'
+      ramon_meeting_reminder: 'Reunião com %{name} em %{label} (%{quando}) — hora de confirmar com o cliente'
+      ramon_meeting_cancelled: 'Reunião com %{name} cancelada (%{quando})'
     attachment: 'Anexo'
     no_content: 'Sem conteúdo'
   conversations:

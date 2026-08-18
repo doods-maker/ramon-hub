@@ -168,7 +168,10 @@
       "sla_missed_first_response": "SLA não alcançado",
       "sla_missed_next_response": "SLA não alcançado",
       "sla_missed_resolution": "SLA não alcançado",
-      "ramon_lead_created": "Lead novo (LP)"
+      "ramon_lead_created": "Lead novo (LP)",
+      "ramon_meeting_scheduled": "Reunião marcada",
+      "ramon_meeting_reminder": "Lembrete de reunião",
+      "ramon_meeting_cancelled": "Reunião cancelada"
     }
   },
   "NETWORK": {

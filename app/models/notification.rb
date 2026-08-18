@@ -44,7 +44,10 @@ class Notification < ApplicationRecord
     sla_missed_first_response: 6,
     sla_missed_next_response: 7,
     sla_missed_resolution: 8,
-    ramon_lead_created: 9
+    ramon_lead_created: 9,
+    ramon_meeting_scheduled: 10,
+    ramon_meeting_reminder: 11,
+    ramon_meeting_cancelled: 12
   }.freeze
 
   enum notification_type: NOTIFICATION_TYPES
@@ -86,7 +89,7 @@ class Notification < ApplicationRecord
     }
   end
 
-  # rubocop:disable Metrics/MethodLength
+  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
   def push_message_title
     notification_title_map = {
       'conversation_creation' => 'notifications.notification_title.conversation_creation',
@@ -97,7 +100,10 @@ class Notification < ApplicationRecord
       'sla_missed_first_response' => 'notifications.notification_title.sla_missed_first_response',
       'sla_missed_next_response' => 'notifications.notification_title.sla_missed_next_response',
       'sla_missed_resolution' => 'notifications.notification_title.sla_missed_resolution',
-      'ramon_lead_created' => 'notifications.notification_title.ramon_lead_created'
+      'ramon_lead_created' => 'notifications.notification_title.ramon_lead_created',
+      'ramon_meeting_scheduled' => 'notifications.notification_title.ramon_meeting_scheduled',
+      'ramon_meeting_reminder' => 'notifications.notification_title.ramon_meeting_reminder',
+      'ramon_meeting_cancelled' => 'notifications.notification_title.ramon_meeting_cancelled'
     }
 
     i18n_key = notification_title_map[notification_type]
@@ -110,11 +116,13 @@ class Notification < ApplicationRecord
       I18n.t(i18n_key, display_id: conversation.display_id)
     elsif notification_type == 'ramon_lead_created'
       I18n.t(i18n_key, name: primary_actor.name)
+    elsif notification_type.start_with?('ramon_meeting_')
+      I18n.t(i18n_key, name: primary_actor.name, quando: meta['quando'].to_s, label: meta['label'].to_s)
     else
       I18n.t(i18n_key, display_id: primary_actor.display_id)
     end
   end
-  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 
   def push_message_body
     case notification_type
@@ -124,8 +132,8 @@ class Notification < ApplicationRecord
       message_body(secondary_actor)
     when 'conversation_assignment', 'sla_missed_next_response', 'sla_missed_resolution'
       message_body((conversation.messages.incoming.last || conversation.messages.outgoing.last))
-    when 'ramon_lead_created'
-      I18n.t('notifications.notification_title.ramon_lead_created', name: primary_actor.name)
+    when 'ramon_lead_created', 'ramon_meeting_scheduled', 'ramon_meeting_reminder', 'ramon_meeting_cancelled'
+      push_message_title
     else
       ''
     end
