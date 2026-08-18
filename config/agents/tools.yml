@@ -194,3 +194,23 @@
   title: 'Link de documento do AdvBox'
   description: 'Link temporario de download de um documento'
   icon: 'link'
+
+- id: configuracoes_advbox
+  title: 'Configuracoes do AdvBox'
+  description: 'IDs de usuarios, tipos de tarefa, origens e etapas — base para escrever no AdvBox'
+  icon: 'settings'
+
+- id: criar_tarefa_advbox
+  title: 'Criar tarefa no AdvBox'
+  description: 'Cria tarefa num processo do AdvBox — previa + codigo, grava so depois do ok do humano'
+  icon: 'calendar-clock'
+
+- id: criar_movimentacao_advbox
+  title: 'Registrar movimentacao no AdvBox'
+  description: 'Andamento manual num processo — previa + codigo, grava so depois do ok do humano'
+  icon: 'timeline'
+
+- id: criar_cliente_advbox
+  title: 'Criar cliente no AdvBox'
+  description: 'Contato/cliente novo no AdvBox — previa + codigo, grava so depois do ok do humano'
+  icon: 'person-add'

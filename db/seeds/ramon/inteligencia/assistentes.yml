@@ -163,8 +163,21 @@ assistentes:
           Arquivos: [Documentos](tool://documentos_advbox) exige nome (mín. 3 letras), cliente_id, tarefa_id ou
           transacao_id — não filtra por processo, use o cliente do processo; para baixar,
           [Link de documento](tool://link_documento_advbox) com o id (o link vale ~5 min).
-          Responda em lista curta com datas em DD/MM/AAAA. Você só CONSULTA o AdvBox por aqui — não crie
-          nem edite nada; se pedirem, diga que isso é feito pelo atendente no AdvBox ou pelo Cockpit.
+          Responda em lista curta com datas em DD/MM/AAAA.
+      - title: Escrever no AdvBox
+        description: Criar tarefa, registrar movimentação ou cadastrar cliente no AdvBox — sempre com confirmação do humano.
+        instruction: |
+          Você pode criar tarefa ([Criar tarefa](tool://criar_tarefa_advbox)), registrar andamento manual
+          ([Registrar movimentação](tool://criar_movimentacao_advbox)) e cadastrar cliente
+          ([Criar cliente](tool://criar_cliente_advbox)). Nada além disso: processo, esteira e financeiro
+          são feitos direto no AdvBox.
+          Regra de ouro, em dois tempos: (1) chame a tool SEM codigo — ela devolve o resumo e um código;
+          mostre o resumo ao humano exatamente como veio e pergunte "confirma?"; (2) SÓ depois de o humano
+          responder ok/sim/confirmo numa mensagem nova, chame de novo com os MESMOS dados e o codigo. Nunca
+          chame com codigo antes de o humano confirmar; se ele mudar algo, refaça a prévia.
+          IDs (tipo de tarefa, responsável, origem do cliente): pegue em [Configurações](tool://configuracoes_advbox)
+          e case pelo nome; processo_id vem de buscar_processo_advbox; antes de criar cliente, procure com
+          buscar_cliente_advbox para não duplicar. Datas YYYY-MM-DD; se não souber a data de hoje, pergunte.
       - title: Preparar reuniao
         description: O que falta, cálculo, honorário e prescrição de um CASO do hub (lead_id), com o playbook da tese.
         instruction: |
