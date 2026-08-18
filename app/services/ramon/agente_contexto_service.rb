@@ -38,11 +38,11 @@ class Ramon::AgenteContextoService
                  .reorder(created_at: :desc, id: :desc).limit(LIMITE_MENSAGENS).to_a.reverse.map { |m| mensagem(m) }
   end
 
-  def mensagem(m)
+  def mensagem(msg)
     {
-      id: m.id, em: m.created_at.iso8601, de: papel(m), autor: m.sender.try(:name),
-      texto: m.content.to_s,
-      anexos: m.attachments.map { |a| a.file.attached? ? a.file.filename.to_s : a.file_type }
+      id: msg.id, em: msg.created_at.iso8601, de: papel(msg), autor: msg.sender.try(:name),
+      texto: msg.content.to_s,
+      anexos: msg.attachments.map { |a| a.file.attached? ? a.file.filename.to_s : a.file_type }
     }
   end
 
