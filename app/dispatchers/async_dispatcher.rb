@@ -20,7 +20,8 @@ class AsyncDispatcher < BaseDispatcher
       Conversations::UnreadCounts::Listener.instance,
       ReportingEventListener.instance,
       WebhookListener.instance,
-      RamonLeadListener.instance
+      RamonLeadListener.instance,
+      RamonAgenteListener.instance
     ]
   end
 end

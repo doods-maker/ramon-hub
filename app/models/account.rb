@@ -83,6 +83,7 @@ class Account < ApplicationRecord
   has_many :hooks, dependent: :destroy_async, class_name: 'Integrations::Hook'
   has_many :inboxes, dependent: :destroy_async
   has_many :labels, dependent: :destroy_async
+  has_many :agente_execucoes, class_name: 'AgenteExecucao', dependent: :destroy_async
   has_many :benefit_types, dependent: :destroy_async
   has_many :calculos, dependent: :destroy_async
   has_many :reunioes, class_name: 'Reuniao', dependent: :destroy_async

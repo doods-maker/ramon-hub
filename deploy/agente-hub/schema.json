@@ -1,0 +1,8 @@
+{"type":"object","additionalProperties":false,"required":["resposta","fontes"],
+ "properties":{
+  "resposta":{"type":"string","description":"Texto final pro Eduardo, PT-BR, markdown simples, máx ~2500 caracteres"},
+  "arquivo":{"type":"object","additionalProperties":false,"required":["nome","conteudo_md"],
+    "properties":{"nome":{"type":"string"},"conteudo_md":{"type":"string"}}},
+  "tarefa_advbox":{"type":"object","additionalProperties":false,"required":["lawsuit_id","texto"],
+    "properties":{"lawsuit_id":{"type":"integer"},"texto":{"type":"string"}}},
+  "fontes":{"type":"array","items":{"type":"string"}}}}

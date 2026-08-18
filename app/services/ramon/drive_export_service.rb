@@ -15,6 +15,17 @@ class Ramon::DriveExportService
     concluir if checklist_completo? && drive_state['concluido_em'].blank?
   end
 
+  # Público: o agente do hub também sobe arquivo avulso na pasta do cliente.
+  def pasta_cliente_id
+    @pasta_cliente_id ||= drive_state['pasta_id'].presence || begin
+      clientes = Ramon::DriveClient.ensure_folder('Clientes', Ramon::DriveClient.root_id)
+      cpf = @lead.contact&.cpf
+      id = Ramon::DriveClient.ensure_folder([nome_cliente, cpf.presence].compact.join(' — '), clientes)
+      merge_drive('pasta_id' => id)
+      id
+    end
+  end
+
   private
 
   def drive_state = @lead.custom_attributes&.dig('drive') || {}
@@ -71,16 +82,6 @@ class Ramon::DriveExportService
 
   def nome_cliente
     @nome_cliente ||= (@lead.contact&.name.presence || @lead.name).to_s.strip
-  end
-
-  def pasta_cliente_id
-    @pasta_cliente_id ||= drive_state['pasta_id'].presence || begin
-      clientes = Ramon::DriveClient.ensure_folder('Clientes', Ramon::DriveClient.root_id)
-      cpf = @lead.contact&.cpf
-      id = Ramon::DriveClient.ensure_folder([nome_cliente, cpf.presence].compact.join(' — '), clientes)
-      merge_drive('pasta_id' => id)
-      id
-    end
   end
 
   def pasta_do_dia_id

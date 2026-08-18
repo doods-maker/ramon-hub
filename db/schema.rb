@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_17_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_17_000003) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -155,6 +155,25 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_17_000002) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_agent_capacity_policies_on_account_id"
+  end
+
+  create_table "agente_execucoes", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "conversation_id"
+    t.bigint "lead_id"
+    t.text "pedido", null: false
+    t.string "status", null: false
+    t.text "resumo"
+    t.jsonb "acoes", default: [], null: false
+    t.string "modelo"
+    t.string "esforco"
+    t.integer "duracao_ms"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "created_at"], name: "index_agente_execucoes_on_account_id_and_created_at"
+    t.index ["account_id"], name: "index_agente_execucoes_on_account_id"
+    t.index ["conversation_id"], name: "index_agente_execucoes_on_conversation_id"
+    t.index ["lead_id"], name: "index_agente_execucoes_on_lead_id"
   end
 
   create_table "applied_slas", force: :cascade do |t|
@@ -1637,6 +1656,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_17_000002) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "agente_execucoes", "accounts"
+  add_foreign_key "agente_execucoes", "conversations", on_delete: :nullify
+  add_foreign_key "agente_execucoes", "leads", on_delete: :nullify
   add_foreign_key "calculos", "accounts"
   add_foreign_key "calculos", "leads"
   add_foreign_key "calculos", "users"

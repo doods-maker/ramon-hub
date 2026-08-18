@@ -21,6 +21,8 @@ RSpec.describe Ramon::ZapsignContractService do
     with_modified_env(ZAPSIGN_API_TOKEN: 'tok') { example.run }
   end
 
+  before { allow(Ramon::ZapsignClient).to receive(:templates).and_return([{ 'token' => 'abc', 'name' => 'Modelo X' }]) }
+
   def zapsign_response
     { 'token' => 'doc-123',
       'signers' => [{ 'sign_url' => 'https://app.zapsign.com.br/verificar/abc' }] }.to_json
@@ -59,6 +61,19 @@ RSpec.describe Ramon::ZapsignContractService do
     # endereço da colheita vai inteiro na rua; número/bairro/cidade/UF ficam em branco
     expect(result['faltando']).to include('{{número}}', '{{bairro}}', '{{cidade}}', '{{UF}}')
     expect(result['faltando']).not_to include('{{nome}}', '{{CPF}}', '{{data de hoje}}')
+  end
+
+  it 'usa o template_id informado e grava o nome' do
+    enviado = nil
+    allow(Ramon::ZapsignClient).to receive(:create_doc_from_template) do |body|
+      enviado = body
+      JSON.parse(zapsign_response)
+    end
+
+    described_class.new(lead, template_id: 'abc').perform
+
+    expect(enviado[:template_id]).to eq 'abc'
+    expect(lead.reload.custom_attributes.dig('zapsign', 'template_name')).to eq 'Modelo X'
   end
 
   it 'propaga UnavailableError em 5xx (sem gravar nada no lead)' do

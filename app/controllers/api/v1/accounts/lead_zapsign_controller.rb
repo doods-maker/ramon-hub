@@ -1,14 +1,22 @@
 # Item 21 (fluxo A): botão "Gerar contrato" no painel do lead → ZapSign cria
 # contrato + procuração pré-preenchidos e devolve o link de assinatura.
 class Api::V1::Accounts::LeadZapsignController < Api::V1::Accounts::BaseController
-  before_action :fetch_lead
+  before_action :fetch_lead, only: [:create]
 
   def create
     authorize(@lead, :show?)
-    render json: Ramon::ZapsignContractService.new(@lead).perform
+    render json: Ramon::ZapsignContractService.new(@lead, template_id: params[:template_id]).perform
   rescue Ramon::ZapsignClient::RequestError => e
     render json: { error: e.body.to_s.truncate(300) }, status: :unprocessable_entity
   rescue Ramon::ZapsignClient::UnavailableError => e
+    render json: { error: e.message }, status: :service_unavailable
+  end
+
+  # Modelos da conta ZapSign pro seletor do painel.
+  def templates
+    authorize(:lead, :index?)
+    render json: Ramon::ZapsignClient.templates
+  rescue Ramon::ZapsignClient::UnavailableError, Ramon::ZapsignClient::RequestError => e
     render json: { error: e.message }, status: :service_unavailable
   end
 

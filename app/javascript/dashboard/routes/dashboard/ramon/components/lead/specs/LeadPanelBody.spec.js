@@ -111,10 +111,10 @@ describe('LeadPanelBody', () => {
       expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('historico');
     });
 
-    it('só mostra a aba Contrato pra tese elegível (acidente)', () => {
+    it('mostra a aba Contrato em qualquer tese', () => {
       expect(
         mountBody().find('[data-testid="lead-tab-contrato"]').exists()
-      ).toBe(false);
+      ).toBe(true);
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
       });
@@ -123,14 +123,14 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('aba Contrato persistida cai no Resumo quando o lead não é elegível', () => {
+    it('aba Contrato persistida abre o cartão do ZapSign', () => {
       localStorage.setItem('ramon_lead_panel_tab', 'contrato');
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadCopilot' }).exists()).toBe(
-        true
+        false
       );
       expect(wrapper.findComponent({ name: 'LeadZapsignCard' }).exists()).toBe(
-        false
+        true
       );
     });
 
