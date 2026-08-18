@@ -384,6 +384,7 @@
         "NEXT_TOMORROW": "tomorrow: {title}",
         "NEXT_IN_DAYS": "in {days}d: {title}",
         "DOSSIE": "30s dossier",
+        "CONVERSATION": "Chat",
         "COPY_PHONE": "Copy phone number",
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
