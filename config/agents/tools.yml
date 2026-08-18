@@ -149,3 +149,48 @@
   title: 'Marcar como perdido'
   description: 'Sugere marcar o caso como perdido com o motivo — o humano aprova no Cockpit'
   icon: 'dismiss-circle'
+
+- id: processo_advbox
+  title: 'Dados do processo no AdvBox'
+  description: 'Etapa, responsavel, clientes e honorarios de um processo, sem o dossie inteiro'
+  icon: 'document'
+
+- id: movimentacoes_advbox
+  title: 'Movimentacoes do processo no AdvBox'
+  description: 'Andamentos de um processo, mais recentes primeiro'
+  icon: 'timeline'
+
+- id: historico_tarefas_advbox
+  title: 'Historico de tarefas no AdvBox'
+  description: 'Tarefas ja realizadas num processo'
+  icon: 'clipboard'
+
+- id: ultimas_movimentacoes_advbox
+  title: 'Radar de movimentacoes no AdvBox'
+  description: 'Ultima movimentacao de cada processo do escritorio'
+  icon: 'timeline'
+
+- id: tarefas_advbox
+  title: 'Tarefas e prazos no AdvBox'
+  description: 'Tarefas do escritorio por periodo, responsavel ou processo'
+  icon: 'calendar'
+
+- id: buscar_cliente_advbox
+  title: 'Buscar cliente no AdvBox'
+  description: 'Contatos/clientes por nome, CPF, telefone ou cidade'
+  icon: 'search'
+
+- id: cliente_advbox
+  title: 'Ficha do cliente no AdvBox'
+  description: 'Ficha completa de um cliente pelo id do AdvBox'
+  icon: 'document'
+
+- id: documentos_advbox
+  title: 'Documentos no AdvBox'
+  description: 'Arquivos anexados, por nome, cliente, tarefa ou transacao'
+  icon: 'document'
+
+- id: link_documento_advbox
+  title: 'Link de documento do AdvBox'
+  description: 'Link temporario de download de um documento'
+  icon: 'link'
