@@ -64,6 +64,11 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
         expect(activity.to_value).to eq 'Consulta previdenciária em 15/07/2026 11:00'
       end
 
+      it 'manda push ntfy no celular na hora da marcação' do
+        expect { post_webhook(booking_payload) }
+          .to have_enqueued_job(Ramon::NtfyPushJob).with(lead.id, title: "Reuniao marcada: #{lead.name}", body: /15\/07 às 11:00/)
+      end
+
       it 'BOOKING_CANCELLED apaga a tarefa da reunião, registra a atividade e avisa no sino' do
         create(:user, account: account, role: :administrator)
         post_webhook(booking_payload)

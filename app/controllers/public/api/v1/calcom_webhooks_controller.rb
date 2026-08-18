@@ -105,6 +105,9 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
   # Sino do hub pra todo mundo da conta (o mesmo do lead novo da LP).
   def notify(lead, type)
     Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: type, meta: { 'quando' => quando_humano }).perform
+    # push no celular na hora (o job é no-op sem NTFY_TOPIC); os lembretes têm o seu no MeetingReminderJob
+    verbo = type == 'ramon_meeting_cancelled' ? 'cancelada' : 'marcada'
+    Ramon::NtfyPushJob.perform_later(lead.id, title: "Reuniao #{verbo}: #{lead.name}", body: "#{quando_humano} — #{event_title}")
   end
 
   # "quinta, 20/08 às 14:00" — texto único pra sino e rascunho.
