@@ -3,6 +3,7 @@ import { ref, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { vOnClickOutside } from '@vueuse/components';
 
+const props = defineProps({ label: { type: String, default: '' } });
 const emit = defineEmits(['schedule']);
 const { t } = useI18n();
 
@@ -100,10 +101,20 @@ const confirmCustom = () => {
       ref="bellRef"
       data-testid="task-bell-toggle"
       :title="t('RAMON.KANBAN.BELL.TITLE')"
-      class="flex items-center justify-center size-6 rounded-full text-n-slate-9 hover:text-n-iris-11 hover:bg-n-alpha-2"
+      :class="
+        props.label
+          ? 'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-n-slate-11 bg-n-alpha-2 hover:bg-n-alpha-3 hover:text-n-iris-11'
+          : 'flex items-center justify-center size-6 rounded-full text-n-slate-9 hover:text-n-iris-11 hover:bg-n-alpha-2'
+      "
       @click.stop="toggle"
     >
-      <span class="i-lucide-bell-plus size-4" />
+      <span
+        :class="
+          props.label
+            ? 'i-lucide-bell-plus size-3'
+            : 'i-lucide-bell-plus size-4'
+        "
+      />{{ props.label }}
     </button>
     <Teleport to="body">
       <div
