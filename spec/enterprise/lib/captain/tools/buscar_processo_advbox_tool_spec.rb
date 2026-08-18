@@ -44,11 +44,11 @@ RSpec.describe Captain::Tools::BuscarProcessoAdvboxTool, type: :model do
     end
 
     it 'exige ao menos um criterio' do
-      expect(tool.perform(tool_context)).to eq('Informe o nome ou o CPF para buscar.')
+      expect(tool.perform(tool_context)).to eq('Informe o nome, o CPF ou o numero do processo para buscar.')
     end
 
     it 'ignora cpf sem nenhum digito, tratando como criterio ausente' do
-      expect(tool.perform(tool_context, cpf: 'nao sei')).to eq('Informe o nome ou o CPF para buscar.')
+      expect(tool.perform(tool_context, cpf: 'nao sei')).to eq('Informe o nome, o CPF ou o numero do processo para buscar.')
     end
 
     it 'devolve mensagem quando o advbox recusa' do

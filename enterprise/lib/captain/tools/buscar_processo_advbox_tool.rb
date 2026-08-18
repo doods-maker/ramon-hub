@@ -1,15 +1,16 @@
 # Leitura pura no AdvBox: encontra os processos da pessoa para o agente poder
 # pedir o dossie de um deles (consultar_dossie_advbox).
 class Captain::Tools::BuscarProcessoAdvboxTool < Captain::Tools::BasePublicTool
-  description 'Busca processos no AdvBox por nome do cliente ou CPF. Devolve id, numero e partes de cada processo.'
+  description 'Busca processos no AdvBox por nome do cliente, CPF ou numero do processo. Devolve id, numero e partes de cada processo.'
   param :nome, type: 'string', desc: 'Nome (parcial) do cliente', required: false
   param :cpf, type: 'string', desc: 'CPF do cliente, com ou sem pontuacao', required: false
+  param :numero_processo, type: 'string', desc: 'Numero exato do processo (CNJ)', required: false
 
   LIMITE = 10
 
-  def perform(_tool_context, nome: nil, cpf: nil)
-    filtros = montar_filtros(nome, cpf)
-    return 'Informe o nome ou o CPF para buscar.' if filtros.empty?
+  def perform(_tool_context, nome: nil, cpf: nil, numero_processo: nil)
+    filtros = montar_filtros(nome, cpf, numero_processo)
+    return 'Informe o nome, o CPF ou o numero do processo para buscar.' if filtros.empty?
 
     log_tool_usage('buscar_processo_advbox', { filtros: filtros.keys })
     lista = extrair_lista(Ramon::AdvboxClient.lawsuits(filtros.merge(limit: LIMITE)))
@@ -36,11 +37,12 @@ class Captain::Tools::BuscarProcessoAdvboxTool < Captain::Tools::BasePublicTool
     Array(resposta['data'] || resposta[:data])
   end
 
-  def montar_filtros(nome, cpf)
+  def montar_filtros(nome, cpf, numero_processo)
     filtros = {}
     digitos = cpf.to_s.delete('^0-9')
     filtros[:identification] = digitos if digitos.present?
     filtros[:name] = nome if nome.present?
+    filtros[:process_number] = numero_processo.strip if numero_processo.present?
     filtros
   end
 end

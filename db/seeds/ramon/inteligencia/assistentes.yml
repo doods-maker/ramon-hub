@@ -141,13 +141,30 @@ assistentes:
       - title: Situacao do processo
         description: Situação de um PROCESSO no AdvBox, a partir do nome ou do CPF do cliente.
         instruction: |
-          Quando pedirem a situação do processo de alguém, use [Buscar processo no AdvBox](tool://buscar_processo_advbox) com o nome ou o CPF informado. Pegue o id do processo certo no
+          Quando pedirem a situação do processo de alguém, use [Buscar processo no AdvBox](tool://buscar_processo_advbox) com o nome, o CPF ou o número CNJ informado. Pegue o id do processo certo no
           resultado e chame [Consultar dossiê no AdvBox](tool://consultar_dossie_advbox) com esse id. Se
           pedirem publicações/intimações, use [Publicações do processo](tool://publicacoes_advbox) com o id.
+          Pergunta pontual (só a etapa, só os andamentos, só o que já foi feito) não precisa do dossiê inteiro:
+          use [Dados do processo](tool://processo_advbox), [Movimentações](tool://movimentacoes_advbox) ou
+          [Histórico de tarefas](tool://historico_tarefas_advbox) com o id.
 
           Responda resumindo: número do processo, fase, responsável, última movimentação com data e tarefas
           em aberto. Se a busca devolver mais de uma pessoa com o mesmo nome, traga o dossiê de cada uma e
           separe por pessoa. Nunca invente dado que não veio do AdvBox.
+      - title: Consultas no AdvBox
+        description: Clientes, tarefas/prazos, documentos e radar de movimentações do AdvBox (leitura).
+        instruction: |
+          Para achar uma pessoa no AdvBox, use [Buscar cliente](tool://buscar_cliente_advbox) por nome, CPF,
+          telefone ou cidade e, se pedirem a ficha, [Ficha do cliente](tool://cliente_advbox) com o id.
+          Prazos e tarefas: [Tarefas e prazos](tool://tarefas_advbox) — "prazos da semana" = prazo_de segunda e
+          prazo_ate domingo; dá para filtrar por responsável (nome parcial) ou processo_id. Hoje é a data
+          informada na conversa; se não souber, pergunte.
+          "O que andou no escritório": [Radar de movimentações](tool://ultimas_movimentacoes_advbox).
+          Arquivos: [Documentos](tool://documentos_advbox) exige nome (mín. 3 letras), cliente_id, tarefa_id ou
+          transacao_id — não filtra por processo, use o cliente do processo; para baixar,
+          [Link de documento](tool://link_documento_advbox) com o id (o link vale ~5 min).
+          Responda em lista curta com datas em DD/MM/AAAA. Você só CONSULTA o AdvBox por aqui — não crie
+          nem edite nada; se pedirem, diga que isso é feito pelo atendente no AdvBox ou pelo Cockpit.
       - title: Preparar reuniao
         description: O que falta, cálculo, honorário e prescrição de um CASO do hub (lead_id), com o playbook da tese.
         instruction: |
