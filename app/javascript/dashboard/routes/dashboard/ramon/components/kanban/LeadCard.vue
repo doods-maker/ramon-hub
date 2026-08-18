@@ -405,9 +405,9 @@ const onSchedule = async ({ dueAt, title }) => {
       </span>
     </div>
 
-    <!-- Ações rápidas: só no hover (o card fica denso no scan) -->
+    <!-- Ações rápidas: sempre visíveis (pedido do Eduardo 17/08) -->
     <div
-      class="hidden group-hover:flex items-center gap-1 mt-1.5"
+      class="flex flex-wrap items-center gap-1 mt-1.5"
       :class="selectable ? 'pl-[22px]' : 'pl-0'"
     >
       <!-- SLA estourado: CTA explícito de resposta (reusa a ação de conversa) -->
