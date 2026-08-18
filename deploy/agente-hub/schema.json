@@ -4,5 +4,7 @@
   "arquivo":{"type":"object","additionalProperties":false,"required":["nome","conteudo_md"],
     "properties":{"nome":{"type":"string"},"conteudo_md":{"type":"string"}}},
   "tarefa_advbox":{"type":"object","additionalProperties":false,"required":["lawsuit_id","texto"],
-    "properties":{"lawsuit_id":{"type":"integer"},"texto":{"type":"string"}}},
+    "properties":{"lawsuit_id":{"type":"integer"},"texto":{"type":"string"},
+      "responsavel_id":{"type":"integer","description":"id do usuário do ADVBOX (users de advbox_configuracoes) quando o Eduardo nomear a pessoa; omita para o padrão"},
+      "tipo_tarefa_id":{"type":"integer","description":"id do tipo de tarefa (tasks de advbox_configuracoes) quando o Eduardo nomear o tipo; omita para o padrão"}}},
   "fontes":{"type":"array","items":{"type":"string"}}}}

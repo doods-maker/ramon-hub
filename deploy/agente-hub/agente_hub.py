@@ -193,12 +193,9 @@ def executar(cfg, cap, job):
                         resposta += '\n\n(arquivo não salvo: conversa sem lead)'
                 if est.get('tarefa_advbox'):
                     ta = est['tarefa_advbox']; texto = ta['texto'] + (f"\nArquivo: {acoes[-1]['ref']}" if acoes else '')
-                    res = mcp_call(cfg, 'advbox_criar_tarefa', {'processo_id': ta['lawsuit_id'],
-                                                                'tipo_tarefa_id': cfg.ADVBOX_TAREFA_TIPO_ID,
-                                                                'responsavel_id': cfg.ADVBOX_TAREFA_RESPONSAVEL_ID,
-                                                                'criador_id': cfg.ADVBOX_TAREFA_RESPONSAVEL_ID,
-                                                                'descricao': texto})
-                    acoes.append({'tipo': 'advbox_tarefa', 'ref': json.dumps(res.get('result', res))[:120]})
+                    args = args_tarefa(cfg, ta, texto)
+                    res = mcp_call(cfg, 'advbox_criar_tarefa', args)
+                    acoes.append({'tipo': 'advbox_tarefa', 'ref': f"resp={args['responsavel_id']} " + json.dumps(res.get('result', res))[:100]})
     except subprocess.TimeoutExpired:
         status, resposta = 'timeout', 'Estourou 6 min. Tente com pedido menor.'
     except Exception as e:  # noqa
@@ -220,6 +217,19 @@ def executar(cfg, cap, job):
     except Exception as e:
         print('trilha falhou', e, file=sys.stderr)
 
+
+def args_tarefa(cfg, ta, texto):
+    """Argumentos do advbox_criar_tarefa. Responsável/tipo vêm do JSON do agente quando o Eduardo nomeou
+    a pessoa na nota (o agente resolve o nome em advbox_configuracoes); senão, defaults do env.
+    Criador (from) é sempre o Eduardo — é ele quem está pedindo."""
+    def inteiro(v, padrao):
+        try: return int(v) if v else padrao
+        except (TypeError, ValueError): return padrao
+    return {'processo_id': ta['lawsuit_id'],
+            'tipo_tarefa_id': inteiro(ta.get('tipo_tarefa_id'), cfg.ADVBOX_TAREFA_TIPO_ID),
+            'responsavel_id': inteiro(ta.get('responsavel_id'), cfg.ADVBOX_TAREFA_RESPONSAVEL_ID),
+            'criador_id': cfg.ADVBOX_TAREFA_RESPONSAVEL_ID,
+            'descricao': texto}
 
 def montar_prompt(cfg, p, ctx):
     tese = p['tese'] or ctx.get('thesis_name') or 'não informada'

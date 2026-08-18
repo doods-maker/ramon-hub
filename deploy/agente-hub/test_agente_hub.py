@@ -80,5 +80,17 @@ class TestCmd(unittest.TestCase):
         self.assertNotIn('Bash', cmd[cmd.index('--allowedTools') + 1])
 
 
+class TestTarefa(unittest.TestCase):
+    def test_responsavel_por_tarefa_ou_padrao(self):
+        cfg = ah.Cfg({'CLAUDE_CODE_OAUTH_TOKEN': 't', 'HUB_URL': 'h', 'ACCOUNT_ID': '2', 'HUB_AGENTE_TOKEN': 'a',
+                      'HUB_MCP_TOKEN': 'm', 'WEBHOOK_SECRET': 's', 'EDUARDO_EMAIL': 'e'})
+        a = ah.args_tarefa(cfg, {'lawsuit_id': 9, 'texto': 'x', 'responsavel_id': 123}, 'x')
+        self.assertEqual((a['processo_id'], a['responsavel_id'], a['criador_id']), (9, 123, cfg.ADVBOX_TAREFA_RESPONSAVEL_ID))
+        b = ah.args_tarefa(cfg, {'lawsuit_id': 9, 'texto': 'x'}, 'x')
+        self.assertEqual((b['responsavel_id'], b['tipo_tarefa_id']), (cfg.ADVBOX_TAREFA_RESPONSAVEL_ID, cfg.ADVBOX_TAREFA_TIPO_ID))
+        c = ah.args_tarefa(cfg, {'lawsuit_id': 9, 'texto': 'x', 'responsavel_id': 'abc'}, 'x')
+        self.assertEqual(c['responsavel_id'], cfg.ADVBOX_TAREFA_RESPONSAVEL_ID)
+
+
 if __name__ == '__main__':
     unittest.main()
