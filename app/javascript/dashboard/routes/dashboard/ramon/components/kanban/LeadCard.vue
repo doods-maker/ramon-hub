@@ -427,7 +427,7 @@ const onSchedule = async ({ dueAt, title }) => {
         @click.stop="emit('openConversation', lead.conversation_id)"
       >
         <span class="i-lucide-message-circle size-3" />{{
-          $t('RAMON.FUNIL.OPEN_CONVERSATION')
+          $t('RAMON.KANBAN.CARD.CONVERSATION')
         }}
       </button>
       <TaskBellMenu
