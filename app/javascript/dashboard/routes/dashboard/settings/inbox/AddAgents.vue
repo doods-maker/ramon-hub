@@ -4,6 +4,9 @@ import { mapGetters } from 'vuex';
 import { useAlert } from 'dashboard/composables';
 
 import InboxMembersAPI from '../../../../api/inboxMembers';
+// FORK-PONTO (ramon): assistente de IA escolhido já na criação da caixa (Eduardo 17/08)
+import CaptainInboxesAPI from 'dashboard/api/captain/inboxes';
+import { modoDefault } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import TagInput from 'dashboard/components-next/taginput/TagInput.vue';
 import router from '../../../index';
@@ -30,12 +33,19 @@ export default {
     return {
       selectedAgentIds: [],
       isCreating: false,
+      // '' = nenhum assistente nesta caixa (padrão: a IA só entra se o Eduardo escolher)
+      selectedAssistantId: '',
     };
   },
   computed: {
     ...mapGetters({
       agentList: 'agents/getAgents',
+      assistants: 'captainAssistants/getRecords',
     }),
+    // rótulo do modo padrão vigente (env RAMON_COPILOTO_MODO_DEFAULT) pra avisar o que a IA vai fazer
+    modoDefaultLabel() {
+      return this.$t(`RAMON.COPILOTO.MODOS.${modoDefault()}.NOME`);
+    },
     selectedAgentNames() {
       return this.selectedAgentIds.map(
         id => this.agentList.find(a => a.id === id)?.name ?? ''
@@ -54,6 +64,7 @@ export default {
   },
   mounted() {
     this.$store.dispatch('agents/get');
+    this.$store.dispatch('captainAssistants/get');
   },
   methods: {
     handleAgentAdd({ value }) {
@@ -73,6 +84,12 @@ export default {
           inboxId,
           agentList: this.selectedAgentIds,
         });
+        if (this.selectedAssistantId) {
+          await CaptainInboxesAPI.create({
+            assistantId: this.selectedAssistantId,
+            inboxId,
+          });
+        }
         router.replace({
           name: 'settings_inbox_finish',
           params: {
@@ -117,6 +134,32 @@ export default {
             </div>
             <span v-if="v$.selectedAgentIds.$error" class="message">
               {{ $t('INBOX_MGMT.ADD.AGENTS.VALIDATION_ERROR') }}
+            </span>
+          </label>
+        </div>
+        <div class="w-full mb-4">
+          <label>
+            {{ $t('INBOX_MGMT.ADD.AGENTS.ASSISTANT_TITLE') }}
+            <select
+              v-model="selectedAssistantId"
+              data-testid="inbox-assistant-select"
+              class="mt-1"
+            >
+              <option value="">
+                {{ $t('INBOX_MGMT.ADD.AGENTS.ASSISTANT_NONE') }}
+              </option>
+              <option v-for="a in assistants" :key="a.id" :value="a.id">
+                {{ a.name }}
+              </option>
+            </select>
+            <span class="text-xs text-n-slate-11">
+              {{
+                selectedAssistantId
+                  ? $t('INBOX_MGMT.ADD.AGENTS.ASSISTANT_HINT_ON', {
+                      modo: modoDefaultLabel,
+                    })
+                  : $t('INBOX_MGMT.ADD.AGENTS.ASSISTANT_HINT_OFF')
+              }}
             </span>
           </label>
         </div>
