@@ -423,19 +423,26 @@ const onSchedule = async ({ dueAt, title }) => {
         v-if="lead.conversation_id"
         data-testid="open-conversation"
         :title="$t('RAMON.FUNIL.OPEN_CONVERSATION')"
-        class="flex items-center justify-center size-6 rounded-md text-n-slate-10 hover:text-n-iris-11 hover:bg-n-alpha-2"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-n-slate-11 bg-n-alpha-2 hover:bg-n-alpha-3 hover:text-n-iris-11"
         @click.stop="emit('openConversation', lead.conversation_id)"
       >
-        <span class="i-lucide-message-circle size-4" />
+        <span class="i-lucide-message-circle size-3" />{{
+          $t('RAMON.FUNIL.OPEN_CONVERSATION')
+        }}
       </button>
-      <TaskBellMenu @schedule="onSchedule" />
+      <TaskBellMenu
+        :label="$t('RAMON.KANBAN.BELL.DEFAULT_TITLE')"
+        @schedule="onSchedule"
+      />
       <button
         data-testid="open-dossie"
         :title="$t('RAMON.KANBAN.CARD.DOSSIE')"
-        class="flex items-center justify-center size-6 rounded-md text-n-slate-10 hover:text-n-iris-11 hover:bg-n-alpha-2"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-n-slate-11 bg-n-alpha-2 hover:bg-n-alpha-3 hover:text-n-iris-11"
         @click.stop="emit('openDossie', lead)"
       >
-        <span class="i-lucide-file-text size-4" />
+        <span class="i-lucide-file-text size-3" />{{
+          $t('RAMON.KANBAN.CARD.DOSSIE')
+        }}
       </button>
     </div>
   </div>
