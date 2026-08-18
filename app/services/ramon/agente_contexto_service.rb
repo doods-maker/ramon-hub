@@ -35,13 +35,15 @@ class Ramon::AgenteContextoService
   def mensagens
     @conversation.messages.includes(:attachments).where.not(message_type: :activity)
                  .where("messages.sender_type IS DISTINCT FROM 'Captain::Assistant'")
-                 .reorder(created_at: :desc, id: :desc).limit(LIMITE_MENSAGENS).to_a.reverse.map do |m|
-      {
-        id: m.id, em: m.created_at.iso8601, de: papel(m), autor: m.sender.try(:name),
-        texto: m.content.to_s,
-        anexos: m.attachments.map { |a| a.file.attached? ? a.file.filename.to_s : a.file_type }
-      }
-    end
+                 .reorder(created_at: :desc, id: :desc).limit(LIMITE_MENSAGENS).to_a.reverse.map { |m| mensagem(m) }
+  end
+
+  def mensagem(m)
+    {
+      id: m.id, em: m.created_at.iso8601, de: papel(m), autor: m.sender.try(:name),
+      texto: m.content.to_s,
+      anexos: m.attachments.map { |a| a.file.attached? ? a.file.filename.to_s : a.file_type }
+    }
   end
 
   def papel(message)
