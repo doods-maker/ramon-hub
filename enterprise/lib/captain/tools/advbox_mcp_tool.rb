@@ -20,8 +20,14 @@ class Captain::Tools::AdvboxMcpTool < Captain::Tools::BasePublicTool
       schema = Ramon::AdvboxMcpService::TOOLS.find { |t| t[:name] == nome } or raise ArgumentError, "MCP sem #{nome}"
       @mcp_nome = nome
       description schema[:description]
-      obrigatorios = schema[:inputSchema][:required].map(&:to_s)
-      schema[:inputSchema][:properties].each do |chave, prop|
+      declarar_params(schema[:inputSchema])
+    end
+
+    private
+
+    def declarar_params(input_schema)
+      obrigatorios = input_schema[:required].map(&:to_s)
+      input_schema[:properties].each do |chave, prop|
         param chave, type: prop[:type], desc: prop[:description] || chave.to_s.tr('_', ' '), required: obrigatorios.include?(chave.to_s)
       end
     end
