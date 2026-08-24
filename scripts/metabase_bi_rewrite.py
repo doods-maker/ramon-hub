@@ -131,6 +131,9 @@ SELECT l.channel AS canal, COUNT(*) AS leads,
 FROM bi_leads l
 WHERE l.account_id = 2
   AND l.created_at >= now() - interval '12 months'
+  -- canal só é derivado (anúncio/assinatura/instagram/indicação) desde 13/08/2026;
+  -- antes disso era massa 'outro' — fora do card (descontinuidade da Onda 1).
+  AND l.created_at >= date '2026-08-13'
 GROUP BY 1 ORDER BY leads DESC""",
 
     "Tese: leads, conversão e valor (12m)": """

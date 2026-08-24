@@ -137,12 +137,13 @@ onBeforeRouteLeave(() => {
       :disabled="estado === 'enviando'"
     />
     <div class="flex items-center gap-3">
-      <span
+      <div
         v-if="estado !== 'parado'"
         class="font-mono text-lg text-n-slate-12"
         data-testid="recorder-timer"
-        >{{ formatoTempo(segundos) }}</span
       >
+        {{ formatoTempo(segundos) }}
+      </div>
       <span
         v-if="estado === 'gravando'"
         class="size-2 animate-pulse rounded-full bg-n-ruby-9"
