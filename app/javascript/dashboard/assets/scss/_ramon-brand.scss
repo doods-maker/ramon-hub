@@ -7,6 +7,16 @@
 
 /* ===== Tema CLARO (default :root) — off-white + branco, bronze de acento ===== */
 :root {
+  // Degraus 1–8 do iris seguiam a lavanda do core no claro (housekeeping 24/08):
+  // mesma rampa quente do --blue-* abaixo.
+  --iris-1: 253 252 250;
+  --iris-2: 250 247 243;
+  --iris-3: 244 238 229;
+  --iris-4: 237 228 215;
+  --iris-5: 228 216 198;
+  --iris-6: 216 200 177;
+  --iris-7: 199 178 148;
+  --iris-8: 175 148 111;
   --iris-9: 125 84 50; // #7d5432 acento/primária (botões)
   --iris-10: 107 70 40; // #6b4628 hover
   --iris-11: 125 84 50; // texto/ícone de acento

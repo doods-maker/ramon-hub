@@ -1,0 +1,8 @@
+# Fim de linha LF no repo e no working tree (Windows com autocrlf gerava diffs fantasma).
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
