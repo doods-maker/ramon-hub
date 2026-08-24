@@ -33,6 +33,19 @@ const escolher = async novoModo => {
         copiloto_modo: novoModo,
       },
     });
+    // Manual desliga a IA sem handoff — conversa pendente ficaria parada com o
+    // robô. Abre na hora pra cair na fila humana (decisão Eduardo 24/08).
+    // Guard lê o store: updateCustomAttributes engole erro e só comita no sucesso.
+    if (
+      novoModo === 'manual' &&
+      currentChat.value?.custom_attributes?.copiloto_modo === 'manual' &&
+      currentChat.value?.status === 'pending'
+    ) {
+      await store.dispatch('toggleStatus', {
+        conversationId: currentChat.value.id,
+        status: 'open',
+      });
+    }
     open.value = false;
   } finally {
     saving.value = false;

@@ -33,19 +33,74 @@ vi.mock('vue-i18n', () => ({
 const mountSelector = ({
   chat = { id: 42, custom_attributes: {} },
   updateCustomAttributes = vi.fn().mockResolvedValue(),
+  toggleStatus = vi.fn().mockResolvedValue(),
 } = {}) => {
   const store = createStore({
     state: () => ({ chat }),
     getters: { getSelectedChat: state => state.chat },
-    actions: { updateCustomAttributes },
+    actions: { updateCustomAttributes, toggleStatus },
   });
   const wrapper = mount(CopilotoModoSelector, {
     global: { plugins: [store] },
   });
-  return { wrapper, store, updateCustomAttributes };
+  return { wrapper, store, updateCustomAttributes, toggleStatus };
+};
+
+// Simula o comportamento real da action: comita no store só no sucesso.
+const updateQueComita = () =>
+  vi.fn(({ state }, { customAttributes }) => {
+    state.chat = { ...state.chat, custom_attributes: customAttributes };
+  });
+
+const escolherManual = async wrapper => {
+  await wrapper.find('[data-testid="copiloto-modo-btn"]').trigger('click');
+  await nextTick();
+  await wrapper
+    .find('[data-testid="copiloto-modo-opcao-manual"]')
+    .trigger('click');
+  await flushPromises();
 };
 
 describe('CopilotoModoSelector.vue', () => {
+  it('opens a PENDING conversation when picking "Manual" (no handoff would leave it stuck with the bot)', async () => {
+    const toggleStatus = vi.fn().mockResolvedValue();
+    const { wrapper } = mountSelector({
+      chat: { id: 42, status: 'pending', custom_attributes: {} },
+      updateCustomAttributes: updateQueComita(),
+      toggleStatus,
+    });
+    await escolherManual(wrapper);
+
+    expect(toggleStatus).toHaveBeenCalledWith(expect.anything(), {
+      conversationId: 42,
+      status: 'open',
+    });
+  });
+
+  it('does NOT touch the status when picking "Manual" on an already open conversation', async () => {
+    const toggleStatus = vi.fn().mockResolvedValue();
+    const { wrapper } = mountSelector({
+      chat: { id: 42, status: 'open', custom_attributes: {} },
+      updateCustomAttributes: updateQueComita(),
+      toggleStatus,
+    });
+    await escolherManual(wrapper);
+
+    expect(toggleStatus).not.toHaveBeenCalled();
+  });
+
+  it('does NOT open the conversation when saving the mode failed (store unchanged)', async () => {
+    const toggleStatus = vi.fn().mockResolvedValue();
+    const { wrapper } = mountSelector({
+      chat: { id: 42, status: 'pending', custom_attributes: {} },
+      updateCustomAttributes: vi.fn().mockResolvedValue(), // não comita
+      toggleStatus,
+    });
+    await escolherManual(wrapper);
+
+    expect(toggleStatus).not.toHaveBeenCalled();
+  });
+
   it('shows the current mode on the button (defaults to Rascunho when the key is missing)', async () => {
     const { wrapper } = mountSelector();
     await flushPromises();

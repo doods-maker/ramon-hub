@@ -97,7 +97,7 @@ class Cfg:
         self.CAP_DIA = int(env.get('CAP_DIA', 30)); self.BIND = env.get('BIND', '172.18.0.1'); self.PORT = int(env.get('PORT', 8765))
         self.SEDE_DIR = env.get('SEDE_DIR', '/opt/sede'); self.CLAUDE_BIN = env.get('CLAUDE_BIN', 'claude'); self.MODELO = env.get('MODELO', 'opus')
         # advbox_criar_tarefa exige tipo_tarefa_id e responsavel_id (ver advbox_mcp_service.rb no hub)
-        self.ADVBOX_TAREFA_TIPO_ID = int(env.get('ADVBOX_TAREFA_TIPO_ID', 8745394))
+        self.ADVBOX_TAREFA_TIPO_ID = int(env.get('ADVBOX_TAREFA_TIPO_ID', 8745386))
         self.ADVBOX_TAREFA_RESPONSAVEL_ID = int(env.get('ADVBOX_TAREFA_RESPONSAVEL_ID', 266778))  # Eduardo
         self.BASE = os.path.dirname(os.path.abspath(__file__))
 
