@@ -103,3 +103,10 @@ ramon_daily_digest_job:
   cron: '0 11 * * *'
   class: 'Ramon::DailyDigestJob'
   queue: scheduled_jobs
+
+# executed daily at 0400 UTC = 01:00 America/Sao_Paulo (UTC-3)
+# apaga cálculos do caso de rascunho (sem cliente) com mais de 30 dias
+ramon_expurgo_calculos_job:
+  cron: '0 4 * * *'
+  class: 'Ramon::ExpurgoCalculosJob'
+  queue: scheduled_jobs
