@@ -177,6 +177,9 @@ class Whatsapp::IncomingMessageBaseService
     content_attrs[:in_reply_to_external_id] = @in_reply_to_external_id if @in_reply_to_external_id.present?
     referral_content_attrs = referral_attributes(message)
     content_attrs[:referral] = referral_content_attrs if referral_content_attrs.present?
+    # id do botão/linha tocado numa mensagem interativa (o content guarda só o título)
+    reply_id = message.dig(:interactive, :button_reply, :id) || message.dig(:interactive, :list_reply, :id)
+    content_attrs[:interactive_reply_id] = reply_id if reply_id.present?
     content_attrs
   end
 

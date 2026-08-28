@@ -313,6 +313,7 @@ describe Whatsapp::IncomingMessageService do
         expect(whatsapp_channel.inbox.conversations.count).not_to eq(0)
         expect(Contact.all.first.name).to eq('Sojan Jose')
         expect(whatsapp_channel.inbox.messages.first.content).to eq('First Button')
+        expect(whatsapp_channel.inbox.messages.first.content_attributes['interactive_reply_id']).to eq('1')
       end
     end
 

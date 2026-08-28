@@ -246,6 +246,14 @@ pt_BR:
         list_button_label: 'Escolha um item'
         call_permission_request_body: 'Gostaríamos de ligar para você em relação à sua conversa.'
         unsupported_message: 'Esta mensagem não está disponível.'
+      # Portaria (menu de Setores da caixa do escritório) — texto final é gate do Eduardo
+      portaria:
+        menu: '[PORTARIA — texto a aprovar pelo Eduardo] Com quem você quer falar?'
+        menu_retry: '[PORTARIA — texto a aprovar pelo Eduardo] Toque em uma das opções abaixo.'
+        setores:
+          recepção: 'Recepção'
+          controladoria: 'Controladoria'
+          advogados: 'Advogados'
       voice_call:
         twilio: 'Chamada de Voz'
         whatsapp: 'Chamada do WhatsApp'
