@@ -26,7 +26,7 @@ RSpec.describe RamonPortariaListener do
   end
 
   it 'manda o menu com os 3 Setores na primeira mensagem' do
-    expect { fire(incoming('oi')) }.to change { menus.count }.by(1)
+    expect { fire(incoming('oi')) }.to change(menus, :count).by(1)
     itens = menus.last.content_attributes['items']
     expect(itens.pluck('value')).to eq(%w[recepção controladoria advogados])
     expect(itens.pluck('title')).to eq(%w[Recepção Controladoria Advogados])
@@ -56,31 +56,31 @@ RSpec.describe RamonPortariaListener do
 
   it 'reapresenta o menu uma vez e depois cai na Recepção' do
     fire(incoming('oi'))
-    expect { fire(incoming('áudio sem texto')) }.to change { menus.count }.by(1)
+    expect { fire(incoming('áudio sem texto')) }.to change(menus, :count).by(1)
     expect(menus.last.content).to eq(I18n.t('conversations.messages.portaria.menu_retry'))
     expect(conversation.reload.team).to be_nil
 
-    expect { fire(incoming('outra coisa')) }.not_to(change { menus.count })
+    expect { fire(incoming('outra coisa')) }.not_to(change(menus, :count))
     expect(conversation.reload.team).to eq(recepcao)
   end
 
   it 'não faz nada se a conversa já tem Setor' do
     conversation.update!(team: controladoria)
-    expect { fire(incoming('oi')) }.not_to(change { menus.count })
+    expect { fire(incoming('oi')) }.not_to(change(menus, :count))
   end
 
   it 'ignora mensagens que não são do cliente' do
     outgoing = create(:message, account: account, inbox: inbox, conversation: conversation, message_type: :outgoing, content: 'olá')
-    expect { fire(outgoing) }.not_to(change { menus.count })
+    expect { fire(outgoing) }.not_to(change(menus, :count))
   end
 
   it 'não faz nada se a caixa não tem Portaria' do
     inbox.update!(portaria_enabled: false)
-    expect { fire(incoming('oi')) }.not_to(change { menus.count })
+    expect { fire(incoming('oi')) }.not_to(change(menus, :count))
   end
 
   it 'fica dormente se faltar algum dos 3 times' do
     advogados.destroy!
-    expect { fire(incoming('oi')) }.not_to(change { menus.count })
+    expect { fire(incoming('oi')) }.not_to(change(menus, :count))
   end
 end

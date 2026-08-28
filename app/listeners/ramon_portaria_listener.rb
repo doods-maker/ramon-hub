@@ -14,13 +14,18 @@ class RamonPortariaListener < BaseListener
   def message_created(event)
     message = event.data[:message]
     return unless message.incoming? && message.inbox.portaria_enabled?
+    return if message.conversation.team_id.present?
 
-    conversation = message.conversation
-    return if conversation.team_id.present?
-
-    teams = conversation.account.teams.where(name: SETORES).index_by(&:name)
+    teams = message.account.teams.where(name: SETORES).index_by(&:name)
     return if teams.size < SETORES.size # ponytail: sem os 3 times a Portaria fica dormente
 
+    rotear(message, teams)
+  end
+
+  private
+
+  def rotear(message, teams)
+    conversation = message.conversation
     enviados = conversation.messages.outgoing.where(content_type: 'input_select').count
     if (team = teams[opcao(message)])
       atribuir(conversation, team)
@@ -30,8 +35,6 @@ class RamonPortariaListener < BaseListener
       atribuir(conversation, teams[FALLBACK])
     end
   end
-
-  private
 
   def opcao(message)
     (message.content_attributes['interactive_reply_id'].presence || message.content.to_s).strip.downcase
