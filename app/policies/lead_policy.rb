@@ -27,6 +27,10 @@ class LeadPolicy < ApplicationPolicy
     @account_user.administrator? || @account_user.agent?
   end
 
+  def encaminhar_comercial?
+    @account_user.administrator? || @account_user.agent?
+  end
+
   def destroy?
     @account_user.administrator?
   end
