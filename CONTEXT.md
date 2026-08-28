@@ -166,3 +166,16 @@ Assistente consulta antes de responder.
 Material de referência que o *Assistente* consulta (guia da tese, política de
 honorários, checklist) — distinto de Documento do cliente no Checklist.
 _Avoid_: usar "documento" sem qualificar quando o contexto for pós-venda
+
+### Atendimento do escritório
+
+**Portaria**:
+O menu de entrada do número do escritório: recebe quem chega, pergunta com
+quem quer falar e encaminha ao Setor escolhido. Não responde dúvida nem
+resolve nada — só encaminha. Existe por caixa; as caixas de tese não têm.
+_Avoid_: URA, bot, triagem (Triagem é qualificação do lead), menu de atendimento
+
+**Setor**:
+Um destino humano da Portaria — Recepção, Controladoria ou Advogados. Cada
+Setor tem sua fila e suas pessoas; quem é de um Setor vê só as conversas dele.
+_Avoid_: departamento, time (nome técnico), equipe

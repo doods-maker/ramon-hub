@@ -811,6 +811,10 @@
         "SLA_PLACEHOLDER": "15",
         "SLA_SUB_TEXT": "Minutos até o timer do card estourar. Vazio = padrão do sistema."
       },
+      "PORTARIA": {
+        "LABEL": "Portaria (menu de Setores)",
+        "SUB_TEXT": "Na primeira mensagem de cada conversa nova, o cliente recebe os botões Recepção / Controladoria / Advogados e a conversa vai pro Setor escolhido. Exige os três times criados com esses nomes."
+      },
       "WHATSAPP_SECTION_SUBHEADER": "Esta chave de API é usada para a integração com as APIs do WhatsApp.",
       "WHATSAPP_SECTION_UPDATE_SUBHEADER": "Insira a nova chave API a ser utilizada para integração com as APIs do WhatsApp.",
       "WHATSAPP_SECTION_TITLE": "Chave API",

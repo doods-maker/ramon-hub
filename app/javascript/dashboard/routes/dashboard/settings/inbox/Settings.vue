@@ -88,6 +88,7 @@ export default {
       greetingEnabled: true,
       greetingMessage: '',
       autoCreateLead: false,
+      portariaEnabled: false,
       firstResponseSlaMinutes: null,
       emailCollectEnabled: false,
       senderNameType: 'friendly',
@@ -473,6 +474,7 @@ export default {
       this.allowMessagesAfterResolved =
         this.inbox.allow_messages_after_resolved;
       this.autoCreateLead = this.inbox.auto_create_lead;
+      this.portariaEnabled = this.inbox.portaria_enabled;
       this.firstResponseSlaMinutes = this.inbox.first_response_sla_minutes;
       this.continuityViaEmail = this.inbox.continuity_via_email;
       this.channelWebsiteUrl = this.inbox.website_url;
@@ -588,6 +590,7 @@ export default {
           enable_email_collect: this.emailCollectEnabled,
           allow_messages_after_resolved: this.allowMessagesAfterResolved,
           auto_create_lead: this.autoCreateLead,
+          portaria_enabled: this.portariaEnabled,
           first_response_sla_minutes: this.firstResponseSlaMinutes
             ? Number(this.firstResponseSlaMinutes)
             : null,
@@ -1216,6 +1219,13 @@ export default {
                   />
                 </template>
               </SettingsToggleSection>
+
+              <SettingsToggleSection
+                v-if="isAWhatsAppChannel"
+                v-model="portariaEnabled"
+                :header="$t('INBOX_MGMT.SETTINGS_POPUP.PORTARIA.LABEL')"
+                :description="$t('INBOX_MGMT.SETTINGS_POPUP.PORTARIA.SUB_TEXT')"
+              />
 
               <SettingsToggleSection
                 v-if="isAWebWidgetInbox"

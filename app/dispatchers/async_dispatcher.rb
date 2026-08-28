@@ -21,7 +21,8 @@ class AsyncDispatcher < BaseDispatcher
       ReportingEventListener.instance,
       WebhookListener.instance,
       RamonLeadListener.instance,
-      RamonAgenteListener.instance
+      RamonAgenteListener.instance,
+      RamonPortariaListener.instance
     ]
   end
 end

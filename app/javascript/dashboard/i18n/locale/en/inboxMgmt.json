@@ -815,6 +815,10 @@
         "SLA_PLACEHOLDER": "15",
         "SLA_SUB_TEXT": "Minutes until the card timer breaches. Empty = system default."
       },
+      "PORTARIA": {
+        "LABEL": "Portaria (sector menu)",
+        "SUB_TEXT": "On the first message of every new conversation, the customer gets the Recepção / Controladoria / Advogados buttons and the conversation is routed to the chosen team. Requires the three teams to exist with those names."
+      },
       "WHATSAPP_SECTION_SUBHEADER": "This API Key is used for the integration with the WhatsApp APIs.",
       "WHATSAPP_SECTION_UPDATE_SUBHEADER": "Enter the new API key to be used for the integration with the WhatsApp APIs.",
       "WHATSAPP_SECTION_TITLE": "API Key",

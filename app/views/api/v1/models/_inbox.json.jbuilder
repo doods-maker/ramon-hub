@@ -21,6 +21,7 @@ json.sender_name_type resource.sender_name_type
 json.business_name resource.business_name
 json.auto_create_lead resource.auto_create_lead
 json.first_response_sla_minutes resource.first_response_sla_minutes
+json.portaria_enabled resource.portaria_enabled
 
 if resource.portal.present?
   json.help_center do

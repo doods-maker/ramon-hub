@@ -138,6 +138,11 @@
 | `db/migrate/20260628000002_add_auto_create_lead_to_inboxes.rb` | migration: coluna `auto_create_lead` (boolean, default false) em `inboxes` | flag de auto-criação de lead por inbox | 2B |
 | `app/listeners/ramon_lead_listener.rb` | listener de auto-criação de lead em `conversation_created`; dedup por contato | funil de leads automático | 2B |
 | `spec/listeners/ramon_lead_listener_spec.rb` | specs: cria / inbox-off / dedup-relink | cobertura do RamonLeadListener | 2B |
+| `db/migrate/20260828000001_add_portaria_enabled_to_inboxes.rb` | migration: coluna `portaria_enabled` (boolean, default false) em `inboxes` | Portaria (menu de Setores) ligada por caixa | portaria 28/08 |
+| `app/controllers/api/v1/accounts/inboxes_controller.rb` + `app/views/api/v1/models/_inbox.json.jbuilder` + `settings/inbox/Settings.vue` + `inboxMgmt.json` en/pt_BR | `:portaria_enabled` em `inbox_attributes`, no jbuilder, `portariaEnabled` em data/sync/payload e toggle `SETTINGS_POPUP.PORTARIA` (só WhatsApp) — mesmo padrão de `auto_create_lead` | toggle da Portaria na caixa | portaria 28/08 |
+| `app/services/whatsapp/incoming_message_base_service.rb` | `message_content_attributes` grava `interactive_reply_id` (id do `button_reply`/`list_reply`; o core só guardava o título no `content`) | roteamento da Portaria pelo id do botão | portaria 28/08 |
+| `app/listeners/ramon_portaria_listener.rb` + `async_dispatcher.rb` | listener em `message_created`: manda menu `input_select` (3 botões) na 1ª incoming da conversa sem time, roteia pro Team por id/título, reapresenta 1× e cai em `recepção`; sem estado próprio | Portaria | portaria 28/08 |
+| `config/locales/{en,pt_BR}.yml` | `conversations.messages.portaria.{menu,menu_retry,setores.*}` (texto final = gate do Eduardo) | textos da Portaria | portaria 28/08 |
 | `db/migrate/20260701000001_create_lead_activities.rb` | migration: tabela `lead_activities` (account_id, lead_id, user_id opcional, kind, from_value, to_value, created_at; sem updated_at) | timeline de atividades do lead | 1b-i |
 | `app/models/lead_activity.rb` | model `LeadActivity` — validação de `kind`, `default_scope` por `created_at` asc | timeline de atividades do lead | 1b-i |
 | `spec/models/lead_activity_spec.rb` | specs: válido sem user, exige kind, belongs_to user opcional | cobertura do LeadActivity | 1b-i |

@@ -670,6 +670,16 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(inbox.reload.auto_create_lead).to be true
       end
 
+      it 'enables portaria_enabled on the inbox' do
+        patch "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}",
+              headers: admin.create_new_auth_token,
+              params: valid_params.merge({ portaria_enabled: true }),
+              as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(inbox.reload.portaria_enabled).to be true
+      end
+
       it 'sets the first-response SLA minutes on the inbox' do
         patch "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}",
               headers: admin.create_new_auth_token,
