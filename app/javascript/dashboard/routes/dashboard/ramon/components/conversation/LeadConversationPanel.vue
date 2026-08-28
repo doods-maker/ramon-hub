@@ -12,20 +12,45 @@ defineOptions({ name: 'LeadConversationPanel' });
 const store = useStore();
 const leadByConv = useMapGetter('leads/getLeadByConversationId');
 const theses = useMapGetter('theses/getTheses');
+const currentChat = useMapGetter('getSelectedChat');
 const lead = computed(() => leadByConv.value(Number(props.conversationId)));
+
+// Portaria: conversa fora do funil (caixa do escritório). O botão de
+// encaminhar só aparece no Setor Recepção — decisão do Eduardo 28/08/2026.
+const semLead = ref(false);
+const encaminhando = ref(false);
+const naRecepcao = computed(
+  () => currentChat.value?.meta?.team?.name === 'recepção'
+);
 
 const ensureFailed = ref(false);
 const ensure = async () => {
   ensureFailed.value = false;
+  semLead.value = false;
   try {
-    await store.dispatch('leads/ensureForConversation', {
+    const found = await store.dispatch('leads/ensureForConversation', {
       conversationId: Number(props.conversationId),
     });
+    semLead.value = !found;
   } catch (e) {
     ensureFailed.value = true;
   }
 };
 watch(() => props.conversationId, ensure, { immediate: true });
+
+const encaminhar = async () => {
+  encaminhando.value = true;
+  try {
+    await store.dispatch('leads/encaminharComercial', {
+      conversationId: Number(props.conversationId),
+    });
+    semLead.value = false;
+  } catch (e) {
+    ensureFailed.value = true;
+  } finally {
+    encaminhando.value = false;
+  }
+};
 
 onMounted(() => {
   if (!theses.value.length) store.dispatch('theses/get');
@@ -68,6 +93,18 @@ onMounted(() => {
         @click="ensure"
       >
         {{ $t('RAMON.LEAD_PANEL.RETRY') }}
+      </button>
+    </div>
+    <div v-else-if="semLead" class="flex-1 p-3 text-sm text-n-slate-11">
+      <p>{{ $t('RAMON.LEAD_PANEL.SEM_LEAD') }}</p>
+      <button
+        v-if="naRecepcao"
+        class="mt-2 rounded-md bg-n-iris-9 px-3 py-1.5 text-xs font-medium text-white hover:bg-n-iris-10 disabled:opacity-50"
+        data-testid="lead-panel-encaminhar-comercial"
+        :disabled="encaminhando"
+        @click="encaminhar"
+      >
+        {{ $t('RAMON.LEAD_PANEL.ENCAMINHAR_COMERCIAL') }}
       </button>
     </div>
     <div

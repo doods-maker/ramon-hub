@@ -124,6 +124,12 @@ class LeadsAPI extends ApiClient {
   followUpDraft(leadId) {
     return axios.post(`${this.url}/${leadId}/follow_up_draft`);
   }
+
+  encaminharComercial(conversationId) {
+    return axios.post(`${this.url}/encaminhar_comercial`, {
+      conversation_id: conversationId,
+    });
+  }
 }
 
 export default new LeadsAPI();

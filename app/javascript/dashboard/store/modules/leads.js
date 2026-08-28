@@ -194,12 +194,19 @@ export const actions = {
   },
   ensureForConversation: async ({ commit }, { conversationId }) => {
     const response = await LeadsAPI.forConversation(conversationId);
-    const lead = response.data;
-    commit(types.MERGE_LEAD, lead);
+    // 204 = caixa com Portaria: a conversa não está no funil, nada a mesclar
+    const lead = response.status === 204 ? null : response.data;
+    if (lead?.id) commit(types.MERGE_LEAD, lead);
     // Não seleciona: selectedId é da gaveta do Kanban — o painel da conversa
     // lê por getLeadByConversationId. Selecionar aqui fazia a gaveta abrir
     // sozinha ao entrar no Funil com o último lead visto na conversa.
     return lead;
+  },
+  // Portaria: Recepção manda a conversa pro comercial (time + lead no funil).
+  encaminharComercial: async ({ commit }, { conversationId }) => {
+    const response = await LeadsAPI.encaminharComercial(conversationId);
+    commit(types.MERGE_LEAD, response.data);
+    return response.data;
   },
   // Só consulta (banner): nunca cria lead nem mexe na seleção.
   peekForConversation: async ({ commit }, { conversationId }) => {
