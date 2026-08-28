@@ -685,6 +685,8 @@
     },
     "LEAD_PANEL": {
       "TITLE": "Lead",
+      "SEM_LEAD": "This conversation belongs to the office desk and is not in the sales funnel.",
+      "ENCAMINHAR_COMERCIAL": "Forward to sales",
       "TABS": {
         "SUMMARY": "Summary",
         "HISTORY": "History",

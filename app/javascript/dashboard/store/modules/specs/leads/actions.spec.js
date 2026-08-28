@@ -54,6 +54,33 @@ describe('leads actions', () => {
     expect(commit).not.toHaveBeenCalledWith(types.SET_SELECTED_LEAD, 7);
   });
 
+  it('ensureForConversation devolve null e não mescla nada no 204 (caixa com Portaria)', async () => {
+    axios.post.mockResolvedValue({ status: 204, data: '' });
+    const commit = vi.fn();
+    const result = await actions.ensureForConversation(
+      { commit },
+      { conversationId: 99 }
+    );
+    expect(result).toBeNull();
+    expect(commit).not.toHaveBeenCalled();
+  });
+
+  it('encaminharComercial posta e mescla o lead devolvido', async () => {
+    const lead = { id: 9, conversation_id: 99, channel: 'indicacao' };
+    axios.post.mockResolvedValue({ data: lead });
+    const commit = vi.fn();
+    const result = await actions.encaminharComercial(
+      { commit },
+      { conversationId: 99 }
+    );
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/leads/encaminhar_comercial'),
+      { conversation_id: 99 }
+    );
+    expect(result).toEqual(lead);
+    expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD, lead);
+  });
+
   it('peekForConversation merges the lead without selecting it', async () => {
     const lead = { id: 7, conversation_id: 99 };
     axios.post.mockResolvedValue({ status: 200, data: lead });

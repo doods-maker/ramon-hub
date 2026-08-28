@@ -214,6 +214,17 @@ RSpec.describe 'Leads API', type: :request do
       expect(existing.reload.conversation_id).to eq(other_conversation.id)
     end
 
+    it 'caixa com Portaria: 204 e não cria lead ao abrir a conversa' do
+      inbox = create(:inbox, account: account, portaria_enabled: true)
+      conversation = create(:conversation, account: account, inbox: inbox, contact: contact)
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+             params: { conversation_id: conversation.display_id },
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to(change(account.leads, :count))
+      expect(response).to have_http_status(:no_content)
+    end
+
     it 'readonly: 204 sem criar lead quando a conversa não tem funil' do
       expect do
         post "/api/v1/accounts/#{account.id}/leads/for_conversation",
@@ -247,6 +258,47 @@ RSpec.describe 'Leads API', type: :request do
 
       expect(response).to have_http_status(:success)
       expect(response.parsed_body['conversation_id']).to eq(conversation.id)
+    end
+  end
+
+  describe 'POST /api/v1/accounts/{account}/leads/encaminhar_comercial' do
+    let(:contact) { create(:contact, account: account) }
+    let(:inbox) { create(:inbox, account: account, portaria_enabled: true) }
+    let(:conversation) { create(:conversation, account: account, inbox: inbox, contact: contact) }
+    let!(:comercial) { create(:team, account: account, name: 'Comercial') }
+
+    it 'move a conversa pro time Comercial e cria o lead como indicação' do
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/encaminhar_comercial",
+             params: { conversation_id: conversation.display_id },
+             headers: admin.create_new_auth_token, as: :json
+      end.to change(account.leads, :count).by(1)
+      expect(response).to have_http_status(:success)
+      expect(conversation.reload.team).to eq(comercial)
+      lead = account.leads.last
+      expect(lead.conversation_id).to eq(conversation.id)
+      expect(lead.channel).to eq('indicacao')
+      expect(response.parsed_body['id']).to eq(lead.id)
+    end
+
+    it 'reaponta o lead aberto do contato em vez de duplicar' do
+      existing = create(:lead, account: account, contact: contact, lead_stage: novo,
+                               conversation: create(:conversation, account: account, contact: contact))
+      expect do
+        post "/api/v1/accounts/#{account.id}/leads/encaminhar_comercial",
+             params: { conversation_id: conversation.display_id },
+             headers: admin.create_new_auth_token, as: :json
+      end.not_to(change(account.leads, :count))
+      expect(response.parsed_body['id']).to eq(existing.id)
+      expect(existing.reload.conversation_id).to eq(conversation.id)
+    end
+
+    it '404 sem o time Comercial' do
+      comercial.destroy!
+      post "/api/v1/accounts/#{account.id}/leads/encaminhar_comercial",
+           params: { conversation_id: conversation.display_id },
+           headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:not_found)
     end
   end
 

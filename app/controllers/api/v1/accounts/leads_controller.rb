@@ -1,6 +1,6 @@
 class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   before_action :current_account
-  before_action :fetch_lead, except: [:index, :create, :for_conversation]
+  before_action :fetch_lead, except: [:index, :create, :for_conversation, :encaminhar_comercial]
   before_action :check_authorization
 
   def index
@@ -46,11 +46,25 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def for_conversation
     # o front manda o id do objeto de conversa da SPA, que é o display_id (por conta)
     conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])
-    # readonly: só consulta (banner da conversa) — nunca cria nem adota lead
-    @lead = params[:readonly] ? find_readonly_lead_for(conversation) : find_or_create_lead_for(conversation)
+    # readonly: só consulta (banner da conversa) — nunca cria nem adota lead.
+    # Caixa com Portaria (setores do escritório) também nunca cria lead ao abrir:
+    # lead lá só nasce pelo "Encaminhar ao comercial".
+    readonly = params[:readonly] || conversation.inbox.portaria_enabled?
+    @lead = readonly ? find_readonly_lead_for(conversation) : find_or_create_lead_for(conversation)
     return head :no_content if @lead.nil?
 
     authorize(@lead, :show?)
+  end
+
+  # Portaria: a Recepção manda um lead orgânico pro comercial — time Comercial + lead no funil.
+  def encaminhar_comercial
+    conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])
+    conversation.update!(team: Current.account.teams.find_by!(name: 'comercial'))
+    @lead = find_or_create_lead_for(conversation)
+    # quem chega sem anúncio presume-se indicado (glossário: Indicação); não pisa em canal já derivado
+    @lead.update!(channel: 'indicacao') if @lead.channel == 'outro'
+    authorize(@lead, :show?)
+    render :for_conversation
   end
 
   private

@@ -685,6 +685,8 @@
     },
     "LEAD_PANEL": {
       "TITLE": "Lead",
+      "SEM_LEAD": "Esta conversa é do atendimento do escritório e não está no funil comercial.",
+      "ENCAMINHAR_COMERCIAL": "Encaminhar ao comercial",
       "TABS": {
         "SUMMARY": "Resumo",
         "HISTORY": "Histórico",
