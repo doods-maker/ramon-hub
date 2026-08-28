@@ -29,7 +29,7 @@ RSpec.describe RamonPortariaListener do
     expect { fire(incoming('oi')) }.to change(menus, :count).by(1)
     itens = menus.last.content_attributes['items']
     expect(itens.pluck('value')).to eq(%w[recepção controladoria advogados])
-    expect(itens.pluck('title')).to eq(%w[Recepção Controladoria Advogados])
+    expect(itens.pluck('title')).to eq(%w[Recepção Financeiro Advogados])
     expect(conversation.reload.team).to be_nil
   end
 
@@ -41,6 +41,11 @@ RSpec.describe RamonPortariaListener do
 
   it 'roteia pelo texto quando o cliente digita o nome do Setor' do
     fire(incoming('controladoria'))
+    expect(conversation.reload.team).to eq(controladoria)
+  end
+
+  it 'roteia pelo rótulo do botão digitado ("Financeiro" → controladoria)' do
+    fire(incoming('Financeiro'))
     expect(conversation.reload.team).to eq(controladoria)
   end
 

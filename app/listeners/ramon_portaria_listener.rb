@@ -36,8 +36,15 @@ class RamonPortariaListener < BaseListener
     end
   end
 
+  # id do botão tocado, ou o texto digitado — que pode ser o nome do time ("controladoria")
+  # ou o rótulo do botão ("financeiro")
   def opcao(message)
-    (message.content_attributes['interactive_reply_id'].presence || message.content.to_s).strip.downcase
+    texto = (message.content_attributes['interactive_reply_id'].presence || message.content.to_s).strip.downcase
+    SETORES.find { |s| titulo(s).downcase == texto } || texto
+  end
+
+  def titulo(setor)
+    I18n.t("conversations.messages.portaria.setores.#{setor}")
   end
 
   def atribuir(conversation, team)
@@ -56,7 +63,7 @@ class RamonPortariaListener < BaseListener
       message_type: :outgoing,
       content_type: 'input_select',
       content: I18n.t("conversations.messages.portaria.#{key}"),
-      content_attributes: { items: SETORES.map { |s| { title: I18n.t("conversations.messages.portaria.setores.#{s}"), value: s } } }
+      content_attributes: { items: SETORES.map { |s| { title: titulo(s), value: s } } }
     )
   end
 end
