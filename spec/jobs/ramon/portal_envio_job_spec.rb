@@ -20,9 +20,9 @@ RSpec.describe Ramon::PortalEnvioJob do
     expect { described_class.perform_now(envio.id) }.to have_enqueued_job(Ramon::NtfyPushJob)
     expect(envio.reload.drive_file_id).to eq 'file-1'
     expect(envio.advbox_post_id).to eq '555'
-    expect(Ramon::AdvboxClient).to have_received(:create_post).with(hash_including(
-      from: '259713', guests: [259_713], tasks_id: '9502039', lawsuits_id: '14039119'
-    ))
+    expect(Ramon::AdvboxClient).to have_received(:create_post).with(
+      hash_including(from: '259713', guests: [259_713], tasks_id: '9502039', lawsuits_id: '14039119')
+    )
   end
 
   it 'é idempotente: não repete Drive nem ADVBOX' do

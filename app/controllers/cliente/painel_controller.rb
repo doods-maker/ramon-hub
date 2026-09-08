@@ -44,14 +44,9 @@ class Cliente::PainelController < Cliente::BaseController
   end
 
   def enviar
-    unless upload_valido?
-      flash[:portal_alert] = MSG_ARQUIVO_INVALIDO
-      return redirect_to cliente_processo_path(@processo['id'])
-    end
+    return redirect_arquivo_invalido unless upload_valido?
 
-    envio = current_cliente.envios.create!(lawsuit_id: @processo['id'], solicitacao_post_id: params[:post_id].presence,
-                                           item: params[:item].to_s.strip.first(120))
-    envio.arquivo.attach(params[:file])
+    envio = criar_envio!
     Ramon::PortalEnvioJob.perform_later(envio.id)
     flash[:portal_notice] = MSG_RECEBIDO
     redirect_to cliente_processo_path(@processo['id'])
@@ -83,5 +78,17 @@ class Cliente::PainelController < Cliente::BaseController
     return false unless file.respond_to?(:tempfile) && params[:item].present?
 
     ALLOWED_CONTENT_TYPES.include?(Marcel::MimeType.for(file.tempfile)) && file.size.to_i.positive? && file.size <= MAX_UPLOAD_BYTES
+  end
+
+  def criar_envio!
+    envio = current_cliente.envios.create!(lawsuit_id: @processo['id'], solicitacao_post_id: params[:post_id].presence,
+                                           item: params[:item].to_s.strip.first(120))
+    envio.arquivo.attach(params[:file])
+    envio
+  end
+
+  def redirect_arquivo_invalido
+    flash[:portal_alert] = MSG_ARQUIVO_INVALIDO
+    redirect_to cliente_processo_path(@processo['id'])
   end
 end

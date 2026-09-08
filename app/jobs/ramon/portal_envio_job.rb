@@ -9,17 +9,21 @@ class Ramon::PortalEnvioJob < ApplicationJob
 
   def perform(envio_id)
     @envio = PortalEnvio.find_by(id: envio_id)
-    return if @envio.nil? || !@envio.arquivo.attached?
+    return unless envio_pronto?
 
     @cliente = @envio.portal_cliente
     @processo = @cliente.processo(@envio.lawsuit_id) || {}
-    subir_drive if @envio.drive_file_id.blank? && Ramon::DriveClient.configured?
+    subir_drive if precisa_drive?
     abrir_tarefa if @envio.advbox_post_id.blank?
     Ramon::NtfyPushJob.perform_later(nil, title: "Documento do cliente #{@cliente.nome}",
                                           body: "#{@envio.item} · processo #{@processo['numero'].presence || @envio.lawsuit_id}")
   end
 
   private
+
+  def envio_pronto? = @envio.present? && @envio.arquivo.attached?
+
+  def precisa_drive? = @envio.drive_file_id.blank? && Ramon::DriveClient.configured?
 
   def subir_drive
     clientes = Ramon::DriveClient.ensure_folder('Clientes', Ramon::DriveClient.root_id)
