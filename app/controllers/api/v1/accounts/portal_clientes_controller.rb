@@ -35,10 +35,27 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     render json: linha(@cliente)
   end
 
-  # PR 6
-  def assinatura = head(:not_found)
+  def assinatura
+    variaveis = params.fetch(:variaveis, {})
+    variaveis = variaveis.respond_to?(:to_unsafe_h) ? variaveis.to_unsafe_h : variaveis.to_h
+    doc = Ramon::ZapsignClient.create_doc_from_template(payload_assinatura(variaveis))
+    signer = doc.dig('signers', 0, 'token')
+    Ramon::ZapsignClient.update_signer(signer, auth_mode: 'assinaturaTela') if signer.present?
+    a = @cliente.assinaturas.create!(doc_token: doc['token'], signer_token: signer, nome: params[:nome].presence || 'Documento')
+    render json: { id: a.id, nome: a.nome, status: a.status }
+  rescue Ramon::ZapsignClient::UnavailableError, Ramon::ZapsignClient::RequestError => e
+    render json: { error: e.message }, status: :service_unavailable
+  end
 
   private
+
+  def payload_assinatura(variaveis)
+    {
+      template_id: params[:template_id], signer_name: @cliente.nome, signer_email: @cliente.email,
+      send_automatic_email: false, send_automatic_whatsapp: false,
+      data: variaveis.map { |de, para| { de: de, para: para.presence || '________' } }
+    }
+  end
 
   def fetch_cliente
     @cliente = Current.account.portal_clientes.find(params[:id])

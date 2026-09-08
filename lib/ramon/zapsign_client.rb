@@ -56,16 +56,30 @@ class Ramon::ZapsignClient
   private_class_method :get_json
 
   def self.create_doc_from_template(body)
+    request(:post, '/models/create-doc/', body)
+  end
+
+  def self.doc(token)
+    request(:get, "/docs/#{token}/")
+  end
+
+  # auth_mode/cpf/redirect_link do signatário depois da criação (o endpoint de
+  # modelo não aceita esses campos de forma confiável).
+  def self.update_signer(signer_token, body)
+    request(:post, "/signers/#{signer_token}/", body)
+  end
+
+  def self.request(verb, path, body = nil)
     token = ENV.fetch('ZAPSIGN_API_TOKEN', nil)
     raise UnavailableError, 'ZapSign indisponível: ZAPSIGN_API_TOKEN não configurado' if token.blank?
 
-    response = HTTParty.post("#{BASE}/models/create-doc/",
-                             body: body.to_json,
-                             headers: { 'Authorization' => "Bearer #{token}",
-                                        'Content-Type' => 'application/json',
-                                        'Accept' => 'application/json' },
-                             open_timeout: OPEN_TIMEOUT,
-                             read_timeout: READ_TIMEOUT)
+    opts = { headers: { 'Authorization' => "Bearer #{token}", 'Accept' => 'application/json' },
+             open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT }
+    if body
+      opts[:body] = body.to_json
+      opts[:headers]['Content-Type'] = 'application/json'
+    end
+    response = HTTParty.public_send(verb, "#{BASE}#{path}", **opts)
     return response.parsed_response if response.success?
     raise UnavailableError, "ZapSign respondeu HTTP #{response.code}" if response.code >= 500
 
@@ -74,4 +88,5 @@ class Ramon::ZapsignClient
          SocketError, Timeout::Error, OpenSSL::SSL::SSLError, EOFError => e
     raise UnavailableError, "ZapSign indisponível: #{e.message}"
   end
+  private_class_method :request
 end
