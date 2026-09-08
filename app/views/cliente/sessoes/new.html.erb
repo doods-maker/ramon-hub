@@ -1,0 +1,10 @@
+<%# app/views/cliente/sessoes/new.html.erb %>
+<p class="eyebrow">Painel do cliente</p>
+<h1>Acompanhe o seu caso</h1>
+<div class="divider"></div>
+<%= form_with url: cliente_codigo_path, method: :post, local: true, class: 'form-portal' do |f| %>
+  <%= f.label :email, 'Seu e-mail', class: 'label' %>
+  <%= f.email_field :email, required: true, autocomplete: 'email', inputmode: 'email', class: 'input', placeholder: 'nome@exemplo.com' %>
+  <%= f.submit 'Receber código', class: 'btn-bronze' %>
+<% end %>
+<div class="neutral-card">Você recebe um código de 6 dígitos no e-mail cadastrado com o escritório. Não precisa de senha.</div>

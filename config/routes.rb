@@ -708,6 +708,21 @@ Rails.application.routes.draw do
   get 'portal/:token', to: 'public/portal#show', as: :ramon_portal
   post 'portal/:token/upload', to: 'public/portal#upload', as: :ramon_portal_upload
 
+  # Painel do Cliente (cliente.ramonantonio.adv.br → Caddy redir / → /cliente).
+  # Fora do namespace :public (força JSON) e fora de Portal:: (help center).
+  scope path: 'cliente', module: :cliente, as: :cliente do
+    get '/', to: 'sessoes#new', as: :root
+    post 'codigo', to: 'sessoes#create', as: :codigo
+    post 'entrar', to: 'sessoes#verificar', as: :entrar
+    delete 'sair', to: 'sessoes#destroy', as: :sair
+    get 'inicio', to: 'painel#show', as: :inicio
+    post 'termos', to: 'painel#aceitar_termos', as: :termos
+    post 'atualizar', to: 'painel#atualizar', as: :atualizar
+    get 'processos/:lawsuit_id', to: 'painel#processo', as: :processo
+    post 'processos/:lawsuit_id/envios', to: 'painel#enviar', as: :envios
+    get 'assinaturas/:id', to: 'painel#assinatura', as: :assinatura
+  end
+
   get 'hc/:slug', to: 'public/api/v1/portals#show'
   get 'hc/:slug/sitemap.xml', to: 'public/api/v1/portals#sitemap'
   get 'hc/:slug/:locale', to: 'public/api/v1/portals#show', as: :public_portal_locale
