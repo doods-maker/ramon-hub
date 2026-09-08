@@ -48,7 +48,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
     allow(Ramon::ZapsignClient).to receive(:update_signer)
 
     post "#{base}/#{cliente.id}/assinatura", params: { template_id: 'tpl', nome: 'Procuração', variaveis: { '{{nome}}' => 'Maria' } },
-                                              headers: headers, as: :json
+                                             headers: headers, as: :json
     expect(response).to have_http_status(:success)
     a = cliente.assinaturas.last
     expect([a.doc_token, a.signer_token, a.status]).to eq %w[doc-1 sig-1 pendente]
