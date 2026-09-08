@@ -2,6 +2,11 @@ class Cliente::PainelController < Cliente::BaseController
   MSG_ATUALIZADO = 'Dados atualizados.'.freeze
   MSG_AGUARDE = 'Já atualizamos há pouco. Tente de novo mais tarde.'.freeze
   MSG_INDISPONIVEL = 'Não conseguimos atualizar agora. Mostrando os últimos dados que temos.'.freeze
+  MSG_ARQUIVO_INVALIDO = 'Não foi possível receber o arquivo — envie um PDF ou foto (JPG/PNG/HEIC) de até 10 MB.'.freeze
+  MSG_RECEBIDO = 'Recebemos seu documento. Obrigado!'.freeze
+
+  MAX_UPLOAD_BYTES = 10.megabytes
+  ALLOWED_CONTENT_TYPES = %w[application/pdf image/jpeg image/jpg image/png image/heic image/heif].freeze
 
   before_action :require_cliente
   before_action :require_termos, except: [:aceitar_termos]
@@ -38,8 +43,19 @@ class Cliente::PainelController < Cliente::BaseController
     @pendentes = pendentes_com_status
   end
 
-  # PR 5
-  def enviar = head(:not_found)
+  def enviar
+    unless upload_valido?
+      flash[:portal_alert] = MSG_ARQUIVO_INVALIDO
+      return redirect_to cliente_processo_path(@processo['id'])
+    end
+
+    envio = current_cliente.envios.create!(lawsuit_id: @processo['id'], solicitacao_post_id: params[:post_id].presence,
+                                           item: params[:item].to_s.strip.first(120))
+    envio.arquivo.attach(params[:file])
+    Ramon::PortalEnvioJob.perform_later(envio.id)
+    flash[:portal_notice] = MSG_RECEBIDO
+    redirect_to cliente_processo_path(@processo['id'])
+  end
 
   # PR 6
   def assinatura = head(:not_found)
@@ -59,5 +75,13 @@ class Cliente::PainelController < Cliente::BaseController
   def pendentes_com_status
     enviados = current_cliente.envios.where(lawsuit_id: @processo['id']).pluck(:solicitacao_post_id, :item).to_set
     @processo['docs_pendentes'].map { |d| d.merge('enviado' => enviados.include?([d['post_id'], d['item']])) }
+  end
+
+  # Tipo real por magic bytes (Marcel) — o content_type do browser mente fácil.
+  def upload_valido?
+    file = params[:file]
+    return false unless file.respond_to?(:tempfile) && params[:item].present?
+
+    ALLOWED_CONTENT_TYPES.include?(Marcel::MimeType.for(file.tempfile)) && file.size.to_i.positive? && file.size <= MAX_UPLOAD_BYTES
   end
 end

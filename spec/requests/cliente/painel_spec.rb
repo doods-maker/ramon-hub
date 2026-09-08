@@ -64,4 +64,28 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     expect(sync).to have_received(:perform).once
     expect(response).to redirect_to('/cliente/inicio')
   end
+
+  describe 'POST /cliente/processos/:id/envios' do
+    let(:pdf) { fixture_file_upload(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf') }
+
+    it 'grava o envio com o pedido e enfileira o job' do
+      entrar
+      expect do
+        post '/cliente/processos/1/envios', params: { file: pdf, item: 'CNIS atualizado', post_id: 9 }
+      end.to change(PortalEnvio, :count).by(1).and have_enqueued_job(Ramon::PortalEnvioJob)
+      envio = PortalEnvio.last
+      expect(envio.solicitacao_post_id).to eq 9
+      expect(envio.arquivo).to be_attached
+      expect(response).to redirect_to('/cliente/processos/1')
+      get '/cliente/processos/1'
+      expect(response.body).to include('Enviado — em conferência')
+    end
+
+    it 'recusa arquivo com content_type mentiroso' do
+      entrar
+      falso = fixture_file_upload(Rails.root.join('spec/assets/sample.mp3'), 'application/pdf')
+      expect { post '/cliente/processos/1/envios', params: { file: falso, item: 'CNIS', post_id: 9 } }.not_to change(PortalEnvio, :count)
+      expect(response).to redirect_to('/cliente/processos/1')
+    end
+  end
 end
