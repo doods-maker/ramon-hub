@@ -22,7 +22,7 @@ class Cliente::BaseController < ActionController::Base
 
   def entrar!(cliente)
     cookies.encrypted[COOKIE] = { value: cliente.id, expires: SESSAO.from_now, httponly: true, same_site: :lax,
-                                  secure: ActiveModel::Type::Boolean.new.cast(ENV.fetch('FORCE_SSL', false)) }
+                                  secure: Rails.env.production? }
   end
 
   def sair!

@@ -24,8 +24,7 @@ class Cliente::PainelController < Cliente::BaseController
 
   def atualizar
     if current_cliente.pode_atualizar?
-      current_cliente.update!(atualizacao_pedida_em: Time.current)
-      Ramon::PortalSyncService.new(current_cliente).perform
+      sincronizar_agora!
       flash[:portal_notice] = MSG_ATUALIZADO
     else
       flash[:portal_notice] = MSG_AGUARDE
@@ -58,6 +57,13 @@ class Cliente::PainelController < Cliente::BaseController
   end
 
   private
+
+  # Só carimba atualizacao_pedida_em (o gate das 6h) depois do sync dar certo —
+  # se o ADVBOX cair, o rescue acima nunca chega aqui e o cliente não fica travado.
+  def sincronizar_agora!
+    Ramon::PortalSyncService.new(current_cliente).perform
+    current_cliente.update!(atualizacao_pedida_em: Time.current)
+  end
 
   def require_termos
     render :termos unless current_cliente.termos_aceitos?

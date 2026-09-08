@@ -660,7 +660,8 @@
       "EMPTY": "No client invited yet.",
       "LOAD_ERROR": "Could not load the list.",
       "SAVED": "Saved.",
-      "DRIVE": "Drive"
+      "DRIVE": "Drive",
+      "ACTION_ERROR": "Something went wrong. Try again."
     },
     "DOSSIE": {
       "OPEN": "Dossier",

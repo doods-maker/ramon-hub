@@ -65,6 +65,14 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     expect(response).to redirect_to('/cliente/inicio')
   end
 
+  it 'atualizar não trava o cliente quando o ADVBOX está fora do ar' do
+    allow(Ramon::PortalSyncService).to receive(:new).and_raise(Ramon::AdvboxClient::UnavailableError)
+    entrar
+    post '/cliente/atualizar'
+    expect(cliente.reload.atualizacao_pedida_em).to be_nil
+    expect(response).to redirect_to('/cliente/inicio')
+  end
+
   describe 'POST /cliente/processos/:id/envios' do
     let(:pdf) { fixture_file_upload(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf') }
 

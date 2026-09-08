@@ -19,7 +19,7 @@ RSpec.describe Ramon::PortalSyncService do
   end
 
   before do
-    allow(Ramon::AdvboxClient).to receive(:lawsuits).with(identification: '12345678901', limit: 20).and_return(lawsuits)
+    allow(Ramon::AdvboxClient).to receive(:lawsuits).with(identification: '12345678901', limit: 10).and_return(lawsuits)
     allow(Ramon::AdvboxClient).to receive(:movements).with(14_039_119, limit: 30).and_return(movements)
     allow(Ramon::AdvboxClient).to receive(:posts).with(lawsuit_id: 14_039_119, limit: 50).and_return(posts)
   end

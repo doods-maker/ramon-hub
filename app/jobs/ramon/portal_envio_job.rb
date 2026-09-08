@@ -1,5 +1,7 @@
-# Documento enviado pelo painel: Drive (Clientes/<Nome — CPF>/) → tarefa ADVBOX
-# "ANALISAR DOCUMENTAÇÃO ENVIADA PELO CLIENTE" pro responsável → push ntfy.
+# Documento enviado pelo painel: Drive (Clientes/<Nome — CPF>/) → push ntfy →
+# tarefa ADVBOX "ANALISAR DOCUMENTAÇÃO ENVIADA PELO CLIENTE" pro responsável.
+# Ntfy vem antes da tarefa: se o ADVBOX cair (retry_on → discard depois de 5
+# tentativas), o humano já foi avisado do documento mesmo assim.
 # Cada passo é idempotente (checa a coluna antes) pra suportar retry.
 class Ramon::PortalEnvioJob < ApplicationJob
   queue_as :low
@@ -14,9 +16,9 @@ class Ramon::PortalEnvioJob < ApplicationJob
     @cliente = @envio.portal_cliente
     @processo = @cliente.processo(@envio.lawsuit_id) || {}
     subir_drive if precisa_drive?
-    abrir_tarefa if @envio.advbox_post_id.blank?
     Ramon::NtfyPushJob.perform_later(nil, title: "Documento do cliente #{@cliente.nome}",
                                           body: "#{@envio.item} · processo #{@processo['numero'].presence || @envio.lawsuit_id}")
+    abrir_tarefa if @envio.advbox_post_id.blank?
   end
 
   private

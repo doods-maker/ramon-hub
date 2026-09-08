@@ -660,7 +660,8 @@
       "EMPTY": "Nenhum cliente convidado ainda.",
       "LOAD_ERROR": "Não deu pra carregar a lista.",
       "SAVED": "Salvo.",
-      "DRIVE": "Drive"
+      "DRIVE": "Drive",
+      "ACTION_ERROR": "Não deu certo. Tente de novo."
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

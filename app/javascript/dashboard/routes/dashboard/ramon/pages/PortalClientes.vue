@@ -2,6 +2,7 @@
 // app/javascript/dashboard/routes/dashboard/ramon/pages/PortalClientes.vue
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import PortalClientesAPI from 'dashboard/api/portalClientes';
 import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
 import LeadsAPI from 'dashboard/api/leads';
@@ -40,8 +41,14 @@ const carregar = async () => {
 
 const buscar = async () => {
   if (busca.value.trim().length < 3) return;
-  const { data } = await RamonCalculosAPI.advboxCustomers(busca.value.trim());
-  resultados.value = data.payload;
+  try {
+    const { data } = await RamonCalculosAPI.advboxCustomers(busca.value.trim());
+    resultados.value = data.payload;
+  } catch (e) {
+    useAlert(
+      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
+    );
+  }
 };
 
 const escolher = c => {
@@ -51,21 +58,33 @@ const escolher = c => {
 
 const convidar = async () => {
   const c = candidato.value;
-  await PortalClientesAPI.create({
-    advbox_customer_id: c.id,
-    nome: c.name,
-    cpf: c.identification,
-    email: emailConvite.value,
-  });
-  candidato.value = null;
-  resultados.value = [];
-  busca.value = '';
-  await carregar();
+  try {
+    await PortalClientesAPI.create({
+      advbox_customer_id: c.id,
+      nome: c.name,
+      cpf: c.identification,
+      email: emailConvite.value,
+    });
+    candidato.value = null;
+    resultados.value = [];
+    busca.value = '';
+    await carregar();
+  } catch (e) {
+    useAlert(
+      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
+    );
+  }
 };
 
 const reenviar = async id => {
-  await PortalClientesAPI.convidar(id);
-  await carregar();
+  try {
+    await PortalClientesAPI.convidar(id);
+    await carregar();
+  } catch (e) {
+    useAlert(
+      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
+    );
+  }
 };
 
 const abrir = async id => {
@@ -108,17 +127,27 @@ const enviarAssinatura = async () => {
     });
     const { data: atualizado } = await PortalClientesAPI.show(aberto.value.id);
     aberto.value = atualizado;
+  } catch (e) {
+    useAlert(
+      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
+    );
   } finally {
     enviandoAssinatura.value = false;
   }
 };
 
 const salvarRecados = async () => {
-  await PortalClientesAPI.update(aberto.value.id, { recados: recados.value });
-  aviso.value = t('RAMON.PORTAL_CLIENTES.SAVED');
-  setTimeout(() => {
-    aviso.value = '';
-  }, 2000);
+  try {
+    await PortalClientesAPI.update(aberto.value.id, { recados: recados.value });
+    aviso.value = t('RAMON.PORTAL_CLIENTES.SAVED');
+    setTimeout(() => {
+      aviso.value = '';
+    }, 2000);
+  } catch (e) {
+    useAlert(
+      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
+    );
+  }
 };
 
 const dataCurta = iso =>

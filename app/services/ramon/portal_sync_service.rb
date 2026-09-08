@@ -4,7 +4,7 @@
 # /last_movements e re-buscar só os processos cuja última data mudou.
 class Ramon::PortalSyncService
   TAREFA_SOLICITAR = 'SOLICITAR DOCUMENTOS'.freeze
-  LIMITE_PROCESSOS = 20
+  LIMITE_PROCESSOS = 10
   LIMITE_ANDAMENTOS = 30
   LIMITE_TAREFAS = 50
 
@@ -44,9 +44,11 @@ class Ramon::PortalSyncService
       .map { |m| { 'data' => m['date'].to_s[0, 10], 'titulo' => m['title'] } }
   end
 
+  # /posts não devolve tasks_id (confirmado na API real) — casa pelo nome da
+  # tarefa, mas tolerante (acento/maiúscula/espaço) em vez de igualdade exata.
   def docs_pendentes(id)
     lista(Ramon::AdvboxClient.posts(lawsuit_id: id, limit: LIMITE_TAREFAS))
-      .select { |p| p['task'].to_s.casecmp?(TAREFA_SOLICITAR) && aberta?(p) }
+      .select { |p| Ramon::PortalTexto.normalizar(p['task']).include?(TAREFA_SOLICITAR) && aberta?(p) }
       .flat_map { |p| p['notes'].to_s.lines.map(&:strip).reject(&:blank?).map { |item| { 'item' => item, 'post_id' => p['id'] } } }
   end
 

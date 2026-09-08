@@ -13,9 +13,10 @@ class PortalCliente < ApplicationRecord
   before_validation :normalizar
 
   validates :nome, :email, :advbox_customer_id, presence: true
-  validates :email, uniqueness: { scope: :account_id }, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :email, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :advbox_customer_id, uniqueness: { scope: :account_id }
 
+  # ponytail: fork single-tenant — e-mail é único global; se virar multi-conta, escopar por account
   def self.from_email(email)
     find_by(email: email&.downcase)
   end
