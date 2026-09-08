@@ -1,0 +1,8 @@
+<%# app/views/cliente/painel/_processo_card.html.erb %>
+<% etapa = Ramon::PortalTexto.etapa(processo['etapa']) %>
+<%= link_to cliente_processo_path(processo['id']), class: 'card', style: 'display:block;text-decoration:none;color:inherit' do %>
+  <span class="badge"><%= processo['tipo'].to_s.downcase.capitalize %></span>
+  <h2><%= etapa['titulo'] %></h2>
+  <p class="muted"><%= etapa['o_que_esperar'] %></p>
+  <% if processo['docs_pendentes'].any? %><p class="badge">Documentos pendentes: <%= processo['docs_pendentes'].size %></p><% end %>
+<% end %>

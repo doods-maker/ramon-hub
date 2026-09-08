@@ -1,0 +1,57 @@
+<%# app/views/cliente/painel/processo.html.erb %>
+<% content_for :title, @etapa['titulo'] %>
+<%= link_to '← Seus processos', cliente_inicio_path, class: 'btn-link' %>
+<p class="eyebrow"><%= @processo['tipo'] %></p>
+<h1><%= @etapa['titulo'] %></h1>
+<div class="divider"></div>
+<% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
+<% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
+<div class="card"><p><%= @etapa['o_que_esperar'] %></p></div>
+
+<% if @recado.present? %>
+  <div class="docs-card"><p class="docs-title">Recado da equipe</p><p><%= simple_format(@recado) %></p></div>
+<% end %>
+
+<% if @pendentes.any? %>
+  <div class="docs-card">
+    <p class="docs-title"><%= @pendentes.size == 1 ? 'Falta 1 documento' : "Faltam #{@pendentes.size} documentos" %></p>
+    <ul>
+      <% @pendentes.each do |d| %>
+        <li>
+          <%= d['item'] %>
+          <% if d['enviado'] %>
+            <span class="badge">Enviado — em conferência</span>
+          <% else %>
+            <%= form_tag cliente_envios_path(@processo['id']), multipart: true, class: 'upload-form' do %>
+              <%= hidden_field_tag :item, d['item'] %>
+              <%= hidden_field_tag :post_id, d['post_id'] %>
+              <%= file_field_tag :file, accept: 'image/*,application/pdf', required: true %>
+              <%= submit_tag 'Enviar', class: 'btn-bronze' %>
+            <% end %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<% if @marcos.any? %>
+  <div class="timeline">
+    <% @marcos.each_with_index do |m, i| %>
+      <div class="step">
+        <div class="step-rail"><span class="dot-done"></span><% unless i == @marcos.size - 1 %><span class="rail-done"></span><% end %></div>
+        <div class="step-text">
+          <p class="step-title"><%= m['titulo'] %> <span class="muted"><%= m['data'] %></span></p>
+          <p class="step-sub"><%= m['explicacao'] %></p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="card">
+  <p class="muted">Número: <%= @processo['numero'].presence || '—' %></p>
+  <p class="muted">Início: <%= @processo['inicio'].presence || '—' %></p>
+  <p class="muted">Advogado(a) responsável: <%= @processo['responsavel'].to_s.titleize.presence || 'equipe' %></p>
+  <a class="btn-bronze" href="https://wa.me/<%= ENV.fetch('PORTAL_WHATSAPP', '5548988319115') %>">Falar com a equipe no WhatsApp</a>
+</div>

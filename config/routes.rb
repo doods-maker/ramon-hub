@@ -299,6 +299,12 @@ Rails.application.routes.draw do
           resources :ramon_reunioes, only: [:index, :show, :create, :destroy], controller: 'ramon_reunioes' do
             member { post :reprocessar }
           end
+          resources :portal_clientes, only: [:index, :show, :create, :update], controller: 'portal_clientes' do
+            member do
+              post :convidar
+              post :assinatura
+            end
+          end
           resources :calculos, only: [:index, :destroy] do
             member { post :reabrir }
           end
@@ -687,6 +693,9 @@ Rails.application.routes.draw do
         # Ramon — webhook do Flowter/ADVBOX (Bearer estático — o Flowter não assina HMAC)
         post 'advbox_webhooks', to: 'advbox_webhooks#create'
 
+        # Ramon — webhook do ZapSign (assinaturas do painel); segredo fixo no header X-Ramon-Secret
+        post 'zapsign_webhooks', to: 'zapsign_webhooks#create'
+
         # Ramon — servidor MCP p/ os Claude Cowork (item 29): leitura e escrita
         # (AdvBox). GET/DELETE = 405 (sem stream SSE). Token via ?token= (o
         # filter_parameters mascara no log). A rota antiga com o token no PATH
@@ -707,6 +716,21 @@ Rails.application.routes.draw do
   # (fora do namespace :public, que força format json; a página é server-rendered ERB)
   get 'portal/:token', to: 'public/portal#show', as: :ramon_portal
   post 'portal/:token/upload', to: 'public/portal#upload', as: :ramon_portal_upload
+
+  # Painel do Cliente (cliente.ramonantonio.adv.br → Caddy redir / → /cliente).
+  # Fora do namespace :public (força JSON) e fora de Portal:: (help center).
+  scope path: 'cliente', module: :cliente, as: :cliente do
+    get '/', to: 'sessoes#new', as: :root
+    post 'codigo', to: 'sessoes#create', as: :codigo
+    post 'entrar', to: 'sessoes#verificar', as: :entrar
+    delete 'sair', to: 'sessoes#destroy', as: :sair
+    get 'inicio', to: 'painel#show', as: :inicio
+    post 'termos', to: 'painel#aceitar_termos', as: :termos
+    post 'atualizar', to: 'painel#atualizar', as: :atualizar
+    get 'processos/:lawsuit_id', to: 'painel#processo', as: :processo
+    post 'processos/:lawsuit_id/envios', to: 'painel#enviar', as: :envios
+    get 'assinaturas/:id', to: 'painel#assinatura', as: :assinatura
+  end
 
   get 'hc/:slug', to: 'public/api/v1/portals#show'
   get 'hc/:slug/sitemap.xml', to: 'public/api/v1/portals#sitemap'

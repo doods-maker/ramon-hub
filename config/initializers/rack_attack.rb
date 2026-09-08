@@ -205,6 +205,11 @@ class Rack::Attack
     req.ip if req.path.start_with?('/public/api/v1/advbox_webhooks') && req.post?
   end
 
+  ## Ramon — ZapSign webhook (assinaturas do painel) ###
+  throttle('public/zapsign_webhooks', limit: 60, period: 1.minute) do |req|
+    req.ip if req.path.start_with?('/public/api/v1/zapsign_webhooks') && req.post?
+  end
+
   ## Ramon — MCP dos coworks; cada pergunta do Claude vira poucas chamadas ###
   throttle('public/mcp', limit: 120, period: 1.minute) do |req|
     req.ip if req.path.start_with?('/public/api/v1/mcp')
@@ -218,6 +223,17 @@ class Rack::Attack
   ## Ramon — uploads do portal, por token (evita bombing num link vazado) ###
   throttle('public/portal_upload', limit: 10, period: 1.hour) do |req|
     req.path.split('/')[2] if req.post? && req.path.match?(%r{\A/portal/[^/]+/upload\z})
+  end
+
+  ## Ramon — Painel do Cliente: código por e-mail (força bruta) ###
+  throttle('cliente/codigo/email', limit: 5, period: 15.minutes) do |req|
+    req.params['email'].to_s.strip.downcase.presence if req.post? && req.path.in?(%w[/cliente/codigo /cliente/entrar])
+  end
+  throttle('cliente/codigo/ip', limit: 10, period: 15.minutes) do |req|
+    req.ip if req.post? && req.path.in?(%w[/cliente/codigo /cliente/entrar])
+  end
+  throttle('cliente/envios', limit: 20, period: 1.hour) do |req|
+    req.ip if req.post? && req.path.match?(%r{\A/cliente/processos/\d+/envios\z})
   end
 
   ##-----------------------------------------------##

@@ -101,6 +101,12 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/portal'),
+    name: 'ramon_portal_clientes',
+    component: () => import('./pages/PortalClientes.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/relatorios'),
     name: 'ramon_relatorios',
     component: () => import('./pages/Relatorios.vue'),

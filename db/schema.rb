@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_28_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_09_000003) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1354,6 +1354,53 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_28_000001) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "portal_assinaturas", force: :cascade do |t|
+    t.bigint "portal_cliente_id", null: false
+    t.string "doc_token", null: false
+    t.string "signer_token"
+    t.string "nome"
+    t.string "status", default: "pendente", null: false
+    t.datetime "assinado_em"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["doc_token"], name: "index_portal_assinaturas_on_doc_token", unique: true
+    t.index ["portal_cliente_id"], name: "index_portal_assinaturas_on_portal_cliente_id"
+  end
+
+  create_table "portal_clientes", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "advbox_customer_id", null: false
+    t.string "nome", null: false
+    t.string "cpf"
+    t.string "email", null: false
+    t.string "codigo_digest"
+    t.datetime "codigo_expira_em"
+    t.datetime "convidado_em"
+    t.datetime "termos_aceitos_em"
+    t.datetime "sincronizado_em"
+    t.datetime "atualizacao_pedida_em"
+    t.jsonb "processos", default: [], null: false
+    t.jsonb "recados", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "advbox_customer_id"], name: "index_portal_clientes_on_account_id_and_advbox_customer_id", unique: true
+    t.index ["account_id", "email"], name: "index_portal_clientes_on_account_id_and_email", unique: true
+    t.index ["account_id"], name: "index_portal_clientes_on_account_id"
+  end
+
+  create_table "portal_envios", force: :cascade do |t|
+    t.bigint "portal_cliente_id", null: false
+    t.bigint "lawsuit_id"
+    t.bigint "solicitacao_post_id"
+    t.string "item"
+    t.string "drive_file_id"
+    t.string "advbox_post_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["portal_cliente_id", "solicitacao_post_id"], name: "portal_envios_cliente_solicitacao_idx"
+    t.index ["portal_cliente_id"], name: "index_portal_envios_on_portal_cliente_id"
+  end
+
   create_table "portals", force: :cascade do |t|
     t.integer "account_id", null: false
     t.string "name", null: false
@@ -1678,6 +1725,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_28_000001) do
   add_foreign_key "lead_triages", "leads", on_delete: :cascade
   add_foreign_key "lead_triages", "triage_agents", on_delete: :nullify
   add_foreign_key "leads", "theses", on_delete: :nullify
+  add_foreign_key "portal_assinaturas", "portal_clientes"
+  add_foreign_key "portal_clientes", "accounts"
+  add_foreign_key "portal_envios", "portal_clientes"
   add_foreign_key "ramon_reunioes", "accounts"
   add_foreign_key "ramon_reunioes", "leads"
   add_foreign_key "ramon_reunioes", "users"

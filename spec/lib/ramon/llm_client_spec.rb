@@ -71,7 +71,7 @@ RSpec.describe Ramon::LlmClient do
         allow(chat).to receive(:ask).and_raise(RubyLLM::RateLimitError.new(response, 'rate limited'))
         expect do
           described_class.complete(provider: 'deepseek', model: 'm', system: 's', user: 'u')
-        end.to raise_error(Ramon::LlmClient::TransientError)
+        end.to(raise_error { |error| expect(error.class.name).to eq('Ramon::LlmClient::TransientError') })
       end
     end
 
@@ -81,7 +81,7 @@ RSpec.describe Ramon::LlmClient do
         allow(chat).to receive(:ask).and_raise(RubyLLM::ServerError.new(response, 'server error'))
         expect do
           described_class.complete(provider: 'deepseek', model: 'm', system: 's', user: 'u')
-        end.to raise_error(Ramon::LlmClient::TransientError)
+        end.to(raise_error { |error| expect(error.class.name).to eq('Ramon::LlmClient::TransientError') })
       end
     end
 
@@ -90,7 +90,7 @@ RSpec.describe Ramon::LlmClient do
         allow(chat).to receive(:ask).and_raise(Faraday::TimeoutError, 'timeout')
         expect do
           described_class.complete(provider: 'deepseek', model: 'm', system: 's', user: 'u')
-        end.to raise_error(Ramon::LlmClient::TransientError)
+        end.to(raise_error { |error| expect(error.class.name).to eq('Ramon::LlmClient::TransientError') })
       end
     end
 

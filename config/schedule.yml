@@ -103,3 +103,10 @@ ramon_daily_digest_job:
   cron: '0 11 * * *'
   class: 'Ramon::DailyDigestJob'
   queue: scheduled_jobs
+
+# executed daily at 0330 UTC = 00:30 America/Sao_Paulo (UTC-3)
+# espelho do Painel do Cliente (processos/andamentos/pedidos do ADVBOX por cliente)
+ramon_portal_sync_job:
+  cron: '30 3 * * *'
+  class: 'Ramon::PortalSyncJob'
+  queue: scheduled_jobs

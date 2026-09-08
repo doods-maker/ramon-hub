@@ -1,0 +1,11 @@
+<%# app/views/cliente/painel/termos.html.erb — RASCUNHO do texto (gate Eduardo) %>
+<p class="eyebrow">Antes de começar</p>
+<h1>Termos de uso</h1>
+<div class="divider"></div>
+<div class="card">
+  <p>O Painel do Cliente mostra informações sobre os seus processos com a Ramon Antonio Advogados, permite enviar documentos e assinar documentos eletronicamente. Os dados são usados só para o seu atendimento, conforme a nossa Política de Privacidade. O conteúdo é informativo e não substitui a orientação individual do(a) advogado(a).</p>
+</div>
+<%= form_with url: cliente_termos_path, method: :post, local: true, class: 'form-portal' do |f| %>
+  <label class="label"><%= f.check_box :aceite, { required: true }, '1', '0' %> Li e aceito os termos de uso e a política de privacidade.</label>
+  <%= f.submit 'Continuar', class: 'btn-bronze' %>
+<% end %>

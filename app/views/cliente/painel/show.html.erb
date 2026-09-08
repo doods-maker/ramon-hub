@@ -1,0 +1,28 @@
+<%# app/views/cliente/painel/show.html.erb %>
+<p class="eyebrow">Olá, <%= current_cliente.primeiro_nome %></p>
+<h1>Seus processos</h1>
+<div class="divider"></div>
+<% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
+<% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
+
+<% @assinaturas.each do |a| %>
+  <div class="docs-card">
+    <p class="docs-title">Assinatura pendente: <%= a.nome %></p>
+    <%= link_to 'Assinar agora', cliente_assinatura_path(a), class: 'btn-bronze' %>
+  </div>
+<% end %>
+
+<% if @ativos.empty? && @encerrados.empty? %>
+  <div class="neutral-card">Ainda não encontramos processos no seu nome. Se acha que é um engano, fale com a equipe.</div>
+<% end %>
+<% @ativos.each do |p| %><%= render 'processo_card', processo: p %><% end %>
+<% if @encerrados.any? %>
+  <p class="eyebrow" style="margin-top:18px">Encerrados</p>
+  <% @encerrados.each do |p| %><%= render 'processo_card', processo: p %><% end %>
+<% end %>
+
+<%= form_with url: cliente_atualizar_path, method: :post, local: true do |f| %>
+  <%= f.submit 'Atualizar', class: 'btn-link' %>
+<% end %>
+<p class="muted">Última atualização: <%= current_cliente.sincronizado_em ? l(current_cliente.sincronizado_em, format: :short) : '—' %></p>
+<%= button_to 'Sair', cliente_sair_path, method: :delete, class: 'btn-link' %>

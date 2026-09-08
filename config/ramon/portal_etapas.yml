@@ -1,0 +1,185 @@
+# config/ramon/portal_etapas.yml
+# Dicionário do Painel do Cliente. Chave = nome da etapa do ADVBOX normalizado
+# (Ramon::PortalTexto.normalizar). Texto fala com o cliente: simples, sem prazo,
+# sem promessa de resultado (Prov. 205/2021 OAB). RASCUNHO — aprovação do Eduardo.
+etapas:
+  'CONTRATO FECHADO':
+    titulo: 'Contrato assinado'
+    o_que_esperar: 'Seu caso entrou na nossa fila de preparação. Em breve pediremos os documentos que faltam.'
+  'REUNIAO POS VENDA':
+    titulo: 'Conversa de boas-vindas'
+    o_que_esperar: 'Vamos combinar os próximos passos do seu caso e tirar suas dúvidas iniciais.'
+  'DOCUMENTOS SOLICITADOS - MKT':
+    titulo: 'Documentos solicitados'
+    o_que_esperar: 'Pedimos alguns documentos para dar sequência ao seu caso. Fique de olho no WhatsApp.'
+  'DOCUMENTOS RECEBIDOS - CONFERIR - MKT':
+    titulo: 'Documentos em conferência'
+    o_que_esperar: 'Recebemos seus documentos e estamos conferindo tudo com calma.'
+  'DISTRIBUIR AO TIME OPERACIONAL - MKT':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Seu caso está sendo organizado para seguir com o time responsável.'
+  'ATENDIMENTO INICIAL':
+    titulo: 'Primeiro atendimento'
+    o_que_esperar: 'Estamos conhecendo o seu caso para entender o melhor caminho.'
+  'CONTRATO FECHADO / AG. DOCTOS':
+    titulo: 'Contrato assinado'
+    o_que_esperar: 'Seu caso entrou na nossa fila de preparação. Em breve pediremos os documentos que faltam.'
+  'DOCTOS RECEBIDOS - CONFERIR':
+    titulo: 'Documentos em conferência'
+    o_que_esperar: 'Recebemos seus documentos e estamos conferindo tudo com calma.'
+  'DISTRIBUIR AO TIME OPERACIONAL':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Seu caso está sendo organizado para seguir com o time responsável.'
+  'BENEFICIO FUTURO / ANOTAR NA AGENDA':
+    titulo: 'Acompanhamento agendado'
+    o_que_esperar: 'Marcamos um lembrete para revisar seu caso no momento certo.'
+  'ELABORACAO DE CONTRATO':
+    titulo: 'Preparando seu contrato'
+    o_que_esperar: 'Estamos elaborando o contrato para darmos início ao seu caso.'
+  'PLANEJAMENTO PREVIDENCIARIO':
+    titulo: 'Planejamento previdenciário'
+    o_que_esperar: 'Estamos estudando o melhor caminho para o seu benefício junto ao INSS.'
+  'AGUARDANDO RETORNO/DOCUMENTOS':
+    titulo: 'Aguardando retorno'
+    o_que_esperar: 'Estamos aguardando um retorno seu ou de terceiros para seguir com o caso.'
+  'BENEFICIO CONCEDIDO / IMPLANTACAO':
+    titulo: 'Benefício concedido'
+    o_que_esperar: 'O INSS aprovou o benefício. Estamos acompanhando a implantação no sistema.'
+  'IMPROCEDENTE / MONTAR INICIAL':
+    titulo: 'Preparando ação na Justiça'
+    o_que_esperar: 'O pedido administrativo não avançou. Estamos preparando a ação judicial.'
+  'TAREFAS ADMINISTRATIVAS':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está cuidando de tarefas internas do seu caso.'
+  'AGUARDANDO PROTOCOLO':
+    titulo: 'Preparando o protocolo'
+    o_que_esperar: 'Estamos organizando tudo para protocolar o seu pedido.'
+  'REQUERIMENTO PROTOCOLADO':
+    titulo: 'Pedido protocolado no INSS'
+    o_que_esperar: 'O INSS recebeu o pedido e vai analisar. Acompanhamos e avisamos você a cada novidade.'
+  'CARTA DE EXIGENCIAS':
+    titulo: 'INSS pediu documentos'
+    o_que_esperar: 'O INSS pediu algo a mais. Se precisarmos de você, o pedido aparece aqui em Documentos.'
+  'PERICIA AGENDADA':
+    titulo: 'Perícia agendada'
+    o_que_esperar: 'Leve todos os laudos, exames e receitas no dia. Em caso de dúvida, fale com a equipe.'
+  'DECISAO PROFERIDA':
+    titulo: 'INSS decidiu o pedido'
+    o_que_esperar: 'Estamos analisando a decisão e o melhor caminho a seguir. Entraremos em contato.'
+  'RECURSO ADMINISTRATIVO PROTOCOLADO':
+    titulo: 'Recurso protocolado no INSS'
+    o_que_esperar: 'Pedimos a revisão da decisão do INSS. Acompanhamos e avisamos você a cada novidade.'
+  'DECISAO DO RECURSO PROFERIDA':
+    titulo: 'INSS decidiu o recurso'
+    o_que_esperar: 'Estamos analisando a decisão do recurso e o melhor caminho a seguir.'
+  'AGUARDANDO PAGAMENTO HONORARIOS':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está organizando as etapas finais do seu caso.'
+  'AGUARDANDO COPIA DO PROCESSO ADMINISTRATIVO':
+    titulo: 'Buscando cópia do processo'
+    o_que_esperar: 'Estamos providenciando uma cópia do seu processo junto ao INSS.'
+  'CONFERIR SAQUE':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está cuidando desta etapa do seu caso.'
+  'AGUARDANDO DOCUMENTOS':
+    titulo: 'Aguardando documentos'
+    o_que_esperar: 'Precisamos de alguns documentos seus para continuar. Fique de olho no WhatsApp.'
+  'SENTENCA PROFERIDA':
+    titulo: 'Juiz deu a sentença'
+    o_que_esperar: 'Estamos analisando a sentença. Explicaremos o resultado e os próximos passos.'
+  'NEGADO / AVISAR CLIENTE':
+    titulo: 'Pedido não foi aceito'
+    o_que_esperar: 'O pedido não foi aceito desta vez. Vamos conversar sobre os próximos passos possíveis.'
+  'ACAO PROTOCOLADA':
+    titulo: 'Ação protocolada na Justiça'
+    o_que_esperar: 'O processo está com o juiz. A Justiça tem o próprio ritmo; acompanhamos de perto.'
+  'PROCESSO SUBSTABELECIDO PARA OUTRO(A) ADV':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Seu caso segue sendo cuidado por nossa equipe.'
+  'DESENVOLVENDO INICIAL / DEFESA':
+    titulo: 'Preparando a ação'
+    o_que_esperar: 'Estamos preparando os documentos para levar seu caso à Justiça.'
+  'INICIAL / DEFESA PROTOCOLADA':
+    titulo: 'Ação protocolada na Justiça'
+    o_que_esperar: 'O processo está com o juiz. A Justiça tem o próprio ritmo; acompanhamos de perto.'
+  'FASE DE INSTRUCAO':
+    titulo: 'Fase de provas'
+    o_que_esperar: 'O juiz está reunindo provas: pode marcar perícia ou audiência. Se for o caso, avisamos você.'
+  'AUDIENCIA / PERICIA REALIZADA':
+    titulo: 'Perícia ou audiência realizada'
+    o_que_esperar: 'O encontro já aconteceu. Agora aguardamos a próxima decisão no processo.'
+  'PROPOSTA DE ACORDO - ANALISAR':
+    titulo: 'Proposta em análise'
+    o_que_esperar: 'Recebemos uma proposta de acordo e estamos avaliando se vale a pena para você.'
+  'PRAZO MANIF / REPLICA / RAZOES FINAIS':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está preparando uma manifestação no seu processo.'
+  'PROCESSO SOBRESTADO':
+    titulo: 'Processo em espera'
+    o_que_esperar: 'O processo está temporariamente parado aguardando outra decisão da Justiça. Acompanhamos de perto.'
+  'RECURSO PROTOCOLADO':
+    titulo: 'Recurso apresentado'
+    o_que_esperar: 'Levamos o caso para a instância superior. O julgamento não tem data fixa.'
+  'PRAZO DE CONTRARRAZOES':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está respondendo ao recurso da outra parte.'
+  'AGUARDANDO JULGAMENTO DO RECURSO':
+    titulo: 'Aguardando julgamento do recurso'
+    o_que_esperar: 'O recurso está com o tribunal. Acompanhamos e avisamos você assim que houver decisão.'
+  'RECURSO JULGADO':
+    titulo: 'Recurso julgado'
+    o_que_esperar: 'O tribunal decidiu o recurso. Estamos analisando o resultado e os próximos passos.'
+  'PRAZO RECURSAL':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está avaliando se cabe recurso no seu processo.'
+  'AGUARDANDO EXECUCAO':
+    titulo: 'Preparando a execução'
+    o_que_esperar: 'Estamos organizando os próximos passos para cobrar o que foi decidido.'
+  'EXECUCAO COMO EXEQUENTE':
+    titulo: 'Cobrança na Justiça'
+    o_que_esperar: 'Estamos cobrando na Justiça o que foi decidido a seu favor.'
+  'EXECUCAO COMO DEVEDOR':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está cuidando desta etapa do processo.'
+  'PENHORA REALIZADA':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está acompanhando esta etapa do processo.'
+  'PRAZO DE EMBARGOS / IMPUGNACAO':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Nossa equipe está respondendo a uma manifestação da outra parte.'
+  'RPV / PRECATORIO EMITIDO':
+    titulo: 'Pagamento em processamento'
+    o_que_esperar: 'A Justiça emitiu a ordem de pagamento. Avisamos você assim que essa etapa for concluída.'
+  'PAGAMENTO RECEBIDO / PAGAR CLIENTE':
+    titulo: 'Pagamento recebido'
+    o_que_esperar: 'O pagamento chegou até nós. Estamos organizando o repasse para você.'
+  'EXECUCAO FINALIZADA / CUSTAS PENDENTES':
+    titulo: 'Execução quase concluída'
+    o_que_esperar: 'O processo está com as últimas pendências para ser encerrado.'
+  'AGUARDANDO ARQUIVAMENTO':
+    titulo: 'Processo em encerramento'
+    o_que_esperar: 'Seu caso está sendo finalizado e em breve será encerrado.'
+  'PAGAMENTO REALIZADO':
+    titulo: 'Pagamento realizado'
+    o_que_esperar: 'O pagamento já foi repassado. Se tiver dúvida, fale com a equipe.'
+  'PRESTAR CONTAS E PAGAR AO CLIENTE':
+    titulo: 'Acerto final do caso'
+    o_que_esperar: 'Estamos organizando a prestação de contas e o repasse com você. A equipe entra em contato.'
+  'ANALISADO E NAO DISTRIBUIDO':
+    titulo: 'Em preparação pela equipe'
+    o_que_esperar: 'Seu caso está sendo analisado pela nossa equipe.'
+  'ARQUIVADO POR DESINTERESSE CLIENTE':
+    titulo: 'Caso encerrado'
+    o_que_esperar: 'Este caso foi encerrado a seu pedido. Se quiser retomar, fale com a equipe.'
+  'ARQUIVADO POR DETERMINACAO JUDICIAL':
+    titulo: 'Caso encerrado'
+    o_que_esperar: 'Este caso foi encerrado por decisão da Justiça. Se precisar de algo, fale com a equipe.'
+  'ARQUIVADO/ENCERRADO':
+    titulo: 'Processo encerrado'
+    o_que_esperar: 'Este processo foi concluído. Se precisar de algo, fale com a equipe.'
+marcos:
+  - { tipo: pericia,   regex: 'per[ií]cia',                    titulo: 'Perícia',              explicacao: 'Avaliação médica do INSS ou da Justiça.' }
+  - { tipo: audiencia, regex: 'audi[êe]ncia',                  titulo: 'Audiência',            explicacao: 'Encontro com o juiz para ouvir as partes e testemunhas.' }
+  - { tipo: protocolo, regex: 'distribu[ií]d|protocol|autuad', titulo: 'Processo protocolado', explicacao: 'O pedido entrou oficialmente.' }
+  - { tipo: sentenca,  regex: 'senten[çc]a|ac[óo]rd[ãa]o',      titulo: 'Decisão do juiz',      explicacao: 'O juiz decidiu. Nossa equipe explica o resultado.' }
+  - { tipo: concessao, regex: 'implanta|concedid|deferid',     titulo: 'Benefício concedido',  explicacao: 'O benefício foi liberado.' }
