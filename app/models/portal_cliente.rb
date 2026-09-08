@@ -16,6 +16,10 @@ class PortalCliente < ApplicationRecord
   validates :email, uniqueness: { scope: :account_id }, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :advbox_customer_id, uniqueness: { scope: :account_id }
 
+  def self.from_email(email)
+    find_by(email: email&.downcase)
+  end
+
   def gerar_codigo!
     codigo = format('%06d', SecureRandom.random_number(1_000_000))
     update!(codigo_digest: digest(codigo), codigo_expira_em: CODIGO_VALIDADE.from_now)

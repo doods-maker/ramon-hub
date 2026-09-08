@@ -1,4 +1,8 @@
 class Cliente::PainelController < Cliente::BaseController
+  MSG_ATUALIZADO = 'Dados atualizados.'.freeze
+  MSG_AGUARDE = 'Já atualizamos há pouco. Tente de novo mais tarde.'.freeze
+  MSG_INDISPONIVEL = 'Não conseguimos atualizar agora. Mostrando os últimos dados que temos.'.freeze
+
   before_action :require_cliente
   before_action :require_termos, except: [:aceitar_termos]
   before_action :fetch_processo, only: [:processo, :enviar]
@@ -17,13 +21,13 @@ class Cliente::PainelController < Cliente::BaseController
     if current_cliente.pode_atualizar?
       current_cliente.update!(atualizacao_pedida_em: Time.current)
       Ramon::PortalSyncService.new(current_cliente).perform
-      flash[:portal_notice] = 'Dados atualizados.'
+      flash[:portal_notice] = MSG_ATUALIZADO
     else
-      flash[:portal_notice] = 'Já atualizamos há pouco. Tente de novo mais tarde.'
+      flash[:portal_notice] = MSG_AGUARDE
     end
     redirect_to cliente_inicio_path
   rescue Ramon::AdvboxClient::UnavailableError, Ramon::AdvboxClient::RequestError
-    flash[:portal_alert] = 'Não conseguimos atualizar agora. Mostrando os últimos dados que temos.'
+    flash[:portal_alert] = MSG_INDISPONIVEL
     redirect_to cliente_inicio_path
   end
 

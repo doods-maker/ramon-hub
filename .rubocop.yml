@@ -107,6 +107,7 @@ Rails/ApplicationController:
     - 'app/controllers/platform_controller.rb'
     - 'app/controllers/public_controller.rb'
     - 'app/controllers/public/portal_controller.rb'
+    - 'app/controllers/cliente/base_controller.rb'
     - 'app/controllers/survey/responses_controller.rb'
 
 Rails/FindEach:
@@ -212,6 +213,7 @@ UseFromEmail:
   Exclude:
     - 'app/models/user.rb'
     - 'app/models/contact.rb'
+    - 'app/models/portal_cliente.rb'
 
 CustomCopLocation:
   Enabled: true

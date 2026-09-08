@@ -1,5 +1,7 @@
 # E-mails do Painel do Cliente: código de acesso e convite. Texto = gate do Eduardo.
 class Ramon::PortalMailer < ApplicationMailer
+  ASSUNTO_CONVITE = 'Acompanhe o seu caso pelo Painel do Cliente'.freeze
+
   def codigo
     return unless smtp_config_set_or_development?
 
@@ -13,6 +15,6 @@ class Ramon::PortalMailer < ApplicationMailer
 
     @cliente = params[:cliente]
     @url = ENV.fetch('PORTAL_URL', "#{ENV.fetch('FRONTEND_URL', nil)}/cliente")
-    mail(to: @cliente.email, subject: 'Acompanhe o seu caso pelo Painel do Cliente') { |f| f.html { render layout: false } }
+    mail(to: @cliente.email, subject: ASSUNTO_CONVITE) { |f| f.html { render layout: false } }
   end
 end

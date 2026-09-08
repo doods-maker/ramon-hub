@@ -59,24 +59,24 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     cliente.update!(convidado_em: Time.current)
   end
 
-  def linha(c)
+  def linha(cliente)
     {
-      id: c.id, nome: c.nome, cpf: c.cpf, email: c.email, advbox_customer_id: c.advbox_customer_id,
-      convidado_em: c.convidado_em&.iso8601, termos_aceitos_em: c.termos_aceitos_em&.iso8601,
-      sincronizado_em: c.sincronizado_em&.iso8601,
-      processos: c.processos.map { |p| p.slice('id', 'numero', 'tipo', 'etapa', 'fase', 'docs_pendentes') },
-      envios_count: c.envios.count, assinaturas_pendentes: c.assinaturas.pendentes.count
+      id: cliente.id, nome: cliente.nome, cpf: cliente.cpf, email: cliente.email, advbox_customer_id: cliente.advbox_customer_id,
+      convidado_em: cliente.convidado_em&.iso8601, termos_aceitos_em: cliente.termos_aceitos_em&.iso8601,
+      sincronizado_em: cliente.sincronizado_em&.iso8601,
+      processos: cliente.processos.map { |p| p.slice('id', 'numero', 'tipo', 'etapa', 'fase', 'docs_pendentes') },
+      envios_count: cliente.envios.count, assinaturas_pendentes: cliente.assinaturas.pendentes.count
     }
   end
 
-  def detalhe(c)
-    linha(c).merge(
-      recados: c.recados,
-      envios: c.envios.order(created_at: :desc).map do |e|
+  def detalhe(cliente)
+    linha(cliente).merge(
+      recados: cliente.recados,
+      envios: cliente.envios.order(created_at: :desc).map do |e|
         { id: e.id, item: e.item, lawsuit_id: e.lawsuit_id, drive_file_id: e.drive_file_id, advbox_post_id: e.advbox_post_id,
           created_at: e.created_at.iso8601 }
       end,
-      assinaturas: c.assinaturas.order(created_at: :desc).map do |a|
+      assinaturas: cliente.assinaturas.order(created_at: :desc).map do |a|
         { id: a.id, nome: a.nome, status: a.status, assinado_em: a.assinado_em&.iso8601, created_at: a.created_at.iso8601 }
       end
     )
