@@ -1,0 +1,21 @@
+<%# app/views/cliente/painel/assinatura.html.erb %>
+<% content_for :title, 'Assinatura' %>
+<%= link_to '← Seus processos', cliente_inicio_path, class: 'btn-link' %>
+<p class="eyebrow">Assinatura eletrônica</p>
+<h1><%= @assinatura.nome %></h1>
+<div class="divider"></div>
+<% if @assinatura.status == 'signed' %>
+  <div class="neutral-card">Documento assinado. Obrigado!</div>
+<% else %>
+  <p id="aviso-assinatura" class="flash flash-notice" hidden>Assinatura recebida. Estamos confirmando…</p>
+  <iframe class="iframe-assinatura" src="<%= @assinatura.sign_url %>" allow="camera" title="Assinar documento"></iframe>
+  <script>
+    // Widget oficial do ZapSign: avisa por postMessage; a verdade vem do webhook.
+    window.addEventListener('message', function (e) {
+      if (e.data === 'zs-doc-signed') {
+        document.getElementById('aviso-assinatura').hidden = false;
+        setTimeout(function () { window.location.href = '<%= cliente_inicio_path %>'; }, 4000);
+      }
+    });
+  </script>
+<% end %>

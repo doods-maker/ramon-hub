@@ -52,8 +52,10 @@ class Cliente::PainelController < Cliente::BaseController
     redirect_to cliente_processo_path(@processo['id'])
   end
 
-  # PR 6
-  def assinatura = head(:not_found)
+  def assinatura
+    @assinatura = current_cliente.assinaturas.find_by(id: params[:id])
+    head :not_found if @assinatura.nil?
+  end
 
   private
 

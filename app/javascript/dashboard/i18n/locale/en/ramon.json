@@ -655,6 +655,8 @@
       "RECADO_SAVE": "Save message",
       "SEND_SIGNATURE": "Send for signature",
       "TEMPLATE": "ZapSign template",
+      "DOC_NAME": "Document name",
+      "SIGNATURES_LIST": "Signatures sent",
       "EMPTY": "No client invited yet.",
       "LOAD_ERROR": "Could not load the list.",
       "SAVED": "Saved.",

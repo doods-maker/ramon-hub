@@ -693,6 +693,9 @@ Rails.application.routes.draw do
         # Ramon — webhook do Flowter/ADVBOX (Bearer estático — o Flowter não assina HMAC)
         post 'advbox_webhooks', to: 'advbox_webhooks#create'
 
+        # Ramon — webhook do ZapSign (assinaturas do painel); segredo fixo no header X-Ramon-Secret
+        post 'zapsign_webhooks', to: 'zapsign_webhooks#create'
+
         # Ramon — servidor MCP p/ os Claude Cowork (item 29): leitura e escrita
         # (AdvBox). GET/DELETE = 405 (sem stream SSE). Token via ?token= (o
         # filter_parameters mascara no log). A rota antiga com o token no PATH

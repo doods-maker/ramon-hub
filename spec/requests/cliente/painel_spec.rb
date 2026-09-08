@@ -88,4 +88,14 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
       expect(response).to redirect_to('/cliente/processos/1')
     end
   end
+
+  it 'tela de assinatura embute o widget do ZapSign do próprio cliente' do
+    a = create(:portal_assinatura, portal_cliente: cliente, signer_token: 'sig-1')
+    entrar
+    get "/cliente/assinaturas/#{a.id}"
+    expect(response.body).to include('https://app.zapsign.com.br/verificar/sig-1')
+    outro = create(:portal_assinatura)
+    get "/cliente/assinaturas/#{outro.id}"
+    expect(response).to have_http_status(:not_found)
+  end
 end
