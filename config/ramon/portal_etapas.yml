@@ -136,8 +136,8 @@ etapas:
     titulo: 'Preparando a execução'
     o_que_esperar: 'Estamos organizando os próximos passos para cobrar o que foi decidido.'
   'EXECUCAO COMO EXEQUENTE':
-    titulo: 'Cobrando o valor decidido'
-    o_que_esperar: 'Estamos cobrando na Justiça o valor que foi decidido a seu favor.'
+    titulo: 'Cobrança na Justiça'
+    o_que_esperar: 'Estamos cobrando na Justiça o que foi decidido a seu favor.'
   'EXECUCAO COMO DEVEDOR':
     titulo: 'Em preparação pela equipe'
     o_que_esperar: 'Nossa equipe está cuidando desta etapa do processo.'
@@ -149,10 +149,10 @@ etapas:
     o_que_esperar: 'Nossa equipe está respondendo a uma manifestação da outra parte.'
   'RPV / PRECATORIO EMITIDO':
     titulo: 'Pagamento em processamento'
-    o_que_esperar: 'A Justiça emitiu a ordem de pagamento. Avisamos quando o valor for liberado.'
+    o_que_esperar: 'A Justiça emitiu a ordem de pagamento. Avisamos você assim que essa etapa for concluída.'
   'PAGAMENTO RECEBIDO / PAGAR CLIENTE':
     titulo: 'Pagamento recebido'
-    o_que_esperar: 'O valor chegou até nós. Estamos organizando o repasse para você.'
+    o_que_esperar: 'O pagamento chegou até nós. Estamos organizando o repasse para você.'
   'EXECUCAO FINALIZADA / CUSTAS PENDENTES':
     titulo: 'Execução quase concluída'
     o_que_esperar: 'O processo está com as últimas pendências para ser encerrado.'
@@ -161,10 +161,10 @@ etapas:
     o_que_esperar: 'Seu caso está sendo finalizado e em breve será encerrado.'
   'PAGAMENTO REALIZADO':
     titulo: 'Pagamento realizado'
-    o_que_esperar: 'O valor já foi repassado. Se tiver dúvida, fale com a equipe.'
+    o_que_esperar: 'O pagamento já foi repassado. Se tiver dúvida, fale com a equipe.'
   'PRESTAR CONTAS E PAGAR AO CLIENTE':
     titulo: 'Acerto final do caso'
-    o_que_esperar: 'Estamos fazendo o acerto final e o repasse do valor para você.'
+    o_que_esperar: 'Estamos organizando a prestação de contas e o repasse com você. A equipe entra em contato.'
   'ANALISADO E NAO DISTRIBUIDO':
     titulo: 'Em preparação pela equipe'
     o_que_esperar: 'Seu caso está sendo analisado pela nossa equipe.'
