@@ -299,6 +299,12 @@ Rails.application.routes.draw do
           resources :ramon_reunioes, only: [:index, :show, :create, :destroy], controller: 'ramon_reunioes' do
             member { post :reprocessar }
           end
+          resources :portal_clientes, only: [:index, :show, :create, :update], controller: 'portal_clientes' do
+            member do
+              post :convidar
+              post :assinatura
+            end
+          end
           resources :calculos, only: [:index, :destroy] do
             member { post :reabrir }
           end
