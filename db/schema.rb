@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_09_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_11_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1372,7 +1372,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_09_000003) do
     t.bigint "advbox_customer_id", null: false
     t.string "nome", null: false
     t.string "cpf"
-    t.string "email", null: false
+    t.string "email"
     t.string "codigo_digest"
     t.datetime "codigo_expira_em"
     t.datetime "convidado_em"
@@ -1383,7 +1383,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_09_000003) do
     t.jsonb "recados", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "senha_digest"
     t.index ["account_id", "advbox_customer_id"], name: "index_portal_clientes_on_account_id_and_advbox_customer_id", unique: true
+    t.index ["account_id", "cpf"], name: "index_portal_clientes_on_account_id_and_cpf", unique: true
     t.index ["account_id", "email"], name: "index_portal_clientes_on_account_id_and_email", unique: true
     t.index ["account_id"], name: "index_portal_clientes_on_account_id"
   end

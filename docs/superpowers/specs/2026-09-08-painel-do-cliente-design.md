@@ -34,7 +34,7 @@ cliente; sem valores; rodapé de compliance OAB.
 |---|---|
 | Q1 | Só cliente com processo no ADVBOX tem conta (customer identificado por CPF). |
 | Q2/Q7 | Andamentos **curados**: dicionário etapa→texto simples + só marcos reconhecidos; "recado ao cliente" opcional por processo, escrito no hub. |
-| Q3 | Login = e-mail + código de 6 dígitos (10 min), sem senha. Sessão 30 dias no aparelho. |
+| Q3 | ~~Login = e-mail + código de 6 dígitos (10 min), sem senha.~~ **Revisto 11/09/2026 (Eduardo):** login = **CPF + senha** (provisória de 6 dígitos gerada no hub ao convidar, mostrada UMA vez pra equipe repassar por WhatsApp/em mãos e no e-mail de convite, se houver e-mail). Troca de senha opcional dentro do painel (só números, mín. 6). E-mail opcional. "Esqueci a senha" = código de 6 dígitos por e-mail (quando há) OU botão "Nova senha provisória" no hub. Motivo: cliente sem e-mail prático. Sessão 30 dias no aparelho. |
 | Q4 | Entrega única (consulta + documentos + assinatura). |
 | Q5/Q13 | Evoluir o hub, servido em `cliente.ramonantonio.adv.br` (Caddy → mesmo container). |
 | Q6 | Espelho sincronizado 1x/noite + botão "Atualizar" (máx. 1 a cada 6 h por cliente). |

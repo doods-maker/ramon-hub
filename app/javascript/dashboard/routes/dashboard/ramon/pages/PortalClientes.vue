@@ -18,6 +18,7 @@ const busca = ref('');
 const resultados = ref([]);
 const candidato = ref(null); // cliente do ADVBOX escolhido pra convidar
 const emailConvite = ref('');
+const senhaGerada = ref(null); // { nome, senha } — aparece uma vez, o hub não guarda em claro
 const aberto = ref(null); // detalhe expandido
 const recados = ref({});
 const aviso = ref('');
@@ -59,12 +60,13 @@ const escolher = c => {
 const convidar = async () => {
   const c = candidato.value;
   try {
-    await PortalClientesAPI.create({
+    const { data } = await PortalClientesAPI.create({
       advbox_customer_id: c.id,
       nome: c.name,
       cpf: c.identification,
       email: emailConvite.value,
     });
+    senhaGerada.value = { nome: data.nome, senha: data.senha_provisoria };
     candidato.value = null;
     resultados.value = [];
     busca.value = '';
@@ -78,7 +80,8 @@ const convidar = async () => {
 
 const reenviar = async id => {
   try {
-    await PortalClientesAPI.convidar(id);
+    const { data } = await PortalClientesAPI.convidar(id);
+    senhaGerada.value = { nome: data.nome, senha: data.senha_provisoria };
     await carregar();
   } catch (e) {
     useAlert(
@@ -150,6 +153,15 @@ const salvarRecados = async () => {
   }
 };
 
+const copiarSenha = async () => {
+  try {
+    await navigator.clipboard.writeText(senhaGerada.value.senha);
+    useAlert(t('RAMON.PORTAL_CLIENTES.COPIED'));
+  } catch {
+    useAlert(t('RAMON.PORTAL_CLIENTES.ACTION_ERROR'));
+  }
+};
+
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
 
@@ -213,12 +225,42 @@ onMounted(carregar);
         <button
           type="button"
           class="rounded-lg bg-n-iris-9 px-3 py-2 text-sm text-white"
-          :disabled="!emailConvite"
           @click="convidar"
         >
           {{ t('RAMON.PORTAL_CLIENTES.INVITE') }}
         </button>
       </div>
+    </div>
+
+    <div
+      v-if="senhaGerada"
+      class="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-n-amber-6 bg-n-amber-2 p-4 text-sm"
+    >
+      <span>
+        {{
+          t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD', { nome: senhaGerada.nome })
+        }}
+        <strong class="font-mono text-lg tracking-widest">{{
+          senhaGerada.senha
+        }}</strong>
+      </span>
+      <button
+        type="button"
+        class="rounded-lg bg-n-iris-9 px-3 py-1.5 text-xs text-white"
+        @click="copiarSenha"
+      >
+        {{ t('RAMON.PORTAL_CLIENTES.COPY') }}
+      </button>
+      <span class="text-xs text-n-slate-11">{{
+        t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD_HINT')
+      }}</span>
+      <button
+        type="button"
+        class="ml-auto text-xs text-n-slate-11 hover:underline"
+        @click="senhaGerada = null"
+      >
+        {{ t('RAMON.PORTAL_CLIENTES.DISMISS') }}
+      </button>
     </div>
 
     <div v-if="isLoading" class="h-12 animate-pulse rounded-lg bg-n-solid-2" />
@@ -240,7 +282,10 @@ onMounted(carregar);
             @click="abrir(c.id)"
           >
             {{ c.nome }}
-            <span class="font-normal text-n-slate-11">{{ c.email }}</span>
+            <span class="font-normal text-n-slate-11"
+              >{{ c.cpf
+              }}<template v-if="c.email"> · {{ c.email }}</template></span
+            >
           </button>
           <span class="text-xs text-n-slate-11">
             {{

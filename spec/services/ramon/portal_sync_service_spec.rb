@@ -34,10 +34,4 @@ RSpec.describe Ramon::PortalSyncService do
     expect(p['docs_pendentes']).to eq([{ 'item' => 'CNIS atualizado', 'post_id' => 1 }, { 'item' => 'Laudo médico', 'post_id' => 1 }])
     expect(cliente.reload.sincronizado_em).to be_present
   end
-
-  it 'sem CPF não chama a API e mantém o espelho' do
-    cliente.update!(cpf: nil, processos: [{ 'id' => 1 }])
-    expect(described_class.new(cliente).perform).to eq([{ 'id' => 1 }])
-    expect(Ramon::AdvboxClient).not_to have_received(:lawsuits)
-  end
 end

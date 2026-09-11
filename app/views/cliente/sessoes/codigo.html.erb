@@ -4,13 +4,14 @@
 <div class="divider"></div>
 <% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
 <% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
-<%= form_with url: cliente_entrar_path, method: :post, local: true, class: 'form-portal' do |f| %>
-  <%= f.hidden_field :email, value: @email %>
+<%= form_with url: cliente_entrar_codigo_path, method: :post, local: true, class: 'form-portal' do |f| %>
+  <%= f.hidden_field :cpf, value: @cpf %>
   <%= f.label :codigo, 'Código de 6 dígitos', class: 'label' %>
   <%= f.text_field :codigo, required: true, inputmode: 'numeric', pattern: '[0-9]{6}', autocomplete: 'one-time-code', class: 'input input-codigo' %>
   <%= f.submit 'Entrar', class: 'btn-bronze' %>
 <% end %>
 <%= form_with url: cliente_codigo_path, method: :post, local: true do |f| %>
-  <%= f.hidden_field :email, value: @email %>
+  <%= f.hidden_field :cpf, value: @cpf %>
   <%= f.submit 'Pedir outro código', class: 'btn-link' %>
 <% end %>
+<%= link_to 'Voltar', cliente_root_path, class: 'btn-link' %>

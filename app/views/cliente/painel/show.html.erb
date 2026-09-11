@@ -25,4 +25,5 @@
   <%= f.submit 'Atualizar', class: 'btn-link' %>
 <% end %>
 <p class="muted">Última atualização: <%= current_cliente.sincronizado_em ? l(current_cliente.sincronizado_em, format: :short) : '—' %></p>
+<%= link_to 'Trocar senha', edit_cliente_senha_path, class: 'btn-link' %>
 <%= button_to 'Sair', cliente_sair_path, method: :delete, class: 'btn-link' %>

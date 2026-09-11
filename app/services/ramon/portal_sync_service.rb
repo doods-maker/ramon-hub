@@ -13,8 +13,6 @@ class Ramon::PortalSyncService
   end
 
   def perform
-    return @cliente.processos if @cliente.cpf.blank?
-
     processos = lista(Ramon::AdvboxClient.lawsuits(identification: @cliente.cpf, limit: LIMITE_PROCESSOS))
                 .map { |l| espelho(l) }
     @cliente.update!(processos: processos, sincronizado_em: Time.current)
