@@ -1,5 +1,6 @@
-# Tela "Painel do cliente" do hub: convidar cliente do ADVBOX, recado por
-# processo, enviar documento pra assinatura. Convite é sempre clique humano.
+# Tela "Painel do cliente" do hub: convidar cliente do ADVBOX (gera a senha
+# provisória), recado por processo, enviar documento pra assinatura. Convite é
+# sempre clique humano.
 class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseController
   before_action :current_account
   before_action :fetch_cliente, only: [:show, :update, :convidar, :assinatura]
@@ -16,23 +17,24 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
   def create
     cliente = Current.account.portal_clientes.create!(params.permit(:advbox_customer_id, :nome, :cpf, :email))
     sincronizar(cliente)
-    convidar!(cliente)
-    render json: linha(cliente)
+    senha = convidar!(cliente)
+    render json: linha(cliente).merge(senha_provisoria: senha)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
   end
 
   def update
     @cliente.update!(recados: params[:recados].to_unsafe_h.transform_values(&:to_s).compact_blank) if params.key?(:recados)
-    @cliente.update!(email: params[:email]) if params[:email].present?
+    @cliente.update!(email: params[:email].presence) if params.key?(:email)
     render json: detalhe(@cliente)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
   end
 
+  # Reenviar convite = gerar senha provisória nova (a anterior deixa de valer).
   def convidar
-    convidar!(@cliente)
-    render json: linha(@cliente)
+    senha = convidar!(@cliente)
+    render json: linha(@cliente).merge(senha_provisoria: senha)
   end
 
   def assinatura
@@ -71,9 +73,13 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     Rails.logger.warn("[PortalClientes] sync falhou cliente=#{cliente.id}: #{e.message}")
   end
 
+  # A senha provisória só existe em claro aqui, na resposta desta chamada (o hub
+  # mostra uma vez pra equipe repassar) e no e-mail de convite, se houver e-mail.
   def convidar!(cliente)
-    Ramon::PortalMailer.with(account: Current.account, cliente: cliente).convite.deliver_later
+    senha = cliente.gerar_senha_provisoria!
+    Ramon::PortalMailer.with(account: Current.account, cliente: cliente, senha: senha).convite.deliver_later if cliente.email.present?
     cliente.update!(convidado_em: Time.current)
+    senha
   end
 
   def linha(cliente)

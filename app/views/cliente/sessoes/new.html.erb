@@ -2,9 +2,13 @@
 <p class="eyebrow">Painel do cliente</p>
 <h1>Acompanhe o seu caso</h1>
 <div class="divider"></div>
-<%= form_with url: cliente_codigo_path, method: :post, local: true, class: 'form-portal' do |f| %>
-  <%= f.label :email, 'Seu e-mail', class: 'label' %>
-  <%= f.email_field :email, required: true, autocomplete: 'email', inputmode: 'email', class: 'input', placeholder: 'nome@exemplo.com' %>
-  <%= f.submit 'Receber código', class: 'btn-bronze' %>
+<% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
+<%= form_with url: cliente_entrar_path, method: :post, local: true, class: 'form-portal' do |f| %>
+  <%= f.label :cpf, 'Seu CPF', class: 'label' %>
+  <%= f.text_field :cpf, value: params[:cpf], required: true, autocomplete: 'username', inputmode: 'numeric', class: 'input', placeholder: '000.000.000-00' %>
+  <%= f.label :senha, 'Sua senha', class: 'label' %>
+  <%= f.password_field :senha, required: true, autocomplete: 'current-password', inputmode: 'numeric', class: 'input' %>
+  <%= f.submit 'Entrar', class: 'btn-bronze' %>
 <% end %>
-<div class="neutral-card">Você recebe um código de 6 dígitos no e-mail cadastrado com o escritório. Não precisa de senha.</div>
+<%= link_to 'Esqueci a senha', cliente_esqueci_path, class: 'btn-link' %>
+<div class="neutral-card">Use o CPF e a senha que o escritório te passou. Você pode trocar a senha depois de entrar.</div>

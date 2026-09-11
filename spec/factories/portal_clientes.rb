@@ -3,7 +3,7 @@ FactoryBot.define do
     account
     sequence(:advbox_customer_id) { |n| 14_000_000 + n }
     nome { 'Maria de Lourdes' }
-    cpf { '12345678901' }
+    sequence(:cpf) { |n| format('%011d', 10_000_000_000 + n) }
     sequence(:email) { |n| "cliente#{n}@exemplo.com" }
   end
 

@@ -13,7 +13,7 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
   let(:cliente) { create(:portal_cliente, account: account, convidado_em: 1.day.ago, termos_aceitos_em: 1.day.ago, processos: processos) }
 
   def entrar(alvo = cliente)
-    post '/cliente/entrar', params: { email: alvo.email, codigo: alvo.gerar_codigo! }
+    post '/cliente/entrar', params: { cpf: alvo.cpf, senha: alvo.gerar_senha_provisoria! }
   end
 
   it 'sem sessão redireciona pro login' do

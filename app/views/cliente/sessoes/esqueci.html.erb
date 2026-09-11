@@ -1,0 +1,11 @@
+<%# app/views/cliente/sessoes/esqueci.html.erb %>
+<p class="eyebrow">Painel do cliente</p>
+<h1>Esqueci a senha</h1>
+<div class="divider"></div>
+<%= form_with url: cliente_codigo_path, method: :post, local: true, class: 'form-portal' do |f| %>
+  <%= f.label :cpf, 'Seu CPF', class: 'label' %>
+  <%= f.text_field :cpf, required: true, autocomplete: 'username', inputmode: 'numeric', class: 'input', placeholder: '000.000.000-00' %>
+  <%= f.submit 'Receber código por e-mail', class: 'btn-bronze' %>
+<% end %>
+<%= link_to 'Voltar', cliente_root_path, class: 'btn-link' %>
+<div class="neutral-card">Se você tem um e-mail cadastrado com o escritório, recebe um código de 6 dígitos para entrar e escolher uma senha nova. Sem e-mail, fale com a equipe pelo WhatsApp.</div>

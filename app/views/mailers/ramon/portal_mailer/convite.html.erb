@@ -2,5 +2,6 @@
 <p>Olá, <%= @cliente.primeiro_nome %>.</p>
 <p>Agora você pode acompanhar o seu caso, enviar documentos e assinar pelo celular no Painel do Cliente:</p>
 <p><a href="<%= @url %>"><%= @url %></a></p>
-<p>Para entrar, use este e-mail. Você recebe um código de 6 dígitos; não precisa de senha.</p>
+<p>Para entrar, use o seu CPF e esta senha provisória: <strong><%= @senha %></strong></p>
+<p>Depois de entrar, você pode trocar a senha quando quiser.</p>
 <p>Ramon Antonio Advogados</p>

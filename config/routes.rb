@@ -721,9 +721,12 @@ Rails.application.routes.draw do
   # Fora do namespace :public (força JSON) e fora de Portal:: (help center).
   scope path: 'cliente', module: :cliente, as: :cliente do
     get '/', to: 'sessoes#new', as: :root
-    post 'codigo', to: 'sessoes#create', as: :codigo
-    post 'entrar', to: 'sessoes#verificar', as: :entrar
+    post 'entrar', to: 'sessoes#create', as: :entrar
+    get 'esqueci', to: 'sessoes#esqueci', as: :esqueci
+    post 'codigo', to: 'sessoes#codigo', as: :codigo
+    post 'entrar-codigo', to: 'sessoes#verificar', as: :entrar_codigo
     delete 'sair', to: 'sessoes#destroy', as: :sair
+    resource :senha, only: [:edit, :update], controller: 'senhas'
     get 'inicio', to: 'painel#show', as: :inicio
     post 'termos', to: 'painel#aceitar_termos', as: :termos
     post 'atualizar', to: 'painel#atualizar', as: :atualizar

@@ -13,7 +13,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(response).to have_http_status(:unauthorized)
   end
 
-  it 'cria o cliente, sincroniza e envia o convite' do
+  it 'cria o cliente, sincroniza, gera a senha provisória (devolvida uma vez) e envia o convite' do
     expect do
       post base, params: { advbox_customer_id: 14_688_380, nome: 'Venicio Schmidt', cpf: '123.456.789-01', email: 'v@exemplo.com' }, headers: headers
     end.to have_enqueued_mail(Ramon::PortalMailer, :convite)
@@ -21,12 +21,24 @@ RSpec.describe 'Portal Clientes API', type: :request do
     cliente = PortalCliente.last
     expect(cliente.convidado_em).to be_present
     expect(cliente.cpf).to eq '12345678901'
+    senha = response.parsed_body['senha_provisoria']
+    expect(senha).to match(/\A\d{6}\z/)
+    expect(cliente.authenticate_senha(senha)).to be_truthy
     expect(Ramon::PortalSyncService).to have_received(:new).with(cliente)
+  end
+
+  it 'sem e-mail: cria, gera a senha e não enfileira convite' do
+    expect do
+      post base, params: { advbox_customer_id: 14_688_381, nome: 'Sem Email', cpf: '987.654.321-00', email: '' }, headers: headers
+    end.not_to have_enqueued_mail(Ramon::PortalMailer, :convite)
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body['senha_provisoria']).to match(/\A\d{6}\z/)
+    expect(PortalCliente.last.email).to be_nil
   end
 
   it 'e-mail duplicado devolve 422' do
     create(:portal_cliente, account: account, email: 'v@exemplo.com')
-    post base, params: { advbox_customer_id: 1, nome: 'X', email: 'v@exemplo.com' }, headers: headers
+    post base, params: { advbox_customer_id: 1, nome: 'X', cpf: '111.111.111-11', email: 'v@exemplo.com' }, headers: headers
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
@@ -36,6 +48,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(response.parsed_body['payload'].first['id']).to eq cliente.id
 
     expect { post "#{base}/#{cliente.id}/convidar", headers: headers }.to have_enqueued_mail(Ramon::PortalMailer, :convite)
+    expect(cliente.reload.authenticate_senha(response.parsed_body['senha_provisoria'])).to be_truthy
     patch "#{base}/#{cliente.id}", params: { recados: { '7' => 'Leve os exames' } }, headers: headers, as: :json
     expect(cliente.reload.recados).to eq('7' => 'Leve os exames')
   end
