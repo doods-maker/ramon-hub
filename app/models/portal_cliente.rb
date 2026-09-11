@@ -21,7 +21,7 @@ class PortalCliente < ApplicationRecord
   validates :cpf, uniqueness: { scope: :account_id }
   validates :email, uniqueness: { scope: :account_id }, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
   validates :advbox_customer_id, uniqueness: { scope: :account_id }
-  validates :senha, format: { with: REGRA_SENHA, message: 'precisa ter pelo menos 6 números' }, allow_nil: true
+  validates :senha, format: { with: REGRA_SENHA }, allow_nil: true
 
   # ponytail: escopado por account_id só porque é o índice único do banco; fork é
   # single-tenant (1 conta só) então na prática CPF/e-mail já são únicos globais.
