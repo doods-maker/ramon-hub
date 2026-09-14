@@ -42,6 +42,17 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
+  it 'convidar de novo o mesmo cliente do ADVBOX atualiza a linha (conserta conta sem CPF) em vez de 422' do
+    cliente = create(:portal_cliente, account: account, advbox_customer_id: 15_255_795, nome: 'Maria Teste', email: nil)
+    cliente.update_column(:cpf, nil) # rubocop:disable Rails/SkipsModelValidations -- linha anterior ao login por CPF
+
+    post base, params: { advbox_customer_id: 15_255_795, nome: 'Maria Teste Silva', cpf: '222.222.222-22', email: '' }, headers: headers
+    expect(response).to have_http_status(:success)
+    expect(PortalCliente.count).to eq 1
+    expect(cliente.reload.attributes.slice('cpf', 'nome')).to eq('cpf' => '22222222222', 'nome' => 'Maria Teste Silva')
+    expect(cliente.authenticate_senha(response.parsed_body['senha_provisoria'])).to be_truthy
+  end
+
   it 'lista, reenvia convite e grava recado' do
     cliente = create(:portal_cliente, account: account, processos: [{ 'id' => 7, 'docs_pendentes' => [] }])
     get base, headers: headers
