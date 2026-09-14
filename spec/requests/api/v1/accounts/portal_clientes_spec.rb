@@ -44,7 +44,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
 
   it 'convidar de novo o mesmo cliente do ADVBOX atualiza a linha (conserta conta sem CPF) em vez de 422' do
     cliente = create(:portal_cliente, account: account, advbox_customer_id: 15_255_795, nome: 'Maria Teste', email: nil)
-    cliente.update_column(:cpf, nil) # linha anterior ao login por CPF (validação não passa mais)
+    cliente.update_column(:cpf, nil) # rubocop:disable Rails/SkipsModelValidations -- linha anterior ao login por CPF
 
     post base, params: { advbox_customer_id: 15_255_795, nome: 'Maria Teste Silva', cpf: '222.222.222-22', email: '' }, headers: headers
     expect(response).to have_http_status(:success)
