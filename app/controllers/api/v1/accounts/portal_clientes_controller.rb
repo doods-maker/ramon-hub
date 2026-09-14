@@ -14,8 +14,12 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     render json: detalhe(@cliente)
   end
 
+  # Convidar de novo o mesmo cliente do ADVBOX ATUALIZA a linha (nome/CPF/e-mail
+  # corrigidos lá) em vez de 422 por customer_id duplicado — é o único jeito de
+  # consertar uma conta que ficou sem CPF (linhas anteriores ao login por CPF).
   def create
-    cliente = Current.account.portal_clientes.create!(params.permit(:advbox_customer_id, :nome, :cpf, :email))
+    cliente = Current.account.portal_clientes.find_or_initialize_by(advbox_customer_id: params[:advbox_customer_id])
+    cliente.update!(params.permit(:nome, :cpf, :email))
     sincronizar(cliente)
     senha = convidar!(cliente)
     render json: linha(cliente).merge(senha_provisoria: senha)
