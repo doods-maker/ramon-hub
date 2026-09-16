@@ -92,5 +92,15 @@ class TestTarefa(unittest.TestCase):
         self.assertEqual(c['responsavel_id'], cfg.ADVBOX_TAREFA_RESPONSAVEL_ID)
 
 
+class TestArquivo(unittest.TestCase):
+    def test_so_sobe_documento_com_conteudo(self):
+        doc = {'nome': 'dossie-1-2026-09-16.md', 'conteudo_md': '# Dossiê'}
+        self.assertTrue(ah.arquivo_valido({'pedido': 'monta o dossiê pro jurídico'}, doc))
+        self.assertFalse(ah.arquivo_valido({'pedido': 'resume este caso em 5 linhas'}, doc))
+        self.assertFalse(ah.arquivo_valido({'pedido': 'monta o dossiê'}, {'nome': 'dossie.md', 'conteudo_md': '  '}))
+        self.assertFalse(ah.arquivo_valido({'pedido': 'monta o dossiê'}, {'nome': '', 'conteudo_md': 'x'}))
+        self.assertFalse(ah.arquivo_valido({'pedido': 'monta o dossiê'}, None))
+
+
 if __name__ == '__main__':
     unittest.main()

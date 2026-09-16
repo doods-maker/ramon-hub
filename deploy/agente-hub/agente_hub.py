@@ -158,6 +158,17 @@ def extrair_estruturado(saida):
     return {}
 
 
+# O modelo às vezes devolve `arquivo` vazio num pedido de resumo (smoke 16/09 → arquivo em branco no
+# Drive do cliente). Só sobe quando o pedido é de documento E veio conteúdo — o prompt já pede isso,
+# o runner garante.
+PEDIDO_DOCUMENTO = re.compile(r'dossi|minuta|documento|arquivo|relat[óo]rio|parecer', re.I)
+
+
+def arquivo_valido(p, a):
+    return bool(isinstance(a, dict) and (a.get('conteudo_md') or '').strip() and (a.get('nome') or '').strip()
+                and PEDIDO_DOCUMENTO.search(p.get('pedido') or ''))
+
+
 def executar(cfg, cap, job):
     t0 = time.time(); p = parse_pedido(job['content']); acoes = []; status = 'ok'; resposta = ''
     conv, lead_id = job['conversation_id'], job.get('lead_id')
@@ -185,7 +196,7 @@ def executar(cfg, cap, job):
                     print(f'claude rc={r.returncode} stderr: {(r.stderr or "")[:500]}', file=sys.stderr)
                     raise RuntimeError(f'saída sem JSON estruturado (rc={r.returncode}); ver journal do agente-hub')
                 resposta = est.get('resposta', '')
-                if est.get('arquivo'):
+                if arquivo_valido(p, est.get('arquivo')):
                     if lead_id:
                         a = est['arquivo']; up = hub(cfg, 'POST', 'arquivo', {'lead_id': lead_id, 'nome': a['nome'], 'conteudo': a['conteudo_md']})
                         acoes.append({'tipo': 'drive', 'ref': up.get('url')})
