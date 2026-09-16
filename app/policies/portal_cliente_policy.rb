@@ -6,6 +6,7 @@ class PortalClientePolicy < ApplicationPolicy
   def show? = index?
   def create? = index?
   def update? = index?
+  def destroy? = index?
   def convidar? = index?
   def assinatura? = index?
 end

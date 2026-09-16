@@ -21,6 +21,7 @@ const emailConvite = ref('');
 const senhaGerada = ref(null); // { nome, senha } — aparece uma vez, o hub não guarda em claro
 const aberto = ref(null); // detalhe expandido
 const recados = ref({});
+const emailEdit = ref('');
 const aviso = ref('');
 const templates = ref([]); // modelos do ZapSign, carregados na 1ª expansão de linha
 const templateId = ref(null);
@@ -98,6 +99,7 @@ const abrir = async id => {
   const { data } = await PortalClientesAPI.show(id);
   aberto.value = data;
   recados.value = { ...data.recados };
+  emailEdit.value = data.email || '';
   templateId.value = null;
   nomeDocumento.value = 'Procuração';
   if (!templates.value.length) {
@@ -146,6 +148,41 @@ const salvarRecados = async () => {
     setTimeout(() => {
       aviso.value = '';
     }, 2000);
+  } catch (e) {
+    useAlert(
+      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
+    );
+  }
+};
+
+const salvarEmail = async () => {
+  try {
+    const { data } = await PortalClientesAPI.update(aberto.value.id, {
+      email: emailEdit.value.trim(),
+    });
+    aberto.value = data;
+    aviso.value = t('RAMON.PORTAL_CLIENTES.SAVED');
+    setTimeout(() => {
+      aviso.value = '';
+    }, 2000);
+    await carregar();
+  } catch (e) {
+    useAlert(
+      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
+    );
+  }
+};
+
+const excluir = async c => {
+  // eslint-disable-next-line no-alert
+  if (
+    !window.confirm(t('RAMON.PORTAL_CLIENTES.DELETE_CONFIRM', { nome: c.nome }))
+  )
+    return;
+  try {
+    await PortalClientesAPI.delete(c.id);
+    if (aberto.value?.id === c.id) aberto.value = null;
+    await carregar();
   } catch (e) {
     useAlert(
       e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
@@ -310,11 +347,39 @@ onMounted(carregar);
           >
             {{ t('RAMON.PORTAL_CLIENTES.REINVITE') }}
           </button>
+          <button
+            type="button"
+            class="text-xs text-n-ruby-11 hover:underline"
+            @click="excluir(c)"
+          >
+            {{ t('RAMON.PORTAL_CLIENTES.DELETE') }}
+          </button>
         </div>
         <div
           v-if="aberto && aberto.id === c.id"
           class="mt-3 flex flex-col gap-3"
         >
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="text-xs">{{
+              t('RAMON.PORTAL_CLIENTES.EMAIL_EDIT')
+            }}</label>
+            <input
+              v-model="emailEdit"
+              type="email"
+              class="min-w-64 rounded-lg border border-n-weak bg-n-solid-1 px-2 py-1 text-xs"
+              :placeholder="t('RAMON.PORTAL_CLIENTES.EMAIL')"
+            />
+            <button
+              type="button"
+              class="rounded-lg bg-n-iris-9 px-3 py-1.5 text-xs text-white"
+              @click="salvarEmail"
+            >
+              {{ t('RAMON.PORTAL_CLIENTES.EMAIL_SAVE') }}
+            </button>
+          </div>
+          <p v-if="!aberto.processos.length" class="text-xs text-n-slate-11">
+            {{ t('RAMON.PORTAL_CLIENTES.NO_LAWSUITS') }}
+          </p>
           <div
             v-for="p in aberto.processos"
             :key="p.id"

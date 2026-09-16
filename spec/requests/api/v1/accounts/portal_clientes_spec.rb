@@ -64,6 +64,19 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(cliente.reload.recados).to eq('7' => 'Leve os exames')
   end
 
+  it 'altera o e-mail e exclui a conta (envios junto), sem mexer no ADVBOX' do
+    cliente = create(:portal_cliente, account: account, email: 'antigo@exemplo.com')
+    cliente.envios.create!(lawsuit_id: 7, item: 'RG')
+
+    patch "#{base}/#{cliente.id}", params: { email: 'Novo@Exemplo.com' }, headers: headers, as: :json
+    expect(cliente.reload.email).to eq 'novo@exemplo.com'
+
+    delete "#{base}/#{cliente.id}", headers: headers
+    expect(response).to have_http_status(:no_content)
+    expect(PortalCliente.exists?(cliente.id)).to be false
+    expect(PortalEnvio.where(portal_cliente_id: cliente.id)).to be_empty
+  end
+
   it 'cria o documento no ZapSign sem e-mail automático e guarda os tokens' do
     cliente = create(:portal_cliente, account: account, nome: 'Maria', email: 'm@exemplo.com')
     allow(Ramon::ZapsignClient).to receive(:create_doc_from_template)

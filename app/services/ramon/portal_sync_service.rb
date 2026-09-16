@@ -44,10 +44,25 @@ class Ramon::PortalSyncService
 
   # /posts não devolve tasks_id (confirmado na API real) — casa pelo nome da
   # tarefa, mas tolerante (acento/maiúscula/espaço) em vez de igualdade exata.
+  # Os itens saem do LLM (Ramon::PortalDocsService); `digest` das observações
+  # guarda o resultado no espelho pra não pagar a chamada de novo toda noite.
   def docs_pendentes(id)
     lista(Ramon::AdvboxClient.posts(lawsuit_id: id, limit: LIMITE_TAREFAS))
       .select { |p| Ramon::PortalTexto.normalizar(p['task']).include?(TAREFA_SOLICITAR) && aberta?(p) }
-      .flat_map { |p| p['notes'].to_s.lines.map(&:strip).reject(&:blank?).map { |item| { 'item' => item, 'post_id' => p['id'] } } }
+      .flat_map do |p|
+        digest = Digest::SHA256.hexdigest(p['notes'].to_s)[0, 16]
+        itens = itens_anteriores[[p['id'], digest]] || Ramon::PortalDocsService.itens(p['notes'], nome: @cliente.nome)
+        Array(itens).map { |item| { 'item' => item, 'post_id' => p['id'], 'digest' => digest } }
+      end
+  end
+
+  # ponytail: lista vazia legítima não fica no espelho, então uma tarefa sem
+  # documento pedido custa 1 chamada por noite — aceitável no volume atual.
+  def itens_anteriores
+    @itens_anteriores ||= Array(@cliente.processos).flat_map { |p| Array(p['docs_pendentes']) }
+                                                   .select { |d| d['digest'].present? }
+                                                   .group_by { |d| [d['post_id'], d['digest']] }
+                                                   .transform_values { |ds| ds.map { |d| d['item'] } }
   end
 
   def aberta?(post)
