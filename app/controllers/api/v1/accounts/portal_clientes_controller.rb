@@ -3,7 +3,7 @@
 # sempre clique humano.
 class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseController
   before_action :current_account
-  before_action :fetch_cliente, only: [:show, :update, :convidar, :assinatura]
+  before_action :fetch_cliente, only: [:show, :update, :destroy, :convidar, :assinatura]
   before_action :check_authorization
 
   def index
@@ -33,6 +33,12 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     render json: detalhe(@cliente)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
+  end
+
+  # Excluir = a conta some (envios/assinaturas junto); o cliente do ADVBOX fica.
+  def destroy
+    @cliente.destroy!
+    head :no_content
   end
 
   # Reenviar convite = gerar senha provisória nova (a anterior deixa de valer).
