@@ -2,6 +2,8 @@ class Whatsapp::EmbeddedSignupService
   def initialize(account:, params:, inbox_id: nil)
     @account = account
     @code = params[:code]
+    # Optional: coexistence completions don't send it; ReauthorizationService still accepts it.
+    @business_id = params[:business_id]
     @waba_id = params[:waba_id]
     @phone_number_id = params[:phone_number_id]
     @inbox_id = inbox_id

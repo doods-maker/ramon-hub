@@ -28,6 +28,24 @@ class Whatsapp::FacebookApiClient
     handle_response(response, 'WABA phone numbers fetch failed')
   end
 
+  # Paginated: a WABA can hold more numbers than one Graph page (upstream #15462).
+  def fetch_all_phone_numbers(waba_id)
+    phone_numbers = []
+    after_cursor = nil
+
+    loop do
+      query = { access_token: @access_token }
+      query[:after] = after_cursor if after_cursor.present?
+      response = HTTParty.get("#{BASE_URI}/#{@api_version}/#{waba_id}/phone_numbers", query: query)
+      data = handle_response(response, 'WABA phone numbers fetch failed')
+      phone_numbers.concat(data['data'] || [])
+      after_cursor = data.dig('paging', 'next').present? ? data.dig('paging', 'cursors', 'after') : nil
+      break if after_cursor.blank?
+    end
+
+    phone_numbers
+  end
+
   def debug_token(input_token)
     response = HTTParty.get(
       "#{BASE_URI}/#{@api_version}/debug_token",
