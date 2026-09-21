@@ -314,6 +314,7 @@
           "SUCCESS_TITLE": "Conta do WhatsApp Business conectada!",
           "WAITING_FOR_AUTH": "Aguardando autenticação...",
           "INVALID_BUSINESS_DATA": "Dados de negócio inválidos recebidos do Facebook. Por favor, tente novamente.",
+          "UNSUPPORTED_COMPLETION": "A configuração da Meta terminou sem um número de WhatsApp que possa ser conectado. Refaça a configuração e adicione um número de telefone.",
           "SIGNUP_ERROR": "Ocorreu um erro no cadastro",
           "AUTH_NOT_COMPLETED": "Autenticação não concluída. Por favor, reinicie o processo.",
           "SUCCESS_FALLBACK": "A conta do WhatsApp Business foi configurada com sucesso",
