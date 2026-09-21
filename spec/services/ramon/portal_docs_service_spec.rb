@@ -2,7 +2,10 @@
 require 'rails_helper'
 
 RSpec.describe Ramon::PortalDocsService do
-  let(:notes) { 'LEAD (Dudu) - o juízo não aceita ZapSign. Pedir comprovante de residência atual em nome dele; se for da esposa, certidão de casamento.' }
+  let(:notes) do
+    'LEAD (Dudu) - o juízo não aceita ZapSign. Pedir comprovante de residência atual em nome dele; ' \
+      'se for da esposa, certidão de casamento.'
+  end
 
   def resposta(content)
     Ramon::LlmClient::Result.new(content: content, input_tokens: 1, output_tokens: 1)
@@ -11,7 +14,8 @@ RSpec.describe Ramon::PortalDocsService do
   it 'manda as observações mascaradas ao LLM e devolve só os nomes dos documentos' do
     allow(Ramon::LlmClient).to receive(:complete)
       .with(hash_including(provider: 'deepseek', user: notes))
-      .and_return(resposta('{"documentos": ["Comprovante de residência atual em seu nome", " Certidão de casamento (se o comprovante estiver no nome da esposa) "]}'))
+      .and_return(resposta('{"documentos": ["Comprovante de residência atual em seu nome", ' \
+                           '" Certidão de casamento (se o comprovante estiver no nome da esposa) "]}'))
     expect(described_class.itens(notes, nome: 'Felix Ribeiro'))
       .to eq(['Comprovante de residência atual em seu nome', 'Certidão de casamento (se o comprovante estiver no nome da esposa)'])
   end

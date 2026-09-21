@@ -51,6 +51,7 @@ class Whatsapp::HealthService
       throughput
       last_onboarded_time
       platform_type
+      is_on_biz_app
       certificate
     ].join(',')
   end
@@ -81,6 +82,7 @@ class Whatsapp::HealthService
       throughput: response['throughput'],
       last_onboarded_time: response['last_onboarded_time'],
       platform_type: response['platform_type'],
+      is_on_biz_app: response['is_on_biz_app'],
       certificate: response['certificate'],
       business_id: @channel.provider_config['business_account_id']
     }
