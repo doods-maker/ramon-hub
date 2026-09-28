@@ -58,6 +58,12 @@ class PortalCliente < ApplicationRecord
 
   def termos_aceitos? = termos_aceitos_em.present?
 
+  # Métrica do piloto: dias distintos com acesso ("voltou" = 2+ dias).
+  def registrar_acesso!
+    novo_dia = ultimo_acesso_em.nil? || ultimo_acesso_em.to_date < Time.zone.today
+    update_columns(ultimo_acesso_em: Time.current, dias_acesso: dias_acesso + (novo_dia ? 1 : 0)) # rubocop:disable Rails/SkipsModelValidations
+  end
+
   def pode_atualizar?
     atualizacao_pedida_em.blank? || atualizacao_pedida_em < INTERVALO_ATUALIZACAO.ago
   end

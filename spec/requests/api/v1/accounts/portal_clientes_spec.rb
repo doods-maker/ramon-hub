@@ -13,6 +13,14 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(response).to have_http_status(:unauthorized)
   end
 
+  it 'lista com o funil do piloto (entraram = 1+ dia, voltaram = 2+ dias)' do
+    create(:portal_cliente, account: account, convidado_em: 2.days.ago, dias_acesso: 3)
+    create(:portal_cliente, account: account, convidado_em: 2.days.ago, dias_acesso: 1)
+    create(:portal_cliente, account: account, convidado_em: nil)
+    get base, headers: headers
+    expect(response.parsed_body['metricas']).to include('convidados' => 2, 'entraram' => 2, 'voltaram' => 1, 'enviaram' => 0)
+  end
+
   it 'cria o cliente, sincroniza, gera a senha provisória (devolvida uma vez) e envia o convite' do
     expect do
       post base, params: { advbox_customer_id: 14_688_380, nome: 'Venicio Schmidt', cpf: '123.456.789-01', email: 'v@exemplo.com' }, headers: headers

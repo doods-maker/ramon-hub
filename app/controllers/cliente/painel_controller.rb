@@ -9,6 +9,7 @@ class Cliente::PainelController < Cliente::BaseController
   ALLOWED_CONTENT_TYPES = %w[application/pdf image/jpeg image/jpg image/png image/heic image/heif].freeze
 
   before_action :require_cliente
+  before_action -> { current_cliente.registrar_acesso! }, only: [:show, :processo]
   before_action :require_termos, except: [:aceitar_termos]
   before_action :fetch_processo, only: [:processo, :enviar]
 
