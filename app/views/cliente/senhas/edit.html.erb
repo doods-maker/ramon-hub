@@ -4,6 +4,10 @@
 <div class="divider"></div>
 <% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
 <%= form_with url: cliente_senha_path, method: :patch, local: true, class: 'form-portal' do |f| %>
+  <% if pedir_senha_atual? %>
+    <%= f.label :senha_atual, 'Senha atual', class: 'label' %>
+    <%= f.password_field :senha_atual, required: true, autocomplete: 'current-password', inputmode: 'numeric', class: 'input' %>
+  <% end %>
   <%= f.label :senha, 'Nova senha (só números, pelo menos 6)', class: 'label' %>
   <%= f.password_field :senha, required: true, autocomplete: 'new-password', inputmode: 'numeric', pattern: '[0-9]{6,}', class: 'input' %>
   <%= f.label :confirmacao, 'Repita a nova senha', class: 'label' %>

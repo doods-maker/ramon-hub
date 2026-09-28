@@ -43,6 +43,8 @@ class Cliente::SessoesController < Cliente::BaseController
     if cliente&.codigo_valido?(params[:codigo])
       cliente.consumir_codigo!
       entrar!(cliente)
+      cookies.encrypted[TROCA] = { value: cliente.id, expires: 15.minutes.from_now, httponly: true, same_site: :lax,
+                                   secure: Rails.env.production? }
       redirect_to edit_cliente_senha_path
     else
       flash.now[:portal_alert] = MSG_CODIGO_INVALIDO
