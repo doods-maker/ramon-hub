@@ -733,6 +733,8 @@ Rails.application.routes.draw do
     get 'processos/:lawsuit_id', to: 'painel#processo', as: :processo
     post 'processos/:lawsuit_id/envios', to: 'painel#enviar', as: :envios
     get 'assinaturas/:id', to: 'painel#assinatura', as: :assinatura
+    get 'assinaturas/:id/baixar', to: 'painel#baixar_assinatura', as: :baixar_assinatura
+    get 'envios/:id/arquivo', to: 'painel#baixar_envio', as: :baixar_envio
   end
 
   get 'hc/:slug', to: 'public/api/v1/portals#show'

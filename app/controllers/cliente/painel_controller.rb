@@ -4,6 +4,7 @@ class Cliente::PainelController < Cliente::BaseController
   MSG_INDISPONIVEL = 'Não conseguimos atualizar agora. Mostrando os últimos dados que temos.'.freeze
   MSG_ARQUIVO_INVALIDO = 'Não foi possível receber o arquivo — envie um PDF ou foto (JPG/PNG/HEIC) de até 10 MB.'.freeze
   MSG_RECEBIDO = 'Recebemos seu documento. Obrigado!'.freeze
+  MSG_DOC_INDISPONIVEL = 'Não conseguimos buscar o documento agora. Tente de novo mais tarde.'.freeze
 
   MAX_UPLOAD_BYTES = 10.megabytes
   ALLOWED_CONTENT_TYPES = %w[application/pdf image/jpeg image/jpg image/png image/heic image/heif].freeze
@@ -16,6 +17,8 @@ class Cliente::PainelController < Cliente::BaseController
   def show
     @ativos, @encerrados = current_cliente.processos.partition { |p| !Ramon::PortalTexto.encerrado?(p['fase']) }
     @assinaturas = current_cliente.assinaturas.pendentes
+    @assinadas = current_cliente.assinaturas.where(status: 'signed').order(assinado_em: :desc)
+    @envios = current_cliente.envios.with_attached_arquivo.order(created_at: :desc).limit(20)
   end
 
   def aceitar_termos
@@ -59,7 +62,28 @@ class Cliente::PainelController < Cliente::BaseController
     head :not_found if @assinatura.nil?
   end
 
+  # Download só do que o próprio cliente assinou (link temporário do ZapSign) ou
+  # enviou. Documento do ADVBOX nunca (regra do Eduardo, 28/09/2026).
+  def baixar_assinatura
+    assinada = current_cliente.assinaturas.find_by(id: params[:id], status: 'signed')
+    return head :not_found if assinada.nil?
+
+    url = Ramon::ZapsignClient.doc(assinada.doc_token)&.dig('signed_file')
+    url.present? ? redirect_to(url, allow_other_host: true) : doc_indisponivel
+  rescue Ramon::ZapsignClient::UnavailableError, Ramon::ZapsignClient::RequestError
+    doc_indisponivel
+  end
+
+  def baixar_envio
+    envio = current_cliente.envios.find_by(id: params[:id])
+    return head :not_found unless envio&.arquivo&.attached?
+
+    send_data envio.arquivo.download, filename: envio.arquivo.filename.to_s, type: envio.arquivo.content_type, disposition: 'attachment'
+  end
+
   private
+
+  def doc_indisponivel = redirect_to(cliente_inicio_path, flash: { portal_alert: MSG_DOC_INDISPONIVEL })
 
   # Só carimba atualizacao_pedida_em (o gate das 6h) depois do sync dar certo —
   # se o ADVBOX cair, o rescue acima nunca chega aqui e o cliente não fica travado.

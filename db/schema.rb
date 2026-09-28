@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_28_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_28_000003) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1402,6 +1402,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_28_000002) do
     t.string "advbox_post_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "juntada_post_id"
     t.index ["portal_cliente_id", "solicitacao_post_id"], name: "portal_envios_cliente_solicitacao_idx"
     t.index ["portal_cliente_id"], name: "index_portal_envios_on_portal_cliente_id"
   end

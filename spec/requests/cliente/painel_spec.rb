@@ -122,6 +122,34 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     end
   end
 
+  describe 'Seus documentos (só o que o cliente assinou ou enviou)' do
+    let(:pdf) { fixture_file_upload(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf') }
+
+    it 'baixa o próprio envio; envio de outro cliente dá 404' do
+      meu = create(:portal_envio, portal_cliente: cliente, arquivo: pdf)
+      alheio = create(:portal_envio, portal_cliente: create(:portal_cliente, account: account), arquivo: pdf)
+      entrar
+      get '/cliente/inicio'
+      expect(response.body).to include('Seus documentos')
+      get "/cliente/envios/#{meu.id}/arquivo"
+      expect(response).to have_http_status(:ok)
+      expect(response.headers['Content-Disposition']).to include('attachment')
+      get "/cliente/envios/#{alheio.id}/arquivo"
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'contrato assinado redireciona pro arquivo assinado do ZapSign; pendente dá 404' do
+      assinada = create(:portal_assinatura, portal_cliente: cliente, status: 'signed', assinado_em: 1.day.ago)
+      pendente = create(:portal_assinatura, portal_cliente: cliente)
+      allow(Ramon::ZapsignClient).to receive(:doc).with(assinada.doc_token).and_return({ 'signed_file' => 'https://zapsign.s3/assinado.pdf' })
+      entrar
+      get "/cliente/assinaturas/#{assinada.id}/baixar"
+      expect(response).to redirect_to('https://zapsign.s3/assinado.pdf')
+      get "/cliente/assinaturas/#{pendente.id}/baixar"
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   it 'tela de assinatura embute o widget do ZapSign do próprio cliente' do
     a = create(:portal_assinatura, portal_cliente: cliente, signer_token: 'sig-1')
     entrar
