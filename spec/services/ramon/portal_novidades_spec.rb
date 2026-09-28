@@ -30,6 +30,14 @@ RSpec.describe Ramon::PortalNovidades do
     expect(described_class.aplicar(anterior, novo('DECISÃO PROFERIDA'))['novidades'].first['delicada']).to be true
   end
 
+  it 'novidade de etapa leva a flag de e-mail do dicionário (v1 sempre true; v2 segue a tabela)' do
+    expect(described_class.aplicar(anterior, novo('REUNIAO POS VENDA'))['novidades'].first['email']).to be true
+    with_modified_env PORTAL_TEXTOS_V2: 'on' do
+      expect(described_class.aplicar(anterior, novo('REUNIAO POS VENDA'))['novidades'].first['email']).to be false
+      expect(described_class.aplicar(anterior, novo('PERICIA AGENDADA'))['novidades'].first['email']).to be true
+    end
+  end
+
   it 'marco novo vira novidade; espelho antigo sem etapa_cliente usa a etapa' do
     antigo = anterior.except('etapa_cliente')
     p = described_class.aplicar(antigo, novo('REQUERIMENTO PROTOCOLADO', [{ 'data' => '2026-09-20', 'titulo' => 'Perícia designada' }]))
