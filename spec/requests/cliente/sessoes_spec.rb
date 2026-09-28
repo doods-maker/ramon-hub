@@ -71,14 +71,46 @@ RSpec.describe 'Painel do cliente — sessões', type: :request do
 
   it 'trocar senha exige confirmação igual e regra de 6 números; a nova passa a valer' do
     post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
-    patch '/cliente/senha', params: { senha: '654321', confirmacao: '111111' }
+    patch '/cliente/senha', params: { senha_atual: senha, senha: '654321', confirmacao: '111111' }
     expect(response).to have_http_status(:unprocessable_entity)
-    patch '/cliente/senha', params: { senha: '12a45', confirmacao: '12a45' }
+    patch '/cliente/senha', params: { senha_atual: senha, senha: '12a45', confirmacao: '12a45' }
     expect(response).to have_http_status(:unprocessable_entity)
-    patch '/cliente/senha', params: { senha: '654321', confirmacao: '654321' }
+    patch '/cliente/senha', params: { senha_atual: senha, senha: '654321', confirmacao: '654321' }
     expect(response).to redirect_to('/cliente/inicio')
     expect(cliente.reload.authenticate_senha('654321')).to be_truthy
     expect(cliente.authenticate_senha(senha)).to be false
+    get '/cliente/inicio'
+    expect(response).to have_http_status(:ok)
+  end
+
+  it 'trocar senha logado por senha exige a senha atual' do
+    post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
+    patch '/cliente/senha', params: { senha_atual: '000000', senha: '654321', confirmacao: '654321' }
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include('A senha atual não confere')
+    expect(cliente.reload.authenticate_senha(senha)).to be_truthy
+  end
+
+  it 'quem entrou pelo código troca a senha sem digitar a atual' do
+    codigo = cliente.gerar_codigo!
+    post '/cliente/entrar-codigo', params: { cpf: '12345678901', codigo: codigo }
+    get '/cliente/senha/edit'
+    expect(response.body).not_to include('Senha atual')
+    patch '/cliente/senha', params: { senha: '654321', confirmacao: '654321' }
+    expect(response).to redirect_to('/cliente/inicio')
+    expect(cliente.reload.authenticate_senha('654321')).to be_truthy
+  end
+
+  it 'senha provisória nova derruba a sessão aberta com a senha antiga' do
+    post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
+    cliente.reload.gerar_senha_provisoria!
+    get '/cliente/inicio'
+    expect(response).to redirect_to('/cliente')
+  end
+
+  it 'as throttles de login casam o path que o Rails aceita (barra final, .json)' do
+    req = ->(path) { Rack::Attack::Request.new(Rack::MockRequest.env_for('/', 'PATH_INFO' => path)).ramon_path }
+    expect(%w[/cliente/entrar /cliente/entrar/ /cliente/entrar.json //cliente//entrar].map(&req)).to all(eq('/cliente/entrar'))
   end
 
   it 'trocar senha sem sessão redireciona pro login' do

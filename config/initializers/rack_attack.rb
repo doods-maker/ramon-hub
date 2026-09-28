@@ -36,6 +36,12 @@ class Rack::Attack
     def path_without_extensions
       path[/^[^.]+/]
     end
+
+    # Ramon — path como o roteador do Rails enxerga (sem extensão, sem barra final,
+    # barras repetidas espremidas): /cliente/entrar/ e //cliente/entrar.json caem no mesmo throttle.
+    def ramon_path
+      ActionDispatch::Journey::Router::Utils.normalize_path(path_without_extensions)
+    end
   end
 
   ### Safelist IPs from Environment Variable ###
@@ -222,18 +228,22 @@ class Rack::Attack
 
   ## Ramon — uploads do portal, por token (evita bombing num link vazado) ###
   throttle('public/portal_upload', limit: 10, period: 1.hour) do |req|
-    req.path.split('/')[2] if req.post? && req.path.match?(%r{\A/portal/[^/]+/upload\z})
+    req.ramon_path.split('/')[2] if req.post? && req.ramon_path.match?(%r{\A/portal/[^/]+/upload\z})
   end
 
   ## Ramon — Painel do Cliente: senha (6 dígitos) + código por e-mail (força bruta) ###
+  CLIENTE_LOGIN_PATHS = %w[/cliente/codigo /cliente/entrar /cliente/entrar-codigo].freeze
   throttle('cliente/codigo/cpf', limit: 5, period: 15.minutes) do |req|
-    req.params['cpf'].to_s.delete('^0-9').presence if req.post? && req.path.in?(%w[/cliente/codigo /cliente/entrar /cliente/entrar-codigo])
+    next unless req.post? && req.ramon_path.in?(CLIENTE_LOGIN_PATHS)
+
+    # params do Rails (não só os do Rack) — CPF num corpo JSON também conta
+    ActionDispatch::Request.new(req.env).params['cpf'].to_s.delete('^0-9').presence
   end
   throttle('cliente/codigo/ip', limit: 10, period: 15.minutes) do |req|
-    req.ip if req.post? && req.path.in?(%w[/cliente/codigo /cliente/entrar /cliente/entrar-codigo])
+    req.ip if req.post? && req.ramon_path.in?(CLIENTE_LOGIN_PATHS)
   end
   throttle('cliente/envios', limit: 20, period: 1.hour) do |req|
-    req.ip if req.post? && req.path.match?(%r{\A/cliente/processos/\d+/envios\z})
+    req.ip if req.post? && req.ramon_path.match?(%r{\A/cliente/processos/\d+/envios\z})
   end
 
   ##-----------------------------------------------##

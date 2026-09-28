@@ -31,6 +31,13 @@ RSpec.describe Ramon::PortalTexto do
     expect(marcos.first['data']).to eq '2026-06-01'
   end
 
+  it 'indeferimento ou negativa nunca vira "Benefício concedido"' do
+    negativas = ['Benefício indeferido', 'Pedido NÃO concedido', 'Não foi concedido o benefício', 'Benefício negado']
+    expect(negativas.flat_map { |t| described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => t }]) }).to be_empty
+    expect(described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => 'Benefício concedido' }]).map { |m| m['tipo'] })
+      .to eq(['concessao'])
+  end
+
   it 'encerrado só na fase ARQUIVAMENTO' do
     expect(described_class.encerrado?('ARQUIVAMENTO')).to be true
     expect(described_class.encerrado?('RH/FINANCEIRO')).to be false
