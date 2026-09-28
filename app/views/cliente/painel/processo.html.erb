@@ -2,6 +2,7 @@
 <% content_for :title, @etapa['titulo'] %>
 <%= link_to '← Seus processos', cliente_inicio_path, class: 'btn-link' %>
 <p class="eyebrow"><%= @processo['tipo'] %></p>
+<% if @novidades.any? %><p class="badge badge-novo">Novo</p><% end %>
 <h1><%= @etapa['titulo'] %></h1>
 <div class="divider"></div>
 <% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>

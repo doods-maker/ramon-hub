@@ -46,6 +46,7 @@ etapas:
     titulo: 'Benefício concedido'
     o_que_esperar: 'O INSS aprovou o benefício. Estamos acompanhando a implantação no sistema.'
   'IMPROCEDENTE / MONTAR INICIAL':
+    delicada: true # resultado: sem e-mail automático; a equipe fala antes
     titulo: 'Preparando ação na Justiça'
     o_que_esperar: 'O pedido administrativo não avançou. Estamos preparando a ação judicial.'
   'TAREFAS ADMINISTRATIVAS':
@@ -64,12 +65,14 @@ etapas:
     titulo: 'Perícia agendada'
     o_que_esperar: 'Leve todos os laudos, exames e receitas no dia. Em caso de dúvida, fale com a equipe.'
   'DECISAO PROFERIDA':
+    delicada: true # resultado: sem e-mail automático; a equipe fala antes
     titulo: 'INSS decidiu o pedido'
     o_que_esperar: 'Estamos analisando a decisão e o melhor caminho a seguir. Entraremos em contato.'
   'RECURSO ADMINISTRATIVO PROTOCOLADO':
     titulo: 'Recurso protocolado no INSS'
     o_que_esperar: 'Pedimos a revisão da decisão do INSS. Acompanhamos e avisamos você a cada novidade.'
   'DECISAO DO RECURSO PROFERIDA':
+    delicada: true # resultado: sem e-mail automático; a equipe fala antes
     titulo: 'INSS decidiu o recurso'
     o_que_esperar: 'Estamos analisando a decisão do recurso e o melhor caminho a seguir.'
   'AGUARDANDO PAGAMENTO HONORARIOS':
@@ -85,9 +88,11 @@ etapas:
     titulo: 'Aguardando documentos'
     o_que_esperar: 'Precisamos de alguns documentos seus para continuar. Fique de olho no WhatsApp.'
   'SENTENCA PROFERIDA':
+    delicada: true # resultado: sem e-mail automático; a equipe fala antes
     titulo: 'Juiz deu a sentença'
     o_que_esperar: 'Estamos analisando a sentença. Explicaremos o resultado e os próximos passos.'
   'NEGADO / AVISAR CLIENTE':
+    interna: true # o painel segue na etapa anterior até a equipe falar com o cliente
     titulo: 'Pedido não foi aceito'
     o_que_esperar: 'O pedido não foi aceito desta vez. Vamos conversar sobre os próximos passos possíveis.'
   'ACAO PROTOCOLADA':
@@ -127,6 +132,7 @@ etapas:
     titulo: 'Aguardando julgamento do recurso'
     o_que_esperar: 'O recurso está com o tribunal. Acompanhamos e avisamos você assim que houver decisão.'
   'RECURSO JULGADO':
+    delicada: true # resultado: sem e-mail automático; a equipe fala antes
     titulo: 'Recurso julgado'
     o_que_esperar: 'O tribunal decidiu o recurso. Estamos analisando o resultado e os próximos passos.'
   'PRAZO RECURSAL':
@@ -181,6 +187,6 @@ marcos:
   - { tipo: pericia,   regex: 'per[ií]cia',                    titulo: 'Perícia',              explicacao: 'Avaliação médica do INSS ou da Justiça.' }
   - { tipo: audiencia, regex: 'audi[êe]ncia',                  titulo: 'Audiência',            explicacao: 'Encontro com o juiz para ouvir as partes e testemunhas.' }
   - { tipo: protocolo, regex: 'distribu[ií]d|protocol|autuad', titulo: 'Processo protocolado', explicacao: 'O pedido entrou oficialmente.' }
-  - { tipo: sentenca,  regex: 'senten[çc]a|ac[óo]rd[ãa]o',      titulo: 'Decisão do juiz',      explicacao: 'O juiz decidiu. Nossa equipe explica o resultado.' }
+  - { tipo: sentenca,  regex: 'senten[çc]a|ac[óo]rd[ãa]o',      titulo: 'Decisão do juiz',      explicacao: 'O juiz decidiu. Nossa equipe explica o resultado.', delicada: true }
   # negação antes: "indeferido", "não concedido", "negado" NÃO podem virar "Benefício concedido" (texto já transliterado)
   - { tipo: concessao, regex: '\A(?!.*(indeferid|nao (foi )?concedid|negad)).*(implanta|concedid|deferid)', titulo: 'Benefício concedido', explicacao: 'O benefício foi liberado.' }

@@ -37,7 +37,9 @@ class Cliente::PainelController < Cliente::BaseController
   end
 
   def processo
-    @etapa = Ramon::PortalTexto.etapa(@processo['etapa'])
+    @etapa = Ramon::PortalTexto.etapa(PortalCliente.etapa_cliente(@processo))
+    @novidades = PortalCliente.novidades_nao_vistas(@processo)
+    current_cliente.marcar_vistas!(@processo['id']) if @novidades.any?
     @marcos = Ramon::PortalTexto.marcos(@processo['andamentos'])
     @recado = current_cliente.recados[@processo['id'].to_s]
     @pendentes = pendentes_com_status

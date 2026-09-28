@@ -1,0 +1,27 @@
+<%# app/views/mailers/ramon/portal_mailer/resumo_equipe.html.erb — interno; texto = rascunho 2026-09-28-painel-v2-textos.md §4 %>
+<p>Bom dia, Gabriela.</p>
+<p>Estes clientes tiveram novidade no Painel do Cliente desde ontem. Para cada um, o texto de WhatsApp já está pronto:
+  toque em "Abrir no WhatsApp", confira e envie.</p>
+<% sem_telefone = [] %>
+<% @linhas.each_with_index do |l, i| %>
+  <hr>
+  <p><strong><%= i + 1 %>. <%= l['nome'] %></strong> (<%= l['tipo'] %>)<br>
+    Novidade: <%= l['titulo'] %><br>
+    Responsável: <%= l['responsavel'].presence || '—' %><br>
+    E-mail automático: <%= l['email'] %></p>
+  <% if l['delicada'] %>
+    <p style="color:#9b1c1c"><strong>ATENÇÃO: novidade delicada.</strong> Antes de enviar, confirme com <%= l['responsavel'].presence || 'o(a) responsável' %> se o cliente já foi avisado.</p>
+  <% end %>
+  <p>Texto para o WhatsApp:</p>
+  <blockquote style="white-space:pre-line"><%= l['texto_whatsapp'] %></blockquote>
+  <% if l['link_wa'] %>
+    <p><a href="<%= l['link_wa'] %>">Abrir no WhatsApp</a></p>
+  <% else %>
+    <% sem_telefone << l['nome'] %>
+  <% end %>
+<% end %>
+<% if sem_telefone.any? %>
+  <hr>
+  <p>Clientes sem telefone cadastrado: <%= sem_telefone.uniq.join(', ') %> (nestes casos, avise o(a) responsável).</p>
+<% end %>
+<p style="font-size:12px;color:#6b6259">Este e-mail é interno e automático. Confira o nome antes de enviar.</p>

@@ -68,6 +68,7 @@ const convidar = async () => {
       nome: c.name,
       cpf: c.identification,
       email: emailConvite.value,
+      telefone: c.cellphone,
     });
     senhaGerada.value = { nome: data.nome, senha: data.senha_provisoria };
     candidato.value = null;
