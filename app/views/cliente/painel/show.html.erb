@@ -21,6 +21,18 @@
   <% @encerrados.each do |p| %><%= render 'processo_card', processo: p %><% end %>
 <% end %>
 
+<% if @assinadas.any? || @envios.any? %>
+  <p class="eyebrow" style="margin-top:18px">Seus documentos</p>
+  <div class="card">
+    <% @assinadas.each do |a| %>
+      <p><%= a.nome %> (assinado) · <%= link_to 'Baixar', cliente_baixar_assinatura_path(a), class: 'btn-link' %></p>
+    <% end %>
+    <% @envios.each do |e| %>
+      <p><%= e.item %> (enviado por você em <%= l(e.created_at.to_date) %>) · <%= link_to 'Baixar', cliente_baixar_envio_path(e), class: 'btn-link' %></p>
+    <% end %>
+  </div>
+<% end %>
+
 <%= form_with url: cliente_atualizar_path, method: :post, local: true do |f| %>
   <%= f.submit 'Atualizar', class: 'btn-link' %>
 <% end %>
