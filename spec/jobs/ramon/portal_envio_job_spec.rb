@@ -23,12 +23,22 @@ RSpec.describe Ramon::PortalEnvioJob do
     expect(Ramon::AdvboxClient).to have_received(:create_post).with(
       hash_including(from: '259713', guests: [259_713], tasks_id: '9502039', lawsuits_id: '14039119')
     )
+    expect(Ramon::AdvboxClient).to have_received(:create_post).with(
+      hash_including(guests: [260_014], tasks_id: '8745531', lawsuits_id: '14039119', comments: include('drive.google.com/file/d/file-1'))
+    )
+    expect(envio.juntada_post_id).to eq '555'
   end
 
   it 'é idempotente: não repete Drive nem ADVBOX' do
-    envio.update!(drive_file_id: 'file-1', advbox_post_id: '555')
+    envio.update!(drive_file_id: 'file-1', advbox_post_id: '555', juntada_post_id: '556')
     described_class.perform_now(envio.id)
     expect(Ramon::DriveClient).not_to have_received(:upload)
     expect(Ramon::AdvboxClient).not_to have_received(:create_post)
+  end
+
+  it 'retry só abre a tarefa que faltou (juntada da secretária)' do
+    envio.update!(drive_file_id: 'file-1', advbox_post_id: '555')
+    described_class.perform_now(envio.id)
+    expect(Ramon::AdvboxClient).to have_received(:create_post).once.with(hash_including(tasks_id: '8745531'))
   end
 end
