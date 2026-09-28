@@ -4,7 +4,7 @@
 # - portal_acessos: data/hora + IP de cada acesso, guardados 6 meses (Marco Civil art. 15).
 class AddLgpdToPortal < ActiveRecord::Migration[7.1]
   def change
-    add_column :portal_clientes, :ia_consentimento, :boolean
+    add_column :portal_clientes, :ia_consentimento, :boolean # rubocop:disable Rails/ThreeStateBooleanColumn -- nil = ainda não respondeu
 
     create_table :portal_acessos do |t|
       t.bigint :portal_cliente_id, null: false
