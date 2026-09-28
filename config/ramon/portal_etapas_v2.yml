@@ -1,0 +1,306 @@
+# config/ramon/portal_etapas_v2.yml
+# Dicionário v2 do Painel do Cliente (comercial/docs/2026-09-28-painel-v2-textos.md).
+# Só vale com PORTAL_TEXTOS_V2=on — desligado até o "aprovado" do Eduardo.
+# Chave da etapa = nome do ADVBOX normalizado (Ramon::PortalTexto.normalizar).
+# - fase: degrau da linha do tempo (chave de `fases`);
+# - email: false = a mudança pra essa etapa não gera e-mail automático ao cliente;
+# - delicada: resultado — painel neutro, sem e-mail, alerta no resumo da equipe;
+# - interna: o painel segue na etapa anterior e nada é avisado (sem título/texto).
+fases:
+  - { chave: documentos, nome: 'Documentos', frase: 'Estamos reunindo e conferindo os documentos do seu caso.' }
+  - { chave: inss, nome: 'Pedido no INSS', frase: 'Seu pedido está no INSS, que analisa e dá uma resposta.' }
+  - { chave: justica, nome: 'Justiça', frase: 'Seu caso foi levado para um juiz decidir.' }
+  - { chave: recurso, nome: 'Recurso', frase: 'A decisão está sendo analisada de novo por um tribunal.' }
+  - { chave: pagamento, nome: 'Pagamento', frase: 'Acompanhamos a liberação do seu benefício e dos valores.' }
+  - { chave: concluido, nome: 'Concluído', frase: 'O trabalho no seu caso terminou.' }
+# Grupo (step) do ADVBOX normalizado → fase. Vale quando a etapa é interna ou desconhecida.
+grupo_fase:
+  'MARKETING': documentos
+  'NEGOCIACAO': documentos
+  'CONSULTORIA': documentos
+  'ADMINISTRATIVO': inss
+  'JUDICIAL': justica
+  'RECURSAL': recurso
+  'EXECUCAO/COBRANCA': pagamento
+  'RH/FINANCEIRO': pagamento
+  'ARQUIVAMENTO': concluido
+# Etapa fora do dicionário: nunca mostra o nome interno cru do ADVBOX.
+padrao:
+  titulo: 'Em andamento'
+  o_que_esperar: 'Nossa equipe está cuidando desta etapa do seu caso. Avisamos você a cada novidade.'
+etapas:
+  # MARKETING
+  'CONTRATO FECHADO':
+    fase: documentos
+    email: true
+    titulo: 'Contrato assinado'
+    o_que_esperar: 'Seu contrato foi assinado e o seu caso já está com a nossa equipe. Agora vamos reunir os documentos. Quando precisarmos de algo, o pedido aparece aqui no painel.'
+  'REUNIAO POS VENDA':
+    fase: documentos
+    email: false
+    titulo: 'Conversa de boas-vindas'
+    o_que_esperar: 'Vamos conversar com você para explicar os próximos passos e tirar suas dúvidas. Se o horário ainda não foi combinado, a equipe vai chamar você.'
+  'DOCUMENTOS SOLICITADOS - MKT':
+    fase: documentos
+    email: true
+    titulo: 'Precisamos de documentos'
+    o_que_esperar: 'Pedimos alguns documentos para seguir com o seu caso. Veja a lista aqui no painel e envie pela câmera do celular. Se tiver dúvida sobre algum, fale com a equipe.'
+  'DOCUMENTOS RECEBIDOS - CONFERIR - MKT':
+    fase: documentos
+    email: true
+    titulo: 'Documentos em conferência'
+    o_que_esperar: 'Recebemos os seus documentos. Agora a equipe confere tudo com atenção. Se faltar alguma coisa, avisamos você.'
+  'DISTRIBUIR AO TIME OPERACIONAL - MKT':
+    fase: documentos
+    email: false
+    titulo: 'Caso com a equipe responsável'
+    o_que_esperar: 'Seus documentos foram conferidos. Agora o seu caso segue para a pessoa da nossa equipe que vai cuidar dele.'
+  # NEGOCIAÇÃO
+  'ATENDIMENTO INICIAL':
+    fase: documentos
+    email: false
+    titulo: 'Primeiro atendimento'
+    o_que_esperar: 'Estamos conhecendo o seu caso para entender o melhor caminho. A equipe pode chamar você para tirar alguma dúvida.'
+  'CONTRATO FECHADO / AG. DOCTOS':
+    fase: documentos
+    email: true
+    titulo: 'Contrato assinado'
+    o_que_esperar: 'Seu contrato foi assinado. Agora precisamos dos seus documentos para começar. Veja aqui no painel o que falta e envie pela câmera do celular.'
+  'DOCTOS RECEBIDOS - CONFERIR':
+    fase: documentos
+    email: true
+    titulo: 'Documentos em conferência'
+    o_que_esperar: 'Recebemos os seus documentos. Agora a equipe confere tudo com atenção. Se faltar alguma coisa, avisamos você.'
+  'DISTRIBUIR AO TIME OPERACIONAL':
+    fase: documentos
+    email: false
+    titulo: 'Caso com a equipe responsável'
+    o_que_esperar: 'Seus documentos foram conferidos. Agora o seu caso segue para a pessoa da nossa equipe que vai cuidar dele.'
+  'BENEFICIO FUTURO / ANOTAR NA AGENDA':
+    fase: documentos
+    email: true
+    titulo: 'Acompanhamento marcado para mais adiante'
+    o_que_esperar: 'Analisamos o seu caso e o momento de fazer o pedido ainda não chegou. Anotamos o seu caso na nossa agenda e vamos chamar você quando for a hora.'
+  # CONSULTORIA
+  'ELABORACAO DE CONTRATO':
+    fase: documentos
+    email: false
+    titulo: 'Preparando o seu contrato'
+    o_que_esperar: 'Estamos preparando o seu contrato. Quando ficar pronto, ele aparece aqui no painel para você assinar pelo celular.'
+  'PLANEJAMENTO PREVIDENCIARIO':
+    fase: documentos
+    email: true
+    titulo: 'Planejamento do seu benefício'
+    o_que_esperar: 'Estamos estudando a sua vida de trabalho e as suas contribuições para achar o melhor caminho. Quando o estudo ficar pronto, vamos conversar com você.'
+  # ADMINISTRATIVO
+  'AGUARDANDO AGENDAMENTO DE PERICIA':
+    fase: inss
+    email: true
+    titulo: 'Aguardando a data da perícia'
+    o_que_esperar: 'Seu pedido está no INSS, que ainda vai marcar a perícia médica. Quando a data sair, avisamos você.'
+  'AGUARDANDO RETORNO/DOCUMENTOS':
+    fase: inss
+    email: true
+    titulo: 'Aguardando um retorno'
+    o_que_esperar: 'Para seguir, estamos esperando um documento ou uma resposta, sua ou de outro órgão. Se o pedido for para você, ele aparece aqui no painel.'
+  'ANALISAR REVISAO':
+    fase: inss
+    email: false
+    titulo: 'Analisando a revisão'
+    o_que_esperar: 'Estamos analisando se o seu benefício pode ser revisto. Quando terminarmos, vamos conversar com você.'
+  'BENEFICIO CONCEDIDO / IMPLANTACAO':
+    fase: pagamento
+    email: true
+    titulo: 'Benefício aprovado pelo INSS'
+    o_que_esperar: 'O INSS aprovou o seu benefício. Agora ele precisa ser colocado no sistema de pagamentos do INSS. A equipe acompanha essa etapa e fala com você sobre o primeiro pagamento.'
+  'IMPROCEDENTE / MONTAR INICIAL':
+    fase: justica
+    email: false
+    delicada: true
+    titulo: 'Preparando a ação na Justiça'
+    o_que_esperar: 'O INSS não aceitou o pedido. Isso não encerra o seu caso: estamos preparando a ação para levar o pedido à Justiça. A equipe vai conversar com você sobre os próximos passos.'
+  'TAREFAS ADMINISTRATIVAS': { interna: true, email: false }
+  'AGUARDANDO PROTOCOLO':
+    fase: inss
+    email: false
+    titulo: 'Preparando o pedido ao INSS'
+    o_que_esperar: 'Estamos montando o seu pedido ao INSS com os documentos que você enviou. Quando ele for entregue, avisamos você.'
+  'REQUERIMENTO PROTOCOLADO':
+    fase: inss
+    email: true
+    titulo: 'Pedido entregue ao INSS'
+    o_que_esperar: 'Seu pedido foi entregue ao INSS e agora está em análise. O INSS não tem data certa para responder. Nós acompanhamos e avisamos você a cada novidade.'
+  'CARTA DE EXIGENCIAS':
+    fase: inss
+    email: true
+    titulo: 'O INSS pediu mais informações'
+    o_que_esperar: 'O INSS pediu um documento ou uma informação a mais. Isso é comum. Se precisarmos de algo seu, o pedido aparece aqui no painel. O resto fica com a equipe.'
+  'PERICIA AGENDADA':
+    fase: inss
+    email: true
+    titulo: 'Perícia marcada'
+    o_que_esperar: 'O INSS marcou a sua perícia médica. A equipe vai confirmar com você o dia, o horário e o local. No dia, chegue cedo e leve documento com foto, laudos, exames e receitas.'
+  'DECISAO PROFERIDA':
+    fase: inss
+    email: false
+    delicada: true
+    titulo: 'O INSS respondeu o pedido'
+    o_que_esperar: 'O INSS já deu uma resposta ao seu pedido. Estamos analisando a decisão e vamos conversar com você sobre o resultado e os próximos passos.'
+  'RECURSO ADMINISTRATIVO PROTOCOLADO': # recurso no INSS fica em "Pedido no INSS" (senão Recurso viria depois de Justiça)
+    fase: inss
+    email: true
+    titulo: 'Recurso entregue'
+    o_que_esperar: 'Pedimos que a decisão do INSS seja analisada de novo, por outro setor da Previdência. Não há data certa para o julgamento. Acompanhamos e avisamos você a cada novidade.'
+  'DECISAO DO RECURSO PROFERIDA':
+    fase: inss
+    email: false
+    delicada: true
+    titulo: 'Recurso respondido'
+    o_que_esperar: 'O recurso foi julgado. Estamos analisando a decisão e vamos conversar com você sobre o resultado e os próximos passos.'
+  'AGUARDANDO PAGAMENTO HONORARIOS': { interna: true, email: false }
+  'AGUARDANDO COPIA DO PROCESSO ADMINISTRATIVO':
+    fase: inss
+    email: false
+    titulo: 'Pedimos a cópia do seu processo'
+    o_que_esperar: 'Pedimos ao INSS a cópia completa do seu processo. Ela ajuda a decidir os próximos passos. O INSS não tem data certa para entregar.'
+  # JUDICIAL
+  'CONFERIR SAQUE': { interna: true, email: false }
+  'AGUARDANDO DOCUMENTOS':
+    fase: justica
+    email: true
+    titulo: 'Precisamos de documentos'
+    o_que_esperar: 'Para seguir com o processo na Justiça, precisamos de alguns documentos seus. Veja a lista aqui no painel e envie pela câmera do celular.'
+  'SENTENCA PROFERIDA':
+    fase: justica
+    email: false
+    delicada: true
+    titulo: 'O juiz decidiu'
+    o_que_esperar: 'O juiz deu a decisão, chamada sentença, no seu processo. Estamos analisando e vamos conversar com você sobre o resultado e os próximos passos.'
+  'NEGADO / AVISAR CLIENTE': { interna: true, email: false } # JUDICIAL e RECURSAL: o(a) advogado(a) fala com o cliente primeiro
+  'ACAO PROTOCOLADA':
+    fase: justica
+    email: true
+    titulo: 'Processo na Justiça'
+    o_que_esperar: 'Seu processo foi entregue à Justiça e agora está com o juiz. A Justiça tem o próprio ritmo e não dá para prever datas. Nós acompanhamos de perto e avisamos você a cada novidade.'
+  'PROCESSO SUBSTABELECIDO PARA OUTRO(A) ADV': { interna: true, email: false }
+  'DESENVOLVENDO INICIAL / DEFESA':
+    fase: justica
+    email: false
+    titulo: 'Preparando a ação'
+    o_que_esperar: 'Estamos preparando o pedido que será levado à Justiça, com base nos seus documentos. Quando ele for entregue, avisamos você.'
+  'INICIAL / DEFESA PROTOCOLADA':
+    fase: justica
+    email: true
+    titulo: 'Processo na Justiça'
+    o_que_esperar: 'Seu processo foi entregue à Justiça e agora está com o juiz. A Justiça tem o próprio ritmo e não dá para prever datas. Nós acompanhamos de perto e avisamos você a cada novidade.'
+  'FASE DE INSTRUCAO':
+    fase: justica
+    email: true
+    titulo: 'Fase de provas'
+    o_que_esperar: 'O juiz está reunindo as provas do processo. Ele pode marcar uma perícia médica ou uma audiência. Se isso acontecer, avisamos você assim que soubermos e explicamos como se preparar.'
+  'AUDIENCIA / PERICIA REALIZADA':
+    fase: justica
+    email: true
+    titulo: 'Perícia ou audiência feita'
+    o_que_esperar: 'A perícia ou a audiência já aconteceu. Agora o processo segue até a decisão do juiz, que não tem data certa. Avisamos você a cada novidade.'
+  'PROPOSTA DE ACORDO - ANALISAR': { interna: true, email: false }
+  'PRAZO MANIF / REPLICA / RAZOES FINAIS': { interna: true, email: false }
+  'PROCESSO SOBRESTADO':
+    fase: justica
+    email: true
+    titulo: 'Processo em espera'
+    o_que_esperar: 'O processo está parado por enquanto. Isso acontece quando a Justiça espera uma decisão maior, que vale para casos parecidos com o seu. Não há data para voltar a andar. Acompanhamos e avisamos você.'
+  # RECURSAL
+  'RECURSO PROTOCOLADO':
+    fase: recurso
+    email: true
+    titulo: 'Recurso apresentado'
+    o_que_esperar: 'Pedimos que um tribunal analise de novo a decisão do seu processo. Não há data certa para o julgamento. Acompanhamos e avisamos você a cada novidade.'
+  'PRAZO DE CONTRARRAZOES':
+    fase: recurso
+    email: false
+    titulo: 'Respondendo ao recurso'
+    o_que_esperar: 'A outra parte do processo (em geral, o INSS) recorreu da decisão. Isso é comum. Estamos preparando a nossa resposta.'
+  'AGUARDANDO JULGAMENTO DO RECURSO':
+    fase: recurso
+    email: true
+    titulo: 'Aguardando o julgamento do recurso'
+    o_que_esperar: 'O recurso está no tribunal, esperando para ser julgado. O tribunal não tem data certa. Acompanhamos e avisamos você assim que houver decisão.'
+  'RECURSO JULGADO':
+    fase: recurso
+    email: false
+    delicada: true
+    titulo: 'Recurso julgado'
+    o_que_esperar: 'O tribunal julgou o recurso. Estamos analisando a decisão e vamos conversar com você sobre o resultado e os próximos passos.'
+  'PRAZO RECURSAL': { interna: true, email: false }
+  # EXECUÇÃO/COBRANÇA
+  'AGUARDANDO EXECUCAO':
+    fase: pagamento
+    email: true
+    titulo: 'Preparando a cobrança dos valores'
+    o_que_esperar: 'O processo chegou à etapa de calcular e cobrar os valores. Estamos organizando os próximos passos.'
+  'EXECUCAO COMO EXEQUENTE':
+    fase: pagamento
+    email: true
+    titulo: 'Cobrança dos valores'
+    o_que_esperar: 'Estamos cobrando na Justiça os valores decididos no processo. Nesta etapa os cálculos são conferidos e podem ser discutidos. Não há data certa para o pagamento.'
+  'EXECUCAO COMO DEVEDOR': { interna: true, email: false }
+  'PENHORA REALIZADA': { interna: true, email: false }
+  'PRAZO DE EMBARGOS / IMPUGNACAO': { interna: true, email: false }
+  'RPV / PRECATORIO EMITIDO':
+    fase: pagamento
+    email: true
+    titulo: 'Ordem de pagamento emitida'
+    o_que_esperar: 'A Justiça emitiu a ordem de pagamento dos valores. Agora o pagamento segue o calendário do tribunal, que não depende de nós. Avisamos você quando o valor for liberado.'
+  'PAGAMENTO RECEBIDO / PAGAR CLIENTE':
+    fase: pagamento
+    email: true
+    titulo: 'Valor liberado'
+    o_que_esperar: 'O valor do processo foi liberado. A equipe vai chamar você para combinar o repasse e mostrar a prestação de contas.'
+  'EXECUCAO FINALIZADA / CUSTAS PENDENTES': { interna: true, email: false }
+  # RH/FINANCEIRO
+  'AGUARDANDO ARQUIVAMENTO':
+    fase: concluido
+    email: false
+    titulo: 'Caso em encerramento'
+    o_que_esperar: 'O trabalho no seu caso terminou. Estamos só fechando a parte burocrática para encerrar o processo.'
+  'PAGAMENTO REALIZADO':
+    fase: pagamento
+    email: false
+    titulo: 'Repasse feito'
+    o_que_esperar: 'O valor já foi repassado a você. Se tiver qualquer dúvida sobre a prestação de contas, fale com a equipe.'
+  'PRESTAR CONTAS E PAGAR AO CLIENTE':
+    fase: pagamento
+    email: false
+    titulo: 'Acerto final'
+    o_que_esperar: 'Estamos preparando a prestação de contas e o repasse do valor. A equipe vai chamar você para combinar.'
+  # ARQUIVAMENTO
+  'ANALISADO E NAO DISTRIBUIDO':
+    fase: concluido
+    email: false
+    delicada: true
+    titulo: 'Caso analisado'
+    o_que_esperar: 'Analisamos o seu caso e ele não seguiu para um pedido. A equipe conversa com você sobre o motivo. Se quiser, fale com a gente a qualquer momento.'
+  'ARQUIVADO POR DESINTERESSE CLIENTE':
+    fase: concluido
+    email: false
+    titulo: 'Caso encerrado'
+    o_que_esperar: 'Este caso foi encerrado a seu pedido. Se quiser retomar, é só falar com a equipe.'
+  'ARQUIVADO POR DETERMINACAO JUDICIAL':
+    fase: concluido
+    email: false
+    delicada: true
+    titulo: 'Processo encerrado pela Justiça'
+    o_que_esperar: 'A Justiça encerrou este processo. A equipe vai conversar com você sobre o que isso significa.'
+  'ARQUIVADO/ENCERRADO':
+    fase: concluido
+    email: true
+    titulo: 'Processo concluído'
+    o_que_esperar: 'Este processo foi concluído. Obrigado pela confiança. Se precisar de algo, fale com a equipe.'
+marcos:
+  - { tipo: pericia,   regex: 'per[ií]cia',                    titulo: 'Perícia',            explicacao: 'Avaliação com um médico do INSS ou da Justiça para verificar a sua condição de saúde.' }
+  - { tipo: audiencia, regex: 'audi[êe]ncia',                  titulo: 'Audiência',          explicacao: 'Encontro com o juiz. Ele ouve você e, se houver, as suas testemunhas.' }
+  - { tipo: protocolo, regex: 'distribu[ií]d|protocol|autuad', titulo: 'Pedido entregue',    explicacao: 'O seu pedido foi entregue oficialmente, ao INSS ou à Justiça.' }
+  - { tipo: sentenca,  regex: 'senten[çc]a|ac[óo]rd[ãa]o',      titulo: 'Decisão',            explicacao: 'Saiu uma decisão no processo. A equipe explica o resultado para você.', delicada: true }
+  # negação antes: "indeferido", "não concedido", "negado" NÃO podem virar "Benefício aprovado" (texto já transliterado)
+  - { tipo: concessao, regex: '\A(?!.*(indeferid|nao (foi )?concedid|negad)).*(implanta|concedid|deferid)', titulo: 'Benefício aprovado', explicacao: 'O benefício foi aprovado.' }
