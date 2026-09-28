@@ -182,4 +182,5 @@ marcos:
   - { tipo: audiencia, regex: 'audi[êe]ncia',                  titulo: 'Audiência',            explicacao: 'Encontro com o juiz para ouvir as partes e testemunhas.' }
   - { tipo: protocolo, regex: 'distribu[ií]d|protocol|autuad', titulo: 'Processo protocolado', explicacao: 'O pedido entrou oficialmente.' }
   - { tipo: sentenca,  regex: 'senten[çc]a|ac[óo]rd[ãa]o',      titulo: 'Decisão do juiz',      explicacao: 'O juiz decidiu. Nossa equipe explica o resultado.' }
-  - { tipo: concessao, regex: 'implanta|concedid|deferid',     titulo: 'Benefício concedido',  explicacao: 'O benefício foi liberado.' }
+  # negação antes: "indeferido", "não concedido", "negado" NÃO podem virar "Benefício concedido" (texto já transliterado)
+  - { tipo: concessao, regex: '\A(?!.*(indeferid|nao (foi )?concedid|negad)).*(implanta|concedid|deferid)', titulo: 'Benefício concedido', explicacao: 'O benefício foi liberado.' }
