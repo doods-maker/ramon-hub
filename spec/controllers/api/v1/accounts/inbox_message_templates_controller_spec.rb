@@ -33,7 +33,8 @@ RSpec.describe Api::V1::Accounts::InboxMessageTemplatesController, type: :reques
     expect(response).to have_http_status(:created)
     expect(response.parsed_body).to eq('id' => '999', 'status' => 'PENDING')
     expect(create_stub).to have_been_requested
-    expect(sync_stub).to have_been_requested
+    # ao salvar os templates, a validação de credenciais do canal repete o mesmo GET
+    expect(sync_stub).to have_been_requested.at_least_once
     expect(whatsapp_channel.reload.message_templates.first['name']).to eq('confirmacao_atendimento')
   end
 
