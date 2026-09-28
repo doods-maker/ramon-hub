@@ -48,7 +48,7 @@ RSpec.describe Ramon::PortalTexto do
     expect(described_class.email?('REUNIAO POS VENDA')).to be true
   end
 
-  context 'com PORTAL_TEXTOS_V2=on' do
+  context 'with PORTAL_TEXTOS_V2=on' do
     around { |ex| with_modified_env(PORTAL_TEXTOS_V2: 'on') { ex.run } }
 
     def processo(etapa, step) = { 'etapa' => etapa, 'fase' => step }

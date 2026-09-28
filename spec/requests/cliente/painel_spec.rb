@@ -31,7 +31,7 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     expect(response).to redirect_to('/cliente/inicio')
   end
 
-  context 'com PORTAL_TEXTOS_V2=on' do
+  context 'with PORTAL_TEXTOS_V2=on' do
     around { |ex| with_modified_env(PORTAL_TEXTOS_V2: 'on') { ex.run } }
 
     it 'termos v2 e, depois do aceite, as 3 telas de boas-vindas' do
