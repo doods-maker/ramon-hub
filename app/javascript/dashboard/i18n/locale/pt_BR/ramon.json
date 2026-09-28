@@ -1340,6 +1340,37 @@
       "ULTIMA": "última retomada:",
       "COM_TAREFA": "já tem tarefa aberta",
       "EMPTY": "Nenhum caso parado no funil agora."
+    },
+    "MESSAGE_TEMPLATES": {
+      "TAB": "Modelos de mensagem",
+      "NEW_TITLE": "Novo modelo de mensagem",
+      "NEW_DESCRIPTION": "Modelos são as únicas mensagens que podem ser enviadas fora da janela de 24 horas do WhatsApp. O modelo é enviado para análise da Meta e só pode ser usado depois de aprovado.",
+      "NAME": "Nome do modelo",
+      "NAME_PLACEHOLDER": "confirmacao_atendimento",
+      "NAME_PREVIEW": "Será salvo como: {name}",
+      "CATEGORY": {
+        "LABEL": "Categoria",
+        "UTILITY": "Utilidade",
+        "MARKETING": "Marketing",
+        "AUTHENTICATION": "Autenticação"
+      },
+      "BODY": "Texto da mensagem",
+      "BODY_PLACEHOLDER": "Olá {'{{'}1{'}}'}, confirmamos seu atendimento em {'{{'}2{'}}'}.",
+      "EXAMPLES_HINT": "A Meta exige um exemplo para cada variável do texto.",
+      "SUBMIT": "Enviar para análise da Meta",
+      "CREATE_SUCCESS": "Modelo enviado para análise da Meta.",
+      "CREATE_ERROR": "Não foi possível criar o modelo.",
+      "LIST_TITLE": "Modelos desta caixa",
+      "SYNC": "Atualizar status",
+      "SYNC_ERROR": "Não foi possível atualizar os modelos.",
+      "EMPTY": "Nenhum modelo ainda.",
+      "STATUS": {
+        "APPROVED": "Aprovado",
+        "PENDING": "Em análise",
+        "REJECTED": "Recusado",
+        "PAUSED": "Pausado",
+        "DISABLED": "Desativado"
+      }
     }
   }
 }
