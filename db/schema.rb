@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_28_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_28_000004) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1354,6 +1354,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_28_000003) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "portal_acessos", force: :cascade do |t|
+    t.bigint "portal_cliente_id", null: false
+    t.string "ip"
+    t.datetime "created_at", null: false
+    t.index ["portal_cliente_id"], name: "index_portal_acessos_on_portal_cliente_id"
+  end
+
   create_table "portal_assinaturas", force: :cascade do |t|
     t.bigint "portal_cliente_id", null: false
     t.string "doc_token", null: false
@@ -1387,6 +1394,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_28_000003) do
     t.datetime "ultimo_acesso_em"
     t.integer "dias_acesso", default: 0, null: false
     t.string "telefone"
+    t.boolean "ia_consentimento"
     t.index ["account_id", "advbox_customer_id"], name: "index_portal_clientes_on_account_id_and_advbox_customer_id", unique: true
     t.index ["account_id", "cpf"], name: "index_portal_clientes_on_account_id_and_cpf", unique: true
     t.index ["account_id", "email"], name: "index_portal_clientes_on_account_id_and_email", unique: true

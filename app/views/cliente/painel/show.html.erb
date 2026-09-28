@@ -5,6 +5,18 @@
 <% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
 <% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
 
+<% if Ramon::PortalTexto.v2? && current_cliente.ia_consentimento.nil? %>
+  <div class="docs-card">
+    <p class="docs-title">Uma pergunta rápida</p>
+    <p>Podemos usar inteligência artificial para organizar a lista de documentos que pedimos a você?
+      O texto do pedido, sem o seu nome e sem o seu CPF, é processado por um serviço com servidores na China.
+      É opcional: sem a sua autorização, mostramos o pedido de forma resumida. Você pode mudar de ideia quando quiser,
+      falando com a equipe.</p>
+    <%= button_to 'Autorizo', cliente_ia_path(ia: 'sim'), method: :post, class: 'btn-bronze' %>
+    <%= button_to 'Não autorizo', cliente_ia_path(ia: 'nao'), method: :post, class: 'btn-link' %>
+  </div>
+<% end %>
+
 <% @assinaturas.each do |a| %>
   <div class="docs-card">
     <p class="docs-title">Assinatura pendente: <%= a.nome %></p>

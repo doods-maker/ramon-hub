@@ -63,6 +63,25 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     expect(response.body).not_to include('Pedido no INSS')
   end
 
+  it 'registra data/hora + IP no login e no 1º acesso do dia (Marco Civil)' do
+    entrar
+    get '/cliente/inicio'
+    expect(cliente.acessos.count).to eq 2
+    expect(cliente.acessos.last.ip).to be_present
+  end
+
+  it 'com os textos v2, pergunta da IA aparece até o cliente responder' do
+    with_modified_env PORTAL_TEXTOS_V2: 'on' do
+      entrar
+      get '/cliente/inicio'
+      expect(response.body).to include('Uma pergunta rápida')
+      post '/cliente/ia', params: { ia: 'nao' }
+      expect(cliente.reload.ia_consentimento).to be false
+      get '/cliente/inicio'
+      expect(response.body).not_to include('Uma pergunta rápida')
+    end
+  end
+
   it 'conta dias distintos de acesso (mesmo dia não soma de novo)' do
     entrar
     get '/cliente/inicio'

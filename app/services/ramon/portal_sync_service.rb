@@ -7,6 +7,8 @@ class Ramon::PortalSyncService
   LIMITE_PROCESSOS = 10
   LIMITE_ANDAMENTOS = 30
   LIMITE_TAREFAS = 50
+  # Sem autorização da IA (LGPD art. 33, VIII) o pedido aparece resumido.
+  ITEM_SEM_IA = 'Documentos pedidos pela equipe (confira a lista com a equipe no WhatsApp)'.freeze
 
   def initialize(cliente)
     @cliente = cliente
@@ -51,11 +53,21 @@ class Ramon::PortalSyncService
     lista(Ramon::AdvboxClient.posts(lawsuit_id: id, limit: LIMITE_TAREFAS))
       .select { |p| Ramon::PortalTexto.normalizar(p['task']).include?(TAREFA_SOLICITAR) && aberta?(p) }
       .flat_map do |p|
-        digest = Digest::SHA256.hexdigest(p['notes'].to_s)[0, 16]
-        itens = itens_anteriores[[p['id'], digest]] || Ramon::PortalDocsService.itens(p['notes'], nome: @cliente.nome)
+        digest = Digest::SHA256.hexdigest("#{usa_ia? ? 'ia' : 'sem-ia'}#{p['notes']}")[0, 16]
+        itens = itens_anteriores[[p['id'], digest]] || itens_do_pedido(p['notes'])
         Array(itens).map { |item| { 'item' => item, 'post_id' => p['id'], 'digest' => digest } }
       end
   end
+
+  def itens_do_pedido(notes)
+    return [] if notes.to_s.strip.blank?
+    return [ITEM_SEM_IA] unless usa_ia?
+
+    Ramon::PortalDocsService.itens(notes, nome: @cliente.nome)
+  end
+
+  # Com os textos v2 ligados a IA exige a autorização do cliente; antes disso segue como está.
+  def usa_ia? = !Ramon::PortalTexto.v2? || @cliente.ia_consentimento == true
 
   # ponytail: lista vazia legítima não fica no espelho, então uma tarefa sem
   # documento pedido custa 1 chamada por noite — aceitável no volume atual.

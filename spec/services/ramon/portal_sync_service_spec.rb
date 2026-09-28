@@ -56,6 +56,17 @@ Laudo médico
     expect(cliente.reload.sincronizado_em).to be_present
   end
 
+  it 'com os textos v2 ligados, sem autorização da IA o pedido vira 1 item resumido e a IA não é chamada' do
+    with_modified_env PORTAL_TEXTOS_V2: 'on' do
+      itens = described_class.new(cliente).perform.first['docs_pendentes'].map { |d| d['item'] }
+      expect(itens).to eq([described_class::ITEM_SEM_IA])
+      expect(Ramon::PortalDocsService).not_to have_received(:itens)
+      cliente.reload.update!(ia_consentimento: true)
+      itens = described_class.new(cliente).perform.first['docs_pendentes'].map { |d| d['item'] }
+      expect(itens).to eq(['CNIS atualizado', 'Laudo médico'])
+    end
+  end
+
   it 'reaproveita os itens do espelho enquanto as observações da tarefa não mudam' do
     described_class.new(cliente).perform
     described_class.new(cliente.reload).perform

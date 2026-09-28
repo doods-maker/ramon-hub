@@ -29,6 +29,7 @@ class Cliente::BaseController < ActionController::Base
   end
 
   def entrar!(cliente)
+    cliente.acessos.create!(ip: request.remote_ip) # Marco Civil art. 15
     cookies.encrypted[COOKIE] = { value: { 'id' => cliente.id, 'v' => versao(cliente) }, expires: SESSAO.from_now,
                                   httponly: true, same_site: :lax, secure: Rails.env.production? }
     @current_cliente = cliente
