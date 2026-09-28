@@ -35,9 +35,9 @@ module Ramon::PortalNovidades
     end
   end
 
-  def detectar(anterior, novo, em)
+  def detectar(anterior, novo, quando)
     (novidade_de_etapa(anterior, novo) + marcos_novos(anterior, novo))
-      .map { |n| n.merge('em' => em, 'vista' => false, 'avisada' => false) }
+      .map { |n| n.merge('em' => quando, 'vista' => false, 'avisada' => false) }
   end
 
   def novidade_de_etapa(anterior, novo)

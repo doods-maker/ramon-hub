@@ -1,7 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe Ramon::PortalAvisosJob do
-  let(:novidade) { { 'tipo' => 'etapa', 'titulo' => 'Perícia agendada', 'o_que_esperar' => 'x', 'delicada' => false, 'vista' => false, 'avisada' => false } }
+  let(:novidade) do
+    { 'tipo' => 'etapa', 'titulo' => 'Perícia agendada', 'o_que_esperar' => 'x', 'delicada' => false, 'vista' => false, 'avisada' => false }
+  end
   let(:delicada) { novidade.merge('titulo' => 'Juiz deu a sentença', 'delicada' => true) }
   let!(:cliente) do
     create(:portal_cliente, convidado_em: 1.day.ago, email: 'maria@exemplo.com', telefone: '48999990000',

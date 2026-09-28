@@ -21,17 +21,28 @@ class Ramon::PortalAvisosJob < ApplicationJob
   private
 
   def avisar(cliente)
-    pendentes = cliente.processos.flat_map { |p| Array(p['novidades']).reject { |n| n['avisada'] }.map { |n| [p, n] } }
+    pendentes = pendentes(cliente)
     return [] if pendentes.empty?
 
-    comuns = pendentes.reject { |_p, n| n['delicada'] }
-    por_email = cliente.email.present? && comuns.any?
-    Ramon::PortalMailer.with(cliente: cliente, itens: comuns.map { |p, n| item(p, n) }).novidade.deliver_now if por_email
+    por_email = enviar_email(cliente, pendentes)
     marcar_avisadas!(cliente)
     pendentes.map { |p, n| linha(cliente, p, n, por_email && !n['delicada']) }
   rescue StandardError => e
     Rails.logger.warn("[Ramon::PortalAvisosJob] cliente=#{cliente.id} #{e.class}: #{e.message}")
     []
+  end
+
+  def pendentes(cliente)
+    cliente.processos.flat_map { |p| Array(p['novidades']).reject { |n| n['avisada'] }.map { |n| [p, n] } }
+  end
+
+  # Etapa/marco delicado nunca vai por e-mail automático.
+  def enviar_email(cliente, pendentes)
+    comuns = pendentes.reject { |_p, n| n['delicada'] }
+    return false if cliente.email.blank? || comuns.empty?
+
+    Ramon::PortalMailer.with(cliente: cliente, itens: comuns.map { |p, n| item(p, n) }).novidade.deliver_now
+    true
   end
 
   def marcar_avisadas!(cliente)

@@ -48,12 +48,12 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
                                                       'novidades' => [novidade])])
     entrar
     get '/cliente/inicio'
-    expect(response.body).to include('badge-novo').and include('Perícia agendada')
+    expect(response.body).to include('class="badge badge-novo"').and include('Perícia agendada')
     expect(response.body).not_to include('Pedido não foi aceito')
     get '/cliente/processos/1'
     expect(cliente.reload.processos.first['novidades'].first['vista']).to be true
     get '/cliente/inicio'
-    expect(response.body).not_to include('badge-novo')
+    expect(response.body).not_to include('class="badge badge-novo"')
   end
 
   it 'lista ativos e encerrados com a etapa traduzida' do
