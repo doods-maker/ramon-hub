@@ -62,6 +62,10 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     { 'Authorization' => "Bearer #{whatsapp_channel.provider_config['api_key']}", 'Content-Type' => 'application/json' }
   end
 
+  def create_message_template(template)
+    HTTParty.post("#{business_account_path}/message_templates", headers: api_headers, body: template.to_json)
+  end
+
   def create_csat_template(template_config)
     csat_template_service.create_template(template_config)
   end

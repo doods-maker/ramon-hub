@@ -1339,6 +1339,37 @@
       "ULTIMA": "last follow-up:",
       "COM_TAREFA": "task already open",
       "EMPTY": "No stalled cases in the funnel right now."
+    },
+    "MESSAGE_TEMPLATES": {
+      "TAB": "Message templates",
+      "NEW_TITLE": "New message template",
+      "NEW_DESCRIPTION": "Templates are the only messages that can be sent outside WhatsApp's 24-hour window. The template is submitted to Meta for review and can only be used once approved.",
+      "NAME": "Template name",
+      "NAME_PLACEHOLDER": "appointment_confirmation",
+      "NAME_PREVIEW": "Will be saved as: {name}",
+      "CATEGORY": {
+        "LABEL": "Category",
+        "UTILITY": "Utility",
+        "MARKETING": "Marketing",
+        "AUTHENTICATION": "Authentication"
+      },
+      "BODY": "Message body",
+      "BODY_PLACEHOLDER": "Hi {'{{'}1{'}}'}, your appointment is confirmed for {'{{'}2{'}}'}.",
+      "EXAMPLES_HINT": "Meta requires one example for each variable in the body.",
+      "SUBMIT": "Submit to Meta for review",
+      "CREATE_SUCCESS": "Template submitted to Meta for review.",
+      "CREATE_ERROR": "Could not create the template.",
+      "LIST_TITLE": "Templates in this inbox",
+      "SYNC": "Refresh status",
+      "SYNC_ERROR": "Could not refresh the templates.",
+      "EMPTY": "No templates yet.",
+      "STATUS": {
+        "APPROVED": "Approved",
+        "PENDING": "In review",
+        "REJECTED": "Rejected",
+        "PAUSED": "Paused",
+        "DISABLED": "Disabled"
+      }
     }
   }
 }
