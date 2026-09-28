@@ -13,9 +13,10 @@ class Ramon::PortalSyncService
   end
 
   def perform
+    anteriores = Array(@cliente.processos).index_by { |p| p['id'].to_s }
     processos = lista(Ramon::AdvboxClient.lawsuits(identification: @cliente.cpf, limit: LIMITE_PROCESSOS))
-                .map { |l| espelho(l) }
-    @cliente.update!(processos: processos, sincronizado_em: Time.current)
+                .map { |l| Ramon::PortalNovidades.aplicar(anteriores[l['id'].to_s], espelho(l)) }
+    @cliente.update!(processos: processos, sincronizado_em: Time.current, telefone: @cliente.telefone.presence || telefone_advbox)
     processos
   end
 
@@ -63,6 +64,15 @@ class Ramon::PortalSyncService
                                                    .select { |d| d['digest'].present? }
                                                    .group_by { |d| [d['post_id'], d['digest']] }
                                                    .transform_values { |ds| ds.map { |d| d['item'] } }
+  end
+
+  # 1 chamada só enquanto o cliente não tem telefone (pro wa.me do resumo da equipe).
+  def telefone_advbox
+    dados = Ramon::AdvboxClient.customer(@cliente.advbox_customer_id)
+    dados = dados['data'] if dados.is_a?(Hash) && dados['data'].is_a?(Hash)
+    dados.is_a?(Hash) ? dados['cellphone'].to_s.delete('^0-9').presence : nil
+  rescue Ramon::AdvboxClient::UnavailableError, Ramon::AdvboxClient::RequestError
+    nil
   end
 
   def aberta?(post)

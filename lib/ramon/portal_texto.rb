@@ -28,10 +28,14 @@ module Ramon::PortalTexto
       marco = MARCOS.find { |m| m['re'].match?(texto) }
       next unless marco
 
-      por_tipo[marco['tipo']] = { 'data' => a['data'], 'tipo' => marco['tipo'],
-                                  'titulo' => marco['titulo'], 'explicacao' => marco['explicacao'] }
+      por_tipo[marco['tipo']] = { 'data' => a['data'], 'tipo' => marco['tipo'], 'titulo' => marco['titulo'],
+                                  'explicacao' => marco['explicacao'], 'delicada' => marco['delicada'] == true }
     end
     por_tipo.values.sort_by { |m| m['data'].to_s }
+  end
+
+  def interna?(stage)
+    ETAPAS.dig(normalizar(stage), 'interna') == true
   end
 
   def encerrado?(step)

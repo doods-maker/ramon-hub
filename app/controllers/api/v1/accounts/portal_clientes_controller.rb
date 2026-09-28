@@ -20,7 +20,7 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
   # consertar uma conta que ficou sem CPF (linhas anteriores ao login por CPF).
   def create
     cliente = Current.account.portal_clientes.find_or_initialize_by(advbox_customer_id: params[:advbox_customer_id])
-    cliente.update!(params.permit(:nome, :cpf, :email))
+    cliente.update!(params.permit(:nome, :cpf, :email, :telefone))
     sincronizar(cliente)
     senha = convidar!(cliente)
     render json: linha(cliente).merge(senha_provisoria: senha)

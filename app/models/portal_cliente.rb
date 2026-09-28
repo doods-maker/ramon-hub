@@ -74,11 +74,25 @@ class PortalCliente < ApplicationRecord
 
   def primeiro_nome = nome.to_s.split.first.to_s.capitalize
 
+  def self.etapa_cliente(processo) = processo.key?('etapa_cliente') ? processo['etapa_cliente'] : processo['etapa']
+
+  def self.novidades_nao_vistas(processo) = Array(processo['novidades']).reject { |n| n['vista'] }
+
+  def marcar_vistas!(lawsuit_id)
+    atualizados = processos.map do |p|
+      next p unless p['id'].to_s == lawsuit_id.to_s
+
+      p.merge('novidades' => Array(p['novidades']).map { |n| n.merge('vista' => true) })
+    end
+    update!(processos: atualizados)
+  end
+
   private
 
   def normalizar
     self.email = email.to_s.strip.downcase.presence
     self.cpf = cpf.to_s.delete('^0-9').presence
+    self.telefone = telefone.to_s.delete('^0-9').presence
   end
 
   # SHA256 com o secret_key_base basta: código de 10 min + throttle no rack_attack.

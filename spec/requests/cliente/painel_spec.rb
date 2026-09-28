@@ -42,6 +42,20 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     expect(cliente.ultimo_acesso_em).to be_within(1.minute).of(Time.current)
   end
 
+  it 'selo Novo no início até o cliente abrir o processo; etapa interna mostra a exibida' do
+    novidade = { 'tipo' => 'etapa', 'titulo' => 'Perícia agendada', 'vista' => false, 'avisada' => true }
+    cliente.update!(processos: [processos.first.merge('etapa' => 'NEGADO / AVISAR CLIENTE', 'etapa_cliente' => 'PERICIA AGENDADA',
+                                                      'novidades' => [novidade])])
+    entrar
+    get '/cliente/inicio'
+    expect(response.body).to include('class="badge badge-novo"').and include('Perícia agendada')
+    expect(response.body).not_to include('Pedido não foi aceito')
+    get '/cliente/processos/1'
+    expect(cliente.reload.processos.first['novidades'].first['vista']).to be true
+    get '/cliente/inicio'
+    expect(response.body).not_to include('class="badge badge-novo"')
+  end
+
   it 'lista ativos e encerrados com a etapa traduzida' do
     entrar
     get '/cliente/inicio'

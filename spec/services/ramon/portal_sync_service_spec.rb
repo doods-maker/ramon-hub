@@ -23,6 +23,21 @@ RSpec.describe Ramon::PortalSyncService do
     allow(Ramon::AdvboxClient).to receive(:movements).with(14_039_119, limit: 30).and_return(movements)
     allow(Ramon::AdvboxClient).to receive(:posts).with(lawsuit_id: 14_039_119, limit: 50).and_return(posts)
     allow(Ramon::PortalDocsService).to receive(:itens).and_return(['CNIS atualizado', 'Laudo médico'])
+    allow(Ramon::AdvboxClient).to receive(:customer).and_return({ 'cellphone' => '(48) 99999-0000' })
+  end
+
+  it 'busca o telefone no ADVBOX só enquanto o cliente não tem' do
+    described_class.new(cliente).perform
+    described_class.new(cliente.reload).perform
+    expect(cliente.reload.telefone).to eq '48999990000'
+    expect(Ramon::AdvboxClient).to have_received(:customer).once
+  end
+
+  it '1º sync não gera novidade; mudança de etapa no sync seguinte gera' do
+    expect(described_class.new(cliente).perform.first['novidades']).to eq([])
+    lawsuits['data'].first['stage'] = 'SENTENÇA PROFERIDA'
+    novidade = described_class.new(cliente.reload).perform.first['novidades'].first
+    expect(novidade).to include('tipo' => 'etapa', 'titulo' => 'Juiz deu a sentença', 'delicada' => true, 'vista' => false, 'avisada' => false)
   end
 
   it 'espelha processos, andamentos e só os pedidos de documento abertos' do

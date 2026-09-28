@@ -30,7 +30,7 @@ RSpec.describe Reuniao do
   # destroy_async, fora da transação da spec) — o nullify fica provado pela reflexão.
   it 'vincula lead e declara nullify na ponta do lead' do
     reuniao = described_class.create!(account: account, user: create(:user, account: account), lead: lead)
-    expect(lead.reunioes).to eq([reuniao])
+    expect(lead.reunioes.pluck(:id)).to eq([reuniao.id]) # ids: a classe pode vir recarregada conforme a ordem do shard
     expect(Lead.reflect_on_association(:reunioes).options[:dependent]).to eq(:nullify)
   end
 end
