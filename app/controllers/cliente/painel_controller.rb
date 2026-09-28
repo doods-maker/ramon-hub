@@ -23,7 +23,15 @@ class Cliente::PainelController < Cliente::BaseController
 
   def aceitar_termos
     current_cliente.update!(termos_aceitos_em: Time.current) if params[:aceite] == '1'
-    redirect_to cliente_inicio_path
+    redirect_to Ramon::PortalTexto.v2? ? cliente_boas_vindas_path : cliente_inicio_path
+  end
+
+  # Onboarding de 3 telas (?passo=1..3). Sem coluna própria: só aparece logo após o
+  # aceite dos termos, que acontece 1x. Texto novo = só com PORTAL_TEXTOS_V2.
+  def boas_vindas
+    return redirect_to cliente_inicio_path unless Ramon::PortalTexto.v2?
+
+    @passo = params[:passo].to_i.clamp(1, 3)
   end
 
   def atualizar
@@ -46,6 +54,7 @@ class Cliente::PainelController < Cliente::BaseController
     @marcos = Ramon::PortalTexto.marcos(@processo['andamentos'])
     @recado = current_cliente.recados[@processo['id'].to_s]
     @pendentes = pendentes_com_status
+    @linha = Ramon::PortalTexto.linha_do_tempo(@processo) if Ramon::PortalTexto.v2?
   end
 
   def enviar

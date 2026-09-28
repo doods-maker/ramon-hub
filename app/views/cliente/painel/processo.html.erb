@@ -7,6 +7,26 @@
 <div class="divider"></div>
 <% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
 <% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
+<% if @linha %>
+  <div class="timeline" aria-label="Fases do seu caso">
+    <% @linha.each_with_index do |d, i| %>
+      <div class="step">
+        <div class="step-rail">
+          <% if d['estado'] == 'current' %><span class="dot-current"><span></span></span><% else %><span class="dot-<%= d['estado'] %>"></span><% end %>
+          <% unless i == @linha.size - 1 %><span class="<%= d['estado'] == 'done' ? 'rail-done' : 'rail-future' %>"></span><% end %>
+        </div>
+        <div class="step-text">
+          <% if d['estado'] == 'future' %>
+            <p class="step-title-future"><%= d['nome'] %></p>
+          <% else %>
+            <p class="step-title"><%= d['nome'] %><% if d['estado'] == 'current' %> <span class="pill-now">agora</span><% end %></p>
+          <% end %>
+          <% if d['estado'] == 'current' %><p class="step-sub"><%= d['frase'] %></p><% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
 <div class="card"><p><%= @etapa['o_que_esperar'] %></p></div>
 
 <% if @recado.present? %>
@@ -54,5 +74,5 @@
   <p class="muted">Número: <%= @processo['numero'].presence || '—' %></p>
   <p class="muted">Início: <%= @processo['inicio'].presence || '—' %></p>
   <p class="muted">Advogado(a) responsável: <%= @processo['responsavel'].to_s.titleize.presence || 'equipe' %></p>
-  <a class="btn-bronze" href="https://wa.me/<%= ENV.fetch('PORTAL_WHATSAPP', '5548988319115') %>">Falar com a equipe no WhatsApp</a>
+  <a class="btn-bronze" href="https://wa.me/<%= ENV.fetch('PORTAL_WHATSAPP', '5548988554077') %>">Falar com a equipe no WhatsApp</a>
 </div>

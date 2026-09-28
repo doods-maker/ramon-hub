@@ -26,7 +26,7 @@ class Ramon::PortalAvisosJob < ApplicationJob
 
     por_email = enviar_email(cliente, pendentes)
     marcar_avisadas!(cliente)
-    pendentes.map { |p, n| linha(cliente, p, n, por_email && !n['delicada']) }
+    pendentes.map { |p, n| linha(cliente, p, n, por_email && por_email?(n)) }
   rescue StandardError => e
     Rails.logger.warn("[Ramon::PortalAvisosJob] cliente=#{cliente.id} #{e.class}: #{e.message}")
     []
@@ -38,12 +38,15 @@ class Ramon::PortalAvisosJob < ApplicationJob
 
   # Etapa/marco delicado nunca vai por e-mail automático.
   def enviar_email(cliente, pendentes)
-    comuns = pendentes.reject { |_p, n| n['delicada'] }
+    comuns = pendentes.select { |_p, n| por_email?(n) }
     return false if cliente.email.blank? || comuns.empty?
 
     Ramon::PortalMailer.with(cliente: cliente, itens: comuns.map { |p, n| item(p, n) }).novidade.deliver_now
     true
   end
+
+  # 'email' => false = etapa sem e-mail no dicionário v2; nil (novidade antiga ou marco) conta como true.
+  def por_email?(novidade) = !novidade['delicada'] && novidade['email'] != false
 
   def marcar_avisadas!(cliente)
     cliente.update!(processos: cliente.processos.map do |p|
@@ -66,6 +69,7 @@ class Ramon::PortalAvisosJob < ApplicationJob
   def status_email(cliente, novidade, recebeu_email)
     return 'Já recebeu por e-mail hoje.' if recebeu_email
     return 'Não recebeu: etapa delicada (sem e-mail automático).' if novidade['delicada']
+    return 'Não recebeu: etapa sem e-mail automático.' if novidade['email'] == false
 
     cliente.email.blank? ? 'Não recebeu: cliente sem e-mail cadastrado. O seu WhatsApp é o único aviso.' : 'Não recebeu e-mail.'
   end

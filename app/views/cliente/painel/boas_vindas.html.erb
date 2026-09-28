@@ -1,0 +1,21 @@
+<%# app/views/cliente/painel/boas_vindas.html.erb — onboarding de 3 telas, logo após os termos (só com PORTAL_TEXTOS_V2) %>
+<% telas = [
+  ['Seu caso na palma da mão',
+   'Aqui você vê em que fase está o seu processo e o que esperar agora. Quando houver novidade, avisamos você.'],
+  ['Envie documentos pela câmera',
+   'Quando precisarmos de um documento, ele aparece aqui. É só tocar em "Enviar" e tirar uma foto com o celular.'],
+  ['Assine e fale com a equipe',
+   'Contratos para assinar também aparecem aqui. Ficou com dúvida? Toque em "Falar com a equipe" e chame a gente no WhatsApp.']
+] %>
+<% titulo, texto = telas[@passo - 1] %>
+<% content_for :title, titulo %>
+<p style="text-align:right"><%= link_to 'Pular', cliente_inicio_path, class: 'btn-link' %></p>
+<p class="eyebrow"><%= @passo %> de <%= telas.size %></p>
+<h1><%= titulo %></h1>
+<div class="divider"></div>
+<div class="card"><p><%= texto %></p></div>
+<% if @passo < telas.size %>
+  <%= link_to 'Próximo', cliente_boas_vindas_path(passo: @passo + 1), class: 'btn-bronze' %>
+<% else %>
+  <%= link_to 'Começar', cliente_inicio_path, class: 'btn-bronze' %>
+<% end %>

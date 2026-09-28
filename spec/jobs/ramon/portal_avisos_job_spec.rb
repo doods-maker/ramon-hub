@@ -33,6 +33,20 @@ RSpec.describe Ramon::PortalAvisosJob do
     expect(cliente.reload.processos.first['novidades'].pluck('avisada')).to all(be true)
   end
 
+  it "novidade com 'email' => false não vai por e-mail, mas entra no resumo da equipe" do
+    sem_email = novidade.merge('titulo' => 'Conversa de boas-vindas', 'email' => false)
+    cliente.update!(processos: [cliente.processos.first.merge('novidades' => [novidade.merge('email' => true), sem_email])])
+    with_modified_env PORTAL_AVISOS: 'on' do
+      described_class.perform_now
+    end
+    expect(Ramon::PortalMailer).to have_received(:with)
+      .with(cliente: cliente, itens: [{ 'tipo' => 'auxílio-acidente', 'titulo' => 'Perícia agendada', 'o_que_esperar' => 'x' }])
+    expect(Ramon::PortalMailer).to have_received(:with).with(hash_including(:linhas)) do |args|
+      expect(args[:linhas].map { |l| [l['titulo'], l['email']] })
+        .to eq([['Perícia agendada', 'Já recebeu por e-mail hoje.'], ['Conversa de boas-vindas', 'Não recebeu: etapa sem e-mail automático.']])
+    end
+  end
+
   it 'ligado e sem novidade pendente: não manda resumo' do
     cliente.update!(processos: [{ 'id' => 1, 'novidades' => [novidade.merge('avisada' => true)] }])
     with_modified_env PORTAL_AVISOS: 'on' do

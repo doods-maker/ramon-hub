@@ -1,6 +1,17 @@
-<%# app/views/mailers/ramon/portal_mailer/codigo.html.erb %>
+<%# app/views/mailers/ramon/portal_mailer/codigo.html.erb — v2 = PORTAL_TEXTOS_V2=on %>
+<% if Ramon::PortalTexto.v2? %>
+<p>Olá, <%= @cliente.primeiro_nome %>.</p>
+<p>Você pediu para criar uma senha nova no Painel do Cliente. Use este código:</p>
+<p style="font-size:28px;letter-spacing:.3em;font-weight:bold"><%= @codigo %></p>
+<p>Ele vale por 10 minutos.</p>
+<p>Se não foi você que pediu, pode ignorar este e-mail. A sua senha continua a mesma.</p>
+<p>Equipe Ramon Antonio Advogados</p>
+<hr>
+<p style="font-size:12px;color:#666">Esta é uma mensagem automática. Por favor, não responda este e-mail.<br>A nossa equipe nunca pede a sua senha por e-mail, telefone ou WhatsApp.</p>
+<% else %>
 <p>Olá, <%= @cliente.primeiro_nome %>.</p>
 <p>Seu código de acesso ao Painel do Cliente é:</p>
 <p style="font-size:28px;letter-spacing:.3em;font-weight:bold"><%= @codigo %></p>
 <p>Ele vale por 10 minutos. Se você não pediu este código, ignore este e-mail.</p>
 <p>Ramon Antonio Advogados</p>
+<% end %>

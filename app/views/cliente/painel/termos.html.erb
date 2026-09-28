@@ -1,11 +1,29 @@
-<%# app/views/cliente/painel/termos.html.erb — RASCUNHO do texto (gate Eduardo) %>
+<%# app/views/cliente/painel/termos.html.erb — RASCUNHO do texto (gate Eduardo); v2 = PORTAL_TEXTOS_V2=on %>
 <p class="eyebrow">Antes de começar</p>
 <h1>Termos de uso</h1>
 <div class="divider"></div>
-<div class="card">
-  <p>O Painel do Cliente mostra informações sobre os seus processos com a Ramon Antonio Advogados, permite enviar documentos e assinar documentos eletronicamente. Os dados são usados só para o seu atendimento, conforme a nossa Política de Privacidade. O conteúdo é informativo e não substitui a orientação individual do(a) advogado(a).</p>
-</div>
+<% if Ramon::PortalTexto.v2? %>
+  <div class="card">
+    <ol>
+      <li><strong>O que é o painel.</strong> O Painel do Cliente é um espaço da Ramon Antonio Advogados para você acompanhar o seu caso, enviar documentos e assinar pelo celular.</li>
+      <li><strong>As informações.</strong> O que aparece aqui vem do nosso sistema de gestão de processos e é atualizado uma vez por dia, ou quando você toca em "Atualizar". Pode haver um pequeno atraso em relação ao INSS ou à Justiça.</li>
+      <li><strong>Não substitui a conversa.</strong> O painel é informativo. Ele não garante resultado nem prazo, e não substitui a orientação do(a) seu(sua) advogado(a).</li>
+      <li><strong>O seu acesso é pessoal.</strong> Não passe o seu CPF e a sua senha para outras pessoas. Se um familiar ajuda você a usar o painel, cuide para que a senha fique só com vocês.</li>
+      <li><strong>Documentos que você envia.</strong> Eles vão direto para a equipe que cuida do seu caso. Envie só o que pedirmos e confira se a foto está legível. Pelo painel você pode baixar o seu contrato assinado e os documentos que você mesmo enviou. Para outras cópias, peça à equipe.</li>
+      <li><strong>Assinatura eletrônica.</strong> A assinatura feita pelo painel é eletrônica e vale como a sua assinatura.</li>
+      <li><strong>Uso de tecnologia.</strong> Usamos um sistema automático (inteligência artificial) apenas para organizar a lista de documentos que pedimos a você. Ele não recebe o seu nome nem o seu CPF e não toma decisões sobre o seu caso.</li>
+      <li><strong>Os seus dados.</strong> Tratamos os seus dados conforme a nossa Política de Privacidade.</li>
+      <li><strong>Encerrar o acesso.</strong> Você pode pedir à equipe para encerrar o seu acesso a qualquer momento. Quando o caso terminar, o acesso pode ser desativado.</li>
+      <li><strong>Mudanças.</strong> Se estes termos mudarem, avisaremos aqui no painel.</li>
+    </ol>
+  </div>
+<% else %>
+  <div class="card">
+    <p>O Painel do Cliente mostra informações sobre os seus processos com a Ramon Antonio Advogados, permite enviar documentos e assinar documentos eletronicamente. Os dados são usados só para o seu atendimento, conforme a nossa Política de Privacidade. O conteúdo é informativo e não substitui a orientação individual do(a) advogado(a).</p>
+  </div>
+<% end %>
 <%= form_with url: cliente_termos_path, method: :post, local: true, class: 'form-portal' do |f| %>
-  <label class="label"><%= f.check_box :aceite, { required: true }, '1', '0' %> Li e aceito os termos de uso e a política de privacidade.</label>
+  <% aceite = Ramon::PortalTexto.v2? ? 'Li e aceito os termos de uso e a Política de Privacidade.' : 'Li e aceito os termos de uso e a política de privacidade.' %>
+  <label class="label"><%= f.check_box :aceite, { required: true }, '1', '0' %> <%= aceite %></label>
   <%= f.submit 'Continuar', class: 'btn-bronze' %>
 <% end %>

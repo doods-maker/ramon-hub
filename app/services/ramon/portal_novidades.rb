@@ -2,7 +2,8 @@
 # - etapa "interna" (ex.: NEGADO / AVISAR CLIENTE) não aparece pro cliente: o painel
 #   segue na etapa anterior até a equipe mover o processo (notícia ruim chega por pessoa);
 # - etapa/marco "delicada" (resultado) aparece com texto neutro, mas sem e-mail
-#   automático — vai só pro resumo da equipe, com alerta.
+#   automático — vai só pro resumo da equipe, com alerta;
+# - etapa com 'email' => false (dicionário v2) aparece no painel, mas sem e-mail automático.
 # 1º sync de um processo (sem espelho anterior) não gera novidade.
 module Ramon::PortalNovidades
   RETENCAO = 30.days
@@ -45,7 +46,8 @@ module Ramon::PortalNovidades
     return [] if atual.blank? || Ramon::PortalTexto.normalizar(atual) == Ramon::PortalTexto.normalizar(etapa_exibida(anterior))
 
     texto = Ramon::PortalTexto.etapa(atual)
-    [{ 'tipo' => 'etapa', 'titulo' => texto['titulo'], 'o_que_esperar' => texto['o_que_esperar'], 'delicada' => texto['delicada'] == true }]
+    [{ 'tipo' => 'etapa', 'titulo' => texto['titulo'], 'o_que_esperar' => texto['o_que_esperar'], 'delicada' => texto['delicada'] == true,
+       'email' => Ramon::PortalTexto.email?(atual) }]
   end
 
   def marcos_novos(anterior, novo)

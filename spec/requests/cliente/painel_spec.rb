@@ -31,6 +31,38 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     expect(response).to redirect_to('/cliente/inicio')
   end
 
+  context 'with PORTAL_TEXTOS_V2=on' do
+    around { |ex| with_modified_env(PORTAL_TEXTOS_V2: 'on') { ex.run } }
+
+    it 'termos v2 e, depois do aceite, as 3 telas de boas-vindas' do
+      cliente.update!(termos_aceitos_em: nil)
+      entrar
+      get '/cliente/inicio'
+      expect(response.body).to include('O seu acesso é pessoal.').and include('Li e aceito os termos de uso e a Política de Privacidade.')
+      post '/cliente/termos', params: { aceite: '1' }
+      expect(response).to redirect_to('/cliente/boas-vindas')
+      get '/cliente/boas-vindas'
+      expect(response.body).to include('Seu caso na palma da mão').and include('1 de 3').and include('Pular')
+      get '/cliente/boas-vindas', params: { passo: 3 }
+      expect(response.body).to include('Assine e fale com a equipe').and include('Começar')
+    end
+
+    it 'tela do processo mostra a linha do tempo por fases' do
+      entrar
+      get '/cliente/processos/1'
+      expect(response.body).to include('Pedido no INSS').and include('pill-now').and include('Perícia marcada')
+      expect(response.body).not_to include('Recurso</p>')
+    end
+  end
+
+  it 'sem a chave v2: sem boas-vindas e sem linha do tempo por fases' do
+    entrar
+    get '/cliente/boas-vindas'
+    expect(response).to redirect_to('/cliente/inicio')
+    get '/cliente/processos/1'
+    expect(response.body).not_to include('Pedido no INSS')
+  end
+
   it 'conta dias distintos de acesso (mesmo dia não soma de novo)' do
     entrar
     get '/cliente/inicio'
