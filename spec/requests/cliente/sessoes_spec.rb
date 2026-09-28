@@ -109,7 +109,7 @@ RSpec.describe 'Painel do cliente — sessões', type: :request do
   end
 
   it 'as throttles de login casam o path que o Rails aceita (barra final, .json)' do
-    req = ->(path) { Rack::Attack::Request.new(Rack::MockRequest.env_for(path)).ramon_path }
+    req = ->(path) { Rack::Attack::Request.new(Rack::MockRequest.env_for('/', 'PATH_INFO' => path)).ramon_path }
     expect(%w[/cliente/entrar /cliente/entrar/ /cliente/entrar.json //cliente//entrar].map(&req)).to all(eq('/cliente/entrar'))
   end
 
