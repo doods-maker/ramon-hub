@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_11_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_28_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1384,6 +1384,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_11_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "senha_digest"
+    t.datetime "ultimo_acesso_em"
+    t.integer "dias_acesso", default: 0, null: false
     t.index ["account_id", "advbox_customer_id"], name: "index_portal_clientes_on_account_id_and_advbox_customer_id", unique: true
     t.index ["account_id", "cpf"], name: "index_portal_clientes_on_account_id_and_cpf", unique: true
     t.index ["account_id", "email"], name: "index_portal_clientes_on_account_id_and_email", unique: true

@@ -637,6 +637,17 @@
       "BACK": "Voltar"
     },
     "PORTAL_CLIENTES": {
+      "ACCESS_DAYS": "{n} dias com acesso",
+      "LAST_ACCESS": "Último acesso",
+      "METRICS": {
+        "CONVIDADOS": "convidados",
+        "ENTRARAM": "entraram",
+        "VOLTARAM": "voltaram (2+ dias)",
+        "ENVIARAM": "enviaram documento",
+        "ASSINARAM": "assinaram",
+        "DOCS_PEDIDOS": "documentos pedidos (em aberto)",
+        "DOCS_ENVIADOS": "documentos enviados pelo painel"
+      },
       "TITLE": "Painel do cliente",
       "SUBTITLE": "Clientes convidados pra cliente.ramonantonio.adv.br",
       "SEARCH": "Buscar cliente no ADVBOX (nome ou CPF)",

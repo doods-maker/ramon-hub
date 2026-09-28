@@ -637,6 +637,17 @@
       "BACK": "Back"
     },
     "PORTAL_CLIENTES": {
+      "ACCESS_DAYS": "{n} days with access",
+      "LAST_ACCESS": "Last access",
+      "METRICS": {
+        "CONVIDADOS": "invited",
+        "ENTRARAM": "logged in",
+        "VOLTARAM": "came back (2+ days)",
+        "ENVIARAM": "sent a document",
+        "ASSINARAM": "signed",
+        "DOCS_PEDIDOS": "documents requested (open)",
+        "DOCS_ENVIADOS": "documents sent via portal"
+      },
       "TITLE": "Client portal",
       "SUBTITLE": "Clients invited to cliente.ramonantonio.adv.br",
       "SEARCH": "Search ADVBOX client (name or CPF)",

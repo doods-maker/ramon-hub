@@ -7,7 +7,8 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
   before_action :check_authorization
 
   def index
-    render json: { payload: Current.account.portal_clientes.order(:nome).map { |c| linha(c) } }
+    clientes = Current.account.portal_clientes.order(:nome).to_a
+    render json: { payload: clientes.map { |c| linha(c) }, metricas: metricas(clientes) }
   end
 
   def show
@@ -92,11 +93,30 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     senha
   end
 
+  # Funil do piloto + documentos (pedidos em aberto no espelho × enviados pelo painel).
+  def metricas(clientes)
+    convidados = clientes.select(&:convidado_em)
+    ids = convidados.map(&:id)
+    envios = PortalEnvio.where(portal_cliente_id: ids)
+    funil(convidados).merge(
+      enviaram: envios.distinct.count(:portal_cliente_id),
+      assinaram: PortalAssinatura.where(portal_cliente_id: ids, status: 'signed').distinct.count(:portal_cliente_id),
+      docs_pedidos: convidados.sum { |c| c.processos.sum { |p| Array(p['docs_pendentes']).size } },
+      docs_enviados: envios.count
+    )
+  end
+
+  def funil(convidados)
+    { convidados: convidados.size, entraram: convidados.count { |c| c.dias_acesso.positive? },
+      voltaram: convidados.count { |c| c.dias_acesso >= 2 } }
+  end
+
   def linha(cliente)
     {
       id: cliente.id, nome: cliente.nome, cpf: cliente.cpf, email: cliente.email, advbox_customer_id: cliente.advbox_customer_id,
       convidado_em: cliente.convidado_em&.iso8601, termos_aceitos_em: cliente.termos_aceitos_em&.iso8601,
-      sincronizado_em: cliente.sincronizado_em&.iso8601,
+      sincronizado_em: cliente.sincronizado_em&.iso8601, ultimo_acesso_em: cliente.ultimo_acesso_em&.iso8601,
+      dias_acesso: cliente.dias_acesso,
       processos: cliente.processos.map { |p| p.slice('id', 'numero', 'tipo', 'etapa', 'fase', 'docs_pendentes') },
       envios_count: cliente.envios.count, assinaturas_pendentes: cliente.assinaturas.pendentes.count
     }

@@ -31,6 +31,17 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     expect(response).to redirect_to('/cliente/inicio')
   end
 
+  it 'conta dias distintos de acesso (mesmo dia não soma de novo)' do
+    entrar
+    get '/cliente/inicio'
+    get '/cliente/processos/1'
+    expect(cliente.reload.dias_acesso).to eq 1
+    cliente.update!(ultimo_acesso_em: 2.days.ago)
+    get '/cliente/inicio'
+    expect(cliente.reload.dias_acesso).to eq 2
+    expect(cliente.ultimo_acesso_em).to be_within(1.minute).of(Time.current)
+  end
+
   it 'lista ativos e encerrados com a etapa traduzida' do
     entrar
     get '/cliente/inicio'

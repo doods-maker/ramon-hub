@@ -12,6 +12,7 @@ defineOptions({ name: 'RamonPortalClientes' });
 
 const { t } = useI18n();
 const clientes = ref([]);
+const metricas = ref(null); // funil do piloto + documentos
 const isLoading = ref(false);
 const hasError = ref(false);
 const busca = ref('');
@@ -34,6 +35,7 @@ const carregar = async () => {
   try {
     const { data } = await PortalClientesAPI.get();
     clientes.value = data.payload;
+    metricas.value = data.metricas;
   } catch {
     hasError.value = true;
   } finally {
@@ -199,6 +201,16 @@ const copiarSenha = async () => {
   }
 };
 
+const METRICAS = [
+  'convidados',
+  'entraram',
+  'voltaram',
+  'enviaram',
+  'assinaram',
+  'docs_pedidos',
+  'docs_enviados',
+];
+
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
 
@@ -300,6 +312,22 @@ onMounted(carregar);
       </button>
     </div>
 
+    <div
+      v-if="metricas"
+      class="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7"
+    >
+      <div
+        v-for="chave in METRICAS"
+        :key="chave"
+        class="rounded-xl border border-n-weak bg-n-solid-1 px-3 py-2"
+      >
+        <p class="text-xl font-semibold">{{ metricas[chave] }}</p>
+        <p class="text-xs text-n-slate-11">
+          {{ t(`RAMON.PORTAL_CLIENTES.METRICS.${chave.toUpperCase()}`) }}
+        </p>
+      </div>
+    </div>
+
     <div v-if="isLoading" class="h-12 animate-pulse rounded-lg bg-n-solid-2" />
     <p v-else-if="hasError" class="text-sm text-n-ruby-11">
       {{ t('RAMON.PORTAL_CLIENTES.LOAD_ERROR') }}
@@ -334,7 +362,10 @@ onMounted(carregar);
             {{
               c.termos_aceitos_em ? t('RAMON.PORTAL_CLIENTES.TERMS_OK') : '—'
             }}
-            · {{ t('RAMON.PORTAL_CLIENTES.SYNCED') }}
+            · {{ t('RAMON.PORTAL_CLIENTES.LAST_ACCESS') }}
+            {{ dataCurta(c.ultimo_acesso_em) }} ·
+            {{ t('RAMON.PORTAL_CLIENTES.ACCESS_DAYS', { n: c.dias_acesso }) }} ·
+            {{ t('RAMON.PORTAL_CLIENTES.SYNCED') }}
             {{ dataCurta(c.sincronizado_em) }}
           </span>
           <span class="text-xs"
