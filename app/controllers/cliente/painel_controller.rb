@@ -10,7 +10,7 @@ class Cliente::PainelController < Cliente::BaseController
   ALLOWED_CONTENT_TYPES = %w[application/pdf image/jpeg image/jpg image/png image/heic image/heif].freeze
 
   before_action :require_cliente
-  before_action -> { current_cliente.registrar_acesso! }, only: [:show, :processo]
+  before_action -> { current_cliente.registrar_acesso!(request.remote_ip) }, only: [:show, :processo]
   before_action :require_termos, except: [:aceitar_termos]
   before_action :fetch_processo, only: [:processo, :enviar]
 
@@ -19,6 +19,12 @@ class Cliente::PainelController < Cliente::BaseController
     @assinaturas = current_cliente.assinaturas.pendentes
     @assinadas = current_cliente.assinaturas.where(status: 'signed').order(assinado_em: :desc)
     @envios = current_cliente.envios.with_attached_arquivo.order(created_at: :desc).limit(20)
+  end
+
+  # Autorização da IA (LGPD art. 33, VIII): opcional, pergunta no início até responder.
+  def consentir_ia
+    current_cliente.update!(ia_consentimento: params[:ia] == 'sim')
+    redirect_to cliente_inicio_path
   end
 
   def aceitar_termos

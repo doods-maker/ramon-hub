@@ -730,6 +730,7 @@ Rails.application.routes.draw do
     resource :senha, only: [:edit, :update], controller: 'senhas'
     get 'inicio', to: 'painel#show', as: :inicio
     post 'termos', to: 'painel#aceitar_termos', as: :termos
+    post 'ia', to: 'painel#consentir_ia', as: :ia
     get 'boas-vindas', to: 'painel#boas_vindas', as: :boas_vindas
     post 'atualizar', to: 'painel#atualizar', as: :atualizar
     get 'processos/:lawsuit_id', to: 'painel#processo', as: :processo

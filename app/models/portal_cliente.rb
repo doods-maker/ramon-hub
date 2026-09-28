@@ -14,6 +14,7 @@ class PortalCliente < ApplicationRecord
   belongs_to :account
   has_many :assinaturas, class_name: 'PortalAssinatura', dependent: :destroy
   has_many :envios, class_name: 'PortalEnvio', dependent: :destroy
+  has_many :acessos, class_name: 'PortalAcesso', dependent: :delete_all
 
   before_validation :normalizar
 
@@ -59,8 +60,9 @@ class PortalCliente < ApplicationRecord
   def termos_aceitos? = termos_aceitos_em.present?
 
   # Métrica do piloto: dias distintos com acesso ("voltou" = 2+ dias).
-  def registrar_acesso!
+  def registrar_acesso!(ip)
     novo_dia = ultimo_acesso_em.nil? || ultimo_acesso_em.to_date < Time.zone.today
+    acessos.create!(ip: ip) if novo_dia
     update_columns(ultimo_acesso_em: Time.current, dias_acesso: dias_acesso + (novo_dia ? 1 : 0)) # rubocop:disable Rails/SkipsModelValidations
   end
 
