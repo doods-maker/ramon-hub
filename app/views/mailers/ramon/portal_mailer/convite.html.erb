@@ -1,7 +1,24 @@
-<%# app/views/mailers/ramon/portal_mailer/convite.html.erb %>
+<%# app/views/mailers/ramon/portal_mailer/convite.html.erb — v2 = PORTAL_TEXTOS_V2=on %>
+<% if Ramon::PortalTexto.v2? %>
+<p>Olá, <%= @cliente.primeiro_nome %>.</p>
+<p>Agora você pode acompanhar o seu caso pelo celular, no Painel do Cliente. Lá você vê em que fase está o processo, envia documentos pela câmera e assina o que for preciso.</p>
+<p>Para entrar:</p>
+<ol>
+  <li>Abra este endereço: <a href="<%= @url %>"><%= @url %></a></li>
+  <li>Digite o seu CPF.</li>
+  <li>Digite esta senha provisória: <strong><%= @senha %></strong></li>
+</ol>
+<p>Depois de entrar, você pode trocar a senha por outra que seja fácil de lembrar (só números).</p>
+<p>Guarde esta senha e não passe para ninguém.</p>
+<p>Qualquer dúvida, fale com a equipe no WhatsApp <a href="https://wa.me/<%= @whatsapp %>">wa.me/<%= @whatsapp %></a>.</p>
+<p>Um abraço,<br>Equipe Ramon Antonio Advogados</p>
+<hr>
+<p style="font-size:12px;color:#666">Esta é uma mensagem automática. Por favor, não responda este e-mail.<br>A nossa equipe nunca pede a sua senha por e-mail, telefone ou WhatsApp.</p>
+<% else %>
 <p>Olá, <%= @cliente.primeiro_nome %>.</p>
 <p>Agora você pode acompanhar o seu caso, enviar documentos e assinar pelo celular no Painel do Cliente:</p>
 <p><a href="<%= @url %>"><%= @url %></a></p>
 <p>Para entrar, use o seu CPF e esta senha provisória: <strong><%= @senha %></strong></p>
 <p>Depois de entrar, você pode trocar a senha quando quiser.</p>
 <p>Ramon Antonio Advogados</p>
+<% end %>

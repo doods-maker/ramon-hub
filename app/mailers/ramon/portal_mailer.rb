@@ -4,13 +4,16 @@ class Ramon::PortalMailer < ApplicationMailer
   ASSUNTO_CODIGO = 'Seu código de acesso ao Painel do Cliente'.freeze
   ASSUNTO_NOVIDADE = '%<nome>s, há uma novidade no seu caso'.freeze
   ASSUNTO_RESUMO = 'Painel do Cliente: %<n>d novidade(s) de clientes (%<data>s)'.freeze
+  # Textos v2 (PORTAL_TEXTOS_V2=on) — aguardam o "aprovado" do Eduardo.
+  ASSUNTO_CONVITE_V2 = 'Seu acesso ao Painel do Cliente | Ramon Antonio Advogados'.freeze
+  ASSUNTO_CODIGO_V2 = 'Seu código para entrar no Painel do Cliente'.freeze
 
   def codigo
     return unless smtp_config_set_or_development?
 
     @cliente = params[:cliente]
     @codigo = params[:codigo]
-    mail(to: @cliente.email, subject: ASSUNTO_CODIGO) { |f| f.html { render layout: false } }
+    mail(to: @cliente.email, subject: Ramon::PortalTexto.v2? ? ASSUNTO_CODIGO_V2 : ASSUNTO_CODIGO) { |f| f.html { render layout: false } }
   end
 
   # itens: [{ 'tipo', 'titulo', 'o_que_esperar' }] — nunca número de processo.
@@ -38,7 +41,8 @@ class Ramon::PortalMailer < ApplicationMailer
     @cliente = params[:cliente]
     @senha = params[:senha]
     @url = url_painel
-    mail(to: @cliente.email, subject: ASSUNTO_CONVITE) { |f| f.html { render layout: false } }
+    @whatsapp = ENV.fetch('PORTAL_WHATSAPP', '5548988554077')
+    mail(to: @cliente.email, subject: Ramon::PortalTexto.v2? ? ASSUNTO_CONVITE_V2 : ASSUNTO_CONVITE) { |f| f.html { render layout: false } }
   end
 
   private
