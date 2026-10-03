@@ -22,6 +22,7 @@ import LostReasonModal from './LostReasonModal.vue';
 import WonValueModal from './WonValueModal.vue';
 import NamePromptModal from '../NamePromptModal.vue';
 import RamonPageHeader from '../RamonPageHeader.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const emit = defineEmits(['new-lead']);
 const store = useStore();
@@ -389,52 +390,50 @@ const exportCsv = () => {
       <!-- mock 1d: título curto, sem subtítulo; busca abre o palette (⌘K) -->
       <RamonPageHeader compact :title="$t('RAMON.FUNIL.TITLE')">
         <template #actions>
-          <button
+          <Button
             data-testid="funil-search"
             :title="$t('RAMON.FUNIL.HOTKEYS_HINT')"
-            class="hidden md:flex items-center gap-1.5 w-44 px-3 py-1.5 text-sm rounded-lg ramon-rail border border-n-weak text-n-slate-9 hover:text-n-slate-11"
+            sm
+            faded
+            slate
+            start
+            icon="i-lucide-search"
+            class="hidden md:inline-flex w-44 !text-n-slate-10"
+            :label="$t('RAMON.FUNIL.SEARCH_HINT')"
             @click="openPalette"
-          >
-            <span class="i-lucide-search size-3.5" />
-            {{ $t('RAMON.FUNIL.SEARCH_HINT') }}
-          </button>
-          <button
+          />
+          <Button
             data-testid="filters-toggle"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border hover:text-n-slate-12"
-            :class="
-              filtersOpen || activeFilterCount
-                ? 'border-n-iris-8 text-n-iris-11'
-                : 'border-n-weak text-n-slate-11'
-            "
+            sm
+            faded
+            :color="filtersOpen || activeFilterCount ? 'blue' : 'slate'"
+            icon="i-lucide-sliders-horizontal"
             @click="filtersOpen = !filtersOpen"
           >
-            <span class="i-lucide-sliders-horizontal size-4" />
             {{ $t('RAMON.FUNIL.FILTERS.TOGGLE') }}
             <span
               v-if="activeFilterCount"
               data-testid="filters-active-count"
-              class="flex items-center justify-center min-w-4 h-4 px-1 text-[10px] rounded-full bg-n-iris-9 text-white"
+              class="flex items-center justify-center min-w-4 h-4 px-1 font-mono text-[10px] rounded-full bg-n-brand text-white"
             >
               {{ activeFilterCount }}
             </span>
-          </button>
-          <button
+          </Button>
+          <Button
             data-testid="export-csv"
-            class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:text-n-slate-12"
+            sm
+            faded
+            slate
+            icon="i-lucide-download"
+            :label="$t('RAMON.FUNIL.EXPORT_CSV')"
             @click="exportCsv"
-          >
-            <span class="i-lucide-download size-4" />{{
-              $t('RAMON.FUNIL.EXPORT_CSV')
-            }}
-          </button>
-          <button
-            class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+          />
+          <Button
+            sm
+            icon="i-lucide-plus"
+            :label="$t('RAMON.FUNIL.NEW_LEAD')"
             @click="emit('new-lead')"
-          >
-            <span class="i-lucide-plus size-4" />{{
-              $t('RAMON.FUNIL.NEW_LEAD')
-            }}
-          </button>
+          />
         </template>
       </RamonPageHeader>
     </div>
@@ -461,7 +460,7 @@ const exportCsv = () => {
         </button>
       </div>
       <!-- mock 2b: "agrupar por: tese · dono · canal · prioridade" inline,
-           ativo em dourado — sem select (o CSS global de select desalinha) -->
+           ativo em azul — sem select (o CSS global de select desalinha) -->
       <div
         v-show="viewMode === 'lanes'"
         data-testid="lanes-group-by"
@@ -477,7 +476,7 @@ const exportCsv = () => {
           class="rounded-md px-1.5 py-1 text-xs"
           :class="
             groupBy === group
-              ? 'bg-n-alpha-2 font-medium text-n-iris-11'
+              ? 'bg-n-blue-9/[0.08] dark:bg-n-blue-9/[0.16] font-medium text-n-blue-11'
               : 'text-n-slate-10 hover:text-n-slate-12'
           "
           @click="groupBy = group"
@@ -502,13 +501,14 @@ const exportCsv = () => {
       <p class="text-sm text-n-slate-11">
         {{ $t('RAMON.FUNIL.LOAD_ERROR') }}
       </p>
-      <button
+      <Button
         data-testid="board-load-retry"
-        class="px-3 py-1.5 text-sm rounded-lg border border-n-weak text-n-slate-11 hover:text-n-slate-12"
+        sm
+        faded
+        slate
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="loadLeads"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
     <!-- primeiro fetch: skeleton em vez de colunas "vazias" mentirosas -->
     <div
@@ -558,12 +558,16 @@ const exportCsv = () => {
           />
         </template>
       </Draggable>
-      <button
-        class="flex items-center self-start gap-1 px-3 py-2 text-sm rounded-lg text-n-slate-11 border border-dashed border-n-weak hover:text-n-slate-12"
+      <Button
+        data-testid="add-stage"
+        sm
+        faded
+        slate
+        icon="i-lucide-plus"
+        class="self-start shrink-0"
+        :label="$t('RAMON.FUNIL.STAGE.ADD')"
         @click="addStage"
-      >
-        <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.STAGE.ADD') }}
-      </button>
+      />
     </div>
     <SwimlaneBoard
       v-else-if="viewMode === 'lanes'"

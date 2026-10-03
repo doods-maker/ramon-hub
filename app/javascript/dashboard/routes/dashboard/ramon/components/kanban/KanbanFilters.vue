@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useStoreGetters } from 'dashboard/composables/store';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CAMPO, SELECT } from '../../helpers/ui';
 
 const props = defineProps({
   filters: { type: Object, required: true },
@@ -20,12 +22,10 @@ const stages = computed(() => getters['leadConfig/getStages']?.value ?? []);
 
 const emitUpdate = partial => emit('update', partial);
 
-// Borda destaca o controle com filtro ativo; transparente mantém o tamanho.
-// w-44 explícito: o CSS global do Chatwoot põe width:100% em select/input e
+// Contorno azul destaca o controle com filtro ativo. !w-44: o kit é w-full e
 // cada controle viraria uma linha inteira (paredão de filtros).
-const ctl =
-  'w-44 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 border text-n-slate-12 outline-none focus:border-n-slate-8';
-const activeClass = value => (value ? 'border-n-iris-8' : 'border-transparent');
+const ctl = `${SELECT} !w-44`;
+const activeClass = value => (value ? '!outline-n-blue-8' : '');
 
 const hasActive = computed(() => {
   const f = props.filters;
@@ -83,8 +83,8 @@ const clearFilters = () => {
     <input
       v-model="search"
       data-testid="filter-search"
-      class="w-56 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border text-n-slate-12 outline-none focus:border-n-slate-8"
-      :class="activeClass(filters.q)"
+      class="!w-56"
+      :class="[CAMPO, activeClass(filters.q)]"
       :placeholder="$t('RAMON.FUNIL.FILTERS.SEARCH')"
     />
     <select
@@ -152,41 +152,44 @@ const clearFilters = () => {
       </option>
     </select>
     <label
-      class="flex items-center gap-1.5 text-xs whitespace-nowrap text-n-slate-10"
-      :class="{ 'text-n-iris-11': filters.createdAfter }"
+      class="flex items-center gap-1.5 mb-0 text-xs font-normal leading-normal whitespace-nowrap"
+      :class="filters.createdAfter ? 'text-n-blue-11' : 'text-n-slate-10'"
     >
       {{ $t('RAMON.FUNIL.FILTERS.CREATED_AFTER') }}
       <input
         type="date"
         data-testid="filter-created-after"
-        :class="[ctl, activeClass(filters.createdAfter)]"
+        class="!w-36 font-mono"
+        :class="[CAMPO, activeClass(filters.createdAfter)]"
         :value="filters.createdAfter || ''"
         @change="emitUpdate({ createdAfter: $event.target.value || null })"
       />
     </label>
     <label
-      class="flex items-center gap-1.5 text-xs whitespace-nowrap text-n-slate-10"
-      :class="{ 'text-n-iris-11': filters.createdBefore }"
+      class="flex items-center gap-1.5 mb-0 text-xs font-normal leading-normal whitespace-nowrap"
+      :class="filters.createdBefore ? 'text-n-blue-11' : 'text-n-slate-10'"
     >
       {{ $t('RAMON.FUNIL.FILTERS.CREATED_BEFORE') }}
       <input
         type="date"
         data-testid="filter-created-before"
-        :class="[ctl, activeClass(filters.createdBefore)]"
+        class="!w-36 font-mono"
+        :class="[CAMPO, activeClass(filters.createdBefore)]"
         :value="filters.createdBefore || ''"
         @change="emitUpdate({ createdBefore: $event.target.value || null })"
       />
     </label>
     <label
-      class="flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-lg cursor-pointer"
+      class="flex items-center gap-1.5 px-2 py-1.5 mb-0 text-sm font-normal leading-normal rounded-lg cursor-pointer"
       :class="
         filters.stalled
-          ? 'text-n-iris-11'
+          ? 'text-n-blue-11'
           : 'text-n-slate-11 hover:text-n-slate-12'
       "
     >
       <input
         type="checkbox"
+        class="m-0 accent-n-brand"
         data-testid="filter-stalled"
         :checked="!!filters.stalled"
         @change="emitUpdate({ stalled: $event.target.checked })"
@@ -194,29 +197,31 @@ const clearFilters = () => {
       {{ $t('RAMON.FUNIL.FILTERS.STALLED') }}
     </label>
     <label
-      class="flex items-center gap-1.5 px-2 py-1.5 text-sm rounded-lg cursor-pointer"
+      class="flex items-center gap-1.5 px-2 py-1.5 mb-0 text-sm font-normal leading-normal rounded-lg cursor-pointer"
       :class="
         filters.noOpenTask
-          ? 'text-n-iris-11'
+          ? 'text-n-blue-11'
           : 'text-n-slate-11 hover:text-n-slate-12'
       "
     >
       <input
         type="checkbox"
+        class="m-0 accent-n-brand"
         data-testid="filter-no-open-task"
         :checked="!!filters.noOpenTask"
         @change="emitUpdate({ noOpenTask: $event.target.checked })"
       />
       {{ $t('RAMON.FUNIL.FILTERS.NO_OPEN_TASK') }}
     </label>
-    <button
+    <Button
       v-if="hasActive"
       data-testid="filter-clear"
-      class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2"
+      sm
+      ghost
+      slate
+      icon="i-lucide-x"
+      :label="$t('RAMON.FUNIL.FILTERS.CLEAR')"
       @click="clearFilters"
-    >
-      <span class="i-lucide-x size-3.5" />
-      {{ $t('RAMON.FUNIL.FILTERS.CLEAR') }}
-    </button>
+    />
   </div>
 </template>

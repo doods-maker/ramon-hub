@@ -6,6 +6,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStoreGetters } from 'dashboard/composables/store';
 import { brlCompact } from '../../helpers/currency';
+import { CHIP, TOM } from '../../helpers/ui';
 
 const props = defineProps({
   filters: { type: Object, required: true },
@@ -124,12 +125,13 @@ const summary = computed(() => {
       v-for="chip in chips"
       :key="chip.key"
       :data-testid="`filter-chip-${chip.key}`"
-      class="inline-flex items-center gap-1 py-0.5 pl-2.5 pr-1 text-xs rounded-full bg-n-alpha-2 text-n-iris-11 border border-n-weak"
+      class="!pe-1"
+      :class="[CHIP, TOM.blue]"
     >
       {{ chip.label }}
       <button
         :data-testid="`filter-chip-remove-${chip.key}`"
-        class="flex items-center p-0.5 rounded-full text-n-slate-10 hover:text-n-slate-12"
+        class="flex items-center p-0.5 rounded-full text-n-blue-11 hover:bg-n-blue-9/15"
         :aria-label="$t('RAMON.FUNIL.CHIPS.REMOVE')"
         :title="$t('RAMON.FUNIL.CHIPS.REMOVE')"
         @click="emit('update', chip.cleared)"
@@ -139,7 +141,7 @@ const summary = computed(() => {
     </span>
     <span
       data-testid="pipeline-summary"
-      class="ms-auto text-xs whitespace-nowrap text-n-slate-10"
+      class="ms-auto font-mono text-[11px] whitespace-nowrap text-n-slate-10"
     >
       {{
         $t('RAMON.FUNIL.CHIPS.SUMMARY', {
@@ -147,7 +149,7 @@ const summary = computed(() => {
           total: brlCompact(summary.total),
         })
       }}
-      <span class="text-n-iris-11">
+      <span class="text-n-blue-11">
         {{
           $t('RAMON.FUNIL.CHIPS.FORECAST', {
             forecast: brlCompact(summary.forecast),

@@ -52,3 +52,21 @@ export const AVISO = 'rounded-lg px-3 py-2 text-xs';
 // Linha clicável de lista (documento, opção de menu).
 export const LINHA =
   'w-full rounded-lg px-2 py-1.5 text-left text-sm hover:bg-n-alpha-2 disabled:cursor-not-allowed disabled:opacity-60';
+
+// Botão xs compacto (ações rápidas do card do funil): cabe 2 por linha na
+// célula das raias (240px) como cabia antes.
+export const BOTAO_COMPACTO = '!gap-1 !px-1.5';
+
+// Menu suspenso (dropdown sobre o conteúdo): mesma pele em todos.
+export const MENU =
+  'rounded-xl border border-n-weak bg-n-solid-2 p-1.5 shadow-lg';
+
+// Janela (modal): casca única. FUNDO escurece a tela (clique nele = cancelar);
+// JANELA é a caixa, largura-base w-80 (form maior: !w-96).
+export const FUNDO_JANELA =
+  'fixed inset-0 z-50 flex items-center justify-center bg-modal-backdrop-light dark:bg-modal-backdrop-dark';
+export const JANELA =
+  'w-80 max-w-[92vw] max-h-[90vh] overflow-y-auto rounded-xl border border-n-weak bg-n-solid-2 p-5 shadow-xl';
+export const TITULO_JANELA = 'mb-3 text-base font-medium text-n-slate-12';
+// Rodapé da janela: secundário à esquerda do primário, alinhados à direita.
+export const RODAPE_JANELA = 'mt-4 flex justify-end gap-2';

@@ -2,6 +2,14 @@
 // Substituto do window.prompt: pergunta um nome no padrão visual da casa.
 import { ref, nextTick, onMounted } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  CAMPO,
+  FUNDO_JANELA,
+  JANELA,
+  TITULO_JANELA,
+  RODAPE_JANELA,
+} from '../helpers/ui';
 
 defineProps({
   title: { type: String, required: true },
@@ -26,38 +34,33 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click.self="emit('cancel')"
-  >
-    <div
-      class="w-80 max-w-[92vw] p-5 rounded-xl bg-n-solid-2 border border-n-weak"
-    >
-      <h3 class="mb-3 text-sm text-n-slate-12">{{ title }}</h3>
+  <div :class="FUNDO_JANELA" @click.self="emit('cancel')">
+    <div :class="JANELA">
+      <h3 :class="TITULO_JANELA">{{ title }}</h3>
       <input
         ref="input"
         v-model="name"
         data-testid="name-prompt-input"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+        :class="CAMPO"
         :placeholder="placeholder"
         @keyup.enter="confirm"
       />
-      <div class="flex justify-end gap-2">
-        <button
+      <div :class="RODAPE_JANELA">
+        <Button
           data-testid="name-prompt-cancel"
-          class="px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.MODAL.CANCEL')"
           @click="emit('cancel')"
-        >
-          {{ $t('RAMON.MODAL.CANCEL') }}
-        </button>
-        <button
+        />
+        <Button
           data-testid="name-prompt-confirm"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+          sm
+          :label="confirmLabel"
           :disabled="!name.trim()"
           @click="confirm"
-        >
-          {{ confirmLabel }}
-        </button>
+        />
       </div>
     </div>
   </div>

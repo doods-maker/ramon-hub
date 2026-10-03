@@ -74,8 +74,8 @@ describe('LeadListView', () => {
     const wrapper = mountList();
     const checks = wrapper.findAll('[data-testid="list-select-toggle"]');
     // primeira linha = Ana (id 11), selecionada
-    expect(checks[0].classes()).toContain('bg-n-iris-9');
-    expect(checks[1].classes()).not.toContain('bg-n-iris-9');
+    expect(checks[0].classes()).toContain('bg-n-brand');
+    expect(checks[1].classes()).not.toContain('bg-n-brand');
   });
 
   it('mostra o vazio quando não há leads', () => {

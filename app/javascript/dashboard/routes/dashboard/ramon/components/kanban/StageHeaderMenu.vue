@@ -2,6 +2,8 @@
 import { ref, computed, nextTick, watch, onBeforeUnmount } from 'vue';
 import { vOnClickOutside } from '@vueuse/components';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CAMPO, LINHA, MENU } from '../../helpers/ui';
 
 const props = defineProps({
   stage: { type: Object, required: true },
@@ -9,6 +11,8 @@ const props = defineProps({
 const emit = defineEmits(['rename', 'recolor', 'setType', 'remove']);
 
 // Paleta fixa (mesma das Labels do Chatwoot) + o fallback padrão de etapa.
+// Fica em hex de propósito: a cor escolhida é DADO salvo na etapa (banco) e
+// pinta a pílula via --stage — não é token de tema.
 const PALETTE = [
   '#6b7280',
   '#3b82f6',
@@ -112,21 +116,25 @@ const remove = () => {
 
 <template>
   <div class="relative">
-    <button
-      ref="toggleRef"
-      data-testid="stage-menu-toggle"
-      :title="$t('RAMON.FUNIL.STAGE.MENU')"
-      class="text-n-slate-9 hover:text-n-slate-12"
-      @click="toggle"
-    >
-      <span class="i-lucide-ellipsis-vertical size-4" />
-    </button>
+    <!-- ref no wrapper: o Button é componente, o clique-fora precisa de elemento -->
+    <span ref="toggleRef" class="inline-flex">
+      <Button
+        data-testid="stage-menu-toggle"
+        :title="$t('RAMON.FUNIL.STAGE.MENU')"
+        xs
+        ghost
+        slate
+        icon="i-lucide-ellipsis-vertical"
+        @click="toggle"
+      />
+    </span>
     <Teleport to="body">
       <div
         v-if="open"
         v-on-click-outside="[close, { ignore: [toggleRef] }]"
         data-testid="stage-menu"
-        class="fixed z-50 w-48 p-2 rounded-lg shadow-lg bg-n-solid-2 border border-n-weak"
+        class="fixed z-50 w-48"
+        :class="MENU"
         :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"
       >
         <template v-if="renaming">
@@ -134,21 +142,23 @@ const remove = () => {
             ref="renameInput"
             v-model="editingName"
             data-testid="stage-rename-input"
-            class="w-full px-2 py-1 mb-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
+            class="!mb-1.5"
+            :class="CAMPO"
             @keyup.enter="confirmRename"
           />
-          <button
+          <Button
             data-testid="stage-rename-confirm"
-            class="w-full px-2 py-1 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+            sm
+            class="w-full"
+            :label="$t('RAMON.FUNIL.STAGE.SAVE')"
             @click="confirmRename"
-          >
-            {{ $t('RAMON.FUNIL.STAGE.SAVE') }}
-          </button>
+          />
         </template>
         <template v-else>
           <button
             data-testid="stage-rename"
-            class="block w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+            class="block text-n-slate-12"
+            :class="LINHA"
             @click="startRename"
           >
             {{ $t('RAMON.FUNIL.STAGE.RENAME') }}
@@ -159,48 +169,55 @@ const remove = () => {
               :key="color"
               data-testid="stage-color"
               :title="color"
-              class="rounded-full size-5 border border-n-weak"
-              :class="{ 'ring-2 ring-n-slate-8': color === currentColor }"
+              class="p-0 rounded-full size-5 border border-solid border-n-weak"
+              :class="{
+                'ring-2 ring-n-blue-9 ring-offset-1 ring-offset-n-solid-2':
+                  color === currentColor,
+              }"
               :style="{ backgroundColor: color }"
               @click="pickColor(color)"
             />
           </div>
           <button
             data-testid="stage-type-normal"
-            class="flex items-center justify-between w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+            class="flex items-center justify-between text-n-slate-12"
+            :class="LINHA"
             @click="setType('normal')"
           >
             {{ $t('RAMON.FUNIL.STAGE.TYPE_NORMAL') }}
             <span
               v-if="currentType === 'normal'"
-              class="i-lucide-check size-3.5"
+              class="i-lucide-check size-3.5 text-n-blue-11"
             />
           </button>
           <button
             data-testid="stage-type-won"
-            class="flex items-center justify-between w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+            class="flex items-center justify-between text-n-slate-12"
+            :class="LINHA"
             @click="setType('won')"
           >
             {{ $t('RAMON.FUNIL.STAGE.TYPE_WON') }}
             <span
               v-if="currentType === 'won'"
-              class="i-lucide-check size-3.5"
+              class="i-lucide-check size-3.5 text-n-blue-11"
             />
           </button>
           <button
             data-testid="stage-type-lost"
-            class="flex items-center justify-between w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+            class="flex items-center justify-between text-n-slate-12"
+            :class="LINHA"
             @click="setType('lost')"
           >
             {{ $t('RAMON.FUNIL.STAGE.TYPE_LOST') }}
             <span
               v-if="currentType === 'lost'"
-              class="i-lucide-check size-3.5"
+              class="i-lucide-check size-3.5 text-n-blue-11"
             />
           </button>
           <button
             data-testid="stage-remove"
-            class="block w-full px-2 py-1 text-sm text-left rounded-lg text-n-ruby-11 hover:bg-n-alpha-2"
+            class="block text-n-ruby-11"
+            :class="LINHA"
             @click="remove"
           >
             {{ $t('RAMON.FUNIL.STAGE.REMOVE') }}
