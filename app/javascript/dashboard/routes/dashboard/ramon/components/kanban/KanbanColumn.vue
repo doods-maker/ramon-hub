@@ -16,12 +16,15 @@ const props = defineProps({
   selectable: { type: Boolean, default: false },
   selectedLeadIds: { type: Array, default: () => [] },
   conversionRate: { type: Number, default: null },
+  // ?filtro do funil (pos_venda | prescricao): o card mostra o selo do filtro
+  filtro: { type: String, default: null },
 });
 const emit = defineEmits([
   'move',
   'openConversation',
   'openLead',
   'openDossie',
+  'cobrarDocs',
   'toggleSelect',
   'renameStage',
   'recolorStage',
@@ -263,9 +266,11 @@ const toggleCollapsed = () => {
           :focused="element.id === focusedLeadId"
           :selectable="selectable"
           :selected="selectedLeadIds.includes(element.id)"
+          :filtro="filtro"
           @open-conversation="id => emit('openConversation', id)"
           @open-lead="lead => emit('openLead', lead)"
           @open-dossie="lead => emit('openDossie', lead)"
+          @cobrar-docs="lead => emit('cobrarDocs', lead)"
           @toggle-select="lead => emit('toggleSelect', lead)"
         />
       </template>

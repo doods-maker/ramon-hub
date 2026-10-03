@@ -5,6 +5,7 @@ import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { formatBrl, brlCompact } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
+import { pctConsumido } from '../../helpers/filtrosFunil';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
 import { TARDE, desde, diaCurto, horaDe } from '../hoje/hoje';
 import Selo from '../hoje/Selo.vue';
@@ -18,12 +19,15 @@ const props = defineProps({
   focused: { type: Boolean, default: false },
   selectable: { type: Boolean, default: false },
   selected: { type: Boolean, default: false },
+  // ?filtro do funil: prescricao → selo do Radar; pos_venda → dias desde o ganho
+  filtro: { type: String, default: null },
 });
 const emit = defineEmits([
   'openConversation',
   'openLead',
   'openDossie',
   'toggleSelect',
+  'cobrarDocs',
 ]);
 
 const cardEl = ref(null);
@@ -94,6 +98,23 @@ const stage = computed(() => {
   const stages = store?.getters?.['leadConfig/getStages'] || [];
   return stages.find(s => s.id === props.lead.lead_stage_id) || null;
 });
+// Filtro "Prescrição em risco": o que a linha do Radar mostrava.
+const radar = computed(() => {
+  if (props.filtro !== 'prescricao' || !prescription.value) return null;
+  const [ano, mes, dia] = String(props.lead.dcb_em).split('-');
+  return {
+    pct: pctConsumido(props.lead),
+    tom: prescription.value.lostInstallments > 0 ? 'bad' : 'warn',
+    dcb: `${dia}/${mes}/${ano.slice(2)}`,
+    perdido: stage.value?.is_lost ?? !!props.lead.lost_at,
+  };
+});
+// Filtro "Pós-venda": dias desde o ganho (âmbar passando de 7).
+const diasGanho = computed(() => {
+  if (props.filtro !== 'pos_venda' || !props.lead.won_at) return null;
+  return Math.floor((Date.now() - new Date(props.lead.won_at)) / 86400000);
+});
+
 const isWon = computed(() => stage.value?.is_won ?? !!props.lead.won_at);
 const tese = computed(
   () => props.lead.thesis_name || props.lead.benefit_type_name || null
@@ -218,6 +239,14 @@ const ACAO = 'hover:text-n-blue-11';
     <p v-if="tese" class="truncate text-[12.5px] text-n-slate-11">
       {{ tese }}
     </p>
+    <p
+      v-if="diasGanho !== null"
+      data-testid="dias-ganho"
+      class="text-xs"
+      :class="diasGanho > 7 ? 'text-n-amber-11' : 'text-n-slate-9'"
+    >
+      {{ $t('RAMON.POS_VENDA.DIAS', { dias: diasGanho }) }}
+    </p>
 
     <div class="flex items-center gap-2.5 mt-2.5 text-xs text-n-slate-9">
       <Selo
@@ -240,8 +269,19 @@ const ACAO = 'hover:text-n-blue-11';
       >
         {{ compactValue }}
       </span>
+      <template v-if="radar">
+        <Selo data-testid="radar-pct" :tom="radar.tom">
+          {{ $t('RAMON.RADAR.CONSUMIDO', { pct: radar.pct }) }}
+        </Selo>
+        <span class="font-mono whitespace-nowrap">
+          {{ $t('RAMON.RADAR.DCB', { date: radar.dcb }) }}
+        </span>
+        <Selo v-if="radar.perdido" data-testid="radar-lost-chip" tom="warn">
+          {{ $t('RAMON.RADAR.LOST_CHIP') }}
+        </Selo>
+      </template>
       <Selo
-        v-if="prescriptionSelo"
+        v-else-if="prescriptionSelo"
         data-testid="prescription-badge"
         :tom="prescriptionSelo.tom"
       >
@@ -282,30 +322,28 @@ const ACAO = 'hover:text-n-blue-11';
       >
         {{ $t('RAMON.KANBAN.CARD.CONVERSATION') }}
       </button>
-      <!-- ganho: cobrar documentos abre a gaveta, onde mora o "Cobrar pendentes" -->
-      <template v-if="isWon">
-        <button
-          v-if="docsPendentes"
-          data-testid="charge-docs"
-          :class="ACAO"
-          @click.stop="emit('openLead', lead)"
-        >
-          {{ $t('RAMON.KANBAN.CARD.COBRAR_DOCS') }}
-        </button>
-      </template>
-      <template v-else>
-        <TaskBellMenu
-          :label="$t('RAMON.KANBAN.CARD.FOLLOW_UP')"
-          @schedule="onSchedule"
-        />
-        <button
-          data-testid="open-dossie"
-          :class="ACAO"
-          @click.stop="emit('openDossie', lead)"
-        >
-          {{ $t('RAMON.KANBAN.CARD.DOSSIE') }}
-        </button>
-      </template>
+      <!-- ganho: cobrar documentos abre a conversa com o rascunho (o board decide;
+           sem conversa, a gaveta) -->
+      <button
+        v-if="isWon && docsPendentes"
+        data-testid="charge-docs"
+        :class="ACAO"
+        @click.stop="emit('cobrarDocs', lead)"
+      >
+        {{ $t('RAMON.KANBAN.CARD.COBRAR_DOCS') }}
+      </button>
+      <TaskBellMenu
+        v-if="!isWon"
+        :label="$t('RAMON.KANBAN.CARD.FOLLOW_UP')"
+        @schedule="onSchedule"
+      />
+      <button
+        data-testid="open-dossie"
+        :class="ACAO"
+        @click.stop="emit('openDossie', lead)"
+      >
+        {{ $t('RAMON.KANBAN.CARD.DOSSIE') }}
+      </button>
     </div>
   </div>
 </template>

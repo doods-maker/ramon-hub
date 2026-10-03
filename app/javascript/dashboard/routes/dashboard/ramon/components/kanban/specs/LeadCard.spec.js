@@ -163,7 +163,7 @@ describe('LeadCard.vue', () => {
       expect(wrapper.emitted('openLead')).toBeFalsy();
     });
 
-    it('ganho com docs pendentes: "Cobrar documentos" abre a gaveta, sem dossiê', async () => {
+    it('ganho com docs pendentes: "Cobrar documentos" emite cobrarDocs e mantém o Dossiê', async () => {
       const wrapper = mountCard({
         lead: {
           ...lead,
@@ -172,9 +172,45 @@ describe('LeadCard.vue', () => {
           docs_total: 5,
         },
       });
-      expect(wrapper.find('[data-testid="open-dossie"]').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="open-dossie"]').exists()).toBe(true);
       await wrapper.find('[data-testid="charge-docs"]').trigger('click');
-      expect(wrapper.emitted('openLead')[0][0].id).toBe(10);
+      expect(wrapper.emitted('cobrarDocs')[0][0].id).toBe(10);
+      expect(wrapper.emitted('openLead')).toBeFalsy();
+    });
+  });
+
+  describe('selos dos filtros do funil', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-10-03T12:00:00Z'));
+    });
+    afterEach(() => vi.useRealTimers());
+
+    it('prescrição: % do prazo, DCB e "Perdemos" no lead perdido', () => {
+      const wrapper = mountCard({
+        filtro: 'prescricao',
+        lead: { ...lead, dcb_em: '2023-01-10', lost_at: '2026-05-01' },
+      });
+      expect(wrapper.find('[data-testid="radar-pct"]').text()).toContain(
+        '"pct":73'
+      );
+      expect(wrapper.text()).toContain('10/01/23');
+      expect(wrapper.find('[data-testid="radar-lost-chip"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('sem o filtro o card não mostra o selo do radar', () => {
+      const wrapper = mountCard({ lead: { ...lead, dcb_em: '2023-01-10' } });
+      expect(wrapper.find('[data-testid="radar-pct"]').exists()).toBe(false);
+    });
+
+    it('pós-venda: dias desde o ganho, âmbar passando de 7', () => {
+      const ganho = { ...lead, won_at: '2026-09-23T12:00:00Z' };
+      const wrapper = mountCard({ filtro: 'pos_venda', lead: ganho });
+      const dias = wrapper.find('[data-testid="dias-ganho"]');
+      expect(dias.text()).toContain('"dias":10');
+      expect(dias.classes()).toContain('text-n-amber-11');
     });
   });
 

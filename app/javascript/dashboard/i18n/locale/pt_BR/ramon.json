@@ -193,7 +193,8 @@
         "advogada": "Advogada",
         "equipe": "Equipe"
       },
-      "PAINEL": "Painel completo"
+      "PAINEL": "Painel completo",
+      "LINHA_DA_VIDA": "Linha da vida"
     },
     "HOJE": {
       "TITULO": "Hoje",
@@ -487,7 +488,10 @@
         "LIMPAR": "Tirar filtro",
         "POS_VENDA": "Ganhos com docs pendentes · {count}",
         "PRESCRICAO": "Prescrição em risco · {count}"
-      }
+      },
+      "OUTROS_FILTROS": "Há outros filtros ativos",
+      "LIMPAR_FILTROS": "limpar",
+      "TENTAR_DE_NOVO": "Tentar de novo"
     },
     "KANBAN": {
       "CARD": {
@@ -506,7 +510,8 @@
         "PRESCRIPTION_SOON": "prescreve em {months}m",
         "DOCS": "docs {received}/{total}",
         "FOLLOW_UP": "Follow-up",
-        "COBRAR_DOCS": "Cobrar documentos"
+        "COBRAR_DOCS": "Cobrar documentos",
+        "TRIAGE_AWAITING_HUMAN": "Triagem: aguardando humano"
       },
       "BELL": {
         "TITLE": "Agendar follow-up",
@@ -1397,7 +1402,9 @@
     },
     "FOLLOW_UP": {
       "BANNER_STALLED": "Parado há {days}d",
-      "BANNER_RETRIES": "{count} retomada(s)"
+      "BANNER_RETRIES": "{count} retomada(s)",
+      "CARD_TITLE": "{count} retomada(s) · última {date}",
+      "CARD_TITLE_NO_DATE": "{count} retomada(s)"
     },
     "SLA": {
       "CHIP_OK": "SLA 1º contato · {minutes} min",
@@ -1554,7 +1561,8 @@
     "CLIENTES": {
       "TITLE": "Clientes",
       "BUSCA": "Buscar por nome ou telefone",
-      "ULTIMA_MUDANCA": "Última mudança"
+      "ULTIMA_MUDANCA": "Última mudança",
+      "BUSCAR_PESSOA": "Buscar pessoa (Linha da vida)"
     },
     "BUSCA": {
       "TITULO": "Buscar",
@@ -1574,6 +1582,27 @@
       "NAVEGAR": "↑↓ navegar",
       "ABRIR": "↵ abrir",
       "DICA": "Busca por nome, CPF, telefone ou nº do processo"
+    },
+    "RADAR": {
+      "PER_MONTH": "/mês",
+      "SUMMARY_BLEEDING": "prescrevendo em {count} leads",
+      "SUMMARY_RISK": "entram em risco nos próximos 90 dias",
+      "DCB": "DCB {date}",
+      "CONSUMIDO": "{pct}% do prazo",
+      "LOST_CHIP": "Perdemos (reativar?)",
+      "CAMPAIGN_CTA": "Criar campanha de resgate ({count})",
+      "CAMPAIGN_TOOLTIP": "só contatos com consentimento LGPD ({n} de {m})",
+      "CAMPAIGN_MODAL_TITLE": "Criar campanha de resgate",
+      "CAMPAIGN_MODAL_MESSAGE": "Vamos abrir a tela de campanhas do WhatsApp para montar o resgate com os {n} contatos com consentimento LGPD (de {m} no radar). Nada é enviado automaticamente.",
+      "CAMPAIGN_MODAL_CONFIRM": "Abrir campanhas",
+      "LOAD_ERROR": "Não deu para carregar o radar."
+    },
+    "POS_VENDA": {
+      "RESUMO": "{count} ganhos aguardando documentos — do mais antigo pro mais novo",
+      "DIAS": "{dias} dias desde o ganho",
+      "ERROR": "Não deu para carregar o pós-venda.",
+      "CONCLUIDOS": "Concluídos ({count})",
+      "DRIVE_CHIP": "no Drive"
     }
   },
   "CAPTAIN_RAMON": {

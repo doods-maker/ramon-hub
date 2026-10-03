@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import KanbanBoard from '../KanbanBoard.vue';
 import KanbanColumn from '../KanbanColumn.vue';
@@ -23,6 +23,26 @@ vi.mock('vue-router', async importOriginal => ({
   useRouter: () => ({ push: vi.fn(), replace: mockReplace }),
 }));
 
+vi.mock('dashboard/composables/useAccount', () => ({
+  useAccount: () => ({ accountScopedRoute: name => ({ name }) }),
+}));
+vi.mock('dashboard/api/ramonPrescriptionRadar', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: { summary: {}, items: [] } }),
+  },
+}));
+vi.mock('dashboard/api/ramonPosVenda', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: { pendentes: [], concluidos: [] } }),
+  },
+}));
+const pendentesDoLead = vi.fn();
+const marcarSolicitados = vi.fn();
+vi.mock('../../../composables/useCobrarDocs', () => ({
+  useCobrarDocs: () => ({ pendentesDoLead, marcarSolicitados }),
+}));
+
+let mockFilters = {};
 const LEADS_STAGE_1 = [
   { id: 10, lead_stage_id: 1, position: 0 },
   {
@@ -54,6 +74,7 @@ const buildStore = () =>
             leadPriorityId: null,
             agentId: null,
             source: '',
+            ...mockFilters,
           }),
         },
       },
@@ -104,6 +125,7 @@ describe('KanbanBoard.vue', () => {
     dispatch.mockClear();
     mockReplace.mockClear();
     mockRoute.query = {};
+    mockFilters = {};
   });
 
   describe('filtros de pós-venda e prescrição', () => {
@@ -127,12 +149,84 @@ describe('KanbanBoard.vue', () => {
       ).toContain('text-n-amber-11');
     });
 
+    it('?filtro=prescricao ordena por sangramento e passa o filtro ao card', () => {
+      mockRoute.query = { filtro: 'prescricao' };
+      LEADS_STAGE_1.push(
+        { id: 20, lead_stage_id: 1, position: 2, dcb_em: '2022-01-10' },
+        {
+          id: 21,
+          lead_stage_id: 1,
+          position: 3,
+          dcb_em: '2018-01-10',
+          benefit_monthly_value: 900,
+        }
+      );
+      const wrapper = mountBoard();
+      LEADS_STAGE_1.splice(2);
+      const coluna = wrapper.findComponent(KanbanColumn);
+      expect(coluna.props('leads').map(l => l.id)).toEqual([21, 20]);
+      expect(coluna.props('filtro')).toBe('prescricao');
+      expect(wrapper.find('[data-testid="faixa-filtro"]').exists()).toBe(true);
+    });
+
+    it('com filtro de servidor ligado a faixa oferece limpar tudo', async () => {
+      mockRoute.query = { filtro: 'pos_venda' };
+      mockFilters = { agentId: 3, stalled: true };
+      const wrapper = mountBoard();
+      await wrapper.find('[data-testid="faixa-limpar"]').trigger('click');
+      expect(dispatch).toHaveBeenCalledWith(
+        'leads/setFilters',
+        expect.objectContaining({ agentId: null, stalled: false, q: '' })
+      );
+    });
+
+    it('"Mais filtros · N" não conta Tese/Responsável/Origem', () => {
+      mockFilters = {
+        agentId: 3,
+        thesisId: 2,
+        channel: 'meta_ads',
+        stalled: true,
+      };
+      const wrapper = mountBoard();
+      expect(
+        wrapper.find('[data-testid="filters-active-count"]').text()
+      ).toContain('1');
+    });
+
     it('o chip liga e desliga o filtro na URL', async () => {
       const wrapper = mountBoard();
       await wrapper.find('[data-testid="filtro-pos_venda"]').trigger('click');
       expect(mockReplace).toHaveBeenCalledWith({
         query: { filtro: 'pos_venda' },
       });
+    });
+  });
+
+  describe('cobrar documentos do card ganho', () => {
+    it('com conversa: abre o dock com o rascunho e marca solicitados', async () => {
+      pendentesDoLead.mockResolvedValue([
+        { id: 1, title: 'Laudo', status: 'pendente' },
+      ]);
+      const wrapper = mountBoard();
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('cobrarDocs', { id: 11, name: 'Ivone', conversation_id: 9 });
+      await flushPromises();
+      expect(dispatch).toHaveBeenCalledWith('leads/openDock', 9);
+      expect(marcarSolicitados).toHaveBeenCalledWith(11, [
+        { id: 1, title: 'Laudo', status: 'pendente' },
+      ]);
+      expect(
+        wrapper.findComponent({ name: 'ConversationDock' }).props('rascunho')
+      ).toContain('RAMON.DOCS.DRAFT.ITEM');
+    });
+
+    it('sem conversa: abre a gaveta', () => {
+      const wrapper = mountBoard();
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('cobrarDocs', { id: 11, conversation_id: null });
+      expect(dispatch).toHaveBeenCalledWith('leads/select', 11);
     });
   });
 

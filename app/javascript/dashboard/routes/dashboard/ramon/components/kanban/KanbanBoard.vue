@@ -8,7 +8,13 @@ import { useAlert } from 'dashboard/composables';
 import { downloadCsvFile } from 'dashboard/helper/downloadHelper';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { leadsToCsv } from '../../helpers/leadsCsv';
-import { FILTROS_FUNIL, contarFiltros } from '../../helpers/filtrosFunil';
+import {
+  FILTROS_FUNIL,
+  ORDEM_FILTRO,
+  contarFiltros,
+} from '../../helpers/filtrosFunil';
+import { rascunhoCobranca } from '../../helpers/rascunhoDocs';
+import { useCobrarDocs } from '../../composables/useCobrarDocs';
 import { BTN_CHEIO } from '../hoje/hoje';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
@@ -20,6 +26,7 @@ import LeadListView from './LeadListView.vue';
 import BulkActionsBar from './BulkActionsBar.vue';
 import LeadDrawer from './LeadDrawer.vue';
 import ConversationDock from './ConversationDock.vue';
+import FaixaFiltro from './FaixaFiltro.vue';
 import RemoveStageModal from './RemoveStageModal.vue';
 import LostReasonModal from './LostReasonModal.vue';
 import WonValueModal from './WonValueModal.vue';
@@ -89,12 +96,17 @@ const findLead = id => getters['leads/getLeads'].value.find(l => l.id === id);
 // Pós-venda e Radar viraram filtros do funil (?filtro=pos_venda|prescricao):
 // aplicados no front sobre o payload slim, por cima dos filtros do servidor.
 const route = useRoute();
-const filtro = computed(() => FILTROS_FUNIL[route?.query?.filtro] || null);
+const filtroKey = computed(() =>
+  FILTROS_FUNIL[route?.query?.filtro] ? route.query.filtro : null
+);
 const stageLeads = stageId => {
   const version = boardVersion.value;
   if (version < 0) return [];
   const leads = getters['leads/getLeadsByStage'].value(stageId);
-  return filtro.value ? leads.filter(filtro.value) : leads;
+  if (!filtroKey.value) return leads;
+  return leads
+    .filter(FILTROS_FUNIL[filtroKey.value])
+    .sort(ORDEM_FILTRO[filtroKey.value]);
 };
 const filters = computed(() => getters['leads/getFilters'].value);
 const onFilterUpdate = partial => store.dispatch('leads/setFilters', partial);
@@ -116,10 +128,26 @@ const FILTER_KEYS = [
   'stalled',
   'noOpenTask',
 ];
+// Tese / Responsável / Origem já têm chip próprio: "Mais filtros · N" conta o resto.
+const COM_CHIP = ['thesisId', 'agentId', 'channel'];
 const activeFilterCount = computed(() => {
   const f = filters.value || {};
-  return FILTER_KEYS.filter(key => f[key]).length;
+  return FILTER_KEYS.filter(key => f[key] && !COM_CHIP.includes(key)).length;
 });
+const algumFiltroServidor = computed(() =>
+  FILTER_KEYS.some(key => (filters.value || {})[key])
+);
+const TEXTO = ['q', 'source', 'channel'];
+const BOOLEANO = ['stalled', 'noOpenTask'];
+const limparFiltros = () =>
+  onFilterUpdate(
+    Object.fromEntries(
+      FILTER_KEYS.map(key => {
+        if (TEXTO.includes(key)) return [key, ''];
+        return [key, BOOLEANO.includes(key) ? false : null];
+      })
+    )
+  );
 
 const onMove = async ({ id, leadStageId, newIndex }) => {
   const stage = findStage(leadStageId);
@@ -221,6 +249,30 @@ const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
 };
 const onOpenConversation = id => store.dispatch('leads/toggleDock', id);
+
+// "Cobrar documentos" do card ganho: abre a conversa no dock com o rascunho
+// de cobrança no editor (mesmo texto do "Cobrar pendentes"); sem conversa, a
+// gaveta. Nada é enviado — quem envia é a pessoa.
+const { pendentesDoLead, marcarSolicitados } = useCobrarDocs();
+const rascunhoDock = ref(null);
+const onCobrarDocs = async lead => {
+  if (!lead.conversation_id) {
+    onOpenLead(lead);
+    return;
+  }
+  try {
+    const itens = await pendentesDoLead(lead.id);
+    rascunhoDock.value = rascunhoCobranca(
+      t,
+      lead.name,
+      itens.map(item => item.title)
+    );
+    store.dispatch('leads/openDock', lead.conversation_id);
+    marcarSolicitados(lead.id, itens);
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  }
+};
 const router = useRouter();
 
 // Chips do cabeçalho (mockup v2 .filtro): Tese / Responsável / Origem.
@@ -572,6 +624,12 @@ const exportCsv = () => {
       </div>
     </div>
     <!-- chips removíveis dos filtros ativos + resumo do pipeline -->
+    <FaixaFiltro
+      v-if="filtroKey"
+      :filtro="filtroKey"
+      :outros-filtros="algumFiltroServidor"
+      @limpar-filtros="limparFiltros"
+    />
     <FilterChips :filters="filters" @update="onFilterUpdate" />
     <!-- v-show (não v-if): o board reage ao evento update do KanbanFilters
          mesmo com o painel fechado, e abrir/fechar não perde o estado da busca -->
@@ -631,10 +689,12 @@ const exportCsv = () => {
             selectable
             :selected-lead-ids="selectedIds"
             :conversion-rate="rateFor(element.id)"
+            :filtro="filtroKey"
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
             @open-dossie="onOpenDossie"
+            @cobrar-docs="onCobrarDocs"
             @toggle-select="onToggleSelect"
             @rename-stage="onRenameStage"
             @recolor-stage="onRecolorStage"
@@ -661,6 +721,7 @@ const exportCsv = () => {
       @open-conversation="onOpenConversation"
       @open-lead="onOpenLead"
       @open-dossie="onOpenDossie"
+      @cobrar-docs="onCobrarDocs"
       @toggle-select="onToggleSelect"
     />
     <LeadListView
@@ -673,7 +734,11 @@ const exportCsv = () => {
     />
     <BulkActionsBar v-if="selectedIds.length" :suspend-esc="anyModalOpen()" />
     <LeadDrawer @open-conversation="onOpenConversation" />
-    <ConversationDock :suspend-esc="anyModalOpen()" />
+    <ConversationDock
+      :suspend-esc="anyModalOpen()"
+      :rascunho="rascunhoDock"
+      @rascunho-inserido="rascunhoDock = null"
+    />
     <Transition
       enter-active-class="transition-opacity duration-150"
       leave-active-class="transition-opacity duration-150"

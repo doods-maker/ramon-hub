@@ -193,7 +193,8 @@
         "advogada": "Lawyer",
         "equipe": "Team"
       },
-      "PAINEL": "Full dashboard"
+      "PAINEL": "Full dashboard",
+      "LINHA_DA_VIDA": "Lifeline"
     },
     "HOJE": {
       "TITULO": "Today",
@@ -487,7 +488,10 @@
         "LIMPAR": "Clear filter",
         "POS_VENDA": "Won with pending docs · {count}",
         "PRESCRICAO": "Statute of limitations at risk · {count}"
-      }
+      },
+      "OUTROS_FILTROS": "Other filters are active",
+      "LIMPAR_FILTROS": "clear",
+      "TENTAR_DE_NOVO": "Retry"
     },
     "KANBAN": {
       "CARD": {
@@ -506,7 +510,8 @@
         "PRESCRIPTION_SOON": "prescribes in {months}mo",
         "DOCS": "docs {received}/{total}",
         "FOLLOW_UP": "Follow-up",
-        "COBRAR_DOCS": "Request documents"
+        "COBRAR_DOCS": "Request documents",
+        "TRIAGE_AWAITING_HUMAN": "Triage: awaiting human"
       },
       "BELL": {
         "TITLE": "Schedule follow-up",
@@ -1397,7 +1402,9 @@
     },
     "FOLLOW_UP": {
       "BANNER_STALLED": "Stalled for {days}d",
-      "BANNER_RETRIES": "{count} follow-up(s)"
+      "BANNER_RETRIES": "{count} follow-up(s)",
+      "CARD_TITLE": "{count} follow-up(s) · last {date}",
+      "CARD_TITLE_NO_DATE": "{count} follow-up(s)"
     },
     "SLA": {
       "CHIP_OK": "First-response SLA · {minutes} min",
@@ -1549,7 +1556,8 @@
     "CLIENTES": {
       "TITLE": "Clients",
       "BUSCA": "Search by name or phone",
-      "ULTIMA_MUDANCA": "Last change"
+      "ULTIMA_MUDANCA": "Last change",
+      "BUSCAR_PESSOA": "Find person (Lifeline)"
     },
     "BUSCA": {
       "TITULO": "Search",
@@ -1569,6 +1577,27 @@
       "NAVEGAR": "↑↓ navigate",
       "ABRIR": "↵ open",
       "DICA": "Search by name, tax ID, phone or case number"
+    },
+    "RADAR": {
+      "PER_MONTH": "/mo",
+      "SUMMARY_BLEEDING": "prescribing across {count} leads",
+      "SUMMARY_RISK": "become at risk in the next 90 days",
+      "DCB": "DCB {date}",
+      "CONSUMIDO": "{pct}% of the window",
+      "LOST_CHIP": "We lost them (reactivate?)",
+      "CAMPAIGN_CTA": "Create rescue campaign ({count})",
+      "CAMPAIGN_TOOLTIP": "only contacts with LGPD consent ({n} of {m})",
+      "CAMPAIGN_MODAL_TITLE": "Create rescue campaign",
+      "CAMPAIGN_MODAL_MESSAGE": "We will open the WhatsApp campaigns screen to build the rescue with the {n} contacts with LGPD consent (out of {m} on the radar). Nothing is sent automatically.",
+      "CAMPAIGN_MODAL_CONFIRM": "Open campaigns",
+      "LOAD_ERROR": "Could not load the radar."
+    },
+    "POS_VENDA": {
+      "RESUMO": "{count} wins awaiting documents — oldest to newest",
+      "DIAS": "{dias} days since the win",
+      "ERROR": "Could not load post-sale.",
+      "CONCLUIDOS": "Completed ({count})",
+      "DRIVE_CHIP": "on Drive"
     }
   },
   "CAPTAIN_RAMON": {

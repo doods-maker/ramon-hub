@@ -1,5 +1,7 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 import ConversationDock from '../ConversationDock.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
@@ -34,9 +36,10 @@ const build = ({ startWithChat = true, lead = null } = {}) => {
   });
   return { store, getConversation, setActiveChat, closeDock };
 };
-const mountDock = ctx => {
+const mountDock = (ctx, props = {}) => {
   const { store, ...spies } = build(ctx);
   const wrapper = mount(ConversationDock, {
+    props,
     global: {
       plugins: [store],
       mocks: { $t: k => k },
@@ -47,6 +50,19 @@ const mountDock = ctx => {
 };
 
 describe('ConversationDock', () => {
+  it('põe o rascunho no editor quando a conversa monta e avisa', async () => {
+    const ouvinte = vi.fn();
+    emitter.on(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, ouvinte);
+    const { wrapper } = mountDock(
+      { startWithChat: true },
+      { rascunho: 'Olá, faltam documentos' }
+    );
+    await flushPromises();
+    expect(ouvinte).toHaveBeenCalledWith('Olá, faltam documentos');
+    expect(wrapper.emitted('rascunhoInserido')).toHaveLength(1);
+    emitter.off(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, ouvinte);
+  });
+
   it('fetches the conversation when absent, then activates it', async () => {
     const { getConversation, setActiveChat } = mountDock({
       startWithChat: false,
