@@ -16,6 +16,9 @@ RSpec.describe Ramon::ClienteDaConversa do
      { 'date' => '2026-10-06 00:00:00', 'task' => 'LIGAR PRO CLIENTE', 'users' => [], 'lawsuit' => { 'process_number' => numero } }]
   end
 
+  # segunda 10h em SP: fora do expediente o ADVBOX não é chamado (Ramon::AdvboxCache)
+  around { |example| travel_to(Time.zone.parse('2026-10-05 13:00:00 UTC')) { example.run } }
+
   before do
     allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new)
     allow(Ramon::AdvboxClient).to receive(:settings).and_return('users' => [{ 'id' => 7, 'email' => 'tamires@banca.adv.br' }])
