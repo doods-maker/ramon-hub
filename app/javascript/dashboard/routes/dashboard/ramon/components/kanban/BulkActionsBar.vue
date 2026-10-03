@@ -25,6 +25,10 @@ const lostReasons = computed(
   () => getters['leadConfig/getLostReasons']?.value ?? []
 );
 const agents = computed(() => getters['agents/getAgents']?.value ?? []);
+// Papéis (playbook §13): só o gestor troca o SDR em lote.
+const isAdmin = computed(
+  () => getters.getCurrentRole?.value === 'administrator'
+);
 const dockOpen = computed(() => !!getters['leads/getDockConversationId'].value);
 
 // Um menu por vez: 'stage' | 'sdr' | 'task' | null. v-show mantém o estado.
@@ -140,7 +144,7 @@ onKeyStroke('Escape', () => {
         </button>
       </div>
     </div>
-    <div class="relative">
+    <div v-if="isAdmin" class="relative">
       <button
         data-testid="bulk-assign-sdr"
         class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-2 text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-3"

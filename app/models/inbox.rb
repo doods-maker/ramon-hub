@@ -169,6 +169,9 @@ class Inbox < ApplicationRecord
   end
 
   def assignable_agents
+    # ramon: na caixa do escritório a Recepção atribui a quem não é membro (ADR 0004)
+    return account.users.to_a if portaria_enabled?
+
     (account.users.where(id: members.select(:user_id)) + account.administrators).uniq
   end
 

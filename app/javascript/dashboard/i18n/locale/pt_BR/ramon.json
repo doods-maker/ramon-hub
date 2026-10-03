@@ -149,7 +149,8 @@
       "RADAR": "Radar de prescrição",
       "POS_VENDA": "Pós-venda",
       "TV": "Placar de TV",
-      "RELATORIOS": "Relatórios"
+      "RELATORIOS": "Relatórios",
+      "EXTRATO": "Extrato da variável"
     },
     "POS_VENDA": {
       "TITLE": "Pós-venda",
@@ -836,7 +837,8 @@
           "MEETING_CANCELLED": "reunião cancelada via Cal.com",
           "ESTEIRA_DONE": "resolveu na Esteira",
           "THESIS_CHANGED": "mudou a tese",
-          "LP_RECAPTURED": "recebeu novo formulário da LP"
+          "LP_RECAPTURED": "recebeu novo formulário da LP",
+          "REUNIAO_REGISTRADA": "registrou a reunião"
         },
         "EMPTY": "Nenhuma atividade registrada ainda.",
         "LOADING": "Carregando histórico…",
@@ -1330,16 +1332,91 @@
       "BTN": "Copiloto: {modo}",
       "TITULO": "Modo do copiloto — só nesta conversa",
       "MODOS": {
-        "manual": { "NOME": "Manual", "DESC": "A IA não sugere nada. Você escreve tudo." },
-        "rascunho": { "NOME": "Rascunho", "DESC": "A IA prepara respostas; nada sai sem você apertar Enviar." },
-        "piloto_limitado": { "NOME": "Piloto com limites", "DESC": "A IA envia sozinha SÓ mensagens de logística: cobrança de documentos, confirmação de horário, mensagem de cadência.", "NOTA": "Nunca envia: valores, análise do caso, promessas. Toda mensagem enviada fica marcada na conversa e você pode pausar com 1 clique." },
-        "piloto_total": { "NOME": "Piloto total", "DESC": "A IA responde tudo sozinha. Toda mensagem fica carimbada e você pode pausar com 1 clique." }
+        "manual": {
+          "NOME": "Manual",
+          "DESC": "A IA não sugere nada. Você escreve tudo."
+        },
+        "rascunho": {
+          "NOME": "Rascunho",
+          "DESC": "A IA prepara respostas; nada sai sem você apertar Enviar."
+        },
+        "piloto_limitado": {
+          "NOME": "Piloto com limites",
+          "DESC": "A IA envia sozinha SÓ mensagens de logística: cobrança de documentos, confirmação de horário, mensagem de cadência.",
+          "NOTA": "Nunca envia: valores, análise do caso, promessas. Toda mensagem enviada fica marcada na conversa e você pode pausar com 1 clique."
+        },
+        "piloto_total": {
+          "NOME": "Piloto total",
+          "DESC": "A IA responde tudo sozinha. Toda mensagem fica carimbada e você pode pausar com 1 clique."
+        }
       },
       "CARIMBO": "enviada pelo piloto ({modo})",
       "PAUSAR": "Pausar piloto",
       "PAUSADO": "Piloto pausado — voltou pro modo Rascunho.",
       "PAUSA_FALHOU": "Não consegui pausar — tente de novo.",
-      "RASCUNHO_IA": { "igual": "rascunho da IA enviado como estava", "editado": "rascunho da IA, editado", "descartado": "rascunho da IA descartado" }
+      "RASCUNHO_IA": {
+        "igual": "rascunho da IA enviado como estava",
+        "editado": "rascunho da IA, editado",
+        "descartado": "rascunho da IA descartado"
+      }
+    },
+    "REUNIAO": {
+      "TITULO": "Reunião (Closer)",
+      "QUALIFICADA": "Qualificada",
+      "NAO_QUALIFICADA": "Não qualificada",
+      "SEM_REGISTRO": "Reunião ainda não registrada",
+      "REGISTRADA_EM": "registrada em {data}",
+      "ERRO": "Não foi possível registrar a reunião — só o Closer do lead ou o gestor pode marcar",
+      "RESULTADO": {
+        "qualificada": "Qualificada",
+        "nao_qualificada": "Não qualificada"
+      }
+    },
+    "CONTRATO": {
+      "LIMPO": "Contrato limpo ✓",
+      "FALTAM_DOCS": "Contrato limpo: falta {count} documento | Contrato limpo: faltam {count} documentos",
+      "SEM_CHECKLIST": "Contrato limpo: escolha a tese pra ter a checklist de documentos",
+      "EM_DIAS": "Contrato limpo na próxima hora | Contrato limpo em {count} dia | Contrato limpo em {count} dias"
+    },
+    "EXTRATO": {
+      "TITLE": "Extrato da variável",
+      "SUBTITLE": "Unidades, bônus de meta e total do mês por pessoa — regulamento de remuneração v2",
+      "MES": "Mês",
+      "EXPORTAR": "Exportar CSV",
+      "LOAD_ERROR": "Não foi possível carregar o extrato.",
+      "RETRY": "Tentar novamente",
+      "VAZIO": "Nenhum extrato seu neste mês.",
+      "VAZIO_GESTOR": "Ninguém no time ainda: crie os times \"sdr\" e \"closer\" em Configurações → Times e coloque as pessoas.",
+      "META": "Meta do mês",
+      "RAMPA": "Rampa (meses 1–2)",
+      "SALVAR": "Salvar meta",
+      "META_SALVA": "Meta salva",
+      "META_ERRO": "Não foi possível salvar a meta",
+      "UNIDADES": "Unidades",
+      "BONUS": "Bônus de meta",
+      "DEGRAUS": "({count} degrau) | ({count} degrau) | ({count} degraus)",
+      "OBS": "Observação",
+      "GARANTIA": "Garantia mínima da rampa aplicada",
+      "TOTAL": "Total do mês",
+      "SEM_UNIDADES": "Nenhum evento neste mês.",
+      "PAPEL": {
+        "sdr": "SDR",
+        "closer": "Closer"
+      },
+      "CONTAGEM": {
+        "sdr": "Reuniões qualificadas",
+        "closer": "Contratos limpos"
+      },
+      "EVENTO": {
+        "reuniao_qualificada": "Reunião qualificada",
+        "contrato_limpo": "Contrato limpo"
+      },
+      "COL": {
+        "DATA": "Data",
+        "LEAD": "Lead",
+        "EVENTO": "Evento",
+        "VALOR": "Valor"
+      }
     }
   },
   "CAPTAIN_RAMON": {

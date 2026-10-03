@@ -35,6 +35,24 @@ describe ActionCableListener do
       listener.message_created(event)
     end
 
+    # ramon: acesso por atribuição/time fora da caixa também recebe o tempo real (ADR 0004)
+    it 'also sends to the assignee and team members who are not inbox members' do
+      lawyer = create(:user, account: account, role: :agent)
+      thais = create(:user, account: account, role: :agent)
+      team = create(:team, account: account)
+      create(:team_member, team: team, user: thais)
+      conversation.update_columns(assignee_id: lawyer.id, team_id: team.id) # rubocop:disable Rails/SkipsModelValidations
+
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        a_collection_containing_exactly(
+          agent.pubsub_token, lawyer.pubsub_token, thais.pubsub_token, admin.pubsub_token, conversation.contact_inbox.pubsub_token
+        ),
+        'message.created',
+        anything
+      )
+      listener.message_created(event)
+    end
+
     it 'sends message to all hmac verified contact inboxes' do
       # HACK: to reload conversation inbox members
       expect(conversation.inbox.reload.inbox_members.count).to eq(1)

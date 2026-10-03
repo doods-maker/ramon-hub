@@ -171,7 +171,8 @@
       "ramon_lead_created": "Lead novo (LP)",
       "ramon_meeting_scheduled": "Reunião marcada",
       "ramon_meeting_reminder": "Lembrete de reunião",
-      "ramon_meeting_cancelled": "Reunião cancelada"
+      "ramon_meeting_cancelled": "Reunião cancelada",
+      "ramon_sla_breach": "1ª resposta atrasada"
     }
   },
   "NETWORK": {

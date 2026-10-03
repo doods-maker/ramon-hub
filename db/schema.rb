@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_02_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_03_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1176,6 +1176,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_000001) do
     t.string "channel"
     t.jsonb "cnis"
     t.string "portal_token"
+    t.string "reuniao_resultado"
+    t.datetime "reuniao_registrada_em"
+    t.datetime "docs_completos_em"
+    t.datetime "contrato_limpo_em"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -1441,6 +1445,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_000001) do
     t.index ["portal_id", "user_id"], name: "index_portals_members_on_portal_id_and_user_id", unique: true
     t.index ["portal_id"], name: "index_portals_members_on_portal_id"
     t.index ["user_id"], name: "index_portals_members_on_user_id"
+  end
+
+  create_table "ramon_metas_comerciais", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id", null: false
+    t.string "papel", null: false
+    t.date "mes", null: false
+    t.integer "meta", default: 0, null: false
+    t.boolean "rampa", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "user_id", "mes"], name: "index_ramon_metas_comerciais_on_account_id_and_user_id_and_mes", unique: true
+    t.index ["account_id"], name: "index_ramon_metas_comerciais_on_account_id"
+    t.index ["user_id"], name: "index_ramon_metas_comerciais_on_user_id"
   end
 
   create_table "ramon_pecas", force: :cascade do |t|

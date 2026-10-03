@@ -136,6 +136,13 @@ const sections = computed(() =>
           adminOnly: true,
         },
         {
+          key: 'extrato',
+          label: t('RAMON.NAV.EXTRATO'),
+          icon: 'i-lucide-receipt',
+          to: accountScopedRoute('ramon_extrato'),
+          names: ['ramon_extrato'],
+        },
+        {
           key: 'sdr',
           label: t('RAMON.NAV.SDR'),
           icon: 'i-lucide-phone',

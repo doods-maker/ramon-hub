@@ -125,6 +125,11 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/follow_up_draft`);
   }
 
+  // resultado: 'qualificada' | 'nao_qualificada' (Closer, base do prêmio do SDR)
+  registrarReuniao(leadId, resultado) {
+    return axios.post(`${this.url}/${leadId}/reuniao`, { resultado });
+  }
+
   encaminharComercial(conversationId) {
     return axios.post(`${this.url}/encaminhar_comercial`, {
       conversation_id: conversationId,

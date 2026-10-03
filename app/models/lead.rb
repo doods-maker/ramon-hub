@@ -1,6 +1,7 @@
 class Lead < ApplicationRecord
   include LeadCadence
   include LeadDocs
+  include LeadComercial
 
   PRESCRIPTION_WINDOW_MONTHS = 60
 
@@ -80,7 +81,7 @@ class Lead < ApplicationRecord
       # espelho do jbuilder — inteiros, JSON-nativos (Sidekiq strict_args rejeita BigDecimal)
       docs_received: docs[:received],
       docs_total: docs[:total]
-    }.merge(cadence_event_data)
+    }.merge(cadence_event_data).merge(comercial_event_data)
   end
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 

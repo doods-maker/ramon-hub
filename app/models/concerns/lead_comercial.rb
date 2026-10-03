@@ -1,0 +1,63 @@
+# Operação com SDR + Closer (playbook operacional §13): atribuição automática,
+# reunião qualificada e carimbos do contrato limpo.
+# Extraído do Lead pra caber no Metrics/ClassLength (mesmo precedente do LeadDocs).
+module LeadComercial
+  extend ActiveSupport::Concern
+
+  REUNIAO_RESULTADOS = %w[qualificada nao_qualificada].freeze
+  ETAPA_REUNIAO_REALIZADA = 'fase-reuniao-realizada'.freeze
+
+  included do
+    before_create :assign_sdr
+    before_save :stamp_docs_completos, if: -> { new_record? || will_save_change_to_custom_attributes? || will_save_change_to_thesis_id? }
+    after_commit :assign_conversation_to_sdr, on: [:create, :update],
+                                              if: -> { saved_change_to_sdr_id? || saved_change_to_conversation_id? }
+  end
+
+  # Closer registra a reunião (regulamento §2): qualificada ou não. A 1ª data
+  # vale (correção não muda o mês da apuração); quem marca vira Closer se o lead
+  # não tinha; o lead anda pra "Reunião realizada", nunca volta.
+  def registrar_reuniao!(resultado, user)
+    attrs = { reuniao_resultado: resultado, reuniao_registrada_em: reuniao_registrada_em || Time.current }
+    attrs[:closer] = user if closer_id.blank?
+    stage = account.lead_stages.find_by(label: ETAPA_REUNIAO_REALIZADA)
+    attrs[:lead_stage] = stage if stage && lead_stage.position < stage.position
+    update!(attrs)
+    lead_activities.create!(account: account, user: user, kind: 'reuniao_registrada', to_value: resultado)
+  end
+
+  def comercial_event_data
+    {
+      reuniao_resultado: reuniao_resultado,
+      reuniao_registrada_em: reuniao_registrada_em&.iso8601,
+      docs_completos_em: docs_completos_em&.iso8601,
+      contrato_limpo_em: contrato_limpo_em&.iso8601
+    }
+  end
+
+  private
+
+  # Lead novo de qualquer canal vai pro SDR com menos leads abertos.
+  # Import e caso de cálculo ficam de fora.
+  def assign_sdr
+    return if sdr_id.present? || source == Lead::FONTE_CALCULO || Current.suppress_import_events
+
+    self.sdr = Ramon::Papeis.proximo(account, Ramon::Papeis::SDR)
+  end
+
+  # Conversa sem responsável vira do SDR do lead ("Minhas" + notificações
+  # nativas do Chatwoot). Nunca tira a conversa de quem já a assumiu.
+  def assign_conversation_to_sdr
+    return if sdr_id.blank? || conversation.blank? || conversation.assignee_id.present?
+
+    conversation.update!(assignee_id: sdr_id)
+  end
+
+  # Documentos mínimos = checklist inteira da tese "recebido" (decisão 02/10).
+  # Carimba o momento em que completou; desmarcar um item apaga o carimbo.
+  def stamp_docs_completos
+    counts = docs_counts
+    completo = counts[:total].positive? && counts[:received] == counts[:total]
+    self.docs_completos_em = completo ? (docs_completos_em || Time.current) : nil
+  end
+end

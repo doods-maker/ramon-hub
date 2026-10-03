@@ -231,6 +231,7 @@ pt_BR:
       ramon_meeting_scheduled: 'Reunião marcada com %{name}: %{quando}'
       ramon_meeting_reminder: 'Reunião com %{name} em %{label} (%{quando}) — hora de confirmar com o cliente'
       ramon_meeting_cancelled: 'Reunião com %{name} cancelada (%{quando})'
+      ramon_sla_breach: 'Lead sem 1ª resposta há %{minutos} min: %{name}'
     attachment: 'Anexo'
     no_content: 'Sem conteúdo'
   conversations:
@@ -246,14 +247,6 @@ pt_BR:
         list_button_label: 'Escolha um item'
         call_permission_request_body: 'Gostaríamos de ligar para você em relação à sua conversa.'
         unsupported_message: 'Esta mensagem não está disponível.'
-      # Portaria (menu de Setores da caixa do escritório) — textos aprovados pelo Eduardo em 28/08/2026
-      portaria:
-        menu: 'Olá! Aqui é o Ramon Antonio Advogados. 😊 Pra te atender mais rápido, toque na opção do seu assunto:'
-        menu_retry: 'Não consegui identificar o assunto. Toque em uma das opções abaixo pra eu te encaminhar certinho:'
-        setores:
-          recepção: 'Recepção'
-          controladoria: 'Financeiro'
-          advogados: 'Advogados'
       voice_call:
         twilio: 'Chamada de Voz'
         whatsapp: 'Chamada do WhatsApp'

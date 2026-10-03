@@ -252,6 +252,7 @@ en:
       ramon_meeting_scheduled: 'Meeting booked with %{name}: %{quando}'
       ramon_meeting_reminder: 'Meeting with %{name} in %{label} (%{quando}) — time to confirm with the client'
       ramon_meeting_cancelled: 'Meeting with %{name} cancelled (%{quando})'
+      ramon_sla_breach: 'Lead waiting for first reply for %{minutos} min: %{name}'
     attachment: 'Attachment'
     no_content: 'No content'
   conversations:
@@ -267,14 +268,6 @@ en:
         list_button_label: 'Choose an item'
         call_permission_request_body: 'We would like to call you regarding your conversation.'
         unsupported_message: 'This message is unavailable.'
-      # Portaria (menu de Setores da caixa do escritório) — textos aprovados pelo Eduardo em 28/08/2026
-      portaria:
-        menu: 'Olá! Aqui é o Ramon Antonio Advogados. 😊 Pra te atender mais rápido, toque na opção do seu assunto:'
-        menu_retry: 'Não consegui identificar o assunto. Toque em uma das opções abaixo pra eu te encaminhar certinho:'
-        setores:
-          recepção: 'Recepção'
-          controladoria: 'Financeiro'
-          advogados: 'Advogados'
       voice_call:
         twilio: 'Voice Call'
         whatsapp: 'WhatsApp Call'
