@@ -10,7 +10,7 @@ class Ramon::Hoje
 
   private
 
-  def blocos(_papel)
-    {}
+  def blocos(papel)
+    papel == 'gestor' ? Ramon::Hoje::Gestor.new(account: account).perform : {}
   end
 end
