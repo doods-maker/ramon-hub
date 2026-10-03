@@ -68,18 +68,6 @@ const weightedValue = computed(
 
 const { t } = useI18n();
 
-// Linha de números da cabeça da coluna por extenso (tooltip quando trunca).
-const headerTitle = computed(() =>
-  [
-    localLeads.value.length,
-    totalValue.value ? brlCompact(totalValue.value) : null,
-    showWeighted.value ? `~${brlCompact(weightedValue.value)}` : null,
-    props.conversionRate != null ? `${props.conversionRate}%` : null,
-  ]
-    .filter(v => v !== null)
-    .join(' · ')
-);
-
 // Alertas agregados do header — prioridade: prescrevendo (ruby) > fora do
 // SLA (ruby) > parados (âmbar); mostramos até 2.
 const stalledCount = computed(
@@ -198,32 +186,70 @@ const toggleCollapsed = () => {
       class="h-0.5 flex-shrink-0"
       :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
     />
-    <div class="flex items-center gap-2 px-3 py-2">
-      <!-- shrink-0: o nome da etapa nunca vira "R…"; quem cede são os números -->
-      <span
-        class="flex items-center gap-1.5 shrink-0 max-w-[9rem] text-sm font-medium text-n-slate-12 stage-drag-handle cursor-grab"
-      >
-        <span
-          class="ramon-stage-pill inline-flex items-center gap-1.5 min-w-0 rounded-full border px-2.5 py-0.5 text-[12px] font-semibold"
-          :style="{ '--stage': stage.color || DEFAULT_STAGE_COLOR }"
+    <!-- cabeça em 2 linhas: 1 = etapa + alertas + botões; 2 = números -->
+    <div class="flex flex-col gap-1 px-3 py-2">
+      <div class="flex items-start gap-1">
+        <!-- alertas à direita da etapa; sem espaço, quebram pra linha de baixo -->
+        <div
+          class="flex flex-wrap items-center flex-1 min-w-0 gap-x-2 gap-y-1 min-h-6"
         >
-          <span class="rounded-full size-1.5 shrink-0 bg-current" />
-          <span class="truncate">{{ stage.name }}</span>
+          <span
+            class="flex items-center gap-1.5 max-w-full text-sm font-medium text-n-slate-12 stage-drag-handle cursor-grab"
+          >
+            <span
+              class="ramon-stage-pill inline-flex items-center gap-1.5 min-w-0 rounded-full border px-2.5 py-0.5 text-[12px] font-semibold"
+              :style="{ '--stage': stage.color || DEFAULT_STAGE_COLOR }"
+            >
+              <span class="rounded-full size-1.5 shrink-0 bg-current" />
+              <span class="truncate">{{ stage.name }}</span>
+            </span>
+            <span
+              v-if="stage.is_won"
+              class="i-lucide-trophy size-3 shrink-0 text-n-amber-11"
+            />
+            <span
+              v-if="stage.is_lost"
+              class="i-lucide-x-circle size-3 shrink-0 text-n-ruby-11"
+            />
+          </span>
+          <span
+            v-if="alerts.length"
+            class="flex flex-wrap items-center gap-x-2 ms-auto"
+          >
+            <span
+              v-for="alert in alerts"
+              :key="alert.key"
+              :data-testid="`column-alert-${alert.key}`"
+              class="text-[10.5px]"
+              :class="alert.class"
+            >
+              {{ alert.label }}
+            </span>
+          </span>
+        </div>
+        <span class="flex items-center gap-0.5 shrink-0">
+          <Button
+            data-testid="stage-collapse-toggle"
+            :title="$t('RAMON.KANBAN.COLUMN.COLLAPSE')"
+            xs
+            ghost
+            slate
+            icon="i-lucide-chevrons-left-right"
+            class="[&>span]:rotate-90"
+            @click="toggleCollapsed"
+          />
+          <StageHeaderMenu
+            :stage="stage"
+            @rename="name => emit('renameStage', { id: stage.id, name })"
+            @recolor="color => emit('recolorStage', { id: stage.id, color })"
+            @set-type="type => emit('setStageType', { id: stage.id, type })"
+            @remove="s => emit('removeStage', s)"
+          />
         </span>
-        <span
-          v-if="stage.is_won"
-          class="i-lucide-trophy size-3 shrink-0 text-n-amber-11"
-        />
-        <span
-          v-if="stage.is_lost"
-          class="i-lucide-x-circle size-3 shrink-0 text-n-ruby-11"
-        />
-      </span>
-      <!-- "N · R$ X mil · ~R$ Y ponderado ↳ Z%": cabeça da coluna (mock 1d) -->
-      <!-- sem espaço na w-72, os números truncam: o title mostra a linha toda -->
-      <span
-        class="min-w-0 truncate font-mono text-[11px] whitespace-nowrap text-n-slate-10"
-        :title="headerTitle"
+      </div>
+      <!-- "N · R$ X mil · ~R$ Y ponderado ↳ Z%" inteiro, quebrando se precisar -->
+      <div
+        class="flex flex-wrap items-center gap-x-1 font-mono text-[11px] text-n-slate-10"
       >
         <span data-testid="stage-count">{{ localLeads.length }}</span>
         <span v-if="totalValue" data-testid="stage-total">
@@ -240,42 +266,13 @@ const toggleCollapsed = () => {
           v-if="conversionRate != null"
           data-testid="stage-conversion"
           :title="$t('RAMON.KANBAN.COLUMN.CONVERSION_TIP')"
-          class="inline-flex items-center gap-0.5 text-[10px]"
+          class="inline-flex items-center gap-0.5"
         >
-          <span class="i-lucide-corner-down-right size-2.5" />{{
+          <span class="i-lucide-corner-down-right size-3" />{{
             `${conversionRate}%`
           }}
         </span>
-      </span>
-      <span class="flex items-center gap-0.5 ms-auto min-w-0">
-        <span
-          v-for="alert in alerts"
-          :key="alert.key"
-          :data-testid="`column-alert-${alert.key}`"
-          class="text-[10.5px] truncate"
-          :class="alert.class"
-        >
-          {{ alert.label }}
-        </span>
-        <Button
-          data-testid="stage-collapse-toggle"
-          :title="$t('RAMON.KANBAN.COLUMN.COLLAPSE')"
-          xs
-          ghost
-          slate
-          icon="i-lucide-chevrons-left-right"
-          class="shrink-0 [&>span]:rotate-90"
-          @click="toggleCollapsed"
-        />
-        <StageHeaderMenu
-          class="shrink-0"
-          :stage="stage"
-          @rename="name => emit('renameStage', { id: stage.id, name })"
-          @recolor="color => emit('recolorStage', { id: stage.id, color })"
-          @set-type="type => emit('setStageType', { id: stage.id, type })"
-          @remove="s => emit('removeStage', s)"
-        />
-      </span>
+      </div>
     </div>
     <p
       v-if="!localLeads.length"
