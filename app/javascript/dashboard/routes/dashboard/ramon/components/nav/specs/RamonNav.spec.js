@@ -128,6 +128,15 @@ describe('RamonNav', () => {
     expect(useChegadasStore().painelPedido).toBe(1);
   });
 
+  // Regressão 03/10: `md:translate-x-0` perde para `ltr:-translate-x-full`
+  // (seletor [dir=ltr] é mais específico) e o menu sumia no desktop.
+  it('no desktop o menu vence o deslocamento do celular (md:ltr/md:rtl)', () => {
+    const classes = montar().find('aside').classes();
+    expect(classes).toContain('md:ltr:translate-x-0');
+    expect(classes).toContain('md:rtl:translate-x-0');
+    expect(classes).not.toContain('md:translate-x-0');
+  });
+
   it('não-recepção não vê Chegou cliente', () => {
     expect(montar().find('[data-test="chegou-cliente"]').exists()).toBe(false);
   });
