@@ -35,8 +35,22 @@ RSpec.describe RamonConversa do
     expect(conversation.reload.additional_attributes['ramon_atribuicao']).to include('por_nome' => 'Gabriela')
   end
 
-  it 'expõe o lead da conversa' do
-    lead = create(:lead, account: account, conversation: conversation)
+  it 'devolver conversa com time (time e agente em duas requisições) não altera o registro' do
+    registro = { 'ramon_atribuicao' => { 'por_id' => gabriela.id, 'por_nome' => 'Gabriela', 'em' => 1.hour.ago.iso8601 } }
+    team = create(:team, account: account)
+    # rubocop:disable Rails/SkipsModelValidations
+    conversation.update_columns(team_id: team.id, assignee_id: tamires.id, additional_attributes: registro)
+    # rubocop:enable Rails/SkipsModelValidations
+    Current.user = tamires
+    conversation.update!(team: nil)
+    conversation.update!(assignee: nil)
+    expect(conversation.reload.additional_attributes).to eq(registro)
+  end
+
+  it 'expõe o lead da conversa, também no payload do websocket' do
+    stage = create(:lead_stage, account: account, name: 'Novo', color: '#475569')
+    lead = create(:lead, account: account, conversation: conversation, lead_stage: stage)
     expect(conversation.reload.ramon_lead).to eq(lead)
+    expect(conversation.push_event_data[:ramon_lead]).to eq(id: lead.id, stage_name: 'Novo', stage_color: '#475569', thesis_name: nil)
   end
 end

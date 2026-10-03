@@ -58,8 +58,8 @@ class Ramon::Hoje::Escritorio
 
   # Cliente = telefone no Painel do Cliente (ADVBOX); o resto é "número novo".
   def cliente?(contato)
-    digitos = contato&.phone_number.to_s.gsub(/\D/, '')
-    digitos.present? && PortalCliente.exists?(account: account, telefone: [digitos, digitos.last(11)])
+    variantes = Ramon::Telefone.variantes(contato&.phone_number)
+    variantes.any? && PortalCliente.exists?(account: account, telefone: variantes)
   end
 
   def contagem

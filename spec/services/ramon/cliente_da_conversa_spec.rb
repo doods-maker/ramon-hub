@@ -26,7 +26,7 @@ RSpec.describe Ramon::ClienteDaConversa do
     expect(described_class.new(conversation).perform).to eq(cliente: false)
   end
 
-  context 'com o cliente no painel (telefone sem o 55)' do
+  context 'with cliente no painel (telefone sem o 55)' do
     let!(:tamires) { create(:user, account: account, email: 'tamires@banca.adv.br', name: 'Dra. Tamires') }
 
     before { create(:portal_cliente, account: account, telefone: '48991203381', nome: 'Maria', processos: [processo]) }
@@ -38,6 +38,11 @@ RSpec.describe Ramon::ClienteDaConversa do
       expect(dados[:processos].first).to include(numero: numero, tipo: 'Auxílio-doença', fase: 'Perícia',
                                                  ultimo_andamento: { data: '2026-09-30', titulo: 'Perícia designada' })
       expect(dados[:compromisso]).to eq(tipo: 'pericia', data: '2026-10-07', hora: '09:00', notas: 'INSS Tubarão')
+    end
+
+    it 'acha também o celular gravado sem o 9º dígito' do
+      PortalCliente.update_all(telefone: '4891203381') # rubocop:disable Rails/SkipsModelValidations
+      expect(described_class.new(conversation).perform).to include(cliente: true, nome: 'Maria')
     end
 
     it 'ADVBOX fora: zera só o compromisso' do

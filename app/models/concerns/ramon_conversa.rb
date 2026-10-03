@@ -9,14 +9,25 @@ module RamonConversa
     before_update :registrar_atribuicao, if: -> { will_save_change_to_assignee_id? || will_save_change_to_team_id? }
   end
 
+  # Bloco slim do lead (etiqueta de etapa na lista) — jbuilder e websocket.
+  def ramon_lead_slim
+    lead = ramon_lead
+    lead && { id: lead.id, stage_name: lead.lead_stage&.name, stage_color: lead.lead_stage&.color, thesis_name: lead.thesis&.name }
+  end
+
   private
 
-  # "Devolver" (tira responsável e time) não é atribuição: não sobrescreve o registro.
   def registrar_atribuicao
-    return if Current.user.blank? || (assignee_id.blank? && team_id.blank?)
+    return if Current.user.blank? || !atribuiu?
 
     self.additional_attributes = (additional_attributes || {}).merge(
       'ramon_atribuicao' => { 'por_id' => Current.user.id, 'por_nome' => Current.user.name, 'em' => Time.current.iso8601 }
     )
+  end
+
+  # Só conta quando alguém (agente ou time) passa a ser o responsável: tirar o
+  # agente ou o time ("Devolver", em uma ou duas requisições) não sobrescreve.
+  def atribuiu?
+    (will_save_change_to_assignee_id? && assignee_id.present?) || (will_save_change_to_team_id? && team_id.present?)
   end
 end

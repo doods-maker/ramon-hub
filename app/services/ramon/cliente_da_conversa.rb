@@ -25,12 +25,12 @@ class Ramon::ClienteDaConversa
 
   private
 
-  # telefone do espelho é só dígitos, com ou sem o 55.
+  # telefone do espelho é só dígitos, em qualquer grafia (com/sem 55 e 9º dígito).
   def portal_cliente
-    digitos = @conversation.contact.phone_number.to_s.delete('^0-9')
-    return if digitos.blank?
+    variantes = Ramon::Telefone.variantes(@conversation.contact.phone_number)
+    return if variantes.empty?
 
-    PortalCliente.where(account_id: @conversation.account_id).find_by(telefone: [digitos, digitos.last(11)])
+    PortalCliente.where(account_id: @conversation.account_id).find_by(telefone: variantes)
   end
 
   def desde(processos)
