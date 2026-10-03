@@ -1,4 +1,5 @@
 class CreateRamonPecas < ActiveRecord::Migration[7.1]
+  # rubocop:disable Metrics/MethodLength
   def change
     create_table :ramon_pecas do |t|
       t.references :account, null: false, foreign_key: true
@@ -27,4 +28,5 @@ class CreateRamonPecas < ActiveRecord::Migration[7.1]
     add_index :ramon_pecas, [:account_id, :slug], unique: true
     add_index :ramon_pecas, [:status, :agendado_para]
   end
+  # rubocop:enable Metrics/MethodLength
 end

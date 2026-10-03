@@ -50,7 +50,7 @@ RSpec.describe Ramon::InstagramPublisher do
   end
 
   it 'sem token não chama a Meta' do
-    expect { described_class.new(peca, token: nil).publicar }.to raise_error(described_class::Erro, /token/)
+    expect { described_class.new(peca, token: nil).publicar }.to raise_error(described_class::Erro, /token/i)
   end
 
   it 'permalink nunca levanta' do

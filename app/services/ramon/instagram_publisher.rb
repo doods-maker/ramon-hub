@@ -53,7 +53,7 @@ class Ramon::InstagramPublisher
   end
 
   def base
-    achados = COLABORADORES.select { |nome, _| @peca.legenda.to_s.include?(nome) }.values.first(3)
+    achados = COLABORADORES.filter_map { |nome, arroba| arroba if @peca.legenda.to_s.include?(nome) }.first(3)
     { caption: @peca.legenda }.merge(achados.any? ? { collaborators: achados.to_json } : {})
   end
 
