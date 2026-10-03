@@ -377,9 +377,7 @@ useKeyboardEvents({
         <p class="text-[11px] tracking-[.2em] uppercase text-n-slate-10">
           {{ dateLine }}
         </p>
-        <h1
-          class="font-cormorant text-[32px] font-semibold leading-tight text-n-slate-12"
-        >
+        <h1 class="text-[32px] font-semibold leading-tight text-n-slate-12">
           {{ t(greetingKey, { name: firstName }) }}
         </h1>
       </div>
@@ -519,7 +517,7 @@ useKeyboardEvents({
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2.5">
                   <p
-                    class="font-cormorant text-[26px] font-semibold leading-tight text-n-slate-12"
+                    class="text-[26px] font-semibold leading-tight text-n-slate-12"
                   >
                     {{ current.leadName }}
                   </p>

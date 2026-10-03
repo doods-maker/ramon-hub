@@ -175,7 +175,7 @@ const submit = async () => {
     <div
       class="w-96 max-w-[92vw] max-h-[90vh] overflow-y-auto p-5 rounded-2xl bg-n-solid-1 border border-n-weak"
     >
-      <h2 class="mb-4 text-lg font-cormorant text-n-slate-12">
+      <h2 class="mb-4 text-lg font-semibold text-n-slate-12">
         {{ $t('RAMON.FUNIL.NEW_LEAD') }}
       </h2>
 

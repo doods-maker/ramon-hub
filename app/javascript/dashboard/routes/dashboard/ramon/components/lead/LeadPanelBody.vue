@@ -1,14 +1,16 @@
 <script setup>
+// Redesign v2 (mockup .painel): blocos Etapa / Próximo passo / Risco no topo e
+// o resto em linhas recolhíveis — as antigas abas viraram seções, nada sumiu.
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import ConversationAction from 'dashboard/routes/dashboard/conversation/ConversationAction.vue';
 import MacrosList from 'dashboard/routes/dashboard/conversation/Macros/List.vue';
-import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
 import MiniEsteira from './MiniEsteira.vue';
+import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import LeadNotes from './LeadNotes.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
@@ -19,7 +21,9 @@ import LeadPlaybook from '../conversation/LeadPlaybook.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
 import DocChecklist from './DocChecklist.vue';
 import QualificacaoViva from './QualificacaoViva.vue';
-import { useLeadPanelTabs } from '../../composables/useLeadPanelSections';
+import SecaoRecolhivel from './SecaoRecolhivel.vue';
+import { useLeadPanelSecoes } from '../../composables/useLeadPanelSections';
+import { BTN_CHEIO, BTN_LINHA } from '../hoje/hoje';
 import { useTemperatura } from '../../composables/useTemperatura';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
@@ -58,17 +62,17 @@ const prescriptionLabel = computed(() => {
   const p = prescription.value;
   if (!p) return null;
   if (p.lostInstallments > 0 && p.monthlyValue)
-    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_BLEEDING', {
+    return t('RAMON.KANBAN.CARD.PRESCRIPTION_BLEEDING', {
       value: formatBrl(p.monthlyValue),
-    })}`;
+    });
   if (p.lostInstallments > 0)
-    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_LOST', {
+    return t('RAMON.KANBAN.CARD.PRESCRIPTION_LOST', {
       count: p.lostInstallments,
-    })}`;
+    });
   if (p.monthsToCliff <= 6)
-    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_SOON', {
+    return t('RAMON.KANBAN.CARD.PRESCRIPTION_SOON', {
       months: p.monthsToCliff,
-    })}`;
+    });
   return null;
 });
 const bleeding = computed(() => prescription.value?.lostInstallments > 0);
@@ -108,20 +112,14 @@ watch(
   }
 );
 
-// Chip de etapa colorido (mock 1f: pílula soft na cor da etapa) — :style é o
-// precedente do fork p/ cor dinâmica (KanbanColumn); sem cor, fica neutro.
-const stageChipStyle = computed(() => {
-  const color = stages.value?.find(s => s.id === stageId.value)?.color;
-  if (!color) return null;
-  return {
-    backgroundColor: `${color}2E`,
-    borderColor: `${color}59`,
-    color,
-  };
-});
+// Pílula de etapa na cor da etapa (classe .ramon-stage-pill lê --stage);
+// sem cor configurada, cinza neutro.
+const stageChipStyle = computed(() => ({
+  '--stage':
+    stages.value?.find(s => s.id === stageId.value)?.color ||
+    DEFAULT_STAGE_COLOR,
+}));
 
-// ----- Onda B: cartões do resumo -----
-const CARD = 'rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-3';
 const stageName = computed(
   () => stages.value?.find(s => s.id === stageId.value)?.name || ''
 );
@@ -136,17 +134,31 @@ const daysInStage = computed(() => {
   const diff = Date.now() - new Date(props.lead.stage_entered_at).getTime();
   return Number.isNaN(diff) ? null : Math.max(0, Math.floor(diff / 86400000));
 });
-const andamentoApoio = computed(() =>
-  [
-    daysInStage.value != null
-      ? t('RAMON.LEAD_PANEL.ANDAMENTO.IN_STAGE', { days: daysInStage.value })
-      : null,
-    formattedValue.value,
-    probability.value != null ? `${probability.value}%` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+// Apoio do bloco Etapa: a reunião marcada ("Quinta, 10:00 · com Camila") ou a tese.
+const tarefasDoLead = useMapGetter('leadTasks/getByLead');
+const temTarefa = computed(
+  () => (tarefasDoLead.value?.(props.lead?.id) || []).length > 0
 );
+const reuniao = computed(() =>
+  (tarefasDoLead.value?.(props.lead?.id) || []).find(
+    tarefa => tarefa.kind === 'meeting' && tarefa.due_at
+  )
+);
+const etapaApoio = computed(() => {
+  if (!reuniao.value) return props.lead?.thesis_name || null;
+  const d = new Date(reuniao.value.due_at);
+  const dia = d
+    .toLocaleDateString('pt-BR', { weekday: 'long' })
+    .replace('-feira', '');
+  const hora = d.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const com = props.lead?.closer_name
+    ? t('RAMON.HOJE.COM', { nome: props.lead.closer_name })
+    : t('RAMON.HOJE.COM_O_CLOSER');
+  return `${dia.charAt(0).toUpperCase()}${dia.slice(1)}, ${hora} · ${com}`;
+});
 // ----- Temperatura (heurística local, só na conversa) + Risco de esfriar -----
 const currentChat = useMapGetter('getSelectedChat');
 const chatMessages = computed(() => currentChat.value?.messages || []);
@@ -165,13 +177,6 @@ const prepararRetomada = async () => {
     followUpPending.value = false;
   }
 };
-
-const docsPct = computed(() => {
-  const total = Number(props.lead?.docs_total) || 0;
-  if (!total) return 0;
-  return Math.round(((Number(props.lead?.docs_received) || 0) / total) * 100);
-});
-const contactOpen = ref(false);
 
 const commitStage = async (targetId, extra = {}) => {
   try {
@@ -254,41 +259,48 @@ const addTask = async () => {
   }
 };
 
-// ----- abas -----
-const { activeTab, setTab } = useLeadPanelTabs();
+// ----- seções recolhíveis (eram abas) -----
+const { abertas, alternar, abrir } = useLeadPanelSecoes();
+const aberta = id => abertas.value.includes(id);
+const DADO = 'flex justify-between gap-3 py-1 text-[13px]';
 const simuladorDot = computed(() =>
   props.lead?.custom_attributes?.ultima_simulacao ? 'bg-n-teal-9' : null
 );
-// Dot âmbar: existe item de documento ainda não recebido (docs_total/received
-// vêm do jbuilder — Task 3; antes dela o dot fica apagado, sem erro).
-const docsDot = computed(() =>
-  props.lead?.docs_total > 0 &&
-  props.lead?.docs_received < props.lead?.docs_total
-    ? 'bg-n-amber-9'
+const docsContagem = computed(() =>
+  props.lead?.docs_total
+    ? `${props.lead.docs_received || 0}/${props.lead.docs_total}`
     : null
 );
-const TABS = computed(() => [
-  { id: 'resumo', label: 'SUMMARY' },
-  { id: 'playbook', label: 'PLAYBOOK' },
-  { id: 'simulador', label: 'SIMULADOR', dot: simuladorDot },
-  ...(props.lead?.thesis_id
-    ? [{ id: 'documentos', label: 'DOCUMENTS', dot: docsDot }]
-    : []),
-  { id: 'contrato', label: 'CONTRACT' },
-  { id: 'historico', label: 'HISTORY' },
-]);
-const shownTab = computed(() => {
-  if (activeTab.value === 'documentos' && !props.lead?.thesis_id)
-    return 'resumo';
-  return activeTab.value;
+// Qualificação N/M: mesmos critérios do QualificacaoViva (itens da tese).
+const theses = useMapGetter('theses/getTheses');
+const qualificacaoContagem = computed(() => {
+  const criterios = (
+    theses.value?.find(x => x.id === props.lead?.thesis_id)?.items || []
+  ).filter(item => item.section === 'qualificacao');
+  if (!criterios.length) return null;
+  const status = props.lead?.custom_attributes?.qualificacao_status || {};
+  const ok = criterios.filter(item => status[item.id] === 'ok').length;
+  return `${ok}/${criterios.length}`;
 });
+
+// Itens da tese buscados uma vez aqui (não só ao abrir a seção), pra contagem
+// N/M aparecer com a Qualificação fechada — mesmo padrão do QualificacaoViva.
+watch(
+  () => props.lead?.thesis_id,
+  thesisId => {
+    if (!thesisId) return;
+    const tese = theses.value?.find(x => x.id === thesisId);
+    if (!tese?.items)
+      Promise.resolve(store.dispatch('theses/show', thesisId)).catch(() => {});
+  },
+  { immediate: true }
+);
 
 // ----- "editar todos os campos": LeadFields completo recolhido por padrão -----
 const fieldsExpanded = ref(false);
 const fieldsEl = ref(null);
 const onCompleteData = async () => {
-  setTab('resumo');
-  contactOpen.value = true;
+  abrir('contato');
   fieldsExpanded.value = true;
   await nextTick();
   fieldsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -312,10 +324,6 @@ const channelLabel = computed(
     props.lead?.channel
 );
 
-// ----- seções nativas do Chatwoot (agente/time/prioridade/etiquetas/macros)
-// recolhidas: não existem no mock 1f e "sujavam" o fim do Resumo -----
-const conversationExtrasOpen = ref(false);
-
 // ----- "Não é lead" (destrutivo: confirmação inline, só na conversa) -----
 const discardPrompt = ref(false);
 const discarding = ref(false);
@@ -335,65 +343,120 @@ const discard = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col flex-1 h-full min-w-0 overflow-hidden">
-    <!-- cabeçalho fixo: quem e quanto sem rolar -->
-    <div class="shrink-0 px-3 pt-3 border-b border-n-weak">
-      <router-link
-        v-if="lead?.id"
-        data-testid="lead-abrir-ficha"
-        :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
-        class="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-n-iris-9 px-3 py-2 text-sm font-semibold text-white hover:bg-n-iris-10"
-        @click="emit('navigate')"
-      >
-        <span class="i-lucide-contact size-4" />{{
-          $t('RAMON.FICHA.OPEN_FULL')
-        }}
-      </router-link>
-
+  <div
+    class="flex h-full min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden"
+  >
+    <!-- gaveta do Kanban: o nome (na conversa ele já está no cabeçalho) -->
+    <div v-if="!inConversation" class="px-[18px] pt-4">
       <h2
-        class="font-cormorant text-[21px] font-semibold leading-tight text-n-slate-12 truncate"
+        class="truncate text-[21px] font-semibold leading-tight text-n-slate-12"
       >
         {{ lead.name }}
       </h2>
+    </div>
 
-      <div class="flex flex-wrap items-center gap-1.5 mt-1.5 min-w-0">
-        <!-- h-auto + bg-none: o CSS global de <select> (_base.scss) impõe h-10
-             e seta de fundo — sem isso o chip vira caixa de formulário -->
+    <!-- Etapa: pílula grande (é o seletor), mini-esteira na cor da etapa -->
+    <section
+      class="border-b border-n-weak px-[18px] py-4"
+      :style="stageChipStyle"
+      data-testid="panel-card-andamento"
+    >
+      <h3 class="mb-2 flex justify-between text-xs font-medium text-n-slate-9">
+        {{ $t('RAMON.LEAD_PANEL.ETAPA') }}
+        <span v-if="daysInStage != null" class="font-mono text-xs">
+          {{ $t('RAMON.LEAD_PANEL.HA_DIAS', { n: daysInStage }, daysInStage) }}
+        </span>
+      </h3>
+      <label
+        class="ramon-stage-pill relative inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium leading-none"
+      >
+        <span class="size-1.5 flex-shrink-0 rounded-full bg-current" />
+        <span class="truncate">{{ stageName || '—' }}</span>
+        <!-- select transparente por cima: abre o seletor nativo -->
         <select
           data-testid="panel-stage"
           :value="stageId"
-          class="max-w-40 appearance-none truncate rounded-full border border-n-weak bg-n-alpha-1 h-auto bg-none px-2.5 py-0.5 text-[11px] text-n-slate-11 outline-none focus:border-n-slate-8"
-          :style="stageChipStyle"
+          :aria-label="$t('RAMON.LEAD_PANEL.ETAPA')"
+          class="absolute inset-0 !m-0 h-full w-full cursor-pointer opacity-0"
           @change="e => onStageChange(Number(e.target.value))"
         >
           <option v-for="s in stages" :key="s.id" :value="s.id">
             {{ s.name }}
           </option>
         </select>
+      </label>
+      <MiniEsteira :stages="stages" :current-id="stageId" />
+      <p v-if="etapaApoio" class="text-[12.5px] text-n-slate-11">
+        {{ etapaApoio }}
+      </p>
+      <div
+        v-if="prescriptionLabel || formattedValue || probability != null"
+        class="mt-2 flex flex-wrap items-center gap-1.5"
+      >
         <span
           v-if="prescriptionLabel"
           data-testid="panel-prescription-chip"
-          class="rounded-full px-2.5 py-0.5 text-[11px] text-white"
-          :class="bleeding ? 'bg-n-ruby-9' : 'bg-n-amber-9'"
+          class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11.5px] font-medium leading-none"
+          :class="
+            bleeding
+              ? 'bg-n-ruby-9/10 text-n-ruby-11'
+              : 'bg-n-amber-9/15 text-n-amber-11'
+          "
         >
+          <span class="i-lucide-hourglass size-3" />
           {{ prescriptionLabel }}
+        </span>
+        <!-- FORK(ramon) Onda 5: o que saiu do card do funil fica aqui na gaveta -->
+        <span
+          v-if="lead.latest_triage?.status === 'awaiting_human'"
+          data-testid="panel-triage-awaiting"
+          :title="$t('RAMON.TRIAGE.AWAITING_HUMAN_HINT')"
+          class="rounded-full bg-n-amber-9/15 px-2.5 py-0.5 text-[11px] text-n-amber-11"
+        >
+          {{ $t('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN') }}
+        </span>
+        <span
+          v-if="lead.follow_up_count > 0"
+          data-testid="panel-follow-up"
+          class="inline-flex items-center gap-1 rounded-full bg-n-slate-3 px-2.5 py-0.5 text-[11px] text-n-slate-11"
+        >
+          <span class="i-lucide-history size-3" />
+          {{
+            lead.follow_up_last_at
+              ? $t('RAMON.FOLLOW_UP.CARD_TITLE', {
+                  count: lead.follow_up_count,
+                  date: new Date(lead.follow_up_last_at).toLocaleDateString(
+                    'pt-BR',
+                    { day: '2-digit', month: '2-digit' }
+                  ),
+                })
+              : $t('RAMON.FOLLOW_UP.CARD_TITLE_NO_DATE', {
+                  count: lead.follow_up_count,
+                })
+          }}
         </span>
         <span
           v-if="formattedValue"
           data-testid="panel-value-chip"
-          class="inline-flex items-center gap-1 rounded-full bg-n-alpha-2 px-2.5 py-0.5 text-[11px] text-n-slate-11"
+          class="inline-flex items-center gap-1 rounded-full bg-n-slate-3 px-2 py-1 font-mono text-[11.5px] leading-none text-n-slate-11"
         >
           {{ formattedValue }}
           <span
             v-if="valorEstimadoAuto"
             data-testid="value-auto-badge"
             :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
-            class="inline-flex items-center gap-0.5 rounded bg-n-iris-9/10 px-1 text-[10px] text-n-iris-11"
+            class="inline-flex items-center gap-0.5 rounded bg-n-blue-9/[0.08] px-1 font-sans text-[10px] text-n-blue-11 dark:bg-n-blue-9/[0.16]"
           >
             <span class="i-lucide-sparkles size-2.5" />{{
               $t('RAMON.DRAWER.VALUE_AUTO')
             }}
           </span>
+        </span>
+        <span
+          v-if="probability != null"
+          class="font-mono text-[11.5px] text-n-slate-9"
+        >
+          {{ `${probability}%` }}
         </span>
       </div>
 
@@ -407,9 +470,9 @@ const discard = async () => {
       <div
         v-if="wonPrompt"
         data-testid="stage-won-prompt"
-        class="flex flex-col gap-2 p-2 mt-2 rounded-lg bg-n-alpha-1 border border-n-weak"
+        class="mt-3 flex flex-col gap-2 rounded-[10px] border border-n-weak p-3"
       >
-        <label class="text-xs text-n-slate-10">{{
+        <label class="text-xs text-n-slate-11">{{
           $t('RAMON.FUNIL.WON.VALUE_LABEL')
         }}</label>
         <input
@@ -417,37 +480,66 @@ const discard = async () => {
           data-testid="stage-won-value"
           type="text"
           inputmode="decimal"
-          class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+          class="!mb-0 w-full rounded-[7px] border border-n-strong bg-transparent px-2 py-1.5 font-mono text-sm text-n-slate-12 outline-none focus:border-n-blue-9"
           @keyup.enter="confirmWonStage"
         />
         <div class="flex justify-end gap-2">
           <button
             data-testid="stage-won-skip"
-            class="px-3 py-1 text-xs text-n-slate-11"
+            :class="BTN_LINHA"
             @click="skipWonStage"
           >
             {{ $t('RAMON.FUNIL.WON.SKIP') }}
           </button>
           <button
             data-testid="stage-won-save"
-            class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white"
+            :class="BTN_CHEIO"
             @click="confirmWonStage"
           >
             {{ $t('RAMON.FUNIL.WON.SAVE') }}
           </button>
         </div>
       </div>
+    </section>
 
-      <!-- 4 ações fixas. WhatsApp abre a conversa (gaveta) ou o wa.me (sem
-           conversa); no painel da conversa ela já está aberta — botão sai. -->
-      <div class="flex gap-1.5 mt-3">
+    <!-- Próximo passo: tarefa aberta + Abrir ficha / Follow-up -->
+    <section
+      class="border-b border-n-weak bg-n-blue-9/[0.08] px-[18px] py-4 dark:bg-n-blue-9/[0.16]"
+      data-testid="panel-proximo-passo"
+    >
+      <h3 class="mb-2 text-xs font-semibold text-n-blue-11">
+        {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.TITLE') }}
+      </h3>
+      <LeadNextAction :lead-id="lead.id" />
+      <p v-if="!temTarefa" class="text-[12.5px] text-n-slate-11">
+        {{ $t('RAMON.FICHA.NEXT_EMPTY') }}
+      </p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <router-link
+          v-if="lead?.id"
+          data-testid="lead-abrir-ficha"
+          :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
+          :class="BTN_CHEIO"
+          @click="emit('navigate')"
+        >
+          {{ $t('RAMON.LEAD_PANEL.ABRIR_FICHA') }}
+        </router-link>
+        <button
+          data-testid="panel-add-task"
+          :class="BTN_LINHA"
+          @click="taskFormOpen = !taskFormOpen"
+        >
+          {{ $t('RAMON.LEAD_PANEL.FOLLOW_UP') }}
+        </button>
+        <!-- WhatsApp: abre a conversa (gaveta) ou o wa.me (sem conversa); na
+             conversa ela já está aberta — botão sai. -->
         <button
           v-if="lead.conversation_id && !inConversation"
           data-testid="panel-whatsapp"
-          class="flex flex-1 items-center justify-center gap-1 rounded-lg bg-n-iris-9 px-1 py-1.5 text-xs font-semibold text-white hover:bg-n-iris-10"
+          :class="BTN_LINHA"
           @click="emit('openConversation', lead.conversation_id)"
         >
-          <span class="i-lucide-message-square size-3.5 shrink-0" />{{
+          <span class="i-lucide-message-square size-4" />{{
             $t('RAMON.KANBAN.CARD.WHATSAPP')
           }}
         </button>
@@ -457,53 +549,43 @@ const discard = async () => {
           :href="waMeUrl(lead.contact_phone)"
           target="_blank"
           rel="noopener noreferrer"
-          class="flex flex-1 items-center justify-center gap-1 rounded-lg bg-n-iris-9 px-1 py-1.5 text-xs font-semibold text-white hover:bg-n-iris-10"
+          :class="BTN_LINHA"
         >
-          <span class="i-lucide-message-square size-3.5 shrink-0" />{{
+          <span class="i-lucide-message-square size-4" />{{
             $t('RAMON.KANBAN.CARD.WHATSAPP')
           }}
         </a>
-        <button
-          data-testid="panel-add-task"
-          class="flex-1 rounded-lg bg-n-alpha-1 px-1 py-1.5 text-xs text-n-slate-11 hover:bg-n-alpha-2"
-          @click="taskFormOpen = !taskFormOpen"
-        >
-          {{ $t('RAMON.TASKS.ADD') }}
-        </button>
-        <div v-if="inConversation" class="flex flex-1 min-w-0 [&>*]:w-full">
-          <ResolveAction color="teal" variant="faded" />
-        </div>
       </div>
-
       <div
         v-if="taskFormOpen"
         data-testid="panel-task-form"
-        class="flex flex-col gap-2 p-2 mt-2 rounded-lg bg-n-alpha-1 border border-n-weak"
+        class="mt-3 flex flex-col gap-2"
       >
         <input
           v-model="taskTitle"
           data-testid="panel-task-title"
           :placeholder="$t('RAMON.TASKS.ADD_TITLE_PLACEHOLDER')"
-          class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+          class="!mb-0 w-full rounded-[7px] border border-n-strong bg-n-background px-2 py-1.5 text-sm text-n-slate-12 outline-none focus:border-n-blue-9"
         />
         <input
           v-model="taskDate"
           data-testid="panel-task-date"
           type="datetime-local"
           :title="$t('RAMON.TASKS.DATE_HINT')"
-          class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+          class="!mb-0 w-full rounded-[7px] border border-n-strong bg-n-background px-2 py-1.5 font-mono text-sm text-n-slate-12 outline-none focus:border-n-blue-9"
         />
         <div class="flex justify-end gap-2">
           <button
             data-testid="panel-task-cancel"
-            class="px-3 py-1 text-xs text-n-slate-11"
+            :class="BTN_LINHA"
             @click="taskFormOpen = false"
           >
             {{ $t('RAMON.FUNIL.CANCEL') }}
           </button>
           <button
             data-testid="panel-task-save"
-            class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
+            :class="BTN_CHEIO"
+            class="disabled:opacity-50"
             :disabled="savingTask"
             @click="addTask"
           >
@@ -511,358 +593,281 @@ const discard = async () => {
           </button>
         </div>
       </div>
+    </section>
 
-      <!-- abas segmentadas com dot de status -->
-      <div class="flex mt-2 -mb-px overflow-x-auto" role="tablist">
-        <button
-          v-for="tab in TABS"
-          :key="tab.id"
-          role="tab"
-          :aria-selected="shownTab === tab.id"
-          :data-testid="`lead-tab-${tab.id}`"
-          class="flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-[12.5px]"
-          :class="
-            shownTab === tab.id
-              ? 'border-n-iris-11 font-semibold text-n-iris-11'
-              : 'border-transparent text-n-slate-10 hover:text-n-slate-11'
-          "
-          @click="setTab(tab.id)"
-        >
-          {{ $t(`RAMON.LEAD_PANEL.TABS.${tab.label}`) }}
-          <span
-            v-if="tab.dot?.value"
-            :data-testid="`lead-tab-dot-${tab.id}`"
-            class="size-1.5 rounded-full"
-            :class="tab.dot.value"
-          />
-        </button>
-      </div>
-    </div>
-
-    <!-- corpo da aba ativa -->
-    <div
-      class="flex flex-col flex-1 gap-3 min-w-0 overflow-y-auto overflow-x-hidden p-3"
+    <!-- Risco de esfriar (stalled) -->
+    <section
+      v-if="risco"
+      class="border-b border-n-weak bg-n-ruby-9/10 px-[18px] py-4 shadow-[inset_4px_0_0_rgb(var(--ruby-9))]"
+      data-testid="panel-card-risco"
     >
-      <template v-if="shownTab === 'resumo'">
-        <LeadCopilot
-          v-if="inConversation && conversationId"
-          :conversation-id="conversationId"
+      <p
+        class="flex items-center gap-1.5 text-[13px] font-semibold text-n-ruby-11"
+      >
+        <span class="i-lucide-triangle-alert size-4" />
+        {{ $t('RAMON.RISCO.TITLE') }}
+      </p>
+      <p class="mt-0.5 text-[12.5px] text-n-slate-12">
+        {{
+          $t('RAMON.RISCO.APOIO', {
+            days: daysInStage ?? 0,
+            count: Number(lead.follow_up_count) || 0,
+          })
+        }}
+      </p>
+      <button
+        type="button"
+        data-testid="risco-preparar-retomada"
+        class="mt-2 text-xs font-medium text-n-blue-11 underline underline-offset-2 disabled:opacity-50"
+        :disabled="followUpPending"
+        @click="prepararRetomada"
+      >
+        {{ $t('RAMON.RISCO.PREPARAR') }}
+      </button>
+    </section>
+
+    <!-- linhas recolhíveis (eram as abas Resumo/Playbook/Simulador/…) -->
+    <SecaoRecolhivel
+      v-if="lead.thesis_id"
+      data-testid="secao-qualificacao"
+      :titulo="$t('RAMON.LEAD_PANEL.QUALIFICACAO')"
+      :contagem="qualificacaoContagem"
+      :aberta="aberta('qualificacao')"
+      @alternar="alternar('qualificacao')"
+    >
+      <div class="flex flex-col gap-3">
+        <QualificacaoViva :lead="lead" :context="context" />
+        <LeadQuizResumo :lead="lead" />
+      </div>
+    </SecaoRecolhivel>
+    <LeadQuizResumo v-else :lead="lead" class="px-[18px] py-3" />
+
+    <SecaoRecolhivel
+      v-if="lead.thesis_id"
+      data-testid="secao-documentos"
+      :titulo="$t('RAMON.DOCS.TITLE')"
+      :contagem="docsContagem"
+      :aberta="aberta('documentos')"
+      @alternar="alternar('documentos')"
+    >
+      <DocChecklist :lead="lead" :context="context" />
+    </SecaoRecolhivel>
+
+    <SecaoRecolhivel
+      data-testid="secao-calculos"
+      :titulo="$t('RAMON.FICHA.CALCULOS_TITLE')"
+      :ponto="simuladorDot"
+      :aberta="aberta('calculos')"
+      @alternar="alternar('calculos')"
+    >
+      <LeadSimulador :lead="lead" />
+    </SecaoRecolhivel>
+
+    <SecaoRecolhivel
+      v-if="inConversation && conversationId"
+      data-testid="secao-copiloto"
+      :titulo="$t('RAMON.LEAD_PANEL.COPILOTO')"
+      :aberta="aberta('copiloto')"
+      @alternar="alternar('copiloto')"
+    >
+      <LeadCopilot :conversation-id="conversationId" />
+    </SecaoRecolhivel>
+
+    <SecaoRecolhivel
+      data-testid="secao-playbook"
+      :titulo="$t('RAMON.LEAD_PANEL.TABS.PLAYBOOK')"
+      :aberta="aberta('playbook')"
+      @alternar="alternar('playbook')"
+    >
+      <LeadPlaybook :lead="lead" />
+    </SecaoRecolhivel>
+
+    <SecaoRecolhivel
+      data-testid="secao-contrato"
+      :titulo="$t('RAMON.LEAD_PANEL.TABS.CONTRACT')"
+      :aberta="aberta('contrato')"
+      @alternar="alternar('contrato')"
+    >
+      <LeadZapsignCard :lead="lead" @complete-data="onCompleteData" />
+    </SecaoRecolhivel>
+
+    <SecaoRecolhivel
+      data-testid="secao-notas"
+      :titulo="$t('RAMON.LEAD_PANEL.NOTES.TITLE')"
+      :aberta="aberta('notas')"
+      @alternar="alternar('notas')"
+    >
+      <LeadNotes :lead-id="lead.id" />
+    </SecaoRecolhivel>
+
+    <SecaoRecolhivel
+      data-testid="secao-historico"
+      :titulo="$t('RAMON.LEAD_PANEL.TABS.HISTORY')"
+      :aberta="aberta('historico')"
+      @alternar="alternar('historico')"
+    >
+      <LeadHistory :lead-id="lead.id" />
+    </SecaoRecolhivel>
+
+    <!-- Temperatura (só na conversa; heurística local) -->
+    <SecaoRecolhivel
+      v-if="inConversation && nivel"
+      data-testid="panel-card-termometro"
+      :titulo="$t('RAMON.TERMOMETRO.TITLE')"
+      :contagem="$t(`RAMON.TERMOMETRO.${nivel.toUpperCase()}`)"
+      :aberta="aberta('temperatura')"
+      @alternar="alternar('temperatura')"
+    >
+      <div
+        class="relative h-1.5 rounded-full bg-gradient-to-r from-n-ruby-9 via-n-amber-9 to-n-teal-9 opacity-80"
+      >
+        <span
+          class="absolute -top-1 h-3.5 w-1 rounded bg-n-slate-12"
+          :class="{
+            'left-[85%]': nivel === 'quente',
+            'left-[48%]': nivel === 'morna',
+            'left-[10%]': nivel === 'fria',
+          }"
         />
+      </div>
+      <p v-if="hesitando" class="mt-1.5 text-xs text-n-slate-11">
+        {{ $t('RAMON.TERMOMETRO.HESITANDO') }}
+      </p>
+    </SecaoRecolhivel>
 
-        <!-- Andamento -->
-        <div :class="CARD" data-testid="panel-card-andamento">
-          <p
-            class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
-          >
-            {{ $t('RAMON.LEAD_PANEL.ANDAMENTO.TITLE') }}
-          </p>
-          <p class="mt-1 text-[13px] font-semibold text-n-iris-11">
-            {{ stageName || '—' }}
-          </p>
-          <MiniEsteira class="mt-2" :stages="stages" :current-id="stageId" />
-          <p v-if="andamentoApoio" class="mt-1.5 text-xs text-n-slate-11">
-            {{ andamentoApoio }}
-          </p>
-        </div>
-
-        <!-- Próximo passo (era LeadNextAction do header) -->
-        <LeadNextAction :lead-id="lead.id" />
-
-        <!-- Temperatura (só na conversa; heurística local) -->
-        <div
-          v-if="inConversation && nivel"
-          :class="CARD"
-          data-testid="panel-card-termometro"
-        >
-          <p
-            class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
-          >
-            {{ $t('RAMON.TERMOMETRO.TITLE') }}
-          </p>
-          <div class="mt-2 flex items-center gap-2">
-            <div
-              class="relative h-1.5 flex-1 rounded-full bg-gradient-to-r from-n-ruby-9 via-n-amber-9 to-n-teal-9 opacity-80"
-            >
-              <span
-                class="absolute -top-1 h-3.5 w-1 rounded bg-n-slate-12"
-                :style="{
-                  left:
-                    nivel === 'quente'
-                      ? '85%'
-                      : nivel === 'morna'
-                        ? '48%'
-                        : '10%',
-                }"
-              />
-            </div>
-            <span
-              class="text-[11px] font-bold uppercase"
-              :class="
-                nivel === 'quente'
-                  ? 'text-n-teal-11'
-                  : nivel === 'morna'
-                    ? 'text-n-amber-11'
-                    : 'text-n-ruby-11'
-              "
-            >
-              {{ $t(`RAMON.TERMOMETRO.${nivel.toUpperCase()}`) }}
-            </span>
-          </div>
-          <p v-if="hesitando" class="mt-1.5 text-xs text-n-slate-11">
-            {{ $t('RAMON.TERMOMETRO.HESITANDO') }}
-          </p>
-        </div>
-
-        <!-- Risco de esfriar (stalled) -->
-        <div
-          v-if="risco"
-          :class="CARD"
-          class="border-l-4 border-l-n-ruby-9 bg-n-ruby-9/5"
-          data-testid="panel-card-risco"
-        >
-          <p class="text-[12.5px] font-bold text-n-ruby-11">
-            {{ $t('RAMON.RISCO.TITLE') }}
-          </p>
-          <p class="mt-0.5 text-xs text-n-slate-11">
-            {{
-              $t('RAMON.RISCO.APOIO', {
-                days: daysInStage ?? 0,
-                count: Number(lead.follow_up_count) || 0,
-              })
-            }}
-          </p>
-          <button
-            type="button"
-            data-testid="risco-preparar-retomada"
-            class="mt-2 text-[11.5px] font-bold text-n-iris-11 underline disabled:opacity-50"
-            :disabled="followUpPending"
-            @click="prepararRetomada"
-          >
-            {{ $t('RAMON.RISCO.PREPARAR') }}
-          </button>
-        </div>
-
-        <!-- Documentos -->
-        <button
-          v-if="lead.thesis_id && lead.docs_total"
-          :class="CARD"
-          class="text-left w-full hover:border-n-iris-9/40"
-          data-testid="panel-card-docs"
-          @click="setTab('documentos')"
-        >
-          <div class="flex items-center justify-between">
-            <p
-              class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
-            >
-              {{ $t('RAMON.DOCS.TITLE') }}
-            </p>
-            <span class="text-xs font-semibold text-n-slate-12">
-              {{
-                $t('RAMON.DOCS.COUNT', {
-                  received: lead.docs_received || 0,
-                  total: lead.docs_total,
-                })
-              }}
-            </span>
-          </div>
-          <div class="mt-2 h-1.5 rounded-full bg-n-alpha-2 overflow-hidden">
-            <div class="h-full bg-n-iris-9" :style="{ width: `${docsPct}%` }" />
-          </div>
-        </button>
-
-        <!-- Caso -->
-        <div :class="CARD" data-testid="panel-card-caso">
-          <p
-            class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
-          >
+    <!-- Dados do contato: caso, telefone/CPF/donos e todos os campos -->
+    <SecaoRecolhivel
+      data-testid="contact-data-toggle"
+      :titulo="$t('RAMON.LEAD_PANEL.CONTACT_DATA')"
+      :aberta="aberta('contato')"
+      @alternar="alternar('contato')"
+    >
+      <div class="flex min-w-0 flex-col">
+        <div :class="DADO">
+          <span class="text-n-slate-9">
             {{ $t('RAMON.LEAD_PANEL.CASE_TITLE') }}
-          </p>
-          <p class="mt-1 text-[13px] font-semibold text-n-slate-12">
+          </span>
+          <span class="text-right text-n-slate-12">
             {{
               [lead.thesis_name, lead.benefit_type_name]
                 .filter(Boolean)
                 .join(' · ') || '—'
             }}
-          </p>
-          <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-2">
-            <div>
-              <p class="text-[10.5px] text-n-slate-9">
-                {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
-              </p>
-              <p
-                data-testid="panel-dcb"
-                class="text-[13px]"
-                :class="bleeding ? 'text-n-ruby-11' : 'text-n-slate-12'"
-              >
-                {{ dcbFormatted || '—' }}
-              </p>
-            </div>
-            <div>
-              <p class="text-[10.5px] text-n-slate-9">
-                {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
-              </p>
-              <p class="text-[13px] text-n-slate-12">
-                {{ channelLabel || '—' }}
-              </p>
-            </div>
-          </div>
+          </span>
         </div>
-
-        <QualificacaoViva :lead="lead" :context="context" />
-
-        <LeadQuizResumo :lead="lead" />
-        <LeadNotes :lead-id="lead.id" />
-
-        <!-- Dados do contato (recolhido — mesmo padrão do "Mais da conversa") -->
-        <div class="pt-3 border-t border-n-weak min-w-0">
-          <button
-            data-testid="contact-data-toggle"
-            class="flex items-center w-full gap-1.5 text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10 hover:text-n-slate-12"
-            @click="contactOpen = !contactOpen"
+        <div :class="DADO">
+          <span class="text-n-slate-9">
+            {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
+          </span>
+          <span
+            data-testid="panel-dcb"
+            class="font-mono"
+            :class="bleeding ? 'text-n-ruby-11' : 'text-n-slate-12'"
           >
-            {{ $t('RAMON.LEAD_PANEL.CONTACT_DATA') }}
-            <span
-              class="size-3.5 shrink-0"
-              :class="
-                contactOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'
-              "
-            />
-          </button>
-          <div v-if="contactOpen" class="flex flex-col gap-2 mt-3 min-w-0">
-            <div class="grid grid-cols-2 gap-x-3 gap-y-2">
-              <div>
-                <p class="text-[10.5px] text-n-slate-9">
-                  {{ $t('RAMON.LEAD_PANEL.FIELDS.PHONE') }}
-                </p>
-                <p class="text-[13px] text-n-slate-12">
-                  {{ lead.contact_phone || '—' }}
-                </p>
-              </div>
-              <div>
-                <p class="text-[10.5px] text-n-slate-9">
-                  {{ $t('RAMON.LEAD_PANEL.FIELDS.CPF') }}
-                </p>
-                <p class="text-[13px] text-n-slate-12">
-                  {{ formatCpf(lead.contact_cpf) || '—' }}
-                </p>
-              </div>
-              <div>
-                <p class="text-[10.5px] text-n-slate-9">
-                  {{ $t('RAMON.LEAD_PANEL.FIELDS.OWNERS') }}
-                </p>
-                <p class="text-[13px] text-n-slate-12">{{ owners || '—' }}</p>
-              </div>
-            </div>
-            <button
-              data-testid="lead-edit-all-toggle"
-              class="self-center text-[11px] text-n-slate-10 hover:text-n-slate-12"
-              @click="fieldsExpanded = !fieldsExpanded"
-            >
-              {{
-                fieldsExpanded
-                  ? `${$t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS_CLOSE')} ▴`
-                  : `${$t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS')} ▾`
-              }}
-            </button>
-            <div
-              v-if="fieldsExpanded"
-              ref="fieldsEl"
-              data-testid="lead-all-fields"
-            >
-              <LeadFields :lead="lead" />
-            </div>
-          </div>
+            {{ dcbFormatted || '—' }}
+          </span>
         </div>
-
-        <div
-          v-if="inConversation && conversationId"
-          class="pt-3 border-t border-n-weak min-w-0"
+        <div :class="DADO">
+          <span class="text-n-slate-9">
+            {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
+          </span>
+          <span class="text-n-slate-12">{{ channelLabel || '—' }}</span>
+        </div>
+        <div :class="DADO">
+          <span class="text-n-slate-9">
+            {{ $t('RAMON.LEAD_PANEL.FIELDS.PHONE') }}
+          </span>
+          <span class="font-mono text-n-slate-12">
+            {{ lead.contact_phone || '—' }}
+          </span>
+        </div>
+        <div :class="DADO">
+          <span class="text-n-slate-9">
+            {{ $t('RAMON.LEAD_PANEL.FIELDS.CPF') }}
+          </span>
+          <span class="font-mono text-n-slate-12">
+            {{ formatCpf(lead.contact_cpf) || '—' }}
+          </span>
+        </div>
+        <div :class="DADO">
+          <span class="text-n-slate-9">
+            {{ $t('RAMON.LEAD_PANEL.FIELDS.OWNERS') }}
+          </span>
+          <span class="text-n-slate-12">{{ owners || '—' }}</span>
+        </div>
+        <button
+          data-testid="lead-edit-all-toggle"
+          class="mt-2 self-start text-xs text-n-blue-11 hover:underline"
+          @click="fieldsExpanded = !fieldsExpanded"
         >
-          <button
-            data-testid="conversation-extras-toggle"
-            class="flex items-center w-full gap-1.5 text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10 hover:text-n-slate-12"
-            @click="conversationExtrasOpen = !conversationExtrasOpen"
-          >
-            {{ $t('RAMON.LEAD_PANEL.CONVERSATION_EXTRAS') }}
-            <span
-              class="size-3.5 shrink-0"
-              :class="
-                conversationExtrasOpen
-                  ? 'i-lucide-chevron-up'
-                  : 'i-lucide-chevron-down'
-              "
-            />
-          </button>
-          <div
-            v-if="conversationExtrasOpen"
-            class="flex flex-col gap-2 mt-3 min-w-0"
-          >
-            <ConversationAction :conversation-id="conversationId" />
-            <div class="pt-3 border-t border-n-weak">
-              <p
-                class="mb-2 text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10"
-              >
-                {{ $t('RAMON.LEAD_PANEL.MACROS_TITLE') }}
-              </p>
-              <MacrosList :conversation-id="conversationId" />
-            </div>
-          </div>
+          {{
+            fieldsExpanded
+              ? $t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS_CLOSE')
+              : $t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS')
+          }}
+        </button>
+        <div v-if="fieldsExpanded" ref="fieldsEl" data-testid="lead-all-fields">
+          <LeadFields :lead="lead" />
         </div>
+      </div>
+    </SecaoRecolhivel>
 
-        <div v-if="inConversation" class="pt-3 border-t border-n-weak">
+    <!-- seções nativas do Chatwoot (agente/time/prioridade/etiquetas/macros) -->
+    <SecaoRecolhivel
+      v-if="inConversation && conversationId"
+      data-testid="conversation-extras-toggle"
+      :titulo="$t('RAMON.LEAD_PANEL.CONVERSATION_EXTRAS')"
+      :aberta="aberta('conversa')"
+      @alternar="alternar('conversa')"
+    >
+      <div class="flex min-w-0 flex-col gap-2">
+        <ConversationAction :conversation-id="conversationId" />
+        <div class="border-t border-n-weak pt-3">
+          <p class="mb-2 text-xs font-medium text-n-slate-9">
+            {{ $t('RAMON.LEAD_PANEL.MACROS_TITLE') }}
+          </p>
+          <MacrosList :conversation-id="conversationId" />
+        </div>
+      </div>
+    </SecaoRecolhivel>
+
+    <!-- "Não é lead" (destrutivo: confirmação inline, só na conversa) -->
+    <div v-if="inConversation" class="px-[18px] py-4">
+      <button
+        v-if="!discardPrompt"
+        class="inline-flex items-center gap-1 text-xs text-n-ruby-11 hover:underline"
+        data-testid="lead-discard"
+        @click="discardPrompt = true"
+      >
+        <span class="i-lucide-user-x size-3.5 shrink-0" />
+        {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
+      </button>
+      <div
+        v-else
+        data-testid="lead-discard-prompt"
+        class="flex flex-col gap-2 rounded-[10px] bg-n-ruby-9/10 p-3"
+      >
+        <p class="text-xs text-n-slate-12">
+          {{ $t('RAMON.LEAD_PANEL.DISCARD_CONFIRM') }}
+        </p>
+        <div class="flex justify-end gap-2">
           <button
-            v-if="!discardPrompt"
-            class="inline-flex items-center gap-1 rounded-full bg-n-ruby-9/10 px-2.5 py-1 text-[11px] text-n-ruby-11 hover:bg-n-ruby-9/20"
-            data-testid="lead-discard"
-            @click="discardPrompt = true"
+            data-testid="lead-discard-cancel"
+            :class="BTN_LINHA"
+            @click="discardPrompt = false"
           >
-            <span class="i-lucide-user-x size-3 shrink-0" />
+            {{ $t('RAMON.FUNIL.CANCEL') }}
+          </button>
+          <button
+            data-testid="lead-discard-confirm"
+            class="rounded-[7px] bg-n-ruby-9 px-2.5 py-[5px] text-[12.5px] font-medium text-white disabled:opacity-50"
+            :disabled="discarding"
+            @click="discard"
+          >
             {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
           </button>
-          <div
-            v-else
-            data-testid="lead-discard-prompt"
-            class="flex flex-col gap-2 p-2 rounded-lg bg-n-alpha-1 border border-n-weak"
-          >
-            <p class="text-xs text-n-slate-11">
-              {{ $t('RAMON.LEAD_PANEL.DISCARD_CONFIRM') }}
-            </p>
-            <div class="flex justify-end gap-2">
-              <button
-                data-testid="lead-discard-cancel"
-                class="px-3 py-1 text-xs text-n-slate-11"
-                @click="discardPrompt = false"
-              >
-                {{ $t('RAMON.FUNIL.CANCEL') }}
-              </button>
-              <button
-                data-testid="lead-discard-confirm"
-                class="px-3 py-1 text-xs rounded-lg bg-n-ruby-9 text-white disabled:opacity-50"
-                :disabled="discarding"
-                @click="discard"
-              >
-                {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
-              </button>
-            </div>
-          </div>
         </div>
-      </template>
-
-      <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
-
-      <LeadSimulador v-else-if="shownTab === 'simulador'" :lead="lead" />
-
-      <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-3">
-        <DocChecklist :lead="lead" :context="context" />
       </div>
-
-      <LeadZapsignCard
-        v-else-if="shownTab === 'contrato'"
-        :lead="lead"
-        @complete-data="onCompleteData"
-      />
-
-      <LeadHistory v-else-if="shownTab === 'historico'" :lead-id="lead.id" />
     </div>
   </div>
 </template>

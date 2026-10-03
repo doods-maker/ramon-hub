@@ -10,6 +10,7 @@ export const useChegadasStore = defineStore('chegadas', {
   state: () => ({
     itens: [],
     podeAvisar: false,
+    painelPedido: 0,
     vistos: LocalStorage.get(VISTOS_KEY) || [],
   }),
 
@@ -46,6 +47,10 @@ export const useChegadasStore = defineStore('chegadas', {
     async responder(id, resposta) {
       const { data } = await ChegadasAPI.responder(id, resposta);
       this.upsert(data);
+    },
+    // O botão "Chegou cliente" mora no menu; o painel escuta este contador.
+    pedirPainel() {
+      this.painelPedido += 1;
     },
     marcarVisto(id) {
       this.vistos.push(id);

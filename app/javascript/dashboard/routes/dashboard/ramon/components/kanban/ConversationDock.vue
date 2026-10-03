@@ -1,13 +1,19 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import ConversationBox from 'dashboard/components/widgets/conversation/ConversationBox.vue';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const props = defineProps({
   // Board com modal aberto: Esc é do modal, não do dock.
   suspendEsc: { type: Boolean, default: false },
+  // Texto a cair como RASCUNHO no editor quando a conversa montar ("Cobrar
+  // documentos" do card) — nada é enviado.
+  rascunho: { type: String, default: null },
 });
+const emit = defineEmits(['rascunhoInserido']);
 
 defineOptions({ name: 'ConversationDock' });
 
@@ -23,6 +29,16 @@ const drawerOpen = computed(() => !!selectedLead.value);
 // no caminho "conversa fria" (antes do setActiveChat async resolver).
 const isReady = computed(
   () => !!dockId.value && Number(activeChat.value?.id) === Number(dockId.value)
+);
+watch(
+  () => [isReady.value, props.rascunho],
+  async ([ready, texto]) => {
+    if (!ready || !texto) return;
+    await nextTick(); // ReplyBox (dentro da ConversationBox) já montou
+    emitter.emit(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, texto);
+    emit('rascunhoInserido');
+  },
+  { immediate: true }
 );
 const contactName = computed(() => activeChat.value?.meta?.sender?.name || '');
 

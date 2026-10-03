@@ -1,37 +1,52 @@
 import { ref } from 'vue';
 
-// Aba ativa do painel do lead — compartilhada entre o painel da conversa e a
-// gaveta do Kanban (mesma chave de localStorage). Substitui o antigo estado de
-// acordeões (ramon_lead_panel_sections) do redesign 1f.
+// Seções recolhíveis abertas do painel do lead (redesign v2: as abas viraram
+// linhas recolhíveis) — compartilhadas entre o painel da conversa e a gaveta
+// do Kanban (mesma chave de localStorage).
+const KEY = 'ramon_lead_panel_abertas';
+// Atalho do Ctrl K (useRamonLeadHotKeys) ainda grava a aba antiga: abre a
+// seção equivalente uma vez e apaga o pedido.
 const TAB_KEY = 'ramon_lead_panel_tab';
-export const LEAD_PANEL_TABS = [
-  'resumo',
-  'playbook',
-  'simulador',
-  'documentos',
-  'contrato',
-  'historico',
-];
+const TAB_PARA_SECAO = {
+  simulador: 'calculos',
+  documentos: 'documentos',
+  contrato: 'contrato',
+  historico: 'historico',
+  playbook: 'playbook',
+};
 
-const readStored = () => {
+const salvar = abertas => {
   try {
-    const stored = localStorage.getItem(TAB_KEY);
-    return LEAD_PANEL_TABS.includes(stored) ? stored : 'resumo';
+    localStorage.setItem(KEY, JSON.stringify(abertas));
   } catch (e) {
-    return 'resumo';
+    // localStorage indisponível: seguimos sem persistir
   }
 };
 
-export function useLeadPanelTabs() {
-  const activeTab = ref(readStored());
-  const setTab = id => {
-    if (!LEAD_PANEL_TABS.includes(id)) return;
-    activeTab.value = id;
-    try {
-      localStorage.setItem(TAB_KEY, id);
-    } catch (e) {
-      // localStorage indisponível: seguimos sem persistir
-    }
+const ler = () => {
+  try {
+    const salvas = JSON.parse(localStorage.getItem(KEY) || '[]');
+    const abertas = Array.isArray(salvas) ? salvas : [];
+    const daAba = TAB_PARA_SECAO[localStorage.getItem(TAB_KEY)];
+    localStorage.removeItem(TAB_KEY);
+    if (!daAba || abertas.includes(daAba)) return abertas;
+    salvar([...abertas, daAba]);
+    return [...abertas, daAba];
+  } catch (e) {
+    return [];
+  }
+};
+
+export function useLeadPanelSecoes() {
+  const abertas = ref(ler());
+  const alternar = id => {
+    abertas.value = abertas.value.includes(id)
+      ? abertas.value.filter(aberta => aberta !== id)
+      : [...abertas.value, id];
+    salvar(abertas.value);
   };
-  return { activeTab, setTab };
+  const abrir = id => {
+    if (!abertas.value.includes(id)) alternar(id);
+  };
+  return { abertas, alternar, abrir };
 }

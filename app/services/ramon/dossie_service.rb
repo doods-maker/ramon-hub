@@ -21,6 +21,7 @@ class Ramon::DossieService
       esteira: esteira_block,
       docs: docs_block,
       calculos: calculos_block,
+      calculos_total: @lead.calculos.count,
       reunioes: reunioes_block,
       timeline: timeline_block,
       pendencias: { tasks: open_tasks, docs_missing: docs_missing }
@@ -30,18 +31,19 @@ class Ramon::DossieService
   private
 
   def pessoa_block
-    {
-      lead_id: @lead.id,
-      lead_name: @lead.name,
-      stage_name: @lead.lead_stage&.name,
-      stage_color: @lead.lead_stage&.color,
-      value: @lead.value&.to_f,
-      conversation_id: @lead.conversation_id,
-      probability: @lead.lead_stage&.probability,
-      stage_entered_at: @lead.stage_entered_at,
-      valor_estimado_origem: @lead.custom_attributes&.dig('valor_estimado', 'origem'),
-      thesis_name: @thesis&.name
-    }.merge(contact_fields)
+    { lead_id: @lead.id, lead_name: @lead.name, value: @lead.value&.to_f, conversation_id: @lead.conversation_id,
+      stage_entered_at: @lead.stage_entered_at, thesis_name: @thesis&.name }.merge(etapa_fields, extras_fields, contact_fields)
+  end
+
+  def etapa_fields
+    etapa = @lead.lead_stage
+    { stage_name: etapa&.name, stage_color: etapa&.color, probability: etapa&.probability }
+  end
+
+  def extras_fields
+    atributos = @lead.custom_attributes || {}
+    { valor_estimado_origem: atributos.dig('valor_estimado', 'origem'), profissao: atributos.dig('colheita', 'dados', 'cliente', 'profissao'),
+      sdr: @lead.sdr&.name, closer: @lead.closer&.name }
   end
 
   def contact_fields

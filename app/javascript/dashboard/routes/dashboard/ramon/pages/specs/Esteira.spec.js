@@ -250,13 +250,13 @@ describe('Esteira.vue', () => {
     const wrapper = await mountEsteira();
     keyHandlers.Escape.action();
     expect(routerPush).toHaveBeenCalledWith({
-      name: 'ramon_index',
+      name: 'ramon_painel',
       params: undefined,
     });
     routerPush.mockClear();
     await wrapper.find('[data-testid="esteira-exit"]').trigger('click');
     expect(routerPush).toHaveBeenCalledWith({
-      name: 'ramon_index',
+      name: 'ramon_painel',
       params: undefined,
     });
   });

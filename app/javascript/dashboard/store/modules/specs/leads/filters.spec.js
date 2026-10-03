@@ -27,11 +27,17 @@ describe('leads filters', () => {
   it('get envia os filtros como params snake_case, omitindo vazios', async () => {
     axios.get.mockResolvedValue({ data: { payload: [] } });
     const state = {
-      filters: { benefitTypeId: 5, agentId: null, source: '', q: 'ana' },
+      filters: {
+        benefitTypeId: 5,
+        thesisId: 3,
+        agentId: null,
+        source: '',
+        q: 'ana',
+      },
     };
     await actions.get({ commit, state });
     expect(axios.get).toHaveBeenCalledWith(expect.any(String), {
-      params: { benefit_type_id: 5, q: 'ana' },
+      params: { benefit_type_id: 5, thesis_id: 3, q: 'ana' },
     });
   });
 
