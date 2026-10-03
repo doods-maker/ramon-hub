@@ -102,62 +102,42 @@ const reschedule = ({ dueAt }) =>
 </script>
 
 <template>
-  <div
-    v-if="task"
-    data-testid="lead-next-action"
-    class="rounded-xl p-3 bg-n-solid-1 border shadow-sm border-l-4"
-    :class="
-      dueInfo.overdue
-        ? 'border-n-amber-9/40 border-l-n-amber-9'
-        : isMeeting
-          ? 'border-n-iris-9/40 border-l-n-iris-9 bg-n-iris-9/5'
-          : 'border-n-weak border-l-n-iris-9'
-    "
-  >
+  <!-- Redesign v2: vive dentro do bloco "Próximo passo" do painel (fundo azul
+       translúcido, título do bloco) — aqui só texto grande, apoio e ações. -->
+  <div v-if="task" data-testid="lead-next-action">
+    <p class="text-sm font-medium text-n-slate-12">{{ task.title }}</p>
     <p
-      class="text-[10.5px] font-semibold uppercase tracking-widest"
-      :class="
-        dueInfo.overdue
-          ? 'text-n-amber-11'
-          : isMeeting
-            ? 'text-n-iris-11'
-            : 'text-n-slate-10'
-      "
+      class="mt-0.5 text-[12.5px]"
+      :class="dueInfo.overdue ? 'text-n-amber-11' : 'text-n-slate-11'"
     >
       <template v-if="isMeeting">
-        <span
-          class="i-lucide-calendar-clock inline-block size-3 align-[-2px]"
-        />
         {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.MEETING_TITLE') }}
+        <span
+          v-if="meetingWhen"
+          class="mx-0.5 inline-block size-1 rounded-full bg-current align-middle"
+        />
+        <span
+          v-if="meetingWhen"
+          data-testid="next-action-meeting-when"
+          class="capitalize"
+        >
+          {{ meetingWhen }}
+        </span>
       </template>
-      <template v-else>{{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.TITLE') }}</template>
-      <template v-if="dueInfo.text">· {{ dueInfo.text }}</template>
-    </p>
-    <p
-      v-if="isMeeting && meetingWhen"
-      data-testid="next-action-meeting-when"
-      class="mt-1 text-sm font-semibold text-n-slate-12 capitalize"
-    >
-      {{ meetingWhen }}
-    </p>
-    <p
-      class="text-sm text-n-slate-12"
-      :class="isMeeting ? 'text-xs text-n-slate-11' : 'mt-1'"
-    >
-      {{ task.title }}
+      <template v-else>{{ dueInfo.text }}</template>
     </p>
     <router-link
       v-if="isMeeting"
       :to="{ name: 'ramon_agenda' }"
-      class="mt-1 inline-block text-xs text-n-iris-11 hover:underline"
+      class="mt-1 inline-block text-xs text-n-blue-11 hover:underline"
       data-testid="next-action-agenda-link"
     >
       {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.SEE_AGENDA') }}
     </router-link>
-    <div class="flex items-center gap-1.5 mt-2.5">
+    <div class="mt-2 flex items-center gap-3 text-xs text-n-slate-11">
       <button
         data-testid="next-action-done"
-        class="px-3 py-1 text-xs font-semibold rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+        class="font-medium text-n-blue-11 hover:underline disabled:opacity-50"
         :disabled="busy"
         @click="complete"
       >
@@ -165,14 +145,14 @@ const reschedule = ({ dueAt }) =>
       </button>
       <button
         data-testid="next-action-snooze"
-        class="px-3 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11 hover:bg-n-alpha-2 disabled:opacity-50"
+        class="hover:text-n-slate-12 disabled:opacity-50"
         :disabled="busy"
         @click="snooze"
       >
         {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.SNOOZE') }}
       </button>
       <span
-        class="flex items-center gap-1 text-xs text-n-slate-11"
+        class="flex items-center gap-1"
         data-testid="next-action-reschedule"
       >
         {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.RESCHEDULE') }}

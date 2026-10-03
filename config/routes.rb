@@ -154,6 +154,7 @@ Rails.application.routes.draw do
               resource :direct_uploads, only: [:create]
               resource :draft_messages, only: [:show, :update, :destroy]
               resource :ramon_copilot, only: [:create], controller: 'ramon_copilot'
+              resource :ramon_cliente, only: [:show], controller: 'ramon_clientes'
             end
             member do
               post :mute

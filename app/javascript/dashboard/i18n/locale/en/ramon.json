@@ -26,7 +26,15 @@
       "ESTADO_aguardando": "waiting",
       "ESTADO_escalado": "no answer",
       "ESTADO_respondido": "answered",
-      "RESPONDEU": "{quem} replied: {resposta}"
+      "RESPONDEU": "{quem} replied: {resposta}",
+      "CLIENTE_CHEGOU": "Client arrived",
+      "AVISADO_POR": "Announced by {quem} at {hora}",
+      "RECADO": "Note:",
+      "ATENDER_AGORA": "I will attend now",
+      "AGUARDAR": "Ask them to wait a few minutes",
+      "NAO_POSSO": "I cannot attend",
+      "OUTRA_COISA": "Reply something else",
+      "VOLTA_EM": "No reply in {tempo} and the alert goes back to {quem}."
     },
     "AGENDA": {
       "TITLE": "Agenda",
@@ -294,7 +302,11 @@
       "CHEGADAS": "arrival | arrivals",
       "CONTRATOS": "Contracts",
       "DOCS_COMPLETOS": "Complete documents",
-      "FUNIL_AGORA": "Funnel now"
+      "FUNIL_AGORA": "Funnel now",
+      "ATRIBUIDAS_HOJE": "assigned | assigned",
+      "POR_HA": "by {nome} {tempo} ago",
+      "AGUARDANDO_CLIENTE": "waiting for the client",
+      "ABRIR": "Open"
     },
     "POS_VENDA": {
       "TITLE": "Post-sale",
@@ -985,7 +997,13 @@
       "LOAD_ERROR": "Couldn't load the lead for this conversation.",
       "RETRY": "Try again",
       "DISCARD_CONFIRM": "Remove this lead from the funnel? The conversation stays in Chatwoot.",
-      "DISCARD_ERROR": "Could not remove the lead — try again"
+      "DISCARD_ERROR": "Could not remove the lead — try again",
+      "ETAPA": "Stage",
+      "HA_DIAS": "{n} day ago | {n} days ago",
+      "FOLLOW_UP": "Follow-up",
+      "ABRIR_FICHA": "Open record",
+      "QUALIFICACAO": "Qualification",
+      "COPILOTO": "Copilot"
     },
     "PLAYBOOK": {
       "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",
@@ -1549,6 +1567,30 @@
         "EVENTO": "Event",
         "VALOR": "Amount"
       }
+    },
+    "CLIENTE_PANEL": {
+      "ATRIBUIDA_POR": "Assigned to you by {nome} · {hora}",
+      "DEVOLVER": "Give back",
+      "ATRIBUIR": "Assign to…",
+      "DO_PROCESSO": "from the case",
+      "CONTROLADORIA": "Controllership",
+      "CONTROLADORIA_COM": "Controllership ({nome})",
+      "CLIENTE_DESDE": "Client since {data}",
+      "CLIENTE": "Client",
+      "NUMERO_NOVO": "New number",
+      "NUMERO_NOVO_APOIO": "This number is not in the Client Panel.",
+      "ADVOGADA": "Lawyer",
+      "TELEFONE": "Phone",
+      "COMPROMISSO": {
+        "pericia": "Medical exam",
+        "audiencia": "Hearing"
+      },
+      "PROCESSOS": "Cases in ADVBOX",
+      "ULTIMO_ANDAMENTO": "Last update",
+      "VER_ADVBOX": "Open in ADVBOX",
+      "CARREGANDO": "Loading client…",
+      "ERRO": "Could not load the client.",
+      "ERRO_ATRIBUIR": "Could not assign — try again."
     }
   },
   "CAPTAIN_RAMON": {

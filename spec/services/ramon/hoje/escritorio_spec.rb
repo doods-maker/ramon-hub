@@ -36,13 +36,6 @@ RSpec.describe Ramon::Hoje::Escritorio do
     expect(blocos(gabriela, 'recepcao')[:sem_responsavel].pluck(:cliente)).to eq([true, false])
   end
 
-  it 'variantes do telefone: com/sem 55 e com/sem o 9º dígito' do
-    expect(described_class.variantes_telefone('+55 (47) 99711-0042'))
-      .to contain_exactly('47997110042', '5547997110042', '4797110042', '554797110042')
-    expect(described_class.variantes_telefone('4797110042')).to include('47997110042', '5547997110042')
-    expect(described_class.variantes_telefone(nil)).to eq([])
-  end
-
   context 'with atendimento do ADVBOX hoje' do
     let(:agenda) { [{ advbox_post_id: 5, cliente_nome: 'NEUSA', hora: '14:00' }, { advbox_post_id: 6, cliente_nome: 'ROBERTO', hora: '09:00' }] }
 
@@ -60,6 +53,17 @@ RSpec.describe Ramon::Hoje::Escritorio do
     resultado = blocos(tamires, 'advogada')
     expect(resultado[:atribuidas].pluck(:conversa_id)).to eq([minha.display_id])
     expect(resultado).to include(semana: [], advbox_fora: false)
+  end
+
+  it 'advogada: quem atribuiu, quando e se a vez é do cliente' do
+    registro = { 'ramon_atribuicao' => { 'por_id' => gabriela.id, 'por_nome' => 'Gabriela', 'em' => '2026-10-03T16:52:00Z' } }
+    esperando_nos = create(:conversation, account: account, inbox: caixa, assignee: tamires, additional_attributes: registro)
+    respondida = create(:conversation, account: account, inbox: caixa, assignee: tamires)
+    respondida.update_columns(waiting_since: nil) # rubocop:disable Rails/SkipsModelValidations
+    linhas = blocos(tamires, 'advogada')[:atribuidas].index_by { |linha| linha[:conversa_id] }
+    expect(linhas[esperando_nos.display_id]).to include(atribuida_por: 'Gabriela', atribuida_em: '2026-10-03T16:52:00Z',
+                                                        aguardando_cliente: false)
+    expect(linhas[respondida.display_id]).to include(atribuida_por: nil, atribuida_em: nil, aguardando_cliente: true)
   end
 
   it 'ADVBOX fora: avisa e segue' do

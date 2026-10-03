@@ -4,18 +4,6 @@
 class Ramon::Hoje::Escritorio
   pattr_initialize [:account!, :user!, :papel!]
 
-  # Celular BR em qualquer grafia: com/sem 55 e com/sem o 9º dígito (DDD + 9 + 8).
-  def self.variantes_telefone(telefone)
-    digitos = telefone.to_s.gsub(/\D/, '')
-    nacional = digitos.length > 11 && digitos.start_with?('55') ? digitos.delete_prefix('55') : digitos
-    return [] if nacional.length < 10
-
-    ddd = nacional[0, 2]
-    local = nacional[2..]
-    locais = [local, local.length == 9 && local.start_with?('9') ? local[1..] : "9#{local}"]
-    locais.flat_map { |l| ["#{ddd}#{l}", "55#{ddd}#{l}"] }.uniq
-  end
-
   def perform
     papel == 'advogada' ? advogada : recepcao
   end
@@ -37,7 +25,7 @@ class Ramon::Hoje::Escritorio
 
   def advogada
     semana, fora = advbox { Ramon::SemanaAdvboxService.new(account).para(user) }
-    { atribuidas: linhas(caixa.where(assignee_id: user.id)), semana: semana, advbox_fora: fora }
+    { atribuidas: linhas(caixa.where(assignee_id: user.id)) { |conversa| atribuicao(conversa) }, semana: semana, advbox_fora: fora }
   end
 
   def advbox
@@ -48,7 +36,16 @@ class Ramon::Hoje::Escritorio
   end
 
   def linhas(scope)
-    scope.preload(:contact).reorder('conversations.created_at').limit(20).map { |conversa| linha(conversa) }
+    scope.preload(:contact).reorder('conversations.created_at').limit(20).map do |conversa|
+      block_given? ? linha(conversa).merge(yield(conversa)) : linha(conversa)
+    end
+  end
+
+  # Quem atribuiu (RamonConversa) e se a vez é do cliente: waiting_since zera
+  # quando a equipe responde, então nil = última mensagem foi nossa.
+  def atribuicao(conversa)
+    registro = conversa.additional_attributes&.dig('ramon_atribuicao') || {}
+    { atribuida_por: registro['por_nome'], atribuida_em: registro['em'], aguardando_cliente: conversa.waiting_since.nil? }
   end
 
   def linha(conversa)
@@ -62,7 +59,7 @@ class Ramon::Hoje::Escritorio
 
   # Cliente = telefone no Painel do Cliente (ADVBOX); o resto é "número novo".
   def cliente?(contato)
-    variantes = Ramon::Hoje::Escritorio.variantes_telefone(contato&.phone_number)
+    variantes = Ramon::Telefone.variantes(contato&.phone_number)
     variantes.any? && PortalCliente.exists?(account: account, telefone: variantes)
   end
 
