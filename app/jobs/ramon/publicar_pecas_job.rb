@@ -61,8 +61,9 @@ class Ramon::PublicarPecasJob < ApplicationJob
       peca.transicionar!(de: 'publicando', para: 'publicado', erro: nil)
       pos_publicacao(peca)
     else
-      peca.transicionar!(de: 'publicando', para: 'falhou',
-                         erro: 'Publicação interrompida no meio — conferir no Instagram antes de tentar de novo.')
+      erro = 'Publicação interrompida no meio — conferir no Instagram antes de tentar de novo.'
+      peca.transicionar!(de: 'publicando', para: 'falhou', erro: erro)
+      avisar("Publicação interrompida: #{peca.gancho}", erro)
     end
   rescue Peca::TransicaoInvalida
     nil # outro processo já resolveu

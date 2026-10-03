@@ -41,7 +41,7 @@ RSpec.describe Ramon::PublicarPecasJob do
 
   it 'publicando há mais de 30 min vira falhou com aviso de conferir' do
     travada = create(:peca, status: 'publicando', publicacao_iniciada_em: 31.minutes.ago)
-    described_class.perform_now
+    expect { described_class.perform_now }.to have_enqueued_job(Ramon::NtfyPushJob)
     expect(travada.reload).to have_attributes(status: 'falhou')
     expect(travada.erro).to include('conferir no Instagram')
   end
