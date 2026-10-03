@@ -126,4 +126,49 @@ describe('CommandPalette', () => {
     emitter.off(BUS_EVENTS.OPEN_NINJA, ouvinte);
     wrapper.unmount();
   });
+
+  it('processo abre o painel do cliente já filtrado pelo nome', async () => {
+    const wrapper = mountPalette();
+    await abrir(wrapper);
+    await wrapper.find('input').setValue('5001876');
+    vi.advanceTimersByTime(250);
+    await flushPromises();
+    await wrapper
+      .find('[data-testid="cmd-processo-5001876-22.2023.4.04.7216"]')
+      .trigger('click');
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ramon_portal_clientes',
+      query: { q: 'João Paulo Ramos' },
+    });
+    wrapper.unmount();
+  });
+
+  it('resposta que chega depois de fechar é descartada', async () => {
+    let resolver;
+    RamonBuscaAPI.get.mockReturnValue(
+      new Promise(r => {
+        resolver = r;
+      })
+    );
+    const wrapper = mountPalette();
+    await abrir(wrapper);
+    await wrapper.find('input').setValue('joao');
+    vi.advanceTimersByTime(250);
+    await wrapper.find('input').trigger('keydown', { key: 'Escape' });
+    resolver({ data: resposta });
+    await flushPromises();
+    await abrir(wrapper);
+    expect(wrapper.text()).not.toContain('João Pedro Martins');
+    wrapper.unmount();
+  });
+
+  it('Esc e setas funcionam com o foco num resultado', async () => {
+    const wrapper = mountPalette();
+    await abrir(wrapper);
+    const botao = wrapper.find('[data-testid="cmd-acao-novo-calculo"]');
+    await botao.trigger('keydown', { key: 'ArrowDown' });
+    await botao.trigger('keydown', { key: 'Enter' });
+    expect(routerPush).toHaveBeenCalledWith({ name: 'ramon_calculos' });
+    wrapper.unmount();
+  });
 });

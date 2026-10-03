@@ -31,7 +31,13 @@ const abrir = () => {
   ativo.value = 0;
   nextTick(() => input.value?.focus());
 };
+// `pedido` numera as buscas: resposta de pedido velho (ou que chega depois
+// de fechar/limpar) é descartada.
+let timer = null;
+let pedido = 0;
 const fechar = () => {
+  clearTimeout(timer);
+  pedido += 1;
   aberto.value = false;
   termo.value = '';
   resultado.value = VAZIO;
@@ -49,15 +55,13 @@ useKeyboardEvents({
   },
 });
 
-// Debounce de 250 ms; < 2 caracteres não vai ao servidor. `pedido` descarta
-// resposta velha que chegue depois de uma mais nova.
-let timer = null;
-let pedido = 0;
+// Debounce de 250 ms; < 2 caracteres não vai ao servidor.
 watch(termo, value => {
   clearTimeout(timer);
   ativo.value = 0;
   const q = value.trim();
   if (q.length < 2) {
+    pedido += 1;
     resultado.value = VAZIO;
     return;
   }
@@ -100,7 +104,7 @@ const itens = computed(() => [
       .filter(Boolean)
       .join(' · '),
     selo: t('RAMON.BUSCA.CLIENTE'),
-    abrir: ir({ name: 'ramon_portal_clientes' }),
+    abrir: ir({ name: 'ramon_portal_clientes', query: { q: cliente.nome } }),
   })),
   ...resultado.value.processos.map(processo => ({
     key: `processo-${processo.numero}`,
@@ -109,7 +113,10 @@ const itens = computed(() => [
     titulo: processo.numero,
     tituloMono: true,
     detalhe: [processo.cliente, processo.tipo].filter(Boolean).join(' · '),
-    abrir: ir({ name: 'ramon_portal_clientes' }),
+    abrir: ir({
+      name: 'ramon_portal_clientes',
+      query: { q: processo.cliente },
+    }),
   })),
   {
     key: 'acao-novo-lead',
@@ -182,6 +189,7 @@ const onKeydown = e => {
       role="dialog"
       :aria-label="t('RAMON.BUSCA.TITULO')"
       class="w-[620px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-n-strong bg-n-background shadow-[0_24px_64px_rgb(0_0_0/0.18)]"
+      @keydown="onKeydown"
     >
       <div class="flex items-center gap-2.5 px-4 py-3.5 border-b border-n-weak">
         <span class="i-lucide-search size-4 text-n-slate-9" />
@@ -191,7 +199,6 @@ const onKeydown = e => {
           class="flex-1 min-w-0 bg-transparent border-0 outline-none text-[15px] text-n-slate-12"
           :aria-label="t('RAMON.BUSCA.TITULO')"
           :placeholder="t('RAMON.BUSCA.PLACEHOLDER')"
-          @keydown="onKeydown"
         />
         <kbd
           class="rounded-[5px] border border-n-strong px-1.5 font-mono text-[11px] text-n-slate-9"

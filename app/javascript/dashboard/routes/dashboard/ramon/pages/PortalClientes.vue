@@ -1,6 +1,7 @@
 <script setup>
 // app/javascript/dashboard/routes/dashboard/ramon/pages/PortalClientes.vue
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import PortalClientesAPI from 'dashboard/api/portalClientes';
@@ -28,6 +29,21 @@ const templates = ref([]); // modelos do ZapSign, carregados na 1ª expansão de
 const templateId = ref(null);
 const nomeDocumento = ref('Procuração');
 const enviandoAssinatura = ref(false);
+
+// ?q= vindo da paleta Ctrl K: filtra a lista local (sem ADVBOX) pelo nome e,
+// se sobrar um só, já abre o detalhe.
+const route = useRoute();
+const semAcento = texto =>
+  String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+const filtroLista = ref(String(route?.query?.q || ''));
+const clientesVisiveis = computed(() => {
+  const termo = semAcento(filtroLista.value).trim();
+  if (!termo) return clientes.value;
+  return clientes.value.filter(c => semAcento(c.nome).includes(termo));
+});
 
 const carregar = async () => {
   isLoading.value = true;
@@ -215,7 +231,11 @@ const METRICAS = [
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
 
-onMounted(carregar);
+onMounted(async () => {
+  await carregar();
+  if (filtroLista.value && clientesVisiveis.value.length === 1)
+    abrir(clientesVisiveis.value[0].id);
+});
 </script>
 
 <template>
@@ -329,6 +349,20 @@ onMounted(carregar);
       </div>
     </div>
 
+    <p
+      v-if="filtroLista"
+      data-testid="portal-filtro-lista"
+      class="mb-3 inline-flex items-center gap-1.5 self-start rounded-full bg-n-blue-9/[0.08] px-2.5 py-1 text-xs font-medium text-n-blue-11 dark:bg-n-blue-9/[0.16]"
+    >
+      {{ `"${filtroLista}"` }}
+      <button
+        type="button"
+        data-testid="portal-filtro-limpar"
+        class="i-lucide-x size-3.5"
+        :aria-label="t('RAMON.FUNIL.CHIP.LIMPAR')"
+        @click="filtroLista = ''"
+      />
+    </p>
     <div v-if="isLoading" class="h-12 animate-pulse rounded-lg bg-n-solid-2" />
     <p v-else-if="hasError" class="text-sm text-n-ruby-11">
       {{ t('RAMON.PORTAL_CLIENTES.LOAD_ERROR') }}
@@ -340,7 +374,7 @@ onMounted(carregar);
       v-else
       class="flex flex-col divide-y divide-n-weak rounded-xl border border-n-weak bg-n-solid-1"
     >
-      <li v-for="c in clientes" :key="c.id" class="px-4 py-3 text-sm">
+      <li v-for="c in clientesVisiveis" :key="c.id" class="px-4 py-3 text-sm">
         <div class="flex items-center justify-between gap-4">
           <button
             type="button"

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import KanbanBoard from '../components/kanban/KanbanBoard.vue';
 import NewLeadModal from '../components/kanban/NewLeadModal.vue';
@@ -15,6 +15,13 @@ watch(
   },
   { immediate: true }
 );
+// fechar tira o ?novo da URL (senão recarregar reabre o modal)
+const router = useRouter();
+const fecharModal = () => {
+  showModal.value = false;
+  if (route.query.novo)
+    router.replace({ query: { ...route.query, novo: undefined } });
+};
 
 // Só busca a conversão se ainda não tiver dado (ex.: já veio do Cockpit) —
 // coluna funciona sem ela, então não bloqueia o render do board.
@@ -30,6 +37,6 @@ onMounted(() => {
 <template>
   <div class="flex flex-col w-full h-full bg-n-background">
     <KanbanBoard @new-lead="showModal = true" />
-    <NewLeadModal v-if="showModal" @close="showModal = false" />
+    <NewLeadModal v-if="showModal" @close="fecharModal" />
   </div>
 </template>
