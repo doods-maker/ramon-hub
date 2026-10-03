@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonConteudoAPI from 'dashboard/api/ramonConteudo';
+import PostPrevia from './PostPrevia.vue';
 
 const props = defineProps({ pecaId: { type: Number, required: true } });
 const emit = defineEmits(['changed', 'close']);
@@ -12,6 +13,8 @@ const { t } = useI18n();
 const peca = ref(null);
 const nota = ref('');
 const ocupado = ref(false);
+const legenda = ref('');
+const refazerCards = ref([]);
 
 const campos = computed(() =>
   Object.entries(peca.value?.conteudo?.fields || {}).filter(
@@ -22,6 +25,7 @@ const campos = computed(() =>
 const carregar = async () => {
   const { data } = await RamonConteudoAPI.show(props.pecaId);
   peca.value = data;
+  legenda.value = data.legenda || '';
 };
 
 const agir = async acao => {
@@ -29,6 +33,8 @@ const agir = async acao => {
   try {
     const { data } = await acao();
     peca.value = data;
+    legenda.value = data.legenda || '';
+    refazerCards.value = [];
     emit('changed');
   } catch (e) {
     useAlert(e?.response?.data?.error || t('RAMON.CONTEUDO.ACAO_ERRO'));
@@ -93,5 +99,50 @@ watch(() => props.pecaId, carregar, { immediate: true });
     >
       {{ t('RAMON.CONTEUDO.MONTANDO_INFO') }}
     </p>
+
+    <template
+      v-if="
+        ['montado', 'agendado', 'falhou', 'publicado'].includes(peca.status)
+      "
+    >
+      <PostPrevia :imagens="peca.imagens || []" :legenda="legenda" />
+      <template v-if="['montado', 'agendado'].includes(peca.status)">
+        <textarea
+          v-model="legenda"
+          rows="8"
+          class="rounded border border-n-weak p-2 text-sm"
+        />
+        <Button
+          sm
+          outline
+          :label="t('RAMON.CONTEUDO.SALVAR_LEGENDA')"
+          :disabled="legenda === peca.legenda"
+          @click="
+            agir(() => RamonConteudoAPI.atualizarLegenda(peca.id, legenda))
+          "
+        />
+      </template>
+      <div
+        v-if="peca.status === 'montado'"
+        class="flex flex-wrap items-center gap-2 text-sm"
+      >
+        <span>{{ t('RAMON.CONTEUDO.REFAZER') }}</span>
+        <label
+          v-for="n in (peca.imagens || []).length"
+          :key="n"
+          class="flex items-center gap-1"
+        >
+          <input v-model="refazerCards" type="checkbox" :value="n" />
+          {{ n }}
+        </label>
+        <Button
+          sm
+          slate
+          :label="t('RAMON.CONTEUDO.REFAZER_BOTAO')"
+          :disabled="!refazerCards.length"
+          @click="agir(() => RamonConteudoAPI.refazer(peca.id, refazerCards))"
+        />
+      </div>
+    </template>
   </aside>
 </template>

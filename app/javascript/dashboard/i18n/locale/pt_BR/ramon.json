@@ -628,7 +628,11 @@
       "APROVAR": "Aprovar",
       "REPROVAR": "Reprovar",
       "NOTA_PLACEHOLDER": "Motivo (opcional)",
-      "MONTANDO_INFO": "A peça está na fila de montagem. A prévia aparece aqui quando ficar pronta."
+      "MONTANDO_INFO": "A peça está na fila de montagem. A prévia aparece aqui quando ficar pronta.",
+      "MAIS": "mais",
+      "SALVAR_LEGENDA": "Salvar legenda",
+      "REFAZER": "Refazer imagem dos cards:",
+      "REFAZER_BOTAO": "Refazer"
     },
     "REUNIOES": {
       "TITLE": "Reuniões",

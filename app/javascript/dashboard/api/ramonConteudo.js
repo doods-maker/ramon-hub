@@ -13,6 +13,14 @@ class RamonConteudoAPI extends ApiClient {
   reprovar(id, nota) {
     return axios.post(`${this.url}/${id}/reprovar`, { nota });
   }
+
+  atualizarLegenda(id, legenda) {
+    return axios.patch(`${this.url}/${id}/atualizar_legenda`, { legenda });
+  }
+
+  refazer(id, cards) {
+    return axios.post(`${this.url}/${id}/refazer`, { cards });
+  }
 }
 
 export default new RamonConteudoAPI();

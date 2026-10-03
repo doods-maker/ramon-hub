@@ -628,7 +628,11 @@
       "APROVAR": "Approve",
       "REPROVAR": "Reject",
       "NOTA_PLACEHOLDER": "Reason (optional)",
-      "MONTANDO_INFO": "Queued for building. The preview shows up here when ready."
+      "MONTANDO_INFO": "Queued for building. The preview shows up here when ready.",
+      "MAIS": "more",
+      "SALVAR_LEGENDA": "Save caption",
+      "REFAZER": "Redo image of cards:",
+      "REFAZER_BOTAO": "Redo"
     },
     "REUNIOES": {
       "TITLE": "Meetings",
