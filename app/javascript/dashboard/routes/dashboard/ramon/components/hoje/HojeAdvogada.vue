@@ -17,6 +17,7 @@ import {
   CAIXA,
   CAIXA_TITULO,
   BTN_CHEIO,
+  BTN_LINHA,
   horaDe,
   diaMes,
   desde,
@@ -42,6 +43,21 @@ const tomEspera = iso => {
   if (minutos < 30) return 'act';
   return minutos >= 1440 ? 'warn' : 'neutro';
 };
+
+// "“msg” · por Gabriela há 6 min" ou "“msg” · aguardando o cliente" (mockup v2).
+const detalhe = c =>
+  [
+    c.ultima_mensagem ? `“${c.ultima_mensagem}”` : null,
+    c.aguardando_cliente ? t('RAMON.HOJE.AGUARDANDO_CLIENTE') : null,
+    !c.aguardando_cliente && c.atribuida_por && c.atribuida_em
+      ? t('RAMON.HOJE.POR_HA', {
+          nome: c.atribuida_por,
+          tempo: tempo(c.atribuida_em),
+        })
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
 const minhasChegadas = computed(() =>
   chegadas.itens.filter(c => c.destinatario?.id === meuId.value)
@@ -69,12 +85,18 @@ const minhasChegadas = computed(() =>
           <div :class="QUEM">
             <b v-if="c.nome" :class="NOME">{{ c.nome }}</b>
             <b v-else :class="NOME" class="font-mono">{{ c.telefone }}</b>
-            <span v-if="c.ultima_mensagem" :class="DETALHE">
-              {{ `“${c.ultima_mensagem}”` }}
-            </span>
+            <span v-if="detalhe(c)" :class="DETALHE">{{ detalhe(c) }}</span>
           </div>
-          <router-link :to="conversa(c.conversa_id)" :class="BTN_CHEIO">
-            {{ t('RAMON.HOJE.RESPONDER') }}
+          <!-- vez do cliente (última mensagem nossa): só abrir, sem cobrar resposta -->
+          <router-link
+            :to="conversa(c.conversa_id)"
+            :class="c.aguardando_cliente ? BTN_LINHA : BTN_CHEIO"
+          >
+            {{
+              c.aguardando_cliente
+                ? t('RAMON.HOJE.ABRIR')
+                : t('RAMON.HOJE.RESPONDER')
+            }}
           </router-link>
         </div>
       </HojeBloco>

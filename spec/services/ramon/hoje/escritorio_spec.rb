@@ -55,6 +55,17 @@ RSpec.describe Ramon::Hoje::Escritorio do
     expect(resultado).to include(semana: [], advbox_fora: false)
   end
 
+  it 'advogada: quem atribuiu, quando e se a vez é do cliente' do
+    registro = { 'ramon_atribuicao' => { 'por_id' => gabriela.id, 'por_nome' => 'Gabriela', 'em' => '2026-10-03T16:52:00Z' } }
+    esperando_nos = create(:conversation, account: account, inbox: caixa, assignee: tamires, additional_attributes: registro)
+    respondida = create(:conversation, account: account, inbox: caixa, assignee: tamires)
+    respondida.update_columns(waiting_since: nil) # rubocop:disable Rails/SkipsModelValidations
+    linhas = blocos(tamires, 'advogada')[:atribuidas].index_by { |linha| linha[:conversa_id] }
+    expect(linhas[esperando_nos.display_id]).to include(atribuida_por: 'Gabriela', atribuida_em: '2026-10-03T16:52:00Z',
+                                                        aguardando_cliente: false)
+    expect(linhas[respondida.display_id]).to include(atribuida_por: nil, atribuida_em: nil, aguardando_cliente: true)
+  end
+
   it 'ADVBOX fora: avisa e segue' do
     allow(Ramon::SemanaAdvboxService).to receive(:new).and_raise(Ramon::AdvboxClient::UnavailableError)
     allow(Ramon::AgendaHojeService).to receive(:new).and_raise(Ramon::AdvboxClient::UnavailableError)

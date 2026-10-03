@@ -9,7 +9,7 @@ RSpec.describe Ramon::Hoje::Gestor do
   it 'sem nada acontecendo: precisa vazio, números zerados, sem meta' do
     expect(hoje[:precisa]).to eq([])
     expect(hoje[:mes]).to include(contratos: 0, meta_contratos: nil, reunioes_qualificadas: 0)
-    expect(hoje[:time]).to include(recepcao: { chegadas: 0 })
+    expect(hoje[:time]).to include(recepcao: { atribuidas: 0, chegadas: 0 })
   end
 
   it 'peça em rascunho vira alerta de conteúdo com o gancho' do
@@ -38,6 +38,16 @@ RSpec.describe Ramon::Hoje::Gestor do
     MetaComercial.create!(account: account, user: closer, papel: 'closer', mes: Time.find_zone!('America/Sao_Paulo').today.beginning_of_month,
                           meta: 13)
     expect(hoje[:mes][:meta_contratos]).to eq(13)
+  end
+
+  it 'recepção: conta as conversas da caixa do escritório atribuídas hoje' do
+    caixa = create(:inbox, account: account, portaria_enabled: true)
+    hoje_em = { 'ramon_atribuicao' => { 'por_nome' => 'Gabriela', 'em' => Time.current.iso8601 } }
+    create(:conversation, account: account, inbox: caixa, additional_attributes: hoje_em)
+    create(:conversation, account: account, inbox: caixa, additional_attributes: { 'ramon_atribuicao' => { 'em' => 2.days.ago.iso8601 } })
+    create(:conversation, account: account, additional_attributes: hoje_em) # fora da caixa
+    create(:conversation, account: account, inbox: caixa)
+    expect(hoje[:time][:recepcao]).to eq(atribuidas: 1, chegadas: 0)
   end
 
   it 'funil lista só etapas abertas, com contagem' do

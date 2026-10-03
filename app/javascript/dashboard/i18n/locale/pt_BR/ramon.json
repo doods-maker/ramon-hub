@@ -302,7 +302,11 @@
       "CHEGADAS": "chegada | chegadas",
       "CONTRATOS": "Contratos",
       "DOCS_COMPLETOS": "Documentação completa",
-      "FUNIL_AGORA": "Funil agora"
+      "FUNIL_AGORA": "Funil agora",
+      "ATRIBUIDAS_HOJE": "atribuída | atribuídas",
+      "POR_HA": "por {nome} há {tempo}",
+      "AGUARDANDO_CLIENTE": "aguardando o cliente",
+      "ABRIR": "Abrir"
     },
     "POS_VENDA": {
       "TITLE": "Pós-venda",

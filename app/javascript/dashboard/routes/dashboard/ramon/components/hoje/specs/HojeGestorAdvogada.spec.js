@@ -53,7 +53,7 @@ describe('HojeGestor', () => {
           time: {
             sdr: { respondidos: 11, media_minutos: 3.6667 },
             closer: { reunioes: 3, contratos: 1 },
-            recepcao: { chegadas: 2 },
+            recepcao: { atribuidas: 7, chegadas: 2 },
           },
           mes: {
             contratos: 7,
@@ -76,6 +76,7 @@ describe('HojeGestor', () => {
     expect(w.text()).toContain('3m40s');
     expect(w.text()).toContain('Outubro');
     expect(w.text()).toContain('Novo');
+    expect(w.text()).toContain('7 RAMON.HOJE.ATRIBUIDAS_HOJE');
   });
 
   it('nada pendente mostra o vazio', () => {
@@ -89,7 +90,7 @@ describe('HojeGestor', () => {
           time: {
             sdr: { respondidos: 0, media_minutos: null },
             closer: { reunioes: 0, contratos: 0 },
-            recepcao: { chegadas: 0 },
+            recepcao: { atribuidas: 0, chegadas: 0 },
           },
           mes: {
             contratos: 0,
@@ -145,6 +146,47 @@ describe('HojeAdvogada', () => {
     expect(w.text()).toContain('5003412-18.2024.4.04.7207');
     expect(w.text()).toContain('Neusa');
     expect(w.text()).not.toContain('Outra');
+  });
+
+  it('mostra quem atribuiu e troca Responder por Abrir quando a vez é do cliente', () => {
+    const w = mount(HojeAdvogada, {
+      global,
+      props: {
+        dados: {
+          papel: 'advogada',
+          data: '2026-10-03',
+          atribuidas: [
+            {
+              conversa_id: 3,
+              nome: 'Maria',
+              ultima_mensagem: 'oi',
+              esperando_desde: new Date().toISOString(),
+              atribuida_por: 'Gabriela',
+              atribuida_em: new Date().toISOString(),
+              aguardando_cliente: false,
+            },
+            {
+              conversa_id: 4,
+              nome: 'Ivo',
+              ultima_mensagem: 'Obrigado, doutora',
+              esperando_desde: new Date().toISOString(),
+              atribuida_por: 'Gabriela',
+              atribuida_em: new Date().toISOString(),
+              aguardando_cliente: true,
+            },
+          ],
+          semana: [],
+          advbox_fora: false,
+        },
+      },
+    });
+    const [maria, ivo] = w.findAllComponents(RouterLinkStub);
+    expect(maria.text()).toBe('RAMON.HOJE.RESPONDER');
+    expect(ivo.text()).toBe('RAMON.HOJE.ABRIR');
+    expect(w.text()).toContain('“oi” · RAMON.HOJE.POR_HA');
+    expect(w.text()).toContain(
+      '“Obrigado, doutora” · RAMON.HOJE.AGUARDANDO_CLIENTE'
+    );
   });
 
   it('ADVBOX fora avisa e mantém as conversas', () => {

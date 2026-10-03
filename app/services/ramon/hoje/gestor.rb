@@ -45,12 +45,19 @@ class Ramon::Hoje::Gestor
   end
 
   def time_hoje
-    { sdr: sdr_hoje, closer: closer_hoje, recepcao: { chegadas: Chegada.where(account: account).de_hoje.count } }
+    { sdr: sdr_hoje, closer: closer_hoje, recepcao: { atribuidas: atribuidas_hoje, chegadas: Chegada.where(account: account).de_hoje.count } }
   end
 
   def sdr_hoje
     respondidas = Ramon::Cadencia.sla_conversations(account, hoje).where.not(first_reply_created_at: nil)
     { respondidos: respondidas.count, media_minutos: Ramon::CockpitMetrics.new(account).sla_today[:avg_first_response_minutes] }
+  end
+
+  # Conversas da caixa do escritório atribuídas hoje (registro do RamonConversa).
+  def atribuidas_hoje
+    account.conversations.joins(:inbox).where(inboxes: { portaria_enabled: true })
+           .where("(conversations.additional_attributes #>> '{ramon_atribuicao,em}')::timestamptz >= ?", zona.now.beginning_of_day)
+           .count
   end
 
   def closer_hoje

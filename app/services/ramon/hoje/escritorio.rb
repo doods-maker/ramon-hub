@@ -25,7 +25,7 @@ class Ramon::Hoje::Escritorio
 
   def advogada
     semana, fora = advbox { Ramon::SemanaAdvboxService.new(account).para(user) }
-    { atribuidas: linhas(caixa.where(assignee_id: user.id)), semana: semana, advbox_fora: fora }
+    { atribuidas: linhas(caixa.where(assignee_id: user.id)) { |conversa| atribuicao(conversa) }, semana: semana, advbox_fora: fora }
   end
 
   def advbox
@@ -35,7 +35,16 @@ class Ramon::Hoje::Escritorio
   end
 
   def linhas(scope)
-    scope.preload(:contact).reorder('conversations.created_at').limit(20).map { |conversa| linha(conversa) }
+    scope.preload(:contact).reorder('conversations.created_at').limit(20).map do |conversa|
+      block_given? ? linha(conversa).merge(yield(conversa)) : linha(conversa)
+    end
+  end
+
+  # Quem atribuiu (RamonConversa) e se a vez é do cliente: waiting_since zera
+  # quando a equipe responde, então nil = última mensagem foi nossa.
+  def atribuicao(conversa)
+    registro = conversa.additional_attributes&.dig('ramon_atribuicao') || {}
+    { atribuida_por: registro['por_nome'], atribuida_em: registro['em'], aguardando_cliente: conversa.waiting_since.nil? }
   end
 
   def linha(conversa)

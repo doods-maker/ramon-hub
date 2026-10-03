@@ -139,6 +139,14 @@ const NUM = 'font-mono text-n-slate-12';
           <div :class="CARTAO">
             <b :class="CARTAO_TITULO">{{ t('RAMON.HOJE.PAPEL_RECEPCAO') }}</b>
             <span :class="CARTAO_LINHA">
+              <span :class="NUM">{{ time.recepcao.atribuidas }}</span>
+              {{
+                t('RAMON.HOJE.ATRIBUIDAS_HOJE', {
+                  count: time.recepcao.atribuidas,
+                })
+              }}
+            </span>
+            <span :class="CARTAO_LINHA">
               <span :class="NUM">{{ time.recepcao.chegadas }}</span>
               {{ t('RAMON.HOJE.CHEGADAS', { count: time.recepcao.chegadas }) }}
             </span>

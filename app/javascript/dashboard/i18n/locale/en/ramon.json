@@ -302,7 +302,11 @@
       "CHEGADAS": "arrival | arrivals",
       "CONTRATOS": "Contracts",
       "DOCS_COMPLETOS": "Complete documents",
-      "FUNIL_AGORA": "Funnel now"
+      "FUNIL_AGORA": "Funnel now",
+      "ATRIBUIDAS_HOJE": "assigned | assigned",
+      "POR_HA": "by {nome} {tempo} ago",
+      "AGUARDANDO_CLIENTE": "waiting for the client",
+      "ABRIR": "Open"
     },
     "POS_VENDA": {
       "TITLE": "Post-sale",
