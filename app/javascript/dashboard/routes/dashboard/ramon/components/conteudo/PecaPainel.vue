@@ -49,6 +49,14 @@ const agir = async acao => {
   }
 };
 
+// Legenda editada e não salva iria perdida: salva antes de agendar/publicar.
+const comLegenda = acao => () => {
+  if (legenda.value === (peca.value.legenda || '')) return acao();
+  return RamonConteudoAPI.atualizarLegenda(peca.value.id, legenda.value).then(
+    acao
+  );
+};
+
 watch(() => props.pecaId, carregar, { immediate: true });
 </script>
 
@@ -161,10 +169,12 @@ watch(() => props.pecaId, carregar, { immediate: true });
             :disabled="!quando || ocupado"
             :is-loading="ocupado"
             @click="
-              agir(() =>
-                RamonConteudoAPI.agendar(
-                  peca.id,
-                  new Date(quando).toISOString()
+              agir(
+                comLegenda(() =>
+                  RamonConteudoAPI.agendar(
+                    peca.id,
+                    new Date(quando).toISOString()
+                  )
                 )
               )
             "
@@ -173,7 +183,9 @@ watch(() => props.pecaId, carregar, { immediate: true });
             outline
             :label="t('RAMON.CONTEUDO.PUBLICAR_AGORA')"
             :disabled="ocupado"
-            @click="agir(() => RamonConteudoAPI.publicarAgora(peca.id))"
+            @click="
+              agir(comLegenda(() => RamonConteudoAPI.publicarAgora(peca.id)))
+            "
           />
         </div>
       </div>
@@ -196,7 +208,9 @@ watch(() => props.pecaId, carregar, { immediate: true });
             outline
             :label="t('RAMON.CONTEUDO.PUBLICAR_AGORA')"
             :disabled="ocupado"
-            @click="agir(() => RamonConteudoAPI.publicarAgora(peca.id))"
+            @click="
+              agir(comLegenda(() => RamonConteudoAPI.publicarAgora(peca.id)))
+            "
           />
           <Button
             ruby
