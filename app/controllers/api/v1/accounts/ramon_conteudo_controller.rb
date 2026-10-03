@@ -30,6 +30,19 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
     render json: detalhe(@peca)
   end
 
+  def atualizar_legenda
+    @peca.transicionar!(de: %w[montado agendado], para: @peca.status, legenda: params.require(:legenda))
+    render json: detalhe(@peca)
+  end
+
+  def refazer
+    cards = Array(params[:cards]).map(&:to_i).select { |n| n.between?(1, 5) }.uniq
+    return render json: { error: 'Escolha ao menos um card' }, status: :unprocessable_entity if cards.empty?
+
+    @peca.transicionar!(de: 'montado', para: 'montado', refazer_cards: cards)
+    render json: detalhe(@peca)
+  end
+
   private
 
   def fetch_peca

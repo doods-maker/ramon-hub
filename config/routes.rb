@@ -304,6 +304,8 @@ Rails.application.routes.draw do
             member do
               post :aprovar
               post :reprovar
+              patch :atualizar_legenda
+              post :refazer
             end
           end
           resources :portal_clientes, only: [:index, :show, :create, :update, :destroy], controller: 'portal_clientes' do
