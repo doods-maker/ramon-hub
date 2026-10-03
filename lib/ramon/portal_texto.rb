@@ -7,9 +7,11 @@ module Ramon::PortalTexto
   FASE_ENCERRADA = 'ARQUIVAMENTO'.freeze
   PADRAO_V1 = { 'titulo' => 'Em andamento', 'o_que_esperar' => 'Nossa equipe está cuidando do seu caso.' }.freeze
   # Degrau opcional da linha do tempo → [fases atuais que o revelam, steps do ADVBOX que o revelam].
+  # Pagamento só aparece quando o caso ESTÁ nele: como degrau futuro prometeria ganho (Eduardo, 03/10).
   DEGRAUS_OPCIONAIS = {
     'justica' => [%w[justica recurso], %w[JUDICIAL RECURSAL EXECUCAO/COBRANCA]],
-    'recurso' => [%w[recurso], %w[RECURSAL]]
+    'recurso' => [%w[recurso], %w[RECURSAL]],
+    'pagamento' => [%w[pagamento], []]
   }.freeze
 
   def self.carregar(arquivo)

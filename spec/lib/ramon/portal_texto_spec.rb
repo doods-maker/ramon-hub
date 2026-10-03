@@ -88,16 +88,22 @@ RSpec.describe Ramon::PortalTexto do
       expect(described_class.fase_de('ETAPA NOVA', 'EXECUÇÃO/COBRANÇA')).to eq 'pagamento'
     end
 
-    it 'linha do tempo no ADMINISTRATIVO: 4 degraus, INSS agora' do
+    it 'linha do tempo no ADMINISTRATIVO: 3 degraus, INSS agora, sem Pagamento prometido' do
       linha = described_class.linha_do_tempo(processo('REQUERIMENTO PROTOCOLADO', 'ADMINISTRATIVO'))
       expect(linha.map { |d| [d['nome'], d['estado']] })
-        .to eq([%w[Documentos done], ['Pedido no INSS', 'current'], %w[Pagamento future], %w[Concluído future]])
+        .to eq([%w[Documentos done], ['Pedido no INSS', 'current'], %w[Concluído future]])
     end
 
-    it 'linha do tempo no RECURSAL: 6 degraus, Recurso agora' do
+    it 'linha do tempo no RECURSAL: 5 degraus, Recurso agora, sem Pagamento prometido' do
       linha = described_class.linha_do_tempo(processo('RECURSO PROTOCOLADO', 'RECURSAL'))
-      expect(linha.pluck('nome')).to eq(['Documentos', 'Pedido no INSS', 'Justiça', 'Recurso', 'Pagamento', 'Concluído'])
-      expect(linha.pluck('estado')).to eq(%w[done done done current future future])
+      expect(linha.pluck('nome')).to eq(['Documentos', 'Pedido no INSS', 'Justiça', 'Recurso', 'Concluído'])
+      expect(linha.pluck('estado')).to eq(%w[done done done current future])
+    end
+
+    it 'Pagamento só aparece quando o caso está nele' do
+      linha = described_class.linha_do_tempo(processo('RPV / PRECATORIO EMITIDO', 'EXECUÇÃO/COBRANÇA'))
+      expect(linha.pluck('nome')).to eq(['Documentos', 'Pedido no INSS', 'Justiça', 'Pagamento', 'Concluído'])
+      expect(linha.find { |d| d['estado'] == 'current' }['nome']).to eq 'Pagamento'
     end
 
     it 'linha do tempo segue a etapa exibida ao cliente, não a interna' do
