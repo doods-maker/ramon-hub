@@ -16,7 +16,7 @@
 - Sem Ruby local: RSpec/RuboCop rodam só no CI. Front: eslint local via `./node_modules/.bin/eslint`; vitest local só com `pnpm install` REAL no worktree (`npx pnpm@10.2.0 install`) — se não der, CI cobre.
 - RuboCop: `Style/HashSyntax EnforcedShorthandSyntax: never` (escreva `id: id`, nunca `id:`), 150 colunas, AbcSize/Complexity → decompor em privados.
 - Vue: `<script setup>` Composition API, Tailwind só (sem CSS/scoped/inline), eventos camelCase, sem string crua no template (i18n em `app/javascript/dashboard/i18n/locale/{pt_BR,en}/ramon.json`, chave `RAMON.CHEGADA.*` — preencher os DOIS arquivos).
-- Nome do time da Recepção = `recepção` (exato, igual `RamonPortariaListener::FALLBACK`).
+- Nome do time da Recepção = `recepção` (exato, igual `RamonPortariaListener::FALLBACK`). ⚠️ 02/10 a caixa do escritório mudou pra "atendimento por atribuição" (branch `feat/atendimento-por-atribuicao`, outra sessão) e pode remover o `RamonPortariaListener` — por isso `Chegada::RECEPCAO` é constante PRÓPRIA (não referenciar a do listener). Gate: Gabriela precisa ser membro do time `recepção` (não interfere na atribuição, que usa a caixa, não o time).
 - Escalada: **3 min** (`Chegada::ESCALAR_APOS`).
 - ADVBOX: cota 500/dia compartilhada → agenda em cache 10 min, `settings` em cache 24 h.
 - Fuso: "hoje" = `America/Sao_Paulo` (app roda em UTC).
