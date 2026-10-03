@@ -1523,6 +1523,11 @@
         "EVENTO": "Evento",
         "VALOR": "Valor"
       }
+    },
+    "CLIENTES": {
+      "TITLE": "Clientes",
+      "BUSCA": "Buscar por nome ou telefone",
+      "ULTIMA_MUDANCA": "Última mudança"
     }
   },
   "CAPTAIN_RAMON": {

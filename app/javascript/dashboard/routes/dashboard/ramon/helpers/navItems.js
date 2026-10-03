@@ -77,11 +77,12 @@ const MENU = [
   {
     key: 'clientes',
     icon: 'i-lucide-users',
-    rota: 'ramon_pessoas',
+    rota: 'ramon_clientes',
     names: [
+      'ramon_clientes',
+      'ramon_lead_dossie',
       'ramon_pessoas',
       'ramon_linha_da_vida',
-      'ramon_lead_dossie',
       'ramon_portal_clientes',
     ],
     papeis: TODOS,

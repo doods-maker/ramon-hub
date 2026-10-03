@@ -52,6 +52,12 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/clientes'),
+    name: 'ramon_clientes',
+    component: () => import('./pages/Clientes.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     // Sem contactId a mesma página vira a busca de pessoa (entrada do menu).
     path: frontendURL('accounts/:accountId/ramon/pessoa'),
     name: 'ramon_pessoas',
