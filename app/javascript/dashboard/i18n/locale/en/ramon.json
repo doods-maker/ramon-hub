@@ -609,6 +609,7 @@
       "CREATE_ERROR": "Could not create the calculation case. Try again."
     },
     "CONTEUDO": {
+      "COM_ERRO": "Has an error — open to see",
       "TITLE": "Instagram content",
       "LOAD_ERROR": "Could not load posts",
       "ACAO_ERRO": "Something went wrong — try again",

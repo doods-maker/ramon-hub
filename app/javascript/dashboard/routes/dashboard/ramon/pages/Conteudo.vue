@@ -86,8 +86,15 @@ onMounted(carregar);
           >
             {{ t('RAMON.CONTEUDO.TRAVADA') }}
           </span>
-          <span v-if="peca.status === 'falhou'" class="text-xs text-n-ruby-11">
-            {{ t('RAMON.CONTEUDO.FALHOU') }}
+          <span
+            v-if="peca.status === 'falhou' || peca.erro"
+            class="text-xs text-n-ruby-11"
+          >
+            {{
+              peca.status === 'falhou'
+                ? t('RAMON.CONTEUDO.FALHOU')
+                : t('RAMON.CONTEUDO.COM_ERRO')
+            }}
           </span>
         </button>
       </section>
