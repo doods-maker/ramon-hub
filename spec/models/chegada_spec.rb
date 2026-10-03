@@ -37,6 +37,15 @@ RSpec.describe Chegada do
     expect(described_class.recepcao?(account, brenda)).to be(false)
   end
 
+  it 'controladoria também avisa chegada (substitui a Recepção)' do
+    time = create(:team, account: account, name: 'controladoria')
+    create(:team_member, team: time, user: brenda)
+    create(:team_member, team: create(:team, account: account, name: 'advogados'), user: gabriela)
+
+    expect(described_class.recepcao?(account, brenda)).to be(true)
+    expect(described_class.recepcao?(account, gabriela)).to be(false)
+  end
+
   it 'de_hoje usa o dia de São Paulo, não o de UTC' do
     manha_sp = travel_to(Time.zone.parse('2026-10-02 12:00:00 UTC')) { chegada } # 09:00 de 02/10 em SP
     ontem_sp = travel_to(Time.zone.parse('2026-10-02 02:00:00 UTC')) { chegada } # 23:00 de 01/10 em SP
