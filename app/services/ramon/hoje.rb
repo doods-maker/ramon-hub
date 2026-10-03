@@ -13,7 +13,7 @@ class Ramon::Hoje
   def blocos(papel)
     case papel
     when 'gestor' then Ramon::Hoje::Gestor.new(account: account).perform
-    when 'recepcao', 'advogada' then {}
+    when 'recepcao', 'advogada' then Ramon::Hoje::Escritorio.new(account: account, user: user, papel: papel).perform
     else Ramon::Hoje::Comercial.new(account: account, user: user, papel: papel).perform
     end
   end

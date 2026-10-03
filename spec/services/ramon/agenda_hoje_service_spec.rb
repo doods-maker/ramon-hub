@@ -7,7 +7,7 @@ RSpec.describe Ramon::AgendaHojeService do
   before do
     allow(Ramon::AdvboxClient).to receive(:posts).and_return(
       'data' => [
-        { 'id' => 1, 'task' => 'ATENDIMENTO', 'notes' => 'traz CNIS',
+        { 'id' => 1, 'task' => 'ATENDIMENTO', 'notes' => 'traz CNIS', 'date' => '2026-10-03 14:00:00',
           'lawsuit' => { 'customers' => [{ 'customer_id' => 9, 'name' => 'INSS', 'customers_origins_id' => 25_705 },
                                          { 'customer_id' => 7, 'name' => 'MARIA SILVA', 'customers_origins_id' => nil }] },
           'users' => [{ 'user_id' => 260_009, 'name' => 'BRENDA ANTUNES' }] },
@@ -22,7 +22,7 @@ RSpec.describe Ramon::AgendaHojeService do
     linhas = described_class.new(account).perform
 
     expect(linhas.size).to eq(1)
-    expect(linhas.first).to include(advbox_post_id: 1, cliente_nome: 'MARIA SILVA', advbox_customer_id: 7,
+    expect(linhas.first).to include(advbox_post_id: 1, cliente_nome: 'MARIA SILVA', advbox_customer_id: 7, hora: '14:00',
                                     notas: 'traz CNIS', responsavel_advbox: 'BRENDA ANTUNES', destinatario_id: brenda.id)
   end
 
