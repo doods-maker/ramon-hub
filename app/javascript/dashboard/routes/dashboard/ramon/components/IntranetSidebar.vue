@@ -76,6 +76,14 @@ const sections = computed(() =>
           names: ['ramon_reunioes', 'ramon_reuniao'],
         },
         {
+          key: 'conteudo',
+          label: t('RAMON.NAV.CONTEUDO'),
+          icon: 'i-lucide-instagram',
+          to: accountScopedRoute('ramon_conteudo'),
+          names: ['ramon_conteudo'],
+          adminOnly: true,
+        },
+        {
           key: 'portal',
           label: t('RAMON.NAV.PORTAL'),
           icon: 'i-lucide-users',

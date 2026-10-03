@@ -144,6 +144,7 @@
       "LINHA_DA_VIDA": "Lifeline",
       "CALCULOS": "Calculations",
       "REUNIOES": "Meetings",
+      "CONTEUDO": "Content",
       "PORTAL": "Client portal",
       "RADAR": "Prescription radar",
       "POS_VENDA": "Post-sale",
@@ -606,6 +607,28 @@
       "ADVBOX_ERROR": "Could not reach AdvBox right now. Try again.",
       "CREATE_CASE": "Create calculation case",
       "CREATE_ERROR": "Could not create the calculation case. Try again."
+    },
+    "CONTEUDO": {
+      "TITLE": "Instagram content",
+      "LOAD_ERROR": "Could not load posts",
+      "ACAO_ERRO": "Something went wrong — try again",
+      "COLUNA": {
+        "PAUTA": "Ideas",
+        "MONTANDO": "Building",
+        "PRONTAS": "Ready",
+        "AGENDADAS": "Scheduled",
+        "PUBLICADAS": "Published"
+      },
+      "TIPO": {
+        "CARROSSEL": "Carousel",
+        "ESTATICO": "Single image"
+      },
+      "TRAVADA": "Build is taking long — check the worker",
+      "FALHOU": "Publishing failed",
+      "APROVAR": "Approve",
+      "REPROVAR": "Reject",
+      "NOTA_PLACEHOLDER": "Reason (optional)",
+      "MONTANDO_INFO": "Queued for building. The preview shows up here when ready."
     },
     "REUNIOES": {
       "TITLE": "Meetings",
