@@ -541,6 +541,102 @@ RSpec.describe 'Leads API', type: :request do
     end
   end
 
+  describe 'papéis: só o gestor troca SDR/Closer' do
+    let(:agent) { create(:user, account: account, role: :agent) }
+    let(:lead) { create(:lead, account: account, lead_stage: novo) }
+
+    it 'agente recebe 403 ao trocar o SDR', :aggregate_failures do
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { sdr_id: agent.id }, headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:forbidden)
+      expect(lead.reload.sdr_id).to be_nil
+    end
+
+    it 'agente edita o resto mandando o mesmo SDR de volta' do
+      lead.update!(sdr_id: agent.id)
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { sdr_id: agent.id, name: 'Novo nome' }, headers: agent.create_new_auth_token, as: :json
+      expect(lead.reload.name).to eq('Novo nome')
+    end
+
+    it 'gestor troca o Closer' do
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { closer_id: agent.id }, headers: admin.create_new_auth_token, as: :json
+      expect(lead.reload.closer_id).to eq(agent.id)
+    end
+
+    it 'agente criando lead não escolhe dono (ignorado)' do
+      post "/api/v1/accounts/#{account.id}/leads",
+           params: { name: 'X', lead_stage_id: novo.id, closer_id: agent.id }, headers: agent.create_new_auth_token, as: :json
+      expect(account.leads.find_by(name: 'X').closer_id).to be_nil
+    end
+  end
+
+  describe 'POST /leads/:id/reuniao (reunião qualificada)' do
+    let(:closer) { create(:user, account: account, role: :agent) }
+    let(:outro) { create(:user, account: account, role: :agent) }
+    let(:lead) { create(:lead, account: account, lead_stage: novo) }
+    let(:realizada) { account.lead_stages.find_by(label: 'fase-reuniao-realizada') }
+
+    def registrar(user, resultado = 'qualificada')
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao",
+           params: { resultado: resultado }, headers: user.create_new_auth_token, as: :json
+    end
+
+    it 'Closer do lead marca: grava, anda pra Reunião realizada e registra a atividade', :aggregate_failures do
+      lead.update!(closer: closer)
+      registrar(closer)
+
+      expect(response).to have_http_status(:success)
+      lead.reload
+      expect(lead.reuniao_resultado).to eq('qualificada')
+      expect(lead.reuniao_registrada_em).to be_present
+      expect(lead.lead_stage).to eq(realizada)
+      expect(lead.lead_activities.find_by(kind: 'reuniao_registrada').to_value).to eq('qualificada')
+    end
+
+    it 'membro do time closer marca lead sem Closer e vira o Closer dele' do
+      create(:team_member, team: create(:team, account: account, name: 'closer'), user: closer)
+      registrar(closer, 'nao_qualificada')
+
+      expect(lead.reload.closer).to eq(closer)
+    end
+
+    it 'quem não é o Closer do lead recebe 401', :aggregate_failures do
+      lead.update!(closer: closer)
+      registrar(outro)
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(lead.reload.reuniao_resultado).to be_nil
+    end
+
+    it 'correção mantém a 1ª data (mês da apuração não muda)' do
+      lead.update!(closer: closer, reuniao_resultado: 'nao_qualificada', reuniao_registrada_em: 3.days.ago.change(usec: 0))
+      expect { registrar(closer) }.not_to(change { lead.reload.reuniao_registrada_em })
+    end
+
+    it 'resultado inválido dá 422' do
+      registrar(admin, 'talvez')
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
+  describe 'docs_completos_em (base do contrato limpo)' do
+    let(:thesis) { create(:thesis, account: account) }
+
+    it 'carimba quando a checklist inteira fica recebida e apaga ao desmarcar', :aggregate_failures do
+      ids = create_list(:thesis_item, 2, thesis: thesis, section: 'documento').map(&:id)
+      lead = create(:lead, account: account, lead_stage: novo, thesis: thesis)
+      todos = ids.index_with { 'recebido' }.transform_keys(&:to_s)
+
+      lead.update!(custom_attributes: { 'doc_status' => todos })
+      expect(lead.reload.docs_completos_em).to be_present
+
+      lead.update!(custom_attributes: { 'doc_status' => todos.merge(ids.first.to_s => 'pendente') })
+      expect(lead.reload.docs_completos_em).to be_nil
+    end
+  end
+
   describe 'valor estimado: flag de origem manual no PATCH' do
     it 'PATCH com value marca origem manual em custom_attributes' do
       lead = create(:lead, account: account, lead_stage: novo)

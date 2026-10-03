@@ -47,7 +47,8 @@ class Notification < ApplicationRecord
     ramon_lead_created: 9,
     ramon_meeting_scheduled: 10,
     ramon_meeting_reminder: 11,
-    ramon_meeting_cancelled: 12
+    ramon_meeting_cancelled: 12,
+    ramon_sla_breach: 13
   }.freeze
 
   enum notification_type: NOTIFICATION_TYPES
@@ -103,7 +104,8 @@ class Notification < ApplicationRecord
       'ramon_lead_created' => 'notifications.notification_title.ramon_lead_created',
       'ramon_meeting_scheduled' => 'notifications.notification_title.ramon_meeting_scheduled',
       'ramon_meeting_reminder' => 'notifications.notification_title.ramon_meeting_reminder',
-      'ramon_meeting_cancelled' => 'notifications.notification_title.ramon_meeting_cancelled'
+      'ramon_meeting_cancelled' => 'notifications.notification_title.ramon_meeting_cancelled',
+      'ramon_sla_breach' => 'notifications.notification_title.ramon_sla_breach'
     }
 
     i18n_key = notification_title_map[notification_type]
@@ -116,8 +118,8 @@ class Notification < ApplicationRecord
       I18n.t(i18n_key, display_id: conversation.display_id)
     elsif notification_type == 'ramon_lead_created'
       I18n.t(i18n_key, name: primary_actor.name)
-    elsif notification_type.start_with?('ramon_meeting_')
-      I18n.t(i18n_key, name: primary_actor.name, quando: meta['quando'].to_s, label: meta['label'].to_s)
+    elsif notification_type.start_with?('ramon_meeting_', 'ramon_sla_')
+      I18n.t(i18n_key, name: primary_actor.name, quando: meta['quando'].to_s, label: meta['label'].to_s, minutos: meta['minutos'].to_s)
     else
       I18n.t(i18n_key, display_id: primary_actor.display_id)
     end
@@ -132,7 +134,7 @@ class Notification < ApplicationRecord
       message_body(secondary_actor)
     when 'conversation_assignment', 'sla_missed_next_response', 'sla_missed_resolution'
       message_body((conversation.messages.incoming.last || conversation.messages.outgoing.last))
-    when 'ramon_lead_created', 'ramon_meeting_scheduled', 'ramon_meeting_reminder', 'ramon_meeting_cancelled'
+    when 'ramon_lead_created', 'ramon_meeting_scheduled', 'ramon_meeting_reminder', 'ramon_meeting_cancelled', 'ramon_sla_breach'
       push_message_title
     else
       ''

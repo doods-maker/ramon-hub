@@ -40,6 +40,8 @@ json.channel lead.channel
 json.stage_entered_at lead.stage_entered_at
 json.won_at lead.won_at
 json.lost_at lead.lost_at
+# Operação SDR+Closer (reunião qualificada + contrato limpo) — mesmo shape do broadcast.
+json.merge! lead.comercial_event_data
 json.dcb_em lead.dcb_em
 json.benefit_monthly_value lead.benefit_monthly_value
 json.stalled lead.stalled?

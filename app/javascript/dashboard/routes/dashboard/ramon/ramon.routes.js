@@ -112,4 +112,11 @@ export const routes = [
     component: () => import('./pages/Relatorios.vue'),
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
+  {
+    // Agente também entra: o backend só devolve o próprio extrato.
+    path: frontendURL('accounts/:accountId/ramon/extrato'),
+    name: 'ramon_extrato',
+    component: () => import('./pages/Extrato.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
 ];

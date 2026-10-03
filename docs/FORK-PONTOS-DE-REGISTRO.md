@@ -104,6 +104,8 @@
 ### Decisão: Tipo NÃO exposto em Perfil → Notificações
 
 **`settings/profile/constants.js` intocado de propósito.** O novo tipo `ramon_lead_created` é **intencionalmente excluído** do toggles de e-mail e push no painel de configurações (Perfil → Notificações). Razão: `Lead` é um `primary_actor` diferente de `Conversation`, e as notificações push/e-mail do Chatwoot upstream esperam sempre `Conversation` (leem `primary_actor.display_id`, `.inbox.name`, `.messages`, etc.). Deixar o tipo exposto quebraria o envio de e-mail e push; mantém-se invisível no UI de propósito — o sino renderiza, clique navega ao Kanban Board (UI nativa nova), e a entrega limita-se a **realtime (ActionCable) no painel**.
+| `app/models/notification.rb` (linha de changes) | +`ramon_sla_breach: 13` no enum + título (branch `start_with?('ramon_meeting_', 'ramon_sla_')`) + corpo | alerta de 1ª resposta no sino do SDR/gestor | comercial 02/10 |
+| `app/controllers/api/v1/accounts/bulk_actions_controller.rb` | `lead_params`: `sdr_id` só entra pra administrador | papéis: só o gestor troca o SDR em lote | comercial 02/10 |
 
 ## Arquivos NOVOS (namespace `ramon/` — não conflitam no rebase)
 | Arquivo | Responsabilidade | Fase |
@@ -284,6 +286,8 @@
 | `config/agents/tools.yml` (linha de changes) | +7 ids acima; `faq_lookup` descrito como "Busca textual nas FAQs aprovadas" (Onda 1); **`resolve_conversation` REMOVIDO** do catálogo (D11: o assistente não fecha conversa sozinho — a classe `ResolveConversationTool` fica no repo, só sai do catálogo) | Inteligência Ondas 1+2 | inteligencia 16/08 |
 | `app/models/message.rb` | `before_create :ramon_carimbar_rascunho, if: -> { Ramon::RascunhoCarimbo.candidata?(self) }` (após `after_create_commit :execute_after_create_commit_callbacks`) → `Ramon::RascunhoCarimbo` | carimbo "veio de rascunho da IA" na mensagem humana | inteligencia 17/08 |
 | `app/views/layouts/vueapp.html.erb` (1 linha) | +`ramonCopilotoModoDefault` em `window.chatwootConfig` (`Ramon::CopilotoModo.default` se enterprise, senão `'rascunho'`) | expor o default do copiloto (env `RAMON_COPILOTO_MODO_DEFAULT`) pro front | inteligencia 17/08 |
+| `app/services/ramon/papeis.rb` + `app/models/concerns/lead_comercial.rb` (+ specs) | papéis SDR/Closer = Times nativos `sdr`/`closer`, gestor = administrador; lead novo → SDR com menos leads abertos (conversa sem responsável vira dele); Cal.com → Closer; SLA padrão 5 min + escalada 60 min aos gestores; reunião qualificada (`POST /leads/:id/reuniao`, `LeadPolicy#reuniao?`); carimbo `docs_completos_em` | operação SDR+Closer (playbook 05 §13 itens 1–5) | comercial 02/10 |
+| `app/jobs/ramon/contrato_limpo_job.rb` (cron horário) + `app/models/meta_comercial.rb` + `app/services/ramon/extrato_variavel.rb` + `RamonExtratoController`/`RamonExtratoPolicy` + `pages/Extrato.vue` | contrato limpo = GREATEST(assinatura + 7d, docs completos), carimbado 1x; extrato mensal por pessoa com a regra do regulamento v2 (unidades, bônus, degraus, teto, rampa); gestor lança a meta, agente vê só o seu | playbook 05 §13 itens 5–6 | comercial 02/10 |
 
 ## Checklist de rebase (a cada nova release upstream)
 1. `git fetch upstream --tags`

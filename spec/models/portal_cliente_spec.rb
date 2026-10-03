@@ -58,6 +58,8 @@ RSpec.describe PortalCliente do
     c = create(:portal_cliente, email: ' Maria@Exemplo.COM ', cpf: '123.456.789-01')
     expect(c.email).to eq 'maria@exemplo.com'
     expect(c.cpf).to eq '12345678901'
-    expect(described_class.from_cpf('123.456.789-01')).to eq c
+    # id, não o objeto: com reload de classe no shard, described_class pode ser a
+    # constante antiga e dois registros iguais deixam de ser == (AGENTS.md).
+    expect(described_class.from_cpf('123.456.789-01')&.id).to eq c.id
   end
 end

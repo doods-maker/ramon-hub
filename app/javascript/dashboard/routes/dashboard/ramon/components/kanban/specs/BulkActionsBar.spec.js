@@ -22,6 +22,7 @@ const stubStore = {
     ],
     'leadConfig/getLostReasons': [{ id: 5, name: 'Preço' }],
     'agents/getAgents': [{ id: 3, name: 'Eduardo' }],
+    getCurrentRole: 'administrator',
   },
   dispatch,
 };

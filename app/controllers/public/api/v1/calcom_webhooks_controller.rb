@@ -88,6 +88,7 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
       due_at: start_at
     )
     advance_to_meeting_stage(lead)
+    Ramon::Papeis.atribuir_closer!(lead)
     confirmation_draft(lead)
     enqueue_reminders(lead)
     notify(lead, 'ramon_meeting_scheduled')

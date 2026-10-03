@@ -116,3 +116,9 @@ ramon_portal_avisos_job:
   cron: '0 11 * * *'
   class: 'Ramon::PortalAvisosJob'
   queue: scheduled_jobs
+
+# executed hourly at minute 10 — carimba o contrato limpo (assinado + docs + 7 dias)
+ramon_contrato_limpo_job:
+  cron: '10 * * * *'
+  class: 'Ramon::ContratoLimpoJob'
+  queue: scheduled_jobs
