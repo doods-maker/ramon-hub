@@ -17,12 +17,14 @@ class Ramon::FirstResponseSlaJob < ApplicationJob
     return if lead.blank?
 
     schedule_escalation(conversation) unless escalada
-    return unless business_hours?
-
-    escalada ? escalate(lead) : alert(lead, Ramon::Cadencia.sla_minutes(conversation.inbox))
+    avisar(lead, conversation, escalada) if business_hours?
   end
 
   private
+
+  def avisar(lead, conversation, escalada)
+    escalada ? escalate(lead) : alert(lead, Ramon::Cadencia.sla_minutes(conversation.inbox))
+  end
 
   def alert(lead, minutes)
     destinatarios = lead.sdr_id ? [lead.sdr_id] : Ramon::Papeis.gestor_ids(lead.account)

@@ -24,11 +24,15 @@ class Ramon::ExtratoVariavel
   private
 
   def pares
-    lista = MetaComercial::PAPEIS.flat_map { |papel| Ramon::Papeis.membro_ids(account, papel).map { |id| [id, papel] } }
-    lista |= metas.values.map { |meta| [meta.user_id, meta.papel] }
+    lista = ids_por_papel
     users = User.where(id: lista.map(&:first)).index_by(&:id)
     lista.filter_map { |id, papel| [users[id], papel] if users[id] }
          .sort_by { |user, papel| [MetaComercial::PAPEIS.index(papel), user.name.to_s] }
+  end
+
+  def ids_por_papel
+    do_time = MetaComercial::PAPEIS.flat_map { |papel| Ramon::Papeis.membro_ids(account, papel).map { |id| [id, papel] } }
+    do_time | metas.values.map { |meta| [meta.user_id, meta.papel] }
   end
 
   def linha(user, papel)
