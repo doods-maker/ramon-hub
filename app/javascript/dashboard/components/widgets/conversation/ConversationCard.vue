@@ -4,6 +4,7 @@
 // prazo de 1ª resposta no lugar da hora/SLA nativo.
 import { computed, ref, watch } from 'vue';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
+import { useMapGetter } from 'dashboard/composables/store';
 import MessagePreview from './MessagePreview.vue';
 import InboxName from '../InboxName.vue';
 import TimeAgo from 'dashboard/components/ui/TimeAgo.vue';
@@ -60,7 +61,16 @@ const showMetaSection = computed(() => {
 });
 
 const visibleLabels = computed(() => semEtiquetaDeFase(props.chat.labels));
-const lead = computed(() => props.chat.ramon_lead);
+// Lead da store (websocket de leads: a etapa muda ao vivo) com o bloco slim da
+// conversa como reserva. A store casa pelo id da conversa — se o slim já diz
+// qual é o lead e a store achou outro, fica o slim.
+const leadDaConversa = useMapGetter('leads/getLeadByConversationId');
+const lead = computed(() => {
+  const slim = props.chat.ramon_lead;
+  const daStore = leadDaConversa.value?.(props.chat.id);
+  if (daStore && (!slim || slim.id === daStore.id)) return daStore;
+  return slim;
+});
 const prazo = computed(() => prazoDaConversa(props.chat, props.inbox));
 
 const messagePreviewClass = computed(() =>
@@ -100,12 +110,13 @@ watch(
   <div
     class="conversation relative max-w-full cursor-pointer border-b border-n-weak py-3 group"
     :class="{
+      // compacto (barra do contato) só aperta quando não há checkbox na borda
+      'px-2': compact && hideThumbnail,
+      'px-4': !compact || !hideThumbnail,
       'active bg-n-slate-4 shadow-[inset_2px_0_0_rgb(var(--blue-9))]':
         isActiveChat,
       'selected bg-n-slate-3': selected && !isActiveChat,
       'hover:bg-n-slate-3': !isActiveChat,
-      'px-2': compact,
-      'px-4': !compact,
     }"
     @click="$emit('click', $event)"
     @contextmenu="$emit('contextmenu', $event)"

@@ -1,10 +1,11 @@
 import { shallowMount } from '@vue/test-utils';
+import { createStore } from 'vuex';
 import ConversationCard from '../ConversationCard.vue';
 
 const agora = Math.floor(Date.now() / 1000);
 const inboxDeLead = { id: 1, auto_create_lead: true };
 
-const montar = (chat = {}, inbox = inboxDeLead) =>
+const montar = (chat = {}, inbox = inboxDeLead, leadsDaStore = []) =>
   shallowMount(ConversationCard, {
     props: {
       chat: {
@@ -12,6 +13,7 @@ const montar = (chat = {}, inbox = inboxDeLead) =>
         created_at: agora - 60,
         timestamp: agora - 60,
         first_reply_created_at: 0,
+        status: 'open',
         unread_count: 1,
         labels: ['fase-novo', 'vip'],
         messages: [],
@@ -26,7 +28,22 @@ const montar = (chat = {}, inbox = inboxDeLead) =>
       currentContact: { name: 'Rosane Fagundes' },
       inbox,
     },
-    global: { mocks: { $t: k => k } },
+    global: {
+      mocks: { $t: k => k },
+      plugins: [
+        createStore({
+          modules: {
+            leads: {
+              namespaced: true,
+              getters: {
+                getLeadByConversationId: () => id =>
+                  leadsDaStore.find(l => l.conversation_id === id),
+              },
+            },
+          },
+        }),
+      ],
+    },
   });
 
 describe('ConversationCard (redesign v2)', () => {
@@ -48,6 +65,33 @@ describe('ConversationCard (redesign v2)', () => {
     const wrapper = montar({ ramon_lead: null }, { id: 2 });
     expect(wrapper.find('.ramon-stage-pill').exists()).toBe(false);
     expect(wrapper.findComponent({ name: 'SeloPrazo' }).exists()).toBe(false);
+  });
+
+  it('prefere o lead da store (etapa ao vivo pelo websocket)', () => {
+    const wrapper = montar({}, inboxDeLead, [
+      {
+        id: 3,
+        conversation_id: 7,
+        stage_name: 'Reunião marcada',
+        stage_color: '#6D28D9',
+        thesis_name: 'BPC/LOAS',
+      },
+    ]);
+    expect(wrapper.find('.ramon-stage-pill').text()).toBe('Reunião marcada');
+  });
+
+  it('conversa nova sem bloco slim usa o lead da store', () => {
+    const wrapper = montar({ ramon_lead: null }, inboxDeLead, [
+      { id: 9, conversation_id: 7, stage_name: 'Novo', thesis_name: null },
+    ]);
+    expect(wrapper.find('.ramon-stage-pill').text()).toBe('Novo');
+  });
+
+  it('lead da store de outra conversa (id diferente do slim) é ignorado', () => {
+    const wrapper = montar({}, inboxDeLead, [
+      { id: 99, conversation_id: 7, stage_name: 'Outro' },
+    ]);
+    expect(wrapper.find('.ramon-stage-pill').text()).toBe('Novo');
   });
 
   it('etiqueta fase-* não vai pro CardLabels', () => {
