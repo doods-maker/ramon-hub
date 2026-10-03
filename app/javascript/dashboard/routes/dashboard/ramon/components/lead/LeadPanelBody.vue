@@ -283,6 +283,19 @@ const qualificacaoContagem = computed(() => {
   return `${ok}/${criterios.length}`;
 });
 
+// Itens da tese buscados uma vez aqui (não só ao abrir a seção), pra contagem
+// N/M aparecer com a Qualificação fechada — mesmo padrão do QualificacaoViva.
+watch(
+  () => props.lead?.thesis_id,
+  thesisId => {
+    if (!thesisId) return;
+    const tese = theses.value?.find(x => x.id === thesisId);
+    if (!tese?.items)
+      Promise.resolve(store.dispatch('theses/show', thesisId)).catch(() => {});
+  },
+  { immediate: true }
+);
+
 // ----- "editar todos os campos": LeadFields completo recolhido por padrão -----
 const fieldsExpanded = ref(false);
 const fieldsEl = ref(null);

@@ -31,6 +31,8 @@ const build = ({
   followUpDraft = vi.fn(),
   chatMessages = [],
   tasks = [],
+  theses = [],
+  thesisShow = vi.fn(),
 } = {}) =>
   createStore({
     getters: { getSelectedChat: () => ({ id: 42, messages: chatMessages }) },
@@ -49,6 +51,11 @@ const build = ({
           ],
           getLostReasons: () => [],
         },
+      },
+      theses: {
+        namespaced: true,
+        getters: { getTheses: () => theses },
+        actions: { show: thesisShow },
       },
       leadTasks: {
         namespaced: true,
@@ -177,6 +184,48 @@ describe('LeadPanelBody', () => {
           .find('[data-testid="secao-copiloto"]')
           .exists()
       ).toBe(false);
+    });
+  });
+
+  describe('contagem da Qualificação', () => {
+    it('aparece com a seção fechada, a partir dos itens da tese', () => {
+      const wrapper = mountBody({
+        props: {
+          lead: {
+            ...lead,
+            thesis_id: 3,
+            custom_attributes: { qualificacao_status: { 1: 'ok' } },
+          },
+        },
+        spies: {
+          theses: [
+            {
+              id: 3,
+              items: [
+                { id: 1, section: 'qualificacao' },
+                { id: 2, section: 'qualificacao' },
+                { id: 4, section: 'documentos' },
+              ],
+            },
+          ],
+        },
+      });
+      expect(
+        wrapper.find('[data-testid="secao-qualificacao"]').text()
+      ).toContain('1/2');
+      expect(wrapper.findComponent({ name: 'QualificacaoViva' }).exists()).toBe(
+        false
+      );
+    });
+
+    it('busca os itens da tese uma vez quando ainda não vieram', () => {
+      const thesisShow = vi.fn();
+      mountBody({
+        props: { lead: { ...lead, thesis_id: 3 } },
+        spies: { theses: [{ id: 3 }], thesisShow },
+      });
+      expect(thesisShow).toHaveBeenCalledTimes(1);
+      expect(thesisShow).toHaveBeenCalledWith(expect.anything(), 3);
     });
   });
 
