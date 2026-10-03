@@ -41,7 +41,7 @@ describe ActionCableListener do
       thais = create(:user, account: account, role: :agent)
       team = create(:team, account: account)
       create(:team_member, team: team, user: thais)
-      conversation.update!(assignee: lawyer, team: team)
+      conversation.update_columns(assignee_id: lawyer.id, team_id: team.id) # rubocop:disable Rails/SkipsModelValidations
 
       expect(ActionCableBroadcastJob).to receive(:perform_later).with(
         a_collection_containing_exactly(
