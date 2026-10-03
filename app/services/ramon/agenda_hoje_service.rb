@@ -2,7 +2,7 @@
 # responsável casado ao usuário do hub por e-mail. A API do ADVBOX tem cota de
 # 500 chamadas/dia (compartilhada) → agenda em cache de 10 min, settings de 24 h.
 class Ramon::AgendaHojeService
-  TAREFA = 'ATENDIMENTO'
+  TAREFA = 'ATENDIMENTO'.freeze
   # ponytail: origem que o ADVBOX põe nas partes contrárias (INSS etc.) nesta conta;
   # se errar, a Gabriela corrige o nome no campo antes de avisar.
   PARTE_CONTRARIA = 25_705

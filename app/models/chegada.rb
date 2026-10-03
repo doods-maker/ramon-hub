@@ -4,9 +4,9 @@
 class Chegada < ApplicationRecord
   self.table_name = 'ramon_chegadas'
 
-  RECEPCAO = 'recepção' # mesmo time da Portaria (RamonPortariaListener::FALLBACK)
+  RECEPCAO = 'recepção'.freeze # mesmo time da Portaria (RamonPortariaListener::FALLBACK)
   ESCALAR_APOS = 3.minutes
-  ZONA = 'America/Sao_Paulo'
+  ZONA = 'America/Sao_Paulo'.freeze
 
   belongs_to :account
   belongs_to :criado_por, class_name: 'User'
