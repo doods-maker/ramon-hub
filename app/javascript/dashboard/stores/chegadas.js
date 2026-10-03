@@ -1,8 +1,17 @@
 import { defineStore } from 'pinia';
 import ChegadasAPI from 'dashboard/api/ramonChegadas';
+import { LocalStorage } from 'shared/helpers/localStorage';
+
+// "Entendi" numa escalada sobrevive a recarregar a página.
+// ponytail: lista só cresce (ids, bytes por dia); podar se um dia pesar.
+const VISTOS_KEY = 'ramon_chegadas_vistos';
 
 export const useChegadasStore = defineStore('chegadas', {
-  state: () => ({ itens: [], podeAvisar: false, vistos: [] }),
+  state: () => ({
+    itens: [],
+    podeAvisar: false,
+    vistos: LocalStorage.get(VISTOS_KEY) || [],
+  }),
 
   getters: {
     // O que insiste na tela de quem está logado: chegada pra mim sem resposta,
@@ -40,6 +49,11 @@ export const useChegadasStore = defineStore('chegadas', {
     },
     marcarVisto(id) {
       this.vistos.push(id);
+      try {
+        LocalStorage.set(VISTOS_KEY, this.vistos);
+      } catch {
+        // storage bloqueado: vale só nesta aba
+      }
     },
   },
 });

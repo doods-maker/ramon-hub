@@ -16,7 +16,10 @@ const chegada = (over = {}) => ({
 });
 
 describe('useChegadasStore', () => {
-  beforeEach(() => setActivePinia(createPinia()));
+  beforeEach(() => {
+    localStorage.clear();
+    setActivePinia(createPinia());
+  });
 
   it('alerta o destinatário enquanto não responde', () => {
     const store = useChegadasStore();
@@ -35,6 +38,14 @@ describe('useChegadasStore', () => {
     expect(store.alertasPara(10)).toHaveLength(0);
     store.upsert(chegada({ id: 2, estado: 'escalado' }));
     store.upsert(chegada({ id: 2, estado: 'respondido' }));
+    expect(store.alertasPara(10)).toHaveLength(0);
+  });
+
+  it('vistos sobrevivem a recarregar a página', () => {
+    useChegadasStore().marcarVisto(1);
+    setActivePinia(createPinia());
+    const store = useChegadasStore();
+    store.upsert(chegada({ estado: 'escalado' }));
     expect(store.alertasPara(10)).toHaveLength(0);
   });
 

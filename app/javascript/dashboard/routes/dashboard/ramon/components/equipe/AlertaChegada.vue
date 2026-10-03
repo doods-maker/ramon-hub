@@ -3,6 +3,9 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStoreGetters } from 'dashboard/composables/store';
 import { useChegadasStore } from 'dashboard/stores/chegadas';
+import { useAlert } from 'dashboard/composables';
+import { useEmitter } from 'dashboard/composables/emitter';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 // Alerta que insiste (Equipe · Fatia 1): overlay + toque em loop + notificação
 // do sistema + título piscando até a pessoa responder. Montado sempre no
@@ -21,29 +24,33 @@ const souDestinatario = computed(
 );
 const resposta = ref('');
 const enviando = ref(false);
+const dialogRef = ref(null);
 
 const ringtone = new Audio(RINGTONE_URL);
 ringtone.loop = true;
 let piscar = null;
 let tituloOriginal = '';
-const notificados = new Set();
+const notificacoes = new Map(); // id → Notification aberta
 
 const notificarSistema = chegada => {
-  if (notificados.has(chegada.id)) return;
+  if (notificacoes.has(chegada.id)) return;
   if (!('Notification' in window) || Notification.permission !== 'granted')
     return;
-  notificados.add(chegada.id);
   const params = { cliente: chegada.cliente_nome };
   const titulo =
     chegada.destinatario.id === userId.value
       ? t('RAMON.CHEGADA.NOTIF_CHEGOU', params)
       : t('RAMON.CHEGADA.NOTIF_SEM_RESPOSTA', params);
-  // eslint-disable-next-line no-new
-  new Notification(titulo, {
+  const n = new Notification(titulo, {
     body: chegada.motivo || '',
     requireInteraction: true,
     tag: `chegada-${chegada.id}-${chegada.estado}`,
   });
+  n.onclick = () => {
+    window.focus();
+    n.close();
+  };
+  notificacoes.set(chegada.id, n);
 };
 
 const pararPiscar = () => {
@@ -86,8 +93,61 @@ watch(
   { immediate: true }
 );
 
-// Notifica todas as pendentes (a fila pode crescer com a aba em segundo plano).
-watch(alertas, lista => lista.forEach(notificarSistema), { immediate: true });
+// O overlay é <dialog> modal (top layer): fica acima de outros Dialog abertos
+// com showModal(), que senão o cobririam e o deixariam inerte.
+watch(
+  [() => !!atual.value, dialogRef],
+  ([temAlerta, el]) => {
+    if (!el) return;
+    if (temAlerta && !el.open) el.showModal?.();
+    else if (!temAlerta) el.close?.();
+  },
+  { flush: 'post' }
+);
+
+// Esc pode fechar o <dialog> mesmo com cancel.prevent (o Chrome deixa na 2ª
+// vez sem gesto): enquanto houver alerta, reabre.
+const manterAberto = () => {
+  if (atual.value) dialogRef.value?.showModal?.();
+};
+
+// Notifica todas as pendentes (a fila pode crescer com a aba em segundo plano)
+// e fecha a notificação do sistema de quem saiu da fila.
+watch(
+  alertas,
+  lista => {
+    lista.forEach(notificarSistema);
+    notificacoes.forEach((n, id) => {
+      if (lista.some(c => c.id === id)) return;
+      n.close();
+      notificacoes.delete(id);
+    });
+  },
+  { immediate: true }
+);
+
+// A Recepção fica sabendo da resposta mesmo com o painel fechado. As já
+// respondidas no 1º carregar não viram toast (recarregar a página).
+const respostasAvisadas = new Set();
+let respostasProntas = false;
+const minhasRespondidas = () =>
+  chegadas.itens.filter(c => c.criado_por.id === userId.value && c.resposta);
+watch(minhasRespondidas, lista => {
+  if (!respostasProntas) return;
+  lista.forEach(c => {
+    if (respostasAvisadas.has(c.id)) return;
+    respostasAvisadas.add(c.id);
+    useAlert(
+      t('RAMON.CHEGADA.RESPONDEU', {
+        quem: c.destinatario.name,
+        resposta: c.resposta,
+      })
+    );
+  });
+});
+
+const recarregar = () => chegadas.carregar().catch(() => {});
+useEmitter(BUS_EVENTS.WEBSOCKET_RECONNECT, recarregar);
 
 const enviar = async () => {
   if (!resposta.value.trim() || enviando.value) return;
@@ -107,8 +167,10 @@ const pedirPermissao = () => {
     Notification.requestPermission();
 };
 
-onMounted(() => {
-  chegadas.carregar().catch(() => {});
+onMounted(async () => {
+  await recarregar();
+  minhasRespondidas().forEach(c => respostasAvisadas.add(c.id));
+  respostasProntas = true;
   document.addEventListener('click', pedirPermissao, { once: true });
 });
 onBeforeUnmount(() => {
@@ -118,13 +180,16 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    v-if="atual"
-    data-testid="alerta-chegada"
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-n-alpha-black1 p-4 backdrop-blur-[4px]"
+  <dialog
+    ref="dialogRef"
+    class="w-[calc(100%-2rem)] max-w-md bg-transparent p-0 backdrop:bg-n-alpha-black1 backdrop:backdrop-blur-[4px]"
+    @cancel.prevent
+    @close="manterAberto"
   >
     <div
-      class="w-full max-w-md rounded-xl bg-n-solid-1 p-6 shadow-xl outline outline-1 outline-n-weak"
+      v-if="atual"
+      data-testid="alerta-chegada"
+      class="w-full rounded-xl bg-n-solid-1 p-6 shadow-xl outline outline-1 outline-n-weak"
     >
       <p class="text-sm text-n-slate-11">
         {{
@@ -173,5 +238,5 @@ onBeforeUnmount(() => {
         {{ t('RAMON.CHEGADA.MAIS', { n: alertas.length - 1 }) }}
       </p>
     </div>
-  </div>
+  </dialog>
 </template>

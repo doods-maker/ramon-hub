@@ -29,6 +29,11 @@ const podeEnviar = computed(
   () => form.value.cliente_nome?.trim() && form.value.destinatario_id
 );
 const deHoje = computed(() => [...chegadas.itens].reverse());
+const hora = iso =>
+  new Date(iso).toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
 const limpar = () => {
   form.value = { cliente_nome: '', motivo: '', destinatario_id: '' };
@@ -43,6 +48,7 @@ const abrir = async () => {
   aba.value = 'hoje';
   advboxFora.value = false;
   store.dispatch('agents/get');
+  chegadas.carregar().catch(() => {}); // lista de hoje atual p/ 2ª recepcionista
   dialogRef.value?.open();
   try {
     const { data } = await ChegadasAPI.agenda();
@@ -239,7 +245,9 @@ const estados = computed(() => ({
             {{ t('RAMON.CHEGADA.AGUARDANDO') }}
           </p>
           <p v-for="c in deHoje" :key="c.id" class="text-sm text-n-slate-12">
-            {{ `${c.cliente_nome} → ${c.destinatario.name} · ` }}
+            {{
+              `${hora(c.created_at)} ${c.cliente_nome} → ${c.destinatario.name} · `
+            }}
             <span
               :class="
                 c.estado === 'escalado' ? 'text-n-ruby-11' : 'text-n-slate-11'

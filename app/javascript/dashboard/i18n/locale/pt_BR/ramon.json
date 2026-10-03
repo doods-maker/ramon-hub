@@ -25,7 +25,8 @@
       "AGUARDANDO": "Hoje",
       "ESTADO_aguardando": "aguardando",
       "ESTADO_escalado": "sem resposta",
-      "ESTADO_respondido": "respondeu"
+      "ESTADO_respondido": "respondeu",
+      "RESPONDEU": "{quem} respondeu: {resposta}"
     },
     "AGENDA": {
       "TITLE": "Agenda",

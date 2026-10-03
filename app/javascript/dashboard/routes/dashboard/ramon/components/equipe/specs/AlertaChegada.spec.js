@@ -1,12 +1,17 @@
-import { mount, flushPromises } from '@vue/test-utils';
+import { mount, flushPromises, enableAutoUnmount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import AlertaChegada from '../AlertaChegada.vue';
 import { useChegadasStore } from 'dashboard/stores/chegadas';
+import ChegadasAPI from 'dashboard/api/ramonChegadas';
+import { useAlert } from 'dashboard/composables';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables/store', () => ({
   useStoreGetters: () => ({ getCurrentUserID: { value: 20 } }),
 }));
+vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('dashboard/api/ramonChegadas', () => ({
   default: {
     get: vi
@@ -41,6 +46,8 @@ const chegada = (id, over = {}) => ({
 });
 
 describe('AlertaChegada.vue', () => {
+  enableAutoUnmount(afterEach);
+
   beforeEach(() => {
     setActivePinia(createPinia());
     play.mockReset().mockResolvedValue();
@@ -102,5 +109,36 @@ describe('AlertaChegada.vue', () => {
       'já vou'
     );
     expect(play).not.toHaveBeenCalled();
+  });
+
+  it('reconexão do websocket recarrega as chegadas', async () => {
+    mount(AlertaChegada);
+    await flushPromises();
+    ChegadasAPI.get.mockClear();
+    emitter.emit(BUS_EVENTS.WEBSOCKET_RECONNECT);
+    await flushPromises();
+    expect(ChegadasAPI.get).toHaveBeenCalledTimes(1);
+  });
+
+  it('avisa quem criou quando o destinatário responde', async () => {
+    mount(AlertaChegada);
+    await flushPromises();
+    const store = useChegadasStore();
+    const minha = {
+      criado_por: { id: 20, name: 'Eu' },
+      destinatario: { id: 30, name: 'Tamires' },
+    };
+    store.upsert(chegada(5, minha));
+    await flushPromises();
+    store.upsert(
+      chegada(5, { ...minha, estado: 'respondido', resposta: 'já vou' })
+    );
+    await flushPromises();
+    store.upsert(
+      chegada(5, { ...minha, estado: 'respondido', resposta: 'já vou' })
+    );
+    await flushPromises();
+    expect(useAlert).toHaveBeenCalledTimes(1);
+    expect(useAlert).toHaveBeenCalledWith('RAMON.CHEGADA.RESPONDEU');
   });
 });
