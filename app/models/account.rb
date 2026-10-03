@@ -22,7 +22,7 @@
 #  index_accounts_on_status  (status)
 #
 
-class Account < ApplicationRecord
+class Account < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # used for single column multi flags
   include FlagShihTzu
   include Reportable
@@ -87,6 +87,7 @@ class Account < ApplicationRecord
   has_many :benefit_types, dependent: :destroy_async
   has_many :calculos, dependent: :destroy_async
   has_many :reunioes, class_name: 'Reuniao', dependent: :destroy_async
+  has_many :chegadas, class_name: 'Chegada', dependent: :destroy_async
   has_many :pecas, class_name: 'Peca', dependent: :destroy_async
   has_many :portal_clientes, dependent: :destroy_async
   has_many :lead_activities, dependent: :destroy_async

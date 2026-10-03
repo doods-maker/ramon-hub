@@ -1,5 +1,33 @@
 {
   "RAMON": {
+    "CHEGADA": {
+      "CHEGOU": "{quem} avisou: chegou cliente",
+      "SEM_RESPOSTA": "{quem} não respondeu em 3 min",
+      "NOTIF_CHEGOU": "Chegou: {cliente}",
+      "NOTIF_SEM_RESPOSTA": "Sem resposta: {cliente}",
+      "RESPOSTA_PLACEHOLDER": "Responder pra recepção (ex.: já vou / peça pra aguardar 5 min)",
+      "RESPONDER": "Responder",
+      "ENTENDI": "Entendi",
+      "MAIS": "+{n} na fila",
+      "BOTAO": "Chegou cliente",
+      "TITULO": "Avisar chegada de cliente",
+      "ABA_HOJE": "Quem vem hoje",
+      "ABA_BUSCAR": "Buscar no ADVBOX",
+      "ABA_LIVRE": "Livre",
+      "HOJE_VAZIO": "Nenhum ATENDIMENTO marcado hoje no ADVBOX.",
+      "ADVBOX_FORA": "ADVBOX indisponível — use Buscar ou Livre.",
+      "ERRO_AVISAR": "Não consegui avisar — tente de novo.",
+      "BUSCAR_PLACEHOLDER": "Nome ou CPF",
+      "NOME": "Nome do cliente",
+      "MOTIVO": "Motivo (opcional)",
+      "DESTINATARIO": "Quem vai atender",
+      "AVISAR": "Avisar",
+      "AGUARDANDO": "Hoje",
+      "ESTADO_aguardando": "aguardando",
+      "ESTADO_escalado": "sem resposta",
+      "ESTADO_respondido": "respondeu",
+      "RESPONDEU": "{quem} respondeu: {resposta}"
+    },
     "AGENDA": {
       "TITLE": "Agenda",
       "TODAY": "Hoje",

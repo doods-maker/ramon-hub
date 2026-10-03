@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_03_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_03_000002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1445,6 +1445,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_03_000001) do
     t.index ["portal_id", "user_id"], name: "index_portals_members_on_portal_id_and_user_id", unique: true
     t.index ["portal_id"], name: "index_portals_members_on_portal_id"
     t.index ["user_id"], name: "index_portals_members_on_user_id"
+  end
+
+  create_table "ramon_chegadas", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "criado_por_id", null: false
+    t.bigint "destinatario_id", null: false
+    t.string "cliente_nome", null: false
+    t.string "motivo"
+    t.bigint "advbox_customer_id"
+    t.bigint "advbox_post_id"
+    t.text "resposta"
+    t.datetime "respondido_em"
+    t.datetime "escalado_em"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "created_at"], name: "index_ramon_chegadas_on_account_id_and_created_at"
   end
 
   create_table "ramon_metas_comerciais", force: :cascade do |t|

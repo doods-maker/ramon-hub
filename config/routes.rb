@@ -300,6 +300,10 @@ Rails.application.routes.draw do
           resources :ramon_reunioes, only: [:index, :show, :create, :destroy], controller: 'ramon_reunioes' do
             member { post :reprocessar }
           end
+          resources :ramon_chegadas, only: [:index, :create], controller: 'ramon_chegadas' do
+            member { post :responder }
+            collection { get :agenda }
+          end
           resources :ramon_conteudo, only: [:index, :show], controller: 'ramon_conteudo' do
             member do
               post :aprovar
