@@ -21,10 +21,15 @@ RSpec.describe Ramon::Hoje::Comercial do
     expect(blocos(sdr, 'sdr')[:responder].pluck(:lead_id)).to eq([meu.id])
   end
 
-  it 'equipe vê todos' do
-    lead_sem_resposta(sdr)
-    lead_sem_resposta(outro)
-    expect(blocos(sdr, 'equipe')[:responder].size).to eq(2)
+  it 'equipe vê os leads das caixas de que é membro, sem o texto da conversa' do
+    create(:inbox_member, user: sdr, inbox: inbox)
+    da_caixa = lead_sem_resposta(outro)
+    create(:message, account: account, inbox: inbox, conversation: da_caixa.conversation, message_type: :incoming, content: 'segredo')
+    alheia = create(:inbox, account: account, auto_create_lead: true)
+    create(:lead, account: account, sdr: outro, conversation: create(:conversation, account: account, inbox: alheia))
+    responder = blocos(sdr, 'equipe')[:responder]
+    expect(responder.pluck(:lead_id)).to eq([da_caixa.id])
+    expect(responder.first[:ultima_mensagem]).to eq('')
   end
 
   it 'SDR sem nada: listas vazias e mês zerado' do
@@ -52,6 +57,14 @@ RSpec.describe Ramon::Hoje::Comercial do
     lead = create(:lead, account: account, closer: closer)
     create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião', due_at: Time.current)
     expect(blocos(closer, 'closer')[:reunioes_hoje].first).to include(lead_id: lead.id, docs: { received: 0, total: 0 })
+  end
+
+  it 'closer: fechamento = ganhos do mês entre as reuniões do mês (nunca passa de 100)' do
+    ganho = account.lead_stages.find_by(is_won: true)
+    create(:lead, account: account, closer: closer, lead_stage: ganho, reuniao_registrada_em: Time.current)
+    create(:lead, account: account, closer: closer, reuniao_registrada_em: Time.current)
+    create(:lead, account: account, closer: closer, lead_stage: ganho) # ganho sem reunião no mês não conta
+    expect(blocos(closer, 'closer')[:mes][:fechamento]).to eq(50)
   end
 
   it 'closer: aguardando assinatura = zapsign enviado e ainda não ganho' do
