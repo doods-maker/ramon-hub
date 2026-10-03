@@ -1,11 +1,21 @@
 <%# app/views/cliente/painel/_processo_card.html.erb %>
 <% etapa = Ramon::PortalTexto.etapa(PortalCliente.etapa_cliente(processo)) %>
 <% faltam = processo['docs_pendentes'].size %>
+<% linha = Ramon::PortalTexto.linha_do_tempo(processo) if Ramon::PortalTexto.v2? %>
+<% atual = linha&.index { |d| d['estado'] == 'current' } %>
 <%= link_to cliente_processo_path(processo['id']), class: 'card' do %>
   <span class="badge"><%= processo['tipo'].to_s.downcase.capitalize %></span>
   <% if PortalCliente.novidades_nao_vistas(processo).any? %><span class="badge badge-novo">Novidade</span><% end %>
   <h2><%= etapa['titulo'] %></h2>
   <p class="muted"><%= etapa['o_que_esperar'] %></p>
+  <% if atual %>
+    <div class="progresso">
+      <div class="progresso-barra" aria-hidden="true">
+        <% linha.each do |passo| %><span class="is-<%= passo['estado'] %>"></span><% end %>
+      </div>
+      <p class="progresso-legenda">Fase <%= atual + 1 %> de <%= linha.size %> · <strong><%= linha[atual]['nome'] %></strong></p>
+    </div>
+  <% end %>
   <div class="card-rodape">
     <% if faltam.positive? %>
       <span class="alerta-docs"><%= faltam == 1 ? 'Falta 1 documento' : "Faltam #{faltam} documentos" %></span>

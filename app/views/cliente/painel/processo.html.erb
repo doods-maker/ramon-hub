@@ -6,6 +6,21 @@
 
 <section class="agora">
   <p class="eyebrow">Seu caso agora · <%= @processo['tipo'].to_s.downcase %></p>
+  <% if @linha %>
+    <% atual = @linha.index { |d| d['estado'] == 'current' } %>
+    <ol class="trilha<%= ' trilha-longa' if @linha.size > 4 %>" aria-label="Fases do seu caso">
+      <% @linha.each do |d| %>
+        <li class="trilha-passo is-<%= d['estado'] %>"<%= ' aria-current="step"'.html_safe if d['estado'] == 'current' %>>
+          <span class="trilha-icone"><%= render 'icone', nome: d['chave'], tamanho: 20 %></span>
+          <span class="trilha-nome"><%= d['nome'] %></span>
+          <span class="sr-only"><%= { 'done' => '(feita)', 'current' => '(agora)', 'future' => '(próxima)' }[d['estado']] %></span>
+        </li>
+      <% end %>
+    </ol>
+    <% if @linha.size > 4 && atual %>
+      <p class="trilha-legenda">Fase <%= atual + 1 %> de <%= @linha.size %><% if @linha[atual + 1] %> · Próxima: <%= @linha[atual + 1]['nome'] %><% end %></p>
+    <% end %>
+  <% end %>
   <h1><%= @etapa['titulo'] %></h1>
   <p class="texto"><%= @etapa['o_que_esperar'] %></p>
   <% if @novidades.any? %><p class="badge badge-novo">Novidade</p><% end %>
@@ -19,14 +34,18 @@
     <ul>
       <% @pendentes.each do |d| %>
         <li>
-          <%= d['item'] %>
+          <span class="doc-item"><%= render 'icone', nome: 'documentos', tamanho: 20 %><%= d['item'] %></span>
           <% if d['enviado'] %>
             <p><span class="badge badge-ok">Enviado — em conferência</span></p>
           <% else %>
             <%= form_tag cliente_envios_path(@processo['id']), multipart: true, class: 'upload-form' do %>
               <%= hidden_field_tag :item, d['item'] %>
               <%= hidden_field_tag :post_id, d['post_id'] %>
-              <%= file_field_tag :file, accept: 'image/*,application/pdf', required: true, 'aria-label': "Arquivo: #{d['item']}" %>
+              <label class="foto">
+                <%= file_field_tag :file, accept: 'image/*,application/pdf', required: true, class: 'foto-input', 'aria-label': "Arquivo: #{d['item']}" %>
+                <span class="foto-icone"><%= render 'icone', nome: 'camera', tamanho: 26 %></span>
+                <span class="foto-texto" data-vazio="Tirar foto ou escolher arquivo">Tirar foto ou escolher arquivo</span>
+              </label>
               <%= submit_tag 'Enviar', class: 'btn-bronze' %>
             <% end %>
           <% end %>
@@ -38,29 +57,7 @@
 
 <% if @recado.present? %>
   <h2 class="secao">Recado da equipe</h2>
-  <div class="card"><%= simple_format(@recado) %></div>
-<% end %>
-
-<% if @linha %>
-  <h2 class="secao">O caminho do seu caso</h2>
-  <div class="timeline" aria-label="Fases do seu caso">
-    <% @linha.each_with_index do |d, i| %>
-      <div class="step">
-        <div class="step-rail">
-          <% if d['estado'] == 'current' %><span class="dot-current"><span></span></span><% else %><span class="dot-<%= d['estado'] %>"></span><% end %>
-          <% unless i == @linha.size - 1 %><span class="<%= d['estado'] == 'done' ? 'rail-done' : 'rail-future' %>"></span><% end %>
-        </div>
-        <div class="step-text">
-          <% if d['estado'] == 'future' %>
-            <p class="step-title-future"><%= d['nome'] %></p>
-          <% else %>
-            <p class="step-title"><%= d['nome'] %><% if d['estado'] == 'current' %> <span class="pill-now">agora</span><% end %></p>
-          <% end %>
-          <% if d['estado'] == 'current' %><p class="step-sub"><%= d['frase'] %></p><% end %>
-        </div>
-      </div>
-    <% end %>
-  </div>
+  <div class="card recado"><%= render 'icone', nome: 'recado', tamanho: 22 %><div><%= simple_format(@recado) %></div></div>
 <% end %>
 
 <% if @marcos.any? %>
@@ -85,5 +82,16 @@
     <div><dt>Início</dt><dd><%= data_br(@processo['inicio']) || '—' %></dd></div>
     <div><dt>Advogado(a) responsável</dt><dd><%= @processo['responsavel'].to_s.titleize.presence || 'Equipe' %></dd></div>
   </dl>
-  <a class="btn-bronze btn-whats" href="https://wa.me/<%= ENV.fetch('PORTAL_WHATSAPP', '5548988554077') %>">Falar com a equipe no WhatsApp</a>
+  <a class="btn-bronze btn-whats" href="https://wa.me/<%= ENV.fetch('PORTAL_WHATSAPP', '5548988554077') %>"><%= render 'icone', nome: 'conversa', tamanho: 22 %>Falar com a equipe no WhatsApp</a>
 </div>
+<script>
+  // Mostra o nome do arquivo escolhido no lugar de "Tirar foto ou escolher arquivo".
+  document.querySelectorAll('.foto-input').forEach(function (input) {
+    input.addEventListener('change', function () {
+      var texto = input.parentNode.querySelector('.foto-texto');
+      var arquivo = input.files[0];
+      texto.textContent = arquivo ? 'Escolhido: ' + arquivo.name : texto.dataset.vazio;
+      input.parentNode.classList.toggle('tem-arquivo', !!arquivo);
+    });
+  });
+</script>

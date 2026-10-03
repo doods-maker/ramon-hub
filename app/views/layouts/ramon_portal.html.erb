@@ -61,9 +61,9 @@
 
     /* Cartões */
     .card, .neutral-card, .docs-card {
-      display: block; background: var(--papel); border: 1px solid var(--linha); border-radius: 16px;
+      display: block; background: var(--papel); border: 1px solid var(--linha); border-radius: 20px;
       padding: 22px; margin-bottom: 16px; color: var(--tinta); text-decoration: none;
-      box-shadow: 0 1px 2px rgba(59, 32, 16, .05);
+      box-shadow: 0 2px 10px rgba(59, 32, 16, .06);
     }
     .neutral-card { color: var(--tinta-suave); }
     .card h2, .card .titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 27px; line-height: 1.15; margin: 10px 0 8px; }
@@ -122,10 +122,67 @@
 
     /* Placa "Seu caso agora" — marrom e ouro, como a placa do logo */
     .agora {
-      background: var(--marrom); color: var(--ouro-claro); border-radius: 20px; padding: 28px 24px;
-      margin-bottom: 8px; position: relative; overflow: hidden;
+      background: radial-gradient(120% 90% at 100% 0%, rgba(201, 164, 70, .22), transparent 55%), var(--marrom);
+      color: var(--ouro-claro); border-radius: 24px; padding: 26px 22px 28px;
+      margin-bottom: 8px; position: relative; overflow: hidden; box-shadow: 0 12px 32px rgba(59, 32, 16, .22);
     }
-    .agora::before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: var(--ouro); }
+
+    /* Trilha horizontal das fases, dentro da placa */
+    .trilha { list-style: none; display: flex; margin: 22px -6px 26px; }
+    .trilha-passo { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+    .trilha-passo:not(:first-child)::before {
+      content: ''; position: absolute; top: 21px; right: 50%; width: 100%; height: 3px;
+      background: rgba(237, 224, 200, .18);
+    }
+    .trilha-passo.is-done::before, .trilha-passo.is-current::before { background: var(--ouro); }
+    .trilha-icone {
+      position: relative; z-index: 1; width: 44px; height: 44px; border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--marrom); border: 2px solid rgba(237, 224, 200, .28); color: rgba(237, 224, 200, .5);
+    }
+    .is-done .trilha-icone { background: var(--ouro); border-color: var(--ouro); color: var(--marrom); }
+    .is-current .trilha-icone {
+      background: #fff; border-color: var(--ouro); color: var(--bronze);
+      box-shadow: 0 0 0 6px rgba(201, 164, 70, .3); animation: pulso 2.4s ease-in-out infinite;
+    }
+    @keyframes pulso { 50% { box-shadow: 0 0 0 10px rgba(201, 164, 70, .12); } }
+    .trilha-nome { font-size: 13px; line-height: 1.25; color: rgba(237, 224, 200, .6); padding: 0 2px; }
+    /* 5–6 fases não cabem com nome no celular: só ícones + nome da fase atual + legenda */
+    .trilha-longa .trilha-nome { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .trilha-longa .is-current .trilha-nome { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+    .trilha-longa .is-current:last-child { align-items: flex-end; }
+    .trilha-legenda { margin: -12px 0 22px; font-size: 15px; color: var(--ouro-claro); opacity: .85; }
+    .is-done .trilha-nome { color: var(--ouro-claro); }
+    .is-current .trilha-nome { color: #fff; font-weight: 700; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* Progresso no card da tela inicial */
+    .progresso { margin-top: 16px; }
+    .progresso-barra { display: flex; gap: 5px; }
+    .progresso-barra span { flex: 1; height: 8px; border-radius: 99px; background: var(--linha); }
+    .progresso-barra .is-done { background: var(--bronze); }
+    .progresso-barra .is-current { background: linear-gradient(90deg, var(--bronze), var(--ouro)); }
+    .progresso-legenda { margin-top: 8px; font-size: 15px; color: var(--tinta-suave); }
+    .progresso-legenda strong { color: var(--tinta); }
+
+    /* Envio pela câmera */
+    .foto {
+      position: relative; display: flex; align-items: center; gap: 14px; padding: 16px 18px; cursor: pointer;
+      border: 2px dashed var(--areia); border-radius: 16px; background: var(--creme); color: var(--bronze); font-weight: 700;
+    }
+    .foto:focus-within { outline: 3px solid var(--ouro); outline-offset: 3px; }
+    .foto.tem-arquivo { border-style: solid; border-color: var(--verde); color: var(--verde); background: #eef6f0; }
+    .foto-input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+    .foto-icone {
+      width: 48px; height: 48px; flex-shrink: 0; border-radius: 14px; background: var(--papel);
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(59, 32, 16, .12);
+    }
+    .foto-texto { font-size: 17px; line-height: 1.3; overflow-wrap: anywhere; }
+    .doc-item { display: flex; align-items: center; gap: 10px; }
+    .doc-item .icone { color: var(--bronze); flex-shrink: 0; }
+    .recado { display: flex; gap: 14px; }
+    .recado > .icone { color: var(--bronze); flex-shrink: 0; margin-top: 3px; }
+    .btn-bronze .icone, .btn-link .icone { margin-right: 10px; flex-shrink: 0; }
     .agora .eyebrow { color: var(--ouro); }
     .agora h1 { color: #fff; font-size: 36px; margin-top: 8px; }
     .agora p.texto { margin-top: 14px; font-size: 18px; color: var(--ouro-claro); }
@@ -199,7 +256,7 @@
       .portal-body { padding: 44px 28px 56px; }
       h1 { font-size: 44px; }
     }
-    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   </style>
 </head>
 <body>

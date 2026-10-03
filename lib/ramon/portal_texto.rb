@@ -77,7 +77,7 @@ module Ramon::PortalTexto
     V2['etapas'].dig(normalizar(stage), 'fase') || V2['grupo_fase'][normalizar(step)]
   end
 
-  # Degraus [{ 'nome', 'frase', 'estado' => done|current|future }] da tela do processo (só v2).
+  # Degraus [{ 'chave', 'nome', 'frase', 'estado' => done|current|future }] da tela do processo (só v2).
   # ponytail: sem histórico de etapas no espelho, "passou por Justiça/Recurso" é inferido do
   # grupo atual — processo judicial que já está em ARQUIVAMENTO ou RH/FINANCEIRO perde o degrau.
   # Guardar as fases vistas no espelho (PortalNovidades) resolve, se incomodar.
@@ -85,7 +85,7 @@ module Ramon::PortalTexto
     atual = fase_de(PortalCliente.etapa_cliente(processo), processo['fase']) || 'documentos'
     fases = V2['fases'].select { |f| degrau_visivel?(f['chave'], atual, processo['fase']) }
     posicao = fases.index { |f| f['chave'] == atual }
-    fases.each_with_index.map { |f, i| { 'nome' => f['nome'], 'frase' => f['frase'], 'estado' => estado(i, posicao) } }
+    fases.each_with_index.map { |f, i| f.slice('chave', 'nome', 'frase').merge('estado' => estado(i, posicao)) }
   end
 
   def degrau_visivel?(chave, atual, step)
