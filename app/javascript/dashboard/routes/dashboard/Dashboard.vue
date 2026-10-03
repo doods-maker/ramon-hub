@@ -1,10 +1,13 @@
 <script>
 import { defineAsyncComponent, ref, computed } from 'vue';
 
+import NextSidebar from 'next/sidebar/Sidebar.vue';
 import RamonNav from './ramon/components/nav/RamonNav.vue';
+import { ehAreaChatwoot } from './ramon/helpers/navItems';
 import AlertaChegada from './ramon/components/equipe/AlertaChegada.vue';
 import ChegouCliente from './ramon/components/equipe/ChegouCliente.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
+import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
 
 import { useUISettings } from 'dashboard/composables/useUISettings';
@@ -31,7 +34,9 @@ import { useCallsStore } from 'dashboard/stores/calls';
 
 export default {
   components: {
+    NextSidebar,
     RamonNav,
+    AddAccountModal,
     CommandBar,
     WootKeyShortcutModal,
     UpgradePage,
@@ -68,12 +73,18 @@ export default {
   },
   data() {
     return {
+      showCreateAccountModal: false,
       isMobileSidebarOpen: false,
     };
   },
   computed: {
     isSmallScreen() {
       return this.windowWidth < wootConstants.SMALL_SCREEN_BREAKPOINT;
+    },
+    // FORK(ramon): Configurações, Captain, Relatórios, Contatos, Campanhas e
+    // Central de ajuda usam o sidebar do Chatwoot (submenus nativos); o resto, o menu único.
+    isAreaChatwoot() {
+      return ehAreaChatwoot(this.$route.path);
     },
     showUpgradePage() {
       return this.upgradePageRef?.shouldShowUpgradePage;
@@ -117,6 +128,12 @@ export default {
     closeMobileSidebar() {
       this.isMobileSidebarOpen = false;
     },
+    openCreateAccountModal() {
+      this.showCreateAccountModal = true;
+    },
+    closeCreateAccountModal() {
+      this.showCreateAccountModal = false;
+    },
     toggleKeyShortcutModal() {
       this.showShortcutModal = true;
     },
@@ -129,7 +146,16 @@ export default {
 
 <template>
   <div class="flex flex-grow overflow-hidden text-n-slate-12">
+    <NextSidebar
+      v-if="isAreaChatwoot"
+      :is-mobile-sidebar-open="isMobileSidebarOpen"
+      @open-key-shortcut-modal="toggleKeyShortcutModal"
+      @close-key-shortcut-modal="closeKeyShortcutModal"
+      @show-create-account-modal="openCreateAccountModal"
+      @close-mobile-sidebar="closeMobileSidebar"
+    />
     <RamonNav
+      v-else
       :is-mobile-sidebar-open="isMobileSidebarOpen"
       @close-mobile-sidebar="closeMobileSidebar"
       @open-key-shortcut-modal="toggleKeyShortcutModal"
@@ -161,6 +187,10 @@ export default {
         <AlertaChegada />
         <ChegouCliente />
       </template>
+      <AddAccountModal
+        :show="showCreateAccountModal"
+        @close-account-create-modal="closeCreateAccountModal"
+      />
       <WootKeyShortcutModal
         v-model:show="showShortcutModal"
         @close="closeKeyShortcutModal"
