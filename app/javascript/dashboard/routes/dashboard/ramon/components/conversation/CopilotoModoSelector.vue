@@ -3,6 +3,8 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { MODOS, copilotoModoDe } from '../../helpers/copilotoModo';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, LINHA } from '../../helpers/ui';
 
 defineOptions({ name: 'CopilotoModoSelector' });
 const { t } = useI18n();
@@ -55,22 +57,26 @@ const escolher = async novoModo => {
 
 <template>
   <div class="relative">
-    <button
-      type="button"
+    <Button
       data-testid="copiloto-modo-btn"
-      class="rounded-full bg-n-iris-9/10 text-n-iris-11 text-xs px-2 py-1"
+      sm
+      faded
+      slate
+      icon="i-lucide-sparkles"
       @click="open = !open"
     >
-      {{
-        `✦ ${t('RAMON.COPILOTO.BTN', {
+      <span class="min-w-0 truncate">{{
+        t('RAMON.COPILOTO.BTN', {
           modo: t(`RAMON.COPILOTO.MODOS.${modo}.NOME`),
-        })} ▾`
-      }}
-    </button>
+        })
+      }}</span>
+      <span class="i-lucide-chevron-down size-3.5 shrink-0" />
+    </Button>
     <div v-if="open" class="fixed inset-0 z-40" @click="open = false" />
     <div
       v-if="open"
-      class="absolute right-0 top-9 z-50 w-80 rounded-xl border border-n-weak bg-n-solid-1 shadow-lg p-3"
+      class="absolute right-0 top-9 z-50 w-80 shadow-lg"
+      :class="CARTAO"
     >
       <p class="text-xs font-medium text-n-slate-11 mb-2">
         {{ t('RAMON.COPILOTO.TITULO') }}
@@ -80,8 +86,7 @@ const escolher = async novoModo => {
         :key="m"
         type="button"
         :data-testid="`copiloto-modo-opcao-${m}`"
-        class="w-full text-left rounded-lg p-2 hover:bg-n-alpha-2"
-        :class="{ 'bg-n-alpha-2': m === modo }"
+        :class="[LINHA, { 'bg-n-alpha-2': m === modo }]"
         @click="escolher(m)"
       >
         <p class="text-sm font-medium text-n-slate-12">

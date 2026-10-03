@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, TITULO, CHIP, TOM } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, default: null },
@@ -118,12 +120,12 @@ const sectionLabelKey = section =>
       <p class="text-sm text-n-slate-10">
         {{ $t('RAMON.PLAYBOOK.LOAD_ERROR') }}
       </p>
-      <button
-        class="text-sm text-n-iris-11 hover:underline"
+      <Button
+        link
+        xs
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="ensureItems"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
     <p
       v-else-if="!sections.length"
@@ -140,13 +142,13 @@ const sectionLabelKey = section =>
         data-testid="playbook-section"
       >
         <span class="flex items-center gap-2">
-          <span class="text-xs uppercase tracking-widest text-n-slate-9">
+          <span :class="TITULO">
             {{ $t(sectionLabelKey(group.section)) }}
           </span>
           <span
             v-if="group.highlighted"
             data-testid="playbook-stage-badge"
-            class="px-1.5 py-0.5 text-[10px] uppercase tracking-wide rounded bg-n-iris-3 text-n-iris-11 border border-n-iris-6"
+            :class="[CHIP, TOM.blue]"
           >
             {{ $t('RAMON.PLAYBOOK.THIS_STAGE') }}
           </span>
@@ -155,23 +157,27 @@ const sectionLabelKey = section =>
           v-for="item in group.items"
           :key="item.id"
           data-testid="playbook-item"
-          class="flex flex-col gap-1 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+          class="flex flex-col gap-1"
+          :class="CARTAO"
         >
           <div class="flex items-start justify-between gap-2">
             <strong v-if="item.title" class="text-sm text-n-slate-12">{{
               item.title
             }}</strong>
-            <button
-              class="shrink-0 px-2 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+            <Button
               data-testid="playbook-copy"
-              @click="copy(item)"
-            >
-              {{
+              sm
+              faded
+              slate
+              class="shrink-0 ms-auto"
+              :icon="copiedId === item.id ? 'i-lucide-check' : 'i-lucide-copy'"
+              :label="
                 copiedId === item.id
                   ? $t('RAMON.PLAYBOOK.COPIED')
                   : $t('RAMON.PLAYBOOK.COPY')
-              }}
-            </button>
+              "
+              @click="copy(item)"
+            />
           </div>
           <p class="text-sm whitespace-pre-wrap text-n-slate-12">
             {{ item.content }}

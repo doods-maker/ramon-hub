@@ -2,6 +2,9 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import LeadPanelBody from 'dashboard/routes/dashboard/ramon/components/lead/LeadPanelBody.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
+import { ACAO } from '../../helpers/ui';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -70,15 +73,17 @@ onMounted(() => {
       <span class="text-sm font-semibold text-n-slate-12">
         {{ $t('RAMON.LEAD_PANEL.TITLE') }}
       </span>
-      <button
-        class="ml-auto text-n-slate-10 hover:text-n-slate-12"
+      <Button
         data-testid="lead-panel-close"
+        sm
+        ghost
+        slate
+        icon="i-lucide-x"
+        class="ml-auto"
         :aria-label="$t('RAMON.LEAD_PANEL.CLOSE')"
         :title="$t('RAMON.LEAD_PANEL.CLOSE')"
         @click="emit('close')"
-      >
-        <span class="i-lucide-x size-4" />
-      </button>
+      />
     </div>
     <LeadPanelBody
       v-if="lead"
@@ -89,31 +94,33 @@ onMounted(() => {
     />
     <div v-else-if="ensureFailed" class="flex-1 p-3 text-sm">
       <p class="text-n-ruby-11">{{ $t('RAMON.LEAD_PANEL.LOAD_ERROR') }}</p>
-      <button
-        class="mt-2 text-xs text-n-iris-11 hover:underline"
+      <Button
         data-testid="lead-panel-retry"
+        link
+        xs
+        class="mt-2"
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="ensure"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
     <div v-else-if="semLead" class="flex-1 p-3 text-sm text-n-slate-11">
       <p>{{ $t('RAMON.LEAD_PANEL.SEM_LEAD') }}</p>
-      <button
+      <Button
         v-if="naRecepcao"
-        class="mt-2 rounded-md bg-n-iris-9 px-3 py-1.5 text-xs font-medium text-white hover:bg-n-iris-10 disabled:opacity-50"
         data-testid="lead-panel-encaminhar-comercial"
+        sm
+        class="mt-2"
+        :class="ACAO"
+        :label="$t('RAMON.LEAD_PANEL.ENCAMINHAR_COMERCIAL')"
         :disabled="encaminhando"
         @click="encaminhar"
-      >
-        {{ $t('RAMON.LEAD_PANEL.ENCAMINHAR_COMERCIAL') }}
-      </button>
+      />
     </div>
     <div
       v-else
       class="flex items-center gap-2 flex-1 p-3 text-sm text-n-slate-10"
     >
-      <span class="i-lucide-loader-2 animate-spin size-4" />
+      <Spinner :size="16" />
       {{ $t('RAMON.LEAD_PANEL.LOADING') }}
     </div>
   </div>

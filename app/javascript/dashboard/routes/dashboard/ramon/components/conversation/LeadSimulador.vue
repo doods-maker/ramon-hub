@@ -2,11 +2,28 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  ACAO,
+  ABA,
+  ABA_ATIVA,
+  ABA_INATIVA,
+  ARQUIVO,
+  AVISO,
+  CAMPO,
+  CARTAO,
+  CARTAO_STATUS,
+  FILETE,
+  ROTULO,
+  SELECT,
+  TOM,
+} from '../../helpers/ui';
 import LeadLiquidacao from './LeadLiquidacao.vue';
 import LeadElegibilidade from './LeadElegibilidade.vue';
 import LeadPensao from './LeadPensao.vue';
 import LeadMaternidade from './LeadMaternidade.vue';
 import LeadPlanejamento from './LeadPlanejamento.vue';
+import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -150,6 +167,13 @@ const especiaisJson = () => {
 };
 
 const GRAUS_ESPECIAIS = [15, 20, 25];
+
+// Checkbox do kit é booleano: o array de excluídos é montado aqui.
+const toggleExcluido = (seq, marcado) => {
+  excluidos.value = marcado
+    ? [...excluidos.value, seq]
+    : excluidos.value.filter(s => s !== seq);
+};
 
 const tituloDe = v => [v.seq, v.tipo, v.origem].filter(Boolean).join(' · ');
 const periodoDe = v => (v.inicio ? `${v.inicio} → ${v.fim || '…'}` : '');
@@ -383,17 +407,14 @@ const liquidarCartao = cartao => {
   liquidacaoRef.value?.preencher(cartao.rmi_com_descartes || cartao.rmi);
 };
 
+// filete do cartão: verde = elegível, vermelho = não, âmbar = depende
 const bordaDe = cartao => {
-  if (cartao.elegivel === true) return 'border-s-4 border-n-teal-9';
-  if (cartao.elegivel === false) return 'border-s-4 border-n-ruby-9';
-  return 'border-s-4 border-n-amber-9';
+  if (cartao.elegivel === true) return FILETE.teal;
+  if (cartao.elegivel === false) return FILETE.ruby;
+  return FILETE.amber;
 };
 
 const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
-
-const fieldClass =
-  'w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12 outline-none focus:border-n-slate-8';
-const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
 
 // Aba padrão = Possibilidades (uso "hub = Previdenciarista"); o fluxo de
 // honorário do auxílio-acidente vive na 2ª aba, intacto. Cálculo reaberto do
@@ -409,21 +430,22 @@ const aba = ref(props.inicial?.tipo || 'painel');
   <div class="flex flex-col gap-3 p-1" data-testid="lead-simulador">
     <div
       v-if="cnis"
-      class="flex flex-col gap-1 p-2 rounded-lg bg-n-alpha-1 border border-n-weak"
+      class="flex flex-col gap-1"
+      :class="CARTAO"
       data-testid="sim-cnis-chip"
     >
       <div class="flex items-center justify-between gap-2">
-        <span class="text-xs font-medium text-n-slate-12">
+        <span class="truncate text-xs font-medium text-n-slate-12">
           {{ cnis.filename }}
         </span>
-        <button
-          type="button"
+        <Button
           data-testid="sim-cnis-remove"
-          class="text-xs text-n-ruby-11"
+          link
+          ruby
+          xs
+          :label="$t('RAMON.SIMULADOR.CNIS_REMOVE')"
           @click="removeCnis"
-        >
-          {{ $t('RAMON.SIMULADOR.CNIS_REMOVE') }}
-        </button>
+        />
       </div>
       <span class="text-xs text-n-slate-10">
         {{
@@ -440,14 +462,15 @@ const aba = ref(props.inicial?.tipo || 'painel');
       >
         <li v-for="(aviso, i) in cnis.avisos" :key="i">{{ aviso }}</li>
       </ul>
-      <button
-        type="button"
+      <Button
         data-testid="sim-cnis-ajustes-toggle"
-        class="self-start text-xs underline text-n-slate-11"
+        link
+        slate
+        xs
+        class="self-start"
+        :label="$t('RAMON.SIMULADOR.VINCULOS_TOGGLE')"
         @click="toggleAjustes"
-      >
-        {{ $t('RAMON.SIMULADOR.VINCULOS_TOGGLE') }}
-      </button>
+      />
       <div
         v-if="ajustesOpen"
         class="flex flex-col gap-2 pt-1"
@@ -456,31 +479,31 @@ const aba = ref(props.inicial?.tipo || 'painel');
         <div
           v-for="v in vinculos"
           :key="v.seq"
-          class="flex flex-col gap-1 p-1.5 rounded-lg border border-n-weak"
+          class="flex flex-col gap-1 border-t border-n-weak pt-2"
         >
           <span class="text-xs text-n-slate-12 truncate">
             {{ tituloDe(v) }}
           </span>
-          <span v-if="v.inicio" class="text-xs text-n-slate-10">
+          <span v-if="v.inicio" class="font-mono text-xs text-n-slate-10">
             {{ periodoDe(v) }}
           </span>
           <label class="flex items-center gap-2 text-xs text-n-slate-11">
-            <input
-              v-model="excluidos"
-              type="checkbox"
-              :value="v.seq"
+            <Checkbox
+              :model-value="excluidos.includes(v.seq)"
               :data-testid="`sim-vinculo-excluir-${v.seq}`"
+              @update:model-value="on => toggleExcluido(v.seq, on)"
             />
             {{ $t('RAMON.SIMULADOR.VINCULO_EXCLUIR') }}
           </label>
-          <label v-if="v.tipo === 'BENEFICIO'" :class="labelClass">
+          <label v-if="v.tipo === 'BENEFICIO'" :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_MENSALIDADE') }}
             <input
               v-model="mensalidades[v.seq]"
               type="number"
               min="0"
               step="0.01"
-              :class="fieldClass"
+              class="font-mono"
+              :class="[CAMPO]"
               :data-testid="`sim-vinculo-mensalidade-${v.seq}`"
             />
           </label>
@@ -494,7 +517,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
             <select
               v-model="especiaisGrau[v.seq]"
               :data-testid="`sim-especial-grau-${v.seq}`"
-              :class="fieldClass"
+              :class="SELECT"
             >
               <option :value="undefined">
                 {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
@@ -508,43 +531,45 @@ const aba = ref(props.inicial?.tipo || 'painel');
                 v-model="especiaisInicio[v.seq]"
                 type="date"
                 :data-testid="`sim-especial-inicio-${v.seq}`"
-                :class="fieldClass"
+                class="font-mono"
+                :class="[CAMPO]"
               />
               <input
                 v-model="especiaisFim[v.seq]"
                 type="date"
                 :data-testid="`sim-especial-fim-${v.seq}`"
-                :class="fieldClass"
+                class="font-mono"
+                :class="[CAMPO]"
               />
             </template>
           </div>
         </div>
-        <label v-if="!cnisFile" :class="labelClass">
+        <label v-if="!cnisFile" :class="ROTULO">
           {{ $t('RAMON.SIMULADOR.VINCULOS_REUPLOAD_HINT') }}
           <input
             type="file"
             accept="application/pdf"
             data-testid="sim-cnis-refile"
-            :class="fieldClass"
+            :class="ARQUIVO"
             @change="onRefile"
           />
         </label>
-        <button
-          type="button"
+        <Button
           data-testid="sim-cnis-reaplicar"
-          class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
           :disabled="!cnisFile || cnisLoading"
-          @click="reaplicar"
-        >
-          {{
+          sm
+          faded
+          slate
+          :label="
             cnisLoading
               ? $t('RAMON.SIMULADOR.CNIS_LOADING')
               : $t('RAMON.SIMULADOR.VINCULOS_REAPLICAR')
-          }}
-        </button>
+          "
+          @click="reaplicar"
+        />
       </div>
     </div>
-    <label v-else :class="labelClass">
+    <label v-else :class="ROTULO">
       {{
         cnisLoading
           ? $t('RAMON.SIMULADOR.CNIS_LOADING')
@@ -555,7 +580,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
         accept="application/pdf"
         data-testid="sim-cnis-file"
         :disabled="cnisLoading"
-        :class="fieldClass"
+        :class="ARQUIVO"
         @change="onCnisFile"
       />
       <span class="text-n-slate-10">
@@ -564,35 +589,37 @@ const aba = ref(props.inicial?.tipo || 'painel');
     </label>
 
     <div class="grid grid-cols-2 gap-2">
-      <label v-if="!cnis" :class="labelClass">
+      <label v-if="!cnis" :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.NASCIMENTO') }}
         <input
           v-model="form.nascimento"
           type="date"
           data-testid="sim-nascimento"
-          :class="fieldClass"
+          class="font-mono"
+          :class="[CAMPO]"
         />
       </label>
-      <label v-if="!cnis" :class="labelClass">
+      <label v-if="!cnis" :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.SEXO') }}
-        <select v-model="form.sexo" data-testid="sim-sexo" :class="fieldClass">
+        <select v-model="form.sexo" data-testid="sim-sexo" :class="SELECT">
           <option value="M">{{ $t('RAMON.SIMULADOR.SEXO_M') }}</option>
           <option value="F">{{ $t('RAMON.SIMULADOR.SEXO_F') }}</option>
         </select>
       </label>
-      <label :class="labelClass">
+      <label :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.DER') }}
         <input
           v-model="form.der"
           type="date"
           data-testid="sim-der"
-          :class="fieldClass"
+          class="font-mono"
+          :class="[CAMPO]"
         />
       </label>
     </div>
 
     <div
-      class="flex flex-wrap gap-1 border-b border-n-weak"
+      class="flex flex-wrap border-b border-n-weak"
       role="tablist"
       data-testid="sim-abas"
     >
@@ -601,12 +628,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
         role="tab"
         :aria-selected="aba === 'painel'"
         data-testid="sim-aba-painel"
-        class="px-3 py-1.5 text-xs rounded-t-lg"
-        :class="
-          aba === 'painel'
-            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
-            : 'text-n-slate-10'
-        "
+        :class="[ABA, aba === 'painel' ? ABA_ATIVA : ABA_INATIVA]"
         @click="aba = 'painel'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_POSSIBILIDADES') }}
@@ -616,12 +638,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
         role="tab"
         :aria-selected="aba === 'honorario'"
         data-testid="sim-aba-honorario"
-        class="px-3 py-1.5 text-xs rounded-t-lg"
-        :class="
-          aba === 'honorario'
-            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
-            : 'text-n-slate-10'
-        "
+        :class="[ABA, aba === 'honorario' ? ABA_ATIVA : ABA_INATIVA]"
         @click="aba = 'honorario'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_HONORARIO') }}
@@ -631,12 +648,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
         role="tab"
         :aria-selected="aba === 'elegibilidade'"
         data-testid="sim-aba-elegibilidade"
-        class="px-3 py-1.5 text-xs rounded-t-lg"
-        :class="
-          aba === 'elegibilidade'
-            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
-            : 'text-n-slate-10'
-        "
+        :class="[ABA, aba === 'elegibilidade' ? ABA_ATIVA : ABA_INATIVA]"
         @click="aba = 'elegibilidade'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_ELEGIBILIDADE') }}
@@ -646,12 +658,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
         role="tab"
         :aria-selected="aba === 'pensao'"
         data-testid="sim-aba-pensao"
-        class="px-3 py-1.5 text-xs rounded-t-lg"
-        :class="
-          aba === 'pensao'
-            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
-            : 'text-n-slate-10'
-        "
+        :class="[ABA, aba === 'pensao' ? ABA_ATIVA : ABA_INATIVA]"
         @click="aba = 'pensao'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_PENSAO') }}
@@ -661,12 +668,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
         role="tab"
         :aria-selected="aba === 'maternidade'"
         data-testid="sim-aba-maternidade"
-        class="px-3 py-1.5 text-xs rounded-t-lg"
-        :class="
-          aba === 'maternidade'
-            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
-            : 'text-n-slate-10'
-        "
+        :class="[ABA, aba === 'maternidade' ? ABA_ATIVA : ABA_INATIVA]"
         @click="aba = 'maternidade'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_MATERNIDADE') }}
@@ -676,12 +678,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
         role="tab"
         :aria-selected="aba === 'planejamento'"
         data-testid="sim-aba-planejamento"
-        class="px-3 py-1.5 text-xs rounded-t-lg"
-        :class="
-          aba === 'planejamento'
-            ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
-            : 'text-n-slate-10'
-        "
+        :class="[ABA, aba === 'planejamento' ? ABA_ATIVA : ABA_INATIVA]"
         @click="aba = 'planejamento'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_PLANEJAMENTO') }}
@@ -709,7 +706,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
       data-testid="sim-secao-honorario"
     >
       <div class="grid grid-cols-2 gap-2">
-        <label v-if="!cnis" :class="labelClass">
+        <label v-if="!cnis" :class="ROTULO">
           {{ $t('RAMON.SIMULADOR.SALARIO') }}
           <input
             v-model="form.salario"
@@ -717,15 +714,16 @@ const aba = ref(props.inicial?.tipo || 'painel');
             min="0"
             step="0.01"
             data-testid="sim-salario"
-            :class="fieldClass"
+            class="font-mono"
+            :class="[CAMPO]"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.SIMULADOR.BENEFICIO') }}
           <select
             v-model="form.beneficio"
             data-testid="sim-beneficio"
-            :class="fieldClass"
+            :class="SELECT"
           >
             <option value="temporaria">
               {{ $t('RAMON.SIMULADOR.BENEFICIO_TEMPORARIA') }}
@@ -738,12 +736,12 @@ const aba = ref(props.inicial?.tipo || 'painel');
             </option>
           </select>
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.SIMULADOR.ORIGEM') }}
           <select
             v-model="form.origem"
             data-testid="sim-origem"
-            :class="fieldClass"
+            :class="SELECT"
           >
             <option value="previdenciaria">
               {{ $t('RAMON.SIMULADOR.ORIGEM_PREVIDENCIARIA') }}
@@ -756,38 +754,34 @@ const aba = ref(props.inicial?.tipo || 'painel');
       </div>
 
       <label class="flex items-center gap-2 text-xs text-n-slate-11">
-        <input
-          v-model="form.acrescimo_25"
-          type="checkbox"
-          data-testid="sim-acrescimo"
-        />
+        <Checkbox v-model="form.acrescimo_25" data-testid="sim-acrescimo" />
         {{ $t('RAMON.SIMULADOR.ACRESCIMO') }}
       </label>
 
-      <button
-        type="button"
+      <Button
         data-testid="sim-run"
-        class="px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="!canSimulate || isLoading"
-        @click="simulate"
-      >
-        {{
+        sm
+        :class="ACAO"
+        :label="
           isLoading
             ? $t('RAMON.SIMULADOR.SIMULANDO')
             : $t('RAMON.SIMULADOR.SIMULAR')
-        }}
-      </button>
+        "
+        @click="simulate"
+      />
 
       <div
         v-if="resultado"
-        class="flex flex-col gap-2 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+        class="flex flex-col gap-2"
+        :class="CARTAO"
         data-testid="sim-resultado"
       >
         <p class="text-sm text-n-slate-12">
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.ATRASADOS') }}:
           </span>
-          <span class="font-semibold" data-testid="sim-atrasados">
+          <span class="font-mono font-semibold" data-testid="sim-atrasados">
             {{ `~${money(resultado.atrasados)}` }}
           </span>
         </p>
@@ -800,7 +794,8 @@ const aba = ref(props.inicial?.tipo || 'painel');
         </p>
         <div
           v-if="avisosQualidade.length"
-          class="flex flex-col gap-1 p-2 rounded-lg border border-n-ruby-9 bg-n-ruby-3 text-xs text-n-ruby-11"
+          class="flex flex-col gap-1"
+          :class="[AVISO, TOM.ruby]"
           data-testid="sim-aviso-qualidade"
         >
           <p v-for="(aviso, i) in avisosQualidade" :key="i">{{ aviso }}</p>
@@ -816,7 +811,9 @@ const aba = ref(props.inicial?.tipo || 'painel');
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.HONORARIO') }}:
           </span>
-          <span class="font-semibold">{{ `~${money(honorario.valor)}` }}</span>
+          <span class="font-mono font-semibold">{{
+            `~${money(honorario.valor)}`
+          }}</span>
           <span class="text-xs text-n-slate-10">
             ({{
               $t('RAMON.SIMULADOR.HONORARIO_FORMULA', {
@@ -860,21 +857,22 @@ const aba = ref(props.inicial?.tipo || 'painel');
         >
           <li v-for="(aviso, i) in avisosGerais" :key="i">{{ aviso }}</li>
         </ul>
-        <button
-          type="button"
+        <Button
           data-testid="sim-memoria-toggle"
-          class="self-start text-xs underline text-n-slate-11 disabled:opacity-40"
           :disabled="memoriaLoading"
-          @click="verMemoria"
-        >
-          {{
+          link
+          slate
+          xs
+          class="self-start"
+          :label="
             memoriaLoading
               ? $t('RAMON.SIMULADOR.MEMORIA_LOADING')
               : memoria
                 ? $t('RAMON.SIMULADOR.MEMORIA_HIDE')
                 : $t('RAMON.SIMULADOR.MEMORIA_SHOW')
-          }}
-        </button>
+          "
+          @click="verMemoria"
+        />
         <div
           v-if="memoria"
           class="flex flex-col gap-1"
@@ -883,8 +881,8 @@ const aba = ref(props.inicial?.tipo || 'painel');
           <div
             class="max-h-64 overflow-y-auto overflow-x-auto rounded-lg border border-n-weak"
           >
-            <table class="w-full text-xs text-n-slate-11">
-              <thead class="sticky top-0 bg-n-solid-2">
+            <table class="w-full font-mono text-xs text-n-slate-11">
+              <thead class="sticky top-0 bg-n-solid-2 font-sans">
                 <tr class="text-n-slate-10">
                   <th class="p-1 text-start font-medium">
                     {{ $t('RAMON.SIMULADOR.MEMORIA_COMPETENCIA') }}
@@ -940,21 +938,32 @@ const aba = ref(props.inicial?.tipo || 'painel');
       <div
         v-for="(v, i) in vinculosExtras"
         :key="i"
-        class="flex flex-col gap-1 p-1.5 rounded-lg border border-n-weak"
+        class="flex flex-col gap-1"
+        :class="CARTAO"
         :data-testid="`sim-vinculo-extra-${i}`"
       >
         <div class="grid grid-cols-2 gap-1">
-          <label :class="labelClass">
+          <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_INICIO') }}
-            <input v-model="v.inicio" type="date" :class="fieldClass" />
+            <input
+              v-model="v.inicio"
+              type="date"
+              class="font-mono"
+              :class="[CAMPO]"
+            />
           </label>
-          <label :class="labelClass">
+          <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_FIM') }}
-            <input v-model="v.fim" type="date" :class="fieldClass" />
+            <input
+              v-model="v.fim"
+              type="date"
+              class="font-mono"
+              :class="[CAMPO]"
+            />
           </label>
-          <label :class="labelClass">
+          <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_TIPO') }}
-            <select v-model="v.tipo" :class="fieldClass">
+            <select v-model="v.tipo" :class="SELECT">
               <option value="EMPREGO">
                 {{ $t('RAMON.SIMULADOR.VINCULO_TIPO_EMPREGO') }}
               </option>
@@ -963,14 +972,15 @@ const aba = ref(props.inicial?.tipo || 'painel');
               </option>
             </select>
           </label>
-          <label :class="labelClass">
+          <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_SALARIO') }}
             <input
               v-model="v.salario"
               type="number"
               min="0"
               step="0.01"
-              :class="fieldClass"
+              class="font-mono"
+              :class="[CAMPO]"
             />
           </label>
         </div>
@@ -981,7 +991,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
           <select
             v-model="v.especialGrau"
             :data-testid="`sim-vinculo-extra-especial-grau-${i}`"
-            :class="fieldClass"
+            :class="SELECT"
           >
             <option :value="undefined">
               {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
@@ -995,45 +1005,48 @@ const aba = ref(props.inicial?.tipo || 'painel');
               v-model="v.especialInicio"
               type="date"
               :data-testid="`sim-vinculo-extra-especial-inicio-${i}`"
-              :class="fieldClass"
+              class="font-mono"
+              :class="[CAMPO]"
             />
             <input
               v-model="v.especialFim"
               type="date"
               :data-testid="`sim-vinculo-extra-especial-fim-${i}`"
-              :class="fieldClass"
+              class="font-mono"
+              :class="[CAMPO]"
             />
           </template>
         </div>
-        <button
-          type="button"
-          class="self-start text-xs text-n-ruby-11"
+        <Button
+          link
+          ruby
+          xs
+          class="self-start"
+          :label="$t('RAMON.SIMULADOR.VINCULO_REMOVER')"
           @click="removeVinculoExtra(i)"
-        >
-          {{ $t('RAMON.SIMULADOR.VINCULO_REMOVER') }}
-        </button>
+        />
       </div>
-      <button
-        type="button"
+      <Button
         data-testid="sim-vinculo-extra-add"
-        class="self-start text-xs underline text-n-slate-11"
+        link
+        slate
+        xs
+        class="self-start"
+        :label="$t('RAMON.SIMULADOR.VINCULO_ADICIONAR')"
         @click="addVinculoExtra"
-      >
-        {{ $t('RAMON.SIMULADOR.VINCULO_ADICIONAR') }}
-      </button>
-      <button
-        type="button"
+      />
+      <Button
         data-testid="sim-painel-run"
-        class="px-3 py-1.5 text-xs rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="!canPainel || painelLoading"
-        @click="calcularPainel"
-      >
-        {{
+        sm
+        :class="ACAO"
+        :label="
           painelLoading
             ? $t('RAMON.SIMULADOR.PAINEL_CALCULANDO')
             : $t('RAMON.SIMULADOR.PAINEL_CALCULAR')
-        }}
-      </button>
+        "
+        @click="calcularPainel"
+      />
 
       <div
         v-if="painel"
@@ -1054,8 +1067,8 @@ const aba = ref(props.inicial?.tipo || 'painel');
         <div
           v-for="cartao in painel.cartoes"
           :key="cartao.id"
-          class="flex flex-col gap-1 p-2 rounded-lg bg-n-alpha-1 border border-n-weak"
-          :class="bordaDe(cartao)"
+          class="flex flex-col gap-1"
+          :class="[CARTAO_STATUS, bordaDe(cartao)]"
           :data-testid="`sim-cartao-${cartao.id}`"
         >
           <div class="flex items-start justify-between gap-2">
@@ -1063,7 +1076,7 @@ const aba = ref(props.inicial?.tipo || 'painel');
               {{ cartao.titulo }}
             </span>
             <span
-              class="text-sm font-semibold text-n-slate-12 whitespace-nowrap"
+              class="font-mono text-sm font-semibold text-n-slate-12 whitespace-nowrap"
             >
               {{ money(cartao.rmi) }}
             </span>
@@ -1110,15 +1123,16 @@ const aba = ref(props.inicial?.tipo || 'painel');
               })
             }}
           </span>
-          <button
+          <Button
             v-if="cartao.rmi"
-            type="button"
-            class="self-start text-xs underline text-n-slate-11"
             :data-testid="`sim-cartao-liquidar-${cartao.id}`"
+            link
+            slate
+            xs
+            class="self-start"
+            :label="$t('RAMON.SIMULADOR.PAINEL_LIQUIDAR')"
             @click="liquidarCartao(cartao)"
-          >
-            {{ $t('RAMON.SIMULADOR.PAINEL_LIQUIDAR') }}
-          </button>
+          />
         </div>
         <ul
           v-if="painel.avisos && painel.avisos.length"

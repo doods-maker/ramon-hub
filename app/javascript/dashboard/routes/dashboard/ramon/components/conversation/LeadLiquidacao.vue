@@ -2,6 +2,9 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
+import Button from 'dashboard/components-next/button/Button.vue';
+import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import { ACAO, CAMPO, CARTAO, ROTULO, SECAO, SELECT } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -161,47 +164,43 @@ const baixarPdf = async () => {
     pdfLoading.value = false;
   }
 };
-
-const fieldClass =
-  'w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12 outline-none focus:border-n-slate-8';
-const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
 </script>
 
 <template>
-  <div
-    class="flex flex-col gap-2 border-t border-n-weak pt-2"
-    data-testid="liq-form"
-  >
+  <div class="flex flex-col gap-2" :class="SECAO" data-testid="liq-form">
     <span class="text-xs font-medium text-n-slate-12">
       {{ $t('RAMON.LIQUIDACAO.TITULO') }}
     </span>
     <div class="grid grid-cols-2 gap-2">
-      <label :class="labelClass">
+      <label :class="ROTULO">
         {{ $t('RAMON.LIQUIDACAO.RMI') }}
         <input
           v-model="form.rmi"
           type="text"
           inputmode="decimal"
           data-testid="liq-rmi"
-          :class="fieldClass"
+          class="font-mono"
+          :class="[CAMPO]"
         />
       </label>
-      <label :class="labelClass">
+      <label :class="ROTULO">
         {{ $t('RAMON.LIQUIDACAO.DIB') }}
         <input
           v-model="form.dib"
           type="date"
           data-testid="liq-dib"
-          :class="fieldClass"
+          class="font-mono"
+          :class="[CAMPO]"
         />
       </label>
-      <label :class="labelClass">
+      <label :class="ROTULO">
         {{ $t('RAMON.LIQUIDACAO.CITACAO') }}
         <input
           v-model="form.data_citacao"
           type="date"
           data-testid="liq-citacao"
-          :class="fieldClass"
+          class="font-mono"
+          :class="[CAMPO]"
         />
       </label>
     </div>
@@ -211,68 +210,74 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
         {{ $t('RAMON.LIQUIDACAO.OPCIONAIS') }}
       </summary>
       <div class="grid grid-cols-2 gap-2 pt-2">
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.AJUIZAMENTO') }}
           <input
             v-model="form.data_ajuizamento"
             type="date"
             data-testid="liq-ajuizamento"
-            :class="fieldClass"
+            class="font-mono"
+            :class="[CAMPO]"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.SENTENCA') }}
           <input
             v-model="form.data_sentenca_ou_acordao"
             type="date"
             data-testid="liq-sentenca"
-            :class="fieldClass"
+            class="font-mono"
+            :class="[CAMPO]"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.FIM') }}
           <input
             v-model="form.data_fim"
             type="date"
             data-testid="liq-fim"
-            :class="fieldClass"
+            class="font-mono"
+            :class="[CAMPO]"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.CALCULO_EM') }}
           <input
             v-model="form.data_calculo"
             type="date"
             data-testid="liq-calculo-em"
-            :class="fieldClass"
+            class="font-mono"
+            :class="[CAMPO]"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.HON_SUC') }}
           <input
             v-model="form.honorarios_sucumbenciais_pct"
             type="text"
             inputmode="decimal"
             data-testid="liq-hon-suc"
-            :class="fieldClass"
+            class="font-mono"
+            :class="[CAMPO]"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.HON_CONTR') }}
           <input
             v-model="form.honorarios_contratuais_pct"
             type="text"
             inputmode="decimal"
             data-testid="liq-hon-contr"
-            :class="fieldClass"
+            class="font-mono"
+            :class="[CAMPO]"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.REGIME') }}
           <select
             v-model="form.regime_pos_ec136"
             data-testid="liq-regime"
-            :class="fieldClass"
+            :class="SELECT"
           >
             <option value="art406">
               {{ $t('RAMON.LIQUIDACAO.REGIME_ART406') }}
@@ -284,11 +289,7 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
         </label>
       </div>
       <label class="flex items-center gap-2 pt-2 text-xs text-n-slate-11">
-        <input
-          v-model="form.no_piso"
-          type="checkbox"
-          data-testid="liq-no-piso"
-        />
+        <Checkbox v-model="form.no_piso" data-testid="liq-no-piso" />
         {{ $t('RAMON.LIQUIDACAO.NO_PISO') }}
       </label>
 
@@ -302,16 +303,17 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
           class="flex items-end gap-1"
           :data-testid="`liq-abatimento-${i}`"
         >
-          <label :class="labelClass">
+          <label :class="ROTULO">
             {{ $t('RAMON.LIQUIDACAO.ABATIMENTO_ANO') }}
             <input
               v-model="a.ano"
               type="number"
               :data-testid="`liq-abatimento-ano-${i}`"
-              :class="fieldClass"
+              class="font-mono"
+              :class="[CAMPO]"
             />
           </label>
-          <label :class="labelClass">
+          <label :class="ROTULO">
             {{ $t('RAMON.LIQUIDACAO.ABATIMENTO_MES') }}
             <input
               v-model="a.mes"
@@ -319,51 +321,53 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
               min="1"
               max="12"
               :data-testid="`liq-abatimento-mes-${i}`"
-              :class="fieldClass"
+              class="font-mono"
+              :class="[CAMPO]"
             />
           </label>
-          <label :class="labelClass">
+          <label :class="ROTULO">
             {{ $t('RAMON.LIQUIDACAO.ABATIMENTO_VALOR') }}
             <input
               v-model="a.valor"
               type="text"
               inputmode="decimal"
               :data-testid="`liq-abatimento-valor-${i}`"
-              :class="fieldClass"
+              class="font-mono"
+              :class="[CAMPO]"
             />
           </label>
-          <button
-            type="button"
-            class="pb-1.5 text-xs text-n-ruby-11"
+          <Button
+            link
+            ruby
+            xs
+            :label="$t('RAMON.LIQUIDACAO.ABATIMENTO_REMOVER')"
             @click="removeAbatimento(i)"
-          >
-            {{ $t('RAMON.LIQUIDACAO.ABATIMENTO_REMOVER') }}
-          </button>
+          />
         </div>
-        <button
-          type="button"
+        <Button
           data-testid="liq-abatimento-add"
-          class="self-start text-xs underline text-n-slate-11"
+          link
+          slate
+          xs
+          class="self-start"
+          :label="$t('RAMON.LIQUIDACAO.ABATIMENTO_ADD')"
           @click="addAbatimento"
-        >
-          {{ $t('RAMON.LIQUIDACAO.ABATIMENTO_ADD') }}
-        </button>
+        />
       </div>
     </details>
 
-    <button
-      type="button"
+    <Button
       data-testid="liq-run"
-      class="px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
       :disabled="!canCalcular || isLoading"
-      @click="calcular"
-    >
-      {{
+      sm
+      :class="ACAO"
+      :label="
         isLoading
           ? $t('RAMON.LIQUIDACAO.CALCULANDO')
           : $t('RAMON.LIQUIDACAO.CALCULAR')
-      }}
-    </button>
+      "
+      @click="calcular"
+    />
 
     <p
       v-if="motorDown"
@@ -382,20 +386,23 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
 
     <div
       v-if="resultado"
-      class="flex flex-col gap-1 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+      class="flex flex-col gap-1"
+      :class="CARTAO"
       data-testid="liq-resultado"
     >
       <p class="text-sm text-n-slate-12">
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.TOTAL_PRINCIPAL') }}:</span
         >
-        {{ money(resultado.total_principal_corrigido) }}
+        <span class="font-mono">{{
+          money(resultado.total_principal_corrigido)
+        }}</span>
       </p>
       <p class="text-sm text-n-slate-12">
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.TOTAL_JUROS') }}:</span
         >
-        {{ money(resultado.total_juros) }}
+        <span class="font-mono">{{ money(resultado.total_juros) }}</span>
       </p>
       <p
         v-if="Number(resultado.total_atualizacao_selic_ec136)"
@@ -404,13 +411,15 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.TOTAL_SELIC') }}:</span
         >
-        {{ money(resultado.total_atualizacao_selic_ec136) }}
+        <span class="font-mono">{{
+          money(resultado.total_atualizacao_selic_ec136)
+        }}</span>
       </p>
       <p class="text-sm font-semibold text-n-slate-12">
         <span class="font-normal text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.TOTAL_GERAL') }}:</span
         >
-        {{ money(resultado.total_geral) }}
+        <span class="font-mono">{{ money(resultado.total_geral) }}</span>
       </p>
       <p
         v-if="resultado.honorarios?.sucumbenciais"
@@ -419,7 +428,9 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.HONORARIOS_SUC') }}:</span
         >
-        {{ money(resultado.honorarios.sucumbenciais.valor) }}
+        <span class="font-mono">{{
+          money(resultado.honorarios.sucumbenciais.valor)
+        }}</span>
       </p>
       <p
         v-if="resultado.honorarios?.contratuais"
@@ -428,7 +439,9 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.HONORARIOS_CONTR') }}:</span
         >
-        {{ money(resultado.honorarios.contratuais.valor) }}
+        <span class="font-mono">{{
+          money(resultado.honorarios.contratuais.valor)
+        }}</span>
       </p>
       <p
         v-if="resultado.honorarios?.contratuais"
@@ -437,7 +450,7 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.LIQUIDO_CLIENTE') }}:</span
         >
-        {{ money(resultado.liquido_cliente) }}
+        <span class="font-mono">{{ money(resultado.liquido_cliente) }}</span>
       </p>
       <ul
         v-if="resultado.avisos && resultado.avisos.length"
@@ -447,47 +460,48 @@ const labelClass = 'flex flex-col gap-1 text-xs text-n-slate-10';
       </ul>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 pt-2">
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.PDF_NOME') }}
           <input
             v-model="cabecalho.segurado_nome"
             type="text"
             data-testid="liq-pdf-nome"
-            :class="fieldClass"
+            :class="CAMPO"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.PDF_PROCESSO') }}
           <input
             v-model="cabecalho.numero_processo"
             type="text"
             data-testid="liq-pdf-processo"
-            :class="fieldClass"
+            :class="CAMPO"
           />
         </label>
-        <label :class="labelClass">
+        <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.PDF_BENEFICIO') }}
           <input
             v-model="cabecalho.numero_beneficio"
             type="text"
             data-testid="liq-pdf-beneficio"
-            :class="fieldClass"
+            :class="CAMPO"
           />
         </label>
       </div>
-      <button
-        type="button"
+      <Button
         data-testid="liq-pdf-run"
-        class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="pdfLoading || !canCalcular"
-        @click="baixarPdf"
-      >
-        {{
+        sm
+        faded
+        slate
+        class="self-start"
+        :label="
           pdfLoading
             ? $t('RAMON.LIQUIDACAO.PDF_BAIXANDO')
             : $t('RAMON.LIQUIDACAO.PDF_BAIXAR')
-        }}
-      </button>
+        "
+        @click="baixarPdf"
+      />
     </div>
   </div>
 </template>

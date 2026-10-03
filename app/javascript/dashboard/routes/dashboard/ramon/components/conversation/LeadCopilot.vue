@@ -6,6 +6,8 @@ import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { ACAO, CARTAO, TITULO } from '../../helpers/ui';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -45,14 +47,9 @@ const generate = async mode => {
 
 <template>
   <!-- Card "Resumo da IA" do mock 1f: header + texto + chips de ação -->
-  <div
-    data-testid="lead-copilot"
-    class="p-3 rounded-xl bg-n-solid-2 border border-n-weak"
-  >
+  <div data-testid="lead-copilot" :class="CARTAO">
     <div class="flex items-center justify-between gap-2">
-      <p
-        class="text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10"
-      >
+      <p :class="TITULO">
         {{ $t('RAMON.COPILOT.SUMMARY_TITLE') }}
       </p>
       <span
@@ -71,32 +68,32 @@ const generate = async mode => {
       {{ summary || $t('RAMON.COPILOT.EMPTY') }}
     </p>
     <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
-      <button
-        type="button"
+      <Button
         data-testid="copilot-suggest"
-        class="px-3 py-1 text-[11.5px] font-semibold rounded-[7px] bg-n-iris-9/10 text-n-iris-11 hover:bg-n-iris-9/20 disabled:opacity-40 disabled:cursor-not-allowed"
+        sm
+        :class="ACAO"
+        icon="i-lucide-sparkles"
         :disabled="Boolean(loading)"
-        @click="generate('draft')"
-      >
-        {{
+        :label="
           loading === 'draft'
             ? $t('RAMON.COPILOT.WORKING')
             : $t('RAMON.COPILOT.SUGGEST')
-        }}
-      </button>
-      <button
-        type="button"
+        "
+        @click="generate('draft')"
+      />
+      <Button
         data-testid="copilot-summarize"
-        class="px-3 py-1 text-[11.5px] rounded-[7px] bg-n-alpha-1 text-n-slate-11 hover:bg-n-alpha-2 disabled:opacity-40 disabled:cursor-not-allowed"
+        sm
+        faded
+        slate
         :disabled="Boolean(loading)"
-        @click="generate('summary')"
-      >
-        {{
+        :label="
           loading === 'summary'
             ? $t('RAMON.COPILOT.WORKING')
             : $t('RAMON.COPILOT.REFRESH')
-        }}
-      </button>
+        "
+        @click="generate('summary')"
+      />
     </div>
   </div>
 </template>
