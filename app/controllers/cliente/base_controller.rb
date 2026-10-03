@@ -10,9 +10,12 @@ class Cliente::BaseController < ActionController::Base
 
   layout 'ramon_portal'
 
-  helper_method :current_cliente
+  helper_method :current_cliente, :data_br
 
   private
+
+  # 'YYYY-MM-DD' do espelho ou Date/Time → '03/10/2026' (o locale padrão do hub é en).
+  def data_br(valor) = (valor.respond_to?(:strftime) ? valor : valor.to_s.to_date)&.strftime('%d/%m/%Y')
 
   # O cookie guarda o id + um pedaço do digest da senha: trocar a senha ou gerar
   # senha provisória nova derruba toda sessão aberta com a senha antiga.

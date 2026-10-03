@@ -1,53 +1,72 @@
 <%# app/views/cliente/painel/show.html.erb %>
-<p class="eyebrow">Olá, <%= current_cliente.primeiro_nome %></p>
-<h1>Seus processos</h1>
-<div class="divider"></div>
+<div class="topo">
+  <p class="eyebrow">Olá, <%= current_cliente.primeiro_nome %></p>
+  <h1>Seus processos</h1>
+  <p class="lead">Veja em que fase está cada caso e o que precisamos de você.</p>
+</div>
 <% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
 <% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
 
-<% if Ramon::PortalTexto.v2? && current_cliente.ia_consentimento.nil? %>
-  <div class="docs-card">
-    <p class="docs-title">Uma pergunta rápida</p>
-    <p>Podemos usar inteligência artificial para organizar a lista de documentos que pedimos a você?
-      O texto do pedido, sem o seu nome e sem o seu CPF, é processado por um serviço com servidores na China.
-      É opcional: sem a sua autorização, mostramos o pedido de forma resumida. Você pode mudar de ideia quando quiser,
-      falando com a equipe.</p>
-    <%= button_to 'Autorizo', cliente_ia_path(ia: 'sim'), method: :post, class: 'btn-bronze' %>
-    <%= button_to 'Não autorizo', cliente_ia_path(ia: 'nao'), method: :post, class: 'btn-link' %>
-  </div>
+<% pergunta_ia = Ramon::PortalTexto.v2? && current_cliente.ia_consentimento.nil? %>
+<% if pergunta_ia || @assinaturas.any? %>
+  <h2 class="secao">Para você fazer</h2>
+  <% @assinaturas.each do |a| %>
+    <div class="docs-card">
+      <p class="docs-title">Assinar: <%= a.nome %></p>
+      <p class="muted">Leva poucos minutos e é feito aqui mesmo, pelo celular.</p>
+      <p><%= link_to 'Assinar agora', cliente_assinatura_path(a), class: 'btn-bronze' %></p>
+    </div>
+  <% end %>
+  <% if pergunta_ia %>
+    <div class="docs-card">
+      <p class="docs-title">Uma pergunta rápida</p>
+      <p>Podemos usar inteligência artificial para organizar a lista de documentos que pedimos a você?
+        O texto do pedido, sem o seu nome e sem o seu CPF, é processado por um serviço com servidores na China.
+        É opcional: sem a sua autorização, mostramos o pedido de forma resumida. Você pode mudar de ideia quando quiser,
+        falando com a equipe.</p>
+      <div class="acoes">
+        <%= button_to 'Autorizo', cliente_ia_path(ia: 'sim'), method: :post, class: 'btn-bronze' %>
+        <%= button_to 'Não autorizo', cliente_ia_path(ia: 'nao'), method: :post, class: 'btn-link' %>
+      </div>
+    </div>
+  <% end %>
 <% end %>
 
-<% @assinaturas.each do |a| %>
-  <div class="docs-card">
-    <p class="docs-title">Assinatura pendente: <%= a.nome %></p>
-    <%= link_to 'Assinar agora', cliente_assinatura_path(a), class: 'btn-bronze' %>
-  </div>
-<% end %>
-
+<% if @ativos.any? || @encerrados.empty? %><h2 class="secao">Em andamento</h2><% end %>
 <% if @ativos.empty? && @encerrados.empty? %>
   <div class="neutral-card">Ainda não encontramos processos no seu nome. Se acha que é um engano, fale com a equipe.</div>
 <% end %>
 <% @ativos.each do |p| %><%= render 'processo_card', processo: p %><% end %>
 <% if @encerrados.any? %>
-  <p class="eyebrow" style="margin-top:18px">Encerrados</p>
+  <h2 class="secao">Encerrados</h2>
   <% @encerrados.each do |p| %><%= render 'processo_card', processo: p %><% end %>
 <% end %>
 
 <% if @assinadas.any? || @envios.any? %>
-  <p class="eyebrow" style="margin-top:18px">Seus documentos</p>
+  <h2 class="secao">Seus documentos</h2>
   <div class="card">
     <% @assinadas.each do |a| %>
-      <p><%= a.nome %> (assinado) · <%= link_to 'Baixar', cliente_baixar_assinatura_path(a), class: 'btn-link' %></p>
+      <div class="doc-linha">
+        <div><p class="doc-nome"><%= a.nome %></p><p class="doc-meta">Assinado por você</p></div>
+        <%= link_to 'Baixar', cliente_baixar_assinatura_path(a), class: 'btn-link' %>
+      </div>
     <% end %>
     <% @envios.each do |e| %>
-      <p><%= e.item %> (enviado por você em <%= l(e.created_at.to_date) %>) · <%= link_to 'Baixar', cliente_baixar_envio_path(e), class: 'btn-link' %></p>
+      <div class="doc-linha">
+        <div><p class="doc-nome"><%= e.item %></p><p class="doc-meta">Enviado por você em <%= data_br(e.created_at) %></p></div>
+        <%= link_to 'Baixar', cliente_baixar_envio_path(e), class: 'btn-link' %>
+      </div>
     <% end %>
   </div>
 <% end %>
 
-<%= form_with url: cliente_atualizar_path, method: :post, local: true do |f| %>
-  <%= f.submit 'Atualizar', class: 'btn-link' %>
-<% end %>
-<p class="muted">Última atualização: <%= current_cliente.sincronizado_em ? l(current_cliente.sincronizado_em, format: :short) : '—' %></p>
-<%= link_to 'Trocar senha', edit_cliente_senha_path, class: 'btn-link' %>
-<%= button_to 'Sair', cliente_sair_path, method: :delete, class: 'btn-link' %>
+<div class="conta">
+  <p class="muted">Última atualização: <%= current_cliente.sincronizado_em ? current_cliente.sincronizado_em.in_time_zone('America/Sao_Paulo').strftime('%d/%m/%Y às %H:%M') : '—' %></p>
+  <div class="conta-links">
+    <%= form_with url: cliente_atualizar_path, method: :post, local: true do |f| %>
+      <%= f.submit 'Atualizar agora', class: 'btn-link' %>
+    <% end %>
+    <%= link_to 'Trocar senha', edit_cliente_senha_path, class: 'btn-link' %>
+    <%= button_to 'Sair', cliente_sair_path, method: :delete, class: 'btn-link' %>
+  </div>
+</div>
