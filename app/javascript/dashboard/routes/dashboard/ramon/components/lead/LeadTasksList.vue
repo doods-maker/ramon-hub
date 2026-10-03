@@ -4,6 +4,9 @@ import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import TaskBellMenu from '../kanban/TaskBellMenu.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import { SECAO, TITULO, CAMPO } from '../../helpers/ui';
 
 const props = defineProps({ leadId: { type: Number, required: true } });
 
@@ -116,10 +119,8 @@ const addTask = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 mb-4 pt-3 border-t border-n-weak">
-    <span class="text-xs uppercase text-n-slate-10">{{
-      $t('RAMON.TASKS.TITLE')
-    }}</span>
+  <div class="flex flex-col gap-2 mb-4" :class="SECAO">
+    <span :class="TITULO">{{ $t('RAMON.TASKS.TITLE') }}</span>
 
     <p
       v-if="!tasks.length"
@@ -136,12 +137,11 @@ const addTask = async () => {
       class="flex flex-col gap-1"
     >
       <div class="flex items-center gap-2">
-        <input
-          type="checkbox"
+        <Checkbox
           data-testid="task-complete"
           class="shrink-0"
           :title="$t('RAMON.TASKS.COMPLETE')"
-          :checked="Boolean(task.completed_at) || completingId === task.id"
+          :model-value="Boolean(task.completed_at) || completingId === task.id"
           :disabled="completingId === task.id"
           @change="complete(task, $event)"
         />
@@ -149,7 +149,7 @@ const addTask = async () => {
         <span
           v-if="task.due_at"
           data-testid="task-due"
-          class="text-[11px]"
+          class="font-mono text-[11px]"
           :class="
             relativeDue(task.due_at).overdue
               ? 'text-n-ruby-11'
@@ -168,13 +168,14 @@ const addTask = async () => {
     >
       <span>{{ $t('RAMON.TASKS.SCHEDULE_NEXT') }}</span>
       <TaskBellMenu @schedule="onScheduleNext" />
-      <button
+      <Button
         data-testid="task-schedule-dismiss"
-        class="text-n-slate-9 hover:text-n-slate-11"
+        xs
+        ghost
+        slate
+        icon="i-lucide-x"
         @click="justCompleted = null"
-      >
-        <span class="i-lucide-x size-3.5" />
-      </button>
+      />
     </div>
 
     <div v-if="adding" class="flex flex-col gap-2">
@@ -182,40 +183,43 @@ const addTask = async () => {
         v-model="newTitle"
         data-testid="task-new-title"
         :placeholder="$t('RAMON.TASKS.ADD_TITLE_PLACEHOLDER')"
-        class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+        :class="CAMPO"
       />
       <input
         v-model="newDate"
         data-testid="task-new-date"
         type="datetime-local"
         :title="$t('RAMON.TASKS.DATE_HINT')"
-        class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+        class="font-mono"
+        :class="CAMPO"
       />
       <div class="flex justify-end gap-2">
-        <button
+        <Button
           data-testid="task-new-cancel"
-          class="px-3 py-1 text-xs text-n-slate-11"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.FUNIL.CANCEL')"
           @click="adding = false"
-        >
-          {{ $t('RAMON.FUNIL.CANCEL') }}
-        </button>
-        <button
+        />
+        <Button
           data-testid="task-new-save"
-          class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
+          sm
+          :label="$t('RAMON.FUNIL.SAVE')"
           :disabled="savingTask"
           @click="addTask"
-        >
-          {{ $t('RAMON.FUNIL.SAVE') }}
-        </button>
+        />
       </div>
     </div>
-    <button
+    <Button
       v-else
       data-testid="task-add-toggle"
-      class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak"
+      sm
+      faded
+      slate
+      class="self-start"
+      :label="$t('RAMON.TASKS.ADD')"
       @click="adding = true"
-    >
-      {{ $t('RAMON.TASKS.ADD') }}
-    </button>
+    />
   </div>
 </template>

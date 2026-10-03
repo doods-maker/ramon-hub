@@ -27,7 +27,7 @@ const toggle = () => {
     slate
     sm
     data-testid="lead-panel-toggle"
-    icon="i-ph-user-bold"
+    icon="i-lucide-user"
     :label="$t('CONVERSATION.SIDEBAR.CONTACT')"
     :class="{ 'bg-n-alpha-2 !text-n-slate-12': isOpen }"
     @click="toggle"

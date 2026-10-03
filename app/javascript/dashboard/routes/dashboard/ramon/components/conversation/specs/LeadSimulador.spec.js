@@ -38,7 +38,11 @@ const lead = {
 const mountSim = (props = {}) =>
   shallowMount(LeadSimulador, {
     props: { lead, ...props },
-    global: { mocks: { $t: k => k } },
+    // Button/Checkbox reais: os testes leem disabled/checked do elemento
+    global: {
+      mocks: { $t: k => k },
+      stubs: { Button: false, Checkbox: false },
+    },
   });
 
 const fillForm = async wrapper => {
@@ -290,7 +294,9 @@ describe('LeadSimulador.vue', () => {
       .find('[data-testid="sim-cnis-ajustes-toggle"]')
       .trigger('click');
     expect(LeadsAPI.getCnis).not.toHaveBeenCalled(); // detalhe veio no upload
-    await wrapper.find('[data-testid="sim-vinculo-excluir-2"]').setValue(true);
+    await wrapper
+      .find('[data-testid="sim-vinculo-excluir-2"] input')
+      .setValue(true);
     await wrapper
       .find('[data-testid="sim-vinculo-mensalidade-2"]')
       .setValue('1286.57');
@@ -317,7 +323,8 @@ describe('LeadSimulador.vue', () => {
     await flushPromises();
     expect(LeadsAPI.getCnis).toHaveBeenCalledWith(7);
     expect(
-      wrapper.find('[data-testid="sim-vinculo-excluir-1"]').element.checked
+      wrapper.find('[data-testid="sim-vinculo-excluir-1"] input').element
+        .checked
     ).toBe(true);
     expect(
       wrapper.find('[data-testid="sim-cnis-reaplicar"]').element.disabled

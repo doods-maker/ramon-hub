@@ -5,6 +5,8 @@ import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import { stripCpf } from '../../helpers/cpf';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, TITULO, SELECT } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 const emit = defineEmits(['completeData']);
@@ -108,13 +110,10 @@ const copyLink = async () => {
 </script>
 
 <template>
-  <div
-    data-testid="zapsign-card"
-    class="rounded-xl p-3 bg-n-solid-1 border border-n-weak"
-  >
+  <div data-testid="zapsign-card" :class="CARTAO">
     <div class="flex items-center gap-2">
-      <span class="i-lucide-pen-line size-4 shrink-0 text-n-iris-11" />
-      <p class="text-xs font-semibold text-n-iris-11">
+      <span class="i-lucide-pen-line size-3.5 shrink-0 text-n-slate-10" />
+      <p :class="TITULO">
         {{ $t('RAMON.ZAPSIGN.CARD_TITLE') }}
       </p>
       <span
@@ -143,7 +142,8 @@ const copyLink = async () => {
         :aria-label="$t('RAMON.ZAPSIGN.TEMPLATE_LABEL')"
         data-testid="zapsign-template"
         :disabled="templatesError || !templates.length"
-        class="w-full mt-2 text-xs rounded-lg border border-n-weak bg-n-solid-1 px-2 py-1"
+        class="mt-2"
+        :class="SELECT"
       >
         <option v-for="tpl in templates" :key="tpl.token" :value="tpl.token">
           {{ tpl.name }}
@@ -168,42 +168,40 @@ const copyLink = async () => {
           target="_blank"
           rel="noopener noreferrer"
           data-testid="zapsign-link"
-          class="px-3 py-1 text-xs font-semibold rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+          class="inline-flex"
         >
-          {{ $t('RAMON.ZAPSIGN.OPEN') }}
+          <Button sm tabindex="-1" :label="$t('RAMON.ZAPSIGN.OPEN')" />
         </a>
-        <button
-          type="button"
+        <Button
           data-testid="zapsign-copy"
-          class="px-3 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11 hover:bg-n-alpha-2"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.ZAPSIGN.COPY')"
           @click="copyLink"
-        >
-          {{ $t('RAMON.ZAPSIGN.COPY') }}
-        </button>
+        />
       </template>
-      <button
+      <Button
         v-else
-        type="button"
         data-testid="zapsign-generate"
+        sm
         :disabled="loading || missing.length > 0 || !templateId"
-        class="px-3 py-1 text-xs font-semibold rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50 disabled:cursor-not-allowed"
-        @click="generate"
-      >
-        {{
+        :label="
           loading
             ? $t('RAMON.ZAPSIGN.GENERATING')
             : $t('RAMON.ZAPSIGN.GENERATE_SHORT')
-        }}
-      </button>
-      <button
+        "
+        @click="generate"
+      />
+      <Button
         v-if="missing.length"
-        type="button"
         data-testid="zapsign-complete-data"
-        class="px-3 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11 hover:bg-n-alpha-2"
+        sm
+        faded
+        slate
+        :label="$t('RAMON.ZAPSIGN.COMPLETE_DATA')"
         @click="emit('completeData')"
-      >
-        {{ $t('RAMON.ZAPSIGN.COMPLETE_DATA') }}
-      </button>
+      />
     </div>
   </div>
 </template>

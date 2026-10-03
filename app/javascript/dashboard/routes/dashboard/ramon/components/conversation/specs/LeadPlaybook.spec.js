@@ -54,6 +54,7 @@ const mountPlaybook = (lead, theses = [thesisWithItems], showSpy = vi.fn()) =>
     global: {
       plugins: [build(theses, showSpy)],
       mocks: { $t: k => k },
+      stubs: { Button: false },
     },
   });
 

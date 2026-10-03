@@ -7,6 +7,8 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { useDocSugestao } from '../../composables/useDocSugestao';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { SECAO, TITULO, CHIP, TOM, AVISO, LINHA } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -107,16 +109,9 @@ const cycle = async item => {
   }
 };
 
-const chipClass = item => {
-  const status = statusOf(item);
-  if (status === 'recebido') {
-    return 'bg-n-teal-3 text-n-teal-11 border-n-teal-6';
-  }
-  if (status === 'solicitado') {
-    return 'bg-n-iris-3 text-n-iris-11 border-n-iris-6';
-  }
-  return 'bg-n-amber-3 text-n-amber-11 border-n-amber-6';
-};
+// verde = recebido (ok), azul = solicitado (em ação), âmbar = pendente
+const chipClass = item =>
+  ({ recebido: TOM.teal, solicitado: TOM.blue })[statusOf(item)] || TOM.amber;
 
 // "Cobrar pendentes": monta o rascunho, copia, avisa e marca os pendentes
 // como solicitados. Nada é enviado automaticamente.
@@ -160,14 +155,13 @@ const chargePending = async () => {
 <template>
   <div
     v-if="lead?.thesis_id && docItems.length"
-    class="flex flex-col gap-2 mb-4 pt-3 border-t border-n-weak"
+    class="flex flex-col gap-2 mb-4"
+    :class="SECAO"
     data-testid="doc-checklist"
   >
     <div class="flex items-center justify-between">
-      <span class="text-xs uppercase text-n-slate-10">{{
-        $t('RAMON.DOCS.TITLE')
-      }}</span>
-      <span class="text-xs text-n-slate-10" data-testid="doc-count">{{
+      <span :class="TITULO">{{ $t('RAMON.DOCS.TITLE') }}</span>
+      <span class="font-mono text-xs text-n-slate-10" data-testid="doc-count">{{
         $t('RAMON.DOCS.COUNT', {
           received: receivedCount,
           total: docItems.length,
@@ -178,7 +172,8 @@ const chargePending = async () => {
     <div
       v-if="sugestao"
       data-testid="doc-sugestao"
-      class="flex items-center gap-2 rounded-lg bg-n-amber-9/10 px-3 py-2 text-n-amber-11"
+      class="flex flex-wrap items-center gap-2"
+      :class="[AVISO, TOM.amber]"
     >
       <span class="i-lucide-sparkles size-3.5" />
       <span class="text-xs">{{
@@ -186,24 +181,23 @@ const chargePending = async () => {
           item: sugestao.item.title || sugestao.item.content,
         })
       }}</span>
-      <button
-        type="button"
+      <Button
         data-testid="doc-sugestao-confirm"
-        class="text-xs font-semibold underline disabled:opacity-60"
+        link
+        xs
+        :label="$t('RAMON.DOCS.SUGESTAO.CONFIRMAR')"
         :disabled="sugestaoPending"
         @click="resolverSugestao(true)"
-      >
-        {{ $t('RAMON.DOCS.SUGESTAO.CONFIRMAR') }}
-      </button>
-      <button
-        type="button"
+      />
+      <Button
         data-testid="doc-sugestao-dismiss"
-        class="text-xs underline opacity-70 disabled:opacity-40"
+        link
+        slate
+        xs
+        :label="$t('RAMON.DOCS.SUGESTAO.DISPENSAR')"
         :disabled="sugestaoPending"
         @click="resolverSugestao(false)"
-      >
-        {{ $t('RAMON.DOCS.SUGESTAO.DISPENSAR') }}
-      </button>
+      />
     </div>
 
     <button
@@ -211,26 +205,27 @@ const chargePending = async () => {
       :key="item.id"
       type="button"
       data-testid="doc-chip"
-      class="flex items-center justify-between gap-2 px-3 py-2 text-sm text-left rounded-lg border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-      :class="chipClass(item)"
+      class="flex items-center justify-between gap-2"
+      :class="LINHA"
       :title="$t('RAMON.DOCS.CYCLE_HINT')"
       :disabled="pendingIds.has(item.id)"
       @click="cycle(item)"
     >
-      <span class="truncate">{{ itemLabel(item) }}</span>
-      <span class="shrink-0 text-xs uppercase tracking-wide">{{
+      <span class="truncate text-n-slate-12">{{ itemLabel(item) }}</span>
+      <span class="shrink-0" :class="[CHIP, chipClass(item)]">{{
         $t(`RAMON.DOCS.STATUS.${statusOf(item).toUpperCase()}`)
       }}</span>
     </button>
 
-    <button
-      type="button"
+    <Button
       data-testid="doc-charge"
-      class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
+      sm
+      faded
+      slate
+      class="self-start"
+      :label="$t('RAMON.DOCS.CHARGE')"
       :disabled="!hasChargeable"
       @click="chargePending"
-    >
-      {{ $t('RAMON.DOCS.CHARGE') }}
-    </button>
+    />
   </div>
 </template>

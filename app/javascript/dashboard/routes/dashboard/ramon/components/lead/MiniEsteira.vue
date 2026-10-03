@@ -28,7 +28,7 @@ const currentIndex = computed(() =>
       class="h-1 flex-1 rounded-full"
       :class="
         currentIndex >= 0 && index <= currentIndex
-          ? 'bg-n-iris-9'
+          ? 'bg-n-blue-9'
           : 'bg-n-alpha-2'
       "
     />

@@ -226,7 +226,7 @@ export const colors = {
     },
 
     black: '#000000',
-    brand: '#8a5c33', // bronze da banca (era o azul Chatwoot #2781F6)
+    brand: '#2563eb', // azul de destaque do hub (03/10; era o bronze #8a5c33)
     portal: 'var(--dynamic-portal-color)',
     'portal-soft': 'var(--dynamic-portal-color-soft)',
     'portal-faint': 'var(--dynamic-portal-color-faint)',

@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, CARTAO_STATUS, FILETE } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -97,30 +99,29 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
 
 <template>
   <div class="flex flex-col gap-3 p-1" data-testid="lead-planejamento">
-    <button
-      type="button"
+    <Button
       data-testid="planejamento-planejar"
-      class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
       :disabled="ocupado"
-      @click="planejar"
-    >
-      {{
+      sm
+      class="self-start"
+      :label="
         isLoading
           ? $t('RAMON.SIMULADOR.PLANEJAMENTO_PLANEJANDO')
           : $t('RAMON.SIMULADOR.PLANEJAMENTO_PLANEJAR')
-      }}
-    </button>
+      "
+      @click="planejar"
+    />
 
     <div v-if="hasError" data-testid="planejamento-error">
       <p class="text-sm text-n-ruby-11">{{ errorMessage }}</p>
-      <button
-        type="button"
+      <Button
         data-testid="planejamento-retry"
-        class="mt-1 text-xs text-n-iris-11 hover:underline"
+        link
+        xs
+        class="mt-1"
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="retry"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
 
     <template v-if="resultado">
@@ -137,7 +138,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
         <div
           v-for="(pend, i) in resultado.decisoes_pendentes"
           :key="i"
-          class="p-2 rounded-lg bg-n-amber-3 border border-n-amber-6"
+          :class="[CARTAO_STATUS, FILETE.amber]"
           :data-testid="`planejamento-pendencia-${i}`"
         >
           <p class="text-xs text-n-amber-11 font-medium">
@@ -149,7 +150,8 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
       <div
         v-for="(cenario, i) in resultado.cenarios"
         :key="i"
-        class="flex flex-col gap-2 p-2 rounded-lg border border-n-weak"
+        class="flex flex-col gap-2"
+        :class="CARTAO"
         :data-testid="`planejamento-cenario-${i}`"
       >
         <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
@@ -158,7 +160,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
           </span>
           <span class="text-xs text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_SALARIO') }}:
-            {{ money(cenario.salario) }}
+            <span class="font-mono">{{ money(cenario.salario) }}</span>
           </span>
           <span class="text-xs text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_ALIQUOTA') }}:
@@ -173,14 +175,14 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
           v-if="cenario.resultados && cenario.resultados.length"
           class="overflow-x-auto"
         >
-          <table class="w-full text-xs">
+          <table class="w-full font-mono text-xs">
             <tbody>
               <tr
                 v-for="(r, j) in cenario.resultados"
                 :key="j"
                 :data-testid="`planejamento-cenario-${i}-resultado-${j}`"
               >
-                <td class="p-1">
+                <td class="p-1 font-sans">
                   <span class="font-medium text-n-slate-12">{{
                     r.titulo
                   }}</span>
@@ -188,11 +190,11 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
                   {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_FECHA_EM') }}:
-                  {{ dataBr(r.fecha_em) }}
+                  <span class="font-mono">{{ dataBr(r.fecha_em) }}</span>
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
                   {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_RMI_PROJETADA') }}:
-                  {{ money(r.rmi_projetada) }}
+                  <span class="font-mono">{{ money(r.rmi_projetada) }}</span>
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
                   {{
@@ -203,7 +205,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
                   {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_DESEMBOLSO') }}:
-                  {{ money(r.desembolso_total) }}
+                  <span class="font-mono">{{ money(r.desembolso_total) }}</span>
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
                   {{
@@ -250,19 +252,20 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
         <li v-for="(aviso, i) in resultado.avisos" :key="i">{{ aviso }}</li>
       </ul>
 
-      <button
-        type="button"
+      <Button
         data-testid="planejamento-pdf-run"
-        class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="ocupado"
-        @click="baixarPdf"
-      >
-        {{
+        sm
+        faded
+        slate
+        class="self-start"
+        :label="
           pdfLoading
             ? $t('RAMON.SIMULADOR.PLANEJAMENTO_PDF_BAIXANDO')
             : $t('RAMON.SIMULADOR.PLANEJAMENTO_PDF_BAIXAR')
-        }}
-      </button>
+        "
+        @click="baixarPdf"
+      />
     </template>
   </div>
 </template>

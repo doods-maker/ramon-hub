@@ -3,6 +3,8 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CHIP, TOM } from '../../helpers/ui';
 
 defineOptions({ name: 'LeadFollowUpBanner' });
 
@@ -82,7 +84,7 @@ const slaChip = computed(() => {
       )
     );
     return {
-      tone: 'bg-n-teal-9/15 text-n-teal-11',
+      tone: TOM.teal,
       icon: 'i-lucide-check',
       text: t('RAMON.SLA.CHIP_OK', { minutes: taken }),
     };
@@ -90,12 +92,12 @@ const slaChip = computed(() => {
   const leftMin = Math.floor((due - Date.now()) / 60000);
   if (leftMin >= 0)
     return {
-      tone: 'bg-n-amber-9/15 text-n-amber-11',
+      tone: TOM.amber,
       icon: 'i-lucide-timer',
       text: t('RAMON.SLA.CHIP_PENDING', { minutes: leftMin }),
     };
   return {
-    tone: 'bg-n-ruby-9/15 text-n-ruby-11',
+    tone: TOM.ruby,
     icon: 'i-lucide-timer-off',
     text: t('RAMON.SLA.CHIP_BREACHED'),
   };
@@ -119,22 +121,22 @@ const openPanel = () => {
       v-if="slaChip"
       data-testid="lead-sla-chip"
       :title="slaChip.text"
-      class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full"
-      :class="slaChip.tone"
+      :class="[CHIP, slaChip.tone]"
     >
       <span class="size-3.5 shrink-0" :class="slaChip.icon" />
       <span class="truncate max-w-40">{{ slaChip.text }}</span>
     </span>
-    <button
+    <Button
       v-if="label"
-      type="button"
       data-testid="lead-follow-up-banner"
+      sm
+      faded
+      amber
+      icon="i-lucide-history"
+      class="max-w-48"
       :title="label"
-      class="inline-flex items-center gap-1 min-w-0 max-w-48 px-2 py-1 text-xs rounded-full bg-n-amber-9/15 text-n-amber-11 hover:bg-n-amber-9/25"
+      :label="label"
       @click="openPanel"
-    >
-      <span class="i-lucide-history size-3.5 shrink-0" />
-      <span class="truncate">{{ label }}</span>
-    </button>
+    />
   </span>
 </template>

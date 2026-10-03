@@ -2,6 +2,18 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
+import Button from 'dashboard/components-next/button/Button.vue';
+import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import {
+  AVISO,
+  CAMPO,
+  CARTAO,
+  CARTAO_STATUS,
+  FILETE,
+  ROTULO,
+  SELECT,
+  TOM,
+} from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -108,10 +120,8 @@ const responder = (tipo, valor) => {
 // erro nunca se mascara de vazio: retry refaz a mesma ação que falhou.
 const retry = () => calcular();
 
-const cenarioBorda = cenario =>
-  cenario.mantida
-    ? 'border-n-teal-9 bg-n-teal-3'
-    : 'border-n-ruby-9 bg-n-ruby-3';
+// filete do cenário: verde = qualidade mantida, vermelho = perdida
+const cenarioBorda = cenario => (cenario.mantida ? FILETE.teal : FILETE.ruby);
 const cenarioTexto = cenario =>
   cenario.mantida ? 'text-n-teal-11' : 'text-n-ruby-11';
 
@@ -121,30 +131,33 @@ const isCessaDict = v => v !== null && typeof v === 'object';
 <template>
   <div class="flex flex-col gap-3 p-1" data-testid="lead-pensao">
     <p
-      class="text-xs font-medium text-n-amber-11 p-2 rounded-lg bg-n-amber-3 border border-n-amber-6"
+      class="font-medium"
+      :class="[AVISO, TOM.amber]"
       data-testid="pensao-aviso-cnis-falecido"
     >
       {{ $t('RAMON.SIMULADOR.PENSAO_AVISO_CNIS_FALECIDO') }}
     </p>
 
     <div class="grid grid-cols-2 gap-2">
-      <label class="flex flex-col gap-1 text-xs text-n-slate-10">
+      <label :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.PENSAO_DATA_OBITO') }}
         <input
           v-model="dataObito"
           type="date"
           data-testid="pensao-data-obito"
-          class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12 outline-none focus:border-n-slate-8"
+          class="font-mono"
+          :class="[CAMPO]"
         />
       </label>
-      <label class="flex flex-col gap-1 text-xs text-n-slate-10">
+      <label :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.PENSAO_VALOR_BENEFICIO_OBITO') }}
         <input
           v-model="valorBeneficioObito"
           type="text"
           inputmode="decimal"
           data-testid="pensao-valor-beneficio"
-          class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12 outline-none focus:border-n-slate-8"
+          class="font-mono"
+          :class="[CAMPO]"
         />
       </label>
     </div>
@@ -156,16 +169,17 @@ const isCessaDict = v => v !== null && typeof v === 'object';
       <div
         v-for="(dep, i) in dependentes"
         :key="i"
-        class="flex flex-col gap-1 p-1.5 rounded-lg border border-n-weak"
+        class="flex flex-col gap-1"
+        :class="CARTAO"
         :data-testid="`pensao-dependente-${i}`"
       >
         <div class="grid grid-cols-2 gap-1">
-          <label class="flex flex-col gap-1 text-xs text-n-slate-10">
+          <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_TIPO') }}
             <select
               v-model="dep.tipo"
               :data-testid="`pensao-dependente-tipo-${i}`"
-              class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12"
+              :class="SELECT"
             >
               <option value="conjuge">
                 {{ $t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_CONJUGE') }}
@@ -178,85 +192,85 @@ const isCessaDict = v => v !== null && typeof v === 'object';
               </option>
             </select>
           </label>
-          <label class="flex flex-col gap-1 text-xs text-n-slate-10">
+          <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_NASCIMENTO') }}
             <input
               v-model="dep.nascimento"
               type="date"
               :data-testid="`pensao-dependente-nascimento-${i}`"
-              class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12"
+              class="font-mono"
+              :class="[CAMPO]"
             />
           </label>
         </div>
         <label class="flex items-center gap-2 text-xs text-n-slate-11">
-          <input
+          <Checkbox
             v-model="dep.invalido"
-            type="checkbox"
             :data-testid="`pensao-dependente-invalido-${i}`"
           />
           {{ $t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_INVALIDO') }}
         </label>
-        <label
-          v-if="dep.tipo === 'conjuge'"
-          class="flex flex-col gap-1 text-xs text-n-slate-10"
-        >
+        <label v-if="dep.tipo === 'conjuge'" :class="ROTULO">
           {{ $t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_INICIO_UNIAO') }}
           <input
             v-model="dep.inicio_uniao"
             type="date"
             :data-testid="`pensao-dependente-uniao-${i}`"
-            class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12"
+            class="font-mono"
+            :class="[CAMPO]"
           />
         </label>
-        <button
-          type="button"
-          class="self-start text-xs text-n-ruby-11"
+        <Button
           :data-testid="`pensao-dependente-remover-${i}`"
+          link
+          ruby
+          xs
+          class="self-start"
+          :label="$t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_REMOVER')"
           @click="removerDependente(i)"
-        >
-          {{ $t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_REMOVER') }}
-        </button>
+        />
       </div>
-      <button
-        type="button"
+      <Button
         data-testid="pensao-dependente-add"
-        class="self-start text-xs underline text-n-slate-11"
+        link
+        slate
+        xs
+        class="self-start"
+        :label="$t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_ADICIONAR')"
         @click="adicionarDependente"
-      >
-        {{ $t('RAMON.SIMULADOR.PENSAO_DEPENDENTE_ADICIONAR') }}
-      </button>
+      />
     </div>
 
-    <button
-      type="button"
+    <Button
       data-testid="pensao-calcular"
-      class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
       :disabled="!dataObito || !dependentes.length || isLoading"
-      @click="calcular"
-    >
-      {{
+      sm
+      class="self-start"
+      :label="
         isLoading
           ? $t('RAMON.SIMULADOR.PENSAO_CALCULANDO')
           : $t('RAMON.SIMULADOR.PENSAO_CALCULAR')
-      }}
-    </button>
+      "
+      @click="calcular"
+    />
 
     <div v-if="hasError" data-testid="pensao-error">
       <p class="text-sm text-n-ruby-11">{{ errorMessage }}</p>
-      <button
-        type="button"
+      <Button
         data-testid="pensao-retry"
-        class="mt-1 text-xs text-n-iris-11 hover:underline"
+        link
+        xs
+        class="mt-1"
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="retry"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
 
     <template v-if="resultado">
       <div
         v-if="resultado.qualidade_falecido === 'dispensada'"
-        class="p-2 rounded-lg border border-n-teal-9 bg-n-teal-3 text-xs text-n-teal-11 font-medium"
+        class="text-xs font-medium text-n-teal-11"
+        :class="[CARTAO_STATUS, FILETE.teal]"
         data-testid="pensao-qualidade-dispensada"
       >
         {{ $t('RAMON.SIMULADOR.PENSAO_QUALIDADE_DISPENSADA') }}
@@ -269,8 +283,11 @@ const isCessaDict = v => v !== null && typeof v === 'object';
       >
         <div
           v-if="resultado.qualidade_falecido.cenarios.unico"
-          class="flex flex-col gap-1 p-2 rounded-lg border"
-          :class="cenarioBorda(resultado.qualidade_falecido.cenarios.unico)"
+          class="flex flex-col gap-1"
+          :class="[
+            CARTAO_STATUS,
+            cenarioBorda(resultado.qualidade_falecido.cenarios.unico),
+          ]"
           data-testid="pensao-cenario-unico"
         >
           <p
@@ -283,7 +300,10 @@ const isCessaDict = v => v !== null && typeof v === 'object';
                 : $t('RAMON.SIMULADOR.ELEG_PERDIDA')
             }}
             <template v-if="resultado.qualidade_falecido.cenarios.unico.ate">
-              — {{ dataBr(resultado.qualidade_falecido.cenarios.unico.ate) }}
+              —
+              <span class="font-mono">{{
+                dataBr(resultado.qualidade_falecido.cenarios.unico.ate)
+              }}</span>
             </template>
           </p>
           <p class="text-xs text-n-slate-10">
@@ -293,10 +313,13 @@ const isCessaDict = v => v !== null && typeof v === 'object';
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div
             v-if="resultado.qualidade_falecido.cenarios.sem_desemprego"
-            class="flex flex-col gap-1 p-2 rounded-lg border"
-            :class="
-              cenarioBorda(resultado.qualidade_falecido.cenarios.sem_desemprego)
-            "
+            class="flex flex-col gap-1"
+            :class="[
+              CARTAO_STATUS,
+              cenarioBorda(
+                resultado.qualidade_falecido.cenarios.sem_desemprego
+              ),
+            ]"
             data-testid="pensao-cenario-sem-desemprego"
           >
             <span class="text-xs text-n-slate-10">
@@ -334,10 +357,13 @@ const isCessaDict = v => v !== null && typeof v === 'object';
           </div>
           <div
             v-if="resultado.qualidade_falecido.cenarios.com_desemprego"
-            class="flex flex-col gap-1 p-2 rounded-lg border"
-            :class="
-              cenarioBorda(resultado.qualidade_falecido.cenarios.com_desemprego)
-            "
+            class="flex flex-col gap-1"
+            :class="[
+              CARTAO_STATUS,
+              cenarioBorda(
+                resultado.qualidade_falecido.cenarios.com_desemprego
+              ),
+            ]"
             data-testid="pensao-cenario-com-desemprego"
           >
             <span class="text-xs text-n-slate-10">
@@ -389,7 +415,8 @@ const isCessaDict = v => v !== null && typeof v === 'object';
         <div
           v-for="(pend, i) in resultado.decisoes_pendentes"
           :key="i"
-          class="flex flex-col gap-1 p-2 rounded-lg bg-n-amber-3 border border-n-amber-6"
+          class="flex flex-col gap-1"
+          :class="[CARTAO_STATUS, FILETE.amber]"
           :data-testid="`pensao-pendencia-${i}`"
         >
           <p class="text-xs text-n-amber-11 font-medium">{{ pend.pergunta }}</p>
@@ -402,38 +429,39 @@ const isCessaDict = v => v !== null && typeof v === 'object';
             {{ pend.efeito_por_resposta?.nao }}
           </p>
           <div class="flex gap-2">
-            <button
-              type="button"
+            <Button
               data-testid="pensao-pendencia-sim"
-              class="px-2 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
               :disabled="isLoading"
+              sm
+              faded
+              slate
+              :label="$t('RAMON.SIMULADOR.ELEG_SIM')"
               @click="responder(pend.tipo, true)"
-            >
-              {{ $t('RAMON.SIMULADOR.ELEG_SIM') }}
-            </button>
-            <button
-              type="button"
+            />
+            <Button
               data-testid="pensao-pendencia-nao"
-              class="px-2 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
               :disabled="isLoading"
+              sm
+              faded
+              slate
+              :label="$t('RAMON.SIMULADOR.ELEG_NAO')"
               @click="responder(pend.tipo, false)"
-            >
-              {{ $t('RAMON.SIMULADOR.ELEG_NAO') }}
-            </button>
+            />
           </div>
         </div>
       </div>
 
       <div
         v-if="resultado.base"
-        class="flex flex-col gap-1 p-2 rounded-lg bg-n-alpha-1 border border-n-weak"
+        class="flex flex-col gap-1"
+        :class="CARTAO"
         data-testid="pensao-base"
       >
         <p class="text-sm text-n-slate-12">
           <span class="text-n-slate-10"
             >{{ $t('RAMON.SIMULADOR.PENSAO_BASE') }}:</span
           >
-          {{ money(resultado.base.valor) }}
+          <span class="font-mono">{{ money(resultado.base.valor) }}</span>
           <span class="text-xs text-n-slate-10">
             ({{ resultado.base.origem }})
           </span>
@@ -445,7 +473,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
           <span class="text-n-slate-10"
             >{{ $t('RAMON.SIMULADOR.PENSAO_PERCENTUAL') }}:</span
           >
-          <span class="font-semibold" data-testid="pensao-percentual">
+          <span class="font-mono font-semibold" data-testid="pensao-percentual">
             {{ resultado.percentual }}%
           </span>
         </p>
@@ -454,7 +482,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
             >{{ $t('RAMON.SIMULADOR.PENSAO_RMI') }}:</span
           >
           <span class="font-semibold" data-testid="pensao-rmi">
-            {{ money(resultado.rmi) }}
+            <span class="font-mono">{{ money(resultado.rmi) }}</span>
           </span>
         </p>
       </div>
@@ -470,14 +498,15 @@ const isCessaDict = v => v !== null && typeof v === 'object';
         <div
           v-for="(q, i) in resultado.quotas"
           :key="i"
-          class="flex flex-col gap-1 p-2 rounded-lg border border-n-weak"
+          class="flex flex-col gap-1"
+          :class="CARTAO"
           :data-testid="`pensao-quota-${i}`"
         >
           <div class="flex items-center justify-between gap-2">
             <span class="text-sm font-medium text-n-slate-12">
               {{ q.tipo }}
             </span>
-            <span class="text-sm font-semibold text-n-slate-12">
+            <span class="font-mono text-sm font-semibold text-n-slate-12">
               {{ q.quota_pct }}%
             </span>
           </div>
@@ -512,7 +541,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
           <template v-else>
             <span class="text-xs text-n-slate-10">
               {{ $t('RAMON.SIMULADOR.PENSAO_CESSA_EM') }}:
-              {{ dataBr(q.cessa_em) }}
+              <span class="font-mono">{{ dataBr(q.cessa_em) }}</span>
             </span>
           </template>
           <p class="text-xs text-n-slate-10">{{ q.fundamento }}</p>

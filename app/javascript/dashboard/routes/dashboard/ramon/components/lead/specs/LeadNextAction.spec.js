@@ -35,7 +35,11 @@ const mountCard = (storeOpts = {}) =>
     global: {
       plugins: [build(storeOpts)],
       mocks: { $t: k => k },
-      stubs: { TaskBellMenu: true, RouterLink: true },
+      stubs: {
+        TaskBellMenu: true,
+        // router-link custom: o stub precisa entregar o slot com navigate
+        RouterLink: { template: '<slot :navigate="() => {}" />' },
+      },
     },
   });
 

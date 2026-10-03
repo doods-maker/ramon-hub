@@ -49,6 +49,8 @@ const tailwindConfig = {
           'ui-monospace',
           'SFMono-Regular',
           'Menlo',
+          'Consolas', // Windows: sem isso, Geist Mono fora do ar cai na Courier
+          'Cascadia Mono',
           'monospace',
         ],
       },

@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CAMPO, CARTAO, ROTULO, SELECT } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -52,21 +54,22 @@ const retry = () => calcular();
 <template>
   <div class="flex flex-col gap-3 p-1" data-testid="lead-maternidade">
     <div class="grid grid-cols-2 gap-2">
-      <label class="flex flex-col gap-1 text-xs text-n-slate-10">
+      <label :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.MATERNIDADE_DATA_EVENTO') }}
         <input
           v-model="dataEvento"
           type="date"
           data-testid="maternidade-data-evento"
-          class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12 outline-none focus:border-n-slate-8"
+          class="font-mono"
+          :class="[CAMPO]"
         />
       </label>
-      <label class="flex flex-col gap-1 text-xs text-n-slate-10">
+      <label :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.MATERNIDADE_CATEGORIA') }}
         <select
           v-model="categoria"
           data-testid="maternidade-categoria"
-          class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 border border-n-weak text-n-slate-12"
+          :class="SELECT"
         >
           <option value="empregada">
             {{ $t('RAMON.SIMULADOR.MATERNIDADE_CATEGORIA_EMPREGADA') }}
@@ -81,35 +84,35 @@ const retry = () => calcular();
       </label>
     </div>
 
-    <button
-      type="button"
+    <Button
       data-testid="maternidade-calcular"
-      class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
       :disabled="!dataEvento || isLoading"
-      @click="calcular"
-    >
-      {{
+      sm
+      class="self-start"
+      :label="
         isLoading
           ? $t('RAMON.SIMULADOR.MATERNIDADE_CALCULANDO')
           : $t('RAMON.SIMULADOR.MATERNIDADE_CALCULAR')
-      }}
-    </button>
+      "
+      @click="calcular"
+    />
 
     <div v-if="hasError" data-testid="maternidade-error">
       <p class="text-sm text-n-ruby-11">{{ errorMessage }}</p>
-      <button
-        type="button"
+      <Button
         data-testid="maternidade-retry"
-        class="mt-1 text-xs text-n-iris-11 hover:underline"
+        link
+        xs
+        class="mt-1"
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="retry"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
 
     <div
       v-if="resultado"
-      class="flex flex-col gap-2 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+      class="flex flex-col gap-2"
+      :class="CARTAO"
       data-testid="maternidade-resultado"
     >
       <p class="text-sm text-n-slate-12">
@@ -117,7 +120,7 @@ const retry = () => calcular();
           >{{ $t('RAMON.SIMULADOR.MATERNIDADE_RMI') }}:</span
         >
         <span class="font-semibold" data-testid="maternidade-rmi">
-          {{ money(resultado.rmi) }}
+          <span class="font-mono">{{ money(resultado.rmi) }}</span>
         </span>
       </p>
       <p class="text-sm text-n-slate-12" data-testid="maternidade-carencia">

@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, CARTAO_STATUS, FILETE } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -91,40 +93,37 @@ const cartoesAlterados = sim =>
       c.previsao_antes !== c.previsao_depois
   );
 
-const cenarioBorda = cenario =>
-  cenario.mantida
-    ? 'border-n-teal-9 bg-n-teal-3'
-    : 'border-n-ruby-9 bg-n-ruby-3';
+// filete do cenário: verde = qualidade mantida, vermelho = perdida
+const cenarioBorda = cenario => (cenario.mantida ? FILETE.teal : FILETE.ruby);
 const cenarioTexto = cenario =>
   cenario.mantida ? 'text-n-teal-11' : 'text-n-ruby-11';
 </script>
 
 <template>
   <div class="flex flex-col gap-3 p-1" data-testid="lead-elegibilidade">
-    <button
-      type="button"
+    <Button
       data-testid="eleg-analisar"
-      class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-40 disabled:cursor-not-allowed"
       :disabled="!der || ocupado"
-      @click="analisar"
-    >
-      {{
+      sm
+      class="self-start"
+      :label="
         isLoading
           ? $t('RAMON.SIMULADOR.SIMULANDO')
           : $t('RAMON.SIMULADOR.ELEG_ANALISAR')
-      }}
-    </button>
+      "
+      @click="analisar"
+    />
 
     <div v-if="hasError" data-testid="eleg-error">
       <p class="text-sm text-n-ruby-11">{{ errorMessage }}</p>
-      <button
-        type="button"
+      <Button
         data-testid="eleg-retry"
-        class="mt-1 text-xs text-n-iris-11 hover:underline"
+        link
+        xs
+        class="mt-1"
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="retry"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
 
     <template v-if="resultado">
@@ -135,8 +134,11 @@ const cenarioTexto = cenario =>
       >
         <div
           v-if="resultado.qualidade.cenarios.unico"
-          class="flex flex-col gap-1 p-2 rounded-lg border"
-          :class="cenarioBorda(resultado.qualidade.cenarios.unico)"
+          class="flex flex-col gap-1"
+          :class="[
+            CARTAO_STATUS,
+            cenarioBorda(resultado.qualidade.cenarios.unico),
+          ]"
           data-testid="eleg-cenario-unico"
         >
           <p
@@ -149,7 +151,10 @@ const cenarioTexto = cenario =>
                 : $t('RAMON.SIMULADOR.ELEG_PERDIDA')
             }}
             <template v-if="resultado.qualidade.cenarios.unico.ate">
-              — {{ dataBr(resultado.qualidade.cenarios.unico.ate) }}
+              —
+              <span class="font-mono">{{
+                dataBr(resultado.qualidade.cenarios.unico.ate)
+              }}</span>
             </template>
           </p>
           <p class="text-xs text-n-slate-10">
@@ -159,8 +164,11 @@ const cenarioTexto = cenario =>
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div
             v-if="resultado.qualidade.cenarios.sem_desemprego"
-            class="flex flex-col gap-1 p-2 rounded-lg border"
-            :class="cenarioBorda(resultado.qualidade.cenarios.sem_desemprego)"
+            class="flex flex-col gap-1"
+            :class="[
+              CARTAO_STATUS,
+              cenarioBorda(resultado.qualidade.cenarios.sem_desemprego),
+            ]"
             data-testid="eleg-cenario-sem-desemprego"
           >
             <span class="text-xs text-n-slate-10">
@@ -177,7 +185,9 @@ const cenarioTexto = cenario =>
               }}
               <template v-if="resultado.qualidade.cenarios.sem_desemprego.ate">
                 —
-                {{ dataBr(resultado.qualidade.cenarios.sem_desemprego.ate) }}
+                <span class="font-mono">{{
+                  dataBr(resultado.qualidade.cenarios.sem_desemprego.ate)
+                }}</span>
               </template>
             </p>
             <p class="text-xs text-n-slate-10">
@@ -186,8 +196,11 @@ const cenarioTexto = cenario =>
           </div>
           <div
             v-if="resultado.qualidade.cenarios.com_desemprego"
-            class="flex flex-col gap-1 p-2 rounded-lg border"
-            :class="cenarioBorda(resultado.qualidade.cenarios.com_desemprego)"
+            class="flex flex-col gap-1"
+            :class="[
+              CARTAO_STATUS,
+              cenarioBorda(resultado.qualidade.cenarios.com_desemprego),
+            ]"
             data-testid="eleg-cenario-com-desemprego"
           >
             <span class="text-xs text-n-slate-10">
@@ -204,7 +217,9 @@ const cenarioTexto = cenario =>
               }}
               <template v-if="resultado.qualidade.cenarios.com_desemprego.ate">
                 —
-                {{ dataBr(resultado.qualidade.cenarios.com_desemprego.ate) }}
+                <span class="font-mono">{{
+                  dataBr(resultado.qualidade.cenarios.com_desemprego.ate)
+                }}</span>
               </template>
             </p>
             <p class="text-xs text-n-slate-10">
@@ -227,7 +242,8 @@ const cenarioTexto = cenario =>
         <div
           v-for="(pend, i) in resultado.decisoes_pendentes"
           :key="i"
-          class="flex flex-col gap-1 p-2 rounded-lg bg-n-amber-3 border border-n-amber-6"
+          class="flex flex-col gap-1"
+          :class="[CARTAO_STATUS, FILETE.amber]"
           :data-testid="`eleg-pendencia-${i}`"
         >
           <p class="text-xs text-n-amber-11 font-medium">{{ pend.pergunta }}</p>
@@ -240,38 +256,39 @@ const cenarioTexto = cenario =>
             {{ pend.efeito_por_resposta?.nao }}
           </p>
           <div class="flex gap-2">
-            <button
-              type="button"
+            <Button
               data-testid="eleg-pendencia-sim"
-              class="px-2 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
               :disabled="ocupado"
+              sm
+              faded
+              slate
+              :label="$t('RAMON.SIMULADOR.ELEG_SIM')"
               @click="responder(pend.tipo, true)"
-            >
-              {{ $t('RAMON.SIMULADOR.ELEG_SIM') }}
-            </button>
-            <button
-              type="button"
+            />
+            <Button
               data-testid="eleg-pendencia-nao"
-              class="px-2 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
               :disabled="ocupado"
+              sm
+              faded
+              slate
+              :label="$t('RAMON.SIMULADOR.ELEG_NAO')"
               @click="responder(pend.tipo, false)"
-            >
-              {{ $t('RAMON.SIMULADOR.ELEG_NAO') }}
-            </button>
+            />
           </div>
         </div>
       </div>
 
       <div
         v-if="resultado.carencia"
-        class="flex flex-col gap-1 p-2 rounded-lg bg-n-alpha-1 border border-n-weak"
+        class="flex flex-col gap-1"
+        :class="CARTAO"
         data-testid="eleg-carencia"
       >
         <p class="text-sm text-n-slate-12">
           <span class="text-n-slate-10"
             >{{ $t('RAMON.SIMULADOR.ELEG_CARENCIA') }}:</span
           >
-          {{ resultado.carencia.total }}
+          <span class="font-mono">{{ resultado.carencia.total }}</span>
         </p>
         <p
           v-if="resultado.carencia.art_27a?.aplicavel"
@@ -303,7 +320,7 @@ const cenarioTexto = cenario =>
                 :key="i"
                 :data-testid="`eleg-lacuna-${i}`"
               >
-                <td class="p-1 whitespace-nowrap">
+                <td class="p-1 font-mono whitespace-nowrap">
                   {{ dataBr(lac.inicio) }} – {{ dataBr(lac.fim) }}
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
@@ -328,19 +345,18 @@ const cenarioTexto = cenario =>
             </tbody>
           </table>
         </div>
-        <button
-          type="button"
+        <Button
           data-testid="eleg-simular"
-          class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-40 disabled:cursor-not-allowed"
           :disabled="ocupado"
-          @click="simular"
-        >
-          {{
+          sm
+          class="self-start"
+          :label="
             simulando
               ? $t('RAMON.SIMULADOR.SIMULANDO')
               : $t('RAMON.SIMULADOR.ELEG_SIMULAR')
-          }}
-        </button>
+          "
+          @click="simular"
+        />
       </div>
 
       <div
@@ -351,7 +367,8 @@ const cenarioTexto = cenario =>
         <div
           v-for="(sim, i) in resultado.simulacao"
           :key="i"
-          class="flex flex-col gap-1 p-2 rounded-lg border border-n-weak"
+          class="flex flex-col gap-1"
+          :class="CARTAO"
           :data-testid="`eleg-simulacao-cenario-${i}`"
         >
           <span class="text-xs font-medium text-n-slate-12">{{

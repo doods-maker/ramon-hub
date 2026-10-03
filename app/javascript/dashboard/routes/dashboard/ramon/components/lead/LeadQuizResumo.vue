@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { CHIP, TOM, TITULO, SECAO } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -13,25 +14,12 @@ const duvidas = computed(() => quiz.value?.duvidas || []);
 </script>
 
 <template>
-  <div
-    v-if="quiz"
-    data-testid="lead-quiz-resumo"
-    class="pt-3 border-t border-n-weak"
-  >
+  <div v-if="quiz" data-testid="lead-quiz-resumo" :class="SECAO">
     <div class="flex items-center gap-2 mb-2">
-      <p
-        class="text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10"
-      >
+      <p :class="TITULO">
         {{ $t('RAMON.LEAD_PANEL.QUIZ.TITLE') }}
       </p>
-      <span
-        class="rounded-full px-2 py-0.5 text-[10.5px]"
-        :class="
-          quiz.qualificado
-            ? 'bg-n-teal-9/10 text-n-teal-11'
-            : 'bg-n-ruby-9/10 text-n-ruby-11'
-        "
-      >
+      <span :class="[CHIP, quiz.qualificado ? TOM.teal : TOM.ruby]">
         {{
           quiz.qualificado
             ? $t('RAMON.LEAD_PANEL.QUIZ.QUALIFIED')

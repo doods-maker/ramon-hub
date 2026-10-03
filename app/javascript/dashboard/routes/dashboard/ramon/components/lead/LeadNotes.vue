@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import LeadsAPI from 'dashboard/api/leads';
+import { CAMPO, TITULO } from '../../helpers/ui';
 
 const props = defineProps({ leadId: { type: Number, required: true } });
 
@@ -60,9 +61,7 @@ const noteTime = createdAt =>
 <template>
   <!-- Seção "Notas" do mock 1f: entradas com filete bronze + input inline -->
   <div data-testid="lead-notes" class="flex flex-col gap-2">
-    <p
-      class="text-[10.5px] font-semibold uppercase tracking-[.1em] text-n-slate-10"
-    >
+    <p :class="TITULO">
       {{ $t('RAMON.LEAD_PANEL.NOTES.TITLE') }}
     </p>
     <p v-if="hiddenCount" class="text-[10.5px] text-n-slate-9">
@@ -71,7 +70,7 @@ const noteTime = createdAt =>
     <div
       v-for="note in visible"
       :key="note.id"
-      class="pl-2.5 border-l-2 border-n-iris-9/40"
+      class="pl-2.5 border-l-2 border-n-blue-9/40"
     >
       <p class="text-[10.5px] text-n-slate-10">
         {{ note.author_name || $t('RAMON.LEAD_PANEL.NOTES.SYSTEM') }} ·
@@ -88,7 +87,7 @@ const noteTime = createdAt =>
       data-testid="lead-note-input"
       :placeholder="$t('RAMON.LEAD_PANEL.NOTES.PLACEHOLDER')"
       :disabled="saving"
-      class="w-full px-3 py-2 text-[12.5px] rounded-[9px] bg-n-solid-2 border border-n-weak text-n-slate-12 placeholder:text-n-slate-9 outline-none focus:border-n-slate-8 disabled:opacity-50"
+      :class="CAMPO"
       @keyup.enter="save"
     />
   </div>
