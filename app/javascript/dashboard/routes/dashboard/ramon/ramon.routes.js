@@ -3,8 +3,15 @@ import CommandCenter from './pages/CommandCenter.vue';
 
 export const routes = [
   {
+    // Tela Hoje por papel (Onda 3); o Centro de Comando foi pro "Mais" (ramon_painel).
     path: frontendURL('accounts/:accountId/ramon'),
     name: 'ramon_index',
+    component: () => import('./pages/Hoje.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
+    path: frontendURL('accounts/:accountId/ramon/painel'),
+    name: 'ramon_painel',
     component: CommandCenter,
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },

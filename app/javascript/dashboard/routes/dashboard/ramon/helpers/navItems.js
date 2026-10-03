@@ -56,7 +56,7 @@ const MENU = [
     key: 'hoje',
     icon: 'i-lucide-sun',
     rota: 'ramon_index',
-    names: ['ramon_index', 'ramon_esteira'],
+    names: ['ramon_index'],
     papeis: TODOS,
   },
   {
@@ -126,6 +126,11 @@ const MENU = [
 ];
 
 const MAIS = [
+  {
+    key: 'painel',
+    icon: 'i-lucide-layout-dashboard',
+    rota: 'ramon_painel',
+  },
   { key: 'esteira', icon: 'i-lucide-zap', rota: 'ramon_esteira' },
   { key: 'pos_venda', icon: 'i-lucide-package-check', rota: 'ramon_pos_venda' },
   { key: 'radar', icon: 'i-lucide-radar', rota: 'ramon_radar' },

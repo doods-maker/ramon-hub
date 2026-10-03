@@ -194,7 +194,15 @@
         "recepcao": "Front desk",
         "advogada": "Lawyer",
         "equipe": "Team"
-      }
+      },
+      "PAINEL": "Full dashboard"
+    },
+    "HOJE": {
+      "TITULO": "Today",
+      "ERRO": "Couldn't load the screen right now.",
+      "TENTAR": "Try again",
+      "PRAZO_PASSOU": "Past the 5 minutes",
+      "PRAZO_RESTANTE": "Time left for the first reply"
     },
     "POS_VENDA": {
       "TITLE": "Post-sale",

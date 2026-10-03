@@ -107,4 +107,12 @@ describe('itensDoMenu', () => {
     expect(itensDoMais('sdr')).toEqual([]);
     expect(itensDoMais('gestor').map(i => i.key)).toContain('tv');
   });
+  it('Hoje acende só na tela Hoje; o Centro de Comando abre o Mais', () => {
+    expect(itensDoMenu('gestor')[0].names).toEqual(['ramon_index']);
+    expect(itensDoMais('gestor')[0]).toMatchObject({
+      key: 'painel',
+      rota: 'ramon_painel',
+      label: 'RAMON.MENU.PAINEL',
+    });
+  });
 });

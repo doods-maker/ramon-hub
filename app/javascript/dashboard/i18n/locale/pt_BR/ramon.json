@@ -194,7 +194,15 @@
         "recepcao": "Recepção",
         "advogada": "Advogada",
         "equipe": "Equipe"
-      }
+      },
+      "PAINEL": "Painel completo"
+    },
+    "HOJE": {
+      "TITULO": "Hoje",
+      "ERRO": "Não deu pra carregar a tela agora.",
+      "TENTAR": "Tentar de novo",
+      "PRAZO_PASSOU": "Passou dos 5 minutos",
+      "PRAZO_RESTANTE": "Tempo restante para a 1ª resposta"
     },
     "POS_VENDA": {
       "TITLE": "Pós-venda",
