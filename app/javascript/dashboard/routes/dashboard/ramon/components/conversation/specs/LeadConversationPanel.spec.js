@@ -87,8 +87,8 @@ describe('LeadConversationPanel', () => {
     expect(thesesGet).toHaveBeenCalled();
   });
 
-  describe('caixa com Portaria (ensure devolve null)', () => {
-    const mountSemLead = (teamName, encaminharSpy = vi.fn()) =>
+  describe('caixa do escritório (ensure devolve null)', () => {
+    const mountSemLead = (meta = {}, encaminharSpy = vi.fn()) =>
       shallowMount(LeadConversationPanel, {
         props: { conversationId: 42 },
         global: {
@@ -97,7 +97,7 @@ describe('LeadConversationPanel', () => {
               getters: {
                 getSelectedChat: () => ({
                   id: 42,
-                  meta: { team: teamName ? { name: teamName } : null },
+                  meta,
                 }),
               },
               modules: {
@@ -122,8 +122,8 @@ describe('LeadConversationPanel', () => {
         },
       });
 
-    it('mostra o aviso e o botão de encaminhar só na Recepção', async () => {
-      const wrapper = mountSemLead('recepção');
+    it('mostra o aviso e o botão de encaminhar na triagem da Recepção', async () => {
+      const wrapper = mountSemLead();
       await flushPromises();
       expect(wrapper.text()).toContain('RAMON.LEAD_PANEL.SEM_LEAD');
       expect(
@@ -131,8 +131,11 @@ describe('LeadConversationPanel', () => {
       ).toBe(true);
     });
 
-    it('esconde o botão fora da Recepção', async () => {
-      const wrapper = mountSemLead('advogados');
+    it.each([
+      ['atribuída a um advogado', { assignee: { id: 7 } }],
+      ['no time da Controladoria', { team: { name: 'controladoria' } }],
+    ])('esconde o botão quando a conversa está %s', async (_, meta) => {
+      const wrapper = mountSemLead(meta);
       await flushPromises();
       expect(wrapper.text()).toContain('RAMON.LEAD_PANEL.SEM_LEAD');
       expect(
@@ -142,7 +145,7 @@ describe('LeadConversationPanel', () => {
 
     it('clicar em encaminhar dispara a action com a conversa', async () => {
       const encaminhar = vi.fn().mockResolvedValue(lead);
-      const wrapper = mountSemLead('recepção', encaminhar);
+      const wrapper = mountSemLead({}, encaminhar);
       await flushPromises();
       await wrapper
         .find('[data-testid="lead-panel-encaminhar-comercial"]')

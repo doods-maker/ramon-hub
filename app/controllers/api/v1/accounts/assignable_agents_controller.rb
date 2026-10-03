@@ -4,12 +4,10 @@ class Api::V1::Accounts::AssignableAgentsController < Api::V1::Accounts::BaseCon
   def index
     agent_ids = @inboxes.map do |inbox|
       authorize inbox, :show?
-      member_ids = inbox.members.pluck(:user_id)
-      member_ids
+      inbox.assignable_agents.map(&:id)
     end
     agent_ids = agent_ids.inject(:&)
-    agents = Current.account.users.where(id: agent_ids)
-    @assignable_agents = (agents + Current.account.administrators).uniq
+    @assignable_agents = Current.account.users.where(id: agent_ids)
   end
 
   private

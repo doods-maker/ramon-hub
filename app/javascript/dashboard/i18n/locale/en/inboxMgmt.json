@@ -817,8 +817,8 @@
         "SLA_SUB_TEXT": "Minutes until the card timer breaches. Empty = system default."
       },
       "PORTARIA": {
-        "LABEL": "Portaria (sector menu)",
-        "SUB_TEXT": "On the first message of every new conversation, the customer gets the Recepção / Controladoria / Advogados buttons and the conversation is routed to the chosen team. Requires the three teams to exist with those names."
+        "LABEL": "Office inbox (assignment-based)",
+        "SUB_TEXT": "Reception (inbox member) sees everything and assigns to a lawyer or to the Controladoria team. Non-members only see what is assigned to them or their team. Conversations never create a lead; reception forwards to sales with a button."
       },
       "WHATSAPP_SECTION_SUBHEADER": "This API Key is used for the integration with the WhatsApp APIs.",
       "WHATSAPP_SECTION_UPDATE_SUBHEADER": "Enter the new API key to be used for the integration with the WhatsApp APIs.",

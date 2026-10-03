@@ -10,8 +10,10 @@ class InboxPolicy < ApplicationPolicy
       @scope = scope
     end
 
+    # ramon: a caixa do escritório é listada pra todos — o front precisa dos dados dela pra responder
+    # a conversa atribuída; o que cada um vê dentro dela decide o PermissionFilterService (ADR 0004)
     def resolve
-      user.assigned_inboxes
+      scope.where(id: user.assigned_inboxes.select(:id)).or(scope.where(portaria_enabled: true))
     end
   end
 

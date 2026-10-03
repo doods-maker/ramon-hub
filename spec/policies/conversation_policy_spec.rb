@@ -62,6 +62,14 @@ RSpec.describe ConversationPolicy, type: :policy do
       end
     end
 
+    context 'when the conversation is assigned to the agent outside their inboxes' do
+      let(:conversation) { create(:conversation, account: account, assignee: agent) }
+
+      it 'allows access' do
+        expect(subject).to permit(agent_context, conversation)
+      end
+    end
+
     context 'when agent lacks inbox and team access' do
       let(:conversation) { create(:conversation, account: account) }
 

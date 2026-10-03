@@ -15,8 +15,12 @@ class Conversations::PermissionFilterService
 
   private
 
+  # ramon: além das caixas de que é membro, o agente vê o que foi atribuído a ele e a fila
+  # dos times dele — é assim que a caixa do escritório separa o atendimento (ADR 0004)
   def accessible_conversations
     conversations.where(inbox: user.inboxes.where(account_id: account.id))
+                 .or(conversations.where(assignee_id: user.id))
+                 .or(conversations.where(team_id: user.teams.where(account_id: account.id).select(:id)))
   end
 
   def account_user

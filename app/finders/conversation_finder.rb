@@ -90,10 +90,15 @@ class ConversationFinder
 
   def set_inboxes
     @inbox_ids = if params[:inbox_id]
-                   @current_user.assigned_inboxes.where(id: params[:inbox_id])
+                   # ramon: inclui a caixa do escritório; o PermissionFilterService recorta (ADR 0004)
+                   policy_inboxes.where(id: params[:inbox_id])
                  else
                    @current_user.assigned_inboxes.pluck(:id)
                  end
+  end
+
+  def policy_inboxes
+    InboxPolicy::Scope.new({ user: current_user, account: current_account }, current_account.inboxes).resolve
   end
 
   def set_assignee_type
