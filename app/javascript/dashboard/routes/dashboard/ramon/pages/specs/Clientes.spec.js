@@ -1,6 +1,9 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
+import LeadsAPI from 'dashboard/api/leads';
 import Clientes from '../Clientes.vue';
+
+vi.mock('dashboard/api/leads', () => ({ default: { get: vi.fn() } }));
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
@@ -28,14 +31,6 @@ const leads = [
 const mountPage = () => {
   const store = createStore({
     modules: {
-      leads: {
-        namespaced: true,
-        getters: {
-          getLeads: () => leads,
-          getFilters: () => ({ q: '', thesisId: null, leadStageId: null }),
-          getUIFlags: () => ({ isFetching: false }),
-        },
-      },
       leadConfig: {
         namespaced: true,
         getters: {
@@ -51,7 +46,11 @@ const mountPage = () => {
   });
   store.dispatch = dispatch;
   return mount(Clientes, {
-    global: { plugins: [store], mocks: { $t: k => k } },
+    global: {
+      plugins: [store],
+      mocks: { $t: k => k },
+      stubs: { RouterLink: { template: '<a><slot /></a>' } },
+    },
   });
 };
 
@@ -59,18 +58,23 @@ describe('Clientes.vue', () => {
   beforeEach(() => {
     dispatch.mockClear();
     routerPush.mockClear();
+    localStorage.clear();
+    LeadsAPI.get.mockReset();
+    LeadsAPI.get.mockResolvedValue({ data: { payload: leads } });
   });
 
-  it('carrega leads, etapas, teses e agentes no mount', () => {
+  it('carrega leads (API própria), etapas, teses e agentes no mount', () => {
     mountPage();
-    expect(dispatch).toHaveBeenCalledWith('leads/loadFilters');
+    expect(LeadsAPI.get).toHaveBeenCalledWith({});
     expect(dispatch).toHaveBeenCalledWith('leadConfig/get');
     expect(dispatch).toHaveBeenCalledWith('theses/get');
     expect(dispatch).toHaveBeenCalledWith('agents/get');
   });
 
-  it('lista em ordem alfabética com etapa, tese, responsável e telefone', () => {
-    const rows = mountPage().findAll('[data-testid="cliente-row"]');
+  it('lista em ordem alfabética com etapa, tese, responsável e telefone', async () => {
+    const wrapper = mountPage();
+    await flushPromises();
+    const rows = wrapper.findAll('[data-testid="cliente-row"]');
     expect(rows).toHaveLength(2);
     expect(rows[0].text()).toContain('Ana Souza');
     expect(rows[0].text()).toContain('Caio');
@@ -81,20 +85,40 @@ describe('Clientes.vue', () => {
     expect(rows[1].text()).toContain('RAMON.HOJE.DIAS');
   });
 
-  it('busca chama a action com q depois do debounce', async () => {
+  it('busca com debounce usa filtros próprios, sem tocar no funil', async () => {
     vi.useFakeTimers();
     const wrapper = mountPage();
     await wrapper.find('[data-testid="clientes-busca"]').setValue('joao');
-    expect(dispatch).not.toHaveBeenCalledWith('leads/setFilters', {
-      q: 'joao',
-    });
-    vi.advanceTimersByTime(300);
-    expect(dispatch).toHaveBeenCalledWith('leads/setFilters', { q: 'joao' });
+    vi.advanceTimersByTime(299);
+    expect(LeadsAPI.get).not.toHaveBeenCalledWith({ q: 'joao' });
+    vi.advanceTimersByTime(1);
+    expect(LeadsAPI.get).toHaveBeenCalledWith({ q: 'joao' });
+    expect(dispatch).not.toHaveBeenCalledWith(
+      'leads/setFilters',
+      expect.anything()
+    );
+    expect(JSON.parse(localStorage.getItem('ramon_clientes_filtros')).q).toBe(
+      'joao'
+    );
+    expect(localStorage.getItem('ramon_lead_filters')).toBeNull();
     vi.useRealTimers();
+  });
+
+  it('o campo de busca reflete o q salvo depois do load', () => {
+    localStorage.setItem(
+      'ramon_clientes_filtros',
+      JSON.stringify({ q: 'ana', thesisId: 4 })
+    );
+    const wrapper = mountPage();
+    expect(wrapper.find('[data-testid="clientes-busca"]').element.value).toBe(
+      'ana'
+    );
+    expect(LeadsAPI.get).toHaveBeenCalledWith({ q: 'ana', thesis_id: 4 });
   });
 
   it('clique na linha abre a ficha', async () => {
     const wrapper = mountPage();
+    await flushPromises();
     await wrapper.findAll('[data-testid="cliente-row"]')[1].trigger('click');
     expect(routerPush).toHaveBeenCalledWith({
       name: 'ramon_lead_dossie',

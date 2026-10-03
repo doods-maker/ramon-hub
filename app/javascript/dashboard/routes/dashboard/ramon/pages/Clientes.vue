@@ -1,10 +1,12 @@
 <script setup>
-// Lista "Clientes" (redesign v2, Onda 5): os leads do funil numa tabela,
-// com a mesma busca (q) e filtros da store `leads` que o funil usa.
+// Lista "Clientes" (redesign v2, Onda 5): os leads do funil numa tabela, com
+// filtros PRÓPRIOS (estado local + chave de storage separada) — filtrar aqui
+// não mexe no funil.
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import LeadsAPI from 'dashboard/api/leads';
 import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import { desde } from '../components/hoje/hoje';
 import FiltroChip from '../components/kanban/FiltroChip.vue';
@@ -14,7 +16,22 @@ const getters = useStoreGetters();
 const router = useRouter();
 const { t } = useI18n();
 
-const filters = computed(() => getters['leads/getFilters'].value);
+const STORAGE = 'ramon_clientes_filtros';
+const lerFiltros = () => {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE) || '{}');
+  } catch (e) {
+    return {};
+  }
+};
+const filters = ref({
+  q: '',
+  thesisId: null,
+  leadStageId: null,
+  agentId: null,
+  ...lerFiltros(),
+});
+
 const stages = computed(() => getters['leadConfig/getStages'].value);
 const stageById = computed(() => new Map(stages.value.map(s => [s.id, s])));
 const asOptions = list => (list || []).map(i => ({ id: i.id, name: i.name }));
@@ -25,15 +42,37 @@ const agentOptions = computed(() =>
   asOptions(getters['agents/getAgents'].value)
 );
 
+const leads = ref([]);
 const clientes = computed(() =>
-  [...getters['leads/getLeads'].value].sort((a, b) =>
+  [...leads.value].sort((a, b) =>
     (a.name || '').localeCompare(b.name || '', 'pt-BR')
   )
 );
 
-const setFilters = partial => store.dispatch('leads/setFilters', partial);
+const carregar = async () => {
+  const f = filters.value;
+  const params = Object.fromEntries(
+    Object.entries({
+      q: f.q,
+      thesis_id: f.thesisId,
+      lead_stage_id: f.leadStageId,
+      agent_id: f.agentId,
+    }).filter(([, v]) => v)
+  );
+  const { data } = await LeadsAPI.get(params);
+  leads.value = data.payload;
+};
+const setFilters = partial => {
+  filters.value = { ...filters.value, ...partial };
+  try {
+    localStorage.setItem(STORAGE, JSON.stringify(filters.value));
+  } catch (e) {
+    // localStorage indisponível: seguimos sem persistir
+  }
+  carregar();
+};
 
-// Busca com debounce de 300 ms (mesmo ritmo do painel de filtros do funil).
+// Busca com debounce de 300 ms; já nasce com o q salvo (reflete o filtro real).
 const busca = ref(filters.value.q || '');
 let timer = null;
 watch(busca, value => {
@@ -50,7 +89,7 @@ const abrir = lead =>
   router.push({ name: 'ramon_lead_dossie', params: { leadId: lead.id } });
 
 onMounted(() => {
-  store.dispatch('leads/loadFilters');
+  carregar();
   store.dispatch('leadConfig/get');
   store.dispatch('theses/get');
   store.dispatch('agents/get');
@@ -74,6 +113,15 @@ const TD = 'py-2.5 pe-4';
         class="w-64 px-3 py-1.5 text-[13px] rounded-lg border border-n-weak bg-transparent outline-none focus:border-n-strong text-n-slate-12"
         :placeholder="t('RAMON.CLIENTES.BUSCA')"
       />
+      <!-- contatos sem lead (Linha da vida) continuam achados por aqui -->
+      <router-link
+        :to="{ name: 'ramon_pessoas' }"
+        data-testid="clientes-buscar-pessoa"
+        class="inline-flex items-center gap-1 text-[12.5px] text-n-blue-11 hover:underline"
+      >
+        <span class="i-lucide-user-search size-3.5" />
+        {{ t('RAMON.CLIENTES.BUSCAR_PESSOA') }}
+      </router-link>
       <FiltroChip
         :label="t('RAMON.FUNIL.CHIP.TESE')"
         :options="thesisOptions"

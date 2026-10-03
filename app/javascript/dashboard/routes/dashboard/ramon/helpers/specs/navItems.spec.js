@@ -80,6 +80,7 @@ describe('itensDoMenu', () => {
     const keys = itensDoMais('gestor').map(i => i.key);
     expect(keys).not.toContain('pos_venda');
     expect(keys).not.toContain('radar');
+    expect(keys).toContain('linha_da_vida');
   });
   it('Conversas acende em qualquer rota de conversa, menos o kanban', () => {
     expect(CONVERSA_ROUTES).toContain('home');

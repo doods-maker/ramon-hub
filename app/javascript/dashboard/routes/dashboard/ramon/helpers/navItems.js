@@ -133,6 +133,7 @@ const MAIS = [
     rota: 'ramon_painel',
   },
   { key: 'esteira', icon: 'i-lucide-zap', rota: 'ramon_esteira' },
+  { key: 'linha_da_vida', icon: 'i-lucide-route', rota: 'ramon_pessoas' },
   { key: 'reunioes', icon: 'i-lucide-mic', rota: 'ramon_reunioes' },
   { key: 'portal', icon: 'i-lucide-smartphone', rota: 'ramon_portal_clientes' },
   { key: 'extrato', icon: 'i-lucide-receipt', rota: 'ramon_extrato' },
