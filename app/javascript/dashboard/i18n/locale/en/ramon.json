@@ -1,5 +1,31 @@
 {
   "RAMON": {
+    "CHEGADA": {
+      "CHEGOU": "{quem}: a client has arrived",
+      "SEM_RESPOSTA": "{quem} didn't answer in 3 min",
+      "NOTIF_CHEGOU": "Arrived: {cliente}",
+      "NOTIF_SEM_RESPOSTA": "No answer: {cliente}",
+      "RESPOSTA_PLACEHOLDER": "Reply to reception (e.g. coming / ask them to wait 5 min)",
+      "RESPONDER": "Reply",
+      "ENTENDI": "Got it",
+      "MAIS": "+{n} in queue",
+      "BOTAO": "Client arrived",
+      "TITULO": "Announce client arrival",
+      "ABA_HOJE": "Due today",
+      "ABA_BUSCAR": "Search ADVBOX",
+      "ABA_LIVRE": "Free",
+      "HOJE_VAZIO": "No ATENDIMENTO scheduled today in ADVBOX.",
+      "ADVBOX_FORA": "ADVBOX unavailable — use Search or Free.",
+      "BUSCAR_PLACEHOLDER": "Name or CPF",
+      "NOME": "Client name",
+      "MOTIVO": "Reason (optional)",
+      "DESTINATARIO": "Who will attend",
+      "AVISAR": "Announce",
+      "AGUARDANDO": "Today",
+      "ESTADO_aguardando": "waiting",
+      "ESTADO_escalado": "no answer",
+      "ESTADO_respondido": "answered"
+    },
     "AGENDA": {
       "TITLE": "Agenda",
       "TODAY": "Today",

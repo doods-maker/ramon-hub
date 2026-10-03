@@ -4,6 +4,7 @@ import { defineAsyncComponent, ref, computed } from 'vue';
 import NextSidebar from 'next/sidebar/Sidebar.vue';
 import WorldRail from './ramon/components/WorldRail.vue';
 import IntranetSidebar from './ramon/components/IntranetSidebar.vue';
+import AlertaChegada from './ramon/components/equipe/AlertaChegada.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
@@ -40,6 +41,7 @@ export default {
     CopilotLauncher,
     CopilotContainer,
     FloatingCallWidget,
+    AlertaChegada,
     MobileSidebarLauncher,
   },
   setup() {
@@ -177,6 +179,7 @@ export default {
         />
         <CopilotContainer />
         <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />
+        <AlertaChegada />
       </template>
       <AddAccountModal
         :show="showCreateAccountModal"
