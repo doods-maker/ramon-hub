@@ -71,7 +71,7 @@ const MENU = [
     key: 'funil',
     icon: 'i-lucide-columns-3',
     rota: 'ramon_funil',
-    names: ['ramon_funil', 'kanban_board', 'ramon_pos_venda', 'ramon_radar'],
+    names: ['ramon_funil', 'kanban_board'],
     papeis: COMERCIAL,
   },
   {
@@ -132,8 +132,6 @@ const MAIS = [
     rota: 'ramon_painel',
   },
   { key: 'esteira', icon: 'i-lucide-zap', rota: 'ramon_esteira' },
-  { key: 'pos_venda', icon: 'i-lucide-package-check', rota: 'ramon_pos_venda' },
-  { key: 'radar', icon: 'i-lucide-radar', rota: 'ramon_radar' },
   { key: 'reunioes', icon: 'i-lucide-mic', rota: 'ramon_reunioes' },
   { key: 'portal', icon: 'i-lucide-smartphone', rota: 'ramon_portal_clientes' },
   { key: 'extrato', icon: 'i-lucide-receipt', rota: 'ramon_extrato' },

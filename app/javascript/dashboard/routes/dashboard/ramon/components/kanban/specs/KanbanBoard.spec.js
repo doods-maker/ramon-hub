@@ -14,6 +14,27 @@ vi.mock('dashboard/composables', () => ({
   useAlert: vi.fn(),
 }));
 
+// ?filtro=pos_venda|prescricao (Pós-venda e Radar viraram filtros do funil)
+const mockRoute = { query: {} };
+const mockReplace = vi.fn();
+vi.mock('vue-router', async importOriginal => ({
+  ...(await importOriginal()),
+  useRoute: () => mockRoute,
+  useRouter: () => ({ push: vi.fn(), replace: mockReplace }),
+}));
+
+const LEADS_STAGE_1 = [
+  { id: 10, lead_stage_id: 1, position: 0 },
+  {
+    id: 11,
+    lead_stage_id: 1,
+    position: 1,
+    won_at: '2026-09-01T10:00:00Z',
+    docs_received: 2,
+    docs_total: 5,
+  },
+];
+
 const dispatch = vi.fn();
 const buildStore = () =>
   createStore({
@@ -21,8 +42,9 @@ const buildStore = () =>
       leads: {
         namespaced: true,
         getters: {
-          getLeadsByStage: () => () => [],
-          getLeads: () => [{ id: 10, lead_stage_id: 1, position: 0 }],
+          getLeadsByStage: () => stageId =>
+            stageId === 1 ? LEADS_STAGE_1 : [],
+          getLeads: () => LEADS_STAGE_1,
           getSelectedIds: () => [],
           getDockConversationId: () => null,
           getUIFlags: () => ({ isFetching: false }),
@@ -78,7 +100,41 @@ const mountBoard = () => {
 };
 
 describe('KanbanBoard.vue', () => {
-  beforeEach(() => dispatch.mockClear());
+  beforeEach(() => {
+    dispatch.mockClear();
+    mockReplace.mockClear();
+    mockRoute.query = {};
+  });
+
+  describe('filtros de pós-venda e prescrição', () => {
+    it('sem ?filtro mostra todos os leads da etapa', () => {
+      const wrapper = mountBoard();
+      expect(wrapper.findComponent(KanbanColumn).props('leads')).toHaveLength(
+        2
+      );
+    });
+
+    it('?filtro=pos_venda mostra só os ganhos com docs pendentes', () => {
+      mockRoute.query = { filtro: 'pos_venda' };
+      const wrapper = mountBoard();
+      const ids = wrapper
+        .findComponent(KanbanColumn)
+        .props('leads')
+        .map(l => l.id);
+      expect(ids).toEqual([11]);
+      expect(
+        wrapper.find('[data-testid="filtro-pos_venda"]').classes()
+      ).toContain('text-n-amber-11');
+    });
+
+    it('o chip liga e desliga o filtro na URL', async () => {
+      const wrapper = mountBoard();
+      await wrapper.find('[data-testid="filtro-pos_venda"]').trigger('click');
+      expect(mockReplace).toHaveBeenCalledWith({
+        query: { filtro: 'pos_venda' },
+      });
+    });
+  });
 
   it('toggles the dock (dispatch leads/toggleDock) when a column emits open-conversation', async () => {
     const wrapper = mountBoard();
