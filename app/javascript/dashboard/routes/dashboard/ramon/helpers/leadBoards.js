@@ -1,11 +1,11 @@
 // Quadros salvos do Funil (ui_settings.ramon_lead_boards).
 export const BOARD_PALETTE = [
-  '#c9a97c',
-  '#8f9a6b',
-  '#6b8f85',
-  '#b4785a',
-  '#a06e8c',
-  '#8d867d',
+  '#2563eb',
+  '#0ea5e9',
+  '#8b5cf6',
+  '#db2777',
+  '#16a34a',
+  '#64748b',
 ];
 
 // Conversão do legado ramon_lead_views [{name, filters}] → quadros completos.

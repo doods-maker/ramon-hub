@@ -1,94 +1,129 @@
 // Marca Ramon Antonio — override dos tokens do design system (vence _next-colors por ordem de @import).
 // RGB sem vírgula (Tailwind: rgb(var(--token) / <alpha-value>)).
-// Paleta "Marfim & Bronze Polido" (aprovada 04/07/2026): a marca vive no ACENTO
-// (bronze/dourado), nunca no fundo — claro = off-white + superfícies brancas;
-// escuro = grafite quente "dim" (não quase-preto).
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+// Visual "branco e preto" (aprovado 03/10/2026, substitui o Marfim & Bronze):
+// claro = branco puro, escuro = preto puro, neutros SEM tom (nem frio nem quente);
+// destaque AZUL nos dois temas (botão #2563eb). Cor só com significado
+// (ruby = atraso/risco, amber = atenção, teal/green = ganho) e fundo colorido
+// sempre translúcido (bg-n-*-9/10 etc., nunca bloco chapado).
+// Alvo fiel aprovado: comercial\docs\mockups\2026-10-03-hub-branco-preto\hub-v2.html
+// Fonte: Geist (texto) + Geist Mono (números/horários/valores, classe font-mono).
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
-/* ===== Tema CLARO (default :root) — off-white + branco, bronze de acento ===== */
+/* ===== Tema CLARO (default :root) — branco puro, azul de destaque ===== */
 :root {
-  // Degraus 1–8 do iris seguiam a lavanda do core no claro (housekeeping 24/08):
-  // mesma rampa quente do --blue-* abaixo.
-  --iris-1: 253 252 250;
-  --iris-2: 250 247 243;
-  --iris-3: 244 238 229;
-  --iris-4: 237 228 215;
-  --iris-5: 228 216 198;
-  --iris-6: 216 200 177;
-  --iris-7: 199 178 148;
-  --iris-8: 175 148 111;
-  --iris-9: 125 84 50; // #7d5432 acento/primária (botões)
-  --iris-10: 107 70 40; // #6b4628 hover
-  --iris-11: 125 84 50; // texto/ícone de acento
-  --iris-12: 38 33 27; // #26211b texto alto contraste
-  // O core do Chatwoot v4 usa BLUE como primária (components-next, abas,
-  // links, banner) — a marca vive no bronze, então o azul inteiro vira a
-  // mesma rampa quente. Info/link = acento, decisão da paleta 04/07.
-  --blue-1: 253 252 250;
-  --blue-2: 250 247 243;
-  --blue-3: 244 238 229;
-  --blue-4: 237 228 215;
-  --blue-5: 228 216 198;
-  --blue-6: 216 200 177;
-  --blue-7: 199 178 148;
-  --blue-8: 175 148 111;
-  --blue-9: 125 84 50;
-  --blue-10: 107 70 40;
-  --blue-11: 125 84 50;
-  --blue-12: 38 33 27;
-  --background-color: 247 244 239; // #f7f4ef off-white quente
+  // slate do core é levemente frio → neutro puro
+  --slate-1: 252 252 252;
+  --slate-2: 250 250 250;
+  --slate-3: 244 244 244;
+  --slate-4: 239 239 239;
+  --slate-5: 232 232 232;
+  --slate-6: 222 222 222;
+  --slate-7: 207 207 207;
+  --slate-8: 187 187 187;
+  --slate-9: 143 143 143;
+  --slate-10: 128 128 128;
+  --slate-11: 102 102 102;
+  --slate-12: 17 17 17;
+  // O core usa BLUE (components-next, abas, links) e IRIS (primária legada)
+  // — os dois viram a mesma rampa azul.
+  --iris-1: 250 252 255;
+  --iris-2: 243 248 255;
+  --iris-3: 234 242 255;
+  --iris-4: 219 234 254;
+  --iris-5: 205 225 254;
+  --iris-6: 191 219 254;
+  --iris-7: 147 197 253;
+  --iris-8: 96 165 250;
+  --iris-9: 37 99 235; // #2563eb botão
+  --iris-10: 29 78 216; // #1d4ed8 hover
+  --iris-11: 29 78 216; // texto/ícone de destaque
+  --iris-12: 30 58 138;
+  --blue-1: 250 252 255;
+  --blue-2: 243 248 255;
+  --blue-3: 234 242 255;
+  --blue-4: 219 234 254;
+  --blue-5: 205 225 254;
+  --blue-6: 191 219 254;
+  --blue-7: 147 197 253;
+  --blue-8: 96 165 250;
+  --blue-9: 37 99 235;
+  --blue-10: 29 78 216;
+  --blue-11: 29 78 216;
+  --blue-12: 30 58 138;
+  --background-color: 255 255 255;
   --surface-1: 255 255 255;
   --surface-2: 255 255 255;
-  --card-color: 255 255 255; // cards brancos (contraste sobre o off-white)
-  --ramon-rail: 236 232 225; // #ece8e1 trilho — um degrau mais fundo
-  --ramon-column: 241 237 230; // #f1ede6 coluna do Kanban (entre fundo e card)
+  --card-color: 255 255 255;
+  --border-strong: 220 220 220; // #dcdcdc
+  --border-weak: 235 235 235; // #ebebeb
+  --border-container: 235 235 235;
+  --solid-iris: 219 234 254;
+  --ramon-rail: 250 250 250;
+  --ramon-column: 250 250 250;
 }
 
-/* ===== Tema ESCURO (.dark — default do app) — grafite quente "dim" ===== */
+/* ===== Tema ESCURO (.dark) — preto puro, mesmo azul ===== */
 .dark {
-  --iris-1: 38 35 32;
-  --iris-2: 43 40 37;
-  --iris-3: 51 48 44;
-  --iris-4: 59 56 51;
-  --iris-5: 69 65 59;
-  --iris-6: 81 76 68;
-  --iris-7: 99 91 78;
-  --iris-8: 125 106 80;
-  --iris-9: 138 92 51; // #8a5c33 primária (botões)
-  --iris-10: 122 80 41; // #7a5029 hover
-  --iris-11: 201 169 124; // #c9a97c acento dourado (ícones/links/ativo)
-  --iris-12: 236 231 223; // #ece7df texto alto contraste
-  --solid-iris: 70 53 40; // #463528
-  // Azul do core → mesma rampa do iris (ver nota no bloco claro)
-  --blue-1: 38 35 32;
-  --blue-2: 43 40 37;
-  --blue-3: 51 48 44;
-  --blue-4: 59 56 51;
-  --blue-5: 69 65 59;
-  --blue-6: 81 76 68;
-  --blue-7: 99 91 78;
-  --blue-8: 125 106 80;
-  --blue-9: 138 92 51;
-  --blue-10: 122 80 41;
-  --blue-11: 201 169 124;
-  --blue-12: 236 231 223;
-  --solid-blue: 70 53 40;
-  // Superfícies quentes (redesign 07/2026): cards/menus deixam o cinza-azulado
-  // do _next-colors e entram na mesma família do fundo #262320.
-  --solid-1: 46 43 39; // #2e2b27
-  --solid-2: 46 43 39; // #2e2b27 (cards quentes)
-  --solid-3: 51 48 44; // #33302c
-  --border-weak: 61 55 47; // ~rgba(201,169,124,.10) sobre #262320
-  --background-color: 38 35 32; // #262320 app — dim, não quase-preto
-  --surface-1: 43 40 37; // #2b2825 sidebar
-  --surface-2: 46 43 39;
-  --card-color: 51 48 44; // #33302c cards
-  --button-color: 69 63 55;
-  --ramon-rail: 30 27 25; // #1e1b19 trilho — o mais escuro (profundidade)
-  --ramon-column: 43 40 37; // #2b2825 coluna do Kanban
+  --slate-1: 10 10 10;
+  --slate-2: 15 15 15;
+  --slate-3: 20 20 20;
+  --slate-4: 28 28 28;
+  --slate-5: 34 34 34;
+  --slate-6: 41 41 41;
+  --slate-7: 54 54 54;
+  --slate-8: 77 77 77;
+  --slate-9: 107 107 107;
+  --slate-10: 122 122 122;
+  --slate-11: 161 161 161;
+  --slate-12: 237 237 237;
+  --iris-1: 8 12 22;
+  --iris-2: 11 17 32;
+  --iris-3: 14 27 51;
+  --iris-4: 17 35 68;
+  --iris-5: 22 45 88;
+  --iris-6: 29 58 112;
+  --iris-7: 36 73 140;
+  --iris-8: 44 92 175;
+  --iris-9: 37 99 235; // #2563eb botão (texto branco)
+  --iris-10: 59 130 246; // hover
+  --iris-11: 96 165 250; // #60a5fa texto/ícone de destaque
+  --iris-12: 219 234 254;
+  --solid-iris: 17 35 68;
+  --blue-1: 8 12 22;
+  --blue-2: 11 17 32;
+  --blue-3: 14 27 51;
+  --blue-4: 17 35 68;
+  --blue-5: 22 45 88;
+  --blue-6: 29 58 112;
+  --blue-7: 36 73 140;
+  --blue-8: 44 92 175;
+  --blue-9: 37 99 235;
+  --blue-10: 59 130 246;
+  --blue-11: 96 165 250;
+  --blue-12: 219 234 254;
+  --solid-blue: 17 35 68;
+  --solid-blue-2: 14 14 14;
+  --solid-1: 10 10 10;
+  --solid-2: 14 14 14;
+  --solid-3: 22 22 22;
+  --solid-active: 28 28 28;
+  --border-strong: 46 46 46; // #2e2e2e
+  --border-weak: 31 31 31; // #1f1f1f
+  --background-color: 0 0 0;
+  --surface-1: 0 0 0;
+  --surface-2: 10 10 10;
+  --surface-active: 28 28 28;
+  --card-color: 14 14 14;
+  --button-color: 28 28 28;
+  --label-background: 28 28 28;
+  --alpha-1: 28, 28, 28, 0.8;
+  --alpha-2: 160, 160, 160, 0.12;
+  --alpha-3: 20, 20, 20, 0.95;
+  --ramon-rail: 0 0 0;
+  --ramon-column: 10 10 10;
 }
 
-/* Fundo do trilho (WorldRail) — sempre o tom mais fundo, distinto da sidebar */
+/* Fundo do trilho (WorldRail) */
 .ramon-rail {
   background-color: rgb(var(--ramon-rail));
 }
@@ -99,10 +134,23 @@
 }
 
 /* Fantasma do drag (vuedraggable ghost-class): marca o destino do drop
-   com tracejado bronze em vez de o card simplesmente "sumir" */
+   com tracejado azul em vez de o card simplesmente "sumir" */
 .ramon-drag-ghost {
   opacity: 0.4;
   outline: 2px dashed rgb(var(--iris-9));
   outline-offset: -2px;
   border-radius: 0.75rem;
+}
+
+/* Etiqueta de etapa (pílula): a cor da etapa vem do banco como hex em --stage;
+   texto escurecido/clareado p/ contraste + fundo translúcido (regra 03/10). */
+.ramon-stage-pill {
+  color: color-mix(in srgb, var(--stage) 70%, black);
+  background-color: color-mix(in srgb, var(--stage) 14%, transparent);
+  border-color: color-mix(in srgb, var(--stage) 28%, transparent);
+}
+
+.dark .ramon-stage-pill {
+  color: color-mix(in srgb, var(--stage) 55%, white);
+  background-color: color-mix(in srgb, var(--stage) 22%, transparent);
 }

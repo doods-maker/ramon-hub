@@ -138,7 +138,7 @@ onKeyStroke('Escape', () => {
         >
           <span
             class="rounded-full size-2 shrink-0"
-            :style="{ backgroundColor: stage.color || '#8d867d' }"
+            :style="{ backgroundColor: stage.color || '#737373' }"
           />
           <span class="truncate">{{ stage.name }}</span>
         </button>

@@ -59,7 +59,12 @@ const usar = opcao => {
 <template>
   <div
     data-bubble-name="ramon-event"
-    class="mx-auto max-w-[78%] rounded-xl border border-dashed border-n-iris-9/50 bg-n-iris-9/10 px-4 py-2 text-center text-xs text-n-iris-11"
+    class="mx-auto max-w-[78%] rounded-xl border px-4 py-2 text-center text-xs"
+    :class="
+      isCoach
+        ? 'border-n-amber-9/40 bg-n-amber-9/15 text-n-amber-11'
+        : 'border-n-iris-9/25 bg-n-iris-9/10 text-n-iris-11'
+    "
   >
     <span v-dompurify-html="content" />
     <div
@@ -91,15 +96,16 @@ const usar = opcao => {
         :key="index"
         type="button"
         data-testid="coach-usar"
-        class="flex items-start gap-2 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-xs text-n-slate-12 hover:border-n-iris-9"
+        class="flex items-center gap-2 rounded-lg border border-n-amber-9/30 bg-n-solid-1/60 px-3 py-2 text-xs text-n-slate-12 hover:border-n-amber-9"
         @click="usar(opcao)"
       >
         <span class="min-w-0"
           ><b>{{ opcao.titulo }}:</b> {{ opcao.texto }}</span
         >
-        <span class="ml-auto shrink-0 font-bold text-n-iris-11">{{
-          $t('RAMON.COACH.USAR')
-        }}</span>
+        <span
+          class="ml-auto shrink-0 rounded-md bg-n-iris-9 px-2.5 py-1 font-semibold text-white"
+          >{{ $t('RAMON.COACH.USAR') }}</span
+        >
       </button>
     </div>
   </div>

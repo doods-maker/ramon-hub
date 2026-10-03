@@ -176,7 +176,7 @@ const isActive = item => item.names?.includes(route.name);
         !isMobileSidebarOpen,
     }"
   >
-    <h2 class="px-4 mb-4 text-xl font-cormorant text-n-slate-12">
+    <h2 class="px-4 mb-4 text-xl font-semibold text-n-slate-12">
       {{ t('RAMON.NAV.TITLE') }}
     </h2>
     <!-- Mobile: a rail de mundos fica oculta — atalho pro outro mundo aqui -->

@@ -9,6 +9,7 @@ import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
 import MiniEsteira from './MiniEsteira.vue';
+import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import LeadNotes from './LeadNotes.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
@@ -108,17 +109,13 @@ watch(
   }
 );
 
-// Chip de etapa colorido (mock 1f: pílula soft na cor da etapa) — :style é o
-// precedente do fork p/ cor dinâmica (KanbanColumn); sem cor, fica neutro.
-const stageChipStyle = computed(() => {
-  const color = stages.value?.find(s => s.id === stageId.value)?.color;
-  if (!color) return null;
-  return {
-    backgroundColor: `${color}2E`,
-    borderColor: `${color}59`,
-    color,
-  };
-});
+// Pílula de etapa na cor da etapa (classe .ramon-stage-pill lê --stage);
+// sem cor configurada, cinza neutro.
+const stageChipStyle = computed(() => ({
+  '--stage':
+    stages.value?.find(s => s.id === stageId.value)?.color ||
+    DEFAULT_STAGE_COLOR,
+}));
 
 // ----- Onda B: cartões do resumo -----
 const CARD = 'rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-3';
@@ -351,7 +348,7 @@ const discard = async () => {
       </router-link>
 
       <h2
-        class="font-cormorant text-[21px] font-semibold leading-tight text-n-slate-12 truncate"
+        class="text-[21px] font-semibold leading-tight text-n-slate-12 truncate"
       >
         {{ lead.name }}
       </h2>
@@ -362,7 +359,7 @@ const discard = async () => {
         <select
           data-testid="panel-stage"
           :value="stageId"
-          class="max-w-40 appearance-none truncate rounded-full border border-n-weak bg-n-alpha-1 h-auto bg-none px-2.5 py-0.5 text-[11px] text-n-slate-11 outline-none focus:border-n-slate-8"
+          class="ramon-stage-pill max-w-40 appearance-none truncate rounded-full border h-auto bg-none px-2.5 py-0.5 text-[11px] font-medium outline-none"
           :style="stageChipStyle"
           @change="e => onStageChange(Number(e.target.value))"
         >
@@ -556,8 +553,14 @@ const discard = async () => {
           >
             {{ $t('RAMON.LEAD_PANEL.ANDAMENTO.TITLE') }}
           </p>
-          <p class="mt-1 text-[13px] font-semibold text-n-iris-11">
-            {{ stageName || '—' }}
+          <p class="mt-1.5">
+            <span
+              class="ramon-stage-pill inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-semibold"
+              :style="stageChipStyle"
+            >
+              <span class="rounded-full size-1.5 bg-current" />
+              {{ stageName || '—' }}
+            </span>
           </p>
           <MiniEsteira class="mt-2" :stages="stages" :current-id="stageId" />
           <p v-if="andamentoApoio" class="mt-1.5 text-xs text-n-slate-11">
@@ -616,8 +619,7 @@ const discard = async () => {
         <!-- Risco de esfriar (stalled) -->
         <div
           v-if="risco"
-          :class="CARD"
-          class="border-l-4 border-l-n-ruby-9 bg-n-ruby-9/5"
+          class="rounded-xl border border-n-ruby-9/30 border-l-4 border-l-n-ruby-9 bg-n-ruby-9/10 p-3"
           data-testid="panel-card-risco"
         >
           <p class="text-[12.5px] font-bold text-n-ruby-11">

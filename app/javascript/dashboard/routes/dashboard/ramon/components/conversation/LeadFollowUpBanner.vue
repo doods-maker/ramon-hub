@@ -82,7 +82,7 @@ const slaChip = computed(() => {
       )
     );
     return {
-      tone: 'bg-n-teal-3 text-n-teal-11',
+      tone: 'bg-n-teal-9/15 text-n-teal-11',
       icon: 'i-lucide-check',
       text: t('RAMON.SLA.CHIP_OK', { minutes: taken }),
     };
@@ -90,12 +90,12 @@ const slaChip = computed(() => {
   const leftMin = Math.floor((due - Date.now()) / 60000);
   if (leftMin >= 0)
     return {
-      tone: 'bg-n-amber-3 text-n-amber-11',
+      tone: 'bg-n-amber-9/15 text-n-amber-11',
       icon: 'i-lucide-timer',
       text: t('RAMON.SLA.CHIP_PENDING', { minutes: leftMin }),
     };
   return {
-    tone: 'bg-n-ruby-3 text-n-ruby-11',
+    tone: 'bg-n-ruby-9/15 text-n-ruby-11',
     icon: 'i-lucide-timer-off',
     text: t('RAMON.SLA.CHIP_BREACHED'),
   };
@@ -130,7 +130,7 @@ const openPanel = () => {
       type="button"
       data-testid="lead-follow-up-banner"
       :title="label"
-      class="inline-flex items-center gap-1 min-w-0 max-w-48 px-2 py-1 text-xs rounded-full bg-n-amber-3 text-n-amber-11 hover:bg-n-amber-4"
+      class="inline-flex items-center gap-1 min-w-0 max-w-48 px-2 py-1 text-xs rounded-full bg-n-amber-9/15 text-n-amber-11 hover:bg-n-amber-9/25"
       @click="openPanel"
     >
       <span class="i-lucide-history size-3.5 shrink-0" />

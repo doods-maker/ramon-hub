@@ -239,7 +239,7 @@ const copyDossie = async () => {
       >
         <div class="flex flex-wrap items-start gap-4">
           <div
-            class="grid text-xl font-semibold rounded-full size-14 shrink-0 place-items-center bg-n-iris-3 text-n-iris-11 font-cormorant"
+            class="grid text-xl font-semibold rounded-full size-14 shrink-0 place-items-center bg-n-iris-3 text-n-iris-11"
           >
             {{ initial }}
           </div>
@@ -247,7 +247,7 @@ const copyDossie = async () => {
             <p class="text-xs tracking-[0.2em] uppercase text-n-slate-11">
               {{ $t('RAMON.FICHA.TITLE') }}
             </p>
-            <h1 class="text-3xl font-semibold font-cormorant text-n-slate-12">
+            <h1 class="text-3xl font-semibold text-n-slate-12">
               {{ pessoa.lead_name }}
             </h1>
             <div class="flex flex-wrap gap-2 mt-2">
@@ -260,14 +260,12 @@ const copyDossie = async () => {
               <span
                 v-if="esteiraSemAtual && pessoa.stage_name"
                 data-testid="ficha-stage-chip-fallback"
-                class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-n-alpha-2 text-n-slate-11"
+                class="ramon-stage-pill inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border"
+                :style="{
+                  '--stage': pessoa.stage_color || DEFAULT_STAGE_COLOR,
+                }"
               >
-                <span
-                  class="size-1.5 rounded-full"
-                  :style="{
-                    backgroundColor: pessoa.stage_color || DEFAULT_STAGE_COLOR,
-                  }"
-                />
+                <span class="size-1.5 rounded-full bg-current" />
                 {{ pessoa.stage_name }}
               </span>
               <span

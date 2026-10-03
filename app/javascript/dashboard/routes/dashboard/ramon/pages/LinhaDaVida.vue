@@ -6,6 +6,7 @@ import LinhaDaVidaAPI from 'dashboard/api/linhaDaVida';
 import ContactAPI from 'dashboard/api/contacts';
 import { formatCpf } from '../helpers/cpf';
 import { formatBrl } from '../helpers/currency';
+import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import { frontendURL } from '../../../../helper/URLHelper';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 
@@ -299,17 +300,8 @@ const conversationUrl = lead =>
             <div class="flex items-center justify-between gap-2">
               <span class="text-sm text-n-slate-12">{{ lead.name }}</span>
               <span
-                class="px-2 py-0.5 text-xs rounded-full shrink-0"
-                :class="
-                  lead.stage_color
-                    ? 'text-white'
-                    : 'bg-n-alpha-2 text-n-slate-11'
-                "
-                :style="
-                  lead.stage_color
-                    ? { backgroundColor: lead.stage_color }
-                    : undefined
-                "
+                class="ramon-stage-pill px-2 py-0.5 text-xs font-medium rounded-full border shrink-0"
+                :style="{ '--stage': lead.stage_color || DEFAULT_STAGE_COLOR }"
               >
                 {{ lead.stage_name }}
               </span>

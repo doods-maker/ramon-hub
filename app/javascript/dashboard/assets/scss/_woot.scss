@@ -8,7 +8,7 @@
 
 // Next Colors
 @import 'next-colors';
-@import 'ramon-brand';   // marca Ramon Antonio (DEVE vir depois)
+@import 'ramon-brand'; // marca Ramon Antonio (DEVE vir depois)
 
 // Base styles for elements
 @import 'base';
@@ -19,6 +19,7 @@
 html,
 body {
   font-family:
+    'Geist',
     'Inter',
     -apple-system,
     system-ui,
