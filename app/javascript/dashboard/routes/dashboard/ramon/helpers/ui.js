@@ -27,8 +27,9 @@ export const TITULO = `${SOBRESCRITO} text-n-slate-10`;
 // o seletor de elemento do select/textarea (margem local: !mb-3).
 export const CAMPO =
   'reset-base block w-full mb-0 h-8 rounded-lg border-0 bg-n-alpha-black2 px-3 text-sm text-n-slate-12 outline outline-1 -outline-offset-1 outline-n-weak hover:outline-n-slate-6 focus:outline-n-brand placeholder:text-n-slate-10 disabled:cursor-not-allowed disabled:opacity-50';
-// select: a seta do CSS global fica à direita, dentro do padding.
-export const SELECT = `${CAMPO} pr-8`;
+// select: a seta do CSS global fica à direita, dentro do padding; py-0 anula o
+// py-2 global (senão o texto corta no h-8).
+export const SELECT = `${CAMPO} py-0 pr-8`;
 export const TEXTAREA = `${CAMPO} h-auto py-2`;
 export const ARQUIVO = `${CAMPO} h-auto py-1.5 text-xs file:me-2 file:rounded-md file:border-0 file:bg-n-alpha-2 file:px-2 file:py-0.5 file:text-n-slate-12`;
 export const ROTULO = 'flex flex-col gap-1 text-xs text-n-slate-10';
