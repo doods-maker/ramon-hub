@@ -26,7 +26,15 @@
       "ESTADO_aguardando": "waiting",
       "ESTADO_escalado": "no answer",
       "ESTADO_respondido": "answered",
-      "RESPONDEU": "{quem} replied: {resposta}"
+      "RESPONDEU": "{quem} replied: {resposta}",
+      "CLIENTE_CHEGOU": "Client arrived",
+      "AVISADO_POR": "Announced by {quem} at {hora}",
+      "RECADO": "Note:",
+      "ATENDER_AGORA": "I will attend now",
+      "AGUARDAR": "Ask them to wait a few minutes",
+      "NAO_POSSO": "I cannot attend",
+      "OUTRA_COISA": "Reply something else",
+      "VOLTA_EM": "No reply in {tempo} and the alert goes back to {quem}."
     },
     "AGENDA": {
       "TITLE": "Agenda",

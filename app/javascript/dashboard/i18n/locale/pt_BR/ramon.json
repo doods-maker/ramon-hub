@@ -26,7 +26,15 @@
       "ESTADO_aguardando": "aguardando",
       "ESTADO_escalado": "sem resposta",
       "ESTADO_respondido": "respondeu",
-      "RESPONDEU": "{quem} respondeu: {resposta}"
+      "RESPONDEU": "{quem} respondeu: {resposta}",
+      "CLIENTE_CHEGOU": "Cliente chegou",
+      "AVISADO_POR": "Avisado por {quem} às {hora}",
+      "RECADO": "Recado:",
+      "ATENDER_AGORA": "Vou atender agora",
+      "AGUARDAR": "Peça pra aguardar uns minutos",
+      "NAO_POSSO": "Não posso atender",
+      "OUTRA_COISA": "Responder outra coisa",
+      "VOLTA_EM": "Sem resposta em {tempo}, o aviso volta pra {quem}."
     },
     "AGENDA": {
       "TITLE": "Agenda",

@@ -6,6 +6,8 @@ import { useChegadasStore } from 'dashboard/stores/chegadas';
 import { useAlert } from 'dashboard/composables';
 import { useEmitter } from 'dashboard/composables/emitter';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
+import { useIntervalFn } from '@vueuse/core';
+import { BTN_CHEIO, BTN_LINHA, horaDe } from '../hoje/hoje';
 
 // Alerta que insiste (Equipe · Fatia 1): overlay + toque em loop + notificação
 // do sistema + título piscando até a pessoa responder. Montado sempre no
@@ -149,15 +151,47 @@ watch(minhasRespondidas, lista => {
 const recarregar = () => chegadas.carregar().catch(() => {});
 useEmitter(BUS_EVENTS.WEBSOCKET_RECONNECT, recarregar);
 
-const enviar = async () => {
-  if (!resposta.value.trim() || enviando.value) return;
+const responderCom = async texto => {
+  if (!texto || enviando.value) return;
   enviando.value = true;
   try {
-    await chegadas.responder(atual.value.id, resposta.value.trim());
+    await chegadas.responder(atual.value.id, texto);
   } finally {
     enviando.value = false;
   }
 };
+const enviar = () => responderCom(resposta.value.trim());
+
+// Redesign v2 (mockup #chegada): respostas prontas — vão pra quem AVISOU
+// (interno), nunca pro cliente. "Responder outra coisa" abre o texto livre.
+const RAPIDAS = [
+  'RAMON.CHEGADA.ATENDER_AGORA',
+  'RAMON.CHEGADA.AGUARDAR',
+  'RAMON.CHEGADA.NAO_POSSO',
+];
+const outraCoisa = ref(false);
+watch(
+  () => atual.value?.id,
+  () => {
+    outraCoisa.value = false;
+  }
+);
+
+// "Sem resposta em m:ss, o aviso volta pra …" — mesmo prazo do
+// Ramon::ChegadaEscalarJob (Chegada::ESCALAR_APOS = 3 min).
+// ref próprio (não o do useNow): o do vueuse não re-renderiza nos testes.
+const ESCALAR_APOS_MS = 3 * 60 * 1000;
+const agora = ref(Date.now());
+useIntervalFn(() => {
+  agora.value = Date.now();
+}, 1000);
+const voltaEm = computed(() => {
+  if (atual.value?.estado !== 'aguardando' || !atual.value.created_at)
+    return null;
+  const fim = new Date(atual.value.created_at).getTime() + ESCALAR_APOS_MS;
+  const s = Math.max(0, Math.round((fim - agora.value) / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+});
 
 // Navegador só pede permissão com gesto do usuário: no 1º clique em qualquer
 // lugar do hub, pergunta (uma vez). Vale pra todo mundo, não só a recepção.
@@ -180,61 +214,123 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <!-- tela inteira em azul translúcido + desfoque; cartão no centro -->
   <dialog
     ref="dialogRef"
-    class="w-[calc(100%-2rem)] max-w-md bg-transparent p-0 backdrop:bg-n-alpha-black1 backdrop:backdrop-blur-[4px]"
+    class="m-0 h-screen max-h-none w-screen max-w-none place-items-center border-0 bg-n-blue-9/[0.18] p-4 backdrop-blur-md backdrop:bg-transparent open:grid dark:bg-n-blue-9/[0.22]"
+    role="alertdialog"
+    :aria-label="t('RAMON.CHEGADA.CLIENTE_CHEGOU')"
     @cancel.prevent
     @close="manterAberto"
   >
     <div
       v-if="atual"
       data-testid="alerta-chegada"
-      class="w-full rounded-xl bg-n-solid-1 p-6 shadow-xl outline outline-1 outline-n-weak"
+      class="w-[460px] max-w-[calc(100vw-32px)] rounded-[18px] border border-n-blue-9/40 bg-n-background p-7 text-center shadow-[0_24px_80px_rgb(37_99_235/0.35)]"
     >
-      <p class="text-sm text-n-slate-11">
+      <div
+        class="mx-auto mb-3.5 grid size-[52px] animate-pulse place-items-center rounded-full bg-n-blue-9/[0.08] text-n-blue-11 motion-reduce:animate-none dark:bg-n-blue-9/[0.16]"
+      >
+        <span class="i-lucide-bell-ring size-6" />
+      </div>
+      <p class="text-[12.5px] font-semibold uppercase text-n-blue-11">
         {{
           souDestinatario
-            ? t('RAMON.CHEGADA.CHEGOU', { quem: atual.criado_por.name })
+            ? t('RAMON.CHEGADA.CLIENTE_CHEGOU')
             : t('RAMON.CHEGADA.SEM_RESPOSTA', { quem: atual.destinatario.name })
         }}
       </p>
-      <h2 class="mt-1 text-2xl font-semibold text-n-slate-12">
+      <h2 class="my-1 text-[28px] font-semibold tracking-tight text-n-slate-12">
         {{ atual.cliente_nome }}
       </h2>
-      <p v-if="atual.motivo" class="mt-1 text-n-slate-11">{{ atual.motivo }}</p>
-
-      <form
-        v-if="souDestinatario"
-        class="mt-4 flex flex-col gap-2"
-        @submit.prevent="enviar"
+      <p v-if="atual.created_at" class="text-[13.5px] text-n-slate-11">
+        {{
+          t('RAMON.CHEGADA.AVISADO_POR', {
+            quem: atual.criado_por.name,
+            hora: horaDe(atual.created_at),
+          })
+        }}
+      </p>
+      <p
+        v-if="atual.motivo"
+        class="mt-4 rounded-[10px] bg-n-amber-9/15 px-3 py-2.5 text-left text-[13px] text-n-slate-12"
       >
-        <textarea
-          v-model="resposta"
-          data-testid="chegada-resposta"
-          rows="2"
-          autofocus
-          :placeholder="t('RAMON.CHEGADA.RESPOSTA_PLACEHOLDER')"
-          class="w-full rounded-lg bg-n-alpha-black2 p-2 text-n-slate-12 outline outline-1 outline-n-weak"
-          @keydown.enter.exact.prevent="enviar"
-        />
+        <b class="font-semibold text-n-amber-11">
+          {{ t('RAMON.CHEGADA.RECADO') }}
+        </b>
+        {{ atual.motivo }}
+      </p>
+
+      <template v-if="souDestinatario">
+        <div class="mt-5 flex flex-col gap-2">
+          <button
+            v-for="(chave, i) in RAPIDAS"
+            :key="chave"
+            type="button"
+            :data-testid="`chegada-rapida-${i}`"
+            :class="[
+              i === 0 ? BTN_CHEIO : BTN_LINHA,
+              { '!border-transparent !text-n-slate-11': i === 2 },
+            ]"
+            class="justify-center !rounded-[9px] !px-4 !py-[9px] !text-sm disabled:opacity-50"
+            :disabled="enviando"
+            @click="responderCom(t(chave))"
+          >
+            {{ t(chave) }}
+          </button>
+        </div>
         <button
-          type="submit"
-          :disabled="!resposta.trim() || enviando"
-          class="rounded-lg bg-n-brand px-4 py-2 font-medium text-white disabled:opacity-50"
+          v-if="!outraCoisa"
+          type="button"
+          data-testid="chegada-outra-coisa"
+          class="mt-3 text-xs text-n-blue-11 underline underline-offset-2"
+          @click="outraCoisa = true"
         >
-          {{ t('RAMON.CHEGADA.RESPONDER') }}
+          {{ t('RAMON.CHEGADA.OUTRA_COISA') }}
         </button>
-      </form>
+        <form v-else class="mt-3 flex flex-col gap-2" @submit.prevent="enviar">
+          <textarea
+            v-model="resposta"
+            data-testid="chegada-resposta"
+            rows="2"
+            autofocus
+            :placeholder="t('RAMON.CHEGADA.RESPOSTA_PLACEHOLDER')"
+            class="!mb-0 w-full rounded-[9px] border border-n-strong bg-transparent p-2 text-left text-sm text-n-slate-12 outline-none focus:border-n-blue-9"
+            @keydown.enter.exact.prevent="enviar"
+          />
+          <button
+            type="submit"
+            :disabled="!resposta.trim() || enviando"
+            :class="BTN_LINHA"
+            class="justify-center disabled:opacity-50"
+          >
+            {{ t('RAMON.CHEGADA.RESPONDER') }}
+          </button>
+        </form>
+        <p
+          v-if="voltaEm"
+          data-testid="chegada-volta-em"
+          class="mt-3.5 text-xs text-n-slate-9"
+        >
+          {{
+            t('RAMON.CHEGADA.VOLTA_EM', {
+              tempo: voltaEm,
+              quem: atual.criado_por.name,
+            })
+          }}
+        </p>
+      </template>
       <button
         v-else
         type="button"
-        class="mt-4 w-full rounded-lg bg-n-brand px-4 py-2 font-medium text-white"
+        :class="BTN_CHEIO"
+        class="mt-5 w-full justify-center !rounded-[9px] !px-4 !py-[9px] !text-sm"
         @click="chegadas.marcarVisto(atual.id)"
       >
         {{ t('RAMON.CHEGADA.ENTENDI') }}
       </button>
 
-      <p v-if="alertas.length > 1" class="mt-3 text-xs text-n-slate-11">
+      <p v-if="alertas.length > 1" class="mt-3 text-xs text-n-slate-9">
         {{ t('RAMON.CHEGADA.MAIS', { n: alertas.length - 1 }) }}
       </p>
     </div>
