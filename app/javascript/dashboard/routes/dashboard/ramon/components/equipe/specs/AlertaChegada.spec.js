@@ -180,6 +180,16 @@ describe('AlertaChegada.vue', () => {
       expect(wrapper.text()).toContain('RAMON.CHEGADA.AVISADO_POR');
     });
 
+    it('foco vai pro cartão, não pro botão de resposta', async () => {
+      const wrapper = mount(AlertaChegada, { attachTo: document.body });
+      await flushPromises();
+      useChegadasStore().upsert(chegada(9));
+      await flushPromises();
+      expect(document.activeElement).toBe(
+        wrapper.find('[data-testid="alerta-chegada"]').element
+      );
+    });
+
     it('escalada não mostra contagem nem respostas prontas', async () => {
       const wrapper = mount(AlertaChegada);
       await flushPromises();

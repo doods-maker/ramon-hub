@@ -27,6 +27,7 @@ const souDestinatario = computed(
 const resposta = ref('');
 const enviando = ref(false);
 const dialogRef = ref(null);
+const cartaoRef = ref(null);
 
 const ringtone = new Audio(RINGTONE_URL);
 ringtone.loop = true;
@@ -103,6 +104,16 @@ watch(
     if (!el) return;
     if (temAlerta && !el.open) el.showModal?.();
     else if (!temAlerta) el.close?.();
+  },
+  { flush: 'post' }
+);
+
+// Foco no cartão, não no 1º botão (o showModal focaria "Vou atender agora"):
+// um Enter de quem estava digitando não pode responder sozinho.
+watch(
+  [() => atual.value?.id, cartaoRef],
+  ([id, cartao]) => {
+    if (id !== undefined) cartao?.focus();
   },
   { flush: 'post' }
 );
@@ -225,8 +236,11 @@ onBeforeUnmount(() => {
   >
     <div
       v-if="atual"
+      ref="cartaoRef"
       data-testid="alerta-chegada"
-      class="w-[460px] max-w-[calc(100vw-32px)] rounded-[18px] border border-n-blue-9/40 bg-n-background p-7 text-center shadow-[0_24px_80px_rgb(37_99_235/0.35)]"
+      tabindex="-1"
+      autofocus
+      class="w-[460px] max-w-[calc(100vw-32px)] rounded-[18px] outline-none border border-n-blue-9/40 bg-n-background p-7 text-center shadow-[0_24px_80px_rgb(37_99_235/0.35)]"
     >
       <div
         class="mx-auto mb-3.5 grid size-[52px] animate-pulse place-items-center rounded-full bg-n-blue-9/[0.08] text-n-blue-11 motion-reduce:animate-none dark:bg-n-blue-9/[0.16]"
