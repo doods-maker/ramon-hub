@@ -16,6 +16,7 @@
       "ABA_LIVRE": "Livre",
       "HOJE_VAZIO": "Nenhum ATENDIMENTO marcado hoje no ADVBOX.",
       "ADVBOX_FORA": "ADVBOX indisponível — use Buscar ou Livre.",
+      "ERRO_AVISAR": "Não consegui avisar — tente de novo.",
       "BUSCAR_PLACEHOLDER": "Nome ou CPF",
       "NOME": "Nome do cliente",
       "MOTIVO": "Motivo (opcional)",

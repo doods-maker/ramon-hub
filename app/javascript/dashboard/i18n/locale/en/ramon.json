@@ -16,6 +16,7 @@
       "ABA_LIVRE": "Free",
       "HOJE_VAZIO": "No ATENDIMENTO scheduled today in ADVBOX.",
       "ADVBOX_FORA": "ADVBOX unavailable — use Search or Free.",
+      "ERRO_AVISAR": "Couldn't send the alert — try again.",
       "BUSCAR_PLACEHOLDER": "Name or CPF",
       "NOME": "Client name",
       "MOTIVO": "Reason (optional)",

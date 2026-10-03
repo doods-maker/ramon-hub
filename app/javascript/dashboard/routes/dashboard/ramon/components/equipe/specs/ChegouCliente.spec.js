@@ -21,7 +21,7 @@ vi.mock('dashboard/api/ramonCalculos', () => ({
 // O Dialog real importa CSS (postcss) que não roda no vitest — troca pelo stub.
 vi.mock('dashboard/components-next/dialog/Dialog.vue', () => ({
   default: {
-    template: '<div><slot /></div>',
+    template: `<div><slot /><button data-testid="confirmar" @click="$emit('confirm')" /></div>`,
     methods: { open() {}, close() {} },
   },
 }));
@@ -74,5 +74,26 @@ describe('ChegouCliente.vue', () => {
     await wrapper.find('[data-testid="chegou-cliente-botao"]').trigger('click');
     await flushPromises();
     expect(wrapper.text()).toContain('RAMON.CHEGADA.ADVBOX_FORA');
+  });
+
+  it('falha ao avisar mostra erro e mantém o formulário', async () => {
+    ChegadasAPI.agenda.mockResolvedValue({ data: { payload: [] } });
+    ChegadasAPI.create.mockRejectedValue(new Error('422'));
+    useChegadasStore().podeAvisar = true;
+    const wrapper = montar();
+    await wrapper.find('[data-testid="chegou-cliente-botao"]').trigger('click');
+    await flushPromises();
+    await wrapper
+      .findAll('button')
+      .find(b => b.text() === 'RAMON.CHEGADA.ABA_LIVRE')
+      .trigger('click');
+    await wrapper.find('[data-testid="chegada-nome"]').setValue('JOSE');
+    await wrapper.find('[data-testid="chegada-destinatario"]').setValue('20');
+    await wrapper.find('[data-testid="confirmar"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.text()).toContain('RAMON.CHEGADA.ERRO_AVISAR');
+    expect(wrapper.find('[data-testid="chegada-nome"]').element.value).toBe(
+      'JOSE'
+    );
   });
 });

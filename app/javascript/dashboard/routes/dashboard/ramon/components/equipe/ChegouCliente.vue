@@ -22,6 +22,7 @@ const termo = ref('');
 const resultados = ref([]);
 const form = ref({});
 const enviando = ref(false);
+const erro = ref(false);
 
 const agents = computed(() => getters['agents/getAgents']?.value ?? []);
 const podeEnviar = computed(
@@ -34,6 +35,10 @@ const limpar = () => {
 };
 
 const abrir = async () => {
+  termo.value = '';
+  resultados.value = [];
+  agenda.value = [];
+  erro.value = false;
   limpar();
   aba.value = 'hoje';
   advboxFora.value = false;
@@ -80,12 +85,15 @@ const usarCliente = cliente => {
 const avisar = async () => {
   if (!podeEnviar.value || enviando.value) return;
   enviando.value = true;
+  erro.value = false;
   try {
     await chegadas.criar({
       ...form.value,
       destinatario_id: Number(form.value.destinatario_id),
     });
     limpar();
+  } catch {
+    erro.value = true;
   } finally {
     enviando.value = false;
   }
@@ -142,6 +150,10 @@ const estados = computed(() => ({
 
         <p v-if="advboxFora" class="text-sm text-n-ruby-11">
           {{ t('RAMON.CHEGADA.ADVBOX_FORA') }}
+        </p>
+
+        <p v-if="erro" class="text-sm text-n-ruby-11">
+          {{ t('RAMON.CHEGADA.ERRO_AVISAR') }}
         </p>
 
         <ul v-if="aba === 'hoje'" class="flex flex-col gap-1">
