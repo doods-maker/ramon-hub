@@ -43,6 +43,34 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
     render json: detalhe(@peca)
   end
 
+  def agendar
+    quando = Time.zone.parse(params.require(:agendado_para).to_s)
+    return render json: { error: 'Escolha um horário no futuro' }, status: :unprocessable_entity if quando.nil? || quando <= Time.current
+
+    @peca.transicionar!(de: 'montado', para: 'agendado', agendado_para: quando)
+    render json: detalhe(@peca)
+  end
+
+  def publicar_agora
+    @peca.transicionar!(de: %w[montado agendado], para: 'agendado', agendado_para: Time.current)
+    Ramon::PublicarPecasJob.perform_later
+    render json: detalhe(@peca)
+  end
+
+  def cancelar_agendamento
+    @peca.transicionar!(de: 'agendado', para: 'montado', agendado_para: nil)
+    render json: detalhe(@peca)
+  end
+
+  def tentar_de_novo
+    # última barreira contra post duplicado: se a Meta já devolveu id, nunca republicar
+    return render json: { error: 'Esta peça já foi ao ar — confira no Instagram.' }, status: :conflict if @peca.ig_media_id.present?
+
+    @peca.transicionar!(de: 'falhou', para: 'agendado', agendado_para: Time.current, erro: nil)
+    Ramon::PublicarPecasJob.perform_later
+    render json: detalhe(@peca)
+  end
+
   private
 
   def fetch_peca
@@ -63,6 +91,7 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
 
   def detalhe(peca)
     linha(peca).merge(conteudo: peca.conteudo, legenda: peca.legenda, imagens: peca.imagens,
-                      nota_reprovacao: peca.nota_reprovacao)
+                      nota_reprovacao: peca.nota_reprovacao,
+                      sugestao_horario: peca.status == 'montado' ? Ramon::GradeConteudo.proximo_horario(peca.account)&.iso8601 : nil)
   end
 end

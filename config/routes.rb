@@ -306,6 +306,10 @@ Rails.application.routes.draw do
               post :reprovar
               patch :atualizar_legenda
               post :refazer
+              post :agendar
+              post :publicar_agora
+              post :cancelar_agendamento
+              post :tentar_de_novo
             end
           end
           resources :portal_clientes, only: [:index, :show, :create, :update, :destroy], controller: 'portal_clientes' do

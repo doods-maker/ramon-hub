@@ -53,4 +53,43 @@ RSpec.describe 'Ramon Conteudo API', type: :request do
     post "#{base}/#{peca.id}/refazer", params: { cards: [2, 9, 'x'] }, headers: admin.create_new_auth_token
     expect(peca.reload).to have_attributes(status: 'montado', refazer_cards: [2])
   end
+
+  describe 'agenda' do
+    before { peca.update_columns(status: 'montado', imagens: ['u1']) }
+
+    it 'detalhe traz a sugestão da grade' do
+      get "#{base}/#{peca.id}", headers: admin.create_new_auth_token
+      expect(response.parsed_body['sugestao_horario']).to be_present
+    end
+
+    it 'agenda pro futuro' do
+      quando = 2.days.from_now.change(usec: 0)
+      post "#{base}/#{peca.id}/agendar", params: { agendado_para: quando.iso8601 }, headers: admin.create_new_auth_token
+      expect(peca.reload).to have_attributes(status: 'agendado', agendado_para: quando)
+    end
+
+    it 'recusa horário no passado' do
+      post "#{base}/#{peca.id}/agendar", params: { agendado_para: 1.hour.ago.iso8601 }, headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(peca.reload.status).to eq 'montado'
+    end
+
+    it 'publicar agora agenda pra já e dispara o job' do
+      expect { post "#{base}/#{peca.id}/publicar_agora", headers: admin.create_new_auth_token }
+        .to have_enqueued_job(Ramon::PublicarPecasJob)
+      expect(peca.reload.status).to eq 'agendado'
+    end
+
+    it 'cancela agendamento' do
+      peca.update_columns(status: 'agendado', agendado_para: 1.day.from_now)
+      post "#{base}/#{peca.id}/cancelar_agendamento", headers: admin.create_new_auth_token
+      expect(peca.reload).to have_attributes(status: 'montado', agendado_para: nil)
+    end
+
+    it 'tentar de novo recusa peça que já tem id na Meta' do
+      peca.update_columns(status: 'falhou', ig_media_id: 'm1')
+      post "#{base}/#{peca.id}/tentar_de_novo", headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:conflict)
+    end
+  end
 end
