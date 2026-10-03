@@ -231,9 +231,9 @@ onMounted(carregar);
               {{ t('RAMON.EXTRATO.OBS') }}
             </dt>
             <dd class="text-xs text-n-slate-11">
-              <template v-if="p.garantia_aplicada">{{
-                t('RAMON.EXTRATO.GARANTIA')
-              }}</template>
+              <template v-if="p.garantia_aplicada">
+                {{ t('RAMON.EXTRATO.GARANTIA') }}
+              </template>
               <template v-else>—</template>
             </dd>
           </div>

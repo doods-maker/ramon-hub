@@ -300,6 +300,18 @@ Rails.application.routes.draw do
           resources :ramon_reunioes, only: [:index, :show, :create, :destroy], controller: 'ramon_reunioes' do
             member { post :reprocessar }
           end
+          resources :ramon_conteudo, only: [:index, :show], controller: 'ramon_conteudo' do
+            member do
+              post :aprovar
+              post :reprovar
+              patch :atualizar_legenda
+              post :refazer
+              post :agendar
+              post :publicar_agora
+              post :cancelar_agendamento
+              post :tentar_de_novo
+            end
+          end
           resources :portal_clientes, only: [:index, :show, :create, :update, :destroy], controller: 'portal_clientes' do
             member do
               post :convidar
@@ -713,6 +725,11 @@ Rails.application.routes.draw do
         post 'agente/nota',      to: 'agente#nota'
         post 'agente/arquivo',   to: 'agente#arquivo'
         post 'agente/execucoes', to: 'agente#execucoes'
+        # Ramon — conteúdo do Instagram (rotina cloud + worker de montagem). Token no header X-Conteudo-Token.
+        post 'conteudo/pecas', to: 'conteudo#criar'
+        post  'conteudo/pecas/proxima',     to: 'conteudo#proxima'
+        patch 'conteudo/pecas/:id/montada', to: 'conteudo#montada'
+        patch 'conteudo/pecas/:id/falha',   to: 'conteudo#falha'
       end
     end
   end

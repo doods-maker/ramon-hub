@@ -111,10 +111,22 @@ ramon_portal_sync_job:
   class: 'Ramon::PortalSyncJob'
   queue: scheduled_jobs
 
+# Conteúdo do Instagram: publica as peças agendadas que venceram (spec 2026-10-02).
+ramon_publicar_pecas_job:
+  cron: '* * * * *'
+  class: 'Ramon::PublicarPecasJob'
+  queue: scheduled_jobs
+
 # 11:00 UTC = 8h em Brasília; só envia com PORTAL_AVISOS=on
 ramon_portal_avisos_job:
   cron: '0 11 * * *'
   class: 'Ramon::PortalAvisosJob'
+  queue: scheduled_jobs
+
+# Renova o token de publicação do Instagram toda segunda 06:00 UTC.
+ramon_ig_token_refresh_job:
+  cron: '0 6 * * 1'
+  class: 'Ramon::IgTokenRefreshJob'
   queue: scheduled_jobs
 
 # executed hourly at minute 10 — carimba o contrato limpo (assinado + docs + 7 dias)

@@ -144,6 +144,7 @@
       "LINHA_DA_VIDA": "Lifeline",
       "CALCULOS": "Calculations",
       "REUNIOES": "Meetings",
+      "CONTEUDO": "Content",
       "PORTAL": "Client portal",
       "RADAR": "Prescription radar",
       "POS_VENDA": "Post-sale",
@@ -607,6 +608,39 @@
       "ADVBOX_ERROR": "Could not reach AdvBox right now. Try again.",
       "CREATE_CASE": "Create calculation case",
       "CREATE_ERROR": "Could not create the calculation case. Try again."
+    },
+    "CONTEUDO": {
+      "COM_ERRO": "Has an error — open to see",
+      "TITLE": "Instagram content",
+      "LOAD_ERROR": "Could not load posts",
+      "ACAO_ERRO": "Something went wrong — try again",
+      "COLUNA": {
+        "PAUTA": "Ideas",
+        "MONTANDO": "Building",
+        "PRONTAS": "Ready",
+        "AGENDADAS": "Scheduled",
+        "PUBLICADAS": "Published"
+      },
+      "TIPO": {
+        "CARROSSEL": "Carousel",
+        "ESTATICO": "Single image"
+      },
+      "TRAVADA": "Build is taking long — check the worker",
+      "FALHOU": "Publishing failed",
+      "APROVAR": "Approve",
+      "REPROVAR": "Reject",
+      "NOTA_PLACEHOLDER": "Reason (optional)",
+      "MONTANDO_INFO": "Queued for building. The preview shows up here when ready.",
+      "MAIS": "more",
+      "SALVAR_LEGENDA": "Save caption",
+      "REFAZER": "Redo image of cards:",
+      "REFAZER_BOTAO": "Redo",
+      "AGENDAR": "Approve and schedule",
+      "PUBLICAR_AGORA": "Publish now",
+      "AGENDADA_PARA": "Scheduled for {quando}",
+      "CANCELAR": "Cancel schedule",
+      "TENTAR_DE_NOVO": "Try again",
+      "VER_NO_INSTAGRAM": "View on Instagram"
     },
     "REUNIOES": {
       "TITLE": "Meetings",

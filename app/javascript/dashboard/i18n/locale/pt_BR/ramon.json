@@ -144,6 +144,7 @@
       "LINHA_DA_VIDA": "Linha da Vida",
       "CALCULOS": "Cálculos",
       "REUNIOES": "Reuniões",
+      "CONTEUDO": "Conteúdo",
       "PORTAL": "Painel do cliente",
       "RADAR": "Radar de prescrição",
       "POS_VENDA": "Pós-venda",
@@ -607,6 +608,39 @@
       "ADVBOX_ERROR": "Não deu pra consultar o AdvBox agora. Tente de novo.",
       "CREATE_CASE": "Criar caso de cálculo",
       "CREATE_ERROR": "Não deu pra criar o caso de cálculo. Tente de novo."
+    },
+    "CONTEUDO": {
+      "COM_ERRO": "Deu erro — abra pra ver",
+      "TITLE": "Conteúdo do Instagram",
+      "LOAD_ERROR": "Não foi possível carregar as peças",
+      "ACAO_ERRO": "Não deu certo — tente de novo",
+      "COLUNA": {
+        "PAUTA": "Pauta",
+        "MONTANDO": "Montando",
+        "PRONTAS": "Prontas",
+        "AGENDADAS": "Agendadas",
+        "PUBLICADAS": "Publicadas"
+      },
+      "TIPO": {
+        "CARROSSEL": "Carrossel",
+        "ESTATICO": "Estático"
+      },
+      "TRAVADA": "Montagem demorando — confira o worker",
+      "FALHOU": "Publicação falhou",
+      "APROVAR": "Aprovar",
+      "REPROVAR": "Reprovar",
+      "NOTA_PLACEHOLDER": "Motivo (opcional)",
+      "MONTANDO_INFO": "A peça está na fila de montagem. A prévia aparece aqui quando ficar pronta.",
+      "MAIS": "mais",
+      "SALVAR_LEGENDA": "Salvar legenda",
+      "REFAZER": "Refazer imagem dos cards:",
+      "REFAZER_BOTAO": "Refazer",
+      "AGENDAR": "Aprovar e agendar",
+      "PUBLICAR_AGORA": "Publicar agora",
+      "AGENDADA_PARA": "Agendada para {quando}",
+      "CANCELAR": "Cancelar agendamento",
+      "TENTAR_DE_NOVO": "Tentar de novo",
+      "VER_NO_INSTAGRAM": "Ver no Instagram"
     },
     "REUNIOES": {
       "TITLE": "Reuniões",

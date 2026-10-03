@@ -439,6 +439,11 @@
   description: 'Configure this if you want to use a different Instagram API version. Make sure its prefixed with `v`'
   value: 'v22.0'
   locked: true
+- name: RAMON_IG_PUBLISH_TOKEN
+  display_title: 'Token de publicação do Instagram (conteúdo)'
+  description: 'Token de longa duração do @ramonantonioadvogados (painel Meta → produto Instagram → Gerar token). Renovado sozinho toda semana.'
+  locked: false
+  type: secret
 # ------- End of Instagram Channel Related Config ------- #
 
 # ------- TikTok Channel Related Config ------- #
