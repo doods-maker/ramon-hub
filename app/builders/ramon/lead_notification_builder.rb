@@ -3,13 +3,14 @@ class Ramon::LeadNotificationBuilder
   # contact.blocked?/conversation de lá assumem primary_actor Conversation.
   # notification_type/meta opcionais: reunião marcada/lembrete/cancelada reusam
   # o mesmo sino (primary_actor = Lead) com o texto vindo do meta.
-  pattr_initialize [:lead!, :notification_type, :meta]
+  # user_ids opcional: só esses recebem (alerta de SLA vai pro SDR do lead).
+  pattr_initialize [:lead!, :notification_type, :meta, :user_ids]
 
   def perform
     # SELECT DISTINCT users.* quebra no Postgres (users.tokens é json, sem
     # operador de igualdade) — deduplicar pelos ids, não pelas linhas.
-    user_ids = lead.account.account_users.pluck(:user_id).uniq
-    User.where(id: user_ids).find_each do |user|
+    ids = user_ids.presence || lead.account.account_users.pluck(:user_id).uniq
+    User.where(id: ids).find_each do |user|
       user.notifications.create!(
         notification_type: notification_type || 'ramon_lead_created',
         account: lead.account,

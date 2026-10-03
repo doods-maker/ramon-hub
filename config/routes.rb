@@ -304,6 +304,18 @@ Rails.application.routes.draw do
             member { post :responder }
             collection { get :agenda }
           end
+          resources :ramon_conteudo, only: [:index, :show], controller: 'ramon_conteudo' do
+            member do
+              post :aprovar
+              post :reprovar
+              patch :atualizar_legenda
+              post :refazer
+              post :agendar
+              post :publicar_agora
+              post :cancelar_agendamento
+              post :tentar_de_novo
+            end
+          end
           resources :portal_clientes, only: [:index, :show, :create, :update, :destroy], controller: 'portal_clientes' do
             member do
               post :convidar
@@ -318,6 +330,9 @@ Rails.application.routes.draw do
           resource :ramon_pos_venda, only: [:show], controller: 'ramon_pos_venda'
           resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
           resource :ramon_relatorios, only: [:show], controller: 'ramon_relatorios'
+          resource :ramon_extrato, only: [:show], controller: 'ramon_extrato' do
+            put :meta
+          end
           resources :captain_tool_runs, only: [:index]
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'
@@ -331,6 +346,7 @@ Rails.application.routes.draw do
               get :dossie, to: 'lead_dossies#show'
               post :portal_link
               post :follow_up_draft
+              post :reuniao
             end
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :notes, only: [:index, :create], controller: 'lead_notes'
@@ -713,6 +729,11 @@ Rails.application.routes.draw do
         post 'agente/nota',      to: 'agente#nota'
         post 'agente/arquivo',   to: 'agente#arquivo'
         post 'agente/execucoes', to: 'agente#execucoes'
+        # Ramon — conteúdo do Instagram (rotina cloud + worker de montagem). Token no header X-Conteudo-Token.
+        post 'conteudo/pecas', to: 'conteudo#criar'
+        post  'conteudo/pecas/proxima',     to: 'conteudo#proxima'
+        patch 'conteudo/pecas/:id/montada', to: 'conteudo#montada'
+        patch 'conteudo/pecas/:id/falha',   to: 'conteudo#falha'
       end
     end
   end

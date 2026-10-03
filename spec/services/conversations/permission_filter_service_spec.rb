@@ -43,5 +43,24 @@ RSpec.describe Conversations::PermissionFilterService do
         expect(result.count).to eq(2)
       end
     end
+
+    # ramon: caixa do escritório — quem não é membro vê só o que é dele ou do time dele (ADR 0004)
+    context 'when the agent is not a member of the inbox' do
+      let(:office) { create(:inbox, account: account) }
+      let(:lawyer) { create(:user, account: account, role: :agent) }
+      let(:team) { create(:team, account: account) }
+      let!(:assigned) { create(:conversation, account: account, inbox: office, assignee: lawyer) }
+      let!(:of_team) { create(:conversation, account: account, inbox: office, team: team) }
+      let!(:other) { create(:conversation, account: account, inbox: office) }
+
+      it 'returns only conversations assigned to the agent or to their teams' do
+        create(:team_member, team: team, user: lawyer)
+
+        result = described_class.new(account.conversations, lawyer, account).perform
+
+        expect(result).to contain_exactly(assigned, of_team)
+        expect(result).not_to include(other)
+      end
+    end
   end
 end

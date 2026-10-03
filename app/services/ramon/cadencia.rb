@@ -23,13 +23,20 @@ module Ramon::Cadencia
 
   # ---- SLA de 1ª resposta (por inbox, fallback no env) ------------------------
 
+  # Meta do SDR (playbook operacional §2): 1ª resposta em até 5 min.
+  SLA_PADRAO_MINUTOS = '5'.freeze
+
   def sla_minutes(inbox)
-    inbox.first_response_sla_minutes || ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i
+    inbox.first_response_sla_minutes || sla_padrao
+  end
+
+  def sla_padrao
+    ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', SLA_PADRAO_MINUTOS).to_i
   end
 
   # Interpolação segura: só o inteiro do env entra na string.
   def sla_threshold_sql
-    "COALESCE(inboxes.first_response_sla_minutes, #{ENV.fetch('RAMON_SLA_FIRST_RESPONSE_MINUTES', '15').to_i})"
+    "COALESCE(inboxes.first_response_sla_minutes, #{sla_padrao})"
   end
 
   # Conversas que contam pro SLA: nascidas em inbox de lead dentro do período.

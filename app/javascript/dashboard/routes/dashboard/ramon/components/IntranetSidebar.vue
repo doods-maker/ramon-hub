@@ -76,6 +76,14 @@ const sections = computed(() =>
           names: ['ramon_reunioes', 'ramon_reuniao'],
         },
         {
+          key: 'conteudo',
+          label: t('RAMON.NAV.CONTEUDO'),
+          icon: 'i-lucide-instagram',
+          to: accountScopedRoute('ramon_conteudo'),
+          names: ['ramon_conteudo'],
+          adminOnly: true,
+        },
+        {
           key: 'portal',
           label: t('RAMON.NAV.PORTAL'),
           icon: 'i-lucide-users',
@@ -126,6 +134,13 @@ const sections = computed(() =>
           to: accountScopedRoute('ramon_relatorios'),
           names: ['ramon_relatorios'],
           adminOnly: true,
+        },
+        {
+          key: 'extrato',
+          label: t('RAMON.NAV.EXTRATO'),
+          icon: 'i-lucide-receipt',
+          to: accountScopedRoute('ramon_extrato'),
+          names: ['ramon_extrato'],
         },
         {
           key: 'sdr',

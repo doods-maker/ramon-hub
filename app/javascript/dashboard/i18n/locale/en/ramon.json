@@ -172,11 +172,13 @@
       "LINHA_DA_VIDA": "Lifeline",
       "CALCULOS": "Calculations",
       "REUNIOES": "Meetings",
+      "CONTEUDO": "Content",
       "PORTAL": "Client portal",
       "RADAR": "Prescription radar",
       "POS_VENDA": "Post-sale",
       "TV": "TV scoreboard",
-      "RELATORIOS": "Reports"
+      "RELATORIOS": "Reports",
+      "EXTRATO": "Variable pay statement"
     },
     "POS_VENDA": {
       "TITLE": "Post-sale",
@@ -635,6 +637,39 @@
       "CREATE_CASE": "Create calculation case",
       "CREATE_ERROR": "Could not create the calculation case. Try again."
     },
+    "CONTEUDO": {
+      "COM_ERRO": "Has an error — open to see",
+      "TITLE": "Instagram content",
+      "LOAD_ERROR": "Could not load posts",
+      "ACAO_ERRO": "Something went wrong — try again",
+      "COLUNA": {
+        "PAUTA": "Ideas",
+        "MONTANDO": "Building",
+        "PRONTAS": "Ready",
+        "AGENDADAS": "Scheduled",
+        "PUBLICADAS": "Published"
+      },
+      "TIPO": {
+        "CARROSSEL": "Carousel",
+        "ESTATICO": "Single image"
+      },
+      "TRAVADA": "Build is taking long — check the worker",
+      "FALHOU": "Publishing failed",
+      "APROVAR": "Approve",
+      "REPROVAR": "Reject",
+      "NOTA_PLACEHOLDER": "Reason (optional)",
+      "MONTANDO_INFO": "Queued for building. The preview shows up here when ready.",
+      "MAIS": "more",
+      "SALVAR_LEGENDA": "Save caption",
+      "REFAZER": "Redo image of cards:",
+      "REFAZER_BOTAO": "Redo",
+      "AGENDAR": "Approve and schedule",
+      "PUBLICAR_AGORA": "Publish now",
+      "AGENDADA_PARA": "Scheduled for {quando}",
+      "CANCELAR": "Cancel schedule",
+      "TENTAR_DE_NOVO": "Try again",
+      "VER_NO_INSTAGRAM": "View on Instagram"
+    },
     "REUNIOES": {
       "TITLE": "Meetings",
       "NEW": "New meeting",
@@ -830,7 +865,8 @@
           "MEETING_CANCELLED": "meeting cancelled via Cal.com",
           "ESTEIRA_DONE": "resolved in the Esteira",
           "THESIS_CHANGED": "changed the thesis",
-          "LP_RECAPTURED": "received a new landing page form"
+          "LP_RECAPTURED": "received a new landing page form",
+          "REUNIAO_REGISTRADA": "recorded the meeting"
         },
         "EMPTY": "No activity recorded yet.",
         "LOADING": "Loading history…",
@@ -1324,15 +1360,86 @@
       "BTN": "Copilot: {modo}",
       "TITULO": "Copilot mode — this conversation only",
       "MODOS": {
-        "manual": { "NOME": "Manual", "DESC": "The AI suggests nothing. You write everything." },
-        "rascunho": { "NOME": "Draft", "DESC": "The AI prepares replies; nothing goes out until you hit Send." },
-        "piloto_limitado": { "NOME": "Limited autopilot", "DESC": "The AI sends on its own ONLY logistics messages: requesting documents, confirming a time, cadence messages.", "NOTA": "Never sends: amounts, case analysis, promises. Every sent message is flagged in the conversation and you can pause it with 1 click." },
-        "piloto_total": { "NOME": "Full autopilot", "DESC": "The AI replies to everything on its own. Every message is stamped and you can pause it with 1 click." }
+        "manual": {
+          "NOME": "Manual",
+          "DESC": "The AI suggests nothing. You write everything."
+        },
+        "rascunho": {
+          "NOME": "Draft",
+          "DESC": "The AI prepares replies; nothing goes out until you hit Send."
+        },
+        "piloto_limitado": {
+          "NOME": "Limited autopilot",
+          "DESC": "The AI sends on its own ONLY logistics messages: requesting documents, confirming a time, cadence messages.",
+          "NOTA": "Never sends: amounts, case analysis, promises. Every sent message is flagged in the conversation and you can pause it with 1 click."
+        },
+        "piloto_total": {
+          "NOME": "Full autopilot",
+          "DESC": "The AI replies to everything on its own. Every message is stamped and you can pause it with 1 click."
+        }
       },
       "CARIMBO": "sent by the autopilot ({modo})",
       "PAUSAR": "Pause autopilot",
       "PAUSADO": "Autopilot paused — back to Draft mode.",
       "PAUSA_FALHOU": "Couldn't pause — try again."
+    },
+    "REUNIAO": {
+      "TITULO": "Meeting (Closer)",
+      "QUALIFICADA": "Qualified",
+      "NAO_QUALIFICADA": "Not qualified",
+      "SEM_REGISTRO": "Meeting not recorded yet",
+      "REGISTRADA_EM": "recorded on {data}",
+      "ERRO": "Could not record the meeting — only the lead Closer or a manager can",
+      "RESULTADO": {
+        "qualificada": "Qualified",
+        "nao_qualificada": "Not qualified"
+      }
+    },
+    "CONTRATO": {
+      "LIMPO": "Clean contract ✓",
+      "FALTAM_DOCS": "Clean contract: {count} document missing | Clean contract: {count} documents missing",
+      "SEM_CHECKLIST": "Clean contract: pick the thesis to get the document checklist",
+      "EM_DIAS": "Clean contract within the hour | Clean contract in {count} day | Clean contract in {count} days"
+    },
+    "EXTRATO": {
+      "TITLE": "Variable pay statement",
+      "SUBTITLE": "Units, target bonus and monthly total per person",
+      "MES": "Month",
+      "EXPORTAR": "Export CSV",
+      "LOAD_ERROR": "Could not load the statement.",
+      "RETRY": "Try again",
+      "VAZIO": "No statement for you this month.",
+      "VAZIO_GESTOR": "Nobody on the team yet: create the \"sdr\" and \"closer\" teams in Settings → Teams.",
+      "META": "Monthly target",
+      "RAMPA": "Ramp-up (months 1–2)",
+      "SALVAR": "Save target",
+      "META_SALVA": "Target saved",
+      "META_ERRO": "Could not save the target",
+      "UNIDADES": "Units",
+      "BONUS": "Target bonus",
+      "DEGRAUS": "({count} step) | ({count} step) | ({count} steps)",
+      "OBS": "Note",
+      "GARANTIA": "Ramp-up minimum applied",
+      "TOTAL": "Monthly total",
+      "SEM_UNIDADES": "No events this month.",
+      "PAPEL": {
+        "sdr": "SDR",
+        "closer": "Closer"
+      },
+      "CONTAGEM": {
+        "sdr": "Qualified meetings",
+        "closer": "Clean contracts"
+      },
+      "EVENTO": {
+        "reuniao_qualificada": "Qualified meeting",
+        "contrato_limpo": "Clean contract"
+      },
+      "COL": {
+        "DATA": "Date",
+        "LEAD": "Lead",
+        "EVENTO": "Event",
+        "VALOR": "Amount"
+      }
     }
   },
   "CAPTAIN_RAMON": {

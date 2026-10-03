@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_02_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_03_000002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1176,6 +1176,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_000001) do
     t.string "channel"
     t.jsonb "cnis"
     t.string "portal_token"
+    t.string "reuniao_resultado"
+    t.datetime "reuniao_registrada_em"
+    t.datetime "docs_completos_em"
+    t.datetime "contrato_limpo_em"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -1457,6 +1461,49 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "created_at"], name: "index_ramon_chegadas_on_account_id_and_created_at"
+  end
+
+  create_table "ramon_metas_comerciais", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id", null: false
+    t.string "papel", null: false
+    t.date "mes", null: false
+    t.integer "meta", default: 0, null: false
+    t.boolean "rampa", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "user_id", "mes"], name: "index_ramon_metas_comerciais_on_account_id_and_user_id_and_mes", unique: true
+    t.index ["account_id"], name: "index_ramon_metas_comerciais_on_account_id"
+    t.index ["user_id"], name: "index_ramon_metas_comerciais_on_user_id"
+  end
+
+  create_table "ramon_pecas", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "slug", null: false
+    t.date "rodada", null: false
+    t.string "tipo", null: false
+    t.string "estilo"
+    t.string "tese"
+    t.string "gancho", null: false
+    t.jsonb "conteudo", default: {}, null: false
+    t.text "legenda"
+    t.string "status", default: "rascunho", null: false
+    t.jsonb "imagens", default: [], null: false
+    t.integer "refazer_cards", default: [], null: false, array: true
+    t.datetime "agendado_para"
+    t.datetime "montagem_iniciada_em"
+    t.datetime "publicacao_iniciada_em"
+    t.string "ig_media_id"
+    t.string "permalink"
+    t.text "erro"
+    t.text "nota_reprovacao"
+    t.string "notion_page_id"
+    t.string "drive_pasta_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "slug"], name: "index_ramon_pecas_on_account_id_and_slug", unique: true
+    t.index ["account_id"], name: "index_ramon_pecas_on_account_id"
+    t.index ["status", "agendado_para"], name: "index_ramon_pecas_on_status_and_agendado_para"
   end
 
   create_table "ramon_reunioes", force: :cascade do |t|
@@ -1758,6 +1805,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_000001) do
   add_foreign_key "portal_assinaturas", "portal_clientes"
   add_foreign_key "portal_clientes", "accounts"
   add_foreign_key "portal_envios", "portal_clientes"
+  add_foreign_key "ramon_pecas", "accounts"
   add_foreign_key "ramon_reunioes", "accounts"
   add_foreign_key "ramon_reunioes", "leads"
   add_foreign_key "ramon_reunioes", "users"

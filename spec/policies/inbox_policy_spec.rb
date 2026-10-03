@@ -32,4 +32,21 @@ RSpec.describe InboxPolicy, type: :policy do
       it { expect(inbox_policy).to permit(agent_context, inbox) }
     end
   end
+
+  # ramon: a caixa do escritório é listada pra todos; o resto só pra membros (ADR 0004)
+  describe 'Scope' do
+    it 'lists member inboxes plus the office inbox' do
+      member_inbox = create(:inbox, account: account)
+      office = create(:inbox, account: account, portaria_enabled: true)
+      create(:inbox, account: account)
+      create(:inbox_member, inbox: member_inbox, user: agent)
+      Current.account = account
+
+      resolved = described_class::Scope.new(agent_context, account.inboxes).resolve
+
+      expect(resolved).to contain_exactly(member_inbox, office)
+    ensure
+      Current.reset
+    end
+  end
 end

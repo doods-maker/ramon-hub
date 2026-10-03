@@ -101,6 +101,12 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/conteudo'),
+    name: 'ramon_conteudo',
+    component: () => import('./pages/Conteudo.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/portal'),
     name: 'ramon_portal_clientes',
     component: () => import('./pages/PortalClientes.vue'),
@@ -111,5 +117,12 @@ export const routes = [
     name: 'ramon_relatorios',
     component: () => import('./pages/Relatorios.vue'),
     meta: { permissions: ['administrator'], world: 'intranet' },
+  },
+  {
+    // Agente também entra: o backend só devolve o próprio extrato.
+    path: frontendURL('accounts/:accountId/ramon/extrato'),
+    name: 'ramon_extrato',
+    component: () => import('./pages/Extrato.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
 ];

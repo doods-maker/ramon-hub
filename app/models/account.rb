@@ -88,6 +88,7 @@ class Account < ApplicationRecord
   has_many :calculos, dependent: :destroy_async
   has_many :reunioes, class_name: 'Reuniao', dependent: :destroy_async
   has_many :chegadas, class_name: 'Chegada', dependent: :destroy_async
+  has_many :pecas, class_name: 'Peca', dependent: :destroy_async
   has_many :portal_clientes, dependent: :destroy_async
   has_many :lead_activities, dependent: :destroy_async
   has_many :lead_notes, dependent: :destroy_async

@@ -131,6 +131,11 @@ export const actions = {
     commit(types.EDIT_LEAD, response.data);
     return response.data;
   },
+  registrarReuniao: async ({ commit }, { id, resultado }) => {
+    const response = await LeadsAPI.registrarReuniao(id, resultado);
+    commit(types.EDIT_LEAD, response.data);
+    return response.data;
+  },
   move: async ({ commit }, { id, leadStageId, position }) => {
     const response = await LeadsAPI.update(id, {
       lead_stage_id: leadStageId,

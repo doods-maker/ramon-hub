@@ -388,4 +388,24 @@ RSpec.describe Inbox do
       end
     end
   end
+
+  describe '#assignable_agents' do
+    let(:account) { create(:account) }
+    let(:inbox) { create(:inbox, account: account) }
+    let!(:member) { create(:user, account: account, role: :agent) }
+    let!(:outsider) { create(:user, account: account, role: :agent) }
+
+    before { create(:inbox_member, inbox: inbox, user: member) }
+
+    it 'lists only members (and admins) in a regular inbox' do
+      expect(inbox.assignable_agents).to include(member)
+      expect(inbox.assignable_agents).not_to include(outsider)
+    end
+
+    # ramon: caixa do escritório — a Recepção atribui a quem não é membro (ADR 0004)
+    it 'lists every account user in the office inbox' do
+      inbox.update!(portaria_enabled: true)
+      expect(inbox.assignable_agents).to include(member, outsider)
+    end
+  end
 end
