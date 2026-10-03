@@ -25,7 +25,7 @@ RSpec.describe Chegada do
 
     registro = chegada
     expect { registro.update!(resposta: 'Já vou', respondido_em: Time.current) }
-      .to have_enqueued_job(ActionCableBroadcastJob).with(anything, 'ramon.chegada.updated', hash_including(estado: 'respondido'))
+      .to have_enqueued_job(ActionCableBroadcastJob).with(contain_exactly(gabriela.pubsub_token, brenda.pubsub_token), 'ramon.chegada.updated', hash_including(estado: 'respondido'))
   end
 
   it 'reconhece quem é da Recepção pelo time' do
@@ -36,10 +36,13 @@ RSpec.describe Chegada do
     expect(described_class.recepcao?(account, brenda)).to be(false)
   end
 
-  it 'de_hoje usa o dia de São Paulo' do
+  it 'de_hoje usa o dia de São Paulo, não o de UTC' do
+    manha_sp = travel_to(Time.zone.parse('2026-10-02 12:00:00 UTC')) { chegada } # 09:00 de 02/10 em SP
+    ontem_sp = travel_to(Time.zone.parse('2026-10-02 02:00:00 UTC')) { chegada } # 23:00 de 01/10 em SP
+
     travel_to Time.zone.parse('2026-10-03 01:00:00 UTC') do # 22:00 de 02/10 em SP
-      ontem_sp = chegada
-      expect(account.chegadas.de_hoje).to include(ontem_sp)
+      expect(account.chegadas.de_hoje).to include(manha_sp)
+      expect(account.chegadas.de_hoje).not_to include(ontem_sp)
     end
   end
 end
