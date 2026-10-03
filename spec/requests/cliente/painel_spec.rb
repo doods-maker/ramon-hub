@@ -50,8 +50,8 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     it 'tela do processo mostra a linha do tempo por fases' do
       entrar
       get '/cliente/processos/1'
-      expect(response.body).to include('Pedido no INSS').and include('pill-now').and include('Perícia marcada')
-      expect(response.body).not_to include('Recurso</p>')
+      expect(response.body).to include('Pedido no INSS').and include('aria-current="step"').and include('Perícia marcada')
+      expect(response.body).not_to include('>Recurso<')
     end
   end
 
