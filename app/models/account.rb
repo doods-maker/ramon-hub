@@ -22,7 +22,7 @@
 #  index_accounts_on_status  (status)
 #
 
-class Account < ApplicationRecord
+class Account < ApplicationRecord # rubocop:disable Metrics/ClassLength
   # used for single column multi flags
   include FlagShihTzu
   include Reportable
