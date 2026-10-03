@@ -9,8 +9,11 @@ class Ramon::Hoje::Gestor
   private
 
   def zona = Time.find_zone!(Chegada::ZONA)
+
   def hoje = zona.now.all_day
+
   def mes_atual = zona.now.all_month
+
   def leads = account.leads.funil.reorder(nil)
 
   def precisa

@@ -9,6 +9,7 @@ class Ramon::Hoje::Comercial
   private
 
   def zona = Time.find_zone!(Chegada::ZONA)
+
   def mes_atual = zona.now.all_month
 
   # Leads do funil em que a pessoa é o SDR/Closer; "equipe" vê todos.

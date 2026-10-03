@@ -22,7 +22,7 @@ module Ramon::Hoje::Prazo
   def linha(lead)
     conversa = lead.conversation
     {
-      lead_id: lead.id, nome: lead.name, tese: lead.thesis&.name, canal: lead.channel,
+      lead_id: lead.id, nome: lead.name, tese: lead.thesis&.name, canal: Ramon::SourceCatalog.labels[lead.channel] || lead.channel,
       conversa_id: conversa.display_id,
       prazo_em: (conversa.created_at + Ramon::Cadencia.sla_minutes(conversa.inbox).minutes).iso8601,
       ultima_mensagem: conversa.messages.incoming.last&.content.to_s.truncate(80)

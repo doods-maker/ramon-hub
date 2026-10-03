@@ -34,5 +34,6 @@ RSpec.describe Ramon::Hoje::Prazo do
     linha = described_class.linha(lead)
     expect(Time.zone.parse(linha[:prazo_em])).to be_within(1.second).of(lead.conversation.created_at + 5.minutes)
     expect(linha[:conversa_id]).to eq(lead.conversation.display_id)
+    expect(linha[:canal]).to eq('Outro')
   end
 end

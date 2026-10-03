@@ -36,7 +36,7 @@ RSpec.describe Ramon::Hoje::Escritorio do
     expect(blocos(gabriela, 'recepcao')[:sem_responsavel].pluck(:cliente)).to eq([true, false])
   end
 
-  context 'com atendimento do ADVBOX hoje' do
+  context 'with atendimento do ADVBOX hoje' do
     let(:agenda) { [{ advbox_post_id: 5, cliente_nome: 'NEUSA', hora: '14:00' }, { advbox_post_id: 6, cliente_nome: 'ROBERTO', hora: '09:00' }] }
 
     it 'recepção: atendimentos em ordem de hora, com a situação da chegada' do
