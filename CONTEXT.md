@@ -169,13 +169,22 @@ _Avoid_: usar "documento" sem qualificar quando o contexto for pós-venda
 
 ### Atendimento do escritório
 
-**Portaria**:
-O menu de entrada do número do escritório: recebe quem chega, pergunta com
-quem quer falar e encaminha ao Setor escolhido. Não responde dúvida nem
-resolve nada — só encaminha. Existe por caixa; as caixas de tese não têm.
-_Avoid_: URA, bot, triagem (Triagem é qualificação do lead), menu de atendimento
+**Caixa do escritório**:
+A caixa do número do escritório (flag técnica `portaria_enabled`). Não cria
+lead e não tem menu: toda conversa nova cai na Recepção, que distribui. As
+caixas de tese não são caixa do escritório. (Até 02/10/2026 tinha a
+**Portaria**, um menu de botões que o cliente usava pra escolher o Setor —
+removido, ver ADR 0004.)
+_Avoid_: Portaria (nome antigo), URA, bot
 
 **Setor**:
-Um destino humano da Portaria — Recepção, Controladoria ou Advogados. Cada
-Setor tem sua fila e suas pessoas; quem é de um Setor vê só as conversas dele.
+Quem atende na caixa do escritório — Recepção, Controladoria ou Advogados. A
+Recepção é membro da caixa e vê tudo; a Controladoria é um time e vê a fila do
+time; cada advogado vê só as conversas **atribuídas** a ele.
 _Avoid_: departamento, time (nome técnico), equipe
+
+**Atribuir (na caixa do escritório)**:
+O gesto da Recepção de passar a conversa a um advogado (responsável) ou ao time
+da Controladoria. É o único jeito de a conversa aparecer na tela de quem não é
+da Recepção.
+_Avoid_: encaminhar (Encaminhar é mandar ao comercial), transferir

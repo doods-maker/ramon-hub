@@ -287,7 +287,8 @@ describe ConversationFinder do
                               assignee: user_1, waiting_since: Time.now.utc) # unattended_conversation_waiting_since
 
         result = conversation_finder.perform
-        expect(result[:conversations].length).to be 2
+        # ramon: atribuída ao agente aparece mesmo fora das caixas dele (ADR 0004) — as 3 acima entram na conta
+        expect(result[:conversations].length).to eq 5
       end
     end
   end

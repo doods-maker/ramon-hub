@@ -15,13 +15,15 @@ const theses = useMapGetter('theses/getTheses');
 const currentChat = useMapGetter('getSelectedChat');
 const lead = computed(() => leadByConv.value(Number(props.conversationId)));
 
-// Portaria: conversa fora do funil (caixa do escritório). O botão de
-// encaminhar só aparece no Setor Recepção — decisão do Eduardo 28/08/2026.
+// Caixa do escritório: conversa fora do funil. O botão de encaminhar só
+// aparece enquanto a conversa está na triagem da Recepção (sem dono e sem
+// time) — decisões do Eduardo 28/08 e 02/10/2026 (ADR 0004).
 const semLead = ref(false);
 const encaminhando = ref(false);
-const naRecepcao = computed(
-  () => currentChat.value?.meta?.team?.name === 'recepção'
-);
+const naRecepcao = computed(() => {
+  const meta = currentChat.value?.meta || {};
+  return !meta.team && !meta.assignee;
+});
 
 const ensureFailed = ref(false);
 const ensure = async () => {

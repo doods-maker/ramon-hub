@@ -1,5 +1,7 @@
 # Número do escritório na API oficial, atendido no hub por Setor
 
+> **02/10/2026: o roteamento por menu (Portaria) foi substituído — ver ADR 0004.** O resto deste ADR (número na API, atendimento no hub) segue valendo.
+
 O WhatsApp do escritório (o número que a recepção atende) vivia no app WhatsApp
 Business de um celular, com WhatsApp Web em 2–3 computadores; todo mundo via
 todas as conversas e o repasse entre setores era na voz. Queríamos um menu de
