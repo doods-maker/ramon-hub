@@ -1,6 +1,6 @@
 # Conteúdo do Instagram dentro do hub — pauta → aprovação → montagem → agenda → publicação
 
-**Data:** 02/10/2026 · **Status:** aguardando revisão do Eduardo
+**Data:** 02/10/2026 · **Status:** APROVADA pelo Eduardo em 02/10/2026
 **Repos:** `ramon-hub` (tela, API, publicação) + `motor-marketing` (worker de montagem)
 
 ## 1. Objetivo
@@ -141,13 +141,10 @@ naquela data-hora.
   espera `status_code=FINISHED` (poll até ~5 min) → `media_publish` → grava `ig_media_id` e
   busca `permalink` → `publicado` → Notion + push ntfy "publicado".
   Estático: contêiner único `image_url`.
-- **Regras de 22/09 (paridade com `publicar-ig.mjs`):**
-  - **Stories sempre:** depois do `media_publish` do feed, cria `media_type=STORIES` com o slide 1
-    (ou a imagem do estático). Falha do story **não** derruba a peça (fica `publicado`), grava o
-    aviso em `erro` e manda push "story falhou — compartilhar pelo app".
-  - **Colaborador:** mesmo casamento do `colaboradores(caption)` — nome do crédito na legenda →
-    @ da pessoa (mapa de `brand.json identidades`, copiado como constante no hub) → `collaborators`
-    (até 3) na criação do contêiner.
+- **Só feed, sem Stories** (decisão Eduardo 02/10: a arte 4:5 fica errada no formato do story).
+- **Colaborador (regra 22/09):** mesmo casamento do `colaboradores(caption)` do `publicar-ig.mjs`
+  — nome do crédito na legenda → @ da pessoa (mapa de `brand.json identidades`, copiado como
+  constante no hub) → `collaborators` (até 3) na criação do contêiner.
 - Host `graph.instagram.com/v26.0`, ig user da conta `@ramonantonioadvogados`.
 - **Sem retry automático.** Qualquer erro → `falhou` + `erro` + push ntfy. Se `ig_media_id` já
   estiver gravado, o job nunca publica de novo. Peça presa em `publicando` > 15 min (processo
@@ -195,8 +192,7 @@ prompt. Ajuste só depois do PR 1 no ar.
 - **RSpec:** transições válidas/inválidas do model; `ConteudoController` (token, idempotência do
   POST, `proxima` entrega a mesma peça uma vez só); `GradeConteudo` (pula slot ocupado, vira a
   semana); `InstagramPublisher` com WebMock (carrossel feliz, erro da Meta → `falhou`,
-  `ig_media_id` presente → não publica; story falha → peça segue `publicado`; crédito na legenda →
-`collaborators`); `NotionEspelho` no-op sem token.
+  `ig_media_id` presente → não publica; crédito na legenda → `collaborators`); `NotionEspelho` no-op sem token.
 - **node --test** (motor): `worker-hub` com hub falso em `node:http` — pega peça, builda em mock,
   manda `montada`; build lançando erro → manda `falha`.
 - **Smoke real** (roteiro em bloco por seção, pro Eduardo): uma peça da rodada → aprovar → ver
