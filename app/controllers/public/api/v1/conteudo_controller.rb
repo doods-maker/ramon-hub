@@ -16,8 +16,6 @@ class Public::Api::V1::ConteudoController < PublicController
 
   def proxima
     peca = Peca.transaction do
-      fila = conta.pecas.where(status: 'aprovado')
-                  .or(conta.pecas.where(status: 'montado').where('cardinality(refazer_cards) > 0'))
       fila.order(:id).lock('FOR UPDATE SKIP LOCKED').first&.tap do |p|
         p.update!(status: 'montando', montagem_iniciada_em: Time.current)
       end
@@ -45,6 +43,13 @@ class Public::Api::V1::ConteudoController < PublicController
   end
 
   private
+
+  # aprovadas, refações pedidas e montagens presas (worker morreu / relatório falhou) há mais de TRAVA
+  def fila
+    conta.pecas.where(status: 'aprovado')
+         .or(conta.pecas.where(status: 'montado').where('cardinality(refazer_cards) > 0'))
+         .or(conta.pecas.where(status: 'montando').where(montagem_iniciada_em: ...Peca::TRAVA.ago))
+  end
 
   def conta
     @conta ||= Account.find(ENV.fetch('RAMON_CONTEUDO_ACCOUNT_ID'))

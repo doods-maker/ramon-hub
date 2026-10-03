@@ -61,6 +61,19 @@ RSpec.describe 'Public Conteudo API', type: :request do
       expect(response).to have_http_status(:no_content)
     end
 
+    it 'proxima re-entrega peça presa em montando há mais de 15 min e renova o relógio' do
+      p = create(:peca, account: account, status: 'montando', montagem_iniciada_em: 20.minutes.ago)
+      post '/public/api/v1/conteudo/pecas/proxima', headers: headers
+      expect(response.parsed_body['id']).to eq p.id
+      expect(p.reload.montagem_iniciada_em).to be > 1.minute.ago
+    end
+
+    it 'proxima não entrega peça montando há menos de 15 min' do
+      create(:peca, account: account, status: 'montando', montagem_iniciada_em: 5.minutes.ago)
+      post '/public/api/v1/conteudo/pecas/proxima', headers: headers
+      expect(response).to have_http_status(:no_content)
+    end
+
     it 'montada grava imagens e zera refação' do
       p = create(:peca, account: account, status: 'montando', refazer_cards: [2])
       patch "/public/api/v1/conteudo/pecas/#{p.id}/montada", params: { imagens: %w[u1 u2] }.to_json, headers: headers
