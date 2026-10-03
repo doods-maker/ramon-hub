@@ -709,6 +709,8 @@ Rails.application.routes.draw do
         post 'agente/nota',      to: 'agente#nota'
         post 'agente/arquivo',   to: 'agente#arquivo'
         post 'agente/execucoes', to: 'agente#execucoes'
+        # Ramon — conteúdo do Instagram (rotina cloud + worker de montagem). Token no header X-Conteudo-Token.
+        post 'conteudo/pecas', to: 'conteudo#criar'
       end
     end
   end
