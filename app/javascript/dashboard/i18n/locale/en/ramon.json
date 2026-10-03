@@ -410,7 +410,6 @@
     },
     "FUNIL": {
       "TITLE": "Pipeline",
-      "SEARCH_HINT": "Search (Ctrl K)",
       "NEW_LEAD": "New lead",
       "HOTKEYS_HINT": "j/k navigate · e edit · c conversation",
       "EXPORT_CSV": "Export CSV",
@@ -482,8 +481,7 @@
         "CREATED_BEFORE": "Created until",
         "STALLED": "Stalled",
         "NO_OPEN_TASK": "No next action",
-        "CLEAR": "Clear",
-        "TOGGLE": "Filters"
+        "CLEAR": "Clear"
       },
       "VIEWS": {
         "SAVE": "Save view",
@@ -511,28 +509,35 @@
       },
       "DOCK_CLOSE": "Close conversation",
       "LOAD_ERROR": "Couldn't load the pipeline",
-      "CONVERSATION_ERROR": "Couldn't load the conversation"
+      "CONVERSATION_ERROR": "Couldn't load the conversation",
+      "CHIP": {
+        "TESE": "Thesis",
+        "RESPONSAVEL": "Owner",
+        "ORIGEM": "Source",
+        "MAIS": "More filters",
+        "LIMPAR": "Clear filter",
+        "POS_VENDA": "Won with pending docs · {count}",
+        "PRESCRICAO": "Statute of limitations at risk · {count}"
+      }
     },
     "KANBAN": {
       "CARD": {
-        "AGE": "{days}d",
-        "NO_NEXT_ACTION": "No next action scheduled",
-        "NEXT_NONE": "no next action",
-        "NEXT_MEETING": "Meeting {when}",
         "NEXT_OVERDUE": "overdue: {title}",
         "NEXT_TODAY": "today: {title}",
         "NEXT_TOMORROW": "tomorrow: {title}",
         "NEXT_IN_DAYS": "in {days}d: {title}",
-        "DOSSIE": "30s dossier",
+        "DOSSIE": "Dossier",
         "CONVERSATION": "Chat",
         "COPY_PHONE": "Copy phone number",
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
         "TASK_SCHEDULED": "Follow-up scheduled",
-        "TRIAGE_AWAITING_HUMAN": "Triage: awaiting human",
         "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
         "PRESCRIPTION_LOST": "{count} installments lost to prescription",
-        "PRESCRIPTION_SOON": "prescribes in {months}mo"
+        "PRESCRIPTION_SOON": "prescribes in {months}mo",
+        "DOCS": "docs {received}/{total}",
+        "FOLLOW_UP": "Follow-up",
+        "COBRAR_DOCS": "Request documents"
       },
       "BELL": {
         "TITLE": "Schedule follow-up",
@@ -544,9 +549,6 @@
         "CONFIRM": "Schedule"
       },
       "SLA": {
-        "REMAINING": "SLA · {time} left",
-        "OVERDUE_SINCE": "SLA breached {time} ago",
-        "REPLIED_IN": "✓ {time}",
         "COL_BREACHED": "{count} outside SLA",
         "RESPOND_NOW": "Reply now"
       },
@@ -1398,8 +1400,6 @@
       "CANCEL": "Cancel"
     },
     "FOLLOW_UP": {
-      "CARD_TITLE": "{count} follow-up(s) · last {date}",
-      "CARD_TITLE_NO_DATE": "{count} follow-up(s)",
       "BANNER_STALLED": "Stalled for {days}d",
       "BANNER_RETRIES": "{count} follow-up(s)"
     },

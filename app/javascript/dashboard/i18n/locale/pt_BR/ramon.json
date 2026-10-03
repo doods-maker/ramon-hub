@@ -410,7 +410,6 @@
     },
     "FUNIL": {
       "TITLE": "Funil",
-      "SEARCH_HINT": "Buscar (Ctrl K)",
       "NEW_LEAD": "Novo lead",
       "HOTKEYS_HINT": "j/k navegar · e editar · c conversa",
       "EXPORT_CSV": "Exportar CSV",
@@ -482,8 +481,7 @@
         "CREATED_BEFORE": "Criado até",
         "STALLED": "Parados",
         "NO_OPEN_TASK": "Sem próxima ação",
-        "CLEAR": "Limpar",
-        "TOGGLE": "Filtros"
+        "CLEAR": "Limpar"
       },
       "VIEWS": {
         "SAVE": "Salvar view",
@@ -511,28 +509,35 @@
       },
       "DOCK_CLOSE": "Fechar conversa",
       "LOAD_ERROR": "Não foi possível carregar o funil",
-      "CONVERSATION_ERROR": "Não foi possível carregar a conversa"
+      "CONVERSATION_ERROR": "Não foi possível carregar a conversa",
+      "CHIP": {
+        "TESE": "Tese",
+        "RESPONSAVEL": "Responsável",
+        "ORIGEM": "Origem",
+        "MAIS": "Mais filtros",
+        "LIMPAR": "Tirar filtro",
+        "POS_VENDA": "Ganhos com docs pendentes · {count}",
+        "PRESCRICAO": "Prescrição em risco · {count}"
+      }
     },
     "KANBAN": {
       "CARD": {
-        "AGE": "{days}d",
-        "NO_NEXT_ACTION": "Sem próxima ação agendada",
-        "NEXT_NONE": "sem próxima ação",
-        "NEXT_MEETING": "Reunião {when}",
         "NEXT_OVERDUE": "venceu: {title}",
         "NEXT_TODAY": "hoje: {title}",
         "NEXT_TOMORROW": "amanhã: {title}",
         "NEXT_IN_DAYS": "em {days}d: {title}",
-        "DOSSIE": "Dossiê 30s",
+        "DOSSIE": "Dossiê",
         "CONVERSATION": "Conversa",
         "COPY_PHONE": "Copiar telefone",
         "PHONE_COPIED": "Telefone copiado",
         "WHATSAPP": "WhatsApp",
         "TASK_SCHEDULED": "Follow-up agendado",
-        "TRIAGE_AWAITING_HUMAN": "Triagem: aguardando humano",
         "PRESCRIPTION_BLEEDING": "{value}/mês evaporando",
         "PRESCRIPTION_LOST": "{count} parcelas perdidas na prescrição",
-        "PRESCRIPTION_SOON": "prescreve em {months}m"
+        "PRESCRIPTION_SOON": "prescreve em {months}m",
+        "DOCS": "docs {received}/{total}",
+        "FOLLOW_UP": "Follow-up",
+        "COBRAR_DOCS": "Cobrar documentos"
       },
       "BELL": {
         "TITLE": "Agendar follow-up",
@@ -544,9 +549,6 @@
         "CONFIRM": "Agendar"
       },
       "SLA": {
-        "REMAINING": "SLA · restam {time}",
-        "OVERDUE_SINCE": "SLA estourado há {time}",
-        "REPLIED_IN": "✓ {time}",
         "COL_BREACHED": "{count} fora do SLA",
         "RESPOND_NOW": "Responder agora"
       },
@@ -1398,8 +1400,6 @@
       "CANCEL": "Cancelar"
     },
     "FOLLOW_UP": {
-      "CARD_TITLE": "{count} retomada(s) · última {date}",
-      "CARD_TITLE_NO_DATE": "{count} retomada(s)",
       "BANNER_STALLED": "Parado há {days}d",
       "BANNER_RETRIES": "{count} retomada(s)"
     },

@@ -181,7 +181,7 @@ describe('KanbanBoard.vue', () => {
   it('addStage abre o modal de nome e confirma criando a etapa', async () => {
     const wrapper = mountBoard();
 
-    await wrapper.find('button.border-dashed').trigger('click');
+    await wrapper.find('[data-testid="add-stage"]').trigger('click');
 
     const modal = wrapper.findComponent({ name: 'NamePromptModal' });
     expect(modal.exists()).toBe(true);
@@ -198,7 +198,7 @@ describe('KanbanBoard.vue', () => {
   it('addStage cancelado fecha o modal sem criar etapa', async () => {
     const wrapper = mountBoard();
 
-    await wrapper.find('button.border-dashed').trigger('click');
+    await wrapper.find('[data-testid="add-stage"]').trigger('click');
     const modal = wrapper.findComponent({ name: 'NamePromptModal' });
     await modal.find('[data-testid="name-prompt-cancel"]').trigger('click');
     await wrapper.vm.$nextTick();
