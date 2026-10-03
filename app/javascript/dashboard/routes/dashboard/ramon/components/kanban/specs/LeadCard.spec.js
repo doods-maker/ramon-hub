@@ -20,20 +20,20 @@ const mountCard = (props = {}) =>
   });
 
 describe('LeadCard.vue', () => {
-  it('renderiza nome, benefício e valor compacto dourado', () => {
+  it('renderiza nome, benefício e valor compacto azul', () => {
     const wrapper = mountCard();
     expect(wrapper.text()).toContain('João');
     expect(wrapper.text()).toContain('Auxílio-acidente');
     const value = wrapper.find('[data-testid="lead-value"]');
     expect(value.text()).toMatch(/R\$\s?12\s?mil/);
-    expect(value.classes()).toContain('text-n-iris-11');
+    expect(value.classes()).toContain('text-n-blue-11');
   });
 
   it('mostra traço no lugar do valor quando o lead não tem valor', () => {
     const wrapper = mountCard({ lead: { ...lead, value: null } });
     const value = wrapper.find('[data-testid="lead-value"]');
     expect(value.text()).toBe('—');
-    expect(value.classes()).not.toContain('text-n-iris-11');
+    expect(value.classes()).not.toContain('text-n-blue-11');
   });
 
   it('emite open-lead ao clicar no corpo', async () => {
@@ -56,7 +56,7 @@ describe('LeadCard.vue', () => {
       expect(action.classes()).toContain('text-n-ruby-11');
     });
 
-    it('reunião marcada = íris com data e hora, não contagem de dias', () => {
+    it('reunião marcada = azul com data e hora, não contagem de dias', () => {
       const due = new Date(Date.now() + 5 * 86400000);
       due.setHours(14, 30, 0, 0);
       const wrapper = mountCard({
@@ -68,7 +68,7 @@ describe('LeadCard.vue', () => {
         },
       });
       const action = wrapper.find('[data-testid="next-action"]');
-      expect(action.classes()).toContain('text-n-iris-11');
+      expect(action.classes()).toContain('text-n-blue-11');
       expect(action.text()).toContain('14:30');
       expect(action.text()).not.toContain('Reunião Cal.com');
     });
@@ -122,10 +122,10 @@ describe('LeadCard.vue', () => {
       expect(wrapper.emitted('openLead')).toBeFalsy();
     });
 
-    it('marca bronze quando selected', () => {
+    it('marca azul quando selected', () => {
       const wrapper = mountCard({ selectable: true, selected: true });
       expect(wrapper.find('[data-testid="select-toggle"]').classes()).toContain(
-        'bg-n-iris-9'
+        'bg-n-brand'
       );
     });
   });
@@ -159,7 +159,7 @@ describe('LeadCard.vue', () => {
         lead: { ...lead, dcb_em: '2019-01-01', benefit_monthly_value: 1412 },
       });
       expect(wrapper.classes()).toContain('border-l-n-ruby-9');
-      expect(wrapper.classes()).toContain('border-l-[3px]');
+      expect(wrapper.classes()).toContain('border-l-4');
     });
 
     it('parado (stalled) = borda âmbar', () => {
@@ -167,9 +167,9 @@ describe('LeadCard.vue', () => {
       expect(wrapper.classes()).toContain('border-l-n-amber-9');
     });
 
-    it('sem risco = sem borda de 3px', () => {
+    it('sem risco = sem filete', () => {
       const wrapper = mountCard();
-      expect(wrapper.classes()).not.toContain('border-l-[3px]');
+      expect(wrapper.classes()).not.toContain('border-l-4');
     });
   });
 
@@ -208,7 +208,7 @@ describe('LeadCard.vue', () => {
       });
       const pill = wrapper.find('[data-testid="sla-pill"]');
       expect(pill.text()).toBe('2h 47min');
-      expect(pill.classes()).toContain('bg-n-ruby-9');
+      expect(pill.classes()).toContain('bg-n-ruby-9/10');
       expect(wrapper.classes()).toContain('border-l-n-ruby-9');
       await wrapper.find('[data-testid="sla-respond-now"]').trigger('click');
       expect(wrapper.emitted('openConversation')[0]).toEqual([99]);

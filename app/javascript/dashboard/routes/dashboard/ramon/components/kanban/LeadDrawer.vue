@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadPanelBody from 'dashboard/routes/dashboard/ramon/components/lead/LeadPanelBody.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const emit = defineEmits(['openConversation']);
 const store = useStore();
@@ -55,20 +56,22 @@ onKeyStroke('Escape', () => {
   >
     <div v-if="lead" class="fixed inset-0 z-40 flex justify-end">
       <div
-        class="absolute inset-0 bg-black/50"
+        class="absolute inset-0 bg-modal-backdrop-light dark:bg-modal-backdrop-dark"
         data-testid="drawer-overlay"
         @click="close"
       />
       <aside
-        class="relative z-10 flex flex-col w-96 max-w-full h-full bg-n-solid-1 border-l border-n-weak"
+        class="relative z-10 flex flex-col w-96 max-w-full h-full bg-n-solid-1 border-l border-n-weak shadow-xl"
       >
-        <button
+        <Button
           data-testid="drawer-close"
-          class="absolute top-3 ltr:right-3 rtl:left-3 z-10 text-n-slate-10 hover:text-n-slate-12"
+          sm
+          ghost
+          slate
+          icon="i-lucide-x"
+          class="absolute top-2 ltr:right-2 rtl:left-2 z-10"
           @click="close"
-        >
-          <span class="i-lucide-x size-5" />
-        </button>
+        />
 
         <!-- corpo compartilhado com o painel da conversa (redesign 1f) -->
         <LeadPanelBody

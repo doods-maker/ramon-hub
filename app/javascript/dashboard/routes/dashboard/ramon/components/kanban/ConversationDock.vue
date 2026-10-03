@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import ConversationBox from 'dashboard/components/widgets/conversation/ConversationBox.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const props = defineProps({
   // Board com modal aberto: Esc é do modal, não do dock.
@@ -65,21 +66,22 @@ onKeyStroke('Escape', () => {
     <div
       v-if="isOpen"
       data-testid="conversation-dock"
-      class="fixed z-50 inset-0 flex flex-col overflow-hidden bg-n-solid-1 border-n-weak shadow-lg md:inset-auto md:bottom-4 md:h-[560px] md:max-h-[calc(100vh-2rem)] md:w-[440px] md:rounded-lg md:border"
+      class="fixed z-50 inset-0 flex flex-col overflow-hidden bg-n-solid-1 border-n-weak shadow-lg md:inset-auto md:bottom-4 md:h-[560px] md:max-h-[calc(100vh-2rem)] md:w-[440px] md:rounded-xl md:border"
       :class="drawerOpen ? 'md:right-[25rem]' : 'md:right-4'"
     >
       <header class="flex items-center gap-2 px-3 py-2 border-b border-n-weak">
         <span class="flex-1 text-sm font-medium text-n-slate-12 truncate">{{
           contactName
         }}</span>
-        <button
+        <Button
           data-testid="dock-close"
           :title="$t('RAMON.FUNIL.DOCK_CLOSE')"
-          class="text-n-slate-10 hover:text-n-slate-12"
+          xs
+          ghost
+          slate
+          icon="i-lucide-x"
           @click="close"
-        >
-          <span class="i-lucide-x size-4" />
-        </button>
+        />
       </header>
       <div class="flex-1 min-h-0">
         <ConversationBox
@@ -94,19 +96,21 @@ onKeyStroke('Escape', () => {
         >
           {{ $t('RAMON.FUNIL.CONVERSATION_ERROR') }}
           <div class="flex gap-2">
-            <button
+            <Button
               data-testid="dock-load-retry"
-              class="px-3 py-1.5 text-sm rounded-lg border border-n-weak text-n-slate-11 hover:text-n-slate-12"
+              sm
+              faded
+              slate
+              :label="$t('RAMON.LEAD_PANEL.RETRY')"
               @click="retry"
-            >
-              {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-            </button>
-            <button
-              class="px-3 py-1.5 text-sm rounded-lg border border-n-weak text-n-slate-11 hover:text-n-slate-12"
+            />
+            <Button
+              sm
+              faded
+              slate
+              :label="$t('RAMON.FUNIL.DOCK_CLOSE')"
               @click="close"
-            >
-              {{ $t('RAMON.FUNIL.DOCK_CLOSE') }}
-            </button>
+            />
           </div>
         </div>
         <div

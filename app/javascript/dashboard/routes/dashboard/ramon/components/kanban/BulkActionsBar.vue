@@ -8,6 +8,9 @@ import { onKeyStroke } from '@vueuse/core';
 import { vOnClickOutside } from '@vueuse/components';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import { CARTAO, CAMPO, LINHA, MENU } from '../../helpers/ui';
 import LostReasonModal from './LostReasonModal.vue';
 
 const props = defineProps({
@@ -107,7 +110,8 @@ onKeyStroke('Escape', () => {
   <div
     v-on-click-outside="closeMenus"
     data-testid="bulk-actions-bar"
-    class="flex flex-none flex-wrap items-center gap-2 mx-4 mb-3 px-4 py-2.5 rounded-xl bg-n-solid-2 border border-n-iris-8 shadow-lg"
+    class="flex flex-none flex-wrap items-center gap-2 mx-4 mb-3 shadow-lg"
+    :class="CARTAO"
   >
     <span
       data-testid="bulk-count"
@@ -117,51 +121,56 @@ onKeyStroke('Escape', () => {
     </span>
     <span class="w-px h-4 bg-n-weak" />
     <div class="relative">
-      <button
+      <Button
         data-testid="bulk-move-stage"
-        class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-2 text-n-iris-11 hover:bg-n-alpha-3"
+        xs
+        faded
+        :label="$t('RAMON.KANBAN.BULK.MOVE')"
         @click="toggleMenu('stage')"
-      >
-        {{ $t('RAMON.KANBAN.BULK.MOVE') }}
-      </button>
+      />
       <div
         v-show="openMenu === 'stage'"
         data-testid="bulk-stage-menu"
-        class="absolute bottom-full left-0 z-50 mb-2 w-56 max-h-64 overflow-y-auto p-1 rounded-lg bg-n-solid-2 border border-n-weak shadow-lg"
+        class="absolute bottom-full left-0 z-50 mb-2 w-56 max-h-64 overflow-y-auto"
+        :class="MENU"
       >
         <button
           v-for="stage in stages"
           :key="stage.id"
           data-testid="bulk-stage-option"
-          class="flex items-center w-full gap-2 px-2 py-1.5 text-sm text-left rounded-md text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
+          class="flex items-center gap-2 text-n-slate-12"
+          :class="LINHA"
           @click="pickStage(stage)"
         >
           <span
             class="rounded-full size-2 shrink-0"
-            :style="{ backgroundColor: stage.color || '#737373' }"
+            :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
           />
           <span class="truncate">{{ stage.name }}</span>
         </button>
       </div>
     </div>
     <div v-if="isAdmin" class="relative">
-      <button
+      <Button
         data-testid="bulk-assign-sdr"
-        class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-2 text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-3"
+        xs
+        faded
+        slate
+        :label="$t('RAMON.KANBAN.BULK.ASSIGN')"
         @click="toggleMenu('sdr')"
-      >
-        {{ $t('RAMON.KANBAN.BULK.ASSIGN') }}
-      </button>
+      />
       <div
         v-show="openMenu === 'sdr'"
         data-testid="bulk-sdr-menu"
-        class="absolute bottom-full left-0 z-50 mb-2 w-56 max-h-64 overflow-y-auto p-1 rounded-lg bg-n-solid-2 border border-n-weak shadow-lg"
+        class="absolute bottom-full left-0 z-50 mb-2 w-56 max-h-64 overflow-y-auto"
+        :class="MENU"
       >
         <button
           v-for="agent in agents"
           :key="agent.id"
           data-testid="bulk-sdr-option"
-          class="block w-full px-2 py-1.5 text-sm text-left truncate rounded-md text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
+          class="block truncate text-n-slate-12"
+          :class="LINHA"
           @click="pickAgent(agent)"
         >
           {{ agent.name }}
@@ -169,41 +178,45 @@ onKeyStroke('Escape', () => {
       </div>
     </div>
     <div class="relative">
-      <button
+      <Button
         data-testid="bulk-follow-up"
-        class="px-3 py-1.5 text-xs rounded-lg bg-n-alpha-2 text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-3"
+        xs
+        faded
+        slate
+        :label="$t('RAMON.KANBAN.BULK.FOLLOW_UP')"
         @click="toggleMenu('task')"
-      >
-        {{ $t('RAMON.KANBAN.BULK.FOLLOW_UP') }}
-      </button>
+      />
       <div
         v-show="openMenu === 'task'"
         data-testid="bulk-task-menu"
-        class="absolute bottom-full left-0 z-50 mb-2 w-56 p-2 flex flex-col gap-1.5 rounded-lg bg-n-solid-2 border border-n-weak shadow-lg"
+        class="absolute bottom-full left-0 z-50 mb-2 w-56 flex flex-col gap-1.5"
+        :class="MENU"
       >
         <input
           v-model="followUpDate"
           data-testid="bulk-task-date"
           type="datetime-local"
-          class="w-full px-2 py-1 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
+          class="font-mono"
+          :class="CAMPO"
         />
-        <button
+        <Button
           data-testid="bulk-task-confirm"
-          class="w-full px-2 py-1 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+          sm
+          class="w-full"
+          :label="$t('RAMON.KANBAN.BULK.FOLLOW_UP_CONFIRM')"
           :disabled="!followUpDate"
           @click="confirmFollowUp"
-        >
-          {{ $t('RAMON.KANBAN.BULK.FOLLOW_UP_CONFIRM') }}
-        </button>
+        />
       </div>
     </div>
-    <button
+    <Button
       data-testid="bulk-clear"
-      class="px-3 py-1.5 text-xs rounded-lg text-n-slate-10 hover:text-n-slate-12"
+      xs
+      ghost
+      slate
+      :label="$t('RAMON.KANBAN.BULK.CLEAR')"
       @click="clearSelection"
-    >
-      {{ $t('RAMON.KANBAN.BULK.CLEAR') }}
-    </button>
+    />
     <span class="ms-auto text-[11px] text-n-slate-10">
       {{ $t('RAMON.KANBAN.BULK.ESC_HINT') }}
     </span>

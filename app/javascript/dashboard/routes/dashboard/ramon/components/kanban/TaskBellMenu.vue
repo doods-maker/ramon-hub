@@ -2,6 +2,8 @@
 import { ref, watch, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { vOnClickOutside } from '@vueuse/components';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { BOTAO_COMPACTO, CAMPO, LINHA, MENU, SECAO } from '../../helpers/ui';
 
 const props = defineProps({ label: { type: String, default: '' } });
 const emit = defineEmits(['schedule']);
@@ -97,31 +99,27 @@ const confirmCustom = () => {
 
 <template>
   <div class="relative" @click.stop>
-    <button
-      ref="bellRef"
-      data-testid="task-bell-toggle"
-      :title="t('RAMON.KANBAN.BELL.TITLE')"
-      :class="
-        props.label
-          ? 'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-n-slate-11 bg-n-alpha-2 hover:bg-n-alpha-3 hover:text-n-iris-11'
-          : 'flex items-center justify-center size-6 rounded-full text-n-slate-9 hover:text-n-iris-11 hover:bg-n-alpha-2'
-      "
-      @click.stop="toggle"
-    >
-      <span
-        :class="
-          props.label
-            ? 'i-lucide-bell-plus size-3'
-            : 'i-lucide-bell-plus size-4'
-        "
-      />{{ props.label }}
-    </button>
+    <!-- ref no wrapper: o Button é componente, o clique-fora precisa de elemento -->
+    <span ref="bellRef" class="inline-flex">
+      <Button
+        data-testid="task-bell-toggle"
+        :class="props.label ? BOTAO_COMPACTO : ''"
+        :title="t('RAMON.KANBAN.BELL.TITLE')"
+        xs
+        :variant="props.label ? 'faded' : 'ghost'"
+        color="slate"
+        icon="i-lucide-bell-plus"
+        :label="props.label"
+        @click.stop="toggle"
+      />
+    </span>
     <Teleport to="body">
       <div
         v-if="open"
         v-on-click-outside="[close, { ignore: [bellRef] }]"
         data-testid="task-bell-menu"
-        class="fixed z-50 w-56 p-2 rounded-lg shadow-lg bg-n-solid-2 border border-n-weak"
+        class="fixed z-50 w-56"
+        :class="MENU"
         :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"
         @click.stop
       >
@@ -129,47 +127,49 @@ const confirmCustom = () => {
           v-model="title"
           data-testid="task-bell-title"
           :placeholder="t('RAMON.KANBAN.BELL.TITLE_PLACEHOLDER')"
-          class="w-full px-2 py-1 mb-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
+          class="!mb-1.5"
+          :class="CAMPO"
           @click.stop
         />
         <button
           data-testid="task-bell-tomorrow"
-          class="block w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+          :class="LINHA"
           @click.stop="inDaysAt9(1)"
         >
           {{ t('RAMON.KANBAN.BELL.TOMORROW') }}
         </button>
         <button
           data-testid="task-bell-3-days"
-          class="block w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+          :class="LINHA"
           @click.stop="inDaysAt9(3)"
         >
           {{ t('RAMON.KANBAN.BELL.IN_3_DAYS') }}
         </button>
         <button
           data-testid="task-bell-1-week"
-          class="block w-full px-2 py-1 text-sm text-left rounded-lg text-n-slate-11 hover:bg-n-alpha-2"
+          :class="LINHA"
           @click.stop="inDaysAt9(7)"
         >
           {{ t('RAMON.KANBAN.BELL.IN_1_WEEK') }}
         </button>
-        <div class="flex flex-col gap-1 pt-2 mt-1 border-t border-n-weak">
+        <div class="flex flex-col gap-1.5 mt-1.5 !pt-1.5" :class="SECAO">
           <input
             v-model="customDate"
             data-testid="task-bell-date"
             type="datetime-local"
             :min="minDate"
-            class="w-full px-2 py-1 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
+            class="font-mono"
+            :class="CAMPO"
             @click.stop
           />
-          <button
+          <Button
             data-testid="task-bell-confirm"
-            class="w-full px-2 py-1 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+            sm
+            class="w-full"
+            :label="t('RAMON.KANBAN.BELL.CONFIRM')"
             :disabled="!customDate"
             @click.stop="confirmCustom"
-          >
-            {{ t('RAMON.KANBAN.BELL.CONFIRM') }}
-          </button>
+          />
         </div>
       </div>
     </Teleport>
