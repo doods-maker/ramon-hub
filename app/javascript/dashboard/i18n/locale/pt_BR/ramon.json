@@ -1594,7 +1594,8 @@
       "ULTIMO_ANDAMENTO": "Último andamento",
       "VER_ADVBOX": "Ver no ADVBOX",
       "CARREGANDO": "Carregando cliente…",
-      "ERRO": "Não foi possível carregar o cliente."
+      "ERRO": "Não foi possível carregar o cliente.",
+      "ERRO_ATRIBUIR": "Não foi possível atribuir — tente de novo."
     }
   },
   "CAPTAIN_RAMON": {

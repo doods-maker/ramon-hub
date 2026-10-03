@@ -2,6 +2,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import ClientePanel from '../ClientePanel.vue';
 import RamonClienteAPI from 'dashboard/api/ramonCliente';
+import { useAlert } from 'dashboard/composables';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
@@ -34,13 +35,30 @@ const ADVOGADAS = [
   { id: 7, name: 'Dra. Tamires' },
 ];
 
-const montar = ({ dados = CLIENTE, chat = {}, userId = 1 } = {}) => {
-  RamonClienteAPI.get.mockResolvedValue({ data: dados });
-  const assignAgent = vi.fn();
-  const assignTeam = vi.fn();
+// assignAgent/assignTeam de verdade só mudam o estado no sucesso (engolem
+// o erro); aqui `falha` simula a requisição que não pegou.
+const montar = ({
+  dados = CLIENTE,
+  chat = {},
+  userId = 1,
+  falha = false,
+  erroCliente = false,
+} = {}) => {
+  if (erroCliente) RamonClienteAPI.get.mockRejectedValue(new Error('fora'));
+  else RamonClienteAPI.get.mockResolvedValue({ data: dados });
+  const chamadas = [];
+  const assignAgent = vi.fn(({ state }, { agentId }) => {
+    chamadas.push('agente');
+    if (!falha) state.meta.assignee = agentId ? { id: agentId } : null;
+  });
+  const assignTeam = vi.fn(({ state }, { teamId }) => {
+    chamadas.push('time');
+    if (!falha) state.meta.team = teamId ? { id: teamId } : null;
+  });
   const store = createStore({
+    state: () => ({ id: 42, meta: {}, ...chat }),
     getters: {
-      getSelectedChat: () => ({ id: 42, meta: {}, ...chat }),
+      getSelectedChat: state => state,
       getCurrentUserID: () => userId,
     },
     actions: { assignAgent, assignTeam },
@@ -68,10 +86,12 @@ const montar = ({ dados = CLIENTE, chat = {}, userId = 1 } = {}) => {
     props: { conversationId: 42 },
     global: { plugins: [store] },
   });
-  return { wrapper, assignAgent, assignTeam };
+  return { wrapper, assignAgent, assignTeam, chamadas };
 };
 
 describe('ClientePanel', () => {
+  beforeEach(() => useAlert.mockClear());
+
   it('Atribuir a… lista a advogada do processo primeiro, marcada', async () => {
     const { wrapper, assignAgent } = montar();
     await flushPromises();
@@ -85,6 +105,25 @@ describe('ClientePanel', () => {
       conversationId: 42,
       agentId: 5,
     });
+  });
+
+  it('só avisa sucesso se a conversa mudou de fato', async () => {
+    const { wrapper } = montar({ falha: true });
+    await flushPromises();
+    await wrapper.find('[data-testid="cliente-atribuir"]').trigger('click');
+    await wrapper.findAll('[data-testid="cliente-pessoa"]')[0].trigger('click');
+    await flushPromises();
+    expect(useAlert).toHaveBeenCalledWith('RAMON.CLIENTE_PANEL.ERRO_ATRIBUIR');
+    expect(useAlert).not.toHaveBeenCalledWith('CONVERSATION.CHANGE_AGENT');
+  });
+
+  it('erro ao buscar o cliente: avisa e ainda deixa encaminhar', async () => {
+    const { wrapper } = montar({ erroCliente: true });
+    await flushPromises();
+    expect(wrapper.text()).toContain('RAMON.CLIENTE_PANEL.ERRO');
+    expect(
+      wrapper.find('[data-testid="lead-panel-encaminhar-comercial"]').exists()
+    ).toBe(true);
   });
 
   it('Controladoria atribui o time', async () => {
@@ -115,7 +154,7 @@ describe('ClientePanel', () => {
   });
 
   it('advogada atribuída vê a faixa (sem o Atribuir a…) e devolve', async () => {
-    const { wrapper, assignAgent, assignTeam } = montar({
+    const { wrapper, assignAgent, assignTeam, chamadas } = montar({
       userId: 7,
       chat: {
         meta: { assignee: { id: 7 } },
@@ -145,6 +184,8 @@ describe('ClientePanel', () => {
       conversationId: 42,
       teamId: 0,
     });
+    // time primeiro: ela ainda é a responsável quando tira o time
+    expect(chamadas).toEqual(['time', 'agente']);
   });
 
   it('atribuição por automação (sem nome) não mostra a faixa', async () => {

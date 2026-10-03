@@ -1589,7 +1589,8 @@
       "ULTIMO_ANDAMENTO": "Last update",
       "VER_ADVBOX": "Open in ADVBOX",
       "CARREGANDO": "Loading client…",
-      "ERRO": "Could not load the client."
+      "ERRO": "Could not load the client.",
+      "ERRO_ATRIBUIR": "Could not assign — try again."
     }
   },
   "CAPTAIN_RAMON": {

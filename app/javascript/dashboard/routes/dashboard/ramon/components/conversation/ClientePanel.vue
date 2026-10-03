@@ -67,7 +67,10 @@ watch(
   times =>
     times
       .filter(time => time && !membrosDe.value(time.id).length)
-      .forEach(time => store.dispatch('teamMembers/get', { teamId: time.id })),
+      .forEach(time =>
+        // sem a lista o menu fica vazio, mas o painel segue
+        store.dispatch('teamMembers/get', { teamId: time.id }).catch(() => {})
+      ),
   { immediate: true }
 );
 
@@ -97,29 +100,32 @@ const iniciais = nome =>
 
 const menuAberto = ref(false);
 const conversa = () => Number(props.conversationId);
+// assignAgent/assignTeam engolem o erro: o sucesso se confere pelo estado.
+const avisar = (mudou, ok) =>
+  useAlert(t(mudou ? ok : 'RAMON.CLIENTE_PANEL.ERRO_ATRIBUIR'));
 const atribuirPessoa = async pessoa => {
   menuAberto.value = false;
   await store.dispatch('assignAgent', {
     conversationId: conversa(),
     agentId: pessoa.id,
   });
-  useAlert(t('CONVERSATION.CHANGE_AGENT'));
+  avisar(meta.value.assignee?.id === pessoa.id, 'CONVERSATION.CHANGE_AGENT');
 };
 const atribuirControladoria = async () => {
   menuAberto.value = false;
-  await store.dispatch('assignTeam', {
-    conversationId: conversa(),
-    teamId: controladoria.value.id,
-  });
-  useAlert(t('CONVERSATION.CHANGE_TEAM'));
+  const teamId = controladoria.value.id;
+  await store.dispatch('assignTeam', { conversationId: conversa(), teamId });
+  avisar(meta.value.team?.id === teamId, 'CONVERSATION.CHANGE_TEAM');
 };
-// Devolver = volta pra fila sem responsável e sem time.
+// Devolver = volta pra fila sem responsável e sem time. Time primeiro: quem
+// devolve ainda é a responsável (acesso garantido) e nenhum dos dois passos
+// regrava "quem atribuiu" (RamonConversa só registra quando alguém assume).
 const devolver = async () => {
+  await store.dispatch('assignTeam', { conversationId: conversa(), teamId: 0 });
   await store.dispatch('assignAgent', {
     conversationId: conversa(),
     agentId: null,
   });
-  await store.dispatch('assignTeam', { conversationId: conversa(), teamId: 0 });
 };
 
 // ----- cliente -----
@@ -223,14 +229,11 @@ const DADO = 'flex justify-between gap-3 py-1 text-[13px]';
       </div>
     </div>
 
-    <p v-if="erro" class="px-[18px] py-4 text-sm text-n-ruby-11">
-      {{ t('RAMON.CLIENTE_PANEL.ERRO') }}
-    </p>
-    <p v-else-if="!dados" class="px-[18px] py-4 text-sm text-n-slate-10">
+    <p v-if="!dados && !erro" class="px-[18px] py-4 text-sm text-n-slate-10">
       {{ t('RAMON.CLIENTE_PANEL.CARREGANDO') }}
     </p>
 
-    <template v-else-if="dados.cliente">
+    <template v-else-if="dados?.cliente">
       <div :class="SECAO">
         <h3 :class="TITULO">
           {{
@@ -309,11 +312,17 @@ const DADO = 'flex justify-between gap-3 py-1 text-[13px]';
       </a>
     </template>
 
+    <!-- número novo — ou ADVBOX/painel fora: o encaminhar continua possível -->
     <div v-else :class="SECAO" data-testid="cliente-numero-novo">
-      <h3 :class="TITULO">{{ t('RAMON.CLIENTE_PANEL.NUMERO_NOVO') }}</h3>
-      <p class="text-[12.5px] text-n-slate-11">
-        {{ t('RAMON.CLIENTE_PANEL.NUMERO_NOVO_APOIO') }}
+      <p v-if="erro" class="text-sm text-n-ruby-11">
+        {{ t('RAMON.CLIENTE_PANEL.ERRO') }}
       </p>
+      <template v-else>
+        <h3 :class="TITULO">{{ t('RAMON.CLIENTE_PANEL.NUMERO_NOVO') }}</h3>
+        <p class="text-[12.5px] text-n-slate-11">
+          {{ t('RAMON.CLIENTE_PANEL.NUMERO_NOVO_APOIO') }}
+        </p>
+      </template>
       <button
         v-if="naRecepcao"
         type="button"
