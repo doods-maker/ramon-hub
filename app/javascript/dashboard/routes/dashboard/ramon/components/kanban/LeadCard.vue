@@ -385,11 +385,11 @@ const onSchedule = async ({ dueAt, title }) => {
             total: lead.docs_total,
           })
         "
-        class="inline-flex items-center gap-0.5"
+        class="inline-flex items-center gap-0.5 rounded-full px-1.5"
         :class="
           lead.docs_received >= lead.docs_total
-            ? 'text-n-teal-11'
-            : 'text-n-slate-10'
+            ? 'bg-n-teal-9/15 text-n-teal-11'
+            : 'bg-n-amber-9/15 text-n-amber-11'
         "
       >
         <span class="i-lucide-file-check size-3" />{{ lead.docs_received }}/{{

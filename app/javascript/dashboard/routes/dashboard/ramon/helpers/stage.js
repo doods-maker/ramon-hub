@@ -1,2 +1,2 @@
-// Fallback quente (tom stone) alinhado ao tema Marfim & Bronze para etapa sem cor.
-export const DEFAULT_STAGE_COLOR = '#78716c';
+// Fallback neutro (cinza puro, visual branco e preto 03/10/2026) para etapa sem cor.
+export const DEFAULT_STAGE_COLOR = '#737373';

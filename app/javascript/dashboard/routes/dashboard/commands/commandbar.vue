@@ -235,9 +235,9 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
-// FORK-PONTO: paleta Marfim & Bronze no command bar (mock 3b do redesign)
+// FORK-PONTO: paleta branco e preto + azul no command bar (redesign 03/10/2026)
 ninja-keys {
-  --ninja-accent-color: #8a5c33;
+  --ninja-accent-color: #2563eb;
   --ninja-font-family: 'Inter';
   z-index: 9999;
 }
@@ -246,14 +246,14 @@ ninja-keys {
 // If OS is in dark theme and app is in light mode, It will prevent showing dark theme in command bar
 body.dark {
   ninja-keys {
-    --ninja-overflow-background: rgba(30, 27, 25, 0.6);
-    --ninja-modal-background: #2e2b27;
-    --ninja-secondary-background-color: #33302c;
-    --ninja-selected-background: #3b362e;
-    --ninja-footer-background: #2b2825;
-    --ninja-text-color: #ece7df;
-    --ninja-icon-color: #c9a97c;
-    --ninja-secondary-text-color: #8d867d;
+    --ninja-overflow-background: rgba(0, 0, 0, 0.6);
+    --ninja-modal-background: #0e0e0e;
+    --ninja-secondary-background-color: #161616;
+    --ninja-selected-background: #1c1c1c;
+    --ninja-footer-background: #0a0a0a;
+    --ninja-text-color: #ededed;
+    --ninja-icon-color: #60a5fa;
+    --ninja-secondary-text-color: #a1a1a1;
   }
 }
 </style>

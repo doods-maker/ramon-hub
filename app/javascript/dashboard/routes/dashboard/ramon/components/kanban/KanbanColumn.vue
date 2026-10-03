@@ -190,10 +190,12 @@ const toggleCollapsed = () => {
         class="flex items-center gap-2 min-w-0 text-sm font-medium text-n-slate-12 stage-drag-handle cursor-grab"
       >
         <span
-          class="rounded-full size-2.5 shrink-0"
-          :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
-        />
-        <span class="truncate">{{ stage.name }}</span>
+          class="ramon-stage-pill inline-flex items-center gap-1.5 min-w-0 rounded-full border px-2.5 py-0.5 font-semibold"
+          :style="{ '--stage': stage.color || DEFAULT_STAGE_COLOR }"
+        >
+          <span class="rounded-full size-1.5 shrink-0 bg-current" />
+          <span class="truncate">{{ stage.name }}</span>
+        </span>
         <span
           v-if="stage.is_won"
           class="i-lucide-trophy size-3 shrink-0 text-n-amber-11"

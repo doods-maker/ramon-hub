@@ -23,7 +23,7 @@ defineProps({
         {{ eyebrow }}
       </p>
       <h1
-        class="font-cormorant font-semibold text-n-slate-12"
+        class="font-semibold text-n-slate-12"
         :class="compact ? 'text-2xl' : 'text-4xl'"
       >
         {{ title }}
