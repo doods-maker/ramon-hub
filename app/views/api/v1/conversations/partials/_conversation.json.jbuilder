@@ -59,4 +59,7 @@ json.last_activity_at conversation.last_activity_at.to_i
 json.priority conversation.priority
 json.waiting_since conversation.waiting_since.to_i.to_i
 json.sla_policy_id conversation.sla_policy_id
+# FORK(ramon): etiqueta de etapa + tese na lista de conversas (redesign v2)
+lead = conversation.ramon_lead
+json.ramon_lead lead && { id: lead.id, stage_name: lead.lead_stage&.name, stage_color: lead.lead_stage&.color, thesis_name: lead.thesis&.name }
 json.partial! 'enterprise/api/v1/conversations/partials/conversation', conversation: conversation if ChatwootApp.enterprise?

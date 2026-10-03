@@ -1,0 +1,34 @@
+require 'rails_helper'
+
+RSpec.describe RamonConversa do
+  let(:account) { create(:account) }
+  let!(:conversation) { create(:conversation, account: account) }
+  let(:gabriela) { create(:user, account: account, name: 'Gabriela') }
+  let(:tamires) { create(:user, account: account) }
+
+  after { Current.reset }
+
+  it 'grava quem atribuiu e quando' do
+    Current.user = gabriela
+    conversation.update!(assignee: tamires)
+    registro = conversation.reload.additional_attributes['ramon_atribuicao']
+    expect(registro).to include('por_id' => gabriela.id, 'por_nome' => 'Gabriela')
+    expect(Time.zone.parse(registro['em'])).to be_within(5.seconds).of(Time.current)
+  end
+
+  it 'grava também quando muda o time' do
+    Current.user = gabriela
+    conversation.update!(team: create(:team, account: account))
+    expect(conversation.reload.additional_attributes['ramon_atribuicao']).to include('por_nome' => 'Gabriela')
+  end
+
+  it 'sem usuário (automação) não grava' do
+    conversation.update!(assignee: tamires)
+    expect(conversation.reload.additional_attributes['ramon_atribuicao']).to be_nil
+  end
+
+  it 'expõe o lead da conversa' do
+    lead = create(:lead, account: account, conversation: conversation)
+    expect(conversation.reload.ramon_lead).to eq(lead)
+  end
+end
