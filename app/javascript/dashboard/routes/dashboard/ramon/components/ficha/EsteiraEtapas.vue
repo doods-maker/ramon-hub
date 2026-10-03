@@ -38,7 +38,7 @@ const nome = stage => {
   if (!stage.current) return 'text-n-slate-11';
   return currentIsLost.value
     ? 'font-semibold text-n-ruby-11'
-    : 'font-semibold text-[color:var(--stage)]';
+    : 'font-semibold ramon-stage-text';
 };
 // atual: "há N dias"; passadas: dd/mm
 const quando = stage => {

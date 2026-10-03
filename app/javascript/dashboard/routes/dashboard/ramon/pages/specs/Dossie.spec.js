@@ -215,4 +215,40 @@ describe('Dossie.vue', () => {
     expect(await vaziaEm('reunioes')).toBe(true);
     expect(await vaziaEm('linha_da_vida')).toBe(true);
   });
+
+  it('lateral junta canal e origem e mostra a probabilidade; contato só se diferente', async () => {
+    const wrapper = await mountDossie({
+      ...payload,
+      pessoa: { ...payload.pessoa, probability: 75, contact_name: 'Maria D.' },
+    });
+    expect(wrapper.find('[data-testid="dossie-origem"]').text()).toContain(
+      'Meta Ads · anuncio-meta-auxilio'
+    );
+    expect(wrapper.find('[data-testid="ficha-probabilidade"]').text()).toBe(
+      '75%'
+    );
+    expect(wrapper.find('[data-testid="ficha-contato"]').text()).toContain(
+      'Maria D.'
+    );
+    const igual = await mountDossie();
+    expect(igual.find('[data-testid="ficha-contato"]').exists()).toBe(false);
+  });
+
+  it('Cobrar pendentes copia o rascunho e marca solicitados pelo store', async () => {
+    storeDispatch.mockClear();
+    const wrapper = await mountDossie();
+    await wrapper.find('[data-testid="ficha-aba-documentos"]').trigger('click');
+    expect(wrapper.find('[data-testid="ficha-docs-barra"]').exists()).toBe(
+      true
+    );
+    await wrapper.find('[data-testid="ficha-cobrar"]').trigger('click');
+    await flushPromises();
+    expect(copyTextToClipboard).toHaveBeenCalledWith(
+      expect.stringContaining('RAMON.DOCS.DRAFT.GREETING')
+    );
+    expect(storeDispatch).toHaveBeenCalledWith('leads/update', {
+      id: 5,
+      custom_attributes: { doc_status: { 12: 'solicitado' } },
+    });
+  });
 });

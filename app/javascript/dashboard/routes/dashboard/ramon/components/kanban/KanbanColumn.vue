@@ -215,7 +215,7 @@ const toggleCollapsed = () => {
       <!-- "R$ total · ~R$ ponderado · ↳ N%" (mono, 75%) -->
       <div
         v-if="totalValue || showWeighted || conversionRate != null"
-        class="mt-0.5 truncate font-mono text-xs opacity-75"
+        class="mt-0.5 truncate font-mono text-xs"
       >
         <span v-if="totalValue" data-testid="stage-total">
           {{ brlCompact(totalValue) }}

@@ -10,6 +10,7 @@ import { formatBrl } from '../helpers/currency';
 import { waMeUrl } from '../helpers/phone';
 import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import { rascunhoCobranca } from '../helpers/rascunhoDocs';
+import { useCobrarDocs } from '../composables/useCobrarDocs';
 import { BTN_LINHA } from '../components/hoje/hoje';
 import Selo from '../components/hoje/Selo.vue';
 import EsteiraEtapas from '../components/ficha/EsteiraEtapas.vue';
@@ -171,6 +172,12 @@ const confirmarGanho = async ({ value }) => {
 };
 
 // --- Cobrar pendentes: rascunho no clipboard + marca pendentes como solicitados ---
+const { marcarSolicitados } = useCobrarDocs();
+const docsPercent = computed(() =>
+  docs.value.total
+    ? Math.round((docs.value.received / docs.value.total) * 100)
+    : 0
+);
 const cobrarPendentes = async () => {
   const faltando = docs.value.itens.filter(i => i.status !== 'recebido');
   if (!faltando.length) return;
@@ -187,13 +194,7 @@ const cobrarPendentes = async () => {
     return;
   }
   useAlert(t('RAMON.DOCS.COPIED'));
-  const docStatus = Object.fromEntries(
-    faltando.filter(i => i.status === 'pendente').map(i => [i.id, 'solicitado'])
-  );
-  // o backend faz deep-merge do custom_attributes: só doc_status muda
-  await LeadsAPI.update(pessoa.value.lead_id, {
-    custom_attributes: { doc_status: docStatus },
-  });
+  await marcarSolicitados(pessoa.value.lead_id, faltando);
   fetchData();
 };
 
@@ -573,6 +574,16 @@ const VAZIO = 'text-[13px] text-n-slate-9';
                 {{ $t('RAMON.DOCS.CHARGE') }}
               </button>
             </h2>
+            <div
+              v-if="docs.total"
+              data-testid="ficha-docs-barra"
+              class="h-1 mb-3 overflow-hidden rounded-full bg-n-slate-4"
+            >
+              <div
+                class="h-full rounded-full bg-n-teal-9"
+                :style="{ width: `${docsPercent}%` }"
+              />
+            </div>
             <p
               v-if="!docs.itens.length"
               :class="VAZIO"
@@ -768,6 +779,18 @@ const VAZIO = 'text-[13px] text-n-slate-9';
           </div>
 
           <div data-testid="dossie-pessoa">
+            <div
+              v-if="
+                pessoa.contact_name && pessoa.contact_name !== pessoa.lead_name
+              "
+              :class="DADO"
+              data-testid="ficha-contato"
+            >
+              <span class="text-n-slate-9">{{ $t('RAMON.DRAWER.NAME') }}</span>
+              <span class="text-right text-n-slate-12">
+                {{ pessoa.contact_name }}
+              </span>
+            </div>
             <div :class="DADO">
               <span class="text-n-slate-9">{{
                 $t('RAMON.FICHA.RESPONSAVEL')
@@ -783,6 +806,13 @@ const VAZIO = 'text-[13px] text-n-slate-9';
                   {{ $t('RAMON.FICHA.ESTIMATED') }}
                 </Selo>
                 {{ formatBrl(pessoa.value) }}
+                <span
+                  v-if="pessoa.probability"
+                  data-testid="ficha-probabilidade"
+                  class="text-n-slate-9"
+                >
+                  {{ `${pessoa.probability}%` }}
+                </span>
               </span>
             </div>
             <div v-if="pessoa.phone_number" :class="DADO">
@@ -834,7 +864,11 @@ const VAZIO = 'text-[13px] text-n-slate-9';
                 $t('RAMON.DRAWER.SOURCE')
               }}</span>
               <span class="text-right text-n-slate-12">
-                {{ origem.channel_label || origem.source || '—' }}
+                {{
+                  [origem.channel_label, origem.source]
+                    .filter(Boolean)
+                    .join(' · ') || '—'
+                }}
               </span>
             </div>
             <p
