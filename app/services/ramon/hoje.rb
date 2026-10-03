@@ -11,6 +11,10 @@ class Ramon::Hoje
   private
 
   def blocos(papel)
-    papel == 'gestor' ? Ramon::Hoje::Gestor.new(account: account).perform : {}
+    case papel
+    when 'gestor' then Ramon::Hoje::Gestor.new(account: account).perform
+    when 'recepcao', 'advogada' then {}
+    else Ramon::Hoje::Comercial.new(account: account, user: user, papel: papel).perform
+    end
   end
 end
