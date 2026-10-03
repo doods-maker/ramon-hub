@@ -26,7 +26,7 @@ viu e o que respondeu; ninguém precisa de WhatsApp pessoal pra falar com colega
 | D4 | Alerta vai pra **uma pessoa escolhida**; sem resposta em **3 min** → alerta volta pra quem avisou. |
 | D5 | Resposta = **texto livre**, volta pra tela da recepção. |
 | D6 | Alcance: hub **aberto em alguma aba, inclusive de fundo** — overlay + som em loop + notificação do sistema + título piscando. Push com navegador fechado = fora do escopo. |
-| D7 | Chat completo: **1:1, canal por setor (times do hub), Geral**. Só texto. |
+| D7 | Chat completo: **1:1, canal por setor (times do hub), Geral**. Só texto. **(02/10) As advogadas ficam no time `advogados`** (canal do setor = membros do time) **e continuam chamáveis sozinhas** (1:1 e destinatária da chegada são por pessoa, nunca por time). |
 | D8 | Mensagem comum de chat = **aviso discreto** (não-lido, som curto, notificação do sistema). Só chegada é alerta insistente. |
 | D9 | **Administradores leem tudo**, inclusive 1:1 — e a tela avisa isso à equipe. |
 
