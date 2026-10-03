@@ -37,6 +37,18 @@ RSpec.describe Ramon::InstagramPublisher do
     expect { pub.publicar }.to raise_error(described_class::Erro, /Invalid image/)
   end
 
+  it 'corpo não-JSON (502 HTML) vira Erro com o código HTTP, sem texto de parser' do
+    stub_request(:post, "#{g}/me/media").to_return(status: 502, body: '<html>Bad Gateway</html>')
+    expect { pub.publicar }.to raise_error(described_class::Erro, /HTTP 502/)
+  end
+
+  it 'falha no media_publish avisa que pode ter ido ao ar' do
+    stub_request(:post, "#{g}/me/media").to_return({ body: { id: 'c1' }.to_json }, { body: { id: 'c2' }.to_json }, { body: { id: 'p1' }.to_json })
+    stub_request(:get, "#{g}/p1").with(query: hash_including('fields' => 'status_code')).to_return(body: { status_code: 'FINISHED' }.to_json)
+    stub_request(:post, "#{g}/me/media_publish").to_return(status: 500, body: 'oops')
+    expect { pub.publicar }.to raise_error(described_class::Erro, /conferir no Instagram/)
+  end
+
   it 'sem token não chama a Meta' do
     expect { described_class.new(peca, token: nil).publicar }.to raise_error(described_class::Erro, /token/)
   end

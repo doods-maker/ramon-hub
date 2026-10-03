@@ -24,7 +24,7 @@ class Ramon::InstagramPublisher
 
     container = @peca.tipo == 'carrossel' ? carrossel : post('me/media', base.merge(image_url: @peca.imagens.first))['id']
     aguardar(container)
-    post('me/media_publish', creation_id: container)['id']
+    publicar_container(container)
   end
 
   def permalink(media_id)
@@ -34,6 +34,16 @@ class Ramon::InstagramPublisher
   end
 
   private
+
+  # Falha AQUI é ambígua: a Meta pode ter publicado e só perdemos a resposta.
+  def publicar_container(container)
+    id = post('me/media_publish', creation_id: container)['id']
+    raise Erro, 'resposta sem id' if id.blank?
+
+    id
+  rescue StandardError => e
+    raise Erro, "Pode ter ido ao ar — conferir no Instagram antes de tentar de novo. (#{e.message})"
+  end
 
   def carrossel
     filhos = @peca.imagens.map { |url| post('me/media', image_url: url, is_carousel_item: true)['id'] }
@@ -67,9 +77,19 @@ class Ramon::InstagramPublisher
   end
 
   def responder(res)
-    corpo = JSON.parse(res.body.presence || '{}')
-    raise Erro, corpo.dig('error', 'message') || "HTTP #{res.code}" unless res.is_a?(Net::HTTPSuccess)
+    corpo = corpo_json(res)
+    unless res.is_a?(Net::HTTPSuccess)
+      mensagem = corpo.is_a?(Hash) && corpo['error'].is_a?(Hash) ? corpo['error']['message'] : nil
+      raise Erro, mensagem.presence || "HTTP #{res.code}"
+    end
+    raise Erro, 'Resposta inválida da Meta' unless corpo.is_a?(Hash)
 
     corpo
+  end
+
+  def corpo_json(res)
+    JSON.parse(res.body.presence || '{}')
+  rescue JSON::ParserError
+    nil
   end
 end
