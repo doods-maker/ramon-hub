@@ -17,6 +17,9 @@ import CustomBrandPolicyWrapper from '../../components/CustomBrandPolicyWrapper.
 
 defineProps({
   isCollapsed: { type: Boolean, default: false },
+  // FORK(ramon): menu único mostra o papel no lugar do e-mail, avatar menor
+  subtitle: { type: String, default: '' },
+  avatarSize: { type: Number, default: 32 },
 });
 
 const emit = defineEmits(['close', 'openKeyShortcutModal']);
@@ -140,7 +143,7 @@ const allowedMenuItems = computed(() => {
         @click="toggle"
       >
         <Avatar
-          :size="32"
+          :size="avatarSize"
           :name="currentUser.available_name"
           :src="currentUser.avatar_url"
           :status="currentUserAvailability"
@@ -151,7 +154,7 @@ const allowedMenuItems = computed(() => {
             {{ currentUser.available_name }}
           </div>
           <div class="text-xs truncate text-n-slate-11">
-            {{ currentUser.email }}
+            {{ subtitle || currentUser.email }}
           </div>
         </div>
       </button>

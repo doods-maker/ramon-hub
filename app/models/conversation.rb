@@ -61,6 +61,7 @@ class Conversation < ApplicationRecord
   include SortHandler
   include PushDataHelper
   include ConversationMuteHelpers
+  include RamonConversa # FORK(ramon)
 
   validates :account_id, presence: true
   validates :inbox_id, presence: true

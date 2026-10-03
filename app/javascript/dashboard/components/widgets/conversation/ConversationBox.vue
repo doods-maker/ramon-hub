@@ -96,12 +96,13 @@ export default {
       'border-l rtl:border-l-0 rtl:border-r border-n-weak': !isOnExpandedLayout,
     }"
   >
+    <!-- FORK(ramon): sem o !pt-2 — o cabeçalho v2 tem altura fixa (h-14) -->
     <ConversationHeader
       v-if="currentChat.id"
       :chat="currentChat"
       :show-back-button="isOnExpandedLayout && !isInboxView"
       :class="{
-        'border-b border-b-n-weak !pt-2': !dashboardApps.length,
+        'border-b border-b-n-weak': !dashboardApps.length,
       }"
     />
     <woot-tabs

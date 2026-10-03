@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import LeadPanelBody from 'dashboard/routes/dashboard/ramon/components/lead/LeadPanelBody.vue';
+import ClientePanel from './ClientePanel.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -12,18 +13,13 @@ defineOptions({ name: 'LeadConversationPanel' });
 const store = useStore();
 const leadByConv = useMapGetter('leads/getLeadByConversationId');
 const theses = useMapGetter('theses/getTheses');
-const currentChat = useMapGetter('getSelectedChat');
 const lead = computed(() => leadByConv.value(Number(props.conversationId)));
 
-// Caixa do escritório: conversa fora do funil. O botão de encaminhar só
-// aparece enquanto a conversa está na triagem da Recepção (sem dono e sem
-// time) — decisões do Eduardo 28/08 e 02/10/2026 (ADR 0004).
+// Caixa do escritório: conversa fora do funil → painel do cliente (ADVBOX +
+// Atribuir a…). O encaminhar ao comercial só aparece na triagem da Recepção
+// (sem dono e sem time) — decisões do Eduardo 28/08 e 02/10/2026 (ADR 0004).
 const semLead = ref(false);
 const encaminhando = ref(false);
-const naRecepcao = computed(() => {
-  const meta = currentChat.value?.meta || {};
-  return !meta.team && !meta.assignee;
-});
 
 const ensureFailed = ref(false);
 const ensure = async () => {
@@ -68,7 +64,11 @@ onMounted(() => {
   >
     <div class="flex items-center gap-2 border-b border-n-weak px-3 py-2">
       <span class="text-sm font-semibold text-n-slate-12">
-        {{ $t('RAMON.LEAD_PANEL.TITLE') }}
+        {{
+          semLead
+            ? $t('RAMON.CLIENTE_PANEL.CLIENTE')
+            : $t('RAMON.LEAD_PANEL.TITLE')
+        }}
       </span>
       <button
         class="ml-auto text-n-slate-10 hover:text-n-slate-12"
@@ -97,18 +97,12 @@ onMounted(() => {
         {{ $t('RAMON.LEAD_PANEL.RETRY') }}
       </button>
     </div>
-    <div v-else-if="semLead" class="flex-1 p-3 text-sm text-n-slate-11">
-      <p>{{ $t('RAMON.LEAD_PANEL.SEM_LEAD') }}</p>
-      <button
-        v-if="naRecepcao"
-        class="mt-2 rounded-md bg-n-iris-9 px-3 py-1.5 text-xs font-medium text-white hover:bg-n-iris-10 disabled:opacity-50"
-        data-testid="lead-panel-encaminhar-comercial"
-        :disabled="encaminhando"
-        @click="encaminhar"
-      >
-        {{ $t('RAMON.LEAD_PANEL.ENCAMINHAR_COMERCIAL') }}
-      </button>
-    </div>
+    <ClientePanel
+      v-else-if="semLead"
+      :conversation-id="conversationId"
+      :encaminhando="encaminhando"
+      @encaminhar="encaminhar"
+    />
     <div
       v-else
       class="flex items-center gap-2 flex-1 p-3 text-sm text-n-slate-10"

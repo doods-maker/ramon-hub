@@ -103,18 +103,14 @@ const confirmCustom = () => {
       :title="t('RAMON.KANBAN.BELL.TITLE')"
       :class="
         props.label
-          ? 'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-n-slate-11 bg-n-alpha-2 hover:bg-n-alpha-3 hover:text-n-iris-11'
+          ? 'inline-flex items-center hover:text-n-blue-11'
           : 'flex items-center justify-center size-6 rounded-full text-n-slate-9 hover:text-n-iris-11 hover:bg-n-alpha-2'
       "
       @click.stop="toggle"
     >
-      <span
-        :class="
-          props.label
-            ? 'i-lucide-bell-plus size-3'
-            : 'i-lucide-bell-plus size-4'
-        "
-      />{{ props.label }}
+      <!-- com rótulo vira link de texto do card (mockup v2 "Follow-up") -->
+      <template v-if="props.label">{{ props.label }}</template>
+      <span v-else class="i-lucide-bell-plus size-4" />
     </button>
     <Teleport to="body">
       <div

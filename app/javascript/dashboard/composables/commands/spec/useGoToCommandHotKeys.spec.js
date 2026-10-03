@@ -162,6 +162,14 @@ describe('useGoToCommandHotKeys', () => {
     });
   });
 
+  it('busca nas conversas e mensagens leva à rota de busca', () => {
+    const { goToCommandHotKeys } = useGoToCommandHotKeys();
+    const busca = goToCommandHotKeys.value.find(c => c.id === 'goto_search');
+    expect(busca.section).toBe('COMMAND_BAR.SECTIONS.SEARCH');
+    busca.handler();
+    expect(useRouter().push).toHaveBeenCalledWith('accounts/1/search');
+  });
+
   it('should include icon for each command', () => {
     const { goToCommandHotKeys } = useGoToCommandHotKeys();
     goToCommandHotKeys.value.forEach(command => {
