@@ -6,7 +6,7 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import { stripCpf } from '../../helpers/cpf';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { ACAO, CARTAO, TITULO, SELECT } from '../../helpers/ui';
+import { CARTAO, TITULO, SELECT } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 const emit = defineEmits(['completeData']);
@@ -170,12 +170,7 @@ const copyLink = async () => {
           data-testid="zapsign-link"
           class="inline-flex"
         >
-          <Button
-            sm
-            tabindex="-1"
-            :class="ACAO"
-            :label="$t('RAMON.ZAPSIGN.OPEN')"
-          />
+          <Button sm tabindex="-1" :label="$t('RAMON.ZAPSIGN.OPEN')" />
         </a>
         <Button
           data-testid="zapsign-copy"
@@ -190,7 +185,6 @@ const copyLink = async () => {
         v-else
         data-testid="zapsign-generate"
         sm
-        :class="ACAO"
         :disabled="loading || missing.length > 0 || !templateId"
         :label="
           loading

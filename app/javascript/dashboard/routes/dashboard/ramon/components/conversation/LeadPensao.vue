@@ -5,7 +5,6 @@ import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import {
-  ACAO,
   AVISO,
   CAMPO,
   CARTAO,
@@ -246,7 +245,6 @@ const isCessaDict = v => v !== null && typeof v === 'object';
       data-testid="pensao-calcular"
       :disabled="!dataObito || !dependentes.length || isLoading"
       sm
-      :class="ACAO"
       class="self-start"
       :label="
         isLoading

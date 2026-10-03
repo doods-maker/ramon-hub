@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { ACAO, CAMPO, CARTAO, ROTULO, SELECT } from '../../helpers/ui';
+import { CAMPO, CARTAO, ROTULO, SELECT } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -88,7 +88,6 @@ const retry = () => calcular();
       data-testid="maternidade-calcular"
       :disabled="!dataEvento || isLoading"
       sm
-      :class="ACAO"
       class="self-start"
       :label="
         isLoading

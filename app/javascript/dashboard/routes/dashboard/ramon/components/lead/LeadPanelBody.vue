@@ -40,7 +40,6 @@ import {
   CHIP,
   TOM,
   AVISO,
-  ACAO,
 } from '../../helpers/ui';
 
 const props = defineProps({
@@ -362,7 +361,6 @@ const discard = async () => {
         :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
       >
         <Button
-          :class="ACAO"
           data-testid="lead-abrir-ficha"
           sm
           icon="i-lucide-contact"
@@ -458,7 +456,6 @@ const discard = async () => {
             @click="skipWonStage"
           />
           <Button
-            :class="ACAO"
             data-testid="stage-won-save"
             sm
             :label="$t('RAMON.FUNIL.WON.SAVE')"
@@ -472,7 +469,6 @@ const discard = async () => {
       <div class="flex gap-1.5 mt-3">
         <Button
           v-if="lead.conversation_id && !inConversation"
-          :class="ACAO"
           data-testid="panel-whatsapp"
           sm
           icon="i-lucide-message-square"
@@ -489,7 +485,6 @@ const discard = async () => {
           class="flex flex-1 min-w-0"
         >
           <Button
-            :class="ACAO"
             sm
             tabindex="-1"
             icon="i-lucide-message-square"
@@ -545,7 +540,6 @@ const discard = async () => {
             @click="taskFormOpen = false"
           />
           <Button
-            :class="ACAO"
             data-testid="panel-task-save"
             sm
             :label="$t('RAMON.FUNIL.SAVE')"

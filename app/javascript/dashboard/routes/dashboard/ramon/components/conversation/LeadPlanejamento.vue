@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { ACAO, CARTAO, CARTAO_STATUS, FILETE } from '../../helpers/ui';
+import { CARTAO, CARTAO_STATUS, FILETE } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -103,7 +103,6 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
       data-testid="planejamento-planejar"
       :disabled="ocupado"
       sm
-      :class="ACAO"
       class="self-start"
       :label="
         isLoading

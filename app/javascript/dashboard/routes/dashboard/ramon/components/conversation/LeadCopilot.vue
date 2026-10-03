@@ -7,7 +7,7 @@ import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { ACAO, CARTAO, TITULO } from '../../helpers/ui';
+import { CARTAO, TITULO } from '../../helpers/ui';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -71,7 +71,6 @@ const generate = async mode => {
       <Button
         data-testid="copilot-suggest"
         sm
-        :class="ACAO"
         icon="i-lucide-sparkles"
         :disabled="Boolean(loading)"
         :label="

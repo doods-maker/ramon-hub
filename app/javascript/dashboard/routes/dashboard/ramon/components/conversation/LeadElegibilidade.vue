@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { ACAO, CARTAO, CARTAO_STATUS, FILETE } from '../../helpers/ui';
+import { CARTAO, CARTAO_STATUS, FILETE } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -105,7 +105,6 @@ const cenarioTexto = cenario =>
       data-testid="eleg-analisar"
       :disabled="!der || ocupado"
       sm
-      :class="ACAO"
       class="self-start"
       :label="
         isLoading
@@ -350,7 +349,6 @@ const cenarioTexto = cenario =>
           data-testid="eleg-simular"
           :disabled="ocupado"
           sm
-          :class="ACAO"
           class="self-start"
           :label="
             simulando

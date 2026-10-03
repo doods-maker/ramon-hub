@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import { ACAO, CAMPO, CARTAO, ROTULO, SECAO, SELECT } from '../../helpers/ui';
+import { CAMPO, CARTAO, ROTULO, SECAO, SELECT } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -360,7 +360,6 @@ const baixarPdf = async () => {
       data-testid="liq-run"
       :disabled="!canCalcular || isLoading"
       sm
-      :class="ACAO"
       :label="
         isLoading
           ? $t('RAMON.LIQUIDACAO.CALCULANDO')

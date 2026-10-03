@@ -21,7 +21,6 @@ import {
   TEXTAREA,
   TOM,
   AVISO,
-  ACAO,
 } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
@@ -466,7 +465,6 @@ const toggleConsent = () =>
           @click="skipWonStage"
         />
         <Button
-          :class="ACAO"
           data-testid="stage-won-save"
           sm
           :label="$t('RAMON.FUNIL.WON.SAVE')"

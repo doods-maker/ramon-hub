@@ -5,7 +5,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import TaskBellMenu from '../kanban/TaskBellMenu.vue';
-import { ACAO, CARTAO_STATUS, FILETE, SOBRESCRITO } from '../../helpers/ui';
+import { CARTAO_STATUS, FILETE, SOBRESCRITO } from '../../helpers/ui';
 
 const props = defineProps({ leadId: { type: Number, required: true } });
 
@@ -158,7 +158,6 @@ const reschedule = ({ dueAt }) =>
     </router-link>
     <div class="flex items-center gap-1.5 mt-2.5">
       <Button
-        :class="ACAO"
         data-testid="next-action-done"
         sm
         :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.DONE')"

@@ -1,11 +1,6 @@
 // Kit visual do painel do lead (padrão único, 03/10/2026). Botão = components-next
 // Button; o resto (cartão, campo, aba, chip) vem daqui — nunca classe à mão.
 
-// Ação primária = AZUL (regra de cores 03/10). O Button "blue" do core pinta
-// n-brand, que neste fork é o bronze da banca — ACAO repinta o solid de azul.
-export const ACAO =
-  '!bg-n-blue-9 hover:enabled:!bg-n-blue-10 focus-visible:!bg-n-blue-10';
-
 // Cartão: um estilo só. Dentro de cartão não há cartão — vira SECAO.
 export const CARTAO = 'rounded-xl border border-n-weak bg-n-solid-1 p-3';
 // Cartão de status: CARTAO + filete colorido à esquerda (somar a cor da borda).

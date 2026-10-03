@@ -9,7 +9,6 @@ import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { ACAO } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -48,7 +47,7 @@ const marcar = async resultado => {
 // escolha marcada = primário azul; a outra = secundário
 const variante = ativo =>
   ativo
-    ? { variant: 'solid', color: 'blue', class: ACAO }
+    ? { variant: 'solid', color: 'blue' }
     : { variant: 'faded', color: 'slate' };
 </script>
 

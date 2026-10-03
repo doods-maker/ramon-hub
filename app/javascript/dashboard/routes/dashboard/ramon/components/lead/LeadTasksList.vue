@@ -6,7 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import TaskBellMenu from '../kanban/TaskBellMenu.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import { ACAO, SECAO, TITULO, CAMPO } from '../../helpers/ui';
+import { SECAO, TITULO, CAMPO } from '../../helpers/ui';
 
 const props = defineProps({ leadId: { type: Number, required: true } });
 
@@ -203,7 +203,6 @@ const addTask = async () => {
           @click="adding = false"
         />
         <Button
-          :class="ACAO"
           data-testid="task-new-save"
           sm
           :label="$t('RAMON.FUNIL.SAVE')"

@@ -4,7 +4,6 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import LeadPanelBody from 'dashboard/routes/dashboard/ramon/components/lead/LeadPanelBody.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
-import { ACAO } from '../../helpers/ui';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -110,7 +109,6 @@ onMounted(() => {
         data-testid="lead-panel-encaminhar-comercial"
         sm
         class="mt-2"
-        :class="ACAO"
         :label="$t('RAMON.LEAD_PANEL.ENCAMINHAR_COMERCIAL')"
         :disabled="encaminhando"
         @click="encaminhar"

@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
 import {
-  ACAO,
   ABA,
   ABA_ATIVA,
   ABA_INATIVA,
@@ -762,7 +761,6 @@ const aba = ref(props.inicial?.tipo || 'painel');
         data-testid="sim-run"
         :disabled="!canSimulate || isLoading"
         sm
-        :class="ACAO"
         :label="
           isLoading
             ? $t('RAMON.SIMULADOR.SIMULANDO')
@@ -1039,7 +1037,6 @@ const aba = ref(props.inicial?.tipo || 'painel');
         data-testid="sim-painel-run"
         :disabled="!canPainel || painelLoading"
         sm
-        :class="ACAO"
         :label="
           painelLoading
             ? $t('RAMON.SIMULADOR.PAINEL_CALCULANDO')
