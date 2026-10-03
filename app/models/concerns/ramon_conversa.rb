@@ -11,8 +11,9 @@ module RamonConversa
 
   private
 
+  # "Devolver" (tira responsável e time) não é atribuição: não sobrescreve o registro.
   def registrar_atribuicao
-    return if Current.user.blank?
+    return if Current.user.blank? || (assignee_id.blank? && team_id.blank?)
 
     self.additional_attributes = (additional_attributes || {}).merge(
       'ramon_atribuicao' => { 'por_id' => Current.user.id, 'por_nome' => Current.user.name, 'em' => Time.current.iso8601 }

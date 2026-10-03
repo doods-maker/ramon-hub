@@ -1555,6 +1555,29 @@
         "EVENTO": "Event",
         "VALOR": "Amount"
       }
+    },
+    "CLIENTE_PANEL": {
+      "ATRIBUIDA_POR": "Assigned to you by {nome} · {hora}",
+      "DEVOLVER": "Give back",
+      "ATRIBUIR": "Assign to…",
+      "DO_PROCESSO": "from the case",
+      "CONTROLADORIA": "Controllership",
+      "CONTROLADORIA_COM": "Controllership ({nome})",
+      "CLIENTE_DESDE": "Client since {data}",
+      "CLIENTE": "Client",
+      "NUMERO_NOVO": "New number",
+      "NUMERO_NOVO_APOIO": "This number is not in the Client Panel.",
+      "ADVOGADA": "Lawyer",
+      "TELEFONE": "Phone",
+      "COMPROMISSO": {
+        "pericia": "Medical exam",
+        "audiencia": "Hearing"
+      },
+      "PROCESSOS": "Cases in ADVBOX",
+      "ULTIMO_ANDAMENTO": "Last update",
+      "VER_ADVBOX": "Open in ADVBOX",
+      "CARREGANDO": "Loading client…",
+      "ERRO": "Could not load the client."
     }
   },
   "CAPTAIN_RAMON": {

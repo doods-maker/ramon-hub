@@ -27,6 +27,14 @@ RSpec.describe RamonConversa do
     expect(conversation.reload.additional_attributes['ramon_atribuicao']).to be_nil
   end
 
+  it 'devolver (tirar responsável e time) não sobrescreve o registro' do
+    Current.user = gabriela
+    conversation.update!(assignee: tamires)
+    Current.user = tamires
+    conversation.update!(assignee: nil)
+    expect(conversation.reload.additional_attributes['ramon_atribuicao']).to include('por_nome' => 'Gabriela')
+  end
+
   it 'expõe o lead da conversa' do
     lead = create(:lead, account: account, conversation: conversation)
     expect(conversation.reload.ramon_lead).to eq(lead)

@@ -1560,6 +1560,29 @@
         "EVENTO": "Evento",
         "VALOR": "Valor"
       }
+    },
+    "CLIENTE_PANEL": {
+      "ATRIBUIDA_POR": "Atribuída a você por {nome} · {hora}",
+      "DEVOLVER": "Devolver",
+      "ATRIBUIR": "Atribuir a…",
+      "DO_PROCESSO": "do processo",
+      "CONTROLADORIA": "Controladoria",
+      "CONTROLADORIA_COM": "Controladoria ({nome})",
+      "CLIENTE_DESDE": "Cliente desde {data}",
+      "CLIENTE": "Cliente",
+      "NUMERO_NOVO": "Número novo",
+      "NUMERO_NOVO_APOIO": "Este número não está no Painel do Cliente.",
+      "ADVOGADA": "Advogada",
+      "TELEFONE": "Telefone",
+      "COMPROMISSO": {
+        "pericia": "Perícia",
+        "audiencia": "Audiência"
+      },
+      "PROCESSOS": "Processos no ADVBOX",
+      "ULTIMO_ANDAMENTO": "Último andamento",
+      "VER_ADVBOX": "Ver no ADVBOX",
+      "CARREGANDO": "Carregando cliente…",
+      "ERRO": "Não foi possível carregar o cliente."
     }
   },
   "CAPTAIN_RAMON": {
