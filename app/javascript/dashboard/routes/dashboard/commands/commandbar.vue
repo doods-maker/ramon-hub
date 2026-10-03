@@ -24,6 +24,8 @@ import {
   CMD_BULK_ACTION_SNOOZE_CONVERSATION,
 } from 'dashboard/helper/commandbar/events';
 import { emitter } from 'shared/helpers/mitt';
+import { useEmitter } from 'dashboard/composables/emitter';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const store = useStore();
 const { t, tm } = useI18n();
@@ -214,6 +216,9 @@ watchEffect(() => {
     ninjakeys.value.data = hotKeys.value;
   }
 });
+
+// FORK(ramon): o campo "Buscar" do menu único abre a command bar.
+useEmitter(BUS_EVENTS.OPEN_COMMAND_BAR, () => ninjakeys.value?.open());
 
 onMounted(() => {
   setCommandBarData();

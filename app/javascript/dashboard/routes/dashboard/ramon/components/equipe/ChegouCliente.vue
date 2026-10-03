@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useChegadasStore } from 'dashboard/stores/chegadas';
@@ -57,6 +57,11 @@ const abrir = async () => {
     advboxFora.value = true;
   }
 };
+
+watch(
+  () => chegadas.painelPedido,
+  () => chegadas.podeAvisar && abrir()
+);
 
 const usarAgenda = item => {
   form.value = {
@@ -120,16 +125,6 @@ const estados = computed(() => ({
 <!-- eslint-disable-next-line vue/no-root-v-if -->
 <template>
   <div v-if="chegadas.podeAvisar" class="contents">
-    <button
-      type="button"
-      data-testid="chegou-cliente-botao"
-      class="fixed bottom-4 z-50 flex items-center gap-2 rounded-full bg-n-brand px-4 py-2 font-medium text-white shadow-lg ltr:right-20 rtl:left-20"
-      @click="abrir"
-    >
-      <span class="i-lucide-bell-ring size-4" />
-      {{ t('RAMON.CHEGADA.BOTAO') }}
-    </button>
-
     <Dialog
       ref="dialogRef"
       :title="t('RAMON.CHEGADA.TITULO')"

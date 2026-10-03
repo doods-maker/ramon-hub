@@ -58,4 +58,11 @@ describe('useChegadasStore', () => {
     expect(store.podeAvisar).toBe(true);
     expect(store.alertasPara(20)).toHaveLength(1);
   });
+
+  it('pedirPainel incrementa o pedido', () => {
+    const store = useChegadasStore();
+    expect(store.painelPedido).toBe(0);
+    store.pedirPainel();
+    expect(store.painelPedido).toBe(1);
+  });
 });

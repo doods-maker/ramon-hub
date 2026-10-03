@@ -18,24 +18,45 @@ vi.mock('dashboard/api/ramonCalculos', () => ({
   default: { advboxCustomers: vi.fn() },
 }));
 
+const dialogOpen = vi.hoisted(() => vi.fn());
+
 // O Dialog real importa CSS (postcss) que não roda no vitest — troca pelo stub.
 vi.mock('dashboard/components-next/dialog/Dialog.vue', () => ({
   default: {
     template: `<div><slot /><button data-testid="confirmar" @click="$emit('confirm')" /></div>`,
-    methods: { open() {}, close() {} },
+    methods: { open: dialogOpen, close() {} },
   },
 }));
 
 const montar = () => mount(ChegouCliente);
 
 describe('ChegouCliente.vue', () => {
-  beforeEach(() => setActivePinia(createPinia()));
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    vi.clearAllMocks();
+  });
 
-  it('some para quem não pode avisar', () => {
+  it('some para quem não pode avisar', async () => {
     const wrapper = montar();
-    expect(wrapper.find('[data-testid="chegou-cliente-botao"]').exists()).toBe(
-      false
-    );
+    useChegadasStore().pedirPainel();
+    await flushPromises();
+    expect(wrapper.find('[data-testid="chegada-nome"]').exists()).toBe(false);
+    expect(dialogOpen).not.toHaveBeenCalled();
+  });
+
+  it('abre o painel quando o menu pede', async () => {
+    ChegadasAPI.agenda.mockResolvedValue({ data: { payload: [] } });
+    useChegadasStore().podeAvisar = true;
+    montar();
+    useChegadasStore().pedirPainel();
+    await flushPromises();
+    expect(dialogOpen).toHaveBeenCalled();
+  });
+
+  it('não tem mais botão flutuante', () => {
+    useChegadasStore().podeAvisar = true;
+    const wrapper = montar();
+    expect(wrapper.find('.fixed.bottom-4').exists()).toBe(false);
   });
 
   it('clicar em quem vem hoje preenche cliente e sugere quem atende', async () => {
@@ -55,7 +76,7 @@ describe('ChegouCliente.vue', () => {
     });
     useChegadasStore().podeAvisar = true;
     const wrapper = montar();
-    await wrapper.find('[data-testid="chegou-cliente-botao"]').trigger('click');
+    useChegadasStore().pedirPainel();
     await flushPromises();
     await wrapper.find('[data-testid="agenda-item"]').trigger('click');
 
@@ -71,7 +92,7 @@ describe('ChegouCliente.vue', () => {
     ChegadasAPI.agenda.mockRejectedValue(new Error('503'));
     useChegadasStore().podeAvisar = true;
     const wrapper = montar();
-    await wrapper.find('[data-testid="chegou-cliente-botao"]').trigger('click');
+    useChegadasStore().pedirPainel();
     await flushPromises();
     expect(wrapper.text()).toContain('RAMON.CHEGADA.ADVBOX_FORA');
   });
@@ -81,7 +102,7 @@ describe('ChegouCliente.vue', () => {
     ChegadasAPI.create.mockRejectedValue(new Error('422'));
     useChegadasStore().podeAvisar = true;
     const wrapper = montar();
-    await wrapper.find('[data-testid="chegou-cliente-botao"]').trigger('click');
+    useChegadasStore().pedirPainel();
     await flushPromises();
     await wrapper
       .findAll('button')
