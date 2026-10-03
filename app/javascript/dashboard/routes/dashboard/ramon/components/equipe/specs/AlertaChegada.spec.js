@@ -87,4 +87,20 @@ describe('AlertaChegada.vue', () => {
     );
     expect(wrapper.text()).toContain('RAMON.CHEGADA.ENTENDI');
   });
+
+  it('escalar a mesma chegada não apaga a resposta digitada', async () => {
+    const wrapper = mount(AlertaChegada);
+    await flushPromises();
+    const store = useChegadasStore();
+    store.upsert(chegada(4));
+    await flushPromises();
+    await wrapper.find('[data-testid="chegada-resposta"]').setValue('já vou');
+    play.mockClear();
+    store.upsert(chegada(4, { estado: 'escalado' }));
+    await flushPromises();
+    expect(wrapper.find('[data-testid="chegada-resposta"]').element.value).toBe(
+      'já vou'
+    );
+    expect(play).not.toHaveBeenCalled();
+  });
 });

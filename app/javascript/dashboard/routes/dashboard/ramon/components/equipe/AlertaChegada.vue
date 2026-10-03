@@ -33,12 +33,13 @@ const notificarSistema = chegada => {
   if (!('Notification' in window) || Notification.permission !== 'granted')
     return;
   notificados.add(chegada.id);
-  const chave =
+  const params = { cliente: chegada.cliente_nome };
+  const titulo =
     chegada.destinatario.id === userId.value
-      ? 'RAMON.CHEGADA.NOTIF_CHEGOU'
-      : 'RAMON.CHEGADA.NOTIF_SEM_RESPOSTA';
+      ? t('RAMON.CHEGADA.NOTIF_CHEGOU', params)
+      : t('RAMON.CHEGADA.NOTIF_SEM_RESPOSTA', params);
   // eslint-disable-next-line no-new
-  new Notification(t(chave, { cliente: chegada.cliente_nome }), {
+  new Notification(titulo, {
     body: chegada.motivo || '',
     requireInteraction: true,
     tag: `chegada-${chegada.id}-${chegada.estado}`,
@@ -69,20 +70,24 @@ const parar = () => {
   pararPiscar();
 };
 
+// Só reage à troca da 1ª da fila (id), não a upsert do mesmo item (ex.:
+// escalou) — senão apagaria a resposta digitada e reiniciaria o toque.
 watch(
-  atual,
-  chegada => {
-    if (!chegada) {
+  () => atual.value?.id,
+  id => {
+    if (id === undefined) {
       parar();
       return;
     }
     resposta.value = '';
     ringtone.play().catch(() => {});
-    notificarSistema(chegada);
     comecarPiscar();
   },
   { immediate: true }
 );
+
+// Notifica todas as pendentes (a fila pode crescer com a aba em segundo plano).
+watch(alertas, lista => lista.forEach(notificarSistema), { immediate: true });
 
 const enviar = async () => {
   if (!resposta.value.trim() || enviando.value) return;
@@ -97,6 +102,7 @@ const enviar = async () => {
 // Navegador só pede permissão com gesto do usuário: no 1º clique em qualquer
 // lugar do hub, pergunta (uma vez). Vale pra todo mundo, não só a recepção.
 const pedirPermissao = () => {
+  if (atual.value) ringtone.play().catch(() => {}); // autoplay bloqueado antes do 1º clique
   if ('Notification' in window && Notification.permission === 'default')
     Notification.requestPermission();
 };
