@@ -24,6 +24,11 @@ class Ramon::SemanaAdvboxService
            .sort_by { |l| [l[:data], l[:hora].to_s] }
   end
 
+  # Painel do cliente na conversa (Ramon::ClienteDaConversa): mesmo cache da semana.
+  def tarefas_do_processo(numero)
+    tarefas.select { |tarefa| tarefa.dig('lawsuit', 'process_number') == numero }.map { |tarefa| linha(tarefa) }
+  end
+
   private
 
   def tarefas
