@@ -1,4 +1,6 @@
 class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
+  ASSIGNMENT_KEYS = %w[sdr_id closer_id].freeze
+
   before_action :current_account
   before_action :fetch_lead, except: [:index, :create, :for_conversation, :encaminhar_comercial]
   before_action :check_authorization
@@ -16,11 +18,13 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
       return
     end
 
-    @lead = Current.account.leads.create!(permitted_params)
+    attrs = gestor? ? permitted_params : permitted_params.except(*ASSIGNMENT_KEYS)
+    @lead = Current.account.leads.create!(attrs)
   end
 
   def update
     ensure_lost_reason!
+    ensure_assignment_permission! unless performed?
     return if performed?
 
     @lead.update!(merged_params)
@@ -41,6 +45,15 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def follow_up_draft
     Ramon::FollowUpDraftJob.perform_later(@lead.id)
     head :accepted
+  end
+
+  # Closer registra a reunião: qualificada ou não (base do prêmio do SDR).
+  def reuniao
+    resultado = params[:resultado].to_s
+    return render json: { error: 'RESULTADO_INVALIDO' }, status: :unprocessable_entity unless Lead::REUNIAO_RESULTADOS.include?(resultado)
+
+    @lead.registrar_reuniao!(resultado, Current.user)
+    render :show
   end
 
   def for_conversation
@@ -68,6 +81,11 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   private
+
+  # reuniao? depende do lead (quem é o Closer dele) — o resto autoriza pela classe.
+  def check_authorization
+    super(action_name == 'reuniao' ? @lead : nil)
+  end
 
   def find_readonly_lead_for(conversation)
     lead = Current.account.leads.find_by(conversation_id: conversation.id)
@@ -154,6 +172,18 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     return if permitted_params[:lost_reason].presence || @lead.lost_reason.presence
 
     render json: { error: 'LOST_REASON_REQUIRED' }, status: :unprocessable_entity
+  end
+
+  # Papéis (playbook §13): só o gestor troca SDR/Closer — o normal é a atribuição automática.
+  def ensure_assignment_permission!
+    return if gestor?
+    return if ASSIGNMENT_KEYS.none? { |key| permitted_params.key?(key) && permitted_params[key].to_s != @lead[key].to_s }
+
+    render json: { error: 'ASSIGNMENT_FORBIDDEN' }, status: :forbidden
+  end
+
+  def gestor?
+    Current.account_user&.administrator?
   end
 
   def search_leads(leads, query)

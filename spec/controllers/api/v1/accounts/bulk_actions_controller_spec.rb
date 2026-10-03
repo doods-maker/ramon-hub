@@ -304,10 +304,11 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
 
       it 'enqueues Ramon::LeadBulkActionJob for Lead type with the permitted payload' do
         lead = create(:lead, account: account)
+        admin = create(:user, account: account, role: :administrator)
 
         expect do
           post "/api/v1/accounts/#{account.id}/bulk_actions",
-               headers: agent.create_new_auth_token,
+               headers: admin.create_new_auth_token,
                params: {
                  type: 'Lead',
                  ids: [lead.id],
@@ -317,7 +318,7 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
                }
         end.to have_enqueued_job(Ramon::LeadBulkActionJob).with(
           account.id,
-          agent.id,
+          admin.id,
           hash_including(
             'ids' => [lead.id.to_s],
             'fields' => { 'sdr_id' => agent_1.id.to_s },
@@ -327,6 +328,18 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
         )
 
         expect(response).to have_http_status(:success)
+      end
+
+      it 'agente não troca o SDR em lote (só o gestor)' do
+        lead = create(:lead, account: account)
+
+        expect do
+          post "/api/v1/accounts/#{account.id}/bulk_actions",
+               headers: agent.create_new_auth_token,
+               params: { type: 'Lead', ids: [lead.id], fields: { sdr_id: agent_1.id, lead_stage_id: 7 } }
+        end.to have_enqueued_job(Ramon::LeadBulkActionJob).with(
+          account.id, agent.id, hash_including('fields' => { 'lead_stage_id' => '7' })
+        )
       end
     end
   end

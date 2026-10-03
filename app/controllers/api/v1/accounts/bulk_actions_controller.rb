@@ -48,10 +48,12 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
   end
 
   def lead_params
+    # Papéis (playbook §13): só o gestor troca o SDR, inclusive em lote.
+    sdr_field = Current.account_user&.administrator? ? [:sdr_id] : []
     params.permit(
       :triage,
       ids: [],
-      fields: [:lead_stage_id, :sdr_id, :lost_reason],
+      fields: [:lead_stage_id, :lost_reason, *sdr_field],
       task: [:due_at, :title]
     )
   end

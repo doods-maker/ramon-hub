@@ -252,6 +252,7 @@ en:
       ramon_meeting_scheduled: 'Meeting booked with %{name}: %{quando}'
       ramon_meeting_reminder: 'Meeting with %{name} in %{label} (%{quando}) — time to confirm with the client'
       ramon_meeting_cancelled: 'Meeting with %{name} cancelled (%{quando})'
+      ramon_sla_breach: 'Lead waiting for first reply for %{minutos} min: %{name}'
     attachment: 'Attachment'
     no_content: 'No content'
   conversations:

@@ -57,6 +57,44 @@ RSpec.describe Ramon::FirstResponseSlaJob do
     expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
   end
 
+  describe 'sino (papéis)' do
+    let(:sdr) { create(:user, account: account, role: :agent) }
+    let!(:gestor) { create(:user, account: account, role: :administrator) }
+
+    it 'avisa só o SDR do lead no 1º disparo e agenda a escalada de 60 min', :aggregate_failures do
+      lead.update!(sdr_id: sdr.id)
+
+      travel_to Time.zone.parse('2026-07-23 13:00:00 UTC') do
+        conversation.update!(created_at: 5.minutes.ago)
+        expect { described_class.perform_now(conversation.id) }
+          .to have_enqueued_job(described_class).with(conversation.id, true)
+      end
+
+      expect(Notification.where(notification_type: 'ramon_sla_breach').pluck(:user_id)).to eq([sdr.id])
+    end
+
+    it 'lead sem SDR avisa os gestores' do
+      travel_to Time.zone.parse('2026-07-23 13:00:00 UTC') do
+        described_class.perform_now(conversation.id)
+      end
+
+      expect(Notification.where(notification_type: 'ramon_sla_breach').pluck(:user_id)).to eq([gestor.id])
+    end
+
+    it 'escalada vai pros gestores, sem ntfy nem nova escalada', :aggregate_failures do
+      lead.update!(sdr_id: sdr.id)
+
+      travel_to Time.zone.parse('2026-07-23 13:00:00 UTC') do
+        expect { described_class.perform_now(conversation.id, true) }.not_to have_enqueued_job(described_class)
+      end
+
+      notification = Notification.find_by(notification_type: 'ramon_sla_breach')
+      expect(notification.user_id).to eq(gestor.id)
+      expect(notification.meta['minutos']).to eq('60')
+      expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
+    end
+  end
+
   it 'conversa sem lead vinculado é no-op' do
     lead.update!(conversation_id: nil)
 

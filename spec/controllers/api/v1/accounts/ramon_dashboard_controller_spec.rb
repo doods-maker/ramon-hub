@@ -177,11 +177,11 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
       breached = create(:conversation, account: account, inbox: inbox)
       breached.update_columns(created_at: 2.hours.ago) # rubocop:disable Rails/SkipsModelValidations
       replied = create(:conversation, account: account, inbox: inbox)
-      replied.update_columns(created_at: 30.minutes.ago, first_reply_created_at: 20.minutes.ago) # rubocop:disable Rails/SkipsModelValidations
+      replied.update_columns(created_at: 30.minutes.ago, first_reply_created_at: 26.minutes.ago) # rubocop:disable Rails/SkipsModelValidations
       get url, headers: agent.create_new_auth_token, as: :json
       sla = response.parsed_body['sla_today']
       expect(sla['breached']).to eq(1)
-      expect(sla['avg_first_response_minutes']).to eq(10.0)
+      expect(sla['avg_first_response_minutes']).to eq(4.0)
     end
   end
 

@@ -34,4 +34,13 @@ class LeadPolicy < ApplicationPolicy
   def destroy?
     @account_user.administrator?
   end
+
+  # Reunião qualificada é base do prêmio do SDR (regulamento §2): quem marca é o
+  # Closer do lead (ou alguém do time closer, se o lead ainda não tem) ou o gestor.
+  def reuniao?
+    return true if @account_user.administrator?
+    return record.closer_id == @user.id if record.closer_id.present?
+
+    Ramon::Papeis.membro?(@account, @user, Ramon::Papeis::CLOSER)
+  end
 end

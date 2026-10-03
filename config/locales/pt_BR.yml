@@ -231,6 +231,7 @@ pt_BR:
       ramon_meeting_scheduled: 'Reunião marcada com %{name}: %{quando}'
       ramon_meeting_reminder: 'Reunião com %{name} em %{label} (%{quando}) — hora de confirmar com o cliente'
       ramon_meeting_cancelled: 'Reunião com %{name} cancelada (%{quando})'
+      ramon_sla_breach: 'Lead sem 1ª resposta há %{minutos} min: %{name}'
     attachment: 'Anexo'
     no_content: 'Sem conteúdo'
   conversations:

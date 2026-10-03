@@ -57,6 +57,15 @@ RSpec.describe 'Public Cal.com Webhooks API', type: :request do
         expect(task.due_at).to eq Time.zone.parse('2026-07-15T14:00:00Z')
       end
 
+      it 'atribui a reunião ao Closer do time closer quando o lead está sem Closer' do
+        closer = create(:user, account: account, role: :agent)
+        create(:team_member, team: create(:team, account: account, name: 'closer'), user: closer)
+
+        post_webhook(booking_payload)
+
+        expect(lead.reload.closer).to eq(closer)
+      end
+
       it 'registra a atividade de reunião agendada no fuso do escritório' do
         post_webhook(booking_payload)
 

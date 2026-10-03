@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadTasksList from './LeadTasksList.vue';
+import LeadReuniao from './LeadReuniao.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
@@ -14,6 +15,10 @@ import { formatCpf, stripCpf } from '../../helpers/cpf';
 const props = defineProps({ lead: { type: Object, required: true } });
 
 const store = useStore();
+// Papéis (playbook §13): só o gestor troca SDR/Closer — o normal é automático.
+const isAdmin = computed(
+  () => store.getters.getCurrentRole === 'administrator'
+);
 const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
 const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
@@ -528,7 +533,8 @@ const toggleConsent = () =>
     }}</label>
     <select
       :value="lead.sdr_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      :disabled="!isAdmin"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8 disabled:opacity-60"
       @change="
         e =>
           saveSelect('sdr_id', e.target.value ? Number(e.target.value) : null)
@@ -545,7 +551,8 @@ const toggleConsent = () =>
     }}</label>
     <select
       :value="lead.closer_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      :disabled="!isAdmin"
+      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8 disabled:opacity-60"
       @change="
         e =>
           saveSelect(
@@ -559,6 +566,8 @@ const toggleConsent = () =>
         {{ a.name }}
       </option>
     </select>
+
+    <LeadReuniao :lead="lead" />
 
     <label class="block mb-1 text-xs text-n-slate-10">
       {{ $t('RAMON.DRAWER.VALUE') }}
