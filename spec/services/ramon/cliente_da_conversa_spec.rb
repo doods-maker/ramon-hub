@@ -11,9 +11,9 @@ RSpec.describe Ramon::ClienteDaConversa do
                                             { 'data' => '2026-09-30', 'titulo' => 'Perícia designada' }] }
   end
   let(:tarefas) do
-    [{ 'date' => '2026-10-07 09:00:00', 'task' => 'ACOMPANHAR PERÍCIA', 'notes' => 'INSS Tubarão',
+    [{ 'id' => 1, 'date' => '2026-10-07 09:00:00', 'task' => 'ACOMPANHAR PERÍCIA', 'notes' => 'INSS Tubarão',
        'users' => [{ 'user_id' => 7 }], 'lawsuit' => { 'process_number' => numero } },
-     { 'date' => '2026-10-06 00:00:00', 'task' => 'LIGAR PRO CLIENTE', 'users' => [], 'lawsuit' => { 'process_number' => numero } }]
+     { 'id' => 2, 'date' => '2026-10-06 00:00:00', 'task' => 'LIGAR PRO CLIENTE', 'users' => [], 'lawsuit' => { 'process_number' => numero } }]
   end
 
   # segunda 10h em SP: fora do expediente o ADVBOX não é chamado (Ramon::AdvboxCache)
