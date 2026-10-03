@@ -632,7 +632,13 @@
       "MAIS": "more",
       "SALVAR_LEGENDA": "Save caption",
       "REFAZER": "Redo image of cards:",
-      "REFAZER_BOTAO": "Redo"
+      "REFAZER_BOTAO": "Redo",
+      "AGENDAR": "Approve and schedule",
+      "PUBLICAR_AGORA": "Publish now",
+      "AGENDADA_PARA": "Scheduled for {quando}",
+      "CANCELAR": "Cancel schedule",
+      "TENTAR_DE_NOVO": "Try again",
+      "VER_NO_INSTAGRAM": "View on Instagram"
     },
     "REUNIOES": {
       "TITLE": "Meetings",

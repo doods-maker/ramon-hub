@@ -632,7 +632,13 @@
       "MAIS": "mais",
       "SALVAR_LEGENDA": "Salvar legenda",
       "REFAZER": "Refazer imagem dos cards:",
-      "REFAZER_BOTAO": "Refazer"
+      "REFAZER_BOTAO": "Refazer",
+      "AGENDAR": "Aprovar e agendar",
+      "PUBLICAR_AGORA": "Publicar agora",
+      "AGENDADA_PARA": "Agendada para {quando}",
+      "CANCELAR": "Cancelar agendamento",
+      "TENTAR_DE_NOVO": "Tentar de novo",
+      "VER_NO_INSTAGRAM": "Ver no Instagram"
     },
     "REUNIOES": {
       "TITLE": "Reuniões",
