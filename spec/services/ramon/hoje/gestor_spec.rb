@@ -33,6 +33,16 @@ RSpec.describe Ramon::Hoje::Gestor do
     expect(hoje[:precisa]).to include(include(tipo: 'parado', count: 1, etapa: 'Novo', dias: 4))
   end
 
+  it 'ganho há +7 dias com checklist incompleto vira alerta de docs; o recente não' do
+    tese = create(:thesis, account: account)
+    create(:thesis_item, thesis: tese, section: 'documento', content: 'RG')
+    ganho = account.lead_stages.find_by(is_won: true)
+    antigo = create(:lead, account: account, lead_stage: ganho, thesis: tese)
+    antigo.update_column(:won_at, 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
+    create(:lead, account: account, lead_stage: ganho, thesis: tese)
+    expect(hoje[:precisa]).to include(include(tipo: 'docs', count: 1))
+  end
+
   it 'meta do mês = soma das metas dos closers do mês' do
     closer = create(:user, account: account)
     MetaComercial.create!(account: account, user: closer, papel: 'closer', mes: Time.find_zone!('America/Sao_Paulo').today.beginning_of_month,

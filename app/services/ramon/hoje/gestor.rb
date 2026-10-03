@@ -34,8 +34,11 @@ class Ramon::Hoje::Gestor
     { tipo: 'parado', nivel: 'warn', count: count, etapa: etapa, dias: dias }
   end
 
+  # Ganho há +7 dias sem docs completos (filtro no SQL); o checklist confere em memória
+  # (tese sem item de documento não tem o que coletar — mesma regra do Pós-venda).
   def docs
-    count = Ramon::LeadRadar.pos_venda(account)[:pendentes].count { |lead| lead.won_at < 7.days.ago }
+    ganhos = leads.where(won_at: ...7.days.ago, docs_completos_em: nil).preload(thesis: :thesis_items).to_a
+    count = ganhos.count { |lead| lead.docs_counts.then { |d| d[:received] < d[:total] } }
     { tipo: 'docs', nivel: 'warn', count: count } if count.positive?
   end
 
