@@ -6,6 +6,7 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
   before_action :current_account
   before_action :fetch_peca, except: [:index]
   before_action :check_authorization
+  before_action :recusar_se_refazendo, only: %i[agendar publicar_agora]
 
   rescue_from Peca::TransicaoInvalida do |e|
     render json: { error: "A peça mudou de etapa (#{e.message}). Recarregue a tela." }, status: :conflict
@@ -72,6 +73,12 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
   end
 
   private
+
+  def recusar_se_refazendo
+    return if @peca.refazer_cards.blank?
+
+    render json: { error: 'Há imagem sendo refeita — espere a peça voltar pra Prontas.' }, status: :conflict
+  end
 
   def fetch_peca
     @peca = Current.account.pecas.find(params[:id])

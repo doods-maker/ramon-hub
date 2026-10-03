@@ -68,6 +68,13 @@ RSpec.describe 'Ramon Conteudo API', type: :request do
       expect(peca.reload).to have_attributes(status: 'agendado', agendado_para: quando)
     end
 
+    it 'recusa agendar com imagem sendo refeita' do
+      peca.update_columns(refazer_cards: [2]) # rubocop:disable Rails/SkipsModelValidations
+      post "#{base}/#{peca.id}/agendar", params: { agendado_para: 2.days.from_now.iso8601 }, headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:conflict)
+      expect(peca.reload.status).to eq 'montado'
+    end
+
     it 'recusa horário no passado' do
       post "#{base}/#{peca.id}/agendar", params: { agendado_para: 1.hour.ago.iso8601 }, headers: admin.create_new_auth_token
       expect(response).to have_http_status(:unprocessable_entity)
