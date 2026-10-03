@@ -17,7 +17,6 @@ const emit = defineEmits([
   'openConversation',
   'openLead',
   'openDossie',
-  'cobrarDocs',
   'toggleSelect',
 ]);
 
@@ -60,7 +59,6 @@ const onChange = evt => {
         @open-conversation="id => emit('openConversation', id)"
         @open-lead="lead => emit('openLead', lead)"
         @open-dossie="lead => emit('openDossie', lead)"
-        @cobrar-docs="lead => emit('cobrarDocs', lead)"
         @toggle-select="lead => emit('toggleSelect', lead)"
       />
     </template>

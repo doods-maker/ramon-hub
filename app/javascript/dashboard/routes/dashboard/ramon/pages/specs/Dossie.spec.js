@@ -3,21 +3,14 @@ import Dossie from '../Dossie.vue';
 import LeadsAPI from 'dashboard/api/leads';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 
-const mockRoute = { params: { accountId: '1', leadId: '5' }, query: {} };
-const routerReplace = vi.fn();
 vi.mock('vue-router', () => ({
-  useRoute: () => mockRoute,
-  useRouter: () => ({ replace: routerReplace }),
-}));
-const storeDispatch = vi.fn().mockResolvedValue({});
-vi.mock('dashboard/composables/store', () => ({
-  useStore: () => ({ dispatch: storeDispatch }),
+  useRoute: () => ({ params: { accountId: '1', leadId: '5' } }),
 }));
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key, te: () => false }),
 }));
 vi.mock('dashboard/api/leads', () => ({
-  default: { getDossie: vi.fn(), portalLink: vi.fn(), update: vi.fn() },
+  default: { getDossie: vi.fn() },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('shared/helpers/clipboard', () => ({
@@ -36,28 +29,7 @@ const payload = {
     stage_color: '#aa8844',
     value: 25000,
     consent_marketing: true,
-    conversation_id: 77,
-    profissao: 'metalúrgico',
-    thesis_name: 'Auxílio-acidente',
-    sdr: 'Sara',
-    closer: null,
   },
-  esteira: [
-    { id: 1, name: 'Novo', color: '#475569', current: false },
-    { id: 2, name: 'Negociação', color: '#0369A1', current: true },
-    { id: 3, name: 'Ganhamos', color: '#15803D', is_won: true },
-  ],
-  docs: {
-    received: 1,
-    total: 2,
-    itens: [
-      { id: 11, title: 'RG e CPF', status: 'recebido' },
-      { id: 12, title: 'Laudo', status: 'pendente' },
-    ],
-  },
-  calculos: [],
-  calculos_total: 0,
-  reunioes: [],
   origem: {
     source: 'anuncio-meta-auxilio',
     channel: 'meta_ads',
@@ -94,13 +66,10 @@ const payload = {
   },
 };
 
-const mountDossie = async (data = payload) => {
-  LeadsAPI.getDossie.mockResolvedValue({ data });
+const mountDossie = async () => {
+  LeadsAPI.getDossie.mockResolvedValue({ data: payload });
   const wrapper = mount(Dossie, {
-    global: {
-      mocks: { $t: key => key },
-      stubs: { RouterLink: true, LinhaDaVida: true, WonValueModal: true },
-    },
+    global: { mocks: { $t: key => key }, stubs: { RouterLink: true } },
   });
   await flushPromises();
   return wrapper;
@@ -138,117 +107,5 @@ describe('Dossie.vue', () => {
     expect(markdown).toContain('Maria das Dores');
     expect(markdown).toContain('30% dos atrasados + 3 mensalidades');
     expect(markdown).toContain('- [ ] Confirmar reunião');
-  });
-
-  it('abas trocam, gravam ?aba= e respeitam a aba da URL', async () => {
-    const wrapper = await mountDossie();
-    expect(wrapper.find('[data-testid="dossie-timeline"]').exists()).toBe(true);
-    await wrapper.find('[data-testid="ficha-aba-documentos"]').trigger('click');
-    expect(routerReplace).toHaveBeenCalledWith({
-      query: { aba: 'documentos' },
-    });
-    expect(wrapper.findAll('[data-testid="ficha-doc-item"]')).toHaveLength(2);
-    expect(wrapper.find('[data-testid="dossie-timeline"]').exists()).toBe(
-      false
-    );
-
-    mockRoute.query = { aba: 'calculos' };
-    const outra = await mountDossie();
-    expect(outra.find('[data-testid="dossie-calculos"]').exists()).toBe(true);
-    mockRoute.query = {};
-  });
-
-  it('abas mostram as contagens de documentos e cálculos', async () => {
-    const wrapper = await mountDossie();
-    expect(
-      wrapper.find('[data-testid="ficha-aba-documentos"]').text()
-    ).toContain('1/2');
-    expect(wrapper.find('[data-testid="ficha-aba-calculos"]').text()).toContain(
-      '0'
-    );
-  });
-
-  it('subtítulo traz tese, cidade e profissão; lateral o responsável', async () => {
-    const wrapper = await mountDossie();
-    expect(wrapper.text()).toContain(
-      'Auxílio-acidente · Tubarão · metalúrgico'
-    );
-    expect(wrapper.find('[data-testid="dossie-pessoa"]').text()).toContain(
-      'Sara'
-    );
-  });
-
-  it('"Marcar como ganho" abre o modal de valor e salva na etapa de ganho', async () => {
-    const wrapper = await mountDossie();
-    await wrapper.find('[data-testid="ficha-marcar-ganho"]').trigger('click');
-    const modal = wrapper.findComponent({ name: 'WonValueModal' });
-    expect(modal.exists()).toBe(true);
-    modal.vm.$emit('confirmValue', { value: 30000 });
-    await flushPromises();
-    expect(storeDispatch).toHaveBeenCalledWith('leads/update', {
-      id: 5,
-      lead_stage_id: 3,
-      value: 30000,
-    });
-  });
-
-  it('lead sem conversa, cálculo ou reunião: botão desabilitado e abas vazias sem erro', async () => {
-    const vazio = {
-      ...payload,
-      pessoa: { ...payload.pessoa, conversation_id: null, contact_id: null },
-      calculos: [],
-      reunioes: [],
-      docs: { received: 0, total: 0, itens: [] },
-    };
-    const wrapper = await mountDossie(vazio);
-    expect(
-      wrapper
-        .find('[data-testid="ficha-open-conversation"]')
-        .attributes('disabled')
-    ).toBeDefined();
-    const vaziaEm = async aba => {
-      await wrapper.find(`[data-testid="ficha-aba-${aba}"]`).trigger('click');
-      return wrapper.find('[data-testid="ficha-aba-vazia"]').exists();
-    };
-    expect(await vaziaEm('documentos')).toBe(true);
-    expect(await vaziaEm('calculos')).toBe(true);
-    expect(await vaziaEm('reunioes')).toBe(true);
-    expect(await vaziaEm('linha_da_vida')).toBe(true);
-  });
-
-  it('lateral junta canal e origem e mostra a probabilidade; contato só se diferente', async () => {
-    const wrapper = await mountDossie({
-      ...payload,
-      pessoa: { ...payload.pessoa, probability: 75, contact_name: 'Maria D.' },
-    });
-    expect(wrapper.find('[data-testid="dossie-origem"]').text()).toContain(
-      'Meta Ads · anuncio-meta-auxilio'
-    );
-    expect(wrapper.find('[data-testid="ficha-probabilidade"]').text()).toBe(
-      '75%'
-    );
-    expect(wrapper.find('[data-testid="ficha-contato"]').text()).toContain(
-      'Maria D.'
-    );
-    const igual = await mountDossie();
-    expect(igual.find('[data-testid="ficha-contato"]').exists()).toBe(false);
-  });
-
-  it('Cobrar pendentes copia o rascunho e marca solicitados pelo store', async () => {
-    storeDispatch.mockClear();
-    const wrapper = await mountDossie();
-    await wrapper.find('[data-testid="ficha-aba-documentos"]').trigger('click');
-    expect(wrapper.find('[data-testid="ficha-docs-barra"]').exists()).toBe(
-      true
-    );
-    await wrapper.find('[data-testid="ficha-cobrar"]').trigger('click');
-    await flushPromises();
-    expect(copyTextToClipboard).toHaveBeenCalledWith(
-      expect.stringContaining('RAMON.DOCS.DRAFT.GREETING')
-    );
-    expect(storeDispatch).toHaveBeenCalledWith('leads/update', {
-      id: 5,
-      custom_attributes: { doc_status: { 12: 'solicitado' } },
-    });
   });
 });

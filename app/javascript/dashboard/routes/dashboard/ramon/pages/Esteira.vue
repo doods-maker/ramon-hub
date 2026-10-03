@@ -232,7 +232,7 @@ const openConversation = () => {
 };
 
 const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
-const exitFocus = () => router.push(accountScopedRoute('ramon_painel'));
+const exitFocus = () => router.push(accountScopedRoute('ramon_index'));
 
 // Atalhos do Modo Foco (mudos em campo focado — o composable cuida disso;
 // a página não tem modais). isActing segue guardando o duplo-acionamento.

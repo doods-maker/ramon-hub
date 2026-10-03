@@ -19,18 +19,14 @@ const { variant, orientation, inReplyTo, shouldGroupWithNext } =
   useMessageContext();
 const { t } = useI18n();
 
-// FORK(ramon): redesign v2 — recebida neutra, enviada/robô em azul translúcido,
-// nota interna em âmbar translúcido (mockup .them/.us/.nota).
-const AZUL_TRANSLUCIDO =
-  'bg-n-blue-9/[0.08] dark:bg-n-blue-9/[0.16] text-n-slate-12';
 const varaintBaseMap = {
-  [MESSAGE_VARIANTS.AGENT]: AZUL_TRANSLUCIDO,
+  [MESSAGE_VARIANTS.AGENT]: 'bg-n-solid-blue text-n-slate-12',
   [MESSAGE_VARIANTS.PRIVATE]:
-    'bg-n-amber-9/15 text-n-slate-12 [&_.prosemirror-mention-node]:font-semibold',
-  [MESSAGE_VARIANTS.USER]: 'bg-n-slate-3 text-n-slate-12',
+    'bg-n-solid-amber text-n-amber-12 [&_.prosemirror-mention-node]:font-semibold',
+  [MESSAGE_VARIANTS.USER]: 'bg-n-slate-4 text-n-slate-12',
   [MESSAGE_VARIANTS.ACTIVITY]: 'bg-n-alpha-1 text-n-slate-11 text-sm',
-  [MESSAGE_VARIANTS.BOT]: AZUL_TRANSLUCIDO,
-  [MESSAGE_VARIANTS.TEMPLATE]: AZUL_TRANSLUCIDO,
+  [MESSAGE_VARIANTS.BOT]: 'bg-n-solid-iris text-n-slate-12',
+  [MESSAGE_VARIANTS.TEMPLATE]: 'bg-n-solid-iris text-n-slate-12',
   [MESSAGE_VARIANTS.ERROR]: 'bg-n-ruby-4 text-n-ruby-12',
   [MESSAGE_VARIANTS.EMAIL]: 'w-full',
   [MESSAGE_VARIANTS.UNSUPPORTED]:

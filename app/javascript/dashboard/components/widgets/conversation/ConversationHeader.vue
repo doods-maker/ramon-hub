@@ -1,18 +1,23 @@
 <script setup>
-// FORK(ramon): cabeçalho enxuto do redesign v2 (mockup .chat-topo) — só nome,
-// Copiloto, painel e Resolver. Saíram avatar, #id/caixa, SLA nativo e ligação.
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
+import { useElementSize } from '@vueuse/core';
 import BackButton from '../BackButton.vue';
+import InboxName from '../InboxName.vue';
 import MoreActions from './MoreActions.vue';
+import Avatar from 'next/avatar/Avatar.vue';
+import SLACardLabel from './components/SLACardLabel.vue';
+import ConversationCallButton from './ConversationCallButton.vue';
 import LeadPanelToggle from 'dashboard/routes/dashboard/ramon/components/conversation/LeadPanelToggle.vue';
 import CopilotoModoSelector from 'dashboard/routes/dashboard/ramon/components/conversation/CopilotoModoSelector.vue';
 import wootConstants from 'dashboard/constants/globals';
 import { conversationListPageURL } from 'dashboard/helper/URLHelper';
 import { snoozedReopenTime } from 'dashboard/helper/snoozeHelpers';
 import { useInbox } from 'dashboard/composables/useInbox';
+import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 
 const props = defineProps({
   chat: {
@@ -28,6 +33,8 @@ const props = defineProps({
 const { t } = useI18n();
 const store = useStore();
 const route = useRoute();
+const conversationHeader = ref(null);
+const { width } = useElementSize(conversationHeader);
 const { isAWebWidgetInbox } = useInbox();
 
 const currentChat = computed(() => store.getters.getSelectedChat);
@@ -78,29 +85,98 @@ const snoozedDisplayText = computed(() => {
   }
   return t('CONVERSATION.HEADER.SNOOZED_UNTIL_NEXT_REPLY');
 });
+
+const inbox = computed(() => {
+  const { inbox_id: inboxId } = props.chat;
+  return store.getters['inboxes/getInbox'](inboxId);
+});
+
+const hasMultipleInboxes = computed(
+  () => store.getters['inboxes/getInboxes'].length > 1
+);
+
+const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
+
+const copyConversationId = async () => {
+  try {
+    await copyTextToClipboard(String(props.chat.id));
+    useAlert(t('CONVERSATION.HEADER.COPY_ID_SUCCESS'));
+  } catch (error) {
+    // error
+  }
+};
 </script>
 
 <template>
   <div
-    class="flex h-14 w-full min-w-0 flex-shrink-0 items-center gap-3 whitespace-nowrap px-5"
+    ref="conversationHeader"
+    class="flex flex-col gap-3 items-center justify-between flex-1 w-full min-w-0 xl:flex-row px-3 pt-3 pb-2 h-24 xl:h-12"
   >
-    <BackButton v-if="showBackButton" :back-url="backButtonUrl" />
-    <span class="min-w-0 truncate text-[14.5px] font-semibold text-n-slate-12">
-      {{ currentContact.name }}
-    </span>
-    <fluent-icon
-      v-if="!isHMACVerified"
-      v-tooltip="$t('CONVERSATION.UNVERIFIED_SESSION')"
-      size="14"
-      class="text-n-amber-10 my-0 mx-0 min-w-[14px] flex-shrink-0"
-      icon="warning"
-    />
-    <span v-if="isSnoozed" class="truncate text-xs font-medium text-n-amber-11">
-      {{ snoozedDisplayText }}
-    </span>
-    <div class="ml-auto flex flex-shrink-0 items-center gap-2">
-      <CopilotoModoSelector v-if="currentChat.id" />
+    <div
+      class="flex items-center justify-start w-full xl:w-auto max-w-full min-w-0 xl:flex-1"
+    >
+      <BackButton
+        v-if="showBackButton"
+        :back-url="backButtonUrl"
+        class="ltr:mr-2 rtl:ml-2"
+      />
+      <Avatar
+        :name="currentContact.name"
+        :src="currentContact.thumbnail"
+        :size="32"
+        :status="currentContact.availability_status"
+        hide-offline-status
+      />
+      <div
+        class="flex flex-col items-start min-w-0 ml-2 overflow-hidden rtl:ml-0 rtl:mr-2"
+      >
+        <div class="flex flex-row items-center max-w-full gap-1 p-0 m-0">
+          <span
+            class="text-sm font-medium truncate leading-tight text-n-slate-12"
+          >
+            {{ currentContact.name }}
+          </span>
+          <fluent-icon
+            v-if="!isHMACVerified"
+            v-tooltip="$t('CONVERSATION.UNVERIFIED_SESSION')"
+            size="14"
+            class="text-n-amber-10 my-0 mx-0 min-w-[14px] flex-shrink-0"
+            icon="warning"
+          />
+        </div>
+
+        <div
+          class="flex items-center gap-1 overflow-hidden text-xs conversation--header--actions text-n-slate-11 text-ellipsis whitespace-nowrap"
+        >
+          <button
+            type="button"
+            class="truncate text-label-small text-n-slate-11 hover:text-n-slate-12 !p-0 cucursor-pointer"
+            @click="copyConversationId"
+          >
+            {{ `#${chat.id}` }}
+          </button>
+          <span v-if="hasMultipleInboxes">•</span>
+          <InboxName v-if="hasMultipleInboxes" :inbox="inbox" class="!mx-0" />
+          <span v-if="isSnoozed">•</span>
+          <span v-if="isSnoozed" class="font-medium text-n-amber-10">
+            {{ snoozedDisplayText }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="flex flex-row items-center justify-start xl:justify-end flex-shrink-0 gap-2 w-full xl:w-auto header-actions-wrap"
+    >
+      <SLACardLabel
+        v-if="hasSlaPolicyId"
+        :chat="chat"
+        show-extended-info
+        :parent-width="width"
+        class="hidden md:flex"
+      />
       <LeadPanelToggle />
+      <CopilotoModoSelector v-if="currentChat.id" />
+      <ConversationCallButton :inbox="inbox" :chat="currentChat" />
       <MoreActions :conversation-id="currentChat.id" />
     </div>
   </div>

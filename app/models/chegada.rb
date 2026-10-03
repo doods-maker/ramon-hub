@@ -5,7 +5,6 @@ class Chegada < ApplicationRecord
   self.table_name = 'ramon_chegadas'
 
   RECEPCAO = 'recepção'.freeze # mesmo time da Portaria (RamonPortariaListener::FALLBACK)
-  TIMES_QUE_AVISAM = [RECEPCAO, 'controladoria'].freeze # controladoria substitui a Recepção
   ESCALAR_APOS = 3.minutes
   ZONA = 'America/Sao_Paulo'.freeze
 
@@ -21,7 +20,7 @@ class Chegada < ApplicationRecord
   after_update_commit { transmitir('ramon.chegada.updated') }
 
   def self.recepcao?(account, user)
-    account.teams.where(name: TIMES_QUE_AVISAM).joins(:team_members).exists?(team_members: { user_id: user.id })
+    account.teams.find_by(name: RECEPCAO)&.members&.exists?(user.id) || false
   end
 
   def estado

@@ -25,8 +25,7 @@ class Conversations::FilterService < FilterService
 
   def base_relation
     conversations = @account.conversations.includes(
-      :taggings, :inbox, { assignee: { avatar_attachment: [:blob] } }, { contact: { avatar_attachment: [:blob] } }, :team, :messages, :contact_inbox,
-      ramon_lead: [:lead_stage, :thesis] # FORK(ramon): etiqueta de etapa na lista
+      :taggings, :inbox, { assignee: { avatar_attachment: [:blob] } }, { contact: { avatar_attachment: [:blob] } }, :team, :messages, :contact_inbox
     )
 
     Conversations::PermissionFilterService.new(

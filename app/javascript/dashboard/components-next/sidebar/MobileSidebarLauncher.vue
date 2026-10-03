@@ -36,14 +36,13 @@ const toggleSidebar = () => {
 </script>
 
 <template>
-  <!-- FORK(ramon): menu único tem 228px — translate-x-56 tira o botão de cima dele -->
   <div
     v-if="!isConversationRoute"
     id="mobile-sidebar-launcher"
     class="fixed bottom-4 ltr:left-4 rtl:right-4 z-40 transition-transform duration-200 ease-out block md:hidden"
     :class="[
       {
-        'ltr:translate-x-56 rtl:-translate-x-56': isMobileSidebarOpen,
+        'ltr:translate-x-48 rtl:-translate-x-48': isMobileSidebarOpen,
       },
     ]"
   >

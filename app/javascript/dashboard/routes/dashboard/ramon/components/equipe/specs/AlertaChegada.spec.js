@@ -101,7 +101,6 @@ describe('AlertaChegada.vue', () => {
     const store = useChegadasStore();
     store.upsert(chegada(4));
     await flushPromises();
-    await wrapper.find('[data-testid="chegada-outra-coisa"]').trigger('click');
     await wrapper.find('[data-testid="chegada-resposta"]').setValue('já vou');
     play.mockClear();
     store.upsert(chegada(4, { estado: 'escalado' }));
@@ -141,73 +140,5 @@ describe('AlertaChegada.vue', () => {
     await flushPromises();
     expect(useAlert).toHaveBeenCalledTimes(1);
     expect(useAlert).toHaveBeenCalledWith('RAMON.CHEGADA.RESPONDEU');
-  });
-
-  describe('tela cheia (redesign v2)', () => {
-    afterEach(() => vi.useRealTimers());
-
-    it.each([
-      [0, 'RAMON.CHEGADA.ATENDER_AGORA'],
-      [1, 'RAMON.CHEGADA.AGUARDAR'],
-      [2, 'RAMON.CHEGADA.NAO_POSSO'],
-    ])('resposta pronta %i responde com o texto do botão', async (i, texto) => {
-      ChegadasAPI.responder.mockResolvedValue({
-        data: chegada(6, { estado: 'respondido', resposta: texto }),
-      });
-      const wrapper = mount(AlertaChegada);
-      await flushPromises();
-      useChegadasStore().upsert(chegada(6));
-      await flushPromises();
-      await wrapper
-        .find(`[data-testid="chegada-rapida-${i}"]`)
-        .trigger('click');
-      await flushPromises();
-      expect(ChegadasAPI.responder).toHaveBeenCalledWith(6, texto);
-    });
-
-    it('conta o tempo até o aviso voltar pra quem avisou', async () => {
-      vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
-      vi.setSystemTime(new Date('2026-10-03T16:55:19Z'));
-      const wrapper = mount(AlertaChegada);
-      await flushPromises();
-      useChegadasStore().upsert(
-        chegada(7, { created_at: '2026-10-03T16:55:00Z' })
-      );
-      await flushPromises();
-      const volta = wrapper.find('[data-testid="chegada-volta-em"]');
-      expect(volta.exists()).toBe(true);
-      expect(wrapper.vm.voltaEm).toBe('2:41');
-      expect(wrapper.text()).toContain('RAMON.CHEGADA.AVISADO_POR');
-    });
-
-    it('foco vai pro cartão, não pro botão de resposta', async () => {
-      const wrapper = mount(AlertaChegada, { attachTo: document.body });
-      await flushPromises();
-      useChegadasStore().upsert(chegada(9));
-      await flushPromises();
-      expect(document.activeElement).toBe(
-        wrapper.find('[data-testid="alerta-chegada"]').element
-      );
-    });
-
-    it('escalada não mostra contagem nem respostas prontas', async () => {
-      const wrapper = mount(AlertaChegada);
-      await flushPromises();
-      useChegadasStore().upsert(
-        chegada(8, {
-          estado: 'escalado',
-          created_at: '2026-10-03T16:55:00Z',
-          criado_por: { id: 20, name: 'Eu' },
-          destinatario: { id: 30, name: 'Tamires' },
-        })
-      );
-      await flushPromises();
-      expect(wrapper.find('[data-testid="chegada-volta-em"]').exists()).toBe(
-        false
-      );
-      expect(wrapper.find('[data-testid="chegada-rapida-0"]').exists()).toBe(
-        false
-      );
-    });
   });
 });

@@ -123,7 +123,7 @@
   --ramon-column: 10 10 10;
 }
 
-/* Fundo neutro (busca do Kanban, Esteira) — nasceu no trilho, que saiu */
+/* Fundo do trilho (WorldRail) */
 .ramon-rail {
   background-color: rgb(var(--ramon-rail));
 }
@@ -153,25 +153,4 @@
 .dark .ramon-stage-pill {
   color: color-mix(in srgb, var(--stage) 55%, white);
   background-color: color-mix(in srgb, var(--stage) 22%, transparent);
-}
-
-/* Cabeçalho de coluna do funil (mockup v2 .col-cab): mesmo --stage da pílula,
-   em bloco sem borda — fundo 12% e texto escurecido/clareado p/ contraste.
-   .ramon-stage-text = só o texto (nome da etapa atual na esteira da ficha). */
-.ramon-stage-block,
-.ramon-stage-text {
-  color: color-mix(in srgb, var(--stage) 62%, black);
-}
-
-.ramon-stage-block {
-  background-color: color-mix(in srgb, var(--stage) 12%, transparent);
-}
-
-.dark .ramon-stage-block,
-.dark .ramon-stage-text {
-  color: color-mix(in srgb, var(--stage) 55%, white);
-}
-
-.dark .ramon-stage-block {
-  background-color: color-mix(in srgb, var(--stage) 18%, transparent);
 }

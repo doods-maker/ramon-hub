@@ -74,35 +74,4 @@ RSpec.describe Ramon::Papeis do
       expect(lead.reload.closer).to eq(ana)
     end
   end
-
-  describe '.papel_de' do
-    def no_time(nome)
-      entra_no_time(create(:team, account: account, name: nome), ana)
-    end
-
-    it 'administrador é gestor' do
-      admin = create(:user, account: account, role: :administrator)
-      expect(described_class.papel_de(account, admin)).to eq('gestor')
-    end
-
-    it 'recepção (com acento) e controladoria viram recepcao' do
-      no_time('Recepção')
-      expect(described_class.papel_de(account, ana)).to eq('recepcao')
-      expect(described_class.papel_de(account, bia)).to eq('equipe')
-      entra_no_time(create(:team, account: account, name: 'controladoria'), bia)
-      expect(described_class.papel_de(account, bia)).to eq('recepcao')
-    end
-
-    it 'closer vence sdr' do
-      no_time('sdr')
-      no_time('closer')
-      expect(described_class.papel_de(account, ana)).to eq('closer')
-    end
-
-    it 'advogados vira advogada; sem time é equipe' do
-      expect(described_class.papel_de(account, ana)).to eq('equipe')
-      no_time('advogados')
-      expect(described_class.papel_de(account, ana)).to eq('advogada')
-    end
-  end
 end

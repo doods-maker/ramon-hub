@@ -2,20 +2,16 @@
 import { defineAsyncComponent, ref, computed } from 'vue';
 
 import NextSidebar from 'next/sidebar/Sidebar.vue';
-import RamonNav from './ramon/components/nav/RamonNav.vue';
-import { ehAreaChatwoot } from './ramon/helpers/navItems';
+import WorldRail from './ramon/components/WorldRail.vue';
+import IntranetSidebar from './ramon/components/IntranetSidebar.vue';
 import AlertaChegada from './ramon/components/equipe/AlertaChegada.vue';
 import ChegouCliente from './ramon/components/equipe/ChegouCliente.vue';
-// FORK(ramon): paleta Ctrl K própria (redesign v2, Onda 5)
-import CommandPalette from './ramon/components/busca/CommandPalette.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
 
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAccount } from 'dashboard/composables/useAccount';
-import { useDashboardBootstrap } from 'dashboard/composables/useDashboardBootstrap';
-import { useSidebarKeyboardShortcuts } from 'dashboard/components-next/sidebar/useSidebarKeyboardShortcuts';
 import { useWindowSize } from '@vueuse/core';
 
 import wootConstants from 'dashboard/constants/globals';
@@ -37,17 +33,17 @@ import { useCallsStore } from 'dashboard/stores/calls';
 export default {
   components: {
     NextSidebar,
-    RamonNav,
-    AddAccountModal,
+    WorldRail,
+    IntranetSidebar,
     CommandBar,
     WootKeyShortcutModal,
+    AddAccountModal,
     UpgradePage,
     CopilotLauncher,
     CopilotContainer,
     FloatingCallWidget,
     AlertaChegada,
     ChegouCliente,
-    CommandPalette,
     MobileSidebarLauncher,
   },
   setup() {
@@ -56,19 +52,12 @@ export default {
     const { accountId } = useAccount();
     const { width: windowWidth } = useWindowSize();
     const callsStore = useCallsStore();
-    const showShortcutModal = ref(false);
-
-    useDashboardBootstrap();
-    useSidebarKeyboardShortcuts(show => {
-      showShortcutModal.value = show;
-    });
 
     return {
       uiSettings,
       updateUISettings,
       accountId,
       upgradePageRef,
-      showShortcutModal,
       windowWidth,
       hasActiveCall: computed(() => callsStore.hasActiveCall),
       hasIncomingCall: computed(() => callsStore.hasIncomingCall),
@@ -76,7 +65,9 @@ export default {
   },
   data() {
     return {
+      showAccountModal: false,
       showCreateAccountModal: false,
+      showShortcutModal: false,
       isMobileSidebarOpen: false,
     };
   },
@@ -84,10 +75,8 @@ export default {
     isSmallScreen() {
       return this.windowWidth < wootConstants.SMALL_SCREEN_BREAKPOINT;
     },
-    // FORK(ramon): Configurações, Captain, Relatórios, Contatos, Campanhas e
-    // Central de ajuda usam o sidebar do Chatwoot (submenus nativos); o resto, o menu único.
-    isAreaChatwoot() {
-      return ehAreaChatwoot(this.$route.path);
+    isIntranetWorld() {
+      return this.$route.meta?.world === 'intranet';
     },
     showUpgradePage() {
       return this.upgradePageRef?.shouldShowUpgradePage;
@@ -132,10 +121,14 @@ export default {
       this.isMobileSidebarOpen = false;
     },
     openCreateAccountModal() {
+      this.showAccountModal = false;
       this.showCreateAccountModal = true;
     },
     closeCreateAccountModal() {
       this.showCreateAccountModal = false;
+    },
+    toggleAccountModal() {
+      this.showAccountModal = !this.showAccountModal;
     },
     toggleKeyShortcutModal() {
       this.showShortcutModal = true;
@@ -149,19 +142,20 @@ export default {
 
 <template>
   <div class="flex flex-grow overflow-hidden text-n-slate-12">
+    <WorldRail />
     <NextSidebar
-      v-if="isAreaChatwoot"
+      v-if="!isIntranetWorld"
       :is-mobile-sidebar-open="isMobileSidebarOpen"
+      @toggle-account-modal="toggleAccountModal"
       @open-key-shortcut-modal="toggleKeyShortcutModal"
       @close-key-shortcut-modal="closeKeyShortcutModal"
       @show-create-account-modal="openCreateAccountModal"
       @close-mobile-sidebar="closeMobileSidebar"
     />
-    <RamonNav
+    <IntranetSidebar
       v-else
       :is-mobile-sidebar-open="isMobileSidebarOpen"
       @close-mobile-sidebar="closeMobileSidebar"
-      @open-key-shortcut-modal="toggleKeyShortcutModal"
     />
 
     <main
@@ -180,7 +174,6 @@ export default {
       <template v-if="!showUpgradePage">
         <router-view />
         <CommandBar />
-        <CommandPalette />
         <CopilotLauncher />
         <MobileSidebarLauncher
           :is-mobile-sidebar-open="isMobileSidebarOpen"

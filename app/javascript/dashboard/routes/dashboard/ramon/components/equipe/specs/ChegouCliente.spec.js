@@ -84,15 +84,17 @@ describe('ChegouCliente.vue', () => {
     expect(dialogOpen).not.toHaveBeenCalled();
   });
 
-  it('abre o painel quando o menu pede', async () => {
+  it('abre o painel quando alguém pede pelo store', async () => {
     await abrirPainel();
     expect(dialogOpen).toHaveBeenCalled();
   });
 
-  it('não tem mais botão flutuante', () => {
+  it('botão flutuante "Chegou cliente" abre o painel', async () => {
     useChegadasStore().podeAvisar = true;
     const wrapper = mount(ChegouCliente);
-    expect(wrapper.find('.fixed.bottom-4').exists()).toBe(false);
+    await wrapper.find('[data-testid="chegou-cliente-botao"]').trigger('click');
+    await flushPromises();
+    expect(dialogOpen).toHaveBeenCalled();
   });
 
   it('agendado de hoje escolhe o cliente e já marca quem atende', async () => {

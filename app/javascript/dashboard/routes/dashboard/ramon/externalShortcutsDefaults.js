@@ -1,5 +1,5 @@
-// Atalhos externos padrão — aparecem de fábrica até o usuário gerenciar.
-// Usado pelo menu único (Mais) e pela tela ExternalShortcuts. URLs a confirmar/ajustar.
+// Atalhos externos padrão do trilho — aparecem de fábrica até o usuário gerenciar.
+// Usado pelo WorldRail (rail) e pela tela ExternalShortcuts. URLs a confirmar/ajustar.
 export const DEFAULT_EXTERNAL_SHORTCUTS = [
   {
     label: 'AdvBox',

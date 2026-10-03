@@ -24,8 +24,6 @@ import {
   CMD_BULK_ACTION_SNOOZE_CONVERSATION,
 } from 'dashboard/helper/commandbar/events';
 import { emitter } from 'shared/helpers/mitt';
-import { useEmitter } from 'dashboard/composables/emitter';
-import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const store = useStore();
 const { t, tm } = useI18n();
@@ -217,10 +215,6 @@ watchEffect(() => {
   }
 });
 
-// FORK(ramon): Ctrl K e o "Buscar" do menu abrem a paleta própria (Onda 5);
-// a command bar antiga fica em Ctrl+Shift+K e no "Mais comandos…" da paleta.
-useEmitter(BUS_EVENTS.OPEN_NINJA, () => ninjakeys.value?.open());
-
 onMounted(() => {
   setCommandBarData();
   patchNinjaKeysOpenClose(ninjakeys.value);
@@ -233,7 +227,6 @@ onMounted(() => {
     ref="ninjakeys"
     noAutoLoadMdIcons
     hideBreadcrumbs
-    openHotkey="cmd+shift+k,ctrl+shift+k"
     :placeholder="placeholder"
     @change="onCommandBarChange"
     @selected="onSelected"

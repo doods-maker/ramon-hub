@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { MODOS, copilotoModoDe } from '../../helpers/copilotoModo';
-import { BTN_TINT } from '../hoje/hoje';
 
 defineOptions({ name: 'CopilotoModoSelector' });
 const { t } = useI18n();
@@ -59,16 +58,14 @@ const escolher = async novoModo => {
     <button
       type="button"
       data-testid="copiloto-modo-btn"
-      :class="BTN_TINT"
+      class="rounded-full bg-n-iris-9/10 text-n-iris-11 text-xs px-2 py-1"
       @click="open = !open"
     >
-      <span class="i-lucide-sparkles size-4" />
       {{
-        t('RAMON.COPILOTO.BTN', {
+        `✦ ${t('RAMON.COPILOTO.BTN', {
           modo: t(`RAMON.COPILOTO.MODOS.${modo}.NOME`),
-        })
+        })} ▾`
       }}
-      <span class="i-lucide-chevron-down size-4" />
     </button>
     <div v-if="open" class="fixed inset-0 z-40" @click="open = false" />
     <div
