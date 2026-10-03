@@ -191,32 +191,6 @@
         "equipe": "Equipe"
       }
     },
-    "NAV": {
-      "TITLE": "Intranet",
-      "SOON": "em breve",
-      "COMERCIAL": "Comercial",
-      "JURIDICO": "Jurídico",
-      "INTELIGENCIA": "Inteligência",
-      "OVERVIEW": "Centro de Comando",
-      "ESTEIRA": "Esteira",
-      "FUNIL": "Funil de Leads",
-      "AGENDA": "Agenda",
-      "SDR": "Painel do SDR",
-      "TRIAGEM": "Triagem de Iniciais",
-      "AGENTES": "Agentes de IA",
-      "FUNIL_CONFIG": "Configurações do Funil",
-      "PLAYBOOKS": "Playbooks",
-      "LINHA_DA_VIDA": "Linha da Vida",
-      "CALCULOS": "Cálculos",
-      "REUNIOES": "Reuniões",
-      "CONTEUDO": "Conteúdo",
-      "PORTAL": "Painel do cliente",
-      "RADAR": "Radar de prescrição",
-      "POS_VENDA": "Pós-venda",
-      "TV": "Placar de TV",
-      "RELATORIOS": "Relatórios",
-      "EXTRATO": "Extrato da variável"
-    },
     "POS_VENDA": {
       "TITLE": "Pós-venda",
       "SUBTITLE": "Ganhos aguardando documentos — do mais antigo pro mais novo",
@@ -316,13 +290,6 @@
         "SKIP": "Espaço",
         "EXIT": "Esc"
       }
-    },
-    "RAIL": {
-      "INTERNOS": "Internos",
-      "EXTERNOS": "Externos",
-      "CONVERSAS": "Conversas",
-      "INTRANET": "Intranet",
-      "MANAGE": "Gerenciar atalhos"
     },
     "SHORTCUTS": {
       "TITLE": "Atalhos externos",

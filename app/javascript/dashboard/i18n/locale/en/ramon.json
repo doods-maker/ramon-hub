@@ -191,32 +191,6 @@
         "equipe": "Team"
       }
     },
-    "NAV": {
-      "TITLE": "Intranet",
-      "SOON": "soon",
-      "COMERCIAL": "Commercial",
-      "JURIDICO": "Legal",
-      "INTELIGENCIA": "Intelligence",
-      "OVERVIEW": "Command Center",
-      "ESTEIRA": "Esteira",
-      "FUNIL": "Pipeline",
-      "AGENDA": "Agenda",
-      "SDR": "SDR Panel",
-      "TRIAGEM": "Case Intake",
-      "AGENTES": "AI Agents",
-      "FUNIL_CONFIG": "Funnel settings",
-      "PLAYBOOKS": "Playbooks",
-      "LINHA_DA_VIDA": "Lifeline",
-      "CALCULOS": "Calculations",
-      "REUNIOES": "Meetings",
-      "CONTEUDO": "Content",
-      "PORTAL": "Client portal",
-      "RADAR": "Prescription radar",
-      "POS_VENDA": "Post-sale",
-      "TV": "TV scoreboard",
-      "RELATORIOS": "Reports",
-      "EXTRATO": "Variable pay statement"
-    },
     "POS_VENDA": {
       "TITLE": "Post-sale",
       "SUBTITLE": "Wins awaiting documents — oldest to newest",
@@ -316,13 +290,6 @@
         "SKIP": "Space",
         "EXIT": "Esc"
       }
-    },
-    "RAIL": {
-      "INTERNOS": "Internal",
-      "EXTERNOS": "External",
-      "CONVERSAS": "Chats",
-      "INTRANET": "Intranet",
-      "MANAGE": "Manage shortcuts"
     },
     "SHORTCUTS": {
       "TITLE": "External shortcuts",
