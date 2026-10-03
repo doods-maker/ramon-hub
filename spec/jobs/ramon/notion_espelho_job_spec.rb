@@ -10,7 +10,7 @@ RSpec.describe Ramon::NotionEspelhoJob do
   end
 
   it 'agendado aparece como montado' do
-    peca.update_columns(status: 'agendado')
+    peca.update_columns(status: 'agendado') # rubocop:disable Rails/SkipsModelValidations
     stub = stub_request(:patch, url)
            .with(body: { properties: { 'Status' => { select: { name: 'montado' } } } }.to_json,
                  headers: { 'Authorization' => 'Bearer nt', 'Notion-Version' => '2022-06-28' })
@@ -20,7 +20,7 @@ RSpec.describe Ramon::NotionEspelhoJob do
   end
 
   it 'montando não é espelhado (senão o vigia local monta junto)' do
-    peca.update_columns(status: 'montando')
+    peca.update_columns(status: 'montando') # rubocop:disable Rails/SkipsModelValidations
     with_modified_env(RAMON_NOTION_TOKEN: 'nt') { described_class.perform_now(peca.id) }
     expect(a_request(:patch, url)).not_to have_been_made
   end

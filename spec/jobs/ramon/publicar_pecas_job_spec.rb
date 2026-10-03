@@ -13,7 +13,7 @@ RSpec.describe Ramon::PublicarPecasJob do
   end
 
   it 'não mexe em peça agendada pro futuro' do
-    peca.update_columns(agendado_para: 1.hour.from_now)
+    peca.update_columns(agendado_para: 1.hour.from_now) # rubocop:disable Rails/SkipsModelValidations
     described_class.perform_now
     expect(publisher).not_to have_received(:publicar)
   end
@@ -26,7 +26,7 @@ RSpec.describe Ramon::PublicarPecasJob do
   end
 
   it 'nunca republica peça que já tem ig_media_id' do
-    peca.update_columns(ig_media_id: 'm1')
+    peca.update_columns(ig_media_id: 'm1') # rubocop:disable Rails/SkipsModelValidations
     described_class.perform_now
     expect(publisher).not_to have_received(:publicar)
     expect(peca.reload.status).to eq 'publicado'

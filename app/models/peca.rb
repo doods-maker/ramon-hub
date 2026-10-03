@@ -22,7 +22,7 @@ class Peca < ApplicationRecord
 
   # Toda mudança de status passa por aqui: trava a linha e confere a origem, pra
   # tela, worker e cron nunca atropelarem um ao outro.
-  def transicionar!(de:, para:, **attrs)
+  def transicionar!(de:, para:, **attrs) # rubocop:disable Naming/MethodParameterName
     with_lock do
       raise TransicaoInvalida, "#{status} → #{para}" unless Array(de).include?(status)
 
