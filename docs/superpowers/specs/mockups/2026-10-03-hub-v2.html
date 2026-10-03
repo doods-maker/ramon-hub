@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light" data-role="gestor" data-screen="hoje">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hub — telas novas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Tokens finais (aprovados 03/10): branco/preto neutros, destaque azul nos dois temas,
+   cor só com significado, todo fundo colorido translúcido */
+[data-theme="light"]{
+  --bg:#FFFFFF; --bg-2:#FAFAFA; --hover:#F4F4F4; --active:#EFEFEF;
+  --line:#EBEBEB; --line-2:#DCDCDC;
+  --text:#111111; --text-2:#666666; --text-3:#999999;
+  --act:#2563EB; --on-act:#FFFFFF; --act-text:#1D4ED8; --act-tint:rgb(37 99 235 / .08);
+  --bubble-them:#F4F4F4;
+  --ok:#15803D; --ok-bg:rgb(34 197 94 / .13);
+  --warn:#B45309; --warn-bg:rgb(234 179 8 / .14); --warn-line:rgb(234 179 8 / .35);
+  --bad:#DC2626; --bad-bg:rgb(239 68 68 / .09); --bad-line:rgb(239 68 68 / .3);
+  --s-novo:#475569; --s-novo-bg:rgb(100 116 139 / .12); --s-qual:#0369A1; --s-qual-bg:rgb(14 165 233 / .12);
+  --s-reun:#6D28D9; --s-reun-bg:rgb(139 92 246 / .12); --s-ass:#BE185D; --s-ass-bg:rgb(236 72 153 / .11);
+  --s-ganho:#15803D; --s-ganho-bg:rgb(34 197 94 / .13);
+  --brand:#754D2A; --veu:rgb(255 255 255 / .6); color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#000000; --bg-2:#0A0A0A; --hover:#141414; --active:#1C1C1C;
+  --line:#1F1F1F; --line-2:#2E2E2E;
+  --text:#EDEDED; --text-2:#A1A1A1; --text-3:#6B6B6B;
+  --act:#2563EB; --on-act:#FFFFFF; --act-text:#60A5FA; --act-tint:rgb(59 130 246 / .16);
+  --bubble-them:#141414;
+  --ok:#4ADE80; --ok-bg:rgb(34 197 94 / .15);
+  --warn:#FBBF24; --warn-bg:rgb(234 179 8 / .13); --warn-line:rgb(234 179 8 / .3);
+  --bad:#F87171; --bad-bg:rgb(239 68 68 / .14); --bad-line:rgb(239 68 68 / .35);
+  --s-novo:#CBD5E1; --s-novo-bg:rgb(148 163 184 / .16); --s-qual:#7DD3FC; --s-qual-bg:rgb(56 189 248 / .15);
+  --s-reun:#C4B5FD; --s-reun-bg:rgb(167 139 250 / .17); --s-ass:#F9A8D4; --s-ass-bg:rgb(244 114 182 / .15);
+  --s-ganho:#86EFAC; --s-ganho-bg:rgb(34 197 94 / .15);
+  --brand:#C4A882; --veu:rgb(0 0 0 / .6); color-scheme:dark;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.5 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+.mono{font-family:"Geist Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:12.5px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--act);outline-offset:2px;border-radius:6px}
+svg.lucide{width:16px;height:16px;stroke-width:1.75;flex-shrink:0}
+a{color:inherit;text-decoration:none}
+.app{display:flex;height:calc(100vh - 48px)}
+
+/* etiquetas e selos */
+.s-novo{--c:var(--s-novo);--cb:var(--s-novo-bg)} .s-qual{--c:var(--s-qual);--cb:var(--s-qual-bg)}
+.s-reun{--c:var(--s-reun);--cb:var(--s-reun-bg)} .s-ass{--c:var(--s-ass);--cb:var(--s-ass-bg)}
+.s-ganho{--c:var(--s-ganho);--cb:var(--s-ganho-bg)}
+.etq{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;line-height:1;padding:4px 9px;border-radius:999px;white-space:nowrap;color:var(--c);background:var(--cb)}
+.etq::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.selo{display:inline-flex;align-items:center;gap:4px;font:500 11.5px/1 "Geist Mono";padding:4px 8px;border-radius:999px;white-space:nowrap}
+.selo svg{width:12px;height:12px}
+.selo.ok{background:var(--ok-bg);color:var(--ok)} .selo.warn{background:var(--warn-bg);color:var(--warn)}
+.selo.bad{background:var(--bad-bg);color:var(--bad)} .selo.neutro{background:var(--active);color:var(--text-2)}
+.selo.act{background:var(--act-tint);color:var(--act-text)}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:7px;padding:5px 10px;font-size:12.5px;color:var(--text);white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.cheio{background:var(--act);color:var(--on-act);border-color:var(--act);font-weight:500}
+.btn.cheio:hover{filter:brightness(1.1)}
+.btn.tint{background:var(--act-tint);border-color:transparent;color:var(--act-text);font-weight:500}
+.btn.grande{padding:9px 16px;font-size:14px;border-radius:9px}
+
+/* ---------- MENU ---------- */
+.nav{width:228px;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:12px 10px;gap:2px;flex-shrink:0}
+.marca{display:flex;align-items:center;gap:10px;padding:4px 8px 12px}
+.marca .rs{width:26px;height:26px;border-radius:7px;background:var(--brand);color:var(--bg);display:grid;place-items:center;font-weight:600;font-size:11px}
+.marca b{font-weight:600;font-size:13.5px}
+.busca{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--text-3);margin:0 0 10px;font-size:13px;width:100%}
+.busca:hover{border-color:var(--line-2)}
+.busca kbd{margin-left:auto;font:11px "Geist Mono";color:var(--text-3)}
+.chegou{margin-bottom:10px;justify-content:center}
+.item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:7px;color:var(--text-2);font-size:13.5px}
+.item:hover{background:var(--hover);color:var(--text)}
+.item.on{background:var(--act-tint);color:var(--act-text);font-weight:500}
+.item .n{margin-left:auto;font:500 11px "Geist Mono";border-radius:999px;padding:1px 7px}
+.item .n.act{background:var(--act);color:var(--on-act)} .item .n.warn{background:var(--warn-bg);color:var(--warn)}
+.item .n.neutro{color:var(--text-3)}
+.rodape-nav{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px 4px;border-top:1px solid var(--line)}
+.av{width:24px;height:24px;border-radius:50%;background:var(--active);display:grid;place-items:center;font-size:10px;font-weight:600;color:var(--text);flex-shrink:0}
+.rodape-nav small{display:block;color:var(--text-3);font-size:11.5px}
+[data-hide]{display:none !important}
+
+/* ---------- telas ---------- */
+.tela{flex:1;min-width:0;display:none}
+.cab-pag{height:56px;display:flex;align-items:center;gap:10px;padding:0 28px;border-bottom:1px solid var(--line);flex-shrink:0}
+.cab-pag h1{font-size:15px;font-weight:600}
+.cab-pag .data{color:var(--text-3);font-size:13px}
+.cab-pag .dir{margin-left:auto;display:flex;gap:8px}
+
+/* HOJE */
+.t-hoje{flex-direction:column;overflow-y:auto}
+.hoje{display:none;grid-template-columns:1fr 300px;gap:40px;padding:24px 28px 48px;max-width:1240px;width:100%}
+.bloco{margin-bottom:32px}
+.bloco-cab{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.bloco-cab h2{font-size:14.5px;font-weight:600}
+.bloco-cab .n{font:12px "Geist Mono";color:var(--text-3)}
+.bloco-cab a{margin-left:auto;font-size:12.5px;color:var(--act-text);font-weight:500}
+.bloco .dica{font-size:12.5px;color:var(--text-3);margin-bottom:8px}
+.fila{border-top:1px solid var(--line)}
+.lin{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid var(--line)}
+.lin:hover{background:var(--hover)}
+.lin .quem{min-width:0;flex:1}
+.lin .quem b{font-weight:500;font-size:13.5px;display:block}
+.lin .quem span{font-size:12.5px;color:var(--text-2);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lin .hora{font:12.5px "Geist Mono";color:var(--text-2);width:44px;flex-shrink:0}
+.lin .col-prazo{width:76px;flex-shrink:0}
+.lin.tarde{box-shadow:inset 3px 0 0 var(--bad)}
+.lado .caixa{border-radius:12px;padding:16px;margin-bottom:16px;background:var(--bg-2);border:1px solid var(--line)}
+.lado .caixa h3{font-size:12px;font-weight:500;color:var(--text-3);margin-bottom:10px}
+.met{margin-bottom:14px}
+.met:last-child{margin-bottom:0}
+.met .l1{display:flex;align-items:baseline;justify-content:space-between;font-size:13px}
+.met .l1 b{font:500 14px "Geist Mono"}
+.met .l1 b small{color:var(--text-3);font-weight:400;font-size:12px}
+.barra{height:6px;border-radius:999px;background:var(--active);margin-top:6px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--act);border-radius:999px}
+.barra.ok i{background:var(--ok)}
+.alerta-cx{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:10px;margin-bottom:8px}
+.alerta-cx svg{margin-top:2px;width:17px;height:17px}
+.alerta-cx b{display:block;font-weight:600;font-size:13.5px}
+.alerta-cx span{font-size:12.5px;color:var(--text)}
+.alerta-cx .btn{margin-left:auto;align-self:center}
+.alerta-cx.bad{background:var(--bad-bg);color:var(--bad)} .alerta-cx.warn{background:var(--warn-bg);color:var(--warn)}
+.alerta-cx.act{background:var(--act-tint);color:var(--act-text)}
+.time{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.time div{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.time b{font-weight:500;font-size:13px;display:block;margin-bottom:6px}
+.time > div > span{display:block;font-size:12.5px;color:var(--text-2)}
+.time .mono{color:var(--text)}
+.etapas-resumo .lin{padding:8px 4px}
+.etapas-resumo .lin .mono{margin-left:auto}
+.cta-chegada{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:12px;background:var(--act-tint);margin-bottom:32px}
+.cta-chegada b{font-weight:600}
+.cta-chegada span{display:block;font-size:12.5px;color:var(--text-2)}
+.cta-chegada .btn{margin-left:auto}
+
+/* CONVERSA */
+.lista{width:320px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
+.lista-topo{padding:14px 16px 0;border-bottom:1px solid var(--line)}
+.lista-topo h1{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.lista-topo h1 button{margin-left:auto;color:var(--text-2);display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:400}
+.abas{display:flex;gap:18px;margin-top:10px}
+.abas a{padding:8px 0;font-size:13px;color:var(--text-2);border-bottom:1.5px solid transparent}
+.abas a.on{color:var(--text);border-color:var(--act);font-weight:500}
+.abas .mono{font-size:11.5px;color:var(--text-3);margin-left:4px}
+.conv{display:block;padding:12px 16px;border-bottom:1px solid var(--line);position:relative}
+.conv:hover{background:var(--hover)}
+.conv.on{background:var(--active);box-shadow:inset 2px 0 0 var(--act)}
+.conv .l1{display:flex;align-items:center;gap:8px}
+.conv .nome{font-weight:500;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv .l1 > :last-child{margin-left:auto}
+.conv .hora{color:var(--text-3);font-size:11.5px}
+.conv .tese{display:flex;align-items:center;gap:8px;margin:3px 0 2px;font-size:12px;color:var(--text-3)}
+.conv .msg{font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv.nova .nome,.conv.nova .msg{color:var(--text)}
+.conv.nova::before{content:"";position:absolute;left:5px;top:18px;width:6px;height:6px;border-radius:50%;background:var(--act)}
+.chat{flex:1;min-width:0;display:flex;flex-direction:column}
+.chat-topo{height:56px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 20px;flex-shrink:0;white-space:nowrap}
+.chat-topo b{font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis}
+.chat-topo .dir{margin-left:auto;display:flex;gap:8px;align-items:center}
+.fluxo{flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:8px}
+.dia{align-self:center;font-size:11.5px;color:var(--text-3);margin:4px 0 8px}
+.b{max-width:64%;padding:8px 12px;border-radius:12px;font-size:13.5px}
+.b time{display:block;font:11px "Geist Mono";margin-top:3px;opacity:.55;text-align:right}
+.them{background:var(--bubble-them);align-self:flex-start}
+.us{background:var(--act-tint);align-self:flex-end}
+.nota{align-self:center;max-width:70%;background:var(--warn-bg);border-radius:10px;padding:8px 12px;font-size:12.5px}
+.nota b{color:var(--warn);font-weight:600}
+.evento{align-self:center;display:flex;gap:7px;align-items:center;background:var(--act-tint);color:var(--act-text);padding:5px 14px;border-radius:999px;font-size:12px;font-weight:500;margin:6px 0}
+.evento svg{width:14px;height:14px}
+.compor{margin:0 20px 16px;border:1px solid var(--line-2);border-radius:10px;flex-shrink:0}
+.compor:focus-within{border-color:var(--act)}
+.compor .modo{display:flex;gap:16px;padding:8px 12px 0;font-size:12.5px;color:var(--text-3)}
+.compor .modo .on{color:var(--text);font-weight:500}
+.compor textarea{width:100%;border:0;background:none;resize:none;padding:8px 12px;font:13.5px Geist;color:var(--text);height:48px;outline:none}
+.compor textarea::placeholder{color:var(--text-3)}
+.compor .acoes{display:flex;align-items:center;gap:4px;padding:6px 8px 8px}
+.ia{font-size:12.5px;color:var(--text-2);padding:4px 8px;border-radius:6px;display:flex;align-items:center;gap:5px}
+.ia svg{color:var(--act-text)}
+.ia:hover{background:var(--hover);color:var(--text)}
+.compor .acoes .btn.cheio{margin-left:auto}
+.painel{width:310px;border-left:1px solid var(--line);overflow-y:auto;flex-shrink:0}
+.p-sec{padding:16px 18px;border-bottom:1px solid var(--line)}
+.p-sec h3{font-size:12px;font-weight:500;color:var(--text-3);margin-bottom:8px;display:flex;justify-content:space-between}
+.p-sec .grande{font-size:14px;font-weight:500}
+.p-sec .apoio{font-size:12.5px;color:var(--text-2);margin-top:2px}
+.p-sec.proximo{background:var(--act-tint)}
+.p-sec.proximo h3{color:var(--act-text);font-weight:600}
+.p-sec.risco{background:var(--bad-bg);box-shadow:inset 4px 0 0 var(--bad)}
+.alerta{color:var(--bad);font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center}
+.esteira{display:flex;gap:4px;margin:8px 0 6px}
+.esteira i{flex:1;height:3px;border-radius:2px;background:var(--line-2)}
+.esteira i.f{background:var(--c,var(--act))}
+.recolhe{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);font-size:13px;color:var(--text-2)}
+.recolhe:hover{background:var(--hover);color:var(--text)}
+.recolhe .mono{margin-left:auto;margin-right:8px;color:var(--text-3)}
+.atribuir{position:relative}
+.atribuir .btn{width:100%;justify-content:center}
+.menu-pessoas{margin-top:8px;border:1px solid var(--line-2);border-radius:10px;padding:6px;background:var(--bg);box-shadow:0 8px 24px rgb(0 0 0 / .08)}
+.menu-pessoas a{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:7px;font-size:13px}
+.menu-pessoas a:hover{background:var(--hover)}
+.menu-pessoas a.sug{background:var(--act-tint)}
+.menu-pessoas a small{margin-left:auto;white-space:nowrap;font-size:11.5px;color:var(--act-text);font-weight:500}
+.menu-pessoas .sep{border-top:1px solid var(--line);margin:6px 0}
+.dado{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:4px 0}
+.dado span:first-child{color:var(--text-3)}
+.compromisso{background:var(--act-tint);border-radius:10px;padding:12px 14px;margin-top:4px}
+.compromisso b{display:block;color:var(--act-text);font-weight:600;font-size:13.5px}
+.compromisso span{font-size:12.5px;color:var(--text)}
+.atrib-info{background:var(--act-tint);color:var(--act-text);font-size:12.5px;font-weight:500;padding:10px 18px;display:flex;align-items:center;gap:8px}
+.atrib-info button{margin-left:auto;color:var(--act-text);text-decoration:underline;text-underline-offset:2px;font-size:12px}
+
+/* FUNIL */
+.t-funil{flex-direction:column}
+.filtro{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);padding:5px 10px;border-radius:7px;border:1px dashed var(--line-2)}
+.filtro.on{border-style:solid;border-color:transparent;background:var(--warn-bg);color:var(--warn);font-weight:500}
+.quadro{flex:1;display:flex;gap:16px;padding:16px 28px;overflow-x:auto;min-height:0}
+.col{flex:1;min-width:220px;display:flex;flex-direction:column;gap:8px}
+.col-cab{background:var(--cb);border-radius:10px;padding:10px 12px;margin-bottom:2px}
+.col-cab b{color:var(--c);font-weight:600;font-size:13.5px}
+.col-cab .mono{color:var(--c);opacity:.75;margin-left:6px}
+.col-cab .valor{display:block;font:12px "Geist Mono";color:var(--c);opacity:.75;margin-top:2px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg)}
+.card:hover{border-color:var(--line-2)}
+.card:has(.selo.bad){box-shadow:inset 3px 0 0 var(--bad)}
+.card .l1{display:flex;align-items:center;gap:8px}
+.card .nome{font-weight:500;font-size:13.5px}
+.card .l1 > :last-child{margin-left:auto}
+.quieto{font:11.5px "Geist Mono";color:var(--text-3);white-space:nowrap}
+.card .tese{font-size:12.5px;color:var(--text-2)}
+.card .meta{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--text-3)}
+.card .meta .av{margin-left:auto;width:20px;height:20px;font-size:9.5px}
+.card .acoes-card{display:flex;gap:14px;margin-top:10px;padding-top:9px;border-top:1px solid var(--line);font-size:12px;color:var(--text-2)}
+.card .acoes-card a:hover{color:var(--act-text)}
+
+/* FICHA */
+.t-ficha{flex-direction:column;overflow-y:auto}
+.ficha{max-width:1080px;width:100%;margin:0 auto;padding:28px 32px 64px}
+.volta{font-size:12.5px;color:var(--text-3);display:inline-flex;gap:4px;align-items:center}
+.ficha-cab{display:flex;align-items:flex-end;gap:16px;margin:12px 0 4px}
+.ficha-cab h1{font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.ficha-cab .dir{margin-left:auto;display:flex;gap:8px}
+.ficha-sub{color:var(--text-2);font-size:13.5px;display:flex;align-items:center;gap:10px}
+.abas-ficha{display:flex;gap:22px;border-bottom:1px solid var(--line);margin:24px 0 28px}
+.abas-ficha a{padding:9px 0;font-size:13.5px;color:var(--text-2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.abas-ficha a.on{color:var(--text);border-color:var(--act);font-weight:500}
+.ficha-grid{display:grid;grid-template-columns:1fr 280px;gap:48px}
+.bl{margin-bottom:36px}
+.bl h2{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
+.bl h2 .mono{color:var(--text-3);font-weight:400}
+.bl h2 a{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--act-text)}
+.bl p{color:var(--text-2);max-width:62ch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:400;color:var(--text-3);font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+td{padding:9px 0;border-bottom:1px solid var(--line)}
+td.r,th.r{text-align:right}
+.btn.cheio.ganho{background:#16A34A;border-color:#16A34A;color:#fff}
+
+/* ---------- SOBREPOSIÇÕES ---------- */
+.sobre{position:fixed;inset:0 0 48px 0;display:none;z-index:40;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sobre.on{display:grid}
+/* busca */
+#busca{background:var(--veu);place-items:start center;padding-top:12vh}
+.cmd{width:620px;max-width:calc(100vw - 32px);background:var(--bg);border:1px solid var(--line-2);border-radius:14px;box-shadow:0 24px 64px rgb(0 0 0 / .18);overflow:hidden}
+.cmd-in{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.cmd-in input{flex:1;border:0;background:none;font:15px Geist;color:var(--text);outline:none}
+.cmd-in kbd{font:11px "Geist Mono";color:var(--text-3);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px}
+.cmd-g{padding:8px}
+.cmd-g h4{font-size:11.5px;font-weight:500;color:var(--text-3);padding:6px 8px 4px}
+.cmd-r{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:8px;font-size:13.5px}
+.cmd-r.on{background:var(--act-tint)}
+.cmd-r .det{font-size:12.5px;color:var(--text-2)}
+.cmd-r > .etq,.cmd-r > .selo{margin-left:auto}
+.cmd-r .ic{width:28px;height:28px;border-radius:7px;background:var(--active);display:grid;place-items:center;color:var(--text-2)}
+.cmd-r.on .ic{background:var(--act);color:var(--on-act)}
+.cmd-pe{display:flex;gap:16px;padding:10px 16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--text-3)}
+/* chegada */
+#chegada{background:rgb(37 99 235 / .18);place-items:center}
+[data-theme="dark"] #chegada{background:rgb(37 99 235 / .22)}
+.cheg{width:460px;max-width:calc(100vw - 32px);background:var(--bg);border-radius:18px;padding:28px;box-shadow:0 24px 80px rgb(37 99 235 / .35);text-align:center;border:1px solid rgb(37 99 235 / .4)}
+.cheg .sino{width:52px;height:52px;border-radius:50%;background:var(--act-tint);color:var(--act-text);display:grid;place-items:center;margin:0 auto 14px}
+.cheg .sino svg{width:24px;height:24px}
+@media (prefers-reduced-motion:no-preference){.cheg .sino{animation:tocar 1.2s ease-in-out infinite}}
+@keyframes tocar{0%,100%{box-shadow:0 0 0 0 rgb(37 99 235 / .35)}50%{box-shadow:0 0 0 12px rgb(37 99 235 / 0)}}
+.cheg small{font-size:12.5px;color:var(--act-text);font-weight:600}
+.cheg h2{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:4px 0}
+.cheg p{color:var(--text-2);font-size:13.5px}
+.cheg .obs{background:var(--warn-bg);border-radius:10px;padding:10px 12px;font-size:13px;margin:16px 0 0;text-align:left}
+.cheg .obs b{color:var(--warn);font-weight:600}
+.cheg .acoes{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.cheg .acoes .btn{justify-content:center}
+.cheg .volta-em{margin-top:14px;font-size:12px;color:var(--text-3)}
+
+[data-screen="hoje"] .t-hoje,[data-screen="conversa"] .t-conversa,[data-screen="funil"] .t-funil,[data-screen="ficha"] .t-ficha{display:flex}
+
+/* barra de comparação (não faz parte do design) */
+.comparar{position:fixed;bottom:0;left:0;right:0;height:48px;display:flex;gap:14px;align-items:center;justify-content:center;background:#222;color:#fff;font-size:12.5px;z-index:50;white-space:nowrap}
+.comparar span{color:#999}
+.seg{display:flex;background:#333;border-radius:8px;padding:2px}
+.seg button{padding:4px 10px;border-radius:6px;color:#bbb;font-size:12.5px}
+.seg button.on{background:#fff;color:#111}
+.comparar .abre{background:#333;color:#ddd;padding:5px 10px;border-radius:8px}
+.comparar .abre:hover{background:#444}
+@media (prefers-reduced-motion:no-preference){.item,.conv,.btn,.card,.lin{transition:background-color .12s,border-color .12s}}
+@media (max-width:1180px){.painel{display:none}.hoje{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== MENU (um só, filtrado por papel) ===== -->
+  <nav class="nav" aria-label="Menu">
+    <div class="marca"><span class="rs">RA</span><b>Ramon Antonio</b></div>
+    <button class="btn cheio grande chegou" data-roles="recepcao" data-abre="chegada"><i data-lucide="bell-ring"></i>Chegou cliente</button>
+    <button class="busca" data-abre="busca"><i data-lucide="search"></i>Buscar<kbd>Ctrl K</kbd></button>
+    <a class="item" data-go="hoje" href="#"><i data-lucide="sun"></i>Hoje</a>
+    <a class="item" data-go="conversa" href="#"><i data-lucide="message-circle"></i>Conversas<span class="n act" id="n-conv">3</span></a>
+    <a class="item" data-go="funil" data-roles="gestor sdr closer" href="#"><i data-lucide="columns-3"></i>Funil</a>
+    <a class="item" data-go="ficha" href="#"><i data-lucide="users"></i>Clientes</a>
+    <a class="item" href="#"><i data-lucide="calendar"></i>Agenda<span class="n neutro">3</span></a>
+    <a class="item" data-roles="gestor sdr closer advogada" href="#"><i data-lucide="calculator"></i>Cálculos</a>
+    <a class="item" data-roles="gestor" href="#"><i data-lucide="image"></i>Conteúdo<span class="n warn">2</span></a>
+    <a class="item" data-roles="gestor sdr closer" href="#"><i data-lucide="chart-no-axes-column"></i>Resultados</a>
+    <a class="item" data-roles="gestor" href="#"><i data-lucide="ellipsis"></i>Mais</a>
+    <div class="rodape-nav"><span class="av" id="av">ES</span><span><span id="quem">Eduardo</span><small id="papel">Gestor</small></span></div>
+  </nav>
+
+  <!-- ===== HOJE ===== -->
+  <main class="tela t-hoje">
+    <div class="cab-pag"><h1>Hoje</h1><span class="data">sexta, 3 de outubro</span></div>
+
+    <!-- Gestor -->
+    <div class="hoje" data-for="gestor">
+      <div>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Precisa de você</h2><span class="n">4</span></div>
+          <div class="alerta-cx bad"><i data-lucide="clock"></i><div><b>2 leads passaram dos 5 minutos sem resposta</b><span>Rosane Fagundes e Paulo Klein, na fila do SDR.</span></div><button class="btn">Ver fila</button></div>
+          <div class="alerta-cx warn"><i data-lucide="hourglass"></i><div><b>Funil parado em Em qualificação</b><span>5 leads há mais de 4 dias sem mudar de etapa.</span></div><button class="btn">Abrir no funil</button></div>
+          <div class="alerta-cx warn"><i data-lucide="file-warning"></i><div><b>3 ganhos com documentos pendentes há +7 dias</b><span>Sem documentação completa não entra no extrato.</span></div><button class="btn">Ver pós-venda</button></div>
+          <div class="alerta-cx act"><i data-lucide="image"></i><div><b>2 peças aguardando sua aprovação</b><span>Carrossel “Auxílio-acidente: quem tem direito” e estático de quarta.</span></div><button class="btn">Revisar</button></div>
+        </section>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Time hoje</h2></div>
+          <div class="time">
+            <div><b>SDR</b><span><span class="mono">11</span> respondidos</span><span>tempo médio <span class="mono">3m40s</span></span></div>
+            <div><b>Closer</b><span><span class="mono">3</span> reuniões</span><span><span class="mono">1</span> contrato assinado</span></div>
+            <div><b>Recepção</b><span><span class="mono">7</span> atribuídas</span><span><span class="mono">2</span> chegadas</span></div>
+          </div>
+        </section>
+      </div>
+      <aside class="lado">
+        <div class="caixa">
+          <h3>Outubro</h3>
+          <div class="met"><div class="l1">Contratos<b>7 <small>/ 13</small></b></div><div class="barra"><i style="width:54%"></i></div></div>
+          <div class="met"><div class="l1">Reuniões qualificadas<b>18</b></div></div>
+          <div class="met"><div class="l1">Documentação completa<b>4 <small>/ 7</small></b></div><div class="barra ok"><i style="width:57%"></i></div></div>
+        </div>
+        <div class="caixa etapas-resumo">
+          <h3>Funil agora</h3>
+          <div class="lin"><span class="etq s-novo">Novo</span><span class="mono">8</span></div>
+          <div class="lin"><span class="etq s-qual">Em qualificação</span><span class="mono">6</span></div>
+          <div class="lin"><span class="etq s-reun">Reunião marcada</span><span class="mono">4</span></div>
+          <div class="lin"><span class="etq s-ass">Aguardando assinatura</span><span class="mono">3</span></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- SDR -->
+    <div class="hoje" data-for="sdr">
+      <div>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Responder agora</h2><span class="n">3</span></div>
+          <p class="dica">Lead novo tem 5 minutos para a primeira resposta.</p>
+          <div class="fila">
+            <div class="lin tarde"><span class="col-prazo"><span class="selo bad prazo" data-s="-185"></span></span><div class="quem"><b>Rosane Fagundes</b><span>BPC/LOAS · Indicação · “Qual documento ainda falta?”</span></div><button class="btn cheio">Responder</button></div>
+            <div class="lin"><span class="col-prazo"><span class="selo warn prazo" data-s="108"></span></span><div class="quem"><b>Paulo Roberto Klein</b><span>Auxílio-acidente · Meta Ads · “Tenho a CAT, serve?”</span></div><button class="btn cheio">Responder</button></div>
+            <div class="lin"><span class="col-prazo"><span class="selo neutro prazo" data-s="252"></span></span><div class="quem"><b>Sérgio Zanella</b><span>Auxílio-acidente · Meta Ads · “Oi, vi o anúncio sobre auxílio…”</span></div><button class="btn cheio">Responder</button></div>
+          </div>
+        </section>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Follow-ups de hoje</h2><span class="n">2</span></div>
+          <div class="fila">
+            <div class="lin"><span class="col-prazo"><span class="selo warn">2 dias</span></span><div class="quem"><b>Anderson Luiz Becker</b><span>Auxílio-acidente · sumiu depois de mandar o áudio</span></div><button class="btn tint"><i data-lucide="sparkles"></i>Preparar follow-up</button></div>
+            <div class="lin"><span class="col-prazo"><span class="selo neutro">hoje</span></span><div class="quem"><b>Débora Lima</b><span>Auxílio-doença · ficou de mandar o CNIS</span></div><button class="btn tint"><i data-lucide="sparkles"></i>Preparar follow-up</button></div>
+          </div>
+        </section>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Reuniões que você marcou</h2><span class="n">2</span></div>
+          <div class="fila">
+            <div class="lin"><span class="hora">qui</span><span class="hora">10:00</span><div class="quem"><b>Marlene de Souza Costa</b><span>Aposentadoria especial · com o Closer</span></div><span class="etq s-reun">Reunião marcada</span></div>
+            <div class="lin"><span class="hora">qui</span><span class="hora">14:00</span><div class="quem"><b>Valdir Hoffmann</b><span>Trabalhista · com o Closer</span></div><span class="etq s-reun">Reunião marcada</span></div>
+          </div>
+        </section>
+      </div>
+      <aside class="lado">
+        <div class="caixa">
+          <h3>Seu mês</h3>
+          <div class="met"><div class="l1">Reuniões qualificadas<b>14 <small>/ 20</small></b></div><div class="barra"><i style="width:70%"></i></div></div>
+          <div class="met"><div class="l1">Contratos dos seus leads<b>6</b></div></div>
+          <div class="met"><div class="l1">Variável até agora<b>R$ 144</b></div></div>
+        </div>
+        <a class="btn" href="#" style="width:100%;justify-content:center">Ver meu extrato</a>
+      </aside>
+    </div>
+
+    <!-- Closer -->
+    <div class="hoje" data-for="closer">
+      <div>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Reuniões de hoje</h2><span class="n">3</span></div>
+          <div class="fila">
+            <div class="lin"><span class="hora">10:00</span><div class="quem"><b>Marlene de Souza Costa</b><span>Aposentadoria especial · objeção: desconfiança</span></div><span class="selo ok"><i data-lucide="check"></i>dossiê pronto</span><button class="btn cheio">Abrir dossiê</button></div>
+            <div class="lin"><span class="hora">14:00</span><div class="quem"><b>Valdir Hoffmann</b><span>Trabalhista</span></div><span class="selo warn">faltam 2 docs</span><button class="btn">Abrir dossiê</button></div>
+            <div class="lin"><span class="hora">16:30</span><div class="quem"><b>Jair Moretti</b><span>Auxílio-acidente</span></div><span class="selo ok"><i data-lucide="check"></i>dossiê pronto</span><button class="btn">Abrir dossiê</button></div>
+          </div>
+        </section>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Aguardando assinatura</h2><span class="n">2</span></div>
+          <div class="fila">
+            <div class="lin"><span class="col-prazo"><span class="selo neutro">5h</span></span><div class="quem"><b>Cláudia Ribeiro</b><span>Auxílio-doença · contrato enviado pelo ZapSign</span></div><button class="btn tint">Lembrar cliente</button></div>
+            <div class="lin"><span class="col-prazo"><span class="selo warn">2 dias</span></span><div class="quem"><b>Ademir Schmitz</b><span>Auxílio-acidente · contrato enviado pelo ZapSign</span></div><button class="btn tint">Lembrar cliente</button></div>
+          </div>
+        </section>
+      </div>
+      <aside class="lado">
+        <div class="caixa">
+          <h3>Seu mês</h3>
+          <div class="met"><div class="l1">Contratos fechados<b>9 <small>/ 13</small></b></div><div class="barra"><i style="width:69%"></i></div></div>
+          <div class="met"><div class="l1">Fechamento nas reuniões<b>41%</b></div></div>
+          <div class="met"><div class="l1">Variável até agora<b>R$ 198</b></div></div>
+        </div>
+        <a class="btn" href="#" style="width:100%;justify-content:center">Ver meu extrato</a>
+      </aside>
+    </div>
+
+    <!-- Recepção -->
+    <div class="hoje" data-for="recepcao">
+      <div>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Sem responsável</h2><span class="n">3</span></div>
+          <p class="dica">Mensagens novas na caixa do escritório. Atribua à advogada ou à controladoria.</p>
+          <div class="fila">
+            <div class="lin"><span class="col-prazo"><span class="selo neutro">4 min</span></span><div class="quem"><b>Maria Aparecida Souza</b><span>Cliente · “Queria saber se já tem data da minha perícia”</span></div><button class="btn cheio" data-go="conversa">Atribuir a…</button></div>
+            <div class="lin"><span class="col-prazo"><span class="selo warn">12 min</span></span><div class="quem"><b>José Carlos Nunes</b><span>Cliente · “Mandei o laudo novo”</span></div><button class="btn cheio">Atribuir a…</button></div>
+            <div class="lin"><span class="col-prazo"><span class="selo neutro">1 min</span></span><div class="quem"><b class="mono" style="font-size:13.5px">(47) 9 9711-0042</b><span>Número novo · “Boa tarde, vocês atendem aposentadoria?”</span></div><button class="btn tint">Encaminhar ao comercial</button></div>
+          </div>
+        </section>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Atendimentos de hoje</h2><span class="n">3</span><a href="#">do ADVBOX</a></div>
+          <div class="fila">
+            <div class="lin"><span class="hora">09:00</span><div class="quem"><b>Valdecir Martins</b><span>com Dra. Brenda</span></div><span class="selo ok"><i data-lucide="check"></i>atendido</span></div>
+            <div class="lin"><span class="hora">14:00</span><div class="quem"><b>Neusa Pereira</b><span>com Dra. Tamires · chegou 13:55</span></div><span class="selo warn">aguardando</span></div>
+            <div class="lin"><span class="hora">15:30</span><div class="quem"><b>Roberto Alves</b><span>com Dra. Rafaela</span></div><span class="selo neutro">ainda não chegou</span></div>
+          </div>
+        </section>
+      </div>
+      <aside class="lado">
+        <div class="caixa">
+          <h3>Caixa do escritório</h3>
+          <div class="dado"><span>Sem responsável</span><b class="mono">3</b></div>
+          <div class="dado"><span>Com a controladoria</span><b class="mono">5</b></div>
+          <div class="dado"><span>Com as advogadas</span><b class="mono">11</b></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Advogada -->
+    <div class="hoje" data-for="advogada">
+      <div>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Atribuídas a você</h2><span class="n">3</span></div>
+          <div class="fila">
+            <div class="lin"><span class="col-prazo"><span class="selo act">nova</span></span><div class="quem"><b>Maria Aparecida Souza</b><span>“Queria saber se já tem data da minha perícia” · por Gabriela há 6 min</span></div><button class="btn cheio" data-go="conversa">Responder</button></div>
+            <div class="lin"><span class="col-prazo"><span class="selo warn">1 dia</span></span><div class="quem"><b>Lurdes Fernandes</b><span>“O INSS mandou uma carta, o que faço?” · por Gabriela</span></div><button class="btn cheio">Responder</button></div>
+            <div class="lin"><span class="col-prazo"><span class="selo neutro">2h</span></span><div class="quem"><b>Ivo Rech</b><span>“Obrigado, doutora” · aguardando o cliente</span></div><button class="btn">Abrir</button></div>
+          </div>
+        </section>
+        <section class="bloco">
+          <div class="bloco-cab"><h2>Perícias e audiências da semana</h2><span class="n">2</span></div>
+          <div class="fila">
+            <div class="lin"><span class="hora">07/10</span><span class="hora">09:00</span><div class="quem"><b>Perícia · Maria Aparecida Souza</b><span>INSS Tubarão</span></div><span class="selo warn">avisar cliente</span></div>
+            <div class="lin"><span class="hora">09/10</span><span class="hora">14:00</span><div class="quem"><b>Audiência · Roberto Alves</b><span>JEF Tubarão</span></div><span class="selo ok"><i data-lucide="check"></i>cliente avisado</span></div>
+          </div>
+        </section>
+      </div>
+      <aside class="lado">
+        <div class="caixa">
+          <h3>Chegou na recepção</h3>
+          <div class="lin" style="border:0;padding:0"><div class="quem"><b>Neusa Pereira</b><span>atendimento 14:00 · chegou 13:55</span></div><span class="selo warn">aguardando</span></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- ===== CONVERSA ===== -->
+  <main class="tela t-conversa">
+    <!-- comercial -->
+    <section class="lista" data-for="gestor sdr closer">
+      <div class="lista-topo">
+        <h1>Conversas <button><i data-lucide="list-filter"></i>Filtrar</button></h1>
+        <div class="abas"><a href="#" class="on">Minhas<span class="mono">4</span></a><a href="#">Sem responsável<span class="mono">2</span></a><a href="#">Todas</a></div>
+      </div>
+      <a href="#" class="conv nova"><div class="l1"><span class="nome">Rosane Fagundes</span><span class="selo bad prazo" data-s="-185"></span></div><div class="tese"><span class="etq s-novo">Novo</span>BPC/LOAS</div><div class="msg">Qual documento ainda falta?</div></a>
+      <a href="#" class="conv nova"><div class="l1"><span class="nome">Paulo Roberto Klein</span><span class="selo warn prazo" data-s="108"></span></div><div class="tese"><span class="etq s-novo">Novo</span>Auxílio-acidente</div><div class="msg">Tenho a CAT, serve?</div></a>
+      <a href="#" class="conv on"><div class="l1"><span class="nome">Marlene de Souza Costa</span><span class="hora mono">10:22</span></div><div class="tese"><span class="etq s-reun">Reunião marcada</span>Aposentadoria especial</div><div class="msg">Vou pensar mais um pouco…</div></a>
+      <a href="#" class="conv"><div class="l1"><span class="nome">Cláudia Ribeiro</span><span class="hora mono">09:41</span></div><div class="tese"><span class="etq s-ass">Aguardando assinatura</span>Auxílio-doença</div><div class="msg">Obrigada, doutor!</div></a>
+      <a href="#" class="conv"><div class="l1"><span class="nome">Anderson Luiz Becker</span><span class="hora mono">ontem</span></div><div class="tese"><span class="etq s-qual">Em qualificação</span>Auxílio-acidente</div><div class="msg">Áudio · 0:32</div></a>
+    </section>
+    <section class="chat" data-for="gestor sdr closer">
+      <div class="chat-topo"><b>Marlene de Souza Costa</b>
+        <div class="dir"><button class="btn tint"><i data-lucide="sparkles"></i>Copiloto: Rascunho<i data-lucide="chevron-down"></i></button><button class="btn"><i data-lucide="check"></i>Resolver</button></div>
+      </div>
+      <div class="fluxo">
+        <span class="dia">Hoje</span>
+        <div class="b us">Bom dia, Marlene! Conseguimos conferir seu CNIS: são 22 anos e 4 meses de atividade especial como técnica de enfermagem.<time>10:04</time></div>
+        <div class="b them">Doutor, minha vizinha entrou com advogado e o INSS negou mesmo assim. Será que vale a pena pra mim? Vou pensar mais um pouco.<time>10:22</time></div>
+        <div class="evento"><i data-lucide="bot"></i>Piloto confirmou o horário de quinta, 10h · <u>Pausar</u></div>
+      </div>
+      <div class="compor"><div class="modo"><span class="on">Responder</span><span>Nota interna</span></div><textarea placeholder="Escreva a resposta…"></textarea>
+        <div class="acoes"><button class="ia"><i data-lucide="sparkles"></i>Sugerir resposta</button><button class="ia"><i data-lucide="text"></i>Resumir</button><button class="btn cheio">Enviar</button></div></div>
+    </section>
+    <aside class="painel" data-for="gestor sdr closer">
+      <div class="p-sec s-reun"><h3>Etapa<span class="mono">há 3 dias</span></h3><span class="etq s-reun" style="font-size:13px;padding:6px 12px">Reunião marcada</span><div class="esteira"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div><div class="apoio">Quinta, 10h · com o Closer</div></div>
+      <div class="p-sec proximo"><h3>Próximo passo</h3><div class="grande">Responder a objeção</div><div class="apoio">Se ela confirmar, preparar o dossiê da reunião.</div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn cheio" data-go="ficha">Abrir ficha</button><button class="btn">Follow-up</button></div></div>
+      <div class="p-sec risco"><div class="alerta"><i data-lucide="triangle-alert"></i>Risco de esfriar</div><div class="apoio" style="color:var(--text)">“Vou pensar” + 2 objeções na semana.</div></div>
+      <a href="#" class="recolhe">Qualificação<span class="mono">4/6</span><i data-lucide="chevron-right"></i></a>
+      <a href="#" class="recolhe">Documentos<span class="mono">3/5</span><i data-lucide="chevron-right"></i></a>
+      <a href="#" class="recolhe">Cálculos<span class="mono">2</span><i data-lucide="chevron-right"></i></a>
+    </aside>
+
+    <!-- caixa do escritório -->
+    <section class="lista" data-for="recepcao advogada">
+      <div class="lista-topo">
+        <h1>Caixa do escritório</h1>
+        <div class="abas"><a href="#" class="on"><span class="r-rec">Sem responsável</span><span class="r-adv">Minhas</span><span class="mono">3</span></a><a href="#">Todas</a></div>
+      </div>
+      <a href="#" class="conv on nova"><div class="l1"><span class="nome">Maria Aparecida Souza</span><span class="hora mono">13:48</span></div><div class="tese">Cliente · Auxílio-doença</div><div class="msg">Queria saber se já tem data da minha perícia</div></a>
+      <a href="#" class="conv nova"><div class="l1"><span class="nome">José Carlos Nunes</span><span class="selo warn">12 min</span></div><div class="tese">Cliente · Aposentadoria por idade</div><div class="msg">Mandei o laudo novo</div></a>
+      <a href="#" class="conv"><div class="l1"><span class="nome mono">(47) 9 9711-0042</span><span class="hora mono">13:59</span></div><div class="tese">Número novo</div><div class="msg">Boa tarde, vocês atendem aposentadoria?</div></a>
+    </section>
+    <section class="chat" data-for="recepcao advogada">
+      <div class="chat-topo"><b>Maria Aparecida Souza</b><div class="dir"><button class="btn"><i data-lucide="check"></i>Resolver</button></div></div>
+      <div class="fluxo">
+        <span class="dia">Hoje</span>
+        <div class="b them">Boa tarde! Queria saber se já tem data da minha perícia, recebi uma carta mas não entendi.<time>13:48</time></div>
+        <div class="nota r-adv"><b>Nota da Gabriela:</b> perícia dela está no ADVBOX, 07/10. Ela pediu pra explicar a carta.</div>
+      </div>
+      <div class="compor"><div class="modo"><span class="on">Responder</span><span>Nota interna</span></div><textarea placeholder="Escreva a resposta…"></textarea>
+        <div class="acoes"><button class="ia"><i data-lucide="paperclip"></i></button><button class="btn cheio">Enviar</button></div></div>
+    </section>
+    <aside class="painel" data-for="recepcao advogada">
+      <div class="atrib-info r-adv"><i data-lucide="user-check"></i>Atribuída a você por Gabriela · 13:52<button>Devolver</button></div>
+      <div class="p-sec r-rec">
+        <div class="atribuir">
+          <button class="btn cheio grande"><i data-lucide="user-plus"></i>Atribuir a…</button>
+          <div class="menu-pessoas">
+            <a href="#" class="sug"><span class="av">TA</span>Dra. Tamires<small>do processo</small></a>
+            <a href="#"><span class="av">BR</span>Dra. Brenda</a>
+            <a href="#"><span class="av">RA</span>Dra. Rafaela</a>
+            <a href="#"><span class="av">CR</span>Dra. Crisleine</a>
+            <div class="sep"></div>
+            <a href="#"><span class="av">CT</span>Controladoria (Thaís)</a>
+          </div>
+        </div>
+      </div>
+      <div class="p-sec">
+        <h3>Cliente desde 03/2023</h3>
+        <div class="dado"><span>Advogada</span><span>Dra. Tamires</span></div>
+        <div class="dado"><span>Telefone</span><span class="mono">(48) 9 9120-3381</span></div>
+        <div class="compromisso"><b>Perícia · 07/10, 09:00</b><span>INSS Tubarão · cliente ainda não foi avisada</span></div>
+      </div>
+      <div class="p-sec">
+        <h3>Processos no ADVBOX<span class="mono">1</span></h3>
+        <div class="grande mono" style="font-size:12.5px">5003412-18.2024.4.04.7207</div>
+        <div class="apoio">Auxílio-doença · JEF Tubarão</div>
+        <div class="dado" style="margin-top:8px"><span>Último andamento</span><span>30/09 · Perícia designada</span></div>
+      </div>
+      <a href="#" class="recolhe">Ver no ADVBOX<i data-lucide="external-link"></i></a>
+    </aside>
+  </main>
+
+  <!-- ===== FUNIL ===== -->
+  <main class="tela t-funil">
+    <div class="cab-pag"><h1>Funil</h1>
+      <button class="filtro"><i data-lucide="plus"></i>Tese</button><button class="filtro"><i data-lucide="plus"></i>Responsável</button>
+      <button class="filtro on"><i data-lucide="file-warning"></i>Ganhos com docs pendentes · 3</button>
+      <div class="dir"><button class="btn cheio"><i data-lucide="plus"></i>Novo lead</button></div></div>
+    <div class="quadro">
+      <div class="col"><div class="col-cab s-novo"><b>Novo</b><span class="mono">8</span><span class="valor">R$ 31.200</span></div>
+        <div class="card"><div class="l1"><span class="nome">Rosane Fagundes</span><span class="selo bad prazo" data-s="-185"></span></div><div class="tese">BPC/LOAS</div><div class="meta"><span>Indicação</span><span class="av">SD</span></div><div class="acoes-card"><a href="#">Conversa</a><a href="#">Follow-up</a><a href="#">Dossiê</a></div></div>
+        <div class="card"><div class="l1"><span class="nome">Sérgio Zanella</span><span class="selo neutro prazo" data-s="252"></span></div><div class="tese">Auxílio-acidente</div><div class="meta"><span>Meta Ads</span><span class="av">SD</span></div><div class="acoes-card"><a href="#">Conversa</a><a href="#">Follow-up</a><a href="#">Dossiê</a></div></div>
+      </div>
+      <div class="col"><div class="col-cab s-qual"><b>Em qualificação</b><span class="mono">6</span><span class="valor">R$ 27.900</span></div>
+        <div class="card"><div class="l1"><span class="nome">João Pedro Martins</span><span class="quieto">1h</span></div><div class="tese">Auxílio-acidente</div><div class="meta"><span class="selo warn">docs 2/5</span><span class="mono">R$ 6.390</span><span class="av">SD</span></div><div class="acoes-card"><a href="#">Conversa</a><a href="#">Follow-up</a><a href="#">Dossiê</a></div></div>
+      </div>
+      <div class="col"><div class="col-cab s-reun"><b>Reunião marcada</b><span class="mono">4</span><span class="valor">R$ 22.400</span></div>
+        <div class="card"><div class="l1"><span class="nome">Marlene de Souza Costa</span><span class="quieto">qui 10h</span></div><div class="tese">Aposentadoria especial</div><div class="meta"><span class="selo warn">docs 3/5</span><span class="av">CL</span></div><div class="acoes-card"><a href="#">Conversa</a><a href="#">Follow-up</a><a href="#">Dossiê</a></div></div>
+      </div>
+      <div class="col"><div class="col-cab s-ass"><b>Aguardando assinatura</b><span class="mono">3</span><span class="valor">R$ 15.100</span></div>
+        <div class="card"><div class="l1"><span class="nome">Cláudia Ribeiro</span><span class="quieto">5h</span></div><div class="tese">Auxílio-doença</div><div class="meta"><span class="selo ok">docs 5/5</span><span class="av">CL</span></div><div class="acoes-card"><a href="#">Conversa</a><a href="#">Follow-up</a><a href="#">Dossiê</a></div></div>
+      </div>
+      <div class="col"><div class="col-cab s-ganho"><b>Ganhamos</b><span class="mono">7</span><span class="valor">R$ 41.300 · outubro</span></div>
+        <div class="card"><div class="l1"><span class="nome">Ivone Cardoso</span><span class="quieto">8 dias</span></div><div class="tese">Auxílio-acidente</div><div class="meta"><span class="selo warn">docs 3/5</span><span class="mono">R$ 7.150</span><span class="av">CL</span></div><div class="acoes-card"><a href="#">Conversa</a><a href="#">Cobrar documentos</a></div></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== CLIENTES / FICHA ===== -->
+  <main class="tela t-ficha">
+    <div class="ficha">
+      <a href="#" class="volta"><i data-lucide="arrow-left"></i>Clientes</a>
+      <div class="ficha-cab">
+        <div><h1>João Pedro Martins</h1><div class="ficha-sub"><span class="etq s-qual">Em qualificação</span>Auxílio-acidente · Joinville/SC · metalúrgico</div></div>
+        <div class="dir"><button class="btn"><i data-lucide="message-circle"></i>Conversa</button><button class="btn cheio ganho"><i data-lucide="trophy"></i>Marcar como ganho</button></div>
+      </div>
+      <nav class="abas-ficha"><a href="#" class="on">Resumo</a><a href="#">Documentos <span class="mono">2/5</span></a><a href="#">Cálculos <span class="mono">1</span></a><a href="#">Reuniões</a><a href="#">Linha da vida</a><a href="#">Painel do cliente</a></nav>
+      <div class="ficha-grid">
+        <div>
+          <section class="bl"><h2>Resumo do caso</h2><p>Acidente na prensa em 14/03/2024 com perda parcial de movimento da mão direita. Recebeu auxílio-doença (B91) até 30/08/2024 e voltou ao trabalho com limitação. CAT emitida pela empresa.</p></section>
+          <section class="bl"><h2>Documentos<span class="mono">2/5</span><a href="#">Cobrar pendentes</a></h2>
+            <table><tr><th>Documento</th><th>Situação</th><th class="r">Recebido</th></tr>
+              <tr><td>RG e CPF</td><td><span class="selo ok">Recebido</span></td><td class="r mono">29/09</td></tr>
+              <tr><td>CAT</td><td><span class="selo ok">Recebido</span></td><td class="r mono">hoje</td></tr>
+              <tr><td>Laudos médicos</td><td><span class="selo warn">Pendente</span></td><td class="r mono">—</td></tr>
+              <tr><td>CNIS</td><td><span class="selo warn">Pendente</span></td><td class="r mono">—</td></tr></table></section>
+        </div>
+        <aside class="lado">
+          <div class="caixa" style="background:var(--act-tint);border-color:transparent"><h3 style="color:var(--act-text);font-weight:600">Próximo passo</h3><div style="font-weight:500">Receber laudos e CNIS</div><div style="color:var(--text-2);font-size:12.5px">Depois disso, marcar a reunião.</div></div>
+          <div class="dado"><span>Responsável</span><span>SDR</span></div>
+          <div class="dado"><span>Valor estimado</span><span class="mono">R$ 6.390,00</span></div>
+          <div class="dado"><span>Telefone</span><span class="mono">(47) 9 9634-2210</span></div>
+          <div class="dado"><span>Origem</span><span>Meta Ads</span></div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===== BUSCA Ctrl K ===== -->
+<div class="sobre" id="busca" role="dialog" aria-label="Buscar">
+  <div class="cmd">
+    <div class="cmd-in"><i data-lucide="search"></i><input value="joão p" aria-label="Buscar"><kbd>esc</kbd></div>
+    <div class="cmd-g"><h4>Clientes e leads</h4>
+      <a href="#" class="cmd-r on" data-go="ficha"><span class="ic"><i data-lucide="user"></i></span><div><div>João Pedro Martins</div><div class="det">Auxílio-acidente · <span class="mono">(47) 9 9634-2210</span></div></div><span class="etq s-qual">Em qualificação</span></a>
+      <a href="#" class="cmd-r"><span class="ic"><i data-lucide="user"></i></span><div><div>João Paulo Ramos</div><div class="det">Cliente desde 2022 · Dra. Brenda</div></div><span class="selo neutro">cliente</span></a>
+    </div>
+    <div class="cmd-g"><h4>Processos</h4>
+      <a href="#" class="cmd-r"><span class="ic"><i data-lucide="scale"></i></span><div><div class="mono" style="font-size:13px">5001876-22.2023.4.04.7216</div><div class="det">João Paulo Ramos · Auxílio-doença</div></div></a>
+    </div>
+    <div class="cmd-g"><h4>Ações</h4>
+      <a href="#" class="cmd-r"><span class="ic"><i data-lucide="plus"></i></span><div>Novo lead</div></a>
+      <a href="#" class="cmd-r"><span class="ic"><i data-lucide="calculator"></i></span><div>Novo cálculo</div></a>
+    </div>
+    <div class="cmd-pe"><span>↑↓ navegar</span><span>↵ abrir</span><span>Busca por nome, CPF, telefone ou nº do processo</span></div>
+  </div>
+</div>
+
+<!-- ===== CHEGADA ===== -->
+<div class="sobre" id="chegada" role="alertdialog" aria-label="Cliente chegou">
+  <div class="cheg">
+    <div class="sino"><i data-lucide="bell-ring"></i></div>
+    <small>CLIENTE CHEGOU</small>
+    <h2>Neusa Pereira</h2>
+    <p>Atendimento das 14:00 · avisado por Gabriela às 13:55</p>
+    <div class="obs"><b>Recado:</b> trouxe os exames novos da ortopedia.</div>
+    <div class="acoes">
+      <button class="btn cheio grande" data-fecha>Vou atender agora</button>
+      <button class="btn grande" data-fecha>Peça pra aguardar uns minutos</button>
+      <button class="btn grande" data-fecha style="border-color:transparent;color:var(--text-2)">Não posso atender</button>
+    </div>
+    <div class="volta-em">Sem resposta em <span class="mono" id="volta">2:41</span>, o aviso volta pra Gabriela.</div>
+  </div>
+</div>
+
+<div class="comparar" role="toolbar" aria-label="Comparar">
+  <span>Tema</span><div class="seg" data-attr="theme"><button data-v="light">Claro</button><button data-v="dark">Escuro</button></div>
+  <span>Papel</span><div class="seg" data-attr="role"><button data-v="gestor">Gestor</button><button data-v="sdr">SDR</button><button data-v="closer">Closer</button><button data-v="recepcao">Recepção</button><button data-v="advogada">Advogada</button></div>
+  <span>Tela</span><div class="seg" data-attr="screen"><button data-v="hoje">Hoje</button><button data-v="conversa">Conversa</button><button data-v="funil">Funil</button><button data-v="ficha">Ficha</button></div>
+  <button class="abre" data-abre="busca">Busca (Ctrl K)</button><button class="abre" data-abre="chegada">Chegada</button>
+</div>
+
+<script>
+// ponytail: protótipo — alterna atributos no <html> e mostra/esconde por papel
+const root = document.documentElement;
+const PESSOA = {
+  gestor: ['ES', 'Eduardo', 'Gestor'], sdr: ['SD', 'SDR', 'SDR'], closer: ['CL', 'Closer', 'Closer'],
+  recepcao: ['GA', 'Gabriela', 'Recepção'], advogada: ['TA', 'Dra. Tamires', 'Advogada'],
+};
+const sync = () => {
+  const role = root.dataset.role;
+  document.querySelectorAll('[data-roles]').forEach(el =>
+    el.toggleAttribute('data-hide', !el.dataset.roles.split(' ').includes(role)));
+  document.querySelectorAll('[data-for]').forEach(el =>
+    el.toggleAttribute('data-hide', !el.dataset.for.split(' ').includes(role)));
+  document.querySelectorAll('.r-rec').forEach(el => el.toggleAttribute('data-hide', role !== 'recepcao'));
+  document.querySelectorAll('.r-adv').forEach(el => el.toggleAttribute('data-hide', role !== 'advogada'));
+  document.querySelectorAll('.hoje').forEach(el => el.style.display = el.dataset.for === role ? 'grid' : '');
+  const [av, nome, papel] = PESSOA[role];
+  document.getElementById('av').textContent = av;
+  document.getElementById('quem').textContent = nome;
+  document.getElementById('papel').textContent = papel;
+  document.querySelectorAll('.seg').forEach(s => s.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('on', root.dataset[s.dataset.attr] === b.dataset.v)));
+  document.querySelectorAll('.item[data-go]').forEach(a => a.classList.toggle('on', a.dataset.go === root.dataset.screen));
+};
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+  root.dataset[b.parentElement.dataset.attr] = b.dataset.v; sync();
+});
+document.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', e => {
+  e.preventDefault(); fechar(); root.dataset.screen = a.dataset.go; sync();
+}));
+const fechar = () => document.querySelectorAll('.sobre').forEach(o => o.classList.remove('on'));
+document.querySelectorAll('[data-abre]').forEach(b => b.onclick = () => {
+  fechar(); document.getElementById(b.dataset.abre).classList.add('on');
+  if (b.dataset.abre === 'busca') document.querySelector('.cmd input').focus();
+});
+document.querySelectorAll('[data-fecha]').forEach(b => b.onclick = fechar);
+document.querySelectorAll('.sobre').forEach(o => o.addEventListener('click', e => { if (e.target === o) fechar(); }));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') fechar();
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.querySelector('[data-abre="busca"]').click(); }
+});
+
+// selo do prazo de 5 min: cinza → âmbar (faltando 2 min) → vermelho (estourou)
+const fmt = s => `${Math.floor(Math.abs(s) / 60)}:${String(Math.abs(s) % 60).padStart(2, '0')}`;
+const prazos = () => document.querySelectorAll('.prazo').forEach(el => {
+  const s = +el.dataset.s;
+  el.className = 'selo prazo ' + (s < 0 ? 'bad' : s <= 120 ? 'warn' : 'neutro');
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${s < 0 ? '+' : ''}${fmt(s)}`;
+  el.title = s < 0 ? 'Passou dos 5 minutos' : 'Tempo restante para a 1ª resposta';
+  el.dataset.s = s - 1;
+});
+let volta = 161;
+setInterval(() => {
+  prazos();
+  volta = volta > 0 ? volta - 1 : 0;
+  document.getElementById('volta').textContent = fmt(volta);
+}, 1000);
+
+// #dark,sdr,hoje,busca abre direto numa combinação
+location.hash.slice(1).split(',').forEach(v => {
+  if (['light', 'dark'].includes(v)) root.dataset.theme = v;
+  else if (PESSOA[v]) root.dataset.role = v;
+  else if (['busca', 'chegada'].includes(v)) document.getElementById(v).classList.add('on');
+  else if (v) root.dataset.screen = v;
+});
+prazos();
+sync();
+lucide.createIcons();
+</script>
+</body>
+</html>
