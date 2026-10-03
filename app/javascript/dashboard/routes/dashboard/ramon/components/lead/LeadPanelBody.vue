@@ -406,6 +406,35 @@ const discard = async () => {
           <span class="i-lucide-hourglass size-3" />
           {{ prescriptionLabel }}
         </span>
+        <!-- FORK(ramon) Onda 5: o que saiu do card do funil fica aqui na gaveta -->
+        <span
+          v-if="lead.latest_triage?.status === 'awaiting_human'"
+          data-testid="panel-triage-awaiting"
+          :title="$t('RAMON.TRIAGE.AWAITING_HUMAN_HINT')"
+          class="rounded-full bg-n-amber-9/15 px-2.5 py-0.5 text-[11px] text-n-amber-11"
+        >
+          {{ $t('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN') }}
+        </span>
+        <span
+          v-if="lead.follow_up_count > 0"
+          data-testid="panel-follow-up"
+          class="inline-flex items-center gap-1 rounded-full bg-n-slate-3 px-2.5 py-0.5 text-[11px] text-n-slate-11"
+        >
+          <span class="i-lucide-history size-3" />
+          {{
+            lead.follow_up_last_at
+              ? $t('RAMON.FOLLOW_UP.CARD_TITLE', {
+                  count: lead.follow_up_count,
+                  date: new Date(lead.follow_up_last_at).toLocaleDateString(
+                    'pt-BR',
+                    { day: '2-digit', month: '2-digit' }
+                  ),
+                })
+              : $t('RAMON.FOLLOW_UP.CARD_TITLE_NO_DATE', {
+                  count: lead.follow_up_count,
+                })
+          }}
+        </span>
         <span
           v-if="formattedValue"
           data-testid="panel-value-chip"

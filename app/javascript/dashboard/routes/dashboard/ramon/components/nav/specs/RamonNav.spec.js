@@ -97,7 +97,7 @@ describe('RamonNav', () => {
       'ramon_index',
       'home',
       'ramon_funil',
-      'ramon_pessoas',
+      'ramon_clientes',
       'ramon_agenda',
       'ramon_calculos',
       'ramon_conteudo',

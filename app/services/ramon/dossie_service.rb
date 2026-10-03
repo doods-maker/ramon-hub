@@ -21,6 +21,7 @@ class Ramon::DossieService
       esteira: esteira_block,
       docs: docs_block,
       calculos: calculos_block,
+      calculos_total: @lead.calculos.count,
       reunioes: reunioes_block,
       timeline: timeline_block,
       pendencias: { tasks: open_tasks, docs_missing: docs_missing }
@@ -40,7 +41,10 @@ class Ramon::DossieService
       probability: @lead.lead_stage&.probability,
       stage_entered_at: @lead.stage_entered_at,
       valor_estimado_origem: @lead.custom_attributes&.dig('valor_estimado', 'origem'),
-      thesis_name: @thesis&.name
+      thesis_name: @thesis&.name,
+      profissao: @lead.custom_attributes&.dig('colheita', 'dados', 'cliente', 'profissao'),
+      sdr: @lead.sdr&.name,
+      closer: @lead.closer&.name
     }.merge(contact_fields)
   end
 

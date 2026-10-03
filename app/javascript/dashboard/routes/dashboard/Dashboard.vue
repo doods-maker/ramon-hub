@@ -6,6 +6,8 @@ import RamonNav from './ramon/components/nav/RamonNav.vue';
 import { ehAreaChatwoot } from './ramon/helpers/navItems';
 import AlertaChegada from './ramon/components/equipe/AlertaChegada.vue';
 import ChegouCliente from './ramon/components/equipe/ChegouCliente.vue';
+// FORK(ramon): paleta Ctrl K própria (redesign v2, Onda 5)
+import CommandPalette from './ramon/components/busca/CommandPalette.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
@@ -45,6 +47,7 @@ export default {
     FloatingCallWidget,
     AlertaChegada,
     ChegouCliente,
+    CommandPalette,
     MobileSidebarLauncher,
   },
   setup() {
@@ -177,6 +180,7 @@ export default {
       <template v-if="!showUpgradePage">
         <router-view />
         <CommandBar />
+        <CommandPalette />
         <CopilotLauncher />
         <MobileSidebarLauncher
           :is-mobile-sidebar-open="isMobileSidebarOpen"

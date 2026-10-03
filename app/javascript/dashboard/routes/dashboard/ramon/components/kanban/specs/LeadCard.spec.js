@@ -1,5 +1,13 @@
 import { shallowMount } from '@vue/test-utils';
 import LeadCard from '../LeadCard.vue';
+import Selo from '../../hoje/Selo.vue';
+import SeloPrazo from '../../hoje/SeloPrazo.vue';
+
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({
+    t: (key, vars) => (vars ? `${key} ${JSON.stringify(vars)}` : key),
+  }),
+}));
 
 const lead = {
   id: 10,
@@ -13,27 +21,40 @@ const lead = {
   closer_name: 'Eduardo Schlata',
 };
 
+const TARDE = 'shadow-[inset_3px_0_0_rgb(var(--ruby-9))]';
+const PARADO = 'shadow-[inset_3px_0_0_rgb(var(--amber-9))]';
+
 const mountCard = (props = {}) =>
   shallowMount(LeadCard, {
     props: { lead, ...props },
-    global: { mocks: { $t: k => k } },
+    global: {
+      mocks: { $t: (k, v) => (v ? `${k} ${JSON.stringify(v)}` : k) },
+      renderStubDefaultSlot: true,
+    },
   });
 
 describe('LeadCard.vue', () => {
-  it('renderiza nome, benefício e valor compacto dourado', () => {
+  it('renderiza nome, tese (cai pro benefício), valor mono e iniciais', () => {
     const wrapper = mountCard();
     expect(wrapper.text()).toContain('João');
     expect(wrapper.text()).toContain('Auxílio-acidente');
+    expect(wrapper.text()).toContain('ES');
     const value = wrapper.find('[data-testid="lead-value"]');
     expect(value.text()).toMatch(/R\$\s?12\s?mil/);
-    expect(value.classes()).toContain('text-n-iris-11');
+    expect(value.classes()).toContain('font-mono');
   });
 
-  it('mostra traço no lugar do valor quando o lead não tem valor', () => {
+  it('tese do lead tem prioridade sobre o benefício', () => {
+    const wrapper = mountCard({
+      lead: { ...lead, thesis_name: 'Aposentadoria especial' },
+    });
+    expect(wrapper.text()).toContain('Aposentadoria especial');
+    expect(wrapper.text()).not.toContain('Auxílio-acidente');
+  });
+
+  it('sem valor não mostra o valor', () => {
     const wrapper = mountCard({ lead: { ...lead, value: null } });
-    const value = wrapper.find('[data-testid="lead-value"]');
-    expect(value.text()).toBe('—');
-    expect(value.classes()).not.toContain('text-n-iris-11');
+    expect(wrapper.find('[data-testid="lead-value"]').exists()).toBe(false);
   });
 
   it('emite open-lead ao clicar no corpo', async () => {
@@ -42,23 +63,35 @@ describe('LeadCard.vue', () => {
     expect(wrapper.emitted('openLead')[0][0]).toEqual(lead);
   });
 
-  describe('linha de próxima ação', () => {
-    it('tarefa vencida = dot/texto ruby', () => {
+  describe('selo de documentos', () => {
+    it('incompleto = âmbar "docs 2/5"', () => {
       const wrapper = mountCard({
-        lead: {
-          ...lead,
-          next_task_due_at: '2020-01-01T09:00:00Z',
-          next_task_title: 'Ligar pós-perícia',
-        },
+        lead: { ...lead, docs_received: 2, docs_total: 5 },
       });
-      const action = wrapper.find('[data-testid="next-action"]');
-      expect(action.exists()).toBe(true);
-      expect(action.classes()).toContain('text-n-ruby-11');
+      const selo = wrapper.findComponent(Selo);
+      expect(selo.props('tom')).toBe('warn');
+      expect(selo.text()).toContain('"received":2');
     });
 
-    it('reunião marcada = íris com data e hora, não contagem de dias', () => {
+    it('completo = verde', () => {
+      const wrapper = mountCard({
+        lead: { ...lead, docs_received: 5, docs_total: 5 },
+      });
+      expect(wrapper.findComponent(Selo).props('tom')).toBe('ok');
+    });
+
+    it('tese sem checklist não mostra selo', () => {
+      const wrapper = mountCard({
+        lead: { ...lead, docs_received: 0, docs_total: 0 },
+      });
+      expect(wrapper.find('[data-testid="docs-badge"]').exists()).toBe(false);
+    });
+  });
+
+  describe('tempo quieto à direita do nome', () => {
+    it('reunião marcada mostra dia e hora, não o título', () => {
       const due = new Date(Date.now() + 5 * 86400000);
-      due.setHours(14, 30, 0, 0);
+      due.setUTCHours(17, 30, 0, 0);
       const wrapper = mountCard({
         lead: {
           ...lead,
@@ -67,43 +100,21 @@ describe('LeadCard.vue', () => {
           next_task_kind: 'meeting',
         },
       });
-      const action = wrapper.find('[data-testid="next-action"]');
-      expect(action.classes()).toContain('text-n-iris-11');
-      expect(action.text()).toContain('14:30');
-      expect(action.text()).not.toContain('Reunião Cal.com');
+      const quiet = wrapper.find('[data-testid="lead-quiet"]');
+      expect(quiet.text()).toContain('14:30'); // fuso do escritório
+      expect(wrapper.text()).not.toContain('Reunião Cal.com');
     });
 
-    it('tarefa de hoje = âmbar', () => {
-      // fim do dia local: sempre "hoje" e ainda no futuro
-      const due = new Date();
-      due.setHours(23, 59, 59, 0);
-      const wrapper = mountCard({
-        lead: { ...lead, next_task_due_at: due.toISOString() },
-      });
-      expect(wrapper.find('[data-testid="next-action"]').classes()).toContain(
-        'text-n-amber-11'
-      );
-    });
-
-    it('tarefa futura = teal', () => {
+    it('sem reunião mostra há quanto tempo está na etapa', () => {
       const wrapper = mountCard({
         lead: {
           ...lead,
-          next_task_due_at: new Date(Date.now() + 5 * 86400000).toISOString(),
+          stage_entered_at: new Date(Date.now() - 5 * 3600000).toISOString(),
         },
       });
-      expect(wrapper.find('[data-testid="next-action"]').classes()).toContain(
-        'text-n-teal-11'
+      expect(wrapper.find('[data-testid="lead-quiet"]').text()).toBe(
+        'RAMON.HOJE.HORAS {"count":5}'
       );
-    });
-
-    it('sem tarefa aberta mostra o alerta "sem próxima ação"', () => {
-      const wrapper = mountCard({
-        lead: { ...lead, open_tasks_count: 0, next_task_due_at: null },
-      });
-      const alert = wrapper.find('[data-testid="no-next-action"]');
-      expect(alert.exists()).toBe(true);
-      expect(alert.classes()).toContain('text-n-ruby-11');
     });
   });
 
@@ -122,15 +133,15 @@ describe('LeadCard.vue', () => {
       expect(wrapper.emitted('openLead')).toBeFalsy();
     });
 
-    it('marca bronze quando selected', () => {
+    it('marca azul quando selected', () => {
       const wrapper = mountCard({ selectable: true, selected: true });
       expect(wrapper.find('[data-testid="select-toggle"]').classes()).toContain(
-        'bg-n-iris-9'
+        'bg-n-blue-9'
       );
     });
   });
 
-  describe('ações rápidas do hover', () => {
+  describe('ações do rodapé', () => {
     it('emite open-conversation com o id e não abre o lead', async () => {
       const wrapper = mountCard({ lead: { ...lead, conversation_id: 99 } });
       await wrapper.find('[data-testid="open-conversation"]').trigger('click');
@@ -151,51 +162,97 @@ describe('LeadCard.vue', () => {
       expect(wrapper.emitted('openDossie')[0][0]).toEqual(lead);
       expect(wrapper.emitted('openLead')).toBeFalsy();
     });
-  });
 
-  describe('risco na borda esquerda', () => {
-    it('prescrevendo (parcelas perdidas) = borda ruby', () => {
-      const wrapper = mountCard({
-        lead: { ...lead, dcb_em: '2019-01-01', benefit_monthly_value: 1412 },
-      });
-      expect(wrapper.classes()).toContain('border-l-n-ruby-9');
-      expect(wrapper.classes()).toContain('border-l-[3px]');
-    });
-
-    it('parado (stalled) = borda âmbar', () => {
-      const wrapper = mountCard({ lead: { ...lead, stalled: true } });
-      expect(wrapper.classes()).toContain('border-l-n-amber-9');
-    });
-
-    it('sem risco = sem borda de 3px', () => {
-      const wrapper = mountCard();
-      expect(wrapper.classes()).not.toContain('border-l-[3px]');
-    });
-  });
-
-  describe('pill de SLA de 1º contato', () => {
-    const minute = 60000;
-
-    it('dentro do SLA = pill âmbar com o tempo restante', () => {
+    it('ganho com docs pendentes: "Cobrar documentos" emite cobrarDocs e mantém o Dossiê', async () => {
       const wrapper = mountCard({
         lead: {
           ...lead,
-          sla: {
-            due_at: new Date(Date.now() + 41 * minute).toISOString(),
-            replied_at: null,
-            minutes: 60,
-          },
+          won_at: '2026-09-25T10:00:00Z',
+          docs_received: 3,
+          docs_total: 5,
         },
       });
-      const pill = wrapper.find('[data-testid="sla-pill"]');
-      expect(pill.exists()).toBe(true);
-      expect(pill.text()).toBe('41min');
-      expect(pill.classes()).toContain('text-n-amber-11');
-      // dentro do SLA não muda a borda nem mostra o CTA
-      expect(wrapper.classes()).not.toContain('border-l-n-ruby-9');
+      expect(wrapper.find('[data-testid="open-dossie"]').exists()).toBe(true);
+      await wrapper.find('[data-testid="charge-docs"]').trigger('click');
+      expect(wrapper.emitted('cobrarDocs')[0][0].id).toBe(10);
+      expect(wrapper.emitted('openLead')).toBeFalsy();
+    });
+  });
+
+  describe('selos dos filtros do funil', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-10-03T12:00:00Z'));
+    });
+    afterEach(() => vi.useRealTimers());
+
+    it('prescrição: % do prazo, DCB e "Perdemos" no lead perdido', () => {
+      const wrapper = mountCard({
+        filtro: 'prescricao',
+        lead: { ...lead, dcb_em: '2023-01-10', lost_at: '2026-05-01' },
+      });
+      expect(wrapper.find('[data-testid="radar-pct"]').text()).toContain(
+        '"pct":73'
+      );
+      expect(wrapper.text()).toContain('10/01/23');
+      expect(wrapper.find('[data-testid="radar-lost-chip"]').exists()).toBe(
+        true
+      );
     });
 
-    it('estourado = pill ruby, borda ruby e CTA "Responder agora"', async () => {
+    it('sem o filtro o card não mostra o selo do radar', () => {
+      const wrapper = mountCard({ lead: { ...lead, dcb_em: '2023-01-10' } });
+      expect(wrapper.find('[data-testid="radar-pct"]').exists()).toBe(false);
+    });
+
+    it('pós-venda: dias desde o ganho, âmbar passando de 7', () => {
+      const ganho = { ...lead, won_at: '2026-09-23T12:00:00Z' };
+      const wrapper = mountCard({ filtro: 'pos_venda', lead: ganho });
+      const dias = wrapper.find('[data-testid="dias-ganho"]');
+      expect(dias.text()).toContain('"dias":10');
+      expect(dias.classes()).toContain('text-n-amber-11');
+    });
+  });
+
+  describe('risco na borda esquerda', () => {
+    it('prescrevendo (parcelas perdidas) = filete ruby e selo ruim', () => {
+      const wrapper = mountCard({
+        lead: { ...lead, dcb_em: '2019-01-01', benefit_monthly_value: 1412 },
+      });
+      expect(wrapper.classes()).toContain(TARDE);
+      expect(
+        wrapper.find('[data-testid="prescription-badge"]').attributes('tom')
+      ).toBe('bad');
+    });
+
+    it('parado (stalled) = filete âmbar', () => {
+      const wrapper = mountCard({ lead: { ...lead, stalled: true } });
+      expect(wrapper.classes()).toContain(PARADO);
+    });
+
+    it('sem risco = sem filete', () => {
+      const wrapper = mountCard();
+      expect(wrapper.classes()).not.toContain(TARDE);
+      expect(wrapper.classes()).not.toContain(PARADO);
+    });
+  });
+
+  describe('prazo de 1ª resposta', () => {
+    const minute = 60000;
+
+    it('correndo = SeloPrazo com o vencimento, sem filete nem CTA', () => {
+      const due = new Date(Date.now() + 4 * minute).toISOString();
+      const wrapper = mountCard({
+        lead: { ...lead, sla: { due_at: due, replied_at: null, minutes: 5 } },
+      });
+      expect(wrapper.findComponent(SeloPrazo).props('prazoEm')).toBe(due);
+      expect(wrapper.classes()).not.toContain(TARDE);
+      expect(wrapper.find('[data-testid="sla-respond-now"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('estourado = filete ruby e CTA "Responder agora"', async () => {
       const wrapper = mountCard({
         lead: {
           ...lead,
@@ -206,82 +263,25 @@ describe('LeadCard.vue', () => {
           },
         },
       });
-      const pill = wrapper.find('[data-testid="sla-pill"]');
-      expect(pill.text()).toBe('2h 47min');
-      expect(pill.classes()).toContain('bg-n-ruby-9');
-      expect(wrapper.classes()).toContain('border-l-n-ruby-9');
+      expect(wrapper.findComponent(SeloPrazo).exists()).toBe(true);
+      expect(wrapper.classes()).toContain(TARDE);
       await wrapper.find('[data-testid="sla-respond-now"]').trigger('click');
       expect(wrapper.emitted('openConversation')[0]).toEqual([99]);
     });
 
-    it('respondido = pill teal com o tempo até a 1ª resposta', () => {
-      const due = Date.now();
-      const wrapper = mountCard({
+    it('respondido ou sem sla não mostra o selo de prazo', () => {
+      const replied = mountCard({
         lead: {
           ...lead,
           sla: {
-            due_at: new Date(due).toISOString(),
-            // começou em due-60min; respondeu 12min depois do início
-            replied_at: new Date(due - 48 * minute).toISOString(),
-            minutes: 60,
+            due_at: new Date().toISOString(),
+            replied_at: new Date().toISOString(),
+            minutes: 5,
           },
         },
       });
-      const pill = wrapper.find('[data-testid="sla-pill"]');
-      expect(pill.exists()).toBe(true);
-      expect(pill.text()).toContain('12min');
-      expect(pill.classes()).toContain('text-n-teal-11');
+      expect(replied.findComponent(SeloPrazo).exists()).toBe(false);
+      expect(mountCard().findComponent(SeloPrazo).exists()).toBe(false);
     });
-
-    it('lead sem sla não mostra pill nem CTA', () => {
-      const wrapper = mountCard();
-      expect(wrapper.find('[data-testid="sla-pill"]').exists()).toBe(false);
-      expect(wrapper.find('[data-testid="sla-respond-now"]').exists()).toBe(
-        false
-      );
-    });
-  });
-
-  it('shows the awaiting-human triage badge when the latest triage awaits a human', () => {
-    const wrapper = mountCard({
-      lead: { ...lead, latest_triage: { id: 1, status: 'awaiting_human' } },
-    });
-    const badge = wrapper.find('[data-testid="triage-awaiting-human-badge"]');
-    expect(badge.exists()).toBe(true);
-    expect(badge.text()).toContain('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN');
-  });
-
-  it('shows the follow-up badge with count when follow_up_count > 0', () => {
-    const wrapper = mountCard({
-      lead: {
-        ...structuredClone(lead),
-        follow_up_count: 2,
-        follow_up_last_at: '2026-07-20T12:00:00Z',
-      },
-    });
-    const badge = wrapper.find('[data-testid="follow-up-badge"]');
-    expect(badge.exists()).toBe(true);
-    expect(badge.text()).toContain('2');
-  });
-
-  it('hides the follow-up badge when follow_up_count is 0', () => {
-    const wrapper = mountCard({
-      lead: { ...structuredClone(lead), follow_up_count: 0 },
-    });
-    expect(wrapper.find('[data-testid="follow-up-badge"]').exists()).toBe(
-      false
-    );
-  });
-
-  it('hides the awaiting-human badge for done triages', () => {
-    const wrapper = mountCard({
-      lead: {
-        ...lead,
-        latest_triage: { id: 1, status: 'done', viability: 'alta' },
-      },
-    });
-    expect(
-      wrapper.find('[data-testid="triage-awaiting-human-badge"]').exists()
-    ).toBe(false);
   });
 });

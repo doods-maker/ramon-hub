@@ -32,6 +32,7 @@ const hasActive = computed(() => {
   return !!(
     f.q ||
     f.benefitTypeId ||
+    f.thesisId ||
     f.leadPriorityId ||
     f.agentId ||
     f.source ||
@@ -63,6 +64,7 @@ watch(
 const clearFilters = () => {
   emitUpdate({
     benefitTypeId: null,
+    thesisId: null,
     leadPriorityId: null,
     agentId: null,
     source: '',

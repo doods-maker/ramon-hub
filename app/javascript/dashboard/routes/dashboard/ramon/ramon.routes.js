@@ -52,6 +52,12 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/clientes'),
+    name: 'ramon_clientes',
+    component: () => import('./pages/Clientes.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     // Sem contactId a mesma página vira a busca de pessoa (entrada do menu).
     path: frontendURL('accounts/:accountId/ramon/pessoa'),
     name: 'ramon_pessoas',
@@ -64,17 +70,24 @@ export const routes = [
     component: () => import('./pages/LinhaDaVida.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
+  // Radar e Pós-venda viraram filtros do funil (Onda 5): URL antiga redireciona.
   {
     path: frontendURL('accounts/:accountId/ramon/radar'),
     name: 'ramon_radar',
-    component: () => import('./pages/RadarPrescricao.vue'),
-    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+    redirect: to => ({
+      name: 'ramon_funil',
+      params: to.params,
+      query: { filtro: 'prescricao' },
+    }),
   },
   {
     path: frontendURL('accounts/:accountId/ramon/pos-venda'),
     name: 'ramon_pos_venda',
-    component: () => import('./pages/PosVenda.vue'),
-    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+    redirect: to => ({
+      name: 'ramon_funil',
+      params: to.params,
+      query: { filtro: 'pos_venda' },
+    }),
   },
   {
     path: frontendURL('accounts/:accountId/ramon/lead/:leadId/dossie'),

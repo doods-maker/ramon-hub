@@ -61,9 +61,26 @@ describe('itensDoMenu', () => {
   });
   it('label é chave i18n do bloco RAMON.MENU', () => {
     expect(itensDoMenu('gestor')[0].label).toBe('RAMON.MENU.HOJE');
-    expect(itensDoMais('gestor').find(i => i.key === 'pos_venda').label).toBe(
-      'RAMON.MENU.POS_VENDA'
+    expect(itensDoMais('gestor').find(i => i.key === 'esteira').label).toBe(
+      'RAMON.MENU.ESTEIRA'
     );
+  });
+  it('Clientes abre a lista própria e acende na ficha e na linha da vida', () => {
+    const clientes = itensDoMenu('sdr').find(i => i.key === 'clientes');
+    expect(clientes.rota).toBe('ramon_clientes');
+    expect(clientes.names).toEqual([
+      'ramon_clientes',
+      'ramon_lead_dossie',
+      'ramon_pessoas',
+      'ramon_linha_da_vida',
+      'ramon_portal_clientes',
+    ]);
+  });
+  it('Pós-venda e Radar saíram do Mais (viraram filtros do funil)', () => {
+    const keys = itensDoMais('gestor').map(i => i.key);
+    expect(keys).not.toContain('pos_venda');
+    expect(keys).not.toContain('radar');
+    expect(keys).toContain('linha_da_vida');
   });
   it('Conversas acende em qualquer rota de conversa, menos o kanban', () => {
     expect(CONVERSA_ROUTES).toContain('home');

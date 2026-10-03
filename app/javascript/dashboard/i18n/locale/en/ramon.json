@@ -177,8 +177,6 @@
       "MARCA": "Ramon Antonio",
       "MARCA_SIGLA": "RA",
       "ESTEIRA": "Queue",
-      "POS_VENDA": "After-sale",
-      "RADAR": "Statute-of-limitations radar",
       "REUNIOES": "Meetings",
       "PORTAL": "Client portal",
       "EXTRATO": "Commission statement",
@@ -203,7 +201,8 @@
         "advogada": "Lawyer",
         "equipe": "Team"
       },
-      "PAINEL": "Full dashboard"
+      "PAINEL": "Full dashboard",
+      "LINHA_DA_VIDA": "Lifeline"
     },
     "HOJE": {
       "TITULO": "Today",
@@ -308,35 +307,6 @@
       "AGUARDANDO_CLIENTE": "waiting for the client",
       "ABRIR": "Open"
     },
-    "POS_VENDA": {
-      "TITLE": "Post-sale",
-      "SUBTITLE": "Wins awaiting documents — oldest to newest",
-      "DIAS": "{dias} days since the win",
-      "DOCS": "docs {received}/{total}",
-      "EMPTY": "No wins with pending documents 🎉",
-      "ERROR": "Could not load post-sale.",
-      "RETRY": "Retry",
-      "CONCLUIDOS": "Completed ({count})",
-      "DRIVE_CHIP": "on Drive",
-      "OPEN_CONVERSATION": "Conversation"
-    },
-    "RADAR": {
-      "TITLE": "Prescription radar",
-      "SUBTITLE": "whole base · updated now",
-      "PER_MONTH": "/mo",
-      "SUMMARY_BLEEDING": "prescribing across {count} leads",
-      "SUMMARY_RISK": "become at risk in the next 90 days",
-      "DCB": "DCB {date}",
-      "LOST_CHIP": "We lost them (reactivate?)",
-      "CAMPAIGN_CTA": "Create rescue campaign ({count})",
-      "CAMPAIGN_TOOLTIP": "only contacts with LGPD consent ({n} of {m})",
-      "CAMPAIGN_MODAL_TITLE": "Create rescue campaign",
-      "CAMPAIGN_MODAL_MESSAGE": "We will open the WhatsApp campaigns screen to build the rescue with the {n} contacts with LGPD consent (out of {m} on the radar). Nothing is sent automatically.",
-      "CAMPAIGN_MODAL_CONFIRM": "Open campaigns",
-      "LOAD_ERROR": "Could not load the radar.",
-      "RETRY": "Retry",
-      "EMPTY": "No leads at risk."
-    },
     "RELATORIOS": {
       "TITLE": "Reports",
       "SUBTITLE": "Commercial analysis — trends, pipeline, source and service",
@@ -422,7 +392,6 @@
     },
     "FUNIL": {
       "TITLE": "Pipeline",
-      "SEARCH_HINT": "Search (Ctrl K)",
       "NEW_LEAD": "New lead",
       "HOTKEYS_HINT": "j/k navigate · e edit · c conversation",
       "EXPORT_CSV": "Export CSV",
@@ -494,8 +463,7 @@
         "CREATED_BEFORE": "Created until",
         "STALLED": "Stalled",
         "NO_OPEN_TASK": "No next action",
-        "CLEAR": "Clear",
-        "TOGGLE": "Filters"
+        "CLEAR": "Clear"
       },
       "VIEWS": {
         "SAVE": "Save view",
@@ -523,28 +491,39 @@
       },
       "DOCK_CLOSE": "Close conversation",
       "LOAD_ERROR": "Couldn't load the pipeline",
-      "CONVERSATION_ERROR": "Couldn't load the conversation"
+      "CONVERSATION_ERROR": "Couldn't load the conversation",
+      "CHIP": {
+        "TESE": "Thesis",
+        "RESPONSAVEL": "Owner",
+        "ORIGEM": "Source",
+        "MAIS": "More filters",
+        "LIMPAR": "Clear filter",
+        "POS_VENDA": "Won with pending docs · {count}",
+        "PRESCRICAO": "Statute of limitations at risk · {count}"
+      },
+      "OUTROS_FILTROS": "Other filters are active",
+      "LIMPAR_FILTROS": "clear",
+      "TENTAR_DE_NOVO": "Retry"
     },
     "KANBAN": {
       "CARD": {
-        "AGE": "{days}d",
-        "NO_NEXT_ACTION": "No next action scheduled",
-        "NEXT_NONE": "no next action",
-        "NEXT_MEETING": "Meeting {when}",
         "NEXT_OVERDUE": "overdue: {title}",
         "NEXT_TODAY": "today: {title}",
         "NEXT_TOMORROW": "tomorrow: {title}",
         "NEXT_IN_DAYS": "in {days}d: {title}",
-        "DOSSIE": "30s dossier",
+        "DOSSIE": "Dossier",
         "CONVERSATION": "Chat",
         "COPY_PHONE": "Copy phone number",
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
         "TASK_SCHEDULED": "Follow-up scheduled",
-        "TRIAGE_AWAITING_HUMAN": "Triage: awaiting human",
         "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
         "PRESCRIPTION_LOST": "{count} installments lost to prescription",
-        "PRESCRIPTION_SOON": "prescribes in {months}mo"
+        "PRESCRIPTION_SOON": "prescribes in {months}mo",
+        "DOCS": "docs {received}/{total}",
+        "FOLLOW_UP": "Follow-up",
+        "COBRAR_DOCS": "Request documents",
+        "TRIAGE_AWAITING_HUMAN": "Triage: awaiting human"
       },
       "BELL": {
         "TITLE": "Schedule follow-up",
@@ -556,9 +535,6 @@
         "CONFIRM": "Schedule"
       },
       "SLA": {
-        "REMAINING": "SLA · {time} left",
-        "OVERDUE_SINCE": "SLA breached {time} ago",
-        "REPLIED_IN": "✓ {time}",
         "COL_BREACHED": "{count} outside SLA",
         "RESPOND_NOW": "Reply now"
       },
@@ -914,7 +890,34 @@
       "REUNIOES_TITLE": "Meetings",
       "REUNIOES_EMPTY": "No meetings yet. Record one and the minutes will appear here.",
       "RECORD_MEETING": "Record meeting",
-      "OPEN_FULL": "Open full file"
+      "OPEN_FULL": "Open full file",
+      "ABA": {
+        "RESUMO": "Summary",
+        "DOCUMENTOS": "Documents",
+        "CALCULOS": "Calculations",
+        "REUNIOES": "Meetings",
+        "LINHA_DA_VIDA": "Lifeline",
+        "PAINEL": "Client portal"
+      },
+      "VOLTAR": "Clients",
+      "CONVERSA": "Conversation",
+      "SEM_CONVERSA": "This lead has no conversation yet",
+      "MARCAR_GANHO": "Mark as won",
+      "RESUMO_CASO": "Case summary",
+      "HISTORICO": "History",
+      "DOCUMENTO": "Document",
+      "SITUACAO": "Status",
+      "DOCS_VAZIO": "This case's thesis has no document checklist.",
+      "NOVO_CALCULO": "New calculation",
+      "DATA": "Date",
+      "TIPO": "Type",
+      "SEGURADO": "Insured",
+      "RESPONSAVEL": "Owner",
+      "VALOR_ESTIMADO": "Estimated value",
+      "SEM_CONTATO": "Lead without a contact — the lifeline needs one.",
+      "PAINEL_TEXTO": "The portal shows the client how the case is going. Copy the access link and send it in the conversation.",
+      "PAINEL_ABRIR": "Open portal clients",
+      "HA": "{tempo} ago"
     },
     "LEAD_PANEL": {
       "TITLE": "Lead",
@@ -1416,10 +1419,10 @@
       "CANCEL": "Cancel"
     },
     "FOLLOW_UP": {
-      "CARD_TITLE": "{count} follow-up(s) · last {date}",
-      "CARD_TITLE_NO_DATE": "{count} follow-up(s)",
       "BANNER_STALLED": "Stalled for {days}d",
-      "BANNER_RETRIES": "{count} follow-up(s)"
+      "BANNER_RETRIES": "{count} follow-up(s)",
+      "CARD_TITLE": "{count} follow-up(s) · last {date}",
+      "CARD_TITLE_NO_DATE": "{count} follow-up(s)"
     },
     "SLA": {
       "CHIP_OK": "First-response SLA · {minutes} min",
@@ -1591,6 +1594,52 @@
       "CARREGANDO": "Loading client…",
       "ERRO": "Could not load the client.",
       "ERRO_ATRIBUIR": "Could not assign — try again."
+    },
+    "CLIENTES": {
+      "TITLE": "Clients",
+      "BUSCA": "Search by name or phone",
+      "ULTIMA_MUDANCA": "Last change",
+      "BUSCAR_PESSOA": "Find person (Lifeline)"
+    },
+    "BUSCA": {
+      "TITULO": "Search",
+      "PLACEHOLDER": "Name, tax ID, phone or case number",
+      "ESC": "esc",
+      "GRUPO": {
+        "PESSOAS": "Clients and leads",
+        "PROCESSOS": "Cases",
+        "ACOES": "Actions"
+      },
+      "CLIENTE": "client",
+      "CLIENTE_DESDE": "Client since {ano}",
+      "NOVO_LEAD": "New lead",
+      "NOVO_CALCULO": "New calculation",
+      "NAS_CONVERSAS": "Search conversations and messages",
+      "MAIS_COMANDOS": "More commands…",
+      "NAVEGAR": "↑↓ navigate",
+      "ABRIR": "↵ open",
+      "DICA": "Search by name, tax ID, phone or case number"
+    },
+    "RADAR": {
+      "PER_MONTH": "/mo",
+      "SUMMARY_BLEEDING": "prescribing across {count} leads",
+      "SUMMARY_RISK": "become at risk in the next 90 days",
+      "DCB": "DCB {date}",
+      "CONSUMIDO": "{pct}% of the window",
+      "LOST_CHIP": "We lost them (reactivate?)",
+      "CAMPAIGN_CTA": "Create rescue campaign ({count})",
+      "CAMPAIGN_TOOLTIP": "only contacts with LGPD consent ({n} of {m})",
+      "CAMPAIGN_MODAL_TITLE": "Create rescue campaign",
+      "CAMPAIGN_MODAL_MESSAGE": "We will open the WhatsApp campaigns screen to build the rescue with the {n} contacts with LGPD consent (out of {m} on the radar). Nothing is sent automatically.",
+      "CAMPAIGN_MODAL_CONFIRM": "Open campaigns",
+      "LOAD_ERROR": "Could not load the radar."
+    },
+    "POS_VENDA": {
+      "RESUMO": "{count} wins awaiting documents — oldest to newest",
+      "DIAS": "{dias} days since the win",
+      "ERROR": "Could not load post-sale.",
+      "CONCLUIDOS": "Completed ({count})",
+      "DRIVE_CHIP": "on Drive"
     }
   },
   "CAPTAIN_RAMON": {

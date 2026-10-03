@@ -591,4 +591,35 @@ describe('LeadPanelBody', () => {
       );
     });
   });
+
+  describe('selos que saíram do card do funil', () => {
+    it('triagem aguardando humano aparece no cabeçalho', () => {
+      const wrapper = mountBody({
+        props: {
+          lead: { ...lead, latest_triage: { status: 'awaiting_human' } },
+        },
+      });
+      expect(
+        wrapper.find('[data-testid="panel-triage-awaiting"]').exists()
+      ).toBe(true);
+    });
+
+    it('retomadas: contagem e data da última; some sem retomada', () => {
+      const wrapper = mountBody({
+        props: {
+          lead: {
+            ...lead,
+            follow_up_count: 2,
+            follow_up_last_at: '2026-09-20T12:00:00Z',
+          },
+        },
+      });
+      expect(wrapper.find('[data-testid="panel-follow-up"]').text()).toContain(
+        'RAMON.FOLLOW_UP.CARD_TITLE'
+      );
+      expect(mountBody().find('[data-testid="panel-follow-up"]').exists()).toBe(
+        false
+      );
+    });
+  });
 });

@@ -1,27 +1,36 @@
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { downloadCsvFile } from 'dashboard/helper/downloadHelper';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { leadsToCsv } from '../../helpers/leadsCsv';
+import {
+  FILTROS_FUNIL,
+  ORDEM_FILTRO,
+  contarFiltros,
+} from '../../helpers/filtrosFunil';
+import { rascunhoCobranca } from '../../helpers/rascunhoDocs';
+import { useCobrarDocs } from '../../composables/useCobrarDocs';
+import { BTN_CHEIO } from '../hoje/hoje';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
 import FilterChips from './FilterChips.vue';
+import FiltroChip from './FiltroChip.vue';
 import SavedViews from './SavedViews.vue';
 import SwimlaneBoard from './SwimlaneBoard.vue';
 import LeadListView from './LeadListView.vue';
 import BulkActionsBar from './BulkActionsBar.vue';
 import LeadDrawer from './LeadDrawer.vue';
 import ConversationDock from './ConversationDock.vue';
+import FaixaFiltro from './FaixaFiltro.vue';
 import RemoveStageModal from './RemoveStageModal.vue';
 import LostReasonModal from './LostReasonModal.vue';
 import WonValueModal from './WonValueModal.vue';
 import NamePromptModal from '../NamePromptModal.vue';
-import RamonPageHeader from '../RamonPageHeader.vue';
 
 const emit = defineEmits(['new-lead']);
 const store = useStore();
@@ -84,9 +93,20 @@ const findLead = id => getters['leads/getLeads'].value.find(l => l.id === id);
 // Lê boardVersion durante o render para criar dependência reativa: ao
 // incrementá-lo, o array de leads é recalculado (nova referência) e as colunas
 // ressincronizam sua cópia local, revertendo um drop não persistido.
+// Pós-venda e Radar viraram filtros do funil (?filtro=pos_venda|prescricao):
+// aplicados no front sobre o payload slim, por cima dos filtros do servidor.
+const route = useRoute();
+const filtroKey = computed(() =>
+  FILTROS_FUNIL[route?.query?.filtro] ? route.query.filtro : null
+);
 const stageLeads = stageId => {
   const version = boardVersion.value;
-  return version >= 0 ? getters['leads/getLeadsByStage'].value(stageId) : [];
+  if (version < 0) return [];
+  const leads = getters['leads/getLeadsByStage'].value(stageId);
+  if (!filtroKey.value) return leads;
+  return leads
+    .filter(FILTROS_FUNIL[filtroKey.value])
+    .sort(ORDEM_FILTRO[filtroKey.value]);
 };
 const filters = computed(() => getters['leads/getFilters'].value);
 const onFilterUpdate = partial => store.dispatch('leads/setFilters', partial);
@@ -97,6 +117,7 @@ const filtersOpen = ref(false);
 const FILTER_KEYS = [
   'q',
   'benefitTypeId',
+  'thesisId',
   'leadPriorityId',
   'agentId',
   'source',
@@ -107,10 +128,26 @@ const FILTER_KEYS = [
   'stalled',
   'noOpenTask',
 ];
+// Tese / Responsável / Origem já têm chip próprio: "Mais filtros · N" conta o resto.
+const COM_CHIP = ['thesisId', 'agentId', 'channel'];
 const activeFilterCount = computed(() => {
   const f = filters.value || {};
-  return FILTER_KEYS.filter(key => f[key]).length;
+  return FILTER_KEYS.filter(key => f[key] && !COM_CHIP.includes(key)).length;
 });
+const algumFiltroServidor = computed(() =>
+  FILTER_KEYS.some(key => (filters.value || {})[key])
+);
+const TEXTO = ['q', 'source', 'channel'];
+const BOOLEANO = ['stalled', 'noOpenTask'];
+const limparFiltros = () =>
+  onFilterUpdate(
+    Object.fromEntries(
+      FILTER_KEYS.map(key => {
+        if (TEXTO.includes(key)) return [key, ''];
+        return [key, BOOLEANO.includes(key) ? false : null];
+      })
+    )
+  );
 
 const onMove = async ({ id, leadStageId, newIndex }) => {
   const stage = findStage(leadStageId);
@@ -212,7 +249,84 @@ const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
 };
 const onOpenConversation = id => store.dispatch('leads/toggleDock', id);
+
+// "Cobrar documentos" do card ganho: abre a conversa no dock com o rascunho
+// de cobrança no editor (mesmo texto do "Cobrar pendentes"); sem conversa, a
+// gaveta. Nada é enviado — quem envia é a pessoa.
+const { pendentesDoLead, marcarSolicitados } = useCobrarDocs();
+const rascunhoDock = ref(null);
+const onCobrarDocs = async lead => {
+  if (!lead.conversation_id) {
+    onOpenLead(lead);
+    return;
+  }
+  try {
+    const itens = await pendentesDoLead(lead.id);
+    rascunhoDock.value = rascunhoCobranca(
+      t,
+      lead.name,
+      itens.map(item => item.title)
+    );
+    store.dispatch('leads/openDock', lead.conversation_id);
+    marcarSolicitados(lead.id, itens);
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  }
+};
 const router = useRouter();
+
+// Chips do cabeçalho (mockup v2 .filtro): Tese / Responsável / Origem.
+const asOptions = (list, id, name) =>
+  (list || []).map(item => ({ id: item[id], name: item[name] }));
+const thesisOptions = computed(() =>
+  asOptions(getters['theses/getTheses']?.value, 'id', 'name')
+);
+const agentOptions = computed(() =>
+  asOptions(getters['agents/getAgents']?.value, 'id', 'name')
+);
+const channelOptions = computed(() =>
+  asOptions(getters['leadConfig/getChannels']?.value, 'key', 'label')
+);
+const contagem = computed(() =>
+  contarFiltros(getters['leads/getLeads']?.value ?? [])
+);
+const FILTRO_CHIPS = [
+  {
+    key: 'pos_venda',
+    conta: 'posVenda',
+    icon: 'i-lucide-file-warning',
+    label: 'RAMON.FUNIL.CHIP.POS_VENDA',
+    on: 'bg-n-amber-9/15 text-n-amber-11',
+  },
+  {
+    key: 'prescricao',
+    conta: 'prescricao',
+    icon: 'i-lucide-radar',
+    label: 'RAMON.FUNIL.CHIP.PRESCRICAO',
+    on: 'bg-n-ruby-9/10 text-n-ruby-11',
+  },
+];
+const filtroChips = computed(() =>
+  FILTRO_CHIPS.map(chip => ({
+    ...chip,
+    count: contagem.value[chip.conta],
+    active: route?.query?.filtro === chip.key,
+  })).filter(chip => chip.active || chip.count)
+);
+const toggleFiltro = key =>
+  router.replace({
+    query: {
+      ...route.query,
+      filtro: route.query.filtro === key ? undefined : key,
+    },
+  });
+const VIEW_ICONS = {
+  columns: 'i-lucide-columns-3',
+  lanes: 'i-lucide-rows-3',
+  list: 'i-lucide-list',
+};
+const CHIP =
+  'inline-flex items-center gap-1.5 rounded-[7px] border px-2.5 py-1.5 text-[12.5px]';
 const onOpenDossie = lead =>
   router.push({ name: 'ramon_lead_dossie', params: { leadId: lead.id } });
 
@@ -370,10 +484,8 @@ onMounted(() => {
   store.dispatch('leadConfig/get');
   loadLeads();
   store.dispatch('agents/get');
+  store.dispatch('theses/get');
 });
-
-// Busca do header abre o command palette (mesmo padrão do ResolveAction)
-const openPalette = () => document.querySelector('ninja-keys')?.open();
 
 const exportCsv = () => {
   const all = allLeads.value;
@@ -385,83 +497,108 @@ const exportCsv = () => {
 
 <template>
   <div class="flex flex-col h-full">
-    <div class="px-4 pt-3">
-      <!-- mock 1d: título curto, sem subtítulo; busca abre o palette (⌘K) -->
-      <RamonPageHeader compact :title="$t('RAMON.FUNIL.TITLE')">
-        <template #actions>
-          <button
-            data-testid="funil-search"
-            :title="$t('RAMON.FUNIL.HOTKEYS_HINT')"
-            class="hidden md:flex items-center gap-1.5 w-44 px-3 py-1.5 text-sm rounded-lg ramon-rail border border-n-weak text-n-slate-9 hover:text-n-slate-11"
-            @click="openPalette"
-          >
-            <span class="i-lucide-search size-3.5" />
-            {{ $t('RAMON.FUNIL.SEARCH_HINT') }}
-          </button>
-          <button
-            data-testid="filters-toggle"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border hover:text-n-slate-12"
-            :class="
-              filtersOpen || activeFilterCount
-                ? 'border-n-iris-8 text-n-iris-11'
-                : 'border-n-weak text-n-slate-11'
-            "
-            @click="filtersOpen = !filtersOpen"
-          >
-            <span class="i-lucide-sliders-horizontal size-4" />
-            {{ $t('RAMON.FUNIL.FILTERS.TOGGLE') }}
-            <span
-              v-if="activeFilterCount"
-              data-testid="filters-active-count"
-              class="flex items-center justify-center min-w-4 h-4 px-1 text-[10px] rounded-full bg-n-iris-9 text-white"
-            >
-              {{ activeFilterCount }}
-            </span>
-          </button>
-          <button
-            data-testid="export-csv"
-            class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:text-n-slate-12"
-            @click="exportCsv"
-          >
-            <span class="i-lucide-download size-4" />{{
-              $t('RAMON.FUNIL.EXPORT_CSV')
-            }}
-          </button>
-          <button
-            class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
-            @click="emit('new-lead')"
-          >
-            <span class="i-lucide-plus size-4" />{{
-              $t('RAMON.FUNIL.NEW_LEAD')
-            }}
-          </button>
-        </template>
-      </RamonPageHeader>
-    </div>
-    <!-- linha de controle: quadro ativo + toggle Colunas/Raias/Lista + agrupador -->
-    <div class="flex flex-wrap items-center gap-3 px-4 pb-1">
-      <SavedViews :view="viewMode" :group-by="groupBy" @apply="onApplyBoard" />
-      <div
-        class="flex gap-0.5 rounded-lg p-0.5 bg-n-alpha-2"
-        data-testid="view-toggle"
+    <!-- mockup v2 .cab-pag: título + chips de filtro + modo + "Novo lead" -->
+    <header
+      class="flex flex-wrap items-center flex-shrink-0 gap-2.5 min-h-14 px-7 py-2.5 border-b border-n-weak"
+    >
+      <h1
+        class="text-[15px] font-semibold text-n-slate-12"
+        :title="$t('RAMON.FUNIL.HOTKEYS_HINT')"
       >
-        <button
-          v-for="mode in ['columns', 'lanes', 'list']"
-          :key="mode"
-          :data-testid="`view-toggle-${mode}`"
-          class="px-3 py-1 text-xs rounded-md"
-          :class="
-            viewMode === mode
-              ? 'bg-n-solid-1 text-n-slate-12 font-medium shadow-sm'
-              : 'text-n-slate-10 hover:text-n-slate-12'
-          "
-          @click="viewMode = mode"
+        {{ $t('RAMON.FUNIL.TITLE') }}
+      </h1>
+      <FiltroChip
+        :label="$t('RAMON.FUNIL.CHIP.TESE')"
+        :options="thesisOptions"
+        :model-value="filters.thesisId"
+        @update:model-value="v => onFilterUpdate({ thesisId: v })"
+      />
+      <FiltroChip
+        :label="$t('RAMON.FUNIL.CHIP.RESPONSAVEL')"
+        :options="agentOptions"
+        :model-value="filters.agentId"
+        @update:model-value="v => onFilterUpdate({ agentId: v })"
+      />
+      <FiltroChip
+        :label="$t('RAMON.FUNIL.CHIP.ORIGEM')"
+        :options="channelOptions"
+        :model-value="filters.channel || null"
+        @update:model-value="v => onFilterUpdate({ channel: v || '' })"
+      />
+      <button
+        data-testid="filters-toggle"
+        :class="[
+          CHIP,
+          filtersOpen || activeFilterCount
+            ? 'border-transparent bg-n-blue-9/[0.08] font-medium text-n-blue-11 dark:bg-n-blue-9/[0.16]'
+            : 'border-dashed border-n-strong text-n-slate-11 hover:bg-n-slate-3',
+        ]"
+        @click="filtersOpen = !filtersOpen"
+      >
+        <span class="i-lucide-sliders-horizontal size-3.5" />
+        {{ $t('RAMON.FUNIL.CHIP.MAIS') }}
+        <span
+          v-if="activeFilterCount"
+          data-testid="filters-active-count"
+          class="font-mono"
         >
-          {{ $t(`RAMON.KANBAN.VIEW.${mode.toUpperCase()}`) }}
+          {{ `· ${activeFilterCount}` }}
+        </span>
+      </button>
+      <button
+        v-for="chip in filtroChips"
+        :key="chip.key"
+        :data-testid="`filtro-${chip.key}`"
+        :class="[
+          CHIP,
+          chip.active
+            ? `border-transparent font-medium ${chip.on}`
+            : 'border-dashed border-n-strong text-n-slate-11 hover:bg-n-slate-3',
+        ]"
+        @click="toggleFiltro(chip.key)"
+      >
+        <span :class="chip.icon" class="size-3.5" />
+        {{ $t(chip.label, { count: chip.count }) }}
+      </button>
+      <div class="flex items-center gap-2 ms-auto">
+        <div class="flex gap-0.5" data-testid="view-toggle">
+          <button
+            v-for="mode in ['columns', 'lanes', 'list']"
+            :key="mode"
+            :data-testid="`view-toggle-${mode}`"
+            :title="$t(`RAMON.KANBAN.VIEW.${mode.toUpperCase()}`)"
+            :aria-label="$t(`RAMON.KANBAN.VIEW.${mode.toUpperCase()}`)"
+            class="grid place-items-center size-7 rounded-[7px]"
+            :class="
+              viewMode === mode
+                ? 'bg-n-slate-3 text-n-slate-12'
+                : 'text-n-slate-9 hover:text-n-slate-12'
+            "
+            @click="viewMode = mode"
+          >
+            <span :class="VIEW_ICONS[mode]" class="size-4" />
+          </button>
+        </div>
+        <button
+          data-testid="export-csv"
+          :title="$t('RAMON.FUNIL.EXPORT_CSV')"
+          :aria-label="$t('RAMON.FUNIL.EXPORT_CSV')"
+          class="grid place-items-center size-7 rounded-[7px] text-n-slate-9 hover:text-n-slate-12"
+          @click="exportCsv"
+        >
+          <span class="i-lucide-download size-4" />
+        </button>
+        <button :class="BTN_CHEIO" @click="emit('new-lead')">
+          <span class="i-lucide-plus size-3.5" />{{
+            $t('RAMON.FUNIL.NEW_LEAD')
+          }}
         </button>
       </div>
-      <!-- mock 2b: "agrupar por: tese · dono · canal · prioridade" inline,
-           ativo em dourado — sem select (o CSS global de select desalinha) -->
+    </header>
+    <!-- quadro ativo + agrupador das raias -->
+    <div class="flex flex-wrap items-center gap-3 px-7 pt-2">
+      <SavedViews :view="viewMode" :group-by="groupBy" @apply="onApplyBoard" />
+      <!-- mock 2b: "agrupar por: tese · dono · canal · prioridade" inline -->
       <div
         v-show="viewMode === 'lanes'"
         data-testid="lanes-group-by"
@@ -477,7 +614,7 @@ const exportCsv = () => {
           class="rounded-md px-1.5 py-1 text-xs"
           :class="
             groupBy === group
-              ? 'bg-n-alpha-2 font-medium text-n-iris-11'
+              ? 'bg-n-slate-3 font-medium text-n-blue-11'
               : 'text-n-slate-10 hover:text-n-slate-12'
           "
           @click="groupBy = group"
@@ -487,6 +624,12 @@ const exportCsv = () => {
       </div>
     </div>
     <!-- chips removíveis dos filtros ativos + resumo do pipeline -->
+    <FaixaFiltro
+      v-if="filtroKey"
+      :filtro="filtroKey"
+      :outros-filtros="algumFiltroServidor"
+      @limpar-filtros="limparFiltros"
+    />
     <FilterChips :filters="filters" @update="onFilterUpdate" />
     <!-- v-show (não v-if): o board reage ao evento update do KanbanFilters
          mesmo com o painel fechado, e abrir/fechar não perde o estado da busca -->
@@ -526,7 +669,7 @@ const exportCsv = () => {
          cresce além da viewport e os cards abaixo da dobra ficam inacessíveis -->
     <div
       v-else-if="viewMode === 'columns'"
-      class="flex flex-1 min-h-0 gap-3 px-4 pb-4 overflow-x-auto"
+      class="flex flex-1 min-h-0 gap-4 px-7 pt-2 pb-4 overflow-x-auto"
     >
       <Draggable
         :key="columnsKey"
@@ -534,7 +677,7 @@ const exportCsv = () => {
         group="stages"
         item-key="id"
         ghost-class="ramon-drag-ghost"
-        class="flex h-full gap-3"
+        class="flex flex-1 h-full gap-4"
         handle=".stage-drag-handle"
         @change="onColumnsReorder"
       >
@@ -546,10 +689,12 @@ const exportCsv = () => {
             selectable
             :selected-lead-ids="selectedIds"
             :conversion-rate="rateFor(element.id)"
+            :filtro="filtroKey"
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
             @open-dossie="onOpenDossie"
+            @cobrar-docs="onCobrarDocs"
             @toggle-select="onToggleSelect"
             @rename-stage="onRenameStage"
             @recolor-stage="onRecolorStage"
@@ -559,7 +704,8 @@ const exportCsv = () => {
         </template>
       </Draggable>
       <button
-        class="flex items-center self-start gap-1 px-3 py-2 text-sm rounded-lg text-n-slate-11 border border-dashed border-n-weak hover:text-n-slate-12"
+        data-testid="add-stage"
+        class="flex items-center self-start flex-shrink-0 gap-1 px-3 py-2 text-[12.5px] rounded-[10px] text-n-slate-11 border border-dashed border-n-strong hover:text-n-slate-12"
         @click="addStage"
       >
         <span class="i-lucide-plus size-4" />{{ $t('RAMON.FUNIL.STAGE.ADD') }}
@@ -575,6 +721,7 @@ const exportCsv = () => {
       @open-conversation="onOpenConversation"
       @open-lead="onOpenLead"
       @open-dossie="onOpenDossie"
+      @cobrar-docs="onCobrarDocs"
       @toggle-select="onToggleSelect"
     />
     <LeadListView
@@ -587,7 +734,11 @@ const exportCsv = () => {
     />
     <BulkActionsBar v-if="selectedIds.length" :suspend-esc="anyModalOpen()" />
     <LeadDrawer @open-conversation="onOpenConversation" />
-    <ConversationDock :suspend-esc="anyModalOpen()" />
+    <ConversationDock
+      :suspend-esc="anyModalOpen()"
+      :rascunho="rascunhoDock"
+      @rascunho-inserido="rascunhoDock = null"
+    />
     <Transition
       enter-active-class="transition-opacity duration-150"
       leave-active-class="transition-opacity duration-150"
