@@ -8,6 +8,8 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { ACAO } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -43,10 +45,11 @@ const marcar = async resultado => {
   }
 };
 
-const botao = ativo =>
+// escolha marcada = primário azul; a outra = secundário
+const variante = ativo =>
   ativo
-    ? 'bg-n-iris-9 text-white'
-    : 'bg-n-alpha-2 text-n-slate-11 hover:bg-n-alpha-3 hover:text-n-slate-12';
+    ? { variant: 'solid', color: 'blue', class: ACAO }
+    : { variant: 'faded', color: 'slate' };
 </script>
 
 <template>
@@ -56,24 +59,22 @@ const botao = ativo =>
     </label>
     <div class="flex flex-wrap items-center gap-2">
       <template v-if="podeMarcar">
-        <button
+        <Button
           data-testid="reuniao-qualificada"
+          size="sm"
+          v-bind="variante(lead.reuniao_resultado === 'qualificada')"
           :disabled="saving"
-          class="px-3 py-1.5 text-xs rounded-lg disabled:opacity-60"
-          :class="botao(lead.reuniao_resultado === 'qualificada')"
+          :label="$t('RAMON.REUNIAO.QUALIFICADA')"
           @click="marcar('qualificada')"
-        >
-          {{ $t('RAMON.REUNIAO.QUALIFICADA') }}
-        </button>
-        <button
+        />
+        <Button
           data-testid="reuniao-nao-qualificada"
+          size="sm"
+          v-bind="variante(lead.reuniao_resultado === 'nao_qualificada')"
           :disabled="saving"
-          class="px-3 py-1.5 text-xs rounded-lg disabled:opacity-60"
-          :class="botao(lead.reuniao_resultado === 'nao_qualificada')"
+          :label="$t('RAMON.REUNIAO.NAO_QUALIFICADA')"
           @click="marcar('nao_qualificada')"
-        >
-          {{ $t('RAMON.REUNIAO.NAO_QUALIFICADA') }}
-        </button>
+        />
       </template>
       <span v-else-if="lead.reuniao_resultado" class="text-sm text-n-slate-12">
         {{ $t(`RAMON.REUNIAO.RESULTADO.${lead.reuniao_resultado}`) }}
@@ -84,7 +85,7 @@ const botao = ativo =>
       <span
         v-if="registradaEm"
         data-testid="reuniao-data"
-        class="text-xs text-n-slate-10"
+        class="font-mono text-xs text-n-slate-10"
       >
         {{ $t('RAMON.REUNIAO.REGISTRADA_EM', { data: registradaEm }) }}
       </span>

@@ -3,7 +3,9 @@ import { computed, ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import Button from 'dashboard/components-next/button/Button.vue';
 import TaskBellMenu from '../kanban/TaskBellMenu.vue';
+import { ACAO, CARTAO_STATUS, FILETE, SOBRESCRITO } from '../../helpers/ui';
 
 const props = defineProps({ leadId: { type: Number, required: true } });
 
@@ -105,24 +107,17 @@ const reschedule = ({ dueAt }) =>
   <div
     v-if="task"
     data-testid="lead-next-action"
-    class="rounded-xl p-3 bg-n-solid-1 border shadow-sm border-l-4"
-    :class="
-      dueInfo.overdue
-        ? 'border-n-amber-9/40 border-l-n-amber-9'
-        : isMeeting
-          ? 'border-n-iris-9/40 border-l-n-iris-9 bg-n-iris-9/5'
-          : 'border-n-weak border-l-n-iris-9'
-    "
+    :class="[CARTAO_STATUS, dueInfo.overdue ? FILETE.amber : FILETE.blue]"
   >
     <p
-      class="text-[10.5px] font-semibold uppercase tracking-widest"
-      :class="
+      :class="[
+        SOBRESCRITO,
         dueInfo.overdue
           ? 'text-n-amber-11'
           : isMeeting
-            ? 'text-n-iris-11'
-            : 'text-n-slate-10'
-      "
+            ? 'text-n-blue-11'
+            : 'text-n-slate-10',
+      ]"
     >
       <template v-if="isMeeting">
         <span
@@ -136,7 +131,7 @@ const reschedule = ({ dueAt }) =>
     <p
       v-if="isMeeting && meetingWhen"
       data-testid="next-action-meeting-when"
-      class="mt-1 text-sm font-semibold text-n-slate-12 capitalize"
+      class="mt-1 font-mono text-sm font-semibold text-n-slate-12 capitalize"
     >
       {{ meetingWhen }}
     </p>
@@ -148,29 +143,37 @@ const reschedule = ({ dueAt }) =>
     </p>
     <router-link
       v-if="isMeeting"
+      v-slot="{ navigate }"
+      custom
       :to="{ name: 'ramon_agenda' }"
-      class="mt-1 inline-block text-xs text-n-iris-11 hover:underline"
-      data-testid="next-action-agenda-link"
     >
-      {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.SEE_AGENDA') }}
+      <Button
+        data-testid="next-action-agenda-link"
+        link
+        xs
+        class="mt-1"
+        :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.SEE_AGENDA')"
+        @click="navigate"
+      />
     </router-link>
     <div class="flex items-center gap-1.5 mt-2.5">
-      <button
+      <Button
+        :class="ACAO"
         data-testid="next-action-done"
-        class="px-3 py-1 text-xs font-semibold rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+        sm
+        :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.DONE')"
         :disabled="busy"
         @click="complete"
-      >
-        {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.DONE') }}
-      </button>
-      <button
+      />
+      <Button
         data-testid="next-action-snooze"
-        class="px-3 py-1 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11 hover:bg-n-alpha-2 disabled:opacity-50"
+        sm
+        faded
+        slate
+        :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.SNOOZE')"
         :disabled="busy"
         @click="snooze"
-      >
-        {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.SNOOZE') }}
-      </button>
+      />
       <span
         class="flex items-center gap-1 text-xs text-n-slate-11"
         data-testid="next-action-reschedule"

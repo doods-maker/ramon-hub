@@ -23,8 +23,8 @@ describe('MiniEsteira', () => {
       props: { stages, currentId: 2 },
     });
     const barras = wrapper.findAll('[data-testid="mini-esteira-barra"]');
-    expect(barras[0].classes()).toContain('bg-n-iris-9');
-    expect(barras[1].classes()).toContain('bg-n-iris-9');
+    expect(barras[0].classes()).toContain('bg-n-blue-9');
+    expect(barras[1].classes()).toContain('bg-n-blue-9');
     expect(barras[2].classes()).toContain('bg-n-alpha-2');
   });
 });

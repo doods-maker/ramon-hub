@@ -11,6 +11,18 @@ import LostReasonModal from '../kanban/LostReasonModal.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
 import { formatCpf, stripCpf } from '../../helpers/cpf';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  CARTAO,
+  SECAO,
+  TITULO,
+  CAMPO,
+  SELECT,
+  TEXTAREA,
+  TOM,
+  AVISO,
+  ACAO,
+} from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -400,7 +412,8 @@ const toggleConsent = () =>
     <input
       v-model="name"
       data-testid="field-name"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3"
+      :class="CAMPO"
       @blur="saveName"
     />
 
@@ -410,8 +423,7 @@ const toggleConsent = () =>
     <select
       data-testid="field-stage"
       :value="stageId"
-      :class="wonPrompt ? 'mb-1' : 'mb-3'"
-      class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      :class="[SELECT, wonPrompt ? '!mb-1' : '!mb-3']"
       @change="e => onStageChange(Number(e.target.value))"
     >
       <option v-for="s in stages" :key="s.id" :value="s.id">
@@ -429,7 +441,8 @@ const toggleConsent = () =>
     <div
       v-if="wonPrompt"
       data-testid="stage-won-prompt"
-      class="flex flex-col gap-2 p-2 mb-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+      class="flex flex-col gap-2 mb-3"
+      :class="CARTAO"
     >
       <label class="text-xs text-n-slate-10">{{
         $t('RAMON.FUNIL.WON.VALUE_LABEL')
@@ -439,24 +452,26 @@ const toggleConsent = () =>
         data-testid="stage-won-value"
         type="text"
         inputmode="decimal"
-        class="w-full px-2 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+        class="font-mono"
+        :class="CAMPO"
         @keyup.enter="confirmWonStage"
       />
       <div class="flex justify-end gap-2">
-        <button
+        <Button
           data-testid="stage-won-skip"
-          class="px-3 py-1 text-xs text-n-slate-11"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.FUNIL.WON.SKIP')"
           @click="skipWonStage"
-        >
-          {{ $t('RAMON.FUNIL.WON.SKIP') }}
-        </button>
-        <button
+        />
+        <Button
+          :class="ACAO"
           data-testid="stage-won-save"
-          class="px-3 py-1 text-xs rounded-lg bg-n-iris-9 text-white"
+          sm
+          :label="$t('RAMON.FUNIL.WON.SAVE')"
           @click="confirmWonStage"
-        >
-          {{ $t('RAMON.FUNIL.WON.SAVE') }}
-        </button>
+        />
       </div>
     </div>
 
@@ -465,7 +480,8 @@ const toggleConsent = () =>
     }}</label>
     <select
       :value="lead.benefit_type_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3"
+      :class="SELECT"
       @change="
         e =>
           saveSelect(
@@ -485,7 +501,8 @@ const toggleConsent = () =>
     }}</label>
     <select
       :value="lead.lead_priority_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3"
+      :class="SELECT"
       @change="
         e =>
           saveSelect(
@@ -506,7 +523,8 @@ const toggleConsent = () =>
     <select
       data-testid="field-thesis"
       :value="lead.thesis_id"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3"
+      :class="SELECT"
       @change="
         e =>
           saveSelect(
@@ -534,7 +552,8 @@ const toggleConsent = () =>
     <select
       :value="lead.sdr_id"
       :disabled="!isAdmin"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8 disabled:opacity-60"
+      class="!mb-3"
+      :class="SELECT"
       @change="
         e =>
           saveSelect('sdr_id', e.target.value ? Number(e.target.value) : null)
@@ -552,7 +571,8 @@ const toggleConsent = () =>
     <select
       :value="lead.closer_id"
       :disabled="!isAdmin"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8 disabled:opacity-60"
+      class="!mb-3"
+      :class="SELECT"
       @change="
         e =>
           saveSelect(
@@ -575,7 +595,8 @@ const toggleConsent = () =>
         v-if="valorEstimadoAuto"
         data-testid="value-auto-badge"
         :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
-        class="ms-1 inline-flex items-center gap-0.5 rounded bg-n-iris-9/10 px-1 text-[10px] text-n-iris-11"
+        class="ms-1 inline-flex items-center gap-0.5 rounded px-1 text-[10px]"
+        :class="TOM.blue"
       >
         <span class="i-lucide-sparkles size-2.5" />{{
           $t('RAMON.DRAWER.VALUE_AUTO')
@@ -587,7 +608,8 @@ const toggleConsent = () =>
       data-testid="field-value"
       type="text"
       inputmode="decimal"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3 font-mono"
+      :class="CAMPO"
       @blur="saveValue"
     />
 
@@ -597,7 +619,8 @@ const toggleConsent = () =>
     <input
       v-model="source"
       data-testid="field-source"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3"
+      :class="CAMPO"
       @blur="saveSource"
     />
 
@@ -607,7 +630,8 @@ const toggleConsent = () =>
     <select
       data-testid="field-channel"
       :value="lead.channel"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3"
+      :class="SELECT"
       @change="e => saveSelect('channel', e.target.value)"
     >
       <option value="">—</option>
@@ -623,7 +647,8 @@ const toggleConsent = () =>
       v-model="dcbEm"
       data-testid="field-dcb-em"
       type="date"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3 font-mono"
+      :class="CAMPO"
       @change="saveDcbEm"
     />
 
@@ -635,7 +660,8 @@ const toggleConsent = () =>
       data-testid="field-benefit-monthly-value"
       type="text"
       inputmode="decimal"
-      class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+      class="!mb-3 font-mono"
+      :class="CAMPO"
       @blur="saveBenefitMonthlyValue"
     />
 
@@ -646,7 +672,8 @@ const toggleConsent = () =>
       <select
         data-testid="field-lost-reason"
         :value="lead.lost_reason"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+        class="!mb-3"
+        :class="SELECT"
         @change="e => saveSelect('lost_reason', e.target.value)"
       >
         <option value="">—</option>
@@ -674,8 +701,8 @@ const toggleConsent = () =>
         max="10"
         step="1"
         inputmode="numeric"
-        class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
-        :class="npsRecordedAt ? 'mb-1' : 'mb-3'"
+        class="font-mono"
+        :class="[CAMPO, npsRecordedAt ? '!mb-1' : '!mb-3']"
         @blur="saveNps"
       />
       <p
@@ -691,12 +718,11 @@ const toggleConsent = () =>
 
     <div
       v-if="lead.custom_attributes?.advbox"
-      class="flex items-center gap-2 mb-4 pt-3 border-t border-n-weak text-xs"
+      class="flex items-center gap-2 mb-4 text-xs"
+      :class="SECAO"
       data-testid="advbox-sync"
     >
-      <span class="uppercase text-n-slate-10">{{
-        $t('RAMON.ADVBOX.TITLE')
-      }}</span>
+      <span :class="TITULO">{{ $t('RAMON.ADVBOX.TITLE') }}</span>
       <span
         v-if="lead.custom_attributes.advbox.lawsuits_id"
         class="text-n-teal-11"
@@ -715,10 +741,8 @@ const toggleConsent = () =>
       </span>
     </div>
 
-    <div class="flex flex-col gap-2 mb-4 pt-3 border-t border-n-weak">
-      <span class="text-xs uppercase text-n-slate-10">{{
-        $t('RAMON.DRAWER.NOTES')
-      }}</span>
+    <div class="flex flex-col gap-2 mb-4" :class="SECAO">
+      <span :class="TITULO">{{ $t('RAMON.DRAWER.NOTES') }}</span>
       <div
         v-for="note in noteList"
         :key="note.id"
@@ -733,7 +757,7 @@ const toggleConsent = () =>
       <select
         v-model="noteTemplate"
         data-testid="note-template-select"
-        class="w-full px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-11 border border-n-weak outline-none focus:border-n-slate-8"
+        :class="SELECT"
         @change="applyNoteTemplate"
       >
         <option value="">
@@ -748,39 +772,37 @@ const toggleConsent = () =>
         data-testid="note-input"
         rows="2"
         maxlength="1000"
-        class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+        :class="TEXTAREA"
         :placeholder="$t('RAMON.DRAWER.NOTES_ADD')"
       />
-      <button
+      <Button
         data-testid="note-add"
-        class="self-start px-3 py-1.5 text-xs rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak disabled:opacity-40 disabled:cursor-not-allowed"
+        sm
+        faded
+        slate
+        class="self-start"
+        :label="$t('RAMON.DRAWER.NOTES_ADD_BUTTON')"
         :disabled="savingNote"
         @click="addNote"
-      >
-        {{ $t('RAMON.DRAWER.NOTES_ADD_BUTTON') }}
-      </button>
+      />
     </div>
 
-    <div
-      class="flex items-center justify-between gap-2 pt-3 mb-4 border-t border-n-weak"
-    >
-      <span class="text-xs uppercase text-n-slate-10">{{
-        $t('RAMON.PORTAL.LABEL')
-      }}</span>
-      <button
+    <div class="flex items-center justify-between gap-2 mb-4" :class="SECAO">
+      <span :class="TITULO">{{ $t('RAMON.PORTAL.LABEL') }}</span>
+      <Button
         data-testid="portal-copy-link"
-        class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg bg-n-alpha-2 text-n-slate-12 hover:bg-n-alpha-3"
+        sm
+        faded
+        slate
+        icon="i-lucide-link"
+        :label="$t('RAMON.PORTAL.COPY_LINK')"
         @click="copyPortalLink"
-      >
-        <span class="i-lucide-link size-3.5" />{{
-          $t('RAMON.PORTAL.COPY_LINK')
-        }}
-      </button>
+      />
     </div>
 
     <!-- Só leitura: contato -->
-    <div class="pt-4 mt-2 border-t border-n-weak">
-      <p class="mb-2 text-xs tracking-widest uppercase text-n-slate-9">
+    <div class="mt-2" :class="SECAO">
+      <p class="mb-2" :class="TITULO">
         {{ $t('RAMON.DRAWER.CONTACT') }}
       </p>
       <p v-if="lead.contact_name" class="text-sm text-n-slate-12">
@@ -790,25 +812,32 @@ const toggleConsent = () =>
         v-if="lead.contact_phone"
         class="flex items-center gap-2 text-xs text-n-slate-10"
       >
-        <button
+        <Button
           data-testid="contact-copy-phone"
+          link
+          slate
+          xs
+          icon="i-lucide-phone"
+          class="font-mono"
           :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
-          class="inline-flex items-center gap-1 hover:text-n-slate-12"
+          :label="lead.contact_phone"
           @click="copyPhone"
-        >
-          <span class="i-lucide-phone size-3.5" />{{ lead.contact_phone }}
-        </button>
+        />
         <a
           v-if="!lead.conversation_id"
           data-testid="contact-wa-me"
           :href="waMeUrl(lead.contact_phone)"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 hover:text-n-iris-11"
+          class="inline-flex"
         >
-          <span class="i-lucide-message-circle size-3.5" />{{
-            $t('RAMON.KANBAN.CARD.WHATSAPP')
-          }}
+          <Button
+            link
+            xs
+            tabindex="-1"
+            icon="i-lucide-message-circle"
+            :label="$t('RAMON.KANBAN.CARD.WHATSAPP')"
+          />
         </a>
       </div>
       <p v-if="lead.contact_email" class="text-xs text-n-slate-10">
@@ -825,7 +854,8 @@ const toggleConsent = () =>
           type="text"
           inputmode="numeric"
           :placeholder="$t('RAMON.DRAWER.PESSOA.CPF_PLACEHOLDER')"
-          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+          class="!mb-3 font-mono"
+          :class="CAMPO"
           @blur="saveContactCpf"
         />
 
@@ -836,7 +866,8 @@ const toggleConsent = () =>
           v-model="contactNascimento"
           data-testid="field-contact-nascimento"
           type="date"
-          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+          class="!mb-3 font-mono"
+          :class="CAMPO"
           @change="saveContactNascimento"
         />
 
@@ -846,7 +877,8 @@ const toggleConsent = () =>
         <select
           v-model="contactSexo"
           data-testid="field-contact-sexo"
-          class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+          class="!mb-3"
+          :class="SELECT"
           @change="saveContactSexo"
         >
           <option value="">—</option>
@@ -858,7 +890,8 @@ const toggleConsent = () =>
           $t('RAMON.DRAWER.CONSENT.LABEL')
         }}</label>
         <div
-          class="flex items-center justify-between gap-2 px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-1 border border-n-weak"
+          class="flex items-center justify-between gap-2 mb-3"
+          :class="[AVISO, TOM.slate]"
         >
           <span
             data-testid="consent-status"
@@ -873,30 +906,36 @@ const toggleConsent = () =>
             />
             {{ consentStatusText }}
           </span>
-          <button
+          <Button
             data-testid="consent-toggle"
-            class="px-2 py-1 text-xs rounded-lg bg-n-alpha-2 text-n-slate-12 hover:bg-n-alpha-3"
-            @click="toggleConsent"
-          >
-            {{
+            sm
+            faded
+            slate
+            :label="
               consentGranted
                 ? $t('RAMON.DRAWER.CONSENT.REVOKE')
                 : $t('RAMON.DRAWER.CONSENT.GRANT')
-            }}
-          </button>
+            "
+            @click="toggleConsent"
+          />
         </div>
 
         <router-link
-          data-testid="field-linha-da-vida-link"
+          v-slot="{ navigate }"
+          custom
           :to="{
             name: 'ramon_linha_da_vida',
             params: { contactId: lead.contact_id },
           }"
-          class="inline-flex items-center gap-1 text-xs text-n-iris-11 hover:underline"
         >
-          <span class="i-lucide-git-commit-vertical size-3.5" />{{
-            $t('RAMON.LINHA_DA_VIDA.OPEN')
-          }}
+          <Button
+            data-testid="field-linha-da-vida-link"
+            link
+            xs
+            icon="i-lucide-git-commit-vertical"
+            :label="$t('RAMON.LINHA_DA_VIDA.OPEN')"
+            @click="navigate"
+          />
         </router-link>
       </template>
     </div>

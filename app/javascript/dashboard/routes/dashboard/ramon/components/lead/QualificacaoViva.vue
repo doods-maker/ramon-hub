@@ -6,6 +6,8 @@ import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, TITULO } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -37,6 +39,13 @@ const statusMap = computed(
   () => props.lead?.custom_attributes?.qualificacao_status || {}
 );
 const statusOf = item => statusMap.value[item.id] || null;
+// ícone + cor do botão de status (ok → falta → sem marca)
+const STATUS_UI = {
+  ok: { icon: 'i-lucide-check', color: 'teal' },
+  falta: { icon: 'i-lucide-circle-alert', color: 'amber' },
+  null: { icon: 'i-lucide-circle-dashed', color: 'slate' },
+};
+const statusUi = item => STATUS_UI[String(statusOf(item))] || STATUS_UI.null;
 const okCount = computed(
   () => criterios.value.filter(item => statusOf(item) === 'ok').length
 );
@@ -81,17 +90,15 @@ const perguntar = async item => {
 <template>
   <div
     v-if="lead?.thesis_id && criterios.length"
-    class="rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-3"
+    :class="CARTAO"
     data-testid="panel-card-qualificacao"
   >
     <div class="flex items-center justify-between">
-      <p
-        class="text-[10.5px] font-semibold uppercase tracking-widest text-n-slate-10"
-      >
+      <p :class="TITULO">
         {{ $t('RAMON.QUALIFICACAO.TITLE') }}
       </p>
       <span
-        class="text-xs font-semibold text-n-slate-12"
+        class="font-mono text-xs font-semibold text-n-slate-12"
         data-testid="qualificacao-count"
       >
         {{
@@ -109,29 +116,17 @@ const perguntar = async item => {
         class="flex items-center gap-2 py-1.5 text-[12.5px]"
         data-testid="qualificacao-criterio"
       >
-        <button
-          type="button"
+        <Button
           data-testid="qualificacao-toggle"
-          class="grid size-4.5 shrink-0 place-items-center rounded-full text-[10px]"
-          :class="
-            statusOf(item) === 'ok'
-              ? 'bg-n-teal-3 text-n-teal-11'
-              : statusOf(item) === 'falta'
-                ? 'bg-n-amber-3 text-n-amber-11'
-                : 'bg-n-alpha-2 text-n-slate-10'
-          "
+          xs
+          faded
+          class="shrink-0"
+          :color="statusUi(item).color"
+          :icon="statusUi(item).icon"
           :disabled="pendingIds.has(item.id)"
           :title="$t('RAMON.QUALIFICACAO.CYCLE_HINT')"
           @click="cycle(item)"
-        >
-          {{
-            statusOf(item) === 'ok'
-              ? '✓'
-              : statusOf(item) === 'falta'
-                ? '!'
-                : '·'
-          }}
-        </button>
+        />
         <span
           class="min-w-0 truncate"
           :class="
@@ -140,15 +135,15 @@ const perguntar = async item => {
         >
           {{ item.title }}
         </span>
-        <button
+        <Button
           v-if="statusOf(item) !== 'ok'"
-          type="button"
           data-testid="qualificacao-perguntar"
-          class="ml-auto shrink-0 text-[11px] font-bold text-n-iris-11"
+          link
+          xs
+          class="ml-auto shrink-0"
+          :label="$t('RAMON.QUALIFICACAO.PERGUNTAR')"
           @click="perguntar(item)"
-        >
-          {{ $t('RAMON.QUALIFICACAO.PERGUNTAR') }}
-        </button>
+        />
       </div>
     </div>
   </div>

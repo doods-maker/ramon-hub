@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import types from 'dashboard/store/mutation-types';
 import LeadPanelBody from './LeadPanelBody.vue';
+import LeadFields from './LeadFields.vue';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
@@ -109,6 +110,9 @@ const LEAD = {
   contact_phone: '+55 48 99812-3456',
   contact_cpf: '12345678909',
   contact_email: 'joao.pereira@email.com',
+  contact_data_nascimento: '1979-04-22',
+  contact_sexo: 'M',
+  benefit_type_id: 1,
   sdr_name: 'Eduardo',
   closer_name: 'Dr. Ramon',
   docs_total: 5,
@@ -212,6 +216,8 @@ store.commit(types.SET_ALL_CONVERSATION, [
   { id: 101, status: 'open', messages: [], meta: {}, custom_attributes: {} },
 ]);
 store.commit(types.SET_CURRENT_CHAT_WINDOW, { id: 101 });
+store.dispatch('leadConfig/get');
+store.dispatch('theses/get');
 
 const comAba = tab => () => {
   localStorage.setItem('ramon_lead_panel_tab', tab);
@@ -267,6 +273,12 @@ const comAba = tab => () => {
           context="conversation"
           :conversation-id="101"
         />
+      </div>
+    </Variant>
+    <!-- "Dados do contato" → "Editar todos os campos" aberto -->
+    <Variant title="Campos">
+      <div class="w-[400px] p-3 bg-n-background">
+        <LeadFields :lead="LEAD" />
       </div>
     </Variant>
   </Story>

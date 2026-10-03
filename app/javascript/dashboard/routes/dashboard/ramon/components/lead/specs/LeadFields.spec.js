@@ -78,6 +78,8 @@ const mountFields = (
     global: {
       plugins: [build(updateSpy, fetchNotesSpy, createNoteSpy)],
       mocks: { $t: k => k },
+      // Button real: o telefone vira o rótulo do botão de copiar
+      stubs: { Button: false },
     },
   });
 
