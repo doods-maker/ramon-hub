@@ -1,6 +1,16 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  SELECT,
+  AVISO,
+  TOM,
+  FUNDO_JANELA,
+  JANELA,
+  TITULO_JANELA,
+  RODAPE_JANELA,
+} from '../../helpers/ui';
 
 const props = defineProps({
   stage: { type: Object, required: true },
@@ -29,61 +39,64 @@ onKeyStroke('Escape', () => emit('cancel'));
 </script>
 
 <template>
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click.self="emit('cancel')"
-  >
-    <div
-      class="w-80 max-w-[92vw] p-5 rounded-xl bg-n-solid-2 border border-n-weak"
-    >
-      <h3 class="mb-3 text-sm text-n-slate-12">
+  <div :class="FUNDO_JANELA" @click.self="emit('cancel')">
+    <div :class="JANELA">
+      <h3 :class="TITULO_JANELA">
         {{ $t('RAMON.FUNIL.STAGE.REMOVE_TITLE', { name: stage.name }) }}
       </h3>
-      <p
-        v-if="leadsCount > 0"
-        data-testid="remove-count"
-        class="mb-3 text-xs text-n-slate-11"
-      >
-        {{ $t('RAMON.FUNIL.STAGE.REMOVE_COUNT', { count: leadsCount }) }}
-      </p>
-      <p v-else data-testid="remove-empty" class="mb-3 text-xs text-n-slate-11">
-        {{ $t('RAMON.FUNIL.STAGE.REMOVE_EMPTY') }}
-      </p>
-      <p
-        v-if="noTarget"
-        data-testid="remove-no-target"
-        class="mb-3 text-xs text-n-amber-11"
-      >
-        {{ $t('RAMON.FUNIL.STAGE.REMOVE_NO_TARGET') }}
-      </p>
-      <select
-        v-if="options.length"
-        v-model="targetId"
-        data-testid="remove-target"
-        class="w-full px-2 py-1.5 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
-      >
-        <option :value="null" disabled>
-          {{ $t('RAMON.FUNIL.STAGE.REMOVE_PICK') }}
-        </option>
-        <option v-for="s in options" :key="s.id" :value="s.id">
-          {{ s.name }}
-        </option>
-      </select>
-      <div class="flex justify-end gap-2">
-        <button
-          class="px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12"
-          @click="emit('cancel')"
+      <div class="flex flex-col gap-3">
+        <p
+          v-if="leadsCount > 0"
+          data-testid="remove-count"
+          class="mb-0 text-xs text-n-slate-11"
         >
-          {{ $t('RAMON.FUNIL.STAGE.CANCEL') }}
-        </button>
-        <button
+          {{ $t('RAMON.FUNIL.STAGE.REMOVE_COUNT', { count: leadsCount }) }}
+        </p>
+        <p
+          v-else
+          data-testid="remove-empty"
+          class="mb-0 text-xs text-n-slate-11"
+        >
+          {{ $t('RAMON.FUNIL.STAGE.REMOVE_EMPTY') }}
+        </p>
+        <p
+          v-if="noTarget"
+          data-testid="remove-no-target"
+          class="mb-0"
+          :class="[AVISO, TOM.amber]"
+        >
+          {{ $t('RAMON.FUNIL.STAGE.REMOVE_NO_TARGET') }}
+        </p>
+        <select
+          v-if="options.length"
+          v-model="targetId"
+          data-testid="remove-target"
+          :class="SELECT"
+        >
+          <option :value="null" disabled>
+            {{ $t('RAMON.FUNIL.STAGE.REMOVE_PICK') }}
+          </option>
+          <option v-for="s in options" :key="s.id" :value="s.id">
+            {{ s.name }}
+          </option>
+        </select>
+      </div>
+      <div :class="RODAPE_JANELA">
+        <Button
+          sm
+          faded
+          slate
+          :label="$t('RAMON.FUNIL.STAGE.CANCEL')"
+          @click="emit('cancel')"
+        />
+        <Button
           data-testid="remove-confirm"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-ruby-9 text-white disabled:opacity-50"
+          sm
+          ruby
+          :label="$t('RAMON.FUNIL.STAGE.REMOVE_CONFIRM')"
           :disabled="noTarget || !targetId"
           @click="confirm"
-        >
-          {{ $t('RAMON.FUNIL.STAGE.REMOVE_CONFIRM') }}
-        </button>
+        />
       </div>
     </div>
   </div>

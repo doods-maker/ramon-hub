@@ -1,6 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  SELECT,
+  TEXTAREA,
+  FUNDO_JANELA,
+  JANELA,
+  TITULO_JANELA,
+  RODAPE_JANELA,
+} from '../../helpers/ui';
 
 const props = defineProps({
   lostReasons: { type: Array, default: () => [] },
@@ -36,33 +45,28 @@ onKeyStroke('Escape', () => {
 </script>
 
 <template>
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click.self="emit('cancelMove')"
-  >
-    <div
-      class="w-80 max-w-[92vw] p-5 rounded-xl bg-n-solid-2 border border-n-weak"
-    >
-      <h3 class="mb-3 text-sm text-n-slate-12">
+  <div :class="FUNDO_JANELA" @click.self="emit('cancelMove')">
+    <div :class="JANELA">
+      <h3 :class="TITULO_JANELA">
         {{ $t('RAMON.FUNIL.LOST.TITLE') }}
       </h3>
       <!-- sem motivos cadastrados: aponta pra Config em vez do beco sem saída -->
       <template v-if="!lostReasons.length">
-        <p data-testid="lost-no-reasons" class="mb-3 text-sm text-n-slate-11">
+        <p data-testid="lost-no-reasons" class="mb-2 text-sm text-n-slate-11">
           {{ $t('RAMON.FUNIL.LOST.NO_REASONS') }}
         </p>
         <router-link
           :to="{ name: 'ramon_funil_config' }"
-          class="inline-block mb-3 text-sm underline text-n-iris-11 hover:text-n-iris-12"
+          class="text-sm font-medium text-n-blue-11 hover:underline"
         >
           {{ $t('RAMON.FUNIL.LOST.CONFIG_LINK') }}
         </router-link>
       </template>
-      <template v-else>
+      <div v-else class="flex flex-col gap-3">
         <select
           v-model="reasonId"
           data-testid="lost-reason-select"
-          class="w-full px-2 py-1.5 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
+          :class="SELECT"
         >
           <option :value="null" disabled>
             {{ $t('RAMON.FUNIL.LOST.PICK') }}
@@ -77,25 +81,27 @@ onKeyStroke('Escape', () => {
           rows="2"
           maxlength="500"
           :placeholder="$t('RAMON.FUNIL.LOST.DETAIL_PLACEHOLDER')"
-          class="w-full px-2 py-1.5 mb-3 text-sm rounded-lg resize-none bg-n-alpha-2 text-n-slate-12 border border-transparent focus:border-n-slate-8 outline-none"
+          class="resize-none"
+          :class="TEXTAREA"
         />
-      </template>
-      <div class="flex justify-end gap-2">
-        <button
-          class="px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12"
+      </div>
+      <div :class="RODAPE_JANELA">
+        <Button
+          sm
+          faded
+          slate
+          :label="$t('RAMON.FUNIL.LOST.CANCEL')"
           @click="emit('cancelMove')"
-        >
-          {{ $t('RAMON.FUNIL.LOST.CANCEL') }}
-        </button>
-        <button
+        />
+        <Button
           v-if="lostReasons.length"
           data-testid="lost-reason-confirm"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-ruby-9 text-white disabled:opacity-50"
+          sm
+          ruby
+          :label="$t('RAMON.FUNIL.LOST.CONFIRM')"
           :disabled="!selectedReason"
           @click="confirm"
-        >
-          {{ $t('RAMON.FUNIL.LOST.CONFIRM') }}
-        </button>
+        />
       </div>
     </div>
   </div>
