@@ -74,6 +74,53 @@ module Ramon::PortalTexto
     normalizar(step) == FASE_ENCERRADA
   end
 
+  # Tipo do ADVBOX que só diz o procedimento, não o assunto: o painel não inventa título.
+  TIPOS_SEM_ASSUNTO = ['PROCEDIMENTO DO JUIZADO ESPECIAL CIVEL', 'CUMPRIMENTO DE SENTENCA CONTRA FAZENDA PUBLICA',
+                       'PROCEDIMENTO COMUM', 'PROCEDIMENTO COMUM CIVEL', 'TAREFAS ADMINISTRATIVAS'].freeze
+  SIGLAS = /\b(inss|pcd|irpf|rpv|fgts|ctps|dpvat)\b/
+
+  # "AUXÍLIO-ACIDENTE - COMUM (B36)" → "Auxílio-acidente"; tipo só de procedimento → nil.
+  def assunto(tipo)
+    base = tipo.to_s.sub(/\s*\(.*\)\s*\z/, '').split(' - ').first.to_s.strip
+    return if base.empty? || TIPOS_SEM_ASSUNTO.include?(normalizar(base))
+
+    base.downcase.capitalize.gsub(SIGLAS, &:upcase)
+  end
+
+  # Nº com 20 dígitos = padrão CNJ; sem número, o grupo do ADVBOX decide.
+  def onde(processo)
+    justica = processo['numero'].to_s.gsub(/\D/, '').size == 20 || DEGRAUS_OPCIONAIS['justica'][1].include?(normalizar(processo['fase']))
+    justica ? 'Processo na Justiça' : 'Pedido no INSS'
+  end
+
+  # Etapas que a EQUIPE marca como positivas no ADVBOX → selo verde. Resultado ainda em análise
+  # (etapa `delicada`) fica em cinza: o painel nunca antecipa resultado (regra do Eduardo, 03/10).
+  ETAPAS_POSITIVAS = {
+    'BENEFICIO CONCEDIDO / IMPLANTACAO' => 'Aprovado',
+    'RPV / PRECATORIO EMITIDO' => 'Pagamento a caminho',
+    'PAGAMENTO RECEBIDO / PAGAR CLIENTE' => 'Valor liberado',
+    'PRESTAR CONTAS E PAGAR AO CLIENTE' => 'Valor liberado',
+    'PAGAMENTO REALIZADO' => 'Pago'
+  }.freeze
+
+  # [tom, rótulo] do selo: aprovado (verde) · analise/concluido (pedra) · andamento (ouro).
+  def status(processo)
+    return %w[concluido Concluído] if encerrado?(processo['fase'])
+
+    stage = normalizar(PortalCliente.etapa_cliente(processo))
+    return ['aprovado', ETAPAS_POSITIVAS[stage]] if ETAPAS_POSITIVAS.key?(stage)
+    return ['analise', 'Em análise'] if dados['etapas'].dig(stage, 'delicada')
+
+    ['andamento', 'Em andamento']
+  end
+
+  # [título, linha de baixo] que diferenciam um processo do outro pro cliente.
+  def identificacao(processo)
+    numero = processo['numero'].presence && "nº #{processo['numero']}"
+    titulo = assunto(processo['tipo'])
+    titulo ? [titulo, [onde(processo), numero].compact.join(' · ')] : [onde(processo), numero]
+  end
+
   # Fase (chave de V2['fases']) da etapa; etapa interna/desconhecida cai no grupo (step) do ADVBOX.
   def fase_de(stage, step)
     V2['etapas'].dig(normalizar(stage), 'fase') || V2['grupo_fase'][normalizar(step)]

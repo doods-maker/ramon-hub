@@ -125,6 +125,23 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
     expect(response.body).to include('Falta 1 documento')
   end
 
+  it 'abas Documentos, Equipe e Conta, com o menu e o contador de pendências' do
+    entrar
+    get '/cliente/documentos'
+    expect(response.body).to include('Para enviar').and include('CNIS atualizado').and include('class="menu-badge"')
+    get '/cliente/equipe'
+    expect(response.body).to include('Chamar no WhatsApp').and include('Ramon Antonio').and include('Rua Coronel Teixeira, 40')
+    get '/cliente/conta'
+    expect(response.body).to include('Trocar senha').and include('Sair')
+    expect(response.body).not_to include(cliente.cpf)
+  end
+
+  it 'início: assunto, número e resumo do que falta fazer' do
+    entrar
+    get '/cliente/inicio'
+    expect(response.body).to include('Auxílio-acidente').and include('nº 5003800-40.2022.4.04.7207').and include('Para você fazer')
+  end
+
   it 'processo de outro cliente dá 404' do
     entrar
     get '/cliente/processos/999'
@@ -180,8 +197,8 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
       meu = create(:portal_envio, portal_cliente: cliente, arquivo: pdf)
       alheio = create(:portal_envio, portal_cliente: create(:portal_cliente, account: account), arquivo: pdf)
       entrar
-      get '/cliente/inicio'
-      expect(response.body).to include('Seus documentos')
+      get '/cliente/documentos'
+      expect(response.body).to include('Seus documentos').and include('Já com o escritório')
       get "/cliente/envios/#{meu.id}/arquivo"
       expect(response).to have_http_status(:ok)
       expect(response.headers['Content-Disposition']).to include('attachment')

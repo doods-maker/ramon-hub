@@ -1,0 +1,64 @@
+<%# app/views/cliente/painel/documentos.html.erb — aba Documentos: enviar, assinar e o que já está com o escritório %>
+<% content_for :title, 'Seus documentos' %>
+<% content_for :aba, 'documentos' %>
+<div class="topo">
+  <h1>Seus documentos</h1>
+  <p class="lead">Envie o que pedimos, assine o que estiver pronto e baixe o que já é seu.</p>
+</div>
+
+<div class="colunas">
+  <div class="col-principal">
+    <h2 class="secao">Para enviar<% if a_enviar.any? %> <span class="contador"><%= a_enviar.size %></span><% end %></h2>
+    <% if a_enviar.empty? %>
+      <div class="neutral-card pessoa"><span class="tile t-aprovado"><%= render 'icone', nome: 'check', tamanho: 19, traco: 2.4 %></span>Nenhum documento pendente agora.</div>
+    <% else %>
+      <div class="lista">
+        <% a_enviar.each do |processo, doc| %>
+          <div class="linha">
+            <span class="tile t-fazer"><%= render 'icone', nome: 'documentos', tamanho: 19 %></span>
+            <span class="linha-texto"><strong><%= doc['item'] %></strong><small>Para: <%= Ramon::PortalTexto.identificacao(processo).compact.join(' · ') %></small></span>
+            <%= link_to 'Enviar', cliente_processo_path(processo['id'], anchor: 'documentos'), class: 'btn-verde btn-pq' %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if @assinaturas.any? %>
+      <h2 class="secao">Para assinar</h2>
+      <div class="lista">
+        <% @assinaturas.each do |a| %>
+          <div class="linha">
+            <span class="tile t-fazer"><%= render 'icone', nome: 'assinar', tamanho: 19 %></span>
+            <span class="linha-texto"><strong><%= a.nome %></strong><small>Leva poucos minutos, pelo celular</small></span>
+            <%= link_to 'Assinar', cliente_assinatura_path(a), class: 'btn-verde btn-pq' %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="col-lateral">
+    <h2 class="secao">Já com o escritório</h2>
+    <% if @assinadas.empty? && @envios.empty? %>
+      <div class="neutral-card">Os documentos que você enviar ou assinar pelo painel aparecem aqui.</div>
+    <% else %>
+      <div class="lista">
+        <% @assinadas.each do |a| %>
+          <div class="linha">
+            <span class="tile tile-marca"><%= render 'icone', nome: 'assinar', tamanho: 19 %></span>
+            <span class="linha-texto"><strong><%= a.nome %></strong><small>Assinado por você</small></span>
+            <%= link_to cliente_baixar_assinatura_path(a), class: 'tile', 'aria-label': "Baixar #{a.nome}", style: 'color: var(--bronze)' do %><%= render 'icone', nome: 'baixar', tamanho: 20 %><% end %>
+          </div>
+        <% end %>
+        <% @envios.each do |e| %>
+          <div class="linha">
+            <span class="tile t-aprovado"><%= render 'icone', nome: 'check', tamanho: 19, traco: 2.4 %></span>
+            <span class="linha-texto"><strong><%= e.item %></strong><small>Enviado por você em <%= data_br(e.created_at) %></small></span>
+            <%= link_to cliente_baixar_envio_path(e), class: 'tile', 'aria-label': "Baixar #{e.item}", style: 'color: var(--bronze)' do %><%= render 'icone', nome: 'baixar', tamanho: 20 %><% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    <p class="muted" style="margin-top: 10px">Precisa de outra cópia de algum documento do processo? Peça na aba Equipe.</p>
+  </div>
+</div>

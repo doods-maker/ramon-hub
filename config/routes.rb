@@ -754,6 +754,9 @@ Rails.application.routes.draw do
     delete 'sair', to: 'sessoes#destroy', as: :sair
     resource :senha, only: [:edit, :update], controller: 'senhas'
     get 'inicio', to: 'painel#show', as: :inicio
+    get 'documentos', to: 'painel#documentos', as: :documentos
+    get 'equipe', to: 'painel#equipe', as: :equipe
+    get 'conta', to: 'painel#conta', as: :conta
     post 'termos', to: 'painel#aceitar_termos', as: :termos
     post 'ia', to: 'painel#consentir_ia', as: :ia
     get 'boas-vindas', to: 'painel#boas_vindas', as: :boas_vindas

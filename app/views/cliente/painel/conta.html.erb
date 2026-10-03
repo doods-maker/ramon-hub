@@ -1,0 +1,35 @@
+<%# app/views/cliente/painel/conta.html.erb — aba Conta. Termos/política entram quando a política do painel for publicada. %>
+<% cpf = current_cliente.cpf.to_s %>
+<% content_for :title, 'Minha conta' %>
+<% content_for :aba, 'conta' %>
+<div class="topo">
+  <p class="eyebrow">Minha conta</p>
+  <h1><%= current_cliente.nome.to_s.titleize %></h1>
+  <p class="lead num">CPF ***.<%= cpf[3, 3] %>.<%= cpf[6, 3] %>-**<% if current_cliente.email.present? %> · <%= current_cliente.email %><% end %></p>
+</div>
+<% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
+<% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
+
+<div class="lista">
+  <%= form_with url: cliente_atualizar_path, method: :post, local: true do %>
+    <button type="submit" class="linha linha-botao">
+      <span class="tile tile-marca"><%= render 'icone', nome: 'atualizar', tamanho: 19 %></span>
+      <span class="linha-texto"><strong>Atualizar agora</strong><small>Última atualização: <%= current_cliente.sincronizado_em ? current_cliente.sincronizado_em.in_time_zone('America/Sao_Paulo').strftime('%d/%m/%Y às %H:%M') : '—' %></small></span>
+      <span class="seta"><%= render 'icone', nome: 'seta', tamanho: 18 %></span>
+    </button>
+  <% end %>
+  <a class="linha" href="<%= edit_cliente_senha_path %>">
+    <span class="tile tile-marca"><%= render 'icone', nome: 'cadeado', tamanho: 19 %></span>
+    <span class="linha-texto"><strong>Trocar senha</strong></span>
+    <span class="seta"><%= render 'icone', nome: 'seta', tamanho: 18 %></span>
+  </a>
+  <% if Ramon::PortalTexto.v2? %>
+    <div class="linha">
+      <span class="tile tile-marca"><%= render 'icone', nome: 'brilho', tamanho: 19 %></span>
+      <span class="linha-texto"><strong>Inteligência artificial</strong>
+        <small><%= { true => 'Autorizado', false => 'Não autorizado', nil => 'Ainda não respondido' }[current_cliente.ia_consentimento] %> · para mudar, fale com a equipe</small></span>
+    </div>
+  <% end %>
+</div>
+
+<%= button_to cliente_sair_path, method: :delete, class: 'btn-contorno', form: { style: 'margin-top: 18px' } do %><%= render 'icone', nome: 'sair', tamanho: 20 %>Sair<% end %>

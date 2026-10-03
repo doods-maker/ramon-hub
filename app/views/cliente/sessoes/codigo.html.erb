@@ -14,7 +14,7 @@
     <%= f.submit 'Entrar', class: 'btn-bronze' %>
   <% end %>
 </div>
-<div class="conta-links">
+<div style="display: flex; gap: 20px; flex-wrap: wrap">
   <%= form_with url: cliente_codigo_path, method: :post, local: true do |f| %>
     <%= f.hidden_field :cpf, value: @cpf %>
     <%= f.submit 'Pedir outro código', class: 'btn-link' %>

@@ -1,27 +1,24 @@
 <%# app/views/cliente/painel/_processo_card.html.erb %>
 <% etapa = Ramon::PortalTexto.etapa(PortalCliente.etapa_cliente(processo)) %>
-<% faltam = processo['docs_pendentes'].size %>
+<% titulo, sub = Ramon::PortalTexto.identificacao(processo) %>
+<% tom, rotulo = Ramon::PortalTexto.status(processo) %>
+<% faltam = a_enviar.count { |p, _d| p['id'] == processo['id'] } %>
 <% linha = Ramon::PortalTexto.linha_do_tempo(processo) if Ramon::PortalTexto.v2? %>
-<% atual = linha&.index { |d| d['estado'] == 'current' } %>
+<% atual = linha&.find { |d| d['estado'] == 'current' } %>
 <%= link_to cliente_processo_path(processo['id']), class: 'card' do %>
-  <span class="badge"><%= processo['tipo'].to_s.downcase.capitalize %></span>
-  <% if PortalCliente.novidades_nao_vistas(processo).any? %><span class="badge badge-novo">Novidade</span><% end %>
-  <h2><%= etapa['titulo'] %></h2>
-  <p class="muted"><%= etapa['o_que_esperar'] %></p>
-  <% if atual %>
-    <div class="progresso">
-      <div class="progresso-barra" aria-hidden="true">
-        <% linha.each do |passo| %><span class="is-<%= passo['estado'] %>"></span><% end %>
-      </div>
-      <p class="progresso-legenda">Fase <%= atual + 1 %> de <%= linha.size %> · <strong><%= linha[atual]['nome'] %></strong></p>
-    </div>
-  <% end %>
-  <div class="card-rodape">
-    <% if faltam.positive? %>
-      <span class="alerta-docs"><%= faltam == 1 ? 'Falta 1 documento' : "Faltam #{faltam} documentos" %></span>
-    <% else %>
-      <span class="muted">Nada pendente com você</span>
+  <div class="proc-topo">
+    <span class="tile t-<%= tom %>"><%= render 'icone', nome: atual ? atual['chave'] : 'documentos', tamanho: 20 %></span>
+    <span class="proc-nome"><strong><%= titulo %></strong><% if sub %><small><%= sub %></small><% end %></span>
+    <span class="selo t-<%= tom %>"><% if tom == 'aprovado' %><%= render 'icone', nome: 'check', tamanho: 11, traco: 3.2 %><% else %><span class="selo-ponto"></span><% end %><%= rotulo %></span>
+  </div>
+  <div class="proc-corpo">
+    <p class="proc-etapa">
+      <span><%= etapa['titulo'] %></span>
+      <% if faltam.positive? %><span class="proc-pendencia"><%= faltam == 1 ? '1 pendência' : "#{faltam} pendências" %></span><% end %>
+    </p>
+    <% if PortalCliente.novidades_nao_vistas(processo).any? %><span class="badge badge-novo" style="margin-top: 6px">Novidade</span><% end %>
+    <% if linha %>
+      <div class="progresso" aria-hidden="true"><% linha.each do |passo| %><span class="is-<%= passo['estado'] %>"></span><% end %></div>
     <% end %>
-    <span class="ver-mais">Ver detalhes →</span>
   </div>
 <% end %>

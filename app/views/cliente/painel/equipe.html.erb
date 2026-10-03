@@ -1,0 +1,43 @@
+<%# app/views/cliente/painel/equipe.html.erb — aba Equipe. Contato/horário/endereço = os do site (ramonantonio-site src/data/site.ts). %>
+<% whatsapp = ENV.fetch('PORTAL_WHATSAPP', '5548988554077') %>
+<% telefone = whatsapp.delete('^0-9').sub(/\A55/, '') %>
+<% telefone_exibicao = "(#{telefone[0, 2]}) #{telefone[2..-5]}-#{telefone[-4..]}" %>
+<% content_for :title, 'Equipe' %>
+<% content_for :aba, 'equipe' %>
+<div class="topo">
+  <h1>Fale com a gente</h1>
+  <p class="lead">Ficou com dúvida sobre o seu caso? Chame a equipe.</p>
+</div>
+
+<div class="colunas">
+  <div class="col-principal">
+    <div class="card">
+      <% @responsaveis.first(3).each do |nome| %>
+        <div class="pessoa" style="margin-bottom: 12px">
+          <span class="pessoa-inicial"><%= nome.first %></span>
+          <span class="linha-texto"><small>Cuida do seu processo</small><strong><%= nome %></strong></span>
+        </div>
+      <% end %>
+      <a class="btn-verde" href="https://wa.me/<%= whatsapp %>"><%= render 'icone', nome: 'conversa', tamanho: 20 %>Chamar no WhatsApp</a>
+      <p class="muted" style="margin-top: 8px; text-align: center"><span class="num"><%= telefone_exibicao %></span> · a mensagem vai para a equipe do escritório</p>
+    </div>
+  </div>
+
+  <div class="col-lateral">
+    <h2 class="secao">Atendimento</h2>
+    <div class="lista">
+      <div class="linha" style="align-items: flex-start">
+        <span class="tile tile-marca"><%= render 'icone', nome: 'relogio', tamanho: 19 %></span>
+        <span class="linha-texto"><strong>Horário</strong><small>Segunda a sexta, das 8h30 às 12h e das 13h30 às 18h</small></span>
+      </div>
+      <a class="linha" style="align-items: flex-start" href="https://www.google.com/maps/search/?api=1&query=<%= ERB::Util.url_encode('Rua Coronel Teixeira, 40, Centro, Tubarão - SC, 88701-230') %>" target="_blank" rel="noopener">
+        <span class="tile tile-marca"><%= render 'icone', nome: 'mapa', tamanho: 19 %></span>
+        <span class="linha-texto"><strong>Escritório</strong><small>Rua Coronel Teixeira, 40 — Centro, Tubarão/SC · abrir no mapa</small></span>
+      </a>
+      <a class="linha" href="tel:+<%= whatsapp %>">
+        <span class="tile tile-marca"><%= render 'icone', nome: 'telefone', tamanho: 19 %></span>
+        <span class="linha-texto"><strong>Telefone</strong><small class="num"><%= telefone_exibicao %></small></span>
+      </a>
+    </div>
+  </div>
+</div>
