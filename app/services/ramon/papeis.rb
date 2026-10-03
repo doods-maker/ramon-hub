@@ -8,6 +8,19 @@ module Ramon::Papeis
   CLOSER = 'closer'.freeze
   COLUNA = { SDR => :sdr_id, CLOSER => :closer_id }.freeze
 
+  # Papel da tela Hoje — mesma regra do front (helpers/papel.js), na ordem de prioridade.
+  # O backend decide o que entrega; o front só escolhe o desenho.
+  PAPEL_POR_TIME = {
+    'recepcao' => 'recepcao', 'controladoria' => 'recepcao', 'closer' => 'closer', 'sdr' => 'sdr', 'advogados' => 'advogada'
+  }.freeze
+
+  def papel_de(account, user)
+    return 'gestor' if account.account_users.find_by(user: user)&.administrator?
+
+    times = user.teams.where(account: account).pluck(:name).map { |nome| I18n.transliterate(nome).strip.downcase }
+    PAPEL_POR_TIME.find { |time, _papel| times.include?(time) }&.last || 'equipe'
+  end
+
   def membro_ids(account, papel)
     account.teams.find_by(name: papel)&.members&.pluck(:id) || []
   end
