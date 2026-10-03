@@ -985,7 +985,13 @@
       "LOAD_ERROR": "Couldn't load the lead for this conversation.",
       "RETRY": "Try again",
       "DISCARD_CONFIRM": "Remove this lead from the funnel? The conversation stays in Chatwoot.",
-      "DISCARD_ERROR": "Could not remove the lead — try again"
+      "DISCARD_ERROR": "Could not remove the lead — try again",
+      "ETAPA": "Stage",
+      "HA_DIAS": "{n} day ago | {n} days ago",
+      "FOLLOW_UP": "Follow-up",
+      "ABRIR_FICHA": "Open record",
+      "QUALIFICACAO": "Qualification",
+      "COPILOTO": "Copilot"
     },
     "PLAYBOOK": {
       "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",

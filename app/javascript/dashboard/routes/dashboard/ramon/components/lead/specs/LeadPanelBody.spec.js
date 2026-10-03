@@ -2,6 +2,7 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadPanelBody from '../LeadPanelBody.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
+import DocChecklist from '../DocChecklist.vue';
 import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
 
@@ -29,6 +30,7 @@ const build = ({
   createTask = vi.fn(),
   followUpDraft = vi.fn(),
   chatMessages = [],
+  tasks = [],
 } = {}) =>
   createStore({
     getters: { getSelectedChat: () => ({ id: 42, messages: chatMessages }) },
@@ -50,7 +52,7 @@ const build = ({
       },
       leadTasks: {
         namespaced: true,
-        getters: { getByLead: () => () => [] },
+        getters: { getByLead: () => () => tasks },
         actions: { fetchForLead: vi.fn(), create: createTask },
       },
     },
@@ -68,6 +70,7 @@ const stubs = {
   MacrosList: true,
   ResolveAction: true,
   RouterLink: { template: '<a><slot /></a>' },
+  SecaoRecolhivel: false,
 };
 
 const mountBody = ({ props = {}, spies = {} } = {}) =>
@@ -86,9 +89,10 @@ describe('LeadPanelBody', () => {
     Element.prototype.scrollIntoView = vi.fn();
   });
 
-  describe('abas', () => {
-    it('abre no Resumo por padrão com o card de próxima ação', () => {
+  describe('seções recolhíveis (eram abas)', () => {
+    it('não tem mais barra de abas; Próximo passo no topo e seções fechadas', () => {
       const wrapper = mountBody();
+      expect(wrapper.find('[role="tablist"]').exists()).toBe(false);
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
         true
       );
@@ -97,33 +101,38 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('troca o conteúdo ao clicar em outra aba e persiste a escolha', async () => {
+    it('abre a seção ao clicar e persiste a escolha', async () => {
       const wrapper = mountBody();
-      await wrapper.find('[data-testid="lead-tab-historico"]').trigger('click');
+      await wrapper.find('[data-testid="secao-historico"]').trigger('click');
       expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(
         true
       );
-      // Próxima ação agora vive no corpo do Resumo (cartões enxutos, D3):
-      // some ao trocar de aba.
+      // Próximo passo continua visível (não é mais aba)
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
-        false
+        true
       );
-      expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('historico');
-    });
-
-    it('mostra a aba Contrato em qualquer tese', () => {
       expect(
-        mountBody().find('[data-testid="lead-tab-contrato"]').exists()
-      ).toBe(true);
+        JSON.parse(localStorage.getItem('ramon_lead_panel_abertas'))
+      ).toEqual(['historico']);
+      await wrapper.find('[data-testid="secao-historico"]').trigger('click');
+      expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(
+        false
+      );
+    });
+
+    it('mostra a seção Contrato em qualquer tese', () => {
+      expect(mountBody().find('[data-testid="secao-contrato"]').exists()).toBe(
+        true
+      );
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
       });
-      expect(wrapper.find('[data-testid="lead-tab-contrato"]').exists()).toBe(
+      expect(wrapper.find('[data-testid="secao-contrato"]').exists()).toBe(
         true
       );
     });
 
-    it('aba Contrato persistida abre o cartão do ZapSign', () => {
+    it('aba antiga gravada pelo atalho (contrato) abre a seção do ZapSign', () => {
       localStorage.setItem('ramon_lead_panel_tab', 'contrato');
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadCopilot' }).exists()).toBe(
@@ -132,25 +141,71 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent({ name: 'LeadZapsignCard' }).exists()).toBe(
         true
       );
+      expect(localStorage.getItem('ramon_lead_panel_tab')).toBeNull();
     });
 
-    it('restaura a aba persistida', () => {
+    it('restaura as seções abertas (atalho "simulador" → Cálculos)', () => {
       localStorage.setItem('ramon_lead_panel_tab', 'simulador');
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadSimulador' }).exists()).toBe(
         true
       );
+      expect(
+        mountBody().findComponent({ name: 'LeadSimulador' }).exists()
+      ).toBe(true);
     });
 
-    it('mostra dot verde no Simulador quando há última simulação', () => {
+    it('mostra dot verde em Cálculos quando há última simulação', () => {
       const wrapper = mountBody({
         props: {
           lead: { ...lead, custom_attributes: { ultima_simulacao: { x: 1 } } },
         },
       });
-      const dot = wrapper.find('[data-testid="lead-tab-dot-simulador"]');
-      expect(dot.exists()).toBe(true);
-      expect(dot.classes()).toContain('bg-n-teal-9');
+      expect(
+        wrapper.find('[data-testid="secao-calculos"] .bg-n-teal-9').exists()
+      ).toBe(true);
+    });
+
+    it('Copiloto vira seção (só na conversa)', async () => {
+      const wrapper = mountBody();
+      await wrapper.find('[data-testid="secao-copiloto"]').trigger('click');
+      expect(wrapper.findComponent({ name: 'LeadCopilot' }).exists()).toBe(
+        true
+      );
+      expect(
+        mountBody({ props: { context: 'drawer' } })
+          .find('[data-testid="secao-copiloto"]')
+          .exists()
+      ).toBe(false);
+    });
+  });
+
+  describe('Etapa e Próximo passo', () => {
+    it('Próximo passo leva pra ficha e o Follow-up abre o form de tarefa', async () => {
+      const wrapper = mountBody();
+      const bloco = wrapper.find('[data-testid="panel-proximo-passo"]');
+      expect(bloco.find('[data-testid="lead-abrir-ficha"]').exists()).toBe(
+        true
+      );
+      expect(bloco.text()).toContain('RAMON.FICHA.NEXT_EMPTY');
+      await bloco.find('[data-testid="panel-add-task"]').trigger('click');
+      expect(wrapper.find('[data-testid="panel-task-form"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('com reunião marcada, o apoio da Etapa mostra quando e com quem', () => {
+      const wrapper = mountBody({
+        spies: {
+          tasks: [
+            { id: 1, kind: 'meeting', due_at: '2026-10-08T13:00:00.000Z' },
+          ],
+        },
+      });
+      const etapa = wrapper.find('[data-testid="panel-card-andamento"]');
+      expect(etapa.text()).toContain('RAMON.HOJE.COM');
+      expect(etapa.text()).not.toContain('Restabelecimento B31');
+      expect(wrapper.text()).not.toContain('RAMON.FICHA.NEXT_EMPTY');
     });
   });
 
@@ -265,13 +320,13 @@ describe('LeadPanelBody', () => {
       expect(wrapper.emitted('openConversation')[0]).toEqual([42]);
     });
 
-    it('na conversa não mostra WhatsApp (a conversa já está aberta) e mostra Resolver', () => {
+    it('na conversa não mostra WhatsApp (a conversa já está aberta) nem Resolver (está no cabeçalho)', () => {
       const wrapper = mountBody();
       expect(wrapper.find('[data-testid="panel-whatsapp"]').exists()).toBe(
         false
       );
       expect(wrapper.findComponent({ name: 'ResolveAction' }).exists()).toBe(
-        true
+        false
       );
     });
 
@@ -317,10 +372,11 @@ describe('LeadPanelBody', () => {
       expect(wrapper.text()).toContain('052.318.774-90');
     });
 
-    it('mostra o cartão Qualificação viva logo após o cartão Caso', () => {
+    it('mostra a Qualificação viva na seção Qualificação', async () => {
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_id: 3 } },
       });
+      await wrapper.find('[data-testid="secao-qualificacao"]').trigger('click');
       expect(wrapper.findComponent({ name: 'QualificacaoViva' }).exists()).toBe(
         true
       );
@@ -336,18 +392,17 @@ describe('LeadPanelBody', () => {
       ).toContain('Novo');
     });
 
-    it('cartão Documentos leva pra aba documentos', async () => {
+    it('seção Documentos mostra a contagem e abre o checklist', async () => {
       const wrapper = mountBody({
         props: {
           lead: { ...lead, thesis_id: 3, docs_total: 4, docs_received: 1 },
         },
       });
-      await wrapper.find('[data-testid="panel-card-docs"]').trigger('click');
-      expect(
-        wrapper
-          .find('[data-testid="lead-tab-documentos"]')
-          .attributes('aria-selected')
-      ).toBe('true');
+      const secao = wrapper.find('[data-testid="secao-documentos"]');
+      expect(secao.text()).toContain('1/4');
+      expect(wrapper.findComponent(DocChecklist).exists()).toBe(false);
+      await secao.trigger('click');
+      expect(wrapper.findComponent(DocChecklist).exists()).toBe(true);
     });
 
     it('expande o formulário completo pelo link "editar todos os campos" (dentro de Dados do contato)', async () => {
@@ -364,11 +419,11 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(true);
     });
 
-    it('completeData do ZapSign (aba Contrato) volta pro Resumo com o formulário aberto', async () => {
+    it('completeData do ZapSign (seção Contrato) abre Dados do contato com o formulário', async () => {
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
       });
-      await wrapper.find('[data-testid="lead-tab-contrato"]').trigger('click');
+      await wrapper.find('[data-testid="secao-contrato"]').trigger('click');
       wrapper
         .findComponent({ name: 'LeadZapsignCard' })
         .vm.$emit('completeData');

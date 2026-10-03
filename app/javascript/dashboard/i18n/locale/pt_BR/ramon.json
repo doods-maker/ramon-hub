@@ -985,7 +985,13 @@
       "LOAD_ERROR": "Não foi possível carregar o lead desta conversa.",
       "RETRY": "Tentar novamente",
       "DISCARD_CONFIRM": "Remover este lead do funil? A conversa continua no Chatwoot.",
-      "DISCARD_ERROR": "Não foi possível remover o lead — tente de novo"
+      "DISCARD_ERROR": "Não foi possível remover o lead — tente de novo",
+      "ETAPA": "Etapa",
+      "HA_DIAS": "há {n} dia | há {n} dias",
+      "FOLLOW_UP": "Follow-up",
+      "ABRIR_FICHA": "Abrir ficha",
+      "QUALIFICACAO": "Qualificação",
+      "COPILOTO": "Copiloto"
     },
     "PLAYBOOK": {
       "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",
