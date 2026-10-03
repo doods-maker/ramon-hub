@@ -161,9 +161,8 @@ aprovado, montado/agendado→montado, publicado→publicado; demais = não mexe.
 
 ### 4.8 Acervo Drive — `Ramon::ConteudoDriveJob`
 
-Em `montado`: `Ramon::DriveClient.ensure_folder` de `<tipo>` e `<rodada — capa_titulo>` sob
-`RAMON_DRIVE_POSTS_ID`, sobe os JPEGs + `legenda.txt`; guarda `drive_pasta_id` (re-upload só em
-refação). ⚠️ O hub usa **service account** — sem cota em "Meu Drive". Se a pasta atual
+Depois de `publicado`: `Ramon::DriveClient.ensure_folder` de `<tipo>` e `<rodada — capa_titulo>` sob
+`RAMON_DRIVE_POSTS_ID`, sobe os JPEGs + `legenda.txt`; guarda `drive_pasta_id`. ⚠️ O hub usa **service account** — sem cota em "Meu Drive". Se a pasta atual
 `Posts Instagram` (no Meu Drive do Eduardo) recusar upload, o acervo passa a viver numa pasta
 dentro do drive compartilhado que o hub já usa. Validar no PR 2.
 
