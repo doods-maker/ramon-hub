@@ -1,6 +1,8 @@
 # Busca da paleta Ctrl K (redesign v2): leads do funil + espelho do painel do
 # cliente (PortalCliente, inclusive nº de processo no jsonb). Tudo local — zero
 # cota do ADVBOX. O banco não tem `unaccent`: o acento sai no translate().
+# ponytail: LIKE '%termo%' varre as tabelas sem índice — ok com milhares de
+# linhas; passando disso, índice trigram (pg_trgm já está ligado).
 class Ramon::Busca
   LIMITE = 6
   COM_ACENTO = 'áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ'.freeze
@@ -22,6 +24,8 @@ class Ramon::Busca
   private
 
   def digitos = @termo.gsub(/\D/, '')
+  # telefone/CPF/processo só quando o termo é basicamente número ("(47) 9 9634-2210")
+  def numerico? = @termo.match?(/\A[\d\s().+-]+\z/)
   def like = "%#{ActiveRecord::Base.sanitize_sql_like(I18n.transliterate(@termo).downcase)}%"
   # só constantes interpoladas — o termo vai sempre como bind (?)
   def sem_acento(coluna) = "LOWER(translate(#{coluna}, '#{COM_ACENTO}', '#{SEM_ACENTO}'))"
@@ -29,8 +33,8 @@ class Ramon::Busca
   def leads
     escopo = @account.leads.funil.left_joins(:contact)
     condicao = escopo.where("#{sem_acento('leads.name')} LIKE ?", like)
-    condicao = condicao.or(escopo.where('contacts.phone_number LIKE ?', "%#{digitos}%")) if digitos.length >= 4
-    condicao.includes(:lead_stage, :thesis, :contact).limit(LIMITE).map do |lead|
+    condicao = condicao.or(escopo.where('contacts.phone_number LIKE ?', "%#{digitos}%")) if numerico? && digitos.length >= 4
+    condicao.includes(:lead_stage, :thesis, :contact).reorder(updated_at: :desc).limit(LIMITE).map do |lead|
       { id: lead.id, nome: lead.name, tese: lead.thesis&.name, telefone: lead.contact&.phone_number,
         stage_name: lead.lead_stage&.name, stage_color: lead.lead_stage&.color }
     end
@@ -39,7 +43,7 @@ class Ramon::Busca
   def clientes
     escopo = PortalCliente.where(account_id: @account.id)
     condicao = escopo.where("#{sem_acento('nome')} LIKE ?", like)
-    condicao = condicao.or(escopo.where(cpf: digitos)).or(escopo.where('telefone LIKE ?', "%#{digitos}%")) if digitos.length >= 8
+    condicao = condicao.or(escopo.where(cpf: digitos)).or(escopo.where('telefone LIKE ?', "%#{digitos}%")) if numerico? && digitos.length >= 8
     condicao.order(:nome).limit(LIMITE).map do |cliente|
       principal = Array(cliente.processos).first || {}
       { id: cliente.id, nome: cliente.nome, advogada: principal['responsavel'], desde: principal['inicio'].to_s[0, 4].presence }
@@ -47,7 +51,7 @@ class Ramon::Busca
   end
 
   def processos
-    return [] if digitos.length < 7
+    return [] unless numerico? && digitos.length >= 7
 
     PortalCliente.where(account_id: @account.id)
                  .where(PROCESSO_SQL, "%#{digitos}%")

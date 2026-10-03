@@ -22,6 +22,12 @@ RSpec.describe Ramon::Busca do
     expect(busca('(47) 9 9634-2210')[:leads].first).to include(id: lead.id, nome: 'Sérgio Zanella', telefone: '+5547996342210')
   end
 
+  it 'termo com letras não casa telefone pelos dígitos soltos' do
+    contato = create(:contact, account: account, phone_number: '+5547996342210')
+    create(:lead, account: account, name: 'Sérgio Zanella', contact: contato)
+    expect(busca('ana 4799')[:leads]).to eq([])
+  end
+
   it 'não devolve caso de cálculo (fora do funil)' do
     create(:lead, account: account, name: 'João Cálculo', source: Lead::FONTE_CALCULO)
     expect(busca('joao')[:leads]).to eq([])
