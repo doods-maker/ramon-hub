@@ -3,7 +3,7 @@
 const TODOS = ['gestor', 'sdr', 'closer', 'recepcao', 'advogada', 'equipe'];
 const COMERCIAL = ['gestor', 'sdr', 'closer', 'equipe'];
 
-// Todas as rotas de conversation.routes.js e inbox (inbox_view*), menos kanban_board.
+// Todas as rotas de conversation.routes.js, menos kanban_board.
 export const CONVERSA_ROUTES = [
   'home',
   'inbox_conversation',
@@ -21,9 +21,35 @@ export const CONVERSA_ROUTES = [
   'conversation_through_unattended',
   'conversation_participating',
   'conversation_through_participating',
-  'inbox_view',
-  'inbox_view_conversation',
 ];
+
+// Caixa de notificações (inbox-view) acende o sino do topo.
+export const NOTIFICACAO_ROUTES = ['inbox_view', 'inbox_view_conversation'];
+
+// Abaixo de Conversas quando ela está acesa (as caixas entram no componente).
+export const SUBITENS_CONVERSAS = [
+  {
+    key: 'mencoes',
+    rota: 'conversation_mentions',
+    names: ['conversation_mentions', 'conversation_through_mentions'],
+  },
+  {
+    key: 'participando',
+    rota: 'conversation_participating',
+    names: ['conversation_participating', 'conversation_through_participating'],
+  },
+  {
+    key: 'nao_atendidas',
+    rota: 'conversation_unattended',
+    names: ['conversation_unattended', 'conversation_through_unattended'],
+  },
+].map(item => ({ ...item, label: `RAMON.MENU.${item.key.toUpperCase()}` }));
+
+// Áreas nativas do Chatwoot: ali o Dashboard monta o sidebar do Chatwoot
+// (submenus de Configurações, Captain, Relatórios, Contatos, Campanhas, Central de ajuda).
+const AREA_CHATWOOT =
+  /\/accounts\/[^/]+\/(settings|captain|reports|contacts|companies|campaigns|portals)(\/|$)/;
+export const ehAreaChatwoot = path => AREA_CHATWOOT.test(path);
 
 const MENU = [
   {

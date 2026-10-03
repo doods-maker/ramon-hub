@@ -1,4 +1,11 @@
-import { itensDoMenu, itensDoMais, CONVERSA_ROUTES } from '../navItems';
+import {
+  itensDoMenu,
+  itensDoMais,
+  CONVERSA_ROUTES,
+  SUBITENS_CONVERSAS,
+  NOTIFICACAO_ROUTES,
+  ehAreaChatwoot,
+} from '../navItems';
 
 const chaves = papel => itensDoMenu(papel).map(i => i.key);
 
@@ -62,6 +69,39 @@ describe('itensDoMenu', () => {
     expect(CONVERSA_ROUTES).toContain('home');
     expect(CONVERSA_ROUTES).toContain('inbox_conversation');
     expect(CONVERSA_ROUTES).not.toContain('kanban_board');
+  });
+  it('caixa de notificações acende o sino, não Conversas', () => {
+    expect(CONVERSA_ROUTES).not.toContain('inbox_view');
+    expect(NOTIFICACAO_ROUTES).toEqual([
+      'inbox_view',
+      'inbox_view_conversation',
+    ]);
+  });
+  it('sub-itens de Conversas: menções, participando, não atendidas', () => {
+    expect(SUBITENS_CONVERSAS.map(i => i.rota)).toEqual([
+      'conversation_mentions',
+      'conversation_participating',
+      'conversation_unattended',
+    ]);
+    expect(SUBITENS_CONVERSAS[0].label).toBe('RAMON.MENU.MENCOES');
+  });
+  it('área nativa do Chatwoot pelo 1º segmento depois da conta', () => {
+    [
+      '/app/accounts/2/settings/inboxes/list',
+      '/app/accounts/2/captain/1/faqs',
+      '/app/accounts/2/reports/overview',
+      '/app/accounts/2/contacts',
+      '/app/accounts/2/companies',
+      '/app/accounts/2/campaigns/sms',
+      '/app/accounts/2/portals/x/pt/articles',
+    ].forEach(path => expect(ehAreaChatwoot(path)).toBe(true));
+    [
+      '/app/accounts/2/dashboard',
+      '/app/accounts/2/ramon/funil',
+      '/app/accounts/2/ramon/contacts-x',
+      '/app/accounts/2/inbox-view',
+      '/app/accounts/2/profile/settings',
+    ].forEach(path => expect(ehAreaChatwoot(path)).toBe(false));
   });
   it('Mais só existe pro gestor', () => {
     expect(itensDoMais('sdr')).toEqual([]);

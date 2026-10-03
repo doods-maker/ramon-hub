@@ -182,6 +182,11 @@
       "RELATORIOS_ATENDIMENTO": "Relatórios de atendimento",
       "CONFIGURACOES": "Configurações",
       "ATALHOS": "Gerenciar atalhos",
+      "NOTIFICACOES": "Notificações",
+      "MENCOES": "Menções",
+      "PARTICIPANDO": "Participando",
+      "NAO_ATENDIDAS": "Não atendidas",
+      "VOLTAR_HUB": "Voltar ao hub",
       "PAPEL": {
         "gestor": "Gestor",
         "sdr": "SDR",
