@@ -31,11 +31,9 @@ RSpec.describe Ramon::PortalTexto do
     expect(marcos.first['data']).to eq '2026-06-01'
   end
 
-  it 'indeferimento ou negativa nunca vira "Benefício concedido"' do
-    negativas = ['Benefício indeferido', 'Pedido NÃO concedido', 'Não foi concedido o benefício', 'Benefício negado']
-    expect(negativas.flat_map { |t| described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => t }]) }).to be_empty
-    expect(described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => 'Benefício concedido' }]).map { |m| m['tipo'] })
-      .to eq(['concessao'])
+  it 'andamento nunca vira "Benefício concedido" (concessão só pela etapa da equipe)' do
+    textos = ['Benefício concedido', 'Deferida a gratuidade da justiça', 'Concedido prazo de 15 dias', 'Benefício indeferido']
+    expect(textos.flat_map { |t| described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => t }]) }).to be_empty
   end
 
   it 'encerrado só na fase ARQUIVAMENTO' do
@@ -79,10 +77,9 @@ RSpec.describe Ramon::PortalTexto do
       expect(described_class.interna?('PRAZO RECURSAL')).to be true
     end
 
-    it 'marcos com os títulos v2 e a mesma proteção contra negativa' do
-      expect(described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => 'Benefício concedido' }]).first['titulo'])
-        .to eq 'Benefício aprovado'
-      expect(described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => 'Benefício indeferido' }])).to be_empty
+    it 'marcos com os títulos v2, sem marco de concessão' do
+      expect(described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => 'Perícia realizada' }]).first['titulo']).to eq 'Perícia'
+      expect(described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => 'Benefício concedido' }])).to be_empty
     end
 
     it 'fase da etapa; etapa interna ou desconhecida cai no grupo do ADVBOX' do

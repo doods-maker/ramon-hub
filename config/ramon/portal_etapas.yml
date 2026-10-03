@@ -184,9 +184,10 @@ etapas:
     titulo: 'Processo encerrado'
     o_que_esperar: 'Este processo foi concluído. Se precisar de algo, fale com a equipe.'
 marcos:
+  # Concessão NÃO é marco: "deferido/concedido" aparece em gratuidade, prazo, juntada…
+  # (falso "Benefício concedido" no teste de 03/10). Concessão real = etapa
+  # 'BENEFICIO CONCEDIDO / IMPLANTACAO', marcada pela equipe.
   - { tipo: pericia,   regex: 'per[ií]cia',                    titulo: 'Perícia',              explicacao: 'Avaliação médica do INSS ou da Justiça.' }
   - { tipo: audiencia, regex: 'audi[êe]ncia',                  titulo: 'Audiência',            explicacao: 'Encontro com o juiz para ouvir as partes e testemunhas.' }
   - { tipo: protocolo, regex: 'distribu[ií]d|protocol|autuad', titulo: 'Processo protocolado', explicacao: 'O pedido entrou oficialmente.' }
   - { tipo: sentenca,  regex: 'senten[çc]a|ac[óo]rd[ãa]o',      titulo: 'Decisão do juiz',      explicacao: 'O juiz decidiu. Nossa equipe explica o resultado.', delicada: true }
-  # negação antes: "indeferido", "não concedido", "negado" NÃO podem virar "Benefício concedido" (texto já transliterado)
-  - { tipo: concessao, regex: '\A(?!.*(indeferid|nao (foi )?concedid|negad)).*(implanta|concedid|deferid)', titulo: 'Benefício concedido', explicacao: 'O benefício foi liberado.' }

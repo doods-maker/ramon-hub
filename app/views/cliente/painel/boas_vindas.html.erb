@@ -9,13 +9,14 @@
 ] %>
 <% titulo, texto = telas[@passo - 1] %>
 <% content_for :title, titulo %>
-<p style="text-align:right"><%= link_to 'Pular', cliente_inicio_path, class: 'btn-link' %></p>
-<p class="eyebrow"><%= @passo %> de <%= telas.size %></p>
-<h1><%= titulo %></h1>
-<div class="divider"></div>
-<div class="card"><p><%= texto %></p></div>
+<div class="topo">
+  <p class="eyebrow">Passo <%= @passo %> de <%= telas.size %></p>
+  <h1><%= titulo %></h1>
+  <p class="lead"><%= texto %></p>
+</div>
 <% if @passo < telas.size %>
   <%= link_to 'Próximo', cliente_boas_vindas_path(passo: @passo + 1), class: 'btn-bronze' %>
 <% else %>
   <%= link_to 'Começar', cliente_inicio_path, class: 'btn-bronze' %>
 <% end %>
+<% if @passo < telas.size %><p style="text-align:center"><%= link_to 'Pular', cliente_inicio_path, class: 'btn-link' %></p><% end %>

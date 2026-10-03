@@ -1,13 +1,48 @@
 <%# app/views/cliente/painel/processo.html.erb %>
 <% content_for :title, @etapa['titulo'] %>
-<%= link_to '← Seus processos', cliente_inicio_path, class: 'btn-link' %>
-<p class="eyebrow"><%= @processo['tipo'] %></p>
-<% if @novidades.any? %><p class="badge badge-novo">Novo</p><% end %>
-<h1><%= @etapa['titulo'] %></h1>
-<div class="divider"></div>
+<%= link_to '← Seus processos', cliente_inicio_path, class: 'btn-link voltar' %>
 <% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
 <% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
+
+<section class="agora">
+  <p class="eyebrow">Seu caso agora · <%= @processo['tipo'].to_s.downcase %></p>
+  <h1><%= @etapa['titulo'] %></h1>
+  <p class="texto"><%= @etapa['o_que_esperar'] %></p>
+  <% if @novidades.any? %><p class="badge badge-novo">Novidade</p><% end %>
+</section>
+
+<% if @pendentes.any? %>
+  <h2 class="secao">Para você fazer</h2>
+  <div class="docs-card">
+    <p class="docs-title"><%= @pendentes.size == 1 ? 'Falta 1 documento' : "Faltam #{@pendentes.size} documentos" %></p>
+    <p class="muted">Tire uma foto bem legível com o celular ou envie o arquivo em PDF.</p>
+    <ul>
+      <% @pendentes.each do |d| %>
+        <li>
+          <%= d['item'] %>
+          <% if d['enviado'] %>
+            <p><span class="badge badge-ok">Enviado — em conferência</span></p>
+          <% else %>
+            <%= form_tag cliente_envios_path(@processo['id']), multipart: true, class: 'upload-form' do %>
+              <%= hidden_field_tag :item, d['item'] %>
+              <%= hidden_field_tag :post_id, d['post_id'] %>
+              <%= file_field_tag :file, accept: 'image/*,application/pdf', required: true, 'aria-label': "Arquivo: #{d['item']}" %>
+              <%= submit_tag 'Enviar', class: 'btn-bronze' %>
+            <% end %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<% if @recado.present? %>
+  <h2 class="secao">Recado da equipe</h2>
+  <div class="card"><%= simple_format(@recado) %></div>
+<% end %>
+
 <% if @linha %>
+  <h2 class="secao">O caminho do seu caso</h2>
   <div class="timeline" aria-label="Fases do seu caso">
     <% @linha.each_with_index do |d, i| %>
       <div class="step">
@@ -27,42 +62,15 @@
     <% end %>
   </div>
 <% end %>
-<div class="card"><p><%= @etapa['o_que_esperar'] %></p></div>
-
-<% if @recado.present? %>
-  <div class="docs-card"><p class="docs-title">Recado da equipe</p><p><%= simple_format(@recado) %></p></div>
-<% end %>
-
-<% if @pendentes.any? %>
-  <div class="docs-card">
-    <p class="docs-title"><%= @pendentes.size == 1 ? 'Falta 1 documento' : "Faltam #{@pendentes.size} documentos" %></p>
-    <ul>
-      <% @pendentes.each do |d| %>
-        <li>
-          <%= d['item'] %>
-          <% if d['enviado'] %>
-            <span class="badge">Enviado — em conferência</span>
-          <% else %>
-            <%= form_tag cliente_envios_path(@processo['id']), multipart: true, class: 'upload-form' do %>
-              <%= hidden_field_tag :item, d['item'] %>
-              <%= hidden_field_tag :post_id, d['post_id'] %>
-              <%= file_field_tag :file, accept: 'image/*,application/pdf', required: true %>
-              <%= submit_tag 'Enviar', class: 'btn-bronze' %>
-            <% end %>
-          <% end %>
-        </li>
-      <% end %>
-    </ul>
-  </div>
-<% end %>
 
 <% if @marcos.any? %>
+  <h2 class="secao">O que já aconteceu</h2>
   <div class="timeline">
-    <% @marcos.each_with_index do |m, i| %>
+    <% @marcos.reverse.each_with_index do |m, i| %>
       <div class="step">
         <div class="step-rail"><span class="dot-done"></span><% unless i == @marcos.size - 1 %><span class="rail-done"></span><% end %></div>
         <div class="step-text">
-          <p class="step-title"><%= m['titulo'] %> <span class="muted"><%= m['data'] %></span></p>
+          <p class="step-title"><span class="step-data"><%= data_br(m['data']) %></span><%= m['titulo'] %></p>
           <p class="step-sub"><%= m['explicacao'] %></p>
         </div>
       </div>
@@ -70,9 +78,12 @@
   </div>
 <% end %>
 
+<h2 class="secao">Dados do processo</h2>
 <div class="card">
-  <p class="muted">Número: <%= @processo['numero'].presence || '—' %></p>
-  <p class="muted">Início: <%= @processo['inicio'].presence || '—' %></p>
-  <p class="muted">Advogado(a) responsável: <%= @processo['responsavel'].to_s.titleize.presence || 'equipe' %></p>
-  <a class="btn-bronze" href="https://wa.me/<%= ENV.fetch('PORTAL_WHATSAPP', '5548988554077') %>">Falar com a equipe no WhatsApp</a>
+  <dl class="dados">
+    <div><dt>Número</dt><dd><%= @processo['numero'].presence || '—' %></dd></div>
+    <div><dt>Início</dt><dd><%= data_br(@processo['inicio']) || '—' %></dd></div>
+    <div><dt>Advogado(a) responsável</dt><dd><%= @processo['responsavel'].to_s.titleize.presence || 'Equipe' %></dd></div>
+  </dl>
+  <a class="btn-bronze btn-whats" href="https://wa.me/<%= ENV.fetch('PORTAL_WHATSAPP', '5548988554077') %>">Falar com a equipe no WhatsApp</a>
 </div>

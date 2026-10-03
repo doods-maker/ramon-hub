@@ -4,110 +4,214 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#3b2010">
   <title><%= content_for?(:title) ? yield(:title) : 'Acompanhamento do seu caso' %> · Ramon Antonio Advogados</title>
   <%= csrf_meta_tags %>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
-  <%# Página pública standalone fora da SPA — CSS inline permitido aqui (mock 4a, tema light da marca).
-      Legibilidade 50+ (painel v2, 28/09): corpo ≥17px, botões ≥48px, cinzas escurecidos p/ contraste AA. %>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+  <%# Página pública standalone fora da SPA — CSS inline permitido aqui. Usado pelo Painel do Cliente e pelo
+      portal do lead (public/portal). Visual 03/10: cores da marca (marrom/dourado/creme do logo e do site),
+      Cormorant Garamond nos títulos (a do site) e Atkinson Hyperlegible no texto (feita p/ baixa visão — público 50+).
+      Corpo ≥18px, botões ≥52px, contraste AA. %>
   <style>
+    :root {
+      --creme: #f7f1e6; --papel: #fdfbf7; --linha: #e4d8c4;
+      --tinta: #2a1d12; --tinta-suave: #5b4a37;
+      --bronze: #754d2a; --bronze-escuro: #5a3a1f; --marrom: #3b2010;
+      --ouro: #c9a446; --ouro-claro: #ede0c8; --areia: #c4a882;
+      --verde: #1f5c3d; --vermelho: #8a3b25;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #faf3e8;
-      color: #26211b;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-      min-height: 100vh;
-      font-size: 18px;
-      line-height: 1.5;
+      background: var(--creme); color: var(--tinta);
+      font-family: 'Atkinson Hyperlegible Next', 'Segoe UI', Roboto, Arial, sans-serif;
+      font-size: 18px; line-height: 1.6; min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
-    .serif { font-family: 'Fraunces', Georgia, serif; }
-    .portal-wrap { max-width: 560px; margin: 0 auto; background: #faf3e8; min-height: 100vh; }
-    .portal-header {
-      padding: 16px 22px; background: #3b2a1c;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .portal-header img { width: 40px; height: 40px; border-radius: 7px; }
-    .portal-header .brand-name { font-family: 'Fraunces', Georgia, serif; font-size: 19px; font-weight: 600; color: #ede0c8; }
-    .portal-header .brand-sub { font-size: 13px; color: #c4a882; }
-    .portal-body { padding: 22px; }
-    .eyebrow { font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: #7d5432; }
-    h1 { margin-top: 4px; font-family: 'Fraunces', Georgia, serif; font-size: 30px; font-weight: 600; color: #26211b; line-height: 1.15; }
-    .divider { width: 56px; height: 3px; border-radius: 99px; background: linear-gradient(90deg, #754d2a, #c4a882); margin: 10px 0 18px; }
-    .flash { margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; font-size: 17px; }
-    .flash-notice { background: #e8f3ec; color: #1f5c3d; border: 1px solid rgba(31, 92, 61, .18); }
-    .flash-alert { background: #f9e9e4; color: #8a3b25; border: 1px solid rgba(138, 59, 37, .18); }
-    .timeline { display: flex; flex-direction: column; }
-    .step { display: flex; gap: 12px; }
-    .step-rail { display: flex; flex-direction: column; align-items: center; }
-    .step-text { padding-bottom: 16px; }
-    .step:last-child .step-text { padding-bottom: 0; }
-    .dot-done {
-      width: 22px; height: 22px; border-radius: 999px; background: #754d2a;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .dot-current {
-      width: 22px; height: 22px; border-radius: 999px; background: #fff; border: 2px solid #754d2a;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .dot-current span { width: 8px; height: 8px; border-radius: 999px; background: #754d2a; }
-    .dot-future { width: 22px; height: 22px; border-radius: 999px; background: #fff; border: 2px solid #e2d5c2; flex-shrink: 0; }
-    .rail-done { width: 2px; flex: 1; background: #754d2a; min-height: 26px; }
-    .rail-future { width: 2px; flex: 1; background: #e2d5c2; min-height: 26px; }
-    .step-title { font-size: 17px; font-weight: 600; color: #26211b; }
-    .step-title-future { font-size: 17px; color: #7a6b5a; }
-    .step-sub { margin-top: 1px; font-size: 15px; color: #6b5c4c; }
-    .pill-now {
-      margin-left: 4px; padding: 2px 10px; font-size: 13px; border-radius: 999px;
-      background: #f5e6cc; color: #7d5432; font-weight: 600;
-    }
-    .docs-card {
-      margin-top: 18px; padding: 12px 14px; border-radius: 12px;
-      background: #fff; border: 1px solid rgba(117, 77, 42, .16);
-    }
-    .docs-card .docs-title { font-size: 14px; font-weight: 600; color: #7d5432; text-transform: uppercase; letter-spacing: .08em; }
-    .docs-card ul { margin: 6px 0 0; padding-left: 18px; }
-    .docs-card li { font-size: 17px; color: #3b2a1c; margin-top: 2px; }
-    .docs-card .docs-hint { margin-top: 6px; font-size: 15px; color: #6b5c4c; }
-    .upload-form { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .upload-form input[type="file"] { font-size: 16px; color: #3b2a1c; }
-    .btn-bronze {
-      display: inline-block; align-self: flex-start; padding: 14px 24px; min-height: 48px; font-size: 17px; font-weight: 600; text-align: center;
-      border-radius: 999px; background: #754d2a; color: #fff; border: none; cursor: pointer;
-    }
-    .btn-bronze:hover { background: #5f3e22; }
-    .neutral-card {
-      margin-top: 4px; padding: 12px 14px; border-radius: 12px;
-      background: #fff; border: 1px solid rgba(117, 77, 42, .16); font-size: 17px; color: #3b2a1c;
-    }
-    .compliance { margin: 16px 0 0; font-size: 13px; line-height: 1.5; color: #7a6b5a; }
+    a { color: var(--bronze); }
+    :focus-visible { outline: 3px solid var(--ouro); outline-offset: 3px; border-radius: 6px; }
+    .serif, h1, h2.titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; }
 
-    .form-portal { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
-    .label { font-size: 17px; color: #4a3b2d; }
-    .input { padding: 14px 16px; border: 1px solid #b89f7e; border-radius: 10px; font-size: 19px; background: #fff; }
-    .input-codigo { letter-spacing: .4em; text-align: center; font-size: 22px; }
-    .btn-link { background: none; border: 0; color: #7d5432; text-decoration: underline; font-size: 17px; cursor: pointer; display: inline-block; min-height: 44px; padding: 10px 0; }
-    .card { background: #fff; border: 1px solid #e8dcc8; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-    .card h2 { font-family: 'Fraunces', Georgia, serif; font-size: 22px; margin-bottom: 4px; }
-    .muted { font-size: 16px; color: #6b5c4c; }
-    .badge { display: inline-block; font-size: 14px; padding: 3px 10px; border-radius: 99px; background: #efe3cf; color: #7d5432; }
-    .badge-novo { background: #754d2a; color: #fff; font-weight: 600; }
-    .iframe-assinatura { width: 100%; height: 80vh; border: 0; border-radius: 12px; background: #fff; }
+    /* Faixa da marca */
+    .marca { background: var(--marrom); padding: 20px 24px 18px; text-align: center; border-bottom: 3px solid var(--ouro); }
+    .marca img { width: 180px; max-width: 60%; height: auto; display: inline-block; }
+    .marca-sub { margin-top: 2px; font-size: 13px; letter-spacing: .22em; text-transform: uppercase; color: var(--areia); }
+
+    .portal-wrap { max-width: 600px; margin: 0 auto; }
+    .portal-body { padding: 32px 22px 40px; }
+
+    /* Cabeçalho de página */
+    .eyebrow { font-size: 14px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--bronze); }
+    h1 { margin-top: 6px; font-size: 38px; line-height: 1.1; color: var(--tinta); }
+    .lead { margin-top: 10px; font-size: 19px; color: var(--tinta-suave); }
+    .divider { width: 48px; height: 2px; background: var(--ouro); margin: 16px 0 24px; }
+    .topo { margin-bottom: 32px; }
+
+    /* Rótulo de seção no estilo do logo: VERSAL ESPAÇADA ———— */
+    .secao {
+      display: flex; align-items: center; gap: 14px; margin: 40px 0 16px;
+      font-size: 14px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--bronze);
+    }
+    .secao::after { content: ''; flex: 1; height: 1px; background: var(--linha); }
+
+    .flash { margin: 0 0 24px; padding: 14px 18px; border-radius: 12px; font-size: 17px; }
+    .flash-notice { background: #e8f3ec; color: var(--verde); border: 1px solid rgba(31, 92, 61, .2); }
+    .flash-alert { background: #f9e9e4; color: var(--vermelho); border: 1px solid rgba(138, 59, 37, .2); }
+
+    /* Cartões */
+    .card, .neutral-card, .docs-card {
+      display: block; background: var(--papel); border: 1px solid var(--linha); border-radius: 16px;
+      padding: 22px; margin-bottom: 16px; color: var(--tinta); text-decoration: none;
+      box-shadow: 0 1px 2px rgba(59, 32, 16, .05);
+    }
+    .neutral-card { color: var(--tinta-suave); }
+    .card h2, .card .titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 27px; line-height: 1.15; margin: 10px 0 8px; }
+    a.card { transition: border-color .15s, box-shadow .15s; }
+    a.card:hover { border-color: var(--areia); box-shadow: 0 4px 14px rgba(59, 32, 16, .08); }
+    .card-rodape {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--linha); font-size: 16px;
+    }
+    .ver-mais { font-weight: 700; color: var(--bronze); white-space: nowrap; }
+    .alerta-docs { color: var(--vermelho); font-weight: 700; }
+
+    /* Algo para o cliente fazer: filete dourado à esquerda */
+    .docs-card { border-left: 5px solid var(--ouro); }
+    .docs-card .docs-title { font-size: 20px; font-weight: 700; color: var(--tinta); margin-bottom: 8px; }
+    .docs-card p + p, .docs-card p + form, .docs-card p + .acoes { margin-top: 12px; }
+    .docs-card ul { list-style: none; margin-top: 4px; }
+    .docs-card li { padding: 16px 0; border-top: 1px solid var(--linha); font-size: 18px; font-weight: 600; }
+    .docs-card li:first-child { border-top: 0; padding-top: 4px; }
+    .docs-card .docs-hint { margin-top: 10px; font-size: 16px; color: var(--tinta-suave); }
+    .acoes { display: flex; flex-direction: column; gap: 6px; }
+
+    .upload-form { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; font-weight: 400; }
+    .upload-form input[type="file"] {
+      width: 100%; font-size: 16px; color: var(--tinta-suave); padding: 10px;
+      border: 2px dashed var(--areia); border-radius: 12px; background: var(--creme);
+    }
+    .upload-form input[type="file"]::file-selector-button {
+      margin-right: 12px; padding: 10px 16px; border-radius: 999px; border: 2px solid var(--bronze);
+      background: var(--papel); color: var(--bronze); font: inherit; font-weight: 700; cursor: pointer;
+    }
+
+    /* Selos */
+    .badge {
+      display: inline-block; font-size: 14px; font-weight: 700; letter-spacing: .04em; padding: 4px 12px;
+      border-radius: 999px; background: #efe3cf; color: var(--bronze-escuro);
+    }
+    .badge-novo { background: var(--ouro); color: var(--marrom); }
+    .badge-ok { background: #e8f3ec; color: var(--verde); }
+
+    /* Botões */
+    .btn-bronze {
+      display: flex; align-items: center; justify-content: center; width: 100%; min-height: 54px;
+      padding: 14px 24px; font: inherit; font-size: 18px; font-weight: 700; text-align: center; text-decoration: none;
+      border-radius: 14px; background: var(--bronze); color: #fff; border: none; cursor: pointer;
+    }
+    .btn-bronze:hover { background: var(--bronze-escuro); }
+    .btn-whats { background: #1f6b45; }
+    .btn-whats:hover { background: #18573a; }
+    .btn-link {
+      display: inline-flex; align-items: center; min-height: 48px; padding: 8px 0; background: none; border: 0;
+      font: inherit; font-size: 17px; font-weight: 600; color: var(--bronze); text-decoration: underline;
+      text-underline-offset: 4px; cursor: pointer;
+    }
+    .voltar { text-decoration: none; margin: -12px 0 12px; }
+
+    /* Placa "Seu caso agora" — marrom e ouro, como a placa do logo */
+    .agora {
+      background: var(--marrom); color: var(--ouro-claro); border-radius: 20px; padding: 28px 24px;
+      margin-bottom: 8px; position: relative; overflow: hidden;
+    }
+    .agora::before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: var(--ouro); }
+    .agora .eyebrow { color: var(--ouro); }
+    .agora h1 { color: #fff; font-size: 36px; margin-top: 8px; }
+    .agora p.texto { margin-top: 14px; font-size: 18px; color: var(--ouro-claro); }
+    .agora .badge-novo { margin-top: 14px; }
+
+    /* Linha do tempo */
+    .timeline { display: flex; flex-direction: column; margin-top: 8px; }
+    .step { display: flex; gap: 16px; }
+    .step-rail { display: flex; flex-direction: column; align-items: center; width: 26px; flex-shrink: 0; }
+    .step-text { padding-bottom: 22px; flex: 1; }
+    .step:last-child .step-text { padding-bottom: 0; }
+    .dot-done, .dot-current, .dot-future {
+      width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dot-done { background: var(--bronze); }
+    .dot-current { background: var(--papel); border: 3px solid var(--ouro); box-shadow: 0 0 0 4px rgba(201, 164, 70, .22); }
+    .dot-current span { width: 10px; height: 10px; border-radius: 999px; background: var(--bronze); }
+    .dot-future { background: var(--papel); border: 2px solid var(--linha); }
+    .rail-done, .rail-future { width: 2px; flex: 1; min-height: 28px; }
+    .rail-done { background: var(--bronze); }
+    .rail-future { background: var(--linha); }
+    .step-title { font-size: 19px; font-weight: 700; color: var(--tinta); line-height: 1.35; padding-top: 1px; }
+    .step-title-future { font-size: 18px; color: #857462; line-height: 1.35; padding-top: 1px; }
+    .step-sub { margin-top: 4px; font-size: 17px; color: var(--tinta-suave); }
+    .step-data { display: block; font-size: 15px; font-weight: 400; color: var(--tinta-suave); }
+    .pill-now {
+      margin-left: 6px; padding: 2px 10px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      border-radius: 999px; background: var(--ouro); color: var(--marrom); vertical-align: 2px;
+    }
+
+    /* Dados do processo */
+    .dados { display: grid; gap: 14px; margin-bottom: 20px; }
+    .dados dt { font-size: 14px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-suave); }
+    .dados dd { font-size: 18px; word-break: break-word; }
+
+    /* Lista de documentos */
+    .doc-linha { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--linha); }
+    .doc-linha:first-child { border-top: 0; padding-top: 0; }
+    .doc-linha:last-child { padding-bottom: 0; }
+    .doc-nome { font-weight: 700; }
+    .doc-meta { font-size: 15px; color: var(--tinta-suave); }
+
+    /* Formulários */
+    .form-portal { display: flex; flex-direction: column; gap: 8px; }
+    .form-portal .btn-bronze { margin-top: 14px; }
+    .label { font-size: 17px; font-weight: 700; color: var(--tinta); margin-top: 8px; }
+    .label:first-child { margin-top: 0; }
+    .input {
+      width: 100%; padding: 15px 16px; border: 2px solid var(--linha); border-radius: 12px;
+      font: inherit; font-size: 20px; background: #fff; color: var(--tinta);
+    }
+    .input:focus { border-color: var(--bronze); outline: none; box-shadow: 0 0 0 4px rgba(201, 164, 70, .3); }
+    .input-codigo { letter-spacing: .4em; text-align: center; font-size: 26px; }
+    label.check { display: flex; gap: 12px; align-items: flex-start; font-weight: 400; }
+    label.check input { width: 24px; height: 24px; margin-top: 3px; accent-color: var(--bronze); flex-shrink: 0; }
+    .termos { padding-left: 22px; }
+    .termos li { margin-top: 12px; }
+    .termos li:first-child { margin-top: 0; }
+
+    /* Rodapé da conta */
+    .conta { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--linha); }
+    .conta .muted { font-size: 16px; }
+    .conta-links { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+    .conta-links form { display: inline; }
+    .muted { font-size: 16px; color: var(--tinta-suave); }
+    .compliance { margin-top: 28px; font-size: 14px; line-height: 1.5; color: #857462; }
+    .iframe-assinatura { width: 100%; height: 80vh; border: 0; border-radius: 16px; background: #fff; }
+
+    @media (min-width: 600px) {
+      .portal-body { padding: 44px 28px 56px; }
+      h1 { font-size: 44px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   </style>
 </head>
 <body>
-  <div class="portal-wrap">
-    <div class="portal-header">
-      <img src="/brand-assets/ramon-monogram.png" alt="RA">
-      <div>
-        <p class="brand-name">Ramon Antonio Advogados</p>
-        <p class="brand-sub">Acompanhamento do seu caso</p>
-      </div>
-    </div>
+  <header class="marca">
+    <img src="/brand-assets/ramon-logo-dark.png" alt="Ramon Antonio Advogados" width="580" height="273">
+    <p class="marca-sub">Acompanhamento do seu caso</p>
+  </header>
+  <main class="portal-wrap">
     <div class="portal-body">
       <%= yield %>
       <p class="compliance">Conteúdo informativo sobre o andamento do seu atendimento. Não substitui a orientação jurídica individual de um(a) advogado(a).</p>
     </div>
-  </div>
+  </main>
 </body>
 </html>
