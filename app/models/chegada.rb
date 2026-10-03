@@ -32,8 +32,8 @@ class Chegada < ApplicationRecord
   def push_event_data
     {
       id: id, account_id: account_id, cliente_nome: cliente_nome, motivo: motivo, resposta: resposta, estado: estado,
-      criado_por: { id: criado_por_id, name: criado_por.name },
-      destinatario: { id: destinatario_id, name: destinatario.name },
+      criado_por: { id: criado_por_id, name: criado_por&.name },
+      destinatario: { id: destinatario_id, name: destinatario&.name },
       created_at: created_at.iso8601, respondido_em: respondido_em&.iso8601, escalado_em: escalado_em&.iso8601
     }
   end

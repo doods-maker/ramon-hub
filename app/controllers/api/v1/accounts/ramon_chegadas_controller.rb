@@ -33,7 +33,9 @@ class Api::V1::Accounts::RamonChegadasController < Api::V1::Accounts::BaseContro
   private
 
   def pode_avisar?
-    Current.account_user.administrator? || Chegada.recepcao?(Current.account, Current.user)
+    return @pode_avisar if defined?(@pode_avisar)
+
+    @pode_avisar = Current.account_user.administrator? || Chegada.recepcao?(Current.account, Current.user)
   end
 
   def chegada_params

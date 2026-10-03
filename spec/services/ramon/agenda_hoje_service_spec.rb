@@ -27,7 +27,7 @@ RSpec.describe Ramon::AgendaHojeService do
   end
 
   it 'pede as tarefas do dia de São Paulo' do
-    travel_to Time.zone.parse('2026-10-03 01:00:00 UTC') { described_class.new(account).perform }
+    travel_to(Time.zone.parse('2026-10-03 01:00:00 UTC')) { described_class.new(account).perform }
     expect(Ramon::AdvboxClient).to have_received(:posts).with(hash_including(date_start: '2026-10-02', date_end: '2026-10-02'))
   end
 end

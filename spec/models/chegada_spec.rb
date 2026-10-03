@@ -25,7 +25,8 @@ RSpec.describe Chegada do
 
     registro = chegada
     expect { registro.update!(resposta: 'Já vou', respondido_em: Time.current) }
-      .to have_enqueued_job(ActionCableBroadcastJob).with(contain_exactly(gabriela.pubsub_token, brenda.pubsub_token), 'ramon.chegada.updated', hash_including(estado: 'respondido'))
+      .to have_enqueued_job(ActionCableBroadcastJob)
+      .with(contain_exactly(gabriela.pubsub_token, brenda.pubsub_token), 'ramon.chegada.updated', hash_including(estado: 'respondido'))
   end
 
   it 'reconhece quem é da Recepção pelo time' do
