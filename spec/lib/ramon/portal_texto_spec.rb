@@ -36,6 +36,30 @@ RSpec.describe Ramon::PortalTexto do
     expect(textos.flat_map { |t| described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => t }]) }).to be_empty
   end
 
+  it 'assunto do processo sai do tipo do ADVBOX, sem código nem detalhe' do
+    expect(described_class.assunto('AUXÍLIO-ACIDENTE - COMUM (B36)')).to eq 'Auxílio-acidente'
+    expect(described_class.assunto('APOSENTADORIA POR IDADE - PCD (B41)')).to eq 'Aposentadoria por idade'
+    expect(described_class.assunto('ISENÇÃO DE IRPF')).to eq 'Isenção de IRPF'
+    expect(described_class.assunto('PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL')).to be_nil
+    expect(described_class.assunto(nil)).to be_nil
+  end
+
+  it 'identificação: assunto + onde corre + número' do
+    inss = { 'tipo' => 'AUXÍLIO-ACIDENTE - COMUM (B36)', 'numero' => '1234567890', 'fase' => 'ADMINISTRATIVO' }
+    expect(described_class.identificacao(inss)).to eq ['Auxílio-acidente', 'Pedido no INSS · nº 1234567890']
+    justica = { 'tipo' => 'PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL', 'numero' => '5003800-40.2022.4.04.7207', 'fase' => 'RECURSAL' }
+    expect(described_class.identificacao(justica)).to eq ['Processo na Justiça', 'nº 5003800-40.2022.4.04.7207']
+    sem_numero = { 'tipo' => 'PENSÃO POR MORTE - COMUM (B21)', 'numero' => nil, 'fase' => 'JUDICIAL' }
+    expect(described_class.identificacao(sem_numero)).to eq ['Pensão por morte', 'Processo na Justiça']
+  end
+
+  it 'selo de status: verde só em etapa positiva da equipe; resultado em análise nunca vira verde' do
+    expect(described_class.status({ 'etapa' => 'BENEFICIO CONCEDIDO / IMPLANTACAO', 'fase' => 'ADMINISTRATIVO' }))
+      .to eq %w[aprovado Aprovado]
+    expect(described_class.status({ 'etapa' => 'REQUERIMENTO PROTOCOLADO', 'fase' => 'ADMINISTRATIVO' })).to eq ['andamento', 'Em andamento']
+    expect(described_class.status({ 'etapa' => 'ARQUIVADO/ENCERRADO', 'fase' => 'ARQUIVAMENTO' })).to eq %w[concluido Concluído]
+  end
+
   it 'encerrado só na fase ARQUIVAMENTO' do
     expect(described_class.encerrado?('ARQUIVAMENTO')).to be true
     expect(described_class.encerrado?('RH/FINANCEIRO')).to be false
@@ -80,6 +104,10 @@ RSpec.describe Ramon::PortalTexto do
     it 'marcos com os títulos v2, sem marco de concessão' do
       expect(described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => 'Perícia realizada' }]).first['titulo']).to eq 'Perícia'
       expect(described_class.marcos([{ 'data' => '2026-09-01', 'titulo' => 'Benefício concedido' }])).to be_empty
+    end
+
+    it 'decisão ainda em análise pela equipe fica em cinza, nunca verde' do
+      expect(described_class.status(processo('DECISAO PROFERIDA', 'ADMINISTRATIVO'))).to eq ['analise', 'Em análise']
     end
 
     it 'fase da etapa; etapa interna ou desconhecida cai no grupo do ADVBOX' do

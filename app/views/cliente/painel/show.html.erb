@@ -1,72 +1,80 @@
 <%# app/views/cliente/painel/show.html.erb %>
-<div class="topo">
-  <p class="eyebrow">Olá, <%= current_cliente.primeiro_nome %></p>
-  <h1>Seus processos</h1>
-  <p class="lead">Veja em que fase está cada caso e o que precisamos de você.</p>
-</div>
+<% content_for :aba, 'inicio' %>
+<% pergunta_ia = Ramon::PortalTexto.v2? && current_cliente.ia_consentimento.nil? %>
 <% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
 <% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
 
-<% pergunta_ia = Ramon::PortalTexto.v2? && current_cliente.ia_consentimento.nil? %>
-<% if pergunta_ia || @assinaturas.any? %>
-  <h2 class="secao">Para você fazer</h2>
-  <% @assinaturas.each do |a| %>
-    <div class="docs-card">
-      <p class="docs-title">Assinar: <%= a.nome %></p>
-      <p class="muted">Leva poucos minutos e é feito aqui mesmo, pelo celular.</p>
-      <p><%= link_to cliente_assinatura_path(a), class: 'btn-bronze' do %><%= render 'icone', nome: 'assinar', tamanho: 22 %>Assinar agora<% end %></p>
+<div class="topo-inicio">
+  <div>
+    <p class="data"><%= hoje_extenso %></p>
+    <h1><%= saudacao %>, <%= current_cliente.primeiro_nome %></h1>
+  </div>
+  <div class="resumo">
+    <a class="resumo-item t-fazer" href="<%= cliente_documentos_path %>">
+      <span class="resumo-icone" style="color: var(--terracota)"><%= render 'icone', nome: 'alerta', tamanho: 17, traco: 2.2 %></span>
+      <span class="resumo-num"><%= @resumo[:fazer] %></span>
+      <span class="resumo-rotulo">Para você fazer</span>
+    </a>
+    <div class="resumo-item t-andamento">
+      <span class="resumo-icone" style="color: var(--ouro)"><%= render 'icone', nome: 'andamento', tamanho: 17, traco: 2.2 %></span>
+      <span class="resumo-num"><%= @resumo[:andamento] %></span>
+      <span class="resumo-rotulo">Em andamento</span>
     </div>
-  <% end %>
-  <% if pergunta_ia %>
-    <div class="docs-card">
-      <p class="docs-title">Uma pergunta rápida</p>
-      <p>Podemos usar inteligência artificial para organizar a lista de documentos que pedimos a você?
-        O texto do pedido, sem o seu nome e sem o seu CPF, é processado por um serviço com servidores na China.
-        É opcional: sem a sua autorização, mostramos o pedido de forma resumida. Você pode mudar de ideia quando quiser,
-        falando com a equipe.</p>
-      <div class="acoes">
-        <%= button_to 'Autorizo', cliente_ia_path(ia: 'sim'), method: :post, class: 'btn-bronze' %>
-        <%= button_to 'Não autorizo', cliente_ia_path(ia: 'nao'), method: :post, class: 'btn-link' %>
-      </div>
+    <div class="resumo-item t-aprovado">
+      <span class="resumo-icone" style="color: var(--verde)"><%= render 'icone', nome: 'check', tamanho: 17, traco: 2.4 %></span>
+      <span class="resumo-num"><%= @resumo[:aprovado] %></span>
+      <span class="resumo-rotulo">Aprovado</span>
     </div>
-  <% end %>
-<% end %>
+  </div>
+</div>
 
-<% if @ativos.any? || @encerrados.empty? %><h2 class="secao">Em andamento</h2><% end %>
-<% if @ativos.empty? && @encerrados.empty? %>
-  <div class="neutral-card">Ainda não encontramos processos no seu nome. Se acha que é um engano, fale com a equipe.</div>
-<% end %>
-<% @ativos.each do |p| %><%= render 'processo_card', processo: p %><% end %>
-<% if @encerrados.any? %>
-  <h2 class="secao">Encerrados</h2>
-  <% @encerrados.each do |p| %><%= render 'processo_card', processo: p %><% end %>
-<% end %>
-
-<% if @assinadas.any? || @envios.any? %>
-  <h2 class="secao">Seus documentos</h2>
-  <div class="card">
-    <% @assinadas.each do |a| %>
-      <div class="doc-linha">
-        <div><p class="doc-nome"><%= a.nome %></p><p class="doc-meta">Assinado por você</p></div>
-        <%= link_to cliente_baixar_assinatura_path(a), class: 'btn-link' do %><%= render 'icone', nome: 'baixar', tamanho: 20 %>Baixar<% end %>
-      </div>
-    <% end %>
-    <% @envios.each do |e| %>
-      <div class="doc-linha">
-        <div><p class="doc-nome"><%= e.item %></p><p class="doc-meta">Enviado por você em <%= data_br(e.created_at) %></p></div>
-        <%= link_to cliente_baixar_envio_path(e), class: 'btn-link' do %><%= render 'icone', nome: 'baixar', tamanho: 20 %>Baixar<% end %>
-      </div>
+<div class="colunas">
+  <div class="col-lateral" style="order: 2">
+    <% if @assinaturas.any? || a_enviar.any? || pergunta_ia %>
+      <h2 class="secao">Para você fazer</h2>
+      <% if @assinaturas.any? || a_enviar.any? %>
+        <div class="lista">
+          <% @assinaturas.each do |a| %>
+            <div class="linha">
+              <span class="tile t-fazer"><%= render 'icone', nome: 'assinar', tamanho: 20 %></span>
+              <span class="linha-texto"><strong>Assinar: <%= a.nome %></strong><small>Leva poucos minutos, pelo celular</small></span>
+              <%= link_to 'Assinar', cliente_assinatura_path(a), class: 'btn-verde btn-pq' %>
+            </div>
+          <% end %>
+          <% a_enviar.each do |processo, doc| %>
+            <div class="linha">
+              <span class="tile t-fazer"><%= render 'icone', nome: 'camera', tamanho: 20 %></span>
+              <span class="linha-texto"><strong>Enviar: <%= doc['item'] %></strong><small><%= Ramon::PortalTexto.identificacao(processo).first %></small></span>
+              <%= link_to 'Enviar', cliente_processo_path(processo['id'], anchor: 'documentos'), class: 'btn-verde btn-pq' %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+      <% if pergunta_ia %>
+        <div class="card">
+          <p class="linha-texto"><strong>Uma pergunta rápida</strong></p>
+          <p class="muted" style="margin-top: 6px">Podemos usar inteligência artificial para organizar a lista de documentos que pedimos a você?
+            O texto do pedido, sem o seu nome e sem o seu CPF, é processado por um serviço com servidores na China.
+            É opcional: sem a sua autorização, mostramos o pedido de forma resumida. Você pode mudar de ideia quando quiser,
+            falando com a equipe.</p>
+          <div class="acoes">
+            <%= button_to 'Autorizo', cliente_ia_path(ia: 'sim'), method: :post, class: 'btn-bronze' %>
+            <%= button_to 'Não autorizo', cliente_ia_path(ia: 'nao'), method: :post, class: 'btn-link' %>
+          </div>
+        </div>
+      <% end %>
     <% end %>
   </div>
-<% end %>
 
-<div class="conta">
-  <p class="muted">Última atualização: <%= current_cliente.sincronizado_em ? current_cliente.sincronizado_em.in_time_zone('America/Sao_Paulo').strftime('%d/%m/%Y às %H:%M') : '—' %></p>
-  <div class="conta-links">
-    <%= form_with url: cliente_atualizar_path, method: :post, local: true do |f| %>
-      <%= f.submit 'Atualizar agora', class: 'btn-link' %>
+  <div class="col-principal">
+    <h2 class="secao">Seus processos</h2>
+    <% if @ativos.empty? && @encerrados.empty? %>
+      <div class="neutral-card">Ainda não encontramos processos no seu nome. Se acha que é um engano, fale com a equipe.</div>
     <% end %>
-    <%= link_to 'Trocar senha', edit_cliente_senha_path, class: 'btn-link' %>
-    <%= button_to 'Sair', cliente_sair_path, method: :delete, class: 'btn-link' %>
+    <% @ativos.each do |p| %><%= render 'processo_card', processo: p %><% end %>
+    <% if @encerrados.any? %>
+      <h2 class="secao">Encerrados</h2>
+      <% @encerrados.each do |p| %><%= render 'processo_card', processo: p %><% end %>
+    <% end %>
   </div>
 </div>

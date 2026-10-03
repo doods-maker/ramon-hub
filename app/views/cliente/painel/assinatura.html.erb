@@ -1,6 +1,7 @@
 <%# app/views/cliente/painel/assinatura.html.erb %>
 <% content_for :title, 'Assinatura' %>
-<%= link_to '← Seus processos', cliente_inicio_path, class: 'btn-link voltar' %>
+<% content_for :voltar, cliente_documentos_path %>
+<% content_for :topo_titulo, 'Assinatura eletrônica' %>
 <div class="topo">
   <p class="eyebrow">Assinatura eletrônica</p>
   <h1><%= @assinatura.nome %></h1>

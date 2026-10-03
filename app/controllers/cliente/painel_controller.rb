@@ -14,12 +14,27 @@ class Cliente::PainelController < Cliente::BaseController
   before_action :require_termos, except: [:aceitar_termos]
   before_action :fetch_processo, only: [:processo, :enviar]
 
+  helper_method :pendencias, :a_enviar
+
   def show
     @ativos, @encerrados = current_cliente.processos.partition { |p| !Ramon::PortalTexto.encerrado?(p['fase']) }
+    @assinaturas = current_cliente.assinaturas.pendentes
+    tons = @ativos.map { |p| Ramon::PortalTexto.status(p).first }
+    @resumo = { fazer: pendencias, andamento: tons.count { |t| %w[andamento analise].include?(t) }, aprovado: tons.count('aprovado') }
+  end
+
+  # Aba Documentos: o que falta enviar (de todos os processos), o que assinar e o que já está com o escritório.
+  def documentos
     @assinaturas = current_cliente.assinaturas.pendentes
     @assinadas = current_cliente.assinaturas.where(status: 'signed').order(assinado_em: :desc)
     @envios = current_cliente.envios.with_attached_arquivo.order(created_at: :desc).limit(20)
   end
+
+  def equipe
+    @responsaveis = current_cliente.processos.filter_map { |p| p['responsavel'].to_s.titleize.presence }.uniq
+  end
+
+  def conta; end
 
   # Autorização da IA (LGPD art. 33, VIII): opcional, pergunta no início até responder.
   def consentir_ia
@@ -59,7 +74,7 @@ class Cliente::PainelController < Cliente::BaseController
     current_cliente.marcar_vistas!(@processo['id']) if @novidades.any?
     @marcos = Ramon::PortalTexto.marcos(@processo['andamentos'])
     @recado = current_cliente.recados[@processo['id'].to_s]
-    @pendentes = pendentes_com_status
+    @pendentes = pendentes_com_status(@processo)
     @linha = Ramon::PortalTexto.linha_do_tempo(@processo) if Ramon::PortalTexto.v2?
   end
 
@@ -117,10 +132,19 @@ class Cliente::PainelController < Cliente::BaseController
   end
 
   # Item pedido vira "enviado" quando existe PortalEnvio do mesmo pedido (post_id) e item.
-  def pendentes_com_status
-    enviados = current_cliente.envios.where(lawsuit_id: @processo['id']).pluck(:solicitacao_post_id, :item).to_set
-    @processo['docs_pendentes'].map { |d| d.merge('enviado' => enviados.include?([d['post_id'], d['item']])) }
+  def pendentes_com_status(processo)
+    enviados = current_cliente.envios.where(lawsuit_id: processo['id']).pluck(:solicitacao_post_id, :item).to_set
+    processo['docs_pendentes'].map { |d| d.merge('enviado' => enviados.include?([d['post_id'], d['item']])) }
   end
+
+  # [[processo, doc]] ainda não enviados, de todos os processos ativos.
+  def a_enviar
+    @a_enviar ||= current_cliente.processos.reject { |p| Ramon::PortalTexto.encerrado?(p['fase']) }
+                                 .flat_map { |p| pendentes_com_status(p).reject { |d| d['enviado'] }.map { |d| [p, d] } }
+  end
+
+  # Contador do menu (aba Documentos) e do resumo do início.
+  def pendencias = @pendencias ||= a_enviar.size + current_cliente.assinaturas.pendentes.count
 
   # Tipo real por magic bytes (Marcel) — o content_type do browser mente fácil.
   def upload_valido?

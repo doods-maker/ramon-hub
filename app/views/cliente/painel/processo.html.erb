@@ -1,96 +1,110 @@
 <%# app/views/cliente/painel/processo.html.erb %>
-<% content_for :title, @etapa['titulo'] %>
-<%= link_to '← Seus processos', cliente_inicio_path, class: 'btn-link voltar' %>
+<% titulo, sub = Ramon::PortalTexto.identificacao(@processo) %>
+<% tom, rotulo = Ramon::PortalTexto.status(@processo) %>
+<% content_for :title, titulo %>
+<% content_for :aba, 'inicio' %>
+<% content_for :voltar, cliente_inicio_path %>
+<% content_for :topo_titulo, titulo %>
 <% if flash[:portal_notice] %><p class="flash flash-notice"><%= flash[:portal_notice] %></p><% end %>
 <% if flash[:portal_alert] %><p class="flash flash-alert"><%= flash[:portal_alert] %></p><% end %>
 
-<section class="agora">
-  <p class="eyebrow">Seu caso agora · <%= @processo['tipo'].to_s.downcase %></p>
-  <% if @linha %>
-    <% atual = @linha.index { |d| d['estado'] == 'current' } %>
-    <ol class="trilha<%= ' trilha-longa' if @linha.size > 4 %>" aria-label="Fases do seu caso">
-      <% @linha.each do |d| %>
-        <li class="trilha-passo is-<%= d['estado'] %>"<%= ' aria-current="step"'.html_safe if d['estado'] == 'current' %>>
-          <span class="trilha-icone"><%= render 'icone', nome: d['chave'], tamanho: 20 %></span>
-          <span class="trilha-nome"><%= d['nome'] %></span>
-          <span class="sr-only"><%= { 'done' => '(feita)', 'current' => '(agora)', 'future' => '(próxima)' }[d['estado']] %></span>
-        </li>
-      <% end %>
-    </ol>
-    <% if @linha.size > 4 && atual %>
-      <p class="trilha-legenda">Fase <%= atual + 1 %> de <%= @linha.size %><% if @linha[atual + 1] %> · Próxima: <%= @linha[atual + 1]['nome'] %><% end %></p>
-    <% end %>
-  <% end %>
-  <h1><%= @etapa['titulo'] %></h1>
-  <p class="texto"><%= @etapa['o_que_esperar'] %></p>
-  <% if @novidades.any? %><p class="badge badge-novo">Novidade</p><% end %>
-</section>
-
-<% if @pendentes.any? %>
-  <h2 class="secao">Para você fazer</h2>
-  <div class="docs-card">
-    <p class="docs-title"><%= @pendentes.size == 1 ? 'Falta 1 documento' : "Faltam #{@pendentes.size} documentos" %></p>
-    <p class="muted">Tire uma foto bem legível com o celular ou envie o arquivo em PDF.</p>
-    <ul>
-      <% @pendentes.each do |d| %>
-        <li>
-          <span class="doc-item"><%= render 'icone', nome: 'documentos', tamanho: 20 %><%= d['item'] %></span>
-          <% if d['enviado'] %>
-            <p><span class="badge badge-ok">Enviado — em conferência</span></p>
-          <% else %>
-            <%= form_tag cliente_envios_path(@processo['id']), multipart: true, class: 'upload-form' do %>
-              <%= hidden_field_tag :item, d['item'] %>
-              <%= hidden_field_tag :post_id, d['post_id'] %>
-              <label class="foto">
-                <%= file_field_tag :file, accept: 'image/*,application/pdf', required: true, class: 'foto-input', 'aria-label': "Arquivo: #{d['item']}" %>
-                <span class="foto-icone"><%= render 'icone', nome: 'camera', tamanho: 26 %></span>
-                <span class="foto-texto" data-vazio="Tirar foto ou escolher arquivo">Tirar foto ou escolher arquivo</span>
-              </label>
-              <%= submit_tag 'Enviar', class: 'btn-bronze' %>
-            <% end %>
+<div class="colunas">
+  <div class="col-principal">
+    <section class="status-card">
+      <div class="status-topo">
+        <span class="num"><%= sub || titulo %></span>
+        <span class="selo t-<%= tom %>"><% if tom == 'aprovado' %><%= render 'icone', nome: 'check', tamanho: 11, traco: 3.2 %><% else %><span class="selo-ponto"></span><% end %><%= rotulo %></span>
+      </div>
+      <% if @linha %>
+        <% atual = @linha.index { |d| d['estado'] == 'current' } %>
+        <ol class="trilha<%= ' trilha-longa' if @linha.size > 4 %>" aria-label="Fases do seu caso">
+          <% @linha.each do |d| %>
+            <li class="trilha-passo is-<%= d['estado'] %>"<%= ' aria-current="step"'.html_safe if d['estado'] == 'current' %>>
+              <span class="trilha-icone"><%= render 'icone', nome: d['estado'] == 'current' ? d['chave'] : 'check', tamanho: d['estado'] == 'current' ? 17 : 16, traco: d['estado'] == 'done' ? 2.8 : 2.1 %></span>
+              <span class="trilha-nome"><%= d['nome'] %></span>
+              <span class="sr-only"><%= { 'done' => '(feita)', 'current' => '(agora)', 'future' => '(próxima)' }[d['estado']] %></span>
+            </li>
           <% end %>
-        </li>
+        </ol>
+        <% if @linha.size > 4 && atual %>
+          <p class="trilha-legenda">Fase <%= atual + 1 %> de <%= @linha.size %><% if @linha[atual + 1] %> · Próxima: <%= @linha[atual + 1]['nome'] %><% end %></p>
+        <% end %>
       <% end %>
-    </ul>
-  </div>
-<% end %>
+      <div class="agora"<%= ' style="margin-top: 14px"'.html_safe unless @linha %>>
+        <p class="eyebrow">Seu caso agora</p>
+        <h1><%= @etapa['titulo'] %></h1>
+        <p class="texto"><%= @etapa['o_que_esperar'] %></p>
+        <% if @novidades.any? %><span class="badge badge-novo">Novidade</span><% end %>
+      </div>
+    </section>
 
-<% if @recado.present? %>
-  <h2 class="secao">Recado da equipe</h2>
-  <div class="card recado"><%= render 'icone', nome: 'recado', tamanho: 22 %><div><%= simple_format(@recado) %></div></div>
-<% end %>
-
-<% if @marcos.any? %>
-  <h2 class="secao">O que já aconteceu</h2>
-  <div class="timeline">
-    <% @marcos.reverse.each_with_index do |m, i| %>
-      <div class="step">
-        <div class="step-rail"><span class="dot-done"></span><% unless i == @marcos.size - 1 %><span class="rail-done"></span><% end %></div>
-        <div class="step-text">
-          <p class="step-title"><span class="step-data"><%= data_br(m['data']) %></span><%= m['titulo'] %></p>
-          <p class="step-sub"><%= m['explicacao'] %></p>
-        </div>
+    <% if @pendentes.any? %>
+      <% a_enviar_aqui = @pendentes.count { |d| !d['enviado'] } %>
+      <h2 class="secao" id="documentos">Para você fazer<% if a_enviar_aqui.positive? %> <span class="contador"><%= a_enviar_aqui %></span><% end %></h2>
+      <div class="card">
+        <p class="muted" style="margin-bottom: 4px"><%= @pendentes.size == 1 ? 'Falta 1 documento' : "Faltam #{@pendentes.size} documentos" %> · foto legível ou PDF</p>
+        <% @pendentes.each_with_index do |d, i| %>
+          <div style="<%= 'margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--linha-suave)' if i.positive? %>">
+            <div class="pessoa">
+              <span class="tile <%= d['enviado'] ? 't-aprovado' : 't-fazer' %>"><%= render 'icone', nome: d['enviado'] ? 'check' : 'documentos', tamanho: 19, traco: d['enviado'] ? 2.4 : 2 %></span>
+              <span class="linha-texto"><strong><%= d['item'] %></strong>
+                <% if d['enviado'] %><small style="color: var(--verde-texto); font-weight: 600">Enviado — em conferência</small><% end %></span>
+            </div>
+            <% unless d['enviado'] %>
+              <%= form_tag cliente_envios_path(@processo['id']), multipart: true, class: 'envio' do %>
+                <%= hidden_field_tag :item, d['item'] %>
+                <%= hidden_field_tag :post_id, d['post_id'] %>
+                <label class="foto">
+                  <%= file_field_tag :file, accept: 'image/*,application/pdf', required: true, class: 'foto-input', 'aria-label': "Arquivo: #{d['item']}" %>
+                  <%= render 'icone', nome: 'camera', tamanho: 19 %>
+                  <span class="foto-texto"><span class="so-celular">Tirar foto ou escolher</span><span class="so-pc">Escolher ou arrastar o arquivo</span></span>
+                </label>
+                <%= submit_tag 'Enviar', class: 'btn-verde' %>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
       </div>
     <% end %>
   </div>
-<% end %>
 
-<h2 class="secao">Dados do processo</h2>
-<div class="card">
-  <dl class="dados">
-    <div><dt>Número</dt><dd><%= @processo['numero'].presence || '—' %></dd></div>
-    <div><dt>Início</dt><dd><%= data_br(@processo['inicio']) || '—' %></dd></div>
-    <div><dt>Advogado(a) responsável</dt><dd><%= @processo['responsavel'].to_s.titleize.presence || 'Equipe' %></dd></div>
-  </dl>
-  <a class="btn-bronze btn-whats" href="https://wa.me/<%= ENV.fetch('PORTAL_WHATSAPP', '5548988554077') %>"><%= render 'icone', nome: 'conversa', tamanho: 22 %>Falar com a equipe no WhatsApp</a>
+  <div class="col-lateral">
+    <% if @recado.present? %>
+      <h2 class="secao">Recado da equipe</h2>
+      <div class="card pessoa" style="align-items: flex-start">
+        <span class="tile tile-marca"><%= render 'icone', nome: 'recado', tamanho: 19 %></span>
+        <div style="font-size: 15px"><%= simple_format(@recado) %></div>
+      </div>
+    <% end %>
+
+    <% if @marcos.any? %>
+      <h2 class="secao">O que já aconteceu</h2>
+      <div class="lista">
+        <% @marcos.reverse_each do |m| %>
+          <% dia = m['data'].to_s.to_date %>
+          <div class="linha" style="align-items: flex-start">
+            <% if dia %><span class="dia"><strong><%= dia.day %></strong><small><%= mes_curto(dia) %></small></span><% end %>
+            <span class="linha-texto"><strong><%= m['titulo'] %></strong><small><%= m['explicacao'] %></small></span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <h2 class="secao">Dados do processo</h2>
+    <dl class="lista dados">
+      <div><dt>Número</dt><dd class="num"><%= @processo['numero'].presence || '—' %></dd></div>
+      <div><dt>Início</dt><dd class="num"><%= data_br(@processo['inicio']) || '—' %></dd></div>
+      <div><dt>Responsável</dt><dd><%= @processo['responsavel'].to_s.titleize.presence || 'Equipe' %></dd></div>
+    </dl>
+  </div>
 </div>
 <script>
-  // Mostra o nome do arquivo escolhido no lugar de "Tirar foto ou escolher arquivo".
+  // Mostra o nome do arquivo escolhido no lugar de "Tirar foto ou escolher".
   document.querySelectorAll('.foto-input').forEach(function (input) {
     input.addEventListener('change', function () {
       var texto = input.parentNode.querySelector('.foto-texto');
       var arquivo = input.files[0];
-      texto.textContent = arquivo ? 'Escolhido: ' + arquivo.name : texto.dataset.vazio;
+      if (arquivo) { texto.textContent = arquivo.name; }
       input.parentNode.classList.toggle('tem-arquivo', !!arquivo);
     });
   });

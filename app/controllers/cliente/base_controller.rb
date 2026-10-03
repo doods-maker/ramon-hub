@@ -10,12 +10,29 @@ class Cliente::BaseController < ActionController::Base
 
   layout 'ramon_portal'
 
-  helper_method :current_cliente, :data_br
+  DIAS = %w[Domingo Segunda-feira Terça-feira Quarta-feira Quinta-feira Sexta-feira Sábado].freeze
+  MESES = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
+
+  helper_method :current_cliente, :data_br, :hoje_extenso, :saudacao, :mes_curto
 
   private
 
   # 'YYYY-MM-DD' do espelho ou Date/Time → '03/10/2026' (o locale padrão do hub é en).
   def data_br(valor) = (valor.respond_to?(:strftime) ? valor : valor.to_s.to_date)&.strftime('%d/%m/%Y')
+
+  def agora = Time.current.in_time_zone('America/Sao_Paulo')
+
+  # "Sábado, 3 de outubro"
+  def hoje_extenso = "#{DIAS[agora.wday]}, #{agora.day} de #{MESES[agora.month - 1]}"
+
+  def saudacao
+    return 'Bom dia' if agora.hour.between?(5, 11)
+
+    agora.hour.between?(12, 17) ? 'Boa tarde' : 'Boa noite'
+  end
+
+  # Date → "set" (bloquinho de calendário do histórico)
+  def mes_curto(data) = MESES[data.month - 1][0, 3]
 
   # O cookie guarda o id + um pedaço do digest da senha: trocar a senha ou gerar
   # senha provisória nova derruba toda sessão aberta com a senha antiga.
