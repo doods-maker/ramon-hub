@@ -34,20 +34,25 @@ class Ramon::Busca
     escopo = @account.leads.funil.left_joins(:contact)
     condicao = escopo.where("#{sem_acento('leads.name')} LIKE ?", like)
     condicao = condicao.or(escopo.where('contacts.phone_number LIKE ?', "%#{digitos}%")) if numerico? && digitos.length >= 4
-    condicao.includes(:lead_stage, :thesis, :contact).reorder(updated_at: :desc).limit(LIMITE).map do |lead|
-      { id: lead.id, nome: lead.name, tese: lead.thesis&.name, telefone: lead.contact&.phone_number,
-        stage_name: lead.lead_stage&.name, stage_color: lead.lead_stage&.color }
-    end
+    condicao.includes(:lead_stage, :thesis, :contact).reorder(updated_at: :desc).limit(LIMITE).map { |lead| linha_lead(lead) }
+  end
+
+  def linha_lead(lead)
+    etapa = lead.lead_stage
+    { id: lead.id, nome: lead.name, tese: lead.thesis&.name, telefone: lead.contact&.phone_number,
+      stage_name: etapa&.name, stage_color: etapa&.color }
   end
 
   def clientes
     escopo = PortalCliente.where(account_id: @account.id)
     condicao = escopo.where("#{sem_acento('nome')} LIKE ?", like)
     condicao = condicao.or(escopo.where(cpf: digitos)).or(escopo.where('telefone LIKE ?', "%#{digitos}%")) if numerico? && digitos.length >= 8
-    condicao.order(:nome).limit(LIMITE).map do |cliente|
-      principal = Array(cliente.processos).first || {}
-      { id: cliente.id, nome: cliente.nome, advogada: principal['responsavel'], desde: principal['inicio'].to_s[0, 4].presence }
-    end
+    condicao.order(:nome).limit(LIMITE).map { |cliente| linha_cliente(cliente) }
+  end
+
+  def linha_cliente(cliente)
+    principal = Array(cliente.processos).first || {}
+    { id: cliente.id, nome: cliente.nome, advogada: principal['responsavel'], desde: principal['inicio'].to_s[0, 4].presence }
   end
 
   def processos

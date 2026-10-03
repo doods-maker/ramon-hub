@@ -25,9 +25,10 @@ module RamonConversa
     )
   end
 
-  # Só conta quando alguém (agente ou time) passa a ser o responsável: tirar o
-  # agente ou o time ("Devolver", em uma ou duas requisições) não sobrescreve.
+  # Só conta quando alguém (agente ou time) passa a ser o responsável por outra
+  # pessoa: tirar o agente ou o time ("Devolver") e pegar a conversa pra si não contam.
   def atribuiu?
-    (will_save_change_to_assignee_id? && assignee_id.present?) || (will_save_change_to_team_id? && team_id.present?)
+    outro_agente = will_save_change_to_assignee_id? && assignee_id.present? && assignee_id != Current.user.id
+    outro_agente || (will_save_change_to_team_id? && team_id.present?)
   end
 end

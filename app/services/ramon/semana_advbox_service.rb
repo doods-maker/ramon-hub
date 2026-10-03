@@ -28,8 +28,12 @@ class Ramon::SemanaAdvboxService
       lote, total = pagina(hoje, pagina)
       novas = lote.reject { |tarefa| por_id.key?(tarefa['id']) }
       novas.each { |tarefa| por_id[tarefa['id']] = tarefa }
-      break por_id if novas.empty? || lote.size < POR_PAGINA || (total && por_id.size >= total)
+      break por_id if fim?(novas, lote, total, por_id)
     end.values
+  end
+
+  def self.fim?(novas, lote, total, por_id)
+    novas.empty? || lote.size < POR_PAGINA || (total.present? && por_id.size >= total)
   end
 
   def self.pagina(hoje, numero)
@@ -37,7 +41,7 @@ class Ramon::SemanaAdvboxService
     lote = Array(resposta.is_a?(Hash) ? resposta['data'] : resposta)
     [lote, resposta.is_a?(Hash) ? resposta['totalCount']&.to_i : nil]
   end
-  private_class_method :buscar, :pagina
+  private_class_method :buscar, :pagina, :fim?
 
   def initialize(account)
     @account = account
@@ -52,7 +56,7 @@ class Ramon::SemanaAdvboxService
 
   # Painel do cliente na conversa (Ramon::ClienteDaConversa): mesmo cache da semana.
   def tarefas_do_processo(numero)
-    tarefas.select { |tarefa| tarefa.dig('lawsuit', 'process_number') == numero }.map { |tarefa| linha(tarefa) }
+    self.class.tarefas.select { |tarefa| tarefa.dig('lawsuit', 'process_number') == numero }.map { |tarefa| linha(tarefa) }
   end
 
   private

@@ -1,4 +1,4 @@
-class ConversationFinder
+class ConversationFinder # rubocop:disable Metrics/ClassLength -- FORK(ramon): preload do lead
   attr_reader :current_user, :current_account, :params
 
   DEFAULT_STATUS = 'open'.freeze

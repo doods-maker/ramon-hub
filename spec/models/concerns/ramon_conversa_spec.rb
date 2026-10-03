@@ -16,6 +16,12 @@ RSpec.describe RamonConversa do
     expect(Time.zone.parse(registro['em'])).to be_within(5.seconds).of(Time.current)
   end
 
+  it 'pegar a conversa pra si não conta como atribuída por alguém' do
+    Current.user = tamires
+    conversation.update!(assignee: tamires)
+    expect(conversation.reload.additional_attributes['ramon_atribuicao']).to be_nil
+  end
+
   it 'grava também quando muda o time' do
     Current.user = gabriela
     conversation.update!(team: create(:team, account: account))
@@ -48,9 +54,9 @@ RSpec.describe RamonConversa do
   end
 
   it 'expõe o lead da conversa, também no payload do websocket' do
-    stage = create(:lead_stage, account: account, name: 'Novo', color: '#475569')
+    stage = create(:lead_stage, account: account, name: 'Etapa da etiqueta', color: '#475569')
     lead = create(:lead, account: account, conversation: conversation, lead_stage: stage)
     expect(conversation.reload.ramon_lead).to eq(lead)
-    expect(conversation.push_event_data[:ramon_lead]).to eq(id: lead.id, stage_name: 'Novo', stage_color: '#475569', thesis_name: nil)
+    expect(conversation.push_event_data[:ramon_lead]).to eq(id: lead.id, stage_name: 'Etapa da etiqueta', stage_color: '#475569', thesis_name: nil)
   end
 end

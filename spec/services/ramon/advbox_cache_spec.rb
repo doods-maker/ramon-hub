@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Ramon::AdvboxCache do
   let(:cache) { ActiveSupport::Cache::MemoryStore.new }
   let(:chamadas) { [] }
-  let(:busca) { -> { described_class.buscar('ramon/teste', expires_in: 30.minutes) { chamadas << 1 && ['ok'] } } }
+  let(:busca) { -> { described_class.buscar('ramon/teste', expires_in: 30.minutes) { (chamadas << 1) && ['ok'] } } }
 
   before { allow(Rails).to receive(:cache).and_return(cache) }
 
