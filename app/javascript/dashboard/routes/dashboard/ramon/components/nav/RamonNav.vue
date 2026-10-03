@@ -90,11 +90,11 @@ onMounted(contadores.carregar);
     @click="fechar"
   />
   <aside
-    class="fixed top-0 z-40 flex h-full w-[228px] flex-col border-n-weak bg-n-background px-2.5 py-3 transition-transform duration-200 ease-out ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l md:relative md:flex-shrink-0 md:ltr:translate-x-0 md:rtl:translate-x-0"
+    class="fixed top-0 z-40 flex h-full w-[228px] flex-col border-n-weak bg-n-background px-2.5 py-3 transition-transform duration-200 ease-out ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l md:relative md:flex-shrink-0 md:translate-x-0"
     :class="
       isMobileSidebarOpen
         ? 'translate-x-0 shadow-lg md:shadow-none'
-        : 'ltr:-translate-x-full rtl:translate-x-full'
+        : 'ltr:-translate-x-full rtl:translate-x-full md:translate-x-0'
     "
   >
     <div class="flex items-center gap-2.5 px-2 pb-3 pt-1">
