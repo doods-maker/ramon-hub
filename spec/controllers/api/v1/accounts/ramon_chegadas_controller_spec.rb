@@ -52,4 +52,10 @@ RSpec.describe 'Ramon Chegadas API', type: :request do
     get url, headers: brenda.create_new_auth_token, as: :json
     expect(response.parsed_body['payload'].size).to eq(1)
   end
+
+  it 'agenda devolve 503 com ADVBOX fora' do
+    allow(Ramon::AdvboxClient).to receive(:posts).and_raise(Ramon::AdvboxClient::UnavailableError)
+    get "#{url}/agenda", headers: gabriela.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:service_unavailable)
+  end
 end

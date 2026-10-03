@@ -24,6 +24,12 @@ class Api::V1::Accounts::RamonChegadasController < Api::V1::Accounts::BaseContro
     render json: chegada.push_event_data
   end
 
+  def agenda
+    render json: { payload: Ramon::AgendaHojeService.new(Current.account).perform }
+  rescue Ramon::AdvboxClient::UnavailableError
+    render json: { error: 'ADVBOX_UNAVAILABLE' }, status: :service_unavailable
+  end
+
   private
 
   def pode_avisar?
