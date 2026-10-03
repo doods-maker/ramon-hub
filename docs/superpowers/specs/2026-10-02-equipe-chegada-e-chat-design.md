@@ -48,16 +48,19 @@ respondido / escalado (sem resposta e `escalado_em`).
   responsavel_advbox}`; casa responsável ADVBOX → user do hub por e-mail (ADVBOX
   `settings.users[].email`), sem casamento = sem sugestão. Cache curto (5 min).
   ADVBOX fora do ar → lista vazia + aviso; campo livre sempre funciona.
-- Busca de cliente: `AdvboxClient.customers(name: q)` (mín. 3 letras).
+- Busca de cliente: REUSA o endpoint existente `GET ramon_calculos/advbox_customers?q=` (front `ramonCalculos.advboxCustomers`).
 - Eventos ActionCable (padrão do `lead.created`: `lib/events/types.rb` →
   `ActionCableListener` → `actionCable.js`): `ramon.chegada.created` pro `pubsub_token`
   do destinatário; `ramon.chegada.updated` pro criador e destinatário.
 - `Ramon::ChegadaEscalarJob` agendado com `set(wait: 3.minutes)` no create: se ainda sem
   resposta, grava `escalado_em` e emite `updated` (o front do criador toca o alerta).
-- Também cria `Notification` (tipo novo `ramon_chegada`) pro sino — histórico, não alerta.
+- Sem `Notification` no sino: a lista de chegadas do dia já é o histórico (YAGNI).
+- ADVBOX tem cota de **500 chamadas/dia** (compartilhada) → agenda em cache de 10 min,
+  `settings` (e-mails dos usuários) em cache de 24 h.
 
 ### Front-end
-- **Botão "Chegou cliente"** no topo do dashboard, só pra recepção/admin. Painel com 3
+- **Botão flutuante "Chegou cliente"** em todas as telas (ao lado do lançador do Copilot,
+  mesmo padrão do `FloatingCallWidget`), só pra recepção/admin. Abre um painel com 3
   abas: *Quem vem hoje* (clique preenche cliente + sugere destinatário), *Buscar no
   ADVBOX*, *Livre* (nome + motivo). Seletor de destinatário (agentes da conta). Enviar.
 - **`AlertaChegada.vue`** montado em `App.vue` (global, acima de tudo): ouve o evento,
@@ -66,7 +69,7 @@ respondido / escalado (sem resposta e `escalado_em`).
   Campo de resposta + Enviar → para tudo. Várias chegadas = fila no mesmo overlay.
 - **Lista "Aguardando"** no painel da recepção: chegadas do dia com cronômetro, resposta
   quando chega; escalada toca o mesmo alerta pra ela ("Dra. X não respondeu").
-- Permissão de notificação: pedida uma vez (banner pedindo "Permitir"); sem permissão o
+- Permissão de notificação: pedida no 1º clique de cada pessoa no hub (navegador exige gesto); sem permissão o
   overlay + som continuam funcionando.
 - ⚠️ Autoplay: navegador só toca som após 1 interação na aba — o hub já tem login/clique,
   então na prática ok; documentar no smoke.
