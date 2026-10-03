@@ -3,7 +3,9 @@
 # do Eduardo 02/10: arte 4:5 quebra no story). Colaborador: crédito na legenda → @.
 class Ramon::InstagramPublisher
   GRAPH = 'https://graph.instagram.com/v26.0'.freeze
-  TENTATIVAS = 60 # × espera (5 s) ≈ 5 min
+  PRAZO = 300 # s, relógio de parede, pro contêiner ficar pronto
+  ABRIR = 10 # s
+  LER = 30 # s
 
   # Espelho de motor-marketing packs/marca-ramon-antonio/brand.json → identidades (22/09).
   COLABORADORES = {
@@ -56,24 +58,33 @@ class Ramon::InstagramPublisher
   end
 
   def aguardar(id)
-    TENTATIVAS.times do
+    limite = Process.clock_gettime(Process::CLOCK_MONOTONIC) + PRAZO
+    loop do
       codigo = get(id, fields: 'status_code')['status_code']
       return if codigo == 'FINISHED'
       raise Erro, "Contêiner #{id}: #{codigo}" if %w[ERROR EXPIRED].include?(codigo)
+      raise Erro, "Contêiner #{id} não ficou pronto a tempo" if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= limite
 
       sleep @espera
     end
-    raise Erro, "Contêiner #{id} não ficou pronto em ~5 min"
   end
 
   def post(caminho, params)
-    responder Net::HTTP.post_form(URI("#{GRAPH}/#{caminho}"), params.merge(access_token: @token))
+    uri = URI("#{GRAPH}/#{caminho}")
+    req = Net::HTTP::Post.new(uri)
+    req.set_form_data(params.merge(access_token: @token))
+    enviar(uri, req)
   end
 
   def get(caminho, params)
     uri = URI("#{GRAPH}/#{caminho}")
     uri.query = URI.encode_www_form(params.merge(access_token: @token))
-    responder Net::HTTP.get_response(uri)
+    enviar(uri, Net::HTTP::Get.new(uri))
+  end
+
+  # Prazo explícito: sem ele um travamento de rede deixa a peça "publicando" sem saber se foi ao ar.
+  def enviar(uri, req)
+    responder Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: ABRIR, read_timeout: LER) { |http| http.request(req) }
   end
 
   def responder(res)
