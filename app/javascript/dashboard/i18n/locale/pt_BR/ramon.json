@@ -1555,6 +1555,25 @@
       "TITLE": "Clientes",
       "BUSCA": "Buscar por nome ou telefone",
       "ULTIMA_MUDANCA": "Última mudança"
+    },
+    "BUSCA": {
+      "TITULO": "Buscar",
+      "PLACEHOLDER": "Nome, CPF, telefone ou nº do processo",
+      "ESC": "esc",
+      "GRUPO": {
+        "PESSOAS": "Clientes e leads",
+        "PROCESSOS": "Processos",
+        "ACOES": "Ações"
+      },
+      "CLIENTE": "cliente",
+      "CLIENTE_DESDE": "Cliente desde {ano}",
+      "NOVO_LEAD": "Novo lead",
+      "NOVO_CALCULO": "Novo cálculo",
+      "NAS_CONVERSAS": "Buscar nas conversas e mensagens",
+      "MAIS_COMANDOS": "Mais comandos…",
+      "NAVEGAR": "↑↓ navegar",
+      "ABRIR": "↵ abrir",
+      "DICA": "Busca por nome, CPF, telefone ou nº do processo"
     }
   },
   "CAPTAIN_RAMON": {

@@ -1550,6 +1550,25 @@
       "TITLE": "Clients",
       "BUSCA": "Search by name or phone",
       "ULTIMA_MUDANCA": "Last change"
+    },
+    "BUSCA": {
+      "TITULO": "Search",
+      "PLACEHOLDER": "Name, tax ID, phone or case number",
+      "ESC": "esc",
+      "GRUPO": {
+        "PESSOAS": "Clients and leads",
+        "PROCESSOS": "Cases",
+        "ACOES": "Actions"
+      },
+      "CLIENTE": "client",
+      "CLIENTE_DESDE": "Client since {ano}",
+      "NOVO_LEAD": "New lead",
+      "NOVO_CALCULO": "New calculation",
+      "NAS_CONVERSAS": "Search conversations and messages",
+      "MAIS_COMANDOS": "More commands…",
+      "NAVEGAR": "↑↓ navigate",
+      "ABRIR": "↵ open",
+      "DICA": "Search by name, tax ID, phone or case number"
     }
   },
   "CAPTAIN_RAMON": {

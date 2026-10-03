@@ -71,7 +71,6 @@ const TD = 'py-2.5 pe-4';
       <input
         v-model="busca"
         data-testid="clientes-busca"
-        type="search"
         class="w-64 px-3 py-1.5 text-[13px] rounded-lg border border-n-weak bg-transparent outline-none focus:border-n-strong text-n-slate-12"
         :placeholder="t('RAMON.CLIENTES.BUSCA')"
       />

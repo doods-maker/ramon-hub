@@ -217,8 +217,9 @@ watchEffect(() => {
   }
 });
 
-// FORK(ramon): o campo "Buscar" do menu único abre a command bar.
-useEmitter(BUS_EVENTS.OPEN_COMMAND_BAR, () => ninjakeys.value?.open());
+// FORK(ramon): Ctrl K e o "Buscar" do menu abrem a paleta própria (Onda 5);
+// a command bar antiga fica em Ctrl+Shift+K e no "Mais comandos…" da paleta.
+useEmitter(BUS_EVENTS.OPEN_NINJA, () => ninjakeys.value?.open());
 
 onMounted(() => {
   setCommandBarData();
@@ -232,6 +233,7 @@ onMounted(() => {
     ref="ninjakeys"
     noAutoLoadMdIcons
     hideBreadcrumbs
+    openHotkey="cmd+shift+k,ctrl+shift+k"
     :placeholder="placeholder"
     @change="onCommandBarChange"
     @selected="onSelected"
