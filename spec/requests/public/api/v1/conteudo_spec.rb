@@ -36,4 +36,49 @@ RSpec.describe 'Public Conteudo API', type: :request do
     post '/public/api/v1/conteudo/pecas', params: corpo.merge(tipo: 'video').to_json, headers: headers
     expect(response).to have_http_status(:unprocessable_entity)
   end
+
+  describe 'worker' do
+    it 'proxima entrega a aprovada mais antiga e marca montando' do
+      create(:peca, account: account, status: 'rascunho')
+      a = create(:peca, account: account, status: 'aprovado')
+      post '/public/api/v1/conteudo/pecas/proxima', headers: headers
+      expect(response.parsed_body).to include('id' => a.id, 'tipo' => 'carrossel', 'refazer_cards' => [])
+      expect(a.reload).to have_attributes(status: 'montando')
+      expect(a.montagem_iniciada_em).to be_present
+    end
+
+    it 'proxima também entrega refação de peça montada' do
+      m = create(:peca, account: account, status: 'montado', refazer_cards: [3])
+      post '/public/api/v1/conteudo/pecas/proxima', headers: headers
+      expect(response.parsed_body['refazer_cards']).to eq [3]
+      expect(m.reload.status).to eq 'montando'
+    end
+
+    it 'proxima responde 204 sem trabalho e não entrega a mesma peça duas vezes' do
+      create(:peca, account: account, status: 'aprovado')
+      post '/public/api/v1/conteudo/pecas/proxima', headers: headers
+      post '/public/api/v1/conteudo/pecas/proxima', headers: headers
+      expect(response).to have_http_status(:no_content)
+    end
+
+    it 'montada grava imagens e zera refação' do
+      p = create(:peca, account: account, status: 'montando', refazer_cards: [2])
+      patch "/public/api/v1/conteudo/pecas/#{p.id}/montada", params: { imagens: %w[u1 u2] }.to_json, headers: headers
+      expect(p.reload).to have_attributes(status: 'montado', imagens: %w[u1 u2], refazer_cards: [], erro: nil)
+    end
+
+    it 'falha de montagem nova volta pra pauta com o erro' do
+      p = create(:peca, account: account, status: 'montando')
+      patch "/public/api/v1/conteudo/pecas/#{p.id}/falha", params: { erro: 'Gemini 429' }.to_json, headers: headers
+      expect(p.reload).to have_attributes(status: 'rascunho', erro: 'Gemini 429')
+    end
+
+    it 'falha de refação volta pra montado e não entra em loop' do
+      p = create(:peca, account: account, status: 'montando', refazer_cards: [2], imagens: ['u1'])
+      patch "/public/api/v1/conteudo/pecas/#{p.id}/falha", params: { erro: 'x' }.to_json, headers: headers
+      expect(p.reload).to have_attributes(status: 'montado', refazer_cards: [], imagens: ['u1'])
+      post '/public/api/v1/conteudo/pecas/proxima', headers: headers
+      expect(response).to have_http_status(:no_content)
+    end
+  end
 end

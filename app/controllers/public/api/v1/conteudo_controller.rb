@@ -14,6 +14,36 @@ class Public::Api::V1::ConteudoController < PublicController
     render json: { id: peca.id, status: peca.status }, status: :created
   end
 
+  def proxima
+    peca = Peca.transaction do
+      fila = conta.pecas.where(status: 'aprovado')
+                  .or(conta.pecas.where(status: 'montado').where('cardinality(refazer_cards) > 0'))
+      fila.order(:id).lock('FOR UPDATE SKIP LOCKED').first&.tap do |p|
+        p.update!(status: 'montando', montagem_iniciada_em: Time.current)
+      end
+    end
+    return head :no_content unless peca
+
+    render json: peca.slice(:id, :slug, :rodada, :tipo, :conteudo, :refazer_cards)
+  end
+
+  def montada
+    peca = conta.pecas.find(params[:id])
+    peca.transicionar!(de: 'montando', para: 'montado', imagens: Array(params.require(:imagens)), refazer_cards: [],
+                       erro: nil, montagem_iniciada_em: nil)
+    head :no_content
+  end
+
+  # Refação que falha volta pra `montado` (as imagens antigas seguem válidas) e
+  # zera refazer_cards — senão o worker pegaria a mesma peça a cada 30 s.
+  def falha
+    peca = conta.pecas.find(params[:id])
+    destino = peca.refazer_cards.any? ? 'montado' : 'rascunho'
+    peca.transicionar!(de: 'montando', para: destino, erro: params[:erro].to_s.truncate(2000), refazer_cards: [],
+                       montagem_iniciada_em: nil)
+    head :no_content
+  end
+
   private
 
   def conta
