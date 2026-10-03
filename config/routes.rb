@@ -289,6 +289,7 @@ Rails.application.routes.draw do
           resource :lead_config, only: [:show], controller: 'lead_config'
           resource :ramon_dashboard, only: [:show], controller: 'ramon_dashboard'
           resource :ramon_hoje, only: [:show], controller: 'ramon_hoje'
+          resource :ramon_busca, only: [:show], controller: 'ramon_busca'
           resource :ramon_esteira, only: [:show], controller: 'ramon_esteira' do
             post :done
             post :snooze

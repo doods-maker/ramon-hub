@@ -437,6 +437,16 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to eq([a.id])
     end
 
+    it 'filtra por thesis_id (chip Tese do funil)' do
+      tese = create(:thesis, account: account)
+      a = account.leads.create!(name: 'A', lead_stage: novo, thesis: tese)
+      account.leads.create!(name: 'B', lead_stage: novo)
+      get "/api/v1/accounts/#{account.id}/leads",
+          params: { thesis_id: tese.id },
+          headers: admin.create_new_auth_token
+      expect(ids(response)).to eq([a.id])
+    end
+
     it 'filtra por agent_id casando sdr OU closer' do
       agent = create(:user, account: account, role: :agent)
       as_sdr = account.leads.create!(name: 'S', lead_stage: novo, sdr_id: agent.id)
