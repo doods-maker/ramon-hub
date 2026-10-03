@@ -972,18 +972,14 @@ const menuItems = computed(() => {
       class="grid overflow-y-scroll flex-grow gap-2 pb-5 no-scrollbar min-w-0"
       :class="isEffectivelyCollapsed ? 'px-1' : 'px-2'"
     >
-      <!-- FORK(ramon): nas áreas nativas o sidebar do Chatwoot substitui o menu único — volta por aqui -->
+      <!-- FORK(ramon): mobile — a rail de mundos fica oculta, atalho pra Intranet aqui -->
       <router-link
         :to="accountScopedRoute('ramon_index')"
-        :title="t('RAMON.MENU.VOLTAR_HUB')"
-        class="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg text-n-slate-11 hover:bg-n-alpha-1 hover:text-n-slate-12"
-        :class="{ 'justify-center': isEffectivelyCollapsed }"
+        class="md:hidden flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg text-n-slate-11 border border-n-weak hover:bg-n-alpha-1"
         @click="emit('closeMobileSidebar')"
       >
-        <span class="i-lucide-arrow-left size-4 flex-shrink-0" />
-        <span v-if="!isEffectivelyCollapsed">{{
-          t('RAMON.MENU.VOLTAR_HUB')
-        }}</span>
+        <span class="i-lucide-scale size-4" />
+        {{ t('RAMON.RAIL.INTRANET') }}
       </router-link>
       <ul
         class="flex flex-col gap-1 m-0 list-none min-w-0"

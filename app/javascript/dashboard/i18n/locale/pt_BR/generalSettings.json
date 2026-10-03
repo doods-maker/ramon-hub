@@ -189,7 +189,6 @@
     "SEARCH_PLACEHOLDER": "Pesquisar ou pular para",
     "SNOOZE_PLACEHOLDER": "Digite um horário, por exemplo: amanhã, 2 horas, próxima sexta-feira, 15 de jan...",
     "SECTIONS": {
-      "SEARCH": "Buscar",
       "GENERAL": "Geral",
       "REPORTS": "Relatórios",
       "CONVERSATION": "Conversas",
@@ -206,7 +205,6 @@
       "SNOOZE_NOTIFICATION": "Adiar Notificação"
     },
     "COMMANDS": {
-      "SEARCH_MESSAGES": "Buscar nas conversas e mensagens",
       "GO_TO_CONVERSATION_DASHBOARD": "Ir para Painel de Conversação",
       "GO_TO_CONTACTS_DASHBOARD": "Ir para Painel de Contatos",
       "GO_TO_REPORTS_OVERVIEW": "Ir para Resumo de Relatórios",

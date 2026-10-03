@@ -154,7 +154,6 @@ Rails.application.routes.draw do
               resource :direct_uploads, only: [:create]
               resource :draft_messages, only: [:show, :update, :destroy]
               resource :ramon_copilot, only: [:create], controller: 'ramon_copilot'
-              resource :ramon_cliente, only: [:show], controller: 'ramon_clientes'
             end
             member do
               post :mute
@@ -289,8 +288,6 @@ Rails.application.routes.draw do
           resources :labels, only: [:index, :show, :create, :update, :destroy]
           resource :lead_config, only: [:show], controller: 'lead_config'
           resource :ramon_dashboard, only: [:show], controller: 'ramon_dashboard'
-          resource :ramon_hoje, only: [:show], controller: 'ramon_hoje'
-          resource :ramon_busca, only: [:show], controller: 'ramon_busca'
           resource :ramon_esteira, only: [:show], controller: 'ramon_esteira' do
             post :done
             post :snooze

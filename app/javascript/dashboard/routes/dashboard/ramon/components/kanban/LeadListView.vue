@@ -166,14 +166,16 @@ const columns = [
           </td>
           <td class="px-2 py-1.5 border-b border-n-weak">
             <span
-              class="ramon-stage-pill inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full border whitespace-nowrap"
-              :style="{
-                '--stage':
-                  stageById.get(lead.lead_stage_id)?.color ||
-                  DEFAULT_STAGE_COLOR,
-              }"
+              class="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs rounded-full bg-n-alpha-2 text-n-slate-11 whitespace-nowrap"
             >
-              <span class="rounded-full size-1.5 shrink-0 bg-current" />
+              <span
+                class="rounded-full size-1.5 shrink-0"
+                :style="{
+                  backgroundColor:
+                    stageById.get(lead.lead_stage_id)?.color ||
+                    DEFAULT_STAGE_COLOR,
+                }"
+              />
               {{ stageById.get(lead.lead_stage_id)?.name || '—' }}
             </span>
           </td>

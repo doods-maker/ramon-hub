@@ -228,7 +228,7 @@ const confirmRemove = () => {
       >
         <span
           class="size-2 rounded-sm shrink-0"
-          :style="{ backgroundColor: activeBoard?.color || '#737373' }"
+          :style="{ backgroundColor: activeBoard?.color || '#8d867d' }"
         />
         <span
           data-testid="board-active-name"

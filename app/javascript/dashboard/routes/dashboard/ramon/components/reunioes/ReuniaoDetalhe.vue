@@ -69,7 +69,9 @@ onBeforeUnmount(() => clearInterval(poll));
   <div v-if="reuniao" class="mx-auto flex w-full max-w-3xl flex-col gap-6">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
-        <h1 class="truncate text-2xl font-semibold text-n-slate-12">
+        <h1
+          class="truncate font-cormorant text-2xl font-semibold text-n-slate-12"
+        >
           {{ reuniao.titulo }}
         </h1>
         <p v-if="reuniao.user_name" class="text-sm text-n-slate-11">

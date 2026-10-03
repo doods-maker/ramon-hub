@@ -24,8 +24,6 @@ import {
   CMD_BULK_ACTION_SNOOZE_CONVERSATION,
 } from 'dashboard/helper/commandbar/events';
 import { emitter } from 'shared/helpers/mitt';
-import { useEmitter } from 'dashboard/composables/emitter';
-import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const store = useStore();
 const { t, tm } = useI18n();
@@ -217,10 +215,6 @@ watchEffect(() => {
   }
 });
 
-// FORK(ramon): Ctrl K e o "Buscar" do menu abrem a paleta própria (Onda 5);
-// a command bar antiga fica em Ctrl+Shift+K e no "Mais comandos…" da paleta.
-useEmitter(BUS_EVENTS.OPEN_NINJA, () => ninjakeys.value?.open());
-
 onMounted(() => {
   setCommandBarData();
   patchNinjaKeysOpenClose(ninjakeys.value);
@@ -233,7 +227,6 @@ onMounted(() => {
     ref="ninjakeys"
     noAutoLoadMdIcons
     hideBreadcrumbs
-    openHotkey="cmd+shift+k,ctrl+shift+k"
     :placeholder="placeholder"
     @change="onCommandBarChange"
     @selected="onSelected"
@@ -242,9 +235,9 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
-// FORK-PONTO: paleta branco e preto + azul no command bar (redesign 03/10/2026)
+// FORK-PONTO: paleta Marfim & Bronze no command bar (mock 3b do redesign)
 ninja-keys {
-  --ninja-accent-color: #2563eb;
+  --ninja-accent-color: #8a5c33;
   --ninja-font-family: 'Inter';
   z-index: 9999;
 }
@@ -253,14 +246,14 @@ ninja-keys {
 // If OS is in dark theme and app is in light mode, It will prevent showing dark theme in command bar
 body.dark {
   ninja-keys {
-    --ninja-overflow-background: rgba(0, 0, 0, 0.6);
-    --ninja-modal-background: #0e0e0e;
-    --ninja-secondary-background-color: #161616;
-    --ninja-selected-background: #1c1c1c;
-    --ninja-footer-background: #0a0a0a;
-    --ninja-text-color: #ededed;
-    --ninja-icon-color: #60a5fa;
-    --ninja-secondary-text-color: #a1a1a1;
+    --ninja-overflow-background: rgba(30, 27, 25, 0.6);
+    --ninja-modal-background: #2e2b27;
+    --ninja-secondary-background-color: #33302c;
+    --ninja-selected-background: #3b362e;
+    --ninja-footer-background: #2b2825;
+    --ninja-text-color: #ece7df;
+    --ninja-icon-color: #c9a97c;
+    --ninja-secondary-text-color: #8d867d;
   }
 }
 </style>

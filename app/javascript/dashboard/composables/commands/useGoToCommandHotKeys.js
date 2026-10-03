@@ -24,16 +24,6 @@ import { frontendURL } from 'dashboard/helper/URLHelper';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 
 const GO_TO_COMMANDS = [
-  // FORK(ramon): o "Buscar" do menu único abre esta barra; a busca de
-  // mensagens do Chatwoot (rota search) fica a um Enter daqui.
-  {
-    id: 'goto_search',
-    title: 'COMMAND_BAR.COMMANDS.SEARCH_MESSAGES',
-    section: 'COMMAND_BAR.SECTIONS.SEARCH',
-    icon: ICON_CONVERSATION_DASHBOARD,
-    path: accountId => `accounts/${accountId}/search`,
-    role: ['administrator', 'agent'],
-  },
   {
     id: 'goto_conversation_dashboard',
     title: 'COMMAND_BAR.COMMANDS.GO_TO_CONVERSATION_DASHBOARD',

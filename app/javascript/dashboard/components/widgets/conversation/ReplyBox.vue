@@ -670,8 +670,14 @@ export default {
           },
           allowOnFocusedInput: true,
         },
-        // FORK(ramon): Ctrl K abre a paleta própria (listener global no
-        // CommandPalette); a command bar antiga fica em Ctrl+Shift+K.
+        '$mod+KeyK': {
+          action: e => {
+            e.preventDefault();
+            const ninja = document.querySelector('ninja-keys');
+            ninja.open();
+          },
+          allowOnFocusedInput: true,
+        },
         Enter: {
           action: e => {
             if (this.isAValidEvent('enter')) {

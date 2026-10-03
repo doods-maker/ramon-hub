@@ -141,17 +141,6 @@ RSpec.describe Ramon::DossieService do
       expect(payload[:calculos]).to eq([])
     end
 
-    it 'pessoa traz profissão da colheita e os responsáveis; calculos_total conta todos' do
-      sdr = create(:user, account: account, name: 'Sara SDR')
-      closer = create(:user, account: account, name: 'Caio Closer')
-      lead.update!(sdr: sdr, closer: closer,
-                   custom_attributes: { 'colheita' => { 'dados' => { 'cliente' => { 'profissao' => 'metalúrgico' } } } })
-      6.times { Calculo.create!(account: account, lead: lead, tipo: 'rmi') }
-      expect(payload[:pessoa]).to include(profissao: 'metalúrgico', sdr: 'Sara SDR', closer: 'Caio Closer')
-      expect(payload[:calculos].size).to eq(5)
-      expect(payload[:calculos_total]).to eq(6)
-    end
-
     it 'docs traz o checklist completo com status' do
       expect(payload[:docs]).to include(:received, :total, :itens)
     end

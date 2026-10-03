@@ -8,7 +8,6 @@ const props = defineProps({
 defineOptions({ name: 'MiniEsteira' });
 
 // Perdido fica fora da trilha (mockup: caminho linear até o ganho).
-// Preenchido na cor da etapa (--stage herdado do bloco Etapa; sem ela, azul).
 const trilha = computed(() =>
   [...props.stages]
     .filter(s => !s.is_lost)
@@ -20,16 +19,16 @@ const currentIndex = computed(() =>
 </script>
 
 <template>
-  <div class="my-2 flex gap-1" data-testid="mini-esteira">
+  <div class="flex gap-1" data-testid="mini-esteira">
     <i
       v-for="(stage, index) in trilha"
       :key="stage.id"
       :title="stage.name"
       data-testid="mini-esteira-barra"
-      class="h-[3px] flex-1 rounded-sm"
+      class="h-1 flex-1 rounded-full"
       :class="
         currentIndex >= 0 && index <= currentIndex
-          ? 'bg-[color:var(--stage,rgb(var(--blue-9)))]'
+          ? 'bg-n-iris-9'
           : 'bg-n-alpha-2'
       "
     />

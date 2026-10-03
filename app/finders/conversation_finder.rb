@@ -1,4 +1,4 @@
-class ConversationFinder # rubocop:disable Metrics/ClassLength -- FORK(ramon): preload do lead
+class ConversationFinder
   attr_reader :current_user, :current_account, :params
 
   DEFAULT_STATUS = 'open'.freeze
@@ -211,8 +211,7 @@ class ConversationFinder # rubocop:disable Metrics/ClassLength -- FORK(ramon): p
 
   def conversations_base_query
     @conversations.includes(
-      :taggings, :inbox, { assignee: { avatar_attachment: [:blob] } }, { contact: { avatar_attachment: [:blob] } }, :team, :contact_inbox,
-      ramon_lead: [:lead_stage, :thesis] # FORK(ramon): etiqueta de etapa na lista
+      :taggings, :inbox, { assignee: { avatar_attachment: [:blob] } }, { contact: { avatar_attachment: [:blob] } }, :team, :contact_inbox
     )
   end
 

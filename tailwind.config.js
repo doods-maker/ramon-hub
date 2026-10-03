@@ -39,18 +39,10 @@ const tailwindConfig = {
   theme: {
     extend: {
       fontFamily: {
-        // Geist (carregada no _ramon-brand.scss do dashboard); onde não é
-        // carregada (widget/portal) cai na Inter como antes.
-        sans: ['Geist', 'Inter', ...defaultSansFonts],
-        inter: ['Geist', 'Inter', ...defaultSansFonts],
-        interDisplay: ['Geist', 'InterDisplay', ...defaultSansFonts],
-        mono: [
-          '"Geist Mono"',
-          'ui-monospace',
-          'SFMono-Regular',
-          'Menlo',
-          'monospace',
-        ],
+        sans: defaultSansFonts,
+        inter: ['Inter', ...defaultSansFonts],
+        interDisplay: ['InterDisplay', ...defaultSansFonts],
+        cormorant: ['Fraunces', 'Georgia', 'serif'],
       },
       fontWeight: {
         420: '420',

@@ -13,7 +13,4 @@ export const BUS_EVENTS = {
   NEW_CONVERSATION_MODAL: 'newConversationModal',
   INSERT_INTO_RICH_EDITOR: 'insertIntoRichEditor',
   INSERT_INTO_NORMAL_EDITOR: 'insertIntoNormalEditor',
-  OPEN_COMMAND_BAR: 'OPEN_COMMAND_BAR',
-  // FORK(ramon): command bar antiga (ninja-keys), aberta pelo "Mais comandos…" da paleta
-  OPEN_NINJA: 'OPEN_NINJA',
 };

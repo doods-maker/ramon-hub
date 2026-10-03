@@ -6,19 +6,12 @@ import LinhaDaVidaAPI from 'dashboard/api/linhaDaVida';
 import ContactAPI from 'dashboard/api/contacts';
 import { formatCpf } from '../helpers/cpf';
 import { formatBrl } from '../helpers/currency';
-import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import { frontendURL } from '../../../../helper/URLHelper';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
-
-// contactId por prop = embutida na aba "Linha da vida" da ficha (Onda 5).
-const props = defineProps({
-  contactId: { type: [Number, String], default: null },
-});
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
-const contactId = computed(() => props.contactId || route.params.contactId);
 
 const data = ref(null);
 const loading = ref(false);
@@ -26,14 +19,14 @@ const error = ref(false);
 
 const fetchData = async () => {
   // Sem contactId a página está no modo busca (entrada pelo menu).
-  if (!contactId.value) {
+  if (!route.params.contactId) {
     data.value = null;
     return;
   }
   loading.value = true;
   error.value = false;
   try {
-    const response = await LinhaDaVidaAPI.show(contactId.value);
+    const response = await LinhaDaVidaAPI.show(route.params.contactId);
     data.value = response.data;
   } catch (e) {
     error.value = true;
@@ -42,7 +35,7 @@ const fetchData = async () => {
   }
 };
 
-watch(contactId, fetchData, { immediate: true });
+watch(() => route.params.contactId, fetchData, { immediate: true });
 
 // ---- modo busca (rota sem contactId): achar a pessoa pela busca de contatos
 const query = ref('');
@@ -160,12 +153,9 @@ const conversationUrl = lead =>
 </script>
 
 <template>
-  <div
-    class="flex-1 w-full bg-n-background"
-    :class="props.contactId ? '' : 'h-full p-4 sm:p-8 overflow-y-auto'"
-  >
+  <div class="flex-1 w-full h-full p-4 sm:p-8 overflow-y-auto bg-n-background">
     <!-- Modo busca: rota sem contactId (entrada "Linha da Vida" do menu) -->
-    <template v-if="!contactId">
+    <template v-if="!route.params.contactId">
       <RamonPageHeader
         :title="$t('RAMON.LINHA_DA_VIDA.TITLE')"
         :subtitle="$t('RAMON.LINHA_DA_VIDA.SEARCH_HINT')"
@@ -231,11 +221,7 @@ const conversationUrl = lead =>
     </div>
 
     <template v-else-if="contact">
-      <RamonPageHeader
-        v-if="!props.contactId"
-        :title="contact.name"
-        :subtitle="headerSubtitle"
-      />
+      <RamonPageHeader :title="contact.name" :subtitle="headerSubtitle" />
       <p
         v-if="!contact.data_nascimento"
         data-testid="lifeline-no-birthdate"
@@ -313,8 +299,17 @@ const conversationUrl = lead =>
             <div class="flex items-center justify-between gap-2">
               <span class="text-sm text-n-slate-12">{{ lead.name }}</span>
               <span
-                class="ramon-stage-pill px-2 py-0.5 text-xs font-medium rounded-full border shrink-0"
-                :style="{ '--stage': lead.stage_color || DEFAULT_STAGE_COLOR }"
+                class="px-2 py-0.5 text-xs rounded-full shrink-0"
+                :class="
+                  lead.stage_color
+                    ? 'text-white'
+                    : 'bg-n-alpha-2 text-n-slate-11'
+                "
+                :style="
+                  lead.stage_color
+                    ? { backgroundColor: lead.stage_color }
+                    : undefined
+                "
               >
                 {{ lead.stage_name }}
               </span>

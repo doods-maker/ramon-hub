@@ -35,18 +35,6 @@ RSpec.describe 'Conversations API', type: :request do
         expect(body[:data][:payload].first[:messages].first[:id]).to eq(message.id)
       end
 
-      # FORK(ramon): etiqueta de etapa na lista de conversas
-      it 'returns the slim lead of the conversation' do
-        stage = create(:lead_stage, account: account, name: 'Reunião marcada', color: '#6D28D9')
-        create(:lead, account: account, conversation: conversation, lead_stage: stage)
-        get "/api/v1/accounts/#{account.id}/conversations",
-            headers: agent.create_new_auth_token,
-            as: :json
-
-        payload = JSON.parse(response.body, symbolize_names: true)[:data][:payload].first
-        expect(payload[:ramon_lead]).to include(stage_name: 'Reunião marcada', stage_color: '#6D28D9', thesis_name: nil)
-      end
-
       it 'returns conversations with empty messages array for conversations with out messages' do
         get "/api/v1/accounts/#{account.id}/conversations",
             headers: agent.create_new_auth_token,

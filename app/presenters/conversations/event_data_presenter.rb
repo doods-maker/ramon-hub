@@ -61,4 +61,3 @@ class Conversations::EventDataPresenter < SimpleDelegator
   end
 end
 Conversations::EventDataPresenter.prepend_mod_with('Conversations::EventDataPresenter')
-Conversations::EventDataPresenter.prepend(Conversations::RamonEventData) # FORK(ramon)

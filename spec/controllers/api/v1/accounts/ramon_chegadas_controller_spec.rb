@@ -55,9 +55,7 @@ RSpec.describe 'Ramon Chegadas API', type: :request do
 
   it 'agenda devolve 503 com ADVBOX fora' do
     allow(Ramon::AdvboxClient).to receive(:posts).and_raise(Ramon::AdvboxClient::UnavailableError)
-    travel_to(Time.zone.parse('2026-10-05 13:00:00 UTC')) do # segunda 10h em SP: no expediente o ADVBOX é chamado
-      get "#{url}/agenda", headers: gabriela.create_new_auth_token, as: :json
-    end
+    get "#{url}/agenda", headers: gabriela.create_new_auth_token, as: :json
     expect(response).to have_http_status(:service_unavailable)
   end
 end

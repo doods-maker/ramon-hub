@@ -25,7 +25,7 @@ const initials = name =>
     .toUpperCase();
 
 const leadIcon = lead =>
-  `<svg role="img" class="ninja-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#2563eb"/><text x="12" y="12.5" text-anchor="middle" dominant-baseline="central" font-family="Inter, sans-serif" font-size="9" font-weight="600" fill="#ffffff">${initials(lead.name)}</text></svg>`;
+  `<svg role="img" class="ninja-icon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#463528"/><text x="12" y="12.5" text-anchor="middle" dominant-baseline="central" font-family="Inter, sans-serif" font-size="9" font-weight="600" fill="#ece7df">${initials(lead.name)}</text></svg>`;
 
 const MAX_LEADS = 15;
 const PANEL_TAB_KEY = 'ramon_lead_panel_tab';

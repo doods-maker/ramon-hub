@@ -167,7 +167,7 @@ const abrir = async () => {
   }
 };
 
-// O menu (RamonNav) pede o painel pelo store; só abre pra quem pode avisar.
+// Também abre por pedido no store (ex.: Hoje); só pra quem pode avisar.
 watch(
   () => chegadas.painelPedido,
   () => chegadas.podeAvisar && abrir()
@@ -197,6 +197,15 @@ const avisar = async () => {
 <!-- eslint-disable-next-line vue/no-root-v-if -->
 <template>
   <div v-if="chegadas.podeAvisar" class="contents">
+    <button
+      type="button"
+      data-testid="chegou-cliente-botao"
+      class="fixed bottom-4 z-50 flex items-center gap-2 rounded-full bg-n-brand px-4 py-2 font-medium text-white shadow-lg ltr:right-20 rtl:left-20"
+      @click="abrir"
+    >
+      <span class="i-lucide-bell-ring size-4" />
+      {{ t('RAMON.CHEGADA.BOTAO') }}
+    </button>
     <Dialog
       ref="dialogRef"
       width="lg"

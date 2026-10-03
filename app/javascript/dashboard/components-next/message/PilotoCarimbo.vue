@@ -47,7 +47,7 @@ const pausar = async () => {
   <div
     v-if="piloto"
     data-testid="piloto-carimbo"
-    class="inline-flex items-center gap-2 rounded-full bg-n-iris-9/10 px-2.5 py-0.5 text-[10.5px] font-medium text-n-iris-11"
+    class="flex items-center gap-2 text-[10.5px] text-n-teal-11"
   >
     <!-- eslint-disable vue/no-bare-strings-in-template -->
     <span

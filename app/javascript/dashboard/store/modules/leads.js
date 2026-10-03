@@ -9,7 +9,6 @@ const FILTERS_KEY = 'ramon_lead_filters';
 const toParams = (filters = {}) => {
   const map = {
     benefit_type_id: filters.benefitTypeId,
-    thesis_id: filters.thesisId,
     lead_priority_id: filters.leadPriorityId,
     agent_id: filters.agentId,
     source: filters.source,
@@ -37,7 +36,6 @@ export const state = {
   dockConversationId: null,
   filters: {
     benefitTypeId: null,
-    thesisId: null,
     leadPriorityId: null,
     agentId: null,
     source: '',

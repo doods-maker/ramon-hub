@@ -118,25 +118,38 @@ describe('LeadConversationPanel', () => {
             }),
           ],
           mocks: { $t: k => k },
-          stubs: { LeadPanelBody: true, ClientePanel: true },
+          stubs: { LeadPanelBody: true },
         },
       });
 
-    it('mostra o painel do cliente (ClientePanel) no lugar do lead', async () => {
+    it('mostra o aviso e o botão de encaminhar na triagem da Recepção', async () => {
       const wrapper = mountSemLead();
       await flushPromises();
-      const painel = wrapper.findComponent({ name: 'ClientePanel' });
-      expect(painel.exists()).toBe(true);
-      expect(painel.props('conversationId')).toBe(42);
-      expect(wrapper.text()).toContain('RAMON.CLIENTE_PANEL.CLIENTE');
+      expect(wrapper.text()).toContain('RAMON.LEAD_PANEL.SEM_LEAD');
+      expect(
+        wrapper.find('[data-testid="lead-panel-encaminhar-comercial"]').exists()
+      ).toBe(true);
     });
 
-    it('encaminhar do painel do cliente dispara a action com a conversa', async () => {
+    it.each([
+      ['atribuída a um advogado', { assignee: { id: 7 } }],
+      ['no time da Controladoria', { team: { name: 'controladoria' } }],
+    ])('esconde o botão quando a conversa está %s', async (_, meta) => {
+      const wrapper = mountSemLead(meta);
+      await flushPromises();
+      expect(wrapper.text()).toContain('RAMON.LEAD_PANEL.SEM_LEAD');
+      expect(
+        wrapper.find('[data-testid="lead-panel-encaminhar-comercial"]').exists()
+      ).toBe(false);
+    });
+
+    it('clicar em encaminhar dispara a action com a conversa', async () => {
       const encaminhar = vi.fn().mockResolvedValue(lead);
       const wrapper = mountSemLead({}, encaminhar);
       await flushPromises();
-      wrapper.findComponent({ name: 'ClientePanel' }).vm.$emit('encaminhar');
-      await flushPromises();
+      await wrapper
+        .find('[data-testid="lead-panel-encaminhar-comercial"]')
+        .trigger('click');
       expect(encaminhar).toHaveBeenCalledWith(expect.anything(), {
         conversationId: 42,
       });

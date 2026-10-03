@@ -1,23 +1,16 @@
 <script setup>
-// FORK(ramon): card do redesign v2 (mockup .conv) — sem avatar (bolinha azul de
-// não lida + checkbox no hover no lugar), etiqueta da etapa + tese e o selo do
-// prazo de 1ª resposta no lugar da hora/SLA nativo.
 import { computed, ref, watch } from 'vue';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
-import { useMapGetter } from 'dashboard/composables/store';
+import Avatar from 'next/avatar/Avatar.vue';
 import MessagePreview from './MessagePreview.vue';
 import InboxName from '../InboxName.vue';
 import TimeAgo from 'dashboard/components/ui/TimeAgo.vue';
 import CardLabels from './conversationCardComponents/CardLabels.vue';
 import CardPriorityIcon from 'dashboard/components-next/Conversation/ConversationCard/CardPriorityIcon.vue';
+import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard/UnreadBadge.vue';
+import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import SeloPrazo from 'dashboard/routes/dashboard/ramon/components/hoje/SeloPrazo.vue';
-import { prazoDaConversa } from 'dashboard/routes/dashboard/ramon/helpers/prazoConversa';
-import {
-  DEFAULT_STAGE_COLOR,
-  semEtiquetaDeFase,
-} from 'dashboard/routes/dashboard/ramon/helpers/stage';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -57,25 +50,26 @@ const voiceCallData = computed(() => {
 });
 
 const showMetaSection = computed(() => {
-  return props.showInboxName || (props.showAssignee && props.assignee.name);
+  return (
+    props.showInboxName ||
+    (props.showAssignee && props.assignee.name) ||
+    props.chat.priority
+  );
 });
 
-const visibleLabels = computed(() => semEtiquetaDeFase(props.chat.labels));
-// Lead da store (websocket de leads: a etapa muda ao vivo) com o bloco slim da
-// conversa como reserva. A store casa pelo id da conversa — se o slim já diz
-// qual é o lead e a store achou outro, fica o slim.
-const leadDaConversa = useMapGetter('leads/getLeadByConversationId');
-const lead = computed(() => {
-  const slim = props.chat.ramon_lead;
-  const daStore = leadDaConversa.value?.(props.chat.id);
-  if (daStore && (!slim || slim.id === daStore.id)) return daStore;
-  return slim;
-});
-const prazo = computed(() => prazoDaConversa(props.chat, props.inbox));
+const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
 
-const messagePreviewClass = computed(() =>
-  hasUnread.value ? 'text-n-slate-12' : 'text-n-slate-11'
-);
+const showLabelsSection = computed(() => {
+  return props.chat.labels?.length > 0 || hasSlaPolicyId.value;
+});
+
+const messagePreviewClass = computed(() => {
+  return [
+    hasUnread.value ? 'font-medium text-n-slate-12' : 'text-n-slate-11',
+    !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
+    props.compact && hasUnread.value ? 'ltr:pr-6 rtl:pl-6' : '',
+  ];
+});
 
 const onThumbnailHover = () => {
   hovered.value = !props.hideThumbnail;
@@ -108,104 +102,133 @@ watch(
 
 <template>
   <div
-    class="conversation relative max-w-full cursor-pointer border-b border-n-weak py-3 group"
+    class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation border-b border-n-slate-3 hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group hover:z-[1] before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']"
     :class="{
-      // compacto (barra do contato) só aperta quando não há checkbox na borda
-      'px-2': compact && hideThumbnail,
-      'px-4': !compact || !hideThumbnail,
-      'active bg-n-slate-4 shadow-[inset_2px_0_0_rgb(var(--blue-9))]':
+      'active animate-card-select bg-n-background !border-n-surface-1':
         isActiveChat,
-      'selected bg-n-slate-3': selected && !isActiveChat,
-      'hover:bg-n-slate-3': !isActiveChat,
+      'selected bg-n-slate-2 !border-n-surface-1': selected,
+      'px-0': compact,
+      'px-3': !compact,
     }"
     @click="$emit('click', $event)"
     @contextmenu="$emit('contextmenu', $event)"
-    @mouseenter="onThumbnailHover"
-    @mouseleave="onThumbnailLeave"
   >
-    <label
-      v-if="hovered || selected"
-      class="absolute left-0 top-[11px] z-10 flex cursor-pointer"
-      @click.stop
+    <div
+      class="relative"
+      @mouseenter="onThumbnailHover"
+      @mouseleave="onThumbnailLeave"
     >
-      <Checkbox v-model="selectedModel" />
-    </label>
-    <span
-      v-else-if="hasUnread"
-      class="absolute left-[5px] top-[18px] size-1.5 rounded-full bg-n-blue-9"
-    />
-    <div class="flex min-w-0 items-center gap-2">
+      <Avatar
+        v-if="!hideThumbnail"
+        :name="currentContact.name"
+        :src="currentContact.thumbnail"
+        :size="32"
+        :status="currentContact.availability_status"
+        :class="!showInboxName ? 'mt-4' : 'mt-8'"
+        hide-offline-status
+      >
+        <template #overlay="{ size }">
+          <label
+            v-if="hovered || selected"
+            class="flex items-center justify-center rounded-full cursor-pointer absolute inset-0 z-10 backdrop-blur-[2px]"
+            :style="{ width: `${size}px`, height: `${size}px` }"
+            @click.stop
+          >
+            <Checkbox v-model="selectedModel" />
+          </label>
+        </template>
+      </Avatar>
+    </div>
+    <div class="px-0 py-3 flex-1 min-w-0 border-line">
+      <div
+        v-if="showMetaSection"
+        class="flex items-center min-w-0 gap-1"
+        :class="{
+          'ltr:ml-2 rtl:mr-2': !compact,
+          'mx-2': compact,
+        }"
+      >
+        <InboxName v-if="showInboxName" :inbox="inbox" class="flex-1 min-w-0" />
+        <div
+          class="flex items-baseline gap-2 flex-shrink-0"
+          :class="{
+            'flex-1 justify-between': !showInboxName,
+          }"
+        >
+          <span
+            v-if="showAssignee && assignee.name"
+            class="text-n-slate-11 text-xs font-medium leading-3 py-0.5 px-0 inline-flex items-center truncate"
+          >
+            <fluent-icon icon="person" size="12" class="text-n-slate-11" />
+            {{ assignee.name }}
+          </span>
+          <CardPriorityIcon
+            :priority="chat.priority"
+            class="flex-shrink-0 !size-3.5"
+          />
+        </div>
+      </div>
       <h4
-        class="conversation--user my-0 min-w-0 truncate text-[13.5px] font-medium capitalize text-n-slate-12"
+        class="conversation--user text-sm my-0 mx-2 capitalize pt-0.5 text-ellipsis overflow-hidden whitespace-nowrap flex-1 min-w-0 ltr:pr-16 rtl:pl-16 text-n-slate-12"
+        :class="hasUnread ? 'font-semibold' : 'font-medium'"
       >
         {{ currentContact.name }}
       </h4>
-      <div class="ml-auto flex flex-shrink-0 items-center gap-1.5">
-        <CardPriorityIcon :priority="chat.priority" class="!size-3.5" />
-        <SeloPrazo v-if="prazo" :prazo-em="prazo" />
-        <span v-else class="font-mono text-[11.5px] text-n-slate-9">
+      <VoiceCallStatus
+        v-if="voiceCallData.status"
+        key="voice-status-row"
+        :status="voiceCallData.status"
+        :direction="voiceCallData.direction"
+        :message-preview-class="messagePreviewClass"
+      />
+      <MessagePreview
+        v-else-if="lastMessageInChat"
+        key="message-preview"
+        :message="lastMessageInChat"
+        class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm"
+        :class="messagePreviewClass"
+      />
+      <p
+        v-else
+        key="no-messages"
+        class="text-n-slate-11 text-sm my-0 mx-2 leading-6 h-6 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+        :class="messagePreviewClass"
+      >
+        <fluent-icon
+          size="16"
+          class="-mt-0.5 align-middle inline-block text-n-slate-10"
+          icon="info"
+        />
+        <span class="mx-0.5">
+          {{ $t(`CHAT_LIST.NO_MESSAGES`) }}
+        </span>
+      </p>
+      <div
+        class="absolute flex flex-col ltr:right-3 rtl:left-3"
+        :class="showMetaSection ? 'top-8' : 'top-4'"
+      >
+        <span class="ml-auto font-normal leading-4 text-xxs">
           <TimeAgo
             :last-activity-timestamp="chat.timestamp"
             :created-at-timestamp="chat.created_at"
             :conversation-id="chat.id"
           />
         </span>
+        <UnreadBadge
+          v-if="hasUnread"
+          :count="unreadCount"
+          class="ltr:ml-auto rtl:mr-auto mt-1"
+        />
       </div>
-    </div>
-    <div
-      v-if="lead"
-      class="mb-0.5 mt-[3px] flex min-w-0 items-center gap-2 text-xs text-n-slate-9"
-    >
-      <span
-        class="ramon-stage-pill inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-[9px] py-1 text-[11.5px] font-medium leading-none"
-        :style="{ '--stage': lead.stage_color || DEFAULT_STAGE_COLOR }"
+      <CardLabels
+        v-if="showLabelsSection"
+        :conversation-labels="chat.labels"
+        class="mt-0.5 mx-2 mb-0"
       >
-        <span class="size-1.5 rounded-full bg-current" />
-        {{ lead.stage_name }}
-      </span>
-      <span v-if="lead.thesis_name" class="truncate">
-        {{ lead.thesis_name }}
-      </span>
+        <template v-if="hasSlaPolicyId" #before>
+          <SLACardLabel :chat="chat" class="ltr:mr-1 rtl:ml-1" />
+        </template>
+      </CardLabels>
     </div>
-    <div
-      v-if="showMetaSection"
-      class="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-n-slate-9"
-    >
-      <InboxName v-if="showInboxName" :inbox="inbox" class="min-w-0" />
-      <span
-        v-if="showAssignee && assignee.name"
-        class="inline-flex min-w-0 items-center gap-1 truncate"
-      >
-        <span class="i-lucide-user size-3 flex-shrink-0" />
-        {{ assignee.name }}
-      </span>
-    </div>
-    <VoiceCallStatus
-      v-if="voiceCallData.status"
-      key="voice-status-row"
-      :status="voiceCallData.status"
-      :direction="voiceCallData.direction"
-      :message-preview-class="messagePreviewClass"
-    />
-    <MessagePreview
-      v-else-if="lastMessageInChat"
-      key="message-preview"
-      :message="lastMessageInChat"
-      class="my-0 min-w-0 text-[13px] leading-5"
-      :class="messagePreviewClass"
-    />
-    <p
-      v-else
-      key="no-messages"
-      class="my-0 min-w-0 truncate text-[13px] leading-5"
-      :class="messagePreviewClass"
-    >
-      {{ $t(`CHAT_LIST.NO_MESSAGES`) }}
-    </p>
-    <CardLabels
-      v-if="visibleLabels.length"
-      :conversation-labels="visibleLabels"
-      class="mt-1"
-    />
   </div>
 </template>

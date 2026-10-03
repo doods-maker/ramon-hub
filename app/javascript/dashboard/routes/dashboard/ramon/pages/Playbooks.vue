@@ -331,7 +331,7 @@ onMounted(() => store.dispatch('theses/get'));
               <input
                 v-model="detail.name"
                 data-testid="playbooks-name-input"
-                class="px-3 py-2 text-lg rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+                class="px-3 py-2 text-lg font-cormorant rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
                 :placeholder="$t('RAMON.PLAYBOOKS.NAME')"
                 @blur="saveDetail"
               />

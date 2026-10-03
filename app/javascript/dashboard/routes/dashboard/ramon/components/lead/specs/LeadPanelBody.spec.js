@@ -2,7 +2,6 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadPanelBody from '../LeadPanelBody.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
-import DocChecklist from '../DocChecklist.vue';
 import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
 
@@ -30,9 +29,6 @@ const build = ({
   createTask = vi.fn(),
   followUpDraft = vi.fn(),
   chatMessages = [],
-  tasks = [],
-  theses = [],
-  thesisShow = vi.fn(),
 } = {}) =>
   createStore({
     getters: { getSelectedChat: () => ({ id: 42, messages: chatMessages }) },
@@ -52,14 +48,9 @@ const build = ({
           getLostReasons: () => [],
         },
       },
-      theses: {
-        namespaced: true,
-        getters: { getTheses: () => theses },
-        actions: { show: thesisShow },
-      },
       leadTasks: {
         namespaced: true,
-        getters: { getByLead: () => () => tasks },
+        getters: { getByLead: () => () => [] },
         actions: { fetchForLead: vi.fn(), create: createTask },
       },
     },
@@ -77,7 +68,6 @@ const stubs = {
   MacrosList: true,
   ResolveAction: true,
   RouterLink: { template: '<a><slot /></a>' },
-  SecaoRecolhivel: false,
 };
 
 const mountBody = ({ props = {}, spies = {} } = {}) =>
@@ -96,10 +86,9 @@ describe('LeadPanelBody', () => {
     Element.prototype.scrollIntoView = vi.fn();
   });
 
-  describe('seções recolhíveis (eram abas)', () => {
-    it('não tem mais barra de abas; Próximo passo no topo e seções fechadas', () => {
+  describe('abas', () => {
+    it('abre no Resumo por padrão com o card de próxima ação', () => {
       const wrapper = mountBody();
-      expect(wrapper.find('[role="tablist"]').exists()).toBe(false);
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
         true
       );
@@ -108,38 +97,33 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('abre a seção ao clicar e persiste a escolha', async () => {
+    it('troca o conteúdo ao clicar em outra aba e persiste a escolha', async () => {
       const wrapper = mountBody();
-      await wrapper.find('[data-testid="secao-historico"]').trigger('click');
+      await wrapper.find('[data-testid="lead-tab-historico"]').trigger('click');
       expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(
         true
       );
-      // Próximo passo continua visível (não é mais aba)
+      // Próxima ação agora vive no corpo do Resumo (cartões enxutos, D3):
+      // some ao trocar de aba.
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
-        true
+        false
       );
+      expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('historico');
+    });
+
+    it('mostra a aba Contrato em qualquer tese', () => {
       expect(
-        JSON.parse(localStorage.getItem('ramon_lead_panel_abertas'))
-      ).toEqual(['historico']);
-      await wrapper.find('[data-testid="secao-historico"]').trigger('click');
-      expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(
-        false
-      );
-    });
-
-    it('mostra a seção Contrato em qualquer tese', () => {
-      expect(mountBody().find('[data-testid="secao-contrato"]').exists()).toBe(
-        true
-      );
+        mountBody().find('[data-testid="lead-tab-contrato"]').exists()
+      ).toBe(true);
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
       });
-      expect(wrapper.find('[data-testid="secao-contrato"]').exists()).toBe(
+      expect(wrapper.find('[data-testid="lead-tab-contrato"]').exists()).toBe(
         true
       );
     });
 
-    it('aba antiga gravada pelo atalho (contrato) abre a seção do ZapSign', () => {
+    it('aba Contrato persistida abre o cartão do ZapSign', () => {
       localStorage.setItem('ramon_lead_panel_tab', 'contrato');
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadCopilot' }).exists()).toBe(
@@ -148,113 +132,25 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent({ name: 'LeadZapsignCard' }).exists()).toBe(
         true
       );
-      expect(localStorage.getItem('ramon_lead_panel_tab')).toBeNull();
     });
 
-    it('restaura as seções abertas (atalho "simulador" → Cálculos)', () => {
+    it('restaura a aba persistida', () => {
       localStorage.setItem('ramon_lead_panel_tab', 'simulador');
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadSimulador' }).exists()).toBe(
         true
       );
-      expect(
-        mountBody().findComponent({ name: 'LeadSimulador' }).exists()
-      ).toBe(true);
     });
 
-    it('mostra dot verde em Cálculos quando há última simulação', () => {
+    it('mostra dot verde no Simulador quando há última simulação', () => {
       const wrapper = mountBody({
         props: {
           lead: { ...lead, custom_attributes: { ultima_simulacao: { x: 1 } } },
         },
       });
-      expect(
-        wrapper.find('[data-testid="secao-calculos"] .bg-n-teal-9').exists()
-      ).toBe(true);
-    });
-
-    it('Copiloto vira seção (só na conversa)', async () => {
-      const wrapper = mountBody();
-      await wrapper.find('[data-testid="secao-copiloto"]').trigger('click');
-      expect(wrapper.findComponent({ name: 'LeadCopilot' }).exists()).toBe(
-        true
-      );
-      expect(
-        mountBody({ props: { context: 'drawer' } })
-          .find('[data-testid="secao-copiloto"]')
-          .exists()
-      ).toBe(false);
-    });
-  });
-
-  describe('contagem da Qualificação', () => {
-    it('aparece com a seção fechada, a partir dos itens da tese', () => {
-      const wrapper = mountBody({
-        props: {
-          lead: {
-            ...lead,
-            thesis_id: 3,
-            custom_attributes: { qualificacao_status: { 1: 'ok' } },
-          },
-        },
-        spies: {
-          theses: [
-            {
-              id: 3,
-              items: [
-                { id: 1, section: 'qualificacao' },
-                { id: 2, section: 'qualificacao' },
-                { id: 4, section: 'documentos' },
-              ],
-            },
-          ],
-        },
-      });
-      expect(
-        wrapper.find('[data-testid="secao-qualificacao"]').text()
-      ).toContain('1/2');
-      expect(wrapper.findComponent({ name: 'QualificacaoViva' }).exists()).toBe(
-        false
-      );
-    });
-
-    it('busca os itens da tese uma vez quando ainda não vieram', () => {
-      const thesisShow = vi.fn();
-      mountBody({
-        props: { lead: { ...lead, thesis_id: 3 } },
-        spies: { theses: [{ id: 3 }], thesisShow },
-      });
-      expect(thesisShow).toHaveBeenCalledTimes(1);
-      expect(thesisShow).toHaveBeenCalledWith(expect.anything(), 3);
-    });
-  });
-
-  describe('Etapa e Próximo passo', () => {
-    it('Próximo passo leva pra ficha e o Follow-up abre o form de tarefa', async () => {
-      const wrapper = mountBody();
-      const bloco = wrapper.find('[data-testid="panel-proximo-passo"]');
-      expect(bloco.find('[data-testid="lead-abrir-ficha"]').exists()).toBe(
-        true
-      );
-      expect(bloco.text()).toContain('RAMON.FICHA.NEXT_EMPTY');
-      await bloco.find('[data-testid="panel-add-task"]').trigger('click');
-      expect(wrapper.find('[data-testid="panel-task-form"]').exists()).toBe(
-        true
-      );
-    });
-
-    it('com reunião marcada, o apoio da Etapa mostra quando e com quem', () => {
-      const wrapper = mountBody({
-        spies: {
-          tasks: [
-            { id: 1, kind: 'meeting', due_at: '2026-10-08T13:00:00.000Z' },
-          ],
-        },
-      });
-      const etapa = wrapper.find('[data-testid="panel-card-andamento"]');
-      expect(etapa.text()).toContain('RAMON.HOJE.COM');
-      expect(etapa.text()).not.toContain('Restabelecimento B31');
-      expect(wrapper.text()).not.toContain('RAMON.FICHA.NEXT_EMPTY');
+      const dot = wrapper.find('[data-testid="lead-tab-dot-simulador"]');
+      expect(dot.exists()).toBe(true);
+      expect(dot.classes()).toContain('bg-n-teal-9');
     });
   });
 
@@ -369,13 +265,13 @@ describe('LeadPanelBody', () => {
       expect(wrapper.emitted('openConversation')[0]).toEqual([42]);
     });
 
-    it('na conversa não mostra WhatsApp (a conversa já está aberta) nem Resolver (está no cabeçalho)', () => {
+    it('na conversa não mostra WhatsApp (a conversa já está aberta) e mostra Resolver', () => {
       const wrapper = mountBody();
       expect(wrapper.find('[data-testid="panel-whatsapp"]').exists()).toBe(
         false
       );
       expect(wrapper.findComponent({ name: 'ResolveAction' }).exists()).toBe(
-        false
+        true
       );
     });
 
@@ -421,11 +317,10 @@ describe('LeadPanelBody', () => {
       expect(wrapper.text()).toContain('052.318.774-90');
     });
 
-    it('mostra a Qualificação viva na seção Qualificação', async () => {
+    it('mostra o cartão Qualificação viva logo após o cartão Caso', () => {
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_id: 3 } },
       });
-      await wrapper.find('[data-testid="secao-qualificacao"]').trigger('click');
       expect(wrapper.findComponent({ name: 'QualificacaoViva' }).exists()).toBe(
         true
       );
@@ -441,17 +336,18 @@ describe('LeadPanelBody', () => {
       ).toContain('Novo');
     });
 
-    it('seção Documentos mostra a contagem e abre o checklist', async () => {
+    it('cartão Documentos leva pra aba documentos', async () => {
       const wrapper = mountBody({
         props: {
           lead: { ...lead, thesis_id: 3, docs_total: 4, docs_received: 1 },
         },
       });
-      const secao = wrapper.find('[data-testid="secao-documentos"]');
-      expect(secao.text()).toContain('1/4');
-      expect(wrapper.findComponent(DocChecklist).exists()).toBe(false);
-      await secao.trigger('click');
-      expect(wrapper.findComponent(DocChecklist).exists()).toBe(true);
+      await wrapper.find('[data-testid="panel-card-docs"]').trigger('click');
+      expect(
+        wrapper
+          .find('[data-testid="lead-tab-documentos"]')
+          .attributes('aria-selected')
+      ).toBe('true');
     });
 
     it('expande o formulário completo pelo link "editar todos os campos" (dentro de Dados do contato)', async () => {
@@ -468,11 +364,11 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(true);
     });
 
-    it('completeData do ZapSign (seção Contrato) abre Dados do contato com o formulário', async () => {
+    it('completeData do ZapSign (aba Contrato) volta pro Resumo com o formulário aberto', async () => {
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
       });
-      await wrapper.find('[data-testid="secao-contrato"]').trigger('click');
+      await wrapper.find('[data-testid="lead-tab-contrato"]').trigger('click');
       wrapper
         .findComponent({ name: 'LeadZapsignCard' })
         .vm.$emit('completeData');
@@ -588,37 +484,6 @@ describe('LeadPanelBody', () => {
       });
       expect(wrapper.find('[data-testid="panel-card-risco"]').exists()).toBe(
         true
-      );
-    });
-  });
-
-  describe('selos que saíram do card do funil', () => {
-    it('triagem aguardando humano aparece no cabeçalho', () => {
-      const wrapper = mountBody({
-        props: {
-          lead: { ...lead, latest_triage: { status: 'awaiting_human' } },
-        },
-      });
-      expect(
-        wrapper.find('[data-testid="panel-triage-awaiting"]').exists()
-      ).toBe(true);
-    });
-
-    it('retomadas: contagem e data da última; some sem retomada', () => {
-      const wrapper = mountBody({
-        props: {
-          lead: {
-            ...lead,
-            follow_up_count: 2,
-            follow_up_last_at: '2026-09-20T12:00:00Z',
-          },
-        },
-      });
-      expect(wrapper.find('[data-testid="panel-follow-up"]').text()).toContain(
-        'RAMON.FOLLOW_UP.CARD_TITLE'
-      );
-      expect(mountBody().find('[data-testid="panel-follow-up"]').exists()).toBe(
-        false
       );
     });
   });

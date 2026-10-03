@@ -232,7 +232,7 @@ const openConversation = () => {
 };
 
 const openFunnel = () => router.push(accountScopedRoute('ramon_funil'));
-const exitFocus = () => router.push(accountScopedRoute('ramon_painel'));
+const exitFocus = () => router.push(accountScopedRoute('ramon_index'));
 
 // Atalhos do Modo Foco (mudos em campo focado — o composable cuida disso;
 // a página não tem modais). isActing segue guardando o duplo-acionamento.
@@ -273,7 +273,9 @@ useKeyboardEvents({
   >
     <!-- Topo: título + progresso do dia + valor em jogo + sair -->
     <div class="flex flex-wrap items-center gap-4 mb-7">
-      <h1 class="text-[22px] font-semibold leading-none text-n-slate-12">
+      <h1
+        class="font-cormorant text-[22px] font-semibold leading-none text-n-slate-12"
+      >
         {{ t('RAMON.ESTEIRA.FOCUS_TITLE') }}
       </h1>
       <div
@@ -394,7 +396,7 @@ useKeyboardEvents({
               }}
             </p>
             <p
-              class="mt-1 text-[34px] font-semibold leading-[1.05] text-n-slate-12"
+              class="mt-1 font-cormorant text-[34px] font-semibold leading-[1.05] text-n-slate-12"
             >
               {{ current.name }}
             </p>
@@ -593,7 +595,9 @@ useKeyboardEvents({
           </p>
           <template v-if="sim">
             <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-semibold text-n-slate-12">
+              <span
+                class="font-cormorant text-2xl font-semibold text-n-slate-12"
+              >
                 {{ money(sim.atrasados) }}
               </span>
               <span class="text-[11px] text-n-slate-10">

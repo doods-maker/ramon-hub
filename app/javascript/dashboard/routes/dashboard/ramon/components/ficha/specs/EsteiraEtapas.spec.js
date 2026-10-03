@@ -1,8 +1,6 @@
 import { mount } from '@vue/test-utils';
 import EsteiraEtapas from '../EsteiraEtapas.vue';
 
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
-
 const stages = [
   {
     id: 1,
@@ -42,18 +40,14 @@ describe('EsteiraEtapas', () => {
     );
   });
 
-  it('barra feita/atual na cor da etapa, futura cinza', () => {
+  it('etapas passadas mostram check, futuras mostram posição', () => {
     const wrapper = mount(EsteiraEtapas, { props: { stages } });
-    const barras = wrapper.findAll('[data-testid="esteira-selo"]');
-    expect(barras[0].classes()).toContain('bg-[var(--stage)]');
-    expect(barras[1].classes()).toContain('bg-[var(--stage)]');
-    expect(barras[2].classes()).toContain('bg-n-slate-4');
-    expect(
-      wrapper.findAll('[data-testid="esteira-etapa"]')[0].attributes('style')
-    ).toContain('#888');
+    const selos = wrapper.findAll('[data-testid="esteira-selo"]');
+    expect(selos[0].classes().join(' ')).toContain('bg-n-iris-9');
+    expect(selos[2].text()).toBe('3');
   });
 
-  it('lead em etapa perdida não marca a etapa de ganho anterior como feita', () => {
+  it('lead em etapa perdida não marca a etapa de ganho anterior como concluída', () => {
     // is_won ANTES da etapa atual perdida — é o cenário real do bug (a esteira
     // reaproveita a etapa "Fechado" quando o lead é reaberto e perdido depois).
     const lostStages = [
@@ -62,21 +56,19 @@ describe('EsteiraEtapas', () => {
       { ...stages[1], id: 3, current: true, is_lost: true },
     ];
     const wrapper = mount(EsteiraEtapas, { props: { stages: lostStages } });
-    const barras = wrapper.findAll('[data-testid="esteira-selo"]');
-    expect(barras[1].classes()).toContain('bg-n-slate-4');
+    const selos = wrapper.findAll('[data-testid="esteira-selo"]');
+    expect(selos[1].find('.i-lucide-check').exists()).toBe(false);
+    expect(selos[1].text()).toBe('2');
   });
 
-  it('etapa atual perdida usa barra e nome em tom ruby', () => {
+  it('etapa atual perdida usa selo em tom ruby', () => {
     const lostStages = [
       stages[0],
       { ...stages[2], id: 2, current: false },
       { ...stages[1], id: 3, current: true, is_lost: true },
     ];
     const wrapper = mount(EsteiraEtapas, { props: { stages: lostStages } });
-    const barras = wrapper.findAll('[data-testid="esteira-selo"]');
-    expect(barras[2].classes()).toContain('bg-n-ruby-9');
-    expect(wrapper.find('[data-testid="esteira-atual"]').classes()).toContain(
-      'text-n-ruby-11'
-    );
+    const selos = wrapper.findAll('[data-testid="esteira-selo"]');
+    expect(selos[2].classes().join(' ')).toContain('bg-n-ruby-9');
   });
 });
