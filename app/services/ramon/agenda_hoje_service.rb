@@ -1,6 +1,6 @@
 # "Quem vem hoje" pra Recepção: tarefas ATENDIMENTO do dia no ADVBOX, com o
-# responsável casado ao usuário do hub por e-mail. A API do ADVBOX tem cota de
-# 500 chamadas/dia (compartilhada) → agenda em cache de 10 min, settings de 24 h (Ramon::AdvboxUsuarios).
+# responsável casado ao usuário do hub por e-mail. Cota do ADVBOX (500/dia): o dia sai
+# do cache da semana e os e-mails do cache de 24 h, ambos via Ramon::AdvboxCache.
 class Ramon::AgendaHojeService
   TAREFA = 'ATENDIMENTO'.freeze
   # ponytail: origem que o ADVBOX põe nas partes contrárias (INSS etc.) nesta conta;
@@ -17,12 +17,10 @@ class Ramon::AgendaHojeService
 
   private
 
+  # Mesmo cache da semana (Ramon::SemanaAdvboxService.tarefas) — sem chamada própria.
   def tarefas_de_hoje
     hoje = Time.find_zone!(Chegada::ZONA).today.iso8601
-    Rails.cache.fetch("ramon/agenda_hoje/#{hoje}", expires_in: 10.minutes) do
-      resposta = Ramon::AdvboxClient.posts(date_start: hoje, date_end: hoje, limit: 100)
-      Array(resposta.is_a?(Hash) ? resposta['data'] : resposta).select { |tarefa| tarefa['task'] == TAREFA }
-    end
+    Ramon::SemanaAdvboxService.tarefas.select { |tarefa| tarefa['task'] == TAREFA && tarefa['date'].to_s.start_with?(hoje) }
   end
 
   def linha(tarefa)

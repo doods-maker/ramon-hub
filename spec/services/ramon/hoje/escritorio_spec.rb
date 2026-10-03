@@ -30,10 +30,17 @@ RSpec.describe Ramon::Hoje::Escritorio do
 
   it 'recepção: número de cliente do Painel vira cliente; o resto é número novo' do
     contato = create(:contact, account: account, phone_number: '+5547997110042')
-    create(:portal_cliente, account: account, telefone: '47997110042')
+    create(:portal_cliente, account: account, telefone: '4797110042') # cadastro antigo, sem o 9
     create(:conversation, account: account, inbox: caixa, contact: contato)
     create(:conversation, account: account, inbox: caixa)
     expect(blocos(gabriela, 'recepcao')[:sem_responsavel].pluck(:cliente)).to eq([true, false])
+  end
+
+  it 'variantes do telefone: com/sem 55 e com/sem o 9º dígito' do
+    expect(described_class.variantes_telefone('+55 (47) 99711-0042'))
+      .to contain_exactly('47997110042', '5547997110042', '4797110042', '554797110042')
+    expect(described_class.variantes_telefone('4797110042')).to include('47997110042', '5547997110042')
+    expect(described_class.variantes_telefone(nil)).to eq([])
   end
 
   context 'with atendimento do ADVBOX hoje' do

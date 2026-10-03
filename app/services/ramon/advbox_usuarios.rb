@@ -1,4 +1,4 @@
-# Usuário do ADVBOX ↔ usuário do hub, casados por e-mail (settings em cache de 24 h — cota 500/dia).
+# Usuário do ADVBOX ↔ usuário do hub, casados por e-mail (settings em cache de 24 h via Ramon::AdvboxCache).
 module Ramon::AdvboxUsuarios
   module_function
 
@@ -13,8 +13,8 @@ module Ramon::AdvboxUsuarios
   end
 
   def emails
-    Rails.cache.fetch('ramon/advbox_users_email', expires_in: 24.hours) do
+    Ramon::AdvboxCache.buscar('ramon/advbox_users_email', expires_in: 24.hours) do
       Array(Ramon::AdvboxClient.settings['users']).to_h { |user| [user['id'], user['email']] }
-    end
+    end.to_h
   end
 end

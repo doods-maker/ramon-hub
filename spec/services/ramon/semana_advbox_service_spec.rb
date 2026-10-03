@@ -6,12 +6,15 @@ RSpec.describe Ramon::SemanaAdvboxService do
   let(:cache) { ActiveSupport::Cache::MemoryStore.new }
   let(:tarefas) do
     [
-      { 'date' => '2026-10-08 00:00:00', 'task' => 'ELABORAR PETIÇÃO INICIAL', 'users' => [{ 'user_id' => 99 }], 'lawsuit' => {} },
-      { 'date' => '2026-10-07 09:00:00', 'task' => 'ACOMPANHAR PERÍCIA', 'notes' => 'INSS Tubarão', 'users' => [{ 'user_id' => 7 }],
+      { 'id' => 1, 'date' => '2026-10-08 00:00:00', 'task' => 'ELABORAR PETIÇÃO INICIAL', 'users' => [{ 'user_id' => 99 }], 'lawsuit' => {} },
+      { 'id' => 2, 'date' => '2026-10-07 09:00:00', 'task' => 'ACOMPANHAR PERÍCIA', 'notes' => 'INSS Tubarão', 'users' => [{ 'user_id' => 7 }],
         'lawsuit' => { 'process_number' => '5003412-18.2024.4.04.7207', 'customers' => [{ 'name' => 'MARIA', 'customers_origins_id' => 1 }] } },
-      { 'date' => '2026-10-06 00:00:00', 'task' => 'LIGAR PRO CLIENTE', 'users' => [{ 'user_id' => 7 }], 'lawsuit' => {} }
+      { 'id' => 3, 'date' => '2026-10-06 00:00:00', 'task' => 'LIGAR PRO CLIENTE', 'users' => [{ 'user_id' => 7 }], 'lawsuit' => {} }
     ]
   end
+
+  # Segunda, 10h em SP — dentro do expediente (Ramon::AdvboxCache).
+  around { |example| travel_to(Time.zone.parse('2026-10-05 13:00:00 UTC')) { example.run } }
 
   before do
     allow(Rails).to receive(:cache).and_return(cache)
@@ -33,8 +36,24 @@ RSpec.describe Ramon::SemanaAdvboxService do
     expect(Ramon::AdvboxClient).to have_received(:posts).once
   end
 
-  it 'pede os próximos 7 dias de São Paulo' do
-    travel_to(Time.zone.parse('2026-10-04 01:00:00 UTC')) { described_class.new(account).para(tamires) }
-    expect(Ramon::AdvboxClient).to have_received(:posts).with(hash_including(date_start: '2026-10-03', date_end: '2026-10-10', offset: 0))
+  it 'pede hoje..hoje+6 de São Paulo' do
+    described_class.new(account).para(tamires)
+    expect(Ramon::AdvboxClient).to have_received(:posts).with(hash_including(date_start: '2026-10-05', date_end: '2026-10-11', offset: 0))
+  end
+
+  describe 'paginação' do
+    let(:pagina) { Array.new(100) { |i| { 'id' => i + 1, 'task' => 'X' } } }
+
+    it 'para quando a página vem repetida e não duplica tarefa' do
+      allow(Ramon::AdvboxClient).to receive(:posts).and_return({ 'data' => pagina }, { 'data' => pagina })
+      expect(described_class.tarefas.size).to eq(100)
+      expect(Ramon::AdvboxClient).to have_received(:posts).twice
+    end
+
+    it 'para quando bate o totalCount' do
+      allow(Ramon::AdvboxClient).to receive(:posts).and_return('data' => pagina, 'totalCount' => 100)
+      expect(described_class.tarefas.size).to eq(100)
+      expect(Ramon::AdvboxClient).to have_received(:posts).once
+    end
   end
 end
