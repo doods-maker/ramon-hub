@@ -3,6 +3,9 @@
 class Ramon::PublicarPecasJob < ApplicationJob
   queue_as :scheduled_jobs
 
+  # Carrossel de até 20 imagens com a Meta lenta passa de 15 min; varrer publicação ainda viva abriria janela de post em dobro.
+  INTERROMPIDA = 30.minutes
+
   def perform
     marcar_interrompidas
     Peca.where(status: 'agendado').where(agendado_para: ..Time.current).find_each { |peca| publicar(peca) }
@@ -42,14 +45,15 @@ class Ramon::PublicarPecasJob < ApplicationJob
   # Algo falhou DEPOIS do id gravado (permalink, callback, fila): update_columns pula callbacks.
   def no_ar_apos_erro(peca, erro)
     Rails.logger.warn("PublicarPecasJob: peça #{peca.id} no ar (#{peca.ig_media_id}), pós-publicação falhou: #{erro.message}")
-    peca.update_columns(status: 'publicado', erro: nil, ig_media_id: peca.ig_media_id)
+    peca.update_columns(status: 'publicado', erro: nil, ig_media_id: peca.ig_media_id) # rubocop:disable Rails/SkipsModelValidations
+    Ramon::NotionEspelhoJob.perform_later(peca.id) # update_columns pula o espelho do after_update_commit
     pos_publicacao(peca)
   rescue StandardError => e
     Rails.logger.warn("PublicarPecasJob: peça #{peca.id} no ar, aviso/acervo não saiu: #{e.message}")
   end
 
   def marcar_interrompidas
-    Peca.where(status: 'publicando').where(publicacao_iniciada_em: ...Peca::TRAVA.ago).find_each { |peca| interromper(peca) }
+    Peca.where(status: 'publicando').where(publicacao_iniciada_em: ...INTERROMPIDA.ago).find_each { |peca| interromper(peca) }
   end
 
   def interromper(peca)

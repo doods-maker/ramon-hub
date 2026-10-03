@@ -39,8 +39,8 @@ RSpec.describe Ramon::PublicarPecasJob do
     expect(peca.reload).to have_attributes(status: 'publicado', ig_media_id: 'm9', permalink: nil)
   end
 
-  it 'publicando há mais de 15 min vira falhou com aviso de conferir' do
-    travada = create(:peca, status: 'publicando', publicacao_iniciada_em: 20.minutes.ago)
+  it 'publicando há mais de 30 min vira falhou com aviso de conferir' do
+    travada = create(:peca, status: 'publicando', publicacao_iniciada_em: 31.minutes.ago)
     described_class.perform_now
     expect(travada.reload).to have_attributes(status: 'falhou')
     expect(travada.erro).to include('conferir no Instagram')
@@ -53,14 +53,14 @@ RSpec.describe Ramon::PublicarPecasJob do
     expect(peca.reload).to have_attributes(status: 'publicado', ig_media_id: 'm9', erro: nil)
   end
 
-  it 'publicando há mais de 15 min COM ig_media_id vira publicado' do
-    no_ar = create(:peca, status: 'publicando', publicacao_iniciada_em: 20.minutes.ago, ig_media_id: 'm5')
+  it 'publicando há mais de 30 min COM ig_media_id vira publicado' do
+    no_ar = create(:peca, status: 'publicando', publicacao_iniciada_em: 31.minutes.ago, ig_media_id: 'm5')
     described_class.perform_now
     expect(no_ar.reload).to have_attributes(status: 'publicado', ig_media_id: 'm5')
   end
 
-  it 'publicando há 5 min é deixada em paz' do
-    andando = create(:peca, status: 'publicando', publicacao_iniciada_em: 5.minutes.ago)
+  it 'publicando há 20 min é deixada em paz' do
+    andando = create(:peca, status: 'publicando', publicacao_iniciada_em: 20.minutes.ago)
     described_class.perform_now
     expect(andando.reload.status).to eq 'publicando'
   end
