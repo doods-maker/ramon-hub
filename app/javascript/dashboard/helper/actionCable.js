@@ -5,6 +5,7 @@ import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { emitter } from 'shared/helpers/mitt';
 import { useImpersonation } from 'dashboard/composables/useImpersonation';
 import { useCallsStore } from 'dashboard/stores/calls';
+import { useChegadasStore } from 'dashboard/stores/chegadas';
 import {
   applyOutboundAnswer,
   armOutboundRecorder,
@@ -56,6 +57,8 @@ class ActionCableConnector extends BaseActionCableConnector {
       'voice_call.ended': this.onVoiceCallEnded,
       'lead.created': this.onLeadUpsert,
       'lead.updated': this.onLeadUpsert,
+      'ramon.chegada.created': this.onChegadaUpsert,
+      'ramon.chegada.updated': this.onChegadaUpsert,
     };
   }
 
@@ -66,6 +69,11 @@ class ActionCableConnector extends BaseActionCableConnector {
 
   onLeadUpsert = data => {
     this.app.$store.dispatch('leads/upsert', data);
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  onChegadaUpsert = data => {
+    useChegadasStore().upsert(data);
   };
 
   // eslint-disable-next-line class-methods-use-this
