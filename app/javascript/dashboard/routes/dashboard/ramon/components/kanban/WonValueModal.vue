@@ -2,6 +2,15 @@
 import { ref, computed, onMounted } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  CAMPO,
+  ROTULO,
+  FUNDO_JANELA,
+  JANELA,
+  TITULO_JANELA,
+  RODAPE_JANELA,
+} from '../../helpers/ui';
 
 const props = defineProps({
   initialValue: { type: [Number, String], default: null },
@@ -33,56 +42,47 @@ onKeyStroke('Escape', cancel);
 </script>
 
 <template>
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click.self="cancel"
-  >
-    <div
-      class="w-80 max-w-[92vw] p-5 rounded-xl bg-n-solid-2 border border-n-weak"
-    >
-      <h3 class="mb-3 text-sm text-n-slate-12">
+  <div :class="FUNDO_JANELA" @click.self="cancel">
+    <div :class="JANELA">
+      <h3 :class="TITULO_JANELA">
         {{ $t('RAMON.FUNIL.WON.TITLE') }}
       </h3>
-      <label class="block mb-1 text-xs text-n-slate-10">{{
-        $t('RAMON.FUNIL.WON.VALUE_LABEL')
-      }}</label>
-      <input
-        ref="valueInput"
-        v-model="value"
-        data-testid="won-value-input"
-        type="text"
-        inputmode="decimal"
-        class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border outline-none"
-        :class="
-          isInvalid
-            ? 'border-n-ruby-8'
-            : 'border-transparent focus:border-n-slate-8'
-        "
-        @keyup.enter="save"
-      />
+      <label :class="ROTULO">
+        {{ $t('RAMON.FUNIL.WON.VALUE_LABEL') }}
+        <input
+          ref="valueInput"
+          v-model="value"
+          data-testid="won-value-input"
+          type="text"
+          inputmode="decimal"
+          class="font-mono"
+          :class="[CAMPO, { '!outline-n-ruby-8': isInvalid }]"
+          @keyup.enter="save"
+        />
+      </label>
       <p
         v-if="isInvalid"
         data-testid="won-value-error"
-        class="mt-1 text-xs text-n-ruby-11"
+        class="mt-1 mb-0 text-xs text-n-ruby-11"
       >
         {{ $t('RAMON.FUNIL.WON.INVALID') }}
       </p>
-      <div class="flex justify-end gap-2 mt-3">
-        <button
+      <div :class="RODAPE_JANELA">
+        <Button
           data-testid="won-value-skip"
-          class="px-3 py-1.5 text-sm rounded-lg text-n-slate-11 hover:text-n-slate-12"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.FUNIL.WON.SKIP')"
           @click="skip"
-        >
-          {{ $t('RAMON.FUNIL.WON.SKIP') }}
-        </button>
-        <button
+        />
+        <Button
           data-testid="won-value-save"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+          sm
+          :label="$t('RAMON.FUNIL.WON.SAVE')"
           :disabled="isInvalid"
           @click="save"
-        >
-          {{ $t('RAMON.FUNIL.WON.SAVE') }}
-        </button>
+        />
       </div>
     </div>
   </div>

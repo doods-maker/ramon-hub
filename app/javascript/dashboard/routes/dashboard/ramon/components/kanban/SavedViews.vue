@@ -9,6 +9,9 @@ import { vOnClickOutside } from '@vueuse/components';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { BOARD_PALETTE, legacyToBoards } from '../../helpers/leadBoards';
+import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import { LINHA, MENU, SECAO, TITULO } from '../../helpers/ui';
+import Button from 'dashboard/components-next/button/Button.vue';
 import NamePromptModal from '../NamePromptModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 
@@ -221,14 +224,18 @@ const confirmRemove = () => {
 <template>
   <div v-on-click-outside="close" class="relative" data-testid="saved-views">
     <div class="flex items-center gap-1.5">
-      <button
+      <Button
         data-testid="board-dropdown-toggle"
-        class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-n-weak text-n-slate-12 hover:border-n-iris-8"
+        sm
+        faded
+        slate
         @click="open = !open"
       >
         <span
           class="size-2 rounded-sm shrink-0"
-          :style="{ backgroundColor: activeBoard?.color || '#737373' }"
+          :style="{
+            backgroundColor: activeBoard?.color || DEFAULT_STAGE_COLOR,
+          }"
         />
         <span
           data-testid="board-active-name"
@@ -238,43 +245,45 @@ const confirmRemove = () => {
           {{ activeBoard?.name || $t('RAMON.FUNIL.BOARDS.ALL') }}
         </span>
         <span class="i-lucide-chevron-down size-3.5 text-n-slate-10" />
-      </button>
-      <button
+      </Button>
+      <Button
         v-if="isDirty"
         data-testid="board-save-current"
-        class="px-2.5 py-1 text-xs rounded-full text-n-iris-11 bg-n-alpha-2 hover:bg-n-alpha-3"
+        xs
+        faded
         :title="$t('RAMON.FUNIL.BOARDS.SAVE_TO_BOARD')"
+        :label="$t('RAMON.FUNIL.BOARDS.SAVE_TO_BOARD')"
         @click="saveToActiveBoard"
-      >
-        {{ $t('RAMON.FUNIL.BOARDS.SAVE_TO_BOARD') }}
-      </button>
+      />
     </div>
     <div
       v-show="open"
       data-testid="board-dropdown"
-      class="absolute top-full left-0 z-50 mt-2 w-80 p-2 rounded-xl bg-n-solid-2 border border-n-weak shadow-lg"
+      class="absolute top-full left-0 z-50 mt-2 w-80"
+      :class="MENU"
     >
-      <p
-        class="mb-1.5 px-2 pt-1 text-[10px] font-semibold tracking-[0.14em] uppercase text-n-slate-9"
-      >
+      <p class="mb-1 px-2 pt-1" :class="TITULO">
         {{ $t('RAMON.FUNIL.BOARDS.TITLE') }}
       </p>
       <div class="flex flex-col gap-0.5">
         <button
           data-testid="board-item-all"
-          class="flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded-lg"
-          :class="
+          class="flex items-center gap-2"
+          :class="[
+            LINHA,
             activeBoard
-              ? 'text-n-slate-11 hover:bg-n-alpha-2'
-              : 'bg-n-alpha-2 text-n-slate-12 font-medium'
-          "
+              ? 'text-n-slate-11'
+              : 'bg-n-alpha-2 text-n-slate-12 font-medium',
+          ]"
           @click="applyBoard(null)"
         >
           <span class="size-2 rounded-sm shrink-0 bg-n-slate-9" />
           <span class="flex-1 truncate">
             {{ $t('RAMON.FUNIL.BOARDS.ALL') }}
           </span>
-          <span class="text-xs text-n-slate-10">{{ leads.length }}</span>
+          <span class="font-mono text-xs text-n-slate-10">{{
+            leads.length
+          }}</span>
         </button>
         <div
           v-for="board in boards"
@@ -283,12 +292,13 @@ const confirmRemove = () => {
         >
           <button
             data-testid="board-item"
-            class="flex items-center flex-1 min-w-0 gap-2 px-2 py-1.5 text-sm text-left rounded-lg"
-            :class="
+            class="flex items-center flex-1 min-w-0 gap-2"
+            :class="[
+              LINHA,
               board.id === activeBoardId
                 ? 'bg-n-alpha-2 text-n-slate-12 font-medium'
-                : 'text-n-slate-11 hover:bg-n-alpha-2'
-            "
+                : 'text-n-slate-11',
+            ]"
             @click="applyBoard(board)"
           >
             <span
@@ -298,46 +308,55 @@ const confirmRemove = () => {
             <span class="flex-1 truncate">{{ board.name }}</span>
             <span
               data-testid="board-count"
-              class="text-xs"
+              class="font-mono text-xs"
               :class="
                 board.id === activeBoardId
-                  ? 'text-n-iris-11'
+                  ? 'text-n-blue-11'
                   : 'text-n-slate-10'
               "
             >
               {{ countFor(board.filters) }}
             </span>
           </button>
-          <button
+          <Button
             data-testid="board-rename"
-            class="hidden group-hover:flex items-center p-1 rounded text-n-slate-10 hover:text-n-slate-12"
+            xs
+            ghost
+            slate
+            icon="i-lucide-pencil"
+            class="hidden group-hover:inline-flex"
             :aria-label="$t('RAMON.FUNIL.BOARDS.RENAME')"
             :title="$t('RAMON.FUNIL.BOARDS.RENAME')"
             @click="boardToRename = board"
-          >
-            <span class="i-lucide-pencil size-3.5" />
-          </button>
-          <button
+          />
+          <Button
             data-testid="board-remove"
-            class="hidden group-hover:flex items-center p-1 rounded text-n-slate-10 hover:text-n-ruby-11"
+            xs
+            ghost
+            ruby
+            icon="i-lucide-trash-2"
+            class="hidden group-hover:inline-flex"
             :aria-label="$t('RAMON.FUNIL.BOARDS.DELETE')"
             :title="$t('RAMON.FUNIL.BOARDS.DELETE')"
             @click="boardToRemove = board"
-          >
-            <span class="i-lucide-trash-2 size-3.5" />
-          </button>
+          />
         </div>
       </div>
-      <button
-        data-testid="board-new"
-        class="w-full mt-1.5 px-2 py-1.5 text-xs text-left rounded-lg border-t border-n-weak text-n-iris-11 hover:bg-n-alpha-2"
-        @click="
-          newModalOpen = true;
-          close();
-        "
-      >
-        + {{ $t('RAMON.FUNIL.BOARDS.NEW') }}
-      </button>
+      <div class="mt-1.5 !pt-1.5" :class="SECAO">
+        <Button
+          data-testid="board-new"
+          xs
+          ghost
+          icon="i-lucide-plus"
+          class="w-full"
+          start
+          :label="$t('RAMON.FUNIL.BOARDS.NEW')"
+          @click="
+            newModalOpen = true;
+            close();
+          "
+        />
+      </div>
     </div>
     <NamePromptModal
       v-if="newModalOpen"

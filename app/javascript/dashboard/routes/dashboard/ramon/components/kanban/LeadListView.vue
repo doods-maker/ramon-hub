@@ -5,6 +5,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatBrl } from '../../helpers/currency';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const props = defineProps({
   leads: { type: Array, default: () => [] },
@@ -115,22 +116,21 @@ const columns = [
             :key="column.key"
             class="sticky top-0 z-10 px-2 py-2 text-left bg-n-background border-b border-n-weak"
           >
-            <button
+            <Button
               :data-testid="`list-sort-${column.key}`"
-              class="inline-flex items-center gap-1 text-xs font-semibold text-n-slate-10 hover:text-n-slate-12"
+              link
+              slate
+              xs
+              trailing-icon
+              class="!gap-1 font-semibold !no-underline"
+              :icon="
+                sortKey === column.key
+                  ? `size-3 ${sortDir === 1 ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'}`
+                  : ''
+              "
+              :label="$t(column.label)"
               @click="setSort(column.key)"
-            >
-              {{ $t(column.label) }}
-              <span
-                v-if="sortKey === column.key"
-                class="size-3"
-                :class="
-                  sortDir === 1
-                    ? 'i-lucide-chevron-up'
-                    : 'i-lucide-chevron-down'
-                "
-              />
-            </button>
+            />
           </th>
         </tr>
       </thead>
@@ -145,11 +145,11 @@ const columns = [
           <td class="px-2 py-1.5 border-b border-n-weak">
             <button
               data-testid="list-select-toggle"
-              class="flex items-center justify-center size-3.5 rounded shrink-0 border-[1.5px] transition duration-150"
+              class="flex items-center justify-center size-3.5 p-0 rounded shrink-0 border-[1.5px] border-solid transition duration-150"
               :class="
                 selectedLeadIds.includes(lead.id)
-                  ? 'bg-n-iris-9 border-n-iris-9'
-                  : 'border-n-slate-9'
+                  ? 'bg-n-brand border-n-brand'
+                  : 'border-n-slate-8'
               "
               @click.stop="emit('toggleSelect', lead)"
             >
@@ -166,7 +166,7 @@ const columns = [
           </td>
           <td class="px-2 py-1.5 border-b border-n-weak">
             <span
-              class="ramon-stage-pill inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full border whitespace-nowrap"
+              class="ramon-stage-pill inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-full border whitespace-nowrap"
               :style="{
                 '--stage':
                   stageById.get(lead.lead_stage_id)?.color ||
@@ -179,9 +179,9 @@ const columns = [
           </td>
           <td
             data-testid="list-value"
-            class="px-2 py-1.5 text-xs tabular-nums whitespace-nowrap border-b border-n-weak"
+            class="px-2 py-1.5 font-mono text-xs whitespace-nowrap border-b border-n-weak"
             :class="
-              lead.value ? 'text-n-iris-11 font-medium' : 'text-n-slate-10'
+              lead.value ? 'text-n-blue-11 font-medium' : 'text-n-slate-10'
             "
           >
             {{ lead.value ? formatBrl(lead.value) : '—' }}
@@ -205,7 +205,7 @@ const columns = [
             {{ lead.thesis_name || '—' }}
           </td>
           <td
-            class="px-2 py-1.5 text-xs tabular-nums whitespace-nowrap border-b border-n-weak text-n-slate-11"
+            class="px-2 py-1.5 font-mono text-xs whitespace-nowrap border-b border-n-weak text-n-slate-11"
           >
             {{ lead.contact_phone || '—' }}
           </td>
@@ -215,7 +215,7 @@ const columns = [
     <p
       v-if="!sorted.length"
       data-testid="list-empty"
-      class="pt-6 text-xs text-center text-n-slate-9"
+      class="pt-6 text-xs text-center text-n-slate-10"
     >
       {{ $t('RAMON.KANBAN.LIST.EMPTY') }}
     </p>

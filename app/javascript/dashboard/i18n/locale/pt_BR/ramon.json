@@ -383,11 +383,9 @@
         "COL_BREACHED": "{count} fora do SLA",
         "RESPOND_NOW": "Responder agora",
         "REMAINING": "SLA · restam {time}",
-        "OVERDUE_SINCE": "SLA estourado há {time}",
-        "REPLIED_IN": "✓ {time}"
+        "OVERDUE_SINCE": "SLA estourado há {time}"
       },
       "COLUMN": {
-        "CONVERSION": "↳ {rate}%",
         "CONVERSION_TIP": "% de leads que avançam desta etapa (90d)",
         "STALLED": "{count} sem contato >24h",
         "PRESCRIBING": "{value}/mês prescrevendo",

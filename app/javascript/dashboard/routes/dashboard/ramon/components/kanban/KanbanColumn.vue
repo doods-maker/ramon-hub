@@ -5,6 +5,7 @@ import Draggable from 'vuedraggable';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import { brlCompact } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
+import Button from 'dashboard/components-next/button/Button.vue';
 import LeadCard from './LeadCard.vue';
 import StageHeaderMenu from './StageHeaderMenu.vue';
 
@@ -154,7 +155,7 @@ const toggleCollapsed = () => {
   <button
     v-if="collapsed"
     data-testid="stage-expand"
-    class="flex flex-col items-center gap-2 w-10 flex-shrink-0 rounded-xl ramon-column border border-n-weak pb-3 cursor-pointer overflow-hidden"
+    class="flex flex-col items-center gap-2 w-10 flex-shrink-0 p-0 pb-3 rounded-xl ramon-column border border-solid border-n-weak cursor-pointer overflow-hidden"
     :title="$t('RAMON.KANBAN.COLUMN.EXPAND')"
     @click="toggleCollapsed"
   >
@@ -167,7 +168,7 @@ const toggleCollapsed = () => {
       class="rounded-full size-2.5 flex-shrink-0"
       :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
     />
-    <span data-testid="stage-count" class="text-xs text-n-slate-9">
+    <span data-testid="stage-count" class="font-mono text-xs text-n-slate-10">
       {{ localLeads.length }}
     </span>
     <span
@@ -185,28 +186,71 @@ const toggleCollapsed = () => {
       class="h-0.5 flex-shrink-0"
       :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
     />
-    <div class="flex items-center gap-2 px-3 py-2">
-      <span
-        class="flex items-center gap-2 min-w-0 text-sm font-medium text-n-slate-12 stage-drag-handle cursor-grab"
-      >
-        <span
-          class="ramon-stage-pill inline-flex items-center gap-1.5 min-w-0 rounded-full border px-2.5 py-0.5 font-semibold"
-          :style="{ '--stage': stage.color || DEFAULT_STAGE_COLOR }"
+    <!-- cabeça em 2 linhas: 1 = etapa + alertas + botões; 2 = números -->
+    <div class="flex flex-col gap-1 px-3 py-2">
+      <div class="flex items-start gap-1">
+        <!-- alertas à direita da etapa; sem espaço, quebram pra linha de baixo -->
+        <div
+          class="flex flex-wrap items-center flex-1 min-w-0 gap-x-2 gap-y-1 min-h-6"
         >
-          <span class="rounded-full size-1.5 shrink-0 bg-current" />
-          <span class="truncate">{{ stage.name }}</span>
+          <span
+            class="flex items-center gap-1.5 max-w-full text-sm font-medium text-n-slate-12 stage-drag-handle cursor-grab"
+          >
+            <span
+              class="ramon-stage-pill inline-flex items-center gap-1.5 min-w-0 rounded-full border px-2.5 py-0.5 text-[12px] font-semibold"
+              :style="{ '--stage': stage.color || DEFAULT_STAGE_COLOR }"
+            >
+              <span class="rounded-full size-1.5 shrink-0 bg-current" />
+              <span class="truncate">{{ stage.name }}</span>
+            </span>
+            <span
+              v-if="stage.is_won"
+              class="i-lucide-trophy size-3 shrink-0 text-n-amber-11"
+            />
+            <span
+              v-if="stage.is_lost"
+              class="i-lucide-x-circle size-3 shrink-0 text-n-ruby-11"
+            />
+          </span>
+          <span
+            v-if="alerts.length"
+            class="flex flex-wrap items-center gap-x-2 ms-auto"
+          >
+            <span
+              v-for="alert in alerts"
+              :key="alert.key"
+              :data-testid="`column-alert-${alert.key}`"
+              class="text-[10.5px]"
+              :class="alert.class"
+            >
+              {{ alert.label }}
+            </span>
+          </span>
+        </div>
+        <span class="flex items-center gap-0.5 shrink-0">
+          <Button
+            data-testid="stage-collapse-toggle"
+            :title="$t('RAMON.KANBAN.COLUMN.COLLAPSE')"
+            xs
+            ghost
+            slate
+            icon="i-lucide-chevrons-left-right"
+            class="[&>span]:rotate-90"
+            @click="toggleCollapsed"
+          />
+          <StageHeaderMenu
+            :stage="stage"
+            @rename="name => emit('renameStage', { id: stage.id, name })"
+            @recolor="color => emit('recolorStage', { id: stage.id, color })"
+            @set-type="type => emit('setStageType', { id: stage.id, type })"
+            @remove="s => emit('removeStage', s)"
+          />
         </span>
-        <span
-          v-if="stage.is_won"
-          class="i-lucide-trophy size-3 shrink-0 text-n-amber-11"
-        />
-        <span
-          v-if="stage.is_lost"
-          class="i-lucide-x-circle size-3 shrink-0 text-n-ruby-11"
-        />
-      </span>
-      <!-- "N · R$ X mil · ~R$ Y ponderado ↳ Z%": cabeça da coluna (mock 1d) -->
-      <span class="text-[11px] tabular-nums whitespace-nowrap text-n-slate-9">
+      </div>
+      <!-- "N · R$ X mil · ~R$ Y ponderado ↳ Z%" inteiro, quebrando se precisar -->
+      <div
+        class="flex flex-wrap items-center gap-x-1 font-mono text-[11px] text-n-slate-10"
+      >
         <span data-testid="stage-count">{{ localLeads.length }}</span>
         <span v-if="totalValue" data-testid="stage-total">
           {{ `· ${brlCompact(totalValue)}` }}
@@ -214,7 +258,7 @@ const toggleCollapsed = () => {
         <span
           v-if="showWeighted"
           data-testid="stage-weighted"
-          class="text-n-iris-11/80"
+          class="text-n-blue-11"
         >
           {{ `· ~${brlCompact(weightedValue)}` }}
         </span>
@@ -222,42 +266,18 @@ const toggleCollapsed = () => {
           v-if="conversionRate != null"
           data-testid="stage-conversion"
           :title="$t('RAMON.KANBAN.COLUMN.CONVERSION_TIP')"
-          class="text-[10px] text-n-slate-10"
+          class="inline-flex items-center gap-0.5"
         >
-          {{ $t('RAMON.KANBAN.COLUMN.CONVERSION', { rate: conversionRate }) }}
+          <span class="i-lucide-corner-down-right size-3" />{{
+            `${conversionRate}%`
+          }}
         </span>
-      </span>
-      <span class="flex items-center gap-2 ms-auto min-w-0">
-        <span
-          v-for="alert in alerts"
-          :key="alert.key"
-          :data-testid="`column-alert-${alert.key}`"
-          class="text-[10.5px] truncate"
-          :class="alert.class"
-        >
-          {{ alert.label }}
-        </span>
-        <button
-          data-testid="stage-collapse-toggle"
-          class="flex items-center text-n-slate-9 hover:text-n-slate-12"
-          :title="$t('RAMON.KANBAN.COLUMN.COLLAPSE')"
-          @click="toggleCollapsed"
-        >
-          <span class="i-lucide-chevrons-left-right size-3.5 rotate-90" />
-        </button>
-        <StageHeaderMenu
-          :stage="stage"
-          @rename="name => emit('renameStage', { id: stage.id, name })"
-          @recolor="color => emit('recolorStage', { id: stage.id, color })"
-          @set-type="type => emit('setStageType', { id: stage.id, type })"
-          @remove="s => emit('removeStage', s)"
-        />
-      </span>
+      </div>
     </div>
     <p
       v-if="!localLeads.length"
       data-testid="column-empty"
-      class="px-3 pt-3 text-xs text-center text-n-slate-9"
+      class="px-3 pt-3 text-xs text-center text-n-slate-10"
     >
       {{ $t('RAMON.KANBAN.COLUMN.EMPTY') }}
     </p>

@@ -7,6 +7,18 @@ import { useAlert } from 'dashboard/composables';
 import LeadsAPI from 'dashboard/api/leads';
 import ContactAPI from 'dashboard/api/contacts';
 import { parseBrlInput } from '../../helpers/currency';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  CAMPO,
+  SELECT,
+  ROTULO,
+  AVISO,
+  TOM,
+  FUNDO_JANELA,
+  JANELA,
+  TITULO_JANELA,
+  RODAPE_JANELA,
+} from '../../helpers/ui';
 
 const emit = defineEmits(['close', 'created']);
 const store = useStore();
@@ -168,154 +180,149 @@ const submit = async () => {
 </script>
 
 <template>
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    @click.self="onBackdrop"
-  >
-    <div
-      class="w-96 max-w-[92vw] max-h-[90vh] overflow-y-auto p-5 rounded-2xl bg-n-solid-1 border border-n-weak"
-    >
-      <h2 class="mb-4 text-lg font-semibold text-n-slate-12">
+  <div :class="FUNDO_JANELA" @click.self="onBackdrop">
+    <div class="!w-96" :class="JANELA">
+      <h2 :class="TITULO_JANELA">
         {{ $t('RAMON.FUNIL.NEW_LEAD') }}
       </h2>
 
-      <label class="block mb-1 text-xs text-n-slate-10">{{
-        $t('RAMON.FUNIL.LEAD_NAME')
-      }}</label>
-      <input
-        ref="nameInput"
-        v-model="name"
-        data-testid="new-lead-name"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
-      />
-
-      <label class="block mb-1 text-xs text-n-slate-10">{{
-        $t('RAMON.FUNIL.LEAD_PHONE')
-      }}</label>
-      <input
-        v-model="phone"
-        data-testid="new-lead-phone"
-        class="w-full px-3 py-2 mb-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
-        @blur="onPhoneBlur"
-      />
-      <div
-        v-if="existingLead"
-        data-testid="new-lead-dedup"
-        class="flex items-center justify-between gap-2 mb-3 px-3 py-2 text-xs rounded-lg bg-n-amber-3 text-n-amber-11 border border-n-amber-6"
-      >
-        <span>{{
-          $t('RAMON.FUNIL.NEW.DEDUP', {
-            name: existingLead.name,
-            stage: existingStageName,
-          })
-        }}</span>
-        <button
-          data-testid="new-lead-open-existing"
-          class="shrink-0 underline hover:text-n-amber-12"
-          @click="openExisting"
-        >
-          {{ $t('RAMON.FUNIL.NEW.OPEN_EXISTING') }}
-        </button>
-      </div>
-
-      <label class="block mb-1 text-xs text-n-slate-10">{{
-        $t('RAMON.FUNIL.BENEFIT')
-      }}</label>
-      <select
-        v-model="benefitTypeId"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
-      >
-        <option :value="null">—</option>
-        <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-          {{ b.name }}
-        </option>
-      </select>
-
-      <label class="block mb-1 text-xs text-n-slate-10">{{
-        $t('RAMON.FUNIL.NEW.SOURCE')
-      }}</label>
-      <input
-        v-model="source"
-        list="new-lead-sources"
-        data-testid="new-lead-source"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
-      />
-      <datalist id="new-lead-sources">
-        <option v-for="s in sources" :key="s" :value="s" />
-      </datalist>
-
-      <label class="block mb-1 text-xs text-n-slate-10">{{
-        $t('RAMON.FUNIL.NEW.CHANNEL')
-      }}</label>
-      <select
-        v-model="channel"
-        data-testid="new-lead-channel"
-        class="w-full px-3 py-2 mb-3 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
-      >
-        <option value="">
-          {{ $t('RAMON.FUNIL.NEW.CHANNEL_PLACEHOLDER') }}
-        </option>
-        <option v-for="c in channels" :key="c.key" :value="c.key">
-          {{ c.label }}
-        </option>
-      </select>
-
-      <div class="flex gap-3">
-        <div class="flex-1">
-          <label class="block mb-1 text-xs text-n-slate-10">{{
-            $t('RAMON.FUNIL.NEW.VALUE')
-          }}</label>
+      <div class="flex flex-col gap-3">
+        <label :class="ROTULO">
+          {{ $t('RAMON.FUNIL.LEAD_NAME') }}
           <input
-            v-model="value"
-            data-testid="new-lead-value"
-            type="text"
-            inputmode="decimal"
-            class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border outline-none focus:border-n-slate-8"
-            :class="isValueInvalid ? 'border-n-ruby-8' : 'border-transparent'"
+            ref="nameInput"
+            v-model="name"
+            data-testid="new-lead-name"
+            :class="CAMPO"
           />
-          <p v-if="isValueInvalid" class="mt-1 mb-2 text-xs text-n-ruby-11">
-            {{ $t('RAMON.FUNIL.WON.INVALID') }}
-          </p>
-          <div v-else class="mb-4" />
+        </label>
+
+        <label :class="ROTULO">
+          {{ $t('RAMON.FUNIL.LEAD_PHONE') }}
+          <input
+            v-model="phone"
+            data-testid="new-lead-phone"
+            class="font-mono"
+            :class="CAMPO"
+            @blur="onPhoneBlur"
+          />
+        </label>
+        <div
+          v-if="existingLead"
+          data-testid="new-lead-dedup"
+          class="flex items-center justify-between gap-2"
+          :class="[AVISO, TOM.amber]"
+        >
+          <span>{{
+            $t('RAMON.FUNIL.NEW.DEDUP', {
+              name: existingLead.name,
+              stage: existingStageName,
+            })
+          }}</span>
+          <Button
+            data-testid="new-lead-open-existing"
+            link
+            xs
+            amber
+            class="shrink-0"
+            :label="$t('RAMON.FUNIL.NEW.OPEN_EXISTING')"
+            @click="openExisting"
+          />
         </div>
-        <div class="flex-1">
-          <label class="block mb-1 text-xs text-n-slate-10">{{
-            $t('RAMON.FUNIL.PRIORITY')
-          }}</label>
-          <select
-            v-model="priorityId"
-            data-testid="new-lead-priority"
-            class="w-full px-3 py-2 mb-4 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 border border-transparent outline-none focus:border-n-slate-8"
-          >
+
+        <label :class="ROTULO">
+          {{ $t('RAMON.FUNIL.BENEFIT') }}
+          <select v-model="benefitTypeId" :class="SELECT">
             <option :value="null">—</option>
-            <option v-for="p in priorities" :key="p.id" :value="p.id">
-              {{ p.name }}
+            <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
+              {{ b.name }}
             </option>
           </select>
+        </label>
+
+        <label :class="ROTULO">
+          {{ $t('RAMON.FUNIL.NEW.SOURCE') }}
+          <input
+            v-model="source"
+            list="new-lead-sources"
+            data-testid="new-lead-source"
+            :class="CAMPO"
+          />
+        </label>
+        <datalist id="new-lead-sources">
+          <option v-for="s in sources" :key="s" :value="s" />
+        </datalist>
+
+        <label :class="ROTULO">
+          {{ $t('RAMON.FUNIL.NEW.CHANNEL') }}
+          <select
+            v-model="channel"
+            data-testid="new-lead-channel"
+            :class="SELECT"
+          >
+            <option value="">
+              {{ $t('RAMON.FUNIL.NEW.CHANNEL_PLACEHOLDER') }}
+            </option>
+            <option v-for="c in channels" :key="c.key" :value="c.key">
+              {{ c.label }}
+            </option>
+          </select>
+        </label>
+
+        <div class="flex gap-3">
+          <div class="flex-1 min-w-0">
+            <label :class="ROTULO">
+              {{ $t('RAMON.FUNIL.NEW.VALUE') }}
+              <input
+                v-model="value"
+                data-testid="new-lead-value"
+                type="text"
+                inputmode="decimal"
+                class="font-mono"
+                :class="[CAMPO, { '!outline-n-ruby-8': isValueInvalid }]"
+              />
+            </label>
+            <p v-if="isValueInvalid" class="mt-1 mb-0 text-xs text-n-ruby-11">
+              {{ $t('RAMON.FUNIL.WON.INVALID') }}
+            </p>
+          </div>
+          <label class="flex-1 min-w-0" :class="ROTULO">
+            {{ $t('RAMON.FUNIL.PRIORITY') }}
+            <select
+              v-model="priorityId"
+              data-testid="new-lead-priority"
+              :class="SELECT"
+            >
+              <option :value="null">—</option>
+              <option v-for="p in priorities" :key="p.id" :value="p.id">
+                {{ p.name }}
+              </option>
+            </select>
+          </label>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2">
-        <button
-          class="px-3 py-1.5 text-sm text-n-slate-11"
+      <div :class="RODAPE_JANELA">
+        <Button
+          sm
+          faded
+          slate
+          :label="$t('RAMON.FUNIL.CANCEL')"
           @click="emit('close')"
-        >
-          {{ $t('RAMON.FUNIL.CANCEL') }}
-        </button>
-        <button
+        />
+        <Button
           data-testid="new-lead-save"
-          class="px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+          sm
+          :label="
+            existingLead
+              ? $t('RAMON.FUNIL.NEW.CREATE_ANYWAY')
+              : $t('RAMON.FUNIL.SAVE')
+          "
           :disabled="
             !name.trim() || submitting || !stages.length || isValueInvalid
           "
           @click="submit"
-        >
-          {{
-            existingLead
-              ? $t('RAMON.FUNIL.NEW.CREATE_ANYWAY')
-              : $t('RAMON.FUNIL.SAVE')
-          }}
-        </button>
+        />
       </div>
     </div>
   </div>

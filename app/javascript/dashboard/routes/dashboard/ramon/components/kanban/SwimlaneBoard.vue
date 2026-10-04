@@ -96,16 +96,14 @@ const gridStyle = computed(() => ({
         :style="gridStyle"
       >
         <span />
-        <span
-          v-for="stage in stages"
-          :key="stage.id"
-          class="flex items-center gap-1.5 text-[11px] font-semibold text-n-slate-10"
-        >
+        <span v-for="stage in stages" :key="stage.id" class="flex min-w-0">
           <span
-            class="rounded-full size-2 shrink-0"
-            :style="{ backgroundColor: stage.color || DEFAULT_STAGE_COLOR }"
-          />
-          {{ stage.name }}
+            class="ramon-stage-pill inline-flex items-center gap-1.5 min-w-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
+            :style="{ '--stage': stage.color || DEFAULT_STAGE_COLOR }"
+          >
+            <span class="rounded-full size-1.5 shrink-0 bg-current" />
+            <span class="truncate">{{ stage.name }}</span>
+          </span>
         </span>
       </div>
       <div class="flex flex-col gap-2.5">
@@ -125,7 +123,7 @@ const gridStyle = computed(() => ({
             </span>
             <span
               data-testid="swimlane-summary"
-              class="text-[11px] tabular-nums text-n-slate-10"
+              class="font-mono text-[11px] text-n-slate-10"
             >
               {{ lane.leads.length }}
               <span v-if="lane.total">{{ `· ${brlCompact(lane.total)}` }}</span>

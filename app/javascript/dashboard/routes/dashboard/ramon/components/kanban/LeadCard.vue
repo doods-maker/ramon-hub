@@ -6,6 +6,8 @@ import { useAlert } from 'dashboard/composables';
 import { formatBrl, brlCompact } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, CHIP, TOM, FILETE, BOTAO_COMPACTO } from '../../helpers/ui';
 import TaskBellMenu from './TaskBellMenu.vue';
 
 const props = defineProps({
@@ -36,7 +38,7 @@ const { t } = useI18n();
 // getters/dispatch ficam defensivas para o card renderizar em testes sem store.
 const store = useStore();
 
-// Valor compacto dourado ("R$ 38 mil") — traço quando não há valor.
+// Valor compacto azul ("R$ 38 mil") — traço quando não há valor.
 const compactValue = computed(() => {
   const v = props.lead.value;
   if (v === null || v === undefined || v === '') return null;
@@ -51,17 +53,17 @@ const prescriptionLabel = computed(() => {
   const p = prescription.value;
   if (!p) return null;
   if (p.lostInstallments > 0 && p.monthlyValue)
-    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_BLEEDING', {
+    return t('RAMON.KANBAN.CARD.PRESCRIPTION_BLEEDING', {
       value: formatBrl(p.monthlyValue),
-    })}`;
+    });
   if (p.lostInstallments > 0)
-    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_LOST', {
+    return t('RAMON.KANBAN.CARD.PRESCRIPTION_LOST', {
       count: p.lostInstallments,
-    })}`;
+    });
   if (p.monthsToCliff <= 6)
-    return `⏳ ${t('RAMON.KANBAN.CARD.PRESCRIPTION_SOON', {
+    return t('RAMON.KANBAN.CARD.PRESCRIPTION_SOON', {
       months: p.monthsToCliff,
-    })}`;
+    });
   return null;
 });
 
@@ -146,40 +148,41 @@ const slaState = computed(() => {
 });
 const slaOverdue = computed(() => slaState.value?.kind === 'overdue');
 
-// Pill: âmbar regressivo dentro do SLA, ruby sólido estourado, teal respondido.
+// Pill: âmbar regressivo dentro do SLA, ruby estourado, teal respondido (com ✓).
 const slaPill = computed(() => {
   const state = slaState.value;
   if (!state) return null;
   if (state.kind === 'replied')
     return {
-      class: 'bg-n-teal-9/20 text-n-teal-11',
-      label: t('RAMON.KANBAN.SLA.REPLIED_IN', { time: state.time }),
+      class: TOM.teal,
+      icon: 'i-lucide-check',
+      label: state.time,
       title: null,
     };
   if (state.kind === 'within')
     return {
-      class: 'bg-n-amber-9/20 text-n-amber-11',
+      class: TOM.amber,
       label: state.time,
       title: t('RAMON.KANBAN.SLA.REMAINING', { time: state.time }),
     };
   return {
-    class: 'bg-n-ruby-9 text-white',
+    class: TOM.ruby,
     label: state.time,
     title: t('RAMON.KANBAN.SLA.OVERDUE_SINCE', { time: state.time }),
   };
 });
 
-// Risco = borda ESQUERDA 3px: ruby (prescrevendo / apodrecendo forte / SLA
-// estourado) tem prioridade sobre âmbar (parado). O hover bronze re-afirma a
+// Risco = filete à ESQUERDA (CARTAO_STATUS): ruby (prescrevendo / apodrecendo forte / SLA
+// estourado) tem prioridade sobre âmbar (parado). O hover azul re-afirma a
 // cor da esquerda para nunca apagar o sinal de risco.
 const riskClass = computed(() => {
   const limit = stage.value?.stalled_after_days;
   const rotten =
     limit != null && daysInStage.value != null && daysInStage.value > 2 * limit;
   if (prescription.value?.lostInstallments > 0 || rotten || slaOverdue.value)
-    return 'border-l-[3px] border-l-n-ruby-9 hover:border-l-n-ruby-9';
+    return `border-l-4 ${FILETE.ruby} hover:border-l-n-ruby-9`;
   if (props.lead.stalled)
-    return 'border-l-[3px] border-l-n-amber-9 hover:border-l-n-amber-9';
+    return `border-l-4 ${FILETE.amber} hover:border-l-n-amber-9`;
   return '';
 });
 
@@ -211,8 +214,8 @@ const nextAction = computed(() => {
   // Reunião marcada (Cal.com/agendar_reuniao): data e hora absolutas, não "em 3d".
   if (props.lead.next_task_kind === 'meeting' && due.getTime() >= Date.now())
     return {
-      dot: 'bg-n-iris-9',
-      text: 'text-n-iris-11 font-semibold',
+      dot: 'bg-n-blue-9',
+      text: 'text-n-blue-11 font-semibold',
       label: t('RAMON.KANBAN.CARD.NEXT_MEETING', {
         when: due.toLocaleString('pt-BR', {
           weekday: 'short',
@@ -277,27 +280,27 @@ const onSchedule = async ({ dueAt, title }) => {
 <template>
   <div
     ref="cardEl"
-    class="group px-3 py-2.5 mb-1.5 rounded-xl bg-n-solid-1 shadow-sm border border-n-weak cursor-pointer transition duration-150 hover:border-n-iris-8 active:scale-[0.97]"
-    :class="[riskClass, { 'ring-2 ring-n-iris-9': focused }]"
+    class="group mb-1.5 cursor-pointer transition duration-150 hover:border-n-blue-8 active:scale-[0.97]"
+    :class="[CARTAO, riskClass, { 'ring-2 ring-n-blue-9': focused }]"
     @click="emit('openLead', lead)"
   >
-    <!-- Linha 1: checkbox de lote + nome + valor compacto dourado -->
+    <!-- Linha 1: checkbox de lote + nome + valor compacto -->
     <div class="flex items-center gap-2">
       <button
         v-if="selectable"
         data-testid="select-toggle"
-        class="flex items-center justify-center size-3.5 rounded shrink-0 border-[1.5px] transition duration-150"
-        :class="selected ? 'bg-n-iris-9 border-n-iris-9' : 'border-n-slate-9'"
+        class="flex items-center justify-center size-3.5 p-0 rounded shrink-0 border-[1.5px] border-solid transition duration-150"
+        :class="selected ? 'bg-n-brand border-n-brand' : 'border-n-slate-8'"
         @click.stop="emit('toggleSelect', lead)"
       >
         <span v-if="selected" class="i-lucide-check size-2.5 text-white" />
       </button>
       <button
         data-testid="lead-card-body"
-        class="flex-1 min-w-0 text-left"
+        class="flex-1 min-w-0 p-0 text-left"
         @click.stop="emit('openLead', lead)"
       >
-        <p class="text-sm font-medium truncate text-n-slate-12">
+        <p class="mb-0 text-sm font-medium truncate text-n-slate-12">
           {{ lead.name }}
         </p>
       </button>
@@ -306,15 +309,16 @@ const onSchedule = async ({ dueAt, title }) => {
         v-if="slaPill"
         data-testid="sla-pill"
         :title="slaPill.title || undefined"
-        class="px-2 py-0.5 rounded-full text-[10.5px] font-semibold tabular-nums shrink-0"
-        :class="slaPill.class"
+        class="shrink-0 font-mono font-semibold"
+        :class="[CHIP, slaPill.class]"
       >
+        <span v-if="slaPill.icon" class="size-3" :class="slaPill.icon" />
         {{ slaPill.label }}
       </span>
       <span
         data-testid="lead-value"
-        class="text-xs tabular-nums shrink-0"
-        :class="compactValue ? 'font-medium text-n-iris-11' : 'text-n-slate-10'"
+        class="text-xs font-mono shrink-0"
+        :class="compactValue ? 'font-medium text-n-blue-11' : 'text-n-slate-10'"
       >
         {{ compactValue || '—' }}
       </span>
@@ -345,12 +349,14 @@ const onSchedule = async ({ dueAt, title }) => {
       <span
         v-if="prescriptionLabel"
         data-testid="prescription-badge"
+        class="inline-flex items-center gap-1"
         :class="
           prescription?.lostInstallments > 0
             ? 'text-n-ruby-11'
             : 'text-n-amber-11'
         "
       >
+        <span class="i-lucide-hourglass size-3 shrink-0" />
         {{ prescriptionLabel }}
       </span>
       <span
@@ -364,7 +370,7 @@ const onSchedule = async ({ dueAt, title }) => {
       <span
         v-if="daysInStage !== null"
         data-testid="stage-age"
-        class="text-n-slate-10"
+        class="font-mono text-n-slate-10"
       >
         {{ $t('RAMON.KANBAN.CARD.AGE', { days: daysInStage }) }}
       </span>
@@ -372,7 +378,7 @@ const onSchedule = async ({ dueAt, title }) => {
         v-if="lead.follow_up_count > 0"
         data-testid="follow-up-badge"
         :title="followUpTitle"
-        class="inline-flex items-center gap-0.5 text-n-slate-10"
+        class="inline-flex items-center gap-0.5 font-mono text-n-slate-10"
       >
         <span class="i-lucide-history size-3" />{{ lead.follow_up_count }}
       </span>
@@ -385,12 +391,11 @@ const onSchedule = async ({ dueAt, title }) => {
             total: lead.docs_total,
           })
         "
-        class="inline-flex items-center gap-0.5 rounded-full px-1.5"
-        :class="
-          lead.docs_received >= lead.docs_total
-            ? 'bg-n-teal-9/15 text-n-teal-11'
-            : 'bg-n-amber-9/15 text-n-amber-11'
-        "
+        class="font-mono !px-1.5"
+        :class="[
+          CHIP,
+          lead.docs_received >= lead.docs_total ? TOM.teal : TOM.amber,
+        ]"
       >
         <span class="i-lucide-file-check size-3" />{{ lead.docs_received }}/{{
           lead.docs_total
@@ -419,43 +424,45 @@ const onSchedule = async ({ dueAt, title }) => {
 
     <!-- Ações rápidas: sempre visíveis (pedido do Eduardo 17/08) -->
     <div
-      class="flex flex-wrap items-center gap-1 mt-1.5"
+      class="flex flex-wrap items-center gap-1 mt-2"
       :class="selectable ? 'pl-[22px]' : 'pl-0'"
     >
       <!-- SLA estourado: CTA explícito de resposta (reusa a ação de conversa) -->
-      <button
+      <Button
         v-if="slaOverdue && lead.conversation_id"
         data-testid="sla-respond-now"
-        class="px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-white bg-n-iris-9 hover:bg-n-iris-10"
+        :class="BOTAO_COMPACTO"
+        xs
+        :label="$t('RAMON.KANBAN.SLA.RESPOND_NOW')"
         @click.stop="emit('openConversation', lead.conversation_id)"
-      >
-        {{ $t('RAMON.KANBAN.SLA.RESPOND_NOW') }}
-      </button>
-      <button
+      />
+      <Button
         v-if="lead.conversation_id"
         data-testid="open-conversation"
+        :class="BOTAO_COMPACTO"
         :title="$t('RAMON.FUNIL.OPEN_CONVERSATION')"
-        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-n-slate-11 bg-n-alpha-2 hover:bg-n-alpha-3 hover:text-n-iris-11"
+        xs
+        faded
+        slate
+        icon="i-lucide-message-circle"
+        :label="$t('RAMON.KANBAN.CARD.CONVERSATION')"
         @click.stop="emit('openConversation', lead.conversation_id)"
-      >
-        <span class="i-lucide-message-circle size-3" />{{
-          $t('RAMON.KANBAN.CARD.CONVERSATION')
-        }}
-      </button>
+      />
       <TaskBellMenu
         :label="$t('RAMON.KANBAN.BELL.DEFAULT_TITLE')"
         @schedule="onSchedule"
       />
-      <button
+      <Button
         data-testid="open-dossie"
+        :class="BOTAO_COMPACTO"
         :title="$t('RAMON.KANBAN.CARD.DOSSIE')"
-        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold text-n-slate-11 bg-n-alpha-2 hover:bg-n-alpha-3 hover:text-n-iris-11"
+        xs
+        faded
+        slate
+        icon="i-lucide-file-text"
+        :label="$t('RAMON.KANBAN.CARD.DOSSIE')"
         @click.stop="emit('openDossie', lead)"
-      >
-        <span class="i-lucide-file-text size-3" />{{
-          $t('RAMON.KANBAN.CARD.DOSSIE')
-        }}
-      </button>
+      />
     </div>
   </div>
 </template>
