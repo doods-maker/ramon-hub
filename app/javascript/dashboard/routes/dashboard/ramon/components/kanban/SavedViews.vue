@@ -30,7 +30,6 @@ const ACTIVE_KEY = 'ramon_lead_board_active';
 const COLLAPSED_KEY = 'ramon_kanban_collapsed';
 
 const boards = computed(() => uiSettings.value?.ramon_lead_boards ?? []);
-const leads = computed(() => getters['leads/getLeads']?.value ?? []);
 const currentFilters = computed(() => getters['leads/getFilters']?.value ?? {});
 
 // Conversão do legado: roda uma única vez quando os ui_settings chegam com
@@ -69,43 +68,6 @@ const persistActive = id => {
 const activeBoard = computed(
   () => boards.value.find(board => board.id === activeBoardId.value) || null
 );
-
-const eq = (a, b) => String(a) === String(b);
-
-// Contador client-side sobre os leads já carregados. A busca textual (q) NÃO
-// entra aqui — o texto é resolvido server-side e não temos como reproduzi-lo.
-const matchesFilters = (lead, filters = {}) => {
-  if (filters.leadStageId && !eq(lead.lead_stage_id, filters.leadStageId))
-    return false;
-  if (filters.benefitTypeId && !eq(lead.benefit_type_id, filters.benefitTypeId))
-    return false;
-  if (
-    filters.leadPriorityId &&
-    !eq(lead.lead_priority_id, filters.leadPriorityId)
-  )
-    return false;
-  if (filters.source && !eq(lead.source, filters.source)) return false;
-  // agentId no servidor casa SDR ou Closer (leads_controller).
-  if (
-    filters.agentId &&
-    !eq(lead.sdr_id, filters.agentId) &&
-    !eq(lead.closer_id, filters.agentId)
-  )
-    return false;
-  if (filters.channel && !eq(lead.channel, filters.channel)) return false;
-  if (filters.stalled && !lead.stalled) return false;
-  if (filters.noOpenTask && lead.open_tasks_count !== 0) return false;
-  // created_at é ISO; comparar só a data (YYYY-MM-DD) evita ruído de fuso.
-  const leadDate = lead.created_at ? lead.created_at.slice(0, 10) : null;
-  if (filters.createdAfter && (!leadDate || leadDate < filters.createdAfter))
-    return false;
-  if (filters.createdBefore && (!leadDate || leadDate > filters.createdBefore))
-    return false;
-  return true;
-};
-
-const countFor = filters =>
-  leads.value.filter(lead => matchesFilters(lead, filters)).length;
 
 const open = ref(false);
 const close = () => {
@@ -281,9 +243,6 @@ const confirmRemove = () => {
           <span class="flex-1 truncate">
             {{ $t('RAMON.FUNIL.BOARDS.ALL') }}
           </span>
-          <span class="font-mono text-xs text-n-slate-10">{{
-            leads.length
-          }}</span>
         </button>
         <div
           v-for="board in boards"
@@ -306,17 +265,6 @@ const confirmRemove = () => {
               :style="{ backgroundColor: board.color }"
             />
             <span class="flex-1 truncate">{{ board.name }}</span>
-            <span
-              data-testid="board-count"
-              class="font-mono text-xs"
-              :class="
-                board.id === activeBoardId
-                  ? 'text-n-blue-11'
-                  : 'text-n-slate-10'
-              "
-            >
-              {{ countFor(board.filters) }}
-            </span>
           </button>
           <Button
             data-testid="board-rename"

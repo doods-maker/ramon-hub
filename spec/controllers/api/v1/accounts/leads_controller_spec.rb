@@ -457,6 +457,16 @@ RSpec.describe 'Leads API', type: :request do
       expect(ids(response)).to eq([hit.id])
     end
 
+    it 'busca q por telefone formatado casando os dígitos do E.164' do
+      contato = create(:contact, account: account, phone_number: '+5548998123456')
+      hit = account.leads.create!(name: 'Fulano', lead_stage: novo, contact: contato)
+      account.leads.create!(name: 'Outro', lead_stage: novo)
+      ['(48) 99812-3456', '99812-3456'].each do |q|
+        get "/api/v1/accounts/#{account.id}/leads", params: { q: q }, headers: admin.create_new_auth_token
+        expect(ids(response)).to eq([hit.id])
+      end
+    end
+
     it 'filtra por lead_stage_id' do
       a = account.leads.create!(name: 'A', lead_stage: qualif)
       account.leads.create!(name: 'B', lead_stage: novo)

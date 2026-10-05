@@ -346,8 +346,7 @@
       },
       "DOCK_CLOSE": "Close conversation",
       "LOAD_ERROR": "Couldn't load the pipeline",
-      "CONVERSATION_ERROR": "Couldn't load the conversation",
-      "SEARCH_HINT": "Search (Ctrl K)"
+      "CONVERSATION_ERROR": "Couldn't load the conversation"
     },
     "KANBAN": {
       "CARD": {
@@ -387,7 +386,7 @@
       },
       "COLUMN": {
         "CONVERSION_TIP": "% of leads that advance from this stage (90d)",
-        "STALLED": "{count} no contact >24h",
+        "STALLED": "{count} stalled",
         "PRESCRIBING": "{value}/mo prescribing",
         "COLLAPSE": "Collapse column",
         "EXPAND": "Expand column",
@@ -430,7 +429,10 @@
         "CLEAR": "Clear",
         "ESC_HINT": "Esc cancels",
         "QUEUED": "Batch queued — cards will refresh shortly",
-        "ERROR": "Couldn't run the batch — try again"
+        "ERROR": "Couldn't run the batch — try again",
+        "WON_TITLE": "Mark {count} lead(s) as won?",
+        "WON_MESSAGE": "Marking as won hands each case over to the legal team, closes it in AdvBox, drafts the NPS message and exports it to Drive. Each lead keeps its own value.",
+        "WON_CONFIRM": "Mark as won"
       }
     },
     "TASKS": {

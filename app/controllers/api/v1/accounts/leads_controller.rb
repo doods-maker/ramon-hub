@@ -186,10 +186,13 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     Current.account_user&.administrator?
   end
 
+  # Telefone é gravado em E.164 (+5548998123456): "(48) 99812-3456" só casa
+  # pelos dígitos. Com 8+ dígitos a busca também compara só os números.
   def search_leads(leads, query)
-    like = "%#{query}%"
-    leads.left_joins(:contact)
-         .where('leads.name ILIKE :q OR contacts.name ILIKE :q OR contacts.phone_number ILIKE :q', q: like)
+    conditions = ['leads.name ILIKE :q', 'contacts.name ILIKE :q', 'contacts.phone_number ILIKE :q']
+    digits = query.to_s.delete('^0-9')
+    conditions << 'contacts.phone_number LIKE :digits' if digits.length >= 8
+    leads.left_joins(:contact).where(conditions.join(' OR '), q: "%#{query}%", digits: "%#{digits}%")
   end
 
   def create_lead_for(conversation)

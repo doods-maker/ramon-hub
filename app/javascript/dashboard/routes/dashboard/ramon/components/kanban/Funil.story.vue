@@ -195,6 +195,8 @@ const LEADS = [
     docs_received: 4,
     conversation_id: 106,
     contact_phone: '+55 48 99933-8080',
+    // SLA de 1º contato vencido e nunca respondido, mas o lead já avançou
+    sla: { due_at: diasAtras(3), minutes: 60 },
     stage_entered_at: diasAtras(2),
     next_task_due_at: emDiasAs(2, 14),
     next_task_title: 'Reunião',
@@ -261,6 +263,7 @@ const LEADS = [
     docs_received: 6,
     won_at: diasAtras(3),
     docs_completos_em: diasAtras(2),
+    sla: { due_at: diasAtras(9), minutes: 60 },
     conversation_id: 109,
     contact_phone: '+55 48 99876-5432',
     open_tasks_count: 0,
@@ -364,6 +367,9 @@ window.axios = {
 };
 
 const store = useStore();
+// Sem router no harness: o papel (getCurrentRole) lê a conta da rota.
+if (!store.hasModule('route'))
+  store.registerModule('route', { state: { params: { accountId: 1 } } });
 store.commit(types.SET_CURRENT_USER, {
   id: 1,
   ui_settings: {
@@ -414,11 +420,11 @@ const colunas = () => estado();
 const raias = () => estado({ view: 'lanes' });
 const lista = () => {
   estado({ view: 'list' });
-  store.commit(types.SET_LEAD_SELECTION, [4, 6]);
+  store.dispatch('leads/selectMany', [4, 6]);
 };
 const filtros = () => {
   estado({ filtros: { agentId: 1, channel: 'whatsapp' }, quadro: 1 });
-  store.commit(types.SET_LEAD_SELECTION, [4, 6]);
+  store.dispatch('leads/selectMany', [4, 6]);
   clicar('[data-testid="filters-toggle"]');
 };
 const quadros = () => {
@@ -438,6 +444,24 @@ const sino = () => {
 const gaveta = () => {
   estado();
   store.dispatch('leads/select', 4);
+};
+// Lote de 2 leads → Mover etapa → Ganho (5ª opção do menu), num clique só
+// para a janela de confirmação já estar aberta no print.
+const loteGanho = () => {
+  estado();
+  store.dispatch('leads/selectMany', [4, 6]);
+  setTimeout(() => {
+    document.querySelector('[data-testid="bulk-move-stage"]')?.click();
+    document.querySelectorAll('[data-testid="bulk-stage-option"]')[4]?.click();
+  }, 1500);
+};
+// Agente (não admin): etapas não são editáveis por ele.
+const naoAdmin = () => {
+  estado();
+  store.commit(types.SET_CURRENT_USER, {
+    ...store.getters.getCurrentUser,
+    accounts: [{ id: 1, role: 'agent' }],
+  });
 };
 </script>
 
@@ -479,6 +503,16 @@ const gaveta = () => {
       </div>
     </Variant>
     <Variant title="Gaveta" :init-state="gaveta">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
+    <Variant title="Lote ganho" :init-state="loteGanho">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
+    <Variant title="Não admin" :init-state="naoAdmin">
       <div class="h-screen flex flex-col bg-n-background">
         <KanbanBoard />
       </div>

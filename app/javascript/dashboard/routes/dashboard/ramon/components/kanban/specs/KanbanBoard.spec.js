@@ -3,6 +3,7 @@ import { createStore } from 'vuex';
 import KanbanBoard from '../KanbanBoard.vue';
 import KanbanColumn from '../KanbanColumn.vue';
 import RemoveStageModal from '../RemoveStageModal.vue';
+import WonValueModal from '../WonValueModal.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
@@ -15,8 +16,9 @@ vi.mock('dashboard/composables', () => ({
 }));
 
 const dispatch = vi.fn();
-const buildStore = () =>
+const buildStore = ({ role = 'administrator', wonRequest = null } = {}) =>
   createStore({
+    getters: { getCurrentRole: () => role },
     modules: {
       leads: {
         namespaced: true,
@@ -25,6 +27,7 @@ const buildStore = () =>
           getLeads: () => [{ id: 10, lead_stage_id: 1, position: 0 }],
           getSelectedIds: () => [],
           getDockConversationId: () => null,
+          getWonRequest: () => wonRequest,
           getUIFlags: () => ({ isFetching: false }),
           getFilters: () => ({
             q: '',
@@ -57,8 +60,8 @@ const buildStore = () =>
     },
   });
 
-const mountBoard = () => {
-  const store = buildStore();
+const mountBoard = options => {
+  const store = buildStore(options);
   store.dispatch = dispatch;
   return mount(KanbanBoard, {
     global: {
@@ -232,6 +235,52 @@ describe('KanbanBoard.vue', () => {
     await draggable.vm.$emit('change');
 
     expect(dispatch).toHaveBeenCalledWith('leadConfig/reorderStages', [2, 1]);
+  });
+
+  it('pedido de ganho do Ctrl K abre o modal de valor e grava no confirmar', async () => {
+    const wrapper = mountBoard({ wonRequest: { id: 10, leadStageId: 5 } });
+    await wrapper.vm.$nextTick();
+    // consome o pedido para não reabrir
+    expect(dispatch).toHaveBeenCalledWith('leads/requestWon', null);
+    const modal = wrapper.findComponent(WonValueModal);
+    expect(modal.exists()).toBe(true);
+
+    modal.vm.$emit('confirmValue', { value: 1500 });
+    await wrapper.vm.$nextTick();
+    expect(dispatch).toHaveBeenCalledWith(
+      'leads/update',
+      expect.objectContaining({ id: 10, lead_stage_id: 5, value: 1500 })
+    );
+  });
+
+  it('agente não vê + Etapa nem o menu da etapa e não reordena colunas', () => {
+    const wrapper = mountBoard({ role: 'agent' });
+    expect(wrapper.find('[data-testid="add-stage"]').exists()).toBe(false);
+    expect(wrapper.findComponent(KanbanColumn).props('editable')).toBe(false);
+    expect(wrapper.find('[data-testid="stage-menu-toggle"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('admin edita etapas', () => {
+    const wrapper = mountBoard();
+    expect(wrapper.find('[data-testid="add-stage"]').exists()).toBe(true);
+    expect(wrapper.findComponent(KanbanColumn).props('editable')).toBe(true);
+  });
+
+  it('busca do header atualiza o filtro q com debounce', async () => {
+    vi.useFakeTimers();
+    const wrapper = mountBoard();
+    await wrapper.find('[data-testid="funil-search"]').setValue('99812-3456');
+    expect(dispatch).not.toHaveBeenCalledWith(
+      'leads/setFilters',
+      expect.anything()
+    );
+    vi.advanceTimersByTime(300);
+    expect(dispatch).toHaveBeenCalledWith('leads/setFilters', {
+      q: '99812-3456',
+    });
+    vi.useRealTimers();
   });
 
   describe('undo do drag & drop', () => {

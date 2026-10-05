@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { computed } from 'vue';
 import { useStoreGetters } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CAMPO, SELECT } from '../../helpers/ui';
@@ -44,22 +44,7 @@ const hasActive = computed(() => {
   );
 });
 
-// Busca com debounce ~300ms para não disparar um request por tecla.
-const search = ref(props.filters.q);
-let timer = null;
-watch(search, value => {
-  clearTimeout(timer);
-  if (value === props.filters.q) return;
-  timer = setTimeout(() => emitUpdate({ q: value }), 300);
-});
-// loadFilters restaura o q persistido depois do setup — refletir na caixa
-watch(
-  () => props.filters.q,
-  value => {
-    if (value !== search.value) search.value = value ?? '';
-  }
-);
-
+// A busca (q) fica no header do board; o Limpar daqui também a zera.
 const clearFilters = () => {
   emitUpdate({
     benefitTypeId: null,
@@ -74,19 +59,11 @@ const clearFilters = () => {
     stalled: false,
     noOpenTask: false,
   });
-  search.value = '';
 };
 </script>
 
 <template>
   <div class="flex flex-wrap items-center gap-2 px-4 py-2">
-    <input
-      v-model="search"
-      data-testid="filter-search"
-      class="!w-56"
-      :class="[CAMPO, activeClass(filters.q)]"
-      :placeholder="$t('RAMON.FUNIL.FILTERS.SEARCH')"
-    />
     <select
       data-testid="filter-benefit"
       :class="[ctl, activeClass(filters.benefitTypeId)]"

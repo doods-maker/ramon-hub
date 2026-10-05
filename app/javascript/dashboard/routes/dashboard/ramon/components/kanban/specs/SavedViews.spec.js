@@ -80,7 +80,7 @@ describe('SavedViews (quadros salvos)', () => {
     expect(updateUISettings).not.toHaveBeenCalled();
   });
 
-  it('lista os quadros com contagem client-side e aplica ao clicar', async () => {
+  it('lista os quadros (sem contagem) e aplica ao clicar', async () => {
     settings.current = {
       ramon_lead_boards: [
         {
@@ -101,7 +101,8 @@ describe('SavedViews (quadros salvos)', () => {
 
     const item = wrapper.find('[data-testid="board-item"]');
     expect(item.text()).toContain('WhatsApp');
-    expect(wrapper.find('[data-testid="board-count"]').text()).toBe('1');
+    // contagem saiu: só via ver os leads já filtrados (e datas davam 0)
+    expect(wrapper.find('[data-testid="board-count"]').exists()).toBe(false);
 
     await item.trigger('click');
     expect(dispatch).toHaveBeenCalledWith(

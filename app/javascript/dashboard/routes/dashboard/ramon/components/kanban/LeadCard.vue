@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import { formatBrl, brlCompact } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
+import { slaApplies } from '../../helpers/stage';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, CHIP, TOM, FILETE, BOTAO_COMPACTO } from '../../helpers/ui';
 import TaskBellMenu from './TaskBellMenu.vue';
@@ -116,28 +117,16 @@ const formatDuration = ms => {
   return hours ? `${hours}h ${minutes % 60}min` : `${minutes}min`;
 };
 
-// 1ª etapa do funil (menor position): depois de respondido, o pill teal só
-// faz sentido enquanto o lead ainda está na coluna de entrada.
-const firstStageId = computed(() => {
-  const stages = store?.getters?.['leadConfig/getStages'] || [];
-  if (!stages.length) return null;
-  return [...stages].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]
-    .id;
-});
-
-// Estado do SLA a partir de lead.sla { due_at, replied_at, minutes }.
+// Estado do SLA a partir de lead.sla { due_at, replied_at, minutes }. Fora da
+// etapa de entrada o SLA é história antiga (lead já foi trabalhado): some.
 const slaState = computed(() => {
   const sla = props.lead.sla;
   if (!sla?.due_at) return null;
+  const stages = store?.getters?.['leadConfig/getStages'];
+  if (!slaApplies(props.lead.lead_stage_id, stages)) return null;
   const due = new Date(sla.due_at).getTime();
   if (Number.isNaN(due)) return null;
   if (sla.replied_at) {
-    // fora da 1ª etapa, respondido = história antiga; some do card
-    if (
-      firstStageId.value !== null &&
-      props.lead.lead_stage_id !== firstStageId.value
-    )
-      return null;
     const startedAt = due - (Number(sla.minutes) || 0) * 60000;
     return {
       kind: 'replied',
@@ -438,8 +427,9 @@ const onSchedule = async ({ dueAt, title }) => {
         :label="$t('RAMON.KANBAN.SLA.RESPOND_NOW')"
         @click.stop="emit('openConversation', lead.conversation_id)"
       />
+      <!-- com SLA estourado o "Responder agora" já abre a conversa -->
       <Button
-        v-if="lead.conversation_id"
+        v-if="lead.conversation_id && !slaOverdue"
         data-testid="open-conversation"
         :class="BOTAO_COMPACTO"
         :title="$t('RAMON.FUNIL.OPEN_CONVERSATION')"

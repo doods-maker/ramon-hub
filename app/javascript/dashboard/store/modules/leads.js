@@ -34,6 +34,9 @@ export const state = {
   // Seleção em lote (checkboxes dos cards / linhas da lista).
   selectedIds: [],
   dockConversationId: null,
+  // Pedido de ganho vindo de fora do board (Ctrl K): o board abre o modal de
+  // valor, o mesmo do arrastar. { id, leadStageId } | null.
+  wonRequest: null,
   filters: {
     benefitTypeId: null,
     leadPriorityId: null,
@@ -79,6 +82,9 @@ export const getters = {
   },
   getSelectedIds(_state) {
     return _state.selectedIds;
+  },
+  getWonRequest(_state) {
+    return _state.wonRequest;
   },
 };
 
@@ -180,6 +186,9 @@ export const actions = {
       ...(triage ? { triage: true } : {}),
     });
     commit(types.SET_LEAD_SELECTION, []);
+  },
+  requestWon: ({ commit }, request) => {
+    commit(types.SET_LEAD_WON_REQUEST, request);
   },
   openDock: ({ commit }, conversationId) => {
     commit(types.SET_DOCK_CONVERSATION, conversationId);
@@ -300,6 +309,9 @@ export const mutations = {
   },
   [types.SET_LEAD_SELECTION](_state, ids) {
     _state.selectedIds = ids;
+  },
+  [types.SET_LEAD_WON_REQUEST](_state, request) {
+    _state.wonRequest = request;
   },
   [types.SET_DOCK_CONVERSATION](_state, id) {
     _state.dockConversationId = id;

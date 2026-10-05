@@ -1,7 +1,8 @@
 <script setup>
 // Barra de ações em lote (mock 1d): aparece quando há seleção, fixa embaixo do
 // board. Mover p/ etapa de perda pede o motivo UMA vez (LostReasonModal) e
-// aplica a todos; o resto vira um único POST bulk_actions → job no backend.
+// aplica a todos; p/ etapa de ganho pede confirmação (dispara automações);
+// o resto vira um único POST bulk_actions → job no backend.
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { onKeyStroke } from '@vueuse/core';
@@ -12,6 +13,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import { CARTAO, CAMPO, LINHA, MENU } from '../../helpers/ui';
 import LostReasonModal from './LostReasonModal.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 
 const props = defineProps({
   // Board com modal aberto: o Esc daqui fica mudo.
@@ -47,6 +49,8 @@ const followUpDate = ref('');
 
 // Etapa de perda escolhida no lote: segura até o motivo ser informado.
 const pendingLostStage = ref(null);
+// Etapa de ganho: segura até a confirmação (passagem, AdvBox, NPS, Drive).
+const pendingWonStage = ref(null);
 
 const runBulk = async payload => {
   closeMenus();
@@ -66,6 +70,11 @@ const pickStage = stage => {
     pendingLostStage.value = stage;
     return;
   }
+  if (stage.is_won) {
+    closeMenus();
+    pendingWonStage.value = stage;
+    return;
+  }
   runBulk({ fields: { lead_stage_id: stage.id } });
 };
 
@@ -77,6 +86,13 @@ const confirmLost = async ({ lostReason }) => {
     },
   });
   if (ok) pendingLostStage.value = null;
+};
+
+const confirmWon = async () => {
+  const ok = await runBulk({
+    fields: { lead_stage_id: pendingWonStage.value.id },
+  });
+  if (ok) pendingWonStage.value = null;
 };
 
 const pickAgent = agent => runBulk({ fields: { sdr_id: agent.id } });
@@ -97,7 +113,13 @@ const clearSelection = () => store.dispatch('leads/clearSelection');
 // Esc: fecha menu aberto → senão limpa a seleção. Mudo com modal (do board ou
 // o de perda daqui) e com o dock de conversa aberto (o Esc é dele).
 onKeyStroke('Escape', () => {
-  if (props.suspendEsc || pendingLostStage.value || dockOpen.value) return;
+  if (
+    props.suspendEsc ||
+    pendingLostStage.value ||
+    pendingWonStage.value ||
+    dockOpen.value
+  )
+    return;
   if (openMenu.value) {
     closeMenus();
     return;
@@ -231,6 +253,24 @@ onKeyStroke('Escape', () => {
         :lost-reasons="lostReasons"
         @confirm-move="confirmLost"
         @cancel-move="pendingLostStage = null"
+      />
+    </Transition>
+    <Transition
+      enter-active-class="transition-opacity duration-150"
+      leave-active-class="transition-opacity duration-150"
+      enter-from-class="opacity-0"
+      leave-to-class="opacity-0"
+    >
+      <ConfirmModal
+        v-if="pendingWonStage"
+        :title="
+          $t('RAMON.KANBAN.BULK.WON_TITLE', { count: selectedIds.length })
+        "
+        :message="$t('RAMON.KANBAN.BULK.WON_MESSAGE')"
+        :confirm-label="$t('RAMON.KANBAN.BULK.WON_CONFIRM')"
+        confirm-color="blue"
+        @confirm="confirmWon"
+        @cancel="pendingWonStage = null"
       />
     </Transition>
   </div>

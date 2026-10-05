@@ -212,6 +212,57 @@ describe('LeadCard.vue', () => {
       expect(wrapper.classes()).toContain('border-l-n-ruby-9');
       await wrapper.find('[data-testid="sla-respond-now"]').trigger('click');
       expect(wrapper.emitted('openConversation')[0]).toEqual([99]);
+      // "Conversa" faria o mesmo: com SLA estourado, só o CTA
+      expect(wrapper.find('[data-testid="open-conversation"]').exists()).toBe(
+        false
+      );
+    });
+
+    describe('só na etapa de entrada', () => {
+      const STAGES = [
+        { id: 2, name: 'Reunião', position: 2 },
+        { id: 1, name: 'Novo', position: 1 },
+        { id: 3, name: 'Ganho', position: 3, is_won: true },
+      ];
+      const breached = {
+        due_at: new Date(Date.now() - 167 * minute).toISOString(),
+        replied_at: null,
+        minutes: 60,
+      };
+      const mountInStage = stageId =>
+        shallowMount(LeadCard, {
+          props: { lead: { ...lead, lead_stage_id: stageId, sla: breached } },
+          global: {
+            mocks: { $t: k => k },
+            plugins: [
+              {
+                install: app => {
+                  app.config.globalProperties.$store = {
+                    getters: { 'leadConfig/getStages': STAGES },
+                  };
+                },
+              },
+            ],
+          },
+        });
+
+      it('na etapa de entrada o SLA estourado alerta', () => {
+        const wrapper = mountInStage(1);
+        expect(wrapper.find('[data-testid="sla-pill"]').exists()).toBe(true);
+        expect(wrapper.classes()).toContain('border-l-n-ruby-9');
+      });
+
+      it.each([2, 3])('na etapa %i some pill, filete e CTA', stageId => {
+        const wrapper = mountInStage(stageId);
+        expect(wrapper.find('[data-testid="sla-pill"]').exists()).toBe(false);
+        expect(wrapper.find('[data-testid="sla-respond-now"]').exists()).toBe(
+          false
+        );
+        expect(wrapper.classes()).not.toContain('border-l-n-ruby-9');
+        expect(wrapper.find('[data-testid="open-conversation"]').exists()).toBe(
+          true
+        );
+      });
     });
 
     it('respondido = pill teal com o tempo até a 1ª resposta', () => {

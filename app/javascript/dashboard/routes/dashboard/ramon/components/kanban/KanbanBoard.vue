@@ -7,6 +7,8 @@ import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { downloadCsvFile } from 'dashboard/helper/downloadHelper';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
+import { useAdmin } from 'dashboard/composables/useAdmin';
+import { CAMPO } from '../../helpers/ui';
 import { leadsToCsv } from '../../helpers/leadsCsv';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
@@ -28,6 +30,8 @@ const emit = defineEmits(['new-lead']);
 const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
+// Etapas são do admin (LeadStagePolicy): criar, editar e reordenar.
+const { isAdmin } = useAdmin();
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
 
@@ -91,6 +95,23 @@ const stageLeads = stageId => {
 };
 const filters = computed(() => getters['leads/getFilters'].value);
 const onFilterUpdate = partial => store.dispatch('leads/setFilters', partial);
+
+// Busca do board (nome/contato, server-side) sempre à vista no header, com
+// debounce ~300ms para não disparar um request por tecla.
+const search = ref(filters.value?.q ?? '');
+let searchTimer = null;
+watch(search, value => {
+  clearTimeout(searchTimer);
+  if (value === filters.value?.q) return;
+  searchTimer = setTimeout(() => onFilterUpdate({ q: value }), 300);
+});
+// loadFilters / Limpar / quadro mudam o q por fora — refletir na caixa
+watch(
+  () => filters.value?.q,
+  value => {
+    if (value !== search.value) search.value = value ?? '';
+  }
+);
 
 // Painel de filtros recolhido por padrão — o kanban é o protagonista da tela.
 // O badge no botão mostra quantos filtros estão ativos mesmo com o painel fechado.
@@ -209,6 +230,18 @@ const cancelWon = () => {
   wonModalOpen.value = false;
   boardVersion.value += 1; // devolve o card à origem
 };
+
+// Ctrl K → etapa de ganho: o palette só pede; o modal de valor é o mesmo.
+watch(
+  () => getters['leads/getWonRequest']?.value,
+  request => {
+    if (!request) return;
+    pendingMove.value = { ...request };
+    wonModalOpen.value = true;
+    store.dispatch('leads/requestWon', null);
+  },
+  { immediate: true }
+);
 const onOpenLead = lead => {
   store.dispatch('leads/select', lead.id);
 };
@@ -373,9 +406,6 @@ onMounted(() => {
   store.dispatch('agents/get');
 });
 
-// Busca do header abre o command palette (mesmo padrão do ResolveAction)
-const openPalette = () => document.querySelector('ninja-keys')?.open();
-
 const exportCsv = () => {
   const all = allLeads.value;
   const date = new Date().toISOString().slice(0, 10);
@@ -387,21 +417,23 @@ const exportCsv = () => {
 <template>
   <div class="flex flex-col h-full">
     <div class="px-4 pt-3">
-      <!-- mock 1d: título curto, sem subtítulo; busca abre o palette (⌘K) -->
+      <!-- mock 1d: título curto, sem subtítulo; a busca do board fica à vista
+           (o Ctrl K global continua abrindo o palette) -->
       <RamonPageHeader compact :title="$t('RAMON.FUNIL.TITLE')">
         <template #actions>
-          <Button
-            data-testid="funil-search"
-            :title="$t('RAMON.FUNIL.HOTKEYS_HINT')"
-            sm
-            faded
-            slate
-            start
-            icon="i-lucide-search"
-            class="hidden md:inline-flex w-44 !text-n-slate-10"
-            :label="$t('RAMON.FUNIL.SEARCH_HINT')"
-            @click="openPalette"
-          />
+          <label class="relative mb-0 w-44 md:w-56">
+            <span
+              class="absolute i-lucide-search size-3.5 text-n-slate-10 start-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+            <input
+              v-model="search"
+              data-testid="funil-search"
+              class="!ps-8"
+              :class="[CAMPO, { '!outline-n-blue-8': filters?.q }]"
+              :title="$t('RAMON.FUNIL.HOTKEYS_HINT')"
+              :placeholder="$t('RAMON.FUNIL.FILTERS.SEARCH')"
+            />
+          </label>
           <Button
             data-testid="filters-toggle"
             sm
@@ -533,6 +565,7 @@ const exportCsv = () => {
         v-model="orderedStages"
         group="stages"
         item-key="id"
+        :disabled="!isAdmin"
         ghost-class="ramon-drag-ghost"
         class="flex h-full gap-3"
         handle=".stage-drag-handle"
@@ -546,6 +579,7 @@ const exportCsv = () => {
             selectable
             :selected-lead-ids="selectedIds"
             :conversion-rate="rateFor(element.id)"
+            :editable="isAdmin"
             @move="onMove"
             @open-conversation="onOpenConversation"
             @open-lead="onOpenLead"
@@ -559,6 +593,7 @@ const exportCsv = () => {
         </template>
       </Draggable>
       <Button
+        v-if="isAdmin"
         data-testid="add-stage"
         sm
         faded
