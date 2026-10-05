@@ -7,11 +7,12 @@ RSpec.describe 'Portal Clientes API', type: :request do
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:admin_headers) { admin.create_new_auth_token }
 
+  let(:base) { "/api/v1/accounts/#{account.id}/portal_clientes" }
+
   def na_recepcao(user)
     time = create(:team, account: account, name: Chegada::RECEPCAO)
     create(:team_member, team: time, user: user)
   end
-  let(:base) { "/api/v1/accounts/#{account.id}/portal_clientes" }
 
   before { allow(Ramon::PortalSyncService).to receive(:new).and_return(instance_double(Ramon::PortalSyncService, perform: [])) }
 
@@ -28,7 +29,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(response.parsed_body['metricas']).to include('convidados' => 2, 'entraram' => 2, 'voltaram' => 1, 'enviaram' => 0)
   end
 
-  it 'cria o cliente, sincroniza, gera a senha provisória (devolvida uma vez) e envia o convite' do
+  it 'cria o cliente, sincroniza, gera a senha provisória (devolvida uma vez) e envia o convite', :aggregate_failures do
     with_modified_env SMTP_ADDRESS: 'smtp.exemplo.com' do
       expect do
         post base, headers: headers,
@@ -190,7 +191,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
       expect(response.parsed_body['permissoes']).to eq('gerir_acesso' => false, 'excluir' => false)
     end
 
-    it 'recepção suspende (derruba a sessão, nada é apagado) e reativa' do
+    it 'recepção suspende (derruba a sessão, nada é apagado) e reativa', :aggregate_failures do
       na_recepcao(agent)
       chave = cliente.sessao_chave
       post "#{base}/#{cliente.id}/suspender", headers: headers

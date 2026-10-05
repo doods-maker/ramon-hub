@@ -11,7 +11,13 @@ class AddSuspensaoEAuditoriaAoPortal < ActiveRecord::Migration[7.1]
       t.string :sessao_chave
     end
     add_column :portal_acessos, :cpf, :string
+    criar_portal_eventos
+    reversible { |dir| dir.up { copiar_cpf_dos_acessos } }
+  end
 
+  private
+
+  def criar_portal_eventos
     create_table :portal_eventos do |t|
       t.bigint :portal_cliente_id
       t.bigint :user_id
@@ -20,14 +26,12 @@ class AddSuspensaoEAuditoriaAoPortal < ActiveRecord::Migration[7.1]
       t.datetime :created_at, null: false
       t.index :portal_cliente_id
     end
+  end
 
-    reversible do |dir|
-      dir.up do
-        execute <<~SQL.squish
-          UPDATE portal_acessos SET cpf = portal_clientes.cpf
-          FROM portal_clientes WHERE portal_clientes.id = portal_acessos.portal_cliente_id
-        SQL
-      end
-    end
+  def copiar_cpf_dos_acessos
+    execute <<~SQL.squish
+      UPDATE portal_acessos SET cpf = portal_clientes.cpf
+      FROM portal_clientes WHERE portal_clientes.id = portal_acessos.portal_cliente_id
+    SQL
   end
 end
