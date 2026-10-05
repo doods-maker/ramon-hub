@@ -322,9 +322,7 @@ const reschedule = ({ dueAt }) =>
           </h3>
           <p class="mb-3 text-xs text-n-slate-10">
             {{ task.title
-            }}<template v-if="meetingWhen">
-              · <span class="font-mono">{{ meetingWhen }}</span>
-            </template>
+            }}<template v-if="meetingWhen"> · {{ meetingWhen }} </template>
           </p>
           <div class="flex flex-col gap-2">
             <Button
@@ -379,6 +377,7 @@ const reschedule = ({ dueAt }) =>
         :title="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"
         :message="mensagemCancelar"
         :confirm-label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"
+        :cancel-label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.MANTER')"
         @confirm="cancelar"
         @cancel="cancelarAberto = false"
       />

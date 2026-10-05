@@ -942,7 +942,8 @@
         "CANCELADA": "Meeting cancelled",
         "RESULTADO_TITULO": "How did the meeting go?",
         "NAO_COMPARECEU": "No-show",
-        "SO_CLOSER": "Qualified or not: only the lead's Closer (or a manager) records it."
+        "SO_CLOSER": "Qualified or not: only the lead's Closer (or a manager) records it.",
+        "MANTER": "Keep meeting"
       },
       "ANDAMENTO": {
         "TITLE": "Progress",

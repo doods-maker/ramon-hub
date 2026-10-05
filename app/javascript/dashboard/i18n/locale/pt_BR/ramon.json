@@ -942,7 +942,8 @@
         "CANCELADA": "Reunião cancelada",
         "RESULTADO_TITULO": "Como foi a reunião?",
         "NAO_COMPARECEU": "Não compareceu",
-        "SO_CLOSER": "Qualificada ou não: só o Closer do lead (ou o gestor) registra."
+        "SO_CLOSER": "Qualificada ou não: só o Closer do lead (ou o gestor) registra.",
+        "MANTER": "Manter reunião"
       },
       "ANDAMENTO": {
         "TITLE": "Andamento",
