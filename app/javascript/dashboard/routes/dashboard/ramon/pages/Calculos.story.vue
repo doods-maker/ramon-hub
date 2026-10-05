@@ -30,17 +30,21 @@ const CNIS_RESUMO = {
   nascimento: '1971-04-18',
   competencias: 318,
   vinculos: 6,
+  sexo: 'M',
   avisos: [
     '03/2013: indicador PEXT pendente (remuneração extemporânea)',
     '11/2019: contribuição abaixo do mínimo',
   ],
 };
 
+// Rascunho de verdade: sem contato (sexo desconhecido), fora do funil, sem tese.
 const RASCUNHO = {
   id: 900,
   name: 'Rascunho',
+  source: 'calculo-advbox',
+  thesis_id: null,
   thesis_name: null,
-  contact_sexo: 'M',
+  contact_sexo: null,
   cnis_resumo: null,
 };
 const RASCUNHO_CNIS = { ...RASCUNHO, cnis_resumo: CNIS_RESUMO };
@@ -53,6 +57,15 @@ const LEAD = {
   contact_data_nascimento: '1971-04-18',
   contact_sexo: 'M',
   cnis_resumo: CNIS_RESUMO,
+  custom_attributes: {
+    ultima_simulacao: {
+      mensal: '1825.96',
+      atrasados: '23737.48',
+      honorario_valor: '12599.12',
+      em: '2026-10-02T15:00:00Z',
+      parametros: { der: '2026-09-30', beneficio: 'acidente' },
+    },
+  },
 };
 
 const CNIS_DETALHE = {
@@ -380,6 +393,11 @@ const HISTORICO = {
       tipo: 'painel',
       der: '2026-09-30',
       created_at: '2026-10-05T09:40:00Z',
+      user_name: 'Eduardo Schlata',
+      valor: '3651.92',
+      rascunho: false,
+      substitui_cnis: true,
+      pode_apagar: true,
     },
     {
       id: 30,
@@ -387,6 +405,10 @@ const HISTORICO = {
       tipo: 'honorario',
       der: '2025-11-12',
       created_at: '2026-10-04T16:15:00Z',
+      user_name: 'Ana Paula Martins',
+      valor: '1825.96',
+      rascunho: true,
+      pode_apagar: false,
     },
     {
       id: 29,
@@ -394,6 +416,10 @@ const HISTORICO = {
       tipo: 'pensao',
       der: null,
       created_at: '2026-10-03T11:02:00Z',
+      user_name: 'Eduardo Schlata',
+      valor: '2556.34',
+      rascunho: true,
+      pode_apagar: true,
     },
     {
       id: 28,
@@ -401,6 +427,9 @@ const HISTORICO = {
       tipo: 'planejamento',
       der: null,
       created_at: '2026-10-02T14:27:00Z',
+      user_name: 'Carlos Eduardo Lima',
+      rascunho: true,
+      pode_apagar: false,
     },
   ],
 };
@@ -418,6 +447,26 @@ const API = {
   'leads/900/planejamento': PLANEJAMENTO,
   'leads/900/liquidacao': LIQUIDACAO,
   'leads/42': LEAD,
+  'leads/42/simulacao': SIMULACAO,
+  theses: [
+    { id: 1, name: 'Auxílio-acidente (B36)', active: true },
+    { id: 2, name: 'Aposentadoria por idade', active: true },
+    { id: 3, name: 'Revisão da vida toda', active: false },
+  ],
+  leads: {
+    payload: [
+      {
+        id: 42,
+        name: 'João Carlos Pereira',
+        thesis_name: 'Auxílio-acidente (B36)',
+      },
+      {
+        id: 43,
+        name: 'João Carlos Pereira',
+        thesis_name: 'Aposentadoria por idade',
+      },
+    ],
+  },
   'contacts/search': {
     payload: [
       { id: 5, name: 'João Carlos Pereira', phone_number: '+5548999123456' },
@@ -458,12 +507,14 @@ const preencher = async (sel, valor) => {
   el.dispatchEvent(new Event('change'));
 };
 const clicar = async sel => (await esperar(sel)).click();
+// comCnis: true/false, ou um objeto que sobrepõe respostas da API.
 const roteiro =
   (comCnis, ...passos) =>
   () => {
     respostas = {
       ...API,
       'ramon_calculos/rascunho': comCnis ? RASCUNHO_CNIS : RASCUNHO,
+      ...(typeof comCnis === 'object' ? comCnis : {}),
     };
     setTimeout(async () => {
       // eslint-disable-next-line no-restricted-syntax
@@ -528,6 +579,45 @@ const lead = () => {
   respostas = API;
   route.params = { leadId: 42 };
 };
+
+// ---- melhorias K1–K8
+const sexoUsado = roteiro(true);
+const reabrirConfirma = roteiro(
+  false,
+  clique('calculos-historico-toggle'),
+  clique('calculos-historico-item')
+);
+const tese = roteiro(
+  {
+    'ramon_calculos/rascunho': RASCUNHO_CNIS,
+    'leads/900/simulacao': {
+      ...SIMULACAO,
+      honorario: { valor: null, motivo: 'sem tese' },
+    },
+  },
+  der,
+  aba('honorario'),
+  clique('sim-run')
+);
+const vincular = roteiro(
+  false,
+  clique('calculos-historico-toggle'),
+  clique('calculos-historico-vincular-30'),
+  () => preencher('[data-testid="vincular-busca"]', 'João'),
+  clique('vincular-pessoa')
+);
+const salvarValor = () => {
+  lead();
+  setTimeout(async () => {
+    await der();
+    await clicar('[data-testid="sim-run"]');
+  }, 300);
+};
+const apagar = roteiro(
+  false,
+  clique('calculos-historico-toggle'),
+  clique('calculos-historico-apagar-31')
+);
 </script>
 
 <template>
@@ -566,6 +656,24 @@ const lead = () => {
       <div class="flex min-h-screen"><Calculos /></div>
     </Variant>
     <Variant title="Lead" :init-state="lead">
+      <div class="flex min-h-screen"><Calculos /></div>
+    </Variant>
+    <Variant title="SexoUsado" :init-state="sexoUsado">
+      <div class="flex min-h-screen"><Calculos /></div>
+    </Variant>
+    <Variant title="ReabrirConfirma" :init-state="reabrirConfirma">
+      <div class="flex min-h-screen"><Calculos /></div>
+    </Variant>
+    <Variant title="Tese" :init-state="tese">
+      <div class="flex min-h-screen"><Calculos /></div>
+    </Variant>
+    <Variant title="Vincular" :init-state="vincular">
+      <div class="flex min-h-screen"><Calculos /></div>
+    </Variant>
+    <Variant title="SalvarValor" :init-state="salvarValor">
+      <div class="flex min-h-screen"><Calculos /></div>
+    </Variant>
+    <Variant title="Apagar" :init-state="apagar">
       <div class="flex min-h-screen"><Calculos /></div>
     </Variant>
   </Story>
