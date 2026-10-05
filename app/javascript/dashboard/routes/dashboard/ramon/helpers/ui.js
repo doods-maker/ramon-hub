@@ -57,6 +57,11 @@ export const LINHA =
 // célula das raias (240px) como cabia antes.
 export const BOTAO_COMPACTO = '!gap-1 !px-1.5';
 
+// Tecla de atalho dentro de botão (Esteira, fila do Centro): herda a cor do
+// botão, então serve no primário e no secundário.
+export const ATALHO =
+  'rounded border border-current px-1 font-mono text-[10px] leading-4 opacity-60';
+
 // Menu suspenso (dropdown sobre o conteúdo): mesma pele em todos.
 export const MENU =
   'rounded-xl border border-n-weak bg-n-solid-2 p-1.5 shadow-lg';

@@ -1,6 +1,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 import { brlCompact } from '../../helpers/currency';
+import { CARTAO, SECAO, TOM } from '../../helpers/ui';
 
 // "Semana · time" (mock 1b): ranking por agente + NPS da semana como rodapé.
 defineProps({
@@ -27,10 +28,7 @@ const npsMedia = media =>
 </script>
 
 <template>
-  <div
-    data-testid="team-week"
-    class="flex flex-col gap-2 p-4 rounded-[14px] border border-n-weak bg-n-solid-2"
-  >
+  <div data-testid="team-week" :class="CARTAO" class="flex flex-col gap-2">
     <div
       v-for="row in team"
       :key="row.user_id"
@@ -45,13 +43,14 @@ const npsMedia = media =>
       />
       <span
         v-else
-        class="flex items-center justify-center flex-none rounded-full size-[26px] bg-n-iris-3 text-[10px] font-semibold text-n-slate-12"
+        class="flex items-center justify-center flex-none rounded-full size-[26px] text-[10px] font-semibold"
+        :class="TOM.blue"
       >
         {{ initials(row.name) }}
       </span>
       <span class="text-[13px] truncate text-n-slate-12">{{ row.name }}</span>
       <span
-        class="ml-auto text-xs whitespace-nowrap"
+        class="ml-auto font-mono text-xs whitespace-nowrap"
         :class="row.won_count ? 'text-n-teal-11' : 'text-n-slate-9'"
       >
         <template v-if="row.won_count">
@@ -74,7 +73,8 @@ const npsMedia = media =>
     <p
       v-if="nps && nps.respostas > 0"
       data-testid="team-nps"
-      class="pt-2 mt-1 text-[11px] border-t border-n-weak text-n-slate-10"
+      :class="SECAO"
+      class="mt-1 text-[11px] text-n-slate-10"
     >
       {{
         t('RAMON.COMMAND.TEAM.NPS_LINE', {

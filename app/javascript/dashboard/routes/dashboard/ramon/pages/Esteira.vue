@@ -9,6 +9,19 @@ import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  ATALHO,
+  CARTAO,
+  CARTAO_STATUS,
+  CHIP,
+  FILETE,
+  LINHA,
+  SECAO,
+  SOBRESCRITO,
+  TITULO,
+  TOM,
+} from '../helpers/ui';
 
 const { t } = useI18n();
 const store = useStore();
@@ -61,7 +74,7 @@ const current = computed(() => items.value[0] || null);
 const upcoming = computed(() => items.value.slice(1));
 const nextThree = computed(() => upcoming.value.slice(0, 3));
 
-// Progresso do dia: feitas / (feitas + na fila) — a barra bronze do topo.
+// Progresso do dia: feitas / (feitas + na fila) — a barra azul do topo.
 const dayTotal = computed(() => doneCount.value + total.value);
 const progressPct = computed(() =>
   dayTotal.value ? Math.round((doneCount.value / dayTotal.value) * 100) : 0
@@ -76,12 +89,12 @@ const reasonLabel = reason =>
       : reason.params
   );
 
-// Chips de motivo com severidade (mock 1h): prescrição ruby sólido,
-// tarefa âmbar, resto neutro.
-const reasonChipClass = key => {
-  if (key.startsWith('PRESCRIPTION')) return 'bg-n-ruby-9 text-white';
-  if (key.startsWith('TASK')) return 'bg-n-amber-3 text-n-amber-11';
-  return 'bg-n-alpha-2 text-n-slate-11';
+// Tom do motivo: prescrição ruby, tarefa âmbar, resto neutro. Pinta o chip
+// e o filete do cartão (pelo 1º motivo).
+const tomMotivo = (key = '') => {
+  if (key.startsWith('PRESCRIPTION')) return 'ruby';
+  if (key.startsWith('TASK')) return 'amber';
+  return 'slate';
 };
 
 // Dot de severidade do "Depois desta".
@@ -269,10 +282,10 @@ useKeyboardEvents({
 
 <template>
   <div
-    class="flex flex-col w-full h-full overflow-auto ramon-rail p-4 sm:px-10 sm:py-6"
+    class="flex flex-col w-full h-full overflow-auto bg-n-background p-4 sm:px-10 sm:py-6"
   >
     <!-- Topo: título + progresso do dia + valor em jogo + sair -->
-    <div class="flex flex-wrap items-center gap-4 mb-7">
+    <div class="flex flex-wrap items-center gap-4 mb-6">
       <h1 class="text-[22px] font-semibold leading-none text-n-slate-12">
         {{ t('RAMON.ESTEIRA.FOCUS_TITLE') }}
       </h1>
@@ -281,49 +294,49 @@ useKeyboardEvents({
         data-testid="esteira-progress"
       >
         <span
-          class="block flex-1 h-[5px] overflow-hidden rounded-full bg-n-alpha-2"
+          class="block flex-1 h-1.5 overflow-hidden rounded-full bg-n-alpha-2"
         >
           <span
-            class="block h-full rounded-full bg-n-iris-9 transition-all duration-200"
+            class="block h-full rounded-full bg-n-blue-9 transition-all duration-200"
             :style="{ width: `${progressPct}%` }"
           />
         </span>
         <span
-          class="text-[13px] font-semibold tabular-nums text-n-iris-11 whitespace-nowrap"
+          class="font-mono text-[13px] font-medium tabular-nums text-n-blue-11 whitespace-nowrap"
         >
           {{
             t('RAMON.ESTEIRA.PROGRESS', { done: doneCount, total: dayTotal })
           }}
         </span>
       </div>
-      <span class="text-xs text-n-slate-9 whitespace-nowrap">
+      <span class="text-xs text-n-slate-10 whitespace-nowrap">
         {{ t('RAMON.ESTEIRA.AT_STAKE', { value: brl(valueSum) }) }}
       </span>
-      <button
-        type="button"
+      <Button
         data-testid="esteira-reload"
         :title="t('RAMON.ESTEIRA.RELOAD')"
-        class="flex items-center justify-center rounded-full size-7 text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12 disabled:opacity-50 disabled:pointer-events-none"
+        icon="i-lucide-refresh-cw"
+        xs
+        ghost
+        slate
         :disabled="isLoading"
         @click="fetchEsteira"
-      >
-        <span class="i-lucide-refresh-cw size-4" />
-      </button>
-      <button
-        type="button"
+      />
+      <Button
         data-testid="esteira-exit"
-        class="px-2.5 py-1 text-[11px] rounded-full border border-n-weak text-n-slate-10 hover:text-n-slate-12 hover:bg-n-alpha-2"
+        xs
+        faded
+        slate
+        :label="t('RAMON.ESTEIRA.FOCUS_EXIT')"
         @click="exitFocus"
-      >
-        {{ t('RAMON.ESTEIRA.FOCUS_EXIT') }}
-      </button>
+      />
     </div>
 
     <div v-if="isLoading" class="flex flex-col gap-5 animate-pulse">
       <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-5">
-        <div class="h-96 rounded-2xl bg-n-solid-2" />
+        <div class="h-96 rounded-xl bg-n-alpha-2" />
         <div class="flex flex-col gap-3">
-          <div v-for="n in 3" :key="n" class="h-28 rounded-xl bg-n-solid-2" />
+          <div v-for="n in 3" :key="n" class="h-28 rounded-xl bg-n-alpha-2" />
         </div>
       </div>
     </div>
@@ -332,29 +345,32 @@ useKeyboardEvents({
     <div
       v-else-if="hasError"
       data-testid="esteira-error"
-      class="py-10 text-center border rounded-xl border-n-weak bg-n-solid-2 max-w-2xl"
+      :class="CARTAO"
+      class="py-10 text-center max-w-2xl"
     >
       <p class="text-sm text-n-ruby-11">
         {{ t('RAMON.ESTEIRA.LOAD_ERROR') }}
       </p>
-      <button
-        type="button"
+      <Button
         data-testid="esteira-retry"
-        class="mt-2 text-xs text-n-iris-11 hover:underline"
+        link
+        xs
+        class="mt-2"
+        :label="t('RAMON.LEAD_PANEL.RETRY')"
         @click="fetchEsteira"
-      >
-        {{ t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
 
     <!-- Esteira zerada -->
     <div
       v-else-if="!current"
       data-testid="esteira-empty"
-      class="py-10 text-center border rounded-xl border-n-weak bg-n-solid-2 max-w-2xl"
+      :class="CARTAO"
+      class="py-10 text-center max-w-2xl"
     >
       <span
-        class="inline-flex items-center justify-center mb-3 rounded-full size-12 bg-n-teal-3 text-n-teal-11"
+        class="inline-flex items-center justify-center mb-3 rounded-full size-12"
+        :class="TOM.teal"
       >
         <span class="i-lucide-check-check size-6" />
       </span>
@@ -364,27 +380,24 @@ useKeyboardEvents({
       <p class="mt-1 text-sm text-n-slate-10">
         {{ t('RAMON.ESTEIRA.EMPTY_BODY') }}
       </p>
-      <button
-        type="button"
+      <Button
         data-testid="esteira-empty-cta"
-        class="inline-flex items-center h-9 gap-2 px-4 mt-5 text-sm rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
+        class="mt-5"
+        :label="t('RAMON.ESTEIRA.EMPTY_CTA')"
         @click="openFunnel"
-      >
-        {{ t('RAMON.ESTEIRA.EMPTY_CTA') }}
-      </button>
+      />
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-5">
       <!-- Card hero: o item atual -->
       <div
         data-testid="esteira-current"
-        class="flex flex-col p-6 rounded-2xl border border-n-weak bg-n-solid-1 shadow-sm"
+        :class="[CARTAO_STATUS, FILETE[tomMotivo(current.reasons[0]?.key)]]"
+        class="flex flex-col !p-6"
       >
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <p
-              class="text-[10.5px] font-semibold tracking-[.14em] uppercase text-n-iris-11"
-            >
+            <p :class="SOBRESCRITO" class="text-n-blue-11">
               {{
                 t('RAMON.ESTEIRA.SUGGESTED', {
                   action: t(
@@ -394,14 +407,14 @@ useKeyboardEvents({
               }}
             </p>
             <p
-              class="mt-1 text-[34px] font-semibold leading-[1.05] text-n-slate-12"
+              class="mt-1 text-[30px] font-semibold leading-[1.1] text-n-slate-12"
             >
               {{ current.name }}
             </p>
           </div>
           <span
             v-if="current.value"
-            class="flex-none text-base font-semibold tabular-nums text-n-iris-11"
+            class="flex-none font-mono text-base font-medium tabular-nums text-n-blue-11"
           >
             {{ money(current.value) }}
           </span>
@@ -411,15 +424,11 @@ useKeyboardEvents({
           <span
             v-for="reason in current.reasons"
             :key="reason.key"
-            class="px-2.5 py-0.5 text-[11px] rounded-full"
-            :class="reasonChipClass(reason.key)"
+            :class="[CHIP, TOM[tomMotivo(reason.key)]]"
           >
             {{ reasonLabel(reason) }}
           </span>
-          <span
-            v-if="current.stage_name"
-            class="px-2.5 py-0.5 text-[11px] rounded-full bg-n-alpha-2 text-n-slate-11"
-          >
+          <span v-if="current.stage_name" :class="[CHIP, TOM.slate]">
             {{ current.stage_name }}
           </span>
         </div>
@@ -428,11 +437,10 @@ useKeyboardEvents({
         <div
           v-if="showScript"
           data-testid="esteira-script"
-          class="mt-4 p-4 rounded-xl bg-n-alpha-2 border border-n-weak"
+          :class="SECAO"
+          class="mt-4"
         >
-          <p
-            class="text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
-          >
+          <p :class="TITULO">
             {{
               t('RAMON.ESTEIRA.SCRIPT_TITLE', { thesis: thesis?.name || '' })
             }}
@@ -446,59 +454,56 @@ useKeyboardEvents({
             <p class="text-[13px] leading-relaxed text-n-slate-11">
               {{ item.content }}
             </p>
-            <button
-              type="button"
-              class="mt-1 text-[11px] text-n-iris-11 hover:underline"
+            <Button
               :data-testid="`esteira-script-copy-${item.id}`"
-              @click="copyScript(item)"
-            >
-              {{
+              link
+              xs
+              :label="
                 copiedId === item.id
                   ? t('RAMON.PLAYBOOK.COPIED')
                   : t('RAMON.PLAYBOOK.COPY')
-              }}
-            </button>
+              "
+              @click="copyScript(item)"
+            />
           </div>
           <template v-if="objecaoItems.length">
-            <button
-              type="button"
+            <Button
               data-testid="esteira-script-objections-toggle"
-              class="mt-2 text-[11px] text-n-iris-11 hover:underline"
-              @click="objecoesOpen = !objecoesOpen"
-            >
-              {{
+              link
+              xs
+              slate
+              class="mt-2"
+              :label="
                 objecoesOpen
                   ? t('RAMON.ESTEIRA.SCRIPT_OBJECTIONS_HIDE')
                   : t('RAMON.ESTEIRA.SCRIPT_OBJECTIONS_SHOW')
-              }}
-            </button>
+              "
+              @click="objecoesOpen = !objecoesOpen"
+            />
             <div v-if="objecoesOpen" data-testid="esteira-script-objections">
               <div v-for="item in objecaoItems" :key="item.id" class="mt-2">
                 <p class="text-[13px] leading-relaxed text-n-slate-11">
                   {{ item.content }}
                 </p>
-                <button
-                  type="button"
-                  class="mt-1 text-[11px] text-n-iris-11 hover:underline"
-                  @click="copyScript(item)"
-                >
-                  {{
+                <Button
+                  link
+                  xs
+                  :label="
                     copiedId === item.id
                       ? t('RAMON.PLAYBOOK.COPIED')
                       : t('RAMON.PLAYBOOK.COPY')
-                  }}
-                </button>
+                  "
+                  @click="copyScript(item)"
+                />
               </div>
             </div>
           </template>
         </div>
 
         <!-- Ações com atalho visível -->
-        <div class="flex flex-wrap items-center gap-2.5 pt-5 mt-auto">
-          <button
-            type="button"
+        <div class="flex flex-wrap items-center gap-2 pt-5 mt-auto">
+          <Button
             data-testid="esteira-open-conversation"
-            class="inline-flex items-center h-10 gap-2 px-5 text-sm font-semibold rounded-[11px] bg-n-iris-9 text-white hover:bg-n-iris-10 shadow-md"
             @click="openConversation"
           >
             {{
@@ -506,53 +511,37 @@ useKeyboardEvents({
                 ? t('RAMON.ESTEIRA.OPEN_CONVERSATION')
                 : t('RAMON.ESTEIRA.OPEN_LIFELINE')
             }}
-            <kbd
-              class="px-1 text-[10px] font-sans rounded border border-white/25 bg-white/10"
-            >
-              {{ t('RAMON.ESTEIRA.KEY.OPEN') }}
-            </kbd>
-          </button>
-          <button
-            type="button"
+            <kbd :class="ATALHO">{{ t('RAMON.ESTEIRA.KEY.OPEN') }}</kbd>
+          </Button>
+          <Button
             data-testid="esteira-done"
-            class="inline-flex items-center h-10 gap-2 px-4 text-sm font-semibold rounded-[11px] bg-n-teal-9 text-white hover:bg-n-teal-10 disabled:opacity-50"
+            teal
             :disabled="isActing"
             @click="markDone"
           >
             {{ t('RAMON.ESTEIRA.DONE') }}
-            <kbd
-              class="px-1 text-[10px] font-sans rounded border border-white/25 bg-white/10"
-            >
-              {{ t('RAMON.ESTEIRA.KEY.DONE') }}
-            </kbd>
-          </button>
-          <button
-            type="button"
+            <kbd :class="ATALHO">{{ t('RAMON.ESTEIRA.KEY.DONE') }}</kbd>
+          </Button>
+          <Button
             data-testid="esteira-snooze"
-            class="inline-flex items-center h-10 gap-2 px-4 text-sm rounded-[11px] border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
+            faded
+            slate
             :disabled="isActing"
             @click="snooze"
           >
             {{ t('RAMON.ESTEIRA.SNOOZE') }}
-            <kbd
-              class="px-1 text-[10px] font-sans rounded border border-n-weak text-n-slate-10"
-            >
-              {{ t('RAMON.ESTEIRA.KEY.SNOOZE') }}
-            </kbd>
-          </button>
-          <button
-            type="button"
+            <kbd :class="ATALHO">{{ t('RAMON.ESTEIRA.KEY.SNOOZE') }}</kbd>
+          </Button>
+          <Button
             data-testid="esteira-skip"
-            class="inline-flex items-center h-10 gap-2 px-3.5 ml-auto text-[13px] rounded-[11px] text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12"
+            ghost
+            slate
+            class="ml-auto"
             @click="skip"
           >
             {{ t('RAMON.ESTEIRA.SKIP') }}
-            <kbd
-              class="px-1 text-[10px] font-sans rounded border border-n-weak text-n-slate-10"
-            >
-              {{ t('RAMON.ESTEIRA.KEY.SKIP') }}
-            </kbd>
-          </button>
+            <kbd :class="ATALHO">{{ t('RAMON.ESTEIRA.KEY.SKIP') }}</kbd>
+          </Button>
         </div>
       </div>
 
@@ -562,11 +551,10 @@ useKeyboardEvents({
         <div
           v-if="lastMessage"
           data-testid="esteira-last-message"
-          class="p-4 rounded-xl border border-n-weak bg-n-solid-2"
+          :class="CARTAO"
+          class="!p-4"
         >
-          <p
-            class="mb-2 text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
-          >
+          <p :class="TITULO" class="mb-2">
             {{ t('RAMON.ESTEIRA.LAST_MESSAGE') }} · {{ lastMessageTime }}
           </p>
           <div
@@ -582,18 +570,13 @@ useKeyboardEvents({
         </div>
 
         <!-- Simulador · última simulação -->
-        <div
-          data-testid="esteira-last-simulation"
-          class="p-4 rounded-xl border border-n-weak bg-n-solid-2"
-        >
-          <p
-            class="mb-1.5 text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
-          >
+        <div data-testid="esteira-last-simulation" :class="CARTAO" class="!p-4">
+          <p :class="TITULO" class="mb-1.5">
             {{ t('RAMON.ESTEIRA.LAST_SIMULATION') }}
           </p>
           <template v-if="sim">
             <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-semibold text-n-slate-12">
+              <span class="font-mono text-2xl font-medium text-n-slate-12">
                 {{ money(sim.atrasados) }}
               </span>
               <span class="text-[11px] text-n-slate-10">
@@ -602,12 +585,12 @@ useKeyboardEvents({
             </div>
             <p
               v-if="simParamsLine"
-              class="mt-1 text-[11px] text-n-slate-9"
+              class="mt-1 font-mono text-[11px] text-n-slate-10"
               data-testid="esteira-sim-params"
             >
               {{ simParamsLine }}
             </p>
-            <p v-if="simDate" class="mt-0.5 text-[11px] text-n-slate-9">
+            <p v-if="simDate" class="mt-0.5 text-[11px] text-n-slate-10">
               {{ t('RAMON.ESTEIRA.LAST_SIMULATION_AT', { date: simDate }) }}
             </p>
           </template>
@@ -624,31 +607,31 @@ useKeyboardEvents({
         <div
           v-if="nextThree.length"
           data-testid="esteira-after-this"
-          class="p-4 rounded-xl border border-n-weak bg-n-solid-2"
+          :class="CARTAO"
+          class="!p-4"
         >
-          <p
-            class="mb-2 text-[10.5px] font-semibold tracking-[.1em] uppercase text-n-slate-10"
-          >
+          <p :class="TITULO" class="mb-2">
             {{ t('RAMON.ESTEIRA.AFTER_THIS') }}
           </p>
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-0.5">
             <button
               v-for="(item, index) in nextThree"
               :key="item.lead_id"
               type="button"
               data-testid="esteira-next-item"
-              class="flex items-center w-full gap-2.5 px-1.5 py-1 text-left rounded-lg hover:bg-n-alpha-2"
+              :class="LINHA"
+              class="flex items-center gap-2.5"
               @click="jumpTo(index)"
             >
               <span
-                class="flex-none rounded-full size-[5px]"
+                class="flex-none rounded-full size-1.5"
                 :class="severityDotClass(item)"
               />
               <span class="text-[12.5px] truncate text-n-slate-11">
                 {{ item.name }}
               </span>
               <span
-                class="flex-shrink-0 ml-auto text-[11px] tabular-nums text-n-slate-9"
+                class="flex-shrink-0 ml-auto font-mono text-[11px] tabular-nums text-n-slate-10"
               >
                 {{ item.value ? brl(item.value) : '—' }}
               </span>

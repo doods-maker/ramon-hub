@@ -3,6 +3,8 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, CHIP, SECAO, TOM } from '../../helpers/ui';
 
 // "Enquanto você dormia" (mock 4b): sugestões do copiloto noturno no topo do
 // Cockpit. Nada é enviado ao cliente — aplicar rascunho vira NOTA no lead.
@@ -38,19 +40,19 @@ const runTime = computed(() => {
 const TAGS = {
   draft: {
     label: 'RAMON.NIGHT_COPILOT.TAG_DRAFT',
-    class: 'bg-n-iris-3 text-n-iris-11',
+    class: TOM.blue,
   },
   move_stage: {
     label: 'RAMON.NIGHT_COPILOT.TAG_MOVE_STAGE',
-    class: 'bg-n-amber-3 text-n-amber-11',
+    class: TOM.amber,
   },
   alert: {
     label: 'RAMON.NIGHT_COPILOT.TAG_ALERT',
-    class: 'bg-n-ruby-3 text-n-ruby-11',
+    class: TOM.ruby,
   },
   acao: {
     label: 'RAMON.NIGHT_COPILOT.TAG_ACAO',
-    class: 'bg-n-teal-3 text-n-teal-11',
+    class: TOM.teal,
   },
 };
 const tagFor = kind => TAGS[kind] || TAGS.alert;
@@ -132,30 +134,33 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
   <div
     v-if="uiFlags.hasError"
     data-testid="night-copilot-error"
-    class="p-4 rounded-[14px] border border-n-weak bg-n-solid-2 text-sm"
+    :class="CARTAO"
+    class="text-sm"
   >
     <p class="text-n-ruby-11">{{ t('RAMON.NIGHT_COPILOT.LOAD_ERROR') }}</p>
-    <button
-      type="button"
+    <Button
       data-testid="night-copilot-retry"
-      class="mt-1 text-xs text-n-iris-11 hover:underline"
+      link
+      xs
+      class="mt-1"
+      :label="t('RAMON.NIGHT_COPILOT.RETRY')"
       @click="retry"
-    >
-      {{ t('RAMON.NIGHT_COPILOT.RETRY') }}
-    </button>
+    />
   </div>
 
   <!-- Bloco some quando não há sugestão pendente -->
   <section
     v-else-if="suggestions.length"
     data-testid="night-copilot"
-    class="p-5 rounded-[14px] border border-n-weak bg-n-solid-1"
+    :class="CARTAO"
+    class="!p-4"
   >
-    <div class="flex items-center gap-2.5 mb-3.5">
+    <div class="flex items-center gap-2.5 mb-1">
       <span
-        class="flex items-center justify-center flex-none rounded-[10px] size-[34px] bg-n-iris-9"
+        class="flex items-center justify-center flex-none rounded-lg size-8"
+        :class="TOM.blue"
       >
-        <span class="i-lucide-bot size-[17px] text-white" />
+        <span class="i-lucide-bot size-4" />
       </span>
       <div class="min-w-0">
         <p class="text-sm font-semibold text-n-slate-12">
@@ -171,33 +176,26 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
           }}
         </p>
       </div>
-      <button
+      <Button
         v-if="bulkCount"
-        type="button"
         data-testid="night-copilot-apply-all"
-        class="ml-auto px-3.5 py-[7px] text-xs font-semibold rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+        sm
+        class="ml-auto"
+        :label="t('RAMON.NIGHT_COPILOT.APPROVE_ALL', { count: bulkCount })"
         :disabled="isBulkActing"
         @click="applyAll"
-      >
-        {{ t('RAMON.NIGHT_COPILOT.APPROVE_ALL', { count: bulkCount }) }}
-      </button>
+      />
     </div>
 
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-3">
       <div
         v-for="suggestion in suggestions"
         :key="suggestion.id"
         data-testid="night-copilot-card"
-        class="px-3.5 py-3 rounded-[11px] bg-n-solid-2 border"
-        :class="
-          suggestion.kind === 'alert' ? 'border-n-ruby-5' : 'border-n-weak'
-        "
+        :class="SECAO"
       >
         <div class="flex items-center gap-2">
-          <span
-            class="px-2 py-0.5 text-[9.5px] font-semibold rounded-full uppercase tracking-[.06em]"
-            :class="tagFor(suggestion.kind).class"
-          >
+          <span :class="[CHIP, tagFor(suggestion.kind).class]">
             {{ t(tagFor(suggestion.kind).label) }}
           </span>
           <p class="text-[13px] font-medium text-n-slate-12 truncate">
@@ -205,7 +203,7 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
           </p>
           <span
             v-if="suggestion.payload.days_stalled"
-            class="ml-auto text-[10.5px] text-n-slate-9 flex-none"
+            class="ml-auto text-[10.5px] text-n-slate-10 flex-none"
           >
             {{
               t('RAMON.NIGHT_COPILOT.STALLED_FOR', {
@@ -230,62 +228,56 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
         </p>
 
         <div class="flex gap-1.5 mt-2">
-          <template v-if="suggestion.kind === 'draft'">
-            <button
-              type="button"
-              data-testid="night-copilot-apply"
-              class="px-3 py-1 text-[11px] font-semibold rounded-[7px] bg-n-teal-3 text-n-teal-11 hover:bg-n-teal-4 disabled:opacity-50"
-              :disabled="actingId === suggestion.id"
-              @click="apply(suggestion)"
-            >
-              {{ t('RAMON.NIGHT_COPILOT.SAVE_NOTE') }}
-            </button>
-          </template>
-          <template
+          <Button
+            v-if="suggestion.kind === 'draft'"
+            data-testid="night-copilot-apply"
+            xs
+            faded
+            teal
+            :label="t('RAMON.NIGHT_COPILOT.SAVE_NOTE')"
+            :disabled="actingId === suggestion.id"
+            @click="apply(suggestion)"
+          />
+          <Button
             v-else-if="
               suggestion.kind === 'move_stage' || suggestion.kind === 'acao'
             "
-          >
-            <button
-              type="button"
-              data-testid="night-copilot-apply"
-              class="px-3 py-1 text-[11px] font-semibold rounded-[7px] bg-n-teal-3 text-n-teal-11 hover:bg-n-teal-4 disabled:opacity-50"
-              :disabled="actingId === suggestion.id"
-              @click="apply(suggestion)"
-            >
-              {{ t('RAMON.NIGHT_COPILOT.APPLY') }}
-            </button>
-          </template>
+            data-testid="night-copilot-apply"
+            xs
+            faded
+            teal
+            :label="t('RAMON.NIGHT_COPILOT.APPLY')"
+            :disabled="actingId === suggestion.id"
+            @click="apply(suggestion)"
+          />
           <template v-else>
-            <button
-              type="button"
+            <Button
               data-testid="night-copilot-apply"
-              class="px-3 py-1 text-[11px] font-semibold rounded-[7px] bg-n-alpha-2 text-n-slate-11 hover:text-n-slate-12 disabled:opacity-50"
+              xs
+              faded
+              slate
+              :label="t('RAMON.NIGHT_COPILOT.OK')"
               :disabled="actingId === suggestion.id"
               @click="apply(suggestion)"
-            >
-              {{ t('RAMON.NIGHT_COPILOT.OK') }}
-            </button>
-            <button
-              type="button"
+            />
+            <Button
               data-testid="night-copilot-escalate"
-              class="px-3 py-1 text-[11px] font-semibold rounded-[7px] bg-n-iris-9 text-white hover:bg-n-iris-10 disabled:opacity-50"
+              xs
+              :label="t('RAMON.NIGHT_COPILOT.ESCALATE')"
               :disabled="actingId === suggestion.id"
               @click="escalate(suggestion)"
-            >
-              {{ t('RAMON.NIGHT_COPILOT.ESCALATE') }}
-            </button>
+            />
           </template>
-          <button
+          <Button
             v-if="suggestion.kind !== 'alert'"
-            type="button"
             data-testid="night-copilot-dismiss"
-            class="px-3 py-1 text-[11px] rounded-[7px] text-n-slate-9 hover:text-n-slate-11 disabled:opacity-50"
+            xs
+            ghost
+            slate
+            :label="t('RAMON.NIGHT_COPILOT.DISMISS')"
             :disabled="actingId === suggestion.id"
             @click="dismiss(suggestion)"
-          >
-            {{ t('RAMON.NIGHT_COPILOT.DISMISS') }}
-          </button>
+          />
         </div>
       </div>
     </div>

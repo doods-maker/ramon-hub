@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CARTAO, LINHA, TOM } from '../../helpers/ui';
 
 // "Hoje na agenda" (mock 3c): reuniões do dia vindas do payload do Cockpit.
 const props = defineProps({
@@ -16,7 +18,7 @@ const fmtTime = iso =>
     minute: '2-digit',
   }).format(new Date(iso));
 
-// A PRÓXIMA reunião futura ganha o bloco de hora bronze; as demais, cinza.
+// A PRÓXIMA reunião futura ganha o bloco de hora azul; as demais, cinza.
 const nextId = computed(() => {
   const now = Date.now();
   const next = props.items.find(item => new Date(item.due_at).getTime() >= now);
@@ -28,30 +30,25 @@ const metaLine = item =>
 </script>
 
 <template>
-  <div
-    data-testid="agenda-today"
-    class="flex flex-col p-3.5 rounded-[14px] border border-n-weak bg-n-solid-2"
-  >
+  <div data-testid="agenda-today" :class="CARTAO" class="flex flex-col">
     <template v-if="items.length">
       <button
         v-for="(item, index) in items"
         :key="item.id"
         type="button"
         data-testid="agenda-item"
-        class="flex items-start w-full gap-3 px-1 py-2.5 text-left rounded-lg hover:bg-n-alpha-2"
-        :class="index > 0 ? 'border-t border-n-weak' : ''"
+        :class="[
+          LINHA,
+          index > 0 ? 'border-t border-n-weak !rounded-none' : '',
+        ]"
+        class="flex items-start gap-3 !py-2.5"
         @click="emit('select', item.lead_id)"
       >
         <span
-          class="flex-none w-[52px] py-1 text-center rounded-lg"
-          :class="item.id === nextId ? 'bg-n-iris-3' : 'bg-n-alpha-2'"
+          class="flex-none w-[52px] py-1 text-center rounded-lg font-mono text-sm font-medium tabular-nums"
+          :class="item.id === nextId ? TOM.blue : TOM.slate"
         >
-          <span
-            class="block text-sm font-semibold tabular-nums"
-            :class="item.id === nextId ? 'text-n-iris-11' : 'text-n-slate-11'"
-          >
-            {{ fmtTime(item.due_at) }}
-          </span>
+          {{ fmtTime(item.due_at) }}
         </span>
         <span class="flex-1 min-w-0">
           <span
@@ -64,14 +61,15 @@ const metaLine = item =>
           </span>
         </span>
       </button>
-      <button
-        type="button"
-        data-testid="agenda-view-week"
-        class="pt-2 mt-1 text-[11px] text-center text-n-iris-11 border-t border-n-weak hover:underline"
-        @click="emit('viewWeek')"
-      >
-        {{ t('RAMON.COMMAND.AGENDA.VIEW_WEEK') }}
-      </button>
+      <div class="flex justify-center pt-2 mt-1 border-t border-n-weak">
+        <Button
+          data-testid="agenda-view-week"
+          link
+          xs
+          :label="t('RAMON.COMMAND.AGENDA.VIEW_WEEK')"
+          @click="emit('viewWeek')"
+        />
+      </div>
     </template>
     <p v-else data-testid="agenda-empty" class="text-xs text-n-slate-10">
       {{ t('RAMON.COMMAND.AGENDA.EMPTY') }}

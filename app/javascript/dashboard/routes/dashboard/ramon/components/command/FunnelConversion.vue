@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { brlCompact } from '../../helpers/currency';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import { CARTAO, LINHA } from '../../helpers/ui';
 
 // "Funil · conversão" (mock 1b): barra segmentada por etapa aberta +
 // "↳ N% avançam" entre etapas, usando o bloco `conversion` do payload.
@@ -38,12 +39,13 @@ const color = stage => stage.color || DEFAULT_STAGE_COLOR;
   <div
     v-if="stages.length"
     data-testid="funnel-conversion"
-    class="flex flex-col gap-2.5 p-4 rounded-[14px] border border-n-weak bg-n-solid-2"
+    :class="CARTAO"
+    class="flex flex-col gap-2.5"
   >
     <div
       v-if="segments.length"
       data-testid="funnel-bar"
-      class="flex h-[34px] gap-0.5 overflow-hidden rounded-lg"
+      class="flex h-7 gap-0.5 overflow-hidden rounded-lg"
     >
       <button
         v-for="stage in segments"
@@ -55,33 +57,34 @@ const color = stage => stage.color || DEFAULT_STAGE_COLOR;
           flex: `${stage.count} 1 0%`,
           backgroundColor: color(stage),
         }"
-        class="opacity-90 hover:opacity-100"
+        class="opacity-80 hover:opacity-100"
         @click="emit('stageSelect', stage.stage_id)"
       />
     </div>
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-0.5">
       <template v-for="stage in openStages" :key="stage.stage_id">
         <button
           type="button"
           data-testid="funnel-stage"
-          class="flex items-center w-full gap-2 px-1 py-0.5 text-left rounded hover:bg-n-alpha-2"
+          :class="LINHA"
+          class="flex items-center gap-2 !py-1"
           @click="emit('stageSelect', stage.stage_id)"
         >
           <span
-            class="flex-none size-2 rounded-[2px]"
+            class="flex-none rounded-full size-2"
             :style="{ backgroundColor: color(stage) }"
           />
           <span class="text-[12.5px] truncate text-n-slate-12">
             {{ stage.name }}
           </span>
-          <span class="ml-auto text-[12.5px] tabular-nums text-n-slate-10">
+          <span class="ml-auto font-mono text-xs tabular-nums text-n-slate-10">
             {{ stage.count }} · {{ brlCompact(stage.weighted_value) }}
           </span>
         </button>
         <p
           v-if="rateFor(stage) !== null"
           data-testid="funnel-rate"
-          class="pl-4 text-[11px] text-n-slate-9"
+          class="pl-4 text-[11px] text-n-slate-10"
         >
           {{ t('RAMON.COMMAND.FUNNEL.ADVANCE', { rate: rateFor(stage) }) }}
         </p>
@@ -90,17 +93,18 @@ const color = stage => stage.color || DEFAULT_STAGE_COLOR;
         v-if="wonStage"
         type="button"
         data-testid="funnel-won"
-        class="flex items-center w-full gap-2 px-1 py-0.5 text-left rounded hover:bg-n-alpha-2"
+        :class="LINHA"
+        class="flex items-center gap-2 !py-1"
         @click="emit('stageSelect', wonStage.stage_id)"
       >
         <span
-          class="flex-none size-2 rounded-[2px]"
+          class="flex-none rounded-full size-2"
           :style="{ backgroundColor: color(wonStage) }"
         />
         <span class="text-[12.5px] truncate text-n-slate-12">
           {{ wonStage.name }}
         </span>
-        <span class="ml-auto text-[12.5px] tabular-nums text-n-teal-11">
+        <span class="ml-auto font-mono text-xs tabular-nums text-n-teal-11">
           {{ wonStage.count }} · {{ brlCompact(wonStage.total_value) }}
         </span>
       </button>
