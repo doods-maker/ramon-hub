@@ -972,7 +972,9 @@
       "REFRESH": "Atualizar",
       "WORKING": "Gerando…",
       "SUMMARY_TITLE": "Resumo da IA",
-      "EMPTY": "Sem resumo ainda — clique em Atualizar para gerar a partir da conversa.",
+      "GENERATE": "gerar →",
+      "SEE_ALL": "ver tudo",
+      "SEE_LESS": "ver menos",
       "DRAFT_READY": "Rascunho inserido no editor — revise antes de enviar",
       "ERROR": "Não foi possível gerar. Tente de novo."
     },

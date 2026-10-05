@@ -8,16 +8,15 @@ const summaries = reactive(new Map()); // conversationId → { summary, generate
 </script>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
-import { emitter } from 'shared/helpers/mitt';
-import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, TITULO } from '../../helpers/ui';
 
+// Linha "Resumo da IA" do Resumo (o "Sugerir resposta" fica no cabeçalho).
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
 });
@@ -27,86 +26,110 @@ const { t } = useI18n();
 const cached = computed(() => summaries.get(String(props.conversationId)));
 const summary = computed(() => cached.value?.summary || '');
 const generatedAt = computed(() => cached.value?.generatedAt ?? null);
-const loading = ref(''); // '' | 'summary' | 'draft'
+const loading = ref(false);
+const expanded = ref(false);
+watch(
+  () => props.conversationId,
+  () => {
+    expanded.value = false;
+  }
+);
 
 const generatedAgo = computed(() =>
   generatedAt.value ? dynamicTime(generatedAt.value / 1000) : null
 );
+// ponytail: "longo" por tamanho (~60 caracteres por linha nos 400px), sem
+// medir o DOM; medir o scrollHeight se o "ver tudo" sobrar ou faltar.
+const longo = computed(
+  () => summary.value.length > 180 || summary.value.split('\n').length > 3
+);
 
-const generate = async mode => {
+const generate = async () => {
   if (loading.value) return;
-  loading.value = mode;
+  loading.value = true;
   // id capturado antes do await: trocar de conversa no meio não troca o dono
   const id = props.conversationId;
   try {
-    const { data } = await RamonCopilotAPI.generate(id, mode);
-    if (mode === 'summary') {
-      summaries.set(String(id), {
-        summary: data.content,
-        generatedAt: Date.now(),
-      });
-    } else {
-      // Cai como rascunho no editor de resposta (ReplyBox escuta este evento);
-      // nada é enviado — quem envia é o Eduardo.
-      emitter.emit(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, data.content);
-      useAlert(t('RAMON.COPILOT.DRAFT_READY'));
-    }
+    const { data } = await RamonCopilotAPI.generate(id, 'summary');
+    summaries.set(String(id), {
+      summary: data.content,
+      generatedAt: Date.now(),
+    });
   } catch (error) {
     useAlert(error?.response?.data?.error || t('RAMON.COPILOT.ERROR'));
   } finally {
-    loading.value = '';
+    loading.value = false;
   }
 };
 </script>
 
 <template>
-  <!-- Card "Resumo da IA" do mock 1f: header + texto + chips de ação -->
   <div data-testid="lead-copilot" :class="CARTAO">
-    <div class="flex items-center justify-between gap-2">
-      <p :class="TITULO">
-        {{ $t('RAMON.COPILOT.SUMMARY_TITLE') }}
-      </p>
-      <span
-        v-if="generatedAgo"
-        data-testid="copilot-summary-time"
-        class="text-[10.5px] text-n-slate-9"
-      >
-        {{ generatedAgo }}
-      </span>
-    </div>
-    <p
-      data-testid="copilot-summary"
-      class="mt-1.5 text-[12.5px] leading-[1.55] whitespace-pre-wrap break-words"
-      :class="summary ? 'text-n-slate-11' : 'text-n-slate-9'"
+    <!-- sem resumo: uma linha só, clicar gera -->
+    <button
+      v-if="!summary"
+      type="button"
+      data-testid="copilot-summarize"
+      class="flex items-center w-full gap-1.5 p-0 text-left text-xs text-n-slate-11 hover:text-n-slate-12 disabled:opacity-60"
+      :disabled="loading"
+      @click="generate"
     >
-      {{ summary || $t('RAMON.COPILOT.EMPTY') }}
-    </p>
-    <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
+      <span class="i-lucide-sparkles size-3.5 shrink-0 text-n-blue-11" />
+      <span class="font-medium text-n-slate-12">
+        {{ $t('RAMON.COPILOT.SUMMARY_TITLE') }}
+      </span>
+      <span>·</span>
+      <span class="text-n-blue-11">
+        {{
+          loading ? $t('RAMON.COPILOT.WORKING') : $t('RAMON.COPILOT.GENERATE')
+        }}
+      </span>
+    </button>
+    <template v-else>
+      <div class="flex items-center gap-2">
+        <p :class="TITULO">
+          {{ $t('RAMON.COPILOT.SUMMARY_TITLE') }}
+          <span
+            data-testid="copilot-summary-time"
+            class="normal-case tracking-normal font-normal text-n-slate-9"
+          >
+            {{ `· ${generatedAgo}` }}
+          </span>
+        </p>
+        <Button
+          data-testid="copilot-summarize"
+          xs
+          ghost
+          slate
+          icon="i-lucide-refresh-cw"
+          class="ml-auto"
+          :class="{ 'animate-spin': loading }"
+          :disabled="loading"
+          :aria-label="$t('RAMON.COPILOT.REFRESH')"
+          :title="$t('RAMON.COPILOT.REFRESH')"
+          @click="generate"
+        />
+      </div>
+      <p
+        data-testid="copilot-summary"
+        class="mt-1 text-[12.5px] leading-[1.55] text-n-slate-11 whitespace-pre-wrap break-words"
+        :class="{ 'line-clamp-3': !expanded }"
+      >
+        {{ summary }}
+      </p>
       <Button
-        data-testid="copilot-suggest"
-        sm
-        icon="i-lucide-sparkles"
-        :disabled="Boolean(loading)"
-        :label="
-          loading === 'draft'
-            ? $t('RAMON.COPILOT.WORKING')
-            : $t('RAMON.COPILOT.SUGGEST')
-        "
-        @click="generate('draft')"
-      />
-      <Button
-        data-testid="copilot-summarize"
-        sm
-        faded
+        v-if="longo"
+        data-testid="copilot-toggle"
+        link
         slate
-        :disabled="Boolean(loading)"
+        xs
+        trailing-icon
+        :icon="expanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
         :label="
-          loading === 'summary'
-            ? $t('RAMON.COPILOT.WORKING')
-            : $t('RAMON.COPILOT.REFRESH')
+          expanded ? $t('RAMON.COPILOT.SEE_LESS') : $t('RAMON.COPILOT.SEE_ALL')
         "
-        @click="generate('summary')"
+        @click="expanded = !expanded"
       />
-    </div>
+    </template>
   </div>
 </template>

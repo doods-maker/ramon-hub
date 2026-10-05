@@ -17,6 +17,7 @@ import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
+import LeadSugerirResposta from '../conversation/LeadSugerirResposta.vue';
 import LeadPlaybook from '../conversation/LeadPlaybook.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
 import DocChecklist from './DocChecklist.vue';
@@ -820,6 +821,12 @@ const discard = async () => {
             class="w-full"
           />
         </a>
+        <!-- Sugerir resposta (copiloto) divide a linha com o + Tarefa -->
+        <LeadSugerirResposta
+          v-if="inConversation && conversationId"
+          :conversation-id="conversationId"
+          class="flex-1"
+        />
         <Button
           data-testid="panel-add-task"
           sm

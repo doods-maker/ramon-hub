@@ -506,6 +506,25 @@ describe('LeadPanelBody', () => {
       );
     });
 
+    it('"Sugerir resposta" fica no cabeçalho ao lado do + Tarefa, só na conversa', () => {
+      const sugerir = w => w.findComponent({ name: 'LeadSugerirResposta' });
+      const wrapper = mountBody();
+      expect(sugerir(wrapper).props('conversationId')).toBe(42);
+      expect(sugerir(wrapper).element.parentElement).toBe(
+        wrapper.find('[data-testid="panel-add-task"]').element.parentElement
+      );
+      // o Resumo da IA continua no corpo, só com o resumo
+      expect(
+        wrapper
+          .find('[data-testid="lead-panel-corpo"]')
+          .findComponent({ name: 'LeadCopilot' })
+          .exists()
+      ).toBe(true);
+      expect(
+        sugerir(mountBody({ props: { context: 'drawer' } })).exists()
+      ).toBe(false);
+    });
+
     it('sem conversa, WhatsApp vira link wa.me', () => {
       const wrapper = mountBody({
         props: { lead: { ...lead, conversation_id: null } },
