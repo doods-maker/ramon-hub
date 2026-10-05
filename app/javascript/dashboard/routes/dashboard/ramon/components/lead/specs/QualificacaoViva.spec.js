@@ -68,20 +68,45 @@ describe('QualificacaoViva.vue', () => {
     clipboardSpy.mockClear();
   });
 
-  it('renders N/M in the count and a criterio per qualificacao item', () => {
+  const criterios = w =>
+    w.findAll('[data-testid="qualificacao-criterio"]').map(c => c.text());
+
+  it('mostra N/M e só as pendentes; respondidas ficam atrás do toggle', async () => {
     const wrapper = mountQualificacao(baseLead);
     expect(wrapper.find('[data-testid="qualificacao-count"]').text()).toContain(
       'RAMON.QUALIFICACAO.COUNT'
     );
-    // 2 itens qualificacao (2 e 3); item 4 é documento, fica de fora
-    expect(
-      wrapper.findAll('[data-testid="qualificacao-criterio"]')
-    ).toHaveLength(2);
+    // 2 itens qualificacao (2 ok, 3 pendente); item 4 é documento, fica de fora
+    expect(criterios(wrapper)).toEqual([
+      expect.stringContaining('Sofreu o acidente no trajeto?'),
+    ]);
+    const toggle = wrapper.find('[data-testid="qualificacao-respondidas"]');
+    expect(toggle.attributes('label')).toBe('RAMON.QUALIFICACAO.RESPONDIDAS');
+    await toggle.trigger('click');
+    expect(criterios(wrapper)).toHaveLength(2);
+  });
+
+  it('todas respondidas: uma linha teal "Qualificado" que abre a lista', async () => {
+    const wrapper = mountQualificacao({
+      ...baseLead,
+      custom_attributes: { qualificacao_status: { 2: 'ok', 3: 'ok' } },
+    });
+    expect(wrapper.find('[data-testid="qualificacao-count"]').exists()).toBe(
+      false
+    );
+    expect(criterios(wrapper)).toHaveLength(0);
+    const linha = wrapper.find('[data-testid="qualificacao-ok"]');
+    expect(linha.text()).toContain('RAMON.QUALIFICACAO.QUALIFICADO');
+    await linha.trigger('click');
+    expect(criterios(wrapper)).toHaveLength(2);
   });
 
   it('clicking a criterio cycles ok->falta->null and PATCHes only qualificacao_status', async () => {
     const update = vi.fn();
     const wrapper = mountQualificacao(baseLead, update);
+    await wrapper
+      .find('[data-testid="qualificacao-respondidas"]')
+      .trigger('click');
     // item 2 já está 'ok' -> vira 'falta'
     await wrapper
       .findAll('[data-testid="qualificacao-toggle"]')[0]
@@ -98,6 +123,7 @@ describe('QualificacaoViva.vue', () => {
       ...baseLead,
       custom_attributes: { qualificacao_status: { 2: 'xyz' } },
     };
+    // status desconhecido conta como pendente: fica à vista
     const wrapper = mountQualificacao(leadComLixo, update);
     await wrapper
       .findAll('[data-testid="qualificacao-toggle"]')[0]

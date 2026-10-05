@@ -10,22 +10,17 @@ import { formatCpf, stripCpf } from '../../helpers/cpf';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { SECAO, TITULO, CAMPO, SELECT, TOM, AVISO } from '../../helpers/ui';
 
-// "Editar todos os campos": só o que o Resumo NÃO edita. Etapa (pílula do
-// cabeçalho), valor (chip), tese/benefício/DCB/canal (cartão Caso), tarefas
-// (Próximo passo / + Tarefa), notas (Notas) e telefone (Dados do contato)
-// moram no Resumo — aqui não se repetem.
+// "Dados do contato": só o que o Resumo NÃO edita. Etapa, valor, caso
+// (tese/benefício/DCB/canal) e responsáveis (campos rotulados), tarefas
+// (Próximo passo / + Tarefa), notas (Notas) e telefone (identidade) moram
+// no Resumo — aqui não se repetem.
 const props = defineProps({ lead: { type: Object, required: true } });
 
 const store = useStore();
-// Papéis (playbook §13): só o gestor troca SDR/Closer — o normal é automático.
-const isAdmin = computed(
-  () => store.getters.getCurrentRole === 'administrator'
-);
 const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
 const priorities = useMapGetter('leadConfig/getPriorities');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
-const agents = useMapGetter('agents/getAgents');
 
 // Motivo da perda só aparece quando o lead está numa etapa marcada como perda.
 const currentStage = computed(() =>
@@ -265,47 +260,6 @@ const toggleConsent = () =>
       <option value="">—</option>
       <option v-for="p in priorities" :key="p.id" :value="p.id">
         {{ p.name }}
-      </option>
-    </select>
-
-    <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.SDR')
-    }}</label>
-    <select
-      :value="lead.sdr_id"
-      :disabled="!isAdmin"
-      class="!mb-3"
-      :class="SELECT"
-      @change="
-        e =>
-          saveSelect('sdr_id', e.target.value ? Number(e.target.value) : null)
-      "
-    >
-      <option value="">—</option>
-      <option v-for="a in agents" :key="a.id" :value="a.id">
-        {{ a.name }}
-      </option>
-    </select>
-
-    <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.CLOSER')
-    }}</label>
-    <select
-      :value="lead.closer_id"
-      :disabled="!isAdmin"
-      class="!mb-3"
-      :class="SELECT"
-      @change="
-        e =>
-          saveSelect(
-            'closer_id',
-            e.target.value ? Number(e.target.value) : null
-          )
-      "
-    >
-      <option value="">—</option>
-      <option v-for="a in agents" :key="a.id" :value="a.id">
-        {{ a.name }}
       </option>
     </select>
 

@@ -49,6 +49,14 @@ const statusUi = item => STATUS_UI[String(statusOf(item))] || STATUS_UI.null;
 const okCount = computed(
   () => criterios.value.filter(item => statusOf(item) === 'ok').length
 );
+const todasOk = computed(() => okCount.value === criterios.value.length);
+// pendentes sempre à vista; respondidas só com o toggle aberto
+const respondidasAbertas = ref(false);
+const visiveis = computed(() =>
+  respondidasAbertas.value
+    ? criterios.value
+    : criterios.value.filter(item => statusOf(item) !== 'ok')
+);
 
 // ciclo: null → ok → falta → null (backend faz deep_merge — só a chave vai)
 const pendingIds = ref(new Set());
@@ -88,15 +96,46 @@ const perguntar = async item => {
 </script>
 
 <template>
+  <!-- compacto: só as pendentes à vista; respondidas recolhidas atrás de um
+       toggle (order-* põe o toggle entre as duas listas num v-for só) -->
   <div
     v-if="lead?.thesis_id && criterios.length"
     :class="CARTAO"
     data-testid="panel-card-qualificacao"
   >
-    <div class="flex items-center justify-between">
+    <button
+      v-if="todasOk"
+      type="button"
+      data-testid="qualificacao-ok"
+      class="flex items-center w-full gap-1.5 p-0 text-left text-xs font-semibold text-n-teal-11"
+      @click="respondidasAbertas = !respondidasAbertas"
+    >
+      <span class="i-lucide-check size-3.5 shrink-0" />
+      {{
+        $t('RAMON.QUALIFICACAO.QUALIFICADO', {
+          ok: okCount,
+          total: criterios.length,
+        })
+      }}
+      <span
+        class="ml-auto size-3.5 shrink-0"
+        :class="
+          respondidasAbertas
+            ? 'i-lucide-chevron-down'
+            : 'i-lucide-chevron-right'
+        "
+      />
+    </button>
+    <div v-else class="flex items-center gap-2">
       <p :class="TITULO">
         {{ $t('RAMON.QUALIFICACAO.TITLE') }}
       </p>
+      <div class="flex-1 h-1 overflow-hidden rounded-full bg-n-alpha-2">
+        <div
+          class="h-full bg-n-teal-9"
+          :style="{ width: `${(okCount / criterios.length) * 100}%` }"
+        />
+      </div>
       <span
         class="font-mono text-xs font-semibold text-n-slate-12"
         data-testid="qualificacao-count"
@@ -109,11 +148,12 @@ const perguntar = async item => {
         }}
       </span>
     </div>
-    <div class="mt-1.5 flex flex-col">
+    <div class="mt-1 flex flex-col">
       <div
-        v-for="item in criterios"
+        v-for="item in visiveis"
         :key="item.id"
-        class="flex items-center gap-2 py-1.5 text-[12.5px]"
+        class="flex items-center gap-2 py-1 text-[12.5px]"
+        :class="statusOf(item) === 'ok' ? 'order-3' : 'order-1'"
         data-testid="qualificacao-criterio"
       >
         <Button
@@ -145,6 +185,22 @@ const perguntar = async item => {
           @click="perguntar(item)"
         />
       </div>
+      <Button
+        v-if="okCount && !todasOk"
+        data-testid="qualificacao-respondidas"
+        link
+        slate
+        xs
+        trailing-icon
+        class="order-2 self-start mt-1"
+        :icon="
+          respondidasAbertas
+            ? 'i-lucide-chevron-down'
+            : 'i-lucide-chevron-right'
+        "
+        :label="$t('RAMON.QUALIFICACAO.RESPONDIDAS', { count: okCount })"
+        @click="respondidasAbertas = !respondidasAbertas"
+      />
     </div>
   </div>
 </template>

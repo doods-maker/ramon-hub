@@ -2,15 +2,17 @@ import { ref } from 'vue';
 
 // Aba ativa do painel do lead — compartilhada entre o painel da conversa e a
 // gaveta do Kanban (mesma chave de localStorage). Substitui o antigo estado de
-// acordeões (ramon_lead_panel_sections) do redesign 1f.
+// acordeões (ramon_lead_panel_sections) do redesign 1f. Valor salvo que não
+// é mais aba ('historico' virou 'atividade'; simulador abre largo, por cima)
+// volta pro Resumo.
 const TAB_KEY = 'ramon_lead_panel_tab';
 export const LEAD_PANEL_TABS = [
   'resumo',
   'playbook',
-  'simulador',
+  'notas',
   'documentos',
   'contrato',
-  'historico',
+  'atividade',
 ];
 
 const readStored = () => {

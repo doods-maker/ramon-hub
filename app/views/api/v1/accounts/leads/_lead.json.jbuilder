@@ -38,6 +38,8 @@ json.source lead.source
 json.channel lead.channel
 
 json.stage_entered_at lead.stage_entered_at
+# "Lead desde …" do painel: só fora do índice slim do Kanban (a gaveta busca o show)
+json.created_at lead.created_at unless local_assigns[:slim]
 json.won_at lead.won_at
 json.lost_at lead.lost_at
 # Operação SDR+Closer (reunião qualificada + contrato limpo) — mesmo shape do broadcast.

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { onKeyStroke, onClickOutside } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
@@ -15,18 +16,23 @@ import LeadReuniao from './LeadReuniao.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
 import LeadHistory from '../conversation/LeadHistory.vue';
+import LeadSugerirResposta from '../conversation/LeadSugerirResposta.vue';
 import LeadPlaybook from '../conversation/LeadPlaybook.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
 import DocChecklist from './DocChecklist.vue';
+import ArquivosRecebidos from './ArquivosRecebidos.vue';
 import QualificacaoViva from './QualificacaoViva.vue';
 import { useLeadPanelTabs } from '../../composables/useLeadPanelSections';
 import { useTemperatura } from '../../composables/useTemperatura';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
-import { waMeUrl } from '../../helpers/phone';
+import { waMeUrl, formatPhoneBr } from '../../helpers/phone';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { dynamicTime } from 'shared/helpers/timeHelper';
+import LeadsAPI from 'dashboard/api/leads';
 import {
   CARTAO,
   CARTAO_STATUS,
@@ -34,13 +40,15 @@ import {
   SECAO,
   TITULO,
   CAMPO,
-  ABA,
-  ABA_ATIVA,
-  ABA_INATIVA,
+  NAV_ICONE,
+  NAV_ICONE_ATIVO,
+  NAV_ICONE_INATIVO,
   CHIP,
   TOM,
-  AVISO,
-  EDITAVEL,
+  LINHA,
+  MENU,
+  CAMPO_GRANDE,
+  SELECT_GRANDE,
 } from '../../helpers/ui';
 
 const props = defineProps({
@@ -70,6 +78,37 @@ onMounted(() => {
 });
 
 const inConversation = computed(() => props.context === 'conversation');
+
+// ----- identidade: foto do contato (remetente da conversa aberta ou contato
+// já no store), senão as iniciais; "Lead desde … · via …" -----
+const contactById = useMapGetter('contacts/getContact');
+const selectedChat = useMapGetter('getSelectedChat');
+const currentChatSender = computed(() => selectedChat.value?.meta?.sender);
+const avatarUrl = computed(
+  () =>
+    (inConversation.value && currentChatSender.value?.thumbnail) ||
+    contactById.value?.(props.lead?.contact_id)?.thumbnail ||
+    ''
+);
+const iniciais = nome => {
+  const partes = (nome || '').trim().split(/\s+/).filter(Boolean);
+  if (!partes.length) return '';
+  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
+  return `${partes[0][0]}${ultima}`.toUpperCase();
+};
+const leadDesde = computed(() => {
+  const criado = props.lead?.created_at;
+  const partes = [];
+  if (criado)
+    partes.push(
+      t('RAMON.LEAD_PANEL.SINCE', {
+        date: new Date(criado).toLocaleDateString('pt-BR'),
+      })
+    );
+  if (props.lead?.source)
+    partes.push(t('RAMON.LEAD_PANEL.VIA', { source: props.lead.source }));
+  return partes.join(' · ');
+});
 
 // ----- cabeçalho: chips -----
 const prescription = computed(() => prescriptionInfo(props.lead));
@@ -163,13 +202,13 @@ watch(
   }
 );
 
-// Pílula de etapa na cor da etapa (classe .ramon-stage-pill lê --stage);
-// sem cor configurada, cinza neutro.
-const stageChipStyle = computed(() => ({
-  '--stage':
+// Bolinha da etapa no campo "Etapa do funil": cor da etapa; sem cor
+// configurada, cinza neutro.
+const corEtapa = computed(
+  () =>
     stages.value?.find(s => s.id === stageId.value)?.color ||
-    DEFAULT_STAGE_COLOR,
-}));
+    DEFAULT_STAGE_COLOR
+);
 
 // ----- Onda B: cartões do resumo -----
 const probability = computed(() => {
@@ -381,22 +420,81 @@ const addTask = async () => {
 // ----- Reunião (Closer): Qualificada / Não qualificada no Andamento quando
 // há reunião em jogo — etapa de reunião (pelo label fixo do seed), reunião
 // já passada ou resultado já registrado -----
-const MEETING_STAGE_LABELS = [
-  'fase-reuniao-agendada',
-  'fase-reuniao-realizada',
-];
+const STAGE_REUNIAO_REALIZADA = 'fase-reuniao-realizada';
+const MEETING_STAGE_LABELS = ['fase-reuniao-agendada', STAGE_REUNIAO_REALIZADA];
 const tasksByLead = useMapGetter('leadTasks/getByLead');
+const leadStage = computed(() =>
+  stages.value?.find(s => s.id === props.lead?.lead_stage_id)
+);
 const showReuniao = computed(() => {
-  const stage = stages.value?.find(s => s.id === props.lead?.lead_stage_id);
-  if (MEETING_STAGE_LABELS.includes(stage?.label)) return true;
+  if (MEETING_STAGE_LABELS.includes(leadStage.value?.label)) return true;
   if (props.lead?.reuniao_resultado) return true;
   return (tasksByLead.value?.(props.lead?.id) || []).some(
     task => task.kind === 'meeting' && new Date(task.due_at) < Date.now()
   );
 });
 
-// ----- abas -----
+// ----- notas: o painel carrega uma vez e usa no item Notas, no contador e na
+// "Última nota" do Resumo. follow_up_last_at muda no broadcast lead.updated
+// quando a retomada grava nota + contador (mesma transação); notesTick sobe
+// quando a reunião marcada aqui grava o rascunho → as notas recarregam -----
+const notes = ref([]);
+const loadNotes = async id => {
+  try {
+    const { data } = await LeadsAPI.getNotes(id);
+    notes.value = data.payload || [];
+  } catch (e) {
+    // painel segue utilizável sem as notas; salvar avisa se falhar
+    notes.value = [];
+  }
+};
+watch(
+  () => [props.lead?.id, props.lead?.follow_up_last_at, notesTick.value],
+  ([id], prev) => {
+    if (id !== prev?.[0]) notes.value = [];
+    if (id) loadNotes(id);
+  },
+  { immediate: true }
+);
+const onNoteCreated = note => {
+  notes.value = [...notes.value, note];
+};
+const ultimaNota = computed(() => notes.value[notes.value.length - 1]);
+const ultimaNotaQuando = computed(() =>
+  ultimaNota.value?.created_at
+    ? dynamicTime(new Date(ultimaNota.value.created_at).getTime() / 1000)
+    : ''
+);
+
+// ----- navegação por ícone -----
 const { activeTab, setTab } = useLeadPanelTabs();
+// Conversa do lead na URL da API (display_id): na conversa, a aberta; na
+// gaveta, a do lead — o mesmo id que o dock usa (hoje coincidem em produção).
+const conversaId = computed(
+  () => props.conversationId || props.lead?.conversation_id || null
+);
+// Docs: checklist da tese e/ou arquivos recebidos na conversa
+const temDocs = computed(() =>
+  Boolean(props.lead?.thesis_id || conversaId.value)
+);
+// Contrato só com contrato em jogo: Reunião realizada ou depois na posição do
+// funil (perda não conta), ganho, ou ZapSign já gerado.
+const showContrato = computed(() => {
+  if (props.lead?.custom_attributes?.zapsign) return true;
+  const stage = leadStage.value;
+  if (!stage || stage.is_lost) return false;
+  if (stage.is_won) return true;
+  const realizada = stages.value.find(s => s.label === STAGE_REUNIAO_REALIZADA);
+  return Boolean(realizada) && stage.position >= realizada.position;
+});
+// Qualificação no topo do Resumo enquanto o lead está nas 2 primeiras etapas
+// abertas do funil (Novo/Qualificação, pela posição); depois desce.
+const qualificacaoNoTopo = computed(() => {
+  const abertas = (stages.value || [])
+    .filter(s => !s.is_won && !s.is_lost)
+    .sort((a, b) => a.position - b.position);
+  return abertas.slice(0, 2).some(s => s.id === props.lead?.lead_stage_id);
+});
 const simuladorDot = computed(() =>
   props.lead?.custom_attributes?.ultima_simulacao ? 'bg-n-teal-9' : null
 );
@@ -408,40 +506,101 @@ const docsDot = computed(() =>
     ? 'bg-n-amber-9'
     : null
 );
-const TABS = computed(() => [
-  { id: 'resumo', label: 'SUMMARY' },
-  { id: 'playbook', label: 'PLAYBOOK' },
-  { id: 'simulador', label: 'SIMULADOR', dot: simuladorDot },
-  ...(props.lead?.thesis_id
-    ? [{ id: 'documentos', label: 'DOCUMENTS', dot: docsDot }]
+const NAV = computed(() => [
+  { id: 'resumo', label: 'SUMMARY', icon: 'i-lucide-layout-list' },
+  ...(temDocs.value
+    ? [
+        {
+          id: 'documentos',
+          label: 'DOCUMENTS',
+          icon: 'i-lucide-file-check',
+          dot: docsDot,
+        },
+      ]
     : []),
-  { id: 'contrato', label: 'CONTRACT' },
-  { id: 'historico', label: 'HISTORY' },
+  { id: 'playbook', label: 'PLAYBOOK', icon: 'i-lucide-message-square-text' },
+  {
+    id: 'notas',
+    label: 'NOTES',
+    icon: 'i-lucide-notebook-pen',
+    count: notes.value.length,
+  },
+  {
+    id: 'simulador',
+    label: 'SIMULADOR',
+    icon: 'i-lucide-calculator',
+    dot: simuladorDot,
+  },
+  ...(showContrato.value
+    ? [{ id: 'contrato', label: 'CONTRACT', icon: 'i-lucide-file-pen-line' }]
+    : []),
+  { id: 'atividade', label: 'ACTIVITY', icon: 'i-lucide-activity' },
 ]);
 const shownTab = computed(() => {
-  if (activeTab.value === 'documentos' && !props.lead?.thesis_id)
-    return 'resumo';
+  if (activeTab.value === 'documentos' && !temDocs.value) return 'resumo';
+  if (activeTab.value === 'contrato' && !showContrato.value) return 'resumo';
   return activeTab.value;
 });
 
-// ----- "editar todos os campos": LeadFields completo recolhido por padrão -----
-const fieldsExpanded = ref(false);
+// Simular abre largo por cima da conversa (não cabe nos 400px do painel);
+// a aba de baixo não muda, então fechar devolve o painel como estava.
+const simuladorAberto = ref(false);
+const navAtivo = computed(() =>
+  simuladorAberto.value ? 'simulador' : shownTab.value
+);
+const onNav = id => {
+  if (id === 'simulador') simuladorAberto.value = true;
+  else setTab(id);
+};
+// No document (antes do window): o Esc fecha só o Simulador, sem chegar à
+// gaveta do Kanban, que também fecha no Esc (onKeyStroke no window). Com o
+// foco num campo o Esc não fecha: o que foi digitado no form se perderia.
+const CAMPOS = ['INPUT', 'SELECT', 'TEXTAREA'];
+onKeyStroke(
+  'Escape',
+  e => {
+    if (!simuladorAberto.value) return;
+    e.stopPropagation();
+    if (CAMPOS.includes(e.target?.tagName)) return;
+    simuladorAberto.value = false;
+  },
+  { target: document }
+);
+watch(
+  () => props.lead?.id,
+  () => {
+    simuladorAberto.value = false;
+  }
+);
+const dossieRoute = computed(() => ({
+  name: 'ramon_lead_dossie',
+  params: { leadId: props.lead.id },
+}));
+
+// ----- "Dados do contato": LeadFields (o que o Resumo não edita) recolhido -----
 const fieldsEl = ref(null);
 const onCompleteData = async () => {
   setTab('resumo');
   contactOpen.value = true;
-  fieldsExpanded.value = true;
   await nextTick();
   fieldsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-// ----- campos derivados dos cartões -----
-const owners = computed(() => {
-  const sdr = props.lead?.sdr_name;
-  const closer = props.lead?.closer_name;
-  if (!sdr && !closer) return null;
-  return `${sdr || '—'} / ${closer || '—'}`;
-});
+// ----- campos derivados -----
+// Responsáveis: só o gestor troca SDR/Closer (playbook §13); os outros leem.
+const isAdmin = computed(
+  () => store.getters.getCurrentRole === 'administrator'
+);
+const agentsGetter = useMapGetter('agents/getAgents');
+const agents = computed(() => agentsGetter.value || []);
+const responsaveis = computed(() => [
+  { campo: 'sdr', rotulo: 'RAMON.DRAWER.SDR', nome: props.lead?.sdr_name },
+  {
+    campo: 'closer',
+    rotulo: 'RAMON.DRAWER.CLOSER',
+    nome: props.lead?.closer_name,
+  },
+]);
 const activeTheses = computed(() =>
   (theses.value || []).filter(thesis => thesis.active)
 );
@@ -471,6 +630,16 @@ const conversationExtrasOpen = ref(false);
 
 // ----- "Não é lead" (destrutivo: confirmação inline, só na conversa) -----
 const discardPrompt = ref(false);
+// "⋯" ao lado do nome: hoje só tem o "Não é lead"
+const menuAberto = ref(false);
+const menuEl = ref(null);
+onClickOutside(menuEl, () => {
+  menuAberto.value = false;
+});
+const pedirDescarte = () => {
+  menuAberto.value = false;
+  discardPrompt.value = true;
+};
 const discarding = ref(false);
 const discard = async () => {
   if (!props.lead || discarding.value) return;
@@ -489,273 +658,528 @@ const discard = async () => {
 
 <template>
   <div class="flex flex-col flex-1 h-full min-w-0 overflow-hidden">
-    <!-- cabeçalho fixo: quem e quanto sem rolar -->
-    <div class="shrink-0 px-3 pt-3 border-b border-n-weak">
-      <router-link
-        v-if="lead?.id"
-        v-slot="{ navigate }"
-        custom
-        :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
+    <!-- navegação só por ícone, no topo do painel (nome no title) -->
+    <nav
+      class="flex shrink-0 gap-1 px-3 py-2 border-b border-n-weak"
+      :aria-label="$t('RAMON.LEAD_PANEL.NAV_LABEL')"
+    >
+      <button
+        v-for="item in NAV"
+        :key="item.id"
+        type="button"
+        :aria-label="$t(`RAMON.LEAD_PANEL.TABS.${item.label}`)"
+        :title="$t(`RAMON.LEAD_PANEL.TABS.${item.label}`)"
+        :aria-current="navAtivo === item.id ? 'page' : undefined"
+        :data-testid="`lead-nav-${item.id}`"
+        :class="[
+          NAV_ICONE,
+          navAtivo === item.id ? NAV_ICONE_ATIVO : NAV_ICONE_INATIVO,
+        ]"
+        @click="onNav(item.id)"
       >
-        <Button
-          data-testid="lead-abrir-ficha"
-          sm
-          icon="i-lucide-contact"
-          :label="$t('RAMON.FICHA.OPEN_FULL')"
-          class="w-full mb-2"
-          @click="
-            navigate($event);
-            emit('navigate');
-          "
-        />
-      </router-link>
-
-      <h2
-        class="text-[21px] font-semibold leading-tight text-n-slate-12 truncate"
-      >
-        {{ lead.name }}
-      </h2>
-
-      <div class="flex flex-wrap items-center gap-1.5 mt-1.5 min-w-0">
-        <!-- h-auto + bg-none: o CSS global de <select> (_base.scss) impõe h-10
-             e seta de fundo — sem isso o chip vira caixa de formulário -->
-        <select
-          data-testid="panel-stage"
-          :value="stageId"
-          class="ramon-stage-pill max-w-40 appearance-none truncate rounded-full border h-auto bg-none px-2.5 py-0.5 text-[11px] font-medium outline-none"
-          :style="stageChipStyle"
-          @change="e => onStageChange(Number(e.target.value))"
-        >
-          <option v-for="s in stages" :key="s.id" :value="s.id">
-            {{ s.name }}
-          </option>
-        </select>
-        <span
-          v-if="prescriptionLabel"
-          data-testid="panel-prescription-chip"
-          :class="[CHIP, bleeding ? TOM.ruby : TOM.amber]"
-        >
-          <span class="i-lucide-hourglass size-3 shrink-0" />
-          {{ prescriptionLabel }}
-        </span>
-        <!-- valor: clicar no chip edita no lugar (Enter/fora salva, Esc desiste) -->
-        <input
-          v-if="valueEditing"
-          ref="valueInput"
-          v-model="valueDraft"
-          data-testid="field-value"
-          type="text"
-          inputmode="decimal"
-          :aria-label="$t('RAMON.DRAWER.VALUE')"
-          class="font-mono !h-7 !w-36"
-          :class="CAMPO"
-          @blur="saveValue"
-          @keyup.enter="saveValue"
-          @keyup.esc="valueEditing = false"
-        />
-        <button
-          v-else
-          type="button"
-          data-testid="panel-value-chip"
-          :title="$t('RAMON.LEAD_PANEL.VALUE_EDIT')"
-          class="hover:bg-n-slate-9/20"
-          :class="[CHIP, TOM.slate]"
-          @click="editValue"
-        >
-          <span :class="{ 'font-mono': formattedValue }">{{
-            formattedValue || $t('RAMON.LEAD_PANEL.VALUE_ADD')
-          }}</span>
+        <span class="relative">
+          <span class="block size-5" :class="item.icon" />
           <span
-            v-if="valorEstimadoAuto"
-            data-testid="value-auto-badge"
-            :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
-            class="inline-flex items-center gap-0.5 rounded px-1 text-[10px]"
-            :class="TOM.blue"
+            v-if="item.dot?.value"
+            :data-testid="`lead-nav-dot-${item.id}`"
+            class="absolute -top-0.5 -right-1 size-2 rounded-full"
+            :class="item.dot.value"
+          />
+          <span
+            v-if="item.count"
+            :data-testid="`lead-nav-count-${item.id}`"
+            class="absolute -top-1.5 left-3 min-w-4 rounded-full px-1 font-mono text-[9.5px] font-medium leading-4 text-center"
+            :class="TOM.slate"
           >
-            <span class="i-lucide-sparkles size-2.5" />{{
-              $t('RAMON.DRAWER.VALUE_AUTO')
-            }}
+            {{ item.count }}
           </span>
-        </button>
-      </div>
-
-      <LostReasonModal
-        v-if="lostModalOpen"
-        :lost-reasons="lostReasons"
-        @confirm-move="confirmLostStage"
-        @cancel-move="cancelLostStage"
-      />
-
-      <div
-        v-if="wonPrompt"
-        data-testid="stage-won-prompt"
-        class="flex flex-col gap-2 mt-2"
-        :class="CARTAO"
-      >
-        <label class="text-xs text-n-slate-10">{{
-          $t('RAMON.FUNIL.WON.VALUE_LABEL')
-        }}</label>
-        <input
-          v-model="wonValue"
-          data-testid="stage-won-value"
-          type="text"
-          inputmode="decimal"
-          class="font-mono"
-          :class="CAMPO"
-          @keyup.enter="confirmWonStage"
-        />
-        <div class="flex justify-end gap-2">
-          <Button
-            data-testid="stage-won-skip"
-            sm
-            faded
-            slate
-            :label="$t('RAMON.FUNIL.WON.SKIP')"
-            @click="skipWonStage"
-          />
-          <Button
-            data-testid="stage-won-save"
-            sm
-            :label="$t('RAMON.FUNIL.WON.SAVE')"
-            @click="confirmWonStage"
-          />
-        </div>
-      </div>
-
-      <!-- Ações fixas. WhatsApp abre a conversa (gaveta) ou o wa.me (sem
-           conversa); no painel da conversa ela já está aberta — botão sai.
-           Resolver NÃO entra aqui: já existe no cabeçalho da conversa, e um
-           2º ResolveAction registrava o atalho Alt+E em dobro. -->
-      <div class="flex gap-1.5 mt-3">
-        <Button
-          v-if="lead.conversation_id && !inConversation"
-          data-testid="panel-whatsapp"
-          sm
-          icon="i-lucide-message-square"
-          :label="$t('RAMON.KANBAN.CARD.WHATSAPP')"
-          class="flex-1"
-          @click="emit('openConversation', lead.conversation_id)"
-        />
-        <a
-          v-else-if="!lead.conversation_id && lead.contact_phone"
-          data-testid="panel-whatsapp-wa-me"
-          :href="waMeUrl(lead.contact_phone)"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex flex-1 min-w-0"
-        >
-          <Button
-            sm
-            tabindex="-1"
-            icon="i-lucide-message-square"
-            :label="$t('RAMON.KANBAN.CARD.WHATSAPP')"
-            class="w-full"
-          />
-        </a>
-        <Button
-          data-testid="panel-add-task"
-          sm
-          faded
-          slate
-          :label="$t('RAMON.TASKS.ADD')"
-          class="flex-1"
-          @click="taskFormOpen = !taskFormOpen"
-        />
-      </div>
-
-      <div
-        v-if="taskFormOpen"
-        data-testid="panel-task-form"
-        class="flex flex-col gap-2 mt-2"
-        :class="CARTAO"
-      >
-        <div class="flex gap-1.5">
-          <Button
-            v-for="k in TASK_KINDS"
-            :key="k.kind"
-            :data-testid="`panel-task-kind-${k.id}`"
-            xs
-            :variant="taskKind === k.kind ? 'solid' : 'faded'"
-            :color="taskKind === k.kind ? 'blue' : 'slate'"
-            :label="$t(`RAMON.TASKS.${k.label}`)"
-            @click="taskKind = k.kind"
-          />
-        </div>
-        <input
-          v-model="taskTitle"
-          data-testid="panel-task-title"
-          :placeholder="
-            $t(
-              isMeetingForm
-                ? 'RAMON.TASKS.MEETING_TITLE_PLACEHOLDER'
-                : 'RAMON.TASKS.ADD_TITLE_PLACEHOLDER'
-            )
-          "
-          :class="CAMPO"
-        />
-        <input
-          v-model="taskDate"
-          data-testid="panel-task-date"
-          type="datetime-local"
-          :title="
-            $t(
-              isMeetingForm
-                ? 'RAMON.TASKS.MEETING_DATE_HINT'
-                : 'RAMON.TASKS.DATE_HINT'
-            )
-          "
-          class="font-mono"
-          :class="CAMPO"
-        />
-        <p v-if="isMeetingForm" class="text-xs text-n-slate-10">
-          {{ $t('RAMON.TASKS.MEETING_HINT') }}
-        </p>
-        <div class="flex justify-end gap-2">
-          <Button
-            data-testid="panel-task-cancel"
-            sm
-            faded
-            slate
-            :label="$t('RAMON.FUNIL.CANCEL')"
-            @click="taskFormOpen = false"
-          />
-          <Button
-            data-testid="panel-task-save"
-            sm
-            :label="$t('RAMON.FUNIL.SAVE')"
-            :disabled="savingTask || (isMeetingForm && !taskDate)"
-            @click="addTask"
-          />
-        </div>
-      </div>
-
-      <!-- abas segmentadas com dot de status -->
-      <div class="flex mt-2 -mb-px overflow-x-auto" role="tablist">
-        <button
-          v-for="tab in TABS"
-          :key="tab.id"
-          role="tab"
-          :aria-selected="shownTab === tab.id"
-          :data-testid="`lead-tab-${tab.id}`"
-          :class="[ABA, shownTab === tab.id ? ABA_ATIVA : ABA_INATIVA]"
-          @click="setTab(tab.id)"
-        >
-          {{ $t(`RAMON.LEAD_PANEL.TABS.${tab.label}`) }}
-          <span
-            v-if="tab.dot?.value"
-            :data-testid="`lead-tab-dot-${tab.id}`"
-            class="size-1.5 rounded-full"
-            :class="tab.dot.value"
-          />
-        </button>
-      </div>
-    </div>
+        </span>
+      </button>
+    </nav>
 
     <!-- corpo da aba ativa -->
     <div
+      data-testid="lead-panel-corpo"
       class="flex flex-col flex-1 gap-3 min-w-0 overflow-y-auto overflow-x-hidden p-3"
     >
       <template v-if="shownTab === 'resumo'">
+        <!-- identidade: foto, nome (+ ficha e ⋯), telefone, desde quando -->
+        <div
+          data-testid="panel-identidade"
+          class="flex flex-col items-center gap-1 pt-1 text-center min-w-0"
+        >
+          <img
+            v-if="avatarUrl"
+            data-testid="panel-avatar"
+            :src="avatarUrl"
+            alt=""
+            class="size-[72px] rounded-full object-cover"
+          />
+          <span
+            v-else
+            data-testid="panel-avatar-iniciais"
+            class="flex items-center justify-center size-[72px] rounded-full text-2xl font-semibold"
+            :class="TOM.blue"
+          >
+            {{ iniciais(lead.name) }}
+          </span>
+          <div class="flex items-center justify-center gap-0.5 max-w-full mt-2">
+            <h2 class="min-w-0 truncate text-xl font-semibold text-n-slate-12">
+              {{ lead.name }}
+            </h2>
+            <router-link
+              v-if="lead?.id"
+              v-slot="{ navigate }"
+              custom
+              :to="dossieRoute"
+            >
+              <Button
+                data-testid="lead-abrir-ficha"
+                xs
+                ghost
+                slate
+                icon="i-lucide-external-link"
+                class="shrink-0"
+                :title="$t('RAMON.FICHA.OPEN_FULL')"
+                :aria-label="$t('RAMON.FICHA.OPEN_FULL')"
+                @click="
+                  navigate($event);
+                  emit('navigate');
+                "
+              />
+            </router-link>
+            <div v-if="inConversation" ref="menuEl" class="relative shrink-0">
+              <Button
+                data-testid="lead-more"
+                xs
+                ghost
+                slate
+                icon="i-lucide-ellipsis"
+                :aria-label="$t('RAMON.LEAD_PANEL.MORE_ACTIONS')"
+                :aria-expanded="menuAberto"
+                @click="menuAberto = !menuAberto"
+              />
+              <div
+                v-if="menuAberto"
+                class="absolute right-0 top-full z-20 mt-1 w-44 text-left"
+                :class="MENU"
+              >
+                <button
+                  type="button"
+                  data-testid="lead-discard"
+                  class="flex items-center gap-2 text-n-ruby-11"
+                  :class="LINHA"
+                  @click="pedirDescarte"
+                >
+                  <span class="i-lucide-user-x size-4 shrink-0" />
+                  {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <Button
+            v-if="lead.contact_phone"
+            data-testid="panel-phone"
+            link
+            slate
+            class="!text-[15px] tabular-nums"
+            :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
+            :label="formatPhoneBr(lead.contact_phone)"
+            @click="copyPhone"
+          />
+          <p
+            v-if="leadDesde"
+            data-testid="panel-lead-desde"
+            class="text-xs italic text-n-slate-10"
+          >
+            {{ leadDesde }}
+          </p>
+          <span
+            v-if="prescriptionLabel"
+            data-testid="panel-prescription-chip"
+            class="mt-1"
+            :class="[CHIP, bleeding ? TOM.ruby : TOM.amber]"
+          >
+            <span class="i-lucide-hourglass size-3 shrink-0" />
+            {{ prescriptionLabel }}
+          </span>
+        </div>
+
+        <!-- tirar do funil é destrutivo: janela de confirmação do kit -->
+        <Teleport to="body">
+          <ConfirmModal
+            v-if="discardPrompt"
+            :title="$t('RAMON.LEAD_PANEL.DISCARD_TITLE')"
+            :message="$t('RAMON.LEAD_PANEL.DISCARD_CONFIRM')"
+            :confirm-label="$t('RAMON.LEAD_PANEL.DISCARD_ACTION')"
+            @confirm="discard"
+            @cancel="discardPrompt = false"
+          />
+        </Teleport>
+
+        <!-- Ações fixas. WhatsApp abre a conversa (gaveta) ou o wa.me (sem
+             conversa); no painel da conversa ela já está aberta — botão sai.
+             Resolver NÃO entra aqui: já existe no cabeçalho da conversa, e um
+             2º ResolveAction registrava o atalho Alt+E em dobro. -->
+        <div class="flex gap-1.5">
+          <Button
+            v-if="lead.conversation_id && !inConversation"
+            data-testid="panel-whatsapp"
+            sm
+            icon="i-lucide-message-square"
+            :label="$t('RAMON.KANBAN.CARD.WHATSAPP')"
+            class="flex-1"
+            @click="emit('openConversation', lead.conversation_id)"
+          />
+          <a
+            v-else-if="!lead.conversation_id && lead.contact_phone"
+            data-testid="panel-whatsapp-wa-me"
+            :href="waMeUrl(lead.contact_phone)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex flex-1 min-w-0"
+          >
+            <Button
+              sm
+              tabindex="-1"
+              icon="i-lucide-message-square"
+              :label="$t('RAMON.KANBAN.CARD.WHATSAPP')"
+              class="w-full"
+            />
+          </a>
+          <!-- Sugerir resposta (copiloto) divide a linha com o + Tarefa -->
+          <LeadSugerirResposta
+            v-if="inConversation && conversationId"
+            :conversation-id="conversationId"
+            class="flex-1"
+          />
+          <Button
+            data-testid="panel-add-task"
+            sm
+            faded
+            slate
+            :label="$t('RAMON.TASKS.ADD')"
+            class="flex-1"
+            @click="taskFormOpen = !taskFormOpen"
+          />
+        </div>
+
+        <div
+          v-if="taskFormOpen"
+          data-testid="panel-task-form"
+          class="flex flex-col gap-2 mt-2"
+          :class="CARTAO"
+        >
+          <div class="flex gap-1.5">
+            <Button
+              v-for="k in TASK_KINDS"
+              :key="k.kind"
+              :data-testid="`panel-task-kind-${k.id}`"
+              xs
+              :variant="taskKind === k.kind ? 'solid' : 'faded'"
+              :color="taskKind === k.kind ? 'blue' : 'slate'"
+              :label="$t(`RAMON.TASKS.${k.label}`)"
+              @click="taskKind = k.kind"
+            />
+          </div>
+          <input
+            v-model="taskTitle"
+            data-testid="panel-task-title"
+            :placeholder="
+              $t(
+                isMeetingForm
+                  ? 'RAMON.TASKS.MEETING_TITLE_PLACEHOLDER'
+                  : 'RAMON.TASKS.ADD_TITLE_PLACEHOLDER'
+              )
+            "
+            :class="CAMPO"
+          />
+          <input
+            v-model="taskDate"
+            data-testid="panel-task-date"
+            type="datetime-local"
+            :title="
+              $t(
+                isMeetingForm
+                  ? 'RAMON.TASKS.MEETING_DATE_HINT'
+                  : 'RAMON.TASKS.DATE_HINT'
+              )
+            "
+            class="font-mono"
+            :class="CAMPO"
+          />
+          <p v-if="isMeetingForm" class="text-xs text-n-slate-10">
+            {{ $t('RAMON.TASKS.MEETING_HINT') }}
+          </p>
+          <div class="flex justify-end gap-2">
+            <Button
+              data-testid="panel-task-cancel"
+              sm
+              faded
+              slate
+              :label="$t('RAMON.FUNIL.CANCEL')"
+              @click="taskFormOpen = false"
+            />
+            <Button
+              data-testid="panel-task-save"
+              sm
+              :label="$t('RAMON.FUNIL.SAVE')"
+              :disabled="savingTask || (isMeetingForm && !taskDate)"
+              @click="addTask"
+            />
+          </div>
+        </div>
+
+        <!-- campos rotulados (como na referência): rótulo em cima, controle
+             largo embaixo; editar = mexer no próprio controle -->
+        <div data-testid="panel-campos" class="flex flex-col gap-4">
+          <div>
+            <p class="mb-1.5" :class="TITULO">
+              {{ $t('RAMON.LEAD_PANEL.FIELDS.STAGE') }}
+            </p>
+            <div class="relative">
+              <span
+                class="absolute left-3 top-1/2 -translate-y-1/2 size-2.5 rounded-full pointer-events-none"
+                :style="{ backgroundColor: corEtapa }"
+              />
+              <select
+                data-testid="panel-stage"
+                :value="stageId"
+                :aria-label="$t('RAMON.LEAD_PANEL.FIELDS.STAGE')"
+                class="!pl-8 font-medium"
+                :class="SELECT_GRANDE"
+                @change="e => onStageChange(Number(e.target.value))"
+              >
+                <option v-for="s in stages" :key="s.id" :value="s.id">
+                  {{ s.name }}
+                </option>
+              </select>
+            </div>
+            <LostReasonModal
+              v-if="lostModalOpen"
+              :lost-reasons="lostReasons"
+              @confirm-move="confirmLostStage"
+              @cancel-move="cancelLostStage"
+            />
+            <div
+              v-if="wonPrompt"
+              data-testid="stage-won-prompt"
+              class="flex flex-col gap-2 mt-2"
+              :class="CARTAO"
+            >
+              <label class="text-xs text-n-slate-10">{{
+                $t('RAMON.FUNIL.WON.VALUE_LABEL')
+              }}</label>
+              <input
+                v-model="wonValue"
+                data-testid="stage-won-value"
+                type="text"
+                inputmode="decimal"
+                class="font-mono"
+                :class="CAMPO"
+                @keyup.enter="confirmWonStage"
+              />
+              <div class="flex justify-end gap-2">
+                <Button
+                  data-testid="stage-won-skip"
+                  sm
+                  faded
+                  slate
+                  :label="$t('RAMON.FUNIL.WON.SKIP')"
+                  @click="skipWonStage"
+                />
+                <Button
+                  data-testid="stage-won-save"
+                  sm
+                  :label="$t('RAMON.FUNIL.WON.SAVE')"
+                  @click="confirmWonStage"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- valor: clicar edita no lugar (Enter/fora salva, Esc desiste) -->
+          <div>
+            <p class="mb-1.5" :class="TITULO">
+              {{ $t('RAMON.DRAWER.VALUE') }}
+            </p>
+            <input
+              v-if="valueEditing"
+              ref="valueInput"
+              v-model="valueDraft"
+              data-testid="field-value"
+              type="text"
+              inputmode="decimal"
+              :aria-label="$t('RAMON.DRAWER.VALUE')"
+              class="font-mono"
+              :class="CAMPO_GRANDE"
+              @blur="saveValue"
+              @keyup.enter="saveValue"
+              @keyup.esc="valueEditing = false"
+            />
+            <button
+              v-else
+              type="button"
+              data-testid="panel-value-chip"
+              :title="$t('RAMON.LEAD_PANEL.VALUE_EDIT')"
+              class="flex items-center gap-2 text-left"
+              :class="CAMPO_GRANDE"
+              @click="editValue"
+            >
+              <span
+                :class="
+                  formattedValue ? 'font-mono font-medium' : 'text-n-slate-10'
+                "
+              >
+                {{ formattedValue || $t('RAMON.LEAD_PANEL.VALUE_ADD') }}
+              </span>
+              <span
+                v-if="valorEstimadoAuto"
+                data-testid="value-auto-badge"
+                :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
+                class="inline-flex items-center gap-0.5 rounded px-1 text-[10px]"
+                :class="TOM.blue"
+              >
+                <span class="i-lucide-sparkles size-2.5" />{{
+                  $t('RAMON.DRAWER.VALUE_AUTO')
+                }}
+              </span>
+            </button>
+          </div>
+
+          <!-- caso: tese · benefício; DCB · canal -->
+          <div data-testid="panel-caso">
+            <p class="mb-1.5" :class="TITULO">
+              {{ $t('RAMON.LEAD_PANEL.FIELDS.CASE') }}
+            </p>
+            <div class="grid grid-cols-[3fr_2fr] gap-2">
+              <select
+                data-testid="field-thesis"
+                :value="lead.thesis_id ?? ''"
+                :aria-label="$t('RAMON.DRAWER.THESIS')"
+                :class="SELECT_GRANDE"
+                @change="e => saveSelect('thesis_id', e.target.value)"
+              >
+                <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
+                <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
+                <option v-if="thesisFora" :value="lead.thesis_id">
+                  {{ lead.thesis_name }}
+                </option>
+                <option v-for="th in activeTheses" :key="th.id" :value="th.id">
+                  {{ th.name }}
+                </option>
+              </select>
+              <select
+                data-testid="field-benefit"
+                :value="lead.benefit_type_id ?? ''"
+                :aria-label="$t('RAMON.DRAWER.BENEFIT')"
+                :class="SELECT_GRANDE"
+                @change="e => saveSelect('benefit_type_id', e.target.value)"
+              >
+                <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
+                <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
+                  {{ b.name }}
+                </option>
+              </select>
+            </div>
+            <div class="grid grid-cols-[3fr_2fr] gap-2 mt-2">
+              <label class="relative block">
+                <span
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-n-slate-10 pointer-events-none"
+                >
+                  {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
+                </span>
+                <input
+                  data-testid="field-dcb-em"
+                  type="date"
+                  :value="lead.dcb_em || ''"
+                  class="!pl-11 font-mono"
+                  :class="[CAMPO_GRANDE, bleeding ? '!text-n-ruby-11' : '']"
+                  @change="e => save({ dcb_em: e.target.value || null })"
+                />
+              </label>
+              <select
+                data-testid="field-channel"
+                :value="lead.channel ?? ''"
+                :aria-label="$t('RAMON.LEAD_PANEL.FIELDS.CHANNEL')"
+                :class="SELECT_GRANDE"
+                @change="e => saveSelect('channel', e.target.value, false)"
+              >
+                <option value="">
+                  {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
+                </option>
+                <option v-for="c in channels" :key="c.key" :value="c.key">
+                  {{ c.label }}
+                </option>
+              </select>
+            </div>
+            <p
+              v-if="!lead.thesis_id"
+              data-testid="no-thesis-hint"
+              class="mt-1 text-xs text-n-slate-9"
+            >
+              {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
+            </p>
+          </div>
+
+          <!-- responsáveis: só o gestor troca (playbook §13); os outros leem -->
+          <div data-testid="panel-responsaveis">
+            <p class="mb-1.5" :class="TITULO">
+              {{ $t('RAMON.LEAD_PANEL.FIELDS.OWNERS') }}
+            </p>
+            <div class="flex flex-col gap-2">
+              <div
+                v-for="r in responsaveis"
+                :key="r.campo"
+                class="flex items-center gap-2"
+              >
+                <span class="w-12 shrink-0 text-xs text-n-slate-10">
+                  {{ $t(r.rotulo) }}
+                </span>
+                <div class="relative flex-1 min-w-0">
+                  <span
+                    class="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center size-6 rounded-full text-[10px] font-semibold pointer-events-none"
+                    :class="r.nome ? TOM.blue : TOM.slate"
+                  >
+                    {{ iniciais(r.nome) || '?' }}
+                  </span>
+                  <select
+                    v-if="isAdmin"
+                    :data-testid="`field-${r.campo}`"
+                    :value="lead[`${r.campo}_id`] ?? ''"
+                    :aria-label="$t(r.rotulo)"
+                    class="!pl-10"
+                    :class="SELECT_GRANDE"
+                    @change="e => saveSelect(`${r.campo}_id`, e.target.value)"
+                  >
+                    <option value="">—</option>
+                    <option v-for="a in agents" :key="a.id" :value="a.id">
+                      {{ a.name }}
+                    </option>
+                  </select>
+                  <p
+                    v-else
+                    :data-testid="`panel-${r.campo}`"
+                    class="flex items-center !pl-10 truncate"
+                    :class="CAMPO_GRANDE"
+                  >
+                    {{ r.nome || '—' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- próximo passo (tarefa aberta mais próxima) -->
+          <LeadNextAction :lead-id="lead.id" />
+        </div>
+
+        <QualificacaoViva
+          v-if="qualificacaoNoTopo"
+          :lead="lead"
+          :context="context"
+        />
+
         <LeadCopilot
           v-if="inConversation && conversationId"
           :conversation-id="conversationId"
@@ -785,7 +1209,7 @@ const discard = async () => {
             type="button"
             data-testid="panel-ultima-simulacao"
             class="block w-full p-0 mt-1.5 text-left text-xs text-n-slate-11 hover:text-n-slate-12"
-            @click="setTab('simulador')"
+            @click="simuladorAberto = true"
           >
             {{ $t('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM') }}
             <template v-for="(parte, i) in ultimaSimPartes" :key="i">
@@ -798,9 +1222,6 @@ const discard = async () => {
           </button>
           <LeadReuniao v-if="showReuniao" :lead="lead" />
         </div>
-
-        <!-- Próximo passo (era LeadNextAction do header) -->
-        <LeadNextAction :lead-id="lead.id" />
 
         <!-- Temperatura (só na conversa; heurística local) -->
         <div
@@ -908,95 +1329,30 @@ const discard = async () => {
           </div>
         </button>
 
-        <!-- Caso: tese, benefício, DCB e canal editáveis no lugar (clicar = editar) -->
-        <div :class="CARTAO" data-testid="panel-card-caso">
-          <p :class="TITULO">
-            {{ $t('RAMON.LEAD_PANEL.CASE_TITLE') }}
-          </p>
-          <div class="flex flex-wrap items-center gap-x-1 mt-1">
-            <select
-              data-testid="field-thesis"
-              :value="lead.thesis_id ?? ''"
-              :aria-label="$t('RAMON.DRAWER.THESIS')"
-              class="font-semibold"
-              :class="EDITAVEL"
-              @change="e => saveSelect('thesis_id', e.target.value)"
-            >
-              <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
-              <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
-              <option v-if="thesisFora" :value="lead.thesis_id">
-                {{ lead.thesis_name }}
-              </option>
-              <option v-for="th in activeTheses" :key="th.id" :value="th.id">
-                {{ th.name }}
-              </option>
-            </select>
-            <span class="text-n-slate-9">·</span>
-            <select
-              data-testid="field-benefit"
-              :value="lead.benefit_type_id ?? ''"
-              :aria-label="$t('RAMON.DRAWER.BENEFIT')"
-              class="font-semibold"
-              :class="EDITAVEL"
-              @change="e => saveSelect('benefit_type_id', e.target.value)"
-            >
-              <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
-              <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-                {{ b.name }}
-              </option>
-            </select>
-          </div>
-          <p
-            v-if="!lead.thesis_id"
-            data-testid="no-thesis-hint"
-            class="mt-1 text-xs text-n-slate-9"
-          >
-            {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
-          </p>
-          <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-2">
-            <label class="min-w-0">
-              <span class="block text-[10.5px] text-n-slate-9">
-                {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
-              </span>
-              <input
-                data-testid="field-dcb-em"
-                type="date"
-                :value="lead.dcb_em || ''"
-                class="font-mono"
-                :class="[EDITAVEL, bleeding ? '!text-n-ruby-11' : '']"
-                @change="e => save({ dcb_em: e.target.value || null })"
-              />
-            </label>
-            <label class="min-w-0">
-              <span class="block text-[10.5px] text-n-slate-9">
-                {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
-              </span>
-              <select
-                data-testid="field-channel"
-                :value="lead.channel ?? ''"
-                :class="EDITAVEL"
-                @change="e => saveSelect('channel', e.target.value, false)"
-              >
-                <option value="">—</option>
-                <option v-for="c in channels" :key="c.key" :value="c.key">
-                  {{ c.label }}
-                </option>
-              </select>
-            </label>
-          </div>
-        </div>
-
-        <QualificacaoViva :lead="lead" :context="context" />
+        <QualificacaoViva
+          v-if="!qualificacaoNoTopo"
+          :lead="lead"
+          :context="context"
+        />
 
         <LeadQuizResumo :lead="lead" />
-        <!-- follow_up_last_at muda no broadcast lead.updated quando a retomada
-             grava nota + contador (mesma transação); notesTick sobe quando a
-             reunião marcada aqui grava o rascunho → as notas recarregam -->
-        <LeadNotes
-          :lead-id="lead.id"
-          :refresh-key="`${lead.follow_up_last_at}-${notesTick}`"
-          :in-conversation="inConversation"
-        />
+
+        <!-- só a última nota, numa linha; a lista inteira mora no item Notas -->
+        <button
+          v-if="ultimaNota"
+          type="button"
+          data-testid="panel-ultima-nota"
+          class="flex items-center w-full gap-1 p-0 text-left text-xs text-n-slate-11 hover:text-n-slate-12"
+          @click="setTab('notas')"
+        >
+          <span class="shrink-0 text-n-slate-10">
+            {{ $t('RAMON.LEAD_PANEL.NOTES.LAST') }}
+          </span>
+          <span class="truncate">{{ ultimaNota.body }}</span>
+          <span class="shrink-0 text-n-slate-10">
+            {{ `· ${ultimaNotaQuando}` }}
+          </span>
+        </button>
 
         <!-- Dados do contato (recolhido — mesmo padrão do "Mais da conversa") -->
         <div class="min-w-0" :class="SECAO">
@@ -1015,58 +1371,13 @@ const discard = async () => {
               "
             />
           </button>
-          <div v-if="contactOpen" class="flex flex-col gap-2 mt-3 min-w-0">
-            <div class="grid grid-cols-2 gap-x-3 gap-y-2">
-              <div>
-                <p class="text-[10.5px] text-n-slate-9">
-                  {{ $t('RAMON.LEAD_PANEL.FIELDS.PHONE') }}
-                </p>
-                <Button
-                  v-if="lead.contact_phone"
-                  data-testid="contact-copy-phone"
-                  link
-                  slate
-                  xs
-                  icon="i-lucide-copy"
-                  trailing-icon
-                  class="font-mono"
-                  :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
-                  :label="lead.contact_phone"
-                  @click="copyPhone"
-                />
-                <p v-else class="font-mono text-[13px] text-n-slate-12">—</p>
-              </div>
-              <div>
-                <p class="text-[10.5px] text-n-slate-9">
-                  {{ $t('RAMON.LEAD_PANEL.FIELDS.OWNERS') }}
-                </p>
-                <p class="text-[13px] text-n-slate-12">{{ owners || '—' }}</p>
-              </div>
-            </div>
-            <Button
-              data-testid="lead-edit-all-toggle"
-              link
-              slate
-              xs
-              trailing-icon
-              class="self-center"
-              :icon="
-                fieldsExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'
-              "
-              :label="
-                fieldsExpanded
-                  ? $t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS_CLOSE')
-                  : $t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS')
-              "
-              @click="fieldsExpanded = !fieldsExpanded"
-            />
-            <div
-              v-if="fieldsExpanded"
-              ref="fieldsEl"
-              data-testid="lead-all-fields"
-            >
-              <LeadFields :lead="lead" />
-            </div>
+          <div
+            v-if="contactOpen"
+            ref="fieldsEl"
+            data-testid="lead-all-fields"
+            class="mt-3 min-w-0"
+          >
+            <LeadFields :lead="lead" />
           </div>
         </div>
 
@@ -1105,59 +1416,42 @@ const discard = async () => {
             </div>
           </div>
         </div>
-
-        <div v-if="inConversation" :class="SECAO">
-          <Button
-            v-if="!discardPrompt"
-            data-testid="lead-discard"
-            sm
-            faded
-            ruby
-            icon="i-lucide-user-x"
-            :label="$t('RAMON.LEAD_PANEL.DISCARD')"
-            @click="discardPrompt = true"
-          />
-          <div
-            v-else
-            data-testid="lead-discard-prompt"
-            class="flex flex-col gap-2"
-            :class="[AVISO, TOM.ruby]"
-          >
-            <p class="text-xs">
-              {{ $t('RAMON.LEAD_PANEL.DISCARD_CONFIRM') }}
-            </p>
-            <div class="flex justify-end gap-2">
-              <Button
-                data-testid="lead-discard-cancel"
-                sm
-                faded
-                slate
-                :label="$t('RAMON.FUNIL.CANCEL')"
-                @click="discardPrompt = false"
-              />
-              <Button
-                data-testid="lead-discard-confirm"
-                sm
-                ruby
-                :label="$t('RAMON.LEAD_PANEL.DISCARD')"
-                :disabled="discarding"
-                @click="discard"
-              />
-            </div>
-          </div>
-        </div>
       </template>
 
       <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
 
-      <LeadSimulador
-        v-else-if="shownTab === 'simulador'"
-        :lead="lead"
-        :ultima-simulacao="ultimaSim"
+      <LeadNotes
+        v-else-if="shownTab === 'notas'"
+        :lead-id="lead.id"
+        :notes="notes"
+        :in-conversation="inConversation"
+        @created="onNoteCreated"
       />
 
-      <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-3">
-        <DocChecklist :lead="lead" :context="context" />
+      <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-5">
+        <DocChecklist v-if="lead.thesis_id" :lead="lead" :context="context" />
+        <ArquivosRecebidos v-if="conversaId" :conversation-id="conversaId" />
+      </div>
+
+      <div v-else-if="shownTab === 'atividade'" class="flex flex-col gap-3">
+        <LeadHistory :lead-id="lead.id" />
+        <!-- linha do tempo completa mora na ficha (Dossiê) -->
+        <router-link v-slot="{ navigate }" custom :to="dossieRoute">
+          <Button
+            data-testid="lead-historico-ficha"
+            link
+            slate
+            xs
+            trailing-icon
+            icon="i-lucide-arrow-right"
+            class="self-start"
+            :label="$t('RAMON.LEAD_PANEL.HISTORY_IN_FICHA')"
+            @click="
+              navigate($event);
+              emit('navigate');
+            "
+          />
+        </router-link>
       </div>
 
       <LeadZapsignCard
@@ -1165,8 +1459,37 @@ const discard = async () => {
         :lead="lead"
         @complete-data="onCompleteData"
       />
-
-      <LeadHistory v-else-if="shownTab === 'historico'" :lead-id="lead.id" />
     </div>
+
+    <!-- Simular largo, ancorado à direita, por cima da conversa -->
+    <Teleport to="body">
+      <div
+        v-if="simuladorAberto"
+        data-testid="lead-simulador-largo"
+        role="dialog"
+        :aria-label="$t('RAMON.LEAD_PANEL.TABS.SIMULADOR')"
+        class="fixed inset-y-0 right-0 z-50 flex flex-col w-[min(760px,92vw)] bg-n-solid-2 border-l border-n-weak shadow-xl"
+      >
+        <div
+          class="flex items-center gap-2 shrink-0 px-3 py-2 border-b border-n-weak"
+        >
+          <Button
+            data-testid="lead-simulador-voltar"
+            sm
+            ghost
+            slate
+            icon="i-lucide-arrow-left"
+            :label="$t('RAMON.LEAD_PANEL.SIMULADOR_BACK')"
+            @click="simuladorAberto = false"
+          />
+          <span class="truncate text-sm font-semibold text-n-slate-12">
+            {{ lead.name }}
+          </span>
+        </div>
+        <div class="flex-1 min-h-0 overflow-y-auto p-4">
+          <LeadSimulador :lead="lead" :ultima-simulacao="ultimaSim" />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

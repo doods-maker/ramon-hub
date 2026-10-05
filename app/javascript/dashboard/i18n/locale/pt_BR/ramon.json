@@ -747,23 +747,43 @@
       "ENCAMINHAR_COMERCIAL": "Encaminhar ao comercial",
       "TABS": {
         "SUMMARY": "Resumo",
-        "HISTORY": "Histórico",
-        "PLAYBOOK": "Playbook",
+        "NOTES": "Notas",
+        "PLAYBOOK": "Scripts",
         "IA": "IA",
         "SIMULADOR": "Simulador",
         "DOCUMENTS": "Documentos",
-        "CONTRACT": "Contrato"
+        "CONTRACT": "Contrato",
+        "ACTIVITY": "Atividade"
       },
+      "SINCE": "Lead desde {date}",
+      "VIA": "via {source}",
+      "ARQUIVOS": {
+        "TITLE": "Arquivos recebidos",
+        "LOADING": "Carregando arquivos…",
+        "EMPTY": "Nenhum arquivo recebido nesta conversa.",
+        "ERROR": "Não foi possível carregar os arquivos.",
+        "DOWNLOAD": "Baixar",
+        "TIPO": {
+          "IMAGE": "Imagem",
+          "AUDIO": "Áudio",
+          "VIDEO": "Vídeo",
+          "PDF": "PDF",
+          "FILE": "Documento"
+        }
+      },
+      "NAV_LABEL": "Seções do painel do lead",
+      "HISTORY_IN_FICHA": "Histórico completo na ficha",
+      "SIMULADOR_BACK": "Voltar ao painel",
       "MACROS_TITLE": "Macros da conversa",
       "CONVERSATION_EXTRAS": "Mais da conversa",
       "NOTES": {
-        "TITLE": "Notas",
         "PLACEHOLDER": "Adicionar nota…",
+        "SAVE": "Salvar",
+        "SAVE_HINT": "Ctrl+Enter salva",
+        "LAST": "Última nota:",
         "SAVE_ERROR": "Não foi possível salvar a nota — tente de novo",
         "SYSTEM": "Sistema",
-        "USE_IN_EDITOR": "Usar no editor",
-        "SHOW_ALL": "ver todas ({count})",
-        "SHOW_LESS": "ver menos"
+        "USE_IN_EDITOR": "Usar no editor"
       },
       "QUIZ": {
         "TITLE": "Triagem da LP",
@@ -789,19 +809,29 @@
         "LAST_SIM_EM": "em",
         "CHANCE": "chance"
       },
-      "CASE_TITLE": "Caso",
       "CONTACT_DATA": "Dados do contato",
       "FIELDS": {
-        "OWNERS": "SDR / Closer",
-        "DCB": "DCB em",
-        "PHONE": "Telefone",
-        "CHANNEL": "Canal"
+        "DCB": "DCB",
+        "CHANNEL": "Canal",
+        "STAGE": "Etapa do funil",
+        "CASE": "Caso",
+        "OWNERS": "Responsáveis"
       },
-      "EDIT_ALL_FIELDS": "editar todos os campos",
-      "EDIT_ALL_FIELDS_CLOSE": "recolher campos",
       "DISCARD": "Não é lead",
       "CLOSE": "Fechar painel",
       "HISTORY": {
+        "TITLE": "Atividade recente",
+        "EMPTY": "Nenhuma atividade registrada ainda.",
+        "LOADING": "Carregando atividade…",
+        "LOAD_ERROR": "Não foi possível carregar a atividade.",
+        "DETAIL": {
+          "STAGE": "Etapa",
+          "VALUE": "Valor",
+          "THESIS": "Tese",
+          "PRIORITY": "Prioridade",
+          "SDR": "SDR",
+          "CLOSER": "Closer"
+        },
         "SYSTEM": "Sistema",
         "KIND": {
           "CREATED": "criou o lead",
@@ -821,15 +851,15 @@
           "REUNIAO_REGISTRADA": "registrou a reunião",
           "ZAPSIGN_SIGNED": "contrato assinado no ZapSign",
           "ZAPSIGN_REFUSED": "contrato recusado no ZapSign"
-        },
-        "EMPTY": "Nenhuma atividade registrada ainda.",
-        "LOADING": "Carregando histórico…",
-        "LOAD_ERROR": "Não foi possível carregar o histórico."
+        }
       },
       "LOADING": "Carregando lead…",
       "LOAD_ERROR": "Não foi possível carregar o lead desta conversa.",
       "RETRY": "Tentar novamente",
-      "DISCARD_CONFIRM": "Remover este lead do funil? A conversa continua no Chatwoot.",
+      "DISCARD_TITLE": "Tirar do funil?",
+      "DISCARD_CONFIRM": "O lead sai do funil e some dos relatórios. A conversa continua no WhatsApp.",
+      "DISCARD_ACTION": "Tirar do funil",
+      "MORE_ACTIONS": "Mais ações",
       "DISCARD_ERROR": "Não foi possível remover o lead — tente de novo",
       "VALUE_ADD": "+ valor",
       "VALUE_EDIT": "Clique para editar o valor"
@@ -973,7 +1003,9 @@
       "REFRESH": "Atualizar",
       "WORKING": "Gerando…",
       "SUMMARY_TITLE": "Resumo da IA",
-      "EMPTY": "Sem resumo ainda — clique em Atualizar para gerar a partir da conversa.",
+      "GENERATE": "gerar →",
+      "SEE_ALL": "…Ver mais",
+      "SEE_LESS": "Ver menos",
       "DRAFT_READY": "Rascunho inserido no editor — revise antes de enviar",
       "ERROR": "Não foi possível gerar. Tente de novo."
     },
@@ -1252,7 +1284,9 @@
       "COUNT": "{ok}/{total}",
       "CYCLE_HINT": "Clique: confirmado → falta → limpar",
       "PERGUNTAR": "perguntar →",
-      "PERGUNTA_INSERIDA": "Pergunta inserida no editor — ajuste e envie."
+      "PERGUNTA_INSERIDA": "Pergunta inserida no editor — ajuste e envie.",
+      "RESPONDIDAS": "✓ {count} respondidas",
+      "QUALIFICADO": "Qualificado — {ok}/{total} respondidas"
     },
     "NPS": {
       "LABEL": "NPS (0–10)",

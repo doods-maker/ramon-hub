@@ -747,23 +747,43 @@
       "ENCAMINHAR_COMERCIAL": "Forward to sales",
       "TABS": {
         "SUMMARY": "Summary",
-        "HISTORY": "History",
-        "PLAYBOOK": "Playbook",
+        "NOTES": "Notes",
+        "PLAYBOOK": "Scripts",
         "IA": "AI",
         "SIMULADOR": "Simulator",
         "DOCUMENTS": "Documents",
-        "CONTRACT": "Contract"
+        "CONTRACT": "Contract",
+        "ACTIVITY": "Activity"
       },
+      "SINCE": "Lead since {date}",
+      "VIA": "via {source}",
+      "ARQUIVOS": {
+        "TITLE": "Files received",
+        "LOADING": "Loading files…",
+        "EMPTY": "No files received in this conversation.",
+        "ERROR": "Could not load the files.",
+        "DOWNLOAD": "Download",
+        "TIPO": {
+          "IMAGE": "Image",
+          "AUDIO": "Audio",
+          "VIDEO": "Video",
+          "PDF": "PDF",
+          "FILE": "Document"
+        }
+      },
+      "NAV_LABEL": "Lead panel sections",
+      "HISTORY_IN_FICHA": "Full history in the file",
+      "SIMULADOR_BACK": "Back to panel",
       "MACROS_TITLE": "Conversation macros",
       "CONVERSATION_EXTRAS": "More from the conversation",
       "NOTES": {
-        "TITLE": "Notes",
         "PLACEHOLDER": "Add a note…",
+        "SAVE": "Save",
+        "SAVE_HINT": "Ctrl+Enter saves",
+        "LAST": "Last note:",
         "SAVE_ERROR": "Could not save the note — try again",
         "SYSTEM": "System",
-        "USE_IN_EDITOR": "Use in editor",
-        "SHOW_ALL": "see all ({count})",
-        "SHOW_LESS": "see fewer"
+        "USE_IN_EDITOR": "Use in editor"
       },
       "QUIZ": {
         "TITLE": "LP triage",
@@ -789,19 +809,29 @@
         "LAST_SIM_EM": "on",
         "CHANCE": "chance"
       },
-      "CASE_TITLE": "Case",
       "CONTACT_DATA": "Contact data",
       "FIELDS": {
-        "OWNERS": "SDR / Closer",
-        "DCB": "DCB on",
-        "PHONE": "Phone",
-        "CHANNEL": "Channel"
+        "DCB": "DCB",
+        "CHANNEL": "Channel",
+        "STAGE": "Funnel stage",
+        "CASE": "Case",
+        "OWNERS": "Owners"
       },
-      "EDIT_ALL_FIELDS": "edit all fields",
-      "EDIT_ALL_FIELDS_CLOSE": "collapse fields",
       "DISCARD": "Not a lead",
       "CLOSE": "Close panel",
       "HISTORY": {
+        "TITLE": "Recent activity",
+        "EMPTY": "No activity recorded yet.",
+        "LOADING": "Loading activity…",
+        "LOAD_ERROR": "Could not load the activity.",
+        "DETAIL": {
+          "STAGE": "Stage",
+          "VALUE": "Value",
+          "THESIS": "Thesis",
+          "PRIORITY": "Priority",
+          "SDR": "SDR",
+          "CLOSER": "Closer"
+        },
         "SYSTEM": "System",
         "KIND": {
           "CREATED": "created the lead",
@@ -821,15 +851,15 @@
           "REUNIAO_REGISTRADA": "recorded the meeting",
           "ZAPSIGN_SIGNED": "signed the contract on ZapSign",
           "ZAPSIGN_REFUSED": "refused the contract on ZapSign"
-        },
-        "EMPTY": "No activity recorded yet.",
-        "LOADING": "Loading history…",
-        "LOAD_ERROR": "Could not load the history."
+        }
       },
       "LOADING": "Loading lead…",
       "LOAD_ERROR": "Couldn't load the lead for this conversation.",
       "RETRY": "Try again",
-      "DISCARD_CONFIRM": "Remove this lead from the funnel? The conversation stays in Chatwoot.",
+      "DISCARD_TITLE": "Remove from the funnel?",
+      "DISCARD_CONFIRM": "The lead leaves the funnel and disappears from the reports. The conversation stays on WhatsApp.",
+      "DISCARD_ACTION": "Remove from funnel",
+      "MORE_ACTIONS": "More actions",
       "DISCARD_ERROR": "Could not remove the lead — try again",
       "VALUE_ADD": "+ value",
       "VALUE_EDIT": "Click to edit the value"
@@ -973,7 +1003,9 @@
       "REFRESH": "Refresh",
       "WORKING": "Generating…",
       "SUMMARY_TITLE": "AI summary",
-      "EMPTY": "No summary yet — click Refresh to generate one from the conversation.",
+      "GENERATE": "generate →",
+      "SEE_ALL": "…See more",
+      "SEE_LESS": "See less",
       "DRAFT_READY": "Draft inserted into the editor — review before sending",
       "ERROR": "Could not generate. Try again."
     },
@@ -1252,7 +1284,9 @@
       "COUNT": "{ok}/{total}",
       "CYCLE_HINT": "Click: confirmed → missing → clear",
       "PERGUNTAR": "ask →",
-      "PERGUNTA_INSERIDA": "Question inserted in the editor — adjust and send."
+      "PERGUNTA_INSERIDA": "Question inserted in the editor — adjust and send.",
+      "RESPONDIDAS": "✓ {count} answered",
+      "QUALIFICADO": "Qualified — {ok}/{total} answered"
     },
     "NPS": {
       "LABEL": "NPS (0–10)",

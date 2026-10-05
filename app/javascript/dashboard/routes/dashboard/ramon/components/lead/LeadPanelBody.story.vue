@@ -30,20 +30,28 @@ const STAGES = [
     position: 3,
     probability: 50,
   },
-  { id: 4, name: 'Negociação', color: '#14b8a6', position: 4, probability: 70 },
   {
-    id: 5,
+    id: 4,
+    name: 'Reunião realizada',
+    label: 'fase-reuniao-realizada',
+    color: '#06b6d4',
+    position: 4,
+    probability: 60,
+  },
+  { id: 5, name: 'Negociação', color: '#14b8a6', position: 5, probability: 70 },
+  {
+    id: 6,
     name: 'Fechado',
     color: '#22c55e',
-    position: 5,
+    position: 6,
     probability: 100,
     is_won: true,
   },
   {
-    id: 6,
+    id: 7,
     name: 'Perdido',
     color: '#ef4444',
-    position: 6,
+    position: 7,
     probability: 0,
     is_lost: true,
   },
@@ -97,6 +105,7 @@ const LEAD = {
   id: 42,
   name: 'João Carlos Pereira',
   lead_stage_id: 3,
+  created_at: diasAtras(9),
   stage_entered_at: diasAtras(4),
   value: 18500,
   thesis_id: 1,
@@ -167,6 +176,37 @@ const LEAD_PRESCREVENDO = { ...LEAD, dcb_em: '2020-06-10' };
 
 // Reunião agendada que já passou (Closer ainda não registrou o resultado)
 const LEAD_REUNIAO = { ...LEAD, id: 44 };
+
+// Em Qualificação: ainda sem contrato em jogo (painel com 4 ícones)
+const LEAD_QUALIFICACAO = { ...LEAD, id: 45, lead_stage_id: 2 };
+
+// Reunião realizada: fase de contrato (painel com 5 ícones)
+const LEAD_CONTRATO = {
+  ...LEAD,
+  id: 46,
+  lead_stage_id: 4,
+  stage_entered_at: diasAtras(1),
+};
+
+// Em Qualificação com as 4 perguntas respondidas (linha teal "Qualificado")
+const LEAD_QUALIFICADO = {
+  ...LEAD_QUALIFICACAO,
+  id: 47,
+  custom_attributes: {
+    ...LEAD.custom_attributes,
+    qualificacao_status: { 21: 'ok', 22: 'ok', 23: 'ok', 24: 'ok' },
+  },
+};
+
+const NOTAS_FASE = [
+  {
+    id: 5,
+    author_name: 'Eduardo',
+    body: 'Reunião feita com o Dr. Ramon. Cliente topou, falta só o laudo atualizado para mandar o contrato.',
+    created_at: diasAtras(0.2),
+  },
+];
+
 // Contrato já gerado no ZapSign (link pronto, 2 campos saíram em branco)
 const LEAD_CONTRATO_GERADO = {
   ...LEAD,
@@ -227,6 +267,28 @@ const API = {
       },
     ],
   },
+  'leads/45/tasks': {
+    payload: [
+      {
+        id: 3,
+        lead_id: 45,
+        title: 'Perguntar se tinha carteira assinada',
+        kind: 'follow_up',
+        due_at: emDias(0.2),
+      },
+    ],
+  },
+  'leads/46/tasks': {
+    payload: [
+      {
+        id: 4,
+        lead_id: 46,
+        title: 'Mandar o contrato pelo ZapSign',
+        kind: 'follow_up',
+        due_at: emDias(1),
+      },
+    ],
+  },
   'leads/44/tasks': {
     payload: [
       {
@@ -247,6 +309,38 @@ const API = {
         created_at: diasAtras(4),
       },
     ],
+  },
+  'leads/45/notes': { payload: NOTAS_FASE },
+  'leads/46/notes': {
+    payload: [
+      {
+        id: 6,
+        author_name: 'Eduardo',
+        body: 'Mandou a CTPS.',
+        created_at: diasAtras(3),
+      },
+      ...NOTAS_FASE,
+    ],
+  },
+  'conversations/101/attachments': {
+    payload: [
+      ['audio', 'Áudio-1.ogg', 0.1],
+      ['image', 'Laudo do ortopedista.jpg', 0.2],
+      ['file', 'CTPS - João Carlos.pdf', 1.1],
+      ['audio', 'Áudio-2.ogg', 1.15],
+      ['video', 'Mão direita.mp4', 3.2],
+      ['file', 'Comprovante de residência.docx', 3.3],
+    ].map(([tipo, nome, dias], i) => ({
+      id: i + 1,
+      file_type: tipo,
+      extension: nome.split('.').pop(),
+      data_url: `https://hub.exemplo/rails/active_storage/blobs/redirect/x${i}/${encodeURIComponent(nome)}`,
+      created_at: Math.floor(Date.now() / 1000 - dias * 86400),
+    })),
+  },
+  'conversations/101/ramon_copilot': {
+    content:
+      'João sofreu acidente de trabalho em 2019 (metalúrgica), ficou afastado pelo B91 até 12/2021 e voltou com perda de força na mão direita. Tem CAT e CTPS; falta o laudo atualizado. Perguntou quanto tempo demora e se paga algo antes — respondi que não há cobrança adiantada. Está animado, mas com receio de perder o emprego.',
   },
   'leads/42/notes': {
     payload: [
@@ -276,10 +370,16 @@ const API = {
   },
   'leads/42/activities': {
     payload: [
-      { id: 1, kind: 'created', created_at: diasAtras(9) },
+      {
+        id: 1,
+        kind: 'created',
+        to_value: 'Meta Ads',
+        created_at: diasAtras(9),
+      },
       {
         id: 2,
         kind: 'stage_changed',
+        from_value: 'Novo',
         to_value: 'Qualificação',
         author_name: 'Eduardo',
         created_at: diasAtras(7),
@@ -292,23 +392,33 @@ const API = {
       },
       {
         id: 4,
+        kind: 'closer_changed',
+        to_value: 'Dr. Ramon',
+        author_name: 'Eduardo',
+        created_at: diasAtras(5),
+      },
+      {
+        id: 5,
         kind: 'stage_changed',
+        from_value: 'Qualificação',
         to_value: 'Reunião agendada',
         author_name: 'Eduardo',
         created_at: diasAtras(4),
       },
+      {
+        id: 6,
+        kind: 'meeting_scheduled',
+        to_value: 'Primeiro Atendimento',
+        created_at: diasAtras(4),
+      },
+      {
+        id: 7,
+        kind: 'note_added',
+        to_value: 'Cliente mandou a CTPS pelo WhatsApp. Falta o laudo.',
+        author_name: 'Eduardo',
+        created_at: diasAtras(1),
+      },
     ],
-  },
-  // prévia do contrato: endereço só com cidade/UF — rua/número/bairro em branco
-  'leads/42/zapsign/preview': {
-    faltando: ['{{rua}}', '{{número}}', '{{bairro}}'],
-    dados: {
-      cidade: 'Tubarão',
-      uf: 'SC',
-      estado_civil: 'casado(a)',
-      profissao: 'montador industrial',
-      email: 'joao.pereira@email.com',
-    },
   },
   'leads/zapsign_templates': [
     { token: 'a', name: 'Contrato + procuração — auxílio-acidente' },
@@ -356,6 +466,15 @@ const clicando =
     }, 800);
     return {};
   };
+// Resumo rolado até o fim (depois que notas/cartões carregam)
+const rolandoAoFim = () => {
+  localStorage.setItem('ramon_lead_panel_tab', 'resumo');
+  setTimeout(() => {
+    const corpo = document.querySelector('[data-testid="lead-panel-corpo"]');
+    if (corpo) corpo.scrollTop = corpo.scrollHeight;
+  }, 2500);
+  return {};
+};
 // Estados internos do cartão (janela aberta) só por clique: clica em ordem.
 const comAbaEClique =
   (tab, ...testids) =>
@@ -453,7 +572,82 @@ const comAbaEClique =
         />
       </div>
     </Variant>
-    <Variant title="Simulador" :init-state="comAba('simulador')">
+    <Variant title="Contrato" :init-state="comAba('contrato')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Qualificacao" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_QUALIFICACAO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="FaseContrato" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Qualificado" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_QUALIFICADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="ResumoIA" :init-state="clicando('copilot-summarize')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Menu" :init-state="clicando('lead-more')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant
+      title="TirarDoFunil"
+      :init-state="clicando('lead-more', 'lead-discard')"
+    >
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Notas" :init-state="comAba('notas')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_PARADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Atividade" :init-state="comAba('atividade')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD"
@@ -462,13 +656,52 @@ const comAbaEClique =
         />
       </div>
     </Variant>
-    <Variant title="Contrato" :init-state="comAba('contrato')">
+    <Variant title="Scripts" :init-state="comAba('playbook')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD"
           context="conversation"
           :conversation-id="101"
         />
+      </div>
+    </Variant>
+    <!-- fim do Resumo: link "Histórico completo na ficha" -->
+    <Variant title="FimResumo" :init-state="rolandoAoFim">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <!-- Simular largo: painel à direita de uma página 1440px (conversa fake) -->
+    <Variant
+      title="SimuladorLargo"
+      :init-state="clicando('lead-nav-simulador')"
+    >
+      <div class="h-screen w-full flex bg-n-background">
+        <div class="flex-1 flex flex-col gap-3 p-6 border-r border-n-weak">
+          <div
+            v-for="n in 6"
+            :key="n"
+            class="h-10 rounded-xl bg-n-alpha-2"
+            :class="n % 2 ? 'w-2/5' : 'w-1/3 self-end'"
+          />
+        </div>
+        <div class="w-[400px] flex">
+          <LeadPanelBody
+            :lead="LEAD"
+            context="conversation"
+            :conversation-id="101"
+          />
+        </div>
+      </div>
+    </Variant>
+    <!-- "Dados do contato" → "Editar todos os campos" aberto -->
+    <Variant title="Campos">
+      <div class="w-[400px] p-3 bg-n-background">
+        <LeadFields :lead="LEAD" />
       </div>
     </Variant>
     <Variant title="Contrato gerado" :init-state="comAba('contrato')">
@@ -510,21 +743,6 @@ const comAbaEClique =
           context="conversation"
           :conversation-id="101"
         />
-      </div>
-    </Variant>
-    <Variant title="Historico" :init-state="comAba('historico')">
-      <div class="h-screen w-[400px] flex bg-n-background">
-        <LeadPanelBody
-          :lead="LEAD"
-          context="conversation"
-          :conversation-id="101"
-        />
-      </div>
-    </Variant>
-    <!-- "Dados do contato" → "Editar todos os campos" aberto -->
-    <Variant title="Campos">
-      <div class="w-[400px] p-3 bg-n-background">
-        <LeadFields :lead="LEAD" />
       </div>
     </Variant>
   </Story>
