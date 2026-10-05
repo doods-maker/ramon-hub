@@ -3,8 +3,7 @@
 #   a resposta diz qual dos três aconteceu (enviado | sem_email | sem_servidor);
 # - mensagem pronta pra equipe copiar ou abrir no WhatsApp (wa.me): quem aperta
 #   enviar é sempre uma pessoa, nada sai sozinho.
-# A mensagem é texto NOVO pro cliente: só aparece com PORTAL_MENSAGEM_CONVITE=on,
-# depois do "aprovado" do Eduardo (enquanto isso o hub mostra só a senha).
+# Texto da mensagem aprovado pelo Eduardo (05/10/2026) — mudar só com novo aprovado.
 class Ramon::PortalConvite
   MENSAGEM = <<~TEXTO.freeze
     Olá, %<nome>s! Aqui é do escritório Ramon Antonio Advogados.
@@ -44,8 +43,6 @@ class Ramon::PortalConvite
   end
 
   def mensagem(senha)
-    return unless ENV['PORTAL_MENSAGEM_CONVITE'] == 'on'
-
     format(MENSAGEM, nome: @cliente.primeiro_nome, url: url_painel, cpf: cpf_formatado, senha: senha).strip
   end
 
