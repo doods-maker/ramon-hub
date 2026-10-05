@@ -728,7 +728,7 @@
         "EXAMPLE": {
           "TITLE": "Lead went silent after the meeting",
           "DESCRIPTION": "When the lead has not replied for days after the closing meeting",
-          "INSTRUCTION": "Follow up kindly, recall the agreed next step and offer a new time slot; use @playbook_da_tese if needed."
+          "INSTRUCTION": "Follow up kindly, recall the agreed next step and offer a new time slot; use [Thesis playbook](tool://playbook_da_tese) if needed."
         }
       }
     },

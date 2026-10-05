@@ -728,7 +728,7 @@
         "EXAMPLE": {
           "TITLE": "Lead que sumiu depois da reunião",
           "DESCRIPTION": "Quando o lead não responde há dias depois da reunião de fechamento",
-          "INSTRUCTION": "Retome com gentileza, lembre o próximo passo combinado e ofereça novo horário; use @playbook_da_tese se precisar."
+          "INSTRUCTION": "Retome com gentileza, lembre o próximo passo combinado e ofereça novo horário; use [Playbook da tese](tool://playbook_da_tese) se precisar."
         }
       }
     },

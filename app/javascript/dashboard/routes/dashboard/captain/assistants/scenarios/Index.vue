@@ -48,7 +48,7 @@ const scenariosExample = [
     title: t('CAPTAIN.ASSISTANTS.SCENARIOS.EXAMPLE.TITLE'),
     description: t('CAPTAIN.ASSISTANTS.SCENARIOS.EXAMPLE.DESCRIPTION'),
     instruction: t('CAPTAIN.ASSISTANTS.SCENARIOS.EXAMPLE.INSTRUCTION'),
-    tools: [],
+    tools: ['playbook_da_tese'],
   },
 ];
 
