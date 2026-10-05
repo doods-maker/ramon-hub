@@ -28,10 +28,11 @@ class RamonFluxoListener < BaseListener
     return if para.nil?
 
     lead = event.data[:lead]
+    etapa = LeadStage.find_by(id: para) # a etapa do evento, não a de agora (o lead pode ter andado de novo)
     dados = { 'de_etapa_id' => de, 'para_etapa_id' => para }
     disparar('lead_mudou_etapa', lead, event, dados)
-    disparar('lead_ganho', lead, event, dados) if lead.lead_stage&.is_won
-    disparar('lead_perdido', lead, event, dados) if lead.lead_stage&.is_lost
+    disparar('lead_ganho', lead, event, dados) if etapa&.is_won
+    disparar('lead_perdido', lead, event, dados) if etapa&.is_lost
   end
 
   private

@@ -91,4 +91,11 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Ver {nome}' }, ctx)
     end.to change { agente.notifications.where(notification_type: 'ramon_fluxo_aviso').count }.by(1)
   end
+
+  it 'sino sem responsável não cai em todo mundo' do
+    create(:user, account: account)
+    r = nil
+    expect { r = Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Ver' }, ctx) }.not_to change(Notification, :count)
+    expect(r[:resumo]).to eq('sino: sem responsável')
+  end
 end

@@ -128,8 +128,8 @@ class Ramon::Fluxos::Executor
   def avisar_falha
     fluxo = @execucao.fluxo
     lead = @execucao.lead
-    if lead
-      admins = fluxo.account.account_users.administrator.pluck(:user_id)
+    admins = fluxo.account.account_users.administrator.pluck(:user_id)
+    if lead && admins.any? # lista vazia no builder vira "todo mundo"
       Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_fluxo_falhou',
                                          meta: { 'label' => fluxo.nome }, user_ids: admins).perform
     end
