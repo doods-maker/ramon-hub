@@ -16,8 +16,12 @@ class Api::V1::Accounts::RamonEsteiraController < Api::V1::Accounts::BaseControl
   end
 
   # "Adiar": empurra a task do item pra frente; sem task, cria follow-up amanhã.
+  # Reunião não se adia (perderia lembretes e o horário do Cal.com): Remarcar
+  # no painel do lead.
   def snooze
     task = @lead.lead_tasks.open_tasks.find_by(id: params[:task_id])
+    return render json: { error: 'REUNIAO_REMARCAR' }, status: :unprocessable_entity if task&.kind == 'meeting'
+
     if task
       # max com agora: task vencida há dias adia pra amanhã, não pra ontem.
       task.update!(due_at: [task.due_at, Time.current].max + 1.day)

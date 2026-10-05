@@ -15,6 +15,7 @@ RSpec.describe Ramon::EsteiraBuilder do
     expect(items.size).to eq(1)
     expect(items.first[:lead_id]).to eq(lead.id)
     expect(items.first[:task_id]).to eq(task.id)
+    expect(items.first[:task_kind]).to eq(task.kind)
     expect(items.first[:reasons].first).to eq({ key: 'TASK_OVERDUE', params: { title: 'Ligar' } })
     expect(items.first[:score]).to eq(80)
     expect(items.first[:suggested_action]).to eq('task')

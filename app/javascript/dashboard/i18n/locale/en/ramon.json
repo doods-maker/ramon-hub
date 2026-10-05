@@ -231,7 +231,8 @@
         "SNOOZE": "A",
         "SKIP": "Space",
         "EXIT": "Esc"
-      }
+      },
+      "REMARCAR": "Reschedule on the lead"
     },
     "SHORTCUTS": {
       "TITLE": "External shortcuts",
@@ -917,7 +918,12 @@
         "DONE": "Done ✓",
         "SNOOZE": "Snooze 1d",
         "RESCHEDULE": "Reschedule",
-        "ERROR": "Could not update the task — try again"
+        "ERROR": "Could not update the task — try again",
+        "REMARCAR": "Reschedule",
+        "REMARCAR_TITULO": "Reschedule meeting",
+        "REMARCADA": "Meeting rescheduled — confirmation drafted in notes",
+        "CALCOM_REMARCAR": "Cal.com meeting: reschedule it on Cal.com too — the hub does not change the booking there.",
+        "REMARCAR_HINT": "Reminders move to the new time and a confirmation draft goes to the notes — nothing is sent to the client."
       },
       "ANDAMENTO": {
         "TITLE": "Progress",
@@ -962,14 +968,15 @@
           "NOTE_ADDED": "added a note",
           "TASK_CREATED": "created task",
           "TASK_COMPLETED": "completed task",
-          "MEETING_SCHEDULED": "scheduled a meeting via Cal.com",
-          "MEETING_CANCELLED": "meeting cancelled via Cal.com",
+          "MEETING_SCHEDULED": "scheduled a meeting",
+          "MEETING_CANCELLED": "cancelled the meeting",
           "ESTEIRA_DONE": "resolved in the Esteira",
           "THESIS_CHANGED": "changed the thesis",
           "LP_RECAPTURED": "received a new landing page form",
           "REUNIAO_REGISTRADA": "recorded the meeting",
           "ZAPSIGN_SIGNED": "signed the contract on ZapSign",
-          "ZAPSIGN_REFUSED": "refused the contract on ZapSign"
+          "ZAPSIGN_REFUSED": "refused the contract on ZapSign",
+          "MEETING_RESCHEDULED": "rescheduled the meeting"
         }
       },
       "LOADING": "Loading lead…",

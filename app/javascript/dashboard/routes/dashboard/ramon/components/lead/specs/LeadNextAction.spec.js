@@ -18,13 +18,14 @@ const build = ({
   complete = vi.fn(),
   update = vi.fn(),
   fetchForLead = vi.fn(),
+  remarcarReuniao = vi.fn(),
 } = {}) =>
   createStore({
     modules: {
       leadTasks: {
         namespaced: true,
         getters: { getByLead: () => () => tasks },
-        actions: { fetchForLead, complete, update },
+        actions: { fetchForLead, complete, update, remarcarReuniao },
       },
     },
   });
@@ -37,6 +38,7 @@ const mountCard = (storeOpts = {}) =>
       mocks: { $t: k => k },
       stubs: {
         TaskBellMenu: true,
+        teleport: true,
         // router-link custom: o stub precisa entregar o slot com navigate
         RouterLink: { template: '<slot :navigate="() => {}" />' },
       },
@@ -118,6 +120,62 @@ describe('LeadNextAction', () => {
       leadId: 7,
       taskId: 3,
       payload: { due_at: '2026-08-01T12:00:00.000Z' },
+    });
+  });
+
+  describe('reunião', () => {
+    const futuro = new Date(Date.now() + 3 * 86400000);
+    futuro.setHours(14, 0, 0, 0);
+    const reuniao = { ...task, kind: 'meeting', due_at: futuro.toISOString() };
+
+    it('troca Adiar/Reagendar por Remarcar', () => {
+      const wrapper = mountCard({ tasks: [reuniao] });
+      expect(wrapper.find('[data-testid="next-action-snooze"]').exists()).toBe(
+        false
+      );
+      expect(
+        wrapper.find('[data-testid="next-action-reschedule"]').exists()
+      ).toBe(false);
+      expect(
+        wrapper.find('[data-testid="next-action-remarcar"]').exists()
+      ).toBe(true);
+    });
+
+    it('Remarcar manda o horário novo pela store e avisa o painel', async () => {
+      const remarcarReuniao = vi.fn().mockResolvedValue({});
+      const wrapper = mountCard({ tasks: [reuniao], remarcarReuniao });
+      await wrapper
+        .find('[data-testid="next-action-remarcar"]')
+        .trigger('click');
+      expect(wrapper.find('[data-testid="remarcar-calcom"]').exists()).toBe(
+        false
+      );
+      await wrapper
+        .find('[data-testid="remarcar-data"]')
+        .setValue('2026-12-10T15:30');
+      await wrapper.find('[data-testid="remarcar-confirmar"]').trigger('click');
+      await flushPromises();
+      expect(remarcarReuniao).toHaveBeenCalledWith(expect.anything(), {
+        leadId: 7,
+        taskId: 3,
+        startsAt: new Date('2026-12-10T15:30').toISOString(),
+      });
+      expect(wrapper.emitted('notesChanged')).toHaveLength(1);
+      expect(wrapper.find('[data-testid="remarcar-janela"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('reunião do Cal.com avisa pra remarcar lá também', async () => {
+      const wrapper = mountCard({
+        tasks: [{ ...reuniao, title: 'Reunião Cal.com: Consulta' }],
+      });
+      await wrapper
+        .find('[data-testid="next-action-remarcar"]')
+        .trigger('click');
+      expect(wrapper.find('[data-testid="remarcar-calcom"]').exists()).toBe(
+        true
+      );
     });
   });
 });

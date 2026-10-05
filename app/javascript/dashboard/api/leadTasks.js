@@ -27,6 +27,14 @@ class LeadTasksAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/tasks/${id}/complete`);
   }
 
+  // Remarcar reunião: passa pelo agendamento (lembretes, rascunho, sino)
+  remarcarReuniao(leadId, taskId, startsAt) {
+    return axios.patch(`${this.url}/${leadId}/reuniao_agendada`, {
+      task_id: taskId,
+      starts_at: startsAt,
+    });
+  }
+
   delete(leadId, id) {
     return axios.delete(`${this.url}/${leadId}/tasks/${id}`);
   }

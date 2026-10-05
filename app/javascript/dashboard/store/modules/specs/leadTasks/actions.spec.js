@@ -111,4 +111,18 @@ describe('leadTasks actions', () => {
       tasks: payload,
     });
   });
+
+  it('remarcarReuniao faz PATCH no agendamento e MERGE_LEAD_TASK', async () => {
+    const task = { id: 3, due_at: '2026-12-10T18:30:00Z' };
+    axios.patch.mockResolvedValue({ data: task });
+    await actions.remarcarReuniao(
+      { commit },
+      { leadId: 10, taskId: 3, startsAt: '2026-12-10T18:30:00Z' }
+    );
+    expect(axios.patch).toHaveBeenCalledWith(
+      expect.stringContaining('/leads/10/reuniao_agendada'),
+      { task_id: 3, starts_at: '2026-12-10T18:30:00Z' }
+    );
+    expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD_TASK, task);
+  });
 });

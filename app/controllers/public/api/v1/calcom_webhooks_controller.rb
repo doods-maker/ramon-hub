@@ -1,5 +1,5 @@
 class Public::Api::V1::CalcomWebhooksController < PublicController
-  TASK_TITLE_PREFIX = 'Reunião Cal.com'.freeze
+  TASK_TITLE_PREFIX = Ramon::ReuniaoAgendamento::CALCOM_PREFIX
 
   # ponytail: janela de dedup no cache Redis já existente — sem tabela nova. Um
   # corpo validamente assinado só é processado 1x por 24h; cobre replay (o mesmo

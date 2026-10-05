@@ -231,7 +231,8 @@
         "SNOOZE": "A",
         "SKIP": "Espaço",
         "EXIT": "Esc"
-      }
+      },
+      "REMARCAR": "Remarcar no lead"
     },
     "SHORTCUTS": {
       "TITLE": "Atalhos externos",
@@ -917,7 +918,12 @@
         "DONE": "Feito ✓",
         "SNOOZE": "Adiar 1d",
         "RESCHEDULE": "Reagendar",
-        "ERROR": "Não foi possível atualizar a tarefa — tente de novo"
+        "ERROR": "Não foi possível atualizar a tarefa — tente de novo",
+        "REMARCAR": "Remarcar",
+        "REMARCAR_TITULO": "Remarcar reunião",
+        "REMARCADA": "Reunião remarcada — confirmação em rascunho nas notas",
+        "CALCOM_REMARCAR": "Reunião do Cal.com: remarque também no Cal.com — o hub não altera o agendamento de lá.",
+        "REMARCAR_HINT": "Os lembretes vão para o horário novo e um rascunho de confirmação fica nas notas — nada é enviado ao cliente."
       },
       "ANDAMENTO": {
         "TITLE": "Andamento",
@@ -962,14 +968,15 @@
           "NOTE_ADDED": "adicionou nota",
           "TASK_CREATED": "criou tarefa",
           "TASK_COMPLETED": "concluiu tarefa",
-          "MEETING_SCHEDULED": "agendou reunião via Cal.com",
-          "MEETING_CANCELLED": "reunião cancelada via Cal.com",
+          "MEETING_SCHEDULED": "agendou reunião",
+          "MEETING_CANCELLED": "cancelou a reunião",
           "ESTEIRA_DONE": "resolveu na Esteira",
           "THESIS_CHANGED": "mudou a tese",
           "LP_RECAPTURED": "recebeu novo formulário da LP",
           "REUNIAO_REGISTRADA": "registrou a reunião",
           "ZAPSIGN_SIGNED": "contrato assinado no ZapSign",
-          "ZAPSIGN_REFUSED": "contrato recusado no ZapSign"
+          "ZAPSIGN_REFUSED": "contrato recusado no ZapSign",
+          "MEETING_RESCHEDULED": "remarcou a reunião"
         }
       },
       "LOADING": "Carregando lead…",

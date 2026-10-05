@@ -91,6 +91,16 @@ export const actions = {
     return data;
   },
 
+  remarcarReuniao: async ({ commit }, { leadId, taskId, startsAt }) => {
+    const { data } = await LeadTasksAPI.remarcarReuniao(
+      leadId,
+      taskId,
+      startsAt
+    );
+    commit(types.MERGE_LEAD_TASK, data);
+    return data;
+  },
+
   destroy: async ({ commit }, { leadId, taskId }) => {
     await LeadTasksAPI.delete(leadId, taskId);
     commit(types.DELETE_LEAD_TASK, taskId);

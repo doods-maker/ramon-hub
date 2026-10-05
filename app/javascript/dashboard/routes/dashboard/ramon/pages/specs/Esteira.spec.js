@@ -263,4 +263,22 @@ describe('Esteira.vue', () => {
       params: undefined,
     });
   });
+
+  it('reunião não se adia: Remarcar abre o lead no Funil', async () => {
+    const wrapper = await mountEsteira({
+      ...payload,
+      items: [{ ...payload.items[1], task_kind: 'meeting' }],
+    });
+    expect(wrapper.find('[data-testid="esteira-snooze"]').exists()).toBe(false);
+    await wrapper.find('[data-testid="esteira-remarcar"]').trigger('click');
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ramon_funil',
+      params: undefined,
+    });
+    expect(dispatchSpy).toHaveBeenCalledWith('leads/select', 2);
+    // atalho A também não adia
+    keyHandlers.KeyA.action();
+    await flushPromises();
+    expect(RamonEsteiraAPI.snooze).not.toHaveBeenCalled();
+  });
 });

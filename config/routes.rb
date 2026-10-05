@@ -390,7 +390,7 @@ Rails.application.routes.draw do
               get :preview
               put :dados
             end
-            resource :reuniao_agendada, only: [:create], controller: 'lead_reunioes_agendadas'
+            resource :reuniao_agendada, only: [:create, :update], controller: 'lead_reunioes_agendadas'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
           resources :copilot_suggestions, only: [:index] do

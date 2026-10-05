@@ -1171,7 +1171,7 @@ const discard = async () => {
           </div>
 
           <!-- próximo passo (tarefa aberta mais próxima) -->
-          <LeadNextAction :lead-id="lead.id" />
+          <LeadNextAction :lead-id="lead.id" @notes-changed="notesTick += 1" />
         </div>
 
         <QualificacaoViva

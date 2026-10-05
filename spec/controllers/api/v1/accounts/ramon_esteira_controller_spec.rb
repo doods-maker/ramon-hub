@@ -55,6 +55,17 @@ RSpec.describe 'Ramon Esteira API', type: :request do
       expect(task.due_at).to be < 2.days.from_now
     end
 
+    it 'recusa adiar reunião (remarca no painel do lead)', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: active_stage)
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting', due_at: 1.hour.ago)
+      expect do
+        post "#{url}/snooze", params: { lead_id: lead.id, task_id: task.id },
+                              headers: agent.create_new_auth_token, as: :json
+      end.not_to(change { task.reload.due_at })
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to eq('REUNIAO_REMARCAR')
+    end
+
     it 'creates a follow-up task for tomorrow when the item has no task' do
       lead = create(:lead, account: account, lead_stage: active_stage)
       post "#{url}/snooze", params: { lead_id: lead.id },

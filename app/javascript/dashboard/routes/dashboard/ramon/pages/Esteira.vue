@@ -181,9 +181,21 @@ const markDone = async () => {
   }
 };
 
+// Reunião não se adia (perderia lembretes e o horário do Cal.com): o item
+// mostra "Remarcar", que abre o lead no Funil — o painel tem o Remarcar.
+const isMeetingItem = computed(() => current.value?.task_kind === 'meeting');
+const openLeadToReschedule = () => {
+  router.push(accountScopedRoute('ramon_funil'));
+  store.dispatch('leads/select', current.value.lead_id);
+};
+
 const snooze = async () => {
   const item = current.value;
   if (!item || isActing.value) return;
+  if (isMeetingItem.value) {
+    openLeadToReschedule();
+    return;
+  }
   isActing.value = true;
   try {
     await RamonEsteiraAPI.snooze(item.lead_id, item.task_id);
@@ -492,6 +504,18 @@ useKeyboardEvents({
             <kbd :class="ATALHO">{{ t('RAMON.ESTEIRA.KEY.DONE') }}</kbd>
           </Button>
           <Button
+            v-if="isMeetingItem"
+            data-testid="esteira-remarcar"
+            faded
+            slate
+            icon="i-lucide-calendar-sync"
+            @click="openLeadToReschedule"
+          >
+            {{ t('RAMON.ESTEIRA.REMARCAR') }}
+            <kbd :class="ATALHO">{{ t('RAMON.ESTEIRA.KEY.SNOOZE') }}</kbd>
+          </Button>
+          <Button
+            v-else
             data-testid="esteira-snooze"
             faded
             slate
