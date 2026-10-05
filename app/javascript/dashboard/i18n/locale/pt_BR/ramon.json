@@ -91,6 +91,7 @@
         "SORTED_BY": "mesma fila da Esteira · urgência × dinheiro",
         "OPEN_CONVERSATION": "Abrir conversa",
         "AI_DRAFT": "Rascunho da IA",
+        "AI_DRAFT_ERROR": "Não foi possível gerar o rascunho da IA — tente de novo ou escreva na conversa",
         "DONE": "Feito ✓",
         "HINT": "Espaço pula · F feito",
         "EMPTY_TITLE": "Fila zerada",

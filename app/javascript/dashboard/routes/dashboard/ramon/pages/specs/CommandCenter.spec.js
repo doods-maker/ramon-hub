@@ -1,6 +1,7 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { ref } from 'vue';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
+import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
 import CommandCenter from '../CommandCenter.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
@@ -44,6 +45,10 @@ vi.mock('dashboard/composables/useKeyboardEvents', () => ({
 
 vi.mock('dashboard/api/ramonEsteira', () => ({
   default: { get: vi.fn(), done: vi.fn() },
+}));
+
+vi.mock('dashboard/api/ramonCopilot', () => ({
+  default: { generate: vi.fn() },
 }));
 
 // A fila do Centro é a fila da Esteira: mesma ordem, mesmos itens.
@@ -298,6 +303,47 @@ describe('CommandCenter.vue', () => {
       .find('[data-testid="queue-open-conversation"]')
       .trigger('click');
     expect(dispatchSpy).toHaveBeenCalledWith('leads/select', 1);
+  });
+
+  it('hides the AI draft when the item has no conversation', async () => {
+    const wrapper = await mountPage();
+    expect(wrapper.find('[data-testid="queue-ai-draft"]').exists()).toBe(false);
+  });
+
+  it('AI draft fills the reply draft BEFORE opening the dock', async () => {
+    RamonCopilotAPI.generate.mockResolvedValue({
+      data: { content: 'Oi, Sebastião!' },
+    });
+    const wrapper = await mountPage();
+    keyHandlers.Space.action({ preventDefault: vi.fn() });
+    await flushPromises();
+    await wrapper.find('[data-testid="queue-ai-draft"]').trigger('click');
+    await flushPromises();
+    expect(RamonCopilotAPI.generate).toHaveBeenCalledWith(9, 'draft');
+    const calls = dispatchSpy.mock.calls.map(([action]) => action);
+    expect(dispatchSpy).toHaveBeenCalledWith('draftMessages/set', {
+      key: 'draft-9-REPLY',
+      message: 'Oi, Sebastião!',
+    });
+    expect(calls.indexOf('draftMessages/set')).toBeLessThan(
+      calls.indexOf('leads/toggleDock')
+    );
+    expect(dispatchSpy).toHaveBeenCalledWith('leads/toggleDock', 9);
+  });
+
+  it('AI draft failure warns and does not open the conversation', async () => {
+    RamonCopilotAPI.generate.mockRejectedValue(new Error('sem chave'));
+    const wrapper = await mountPage();
+    keyHandlers.Space.action({ preventDefault: vi.fn() });
+    await flushPromises();
+    await wrapper.find('[data-testid="queue-ai-draft"]').trigger('click');
+    await flushPromises();
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.COMMAND.QUEUE.AI_DRAFT_ERROR');
+    expect(dispatchSpy).not.toHaveBeenCalledWith(
+      'draftMessages/set',
+      expect.anything()
+    );
+    expect(dispatchSpy).not.toHaveBeenCalledWith('leads/toggleDock', 9);
   });
 
   it('opens the lead from the agenda and the week view from its footer', async () => {

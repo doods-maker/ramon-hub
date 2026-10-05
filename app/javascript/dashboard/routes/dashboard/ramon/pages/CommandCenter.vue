@@ -8,6 +8,7 @@ import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useAlert } from 'dashboard/composables';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
+import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
 import { brlCompact } from '../helpers/currency';
 import { reasonLabel, severityDotClass, tomMotivo } from '../helpers/esteira';
 import AgendaToday from '../components/command/AgendaToday.vue';
@@ -204,6 +205,30 @@ const openConversation = item => {
     store.dispatch('leads/toggleDock', item.conversation_id);
   } else {
     openLead(item.lead_id);
+  }
+};
+
+// Rascunho da IA: gera a resposta, deixa no campo de resposta da conversa
+// (rascunho do ReplyBox, lido ao montar) e abre o dock. Nada é enviado.
+const isDrafting = ref(false);
+const aiDraft = async () => {
+  const item = current.value;
+  if (!item?.conversation_id || isDrafting.value) return;
+  isDrafting.value = true;
+  try {
+    const { data: draft } = await RamonCopilotAPI.generate(
+      item.conversation_id,
+      'draft'
+    );
+    await store.dispatch('draftMessages/set', {
+      key: `draft-${item.conversation_id}-REPLY`,
+      message: draft.content,
+    });
+    openConversation(item);
+  } catch (e) {
+    useAlert(t('RAMON.COMMAND.QUEUE.AI_DRAFT_ERROR'));
+  } finally {
+    isDrafting.value = false;
   }
 };
 
@@ -454,13 +479,16 @@ useKeyboardEvents({
                 @click="openConversation(current)"
               />
               <Button
+                v-if="current.conversation_id"
                 data-testid="queue-ai-draft"
                 sm
                 faded
                 slate
                 icon="i-lucide-sparkles"
                 :label="t('RAMON.COMMAND.QUEUE.AI_DRAFT')"
-                @click="openConversation(current)"
+                :is-loading="isDrafting"
+                :disabled="isDrafting"
+                @click="aiDraft"
               />
               <Button
                 data-testid="queue-done"

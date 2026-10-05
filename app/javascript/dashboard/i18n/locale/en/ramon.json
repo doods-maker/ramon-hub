@@ -91,6 +91,7 @@
         "SORTED_BY": "same queue as the Esteira · urgency × money",
         "OPEN_CONVERSATION": "Open conversation",
         "AI_DRAFT": "AI draft",
+        "AI_DRAFT_ERROR": "Couldn't generate the AI draft — try again or write in the conversation",
         "DONE": "Done ✓",
         "HINT": "Space skips · F done",
         "EMPTY_TITLE": "Queue cleared",
