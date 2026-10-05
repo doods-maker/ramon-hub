@@ -79,7 +79,11 @@ const DASHBOARD = {
     },
     new_from_lp: { count: 5, items: [] },
   },
-  week: { won: 3, nps: { media: 9.2, respostas: 6 } },
+  week: {
+    won: 3,
+    won_since: diasAtras(0).slice(0, 10),
+    nps: { media: 9.2, respostas: 6 },
+  },
   funnel: [
     {
       stage_id: 1,
@@ -195,13 +199,12 @@ const DASHBOARD = {
     ],
   },
   sla_today: { breached: 1, avg_first_response_minutes: 12 },
-  history: [
-    { value_sum: 90000, leads_count: 20 },
-    { value_sum: 120000, leads_count: 24 },
-    { value_sum: 110000, leads_count: 22 },
-    { value_sum: 150000, leads_count: 28 },
-    { value_sum: 184000, leads_count: 32 },
-  ],
+  // 30 snapshots diários (estoque do funil aberto), do mais antigo ao de hoje.
+  history: Array.from({ length: 30 }, (_, i) => ({
+    date: diasAtras(29 - i).slice(0, 10),
+    leads_count: 20 + Math.round(i * 0.4) + (i % 3),
+    value_sum: 90000 + i * 3200 + (i % 4) * 4000,
+  })),
 };
 
 const SUGESTOES = {
@@ -314,6 +317,9 @@ const API = {
   ramon_esteira: ESTEIRA,
   theses: [TESE],
   'theses/1': TESE,
+  'conversations/101/ramon_copilot': {
+    content: 'Oi, Maria! Conseguiu achar o papel do INSS?',
+  },
 };
 const VAZIO = {
   ramon_dashboard: {
@@ -355,6 +361,9 @@ store.dispatch('theses/get');
 const vazio = () => {
   respostas = VAZIO;
 };
+// "Enquanto você dormia" abre recolhido; a variante aberta grava a escolha.
+const copiloto = aberto => () =>
+  localStorage.setItem('ramon_night_copilot_expanded', aberto ? '1' : '0');
 const objecoes = () =>
   setTimeout(
     () =>
@@ -370,7 +379,12 @@ const objecoes = () =>
     title="Ramon/Centro de Comando"
     :layout="{ type: 'single', iframe: true }"
   >
-    <Variant title="Centro">
+    <Variant title="Centro" :init-state="copiloto(false)">
+      <div class="h-screen">
+        <CommandCenter />
+      </div>
+    </Variant>
+    <Variant title="Centro copiloto aberto" :init-state="copiloto(true)">
       <div class="h-screen">
         <CommandCenter />
       </div>
