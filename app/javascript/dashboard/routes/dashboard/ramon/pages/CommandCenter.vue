@@ -115,6 +115,10 @@ const dayMonth = date => `${date.slice(8, 10)}/${date.slice(5, 7)}`;
 
 // ---- KPI strip ------------------------------------------------------------
 // filter = o que o clique liga no Funil (mesma regra da contagem).
+// KPI_CLICAVEL: o <button> global (_base.scss) zera borda/padding/raio sem
+// layer — os ! devolvem a pele do CARTAO.
+const KPI_CLICAVEL =
+  '!border !border-solid !rounded-xl !p-3 !text-left hover:border-n-strong';
 const kpis = computed(() => [
   {
     key: 'overdue',
@@ -406,10 +410,7 @@ useKeyboardEvents({
             :key="kpi.key"
             :type="kpi.filter ? 'button' : undefined"
             :data-testid="`kpi-${kpi.key}`"
-            :class="[
-              CARTAO,
-              kpi.filter && 'text-left transition-colors hover:border-n-strong',
-            ]"
+            :class="[CARTAO, kpi.filter && KPI_CLICAVEL]"
             @click="kpi.filter && openFiltered(kpi.filter)"
           >
             <p
