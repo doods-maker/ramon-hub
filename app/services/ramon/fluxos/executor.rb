@@ -1,5 +1,6 @@
 # Anda uma execução de fluxo passo a passo (spec §6). Seguro para chamada dupla:
-# trava a linha, só anda se estiver rodando/esperando E a espera venceu.
+# reivindica a execução (esperando e vencida → rodando) numa transação curta e só
+# então anda — os passos rodam fora de transação (cada um commita o seu).
 # Esperar só anota retomar_em — quem retoma é o Ramon::FluxoRelogioJob.
 class Ramon::Fluxos::Executor
   LIMITE_PASSOS = 50
@@ -20,18 +21,13 @@ class Ramon::Fluxos::Executor
   end
 
   def avancar!
-    falhou = false
-    Current.executed_by = @execucao # fica até depois do commit: os after_commit leem performed_by
-    @execucao.with_lock do
-      next unless pode_andar?
-      next if cancelar_se_preciso
+    Current.executed_by = @execucao # os after_commit dos passos leem performed_by
+    return @execucao unless reivindicar
+    return @execucao if cancelar_se_preciso
 
-      @execucao.assign_attributes(status: 'rodando', retomar_em: nil)
-      andar
-      @execucao.save!
-      falhou = @execucao.status == 'falhou' && !@execucao.ensaio
-    end
-    avisar_falha if falhou
+    andar
+    @execucao.save!
+    avisar_falha if @execucao.status == 'falhou' && !@execucao.ensaio
     @execucao
   ensure
     Current.executed_by = nil
@@ -41,27 +37,35 @@ class Ramon::Fluxos::Executor
 
   def grafo = @grafo ||= @execucao.grafo
 
-  def pode_andar?
-    return true if @execucao.status == 'rodando'
+  # Troca esperando (vencida) → rodando numa transação curta: dois jobs nunca andam a mesma execução.
+  def reivindicar
+    ok = false
+    @execucao.with_lock do
+      next unless @execucao.status == 'esperando' && @execucao.retomar_em.present? && @execucao.retomar_em <= Time.current
 
-    @execucao.status == 'esperando' && @execucao.retomar_em.present? && @execucao.retomar_em <= Time.current
+      @execucao.update!(status: 'rodando', retomar_em: nil)
+      ok = true
+    end
+    ok
   end
 
+  # Roda já com status 'rodando' (reivindicada).
   def cancelar_se_preciso
     motivo = if @execucao.alvo.nil? then 'o lead/conversa foi apagado'
+             elsif desligado? then 'o fluxo foi desligado'
              elsif saiu_da_etapa? then 'o lead saiu da etapa'
              end
     return false unless motivo
 
-    @execucao.update!(status: 'cancelada', retomar_em: nil,
-                      trilha: @execucao.trilha + [linha('cancelado', 'cancelado', "cancelado: #{motivo}")])
+    @execucao.update!(status: 'cancelada', trilha: @execucao.trilha + [linha('cancelado', 'cancelado', "cancelado: #{motivo}")])
     true
   end
 
+  def desligado? = !@execucao.ensaio && !@execucao.fluxo&.ativo
+
   def saiu_da_etapa?
     inicial = @execucao.contexto['etapa_inicial_id']
-    return false if @execucao.status != 'esperando' || inicial.blank?
-    return false if grafo.gatilho&.dig('config', 'cancelar_se_sair_da_etapa') == false
+    return false if inicial.blank? || grafo.gatilho&.dig('config', 'cancelar_se_sair_da_etapa') == false
 
     lead = @execucao.lead
     lead.present? && lead.lead_stage_id != inicial
@@ -85,12 +89,7 @@ class Ramon::Fluxos::Executor
   end
 
   def executar(no)
-    Current.executed_by = @execucao
-    # savepoint: erro de banco dentro do passo não envenena a transação do with_lock
-    resultado = ActiveRecord::Base.transaction(requires_new: true) do
-      PASSOS.fetch(no['tipo']).public_send(no['tipo'], no['config'] || {}, Ramon::Fluxos::Contexto.new(@execucao))
-    end
-    acompanhar_etapa(no)
+    resultado = PASSOS.fetch(no['tipo']).public_send(no['tipo'], no['config'] || {}, Ramon::Fluxos::Contexto.new(@execucao))
     @execucao.tentativas = 0
     @execucao.contexto = @execucao.contexto.merge('vars' => (@execucao.contexto['vars'] || {}).merge(resultado[:vars] || {}))
     resultado
@@ -99,13 +98,6 @@ class Ramon::Fluxos::Executor
     nil
   ensure
     Current.executed_by = @execucao # o ActionService dá Current.reset
-  end
-
-  # mover_etapa do próprio fluxo não pode contar como "o lead saiu da etapa"
-  def acompanhar_etapa(no)
-    return if no['tipo'] != 'mover_etapa' || @execucao.ensaio
-
-    @execucao.contexto = @execucao.contexto.merge('etapa_inicial_id' => @execucao.lead&.reload&.lead_stage_id)
   end
 
   def tratar_erro(no, erro)
@@ -126,7 +118,7 @@ class Ramon::Fluxos::Executor
     @execucao.trilha = @execucao.trilha + [linha(no['id'], no['tipo'], resultado[:resumo], saida: resultado[:saida])]
     return if @execucao.ensaio || VISIVEIS.exclude?(no['tipo'])
 
-    Ramon::EventoInline.registrar(@execucao.conversa, "⚙ Fluxo #{@execucao.fluxo.nome}: #{resultado[:resumo]}", tipo: 'fluxo')
+    Ramon::EventoInline.registrar(@execucao.conversa, "⚙ Fluxo #{@execucao.fluxo&.nome}: #{resultado[:resumo]}", tipo: 'fluxo')
   end
 
   def linha(no, tipo, resumo, saida: nil, erro: false)

@@ -1,6 +1,7 @@
 # Transforma um evento (ou um clique) em execuções de fluxo (spec §6): acha os fluxos
 # ativos com aquele gatilho, aplica o filtro, o limite do dia e a profundidade de cadeia,
 # e cria a execução — o índice único parcial barra 2 execuções vivas no mesmo alvo.
+# Toda execução nasce 'esperando' e vencida: o Executor a reivindica (ensaio: na hora).
 class Ramon::Fluxos::Disparo
   PROFUNDIDADE_MAX = 3
 
@@ -12,7 +13,8 @@ class Ramon::Fluxos::Disparo
   end
 
   def self.manual(fluxo, alvo)
-    return unless fluxo.gatilho_tipo == 'manual' && fluxo.versao_publicada && !fluxo.limite_atingido?
+    # desligado não roda: o Executor cancelaria na hora ("o fluxo foi desligado")
+    return unless fluxo.ativo && fluxo.gatilho_tipo == 'manual' && fluxo.versao_publicada && !fluxo.limite_atingido?
 
     new(fluxo, alvo, {}, nil).iniciar
   end
@@ -60,7 +62,7 @@ class Ramon::Fluxos::Disparo
     {
       account: @fluxo.account, versao: (@ensaio == 'rascunho' ? nil : @fluxo.versao_publicada), alvo: @alvo,
       ensaio: @ensaio.present? || @fluxo.modo == 'sombra', profundidade: @origem ? @origem.profundidade + 1 : 0,
-      no_atual: grafo.proximo(g['id'], 's'), contexto: contexto,
+      no_atual: grafo.proximo(g['id'], 's'), contexto: contexto, status: 'esperando', retomar_em: Time.current,
       trilha: [{ 'no' => g['id'], 'tipo' => 'gatilho', 'em' => Time.current.iso8601, 'saida' => 's',
                  'resumo' => g.dig('config', 'tipo'), 'erro' => false }]
     }

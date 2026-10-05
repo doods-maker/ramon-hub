@@ -2172,7 +2172,7 @@ g = { 'nos' => [
   { 'id' => 'p3', 'tipo' => 'criar_tarefa', 'config' => { 'titulo' => 'Tarefa do fluxo de teste' } }
 ], 'setas' => [{ 'de' => 'g', 'saida' => 's', 'para' => 'p1' }, { 'de' => 'p1', 'saida' => 's', 'para' => 'p2' },
                { 'de' => 'p2', 'saida' => 's', 'para' => 'p3' }] }
-f = a.fluxos.create!(nome: 'TESTE B1', rascunho: g)
+f = a.fluxos.create!(nome: 'TESTE B1', rascunho: g, ativo: true) # desligado o manual não roda
 f.publicar!(nil)
 puts Ramon::Fluxos::Disparo.ensaiar(f, lead, usar: 'publicada').trilha.map { |t| t['resumo'] }.inspect
 e = Ramon::Fluxos::Disparo.manual(f.reload, lead)

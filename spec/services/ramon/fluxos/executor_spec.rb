@@ -9,6 +9,7 @@ RSpec.describe Ramon::Fluxos::Executor do
     fluxo = fluxo_publicado(account, grafo)
     g = fluxo.versao_publicada.grafo
     fluxo.execucoes.create!({ account: account, versao: fluxo.versao_publicada, alvo: alvo,
+                              status: 'esperando', retomar_em: Time.current,
                               no_atual: Ramon::Fluxos::Grafo.new(g).proximo('g', 's'),
                               contexto: { 'etapa_inicial_id' => lead.lead_stage_id } }.merge(attrs))
   end
@@ -47,6 +48,16 @@ RSpec.describe Ramon::Fluxos::Executor do
     avancar(e)
     lead.update!(lead_stage: create(:lead_stage, account: account, position: 9))
     travel(2.hours) { expect(avancar(e).status).to eq('cancelada') }
+  end
+
+  it 'fluxo desligado durante a espera → cancelada' do
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'quantidade' => 1, 'unidade' => 'horas' }],
+                             ['nota_privada', { 'texto' => 'x' }]))
+    avancar(e)
+    e.fluxo.update!(ativo: false)
+    travel(2.hours) { expect(avancar(e).status).to eq('cancelada') }
+    expect(e.trilha.last['resumo']).to eq('cancelado: o fluxo foi desligado')
+    expect(conversa.messages.where(private: true, content: 'x')).to be_empty
   end
 
   it 'versão congelada: publicar de novo não muda execução em andamento' do
@@ -90,11 +101,11 @@ RSpec.describe Ramon::Fluxos::Executor do
   end
 
   it 'escolha segue a saída do caso' do
+    casos = [{ 'chave' => 'c1', 'rotulo' => 'Indicação', 'valores' => ['indicacao'] },
+             { 'chave' => 'c2', 'rotulo' => 'Anúncio', 'valores' => ['anuncio'] }]
     d = grafo_linear({ 'tipo' => 'manual' })
-    d['nos'] += [no_fluxo('x', 'escolha', { 'campo' => 'origem', 'casos' => [
-      { 'chave' => 'c1', 'rotulo' => 'Indicação', 'valores' => ['indicacao'] },
-      { 'chave' => 'c2', 'rotulo' => 'Anúncio', 'valores' => ['anuncio'] }
-    ] }), no_fluxo('a', 'nota_privada', { 'texto' => 'A' }), no_fluxo('b', 'nota_privada', { 'texto' => 'B' })]
+    d['nos'] += [no_fluxo('x', 'escolha', { 'campo' => 'origem', 'casos' => casos }),
+                 no_fluxo('a', 'nota_privada', { 'texto' => 'A' }), no_fluxo('b', 'nota_privada', { 'texto' => 'B' })]
     d['setas'] += [{ 'de' => 'g', 'saida' => 's', 'para' => 'x' }, { 'de' => 'x', 'saida' => 'c1', 'para' => 'a' },
                    { 'de' => 'x', 'saida' => 'outro', 'para' => 'b' }]
     lead.update!(source: 'indicacao')
@@ -117,7 +128,8 @@ RSpec.describe Ramon::Fluxos::Executor do
     allow(Rails.configuration.dispatcher).to receive(:dispatch)
     avancar(e)
     expect(Rails.configuration.dispatcher).to have_received(:dispatch)
-      .with(Events::Types::LEAD_UPDATED, anything, hash_including(performed_by: e))
+      .with(Events::Types::LEAD_UPDATED, anything,
+            hash_including(changed_attributes: { 'lead_stage_id' => [anything, nova.id] }, performed_by: e))
   end
 
   it 'mover_etapa → esperar → não se cancela sozinho' do

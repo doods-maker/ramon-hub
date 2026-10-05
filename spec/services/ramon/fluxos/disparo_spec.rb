@@ -10,7 +10,8 @@ RSpec.describe Ramon::Fluxos::Disparo do
     fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_criado' }, nota))
     expect { described_class.call('lead_criado', lead) }.to have_enqueued_job(Ramon::FluxoAvancarJob)
     e = fluxo.execucoes.last
-    expect(e).to have_attributes(status: 'rodando', no_atual: 'p1', profundidade: 0)
+    expect(e).to have_attributes(status: 'esperando', no_atual: 'p1', profundidade: 0)
+    expect(e.retomar_em).to be <= Time.current
     expect(e.trilha.first['tipo']).to eq('gatilho')
     expect(e.contexto['etapa_inicial_id']).to eq(lead.lead_stage_id)
   end
@@ -67,10 +68,12 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect(e.trilha.pluck('no')).to eq(%w[g p1 p2])
   end
 
-  it 'manual só para fluxo com gatilho manual' do
+  it 'manual só para fluxo ligado com gatilho manual' do
     manual = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, nota))
     outro = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_criado' }, nota))
+    desligado = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, nota), ativo: false)
     expect(described_class.manual(manual, lead)).to be_a(FluxoExecucao)
     expect(described_class.manual(outro, lead)).to be_nil
+    expect(described_class.manual(desligado, lead)).to be_nil
   end
 end
