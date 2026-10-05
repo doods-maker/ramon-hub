@@ -24,7 +24,7 @@ RSpec.describe Ramon::Fluxos::Condicao do
   it 'escolha devolve a chave do caso ou outro' do
     config = { 'campo' => 'tese', 'casos' => [
       { 'chave' => 'c1', 'rotulo' => 'BPC', 'valores' => ['BPC'] },
-      { 'chave' => 'c2', 'rotulo' => 'Acidente', 'valores' => ['Auxílio-acidente', 'Auxílio-doença'] }
+      { 'chave' => 'c2', 'rotulo' => 'Acidente', 'valores' => %w[Auxílio-acidente Auxílio-doença] }
     ] }
     expect(described_class.escolher(config, dados)).to eq('c2')
     expect(described_class.escolher(config, { 'tese' => 'Aposentadoria' })).to eq('outro')

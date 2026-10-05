@@ -1,6 +1,7 @@
 # Automações em fluxo (spec 2026-10-05): fluxo = desenho versionado; execução = uma
 # passada por um lead/conversa, com trilha. Ensaio tem versao_id nulo (roda o rascunho).
 class CreateRamonFluxos < ActiveRecord::Migration[7.1]
+  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
   def change
     create_table :ramon_fluxos do |t|
       t.bigint :account_id, null: false
@@ -51,4 +52,5 @@ class CreateRamonFluxos < ActiveRecord::Migration[7.1]
       t.index :retomar_em, name: 'index_ramon_fluxo_execucoes_retomar', where: "status = 'esperando'"
     end
   end
+  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 end
