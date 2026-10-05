@@ -184,7 +184,7 @@
         "FOLLOW_UP": "Follow up"
       },
       "REASON": {
-        "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
+        "PRESCRIPTION_BLEEDING": "{value}/mo prescribing",
         "PRESCRIPTION_LOST": "{count} installments already lost",
         "PRESCRIPTION_SOON": "prescribes in {months} months",
         "TASK_OVERDUE": "overdue task: {title}",
@@ -361,9 +361,9 @@
         "PHONE_COPIED": "Phone number copied",
         "WHATSAPP": "WhatsApp",
         "TASK_SCHEDULED": "Follow-up scheduled",
-        "PRESCRIPTION_BLEEDING": "{value}/mo evaporating",
-        "PRESCRIPTION_LOST": "{count} installments lost to prescription",
-        "PRESCRIPTION_SOON": "prescribes in {months}mo",
+        "PRESCRIPTION_BLEEDING": "prescribing {value}/mo",
+        "PRESCRIPTION_LOST": "{count} installments already lost",
+        "PRESCRIPTION_SOON": "prescribes in {months} month | prescribes in {months} months",
         "TRIAGE_AWAITING_HUMAN": "Triage: awaiting human",
         "AGE": "{days}d",
         "NO_NEXT_ACTION": "No next action scheduled",

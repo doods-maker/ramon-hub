@@ -61,9 +61,11 @@ const prescriptionLabel = computed(() => {
       count: p.lostInstallments,
     });
   if (p.monthsToCliff <= 6)
-    return t('RAMON.KANBAN.CARD.PRESCRIPTION_SOON', {
-      months: p.monthsToCliff,
-    });
+    return t(
+      'RAMON.KANBAN.CARD.PRESCRIPTION_SOON',
+      { months: p.monthsToCliff },
+      p.monthsToCliff
+    );
   return null;
 });
 
