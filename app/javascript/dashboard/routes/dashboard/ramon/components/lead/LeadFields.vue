@@ -5,23 +5,15 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
-import LeadTasksList from './LeadTasksList.vue';
-import LostReasonModal from '../kanban/LostReasonModal.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
-import { waMeUrl } from '../../helpers/phone';
 import { formatCpf, stripCpf } from '../../helpers/cpf';
 import Button from 'dashboard/components-next/button/Button.vue';
-import {
-  CARTAO,
-  SECAO,
-  TITULO,
-  CAMPO,
-  SELECT,
-  TEXTAREA,
-  TOM,
-  AVISO,
-} from '../../helpers/ui';
+import { SECAO, TITULO, CAMPO, SELECT, TOM, AVISO } from '../../helpers/ui';
 
+// "Editar todos os campos": só o que o Resumo NÃO edita. Etapa (pílula do
+// cabeçalho), valor (chip), tese/benefício/DCB/canal (cartão Caso), tarefas
+// (Próximo passo / + Tarefa), notas (Notas) e telefone (Dados do contato)
+// moram no Resumo — aqui não se repetem.
 const props = defineProps({ lead: { type: Object, required: true } });
 
 const store = useStore();
@@ -31,15 +23,9 @@ const isAdmin = computed(
 );
 const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
-const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
 const priorities = useMapGetter('leadConfig/getPriorities');
-const channels = useMapGetter('leadConfig/getChannels');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
 const agents = useMapGetter('agents/getAgents');
-const theses = useMapGetter('theses/getTheses');
-const activeTheses = computed(() =>
-  theses.value.filter(thesis => thesis.active)
-);
 
 // Motivo da perda só aparece quando o lead está numa etapa marcada como perda.
 const currentStage = computed(() =>
@@ -48,54 +34,31 @@ const currentStage = computed(() =>
 const isLostStage = computed(() => !!currentStage.value?.is_lost);
 const reasonNames = computed(() => lostReasons.value.map(r => r.name));
 
-// Badge "estimado": valor_estimado.origem === 'auto' vem da Task 1 (regra da
-// tese calculou sozinha); some assim que o campo é editado à mão.
-const valorEstimadoAuto = computed(
-  () => props.lead?.custom_attributes?.valor_estimado?.origem === 'auto'
-);
-
 // refs locais editáveis, ressincronizados sempre que o lead muda
 const name = ref('');
-const value = ref('');
 const source = ref('');
-const dcbEm = ref('');
 const benefitMonthlyValue = ref('');
 const contactCpf = ref('');
 const contactNascimento = ref('');
 const contactSexo = ref('');
 const npsScore = ref('');
 
-// Etapa controlada localmente para poder reverter o select quando a mudança
-// para uma etapa de perda é cancelada, ou quando o backend recusa o update.
-const stageId = ref(null);
-const lostModalOpen = ref(false);
-const wonPrompt = ref(false);
-const wonValue = ref('');
-
 // ressincroniza TUDO — usada na troca de lead e na reversão pós-erro de save
 const syncAll = l => {
   name.value = l?.name ?? '';
-  value.value = formatBrl(l?.value);
   source.value = l?.source ?? '';
-  dcbEm.value = l?.dcb_em ?? '';
   benefitMonthlyValue.value = formatBrl(l?.benefit_monthly_value);
   contactCpf.value = formatCpf(l?.contact_cpf);
   contactNascimento.value = l?.contact_data_nascimento ?? '';
   contactSexo.value = l?.contact_sexo ?? '';
   npsScore.value = l?.custom_attributes?.nps?.score ?? '';
-  stageId.value = l?.lead_stage_id ?? null;
-  lostModalOpen.value = false;
-  wonPrompt.value = false;
-  wonValue.value = '';
 };
 
 // [data-testid do input, ref local, leitura do lead] — p/ absorver broadcasts
 // sem apagar o que o usuário está digitando (só atualiza campo SEM foco).
 const FIELD_SYNC = [
   ['field-name', name, l => l?.name ?? ''],
-  ['field-value', value, l => formatBrl(l?.value)],
   ['field-source', source, l => l?.source ?? ''],
-  ['field-dcb-em', dcbEm, l => l?.dcb_em ?? ''],
   [
     'field-benefit-monthly-value',
     benefitMonthlyValue,
@@ -114,7 +77,7 @@ const FIELD_SYNC = [
 watch(
   () => props.lead,
   (l, prev) => {
-    // lead trocou: ressincroniza tudo e fecha prompts
+    // lead trocou: ressincroniza tudo
     if (l?.id !== prev?.id) {
       syncAll(l);
       return;
@@ -124,63 +87,12 @@ watch(
     FIELD_SYNC.forEach(([testId, target, read]) => {
       if (testId !== focused) target.value = read(l);
     });
-    // etapa: não mexer com prompt aberto (escolha pendente do usuário)
-    if (!lostModalOpen.value && !wonPrompt.value && focused !== 'field-stage') {
-      stageId.value = l?.lead_stage_id ?? null;
-    }
   },
   { immediate: true }
 );
 
-// notas discretas: lista + adicionar
-const noteList = ref([]);
-const newNote = ref('');
-
-// Templates de nota rápida (item 8 do 4b): chaves fixas, texto no i18n.
-const NOTE_TEMPLATE_KEYS = [
-  'TRIED_CONTACT',
-  'AWAITING_DOCS',
-  'MEETING_SCHEDULED',
-];
-const noteTemplate = ref('');
-const applyNoteTemplate = () => {
-  if (!noteTemplate.value) return;
-  const text = t(`RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.${noteTemplate.value}`);
-  newNote.value = newNote.value ? `${newNote.value}\n${text}` : text;
-  noteTemplate.value = '';
-};
-
-const loadNotes = async () => {
-  noteList.value =
-    (await store.dispatch('leads/fetchNotes', props.lead.id)) || [];
-};
-
-watch(
-  () => props.lead?.id,
-  id => {
-    if (id) loadNotes();
-  },
-  { immediate: true }
-);
-
-const savingNote = ref(false);
-const addNote = async () => {
-  const body = newNote.value.trim();
-  if (!body || savingNote.value) return;
-  savingNote.value = true;
-  try {
-    await store.dispatch('leads/createNote', { leadId: props.lead.id, body });
-    newNote.value = '';
-    await loadNotes();
-  } catch (e) {
-    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
-  } finally {
-    savingNote.value = false;
-  }
-};
-
-// try/catch aqui cobre saveText/saveValue/saveSelect e cia; no erro,
-// ressincroniza os refs com o lead da store (padrão do commitStage).
+// try/catch aqui cobre saveText/saveSelect e cia; no erro,
+// ressincroniza os refs com o lead da store.
 const save = async payload => {
   try {
     await store.dispatch('leads/update', { id: props.lead.id, ...payload });
@@ -200,21 +112,6 @@ const saveText = (key, refVal, original) => {
 
 const saveName = () => saveText('name', name, props.lead?.name);
 const saveSource = () => saveText('source', source, props.lead?.source);
-const saveValue = () => {
-  const next = parseBrlInput(value.value);
-  // texto inválido não-vazio: reverte a exibição e não salva (evita apagar o valor)
-  if (next === null && String(value.value).trim() !== '') {
-    value.value = formatBrl(props.lead?.value);
-    return;
-  }
-  const prev = props.lead?.value == null ? null : Number(props.lead.value);
-  value.value = formatBrl(next);
-  if (next === prev) return;
-  save({ value: next });
-};
-
-const saveDcbEm = () => save({ dcb_em: dcbEm.value || null });
-
 const saveBenefitMonthlyValue = () => {
   const next = parseBrlInput(benefitMonthlyValue.value);
   // texto inválido não-vazio: reverte a exibição e não salva (evita apagar o valor)
@@ -233,62 +130,6 @@ const saveBenefitMonthlyValue = () => {
 
 // select: salva direto no change
 const saveSelect = (key, val) => save({ [key]: val === '' ? null : val });
-
-// Etapa: envolve o update em try/catch e reverte o select em erro.
-const commitStage = async (targetId, extra = {}) => {
-  try {
-    await store.dispatch('leads/update', {
-      id: props.lead.id,
-      lead_stage_id: targetId,
-      ...extra,
-    });
-  } catch (e) {
-    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
-    stageId.value = props.lead?.lead_stage_id ?? null;
-  } finally {
-    lostModalOpen.value = false;
-    wonPrompt.value = false;
-  }
-};
-
-// Mudar de etapa pelo select. Etapa de perda sem motivo → abre o LostReasonModal
-// (mesmo fluxo do drag no Kanban) antes de mandar — senão o backend recusa com
-// 422 e o select fica dessincrono.
-// Etapa de ganho sem valor → pede o valor inline, mesmo padrão do drag no Kanban.
-const onStageChange = targetId => {
-  stageId.value = targetId;
-  // Trocar a seleção fecha qualquer prompt aberto da escolha anterior.
-  lostModalOpen.value = false;
-  wonPrompt.value = false;
-  const target = stages.value.find(s => s.id === targetId);
-  if (target?.is_lost && !props.lead?.lost_reason) {
-    lostModalOpen.value = true;
-    return;
-  }
-  // Ganho: SEMPRE pede confirmação, pré-preenchida quando o lead já tem valor
-  // (o automático da Onda 3 não pode virar "valor de contrato" em silêncio).
-  if (target?.is_won) {
-    wonValue.value = formatBrl(props.lead?.value);
-    wonPrompt.value = true;
-    return;
-  }
-  commitStage(targetId);
-};
-
-const confirmLostStage = ({ lostReason }) =>
-  commitStage(stageId.value, { lost_reason: lostReason });
-
-const cancelLostStage = () => {
-  lostModalOpen.value = false;
-  stageId.value = props.lead?.lead_stage_id ?? null;
-};
-
-const confirmWonStage = () => {
-  const parsed = parseBrlInput(wonValue.value);
-  commitStage(stageId.value, parsed == null ? {} : { value: parsed });
-};
-
-const skipWonStage = () => commitStage(stageId.value);
 
 // NPS pós-ganho: grava só a chave nps (o PATCH faz deep_merge server-side).
 const currentNps = computed(() => props.lead?.custom_attributes?.nps || null);
@@ -334,15 +175,6 @@ const copyPortalLink = async () => {
     useAlert(t('RAMON.PORTAL.COPIED'));
   } catch (error) {
     useAlert(t('RAMON.PORTAL.ERROR'));
-  }
-};
-
-const copyPhone = async () => {
-  try {
-    await copyTextToClipboard(props.lead.contact_phone);
-    useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
-  } catch (error) {
-    useAlert(t('RAMON.DOCS.COPY_FAILED'));
   }
 };
 
@@ -416,84 +248,6 @@ const toggleConsent = () =>
     />
 
     <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.STAGE')
-    }}</label>
-    <select
-      data-testid="field-stage"
-      :value="stageId"
-      :class="[SELECT, wonPrompt ? '!mb-1' : '!mb-3']"
-      @change="e => onStageChange(Number(e.target.value))"
-    >
-      <option v-for="s in stages" :key="s.id" :value="s.id">
-        {{ s.name }}
-      </option>
-    </select>
-
-    <LostReasonModal
-      v-if="lostModalOpen"
-      :lost-reasons="lostReasons"
-      @confirm-move="confirmLostStage"
-      @cancel-move="cancelLostStage"
-    />
-
-    <div
-      v-if="wonPrompt"
-      data-testid="stage-won-prompt"
-      class="flex flex-col gap-2 mb-3"
-      :class="CARTAO"
-    >
-      <label class="text-xs text-n-slate-10">{{
-        $t('RAMON.FUNIL.WON.VALUE_LABEL')
-      }}</label>
-      <input
-        v-model="wonValue"
-        data-testid="stage-won-value"
-        type="text"
-        inputmode="decimal"
-        class="font-mono"
-        :class="CAMPO"
-        @keyup.enter="confirmWonStage"
-      />
-      <div class="flex justify-end gap-2">
-        <Button
-          data-testid="stage-won-skip"
-          sm
-          faded
-          slate
-          :label="$t('RAMON.FUNIL.WON.SKIP')"
-          @click="skipWonStage"
-        />
-        <Button
-          data-testid="stage-won-save"
-          sm
-          :label="$t('RAMON.FUNIL.WON.SAVE')"
-          @click="confirmWonStage"
-        />
-      </div>
-    </div>
-
-    <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.BENEFIT')
-    }}</label>
-    <select
-      :value="lead.benefit_type_id"
-      class="!mb-3"
-      :class="SELECT"
-      @change="
-        e =>
-          saveSelect(
-            'benefit_type_id',
-            e.target.value ? Number(e.target.value) : null
-          )
-      "
-    >
-      <option value="">—</option>
-      <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-        {{ b.name }}
-      </option>
-    </select>
-
-    <label class="block mb-1 text-xs text-n-slate-10">{{
       $t('RAMON.DRAWER.PRIORITY')
     }}</label>
     <select
@@ -513,35 +267,6 @@ const toggleConsent = () =>
         {{ p.name }}
       </option>
     </select>
-
-    <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.THESIS')
-    }}</label>
-    <select
-      data-testid="field-thesis"
-      :value="lead.thesis_id"
-      class="!mb-3"
-      :class="SELECT"
-      @change="
-        e =>
-          saveSelect(
-            'thesis_id',
-            e.target.value ? Number(e.target.value) : null
-          )
-      "
-    >
-      <option value="">—</option>
-      <option v-for="t in activeTheses" :key="t.id" :value="t.id">
-        {{ t.name }}
-      </option>
-    </select>
-    <p
-      v-if="!lead.thesis_id"
-      data-testid="no-thesis-hint"
-      class="text-xs text-n-slate-9"
-    >
-      {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
-    </p>
 
     <label class="block mb-1 text-xs text-n-slate-10">{{
       $t('RAMON.DRAWER.SDR')
@@ -584,30 +309,6 @@ const toggleConsent = () =>
       </option>
     </select>
 
-    <label class="block mb-1 text-xs text-n-slate-10">
-      {{ $t('RAMON.DRAWER.VALUE') }}
-      <span
-        v-if="valorEstimadoAuto"
-        data-testid="value-auto-badge"
-        :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
-        class="ms-1 inline-flex items-center gap-0.5 rounded px-1 text-[10px]"
-        :class="TOM.blue"
-      >
-        <span class="i-lucide-sparkles size-2.5" />{{
-          $t('RAMON.DRAWER.VALUE_AUTO')
-        }}
-      </span>
-    </label>
-    <input
-      v-model="value"
-      data-testid="field-value"
-      type="text"
-      inputmode="decimal"
-      class="!mb-3 font-mono"
-      :class="CAMPO"
-      @blur="saveValue"
-    />
-
     <label class="block mb-1 text-xs text-n-slate-10">{{
       $t('RAMON.DRAWER.SOURCE')
     }}</label>
@@ -617,34 +318,6 @@ const toggleConsent = () =>
       class="!mb-3"
       :class="CAMPO"
       @blur="saveSource"
-    />
-
-    <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.CHANNEL')
-    }}</label>
-    <select
-      data-testid="field-channel"
-      :value="lead.channel"
-      class="!mb-3"
-      :class="SELECT"
-      @change="e => saveSelect('channel', e.target.value)"
-    >
-      <option value="">—</option>
-      <option v-for="c in channels" :key="c.key" :value="c.key">
-        {{ c.label }}
-      </option>
-    </select>
-
-    <label class="block mb-1 text-xs text-n-slate-10">{{
-      $t('RAMON.DRAWER.DCB_LABEL')
-    }}</label>
-    <input
-      v-model="dcbEm"
-      data-testid="field-dcb-em"
-      type="date"
-      class="!mb-3 font-mono"
-      :class="CAMPO"
-      @change="saveDcbEm"
     />
 
     <label class="block mb-1 text-xs text-n-slate-10">{{
@@ -709,8 +382,6 @@ const toggleConsent = () =>
       </p>
     </template>
 
-    <LeadTasksList v-if="lead.id" :lead-id="lead.id" />
-
     <div
       v-if="lead.custom_attributes?.advbox"
       class="flex items-center gap-2 mb-4 text-xs"
@@ -736,52 +407,6 @@ const toggleConsent = () =>
       </span>
     </div>
 
-    <div class="flex flex-col gap-2 mb-4" :class="SECAO">
-      <span :class="TITULO">{{ $t('RAMON.DRAWER.NOTES') }}</span>
-      <div
-        v-for="note in noteList"
-        :key="note.id"
-        data-testid="note-item"
-        class="flex flex-col gap-1 pl-2 text-sm border-l-2 border-n-weak"
-      >
-        <strong v-if="note.author_name" class="text-xs opacity-60">{{
-          note.author_name
-        }}</strong>
-        <span class="whitespace-pre-wrap">{{ note.body }}</span>
-      </div>
-      <select
-        v-model="noteTemplate"
-        data-testid="note-template-select"
-        :class="SELECT"
-        @change="applyNoteTemplate"
-      >
-        <option value="">
-          {{ $t('RAMON.DRAWER.NOTE_TEMPLATES.LABEL') }}
-        </option>
-        <option v-for="key in NOTE_TEMPLATE_KEYS" :key="key" :value="key">
-          {{ $t(`RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.${key}`) }}
-        </option>
-      </select>
-      <textarea
-        v-model="newNote"
-        data-testid="note-input"
-        rows="2"
-        maxlength="1000"
-        :class="TEXTAREA"
-        :placeholder="$t('RAMON.DRAWER.NOTES_ADD')"
-      />
-      <Button
-        data-testid="note-add"
-        sm
-        faded
-        slate
-        class="self-start"
-        :label="$t('RAMON.DRAWER.NOTES_ADD_BUTTON')"
-        :disabled="savingNote"
-        @click="addNote"
-      />
-    </div>
-
     <div class="flex items-center justify-between gap-2 mb-4" :class="SECAO">
       <span :class="TITULO">{{ $t('RAMON.PORTAL.LABEL') }}</span>
       <Button
@@ -795,46 +420,11 @@ const toggleConsent = () =>
       />
     </div>
 
-    <!-- Só leitura: contato -->
+    <!-- contato (telefone fica em "Dados do contato", no Resumo) -->
     <div class="mt-2" :class="SECAO">
       <p class="mb-2" :class="TITULO">
         {{ $t('RAMON.DRAWER.CONTACT') }}
       </p>
-      <p v-if="lead.contact_name" class="text-sm text-n-slate-12">
-        {{ lead.contact_name }}
-      </p>
-      <div
-        v-if="lead.contact_phone"
-        class="flex items-center gap-2 text-xs text-n-slate-10"
-      >
-        <Button
-          data-testid="contact-copy-phone"
-          link
-          slate
-          xs
-          icon="i-lucide-phone"
-          class="font-mono"
-          :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
-          :label="lead.contact_phone"
-          @click="copyPhone"
-        />
-        <a
-          v-if="!lead.conversation_id"
-          data-testid="contact-wa-me"
-          :href="waMeUrl(lead.contact_phone)"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex"
-        >
-          <Button
-            link
-            xs
-            tabindex="-1"
-            icon="i-lucide-message-circle"
-            :label="$t('RAMON.KANBAN.CARD.WHATSAPP')"
-          />
-        </a>
-      </div>
       <p v-if="lead.contact_email" class="text-xs text-n-slate-10">
         {{ lead.contact_email }}
       </p>

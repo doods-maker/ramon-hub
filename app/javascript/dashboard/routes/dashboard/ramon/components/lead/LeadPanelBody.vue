@@ -26,7 +26,7 @@ import { useTemperatura } from '../../composables/useTemperatura';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
-import { formatCpf } from '../../helpers/cpf';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import {
   CARTAO,
   CARTAO_STATUS,
@@ -40,6 +40,7 @@ import {
   CHIP,
   TOM,
   AVISO,
+  EDITAVEL,
 } from '../../helpers/ui';
 
 const props = defineProps({
@@ -59,6 +60,8 @@ const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
 const channels = useMapGetter('leadConfig/getChannels');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
+const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
+const theses = useMapGetter('theses/getTheses');
 
 // Etapas/motivos só eram buscados pelo Funil: abrir a conversa direto (F5)
 // deixava o chip de etapa VAZIO e o modal de perda sem motivos.
@@ -97,10 +100,43 @@ const formattedValue = computed(() =>
     : formatBrl(props.lead.value)
 );
 
-// Badge "estimado": mesmo computed do LeadFields, dentro do chip de valor.
+// Badge "estimado": valor_estimado.origem === 'auto' (regra da tese calculou
+// sozinha); some assim que o valor é editado à mão.
 const valorEstimadoAuto = computed(
   () => props.lead?.custom_attributes?.valor_estimado?.origem === 'auto'
 );
+
+// try/catch único dos campos editáveis do Resumo (valor, tese, benefício,
+// DCB, canal): no erro só avisa — o lead da store não mudou.
+const save = async payload => {
+  try {
+    await store.dispatch('leads/update', { id: props.lead.id, ...payload });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  }
+};
+
+// ----- valor: chip do cabeçalho vira input ao clicar -----
+const valueEditing = ref(false);
+const valueDraft = ref('');
+const valueInput = ref(null);
+const editValue = async () => {
+  valueDraft.value = formatBrl(props.lead?.value);
+  valueEditing.value = true;
+  await nextTick();
+  valueInput.value?.focus();
+  valueInput.value?.select();
+};
+// Enter/blur salva; Esc fecha antes do blur (que então não salva nada).
+const saveValue = () => {
+  if (!valueEditing.value) return;
+  valueEditing.value = false;
+  const next = parseBrlInput(valueDraft.value);
+  // texto inválido não-vazio: descarta (evita apagar o valor)
+  if (next === null && valueDraft.value.trim() !== '') return;
+  const prev = props.lead?.value == null ? null : Number(props.lead.value);
+  if (next !== prev) save({ value: next });
+};
 
 // ----- etapa editável no chip (mesma guarda do LeadFields: perda pede motivo,
 // ganho sem valor pede valor — senão o backend recusa com 422) -----
@@ -116,6 +152,7 @@ watch(
       stageId.value = l?.lead_stage_id ?? null;
       lostModalOpen.value = false;
       wonPrompt.value = false;
+      valueEditing.value = false;
       return;
     }
     // broadcast no mesmo lead: não mexer com prompt aberto nem select focado
@@ -135,9 +172,6 @@ const stageChipStyle = computed(() => ({
 }));
 
 // ----- Onda B: cartões do resumo -----
-const stageName = computed(
-  () => stages.value?.find(s => s.id === stageId.value)?.name || ''
-);
 const probability = computed(() => {
   const p = stages.value?.find(s => s.id === stageId.value)?.probability;
   return p == null ? null : Number(p);
@@ -159,9 +193,12 @@ const andamentoApoio = computed(() =>
           }),
         }
       : null,
-    formattedValue.value ? { texto: formattedValue.value, mono: true } : null,
     probability.value != null
-      ? { texto: `${probability.value}%`, mono: true }
+      ? {
+          rotulo: t('RAMON.LEAD_PANEL.ANDAMENTO.CHANCE'),
+          texto: `${probability.value}%`,
+          mono: true,
+        }
       : null,
   ].filter(Boolean)
 );
@@ -399,22 +436,34 @@ const onCompleteData = async () => {
 };
 
 // ----- campos derivados dos cartões -----
-const dcbFormatted = computed(() => {
-  if (!props.lead?.dcb_em) return null;
-  const d = new Date(`${props.lead.dcb_em}T00:00:00`);
-  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString('pt-BR');
-});
 const owners = computed(() => {
   const sdr = props.lead?.sdr_name;
   const closer = props.lead?.closer_name;
   if (!sdr && !closer) return null;
   return `${sdr || '—'} / ${closer || '—'}`;
 });
-const channelLabel = computed(
-  () =>
-    channels.value?.find(c => c.key === props.lead?.channel)?.label ??
-    props.lead?.channel
+const activeTheses = computed(() =>
+  (theses.value || []).filter(thesis => thesis.active)
 );
+const thesisFora = computed(
+  () =>
+    props.lead?.thesis_id &&
+    !activeTheses.value.some(th => th.id === props.lead.thesis_id)
+);
+// select do Caso: '' = limpar (null); ids numéricos viram Number
+const saveSelect = (key, raw, numeric = true) => {
+  const val = raw === '' ? null : raw;
+  save({ [key]: numeric && val != null ? Number(val) : val });
+};
+
+const copyPhone = async () => {
+  try {
+    await copyTextToClipboard(props.lead.contact_phone);
+    useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
+  } catch (error) {
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+  }
+};
 
 // ----- seções nativas do Chatwoot (agente/time/prioridade/etiquetas/macros)
 // recolhidas: não existem no mock 1f e "sujavam" o fim do Resumo -----
@@ -489,12 +538,33 @@ const discard = async () => {
           <span class="i-lucide-hourglass size-3 shrink-0" />
           {{ prescriptionLabel }}
         </span>
-        <span
-          v-if="formattedValue"
+        <!-- valor: clicar no chip edita no lugar (Enter/fora salva, Esc desiste) -->
+        <input
+          v-if="valueEditing"
+          ref="valueInput"
+          v-model="valueDraft"
+          data-testid="field-value"
+          type="text"
+          inputmode="decimal"
+          :aria-label="$t('RAMON.DRAWER.VALUE')"
+          class="font-mono !h-7 !w-36"
+          :class="CAMPO"
+          @blur="saveValue"
+          @keyup.enter="saveValue"
+          @keyup.esc="valueEditing = false"
+        />
+        <button
+          v-else
+          type="button"
           data-testid="panel-value-chip"
+          :title="$t('RAMON.LEAD_PANEL.VALUE_EDIT')"
+          class="hover:bg-n-slate-9/20"
           :class="[CHIP, TOM.slate]"
+          @click="editValue"
         >
-          <span class="font-mono">{{ formattedValue }}</span>
+          <span :class="{ 'font-mono': formattedValue }">{{
+            formattedValue || $t('RAMON.LEAD_PANEL.VALUE_ADD')
+          }}</span>
           <span
             v-if="valorEstimadoAuto"
             data-testid="value-auto-badge"
@@ -506,7 +576,7 @@ const discard = async () => {
               $t('RAMON.DRAWER.VALUE_AUTO')
             }}
           </span>
-        </span>
+        </button>
       </div>
 
       <LostReasonModal
@@ -696,15 +766,7 @@ const discard = async () => {
           <p :class="TITULO">
             {{ $t('RAMON.LEAD_PANEL.ANDAMENTO.TITLE') }}
           </p>
-          <p class="mt-1.5">
-            <span
-              class="ramon-stage-pill inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-semibold"
-              :style="stageChipStyle"
-            >
-              <span class="rounded-full size-1.5 bg-current" />
-              {{ stageName || '—' }}
-            </span>
-          </p>
+          <!-- etapa: o controle é a pílula do cabeçalho; aqui só a esteira -->
           <MiniEsteira class="mt-2" :stages="stages" :current-id="stageId" />
           <p
             v-if="andamentoApoio.length"
@@ -712,6 +774,7 @@ const discard = async () => {
           >
             <template v-for="(parte, i) in andamentoApoio" :key="i">
               <span v-if="i"> · </span>
+              <span v-if="parte.rotulo">{{ `${parte.rotulo} ` }}</span>
               <span :class="{ 'font-mono': parte.mono }">{{
                 parte.texto
               }}</span>
@@ -845,39 +908,81 @@ const discard = async () => {
           </div>
         </button>
 
-        <!-- Caso -->
+        <!-- Caso: tese, benefício, DCB e canal editáveis no lugar (clicar = editar) -->
         <div :class="CARTAO" data-testid="panel-card-caso">
           <p :class="TITULO">
             {{ $t('RAMON.LEAD_PANEL.CASE_TITLE') }}
           </p>
-          <p class="mt-1 text-[13px] font-semibold text-n-slate-12">
-            {{
-              [lead.thesis_name, lead.benefit_type_name]
-                .filter(Boolean)
-                .join(' · ') || '—'
-            }}
+          <div class="flex flex-wrap items-center gap-x-1 mt-1">
+            <select
+              data-testid="field-thesis"
+              :value="lead.thesis_id ?? ''"
+              :aria-label="$t('RAMON.DRAWER.THESIS')"
+              class="font-semibold"
+              :class="EDITAVEL"
+              @change="e => saveSelect('thesis_id', e.target.value)"
+            >
+              <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
+              <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
+              <option v-if="thesisFora" :value="lead.thesis_id">
+                {{ lead.thesis_name }}
+              </option>
+              <option v-for="th in activeTheses" :key="th.id" :value="th.id">
+                {{ th.name }}
+              </option>
+            </select>
+            <span class="text-n-slate-9">·</span>
+            <select
+              data-testid="field-benefit"
+              :value="lead.benefit_type_id ?? ''"
+              :aria-label="$t('RAMON.DRAWER.BENEFIT')"
+              class="font-semibold"
+              :class="EDITAVEL"
+              @change="e => saveSelect('benefit_type_id', e.target.value)"
+            >
+              <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
+              <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
+                {{ b.name }}
+              </option>
+            </select>
+          </div>
+          <p
+            v-if="!lead.thesis_id"
+            data-testid="no-thesis-hint"
+            class="mt-1 text-xs text-n-slate-9"
+          >
+            {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
           </p>
           <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-2">
-            <div>
-              <p class="text-[10.5px] text-n-slate-9">
+            <label class="min-w-0">
+              <span class="block text-[10.5px] text-n-slate-9">
                 {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
-              </p>
-              <p
-                data-testid="panel-dcb"
-                class="font-mono text-[13px]"
-                :class="bleeding ? 'text-n-ruby-11' : 'text-n-slate-12'"
-              >
-                {{ dcbFormatted || '—' }}
-              </p>
-            </div>
-            <div>
-              <p class="text-[10.5px] text-n-slate-9">
+              </span>
+              <input
+                data-testid="field-dcb-em"
+                type="date"
+                :value="lead.dcb_em || ''"
+                class="font-mono"
+                :class="[EDITAVEL, bleeding ? '!text-n-ruby-11' : '']"
+                @change="e => save({ dcb_em: e.target.value || null })"
+              />
+            </label>
+            <label class="min-w-0">
+              <span class="block text-[10.5px] text-n-slate-9">
                 {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
-              </p>
-              <p class="text-[13px] text-n-slate-12">
-                {{ channelLabel || '—' }}
-              </p>
-            </div>
+              </span>
+              <select
+                data-testid="field-channel"
+                :value="lead.channel ?? ''"
+                :class="EDITAVEL"
+                @change="e => saveSelect('channel', e.target.value, false)"
+              >
+                <option value="">—</option>
+                <option v-for="c in channels" :key="c.key" :value="c.key">
+                  {{ c.label }}
+                </option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -916,17 +1021,20 @@ const discard = async () => {
                 <p class="text-[10.5px] text-n-slate-9">
                   {{ $t('RAMON.LEAD_PANEL.FIELDS.PHONE') }}
                 </p>
-                <p class="font-mono text-[13px] text-n-slate-12">
-                  {{ lead.contact_phone || '—' }}
-                </p>
-              </div>
-              <div>
-                <p class="text-[10.5px] text-n-slate-9">
-                  {{ $t('RAMON.LEAD_PANEL.FIELDS.CPF') }}
-                </p>
-                <p class="font-mono text-[13px] text-n-slate-12">
-                  {{ formatCpf(lead.contact_cpf) || '—' }}
-                </p>
+                <Button
+                  v-if="lead.contact_phone"
+                  data-testid="contact-copy-phone"
+                  link
+                  slate
+                  xs
+                  icon="i-lucide-copy"
+                  trailing-icon
+                  class="font-mono"
+                  :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
+                  :label="lead.contact_phone"
+                  @click="copyPhone"
+                />
+                <p v-else class="font-mono text-[13px] text-n-slate-12">—</p>
               </div>
               <div>
                 <p class="text-[10.5px] text-n-slate-9">

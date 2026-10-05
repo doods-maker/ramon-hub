@@ -437,17 +437,13 @@
       }
     },
     "TASKS": {
-      "TITLE": "Próximas ações",
-      "EMPTY": "Nenhuma tarefa aberta.",
       "ADD": "+ Tarefa",
       "ADD_TITLE_PLACEHOLDER": "Título da tarefa",
       "OVERDUE": "Vencida",
       "TODAY": "Hoje",
       "IN_DAYS": "em {n}d",
-      "SCHEDULE_NEXT": "Agendar próxima?",
       "DATE_HINT": "Vazio = amanhã 9h",
       "CREATE_ERROR": "Não foi possível criar a tarefa — tente de novo",
-      "COMPLETE": "Concluir tarefa",
       "KIND_TASK": "Tarefa",
       "KIND_MEETING": "Reunião",
       "MEETING_TITLE_PLACEHOLDER": "Título da reunião (opcional)",
@@ -488,7 +484,6 @@
     },
     "DRAWER": {
       "NAME": "Nome",
-      "STAGE": "Etapa",
       "BENEFIT": "Tipo de benefício",
       "PRIORITY": "Prioridade do lead",
       "SDR": "SDR",
@@ -499,9 +494,6 @@
       "SOURCE": "Origem",
       "CHANNEL": "Canal",
       "LOST_REASON": "Motivo da perda",
-      "NOTES": "Notas",
-      "NOTES_ADD": "Escreva uma nota…",
-      "NOTES_ADD_BUTTON": "Adicionar nota",
       "CONTACT": "Contato",
       "THESIS": "Tese",
       "NO_THESIS_HINT": "Escolha a tese para liberar o checklist de documentos e o playbook.",
@@ -529,8 +521,7 @@
           "MEETING_SCHEDULED": "Reunião marcada."
         }
       },
-      "BENEFIT_MONTHLY_LABEL": "Benefício mensal estimado",
-      "DCB_LABEL": "DCB (data de cessação do benefício)"
+      "BENEFIT_MONTHLY_LABEL": "Benefício mensal estimado"
     },
     "LINHA_DA_VIDA": {
       "OPEN": "Linha da Vida",
@@ -767,9 +758,10 @@
         "TITLE": "Notas",
         "PLACEHOLDER": "Adicionar nota…",
         "SAVE_ERROR": "Não foi possível salvar a nota — tente de novo",
-        "HIDDEN": "+{count} anteriores na aba Histórico",
         "SYSTEM": "Sistema",
-        "USE_IN_EDITOR": "Usar no editor"
+        "USE_IN_EDITOR": "Usar no editor",
+        "SHOW_ALL": "ver todas ({count})",
+        "SHOW_LESS": "ver menos"
       },
       "QUIZ": {
         "TITLE": "Triagem da LP",
@@ -792,7 +784,8 @@
         "LAST_SIM": "Última simulação:",
         "LAST_SIM_ATRASADOS": "atrasados",
         "LAST_SIM_RMI": "RMI",
-        "LAST_SIM_EM": "em"
+        "LAST_SIM_EM": "em",
+        "CHANCE": "chance"
       },
       "CASE_TITLE": "Caso",
       "CONTACT_DATA": "Dados do contato",
@@ -800,7 +793,6 @@
         "OWNERS": "SDR / Closer",
         "DCB": "DCB em",
         "PHONE": "Telefone",
-        "CPF": "CPF",
         "CHANNEL": "Canal"
       },
       "EDIT_ALL_FIELDS": "editar todos os campos",
@@ -834,7 +826,9 @@
       "LOAD_ERROR": "Não foi possível carregar o lead desta conversa.",
       "RETRY": "Tentar novamente",
       "DISCARD_CONFIRM": "Remover este lead do funil? A conversa continua no Chatwoot.",
-      "DISCARD_ERROR": "Não foi possível remover o lead — tente de novo"
+      "DISCARD_ERROR": "Não foi possível remover o lead — tente de novo",
+      "VALUE_ADD": "+ valor",
+      "VALUE_EDIT": "Clique para editar o valor"
     },
     "PLAYBOOK": {
       "EMPTY": "Escolha uma tese na aba Resumo para ver o roteiro de consulta.",
