@@ -46,6 +46,7 @@
       "VIEW_MONTH": "Mês",
       "FILTER_ALL": "Todas",
       "FILTER_MEETING": "Reuniões",
+      "OVERDUE": "vencida",
       "OWNER_MINE": "Minhas",
       "OWNER_TEAM": "Time",
       "FILTER_FOLLOW_UP": "Follow-ups",
@@ -103,7 +104,8 @@
       "AGENDA": {
         "TITLE": "Hoje na agenda",
         "EMPTY": "Sem reuniões hoje.",
-        "VIEW_WEEK": "ver semana inteira → Agenda"
+        "VIEW_WEEK": "ver semana inteira → Agenda",
+        "OVERDUE": "vencida {data}"
       },
       "FUNNEL": {
         "TITLE": "Funil · conversão",

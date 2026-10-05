@@ -46,6 +46,7 @@
       "VIEW_MONTH": "Month",
       "FILTER_ALL": "All",
       "FILTER_MEETING": "Meetings",
+      "OVERDUE": "overdue",
       "OWNER_MINE": "Mine",
       "OWNER_TEAM": "Team",
       "FILTER_FOLLOW_UP": "Follow-ups",
@@ -103,7 +104,8 @@
       "AGENDA": {
         "TITLE": "Today's agenda",
         "EMPTY": "No meetings today.",
-        "VIEW_WEEK": "see the whole week → Agenda"
+        "VIEW_WEEK": "see the whole week → Agenda",
+        "OVERDUE": "overdue {data}"
       },
       "FUNNEL": {
         "TITLE": "Pipeline · conversion",

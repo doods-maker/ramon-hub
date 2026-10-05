@@ -76,11 +76,6 @@ const startOfWeek = date => {
 };
 const startOfMonth = date => new Date(date.getFullYear(), date.getMonth(), 1);
 
-// Reusa o endpoint de tarefas da conta (scope default = todas as abertas);
-// recorte de período e filtro de tipo são client-side.
-const reload = () => store.dispatch('leadTasks/fetchAccountScope');
-onMounted(reload);
-
 const dayKey = d => d.toDateString();
 const isToday = d => dayKey(d) === dayKey(new Date());
 const isWeekend = d => d.getDay() === 0 || d.getDay() === 6;
@@ -101,15 +96,38 @@ const matchesOwner = task => {
   return task.user_id === me;
 };
 
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+// vencida = aberta de um dia que já passou (a de hoje fica no horário dela)
+const isOverdue = task =>
+  !task.completed_at && new Date(task.due_at) < startOfToday();
+const isDoneToday = task =>
+  Boolean(task.completed_at) &&
+  dayKey(new Date(task.completed_at)) === dayKey(new Date());
+
+// Concluída só aparece no dia em que foi feita (apagada, com check); vencida
+// sai do dia dela e fica fixada no topo de Hoje.
 const tasksByDay = computed(() => {
   const map = {};
+  const vencidas = [];
   getters['leadTasks/getAccountTasks'].value.forEach(task => {
-    if (!task.due_at || task.completed_at) return;
+    if (!task.due_at || (task.completed_at && !isDoneToday(task))) return;
     if (!matchesKind(task) || !matchesOwner(task)) return;
+    if (isOverdue(task)) {
+      vencidas.push(task);
+      return;
+    }
     const key = dayKey(new Date(task.due_at));
     if (!map[key]) map[key] = [];
     map[key].push(task);
   });
+  if (vencidas.length) {
+    const hoje = dayKey(new Date());
+    map[hoje] = [...vencidas, ...(map[hoje] || [])];
+  }
   return map;
 });
 
@@ -135,6 +153,21 @@ const days = computed(() => {
   const weeks = Math.round(((last - start) / 86400000 + 1) / 7);
   return Array.from({ length: weeks * 7 }, (_, i) => addDays(start, i));
 });
+
+// Período visível inteiro (abertas + feitas hoje + vencidas); o store troca
+// as tarefas do período pelas do servidor — o que foi concluído ou cancelado
+// em outra tela some sem F5. Filtros de tipo e dono são client-side.
+const reload = () => {
+  const ini = new Date(days.value[0]);
+  const fim = new Date(days.value[days.value.length - 1]);
+  fim.setHours(23, 59, 59, 999);
+  return store.dispatch('leadTasks/fetchAccountScope', {
+    scope: 'agenda',
+    from: ini.toISOString(),
+    to: fim.toISOString(),
+  });
+};
+onMounted(reload);
 
 const isFetching = computed(
   () => getters['leadTasks/getUIFlags'].value.isFetching
@@ -162,6 +195,21 @@ const fullDayLabel = d =>
     day: '2-digit',
     month: 'long',
   }).format(d);
+
+// chip de horário: feita = cinza com check; reunião = azul; follow-up = cinza
+const chipTom = task => {
+  if (task.completed_at) return TOM.slate;
+  return task.kind === 'meeting' ? TOM.blue : TOM.slate;
+};
+// vencida mostra o dia de origem junto da hora
+const horaDe = task =>
+  isOverdue(task)
+    ? `${dateLabel(new Date(task.due_at))} ${timeLabel(task.due_at)}`
+    : timeLabel(task.due_at);
+const chipIcone = task => {
+  if (task.completed_at) return 'i-lucide-check';
+  return task.kind === 'meeting' ? 'i-lucide-calendar-clock' : 'i-lucide-bell';
+};
 
 // Cabeçalho dos dias da semana no mês (seg…dom, derivado de uma semana real).
 const weekdayHeaders = computed(() => {
@@ -217,6 +265,12 @@ const openLead = leadId => {
 
 const hasVisibleTasks = computed(() =>
   days.value.some(day => tasksByDay.value[dayKey(day)])
+);
+
+// trocou o período (navegação, visão, mês) → busca o período novo
+watch(
+  () => `${dayKey(days.value[0])}|${days.value.length}`,
+  () => reload()
 );
 </script>
 
@@ -369,23 +423,26 @@ const hasVisibleTasks = computed(() =>
                 index > 0
                   ? 'border-t border-solid border-n-weak !rounded-none'
                   : '',
+                { 'opacity-60': task.completed_at },
               ]"
               class="flex items-start gap-3 !py-2.5"
+              data-testid="agenda-task"
               @click="openLead(task.lead_id)"
             >
               <span
-                :class="[CHIP, task.kind === 'meeting' ? TOM.blue : TOM.slate]"
+                :class="[CHIP, chipTom(task)]"
                 class="flex-none mt-0.5 font-mono tabular-nums"
               >
-                <span
-                  :class="
-                    task.kind === 'meeting'
-                      ? 'i-lucide-calendar-clock'
-                      : 'i-lucide-bell'
-                  "
-                  class="size-3 flex-shrink-0"
-                />
-                {{ timeLabel(task.due_at) }}
+                <span :class="chipIcone(task)" class="size-3 flex-shrink-0" />
+                {{ horaDe(task) }}
+              </span>
+              <span
+                v-if="isOverdue(task)"
+                :class="[CHIP, TOM.ruby]"
+                class="flex-none mt-0.5"
+                data-testid="agenda-overdue"
+              >
+                {{ t('RAMON.AGENDA.OVERDUE') }}
               </span>
               <span class="flex flex-col flex-1 min-w-0">
                 <span class="text-sm font-medium text-n-slate-12">
@@ -446,26 +503,30 @@ const hasVisibleTasks = computed(() =>
                   index > 0
                     ? 'border-t border-solid border-n-weak !rounded-none'
                     : '',
+                  { 'opacity-60': task.completed_at },
                 ]"
                 class="flex flex-col items-start gap-1 !py-2"
+                data-testid="agenda-task"
                 @click="openLead(task.lead_id)"
               >
-                <span
-                  :class="[
-                    CHIP,
-                    task.kind === 'meeting' ? TOM.blue : TOM.slate,
-                  ]"
-                  class="font-mono tabular-nums"
-                >
+                <span class="flex flex-wrap items-center gap-1">
                   <span
-                    :class="
-                      task.kind === 'meeting'
-                        ? 'i-lucide-calendar-clock'
-                        : 'i-lucide-bell'
-                    "
-                    class="size-3 flex-shrink-0"
-                  />
-                  {{ timeLabel(task.due_at) }}
+                    :class="[CHIP, chipTom(task)]"
+                    class="font-mono tabular-nums"
+                  >
+                    <span
+                      :class="chipIcone(task)"
+                      class="size-3 flex-shrink-0"
+                    />
+                    {{ horaDe(task) }}
+                  </span>
+                  <span
+                    v-if="isOverdue(task)"
+                    :class="[CHIP, TOM.ruby]"
+                    data-testid="agenda-overdue"
+                  >
+                    {{ t('RAMON.AGENDA.OVERDUE') }}
+                  </span>
                 </span>
                 <span
                   class="text-[13px] font-medium leading-snug text-n-slate-12 line-clamp-2"
@@ -525,16 +586,12 @@ const hasVisibleTasks = computed(() =>
                 v-for="task in (tasksByDay[dayKey(day)] || []).slice(0, 3)"
                 :key="task.id"
                 class="flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded-md truncate"
-                :class="task.kind === 'meeting' ? TOM.blue : TOM.slate"
+                :class="[
+                  isOverdue(task) ? TOM.ruby : chipTom(task),
+                  { 'opacity-60': task.completed_at },
+                ]"
               >
-                <span
-                  :class="
-                    task.kind === 'meeting'
-                      ? 'i-lucide-calendar-clock'
-                      : 'i-lucide-bell'
-                  "
-                  class="size-3 flex-shrink-0"
-                />
+                <span :class="chipIcone(task)" class="size-3 flex-shrink-0" />
                 <span class="truncate">{{ task.title }}</span>
               </span>
               <span

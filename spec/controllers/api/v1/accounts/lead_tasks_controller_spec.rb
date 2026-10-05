@@ -81,4 +81,17 @@ RSpec.describe 'Lead Tasks API', type: :request do
     expect(row['closer_id']).to eq(closer.id)
     expect(row['closer_name']).to eq('Clara Closer')
   end
+
+  it 'scope=agenda devolve o período (abertas + feitas hoje) e as vencidas abertas', :aggregate_failures do
+    create(:lead_task, account: account, lead: lead, title: 'aberta', due_at: 2.days.from_now)
+    create(:lead_task, account: account, lead: lead, title: 'feita hoje', due_at: 2.days.from_now, completed_at: Time.current)
+    create(:lead_task, account: account, lead: lead, title: 'feita antes', due_at: 2.days.from_now, completed_at: 3.days.ago)
+    create(:lead_task, account: account, lead: lead, title: 'vencida', due_at: 20.days.ago)
+    create(:lead_task, account: account, lead: lead, title: 'fora', due_at: 30.days.from_now)
+    get "/api/v1/accounts/#{account.id}/lead_tasks",
+        params: { scope: 'agenda', from: 1.day.from_now.iso8601, to: 7.days.from_now.iso8601 },
+        headers: agent.create_new_auth_token
+    titles = response.parsed_body['payload'].map { |t| t['title'] }
+    expect(titles).to contain_exactly('aberta', 'feita hoje', 'vencida')
+  end
 end

@@ -95,4 +95,20 @@ describe('leadTasks actions', () => {
     );
     expect(commit).toHaveBeenCalledWith(types.DELETE_LEAD_TASK, 3);
   });
+
+  it('fetchAccountScope com período (Agenda) troca as tarefas do período', async () => {
+    const payload = [{ id: 4, lead_id: 20 }];
+    axios.get.mockResolvedValue({ data: { payload } });
+    const query = { scope: 'agenda', from: '2026-10-05', to: '2026-10-11' };
+    await actions.fetchAccountScope({ commit }, query);
+    expect(axios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/lead_tasks'),
+      { params: query }
+    );
+    expect(commit).toHaveBeenCalledWith(types.REPLACE_LEAD_TASKS_PERIOD, {
+      from: '2026-10-05',
+      to: '2026-10-11',
+      tasks: payload,
+    });
+  });
 });

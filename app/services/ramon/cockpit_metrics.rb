@@ -44,15 +44,22 @@ class Ramon::CockpitMetrics
 
   # ---- Agenda de hoje -----------------------------------------------------
 
-  # Reuniões de hoje, abertas ou não (o Cockpit mostra o dia inteiro). Quem
-  # aparece é o dono da reunião: Closer, senão SDR, senão quem criou a tarefa
-  # (a do Cal.com nasce sem criador).
+  # Reuniões de hoje, abertas ou não (o Cockpit mostra o dia inteiro; feita
+  # vem apagada), + as vencidas ainda abertas da última semana, fixadas no
+  # topo. Quem aparece é o dono da reunião: Closer, senão SDR, senão quem
+  # criou a tarefa (a do Cal.com nasce sem criador).
+  # ponytail: vencida só de 7 dias — backlog antigo não come o limite de hoje.
   def agenda_today
-    @account.lead_tasks.where(kind: 'meeting', due_at: today_range)
-            .includes(:user, lead: [:closer, :sdr]).order(:due_at).limit(AGENDA_LIMIT).map do |task|
-      { id: task.id, lead_id: task.lead_id, lead_name: task.lead&.name, title: task.title,
-        due_at: task.due_at, user_name: dono_da_reuniao(task), source: task.lead&.source }
-    end
+    meetings = @account.lead_tasks.where(kind: 'meeting')
+    vencidas = meetings.open_tasks.where(due_at: (today_range.first - 7.days)...today_range.first)
+    meetings.where(due_at: today_range).or(vencidas)
+            .includes(:user, lead: [:closer, :sdr]).order(:due_at).limit(AGENDA_LIMIT).map { |task| agenda_row(task) }
+  end
+
+  def agenda_row(task)
+    { id: task.id, lead_id: task.lead_id, lead_name: task.lead&.name, title: task.title, due_at: task.due_at,
+      user_name: dono_da_reuniao(task), source: task.lead&.source, completed_at: task.completed_at,
+      vencida: task.completed_at.nil? && task.due_at < today_range.first }
   end
 
   def dono_da_reuniao(task)

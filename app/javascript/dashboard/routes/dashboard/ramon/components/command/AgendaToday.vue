@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { CARTAO, LINHA, TOM } from '../../helpers/ui';
+import { CARTAO, CHIP, LINHA, TOM } from '../../helpers/ui';
 
 // "Hoje na agenda" (mock 3c): reuniões do dia vindas do payload do Cockpit.
 const props = defineProps({
@@ -18,12 +18,20 @@ const fmtTime = iso =>
     minute: '2-digit',
   }).format(new Date(iso));
 
-// A PRÓXIMA reunião futura ganha o bloco de hora azul; as demais, cinza.
+// A PRÓXIMA reunião futura (aberta) ganha o bloco de hora azul; as demais,
+// cinza. Feita vem apagada com check; vencida (dias anteriores) fica no topo.
 const nextId = computed(() => {
   const now = Date.now();
-  const next = props.items.find(item => new Date(item.due_at).getTime() >= now);
+  const next = props.items.find(
+    item => !item.completed_at && new Date(item.due_at).getTime() >= now
+  );
   return next ? next.id : null;
 });
+
+const fmtDay = iso =>
+  new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(
+    new Date(iso)
+  );
 
 const metaLine = item =>
   [item.title, item.user_name, item.source].filter(Boolean).join(' · ');
@@ -39,22 +47,38 @@ const metaLine = item =>
         data-testid="agenda-item"
         :class="[
           LINHA,
-          index > 0 ? 'border-t border-n-weak !rounded-none' : '',
+          index > 0 ? 'border-t border-solid border-n-weak !rounded-none' : '',
+          { 'opacity-60': item.completed_at },
         ]"
         class="flex items-start gap-3 !py-2.5"
         @click="emit('select', item.lead_id)"
       >
         <span
-          class="flex-none w-[52px] py-1 text-center rounded-lg font-mono text-sm font-medium tabular-nums"
+          class="flex-none min-w-[52px] px-1 py-1 text-center rounded-lg font-mono text-sm font-medium tabular-nums"
           :class="item.id === nextId ? TOM.blue : TOM.slate"
         >
+          <span
+            v-if="item.completed_at"
+            data-testid="agenda-item-done"
+            class="i-lucide-check inline-block size-3 align-[-1px]"
+          />
           {{ fmtTime(item.due_at) }}
         </span>
         <span class="flex-1 min-w-0">
-          <span
-            class="block text-[13.5px] font-medium truncate text-n-slate-12"
-          >
-            {{ item.lead_name }}
+          <span class="flex items-center gap-1.5 min-w-0">
+            <span class="text-[13.5px] font-medium truncate text-n-slate-12">
+              {{ item.lead_name }}
+            </span>
+            <span
+              v-if="item.vencida"
+              data-testid="agenda-item-overdue"
+              :class="[CHIP, TOM.ruby]"
+              class="shrink-0"
+            >
+              {{
+                t('RAMON.COMMAND.AGENDA.OVERDUE', { data: fmtDay(item.due_at) })
+              }}
+            </span>
           </span>
           <span class="block mt-0.5 text-[11px] truncate text-n-slate-10">
             {{ metaLine(item) }}

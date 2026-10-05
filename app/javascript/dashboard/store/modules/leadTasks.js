@@ -35,11 +35,24 @@ export const actions = {
     }
   },
 
-  fetchAccountScope: async ({ commit }, scope) => {
+  // query: 'overdue' | 'today' | { scope: 'agenda', from, to }. Com período, a
+  // resposta substitui as tarefas do período (e as vencidas abertas) em vez
+  // de só somar — concluída/cancelada em outra tela some sem F5.
+  fetchAccountScope: async ({ commit }, query) => {
+    const params =
+      typeof query === 'object' && query ? query : { scope: query };
     commit(types.SET_LEAD_TASKS_UI_FLAG, { isFetching: true, hasError: false });
     try {
-      const { data } = await LeadTasksAPI.getAccountScope(scope);
-      commit(types.MERGE_LEAD_TASKS, data.payload);
+      const { data } = await LeadTasksAPI.getAccountScope(params);
+      if (params.from) {
+        commit(types.REPLACE_LEAD_TASKS_PERIOD, {
+          from: params.from,
+          to: params.to,
+          tasks: data.payload,
+        });
+      } else {
+        commit(types.MERGE_LEAD_TASKS, data.payload);
+      }
     } catch (e) {
       // Erro fica na flag: a Agenda mostra retry em vez de "sem compromissos".
       commit(types.SET_LEAD_TASKS_UI_FLAG, { hasError: true });
@@ -104,6 +117,19 @@ export const mutations = {
   },
   [types.MERGE_LEAD_TASK](_state, data) {
     mergeById(_state.records, data);
+  },
+  // tira do cache o que caía no período (ou estava vencida e aberta) e põe
+  // o que o servidor devolveu — o resto do cache (outros períodos) fica.
+  [types.REPLACE_LEAD_TASKS_PERIOD](_state, { from, to, tasks = [] }) {
+    const ini = new Date(from).getTime();
+    const fim = new Date(to).getTime();
+    const agora = Date.now();
+    _state.records = _state.records.filter(task => {
+      const due = new Date(task.due_at).getTime();
+      if (due >= ini && due <= fim) return false;
+      return Boolean(task.completed_at) || !(due < agora);
+    });
+    tasks.forEach(task => mergeById(_state.records, task));
   },
   [types.DELETE_LEAD_TASK](_state, id) {
     _state.records = _state.records.filter(task => task.id !== id);

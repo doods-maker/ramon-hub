@@ -10,8 +10,9 @@ class LeadTasksAPI extends ApiClient {
     return axios.get(`${this.url}/${leadId}/tasks`);
   }
 
-  getAccountScope(scope) {
-    return axios.get(`${this.baseUrl()}/lead_tasks`, { params: { scope } });
+  // params: { scope } ou, na Agenda, { scope: 'agenda', from, to }
+  getAccountScope(params) {
+    return axios.get(`${this.baseUrl()}/lead_tasks`, { params });
   }
 
   create(leadId, payload) {
