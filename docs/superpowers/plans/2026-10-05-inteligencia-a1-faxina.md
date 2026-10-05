@@ -41,14 +41,14 @@
 5. **I-DO2:** o PDF sai do formulário (não só um aviso) — sem "Colar texto" (I-DO1, pacote 3) o formulário fica só com URL + nome. O filtro "PDF's" da lista fica (é filtro, não criação).
 6. **I-T1 / Playground:** só o rótulo do menu vira "Testar"; o cabeçalho da tela segue "Área de testes" (já está em português); a descrição perde a palavra "playground".
 7. **I-T3:** o Paywall ("Atualize seu plano") não sai — só aparece com a feature desligada, o que não acontece na banca.
-8. **Exemplo de Skill em inglês ("Prospective Buyer", `scenarios/Index.vue:43-53`) fica** — trocar é o I-SK3, que não foi escolhido. Ver dúvida 1.
+8. **Exemplo de Skill em inglês** — resolvido: entra no A1 (ver decisão 1 abaixo, Task 6).
 
-## Dúvidas que exigem decisão do Eduardo (não bloqueiam a execução)
+## Decisões do controller sobre as dúvidas (05/10, com base em decisões já tomadas pelo Eduardo)
 
-1. O exemplo de Skill em inglês (I-SK3, não escolhido) fica até o pacote dele, ou tiro já no A1 (≈10 linhas)?
-2. Proteção de exemplo "toda mensagem ao cliente é rascunho" contradiz o modo "Piloto com limites" (que envia logística sozinho). Mantenho o texto como está nas regras da casa?
-3. Vigia no topo do menu até a Visão geral existir — ok, ou prefere perto de Execuções?
-4. Texto provisório da tela Assistentes (aponta pro seletor) — ok até o I-AS1?
+1. **I-SK3 entra no A1** (mesmo problema dos exemplos falsos do I-T2): na Task 6, o exemplo em inglês de `scenarios/Index.vue:43-53` vira um exemplo da banca — título "Lead que sumiu depois da reunião", descrição "Quando o lead não responde há dias depois da reunião de fechamento", instrução "Retome com gentileza, lembre o próximo passo combinado e ofereça novo horário; use @playbook_da_tese se precisar." (adapte aos campos reais do array).
+2. **Proteção de rascunho reescrita** para não contradizer o piloto limitado (D7, ligado em 17/08): "Conteúdo jurídico, valores e prazos só saem como rascunho…; no modo piloto limitado, só logística sai sozinha."
+3. **Vigia no topo** até a Visão geral existir: ok.
+4. **Texto provisório da tela Assistentes**: ok até o I-AS1.
 
 ## Mapa de arquivos
 
@@ -1980,7 +1980,7 @@ const guardrailsExample = [
   {
     id: 3,
     content:
-      'Toda mensagem ao cliente é rascunho: quem revisa e envia é uma pessoa da equipe.',
+      'Conteúdo jurídico, valores e prazos só saem como rascunho para a equipe revisar; no modo piloto limitado, só logística (horário, endereço, lista de documentos) sai sozinha.',
   },
 ];
 ```
