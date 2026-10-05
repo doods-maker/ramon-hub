@@ -8,4 +8,12 @@ RSpec.describe Ramon::ZapsignStatusJob do
     expect(a.reload.status).to eq 'signed'
     expect(a.assinado_em).to be_present
   end
+
+  it 'documento cancelado pelo hub não volta a mudar com o webhook de recusa' do
+    a = create(:portal_assinatura, status: 'cancelado')
+    allow(Ramon::ZapsignClient).to receive(:doc)
+    described_class.perform_now(a.id)
+    expect(a.reload.status).to eq 'cancelado'
+    expect(Ramon::ZapsignClient).not_to have_received(:doc)
+  end
 end

@@ -34,14 +34,19 @@ class Cliente::BaseController < ActionController::Base
   # Date → "set" (bloquinho de calendário do histórico)
   def mes_curto(data) = MESES[data.month - 1][0, 3]
 
-  # O cookie guarda o id + um pedaço do digest da senha: trocar a senha ou gerar
-  # senha provisória nova derruba toda sessão aberta com a senha antiga.
+  # O cookie guarda o id + um pedaço do digest da senha (+ a chave de sessão): trocar
+  # a senha, gerar senha provisória nova ou suspender derruba toda sessão aberta.
+  # Cliente suspenso nunca passa, mesmo com cookie válido.
   def current_cliente
     return @current_cliente if defined?(@current_cliente)
 
     dados = cookies.encrypted[COOKIE]
     cliente = PortalCliente.find_by(id: dados['id']) if dados.is_a?(Hash)
-    @current_cliente = cliente if cliente && ActiveSupport::SecurityUtils.secure_compare(dados['v'].to_s, versao(cliente))
+    @current_cliente = cliente if sessao_valida?(cliente, dados)
+  end
+
+  def sessao_valida?(cliente, dados)
+    cliente.present? && !cliente.suspenso? && ActiveSupport::SecurityUtils.secure_compare(dados['v'].to_s, versao(cliente))
   end
 
   def require_cliente
@@ -60,5 +65,6 @@ class Cliente::BaseController < ActionController::Base
     cookies.delete(TROCA)
   end
 
-  def versao(cliente) = cliente.senha_digest.to_s.last(8)
+  # sessao_chave nil (quem nunca foi suspenso) mantém a versão de antes: ninguém cai no deploy.
+  def versao(cliente) = "#{cliente.senha_digest.to_s.last(8)}#{cliente.sessao_chave}"
 end

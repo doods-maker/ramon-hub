@@ -4,7 +4,10 @@
 class PortalAcesso < ApplicationRecord
   PRAZO = 6.months
 
-  belongs_to :portal_cliente
+  # optional: a linha fica depois que o cliente é excluído (identificada pelo CPF).
+  belongs_to :portal_cliente, optional: true
+
+  before_create { self.cpf ||= portal_cliente&.cpf }
 
   def self.expurgar! = where(created_at: ...PRAZO.ago).delete_all
 end

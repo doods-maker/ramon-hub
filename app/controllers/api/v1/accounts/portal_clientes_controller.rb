@@ -2,17 +2,19 @@
 # provisória), recado por processo, enviar documento pra assinatura. Convite é
 # sempre clique humano.
 class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseController
+  MOTIVO_CANCELAMENTO = 'Documento cancelado pelo escritório'.freeze
   before_action :current_account
-  before_action :fetch_cliente, only: [:show, :update, :destroy, :convidar, :assinatura]
+  before_action :fetch_cliente, except: [:index, :create]
   before_action :check_authorization
 
   def index
     clientes = Current.account.portal_clientes.order(:nome).to_a
-    render json: { payload: clientes.map { |c| linha(c) }, metricas: metricas(clientes) }
+    render json: { payload: clientes.map { |c| portal_json.linha(c) }, metricas: portal_json.metricas(clientes),
+                   email_configurado: Ramon::PortalConvite.email_configurado?, permissoes: permissoes }
   end
 
   def show
-    render json: detalhe(@cliente)
+    render json: portal_json.detalhe(@cliente)
   end
 
   # Convidar de novo o mesmo cliente do ADVBOX ATUALIZA a linha (nome/CPF/e-mail
@@ -20,47 +22,88 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
   # consertar uma conta que ficou sem CPF (linhas anteriores ao login por CPF).
   def create
     cliente = Current.account.portal_clientes.find_or_initialize_by(advbox_customer_id: params[:advbox_customer_id])
+    authorize(:portal_cliente, :nova_senha?) if cliente.convidado_em.present?
     cliente.update!(params.permit(:nome, :cpf, :email, :telefone))
     sincronizar(cliente)
-    senha = convidar!(cliente)
-    render json: linha(cliente).merge(senha_provisoria: senha)
+    render json: entregar_senha(cliente)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
   end
 
   def update
-    @cliente.update!(recados: params[:recados].to_unsafe_h.transform_values(&:to_s).compact_blank) if params.key?(:recados)
-    @cliente.update!(email: params[:email].presence) if params.key?(:email)
-    render json: detalhe(@cliente)
+    salvar_recados if params.key?(:recados)
+    salvar_email if params.key?(:email)
+    render json: portal_json.detalhe(@cliente)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
   end
 
   # Excluir = a conta some (envios/assinaturas junto); o cliente do ADVBOX fica.
   def destroy
+    registrar('excluiu', "#{@cliente.nome} (CPF #{@cliente.cpf})")
     @cliente.destroy!
     head :no_content
   end
 
   # Reenviar convite = gerar senha provisória nova (a anterior deixa de valer).
+  # 1º convite: qualquer agente. Senha nova de quem já tem acesso: nova_senha?.
   def convidar
-    senha = convidar!(@cliente)
-    render json: linha(@cliente).merge(senha_provisoria: senha)
+    authorize(:portal_cliente, :nova_senha?) if @cliente.convidado_em.present?
+    render json: entregar_senha(@cliente)
+  end
+
+  # Suspender: não entra e cai das sessões abertas; nada é apagado.
+  def suspender
+    @cliente.suspender!
+    registrar('suspendeu')
+    render json: portal_json.linha(@cliente)
+  end
+
+  # Reativar sempre volta com senha nova (a anterior deixa de valer e as sessões
+  # caem) e o mesmo bloco de entrega do convite. Evento: só "reativou".
+  def reativar
+    @cliente.reativar!
+    registrar('reativou')
+    render json: portal_json.linha(@cliente).merge(Ramon::PortalConvite.new(@cliente).perform)
   end
 
   def assinatura
-    variaveis = params.fetch(:variaveis, {})
-    variaveis = variaveis.respond_to?(:to_unsafe_h) ? variaveis.to_unsafe_h : variaveis.to_h
-    doc = Ramon::ZapsignClient.create_doc_from_template(payload_assinatura(variaveis))
-    signer = doc.dig('signers', 0, 'token')
-    Ramon::ZapsignClient.update_signer(signer, auth_mode: 'assinaturaTela') if signer.present?
-    a = @cliente.assinaturas.create!(doc_token: doc['token'], signer_token: signer, nome: params[:nome].presence || 'Documento')
+    a = criar_assinatura!
+    registrar('enviou_assinatura', a.nome)
     render json: { id: a.id, nome: a.nome, status: a.status }
   rescue Ramon::ZapsignClient::UnavailableError, Ramon::ZapsignClient::RequestError => e
     render json: { error: e.message }, status: :service_unavailable
   end
 
+  # Cancela no ZapSign (refuse_doc, sem avisar o signatário) e marca cancelado:
+  # sai da lista "assinar" do cliente (só pendente aparece lá).
+  def cancelar_assinatura
+    a = @cliente.assinaturas.pendentes.find(params[:assinatura_id])
+    Ramon::ZapsignClient.refuse_doc(a.doc_token, MOTIVO_CANCELAMENTO)
+    a.update!(status: 'cancelado')
+    registrar('cancelou_assinatura', a.nome)
+    render json: portal_json.detalhe(@cliente)
+  rescue Ramon::ZapsignClient::UnavailableError, Ramon::ZapsignClient::RequestError => e
+    render json: { error: e.message }, status: :service_unavailable
+  end
+
   private
+
+  def portal_json = Ramon::PortalClienteJson
+
+  # Trilha de auditoria (PortalEvento): quem fez o quê neste cliente.
+  def registrar(acao, detalhe = nil, cliente = @cliente)
+    PortalEvento.create!(portal_cliente_id: cliente.id, user: Current.user, acao: acao, detalhe: detalhe)
+  end
+
+  def criar_assinatura!
+    variaveis = params.fetch(:variaveis, {})
+    variaveis = variaveis.respond_to?(:to_unsafe_h) ? variaveis.to_unsafe_h : variaveis.to_h
+    doc = Ramon::ZapsignClient.create_doc_from_template(payload_assinatura(variaveis))
+    signer = doc.dig('signers', 0, 'token')
+    Ramon::ZapsignClient.update_signer(signer, auth_mode: 'assinaturaTela') if signer.present?
+    @cliente.assinaturas.create!(doc_token: doc['token'], signer_token: signer, nome: params[:nome].presence || 'Documento')
+  end
 
   def payload_assinatura(variaveis)
     {
@@ -68,6 +111,27 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
       send_automatic_email: false, send_automatic_whatsapp: false,
       data: variaveis.map { |de, para| { de: de, para: para.presence || '________' } }
     }
+  end
+
+  # Convite (1ª vez) ou senha nova: a senha só existe em claro nesta resposta.
+  def entregar_senha(cliente)
+    registrar(cliente.convidado_em ? 'nova_senha' : 'convidou', nil, cliente)
+    portal_json.linha(cliente).merge(Ramon::PortalConvite.new(cliente).perform)
+  end
+
+  def salvar_recados
+    @cliente.update!(recados: params[:recados].to_unsafe_h.transform_values(&:to_s).compact_blank)
+    registrar('salvou_recado')
+  end
+
+  def salvar_email
+    @cliente.update!(email: params[:email].presence)
+    registrar('alterou_email', @cliente.email)
+  end
+
+  def permissoes
+    politica = PortalClientePolicy.new(pundit_user, :portal_cliente)
+    { gerir_acesso: politica.gerir_acesso?, excluir: politica.destroy? }
   end
 
   def fetch_cliente
@@ -82,56 +146,5 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     Ramon::PortalSyncService.new(cliente).perform
   rescue Ramon::AdvboxClient::UnavailableError, Ramon::AdvboxClient::RequestError => e
     Rails.logger.warn("[PortalClientes] sync falhou cliente=#{cliente.id}: #{e.message}")
-  end
-
-  # A senha provisória só existe em claro aqui, na resposta desta chamada (o hub
-  # mostra uma vez pra equipe repassar) e no e-mail de convite, se houver e-mail.
-  def convidar!(cliente)
-    senha = cliente.gerar_senha_provisoria!
-    Ramon::PortalMailer.with(account: Current.account, cliente: cliente, senha: senha).convite.deliver_later if cliente.email.present?
-    cliente.update!(convidado_em: Time.current)
-    senha
-  end
-
-  # Funil do piloto + documentos (pedidos em aberto no espelho × enviados pelo painel).
-  def metricas(clientes)
-    convidados = clientes.select(&:convidado_em)
-    ids = convidados.map(&:id)
-    envios = PortalEnvio.where(portal_cliente_id: ids)
-    funil(convidados).merge(
-      enviaram: envios.distinct.count(:portal_cliente_id),
-      assinaram: PortalAssinatura.where(portal_cliente_id: ids, status: 'signed').distinct.count(:portal_cliente_id),
-      docs_pedidos: convidados.sum { |c| c.processos.sum { |p| Array(p['docs_pendentes']).size } },
-      docs_enviados: envios.count
-    )
-  end
-
-  def funil(convidados)
-    { convidados: convidados.size, entraram: convidados.count { |c| c.dias_acesso.positive? },
-      voltaram: convidados.count { |c| c.dias_acesso >= 2 } }
-  end
-
-  def linha(cliente)
-    {
-      id: cliente.id, nome: cliente.nome, cpf: cliente.cpf, email: cliente.email, advbox_customer_id: cliente.advbox_customer_id,
-      convidado_em: cliente.convidado_em&.iso8601, termos_aceitos_em: cliente.termos_aceitos_em&.iso8601,
-      sincronizado_em: cliente.sincronizado_em&.iso8601, ultimo_acesso_em: cliente.ultimo_acesso_em&.iso8601,
-      dias_acesso: cliente.dias_acesso,
-      processos: cliente.processos.map { |p| p.slice('id', 'numero', 'tipo', 'etapa', 'fase', 'docs_pendentes') },
-      envios_count: cliente.envios.count, assinaturas_pendentes: cliente.assinaturas.pendentes.count
-    }
-  end
-
-  def detalhe(cliente)
-    linha(cliente).merge(
-      recados: cliente.recados,
-      envios: cliente.envios.order(created_at: :desc).map do |e|
-        { id: e.id, item: e.item, lawsuit_id: e.lawsuit_id, drive_file_id: e.drive_file_id, advbox_post_id: e.advbox_post_id,
-          created_at: e.created_at.iso8601 }
-      end,
-      assinaturas: cliente.assinaturas.order(created_at: :desc).map do |a|
-        { id: a.id, nome: a.nome, status: a.status, assinado_em: a.assinado_em&.iso8601, created_at: a.created_at.iso8601 }
-      end
-    )
   end
 end

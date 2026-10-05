@@ -14,7 +14,11 @@ class PortalCliente < ApplicationRecord
   belongs_to :account
   has_many :assinaturas, class_name: 'PortalAssinatura', dependent: :destroy
   has_many :envios, class_name: 'PortalEnvio', dependent: :destroy
-  has_many :acessos, class_name: 'PortalAcesso', dependent: :delete_all
+  # Marco Civil art. 15: o registro de acesso fica 6 meses mesmo depois de excluir
+  # o cliente (leva o CPF na linha); quem apaga é o expurgo noturno do PortalAcesso.
+  has_many :acessos, class_name: 'PortalAcesso', dependent: nil
+  # Trilha do hub (PortalEvento): fica depois da exclusão, como o registro de acesso.
+  has_many :eventos, class_name: 'PortalEvento', dependent: nil
 
   before_validation :normalizar
 
@@ -59,6 +63,14 @@ class PortalCliente < ApplicationRecord
 
   def termos_aceitos? = termos_aceitos_em.present?
 
+  def suspenso? = suspenso_em.present?
+
+  # Suspender: não entra mais e as sessões abertas caem (a chave nova muda a versão
+  # do cookie). Nada é apagado; reativar devolve o acesso com a mesma senha.
+  def suspender! = update!(suspenso_em: Time.current, sessao_chave: SecureRandom.hex(4))
+
+  def reativar! = update!(suspenso_em: nil)
+
   # Métrica do piloto: dias distintos com acesso ("voltou" = 2+ dias).
   def registrar_acesso!(ip)
     novo_dia = ultimo_acesso_em.nil? || ultimo_acesso_em.to_date < Time.zone.today
@@ -68,6 +80,24 @@ class PortalCliente < ApplicationRecord
 
   def pode_atualizar?
     atualizacao_pedida_em.blank? || atualizacao_pedida_em < INTERVALO_ATUALIZACAO.ago
+  end
+
+  # Documento pedido vira "enviado" quando existe PortalEnvio do mesmo pedido (post_id) e
+  # item — regra única do Painel do Cliente e do hub. enviado_em = quando chegou.
+  def pendentes_com_status(processo)
+    enviados = envios.where(lawsuit_id: processo['id']).pluck(:solicitacao_post_id, :item, :created_at)
+                     .to_h { |post_id, item, em| [[post_id, item], em] }
+    Array(processo['docs_pendentes']).map do |d|
+      em = enviados[[d['post_id'], d['item']]]
+      d.merge('enviado' => em.present?, 'enviado_em' => em&.iso8601)
+    end
+  end
+
+  # [[processo, doc]] ainda não enviados, dos processos ativos (o que falta de verdade).
+  # ponytail: 1 consulta de envios por processo; agrupar numa só se a lista crescer.
+  def a_enviar
+    @a_enviar ||= processos.reject { |p| Ramon::PortalTexto.encerrado?(p['fase']) }
+                           .flat_map { |p| pendentes_com_status(p).reject { |d| d['enviado'] }.map { |d| [p, d] } }
   end
 
   def processo(lawsuit_id)

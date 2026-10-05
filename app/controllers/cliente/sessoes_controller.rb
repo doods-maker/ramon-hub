@@ -11,7 +11,7 @@ class Cliente::SessoesController < Cliente::BaseController
   # CPF + senha. Mesma mensagem para CPF desconhecido e senha errada.
   def create
     cliente = PortalCliente.from_cpf(params[:cpf])
-    if cliente&.convidado_em.present? && cliente.authenticate_senha(params[:senha].to_s)
+    if pode_entrar?(cliente) && cliente.authenticate_senha(params[:senha].to_s)
       entrar!(cliente)
       redirect_to cliente_inicio_path
     else
@@ -28,7 +28,7 @@ class Cliente::SessoesController < Cliente::BaseController
   def codigo
     @cpf = cpf_param
     cliente = PortalCliente.from_cpf(@cpf)
-    if cliente&.convidado_em.present? && cliente.email.present?
+    if pode_entrar?(cliente) && cliente.email.present?
       codigo = cliente.gerar_codigo!
       Ramon::PortalMailer.with(account: cliente.account, cliente: cliente, codigo: codigo).codigo.deliver_later
     end
@@ -40,7 +40,7 @@ class Cliente::SessoesController < Cliente::BaseController
   def verificar
     @cpf = cpf_param
     cliente = PortalCliente.from_cpf(@cpf)
-    if cliente&.codigo_valido?(params[:codigo])
+    if pode_entrar?(cliente) && cliente.codigo_valido?(params[:codigo])
       cliente.consumir_codigo!
       entrar!(cliente)
       cookies.encrypted[TROCA] = { value: cliente.id, expires: 15.minutes.from_now, httponly: true, same_site: :lax,
@@ -60,4 +60,7 @@ class Cliente::SessoesController < Cliente::BaseController
   private
 
   def cpf_param = params[:cpf].to_s.delete('^0-9')
+
+  # Suspenso recebe a mesma resposta de senha errada (não revela a suspensão).
+  def pode_entrar?(cliente) = cliente&.convidado_em.present? && !cliente.suspenso?
 end

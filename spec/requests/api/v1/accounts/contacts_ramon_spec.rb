@@ -34,5 +34,10 @@ RSpec.describe 'Contacts API (campos ramon)', type: :request do
     expect(body['contact_cpf']).to eq('52998224725')
     expect(body['contact_data_nascimento']).to eq('1970-03-15')
     expect(body['contact_sexo']).to eq('F')
+    expect(body['portal_cliente_id']).to be_nil
+
+    cliente = create(:portal_cliente, account: account, cpf: '529.982.247-25')
+    get "/api/v1/accounts/#{account.id}/leads/#{lead.id}", headers: admin.create_new_auth_token
+    expect(response.parsed_body['portal_cliente_id']).to eq cliente.id
   end
 end

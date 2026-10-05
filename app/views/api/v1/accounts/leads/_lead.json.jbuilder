@@ -65,6 +65,9 @@ json.contact_name lead.contact&.name
 json.contact_phone lead.contact&.phone_number
 json.contact_email lead.contact&.email
 json.contact_cpf lead.contact&.cpf
+# Link "Painel do cliente" no painel do lead: casa pelo CPF do contato (só fora do
+# índice slim — 1 consulta por lead aberto, não por card do Kanban).
+json.portal_cliente_id PortalCliente.where(account_id: lead.account_id).from_cpf(lead.contact&.cpf)&.id unless local_assigns[:slim]
 json.contact_data_nascimento lead.contact&.data_nascimento
 json.contact_sexo lead.contact&.sexo
 json.contact_consent_marketing lead.contact&.custom_attributes&.dig('consent_marketing')

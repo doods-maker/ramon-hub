@@ -1,5 +1,5 @@
 # Documento criado no ZapSign pelo hub para o cliente assinar no painel.
-# status espelha o ZapSign: pendente | signed | refused.
+# status espelha o ZapSign: pendente | signed | refused; cancelado = cancelado pelo hub.
 class PortalAssinatura < ApplicationRecord
   belongs_to :portal_cliente
 

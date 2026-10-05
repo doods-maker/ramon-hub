@@ -9,4 +9,11 @@ RSpec.describe PortalAcesso do
     expect(described_class.pluck(:id)).to eq([recente.id])
     expect(described_class.exists?(velho.id)).to be false
   end
+
+  it 'guarda o CPF na linha e sobrevive à exclusão do cliente' do
+    cliente = create(:portal_cliente, cpf: '12345678901')
+    acesso = cliente.acessos.create!(ip: '1.1.1.1')
+    cliente.destroy!
+    expect(acesso.reload.cpf).to eq '12345678901'
+  end
 end

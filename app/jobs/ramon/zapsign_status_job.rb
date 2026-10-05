@@ -6,7 +6,7 @@ class Ramon::ZapsignStatusJob < ApplicationJob
 
   def perform(assinatura_id)
     a = PortalAssinatura.find_by(id: assinatura_id)
-    return if a.nil?
+    return if a.nil? || a.status == 'cancelado' # cancelado no hub: o "refused" do ZapSign não sobrescreve
 
     doc = Ramon::ZapsignClient.doc(a.doc_token)
     status = doc['status'].to_s

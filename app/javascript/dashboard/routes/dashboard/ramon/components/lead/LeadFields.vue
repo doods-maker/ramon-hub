@@ -476,6 +476,26 @@ const toggleConsent = () =>
             @click="navigate"
           />
         </router-link>
+
+        <!-- Cliente com acesso ao Painel do Cliente (mesmo CPF): abre ele lá -->
+        <router-link
+          v-if="lead.portal_cliente_id"
+          v-slot="{ navigate }"
+          data-testid="field-portal-cliente-link"
+          custom
+          :to="{
+            name: 'ramon_portal_clientes',
+            query: { cliente: lead.portal_cliente_id },
+          }"
+        >
+          <Button
+            link
+            xs
+            icon="i-lucide-panels-top-left"
+            :label="$t('RAMON.PORTAL_CLIENTES.OPEN_PORTAL_CLIENT')"
+            @click="navigate"
+          />
+        </router-link>
       </template>
     </div>
   </div>
