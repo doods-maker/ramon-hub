@@ -10,6 +10,7 @@ vi.mock('dashboard/api/leads', () => ({
     uploadCnis: vi.fn(),
     getCnis: vi.fn(),
     deleteCnis: vi.fn(),
+    trocarSexoCnis: vi.fn(),
     painel: vi.fn(),
   },
 }));
@@ -686,6 +687,40 @@ describe('LeadSimulador.vue', () => {
       expect(wrapper.find('[data-testid="sim-painel-secao"]').isVisible()).toBe(
         true
       );
+    });
+  });
+
+  describe('sexo do segurado (K1)', () => {
+    it('sem sexo conhecido: campo vazio e CNIS travado até escolher', async () => {
+      const wrapper = mountSim({ lead: { ...lead, contact_sexo: null } });
+      expect(wrapper.find('[data-testid="sim-sexo"]').element.value).toBe('');
+      const input = wrapper.find('[data-testid="sim-cnis-file"]');
+      expect(input.element.disabled).toBe(true);
+      expect(wrapper.find('[data-testid="sim-sexo-antes-cnis"]').exists()).toBe(
+        true
+      );
+      await wrapper.find('[data-testid="sim-sexo"]').setValue('F');
+      expect(input.element.disabled).toBe(false);
+      expect(wrapper.find('[data-testid="sim-sexo-antes-cnis"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('cartão do CNIS mostra o sexo usado e troca sem reanexar', async () => {
+      LeadsAPI.trocarSexoCnis.mockResolvedValue({
+        data: { ...cnisResumo, sexo: 'F' },
+      });
+      const wrapper = mountSim({
+        lead: { ...lead, cnis_resumo: { ...cnisResumo, sexo: 'M' } },
+      });
+      const linha = wrapper.find('[data-testid="sim-cnis-sexo"]');
+      expect(linha.text()).toContain('RAMON.SIMULADOR.CNIS_SEXO_USADO');
+      await wrapper
+        .find('[data-testid="sim-cnis-sexo-trocar"]')
+        .trigger('click');
+      await flushPromises();
+      expect(LeadsAPI.trocarSexoCnis).toHaveBeenCalledWith(7, 'F');
+      expect(LeadsAPI.uploadCnis).not.toHaveBeenCalled();
     });
   });
 });

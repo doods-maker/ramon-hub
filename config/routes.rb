@@ -368,7 +368,7 @@ Rails.application.routes.draw do
               post :pdf
             end
             resource :colheita, only: [:create], controller: 'lead_colheitas'
-            resource :cnis, only: [:show, :create, :destroy], controller: 'lead_cnis'
+            resource :cnis, only: [:show, :create, :update, :destroy], controller: 'lead_cnis'
             resource :liquidacao, only: [:create], controller: 'lead_liquidacoes' do
               post :pdf
             end

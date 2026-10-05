@@ -1174,7 +1174,11 @@
       "PLANEJAMENTO_EXCLUIDAS_TITULO": "Excluded rules",
       "PLANEJAMENTO_PENDENCIAS": "Before closing the opinion, confirm with the insured",
       "PLANEJAMENTO_PDF_BAIXAR": "Download the planning PDF",
-      "PLANEJAMENTO_PDF_BAIXANDO": "Generating PDF…"
+      "PLANEJAMENTO_PDF_BAIXANDO": "Generating PDF…",
+      "SEXO_SELECIONE": "Select",
+      "SEXO_ANTES_CNIS": "Choose the insured's sex before attaching the CNIS — it goes with the PDF and into every calculation.",
+      "CNIS_SEXO_USADO": "Sex used: {sexo}",
+      "CNIS_SEXO_TROCAR": "change"
     },
     "LIQUIDACAO": {
       "TITULO": "Judgment liquidation",

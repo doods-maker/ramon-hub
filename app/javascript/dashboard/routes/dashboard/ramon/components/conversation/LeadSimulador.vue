@@ -62,7 +62,9 @@ const ultimaData = props.ultimaSimulacao?.em
 
 const form = ref({
   nascimento: ini.nascimento || props.lead.contact_data_nascimento || '',
-  sexo: ini.sexo || props.lead.contact_sexo || 'M',
+  // Sem sexo conhecido o campo nasce vazio e é obrigatório: ele vai junto do
+  // CNIS e entra em todo cálculo (antes caía em 'M' calado).
+  sexo: ini.sexo || props.lead.contact_sexo || '',
   der: ini.der || '',
   salario: ini.salario || '',
   beneficio: ini.beneficio || guessBeneficio(props.lead.thesis_name),
@@ -100,7 +102,12 @@ const money = value => brl.format(Number(value || 0));
 const canSimulate = computed(() =>
   cnis.value
     ? Boolean(form.value.der)
-    : Boolean(form.value.nascimento && form.value.der && form.value.salario)
+    : Boolean(
+        form.value.nascimento &&
+          form.value.sexo &&
+          form.value.der &&
+          form.value.salario
+      )
 );
 
 const honorario = computed(() => resultado.value?.honorario || null);
@@ -376,6 +383,7 @@ const canPainel = computed(() =>
     form.value.der &&
       (cnis.value ||
         (form.value.nascimento &&
+          form.value.sexo &&
           vinculosExtras.value.some(v => v.inicio && v.fim)))
   )
 );
@@ -408,6 +416,33 @@ const calcularPainel = async () => {
     handleMotorError(error);
   } finally {
     painelLoading.value = false;
+  }
+};
+
+const nomeSexo = sexo =>
+  sexo === 'F' ? t('RAMON.SIMULADOR.SEXO_F') : t('RAMON.SIMULADOR.SEXO_M');
+
+// Trocar o sexo usado no CNIS: o servidor corrige o segurado guardado (o PDF
+// não precisa voltar). Resultados na tela eram do sexo antigo — saem, e as
+// abas filhas remontam (calculoVersao) pra não mostrar conta velha.
+const sexoTrocando = ref(false);
+const calculoVersao = ref(0);
+const trocarSexo = async () => {
+  sexoTrocando.value = true;
+  errorMessage.value = '';
+  try {
+    const novo = cnis.value.sexo === 'F' ? 'M' : 'F';
+    const { data } = await LeadsAPI.trocarSexoCnis(props.lead.id, novo);
+    cnis.value = { ...cnis.value, sexo: data.sexo };
+    form.value.sexo = data.sexo;
+    resultado.value = null;
+    memoria.value = null;
+    painel.value = null;
+    calculoVersao.value += 1;
+  } catch {
+    errorMessage.value = t('RAMON.SIMULADOR.GENERIC_ERROR');
+  } finally {
+    sexoTrocando.value = false;
   }
 };
 
@@ -471,6 +506,23 @@ const aba = ref(
             vinculos: cnis.vinculos,
           })
         }}
+      </span>
+      <span
+        v-if="cnis.sexo"
+        class="flex items-center gap-2 text-xs text-n-slate-10"
+        data-testid="sim-cnis-sexo"
+      >
+        {{
+          $t('RAMON.SIMULADOR.CNIS_SEXO_USADO', { sexo: nomeSexo(cnis.sexo) })
+        }}
+        <Button
+          data-testid="sim-cnis-sexo-trocar"
+          link
+          xs
+          :disabled="sexoTrocando"
+          :label="$t('RAMON.SIMULADOR.CNIS_SEXO_TROCAR')"
+          @click="trocarSexo"
+        />
       </span>
       <ul
         v-if="cnis.avisos && cnis.avisos.length"
@@ -600,12 +652,19 @@ const aba = ref(
         type="file"
         accept="application/pdf"
         data-testid="sim-cnis-file"
-        :disabled="cnisLoading"
+        :disabled="cnisLoading || !form.sexo"
         class="!mb-0"
         :class="[ARQUIVO]"
         @change="onCnisFile"
       />
-      <span class="text-n-slate-10">
+      <span
+        v-if="!form.sexo"
+        class="text-n-amber-11"
+        data-testid="sim-sexo-antes-cnis"
+      >
+        {{ $t('RAMON.SIMULADOR.SEXO_ANTES_CNIS') }}
+      </span>
+      <span v-else class="text-n-slate-10">
         {{ $t('RAMON.SIMULADOR.CNIS_HINT') }}
       </span>
     </label>
@@ -624,6 +683,9 @@ const aba = ref(
       <label v-if="!cnis" :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.SEXO') }}
         <select v-model="form.sexo" data-testid="sim-sexo" :class="SELECT">
+          <option value="" disabled>
+            {{ $t('RAMON.SIMULADOR.SEXO_SELECIONE') }}
+          </option>
           <option value="M">{{ $t('RAMON.SIMULADOR.SEXO_M') }}</option>
           <option value="F">{{ $t('RAMON.SIMULADOR.SEXO_F') }}</option>
         </select>
@@ -1228,6 +1290,7 @@ const aba = ref(
       </p>
       <LeadElegibilidade
         v-else
+        :key="calculoVersao"
         :lead="lead"
         :der="form.der"
         :segurado-nome="seguradoNome"
@@ -1247,7 +1310,12 @@ const aba = ref(
       >
         {{ $t('RAMON.SIMULADOR.PENSAO_PRECISA_CNIS') }}
       </p>
-      <LeadPensao v-else :lead="lead" :segurado-nome="seguradoNome" />
+      <LeadPensao
+        v-else
+        :key="calculoVersao"
+        :lead="lead"
+        :segurado-nome="seguradoNome"
+      />
     </div>
 
     <div
@@ -1263,7 +1331,12 @@ const aba = ref(
       >
         {{ $t('RAMON.SIMULADOR.MATERNIDADE_PRECISA_CNIS') }}
       </p>
-      <LeadMaternidade v-else :lead="lead" :segurado-nome="seguradoNome" />
+      <LeadMaternidade
+        v-else
+        :key="calculoVersao"
+        :lead="lead"
+        :segurado-nome="seguradoNome"
+      />
     </div>
 
     <div
@@ -1279,7 +1352,12 @@ const aba = ref(
       >
         {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PRECISA_CNIS') }}
       </p>
-      <LeadPlanejamento v-else :lead="lead" :segurado-nome="seguradoNome" />
+      <LeadPlanejamento
+        v-else
+        :key="calculoVersao"
+        :lead="lead"
+        :segurado-nome="seguradoNome"
+      />
     </div>
 
     <p

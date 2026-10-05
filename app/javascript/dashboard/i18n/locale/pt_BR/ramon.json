@@ -1174,7 +1174,11 @@
       "PLANEJAMENTO_EXCLUIDAS_TITULO": "Regras excluídas",
       "PLANEJAMENTO_PENDENCIAS": "Antes de fechar o parecer, confirme com o segurado",
       "PLANEJAMENTO_PDF_BAIXAR": "Baixar PDF do planejamento",
-      "PLANEJAMENTO_PDF_BAIXANDO": "Gerando PDF…"
+      "PLANEJAMENTO_PDF_BAIXANDO": "Gerando PDF…",
+      "SEXO_SELECIONE": "Selecione",
+      "SEXO_ANTES_CNIS": "Escolha o sexo do segurado antes de anexar o CNIS — ele vai junto do PDF e entra em todos os cálculos.",
+      "CNIS_SEXO_USADO": "Sexo usado: {sexo}",
+      "CNIS_SEXO_TROCAR": "trocar"
     },
     "LIQUIDACAO": {
       "TITULO": "Liquidação de sentença",

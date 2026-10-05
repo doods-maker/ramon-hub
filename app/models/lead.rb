@@ -109,6 +109,8 @@ class Lead < ApplicationRecord
       filename: cnis['filename'],
       uploaded_at: cnis['uploaded_at'],
       nascimento: cnis.dig('entrada', 'segurado', 'nascimento'),
+      # sexo escolhido no upload (vai pro segurado do motor; trocável sem reanexar)
+      sexo: cnis.dig('entrada', 'segurado', 'sexo'),
       competencias: cnis.dig('entrada', 'competencias')&.size || 0,
       vinculos: cnis['vinculos']&.size || 0,
       avisos: cnis['avisos'] || []
