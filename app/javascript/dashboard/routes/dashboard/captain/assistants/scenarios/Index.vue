@@ -17,7 +17,10 @@ import ScenariosCard from 'dashboard/components-next/captain/assistant/Scenarios
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import AddNewScenariosDialog from 'dashboard/components-next/captain/assistant/AddNewScenariosDialog.vue';
 import { CHIP } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { NIVEL_TOM } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
+import {
+  NIVEL_TOM,
+  ferramentaInfo,
+} from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -29,6 +32,7 @@ const assistantId = computed(() => Number(route.params.assistantId));
 const uiFlags = useMapGetter('captainScenarios/getUIFlags');
 const isFetching = computed(() => uiFlags.value.fetchingList);
 const scenarios = useMapGetter('captainScenarios/getRecords');
+const catalogo = useMapGetter('captainTools/getRecords');
 
 const searchQuery = ref('');
 
@@ -239,10 +243,25 @@ onMounted(() => {
               <component
                 :is="renderInstruction(formatMessage(item.instruction, false))"
               />
-              <span class="text-sm text-n-slate-11 font-medium mb-1">
-                {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TOOLS_USED') }}
-                {{ item.tools?.map(tool => `@${tool}`).join(', ') }}
-              </span>
+              <div
+                v-if="item.tools?.length"
+                class="flex flex-wrap items-center gap-1.5 mb-1"
+              >
+                <span class="text-sm text-n-slate-11 font-medium">
+                  {{
+                    t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TOOLS_USED')
+                  }}
+                </span>
+                <span
+                  v-for="f in item.tools.map(id =>
+                    ferramentaInfo(id, catalogo)
+                  )"
+                  :key="f.id"
+                  :class="[CHIP, f.tom]"
+                >
+                  {{ f.title }}
+                </span>
+              </div>
             </div>
           </template>
         </SuggestedScenarios>
