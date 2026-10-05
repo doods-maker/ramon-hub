@@ -12,13 +12,19 @@ class Api::V1::Accounts::LeadPaineisController < Api::V1::Accounts::BaseControll
     return render json: { error: 'especiais: JSON inválido' }, status: :unprocessable_entity if especiais_invalidos?
 
     responder do
-      render json: Ramon::MotorClient.painel(motor_payload)
+      resultado = Ramon::MotorClient.painel(motor_payload)
+      render json: resultado
       persistir_especiais
-      registrar_calculo('painel')
+      registrar_calculo('painel', valor: melhor_rmi(resultado))
     end
   end
 
   private
+
+  # Número da linha do histórico: a maior RMI entre os benefícios elegíveis.
+  def melhor_rmi(resultado)
+    Array(resultado['cartoes']).select { |c| c['elegivel'] == true }.filter_map { |c| c['rmi'].presence }.max_by(&:to_d)
+  end
 
   def permitted
     params.permit(:nascimento, :sexo, :der, :memoria_calculo, :especiais,

@@ -1250,8 +1250,8 @@ describe('LeadPanelBody', () => {
       });
       const linha = wrapper.find('[data-testid="panel-ultima-simulacao"]');
       expect(linha.text()).toContain('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM');
-      expect(linha.text()).toContain(formatBrl(25416));
-      expect(linha.text()).toContain(formatBrl(706));
+      expect(linha.text()).toContain(`~${formatBrl(25416)}`);
+      expect(linha.text()).toContain(`~${formatBrl(706)}`);
       expect(linha.text()).toContain('02/10');
       await linha.trigger('click');
       const sim = wrapper

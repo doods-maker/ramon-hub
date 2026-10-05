@@ -17,8 +17,9 @@ class Api::V1::Accounts::LeadMaternidadesController < Api::V1::Accounts::BaseCon
     end
 
     responder do
-      render json: Ramon::MotorClient.maternidade(motor_payload)
-      registrar_calculo('maternidade')
+      resultado = Ramon::MotorClient.maternidade(motor_payload)
+      render json: resultado
+      registrar_calculo('maternidade', valor: resultado['rmi'])
     end
   end
 

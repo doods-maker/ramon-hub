@@ -3,6 +3,22 @@ import LeadsAPI from 'dashboard/api/leads';
 import LeadSimulador from '../LeadSimulador.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+const alertSpy = vi.fn();
+vi.mock('dashboard/composables', () => ({
+  useAlert: (...a) => alertSpy(...a),
+}));
+vi.mock('dashboard/api/theses', () => ({
+  default: {
+    get: vi.fn(() =>
+      Promise.resolve({
+        data: [
+          { id: 3, name: 'Auxílio-acidente', active: true },
+          { id: 4, name: 'Tese arquivada', active: false },
+        ],
+      })
+    ),
+  },
+}));
 vi.mock('dashboard/api/leads', () => ({
   default: {
     simulate: vi.fn(),
@@ -10,6 +26,7 @@ vi.mock('dashboard/api/leads', () => ({
     uploadCnis: vi.fn(),
     getCnis: vi.fn(),
     deleteCnis: vi.fn(),
+    trocarSexoCnis: vi.fn(),
     painel: vi.fn(),
   },
 }));
@@ -141,6 +158,11 @@ describe('LeadSimulador.vue', () => {
     expect(
       wrapper.find('[data-testid="sim-aviso-qualidade"]').text()
     ).toContain('qualidade de segurado');
+    // K5: valor mensal com um nome só e "~" de estimativa
+    const mensal = wrapper.find('[data-testid="sim-mensal"]').text();
+    expect(mensal).toContain('RAMON.SIMULADOR.MENSAL_ESTIMADO');
+    expect(mensal).toContain('~R$');
+    expect(mensal).toContain('1.700,00');
   });
 
   it('mostra o banner de qualidade em risco quando o aviso cita o art. 27-A', async () => {
@@ -193,12 +215,19 @@ describe('LeadSimulador.vue', () => {
     );
   });
 
-  it('persiste a última simulação no lead após simular com sucesso', async () => {
+  it('simular NÃO grava no lead; "Salvar como valor deste lead" grava a última simulação (K4)', async () => {
     LeadsAPI.simulate.mockResolvedValue({ data: resultado });
     const wrapper = mountSim();
     await fillForm(wrapper);
     await wrapper.find('[data-testid="sim-run"]').trigger('click');
     await flushPromises();
+    expect(LeadsAPI.update).not.toHaveBeenCalled();
+
+    // mexer no form depois do resultado não muda o que é salvo
+    await wrapper.find('[data-testid="sim-der"]').setValue('2026-01-01');
+    await wrapper.find('[data-testid="sim-salvar-valor"]').trigger('click');
+    await flushPromises();
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.SIMULADOR.VALOR_SALVO');
     expect(LeadsAPI.update).toHaveBeenCalledWith(7, {
       custom_attributes: {
         ultima_simulacao: expect.objectContaining({
@@ -216,15 +245,29 @@ describe('LeadSimulador.vue', () => {
     });
   });
 
-  it('falha do PATCH de persistência não esconde o resultado da simulação', async () => {
+  it('falha ao salvar o valor vira aviso e não esconde o resultado', async () => {
     LeadsAPI.simulate.mockResolvedValue({ data: resultado });
     LeadsAPI.update.mockRejectedValue(new Error('offline'));
     const wrapper = mountSim();
     await fillForm(wrapper);
     await wrapper.find('[data-testid="sim-run"]').trigger('click');
     await flushPromises();
+    await wrapper.find('[data-testid="sim-salvar-valor"]').trigger('click');
+    await flushPromises();
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.SIMULADOR.SALVAR_VALOR_ERRO');
     expect(wrapper.find('[data-testid="sim-resultado"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="sim-error"]').exists()).toBe(false);
+  });
+
+  it('caso de cálculo (rascunho/oculto) não oferece salvar valor', async () => {
+    LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+    const wrapper = mountSim({ lead: { ...lead, source: 'calculo-advbox' } });
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="sim-salvar-valor"]').exists()).toBe(
+      false
+    );
   });
 
   it('mostra estado explicativo quando o motor está fora do ar (503)', async () => {
@@ -575,14 +618,33 @@ describe('LeadSimulador.vue', () => {
     );
   });
 
-  it('gerar liquidacao pre-preenche a RMI do cartao (com descartes quando houver)', async () => {
+  it('"Usar esta RMI na liquidação" abre a aba Liquidação com a RMI do cartão (com descartes quando houver) (K8)', async () => {
     const wrapper = await montarComPainelCalculado();
+    const liq = () =>
+      wrapper
+        .find('[data-testid="sim-liquidacao-secao"]')
+        .attributes('style') || '';
+    expect(liq()).toContain('display: none');
     await wrapper
       .find('[data-testid="sim-cartao-liquidar-idade_pre"]')
       .trigger('click');
+    await flushPromises();
     expect(wrapper.find('[data-testid="liq-rmi"]').element.value).toBe(
       '3500.00'
     );
+    expect(liq()).not.toContain('display: none');
+    expect(
+      wrapper
+        .find('[data-testid="sim-aba-liquidacao"]')
+        .attributes('aria-selected')
+    ).toBe('true');
+    // a liquidação não fica mais escondida no fim de Possibilidades
+    expect(
+      wrapper
+        .find('[data-testid="sim-painel-secao"]')
+        .find('[data-testid="liq-form"]')
+        .exists()
+    ).toBe(false);
   });
 
   describe('abas', () => {
@@ -668,6 +730,8 @@ describe('LeadSimulador.vue', () => {
       expect(card.text()).toContain('RAMON.SIMULADOR.ULTIMA_TITULO');
       expect(card.text()).toContain('25.416,00');
       expect(card.text()).toContain('706,00');
+      expect(card.text()).toContain('RAMON.SIMULADOR.MENSAL_ESTIMADO');
+      expect(card.text()).not.toContain('RMI');
     });
 
     it('resultado novo substitui o cartão da última simulação', async () => {
@@ -686,6 +750,136 @@ describe('LeadSimulador.vue', () => {
       expect(wrapper.find('[data-testid="sim-painel-secao"]').isVisible()).toBe(
         true
       );
+    });
+  });
+
+  describe('tese no caso de cálculo (K3)', () => {
+    const caso = {
+      ...lead,
+      source: 'calculo-advbox',
+      thesis_id: null,
+      thesis_name: null,
+    };
+
+    it('caso de cálculo sem tese: escolhe na aba Honorário, grava e calcula', async () => {
+      LeadsAPI.update.mockResolvedValue({ data: {} });
+      LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+      const wrapper = mountSim({ lead: { ...caso, cnis_resumo: cnisResumo } });
+      await flushPromises();
+      await wrapper.find('[data-testid="sim-der"]').setValue('2025-09-01');
+
+      const select = wrapper.find('[data-testid="sim-tese"]');
+      expect(select.findAll('option').map(o => o.text())).toEqual([
+        'RAMON.SIMULADOR.TESE_SELECIONE',
+        'Auxílio-acidente',
+      ]);
+      await select.setValue(3);
+      await flushPromises();
+
+      expect(LeadsAPI.update).toHaveBeenCalledWith(7, { thesis_id: 3 });
+      expect(LeadsAPI.simulate).toHaveBeenCalled();
+    });
+
+    it('lead do funil não ganha seletor de tese', () => {
+      const wrapper = mountSim();
+      expect(wrapper.find('[data-testid="sim-tese"]').exists()).toBe(false);
+    });
+  });
+
+  describe('reabrir do histórico (K7)', () => {
+    it('restaura vínculos manuais e recalcula o painel sem gravar histórico', async () => {
+      LeadsAPI.painel.mockResolvedValue({
+        data: { resumo: { media: '1.00' }, cartoes: [], avisos: [] },
+      });
+      const wrapper = mountSim({
+        inicial: {
+          tipo: 'painel',
+          params: {
+            der: '2026-06-30',
+            nascimento: '1980-05-10',
+            sexo: 'F',
+            vinculos_extras: [
+              {
+                inicio: '1980-08-07',
+                fim: '1988-04-30',
+                tipo: 'EMPREGO',
+                especial: { grau: 25 },
+              },
+            ],
+          },
+        },
+      });
+      await flushPromises();
+      expect(wrapper.find('[data-testid="sim-vinculo-extra-0"]').exists()).toBe(
+        true
+      );
+      expect(LeadsAPI.painel).toHaveBeenCalledWith(
+        7,
+        expect.objectContaining({
+          sem_historico: true,
+          vinculos_extras: [
+            expect.objectContaining({
+              inicio: '1980-08-07',
+              especial: { grau: 25, inicio: null, fim: null },
+            }),
+          ],
+        })
+      );
+      expect(
+        wrapper.find('[data-testid="sim-painel-resultado"]').exists()
+      ).toBe(true);
+    });
+
+    it('ver memória de cálculo não grava outra linha no histórico', async () => {
+      LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+      const wrapper = mountSim();
+      await fillForm(wrapper);
+      await wrapper.find('[data-testid="sim-run"]').trigger('click');
+      await flushPromises();
+      expect(LeadsAPI.simulate).toHaveBeenLastCalledWith(
+        7,
+        expect.not.objectContaining({ sem_historico: true })
+      );
+      await wrapper.find('[data-testid="sim-memoria-toggle"]').trigger('click');
+      await flushPromises();
+      expect(LeadsAPI.simulate).toHaveBeenLastCalledWith(
+        7,
+        expect.objectContaining({ memoria_calculo: true, sem_historico: true })
+      );
+    });
+  });
+
+  describe('sexo do segurado (K1)', () => {
+    it('sem sexo conhecido: campo vazio e CNIS travado até escolher', async () => {
+      const wrapper = mountSim({ lead: { ...lead, contact_sexo: null } });
+      expect(wrapper.find('[data-testid="sim-sexo"]').element.value).toBe('');
+      const input = wrapper.find('[data-testid="sim-cnis-file"]');
+      expect(input.element.disabled).toBe(true);
+      expect(wrapper.find('[data-testid="sim-sexo-antes-cnis"]').exists()).toBe(
+        true
+      );
+      await wrapper.find('[data-testid="sim-sexo"]').setValue('F');
+      expect(input.element.disabled).toBe(false);
+      expect(wrapper.find('[data-testid="sim-sexo-antes-cnis"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('cartão do CNIS mostra o sexo usado e troca sem reanexar', async () => {
+      LeadsAPI.trocarSexoCnis.mockResolvedValue({
+        data: { ...cnisResumo, sexo: 'F' },
+      });
+      const wrapper = mountSim({
+        lead: { ...lead, cnis_resumo: { ...cnisResumo, sexo: 'M' } },
+      });
+      const linha = wrapper.find('[data-testid="sim-cnis-sexo"]');
+      expect(linha.text()).toContain('RAMON.SIMULADOR.CNIS_SEXO_USADO');
+      await wrapper
+        .find('[data-testid="sim-cnis-sexo-trocar"]')
+        .trigger('click');
+      await flushPromises();
+      expect(LeadsAPI.trocarSexoCnis).toHaveBeenCalledWith(7, 'F');
+      expect(LeadsAPI.uploadCnis).not.toHaveBeenCalled();
     });
   });
 });

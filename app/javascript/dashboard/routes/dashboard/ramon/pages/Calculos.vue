@@ -1,15 +1,22 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import ContactAPI from 'dashboard/api/contacts';
 import LeadsAPI from 'dashboard/api/leads';
 import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
 import CalculosAPI from 'dashboard/api/calculos';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import LeadSimulador from '../components/conversation/LeadSimulador.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
+import VincularCalculo from '../components/VincularCalculo.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CAMPO, CAMPO_GRANDE, CARTAO, LINHA, TITULO } from '../helpers/ui';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 // ---- deep-link (rota com leadId): carrega o lead direto, sem passar pela busca
 const lead = ref(null);
@@ -83,35 +90,86 @@ watch(historicoQuery, () => {
   historicoTimer = setTimeout(carregarHistorico, 300);
 });
 
-const reabrirCalculo = async item => {
-  historicoError.value = false;
-  try {
-    const { data } = await CalculosAPI.reabrir(item.id);
-    restaurado.value = data;
-    simuladorKey.value += 1;
-    historicoOpen.value = false;
-    if (rascunho.value && data.lead_id === rascunho.value.id) {
-      modo.value = 'calculadora';
-      seguradoNome.value = item.segurado_nome || '';
-    } else {
-      router.push({
-        name: 'ramon_calculos_lead',
-        params: { leadId: data.lead_id },
-      });
-    }
-  } catch (e) {
-    historicoError.value = true;
+// Item do histórico esperando a resposta da janela "substituir o CNIS?".
+const reabrirPendente = ref(null);
+
+// Abre o cálculo devolvido pelo servidor: no MEU rascunho fica na tela (com a
+// tese que veio junto); num lead, navega pra calculadora dele.
+const abrirReaberto = (data, nome) => {
+  restaurado.value = data;
+  simuladorKey.value += 1;
+  historicoOpen.value = false;
+  if (rascunho.value && data.lead_id === rascunho.value.id) {
+    modo.value = 'calculadora';
+    rascunho.value = {
+      ...rascunho.value,
+      thesis_id: data.thesis_id ?? null,
+      thesis_name: data.thesis_name ?? null,
+    };
+    seguradoNome.value = nome || '';
+  } else {
+    router.push({
+      name: 'ramon_calculos_lead',
+      params: { leadId: data.lead_id },
+    });
   }
 };
 
+// destino 'rascunho' = copia pro meu rascunho e deixa o lead intacto. Erro
+// vira aviso e a lista fica onde está.
+const executarReabrir = async (item, destino) => {
+  reabrirPendente.value = null;
+  try {
+    const { data } = await CalculosAPI.reabrir(item.id, destino);
+    abrirReaberto(data, item.segurado_nome);
+  } catch (e) {
+    useAlert(t('RAMON.CALCULOS.REABRIR_ERRO'));
+  }
+};
+
+// Cálculo rápido volta sempre no meu rascunho (o servidor garante). De lead
+// real que hoje tem OUTRO CNIS, pergunta antes de trocar.
+const reabrirCalculo = item => {
+  if (item.substitui_cnis) {
+    reabrirPendente.value = item;
+    return;
+  }
+  executarReabrir(item);
+};
+
+const diaMes = iso =>
+  new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  });
+
+// "Vincular a cliente": o servidor leva o CNIS pro caso escolhido e a tela
+// abre o cálculo dele.
+const vinculando = ref(null);
+const aoVincular = data => {
+  const nome = vinculando.value?.segurado_nome;
+  vinculando.value = null;
+  abrirReaberto(data, nome);
+};
+
+// Apagar pede confirmação e só aparece pra quem calculou (ou admin — o
+// servidor decide em pode_apagar). Erro vira aviso; a lista fica.
+const apagando = ref(null);
 const apagarCalculo = async item => {
+  apagando.value = null;
   try {
     await CalculosAPI.delete(item.id);
     historico.value = historico.value.filter(c => c.id !== item.id);
   } catch (e) {
-    historicoError.value = true;
+    useAlert(t('RAMON.CALCULOS.APAGAR_ERRO'));
   }
 };
+
+const brl = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+const valorDe = item => `~${brl.format(Number(item.valor))}`;
 
 const TIPO_LABEL = {
   painel: 'RAMON.SIMULADOR.ABA_POSSIBILIDADES',
@@ -288,6 +346,20 @@ const fmtDate = value => {
     'pt-BR'
   );
 };
+
+// Linha de baixo do item: quando · tipo · DER · quem calculou.
+const metaDe = item => {
+  const base = {
+    quando: fmtDateTime(item.created_at),
+    tipo: t(TIPO_LABEL[item.tipo] || 'RAMON.CALCULOS.TITLE'),
+  };
+  const linha = item.der
+    ? t('RAMON.CALCULOS.HIST_LINHA_DER', { ...base, der: fmtDate(item.der) })
+    : t('RAMON.CALCULOS.HIST_LINHA', base);
+  return item.user_name
+    ? `${linha} · ${t('RAMON.CALCULOS.HIST_POR', { nome: item.user_name })}`
+    : linha;
+};
 </script>
 
 <template>
@@ -296,45 +368,55 @@ const fmtDate = value => {
     <template v-if="route.params.leadId">
       <div
         v-if="loadingLead"
-        class="flex flex-col max-w-2xl gap-4 animate-pulse"
+        class="flex flex-col w-full max-w-4xl gap-4 mx-auto animate-pulse"
         data-testid="calculos-skeleton"
       >
-        <div class="w-1/3 h-8 rounded bg-n-solid-2" />
-        <div class="h-40 rounded-xl bg-n-solid-2" />
+        <div class="w-1/3 h-8 rounded-lg bg-n-alpha-2" />
+        <div class="h-40 rounded-xl bg-n-alpha-2" />
       </div>
-      <div v-else-if="errorLead" class="flex items-center gap-3">
-        <p class="text-sm text-n-ruby-11">
+      <div
+        v-else-if="errorLead"
+        class="flex items-center w-full max-w-4xl gap-3 mx-auto"
+      >
+        <p class="mb-0 text-sm text-n-ruby-11">
           {{ $t('RAMON.CALCULOS.ERROR') }}
         </p>
-        <button
+        <Button
           data-testid="calculos-retry"
-          class="text-sm text-n-iris-11 hover:underline"
+          link
+          xs
+          :label="$t('RAMON.LEAD_PANEL.RETRY')"
           @click="fetchLead"
-        >
-          {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-        </button>
+        />
       </div>
-      <template v-else-if="lead">
+      <div v-else-if="lead" class="w-full max-w-4xl mx-auto">
         <RamonPageHeader
           :title="lead.contact_name || lead.name"
           :subtitle="lead.thesis_name || ''"
         >
           <template #actions>
-            <button
+            <Button
               data-testid="calculos-novo-calculo"
-              class="text-sm text-n-iris-11 hover:underline"
+              sm
+              faded
+              slate
+              icon="i-lucide-plus"
+              :label="$t('RAMON.CALCULOS.NOVO_CALCULO')"
               @click="router.push({ name: 'ramon_calculos' })"
-            >
-              {{ $t('RAMON.CALCULOS.NOVO_CALCULO') }}
-            </button>
+            />
           </template>
         </RamonPageHeader>
-        <LeadSimulador :key="simuladorKey" :lead="lead" :inicial="restaurado" />
-      </template>
+        <LeadSimulador
+          :key="simuladorKey"
+          :lead="lead"
+          :inicial="restaurado"
+          :ultima-simulacao="lead.custom_attributes?.ultima_simulacao || null"
+        />
+      </div>
     </template>
 
     <!-- Entrada "Cálculos" do menu: calculadora direto; busca a um clique -->
-    <template v-else>
+    <div v-else class="w-full max-w-4xl mx-auto">
       <RamonPageHeader
         :title="$t('RAMON.CALCULOS.TITLE')"
         :subtitle="
@@ -344,101 +426,116 @@ const fmtDate = value => {
         "
       >
         <template #actions>
-          <button
+          <Button
             data-testid="calculos-historico-toggle"
-            class="text-sm text-n-iris-11 hover:underline"
+            sm
+            faded
+            :color="historicoOpen ? 'blue' : 'slate'"
+            icon="i-lucide-history"
+            :label="$t('RAMON.CALCULOS.HIST_TOGGLE')"
             @click="toggleHistorico"
-          >
-            {{ $t('RAMON.CALCULOS.HIST_TOGGLE') }}
-          </button>
-          <button
+          />
+          <Button
             v-if="modo === 'calculadora'"
             data-testid="calculos-modo-busca"
-            class="text-sm text-n-iris-11 hover:underline"
+            sm
+            faded
+            slate
+            icon="i-lucide-user-search"
+            :label="$t('RAMON.CALCULOS.OPEN_SEARCH')"
             @click="modo = 'busca'"
-          >
-            {{ $t('RAMON.CALCULOS.OPEN_SEARCH') }}
-          </button>
-          <button
+          />
+          <Button
             v-else
             data-testid="calculos-modo-calculadora"
-            class="text-sm text-n-iris-11 hover:underline"
+            sm
+            faded
+            slate
+            icon="i-lucide-calculator"
+            :label="$t('RAMON.CALCULOS.OPEN_RASCUNHO')"
             @click="abrirCalculadora"
-          >
-            {{ $t('RAMON.CALCULOS.OPEN_RASCUNHO') }}
-          </button>
+          />
         </template>
       </RamonPageHeader>
 
       <!-- Histórico: mesmo painel nos dois modos, some ao reabrir um cálculo -->
       <div
         v-if="historicoOpen"
-        class="max-w-2xl p-3 mb-4 rounded-xl border border-n-weak bg-n-solid-1 shadow-sm"
+        class="flex flex-col gap-2 mb-4"
+        :class="CARTAO"
         data-testid="calculos-historico"
       >
         <input
           v-model="historicoQuery"
           data-testid="calculos-historico-busca"
-          class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+          :class="CAMPO"
           :placeholder="$t('RAMON.CALCULOS.HIST_PLACEHOLDER')"
         />
-        <p v-if="historicoLoading" class="mt-3 text-sm text-n-slate-10">
+        <p v-if="historicoLoading" class="mb-0 text-sm text-n-slate-10">
           {{ $t('RAMON.CALCULOS.SEARCHING') }}
         </p>
         <p
           v-else-if="historicoError"
-          class="mt-3 text-sm text-n-ruby-11"
+          class="mb-0 text-sm text-n-ruby-11"
           data-testid="calculos-historico-error"
         >
           {{ $t('RAMON.CALCULOS.HIST_ERROR') }}
         </p>
         <ul
           v-else-if="historico.length"
-          class="mt-3 rounded-lg border border-n-weak divide-y divide-n-weak"
+          class="flex flex-col list-none reset-base ms-0"
         >
           <li
             v-for="item in historico"
             :key="item.id"
-            class="flex items-center justify-between gap-3 px-3 py-2 hover:bg-n-alpha-2"
+            class="flex items-center gap-2"
           >
             <button
               data-testid="calculos-historico-item"
-              class="flex flex-col flex-1 min-w-0 text-left"
+              class="flex items-center flex-1 min-w-0 gap-3"
+              :class="LINHA"
               @click="reabrirCalculo(item)"
             >
-              <span class="text-sm truncate text-n-slate-12">
-                {{ item.segurado_nome || $t('RAMON.CALCULOS.HIST_SEM_NOME') }}
+              <span class="flex flex-col flex-1 min-w-0">
+                <span class="truncate text-n-slate-12">
+                  {{ item.segurado_nome || $t('RAMON.CALCULOS.HIST_SEM_NOME') }}
+                </span>
+                <span class="text-xs truncate text-n-slate-10">
+                  {{ metaDe(item) }}
+                </span>
               </span>
-              <span v-if="item.der" class="text-xs text-n-slate-10">
-                {{
-                  $t('RAMON.CALCULOS.HIST_LINHA_DER', {
-                    quando: fmtDateTime(item.created_at),
-                    tipo: $t(TIPO_LABEL[item.tipo] || 'RAMON.CALCULOS.TITLE'),
-                    der: fmtDate(item.der),
-                  })
-                }}
-              </span>
-              <span v-else class="text-xs text-n-slate-10">
-                {{
-                  $t('RAMON.CALCULOS.HIST_LINHA', {
-                    quando: fmtDateTime(item.created_at),
-                    tipo: $t(TIPO_LABEL[item.tipo] || 'RAMON.CALCULOS.TITLE'),
-                  })
-                }}
+              <span
+                v-if="item.valor"
+                class="font-mono text-sm shrink-0 text-n-slate-12"
+                data-testid="calculos-historico-valor"
+              >
+                {{ valorDe(item) }}
               </span>
             </button>
-            <button
+            <Button
+              :data-testid="`calculos-historico-vincular-${item.id}`"
+              link
+              slate
+              xs
+              class="shrink-0"
+              :label="$t('RAMON.CALCULOS.VINCULAR')"
+              @click="vinculando = item"
+            />
+            <Button
+              v-if="item.pode_apagar"
               :data-testid="`calculos-historico-apagar-${item.id}`"
-              class="text-xs shrink-0 text-n-ruby-11 hover:underline"
-              @click="apagarCalculo(item)"
-            >
-              {{ $t('RAMON.CALCULOS.HIST_APAGAR') }}
-            </button>
+              link
+              ruby
+              xs
+              class="shrink-0 me-2"
+              :label="$t('RAMON.CALCULOS.HIST_APAGAR')"
+              @click="apagando = item"
+            />
           </li>
         </ul>
         <p
           v-else
-          class="mt-3 text-sm text-n-slate-10"
+          class="mb-0 text-sm text-n-slate-10"
           data-testid="calculos-historico-vazio"
         >
           {{ $t('RAMON.CALCULOS.HIST_VAZIO') }}
@@ -448,33 +545,33 @@ const fmtDate = value => {
       <template v-if="modo === 'calculadora'">
         <div
           v-if="rascunhoLoading"
-          class="flex flex-col max-w-2xl gap-4 animate-pulse"
+          class="flex flex-col gap-4 animate-pulse"
           data-testid="calculos-rascunho-skeleton"
         >
-          <div class="w-1/3 h-8 rounded bg-n-solid-2" />
-          <div class="h-40 rounded-xl bg-n-solid-2" />
+          <div class="w-1/3 h-8 rounded-lg bg-n-alpha-2" />
+          <div class="h-40 rounded-xl bg-n-alpha-2" />
         </div>
         <div v-else-if="rascunhoError" class="flex items-center gap-3">
           <p
-            class="text-sm text-n-ruby-11"
+            class="mb-0 text-sm text-n-ruby-11"
             data-testid="calculos-rascunho-error"
           >
             {{ $t('RAMON.CALCULOS.RASCUNHO_ERROR') }}
           </p>
-          <button
+          <Button
             data-testid="calculos-rascunho-retry"
-            class="text-sm text-n-iris-11 hover:underline"
+            link
+            xs
+            :label="$t('RAMON.LEAD_PANEL.RETRY')"
             @click="abrirCalculadora"
-          >
-            {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-          </button>
+          />
         </div>
         <template v-else-if="rascunho">
-          <div class="max-w-2xl mb-4">
+          <div class="px-1 mb-3">
             <input
               v-model="seguradoNome"
               data-testid="calculos-segurado-nome"
-              class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+              :class="CAMPO_GRANDE"
               :placeholder="$t('RAMON.CALCULOS.NOME_PLACEHOLDER')"
             />
           </div>
@@ -487,30 +584,32 @@ const fmtDate = value => {
         </template>
       </template>
 
-      <div v-else class="max-w-xl">
+      <div v-else class="w-full max-w-xl mx-auto">
         <input
           v-model="query"
           data-testid="pessoa-search"
-          class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+          :class="CAMPO_GRANDE"
           :placeholder="$t('RAMON.CALCULOS.SEARCH_PLACEHOLDER')"
         />
-        <p v-if="searching" class="mt-3 text-sm text-n-slate-10">
+        <p v-if="searching" class="mt-3 mb-0 text-sm text-n-slate-10">
           {{ $t('RAMON.CALCULOS.SEARCHING') }}
         </p>
         <ul
           v-else-if="results.length"
-          class="mt-3 rounded-lg border border-n-weak divide-y divide-n-weak"
+          class="flex flex-col mt-3 list-none reset-base ms-0 !p-1.5"
+          :class="[CARTAO]"
         >
           <li v-for="c in results" :key="c.id">
             <button
               data-testid="pessoa-result"
-              class="flex items-center justify-between w-full gap-3 px-3 py-2 text-left hover:bg-n-alpha-2"
+              class="flex items-center justify-between gap-3"
+              :class="LINHA"
               @click="openPessoa(c)"
             >
-              <span class="text-sm truncate text-n-slate-12">
+              <span class="truncate text-n-slate-12">
                 {{ c.name }}
               </span>
-              <span class="text-xs shrink-0 text-n-slate-10">
+              <span class="font-mono text-xs shrink-0 text-n-slate-10">
                 {{ c.phone_number || c.email || '' }}
               </span>
             </button>
@@ -518,50 +617,55 @@ const fmtDate = value => {
         </ul>
         <p
           v-else-if="query.trim().length >= 2"
-          class="mt-3 text-sm text-n-slate-10"
+          class="mt-3 mb-0 text-sm text-n-slate-10"
         >
           {{ $t('RAMON.CALCULOS.SEARCH_EMPTY') }}
         </p>
 
         <!-- AdvBox: só sob demanda (1 chamada por clique) -->
         <template v-if="query.trim().length >= 2 && !searching">
-          <button
+          <Button
             v-if="!advboxSearching"
             data-testid="advbox-search"
-            class="mt-4 text-sm text-n-iris-11 hover:underline"
+            sm
+            faded
+            slate
+            icon="i-lucide-search"
+            class="mt-4"
+            :label="$t('RAMON.CALCULOS.ADVBOX_SEARCH')"
             @click="searchAdvbox"
-          >
-            {{ $t('RAMON.CALCULOS.ADVBOX_SEARCH') }}
-          </button>
-          <p v-else class="mt-4 text-sm text-n-slate-10">
+          />
+          <p v-else class="mt-4 mb-0 text-sm text-n-slate-10">
             {{ $t('RAMON.CALCULOS.SEARCHING') }}
           </p>
           <p
             v-if="advboxError"
-            class="mt-2 text-sm text-n-ruby-11"
+            class="mt-2 mb-0 text-sm text-n-ruby-11"
             data-testid="advbox-error"
           >
             {{ $t('RAMON.CALCULOS.ADVBOX_ERROR') }}
           </p>
           <template v-if="advboxSearched">
-            <p class="mt-4 text-xs font-medium uppercase text-n-slate-10">
+            <p class="mt-4 mb-0" :class="TITULO">
               {{ $t('RAMON.CALCULOS.ADVBOX_TITLE') }}
             </p>
             <ul
               v-if="advboxResults.length"
-              class="mt-2 rounded-lg border border-n-weak divide-y divide-n-weak"
+              class="flex flex-col mt-2 list-none reset-base ms-0 !p-1.5"
+              :class="[CARTAO]"
             >
               <li v-for="c in advboxResults" :key="c.id">
                 <button
                   data-testid="advbox-result"
                   :disabled="creating"
-                  class="flex items-center justify-between w-full gap-3 px-3 py-2 text-left hover:bg-n-alpha-2 disabled:opacity-50"
+                  class="flex items-center justify-between gap-3"
+                  :class="LINHA"
                   @click="openAdvboxCustomer(c)"
                 >
-                  <span class="text-sm truncate text-n-slate-12">
+                  <span class="truncate text-n-slate-12">
                     {{ c.name }}
                   </span>
-                  <span class="text-xs shrink-0 text-n-slate-10">
+                  <span class="font-mono text-xs shrink-0 text-n-slate-10">
                     {{ c.identification || c.cellphone || '' }}
                   </span>
                 </button>
@@ -569,7 +673,7 @@ const fmtDate = value => {
             </ul>
             <p
               v-else
-              class="mt-2 text-sm text-n-slate-10"
+              class="mt-2 mb-0 text-sm text-n-slate-10"
               data-testid="advbox-empty"
             >
               {{ $t('RAMON.CALCULOS.ADVBOX_EMPTY') }}
@@ -578,7 +682,7 @@ const fmtDate = value => {
         </template>
         <p
           v-if="createError"
-          class="mt-2 text-sm text-n-ruby-11"
+          class="mt-2 mb-0 text-sm text-n-ruby-11"
           data-testid="create-error"
         >
           {{ $t('RAMON.CALCULOS.CREATE_ERROR') }}
@@ -586,7 +690,7 @@ const fmtDate = value => {
 
         <p
           v-if="loadingLeads"
-          class="mt-4 text-sm text-n-slate-10"
+          class="mt-4 mb-0 text-sm text-n-slate-10"
           data-testid="calculos-loading-leads"
         >
           {{ $t('RAMON.CALCULOS.LOADING_LEADS') }}
@@ -594,7 +698,7 @@ const fmtDate = value => {
 
         <p
           v-else-if="leadsError"
-          class="mt-4 text-sm text-n-ruby-11"
+          class="mt-4 mb-0 text-sm text-n-ruby-11"
           data-testid="calculos-leads-error"
         >
           {{ $t('RAMON.CALCULOS.ERROR') }}
@@ -603,43 +707,81 @@ const fmtDate = value => {
         <template v-else-if="selectedContact">
           <ul
             v-if="contactLeads.length"
-            class="mt-4 rounded-lg border border-n-weak divide-y divide-n-weak"
+            class="flex flex-col mt-4 list-none reset-base ms-0 !p-1.5"
+            :class="[CARTAO]"
             data-testid="calculos-lead-list"
           >
             <li v-for="l in contactLeads" :key="l.id">
               <button
                 data-testid="calculos-lead-item"
-                class="flex items-center justify-between w-full gap-3 px-3 py-2 text-left hover:bg-n-alpha-2"
+                class="flex items-center justify-between gap-3"
+                :class="LINHA"
                 @click="openLead(l.id)"
               >
-                <span class="text-sm truncate text-n-slate-12">
+                <span class="truncate text-n-slate-12">
                   {{ l.thesis_name || l.name }}
                 </span>
-                <span class="text-xs shrink-0 text-n-slate-10">
+                <span class="font-mono text-xs shrink-0 text-n-slate-10">
                   {{ fmtDate(l.stage_entered_at) }}
                 </span>
               </button>
             </li>
           </ul>
-          <div v-else class="mt-4" data-testid="calculos-empty">
-            <p class="text-sm text-n-slate-10">
+          <div
+            v-else
+            class="flex flex-col items-start gap-2 mt-4"
+            data-testid="calculos-empty"
+          >
+            <p class="mb-0 text-sm text-n-slate-10">
               {{
                 $t('RAMON.CALCULOS.EMPTY_NO_LEAD', {
                   name: selectedContact.name,
                 })
               }}
             </p>
-            <button
+            <Button
               data-testid="create-case"
               :disabled="creating"
-              class="mt-2 text-sm text-n-iris-11 hover:underline disabled:opacity-50"
+              sm
+              icon="i-lucide-plus"
+              :label="$t('RAMON.CALCULOS.CREATE_CASE')"
               @click="criarCasoParaContato"
-            >
-              {{ $t('RAMON.CALCULOS.CREATE_CASE') }}
-            </button>
+            />
           </div>
         </template>
       </div>
-    </template>
+    </div>
+
+    <ConfirmModal
+      v-if="reabrirPendente"
+      :title="
+        $t('RAMON.CALCULOS.REABRIR_TITULO', {
+          data: diaMes(reabrirPendente.created_at),
+        })
+      "
+      :confirm-label="$t('RAMON.CALCULOS.REABRIR_SUBSTITUIR')"
+      :alt-label="$t('RAMON.CALCULOS.REABRIR_RASCUNHO')"
+      @confirm="executarReabrir(reabrirPendente)"
+      @alt="executarReabrir(reabrirPendente, 'rascunho')"
+      @cancel="reabrirPendente = null"
+    />
+    <ConfirmModal
+      v-if="apagando"
+      :title="
+        $t('RAMON.CALCULOS.APAGAR_TITULO', {
+          nome: apagando.segurado_nome || $t('RAMON.CALCULOS.HIST_SEM_NOME'),
+        })
+      "
+      :message="$t('RAMON.CALCULOS.APAGAR_MENSAGEM')"
+      :confirm-label="$t('RAMON.CALCULOS.HIST_APAGAR')"
+      @confirm="apagarCalculo(apagando)"
+      @cancel="apagando = null"
+    />
+    <VincularCalculo
+      v-if="vinculando"
+      :calculo="vinculando"
+      @cancel="vinculando = null"
+      @vinculado="aoVincular"
+    />
   </div>
 </template>

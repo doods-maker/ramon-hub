@@ -121,6 +121,46 @@ RSpec.describe 'Lead CNIS API', type: :request do
     expect(response.parsed_body['error']).to include('motor indisponível')
   end
 
+  it 'rejects the upload without the segurado sex (it goes into every calculation)' do
+    post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/cnis",
+         params: { arquivo: arquivo, sexo: '' }, headers: admin.create_new_auth_token
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body['error']).to include('sexo')
+  end
+
+  describe 'PATCH (trocar o sexo sem reanexar)' do
+    let(:url) { "/api/v1/accounts/#{account.id}/leads/#{lead.id}/cnis" }
+
+    it 'updates the stored segurado sex and keeps the rest of the CNIS' do
+      lead.update!(cnis: {
+                     'filename' => 'sample.pdf',
+                     'entrada' => { 'segurado' => { 'nascimento' => '1980-05-10', 'sexo' => 'M' },
+                                    'competencias' => [{ 'ano' => 2024, 'mes' => 1, 'salario' => '3000.00' }] },
+                     'vinculos' => [{ 'seq' => 1 }]
+                   })
+      patch url, params: { sexo: 'F' }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['sexo']).to eq('F')
+      cnis = lead.reload.cnis
+      expect(cnis.dig('entrada', 'segurado')).to eq('nascimento' => '1980-05-10', 'sexo' => 'F')
+      expect(cnis.dig('entrada', 'competencias').length).to eq(1)
+      expect(cnis['filename']).to eq('sample.pdf')
+    end
+
+    it 'rejects a value other than M/F' do
+      lead.update!(cnis: { 'entrada' => { 'segurado' => { 'sexo' => 'M' } } })
+      patch url, params: { sexo: 'X' }, headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(lead.reload.cnis.dig('entrada', 'segurado', 'sexo')).to eq('M')
+    end
+
+    it 'returns not found when the lead has no CNIS' do
+      patch url, params: { sexo: 'F' }, headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe 'DELETE' do
     it 'clears the stored CNIS' do
       lead.update!(cnis: { 'filename' => 'antigo.pdf' })

@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import LeadsAPI from 'dashboard/api/leads';
+import ThesesAPI from 'dashboard/api/theses';
 import Button from 'dashboard/components-next/button/Button.vue';
 import {
   ABA,
@@ -12,8 +14,10 @@ import {
   CAMPO,
   CARTAO,
   CARTAO_STATUS,
+  CHIP,
   FILETE,
   ROTULO,
+  SECAO,
   SELECT,
   TITULO,
   TOM,
@@ -60,7 +64,9 @@ const ultimaData = props.ultimaSimulacao?.em
 
 const form = ref({
   nascimento: ini.nascimento || props.lead.contact_data_nascimento || '',
-  sexo: ini.sexo || props.lead.contact_sexo || 'M',
+  // Sem sexo conhecido o campo nasce vazio e é obrigatório: ele vai junto do
+  // CNIS e entra em todo cálculo (antes caía em 'M' calado).
+  sexo: ini.sexo || props.lead.contact_sexo || '',
   der: ini.der || '',
   salario: ini.salario || '',
   beneficio: ini.beneficio || guessBeneficio(props.lead.thesis_name),
@@ -98,7 +104,12 @@ const money = value => brl.format(Number(value || 0));
 const canSimulate = computed(() =>
   cnis.value
     ? Boolean(form.value.der)
-    : Boolean(form.value.nascimento && form.value.der && form.value.salario)
+    : Boolean(
+        form.value.nascimento &&
+          form.value.sexo &&
+          form.value.der &&
+          form.value.salario
+      )
 );
 
 const honorario = computed(() => resultado.value?.honorario || null);
@@ -261,34 +272,49 @@ const removeCnis = async () => {
 
 // Persiste o essencial da última simulação no lead (o Modo Foco da Esteira
 // lê custom_attributes.ultima_simulacao; o PATCH faz deep_merge no server).
-// Best-effort: falha do PATCH nunca esconde o resultado já exibido.
-const persistirUltimaSimulacao = async data => {
-  try {
-    await LeadsAPI.update(props.lead.id, {
-      custom_attributes: {
-        ultima_simulacao: {
-          mensal: data.mensal,
-          atrasados: data.atrasados,
-          honorario_valor: data.honorario?.valor || null,
-          tese: data.honorario?.tese || props.lead.thesis_name || null,
-          em: new Date().toISOString(),
-          parametros: {
-            der: form.value.der,
-            salario: form.value.salario,
-            beneficio: form.value.beneficio,
-            origem: form.value.origem,
-            acrescimo_25: form.value.acrescimo_25,
-            usar_cnis: Boolean(cnis.value),
-          },
+// Vira o VALOR do lead no funil (LeadValorEstimado), então só acontece no
+// clique explícito em "Salvar como valor deste lead" — simular não grava.
+// `f` = formulário do momento em que o resultado saiu (não o de agora).
+const persistirUltimaSimulacao = (data, f) =>
+  LeadsAPI.update(props.lead.id, {
+    custom_attributes: {
+      ultima_simulacao: {
+        mensal: data.mensal,
+        atrasados: data.atrasados,
+        honorario_valor: data.honorario?.valor || null,
+        tese: data.honorario?.tese || props.lead.thesis_name || null,
+        em: new Date().toISOString(),
+        parametros: {
+          der: f.der,
+          salario: f.salario,
+          beneficio: f.beneficio,
+          origem: f.origem,
+          acrescimo_25: f.acrescimo_25,
+          usar_cnis: f.usar_cnis,
         },
       },
-    });
+    },
+  });
+
+const salvandoValor = ref(false);
+const valorSalvo = ref(false);
+let formDoResultado = null;
+const salvarValor = async () => {
+  salvandoValor.value = true;
+  try {
+    await persistirUltimaSimulacao(resultado.value, formDoResultado);
+    valorSalvo.value = true;
+    useAlert(t('RAMON.SIMULADOR.VALOR_SALVO'));
   } catch {
-    // silêncio: persistência é conveniência, o resultado na tela é a fonte
+    useAlert(t('RAMON.SIMULADOR.SALVAR_VALOR_ERRO'));
+  } finally {
+    salvandoValor.value = false;
   }
 };
 
-const simulate = async () => {
+// semHistorico: recalcular o que já está no histórico (reabrir) não grava
+// outra linha. Também recebe o evento do clique — só lê a chave.
+const simulate = async ({ semHistorico = false } = {}) => {
   isLoading.value = true;
   motorDown.value = false;
   errorMessage.value = '';
@@ -299,9 +325,11 @@ const simulate = async () => {
       ...form.value,
       usar_cnis: Boolean(cnis.value),
       segurado_nome: props.seguradoNome || undefined,
+      sem_historico: semHistorico || undefined,
     });
     resultado.value = data;
-    await persistirUltimaSimulacao(data);
+    formDoResultado = { ...form.value, usar_cnis: Boolean(cnis.value) };
+    valorSalvo.value = false;
   } catch (error) {
     handleMotorError(error);
   } finally {
@@ -310,7 +338,8 @@ const simulate = async () => {
 };
 
 // Memória de cálculo do motor (competência/índice/corrigido): re-simula com o
-// flag opt-in — payload grande, só quando o advogado pede.
+// flag opt-in — payload grande, só quando o advogado pede. É a mesma conta já
+// registrada: sem_historico pra não criar outra linha no histórico.
 const verMemoria = async () => {
   if (memoria.value) {
     memoria.value = null;
@@ -325,6 +354,7 @@ const verMemoria = async () => {
       usar_cnis: Boolean(cnis.value),
       memoria_calculo: true,
       segurado_nome: props.seguradoNome || undefined,
+      sem_historico: true,
     });
     resultado.value = data;
     memoria.value = data.motor?.memoria_calculo || null;
@@ -339,7 +369,21 @@ const verMemoria = async () => {
 // CNIS e/ou vínculos manuais (ex.: atividade rural que não está no CNIS).
 const painelLoading = ref(false);
 const painel = ref(null);
-const vinculosExtras = ref([]);
+// Vínculos manuais voltam do snapshot ao reabrir (o servidor guarda os
+// parâmetros do painel como foram enviados).
+const extrasDoSnapshot = lista =>
+  (lista || []).map(v => ({
+    inicio: v.inicio || '',
+    fim: v.fim || '',
+    tipo: v.tipo || 'EMPREGO',
+    salario: v.salario ?? '',
+    especialGrau: v.especial?.grau ? Number(v.especial.grau) : undefined,
+    especialInicio: v.especial?.inicio || '',
+    especialFim: v.especial?.fim || '',
+  }));
+const vinculosExtras = ref(
+  extrasDoSnapshot(props.inicial?.params?.vinculos_extras)
+);
 
 const addVinculoExtra = () =>
   vinculosExtras.value.push({
@@ -374,6 +418,7 @@ const canPainel = computed(() =>
     form.value.der &&
       (cnis.value ||
         (form.value.nascimento &&
+          form.value.sexo &&
           vinculosExtras.value.some(v => v.inicio && v.fim)))
   )
 );
@@ -388,7 +433,7 @@ const canPensao = computed(() => Boolean(cnis.value));
 const canMaternidade = computed(() => Boolean(cnis.value));
 const canPlanejamento = computed(() => Boolean(cnis.value));
 
-const calcularPainel = async () => {
+const calcularPainel = async ({ semHistorico = false } = {}) => {
   painelLoading.value = true;
   motorDown.value = false;
   errorMessage.value = '';
@@ -400,6 +445,7 @@ const calcularPainel = async () => {
       vinculos_extras: vinculosExtrasJson(),
       especiais: especiaisJson(),
       segurado_nome: props.seguradoNome || undefined,
+      sem_historico: semHistorico || undefined,
     });
     painel.value = data;
   } catch (error) {
@@ -409,12 +455,61 @@ const calcularPainel = async () => {
   }
 };
 
-const liquidacaoRef = ref(null);
+const nomeSexo = sexo =>
+  sexo === 'F' ? t('RAMON.SIMULADOR.SEXO_F') : t('RAMON.SIMULADOR.SEXO_M');
 
-// RMI com descartes é a que o advogado usa na conta quando existe (é a maior).
-const liquidarCartao = cartao => {
-  liquidacaoRef.value?.preencher(cartao.rmi_com_descartes || cartao.rmi);
+// Trocar o sexo usado no CNIS: o servidor corrige o segurado guardado (o PDF
+// não precisa voltar). Resultados na tela eram do sexo antigo — saem, e as
+// abas filhas remontam (calculoVersao) pra não mostrar conta velha.
+const sexoTrocando = ref(false);
+const calculoVersao = ref(0);
+const trocarSexo = async () => {
+  sexoTrocando.value = true;
+  errorMessage.value = '';
+  try {
+    const novo = cnis.value.sexo === 'F' ? 'M' : 'F';
+    const { data } = await LeadsAPI.trocarSexoCnis(props.lead.id, novo);
+    cnis.value = { ...cnis.value, sexo: data.sexo };
+    form.value.sexo = data.sexo;
+    resultado.value = null;
+    memoria.value = null;
+    painel.value = null;
+    calculoVersao.value += 1;
+  } catch {
+    errorMessage.value = t('RAMON.SIMULADOR.GENERIC_ERROR');
+  } finally {
+    sexoTrocando.value = false;
+  }
 };
+
+// Caso de cálculo (rascunho ou caso oculto, fora do funil) nasce sem tese e o
+// Honorário não tem regra: a aba oferece a tese ali mesmo. Escolher grava a
+// tese no caso (não é lead do funil) e já calcula.
+const casoDeCalculo = props.lead.source === 'calculo-advbox';
+const teseId = ref(props.lead.thesis_id || '');
+const teses = ref([]);
+const teseSalvando = ref(false);
+if (casoDeCalculo) {
+  ThesesAPI.get()
+    .then(({ data }) => {
+      teses.value = (data || []).filter(tese => tese.active);
+    })
+    .catch(() => {});
+}
+const escolherTese = async () => {
+  teseSalvando.value = true;
+  errorMessage.value = '';
+  try {
+    await LeadsAPI.update(props.lead.id, { thesis_id: teseId.value || null });
+    if (canSimulate.value) await simulate();
+  } catch {
+    errorMessage.value = t('RAMON.SIMULADOR.GENERIC_ERROR');
+  } finally {
+    teseSalvando.value = false;
+  }
+};
+
+const liquidacaoRef = ref(null);
 
 // filete do cartão: verde = elegível, vermelho = não, âmbar = depende
 const bordaDe = cartao => {
@@ -428,14 +523,27 @@ const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
 // Aba padrão = Possibilidades (uso "hub = Previdenciarista"); o fluxo de
 // honorário do auxílio-acidente vive na 2ª aba, intacto. Cálculo reaberto do
 // histórico volta na aba em que foi feito.
-// ponytail: o reabrir restaura o que é caro (CNIS + nascimento/sexo/DER +
-// ajustes de vínculo). Campos próprios das abas pensão/maternidade/
-// planejamento ficam guardados no snapshot mas não são repreenchidos —
-// preencher de novo é digitação de segundos. Ligar se incomodar.
 // Última simulação salva é do Honorário: abre nela, onde o resultado aparece.
 const aba = ref(
   props.inicial?.tipo || (props.ultimaSimulacao ? 'honorario' : 'painel')
 );
+
+// "Usar esta RMI na liquidação": leva a RMI do cartão pra aba Liquidação e
+// abre a aba. RMI com descartes é a que o advogado usa quando existe (é a maior).
+const liquidarCartao = cartao => {
+  liquidacaoRef.value?.preencher(cartao.rmi_com_descartes || cartao.rmi);
+  aba.value = 'liquidacao';
+};
+
+// Reabrir volta com o RESULTADO na tela, não só o formulário: recalcula na
+// hora (sem gravar outra linha no histórico). As abas filhas recebem os
+// parâmetros delas e fazem o mesmo.
+const inicialDe = tipo =>
+  props.inicial?.tipo === tipo ? props.inicial.params || {} : null;
+if (props.inicial?.tipo === 'painel' && canPainel.value)
+  calcularPainel({ semHistorico: true });
+if (props.inicial?.tipo === 'honorario' && canSimulate.value)
+  simulate({ semHistorico: true });
 </script>
 
 <template>
@@ -447,8 +555,11 @@ const aba = ref(
       data-testid="sim-cnis-chip"
     >
       <div class="flex items-center justify-between gap-2">
-        <span class="truncate text-xs font-medium text-n-slate-12">
-          {{ cnis.filename }}
+        <span
+          class="flex items-center min-w-0 gap-1.5 text-sm font-medium text-n-slate-12"
+        >
+          <span class="i-lucide-file-text size-4 shrink-0 text-n-blue-11" />
+          <span class="truncate">{{ cnis.filename }}</span>
         </span>
         <Button
           data-testid="sim-cnis-remove"
@@ -467,9 +578,27 @@ const aba = ref(
           })
         }}
       </span>
+      <span
+        v-if="cnis.sexo"
+        class="flex items-center gap-2 text-xs text-n-slate-10"
+        data-testid="sim-cnis-sexo"
+      >
+        {{
+          $t('RAMON.SIMULADOR.CNIS_SEXO_USADO', { sexo: nomeSexo(cnis.sexo) })
+        }}
+        <Button
+          data-testid="sim-cnis-sexo-trocar"
+          link
+          xs
+          :disabled="sexoTrocando"
+          :label="$t('RAMON.SIMULADOR.CNIS_SEXO_TROCAR')"
+          @click="trocarSexo"
+        />
+      </span>
       <ul
         v-if="cnis.avisos && cnis.avisos.length"
-        class="flex flex-col gap-1 text-xs text-n-amber-11 list-disc ps-4"
+        class="flex flex-col gap-1 list-disc ps-7 my-1"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-cnis-avisos"
       >
         <li v-for="(aviso, i) in cnis.avisos" :key="i">{{ aviso }}</li>
@@ -491,7 +620,8 @@ const aba = ref(
         <div
           v-for="v in vinculos"
           :key="v.seq"
-          class="flex flex-col gap-1 border-t border-n-weak pt-2"
+          class="flex flex-col gap-1"
+          :class="SECAO"
         >
           <span class="text-xs text-n-slate-12 truncate">
             {{ tituloDe(v) }}
@@ -507,7 +637,7 @@ const aba = ref(
             />
             {{ $t('RAMON.SIMULADOR.VINCULO_EXCLUIR') }}
           </label>
-          <label v-if="v.tipo === 'BENEFICIO'" :class="ROTULO">
+          <label v-if="v.tipo === 'BENEFICIO'" class="sm:w-1/3" :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_MENSALIDADE') }}
             <input
               v-model="mensalidades[v.seq]"
@@ -521,23 +651,23 @@ const aba = ref(
           </label>
           <div
             v-if="v.tipo !== 'BENEFICIO'"
-            class="flex flex-wrap items-center gap-2"
+            class="grid items-end grid-cols-3 gap-2"
           >
-            <label class="text-xs text-n-slate-11">
+            <label :class="ROTULO">
               {{ $t('RAMON.SIMULADOR.ESPECIAL_LABEL') }}
+              <select
+                v-model="especiaisGrau[v.seq]"
+                :data-testid="`sim-especial-grau-${v.seq}`"
+                :class="SELECT"
+              >
+                <option :value="undefined">
+                  {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
+                </option>
+                <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
+                  {{ g }}
+                </option>
+              </select>
             </label>
-            <select
-              v-model="especiaisGrau[v.seq]"
-              :data-testid="`sim-especial-grau-${v.seq}`"
-              :class="SELECT"
-            >
-              <option :value="undefined">
-                {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
-              </option>
-              <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
-                {{ g }}
-              </option>
-            </select>
             <template v-if="especiaisGrau[v.seq]">
               <input
                 v-model="especiaisInicio[v.seq]"
@@ -562,7 +692,8 @@ const aba = ref(
             type="file"
             accept="application/pdf"
             data-testid="sim-cnis-refile"
-            :class="ARQUIVO"
+            class="!mb-0"
+            :class="[ARQUIVO]"
             @change="onRefile"
           />
         </label>
@@ -572,6 +703,7 @@ const aba = ref(
           sm
           faded
           slate
+          class="self-start"
           :label="
             cnisLoading
               ? $t('RAMON.SIMULADOR.CNIS_LOADING')
@@ -591,11 +723,19 @@ const aba = ref(
         type="file"
         accept="application/pdf"
         data-testid="sim-cnis-file"
-        :disabled="cnisLoading"
-        :class="ARQUIVO"
+        :disabled="cnisLoading || !form.sexo"
+        class="!mb-0"
+        :class="[ARQUIVO]"
         @change="onCnisFile"
       />
-      <span class="text-n-slate-10">
+      <span
+        v-if="!form.sexo"
+        class="text-n-amber-11"
+        data-testid="sim-sexo-antes-cnis"
+      >
+        {{ $t('RAMON.SIMULADOR.SEXO_ANTES_CNIS') }}
+      </span>
+      <span v-else class="text-n-slate-10">
         {{ $t('RAMON.SIMULADOR.CNIS_HINT') }}
       </span>
     </label>
@@ -614,6 +754,9 @@ const aba = ref(
       <label v-if="!cnis" :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.SEXO') }}
         <select v-model="form.sexo" data-testid="sim-sexo" :class="SELECT">
+          <option value="" disabled>
+            {{ $t('RAMON.SIMULADOR.SEXO_SELECIONE') }}
+          </option>
           <option value="M">{{ $t('RAMON.SIMULADOR.SEXO_M') }}</option>
           <option value="F">{{ $t('RAMON.SIMULADOR.SEXO_F') }}</option>
         </select>
@@ -695,18 +838,30 @@ const aba = ref(
       >
         {{ $t('RAMON.SIMULADOR.ABA_PLANEJAMENTO') }}
       </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="aba === 'liquidacao'"
+        data-testid="sim-aba-liquidacao"
+        :class="[ABA, aba === 'liquidacao' ? ABA_ATIVA : ABA_INATIVA]"
+        @click="aba = 'liquidacao'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_LIQUIDACAO') }}
+      </button>
     </div>
 
     <p
       v-if="motorDown"
-      class="text-sm text-n-amber-11"
+      class="mb-0"
+      :class="[AVISO, TOM.amber]"
       data-testid="sim-motor-down"
     >
       {{ $t('RAMON.SIMULADOR.MOTOR_DOWN') }}
     </p>
     <p
       v-else-if="errorMessage"
-      class="text-sm text-n-ruby-11"
+      class="mb-0"
+      :class="[AVISO, TOM.ruby]"
       data-testid="sim-error"
     >
       {{ errorMessage }}
@@ -717,6 +872,23 @@ const aba = ref(
       class="flex flex-col gap-3"
       data-testid="sim-secao-honorario"
     >
+      <label v-if="casoDeCalculo" class="sm:w-1/2" :class="ROTULO">
+        {{ $t('RAMON.SIMULADOR.TESE') }}
+        <select
+          v-model="teseId"
+          data-testid="sim-tese"
+          :disabled="teseSalvando"
+          :class="SELECT"
+          @change="escolherTese"
+        >
+          <option value="" disabled>
+            {{ $t('RAMON.SIMULADOR.TESE_SELECIONE') }}
+          </option>
+          <option v-for="tese in teses" :key="tese.id" :value="tese.id">
+            {{ tese.name }}
+          </option>
+        </select>
+      </label>
       <div class="grid grid-cols-2 gap-2">
         <label v-if="!cnis" :class="ROTULO">
           {{ $t('RAMON.SIMULADOR.SALARIO') }}
@@ -774,6 +946,7 @@ const aba = ref(
         data-testid="sim-run"
         :disabled="!canSimulate || isLoading"
         sm
+        class="self-start"
         :label="
           isLoading
             ? $t('RAMON.SIMULADOR.SIMULANDO')
@@ -788,10 +961,10 @@ const aba = ref(
         :class="CARTAO"
         data-testid="sim-ultima"
       >
-        <p :class="TITULO">
+        <p class="mb-0" :class="TITULO">
           {{ $t('RAMON.SIMULADOR.ULTIMA_TITULO', { data: ultimaData }) }}
         </p>
-        <p v-if="ultimaSimulacao.atrasados != null" class="text-sm">
+        <p v-if="ultimaSimulacao.atrasados != null" class="mb-0 text-sm">
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.ATRASADOS') }}:
           </span>
@@ -799,15 +972,15 @@ const aba = ref(
             {{ `~${money(ultimaSimulacao.atrasados)}` }}
           </span>
         </p>
-        <p v-if="ultimaSimulacao.mensal != null" class="text-sm">
+        <p v-if="ultimaSimulacao.mensal != null" class="mb-0 text-sm">
           <span class="text-n-slate-10">
-            {{ $t('RAMON.SIMULADOR.ULTIMA_RMI') }}:
+            {{ $t('RAMON.SIMULADOR.MENSAL_ESTIMADO') }}:
           </span>
           <span class="font-mono font-semibold text-n-slate-12">
-            {{ money(ultimaSimulacao.mensal) }}
+            {{ `~${money(ultimaSimulacao.mensal)}` }}
           </span>
         </p>
-        <p v-if="ultimaSimulacao.honorario_valor" class="text-sm">
+        <p v-if="ultimaSimulacao.honorario_valor" class="mb-0 text-sm">
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.HONORARIO') }}:
           </span>
@@ -815,7 +988,7 @@ const aba = ref(
             {{ `~${money(ultimaSimulacao.honorario_valor)}` }}
           </span>
         </p>
-        <p class="text-xs text-n-slate-10">
+        <p class="mb-0 text-xs text-n-slate-10">
           {{ $t('RAMON.SIMULADOR.ULTIMA_HINT') }}
         </p>
       </div>
@@ -826,7 +999,7 @@ const aba = ref(
         :class="CARTAO"
         data-testid="sim-resultado"
       >
-        <p class="text-sm text-n-slate-12">
+        <p class="mb-0 text-sm text-n-slate-12">
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.ATRASADOS') }}:
           </span>
@@ -834,12 +1007,15 @@ const aba = ref(
             {{ `~${money(resultado.atrasados)}` }}
           </span>
         </p>
-        <p class="text-sm text-n-slate-12" data-testid="sim-perda-mensal">
-          {{
-            $t('RAMON.SIMULADOR.PERDA_MENSAL', {
-              value: money(resultado.perda_mensal),
-            })
-          }}
+        <!-- Um número só, um nome só: o mesmo valor mensal que a Esteira, o
+             painel e a "Última simulação" mostram. -->
+        <p class="mb-0 text-sm text-n-slate-12" data-testid="sim-mensal">
+          <span class="text-n-slate-10">
+            {{ $t('RAMON.SIMULADOR.MENSAL_ESTIMADO') }}:
+          </span>
+          <span class="font-mono font-semibold">
+            {{ `~${money(resultado.mensal)}` }}
+          </span>
         </p>
         <div
           v-if="avisosQualidade.length"
@@ -847,14 +1023,16 @@ const aba = ref(
           :class="[AVISO, TOM.ruby]"
           data-testid="sim-aviso-qualidade"
         >
-          <p v-for="(aviso, i) in avisosQualidade" :key="i">{{ aviso }}</p>
-          <p class="font-medium">
+          <p v-for="(aviso, i) in avisosQualidade" :key="i" class="mb-0">
+            {{ aviso }}
+          </p>
+          <p class="mb-0 font-medium">
             {{ $t('RAMON.SIMULADOR.ELEG_VER_ABA') }}
           </p>
         </div>
         <p
           v-if="honorario && honorario.valor"
-          class="text-sm text-n-slate-12"
+          class="mb-0 text-sm text-n-slate-12"
           data-testid="sim-honorario"
         >
           <span class="text-n-slate-10">
@@ -875,12 +1053,16 @@ const aba = ref(
         </p>
         <p
           v-else
-          class="text-xs text-n-amber-11"
+          class="mb-0 text-xs text-n-amber-11"
           data-testid="sim-sem-honorario"
         >
-          {{ $t('RAMON.SIMULADOR.NO_FEE_CONFIG') }}
+          {{
+            casoDeCalculo
+              ? $t('RAMON.SIMULADOR.TESE_ESCOLHA')
+              : $t('RAMON.SIMULADOR.NO_FEE_CONFIG')
+          }}
         </p>
-        <p class="text-xs text-n-slate-10">
+        <p class="mb-0 text-xs text-n-slate-10">
           {{
             $t('RAMON.SIMULADOR.ESTIMATIVA_BASE', {
               meses: resultado.atrasados_estimativa?.meses || 0,
@@ -889,7 +1071,7 @@ const aba = ref(
         </p>
         <p
           v-if="motorInfo.rmi_com_descartes"
-          class="text-xs text-n-slate-10"
+          class="mb-0 text-xs text-n-slate-10"
           data-testid="sim-duas-medias"
         >
           {{
@@ -921,6 +1103,24 @@ const aba = ref(
                 : $t('RAMON.SIMULADOR.MEMORIA_SHOW')
           "
           @click="verMemoria"
+        />
+        <!-- Lead do funil: o resultado só vira valor do lead se pedir. Caso de
+             cálculo (rascunho/oculto) não tem valor de funil. -->
+        <Button
+          v-if="!casoDeCalculo"
+          data-testid="sim-salvar-valor"
+          sm
+          faded
+          :color="valorSalvo ? 'teal' : 'blue'"
+          :icon="valorSalvo ? 'i-lucide-check' : 'i-lucide-save'"
+          :disabled="salvandoValor || valorSalvo"
+          class="self-start"
+          :label="
+            valorSalvo
+              ? $t('RAMON.SIMULADOR.VALOR_SALVO')
+              : $t('RAMON.SIMULADOR.SALVAR_VALOR')
+          "
+          @click="salvarValor"
         />
         <div
           v-if="memoria"
@@ -963,7 +1163,10 @@ const aba = ref(
               </tbody>
             </table>
           </div>
-          <p class="text-xs text-n-slate-10" data-testid="sim-memoria-resumo">
+          <p
+            class="mb-0 text-xs text-n-slate-10"
+            data-testid="sim-memoria-resumo"
+          >
             {{
               $t('RAMON.SIMULADOR.MEMORIA_RESUMO', {
                 soma: money(memoria.soma),
@@ -981,7 +1184,7 @@ const aba = ref(
       class="flex flex-col gap-2"
       data-testid="sim-painel-secao"
     >
-      <span class="text-xs font-medium text-n-slate-12">
+      <span :class="TITULO">
         {{ $t('RAMON.SIMULADOR.PAINEL_TITULO') }}
       </span>
       <div
@@ -991,7 +1194,7 @@ const aba = ref(
         :class="CARTAO"
         :data-testid="`sim-vinculo-extra-${i}`"
       >
-        <div class="grid grid-cols-2 gap-1">
+        <div class="grid grid-cols-2 gap-2">
           <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_INICIO') }}
             <input
@@ -1033,22 +1236,22 @@ const aba = ref(
             />
           </label>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <label class="text-xs text-n-slate-11">
+        <div class="grid items-end grid-cols-3 gap-2">
+          <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.ESPECIAL_LABEL') }}
+            <select
+              v-model="v.especialGrau"
+              :data-testid="`sim-vinculo-extra-especial-grau-${i}`"
+              :class="SELECT"
+            >
+              <option :value="undefined">
+                {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
+              </option>
+              <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
+                {{ g }}
+              </option>
+            </select>
           </label>
-          <select
-            v-model="v.especialGrau"
-            :data-testid="`sim-vinculo-extra-especial-grau-${i}`"
-            :class="SELECT"
-          >
-            <option :value="undefined">
-              {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
-            </option>
-            <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
-              {{ g }}
-            </option>
-          </select>
           <template v-if="v.especialGrau">
             <input
               v-model="v.especialInicio"
@@ -1088,6 +1291,7 @@ const aba = ref(
         data-testid="sim-painel-run"
         :disabled="!canPainel || painelLoading"
         sm
+        class="self-start"
         :label="
           painelLoading
             ? $t('RAMON.SIMULADOR.PAINEL_CALCULANDO')
@@ -1101,7 +1305,7 @@ const aba = ref(
         class="flex flex-col gap-2"
         data-testid="sim-painel-resultado"
       >
-        <p class="text-xs text-n-slate-11" data-testid="sim-painel-resumo">
+        <p class="mb-0 text-xs text-n-slate-11" data-testid="sim-painel-resumo">
           {{
             $t('RAMON.SIMULADOR.PAINEL_RESUMO', {
               idade: painel.resumo.idade,
@@ -1120,7 +1324,7 @@ const aba = ref(
           :data-testid="`sim-cartao-${cartao.id}`"
         >
           <div class="flex items-start justify-between gap-2">
-            <span class="text-xs font-medium text-n-slate-12">
+            <span class="text-sm font-medium text-n-slate-12">
               {{ cartao.titulo }}
             </span>
             <span
@@ -1132,13 +1336,15 @@ const aba = ref(
           <span class="text-xs text-n-slate-10">{{ cartao.subtitulo }}</span>
           <span
             v-if="cartao.elegivel === true"
-            class="text-xs text-n-teal-11 font-medium"
+            class="self-start"
+            :class="[CHIP, TOM.teal]"
           >
             {{ $t('RAMON.SIMULADOR.PAINEL_ELEGIVEL') }}
           </span>
           <span
             v-else-if="cartao.elegivel === null && cartao.depende_de"
-            class="text-xs text-n-amber-11"
+            class="self-start"
+            :class="[CHIP, TOM.amber]"
           >
             {{
               $t('RAMON.SIMULADOR.PAINEL_DEPENDE', { de: cartao.depende_de })
@@ -1189,6 +1395,15 @@ const aba = ref(
           <li v-for="(aviso, i) in painel.avisos" :key="i">{{ aviso }}</li>
         </ul>
       </div>
+    </div>
+
+    <!-- Liquidação de sentença: aba própria (antes ficava escondida no fim de
+         Possibilidades). Não depende do CNIS. -->
+    <div
+      v-show="aba === 'liquidacao'"
+      class="flex flex-col gap-2"
+      data-testid="sim-liquidacao-secao"
+    >
       <LeadLiquidacao ref="liquidacaoRef" :lead="lead" />
     </div>
 
@@ -1199,16 +1414,19 @@ const aba = ref(
     >
       <p
         v-if="!canElegibilidade"
-        class="text-xs text-n-amber-11"
+        class="mb-0"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-elegibilidade-hint"
       >
         {{ $t('RAMON.SIMULADOR.ELEG_PRECISA_CNIS') }}
       </p>
       <LeadElegibilidade
         v-else
+        :key="calculoVersao"
         :lead="lead"
         :der="form.der"
         :segurado-nome="seguradoNome"
+        :inicial="inicialDe('elegibilidade')"
       />
     </div>
 
@@ -1219,12 +1437,19 @@ const aba = ref(
     >
       <p
         v-if="!canPensao"
-        class="text-xs text-n-amber-11"
+        class="mb-0"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-pensao-hint"
       >
         {{ $t('RAMON.SIMULADOR.PENSAO_PRECISA_CNIS') }}
       </p>
-      <LeadPensao v-else :lead="lead" :segurado-nome="seguradoNome" />
+      <LeadPensao
+        v-else
+        :key="calculoVersao"
+        :lead="lead"
+        :segurado-nome="seguradoNome"
+        :inicial="inicialDe('pensao')"
+      />
     </div>
 
     <div
@@ -1234,12 +1459,19 @@ const aba = ref(
     >
       <p
         v-if="!canMaternidade"
-        class="text-xs text-n-amber-11"
+        class="mb-0"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-maternidade-hint"
       >
         {{ $t('RAMON.SIMULADOR.MATERNIDADE_PRECISA_CNIS') }}
       </p>
-      <LeadMaternidade v-else :lead="lead" :segurado-nome="seguradoNome" />
+      <LeadMaternidade
+        v-else
+        :key="calculoVersao"
+        :lead="lead"
+        :segurado-nome="seguradoNome"
+        :inicial="inicialDe('maternidade')"
+      />
     </div>
 
     <div
@@ -1249,16 +1481,24 @@ const aba = ref(
     >
       <p
         v-if="!canPlanejamento"
-        class="text-xs text-n-amber-11"
+        class="mb-0"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-planejamento-hint"
       >
         {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PRECISA_CNIS') }}
       </p>
-      <LeadPlanejamento v-else :lead="lead" :segurado-nome="seguradoNome" />
+      <LeadPlanejamento
+        v-else
+        :key="calculoVersao"
+        :lead="lead"
+        :segurado-nome="seguradoNome"
+        :inicial="inicialDe('planejamento')"
+      />
     </div>
 
     <p
-      class="text-xs italic text-n-amber-11 border-t border-n-weak pt-2"
+      class="mb-0 italic"
+      :class="[AVISO, TOM.amber]"
       data-testid="sim-disclaimer"
     >
       {{ $t('RAMON.SIMULADOR.DISCLAIMER') }}

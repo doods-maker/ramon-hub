@@ -323,7 +323,10 @@ Rails.application.routes.draw do
             end
           end
           resources :calculos, only: [:index, :destroy] do
-            member { post :reabrir }
+            member do
+              post :reabrir
+              post :vincular
+            end
           end
           resources :ramon_lead_imports, only: [:create, :show]
           resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'
@@ -368,7 +371,7 @@ Rails.application.routes.draw do
               post :pdf
             end
             resource :colheita, only: [:create], controller: 'lead_colheitas'
-            resource :cnis, only: [:show, :create, :destroy], controller: 'lead_cnis'
+            resource :cnis, only: [:show, :create, :update, :destroy], controller: 'lead_cnis'
             resource :liquidacao, only: [:create], controller: 'lead_liquidacoes' do
               post :pdf
             end

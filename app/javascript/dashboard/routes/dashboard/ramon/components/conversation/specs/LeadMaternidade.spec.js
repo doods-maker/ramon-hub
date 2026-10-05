@@ -24,6 +24,33 @@ const resultado = {
   avisos: ['evento anterior a 04/2024 — regra de transição aplicada'],
 };
 
+describe('LeadMaternidade reaberta do histórico (K7)', () => {
+  it('repreenche e recalcula sem gravar outra linha', async () => {
+    LeadsAPI.maternidade.mockResolvedValue({
+      data: { rmi: '2245.80', duracao_dias: 120, avisos: [] },
+    });
+    const wrapper = shallowMount(LeadMaternidade, {
+      props: {
+        lead: { id: 7 },
+        inicial: { data_evento: '2026-08-20', categoria: 'especial' },
+      },
+      global: { mocks: { $t: k => k }, stubs: { Button: false } },
+    });
+    await flushPromises();
+    expect(
+      wrapper.find('[data-testid="maternidade-data-evento"]').element.value
+    ).toBe('2026-08-20');
+    expect(LeadsAPI.maternidade).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({
+        data_evento: '2026-08-20',
+        categoria: 'especial',
+        sem_historico: true,
+      })
+    );
+  });
+});
+
 describe('LeadMaternidade', () => {
   beforeEach(() => {
     LeadsAPI.maternidade.mockReset();

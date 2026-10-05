@@ -3,11 +3,14 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { CAMPO, CARTAO, ROTULO, SELECT } from '../../helpers/ui';
+import { AVISO, CAMPO, CARTAO, ROTULO, SELECT, TOM } from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
   seguradoNome: { type: String, default: '' },
+  // Parâmetros do cálculo reaberto do histórico (só desta aba): repreenche e
+  // recalcula sem gravar outra linha no histórico.
+  inicial: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadMaternidade' });
 
@@ -18,8 +21,8 @@ const hasError = ref(false);
 const errorMessage = ref('');
 const resultado = ref(null);
 
-const dataEvento = ref('');
-const categoria = ref('empregada');
+const dataEvento = ref(props.inicial?.data_evento || '');
+const categoria = ref(props.inicial?.categoria || 'empregada');
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -27,7 +30,7 @@ const brl = new Intl.NumberFormat('pt-BR', {
 });
 const money = value => brl.format(Number(value || 0));
 
-const calcular = async () => {
+const calcular = async (extra = {}) => {
   isLoading.value = true;
   hasError.value = false;
   errorMessage.value = '';
@@ -36,6 +39,7 @@ const calcular = async () => {
       data_evento: dataEvento.value,
       categoria: categoria.value,
       segurado_nome: props.seguradoNome || undefined,
+      ...extra,
     });
     resultado.value = data;
   } catch (error) {
@@ -49,10 +53,12 @@ const calcular = async () => {
 
 // erro nunca se mascara de vazio: retry refaz a mesma ação que falhou.
 const retry = () => calcular();
+
+if (dataEvento.value && props.inicial) calcular({ sem_historico: true });
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 p-1" data-testid="lead-maternidade">
+  <div class="flex flex-col gap-3" data-testid="lead-maternidade">
     <div class="grid grid-cols-2 gap-2">
       <label :class="ROTULO">
         {{ $t('RAMON.SIMULADOR.MATERNIDADE_DATA_EVENTO') }}
@@ -94,11 +100,11 @@ const retry = () => calcular();
           ? $t('RAMON.SIMULADOR.MATERNIDADE_CALCULANDO')
           : $t('RAMON.SIMULADOR.MATERNIDADE_CALCULAR')
       "
-      @click="calcular"
+      @click="calcular()"
     />
 
     <div v-if="hasError" data-testid="maternidade-error">
-      <p class="text-sm text-n-ruby-11">{{ errorMessage }}</p>
+      <p class="mb-0" :class="[AVISO, TOM.ruby]">{{ errorMessage }}</p>
       <Button
         data-testid="maternidade-retry"
         link
@@ -115,7 +121,9 @@ const retry = () => calcular();
       :class="CARTAO"
       data-testid="maternidade-resultado"
     >
-      <p class="text-sm text-n-slate-12">
+      <p
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+      >
         <span class="text-n-slate-10"
           >{{ $t('RAMON.SIMULADOR.MATERNIDADE_RMI') }}:</span
         >
@@ -123,16 +131,22 @@ const retry = () => calcular();
           <span class="font-mono">{{ money(resultado.rmi) }}</span>
         </span>
       </p>
-      <p class="text-sm text-n-slate-12" data-testid="maternidade-carencia">
+      <p
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+        data-testid="maternidade-carencia"
+      >
         <span class="text-n-slate-10"
           >{{ $t('RAMON.SIMULADOR.MATERNIDADE_CARENCIA') }}:</span
         >
-        {{ resultado.carencia?.exigida }}
+        <span class="font-mono">{{ resultado.carencia?.exigida }}</span>
         <span class="text-xs text-n-slate-10">
           ({{ resultado.carencia?.fundamento }})
         </span>
       </p>
-      <p class="text-sm text-n-slate-12" data-testid="maternidade-duracao">
+      <p
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+        data-testid="maternidade-duracao"
+      >
         {{
           $t('RAMON.SIMULADOR.MATERNIDADE_DURACAO', {
             dias: resultado.duracao_dias,

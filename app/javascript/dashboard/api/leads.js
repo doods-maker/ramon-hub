@@ -70,6 +70,11 @@ class LeadsAPI extends ApiClient {
     return axios.delete(`${this.url}/${leadId}/cnis`);
   }
 
+  // Troca o sexo do segurado guardado no CNIS (sem reanexar o PDF).
+  trocarSexoCnis(leadId, sexo) {
+    return axios.patch(`${this.url}/${leadId}/cnis`, { sexo });
+  }
+
   liquidacao(leadId, payload) {
     return axios.post(`${this.url}/${leadId}/liquidacao`, payload);
   }

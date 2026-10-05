@@ -10,8 +10,16 @@ class CalculosAPI extends ApiClient {
     return axios.get(this.url, { params: q ? { q } : {} });
   }
 
-  reabrir(id) {
-    return axios.post(`${this.url}/${id}/reabrir`);
+  // destino: 'rascunho' copia pro rascunho de quem abre (lead intacto).
+  reabrir(id, destino) {
+    return axios.post(`${this.url}/${id}/reabrir`, destino ? { destino } : {});
+  }
+
+  vincular(id, leadId, substituir = false) {
+    return axios.post(`${this.url}/${id}/vincular`, {
+      lead_id: leadId,
+      substituir,
+    });
   }
 }
 

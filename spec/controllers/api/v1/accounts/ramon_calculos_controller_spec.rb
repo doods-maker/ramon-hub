@@ -106,5 +106,15 @@ RSpec.describe 'Ramon Calculos API', type: :request do
       expect(response.parsed_body['cnis_resumo']).to be_nil
       expect(lead.reload.cnis).to be_nil
     end
+
+    it 'limpa também a tese escolhida no cálculo anterior (honorário de outra pessoa)' do
+      post url, headers: agent.create_new_auth_token, as: :json
+      lead = account.leads.find(response.parsed_body['id'])
+      lead.update!(thesis: create(:thesis, account: account))
+
+      post url, headers: agent.create_new_auth_token, as: :json
+      expect(response.parsed_body['thesis_id']).to be_nil
+      expect(lead.reload.thesis_id).to be_nil
+    end
   end
 end

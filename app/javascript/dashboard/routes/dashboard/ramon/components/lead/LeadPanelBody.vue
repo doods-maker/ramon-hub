@@ -253,13 +253,13 @@ const ultimaSimPartes = computed(() => {
     s.atrasados != null
       ? {
           rotulo: t('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM_ATRASADOS'),
-          valor: formatBrl(s.atrasados),
+          valor: `~${formatBrl(s.atrasados)}`,
         }
       : null,
     s.mensal != null
       ? {
           rotulo: t('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM_RMI'),
-          valor: formatBrl(s.mensal),
+          valor: `~${formatBrl(s.mensal)}`,
         }
       : null,
     s.em

@@ -17,13 +17,12 @@ class Api::V1::Accounts::RamonCalculosController < Api::V1::Accounts::BaseContro
   # Cálculo sem cliente: a tela Cálculos abre a calculadora direto, sem pedir
   # nome antes (uso "hub = Previdenciarista"). Um caso de rascunho por usuário,
   # reaproveitado e SEMPRE limpo na entrada — CNIS de um cálculo anterior não
-  # pode vazar pro seguinte (viraria RMI da pessoa errada). Nasce sem contato e
-  # com source calculo-advbox: invisível no funil (ver Lead.funil).
+  # pode vazar pro seguinte (viraria RMI da pessoa errada) — nem a tese (o
+  # honorário sairia pela tese de outra pessoa). Nasce sem contato e com source
+  # calculo-advbox: invisível no funil (ver Lead.funil).
   def rascunho
-    lead = Current.account.leads.find_or_create_by!(
-      source: Lead::FONTE_CALCULO, contact_id: nil, name: "Cálculo rápido — #{Current.user.name}"
-    ) { |novo| novo.lead_stage = Current.account.lead_stages.order(:position).first }
-    lead.update!(cnis: nil)
+    lead = Lead.rascunho_de!(Current.account, Current.user)
+    lead.update!(cnis: nil, thesis_id: nil)
     render json: lead.push_event_data.merge(cnis_resumo: lead.cnis_resumo)
   end
 

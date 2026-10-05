@@ -16,8 +16,11 @@ defineProps({
   confirmLabel: { type: String, required: true },
   // ruby = destrutivo (padrão); blue = ação consequente mas não destrutiva.
   confirmColor: { type: String, default: 'ruby' },
+  // Terceira saída opcional (ex.: "Abrir no meu rascunho"), entre cancelar e
+  // confirmar — secundário azul.
+  altLabel: { type: String, default: '' },
 });
-const emit = defineEmits(['confirm', 'cancel']);
+const emit = defineEmits(['confirm', 'cancel', 'alt']);
 
 // Foco no confirmar ao abrir: Enter confirma, Esc cancela.
 const confirmButton = ref(null);
@@ -28,7 +31,7 @@ onKeyStroke('Escape', () => emit('cancel'));
 
 <template>
   <div :class="FUNDO_JANELA" @click.self="emit('cancel')">
-    <div :class="JANELA">
+    <div :class="[JANELA, altLabel ? '!w-[28rem]' : '']">
       <h3 :class="TITULO_JANELA">{{ title }}</h3>
       <p v-if="message" class="text-sm text-n-slate-11">{{ message }}</p>
       <div :class="RODAPE_JANELA">
@@ -39,6 +42,15 @@ onKeyStroke('Escape', () => emit('cancel'));
           slate
           :label="$t('RAMON.MODAL.CANCEL')"
           @click="emit('cancel')"
+        />
+        <Button
+          v-if="altLabel"
+          data-testid="confirm-modal-alt"
+          sm
+          faded
+          blue
+          :label="altLabel"
+          @click="emit('alt')"
         />
         <Button
           ref="confirmButton"

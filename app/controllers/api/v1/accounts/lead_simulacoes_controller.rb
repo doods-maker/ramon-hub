@@ -9,8 +9,9 @@ class Api::V1::Accounts::LeadSimulacoesController < Api::V1::Accounts::BaseContr
     return render json: { error: 'DER inválida — use o formato AAAA-MM-DD' }, status: :unprocessable_entity if der.blank?
 
     responder do
-      render json: simulacao(Ramon::MotorClient.incapacidade(motor_payload))
-      registrar_calculo('honorario')
+      resultado = simulacao(Ramon::MotorClient.incapacidade(motor_payload))
+      render json: resultado
+      registrar_calculo('honorario', valor: resultado[:mensal])
     end
   end
 
