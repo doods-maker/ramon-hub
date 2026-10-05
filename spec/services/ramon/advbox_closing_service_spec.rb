@@ -41,7 +41,7 @@ RSpec.describe Ramon::AdvboxClosingService do
     expect(posts).to have_been_requested
   end
 
-  it 'monta o caso com os ids escolhidos (responsável, fase, tipo pela tese) e o link da conversa' do
+  it 'monta o caso com os ids escolhidos (responsável, fase, tipo pela tese) e o link da ficha' do
     stub_create('customers', 'customers_id', 111)
     stub_create('posts', 'posts_id', 333)
     lawsuits = stub_request(:post, 'https://app.advbox.com.br/api/v1/lawsuits')
@@ -49,7 +49,7 @@ RSpec.describe Ramon::AdvboxClosingService do
                  body = JSON.parse(req.body)
                  body['users_id'] == 266_778 && body['stages_id'] == 3_736_299 &&
                    body['type_lawsuits_id'] == 2_408_556 && body['customers_id'] == [111] &&
-                   body['notes'].include?("/app/accounts/#{account.id}/conversations/#{conversation.display_id}")
+                   body['notes'].include?("https://chat.example.com/app/accounts/#{account.id}/ramon/lead/#{lead.id}/dossie")
                end
                .to_return(status: 201, body: { 'success' => true, 'lawsuits_id' => 222 }.to_json,
                           headers: { 'Content-Type' => 'application/json' })

@@ -144,13 +144,12 @@ class Ramon::AdvboxClosingService
     @lead.thesis&.name.present? && TYPE_BY_THESIS.any? { |pattern, _| @lead.thesis.name.match?(pattern) }
   end
 
-  # Plano B do upload (a API não sobe documentos): link da conversa nas notas.
+  # Plano B do upload (a API não sobe documentos): link da ficha do cliente nas
+  # notas — lá estão o dossiê de passagem completo, a conversa e os documentos.
   def lawsuit_notes
     parts = ["Caso criado automaticamente pelo ramon-hub no fechamento do lead ##{@lead.id}."]
     parts << '[CONFERIR tipo de processo — tese fora do mapa automático]' unless type_mapped?
-    if @lead.conversation
-      parts << "Conversa/dossiê: #{ENV.fetch('FRONTEND_URL', '')}/app/accounts/#{@lead.account_id}/conversations/#{@lead.conversation.display_id}"
-    end
+    parts << "Dossiê (ficha do cliente): #{Ramon::DossiePassagem.ficha_url(@lead)}"
     parts.join("\n")
   end
 
