@@ -97,6 +97,12 @@ ramon_night_copilot_job:
   class: 'Ramon::NightCopilotJob'
   queue: scheduled_jobs
 
+# a cada minuto: retoma execuções de fluxo cuja espera venceu (Automações em fluxo)
+ramon_fluxo_relogio_job:
+  cron: '*/1 * * * *'
+  class: 'Ramon::FluxoRelogioJob'
+  queue: scheduled_jobs
+
 # executed daily at 1100 UTC = 08:00 America/Sao_Paulo (UTC-3)
 # resumo diário (mock 3f): push ntfy pro SDR + e-mail digest pra gestão
 ramon_daily_digest_job:
