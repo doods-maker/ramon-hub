@@ -26,7 +26,7 @@ RSpec.describe LeadTriage do
   it 'redispara o broadcast do lead ao mudar de status' do
     triage = lead.lead_triages.create!(account: account, triage_agent: agent)
     expect(Rails.configuration.dispatcher).to receive(:dispatch)
-      .with(Events::Types::LEAD_UPDATED, anything, lead: lead)
+      .with(Events::Types::LEAD_UPDATED, anything, hash_including(lead: lead))
     triage.update!(status: 'done', result: 'ok')
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_05_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_05_000002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1473,6 +1473,56 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_05_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "created_at"], name: "index_ramon_chegadas_on_account_id_and_created_at"
+  end
+
+  create_table "ramon_fluxo_execucoes", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "fluxo_id", null: false
+    t.bigint "versao_id"
+    t.string "alvo_type", null: false
+    t.bigint "alvo_id", null: false
+    t.string "status", default: "rodando", null: false
+    t.boolean "ensaio", default: false, null: false
+    t.string "no_atual"
+    t.datetime "retomar_em"
+    t.integer "tentativas", default: 0, null: false
+    t.integer "profundidade", default: 0, null: false
+    t.jsonb "contexto", default: {}, null: false
+    t.jsonb "trilha", default: [], null: false
+    t.text "erro"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fluxo_id", "alvo_type", "alvo_id"], name: "index_ramon_fluxo_execucoes_unica_ativa", unique: true, where: "(((status)::text = ANY ((ARRAY['rodando'::character varying, 'esperando'::character varying])::text[])) AND (NOT ensaio))"
+    t.index ["fluxo_id", "created_at"], name: "index_ramon_fluxo_execucoes_on_fluxo_id_and_created_at"
+    t.index ["retomar_em"], name: "index_ramon_fluxo_execucoes_retomar", where: "((status)::text = 'esperando'::text)"
+  end
+
+  create_table "ramon_fluxo_versoes", force: :cascade do |t|
+    t.bigint "fluxo_id", null: false
+    t.integer "numero", null: false
+    t.jsonb "grafo", default: {}, null: false
+    t.bigint "publicado_por_id"
+    t.datetime "created_at", null: false
+    t.index ["fluxo_id", "numero"], name: "index_ramon_fluxo_versoes_on_fluxo_id_and_numero", unique: true
+  end
+
+  create_table "ramon_fluxos", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "nome", null: false
+    t.text "descricao"
+    t.string "gatilho_tipo"
+    t.boolean "ativo", default: false, null: false
+    t.integer "limite_dia"
+    t.string "origem", default: "usuario", null: false
+    t.string "sistema_chave"
+    t.string "modo", default: "normal", null: false
+    t.jsonb "rascunho", default: {}, null: false
+    t.bigint "versao_publicada_id"
+    t.datetime "ultimo_disparo_em"
+    t.bigint "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "gatilho_tipo"], name: "index_ramon_fluxos_on_account_id_and_gatilho_tipo"
   end
 
   create_table "ramon_metas_comerciais", force: :cascade do |t|

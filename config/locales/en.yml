@@ -254,6 +254,8 @@ en:
       ramon_meeting_cancelled: 'Meeting with %{name} cancelled (%{quando})'
       ramon_sla_breach: 'Lead waiting for first reply for %{minutos} min: %{name}'
       ramon_contract_status: 'Contract of %{name} %{label} on ZapSign'
+      ramon_fluxo_aviso: 'Automation: %{label} (%{name})'
+      ramon_fluxo_falhou: 'Automation "%{label}" failed for %{name}'
     attachment: 'Attachment'
     no_content: 'No content'
   conversations:

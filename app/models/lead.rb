@@ -220,7 +220,9 @@ class Lead < ApplicationRecord
   def dispatch_update_event
     return if Current.suppress_import_events
 
-    Rails.configuration.dispatcher.dispatch(Events::Types::LEAD_UPDATED, Time.zone.now, lead: self)
+    # changed_attributes/performed_by: gatilhos de fluxo (etapa mudou; cadeia entre fluxos)
+    Rails.configuration.dispatcher.dispatch(Events::Types::LEAD_UPDATED, Time.zone.now,
+                                            lead: self, changed_attributes: saved_changes.slice('lead_stage_id'), performed_by: Current.executed_by)
   end
 
   def record_created_activity
