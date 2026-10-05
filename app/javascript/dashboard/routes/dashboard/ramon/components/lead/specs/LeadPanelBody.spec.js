@@ -2,6 +2,7 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadPanelBody from '../LeadPanelBody.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
+import LeadReuniao from '../LeadReuniao.vue';
 import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
 
@@ -28,6 +29,8 @@ const build = ({
   del = vi.fn(),
   createTask = vi.fn(),
   followUpDraft = vi.fn(),
+  agendarReuniao = vi.fn(),
+  tasks = [],
   chatMessages = [],
 } = {}) =>
   createStore({
@@ -35,7 +38,7 @@ const build = ({
     modules: {
       leads: {
         namespaced: true,
-        actions: { update, delete: del, followUpDraft },
+        actions: { update, delete: del, followUpDraft, agendarReuniao },
       },
       leadConfig: {
         namespaced: true,
@@ -44,13 +47,14 @@ const build = ({
             { id: 1, name: 'Novo' },
             { id: 2, name: 'Fechado', is_won: true },
             { id: 3, name: 'Perdido', is_lost: true },
+            { id: 4, name: 'Reunião', label: 'fase-reuniao-agendada' },
           ],
           getLostReasons: () => [],
         },
       },
       leadTasks: {
         namespaced: true,
-        getters: { getByLead: () => () => [] },
+        getters: { getByLead: () => () => tasks },
         actions: { fetchForLead: vi.fn(), create: createTask },
       },
     },
@@ -299,6 +303,89 @@ describe('LeadPanelBody', () => {
     });
   });
 
+  describe('+ Tarefa → Reunião', () => {
+    const abrirReuniao = async wrapper => {
+      await wrapper.find('[data-testid="panel-add-task"]').trigger('click');
+      await wrapper
+        .find('[data-testid="panel-task-kind-meeting"]')
+        .trigger('click');
+    };
+
+    it('exige data/hora: sem ela não marca nada', async () => {
+      const agendarReuniao = vi.fn();
+      const wrapper = mountBody({ spies: { agendarReuniao } });
+      await abrirReuniao(wrapper);
+      const salvar = wrapper.find('[data-testid="panel-task-save"]');
+      expect(salvar.attributes('disabled')).toBeDefined();
+      expect(agendarReuniao).not.toHaveBeenCalled();
+    });
+
+    it('marca pela action de reunião (não cria follow-up), avisa e recarrega as notas', async () => {
+      useAlert.mockClear();
+      const agendarReuniao = vi.fn();
+      const createTask = vi.fn();
+      const wrapper = mountBody({ spies: { agendarReuniao, createTask } });
+      await abrirReuniao(wrapper);
+      await wrapper
+        .find('[data-testid="panel-task-title"]')
+        .setValue('Reunião');
+      await wrapper
+        .find('[data-testid="panel-task-date"]')
+        .setValue('2026-10-06T14:00');
+      await wrapper.find('[data-testid="panel-task-save"]').trigger('click');
+      await flushPromises();
+      expect(createTask).not.toHaveBeenCalled();
+      expect(agendarReuniao).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        startsAt: new Date('2026-10-06T14:00').toISOString(),
+        title: 'Reunião',
+      });
+      expect(useAlert).toHaveBeenCalledWith('RAMON.TASKS.MEETING_SCHEDULED');
+      expect(
+        wrapper.findComponent({ name: 'LeadNotes' }).props('refreshKey')
+      ).toBe('undefined-1');
+      expect(wrapper.find('[data-testid="panel-task-form"]').exists()).toBe(
+        false
+      );
+    });
+  });
+
+  describe('Reunião (Closer) no Andamento', () => {
+    const reuniaoVisivel = opts =>
+      mountBody(opts)
+        .find('[data-testid="panel-card-andamento"]')
+        .findComponent(LeadReuniao)
+        .exists();
+
+    it('aparece em etapa de reunião (pelo label)', () => {
+      expect(
+        reuniaoVisivel({ props: { lead: { ...lead, lead_stage_id: 4 } } })
+      ).toBe(true);
+    });
+
+    it('aparece quando a reunião (tarefa) já passou', () => {
+      const tasks = [
+        { id: 1, kind: 'meeting', due_at: '2020-01-01T10:00:00Z' },
+      ];
+      expect(reuniaoVisivel({ spies: { tasks } })).toBe(true);
+    });
+
+    it('aparece quando já há resultado registrado', () => {
+      expect(
+        reuniaoVisivel({
+          props: { lead: { ...lead, reuniao_resultado: 'qualificada' } },
+        })
+      ).toBe(true);
+    });
+
+    it('não aparece sem reunião em jogo (reunião futura não conta)', () => {
+      const tasks = [
+        { id: 1, kind: 'meeting', due_at: '2999-01-01T10:00:00Z' },
+      ];
+      expect(reuniaoVisivel({ spies: { tasks } })).toBe(false);
+    });
+  });
+
   describe('resumo', () => {
     it('mostra o cartão Caso com tese e benefício sem precisar abrir nada', () => {
       const wrapper = mountBody();
@@ -519,7 +606,7 @@ describe('LeadPanelBody', () => {
         props: { lead: { ...lead, follow_up_last_at: '2026-10-05T12:00:00Z' } },
       });
       const notas = wrapper.findComponent({ name: 'LeadNotes' });
-      expect(notas.props('refreshKey')).toBe('2026-10-05T12:00:00Z');
+      expect(notas.props('refreshKey')).toBe('2026-10-05T12:00:00Z-0');
       expect(notas.props('inConversation')).toBe(true);
     });
 

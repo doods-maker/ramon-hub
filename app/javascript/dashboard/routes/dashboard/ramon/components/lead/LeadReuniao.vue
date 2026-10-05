@@ -9,6 +9,7 @@ import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { SECAO } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 
@@ -52,7 +53,7 @@ const variante = ativo =>
 </script>
 
 <template>
-  <div data-testid="lead-reuniao" class="mb-3">
+  <div data-testid="lead-reuniao" class="mt-3" :class="SECAO">
     <label class="block mb-1 text-xs text-n-slate-10">
       {{ $t('RAMON.REUNIAO.TITULO') }}
     </label>

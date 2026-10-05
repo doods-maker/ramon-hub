@@ -447,7 +447,14 @@
       "SCHEDULE_NEXT": "Schedule next?",
       "DATE_HINT": "Empty = tomorrow 9am",
       "CREATE_ERROR": "Could not create the task — try again",
-      "COMPLETE": "Complete task"
+      "COMPLETE": "Complete task",
+      "KIND_TASK": "Task",
+      "KIND_MEETING": "Meeting",
+      "MEETING_TITLE_PLACEHOLDER": "Meeting title (optional)",
+      "MEETING_DATE_HINT": "Meeting date and time (required)",
+      "MEETING_HINT": "The lead moves to Meeting scheduled, gets a Closer and a confirmation draft in the notes — nothing is sent to the client.",
+      "MEETING_SCHEDULED": "Meeting scheduled — the lead moved to Meeting scheduled and the confirmation draft is in the notes.",
+      "MEETING_ERROR": "Could not schedule the meeting — try again"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",

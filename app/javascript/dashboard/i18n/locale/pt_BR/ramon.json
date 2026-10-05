@@ -447,7 +447,14 @@
       "SCHEDULE_NEXT": "Agendar próxima?",
       "DATE_HINT": "Vazio = amanhã 9h",
       "CREATE_ERROR": "Não foi possível criar a tarefa — tente de novo",
-      "COMPLETE": "Concluir tarefa"
+      "COMPLETE": "Concluir tarefa",
+      "KIND_TASK": "Tarefa",
+      "KIND_MEETING": "Reunião",
+      "MEETING_TITLE_PLACEHOLDER": "Título da reunião (opcional)",
+      "MEETING_DATE_HINT": "Data e hora da reunião (obrigatório)",
+      "MEETING_HINT": "O lead vai para Reunião agendada, ganha Closer e um rascunho de confirmação nas notas — nada é enviado ao cliente.",
+      "MEETING_SCHEDULED": "Reunião marcada — o lead foi para Reunião agendada e o rascunho de confirmação está nas notas.",
+      "MEETING_ERROR": "Não foi possível marcar a reunião — tente de novo"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",

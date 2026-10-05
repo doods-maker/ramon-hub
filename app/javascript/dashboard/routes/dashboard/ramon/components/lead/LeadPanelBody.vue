@@ -11,6 +11,7 @@ import LeadNextAction from './LeadNextAction.vue';
 import MiniEsteira from './MiniEsteira.vue';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import LeadNotes from './LeadNotes.vue';
+import LeadReuniao from './LeadReuniao.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
@@ -280,10 +281,19 @@ const confirmWonStage = () => {
 };
 const skipWonStage = () => commitStage(stageId.value);
 
-// ----- + Tarefa: form inline (mesmos defaults do LeadTasksList) -----
+// ----- + Tarefa: form inline. Tipo Reunião = mesmo efeito do Cal.com no
+// backend (etapa, Closer, rascunho de confirmação, lembretes internos) -----
+const TASK_KINDS = [
+  { kind: 'follow_up', id: 'task', label: 'KIND_TASK' },
+  { kind: 'meeting', id: 'meeting', label: 'KIND_MEETING' },
+];
 const taskFormOpen = ref(false);
+const taskKind = ref('follow_up');
 const taskTitle = ref('');
 const taskDate = ref('');
+const isMeetingForm = computed(() => taskKind.value === 'meeting');
+// nota-rascunho de confirmação nasce no backend: recarrega as notas
+const notesTick = ref(0);
 const tomorrowAt9 = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
@@ -293,26 +303,60 @@ const tomorrowAt9 = () => {
 // guard de duplo-clique: dois cliques rápidos criavam a tarefa em dobro
 const savingTask = ref(false);
 const addTask = async () => {
-  if (savingTask.value) return;
+  if (savingTask.value || (isMeetingForm.value && !taskDate.value)) return;
   savingTask.value = true;
-  const title = taskTitle.value.trim() || t('RAMON.KANBAN.BELL.DEFAULT_TITLE');
+  const title = taskTitle.value.trim();
   const due = taskDate.value ? new Date(taskDate.value) : tomorrowAt9();
   try {
-    await store.dispatch('leadTasks/create', {
-      leadId: props.lead.id,
-      title,
-      kind: 'follow_up',
-      dueAt: due.toISOString(),
-    });
+    if (isMeetingForm.value) {
+      await store.dispatch('leads/agendarReuniao', {
+        id: props.lead.id,
+        startsAt: due.toISOString(),
+        title,
+      });
+      notesTick.value += 1;
+      useAlert(t('RAMON.TASKS.MEETING_SCHEDULED'));
+    } else {
+      await store.dispatch('leadTasks/create', {
+        leadId: props.lead.id,
+        title: title || t('RAMON.KANBAN.BELL.DEFAULT_TITLE'),
+        kind: 'follow_up',
+        dueAt: due.toISOString(),
+      });
+    }
     taskTitle.value = '';
     taskDate.value = '';
+    taskKind.value = 'follow_up';
     taskFormOpen.value = false;
   } catch (e) {
-    useAlert(t('RAMON.TASKS.CREATE_ERROR'));
+    useAlert(
+      t(
+        isMeetingForm.value
+          ? 'RAMON.TASKS.MEETING_ERROR'
+          : 'RAMON.TASKS.CREATE_ERROR'
+      )
+    );
   } finally {
     savingTask.value = false;
   }
 };
+
+// ----- Reunião (Closer): Qualificada / Não qualificada no Andamento quando
+// há reunião em jogo — etapa de reunião (pelo label fixo do seed), reunião
+// já passada ou resultado já registrado -----
+const MEETING_STAGE_LABELS = [
+  'fase-reuniao-agendada',
+  'fase-reuniao-realizada',
+];
+const tasksByLead = useMapGetter('leadTasks/getByLead');
+const showReuniao = computed(() => {
+  const stage = stages.value?.find(s => s.id === props.lead?.lead_stage_id);
+  if (MEETING_STAGE_LABELS.includes(stage?.label)) return true;
+  if (props.lead?.reuniao_resultado) return true;
+  return (tasksByLead.value?.(props.lead?.id) || []).some(
+    task => task.kind === 'meeting' && new Date(task.due_at) < Date.now()
+  );
+});
 
 // ----- abas -----
 const { activeTab, setTab } = useLeadPanelTabs();
@@ -555,20 +599,47 @@ const discard = async () => {
         class="flex flex-col gap-2 mt-2"
         :class="CARTAO"
       >
+        <div class="flex gap-1.5">
+          <Button
+            v-for="k in TASK_KINDS"
+            :key="k.kind"
+            :data-testid="`panel-task-kind-${k.id}`"
+            xs
+            :variant="taskKind === k.kind ? 'solid' : 'faded'"
+            :color="taskKind === k.kind ? 'blue' : 'slate'"
+            :label="$t(`RAMON.TASKS.${k.label}`)"
+            @click="taskKind = k.kind"
+          />
+        </div>
         <input
           v-model="taskTitle"
           data-testid="panel-task-title"
-          :placeholder="$t('RAMON.TASKS.ADD_TITLE_PLACEHOLDER')"
+          :placeholder="
+            $t(
+              isMeetingForm
+                ? 'RAMON.TASKS.MEETING_TITLE_PLACEHOLDER'
+                : 'RAMON.TASKS.ADD_TITLE_PLACEHOLDER'
+            )
+          "
           :class="CAMPO"
         />
         <input
           v-model="taskDate"
           data-testid="panel-task-date"
           type="datetime-local"
-          :title="$t('RAMON.TASKS.DATE_HINT')"
+          :title="
+            $t(
+              isMeetingForm
+                ? 'RAMON.TASKS.MEETING_DATE_HINT'
+                : 'RAMON.TASKS.DATE_HINT'
+            )
+          "
           class="font-mono"
           :class="CAMPO"
         />
+        <p v-if="isMeetingForm" class="text-xs text-n-slate-10">
+          {{ $t('RAMON.TASKS.MEETING_HINT') }}
+        </p>
         <div class="flex justify-end gap-2">
           <Button
             data-testid="panel-task-cancel"
@@ -582,7 +653,7 @@ const discard = async () => {
             data-testid="panel-task-save"
             sm
             :label="$t('RAMON.FUNIL.SAVE')"
-            :disabled="savingTask"
+            :disabled="savingTask || (isMeetingForm && !taskDate)"
             @click="addTask"
           />
         </div>
@@ -662,6 +733,7 @@ const discard = async () => {
               </span>
             </template>
           </button>
+          <LeadReuniao v-if="showReuniao" :lead="lead" />
         </div>
 
         <!-- Próximo passo (era LeadNextAction do header) -->
@@ -813,10 +885,11 @@ const discard = async () => {
 
         <LeadQuizResumo :lead="lead" />
         <!-- follow_up_last_at muda no broadcast lead.updated quando a retomada
-             grava nota + contador (mesma transação) → as notas recarregam -->
+             grava nota + contador (mesma transação); notesTick sobe quando a
+             reunião marcada aqui grava o rascunho → as notas recarregam -->
         <LeadNotes
           :lead-id="lead.id"
-          :refresh-key="lead.follow_up_last_at"
+          :refresh-key="`${lead.follow_up_last_at}-${notesTick}`"
           :in-conversation="inConversation"
         />
 

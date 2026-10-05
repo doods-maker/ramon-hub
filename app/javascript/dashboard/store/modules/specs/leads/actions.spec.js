@@ -129,6 +129,25 @@ describe('leads actions', () => {
       { body: 'nova' }
     );
   });
+
+  it('agendarReuniao posts the meeting, edits the lead and reloads its tasks', async () => {
+    const lead = { id: 5, lead_stage_id: 3 };
+    axios.post.mockResolvedValue({ data: lead });
+    const commit = vi.fn();
+    const dispatch = vi.fn();
+    await actions.agendarReuniao(
+      { commit, dispatch },
+      { id: 5, startsAt: '2026-10-06T17:00:00.000Z', title: 'Reunião' }
+    );
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/5/reuniao_agendada'),
+      { starts_at: '2026-10-06T17:00:00.000Z', title: 'Reunião' }
+    );
+    expect(commit).toHaveBeenCalledWith(types.EDIT_LEAD, lead);
+    expect(dispatch).toHaveBeenCalledWith('leadTasks/fetchForLead', 5, {
+      root: true,
+    });
+  });
 });
 
 describe('leads/openDock & closeDock', () => {

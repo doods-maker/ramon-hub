@@ -6,7 +6,6 @@ import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import LeadTasksList from './LeadTasksList.vue';
-import LeadReuniao from './LeadReuniao.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
@@ -584,8 +583,6 @@ const toggleConsent = () =>
         {{ a.name }}
       </option>
     </select>
-
-    <LeadReuniao :lead="lead" />
 
     <label class="block mb-1 text-xs text-n-slate-10">
       {{ $t('RAMON.DRAWER.VALUE') }}
