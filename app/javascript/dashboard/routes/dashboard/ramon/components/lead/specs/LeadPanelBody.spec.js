@@ -4,6 +4,7 @@ import { createStore } from 'vuex';
 import LeadPanelBody from '../LeadPanelBody.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
 import LeadReuniao from '../LeadReuniao.vue';
+import ConfirmModal from '../../ConfirmModal.vue';
 import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
@@ -845,17 +846,50 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('descarta o lead só após confirmação inline', async () => {
+    it('"Não é lead" sai do fim do Resumo e vai pro menu ⋯ do cabeçalho', async () => {
+      const wrapper = mountBody();
+      expect(wrapper.find('[data-testid="lead-discard"]').exists()).toBe(false);
+      await wrapper.find('[data-testid="lead-more"]').trigger('click');
+      const item = wrapper.find('[data-testid="lead-discard"]');
+      expect(item.exists()).toBe(true);
+      expect(
+        wrapper
+          .find('[data-testid="lead-panel-corpo"]')
+          .find('[data-testid="lead-discard"]')
+          .exists()
+      ).toBe(false);
+    });
+
+    it('descarta o lead só depois da janela de confirmação', async () => {
       const del = vi.fn();
       const wrapper = mountBody({ spies: { del } });
+      const janela = () => wrapper.findComponent(ConfirmModal);
+      await wrapper.find('[data-testid="lead-more"]').trigger('click');
       await wrapper.find('[data-testid="lead-discard"]').trigger('click');
+      // o menu fecha e a janela abre; nada apagado ainda
+      expect(wrapper.find('[data-testid="lead-discard"]').exists()).toBe(false);
+      expect(janela().props()).toMatchObject({
+        title: 'RAMON.LEAD_PANEL.DISCARD_TITLE',
+        message: 'RAMON.LEAD_PANEL.DISCARD_CONFIRM',
+        confirmLabel: 'RAMON.LEAD_PANEL.DISCARD_ACTION',
+      });
       expect(del).not.toHaveBeenCalled();
-      await wrapper
-        .find('[data-testid="lead-discard-confirm"]')
-        .trigger('click');
+      janela().vm.$emit('confirm');
       await flushPromises();
       expect(del).toHaveBeenCalledWith(expect.anything(), 7);
       expect(wrapper.emitted('discarded')).toBeTruthy();
+      expect(janela().exists()).toBe(false);
+    });
+
+    it('Cancelar fecha a janela sem apagar', async () => {
+      const del = vi.fn();
+      const wrapper = mountBody({ spies: { del } });
+      await wrapper.find('[data-testid="lead-more"]').trigger('click');
+      await wrapper.find('[data-testid="lead-discard"]').trigger('click');
+      wrapper.findComponent(ConfirmModal).vm.$emit('cancel');
+      await flushPromises();
+      expect(wrapper.findComponent(ConfirmModal).exists()).toBe(false);
+      expect(del).not.toHaveBeenCalled();
     });
 
     it('seções nativas da conversa ficam recolhidas atrás de "Mais da conversa"', async () => {
@@ -874,7 +908,7 @@ describe('LeadPanelBody', () => {
 
     it('no drawer não há "Não é lead" nem ações nativas da conversa', () => {
       const wrapper = mountBody({ props: { context: 'drawer' } });
-      expect(wrapper.find('[data-testid="lead-discard"]').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="lead-more"]').exists()).toBe(false);
       expect(
         wrapper.findComponent({ name: 'ConversationAction' }).exists()
       ).toBe(false);

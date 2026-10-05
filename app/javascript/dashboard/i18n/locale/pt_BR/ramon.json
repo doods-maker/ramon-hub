@@ -828,7 +828,10 @@
       "LOADING": "Carregando lead…",
       "LOAD_ERROR": "Não foi possível carregar o lead desta conversa.",
       "RETRY": "Tentar novamente",
-      "DISCARD_CONFIRM": "Remover este lead do funil? A conversa continua no Chatwoot.",
+      "DISCARD_TITLE": "Tirar do funil?",
+      "DISCARD_CONFIRM": "O lead sai do funil e some dos relatórios. A conversa continua no WhatsApp.",
+      "DISCARD_ACTION": "Tirar do funil",
+      "MORE_ACTIONS": "Mais ações",
       "DISCARD_ERROR": "Não foi possível remover o lead — tente de novo",
       "VALUE_ADD": "+ valor",
       "VALUE_EDIT": "Clique para editar o valor"

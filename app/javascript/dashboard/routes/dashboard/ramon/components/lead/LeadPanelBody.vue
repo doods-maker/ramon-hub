@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
-import { onKeyStroke } from '@vueuse/core';
+import { onKeyStroke, onClickOutside } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
@@ -16,6 +16,7 @@ import LeadReuniao from './LeadReuniao.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
 import LeadSugerirResposta from '../conversation/LeadSugerirResposta.vue';
 import LeadPlaybook from '../conversation/LeadPlaybook.vue';
@@ -42,7 +43,8 @@ import {
   NAV_ICONE_INATIVO,
   CHIP,
   TOM,
-  AVISO,
+  LINHA,
+  MENU,
   EDITAVEL,
 } from '../../helpers/ui';
 
@@ -579,6 +581,16 @@ const conversationExtrasOpen = ref(false);
 
 // ----- "Não é lead" (destrutivo: confirmação inline, só na conversa) -----
 const discardPrompt = ref(false);
+// "⋯" ao lado do nome: hoje só tem o "Não é lead"
+const menuAberto = ref(false);
+const menuEl = ref(null);
+onClickOutside(menuEl, () => {
+  menuAberto.value = false;
+});
+const pedirDescarte = () => {
+  menuAberto.value = false;
+  discardPrompt.value = true;
+};
 const discarding = ref(false);
 const discard = async () => {
   if (!props.lead || discarding.value) return;
@@ -618,11 +630,52 @@ const discard = async () => {
         />
       </router-link>
 
-      <h2
-        class="text-[21px] font-semibold leading-tight text-n-slate-12 truncate"
-      >
-        {{ lead.name }}
-      </h2>
+      <div class="flex items-center gap-1 min-w-0">
+        <h2
+          class="flex-1 min-w-0 text-[21px] font-semibold leading-tight text-n-slate-12 truncate"
+        >
+          {{ lead.name }}
+        </h2>
+        <div v-if="inConversation" ref="menuEl" class="relative shrink-0">
+          <Button
+            data-testid="lead-more"
+            sm
+            ghost
+            slate
+            icon="i-lucide-ellipsis"
+            :aria-label="$t('RAMON.LEAD_PANEL.MORE_ACTIONS')"
+            :aria-expanded="menuAberto"
+            @click="menuAberto = !menuAberto"
+          />
+          <div
+            v-if="menuAberto"
+            class="absolute right-0 top-full z-20 mt-1 w-44"
+            :class="MENU"
+          >
+            <button
+              type="button"
+              data-testid="lead-discard"
+              class="flex items-center gap-2 text-n-ruby-11"
+              :class="LINHA"
+              @click="pedirDescarte"
+            >
+              <span class="i-lucide-user-x size-4 shrink-0" />
+              {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- tirar do funil é destrutivo: janela de confirmação do kit -->
+      <Teleport to="body">
+        <ConfirmModal
+          v-if="discardPrompt"
+          :title="$t('RAMON.LEAD_PANEL.DISCARD_TITLE')"
+          :message="$t('RAMON.LEAD_PANEL.DISCARD_CONFIRM')"
+          :confirm-label="$t('RAMON.LEAD_PANEL.DISCARD_ACTION')"
+          @confirm="discard"
+          @cancel="discardPrompt = false"
+        />
+      </Teleport>
 
       <!-- Caso numa linha: tese · benefício · DCB · canal, clicar = editar -->
       <div
@@ -1247,47 +1300,6 @@ const discard = async () => {
                 {{ $t('RAMON.LEAD_PANEL.MACROS_TITLE') }}
               </p>
               <MacrosList :conversation-id="conversationId" />
-            </div>
-          </div>
-        </div>
-
-        <div v-if="inConversation" :class="SECAO">
-          <Button
-            v-if="!discardPrompt"
-            data-testid="lead-discard"
-            sm
-            faded
-            ruby
-            icon="i-lucide-user-x"
-            :label="$t('RAMON.LEAD_PANEL.DISCARD')"
-            @click="discardPrompt = true"
-          />
-          <div
-            v-else
-            data-testid="lead-discard-prompt"
-            class="flex flex-col gap-2"
-            :class="[AVISO, TOM.ruby]"
-          >
-            <p class="text-xs">
-              {{ $t('RAMON.LEAD_PANEL.DISCARD_CONFIRM') }}
-            </p>
-            <div class="flex justify-end gap-2">
-              <Button
-                data-testid="lead-discard-cancel"
-                sm
-                faded
-                slate
-                :label="$t('RAMON.FUNIL.CANCEL')"
-                @click="discardPrompt = false"
-              />
-              <Button
-                data-testid="lead-discard-confirm"
-                sm
-                ruby
-                :label="$t('RAMON.LEAD_PANEL.DISCARD')"
-                :disabled="discarding"
-                @click="discard"
-              />
             </div>
           </div>
         </div>

@@ -828,7 +828,10 @@
       "LOADING": "Loading lead…",
       "LOAD_ERROR": "Couldn't load the lead for this conversation.",
       "RETRY": "Try again",
-      "DISCARD_CONFIRM": "Remove this lead from the funnel? The conversation stays in Chatwoot.",
+      "DISCARD_TITLE": "Remove from the funnel?",
+      "DISCARD_CONFIRM": "The lead leaves the funnel and disappears from the reports. The conversation stays on WhatsApp.",
+      "DISCARD_ACTION": "Remove from funnel",
+      "MORE_ACTIONS": "More actions",
       "DISCARD_ERROR": "Could not remove the lead — try again",
       "VALUE_ADD": "+ value",
       "VALUE_EDIT": "Click to edit the value"
