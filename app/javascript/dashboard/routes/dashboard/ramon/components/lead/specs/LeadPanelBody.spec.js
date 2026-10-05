@@ -66,7 +66,6 @@ const stubs = {
   LeadSimulador: true,
   ConversationAction: true,
   MacrosList: true,
-  ResolveAction: true,
   RouterLink: { template: '<a><slot /></a>' },
 };
 
@@ -265,13 +264,13 @@ describe('LeadPanelBody', () => {
       expect(wrapper.emitted('openConversation')[0]).toEqual([42]);
     });
 
-    it('na conversa não mostra WhatsApp (a conversa já está aberta) e mostra Resolver', () => {
+    it('na conversa não mostra WhatsApp nem Resolver (já estão no cabeçalho da conversa)', () => {
       const wrapper = mountBody();
       expect(wrapper.find('[data-testid="panel-whatsapp"]').exists()).toBe(
         false
       );
       expect(wrapper.findComponent({ name: 'ResolveAction' }).exists()).toBe(
-        true
+        false
       );
     });
 

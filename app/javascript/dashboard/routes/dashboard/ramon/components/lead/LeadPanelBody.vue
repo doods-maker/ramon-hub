@@ -5,7 +5,6 @@ import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import ConversationAction from 'dashboard/routes/dashboard/conversation/ConversationAction.vue';
 import MacrosList from 'dashboard/routes/dashboard/conversation/Macros/List.vue';
-import ResolveAction from 'dashboard/components/buttons/ResolveAction.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import LeadFields from './LeadFields.vue';
 import LeadNextAction from './LeadNextAction.vue';
@@ -464,8 +463,10 @@ const discard = async () => {
         </div>
       </div>
 
-      <!-- 4 ações fixas. WhatsApp abre a conversa (gaveta) ou o wa.me (sem
-           conversa); no painel da conversa ela já está aberta — botão sai. -->
+      <!-- Ações fixas. WhatsApp abre a conversa (gaveta) ou o wa.me (sem
+           conversa); no painel da conversa ela já está aberta — botão sai.
+           Resolver NÃO entra aqui: já existe no cabeçalho da conversa, e um
+           2º ResolveAction registrava o atalho Alt+E em dobro. -->
       <div class="flex gap-1.5 mt-3">
         <Button
           v-if="lead.conversation_id && !inConversation"
@@ -501,13 +502,6 @@ const discard = async () => {
           class="flex-1"
           @click="taskFormOpen = !taskFormOpen"
         />
-        <!-- [&_button]:h-8: o Resolver (core) vem em md; aqui segue o sm do kit -->
-        <div
-          v-if="inConversation"
-          class="flex flex-1 min-w-0 [&>*]:w-full [&_button]:h-8"
-        >
-          <ResolveAction color="teal" variant="faded" />
-        </div>
       </div>
 
       <div
