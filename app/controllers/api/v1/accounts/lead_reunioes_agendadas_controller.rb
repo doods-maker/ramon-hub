@@ -9,7 +9,9 @@ class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::Ba
 
     title = params[:title].to_s.strip.presence || 'Reunião'
     Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: starts_at, title: title, user: Current.user)
-    render 'api/v1/accounts/leads/show', format: :json
+    # leads/show usa o partial pelo nome curto, que não resolve fora do
+    # LeadsController — template próprio aponta o partial pelo caminho cheio.
+    @lead.reload
   end
 
   private

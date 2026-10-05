@@ -9,8 +9,8 @@ RSpec.describe Ramon::ReuniaoAgendamento do
   let(:user) { create(:user, account: account, role: :agent) }
   let(:starts_at) { Time.zone.parse('2026-07-15T14:00:00Z') }
 
-  def agendar(**opts)
-    described_class.call(lead: lead, starts_at: starts_at, title: 'Primeiro Atendimento', user: user, **opts)
+  def agendar(**)
+    described_class.call(lead: lead, starts_at: starts_at, title: 'Primeiro Atendimento', user: user, **)
   end
 
   it 'cria a tarefa de reunião, a atividade e anda o lead pra Reunião agendada', :aggregate_failures do
