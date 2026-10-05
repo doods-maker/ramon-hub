@@ -19,10 +19,17 @@ module Ramon::Fluxos::Passos::Lead
     prazo = (Time.find_zone!(Fluxo::ZONA).now + config.fetch('prazo_dias', 1).to_i.days).end_of_day
     return { saida: 's', resumo: "faria: tarefa \"#{titulo}\"" } if ctx.ensaio?
 
-    responsavel = config['responsavel_id'].present? ? lead.account.users.find(config['responsavel_id']) : (lead.closer || lead.sdr)
-    kind = LeadTask::KINDS.include?(config['tipo']) ? config['tipo'] : 'other'
-    lead.lead_tasks.create!(account: lead.account, kind: kind, title: titulo, due_at: prazo, user: responsavel)
+    responsavel = responsavel_da_tarefa(lead, config)
+    lead.lead_tasks.create!(account: lead.account, kind: kind_da_tarefa(config), title: titulo, due_at: prazo, user: responsavel)
     { saida: 's', resumo: "tarefa \"#{titulo}\" · #{responsavel&.name || 'sem responsável'}" }
+  end
+
+  def responsavel_da_tarefa(lead, config)
+    config['responsavel_id'].present? ? lead.account.users.find(config['responsavel_id']) : (lead.closer || lead.sdr)
+  end
+
+  def kind_da_tarefa(config)
+    LeadTask::KINDS.include?(config['tipo']) ? config['tipo'] : 'other'
   end
 
   def exigir_lead(ctx)
