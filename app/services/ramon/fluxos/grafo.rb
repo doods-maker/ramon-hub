@@ -12,12 +12,16 @@ class Ramon::Fluxos::Grafo
     'rascunho_texto' => %w[texto], 'nota_privada' => %w[texto], 'mover_etapa' => %w[etapa_id],
     'criar_tarefa' => %w[titulo], 'escolha' => %w[campo], 'avisar_sino' => %w[texto], 'avisar_push' => %w[texto]
   }.freeze
-  PROIBIDAS_CHATWOOT = %w[send_message send_attachment].freeze
-  # Allowlist: só o que a regra do Chatwoot aceita (inclui as do enterprise), menos envio ao cliente —
-  # o ActionService chama o nome da ação com `send`, então nome livre seria execução arbitrária.
-  PERMITIDAS_CHATWOOT = (AutomationRule.new.actions_attributes - PROIBIDAS_CHATWOOT).freeze
+  MENSAGEM_CLIENTE = %w[send_message send_attachment].freeze
+  # sem envio externo: transcript pode ir pro e-mail do contato; webhook vira passo próprio (B2b)
+  PROIBIDAS_CHATWOOT = (MENSAGEM_CLIENTE + %w[send_email_transcript send_webhook_event]).freeze
 
   attr_reader :nos, :setas
+
+  # Allowlist: só o que a regra do Chatwoot aceita (inclui as do enterprise), menos as proibidas —
+  # o ActionService chama o nome da ação com `send`, então nome livre seria execução arbitrária.
+  # Sob demanda: AutomationRule.new lê o schema, e o assets:precompile do Docker roda sem banco.
+  def self.permitidas_chatwoot = @permitidas_chatwoot ||= (AutomationRule.new.actions_attributes - PROIBIDAS_CHATWOOT).freeze
 
   def initialize(dados)
     dados = (dados || {}).to_h.deep_stringify_keys
@@ -133,8 +137,12 @@ class Ramon::Fluxos::Grafo
   def erros_chatwoot(passo, config)
     nomes = Array(config['acoes']).pluck('action_name')
     return ["Passo #{passo['id']}: escolha pelo menos uma ação"] if nomes.empty?
-    return ["Passo #{passo['id']}: mensagem ao cliente só como rascunho"] if nomes.intersect?(PROIBIDAS_CHATWOOT)
+    return ["Passo #{passo['id']}: mensagem ao cliente só como rascunho"] if nomes.intersect?(MENSAGEM_CLIENTE)
 
-    (nomes - PERMITIDAS_CHATWOOT).map { |nome| "Passo #{passo['id']}: ação desconhecida (#{nome})" }
+    nomes.filter_map do |nome|
+      if PROIBIDAS_CHATWOOT.include?(nome) then "Passo #{passo['id']}: ação não permitida no fluxo (#{nome})"
+      elsif self.class.permitidas_chatwoot.exclude?(nome) then "Passo #{passo['id']}: ação desconhecida (#{nome})"
+      end
+    end
   end
 end

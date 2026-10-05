@@ -54,6 +54,11 @@ RSpec.describe Ramon::Fluxos::Grafo do
     expect(grafo(d).erros).to include('Passo p1: ação desconhecida (system)')
   end
 
+  it 'recusa envio externo na ação do Chatwoot (webhook é passo próprio)' do
+    d = grafo_linear({ 'tipo' => 'manual' }, ['acao_chatwoot', { 'acoes' => [{ 'action_name' => 'send_webhook_event' }] }])
+    expect(grafo(d).erros).to eq(['Passo p1: ação não permitida no fluxo (send_webhook_event)'])
+  end
+
   it 'exige configuração obrigatória' do
     d = grafo_linear({ 'tipo' => 'manual' }, ['mover_etapa', {}], ['esperar', {}])
     expect(grafo(d).erros).to include('Passo p1: falta etapa_id', 'Passo p2: falta o tempo de espera')
