@@ -1,0 +1,61 @@
+import { mount } from '@vue/test-utils';
+import { createStore } from 'vuex';
+import ScenariosCard from '../ScenariosCard.vue';
+
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
+
+const montar = tools => {
+  const store = createStore({
+    modules: {
+      captainTools: {
+        namespaced: true,
+        getters: {
+          getRecords: () => [
+            { id: 'mover_etapa', title: 'Mover de etapa', nivel: 'sugestao' },
+          ],
+        },
+      },
+    },
+  });
+  return mount(ScenariosCard, {
+    props: {
+      id: 1,
+      title: 'Lead aceitou a reunião',
+      description: 'Quando o lead topa conversar',
+      instruction: 'Conduza a conversa',
+      tools,
+    },
+    global: {
+      plugins: [store],
+      stubs: {
+        CardLayout: { template: '<div><slot /></div>' },
+        Checkbox: true,
+        Button: true,
+        Icon: true,
+        Editor: true,
+        Input: true,
+        TextArea: true,
+      },
+    },
+  });
+};
+
+describe('ScenariosCard — ferramentas da skill', () => {
+  it('mostra o nome legível com a cor do nível, e o id cru quando não está no catálogo', () => {
+    const chips = montar(['mover_etapa', 'minha_http']).findAll(
+      '[data-testid="skill-ferramenta"]'
+    );
+    expect(chips.map(chip => chip.text())).toEqual([
+      'Mover de etapa',
+      'minha_http',
+    ]);
+    expect(chips[0].classes()).toContain('text-n-amber-11');
+    expect(chips[1].classes()).toContain('text-n-slate-11');
+  });
+
+  it('skill sem ferramentas (tools null da API) não mostra a linha', () => {
+    expect(montar(null).text()).not.toContain(
+      'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TOOLS_USED'
+    );
+  });
+});

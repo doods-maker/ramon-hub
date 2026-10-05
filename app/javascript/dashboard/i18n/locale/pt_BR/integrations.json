@@ -663,8 +663,8 @@
         }
       },
       "SCENARIOS": {
-        "TITLE": "Cenários",
-        "DESCRIPTION": "Dê algum contexto ao seu assistente — como \"o que fazer quando um usuário estiver com problemas\", ou \"como agir durante uma solicitação de reembolso\".",
+        "TITLE": "Skills",
+        "DESCRIPTION": "Situações que o assistente sabe conduzir: quando usar cada skill, como conduzir e quais ferramentas ela usa.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selecionado | {count} itens selecionados",
           "SELECT_ALL": "Selecionar todos ({count})",
@@ -673,29 +673,29 @@
         },
         "ADD": {
           "SUGGESTED": {
-            "TITLE": "Exemplos de cenários",
+            "TITLE": "Exemplos de skills",
             "ADD": "Adicionar todos",
             "ADD_SINGLE": "Adicionar este",
-            "TOOLS_USED": "Ferramentas usadas :"
+            "TOOLS_USED": "Ferramentas usadas:"
           },
           "NEW": {
-            "CREATE": "Adicionar um cenário",
-            "TITLE": "Criar um cenário",
+            "CREATE": "Adicionar uma skill",
+            "TITLE": "Criar uma skill",
             "FORM": {
               "TITLE": {
-                "LABEL": "Título",
-                "PLACEHOLDER": "Digite um nome para o cenário",
-                "ERROR": "O nome do cenário é obrigatório"
+                "LABEL": "Nome da skill",
+                "PLACEHOLDER": "Ex.: Lead que sumiu depois da reunião",
+                "ERROR": "O nome da skill é obrigatório"
               },
               "DESCRIPTION": {
-                "LABEL": "Descrição",
-                "PLACEHOLDER": "Descreva como e onde este cenário será utilizado",
-                "ERROR": "Descrição do cenário é obrigatória"
+                "LABEL": "Quando usar",
+                "PLACEHOLDER": "Em que situação o assistente deve seguir esta skill",
+                "ERROR": "Diga quando usar esta skill"
               },
               "INSTRUCTION": {
-                "LABEL": "Como lidar",
-                "PLACEHOLDER": "Descreva como e onde este cenário será utilizado",
-                "ERROR": "Conteúdo do cenário é obrigatório"
+                "LABEL": "Como conduzir",
+                "PLACEHOLDER": "Passo a passo do que o assistente faz — digite @ para chamar uma ferramenta",
+                "ERROR": "Escreva como conduzir esta skill"
               },
               "CREATE": "Criar",
               "CANCEL": "Cancelar"
@@ -704,26 +704,31 @@
         },
         "UPDATE": {
           "CANCEL": "Cancelar",
-          "UPDATE": "Atualizar alterações"
+          "UPDATE": "Salvar alterações"
         },
         "LIST": {
           "SEARCH_PLACEHOLDER": "Pesquisar..."
         },
-        "EMPTY_MESSAGE": "Nenhum cenário encontrado. Crie ou adicione exemplos para começar.",
-        "SEARCH_EMPTY_MESSAGE": "Nenhum cenário encontrado para esta pesquisa.",
+        "EMPTY_MESSAGE": "Nenhuma skill ainda. Crie uma para começar.",
+        "SEARCH_EMPTY_MESSAGE": "Nenhuma skill encontrada para esta pesquisa.",
         "API": {
           "ADD": {
-            "SUCCESS": "Cenários adicionados com sucesso",
-            "ERROR": "Ocorreu um erro ao adicionar cenários, por favor tente novamente."
+            "SUCCESS": "Skills adicionadas com sucesso",
+            "ERROR": "Ocorreu um erro ao adicionar skills, por favor tente novamente."
           },
           "UPDATE": {
-            "SUCCESS": "Cenários atualizados com sucesso",
-            "ERROR": "Ocorreu um erro ao atualizar cenários, por favor tente novamente."
+            "SUCCESS": "Skill atualizada com sucesso",
+            "ERROR": "Ocorreu um erro ao atualizar a skill, por favor tente novamente."
           },
           "DELETE": {
-            "SUCCESS": "Cenários excluídos com sucesso",
-            "ERROR": "Ocorreu um erro ao excluir os cenários, por favor tente novamente."
+            "SUCCESS": "Skills excluídas com sucesso",
+            "ERROR": "Ocorreu um erro ao excluir as skills, por favor tente novamente."
           }
+        },
+        "EXAMPLE": {
+          "TITLE": "Lead que sumiu depois da reunião",
+          "DESCRIPTION": "Quando o lead não responde há dias depois da reunião de fechamento",
+          "INSTRUCTION": "Retome com gentileza, lembre o próximo passo combinado e ofereça novo horário; use @playbook_da_tese se precisar."
         }
       }
     },

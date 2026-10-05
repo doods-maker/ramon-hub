@@ -663,8 +663,8 @@
         }
       },
       "SCENARIOS": {
-        "TITLE": "Scenarios",
-        "DESCRIPTION": "Give your assistant some context—like “what to do when a user is stuck,” or “how to act during a refund request.”",
+        "TITLE": "Skills",
+        "DESCRIPTION": "Situations the assistant knows how to handle: when to use each skill, how to handle it and which tools it uses.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
           "SELECT_ALL": "Select all ({count})",
@@ -673,29 +673,29 @@
         },
         "ADD": {
           "SUGGESTED": {
-            "TITLE": "Example scenarios",
+            "TITLE": "Example skills",
             "ADD": "Add all",
             "ADD_SINGLE": "Add this",
-            "TOOLS_USED": "Tools used :"
+            "TOOLS_USED": "Tools used:"
           },
           "NEW": {
-            "CREATE": "Add a scenario",
-            "TITLE": "Create a scenario",
+            "CREATE": "Add a skill",
+            "TITLE": "Create a skill",
             "FORM": {
               "TITLE": {
-                "LABEL": "Title",
-                "PLACEHOLDER": "Enter a name for the scenario",
-                "ERROR": "Scenario name is required"
+                "LABEL": "Skill name",
+                "PLACEHOLDER": "E.g. Lead went silent after the meeting",
+                "ERROR": "Skill name is required"
               },
               "DESCRIPTION": {
-                "LABEL": "Description",
-                "PLACEHOLDER": "Describe how and where this scenario will be used",
-                "ERROR": "Scenario description is required"
+                "LABEL": "When to use",
+                "PLACEHOLDER": "In which situation the assistant should follow this skill",
+                "ERROR": "Say when to use this skill"
               },
               "INSTRUCTION": {
                 "LABEL": "How to handle",
-                "PLACEHOLDER": "Describe how and where this scenario will be handled",
-                "ERROR": "Scenario content is required"
+                "PLACEHOLDER": "Step by step of what the assistant does — type @ to call a tool",
+                "ERROR": "Write how to handle this skill"
               },
               "CREATE": "Create",
               "CANCEL": "Cancel"
@@ -704,26 +704,31 @@
         },
         "UPDATE": {
           "CANCEL": "Cancel",
-          "UPDATE": "Update changes"
+          "UPDATE": "Save changes"
         },
         "LIST": {
           "SEARCH_PLACEHOLDER": "Search..."
         },
-        "EMPTY_MESSAGE": "No scenarios found. Create or add examples to begin.",
-        "SEARCH_EMPTY_MESSAGE": "No scenarios found for this search.",
+        "EMPTY_MESSAGE": "No skills yet. Create one to begin.",
+        "SEARCH_EMPTY_MESSAGE": "No skills found for this search.",
         "API": {
           "ADD": {
-            "SUCCESS": "Scenarios added successfully",
-            "ERROR": "There was an error adding scenarios, please try again."
+            "SUCCESS": "Skills added successfully",
+            "ERROR": "There was an error adding skills, please try again."
           },
           "UPDATE": {
-            "SUCCESS": "Scenarios updated successfully",
-            "ERROR": "There was an error updating scenarios, please try again."
+            "SUCCESS": "Skill updated successfully",
+            "ERROR": "There was an error updating the skill, please try again."
           },
           "DELETE": {
-            "SUCCESS": "Scenarios deleted successfully",
-            "ERROR": "There was an error deleting scenarios, please try again."
+            "SUCCESS": "Skills deleted successfully",
+            "ERROR": "There was an error deleting skills, please try again."
           }
+        },
+        "EXAMPLE": {
+          "TITLE": "Lead went silent after the meeting",
+          "DESCRIPTION": "When the lead has not replied for days after the closing meeting",
+          "INSTRUCTION": "Follow up kindly, recall the agreed next step and offer a new time slot; use @playbook_da_tese if needed."
         }
       }
     },

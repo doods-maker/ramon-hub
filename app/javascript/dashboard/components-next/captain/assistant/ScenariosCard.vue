@@ -12,6 +12,9 @@ import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import { useMapGetter } from 'dashboard/composables/store';
+import { CHIP } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { ferramentaInfo } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
 
 const props = defineProps({
   id: {
@@ -48,6 +51,13 @@ const emit = defineEmits(['select', 'hover', 'delete', 'update']);
 
 const { t } = useI18n();
 const { formatMessage } = useMessageFormatter();
+
+// Catálogo vem de captainTools/getTools (a página de Skills busca no onMounted).
+// tools chega null quando a instrução não cita ferramenta.
+const catalogo = useMapGetter('captainTools/getRecords');
+const ferramentas = computed(() =>
+  (props.tools || []).map(id => ferramentaInfo(id, catalogo.value))
+);
 
 const modelValue = computed({
   get: () => props.isSelected,
@@ -192,13 +202,25 @@ const renderInstruction = instruction => () =>
           />
         </div>
       </div>
-      <span
-        v-if="tools?.length"
-        class="text-sm text-n-slate-11 font-medium mb-1"
+      <div
+        v-if="ferramentas.length"
+        class="flex flex-wrap items-center gap-1.5 mb-1"
       >
-        {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TOOLS_USED') }}
-        {{ tools?.map(tool => `@${tool}`).join(', ') }}
-      </span>
+        <span class="text-sm text-n-slate-11 font-medium">
+          {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TOOLS_USED') }}
+        </span>
+        <span
+          v-for="ferramenta in ferramentas"
+          :key="ferramenta.id"
+          data-testid="skill-ferramenta"
+          :class="[CHIP, ferramenta.tom]"
+          :title="
+            ferramenta.nivel ? t(`CAPTAIN_RAMON.NIVEL.${ferramenta.nivel}`) : ''
+          "
+        >
+          {{ ferramenta.title }}
+        </span>
+      </div>
     </div>
     <div v-else class="overflow-hidden flex flex-col gap-4 w-full">
       <Input

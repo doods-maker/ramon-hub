@@ -16,6 +16,8 @@ import SuggestedScenarios from 'dashboard/components-next/captain/assistant/Sugg
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import AddNewScenariosDialog from 'dashboard/components-next/captain/assistant/AddNewScenariosDialog.vue';
+import { CHIP } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { NIVEL_TOM } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -39,16 +41,14 @@ const renderInstruction = instruction => () =>
     innerHTML: instruction,
   });
 
-// Suggested example scenarios for quick add
+// Skill de exemplo para adicionar rápido (texto vem do i18n)
 const scenariosExample = [
   {
     id: 1,
-    title: 'Prospective Buyer',
-    description:
-      'Handle customers who are showing interest in purchasing a license',
-    instruction:
-      'If someone is interested in purchasing a license, ask them for following:\n\n1. How many licenses are they willing to purchase?\n2. Are they migrating from another platform?\n. Once these details are collected, do the following steps\n1. add a private note to with the information you collected using [Add Private Note](tool://add_private_note)\n2. Add label "sales" to the contact using [Add Label to Conversation](tool://add_label_to_conversation)\n3. Reply saying "one of us will reach out soon" and provide an estimated timeline for the response and [Handoff to Human](tool://handoff)',
-    tools: ['add_private_note', 'add_label_to_conversation', 'handoff'],
+    title: t('CAPTAIN.ASSISTANTS.SCENARIOS.EXAMPLE.TITLE'),
+    description: t('CAPTAIN.ASSISTANTS.SCENARIOS.EXAMPLE.DESCRIPTION'),
+    instruction: t('CAPTAIN.ASSISTANTS.SCENARIOS.EXAMPLE.INSTRUCTION'),
+    tools: [],
   },
 ];
 
@@ -200,6 +200,15 @@ onMounted(() => {
         :heading="$t('CAPTAIN.ASSISTANTS.SCENARIOS.TITLE')"
         :description="$t('CAPTAIN.ASSISTANTS.SCENARIOS.DESCRIPTION')"
       />
+      <div class="flex flex-wrap items-center gap-1.5 mt-3">
+        <span
+          v-for="(tom, nivel) in NIVEL_TOM"
+          :key="nivel"
+          :class="[CHIP, tom]"
+        >
+          {{ t(`CAPTAIN_RAMON.NIVEL.${nivel}`) }}
+        </span>
+      </div>
       <div v-if="shouldShowSuggestedRules" class="flex mt-7 flex-col gap-4">
         <SuggestedScenarios
           :title="$t('CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TITLE')"
