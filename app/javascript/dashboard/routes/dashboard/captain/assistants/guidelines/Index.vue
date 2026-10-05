@@ -184,7 +184,6 @@ const addAllExample = async () => {
     :header-title="$t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.TITLE')"
     :is-fetching="isFetching"
     :back-url="backUrl"
-    :show-know-more="false"
     :show-pagination-footer="false"
     :show-assistant-switcher="false"
   >

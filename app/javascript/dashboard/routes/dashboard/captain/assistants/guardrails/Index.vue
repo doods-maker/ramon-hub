@@ -177,7 +177,6 @@ const addAllExample = () => {
     :header-title="$t('CAPTAIN.ASSISTANTS.GUARDRAILS.TITLE')"
     :is-fetching="isFetching"
     :back-url="backUrl"
-    :show-know-more="false"
     :show-pagination-footer="false"
     :show-assistant-switcher="false"
   >

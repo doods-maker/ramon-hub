@@ -193,7 +193,6 @@ onMounted(() => {
   <PageLayout
     :header-title="$t('CAPTAIN.ASSISTANTS.SCENARIOS.TITLE')"
     :is-fetching="isFetching"
-    :show-know-more="false"
     :show-pagination-footer="false"
   >
     <template #body>

@@ -392,7 +392,6 @@
   },
   "CAPTAIN": {
     "NAME": "Inteligência",
-    "HEADER_KNOW_MORE": "Saiba mais",
     "ASSISTANT_SWITCHER": {
       "ASSISTANTS": "Assistentes",
       "SWITCH_ASSISTANT": "Alternar entre assistentes",
@@ -440,8 +439,7 @@
       "ASSISTANT": "Assistente",
       "MESSAGE_PLACEHOLDER": "Digite sua mensagem...",
       "HEADER": "Área de testes",
-      "DESCRIPTION": "Use este playground para enviar mensagens para seu assistente e verificar se ele responde com precisão, rápido e no tom que você espera.",
-      "CREDIT_NOTE": "As mensagens enviadas aqui usam os créditos do sua Inteligência."
+      "DESCRIPTION": "Converse com o assistente aqui para conferir se ele responde certo, rápido e no tom esperado."
     },
     "PAYWALL": {
       "TITLE": "Atualize para usar o Inteligência",
@@ -454,10 +452,6 @@
       "AVAILABLE_ON": "O Inteligência está disponível apenas nos planos Enterprise.",
       "UPGRADE_PROMPT": "Atualize seu plano para ter acesso aos nossos assistentes, copilotos e muito mais.",
       "ASK_ADMIN": "Entre em contato com seu administrador para fazer a atualização."
-    },
-    "BANNER": {
-      "RESPONSES": "Você usou mais de 80% do seu limite de respostas. Para continuar usando o Inteligência, faça o upgrade.",
-      "DOCUMENTS": "Limite de documentos atingido. Atualize para continuar usando o Inteligência."
     },
     "FORM": {
       "CANCEL": "Cancelar",

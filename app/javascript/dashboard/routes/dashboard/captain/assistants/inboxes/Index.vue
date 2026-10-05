@@ -68,7 +68,6 @@ watch(
     :is-fetching="isFetchingAssistant || isFetching"
     :is-empty="!captainInboxes.length"
     :show-pagination-footer="false"
-    :show-know-more="false"
     :feature-flag="FEATURE_FLAGS.CAPTAIN"
     @click="handleCreate"
   >
