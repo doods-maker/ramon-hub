@@ -167,6 +167,20 @@ const LEAD_PRESCREVENDO = { ...LEAD, dcb_em: '2020-06-10' };
 
 // Reunião agendada que já passou (Closer ainda não registrou o resultado)
 const LEAD_REUNIAO = { ...LEAD, id: 44 };
+// Contrato já gerado no ZapSign (link pronto, 2 campos saíram em branco)
+const LEAD_CONTRATO_GERADO = {
+  ...LEAD,
+  custom_attributes: {
+    ...LEAD.custom_attributes,
+    zapsign: {
+      doc_token: 'doc-1',
+      sign_url: 'https://app.zapsign.com.br/verificar/doc-1',
+      faltando: ['{{número}}', '{{bairro}}'],
+      template_name: 'Contrato + procuração — auxílio-acidente',
+      criado_em: diasAtras(1),
+    },
+  },
+};
 
 const API = {
   lead_config: {
@@ -405,6 +419,15 @@ const clicando =
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Contrato gerado" :init-state="comAba('contrato')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_GERADO"
           context="conversation"
           :conversation-id="101"
         />
