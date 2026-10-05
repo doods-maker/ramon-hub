@@ -37,4 +37,23 @@ class Fluxo < ApplicationRecord
   def execucoes_hoje = execucoes.where(ensaio: false, created_at: Time.find_zone!(ZONA).now.all_day)
 
   def limite_atingido? = limite_dia.present? && execucoes_hoje.count >= limite_dia
+
+  # ponytail: contadores por fluxo (N consultas); agregar numa query se passar de ~50 fluxos.
+  def resumo_json
+    {
+      id: id, nome: nome, descricao: descricao, gatilho_tipo: gatilho_tipo, ativo: ativo, limite_dia: limite_dia,
+      origem: origem, sistema_chave: sistema_chave, modo: modo, versao: versao_publicada&.numero,
+      editado_em: updated_at
+    }.merge(contadores)
+  end
+
+  private
+
+  def contadores
+    vivas = execucoes.where(ensaio: false)
+    {
+      hoje: execucoes_hoje.count, esperando: vivas.where(status: 'esperando').count,
+      falharam_24h: vivas.where(status: 'falhou', updated_at: 24.hours.ago..).count, ultima_em: vivas.maximum(:created_at)
+    }
+  end
 end

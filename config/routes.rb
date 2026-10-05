@@ -335,6 +335,14 @@ Rails.application.routes.draw do
           resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'
           resource :ramon_pos_venda, only: [:show], controller: 'ramon_pos_venda'
           resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
+          resources :ramon_fluxos, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_fluxos' do
+            member do
+              post :publicar
+              post :ensaio
+              post :rodar
+            end
+            resources :execucoes, only: [:index, :show], controller: 'ramon_fluxo_execucoes'
+          end
           resource :ramon_relatorios, only: [:show], controller: 'ramon_relatorios'
           resource :ramon_extrato, only: [:show], controller: 'ramon_extrato' do
             put :meta
