@@ -267,4 +267,36 @@ describe('LeadZapsignCard', () => {
     await flushPromises();
     expect(LeadsAPI.createZapsign).toHaveBeenCalledWith(9, 't1', true);
   });
+
+  it('assinado: selo com a data e sem "Gerar de novo"', async () => {
+    const wrapper = await mountCard({
+      ...eligibleLead,
+      custom_attributes: {
+        zapsign: {
+          doc_token: 'd',
+          sign_url: 'https://zapsign/d',
+          status: 'signed',
+          assinado_em: '2026-10-03T14:00:00Z',
+        },
+      },
+    });
+    expect(wrapper.find('[data-testid="zapsign-seal"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="zapsign-regenerate"]').exists()).toBe(
+      false
+    );
+    expect(wrapper.find('[data-testid="zapsign-link"]').exists()).toBe(true);
+  });
+
+  it('recusado pelo cliente: selo ruby e volta o formulário pra gerar de novo', async () => {
+    const wrapper = await mountCard({
+      ...eligibleLead,
+      custom_attributes: {
+        zapsign: { doc_token: 'd', sign_url: 'https://x', status: 'refused' },
+      },
+    });
+    expect(wrapper.find('[data-testid="zapsign-seal"]').classes()).toContain(
+      'text-n-ruby-11'
+    );
+    expect(wrapper.find('[data-testid="zapsign-form"]').exists()).toBe(true);
+  });
 });

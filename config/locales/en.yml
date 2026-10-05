@@ -253,6 +253,7 @@ en:
       ramon_meeting_reminder: 'Meeting with %{name} in %{label} (%{quando}) — time to confirm with the client'
       ramon_meeting_cancelled: 'Meeting with %{name} cancelled (%{quando})'
       ramon_sla_breach: 'Lead waiting for first reply for %{minutos} min: %{name}'
+      ramon_contract_status: 'Contract of %{name} %{label} on ZapSign'
     attachment: 'Attachment'
     no_content: 'No content'
   conversations:

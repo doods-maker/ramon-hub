@@ -71,6 +71,7 @@ class Ramon::ZapsignContractService
     return if e.code == 404 || e.body.to_s.include?('already_refused')
     raise unless e.body.to_s.include?('already_signed')
 
+    Ramon::ZapsignLeadStatusJob.perform_later(@lead.id, token) # o webhook pode ter se perdido: sincroniza o selo
     raise ConflictError, 'O ZapSign diz que o contrato anterior já foi assinado — não gerei outro'
   end
 

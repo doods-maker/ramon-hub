@@ -60,6 +60,23 @@ describe('LeadCard.vue', () => {
     expect(wrapper.find('[data-testid="owner-closer"]').exists()).toBe(false);
   });
 
+  it('selo do ZapSign: teal assinado, ruby recusado, nada sem status', () => {
+    const seal = extra =>
+      mountCard({ lead: { ...lead, ...extra } }).find(
+        '[data-testid="zapsign-seal"]'
+      );
+    expect(seal({}).exists()).toBe(false);
+    expect(
+      seal({
+        zapsign_status: 'signed',
+        zapsign_assinado_em: '2026-10-03T14:00:00Z',
+      }).classes()
+    ).toContain('text-n-teal-11');
+    expect(seal({ zapsign_status: 'refused' }).classes()).toContain(
+      'text-n-ruby-11'
+    );
+  });
+
   it('emite open-lead ao clicar no corpo', async () => {
     const wrapper = mountCard();
     await wrapper.find('[data-testid="lead-card-body"]').trigger('click');

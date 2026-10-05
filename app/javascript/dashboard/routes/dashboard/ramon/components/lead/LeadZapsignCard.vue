@@ -6,7 +6,16 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ConfirmModal from '../ConfirmModal.vue';
-import { CARTAO, TITULO, SELECT, CAMPO, ROTULO, SECAO } from '../../helpers/ui';
+import {
+  CARTAO,
+  TITULO,
+  SELECT,
+  CAMPO,
+  ROTULO,
+  SECAO,
+  CHIP,
+  TOM,
+} from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 const emit = defineEmits(['completeData']);
@@ -33,6 +42,25 @@ const ativo = computed(
     !['cancelado', 'refused'].includes(zapsign.value.status)
 );
 const refazendo = ref(false);
+// Assinado/recusado vem do webhook do ZapSign. Assinado não se troca.
+const assinado = computed(() => zapsign.value?.status === 'signed');
+const selo = computed(() => {
+  if (zapsign.value?.status === 'refused')
+    return { tom: TOM.ruby, label: t('RAMON.ZAPSIGN.SEAL_REFUSED') };
+  if (!assinado.value) return null;
+  const em = zapsign.value.assinado_em;
+  return {
+    tom: TOM.teal,
+    label: em
+      ? t('RAMON.ZAPSIGN.SEAL_SIGNED_AT', {
+          date: new Date(em).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+          }),
+        })
+      : t('RAMON.ZAPSIGN.SEAL_SIGNED'),
+  };
+});
 const confirmando = ref(false);
 // Modelos da conta ZapSign: o cartão vale pra qualquer tese, o closer escolhe
 // o modelo. Pré-seleção só chuta pela tese; ZapSign fora do ar trava o botão.
@@ -235,7 +263,15 @@ const copyLink = async () => {
         {{ $t('RAMON.ZAPSIGN.CARD_TITLE') }}
       </p>
       <span
-        v-if="missing.length"
+        v-if="selo"
+        data-testid="zapsign-seal"
+        class="ml-auto"
+        :class="[CHIP, selo.tom]"
+      >
+        <span class="i-lucide-pen-line size-3" />{{ selo.label }}
+      </span>
+      <span
+        v-else-if="missing.length"
         data-testid="zapsign-missing"
         class="ml-auto text-[10px] text-n-slate-10"
       >
@@ -363,13 +399,16 @@ const copyLink = async () => {
     </template>
     <template v-else>
       <p
-        v-if="missing.length"
+        v-if="missing.length && !assinado"
         class="mt-1.5 text-[11.5px] leading-relaxed text-n-slate-11"
       >
         {{ $t('RAMON.ZAPSIGN.MISSING_HINT') }}
         <span class="text-n-amber-11">{{ missing.join(', ') }}</span>
       </p>
-      <p v-else class="mt-1.5 text-[11.5px] leading-relaxed text-n-slate-11">
+      <p
+        v-else-if="!assinado"
+        class="mt-1.5 text-[11.5px] leading-relaxed text-n-slate-11"
+      >
         {{ $t('RAMON.ZAPSIGN.PREPARED') }}
       </p>
       <p class="mt-2 text-[11px] text-n-slate-10">
@@ -401,6 +440,7 @@ const copyLink = async () => {
           @click="copyLink"
         />
         <Button
+          v-if="!assinado"
           data-testid="zapsign-regenerate"
           sm
           faded

@@ -818,7 +818,9 @@
           "ESTEIRA_DONE": "resolved in the Esteira",
           "THESIS_CHANGED": "changed the thesis",
           "LP_RECAPTURED": "received a new landing page form",
-          "REUNIAO_REGISTRADA": "recorded the meeting"
+          "REUNIAO_REGISTRADA": "recorded the meeting",
+          "ZAPSIGN_SIGNED": "signed the contract on ZapSign",
+          "ZAPSIGN_REFUSED": "refused the contract on ZapSign"
         },
         "EMPTY": "No activity recorded yet.",
         "LOADING": "Loading history…",
@@ -889,7 +891,10 @@
       "REGENERATE": "Generate again",
       "REGENERATE_TITLE": "Generate the contract again?",
       "REGENERATE_MESSAGE": "The previous document will be cancelled in ZapSign and its signature link will stop working. A new link is created with the current details.",
-      "CANCELLED_HINT": "The previous contract was cancelled in ZapSign — generate a new one."
+      "CANCELLED_HINT": "The previous contract was cancelled in ZapSign — generate a new one.",
+      "SEAL_SIGNED": "Signed",
+      "SEAL_SIGNED_AT": "Signed on {date}",
+      "SEAL_REFUSED": "Refused"
     },
     "ADVBOX": {
       "TITLE": "AdvBox",
