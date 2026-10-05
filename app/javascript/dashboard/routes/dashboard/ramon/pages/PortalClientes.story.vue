@@ -1,0 +1,250 @@
+<script setup>
+// Story do Painel do cliente (lado do escritório) — aprovação visual por
+// print, claro/escuro. Sem rede: window.axios responde com dados FICTÍCIOS por
+// URL. As variantes "aberto", "busca" e "senha" clicam na tela depois de
+// montar (pelo texto do botão, pra servir no código antigo e no novo).
+import { useI18n } from 'vue-i18n';
+import { useStore } from 'dashboard/composables/store';
+import PortalClientes from './PortalClientes.vue';
+
+const { locale } = useI18n({ useScope: 'global' });
+locale.value = 'pt_BR';
+
+const DIA = 86400000;
+const diasAtras = n => new Date(Date.now() - n * DIA).toISOString();
+
+const PROCESSOS_MARIA = [
+  {
+    id: 501,
+    numero: '5003421-18.2025.4.04.7207',
+    tipo: 'Auxílio-acidente',
+    etapa: 'Aguardando perícia',
+    fase: 'Judicial',
+    docs_pendentes: ['Laudo do ortopedista', 'Comprovante de residência'],
+  },
+  {
+    id: 502,
+    numero: 'NB 712.345.678-9',
+    tipo: 'Aposentadoria por idade',
+    etapa: 'Requerimento no INSS',
+    fase: 'Administrativo',
+    docs_pendentes: [],
+  },
+];
+
+const CLIENTES = [
+  {
+    id: 1,
+    nome: 'Ana Paula Martins',
+    cpf: '123.456.789-09',
+    email: 'ana.martins@exemplo.com.br',
+    convidado_em: diasAtras(20),
+    termos_aceitos_em: diasAtras(19),
+    sincronizado_em: diasAtras(0),
+    ultimo_acesso_em: diasAtras(1),
+    dias_acesso: 6,
+    processos: [],
+    envios_count: 3,
+    assinaturas_pendentes: 0,
+  },
+  {
+    id: 2,
+    nome: 'Carlos Eduardo Lima',
+    cpf: '987.654.321-00',
+    email: null,
+    convidado_em: diasAtras(3),
+    termos_aceitos_em: null,
+    sincronizado_em: diasAtras(3),
+    ultimo_acesso_em: null,
+    dias_acesso: 0,
+    processos: [],
+    envios_count: 0,
+    assinaturas_pendentes: 0,
+  },
+  {
+    id: 3,
+    nome: 'José Ribeiro da Silva',
+    cpf: '456.789.123-45',
+    email: 'jose.ribeiro@exemplo.com.br',
+    convidado_em: null,
+    termos_aceitos_em: null,
+    sincronizado_em: diasAtras(8),
+    ultimo_acesso_em: null,
+    dias_acesso: 0,
+    processos: [],
+    envios_count: 0,
+    assinaturas_pendentes: 0,
+  },
+  {
+    id: 4,
+    nome: 'Maria Aparecida Souza',
+    cpf: '321.654.987-10',
+    email: 'maria.souza@exemplo.com.br',
+    convidado_em: diasAtras(35),
+    termos_aceitos_em: diasAtras(34),
+    sincronizado_em: diasAtras(0),
+    ultimo_acesso_em: diasAtras(0),
+    dias_acesso: 14,
+    processos: PROCESSOS_MARIA,
+    envios_count: 7,
+    assinaturas_pendentes: 1,
+  },
+];
+
+const MARIA = {
+  ...CLIENTES[3],
+  recados: {
+    501: 'Perícia marcada para 14/10 às 9h no fórum de Tubarão. Leve os exames.',
+  },
+  envios: [
+    {
+      id: 71,
+      item: 'Laudo do ortopedista',
+      drive_file_id: null,
+      created_at: diasAtras(0),
+    },
+    {
+      id: 70,
+      item: 'Carteira de trabalho',
+      drive_file_id: 'drv-70',
+      created_at: diasAtras(6),
+    },
+    {
+      id: 69,
+      item: 'RG e CPF',
+      drive_file_id: 'drv-69',
+      created_at: diasAtras(12),
+    },
+  ],
+  assinaturas: [
+    {
+      id: 31,
+      nome: 'Procuração',
+      status: 'pending',
+      created_at: diasAtras(2),
+    },
+    {
+      id: 30,
+      nome: 'Contrato de honorários',
+      status: 'signed',
+      created_at: diasAtras(30),
+    },
+  ],
+};
+
+const METRICAS = {
+  convidados: 3,
+  entraram: 2,
+  voltaram: 2,
+  enviaram: 2,
+  assinaram: 1,
+  docs_pedidos: 2,
+  docs_enviados: 10,
+};
+
+const API = {
+  portal_clientes: { payload: CLIENTES, metricas: METRICAS },
+  'portal_clientes/4': MARIA,
+  'portal_clientes/2/convidar': {
+    ...CLIENTES[1],
+    senha_provisoria: 'K7P4-29QX',
+  },
+  'ramon_calculos/advbox_customers': {
+    payload: [
+      {
+        id: 9001,
+        name: 'Rosângela Pereira Costa',
+        identification: '741.852.963-00',
+        email: 'Rosangela.Costa@exemplo.com.br',
+        cellphone: '(48) 99812-3456',
+      },
+      {
+        id: 9002,
+        name: 'Rosa Maria Fontana',
+        identification: '852.963.741-11',
+        email: null,
+        cellphone: '(48) 99654-0987',
+      },
+    ],
+  },
+  zapsign_templates: [
+    { token: 'tpl-1', name: 'Procuração INSS' },
+    { token: 'tpl-2', name: 'Contrato de honorários' },
+  ],
+};
+
+let respostas = API;
+let falhar = false;
+const responder = async url => {
+  if (falhar) throw new Error('offline');
+  const path = url
+    .replace(/^\/api\/v1\/(accounts\/\d+\/)?/, '')
+    .replace(/^leads\//, '');
+  return { data: respostas[path] ?? {} };
+};
+window.axios = {
+  get: responder,
+  post: responder,
+  patch: responder,
+  put: responder,
+  delete: responder,
+};
+
+const store = useStore();
+// sem router: getCurrentAccountId lê a conta de rootState.route
+store.registerModule('route', { state: { params: { accountId: 1 } } });
+
+// Clica no botão cujo texto contém `texto` (o n-ésimo, se houver vários).
+const clicar = (texto, n = 0) =>
+  [...document.querySelectorAll('button')]
+    .filter(b => b.textContent.includes(texto))
+    [n]?.click();
+const depois = (ms, fn) => () => setTimeout(fn, ms);
+
+const vazio = () => {
+  respostas = {
+    ...API,
+    portal_clientes: {
+      payload: [],
+      metricas: Object.fromEntries(Object.keys(METRICAS).map(k => [k, 0])),
+    },
+  };
+};
+const erro = () => {
+  falhar = true;
+};
+const aberto = depois(1500, () => clicar('Maria Aparecida'));
+const senha = depois(1500, () => clicar('Nova senha provisória', 1));
+const busca = depois(1500, () => {
+  const campo = document.querySelector('input[type="search"]');
+  campo.value = 'Ros';
+  campo.dispatchEvent(new Event('input'));
+  setTimeout(() => {
+    clicar('Buscar');
+    setTimeout(() => clicar('Convidar'), 500);
+  }, 300);
+});
+</script>
+
+<template>
+  <Story title="Ramon/Painel do cliente" :layout="{ type: 'single' }">
+    <Variant title="Lista">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="Aberto" :init-state="aberto">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="Busca" :init-state="busca">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="Senha" :init-state="senha">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="Vazio" :init-state="vazio">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="Erro" :init-state="erro">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+  </Story>
+</template>
