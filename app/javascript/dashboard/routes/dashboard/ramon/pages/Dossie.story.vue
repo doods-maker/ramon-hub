@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import Dossie from './Dossie.vue';
 import LinhaDaVida from './LinhaDaVida.vue';
+import { CARTAO } from '../helpers/ui';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
@@ -35,6 +36,58 @@ const esteira = (atualId, entradas) =>
     current: etapa.id === atualId,
     entered_at: entradas[i] ?? null,
   }));
+
+// Texto único de passagem como o servidor gera (Ramon::DossiePassagemTexto)
+// para o lead ganho abaixo — o "Copiar dossiê" copia exatamente isto.
+const TEXTO_PASSAGEM = [
+  'DOSSIÊ DE PASSAGEM — Maria Aparecida Souza',
+  '',
+  'CLIENTE',
+  '- Nome: Maria Aparecida Souza',
+  '- CPF: 529.982.247-25',
+  '- Nascimento: 22/03/1965',
+  '- Telefone: +5548998765432',
+  '',
+  'CASO',
+  '- Tese: Auxílio-acidente',
+  '- Benefício: Auxílio-acidente (B94)',
+  '- DCB: 15/06/2021',
+  '- Prescrição: 3 parcelas já prescritas · prescrevendo R$ 1.412,00/mês',
+  '',
+  'CONTRATO',
+  '- Assinado em 04/10/2026',
+  '',
+  'ADVBOX',
+  '- Caso #48213 criado no fechamento',
+  '',
+  'DRIVE',
+  '- https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOp',
+  '',
+  'CNIS',
+  '- 312 competências · 6 vínculos · sexo F',
+  '',
+  'SIMULAÇÃO',
+  '- atrasados ~R$ 52.300,00',
+  '- benefício mensal estimado (valor de hoje) ~R$ 1.412,00',
+  '- honorário ~R$ 19.926,00',
+  '- em 28/09/2026',
+  '',
+  'REUNIÃO',
+  '- Resultado: Qualificada',
+  '- Data: 30/09/2026',
+  '- Ata: Cliente confirmou o acidente de trajeto em 2020 e a sequela no punho; trouxe CAT e laudo do ortopedista. Fechou o contrato com honorário de 30% dos atrasados + 3 benefícios.',
+  '',
+  'DOCUMENTOS',
+  '- Recebidos: RG e CPF; CAT (Comunicação de Acidente); CNIS atualizado; Laudo do ortopedista',
+  '- Pendentes: nenhum',
+  '',
+  'PENDÊNCIAS',
+  '- Próximo passo: nenhuma tarefa aberta',
+  '- Documentos faltando: nenhum',
+  '',
+  'FICHA',
+  '- https://hub.exemplo.com.br/app/accounts/1/ramon/lead/8/dossie',
+].join('\n');
 
 const DOSSIE = {
   pessoa: {
@@ -111,12 +164,48 @@ const DOSSIE = {
       created_at: diasAtras(3),
     },
   ],
+  passagem: {
+    nome: 'João Carlos Pereira',
+    cpf: '11144477735',
+    nascimento: '1968-05-14',
+    telefone: '+5548991234567',
+    tese: 'Auxílio-acidente',
+    beneficio: 'Auxílio-acidente (B94)',
+    dcb_em: '2023-03-12',
+    benefit_monthly_value: null,
+    prescription: {
+      months_since_dcb: 42,
+      lost_installments: 0,
+      lost_value: null,
+      months_to_cliff: 18,
+    },
+    contrato: { criado_em: '2026-10-03T13:00:00Z' },
+    advbox: null,
+    drive_url: null,
+    cnis: { competencias: 287, vinculos: 5, sexo: 'M' },
+    simulacao: {
+      atrasados: 38400,
+      mensal: 1412,
+      honorario_valor: 15756,
+      em: '2026-10-02T14:00:00Z',
+    },
+    reuniao: {
+      resultado: null,
+      registrada_em: null,
+      reuniao_id: 1,
+      ata_resumo:
+        'Cliente relatou o acidente de trajeto em 2022 e a dor no punho ao carregar peso; ficou de trazer o laudo do ortopedista. Honorário explicado e aceito; contrato enviado pelo ZapSign.',
+    },
+    ficha_url: 'https://hub.exemplo.com.br/app/accounts/1/ramon/lead/7/dossie',
+  },
   reunioes: [
     {
       id: 1,
       titulo: 'Reunião de fechamento — João',
       status: 'pronta',
       created_at: diasAtras(1),
+      ata_resumo:
+        'Cliente relatou o acidente de trajeto em 2022 e a dor no punho ao carregar peso; ficou de trazer o laudo do ortopedista. Honorário explicado e aceito; contrato enviado pelo ZapSign.',
     },
   ],
   timeline: [
@@ -255,6 +344,41 @@ const DOSSIE_GANHO = {
     },
   ],
   pendencias: { tasks: [], docs_missing: [] },
+  passagem: {
+    nome: 'Maria Aparecida Souza',
+    cpf: '52998224725',
+    nascimento: '1965-03-22',
+    telefone: '+5548998765432',
+    tese: 'Auxílio-acidente',
+    beneficio: 'Auxílio-acidente (B94)',
+    dcb_em: '2021-06-15',
+    benefit_monthly_value: 1412,
+    prescription: {
+      months_since_dcb: 63,
+      lost_installments: 3,
+      lost_value: 4236,
+      months_to_cliff: 0,
+    },
+    contrato: { status: 'signed', assinado_em: '2026-10-04T15:12:00Z' },
+    advbox: { lawsuits_id: 48213 },
+    drive_url: 'https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOp',
+    cnis: { competencias: 312, vinculos: 6, sexo: 'F' },
+    simulacao: {
+      atrasados: 52300,
+      mensal: 1412,
+      honorario_valor: 19926,
+      em: '2026-09-28T14:00:00Z',
+    },
+    reuniao: {
+      resultado: 'qualificada',
+      registrada_em: '2026-09-30T17:30:00Z',
+      reuniao_id: 1,
+      ata_resumo:
+        'Cliente confirmou o acidente de trajeto em 2020 e a sequela no punho; trouxe CAT e laudo do ortopedista. Fechou o contrato com honorário de 30% dos atrasados + 3 benefícios.',
+    },
+    ficha_url: 'https://hub.exemplo.com.br/app/accounts/1/ramon/lead/8/dossie',
+  },
+  passagem_texto: TEXTO_PASSAGEM,
 };
 
 const DOSSIE_NOVO = {
@@ -296,6 +420,46 @@ const DOSSIE_NOVO = {
     },
   ],
   pendencias: { tasks: [], docs_missing: [] },
+  passagem: {
+    nome: 'Ana Lúcia Ramos',
+    cpf: null,
+    nascimento: null,
+    telefone: '+5547996543210',
+    tese: null,
+    beneficio: null,
+    dcb_em: null,
+    benefit_monthly_value: null,
+    prescription: null,
+    contrato: null,
+    advbox: null,
+    drive_url: null,
+    cnis: null,
+    simulacao: null,
+    reuniao: null,
+    ficha_url: 'https://hub.exemplo.com.br/app/accounts/1/ramon/lead/10/dossie',
+  },
+};
+
+// Histórico longo (32 eventos): a ficha mostra 20 e o "Ver mais".
+const AUTORES = ['Gabriela Matos', 'Eduardo Schlata', null];
+const DOSSIE_HISTORICO = {
+  ...DOSSIE,
+  timeline: Array.from({ length: 32 }, (_, i) =>
+    i % 4 === 0
+      ? {
+          type: 'note',
+          body: `Retorno ${32 - i}: cliente pediu para ligar depois das 18h.`,
+          author_name: 'Gabriela Matos',
+          created_at: diasAtras(i * 0.7),
+        }
+      : {
+          type: 'activity',
+          kind: ['value_changed', 'meeting_scheduled', 'sdr_changed'][i % 3],
+          to_value: [String(30000 + i * 400), null, 'Gabriela Matos'][i % 3],
+          author_name: AUTORES[i % 3],
+          created_at: diasAtras(i * 0.7),
+        }
+  ),
 };
 
 const LINHA = {
@@ -321,6 +485,9 @@ const LINHA = {
       benefit_type_name: 'BPC/LOAS',
       value: 9000,
       lost_reason: 'Renda acima do limite',
+      dcb_em: anosAtras(5.6),
+      benefit_monthly_value: 1412,
+      prescription: { months_since_dcb: 67, lost_installments: 7 },
     },
     {
       id: 5,
@@ -403,6 +570,7 @@ const API = {
   'leads/7/dossie': DOSSIE,
   'leads/8/dossie': DOSSIE_GANHO,
   'leads/10/dossie': DOSSIE_NOVO,
+  'leads/11/dossie': DOSSIE_HISTORICO,
   'contacts/9/linha_da_vida': LINHA,
   'contacts/13/linha_da_vida': LINHA_VAZIA,
 };
@@ -448,6 +616,18 @@ const ComRota = {
     </Variant>
     <Variant title="Dossie novo">
       <ComRota :params="{ leadId: 10 }"><Dossie /></ComRota>
+    </Variant>
+    <Variant title="Dossie historico">
+      <ComRota :params="{ leadId: 11 }"><Dossie /></ComRota>
+    </Variant>
+    <Variant title="Texto de passagem">
+      <div class="min-h-screen p-8 bg-n-background">
+        <pre
+          :class="CARTAO"
+          class="max-w-3xl mx-auto !p-6 whitespace-pre-wrap font-mono text-[12.5px] leading-relaxed text-n-slate-12"
+          >{{ TEXTO_PASSAGEM }}</pre
+        >
+      </div>
     </Variant>
     <Variant title="Linha da Vida">
       <ComRota :params="{ contactId: 9 }"><LinhaDaVida /></ComRota>
