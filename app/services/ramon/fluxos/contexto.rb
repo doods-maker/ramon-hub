@@ -14,7 +14,7 @@ class Ramon::Fluxos::Contexto
   def ensaio? = execucao.ensaio
 
   def dados
-    @dados ||= dados_lead.merge(dados_conversa).merge(
+    @dados ||= dados_lead.merge(dados_funil).merge(dados_conversa).merge(
       'texto' => execucao.contexto.dig('gatilho', 'texto')
     ).merge(execucao.contexto['vars'] || {})
   end
@@ -32,11 +32,16 @@ class Ramon::Fluxos::Contexto
     nome = contato&.name.presence || lead&.name
     {
       'nome' => nome.to_s.split.first, 'nome_completo' => nome, 'telefone' => contato&.phone_number,
+      'responsavel' => responsavel&.name, 'responsavel_id' => responsavel&.id
+    }
+  end
+
+  def dados_funil
+    {
       'etapa' => lead&.lead_stage&.name, 'etapa_id' => lead&.lead_stage_id,
       'tese' => lead&.thesis&.name, 'tese_id' => lead&.thesis_id,
       'origem' => lead&.source, 'canal' => lead&.channel, 'valor' => lead&.value&.to_f,
-      'prioridade' => lead&.lead_priority&.name,
-      'responsavel' => responsavel&.name, 'responsavel_id' => responsavel&.id
+      'prioridade' => lead&.lead_priority&.name
     }
   end
 

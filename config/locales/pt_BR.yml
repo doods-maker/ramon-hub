@@ -233,6 +233,8 @@ pt_BR:
       ramon_meeting_cancelled: 'Reunião com %{name} cancelada (%{quando})'
       ramon_sla_breach: 'Lead sem 1ª resposta há %{minutos} min: %{name}'
       ramon_contract_status: 'Contrato de %{name} %{label} no ZapSign'
+      ramon_fluxo_aviso: 'Automação: %{label} (%{name})'
+      ramon_fluxo_falhou: 'Automação "%{label}" falhou para %{name}'
     attachment: 'Anexo'
     no_content: 'Sem conteúdo'
   conversations:

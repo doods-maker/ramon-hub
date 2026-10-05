@@ -14,7 +14,7 @@ module Ramon::Fluxos::Condicao
     caso ? caso['chave'] : 'outro'
   end
 
-  def teste(condicao, dados) # rubocop:disable Metrics/CyclomaticComplexity
+  def teste(condicao, dados) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/AbcSize
     atual = dados[condicao['campo']]
     esperado = condicao['valor']
     case condicao['operador']
