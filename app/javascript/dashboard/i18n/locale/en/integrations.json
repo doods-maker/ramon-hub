@@ -537,23 +537,23 @@
         "HEADER": "Settings",
         "BASIC_SETTINGS": {
           "TITLE": "Basic settings",
-          "DESCRIPTION": "Customize what the assistant says when ending a conversation or transferring to a human."
+          "DESCRIPTION": "Name, description and what the assistant can use in its replies."
         },
         "SYSTEM_SETTINGS": {
           "TITLE": "System settings",
-          "DESCRIPTION": "Customize what the assistant says when ending a conversation or transferring to a human."
+          "DESCRIPTION": "General instructions, handoff and resolution messages and reply temperature."
         },
         "CONTROL_ITEMS": {
-          "TITLE": "The Fun Stuff",
-          "DESCRIPTION": "Add more control to the assistant. (a bit more visual like a story : Query guardrail → scenarios → output) Nudges user to actually utilise these.",
+          "TITLE": "Assistant rules",
+          "DESCRIPTION": "What the assistant must never do (Guardrails) and how it should write (Response guidelines). Applies to every reply.",
           "OPTIONS": {
             "GUARDRAILS": {
               "TITLE": "Guardrails",
-              "DESCRIPTION": "Keeps things on track—only the kinds of questions you want your assistant to answer, nothing off-limits or off-topic."
+              "DESCRIPTION": "What the assistant must never do or say — for example, promise an outcome or an INSS deadline."
             },
             "RESPONSE_GUIDELINES": {
               "TITLE": "Response guidelines",
-              "DESCRIPTION": "The vibe and structure of your assistant’s replies—clear and friendly? Short and snappy? Detailed and formal?"
+              "DESCRIPTION": "How the assistant writes: tone, message length and what to say on each topic."
             }
           }
         },
@@ -574,7 +574,7 @@
       },
       "GUARDRAILS": {
         "TITLE": "Guardrails",
-        "DESCRIPTION": "Keeps things on track—only the kinds of questions you want your assistant to answer, nothing off-limits or off-topic.",
+        "DESCRIPTION": "What the assistant must never do or say — for example, promise an outcome or an INSS deadline.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
           "SELECT_ALL": "Select all ({count})",
@@ -619,7 +619,7 @@
       },
       "RESPONSE_GUIDELINES": {
         "TITLE": "Response Guidelines",
-        "DESCRIPTION": "The vibe and structure of your assistant’s replies—clear and friendly? Short and snappy? Detailed and formal?",
+        "DESCRIPTION": "How the assistant writes: tone, message length and what to say on each topic.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selected | {count} items selected",
           "SELECT_ALL": "Select all ({count})",

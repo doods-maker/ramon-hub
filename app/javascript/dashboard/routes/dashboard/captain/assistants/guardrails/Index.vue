@@ -48,21 +48,22 @@ const displayGuardrails = computed(() =>
   guardrailsContent.value.map((c, idx) => ({ id: idx, content: c }))
 );
 
+// Exemplos da banca (só entram no assistente se alguém clicar "Adicionar").
 const guardrailsExample = [
   {
     id: 1,
     content:
-      'Block queries that share or request sensitive personal information (e.g. phone numbers, passwords).',
+      'Nunca prometer resultado nem prazo do INSS ou da Justiça — nem "o caso está ganho", nem "sai em tantos dias".',
   },
   {
     id: 2,
     content:
-      'Reject queries that include offensive, discriminatory, or threatening language.',
+      'Seguir o Provimento 205/2021 da OAB: sem captação de cliente, sem comparar com outros escritórios e sem promoção de preço.',
   },
   {
     id: 3,
     content:
-      'Deflect when the assistant is asked for legal or medical diagnosis or treatment.',
+      'Conteúdo jurídico, valores e prazos só saem como rascunho para a equipe revisar; no modo piloto limitado, só logística (horário, endereço, lista de documentos) sai sozinha.',
   },
 ];
 
