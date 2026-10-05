@@ -668,7 +668,16 @@
       "DELETE": "Apagar",
       "DELETE_CONFIRM": "Apagar esta reunião e o áudio? Não dá pra desfazer.",
       "RECORDED_BY": "Gravada por {name}",
-      "BACK": "Voltar"
+      "BACK": "Voltar",
+      "SEARCH_PLACEHOLDER": "Buscar por título ou nome do lead",
+      "SEARCH_EMPTY": "Nenhuma reunião encontrada.",
+      "LINK_LEAD": "Vincular a um lead",
+      "LINK_CHANGE": "Trocar lead",
+      "LINK_TITLE": "Vincular a um lead",
+      "LINK_HINT": "Busque a pessoa e escolha o caso dela.",
+      "LINK_SEARCH": "Nome ou telefone",
+      "LINK_NO_CASE": "{name} não tem caso no funil.",
+      "LINK_ERROR": "Não foi possível vincular — tente de novo"
     },
     "PORTAL_CLIENTES": {
       "ACCESS_DAYS": "{n} dias com acesso",

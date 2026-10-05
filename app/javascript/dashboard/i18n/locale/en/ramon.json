@@ -668,7 +668,16 @@
       "DELETE": "Delete",
       "DELETE_CONFIRM": "Delete this meeting and its audio? This can't be undone.",
       "RECORDED_BY": "Recorded by {name}",
-      "BACK": "Back"
+      "BACK": "Back",
+      "SEARCH_PLACEHOLDER": "Search by title or lead name",
+      "SEARCH_EMPTY": "No meeting found.",
+      "LINK_LEAD": "Link to a lead",
+      "LINK_CHANGE": "Change lead",
+      "LINK_TITLE": "Link to a lead",
+      "LINK_HINT": "Find the person and pick their case.",
+      "LINK_SEARCH": "Name or phone",
+      "LINK_NO_CASE": "{name} has no case in the funnel.",
+      "LINK_ERROR": "Could not link, try again"
     },
     "PORTAL_CLIENTES": {
       "ACCESS_DAYS": "{n} days with access",

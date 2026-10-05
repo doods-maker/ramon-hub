@@ -7,7 +7,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import ReuniaoRecorder from '../components/reunioes/ReuniaoRecorder.vue';
 import ReuniaoDetalhe from '../components/reunioes/ReuniaoDetalhe.vue';
-import { CARTAO, CHIP, LINHA, TOM } from '../helpers/ui';
+import { CAMPO, CARTAO, CHIP, LINHA, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonReunioes' });
 
@@ -21,11 +21,14 @@ const hasError = ref(false);
 
 const reuniaoId = computed(() => route.params.reuniaoId);
 
+// Busca no servidor (título ou nome do lead), com respiro de 300ms.
+const busca = ref('');
+let buscaTimer = null;
 const carregar = async () => {
   isLoading.value = true;
   hasError.value = false;
   try {
-    const { data } = await ReunioesAPI.get();
+    const { data } = await ReunioesAPI.buscar(busca.value.trim());
     reunioes.value = data.payload;
   } catch {
     hasError.value = true;
@@ -61,6 +64,10 @@ const formatoDuracao = total => {
 };
 
 onMounted(carregar);
+watch(busca, () => {
+  clearTimeout(buscaTimer);
+  buscaTimer = setTimeout(carregar, 300);
+});
 
 // O router reusa a instância entre lista e detalhe (mesmo componente); sem
 // isso, voltar do detalhe mostra a lista desatualizada (padrão do Calculos.vue).
@@ -79,8 +86,16 @@ watch(reuniaoId, id => {
           :lead-id="route.query.leadId"
           @created="onCreated"
         />
+        <input
+          v-model="busca"
+          type="search"
+          data-testid="reunioes-busca"
+          :class="CAMPO"
+          class="!mb-3"
+          :placeholder="t('RAMON.REUNIOES.SEARCH_PLACEHOLDER')"
+        />
         <div
-          v-if="isLoading"
+          v-if="isLoading && !reunioes.length"
           class="flex flex-col gap-3 animate-pulse"
           data-testid="reunioes-skeleton"
         >
@@ -101,7 +116,11 @@ watch(reuniaoId, id => {
           />
         </div>
         <p v-else-if="!reunioes.length" class="text-sm text-n-slate-10">
-          {{ t('RAMON.REUNIOES.EMPTY') }}
+          {{
+            busca.trim()
+              ? t('RAMON.REUNIOES.SEARCH_EMPTY')
+              : t('RAMON.REUNIOES.EMPTY')
+          }}
         </p>
         <ul
           v-else
@@ -117,12 +136,21 @@ watch(reuniaoId, id => {
               type="button"
               :class="LINHA"
               class="flex items-center gap-4 !px-3 !py-2.5"
+              data-testid="reunioes-item"
               @click="abrir(reuniao.id)"
             >
-              <span
-                class="flex-1 min-w-0 text-sm font-medium truncate text-n-slate-12"
-              >
-                {{ reuniao.titulo }}
+              <span class="flex flex-col flex-1 min-w-0">
+                <span class="text-sm font-medium truncate text-n-slate-12">
+                  {{ reuniao.titulo }}
+                </span>
+                <span
+                  v-if="reuniao.lead_name"
+                  class="flex items-center gap-1 text-xs truncate text-n-slate-10"
+                  data-testid="reunioes-item-lead"
+                >
+                  <span class="i-lucide-user size-3 shrink-0" />
+                  {{ reuniao.lead_name }}
+                </span>
               </span>
               <span class="font-mono text-xs tabular-nums text-n-slate-10">
                 {{ formatoDuracao(reuniao.duracao_segundos) }}

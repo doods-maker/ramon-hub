@@ -5,12 +5,23 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
   LIMIT = 100
 
   before_action :current_account
-  before_action :fetch_reuniao, only: [:show, :destroy, :reprocessar]
+  before_action :fetch_reuniao, only: [:show, :update, :destroy, :reprocessar]
   before_action :check_authorization
 
+  # q: busca no servidor por título ou nome do lead (alcança além das 100
+  # mais recentes que a lista mostra sem busca).
   def index
-    reunioes = Current.account.reunioes.includes(:user, :lead).recentes.limit(LIMIT)
-    render json: { payload: reunioes.map { |reuniao| linha(reuniao) } }
+    reunioes = Current.account.reunioes.includes(:user, :lead).recentes
+    reunioes = buscar(reunioes, params[:q]) if params[:q].present?
+    render json: { payload: reunioes.limit(LIMIT).map { |reuniao| linha(reuniao) } }
+  end
+
+  # Vincular a um lead (gravada pela barra lateral nasce sem lead); lead_id
+  # vazio desvincula.
+  def update
+    lead = params[:lead_id].present? ? Current.account.leads.find(params[:lead_id]) : nil
+    @reuniao.update!(lead: lead)
+    render json: detalhe(@reuniao)
   end
 
   def show
@@ -47,6 +58,11 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
   end
 
   private
+
+  def buscar(reunioes, termo)
+    padrao = "%#{ActiveRecord::Base.sanitize_sql_like(termo.to_s.strip)}%"
+    reunioes.left_joins(:lead).where('ramon_reunioes.titulo ILIKE :q OR leads.name ILIKE :q', q: padrao)
+  end
 
   def fetch_reuniao
     @reuniao = Current.account.reunioes.find(params[:id])

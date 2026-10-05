@@ -4,7 +4,12 @@ import ReuniaoDetalhe from '../../components/reunioes/ReuniaoDetalhe.vue';
 import ReunioesAPI from 'dashboard/api/reunioes';
 
 vi.mock('dashboard/api/reunioes', () => ({
-  default: { show: vi.fn(), reprocessar: vi.fn(), delete: vi.fn() },
+  default: {
+    show: vi.fn(),
+    reprocessar: vi.fn(),
+    delete: vi.fn(),
+    vincularLead: vi.fn(),
+  },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
@@ -84,5 +89,52 @@ describe('ReuniaoDetalhe', () => {
 
     expect(ReunioesAPI.delete).toHaveBeenCalledWith(1);
     expect(wrapper.emitted('deleted')).toBeTruthy();
+  });
+
+  describe('lead da reunião', () => {
+    const montar = () =>
+      mount(ReuniaoDetalhe, {
+        props: { reuniaoId: 1 },
+        global: {
+          mocks: { $t: k => k },
+          stubs: {
+            RouterLink: { template: '<a><slot /></a>' },
+            ReuniaoVincularLead: true,
+            teleport: true,
+          },
+        },
+      });
+
+    it('mostra o lead vinculado', async () => {
+      ReunioesAPI.show.mockResolvedValue({
+        data: detalhe({ lead_id: 8, lead_name: 'Maria Souza' }),
+      });
+      const wrapper = montar();
+      await flushPromises();
+      expect(
+        wrapper.find('[data-testid="reuniao-lead-link"]').text()
+      ).toContain('Maria Souza');
+    });
+
+    it('Vincular a um lead grava o caso escolhido', async () => {
+      ReunioesAPI.show.mockResolvedValue({ data: detalhe() });
+      ReunioesAPI.vincularLead.mockResolvedValue({
+        data: detalhe({ lead_id: 9, lead_name: 'Rosângela' }),
+      });
+      const wrapper = montar();
+      await flushPromises();
+      expect(wrapper.find('[data-testid="reuniao-lead-link"]').exists()).toBe(
+        false
+      );
+      await wrapper.find('[data-testid="reuniao-vincular"]').trigger('click');
+      wrapper
+        .findComponent({ name: 'ReuniaoVincularLead' })
+        .vm.$emit('escolhido', { id: 9 });
+      await flushPromises();
+      expect(ReunioesAPI.vincularLead).toHaveBeenCalledWith(1, 9);
+      expect(
+        wrapper.find('[data-testid="reuniao-lead-link"]').text()
+      ).toContain('Rosângela');
+    });
   });
 });

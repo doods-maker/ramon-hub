@@ -19,6 +19,11 @@ RSpec.describe Reuniao do
       reuniao = create(:reuniao, titulo: nil)
       expect(reuniao.titulo_exibicao).to include(reuniao.created_at.strftime('%d/%m'))
     end
+
+    it 'usa a hora de Brasília no título automático' do
+      reuniao = build(:reuniao, titulo: nil, created_at: Time.zone.parse('2026-10-05T13:30:00Z'))
+      expect(reuniao.titulo_exibicao).to eq('Reunião de 05/10 10:30')
+    end
   end
 
   it 'aceita reuniao sem lead (avulsa segue valendo)' do

@@ -6,7 +6,8 @@ import ReunioesAPI from 'dashboard/api/reunioes';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ConfirmModal from '../ConfirmModal.vue';
-import { AVISO, CARTAO, TITULO, TOM } from '../../helpers/ui';
+import ReuniaoVincularLead from './ReuniaoVincularLead.vue';
+import { AVISO, CARTAO, CHIP, TITULO, TOM } from '../../helpers/ui';
 
 const props = defineProps({
   reuniaoId: { type: [String, Number], required: true },
@@ -23,6 +24,17 @@ const reuniao = ref(null);
 const hasError = ref(false);
 const mostrarTranscricao = ref(false);
 const showDeleteConfirm = ref(false);
+const vincularAberto = ref(false);
+
+const vincular = async lead => {
+  try {
+    const { data } = await ReunioesAPI.vincularLead(props.reuniaoId, lead.id);
+    reuniao.value = data;
+    vincularAberto.value = false;
+  } catch {
+    useAlert(t('RAMON.REUNIOES.LINK_ERROR'));
+  }
+};
 let poll = null;
 
 // ponytail: polling de 10s enquanto processa — sem canal ActionCable novo.
@@ -77,6 +89,34 @@ onBeforeUnmount(() => clearInterval(poll));
         <p v-if="reuniao.user_name" class="mt-0.5 text-sm text-n-slate-11">
           {{ t('RAMON.REUNIOES.RECORDED_BY', { name: reuniao.user_name }) }}
         </p>
+        <div class="flex flex-wrap items-center gap-2 mt-2">
+          <router-link
+            v-if="reuniao.lead_id"
+            data-testid="reuniao-lead-link"
+            :to="{
+              name: 'ramon_lead_dossie',
+              params: { leadId: reuniao.lead_id },
+            }"
+            :class="[CHIP, TOM.blue]"
+            class="hover:underline"
+          >
+            <span class="i-lucide-user size-3" />
+            {{ reuniao.lead_name }}
+          </router-link>
+          <Button
+            data-testid="reuniao-vincular"
+            xs
+            :variant="reuniao.lead_id ? 'link' : 'faded'"
+            :color="reuniao.lead_id ? 'slate' : 'blue'"
+            icon="i-lucide-link"
+            :label="
+              reuniao.lead_id
+                ? t('RAMON.REUNIOES.LINK_CHANGE')
+                : t('RAMON.REUNIOES.LINK_LEAD')
+            "
+            @click="vincularAberto = true"
+          />
+        </div>
       </div>
       <Button
         sm
@@ -164,6 +204,11 @@ onBeforeUnmount(() => clearInterval(poll));
       </p>
     </section>
 
+    <ReuniaoVincularLead
+      v-if="vincularAberto"
+      @cancel="vincularAberto = false"
+      @escolhido="vincular"
+    />
     <ConfirmModal
       v-if="showDeleteConfirm"
       :title="t('RAMON.REUNIOES.DELETE')"
