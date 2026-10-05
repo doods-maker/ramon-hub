@@ -11,7 +11,8 @@ class Ramon::PortalAvisosJob < ApplicationJob
     return unless ENV['PORTAL_AVISOS'] == 'on'
 
     linhas = []
-    PortalCliente.where.not(convidado_em: nil).find_each { |cliente| linhas.concat(avisar(cliente)) }
+    # Suspenso não recebe aviso (nem entra no resumo): o acesso dele está parado.
+    PortalCliente.where.not(convidado_em: nil).where(suspenso_em: nil).find_each { |cliente| linhas.concat(avisar(cliente)) }
     return if linhas.empty?
 
     # ponytail: se o resumo falhar, as novidades já ficaram avisadas — o selo "Novo" segue no painel.

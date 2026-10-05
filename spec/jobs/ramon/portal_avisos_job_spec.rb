@@ -15,6 +15,14 @@ RSpec.describe Ramon::PortalAvisosJob do
 
   before { allow(Ramon::PortalMailer).to receive(:with).and_return(mailer) }
 
+  it 'cliente suspenso não recebe aviso nem entra no resumo' do
+    cliente.suspender!
+    with_modified_env PORTAL_AVISOS: 'on' do
+      described_class.perform_now
+    end
+    expect(Ramon::PortalMailer).not_to have_received(:with)
+  end
+
   it 'desligado (sem PORTAL_AVISOS=on) não envia nada' do
     described_class.perform_now
     expect(Ramon::PortalMailer).not_to have_received(:with)

@@ -27,11 +27,11 @@ module Ramon::PortalClienteJson
   # cliente_ve = o título que o Painel do Cliente mostra (mesma tradução do portal,
   # Ramon::PortalTexto). Etapa interna: o cliente segue vendo a anterior, sem aviso.
   # documentos = cada item pedido com enviado/enviado_em (mesma regra do portal).
-  def processo(cliente, proc)
-    proc.slice('id', 'numero', 'tipo', 'etapa', 'fase').merge(
-      'cliente_ve' => Ramon::PortalTexto.etapa(PortalCliente.etapa_cliente(proc))['titulo'],
-      'etapa_interna' => Ramon::PortalTexto.interna?(proc['etapa']),
-      'documentos' => cliente.pendentes_com_status(proc).map { |d| d.slice('item', 'enviado', 'enviado_em') }
+  def processo(cliente, dados)
+    dados.slice('id', 'numero', 'tipo', 'etapa', 'fase').merge(
+      'cliente_ve' => Ramon::PortalTexto.etapa(PortalCliente.etapa_cliente(dados))['titulo'],
+      'etapa_interna' => Ramon::PortalTexto.interna?(dados['etapa']),
+      'documentos' => cliente.pendentes_com_status(dados).map { |d| d.slice('item', 'enviado', 'enviado_em') }
     )
   end
 
