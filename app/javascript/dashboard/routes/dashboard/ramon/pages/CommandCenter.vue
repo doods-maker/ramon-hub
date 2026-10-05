@@ -15,6 +15,16 @@ import FunnelConversion from '../components/command/FunnelConversion.vue';
 import TeamWeek from '../components/command/TeamWeek.vue';
 import LossesByThesis from '../components/command/LossesByThesis.vue';
 import Sparkline from '../components/command/Sparkline.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  CARTAO,
+  CARTAO_STATUS,
+  CHIP,
+  FILETE,
+  LINHA,
+  TITULO,
+  TOM,
+} from '../helpers/ui';
 
 const { t } = useI18n();
 const store = useStore();
@@ -121,7 +131,7 @@ const kpis = computed(() => [
     key: 'forecast',
     value: brlCompact(data.value?.forecast_total),
     label: t('RAMON.COMMAND.KPI.FORECAST'),
-    class: 'text-n-iris-11',
+    class: 'text-n-blue-11',
   },
 ]);
 
@@ -240,7 +250,7 @@ const heroChips = computed(() => {
   if (p && p.lostInstallments > 0 && p.monthlyValue) {
     chips.push({
       key: 'bleeding',
-      class: 'bg-n-ruby-9 text-white font-medium',
+      class: TOM.ruby,
       label: t('RAMON.COMMAND.QUEUE.CHIP_BLEEDING', {
         value: money(p.monthlyValue),
       }),
@@ -249,13 +259,13 @@ const heroChips = computed(() => {
   if (item.taskTitle) {
     chips.push({
       key: 'overdue',
-      class: 'bg-n-alpha-2 text-n-slate-11',
+      class: TOM.amber,
       label: t('RAMON.COMMAND.QUEUE.CHIP_OVERDUE', { title: item.taskTitle }),
     });
   } else if (item.daysInStage != null) {
     chips.push({
       key: 'stalled',
-      class: 'bg-n-alpha-2 text-n-slate-11',
+      class: TOM.slate,
       label: t('RAMON.COMMAND.QUEUE.CHIP_STALLED', {
         days: item.daysInStage,
       }),
@@ -287,13 +297,16 @@ const rowMotive = item =>
         stage: item.stageName || '',
       });
 
-// Dot de severidade: prescrevendo/vencida = ruby, parado = âmbar.
-const severityDotClass = item => {
+// Severidade: prescrevendo/vencida = ruby, parado = âmbar. Pinta o ponto
+// da lista e o filete do cartão da vez.
+const severity = item => {
   const p = bleeding(item);
   if ((p && p.lostInstallments > 0 && p.monthlyValue) || item.taskId)
-    return 'bg-n-ruby-9';
-  return 'bg-n-amber-9';
+    return 'ruby';
+  return 'amber';
 };
+const PONTO = { ruby: 'bg-n-ruby-9', amber: 'bg-n-amber-9' };
+const severityDotClass = item => PONTO[severity(item)];
 
 // ---- Ações ----------------------------------------------------------------
 // Clique num lead → abre o Funil e seleciona o lead (drawer).
@@ -374,29 +387,27 @@ useKeyboardEvents({
     <!-- Header: saudação + data + meta do dia + CTA -->
     <header class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <p class="text-[11px] tracking-[.2em] uppercase text-n-slate-10">
-          {{ dateLine }}
-        </p>
-        <h1 class="text-[32px] font-semibold leading-tight text-n-slate-12">
+        <p :class="TITULO">{{ dateLine }}</p>
+        <h1
+          class="mt-1 text-[28px] font-semibold leading-tight text-n-slate-12"
+        >
           {{ t(greetingKey, { name: firstName }) }}
         </h1>
       </div>
-      <div class="flex flex-wrap items-center gap-5">
+      <div class="flex flex-wrap items-center gap-4">
         <div data-testid="daily-goal" class="text-right">
-          <p class="text-[11px] uppercase tracking-[.08em] text-n-slate-10">
-            {{ t('RAMON.COMMAND.GOAL_LABEL') }}
-          </p>
-          <div class="flex items-center gap-2 mt-1">
+          <p :class="TITULO">{{ t('RAMON.COMMAND.GOAL_LABEL') }}</p>
+          <div class="flex items-center gap-2 mt-1.5">
             <span
               class="block w-40 h-1.5 overflow-hidden rounded-full bg-n-alpha-2"
             >
               <span
-                class="block h-full rounded-full bg-n-iris-9 transition-all duration-200"
+                class="block h-full rounded-full bg-n-blue-9 transition-all duration-200"
                 :style="{ width: `${goalPct}%` }"
               />
             </span>
             <span
-              class="text-[13px] font-semibold tabular-nums text-n-slate-12"
+              class="font-mono text-[13px] font-medium tabular-nums text-n-slate-12"
             >
               {{
                 t('RAMON.COMMAND.GOAL_PROGRESS', {
@@ -407,25 +418,22 @@ useKeyboardEvents({
             </span>
           </div>
         </div>
-        <button
-          type="button"
+        <Button
           data-testid="reload"
           :title="t('RAMON.COMMAND.RELOAD')"
-          class="flex items-center justify-center rounded-full size-8 text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12 disabled:opacity-50 disabled:pointer-events-none"
+          icon="i-lucide-refresh-cw"
+          sm
+          ghost
+          slate
           :disabled="isFetching"
           @click="reload"
-        >
-          <span class="i-lucide-refresh-cw size-4" />
-        </button>
-        <button
-          type="button"
+        />
+        <Button
           data-testid="start-day"
-          class="inline-flex items-center h-[38px] gap-2 px-[18px] text-sm font-semibold rounded-[10px] bg-n-iris-9 text-white hover:bg-n-iris-10 shadow-md"
+          icon="i-lucide-play"
+          :label="t('RAMON.COMMAND.START_DAY')"
           @click="startDay"
-        >
-          <span class="i-lucide-play size-4" />
-          {{ t('RAMON.COMMAND.START_DAY') }}
-        </button>
+        />
       </div>
     </header>
 
@@ -434,16 +442,12 @@ useKeyboardEvents({
 
     <div v-if="isLoading" class="flex flex-col gap-5 animate-pulse">
       <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5">
-        <div v-for="n in 6" :key="n" class="h-16 rounded-[10px] bg-n-solid-2" />
+        <div v-for="n in 6" :key="n" class="h-16 rounded-xl bg-n-alpha-2" />
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5">
-        <div class="h-64 rounded-[14px] bg-n-solid-2" />
+        <div class="h-64 rounded-xl bg-n-alpha-2" />
         <div class="flex flex-col gap-3">
-          <div
-            v-for="n in 2"
-            :key="n"
-            class="h-32 rounded-[14px] bg-n-solid-2"
-          />
+          <div v-for="n in 2" :key="n" class="h-32 rounded-xl bg-n-alpha-2" />
         </div>
       </div>
     </div>
@@ -451,14 +455,14 @@ useKeyboardEvents({
     <!-- Erro de carga: mostra retry em vez de fingir "tudo em dia" -->
     <div v-else-if="hasError" data-testid="command-error" class="text-sm">
       <p class="text-n-ruby-11">{{ t('RAMON.COMMAND.LOAD_ERROR') }}</p>
-      <button
-        type="button"
+      <Button
         data-testid="command-retry"
-        class="mt-2 text-xs text-n-iris-11 hover:underline"
+        link
+        xs
+        class="mt-2"
+        :label="t('RAMON.LEAD_PANEL.RETRY')"
         @click="reload"
-      >
-        {{ t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
 
     <div v-else class="flex flex-col gap-5">
@@ -472,12 +476,15 @@ useKeyboardEvents({
             v-for="kpi in kpis"
             :key="kpi.key"
             :data-testid="`kpi-${kpi.key}`"
-            class="p-3 rounded-[10px] border border-n-weak bg-n-solid-2"
+            :class="CARTAO"
           >
-            <p class="text-xl font-semibold tabular-nums" :class="kpi.class">
+            <p
+              class="font-mono text-xl font-medium tabular-nums"
+              :class="kpi.class"
+            >
               {{ kpi.value }}
             </p>
-            <p class="mt-0.5 text-[10.5px] text-n-slate-10">{{ kpi.label }}</p>
+            <p class="mt-0.5 text-[11px] text-n-slate-10">{{ kpi.label }}</p>
           </div>
         </div>
         <!-- SLA de 1ª resposta: sub-linha discreta (não cabe no grid de 6) -->
@@ -498,12 +505,8 @@ useKeyboardEvents({
         <!-- Sua fila agora -->
         <div class="flex flex-col gap-2.5 min-w-0">
           <div class="flex items-baseline justify-between">
-            <h2
-              class="text-xs font-semibold tracking-[.12em] uppercase text-n-slate-10"
-            >
-              {{ t('RAMON.COMMAND.QUEUE.TITLE') }}
-            </h2>
-            <span class="text-[11px] text-n-slate-9">
+            <h2 :class="TITULO">{{ t('RAMON.COMMAND.QUEUE.TITLE') }}</h2>
+            <span class="text-[11px] text-n-slate-10">
               {{ t('RAMON.COMMAND.QUEUE.SORTED_BY') }}
             </span>
           </div>
@@ -511,20 +514,18 @@ useKeyboardEvents({
           <div
             v-if="current"
             data-testid="queue-hero"
-            class="p-5 rounded-[14px] border border-n-weak bg-n-solid-1 shadow-sm"
+            :class="[CARTAO_STATUS, FILETE[severity(current)]]"
+            class="!p-5"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2.5">
                   <p
-                    class="text-[26px] font-semibold leading-tight text-n-slate-12"
+                    class="text-2xl font-semibold leading-tight text-n-slate-12"
                   >
                     {{ current.leadName }}
                   </p>
-                  <span
-                    v-if="current.stageName"
-                    class="px-2 py-0.5 text-[10.5px] rounded-full bg-n-iris-3 text-n-iris-11 border border-n-weak"
-                  >
+                  <span v-if="current.stageName" :class="[CHIP, TOM.slate]">
                     {{ stageAge(current) }}
                   </span>
                 </div>
@@ -535,15 +536,19 @@ useKeyboardEvents({
                   <span
                     v-for="chip in heroChips"
                     :key="chip.key"
-                    class="px-2.5 py-0.5 text-[11px] rounded-full"
-                    :class="chip.class"
+                    :class="[CHIP, chip.class]"
                   >
                     {{ chip.label }}
                   </span>
                 </div>
               </div>
               <span
-                class="flex-none text-[15px] font-semibold tabular-nums text-n-iris-11"
+                class="flex-none font-mono text-[15px] font-medium tabular-nums"
+                :class="
+                  current.benefitMonthlyValue
+                    ? 'text-n-blue-11'
+                    : 'text-n-slate-10'
+                "
               >
                 {{ itemValue(current) }}
               </span>
@@ -551,33 +556,32 @@ useKeyboardEvents({
             <div
               class="flex flex-wrap items-center gap-2 mt-4 pt-3.5 border-t border-n-weak"
             >
-              <button
-                type="button"
+              <Button
                 data-testid="queue-open-conversation"
-                class="inline-flex items-center h-[34px] gap-1.5 px-3.5 text-[13px] font-semibold rounded-[9px] bg-n-iris-9 text-white hover:bg-n-iris-10"
+                sm
+                icon="i-lucide-message-square"
+                :label="t('RAMON.COMMAND.QUEUE.OPEN_CONVERSATION')"
                 @click="openConversation(current)"
-              >
-                <span class="i-lucide-message-square size-4" />
-                {{ t('RAMON.COMMAND.QUEUE.OPEN_CONVERSATION') }}
-              </button>
-              <button
-                type="button"
+              />
+              <Button
                 data-testid="queue-ai-draft"
-                class="inline-flex items-center h-[34px] gap-1.5 px-3.5 text-[13px] rounded-[9px] border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2"
+                sm
+                faded
+                slate
+                icon="i-lucide-sparkles"
+                :label="t('RAMON.COMMAND.QUEUE.AI_DRAFT')"
                 @click="openConversation(current)"
-              >
-                {{ t('RAMON.COMMAND.QUEUE.AI_DRAFT') }}
-              </button>
-              <button
-                type="button"
+              />
+              <Button
                 data-testid="queue-done"
-                class="inline-flex items-center h-[34px] gap-1.5 px-3.5 text-[13px] rounded-[9px] border border-n-weak text-n-slate-11 hover:text-n-slate-12 hover:bg-n-alpha-2 disabled:opacity-50"
+                sm
+                faded
+                slate
+                :label="t('RAMON.COMMAND.QUEUE.DONE')"
                 :disabled="isActing"
                 @click="markDone"
-              >
-                {{ t('RAMON.COMMAND.QUEUE.DONE') }}
-              </button>
-              <span class="ml-auto text-[11px] text-n-slate-9">
+              />
+              <span class="ml-auto text-[11px] text-n-slate-10">
                 {{ t('RAMON.COMMAND.QUEUE.HINT') }}
               </span>
             </div>
@@ -587,10 +591,12 @@ useKeyboardEvents({
           <div
             v-else
             data-testid="queue-empty"
-            class="py-8 text-center rounded-[14px] border border-n-weak bg-n-solid-2"
+            :class="CARTAO"
+            class="py-8 text-center"
           >
             <span
-              class="inline-flex items-center justify-center mb-2 rounded-full size-10 bg-n-teal-3 text-n-teal-11"
+              class="inline-flex items-center justify-center mb-2 rounded-full size-10"
+              :class="TOM.teal"
             >
               <span class="i-lucide-check-check size-5" />
             </span>
@@ -606,14 +612,16 @@ useKeyboardEvents({
           <div
             v-if="nextItems.length"
             data-testid="queue-next"
-            class="flex flex-col gap-1.5"
+            :class="CARTAO"
+            class="flex flex-col !p-1.5"
           >
             <button
               v-for="(item, index) in nextItems"
               :key="item.leadId"
               type="button"
               data-testid="queue-next-item"
-              class="flex items-center w-full gap-3 px-3.5 py-2.5 text-left rounded-[10px] border border-n-weak bg-n-solid-2 hover:bg-n-alpha-2"
+              :class="LINHA"
+              class="flex items-center gap-3 !px-2.5 !py-2"
               @click="jumpTo(index)"
             >
               <span
@@ -627,9 +635,11 @@ useKeyboardEvents({
                 {{ rowMotive(item) }}
               </span>
               <span
-                class="flex-none ml-auto text-xs tabular-nums"
+                class="flex-none ml-auto font-mono text-xs tabular-nums"
                 :class="
-                  item.benefitMonthlyValue ? 'text-n-iris-11' : 'text-n-slate-9'
+                  item.benefitMonthlyValue
+                    ? 'text-n-blue-11'
+                    : 'text-n-slate-10'
                 "
               >
                 {{ itemValue(item) }}
@@ -639,21 +649,15 @@ useKeyboardEvents({
         </div>
 
         <!-- Coluna direita: agenda, conversão, time -->
-        <div class="flex flex-col gap-3.5 min-w-0">
-          <h2
-            class="text-xs font-semibold tracking-[.12em] uppercase text-n-slate-10"
-          >
-            {{ t('RAMON.COMMAND.AGENDA.TITLE') }}
-          </h2>
+        <div class="flex flex-col gap-2.5 min-w-0">
+          <h2 :class="TITULO">{{ t('RAMON.COMMAND.AGENDA.TITLE') }}</h2>
           <AgendaToday
             :items="agendaToday"
             @select="openLead"
             @view-week="openAgenda"
           />
 
-          <h2
-            class="text-xs font-semibold tracking-[.12em] uppercase text-n-slate-10"
-          >
+          <h2 :class="TITULO" class="mt-2.5">
             {{ t('RAMON.COMMAND.FUNNEL.TITLE') }}
           </h2>
           <FunnelConversion
@@ -662,9 +666,7 @@ useKeyboardEvents({
             @stage-select="openStage"
           />
 
-          <h2
-            class="text-xs font-semibold tracking-[.12em] uppercase text-n-slate-10"
-          >
+          <h2 :class="TITULO" class="mt-2.5">
             {{ t('RAMON.COMMAND.TEAM.TITLE') }}
           </h2>
           <TeamWeek :team="teamWeek" :nps="nps" />
@@ -679,12 +681,10 @@ useKeyboardEvents({
 
       <!-- Histórico compacto -->
       <section v-if="history.length">
-        <h2
-          class="mb-2.5 text-xs font-semibold tracking-[.12em] uppercase text-n-slate-10"
-        >
+        <h2 :class="TITULO" class="mb-2.5">
           {{ t('RAMON.COMMAND.HISTORY.TITLE') }}
         </h2>
-        <div class="p-4 rounded-[14px] border border-n-weak bg-n-solid-2">
+        <div :class="CARTAO">
           <Sparkline
             v-if="historyPoints.length > 1"
             :points="historyPoints"

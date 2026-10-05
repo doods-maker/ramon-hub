@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { AVISO, CARTAO, SELECT, TITULO, TOM } from '../../helpers/ui';
 
 // "Perdas por tese" (mock 3e): barra empilhada de lost_reason por tese,
 // delta vs. trimestre anterior e a linha "Sinal:" gerada aqui no front.
@@ -47,12 +48,13 @@ const deltaClass = th => {
   return pct > 0 ? 'text-n-ruby-11' : 'text-n-teal-11';
 };
 
-// Gradações de ruby por posição (as razões já vêm ordenadas desc do backend).
+// Gradações de ruby translúcido por posição (as razões já vêm ordenadas desc
+// do backend): a principal mais forte, o resto clareando até o neutro.
 const SEGMENT_CLASSES = [
-  'bg-n-ruby-9 text-white font-semibold',
-  'bg-n-ruby-7 text-white',
-  'bg-n-ruby-5 text-n-ruby-11',
-  'bg-n-alpha-2 text-n-slate-11',
+  'bg-n-ruby-9/30 text-n-ruby-12 font-semibold',
+  'bg-n-ruby-9/20 text-n-ruby-11',
+  'bg-n-ruby-9/10 text-n-ruby-11',
+  'bg-n-slate-9/10 text-n-slate-11',
 ];
 const segmentClass = index =>
   SEGMENT_CLASSES[Math.min(index, SEGMENT_CLASSES.length - 1)];
@@ -69,17 +71,16 @@ const signal = th => {
 
 <template>
   <div data-testid="losses-by-thesis">
-    <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-      <h2
-        class="text-xs font-semibold tracking-[.12em] uppercase text-n-slate-10"
-      >
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+      <h2 :class="TITULO">
         {{ t('RAMON.COMMAND.LOSSES.TITLE', { days: losses.window_days }) }}
       </h2>
-      <div class="flex items-center gap-2 text-[11px] text-n-slate-9">
+      <div class="flex items-center gap-2 text-[11px] text-n-slate-10">
         <select
           v-model="selectedId"
           data-testid="losses-thesis-select"
-          class="h-6 px-1 mb-0 text-[11px] bg-transparent border-none rounded text-n-slate-10"
+          :class="SELECT"
+          class="!w-auto !h-7 text-xs"
         >
           <option value="all">{{ t('RAMON.COMMAND.LOSSES.ALL') }}</option>
           <option
@@ -95,9 +96,7 @@ const signal = th => {
         }}</span>
       </div>
     </div>
-    <div
-      class="flex flex-col gap-3.5 p-4 rounded-[14px] border border-n-weak bg-n-solid-2"
-    >
+    <div :class="CARTAO" class="flex flex-col gap-3.5">
       <div
         v-for="th in visible"
         :key="String(th.thesis_id)"
@@ -130,7 +129,8 @@ const signal = th => {
         <p
           v-if="signal(th)"
           data-testid="losses-signal"
-          class="mt-1.5 text-[11px] text-n-iris-11"
+          :class="[AVISO, TOM.amber]"
+          class="mt-1.5 !py-1 text-[11px]"
         >
           {{ signal(th) }}
         </p>
