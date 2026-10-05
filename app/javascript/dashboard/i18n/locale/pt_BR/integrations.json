@@ -1066,7 +1066,8 @@
           "LABEL": "Caixa de Entrada",
           "PLACEHOLDER": "Selecione a caixa de entrada para implantar o assistente.",
           "ERROR": "É obrigatório selecionar uma caixa de entrada."
-        }
+        },
+        "AVISO_RASCUNHO": "Ao conectar, o assistente começa na hora a escrever rascunhos de resposta nas conversas desta caixa. Modo padrão das conversas novas: {modo} — nos modos de piloto, mensagens de logística podem sair sem você enviar. Dá para trocar em cada conversa."
       },
       "EMPTY_STATE": {
         "TITLE": "Nenhuma caixa conectada",

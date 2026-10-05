@@ -1067,7 +1067,8 @@
           "LABEL": "Inbox",
           "PLACEHOLDER": "Choose the inbox to deploy the assistant.",
           "ERROR": "An inbox selection is required."
-        }
+        },
+        "AVISO_RASCUNHO": "Once connected, the assistant immediately starts drafting replies in this inbox's conversations. Default mode for new conversations: {modo} — in the pilot modes, logistics messages can go out without you sending them. You can change it per conversation."
       },
       "EMPTY_STATE": {
         "TITLE": "No connected inboxes",
