@@ -1063,7 +1063,6 @@
       "ULTIMA_TITULO": "Last simulation · {data}",
       "ULTIMA_HINT": "Its parameters are already in the form — click Simulate to recalculate.",
       "ATRASADOS": "Estimated back pay",
-      "PERDA_MENSAL": "Each month without the benefit: ~{value}",
       "HONORARIO": "Estimated fee",
       "HONORARIO_FORMULA": "{percentual}% of back pay + {n} monthly benefits ({tese})",
       "NO_FEE_CONFIG": "The lead's thesis has no fee configured (% and monthly benefits) — set it up in Playbooks.",

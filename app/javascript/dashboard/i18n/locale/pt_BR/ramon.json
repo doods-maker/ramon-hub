@@ -1063,7 +1063,6 @@
       "ULTIMA_TITULO": "Última simulação · {data}",
       "ULTIMA_HINT": "Parâmetros dela já estão no formulário — clique em Simular para recalcular.",
       "ATRASADOS": "Atrasados estimados",
-      "PERDA_MENSAL": "Cada mês sem o benefício: ~{value}",
       "HONORARIO": "Honorário estimado",
       "HONORARIO_FORMULA": "{percentual}% dos atrasados + {n} mensalidades ({tese})",
       "NO_FEE_CONFIG": "A tese do lead está sem honorário configurado (% e nº de mensalidades) — cadastre em Playbooks.",

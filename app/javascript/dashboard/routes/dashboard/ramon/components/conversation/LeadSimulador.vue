@@ -1017,13 +1017,6 @@ if (props.inicial?.tipo === 'honorario' && canSimulate.value)
             {{ `~${money(resultado.mensal)}` }}
           </span>
         </p>
-        <p class="mb-0 text-xs text-n-slate-10" data-testid="sim-perda-mensal">
-          {{
-            $t('RAMON.SIMULADOR.PERDA_MENSAL', {
-              value: money(resultado.perda_mensal),
-            })
-          }}
-        </p>
         <div
           v-if="avisosQualidade.length"
           class="flex flex-col gap-1"

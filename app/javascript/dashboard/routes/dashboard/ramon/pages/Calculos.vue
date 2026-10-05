@@ -368,13 +368,16 @@ const metaDe = item => {
     <template v-if="route.params.leadId">
       <div
         v-if="loadingLead"
-        class="flex flex-col max-w-4xl gap-4 animate-pulse"
+        class="flex flex-col w-full max-w-4xl gap-4 mx-auto animate-pulse"
         data-testid="calculos-skeleton"
       >
         <div class="w-1/3 h-8 rounded-lg bg-n-alpha-2" />
         <div class="h-40 rounded-xl bg-n-alpha-2" />
       </div>
-      <div v-else-if="errorLead" class="flex items-center gap-3">
+      <div
+        v-else-if="errorLead"
+        class="flex items-center w-full max-w-4xl gap-3 mx-auto"
+      >
         <p class="mb-0 text-sm text-n-ruby-11">
           {{ $t('RAMON.CALCULOS.ERROR') }}
         </p>
@@ -386,7 +389,7 @@ const metaDe = item => {
           @click="fetchLead"
         />
       </div>
-      <div v-else-if="lead" class="max-w-4xl">
+      <div v-else-if="lead" class="w-full max-w-4xl mx-auto">
         <RamonPageHeader
           :title="lead.contact_name || lead.name"
           :subtitle="lead.thesis_name || ''"
@@ -413,7 +416,7 @@ const metaDe = item => {
     </template>
 
     <!-- Entrada "Cálculos" do menu: calculadora direto; busca a um clique -->
-    <div v-else class="max-w-4xl">
+    <div v-else class="w-full max-w-4xl mx-auto">
       <RamonPageHeader
         :title="$t('RAMON.CALCULOS.TITLE')"
         :subtitle="
@@ -581,7 +584,7 @@ const metaDe = item => {
         </template>
       </template>
 
-      <div v-else class="max-w-xl">
+      <div v-else class="w-full max-w-xl mx-auto">
         <input
           v-model="query"
           data-testid="pessoa-search"
