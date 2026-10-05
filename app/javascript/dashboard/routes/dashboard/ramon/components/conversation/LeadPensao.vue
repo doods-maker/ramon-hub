@@ -12,6 +12,7 @@ import {
   FILETE,
   ROTULO,
   SELECT,
+  TITULO,
   TOM,
 } from '../../helpers/ui';
 
@@ -129,9 +130,9 @@ const isCessaDict = v => v !== null && typeof v === 'object';
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 p-1" data-testid="lead-pensao">
+  <div class="flex flex-col gap-3" data-testid="lead-pensao">
     <p
-      class="font-medium"
+      class="mb-0 font-medium"
       :class="[AVISO, TOM.amber]"
       data-testid="pensao-aviso-cnis-falecido"
     >
@@ -163,7 +164,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
     </div>
 
     <div class="flex flex-col gap-2">
-      <span class="text-xs font-medium text-n-slate-12">
+      <span :class="TITULO">
         {{ $t('RAMON.SIMULADOR.PENSAO_DEPENDENTES_TITULO') }}
       </span>
       <div
@@ -255,7 +256,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
     />
 
     <div v-if="hasError" data-testid="pensao-error">
-      <p class="text-sm text-n-ruby-11">{{ errorMessage }}</p>
+      <p class="mb-0" :class="[AVISO, TOM.ruby]">{{ errorMessage }}</p>
       <Button
         data-testid="pensao-retry"
         link
@@ -291,7 +292,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
           data-testid="pensao-cenario-unico"
         >
           <p
-            class="text-sm font-medium"
+            class="mb-0 text-sm font-medium"
             :class="cenarioTexto(resultado.qualidade_falecido.cenarios.unico)"
           >
             {{
@@ -306,7 +307,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
               }}</span>
             </template>
           </p>
-          <p class="text-xs text-n-slate-10">
+          <p class="mb-0 text-xs text-n-slate-10">
             {{ resultado.qualidade_falecido.cenarios.unico.fundamento }}
           </p>
         </div>
@@ -326,7 +327,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
               {{ $t('RAMON.SIMULADOR.ELEG_SEM_DESEMPREGO') }}
             </span>
             <p
-              class="text-sm font-medium"
+              class="mb-0 text-sm font-medium"
               :class="
                 cenarioTexto(
                   resultado.qualidade_falecido.cenarios.sem_desemprego
@@ -342,14 +343,14 @@ const isCessaDict = v => v !== null && typeof v === 'object';
                 v-if="resultado.qualidade_falecido.cenarios.sem_desemprego.ate"
               >
                 —
-                {{
+                <span class="font-mono">{{
                   dataBr(
                     resultado.qualidade_falecido.cenarios.sem_desemprego.ate
                   )
-                }}
+                }}</span>
               </template>
             </p>
-            <p class="text-xs text-n-slate-10">
+            <p class="mb-0 text-xs text-n-slate-10">
               {{
                 resultado.qualidade_falecido.cenarios.sem_desemprego.fundamento
               }}
@@ -370,7 +371,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
               {{ $t('RAMON.SIMULADOR.ELEG_COM_DESEMPREGO') }}
             </span>
             <p
-              class="text-sm font-medium"
+              class="mb-0 text-sm font-medium"
               :class="
                 cenarioTexto(
                   resultado.qualidade_falecido.cenarios.com_desemprego
@@ -386,14 +387,14 @@ const isCessaDict = v => v !== null && typeof v === 'object';
                 v-if="resultado.qualidade_falecido.cenarios.com_desemprego.ate"
               >
                 —
-                {{
+                <span class="font-mono">{{
                   dataBr(
                     resultado.qualidade_falecido.cenarios.com_desemprego.ate
                   )
-                }}
+                }}</span>
               </template>
             </p>
-            <p class="text-xs text-n-slate-10">
+            <p class="mb-0 text-xs text-n-slate-10">
               {{
                 resultado.qualidade_falecido.cenarios.com_desemprego.fundamento
               }}
@@ -409,7 +410,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
         class="flex flex-col gap-2"
         data-testid="pensao-pendencias"
       >
-        <span class="text-xs font-medium text-n-slate-12">
+        <span :class="TITULO">
           {{ $t('RAMON.SIMULADOR.ELEG_PENDENCIAS') }}
         </span>
         <div
@@ -419,12 +420,14 @@ const isCessaDict = v => v !== null && typeof v === 'object';
           :class="[CARTAO_STATUS, FILETE.amber]"
           :data-testid="`pensao-pendencia-${i}`"
         >
-          <p class="text-xs text-n-amber-11 font-medium">{{ pend.pergunta }}</p>
-          <p class="text-xs text-n-slate-11">
+          <p class="mb-0 text-xs text-n-amber-11 font-medium">
+            {{ pend.pergunta }}
+          </p>
+          <p class="mb-0 text-xs text-n-slate-11">
             {{ $t('RAMON.SIMULADOR.ELEG_SIM') }}:
             {{ pend.efeito_por_resposta?.sim }}
           </p>
-          <p class="text-xs text-n-slate-11">
+          <p class="mb-0 text-xs text-n-slate-11">
             {{ $t('RAMON.SIMULADOR.ELEG_NAO') }}:
             {{ pend.efeito_por_resposta?.nao }}
           </p>
@@ -457,7 +460,9 @@ const isCessaDict = v => v !== null && typeof v === 'object';
         :class="CARTAO"
         data-testid="pensao-base"
       >
-        <p class="text-sm text-n-slate-12">
+        <p
+          class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+        >
           <span class="text-n-slate-10"
             >{{ $t('RAMON.SIMULADOR.PENSAO_BASE') }}:</span
           >
@@ -469,7 +474,9 @@ const isCessaDict = v => v !== null && typeof v === 'object';
       </div>
 
       <div class="flex gap-4">
-        <p class="text-sm text-n-slate-12">
+        <p
+          class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+        >
           <span class="text-n-slate-10"
             >{{ $t('RAMON.SIMULADOR.PENSAO_PERCENTUAL') }}:</span
           >
@@ -477,7 +484,9 @@ const isCessaDict = v => v !== null && typeof v === 'object';
             {{ resultado.percentual }}%
           </span>
         </p>
-        <p class="text-sm text-n-slate-12">
+        <p
+          class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+        >
           <span class="text-n-slate-10"
             >{{ $t('RAMON.SIMULADOR.PENSAO_RMI') }}:</span
           >
@@ -492,7 +501,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
         class="flex flex-col gap-2"
         data-testid="pensao-quotas"
       >
-        <span class="text-xs font-medium text-n-slate-12">
+        <span :class="TITULO">
           {{ $t('RAMON.SIMULADOR.PENSAO_QUOTAS_TITULO') }}
         </span>
         <div
@@ -522,19 +531,21 @@ const isCessaDict = v => v !== null && typeof v === 'object';
             >
               <span>
                 {{ $t('RAMON.SIMULADOR.PENSAO_UNIAO_MENOR2') }}:
-                {{
-                  q.cessa_em.uniao_menor_2_anos
-                    ? dataBr(q.cessa_em.uniao_menor_2_anos)
-                    : $t('RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA')
-                }}
+                <span v-if="q.cessa_em.uniao_menor_2_anos" class="font-mono">
+                  {{ dataBr(q.cessa_em.uniao_menor_2_anos) }}
+                </span>
+                <template v-else>{{
+                  $t('RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA')
+                }}</template>
               </span>
               <span>
                 {{ $t('RAMON.SIMULADOR.PENSAO_UNIAO_2OUMAIS') }}:
-                {{
-                  q.cessa_em.uniao_2_anos_ou_mais
-                    ? dataBr(q.cessa_em.uniao_2_anos_ou_mais)
-                    : $t('RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA')
-                }}
+                <span v-if="q.cessa_em.uniao_2_anos_ou_mais" class="font-mono">
+                  {{ dataBr(q.cessa_em.uniao_2_anos_ou_mais) }}
+                </span>
+                <template v-else>{{
+                  $t('RAMON.SIMULADOR.PENSAO_CESSA_VITALICIA')
+                }}</template>
               </span>
             </div>
           </template>
@@ -544,7 +555,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
               <span class="font-mono">{{ dataBr(q.cessa_em) }}</span>
             </span>
           </template>
-          <p class="text-xs text-n-slate-10">{{ q.fundamento }}</p>
+          <p class="mb-0 text-xs text-n-slate-10">{{ q.fundamento }}</p>
           <ul
             v-if="q.avisos && q.avisos.length"
             class="flex flex-col gap-0.5 text-xs text-n-amber-11 list-disc ps-4"

@@ -4,7 +4,16 @@ import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import { CAMPO, CARTAO, ROTULO, SECAO, SELECT } from '../../helpers/ui';
+import {
+  AVISO,
+  CAMPO,
+  CARTAO,
+  ROTULO,
+  SECAO,
+  SELECT,
+  TITULO,
+  TOM,
+} from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -168,7 +177,7 @@ const baixarPdf = async () => {
 
 <template>
   <div class="flex flex-col gap-2" :class="SECAO" data-testid="liq-form">
-    <span class="text-xs font-medium text-n-slate-12">
+    <span :class="TITULO">
       {{ $t('RAMON.LIQUIDACAO.TITULO') }}
     </span>
     <div class="grid grid-cols-2 gap-2">
@@ -206,7 +215,9 @@ const baixarPdf = async () => {
     </div>
 
     <details data-testid="liq-opcionais">
-      <summary class="text-xs cursor-pointer text-n-slate-11">
+      <summary
+        class="text-xs cursor-pointer text-n-slate-11 hover:text-n-slate-12"
+      >
         {{ $t('RAMON.LIQUIDACAO.OPCIONAIS') }}
       </summary>
       <div class="grid grid-cols-2 gap-2 pt-2">
@@ -300,7 +311,7 @@ const baixarPdf = async () => {
         <div
           v-for="(a, i) in abatimentos"
           :key="i"
-          class="flex items-end gap-1"
+          class="flex items-end gap-2"
           :data-testid="`liq-abatimento-${i}`"
         >
           <label :class="ROTULO">
@@ -360,6 +371,7 @@ const baixarPdf = async () => {
       data-testid="liq-run"
       :disabled="!canCalcular || isLoading"
       sm
+      class="self-start"
       :label="
         isLoading
           ? $t('RAMON.LIQUIDACAO.CALCULANDO')
@@ -370,14 +382,16 @@ const baixarPdf = async () => {
 
     <p
       v-if="motorDown"
-      class="text-sm text-n-amber-11"
+      class="mb-0"
+      :class="[AVISO, TOM.amber]"
       data-testid="liq-motor-down"
     >
       {{ $t('RAMON.SIMULADOR.MOTOR_DOWN') }}
     </p>
     <p
       v-else-if="errorMessage"
-      class="text-sm text-n-ruby-11"
+      class="mb-0"
+      :class="[AVISO, TOM.ruby]"
       data-testid="liq-error"
     >
       {{ errorMessage }}
@@ -389,7 +403,9 @@ const baixarPdf = async () => {
       :class="CARTAO"
       data-testid="liq-resultado"
     >
-      <p class="text-sm text-n-slate-12">
+      <p
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+      >
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.TOTAL_PRINCIPAL') }}:</span
         >
@@ -397,7 +413,9 @@ const baixarPdf = async () => {
           money(resultado.total_principal_corrigido)
         }}</span>
       </p>
-      <p class="text-sm text-n-slate-12">
+      <p
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+      >
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.TOTAL_JUROS') }}:</span
         >
@@ -405,7 +423,7 @@ const baixarPdf = async () => {
       </p>
       <p
         v-if="Number(resultado.total_atualizacao_selic_ec136)"
-        class="text-sm text-n-slate-12"
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
       >
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.TOTAL_SELIC') }}:</span
@@ -414,7 +432,9 @@ const baixarPdf = async () => {
           money(resultado.total_atualizacao_selic_ec136)
         }}</span>
       </p>
-      <p class="text-sm font-semibold text-n-slate-12">
+      <p
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm font-semibold text-n-slate-12"
+      >
         <span class="font-normal text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.TOTAL_GERAL') }}:</span
         >
@@ -422,7 +442,7 @@ const baixarPdf = async () => {
       </p>
       <p
         v-if="resultado.honorarios?.sucumbenciais"
-        class="text-sm text-n-slate-12"
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
       >
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.HONORARIOS_SUC') }}:</span
@@ -433,7 +453,7 @@ const baixarPdf = async () => {
       </p>
       <p
         v-if="resultado.honorarios?.contratuais"
-        class="text-sm text-n-slate-12"
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
       >
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.HONORARIOS_CONTR') }}:</span
@@ -444,7 +464,7 @@ const baixarPdf = async () => {
       </p>
       <p
         v-if="resultado.honorarios?.contratuais"
-        class="text-sm text-n-slate-12"
+        class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
       >
         <span class="text-n-slate-10"
           >{{ $t('RAMON.LIQUIDACAO.LIQUIDO_CLIENTE') }}:</span
@@ -458,7 +478,7 @@ const baixarPdf = async () => {
         <li v-for="(aviso, i) in resultado.avisos" :key="i">{{ aviso }}</li>
       </ul>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 pt-2">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
         <label :class="ROTULO">
           {{ $t('RAMON.LIQUIDACAO.PDF_NOME') }}
           <input

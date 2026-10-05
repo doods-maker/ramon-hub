@@ -3,7 +3,14 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { CARTAO, CARTAO_STATUS, FILETE } from '../../helpers/ui';
+import {
+  AVISO,
+  CARTAO,
+  CARTAO_STATUS,
+  FILETE,
+  TITULO,
+  TOM,
+} from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -98,7 +105,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 p-1" data-testid="lead-planejamento">
+  <div class="flex flex-col gap-3" data-testid="lead-planejamento">
     <Button
       data-testid="planejamento-planejar"
       :disabled="ocupado"
@@ -113,7 +120,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
     />
 
     <div v-if="hasError" data-testid="planejamento-error">
-      <p class="text-sm text-n-ruby-11">{{ errorMessage }}</p>
+      <p class="mb-0" :class="[AVISO, TOM.ruby]">{{ errorMessage }}</p>
       <Button
         data-testid="planejamento-retry"
         link
@@ -132,7 +139,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
         class="flex flex-col gap-2"
         data-testid="planejamento-pendencias"
       >
-        <span class="text-xs font-medium text-n-slate-12">
+        <span :class="TITULO">
           {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PENDENCIAS') }}
         </span>
         <div
@@ -141,7 +148,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
           :class="[CARTAO_STATUS, FILETE.amber]"
           :data-testid="`planejamento-pendencia-${i}`"
         >
-          <p class="text-xs text-n-amber-11 font-medium">
+          <p class="mb-0 text-xs text-n-amber-11 font-medium">
             {{ pend.pergunta }}
           </p>
         </div>
@@ -164,10 +171,10 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
           </span>
           <span class="text-xs text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_ALIQUOTA') }}:
-            {{ cenario.aliquota }}%
+            <span class="font-mono">{{ cenario.aliquota }}%</span>
           </span>
         </div>
-        <p v-if="cenario.observacao" class="text-xs text-n-slate-10">
+        <p v-if="cenario.observacao" class="mb-0 text-xs text-n-slate-10">
           {{ cenario.observacao }}
         </p>
 
@@ -175,14 +182,14 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
           v-if="cenario.resultados && cenario.resultados.length"
           class="overflow-x-auto"
         >
-          <table class="w-full font-mono text-xs">
-            <tbody>
+          <table class="w-full text-xs text-n-slate-11">
+            <tbody class="divide-y divide-n-weak">
               <tr
                 v-for="(r, j) in cenario.resultados"
                 :key="j"
                 :data-testid="`planejamento-cenario-${i}-resultado-${j}`"
               >
-                <td class="p-1 font-sans">
+                <td class="p-1">
                   <span class="font-medium text-n-slate-12">{{
                     r.titulo
                   }}</span>
@@ -230,7 +237,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
           <p
             v-for="(ex, k) in cenario.regras_excluidas"
             :key="k"
-            class="text-[11px] text-n-slate-10"
+            class="mb-0 text-[11px] text-n-slate-10"
           >
             {{ ex.regra }}: {{ ex.motivo }}
           </p>

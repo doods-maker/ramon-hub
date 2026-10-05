@@ -3,7 +3,14 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { CARTAO, CARTAO_STATUS, FILETE } from '../../helpers/ui';
+import {
+  AVISO,
+  CARTAO,
+  CARTAO_STATUS,
+  FILETE,
+  TITULO,
+  TOM,
+} from '../../helpers/ui';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -100,7 +107,7 @@ const cenarioTexto = cenario =>
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 p-1" data-testid="lead-elegibilidade">
+  <div class="flex flex-col gap-3" data-testid="lead-elegibilidade">
     <Button
       data-testid="eleg-analisar"
       :disabled="!der || ocupado"
@@ -115,7 +122,7 @@ const cenarioTexto = cenario =>
     />
 
     <div v-if="hasError" data-testid="eleg-error">
-      <p class="text-sm text-n-ruby-11">{{ errorMessage }}</p>
+      <p class="mb-0" :class="[AVISO, TOM.ruby]">{{ errorMessage }}</p>
       <Button
         data-testid="eleg-retry"
         link
@@ -142,7 +149,7 @@ const cenarioTexto = cenario =>
           data-testid="eleg-cenario-unico"
         >
           <p
-            class="text-sm font-medium"
+            class="mb-0 text-sm font-medium"
             :class="cenarioTexto(resultado.qualidade.cenarios.unico)"
           >
             {{
@@ -157,7 +164,7 @@ const cenarioTexto = cenario =>
               }}</span>
             </template>
           </p>
-          <p class="text-xs text-n-slate-10">
+          <p class="mb-0 text-xs text-n-slate-10">
             {{ resultado.qualidade.cenarios.unico.fundamento }}
           </p>
         </div>
@@ -175,7 +182,7 @@ const cenarioTexto = cenario =>
               {{ $t('RAMON.SIMULADOR.ELEG_SEM_DESEMPREGO') }}
             </span>
             <p
-              class="text-sm font-medium"
+              class="mb-0 text-sm font-medium"
               :class="cenarioTexto(resultado.qualidade.cenarios.sem_desemprego)"
             >
               {{
@@ -190,7 +197,7 @@ const cenarioTexto = cenario =>
                 }}</span>
               </template>
             </p>
-            <p class="text-xs text-n-slate-10">
+            <p class="mb-0 text-xs text-n-slate-10">
               {{ resultado.qualidade.cenarios.sem_desemprego.fundamento }}
             </p>
           </div>
@@ -207,7 +214,7 @@ const cenarioTexto = cenario =>
               {{ $t('RAMON.SIMULADOR.ELEG_COM_DESEMPREGO') }}
             </span>
             <p
-              class="text-sm font-medium"
+              class="mb-0 text-sm font-medium"
               :class="cenarioTexto(resultado.qualidade.cenarios.com_desemprego)"
             >
               {{
@@ -222,7 +229,7 @@ const cenarioTexto = cenario =>
                 }}</span>
               </template>
             </p>
-            <p class="text-xs text-n-slate-10">
+            <p class="mb-0 text-xs text-n-slate-10">
               {{ resultado.qualidade.cenarios.com_desemprego.fundamento }}
             </p>
           </div>
@@ -236,7 +243,7 @@ const cenarioTexto = cenario =>
         class="flex flex-col gap-2"
         data-testid="eleg-pendencias"
       >
-        <span class="text-xs font-medium text-n-slate-12">
+        <span :class="TITULO">
           {{ $t('RAMON.SIMULADOR.ELEG_PENDENCIAS') }}
         </span>
         <div
@@ -246,12 +253,14 @@ const cenarioTexto = cenario =>
           :class="[CARTAO_STATUS, FILETE.amber]"
           :data-testid="`eleg-pendencia-${i}`"
         >
-          <p class="text-xs text-n-amber-11 font-medium">{{ pend.pergunta }}</p>
-          <p class="text-xs text-n-slate-11">
+          <p class="mb-0 text-xs text-n-amber-11 font-medium">
+            {{ pend.pergunta }}
+          </p>
+          <p class="mb-0 text-xs text-n-slate-11">
             {{ $t('RAMON.SIMULADOR.ELEG_SIM') }}:
             {{ pend.efeito_por_resposta?.sim }}
           </p>
-          <p class="text-xs text-n-slate-11">
+          <p class="mb-0 text-xs text-n-slate-11">
             {{ $t('RAMON.SIMULADOR.ELEG_NAO') }}:
             {{ pend.efeito_por_resposta?.nao }}
           </p>
@@ -284,7 +293,9 @@ const cenarioTexto = cenario =>
         :class="CARTAO"
         data-testid="eleg-carencia"
       >
-        <p class="text-sm text-n-slate-12">
+        <p
+          class="mb-0 flex flex-wrap items-baseline gap-x-1 text-sm text-n-slate-12"
+        >
           <span class="text-n-slate-10"
             >{{ $t('RAMON.SIMULADOR.ELEG_CARENCIA') }}:</span
           >
@@ -292,7 +303,7 @@ const cenarioTexto = cenario =>
         </p>
         <p
           v-if="resultado.carencia.art_27a?.aplicavel"
-          class="text-xs text-n-amber-11"
+          class="mb-0 text-xs text-n-amber-11"
           data-testid="eleg-art27a"
         >
           {{
@@ -309,12 +320,12 @@ const cenarioTexto = cenario =>
         class="flex flex-col gap-2"
         data-testid="eleg-lacunas"
       >
-        <span class="text-xs font-medium text-n-slate-12">
+        <span :class="TITULO">
           {{ $t('RAMON.SIMULADOR.ELEG_LACUNAS') }}
         </span>
         <div class="overflow-x-auto">
-          <table class="w-full text-xs">
-            <tbody>
+          <table class="w-full text-xs text-n-slate-11">
+            <tbody class="divide-y divide-n-weak">
               <tr
                 v-for="(lac, i) in resultado.lacunas"
                 :key="i"
@@ -323,7 +334,7 @@ const cenarioTexto = cenario =>
                 <td class="p-1 font-mono whitespace-nowrap">
                   {{ dataBr(lac.inicio) }} – {{ dataBr(lac.fim) }}
                 </td>
-                <td class="p-1 text-end whitespace-nowrap">
+                <td class="p-1 font-mono text-end whitespace-nowrap">
                   {{ $t('RAMON.SIMULADOR.ELEG_MESES', { n: lac.meses }) }}
                 </td>
                 <td class="p-1 text-end whitespace-nowrap">
@@ -371,7 +382,7 @@ const cenarioTexto = cenario =>
           :class="CARTAO"
           :data-testid="`eleg-simulacao-cenario-${i}`"
         >
-          <span class="text-xs font-medium text-n-slate-12">{{
+          <span class="text-sm font-medium text-n-slate-12">{{
             sim.cenario
           }}</span>
           <div
@@ -384,17 +395,21 @@ const cenarioTexto = cenario =>
             <span
               >{{ $t('RAMON.SIMULADOR.ELEG_ANTES') }}:
               {{ simNao(cartao.elegivel_antes) }} ·
-              {{ money(cartao.rmi_antes) }} ·
-              {{ dataBr(cartao.previsao_antes) }}</span
+              <span class="font-mono">{{ money(cartao.rmi_antes) }}</span> ·
+              <span class="font-mono">{{
+                dataBr(cartao.previsao_antes)
+              }}</span></span
             >
             <span
               >{{ $t('RAMON.SIMULADOR.ELEG_DEPOIS') }}:
               {{ simNao(cartao.elegivel_depois) }} ·
-              {{ money(cartao.rmi_depois) }} ·
-              {{ dataBr(cartao.previsao_depois) }}</span
+              <span class="font-mono">{{ money(cartao.rmi_depois) }}</span> ·
+              <span class="font-mono">{{
+                dataBr(cartao.previsao_depois)
+              }}</span></span
             >
           </div>
-          <p v-if="sim.aviso" class="text-xs text-n-amber-11 font-medium">
+          <p v-if="sim.aviso" class="mb-0 text-xs text-n-amber-11 font-medium">
             {{ sim.aviso }}
           </p>
         </div>
