@@ -735,6 +735,8 @@
     "DOCUMENTS": {
       "HEADER": "Documents",
       "ADD_NEW": "Create a new document",
+      "AVISO_FAQS": "The assistant does not read documents: each one becomes pending FAQs, and only what you approve is used.",
+      "VER_FAQS_GERADAS": "See generated FAQs",
       "SELECTED": "{count} selected",
       "SELECT_ALL": "Select all ({count})",
       "UNSELECT_ALL": "Unselect all ({count})",
@@ -796,30 +798,17 @@
         "TITLE": "Related FAQs",
         "DESCRIPTION": "These FAQs are generated directly from the document."
       },
-      "FORM_DESCRIPTION": "Enter the URL of the document to add it as a knowledge source and choose the assistant to associate it with.",
+      "FORM_DESCRIPTION": "Paste a page link. Captain reads the page and generates pending FAQs; the assistant only uses what you approve.",
       "CREATE": {
         "TITLE": "Add a document",
         "SUCCESS_MESSAGE": "The document has been successfully created",
         "ERROR_MESSAGE": "There was an error creating the document, please try again."
       },
       "FORM": {
-        "TYPE": {
-          "LABEL": "Document Type",
-          "URL": "URL",
-          "PDF": "PDF File"
-        },
         "URL": {
-          "LABEL": "URL",
-          "PLACEHOLDER": "Enter the URL of the document",
+          "LABEL": "Page link",
+          "PLACEHOLDER": "Paste the page link (https://...)",
           "ERROR": "Please provide a valid URL for the document"
-        },
-        "PDF_FILE": {
-          "LABEL": "PDF File",
-          "CHOOSE_FILE": "Choose PDF file",
-          "ERROR": "Please select a PDF file",
-          "HELP_TEXT": "Maximum file size: 10MB",
-          "INVALID_TYPE": "Please select a valid PDF file",
-          "TOO_LARGE": "File size exceeds 10MB limit"
         },
         "NAME": {
           "LABEL": "Document Name (Optional)",

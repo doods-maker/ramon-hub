@@ -735,6 +735,8 @@
     "DOCUMENTS": {
       "HEADER": "Documentos",
       "ADD_NEW": "Criar um novo documento",
+      "AVISO_FAQS": "O documento não é lido pelo assistente: ele vira FAQs pendentes, e só vale o que você aprovar.",
+      "VER_FAQS_GERADAS": "Ver FAQs geradas",
       "SELECTED": "{count} selecionado",
       "SELECT_ALL": "Selecionar todos ({count})",
       "UNSELECT_ALL": "Desmarcar todos ({count})",
@@ -796,30 +798,17 @@
         "TITLE": "FAQs Relacionadas",
         "DESCRIPTION": "Estes FAQs são gerados diretamente a partir do documento."
       },
-      "FORM_DESCRIPTION": "Digite o URL do documento para adicioná-lo como fonte de conhecimento e escolha o assistente para associá-lo.",
+      "FORM_DESCRIPTION": "Cole o link de uma página. A Inteligência lê a página e gera FAQs pendentes; o assistente só usa o que você aprovar.",
       "CREATE": {
         "TITLE": "Adicionar um documento",
         "SUCCESS_MESSAGE": "O documento foi criado com sucesso",
         "ERROR_MESSAGE": "Ocorreu um erro ao criar o documento, por favor, tente novamente."
       },
       "FORM": {
-        "TYPE": {
-          "LABEL": "Tipo do documento",
-          "URL": "URL:",
-          "PDF": "Arquivo PDF"
-        },
         "URL": {
-          "LABEL": "URL:",
-          "PLACEHOLDER": "Insira a URL do documento",
+          "LABEL": "Link da página",
+          "PLACEHOLDER": "Cole o link da página (https://...)",
           "ERROR": "Por favor forneça uma URL válida para o documento"
-        },
-        "PDF_FILE": {
-          "LABEL": "Arquivo PDF",
-          "CHOOSE_FILE": "Escolher arquivo PDF",
-          "ERROR": "Por favor, selecione um arquivo PDF",
-          "HELP_TEXT": "Tamanho máximo do arquivo: 10 MB",
-          "INVALID_TYPE": "Por favor, selecione um arquivo PDF válido",
-          "TOO_LARGE": "O tamanho do arquivo excede o limite de 10 MB"
         },
         "NAME": {
           "LABEL": "Nome do documento (opcional)",
