@@ -4,7 +4,20 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
+import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import {
+  ABA,
+  ABA_ATIVA,
+  ABA_INATIVA,
+  CAMPO,
+  CARTAO,
+  CHIP,
+  LINHA,
+  ROTULO,
+  TITULO,
+  TOM,
+} from '../helpers/ui';
 
 const { t } = useI18n();
 const store = useStore();
@@ -186,196 +199,139 @@ const hasVisibleTasks = computed(() =>
 </script>
 
 <template>
-  <div
-    class="flex flex-col w-full h-full overflow-y-auto bg-n-background p-4 sm:p-8"
-  >
-    <RamonPageHeader :title="t('RAMON.AGENDA.TITLE')" :subtitle="rangeLabel">
-      <template #actions>
-        <button
-          class="flex items-center justify-center h-8 px-2 rounded-lg border border-n-weak text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
-          :title="t('RAMON.AGENDA.PREV')"
-          @click="shift(-1)"
-        >
-          <span class="i-lucide-chevron-left size-4" />
-        </button>
-        <button
-          class="h-8 px-3 text-sm rounded-lg border border-n-weak text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
-          @click="goToday"
-        >
-          {{ t('RAMON.AGENDA.TODAY') }}
-        </button>
-        <button
-          class="flex items-center justify-center h-8 px-2 rounded-lg border border-n-weak text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
-          :title="t('RAMON.AGENDA.NEXT')"
-          @click="shift(1)"
-        >
-          <span class="i-lucide-chevron-right size-4" />
-        </button>
-      </template>
-    </RamonPageHeader>
+  <div class="w-full h-full overflow-y-auto bg-n-background p-4 sm:p-8">
+    <div class="flex flex-col w-full max-w-6xl min-h-full mx-auto">
+      <RamonPageHeader :title="t('RAMON.AGENDA.TITLE')" :subtitle="rangeLabel">
+        <template #actions>
+          <Button
+            sm
+            faded
+            slate
+            icon="i-lucide-chevron-left"
+            :title="t('RAMON.AGENDA.PREV')"
+            @click="shift(-1)"
+          />
+          <Button
+            sm
+            faded
+            slate
+            :label="t('RAMON.AGENDA.TODAY')"
+            @click="goToday"
+          />
+          <Button
+            sm
+            faded
+            slate
+            icon="i-lucide-chevron-right"
+            :title="t('RAMON.AGENDA.NEXT')"
+            @click="shift(1)"
+          />
+        </template>
+      </RamonPageHeader>
 
-    <!-- Barra de controles: visão + filtro de tipo à esquerda, mês à direita -->
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-      <div class="flex flex-wrap items-center gap-3">
-        <div
-          class="inline-flex rounded-lg border border-n-weak overflow-hidden"
-          data-testid="agenda-view-switch"
-        >
-          <button
-            v-for="v in VIEWS"
-            :key="v"
-            :data-testid="`agenda-view-${v}`"
-            class="px-3 h-8 text-sm"
-            :class="
-              view === v
-                ? 'bg-n-iris-9 text-white'
-                : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
-            "
-            @click="view = v"
-          >
-            {{ t(`RAMON.AGENDA.VIEW_${v.toUpperCase()}`) }}
-          </button>
-        </div>
-        <div class="flex items-center gap-1">
-          <button
-            v-for="k in KIND_FILTERS"
-            :key="k"
-            :data-testid="`agenda-filter-${k}`"
-            class="px-2.5 h-7 text-xs rounded-full border"
-            :class="
-              kindFilter === k
-                ? 'border-n-iris-8 text-n-iris-11 bg-n-alpha-2'
-                : 'border-transparent text-n-slate-10 hover:text-n-slate-12'
-            "
-            @click="kindFilter = k"
-          >
-            {{ t(`RAMON.AGENDA.FILTER_${k.toUpperCase()}`) }}
-          </button>
-        </div>
-      </div>
-      <label class="flex items-center gap-1.5 text-xs text-n-slate-10">
-        {{ t('RAMON.AGENDA.PICK_MONTH') }}
-        <input
-          type="month"
-          data-testid="agenda-month-pick"
-          class="h-8 px-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-          :value="monthValue"
-          @change="onMonthPick"
-        />
-      </label>
-    </div>
-
-    <!-- Skeleton enquanto carrega sem nada em cache -->
-    <div
-      v-if="isFetching && !hasVisibleTasks"
-      data-testid="agenda-skeleton"
-      class="flex flex-col gap-3 animate-pulse"
-    >
-      <div class="h-24 rounded-xl bg-n-solid-2" />
-      <div class="h-24 rounded-xl bg-n-solid-2" />
-      <div class="h-24 rounded-xl bg-n-solid-2" />
-    </div>
-
-    <!-- Erro de carga: retry em vez de fingir agenda vazia -->
-    <div
-      v-else-if="hasError && !hasVisibleTasks"
-      data-testid="agenda-error"
-      class="text-sm"
-    >
-      <p class="text-n-ruby-11">{{ t('RAMON.AGENDA.LOAD_ERROR') }}</p>
-      <button
-        type="button"
-        data-testid="agenda-retry"
-        class="mt-2 text-xs text-n-iris-11 hover:underline"
-        @click="reload"
-      >
-        {{ t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
-    </div>
-
-    <!-- VISÃO DIA -->
-    <div v-else-if="view === 'day'" class="max-w-xl">
+      <!-- Barra de controles: visão + filtro de tipo à esquerda, mês à direita -->
       <div
-        class="flex flex-col rounded-xl border bg-n-solid-1"
-        :class="isToday(anchor) ? 'border-n-iris-8' : 'border-n-weak'"
+        class="flex flex-wrap items-end justify-between gap-3 mb-4 border-b border-n-weak"
       >
-        <div
-          class="px-4 py-3 border-b border-n-weak text-xs uppercase tracking-wide"
-          :class="isToday(anchor) ? 'text-n-iris-11' : 'text-n-slate-10'"
-        >
-          {{ fullDayLabel(anchor) }}
-        </div>
-        <div class="flex flex-col gap-2 p-3">
-          <button
-            v-for="task in tasksByDay[dayKey(anchor)] || []"
-            :key="task.id"
-            class="flex flex-col items-start gap-0.5 p-3 text-left rounded-lg border border-n-weak bg-n-solid-2 hover:bg-n-alpha-2"
-            @click="openLead(task.lead_id)"
-          >
-            <span
-              class="flex items-center gap-1.5 text-xs"
-              :class="
-                task.kind === 'meeting' ? 'text-n-iris-11' : 'text-n-slate-10'
-              "
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="flex" data-testid="agenda-view-switch">
+            <button
+              v-for="v in VIEWS"
+              :key="v"
+              type="button"
+              :data-testid="`agenda-view-${v}`"
+              :class="[ABA, view === v ? ABA_ATIVA : ABA_INATIVA]"
+              @click="view = v"
             >
-              <span
-                :class="
-                  task.kind === 'meeting'
-                    ? 'i-lucide-calendar-clock'
-                    : 'i-lucide-bell'
-                "
-                class="size-3.5 flex-shrink-0"
-              />
-              {{ timeLabel(task.due_at) }}
-            </span>
-            <span class="text-sm text-n-slate-12">{{ task.title }}</span>
-            <span v-if="task.lead_name" class="text-xs text-n-slate-11">
-              {{ task.lead_name }}
-            </span>
-          </button>
-          <p
-            v-if="!(tasksByDay[dayKey(anchor)] || []).length"
-            class="p-3 text-sm text-n-slate-10"
-          >
-            {{ t('RAMON.AGENDA.EMPTY_DAY') }}
-          </p>
+              {{ t(`RAMON.AGENDA.VIEW_${v.toUpperCase()}`) }}
+            </button>
+          </div>
+          <div class="flex items-center gap-1 pb-1.5">
+            <button
+              v-for="k in KIND_FILTERS"
+              :key="k"
+              type="button"
+              :data-testid="`agenda-filter-${k}`"
+              :class="[
+                CHIP,
+                kindFilter === k
+                  ? TOM.blue
+                  : 'text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12',
+              ]"
+              @click="kindFilter = k"
+            >
+              {{ t(`RAMON.AGENDA.FILTER_${k.toUpperCase()}`) }}
+            </button>
+          </div>
         </div>
+        <label :class="ROTULO" class="!flex-row items-center pb-1.5">
+          {{ t('RAMON.AGENDA.PICK_MONTH') }}
+          <input
+            type="month"
+            data-testid="agenda-month-pick"
+            :class="CAMPO"
+            class="!w-44"
+            :value="monthValue"
+            @change="onMonthPick"
+          />
+        </label>
       </div>
-    </div>
 
-    <!-- VISÃO SEMANA (só a grade rola na horizontal; header/filtros ficam fixos) -->
-    <div v-else-if="view === 'week'" class="overflow-x-auto flex-1 min-h-0">
-      <div class="grid grid-cols-7 gap-2 min-w-[840px]">
+      <!-- Skeleton enquanto carrega sem nada em cache -->
+      <div
+        v-if="isFetching && !hasVisibleTasks"
+        data-testid="agenda-skeleton"
+        class="flex flex-col gap-3 animate-pulse"
+      >
+        <div class="h-24 rounded-xl bg-n-alpha-2" />
+        <div class="h-24 rounded-xl bg-n-alpha-2" />
+        <div class="h-24 rounded-xl bg-n-alpha-2" />
+      </div>
+
+      <!-- Erro de carga: retry em vez de fingir agenda vazia -->
+      <div
+        v-else-if="hasError && !hasVisibleTasks"
+        data-testid="agenda-error"
+        class="text-sm"
+      >
+        <p class="text-n-ruby-11">{{ t('RAMON.AGENDA.LOAD_ERROR') }}</p>
+        <Button
+          data-testid="agenda-retry"
+          link
+          xs
+          class="mt-2"
+          :label="t('RAMON.LEAD_PANEL.RETRY')"
+          @click="reload"
+        />
+      </div>
+
+      <!-- VISÃO DIA -->
+      <div v-else-if="view === 'day'" class="w-full max-w-2xl mx-auto">
         <div
-          v-for="day in days"
-          :key="dayKey(day)"
-          class="flex flex-col rounded-xl border bg-n-solid-1 min-h-[320px]"
-          :class="isToday(day) ? 'border-n-iris-8' : 'border-n-weak'"
+          :class="[CARTAO, isToday(anchor) ? '!border-n-blue-8' : '']"
+          class="flex flex-col !p-0"
         >
           <div
-            class="px-3 py-2 border-b border-n-weak text-xs uppercase tracking-wide"
-            :class="[
-              isToday(day) ? 'text-n-iris-11' : 'text-n-slate-10',
-              { 'opacity-60': isWeekend(day) && !isToday(day) },
-            ]"
+            :class="[TITULO, isToday(anchor) ? '!text-n-blue-11' : '']"
+            class="px-4 py-3 border-b border-n-weak"
           >
-            {{ dayLabel(day) }}
-            <span class="block text-sm normal-case text-n-slate-12">
-              {{ dateLabel(day) }}
-            </span>
+            {{ fullDayLabel(anchor) }}
           </div>
-          <div class="flex flex-col gap-1.5 p-2">
+          <div class="flex flex-col p-2">
             <button
-              v-for="task in tasksByDay[dayKey(day)] || []"
+              v-for="(task, index) in tasksByDay[dayKey(anchor)] || []"
               :key="task.id"
-              class="flex flex-col items-start gap-0.5 p-2 text-left rounded-lg border border-n-weak bg-n-solid-2 hover:bg-n-alpha-2"
+              type="button"
+              :class="[
+                LINHA,
+                index > 0 ? 'border-t border-n-weak !rounded-none' : '',
+              ]"
+              class="flex items-start gap-3 !py-2.5"
               @click="openLead(task.lead_id)"
             >
               <span
-                class="flex items-center gap-1 text-xs"
-                :class="
-                  task.kind === 'meeting' ? 'text-n-iris-11' : 'text-n-slate-10'
-                "
+                :class="[CHIP, task.kind === 'meeting' ? TOM.blue : TOM.slate]"
+                class="flex-none mt-0.5 font-mono tabular-nums"
               >
                 <span
                   :class="
@@ -383,101 +339,184 @@ const hasVisibleTasks = computed(() =>
                       ? 'i-lucide-calendar-clock'
                       : 'i-lucide-bell'
                   "
-                  class="size-3.5 flex-shrink-0"
+                  class="size-3 flex-shrink-0"
                 />
                 {{ timeLabel(task.due_at) }}
               </span>
-              <span class="text-sm text-n-slate-12 line-clamp-2">
-                {{ task.title }}
+              <span class="flex flex-col flex-1 min-w-0">
+                <span class="text-sm font-medium text-n-slate-12">
+                  {{ task.title }}
+                </span>
+                <span
+                  v-if="task.lead_name"
+                  class="text-xs truncate text-n-slate-10"
+                >
+                  {{ task.lead_name }}
+                </span>
               </span>
-              <span v-if="task.lead_name" class="text-xs text-n-slate-11">
-                {{ task.lead_name }}
+            </button>
+            <p
+              v-if="!(tasksByDay[dayKey(anchor)] || []).length"
+              class="p-2 text-sm text-n-slate-10"
+            >
+              {{ t('RAMON.AGENDA.EMPTY_DAY') }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISÃO SEMANA (só a grade rola na horizontal; header/filtros ficam fixos) -->
+      <div v-else-if="view === 'week'" class="overflow-x-auto flex-1 min-h-0">
+        <div class="grid grid-cols-7 gap-2 min-w-[840px]">
+          <div
+            v-for="day in days"
+            :key="dayKey(day)"
+            :class="[CARTAO, isToday(day) ? '!border-n-blue-8' : '']"
+            class="flex flex-col !p-0 min-h-[320px]"
+          >
+            <div
+              class="flex items-center justify-between gap-1 px-3 py-2 border-b border-n-weak"
+              :class="{ 'opacity-60': isWeekend(day) && !isToday(day) }"
+            >
+              <span :class="[TITULO, isToday(day) ? '!text-n-blue-11' : '']">
+                {{ dayLabel(day) }}
+              </span>
+              <span
+                class="font-mono text-[13px] font-medium tabular-nums"
+                :class="
+                  isToday(day)
+                    ? [CHIP, TOM.blue, '!px-2 !text-[13px]']
+                    : 'text-n-slate-12'
+                "
+              >
+                {{ dateLabel(day) }}
+              </span>
+            </div>
+            <div class="flex flex-col p-1.5">
+              <button
+                v-for="(task, index) in tasksByDay[dayKey(day)] || []"
+                :key="task.id"
+                type="button"
+                :class="[
+                  LINHA,
+                  index > 0 ? 'border-t border-n-weak !rounded-none' : '',
+                ]"
+                class="flex flex-col items-start gap-1 !py-2"
+                @click="openLead(task.lead_id)"
+              >
+                <span
+                  :class="[
+                    CHIP,
+                    task.kind === 'meeting' ? TOM.blue : TOM.slate,
+                  ]"
+                  class="font-mono tabular-nums"
+                >
+                  <span
+                    :class="
+                      task.kind === 'meeting'
+                        ? 'i-lucide-calendar-clock'
+                        : 'i-lucide-bell'
+                    "
+                    class="size-3 flex-shrink-0"
+                  />
+                  {{ timeLabel(task.due_at) }}
+                </span>
+                <span
+                  class="text-[13px] font-medium leading-snug text-n-slate-12 line-clamp-2"
+                >
+                  {{ task.title }}
+                </span>
+                <span
+                  v-if="task.lead_name"
+                  class="w-full text-[11px] truncate text-n-slate-10"
+                >
+                  {{ task.lead_name }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISÃO MÊS (mesma regra: overflow-x só na grade) -->
+      <div v-else class="overflow-x-auto flex-1 min-h-0">
+        <div class="flex flex-col min-w-[840px]">
+          <div class="grid grid-cols-7 gap-2 mb-1.5">
+            <div
+              v-for="(label, i) in weekdayHeaders"
+              :key="i"
+              :class="TITULO"
+              class="px-2"
+            >
+              {{ label }}
+            </div>
+          </div>
+          <div class="grid grid-cols-7 gap-2">
+            <button
+              v-for="day in days"
+              :key="dayKey(day)"
+              type="button"
+              data-testid="agenda-month-day"
+              :class="[
+                CARTAO,
+                isToday(day) ? '!border-n-blue-8' : '',
+                { 'opacity-50': !inAnchorMonth(day) },
+              ]"
+              class="flex flex-col items-stretch gap-1 !p-2 min-h-[96px] text-left hover:bg-n-alpha-2"
+              @click="openDay(day)"
+            >
+              <span
+                class="self-end font-mono text-xs tabular-nums"
+                :class="
+                  isToday(day)
+                    ? [CHIP, TOM.blue, '!px-1.5 font-semibold']
+                    : 'text-n-slate-10'
+                "
+              >
+                {{ day.getDate() }}
+              </span>
+              <span
+                v-for="task in (tasksByDay[dayKey(day)] || []).slice(0, 3)"
+                :key="task.id"
+                class="flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded-md truncate"
+                :class="task.kind === 'meeting' ? TOM.blue : TOM.slate"
+              >
+                <span
+                  :class="
+                    task.kind === 'meeting'
+                      ? 'i-lucide-calendar-clock'
+                      : 'i-lucide-bell'
+                  "
+                  class="size-3 flex-shrink-0"
+                />
+                <span class="truncate">{{ task.title }}</span>
+              </span>
+              <span
+                v-if="(tasksByDay[dayKey(day)] || []).length > 3"
+                class="px-1.5 text-[11px] text-n-slate-10"
+              >
+                {{
+                  t('RAMON.AGENDA.MORE', {
+                    count: (tasksByDay[dayKey(day)] || []).length - 3,
+                  })
+                }}
               </span>
             </button>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- VISÃO MÊS (mesma regra: overflow-x só na grade) -->
-    <div v-else class="overflow-x-auto flex-1 min-h-0">
-      <div class="flex flex-col min-w-[840px]">
-        <div class="grid grid-cols-7 gap-2 mb-1">
-          <div
-            v-for="(label, i) in weekdayHeaders"
-            :key="i"
-            class="px-2 text-xs uppercase tracking-wide text-n-slate-10"
-          >
-            {{ label }}
-          </div>
-        </div>
-        <div class="grid grid-cols-7 gap-2">
-          <button
-            v-for="day in days"
-            :key="dayKey(day)"
-            data-testid="agenda-month-day"
-            class="flex flex-col items-stretch gap-1 p-2 min-h-[96px] text-left rounded-xl border bg-n-solid-1 hover:bg-n-alpha-2"
-            :class="[
-              isToday(day) ? 'border-n-iris-8' : 'border-n-weak',
-              { 'opacity-50': !inAnchorMonth(day) },
-            ]"
-            @click="openDay(day)"
-          >
-            <span
-              class="self-end text-xs tabular-nums"
-              :class="
-                isToday(day)
-                  ? 'flex items-center justify-center rounded-full size-5 bg-n-iris-9 text-white'
-                  : 'text-n-slate-10'
-              "
-            >
-              {{ day.getDate() }}
-            </span>
-            <span
-              v-for="task in (tasksByDay[dayKey(day)] || []).slice(0, 3)"
-              :key="task.id"
-              class="flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded truncate"
-              :class="
-                task.kind === 'meeting'
-                  ? 'bg-n-alpha-2 text-n-iris-11'
-                  : 'bg-n-alpha-2 text-n-slate-11'
-              "
-            >
-              <span
-                :class="
-                  task.kind === 'meeting'
-                    ? 'i-lucide-calendar-clock'
-                    : 'i-lucide-bell'
-                "
-                class="size-3 flex-shrink-0"
-              />
-              <span class="truncate">{{ task.title }}</span>
-            </span>
-            <span
-              v-if="(tasksByDay[dayKey(day)] || []).length > 3"
-              class="px-1.5 text-[11px] text-n-slate-10"
-            >
-              {{
-                t('RAMON.AGENDA.MORE', {
-                  count: (tasksByDay[dayKey(day)] || []).length - 3,
-                })
-              }}
-            </span>
-          </button>
-        </div>
-      </div>
+      <!-- Visão dia já tem o próprio EMPTY_DAY dentro do card -->
+      <p
+        v-if="!isFetching && !hasError && !hasVisibleTasks && view !== 'day'"
+        class="mt-4 text-sm text-center text-n-slate-10"
+      >
+        {{
+          view === 'week'
+            ? t('RAMON.AGENDA.EMPTY')
+            : t('RAMON.AGENDA.EMPTY_MONTH')
+        }}
+      </p>
     </div>
-
-    <!-- Visão dia já tem o próprio EMPTY_DAY dentro do card -->
-    <p
-      v-if="!isFetching && !hasError && !hasVisibleTasks && view !== 'day'"
-      class="mt-4 text-sm text-center text-n-slate-10"
-    >
-      {{
-        view === 'week'
-          ? t('RAMON.AGENDA.EMPTY')
-          : t('RAMON.AGENDA.EMPTY_MONTH')
-      }}
-    </p>
   </div>
 </template>
