@@ -761,7 +761,8 @@
         "PLACEHOLDER": "Add a note…",
         "SAVE_ERROR": "Could not save the note — try again",
         "HIDDEN": "+{count} older in the History tab",
-        "SYSTEM": "System"
+        "SYSTEM": "System",
+        "USE_IN_EDITOR": "Use in editor"
       },
       "QUIZ": {
         "TITLE": "LP triage",
@@ -780,7 +781,11 @@
       },
       "ANDAMENTO": {
         "TITLE": "Progress",
-        "IN_STAGE": "In this stage for {days} d"
+        "IN_STAGE": "In this stage for {days} d",
+        "LAST_SIM": "Last simulation:",
+        "LAST_SIM_ATRASADOS": "arrears",
+        "LAST_SIM_RMI": "RMI",
+        "LAST_SIM_EM": "on"
       },
       "CASE_TITLE": "Case",
       "CONTACT_DATA": "Contact data",
@@ -1033,6 +1038,9 @@
       "ACRESCIMO": "25% addition (severe disability)",
       "SIMULAR": "Simulate",
       "SIMULANDO": "Simulating…",
+      "ULTIMA_TITULO": "Last simulation · {data}",
+      "ULTIMA_RMI": "RMI",
+      "ULTIMA_HINT": "Its parameters are already in the form — click Simulate to recalculate.",
       "ATRASADOS": "Estimated back pay",
       "PERDA_MENSAL": "Waiting, you lose {value}/month",
       "HONORARIO": "Estimated fee",
@@ -1256,7 +1264,12 @@
       "TITLE": "Risk of cooling off",
       "APOIO": "In this stage for {days}d · {count} follow-up(s) already done.",
       "PREPARAR": "Prepare follow-up (W4) →",
-      "PREPARADO": "Follow-up being prepared — the draft appears in notes and the event in the conversation."
+      "PREPARADO": "Follow-up being prepared — the draft appears in notes and the event in the conversation.",
+      "RECUSA": {
+        "NO_CONVERSATION": "This lead has no WhatsApp conversation — the follow-up needs one to be prepared.",
+        "OPEN_FOLLOW_UP": "There is already an open follow-up for this lead — complete the task in Next step before preparing another one.",
+        "RECENT_FOLLOW_UP": "The last follow-up was today — wait {gap} days between follow-ups. | The last follow-up was 1 day ago — wait {gap} days between follow-ups. | The last follow-up was {days} days ago — wait {gap} days between follow-ups."
+      }
     },
     "QUALIFICACAO": {
       "TITLE": "Qualification",

@@ -477,6 +477,82 @@ describe('LeadPanelBody', () => {
       expect(useAlert).toHaveBeenCalledWith('RAMON.RISCO.PREPARADO');
     });
 
+    it.each([
+      ['no_conversation', 'RAMON.RISCO.RECUSA.NO_CONVERSATION'],
+      ['open_follow_up', 'RAMON.RISCO.RECUSA.OPEN_FOLLOW_UP'],
+      ['recent_follow_up', 'RAMON.RISCO.RECUSA.RECENT_FOLLOW_UP'],
+      [undefined, 'RAMON.FUNIL.SAVE_ERROR'],
+    ])(
+      '422 com reason %s → avisa o motivo, não "em preparo"',
+      async (reason, key) => {
+        useAlert.mockClear();
+        const followUpDraft = vi.fn().mockRejectedValue({
+          response: { data: { reason, days_ago: 2, min_gap_days: 5 } },
+        });
+        const wrapper = mountBody({
+          props: { lead: { ...lead, stalled: true } },
+          spies: { followUpDraft },
+        });
+        await wrapper
+          .find('[data-testid="risco-preparar-retomada"]')
+          .trigger('click');
+        await flushPromises();
+        expect(useAlert).toHaveBeenCalledWith(key);
+        expect(useAlert).not.toHaveBeenCalledWith('RAMON.RISCO.PREPARADO');
+      }
+    );
+
+    it('lead sem conversa: sem botão, explica o porquê', () => {
+      const wrapper = mountBody({
+        props: { lead: { ...lead, stalled: true, conversation_id: null } },
+      });
+      expect(
+        wrapper.find('[data-testid="risco-preparar-retomada"]').exists()
+      ).toBe(false);
+      expect(wrapper.find('[data-testid="risco-sem-conversa"]').text()).toBe(
+        'RAMON.RISCO.RECUSA.NO_CONVERSATION'
+      );
+    });
+
+    it('notas recarregam pelo follow_up_last_at do broadcast', () => {
+      const wrapper = mountBody({
+        props: { lead: { ...lead, follow_up_last_at: '2026-10-05T12:00:00Z' } },
+      });
+      const notas = wrapper.findComponent({ name: 'LeadNotes' });
+      expect(notas.props('refreshKey')).toBe('2026-10-05T12:00:00Z');
+      expect(notas.props('inConversation')).toBe(true);
+    });
+
+    it('Andamento mostra a última simulação e leva ao Simulador', async () => {
+      const ultima = {
+        mensal: 706,
+        atrasados: 25416,
+        em: '2026-10-02T15:00:00Z',
+        parametros: { der: '2021-12-11' },
+      };
+      const wrapper = mountBody({
+        props: {
+          lead: { ...lead, custom_attributes: { ultima_simulacao: ultima } },
+        },
+      });
+      const linha = wrapper.find('[data-testid="panel-ultima-simulacao"]');
+      expect(linha.text()).toContain('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM');
+      expect(linha.text()).toContain(formatBrl(25416));
+      expect(linha.text()).toContain(formatBrl(706));
+      expect(linha.text()).toContain('02/10');
+      await linha.trigger('click');
+      const sim = wrapper.findComponent({ name: 'LeadSimulador' });
+      expect(sim.exists()).toBe(true);
+      expect(sim.props('ultimaSimulacao')).toEqual(ultima);
+    });
+
+    it('sem simulação, nenhuma linha no Andamento', () => {
+      const wrapper = mountBody();
+      expect(
+        wrapper.find('[data-testid="panel-ultima-simulacao"]').exists()
+      ).toBe(false);
+    });
+
     it('risco continua funcional no drawer (a action é independente de contexto)', () => {
       const wrapper = mountBody({
         props: { context: 'drawer', lead: { ...lead, stalled: true } },

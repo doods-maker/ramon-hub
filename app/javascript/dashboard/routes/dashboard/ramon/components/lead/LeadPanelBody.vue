@@ -164,12 +164,45 @@ const andamentoApoio = computed(() =>
       : null,
   ].filter(Boolean)
 );
+// Última simulação (gravada pelo Simulador em custom_attributes): linha no
+// Andamento + form do Simulador pré-preenchido. Sem simulação, nada aparece.
+const ultimaSim = computed(
+  () => props.lead?.custom_attributes?.ultima_simulacao || null
+);
+const ultimaSimPartes = computed(() => {
+  const s = ultimaSim.value;
+  if (!s) return [];
+  return [
+    s.atrasados != null
+      ? {
+          rotulo: t('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM_ATRASADOS'),
+          valor: formatBrl(s.atrasados),
+        }
+      : null,
+    s.mensal != null
+      ? {
+          rotulo: t('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM_RMI'),
+          valor: formatBrl(s.mensal),
+        }
+      : null,
+    s.em
+      ? {
+          rotulo: t('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM_EM'),
+          valor: new Date(s.em).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+          }),
+        }
+      : null,
+  ].filter(Boolean);
+});
 // ----- Temperatura (heurística local, só na conversa) + Risco de esfriar -----
 const currentChat = useMapGetter('getSelectedChat');
 const chatMessages = computed(() => currentChat.value?.messages || []);
 const { nivel, hesitando } = useTemperatura(chatMessages);
 const risco = computed(() => Boolean(props.lead?.stalled));
 const followUpPending = ref(false);
+const RECUSAS = ['no_conversation', 'open_follow_up', 'recent_follow_up'];
 const prepararRetomada = async () => {
   if (followUpPending.value) return;
   followUpPending.value = true;
@@ -177,7 +210,17 @@ const prepararRetomada = async () => {
     await store.dispatch('leads/followUpDraft', props.lead.id);
     useAlert(t('RAMON.RISCO.PREPARADO'));
   } catch (e) {
-    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    // 422 do backend diz POR QUE não dá pra preparar (antes: "em preparo" mentiroso)
+    const recusa = e?.response?.data;
+    useAlert(
+      RECUSAS.includes(recusa?.reason)
+        ? t(
+            `RAMON.RISCO.RECUSA.${recusa.reason.toUpperCase()}`,
+            { days: recusa.days_ago, gap: recusa.min_gap_days },
+            Number(recusa.days_ago) || 0
+          )
+        : t('RAMON.FUNIL.SAVE_ERROR')
+    );
   } finally {
     followUpPending.value = false;
   }
@@ -603,6 +646,22 @@ const discard = async () => {
               }}</span>
             </template>
           </p>
+          <button
+            v-if="ultimaSimPartes.length"
+            type="button"
+            data-testid="panel-ultima-simulacao"
+            class="block w-full p-0 mt-1.5 text-left text-xs text-n-slate-11 hover:text-n-slate-12"
+            @click="setTab('simulador')"
+          >
+            {{ $t('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM') }}
+            <template v-for="(parte, i) in ultimaSimPartes" :key="i">
+              <span v-if="i"> · </span>
+              <span class="whitespace-nowrap">
+                {{ parte.rotulo }}
+                <span class="font-mono">{{ parte.valor }}</span>
+              </span>
+            </template>
+          </button>
         </div>
 
         <!-- Próximo passo (era LeadNextAction do header) -->
@@ -669,6 +728,7 @@ const discard = async () => {
             }}
           </p>
           <Button
+            v-if="lead.conversation_id"
             data-testid="risco-preparar-retomada"
             link
             xs
@@ -677,6 +737,13 @@ const discard = async () => {
             :disabled="followUpPending"
             @click="prepararRetomada"
           />
+          <p
+            v-else
+            data-testid="risco-sem-conversa"
+            class="mt-2 text-xs text-n-slate-10"
+          >
+            {{ $t('RAMON.RISCO.RECUSA.NO_CONVERSATION') }}
+          </p>
         </div>
 
         <!-- Documentos (cartão inteiro clicável → aba Documentos) -->
@@ -745,7 +812,13 @@ const discard = async () => {
         <QualificacaoViva :lead="lead" :context="context" />
 
         <LeadQuizResumo :lead="lead" />
-        <LeadNotes :lead-id="lead.id" />
+        <!-- follow_up_last_at muda no broadcast lead.updated quando a retomada
+             grava nota + contador (mesma transação) → as notas recarregam -->
+        <LeadNotes
+          :lead-id="lead.id"
+          :refresh-key="lead.follow_up_last_at"
+          :in-conversation="inConversation"
+        />
 
         <!-- Dados do contato (recolhido — mesmo padrão do "Mais da conversa") -->
         <div class="min-w-0" :class="SECAO">
@@ -896,7 +969,11 @@ const discard = async () => {
 
       <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
 
-      <LeadSimulador v-else-if="shownTab === 'simulador'" :lead="lead" />
+      <LeadSimulador
+        v-else-if="shownTab === 'simulador'"
+        :lead="lead"
+        :ultima-simulacao="ultimaSim"
+      />
 
       <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-3">
         <DocChecklist :lead="lead" :context="context" />
