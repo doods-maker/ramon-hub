@@ -41,7 +41,7 @@ RSpec.describe 'Captain Tool Runs API', type: :request do
     expect(response.parsed_body['items']).to be_empty
   end
 
-  it 'devolve o catalogo com nome e nivel de cada ferramenta' do
+  it 'devolve o catalogo com nome e nivel de cada ferramenta', if: ChatwootApp.enterprise? do
     get url, headers: agent.create_new_auth_token, as: :json
 
     expect(response.parsed_body['catalogo']).to include({ 'id' => 'mover_etapa', 'title' => 'Mover de etapa', 'nivel' => 'sugestao' })
