@@ -138,6 +138,9 @@ const LEAD = {
   },
 };
 
+// DCB há mais de 5 anos: parcelas já prescrevendo (chip ruby no cabeçalho)
+const LEAD_PRESCREVENDO = { ...LEAD, dcb_em: '2020-06-10' };
+
 const API = {
   lead_config: {
     stages: STAGES,
@@ -234,6 +237,15 @@ const comAba = tab => () => {
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Prescrevendo" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_PRESCREVENDO"
           context="conversation"
           :conversation-id="101"
         />
