@@ -459,7 +459,10 @@
       "MEETING_DATE_HINT": "Data e hora da reunião (obrigatório)",
       "MEETING_HINT": "O lead vai para Reunião agendada, ganha Closer e um rascunho de confirmação nas notas — nada é enviado ao cliente.",
       "MEETING_SCHEDULED": "Reunião marcada — o lead foi para Reunião agendada e o rascunho de confirmação está nas notas.",
-      "MEETING_ERROR": "Não foi possível marcar a reunião — tente de novo"
+      "MEETING_ERROR": "Não foi possível marcar a reunião — tente de novo",
+      "MEETING_CONFLICT_TITLE": "Já existe reunião aberta",
+      "MEETING_CONFLICT": "Já existe reunião aberta em {quando} — marcar outra mesmo assim?",
+      "MEETING_CONFLICT_CONFIRM": "Marcar mesmo assim"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
@@ -923,7 +926,11 @@
         "REMARCAR_TITULO": "Remarcar reunião",
         "REMARCADA": "Reunião remarcada — confirmação em rascunho nas notas",
         "CALCOM_REMARCAR": "Reunião do Cal.com: remarque também no Cal.com — o hub não altera o agendamento de lá.",
-        "REMARCAR_HINT": "Os lembretes vão para o horário novo e um rascunho de confirmação fica nas notas — nada é enviado ao cliente."
+        "REMARCAR_HINT": "Os lembretes vão para o horário novo e um rascunho de confirmação fica nas notas — nada é enviado ao cliente.",
+        "CANCELAR": "Cancelar reunião",
+        "CANCELAR_CONFIRM": "Cancelar a reunião de {quando}? Os lembretes param e o cancelamento entra no histórico do lead. Nada é enviado ao cliente.",
+        "CALCOM_CANCELAR": "Reunião do Cal.com: cancele também no Cal.com.",
+        "CANCELADA": "Reunião cancelada"
       },
       "ANDAMENTO": {
         "TITLE": "Andamento",

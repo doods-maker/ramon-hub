@@ -69,4 +69,31 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
     end
   end
+
+  describe 'reunião já aberta' do
+    before { agendar(starts_at: starts_at.iso8601) }
+
+    it 'devolve 409 com a reunião aberta e não marca outra', :aggregate_failures do
+      expect { agendar(starts_at: (starts_at + 1.day).iso8601) }.not_to change(LeadTask, :count)
+      expect(response).to have_http_status(:conflict)
+      expect(response.parsed_body['task']['id']).to eq lead.lead_tasks.find_by!(kind: 'meeting').id
+    end
+
+    it 'com force=true marca mesmo assim' do
+      expect { agendar(starts_at: (starts_at + 1.day).iso8601, force: true) }.to change(LeadTask, :count).by(1)
+    end
+  end
+
+  describe 'DELETE (Cancelar)' do
+    it 'cancela a reunião aberta', :aggregate_failures do
+      agendar(starts_at: starts_at.iso8601)
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+      delete "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao_agendada",
+             params: { task_id: task.id }, headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(LeadTask.exists?(task.id)).to be(false)
+      expect(lead.lead_activities.where(kind: 'meeting_cancelled')).to exist
+    end
+  end
 end

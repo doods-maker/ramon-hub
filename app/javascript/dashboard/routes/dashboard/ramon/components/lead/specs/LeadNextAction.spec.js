@@ -19,13 +19,20 @@ const build = ({
   update = vi.fn(),
   fetchForLead = vi.fn(),
   remarcarReuniao = vi.fn(),
+  cancelarReuniao = vi.fn(),
 } = {}) =>
   createStore({
     modules: {
       leadTasks: {
         namespaced: true,
         getters: { getByLead: () => () => tasks },
-        actions: { fetchForLead, complete, update, remarcarReuniao },
+        actions: {
+          fetchForLead,
+          complete,
+          update,
+          remarcarReuniao,
+          cancelarReuniao,
+        },
       },
     },
   });
@@ -164,6 +171,30 @@ describe('LeadNextAction', () => {
       expect(wrapper.find('[data-testid="remarcar-janela"]').exists()).toBe(
         false
       );
+    });
+
+    it('Cancelar reunião pede confirmação e cancela pela store', async () => {
+      const cancelarReuniao = vi.fn().mockResolvedValue({});
+      const wrapper = mountCard({
+        tasks: [{ ...reuniao, title: 'Reunião Cal.com: Consulta' }],
+        cancelarReuniao,
+      });
+      await wrapper
+        .find('[data-testid="next-action-cancelar"]')
+        .trigger('click');
+      expect(cancelarReuniao).not.toHaveBeenCalled();
+      // mensagem leva o aviso do Cal.com
+      expect(wrapper.text()).toContain(
+        'RAMON.LEAD_PANEL.NEXT_ACTION.CALCOM_CANCELAR'
+      );
+      await wrapper
+        .find('[data-testid="confirm-modal-confirm"]')
+        .trigger('click');
+      await flushPromises();
+      expect(cancelarReuniao).toHaveBeenCalledWith(expect.anything(), {
+        leadId: 7,
+        taskId: 3,
+      });
     });
 
     it('reunião do Cal.com avisa pra remarcar lá também', async () => {

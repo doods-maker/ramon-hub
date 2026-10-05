@@ -97,4 +97,29 @@ RSpec.describe Ramon::ReuniaoAgendamento do
       expect(Notification.where(notification_type: 'ramon_meeting_scheduled').last.meta['quando']).to eq 'sexta, 17/07 às 14:30'
     end
   end
+
+  describe '.cancelar' do
+    it 'tira a tarefa, registra o cancelamento e avisa no sino', :aggregate_failures do
+      create(:user, account: account, role: :administrator)
+      agendar
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+
+      described_class.cancelar(task: task, user: user)
+
+      expect(LeadTask.exists?(task.id)).to be(false)
+      activity = lead.lead_activities.find_by!(kind: 'meeting_cancelled')
+      expect(activity.to_value).to eq 'Primeiro Atendimento em 15/07/2026 11:00'
+      expect(activity.user).to eq user
+      expect(Notification.where(notification_type: 'ramon_meeting_cancelled')).to exist
+    end
+
+    it 'o lembrete já enfileirado vira órfão e não apita' do
+      allow(Ramon::NtfyPushJob).to receive(:perform_now)
+      agendar
+      described_class.cancelar(task: lead.lead_tasks.find_by!(kind: 'meeting'))
+
+      with_modified_env(NTFY_TOPIC: 'ramon') { Ramon::MeetingReminderJob.perform_now(lead.id, starts_at.iso8601, '1h antes') }
+      expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
+    end
+  end
 end

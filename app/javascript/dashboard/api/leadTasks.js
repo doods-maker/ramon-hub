@@ -35,6 +35,12 @@ class LeadTasksAPI extends ApiClient {
     });
   }
 
+  cancelarReuniao(leadId, taskId) {
+    return axios.delete(`${this.url}/${leadId}/reuniao_agendada`, {
+      params: { task_id: taskId },
+    });
+  }
+
   delete(leadId, id) {
     return axios.delete(`${this.url}/${leadId}/tasks/${id}`);
   }

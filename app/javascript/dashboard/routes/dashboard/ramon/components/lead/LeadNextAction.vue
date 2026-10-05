@@ -5,6 +5,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import TaskBellMenu from '../kanban/TaskBellMenu.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 import {
   AVISO,
   CAMPO,
@@ -137,6 +138,29 @@ const remarcar = () =>
     useAlert(t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCADA'));
   });
 
+// Cancelar: mesmo efeito do cancel do Cal.com (atividade + sino); nada vai ao
+// cliente. Os lembretes já enfileirados morrem no guard do job.
+const cancelarAberto = ref(false);
+const cancelar = () =>
+  run(async () => {
+    cancelarAberto.value = false;
+    await store.dispatch('leadTasks/cancelarReuniao', {
+      leadId: props.leadId,
+      taskId: task.value.id,
+    });
+    useAlert(t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELADA'));
+  });
+const mensagemCancelar = computed(() =>
+  [
+    t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR_CONFIRM', {
+      quando: meetingWhen.value,
+    }),
+    isCalcom.value ? t('RAMON.LEAD_PANEL.NEXT_ACTION.CALCOM_CANCELAR') : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+);
+
 // Reagendar via TaskBellMenu: só a data muda — o título da tarefa fica.
 const reschedule = ({ dueAt }) =>
   run(() =>
@@ -220,6 +244,17 @@ const reschedule = ({ dueAt }) =>
         :disabled="busy"
         @click="abrirRemarcar"
       />
+      <Button
+        v-if="isMeeting"
+        data-testid="next-action-cancelar"
+        sm
+        ghost
+        ruby
+        icon="i-lucide-calendar-x"
+        :title="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"
+        :disabled="busy"
+        @click="cancelarAberto = true"
+      />
       <template v-else>
         <Button
           data-testid="next-action-snooze"
@@ -241,6 +276,14 @@ const reschedule = ({ dueAt }) =>
     </div>
 
     <Teleport to="body">
+      <ConfirmModal
+        v-if="cancelarAberto"
+        :title="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"
+        :message="mensagemCancelar"
+        :confirm-label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"
+        @confirm="cancelar"
+        @cancel="cancelarAberto = false"
+      />
       <div
         v-if="remarcarAberto"
         :class="FUNDO_JANELA"

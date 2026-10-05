@@ -915,6 +915,7 @@ describe('LeadPanelBody', () => {
         id: 7,
         startsAt: new Date('2026-10-06T14:00').toISOString(),
         title: 'Reunião',
+        force: false,
       });
       expect(useAlert).toHaveBeenCalledWith('RAMON.TASKS.MEETING_SCHEDULED');
       // rascunho de confirmação nasce no backend: notas recarregam
@@ -922,6 +923,38 @@ describe('LeadPanelBody', () => {
       expect(wrapper.find('[data-testid="panel-task-form"]').exists()).toBe(
         false
       );
+    });
+  });
+
+  describe('+ Tarefa → Reunião com outra aberta', () => {
+    it('o 409 abre a confirmação e "marcar mesmo assim" reenvia com force', async () => {
+      const agendarReuniao = vi
+        .fn()
+        .mockRejectedValueOnce({
+          response: {
+            status: 409,
+            data: { task: { id: 9, due_at: '2026-10-08T17:00:00Z' } },
+          },
+        })
+        .mockResolvedValueOnce({});
+      const wrapper = mountBody({ spies: { agendarReuniao } });
+      await wrapper.find('[data-testid="panel-add-task"]').trigger('click');
+      await wrapper
+        .find('[data-testid="panel-task-kind-meeting"]')
+        .trigger('click');
+      await wrapper
+        .find('[data-testid="panel-task-date"]')
+        .setValue('2026-10-09T14:00');
+      await wrapper.find('[data-testid="panel-task-save"]').trigger('click');
+      await flushPromises();
+      const modal = wrapper
+        .findAllComponents(ConfirmModal)
+        .find(c => c.props('title') === 'RAMON.TASKS.MEETING_CONFLICT_TITLE');
+      expect(modal.props('message')).toBe('RAMON.TASKS.MEETING_CONFLICT');
+      modal.vm.$emit('confirm');
+      await flushPromises();
+      expect(agendarReuniao).toHaveBeenCalledTimes(2);
+      expect(agendarReuniao.mock.calls[1][1].force).toBe(true);
     });
   });
 

@@ -25,6 +25,17 @@ class Ramon::ReuniaoAgendamento
     new(task.lead, starts_at, titulo_de(task), user).remarcar(task)
   end
 
+  # Cancelar (painel do lead): mesmo efeito do cancel do Cal.com — atividade
+  # meeting_cancelled + sino/ntfy. A tarefa sai; os lembretes já enfileirados
+  # viram órfãos e o guard do MeetingReminderJob descarta.
+  def self.cancelar(task:, user: nil)
+    lead = task.lead
+    title = titulo_de(task)
+    lead.lead_activities.create!(account: lead.account, user: user, kind: 'meeting_cancelled', to_value: resumo(title, task.due_at))
+    task.destroy!
+    notify(lead, 'ramon_meeting_cancelled', task.due_at, title)
+  end
+
   # "Reunião Cal.com: Primeiro Atendimento" → "Primeiro Atendimento"
   def self.titulo_de(task)
     task.title.delete_prefix("#{CALCOM_PREFIX}: ")

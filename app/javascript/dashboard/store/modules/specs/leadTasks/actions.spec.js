@@ -125,4 +125,14 @@ describe('leadTasks actions', () => {
     );
     expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD_TASK, task);
   });
+
+  it('cancelarReuniao faz DELETE no agendamento e tira a tarefa do cache', async () => {
+    axios.delete.mockResolvedValue({});
+    await actions.cancelarReuniao({ commit }, { leadId: 10, taskId: 3 });
+    expect(axios.delete).toHaveBeenCalledWith(
+      expect.stringContaining('/leads/10/reuniao_agendada'),
+      { params: { task_id: 3 } }
+    );
+    expect(commit).toHaveBeenCalledWith(types.DELETE_LEAD_TASK, 3);
+  });
 });

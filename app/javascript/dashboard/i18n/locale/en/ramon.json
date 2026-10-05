@@ -459,7 +459,10 @@
       "MEETING_DATE_HINT": "Meeting date and time (required)",
       "MEETING_HINT": "The lead moves to Meeting scheduled, gets a Closer and a confirmation draft in the notes — nothing is sent to the client.",
       "MEETING_SCHEDULED": "Meeting scheduled — the lead moved to Meeting scheduled and the confirmation draft is in the notes.",
-      "MEETING_ERROR": "Could not schedule the meeting — try again"
+      "MEETING_ERROR": "Could not schedule the meeting — try again",
+      "MEETING_CONFLICT_TITLE": "There is an open meeting",
+      "MEETING_CONFLICT": "There is already an open meeting on {quando} — book another one anyway?",
+      "MEETING_CONFLICT_CONFIRM": "Book anyway"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",
@@ -923,7 +926,11 @@
         "REMARCAR_TITULO": "Reschedule meeting",
         "REMARCADA": "Meeting rescheduled — confirmation drafted in notes",
         "CALCOM_REMARCAR": "Cal.com meeting: reschedule it on Cal.com too — the hub does not change the booking there.",
-        "REMARCAR_HINT": "Reminders move to the new time and a confirmation draft goes to the notes — nothing is sent to the client."
+        "REMARCAR_HINT": "Reminders move to the new time and a confirmation draft goes to the notes — nothing is sent to the client.",
+        "CANCELAR": "Cancel meeting",
+        "CANCELAR_CONFIRM": "Cancel the meeting on {quando}? Reminders stop and the cancellation goes to the lead history. Nothing is sent to the client.",
+        "CALCOM_CANCELAR": "Cal.com meeting: cancel it on Cal.com too.",
+        "CANCELADA": "Meeting cancelled"
       },
       "ANDAMENTO": {
         "TITLE": "Progress",

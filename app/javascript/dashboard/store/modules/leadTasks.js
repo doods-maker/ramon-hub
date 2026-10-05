@@ -101,6 +101,12 @@ export const actions = {
     return data;
   },
 
+  // Cancelar reunião: atividade + sino no backend; a tarefa sai do cache.
+  cancelarReuniao: async ({ commit }, { leadId, taskId }) => {
+    await LeadTasksAPI.cancelarReuniao(leadId, taskId);
+    commit(types.DELETE_LEAD_TASK, taskId);
+  },
+
   destroy: async ({ commit }, { leadId, taskId }) => {
     await LeadTasksAPI.delete(leadId, taskId);
     commit(types.DELETE_LEAD_TASK, taskId);
