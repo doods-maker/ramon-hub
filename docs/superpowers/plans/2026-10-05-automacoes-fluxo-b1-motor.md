@@ -40,7 +40,7 @@
 
 | Arquivo | Papel |
 |---|---|
-| `db/migrate/20261005000001_create_ramon_fluxos.rb` | 3 tabelas |
+| `db/migrate/20261005000002_create_ramon_fluxos.rb` | 3 tabelas |
 | `db/schema.rb` | idem, à mão |
 | `app/models/fluxo.rb` · `fluxo_versao.rb` · `fluxo_execucao.rb` | modelos |
 | `app/models/account.rb` | `has_many :fluxos` |
@@ -73,7 +73,7 @@
 ### Task 1: Tabelas e modelos
 
 **Files:**
-- Create: `db/migrate/20261005000001_create_ramon_fluxos.rb`
+- Create: `db/migrate/20261005000002_create_ramon_fluxos.rb`
 - Modify: `db/schema.rb` (versão + 3 `create_table` entre `ramon_chegadas` e `ramon_metas_comerciais`)
 - Create: `app/models/fluxo.rb`, `app/models/fluxo_versao.rb`, `app/models/fluxo_execucao.rb`
 - Modify: `app/models/account.rb:90` (ao lado de `has_many :chegadas`)
@@ -144,7 +144,7 @@ end
 
 - [ ] **Step 2: `db/schema.rb` à mão**
 
-Trocar a linha `ActiveRecord::Schema[7.1].define(version: 2026_10_03_000002) do` por `version: 2026_10_05_000001` (se já houver versão maior na base, manter a maior). Inserir, logo depois do bloco `create_table "ramon_chegadas"`:
+Trocar a linha `ActiveRecord::Schema[7.1].define(version: 2026_10_03_000002) do` por `version: 2026_10_05_000002` (a `20261005000001` é a migração do portal, PR #195; se já houver versão maior na base, manter a maior). Inserir, logo depois do bloco `create_table "ramon_chegadas"`:
 
 ```ruby
   create_table "ramon_fluxo_execucoes", force: :cascade do |t|
@@ -376,7 +376,7 @@ end
 - [ ] **Step 6: Commit**
 
 ```bash
-git add db/migrate/20261005000001_create_ramon_fluxos.rb db/schema.rb app/models/fluxo.rb app/models/fluxo_versao.rb app/models/fluxo_execucao.rb app/models/account.rb spec/support/fluxo_helpers.rb spec/rails_helper.rb spec/models/fluxo_spec.rb
+git add db/migrate/20261005000002_create_ramon_fluxos.rb db/schema.rb app/models/fluxo.rb app/models/fluxo_versao.rb app/models/fluxo_execucao.rb app/models/account.rb spec/support/fluxo_helpers.rb spec/rails_helper.rb spec/models/fluxo_spec.rb
 git commit -m "feat(fluxos): tabelas e modelos do motor de fluxos"
 ```
 
@@ -2158,7 +2158,7 @@ git commit -m "docs(fluxos): spec — ensaio como coluna e rascunho fora do bi_i
 
 - [ ] **Step 2: PR** — `gh pr create --base ramon` com título `feat(fluxos): motor de automações em fluxo (B1)`; corpo: parágrafo de produto ("o hub ganha um motor de fluxos; nada ligado até o smoke; a tela vem na B2"), `How to test` = roteiro do smoke. CI verde → merge squash no regime combinado (pacote).
 
-- [ ] **Step 3: Deploy (Eduardo roda via `!`)** — imagem nova publicada → `docker compose pull && up -d` → **migração à mão**: `docker compose exec -T web bundle exec rails db:migrate` → conferir `\d ramon_fluxo_execucoes` mostra o índice `index_ramon_fluxo_execucoes_unica_ativa` → login 200 → `docker inspect` com o SHA.
+- [ ] **Step 3: Deploy (Eduardo roda via `!`)** — imagem nova publicada → `docker compose pull && up -d` → **migração à mão**: `docker compose exec -T web bundle exec rails db:migrate:status | tail -3` (deve listar `20261005000002` como `down`; a `20261005000001` do portal já `up` se o #195 foi deployado antes) → `docker compose exec -T web bundle exec rails db:migrate` → conferir `\d ramon_fluxo_execucoes` mostra o índice `index_ramon_fluxo_execucoes_unica_ativa` → login 200 → `docker inspect` com o SHA.
 
 - [ ] **Step 4: Prova real na VPS** (`rails runner`, lead temporário, apagado no fim):
 
