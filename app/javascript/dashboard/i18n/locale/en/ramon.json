@@ -133,6 +133,9 @@
     "NIGHT_COPILOT": {
       "TITLE": "While you were sleeping",
       "SUBTITLE": "the copilot reviewed {leads} leads at {time} · {count} suggestions awaiting approval",
+      "PENDING": "{count} suggestions awaiting approval",
+      "EXPAND": "Show suggestions",
+      "COLLAPSE": "Hide suggestions",
       "APPROVE_ALL": "Approve all ({count})",
       "TAG_DRAFT": "Draft",
       "TAG_MOVE_STAGE": "Move stage",

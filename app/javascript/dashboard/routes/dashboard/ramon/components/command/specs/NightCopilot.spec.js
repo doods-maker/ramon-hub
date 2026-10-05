@@ -66,6 +66,34 @@ describe('NightCopilot.vue', () => {
     vi.clearAllMocks();
     suggestionsRef.value = suggestions();
     flagsRef.value = { isFetching: false, isApplying: false, hasError: false };
+    // a maioria dos casos olha os cartões: bloco aberto
+    localStorage.setItem('ramon_night_copilot_expanded', '1');
+  });
+
+  it('starts collapsed in one line: pending count, approve all and toggle', async () => {
+    localStorage.removeItem('ramon_night_copilot_expanded');
+    const wrapper = await mountBlock();
+    expect(wrapper.findAll('[data-testid="night-copilot-card"]')).toHaveLength(
+      0
+    );
+    expect(wrapper.find('[data-testid="night-copilot-pending"]').text()).toBe(
+      'RAMON.NIGHT_COPILOT.PENDING'
+    );
+    expect(
+      wrapper.find('[data-testid="night-copilot-apply-all"]').exists()
+    ).toBe(true);
+  });
+
+  it('toggle expands the list and remembers it in the browser', async () => {
+    localStorage.setItem('ramon_night_copilot_expanded', '0');
+    const wrapper = await mountBlock();
+    await wrapper.find('[data-testid="night-copilot-toggle"]').trigger('click');
+    expect(wrapper.findAll('[data-testid="night-copilot-card"]')).toHaveLength(
+      3
+    );
+    expect(localStorage.getItem('ramon_night_copilot_expanded')).toBe('1');
+    await wrapper.find('[data-testid="night-copilot-toggle"]').trigger('click');
+    expect(localStorage.getItem('ramon_night_copilot_expanded')).toBe('0');
   });
 
   it('fetches on mount and renders one card per suggestion with its tag', async () => {

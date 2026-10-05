@@ -20,6 +20,25 @@ const uiFlags = computed(() => getters['copilotSuggestions/getUIFlags'].value);
 
 onMounted(() => store.dispatch('copilotSuggestions/fetch'));
 
+// Recolhido por padrão (uma linha); aberto/fechado fica lembrado no navegador.
+const EXPANDED_KEY = 'ramon_night_copilot_expanded';
+const readExpanded = () => {
+  try {
+    return localStorage.getItem(EXPANDED_KEY) === '1';
+  } catch (e) {
+    return false;
+  }
+};
+const expanded = ref(readExpanded());
+const toggleExpanded = () => {
+  expanded.value = !expanded.value;
+  try {
+    localStorage.setItem(EXPANDED_KEY, expanded.value ? '1' : '0');
+  } catch (e) {
+    // localStorage indisponível: vale só nesta visita
+  }
+};
+
 // "Aprovar todas" cobre só draft/alert — move_stage e acao são cartão a
 // cartão, porque tocam funil e sistema externo (ZapSign/AdvBox/Esteira).
 const bulkCount = computed(
@@ -155,7 +174,7 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
     :class="CARTAO"
     class="!p-4"
   >
-    <div class="flex items-center gap-2.5 mb-1">
+    <div class="flex items-center gap-2.5" :class="{ 'mb-1': expanded }">
       <span
         class="flex items-center justify-center flex-none rounded-lg size-8"
         :class="TOM.blue"
@@ -163,10 +182,19 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
         <span class="i-lucide-bot size-4" />
       </span>
       <div class="min-w-0">
-        <p class="text-sm font-semibold text-n-slate-12">
+        <p class="text-sm font-semibold truncate text-n-slate-12">
           {{ t('RAMON.NIGHT_COPILOT.TITLE') }}
+          <span
+            v-if="!expanded"
+            data-testid="night-copilot-pending"
+            class="ml-1.5 text-xs font-normal text-n-slate-10"
+          >
+            {{
+              t('RAMON.NIGHT_COPILOT.PENDING', { count: suggestions.length })
+            }}
+          </span>
         </p>
-        <p class="text-[11px] text-n-slate-10 truncate">
+        <p v-if="expanded" class="text-[11px] text-n-slate-10 truncate">
           {{
             t('RAMON.NIGHT_COPILOT.SUBTITLE', {
               leads: meta.reviewedCount,
@@ -176,18 +204,33 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
           }}
         </p>
       </div>
-      <Button
-        v-if="bulkCount"
-        data-testid="night-copilot-apply-all"
-        sm
-        class="ml-auto"
-        :label="t('RAMON.NIGHT_COPILOT.APPROVE_ALL', { count: bulkCount })"
-        :disabled="isBulkActing"
-        @click="applyAll"
-      />
+      <div class="flex items-center flex-none gap-1.5 ml-auto">
+        <Button
+          v-if="bulkCount"
+          data-testid="night-copilot-apply-all"
+          sm
+          :label="t('RAMON.NIGHT_COPILOT.APPROVE_ALL', { count: bulkCount })"
+          :disabled="isBulkActing"
+          @click="applyAll"
+        />
+        <Button
+          data-testid="night-copilot-toggle"
+          sm
+          ghost
+          slate
+          :icon="expanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+          :title="
+            expanded
+              ? t('RAMON.NIGHT_COPILOT.COLLAPSE')
+              : t('RAMON.NIGHT_COPILOT.EXPAND')
+          "
+          :aria-expanded="expanded"
+          @click="toggleExpanded"
+        />
+      </div>
     </div>
 
-    <div class="flex flex-col gap-3">
+    <div v-if="expanded" class="flex flex-col gap-3">
       <div
         v-for="suggestion in suggestions"
         :key="suggestion.id"
