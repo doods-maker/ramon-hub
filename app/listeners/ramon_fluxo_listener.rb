@@ -7,7 +7,12 @@ class RamonFluxoListener < BaseListener
 
   def conversation_opened(event) = disparar('conversa_reaberta', event.data[:conversation], event)
 
-  def assignee_changed(event) = disparar('conversa_atribuida', event.data[:conversation], event)
+  # A atribuição automática emite um 2º evento sem :changed_attributes (duplicata do do modelo) — ignorar.
+  def assignee_changed(event)
+    return unless event.data.key?(:changed_attributes)
+
+    disparar('conversa_atribuida', event.data[:conversation], event)
+  end
 
   def message_created(event)
     message = event.data[:message]

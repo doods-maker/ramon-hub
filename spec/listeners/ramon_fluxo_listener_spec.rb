@@ -31,6 +31,17 @@ RSpec.describe RamonFluxoListener do
                                                  performed_by: autora))
   end
 
+  it 'atribuição: ignora o evento duplicado do auto-assignment (sem changed_attributes)' do
+    expect(Ramon::Fluxos::Disparo).not_to receive(:call)
+    listener.assignee_changed(evento('assignee.changed', conversation: conversa, user: create(:user, account: account)))
+  end
+
+  it 'atribuição: evento do modelo dispara conversa_atribuida' do
+    expect(Ramon::Fluxos::Disparo).to receive(:call)
+      .with('conversa_atribuida', conversa, hash_including('caixa_id' => conversa.inbox_id), origem: nil)
+    listener.assignee_changed(evento('assignee.changed', conversation: conversa, changed_attributes: nil, performed_by: nil))
+  end
+
   it 'lead atualizado sem troca de etapa não dispara' do
     expect(Ramon::Fluxos::Disparo).not_to receive(:call)
     listener.lead_updated(evento('lead.updated', lead: lead, changed_attributes: {}))
