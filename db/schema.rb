@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_03_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_05_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1362,6 +1362,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_03_000002) do
     t.bigint "portal_cliente_id", null: false
     t.string "ip"
     t.datetime "created_at", null: false
+    t.string "cpf"
     t.index ["portal_cliente_id"], name: "index_portal_acessos_on_portal_cliente_id"
   end
 
@@ -1399,6 +1400,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_03_000002) do
     t.integer "dias_acesso", default: 0, null: false
     t.string "telefone"
     t.boolean "ia_consentimento"
+    t.datetime "suspenso_em"
+    t.string "sessao_chave"
     t.index ["account_id", "advbox_customer_id"], name: "index_portal_clientes_on_account_id_and_advbox_customer_id", unique: true
     t.index ["account_id", "cpf"], name: "index_portal_clientes_on_account_id_and_cpf", unique: true
     t.index ["account_id", "email"], name: "index_portal_clientes_on_account_id_and_email", unique: true
@@ -1417,6 +1420,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_03_000002) do
     t.string "juntada_post_id"
     t.index ["portal_cliente_id", "solicitacao_post_id"], name: "portal_envios_cliente_solicitacao_idx"
     t.index ["portal_cliente_id"], name: "index_portal_envios_on_portal_cliente_id"
+  end
+
+  create_table "portal_eventos", force: :cascade do |t|
+    t.bigint "portal_cliente_id"
+    t.bigint "user_id"
+    t.string "acao", null: false
+    t.string "detalhe"
+    t.datetime "created_at", null: false
+    t.index ["portal_cliente_id"], name: "index_portal_eventos_on_portal_cliente_id"
   end
 
   create_table "portals", force: :cascade do |t|

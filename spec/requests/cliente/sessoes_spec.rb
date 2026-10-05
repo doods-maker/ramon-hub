@@ -29,6 +29,20 @@ RSpec.describe 'Painel do cliente — sessões', type: :request do
     expect(response).to redirect_to('/cliente')
   end
 
+  it 'suspenso não entra (mesma mensagem de senha errada) e a sessão aberta cai' do
+    post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
+    cliente.suspender!
+    get '/cliente/inicio'
+    expect(response).to redirect_to('/cliente')
+    post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.body).to include('CPF ou senha não conferem')
+
+    cliente.reativar!
+    post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
+    expect(response).to redirect_to('/cliente/inicio')
+  end
+
   it 'cliente ainda não convidado não entra' do
     cliente.update!(convidado_em: nil)
     post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }

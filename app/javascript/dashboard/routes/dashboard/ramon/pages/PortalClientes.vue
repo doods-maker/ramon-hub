@@ -27,6 +27,8 @@ const emailConvite = ref('');
 // mensagem, whatsapp_url } — aparece uma vez, o hub não guarda a senha em claro.
 const senhaGerada = ref(null);
 const emailConfigurado = ref(true);
+// O que quem está logado pode fazer (o backend decide; aqui só esconde botão).
+const permissoes = ref({ gerir_acesso: false, excluir: false });
 const aberto = ref(null); // detalhe expandido
 const templates = ref([]); // modelos do ZapSign, carregados na 1ª expansão de linha
 // Janela de confirmação aberta: { title, message, confirmLabel, confirmColor, acao }.
@@ -49,6 +51,7 @@ const carregar = async () => {
     clientes.value = data.payload;
     metricas.value = data.metricas;
     emailConfigurado.value = data.email_configurado !== false;
+    permissoes.value = data.permissoes || permissoes.value;
   } catch {
     hasError.value = true;
   } finally {
@@ -143,21 +146,49 @@ const abrir = async id => {
   }
 };
 
-const excluir = async c => {
-  // eslint-disable-next-line no-alert
-  if (
-    !window.confirm(t('RAMON.PORTAL_CLIENTES.DELETE_CONFIRM', { nome: c.nome }))
-  )
-    return;
+const excluir = c => {
+  confirmacao.value = {
+    title: t('RAMON.PORTAL_CLIENTES.DELETE_TITLE', { nome: c.nome }),
+    message: t('RAMON.PORTAL_CLIENTES.DELETE_CONFIRM'),
+    confirmLabel: t('RAMON.PORTAL_CLIENTES.DELETE'),
+    confirmColor: 'ruby',
+    acao: async () => {
+      try {
+        await PortalClientesAPI.delete(c.id);
+        if (aberto.value?.id === c.id) aberto.value = null;
+        await carregar();
+      } catch (e) {
+        erro(e);
+      }
+    },
+  };
+};
+
+const reativar = async c => {
   try {
-    await PortalClientesAPI.delete(c.id);
-    if (aberto.value?.id === c.id) aberto.value = null;
+    await PortalClientesAPI.reativar(c.id);
     await carregar();
   } catch (e) {
-    useAlert(
-      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
-    );
+    erro(e);
   }
+};
+
+// Suspender não apaga nada: só tira o acesso (e derruba as sessões abertas).
+const suspender = c => {
+  confirmacao.value = {
+    title: t('RAMON.PORTAL_CLIENTES.SUSPEND_TITLE', { nome: c.nome }),
+    message: t('RAMON.PORTAL_CLIENTES.SUSPEND_CONFIRM'),
+    confirmLabel: t('RAMON.PORTAL_CLIENTES.SUSPEND'),
+    confirmColor: 'ruby',
+    acao: async () => {
+      try {
+        await PortalClientesAPI.suspender(c.id);
+        await carregar();
+      } catch (e) {
+        erro(e);
+      }
+    },
+  };
 };
 
 const copiar = async (texto, ok) => {
@@ -433,7 +464,13 @@ onMounted(carregar);
                 <span class="truncate font-medium text-n-slate-12">{{
                   c.nome
                 }}</span>
-                <span :class="[CHIP, c.convidado_em ? TOM.blue : TOM.slate]">
+                <span v-if="c.suspenso_em" :class="[CHIP, TOM.ruby]">
+                  {{ t('RAMON.PORTAL_CLIENTES.SUSPENDED') }}
+                </span>
+                <span
+                  v-else
+                  :class="[CHIP, c.convidado_em ? TOM.blue : TOM.slate]"
+                >
                   {{
                     c.convidado_em
                       ? t('RAMON.PORTAL_CLIENTES.INVITED')
@@ -472,13 +509,35 @@ onMounted(carregar);
               <span class="font-mono">{{ c.envios_count }}</span>
               {{ t('RAMON.PORTAL_CLIENTES.UPLOADS') }}
             </span>
+            <!-- 1º convite: todo agente; senha nova/suspender: gerir_acesso; excluir: admin -->
             <Button
+              v-if="
+                !c.suspenso_em && (!c.convidado_em || permissoes.gerir_acesso)
+              "
               link
               xs
               :label="t('RAMON.PORTAL_CLIENTES.REINVITE')"
               @click="reenviar(c)"
             />
+            <template v-if="permissoes.gerir_acesso && c.convidado_em">
+              <Button
+                v-if="c.suspenso_em"
+                link
+                xs
+                :label="t('RAMON.PORTAL_CLIENTES.REACTIVATE')"
+                @click="reativar(c)"
+              />
+              <Button
+                v-else
+                link
+                xs
+                ruby
+                :label="t('RAMON.PORTAL_CLIENTES.SUSPEND')"
+                @click="suspender(c)"
+              />
+            </template>
             <Button
+              v-if="permissoes.excluir"
               link
               xs
               ruby

@@ -320,6 +320,8 @@ Rails.application.routes.draw do
             member do
               post :convidar
               post :assinatura
+              post :suspender
+              post :reativar
             end
           end
           resources :calculos, only: [:index, :destroy] do

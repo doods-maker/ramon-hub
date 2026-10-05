@@ -4,6 +4,13 @@ RSpec.describe 'Portal Clientes API', type: :request do
   let(:account) { create(:account) }
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:headers) { agent.create_new_auth_token }
+  let(:admin) { create(:user, account: account, role: :administrator) }
+  let(:admin_headers) { admin.create_new_auth_token }
+
+  def na_recepcao(user)
+    time = create(:team, account: account, name: Chegada::RECEPCAO)
+    create(:team_member, team: time, user: user)
+  end
   let(:base) { "/api/v1/accounts/#{account.id}/portal_clientes" }
 
   before { allow(Ramon::PortalSyncService).to receive(:new).and_return(instance_double(Ramon::PortalSyncService, perform: [])) }
@@ -88,17 +95,56 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(cliente.reload.recados).to eq('7' => 'Leve os exames')
   end
 
-  it 'altera o e-mail e exclui a conta (envios junto), sem mexer no ADVBOX' do
-    cliente = create(:portal_cliente, account: account, email: 'antigo@exemplo.com')
+  it 'altera o e-mail e (admin) exclui a conta: envios somem, registro de acesso fica 6 meses com o CPF' do
+    cliente = create(:portal_cliente, account: account, email: 'antigo@exemplo.com', cpf: '12345678901')
     cliente.envios.create!(lawsuit_id: 7, item: 'RG')
+    cliente.acessos.create!(ip: '1.2.3.4')
 
     patch "#{base}/#{cliente.id}", params: { email: 'Novo@Exemplo.com' }, headers: headers, as: :json
     expect(cliente.reload.email).to eq 'novo@exemplo.com'
 
     delete "#{base}/#{cliente.id}", headers: headers
+    expect(response).to have_http_status(:unauthorized)
+
+    delete "#{base}/#{cliente.id}", headers: admin_headers
     expect(response).to have_http_status(:no_content)
     expect(PortalCliente.exists?(cliente.id)).to be false
     expect(PortalEnvio.where(portal_cliente_id: cliente.id)).to be_empty
+    expect(PortalAcesso.where(portal_cliente_id: cliente.id).pluck(:cpf, :ip)).to eq [%w[12345678901 1.2.3.4]]
+  end
+
+  describe 'suspender, reativar e senha nova de quem já tem acesso' do
+    let(:cliente) { create(:portal_cliente, account: account, convidado_em: 1.day.ago) }
+
+    it 'agente fora da recepção/controladoria não suspende nem gera senha nova; vê as permissões no index' do
+      post "#{base}/#{cliente.id}/suspender", headers: headers
+      expect(response).to have_http_status(:unauthorized)
+      post "#{base}/#{cliente.id}/convidar", headers: headers
+      expect(response).to have_http_status(:unauthorized)
+      get base, headers: headers
+      expect(response.parsed_body['permissoes']).to eq('gerir_acesso' => false, 'excluir' => false)
+    end
+
+    it 'recepção suspende (derruba a sessão, nada é apagado) e reativa' do
+      na_recepcao(agent)
+      chave = cliente.sessao_chave
+      post "#{base}/#{cliente.id}/suspender", headers: headers
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['suspenso_em']).to be_present
+      expect(cliente.reload.sessao_chave).not_to eq chave
+
+      post "#{base}/#{cliente.id}/reativar", headers: headers
+      expect(cliente.reload.suspenso?).to be false
+      get base, headers: headers
+      expect(response.parsed_body['permissoes']).to eq('gerir_acesso' => true, 'excluir' => false)
+    end
+
+    it 'controladoria também gera senha nova' do
+      time = create(:team, account: account, name: 'controladoria')
+      create(:team_member, team: time, user: agent)
+      post "#{base}/#{cliente.id}/convidar", headers: headers
+      expect(response).to have_http_status(:success)
+    end
   end
 
   it 'cria o documento no ZapSign sem e-mail automático e guarda os tokens' do

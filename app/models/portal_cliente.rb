@@ -14,7 +14,9 @@ class PortalCliente < ApplicationRecord
   belongs_to :account
   has_many :assinaturas, class_name: 'PortalAssinatura', dependent: :destroy
   has_many :envios, class_name: 'PortalEnvio', dependent: :destroy
-  has_many :acessos, class_name: 'PortalAcesso', dependent: :delete_all
+  # Marco Civil art. 15: o registro de acesso fica 6 meses mesmo depois de excluir
+  # o cliente (leva o CPF na linha); quem apaga é o expurgo noturno do PortalAcesso.
+  has_many :acessos, class_name: 'PortalAcesso', dependent: nil
 
   before_validation :normalizar
 
@@ -58,6 +60,14 @@ class PortalCliente < ApplicationRecord
   end
 
   def termos_aceitos? = termos_aceitos_em.present?
+
+  def suspenso? = suspenso_em.present?
+
+  # Suspender: não entra mais e as sessões abertas caem (a chave nova muda a versão
+  # do cookie). Nada é apagado; reativar devolve o acesso com a mesma senha.
+  def suspender! = update!(suspenso_em: Time.current, sessao_chave: SecureRandom.hex(4))
+
+  def reativar! = update!(suspenso_em: nil)
 
   # Métrica do piloto: dias distintos com acesso ("voltou" = 2+ dias).
   def registrar_acesso!(ip)

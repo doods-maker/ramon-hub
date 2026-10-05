@@ -11,6 +11,14 @@ class PortalClientesAPI extends ApiClient {
     return axios.post(`${this.url}/${id}/convidar`);
   }
 
+  suspender(id) {
+    return axios.post(`${this.url}/${id}/suspender`);
+  }
+
+  reativar(id) {
+    return axios.post(`${this.url}/${id}/reativar`);
+  }
+
   assinatura(id, payload) {
     return axios.post(`${this.url}/${id}/assinatura`, payload);
   }

@@ -3,13 +3,13 @@
 # sempre clique humano.
 class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseController
   before_action :current_account
-  before_action :fetch_cliente, only: [:show, :update, :destroy, :convidar, :assinatura]
+  before_action :fetch_cliente, except: [:index, :create]
   before_action :check_authorization
 
   def index
     clientes = Current.account.portal_clientes.order(:nome).to_a
     render json: { payload: clientes.map { |c| linha(c) }, metricas: metricas(clientes),
-                   email_configurado: Ramon::PortalConvite.email_configurado? }
+                   email_configurado: Ramon::PortalConvite.email_configurado?, permissoes: permissoes }
   end
 
   def show
@@ -21,6 +21,7 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
   # consertar uma conta que ficou sem CPF (linhas anteriores ao login por CPF).
   def create
     cliente = Current.account.portal_clientes.find_or_initialize_by(advbox_customer_id: params[:advbox_customer_id])
+    authorize(:portal_cliente, :nova_senha?) if cliente.convidado_em.present?
     cliente.update!(params.permit(:nome, :cpf, :email, :telefone))
     sincronizar(cliente)
     render json: linha(cliente).merge(Ramon::PortalConvite.new(cliente).perform)
@@ -43,8 +44,21 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
   end
 
   # Reenviar convite = gerar senha provisória nova (a anterior deixa de valer).
+  # 1º convite: qualquer agente. Senha nova de quem já tem acesso: nova_senha?.
   def convidar
+    authorize(:portal_cliente, :nova_senha?) if @cliente.convidado_em.present?
     render json: linha(@cliente).merge(Ramon::PortalConvite.new(@cliente).perform)
+  end
+
+  # Suspender: não entra e cai das sessões abertas; nada é apagado.
+  def suspender
+    @cliente.suspender!
+    render json: linha(@cliente)
+  end
+
+  def reativar
+    @cliente.reativar!
+    render json: linha(@cliente)
   end
 
   def assinatura
@@ -67,6 +81,11 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
       send_automatic_email: false, send_automatic_whatsapp: false,
       data: variaveis.map { |de, para| { de: de, para: para.presence || '________' } }
     }
+  end
+
+  def permissoes
+    politica = PortalClientePolicy.new(pundit_user, :portal_cliente)
+    { gerir_acesso: politica.gerir_acesso?, excluir: politica.destroy? }
   end
 
   def fetch_cliente
@@ -106,6 +125,7 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
       id: cliente.id, nome: cliente.nome, cpf: cliente.cpf, email: cliente.email, advbox_customer_id: cliente.advbox_customer_id,
       convidado_em: cliente.convidado_em&.iso8601, termos_aceitos_em: cliente.termos_aceitos_em&.iso8601,
       sincronizado_em: cliente.sincronizado_em&.iso8601, ultimo_acesso_em: cliente.ultimo_acesso_em&.iso8601,
+      suspenso_em: cliente.suspenso_em&.iso8601,
       dias_acesso: cliente.dias_acesso,
       processos: cliente.processos.map { |p| p.slice('id', 'numero', 'tipo', 'etapa', 'fase', 'docs_pendentes') },
       envios_count: cliente.envios.count, assinaturas_pendentes: cliente.assinaturas.pendentes.count

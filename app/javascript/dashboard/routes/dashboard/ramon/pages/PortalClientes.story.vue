@@ -93,6 +93,22 @@ const CLIENTES = [
     envios_count: 7,
     assinaturas_pendentes: 1,
   },
+  {
+    id: 5,
+    nome: 'Pedro Henrique Alves',
+    advbox_customer_id: 9105,
+    cpf: '654.987.321-55',
+    email: 'pedro.alves@exemplo.com.br',
+    convidado_em: diasAtras(60),
+    termos_aceitos_em: diasAtras(59),
+    sincronizado_em: diasAtras(0),
+    ultimo_acesso_em: diasAtras(41),
+    suspenso_em: diasAtras(2),
+    dias_acesso: 3,
+    processos: [],
+    envios_count: 1,
+    assinaturas_pendentes: 0,
+  },
 ];
 
 const MARIA = {
@@ -159,7 +175,12 @@ const METRICAS = {
 };
 
 const API = {
-  portal_clientes: { payload: CLIENTES, metricas: METRICAS },
+  portal_clientes: {
+    payload: CLIENTES,
+    metricas: METRICAS,
+    email_configurado: true,
+    permissoes: { gerir_acesso: true, excluir: true },
+  },
   'portal_clientes/4': MARIA,
   // Texto da mensagem = proposta do Ramon::PortalConvite::MENSAGEM (gate do Eduardo).
   'portal_clientes/2/convidar': {
@@ -264,6 +285,7 @@ const novaSenha = n =>
     clicar('Nova senha provisória', n);
     setTimeout(() => clicar('Gerar senha nova'), 300);
   });
+const clicarEm = texto => depois(1500, () => clicar(texto));
 const confirmarSenha = depois(1500, () => clicar('Nova senha provisória', 0));
 const busca = depois(1500, () => {
   const campo = document.querySelector('input[type="search"]');
@@ -297,6 +319,12 @@ const busca = depois(1500, () => {
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="PC2 email enviado" :init-state="novaSenha(3)">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC3 suspender" :init-state="clicarEm('Suspender acesso')">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC3 excluir" :init-state="clicarEm('Excluir')">
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="Vazio" :init-state="vazio">
