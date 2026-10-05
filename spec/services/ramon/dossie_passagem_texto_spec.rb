@@ -29,8 +29,8 @@ RSpec.describe Ramon::DossiePassagemTexto do
 
     texto = described_class.new(lead: lead).perform
 
-    expect(texto).to start_with("DOSSIÊ DE PASSAGEM — João Carlos\n\nCLIENTE\n- Nome: João Carlos\n- CPF: 529.982.247-25")
-    expect(texto).to include('- Telefone: +55 (48) 99123-4567')
+    expect(texto).to start_with("DOSSIÊ DE PASSAGEM — João Carlos\n\nCLIENTE\n- Nome: João Carlos\n- CPF: 529.982.247-25\n" \
+                                 "- Nascimento: 14/05/1968\n- Telefone: +55 (48) 99123-4567")
     expect(texto).to include("CASO\n- Tese: Auxílio-acidente\n- Benefício: não informado\n- DCB: 12/03/2023")
     expect(texto).to include("SIMULAÇÃO\n- atrasados ~R$ 38.400,00\n- benefício mensal estimado (valor de hoje) ~R$ 1.412,50\n" \
                              "- honorário ~R$ 11.520,00\n- em 01/10/2026")
