@@ -1253,7 +1253,9 @@
       "COUNT": "{ok}/{total}",
       "CYCLE_HINT": "Click: confirmed → missing → clear",
       "PERGUNTAR": "ask →",
-      "PERGUNTA_INSERIDA": "Question inserted in the editor — adjust and send."
+      "PERGUNTA_INSERIDA": "Question inserted in the editor — adjust and send.",
+      "RESPONDIDAS": "✓ {count} answered",
+      "QUALIFICADO": "Qualified — {ok}/{total} answered"
     },
     "NPS": {
       "LABEL": "NPS (0–10)",

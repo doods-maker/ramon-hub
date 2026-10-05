@@ -748,13 +748,48 @@ describe('LeadPanelBody', () => {
       expect(copyTextToClipboard).toHaveBeenCalledWith('+55489999');
     });
 
-    it('mostra o cartão Qualificação viva', () => {
+    // posição da Qualificação entre os blocos do corpo do Resumo
+    const ordemQualificacao = stageId => {
       const wrapper = mountBody({
-        props: { lead: { ...lead, thesis_id: 3 } },
+        props: {
+          lead: {
+            ...lead,
+            thesis_id: 3,
+            docs_total: 4,
+            docs_received: 1,
+            lead_stage_id: stageId,
+          },
+        },
       });
-      expect(wrapper.findComponent({ name: 'QualificacaoViva' }).exists()).toBe(
-        true
-      );
+      expect(
+        wrapper.findAllComponents({ name: 'QualificacaoViva' })
+      ).toHaveLength(1);
+      const blocos = [
+        ...wrapper.find('[data-testid="lead-panel-corpo"]').element.children,
+      ];
+      const pos = sel => blocos.indexOf(wrapper.find(sel).element);
+      return {
+        qualificacao: blocos.indexOf(
+          wrapper.findComponent({ name: 'QualificacaoViva' }).element
+        ),
+        andamento: pos('[data-testid="panel-card-andamento"]'),
+        docs: pos('[data-testid="panel-card-docs"]'),
+      };
+    };
+
+    it('Qualificação no topo nas 2 primeiras etapas abertas (Novo/Qualificação)', () => {
+      [1, 4].forEach(stageId => {
+        const { qualificacao, andamento } = ordemQualificacao(stageId);
+        expect(qualificacao).toBe(0);
+        expect(qualificacao).toBeLessThan(andamento);
+      });
+    });
+
+    it('depois das 2 primeiras etapas, Qualificação desce para baixo de Documentos', () => {
+      [5, 2].forEach(stageId => {
+        const { qualificacao, docs } = ordemQualificacao(stageId);
+        expect(qualificacao).toBe(docs + 1);
+      });
     });
 
     it('Andamento: só a mini-esteira (etapa fica na pílula), chance rotulada e sem o valor', () => {

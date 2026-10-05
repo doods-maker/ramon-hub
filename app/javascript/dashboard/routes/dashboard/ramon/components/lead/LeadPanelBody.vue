@@ -442,6 +442,14 @@ const showContrato = computed(() => {
   const realizada = stages.value.find(s => s.label === STAGE_REUNIAO_REALIZADA);
   return Boolean(realizada) && stage.position >= realizada.position;
 });
+// Qualificação no topo do Resumo enquanto o lead está nas 2 primeiras etapas
+// abertas do funil (Novo/Qualificação, pela posição); depois desce.
+const qualificacaoNoTopo = computed(() => {
+  const abertas = (stages.value || [])
+    .filter(s => !s.is_won && !s.is_lost)
+    .sort((a, b) => a.position - b.position);
+  return abertas.slice(0, 2).some(s => s.id === props.lead?.lead_stage_id);
+});
 const simuladorDot = computed(() =>
   props.lead?.custom_attributes?.ultima_simulacao ? 'bg-n-teal-9' : null
 );
@@ -952,6 +960,12 @@ const discard = async () => {
       class="flex flex-col flex-1 gap-3 min-w-0 overflow-y-auto overflow-x-hidden p-3"
     >
       <template v-if="shownTab === 'resumo'">
+        <QualificacaoViva
+          v-if="qualificacaoNoTopo"
+          :lead="lead"
+          :context="context"
+        />
+
         <LeadCopilot
           v-if="inConversation && conversationId"
           :conversation-id="conversationId"
@@ -1104,7 +1118,11 @@ const discard = async () => {
           </div>
         </button>
 
-        <QualificacaoViva :lead="lead" :context="context" />
+        <QualificacaoViva
+          v-if="!qualificacaoNoTopo"
+          :lead="lead"
+          :context="context"
+        />
 
         <LeadQuizResumo :lead="lead" />
 
