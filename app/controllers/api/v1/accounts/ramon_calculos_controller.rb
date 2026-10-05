@@ -20,9 +20,7 @@ class Api::V1::Accounts::RamonCalculosController < Api::V1::Accounts::BaseContro
   # pode vazar pro seguinte (viraria RMI da pessoa errada). Nasce sem contato e
   # com source calculo-advbox: invisível no funil (ver Lead.funil).
   def rascunho
-    lead = Current.account.leads.find_or_create_by!(
-      source: Lead::FONTE_CALCULO, contact_id: nil, name: "Cálculo rápido — #{Current.user.name}"
-    ) { |novo| novo.lead_stage = Current.account.lead_stages.order(:position).first }
+    lead = Lead.rascunho_de!(Current.account, Current.user)
     lead.update!(cnis: nil)
     render json: lead.push_event_data.merge(cnis_resumo: lead.cnis_resumo)
   end

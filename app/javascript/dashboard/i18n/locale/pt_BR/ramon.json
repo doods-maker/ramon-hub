@@ -582,7 +582,11 @@
       "ADVBOX_EMPTY": "Nenhum cadastro no AdvBox com esse termo.",
       "ADVBOX_ERROR": "Não deu pra consultar o AdvBox agora. Tente de novo.",
       "CREATE_CASE": "Criar caso de cálculo",
-      "CREATE_ERROR": "Não deu pra criar o caso de cálculo. Tente de novo."
+      "CREATE_ERROR": "Não deu pra criar o caso de cálculo. Tente de novo.",
+      "REABRIR_TITULO": "Substituir o CNIS atual deste lead pelo do cálculo de {data}?",
+      "REABRIR_SUBSTITUIR": "Substituir",
+      "REABRIR_RASCUNHO": "Abrir no meu rascunho",
+      "REABRIR_ERRO": "Não foi possível reabrir o cálculo."
     },
     "CONTEUDO": {
       "COM_ERRO": "Deu erro — abra pra ver",

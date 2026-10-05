@@ -1,17 +1,21 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import ContactAPI from 'dashboard/api/contacts';
 import LeadsAPI from 'dashboard/api/leads';
 import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
 import CalculosAPI from 'dashboard/api/calculos';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import LeadSimulador from '../components/conversation/LeadSimulador.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CAMPO, CAMPO_GRANDE, CARTAO, LINHA, TITULO } from '../helpers/ui';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 // ---- deep-link (rota com leadId): carrega o lead direto, sem passar pela busca
 const lead = ref(null);
@@ -85,26 +89,58 @@ watch(historicoQuery, () => {
   historicoTimer = setTimeout(carregarHistorico, 300);
 });
 
-const reabrirCalculo = async item => {
-  historicoError.value = false;
-  try {
-    const { data } = await CalculosAPI.reabrir(item.id);
-    restaurado.value = data;
-    simuladorKey.value += 1;
-    historicoOpen.value = false;
-    if (rascunho.value && data.lead_id === rascunho.value.id) {
-      modo.value = 'calculadora';
-      seguradoNome.value = item.segurado_nome || '';
-    } else {
-      router.push({
-        name: 'ramon_calculos_lead',
-        params: { leadId: data.lead_id },
-      });
-    }
-  } catch (e) {
-    historicoError.value = true;
+// Item do histórico esperando a resposta da janela "substituir o CNIS?".
+const reabrirPendente = ref(null);
+
+// Abre o cálculo devolvido pelo servidor: no MEU rascunho fica na tela (com a
+// tese que veio junto); num lead, navega pra calculadora dele.
+const abrirReaberto = (data, nome) => {
+  restaurado.value = data;
+  simuladorKey.value += 1;
+  historicoOpen.value = false;
+  if (rascunho.value && data.lead_id === rascunho.value.id) {
+    modo.value = 'calculadora';
+    rascunho.value = {
+      ...rascunho.value,
+      thesis_id: data.thesis_id ?? null,
+      thesis_name: data.thesis_name ?? null,
+    };
+    seguradoNome.value = nome || '';
+  } else {
+    router.push({
+      name: 'ramon_calculos_lead',
+      params: { leadId: data.lead_id },
+    });
   }
 };
+
+// destino 'rascunho' = copia pro meu rascunho e deixa o lead intacto. Erro
+// vira aviso e a lista fica onde está.
+const executarReabrir = async (item, destino) => {
+  reabrirPendente.value = null;
+  try {
+    const { data } = await CalculosAPI.reabrir(item.id, destino);
+    abrirReaberto(data, item.segurado_nome);
+  } catch (e) {
+    useAlert(t('RAMON.CALCULOS.REABRIR_ERRO'));
+  }
+};
+
+// Cálculo rápido volta sempre no meu rascunho (o servidor garante). De lead
+// real que hoje tem OUTRO CNIS, pergunta antes de trocar.
+const reabrirCalculo = item => {
+  if (item.substitui_cnis) {
+    reabrirPendente.value = item;
+    return;
+  }
+  executarReabrir(item);
+};
+
+const diaMes = iso =>
+  new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  });
 
 const apagarCalculo = async item => {
   try {
@@ -668,5 +704,19 @@ const fmtDate = value => {
         </template>
       </div>
     </div>
+
+    <ConfirmModal
+      v-if="reabrirPendente"
+      :title="
+        $t('RAMON.CALCULOS.REABRIR_TITULO', {
+          data: diaMes(reabrirPendente.created_at),
+        })
+      "
+      :confirm-label="$t('RAMON.CALCULOS.REABRIR_SUBSTITUIR')"
+      :alt-label="$t('RAMON.CALCULOS.REABRIR_RASCUNHO')"
+      @confirm="executarReabrir(reabrirPendente)"
+      @alt="executarReabrir(reabrirPendente, 'rascunho')"
+      @cancel="reabrirPendente = null"
+    />
   </div>
 </template>

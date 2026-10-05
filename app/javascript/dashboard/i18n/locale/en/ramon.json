@@ -582,7 +582,11 @@
       "ADVBOX_EMPTY": "No AdvBox record matches that term.",
       "ADVBOX_ERROR": "Could not reach AdvBox right now. Try again.",
       "CREATE_CASE": "Create calculation case",
-      "CREATE_ERROR": "Could not create the calculation case. Try again."
+      "CREATE_ERROR": "Could not create the calculation case. Try again.",
+      "REABRIR_TITULO": "Replace this lead's current CNIS with the one from the {data} calculation?",
+      "REABRIR_SUBSTITUIR": "Replace",
+      "REABRIR_RASCUNHO": "Open in my draft",
+      "REABRIR_ERRO": "Could not reopen the calculation."
     },
     "CONTEUDO": {
       "COM_ERRO": "Has an error — open to see",

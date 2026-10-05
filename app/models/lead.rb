@@ -2,6 +2,7 @@ class Lead < ApplicationRecord
   include LeadCadence
   include LeadDocs
   include LeadComercial
+  include LeadCasoCalculo
 
   PRESCRIPTION_WINDOW_MONTHS = 60
 

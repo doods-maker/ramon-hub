@@ -14,6 +14,13 @@ const push = vi.fn(({ params }) => {
   Object.assign(routeParams, params);
 });
 
+const alertSpy = vi.fn();
+vi.mock('dashboard/composables', () => ({
+  useAlert: (...a) => alertSpy(...a),
+}));
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({ t: (k, p) => (p ? `${k} ${JSON.stringify(p)}` : k) }),
+}));
 vi.mock('vue-router', () => ({
   useRoute: () => ({ params: routeParams }),
   useRouter: () => ({ push }),
@@ -164,7 +171,7 @@ describe('Calculos.vue', () => {
       .trigger('click');
     await flushPromises();
 
-    expect(CalculosAPI.reabrir).toHaveBeenCalledWith(5);
+    expect(CalculosAPI.reabrir).toHaveBeenCalledWith(5, undefined);
     // mesmo lead do rascunho: fica na tela, sem navegar
     expect(push).not.toHaveBeenCalled();
     const stub = wrapper.findComponent({ name: 'LeadSimulador' });
@@ -225,6 +232,80 @@ describe('Calculos.vue', () => {
     expect(
       wrapper.find('[data-testid="calculos-segurado-nome"]').element.value
     ).toBe('Dona Zilda');
+  });
+
+  describe('reabrir com segurança (K2)', () => {
+    const abrirHistorico = async item => {
+      CalculosAPI.historico.mockResolvedValue({ data: { payload: [item] } });
+      const wrapper = mount(Calculos, mountOptions);
+      await flushPromises();
+      await wrapper
+        .find('[data-testid="calculos-historico-toggle"]')
+        .trigger('click');
+      await flushPromises();
+      await wrapper
+        .find('[data-testid="calculos-historico-item"]')
+        .trigger('click');
+      await flushPromises();
+      return wrapper;
+    };
+    const itemLead = {
+      id: 9,
+      tipo: 'painel',
+      lead_id: 40,
+      segurado_nome: 'João Carlos Pereira',
+      created_at: '2026-09-28T14:32:00.000Z',
+      substitui_cnis: true,
+    };
+
+    it('lead com outro CNIS: pergunta antes e "Abrir no meu rascunho" não toca o lead', async () => {
+      CalculosAPI.reabrir.mockResolvedValue({
+        data: { lead_id: 77, tipo: 'painel', params: {}, cnis: null },
+      });
+      const wrapper = await abrirHistorico(itemLead);
+
+      expect(CalculosAPI.reabrir).not.toHaveBeenCalled();
+      expect(wrapper.find('[data-testid="confirm-modal-alt"]').exists()).toBe(
+        true
+      );
+      await wrapper.find('[data-testid="confirm-modal-alt"]').trigger('click');
+      await flushPromises();
+
+      expect(CalculosAPI.reabrir).toHaveBeenCalledWith(9, 'rascunho');
+      expect(push).not.toHaveBeenCalled();
+      expect(
+        wrapper.find('[data-testid="calculos-segurado-nome"]').element.value
+      ).toBe('João Carlos Pereira');
+    });
+
+    it('"Substituir" reabre no próprio lead e navega pra ele', async () => {
+      CalculosAPI.reabrir.mockResolvedValue({
+        data: { lead_id: 40, tipo: 'painel', params: {}, cnis: null },
+      });
+      const wrapper = await abrirHistorico(itemLead);
+      await wrapper
+        .find('[data-testid="confirm-modal-confirm"]')
+        .trigger('click');
+      await flushPromises();
+
+      expect(CalculosAPI.reabrir).toHaveBeenCalledWith(9, undefined);
+      expect(push).toHaveBeenCalledWith({
+        name: 'ramon_calculos_lead',
+        params: { leadId: 40 },
+      });
+    });
+
+    it('erro ao reabrir vira aviso e a lista continua', async () => {
+      CalculosAPI.reabrir.mockRejectedValue(new Error('x'));
+      const wrapper = await abrirHistorico({
+        ...itemLead,
+        substitui_cnis: false,
+      });
+      expect(alertSpy).toHaveBeenCalledWith('RAMON.CALCULOS.REABRIR_ERRO');
+      expect(
+        wrapper.find('[data-testid="calculos-historico-item"]').exists()
+      ).toBe(true);
+    });
   });
 
   it('erro ao abrir a calculadora permite tentar de novo', async () => {

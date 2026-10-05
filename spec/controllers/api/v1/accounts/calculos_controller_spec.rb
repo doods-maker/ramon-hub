@@ -82,6 +82,42 @@ RSpec.describe 'Calculos API', type: :request do
     end
   end
 
+  describe 'POST /calculos/:id/reabrir — destino seguro' do
+    let(:outro) { create(:user, account: account, role: :agent) }
+    let(:rascunho_do_outro) { Lead.rascunho_de!(account, outro) }
+
+    def reabrir(calculo, params = {})
+      post "/api/v1/accounts/#{account.id}/calculos/#{calculo.id}/reabrir",
+           params: params, headers: agent.create_new_auth_token, as: :json
+    end
+
+    it 'cálculo rápido de outra pessoa volta no MEU rascunho e não mexe no dela' do
+      rascunho_do_outro.update!(cnis: { 'filename' => 'atual-do-outro.pdf' })
+      calculo = Calculo.create!(account: account, lead: rascunho_do_outro, user: outro, tipo: 'painel',
+                                snapshot: { 'params' => { 'der' => '2026-03-10' }, 'cnis' => cnis })
+
+      reabrir(calculo)
+
+      meu = Lead.rascunho_de!(account, agent)
+      expect(response.parsed_body['lead_id']).to eq(meu.id)
+      expect(meu.reload.cnis['filename']).to eq('cnis.pdf')
+      expect(rascunho_do_outro.reload.cnis['filename']).to eq('atual-do-outro.pdf')
+    end
+
+    it 'de lead real com destino=rascunho copia pro meu rascunho (com a tese) e deixa o lead intacto' do
+      tese = create(:thesis, account: account)
+      lead.update!(cnis: { 'filename' => 'cnis-atual.pdf' }, thesis: tese)
+      calculo = cria_calculo(snapshot_cnis: cnis)
+
+      reabrir(calculo, destino: 'rascunho')
+
+      meu = Lead.rascunho_de!(account, agent)
+      expect(response.parsed_body).to include('lead_id' => meu.id, 'thesis_id' => tese.id)
+      expect(meu.reload.cnis['filename']).to eq('cnis.pdf')
+      expect(lead.reload.cnis['filename']).to eq('cnis-atual.pdf')
+    end
+  end
+
   describe 'gravação automática' do
     it 'painel calculado vira registro com CNIS e nome do segurado' do
       lead.update!(cnis: cnis)
