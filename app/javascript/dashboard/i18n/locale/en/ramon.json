@@ -1191,7 +1191,10 @@
       "CNIS_SEXO_TROCAR": "change",
       "TESE": "Calculation thesis",
       "TESE_SELECIONE": "Choose the thesis",
-      "TESE_ESCOLHA": "Choose the thesis above to calculate the fee."
+      "TESE_ESCOLHA": "Choose the thesis above to calculate the fee.",
+      "SALVAR_VALOR": "Save as this lead's value",
+      "VALOR_SALVO": "Lead value updated",
+      "SALVAR_VALOR_ERRO": "Could not save the lead value."
     },
     "LIQUIDACAO": {
       "TITULO": "Judgment liquidation",

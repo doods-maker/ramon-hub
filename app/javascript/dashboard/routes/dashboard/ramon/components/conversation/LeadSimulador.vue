@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
 import LeadsAPI from 'dashboard/api/leads';
 import ThesesAPI from 'dashboard/api/theses';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -271,30 +272,43 @@ const removeCnis = async () => {
 
 // Persiste o essencial da última simulação no lead (o Modo Foco da Esteira
 // lê custom_attributes.ultima_simulacao; o PATCH faz deep_merge no server).
-// Best-effort: falha do PATCH nunca esconde o resultado já exibido.
-const persistirUltimaSimulacao = async data => {
-  try {
-    await LeadsAPI.update(props.lead.id, {
-      custom_attributes: {
-        ultima_simulacao: {
-          mensal: data.mensal,
-          atrasados: data.atrasados,
-          honorario_valor: data.honorario?.valor || null,
-          tese: data.honorario?.tese || props.lead.thesis_name || null,
-          em: new Date().toISOString(),
-          parametros: {
-            der: form.value.der,
-            salario: form.value.salario,
-            beneficio: form.value.beneficio,
-            origem: form.value.origem,
-            acrescimo_25: form.value.acrescimo_25,
-            usar_cnis: Boolean(cnis.value),
-          },
+// Vira o VALOR do lead no funil (LeadValorEstimado), então só acontece no
+// clique explícito em "Salvar como valor deste lead" — simular não grava.
+// `f` = formulário do momento em que o resultado saiu (não o de agora).
+const persistirUltimaSimulacao = (data, f) =>
+  LeadsAPI.update(props.lead.id, {
+    custom_attributes: {
+      ultima_simulacao: {
+        mensal: data.mensal,
+        atrasados: data.atrasados,
+        honorario_valor: data.honorario?.valor || null,
+        tese: data.honorario?.tese || props.lead.thesis_name || null,
+        em: new Date().toISOString(),
+        parametros: {
+          der: f.der,
+          salario: f.salario,
+          beneficio: f.beneficio,
+          origem: f.origem,
+          acrescimo_25: f.acrescimo_25,
+          usar_cnis: f.usar_cnis,
         },
       },
-    });
+    },
+  });
+
+const salvandoValor = ref(false);
+const valorSalvo = ref(false);
+let formDoResultado = null;
+const salvarValor = async () => {
+  salvandoValor.value = true;
+  try {
+    await persistirUltimaSimulacao(resultado.value, formDoResultado);
+    valorSalvo.value = true;
+    useAlert(t('RAMON.SIMULADOR.VALOR_SALVO'));
   } catch {
-    // silêncio: persistência é conveniência, o resultado na tela é a fonte
+    useAlert(t('RAMON.SIMULADOR.SALVAR_VALOR_ERRO'));
+  } finally {
+    salvandoValor.value = false;
   }
 };
 
@@ -311,7 +325,8 @@ const simulate = async () => {
       segurado_nome: props.seguradoNome || undefined,
     });
     resultado.value = data;
-    await persistirUltimaSimulacao(data);
+    formDoResultado = { ...form.value, usar_cnis: Boolean(cnis.value) };
+    valorSalvo.value = false;
   } catch (error) {
     handleMotorError(error);
   } finally {
@@ -1047,6 +1062,24 @@ const aba = ref(
                 : $t('RAMON.SIMULADOR.MEMORIA_SHOW')
           "
           @click="verMemoria"
+        />
+        <!-- Lead do funil: o resultado só vira valor do lead se pedir. Caso de
+             cálculo (rascunho/oculto) não tem valor de funil. -->
+        <Button
+          v-if="!casoDeCalculo"
+          data-testid="sim-salvar-valor"
+          sm
+          faded
+          :color="valorSalvo ? 'teal' : 'blue'"
+          :icon="valorSalvo ? 'i-lucide-check' : 'i-lucide-save'"
+          :disabled="salvandoValor || valorSalvo"
+          class="self-start"
+          :label="
+            valorSalvo
+              ? $t('RAMON.SIMULADOR.VALOR_SALVO')
+              : $t('RAMON.SIMULADOR.SALVAR_VALOR')
+          "
+          @click="salvarValor"
         />
         <div
           v-if="memoria"

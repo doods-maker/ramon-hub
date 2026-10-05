@@ -1191,7 +1191,10 @@
       "CNIS_SEXO_TROCAR": "trocar",
       "TESE": "Tese do cálculo",
       "TESE_SELECIONE": "Escolha a tese",
-      "TESE_ESCOLHA": "Escolha a tese acima para calcular o honorário."
+      "TESE_ESCOLHA": "Escolha a tese acima para calcular o honorário.",
+      "SALVAR_VALOR": "Salvar como valor deste lead",
+      "VALOR_SALVO": "Valor do lead atualizado",
+      "SALVAR_VALOR_ERRO": "Não foi possível salvar o valor do lead."
     },
     "LIQUIDACAO": {
       "TITULO": "Liquidação de sentença",

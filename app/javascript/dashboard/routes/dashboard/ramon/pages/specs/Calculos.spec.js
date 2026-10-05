@@ -46,7 +46,7 @@ vi.mock('dashboard/api/calculos', () => ({
 vi.mock('../../components/conversation/LeadSimulador.vue', () => ({
   default: {
     name: 'LeadSimulador',
-    props: ['lead', 'inicial', 'seguradoNome'],
+    props: ['lead', 'inicial', 'seguradoNome', 'ultimaSimulacao'],
     template: '<div data-testid="stub-simulador">{{ lead.id }}</div>',
   },
 }));
@@ -532,6 +532,23 @@ describe('Calculos.vue', () => {
       name: 'ramon_calculos_lead',
       params: { leadId: 33 },
     });
+  });
+
+  it('lead aberto direto passa a última simulação pro simulador (K4)', async () => {
+    const ultima = { mensal: '1825.96', atrasados: '23737.48' };
+    LeadsAPI.show.mockResolvedValue({
+      data: {
+        id: 42,
+        name: 'João',
+        custom_attributes: { ultima_simulacao: ultima },
+      },
+    });
+    routeParams.leadId = 42;
+    const wrapper = mount(Calculos, mountOptions);
+    await flushPromises();
+    expect(
+      wrapper.findComponent({ name: 'LeadSimulador' }).props('ultimaSimulacao')
+    ).toEqual(ultima);
   });
 
   it('contato do hub sem lead ganha botão de criar caso de cálculo', async () => {

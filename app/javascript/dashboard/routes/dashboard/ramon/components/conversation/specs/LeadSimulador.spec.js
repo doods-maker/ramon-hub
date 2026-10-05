@@ -3,6 +3,10 @@ import LeadsAPI from 'dashboard/api/leads';
 import LeadSimulador from '../LeadSimulador.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+const alertSpy = vi.fn();
+vi.mock('dashboard/composables', () => ({
+  useAlert: (...a) => alertSpy(...a),
+}));
 vi.mock('dashboard/api/theses', () => ({
   default: {
     get: vi.fn(() =>
@@ -206,12 +210,19 @@ describe('LeadSimulador.vue', () => {
     );
   });
 
-  it('persiste a última simulação no lead após simular com sucesso', async () => {
+  it('simular NÃO grava no lead; "Salvar como valor deste lead" grava a última simulação (K4)', async () => {
     LeadsAPI.simulate.mockResolvedValue({ data: resultado });
     const wrapper = mountSim();
     await fillForm(wrapper);
     await wrapper.find('[data-testid="sim-run"]').trigger('click');
     await flushPromises();
+    expect(LeadsAPI.update).not.toHaveBeenCalled();
+
+    // mexer no form depois do resultado não muda o que é salvo
+    await wrapper.find('[data-testid="sim-der"]').setValue('2026-01-01');
+    await wrapper.find('[data-testid="sim-salvar-valor"]').trigger('click');
+    await flushPromises();
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.SIMULADOR.VALOR_SALVO');
     expect(LeadsAPI.update).toHaveBeenCalledWith(7, {
       custom_attributes: {
         ultima_simulacao: expect.objectContaining({
@@ -229,15 +240,29 @@ describe('LeadSimulador.vue', () => {
     });
   });
 
-  it('falha do PATCH de persistência não esconde o resultado da simulação', async () => {
+  it('falha ao salvar o valor vira aviso e não esconde o resultado', async () => {
     LeadsAPI.simulate.mockResolvedValue({ data: resultado });
     LeadsAPI.update.mockRejectedValue(new Error('offline'));
     const wrapper = mountSim();
     await fillForm(wrapper);
     await wrapper.find('[data-testid="sim-run"]').trigger('click');
     await flushPromises();
+    await wrapper.find('[data-testid="sim-salvar-valor"]').trigger('click');
+    await flushPromises();
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.SIMULADOR.SALVAR_VALOR_ERRO');
     expect(wrapper.find('[data-testid="sim-resultado"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="sim-error"]').exists()).toBe(false);
+  });
+
+  it('caso de cálculo (rascunho/oculto) não oferece salvar valor', async () => {
+    LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+    const wrapper = mountSim({ lead: { ...lead, source: 'calculo-advbox' } });
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="sim-salvar-valor"]').exists()).toBe(
+      false
+    );
   });
 
   it('mostra estado explicativo quando o motor está fora do ar (503)', async () => {

@@ -379,7 +379,12 @@ const fmtDate = value => {
             />
           </template>
         </RamonPageHeader>
-        <LeadSimulador :key="simuladorKey" :lead="lead" :inicial="restaurado" />
+        <LeadSimulador
+          :key="simuladorKey"
+          :lead="lead"
+          :inicial="restaurado"
+          :ultima-simulacao="lead.custom_attributes?.ultima_simulacao || null"
+        />
       </div>
     </template>
 
