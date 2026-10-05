@@ -1,3 +1,4 @@
+import { h } from 'vue';
 import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadPanelBody from '../LeadPanelBody.vue';
@@ -46,10 +47,22 @@ const build = ({
         namespaced: true,
         getters: {
           getStages: () => [
-            { id: 1, name: 'Novo', probability: 10 },
-            { id: 2, name: 'Fechado', is_won: true },
-            { id: 3, name: 'Perdido', is_lost: true },
-            { id: 4, name: 'Reunião', label: 'fase-reuniao-agendada' },
+            { id: 1, name: 'Novo', probability: 10, position: 1 },
+            { id: 2, name: 'Fechado', is_won: true, position: 5 },
+            { id: 3, name: 'Perdido', is_lost: true, position: 6 },
+            {
+              id: 4,
+              name: 'Reunião',
+              label: 'fase-reuniao-agendada',
+              position: 2,
+            },
+            {
+              id: 5,
+              name: 'Reunião realizada',
+              label: 'fase-reuniao-realizada',
+              position: 3,
+            },
+            { id: 6, name: 'Negociação', position: 4 },
           ],
           getLostReasons: () => [],
           getBenefitTypes: () => [{ id: 31, name: 'B31' }],
@@ -73,17 +86,26 @@ const build = ({
     },
   });
 
+// router-link custom: entrega o navigate (espião) pro slot
+const navigate = vi.fn();
+const RouterLink = {
+  props: { to: Object, custom: Boolean },
+  setup:
+    (_, { slots }) =>
+    () =>
+      h('div', slots.default?.({ navigate })),
+};
 const stubs = {
   LeadNextAction: true,
   LeadZapsignCard: true,
   LeadCopilot: true,
   LeadFields: true,
-  LeadHistory: true,
   LeadPlaybook: true,
   LeadSimulador: true,
   ConversationAction: true,
   MacrosList: true,
-  RouterLink: { template: '<a><slot /></a>' },
+  RouterLink,
+  teleport: true,
 };
 
 const mountBody = ({ props = {}, spies = {} } = {}) =>
@@ -102,46 +124,80 @@ describe('LeadPanelBody', () => {
     Element.prototype.scrollIntoView = vi.fn();
   });
 
-  describe('abas', () => {
+  describe('navegação por ícone', () => {
+    const ativo = wrapper =>
+      wrapper.find('[aria-current="page"]').attributes('data-testid');
+    const temContrato = leadProps =>
+      mountBody({ props: { lead: { ...lead, ...leadProps } } })
+        .find('[data-testid="lead-nav-contrato"]')
+        .exists();
+
     it('abre no Resumo por padrão com o card de próxima ação', () => {
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
         true
       );
-      expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(
-        false
-      );
+      expect(ativo(wrapper)).toBe('lead-nav-resumo');
     });
 
-    it('troca o conteúdo ao clicar em outra aba e persiste a escolha', async () => {
+    it('troca o conteúdo ao clicar em Scripts e persiste a escolha', async () => {
       const wrapper = mountBody();
-      await wrapper.find('[data-testid="lead-tab-historico"]').trigger('click');
-      expect(wrapper.findComponent({ name: 'LeadHistory' }).exists()).toBe(
+      await wrapper.find('[data-testid="lead-nav-playbook"]').trigger('click');
+      expect(wrapper.findComponent({ name: 'LeadPlaybook' }).exists()).toBe(
         true
       );
-      // Próxima ação agora vive no corpo do Resumo (cartões enxutos, D3):
-      // some ao trocar de aba.
+      // Próxima ação vive no corpo do Resumo: some ao trocar de item.
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
         false
       );
-      expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('historico');
+      expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('playbook');
     });
 
-    it('mostra a aba Contrato em qualquer tese', () => {
-      expect(
-        mountBody().find('[data-testid="lead-tab-contrato"]').exists()
-      ).toBe(true);
-      const wrapper = mountBody({
-        props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
-      });
-      expect(wrapper.find('[data-testid="lead-tab-contrato"]').exists()).toBe(
+    it('restaura o item persistido', () => {
+      localStorage.setItem('ramon_lead_panel_tab', 'playbook');
+      expect(mountBody().findComponent({ name: 'LeadPlaybook' }).exists()).toBe(
         true
       );
     });
 
-    it('aba Contrato persistida abre o cartão do ZapSign', () => {
+    it.each(['historico', 'simulador', 'qualquer'])(
+      'valor salvo legado (%s) cai no Resumo',
+      valor => {
+        localStorage.setItem('ramon_lead_panel_tab', valor);
+        const wrapper = mountBody();
+        expect(ativo(wrapper)).toBe('lead-nav-resumo');
+        expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(
+          true
+        );
+        expect(
+          wrapper.find('[data-testid="lead-simulador-largo"]').exists()
+        ).toBe(false);
+      }
+    );
+
+    it('Contrato só aparece de Reunião realizada em diante (perda não conta)', () => {
+      expect(temContrato({ lead_stage_id: 1 })).toBe(false);
+      expect(temContrato({ lead_stage_id: 4 })).toBe(false);
+      expect(temContrato({ lead_stage_id: 5 })).toBe(true);
+      expect(temContrato({ lead_stage_id: 6 })).toBe(true);
+      expect(temContrato({ lead_stage_id: 2 })).toBe(true);
+      expect(temContrato({ lead_stage_id: 3 })).toBe(false);
+    });
+
+    it('Contrato aparece em qualquer etapa quando o ZapSign já foi gerado', () => {
+      expect(
+        temContrato({
+          lead_stage_id: 1,
+          custom_attributes: { zapsign: { sign_url: 'https://x' } },
+        })
+      ).toBe(true);
+    });
+
+    it('Contrato persistido abre o cartão do ZapSign na fase de contrato', () => {
       localStorage.setItem('ramon_lead_panel_tab', 'contrato');
-      const wrapper = mountBody();
+      const wrapper = mountBody({
+        props: { lead: { ...lead, lead_stage_id: 5 } },
+      });
       expect(wrapper.findComponent({ name: 'LeadCopilot' }).exists()).toBe(
         false
       );
@@ -150,24 +206,84 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('restaura a aba persistida', () => {
-      localStorage.setItem('ramon_lead_panel_tab', 'simulador');
+    it('Contrato persistido cai no Resumo quando o item sumiu', () => {
+      localStorage.setItem('ramon_lead_panel_tab', 'contrato');
       const wrapper = mountBody();
-      expect(wrapper.findComponent({ name: 'LeadSimulador' }).exists()).toBe(
-        true
+      expect(wrapper.findComponent({ name: 'LeadZapsignCard' }).exists()).toBe(
+        false
       );
+      expect(ativo(wrapper)).toBe('lead-nav-resumo');
     });
 
-    it('mostra dot verde no Simulador quando há última simulação', () => {
+    it('Docs só com tese', () => {
+      expect(
+        mountBody().find('[data-testid="lead-nav-documentos"]').exists()
+      ).toBe(false);
+      expect(
+        mountBody({ props: { lead: { ...lead, thesis_id: 3 } } })
+          .find('[data-testid="lead-nav-documentos"]')
+          .exists()
+      ).toBe(true);
+    });
+
+    it('mostra dot verde no Simular quando há última simulação', () => {
       const wrapper = mountBody({
         props: {
           lead: { ...lead, custom_attributes: { ultima_simulacao: { x: 1 } } },
         },
       });
-      const dot = wrapper.find('[data-testid="lead-tab-dot-simulador"]');
+      const dot = wrapper.find('[data-testid="lead-nav-dot-simulador"]');
       expect(dot.exists()).toBe(true);
       expect(dot.classes()).toContain('bg-n-teal-9');
     });
+  });
+
+  describe('Simular largo', () => {
+    const largo = wrapper =>
+      wrapper.find('[data-testid="lead-simulador-largo"]');
+
+    it('abre por cima com o Simulador; Esc fecha e o item ativo volta', async () => {
+      localStorage.setItem('ramon_lead_panel_tab', 'playbook');
+      const wrapper = mountBody();
+      await wrapper.find('[data-testid="lead-nav-simulador"]').trigger('click');
+      expect(largo(wrapper).exists()).toBe(true);
+      expect(
+        largo(wrapper).findComponent({ name: 'LeadSimulador' }).exists()
+      ).toBe(true);
+      expect(
+        wrapper.find('[aria-current="page"]').attributes('data-testid')
+      ).toBe('lead-nav-simulador');
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await flushPromises();
+      expect(largo(wrapper).exists()).toBe(false);
+      expect(
+        wrapper.find('[aria-current="page"]').attributes('data-testid')
+      ).toBe('lead-nav-playbook');
+      expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('playbook');
+    });
+
+    it('"Voltar ao painel" fecha', async () => {
+      const wrapper = mountBody();
+      await wrapper.find('[data-testid="lead-nav-simulador"]').trigger('click');
+      await wrapper
+        .find('[data-testid="lead-simulador-voltar"]')
+        .trigger('click');
+      expect(largo(wrapper).exists()).toBe(false);
+    });
+  });
+
+  it('"Histórico completo na ficha" navega pro Dossiê como o "Abrir ficha"', async () => {
+    navigate.mockClear();
+    const wrapper = mountBody();
+    await wrapper.find('[data-testid="lead-historico-ficha"]').trigger('click');
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(wrapper.emitted('navigate')).toHaveLength(1);
+    const rotas = wrapper.findAllComponents(RouterLink).map(r => r.props('to'));
+    expect(rotas).toEqual([
+      { name: 'ramon_lead_dossie', params: { leadId: 7 } },
+      { name: 'ramon_lead_dossie', params: { leadId: 7 } },
+    ]);
   });
 
   describe('badge de valor estimado automático no chip', () => {
@@ -534,9 +650,9 @@ describe('LeadPanelBody', () => {
       await wrapper.find('[data-testid="panel-card-docs"]').trigger('click');
       expect(
         wrapper
-          .find('[data-testid="lead-tab-documentos"]')
-          .attributes('aria-selected')
-      ).toBe('true');
+          .find('[data-testid="lead-nav-documentos"]')
+          .attributes('aria-current')
+      ).toBe('page');
     });
 
     it('expande o formulário completo pelo link "editar todos os campos" (dentro de Dados do contato)', async () => {
@@ -553,11 +669,11 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(true);
     });
 
-    it('completeData do ZapSign (aba Contrato) volta pro Resumo com o formulário aberto', async () => {
+    it('completeData do ZapSign (Contrato) volta pro Resumo com o formulário aberto', async () => {
       const wrapper = mountBody({
-        props: { lead: { ...lead, thesis_name: 'Auxílio-acidente' } },
+        props: { lead: { ...lead, lead_stage_id: 5 } },
       });
-      await wrapper.find('[data-testid="lead-tab-contrato"]').trigger('click');
+      await wrapper.find('[data-testid="lead-nav-contrato"]').trigger('click');
       wrapper
         .findComponent({ name: 'LeadZapsignCard' })
         .vm.$emit('completeData');
@@ -731,7 +847,9 @@ describe('LeadPanelBody', () => {
       expect(linha.text()).toContain(formatBrl(706));
       expect(linha.text()).toContain('02/10');
       await linha.trigger('click');
-      const sim = wrapper.findComponent({ name: 'LeadSimulador' });
+      const sim = wrapper
+        .find('[data-testid="lead-simulador-largo"]')
+        .findComponent({ name: 'LeadSimulador' });
       expect(sim.exists()).toBe(true);
       expect(sim.props('ultimaSimulacao')).toEqual(ultima);
     });

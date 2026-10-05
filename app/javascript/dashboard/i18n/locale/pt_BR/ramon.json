@@ -747,13 +747,15 @@
       "ENCAMINHAR_COMERCIAL": "Encaminhar ao comercial",
       "TABS": {
         "SUMMARY": "Resumo",
-        "HISTORY": "Histórico",
-        "PLAYBOOK": "Playbook",
+        "PLAYBOOK": "Scripts",
         "IA": "IA",
-        "SIMULADOR": "Simulador",
-        "DOCUMENTS": "Documentos",
+        "SIMULADOR": "Simular",
+        "DOCUMENTS": "Docs",
         "CONTRACT": "Contrato"
       },
+      "NAV_LABEL": "Seções do painel do lead",
+      "HISTORY_IN_FICHA": "Histórico completo na ficha",
+      "SIMULADOR_BACK": "Voltar ao painel",
       "MACROS_TITLE": "Macros da conversa",
       "CONVERSATION_EXTRAS": "Mais da conversa",
       "NOTES": {
@@ -821,10 +823,7 @@
           "REUNIAO_REGISTRADA": "registrou a reunião",
           "ZAPSIGN_SIGNED": "contrato assinado no ZapSign",
           "ZAPSIGN_REFUSED": "contrato recusado no ZapSign"
-        },
-        "EMPTY": "Nenhuma atividade registrada ainda.",
-        "LOADING": "Carregando histórico…",
-        "LOAD_ERROR": "Não foi possível carregar o histórico."
+        }
       },
       "LOADING": "Carregando lead…",
       "LOAD_ERROR": "Não foi possível carregar o lead desta conversa.",

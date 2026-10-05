@@ -250,10 +250,6 @@ export const actions = {
     if (lead?.id) commit(types.MERGE_LEAD, lead);
     return lead;
   },
-  fetchActivities: async (_ctx, leadId) => {
-    const response = await LeadsAPI.getActivities(leadId);
-    return response.data.payload;
-  },
   // Só dispara o job; o rascunho (nota + task) chega pelo broadcast do lead.
   followUpDraft: async (_ctx, leadId) => {
     await LeadsAPI.followUpDraft(leadId);

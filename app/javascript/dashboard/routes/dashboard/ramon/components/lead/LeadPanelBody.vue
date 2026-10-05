@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { onKeyStroke } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
@@ -16,7 +17,6 @@ import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
-import LeadHistory from '../conversation/LeadHistory.vue';
 import LeadPlaybook from '../conversation/LeadPlaybook.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
 import DocChecklist from './DocChecklist.vue';
@@ -34,9 +34,9 @@ import {
   SECAO,
   TITULO,
   CAMPO,
-  ABA,
-  ABA_ATIVA,
-  ABA_INATIVA,
+  NAV_ICONE,
+  NAV_ICONE_ATIVO,
+  NAV_ICONE_INATIVO,
   CHIP,
   TOM,
   AVISO,
@@ -381,22 +381,32 @@ const addTask = async () => {
 // ----- Reunião (Closer): Qualificada / Não qualificada no Andamento quando
 // há reunião em jogo — etapa de reunião (pelo label fixo do seed), reunião
 // já passada ou resultado já registrado -----
-const MEETING_STAGE_LABELS = [
-  'fase-reuniao-agendada',
-  'fase-reuniao-realizada',
-];
+const STAGE_REUNIAO_REALIZADA = 'fase-reuniao-realizada';
+const MEETING_STAGE_LABELS = ['fase-reuniao-agendada', STAGE_REUNIAO_REALIZADA];
 const tasksByLead = useMapGetter('leadTasks/getByLead');
+const leadStage = computed(() =>
+  stages.value?.find(s => s.id === props.lead?.lead_stage_id)
+);
 const showReuniao = computed(() => {
-  const stage = stages.value?.find(s => s.id === props.lead?.lead_stage_id);
-  if (MEETING_STAGE_LABELS.includes(stage?.label)) return true;
+  if (MEETING_STAGE_LABELS.includes(leadStage.value?.label)) return true;
   if (props.lead?.reuniao_resultado) return true;
   return (tasksByLead.value?.(props.lead?.id) || []).some(
     task => task.kind === 'meeting' && new Date(task.due_at) < Date.now()
   );
 });
 
-// ----- abas -----
+// ----- navegação por ícone -----
 const { activeTab, setTab } = useLeadPanelTabs();
+// Contrato só com contrato em jogo: Reunião realizada ou depois na posição do
+// funil (perda não conta), ganho, ou ZapSign já gerado.
+const showContrato = computed(() => {
+  if (props.lead?.custom_attributes?.zapsign) return true;
+  const stage = leadStage.value;
+  if (!stage || stage.is_lost) return false;
+  if (stage.is_won) return true;
+  const realizada = stages.value.find(s => s.label === STAGE_REUNIAO_REALIZADA);
+  return Boolean(realizada) && stage.position >= realizada.position;
+});
 const simuladorDot = computed(() =>
   props.lead?.custom_attributes?.ultima_simulacao ? 'bg-n-teal-9' : null
 );
@@ -408,21 +418,67 @@ const docsDot = computed(() =>
     ? 'bg-n-amber-9'
     : null
 );
-const TABS = computed(() => [
-  { id: 'resumo', label: 'SUMMARY' },
-  { id: 'playbook', label: 'PLAYBOOK' },
-  { id: 'simulador', label: 'SIMULADOR', dot: simuladorDot },
+const NAV = computed(() => [
+  { id: 'resumo', label: 'SUMMARY', icon: 'i-lucide-layout-list' },
   ...(props.lead?.thesis_id
-    ? [{ id: 'documentos', label: 'DOCUMENTS', dot: docsDot }]
+    ? [
+        {
+          id: 'documentos',
+          label: 'DOCUMENTS',
+          icon: 'i-lucide-file-check',
+          dot: docsDot,
+        },
+      ]
     : []),
-  { id: 'contrato', label: 'CONTRACT' },
-  { id: 'historico', label: 'HISTORY' },
+  { id: 'playbook', label: 'PLAYBOOK', icon: 'i-lucide-message-square-text' },
+  {
+    id: 'simulador',
+    label: 'SIMULADOR',
+    icon: 'i-lucide-calculator',
+    dot: simuladorDot,
+  },
+  ...(showContrato.value
+    ? [{ id: 'contrato', label: 'CONTRACT', icon: 'i-lucide-file-pen-line' }]
+    : []),
 ]);
 const shownTab = computed(() => {
   if (activeTab.value === 'documentos' && !props.lead?.thesis_id)
     return 'resumo';
+  if (activeTab.value === 'contrato' && !showContrato.value) return 'resumo';
   return activeTab.value;
 });
+
+// Simular abre largo por cima da conversa (não cabe nos 400px do painel);
+// a aba de baixo não muda, então fechar devolve o painel como estava.
+const simuladorAberto = ref(false);
+const navAtivo = computed(() =>
+  simuladorAberto.value ? 'simulador' : shownTab.value
+);
+const onNav = id => {
+  if (id === 'simulador') simuladorAberto.value = true;
+  else setTab(id);
+};
+// No document (antes do window): o Esc fecha só o Simulador, sem chegar à
+// gaveta do Kanban, que também fecha no Esc (onKeyStroke no window).
+onKeyStroke(
+  'Escape',
+  e => {
+    if (!simuladorAberto.value) return;
+    e.stopPropagation();
+    simuladorAberto.value = false;
+  },
+  { target: document }
+);
+watch(
+  () => props.lead?.id,
+  () => {
+    simuladorAberto.value = false;
+  }
+);
+const dossieRoute = computed(() => ({
+  name: 'ramon_lead_dossie',
+  params: { leadId: props.lead.id },
+}));
 
 // ----- "editar todos os campos": LeadFields completo recolhido por padrão -----
 const fieldsExpanded = ref(false);
@@ -495,7 +551,7 @@ const discard = async () => {
         v-if="lead?.id"
         v-slot="{ navigate }"
         custom
-        :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
+        :to="dossieRoute"
       >
         <Button
           data-testid="lead-abrir-ficha"
@@ -729,30 +785,43 @@ const discard = async () => {
         </div>
       </div>
 
-      <!-- abas segmentadas com dot de status -->
-      <div class="flex mt-2 -mb-px overflow-x-auto" role="tablist">
+      <!-- navegação: ícone + rótulo curto, dot de status no ícone -->
+      <nav
+        class="flex gap-1 mt-2 mb-2"
+        :aria-label="$t('RAMON.LEAD_PANEL.NAV_LABEL')"
+      >
         <button
-          v-for="tab in TABS"
-          :key="tab.id"
-          role="tab"
-          :aria-selected="shownTab === tab.id"
-          :data-testid="`lead-tab-${tab.id}`"
-          :class="[ABA, shownTab === tab.id ? ABA_ATIVA : ABA_INATIVA]"
-          @click="setTab(tab.id)"
+          v-for="item in NAV"
+          :key="item.id"
+          type="button"
+          :aria-label="$t(`RAMON.LEAD_PANEL.TABS.${item.label}`)"
+          :aria-current="navAtivo === item.id ? 'page' : undefined"
+          :data-testid="`lead-nav-${item.id}`"
+          :class="[
+            NAV_ICONE,
+            navAtivo === item.id ? NAV_ICONE_ATIVO : NAV_ICONE_INATIVO,
+          ]"
+          @click="onNav(item.id)"
         >
-          {{ $t(`RAMON.LEAD_PANEL.TABS.${tab.label}`) }}
-          <span
-            v-if="tab.dot?.value"
-            :data-testid="`lead-tab-dot-${tab.id}`"
-            class="size-1.5 rounded-full"
-            :class="tab.dot.value"
-          />
+          <span class="relative">
+            <span class="block size-[18px]" :class="item.icon" />
+            <span
+              v-if="item.dot?.value"
+              :data-testid="`lead-nav-dot-${item.id}`"
+              class="absolute -top-0.5 -right-1 size-2 rounded-full"
+              :class="item.dot.value"
+            />
+          </span>
+          <span class="max-w-full truncate">
+            {{ $t(`RAMON.LEAD_PANEL.TABS.${item.label}`) }}
+          </span>
         </button>
-      </div>
+      </nav>
     </div>
 
     <!-- corpo da aba ativa -->
     <div
+      data-testid="lead-panel-corpo"
       class="flex flex-col flex-1 gap-3 min-w-0 overflow-y-auto overflow-x-hidden p-3"
     >
       <template v-if="shownTab === 'resumo'">
@@ -785,7 +854,7 @@ const discard = async () => {
             type="button"
             data-testid="panel-ultima-simulacao"
             class="block w-full p-0 mt-1.5 text-left text-xs text-n-slate-11 hover:text-n-slate-12"
-            @click="setTab('simulador')"
+            @click="simuladorAberto = true"
           >
             {{ $t('RAMON.LEAD_PANEL.ANDAMENTO.LAST_SIM') }}
             <template v-for="(parte, i) in ultimaSimPartes" :key="i">
@@ -1146,15 +1215,27 @@ const discard = async () => {
             </div>
           </div>
         </div>
+
+        <!-- linha do tempo completa mora na ficha (Dossiê) -->
+        <router-link v-slot="{ navigate }" custom :to="dossieRoute">
+          <Button
+            data-testid="lead-historico-ficha"
+            link
+            slate
+            xs
+            trailing-icon
+            icon="i-lucide-arrow-right"
+            class="self-start"
+            :label="$t('RAMON.LEAD_PANEL.HISTORY_IN_FICHA')"
+            @click="
+              navigate($event);
+              emit('navigate');
+            "
+          />
+        </router-link>
       </template>
 
       <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
-
-      <LeadSimulador
-        v-else-if="shownTab === 'simulador'"
-        :lead="lead"
-        :ultima-simulacao="ultimaSim"
-      />
 
       <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-3">
         <DocChecklist :lead="lead" :context="context" />
@@ -1165,8 +1246,37 @@ const discard = async () => {
         :lead="lead"
         @complete-data="onCompleteData"
       />
-
-      <LeadHistory v-else-if="shownTab === 'historico'" :lead-id="lead.id" />
     </div>
+
+    <!-- Simular largo, ancorado à direita, por cima da conversa -->
+    <Teleport to="body">
+      <div
+        v-if="simuladorAberto"
+        data-testid="lead-simulador-largo"
+        role="dialog"
+        :aria-label="$t('RAMON.LEAD_PANEL.TABS.SIMULADOR')"
+        class="fixed inset-y-0 right-0 z-50 flex flex-col w-[min(760px,92vw)] bg-n-solid-2 border-l border-n-weak shadow-xl"
+      >
+        <div
+          class="flex items-center gap-2 shrink-0 px-3 py-2 border-b border-n-weak"
+        >
+          <Button
+            data-testid="lead-simulador-voltar"
+            sm
+            ghost
+            slate
+            icon="i-lucide-arrow-left"
+            :label="$t('RAMON.LEAD_PANEL.SIMULADOR_BACK')"
+            @click="simuladorAberto = false"
+          />
+          <span class="truncate text-sm font-semibold text-n-slate-12">
+            {{ lead.name }}
+          </span>
+        </div>
+        <div class="flex-1 min-h-0 overflow-y-auto p-4">
+          <LeadSimulador :lead="lead" :ultima-simulacao="ultimaSim" />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

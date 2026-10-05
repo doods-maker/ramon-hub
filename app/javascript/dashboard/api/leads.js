@@ -17,10 +17,6 @@ class LeadsAPI extends ApiClient {
     });
   }
 
-  getActivities(leadId) {
-    return axios.get(`${this.url}/${leadId}/activities`);
-  }
-
   getNotes(leadId) {
     return axios.get(`${this.url}/${leadId}/notes`);
   }

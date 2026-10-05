@@ -35,7 +35,7 @@ export const EDITAVEL =
   'reset-base appearance-none h-auto w-auto max-w-full m-0 -mx-1 rounded border-0 bg-transparent bg-none px-1 py-0 text-[13px] text-n-slate-12 !outline-none cursor-pointer hover:bg-n-alpha-2 focus:bg-n-alpha-2';
 export const ROTULO = 'flex flex-col gap-1 text-xs text-n-slate-10';
 
-// Abas sublinhadas (painel e abas internas do simulador).
+// Abas sublinhadas (abas internas do simulador).
 export const ABA =
   'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-[12.5px]';
 export const ABA_ATIVA = 'border-n-blue-9 font-semibold text-n-blue-11';
@@ -52,6 +52,14 @@ export const TOM = {
   amber: 'bg-n-amber-9/15 text-n-amber-11',
   ruby: 'bg-n-ruby-9/10 text-n-ruby-11',
 };
+// Navegação do painel do lead: ícone em cima, rótulo curto embaixo; os itens
+// dividem a largura (5 cabem nos 400px do painel). Ativo = azul da marca.
+export const NAV_ICONE =
+  'flex flex-1 min-w-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] leading-4';
+export const NAV_ICONE_ATIVO = `${TOM.blue} font-semibold`;
+export const NAV_ICONE_INATIVO =
+  'text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12';
+
 // Aviso em bloco (dentro ou fora de cartão): fundo translúcido, sem borda.
 export const AVISO = 'rounded-lg px-3 py-2 text-xs';
 

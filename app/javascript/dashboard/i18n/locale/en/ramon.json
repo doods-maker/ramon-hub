@@ -747,13 +747,15 @@
       "ENCAMINHAR_COMERCIAL": "Forward to sales",
       "TABS": {
         "SUMMARY": "Summary",
-        "HISTORY": "History",
-        "PLAYBOOK": "Playbook",
+        "PLAYBOOK": "Scripts",
         "IA": "AI",
-        "SIMULADOR": "Simulator",
-        "DOCUMENTS": "Documents",
+        "SIMULADOR": "Simulate",
+        "DOCUMENTS": "Docs",
         "CONTRACT": "Contract"
       },
+      "NAV_LABEL": "Lead panel sections",
+      "HISTORY_IN_FICHA": "Full history in the file",
+      "SIMULADOR_BACK": "Back to panel",
       "MACROS_TITLE": "Conversation macros",
       "CONVERSATION_EXTRAS": "More from the conversation",
       "NOTES": {
@@ -821,10 +823,7 @@
           "REUNIAO_REGISTRADA": "recorded the meeting",
           "ZAPSIGN_SIGNED": "signed the contract on ZapSign",
           "ZAPSIGN_REFUSED": "refused the contract on ZapSign"
-        },
-        "EMPTY": "No activity recorded yet.",
-        "LOADING": "Loading history…",
-        "LOAD_ERROR": "Could not load the history."
+        }
       },
       "LOADING": "Loading lead…",
       "LOAD_ERROR": "Couldn't load the lead for this conversation.",
