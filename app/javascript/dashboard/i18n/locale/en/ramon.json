@@ -754,6 +754,8 @@
         "DOCUMENTS": "Documents",
         "CONTRACT": "Contract"
       },
+      "SINCE": "Lead since {date}",
+      "VIA": "via {source}",
       "NAV_LABEL": "Lead panel sections",
       "HISTORY_IN_FICHA": "Full history in the file",
       "SIMULADOR_BACK": "Back to panel",

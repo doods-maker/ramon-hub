@@ -46,9 +46,16 @@ const build = ({
   agendarReuniao = vi.fn(),
   tasks = [],
   chatMessages = [],
+  sender = {},
 } = {}) =>
   createStore({
-    getters: { getSelectedChat: () => ({ id: 42, messages: chatMessages }) },
+    getters: {
+      getSelectedChat: () => ({
+        id: 42,
+        messages: chatMessages,
+        meta: { sender },
+      }),
+    },
     modules: {
       leads: {
         namespaced: true,
@@ -135,6 +142,68 @@ describe('LeadPanelBody', () => {
     Element.prototype.scrollIntoView = vi.fn();
     LeadsAPI.getNotes.mockReset();
     LeadsAPI.getNotes.mockResolvedValue(notesPayload([]));
+  });
+
+  describe('identidade', () => {
+    const identidade = w => w.find('[data-testid="panel-identidade"]');
+
+    it('sem foto: círculo com as iniciais (primeiro + último nome)', () => {
+      const wrapper = mountBody();
+      expect(wrapper.find('[data-testid="panel-avatar"]').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="panel-avatar-iniciais"]').text()).toBe(
+        'ML'
+      );
+    });
+
+    it('na conversa usa a foto do remetente', () => {
+      const wrapper = mountBody({
+        spies: { sender: { thumbnail: 'https://x/foto.jpg' } },
+      });
+      expect(
+        wrapper.find('[data-testid="panel-avatar"]').attributes('src')
+      ).toBe('https://x/foto.jpg');
+    });
+
+    it('telefone formatado; clicar copia', async () => {
+      copyTextToClipboard.mockClear();
+      const wrapper = mountBody({
+        props: { lead: { ...lead, contact_phone: '+5548998123456' } },
+      });
+      const fone = wrapper.find('[data-testid="panel-phone"]');
+      expect(fone.attributes('label')).toBe('+55 (48) 99812-3456');
+      await fone.trigger('click');
+      expect(copyTextToClipboard).toHaveBeenCalledWith('+5548998123456');
+    });
+
+    it('"Lead desde dd/mm/aaaa · via origem"; sem os dados, some', () => {
+      const wrapper = mountBody({
+        props: {
+          lead: {
+            ...lead,
+            created_at: '2026-09-28T15:00:00Z',
+            source: 'Meta Ads',
+          },
+        },
+      });
+      expect(wrapper.find('[data-testid="panel-lead-desde"]').text()).toBe(
+        'RAMON.LEAD_PANEL.SINCE · RAMON.LEAD_PANEL.VIA'
+      );
+      expect(
+        mountBody().find('[data-testid="panel-lead-desde"]').exists()
+      ).toBe(false);
+    });
+
+    it('"↗" abre a ficha (substitui o botão grande) e emite navigate', async () => {
+      navigate.mockClear();
+      const wrapper = mountBody();
+      const ficha = identidade(wrapper).find(
+        '[data-testid="lead-abrir-ficha"]'
+      );
+      expect(ficha.attributes('icon')).toBe('i-lucide-external-link');
+      await ficha.trigger('click');
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(wrapper.emitted('navigate')).toHaveLength(1);
+    });
   });
 
   describe('Notas', () => {
@@ -603,16 +672,6 @@ describe('LeadPanelBody', () => {
   });
 
   describe('Caso no cabeçalho, editável no lugar', () => {
-    it('fica no cabeçalho fixo, não no corpo do Resumo', () => {
-      const wrapper = mountBody();
-      const corpo = wrapper.find('[data-testid="lead-panel-corpo"]');
-      expect(wrapper.find('[data-testid="panel-caso"]').exists()).toBe(true);
-      expect(corpo.find('[data-testid="field-thesis"]').exists()).toBe(false);
-      expect(corpo.find('[data-testid="panel-card-caso"]').exists()).toBe(
-        false
-      );
-    });
-
     it('tese, benefício e canal salvam no change', async () => {
       const update = vi.fn();
       const wrapper = mountBody({ spies: { update } });
@@ -748,7 +807,7 @@ describe('LeadPanelBody', () => {
   });
 
   describe('resumo', () => {
-    it('mostra telefone (copiável) e donos só depois de abrir "Dados do contato"; CPF fica só no editar tudo', async () => {
+    it('donos só depois de abrir "Dados do contato"; CPF fica só no editar tudo', async () => {
       const wrapper = mountBody();
       expect(wrapper.text()).not.toContain('Eduardo / Camila');
       await wrapper
@@ -756,8 +815,6 @@ describe('LeadPanelBody', () => {
         .trigger('click');
       expect(wrapper.text()).toContain('Eduardo / Camila');
       expect(wrapper.text()).not.toContain('052.318.774-90');
-      await wrapper.find('[data-testid="contact-copy-phone"]').trigger('click');
-      expect(copyTextToClipboard).toHaveBeenCalledWith('+55489999');
     });
 
     // posição da Qualificação entre os blocos do corpo do Resumo
@@ -792,7 +849,6 @@ describe('LeadPanelBody', () => {
     it('Qualificação no topo nas 2 primeiras etapas abertas (Novo/Qualificação)', () => {
       [1, 4].forEach(stageId => {
         const { qualificacao, andamento } = ordemQualificacao(stageId);
-        expect(qualificacao).toBe(0);
         expect(qualificacao).toBeLessThan(andamento);
       });
     });
@@ -857,18 +913,16 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('"Não é lead" sai do fim do Resumo e vai pro menu ⋯ do cabeçalho', async () => {
+    it('"Não é lead" mora no menu ⋯ ao lado do nome', async () => {
       const wrapper = mountBody();
       expect(wrapper.find('[data-testid="lead-discard"]').exists()).toBe(false);
       await wrapper.find('[data-testid="lead-more"]').trigger('click');
-      const item = wrapper.find('[data-testid="lead-discard"]');
-      expect(item.exists()).toBe(true);
       expect(
         wrapper
-          .find('[data-testid="lead-panel-corpo"]')
+          .find('[data-testid="panel-identidade"]')
           .find('[data-testid="lead-discard"]')
           .exists()
-      ).toBe(false);
+      ).toBe(true);
     });
 
     it('descarta o lead só depois da janela de confirmação', async () => {

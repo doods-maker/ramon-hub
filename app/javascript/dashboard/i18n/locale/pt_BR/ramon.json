@@ -754,6 +754,8 @@
         "DOCUMENTS": "Documentos",
         "CONTRACT": "Contrato"
       },
+      "SINCE": "Lead desde {date}",
+      "VIA": "via {source}",
       "NAV_LABEL": "Seções do painel do lead",
       "HISTORY_IN_FICHA": "Histórico completo na ficha",
       "SIMULADOR_BACK": "Voltar ao painel",
