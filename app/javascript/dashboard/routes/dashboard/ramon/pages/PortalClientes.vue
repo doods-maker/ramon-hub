@@ -7,19 +7,9 @@ import PortalClientesAPI from 'dashboard/api/portalClientes';
 import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
 import LeadsAPI from 'dashboard/api/leads';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import PortalClienteDetalhe from '../components/portal/PortalClienteDetalhe.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import {
-  AVISO,
-  CAMPO,
-  CARTAO,
-  CHIP,
-  ROTULO,
-  SECAO,
-  SELECT,
-  TEXTAREA,
-  TITULO,
-  TOM,
-} from '../helpers/ui';
+import { AVISO, CAMPO, CARTAO, CHIP, SECAO, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonPortalClientes' });
 
@@ -34,13 +24,7 @@ const candidato = ref(null); // cliente do ADVBOX escolhido pra convidar
 const emailConvite = ref('');
 const senhaGerada = ref(null); // { nome, senha } — aparece uma vez, o hub não guarda em claro
 const aberto = ref(null); // detalhe expandido
-const recados = ref({});
-const emailEdit = ref('');
-const aviso = ref('');
 const templates = ref([]); // modelos do ZapSign, carregados na 1ª expansão de linha
-const templateId = ref(null);
-const nomeDocumento = ref('Procuração');
-const enviandoAssinatura = ref(false);
 
 const carregar = async () => {
   isLoading.value = true;
@@ -114,10 +98,6 @@ const abrir = async id => {
   }
   const { data } = await PortalClientesAPI.show(id);
   aberto.value = data;
-  recados.value = { ...data.recados };
-  emailEdit.value = data.email || '';
-  templateId.value = null;
-  nomeDocumento.value = 'Procuração';
   if (!templates.value.length) {
     try {
       const resp = await LeadsAPI.zapsignTemplates();
@@ -125,67 +105,6 @@ const abrir = async id => {
     } catch {
       templates.value = [];
     }
-  }
-};
-
-const enviarAssinatura = async () => {
-  const hoje = new Date().toLocaleDateString('pt-BR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  enviandoAssinatura.value = true;
-  try {
-    await PortalClientesAPI.assinatura(aberto.value.id, {
-      template_id: templateId.value,
-      nome: nomeDocumento.value,
-      variaveis: {
-        '{{nome}}': aberto.value.nome,
-        '{{CPF}}': aberto.value.cpf,
-        '{{email}}': aberto.value.email,
-        '{{data de hoje}}': hoje,
-      },
-    });
-    const { data: atualizado } = await PortalClientesAPI.show(aberto.value.id);
-    aberto.value = atualizado;
-  } catch (e) {
-    useAlert(
-      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
-    );
-  } finally {
-    enviandoAssinatura.value = false;
-  }
-};
-
-const salvarRecados = async () => {
-  try {
-    await PortalClientesAPI.update(aberto.value.id, { recados: recados.value });
-    aviso.value = t('RAMON.PORTAL_CLIENTES.SAVED');
-    setTimeout(() => {
-      aviso.value = '';
-    }, 2000);
-  } catch (e) {
-    useAlert(
-      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
-    );
-  }
-};
-
-const salvarEmail = async () => {
-  try {
-    const { data } = await PortalClientesAPI.update(aberto.value.id, {
-      email: emailEdit.value.trim(),
-    });
-    aberto.value = data;
-    aviso.value = t('RAMON.PORTAL_CLIENTES.SAVED');
-    setTimeout(() => {
-      aviso.value = '';
-    }, 2000);
-    await carregar();
-  } catch (e) {
-    useAlert(
-      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
-    );
   }
 };
 
@@ -224,9 +143,6 @@ const METRICAS = [
   'docs_pedidos',
   'docs_enviados',
 ];
-
-// status espelha o ZapSign: pendente | signed | refused.
-const TOM_ASSINATURA = { signed: TOM.teal, refused: TOM.ruby };
 
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
@@ -446,141 +362,14 @@ onMounted(carregar);
             />
           </div>
 
-          <!-- Detalhe: seções (sem cartão dentro de cartão) -->
-          <div
+          <PortalClienteDetalhe
             v-if="aberto && aberto.id === c.id"
-            class="mt-3 flex flex-col gap-4 ps-5"
-          >
-            <div class="flex flex-wrap items-end gap-2" :class="SECAO">
-              <label :class="ROTULO" class="min-w-64 flex-1">
-                {{ t('RAMON.PORTAL_CLIENTES.EMAIL_EDIT') }}
-                <input
-                  v-model="emailEdit"
-                  type="email"
-                  :class="CAMPO"
-                  :placeholder="t('RAMON.PORTAL_CLIENTES.EMAIL')"
-                />
-              </label>
-              <Button
-                sm
-                faded
-                slate
-                :label="t('RAMON.PORTAL_CLIENTES.EMAIL_SAVE')"
-                @click="salvarEmail"
-              />
-            </div>
-
-            <p
-              v-if="!aberto.processos.length"
-              :class="[AVISO, TOM.slate]"
-              class="m-0"
-            >
-              {{ t('RAMON.PORTAL_CLIENTES.NO_LAWSUITS') }}
-            </p>
-            <div
-              v-for="p in aberto.processos"
-              :key="p.id"
-              class="flex flex-col gap-2"
-              :class="SECAO"
-            >
-              <div class="flex flex-wrap items-center gap-2 text-xs">
-                <span class="font-mono text-n-slate-12">{{ p.numero }}</span>
-                <span class="text-n-slate-10"
-                  >· {{ p.tipo }} · {{ p.etapa }}</span
-                >
-                <span v-if="p.docs_pendentes.length" :class="[CHIP, TOM.amber]">
-                  <span class="font-mono">{{ p.docs_pendentes.length }}</span>
-                  {{ t('RAMON.PORTAL_CLIENTES.PENDING_DOCS') }}
-                </span>
-              </div>
-              <label :class="ROTULO">
-                {{ t('RAMON.PORTAL_CLIENTES.RECADO') }}
-                <textarea v-model="recados[p.id]" rows="2" :class="TEXTAREA" />
-              </label>
-            </div>
-            <div class="flex items-center gap-3">
-              <Button
-                sm
-                :label="t('RAMON.PORTAL_CLIENTES.RECADO_SAVE')"
-                @click="salvarRecados"
-              />
-              <span v-if="aviso" class="text-xs text-n-teal-11">{{
-                aviso
-              }}</span>
-            </div>
-
-            <div class="flex flex-col gap-2" :class="SECAO">
-              <div class="flex flex-wrap items-center gap-2">
-                <select v-model="templateId" :class="SELECT" class="!w-auto">
-                  <option :value="null">
-                    {{ t('RAMON.PORTAL_CLIENTES.TEMPLATE') }}
-                  </option>
-                  <option
-                    v-for="tpl in templates"
-                    :key="tpl.token"
-                    :value="tpl.token"
-                  >
-                    {{ tpl.name }}
-                  </option>
-                </select>
-                <input
-                  v-model="nomeDocumento"
-                  type="text"
-                  :class="CAMPO"
-                  class="!w-56"
-                  :placeholder="t('RAMON.PORTAL_CLIENTES.DOC_NAME')"
-                />
-                <Button
-                  sm
-                  icon="i-lucide-signature"
-                  :label="t('RAMON.PORTAL_CLIENTES.SEND_SIGNATURE')"
-                  :disabled="!templateId || enviandoAssinatura"
-                  @click="enviarAssinatura"
-                />
-              </div>
-              <template v-if="aberto.assinaturas && aberto.assinaturas.length">
-                <p :class="TITULO" class="m-0 mt-1">
-                  {{ t('RAMON.PORTAL_CLIENTES.SIGNATURES_LIST') }}
-                </p>
-                <ul class="m-0 flex list-none flex-col gap-1 p-0 text-xs">
-                  <li
-                    v-for="a in aberto.assinaturas"
-                    :key="a.id"
-                    class="flex items-center gap-2"
-                  >
-                    <span class="text-n-slate-12">{{ a.nome }}</span>
-                    <span
-                      :class="[CHIP, TOM_ASSINATURA[a.status] || TOM.amber]"
-                    >
-                      {{ a.status }}
-                    </span>
-                    <span class="font-mono text-n-slate-10">{{
-                      dataCurta(a.created_at)
-                    }}</span>
-                  </li>
-                </ul>
-              </template>
-            </div>
-
-            <ul
-              v-if="aberto.envios.length"
-              class="m-0 flex list-none flex-col gap-1 p-0 text-xs text-n-slate-11"
-              :class="SECAO"
-            >
-              <li v-for="e in aberto.envios" :key="e.id">
-                <span class="font-mono text-n-slate-10">{{
-                  dataCurta(e.created_at)
-                }}</span>
-                · {{ e.item }} · {{ t('RAMON.PORTAL_CLIENTES.DRIVE') }}
-                <span
-                  :class="
-                    e.drive_file_id ? 'text-n-teal-11' : 'text-n-slate-10'
-                  "
-                  >{{ e.drive_file_id ? '✓' : '…' }}</span
-                >
-              </li>
-            </ul>
-          </div>
+            :key="aberto.id"
+            :cliente="aberto"
+            :templates="templates"
+            @atualizar="aberto = $event"
+            @recarregar="carregar"
+          />
         </li>
       </ul>
     </div>
