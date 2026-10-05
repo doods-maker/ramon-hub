@@ -27,21 +27,25 @@ class Ramon::Fluxos::Contexto
 
   def contato = lead&.contact || conversa&.contact
 
+  # locais (l, c, r): `&.` repetido na mesma variável conta 1 vez só na complexidade do Rubocop
   def dados_lead
-    responsavel = lead&.closer || lead&.sdr
-    nome = contato&.name.presence || lead&.name
+    l = lead
+    c = contato
+    r = l&.closer || l&.sdr
+    nome = c&.name.presence || l&.name
     {
-      'nome' => nome.to_s.split.first, 'nome_completo' => nome, 'telefone' => contato&.phone_number,
-      'responsavel' => responsavel&.name, 'responsavel_id' => responsavel&.id
+      'nome' => nome.to_s.split.first, 'nome_completo' => nome, 'telefone' => c&.phone_number,
+      'responsavel' => r&.name, 'responsavel_id' => r&.id
     }
   end
 
   def dados_funil
+    l = lead
     {
-      'etapa' => lead&.lead_stage&.name, 'etapa_id' => lead&.lead_stage_id,
-      'tese' => lead&.thesis&.name, 'tese_id' => lead&.thesis_id,
-      'origem' => lead&.source, 'canal' => lead&.channel, 'valor' => lead&.value&.to_f,
-      'prioridade' => lead&.lead_priority&.name
+      'etapa' => l&.lead_stage&.name, 'etapa_id' => l&.lead_stage_id,
+      'tese' => l&.thesis&.name, 'tese_id' => l&.thesis_id,
+      'origem' => l&.source, 'canal' => l&.channel, 'valor' => l&.value&.to_f,
+      'prioridade' => l&.lead_priority&.name
     }
   end
 

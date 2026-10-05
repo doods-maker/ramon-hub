@@ -73,40 +73,40 @@ class Ramon::Fluxos::Executor
 
   def andar
     LIMITE_PASSOS.times do
-      no = grafo.no(@execucao.no_atual)
-      return @execucao.status = 'concluida' if no.nil?
+      passo = grafo.no(@execucao.no_atual)
+      return @execucao.status = 'concluida' if passo.nil?
 
-      resultado = executar(no)
+      resultado = executar(passo)
       return if resultado.nil? # erro: já ficou esperando nova tentativa ou falhou
 
-      registrar(no, resultado)
+      registrar(passo, resultado)
       return @execucao.status = 'concluida' if resultado[:parar]
 
-      @execucao.no_atual = grafo.proximo(no['id'], resultado[:saida])
+      @execucao.no_atual = grafo.proximo(passo['id'], resultado[:saida])
       return esperar(resultado[:esperar_ate]) if resultado[:esperar_ate] && !@execucao.contexto['pular_esperas']
     end
     @execucao.assign_attributes(status: 'falhou', erro: "passou de #{LIMITE_PASSOS} passos")
   end
 
-  def executar(no)
-    resultado = PASSOS.fetch(no['tipo']).public_send(no['tipo'], no['config'] || {}, Ramon::Fluxos::Contexto.new(@execucao))
+  def executar(passo)
+    resultado = PASSOS.fetch(passo['tipo']).public_send(passo['tipo'], passo['config'] || {}, Ramon::Fluxos::Contexto.new(@execucao))
     @execucao.tentativas = 0
     @execucao.contexto = @execucao.contexto.merge('vars' => (@execucao.contexto['vars'] || {}).merge(resultado[:vars] || {}))
     resultado
   rescue StandardError => e
-    tratar_erro(no, e)
+    tratar_erro(passo, e)
     nil
   ensure
     Current.executed_by = @execucao # o ActionService dá Current.reset
   end
 
-  def tratar_erro(no, erro)
+  def tratar_erro(passo, erro)
     espera = ESPERAS_ERRO[@execucao.tentativas] unless @execucao.ensaio || erro.is_a?(Ramon::Fluxos::PassoImpossivel)
     if espera
       @execucao.assign_attributes(tentativas: @execucao.tentativas + 1, status: 'esperando', retomar_em: espera.minutes.from_now)
     else
-      @execucao.assign_attributes(status: 'falhou', erro: "#{no['id']}: #{erro.message}".truncate(500))
-      @execucao.trilha = @execucao.trilha + [linha(no['id'], no['tipo'], "erro: #{erro.message}".truncate(300), erro: true)]
+      @execucao.assign_attributes(status: 'falhou', erro: "#{passo['id']}: #{erro.message}".truncate(500))
+      @execucao.trilha = @execucao.trilha + [linha(passo['id'], passo['tipo'], "erro: #{erro.message}".truncate(300), erro: true)]
     end
   end
 
@@ -114,15 +114,15 @@ class Ramon::Fluxos::Executor
     @execucao.assign_attributes(status: 'esperando', retomar_em: ate)
   end
 
-  def registrar(no, resultado)
-    @execucao.trilha = @execucao.trilha + [linha(no['id'], no['tipo'], resultado[:resumo], saida: resultado[:saida])]
-    return if @execucao.ensaio || VISIVEIS.exclude?(no['tipo'])
+  def registrar(passo, resultado)
+    @execucao.trilha = @execucao.trilha + [linha(passo['id'], passo['tipo'], resultado[:resumo], saida: resultado[:saida])]
+    return if @execucao.ensaio || VISIVEIS.exclude?(passo['tipo'])
 
     Ramon::EventoInline.registrar(@execucao.conversa, "⚙ Fluxo #{@execucao.fluxo&.nome}: #{resultado[:resumo]}", tipo: 'fluxo')
   end
 
-  def linha(no, tipo, resumo, saida: nil, erro: false)
-    { 'no' => no, 'tipo' => tipo, 'em' => Time.current.iso8601, 'saida' => saida, 'resumo' => resumo, 'erro' => erro }
+  def linha(passo_id, tipo, resumo, saida: nil, erro: false)
+    { 'no' => passo_id, 'tipo' => tipo, 'em' => Time.current.iso8601, 'saida' => saida, 'resumo' => resumo, 'erro' => erro }
   end
 
   def avisar_falha

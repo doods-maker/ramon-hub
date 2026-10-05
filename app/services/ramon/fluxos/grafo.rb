@@ -49,7 +49,7 @@ class Ramon::Fluxos::Grafo
   end
 
   def erros_setas
-    ids = nos.map { |n| n['id'] }
+    ids = nos.pluck('id')
     fantasmas = setas.flat_map { |s| [s['de'], s['para']] }.uniq - ids
     erros = fantasmas.map { |id| "Seta aponta para passo inexistente: #{id}" }
     repetidas = setas.group_by { |s| [s['de'], s['saida']] }.select { |_, v| v.size > 1 }.keys
@@ -88,40 +88,40 @@ class Ramon::Fluxos::Grafo
     nos.any? { |n| visita.call(n['id']) }
   end
 
-  def erros_passo(no)
-    return [] if no['tipo'] == 'gatilho'
-    return ["Passo #{no['id']}: tipo desconhecido (#{no['tipo']})"] unless TIPOS_PASSO.include?(no['tipo'])
+  def erros_passo(passo)
+    return [] if passo['tipo'] == 'gatilho'
+    return ["Passo #{passo['id']}: tipo desconhecido (#{passo['tipo']})"] unless TIPOS_PASSO.include?(passo['tipo'])
 
-    config = no['config'] || {}
-    erros = Array(OBRIGATORIOS[no['tipo']]).select { |k| config[k].blank? }.map { |k| "Passo #{no['id']}: falta #{k}" }
-    erros + erros_especificos(no, config)
+    config = passo['config'] || {}
+    erros = Array(OBRIGATORIOS[passo['tipo']]).select { |k| config[k].blank? }.map { |k| "Passo #{passo['id']}: falta #{k}" }
+    erros + erros_especificos(passo, config)
   end
 
-  def erros_especificos(no, config)
-    case no['tipo']
-    when 'se' then erros_se(no, config)
-    when 'escolha' then erros_escolha(no, config)
-    when 'esperar' then espera_valida?(config) ? [] : ["Passo #{no['id']}: falta o tempo de espera"]
-    when 'acao_chatwoot' then erros_chatwoot(no, config)
+  def erros_especificos(passo, config)
+    case passo['tipo']
+    when 'se' then erros_se(passo, config)
+    when 'escolha' then erros_escolha(passo, config)
+    when 'esperar' then espera_valida?(config) ? [] : ["Passo #{passo['id']}: falta o tempo de espera"]
+    when 'acao_chatwoot' then erros_chatwoot(passo, config)
     else []
     end
   end
 
-  def erros_se(no, config)
+  def erros_se(passo, config)
     erros = []
-    erros << "Passo #{no['id']} (Se) precisa de condições" if Array(config['condicoes']).empty?
-    erros << "Passo #{no['id']} (Se) precisa de pelo menos uma saída" if setas.none? { |s| s['de'] == no['id'] }
+    erros << "Passo #{passo['id']} (Se) precisa de condições" if Array(config['condicoes']).empty?
+    erros << "Passo #{passo['id']} (Se) precisa de pelo menos uma saída" if setas.none? { |s| s['de'] == passo['id'] }
     erros
   end
 
-  def erros_escolha(no, config)
+  def erros_escolha(passo, config)
     casos = Array(config['casos'])
-    return ["Passo #{no['id']} (Escolha) precisa de pelo menos 2 casos"] if casos.size < 2
+    return ["Passo #{passo['id']} (Escolha) precisa de pelo menos 2 casos"] if casos.size < 2
 
     erros = []
-    erros << "Passo #{no['id']} (Escolha): casos com a mesma chave" if casos.pluck('chave').uniq.size < casos.size
+    erros << "Passo #{passo['id']} (Escolha): casos com a mesma chave" if casos.pluck('chave').uniq.size < casos.size
     valores = casos.flat_map { |c| Array(c['valores']).map { |v| v.to_s.downcase } }
-    erros << "Passo #{no['id']} (Escolha): o mesmo valor em dois casos" if valores.uniq.size < valores.size
+    erros << "Passo #{passo['id']} (Escolha): o mesmo valor em dois casos" if valores.uniq.size < valores.size
     erros
   end
 
@@ -130,11 +130,11 @@ class Ramon::Fluxos::Grafo
       (config['quantidade'].to_i.positive? && %w[minutos horas dias].include?(config['unidade']))
   end
 
-  def erros_chatwoot(no, config)
+  def erros_chatwoot(passo, config)
     nomes = Array(config['acoes']).pluck('action_name')
-    return ["Passo #{no['id']}: escolha pelo menos uma ação"] if nomes.empty?
-    return ["Passo #{no['id']}: mensagem ao cliente só como rascunho"] if nomes.intersect?(PROIBIDAS_CHATWOOT)
+    return ["Passo #{passo['id']}: escolha pelo menos uma ação"] if nomes.empty?
+    return ["Passo #{passo['id']}: mensagem ao cliente só como rascunho"] if nomes.intersect?(PROIBIDAS_CHATWOOT)
 
-    (nomes - PERMITIDAS_CHATWOOT).map { |nome| "Passo #{no['id']}: ação desconhecida (#{nome})" }
+    (nomes - PERMITIDAS_CHATWOOT).map { |nome| "Passo #{passo['id']}: ação desconhecida (#{nome})" }
   end
 end
