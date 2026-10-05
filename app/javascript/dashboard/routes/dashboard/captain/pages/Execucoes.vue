@@ -4,6 +4,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CaptainToolRunsAPI from 'dashboard/api/captainToolRuns';
+import { CHIP } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { ferramentaInfo } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
 
 defineOptions({ name: 'CaptainExecucoes' });
 
@@ -36,6 +38,15 @@ onMounted(fetchData);
 const resumo = computed(() => data.value?.resumo ?? {});
 const items = computed(() => data.value?.items ?? []);
 const tools = computed(() => resumo.value.tools ?? []);
+const catalogo = computed(() => data.value?.catalogo ?? []);
+const nivelLabel = nivel =>
+  ({
+    consulta: t('CAPTAIN_RAMON.NIVEL.consulta'),
+    sugestao: t('CAPTAIN_RAMON.NIVEL.sugestao'),
+    rascunho: t('CAPTAIN_RAMON.NIVEL.rascunho'),
+    interna: t('CAPTAIN_RAMON.NIVEL.interna'),
+  })[nivel];
+const ferramenta = id => ferramentaInfo(id, catalogo.value);
 
 const fmtHora = value =>
   new Date(value).toLocaleString('pt-BR', {
@@ -128,7 +139,7 @@ const linhaCaso = run =>
               {{ t('CAPTAIN_RAMON.EXECUCOES.ALL_TOOLS') }}
             </option>
             <option v-for="tool in tools" :key="tool" :value="tool">
-              {{ tool }}
+              {{ ferramenta(tool).title }}
             </option>
           </select>
           <select
@@ -178,7 +189,14 @@ const linhaCaso = run =>
                 {{ run.status }}
               </span>
               <span class="text-sm font-medium text-n-slate-12">
-                {{ run.tool_name }}
+                {{ ferramenta(run.tool_name).title }}
+              </span>
+              <span
+                v-if="ferramenta(run.tool_name).nivel"
+                data-testid="execucoes-nivel"
+                :class="[CHIP, ferramenta(run.tool_name).tom]"
+              >
+                {{ nivelLabel(ferramenta(run.tool_name).nivel) }}
               </span>
               <span class="ml-auto text-[11px] text-n-slate-9">
                 {{ linhaTempo(run) }}
