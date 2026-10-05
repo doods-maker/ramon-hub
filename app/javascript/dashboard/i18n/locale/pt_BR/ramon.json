@@ -756,6 +756,20 @@
       },
       "SINCE": "Lead desde {date}",
       "VIA": "via {source}",
+      "ARQUIVOS": {
+        "TITLE": "Arquivos recebidos",
+        "LOADING": "Carregando arquivos…",
+        "EMPTY": "Nenhum arquivo recebido nesta conversa.",
+        "ERROR": "Não foi possível carregar os arquivos.",
+        "DOWNLOAD": "Baixar",
+        "TIPO": {
+          "IMAGE": "Imagem",
+          "AUDIO": "Áudio",
+          "VIDEO": "Vídeo",
+          "PDF": "PDF",
+          "FILE": "Documento"
+        }
+      },
       "NAV_LABEL": "Seções do painel do lead",
       "HISTORY_IN_FICHA": "Histórico completo na ficha",
       "SIMULADOR_BACK": "Voltar ao painel",

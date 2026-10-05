@@ -22,6 +22,7 @@ import LeadSugerirResposta from '../conversation/LeadSugerirResposta.vue';
 import LeadPlaybook from '../conversation/LeadPlaybook.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
 import DocChecklist from './DocChecklist.vue';
+import ArquivosRecebidos from './ArquivosRecebidos.vue';
 import QualificacaoViva from './QualificacaoViva.vue';
 import { useLeadPanelTabs } from '../../composables/useLeadPanelSections';
 import { useTemperatura } from '../../composables/useTemperatura';
@@ -466,6 +467,15 @@ const ultimaNotaQuando = computed(() =>
 
 // ----- navegação por ícone -----
 const { activeTab, setTab } = useLeadPanelTabs();
+// Conversa do lead na URL da API (display_id): na conversa, a aberta; na
+// gaveta, a do lead — o mesmo id que o dock usa (hoje coincidem em produção).
+const conversaId = computed(
+  () => props.conversationId || props.lead?.conversation_id || null
+);
+// Docs: checklist da tese e/ou arquivos recebidos na conversa
+const temDocs = computed(() =>
+  Boolean(props.lead?.thesis_id || conversaId.value)
+);
 // Contrato só com contrato em jogo: Reunião realizada ou depois na posição do
 // funil (perda não conta), ganho, ou ZapSign já gerado.
 const showContrato = computed(() => {
@@ -497,7 +507,7 @@ const docsDot = computed(() =>
 );
 const NAV = computed(() => [
   { id: 'resumo', label: 'SUMMARY', icon: 'i-lucide-layout-list' },
-  ...(props.lead?.thesis_id
+  ...(temDocs.value
     ? [
         {
           id: 'documentos',
@@ -525,8 +535,7 @@ const NAV = computed(() => [
     : []),
 ]);
 const shownTab = computed(() => {
-  if (activeTab.value === 'documentos' && !props.lead?.thesis_id)
-    return 'resumo';
+  if (activeTab.value === 'documentos' && !temDocs.value) return 'resumo';
   if (activeTab.value === 'contrato' && !showContrato.value) return 'resumo';
   return activeTab.value;
 });
@@ -1435,8 +1444,9 @@ const discard = async () => {
         @created="onNoteCreated"
       />
 
-      <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-3">
-        <DocChecklist :lead="lead" :context="context" />
+      <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-5">
+        <DocChecklist v-if="lead.thesis_id" :lead="lead" :context="context" />
+        <ArquivosRecebidos v-if="conversaId" :conversation-id="conversaId" />
       </div>
 
       <LeadZapsignCard

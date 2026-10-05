@@ -478,15 +478,52 @@ describe('LeadPanelBody', () => {
       expect(ativo(wrapper)).toBe('lead-nav-resumo');
     });
 
-    it('Docs só com tese', () => {
+    it('Docs aparece com tese ou com conversa (arquivos recebidos)', () => {
+      const temDocs = opts =>
+        mountBody(opts).find('[data-testid="lead-nav-documentos"]').exists();
+      // sem tese e sem conversa (gaveta, lead sem conversa): não aparece
       expect(
-        mountBody().find('[data-testid="lead-nav-documentos"]').exists()
+        temDocs({
+          props: {
+            context: 'drawer',
+            conversationId: null,
+            lead: { ...lead, conversation_id: null },
+          },
+        })
       ).toBe(false);
+      expect(temDocs()).toBe(true);
+      expect(temDocs({ props: { lead: { ...lead, thesis_id: 3 } } })).toBe(
+        true
+      );
+    });
+
+    it('Docs: checklist da tese em cima e arquivos da conversa embaixo', async () => {
+      localStorage.setItem('ramon_lead_panel_tab', 'documentos');
+      const semTese = mountBody();
+      expect(semTese.findComponent({ name: 'DocChecklist' }).exists()).toBe(
+        false
+      );
       expect(
-        mountBody({ props: { lead: { ...lead, thesis_id: 3 } } })
-          .find('[data-testid="lead-nav-documentos"]')
-          .exists()
-      ).toBe(true);
+        semTese
+          .findComponent({ name: 'ArquivosRecebidos' })
+          .props('conversationId')
+      ).toBe(42);
+      // gaveta: usa a conversa do lead
+      const gaveta = mountBody({
+        props: {
+          context: 'drawer',
+          conversationId: null,
+          lead: { ...lead, thesis_id: 3, conversation_id: 99 },
+        },
+      });
+      expect(gaveta.findComponent({ name: 'DocChecklist' }).exists()).toBe(
+        true
+      );
+      expect(
+        gaveta
+          .findComponent({ name: 'ArquivosRecebidos' })
+          .props('conversationId')
+      ).toBe(99);
     });
 
     it('mostra dot verde no Simular quando há última simulação', () => {

@@ -756,6 +756,20 @@
       },
       "SINCE": "Lead since {date}",
       "VIA": "via {source}",
+      "ARQUIVOS": {
+        "TITLE": "Files received",
+        "LOADING": "Loading files…",
+        "EMPTY": "No files received in this conversation.",
+        "ERROR": "Could not load the files.",
+        "DOWNLOAD": "Download",
+        "TIPO": {
+          "IMAGE": "Image",
+          "AUDIO": "Audio",
+          "VIDEO": "Video",
+          "PDF": "PDF",
+          "FILE": "Document"
+        }
+      },
       "NAV_LABEL": "Lead panel sections",
       "HISTORY_IN_FICHA": "Full history in the file",
       "SIMULADOR_BACK": "Back to panel",
