@@ -134,4 +134,15 @@ RSpec.describe Ramon::EsteiraBuilder do
     expect(result[:items].first[:name]).to eq('Fica')
     expect(result[:board][:done_today]).to eq(1)
   end
+
+  it 'counts the day in São Paulo, like the daily goal (22h SP is still today)' do
+    travel_to Time.utc(2026, 10, 6, 1, 0, 0) do # 22h de 05/10 em São Paulo; em UTC já é 06/10
+      done_lead = create(:lead, account: account, lead_stage: active_stage, source: 'lp-x')
+      activity = done_lead.lead_activities.create!(account: account, kind: described_class::DONE_KIND)
+      activity.update_columns(created_at: Time.utc(2026, 10, 5, 23, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+      result = build
+      expect(result[:items]).to be_empty
+      expect(result[:board][:done_today]).to eq(1)
+    end
+  end
 end

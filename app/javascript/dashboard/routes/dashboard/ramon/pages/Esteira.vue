@@ -10,6 +10,8 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { brlCompact } from '../helpers/currency';
+import { reasonLabel, severityDotClass, tomMotivo } from '../helpers/esteira';
 import {
   ATALHO,
   CARTAO,
@@ -51,14 +53,6 @@ const fetchEsteira = async () => {
 };
 onMounted(fetchEsteira);
 
-const brl = value =>
-  new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(Number(value) || 0);
-
 const money = value =>
   new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -79,31 +73,6 @@ const dayTotal = computed(() => doneCount.value + total.value);
 const progressPct = computed(() =>
   dayTotal.value ? Math.round((doneCount.value / dayTotal.value) * 100) : 0
 );
-
-// Motivo legível: chaves i18n vindas do backend; moeda formatada aqui.
-const reasonLabel = reason =>
-  t(
-    `RAMON.ESTEIRA.REASON.${reason.key}`,
-    reason.key === 'PRESCRIPTION_BLEEDING'
-      ? { value: brl(reason.params.monthly) }
-      : reason.params
-  );
-
-// Tom do motivo: prescrição ruby, tarefa âmbar, resto neutro. Pinta o chip
-// e o filete do cartão (pelo 1º motivo).
-const tomMotivo = (key = '') => {
-  if (key.startsWith('PRESCRIPTION')) return 'ruby';
-  if (key.startsWith('TASK')) return 'amber';
-  return 'slate';
-};
-
-// Dot de severidade do "Depois desta".
-const severityDotClass = item => {
-  const key = item.reasons[0]?.key || '';
-  if (key.startsWith('PRESCRIPTION')) return 'bg-n-ruby-9';
-  if (key === 'TASK_OVERDUE' || key === 'STALLED') return 'bg-n-amber-9';
-  return 'bg-n-teal-9';
-};
 
 // ---- Script do playbook (tese do lead atual) -----------------------------
 const theses = useMapGetter('theses/getTheses');
@@ -310,7 +279,7 @@ useKeyboardEvents({
         </span>
       </div>
       <span class="text-xs text-n-slate-10 whitespace-nowrap">
-        {{ t('RAMON.ESTEIRA.AT_STAKE', { value: brl(valueSum) }) }}
+        {{ t('RAMON.ESTEIRA.AT_STAKE', { value: brlCompact(valueSum) }) }}
       </span>
       <Button
         data-testid="esteira-reload"
@@ -426,7 +395,7 @@ useKeyboardEvents({
             :key="reason.key"
             :class="[CHIP, TOM[tomMotivo(reason.key)]]"
           >
-            {{ reasonLabel(reason) }}
+            {{ reasonLabel(t, reason) }}
           </span>
           <span v-if="current.stage_name" :class="[CHIP, TOM.slate]">
             {{ current.stage_name }}
@@ -633,7 +602,7 @@ useKeyboardEvents({
               <span
                 class="flex-shrink-0 ml-auto font-mono text-[11px] tabular-nums text-n-slate-10"
               >
-                {{ item.value ? brl(item.value) : '—' }}
+                {{ item.value ? brlCompact(item.value) : '—' }}
               </span>
             </button>
           </div>
