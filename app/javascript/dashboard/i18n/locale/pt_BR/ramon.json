@@ -755,7 +755,17 @@
         "SUSPENSOS": "Suspensos",
         "DOC_PENDENTE": "Com documento pendente"
       },
-      "OPEN_PORTAL_CLIENT": "Painel do cliente"
+      "OPEN_PORTAL_CLIENT": "Painel do cliente",
+      "SIGNATURE_STATUS": {
+        "PENDENTE": "Aguardando assinatura",
+        "SIGNED": "Assinado em",
+        "REFUSED": "Recusado",
+        "CANCELADO": "Cancelado"
+      },
+      "CANCEL_DOCUMENT": "Cancelar documento",
+      "CANCEL_DOCUMENT_TITLE": "Cancelar “{nome}”?",
+      "CANCEL_DOCUMENT_CONFIRM": "O documento é cancelado no ZapSign e sai da lista “assinar” do cliente. O cliente não é avisado.",
+      "DETAIL_ERROR": "Não deu pra carregar este cliente."
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

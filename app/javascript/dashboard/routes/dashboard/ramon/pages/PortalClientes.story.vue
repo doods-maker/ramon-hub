@@ -189,7 +189,20 @@ const MARIA = {
       id: 30,
       nome: 'Contrato de honorários',
       status: 'signed',
+      assinado_em: diasAtras(29),
       created_at: diasAtras(30),
+    },
+    {
+      id: 29,
+      nome: 'Declaração de hipossuficiência',
+      status: 'cancelado',
+      created_at: diasAtras(31),
+    },
+    {
+      id: 28,
+      nome: 'Termo de renúncia',
+      status: 'refused',
+      created_at: diasAtras(33),
     },
   ],
 };
@@ -279,11 +292,13 @@ const API = {
 
 let respostas = API;
 let falhar = false;
+const FALHAM = new Set(); // caminhos que respondem erro (detalhe que não carrega)
 const responder = async url => {
   if (falhar) throw new Error('offline');
   const path = url
     .replace(/^\/api\/v1\/(accounts\/\d+\/)?/, '')
     .replace(/^leads\//, '');
+  if (FALHAM.has(path)) throw new Error('500');
   return { data: respostas[path] ?? {} };
 };
 window.axios = {
@@ -349,6 +364,14 @@ const filtrar = depois(1500, () => {
   clicar('Com documento pendente');
   document.activeElement?.blur();
 });
+const cancelarDoc = depois(1500, () => {
+  clicar('Maria Aparecida');
+  setTimeout(() => clicar('Cancelar documento'), 800);
+});
+const erroDetalhe = depois(1500, () => {
+  FALHAM.add('portal_clientes/2');
+  clicar('Carlos Eduardo');
+});
 const clicarEm = texto => depois(1500, () => clicar(texto));
 const confirmarSenha = depois(1500, () => clicar('Nova senha provisória', 0));
 const busca = depois(1500, () => {
@@ -398,6 +421,12 @@ const busca = depois(1500, () => {
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="PC7 link direto" :init-state="linkDireto">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC8 cancelar documento" :init-state="cancelarDoc">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC8 erro detalhe" :init-state="erroDetalhe">
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="Vazio" :init-state="vazio">

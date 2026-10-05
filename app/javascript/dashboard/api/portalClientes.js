@@ -19,6 +19,12 @@ class PortalClientesAPI extends ApiClient {
     return axios.post(`${this.url}/${id}/reativar`);
   }
 
+  cancelarAssinatura(id, assinaturaId) {
+    return axios.post(`${this.url}/${id}/cancelar_assinatura`, {
+      assinatura_id: assinaturaId,
+    });
+  }
+
   assinatura(id, payload) {
     return axios.post(`${this.url}/${id}/assinatura`, payload);
   }

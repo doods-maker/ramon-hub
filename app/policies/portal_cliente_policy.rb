@@ -12,6 +12,7 @@ class PortalClientePolicy < ApplicationPolicy
   def create? = index?
   def update? = index?
   def assinatura? = index?
+  def cancelar_assinatura? = index?
   def convidar? = index?
   def nova_senha? = gerir_acesso?
   def suspender? = gerir_acesso?

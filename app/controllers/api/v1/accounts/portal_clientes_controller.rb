@@ -2,6 +2,7 @@
 # provisória), recado por processo, enviar documento pra assinatura. Convite é
 # sempre clique humano.
 class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseController
+  MOTIVO_CANCELAMENTO = 'Documento cancelado pelo escritório'.freeze
   before_action :current_account
   before_action :fetch_cliente, except: [:index, :create]
   before_action :check_authorization
@@ -68,6 +69,18 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     a = criar_assinatura!
     registrar('enviou_assinatura', a.nome)
     render json: { id: a.id, nome: a.nome, status: a.status }
+  rescue Ramon::ZapsignClient::UnavailableError, Ramon::ZapsignClient::RequestError => e
+    render json: { error: e.message }, status: :service_unavailable
+  end
+
+  # Cancela no ZapSign (refuse_doc, sem avisar o signatário) e marca cancelado:
+  # sai da lista "assinar" do cliente (só pendente aparece lá).
+  def cancelar_assinatura
+    a = @cliente.assinaturas.pendentes.find(params[:assinatura_id])
+    Ramon::ZapsignClient.refuse_doc(a.doc_token, MOTIVO_CANCELAMENTO)
+    a.update!(status: 'cancelado')
+    registrar('cancelou_assinatura', a.nome)
+    render json: portal_json.detalhe(@cliente)
   rescue Ramon::ZapsignClient::UnavailableError, Ramon::ZapsignClient::RequestError => e
     render json: { error: e.message }, status: :service_unavailable
   end

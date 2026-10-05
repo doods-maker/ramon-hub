@@ -141,6 +141,29 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(response.parsed_body['envios'].first['drive_url']).to eq 'https://drive.google.com/file/d/abc'
   end
 
+  it 'cancela o documento no ZapSign, marca cancelado (sai do "assinar" do cliente) e registra' do
+    cliente = create(:portal_cliente, account: account)
+    a = create(:portal_assinatura, portal_cliente: cliente, doc_token: 'doc-9')
+    allow(Ramon::ZapsignClient).to receive(:refuse_doc)
+
+    post "#{base}/#{cliente.id}/cancelar_assinatura", params: { assinatura_id: a.id }, headers: headers, as: :json
+    expect(response).to have_http_status(:success)
+    expect(Ramon::ZapsignClient).to have_received(:refuse_doc).with('doc-9', anything)
+    expect(a.reload.status).to eq 'cancelado'
+    expect(cliente.assinaturas.pendentes).to be_empty
+    expect(response.parsed_body['eventos'].first['acao']).to eq 'cancelou_assinatura'
+  end
+
+  it 'ZapSign fora do ar ao cancelar: 503 e o documento segue pendente' do
+    cliente = create(:portal_cliente, account: account)
+    a = create(:portal_assinatura, portal_cliente: cliente)
+    allow(Ramon::ZapsignClient).to receive(:refuse_doc).and_raise(Ramon::ZapsignClient::UnavailableError, 'fora')
+
+    post "#{base}/#{cliente.id}/cancelar_assinatura", params: { assinatura_id: a.id }, headers: headers, as: :json
+    expect(response).to have_http_status(:service_unavailable)
+    expect(a.reload.status).to eq 'pendente'
+  end
+
   it 'registra a trilha (quem fez o quê) e devolve o histórico no detalhe' do
     na_recepcao(agent)
     cliente = create(:portal_cliente, account: account, processos: [{ 'id' => 7, 'docs_pendentes' => [] }])

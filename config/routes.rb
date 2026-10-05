@@ -322,6 +322,7 @@ Rails.application.routes.draw do
               post :assinatura
               post :suspender
               post :reativar
+              post :cancelar_assinatura
             end
           end
           resources :calculos, only: [:index, :destroy] do

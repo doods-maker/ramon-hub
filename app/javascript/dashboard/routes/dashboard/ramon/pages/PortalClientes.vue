@@ -132,13 +132,27 @@ const reenviar = c => {
 const comAcesso = c =>
   clientes.value.find(x => x.advbox_customer_id === c.id && x.convidado_em);
 
-const abrir = async id => {
-  if (aberto.value?.id === id) {
+// id do cliente cujo detalhe não carregou (mostra erro + tentar de novo na linha).
+const erroDetalhe = ref(null);
+
+const carregarDetalhe = async id => {
+  erroDetalhe.value = null;
+  try {
+    const { data } = await PortalClientesAPI.show(id);
+    aberto.value = data;
+  } catch {
     aberto.value = null;
+    erroDetalhe.value = id;
+  }
+};
+
+const abrir = async id => {
+  if (aberto.value?.id === id || erroDetalhe.value === id) {
+    aberto.value = null;
+    erroDetalhe.value = null;
     return;
   }
-  const { data } = await PortalClientesAPI.show(id);
-  aberto.value = data;
+  await carregarDetalhe(id);
   if (!templates.value.length) {
     try {
       const resp = await LeadsAPI.zapsignTemplates();
@@ -614,6 +628,21 @@ onMounted(async () => {
               </div>
             </div>
 
+            <div
+              v-if="erroDetalhe === c.id"
+              data-testid="portal-detalhe-erro"
+              class="mt-3 flex items-center gap-3 ps-5 text-xs"
+            >
+              <span class="text-n-ruby-11">{{
+                t('RAMON.PORTAL_CLIENTES.DETAIL_ERROR')
+              }}</span>
+              <Button
+                link
+                xs
+                :label="t('RAMON.LEAD_PANEL.RETRY')"
+                @click="carregarDetalhe(c.id)"
+              />
+            </div>
             <PortalClienteDetalhe
               v-if="aberto && aberto.id === c.id"
               :key="aberto.id"

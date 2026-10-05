@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import PortalClientesAPI from 'dashboard/api/portalClientes';
 import Button from 'dashboard/components-next/button/Button.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 import {
   AVISO,
   CAMPO,
@@ -100,10 +101,40 @@ const salvarEmail = async () => {
 };
 
 // status espelha o ZapSign: pendente | signed | refused.
-const TOM_ASSINATURA = { signed: TOM.teal, refused: TOM.ruby };
-
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
+
+// status do ZapSign em português; assinado mostra a data.
+const TOM_ASSINATURA = {
+  pendente: TOM.amber,
+  signed: TOM.teal,
+  refused: TOM.ruby,
+  cancelado: TOM.slate,
+};
+const ROTULO_ASSINATURA = {
+  pendente: 'RAMON.PORTAL_CLIENTES.SIGNATURE_STATUS.PENDENTE',
+  signed: 'RAMON.PORTAL_CLIENTES.SIGNATURE_STATUS.SIGNED',
+  refused: 'RAMON.PORTAL_CLIENTES.SIGNATURE_STATUS.REFUSED',
+  cancelado: 'RAMON.PORTAL_CLIENTES.SIGNATURE_STATUS.CANCELADO',
+};
+const statusAssinatura = a =>
+  ROTULO_ASSINATURA[a.status] ? t(ROTULO_ASSINATURA[a.status]) : a.status;
+
+// Cancelar documento pendente: confirma, cancela no ZapSign e some do "assinar" do cliente.
+const cancelando = ref(null);
+const cancelarAssinatura = async () => {
+  const a = cancelando.value;
+  cancelando.value = null;
+  try {
+    const { data } = await PortalClientesAPI.cancelarAssinatura(
+      props.cliente.id,
+      a.id
+    );
+    emit('atualizar', data);
+  } catch (e) {
+    erro(e);
+  }
+};
 
 const faltam = p => (p.documentos || []).filter(d => !d.enviado).length;
 
@@ -264,12 +295,27 @@ const dataHora = iso =>
             class="flex items-center gap-2"
           >
             <span class="text-n-slate-12">{{ a.nome }}</span>
-            <span :class="[CHIP, TOM_ASSINATURA[a.status] || TOM.amber]">
-              {{ a.status }}
+            <span :class="[CHIP, TOM_ASSINATURA[a.status] || TOM.slate]">
+              {{ statusAssinatura(a) }}
+              <span
+                v-if="a.status === 'signed' && a.assinado_em"
+                class="font-mono"
+              >
+                {{ dataCurta(a.assinado_em) }}
+              </span>
             </span>
             <span class="font-mono text-n-slate-10">{{
               dataCurta(a.created_at)
             }}</span>
+            <Button
+              v-if="a.status === 'pendente'"
+              link
+              xs
+              ruby
+              class="ms-auto"
+              :label="t('RAMON.PORTAL_CLIENTES.CANCEL_DOCUMENT')"
+              @click="cancelando = a"
+            />
           </li>
         </ul>
       </template>
@@ -320,5 +366,17 @@ const dataHora = iso =>
         </li>
       </ul>
     </div>
+    <ConfirmModal
+      v-if="cancelando"
+      :title="
+        t('RAMON.PORTAL_CLIENTES.CANCEL_DOCUMENT_TITLE', {
+          nome: cancelando.nome,
+        })
+      "
+      :message="t('RAMON.PORTAL_CLIENTES.CANCEL_DOCUMENT_CONFIRM')"
+      :confirm-label="t('RAMON.PORTAL_CLIENTES.CANCEL_DOCUMENT')"
+      @confirm="cancelarAssinatura"
+      @cancel="cancelando = null"
+    />
   </div>
 </template>

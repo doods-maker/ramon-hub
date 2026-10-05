@@ -755,7 +755,17 @@
         "SUSPENSOS": "Suspended",
         "DOC_PENDENTE": "Document pending"
       },
-      "OPEN_PORTAL_CLIENT": "Client portal"
+      "OPEN_PORTAL_CLIENT": "Client portal",
+      "SIGNATURE_STATUS": {
+        "PENDENTE": "Awaiting signature",
+        "SIGNED": "Signed on",
+        "REFUSED": "Refused",
+        "CANCELADO": "Cancelled"
+      },
+      "CANCEL_DOCUMENT": "Cancel document",
+      "CANCEL_DOCUMENT_TITLE": "Cancel “{nome}”?",
+      "CANCEL_DOCUMENT_CONFIRM": "The document is cancelled in ZapSign and leaves the client's “to sign” list. The client is not notified.",
+      "DETAIL_ERROR": "Could not load this client."
     },
     "DOSSIE": {
       "OPEN": "Dossier",
