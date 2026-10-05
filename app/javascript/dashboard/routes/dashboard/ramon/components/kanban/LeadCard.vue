@@ -323,14 +323,6 @@ const onSchedule = async ({ dueAt, title }) => {
         {{ prescriptionLabel }}
       </span>
       <span
-        v-if="lead.latest_triage?.status === 'awaiting_human'"
-        data-testid="triage-awaiting-human-badge"
-        :title="$t('RAMON.TRIAGE.AWAITING_HUMAN_HINT')"
-        class="text-n-amber-11"
-      >
-        {{ $t('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN') }}
-      </span>
-      <span
         v-if="daysInStage !== null"
         data-testid="stage-age"
         class="font-mono text-n-slate-10"

@@ -152,8 +152,6 @@ const markdown = computed(() => {
   ];
 
   if (triagem.value) {
-    if (triagem.value.awaiting_human)
-      parts.push(`- ${t('RAMON.DOSSIE.TRIAGE_AWAITING_HUMAN')}`);
     parts.push(
       line(
         t('RAMON.TRIAGE.VIABILITY.LABEL'),
@@ -552,13 +550,6 @@ const copyDossie = async () => {
                 {{ $t('RAMON.DOSSIE.TRIAGE_EMPTY') }}
               </p>
               <template v-else>
-                <p
-                  v-if="triagem.awaiting_human"
-                  class="mb-1 text-sm text-n-amber-11"
-                  data-testid="dossie-awaiting-human"
-                >
-                  {{ $t('RAMON.DOSSIE.TRIAGE_AWAITING_HUMAN') }}
-                </p>
                 <p class="text-sm text-n-slate-12">
                   {{ $t('RAMON.TRIAGE.VIABILITY.LABEL') }}:
                   {{ viabilityLabel(triagem.viability) }}

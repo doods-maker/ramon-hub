@@ -41,7 +41,6 @@ const payload = {
     id: 9,
     status: 'done',
     viability: null,
-    awaiting_human: true,
     result: 'Caso com indícios de nexo.',
   },
   tese: {
@@ -90,13 +89,6 @@ describe('Dossie.vue', () => {
     );
     expect(wrapper.findAll('[data-testid="dossie-objecao"]')).toHaveLength(1);
     expect(wrapper.findAll('[data-testid="dossie-doc"]')).toHaveLength(1);
-  });
-
-  it('sinaliza triagem aguardando revisão humana', async () => {
-    const wrapper = await mountDossie();
-    expect(wrapper.find('[data-testid="dossie-awaiting-human"]').exists()).toBe(
-      true
-    );
   });
 
   it('copia o dossiê em markdown', async () => {

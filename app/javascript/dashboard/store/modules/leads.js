@@ -190,16 +190,12 @@ export const actions = {
   },
   // Enfileira o lote no backend (Ramon::LeadBulkActionJob). O board se atualiza
   // pelos broadcasts lead.updated de cada item — sem refetch aqui.
-  bulkAction: async (
-    { commit, state: moduleState },
-    { fields, task, triage } = {}
-  ) => {
+  bulkAction: async ({ commit, state: moduleState }, { fields, task } = {}) => {
     await BulkActionsAPI.create({
       type: 'Lead',
       ids: moduleState.selectedIds,
       ...(fields ? { fields } : {}),
       ...(task ? { task } : {}),
-      ...(triage ? { triage: true } : {}),
     });
     commit(types.SET_LEAD_SELECTION, []);
   },

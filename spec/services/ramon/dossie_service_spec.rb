@@ -45,7 +45,7 @@ RSpec.describe Ramon::DossieService do
       expect(described_class.new(lead: lead).perform[:tese][:honorario_text]).to eq('12,5% dos atrasados')
     end
 
-    it 'expõe a última triagem e sinaliza awaiting_human quando done sem viabilidade' do
+    it 'expõe a última triagem (histórico), sem o aviso de aguardando humano' do
       lead = create(:lead, account: account, lead_stage: stage)
       lead.lead_triages.create!(account: account, status: 'done', viability: 'alta')
       last = lead.lead_triages.create!(account: account, status: 'done', result: 'sem conclusão')
@@ -53,14 +53,8 @@ RSpec.describe Ramon::DossieService do
       triagem = described_class.new(lead: lead).perform[:triagem]
 
       expect(triagem[:id]).to eq(last.id)
-      expect(triagem[:awaiting_human]).to be true
+      expect(triagem).not_to have_key(:awaiting_human)
       expect(triagem[:result]).to eq('sem conclusão')
-    end
-
-    it 'não marca awaiting_human quando a viabilidade foi detectada' do
-      lead = create(:lead, account: account, lead_stage: stage)
-      lead.lead_triages.create!(account: account, status: 'done', viability: 'alta')
-      expect(described_class.new(lead: lead).perform[:triagem][:awaiting_human]).to be false
     end
 
     it 'mescla atividades e notas na timeline' do
