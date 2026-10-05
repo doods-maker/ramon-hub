@@ -13,6 +13,9 @@ class Ramon::Fluxos::Grafo
     'criar_tarefa' => %w[titulo], 'escolha' => %w[campo], 'avisar_sino' => %w[texto], 'avisar_push' => %w[texto]
   }.freeze
   PROIBIDAS_CHATWOOT = %w[send_message send_attachment].freeze
+  # Allowlist: só o que a regra do Chatwoot aceita (inclui as do enterprise), menos envio ao cliente —
+  # o ActionService chama o nome da ação com `send`, então nome livre seria execução arbitrária.
+  PERMITIDAS_CHATWOOT = (AutomationRule.new.actions_attributes - PROIBIDAS_CHATWOOT).freeze
 
   attr_reader :nos, :setas
 
@@ -128,9 +131,10 @@ class Ramon::Fluxos::Grafo
   end
 
   def erros_chatwoot(no, config)
-    nomes = Array(config['acoes']).map { |a| a['action_name'] }
+    nomes = Array(config['acoes']).pluck('action_name')
     return ["Passo #{no['id']}: escolha pelo menos uma ação"] if nomes.empty?
+    return ["Passo #{no['id']}: mensagem ao cliente só como rascunho"] if nomes.intersect?(PROIBIDAS_CHATWOOT)
 
-    (nomes & PROIBIDAS_CHATWOOT).any? ? ["Passo #{no['id']}: mensagem ao cliente só como rascunho"] : []
+    (nomes - PERMITIDAS_CHATWOOT).map { |nome| "Passo #{no['id']}: ação desconhecida (#{nome})" }
   end
 end

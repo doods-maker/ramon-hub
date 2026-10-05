@@ -49,6 +49,11 @@ RSpec.describe Ramon::Fluxos::Grafo do
     expect(grafo(d).erros).to include('Passo p1: mensagem ao cliente só como rascunho')
   end
 
+  it 'recusa ação do Chatwoot fora da lista permitida' do
+    d = grafo_linear({ 'tipo' => 'manual' }, ['acao_chatwoot', { 'acoes' => [{ 'action_name' => 'system' }] }])
+    expect(grafo(d).erros).to include('Passo p1: ação desconhecida (system)')
+  end
+
   it 'exige configuração obrigatória' do
     d = grafo_linear({ 'tipo' => 'manual' }, ['mover_etapa', {}], ['esperar', {}])
     expect(grafo(d).erros).to include('Passo p1: falta etapa_id', 'Passo p2: falta o tempo de espera')

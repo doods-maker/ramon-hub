@@ -40,6 +40,14 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     expect(conversa.reload.label_list).to include('urgente')
   end
 
+  it 'ação do Chatwoot fora da lista permitida é descartada antes de rodar' do
+    acoes = [{ 'action_name' => 'add_label', 'action_params' => ['urgente'] }, { 'action_name' => 'system', 'action_params' => [] }]
+    servico = Ramon::Fluxos::AcaoChatwootService.new(ctx.execucao, conversa, acoes)
+    expect(servico.instance_variable_get(:@rule).actions.pluck('action_name')).to eq(['add_label'])
+    servico.perform
+    expect(conversa.reload.label_list).to include('urgente')
+  end
+
   it 'mover etapa atualiza a etapa inicial da execução' do
     nova = create(:lead_stage, account: account, position: 5)
     c = ctx
