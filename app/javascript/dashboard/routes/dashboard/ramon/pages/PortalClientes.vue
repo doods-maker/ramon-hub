@@ -181,13 +181,28 @@ const excluir = c => {
   };
 };
 
-const reativar = async c => {
-  try {
-    await PortalClientesAPI.reativar(c.id);
-    await carregar();
-  } catch (e) {
-    erro(e);
-  }
+// Reativar sempre gera senha nova (a anterior deixa de valer) e mostra a entrega.
+const reativar = c => {
+  confirmacao.value = {
+    title: t('RAMON.PORTAL_CLIENTES.REACTIVATE_TITLE', { nome: c.nome }),
+    message:
+      c.email && emailConfigurado.value
+        ? t('RAMON.PORTAL_CLIENTES.REACTIVATE_CONFIRM_EMAIL', {
+            email: c.email,
+          })
+        : t('RAMON.PORTAL_CLIENTES.REACTIVATE_CONFIRM'),
+    confirmLabel: t('RAMON.PORTAL_CLIENTES.REACTIVATE'),
+    confirmColor: 'blue',
+    acao: async () => {
+      try {
+        const { data } = await PortalClientesAPI.reativar(c.id);
+        senhaGerada.value = data;
+        await carregar();
+      } catch (e) {
+        erro(e);
+      }
+    },
+  };
 };
 
 // Suspender não apaga nada: só tira o acesso (e derruba as sessões abertas).

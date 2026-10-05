@@ -765,7 +765,10 @@
       "CANCEL_DOCUMENT": "Cancelar documento",
       "CANCEL_DOCUMENT_TITLE": "Cancelar “{nome}”?",
       "CANCEL_DOCUMENT_CONFIRM": "O documento é cancelado no ZapSign e sai da lista “assinar” do cliente. O cliente não é avisado.",
-      "DETAIL_ERROR": "Não deu pra carregar este cliente."
+      "DETAIL_ERROR": "Não deu pra carregar este cliente.",
+      "REACTIVATE_TITLE": "Reativar o acesso de {nome}?",
+      "REACTIVATE_CONFIRM": "O acesso volta com uma senha nova — a anterior deixa de valer.",
+      "REACTIVATE_CONFIRM_EMAIL": "O acesso volta com uma senha nova — a anterior deixa de valer e ela vai por e-mail para {email}."
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

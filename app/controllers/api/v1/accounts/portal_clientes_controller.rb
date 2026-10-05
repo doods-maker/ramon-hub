@@ -59,10 +59,12 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     render json: portal_json.linha(@cliente)
   end
 
+  # Reativar sempre volta com senha nova (a anterior deixa de valer e as sessões
+  # caem) e o mesmo bloco de entrega do convite. Evento: só "reativou".
   def reativar
     @cliente.reativar!
     registrar('reativou')
-    render json: portal_json.linha(@cliente)
+    render json: portal_json.linha(@cliente).merge(Ramon::PortalConvite.new(@cliente).perform)
   end
 
   def assinatura

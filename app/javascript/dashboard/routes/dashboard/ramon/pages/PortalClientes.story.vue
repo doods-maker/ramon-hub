@@ -256,8 +256,16 @@ const API = {
     ...CLIENTES[3],
     senha_provisoria: '390557',
     email: { status: 'enviado', para: 'maria.souza@exemplo.com.br' },
-    mensagem: null,
-    whatsapp_url: null,
+    mensagem: mensagemPronta('Maria', '321.654.987-10', '390557'),
+    whatsapp_url: 'https://wa.me/5548998887766?text=Ol%C3%A1',
+  },
+  'portal_clientes/5/reativar': {
+    ...CLIENTES[4],
+    suspenso_em: null,
+    senha_provisoria: '617240',
+    email: { status: 'enviado', para: 'pedro.alves@exemplo.com.br' },
+    mensagem: mensagemPronta('Pedro', '654.987.321-55', '617240'),
+    whatsapp_url: 'https://wa.me/5548996554433?text=Ol%C3%A1',
   },
   'ramon_calculos/advbox_customers': {
     payload: [
@@ -372,6 +380,10 @@ const erroDetalhe = depois(1500, () => {
   FALHAM.add('portal_clientes/2');
   clicar('Carlos Eduardo');
 });
+const reativarEntrega = depois(1500, () => {
+  clicar('Reativar acesso');
+  setTimeout(() => clicar('Reativar acesso', 1), 300);
+});
 const clicarEm = texto => depois(1500, () => clicar(texto));
 const confirmarSenha = depois(1500, () => clicar('Nova senha provisória', 0));
 const busca = depois(1500, () => {
@@ -427,6 +439,12 @@ const busca = depois(1500, () => {
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="PC8 erro detalhe" :init-state="erroDetalhe">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC3 reativar" :init-state="clicarEm('Reativar acesso')">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC3 reativar entrega" :init-state="reativarEntrega">
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="Vazio" :init-state="vazio">

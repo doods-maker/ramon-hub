@@ -63,7 +63,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
       end.not_to have_enqueued_mail(Ramon::PortalMailer, :convite)
     end
     expect(response.parsed_body['email']).to eq('status' => 'sem_servidor', 'para' => 'c@exemplo.com')
-    expect(response.parsed_body['mensagem']).to be_nil
+    expect(response.parsed_body['mensagem']).to include(response.parsed_body['senha_provisoria'])
   end
 
   it 'e-mail duplicado devolve 422' do
@@ -198,8 +198,14 @@ RSpec.describe 'Portal Clientes API', type: :request do
       expect(response.parsed_body['suspenso_em']).to be_present
       expect(cliente.reload.sessao_chave).not_to eq chave
 
+      antiga = cliente.gerar_senha_provisoria!
       post "#{base}/#{cliente.id}/reativar", headers: headers
       expect(cliente.reload.suspenso?).to be false
+      nova = response.parsed_body['senha_provisoria']
+      expect(cliente.authenticate_senha(antiga)).to be false
+      expect(cliente.authenticate_senha(nova)).to be_truthy
+      expect(response.parsed_body.keys).to include('email', 'mensagem', 'whatsapp_url')
+      expect(PortalEvento.where(portal_cliente_id: cliente.id).pluck(:acao)).to eq %w[suspendeu reativou]
       get base, headers: headers
       expect(response.parsed_body['permissoes']).to eq('gerir_acesso' => true, 'excluir' => false)
     end
