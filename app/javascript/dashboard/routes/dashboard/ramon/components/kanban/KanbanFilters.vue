@@ -104,6 +104,17 @@ const clearFilters = () => {
         {{ st.name }}
       </option>
     </select>
+    <!-- ganhos/perdidos: o server traz só os dos últimos 90 dias por padrão -->
+    <select
+      data-testid="filter-closed-all"
+      class="!w-64"
+      :class="[SELECT, activeClass(filters.closedAll)]"
+      :value="filters.closedAll ? 'all' : ''"
+      @change="emitUpdate({ closedAll: $event.target.value === 'all' })"
+    >
+      <option value="">{{ $t('RAMON.FUNIL.FILTERS.CLOSED_RECENT') }}</option>
+      <option value="all">{{ $t('RAMON.FUNIL.FILTERS.CLOSED_ALL') }}</option>
+    </select>
     <label
       class="flex items-center gap-1.5 mb-0 text-xs font-normal leading-normal whitespace-nowrap"
       :class="filters.createdAfter ? 'text-n-blue-11' : 'text-n-slate-10'"

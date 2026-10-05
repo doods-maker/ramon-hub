@@ -15,12 +15,16 @@ const stubStore = {
     'leadConfig/getChannels': [{ key: 'whatsapp', label: 'WhatsApp' }],
     'leadConfig/getStages': [
       { id: 1, name: 'Novo', probability: 50 },
-      { id: 2, name: 'Perdido', probability: 0 },
+      { id: 2, name: 'Assinatura', probability: 80 },
+      { id: 3, name: 'Ganho', probability: 100, is_won: true },
+      { id: 4, name: 'Perdido', probability: 0, is_lost: true },
     ],
     'agents/getAgents': [{ id: 3, name: 'Eduardo' }],
     'leads/getLeads': [
       { id: 10, lead_stage_id: 1, value: 100 },
       { id: 11, lead_stage_id: 2, value: 40 },
+      { id: 12, lead_stage_id: 3, value: 900 },
+      { id: 13, lead_stage_id: 4, value: 700 },
     ],
   },
   dispatch: vi.fn(),
@@ -42,6 +46,7 @@ const emptyFilters = {
   taskDueToday: false,
   wonSince: null,
   newFromLp: false,
+  closedAll: false,
 };
 
 const mountChips = (filters = {}) =>
@@ -114,12 +119,20 @@ describe('FilterChips', () => {
     expect(wrapper.emitted().update[0][0]).toEqual({ wonSince: null });
   });
 
-  it('resumo traz contagem, soma e previsão ponderada pela etapa', () => {
+  it('chip de ganhos/perdidos de todas as datas volta aos 90 dias no ✕', async () => {
+    const wrapper = mountChips({ closedAll: true });
+    await wrapper
+      .find('[data-testid="filter-chip-remove-closedAll"]')
+      .trigger('click');
+    expect(wrapper.emitted().update[0][0]).toEqual({ closedAll: false });
+  });
+
+  it('resumo conta só o pipeline em aberto (sem ganhos e perdidos)', () => {
     const wrapper = mountChips();
     const summary = wrapper.find('[data-testid="pipeline-summary"]').text();
-    // 2 leads · R$ 140 no total · previsão = 100×50% + 40×0% = R$ 50
+    // 2 em aberto · R$ 140 · previsão = 100×50% + 40×80% = R$ 82
     expect(summary).toContain('"count":2');
     expect(summary).toContain('140');
-    expect(summary).toContain('50');
+    expect(summary).toContain('82');
   });
 });

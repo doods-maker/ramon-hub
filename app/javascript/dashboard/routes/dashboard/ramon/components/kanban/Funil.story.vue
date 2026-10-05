@@ -401,8 +401,16 @@ const API = {
   'leads/4/activities': { payload: [] },
 };
 
-const responder = async url => {
+// Espelha a janela do index (Ramon::LeadRadar.closed_window): fechados só dos
+// últimos 90 dias, salvo closed_all.
+const fechadoRecente = lead => {
+  const fechadoEm = lead.won_at || lead.lost_at;
+  return !fechadoEm || Date.now() - new Date(fechadoEm) <= 90 * DIA;
+};
+const responder = async (url, config = {}) => {
   const path = url.replace(/^\/api\/v1\/(accounts\/\d+\/)?/, '');
+  if (path === 'leads' && !config.params?.closed_all)
+    return { data: { payload: LEADS.filter(fechadoRecente) } };
   return { data: API[path] ?? {} };
 };
 window.axios = {
@@ -480,6 +488,7 @@ const filtros = () => {
   store.dispatch('leads/selectMany', [4, 6]);
   clicar('[data-testid="filters-toggle"]');
 };
+const fechadosTodos = () => estado({ filtros: { closedAll: true } });
 const quadros = () => {
   estado({ quadro: 1 });
   clicar('[data-testid="board-dropdown-toggle"]');
@@ -541,6 +550,11 @@ const naoAdmin = () => {
       </div>
     </Variant>
     <Variant title="Filtros" :init-state="filtros">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
+    <Variant title="Fechados todos" :init-state="fechadosTodos">
       <div class="h-screen flex flex-col bg-n-background">
         <KanbanBoard />
       </div>

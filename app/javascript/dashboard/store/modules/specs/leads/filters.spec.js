@@ -78,6 +78,21 @@ describe('leads filters', () => {
     });
   });
 
+  it('get pede ganhos/perdidos de todas as datas só com closedAll', async () => {
+    axios.get.mockResolvedValue({ data: { payload: [] } });
+    await actions.get({ commit, state: { filters: { ...EMPTY_FILTERS } } });
+    expect(axios.get).toHaveBeenLastCalledWith(expect.any(String), {
+      params: {},
+    });
+    await actions.get({
+      commit,
+      state: { filters: { ...EMPTY_FILTERS, closedAll: true } },
+    });
+    expect(axios.get).toHaveBeenLastCalledWith(expect.any(String), {
+      params: { closed_all: true },
+    });
+  });
+
   it('loadFilters lê do localStorage e busca', async () => {
     localStorage.setItem('ramon_lead_filters', JSON.stringify({ q: 'x' }));
     await actions.loadFilters({ commit, dispatch });

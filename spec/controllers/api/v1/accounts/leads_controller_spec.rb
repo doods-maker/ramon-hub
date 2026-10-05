@@ -549,6 +549,42 @@ RSpec.describe 'Leads API', type: :request do
         expect(leads_with(new_from_lp: 'true')).to eq([da_lp.id])
       end
     end
+
+    describe 'janela de 90 dias dos ganhos/perdidos' do
+      let(:ganho) { account.lead_stages.find_by(is_won: true) }
+      let!(:aberto_antigo) { travel_to(200.days.ago) { account.leads.create!(name: 'Aberto antigo', lead_stage: novo) } }
+      let!(:ganho_recente) { travel_to(10.days.ago) { account.leads.create!(name: 'Ganho recente', lead_stage: ganho) } }
+      let!(:ganho_antigo) { travel_to(120.days.ago) { account.leads.create!(name: 'Ganho antigo', lead_stage: ganho) } }
+      let!(:perdido_recente) { travel_to(5.days.ago) { account.leads.create!(name: 'Perdido recente', lead_stage: perdido, lost_reason: 'x') } }
+      let!(:perdido_antigo) { travel_to(150.days.ago) { account.leads.create!(name: 'Perdido antigo', lead_stage: perdido, lost_reason: 'x') } }
+
+      def leads_with(params = {})
+        get "/api/v1/accounts/#{account.id}/leads", params: params, headers: admin.create_new_auth_token
+        ids(response)
+      end
+
+      it 'por padrão traz abertos de qualquer idade e só fechados dos últimos 90 dias' do
+        expect(leads_with).to contain_exactly(aberto_antigo.id, ganho_recente.id, perdido_recente.id)
+      end
+
+      it 'closed_all traz todos os fechados' do
+        expect(leads_with(closed_all: 'true'))
+          .to contain_exactly(aberto_antigo.id, ganho_recente.id, ganho_antigo.id, perdido_recente.id, perdido_antigo.id)
+      end
+
+      it 'won_since anterior à janela não é cortado' do
+        since = 130.days.ago.in_time_zone('America/Sao_Paulo').to_date.iso8601
+        expect(leads_with(won_since: since)).to contain_exactly(ganho_recente.id, ganho_antigo.id)
+      end
+
+      it 'filtro pela etapa ganha traz o histórico da etapa' do
+        expect(leads_with(lead_stage_id: ganho.id)).to contain_exactly(ganho_recente.id, ganho_antigo.id)
+      end
+
+      it 'busca por nome acha o fechado antigo' do
+        expect(leads_with(q: 'Perdido antigo')).to eq([perdido_antigo.id])
+      end
+    end
   end
 
   describe 'trava de motivo de perda no update' do

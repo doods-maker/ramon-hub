@@ -2,6 +2,10 @@
 # (ramon_dashboard_controller) e a Esteira (esteira_builder).
 module Ramon::LeadRadar
   TIME_ZONE = 'America/Sao_Paulo'.freeze
+  # Funil: ganhos/perdidos aparecem só se fecharam nos últimos 90 dias.
+  CLOSED_WINDOW = 90.days
+  # Filtros que miram fechados de propósito (ou uma pessoa) dispensam a janela.
+  CLOSED_WINDOW_BYPASS = %i[closed_all won_since lead_stage_id q contact_id].freeze
 
   module_function
 
@@ -41,6 +45,16 @@ module Ramon::LeadRadar
     leads = leads.where(won_at: Date.parse(params[:won_since]).in_time_zone(TIME_ZONE)..) if params[:won_since].present?
     leads = leads.where(id: new_from_lp_leads(account).reorder(nil).select(:id)) if params[:new_from_lp].present?
     leads
+  end
+
+  # Data do fechamento = won_at/lost_at (o Lead grava ao entrar na etapa
+  # ganha/perdida); stage_entered_at cobre etapa que virou ganha/perdida depois.
+  def closed_window(account, leads, params)
+    return leads if CLOSED_WINDOW_BYPASS.any? { |key| params[key].present? }
+
+    closed_stage_ids = account.lead_stages.where('is_won OR is_lost').select(:id)
+    leads.where.not(lead_stage_id: closed_stage_ids)
+         .or(leads.where('COALESCE(leads.won_at, leads.lost_at, leads.stage_entered_at) >= ?', CLOSED_WINDOW.ago))
   end
 
   # Pós-venda (ADR-0001): ganhos ficam em "Fechado"; aqui a visão deriva o

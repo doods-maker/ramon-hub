@@ -318,6 +318,8 @@
         "TASK_DUE_TODAY": "With task due today",
         "WON_SINCE": "Won since",
         "NEW_FROM_LP": "New from LP, unanswered",
+        "CLOSED_RECENT": "Won/lost: 90 days",
+        "CLOSED_ALL": "Won/lost: all",
         "CLEAR": "Clear",
         "TOGGLE": "Filters"
       },
@@ -329,7 +331,7 @@
       },
       "CHIPS": {
         "REMOVE": "Remove filter",
-        "SUMMARY": "{count} leads · {total} · forecast",
+        "SUMMARY": "{count} open · {total} · forecast",
         "FORECAST": "{forecast}"
       },
       "BOARDS": {
