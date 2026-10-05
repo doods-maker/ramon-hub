@@ -317,6 +317,7 @@ watch(
               type="button"
               :data-testid="`agenda-view-${v}`"
               :class="[ABA, view === v ? ABA_ATIVA : ABA_INATIVA]"
+              class="border-solid"
               @click="view = v"
             >
               {{ t(`RAMON.AGENDA.VIEW_${v.toUpperCase()}`) }}

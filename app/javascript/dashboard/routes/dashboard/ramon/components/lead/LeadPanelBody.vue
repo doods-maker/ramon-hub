@@ -1341,7 +1341,7 @@ const discard = async () => {
           v-if="lead.thesis_id && lead.docs_total"
           type="button"
           :class="CARTAO"
-          class="text-left w-full hover:border-n-blue-9/40"
+          class="text-left w-full border-solid hover:border-n-blue-9/40"
           data-testid="panel-card-docs"
           @click="setTab('documentos')"
         >
