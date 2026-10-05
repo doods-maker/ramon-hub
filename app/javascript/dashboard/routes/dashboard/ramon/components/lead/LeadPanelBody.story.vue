@@ -25,6 +25,7 @@ const STAGES = [
   {
     id: 3,
     name: 'Reunião agendada',
+    label: 'fase-reuniao-agendada',
     color: '#f59e0b',
     position: 3,
     probability: 50,
@@ -164,6 +165,9 @@ const LEAD_PARADO = {
 // DCB há mais de 5 anos: parcelas já prescrevendo (chip ruby no cabeçalho)
 const LEAD_PRESCREVENDO = { ...LEAD, dcb_em: '2020-06-10' };
 
+// Reunião agendada que já passou (Closer ainda não registrou o resultado)
+const LEAD_REUNIAO = { ...LEAD, id: 44 };
+
 const API = {
   lead_config: {
     stages: STAGES,
@@ -182,6 +186,27 @@ const API = {
         title: 'Ligar para confirmar a reunião',
         kind: 'follow_up',
         due_at: emDias(1),
+      },
+    ],
+  },
+  'leads/44/tasks': {
+    payload: [
+      {
+        id: 2,
+        lead_id: 44,
+        title: 'Reunião Cal.com: Primeiro Atendimento',
+        kind: 'meeting',
+        due_at: diasAtras(1),
+      },
+    ],
+  },
+  'leads/44/notes': {
+    payload: [
+      {
+        id: 4,
+        author_name: null,
+        body: 'RASCUNHO (revisar antes de enviar) — confirmação de reunião:\n"Oi João! Nossa conversa está confirmada pra sexta, 02/10 às 14:00. Vou te esperar, tá? Se não puder comparecer, me avise com antecedência que a gente remarca sem problema."',
+        created_at: diasAtras(4),
       },
     ],
   },
@@ -265,6 +290,23 @@ const comAba = tab => () => {
   localStorage.setItem('ramon_lead_panel_tab', tab);
   return {};
 };
+// Resumo + cliques em sequência (abre formulário/seção para o print)
+const clicando =
+  (...testIds) =>
+  () => {
+    localStorage.setItem('ramon_lead_panel_tab', 'resumo');
+    setTimeout(async () => {
+      // eslint-disable-next-line no-restricted-syntax
+      for (const id of testIds) {
+        document.querySelector(`[data-testid="${id}"]`)?.click();
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise(r => {
+          setTimeout(r, 300);
+        });
+      }
+    }, 800);
+    return {};
+  };
 </script>
 
 <template>
@@ -294,6 +336,48 @@ const comAba = tab => () => {
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD_PARADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Tarefa" :init-state="clicando('panel-add-task')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant
+      title="TarefaReuniao"
+      :init-state="clicando('panel-add-task', 'panel-task-kind-meeting')"
+    >
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant
+      title="EditarTudo"
+      :init-state="clicando('contact-data-toggle', 'lead-edit-all-toggle')"
+    >
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="ReuniaoPassada" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_REUNIAO"
           context="conversation"
           :conversation-id="101"
         />
