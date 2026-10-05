@@ -446,12 +446,45 @@ const menuItems = computed(() => {
       icon: 'i-woot-captain',
       label: t('SIDEBAR.CAPTAIN'),
       activeOn: ['captain_assistants_create_index'],
+      // ponytail: Vigia no topo e Caixas logo após Assistentes = lugar da
+      // Visão geral (I-VG1) e do cartão do assistente (I-AS3); saem do menu
+      // quando esses destinos existirem.
       children: [
+        {
+          name: 'Watchdog',
+          label: t('SIDEBAR.CAPTAIN_WATCHDOG'),
+          activeOn: ['captain_watchdog_index'],
+          to: accountScopedRoute('captain_watchdog_index'),
+        },
         {
           name: 'Assistants',
           label: t('SIDEBAR.CAPTAIN_ASSISTANTS'),
           activeOn: ['captain_assistants_create_index'],
           to: accountScopedRoute('captain_assistants_create_index'),
+        },
+        {
+          name: 'Inboxes',
+          label: t('SIDEBAR.CAPTAIN_INBOXES'),
+          activeOn: ['captain_assistants_inboxes_index'],
+          to: accountScopedRoute('captain_assistants_index', {
+            navigationPath: 'captain_assistants_inboxes_index',
+          }),
+        },
+        {
+          name: 'Scenarios',
+          label: t('SIDEBAR.CAPTAIN_SCENARIOS'),
+          activeOn: ['captain_assistants_scenarios_index'],
+          to: accountScopedRoute('captain_assistants_index', {
+            navigationPath: 'captain_assistants_scenarios_index',
+          }),
+        },
+        {
+          name: 'Tools',
+          label: t('SIDEBAR.CAPTAIN_TOOLS'),
+          activeOn: ['captain_tools_index'],
+          to: accountScopedRoute('captain_assistants_index', {
+            navigationPath: 'captain_tools_index',
+          }),
         },
         {
           name: 'FAQs',
@@ -473,14 +506,6 @@ const menuItems = computed(() => {
           }),
         },
         {
-          name: 'Scenarios',
-          label: t('SIDEBAR.CAPTAIN_SCENARIOS'),
-          activeOn: ['captain_assistants_scenarios_index'],
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_assistants_scenarios_index',
-          }),
-        },
-        {
           name: 'Playground',
           label: t('SIDEBAR.CAPTAIN_PLAYGROUND'),
           activeOn: ['captain_assistants_playground_index'],
@@ -489,32 +514,10 @@ const menuItems = computed(() => {
           }),
         },
         {
-          name: 'Inboxes',
-          label: t('SIDEBAR.CAPTAIN_INBOXES'),
-          activeOn: ['captain_assistants_inboxes_index'],
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_assistants_inboxes_index',
-          }),
-        },
-        {
-          name: 'Tools',
-          label: t('SIDEBAR.CAPTAIN_TOOLS'),
-          activeOn: ['captain_tools_index'],
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_tools_index',
-          }),
-        },
-        {
           name: 'Execucoes',
           label: t('SIDEBAR.CAPTAIN_EXECUCOES'),
           activeOn: ['captain_execucoes_index'],
           to: accountScopedRoute('captain_execucoes_index'),
-        },
-        {
-          name: 'Watchdog',
-          label: t('SIDEBAR.CAPTAIN_WATCHDOG'),
-          activeOn: ['captain_watchdog_index'],
-          to: accountScopedRoute('captain_watchdog_index'),
         },
         {
           name: 'Settings',

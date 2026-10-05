@@ -1622,7 +1622,7 @@
       "CASO": "caso"
     },
     "WATCHDOG": {
-      "TITLE": "Watchdog",
+      "TITLE": "Vigia",
       "SUBTITLE": "O vigia que já roda: retomada dos casos parados e copiloto noturno.",
       "PARADOS": "Parados agora",
       "RETOMADAS_24H": "Retomadas 24h",
