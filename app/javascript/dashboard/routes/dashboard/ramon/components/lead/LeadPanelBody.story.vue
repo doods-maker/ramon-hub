@@ -30,20 +30,28 @@ const STAGES = [
     position: 3,
     probability: 50,
   },
-  { id: 4, name: 'Negociação', color: '#14b8a6', position: 4, probability: 70 },
   {
-    id: 5,
+    id: 4,
+    name: 'Reunião realizada',
+    label: 'fase-reuniao-realizada',
+    color: '#06b6d4',
+    position: 4,
+    probability: 60,
+  },
+  { id: 5, name: 'Negociação', color: '#14b8a6', position: 5, probability: 70 },
+  {
+    id: 6,
     name: 'Fechado',
     color: '#22c55e',
-    position: 5,
+    position: 6,
     probability: 100,
     is_won: true,
   },
   {
-    id: 6,
+    id: 7,
     name: 'Perdido',
     color: '#ef4444',
-    position: 6,
+    position: 7,
     probability: 0,
     is_lost: true,
   },
@@ -204,6 +212,17 @@ const LEAD_CONTRATO_RECUSADO = {
       recusado_em: diasAtras(0),
     },
   },
+};
+
+// Em Qualificação: ainda sem contrato em jogo (painel com 4 ícones)
+const LEAD_QUALIFICACAO = { ...LEAD, id: 45, lead_stage_id: 2 };
+
+// Reunião realizada: fase de contrato (painel com 5 ícones)
+const LEAD_CONTRATO = {
+  ...LEAD,
+  id: 46,
+  lead_stage_id: 4,
+  stage_entered_at: diasAtras(1),
 };
 
 const API = {
@@ -368,6 +387,15 @@ const comAbaEClique =
     );
     return comAba(tab)();
   };
+// Resumo rolado até o fim (depois que notas/cartões carregam)
+const rolandoAoFim = () => {
+  localStorage.setItem('ramon_lead_panel_tab', 'resumo');
+  setTimeout(() => {
+    const corpo = document.querySelector('[data-testid="lead-panel-corpo"]');
+    if (corpo) corpo.scrollTop = corpo.scrollHeight;
+  }, 2500);
+  return {};
+};
 </script>
 
 <template>
@@ -453,19 +481,10 @@ const comAbaEClique =
         />
       </div>
     </Variant>
-    <Variant title="Simulador" :init-state="comAba('simulador')">
-      <div class="h-screen w-[400px] flex bg-n-background">
-        <LeadPanelBody
-          :lead="LEAD"
-          context="conversation"
-          :conversation-id="101"
-        />
-      </div>
-    </Variant>
     <Variant title="Contrato" :init-state="comAba('contrato')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
-          :lead="LEAD"
+          :lead="LEAD_CONTRATO"
           context="conversation"
           :conversation-id="101"
         />
@@ -475,6 +494,10 @@ const comAbaEClique =
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD_CONTRATO_GERADO"
+    <Variant title="Qualificacao" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_QUALIFICACAO"
           context="conversation"
           :conversation-id="101"
         />
@@ -489,6 +512,10 @@ const comAbaEClique =
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD_CONTRATO_GERADO"
+    <Variant title="FaseContrato" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
           context="conversation"
           :conversation-id="101"
         />
@@ -513,12 +540,46 @@ const comAbaEClique =
       </div>
     </Variant>
     <Variant title="Historico" :init-state="comAba('historico')">
+    <Variant title="Scripts" :init-state="comAba('playbook')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD"
           context="conversation"
           :conversation-id="101"
         />
+      </div>
+    </Variant>
+    <!-- fim do Resumo: link "Histórico completo na ficha" -->
+    <Variant title="FimResumo" :init-state="rolandoAoFim">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <!-- Simular largo: painel à direita de uma página 1440px (conversa fake) -->
+    <Variant
+      title="SimuladorLargo"
+      :init-state="clicando('lead-nav-simulador')"
+    >
+      <div class="h-screen w-full flex bg-n-background">
+        <div class="flex-1 flex flex-col gap-3 p-6 border-r border-n-weak">
+          <div
+            v-for="n in 6"
+            :key="n"
+            class="h-10 rounded-xl bg-n-alpha-2"
+            :class="n % 2 ? 'w-2/5' : 'w-1/3 self-end'"
+          />
+        </div>
+        <div class="w-[400px] flex">
+          <LeadPanelBody
+            :lead="LEAD"
+            context="conversation"
+            :conversation-id="101"
+          />
+        </div>
       </div>
     </Variant>
     <!-- "Dados do contato" → "Editar todos os campos" aberto -->
