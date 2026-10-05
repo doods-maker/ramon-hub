@@ -70,7 +70,8 @@ class Captain::Documents::ResponseBuilderJob < ApplicationJob
       question: faq['question'],
       answer: faq['answer'],
       assistant: document.assistant,
-      documentable: document
+      documentable: document,
+      status: :pending
     )
   rescue ActiveRecord::RecordInvalid => e
     Rails.logger.error I18n.t('captain.documents.response_creation_error', error: e.message)
