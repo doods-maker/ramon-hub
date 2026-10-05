@@ -324,7 +324,9 @@ const hasVisibleTasks = computed(() =>
               type="button"
               :class="[
                 LINHA,
-                index > 0 ? 'border-t border-n-weak !rounded-none' : '',
+                index > 0
+                  ? 'border-t border-solid border-n-weak !rounded-none'
+                  : '',
               ]"
               class="flex items-start gap-3 !py-2.5"
               @click="openLead(task.lead_id)"
@@ -399,7 +401,9 @@ const hasVisibleTasks = computed(() =>
                 type="button"
                 :class="[
                   LINHA,
-                  index > 0 ? 'border-t border-n-weak !rounded-none' : '',
+                  index > 0
+                    ? 'border-t border-solid border-n-weak !rounded-none'
+                    : '',
                 ]"
                 class="flex flex-col items-start gap-1 !py-2"
                 @click="openLead(task.lead_id)"
@@ -462,7 +466,7 @@ const hasVisibleTasks = computed(() =>
                 isToday(day) ? '!border-n-blue-8' : '',
                 { 'opacity-50': !inAnchorMonth(day) },
               ]"
-              class="flex flex-col items-stretch gap-1 !p-2 min-h-[96px] text-left hover:bg-n-alpha-2"
+              class="flex flex-col items-stretch gap-1 !p-2 min-h-[96px] text-left border-solid hover:bg-n-alpha-2"
               @click="openDay(day)"
             >
               <span
