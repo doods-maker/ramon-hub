@@ -225,6 +225,25 @@ const LEAD_CONTRATO = {
   stage_entered_at: diasAtras(1),
 };
 
+// Em Qualificação com as 4 perguntas respondidas (linha teal "Qualificado")
+const LEAD_QUALIFICADO = {
+  ...LEAD_QUALIFICACAO,
+  id: 47,
+  custom_attributes: {
+    ...LEAD.custom_attributes,
+    qualificacao_status: { 21: 'ok', 22: 'ok', 23: 'ok', 24: 'ok' },
+  },
+};
+
+const NOTAS_FASE = [
+  {
+    id: 5,
+    author_name: 'Eduardo',
+    body: 'Reunião feita com o Dr. Ramon. Cliente topou, falta só o laudo atualizado para mandar o contrato.',
+    created_at: diasAtras(0.2),
+  },
+];
+
 const API = {
   lead_config: {
     stages: STAGES,
@@ -266,6 +285,22 @@ const API = {
         created_at: diasAtras(4),
       },
     ],
+  },
+  'leads/45/notes': { payload: NOTAS_FASE },
+  'leads/46/notes': {
+    payload: [
+      {
+        id: 6,
+        author_name: 'Eduardo',
+        body: 'Mandou a CTPS.',
+        created_at: diasAtras(3),
+      },
+      ...NOTAS_FASE,
+    ],
+  },
+  'conversations/101/ramon_copilot': {
+    content:
+      'João sofreu acidente de trabalho em 2019 (metalúrgica), ficou afastado pelo B91 até 12/2021 e voltou com perda de força na mão direita. Tem CAT e CTPS; falta o laudo atualizado. Perguntou quanto tempo demora e se paga algo antes — respondi que não há cobrança adiantada. Está animado, mas com receio de perder o emprego.',
   },
   'leads/42/notes': {
     payload: [
@@ -525,6 +560,10 @@ const rolandoAoFim = () => {
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD_CONTRATO_ASSINADO"
+    <Variant title="Qualificado" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_QUALIFICADO"
           context="conversation"
           :conversation-id="101"
         />
@@ -534,6 +573,43 @@ const rolandoAoFim = () => {
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD_CONTRATO_RECUSADO"
+    <Variant
+      title="ResumoIA"
+      :init-state="clicando('copilot-summarize', 'copilot-toggle')"
+    >
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Menu" :init-state="clicando('lead-more')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant
+      title="TirarDoFunil"
+      :init-state="clicando('lead-more', 'lead-discard')"
+    >
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Notas" :init-state="comAba('notas')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_PARADO"
           context="conversation"
           :conversation-id="101"
         />
