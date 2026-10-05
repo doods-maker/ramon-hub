@@ -31,7 +31,8 @@ RSpec.describe 'Portal Clientes API', type: :request do
   it 'cria o cliente, sincroniza, gera a senha provisória (devolvida uma vez) e envia o convite' do
     with_modified_env SMTP_ADDRESS: 'smtp.exemplo.com' do
       expect do
-        post base, params: { advbox_customer_id: 14_688_380, nome: 'Venicio Schmidt', cpf: '123.456.789-01', email: 'v@exemplo.com' }, headers: headers
+        post base, headers: headers,
+                   params: { advbox_customer_id: 14_688_380, nome: 'Venicio Schmidt', cpf: '123.456.789-01', email: 'v@exemplo.com' }
       end.to have_enqueued_mail(Ramon::PortalMailer, :convite)
     end
     expect(response).to have_http_status(:success)

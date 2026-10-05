@@ -55,10 +55,9 @@ RSpec.describe PortalCliente do
   end
 
   it 'documento pedido vira enviado (com a data) quando chega o envio do mesmo pedido; a_enviar ignora processo encerrado' do
-    cliente.update!(processos: [
-                      { 'id' => 7, 'fase' => 'JUDICIAL', 'docs_pendentes' => [{ 'item' => 'RG', 'post_id' => 1 }, { 'item' => 'CNIS', 'post_id' => 1 }] },
-                      { 'id' => 8, 'fase' => 'ARQUIVAMENTO', 'docs_pendentes' => [{ 'item' => 'Laudo', 'post_id' => 2 }] }
-                    ])
+    pedidos = [{ 'item' => 'RG', 'post_id' => 1 }, { 'item' => 'CNIS', 'post_id' => 1 }]
+    cliente.update!(processos: [{ 'id' => 7, 'fase' => 'JUDICIAL', 'docs_pendentes' => pedidos },
+                                { 'id' => 8, 'fase' => 'ARQUIVAMENTO', 'docs_pendentes' => [{ 'item' => 'Laudo', 'post_id' => 2 }] }])
     cliente.envios.create!(lawsuit_id: 7, solicitacao_post_id: 1, item: 'RG')
 
     status = cliente.pendentes_com_status(cliente.processo(7))
