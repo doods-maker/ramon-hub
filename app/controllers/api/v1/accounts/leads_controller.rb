@@ -160,7 +160,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def apply_cadence_filters(leads)
     leads = Ramon::Cadencia.parados(leads) if params[:stalled].present?
     leads = leads.where.not(id: Current.account.lead_tasks.open_tasks.select(:lead_id)) if params[:no_open_task].present?
-    leads
+    Ramon::LeadRadar.kpi_filters(Current.account, leads, params)
   end
 
   def ensure_lost_reason!

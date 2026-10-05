@@ -41,6 +41,7 @@ json.week do
     json.count row[:count]
   end
   json.won @week[:won]
+  json.won_since @week[:won_since]
   json.lost @week[:lost]
   json.created @week[:created]
   json.lost_reasons_30d @week[:lost_reasons_30d] do |reason, count|

@@ -312,6 +312,10 @@
         "CREATED_BEFORE": "Created until",
         "STALLED": "Stalled",
         "NO_OPEN_TASK": "No next action",
+        "OVERDUE_TASK": "With overdue task",
+        "TASK_DUE_TODAY": "With task due today",
+        "WON_SINCE": "Won since",
+        "NEW_FROM_LP": "New from LP, unanswered",
         "CLEAR": "Clear",
         "TOGGLE": "Filters"
       },

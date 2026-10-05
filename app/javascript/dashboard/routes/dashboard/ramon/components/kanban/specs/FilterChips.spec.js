@@ -38,6 +38,10 @@ const emptyFilters = {
   createdBefore: null,
   stalled: false,
   noOpenTask: false,
+  overdueTask: false,
+  taskDueToday: false,
+  wonSince: null,
+  newFromLp: false,
 };
 
 const mountChips = (filters = {}) =>
@@ -87,6 +91,27 @@ describe('FilterChips', () => {
       .find('[data-testid="filter-chip-remove-agentId"]')
       .trigger('click');
     expect(wrapper.emitted().update[0][0]).toEqual({ agentId: null });
+  });
+
+  it('mostra chip removível pros atalhos dos KPIs do Centro', async () => {
+    const wrapper = mountChips({
+      overdueTask: true,
+      taskDueToday: true,
+      wonSince: '2026-10-05',
+      newFromLp: true,
+    });
+    expect(
+      wrapper.find('[data-testid="filter-chip-wonSince"]').text()
+    ).toContain('05/10');
+    ['overdueTask', 'taskDueToday', 'newFromLp'].forEach(key => {
+      expect(wrapper.find(`[data-testid="filter-chip-${key}"]`).exists()).toBe(
+        true
+      );
+    });
+    await wrapper
+      .find('[data-testid="filter-chip-remove-wonSince"]')
+      .trigger('click');
+    expect(wrapper.emitted().update[0][0]).toEqual({ wonSince: null });
   });
 
   it('resumo traz contagem, soma e previsão ponderada pela etapa', () => {

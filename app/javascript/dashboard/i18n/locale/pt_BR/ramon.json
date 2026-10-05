@@ -312,6 +312,10 @@
         "CREATED_BEFORE": "Criado até",
         "STALLED": "Parados",
         "NO_OPEN_TASK": "Sem próxima ação",
+        "OVERDUE_TASK": "Com tarefa vencida",
+        "TASK_DUE_TODAY": "Com tarefa para hoje",
+        "WON_SINCE": "Ganhos desde",
+        "NEW_FROM_LP": "Novos da LP sem resposta",
         "CLEAR": "Limpar",
         "TOGGLE": "Filtros"
       },

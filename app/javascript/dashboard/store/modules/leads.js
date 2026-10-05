@@ -20,12 +20,37 @@ const toParams = (filters = {}) => {
     // booleanos só entram na query quando true, para não sujar a URL.
     stalled: filters.stalled || undefined,
     no_open_task: filters.noOpenTask || undefined,
+    // atalhos dos KPIs do Centro de Comando
+    overdue_task: filters.overdueTask || undefined,
+    task_due_today: filters.taskDueToday || undefined,
+    won_since: filters.wonSince,
+    new_from_lp: filters.newFromLp || undefined,
   };
   return Object.fromEntries(
     Object.entries(map).filter(
       ([, v]) => v !== null && v !== undefined && v !== '' && v !== false
     )
   );
+};
+
+// Funil sem filtro nenhum: base do "Limpar" e dos atalhos do Centro (que
+// zeram os filtros persistidos e ligam só o do KPI clicado).
+export const EMPTY_FILTERS = {
+  benefitTypeId: null,
+  leadPriorityId: null,
+  agentId: null,
+  source: '',
+  channel: '',
+  q: '',
+  leadStageId: null,
+  createdAfter: null,
+  createdBefore: null,
+  stalled: false,
+  noOpenTask: false,
+  overdueTask: false,
+  taskDueToday: false,
+  wonSince: null,
+  newFromLp: false,
 };
 
 export const state = {
@@ -37,19 +62,7 @@ export const state = {
   // Pedido de ganho vindo de fora do board (Ctrl K): o board abre o modal de
   // valor, o mesmo do arrastar. { id, leadStageId } | null.
   wonRequest: null,
-  filters: {
-    benefitTypeId: null,
-    leadPriorityId: null,
-    agentId: null,
-    source: '',
-    channel: '',
-    q: '',
-    leadStageId: null,
-    createdAfter: null,
-    createdBefore: null,
-    stalled: false,
-    noOpenTask: false,
-  },
+  filters: { ...EMPTY_FILTERS },
   uiFlags: {
     isFetching: false,
     isCreating: false,

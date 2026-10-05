@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { actions } from '../../leads';
+import { actions, EMPTY_FILTERS } from '../../leads';
 import types from '../../../mutation-types';
 
 global.axios = axios;
@@ -52,6 +52,28 @@ describe('leads filters', () => {
         lead_stage_id: 7,
         created_after: '2026-07-01',
         stalled: true,
+      },
+    });
+  });
+
+  it('get envia os atalhos dos KPIs do Centro como params do índice', async () => {
+    axios.get.mockResolvedValue({ data: { payload: [] } });
+    const state = {
+      filters: {
+        ...EMPTY_FILTERS,
+        overdueTask: true,
+        taskDueToday: true,
+        wonSince: '2026-10-05',
+        newFromLp: true,
+      },
+    };
+    await actions.get({ commit, state });
+    expect(axios.get).toHaveBeenCalledWith(expect.any(String), {
+      params: {
+        overdue_task: true,
+        task_due_today: true,
+        won_since: '2026-10-05',
+        new_from_lp: true,
       },
     });
   });

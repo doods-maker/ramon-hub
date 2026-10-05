@@ -9,6 +9,7 @@ import { useAlert } from 'dashboard/composables';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
 import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
+import { EMPTY_FILTERS } from 'dashboard/store/modules/leads';
 import { brlCompact } from '../helpers/currency';
 import { reasonLabel, severityDotClass, tomMotivo } from '../helpers/esteira';
 import AgendaToday from '../components/command/AgendaToday.vue';
@@ -94,6 +95,7 @@ const historyLatest = computed(
 );
 
 // ---- KPI strip ------------------------------------------------------------
+// filter = o que o clique liga no Funil (mesma regra da contagem).
 const kpis = computed(() => [
   {
     key: 'overdue',
@@ -101,30 +103,35 @@ const kpis = computed(() => [
     label: t('RAMON.COMMAND.KPI.OVERDUE'),
     class:
       section('tasks_overdue').count > 0 ? 'text-n-ruby-11' : 'text-n-slate-12',
+    filter: { overdueTask: true },
   },
   {
     key: 'today',
     value: section('tasks_today').count,
     label: t('RAMON.COMMAND.KPI.TODAY'),
     class: 'text-n-slate-12',
+    filter: { taskDueToday: true },
   },
   {
     key: 'stalled',
     value: section('stalled').count,
     label: t('RAMON.COMMAND.KPI.STALLED'),
     class: section('stalled').count > 0 ? 'text-n-amber-11' : 'text-n-slate-12',
+    filter: { stalled: true },
   },
   {
     key: 'new_from_lp',
     value: section('new_from_lp').count,
     label: t('RAMON.COMMAND.KPI.NEW_FROM_LP'),
     class: 'text-n-slate-12',
+    filter: { newFromLp: true },
   },
   {
     key: 'won_week',
     value: week.value.won || 0,
     label: t('RAMON.COMMAND.KPI.WON_WEEK'),
     class: 'text-n-teal-11',
+    filter: { wonSince: week.value.won_since },
   },
   {
     key: 'forecast',
@@ -193,6 +200,13 @@ const openStage = stageId => {
   router.push(accountScopedRoute('ramon_funil'));
   store.dispatch('leads/setFilters', { leadStageId: String(stageId) });
   store.dispatch('leads/get');
+};
+
+// Clique num KPI → Funil só com aquele recorte: zera os filtros persistidos
+// (sticky) pra o board mostrar exatamente o conjunto contado.
+const openFiltered = filter => {
+  router.push(accountScopedRoute('ramon_funil'));
+  store.dispatch('leads/setFilters', { ...EMPTY_FILTERS, ...filter });
 };
 
 const openAgenda = () => router.push(accountScopedRoute('ramon_agenda'));
@@ -367,11 +381,17 @@ useKeyboardEvents({
           data-testid="kpi-strip"
           class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5"
         >
-          <div
+          <component
+            :is="kpi.filter ? 'button' : 'div'"
             v-for="kpi in kpis"
             :key="kpi.key"
+            :type="kpi.filter ? 'button' : undefined"
             :data-testid="`kpi-${kpi.key}`"
-            :class="CARTAO"
+            :class="[
+              CARTAO,
+              kpi.filter && 'text-left transition-colors hover:border-n-strong',
+            ]"
+            @click="kpi.filter && openFiltered(kpi.filter)"
           >
             <p
               class="font-mono text-xl font-medium tabular-nums"
@@ -380,7 +400,7 @@ useKeyboardEvents({
               {{ kpi.value }}
             </p>
             <p class="mt-0.5 text-[11px] text-n-slate-10">{{ kpi.label }}</p>
-          </div>
+          </component>
         </div>
         <!-- SLA de 1ª resposta: sub-linha discreta (não cabe no grid de 6) -->
         <p

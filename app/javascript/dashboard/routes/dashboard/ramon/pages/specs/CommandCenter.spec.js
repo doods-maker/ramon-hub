@@ -2,6 +2,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { ref } from 'vue';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
 import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
+import { EMPTY_FILTERS } from 'dashboard/store/modules/leads';
 import CommandCenter from '../CommandCenter.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
@@ -136,7 +137,7 @@ const payload = () => ({
       is_lost: false,
     },
   ],
-  week: { won: 5, nps: { media: 9.4, respostas: 3 } },
+  week: { won: 5, won_since: '2026-07-20', nps: { media: 9.4, respostas: 3 } },
   history: [
     { date: '2026-07-22', leads_count: 30, value_sum: 590000 },
     { date: '2026-07-23', leads_count: 32, value_sum: 616000 },
@@ -344,6 +345,48 @@ describe('CommandCenter.vue', () => {
       expect.anything()
     );
     expect(dispatchSpy).not.toHaveBeenCalledWith('leads/toggleDock', 9);
+  });
+
+  it('KPI click opens the Funil with ONLY that filter on', async () => {
+    const wrapper = await mountPage();
+    const cases = [
+      ['overdue', { overdueTask: true }],
+      ['today', { taskDueToday: true }],
+      ['stalled', { stalled: true }],
+      ['new_from_lp', { newFromLp: true }],
+      ['won_week', { wonSince: '2026-07-20' }],
+    ];
+    await Promise.all(
+      cases.map(([key]) =>
+        wrapper.find(`[data-testid="kpi-${key}"]`).trigger('click')
+      )
+    );
+    cases.forEach(([, filter]) => {
+      expect(dispatchSpy).toHaveBeenCalledWith('leads/setFilters', {
+        ...EMPTY_FILTERS,
+        ...filter,
+      });
+    });
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ramon_funil',
+      params: undefined,
+    });
+    // os demais filtros persistidos vão zerados, não herdados
+    const [, sent] = dispatchSpy.mock.calls.find(
+      ([action]) => action === 'leads/setFilters'
+    );
+    expect(sent).toMatchObject({ agentId: null, q: '', leadStageId: null });
+  });
+
+  it('forecast KPI is not clickable', async () => {
+    const wrapper = await mountPage();
+    const forecast = wrapper.find('[data-testid="kpi-forecast"]');
+    expect(forecast.element.tagName).toBe('DIV');
+    await forecast.trigger('click');
+    expect(dispatchSpy).not.toHaveBeenCalledWith(
+      'leads/setFilters',
+      expect.anything()
+    );
   });
 
   it('opens the lead from the agenda and the week view from its footer', async () => {
