@@ -138,7 +138,7 @@ RSpec.describe Ramon::ZapsignContractService do
     end
 
     it 'sem confirmação não cria um 2º contrato' do
-      expect { described_class.new(lead).perform }.to raise_error { |e| expect(e.class.name).to eq(conflito) }
+      expect { described_class.new(lead).perform }.to(raise_error { |e| expect(e.class.name).to eq(conflito) })
       expect(a_request(:any, /zapsign/)).not_to have_been_made
     end
 
@@ -170,13 +170,13 @@ RSpec.describe Ramon::ZapsignContractService do
                                                 headers: { 'Content-Type' => 'application/json' })
       create = stub_request(:post, create_url)
 
-      expect { described_class.new(lead).perform(regenerar: true) }.to raise_error { |e| expect(e.class.name).to eq(conflito) }
+      expect { described_class.new(lead).perform(regenerar: true) }.to(raise_error { |e| expect(e.class.name).to eq(conflito) })
       expect(create).not_to have_been_requested
     end
 
     it 'contrato marcado assinado nem chama o ZapSign' do
       lead.update!(custom_attributes: lead.custom_attributes.deep_merge('zapsign' => { 'status' => 'signed' }))
-      expect { described_class.new(lead).perform(regenerar: true) }.to raise_error { |e| expect(e.class.name).to eq(conflito) }
+      expect { described_class.new(lead).perform(regenerar: true) }.to(raise_error { |e| expect(e.class.name).to eq(conflito) })
       expect(a_request(:any, /zapsign/)).not_to have_been_made
     end
   end
