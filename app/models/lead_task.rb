@@ -11,7 +11,8 @@ class LeadTask < ApplicationRecord
 
   scope :open_tasks, -> { where(completed_at: nil) }
   scope :overdue, -> { open_tasks.where(due_at: ...Time.current) }
-  scope :due_today, -> { open_tasks.where(due_at: Time.current.all_day) }
+  # "Hoje" no fuso do escritório (o servidor roda em UTC).
+  scope :due_today, -> { open_tasks.where(due_at: Time.current.in_time_zone('America/Sao_Paulo').all_day) }
 
   after_create_commit :record_created_activity, :touch_lead
   after_update_commit :touch_lead

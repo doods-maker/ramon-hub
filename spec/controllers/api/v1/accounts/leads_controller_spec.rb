@@ -505,6 +505,50 @@ RSpec.describe 'Leads API', type: :request do
           headers: admin.create_new_auth_token
       expect(ids(response)).to eq([sem_tarefa.id])
     end
+
+    describe 'atalhos dos KPIs do Centro de Comando' do
+      around { |example| travel_to(Time.utc(2026, 10, 7, 13, 0, 0)) { example.run } } # quarta, 10h em São Paulo
+
+      def leads_with(params)
+        get "/api/v1/accounts/#{account.id}/leads", params: params, headers: admin.create_new_auth_token
+        ids(response)
+      end
+
+      it 'filtra por overdue_task (tarefa aberta já vencida)' do
+        vencida = account.leads.create!(name: 'Vencida', lead_stage: novo)
+        create(:lead_task, account: account, lead: vencida, due_at: 1.hour.ago)
+        futura = account.leads.create!(name: 'Futura', lead_stage: novo)
+        create(:lead_task, account: account, lead: futura, due_at: 1.day.from_now)
+        feita = account.leads.create!(name: 'Feita', lead_stage: novo)
+        create(:lead_task, account: account, lead: feita, due_at: 1.hour.ago, completed_at: Time.current)
+        expect(leads_with(overdue_task: 'true')).to eq([vencida.id])
+      end
+
+      it 'filtra por task_due_today no dia de São Paulo' do
+        hoje = account.leads.create!(name: 'Hoje', lead_stage: novo)
+        create(:lead_task, account: account, lead: hoje, due_at: Time.utc(2026, 10, 8, 2, 0, 0)) # 23h SP de 07/10
+        amanha = account.leads.create!(name: 'Amanhã', lead_stage: novo)
+        create(:lead_task, account: account, lead: amanha, due_at: Time.utc(2026, 10, 8, 4, 0, 0)) # 01h SP de 08/10
+        expect(leads_with(task_due_today: 'true')).to eq([hoje.id])
+      end
+
+      it 'filtra por won_since (desde 00h da data em São Paulo) junto com a etapa' do
+        ganho = account.lead_stages.find_by(is_won: true)
+        da_semana = account.leads.create!(name: 'Semana', lead_stage: ganho)
+        antigo = account.leads.create!(name: 'Antigo', lead_stage: ganho)
+        antigo.update_column(:won_at, Time.utc(2026, 10, 5, 2, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+        account.leads.create!(name: 'Aberto', lead_stage: novo)
+        expect(leads_with(won_since: '2026-10-05', lead_stage_id: ganho.id)).to eq([da_semana.id])
+      end
+
+      it 'filtra por new_from_lp com a mesma regra do radar (LP, 48h, ninguém tocou)' do
+        da_lp = account.leads.create!(name: 'LP', lead_stage: novo, source: 'lp-auxilio')
+        tocado = account.leads.create!(name: 'Tocado', lead_stage: novo, source: 'lp-auxilio')
+        create(:lead_task, account: account, lead: tocado)
+        account.leads.create!(name: 'Sem fonte', lead_stage: novo)
+        expect(leads_with(new_from_lp: 'true')).to eq([da_lp.id])
+      end
+    end
   end
 
   describe 'trava de motivo de perda no update' do

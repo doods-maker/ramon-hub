@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
@@ -7,8 +7,11 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useAlert } from 'dashboard/composables';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
-import { prescriptionInfo } from '../helpers/prescription';
+import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
+import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
+import { EMPTY_FILTERS } from 'dashboard/store/modules/leads';
 import { brlCompact } from '../helpers/currency';
+import { reasonLabel, severityDotClass, tomMotivo } from '../helpers/esteira';
 import AgendaToday from '../components/command/AgendaToday.vue';
 import NightCopilot from '../components/command/NightCopilot.vue';
 import FunnelConversion from '../components/command/FunnelConversion.vue';
@@ -38,9 +41,6 @@ const uiFlags = computed(() => getters['ramonDashboard/getUIFlags'].value);
 const isFetching = computed(() => uiFlags.value.isFetching);
 const isLoading = computed(() => isFetching.value && !data.value);
 const hasError = computed(() => uiFlags.value.hasError);
-
-const reload = () => store.dispatch('ramonDashboard/fetch');
-onMounted(reload);
 
 const money = value =>
   new Intl.NumberFormat('pt-BR', {
@@ -93,8 +93,32 @@ const historyPoints = computed(() =>
 const historyLatest = computed(
   () => history.value[history.value.length - 1] || null
 );
+// Pontos semanais: de 7 em 7 dias pra trás a partir do último snapshot (até
+// 5), do mais antigo pro mais novo; a variação é do 1º ao último snapshot.
+const historyWeekly = computed(() => {
+  const last = history.value.length - 1;
+  return [0, 7, 14, 21, 28]
+    .filter(back => last - back >= 0)
+    .map(back => history.value[last - back])
+    .reverse();
+});
+const historyDelta = computed(() => {
+  const first = history.value[0];
+  const last = historyLatest.value;
+  return {
+    value: (Number(last.value_sum) || 0) - (Number(first.value_sum) || 0),
+    leads: last.leads_count - first.leads_count,
+  };
+});
+const signed = (number, text) => (number > 0 ? `+${text}` : text);
+const dayMonth = date => `${date.slice(8, 10)}/${date.slice(5, 7)}`;
 
 // ---- KPI strip ------------------------------------------------------------
+// filter = o que o clique liga no Funil (mesma regra da contagem).
+// KPI_CLICAVEL: o <button> global (_base.scss) zera borda/padding/raio sem
+// layer — os ! devolvem a pele do CARTAO.
+const KPI_CLICAVEL =
+  '!border !border-solid !rounded-xl !p-3 !text-left hover:border-n-strong';
 const kpis = computed(() => [
   {
     key: 'overdue',
@@ -102,30 +126,35 @@ const kpis = computed(() => [
     label: t('RAMON.COMMAND.KPI.OVERDUE'),
     class:
       section('tasks_overdue').count > 0 ? 'text-n-ruby-11' : 'text-n-slate-12',
+    filter: { overdueTask: true },
   },
   {
     key: 'today',
     value: section('tasks_today').count,
     label: t('RAMON.COMMAND.KPI.TODAY'),
     class: 'text-n-slate-12',
+    filter: { taskDueToday: true },
   },
   {
     key: 'stalled',
     value: section('stalled').count,
     label: t('RAMON.COMMAND.KPI.STALLED'),
     class: section('stalled').count > 0 ? 'text-n-amber-11' : 'text-n-slate-12',
+    filter: { stalled: true },
   },
   {
     key: 'new_from_lp',
     value: section('new_from_lp').count,
     label: t('RAMON.COMMAND.KPI.NEW_FROM_LP'),
     class: 'text-n-slate-12',
+    filter: { newFromLp: true },
   },
   {
     key: 'won_week',
     value: week.value.won || 0,
     label: t('RAMON.COMMAND.KPI.WON_WEEK'),
     class: 'text-n-teal-11',
+    filter: { wonSince: week.value.won_since },
   },
   {
     key: 'forecast',
@@ -142,86 +171,32 @@ const slaAvgLabel = computed(() => {
     : t('RAMON.COMMAND.SLA.AVG', { minutes });
 });
 
-// ---- Fila de retomada -----------------------------------------------------
-// União client-side de tarefas vencidas + parados, deduplicada por lead.
-// A tarefa vence o desempate (entra primeiro e mantém título/prazo); o item
-// "parado" enriquece etapa/telefone/conversa quando o mesmo lead aparece nos
-// dois blocos. Ordenada por dinheiro prescrevendo desc.
-const followUpQueue = computed(() => {
-  const byLead = new Map();
-  const order = [];
-
-  section('tasks_overdue').items.forEach(task => {
-    const leadId = task.lead_id;
-    // itens vêm em due_at asc: a primeira task do lead é a mais atrasada
-    if (byLead.has(leadId)) return;
-    order.push(leadId);
-    byLead.set(leadId, {
-      leadId,
-      leadName: task.lead_name,
-      stageName: null,
-      daysInStage: null,
-      taskId: task.id,
-      taskTitle: task.title,
-      dueAt: task.due_at,
-      conversationId: null,
-      contactPhone: null,
-      dcbEm: task.dcb_em,
-      benefitMonthlyValue: task.benefit_monthly_value,
-    });
-  });
-
-  section('stalled').items.forEach(lead => {
-    const leadId = lead.id;
-    const existing = byLead.get(leadId);
-    if (existing) {
-      // Enriquecimento: nunca sobrescreve os campos de tarefa (task ganha).
-      existing.stageName = lead.stage_name;
-      existing.daysInStage = lead.days_in_stage;
-      existing.conversationId = lead.conversation_id;
-      existing.contactPhone = lead.contact_phone;
-      existing.dcbEm = lead.dcb_em;
-      existing.benefitMonthlyValue = lead.benefit_monthly_value;
-      return;
-    }
-    order.push(leadId);
-    byLead.set(leadId, {
-      leadId,
-      leadName: lead.name,
-      stageName: lead.stage_name,
-      daysInStage: lead.days_in_stage,
-      taskId: null,
-      taskTitle: null,
-      dueAt: null,
-      conversationId: lead.conversation_id,
-      contactPhone: lead.contact_phone,
-      dcbEm: lead.dcb_em,
-      benefitMonthlyValue: lead.benefit_monthly_value,
-    });
-  });
-
-  const bleedRate = item => {
-    const p = prescriptionInfo({
-      dcb_em: item.dcbEm,
-      benefit_monthly_value: item.benefitMonthlyValue,
-    });
-    return p && p.lostInstallments > 0 && p.monthlyValue ? p.monthlyValue : 0;
-  };
-
-  return order
-    .map(leadId => byLead.get(leadId))
-    .sort((a, b) => bleedRate(b) - bleedRate(a));
-});
-
-// Fila local: Espaço gira (pula), Feito remove; refetch re-hidrata via watch.
+// ---- Sua fila agora = a fila da Esteira ----------------------------------
+// Mesma fonte e mesma ordem da Esteira (urgência x dinheiro): o hero é o 1º
+// item, a lista são os 5 seguintes. Espaço gira (pula), Feito remove.
 const queue = ref([]);
-watch(
-  followUpQueue,
-  value => {
-    queue.value = [...value];
-  },
-  { immediate: true }
-);
+const isQueueLoading = ref(true);
+const queueError = ref(false);
+
+const fetchQueue = async () => {
+  isQueueLoading.value = true;
+  queueError.value = false;
+  try {
+    const { data: esteira } = await RamonEsteiraAPI.get();
+    queue.value = esteira.items || [];
+  } catch (e) {
+    // Erro de API não pode virar "fila zerada" comemorativa.
+    queueError.value = true;
+  } finally {
+    isQueueLoading.value = false;
+  }
+};
+
+const reload = () => {
+  store.dispatch('ramonDashboard/fetch');
+  fetchQueue();
+};
+onMounted(reload);
 
 const current = computed(() => queue.value[0] || null);
 const nextItems = computed(() => queue.value.slice(1, 6));
@@ -235,78 +210,6 @@ const jumpTo = index => {
   const [item] = queue.value.splice(index + 1, 1);
   queue.value.unshift(item);
 };
-
-const bleeding = item =>
-  prescriptionInfo({
-    dcb_em: item.dcbEm,
-    benefit_monthly_value: item.benefitMonthlyValue,
-  });
-
-const heroChips = computed(() => {
-  const item = current.value;
-  if (!item) return [];
-  const chips = [];
-  const p = bleeding(item);
-  if (p && p.lostInstallments > 0 && p.monthlyValue) {
-    chips.push({
-      key: 'bleeding',
-      class: TOM.ruby,
-      label: t('RAMON.COMMAND.QUEUE.CHIP_BLEEDING', {
-        value: money(p.monthlyValue),
-      }),
-    });
-  }
-  if (item.taskTitle) {
-    chips.push({
-      key: 'overdue',
-      class: TOM.amber,
-      label: t('RAMON.COMMAND.QUEUE.CHIP_OVERDUE', { title: item.taskTitle }),
-    });
-  } else if (item.daysInStage != null) {
-    chips.push({
-      key: 'stalled',
-      class: TOM.slate,
-      label: t('RAMON.COMMAND.QUEUE.CHIP_STALLED', {
-        days: item.daysInStage,
-      }),
-    });
-  }
-  return chips;
-});
-
-const stageAge = item =>
-  item.daysInStage != null
-    ? t('RAMON.COMMAND.QUEUE.STAGE_AGE', {
-        stage: item.stageName,
-        days: item.daysInStage,
-      })
-    : item.stageName;
-
-const itemValue = item =>
-  item.benefitMonthlyValue
-    ? t('RAMON.COMMAND.QUEUE.MONTHLY', {
-        value: money(item.benefitMonthlyValue),
-      })
-    : '—';
-
-const rowMotive = item =>
-  item.taskTitle
-    ? t('RAMON.COMMAND.QUEUE.ROW_OVERDUE', { title: item.taskTitle })
-    : t('RAMON.COMMAND.QUEUE.ROW_STALLED', {
-        days: item.daysInStage ?? 0,
-        stage: item.stageName || '',
-      });
-
-// Severidade: prescrevendo/vencida = ruby, parado = âmbar. Pinta o ponto
-// da lista e o filete do cartão da vez.
-const severity = item => {
-  const p = bleeding(item);
-  if ((p && p.lostInstallments > 0 && p.monthlyValue) || item.taskId)
-    return 'ruby';
-  return 'amber';
-};
-const PONTO = { ruby: 'bg-n-ruby-9', amber: 'bg-n-amber-9' };
-const severityDotClass = item => PONTO[severity(item)];
 
 // ---- Ações ----------------------------------------------------------------
 // Clique num lead → abre o Funil e seleciona o lead (drawer).
@@ -322,40 +225,64 @@ const openStage = stageId => {
   store.dispatch('leads/get');
 };
 
+// Clique num KPI → Funil só com aquele recorte: zera os filtros persistidos
+// (sticky) pra o board mostrar exatamente o conjunto contado.
+const openFiltered = filter => {
+  router.push(accountScopedRoute('ramon_funil'));
+  store.dispatch('leads/setFilters', { ...EMPTY_FILTERS, ...filter });
+};
+
 const openAgenda = () => router.push(accountScopedRoute('ramon_agenda'));
 
 // Abrir conversa (padrão do fork: funil + dock); sem conversa → painel do lead.
 const openConversation = item => {
   if (!item) return;
-  if (item.conversationId) {
+  if (item.conversation_id) {
     router.push(accountScopedRoute('ramon_funil'));
-    store.dispatch('leads/toggleDock', item.conversationId);
+    store.dispatch('leads/toggleDock', item.conversation_id);
   } else {
-    openLead(item.leadId);
+    openLead(item.lead_id);
   }
 };
 
-// Feito: conclui a task se houver; senão navega ao lead pra resolver lá.
+// Rascunho da IA: gera a resposta, deixa no campo de resposta da conversa
+// (rascunho do ReplyBox, lido ao montar) e abre o dock. Nada é enviado.
+const isDrafting = ref(false);
+const aiDraft = async () => {
+  const item = current.value;
+  if (!item?.conversation_id || isDrafting.value) return;
+  isDrafting.value = true;
+  try {
+    const { data: draft } = await RamonCopilotAPI.generate(
+      item.conversation_id,
+      'draft'
+    );
+    await store.dispatch('draftMessages/set', {
+      key: `draft-${item.conversation_id}-REPLY`,
+      message: draft.content,
+    });
+    openConversation(item);
+  } catch (e) {
+    useAlert(t('RAMON.COMMAND.QUEUE.AI_DRAFT_ERROR'));
+  } finally {
+    isDrafting.value = false;
+  }
+};
+
+// Feito: o mesmo "Feito" da Esteira (conta na meta do dia e tira o lead da
+// fila de hoje); o refetch do painel atualiza a meta.
 const isActing = ref(false);
 const markDone = async () => {
   const item = current.value;
   if (!item || isActing.value) return;
-  if (!item.taskId) {
-    openLead(item.leadId);
-    return;
-  }
   isActing.value = true;
   try {
-    await store.dispatch('leadTasks/complete', {
-      leadId: item.leadId,
-      taskId: item.taskId,
-    });
-    useAlert(t('RAMON.COMMAND.QUEUE.TASK_COMPLETED'));
+    await RamonEsteiraAPI.done(item.lead_id);
     queue.value.shift();
-    // Re-hidrata os KPIs; o watch re-copia a fila quando o payload voltar.
+    useAlert(t('RAMON.ESTEIRA.DONE_TOAST'));
     store.dispatch('ramonDashboard/fetch');
   } catch (e) {
-    useAlert(t('RAMON.COMMAND.QUEUE.COMPLETE_ERROR'));
+    useAlert(t('RAMON.ESTEIRA.ACTION_ERROR'));
   } finally {
     isActing.value = false;
   }
@@ -363,7 +290,12 @@ const markDone = async () => {
 
 // Atalhos reais da fila (mudos com campo focado — o composable cuida disso;
 // a página não tem modais próprios).
-const canAct = () => !isLoading.value && !hasError.value && !!current.value;
+const canAct = () =>
+  !isLoading.value &&
+  !hasError.value &&
+  !isQueueLoading.value &&
+  !queueError.value &&
+  !!current.value;
 useKeyboardEvents({
   Space: {
     action: e => {
@@ -472,11 +404,14 @@ useKeyboardEvents({
           data-testid="kpi-strip"
           class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5"
         >
-          <div
+          <component
+            :is="kpi.filter ? 'button' : 'div'"
             v-for="kpi in kpis"
             :key="kpi.key"
+            :type="kpi.filter ? 'button' : undefined"
             :data-testid="`kpi-${kpi.key}`"
-            :class="CARTAO"
+            :class="[CARTAO, kpi.filter && KPI_CLICAVEL]"
+            @click="kpi.filter && openFiltered(kpi.filter)"
           >
             <p
               class="font-mono text-xl font-medium tabular-nums"
@@ -485,7 +420,7 @@ useKeyboardEvents({
               {{ kpi.value }}
             </p>
             <p class="mt-0.5 text-[11px] text-n-slate-10">{{ kpi.label }}</p>
-          </div>
+          </component>
         </div>
         <!-- SLA de 1ª resposta: sub-linha discreta (não cabe no grid de 6) -->
         <p
@@ -502,7 +437,7 @@ useKeyboardEvents({
 
       <!-- Grid principal: fila (1.5fr) + coluna direita (1fr) -->
       <div class="grid items-start grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5">
-        <!-- Sua fila agora -->
+        <!-- Sua fila agora (= fila da Esteira) -->
         <div class="flex flex-col gap-2.5 min-w-0">
           <div class="flex items-baseline justify-between">
             <h2 :class="TITULO">{{ t('RAMON.COMMAND.QUEUE.TITLE') }}</h2>
@@ -512,9 +447,32 @@ useKeyboardEvents({
           </div>
 
           <div
-            v-if="current"
+            v-if="isQueueLoading"
+            class="h-40 rounded-xl bg-n-alpha-2 animate-pulse"
+          />
+
+          <!-- Erro de carga: distinto da fila zerada -->
+          <div
+            v-else-if="queueError"
+            data-testid="queue-error"
+            :class="CARTAO"
+            class="text-sm"
+          >
+            <p class="text-n-ruby-11">{{ t('RAMON.ESTEIRA.LOAD_ERROR') }}</p>
+            <Button
+              data-testid="queue-retry"
+              link
+              xs
+              class="mt-2"
+              :label="t('RAMON.LEAD_PANEL.RETRY')"
+              @click="fetchQueue"
+            />
+          </div>
+
+          <div
+            v-else-if="current"
             data-testid="queue-hero"
-            :class="[CARTAO_STATUS, FILETE[severity(current)]]"
+            :class="[CARTAO_STATUS, FILETE[tomMotivo(current.reasons[0]?.key)]]"
             class="!p-5"
           >
             <div class="flex items-start justify-between gap-3">
@@ -523,10 +481,10 @@ useKeyboardEvents({
                   <p
                     class="text-2xl font-semibold leading-tight text-n-slate-12"
                   >
-                    {{ current.leadName }}
+                    {{ current.name }}
                   </p>
-                  <span v-if="current.stageName" :class="[CHIP, TOM.slate]">
-                    {{ stageAge(current) }}
+                  <span v-if="current.stage_name" :class="[CHIP, TOM.slate]">
+                    {{ current.stage_name }}
                   </span>
                 </div>
                 <div
@@ -534,23 +492,20 @@ useKeyboardEvents({
                   class="flex flex-wrap gap-1.5 mt-2"
                 >
                   <span
-                    v-for="chip in heroChips"
-                    :key="chip.key"
-                    :class="[CHIP, chip.class]"
+                    v-for="reason in current.reasons"
+                    :key="reason.key"
+                    :class="[CHIP, TOM[tomMotivo(reason.key)]]"
                   >
-                    {{ chip.label }}
+                    {{ reasonLabel(t, reason) }}
                   </span>
                 </div>
               </div>
               <span
-                class="flex-none font-mono text-[15px] font-medium tabular-nums"
-                :class="
-                  current.benefitMonthlyValue
-                    ? 'text-n-blue-11'
-                    : 'text-n-slate-10'
-                "
+                v-if="current.value"
+                data-testid="queue-hero-value"
+                class="flex-none font-mono text-[15px] font-medium tabular-nums text-n-blue-11"
               >
-                {{ itemValue(current) }}
+                {{ money(current.value) }}
               </span>
             </div>
             <div
@@ -564,13 +519,16 @@ useKeyboardEvents({
                 @click="openConversation(current)"
               />
               <Button
+                v-if="current.conversation_id"
                 data-testid="queue-ai-draft"
                 sm
                 faded
                 slate
                 icon="i-lucide-sparkles"
                 :label="t('RAMON.COMMAND.QUEUE.AI_DRAFT')"
-                @click="openConversation(current)"
+                :is-loading="isDrafting"
+                :disabled="isDrafting"
+                @click="aiDraft"
               />
               <Button
                 data-testid="queue-done"
@@ -610,14 +568,14 @@ useKeyboardEvents({
 
           <!-- Próximos da fila -->
           <div
-            v-if="nextItems.length"
+            v-if="!isQueueLoading && !queueError && nextItems.length"
             data-testid="queue-next"
             :class="CARTAO"
             class="flex flex-col !p-1.5"
           >
             <button
               v-for="(item, index) in nextItems"
-              :key="item.leadId"
+              :key="item.lead_id"
               type="button"
               data-testid="queue-next-item"
               :class="LINHA"
@@ -629,20 +587,16 @@ useKeyboardEvents({
                 :class="severityDotClass(item)"
               />
               <span class="text-[13.5px] font-medium truncate text-n-slate-12">
-                {{ item.leadName }}
+                {{ item.name }}
               </span>
               <span class="text-[11.5px] truncate text-n-slate-10">
-                {{ rowMotive(item) }}
+                {{ reasonLabel(t, item.reasons[0]) }}
               </span>
               <span
                 class="flex-none ml-auto font-mono text-xs tabular-nums"
-                :class="
-                  item.benefitMonthlyValue
-                    ? 'text-n-blue-11'
-                    : 'text-n-slate-10'
-                "
+                :class="item.value ? 'text-n-blue-11' : 'text-n-slate-10'"
               >
-                {{ itemValue(item) }}
+                {{ item.value ? brlCompact(item.value) : '—' }}
               </span>
             </button>
           </div>
@@ -691,6 +645,51 @@ useKeyboardEvents({
             :width="560"
             :height="48"
           />
+          <div
+            v-if="historyWeekly.length > 1"
+            data-testid="history-weekly"
+            class="flex flex-wrap items-end gap-x-6 gap-y-2 pt-3 mt-3 border-t border-n-weak"
+          >
+            <div
+              v-for="point in historyWeekly"
+              :key="point.date"
+              data-testid="history-point"
+            >
+              <p class="font-mono text-[11px] text-n-slate-10">
+                {{ dayMonth(point.date) }}
+              </p>
+              <p
+                class="font-mono text-[13px] font-medium tabular-nums text-n-slate-12"
+              >
+                {{ brlCompact(point.value_sum) }}
+              </p>
+              <p class="font-mono text-[11px] tabular-nums text-n-slate-10">
+                {{
+                  t('RAMON.COMMAND.HISTORY.LEADS', { count: point.leads_count })
+                }}
+              </p>
+            </div>
+            <div data-testid="history-delta" class="ml-auto text-right">
+              <p class="text-[11px] text-n-slate-10">
+                {{ t('RAMON.COMMAND.HISTORY.CHANGE') }}
+              </p>
+              <p
+                class="font-mono text-[13px] font-medium tabular-nums"
+                :class="
+                  historyDelta.value < 0 ? 'text-n-ruby-11' : 'text-n-teal-11'
+                "
+              >
+                {{ signed(historyDelta.value, brlCompact(historyDelta.value)) }}
+              </p>
+              <p class="font-mono text-[11px] tabular-nums text-n-slate-10">
+                {{
+                  t('RAMON.COMMAND.HISTORY.LEADS', {
+                    count: signed(historyDelta.leads, historyDelta.leads),
+                  })
+                }}
+              </p>
+            </div>
+          </div>
           <p
             v-if="historyLatest"
             data-testid="history-latest"

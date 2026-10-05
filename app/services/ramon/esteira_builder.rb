@@ -30,6 +30,8 @@ class Ramon::EsteiraBuilder
 
   PRESCRIPTION_SOON_MONTHS = 6
   DONE_KIND = 'esteira_done'.freeze
+  # "Hoje" no fuso do escritório — o mesmo dia da meta (Ramon::CockpitMetrics).
+  TIME_ZONE = 'America/Sao_Paulo'.freeze
 
   def initialize(account:)
     @account = account
@@ -186,8 +188,12 @@ class Ramon::EsteiraBuilder
   # "Feito" tira o lead da fila do dia inteiro, independente da fonte.
   def done_today_lead_ids
     @done_today_lead_ids ||= @account.lead_activities
-                                     .where(kind: DONE_KIND, created_at: Time.current.all_day)
+                                     .where(kind: DONE_KIND, created_at: today_range)
                                      .reorder(nil).distinct.pluck(:lead_id)
+  end
+
+  def today_range
+    Time.current.in_time_zone(TIME_ZONE).all_day
   end
 
   def days_in_stage(lead)
@@ -200,7 +206,7 @@ class Ramon::EsteiraBuilder
     {
       total: items.size,
       value_sum: items.sum { |item| item[:value].to_f },
-      done_today: @account.lead_activities.where(kind: DONE_KIND, created_at: Time.current.all_day).count
+      done_today: @account.lead_activities.where(kind: DONE_KIND, created_at: today_range).count
     }
   end
 end

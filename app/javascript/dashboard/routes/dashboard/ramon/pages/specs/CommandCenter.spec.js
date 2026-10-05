@@ -1,5 +1,8 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { ref } from 'vue';
+import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
+import RamonCopilotAPI from 'dashboard/api/ramonCopilot';
+import { EMPTY_FILTERS } from 'dashboard/store/modules/leads';
 import CommandCenter from '../CommandCenter.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
@@ -41,7 +44,42 @@ vi.mock('dashboard/composables/useKeyboardEvents', () => ({
   },
 }));
 
-// Maria tem DCB antiga + valor mensal → sangra prescrição e lidera a fila.
+vi.mock('dashboard/api/ramonEsteira', () => ({
+  default: { get: vi.fn(), done: vi.fn() },
+}));
+
+vi.mock('dashboard/api/ramonCopilot', () => ({
+  default: { generate: vi.fn() },
+}));
+
+// A fila do Centro é a fila da Esteira: mesma ordem, mesmos itens.
+const esteira = () => ({
+  items: [
+    {
+      lead_id: 1,
+      name: 'Maria de Lourdes',
+      stage_name: 'Novo',
+      value: 16900,
+      conversation_id: null,
+      task_id: 7,
+      reasons: [
+        { key: 'PRESCRIPTION_BLEEDING', params: { monthly: 1412 } },
+        { key: 'TASK_OVERDUE', params: { title: 'Ligar após perícia' } },
+      ],
+    },
+    {
+      lead_id: 2,
+      name: 'Sebastião Ramos',
+      stage_name: 'Qualificado',
+      value: null,
+      conversation_id: 9,
+      task_id: null,
+      reasons: [{ key: 'STALLED', params: { days: 14 } }],
+    },
+  ],
+  board: { total: 2, value_sum: 16900, done_today: 5 },
+});
+
 const payload = () => ({
   today: {
     tasks_overdue: {
@@ -99,7 +137,7 @@ const payload = () => ({
       is_lost: false,
     },
   ],
-  week: { won: 5, nps: { media: 9.4, respostas: 3 } },
+  week: { won: 5, won_since: '2026-07-20', nps: { media: 9.4, respostas: 3 } },
   history: [
     { date: '2026-07-22', leads_count: 30, value_sum: 590000 },
     { date: '2026-07-23', leads_count: 32, value_sum: 616000 },
@@ -150,8 +188,9 @@ const payload = () => ({
 });
 
 // NightCopilot tem store/specs próprios — aqui entra como stub.
-const mountPage = async (data = payload()) => {
+const mountPage = async (data = payload(), queue = esteira()) => {
   dataRef.value = data;
+  RamonEsteiraAPI.get.mockResolvedValue({ data: queue });
   const wrapper = mount(CommandCenter, {
     global: { mocks: { $t: k => k }, stubs: { NightCopilot: true } },
   });
@@ -195,14 +234,20 @@ describe('CommandCenter.vue', () => {
     );
   });
 
-  it('puts the bleeding lead on the hero card with its risk chips', async () => {
+  it('shows the Esteira queue: hero = 1st item, list = the next ones', async () => {
     const wrapper = await mountPage();
+    expect(RamonEsteiraAPI.get).toHaveBeenCalled();
     const hero = wrapper.find('[data-testid="queue-hero"]');
     expect(hero.text()).toContain('Maria de Lourdes');
     expect(hero.find('[data-testid="queue-hero-chips"]').text()).toContain(
-      'RAMON.COMMAND.QUEUE.CHIP_BLEEDING'
+      'RAMON.ESTEIRA.REASON.PRESCRIPTION_BLEEDING'
     );
-    expect(wrapper.findAll('[data-testid="queue-next-item"]')).toHaveLength(1);
+    expect(hero.find('[data-testid="queue-hero-value"]').text()).toContain(
+      '16.900'
+    );
+    const next = wrapper.findAll('[data-testid="queue-next-item"]');
+    expect(next).toHaveLength(1);
+    expect(next[0].text()).toContain('RAMON.ESTEIRA.REASON.STALLED');
   });
 
   it('skips to the next item with Space', async () => {
@@ -216,30 +261,31 @@ describe('CommandCenter.vue', () => {
     );
   });
 
-  it('completes the current task with F and refetches the dashboard', async () => {
+  it('marks done with F through the Esteira and refetches the goal', async () => {
+    RamonEsteiraAPI.done.mockResolvedValue({});
     const wrapper = await mountPage();
     keyHandlers.KeyF.action();
     await flushPromises();
-    expect(dispatchSpy).toHaveBeenCalledWith('leadTasks/complete', {
-      leadId: 1,
-      taskId: 7,
-    });
+    expect(RamonEsteiraAPI.done).toHaveBeenCalledWith(1);
+    expect(dispatchSpy).not.toHaveBeenCalledWith(
+      'leadTasks/complete',
+      expect.anything()
+    );
     expect(dispatchSpy).toHaveBeenCalledWith('ramonDashboard/fetch');
     expect(wrapper.find('[data-testid="queue-hero"]').text()).toContain(
       'Sebastião Ramos'
     );
   });
 
-  it('navigates to the lead on Done when the item has no task', async () => {
+  it('keeps the item and warns when Done fails', async () => {
+    RamonEsteiraAPI.done.mockRejectedValue(new Error('boom'));
     const wrapper = await mountPage();
-    keyHandlers.Space.action({ preventDefault: vi.fn() });
-    await flushPromises();
     await wrapper.find('[data-testid="queue-done"]').trigger('click');
-    expect(routerPush).toHaveBeenCalledWith({
-      name: 'ramon_funil',
-      params: undefined,
-    });
-    expect(dispatchSpy).toHaveBeenCalledWith('leads/select', 2);
+    await flushPromises();
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.ESTEIRA.ACTION_ERROR');
+    expect(wrapper.find('[data-testid="queue-hero"]').text()).toContain(
+      'Maria de Lourdes'
+    );
   });
 
   it('opens the conversation dock from the hero when there is one', async () => {
@@ -250,6 +296,97 @@ describe('CommandCenter.vue', () => {
       .find('[data-testid="queue-open-conversation"]')
       .trigger('click');
     expect(dispatchSpy).toHaveBeenCalledWith('leads/toggleDock', 9);
+  });
+
+  it('opens the lead panel when the item has no conversation', async () => {
+    const wrapper = await mountPage();
+    await wrapper
+      .find('[data-testid="queue-open-conversation"]')
+      .trigger('click');
+    expect(dispatchSpy).toHaveBeenCalledWith('leads/select', 1);
+  });
+
+  it('hides the AI draft when the item has no conversation', async () => {
+    const wrapper = await mountPage();
+    expect(wrapper.find('[data-testid="queue-ai-draft"]').exists()).toBe(false);
+  });
+
+  it('AI draft fills the reply draft BEFORE opening the dock', async () => {
+    RamonCopilotAPI.generate.mockResolvedValue({
+      data: { content: 'Oi, Sebastião!' },
+    });
+    const wrapper = await mountPage();
+    keyHandlers.Space.action({ preventDefault: vi.fn() });
+    await flushPromises();
+    await wrapper.find('[data-testid="queue-ai-draft"]').trigger('click');
+    await flushPromises();
+    expect(RamonCopilotAPI.generate).toHaveBeenCalledWith(9, 'draft');
+    const calls = dispatchSpy.mock.calls.map(([action]) => action);
+    expect(dispatchSpy).toHaveBeenCalledWith('draftMessages/set', {
+      key: 'draft-9-REPLY',
+      message: 'Oi, Sebastião!',
+    });
+    expect(calls.indexOf('draftMessages/set')).toBeLessThan(
+      calls.indexOf('leads/toggleDock')
+    );
+    expect(dispatchSpy).toHaveBeenCalledWith('leads/toggleDock', 9);
+  });
+
+  it('AI draft failure warns and does not open the conversation', async () => {
+    RamonCopilotAPI.generate.mockRejectedValue(new Error('sem chave'));
+    const wrapper = await mountPage();
+    keyHandlers.Space.action({ preventDefault: vi.fn() });
+    await flushPromises();
+    await wrapper.find('[data-testid="queue-ai-draft"]').trigger('click');
+    await flushPromises();
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.COMMAND.QUEUE.AI_DRAFT_ERROR');
+    expect(dispatchSpy).not.toHaveBeenCalledWith(
+      'draftMessages/set',
+      expect.anything()
+    );
+    expect(dispatchSpy).not.toHaveBeenCalledWith('leads/toggleDock', 9);
+  });
+
+  it('KPI click opens the Funil with ONLY that filter on', async () => {
+    const wrapper = await mountPage();
+    const cases = [
+      ['overdue', { overdueTask: true }],
+      ['today', { taskDueToday: true }],
+      ['stalled', { stalled: true }],
+      ['new_from_lp', { newFromLp: true }],
+      ['won_week', { wonSince: '2026-07-20' }],
+    ];
+    await Promise.all(
+      cases.map(([key]) =>
+        wrapper.find(`[data-testid="kpi-${key}"]`).trigger('click')
+      )
+    );
+    cases.forEach(([, filter]) => {
+      expect(dispatchSpy).toHaveBeenCalledWith('leads/setFilters', {
+        ...EMPTY_FILTERS,
+        ...filter,
+      });
+    });
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ramon_funil',
+      params: undefined,
+    });
+    // os demais filtros persistidos vão zerados, não herdados
+    const [, sent] = dispatchSpy.mock.calls.find(
+      ([action]) => action === 'leads/setFilters'
+    );
+    expect(sent).toMatchObject({ agentId: null, q: '', leadStageId: null });
+  });
+
+  it('forecast KPI is not clickable', async () => {
+    const wrapper = await mountPage();
+    const forecast = wrapper.find('[data-testid="kpi-forecast"]');
+    expect(forecast.element.tagName).toBe('DIV');
+    await forecast.trigger('click');
+    expect(dispatchSpy).not.toHaveBeenCalledWith(
+      'leads/setFilters',
+      expect.anything()
+    );
   });
 
   it('opens the lead from the agenda and the week view from its footer', async () => {
@@ -276,6 +413,26 @@ describe('CommandCenter.vue', () => {
     expect(dispatchSpy).toHaveBeenCalledWith('leads/get');
   });
 
+  it('history shows weekly points back from the latest and the change', async () => {
+    const data = payload();
+    // 15 snapshots diários: 01/07 … 15/07 → pontos em 01/07, 08/07 e 15/07
+    data.history = Array.from({ length: 15 }, (_, i) => ({
+      date: `2026-07-${String(i + 1).padStart(2, '0')}`,
+      leads_count: 20 + i,
+      value_sum: 100000 + i * 1000,
+    }));
+    const wrapper = await mountPage(data);
+    const points = wrapper.findAll('[data-testid="history-point"]');
+    expect(points.map(p => p.text().slice(0, 5))).toEqual([
+      '01/07',
+      '08/07',
+      '15/07',
+    ]);
+    const delta = wrapper.find('[data-testid="history-delta"]').text();
+    expect(delta).toContain('+R$');
+    expect(delta).toContain('14');
+  });
+
   it('shows losses by thesis for admins only', async () => {
     const wrapper = await mountPage();
     expect(wrapper.find('[data-testid="losses-by-thesis"]').exists()).toBe(
@@ -288,13 +445,21 @@ describe('CommandCenter.vue', () => {
     );
   });
 
-  it('shows the empty queue state when nothing is overdue or stalled', async () => {
-    const data = payload();
-    data.today.tasks_overdue = { count: 0, items: [] };
-    data.today.stalled = { count: 0, items: [] };
-    const wrapper = await mountPage(data);
+  it('shows the empty queue state when the Esteira is empty', async () => {
+    const wrapper = await mountPage(payload(), { items: [], board: {} });
     expect(wrapper.find('[data-testid="queue-empty"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="queue-hero"]').exists()).toBe(false);
+  });
+
+  it('shows a queue error (not an empty queue) when the Esteira fails', async () => {
+    dataRef.value = payload();
+    RamonEsteiraAPI.get.mockRejectedValue(new Error('boom'));
+    const wrapper = mount(CommandCenter, {
+      global: { mocks: { $t: k => k }, stubs: { NightCopilot: true } },
+    });
+    await flushPromises();
+    expect(wrapper.find('[data-testid="queue-error"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="queue-empty"]').exists()).toBe(false);
   });
 
   it('shows the error state with retry instead of pretending all is fine', async () => {

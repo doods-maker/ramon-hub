@@ -96,6 +96,25 @@ const chips = computed(() => {
     push('noOpenTask', t('RAMON.FUNIL.FILTERS.NO_OPEN_TASK'), {
       noOpenTask: false,
     });
+  // atalhos dos KPIs do Centro de Comando (sem controle no painel de filtros)
+  if (f.overdueTask)
+    push('overdueTask', t('RAMON.FUNIL.FILTERS.OVERDUE_TASK'), {
+      overdueTask: false,
+    });
+  if (f.taskDueToday)
+    push('taskDueToday', t('RAMON.FUNIL.FILTERS.TASK_DUE_TODAY'), {
+      taskDueToday: false,
+    });
+  if (f.wonSince)
+    push(
+      'wonSince',
+      `${t('RAMON.FUNIL.FILTERS.WON_SINCE')} ${dateBr(f.wonSince)}`,
+      { wonSince: null }
+    );
+  if (f.newFromLp)
+    push('newFromLp', t('RAMON.FUNIL.FILTERS.NEW_FROM_LP'), {
+      newFromLp: false,
+    });
   return list;
 });
 

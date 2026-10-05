@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useStoreGetters } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { EMPTY_FILTERS } from 'dashboard/store/modules/leads';
 import { CAMPO, SELECT } from '../../helpers/ui';
 
 const props = defineProps({
@@ -27,38 +28,13 @@ const emitUpdate = partial => emit('update', partial);
 const ctl = `${SELECT} !w-44`;
 const activeClass = value => (value ? '!outline-n-blue-8' : '');
 
-const hasActive = computed(() => {
-  const f = props.filters;
-  return !!(
-    f.q ||
-    f.benefitTypeId ||
-    f.leadPriorityId ||
-    f.agentId ||
-    f.source ||
-    f.channel ||
-    f.leadStageId ||
-    f.createdAfter ||
-    f.createdBefore ||
-    f.stalled ||
-    f.noOpenTask
-  );
-});
+const hasActive = computed(() =>
+  Object.keys(EMPTY_FILTERS).some(key => props.filters[key])
+);
 
 // A busca (q) fica no header do board; o Limpar daqui também a zera.
 const clearFilters = () => {
-  emitUpdate({
-    benefitTypeId: null,
-    leadPriorityId: null,
-    agentId: null,
-    source: '',
-    channel: '',
-    q: '',
-    leadStageId: null,
-    createdAfter: null,
-    createdBefore: null,
-    stalled: false,
-    noOpenTask: false,
-  });
+  emitUpdate({ ...EMPTY_FILTERS });
 };
 </script>
 

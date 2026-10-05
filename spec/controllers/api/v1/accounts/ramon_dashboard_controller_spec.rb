@@ -27,6 +27,17 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(block['items'].first['days_in_stage']).to be >= 9
   end
 
+  it 'counts wins since Monday in São Paulo and exposes that date for the Funil filter' do
+    travel_to Time.utc(2026, 10, 7, 13, 0, 0) do # quarta, 10h em São Paulo
+      won_stage = account.lead_stages.find_by(is_won: true)
+      create(:lead, account: account, lead_stage: won_stage)
+      domingo = create(:lead, account: account, lead_stage: won_stage)
+      domingo.update_column(:won_at, Time.utc(2026, 10, 5, 2, 0, 0)) # rubocop:disable Rails/SkipsModelValidations
+      get url, headers: agent.create_new_auth_token, as: :json
+      expect(response.parsed_body['week']).to include('won' => 1, 'won_since' => '2026-10-05')
+    end
+  end
+
   it 'counts weekly wins and sums funnel value' do
     won_stage = account.lead_stages.find_by(is_won: true)
     create(:lead, account: account, lead_stage: won_stage, value: 1500)

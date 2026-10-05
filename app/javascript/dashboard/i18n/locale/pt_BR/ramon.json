@@ -88,20 +88,12 @@
       },
       "QUEUE": {
         "TITLE": "Sua fila agora",
-        "SORTED_BY": "ordenada por dinheiro prescrevendo",
+        "SORTED_BY": "mesma fila da Esteira · urgência × dinheiro",
         "OPEN_CONVERSATION": "Abrir conversa",
         "AI_DRAFT": "Rascunho da IA",
+        "AI_DRAFT_ERROR": "Não foi possível gerar o rascunho da IA — tente de novo ou escreva na conversa",
         "DONE": "Feito ✓",
         "HINT": "Espaço pula · F feito",
-        "STAGE_AGE": "{stage} · {days}d",
-        "CHIP_BLEEDING": "Prescrevendo {value}/mês",
-        "CHIP_OVERDUE": "Tarefa vencida: {title}",
-        "CHIP_STALLED": "Parado há {days}d",
-        "ROW_OVERDUE": "{title} · vencida",
-        "ROW_STALLED": "Parado há {days}d em {stage}",
-        "MONTHLY": "{value}/mês",
-        "TASK_COMPLETED": "Tarefa concluída",
-        "COMPLETE_ERROR": "Não foi possível concluir a tarefa — tente de novo",
         "EMPTY_TITLE": "Fila zerada",
         "EMPTY_BODY": "Nada vencido nem parado — o funil está andando."
       },
@@ -134,13 +126,18 @@
       },
       "HISTORY": {
         "TITLE": "Funil nos últimos 30 dias",
-        "LATEST": "hoje: {leads} leads ativos · {value} em pipeline"
+        "LATEST": "hoje: {leads} leads ativos · {value} em pipeline",
+        "LEADS": "{count} leads",
+        "CHANGE": "variação no período"
       },
       "LOAD_ERROR": "Não foi possível carregar o Centro de Comando"
     },
     "NIGHT_COPILOT": {
       "TITLE": "Enquanto você dormia",
       "SUBTITLE": "o copiloto revisou {leads} leads às {time} · {count} sugestões aguardam aprovação",
+      "PENDING": "{count} sugestões aguardam aprovação",
+      "EXPAND": "Ver sugestões",
+      "COLLAPSE": "Recolher sugestões",
       "APPROVE_ALL": "Aprovar todas ({count})",
       "TAG_DRAFT": "Rascunho",
       "TAG_MOVE_STAGE": "Mover etapa",
@@ -317,6 +314,10 @@
         "CREATED_BEFORE": "Criado até",
         "STALLED": "Parados",
         "NO_OPEN_TASK": "Sem próxima ação",
+        "OVERDUE_TASK": "Com tarefa vencida",
+        "TASK_DUE_TODAY": "Com tarefa para hoje",
+        "WON_SINCE": "Ganhos desde",
+        "NEW_FROM_LP": "Novos da LP sem resposta",
         "CLEAR": "Limpar",
         "TOGGLE": "Filtros"
       },

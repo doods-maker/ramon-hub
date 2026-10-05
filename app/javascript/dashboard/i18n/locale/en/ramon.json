@@ -88,20 +88,12 @@
       },
       "QUEUE": {
         "TITLE": "Your queue now",
-        "SORTED_BY": "sorted by money prescribing",
+        "SORTED_BY": "same queue as the Esteira · urgency × money",
         "OPEN_CONVERSATION": "Open conversation",
         "AI_DRAFT": "AI draft",
+        "AI_DRAFT_ERROR": "Couldn't generate the AI draft — try again or write in the conversation",
         "DONE": "Done ✓",
         "HINT": "Space skips · F done",
-        "STAGE_AGE": "{stage} · {days}d",
-        "CHIP_BLEEDING": "Prescribing {value}/mo",
-        "CHIP_OVERDUE": "Overdue task: {title}",
-        "CHIP_STALLED": "Stalled for {days}d",
-        "ROW_OVERDUE": "{title} · overdue",
-        "ROW_STALLED": "Stalled for {days}d in {stage}",
-        "MONTHLY": "{value}/mo",
-        "TASK_COMPLETED": "Task completed",
-        "COMPLETE_ERROR": "Couldn't complete the task — try again",
         "EMPTY_TITLE": "Queue cleared",
         "EMPTY_BODY": "Nothing overdue or stalled — the pipeline is moving."
       },
@@ -134,13 +126,18 @@
       },
       "HISTORY": {
         "TITLE": "Funnel over the last 30 days",
-        "LATEST": "today: {leads} active leads · {value} in pipeline"
+        "LATEST": "today: {leads} active leads · {value} in pipeline",
+        "LEADS": "{count} leads",
+        "CHANGE": "change over the period"
       },
       "LOAD_ERROR": "Couldn't load the Command Center"
     },
     "NIGHT_COPILOT": {
       "TITLE": "While you were sleeping",
       "SUBTITLE": "the copilot reviewed {leads} leads at {time} · {count} suggestions awaiting approval",
+      "PENDING": "{count} suggestions awaiting approval",
+      "EXPAND": "Show suggestions",
+      "COLLAPSE": "Hide suggestions",
       "APPROVE_ALL": "Approve all ({count})",
       "TAG_DRAFT": "Draft",
       "TAG_MOVE_STAGE": "Move stage",
@@ -317,6 +314,10 @@
         "CREATED_BEFORE": "Created until",
         "STALLED": "Stalled",
         "NO_OPEN_TASK": "No next action",
+        "OVERDUE_TASK": "With overdue task",
+        "TASK_DUE_TODAY": "With task due today",
+        "WON_SINCE": "Won since",
+        "NEW_FROM_LP": "New from LP, unanswered",
         "CLEAR": "Clear",
         "TOGGLE": "Filters"
       },

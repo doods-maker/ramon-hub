@@ -94,7 +94,9 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   def week_section
     {
       created_by_channel: created_by_channel,
-      won: leads_funil.where(won_at: 7.days.ago..).count,
+      # mesma janela do filtro won_since do Funil (clique no KPI)
+      won: leads_funil.where(won_at: Ramon::LeadRadar.week_start..).count,
+      won_since: Ramon::LeadRadar.week_start.to_date,
       lost: leads_funil.where(lost_at: 7.days.ago..).count,
       created: leads_funil.where(created_at: 7.days.ago..).count,
       lost_reasons_30d: lost_reasons_30d,
