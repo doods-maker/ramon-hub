@@ -35,7 +35,12 @@ vi.mock('dashboard/api/ramonCalculos', () => ({
   default: { advboxCustomers: vi.fn(), criarCaso: vi.fn(), rascunho: vi.fn() },
 }));
 vi.mock('dashboard/api/calculos', () => ({
-  default: { historico: vi.fn(), reabrir: vi.fn(), delete: vi.fn() },
+  default: {
+    historico: vi.fn(),
+    reabrir: vi.fn(),
+    delete: vi.fn(),
+    vincular: vi.fn(),
+  },
 }));
 // LeadSimulador tem specs próprios — aqui só confirmamos que recebeu o lead certo.
 vi.mock('../../components/conversation/LeadSimulador.vue', () => ({
@@ -306,6 +311,34 @@ describe('Calculos.vue', () => {
         wrapper.find('[data-testid="calculos-historico-item"]').exists()
       ).toBe(true);
     });
+  });
+
+  it('"Vincular a cliente" abre a janela de escolha do caso (K3)', async () => {
+    CalculosAPI.historico.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            id: 5,
+            tipo: 'painel',
+            lead_id: 77,
+            rascunho: true,
+            created_at: '2026-07-27T14:32:00.000Z',
+          },
+        ],
+      },
+    });
+    const wrapper = mount(Calculos, mountOptions);
+    await flushPromises();
+    await wrapper
+      .find('[data-testid="calculos-historico-toggle"]')
+      .trigger('click');
+    await flushPromises();
+    await wrapper
+      .find('[data-testid="calculos-historico-vincular-5"]')
+      .trigger('click');
+    expect(wrapper.find('[data-testid="vincular-calculo"]').exists()).toBe(
+      true
+    );
   });
 
   it('erro ao abrir a calculadora permite tentar de novo', async () => {

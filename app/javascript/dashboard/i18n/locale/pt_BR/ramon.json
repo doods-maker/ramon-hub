@@ -586,7 +586,13 @@
       "REABRIR_TITULO": "Substituir o CNIS atual deste lead pelo do cálculo de {data}?",
       "REABRIR_SUBSTITUIR": "Substituir",
       "REABRIR_RASCUNHO": "Abrir no meu rascunho",
-      "REABRIR_ERRO": "Não foi possível reabrir o cálculo."
+      "REABRIR_ERRO": "Não foi possível reabrir o cálculo.",
+      "VINCULAR": "Vincular a cliente",
+      "VINCULAR_TITULO": "Vincular o cálculo a um cliente",
+      "VINCULAR_HINT": "Busque a pessoa e escolha o caso — o CNIS deste cálculo vai para ele.",
+      "VINCULAR_SEM_CASO": "{name} ainda não tem caso — crie em “Calcular para um cliente”.",
+      "VINCULAR_SUBSTITUIR": "Este caso já tem outro CNIS. Substituir pelo do cálculo de {data}?",
+      "VINCULAR_ERRO": "Não foi possível vincular o cálculo."
     },
     "CONTEUDO": {
       "COM_ERRO": "Deu erro — abra pra ver",
@@ -1182,7 +1188,10 @@
       "SEXO_SELECIONE": "Selecione",
       "SEXO_ANTES_CNIS": "Escolha o sexo do segurado antes de anexar o CNIS — ele vai junto do PDF e entra em todos os cálculos.",
       "CNIS_SEXO_USADO": "Sexo usado: {sexo}",
-      "CNIS_SEXO_TROCAR": "trocar"
+      "CNIS_SEXO_TROCAR": "trocar",
+      "TESE": "Tese do cálculo",
+      "TESE_SELECIONE": "Escolha a tese",
+      "TESE_ESCOLHA": "Escolha a tese acima para calcular o honorário."
     },
     "LIQUIDACAO": {
       "TITULO": "Liquidação de sentença",

@@ -586,7 +586,13 @@
       "REABRIR_TITULO": "Replace this lead's current CNIS with the one from the {data} calculation?",
       "REABRIR_SUBSTITUIR": "Replace",
       "REABRIR_RASCUNHO": "Open in my draft",
-      "REABRIR_ERRO": "Could not reopen the calculation."
+      "REABRIR_ERRO": "Could not reopen the calculation.",
+      "VINCULAR": "Link to client",
+      "VINCULAR_TITULO": "Link the calculation to a client",
+      "VINCULAR_HINT": "Search the person and pick the case — this calculation's CNIS goes to it.",
+      "VINCULAR_SEM_CASO": "{name} has no case yet — create one in “Calculate for a client”.",
+      "VINCULAR_SUBSTITUIR": "This case already has another CNIS. Replace it with the one from the {data} calculation?",
+      "VINCULAR_ERRO": "Could not link the calculation."
     },
     "CONTEUDO": {
       "COM_ERRO": "Has an error — open to see",
@@ -1182,7 +1188,10 @@
       "SEXO_SELECIONE": "Select",
       "SEXO_ANTES_CNIS": "Choose the insured's sex before attaching the CNIS — it goes with the PDF and into every calculation.",
       "CNIS_SEXO_USADO": "Sex used: {sexo}",
-      "CNIS_SEXO_TROCAR": "change"
+      "CNIS_SEXO_TROCAR": "change",
+      "TESE": "Calculation thesis",
+      "TESE_SELECIONE": "Choose the thesis",
+      "TESE_ESCOLHA": "Choose the thesis above to calculate the fee."
     },
     "LIQUIDACAO": {
       "TITULO": "Judgment liquidation",

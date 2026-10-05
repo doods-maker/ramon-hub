@@ -7,6 +7,10 @@ class CalculoPolicy < ApplicationPolicy
     index?
   end
 
+  def vincular?
+    index?
+  end
+
   def destroy?
     index?
   end

@@ -118,6 +118,42 @@ RSpec.describe 'Calculos API', type: :request do
     end
   end
 
+  describe 'POST /calculos/:id/vincular' do
+    let(:cliente) { create(:lead, account: account, contact: create(:contact, account: account, name: 'João Carlos Pereira')) }
+
+    def vincular(calculo, params = {})
+      post "/api/v1/accounts/#{account.id}/calculos/#{calculo.id}/vincular",
+           params: { lead_id: cliente.id }.merge(params), headers: agent.create_new_auth_token, as: :json
+    end
+
+    it 'leva o CNIS do cálculo rápido pro cliente e o cálculo passa a ser dele' do
+      calculo = Calculo.create!(account: account, lead: Lead.rascunho_de!(account, agent), user: agent,
+                                tipo: 'painel', snapshot: { 'params' => { 'der' => '2026-03-10' }, 'cnis' => cnis })
+
+      vincular(calculo)
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body).to include('lead_id' => cliente.id, 'tipo' => 'painel')
+      expect(cliente.reload.cnis['filename']).to eq('cnis.pdf')
+      expect(calculo.reload.lead_id).to eq(cliente.id)
+      expect(calculo.segurado_nome).to eq('João Carlos Pereira')
+    end
+
+    it 'não sobrescreve outro CNIS do cliente sem substituir=true' do
+      cliente.update!(cnis: { 'filename' => 'cnis-do-cliente.pdf' })
+      calculo = cria_calculo(snapshot_cnis: cnis)
+
+      vincular(calculo)
+      expect(response).to have_http_status(:conflict)
+      expect(response.parsed_body['error']).to eq('LEAD_TEM_CNIS')
+      expect(cliente.reload.cnis['filename']).to eq('cnis-do-cliente.pdf')
+
+      vincular(calculo, substituir: true)
+      expect(response).to have_http_status(:success)
+      expect(cliente.reload.cnis['filename']).to eq('cnis.pdf')
+    end
+  end
+
   describe 'gravação automática' do
     it 'painel calculado vira registro com CNIS e nome do segurado' do
       lead.update!(cnis: cnis)

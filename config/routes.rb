@@ -323,7 +323,10 @@ Rails.application.routes.draw do
             end
           end
           resources :calculos, only: [:index, :destroy] do
-            member { post :reabrir }
+            member do
+              post :reabrir
+              post :vincular
+            end
           end
           resources :ramon_lead_imports, only: [:create, :show]
           resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'

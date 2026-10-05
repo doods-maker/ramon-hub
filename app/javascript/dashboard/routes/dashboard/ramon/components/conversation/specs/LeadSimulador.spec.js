@@ -3,6 +3,18 @@ import LeadsAPI from 'dashboard/api/leads';
 import LeadSimulador from '../LeadSimulador.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
+vi.mock('dashboard/api/theses', () => ({
+  default: {
+    get: vi.fn(() =>
+      Promise.resolve({
+        data: [
+          { id: 3, name: 'Auxílio-acidente', active: true },
+          { id: 4, name: 'Tese arquivada', active: false },
+        ],
+      })
+    ),
+  },
+}));
 vi.mock('dashboard/api/leads', () => ({
   default: {
     simulate: vi.fn(),
@@ -687,6 +699,39 @@ describe('LeadSimulador.vue', () => {
       expect(wrapper.find('[data-testid="sim-painel-secao"]').isVisible()).toBe(
         true
       );
+    });
+  });
+
+  describe('tese no caso de cálculo (K3)', () => {
+    const caso = {
+      ...lead,
+      source: 'calculo-advbox',
+      thesis_id: null,
+      thesis_name: null,
+    };
+
+    it('caso de cálculo sem tese: escolhe na aba Honorário, grava e calcula', async () => {
+      LeadsAPI.update.mockResolvedValue({ data: {} });
+      LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+      const wrapper = mountSim({ lead: { ...caso, cnis_resumo: cnisResumo } });
+      await flushPromises();
+      await wrapper.find('[data-testid="sim-der"]').setValue('2025-09-01');
+
+      const select = wrapper.find('[data-testid="sim-tese"]');
+      expect(select.findAll('option').map(o => o.text())).toEqual([
+        'RAMON.SIMULADOR.TESE_SELECIONE',
+        'Auxílio-acidente',
+      ]);
+      await select.setValue(3);
+      await flushPromises();
+
+      expect(LeadsAPI.update).toHaveBeenCalledWith(7, { thesis_id: 3 });
+      expect(LeadsAPI.simulate).toHaveBeenCalled();
+    });
+
+    it('lead do funil não ganha seletor de tese', () => {
+      const wrapper = mountSim();
+      expect(wrapper.find('[data-testid="sim-tese"]').exists()).toBe(false);
     });
   });
 

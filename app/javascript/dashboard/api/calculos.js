@@ -14,6 +14,13 @@ class CalculosAPI extends ApiClient {
   reabrir(id, destino) {
     return axios.post(`${this.url}/${id}/reabrir`, destino ? { destino } : {});
   }
+
+  vincular(id, leadId, substituir = false) {
+    return axios.post(`${this.url}/${id}/vincular`, {
+      lead_id: leadId,
+      substituir,
+    });
+  }
 }
 
 export default new CalculosAPI();

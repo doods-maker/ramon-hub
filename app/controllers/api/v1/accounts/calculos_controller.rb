@@ -1,11 +1,11 @@
 # Histórico da tela Cálculos: lista o que já foi calculado (cliente, tipo,
-# data/hora), reabre um cálculo no estado exato e apaga
-# registro indevido.
+# data/hora), reabre um cálculo no estado
+# exato, vincula um cálculo a um cliente e apaga registro indevido.
 class Api::V1::Accounts::CalculosController < Api::V1::Accounts::BaseController
   LIMIT = 50
 
   before_action :current_account
-  before_action :fetch_calculo, only: [:destroy, :reabrir]
+  before_action :fetch_calculo, only: [:destroy, :reabrir, :vincular]
   before_action :check_authorization
 
   def index
@@ -31,6 +31,19 @@ class Api::V1::Accounts::CalculosController < Api::V1::Accounts::BaseController
     render json: reaberto(destino)
   end
 
+  # Vincula o cálculo a um cliente: o CNIS do cálculo vai pro lead escolhido e
+  # a tela abre o cálculo dele. Lead que já tem outro CNIS só é sobrescrito com
+  # substituir=true (a tela pergunta antes). Cálculo rápido passa a ser do cliente.
+  def vincular
+    alvo = Current.account.leads.find(params[:lead_id])
+    authorize(alvo, :update?)
+    return render json: { error: 'LEAD_TEM_CNIS' }, status: :conflict if conflito?(alvo)
+
+    alvo.update!(cnis: @calculo.cnis_snapshot) if @calculo.cnis_snapshot.present?
+    adotar_rascunho(alvo) if @calculo.lead.rascunho_de_calculo?
+    render json: reaberto(alvo)
+  end
+
   private
 
   def fetch_calculo
@@ -47,6 +60,15 @@ class Api::V1::Accounts::CalculosController < Api::V1::Accounts::BaseController
     rascunho = Lead.rascunho_de!(Current.account, Current.user)
     rascunho.update!(thesis_id: @calculo.lead.thesis_id) unless @calculo.lead.rascunho_de_calculo?
     rascunho
+  end
+
+  # Cálculo rápido vinculado sai do rascunho e passa a constar no cliente.
+  def adotar_rascunho(alvo)
+    @calculo.update!(lead: alvo, segurado_nome: @calculo.segurado_nome.presence || alvo.contact&.name)
+  end
+
+  def conflito?(alvo)
+    !ActiveModel::Type::Boolean.new.cast(params[:substituir]) && cnis_diferente?(alvo, @calculo)
   end
 
   def cnis_diferente?(lead, calculo)

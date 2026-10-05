@@ -10,6 +10,7 @@ import CalculosAPI from 'dashboard/api/calculos';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import LeadSimulador from '../components/conversation/LeadSimulador.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import VincularCalculo from '../components/VincularCalculo.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CAMPO, CAMPO_GRANDE, CARTAO, LINHA, TITULO } from '../helpers/ui';
 
@@ -141,6 +142,15 @@ const diaMes = iso =>
     day: '2-digit',
     month: '2-digit',
   });
+
+// "Vincular a cliente": o servidor leva o CNIS pro caso escolhido e a tela
+// abre o cálculo dele.
+const vinculando = ref(null);
+const aoVincular = data => {
+  const nome = vinculando.value?.segurado_nome;
+  vinculando.value = null;
+  abrirReaberto(data, nome);
+};
 
 const apagarCalculo = async item => {
   try {
@@ -476,6 +486,15 @@ const fmtDate = value => {
               </span>
             </button>
             <Button
+              :data-testid="`calculos-historico-vincular-${item.id}`"
+              link
+              slate
+              xs
+              class="shrink-0"
+              :label="$t('RAMON.CALCULOS.VINCULAR')"
+              @click="vinculando = item"
+            />
+            <Button
               :data-testid="`calculos-historico-apagar-${item.id}`"
               link
               ruby
@@ -717,6 +736,12 @@ const fmtDate = value => {
       @confirm="executarReabrir(reabrirPendente)"
       @alt="executarReabrir(reabrirPendente, 'rascunho')"
       @cancel="reabrirPendente = null"
+    />
+    <VincularCalculo
+      v-if="vinculando"
+      :calculo="vinculando"
+      @cancel="vinculando = null"
+      @vinculado="aoVincular"
     />
   </div>
 </template>

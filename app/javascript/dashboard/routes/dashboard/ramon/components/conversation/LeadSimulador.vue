@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LeadsAPI from 'dashboard/api/leads';
+import ThesesAPI from 'dashboard/api/theses';
 import Button from 'dashboard/components-next/button/Button.vue';
 import {
   ABA,
@@ -446,6 +447,33 @@ const trocarSexo = async () => {
   }
 };
 
+// Caso de cálculo (rascunho ou caso oculto, fora do funil) nasce sem tese e o
+// Honorário não tem regra: a aba oferece a tese ali mesmo. Escolher grava a
+// tese no caso (não é lead do funil) e já calcula.
+const casoDeCalculo = props.lead.source === 'calculo-advbox';
+const teseId = ref(props.lead.thesis_id || '');
+const teses = ref([]);
+const teseSalvando = ref(false);
+if (casoDeCalculo) {
+  ThesesAPI.get()
+    .then(({ data }) => {
+      teses.value = (data || []).filter(tese => tese.active);
+    })
+    .catch(() => {});
+}
+const escolherTese = async () => {
+  teseSalvando.value = true;
+  errorMessage.value = '';
+  try {
+    await LeadsAPI.update(props.lead.id, { thesis_id: teseId.value || null });
+    if (canSimulate.value) await simulate();
+  } catch {
+    errorMessage.value = t('RAMON.SIMULADOR.GENERIC_ERROR');
+  } finally {
+    teseSalvando.value = false;
+  }
+};
+
 const liquidacaoRef = ref(null);
 
 // RMI com descartes é a que o advogado usa na conta quando existe (é a maior).
@@ -791,6 +819,23 @@ const aba = ref(
       class="flex flex-col gap-3"
       data-testid="sim-secao-honorario"
     >
+      <label v-if="casoDeCalculo" class="sm:w-1/2" :class="ROTULO">
+        {{ $t('RAMON.SIMULADOR.TESE') }}
+        <select
+          v-model="teseId"
+          data-testid="sim-tese"
+          :disabled="teseSalvando"
+          :class="SELECT"
+          @change="escolherTese"
+        >
+          <option value="" disabled>
+            {{ $t('RAMON.SIMULADOR.TESE_SELECIONE') }}
+          </option>
+          <option v-for="tese in teses" :key="tese.id" :value="tese.id">
+            {{ tese.name }}
+          </option>
+        </select>
+      </label>
       <div class="grid grid-cols-2 gap-2">
         <label v-if="!cnis" :class="ROTULO">
           {{ $t('RAMON.SIMULADOR.SALARIO') }}
@@ -955,7 +1000,11 @@ const aba = ref(
           class="mb-0 text-xs text-n-amber-11"
           data-testid="sim-sem-honorario"
         >
-          {{ $t('RAMON.SIMULADOR.NO_FEE_CONFIG') }}
+          {{
+            casoDeCalculo
+              ? $t('RAMON.SIMULADOR.TESE_ESCOLHA')
+              : $t('RAMON.SIMULADOR.NO_FEE_CONFIG')
+          }}
         </p>
         <p class="mb-0 text-xs text-n-slate-10">
           {{
