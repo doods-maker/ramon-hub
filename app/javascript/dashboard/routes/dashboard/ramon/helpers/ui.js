@@ -20,8 +20,10 @@ export const TITULO = `${SOBRESCRITO} text-n-slate-10`;
 // Campos nativos (input/select/textarea): mesma pele do Input do components-next.
 // reset-base tira o input do CSS global (_base.scss: h-10 + mb-4); mb-0 vence
 // o seletor de elemento do select/textarea (margem local: !mb-3).
+// color-scheme escuro no tema escuro: ícone de calendário/relógio dos campos
+// de data visível (o nativo vem preto).
 export const CAMPO =
-  'reset-base block w-full mb-0 h-8 rounded-lg border-0 bg-n-alpha-black2 px-3 text-sm text-n-slate-12 outline outline-1 -outline-offset-1 outline-n-weak hover:outline-n-slate-6 focus:outline-n-brand placeholder:text-n-slate-10 disabled:cursor-not-allowed disabled:opacity-50';
+  'reset-base block w-full mb-0 h-8 rounded-lg border-0 bg-n-alpha-black2 px-3 text-sm text-n-slate-12 outline outline-1 -outline-offset-1 outline-n-weak hover:outline-n-slate-6 focus:outline-n-brand placeholder:text-n-slate-10 disabled:cursor-not-allowed disabled:opacity-50 dark:[color-scheme:dark]';
 // select: a seta do CSS global fica à direita, dentro do padding; py-0 anula o
 // py-2 global (senão o texto corta no h-8).
 export const SELECT = `${CAMPO} py-0 pr-8`;
