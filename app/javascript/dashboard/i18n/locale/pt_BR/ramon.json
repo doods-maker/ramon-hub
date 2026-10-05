@@ -707,7 +707,13 @@
       "LOAD_ERROR": "Não deu pra carregar a lista.",
       "SAVED": "Salvo.",
       "DRIVE": "Drive",
-      "ACTION_ERROR": "Não deu certo. Tente de novo."
+      "ACTION_ERROR": "Não deu certo. Tente de novo.",
+      "HAS_ACCESS": "Já tem acesso",
+      "NEW_PASSWORD": "Nova senha",
+      "CONFIRM_NEW_PASSWORD_TITLE": "Gerar senha nova para {nome}?",
+      "CONFIRM_NEW_PASSWORD": "O cliente perde a senha atual, é desconectado e recebe uma senha nova.",
+      "CONFIRM_NEW_PASSWORD_EMAIL": "O cliente perde a senha atual, é desconectado e recebe uma senha nova por e-mail em {email}.",
+      "CONFIRM_NEW_PASSWORD_BTN": "Gerar senha nova"
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

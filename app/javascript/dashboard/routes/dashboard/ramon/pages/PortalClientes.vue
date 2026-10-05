@@ -8,6 +8,7 @@ import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
 import LeadsAPI from 'dashboard/api/leads';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import PortalClienteDetalhe from '../components/portal/PortalClienteDetalhe.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { AVISO, CAMPO, CARTAO, CHIP, SECAO, TOM } from '../helpers/ui';
 
@@ -25,6 +26,17 @@ const emailConvite = ref('');
 const senhaGerada = ref(null); // { nome, senha } — aparece uma vez, o hub não guarda em claro
 const aberto = ref(null); // detalhe expandido
 const templates = ref([]); // modelos do ZapSign, carregados na 1ª expansão de linha
+// Janela de confirmação aberta: { title, message, confirmLabel, confirmColor, acao }.
+const confirmacao = ref(null);
+
+const erro = e =>
+  useAlert(e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR'));
+
+const confirmar = async () => {
+  const { acao } = confirmacao.value;
+  confirmacao.value = null;
+  await acao();
+};
 
 const carregar = async () => {
   isLoading.value = true;
@@ -79,17 +91,35 @@ const convidar = async () => {
   }
 };
 
-const reenviar = async id => {
-  try {
-    const { data } = await PortalClientesAPI.convidar(id);
-    senhaGerada.value = { nome: data.nome, senha: data.senha_provisoria };
-    await carregar();
-  } catch (e) {
-    useAlert(
-      e?.response?.data?.error || t('RAMON.PORTAL_CLIENTES.ACTION_ERROR')
-    );
-  }
+// Senha nova derruba a do cliente: sempre passa pela janela de confirmação.
+const reenviar = c => {
+  confirmacao.value = {
+    title: t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD_TITLE', {
+      nome: c.nome,
+    }),
+    message: c.email
+      ? t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD_EMAIL', {
+          email: c.email,
+        })
+      : t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD'),
+    confirmLabel: t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD_BTN'),
+    confirmColor: 'blue',
+    acao: async () => {
+      try {
+        const { data } = await PortalClientesAPI.convidar(c.id);
+        senhaGerada.value = { nome: data.nome, senha: data.senha_provisoria };
+        resultados.value = [];
+        await carregar();
+      } catch (e) {
+        erro(e);
+      }
+    },
+  };
 };
+
+// Resultado do ADVBOX que já tem acesso ao painel (convidado) — vira "Nova senha".
+const comAcesso = c =>
+  clientes.value.find(x => x.advbox_customer_id === c.id && x.convidado_em);
 
 const abrir = async id => {
   if (aberto.value?.id === id) {
@@ -191,8 +221,19 @@ onMounted(carregar);
               <span class="ms-1 font-mono text-xs text-n-slate-10">{{
                 c.identification
               }}</span>
+              <span v-if="comAcesso(c)" class="ms-2" :class="[CHIP, TOM.blue]">
+                {{ t('RAMON.PORTAL_CLIENTES.HAS_ACCESS') }}
+              </span>
             </span>
             <Button
+              v-if="comAcesso(c)"
+              link
+              xs
+              :label="t('RAMON.PORTAL_CLIENTES.NEW_PASSWORD')"
+              @click="reenviar(comAcesso(c))"
+            />
+            <Button
+              v-else
               link
               xs
               :label="t('RAMON.PORTAL_CLIENTES.INVITE')"
@@ -351,7 +392,7 @@ onMounted(carregar);
               link
               xs
               :label="t('RAMON.PORTAL_CLIENTES.REINVITE')"
-              @click="reenviar(c.id)"
+              @click="reenviar(c)"
             />
             <Button
               link
@@ -373,5 +414,15 @@ onMounted(carregar);
         </li>
       </ul>
     </div>
+
+    <ConfirmModal
+      v-if="confirmacao"
+      :title="confirmacao.title"
+      :message="confirmacao.message"
+      :confirm-label="confirmacao.confirmLabel"
+      :confirm-color="confirmacao.confirmColor"
+      @confirm="confirmar"
+      @cancel="confirmacao = null"
+    />
   </div>
 </template>

@@ -36,6 +36,7 @@ const CLIENTES = [
   {
     id: 1,
     nome: 'Ana Paula Martins',
+    advbox_customer_id: 9101,
     cpf: '123.456.789-09',
     email: 'ana.martins@exemplo.com.br',
     convidado_em: diasAtras(20),
@@ -50,6 +51,7 @@ const CLIENTES = [
   {
     id: 2,
     nome: 'Carlos Eduardo Lima',
+    advbox_customer_id: 9102,
     cpf: '987.654.321-00',
     email: null,
     convidado_em: diasAtras(3),
@@ -64,6 +66,7 @@ const CLIENTES = [
   {
     id: 3,
     nome: 'José Ribeiro da Silva',
+    advbox_customer_id: 9103,
     cpf: '456.789.123-45',
     email: 'jose.ribeiro@exemplo.com.br',
     convidado_em: null,
@@ -78,6 +81,7 @@ const CLIENTES = [
   {
     id: 4,
     nome: 'Maria Aparecida Souza',
+    advbox_customer_id: 9104,
     cpf: '321.654.987-10',
     email: 'maria.souza@exemplo.com.br',
     convidado_em: diasAtras(35),
@@ -159,6 +163,13 @@ const API = {
         cellphone: '(48) 99812-3456',
       },
       {
+        id: 9101,
+        name: 'Ana Paula Martins',
+        identification: '123.456.789-09',
+        email: 'ana.martins@exemplo.com.br',
+        cellphone: '(48) 99701-2233',
+      },
+      {
         id: 9002,
         name: 'Rosa Maria Fontana',
         identification: '852.963.741-11',
@@ -214,7 +225,11 @@ const erro = () => {
   falhar = true;
 };
 const aberto = depois(1500, () => clicar('Maria Aparecida'));
-const senha = depois(1500, () => clicar('Nova senha provisória', 1));
+const senha = depois(1500, () => {
+  clicar('Nova senha provisória', 1);
+  setTimeout(() => clicar('Gerar senha nova'), 300);
+});
+const confirmarSenha = depois(1500, () => clicar('Nova senha provisória', 0));
 const busca = depois(1500, () => {
   const campo = document.querySelector('input[type="search"]');
   campo.value = 'Ros';
@@ -238,6 +253,9 @@ const busca = depois(1500, () => {
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="Senha" :init-state="senha">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC1 confirmar senha" :init-state="confirmarSenha">
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="Vazio" :init-state="vazio">

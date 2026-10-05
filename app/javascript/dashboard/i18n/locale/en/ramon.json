@@ -707,7 +707,13 @@
       "LOAD_ERROR": "Could not load the list.",
       "SAVED": "Saved.",
       "DRIVE": "Drive",
-      "ACTION_ERROR": "Something went wrong. Try again."
+      "ACTION_ERROR": "Something went wrong. Try again.",
+      "HAS_ACCESS": "Already has access",
+      "NEW_PASSWORD": "New password",
+      "CONFIRM_NEW_PASSWORD_TITLE": "Generate a new password for {nome}?",
+      "CONFIRM_NEW_PASSWORD": "The client loses the current password, is signed out and gets a new password.",
+      "CONFIRM_NEW_PASSWORD_EMAIL": "The client loses the current password, is signed out and gets a new password by e-mail at {email}.",
+      "CONFIRM_NEW_PASSWORD_BTN": "Generate new password"
     },
     "DOSSIE": {
       "OPEN": "Dossier",
