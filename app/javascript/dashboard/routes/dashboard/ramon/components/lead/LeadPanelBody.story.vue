@@ -176,6 +176,37 @@ const LEAD_PRESCREVENDO = { ...LEAD, dcb_em: '2020-06-10' };
 
 // Reunião agendada que já passou (Closer ainda não registrou o resultado)
 const LEAD_REUNIAO = { ...LEAD, id: 44 };
+
+// Em Qualificação: ainda sem contrato em jogo (painel com 4 ícones)
+const LEAD_QUALIFICACAO = { ...LEAD, id: 45, lead_stage_id: 2 };
+
+// Reunião realizada: fase de contrato (painel com 5 ícones)
+const LEAD_CONTRATO = {
+  ...LEAD,
+  id: 46,
+  lead_stage_id: 4,
+  stage_entered_at: diasAtras(1),
+};
+
+// Em Qualificação com as 4 perguntas respondidas (linha teal "Qualificado")
+const LEAD_QUALIFICADO = {
+  ...LEAD_QUALIFICACAO,
+  id: 47,
+  custom_attributes: {
+    ...LEAD.custom_attributes,
+    qualificacao_status: { 21: 'ok', 22: 'ok', 23: 'ok', 24: 'ok' },
+  },
+};
+
+const NOTAS_FASE = [
+  {
+    id: 5,
+    author_name: 'Eduardo',
+    body: 'Reunião feita com o Dr. Ramon. Cliente topou, falta só o laudo atualizado para mandar o contrato.',
+    created_at: diasAtras(0.2),
+  },
+];
+
 // Contrato já gerado no ZapSign (link pronto, 2 campos saíram em branco)
 const LEAD_CONTRATO_GERADO = {
   ...LEAD,
@@ -214,36 +245,6 @@ const LEAD_CONTRATO_RECUSADO = {
     },
   },
 };
-
-// Em Qualificação: ainda sem contrato em jogo (painel com 4 ícones)
-const LEAD_QUALIFICACAO = { ...LEAD, id: 45, lead_stage_id: 2 };
-
-// Reunião realizada: fase de contrato (painel com 5 ícones)
-const LEAD_CONTRATO = {
-  ...LEAD,
-  id: 46,
-  lead_stage_id: 4,
-  stage_entered_at: diasAtras(1),
-};
-
-// Em Qualificação com as 4 perguntas respondidas (linha teal "Qualificado")
-const LEAD_QUALIFICADO = {
-  ...LEAD_QUALIFICACAO,
-  id: 47,
-  custom_attributes: {
-    ...LEAD.custom_attributes,
-    qualificacao_status: { 21: 'ok', 22: 'ok', 23: 'ok', 24: 'ok' },
-  },
-};
-
-const NOTAS_FASE = [
-  {
-    id: 5,
-    author_name: 'Eduardo',
-    body: 'Reunião feita com o Dr. Ramon. Cliente topou, falta só o laudo atualizado para mandar o contrato.',
-    created_at: diasAtras(0.2),
-  },
-];
 
 const API = {
   lead_config: {
@@ -419,17 +420,6 @@ const API = {
       },
     ],
   },
-  // prévia do contrato: endereço só com cidade/UF — rua/número/bairro em branco
-  'leads/42/zapsign/preview': {
-    faltando: ['{{rua}}', '{{número}}', '{{bairro}}'],
-    dados: {
-      cidade: 'Tubarão',
-      uf: 'SC',
-      estado_civil: 'casado(a)',
-      profissao: 'montador industrial',
-      email: 'joao.pereira@email.com',
-    },
-  },
   'leads/zapsign_templates': [
     { token: 'a', name: 'Contrato + procuração — auxílio-acidente' },
   ],
@@ -476,6 +466,15 @@ const clicando =
     }, 800);
     return {};
   };
+// Resumo rolado até o fim (depois que notas/cartões carregam)
+const rolandoAoFim = () => {
+  localStorage.setItem('ramon_lead_panel_tab', 'resumo');
+  setTimeout(() => {
+    const corpo = document.querySelector('[data-testid="lead-panel-corpo"]');
+    if (corpo) corpo.scrollTop = corpo.scrollHeight;
+  }, 2500);
+  return {};
+};
 // Estados internos do cartão (janela aberta) só por clique: clica em ordem.
 const comAbaEClique =
   (tab, ...testids) =>
@@ -488,15 +487,6 @@ const comAbaEClique =
     );
     return comAba(tab)();
   };
-// Resumo rolado até o fim (depois que notas/cartões carregam)
-const rolandoAoFim = () => {
-  localStorage.setItem('ramon_lead_panel_tab', 'resumo');
-  setTimeout(() => {
-    const corpo = document.querySelector('[data-testid="lead-panel-corpo"]');
-    if (corpo) corpo.scrollTop = corpo.scrollHeight;
-  }, 2500);
-  return {};
-};
 </script>
 
 <template>
@@ -591,10 +581,6 @@ const rolandoAoFim = () => {
         />
       </div>
     </Variant>
-    <Variant title="Contrato gerado" :init-state="comAba('contrato')">
-      <div class="h-screen w-[400px] flex bg-n-background">
-        <LeadPanelBody
-          :lead="LEAD_CONTRATO_GERADO"
     <Variant title="Qualificacao" :init-state="comAba('resumo')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
@@ -604,15 +590,6 @@ const rolandoAoFim = () => {
         />
       </div>
     </Variant>
-    <Variant
-      title="Contrato gerar de novo"
-      :init-state="
-        comAbaEClique('contrato', 'zapsign-regenerate', 'zapsign-generate')
-      "
-    >
-      <div class="h-screen w-[400px] flex bg-n-background">
-        <LeadPanelBody
-          :lead="LEAD_CONTRATO_GERADO"
     <Variant title="FaseContrato" :init-state="comAba('resumo')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
@@ -622,10 +599,6 @@ const rolandoAoFim = () => {
         />
       </div>
     </Variant>
-    <Variant title="Contrato assinado" :init-state="comAba('contrato')">
-      <div class="h-screen w-[400px] flex bg-n-background">
-        <LeadPanelBody
-          :lead="LEAD_CONTRATO_ASSINADO"
     <Variant title="Qualificado" :init-state="comAba('resumo')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
@@ -635,14 +608,6 @@ const rolandoAoFim = () => {
         />
       </div>
     </Variant>
-    <Variant title="Contrato recusado" :init-state="comAba('contrato')">
-      <div class="h-screen w-[400px] flex bg-n-background">
-        <LeadPanelBody
-          :lead="LEAD_CONTRATO_RECUSADO"
-    <Variant
-      title="ResumoIA"
-      :init-state="clicando('copilot-summarize', 'copilot-toggle')"
-    >
     <Variant title="ResumoIA" :init-state="clicando('copilot-summarize')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
@@ -682,7 +647,6 @@ const rolandoAoFim = () => {
         />
       </div>
     </Variant>
-    <Variant title="Historico" :init-state="comAba('historico')">
     <Variant title="Atividade" :init-state="comAba('atividade')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
@@ -738,6 +702,47 @@ const rolandoAoFim = () => {
     <Variant title="Campos">
       <div class="w-[400px] p-3 bg-n-background">
         <LeadFields :lead="LEAD" />
+      </div>
+    </Variant>
+    <Variant title="Contrato gerado" :init-state="comAba('contrato')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_GERADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant
+      title="Contrato gerar de novo"
+      :init-state="
+        comAbaEClique('contrato', 'zapsign-regenerate', 'zapsign-generate')
+      "
+    >
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_GERADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Contrato assinado" :init-state="comAba('contrato')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_ASSINADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Contrato recusado" :init-state="comAba('contrato')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_RECUSADO"
+          context="conversation"
+          :conversation-id="101"
+        />
       </div>
     </Variant>
   </Story>
