@@ -110,4 +110,22 @@ RSpec.describe Ramon::Fluxos::Executor do
     expect(e.status).to eq('concluida')
     expect(e.trilha.last['resumo']).to start_with('faria: ')
   end
+
+  it 'eventos disparados pelo passo levam o executor como autor (performed_by)' do
+    nova = create(:lead_stage, account: account, position: 9)
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['mover_etapa', { 'etapa_id' => nova.id }]))
+    allow(Rails.configuration.dispatcher).to receive(:dispatch)
+    avancar(e)
+    expect(Rails.configuration.dispatcher).to have_received(:dispatch)
+      .with(Events::Types::LEAD_UPDATED, anything, hash_including(performed_by: e))
+  end
+
+  it 'mover_etapa → esperar → não se cancela sozinho' do
+    nova = create(:lead_stage, account: account, position: 9)
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['mover_etapa', { 'etapa_id' => nova.id }],
+                             ['esperar', { 'quantidade' => 1, 'unidade' => 'horas' }], ['nota_privada', { 'texto' => 'x' }]))
+    avancar(e)
+    expect(e.status).to eq('esperando')
+    travel(2.hours) { expect(avancar(e).status).to eq('concluida') }
+  end
 end
