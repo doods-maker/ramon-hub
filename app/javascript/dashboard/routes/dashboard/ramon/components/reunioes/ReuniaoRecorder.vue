@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import ReunioesAPI from 'dashboard/api/reunioes';
 import { useAlert } from 'dashboard/composables';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { CAMPO_GRANDE, CARTAO } from '../../helpers/ui';
 
 const props = defineProps({
   leadId: { type: [Number, String], default: null },
@@ -126,86 +128,83 @@ onBeforeRouteLeave(() => {
 </script>
 
 <template>
-  <div
-    class="flex flex-col gap-3 rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-4"
-  >
+  <div :class="CARTAO" class="flex flex-col gap-3 !p-4">
     <input
       v-model="titulo"
       type="text"
-      class="reset-base h-10 rounded-lg border border-n-weak bg-n-alpha-black2 px-3 text-sm text-n-slate-12"
+      :class="CAMPO_GRANDE"
       :placeholder="t('RAMON.REUNIOES.TITLE_PLACEHOLDER')"
       :disabled="estado === 'enviando'"
     />
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center gap-2">
       <div
         v-if="estado !== 'parado'"
-        class="font-mono text-lg text-n-slate-12"
+        class="flex items-center gap-2 me-2 font-mono text-lg font-medium tabular-nums text-n-slate-12"
         data-testid="recorder-timer"
       >
         {{ formatoTempo(segundos) }}
-      </div>
-      <span
-        v-if="estado === 'gravando'"
-        class="size-2 animate-pulse rounded-full bg-n-ruby-9"
-      />
-      <button
-        v-if="estado === 'parado'"
-        type="button"
-        class="rounded-lg bg-n-iris-9 px-4 py-2 text-sm font-medium text-white"
-        data-testid="recorder-start"
-        @click="gravar"
-      >
-        {{ t('RAMON.REUNIOES.RECORD') }}
-      </button>
-      <template v-else-if="estado === 'gravando' || estado === 'pausado'">
-        <button
+        <span
           v-if="estado === 'gravando'"
-          type="button"
-          class="rounded-lg border border-n-weak px-3 py-2 text-sm text-n-slate-12"
+          class="size-2 animate-pulse rounded-full bg-n-ruby-9"
+        />
+      </div>
+      <Button
+        v-if="estado === 'parado'"
+        sm
+        icon="i-lucide-mic"
+        data-testid="recorder-start"
+        :label="t('RAMON.REUNIOES.RECORD')"
+        @click="gravar"
+      />
+      <template v-else-if="estado === 'gravando' || estado === 'pausado'">
+        <Button
+          v-if="estado === 'gravando'"
+          sm
+          faded
+          slate
+          icon="i-lucide-pause"
+          :label="t('RAMON.REUNIOES.PAUSE')"
           @click="pausar"
-        >
-          {{ t('RAMON.REUNIOES.PAUSE') }}
-        </button>
-        <button
+        />
+        <Button
           v-else
-          type="button"
-          class="rounded-lg border border-n-weak px-3 py-2 text-sm text-n-slate-12"
+          sm
+          faded
+          slate
+          icon="i-lucide-play"
+          :label="t('RAMON.REUNIOES.RESUME')"
           @click="continuar"
-        >
-          {{ t('RAMON.REUNIOES.RESUME') }}
-        </button>
-        <button
-          type="button"
-          class="rounded-lg bg-n-iris-9 px-4 py-2 text-sm font-medium text-white"
+        />
+        <Button
+          sm
+          icon="i-lucide-square"
           data-testid="recorder-stop"
+          :label="t('RAMON.REUNIOES.STOP')"
           @click="encerrar"
-        >
-          {{ t('RAMON.REUNIOES.STOP') }}
-        </button>
-        <button
-          type="button"
-          class="rounded-lg px-3 py-2 text-sm text-n-slate-11"
+        />
+        <Button
+          sm
+          ghost
+          slate
+          :label="t('RAMON.REUNIOES.CANCEL')"
           @click="descartar"
-        >
-          {{ t('RAMON.REUNIOES.CANCEL') }}
-        </button>
+        />
       </template>
       <template v-else-if="estado === 'falha'">
-        <button
-          type="button"
-          class="rounded-lg bg-n-iris-9 px-4 py-2 text-sm font-medium text-white"
+        <Button
+          sm
+          icon="i-lucide-upload"
           data-testid="recorder-retry"
+          :label="t('RAMON.REUNIOES.RETRY_UPLOAD')"
           @click="enviar"
-        >
-          {{ t('RAMON.REUNIOES.RETRY_UPLOAD') }}
-        </button>
-        <button
-          type="button"
-          class="rounded-lg px-3 py-2 text-sm text-n-slate-11"
+        />
+        <Button
+          sm
+          ghost
+          slate
+          :label="t('RAMON.REUNIOES.CANCEL')"
           @click="descartar"
-        >
-          {{ t('RAMON.REUNIOES.CANCEL') }}
-        </button>
+        />
       </template>
       <span v-else class="text-sm text-n-slate-11">
         {{ t('RAMON.REUNIOES.UPLOADING', { progress: progresso }) }}
