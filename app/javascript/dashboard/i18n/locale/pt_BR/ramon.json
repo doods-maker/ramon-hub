@@ -1606,6 +1606,12 @@
     "LOADING": "Carregando...",
     "LOAD_ERROR": "Não consegui carregar agora.",
     "RETRY": "Tentar de novo",
+    "NIVEL": {
+      "consulta": "Consulta",
+      "sugestao": "Prepara sugestão",
+      "rascunho": "Rascunho pro cliente",
+      "interna": "Escrita interna"
+    },
     "EXECUCOES": {
       "TITLE": "Execuções",
       "SUBTITLE": "Tudo que o agente executou: qual tool, com quais dados e o que voltou.",

@@ -9,6 +9,8 @@ class Api::V1::Accounts::CaptainToolRunsController < Api::V1::Accounts::BaseCont
   def index
     @tool_runs = escopo.recentes.limit(LIST_LIMIT)
     @resumo = resumo
+    # nome e nivel de cada ferramenta pra tela: o endpoint de ferramentas e so admin
+    @catalogo = Captain::Assistant.built_in_agent_tools
   end
 
   private

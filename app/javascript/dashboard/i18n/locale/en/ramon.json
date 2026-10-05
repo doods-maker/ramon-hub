@@ -1601,6 +1601,12 @@
     "LOADING": "Loading...",
     "LOAD_ERROR": "Could not load right now.",
     "RETRY": "Try again",
+    "NIVEL": {
+      "consulta": "Lookup",
+      "sugestao": "Prepares a suggestion",
+      "rascunho": "Client draft",
+      "interna": "Internal write"
+    },
     "EXECUCOES": {
       "TITLE": "Executions",
       "SUBTITLE": "Everything the agent ran: which tool, with which data, and what came back.",

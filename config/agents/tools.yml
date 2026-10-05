@@ -1,216 +1,264 @@
 ######  Captain Agent Tools Configuration #######
 # id: Tool identifier used to resolve the class (Captain::Tools::{PascalCase(id)}Tool)
-# title: Human-readable tool name for frontend display
-# description: Brief description of what the tool does
+# title: nome em português mostrado na tela (Skills, Execuções)
+# description: texto curto mostrado na tela
 # icon: Icon name for frontend display (frontend icon system)
+# nivel: o que a ferramenta faz no mundo — define a cor na tela:
+#   consulta (azul)  = só lê
+#   interna  (cinza) = escreve no hub, só a equipe vê (nota, etiqueta, tarefa, qualificação)
+#   sugestao (âmbar) = cria Sugestão pendente que o humano aprova
+#                      (classes RamonEscritaTool e AdvboxMcpEscritaTool — o spec confere)
+#   rascunho (verde) = devolve texto pronto pro cliente; quem envia é o humano
 #######################################################
 
 - id: add_contact_note
-  title: 'Add Contact Note'
-  description: 'Add a note to a contact profile'
+  title: 'Nota no contato'
+  description: 'Adiciona uma nota no perfil do contato'
   icon: 'note-add'
+  nivel: interna
 
 - id: add_private_note
-  title: 'Add Private Note'
-  description: 'Add a private note to a conversation (internal only)'
+  title: 'Nota interna na conversa'
+  description: 'Adiciona uma nota privada na conversa (só a equipe vê)'
   icon: 'eye-off'
+  nivel: interna
 
 - id: update_priority
-  title: 'Update Priority'
-  description: 'Update conversation priority level'
+  title: 'Mudar prioridade'
+  description: 'Muda a prioridade da conversa'
   icon: 'exclamation-triangle'
+  nivel: interna
 
 - id: add_label_to_conversation
-  title: 'Add Label to Conversation'
-  description: 'Add a label to a conversation'
+  title: 'Etiquetar conversa'
+  description: 'Adiciona uma etiqueta na conversa'
   icon: 'tag'
+  nivel: interna
 
 - id: faq_lookup
-  title: 'FAQ Lookup'
+  title: 'Buscar nas FAQs'
   description: 'Busca textual nas FAQs aprovadas'
   icon: 'search'
+  nivel: consulta
 
 - id: handoff
-  title: 'Handoff to Human'
-  description: 'Hand off the conversation to a human agent'
+  title: 'Passar para um humano'
+  description: 'Transfere a conversa para uma pessoa da equipe'
   icon: 'user-switch'
+  nivel: interna
 
 - id: buscar_processo_advbox
   title: 'Buscar processo no AdvBox'
   description: 'Busca processos no AdvBox por nome do cliente ou CPF'
   icon: 'search'
+  nivel: consulta
 
 - id: consultar_dossie_advbox
-  title: 'Consultar dossie no AdvBox'
-  description: 'Dossie completo de um processo do AdvBox numa chamada so'
+  title: 'Consultar dossiê no AdvBox'
+  description: 'Dossiê completo de um processo do AdvBox numa chamada só'
   icon: 'document'
+  nivel: consulta
 
 - id: calcular_beneficio
-  title: 'Calcular beneficio no motor'
-  description: 'Calcula renda mensal e atrasados estimados do caso no motor de calculos'
+  title: 'Calcular benefício no motor'
+  description: 'Calcula renda mensal e atrasados estimados do caso no motor de cálculos'
   icon: 'calculator'
+  nivel: consulta
 
 - id: checar_prescricao
-  title: 'Checar prescricao'
-  description: 'Prescricao quinquenal do caso: parcelas ja perdidas e meses ate o corte'
+  title: 'Checar prescrição'
+  description: 'Prescrição quinquenal do caso: parcelas já perdidas e meses até o corte'
   icon: 'clock'
+  nivel: consulta
 
 - id: linha_da_vida
   title: 'Linha da vida da pessoa'
-  description: 'Todos os casos da pessoa no hub e os marcos etarios que ainda vencem'
+  description: 'Todos os casos da pessoa no hub e os marcos etários que ainda vencem'
   icon: 'timeline'
+  nivel: consulta
 
 - id: documentacao_faltante
   title: 'O que falta no caso'
   description: 'Documentos pendentes, lacunas da colheita e tarefas em aberto do caso'
   icon: 'clipboard'
+  nivel: consulta
 
 - id: preparar_contrato_zapsign
   title: 'Preparar contrato no ZapSign'
-  description: 'Sugere gerar contrato + procuracao no ZapSign (o humano aprova antes)'
+  description: 'Sugere gerar contrato + procuração no ZapSign (o humano aprova antes)'
   icon: 'signature'
+  nivel: sugestao
 
 - id: preparar_caso_advbox
   title: 'Abrir caso no AdvBox'
   description: 'Sugere abrir cliente, caso e primeira tarefa no AdvBox (o humano aprova antes)'
   icon: 'briefcase'
+  nivel: sugestao
 
 - id: agendar_reuniao
-  title: 'Agendar reuniao'
-  description: 'Sugere data da reuniao de fechamento; aprovada, vira tarefa na Esteira'
+  title: 'Agendar reunião'
+  description: 'Sugere data da reunião de fechamento; aprovada, vira tarefa na Esteira'
   icon: 'calendar'
+  nivel: sugestao
 
 - id: mover_etapa
   title: 'Mover de etapa'
   description: 'Sugere mover o caso para outra etapa do funil (o humano aprova antes)'
   icon: 'columns'
+  nivel: sugestao
 
 - id: playbook_da_tese
   title: 'Playbook da tese'
-  description: 'Criterios, objecoes, apresentacao, documentos e honorario de uma tese'
+  description: 'Critérios, objeções, apresentação, documentos e honorário de uma tese'
   icon: 'clipboard'
+  nivel: consulta
 
 - id: simular_honorario
-  title: 'Simular honorario'
-  description: 'Honorario estimado pela regra da tese sobre atrasados e mensal'
+  title: 'Simular honorário'
+  description: 'Honorário estimado pela regra da tese sobre atrasados e mensal'
   icon: 'calculator'
+  nivel: consulta
 
 - id: historico_do_contato
-  title: 'Historico do contato'
+  title: 'Histórico do contato'
   description: 'Casos, conversas e notas anteriores da pessoa no hub'
   icon: 'timeline'
+  nivel: consulta
 
 - id: triagem_da_lp
   title: 'Triagem da LP'
   description: 'Quiz que o lead respondeu na landing page antes de chamar: veredito, respostas e dúvidas'
   icon: 'clipboard'
+  nivel: consulta
 
 - id: link_agendamento
   title: 'Link de agendamento'
-  description: 'Link para o lead escolher dia e horario da conversa'
+  description: 'Link para o lead escolher dia e horário da conversa'
   icon: 'calendar'
+  nivel: consulta
 
 - id: agenda_do_escritorio
-  title: 'Agenda do dia'
-  description: 'Reunioes, tarefas do hub (do dia e atrasadas) e prazos do AdvBox no dia'
+  title: 'Agenda do escritório'
+  description: 'Reuniões, tarefas do hub (do dia e atrasadas) e prazos do AdvBox no dia'
   icon: 'calendar'
+  nivel: consulta
 
 - id: funil_hoje
   title: 'Funil de hoje'
-  description: 'Meta do dia, conversao por etapa com gargalo, SLA e perdas por tese'
+  description: 'Meta do dia, conversão por etapa com gargalo, SLA e perdas por tese'
   icon: 'columns'
+  nivel: consulta
 
 - id: publicacoes_advbox
-  title: 'Publicacoes do processo no AdvBox'
-  description: 'Ultimas publicacoes de um processo do AdvBox (data e trecho)'
+  title: 'Publicações do processo no AdvBox'
+  description: 'Últimas publicações de um processo do AdvBox (data e trecho)'
   icon: 'document'
+  nivel: consulta
 
 - id: registrar_qualificacao
   title: 'Registrar qualificação'
   description: 'Marca no caso se um critério de qualificação da tese foi confirmado ou não atendido'
   icon: 'checkmark-circle'
+  nivel: interna
 
 - id: criar_tarefa_esteira
   title: 'Criar tarefa de cadência'
   description: 'Cria um lembrete interno na Esteira do caso (cobrar, retomar, ligar) com data e hora'
   icon: 'calendar-clock'
+  nivel: interna
 
 - id: solicitar_documento
   title: 'Pedir documentos'
   description: 'Texto pronto pedindo ao cliente os documentos pendentes do caso'
   icon: 'document-add'
+  nivel: rascunho
 
 - id: enviar_link_portal
   title: 'Link do portal do cliente'
   description: 'Link seguro para o cliente enviar documentos pelo celular, com frase pronta'
   icon: 'link'
+  nivel: rascunho
 
 - id: marcar_perdido
   title: 'Marcar como perdido'
   description: 'Sugere marcar o caso como perdido com o motivo — o humano aprova no Cockpit'
   icon: 'dismiss-circle'
+  nivel: sugestao
 
 - id: processo_advbox
   title: 'Dados do processo no AdvBox'
-  description: 'Etapa, responsavel, clientes e honorarios de um processo, sem o dossie inteiro'
+  description: 'Etapa, responsável, clientes e honorários de um processo, sem o dossiê inteiro'
   icon: 'document'
+  nivel: consulta
 
 - id: movimentacoes_advbox
-  title: 'Movimentacoes do processo no AdvBox'
+  title: 'Movimentações do processo no AdvBox'
   description: 'Andamentos de um processo, mais recentes primeiro'
   icon: 'timeline'
+  nivel: consulta
 
 - id: historico_tarefas_advbox
-  title: 'Historico de tarefas no AdvBox'
-  description: 'Tarefas ja realizadas num processo'
+  title: 'Histórico de tarefas no AdvBox'
+  description: 'Tarefas já realizadas num processo'
   icon: 'clipboard'
+  nivel: consulta
 
 - id: ultimas_movimentacoes_advbox
-  title: 'Radar de movimentacoes no AdvBox'
-  description: 'Ultima movimentacao de cada processo do escritorio'
+  title: 'Radar de movimentações no AdvBox'
+  description: 'Última movimentação de cada processo do escritório'
   icon: 'timeline'
+  nivel: consulta
 
 - id: tarefas_advbox
   title: 'Tarefas e prazos no AdvBox'
-  description: 'Tarefas do escritorio por periodo, responsavel ou processo'
+  description: 'Tarefas do escritório por período, responsável ou processo'
   icon: 'calendar'
+  nivel: consulta
 
 - id: buscar_cliente_advbox
   title: 'Buscar cliente no AdvBox'
   description: 'Contatos/clientes por nome, CPF, telefone ou cidade'
   icon: 'search'
+  nivel: consulta
 
 - id: cliente_advbox
   title: 'Ficha do cliente no AdvBox'
   description: 'Ficha completa de um cliente pelo id do AdvBox'
   icon: 'document'
+  nivel: consulta
 
 - id: documentos_advbox
   title: 'Documentos no AdvBox'
-  description: 'Arquivos anexados, por nome, cliente, tarefa ou transacao'
+  description: 'Arquivos anexados, por nome, cliente, tarefa ou transação'
   icon: 'document'
+  nivel: consulta
 
 - id: link_documento_advbox
   title: 'Link de documento do AdvBox'
-  description: 'Link temporario de download de um documento'
+  description: 'Link temporário de download de um documento'
   icon: 'link'
+  nivel: consulta
 
 - id: configuracoes_advbox
-  title: 'Configuracoes do AdvBox'
-  description: 'IDs de usuarios, tipos de tarefa, origens e etapas — base para escrever no AdvBox'
+  title: 'Configurações do AdvBox'
+  description: 'IDs de usuários, tipos de tarefa, origens e etapas — base para escrever no AdvBox'
   icon: 'settings'
+  nivel: consulta
 
 - id: criar_tarefa_advbox
   title: 'Criar tarefa no AdvBox'
-  description: 'Cria tarefa num processo do AdvBox — previa + codigo, grava so depois do ok do humano'
+  description: 'Cria tarefa num processo do AdvBox — prévia + código, grava só depois do ok do humano'
   icon: 'calendar-clock'
+  nivel: sugestao
 
 - id: criar_movimentacao_advbox
-  title: 'Registrar movimentacao no AdvBox'
-  description: 'Andamento manual num processo — previa + codigo, grava so depois do ok do humano'
+  title: 'Registrar movimentação no AdvBox'
+  description: 'Andamento manual num processo — prévia + código, grava só depois do ok do humano'
   icon: 'timeline'
+  nivel: sugestao
 
 - id: criar_cliente_advbox
   title: 'Criar cliente no AdvBox'
-  description: 'Contato/cliente novo no AdvBox — previa + codigo, grava so depois do ok do humano'
+  description: 'Contato/cliente novo no AdvBox — prévia + código, grava só depois do ok do humano'
   icon: 'person-add'
+  nivel: sugestao

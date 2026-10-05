@@ -103,4 +103,29 @@ RSpec.describe Concerns::CaptainToolsHelpers, type: :concern do
       expect(result).to eq(%w[add_contact_note update_priority add_private_note])
     end
   end
+
+  describe 'nivel das ferramentas (config/agents/tools.yml)' do
+    let(:ferramentas) { Captain::Assistant.built_in_agent_tools }
+
+    def ids_do_nivel(nivel)
+      ferramentas.select { |tool| tool[:nivel] == nivel }.pluck(:id)
+    end
+
+    it 'toda ferramenta tem um dos quatro niveis' do
+      expect(ferramentas.pluck(:nivel).uniq).to match_array(%w[consulta interna sugestao rascunho])
+    end
+
+    it 'sugestao = exatamente as ferramentas que herdam das bases de escrita com aprovacao' do
+      herdeiras = ferramentas.pluck(:id).select do |id|
+        klass = Captain::Assistant.resolve_tool_class(id)
+        klass < Captain::Tools::RamonEscritaTool || klass < Captain::Tools::AdvboxMcpEscritaTool
+      end
+
+      expect(ids_do_nivel('sugestao')).to match_array(herdeiras)
+    end
+
+    it 'rascunho pro cliente = pedir documentos e link do portal' do
+      expect(ids_do_nivel('rascunho')).to match_array(%w[solicitar_documento enviar_link_portal])
+    end
+  end
 end
