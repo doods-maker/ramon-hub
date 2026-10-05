@@ -747,12 +747,44 @@ RSpec.describe 'Leads API', type: :request do
   end
 
   describe 'POST /api/v1/accounts/:account_id/leads/:id/follow_up_draft' do
+    let(:conversation) { create(:conversation, account: account) }
+    let(:lead) { create(:lead, account: account, lead_stage: novo, conversation_id: conversation.id) }
+
+    def post_draft(target = lead)
+      post "/api/v1/accounts/#{account.id}/leads/#{target.id}/follow_up_draft",
+           headers: admin.create_new_auth_token, as: :json
+    end
+
     it 'enfileira o job de retomada e devolve 202' do
-      lead = create(:lead, account: account, lead_stage: novo)
-      expect do
-        post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/follow_up_draft",
-             headers: admin.create_new_auth_token, as: :json
-      end.to have_enqueued_job(Ramon::FollowUpDraftJob).with(lead.id)
+      expect { post_draft }.to have_enqueued_job(Ramon::FollowUpDraftJob).with(lead.id)
+      expect(response).to have_http_status(:accepted)
+    end
+
+    it 'lead sem conversa → 422 no_conversation, sem enfileirar' do
+      sem_conversa = create(:lead, account: account, lead_stage: novo)
+      expect { post_draft(sem_conversa) }.not_to have_enqueued_job(Ramon::FollowUpDraftJob)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'FOLLOW_UP_NOT_ELIGIBLE', 'reason' => 'no_conversation')
+    end
+
+    it 'tarefa follow_up aberta → 422 open_follow_up, sem enfileirar' do
+      lead.lead_tasks.create!(account: account, kind: 'follow_up', title: 'Ligar', due_at: 1.day.from_now)
+      expect { post_draft }.not_to have_enqueued_job(Ramon::FollowUpDraftJob)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['reason']).to eq('open_follow_up')
+    end
+
+    it 'retomada há menos de 5 dias → 422 recent_follow_up com data e dias' do
+      lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 1, 'ultima_em' => 2.days.ago.iso8601 } })
+      expect { post_draft }.not_to have_enqueued_job(Ramon::FollowUpDraftJob)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('reason' => 'recent_follow_up', 'days_ago' => 2, 'min_gap_days' => 5)
+      expect(response.parsed_body['last_at']).to be_present
+    end
+
+    it 'retomada há mais de 5 dias → 202' do
+      lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 1, 'ultima_em' => 6.days.ago.iso8601 } })
+      expect { post_draft }.to have_enqueued_job(Ramon::FollowUpDraftJob).with(lead.id)
       expect(response).to have_http_status(:accepted)
     end
 
