@@ -479,6 +479,7 @@ const semResize = () => {
 const colunas = () => estado();
 const raias = () => estado({ view: 'lanes' });
 const raiasSdr = () => estado({ view: 'lanes', groupBy: 'sdr' });
+const raiasCloser = () => estado({ view: 'lanes', groupBy: 'closer' });
 const lista = () => {
   estado({ view: 'list' });
   store.dispatch('leads/selectMany', [4, 6]);
@@ -540,6 +541,11 @@ const naoAdmin = () => {
       </div>
     </Variant>
     <Variant title="Raias por SDR" :init-state="raiasSdr">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
+    <Variant title="Raias por Closer" :init-state="raiasCloser">
       <div class="h-screen flex flex-col bg-n-background">
         <KanbanBoard />
       </div>

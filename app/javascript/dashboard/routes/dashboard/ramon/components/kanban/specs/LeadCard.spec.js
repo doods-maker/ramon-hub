@@ -36,6 +36,30 @@ describe('LeadCard.vue', () => {
     expect(value.classes()).not.toContain('text-n-blue-11');
   });
 
+  it('mostra SDR e Closer em siglas separadas, cada uma com o papel no title', () => {
+    const wrapper = mountCard({
+      lead: {
+        ...lead,
+        sdr_name: 'Gabriela Matos',
+        closer_name: 'Ramon Antonio',
+      },
+    });
+    const sdr = wrapper.find('[data-testid="owner-sdr"]');
+    const closer = wrapper.find('[data-testid="owner-closer"]');
+    expect(sdr.text()).toBe('GM');
+    expect(sdr.attributes('title')).toBe('SDR: Gabriela Matos');
+    expect(closer.text()).toBe('RA');
+    expect(closer.attributes('title')).toBe('Closer: Ramon Antonio');
+  });
+
+  it('só mostra a sigla dos papéis preenchidos', () => {
+    const wrapper = mountCard({
+      lead: { ...lead, sdr_name: 'Gabriela Matos', closer_name: null },
+    });
+    expect(wrapper.find('[data-testid="owner-sdr"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="owner-closer"]').exists()).toBe(false);
+  });
+
   it('emite open-lead ao clicar no corpo', async () => {
     const wrapper = mountCard();
     await wrapper.find('[data-testid="lead-card-body"]').trigger('click');

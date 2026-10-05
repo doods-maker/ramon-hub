@@ -370,7 +370,9 @@
         "AGE": "{days}d",
         "NO_NEXT_ACTION": "Sem próxima ação agendada",
         "NEXT_NONE": "sem próxima ação",
-        "NEXT_MEETING": "Reunião {when}"
+        "NEXT_MEETING": "Reunião {when}",
+        "OWNER_SDR": "SDR: {name}",
+        "OWNER_CLOSER": "Closer: {name}"
       },
       "BELL": {
         "TITLE": "Agendar follow-up",
@@ -404,7 +406,8 @@
         "GROUP_BY": "agrupar por",
         "GROUP": {
           "THESIS": "tese",
-          "SDR": "dono",
+          "SDR": "SDR",
+          "CLOSER": "Closer",
           "CHANNEL": "canal",
           "PRIORITY": "prioridade"
         }
@@ -418,6 +421,7 @@
         "VALUE": "Valor",
         "NEXT": "Próxima ação",
         "SDR": "SDR",
+        "CLOSER": "Closer",
         "THESIS": "Tese",
         "PHONE": "Telefone",
         "EMPTY": "Nenhum lead no filtro atual."

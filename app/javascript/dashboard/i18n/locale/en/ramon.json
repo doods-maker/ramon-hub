@@ -370,7 +370,9 @@
         "AGE": "{days}d",
         "NO_NEXT_ACTION": "No next action scheduled",
         "NEXT_NONE": "no next action",
-        "NEXT_MEETING": "Meeting {when}"
+        "NEXT_MEETING": "Meeting {when}",
+        "OWNER_SDR": "SDR: {name}",
+        "OWNER_CLOSER": "Closer: {name}"
       },
       "BELL": {
         "TITLE": "Schedule follow-up",
@@ -404,7 +406,8 @@
         "GROUP_BY": "group by",
         "GROUP": {
           "THESIS": "thesis",
-          "SDR": "owner",
+          "SDR": "SDR",
+          "CLOSER": "Closer",
           "CHANNEL": "channel",
           "PRIORITY": "priority"
         }
@@ -418,6 +421,7 @@
         "VALUE": "Value",
         "NEXT": "Next action",
         "SDR": "SDR",
+        "CLOSER": "Closer",
         "THESIS": "Thesis",
         "PHONE": "Phone",
         "EMPTY": "No leads in the current filter."

@@ -269,7 +269,8 @@ const readViewState = () => {
 };
 const savedViewState = readViewState();
 const VIEW_MODES = ['columns', 'lanes', 'list'];
-const GROUP_BYS = ['thesis', 'sdr', 'channel', 'priority'];
+// 'sdr' era o antigo "dono" — quadros/views salvos com ele seguem valendo.
+const GROUP_BYS = ['thesis', 'sdr', 'closer', 'channel', 'priority'];
 const viewMode = ref(
   VIEW_MODES.includes(savedViewState.view) ? savedViewState.view : 'columns'
 );
@@ -502,7 +503,7 @@ const exportCsv = () => {
           $t('RAMON.KANBAN.VIEW.GROUP_BY')
         }}</span>
         <button
-          v-for="group in ['thesis', 'sdr', 'channel', 'priority']"
+          v-for="group in GROUP_BYS"
           :key="group"
           :data-testid="`lanes-group-${group}`"
           class="rounded-md px-1.5 py-1 text-xs"
