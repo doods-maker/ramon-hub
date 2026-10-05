@@ -39,11 +39,11 @@ describe('leads selection (lote)', () => {
     const commit = vi.fn();
     await actions.bulkAction(
       { commit, state: { selectedIds: [4, 5] } },
-      { fields: { lead_stage_id: 9 }, triage: true }
+      { fields: { lead_stage_id: 9 } }
     );
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringContaining('bulk_actions'),
-      { type: 'Lead', ids: [4, 5], fields: { lead_stage_id: 9 }, triage: true }
+      { type: 'Lead', ids: [4, 5], fields: { lead_stage_id: 9 } }
     );
     expect(commit).toHaveBeenCalledWith(types.SET_LEAD_SELECTION, []);
   });

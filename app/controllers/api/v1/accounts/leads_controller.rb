@@ -158,7 +158,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   def apply_period_filters(leads)
     leads = leads.where(created_at: Date.parse(params[:created_after]).beginning_of_day..) if params[:created_after].present?
     leads = leads.where(created_at: ..Date.parse(params[:created_before]).end_of_day) if params[:created_before].present?
-    leads
+    Ramon::LeadRadar.closed_window(Current.account, leads, params)
   end
 
   def apply_cadence_filters(leads)

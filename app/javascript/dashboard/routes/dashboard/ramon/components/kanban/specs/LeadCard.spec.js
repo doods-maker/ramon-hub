@@ -36,6 +36,30 @@ describe('LeadCard.vue', () => {
     expect(value.classes()).not.toContain('text-n-blue-11');
   });
 
+  it('mostra SDR e Closer em siglas separadas, cada uma com o papel no title', () => {
+    const wrapper = mountCard({
+      lead: {
+        ...lead,
+        sdr_name: 'Gabriela Matos',
+        closer_name: 'Ramon Antonio',
+      },
+    });
+    const sdr = wrapper.find('[data-testid="owner-sdr"]');
+    const closer = wrapper.find('[data-testid="owner-closer"]');
+    expect(sdr.text()).toBe('GM');
+    expect(sdr.attributes('title')).toBe('SDR: Gabriela Matos');
+    expect(closer.text()).toBe('RA');
+    expect(closer.attributes('title')).toBe('Closer: Ramon Antonio');
+  });
+
+  it('só mostra a sigla dos papéis preenchidos', () => {
+    const wrapper = mountCard({
+      lead: { ...lead, sdr_name: 'Gabriela Matos', closer_name: null },
+    });
+    expect(wrapper.find('[data-testid="owner-sdr"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="owner-closer"]').exists()).toBe(false);
+  });
+
   it('emite open-lead ao clicar no corpo', async () => {
     const wrapper = mountCard();
     await wrapper.find('[data-testid="lead-card-body"]').trigger('click');
@@ -293,15 +317,6 @@ describe('LeadCard.vue', () => {
     });
   });
 
-  it('shows the awaiting-human triage badge when the latest triage awaits a human', () => {
-    const wrapper = mountCard({
-      lead: { ...lead, latest_triage: { id: 1, status: 'awaiting_human' } },
-    });
-    const badge = wrapper.find('[data-testid="triage-awaiting-human-badge"]');
-    expect(badge.exists()).toBe(true);
-    expect(badge.text()).toContain('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN');
-  });
-
   it('shows the follow-up badge with count when follow_up_count > 0', () => {
     const wrapper = mountCard({
       lead: {
@@ -322,17 +337,5 @@ describe('LeadCard.vue', () => {
     expect(wrapper.find('[data-testid="follow-up-badge"]').exists()).toBe(
       false
     );
-  });
-
-  it('hides the awaiting-human badge for done triages', () => {
-    const wrapper = mountCard({
-      lead: {
-        ...lead,
-        latest_triage: { id: 1, status: 'done', viability: 'alta' },
-      },
-    });
-    expect(
-      wrapper.find('[data-testid="triage-awaiting-human-badge"]').exists()
-    ).toBe(false);
   });
 });

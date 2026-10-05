@@ -41,6 +41,8 @@ const leads = [
     thesis_name: 'B31',
     sdr_id: 4,
     sdr_name: 'Ramon',
+    closer_id: 7,
+    closer_name: 'Gabi',
     channel: 'whatsapp',
     value: 50,
   },
@@ -98,7 +100,15 @@ describe('SwimlaneBoard', () => {
     expect(cells[1].text()).toContain('Bia');
   });
 
-  it('agrupar por dono (sdr) refaz as raias', async () => {
+  it('agrupar por Closer refaz as raias (sem Closer = Sem grupo, por último)', () => {
+    const wrapper = mountBoard({ groupBy: 'closer' });
+    const names = wrapper
+      .findAll('[data-testid="swimlane-name"]')
+      .map(n => n.text());
+    expect(names).toEqual(['Gabi', 'RAMON.KANBAN.LANES.NO_GROUP']);
+  });
+
+  it('agrupar por SDR refaz as raias', async () => {
     const wrapper = mountBoard({ groupBy: 'sdr' });
     const names = wrapper
       .findAll('[data-testid="swimlane-name"]')

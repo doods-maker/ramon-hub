@@ -25,6 +25,8 @@ const toParams = (filters = {}) => {
     task_due_today: filters.taskDueToday || undefined,
     won_since: filters.wonSince,
     new_from_lp: filters.newFromLp || undefined,
+    // ganhos/perdidos de todas as datas (padrão do server: últimos 90 dias)
+    closed_all: filters.closedAll || undefined,
   };
   return Object.fromEntries(
     Object.entries(map).filter(
@@ -51,6 +53,7 @@ export const EMPTY_FILTERS = {
   taskDueToday: false,
   wonSince: null,
   newFromLp: false,
+  closedAll: false,
 };
 
 export const state = {
@@ -187,16 +190,12 @@ export const actions = {
   },
   // Enfileira o lote no backend (Ramon::LeadBulkActionJob). O board se atualiza
   // pelos broadcasts lead.updated de cada item — sem refetch aqui.
-  bulkAction: async (
-    { commit, state: moduleState },
-    { fields, task, triage } = {}
-  ) => {
+  bulkAction: async ({ commit, state: moduleState }, { fields, task } = {}) => {
     await BulkActionsAPI.create({
       type: 'Lead',
       ids: moduleState.selectedIds,
       ...(fields ? { fields } : {}),
       ...(task ? { task } : {}),
-      ...(triage ? { triage: true } : {}),
     });
     commit(types.SET_LEAD_SELECTION, []);
   },

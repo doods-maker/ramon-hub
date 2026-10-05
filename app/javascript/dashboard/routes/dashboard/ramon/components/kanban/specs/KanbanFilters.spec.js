@@ -40,4 +40,15 @@ describe('KanbanFilters', () => {
     await wrapper.find('[data-testid="filter-benefit"]').setValue('1');
     expect(wrapper.emitted().update[0][0]).toEqual({ benefitTypeId: '1' });
   });
+
+  it('alterna ganhos/perdidos entre 90 dias e todos', async () => {
+    const wrapper = mountFilters();
+    const select = wrapper.find('[data-testid="filter-closed-all"]');
+    await select.setValue('all');
+    await select.setValue('');
+    expect(wrapper.emitted().update.map(([partial]) => partial)).toEqual([
+      { closedAll: true },
+      { closedAll: false },
+    ]);
+  });
 });

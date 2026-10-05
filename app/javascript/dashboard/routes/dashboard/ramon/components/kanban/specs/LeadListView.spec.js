@@ -17,6 +17,7 @@ const leads = [
     lead_stage_id: 1,
     value: 100,
     sdr_name: 'Edu',
+    closer_name: 'Ramon',
     thesis_name: 'B31',
     contact_phone: '+554899',
   },
@@ -76,6 +77,32 @@ describe('LeadListView', () => {
     // primeira linha = Ana (id 11), selecionada
     expect(checks[0].classes()).toContain('bg-n-brand');
     expect(checks[1].classes()).not.toContain('bg-n-brand');
+  });
+
+  it('mostra SDR e Closer em colunas próprias', () => {
+    const wrapper = mountList();
+    const bia = wrapper.findAll('[data-testid="list-row"]')[1];
+    expect(bia.text()).toContain('Edu');
+    expect(bia.text()).toContain('Ramon');
+    expect(wrapper.find('[data-testid="list-sort-closer"]').exists()).toBe(
+      true
+    );
+  });
+
+  it('reunião marcada sai com data e hora, como no card', () => {
+    const wrapper = mountList({
+      leads: [
+        {
+          ...leads[0],
+          next_task_due_at: new Date(Date.now() + 2 * 86400000).toISOString(),
+          next_task_title: 'Reunião',
+          next_task_kind: 'meeting',
+        },
+      ],
+    });
+    expect(wrapper.find('[data-testid="list-row"]').text()).toContain(
+      'RAMON.KANBAN.CARD.NEXT_MEETING'
+    );
   });
 
   it('mostra o vazio quando não há leads', () => {

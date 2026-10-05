@@ -188,7 +188,6 @@
         "TASK_TODAY": "tarefa de hoje: {title}",
         "NEW_FROM_LP": "lead novo da LP ({source}) sem resposta",
         "SLA_BREACH": "sem 1ª resposta — SLA de {minutes}min estourado",
-        "AWAITING_HUMAN": "triagem aguardando humano",
         "STALLED": "{days} dias parado na etapa"
       },
       "OPEN_CONVERSATION": "Abrir conversa",
@@ -318,6 +317,8 @@
         "TASK_DUE_TODAY": "Com tarefa para hoje",
         "WON_SINCE": "Ganhos desde",
         "NEW_FROM_LP": "Novos da LP sem resposta",
+        "CLOSED_RECENT": "Ganhos/perdidos: 90 dias",
+        "CLOSED_ALL": "Ganhos/perdidos: todos",
         "CLEAR": "Limpar",
         "TOGGLE": "Filtros"
       },
@@ -329,7 +330,7 @@
       },
       "CHIPS": {
         "REMOVE": "Remover filtro",
-        "SUMMARY": "{count} leads · {total} · previsão",
+        "SUMMARY": "{count} em aberto · {total} · previsão",
         "FORECAST": "{forecast}"
       },
       "BOARDS": {
@@ -364,11 +365,12 @@
         "PRESCRIPTION_BLEEDING": "prescrevendo {value}/mês",
         "PRESCRIPTION_LOST": "{count} parcelas já prescritas",
         "PRESCRIPTION_SOON": "prescreve em {months} mês | prescreve em {months} meses",
-        "TRIAGE_AWAITING_HUMAN": "Triagem: aguardando humano",
         "AGE": "{days}d",
         "NO_NEXT_ACTION": "Sem próxima ação agendada",
         "NEXT_NONE": "sem próxima ação",
-        "NEXT_MEETING": "Reunião {when}"
+        "NEXT_MEETING": "Reunião {when}",
+        "OWNER_SDR": "SDR: {name}",
+        "OWNER_CLOSER": "Closer: {name}"
       },
       "BELL": {
         "TITLE": "Agendar follow-up",
@@ -402,7 +404,8 @@
         "GROUP_BY": "agrupar por",
         "GROUP": {
           "THESIS": "tese",
-          "SDR": "dono",
+          "SDR": "SDR",
+          "CLOSER": "Closer",
           "CHANNEL": "canal",
           "PRIORITY": "prioridade"
         }
@@ -416,6 +419,7 @@
         "VALUE": "Valor",
         "NEXT": "Próxima ação",
         "SDR": "SDR",
+        "CLOSER": "Closer",
         "THESIS": "Tese",
         "PHONE": "Telefone",
         "EMPTY": "Nenhum lead no filtro atual."
@@ -426,7 +430,6 @@
         "ASSIGN": "Atribuir SDR ▾",
         "FOLLOW_UP": "Agendar follow-up",
         "FOLLOW_UP_CONFIRM": "Agendar",
-        "TRIAGE": "Rodar triagem IA",
         "CLEAR": "Limpar",
         "ESC_HINT": "Esc cancela",
         "QUEUED": "Lote na fila — os cards atualizam em instantes",
@@ -715,7 +718,6 @@
       "REFERRAL": "Veio por indicação",
       "TRIAGE": "O que a triagem detectou",
       "TRIAGE_EMPTY": "Nenhuma triagem feita ainda.",
-      "TRIAGE_AWAITING_HUMAN": "Aguardando revisão humana",
       "THESIS": "Tese e argumentos",
       "THESIS_EMPTY": "Nenhuma tese definida para este caso.",
       "FEE": "Honorário",
@@ -875,23 +877,6 @@
       "COPIED": "Link do portal copiado",
       "ERROR": "Não foi possível gerar o link do portal — tente de novo"
     },
-    "COLHEITA": {
-      "TITLE": "O que falta perguntar",
-      "COUNT": "{done}/{total} colhidos",
-      "EXTRACT": "Extrair da conversa",
-      "EXTRACT_REQUESTED": "Extração pedida — a colheita atualiza em alguns segundos",
-      "LACUNAS_TITLE": "Lacunas da reunião (IA)",
-      "EXTRACTED_AT": "Extraído da conversa em {date}",
-      "AI_BADGE": "✨ IA",
-      "AI_BADGE_TIP": "Marcado pela IA a partir da conversa — clique para desfazer",
-      "CHARGE": "Pedir documentos das lacunas",
-      "COPIED": "Rascunho copiado — revise e cole no WhatsApp",
-      "DRAFT": {
-        "GREETING": "Olá {name}, tudo bem? Da nossa conversa, ficaram só alguns documentos pra completar o seu caso:",
-        "ITEM": "• {item}",
-        "CLOSING": "Assim que conseguir, me manda por aqui mesmo que a gente já dá andamento. Qualquer dúvida, me chama!"
-      }
-    },
     "DOCS": {
       "TITLE": "Documentos",
       "CARD_TITLE": "Documentos: {received} de {total} recebidos",
@@ -967,52 +952,13 @@
       "USADO": "Resposta inserida no editor — revise antes de enviar."
     },
     "TRIAGE": {
-      "TAB": "Triagem",
-      "RUN": "Rodar triagem",
-      "RUNNING": "Analisando…",
-      "RERUN": "Rodar de novo",
-      "EMPTY": "Nenhuma triagem ainda. Rode a análise de viabilidade com IA.",
-      "ERROR": "A triagem falhou",
-      "AGENT_LABEL": "Agente",
       "VIABILITY": {
         "LABEL": "Viabilidade",
         "ALTA": "Alta",
         "MEDIA": "Média",
         "BAIXA": "Baixa",
         "UNKNOWN": "Não detectada"
-      },
-      "AWAITING_HUMAN": "Aguardando humano",
-      "AWAITING_HUMAN_HINT": "A IA não classificou com confiança — revise a conversa e defina a viabilidade você mesmo.",
-      "STARTED": "Triagem iniciada — o resultado aparece aqui em instantes",
-      "LOADING": "Carregando triagens…",
-      "LOAD_ERROR": "Não foi possível carregar as triagens.",
-      "REFRESH": "atualizar"
-    },
-    "KIT": {
-      "TAB": "Kit",
-      "GENERATE": "Gerar Kit do Closer",
-      "REGENERATE": "Gerar novamente",
-      "GENERATING": "Gerando kit…",
-      "STARTED": "Geração do kit iniciada",
-      "ERROR": "Falha ao gerar o kit",
-      "EMPTY": "Rode uma triagem primeiro — o kit nasce da análise dela.",
-      "NEED_DONE": "A triagem precisa terminar antes de gerar o kit.",
-      "CLOSED": "Lead encerrado — sem kit para esta etapa.",
-      "COPY_BLOCK": "Copiar",
-      "MODE_LABEL": "Modo",
-      "MODE": {
-        "SDR": "Qualificação (SDR)",
-        "CLOSER": "Fechamento (Closer)"
-      },
-      "BLOCKS": {
-        "RESUMO": "Resumo em linguagem simples",
-        "ROTEIRO": "Roteiro de perguntas",
-        "DOCUMENTOS": "Documentos a pedir",
-        "VENDA_OBJECOES": "Venda e objeções",
-        "PROXIMO_PASSO": "Próximo passo"
-      },
-      "LOADING": "Carregando kit…",
-      "REFRESH": "Atualizar"
+      }
     },
     "SIMULADOR": {
       "TAB": "Simulador",

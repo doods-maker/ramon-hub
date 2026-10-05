@@ -49,15 +49,14 @@ RSpec.describe Ramon::EsteiraBuilder do
     expect(items.first[:score]).to eq(100)
   end
 
-  it 'lists fresh landing-page leads and awaiting_human triages' do
+  it 'lists fresh landing-page leads, but not awaiting_human triages (triagem IA aposentada)' do
     lp_lead = create(:lead, account: account, lead_stage: active_stage, source: 'lp-auxilio-acidente')
     triaged = create(:lead, account: account, lead_stage: active_stage, name: 'Triado')
     triage = triaged.lead_triages.create!(account: account)
     triage.update_column(:status, 'awaiting_human') # rubocop:disable Rails/SkipsModelValidations
     items = build[:items]
-    expect(items.pluck(:lead_id)).to eq([lp_lead.id, triaged.id])
+    expect(items.pluck(:lead_id)).to eq([lp_lead.id])
     expect(items.first[:reasons].first[:key]).to eq('NEW_FROM_LP')
-    expect(items.last[:reasons].first[:key]).to eq('AWAITING_HUMAN')
   end
 
   describe 'SLA de 1º contato' do

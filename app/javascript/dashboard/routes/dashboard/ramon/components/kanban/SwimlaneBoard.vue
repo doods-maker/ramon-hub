@@ -1,5 +1,5 @@
 <script setup>
-// Raias por agrupamento (mock 2b): raia = grupo (tese/dono/canal/prioridade),
+// Raias por agrupamento (mock 2b): raia = grupo (tese/SDR/Closer/canal/prioridade),
 // coluna = etapa. Célula-resumo à esquerda (nome, "N · R$ X", alertas) e uma
 // mini-coluna de cards por etapa; drag entre etapas fica DENTRO da raia.
 import { computed } from 'vue';
@@ -34,6 +34,8 @@ const groupOf = lead => {
   switch (props.groupBy) {
     case 'sdr':
       return [lead.sdr_id ?? 'none', lead.sdr_name || none];
+    case 'closer':
+      return [lead.closer_id ?? 'none', lead.closer_name || none];
     case 'channel': {
       const channel = channels.value.find(c => c.key === lead.channel);
       return [lead.channel || 'none', channel?.label || lead.channel || none];

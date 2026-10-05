@@ -7,6 +7,7 @@ import { formatBrl, brlCompact } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
 import { slaApplies } from '../../helpers/stage';
+import { nextActionInfo } from '../../helpers/nextAction';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, CHIP, TOM, FILETE, BOTAO_COMPACTO } from '../../helpers/ui';
 import TaskBellMenu from './TaskBellMenu.vue';
@@ -70,19 +71,37 @@ const prescriptionLabel = computed(() => {
   return null;
 });
 
-const ownerName = computed(
-  () => props.lead.closer_name || props.lead.sdr_name || null
-);
-const ownerInitials = computed(() => {
-  if (!ownerName.value) return null;
-  return ownerName.value
+// SDR e Closer explícitos: uma sigla por papel preenchido, nome no title.
+const initials = name =>
+  name
     .trim()
     .split(/\s+/)
     .map(word => word[0])
     .slice(0, 2)
     .join('')
     .toUpperCase();
-});
+const owners = computed(() =>
+  [
+    {
+      role: 'sdr',
+      name: props.lead.sdr_name,
+      tone: TOM.slate,
+      title: name => t('RAMON.KANBAN.CARD.OWNER_SDR', { name }),
+    },
+    {
+      role: 'closer',
+      name: props.lead.closer_name,
+      tone: TOM.blue,
+      title: name => t('RAMON.KANBAN.CARD.OWNER_CLOSER', { name }),
+    },
+  ]
+    .filter(owner => owner.name)
+    .map(owner => ({
+      ...owner,
+      initials: initials(owner.name),
+      title: owner.title(owner.name),
+    }))
+);
 
 // Etapa do lead a partir do leadConfig (para stalled_after_days e won/lost).
 const stage = computed(() => {
@@ -195,55 +214,8 @@ const followUpTitle = computed(() => {
   });
 });
 
-// Próxima ação com dot semântico: vencida = ruby, hoje = âmbar, futura = teal.
-const nextAction = computed(() => {
-  const raw = props.lead.next_task_due_at;
-  if (!raw) return null;
-  const due = new Date(raw);
-  if (Number.isNaN(due.getTime())) return null;
-  const title = props.lead.next_task_title || '';
-  // Reunião marcada (Cal.com/agendar_reuniao): data e hora absolutas, não "em 3d".
-  if (props.lead.next_task_kind === 'meeting' && due.getTime() >= Date.now())
-    return {
-      dot: 'bg-n-blue-9',
-      text: 'text-n-blue-11 font-semibold',
-      label: t('RAMON.KANBAN.CARD.NEXT_MEETING', {
-        when: due.toLocaleString('pt-BR', {
-          weekday: 'short',
-          day: '2-digit',
-          month: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      }),
-    };
-  if (due.getTime() < Date.now())
-    return {
-      dot: 'bg-n-ruby-9',
-      text: 'text-n-ruby-11',
-      label: t('RAMON.KANBAN.CARD.NEXT_OVERDUE', { title }),
-    };
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const days = Math.floor((due.getTime() - startOfToday.getTime()) / 86400000);
-  if (days === 0)
-    return {
-      dot: 'bg-n-amber-9',
-      text: 'text-n-amber-11',
-      label: t('RAMON.KANBAN.CARD.NEXT_TODAY', { title }),
-    };
-  if (days === 1)
-    return {
-      dot: 'bg-n-teal-9',
-      text: 'text-n-teal-11',
-      label: t('RAMON.KANBAN.CARD.NEXT_TOMORROW', { title }),
-    };
-  return {
-    dot: 'bg-n-teal-9',
-    text: 'text-n-teal-11',
-    label: t('RAMON.KANBAN.CARD.NEXT_IN_DAYS', { days, title }),
-  };
-});
+// Próxima ação: mesma formatação da Lista (helpers/nextAction).
+const nextAction = computed(() => nextActionInfo(props.lead, t));
 
 // "Sem próxima ação": nenhuma tarefa aberta e etapa ainda ativa (nem won/lost).
 const showNoNextAction = computed(
@@ -351,14 +323,6 @@ const onSchedule = async ({ dueAt, title }) => {
         {{ prescriptionLabel }}
       </span>
       <span
-        v-if="lead.latest_triage?.status === 'awaiting_human'"
-        data-testid="triage-awaiting-human-badge"
-        :title="$t('RAMON.TRIAGE.AWAITING_HUMAN_HINT')"
-        class="text-n-amber-11"
-      >
-        {{ $t('RAMON.KANBAN.CARD.TRIAGE_AWAITING_HUMAN') }}
-      </span>
-      <span
         v-if="daysInStage !== null"
         data-testid="stage-age"
         class="font-mono text-n-slate-10"
@@ -404,12 +368,17 @@ const onSchedule = async ({ dueAt, title }) => {
       <span v-if="lead.benefit_type_name" class="text-n-slate-10">
         {{ lead.benefit_type_name }}
       </span>
-      <span
-        v-if="ownerInitials"
-        :title="ownerName"
-        class="text-n-slate-10 ms-auto"
-      >
-        {{ ownerInitials }}
+      <span v-if="owners.length" class="inline-flex gap-1 ms-auto">
+        <span
+          v-for="owner in owners"
+          :key="owner.role"
+          :data-testid="`owner-${owner.role}`"
+          :title="owner.title"
+          class="!px-1.5 font-mono"
+          :class="[CHIP, owner.tone]"
+        >
+          {{ owner.initials }}
+        </span>
       </span>
     </div>
 

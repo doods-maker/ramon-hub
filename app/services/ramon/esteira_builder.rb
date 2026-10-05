@@ -11,7 +11,6 @@ class Ramon::EsteiraBuilder
     'TASK_OVERDUE' => 80,
     'TASK_TODAY' => 75,
     'NEW_FROM_LP' => 70,
-    'AWAITING_HUMAN' => 60,
     'STALLED' => 40
   }.freeze
 
@@ -24,7 +23,6 @@ class Ramon::EsteiraBuilder
     'TASK_OVERDUE' => 'task',
     'TASK_TODAY' => 'task',
     'NEW_FROM_LP' => 'reply',
-    'AWAITING_HUMAN' => 'reply',
     'STALLED' => 'follow_up'
   }.freeze
 
@@ -43,7 +41,6 @@ class Ramon::EsteiraBuilder
     collect_prescription
     collect_sla_breach
     collect_new_from_lp
-    collect_awaiting_human
     collect_stalled
     items = build_items
     { items: items, board: board(items) }
@@ -96,15 +93,6 @@ class Ramon::EsteiraBuilder
   def collect_new_from_lp
     Ramon::LeadRadar.new_from_lp_leads(@account).each do |lead|
       add(lead, 'NEW_FROM_LP', { source: lead.source })
-    end
-  end
-
-  # ponytail: status como string até o PR #48 (handoff por confiança) chegar
-  # na ramon — antes dele a query só devolve vazio, sem quebrar nada.
-  def collect_awaiting_human
-    triaged_ids = @account.lead_triages.where(status: 'awaiting_human').select(:lead_id)
-    Ramon::LeadRadar.active_leads(@account).where(id: triaged_ids).find_each do |lead|
-      add(lead, 'AWAITING_HUMAN')
     end
   end
 

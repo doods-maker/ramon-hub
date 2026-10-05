@@ -146,6 +146,7 @@ const LEADS = [
     benefit_monthly_value: 1412,
     sdr_id: 1,
     sdr_name: 'Eduardo Schlata',
+    closer_id: 3,
     closer_name: 'Ramon Antonio',
     docs_total: 5,
     docs_received: 3,
@@ -190,6 +191,7 @@ const LEADS = [
     benefit_type_name: 'B32',
     sdr_id: 1,
     sdr_name: 'Eduardo Schlata',
+    closer_id: 3,
     closer_name: 'Ramon Antonio',
     docs_total: 4,
     docs_received: 4,
@@ -236,6 +238,7 @@ const LEADS = [
     benefit_type_name: 'B46',
     sdr_id: 1,
     sdr_name: 'Eduardo Schlata',
+    closer_id: 3,
     closer_name: 'Ramon Antonio',
     docs_total: 6,
     docs_received: 5,
@@ -258,6 +261,7 @@ const LEADS = [
     benefit_type_name: 'B94',
     sdr_id: 2,
     sdr_name: 'Gabriela Matos',
+    closer_id: 3,
     closer_name: 'Ramon Antonio',
     docs_total: 6,
     docs_received: 6,
@@ -281,6 +285,7 @@ const LEADS = [
     benefit_type_name: 'B87',
     sdr_id: 1,
     sdr_name: 'Eduardo Schlata',
+    closer_id: 3,
     closer_name: 'Ramon Antonio',
     docs_total: 5,
     docs_received: 5,
@@ -305,10 +310,51 @@ const LEADS = [
     sdr_id: 2,
     sdr_name: 'Gabriela Matos',
     lost_reason: 'Sem qualidade de segurado',
+    lost_at: diasAtras(6),
     conversation_id: 111,
     contact_phone: '+55 48 98123-4567',
     open_tasks_count: 0,
     stage_entered_at: diasAtras(6),
+  },
+  // Fechados há meses: o Funil carregava todos os ganhos/perdidos da história.
+  {
+    ...base,
+    id: 12,
+    name: 'Valdir Nascimento',
+    lead_stage_id: 5,
+    position: 3,
+    value: 52000,
+    thesis_id: 5,
+    thesis_name: 'Aposentadoria especial',
+    benefit_type_name: 'B46',
+    sdr_id: 1,
+    sdr_name: 'Eduardo Schlata',
+    closer_id: 3,
+    closer_name: 'Ramon Antonio',
+    won_at: diasAtras(200),
+    conversation_id: 112,
+    contact_phone: '+55 48 99210-3344',
+    open_tasks_count: 0,
+    stage_entered_at: diasAtras(200),
+  },
+  {
+    ...base,
+    id: 13,
+    name: 'Neusa Cardoso',
+    lead_stage_id: 6,
+    position: 2,
+    value: 20000,
+    thesis_id: 2,
+    thesis_name: 'BPC/LOAS',
+    benefit_type_name: 'B87',
+    sdr_id: 2,
+    sdr_name: 'Gabriela Matos',
+    lost_reason: 'Fechou com outro escritório',
+    lost_at: diasAtras(150),
+    conversation_id: 113,
+    contact_phone: '+55 48 98700-5566',
+    open_tasks_count: 0,
+    stage_entered_at: diasAtras(150),
   },
 ];
 
@@ -337,6 +383,7 @@ const API = {
   agents: [
     { id: 1, name: 'Eduardo Schlata' },
     { id: 2, name: 'Gabriela Matos' },
+    { id: 3, name: 'Ramon Antonio' },
   ],
   ramon_dashboard: {
     conversion: [
@@ -354,8 +401,16 @@ const API = {
   'leads/4/activities': { payload: [] },
 };
 
-const responder = async url => {
+// Espelha a janela do index (Ramon::LeadRadar.closed_window): fechados só dos
+// últimos 90 dias, salvo closed_all.
+const fechadoRecente = lead => {
+  const fechadoEm = lead.won_at || lead.lost_at;
+  return !fechadoEm || Date.now() - new Date(fechadoEm) <= 90 * DIA;
+};
+const responder = async (url, config = {}) => {
   const path = url.replace(/^\/api\/v1\/(accounts\/\d+\/)?/, '');
+  if (path === 'leads' && !config.params?.closed_all)
+    return { data: { payload: LEADS.filter(fechadoRecente) } };
   return { data: API[path] ?? {} };
 };
 window.axios = {
@@ -400,8 +455,13 @@ store.dispatch('leadConfig/get');
 store.dispatch('ramonDashboard/fetch');
 
 // Estado salvo por variante: visualização, filtros, quadro ativo, colapso.
-const estado = ({ view = 'columns', filtros = {}, quadro = null } = {}) => {
-  localStorage.setItem('ramon_kanban_view', JSON.stringify({ view }));
+const estado = ({
+  view = 'columns',
+  groupBy = 'thesis',
+  filtros = {},
+  quadro = null,
+} = {}) => {
+  localStorage.setItem('ramon_kanban_view', JSON.stringify({ view, groupBy }));
   localStorage.setItem('ramon_lead_filters', JSON.stringify(filtros));
   localStorage.setItem('ramon_lead_board_active', JSON.stringify(quadro));
   localStorage.setItem('ramon_kanban_collapsed', '[]');
@@ -418,6 +478,8 @@ const semResize = () => {
 
 const colunas = () => estado();
 const raias = () => estado({ view: 'lanes' });
+const raiasSdr = () => estado({ view: 'lanes', groupBy: 'sdr' });
+const raiasCloser = () => estado({ view: 'lanes', groupBy: 'closer' });
 const lista = () => {
   estado({ view: 'list' });
   store.dispatch('leads/selectMany', [4, 6]);
@@ -427,6 +489,7 @@ const filtros = () => {
   store.dispatch('leads/selectMany', [4, 6]);
   clicar('[data-testid="filters-toggle"]');
 };
+const fechadosTodos = () => estado({ filtros: { closedAll: true } });
 const quadros = () => {
   estado({ quadro: 1 });
   clicar('[data-testid="board-dropdown-toggle"]');
@@ -477,12 +540,27 @@ const naoAdmin = () => {
         <KanbanBoard />
       </div>
     </Variant>
+    <Variant title="Raias por SDR" :init-state="raiasSdr">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
+    <Variant title="Raias por Closer" :init-state="raiasCloser">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
     <Variant title="Lista" :init-state="lista">
       <div class="h-screen flex flex-col bg-n-background">
         <KanbanBoard />
       </div>
     </Variant>
     <Variant title="Filtros" :init-state="filtros">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
+    <Variant title="Fechados todos" :init-state="fechadosTodos">
       <div class="h-screen flex flex-col bg-n-background">
         <KanbanBoard />
       </div>

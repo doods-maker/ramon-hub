@@ -5,6 +5,7 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatBrl } from '../../helpers/currency';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import { nextActionInfo } from '../../helpers/nextAction';
 import Button from 'dashboard/components-next/button/Button.vue';
 
 const props = defineProps({
@@ -41,6 +42,8 @@ const sortValue = lead => {
       return lead.next_task_due_at || '9999';
     case 'sdr':
       return lead.sdr_name || '';
+    case 'closer':
+      return lead.closer_name || '';
     case 'thesis':
       return lead.thesis_name || '';
     case 'phone':
@@ -60,37 +63,8 @@ const sorted = computed(() =>
   })
 );
 
-// Próxima ação com a mesma semântica de cor do card: vencida ruby, hoje âmbar,
-// futura teal — versão enxuta pra caber numa célula.
-const nextAction = lead => {
-  const raw = lead.next_task_due_at;
-  if (!raw) return null;
-  const due = new Date(raw);
-  if (Number.isNaN(due.getTime())) return null;
-  const title = lead.next_task_title || '';
-  if (due.getTime() < Date.now())
-    return {
-      class: 'text-n-ruby-11',
-      label: t('RAMON.KANBAN.CARD.NEXT_OVERDUE', { title }),
-    };
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const days = Math.floor((due.getTime() - startOfToday.getTime()) / 86400000);
-  if (days === 0)
-    return {
-      class: 'text-n-amber-11',
-      label: t('RAMON.KANBAN.CARD.NEXT_TODAY', { title }),
-    };
-  if (days === 1)
-    return {
-      class: 'text-n-teal-11',
-      label: t('RAMON.KANBAN.CARD.NEXT_TOMORROW', { title }),
-    };
-  return {
-    class: 'text-n-teal-11',
-    label: t('RAMON.KANBAN.CARD.NEXT_IN_DAYS', { days, title }),
-  };
-};
+// Próxima ação idêntica à do card (helpers/nextAction).
+const nextAction = lead => nextActionInfo(lead, t);
 
 const columns = [
   { key: 'name', label: 'RAMON.KANBAN.LIST.NAME' },
@@ -98,6 +72,7 @@ const columns = [
   { key: 'value', label: 'RAMON.KANBAN.LIST.VALUE' },
   { key: 'next', label: 'RAMON.KANBAN.LIST.NEXT' },
   { key: 'sdr', label: 'RAMON.KANBAN.LIST.SDR' },
+  { key: 'closer', label: 'RAMON.KANBAN.LIST.CLOSER' },
   { key: 'thesis', label: 'RAMON.KANBAN.LIST.THESIS' },
   { key: 'phone', label: 'RAMON.KANBAN.LIST.PHONE' },
 ];
@@ -189,7 +164,7 @@ const columns = [
           <td
             class="px-2 py-1.5 text-xs truncate max-w-52 border-b border-n-weak"
           >
-            <span v-if="nextAction(lead)" :class="nextAction(lead).class">
+            <span v-if="nextAction(lead)" :class="nextAction(lead).text">
               {{ nextAction(lead).label }}
             </span>
             <span v-else class="text-n-slate-10">—</span>
@@ -198,6 +173,11 @@ const columns = [
             class="px-2 py-1.5 text-xs truncate max-w-36 border-b border-n-weak text-n-slate-11"
           >
             {{ lead.sdr_name || '—' }}
+          </td>
+          <td
+            class="px-2 py-1.5 text-xs truncate max-w-36 border-b border-n-weak text-n-slate-11"
+          >
+            {{ lead.closer_name || '—' }}
           </td>
           <td
             class="px-2 py-1.5 text-xs truncate max-w-44 border-b border-n-weak text-n-slate-11"

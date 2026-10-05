@@ -188,7 +188,6 @@
         "TASK_TODAY": "task due today: {title}",
         "NEW_FROM_LP": "new LP lead ({source}) without reply",
         "SLA_BREACH": "no first reply — {minutes}min SLA breached",
-        "AWAITING_HUMAN": "triage awaiting a human",
         "STALLED": "{days} days stalled in stage"
       },
       "OPEN_CONVERSATION": "Open conversation",
@@ -318,6 +317,8 @@
         "TASK_DUE_TODAY": "With task due today",
         "WON_SINCE": "Won since",
         "NEW_FROM_LP": "New from LP, unanswered",
+        "CLOSED_RECENT": "Won/lost: 90 days",
+        "CLOSED_ALL": "Won/lost: all",
         "CLEAR": "Clear",
         "TOGGLE": "Filters"
       },
@@ -329,7 +330,7 @@
       },
       "CHIPS": {
         "REMOVE": "Remove filter",
-        "SUMMARY": "{count} leads · {total} · forecast",
+        "SUMMARY": "{count} open · {total} · forecast",
         "FORECAST": "{forecast}"
       },
       "BOARDS": {
@@ -364,11 +365,12 @@
         "PRESCRIPTION_BLEEDING": "prescribing {value}/mo",
         "PRESCRIPTION_LOST": "{count} installments already lost",
         "PRESCRIPTION_SOON": "prescribes in {months} month | prescribes in {months} months",
-        "TRIAGE_AWAITING_HUMAN": "Triage: awaiting human",
         "AGE": "{days}d",
         "NO_NEXT_ACTION": "No next action scheduled",
         "NEXT_NONE": "no next action",
-        "NEXT_MEETING": "Meeting {when}"
+        "NEXT_MEETING": "Meeting {when}",
+        "OWNER_SDR": "SDR: {name}",
+        "OWNER_CLOSER": "Closer: {name}"
       },
       "BELL": {
         "TITLE": "Schedule follow-up",
@@ -402,7 +404,8 @@
         "GROUP_BY": "group by",
         "GROUP": {
           "THESIS": "thesis",
-          "SDR": "owner",
+          "SDR": "SDR",
+          "CLOSER": "Closer",
           "CHANNEL": "channel",
           "PRIORITY": "priority"
         }
@@ -416,6 +419,7 @@
         "VALUE": "Value",
         "NEXT": "Next action",
         "SDR": "SDR",
+        "CLOSER": "Closer",
         "THESIS": "Thesis",
         "PHONE": "Phone",
         "EMPTY": "No leads in the current filter."
@@ -426,7 +430,6 @@
         "ASSIGN": "Assign SDR ▾",
         "FOLLOW_UP": "Schedule follow-up",
         "FOLLOW_UP_CONFIRM": "Schedule",
-        "TRIAGE": "Run AI triage",
         "CLEAR": "Clear",
         "ESC_HINT": "Esc cancels",
         "QUEUED": "Batch queued — cards will refresh shortly",
@@ -715,7 +718,6 @@
       "REFERRAL": "Came by referral",
       "TRIAGE": "What triage detected",
       "TRIAGE_EMPTY": "No triage run yet.",
-      "TRIAGE_AWAITING_HUMAN": "Awaiting human review",
       "THESIS": "Thesis and arguments",
       "THESIS_EMPTY": "No thesis set for this case.",
       "FEE": "Fee",
@@ -875,23 +877,6 @@
       "COPIED": "Portal link copied",
       "ERROR": "Could not generate the portal link — try again"
     },
-    "COLHEITA": {
-      "TITLE": "Still to ask",
-      "COUNT": "{done}/{total} collected",
-      "EXTRACT": "Extract from conversation",
-      "EXTRACT_REQUESTED": "Extraction requested — the harvest updates in a few seconds",
-      "LACUNAS_TITLE": "Meeting gaps (AI)",
-      "EXTRACTED_AT": "Extracted from the conversation at {date}",
-      "AI_BADGE": "✨ AI",
-      "AI_BADGE_TIP": "Checked by the AI from the conversation — click to undo",
-      "CHARGE": "Request gap documents",
-      "COPIED": "Draft copied — review and paste into WhatsApp",
-      "DRAFT": {
-        "GREETING": "Hi {name}, how are you? From our conversation, just a few documents are missing to complete your case:",
-        "ITEM": "• {item}",
-        "CLOSING": "Send them here whenever you can and we'll move forward. Any questions, just message me!"
-      }
-    },
     "DOCS": {
       "TITLE": "Documents",
       "CARD_TITLE": "Documents: {received} of {total} received",
@@ -967,52 +952,13 @@
       "USADO": "Reply inserted in the editor — review before sending."
     },
     "TRIAGE": {
-      "TAB": "Triage",
-      "RUN": "Run triage",
-      "RUNNING": "Analyzing…",
-      "RERUN": "Run again",
-      "EMPTY": "No triage yet. Run the AI viability analysis.",
-      "ERROR": "Triage failed",
-      "AGENT_LABEL": "Agent",
       "VIABILITY": {
         "LABEL": "Viability",
         "ALTA": "High",
         "MEDIA": "Medium",
         "BAIXA": "Low",
         "UNKNOWN": "Not detected"
-      },
-      "AWAITING_HUMAN": "Awaiting human",
-      "AWAITING_HUMAN_HINT": "The AI did not classify with confidence — review the conversation and set the viability yourself.",
-      "STARTED": "Triage started — the result appears here shortly",
-      "LOADING": "Loading triages…",
-      "LOAD_ERROR": "Could not load the triages.",
-      "REFRESH": "refresh"
-    },
-    "KIT": {
-      "TAB": "Kit",
-      "GENERATE": "Generate Closer Kit",
-      "REGENERATE": "Regenerate",
-      "GENERATING": "Generating kit…",
-      "STARTED": "Kit generation started",
-      "ERROR": "Kit generation failed",
-      "EMPTY": "Run a triage first — the kit is built from its analysis.",
-      "NEED_DONE": "The triage must finish before generating the kit.",
-      "CLOSED": "Lead closed — no kit for this stage.",
-      "COPY_BLOCK": "Copy",
-      "MODE_LABEL": "Mode",
-      "MODE": {
-        "SDR": "Qualifying (SDR)",
-        "CLOSER": "Closing (Closer)"
-      },
-      "BLOCKS": {
-        "RESUMO": "Plain-language summary",
-        "ROTEIRO": "Question script",
-        "DOCUMENTOS": "Documents to request",
-        "VENDA_OBJECOES": "Pitch and objections",
-        "PROXIMO_PASSO": "Next step"
-      },
-      "LOADING": "Loading kit…",
-      "REFRESH": "Refresh"
+      }
     },
     "SIMULADOR": {
       "TAB": "Simulator",

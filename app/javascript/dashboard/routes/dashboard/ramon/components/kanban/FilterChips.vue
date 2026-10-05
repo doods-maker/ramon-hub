@@ -115,23 +115,32 @@ const chips = computed(() => {
     push('newFromLp', t('RAMON.FUNIL.FILTERS.NEW_FROM_LP'), {
       newFromLp: false,
     });
+  if (f.closedAll)
+    push('closedAll', t('RAMON.FUNIL.FILTERS.CLOSED_ALL'), {
+      closedAll: false,
+    });
   return list;
 });
 
-// Resumo dos leads carregados (já filtrados no server): contagem, Σ valor e
-// previsão ponderada Σ valor × probabilidade da etapa.
+// Resumo do pipeline em aberto (leads carregados, já filtrados no server):
+// contagem, Σ valor e previsão ponderada Σ valor × probabilidade da etapa.
+// Ganho/perdido fica fora — já não é pipeline nem previsão.
 const summary = computed(() => {
   const stageById = new Map(stages.value.map(s => [s.id, s]));
+  const open = leads.value.filter(lead => {
+    const stage = stageById.get(lead.lead_stage_id);
+    return !stage?.is_won && !stage?.is_lost;
+  });
   let total = 0;
   let forecast = 0;
-  leads.value.forEach(lead => {
+  open.forEach(lead => {
     const value = Number(lead.value) || 0;
     total += value;
     const probability =
       Number(stageById.get(lead.lead_stage_id)?.probability) || 0;
     forecast += value * (probability / 100);
   });
-  return { count: leads.value.length, total, forecast };
+  return { count: open.length, total, forecast };
 });
 </script>
 
