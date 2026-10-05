@@ -27,7 +27,7 @@ class Ramon::DossiePassagemTexto
 
   def cliente
     ['CLIENTE', item('Nome', @dados[:nome]), item('CPF', cpf(@dados[:cpf])),
-     item('Nascimento', data(@dados[:nascimento])), item('Telefone', @dados[:telefone])]
+     item('Nascimento', data(@dados[:nascimento])), item('Telefone', telefone(@dados[:telefone]))]
   end
 
   def caso
@@ -143,6 +143,15 @@ class Ramon::DossiePassagemTexto
     return valor.presence if digitos.length != 11
 
     "#{digitos[0, 3]}.#{digitos[3, 3]}.#{digitos[6, 3]}-#{digitos[9, 2]}"
+  end
+
+  # +5548991234567 → +55 (48) 99123-4567 (celular com 9 ou fixo com 8 dígitos)
+  def telefone(valor)
+    digitos = valor.to_s.gsub(/\D/, '')
+    return valor.presence unless digitos.start_with?('55') && [12, 13].include?(digitos.length)
+
+    numero = digitos[4..]
+    "+55 (#{digitos[2, 2]}) #{numero[0..-5]}-#{numero[-4..]}"
   end
 
   # Date (DCB, nascimento) fica como está; data-hora (ISO ou Time) vai pro fuso
