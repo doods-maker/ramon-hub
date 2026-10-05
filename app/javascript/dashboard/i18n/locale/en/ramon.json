@@ -796,13 +796,12 @@
       },
       "CONTACT_DATA": "Contact data",
       "FIELDS": {
-        "OWNERS": "SDR / Closer",
         "DCB": "DCB",
-        "PHONE": "Phone",
-        "CHANNEL": "Channel"
+        "CHANNEL": "Channel",
+        "STAGE": "Funnel stage",
+        "CASE": "Case",
+        "OWNERS": "Owners"
       },
-      "EDIT_ALL_FIELDS": "edit all fields",
-      "EDIT_ALL_FIELDS_CLOSE": "collapse fields",
       "DISCARD": "Not a lead",
       "CLOSE": "Close panel",
       "HISTORY": {

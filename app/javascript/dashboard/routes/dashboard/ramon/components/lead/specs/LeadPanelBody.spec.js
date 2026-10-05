@@ -47,6 +47,7 @@ const build = ({
   tasks = [],
   chatMessages = [],
   sender = {},
+  role = 'agent',
 } = {}) =>
   createStore({
     getters: {
@@ -55,8 +56,18 @@ const build = ({
         messages: chatMessages,
         meta: { sender },
       }),
+      getCurrentRole: () => role,
     },
     modules: {
+      agents: {
+        namespaced: true,
+        getters: {
+          getAgents: () => [
+            { id: 1, name: 'Eduardo' },
+            { id: 2, name: 'Camila' },
+          ],
+        },
+      },
       leads: {
         namespaced: true,
         actions: { update, delete: del, followUpDraft, agendarReuniao },
@@ -203,6 +214,65 @@ describe('LeadPanelBody', () => {
       await ficha.trigger('click');
       expect(navigate).toHaveBeenCalledTimes(1);
       expect(wrapper.emitted('navigate')).toHaveLength(1);
+    });
+  });
+
+  describe('campos rotulados', () => {
+    const campos = w => w.find('[data-testid="panel-campos"]');
+
+    it('Etapa, Valor, Caso, Responsáveis e Próximo passo, nessa ordem', () => {
+      const wrapper = mountBody();
+      const texto = campos(wrapper).text();
+      const ordem = [
+        'RAMON.LEAD_PANEL.FIELDS.STAGE',
+        'RAMON.DRAWER.VALUE',
+        'RAMON.LEAD_PANEL.FIELDS.CASE',
+        'RAMON.LEAD_PANEL.FIELDS.OWNERS',
+      ].map(k => texto.indexOf(k));
+      expect(ordem.every(i => i >= 0)).toBe(true);
+      expect([...ordem].sort((a, b) => a - b)).toEqual(ordem);
+      expect(
+        campos(wrapper).findComponent({ name: 'LeadNextAction' }).exists()
+      ).toBe(true);
+      [
+        'panel-stage',
+        'panel-value-chip',
+        'field-thesis',
+        'field-dcb-em',
+      ].forEach(id =>
+        expect(campos(wrapper).find(`[data-testid="${id}"]`).exists()).toBe(
+          true
+        )
+      );
+    });
+
+    it('não há mais pílula de etapa nem chip de valor fora dos campos', () => {
+      const wrapper = mountBody();
+      expect(wrapper.findAll('[data-testid="panel-stage"]')).toHaveLength(1);
+      expect(wrapper.find('.ramon-stage-pill').exists()).toBe(false);
+    });
+
+    it('Responsáveis: quem não é gestor só lê (iniciais + nome)', () => {
+      const wrapper = mountBody();
+      expect(wrapper.find('[data-testid="panel-sdr"]').text()).toBe('Eduardo');
+      expect(wrapper.find('[data-testid="panel-closer"]').text()).toBe(
+        'Camila'
+      );
+      expect(wrapper.find('[data-testid="field-sdr"]').exists()).toBe(false);
+      // iniciais no avatar antes do nome
+      expect(wrapper.find('[data-testid="panel-responsaveis"]').text()).toMatch(
+        /SDR\s*E\s*Eduardo/
+      );
+    });
+
+    it('Responsáveis: o gestor troca pelo select (salva sdr_id/closer_id)', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({ spies: { update, role: 'administrator' } });
+      await wrapper.find('[data-testid="field-closer"]').setValue('1');
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        closer_id: 1,
+      });
     });
   });
 
@@ -807,16 +877,6 @@ describe('LeadPanelBody', () => {
   });
 
   describe('resumo', () => {
-    it('donos só depois de abrir "Dados do contato"; CPF fica só no editar tudo', async () => {
-      const wrapper = mountBody();
-      expect(wrapper.text()).not.toContain('Eduardo / Camila');
-      await wrapper
-        .find('[data-testid="contact-data-toggle"]')
-        .trigger('click');
-      expect(wrapper.text()).toContain('Eduardo / Camila');
-      expect(wrapper.text()).not.toContain('052.318.774-90');
-    });
-
     // posição da Qualificação entre os blocos do corpo do Resumo
     const ordemQualificacao = stageId => {
       const wrapper = mountBody({
@@ -885,7 +945,7 @@ describe('LeadPanelBody', () => {
       ).toBe('page');
     });
 
-    it('expande o formulário completo pelo link "editar todos os campos" (dentro de Dados do contato)', async () => {
+    it('"Dados do contato" abre direto o formulário com o resto dos campos', async () => {
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(
         false
@@ -893,10 +953,8 @@ describe('LeadPanelBody', () => {
       await wrapper
         .find('[data-testid="contact-data-toggle"]')
         .trigger('click');
-      await wrapper
-        .find('[data-testid="lead-edit-all-toggle"]')
-        .trigger('click');
       expect(wrapper.findComponent({ name: 'LeadFields' }).exists()).toBe(true);
+      expect(wrapper.text()).not.toContain('052.318.774-90');
     });
 
     it('completeData do ZapSign (Contrato) volta pro Resumo com o formulário aberto', async () => {

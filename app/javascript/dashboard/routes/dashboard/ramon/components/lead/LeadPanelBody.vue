@@ -45,7 +45,8 @@ import {
   TOM,
   LINHA,
   MENU,
-  EDITAVEL,
+  CAMPO_GRANDE,
+  SELECT_GRANDE,
 } from '../../helpers/ui';
 
 const props = defineProps({
@@ -199,13 +200,13 @@ watch(
   }
 );
 
-// Pílula de etapa na cor da etapa (classe .ramon-stage-pill lê --stage);
-// sem cor configurada, cinza neutro.
-const stageChipStyle = computed(() => ({
-  '--stage':
+// Bolinha da etapa no campo "Etapa do funil": cor da etapa; sem cor
+// configurada, cinza neutro.
+const corEtapa = computed(
+  () =>
     stages.value?.find(s => s.id === stageId.value)?.color ||
-    DEFAULT_STAGE_COLOR,
-}));
+    DEFAULT_STAGE_COLOR
+);
 
 // ----- Onda B: cartões do resumo -----
 const probability = computed(() => {
@@ -565,24 +566,30 @@ const dossieRoute = computed(() => ({
   params: { leadId: props.lead.id },
 }));
 
-// ----- "editar todos os campos": LeadFields completo recolhido por padrão -----
-const fieldsExpanded = ref(false);
+// ----- "Dados do contato": LeadFields (o que o Resumo não edita) recolhido -----
 const fieldsEl = ref(null);
 const onCompleteData = async () => {
   setTab('resumo');
   contactOpen.value = true;
-  fieldsExpanded.value = true;
   await nextTick();
   fieldsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-// ----- campos derivados dos cartões -----
-const owners = computed(() => {
-  const sdr = props.lead?.sdr_name;
-  const closer = props.lead?.closer_name;
-  if (!sdr && !closer) return null;
-  return `${sdr || '—'} / ${closer || '—'}`;
-});
+// ----- campos derivados -----
+// Responsáveis: só o gestor troca SDR/Closer (playbook §13); os outros leem.
+const isAdmin = computed(
+  () => store.getters.getCurrentRole === 'administrator'
+);
+const agentsGetter = useMapGetter('agents/getAgents');
+const agents = computed(() => agentsGetter.value || []);
+const responsaveis = computed(() => [
+  { campo: 'sdr', rotulo: 'RAMON.DRAWER.SDR', nome: props.lead?.sdr_name },
+  {
+    campo: 'closer',
+    rotulo: 'RAMON.DRAWER.CLOSER',
+    nome: props.lead?.closer_name,
+  },
+]);
 const activeTheses = computed(() =>
   (theses.value || []).filter(thesis => thesis.active)
 );
@@ -799,175 +806,6 @@ const discard = async () => {
           />
         </Teleport>
 
-        <!-- Caso numa linha: tese · benefício · DCB · canal, clicar = editar -->
-        <div
-          data-testid="panel-caso"
-          class="flex flex-wrap items-center gap-x-1 gap-y-0.5 mt-1 min-w-0 text-n-slate-9"
-        >
-          <select
-            data-testid="field-thesis"
-            :value="lead.thesis_id ?? ''"
-            :aria-label="$t('RAMON.DRAWER.THESIS')"
-            class="font-semibold"
-            :class="EDITAVEL"
-            @change="e => saveSelect('thesis_id', e.target.value)"
-          >
-            <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
-            <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
-            <option v-if="thesisFora" :value="lead.thesis_id">
-              {{ lead.thesis_name }}
-            </option>
-            <option v-for="th in activeTheses" :key="th.id" :value="th.id">
-              {{ th.name }}
-            </option>
-          </select>
-          <span>·</span>
-          <select
-            data-testid="field-benefit"
-            :value="lead.benefit_type_id ?? ''"
-            :aria-label="$t('RAMON.DRAWER.BENEFIT')"
-            :class="EDITAVEL"
-            @change="e => saveSelect('benefit_type_id', e.target.value)"
-          >
-            <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
-            <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-              {{ b.name }}
-            </option>
-          </select>
-          <span>·</span>
-          <label class="flex items-center gap-1 text-[13px]">
-            {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
-            <input
-              data-testid="field-dcb-em"
-              type="date"
-              :value="lead.dcb_em || ''"
-              class="font-mono"
-              :class="[EDITAVEL, bleeding ? '!text-n-ruby-11' : '']"
-              @change="e => save({ dcb_em: e.target.value || null })"
-            />
-          </label>
-          <span>·</span>
-          <select
-            data-testid="field-channel"
-            :value="lead.channel ?? ''"
-            :aria-label="$t('RAMON.LEAD_PANEL.FIELDS.CHANNEL')"
-            :class="EDITAVEL"
-            @change="e => saveSelect('channel', e.target.value, false)"
-          >
-            <option value="">
-              {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
-            </option>
-            <option v-for="c in channels" :key="c.key" :value="c.key">
-              {{ c.label }}
-            </option>
-          </select>
-        </div>
-        <p
-          v-if="!lead.thesis_id"
-          data-testid="no-thesis-hint"
-          class="mt-0.5 text-xs text-n-slate-9"
-        >
-          {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
-        </p>
-
-        <div class="flex flex-wrap items-center gap-1.5 mt-1.5 min-w-0">
-          <!-- h-auto + bg-none: o CSS global de <select> (_base.scss) impõe h-10
-               e seta de fundo — sem isso o chip vira caixa de formulário -->
-          <select
-            data-testid="panel-stage"
-            :value="stageId"
-            class="ramon-stage-pill max-w-40 appearance-none truncate rounded-full border h-auto bg-none px-2.5 py-0.5 text-[11px] font-medium outline-none"
-            :style="stageChipStyle"
-            @change="e => onStageChange(Number(e.target.value))"
-          >
-            <option v-for="s in stages" :key="s.id" :value="s.id">
-              {{ s.name }}
-            </option>
-          </select>
-          <!-- valor: clicar no chip edita no lugar (Enter/fora salva, Esc desiste) -->
-          <input
-            v-if="valueEditing"
-            ref="valueInput"
-            v-model="valueDraft"
-            data-testid="field-value"
-            type="text"
-            inputmode="decimal"
-            :aria-label="$t('RAMON.DRAWER.VALUE')"
-            class="font-mono !h-7 !w-36"
-            :class="CAMPO"
-            @blur="saveValue"
-            @keyup.enter="saveValue"
-            @keyup.esc="valueEditing = false"
-          />
-          <button
-            v-else
-            type="button"
-            data-testid="panel-value-chip"
-            :title="$t('RAMON.LEAD_PANEL.VALUE_EDIT')"
-            class="hover:bg-n-slate-9/20"
-            :class="[CHIP, TOM.slate]"
-            @click="editValue"
-          >
-            <span :class="{ 'font-mono': formattedValue }">{{
-              formattedValue || $t('RAMON.LEAD_PANEL.VALUE_ADD')
-            }}</span>
-            <span
-              v-if="valorEstimadoAuto"
-              data-testid="value-auto-badge"
-              :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
-              class="inline-flex items-center gap-0.5 rounded px-1 text-[10px]"
-              :class="TOM.blue"
-            >
-              <span class="i-lucide-sparkles size-2.5" />{{
-                $t('RAMON.DRAWER.VALUE_AUTO')
-              }}
-            </span>
-          </button>
-        </div>
-
-        <LostReasonModal
-          v-if="lostModalOpen"
-          :lost-reasons="lostReasons"
-          @confirm-move="confirmLostStage"
-          @cancel-move="cancelLostStage"
-        />
-
-        <div
-          v-if="wonPrompt"
-          data-testid="stage-won-prompt"
-          class="flex flex-col gap-2 mt-2"
-          :class="CARTAO"
-        >
-          <label class="text-xs text-n-slate-10">{{
-            $t('RAMON.FUNIL.WON.VALUE_LABEL')
-          }}</label>
-          <input
-            v-model="wonValue"
-            data-testid="stage-won-value"
-            type="text"
-            inputmode="decimal"
-            class="font-mono"
-            :class="CAMPO"
-            @keyup.enter="confirmWonStage"
-          />
-          <div class="flex justify-end gap-2">
-            <Button
-              data-testid="stage-won-skip"
-              sm
-              faded
-              slate
-              :label="$t('RAMON.FUNIL.WON.SKIP')"
-              @click="skipWonStage"
-            />
-            <Button
-              data-testid="stage-won-save"
-              sm
-              :label="$t('RAMON.FUNIL.WON.SAVE')"
-              @click="confirmWonStage"
-            />
-          </div>
-        </div>
-
         <!-- Ações fixas. WhatsApp abre a conversa (gaveta) ou o wa.me (sem
              conversa); no painel da conversa ela já está aberta — botão sai.
              Resolver NÃO entra aqui: já existe no cabeçalho da conversa, e um
@@ -1081,6 +919,250 @@ const discard = async () => {
           </div>
         </div>
 
+        <!-- campos rotulados (como na referência): rótulo em cima, controle
+             largo embaixo; editar = mexer no próprio controle -->
+        <div data-testid="panel-campos" class="flex flex-col gap-4">
+          <div>
+            <p class="mb-1.5" :class="TITULO">
+              {{ $t('RAMON.LEAD_PANEL.FIELDS.STAGE') }}
+            </p>
+            <div class="relative">
+              <span
+                class="absolute left-3 top-1/2 -translate-y-1/2 size-2.5 rounded-full pointer-events-none"
+                :style="{ backgroundColor: corEtapa }"
+              />
+              <select
+                data-testid="panel-stage"
+                :value="stageId"
+                :aria-label="$t('RAMON.LEAD_PANEL.FIELDS.STAGE')"
+                class="!pl-8 font-medium"
+                :class="SELECT_GRANDE"
+                @change="e => onStageChange(Number(e.target.value))"
+              >
+                <option v-for="s in stages" :key="s.id" :value="s.id">
+                  {{ s.name }}
+                </option>
+              </select>
+            </div>
+            <LostReasonModal
+              v-if="lostModalOpen"
+              :lost-reasons="lostReasons"
+              @confirm-move="confirmLostStage"
+              @cancel-move="cancelLostStage"
+            />
+            <div
+              v-if="wonPrompt"
+              data-testid="stage-won-prompt"
+              class="flex flex-col gap-2 mt-2"
+              :class="CARTAO"
+            >
+              <label class="text-xs text-n-slate-10">{{
+                $t('RAMON.FUNIL.WON.VALUE_LABEL')
+              }}</label>
+              <input
+                v-model="wonValue"
+                data-testid="stage-won-value"
+                type="text"
+                inputmode="decimal"
+                class="font-mono"
+                :class="CAMPO"
+                @keyup.enter="confirmWonStage"
+              />
+              <div class="flex justify-end gap-2">
+                <Button
+                  data-testid="stage-won-skip"
+                  sm
+                  faded
+                  slate
+                  :label="$t('RAMON.FUNIL.WON.SKIP')"
+                  @click="skipWonStage"
+                />
+                <Button
+                  data-testid="stage-won-save"
+                  sm
+                  :label="$t('RAMON.FUNIL.WON.SAVE')"
+                  @click="confirmWonStage"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- valor: clicar edita no lugar (Enter/fora salva, Esc desiste) -->
+          <div>
+            <p class="mb-1.5" :class="TITULO">
+              {{ $t('RAMON.DRAWER.VALUE') }}
+            </p>
+            <input
+              v-if="valueEditing"
+              ref="valueInput"
+              v-model="valueDraft"
+              data-testid="field-value"
+              type="text"
+              inputmode="decimal"
+              :aria-label="$t('RAMON.DRAWER.VALUE')"
+              class="font-mono"
+              :class="CAMPO_GRANDE"
+              @blur="saveValue"
+              @keyup.enter="saveValue"
+              @keyup.esc="valueEditing = false"
+            />
+            <button
+              v-else
+              type="button"
+              data-testid="panel-value-chip"
+              :title="$t('RAMON.LEAD_PANEL.VALUE_EDIT')"
+              class="flex items-center gap-2 text-left"
+              :class="CAMPO_GRANDE"
+              @click="editValue"
+            >
+              <span
+                :class="
+                  formattedValue ? 'font-mono font-medium' : 'text-n-slate-10'
+                "
+              >
+                {{ formattedValue || $t('RAMON.LEAD_PANEL.VALUE_ADD') }}
+              </span>
+              <span
+                v-if="valorEstimadoAuto"
+                data-testid="value-auto-badge"
+                :title="$t('RAMON.DRAWER.VALUE_AUTO_TIP')"
+                class="inline-flex items-center gap-0.5 rounded px-1 text-[10px]"
+                :class="TOM.blue"
+              >
+                <span class="i-lucide-sparkles size-2.5" />{{
+                  $t('RAMON.DRAWER.VALUE_AUTO')
+                }}
+              </span>
+            </button>
+          </div>
+
+          <!-- caso: tese · benefício; DCB · canal -->
+          <div data-testid="panel-caso">
+            <p class="mb-1.5" :class="TITULO">
+              {{ $t('RAMON.LEAD_PANEL.FIELDS.CASE') }}
+            </p>
+            <div class="grid grid-cols-[3fr_2fr] gap-2">
+              <select
+                data-testid="field-thesis"
+                :value="lead.thesis_id ?? ''"
+                :aria-label="$t('RAMON.DRAWER.THESIS')"
+                :class="SELECT_GRANDE"
+                @change="e => saveSelect('thesis_id', e.target.value)"
+              >
+                <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
+                <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
+                <option v-if="thesisFora" :value="lead.thesis_id">
+                  {{ lead.thesis_name }}
+                </option>
+                <option v-for="th in activeTheses" :key="th.id" :value="th.id">
+                  {{ th.name }}
+                </option>
+              </select>
+              <select
+                data-testid="field-benefit"
+                :value="lead.benefit_type_id ?? ''"
+                :aria-label="$t('RAMON.DRAWER.BENEFIT')"
+                :class="SELECT_GRANDE"
+                @change="e => saveSelect('benefit_type_id', e.target.value)"
+              >
+                <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
+                <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
+                  {{ b.name }}
+                </option>
+              </select>
+            </div>
+            <div class="grid grid-cols-[3fr_2fr] gap-2 mt-2">
+              <label class="relative block">
+                <span
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-n-slate-10 pointer-events-none"
+                >
+                  {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
+                </span>
+                <input
+                  data-testid="field-dcb-em"
+                  type="date"
+                  :value="lead.dcb_em || ''"
+                  class="!pl-11 font-mono"
+                  :class="[CAMPO_GRANDE, bleeding ? '!text-n-ruby-11' : '']"
+                  @change="e => save({ dcb_em: e.target.value || null })"
+                />
+              </label>
+              <select
+                data-testid="field-channel"
+                :value="lead.channel ?? ''"
+                :aria-label="$t('RAMON.LEAD_PANEL.FIELDS.CHANNEL')"
+                :class="SELECT_GRANDE"
+                @change="e => saveSelect('channel', e.target.value, false)"
+              >
+                <option value="">
+                  {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
+                </option>
+                <option v-for="c in channels" :key="c.key" :value="c.key">
+                  {{ c.label }}
+                </option>
+              </select>
+            </div>
+            <p
+              v-if="!lead.thesis_id"
+              data-testid="no-thesis-hint"
+              class="mt-1 text-xs text-n-slate-9"
+            >
+              {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
+            </p>
+          </div>
+
+          <!-- responsáveis: só o gestor troca (playbook §13); os outros leem -->
+          <div data-testid="panel-responsaveis">
+            <p class="mb-1.5" :class="TITULO">
+              {{ $t('RAMON.LEAD_PANEL.FIELDS.OWNERS') }}
+            </p>
+            <div class="flex flex-col gap-2">
+              <div
+                v-for="r in responsaveis"
+                :key="r.campo"
+                class="flex items-center gap-2"
+              >
+                <span class="w-12 shrink-0 text-xs text-n-slate-10">
+                  {{ $t(r.rotulo) }}
+                </span>
+                <div class="relative flex-1 min-w-0">
+                  <span
+                    class="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center size-6 rounded-full text-[10px] font-semibold pointer-events-none"
+                    :class="r.nome ? TOM.blue : TOM.slate"
+                  >
+                    {{ iniciais(r.nome) || '?' }}
+                  </span>
+                  <select
+                    v-if="isAdmin"
+                    :data-testid="`field-${r.campo}`"
+                    :value="lead[`${r.campo}_id`] ?? ''"
+                    :aria-label="$t(r.rotulo)"
+                    class="!pl-10"
+                    :class="SELECT_GRANDE"
+                    @change="e => saveSelect(`${r.campo}_id`, e.target.value)"
+                  >
+                    <option value="">—</option>
+                    <option v-for="a in agents" :key="a.id" :value="a.id">
+                      {{ a.name }}
+                    </option>
+                  </select>
+                  <p
+                    v-else
+                    :data-testid="`panel-${r.campo}`"
+                    class="flex items-center !pl-10 truncate"
+                    :class="CAMPO_GRANDE"
+                  >
+                    {{ r.nome || '—' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- próximo passo (tarefa aberta mais próxima) -->
+          <LeadNextAction :lead-id="lead.id" />
+        </div>
+
         <QualificacaoViva
           v-if="qualificacaoNoTopo"
           :lead="lead"
@@ -1129,9 +1211,6 @@ const discard = async () => {
           </button>
           <LeadReuniao v-if="showReuniao" :lead="lead" />
         </div>
-
-        <!-- Próximo passo (era LeadNextAction do header) -->
-        <LeadNextAction :lead-id="lead.id" />
 
         <!-- Temperatura (só na conversa; heurística local) -->
         <div
@@ -1281,39 +1360,13 @@ const discard = async () => {
               "
             />
           </button>
-          <div v-if="contactOpen" class="flex flex-col gap-2 mt-3 min-w-0">
-            <div class="grid grid-cols-2 gap-x-3 gap-y-2">
-              <div>
-                <p class="text-[10.5px] text-n-slate-9">
-                  {{ $t('RAMON.LEAD_PANEL.FIELDS.OWNERS') }}
-                </p>
-                <p class="text-[13px] text-n-slate-12">{{ owners || '—' }}</p>
-              </div>
-            </div>
-            <Button
-              data-testid="lead-edit-all-toggle"
-              link
-              slate
-              xs
-              trailing-icon
-              class="self-center"
-              :icon="
-                fieldsExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'
-              "
-              :label="
-                fieldsExpanded
-                  ? $t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS_CLOSE')
-                  : $t('RAMON.LEAD_PANEL.EDIT_ALL_FIELDS')
-              "
-              @click="fieldsExpanded = !fieldsExpanded"
-            />
-            <div
-              v-if="fieldsExpanded"
-              ref="fieldsEl"
-              data-testid="lead-all-fields"
-            >
-              <LeadFields :lead="lead" />
-            </div>
+          <div
+            v-if="contactOpen"
+            ref="fieldsEl"
+            data-testid="lead-all-fields"
+            class="mt-3 min-w-0"
+          >
+            <LeadFields :lead="lead" />
           </div>
         </div>
 
