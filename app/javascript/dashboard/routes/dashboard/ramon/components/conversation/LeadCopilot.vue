@@ -1,3 +1,12 @@
+<script>
+import { reactive } from 'vue';
+
+// Resumo da IA por conversa, no escopo do módulo: sobrevive à troca de aba
+// e ao remount do painel (antes sumia e o usuário pagava outra geração).
+// ponytail: só na memória da página — F5 limpa; persistir se pedirem.
+const summaries = reactive(new Map()); // conversationId → { summary, generatedAt }
+</script>
+
 <script setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -15,8 +24,9 @@ const props = defineProps({
 defineOptions({ name: 'LeadCopilot' });
 
 const { t } = useI18n();
-const summary = ref('');
-const generatedAt = ref(null);
+const cached = computed(() => summaries.get(String(props.conversationId)));
+const summary = computed(() => cached.value?.summary || '');
+const generatedAt = computed(() => cached.value?.generatedAt ?? null);
 const loading = ref(''); // '' | 'summary' | 'draft'
 
 const generatedAgo = computed(() =>
@@ -26,11 +36,15 @@ const generatedAgo = computed(() =>
 const generate = async mode => {
   if (loading.value) return;
   loading.value = mode;
+  // id capturado antes do await: trocar de conversa no meio não troca o dono
+  const id = props.conversationId;
   try {
-    const { data } = await RamonCopilotAPI.generate(props.conversationId, mode);
+    const { data } = await RamonCopilotAPI.generate(id, mode);
     if (mode === 'summary') {
-      summary.value = data.content;
-      generatedAt.value = Date.now();
+      summaries.set(String(id), {
+        summary: data.content,
+        generatedAt: Date.now(),
+      });
     } else {
       // Cai como rascunho no editor de resposta (ReplyBox escuta este evento);
       // nada é enviado — quem envia é o Eduardo.
