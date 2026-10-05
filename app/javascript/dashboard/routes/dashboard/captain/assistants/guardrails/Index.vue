@@ -58,7 +58,7 @@ const guardrailsExample = [
   {
     id: 2,
     content:
-      'Seguir o Provimento 205/2021 da OAB: sem captação de cliente, sem comparar com outros escritórios e sem promoção de preço.',
+      "Seguir o Provimento 205/2021 da OAB: sem linguagem mercantil de captação (ex.: 'garanta já', promoção de preço) e sem comparar com outros escritórios.",
   },
   {
     id: 3,
