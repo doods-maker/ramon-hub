@@ -12,8 +12,10 @@ import {
   CAMPO,
   CARTAO,
   CARTAO_STATUS,
+  CHIP,
   FILETE,
   ROTULO,
+  SECAO,
   SELECT,
   TITULO,
   TOM,
@@ -447,8 +449,11 @@ const aba = ref(
       data-testid="sim-cnis-chip"
     >
       <div class="flex items-center justify-between gap-2">
-        <span class="truncate text-xs font-medium text-n-slate-12">
-          {{ cnis.filename }}
+        <span
+          class="flex items-center min-w-0 gap-1.5 text-sm font-medium text-n-slate-12"
+        >
+          <span class="i-lucide-file-text size-4 shrink-0 text-n-blue-11" />
+          <span class="truncate">{{ cnis.filename }}</span>
         </span>
         <Button
           data-testid="sim-cnis-remove"
@@ -469,7 +474,8 @@ const aba = ref(
       </span>
       <ul
         v-if="cnis.avisos && cnis.avisos.length"
-        class="flex flex-col gap-1 text-xs text-n-amber-11 list-disc ps-4"
+        class="flex flex-col gap-1 list-disc ps-7 my-1"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-cnis-avisos"
       >
         <li v-for="(aviso, i) in cnis.avisos" :key="i">{{ aviso }}</li>
@@ -491,7 +497,8 @@ const aba = ref(
         <div
           v-for="v in vinculos"
           :key="v.seq"
-          class="flex flex-col gap-1 border-t border-n-weak pt-2"
+          class="flex flex-col gap-1"
+          :class="SECAO"
         >
           <span class="text-xs text-n-slate-12 truncate">
             {{ tituloDe(v) }}
@@ -507,7 +514,7 @@ const aba = ref(
             />
             {{ $t('RAMON.SIMULADOR.VINCULO_EXCLUIR') }}
           </label>
-          <label v-if="v.tipo === 'BENEFICIO'" :class="ROTULO">
+          <label v-if="v.tipo === 'BENEFICIO'" class="sm:w-1/3" :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_MENSALIDADE') }}
             <input
               v-model="mensalidades[v.seq]"
@@ -521,23 +528,23 @@ const aba = ref(
           </label>
           <div
             v-if="v.tipo !== 'BENEFICIO'"
-            class="flex flex-wrap items-center gap-2"
+            class="grid items-end grid-cols-3 gap-2"
           >
-            <label class="text-xs text-n-slate-11">
+            <label :class="ROTULO">
               {{ $t('RAMON.SIMULADOR.ESPECIAL_LABEL') }}
+              <select
+                v-model="especiaisGrau[v.seq]"
+                :data-testid="`sim-especial-grau-${v.seq}`"
+                :class="SELECT"
+              >
+                <option :value="undefined">
+                  {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
+                </option>
+                <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
+                  {{ g }}
+                </option>
+              </select>
             </label>
-            <select
-              v-model="especiaisGrau[v.seq]"
-              :data-testid="`sim-especial-grau-${v.seq}`"
-              :class="SELECT"
-            >
-              <option :value="undefined">
-                {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
-              </option>
-              <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
-                {{ g }}
-              </option>
-            </select>
             <template v-if="especiaisGrau[v.seq]">
               <input
                 v-model="especiaisInicio[v.seq]"
@@ -562,7 +569,8 @@ const aba = ref(
             type="file"
             accept="application/pdf"
             data-testid="sim-cnis-refile"
-            :class="ARQUIVO"
+            class="!mb-0"
+            :class="[ARQUIVO]"
             @change="onRefile"
           />
         </label>
@@ -572,6 +580,7 @@ const aba = ref(
           sm
           faded
           slate
+          class="self-start"
           :label="
             cnisLoading
               ? $t('RAMON.SIMULADOR.CNIS_LOADING')
@@ -592,7 +601,8 @@ const aba = ref(
         accept="application/pdf"
         data-testid="sim-cnis-file"
         :disabled="cnisLoading"
-        :class="ARQUIVO"
+        class="!mb-0"
+        :class="[ARQUIVO]"
         @change="onCnisFile"
       />
       <span class="text-n-slate-10">
@@ -699,14 +709,16 @@ const aba = ref(
 
     <p
       v-if="motorDown"
-      class="text-sm text-n-amber-11"
+      class="mb-0"
+      :class="[AVISO, TOM.amber]"
       data-testid="sim-motor-down"
     >
       {{ $t('RAMON.SIMULADOR.MOTOR_DOWN') }}
     </p>
     <p
       v-else-if="errorMessage"
-      class="text-sm text-n-ruby-11"
+      class="mb-0"
+      :class="[AVISO, TOM.ruby]"
       data-testid="sim-error"
     >
       {{ errorMessage }}
@@ -774,6 +786,7 @@ const aba = ref(
         data-testid="sim-run"
         :disabled="!canSimulate || isLoading"
         sm
+        class="self-start"
         :label="
           isLoading
             ? $t('RAMON.SIMULADOR.SIMULANDO')
@@ -788,10 +801,10 @@ const aba = ref(
         :class="CARTAO"
         data-testid="sim-ultima"
       >
-        <p :class="TITULO">
+        <p class="mb-0" :class="TITULO">
           {{ $t('RAMON.SIMULADOR.ULTIMA_TITULO', { data: ultimaData }) }}
         </p>
-        <p v-if="ultimaSimulacao.atrasados != null" class="text-sm">
+        <p v-if="ultimaSimulacao.atrasados != null" class="mb-0 text-sm">
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.ATRASADOS') }}:
           </span>
@@ -799,7 +812,7 @@ const aba = ref(
             {{ `~${money(ultimaSimulacao.atrasados)}` }}
           </span>
         </p>
-        <p v-if="ultimaSimulacao.mensal != null" class="text-sm">
+        <p v-if="ultimaSimulacao.mensal != null" class="mb-0 text-sm">
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.ULTIMA_RMI') }}:
           </span>
@@ -807,7 +820,7 @@ const aba = ref(
             {{ money(ultimaSimulacao.mensal) }}
           </span>
         </p>
-        <p v-if="ultimaSimulacao.honorario_valor" class="text-sm">
+        <p v-if="ultimaSimulacao.honorario_valor" class="mb-0 text-sm">
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.HONORARIO') }}:
           </span>
@@ -815,7 +828,7 @@ const aba = ref(
             {{ `~${money(ultimaSimulacao.honorario_valor)}` }}
           </span>
         </p>
-        <p class="text-xs text-n-slate-10">
+        <p class="mb-0 text-xs text-n-slate-10">
           {{ $t('RAMON.SIMULADOR.ULTIMA_HINT') }}
         </p>
       </div>
@@ -826,7 +839,7 @@ const aba = ref(
         :class="CARTAO"
         data-testid="sim-resultado"
       >
-        <p class="text-sm text-n-slate-12">
+        <p class="mb-0 text-sm text-n-slate-12">
           <span class="text-n-slate-10">
             {{ $t('RAMON.SIMULADOR.ATRASADOS') }}:
           </span>
@@ -834,7 +847,7 @@ const aba = ref(
             {{ `~${money(resultado.atrasados)}` }}
           </span>
         </p>
-        <p class="text-sm text-n-slate-12" data-testid="sim-perda-mensal">
+        <p class="mb-0 text-sm text-n-slate-12" data-testid="sim-perda-mensal">
           {{
             $t('RAMON.SIMULADOR.PERDA_MENSAL', {
               value: money(resultado.perda_mensal),
@@ -847,14 +860,16 @@ const aba = ref(
           :class="[AVISO, TOM.ruby]"
           data-testid="sim-aviso-qualidade"
         >
-          <p v-for="(aviso, i) in avisosQualidade" :key="i">{{ aviso }}</p>
-          <p class="font-medium">
+          <p v-for="(aviso, i) in avisosQualidade" :key="i" class="mb-0">
+            {{ aviso }}
+          </p>
+          <p class="mb-0 font-medium">
             {{ $t('RAMON.SIMULADOR.ELEG_VER_ABA') }}
           </p>
         </div>
         <p
           v-if="honorario && honorario.valor"
-          class="text-sm text-n-slate-12"
+          class="mb-0 text-sm text-n-slate-12"
           data-testid="sim-honorario"
         >
           <span class="text-n-slate-10">
@@ -875,12 +890,12 @@ const aba = ref(
         </p>
         <p
           v-else
-          class="text-xs text-n-amber-11"
+          class="mb-0 text-xs text-n-amber-11"
           data-testid="sim-sem-honorario"
         >
           {{ $t('RAMON.SIMULADOR.NO_FEE_CONFIG') }}
         </p>
-        <p class="text-xs text-n-slate-10">
+        <p class="mb-0 text-xs text-n-slate-10">
           {{
             $t('RAMON.SIMULADOR.ESTIMATIVA_BASE', {
               meses: resultado.atrasados_estimativa?.meses || 0,
@@ -889,7 +904,7 @@ const aba = ref(
         </p>
         <p
           v-if="motorInfo.rmi_com_descartes"
-          class="text-xs text-n-slate-10"
+          class="mb-0 text-xs text-n-slate-10"
           data-testid="sim-duas-medias"
         >
           {{
@@ -963,7 +978,10 @@ const aba = ref(
               </tbody>
             </table>
           </div>
-          <p class="text-xs text-n-slate-10" data-testid="sim-memoria-resumo">
+          <p
+            class="mb-0 text-xs text-n-slate-10"
+            data-testid="sim-memoria-resumo"
+          >
             {{
               $t('RAMON.SIMULADOR.MEMORIA_RESUMO', {
                 soma: money(memoria.soma),
@@ -981,7 +999,7 @@ const aba = ref(
       class="flex flex-col gap-2"
       data-testid="sim-painel-secao"
     >
-      <span class="text-xs font-medium text-n-slate-12">
+      <span :class="TITULO">
         {{ $t('RAMON.SIMULADOR.PAINEL_TITULO') }}
       </span>
       <div
@@ -991,7 +1009,7 @@ const aba = ref(
         :class="CARTAO"
         :data-testid="`sim-vinculo-extra-${i}`"
       >
-        <div class="grid grid-cols-2 gap-1">
+        <div class="grid grid-cols-2 gap-2">
           <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.VINCULO_INICIO') }}
             <input
@@ -1033,22 +1051,22 @@ const aba = ref(
             />
           </label>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <label class="text-xs text-n-slate-11">
+        <div class="grid items-end grid-cols-3 gap-2">
+          <label :class="ROTULO">
             {{ $t('RAMON.SIMULADOR.ESPECIAL_LABEL') }}
+            <select
+              v-model="v.especialGrau"
+              :data-testid="`sim-vinculo-extra-especial-grau-${i}`"
+              :class="SELECT"
+            >
+              <option :value="undefined">
+                {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
+              </option>
+              <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
+                {{ g }}
+              </option>
+            </select>
           </label>
-          <select
-            v-model="v.especialGrau"
-            :data-testid="`sim-vinculo-extra-especial-grau-${i}`"
-            :class="SELECT"
-          >
-            <option :value="undefined">
-              {{ $t('RAMON.SIMULADOR.ESPECIAL_NAO') }}
-            </option>
-            <option v-for="g in GRAUS_ESPECIAIS" :key="g" :value="g">
-              {{ g }}
-            </option>
-          </select>
           <template v-if="v.especialGrau">
             <input
               v-model="v.especialInicio"
@@ -1088,6 +1106,7 @@ const aba = ref(
         data-testid="sim-painel-run"
         :disabled="!canPainel || painelLoading"
         sm
+        class="self-start"
         :label="
           painelLoading
             ? $t('RAMON.SIMULADOR.PAINEL_CALCULANDO')
@@ -1101,7 +1120,7 @@ const aba = ref(
         class="flex flex-col gap-2"
         data-testid="sim-painel-resultado"
       >
-        <p class="text-xs text-n-slate-11" data-testid="sim-painel-resumo">
+        <p class="mb-0 text-xs text-n-slate-11" data-testid="sim-painel-resumo">
           {{
             $t('RAMON.SIMULADOR.PAINEL_RESUMO', {
               idade: painel.resumo.idade,
@@ -1120,7 +1139,7 @@ const aba = ref(
           :data-testid="`sim-cartao-${cartao.id}`"
         >
           <div class="flex items-start justify-between gap-2">
-            <span class="text-xs font-medium text-n-slate-12">
+            <span class="text-sm font-medium text-n-slate-12">
               {{ cartao.titulo }}
             </span>
             <span
@@ -1132,13 +1151,15 @@ const aba = ref(
           <span class="text-xs text-n-slate-10">{{ cartao.subtitulo }}</span>
           <span
             v-if="cartao.elegivel === true"
-            class="text-xs text-n-teal-11 font-medium"
+            class="self-start"
+            :class="[CHIP, TOM.teal]"
           >
             {{ $t('RAMON.SIMULADOR.PAINEL_ELEGIVEL') }}
           </span>
           <span
             v-else-if="cartao.elegivel === null && cartao.depende_de"
-            class="text-xs text-n-amber-11"
+            class="self-start"
+            :class="[CHIP, TOM.amber]"
           >
             {{
               $t('RAMON.SIMULADOR.PAINEL_DEPENDE', { de: cartao.depende_de })
@@ -1199,7 +1220,8 @@ const aba = ref(
     >
       <p
         v-if="!canElegibilidade"
-        class="text-xs text-n-amber-11"
+        class="mb-0"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-elegibilidade-hint"
       >
         {{ $t('RAMON.SIMULADOR.ELEG_PRECISA_CNIS') }}
@@ -1219,7 +1241,8 @@ const aba = ref(
     >
       <p
         v-if="!canPensao"
-        class="text-xs text-n-amber-11"
+        class="mb-0"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-pensao-hint"
       >
         {{ $t('RAMON.SIMULADOR.PENSAO_PRECISA_CNIS') }}
@@ -1234,7 +1257,8 @@ const aba = ref(
     >
       <p
         v-if="!canMaternidade"
-        class="text-xs text-n-amber-11"
+        class="mb-0"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-maternidade-hint"
       >
         {{ $t('RAMON.SIMULADOR.MATERNIDADE_PRECISA_CNIS') }}
@@ -1249,7 +1273,8 @@ const aba = ref(
     >
       <p
         v-if="!canPlanejamento"
-        class="text-xs text-n-amber-11"
+        class="mb-0"
+        :class="[AVISO, TOM.amber]"
         data-testid="sim-planejamento-hint"
       >
         {{ $t('RAMON.SIMULADOR.PLANEJAMENTO_PRECISA_CNIS') }}
@@ -1258,7 +1283,8 @@ const aba = ref(
     </div>
 
     <p
-      class="text-xs italic text-n-amber-11 border-t border-n-weak pt-2"
+      class="mb-0 italic"
+      :class="[AVISO, TOM.amber]"
       data-testid="sim-disclaimer"
     >
       {{ $t('RAMON.SIMULADOR.DISCLAIMER') }}
