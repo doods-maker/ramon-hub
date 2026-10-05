@@ -263,6 +263,24 @@ describe('LeadPanelBody', () => {
       expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('playbook');
     });
 
+    it.each(['input', 'select', 'textarea'])(
+      'Esc com foco num %s não fecha (o que foi digitado se perderia)',
+      async tag => {
+        const wrapper = mountBody();
+        await wrapper
+          .find('[data-testid="lead-nav-simulador"]')
+          .trigger('click');
+        const campo = document.createElement(tag);
+        document.body.appendChild(campo);
+        campo.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+        );
+        await flushPromises();
+        expect(largo(wrapper).exists()).toBe(true);
+        campo.remove();
+      }
+    );
+
     it('"Voltar ao painel" fecha', async () => {
       const wrapper = mountBody();
       await wrapper.find('[data-testid="lead-nav-simulador"]').trigger('click');

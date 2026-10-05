@@ -459,12 +459,15 @@ const onNav = id => {
   else setTab(id);
 };
 // No document (antes do window): o Esc fecha só o Simulador, sem chegar à
-// gaveta do Kanban, que também fecha no Esc (onKeyStroke no window).
+// gaveta do Kanban, que também fecha no Esc (onKeyStroke no window). Com o
+// foco num campo o Esc não fecha: o que foi digitado no form se perderia.
+const CAMPOS = ['INPUT', 'SELECT', 'TEXTAREA'];
 onKeyStroke(
   'Escape',
   e => {
     if (!simuladorAberto.value) return;
     e.stopPropagation();
+    if (CAMPOS.includes(e.target?.tagName)) return;
     simuladorAberto.value = false;
   },
   { target: document }
