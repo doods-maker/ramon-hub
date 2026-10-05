@@ -134,8 +134,31 @@ const LEAD = {
       14: 'solicitado',
     },
     qualificacao_status: { 21: 'ok', 22: 'ok', 23: 'falta' },
-    ultima_simulacao: { mensal: 706 },
+    ultima_simulacao: {
+      mensal: 706,
+      atrasados: 25416,
+      honorario_valor: 9742.8,
+      tese: 'Auxílio-acidente',
+      em: diasAtras(3),
+      parametros: {
+        der: '2021-12-11',
+        salario: '2824',
+        beneficio: 'acidente',
+        origem: 'acidentaria',
+        acrescimo_25: false,
+        usar_cnis: true,
+      },
+    },
   },
+};
+
+// Lead parado (cartão "Risco de esfriar") com rascunho de retomada nas notas
+const LEAD_PARADO = {
+  ...LEAD,
+  id: 43,
+  stalled: true,
+  stage_entered_at: diasAtras(12),
+  follow_up_count: 1,
 };
 
 // DCB há mais de 5 anos: parcelas já prescrevendo (chip ruby no cabeçalho)
@@ -169,6 +192,22 @@ const API = {
         author_name: 'Eduardo',
         body: 'Cliente mandou a CTPS pelo WhatsApp. Falta o laudo.',
         created_at: diasAtras(1),
+      },
+    ],
+  },
+  'leads/43/notes': {
+    payload: [
+      {
+        id: 2,
+        author_name: 'Eduardo',
+        body: 'Ligou dizendo que ia buscar o laudo no posto.',
+        created_at: diasAtras(13),
+      },
+      {
+        id: 3,
+        author_name: null,
+        body: 'RASCUNHO (revisar antes de enviar) — retomada nº 2:\nOi João, tudo bem? Conseguiu pegar o laudo no posto? Se quiser, me manda uma foto dele por aqui que eu já confiro pra você.',
+        created_at: diasAtras(0),
       },
     ],
   },
@@ -246,6 +285,15 @@ const comAba = tab => () => {
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD_PRESCREVENDO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Retomada" :init-state="comAba('resumo')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_PARADO"
           context="conversation"
           :conversation-id="101"
         />

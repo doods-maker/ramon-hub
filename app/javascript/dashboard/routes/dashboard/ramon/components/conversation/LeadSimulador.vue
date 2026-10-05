@@ -15,6 +15,7 @@ import {
   FILETE,
   ROTULO,
   SELECT,
+  TITULO,
   TOM,
 } from '../../helpers/ui';
 import LeadLiquidacao from './LeadLiquidacao.vue';
@@ -33,6 +34,9 @@ const props = defineProps({
   // de cada POST de cálculo e vira o segurado_nome do histórico. Só a
   // instância do rascunho recebe — lead real usa o contato, como sempre.
   seguradoNome: { type: String, default: '' },
+  // custom_attributes.ultima_simulacao do lead (só o painel passa): o form
+  // abre com os parâmetros dela e o resultado salvo aparece rotulado.
+  ultimaSimulacao: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadSimulador' });
 
@@ -46,7 +50,13 @@ const guessBeneficio = name => {
   return 'temporaria';
 };
 
-const ini = props.inicial?.params || {};
+const ini = props.inicial?.params || props.ultimaSimulacao?.parametros || {};
+const ultimaData = props.ultimaSimulacao?.em
+  ? new Date(props.ultimaSimulacao.em).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+    })
+  : '';
 
 const form = ref({
   nascimento: ini.nascimento || props.lead.contact_data_nascimento || '',
@@ -422,7 +432,10 @@ const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
 // ajustes de vínculo). Campos próprios das abas pensão/maternidade/
 // planejamento ficam guardados no snapshot mas não são repreenchidos —
 // preencher de novo é digitação de segundos. Ligar se incomodar.
-const aba = ref(props.inicial?.tipo || 'painel');
+// Última simulação salva é do Honorário: abre nela, onde o resultado aparece.
+const aba = ref(
+  props.inicial?.tipo || (props.ultimaSimulacao ? 'honorario' : 'painel')
+);
 </script>
 
 <template>
@@ -768,6 +781,44 @@ const aba = ref(props.inicial?.tipo || 'painel');
         "
         @click="simulate"
       />
+
+      <div
+        v-if="!resultado && ultimaSimulacao"
+        class="flex flex-col gap-1.5"
+        :class="CARTAO"
+        data-testid="sim-ultima"
+      >
+        <p :class="TITULO">
+          {{ $t('RAMON.SIMULADOR.ULTIMA_TITULO', { data: ultimaData }) }}
+        </p>
+        <p v-if="ultimaSimulacao.atrasados != null" class="text-sm">
+          <span class="text-n-slate-10">
+            {{ $t('RAMON.SIMULADOR.ATRASADOS') }}:
+          </span>
+          <span class="font-mono font-semibold text-n-slate-12">
+            {{ `~${money(ultimaSimulacao.atrasados)}` }}
+          </span>
+        </p>
+        <p v-if="ultimaSimulacao.mensal != null" class="text-sm">
+          <span class="text-n-slate-10">
+            {{ $t('RAMON.SIMULADOR.ULTIMA_RMI') }}:
+          </span>
+          <span class="font-mono font-semibold text-n-slate-12">
+            {{ money(ultimaSimulacao.mensal) }}
+          </span>
+        </p>
+        <p v-if="ultimaSimulacao.honorario_valor" class="text-sm">
+          <span class="text-n-slate-10">
+            {{ $t('RAMON.SIMULADOR.HONORARIO') }}:
+          </span>
+          <span class="font-mono font-semibold text-n-slate-12">
+            {{ `~${money(ultimaSimulacao.honorario_valor)}` }}
+          </span>
+        </p>
+        <p class="text-xs text-n-slate-10">
+          {{ $t('RAMON.SIMULADOR.ULTIMA_HINT') }}
+        </p>
+      </div>
 
       <div
         v-if="resultado"

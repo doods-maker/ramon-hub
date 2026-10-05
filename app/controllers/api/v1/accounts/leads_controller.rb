@@ -42,7 +42,11 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   # Retomada W4 sob demanda (Onda D): botão "Preparar retomada" do painel.
   # Resultado (nota RASCUNHO + tarefa) chega pelos broadcasts de sempre.
+  # Inelegível → 422 com o motivo (reason) pro painel explicar, sem enfileirar.
   def follow_up_draft
+    motivo = Ramon::FollowUpDraftService.new(account: Current.account).ineligibility(@lead)
+    return render json: { error: 'FOLLOW_UP_NOT_ELIGIBLE', **motivo }, status: :unprocessable_entity if motivo
+
     Ramon::FollowUpDraftJob.perform_later(@lead.id)
     head :accepted
   end

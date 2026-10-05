@@ -44,22 +44,32 @@ class Ramon::FollowUpDraftService
     true
   end
 
+  # Por que o lead NÃO pode receber retomada agora (nil = pode). O controller
+  # checa antes de enfileirar: o botão do painel dizia "em preparo" mesmo
+  # quando o job ia desistir calado.
+  def ineligibility(lead)
+    return { reason: 'no_conversation' } if lead.conversation_id.blank?
+    return { reason: 'open_follow_up' } if lead.lead_tasks.open_tasks.exists?(kind: 'follow_up')
+
+    last_at = last_follow_up_at(lead)
+    return if last_at.nil? || last_at <= MIN_GAP_DAYS.days.ago
+
+    { reason: 'recent_follow_up', last_at: last_at.iso8601,
+      days_ago: (Time.zone.today - last_at.to_date).to_i, min_gap_days: MIN_GAP_DAYS }
+  end
+
   private
 
-  def eligible?(lead)
-    return false if lead.conversation_id.blank?
-    return false if lead.lead_tasks.open_tasks.exists?(kind: 'follow_up')
+  def eligible?(lead) = ineligibility(lead).nil?
 
+  # data venenosa (API grava qualquer coisa no jsonb) → nil, tratada como "nunca"
+  def last_follow_up_at(lead)
     last_at = lead.custom_attributes.dig('follow_up', 'ultima_em')
-    return true if last_at.blank?
+    return if last_at.blank?
 
-    parsed = begin
-      Time.zone.parse(last_at.to_s)
-    rescue ArgumentError
-      nil
-    end
-    # data venenosa (API grava qualquer coisa no jsonb) → trata como "nunca"
-    parsed.nil? || parsed <= MIN_GAP_DAYS.days.ago
+    Time.zone.parse(last_at.to_s)
+  rescue ArgumentError
+    nil
   end
 
   def draft_for(lead)

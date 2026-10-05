@@ -634,4 +634,58 @@ describe('LeadSimulador.vue', () => {
       ).toBe(true);
     });
   });
+
+  describe('última simulação do lead', () => {
+    const ultimaSimulacao = {
+      mensal: 706,
+      atrasados: 25416,
+      honorario_valor: 9742.8,
+      em: '2026-10-02T15:00:00Z',
+      parametros: {
+        der: '2021-12-11',
+        salario: '2824',
+        beneficio: 'acidente',
+        origem: 'acidentaria',
+        acrescimo_25: false,
+      },
+    };
+
+    it('abre no Honorário com os parâmetros e o resultado salvo rotulado', () => {
+      const wrapper = mountSim({ ultimaSimulacao });
+      expect(
+        wrapper.find('[data-testid="sim-secao-honorario"]').isVisible()
+      ).toBe(true);
+      expect(wrapper.find('[data-testid="sim-der"]').element.value).toBe(
+        '2021-12-11'
+      );
+      expect(wrapper.find('[data-testid="sim-salario"]').element.value).toBe(
+        '2824'
+      );
+      expect(wrapper.find('[data-testid="sim-beneficio"]').element.value).toBe(
+        'acidente'
+      );
+      const card = wrapper.find('[data-testid="sim-ultima"]');
+      expect(card.text()).toContain('RAMON.SIMULADOR.ULTIMA_TITULO');
+      expect(card.text()).toContain('25.416,00');
+      expect(card.text()).toContain('706,00');
+    });
+
+    it('resultado novo substitui o cartão da última simulação', async () => {
+      LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+      LeadsAPI.update.mockResolvedValue({});
+      const wrapper = mountSim({ ultimaSimulacao });
+      await wrapper.find('[data-testid="sim-run"]').trigger('click');
+      await flushPromises();
+      expect(wrapper.find('[data-testid="sim-ultima"]').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="sim-resultado"]').exists()).toBe(true);
+    });
+
+    it('sem última simulação, nada de cartão e abre em Possibilidades', () => {
+      const wrapper = mountSim();
+      expect(wrapper.find('[data-testid="sim-ultima"]').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="sim-painel-secao"]').isVisible()).toBe(
+        true
+      );
+    });
+  });
 });

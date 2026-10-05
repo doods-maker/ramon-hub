@@ -761,7 +761,8 @@
         "PLACEHOLDER": "Adicionar nota…",
         "SAVE_ERROR": "Não foi possível salvar a nota — tente de novo",
         "HIDDEN": "+{count} anteriores na aba Histórico",
-        "SYSTEM": "Sistema"
+        "SYSTEM": "Sistema",
+        "USE_IN_EDITOR": "Usar no editor"
       },
       "QUIZ": {
         "TITLE": "Triagem da LP",
@@ -780,7 +781,11 @@
       },
       "ANDAMENTO": {
         "TITLE": "Andamento",
-        "IN_STAGE": "Nesta etapa há {days} d"
+        "IN_STAGE": "Nesta etapa há {days} d",
+        "LAST_SIM": "Última simulação:",
+        "LAST_SIM_ATRASADOS": "atrasados",
+        "LAST_SIM_RMI": "RMI",
+        "LAST_SIM_EM": "em"
       },
       "CASE_TITLE": "Caso",
       "CONTACT_DATA": "Dados do contato",
@@ -1033,6 +1038,9 @@
       "ACRESCIMO": "Acréscimo de 25% (grande invalidez)",
       "SIMULAR": "Simular",
       "SIMULANDO": "Simulando…",
+      "ULTIMA_TITULO": "Última simulação · {data}",
+      "ULTIMA_RMI": "RMI",
+      "ULTIMA_HINT": "Parâmetros dela já estão no formulário — clique em Simular para recalcular.",
       "ATRASADOS": "Atrasados estimados",
       "PERDA_MENSAL": "Esperando, você perde {value}/mês",
       "HONORARIO": "Honorário estimado",
@@ -1256,7 +1264,12 @@
       "TITLE": "Risco de esfriar",
       "APOIO": "Nesta etapa há {days} d · {count} retomada(s) já feitas.",
       "PREPARAR": "Preparar retomada (W4) →",
-      "PREPARADO": "Retomada em preparo — o rascunho aparece nas notas e o evento na conversa."
+      "PREPARADO": "Retomada em preparo — o rascunho aparece nas notas e o evento na conversa.",
+      "RECUSA": {
+        "NO_CONVERSATION": "Este lead não tem conversa no WhatsApp — a retomada precisa da conversa para ser preparada.",
+        "OPEN_FOLLOW_UP": "Já existe um follow-up aberto para este lead — conclua a tarefa em Próximo passo antes de preparar outra retomada.",
+        "RECENT_FOLLOW_UP": "A última retomada foi hoje — espere {gap} dias entre retomadas. | A última retomada foi há 1 dia — espere {gap} dias entre retomadas. | A última retomada foi há {days} dias — espere {gap} dias entre retomadas."
+      }
     },
     "QUALIFICACAO": {
       "TITLE": "Qualificação",

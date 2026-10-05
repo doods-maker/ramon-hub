@@ -3,10 +3,18 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { dynamicTime } from 'shared/helpers/timeHelper';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 import LeadsAPI from 'dashboard/api/leads';
+import Button from 'dashboard/components-next/button/Button.vue';
 import { CAMPO, TITULO } from '../../helpers/ui';
 
-const props = defineProps({ leadId: { type: Number, required: true } });
+const props = defineProps({
+  leadId: { type: Number, required: true },
+  // muda quando o backend grava algo nas notas fora daqui (ex.: retomada)
+  refreshKey: { type: String, default: null },
+  inConversation: { type: Boolean, default: false },
+});
 
 defineOptions({ name: 'LeadNotes' });
 const { t } = useI18n();
@@ -31,13 +39,27 @@ const load = async id => {
 };
 onMounted(() => load(props.leadId));
 watch(
-  () => props.leadId,
-  id => {
-    notes.value = [];
-    draft.value = '';
+  () => [props.leadId, props.refreshKey],
+  ([id], [prevId]) => {
+    if (id !== prevId) {
+      notes.value = [];
+      draft.value = '';
+    }
     load(id);
   }
 );
+
+// Cabeçalho que o backend põe nas notas-rascunho (retomada, AdvBox, copiloto
+// noturno, Cal.com): 1ª linha "RASCUNHO (revisar antes de enviar) — <motivo>:",
+// texto da mensagem nas linhas seguintes.
+const RASCUNHO_PREFIXO = 'RASCUNHO (revisar antes de enviar)';
+const isRascunho = note => note.body?.startsWith(RASCUNHO_PREFIXO);
+// Só o texto da mensagem vai pro editor; nada é enviado — quem envia é o Eduardo.
+const usarNoEditor = note =>
+  emitter.emit(
+    BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR,
+    note.body.split('\n').slice(1).join('\n').trim()
+  );
 
 const save = async () => {
   const body = draft.value.trim();
@@ -81,6 +103,15 @@ const noteTime = createdAt =>
       >
         {{ note.body }}
       </p>
+      <Button
+        v-if="inConversation && isRascunho(note)"
+        data-testid="lead-note-usar-editor"
+        link
+        xs
+        icon="i-lucide-corner-down-left"
+        :label="$t('RAMON.LEAD_PANEL.NOTES.USE_IN_EDITOR')"
+        @click="usarNoEditor(note)"
+      />
     </div>
     <input
       v-model="draft"
