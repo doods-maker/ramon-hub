@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import ReunioesAPI from 'dashboard/api/reunioes';
 import { useAlert } from 'dashboard/composables';
+import Button from 'dashboard/components-next/button/Button.vue';
 import ConfirmModal from '../ConfirmModal.vue';
+import { AVISO, CARTAO, TITULO, TOM } from '../../helpers/ui';
 
 const props = defineProps({
   reuniaoId: { type: [String, Number], required: true },
@@ -66,88 +68,97 @@ onBeforeUnmount(() => clearInterval(poll));
 </script>
 
 <template>
-  <div v-if="reuniao" class="mx-auto flex w-full max-w-3xl flex-col gap-6">
-    <div class="flex items-start justify-between gap-4">
+  <div v-if="reuniao" class="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <div class="flex items-start justify-between gap-4 mb-2">
       <div class="min-w-0">
         <h1 class="truncate text-2xl font-semibold text-n-slate-12">
           {{ reuniao.titulo }}
         </h1>
-        <p v-if="reuniao.user_name" class="text-sm text-n-slate-11">
+        <p v-if="reuniao.user_name" class="mt-0.5 text-sm text-n-slate-11">
           {{ t('RAMON.REUNIOES.RECORDED_BY', { name: reuniao.user_name }) }}
         </p>
       </div>
-      <button
-        type="button"
-        class="shrink-0 text-sm text-n-ruby-11"
+      <Button
+        sm
+        ghost
+        ruby
+        icon="i-lucide-trash-2"
+        class="shrink-0"
         data-testid="reuniao-delete"
+        :label="t('RAMON.REUNIOES.DELETE')"
         @click="showDeleteConfirm = true"
-      >
-        {{ t('RAMON.REUNIOES.DELETE') }}
-      </button>
+      />
     </div>
 
     <div
       v-if="reuniao.status === 'transcrevendo'"
-      class="rounded-lg bg-n-amber-3 p-4 text-sm text-n-amber-11"
+      :class="[AVISO, TOM.amber]"
+      class="flex items-center gap-2 !text-sm"
       data-testid="reuniao-processing"
     >
+      <span class="i-lucide-loader-circle size-4 shrink-0 animate-spin" />
       {{ t('RAMON.REUNIOES.PROCESSING_HINT') }}
     </div>
 
     <div
       v-else-if="reuniao.status === 'erro'"
-      class="flex items-center justify-between gap-4 rounded-lg bg-n-ruby-3 p-4 text-sm text-n-ruby-11"
+      :class="[AVISO, TOM.ruby]"
+      class="flex items-center justify-between gap-4 !text-sm"
     >
       <span class="min-w-0 truncate">{{ reuniao.erro }}</span>
-      <button
-        type="button"
-        class="shrink-0 underline"
+      <Button
+        xs
+        faded
+        ruby
+        icon="i-lucide-refresh-cw"
+        class="shrink-0"
         data-testid="reuniao-reprocess"
+        :label="t('RAMON.REUNIOES.REPROCESS')"
         @click="reprocessar"
-      >
-        {{ t('RAMON.REUNIOES.REPROCESS') }}
-      </button>
+      />
     </div>
 
-    <section
-      v-if="reuniao.ata"
-      class="rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-4"
-    >
-      <h2 class="mb-2 text-sm font-semibold uppercase text-n-slate-11">
+    <section v-if="reuniao.ata" :class="CARTAO" class="!p-4">
+      <h2 :class="TITULO" class="mb-2">
         {{ t('RAMON.REUNIOES.ATA_TITLE') }}
       </h2>
       <div
-        class="text-sm text-n-slate-12 [&_h2]:mb-1 [&_h2]:mt-4 [&_h2]:font-semibold [&_li]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ps-4"
+        class="text-sm leading-relaxed text-n-slate-12 [&_h2]:mb-1 [&_h2]:mt-4 [&_h2]:text-sm [&_h2]:font-semibold [&_li]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ps-4"
         data-testid="reuniao-ata"
         v-html="formatMessage(reuniao.ata)"
       />
     </section>
 
-    <section
-      v-if="reuniao.audio_url"
-      class="rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-4"
-    >
-      <h2 class="mb-2 text-sm font-semibold uppercase text-n-slate-11">
+    <section v-if="reuniao.audio_url" :class="CARTAO" class="!p-4">
+      <h2 :class="TITULO" class="mb-2">
         {{ t('RAMON.REUNIOES.AUDIO_TITLE') }}
       </h2>
-      <audio controls :src="reuniao.audio_url" class="w-full" />
+      <audio
+        controls
+        :src="reuniao.audio_url"
+        class="w-full dark:[color-scheme:dark]"
+      />
     </section>
 
-    <section
-      v-if="reuniao.transcricao"
-      class="rounded-xl border border-n-weak bg-n-solid-1 shadow-sm p-4"
-    >
+    <section v-if="reuniao.transcricao" :class="CARTAO" class="!p-4">
       <button
         type="button"
-        class="mb-2 text-sm font-semibold uppercase text-n-slate-11 underline"
+        :class="TITULO"
+        class="flex items-center gap-1 !p-0 hover:text-n-slate-12"
         data-testid="reuniao-toggle-transcricao"
         @click="mostrarTranscricao = !mostrarTranscricao"
       >
         {{ t('RAMON.REUNIOES.TRANSCRICAO_TITLE') }}
+        <span
+          class="size-3.5"
+          :class="
+            mostrarTranscricao ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'
+          "
+        />
       </button>
       <p
         v-if="mostrarTranscricao"
-        class="whitespace-pre-wrap text-sm text-n-slate-11"
+        class="mt-2 mb-0 whitespace-pre-wrap text-sm text-n-slate-11"
       >
         {{ reuniao.transcricao }}
       </p>
@@ -167,8 +178,6 @@ onBeforeUnmount(() => clearInterval(poll));
     class="flex items-center gap-2 text-sm text-n-ruby-11"
   >
     {{ t('RAMON.REUNIOES.LOAD_ERROR') }}
-    <button type="button" class="underline" @click="carregar">
-      {{ t('RAMON.LEAD_PANEL.RETRY') }}
-    </button>
+    <Button link xs :label="t('RAMON.LEAD_PANEL.RETRY')" @click="carregar" />
   </div>
 </template>
