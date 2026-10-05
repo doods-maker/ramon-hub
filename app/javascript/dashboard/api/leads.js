@@ -113,6 +113,15 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/reuniao`, { resultado });
   }
 
+  // Reunião marcada pelo painel: mesmo efeito do Cal.com (etapa, Closer,
+  // rascunho de confirmação nas notas, lembretes internos). Nada vai ao cliente.
+  agendarReuniao(leadId, { startsAt, title }) {
+    return axios.post(`${this.url}/${leadId}/reuniao_agendada`, {
+      starts_at: startsAt,
+      title,
+    });
+  }
+
   encaminharComercial(conversationId) {
     return axios.post(`${this.url}/encaminhar_comercial`, {
       conversation_id: conversationId,

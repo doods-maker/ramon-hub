@@ -7,7 +7,7 @@ import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { CAMPO, TITULO } from '../../helpers/ui';
+import { CAMPO, SELECT, TITULO } from '../../helpers/ui';
 
 const props = defineProps({
   leadId: { type: Number, required: true },
@@ -23,9 +23,28 @@ const notes = ref([]);
 const draft = ref('');
 const saving = ref(false);
 
-// ponytail: mostra as 5 últimas; o histórico completo vive na aba Histórico
-const visible = computed(() => notes.value.slice(-5));
+// Lista única de notas do lead: as 5 últimas, "ver todas" abre o resto aqui
+// mesmo, texto inteiro (a aba Histórico só guarda um resumo de 60 caracteres).
+const showAll = ref(false);
+const visible = computed(() =>
+  showAll.value ? notes.value : notes.value.slice(-5)
+);
 const hiddenCount = computed(() => Math.max(0, notes.value.length - 5));
+
+// Templates de nota rápida: chaves fixas, texto no i18n.
+const NOTE_TEMPLATE_KEYS = [
+  'TRIED_CONTACT',
+  'AWAITING_DOCS',
+  'MEETING_SCHEDULED',
+];
+// select volta pro rótulo depois de aplicar (é atalho, não estado)
+const applyNoteTemplate = e => {
+  const key = e.target.value;
+  if (!key) return;
+  const text = t(`RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.${key}`);
+  draft.value = draft.value ? `${draft.value} ${text}` : text;
+  e.target.value = '';
+};
 
 const load = async id => {
   if (!id) return;
@@ -44,6 +63,7 @@ watch(
     if (id !== prevId) {
       notes.value = [];
       draft.value = '';
+      showAll.value = false;
     }
     load(id);
   }
@@ -86,9 +106,20 @@ const noteTime = createdAt =>
     <p :class="TITULO">
       {{ $t('RAMON.LEAD_PANEL.NOTES.TITLE') }}
     </p>
-    <p v-if="hiddenCount" class="text-[10.5px] text-n-slate-9">
-      {{ $t('RAMON.LEAD_PANEL.NOTES.HIDDEN', { count: hiddenCount }) }}
-    </p>
+    <Button
+      v-if="hiddenCount"
+      data-testid="lead-notes-ver-todas"
+      link
+      slate
+      xs
+      class="self-start"
+      :label="
+        showAll
+          ? $t('RAMON.LEAD_PANEL.NOTES.SHOW_LESS')
+          : $t('RAMON.LEAD_PANEL.NOTES.SHOW_ALL', { count: notes.length })
+      "
+      @click="showAll = !showAll"
+    />
     <div
       v-for="note in visible"
       :key="note.id"
@@ -113,6 +144,18 @@ const noteTime = createdAt =>
         @click="usarNoEditor(note)"
       />
     </div>
+    <select
+      data-testid="note-template-select"
+      :class="SELECT"
+      @change="applyNoteTemplate"
+    >
+      <option value="">
+        {{ $t('RAMON.DRAWER.NOTE_TEMPLATES.LABEL') }}
+      </option>
+      <option v-for="key in NOTE_TEMPLATE_KEYS" :key="key" :value="key">
+        {{ $t(`RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.${key}`) }}
+      </option>
+    </select>
     <input
       v-model="draft"
       data-testid="lead-note-input"

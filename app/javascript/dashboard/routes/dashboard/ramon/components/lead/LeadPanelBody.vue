@@ -11,6 +11,7 @@ import LeadNextAction from './LeadNextAction.vue';
 import MiniEsteira from './MiniEsteira.vue';
 import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
 import LeadNotes from './LeadNotes.vue';
+import LeadReuniao from './LeadReuniao.vue';
 import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
@@ -25,7 +26,7 @@ import { useTemperatura } from '../../composables/useTemperatura';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
-import { formatCpf } from '../../helpers/cpf';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import {
   CARTAO,
   CARTAO_STATUS,
@@ -39,6 +40,7 @@ import {
   CHIP,
   TOM,
   AVISO,
+  EDITAVEL,
 } from '../../helpers/ui';
 
 const props = defineProps({
@@ -58,6 +60,8 @@ const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
 const channels = useMapGetter('leadConfig/getChannels');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
+const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
+const theses = useMapGetter('theses/getTheses');
 
 // Etapas/motivos só eram buscados pelo Funil: abrir a conversa direto (F5)
 // deixava o chip de etapa VAZIO e o modal de perda sem motivos.
@@ -96,10 +100,43 @@ const formattedValue = computed(() =>
     : formatBrl(props.lead.value)
 );
 
-// Badge "estimado": mesmo computed do LeadFields, dentro do chip de valor.
+// Badge "estimado": valor_estimado.origem === 'auto' (regra da tese calculou
+// sozinha); some assim que o valor é editado à mão.
 const valorEstimadoAuto = computed(
   () => props.lead?.custom_attributes?.valor_estimado?.origem === 'auto'
 );
+
+// try/catch único dos campos editáveis do Resumo (valor, tese, benefício,
+// DCB, canal): no erro só avisa — o lead da store não mudou.
+const save = async payload => {
+  try {
+    await store.dispatch('leads/update', { id: props.lead.id, ...payload });
+  } catch (e) {
+    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+  }
+};
+
+// ----- valor: chip do cabeçalho vira input ao clicar -----
+const valueEditing = ref(false);
+const valueDraft = ref('');
+const valueInput = ref(null);
+const editValue = async () => {
+  valueDraft.value = formatBrl(props.lead?.value);
+  valueEditing.value = true;
+  await nextTick();
+  valueInput.value?.focus();
+  valueInput.value?.select();
+};
+// Enter/blur salva; Esc fecha antes do blur (que então não salva nada).
+const saveValue = () => {
+  if (!valueEditing.value) return;
+  valueEditing.value = false;
+  const next = parseBrlInput(valueDraft.value);
+  // texto inválido não-vazio: descarta (evita apagar o valor)
+  if (next === null && valueDraft.value.trim() !== '') return;
+  const prev = props.lead?.value == null ? null : Number(props.lead.value);
+  if (next !== prev) save({ value: next });
+};
 
 // ----- etapa editável no chip (mesma guarda do LeadFields: perda pede motivo,
 // ganho sem valor pede valor — senão o backend recusa com 422) -----
@@ -115,6 +152,7 @@ watch(
       stageId.value = l?.lead_stage_id ?? null;
       lostModalOpen.value = false;
       wonPrompt.value = false;
+      valueEditing.value = false;
       return;
     }
     // broadcast no mesmo lead: não mexer com prompt aberto nem select focado
@@ -134,9 +172,6 @@ const stageChipStyle = computed(() => ({
 }));
 
 // ----- Onda B: cartões do resumo -----
-const stageName = computed(
-  () => stages.value?.find(s => s.id === stageId.value)?.name || ''
-);
 const probability = computed(() => {
   const p = stages.value?.find(s => s.id === stageId.value)?.probability;
   return p == null ? null : Number(p);
@@ -158,9 +193,12 @@ const andamentoApoio = computed(() =>
           }),
         }
       : null,
-    formattedValue.value ? { texto: formattedValue.value, mono: true } : null,
     probability.value != null
-      ? { texto: `${probability.value}%`, mono: true }
+      ? {
+          rotulo: t('RAMON.LEAD_PANEL.ANDAMENTO.CHANCE'),
+          texto: `${probability.value}%`,
+          mono: true,
+        }
       : null,
   ].filter(Boolean)
 );
@@ -280,10 +318,19 @@ const confirmWonStage = () => {
 };
 const skipWonStage = () => commitStage(stageId.value);
 
-// ----- + Tarefa: form inline (mesmos defaults do LeadTasksList) -----
+// ----- + Tarefa: form inline. Tipo Reunião = mesmo efeito do Cal.com no
+// backend (etapa, Closer, rascunho de confirmação, lembretes internos) -----
+const TASK_KINDS = [
+  { kind: 'follow_up', id: 'task', label: 'KIND_TASK' },
+  { kind: 'meeting', id: 'meeting', label: 'KIND_MEETING' },
+];
 const taskFormOpen = ref(false);
+const taskKind = ref('follow_up');
 const taskTitle = ref('');
 const taskDate = ref('');
+const isMeetingForm = computed(() => taskKind.value === 'meeting');
+// nota-rascunho de confirmação nasce no backend: recarrega as notas
+const notesTick = ref(0);
 const tomorrowAt9 = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
@@ -293,26 +340,60 @@ const tomorrowAt9 = () => {
 // guard de duplo-clique: dois cliques rápidos criavam a tarefa em dobro
 const savingTask = ref(false);
 const addTask = async () => {
-  if (savingTask.value) return;
+  if (savingTask.value || (isMeetingForm.value && !taskDate.value)) return;
   savingTask.value = true;
-  const title = taskTitle.value.trim() || t('RAMON.KANBAN.BELL.DEFAULT_TITLE');
+  const title = taskTitle.value.trim();
   const due = taskDate.value ? new Date(taskDate.value) : tomorrowAt9();
   try {
-    await store.dispatch('leadTasks/create', {
-      leadId: props.lead.id,
-      title,
-      kind: 'follow_up',
-      dueAt: due.toISOString(),
-    });
+    if (isMeetingForm.value) {
+      await store.dispatch('leads/agendarReuniao', {
+        id: props.lead.id,
+        startsAt: due.toISOString(),
+        title,
+      });
+      notesTick.value += 1;
+      useAlert(t('RAMON.TASKS.MEETING_SCHEDULED'));
+    } else {
+      await store.dispatch('leadTasks/create', {
+        leadId: props.lead.id,
+        title: title || t('RAMON.KANBAN.BELL.DEFAULT_TITLE'),
+        kind: 'follow_up',
+        dueAt: due.toISOString(),
+      });
+    }
     taskTitle.value = '';
     taskDate.value = '';
+    taskKind.value = 'follow_up';
     taskFormOpen.value = false;
   } catch (e) {
-    useAlert(t('RAMON.TASKS.CREATE_ERROR'));
+    useAlert(
+      t(
+        isMeetingForm.value
+          ? 'RAMON.TASKS.MEETING_ERROR'
+          : 'RAMON.TASKS.CREATE_ERROR'
+      )
+    );
   } finally {
     savingTask.value = false;
   }
 };
+
+// ----- Reunião (Closer): Qualificada / Não qualificada no Andamento quando
+// há reunião em jogo — etapa de reunião (pelo label fixo do seed), reunião
+// já passada ou resultado já registrado -----
+const MEETING_STAGE_LABELS = [
+  'fase-reuniao-agendada',
+  'fase-reuniao-realizada',
+];
+const tasksByLead = useMapGetter('leadTasks/getByLead');
+const showReuniao = computed(() => {
+  const stage = stages.value?.find(s => s.id === props.lead?.lead_stage_id);
+  if (MEETING_STAGE_LABELS.includes(stage?.label)) return true;
+  if (props.lead?.reuniao_resultado) return true;
+  return (tasksByLead.value?.(props.lead?.id) || []).some(
+    task => task.kind === 'meeting' && new Date(task.due_at) < Date.now()
+  );
+});
 
 // ----- abas -----
 const { activeTab, setTab } = useLeadPanelTabs();
@@ -355,22 +436,34 @@ const onCompleteData = async () => {
 };
 
 // ----- campos derivados dos cartões -----
-const dcbFormatted = computed(() => {
-  if (!props.lead?.dcb_em) return null;
-  const d = new Date(`${props.lead.dcb_em}T00:00:00`);
-  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString('pt-BR');
-});
 const owners = computed(() => {
   const sdr = props.lead?.sdr_name;
   const closer = props.lead?.closer_name;
   if (!sdr && !closer) return null;
   return `${sdr || '—'} / ${closer || '—'}`;
 });
-const channelLabel = computed(
-  () =>
-    channels.value?.find(c => c.key === props.lead?.channel)?.label ??
-    props.lead?.channel
+const activeTheses = computed(() =>
+  (theses.value || []).filter(thesis => thesis.active)
 );
+const thesisFora = computed(
+  () =>
+    props.lead?.thesis_id &&
+    !activeTheses.value.some(th => th.id === props.lead.thesis_id)
+);
+// select do Caso: '' = limpar (null); ids numéricos viram Number
+const saveSelect = (key, raw, numeric = true) => {
+  const val = raw === '' ? null : raw;
+  save({ [key]: numeric && val != null ? Number(val) : val });
+};
+
+const copyPhone = async () => {
+  try {
+    await copyTextToClipboard(props.lead.contact_phone);
+    useAlert(t('RAMON.KANBAN.CARD.PHONE_COPIED'));
+  } catch (error) {
+    useAlert(t('RAMON.DOCS.COPY_FAILED'));
+  }
+};
 
 // ----- seções nativas do Chatwoot (agente/time/prioridade/etiquetas/macros)
 // recolhidas: não existem no mock 1f e "sujavam" o fim do Resumo -----
@@ -445,12 +538,33 @@ const discard = async () => {
           <span class="i-lucide-hourglass size-3 shrink-0" />
           {{ prescriptionLabel }}
         </span>
-        <span
-          v-if="formattedValue"
+        <!-- valor: clicar no chip edita no lugar (Enter/fora salva, Esc desiste) -->
+        <input
+          v-if="valueEditing"
+          ref="valueInput"
+          v-model="valueDraft"
+          data-testid="field-value"
+          type="text"
+          inputmode="decimal"
+          :aria-label="$t('RAMON.DRAWER.VALUE')"
+          class="font-mono !h-7 !w-36"
+          :class="CAMPO"
+          @blur="saveValue"
+          @keyup.enter="saveValue"
+          @keyup.esc="valueEditing = false"
+        />
+        <button
+          v-else
+          type="button"
           data-testid="panel-value-chip"
+          :title="$t('RAMON.LEAD_PANEL.VALUE_EDIT')"
+          class="hover:bg-n-slate-9/20"
           :class="[CHIP, TOM.slate]"
+          @click="editValue"
         >
-          <span class="font-mono">{{ formattedValue }}</span>
+          <span :class="{ 'font-mono': formattedValue }">{{
+            formattedValue || $t('RAMON.LEAD_PANEL.VALUE_ADD')
+          }}</span>
           <span
             v-if="valorEstimadoAuto"
             data-testid="value-auto-badge"
@@ -462,7 +576,7 @@ const discard = async () => {
               $t('RAMON.DRAWER.VALUE_AUTO')
             }}
           </span>
-        </span>
+        </button>
       </div>
 
       <LostReasonModal
@@ -555,20 +669,47 @@ const discard = async () => {
         class="flex flex-col gap-2 mt-2"
         :class="CARTAO"
       >
+        <div class="flex gap-1.5">
+          <Button
+            v-for="k in TASK_KINDS"
+            :key="k.kind"
+            :data-testid="`panel-task-kind-${k.id}`"
+            xs
+            :variant="taskKind === k.kind ? 'solid' : 'faded'"
+            :color="taskKind === k.kind ? 'blue' : 'slate'"
+            :label="$t(`RAMON.TASKS.${k.label}`)"
+            @click="taskKind = k.kind"
+          />
+        </div>
         <input
           v-model="taskTitle"
           data-testid="panel-task-title"
-          :placeholder="$t('RAMON.TASKS.ADD_TITLE_PLACEHOLDER')"
+          :placeholder="
+            $t(
+              isMeetingForm
+                ? 'RAMON.TASKS.MEETING_TITLE_PLACEHOLDER'
+                : 'RAMON.TASKS.ADD_TITLE_PLACEHOLDER'
+            )
+          "
           :class="CAMPO"
         />
         <input
           v-model="taskDate"
           data-testid="panel-task-date"
           type="datetime-local"
-          :title="$t('RAMON.TASKS.DATE_HINT')"
+          :title="
+            $t(
+              isMeetingForm
+                ? 'RAMON.TASKS.MEETING_DATE_HINT'
+                : 'RAMON.TASKS.DATE_HINT'
+            )
+          "
           class="font-mono"
           :class="CAMPO"
         />
+        <p v-if="isMeetingForm" class="text-xs text-n-slate-10">
+          {{ $t('RAMON.TASKS.MEETING_HINT') }}
+        </p>
         <div class="flex justify-end gap-2">
           <Button
             data-testid="panel-task-cancel"
@@ -582,7 +723,7 @@ const discard = async () => {
             data-testid="panel-task-save"
             sm
             :label="$t('RAMON.FUNIL.SAVE')"
-            :disabled="savingTask"
+            :disabled="savingTask || (isMeetingForm && !taskDate)"
             @click="addTask"
           />
         </div>
@@ -625,15 +766,7 @@ const discard = async () => {
           <p :class="TITULO">
             {{ $t('RAMON.LEAD_PANEL.ANDAMENTO.TITLE') }}
           </p>
-          <p class="mt-1.5">
-            <span
-              class="ramon-stage-pill inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-semibold"
-              :style="stageChipStyle"
-            >
-              <span class="rounded-full size-1.5 bg-current" />
-              {{ stageName || '—' }}
-            </span>
-          </p>
+          <!-- etapa: o controle é a pílula do cabeçalho; aqui só a esteira -->
           <MiniEsteira class="mt-2" :stages="stages" :current-id="stageId" />
           <p
             v-if="andamentoApoio.length"
@@ -641,6 +774,7 @@ const discard = async () => {
           >
             <template v-for="(parte, i) in andamentoApoio" :key="i">
               <span v-if="i"> · </span>
+              <span v-if="parte.rotulo">{{ `${parte.rotulo} ` }}</span>
               <span :class="{ 'font-mono': parte.mono }">{{
                 parte.texto
               }}</span>
@@ -662,6 +796,7 @@ const discard = async () => {
               </span>
             </template>
           </button>
+          <LeadReuniao v-if="showReuniao" :lead="lead" />
         </div>
 
         <!-- Próximo passo (era LeadNextAction do header) -->
@@ -773,39 +908,81 @@ const discard = async () => {
           </div>
         </button>
 
-        <!-- Caso -->
+        <!-- Caso: tese, benefício, DCB e canal editáveis no lugar (clicar = editar) -->
         <div :class="CARTAO" data-testid="panel-card-caso">
           <p :class="TITULO">
             {{ $t('RAMON.LEAD_PANEL.CASE_TITLE') }}
           </p>
-          <p class="mt-1 text-[13px] font-semibold text-n-slate-12">
-            {{
-              [lead.thesis_name, lead.benefit_type_name]
-                .filter(Boolean)
-                .join(' · ') || '—'
-            }}
+          <div class="flex flex-wrap items-center gap-x-1 mt-1">
+            <select
+              data-testid="field-thesis"
+              :value="lead.thesis_id ?? ''"
+              :aria-label="$t('RAMON.DRAWER.THESIS')"
+              class="font-semibold"
+              :class="EDITAVEL"
+              @change="e => saveSelect('thesis_id', e.target.value)"
+            >
+              <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
+              <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
+              <option v-if="thesisFora" :value="lead.thesis_id">
+                {{ lead.thesis_name }}
+              </option>
+              <option v-for="th in activeTheses" :key="th.id" :value="th.id">
+                {{ th.name }}
+              </option>
+            </select>
+            <span class="text-n-slate-9">·</span>
+            <select
+              data-testid="field-benefit"
+              :value="lead.benefit_type_id ?? ''"
+              :aria-label="$t('RAMON.DRAWER.BENEFIT')"
+              class="font-semibold"
+              :class="EDITAVEL"
+              @change="e => saveSelect('benefit_type_id', e.target.value)"
+            >
+              <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
+              <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
+                {{ b.name }}
+              </option>
+            </select>
+          </div>
+          <p
+            v-if="!lead.thesis_id"
+            data-testid="no-thesis-hint"
+            class="mt-1 text-xs text-n-slate-9"
+          >
+            {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
           </p>
           <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-2">
-            <div>
-              <p class="text-[10.5px] text-n-slate-9">
+            <label class="min-w-0">
+              <span class="block text-[10.5px] text-n-slate-9">
                 {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
-              </p>
-              <p
-                data-testid="panel-dcb"
-                class="font-mono text-[13px]"
-                :class="bleeding ? 'text-n-ruby-11' : 'text-n-slate-12'"
-              >
-                {{ dcbFormatted || '—' }}
-              </p>
-            </div>
-            <div>
-              <p class="text-[10.5px] text-n-slate-9">
+              </span>
+              <input
+                data-testid="field-dcb-em"
+                type="date"
+                :value="lead.dcb_em || ''"
+                class="font-mono"
+                :class="[EDITAVEL, bleeding ? '!text-n-ruby-11' : '']"
+                @change="e => save({ dcb_em: e.target.value || null })"
+              />
+            </label>
+            <label class="min-w-0">
+              <span class="block text-[10.5px] text-n-slate-9">
                 {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
-              </p>
-              <p class="text-[13px] text-n-slate-12">
-                {{ channelLabel || '—' }}
-              </p>
-            </div>
+              </span>
+              <select
+                data-testid="field-channel"
+                :value="lead.channel ?? ''"
+                :class="EDITAVEL"
+                @change="e => saveSelect('channel', e.target.value, false)"
+              >
+                <option value="">—</option>
+                <option v-for="c in channels" :key="c.key" :value="c.key">
+                  {{ c.label }}
+                </option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -813,10 +990,11 @@ const discard = async () => {
 
         <LeadQuizResumo :lead="lead" />
         <!-- follow_up_last_at muda no broadcast lead.updated quando a retomada
-             grava nota + contador (mesma transação) → as notas recarregam -->
+             grava nota + contador (mesma transação); notesTick sobe quando a
+             reunião marcada aqui grava o rascunho → as notas recarregam -->
         <LeadNotes
           :lead-id="lead.id"
-          :refresh-key="lead.follow_up_last_at"
+          :refresh-key="`${lead.follow_up_last_at}-${notesTick}`"
           :in-conversation="inConversation"
         />
 
@@ -843,17 +1021,20 @@ const discard = async () => {
                 <p class="text-[10.5px] text-n-slate-9">
                   {{ $t('RAMON.LEAD_PANEL.FIELDS.PHONE') }}
                 </p>
-                <p class="font-mono text-[13px] text-n-slate-12">
-                  {{ lead.contact_phone || '—' }}
-                </p>
-              </div>
-              <div>
-                <p class="text-[10.5px] text-n-slate-9">
-                  {{ $t('RAMON.LEAD_PANEL.FIELDS.CPF') }}
-                </p>
-                <p class="font-mono text-[13px] text-n-slate-12">
-                  {{ formatCpf(lead.contact_cpf) || '—' }}
-                </p>
+                <Button
+                  v-if="lead.contact_phone"
+                  data-testid="contact-copy-phone"
+                  link
+                  slate
+                  xs
+                  icon="i-lucide-copy"
+                  trailing-icon
+                  class="font-mono"
+                  :title="$t('RAMON.KANBAN.CARD.COPY_PHONE')"
+                  :label="lead.contact_phone"
+                  @click="copyPhone"
+                />
+                <p v-else class="font-mono text-[13px] text-n-slate-12">—</p>
               </div>
               <div>
                 <p class="text-[10.5px] text-n-slate-9">

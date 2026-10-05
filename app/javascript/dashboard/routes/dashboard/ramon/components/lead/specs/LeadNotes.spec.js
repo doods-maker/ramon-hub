@@ -53,15 +53,42 @@ describe('LeadNotes', () => {
     expect(input.element.value).toBe('');
   });
 
-  it('mostra só as 5 últimas com contador das anteriores', async () => {
+  it('mostra as 5 últimas e "ver todas" abre o resto aqui mesmo, texto inteiro', async () => {
+    const longa = `nota 1 ${'x'.repeat(200)}`;
     LeadsAPI.getNotes.mockResolvedValue({
-      data: { payload: [1, 2, 3, 4, 5, 6, 7].map(i => note(i, `nota ${i}`)) },
+      data: {
+        payload: [longa, 2, 3, 4, 5, 6, 7].map((b, i) =>
+          note(i + 1, i ? `nota ${b}` : b)
+        ),
+      },
     });
     const wrapper = mountNotes();
     await flushPromises();
     expect(wrapper.text()).not.toContain('nota 2');
     expect(wrapper.text()).toContain('nota 7');
-    expect(wrapper.text()).toContain('RAMON.LEAD_PANEL.NOTES.HIDDEN 2');
+    const verTodas = wrapper.find('[data-testid="lead-notes-ver-todas"]');
+    expect(verTodas.text()).toBe('RAMON.LEAD_PANEL.NOTES.SHOW_ALL 7');
+    await verTodas.trigger('click');
+    expect(wrapper.text()).toContain('nota 2');
+    expect(wrapper.text()).toContain(longa);
+  });
+
+  it('template de nota rápida preenche o campo (e anexa ao que já tinha)', async () => {
+    LeadsAPI.getNotes.mockResolvedValue({ data: { payload: [] } });
+    const wrapper = mountNotes();
+    await flushPromises();
+    const input = wrapper.find('[data-testid="lead-note-input"]');
+    const select = wrapper.find('[data-testid="note-template-select"]');
+    await select.setValue('TRIED_CONTACT');
+    expect(input.element.value).toBe(
+      'RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.TRIED_CONTACT'
+    );
+    expect(select.element.value).toBe('');
+    await input.setValue('Ligou');
+    await select.setValue('AWAITING_DOCS');
+    expect(input.element.value).toBe(
+      'Ligou RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.AWAITING_DOCS'
+    );
   });
 
   it('recarrega quando refreshKey muda (retomada gravou nota pelo backend)', async () => {

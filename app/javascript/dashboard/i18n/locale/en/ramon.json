@@ -440,17 +440,20 @@
       }
     },
     "TASKS": {
-      "TITLE": "Next actions",
-      "EMPTY": "No open tasks.",
       "ADD": "+ Task",
       "ADD_TITLE_PLACEHOLDER": "Task title",
       "OVERDUE": "Overdue",
       "TODAY": "Today",
       "IN_DAYS": "in {n}d",
-      "SCHEDULE_NEXT": "Schedule next?",
       "DATE_HINT": "Empty = tomorrow 9am",
       "CREATE_ERROR": "Could not create the task — try again",
-      "COMPLETE": "Complete task"
+      "KIND_TASK": "Task",
+      "KIND_MEETING": "Meeting",
+      "MEETING_TITLE_PLACEHOLDER": "Meeting title (optional)",
+      "MEETING_DATE_HINT": "Meeting date and time (required)",
+      "MEETING_HINT": "The lead moves to Meeting scheduled, gets a Closer and a confirmation draft in the notes — nothing is sent to the client.",
+      "MEETING_SCHEDULED": "Meeting scheduled — the lead moved to Meeting scheduled and the confirmation draft is in the notes.",
+      "MEETING_ERROR": "Could not schedule the meeting — try again"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",
@@ -484,7 +487,6 @@
     },
     "DRAWER": {
       "NAME": "Name",
-      "STAGE": "Stage",
       "BENEFIT": "Benefit type",
       "PRIORITY": "Lead priority",
       "SDR": "SDR",
@@ -495,13 +497,9 @@
       "SOURCE": "Source",
       "CHANNEL": "Channel",
       "LOST_REASON": "Loss reason",
-      "NOTES": "Notes",
-      "NOTES_ADD": "Write a note…",
-      "NOTES_ADD_BUTTON": "Add note",
       "CONTACT": "Contact",
       "THESIS": "Thesis",
       "NO_THESIS_HINT": "Pick a thesis to unlock the document checklist and playbook.",
-      "DCB_LABEL": "DCB (benefit cessation date)",
       "BENEFIT_MONTHLY_LABEL": "Estimated monthly benefit",
       "PESSOA": {
         "CPF": "CPF",
@@ -762,9 +760,10 @@
         "TITLE": "Notes",
         "PLACEHOLDER": "Add a note…",
         "SAVE_ERROR": "Could not save the note — try again",
-        "HIDDEN": "+{count} older in the History tab",
         "SYSTEM": "System",
-        "USE_IN_EDITOR": "Use in editor"
+        "USE_IN_EDITOR": "Use in editor",
+        "SHOW_ALL": "see all ({count})",
+        "SHOW_LESS": "see fewer"
       },
       "QUIZ": {
         "TITLE": "LP triage",
@@ -787,7 +786,8 @@
         "LAST_SIM": "Last simulation:",
         "LAST_SIM_ATRASADOS": "arrears",
         "LAST_SIM_RMI": "RMI",
-        "LAST_SIM_EM": "on"
+        "LAST_SIM_EM": "on",
+        "CHANCE": "chance"
       },
       "CASE_TITLE": "Case",
       "CONTACT_DATA": "Contact data",
@@ -795,7 +795,6 @@
         "OWNERS": "SDR / Closer",
         "DCB": "DCB on",
         "PHONE": "Phone",
-        "CPF": "CPF",
         "CHANNEL": "Channel"
       },
       "EDIT_ALL_FIELDS": "edit all fields",
@@ -829,7 +828,9 @@
       "LOAD_ERROR": "Couldn't load the lead for this conversation.",
       "RETRY": "Try again",
       "DISCARD_CONFIRM": "Remove this lead from the funnel? The conversation stays in Chatwoot.",
-      "DISCARD_ERROR": "Could not remove the lead — try again"
+      "DISCARD_ERROR": "Could not remove the lead — try again",
+      "VALUE_ADD": "+ value",
+      "VALUE_EDIT": "Click to edit the value"
     },
     "PLAYBOOK": {
       "EMPTY": "Choose a thesis in the Summary tab to see the consultation script.",

@@ -27,6 +27,12 @@ export const CAMPO =
 export const SELECT = `${CAMPO} py-0 pr-8`;
 export const TEXTAREA = `${CAMPO} h-auto py-2`;
 export const ARQUIVO = `${CAMPO} h-auto py-1.5 text-xs file:me-2 file:rounded-md file:border-0 file:bg-n-alpha-2 file:px-2 file:py-0.5 file:text-n-slate-12`;
+// Campo que parece texto (select/date nos cartões do Resumo): clicar já edita.
+// bg-none/appearance-none tiram a seta global do select; -mx-1 px-1 alinha o
+// texto com o rótulo e deixa o realce do hover respirar; !outline-none vence
+// o contorno do select global no escuro (.dark select, mais específico).
+export const EDITAVEL =
+  'reset-base appearance-none h-auto w-auto max-w-full m-0 -mx-1 rounded border-0 bg-transparent bg-none px-1 py-0 text-[13px] text-n-slate-12 !outline-none cursor-pointer hover:bg-n-alpha-2 focus:bg-n-alpha-2';
 export const ROTULO = 'flex flex-col gap-1 text-xs text-n-slate-10';
 
 // Abas sublinhadas (painel e abas internas do simulador).

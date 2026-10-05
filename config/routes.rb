@@ -372,6 +372,7 @@ Rails.application.routes.draw do
               post :pdf
             end
             resource :zapsign, only: [:create], controller: 'lead_zapsign'
+            resource :reuniao_agendada, only: [:create], controller: 'lead_reunioes_agendadas'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
           resources :copilot_suggestions, only: [:index] do

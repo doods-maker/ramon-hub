@@ -2,11 +2,14 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import LeadPanelBody from '../LeadPanelBody.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
+import LeadReuniao from '../LeadReuniao.vue';
 import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
+vi.mock('shared/helpers/clipboard', () => ({ copyTextToClipboard: vi.fn() }));
 
 const lead = {
   id: 7,
@@ -28,6 +31,8 @@ const build = ({
   del = vi.fn(),
   createTask = vi.fn(),
   followUpDraft = vi.fn(),
+  agendarReuniao = vi.fn(),
+  tasks = [],
   chatMessages = [],
 } = {}) =>
   createStore({
@@ -35,22 +40,34 @@ const build = ({
     modules: {
       leads: {
         namespaced: true,
-        actions: { update, delete: del, followUpDraft },
+        actions: { update, delete: del, followUpDraft, agendarReuniao },
       },
       leadConfig: {
         namespaced: true,
         getters: {
           getStages: () => [
-            { id: 1, name: 'Novo' },
+            { id: 1, name: 'Novo', probability: 10 },
             { id: 2, name: 'Fechado', is_won: true },
             { id: 3, name: 'Perdido', is_lost: true },
+            { id: 4, name: 'Reunião', label: 'fase-reuniao-agendada' },
           ],
           getLostReasons: () => [],
+          getBenefitTypes: () => [{ id: 31, name: 'B31' }],
+          getChannels: () => [{ key: 'whatsapp', label: 'WhatsApp' }],
+        },
+      },
+      theses: {
+        namespaced: true,
+        getters: {
+          getTheses: () => [
+            { id: 5, name: 'Restabelecimento B31', active: true },
+            { id: 6, name: 'Antiga', active: false },
+          ],
         },
       },
       leadTasks: {
         namespaced: true,
-        getters: { getByLead: () => () => [] },
+        getters: { getByLead: () => () => tasks },
         actions: { fetchForLead: vi.fn(), create: createTask },
       },
     },
@@ -299,21 +316,193 @@ describe('LeadPanelBody', () => {
     });
   });
 
-  describe('resumo', () => {
-    it('mostra o cartão Caso com tese e benefício sem precisar abrir nada', () => {
-      const wrapper = mountBody();
-      expect(wrapper.text()).toContain('Restabelecimento B31');
+  describe('valor editável no chip do cabeçalho', () => {
+    const editar = async (wrapper, texto) => {
+      await wrapper.find('[data-testid="panel-value-chip"]').trigger('click');
+      const input = wrapper.find('[data-testid="field-value"]');
+      await input.setValue(texto);
+      return input;
+    };
+
+    it('clicar no chip abre o input já com o valor; Enter salva o número', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({ spies: { update } });
+      await wrapper.find('[data-testid="panel-value-chip"]').trigger('click');
+      const input = wrapper.find('[data-testid="field-value"]');
+      expect(input.element.value).toBe(formatBrl(48000));
+      await input.setValue('1.234,56');
+      await input.trigger('keyup.enter');
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        value: 1234.56,
+      });
+      expect(wrapper.find('[data-testid="field-value"]').exists()).toBe(false);
     });
 
-    it('mostra telefone/CPF/donos só depois de abrir "Dados do contato"', async () => {
+    it('texto inválido ou Esc não salvam', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({ spies: { update } });
+      await (await editar(wrapper, 'abc')).trigger('blur');
+      const input = await editar(wrapper, '999');
+      await input.trigger('keyup.esc');
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('lead sem valor mostra "+ valor" no chip', () => {
+      const wrapper = mountBody({ props: { lead: { ...lead, value: null } } });
+      expect(wrapper.find('[data-testid="panel-value-chip"]').text()).toBe(
+        'RAMON.LEAD_PANEL.VALUE_ADD'
+      );
+    });
+  });
+
+  describe('cartão Caso editável no lugar', () => {
+    it('tese, benefício e canal salvam no change', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({ spies: { update } });
+      await wrapper.find('[data-testid="field-thesis"]').setValue('5');
+      await wrapper.find('[data-testid="field-benefit"]').setValue('31');
+      await wrapper.find('[data-testid="field-channel"]').setValue('whatsapp');
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        thesis_id: 5,
+      });
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        benefit_type_id: 31,
+      });
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        channel: 'whatsapp',
+      });
+    });
+
+    it('DCB salva no change e vazio limpa', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({ spies: { update } });
+      const dcb = wrapper.find('[data-testid="field-dcb-em"]');
+      await dcb.setValue('2021-12-10');
+      await dcb.setValue('');
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        dcb_em: '2021-12-10',
+      });
+      expect(update).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        dcb_em: null,
+      });
+    });
+
+    it('sem tese mostra o hint; tese inativa continua aparecendo', () => {
+      expect(mountBody().find('[data-testid="no-thesis-hint"]').exists()).toBe(
+        true
+      );
+      const wrapper = mountBody({
+        props: { lead: { ...lead, thesis_id: 6, thesis_name: 'Antiga' } },
+      });
+      expect(wrapper.find('[data-testid="no-thesis-hint"]').exists()).toBe(
+        false
+      );
+      const tese = wrapper.find('[data-testid="field-thesis"]');
+      expect(tese.element.value).toBe('6');
+      expect(tese.text()).toContain('Antiga');
+    });
+  });
+
+  describe('+ Tarefa → Reunião', () => {
+    const abrirReuniao = async wrapper => {
+      await wrapper.find('[data-testid="panel-add-task"]').trigger('click');
+      await wrapper
+        .find('[data-testid="panel-task-kind-meeting"]')
+        .trigger('click');
+    };
+
+    it('exige data/hora: sem ela não marca nada', async () => {
+      const agendarReuniao = vi.fn();
+      const wrapper = mountBody({ spies: { agendarReuniao } });
+      await abrirReuniao(wrapper);
+      const salvar = wrapper.find('[data-testid="panel-task-save"]');
+      expect(salvar.attributes('disabled')).toBeDefined();
+      expect(agendarReuniao).not.toHaveBeenCalled();
+    });
+
+    it('marca pela action de reunião (não cria follow-up), avisa e recarrega as notas', async () => {
+      useAlert.mockClear();
+      const agendarReuniao = vi.fn();
+      const createTask = vi.fn();
+      const wrapper = mountBody({ spies: { agendarReuniao, createTask } });
+      await abrirReuniao(wrapper);
+      await wrapper
+        .find('[data-testid="panel-task-title"]')
+        .setValue('Reunião');
+      await wrapper
+        .find('[data-testid="panel-task-date"]')
+        .setValue('2026-10-06T14:00');
+      await wrapper.find('[data-testid="panel-task-save"]').trigger('click');
+      await flushPromises();
+      expect(createTask).not.toHaveBeenCalled();
+      expect(agendarReuniao).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        startsAt: new Date('2026-10-06T14:00').toISOString(),
+        title: 'Reunião',
+      });
+      expect(useAlert).toHaveBeenCalledWith('RAMON.TASKS.MEETING_SCHEDULED');
+      expect(
+        wrapper.findComponent({ name: 'LeadNotes' }).props('refreshKey')
+      ).toBe('undefined-1');
+      expect(wrapper.find('[data-testid="panel-task-form"]').exists()).toBe(
+        false
+      );
+    });
+  });
+
+  describe('Reunião (Closer) no Andamento', () => {
+    const reuniaoVisivel = opts =>
+      mountBody(opts)
+        .find('[data-testid="panel-card-andamento"]')
+        .findComponent(LeadReuniao)
+        .exists();
+
+    it('aparece em etapa de reunião (pelo label)', () => {
+      expect(
+        reuniaoVisivel({ props: { lead: { ...lead, lead_stage_id: 4 } } })
+      ).toBe(true);
+    });
+
+    it('aparece quando a reunião (tarefa) já passou', () => {
+      const tasks = [
+        { id: 1, kind: 'meeting', due_at: '2020-01-01T10:00:00Z' },
+      ];
+      expect(reuniaoVisivel({ spies: { tasks } })).toBe(true);
+    });
+
+    it('aparece quando já há resultado registrado', () => {
+      expect(
+        reuniaoVisivel({
+          props: { lead: { ...lead, reuniao_resultado: 'qualificada' } },
+        })
+      ).toBe(true);
+    });
+
+    it('não aparece sem reunião em jogo (reunião futura não conta)', () => {
+      const tasks = [
+        { id: 1, kind: 'meeting', due_at: '2999-01-01T10:00:00Z' },
+      ];
+      expect(reuniaoVisivel({ spies: { tasks } })).toBe(false);
+    });
+  });
+
+  describe('resumo', () => {
+    it('mostra telefone (copiável) e donos só depois de abrir "Dados do contato"; CPF fica só no editar tudo', async () => {
       const wrapper = mountBody();
       expect(wrapper.text()).not.toContain('Eduardo / Camila');
-      expect(wrapper.text()).not.toContain('052.318.774-90');
       await wrapper
         .find('[data-testid="contact-data-toggle"]')
         .trigger('click');
       expect(wrapper.text()).toContain('Eduardo / Camila');
-      expect(wrapper.text()).toContain('052.318.774-90');
+      expect(wrapper.text()).not.toContain('052.318.774-90');
+      await wrapper.find('[data-testid="contact-copy-phone"]').trigger('click');
+      expect(copyTextToClipboard).toHaveBeenCalledWith('+55489999');
     });
 
     it('mostra o cartão Qualificação viva logo após o cartão Caso', () => {
@@ -325,14 +514,15 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('Andamento mostra a etapa atual e a mini-esteira', () => {
+    it('Andamento: só a mini-esteira (etapa fica na pílula), chance rotulada e sem o valor', () => {
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'MiniEsteira' }).exists()).toBe(
         true
       );
-      expect(
-        wrapper.find('[data-testid="panel-card-andamento"]').text()
-      ).toContain('Novo');
+      const card = wrapper.find('[data-testid="panel-card-andamento"]').text();
+      expect(card).not.toContain('Novo');
+      expect(card).toContain('RAMON.LEAD_PANEL.ANDAMENTO.CHANCE 10%');
+      expect(card).not.toContain(formatBrl(48000));
     });
 
     it('cartão Documentos leva pra aba documentos', async () => {
@@ -519,7 +709,7 @@ describe('LeadPanelBody', () => {
         props: { lead: { ...lead, follow_up_last_at: '2026-10-05T12:00:00Z' } },
       });
       const notas = wrapper.findComponent({ name: 'LeadNotes' });
-      expect(notas.props('refreshKey')).toBe('2026-10-05T12:00:00Z');
+      expect(notas.props('refreshKey')).toBe('2026-10-05T12:00:00Z-0');
       expect(notas.props('inConversation')).toBe(true);
     });
 

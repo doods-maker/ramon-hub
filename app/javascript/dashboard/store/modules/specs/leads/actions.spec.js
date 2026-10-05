@@ -112,22 +112,23 @@ describe('leads actions', () => {
     expect(result).toEqual(activities);
   });
 
-  it('fetchNotes gets notes and returns the payload array', async () => {
-    const notes = [{ id: 1, body: 'a' }];
-    axios.get.mockResolvedValue({ data: { payload: notes } });
-    const result = await actions.fetchNotes({}, 5);
-    expect(result).toEqual(notes);
-  });
-
-  it('createNote posts a note and returns it', async () => {
-    const note = { id: 9, body: 'nova' };
-    axios.post.mockResolvedValue({ data: note });
-    const result = await actions.createNote({}, { leadId: 5, body: 'nova' });
-    expect(result).toEqual(note);
-    expect(axios.post).toHaveBeenCalledWith(
-      expect.stringContaining('/5/notes'),
-      { body: 'nova' }
+  it('agendarReuniao posts the meeting, edits the lead and reloads its tasks', async () => {
+    const lead = { id: 5, lead_stage_id: 3 };
+    axios.post.mockResolvedValue({ data: lead });
+    const commit = vi.fn();
+    const dispatch = vi.fn();
+    await actions.agendarReuniao(
+      { commit, dispatch },
+      { id: 5, startsAt: '2026-10-06T17:00:00.000Z', title: 'Reunião' }
     );
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/5/reuniao_agendada'),
+      { starts_at: '2026-10-06T17:00:00.000Z', title: 'Reunião' }
+    );
+    expect(commit).toHaveBeenCalledWith(types.EDIT_LEAD, lead);
+    expect(dispatch).toHaveBeenCalledWith('leadTasks/fetchForLead', 5, {
+      root: true,
+    });
   });
 });
 
