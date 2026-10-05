@@ -39,11 +39,11 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
   end
 
   describe 'PATCH (Remarcar)' do
-    let(:novo) { 4.days.from_now.change(usec: 0) }
+    let(:novo_horario) { 4.days.from_now.change(usec: 0) }
 
     def remarcar(task, params = {})
       patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao_agendada",
-            params: { task_id: task.id, starts_at: novo.iso8601 }.merge(params), headers: agent.create_new_auth_token, as: :json
+            params: { task_id: task.id, starts_at: novo_horario.iso8601 }.merge(params), headers: agent.create_new_auth_token, as: :json
     end
 
     it 'remarca a reunião e devolve a tarefa no horário novo', :aggregate_failures do
@@ -53,7 +53,7 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
 
       expect(response).to have_http_status(:success)
       expect(response.parsed_body['id']).to eq task.id
-      expect(Time.zone.parse(response.parsed_body['due_at'])).to eq novo
+      expect(Time.zone.parse(response.parsed_body['due_at'])).to eq novo_horario
       expect(lead.lead_activities.where(kind: 'meeting_rescheduled')).to exist
     end
 
