@@ -713,7 +713,14 @@
       "CONFIRM_NEW_PASSWORD_TITLE": "Gerar senha nova para {nome}?",
       "CONFIRM_NEW_PASSWORD": "O cliente perde a senha atual, é desconectado e recebe uma senha nova.",
       "CONFIRM_NEW_PASSWORD_EMAIL": "O cliente perde a senha atual, é desconectado e recebe uma senha nova por e-mail em {email}.",
-      "CONFIRM_NEW_PASSWORD_BTN": "Gerar senha nova"
+      "CONFIRM_NEW_PASSWORD_BTN": "Gerar senha nova",
+      "EMAIL_SENT": "E-mail com a senha enviado para {email}.",
+      "EMAIL_NOT_SENT_NO_EMAIL": "E-mail NÃO enviado: cliente sem e-mail cadastrado. Repasse a senha pelo WhatsApp ou em mãos.",
+      "EMAIL_NOT_SENT_NO_SERVER": "E-mail NÃO enviado para {email}: o servidor está sem e-mail configurado. Repasse a senha pelo WhatsApp ou em mãos.",
+      "READY_MESSAGE": "Mensagem pronta",
+      "COPY_MESSAGE": "Copiar mensagem pronta",
+      "MESSAGE_COPIED": "Mensagem copiada.",
+      "OPEN_WHATSAPP": "Abrir no WhatsApp"
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

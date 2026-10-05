@@ -10,7 +10,7 @@ import RamonPageHeader from '../components/RamonPageHeader.vue';
 import PortalClienteDetalhe from '../components/portal/PortalClienteDetalhe.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { AVISO, CAMPO, CARTAO, CHIP, SECAO, TOM } from '../helpers/ui';
+import { AVISO, CAMPO, CARTAO, CHIP, SECAO, TITULO, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonPortalClientes' });
 
@@ -23,7 +23,10 @@ const busca = ref('');
 const resultados = ref([]);
 const candidato = ref(null); // cliente do ADVBOX escolhido pra convidar
 const emailConvite = ref('');
-const senhaGerada = ref(null); // { nome, senha } — aparece uma vez, o hub não guarda em claro
+// Resposta de convite/senha nova: { nome, senha_provisoria, email: { status, para },
+// mensagem, whatsapp_url } — aparece uma vez, o hub não guarda a senha em claro.
+const senhaGerada = ref(null);
+const emailConfigurado = ref(true);
 const aberto = ref(null); // detalhe expandido
 const templates = ref([]); // modelos do ZapSign, carregados na 1ª expansão de linha
 // Janela de confirmação aberta: { title, message, confirmLabel, confirmColor, acao }.
@@ -45,6 +48,7 @@ const carregar = async () => {
     const { data } = await PortalClientesAPI.get();
     clientes.value = data.payload;
     metricas.value = data.metricas;
+    emailConfigurado.value = data.email_configurado !== false;
   } catch {
     hasError.value = true;
   } finally {
@@ -79,7 +83,7 @@ const convidar = async () => {
       email: emailConvite.value,
       telefone: c.cellphone,
     });
-    senhaGerada.value = { nome: data.nome, senha: data.senha_provisoria };
+    senhaGerada.value = data;
     candidato.value = null;
     resultados.value = [];
     busca.value = '';
@@ -97,17 +101,18 @@ const reenviar = c => {
     title: t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD_TITLE', {
       nome: c.nome,
     }),
-    message: c.email
-      ? t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD_EMAIL', {
-          email: c.email,
-        })
-      : t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD'),
+    message:
+      c.email && emailConfigurado.value
+        ? t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD_EMAIL', {
+            email: c.email,
+          })
+        : t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD'),
     confirmLabel: t('RAMON.PORTAL_CLIENTES.CONFIRM_NEW_PASSWORD_BTN'),
     confirmColor: 'blue',
     acao: async () => {
       try {
         const { data } = await PortalClientesAPI.convidar(c.id);
-        senhaGerada.value = { nome: data.nome, senha: data.senha_provisoria };
+        senhaGerada.value = data;
         resultados.value = [];
         await carregar();
       } catch (e) {
@@ -155,14 +160,24 @@ const excluir = async c => {
   }
 };
 
-const copiarSenha = async () => {
+const copiar = async (texto, ok) => {
   try {
-    await navigator.clipboard.writeText(senhaGerada.value.senha);
-    useAlert(t('RAMON.PORTAL_CLIENTES.COPIED'));
+    await navigator.clipboard.writeText(texto);
+    useAlert(t(ok));
   } catch {
     useAlert(t('RAMON.PORTAL_CLIENTES.ACTION_ERROR'));
   }
 };
+
+// Linha "E-mail enviado para X / NÃO enviado (motivo)" da senha recém-gerada.
+const EMAIL_STATUS = {
+  enviado: 'RAMON.PORTAL_CLIENTES.EMAIL_SENT',
+  sem_email: 'RAMON.PORTAL_CLIENTES.EMAIL_NOT_SENT_NO_EMAIL',
+  sem_servidor: 'RAMON.PORTAL_CLIENTES.EMAIL_NOT_SENT_NO_SERVER',
+};
+
+const abrirWhatsapp = () =>
+  window.open(senhaGerada.value.whatsapp_url, '_blank', 'noopener');
 
 const METRICAS = [
   'convidados',
@@ -265,35 +280,104 @@ onMounted(carregar);
         </div>
       </div>
 
-      <!-- Senha provisória: aparece uma vez -->
+      <!-- Senha provisória: aparece uma vez, com o caminho de entrega -->
       <div
         v-if="senhaGerada"
-        class="flex flex-wrap items-center gap-3 !py-3"
+        data-testid="portal-senha"
+        class="flex flex-col gap-2 !py-3"
         :class="[AVISO, TOM.amber]"
       >
-        <span class="text-sm text-n-slate-12">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="text-sm text-n-slate-12">
+            {{
+              t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD', {
+                nome: senhaGerada.nome,
+              })
+            }}
+            <strong class="ms-1 font-mono text-lg tracking-widest">{{
+              senhaGerada.senha_provisoria
+            }}</strong>
+          </span>
+          <Button
+            xs
+            icon="i-lucide-copy"
+            :label="t('RAMON.PORTAL_CLIENTES.COPY')"
+            @click="
+              copiar(
+                senhaGerada.senha_provisoria,
+                'RAMON.PORTAL_CLIENTES.COPIED'
+              )
+            "
+          />
+          <span>{{ t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD_HINT') }}</span>
+          <Button
+            link
+            xs
+            slate
+            class="ms-auto"
+            :label="t('RAMON.PORTAL_CLIENTES.DISMISS')"
+            @click="senhaGerada = null"
+          />
+        </div>
+        <p
+          v-if="senhaGerada.email"
+          data-testid="portal-email-status"
+          class="m-0 flex items-center gap-1.5"
+          :class="
+            senhaGerada.email.status === 'enviado'
+              ? 'text-n-teal-11'
+              : 'font-medium text-n-ruby-11'
+          "
+        >
+          <span
+            class="size-3.5 shrink-0"
+            :class="
+              senhaGerada.email.status === 'enviado'
+                ? 'i-lucide-mail-check'
+                : 'i-lucide-mail-x'
+            "
+          />
           {{
-            t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD', { nome: senhaGerada.nome })
+            t(EMAIL_STATUS[senhaGerada.email.status], {
+              email: senhaGerada.email.para,
+            })
           }}
-          <strong class="ms-1 font-mono text-lg tracking-widest">{{
-            senhaGerada.senha
-          }}</strong>
-        </span>
-        <Button
-          xs
-          icon="i-lucide-copy"
-          :label="t('RAMON.PORTAL_CLIENTES.COPY')"
-          @click="copiarSenha"
-        />
-        <span>{{ t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD_HINT') }}</span>
-        <Button
-          link
-          xs
-          slate
-          class="ms-auto"
-          :label="t('RAMON.PORTAL_CLIENTES.DISMISS')"
-          @click="senhaGerada = null"
-        />
+        </p>
+        <template v-if="senhaGerada.mensagem">
+          <p class="m-0 mt-1 text-n-slate-11" :class="TITULO">
+            {{ t('RAMON.PORTAL_CLIENTES.READY_MESSAGE') }}
+          </p>
+          <p
+            data-testid="portal-mensagem"
+            class="m-0 whitespace-pre-line border-s-2 border-n-amber-9/40 ps-3 text-n-slate-12"
+          >
+            {{ senhaGerada.mensagem }}
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <Button
+              xs
+              faded
+              slate
+              icon="i-lucide-copy"
+              :label="t('RAMON.PORTAL_CLIENTES.COPY_MESSAGE')"
+              @click="
+                copiar(
+                  senhaGerada.mensagem,
+                  'RAMON.PORTAL_CLIENTES.MESSAGE_COPIED'
+                )
+              "
+            />
+            <Button
+              v-if="senhaGerada.whatsapp_url"
+              xs
+              faded
+              teal
+              icon="i-ri-whatsapp-line"
+              :label="t('RAMON.PORTAL_CLIENTES.OPEN_WHATSAPP')"
+              @click="abrirWhatsapp"
+            />
+          </div>
+        </template>
       </div>
 
       <!-- Funil do piloto + documentos -->

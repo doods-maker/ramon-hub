@@ -136,6 +136,18 @@ const MARIA = {
   ],
 };
 
+const mensagemPronta = (nome, cpf, senha) =>
+  `Olá, ${nome}! Aqui é do escritório Ramon Antonio Advogados.
+Agora você pode acompanhar o seu caso pelo celular, no Painel do Cliente.
+
+Para entrar:
+1. Abra: https://cliente.ramonantonio.adv.br
+2. Digite o seu CPF: ${cpf}
+3. Digite esta senha provisória: ${senha}
+
+Depois de entrar, você pode trocar a senha por outra fácil de lembrar (só números). Guarde esta senha e não passe para ninguém.
+Qualquer dúvida, é só responder esta mensagem.`;
+
 const METRICAS = {
   convidados: 3,
   entraram: 2,
@@ -149,9 +161,27 @@ const METRICAS = {
 const API = {
   portal_clientes: { payload: CLIENTES, metricas: METRICAS },
   'portal_clientes/4': MARIA,
+  // Texto da mensagem = proposta do Ramon::PortalConvite::MENSAGEM (gate do Eduardo).
   'portal_clientes/2/convidar': {
     ...CLIENTES[1],
-    senha_provisoria: 'K7P4-29QX',
+    senha_provisoria: '482913',
+    email: { status: 'sem_email' },
+    mensagem: mensagemPronta('Carlos', '987.654.321-00', '482913'),
+    whatsapp_url: 'https://wa.me/5548999112233?text=Ol%C3%A1',
+  },
+  'portal_clientes/1/convidar': {
+    ...CLIENTES[0],
+    senha_provisoria: '705126',
+    email: { status: 'sem_servidor', para: 'ana.martins@exemplo.com.br' },
+    mensagem: mensagemPronta('Ana', '123.456.789-09', '705126'),
+    whatsapp_url: 'https://wa.me/5548997012233?text=Ol%C3%A1',
+  },
+  'portal_clientes/4/convidar': {
+    ...CLIENTES[3],
+    senha_provisoria: '390557',
+    email: { status: 'enviado', para: 'maria.souza@exemplo.com.br' },
+    mensagem: null,
+    whatsapp_url: null,
   },
   'ramon_calculos/advbox_customers': {
     payload: [
@@ -229,6 +259,11 @@ const senha = depois(1500, () => {
   clicar('Nova senha provisória', 1);
   setTimeout(() => clicar('Gerar senha nova'), 300);
 });
+const novaSenha = n =>
+  depois(1500, () => {
+    clicar('Nova senha provisória', n);
+    setTimeout(() => clicar('Gerar senha nova'), 300);
+  });
 const confirmarSenha = depois(1500, () => clicar('Nova senha provisória', 0));
 const busca = depois(1500, () => {
   const campo = document.querySelector('input[type="search"]');
@@ -256,6 +291,12 @@ const busca = depois(1500, () => {
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="PC1 confirmar senha" :init-state="confirmarSenha">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC2 sem servidor" :init-state="novaSenha(0)">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC2 email enviado" :init-state="novaSenha(3)">
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="Vazio" :init-state="vazio">

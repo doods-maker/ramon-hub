@@ -8,7 +8,8 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
 
   def index
     clientes = Current.account.portal_clientes.order(:nome).to_a
-    render json: { payload: clientes.map { |c| linha(c) }, metricas: metricas(clientes) }
+    render json: { payload: clientes.map { |c| linha(c) }, metricas: metricas(clientes),
+                   email_configurado: Ramon::PortalConvite.email_configurado? }
   end
 
   def show
@@ -22,8 +23,7 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     cliente = Current.account.portal_clientes.find_or_initialize_by(advbox_customer_id: params[:advbox_customer_id])
     cliente.update!(params.permit(:nome, :cpf, :email, :telefone))
     sincronizar(cliente)
-    senha = convidar!(cliente)
-    render json: linha(cliente).merge(senha_provisoria: senha)
+    render json: linha(cliente).merge(Ramon::PortalConvite.new(cliente).perform)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
   end
@@ -44,8 +44,7 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
 
   # Reenviar convite = gerar senha provisória nova (a anterior deixa de valer).
   def convidar
-    senha = convidar!(@cliente)
-    render json: linha(@cliente).merge(senha_provisoria: senha)
+    render json: linha(@cliente).merge(Ramon::PortalConvite.new(@cliente).perform)
   end
 
   def assinatura
@@ -82,15 +81,6 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     Ramon::PortalSyncService.new(cliente).perform
   rescue Ramon::AdvboxClient::UnavailableError, Ramon::AdvboxClient::RequestError => e
     Rails.logger.warn("[PortalClientes] sync falhou cliente=#{cliente.id}: #{e.message}")
-  end
-
-  # A senha provisória só existe em claro aqui, na resposta desta chamada (o hub
-  # mostra uma vez pra equipe repassar) e no e-mail de convite, se houver e-mail.
-  def convidar!(cliente)
-    senha = cliente.gerar_senha_provisoria!
-    Ramon::PortalMailer.with(account: Current.account, cliente: cliente, senha: senha).convite.deliver_later if cliente.email.present?
-    cliente.update!(convidado_em: Time.current)
-    senha
   end
 
   # Funil do piloto + documentos (pedidos em aberto no espelho × enviados pelo painel).

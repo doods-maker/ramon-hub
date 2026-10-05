@@ -713,7 +713,14 @@
       "CONFIRM_NEW_PASSWORD_TITLE": "Generate a new password for {nome}?",
       "CONFIRM_NEW_PASSWORD": "The client loses the current password, is signed out and gets a new password.",
       "CONFIRM_NEW_PASSWORD_EMAIL": "The client loses the current password, is signed out and gets a new password by e-mail at {email}.",
-      "CONFIRM_NEW_PASSWORD_BTN": "Generate new password"
+      "CONFIRM_NEW_PASSWORD_BTN": "Generate new password",
+      "EMAIL_SENT": "E-mail with the password sent to {email}.",
+      "EMAIL_NOT_SENT_NO_EMAIL": "E-mail NOT sent: the client has no e-mail on file. Hand over the password by WhatsApp or in person.",
+      "EMAIL_NOT_SENT_NO_SERVER": "E-mail NOT sent to {email}: the server has no e-mail configured. Hand over the password by WhatsApp or in person.",
+      "READY_MESSAGE": "Ready-to-send message",
+      "COPY_MESSAGE": "Copy ready message",
+      "MESSAGE_COPIED": "Message copied.",
+      "OPEN_WHATSAPP": "Open in WhatsApp"
     },
     "DOSSIE": {
       "OPEN": "Dossier",
