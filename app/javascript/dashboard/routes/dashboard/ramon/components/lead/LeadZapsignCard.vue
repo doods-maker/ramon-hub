@@ -5,6 +5,7 @@ import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 import { CARTAO, TITULO, SELECT, CAMPO, ROTULO, SECAO } from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
@@ -17,10 +18,22 @@ const { t } = useI18n();
 // e devolve o link de assinatura — nada é enviado ao cliente automaticamente.
 // Fallback local da resposta: se o websocket estiver caído, o lead da store não
 // recebe o zapsign novo e o botão continuaria armado — 2º clique = 2º contrato.
+// Depois do "Gerar de novo" a store ainda tem o doc velho até o websocket: o
+// local (doc novo) vale até a store alcançá-lo.
 const zapsignLocal = ref(null);
-const zapsign = computed(
-  () => props.lead?.custom_attributes?.zapsign || zapsignLocal.value
+const zapsign = computed(() => {
+  const salvo = props.lead?.custom_attributes?.zapsign;
+  const local = zapsignLocal.value;
+  return local && salvo?.doc_token !== local.doc_token ? local : salvo || local;
+});
+// Doc cancelado (pelo "Gerar de novo") ou recusado não tem link vivo.
+const ativo = computed(
+  () =>
+    !!zapsign.value?.sign_url &&
+    !['cancelado', 'refused'].includes(zapsign.value.status)
 );
+const refazendo = ref(false);
+const confirmando = ref(false);
 // Modelos da conta ZapSign: o cartão vale pra qualquer tese, o closer escolhe
 // o modelo. Pré-seleção só chuta pela tese; ZapSign fora do ar trava o botão.
 const templates = ref([]);
@@ -140,6 +153,7 @@ watch(
   () => props.lead?.id,
   () => {
     zapsignLocal.value = null;
+    refazendo.value = false;
     templateId.value = guessTemplate(templates.value);
     carregarPreview();
   }
@@ -157,10 +171,11 @@ onMounted(async () => {
 });
 
 // Antes de gerar: a prévia do backend. Depois: o que de fato saiu em branco.
+const mostrarForm = computed(() => !ativo.value || refazendo.value);
 const missing = computed(() => {
-  const lista = zapsign.value
-    ? zapsign.value.faltando
-    : preview.value?.faltando;
+  const lista = mostrarForm.value
+    ? preview.value?.faltando
+    : zapsign.value.faltando;
   return (lista || []).map(f => f.replace(/[{}]/g, ''));
 });
 // Nome/CPF/telefone não estão no formulário: "Completar dados" leva ao Resumo.
@@ -171,25 +186,35 @@ const faltaForaDoForm = computed(() =>
 const loading = ref(false);
 const generate = async () => {
   if (loading.value) return;
+  confirmando.value = false;
   loading.value = true;
+  // já houve doc: o backend cancela o anterior no ZapSign antes de criar
+  const regenerar = !!zapsign.value?.doc_token;
   try {
     // edição não salva vai junto: o contrato sai com o que está na tela
     if (dirty.value && !(await salvarDados())) return;
     const { data } = await LeadsAPI.createZapsign(
       props.lead.id,
-      templateId.value
+      templateId.value,
+      regenerar
     );
     zapsignLocal.value = data;
+    refazendo.value = false;
     useAlert(
       data.faltando?.length
         ? t('RAMON.ZAPSIGN.MISSING', { count: data.faltando.length })
         : t('RAMON.ZAPSIGN.CREATED')
     );
   } catch (error) {
-    useAlert(t('RAMON.ZAPSIGN.ERROR'));
+    useAlert(error.response?.data?.error || t('RAMON.ZAPSIGN.ERROR'));
   } finally {
     loading.value = false;
   }
+};
+// Doc com link vivo: confirma antes (o link antigo deixa de funcionar).
+const onGenerate = () => {
+  if (ativo.value) confirmando.value = true;
+  else generate();
 };
 
 const copyLink = async () => {
@@ -218,7 +243,15 @@ const copyLink = async () => {
       </span>
     </div>
 
-    <template v-if="!zapsign?.sign_url">
+    <p
+      v-if="zapsign?.status === 'cancelado' && !refazendo"
+      data-testid="zapsign-cancelled"
+      class="mt-1.5 text-[11.5px] leading-relaxed text-n-slate-11"
+    >
+      {{ $t('RAMON.ZAPSIGN.CANCELLED_HINT') }}
+    </p>
+
+    <template v-if="mostrarForm">
       <form
         data-testid="zapsign-form"
         class="mt-3 grid grid-cols-6 gap-2"
@@ -349,7 +382,7 @@ const copyLink = async () => {
     </template>
 
     <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
-      <template v-if="zapsign?.sign_url">
+      <template v-if="!mostrarForm">
         <a
           :href="zapsign.sign_url"
           target="_blank"
@@ -367,19 +400,39 @@ const copyLink = async () => {
           :label="$t('RAMON.ZAPSIGN.COPY')"
           @click="copyLink"
         />
+        <Button
+          data-testid="zapsign-regenerate"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.ZAPSIGN.REGENERATE')"
+          @click="refazendo = true"
+        />
       </template>
-      <Button
-        v-else
-        data-testid="zapsign-generate"
-        sm
-        :disabled="loading || !templateId"
-        :label="
-          loading
-            ? $t('RAMON.ZAPSIGN.GENERATING')
-            : $t('RAMON.ZAPSIGN.GENERATE_SHORT')
-        "
-        @click="generate"
-      />
+      <template v-else>
+        <Button
+          data-testid="zapsign-generate"
+          sm
+          :disabled="loading || !templateId"
+          :label="
+            loading
+              ? $t('RAMON.ZAPSIGN.GENERATING')
+              : zapsign?.doc_token
+                ? $t('RAMON.ZAPSIGN.REGENERATE')
+                : $t('RAMON.ZAPSIGN.GENERATE_SHORT')
+          "
+          @click="onGenerate"
+        />
+        <Button
+          v-if="refazendo"
+          data-testid="zapsign-regenerate-cancel"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.MODAL.CANCEL')"
+          @click="refazendo = false"
+        />
+      </template>
       <Button
         v-if="faltaForaDoForm"
         data-testid="zapsign-complete-data"
@@ -390,5 +443,14 @@ const copyLink = async () => {
         @click="emit('completeData')"
       />
     </div>
+
+    <ConfirmModal
+      v-if="confirmando"
+      :title="$t('RAMON.ZAPSIGN.REGENERATE_TITLE')"
+      :message="$t('RAMON.ZAPSIGN.REGENERATE_MESSAGE')"
+      :confirm-label="$t('RAMON.ZAPSIGN.REGENERATE')"
+      @confirm="generate"
+      @cancel="confirmando = false"
+    />
   </div>
 </template>

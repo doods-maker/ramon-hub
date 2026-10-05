@@ -86,7 +86,7 @@ describe('LeadZapsignCard', () => {
     await wrapper.find('[data-testid="zapsign-template"]').setValue('t2');
     await wrapper.find('[data-testid="zapsign-generate"]').trigger('click');
     await flushPromises();
-    expect(LeadsAPI.createZapsign).toHaveBeenCalledWith(9, 't2');
+    expect(LeadsAPI.createZapsign).toHaveBeenCalledWith(9, 't2', false);
   });
 
   it('avisa quando não consegue carregar os modelos', async () => {
@@ -173,14 +173,17 @@ describe('LeadZapsignCard', () => {
     const wrapper = await mountCard(eligibleLead);
     await wrapper.find('[data-testid="zapsign-generate"]').trigger('click');
     await flushPromises();
-    expect(LeadsAPI.createZapsign).toHaveBeenCalledWith(9, 't1');
+    expect(LeadsAPI.createZapsign).toHaveBeenCalledWith(9, 't1', false);
     const link = wrapper.find('[data-testid="zapsign-link"]');
     expect(link.exists()).toBe(true);
     expect(link.attributes('href')).toBe('https://zapsign/abc');
     expect(wrapper.find('[data-testid="zapsign-copy"]').exists()).toBe(true);
-    // não há mais botão de gerar — guard contra 2º contrato
+    // não há mais botão de gerar — só o "Gerar de novo", com confirmação
     expect(wrapper.find('[data-testid="zapsign-generate"]').exists()).toBe(
       false
+    );
+    expect(wrapper.find('[data-testid="zapsign-regenerate"]').exists()).toBe(
+      true
     );
   });
 
@@ -212,5 +215,56 @@ describe('LeadZapsignCard', () => {
     expect(
       wrapper.find('[data-testid="zapsign-link"]').attributes('href')
     ).toBe('https://zapsign/persistido');
+  });
+
+  it('Gerar de novo confirma e manda regenerar (o backend cancela o anterior)', async () => {
+    LeadsAPI.createZapsign.mockResolvedValue({
+      data: {
+        doc_token: 'novo',
+        sign_url: 'https://zapsign/novo',
+        faltando: [],
+      },
+    });
+    const wrapper = await mountCard({
+      ...eligibleLead,
+      custom_attributes: {
+        zapsign: { doc_token: 'velho', sign_url: 'https://zapsign/velho' },
+      },
+    });
+    await wrapper.find('[data-testid="zapsign-regenerate"]').trigger('click');
+    expect(wrapper.find('[data-testid="zapsign-form"]').exists()).toBe(true);
+    await wrapper.find('[data-testid="zapsign-generate"]').trigger('click');
+    // nada sai sem confirmar na janela
+    expect(LeadsAPI.createZapsign).not.toHaveBeenCalled();
+    await wrapper
+      .find('[data-testid="confirm-modal-confirm"]')
+      .trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.createZapsign).toHaveBeenCalledWith(9, 't1', true);
+    expect(
+      wrapper.find('[data-testid="zapsign-link"]').attributes('href')
+    ).toBe('https://zapsign/novo');
+  });
+
+  it('doc cancelado: mostra o aviso e gera de novo sem janela', async () => {
+    LeadsAPI.createZapsign.mockResolvedValue({
+      data: { doc_token: 'novo', sign_url: 'https://zapsign/novo' },
+    });
+    const wrapper = await mountCard({
+      ...eligibleLead,
+      custom_attributes: {
+        zapsign: {
+          doc_token: 'velho',
+          sign_url: 'https://zapsign/velho',
+          status: 'cancelado',
+        },
+      },
+    });
+    expect(wrapper.find('[data-testid="zapsign-cancelled"]').exists()).toBe(
+      true
+    );
+    await wrapper.find('[data-testid="zapsign-generate"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.createZapsign).toHaveBeenCalledWith(9, 't1', true);
   });
 });

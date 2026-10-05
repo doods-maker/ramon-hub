@@ -885,7 +885,11 @@
       "CEP_NOT_FOUND": "CEP não encontrado — preencha o endereço à mão",
       "CEP_ERROR": "Não deu pra buscar o CEP — preencha o endereço à mão",
       "BLANKS_HINT": "Vão em branco no contrato:",
-      "NO_BLANKS": "Nenhum campo do contrato vai em branco."
+      "NO_BLANKS": "Nenhum campo do contrato vai em branco.",
+      "REGENERATE": "Gerar de novo",
+      "REGENERATE_TITLE": "Gerar o contrato de novo?",
+      "REGENERATE_MESSAGE": "O documento anterior será cancelado no ZapSign e o link de assinatura dele deixa de funcionar. Um link novo é criado com os dados atuais.",
+      "CANCELLED_HINT": "O contrato anterior foi cancelado no ZapSign — gere um novo."
     },
     "ADVBOX": {
       "TITLE": "AdvBox",

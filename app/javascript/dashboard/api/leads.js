@@ -90,9 +90,10 @@ class LeadsAPI extends ApiClient {
     });
   }
 
-  createZapsign(leadId, templateId) {
+  createZapsign(leadId, templateId, regenerar = false) {
     return axios.post(`${this.url}/${leadId}/zapsign`, {
       template_id: templateId,
+      regenerar,
     });
   }
 

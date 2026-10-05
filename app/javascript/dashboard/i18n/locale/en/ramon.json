@@ -885,7 +885,11 @@
       "CEP_NOT_FOUND": "ZIP not found — fill in the address by hand",
       "CEP_ERROR": "Could not look up the ZIP — fill in the address by hand",
       "BLANKS_HINT": "Will go blank in the contract:",
-      "NO_BLANKS": "No contract field will go blank."
+      "NO_BLANKS": "No contract field will go blank.",
+      "REGENERATE": "Generate again",
+      "REGENERATE_TITLE": "Generate the contract again?",
+      "REGENERATE_MESSAGE": "The previous document will be cancelled in ZapSign and its signature link will stop working. A new link is created with the current details.",
+      "CANCELLED_HINT": "The previous contract was cancelled in ZapSign — generate a new one."
     },
     "ADVBOX": {
       "TITLE": "AdvBox",

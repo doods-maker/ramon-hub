@@ -127,4 +127,57 @@ RSpec.describe Ramon::ZapsignContractService do
     expect(preview['dados']).to include('rua' => 'Rua das Flores, 100, Centro, Tubarão/SC', 'cidade' => 'Laguna', 'uf' => 'SC')
     expect(preview['faltando']).to contain_exactly('{{número}}', '{{bairro}}')
   end
+
+  describe 'gerar de novo' do
+    let(:refuse_url) { 'https://api.zapsign.com.br/api/v1/refuse/' }
+    let(:create_url) { 'https://api.zapsign.com.br/api/v1/models/create-doc/' }
+    let(:conflito) { 'Ramon::ZapsignContractService::ConflictError' }
+
+    before do
+      lead.update!(custom_attributes: lead.custom_attributes.merge('zapsign' => { 'doc_token' => 'old', 'sign_url' => 'https://velho' }))
+    end
+
+    it 'sem confirmação não cria um 2º contrato' do
+      expect { described_class.new(lead).perform }.to raise_error { |e| expect(e.class.name).to eq(conflito) }
+      expect(a_request(:any, /zapsign/)).not_to have_been_made
+    end
+
+    it 'cancela o anterior no ZapSign e só depois cria o novo' do
+      stub_request(:post, refuse_url).with(body: hash_including('doc_token' => 'old', 'notify_signer' => false))
+                                     .to_return(status: 200, body: { message: 'ok' }.to_json, headers: { 'Content-Type' => 'application/json' })
+      stub_request(:post, create_url).to_return(status: 200, body: zapsign_response, headers: { 'Content-Type' => 'application/json' })
+      expect(Ramon::ZapsignClient).to receive(:refuse_doc).with('old', anything).ordered.and_call_original
+      expect(Ramon::ZapsignClient).to receive(:create_doc_from_template).ordered.and_call_original
+
+      result = described_class.new(lead).perform(regenerar: true)
+
+      expect(result['doc_token']).to eq('doc-123')
+      expect(lead.reload.custom_attributes.dig('zapsign', 'doc_token')).to eq('doc-123')
+    end
+
+    it 'aborta sem criar quando o cancelamento falha' do
+      stub_request(:post, refuse_url).to_return(status: 403, body: { error: 'refuse_not_allowed' }.to_json,
+                                                headers: { 'Content-Type' => 'application/json' })
+      create = stub_request(:post, create_url)
+
+      expect { described_class.new(lead).perform(regenerar: true) }.to raise_error(Ramon::ZapsignClient::RequestError)
+      expect(create).not_to have_been_requested
+      expect(lead.reload.custom_attributes.dig('zapsign', 'doc_token')).to eq('old')
+    end
+
+    it 'não troca contrato que o ZapSign diz já assinado' do
+      stub_request(:post, refuse_url).to_return(status: 403, body: { error: 'document_already_signed' }.to_json,
+                                                headers: { 'Content-Type' => 'application/json' })
+      create = stub_request(:post, create_url)
+
+      expect { described_class.new(lead).perform(regenerar: true) }.to raise_error { |e| expect(e.class.name).to eq(conflito) }
+      expect(create).not_to have_been_requested
+    end
+
+    it 'contrato marcado assinado nem chama o ZapSign' do
+      lead.update!(custom_attributes: lead.custom_attributes.deep_merge('zapsign' => { 'status' => 'signed' }))
+      expect { described_class.new(lead).perform(regenerar: true) }.to raise_error { |e| expect(e.class.name).to eq(conflito) }
+      expect(a_request(:any, /zapsign/)).not_to have_been_made
+    end
+  end
 end

@@ -45,6 +45,25 @@ RSpec.describe 'Lead ZapSign API', type: :request do
       expect(response).to have_http_status(:success)
       expect(Ramon::ZapsignContractService).to have_received(:new).with(lead, template_id: 'abc')
     end
+
+    it 'com contrato já gerado e sem "regenerar" devolve 409 sem chamar o ZapSign' do
+      lead.update!(custom_attributes: { 'zapsign' => { 'doc_token' => 'old', 'sign_url' => 'https://velho' } })
+
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/zapsign", headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:conflict)
+      expect(response.parsed_body['error']).to include('Gerar de novo')
+    end
+
+    it 'repassa regenerar: true pro serviço' do
+      servico = instance_double(Ramon::ZapsignContractService, perform: {})
+      allow(Ramon::ZapsignContractService).to receive(:new).and_return(servico)
+
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/zapsign",
+           params: { regenerar: true }, headers: admin.create_new_auth_token, as: :json
+
+      expect(servico).to have_received(:perform).with(regenerar: true)
+    end
   end
 
   describe 'prévia e dados do contrato' do

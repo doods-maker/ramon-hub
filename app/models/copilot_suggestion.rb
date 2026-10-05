@@ -68,6 +68,8 @@ class CopilotSuggestion < ApplicationRecord
     faltando = stored['faltando'].presence
     criar_nota(user, "Contrato preparado no ZapSign: #{stored['sign_url']}" \
                      "#{faltando ? "\nFalta preencher: #{faltando.join(', ')}" : ''}")
+  rescue Ramon::ZapsignContractService::ConflictError => e
+    recusar(e.message)
   rescue Ramon::ZapsignClient::RequestError, Ramon::ZapsignClient::UnavailableError => e
     recusar("O ZapSign recusou ou não respondeu: #{e.message.to_s.truncate(120)}")
   end

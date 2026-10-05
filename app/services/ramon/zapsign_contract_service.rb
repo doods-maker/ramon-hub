@@ -7,6 +7,9 @@ class Ramon::ZapsignContractService
   # ponytail: fork single-tenant — id em constante; virar config na 2ª tese com modelo.
   TEMPLATE_ID = 'ab138291-2e38-4232-96c5-47a87c814819'.freeze
 
+  # Já existe contrato que não pode ser trocado sem confirmação (ou já assinado).
+  class ConflictError < StandardError; end
+
   BLANK = '________'.freeze
   MESES = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
 
@@ -17,7 +20,10 @@ class Ramon::ZapsignContractService
   end
 
   # => { 'sign_url' =>, 'doc_token' =>, 'faltando' => [...] }
-  def perform
+  # regenerar: true cancela no ZapSign o doc anterior (não assinado) antes de
+  # criar o novo — sem isso, um 2º clique deixaria dois links válidos.
+  def perform(regenerar: false)
+    cancelar_anterior!(regenerar)
     result = Ramon::ZapsignClient.create_doc_from_template(payload)
     stored = {
       'doc_token' => result['token'],
@@ -44,6 +50,28 @@ class Ramon::ZapsignContractService
     @lead.reload
     @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('zapsign' => zapsign))
     zapsign
+  end
+
+  def cancelar_anterior!(regenerar)
+    anterior = @lead.custom_attributes&.dig('zapsign') || {}
+    return if anterior['doc_token'].blank?
+    raise ConflictError, 'O contrato já foi assinado — não dá pra gerar outro por cima' if anterior['status'] == 'signed'
+    raise ConflictError, 'Já existe contrato gerado — use "Gerar de novo" pra substituir' unless regenerar
+    return if %w[refused cancelado].include?(anterior['status'])
+
+    refuse!(anterior['doc_token'])
+    gravar(anterior.merge('status' => 'cancelado', 'cancelado_em' => Time.zone.now.iso8601))
+  end
+
+  # 404 (sumiu do ZapSign) e "já recusado" não deixam link vivo: segue. Já
+  # assinado ou qualquer outra falha aborta sem criar o novo.
+  def refuse!(token)
+    Ramon::ZapsignClient.refuse_doc(token, 'Substituído por um novo contrato gerado no hub')
+  rescue Ramon::ZapsignClient::RequestError => e
+    return if e.code == 404 || e.body.to_s.include?('already_refused')
+    raise unless e.body.to_s.include?('already_signed')
+
+    raise ConflictError, 'O ZapSign diz que o contrato anterior já foi assinado — não gerei outro'
   end
 
   # Nome do modelo escolhido, só pra mostrar no painel depois de gerado.

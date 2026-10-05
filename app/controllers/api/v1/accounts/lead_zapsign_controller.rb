@@ -5,7 +5,10 @@ class Api::V1::Accounts::LeadZapsignController < Api::V1::Accounts::BaseControll
 
   def create
     authorize(@lead, :show?)
-    render json: Ramon::ZapsignContractService.new(@lead, template_id: params[:template_id]).perform
+    regenerar = ActiveModel::Type::Boolean.new.cast(params[:regenerar]) || false
+    render json: Ramon::ZapsignContractService.new(@lead, template_id: params[:template_id]).perform(regenerar: regenerar)
+  rescue Ramon::ZapsignContractService::ConflictError => e
+    render json: { error: e.message }, status: :conflict
   rescue Ramon::ZapsignClient::RequestError => e
     render json: { error: e.body.to_s.truncate(300) }, status: :unprocessable_entity
   rescue Ramon::ZapsignClient::UnavailableError => e
