@@ -5,7 +5,13 @@ import LeadsAPI from 'dashboard/api/leads';
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('dashboard/api/leads', () => ({
-  default: { createZapsign: vi.fn(), zapsignTemplates: vi.fn() },
+  default: {
+    createZapsign: vi.fn(),
+    zapsignTemplates: vi.fn(),
+    zapsignPreview: vi.fn(),
+    saveZapsignDados: vi.fn(),
+    zapsignCep: vi.fn(),
+  },
 }));
 
 const TEMPLATES = [
@@ -32,6 +38,9 @@ describe('LeadZapsignCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     LeadsAPI.zapsignTemplates.mockResolvedValue({ data: TEMPLATES });
+    LeadsAPI.zapsignPreview.mockResolvedValue({
+      data: { faltando: [], dados: {} },
+    });
   });
 
   it('aparece mesmo sem tese de acidente', async () => {
@@ -91,16 +100,70 @@ describe('LeadZapsignCard', () => {
     ).toBeDefined();
   });
 
-  it('desabilita Gerar e oferece Completar dados quando falta CPF', async () => {
-    const wrapper = await mountCard({ ...eligibleLead, contact_cpf: null });
+  it('lista o que vai em branco pela prévia do backend e deixa gerar mesmo assim', async () => {
+    LeadsAPI.zapsignPreview.mockResolvedValue({
+      data: { faltando: ['{{CPF}}', '{{número}}'], dados: {} },
+    });
+    const wrapper = await mountCard(eligibleLead);
+    expect(LeadsAPI.zapsignPreview).toHaveBeenCalledWith(9);
+    expect(wrapper.find('[data-testid="zapsign-blanks"]').text()).toContain(
+      'CPF, número'
+    );
     expect(
       wrapper.find('[data-testid="zapsign-generate"]').attributes('disabled')
-    ).toBeDefined();
-    expect(wrapper.find('[data-testid="zapsign-missing"]').exists()).toBe(true);
+    ).toBeUndefined();
+    // CPF não está no formulário do cartão: leva pros dados do contato
     await wrapper
       .find('[data-testid="zapsign-complete-data"]')
       .trigger('click');
     expect(wrapper.emitted('completeData')).toBeTruthy();
+  });
+
+  it('CEP com 8 dígitos preenche o endereço e salvar grava no contato', async () => {
+    LeadsAPI.zapsignCep.mockResolvedValue({
+      data: {
+        cep: '88701000',
+        rua: 'Rua A',
+        bairro: 'Centro',
+        cidade: 'Tubarão',
+        uf: 'SC',
+      },
+    });
+    LeadsAPI.saveZapsignDados.mockResolvedValue({
+      data: { faltando: [], dados: {} },
+    });
+    const wrapper = await mountCard(eligibleLead);
+    await wrapper.find('[data-testid="zapsign-cep"]').setValue('88701-000');
+    await flushPromises();
+    expect(LeadsAPI.zapsignCep).toHaveBeenCalledWith('88701000');
+    await wrapper.find('[data-testid="zapsign-form"]').trigger('submit');
+    await flushPromises();
+    expect(LeadsAPI.saveZapsignDados).toHaveBeenCalledWith(
+      9,
+      expect.objectContaining({
+        endereco: expect.objectContaining({
+          cep: '88701000',
+          rua: 'Rua A',
+          cidade: 'Tubarão',
+        }),
+      })
+    );
+  });
+
+  it('gerar com edição não salva grava os dados antes', async () => {
+    LeadsAPI.saveZapsignDados.mockResolvedValue({
+      data: { faltando: [], dados: { profissao: 'soldador' } },
+    });
+    LeadsAPI.createZapsign.mockResolvedValue({
+      data: { sign_url: 'https://zapsign/abc', faltando: [] },
+    });
+    const wrapper = await mountCard(eligibleLead);
+    const inputs = wrapper.findAll('[data-testid="zapsign-form"] input');
+    await inputs[inputs.length - 2].setValue('soldador');
+    await wrapper.find('[data-testid="zapsign-generate"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.saveZapsignDados).toHaveBeenCalled();
+    expect(LeadsAPI.createZapsign).toHaveBeenCalled();
   });
 
   it('gera o contrato e mostra o link no mesmo cartão', async () => {

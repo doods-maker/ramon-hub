@@ -100,6 +100,18 @@ class LeadsAPI extends ApiClient {
     return axios.get(`${this.url}/zapsign_templates`);
   }
 
+  zapsignPreview(leadId) {
+    return axios.get(`${this.url}/${leadId}/zapsign/preview`);
+  }
+
+  saveZapsignDados(leadId, dados) {
+    return axios.put(`${this.url}/${leadId}/zapsign/dados`, dados);
+  }
+
+  zapsignCep(cep) {
+    return axios.get(`${this.url}/zapsign_cep`, { params: { cep } });
+  }
+
   portalLink(leadId) {
     return axios.post(`${this.url}/${leadId}/portal_link`);
   }

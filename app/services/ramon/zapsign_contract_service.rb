@@ -27,14 +27,24 @@ class Ramon::ZapsignContractService
       'template_name' => template_name,
       'criado_em' => Time.zone.now.iso8601
     }
-    # reload: a chamada HTTP demora e um snapshot velho reverteria gravações
-    # paralelas em custom_attributes (colheita/AdvBox/painel).
-    @lead.reload
-    @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('zapsign' => stored))
-    stored
+    gravar(stored)
+  end
+
+  # Prévia sem chamar o ZapSign: o que sairia em branco + os dados atuais pro
+  # formulário "Dados do contrato" do painel (mesma fonte que o perform usa).
+  def preview
+    { 'faltando' => faltando, 'dados' => dados }
   end
 
   private
+
+  # reload: a chamada HTTP demora e um snapshot velho reverteria gravações
+  # paralelas em custom_attributes (colheita/AdvBox/painel).
+  def gravar(zapsign)
+    @lead.reload
+    @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('zapsign' => zapsign))
+    zapsign
+  end
 
   # Nome do modelo escolhido, só pra mostrar no painel depois de gerado.
   # ZapSign fora do ar não pode derrubar um contrato já criado.
@@ -54,16 +64,16 @@ class Ramon::ZapsignContractService
     }
   end
 
-  # As 12 variáveis do modelo. Endereço/estado civil/profissão vêm da extração
-  # da colheita quando existem; o que faltar sai como linha em branco no doc
-  # (lista em 'faltando' pro closer completar antes de colher a assinatura).
+  # As 12 variáveis do modelo. Endereço/estado civil/profissão vêm do contato
+  # ("Dados do contrato" no painel) e, na falta, da extração da colheita; o que
+  # faltar sai como linha em branco no doc (lista em 'faltando').
   def variaveis
     {
       '{{nome}}' => nome,
-      '{{estado civil}}' => colheita_cliente['estado_civil'],
-      '{{profissão}}' => colheita_cliente['profissao'],
+      '{{estado civil}}' => estado_civil,
+      '{{profissão}}' => profissao,
       '{{CPF}}' => cpf_formatado,
-      '{{rua}}' => endereco['rua'],
+      '{{rua}}' => rua,
       '{{número}}' => endereco['numero'],
       '{{bairro}}' => endereco['bairro'],
       '{{cidade}}' => cidade,
@@ -82,23 +92,47 @@ class Ramon::ZapsignContractService
     @contact&.name.presence || @lead.name
   end
 
+  def dados
+    endereco.slice('cep', 'numero', 'complemento', 'bairro')
+            .merge('rua' => endereco['rua'], 'cidade' => cidade, 'uf' => uf, 'estado_civil' => estado_civil,
+                   'profissao' => profissao, 'email' => @contact&.email)
+  end
+
+  def contato_attr(chave)
+    @contact&.custom_attributes&.dig(chave).presence
+  end
+
   def colheita_cliente
     @lead.custom_attributes&.dig('colheita', 'dados', 'cliente') || {}
   end
 
-  # A colheita traz o endereço numa string só; rua/número/bairro separados só
-  # se um dia forem campos próprios — até lá a rua carrega o endereço inteiro.
+  def estado_civil
+    contato_attr('estado_civil') || colheita_cliente['estado_civil']
+  end
+
+  def profissao
+    contato_attr('profissao') || colheita_cliente['profissao']
+  end
+
+  # Endereço do contato (CEP + número no painel). Sem ele, a colheita traz o
+  # endereço numa string só, que vai inteira na rua.
   def endereco
+    return contato_attr('endereco') if contato_attr('endereco').is_a?(Hash)
+
     completo = colheita_cliente['endereco'].presence
-    completo ? { 'rua' => completo, 'numero' => '', 'bairro' => '' } : {}
+    completo ? { 'rua' => completo } : {}
+  end
+
+  def rua
+    [endereco['rua'].presence, endereco['complemento'].presence].compact.join(', ').presence
   end
 
   def cidade
-    @contact&.additional_attributes&.dig('city').presence
+    endereco['cidade'].presence || @contact&.additional_attributes&.dig('city').presence
   end
 
   def uf
-    @contact&.additional_attributes&.dig('state').presence || (cidade ? 'SC' : nil)
+    endereco['uf'].presence || @contact&.additional_attributes&.dig('state').presence || (cidade ? 'SC' : nil)
   end
 
   def cpf_formatado

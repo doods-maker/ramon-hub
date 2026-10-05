@@ -865,7 +865,27 @@
       "COPIED": "Signature link copied",
       "TEMPLATE_LABEL": "Contract template",
       "TEMPLATES_ERROR": "Could not load ZapSign templates",
-      "TEMPLATE_USED": "Template: {name}"
+      "TEMPLATE_USED": "Template: {name}",
+      "FORM_TITLE": "Contract details",
+      "CAMPOS": {
+        "CEP": "ZIP (CEP)",
+        "RUA": "Street",
+        "NUMERO": "Number",
+        "COMPLEMENTO": "Complement",
+        "BAIRRO": "District",
+        "CIDADE": "City",
+        "UF": "State",
+        "ESTADO_CIVIL": "Marital status",
+        "PROFISSAO": "Occupation",
+        "EMAIL": "E-mail"
+      },
+      "OPTIONAL": "optional",
+      "SAVE_DATA": "Save details",
+      "SAVE_ERROR": "Could not save the contract details — try again",
+      "CEP_NOT_FOUND": "ZIP not found — fill in the address by hand",
+      "CEP_ERROR": "Could not look up the ZIP — fill in the address by hand",
+      "BLANKS_HINT": "Will go blank in the contract:",
+      "NO_BLANKS": "No contract field will go blank."
     },
     "ADVBOX": {
       "TITLE": "AdvBox",

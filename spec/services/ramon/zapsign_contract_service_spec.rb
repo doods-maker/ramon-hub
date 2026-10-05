@@ -81,4 +81,50 @@ RSpec.describe Ramon::ZapsignContractService do
     expect { described_class.new(lead).perform }.to raise_error(Ramon::ZapsignClient::UnavailableError)
     expect(lead.reload.custom_attributes).not_to have_key('zapsign')
   end
+
+  describe 'dados do contrato no contato' do
+    before do
+      contact.update!(additional_attributes: { 'city' => 'Laguna', 'state' => 'SC' },
+                      custom_attributes: {
+                        'estado_civil' => 'solteiro', 'profissao' => 'soldador',
+                        'endereco' => { 'cep' => '88701000', 'rua' => 'Rua Lauro Müller', 'numero' => '45',
+                                        'complemento' => 'apto 2', 'bairro' => 'Centro', 'cidade' => 'Tubarão', 'uf' => 'SC' }
+                      })
+    end
+
+    it 'prefere o contato à colheita e junta o complemento na rua' do
+      enviado = nil
+      allow(Ramon::ZapsignClient).to receive(:create_doc_from_template) do |body|
+        enviado = body[:data].to_h { |i| [i[:de], i[:para]] }
+        JSON.parse(zapsign_response)
+      end
+
+      result = described_class.new(lead).perform
+
+      expect(enviado).to include('{{estado civil}}' => 'solteiro', '{{profissão}}' => 'soldador',
+                                 '{{rua}}' => 'Rua Lauro Müller, apto 2', '{{número}}' => '45',
+                                 '{{bairro}}' => 'Centro', '{{cidade}}' => 'Tubarão', '{{UF}}' => 'SC')
+      expect(result['faltando']).to be_empty
+    end
+
+    it 'preview lista o que falta sem chamar o ZapSign e devolve os dados do formulário' do
+      contact.update!(custom_attributes: { 'endereco' => { 'rua' => 'Rua A', 'cidade' => 'Tubarão', 'uf' => 'SC' } })
+
+      preview = described_class.new(lead.reload).preview
+
+      expect(preview['faltando']).to contain_exactly('{{número}}', '{{bairro}}')
+      expect(preview['dados']).to include('rua' => 'Rua A', 'cidade' => 'Tubarão', 'estado_civil' => 'casado',
+                                          'profissao' => 'montador industrial', 'email' => 'joao@example.com')
+      expect(a_request(:any, /zapsign/)).not_to have_been_made
+    end
+  end
+
+  it 'sem endereço no contato cai na colheita (rua inteira) e na cidade do contato' do
+    contact.update!(additional_attributes: { 'city' => 'Laguna' })
+
+    preview = described_class.new(lead.reload).preview
+
+    expect(preview['dados']).to include('rua' => 'Rua das Flores, 100, Centro, Tubarão/SC', 'cidade' => 'Laguna', 'uf' => 'SC')
+    expect(preview['faltando']).to contain_exactly('{{número}}', '{{bairro}}')
+  end
 end
