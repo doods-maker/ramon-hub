@@ -413,6 +413,26 @@ describe('CommandCenter.vue', () => {
     expect(dispatchSpy).toHaveBeenCalledWith('leads/get');
   });
 
+  it('history shows weekly points back from the latest and the change', async () => {
+    const data = payload();
+    // 15 snapshots diários: 01/07 … 15/07 → pontos em 01/07, 08/07 e 15/07
+    data.history = Array.from({ length: 15 }, (_, i) => ({
+      date: `2026-07-${String(i + 1).padStart(2, '0')}`,
+      leads_count: 20 + i,
+      value_sum: 100000 + i * 1000,
+    }));
+    const wrapper = await mountPage(data);
+    const points = wrapper.findAll('[data-testid="history-point"]');
+    expect(points.map(p => p.text().slice(0, 5))).toEqual([
+      '01/07',
+      '08/07',
+      '15/07',
+    ]);
+    const delta = wrapper.find('[data-testid="history-delta"]').text();
+    expect(delta).toContain('+R$');
+    expect(delta).toContain('14');
+  });
+
   it('shows losses by thesis for admins only', async () => {
     const wrapper = await mountPage();
     expect(wrapper.find('[data-testid="losses-by-thesis"]').exists()).toBe(

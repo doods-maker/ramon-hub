@@ -126,7 +126,9 @@
       },
       "HISTORY": {
         "TITLE": "Funnel over the last 30 days",
-        "LATEST": "today: {leads} active leads · {value} in pipeline"
+        "LATEST": "today: {leads} active leads · {value} in pipeline",
+        "LEADS": "{count} leads",
+        "CHANGE": "change over the period"
       },
       "LOAD_ERROR": "Couldn't load the Command Center"
     },

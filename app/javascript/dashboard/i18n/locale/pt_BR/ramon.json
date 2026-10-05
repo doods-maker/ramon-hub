@@ -126,7 +126,9 @@
       },
       "HISTORY": {
         "TITLE": "Funil nos últimos 30 dias",
-        "LATEST": "hoje: {leads} leads ativos · {value} em pipeline"
+        "LATEST": "hoje: {leads} leads ativos · {value} em pipeline",
+        "LEADS": "{count} leads",
+        "CHANGE": "variação no período"
       },
       "LOAD_ERROR": "Não foi possível carregar o Centro de Comando"
     },

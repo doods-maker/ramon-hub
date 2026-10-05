@@ -93,6 +93,25 @@ const historyPoints = computed(() =>
 const historyLatest = computed(
   () => history.value[history.value.length - 1] || null
 );
+// Pontos semanais: de 7 em 7 dias pra trás a partir do último snapshot (até
+// 5), do mais antigo pro mais novo; a variação é do 1º ao último snapshot.
+const historyWeekly = computed(() => {
+  const last = history.value.length - 1;
+  return [0, 7, 14, 21, 28]
+    .filter(back => last - back >= 0)
+    .map(back => history.value[last - back])
+    .reverse();
+});
+const historyDelta = computed(() => {
+  const first = history.value[0];
+  const last = historyLatest.value;
+  return {
+    value: (Number(last.value_sum) || 0) - (Number(first.value_sum) || 0),
+    leads: last.leads_count - first.leads_count,
+  };
+});
+const signed = (number, text) => (number > 0 ? `+${text}` : text);
+const dayMonth = date => `${date.slice(8, 10)}/${date.slice(5, 7)}`;
 
 // ---- KPI strip ------------------------------------------------------------
 // filter = o que o clique liga no Funil (mesma regra da contagem).
@@ -625,6 +644,51 @@ useKeyboardEvents({
             :width="560"
             :height="48"
           />
+          <div
+            v-if="historyWeekly.length > 1"
+            data-testid="history-weekly"
+            class="flex flex-wrap items-end gap-x-6 gap-y-2 pt-3 mt-3 border-t border-n-weak"
+          >
+            <div
+              v-for="point in historyWeekly"
+              :key="point.date"
+              data-testid="history-point"
+            >
+              <p class="font-mono text-[11px] text-n-slate-10">
+                {{ dayMonth(point.date) }}
+              </p>
+              <p
+                class="font-mono text-[13px] font-medium tabular-nums text-n-slate-12"
+              >
+                {{ brlCompact(point.value_sum) }}
+              </p>
+              <p class="font-mono text-[11px] tabular-nums text-n-slate-10">
+                {{
+                  t('RAMON.COMMAND.HISTORY.LEADS', { count: point.leads_count })
+                }}
+              </p>
+            </div>
+            <div data-testid="history-delta" class="ml-auto text-right">
+              <p class="text-[11px] text-n-slate-10">
+                {{ t('RAMON.COMMAND.HISTORY.CHANGE') }}
+              </p>
+              <p
+                class="font-mono text-[13px] font-medium tabular-nums"
+                :class="
+                  historyDelta.value < 0 ? 'text-n-ruby-11' : 'text-n-teal-11'
+                "
+              >
+                {{ signed(historyDelta.value, brlCompact(historyDelta.value)) }}
+              </p>
+              <p class="font-mono text-[11px] tabular-nums text-n-slate-10">
+                {{
+                  t('RAMON.COMMAND.HISTORY.LEADS', {
+                    count: signed(historyDelta.leads, historyDelta.leads),
+                  })
+                }}
+              </p>
+            </div>
+          </div>
           <p
             v-if="historyLatest"
             data-testid="history-latest"
