@@ -15,6 +15,9 @@ import {
 const props = defineProps({
   lead: { type: Object, required: true },
   seguradoNome: { type: String, default: '' },
+  // Parâmetros do cálculo reaberto do histórico (só desta aba): repreenche e
+  // recalcula sem gravar outra linha no histórico.
+  inicial: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadPlanejamento' });
 
@@ -64,7 +67,7 @@ const handleError = async error => {
   hasError.value = true;
 };
 
-const planejar = async () => {
+const planejar = async (extra = {}) => {
   ultimaAcao.value = 'planejar';
   isLoading.value = true;
   hasError.value = false;
@@ -72,6 +75,7 @@ const planejar = async () => {
   try {
     const { data } = await LeadsAPI.planejamento(props.lead.id, {
       segurado_nome: props.seguradoNome || undefined,
+      ...extra,
     });
     resultado.value = data;
   } catch (error) {
@@ -102,6 +106,8 @@ const baixarPdf = async () => {
 };
 
 const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
+
+if (props.inicial) planejar({ sem_historico: true });
 </script>
 
 <template>
@@ -116,7 +122,7 @@ const retry = () => (ultimaAcao.value === 'pdf' ? baixarPdf() : planejar());
           ? $t('RAMON.SIMULADOR.PLANEJAMENTO_PLANEJANDO')
           : $t('RAMON.SIMULADOR.PLANEJAMENTO_PLANEJAR')
       "
-      @click="planejar"
+      @click="planejar()"
     />
 
     <div v-if="hasError" data-testid="planejamento-error">

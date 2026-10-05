@@ -8,6 +8,9 @@ import { AVISO, CAMPO, CARTAO, ROTULO, SELECT, TOM } from '../../helpers/ui';
 const props = defineProps({
   lead: { type: Object, required: true },
   seguradoNome: { type: String, default: '' },
+  // Parâmetros do cálculo reaberto do histórico (só desta aba): repreenche e
+  // recalcula sem gravar outra linha no histórico.
+  inicial: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadMaternidade' });
 
@@ -18,8 +21,8 @@ const hasError = ref(false);
 const errorMessage = ref('');
 const resultado = ref(null);
 
-const dataEvento = ref('');
-const categoria = ref('empregada');
+const dataEvento = ref(props.inicial?.data_evento || '');
+const categoria = ref(props.inicial?.categoria || 'empregada');
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -27,7 +30,7 @@ const brl = new Intl.NumberFormat('pt-BR', {
 });
 const money = value => brl.format(Number(value || 0));
 
-const calcular = async () => {
+const calcular = async (extra = {}) => {
   isLoading.value = true;
   hasError.value = false;
   errorMessage.value = '';
@@ -36,6 +39,7 @@ const calcular = async () => {
       data_evento: dataEvento.value,
       categoria: categoria.value,
       segurado_nome: props.seguradoNome || undefined,
+      ...extra,
     });
     resultado.value = data;
   } catch (error) {
@@ -49,6 +53,8 @@ const calcular = async () => {
 
 // erro nunca se mascara de vazio: retry refaz a mesma ação que falhou.
 const retry = () => calcular();
+
+if (dataEvento.value && props.inicial) calcular({ sem_historico: true });
 </script>
 
 <template>
@@ -94,7 +100,7 @@ const retry = () => calcular();
           ? $t('RAMON.SIMULADOR.MATERNIDADE_CALCULANDO')
           : $t('RAMON.SIMULADOR.MATERNIDADE_CALCULAR')
       "
-      @click="calcular"
+      @click="calcular()"
     />
 
     <div v-if="hasError" data-testid="maternidade-error">

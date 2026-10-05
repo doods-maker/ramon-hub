@@ -767,6 +767,69 @@ describe('LeadSimulador.vue', () => {
     });
   });
 
+  describe('reabrir do histórico (K7)', () => {
+    it('restaura vínculos manuais e recalcula o painel sem gravar histórico', async () => {
+      LeadsAPI.painel.mockResolvedValue({
+        data: { resumo: { media: '1.00' }, cartoes: [], avisos: [] },
+      });
+      const wrapper = mountSim({
+        inicial: {
+          tipo: 'painel',
+          params: {
+            der: '2026-06-30',
+            nascimento: '1980-05-10',
+            sexo: 'F',
+            vinculos_extras: [
+              {
+                inicio: '1980-08-07',
+                fim: '1988-04-30',
+                tipo: 'EMPREGO',
+                especial: { grau: 25 },
+              },
+            ],
+          },
+        },
+      });
+      await flushPromises();
+      expect(wrapper.find('[data-testid="sim-vinculo-extra-0"]').exists()).toBe(
+        true
+      );
+      expect(LeadsAPI.painel).toHaveBeenCalledWith(
+        7,
+        expect.objectContaining({
+          sem_historico: true,
+          vinculos_extras: [
+            expect.objectContaining({
+              inicio: '1980-08-07',
+              especial: { grau: 25, inicio: null, fim: null },
+            }),
+          ],
+        })
+      );
+      expect(
+        wrapper.find('[data-testid="sim-painel-resultado"]').exists()
+      ).toBe(true);
+    });
+
+    it('ver memória de cálculo não grava outra linha no histórico', async () => {
+      LeadsAPI.simulate.mockResolvedValue({ data: resultado });
+      const wrapper = mountSim();
+      await fillForm(wrapper);
+      await wrapper.find('[data-testid="sim-run"]').trigger('click');
+      await flushPromises();
+      expect(LeadsAPI.simulate).toHaveBeenLastCalledWith(
+        7,
+        expect.not.objectContaining({ sem_historico: true })
+      );
+      await wrapper.find('[data-testid="sim-memoria-toggle"]').trigger('click');
+      await flushPromises();
+      expect(LeadsAPI.simulate).toHaveBeenLastCalledWith(
+        7,
+        expect.objectContaining({ memoria_calculo: true, sem_historico: true })
+      );
+    });
+  });
+
   describe('sexo do segurado (K1)', () => {
     it('sem sexo conhecido: campo vazio e CNIS travado até escolher', async () => {
       const wrapper = mountSim({ lead: { ...lead, contact_sexo: null } });

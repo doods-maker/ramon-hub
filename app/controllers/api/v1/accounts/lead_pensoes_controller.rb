@@ -13,8 +13,9 @@ class Api::V1::Accounts::LeadPensoesController < Api::V1::Accounts::BaseControll
     return render json: { error: 'dependentes obrigatório — informe ao menos 1' }, status: :unprocessable_entity if dependentes.blank?
 
     responder do
-      render json: Ramon::MotorClient.pensao(motor_payload)
-      registrar_calculo('pensao')
+      resultado = Ramon::MotorClient.pensao(motor_payload)
+      render json: resultado
+      registrar_calculo('pensao', valor: resultado['rmi'])
     end
   end
 

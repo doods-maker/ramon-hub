@@ -19,6 +19,9 @@ import {
 const props = defineProps({
   lead: { type: Object, required: true },
   seguradoNome: { type: String, default: '' },
+  // Parâmetros do cálculo reaberto do histórico (só desta aba): repreenche e
+  // recalcula sem gravar outra linha no histórico.
+  inicial: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadPensao' });
 
@@ -28,17 +31,25 @@ const isLoading = ref(false);
 const hasError = ref(false);
 const errorMessage = ref('');
 const resultado = ref(null);
+const ini = props.inicial || {};
 const decisoes = ref({
-  desemprego: null,
-  facultativo: null,
-  uniao_2_anos: null,
+  desemprego: ini.decisoes?.desemprego ?? null,
+  facultativo: ini.decisoes?.facultativo ?? null,
+  uniao_2_anos: ini.decisoes?.uniao_2_anos ?? null,
 });
 
-const dataObito = ref('');
-const valorBeneficioObito = ref('');
-const dependentes = ref([
-  { tipo: 'conjuge', nascimento: '', invalido: false, inicio_uniao: '' },
-]);
+const dataObito = ref(ini.data_obito || '');
+const valorBeneficioObito = ref(ini.valor_beneficio_obito || '');
+const dependentes = ref(
+  ini.dependentes?.length
+    ? ini.dependentes.map(dep => ({
+        tipo: dep.tipo,
+        nascimento: dep.nascimento || '',
+        invalido: dep.invalido === true || dep.invalido === 'true',
+        inicio_uniao: dep.inicio_uniao || '',
+      }))
+    : [{ tipo: 'conjuge', nascimento: '', invalido: false, inicio_uniao: '' }]
+);
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -93,11 +104,14 @@ const payload = () => {
   return p;
 };
 
-const chamar = async () => {
+const chamar = async (extra = {}) => {
   hasError.value = false;
   errorMessage.value = '';
   try {
-    const { data } = await LeadsAPI.pensao(props.lead.id, payload());
+    const { data } = await LeadsAPI.pensao(props.lead.id, {
+      ...payload(),
+      ...extra,
+    });
     resultado.value = data;
   } catch (error) {
     hasError.value = true;
@@ -106,9 +120,9 @@ const chamar = async () => {
   }
 };
 
-const calcular = async () => {
+const calcular = async (extra = {}) => {
   isLoading.value = true;
-  await chamar();
+  await chamar(extra);
   isLoading.value = false;
 };
 
@@ -120,6 +134,8 @@ const responder = (tipo, valor) => {
 
 // erro nunca se mascara de vazio: retry refaz a mesma ação que falhou.
 const retry = () => calcular();
+
+if (dataObito.value && props.inicial) calcular({ sem_historico: true });
 
 // filete do cenário: verde = qualidade mantida, vermelho = perdida
 const cenarioBorda = cenario => (cenario.mantida ? FILETE.teal : FILETE.ruby);
@@ -252,7 +268,7 @@ const isCessaDict = v => v !== null && typeof v === 'object';
           ? $t('RAMON.SIMULADOR.PENSAO_CALCULANDO')
           : $t('RAMON.SIMULADOR.PENSAO_CALCULAR')
       "
-      @click="calcular"
+      @click="calcular()"
     />
 
     <div v-if="hasError" data-testid="pensao-error">

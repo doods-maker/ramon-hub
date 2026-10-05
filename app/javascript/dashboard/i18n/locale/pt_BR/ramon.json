@@ -592,7 +592,11 @@
       "VINCULAR_HINT": "Busque a pessoa e escolha o caso — o CNIS deste cálculo vai para ele.",
       "VINCULAR_SEM_CASO": "{name} ainda não tem caso — crie em “Calcular para um cliente”.",
       "VINCULAR_SUBSTITUIR": "Este caso já tem outro CNIS. Substituir pelo do cálculo de {data}?",
-      "VINCULAR_ERRO": "Não foi possível vincular o cálculo."
+      "VINCULAR_ERRO": "Não foi possível vincular o cálculo.",
+      "HIST_POR": "por {nome}",
+      "APAGAR_TITULO": "Apagar o cálculo de {nome}?",
+      "APAGAR_MENSAGEM": "Ele sai do histórico de todo mundo — não dá para desfazer.",
+      "APAGAR_ERRO": "Não foi possível apagar o cálculo."
     },
     "CONTEUDO": {
       "COM_ERRO": "Deu erro — abra pra ver",

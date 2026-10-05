@@ -16,6 +16,9 @@ const props = defineProps({
   lead: { type: Object, required: true },
   der: { type: String, default: '' },
   seguradoNome: { type: String, default: '' },
+  // Parâmetros do cálculo reaberto do histórico (só desta aba): repreenche e
+  // recalcula sem gravar outra linha no histórico.
+  inicial: { type: Object, default: null },
 });
 defineOptions({ name: 'LeadElegibilidade' });
 
@@ -27,7 +30,10 @@ const ocupado = computed(() => isLoading.value || simulando.value);
 const hasError = ref(false);
 const errorMessage = ref('');
 const resultado = ref(null);
-const decisoes = ref({ desemprego: null, facultativo: null });
+const decisoes = ref({
+  desemprego: props.inicial?.decisoes?.desemprego ?? null,
+  facultativo: props.inicial?.decisoes?.facultativo ?? null,
+});
 // erro nunca se mascara de vazio: retry refaz a mesma ação que falhou.
 const ultimaAcao = ref('analisar');
 
@@ -69,10 +75,10 @@ const chamar = async (extra = {}) => {
   }
 };
 
-const analisar = async () => {
+const analisar = async (extra = {}) => {
   ultimaAcao.value = 'analisar';
   isLoading.value = true;
-  await chamar();
+  await chamar(extra);
   isLoading.value = false;
 };
 
@@ -81,14 +87,20 @@ const responder = (tipo, valor) => {
   analisar();
 };
 
-const simular = async () => {
+const simular = async (extra = {}) => {
   ultimaAcao.value = 'simular';
   simulando.value = true;
-  await chamar({ simular_lacunas: true });
+  await chamar({ simular_lacunas: true, ...extra });
   simulando.value = false;
 };
 
 const retry = () => (ultimaAcao.value === 'simular' ? simular() : analisar());
+
+if (props.inicial && props.der) {
+  const semHistorico = { sem_historico: true };
+  if (props.inicial.simular_lacunas) simular(semHistorico);
+  else analisar(semHistorico);
+}
 
 // só as linhas que mudaram (elegibilidade, RMI ou previsão) — o resto some
 // pra não afogar o advogado em cartões que a lacuna não afetou.
@@ -118,7 +130,7 @@ const cenarioTexto = cenario =>
           ? $t('RAMON.SIMULADOR.SIMULANDO')
           : $t('RAMON.SIMULADOR.ELEG_ANALISAR')
       "
-      @click="analisar"
+      @click="analisar()"
     />
 
     <div v-if="hasError" data-testid="eleg-error">
@@ -366,7 +378,7 @@ const cenarioTexto = cenario =>
               ? $t('RAMON.SIMULADOR.SIMULANDO')
               : $t('RAMON.SIMULADOR.ELEG_SIMULAR')
           "
-          @click="simular"
+          @click="simular()"
         />
       </div>
 

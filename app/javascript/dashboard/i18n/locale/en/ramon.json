@@ -592,7 +592,11 @@
       "VINCULAR_HINT": "Search the person and pick the case — this calculation's CNIS goes to it.",
       "VINCULAR_SEM_CASO": "{name} has no case yet — create one in “Calculate for a client”.",
       "VINCULAR_SUBSTITUIR": "This case already has another CNIS. Replace it with the one from the {data} calculation?",
-      "VINCULAR_ERRO": "Could not link the calculation."
+      "VINCULAR_ERRO": "Could not link the calculation.",
+      "HIST_POR": "by {nome}",
+      "APAGAR_TITULO": "Delete {nome}'s calculation?",
+      "APAGAR_MENSAGEM": "It leaves everyone's history — this cannot be undone.",
+      "APAGAR_ERRO": "Could not delete the calculation."
     },
     "CONTEUDO": {
       "COM_ERRO": "Has an error — open to see",

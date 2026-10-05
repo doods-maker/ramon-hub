@@ -341,6 +341,77 @@ describe('Calculos.vue', () => {
     );
   });
 
+  describe('histórico com autor, valor e apagar seguro (K7)', () => {
+    const abrir = async item => {
+      CalculosAPI.historico.mockResolvedValue({ data: { payload: [item] } });
+      const wrapper = mount(Calculos, mountOptions);
+      await flushPromises();
+      await wrapper
+        .find('[data-testid="calculos-historico-toggle"]')
+        .trigger('click');
+      await flushPromises();
+      return wrapper;
+    };
+    const item = {
+      id: 31,
+      tipo: 'painel',
+      lead_id: 77,
+      segurado_nome: 'João Carlos Pereira',
+      created_at: '2026-10-05T09:40:00Z',
+      user_name: 'Eduardo Schlata',
+      valor: '3651.92',
+      pode_apagar: true,
+    };
+
+    it('mostra quem calculou e o valor principal', async () => {
+      const wrapper = await abrir(item);
+      const linha = wrapper.find('[data-testid="calculos-historico-item"]');
+      expect(linha.text()).toContain('RAMON.CALCULOS.HIST_POR');
+      expect(linha.text()).toContain('Eduardo Schlata');
+      expect(
+        wrapper.find('[data-testid="calculos-historico-valor"]').text()
+      ).toContain('3.651,92');
+    });
+
+    it('apagar pergunta antes e só aparece pra quem pode', async () => {
+      CalculosAPI.delete.mockResolvedValue({});
+      const wrapper = await abrir(item);
+      await wrapper
+        .find('[data-testid="calculos-historico-apagar-31"]')
+        .trigger('click');
+      expect(CalculosAPI.delete).not.toHaveBeenCalled();
+      await wrapper
+        .find('[data-testid="confirm-modal-confirm"]')
+        .trigger('click');
+      await flushPromises();
+      expect(CalculosAPI.delete).toHaveBeenCalledWith(31);
+      expect(
+        wrapper.find('[data-testid="calculos-historico-item"]').exists()
+      ).toBe(false);
+
+      const alheio = await abrir({ ...item, pode_apagar: false });
+      expect(
+        alheio.find('[data-testid="calculos-historico-apagar-31"]').exists()
+      ).toBe(false);
+    });
+
+    it('erro ao apagar vira aviso e a lista continua', async () => {
+      CalculosAPI.delete.mockRejectedValue(new Error('x'));
+      const wrapper = await abrir(item);
+      await wrapper
+        .find('[data-testid="calculos-historico-apagar-31"]')
+        .trigger('click');
+      await wrapper
+        .find('[data-testid="confirm-modal-confirm"]')
+        .trigger('click');
+      await flushPromises();
+      expect(alertSpy).toHaveBeenCalledWith('RAMON.CALCULOS.APAGAR_ERRO');
+      expect(
+        wrapper.find('[data-testid="calculos-historico-item"]').exists()
+      ).toBe(true);
+    });
+  });
+
   it('erro ao abrir a calculadora permite tentar de novo', async () => {
     RamonCalculosAPI.rascunho.mockRejectedValueOnce(new Error('down'));
     const wrapper = mount(Calculos, mountOptions);

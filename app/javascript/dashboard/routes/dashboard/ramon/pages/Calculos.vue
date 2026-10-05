@@ -152,14 +152,24 @@ const aoVincular = data => {
   abrirReaberto(data, nome);
 };
 
+// Apagar pede confirmação e só aparece pra quem calculou (ou admin — o
+// servidor decide em pode_apagar). Erro vira aviso; a lista fica.
+const apagando = ref(null);
 const apagarCalculo = async item => {
+  apagando.value = null;
   try {
     await CalculosAPI.delete(item.id);
     historico.value = historico.value.filter(c => c.id !== item.id);
   } catch (e) {
-    historicoError.value = true;
+    useAlert(t('RAMON.CALCULOS.APAGAR_ERRO'));
   }
 };
+
+const brl = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+const valorDe = item => `~${brl.format(Number(item.valor))}`;
 
 const TIPO_LABEL = {
   painel: 'RAMON.SIMULADOR.ABA_POSSIBILIDADES',
@@ -336,6 +346,20 @@ const fmtDate = value => {
     'pt-BR'
   );
 };
+
+// Linha de baixo do item: quando · tipo · DER · quem calculou.
+const metaDe = item => {
+  const base = {
+    quando: fmtDateTime(item.created_at),
+    tipo: t(TIPO_LABEL[item.tipo] || 'RAMON.CALCULOS.TITLE'),
+  };
+  const linha = item.der
+    ? t('RAMON.CALCULOS.HIST_LINHA_DER', { ...base, der: fmtDate(item.der) })
+    : t('RAMON.CALCULOS.HIST_LINHA', base);
+  return item.user_name
+    ? `${linha} · ${t('RAMON.CALCULOS.HIST_POR', { nome: item.user_name })}`
+    : linha;
+};
 </script>
 
 <template>
@@ -465,29 +489,24 @@ const fmtDate = value => {
           >
             <button
               data-testid="calculos-historico-item"
-              class="flex flex-col flex-1 min-w-0"
+              class="flex items-center flex-1 min-w-0 gap-3"
               :class="LINHA"
               @click="reabrirCalculo(item)"
             >
-              <span class="truncate text-n-slate-12">
-                {{ item.segurado_nome || $t('RAMON.CALCULOS.HIST_SEM_NOME') }}
+              <span class="flex flex-col flex-1 min-w-0">
+                <span class="truncate text-n-slate-12">
+                  {{ item.segurado_nome || $t('RAMON.CALCULOS.HIST_SEM_NOME') }}
+                </span>
+                <span class="text-xs truncate text-n-slate-10">
+                  {{ metaDe(item) }}
+                </span>
               </span>
-              <span v-if="item.der" class="text-xs text-n-slate-10">
-                {{
-                  $t('RAMON.CALCULOS.HIST_LINHA_DER', {
-                    quando: fmtDateTime(item.created_at),
-                    tipo: $t(TIPO_LABEL[item.tipo] || 'RAMON.CALCULOS.TITLE'),
-                    der: fmtDate(item.der),
-                  })
-                }}
-              </span>
-              <span v-else class="text-xs text-n-slate-10">
-                {{
-                  $t('RAMON.CALCULOS.HIST_LINHA', {
-                    quando: fmtDateTime(item.created_at),
-                    tipo: $t(TIPO_LABEL[item.tipo] || 'RAMON.CALCULOS.TITLE'),
-                  })
-                }}
+              <span
+                v-if="item.valor"
+                class="font-mono text-sm shrink-0 text-n-slate-12"
+                data-testid="calculos-historico-valor"
+              >
+                {{ valorDe(item) }}
               </span>
             </button>
             <Button
@@ -500,13 +519,14 @@ const fmtDate = value => {
               @click="vinculando = item"
             />
             <Button
+              v-if="item.pode_apagar"
               :data-testid="`calculos-historico-apagar-${item.id}`"
               link
               ruby
               xs
               class="shrink-0 me-2"
               :label="$t('RAMON.CALCULOS.HIST_APAGAR')"
-              @click="apagarCalculo(item)"
+              @click="apagando = item"
             />
           </li>
         </ul>
@@ -741,6 +761,18 @@ const fmtDate = value => {
       @confirm="executarReabrir(reabrirPendente)"
       @alt="executarReabrir(reabrirPendente, 'rascunho')"
       @cancel="reabrirPendente = null"
+    />
+    <ConfirmModal
+      v-if="apagando"
+      :title="
+        $t('RAMON.CALCULOS.APAGAR_TITULO', {
+          nome: apagando.segurado_nome || $t('RAMON.CALCULOS.HIST_SEM_NOME'),
+        })
+      "
+      :message="$t('RAMON.CALCULOS.APAGAR_MENSAGEM')"
+      :confirm-label="$t('RAMON.CALCULOS.HIST_APAGAR')"
+      @confirm="apagarCalculo(apagando)"
+      @cancel="apagando = null"
     />
     <VincularCalculo
       v-if="vinculando"

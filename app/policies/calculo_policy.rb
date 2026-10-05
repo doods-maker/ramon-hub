@@ -11,7 +11,8 @@ class CalculoPolicy < ApplicationPolicy
     index?
   end
 
+  # Histórico é de quem calculou: só ele (ou o admin) apaga.
   def destroy?
-    index?
+    @account_user.administrator? || (index? && @record.user_id.present? && @record.user_id == @user.id)
   end
 end

@@ -80,6 +80,20 @@ RSpec.describe 'Calculos API', type: :request do
       expect(response).to have_http_status(:no_content)
       expect(Calculo.exists?(calculo.id)).to be(false)
     end
+
+    it 'não deixa um agente apagar o cálculo de outra pessoa (o admin pode)' do
+      calculo = Calculo.create!(account: account, lead: lead, user: create(:user, account: account, role: :agent),
+                                tipo: 'painel', snapshot: {})
+      delete "/api/v1/accounts/#{account.id}/calculos/#{calculo.id}",
+             headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(Calculo.exists?(calculo.id)).to be(true)
+
+      admin = create(:user, account: account, role: :administrator)
+      delete "/api/v1/accounts/#{account.id}/calculos/#{calculo.id}",
+             headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:no_content)
+    end
   end
 
   describe 'POST /calculos/:id/reabrir — destino seguro' do
@@ -115,6 +129,23 @@ RSpec.describe 'Calculos API', type: :request do
       expect(response.parsed_body).to include('lead_id' => meu.id, 'thesis_id' => tese.id)
       expect(meu.reload.cnis['filename']).to eq('cnis.pdf')
       expect(lead.reload.cnis['filename']).to eq('cnis-atual.pdf')
+    end
+  end
+
+  describe 'GET /calculos — linha completa' do
+    it 'traz valor principal, quem calculou, se é rascunho, se troca o CNIS do lead e se posso apagar' do
+      lead.update!(cnis: { 'filename' => 'outro.pdf' })
+      calculo = cria_calculo(snapshot_cnis: cnis)
+      calculo.update!(snapshot: calculo.snapshot.merge('valor' => '3651.92'))
+      alheio = Calculo.create!(account: account, lead: lead, user: create(:user, account: account, role: :agent),
+                               tipo: 'pensao', snapshot: {})
+
+      get "/api/v1/accounts/#{account.id}/calculos", headers: agent.create_new_auth_token, as: :json
+
+      linhas = response.parsed_body['payload'].index_by { |c| c['id'] }
+      expect(linhas[calculo.id]).to include('valor' => '3651.92', 'user_name' => agent.name, 'rascunho' => false,
+                                            'substitui_cnis' => true, 'pode_apagar' => true)
+      expect(linhas[alheio.id]).to include('pode_apagar' => false, 'substitui_cnis' => false)
     end
   end
 
@@ -189,6 +220,26 @@ RSpec.describe 'Calculos API', type: :request do
       end
 
       expect(Calculo.last.segurado_nome).to eq('Dona Zilda')
+    end
+
+    it 'guarda o valor principal (maior RMI elegível) e não grava com sem_historico' do
+      lead.update!(cnis: cnis)
+      cartoes = [{ id: 'a', elegivel: true, rmi: '2100.00' }, { id: 'b', elegivel: true, rmi: '3651.92' },
+                 { id: 'c', elegivel: false, rmi: '5000.00' }]
+      stub_request(:post, 'http://motor:8000/painel')
+        .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
+                   body: { resumo: {}, cartoes: cartoes, avisos: [] }.to_json)
+      url = "/api/v1/accounts/#{account.id}/leads/#{lead.id}/painel"
+
+      with_modified_env MOTOR_CALCULOS_URL: 'http://motor:8000' do
+        post url, params: { der: '2026-03-10' }, headers: agent.create_new_auth_token, as: :json
+        expect(Calculo.last.snapshot['valor']).to eq('3651.92')
+
+        expect do
+          post url, params: { der: '2026-03-10', sem_historico: true }, headers: agent.create_new_auth_token, as: :json
+        end.not_to change(Calculo, :count)
+      end
+      expect(response).to have_http_status(:success)
     end
   end
 end

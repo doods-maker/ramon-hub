@@ -312,7 +312,9 @@ const salvarValor = async () => {
   }
 };
 
-const simulate = async () => {
+// semHistorico: recalcular o que já está no histórico (reabrir) não grava
+// outra linha. Também recebe o evento do clique — só lê a chave.
+const simulate = async ({ semHistorico = false } = {}) => {
   isLoading.value = true;
   motorDown.value = false;
   errorMessage.value = '';
@@ -323,6 +325,7 @@ const simulate = async () => {
       ...form.value,
       usar_cnis: Boolean(cnis.value),
       segurado_nome: props.seguradoNome || undefined,
+      sem_historico: semHistorico || undefined,
     });
     resultado.value = data;
     formDoResultado = { ...form.value, usar_cnis: Boolean(cnis.value) };
@@ -335,7 +338,8 @@ const simulate = async () => {
 };
 
 // Memória de cálculo do motor (competência/índice/corrigido): re-simula com o
-// flag opt-in — payload grande, só quando o advogado pede.
+// flag opt-in — payload grande, só quando o advogado pede. É a mesma conta já
+// registrada: sem_historico pra não criar outra linha no histórico.
 const verMemoria = async () => {
   if (memoria.value) {
     memoria.value = null;
@@ -350,6 +354,7 @@ const verMemoria = async () => {
       usar_cnis: Boolean(cnis.value),
       memoria_calculo: true,
       segurado_nome: props.seguradoNome || undefined,
+      sem_historico: true,
     });
     resultado.value = data;
     memoria.value = data.motor?.memoria_calculo || null;
@@ -364,7 +369,21 @@ const verMemoria = async () => {
 // CNIS e/ou vínculos manuais (ex.: atividade rural que não está no CNIS).
 const painelLoading = ref(false);
 const painel = ref(null);
-const vinculosExtras = ref([]);
+// Vínculos manuais voltam do snapshot ao reabrir (o servidor guarda os
+// parâmetros do painel como foram enviados).
+const extrasDoSnapshot = lista =>
+  (lista || []).map(v => ({
+    inicio: v.inicio || '',
+    fim: v.fim || '',
+    tipo: v.tipo || 'EMPREGO',
+    salario: v.salario ?? '',
+    especialGrau: v.especial?.grau ? Number(v.especial.grau) : undefined,
+    especialInicio: v.especial?.inicio || '',
+    especialFim: v.especial?.fim || '',
+  }));
+const vinculosExtras = ref(
+  extrasDoSnapshot(props.inicial?.params?.vinculos_extras)
+);
 
 const addVinculoExtra = () =>
   vinculosExtras.value.push({
@@ -414,7 +433,7 @@ const canPensao = computed(() => Boolean(cnis.value));
 const canMaternidade = computed(() => Boolean(cnis.value));
 const canPlanejamento = computed(() => Boolean(cnis.value));
 
-const calcularPainel = async () => {
+const calcularPainel = async ({ semHistorico = false } = {}) => {
   painelLoading.value = true;
   motorDown.value = false;
   errorMessage.value = '';
@@ -426,6 +445,7 @@ const calcularPainel = async () => {
       vinculos_extras: vinculosExtrasJson(),
       especiais: especiaisJson(),
       segurado_nome: props.seguradoNome || undefined,
+      sem_historico: semHistorico || undefined,
     });
     painel.value = data;
   } catch (error) {
@@ -508,14 +528,20 @@ const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
 // Aba padrão = Possibilidades (uso "hub = Previdenciarista"); o fluxo de
 // honorário do auxílio-acidente vive na 2ª aba, intacto. Cálculo reaberto do
 // histórico volta na aba em que foi feito.
-// ponytail: o reabrir restaura o que é caro (CNIS + nascimento/sexo/DER +
-// ajustes de vínculo). Campos próprios das abas pensão/maternidade/
-// planejamento ficam guardados no snapshot mas não são repreenchidos —
-// preencher de novo é digitação de segundos. Ligar se incomodar.
 // Última simulação salva é do Honorário: abre nela, onde o resultado aparece.
 const aba = ref(
   props.inicial?.tipo || (props.ultimaSimulacao ? 'honorario' : 'painel')
 );
+
+// Reabrir volta com o RESULTADO na tela, não só o formulário: recalcula na
+// hora (sem gravar outra linha no histórico). As abas filhas recebem os
+// parâmetros delas e fazem o mesmo.
+const inicialDe = tipo =>
+  props.inicial?.tipo === tipo ? props.inicial.params || {} : null;
+if (props.inicial?.tipo === 'painel' && canPainel.value)
+  calcularPainel({ semHistorico: true });
+if (props.inicial?.tipo === 'honorario' && canSimulate.value)
+  simulate({ semHistorico: true });
 </script>
 
 <template>
@@ -1386,6 +1412,7 @@ const aba = ref(
         :lead="lead"
         :der="form.der"
         :segurado-nome="seguradoNome"
+        :inicial="inicialDe('elegibilidade')"
       />
     </div>
 
@@ -1407,6 +1434,7 @@ const aba = ref(
         :key="calculoVersao"
         :lead="lead"
         :segurado-nome="seguradoNome"
+        :inicial="inicialDe('pensao')"
       />
     </div>
 
@@ -1428,6 +1456,7 @@ const aba = ref(
         :key="calculoVersao"
         :lead="lead"
         :segurado-nome="seguradoNome"
+        :inicial="inicialDe('maternidade')"
       />
     </div>
 
@@ -1449,6 +1478,7 @@ const aba = ref(
         :key="calculoVersao"
         :lead="lead"
         :segurado-nome="seguradoNome"
+        :inicial="inicialDe('planejamento')"
       />
     </div>
 

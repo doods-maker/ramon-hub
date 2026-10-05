@@ -1,5 +1,5 @@
 # Histórico da tela Cálculos: lista o que já foi calculado (cliente, tipo,
-# data/hora), reabre um cálculo no estado
+# data/hora, quem calculou e o valor principal), reabre um cálculo no estado
 # exato, vincula um cálculo a um cliente e apaga registro indevido.
 class Api::V1::Accounts::CalculosController < Api::V1::Accounts::BaseController
   LIMIT = 50
@@ -50,6 +50,11 @@ class Api::V1::Accounts::CalculosController < Api::V1::Accounts::BaseController
     @calculo = Current.account.calculos.find(params[:id])
   end
 
+  # Apagar depende de quem calculou: a policy precisa do registro, não da classe.
+  def check_authorization
+    authorize(@calculo || Calculo)
+  end
+
   def abrir_no_rascunho?
     @calculo.lead.rascunho_de_calculo? || params[:destino] == 'rascunho'
   end
@@ -90,9 +95,11 @@ class Api::V1::Accounts::CalculosController < Api::V1::Accounts::BaseController
     dados(calculo).merge(
       # sem CNIS no snapshot, reabrir só devolve os campos digitados
       tem_cnis: calculo.cnis_snapshot.present?,
+      valor: calculo.snapshot['valor'],
       rascunho: calculo.lead.rascunho_de_calculo?,
       # reabrir no lead trocaria o CNIS diferente que ele tem hoje → a tela pergunta
-      substitui_cnis: !calculo.lead.rascunho_de_calculo? && cnis_diferente?(calculo.lead, calculo)
+      substitui_cnis: !calculo.lead.rascunho_de_calculo? && cnis_diferente?(calculo.lead, calculo),
+      pode_apagar: CalculoPolicy.new(pundit_user, calculo).destroy?
     )
   end
 
