@@ -21,13 +21,7 @@ class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
     return render json: { error: SEXO_OBRIGATORIO }, status: :unprocessable_entity unless SEXOS.include?(params[:sexo])
 
     responder do
-      resultado = Ramon::MotorClient.cnis(
-        params[:arquivo],
-        sexo: params[:sexo].to_s,
-        excluir_seqs: params[:excluir_seqs].to_s,
-        mensalidades: params[:mensalidades].to_s
-      )
-      @lead.update!(cnis: stored(resultado))
+      @lead.update!(cnis: stored(parsear_cnis))
       render json: detalhe
     end
   end
@@ -53,6 +47,15 @@ class Api::V1::Accounts::LeadCnisController < Api::V1::Accounts::BaseController
   end
 
   private
+
+  def parsear_cnis
+    Ramon::MotorClient.cnis(
+      params[:arquivo],
+      sexo: params[:sexo].to_s,
+      excluir_seqs: params[:excluir_seqs].to_s,
+      mensalidades: params[:mensalidades].to_s
+    )
+  end
 
   def detalhe
     @lead.cnis_detalhe
