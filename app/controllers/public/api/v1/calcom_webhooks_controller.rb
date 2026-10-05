@@ -1,7 +1,4 @@
 class Public::Api::V1::CalcomWebhooksController < PublicController
-  # ponytail: fork single-tenant do escritório (Tubarão/SC) — fuso fixo para o
-  # texto humano da atividade; parametrizar se um dia houver mais contas.
-  TIME_ZONE = 'America/Sao_Paulo'.freeze
   TASK_TITLE_PREFIX = 'Reunião Cal.com'.freeze
 
   # ponytail: janela de dedup no cache Redis já existente — sem tabela nova. Um
@@ -79,44 +76,15 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
     :ok
   end
 
+  # Mesmo efeito da reunião marcada pelo painel (Ramon::ReuniaoAgendamento);
+  # o prefixo no título é o que o cancel/reschedule usam pra achar a tarefa.
   def register_meeting(lead)
-    lead.lead_activities.create!(account: account, kind: 'meeting_scheduled', to_value: meeting_summary)
-    lead.lead_tasks.create!(
-      account: account,
-      title: "#{TASK_TITLE_PREFIX}: #{event_title}".truncate(255),
-      kind: 'meeting',
-      due_at: start_at
-    )
-    advance_to_meeting_stage(lead)
-    Ramon::Papeis.atribuir_closer!(lead)
-    confirmation_draft(lead)
-    enqueue_reminders(lead)
-    notify(lead, 'ramon_meeting_scheduled')
+    Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: start_at, title: event_title,
+                                   task_title: "#{TASK_TITLE_PREFIX}: #{event_title}")
   end
 
-  # Reunião marcada = o lead anda pra "Reunião agendada" (label fixo do seed),
-  # nunca regride: quem já está em Negociação e remarcou fica onde está.
-  def advance_to_meeting_stage(lead)
-    stage = account.lead_stages.find_by(label: 'fase-reuniao-agendada')
-    return if stage.blank? || lead.lead_stage.position >= stage.position
-
-    lead.update!(lead_stage: stage)
-  end
-
-  # Sino do hub pra todo mundo da conta (o mesmo do lead novo da LP).
   def notify(lead, type)
-    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: type, meta: { 'quando' => quando_humano }).perform
-    # push no celular na hora (o job é no-op sem NTFY_TOPIC); os lembretes têm o seu no MeetingReminderJob
-    verbo = type == 'ramon_meeting_cancelled' ? 'cancelada' : 'marcada'
-    Ramon::NtfyPushJob.perform_later(lead.id, title: "Reuniao #{verbo}: #{lead.name}", body: "#{quando_humano} — #{event_title}")
-  end
-
-  # "quinta, 20/08 às 14:00" — texto único pra sino e rascunho.
-  def quando_humano
-    return '' if start_at.blank?
-
-    local = start_at.in_time_zone(TIME_ZONE)
-    "#{DIAS_SEMANA[local.wday]}, #{local.strftime('%d/%m')} às #{local.strftime('%H:%M')}"
+    Ramon::ReuniaoAgendamento.notify(lead, type, start_at, event_title)
   end
 
   # Nome do tipo de evento ("Primeiro Atendimento"), não o título do booking
@@ -126,29 +94,6 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
       booking[:title].to_s.sub(/ between .*\z/, '')
   end
 
-  DIAS_SEMANA = %w[domingo segunda terça quarta quinta sexta sábado].freeze
-
-  # Rascunho de confirmação (gatilho do compromisso) — estático, sem LLM.
-  def confirmation_draft(lead)
-    quando = quando_humano
-    first = lead.name.to_s.split.first.presence || 'cliente'
-    lead.lead_notes.create!(account: account, body: <<~NOTA.strip.truncate(1000))
-      RASCUNHO (revisar antes de enviar) — confirmação de reunião:
-      "Oi #{first}! Nossa conversa está confirmada pra #{quando}. Vou te esperar, tá? Se não puder comparecer, me avise com antecedência que a gente remarca sem problema."
-    NOTA
-  end
-
-  # Lembretes anti no-show: só offsets ainda no futuro; cancel/reschedule não
-  # desagenda — o guard do job mata o lembrete órfão.
-  def enqueue_reminders(lead)
-    Ramon::MeetingReminderJob::OFFSETS.each do |offset, label|
-      fire_at = start_at - offset
-      next if fire_at.past?
-
-      Ramon::MeetingReminderJob.set(wait_until: fire_at).perform_later(lead.id, start_at.iso8601, label)
-    end
-  end
-
   def purge_calcom_tasks(lead, due_at: nil)
     tasks = lead.lead_tasks.open_tasks.where(kind: 'meeting').where('title LIKE ?', "#{TASK_TITLE_PREFIX}%")
     tasks = tasks.where(due_at: due_at) if due_at.present?
@@ -156,8 +101,7 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
   end
 
   def meeting_summary
-    when_text = start_at ? start_at.in_time_zone(TIME_ZONE).strftime('%d/%m/%Y %H:%M') : ''
-    "#{event_title} em #{when_text}".strip.truncate(255)
+    Ramon::ReuniaoAgendamento.resumo(event_title, start_at)
   end
 
   def booking

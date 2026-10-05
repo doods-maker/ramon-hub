@@ -2,6 +2,8 @@ json.stages do
   json.array! @stages do |stage|
     json.id stage.id
     json.name stage.name
+    # label fixo do seed (fase-reuniao-agendada…): o painel decide por ele, não pelo nome editável
+    json.label stage.label
     json.color stage.color
     json.position stage.position
     json.is_won stage.is_won
