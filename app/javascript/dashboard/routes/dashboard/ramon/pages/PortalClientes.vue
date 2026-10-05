@@ -7,6 +7,19 @@ import PortalClientesAPI from 'dashboard/api/portalClientes';
 import RamonCalculosAPI from 'dashboard/api/ramonCalculos';
 import LeadsAPI from 'dashboard/api/leads';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import {
+  AVISO,
+  CAMPO,
+  CARTAO,
+  CHIP,
+  ROTULO,
+  SECAO,
+  SELECT,
+  TEXTAREA,
+  TITULO,
+  TOM,
+} from '../helpers/ui';
 
 defineOptions({ name: 'RamonPortalClientes' });
 
@@ -212,6 +225,9 @@ const METRICAS = [
   'docs_enviados',
 ];
 
+// status espelha o ZapSign: pendente | signed | refused.
+const TOM_ASSINATURA = { signed: TOM.teal, refused: TOM.ruby };
+
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
 
@@ -219,282 +235,354 @@ onMounted(carregar);
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col overflow-y-auto p-8">
-    <RamonPageHeader
-      :title="t('RAMON.PORTAL_CLIENTES.TITLE')"
-      :subtitle="t('RAMON.PORTAL_CLIENTES.SUBTITLE')"
-    />
+  <div class="h-full w-full overflow-y-auto bg-n-background p-4 sm:p-8">
+    <div class="mx-auto flex w-full max-w-5xl flex-col gap-5">
+      <RamonPageHeader
+        class="!mb-0"
+        :title="t('RAMON.PORTAL_CLIENTES.TITLE')"
+        :subtitle="t('RAMON.PORTAL_CLIENTES.SUBTITLE')"
+      />
 
-    <div class="mb-6 rounded-xl border border-n-weak bg-n-solid-1 p-4">
-      <div class="flex gap-2">
-        <input
-          v-model="busca"
-          type="search"
-          class="flex-1 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm"
-          :placeholder="t('RAMON.PORTAL_CLIENTES.SEARCH')"
-          @keyup.enter="buscar"
-        />
-        <button
-          type="button"
-          class="rounded-lg bg-n-iris-9 px-3 py-2 text-sm text-white"
-          @click="buscar"
+      <!-- Convidar: busca no ADVBOX → escolhe → e-mail → convida -->
+      <div :class="CARTAO">
+        <div class="flex gap-2">
+          <input
+            v-model="busca"
+            type="search"
+            :class="CAMPO"
+            class="flex-1"
+            :placeholder="t('RAMON.PORTAL_CLIENTES.SEARCH')"
+            @keyup.enter="buscar"
+          />
+          <Button
+            sm
+            icon="i-lucide-search"
+            :label="t('RAMON.PORTAL_CLIENTES.SEARCH_BTN')"
+            @click="buscar"
+          />
+        </div>
+        <ul
+          v-if="resultados.length"
+          class="m-0 mt-3 flex list-none flex-col divide-y divide-n-weak border-t border-n-weak p-0"
         >
-          {{ t('RAMON.PORTAL_CLIENTES.SEARCH_BTN') }}
-        </button>
-      </div>
-      <ul
-        v-if="resultados.length"
-        class="mt-3 flex flex-col divide-y divide-n-weak"
-      >
-        <li
-          v-for="c in resultados"
-          :key="c.id"
-          class="flex items-center justify-between py-2 text-sm"
-        >
-          <span>
-            {{ c.name }}
-            <span class="text-n-slate-11">{{ c.identification }}</span>
-          </span>
-          <button
-            type="button"
-            class="text-n-iris-11 hover:underline"
-            @click="escolher(c)"
+          <li
+            v-for="c in resultados"
+            :key="c.id"
+            class="flex items-center justify-between gap-3 py-1.5 text-sm"
           >
-            {{ t('RAMON.PORTAL_CLIENTES.INVITE') }}
-          </button>
+            <span class="min-w-0 truncate text-n-slate-12">
+              {{ c.name }}
+              <span class="ms-1 font-mono text-xs text-n-slate-10">{{
+                c.identification
+              }}</span>
+            </span>
+            <Button
+              link
+              xs
+              :label="t('RAMON.PORTAL_CLIENTES.INVITE')"
+              @click="escolher(c)"
+            />
+          </li>
+        </ul>
+        <div
+          v-if="candidato"
+          class="mt-3 flex items-center gap-2"
+          :class="SECAO"
+        >
+          <span class="text-sm font-medium text-n-slate-12">{{
+            candidato.name
+          }}</span>
+          <input
+            v-model="emailConvite"
+            type="email"
+            :class="CAMPO"
+            class="flex-1"
+            :placeholder="t('RAMON.PORTAL_CLIENTES.EMAIL')"
+          />
+          <Button
+            sm
+            icon="i-lucide-send"
+            :label="t('RAMON.PORTAL_CLIENTES.INVITE')"
+            @click="convidar"
+          />
+        </div>
+      </div>
+
+      <!-- Senha provisória: aparece uma vez -->
+      <div
+        v-if="senhaGerada"
+        class="flex flex-wrap items-center gap-3 !py-3"
+        :class="[AVISO, TOM.amber]"
+      >
+        <span class="text-sm text-n-slate-12">
+          {{
+            t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD', { nome: senhaGerada.nome })
+          }}
+          <strong class="ms-1 font-mono text-lg tracking-widest">{{
+            senhaGerada.senha
+          }}</strong>
+        </span>
+        <Button
+          xs
+          icon="i-lucide-copy"
+          :label="t('RAMON.PORTAL_CLIENTES.COPY')"
+          @click="copiarSenha"
+        />
+        <span>{{ t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD_HINT') }}</span>
+        <Button
+          link
+          xs
+          slate
+          class="ms-auto"
+          :label="t('RAMON.PORTAL_CLIENTES.DISMISS')"
+          @click="senhaGerada = null"
+        />
+      </div>
+
+      <!-- Funil do piloto + documentos -->
+      <div
+        v-if="metricas"
+        class="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-7"
+      >
+        <div v-for="chave in METRICAS" :key="chave" :class="CARTAO">
+          <p class="font-mono text-xl font-medium tabular-nums text-n-slate-12">
+            {{ metricas[chave] }}
+          </p>
+          <p class="mt-0.5 text-[11px] leading-snug text-n-slate-10">
+            {{ t(`RAMON.PORTAL_CLIENTES.METRICS.${chave.toUpperCase()}`) }}
+          </p>
+        </div>
+      </div>
+
+      <div
+        v-if="isLoading"
+        class="h-32 animate-pulse rounded-xl bg-n-alpha-2"
+      />
+      <p v-else-if="hasError" class="text-sm text-n-ruby-11">
+        {{ t('RAMON.PORTAL_CLIENTES.LOAD_ERROR') }}
+      </p>
+      <p
+        v-else-if="!clientes.length"
+        :class="CARTAO"
+        class="py-6 text-center text-sm text-n-slate-10"
+      >
+        {{ t('RAMON.PORTAL_CLIENTES.EMPTY') }}
+      </p>
+      <ul
+        v-else
+        class="m-0 flex list-none flex-col divide-y divide-n-weak !p-0"
+        :class="CARTAO"
+      >
+        <li v-for="c in clientes" :key="c.id" class="px-4 py-3 text-sm">
+          <div class="flex items-center gap-4">
+            <button
+              type="button"
+              class="flex min-w-0 flex-1 flex-col items-start gap-1 text-start"
+              @click="abrir(c.id)"
+            >
+              <span class="flex min-w-0 max-w-full items-center gap-2">
+                <span
+                  class="size-3.5 shrink-0 text-n-slate-10"
+                  :class="
+                    aberto && aberto.id === c.id
+                      ? 'i-lucide-chevron-down'
+                      : 'i-lucide-chevron-right'
+                  "
+                />
+                <span class="truncate font-medium text-n-slate-12">{{
+                  c.nome
+                }}</span>
+                <span :class="[CHIP, c.convidado_em ? TOM.blue : TOM.slate]">
+                  {{
+                    c.convidado_em
+                      ? t('RAMON.PORTAL_CLIENTES.INVITED')
+                      : t('RAMON.PORTAL_CLIENTES.NOT_INVITED')
+                  }}
+                </span>
+                <span v-if="c.termos_aceitos_em" :class="[CHIP, TOM.teal]">
+                  {{ t('RAMON.PORTAL_CLIENTES.TERMS_OK') }}
+                </span>
+              </span>
+              <!-- cada trecho "rótulo valor" não quebra no meio -->
+              <span class="ps-5 text-xs text-n-slate-10">
+                <span class="font-mono">{{ c.cpf }}</span>
+                <template v-if="c.email"> · {{ c.email }}</template>
+                ·
+                <span class="whitespace-nowrap">
+                  {{ t('RAMON.PORTAL_CLIENTES.LAST_ACCESS') }}
+                  <span class="font-mono">{{
+                    dataCurta(c.ultimo_acesso_em)
+                  }}</span>
+                </span>
+                ·
+                <span class="whitespace-nowrap">{{
+                  t('RAMON.PORTAL_CLIENTES.ACCESS_DAYS', { n: c.dias_acesso })
+                }}</span>
+                ·
+                <span class="whitespace-nowrap">
+                  {{ t('RAMON.PORTAL_CLIENTES.SYNCED') }}
+                  <span class="font-mono">{{
+                    dataCurta(c.sincronizado_em)
+                  }}</span>
+                </span>
+              </span>
+            </button>
+            <span class="whitespace-nowrap text-xs text-n-slate-11">
+              <span class="font-mono">{{ c.envios_count }}</span>
+              {{ t('RAMON.PORTAL_CLIENTES.UPLOADS') }}
+            </span>
+            <Button
+              link
+              xs
+              :label="t('RAMON.PORTAL_CLIENTES.REINVITE')"
+              @click="reenviar(c.id)"
+            />
+            <Button
+              link
+              xs
+              ruby
+              :label="t('RAMON.PORTAL_CLIENTES.DELETE')"
+              @click="excluir(c)"
+            />
+          </div>
+
+          <!-- Detalhe: seções (sem cartão dentro de cartão) -->
+          <div
+            v-if="aberto && aberto.id === c.id"
+            class="mt-3 flex flex-col gap-4 ps-5"
+          >
+            <div class="flex flex-wrap items-end gap-2" :class="SECAO">
+              <label :class="ROTULO" class="min-w-64 flex-1">
+                {{ t('RAMON.PORTAL_CLIENTES.EMAIL_EDIT') }}
+                <input
+                  v-model="emailEdit"
+                  type="email"
+                  :class="CAMPO"
+                  :placeholder="t('RAMON.PORTAL_CLIENTES.EMAIL')"
+                />
+              </label>
+              <Button
+                sm
+                faded
+                slate
+                :label="t('RAMON.PORTAL_CLIENTES.EMAIL_SAVE')"
+                @click="salvarEmail"
+              />
+            </div>
+
+            <p
+              v-if="!aberto.processos.length"
+              :class="[AVISO, TOM.slate]"
+              class="m-0"
+            >
+              {{ t('RAMON.PORTAL_CLIENTES.NO_LAWSUITS') }}
+            </p>
+            <div
+              v-for="p in aberto.processos"
+              :key="p.id"
+              class="flex flex-col gap-2"
+              :class="SECAO"
+            >
+              <div class="flex flex-wrap items-center gap-2 text-xs">
+                <span class="font-mono text-n-slate-12">{{ p.numero }}</span>
+                <span class="text-n-slate-10"
+                  >· {{ p.tipo }} · {{ p.etapa }}</span
+                >
+                <span v-if="p.docs_pendentes.length" :class="[CHIP, TOM.amber]">
+                  <span class="font-mono">{{ p.docs_pendentes.length }}</span>
+                  {{ t('RAMON.PORTAL_CLIENTES.PENDING_DOCS') }}
+                </span>
+              </div>
+              <label :class="ROTULO">
+                {{ t('RAMON.PORTAL_CLIENTES.RECADO') }}
+                <textarea v-model="recados[p.id]" rows="2" :class="TEXTAREA" />
+              </label>
+            </div>
+            <div class="flex items-center gap-3">
+              <Button
+                sm
+                :label="t('RAMON.PORTAL_CLIENTES.RECADO_SAVE')"
+                @click="salvarRecados"
+              />
+              <span v-if="aviso" class="text-xs text-n-teal-11">{{
+                aviso
+              }}</span>
+            </div>
+
+            <div class="flex flex-col gap-2" :class="SECAO">
+              <div class="flex flex-wrap items-center gap-2">
+                <select v-model="templateId" :class="SELECT" class="!w-auto">
+                  <option :value="null">
+                    {{ t('RAMON.PORTAL_CLIENTES.TEMPLATE') }}
+                  </option>
+                  <option
+                    v-for="tpl in templates"
+                    :key="tpl.token"
+                    :value="tpl.token"
+                  >
+                    {{ tpl.name }}
+                  </option>
+                </select>
+                <input
+                  v-model="nomeDocumento"
+                  type="text"
+                  :class="CAMPO"
+                  class="!w-56"
+                  :placeholder="t('RAMON.PORTAL_CLIENTES.DOC_NAME')"
+                />
+                <Button
+                  sm
+                  icon="i-lucide-signature"
+                  :label="t('RAMON.PORTAL_CLIENTES.SEND_SIGNATURE')"
+                  :disabled="!templateId || enviandoAssinatura"
+                  @click="enviarAssinatura"
+                />
+              </div>
+              <template v-if="aberto.assinaturas && aberto.assinaturas.length">
+                <p :class="TITULO" class="m-0 mt-1">
+                  {{ t('RAMON.PORTAL_CLIENTES.SIGNATURES_LIST') }}
+                </p>
+                <ul class="m-0 flex list-none flex-col gap-1 p-0 text-xs">
+                  <li
+                    v-for="a in aberto.assinaturas"
+                    :key="a.id"
+                    class="flex items-center gap-2"
+                  >
+                    <span class="text-n-slate-12">{{ a.nome }}</span>
+                    <span
+                      :class="[CHIP, TOM_ASSINATURA[a.status] || TOM.amber]"
+                    >
+                      {{ a.status }}
+                    </span>
+                    <span class="font-mono text-n-slate-10">{{
+                      dataCurta(a.created_at)
+                    }}</span>
+                  </li>
+                </ul>
+              </template>
+            </div>
+
+            <ul
+              v-if="aberto.envios.length"
+              class="m-0 flex list-none flex-col gap-1 p-0 text-xs text-n-slate-11"
+              :class="SECAO"
+            >
+              <li v-for="e in aberto.envios" :key="e.id">
+                <span class="font-mono text-n-slate-10">{{
+                  dataCurta(e.created_at)
+                }}</span>
+                · {{ e.item }} · {{ t('RAMON.PORTAL_CLIENTES.DRIVE') }}
+                <span
+                  :class="
+                    e.drive_file_id ? 'text-n-teal-11' : 'text-n-slate-10'
+                  "
+                  >{{ e.drive_file_id ? '✓' : '…' }}</span
+                >
+              </li>
+            </ul>
+          </div>
         </li>
       </ul>
-      <div v-if="candidato" class="mt-3 flex items-center gap-2">
-        <span class="text-sm font-medium">{{ candidato.name }}</span>
-        <input
-          v-model="emailConvite"
-          type="email"
-          class="flex-1 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-sm"
-          :placeholder="t('RAMON.PORTAL_CLIENTES.EMAIL')"
-        />
-        <button
-          type="button"
-          class="rounded-lg bg-n-iris-9 px-3 py-2 text-sm text-white"
-          @click="convidar"
-        >
-          {{ t('RAMON.PORTAL_CLIENTES.INVITE') }}
-        </button>
-      </div>
     </div>
-
-    <div
-      v-if="senhaGerada"
-      class="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-n-amber-6 bg-n-amber-2 p-4 text-sm"
-    >
-      <span>
-        {{
-          t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD', { nome: senhaGerada.nome })
-        }}
-        <strong class="font-mono text-lg tracking-widest">{{
-          senhaGerada.senha
-        }}</strong>
-      </span>
-      <button
-        type="button"
-        class="rounded-lg bg-n-iris-9 px-3 py-1.5 text-xs text-white"
-        @click="copiarSenha"
-      >
-        {{ t('RAMON.PORTAL_CLIENTES.COPY') }}
-      </button>
-      <span class="text-xs text-n-slate-11">{{
-        t('RAMON.PORTAL_CLIENTES.TEMP_PASSWORD_HINT')
-      }}</span>
-      <button
-        type="button"
-        class="ml-auto text-xs text-n-slate-11 hover:underline"
-        @click="senhaGerada = null"
-      >
-        {{ t('RAMON.PORTAL_CLIENTES.DISMISS') }}
-      </button>
-    </div>
-
-    <div
-      v-if="metricas"
-      class="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7"
-    >
-      <div
-        v-for="chave in METRICAS"
-        :key="chave"
-        class="rounded-xl border border-n-weak bg-n-solid-1 px-3 py-2"
-      >
-        <p class="text-xl font-semibold">{{ metricas[chave] }}</p>
-        <p class="text-xs text-n-slate-11">
-          {{ t(`RAMON.PORTAL_CLIENTES.METRICS.${chave.toUpperCase()}`) }}
-        </p>
-      </div>
-    </div>
-
-    <div v-if="isLoading" class="h-12 animate-pulse rounded-lg bg-n-solid-2" />
-    <p v-else-if="hasError" class="text-sm text-n-ruby-11">
-      {{ t('RAMON.PORTAL_CLIENTES.LOAD_ERROR') }}
-    </p>
-    <p v-else-if="!clientes.length" class="text-sm text-n-slate-11">
-      {{ t('RAMON.PORTAL_CLIENTES.EMPTY') }}
-    </p>
-    <ul
-      v-else
-      class="flex flex-col divide-y divide-n-weak rounded-xl border border-n-weak bg-n-solid-1"
-    >
-      <li v-for="c in clientes" :key="c.id" class="px-4 py-3 text-sm">
-        <div class="flex items-center justify-between gap-4">
-          <button
-            type="button"
-            class="min-w-0 flex-1 truncate text-start font-medium"
-            @click="abrir(c.id)"
-          >
-            {{ c.nome }}
-            <span class="font-normal text-n-slate-11"
-              >{{ c.cpf
-              }}<template v-if="c.email"> · {{ c.email }}</template></span
-            >
-          </button>
-          <span class="text-xs text-n-slate-11">
-            {{
-              c.convidado_em
-                ? t('RAMON.PORTAL_CLIENTES.INVITED')
-                : t('RAMON.PORTAL_CLIENTES.NOT_INVITED')
-            }}
-            ·
-            {{
-              c.termos_aceitos_em ? t('RAMON.PORTAL_CLIENTES.TERMS_OK') : '—'
-            }}
-            · {{ t('RAMON.PORTAL_CLIENTES.LAST_ACCESS') }}
-            {{ dataCurta(c.ultimo_acesso_em) }} ·
-            {{ t('RAMON.PORTAL_CLIENTES.ACCESS_DAYS', { n: c.dias_acesso }) }} ·
-            {{ t('RAMON.PORTAL_CLIENTES.SYNCED') }}
-            {{ dataCurta(c.sincronizado_em) }}
-          </span>
-          <span class="text-xs"
-            >{{ c.envios_count }} {{ t('RAMON.PORTAL_CLIENTES.UPLOADS') }}</span
-          >
-          <button
-            type="button"
-            class="text-xs text-n-iris-11 hover:underline"
-            @click="reenviar(c.id)"
-          >
-            {{ t('RAMON.PORTAL_CLIENTES.REINVITE') }}
-          </button>
-          <button
-            type="button"
-            class="text-xs text-n-ruby-11 hover:underline"
-            @click="excluir(c)"
-          >
-            {{ t('RAMON.PORTAL_CLIENTES.DELETE') }}
-          </button>
-        </div>
-        <div
-          v-if="aberto && aberto.id === c.id"
-          class="mt-3 flex flex-col gap-3"
-        >
-          <div class="flex flex-wrap items-center gap-2">
-            <label class="text-xs">{{
-              t('RAMON.PORTAL_CLIENTES.EMAIL_EDIT')
-            }}</label>
-            <input
-              v-model="emailEdit"
-              type="email"
-              class="min-w-64 rounded-lg border border-n-weak bg-n-solid-1 px-2 py-1 text-xs"
-              :placeholder="t('RAMON.PORTAL_CLIENTES.EMAIL')"
-            />
-            <button
-              type="button"
-              class="rounded-lg bg-n-iris-9 px-3 py-1.5 text-xs text-white"
-              @click="salvarEmail"
-            >
-              {{ t('RAMON.PORTAL_CLIENTES.EMAIL_SAVE') }}
-            </button>
-          </div>
-          <p v-if="!aberto.processos.length" class="text-xs text-n-slate-11">
-            {{ t('RAMON.PORTAL_CLIENTES.NO_LAWSUITS') }}
-          </p>
-          <div
-            v-for="p in aberto.processos"
-            :key="p.id"
-            class="rounded-lg border border-n-weak p-3"
-          >
-            <p class="text-xs text-n-slate-11">
-              {{ p.numero }} · {{ p.tipo }} · {{ p.etapa }}
-            </p>
-            <p v-if="p.docs_pendentes.length" class="text-xs">
-              {{ p.docs_pendentes.length }}
-              {{ t('RAMON.PORTAL_CLIENTES.PENDING_DOCS') }}
-            </p>
-            <label class="mt-2 block text-xs">{{
-              t('RAMON.PORTAL_CLIENTES.RECADO')
-            }}</label>
-            <textarea
-              v-model="recados[p.id]"
-              rows="2"
-              class="w-full rounded-lg border border-n-weak bg-n-solid-1 px-2 py-1 text-sm"
-            />
-          </div>
-          <div class="flex items-center gap-3">
-            <button
-              type="button"
-              class="rounded-lg bg-n-iris-9 px-3 py-1.5 text-xs text-white"
-              @click="salvarRecados"
-            >
-              {{ t('RAMON.PORTAL_CLIENTES.RECADO_SAVE') }}
-            </button>
-            <span v-if="aviso" class="text-xs text-n-teal-11">{{ aviso }}</span>
-          </div>
-          <div class="flex flex-col gap-2 rounded-lg border border-n-weak p-3">
-            <div class="flex flex-wrap items-center gap-2">
-              <select
-                v-model="templateId"
-                class="rounded-lg border border-n-weak bg-n-solid-1 px-2 py-1 text-xs"
-              >
-                <option :value="null">
-                  {{ t('RAMON.PORTAL_CLIENTES.TEMPLATE') }}
-                </option>
-                <option
-                  v-for="tpl in templates"
-                  :key="tpl.token"
-                  :value="tpl.token"
-                >
-                  {{ tpl.name }}
-                </option>
-              </select>
-              <input
-                v-model="nomeDocumento"
-                type="text"
-                class="rounded-lg border border-n-weak bg-n-solid-1 px-2 py-1 text-xs"
-                :placeholder="t('RAMON.PORTAL_CLIENTES.DOC_NAME')"
-              />
-              <button
-                type="button"
-                class="rounded-lg bg-n-iris-9 px-3 py-1.5 text-xs text-white disabled:opacity-50"
-                :disabled="!templateId || enviandoAssinatura"
-                @click="enviarAssinatura"
-              >
-                {{ t('RAMON.PORTAL_CLIENTES.SEND_SIGNATURE') }}
-              </button>
-            </div>
-            <template v-if="aberto.assinaturas && aberto.assinaturas.length">
-              <p class="text-xs font-medium">
-                {{ t('RAMON.PORTAL_CLIENTES.SIGNATURES_LIST') }}
-              </p>
-              <ul class="text-xs text-n-slate-11">
-                <li v-for="a in aberto.assinaturas" :key="a.id">
-                  {{ a.nome }} · {{ a.status }} · {{ dataCurta(a.created_at) }}
-                </li>
-              </ul>
-            </template>
-          </div>
-          <ul v-if="aberto.envios.length" class="text-xs text-n-slate-11">
-            <li v-for="e in aberto.envios" :key="e.id">
-              {{ dataCurta(e.created_at) }} · {{ e.item }} ·
-              {{ t('RAMON.PORTAL_CLIENTES.DRIVE') }}
-              {{ e.drive_file_id ? '✓' : '…' }}
-            </li>
-          </ul>
-        </div>
-      </li>
-    </ul>
   </div>
 </template>
