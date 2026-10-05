@@ -167,6 +167,44 @@ const LEAD_PRESCREVENDO = { ...LEAD, dcb_em: '2020-06-10' };
 
 // Reunião agendada que já passou (Closer ainda não registrou o resultado)
 const LEAD_REUNIAO = { ...LEAD, id: 44 };
+// Contrato já gerado no ZapSign (link pronto, 2 campos saíram em branco)
+const LEAD_CONTRATO_GERADO = {
+  ...LEAD,
+  custom_attributes: {
+    ...LEAD.custom_attributes,
+    zapsign: {
+      doc_token: 'doc-1',
+      sign_url: 'https://app.zapsign.com.br/verificar/doc-1',
+      faltando: ['{{número}}', '{{bairro}}'],
+      template_name: 'Contrato + procuração — auxílio-acidente',
+      criado_em: diasAtras(1),
+    },
+  },
+};
+
+// Assinado (webhook do ZapSign) e recusado pelo cliente
+const LEAD_CONTRATO_ASSINADO = {
+  ...LEAD_CONTRATO_GERADO,
+  custom_attributes: {
+    ...LEAD.custom_attributes,
+    zapsign: {
+      ...LEAD_CONTRATO_GERADO.custom_attributes.zapsign,
+      status: 'signed',
+      assinado_em: diasAtras(0),
+    },
+  },
+};
+const LEAD_CONTRATO_RECUSADO = {
+  ...LEAD_CONTRATO_GERADO,
+  custom_attributes: {
+    ...LEAD.custom_attributes,
+    zapsign: {
+      ...LEAD_CONTRATO_GERADO.custom_attributes.zapsign,
+      status: 'refused',
+      recusado_em: diasAtras(0),
+    },
+  },
+};
 
 const API = {
   lead_config: {
@@ -261,6 +299,17 @@ const API = {
       },
     ],
   },
+  // prévia do contrato: endereço só com cidade/UF — rua/número/bairro em branco
+  'leads/42/zapsign/preview': {
+    faltando: ['{{rua}}', '{{número}}', '{{bairro}}'],
+    dados: {
+      cidade: 'Tubarão',
+      uf: 'SC',
+      estado_civil: 'casado(a)',
+      profissao: 'montador industrial',
+      email: 'joao.pereira@email.com',
+    },
+  },
   'leads/zapsign_templates': [
     { token: 'a', name: 'Contrato + procuração — auxílio-acidente' },
   ],
@@ -306,6 +355,18 @@ const clicando =
       }
     }, 800);
     return {};
+  };
+// Estados internos do cartão (janela aberta) só por clique: clica em ordem.
+const comAbaEClique =
+  (tab, ...testids) =>
+  () => {
+    testids.forEach((id, i) =>
+      setTimeout(
+        () => document.querySelector(`[data-testid="${id}"]`)?.click(),
+        1000 + i * 500
+      )
+    );
+    return comAba(tab)();
   };
 </script>
 
@@ -405,6 +466,47 @@ const clicando =
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Contrato gerado" :init-state="comAba('contrato')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_GERADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant
+      title="Contrato gerar de novo"
+      :init-state="
+        comAbaEClique('contrato', 'zapsign-regenerate', 'zapsign-generate')
+      "
+    >
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_GERADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Contrato assinado" :init-state="comAba('contrato')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_ASSINADO"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
+    <Variant title="Contrato recusado" :init-state="comAba('contrato')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD_CONTRATO_RECUSADO"
           context="conversation"
           :conversation-id="101"
         />

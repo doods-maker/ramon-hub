@@ -4,9 +4,18 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import LeadsAPI from 'dashboard/api/leads';
-import { stripCpf } from '../../helpers/cpf';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { CARTAO, TITULO, SELECT } from '../../helpers/ui';
+import ConfirmModal from '../ConfirmModal.vue';
+import {
+  CARTAO,
+  TITULO,
+  SELECT,
+  CAMPO,
+  ROTULO,
+  SECAO,
+  CHIP,
+  TOM,
+} from '../../helpers/ui';
 
 const props = defineProps({ lead: { type: Object, required: true } });
 const emit = defineEmits(['completeData']);
@@ -18,10 +27,41 @@ const { t } = useI18n();
 // e devolve o link de assinatura — nada é enviado ao cliente automaticamente.
 // Fallback local da resposta: se o websocket estiver caído, o lead da store não
 // recebe o zapsign novo e o botão continuaria armado — 2º clique = 2º contrato.
+// Depois do "Gerar de novo" a store ainda tem o doc velho até o websocket: o
+// local (doc novo) vale até a store alcançá-lo.
 const zapsignLocal = ref(null);
-const zapsign = computed(
-  () => props.lead?.custom_attributes?.zapsign || zapsignLocal.value
+const zapsign = computed(() => {
+  const salvo = props.lead?.custom_attributes?.zapsign;
+  const local = zapsignLocal.value;
+  return local && salvo?.doc_token !== local.doc_token ? local : salvo || local;
+});
+// Doc cancelado (pelo "Gerar de novo") ou recusado não tem link vivo.
+const ativo = computed(
+  () =>
+    !!zapsign.value?.sign_url &&
+    !['cancelado', 'refused'].includes(zapsign.value.status)
 );
+const refazendo = ref(false);
+// Assinado/recusado vem do webhook do ZapSign. Assinado não se troca.
+const assinado = computed(() => zapsign.value?.status === 'signed');
+const selo = computed(() => {
+  if (zapsign.value?.status === 'refused')
+    return { tom: TOM.ruby, label: t('RAMON.ZAPSIGN.SEAL_REFUSED') };
+  if (!assinado.value) return null;
+  const em = zapsign.value.assinado_em;
+  return {
+    tom: TOM.teal,
+    label: em
+      ? t('RAMON.ZAPSIGN.SEAL_SIGNED_AT', {
+          date: new Date(em).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+          }),
+        })
+      : t('RAMON.ZAPSIGN.SEAL_SIGNED'),
+  };
+});
+const confirmando = ref(false);
 // Modelos da conta ZapSign: o cartão vale pra qualquer tese, o closer escolhe
 // o modelo. Pré-seleção só chuta pela tese; ZapSign fora do ar trava o botão.
 const templates = ref([]);
@@ -46,16 +86,109 @@ const guessTemplate = list => {
   return (match || list[0])?.token || null;
 };
 
+// "Dados do contrato": o que o contrato usa e o painel não edita em outro
+// lugar. Grava no contato; a prévia (o que sairia em branco) vem do backend —
+// mesma conta do ZapsignContractService, sem espelhar as 12 variáveis aqui.
+// Valor = texto que vai no contrato, por isso a opção mostra o próprio valor.
+const ESTADOS_CIVIS = [
+  'solteiro(a)',
+  'casado(a)',
+  'divorciado(a)',
+  'separado(a)',
+  'viúvo(a)',
+  'em união estável',
+];
+const CAMPOS = [
+  'cep',
+  'rua',
+  'numero',
+  'complemento',
+  'bairro',
+  'cidade',
+  'uf',
+  'estado_civil',
+  'profissao',
+  'email',
+];
+const form = ref({});
+const salvo = ref('');
+const preview = ref(null);
+const dirty = computed(() => JSON.stringify(form.value) !== salvo.value);
+// estado civil vindo da colheita ("casado") fora da lista não some do select
+const estadosCivis = computed(() => {
+  const atual = form.value.estado_civil;
+  return atual && !ESTADOS_CIVIS.includes(atual)
+    ? [atual, ...ESTADOS_CIVIS]
+    : ESTADOS_CIVIS;
+});
+
+const aplicarPreview = data => {
+  preview.value = data;
+  form.value = Object.fromEntries(
+    CAMPOS.map(campo => [campo, data.dados?.[campo] || ''])
+  );
+  salvo.value = JSON.stringify(form.value);
+};
+
+const carregarPreview = async () => {
+  try {
+    const { data } = await LeadsAPI.zapsignPreview(props.lead.id);
+    aplicarPreview(data);
+  } catch (error) {
+    preview.value = null;
+  }
+};
+
+const salvando = ref(false);
+const salvarDados = async () => {
+  salvando.value = true;
+  try {
+    const { cep, rua, numero, complemento, bairro, cidade, uf, ...resto } =
+      form.value;
+    const { data } = await LeadsAPI.saveZapsignDados(props.lead.id, {
+      ...resto,
+      endereco: { cep, rua, numero, complemento, bairro, cidade, uf },
+    });
+    aplicarPreview(data);
+    return true;
+  } catch (error) {
+    useAlert(error.response?.data?.error || t('RAMON.ZAPSIGN.SAVE_ERROR'));
+    return false;
+  } finally {
+    salvando.value = false;
+  }
+};
+
+// CEP com 8 dígitos → rua/bairro/cidade/UF pelo ViaCEP (via backend).
+// Número e complemento ficam com o closer.
+const buscarCep = async () => {
+  const cep = (form.value.cep || '').replace(/\D/g, '');
+  if (cep.length !== 8) return;
+  try {
+    const { data } = await LeadsAPI.zapsignCep(cep);
+    form.value = { ...form.value, ...data };
+  } catch (error) {
+    useAlert(
+      error.response?.status === 404
+        ? t('RAMON.ZAPSIGN.CEP_NOT_FOUND')
+        : t('RAMON.ZAPSIGN.CEP_ERROR')
+    );
+  }
+};
+
 // Troca de lead: zera o link local e re-chuta o modelo pela tese do lead novo.
 watch(
   () => props.lead?.id,
   () => {
     zapsignLocal.value = null;
+    refazendo.value = false;
     templateId.value = guessTemplate(templates.value);
+    carregarPreview();
   }
 );
 
 onMounted(async () => {
+  carregarPreview();
   try {
     const { data } = await LeadsAPI.zapsignTemplates();
     templates.value = data;
@@ -65,38 +198,51 @@ onMounted(async () => {
   }
 });
 
-// Antes de gerar só dá pra prever o que o painel edita; depois de gerado, o
-// backend devolve a lista completa (faltando) com as variáveis do modelo.
-// ponytail: pré-geração checa só CPF — espelhar as 12 variáveis do
-// ZapsignContractService aqui seria duplicar o serviço no front.
+// Antes de gerar: a prévia do backend. Depois: o que de fato saiu em branco.
+const mostrarForm = computed(() => !ativo.value || refazendo.value);
 const missing = computed(() => {
-  if (zapsign.value)
-    return (zapsign.value.faltando || []).map(f => f.replace(/[{}]/g, ''));
-  return stripCpf(props.lead?.contact_cpf || '').length === 11
-    ? []
-    : [t('RAMON.DRAWER.PESSOA.CPF')];
+  const lista = mostrarForm.value
+    ? preview.value?.faltando
+    : zapsign.value.faltando;
+  return (lista || []).map(f => f.replace(/[{}]/g, ''));
 });
+// Nome/CPF/telefone não estão no formulário: "Completar dados" leva ao Resumo.
+const faltaForaDoForm = computed(() =>
+  missing.value.some(campo => ['nome', 'CPF', 'telefone'].includes(campo))
+);
 
 const loading = ref(false);
 const generate = async () => {
-  if (loading.value || missing.value.length) return;
+  if (loading.value) return;
+  confirmando.value = false;
   loading.value = true;
+  // já houve doc: o backend cancela o anterior no ZapSign antes de criar
+  const regenerar = !!zapsign.value?.doc_token;
   try {
+    // edição não salva vai junto: o contrato sai com o que está na tela
+    if (dirty.value && !(await salvarDados())) return;
     const { data } = await LeadsAPI.createZapsign(
       props.lead.id,
-      templateId.value
+      templateId.value,
+      regenerar
     );
     zapsignLocal.value = data;
+    refazendo.value = false;
     useAlert(
       data.faltando?.length
         ? t('RAMON.ZAPSIGN.MISSING', { count: data.faltando.length })
         : t('RAMON.ZAPSIGN.CREATED')
     );
   } catch (error) {
-    useAlert(t('RAMON.ZAPSIGN.ERROR'));
+    useAlert(error.response?.data?.error || t('RAMON.ZAPSIGN.ERROR'));
   } finally {
     loading.value = false;
   }
+};
+// Doc com link vivo: confirma antes (o link antigo deixa de funcionar).
+const onGenerate = () => {
+  if (ativo.value) confirmando.value = true;
+  else generate();
 };
 
 const copyLink = async () => {
@@ -117,7 +263,15 @@ const copyLink = async () => {
         {{ $t('RAMON.ZAPSIGN.CARD_TITLE') }}
       </p>
       <span
-        v-if="missing.length"
+        v-if="selo"
+        data-testid="zapsign-seal"
+        class="ml-auto"
+        :class="[CHIP, selo.tom]"
+      >
+        <span class="i-lucide-pen-line size-3" />{{ selo.label }}
+      </span>
+      <span
+        v-else-if="missing.length"
         data-testid="zapsign-missing"
         class="ml-auto text-[10px] text-n-slate-10"
       >
@@ -126,17 +280,107 @@ const copyLink = async () => {
     </div>
 
     <p
-      v-if="missing.length"
+      v-if="zapsign?.status === 'cancelado' && !refazendo"
+      data-testid="zapsign-cancelled"
       class="mt-1.5 text-[11.5px] leading-relaxed text-n-slate-11"
     >
-      {{ $t('RAMON.ZAPSIGN.MISSING_HINT') }}
-      <span class="text-n-amber-11">{{ missing.join(', ') }}</span>
-    </p>
-    <p v-else class="mt-1.5 text-[11.5px] leading-relaxed text-n-slate-11">
-      {{ $t('RAMON.ZAPSIGN.PREPARED') }}
+      {{ $t('RAMON.ZAPSIGN.CANCELLED_HINT') }}
     </p>
 
-    <template v-if="!zapsign?.sign_url">
+    <template v-if="mostrarForm">
+      <form
+        data-testid="zapsign-form"
+        class="mt-3 grid grid-cols-6 gap-2"
+        :class="SECAO"
+        @submit.prevent="salvarDados"
+      >
+        <p class="col-span-6" :class="TITULO">
+          {{ $t('RAMON.ZAPSIGN.FORM_TITLE') }}
+        </p>
+        <label class="col-span-2" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.CEP') }}
+          <input
+            v-model="form.cep"
+            data-testid="zapsign-cep"
+            inputmode="numeric"
+            maxlength="9"
+            :class="CAMPO"
+            @input="buscarCep"
+          />
+        </label>
+        <label class="col-span-4" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.RUA') }}
+          <input v-model="form.rua" :class="CAMPO" />
+        </label>
+        <label class="col-span-2" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.NUMERO') }}
+          <input v-model="form.numero" :class="CAMPO" />
+        </label>
+        <label class="col-span-4" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.COMPLEMENTO') }}
+          <input
+            v-model="form.complemento"
+            :placeholder="$t('RAMON.ZAPSIGN.OPTIONAL')"
+            :class="CAMPO"
+          />
+        </label>
+        <label class="col-span-3" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.BAIRRO') }}
+          <input v-model="form.bairro" :class="CAMPO" />
+        </label>
+        <label class="col-span-2" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.CIDADE') }}
+          <input v-model="form.cidade" :class="CAMPO" />
+        </label>
+        <label class="col-span-1" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.UF') }}
+          <input v-model="form.uf" maxlength="2" :class="CAMPO" />
+        </label>
+        <label class="col-span-3" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.ESTADO_CIVIL') }}
+          <select v-model="form.estado_civil" :class="SELECT">
+            <option value="" />
+            <option v-for="ec in estadosCivis" :key="ec" :value="ec">
+              {{ ec }}
+            </option>
+          </select>
+        </label>
+        <label class="col-span-3" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.PROFISSAO') }}
+          <input v-model="form.profissao" :class="CAMPO" />
+        </label>
+        <label class="col-span-6" :class="ROTULO">
+          {{ $t('RAMON.ZAPSIGN.CAMPOS.EMAIL') }}
+          <input v-model="form.email" type="email" :class="CAMPO" />
+        </label>
+        <div class="col-span-6 flex justify-end">
+          <Button
+            data-testid="zapsign-save"
+            type="submit"
+            sm
+            faded
+            slate
+            :disabled="!dirty || salvando"
+            :label="$t('RAMON.ZAPSIGN.SAVE_DATA')"
+          />
+        </div>
+      </form>
+
+      <p
+        v-if="missing.length"
+        data-testid="zapsign-blanks"
+        class="mt-3 text-[11.5px] leading-relaxed text-n-slate-11"
+      >
+        {{ $t('RAMON.ZAPSIGN.BLANKS_HINT') }}
+        <span class="text-n-amber-11">{{ missing.join(', ') }}</span>
+      </p>
+      <p
+        v-else-if="preview"
+        class="mt-3 text-[11.5px] leading-relaxed text-n-teal-11"
+      >
+        {{ $t('RAMON.ZAPSIGN.NO_BLANKS') }}
+      </p>
+
       <select
         v-model="templateId"
         :aria-label="$t('RAMON.ZAPSIGN.TEMPLATE_LABEL')"
@@ -153,16 +397,31 @@ const copyLink = async () => {
         {{ $t('RAMON.ZAPSIGN.TEMPLATES_ERROR') }}
       </p>
     </template>
-    <p v-else class="mt-2 text-[11px] text-n-slate-10">
-      {{
-        $t('RAMON.ZAPSIGN.TEMPLATE_USED', {
-          name: zapsign.template_name || '—',
-        })
-      }}
-    </p>
+    <template v-else>
+      <p
+        v-if="missing.length && !assinado"
+        class="mt-1.5 text-[11.5px] leading-relaxed text-n-slate-11"
+      >
+        {{ $t('RAMON.ZAPSIGN.MISSING_HINT') }}
+        <span class="text-n-amber-11">{{ missing.join(', ') }}</span>
+      </p>
+      <p
+        v-else-if="!assinado"
+        class="mt-1.5 text-[11.5px] leading-relaxed text-n-slate-11"
+      >
+        {{ $t('RAMON.ZAPSIGN.PREPARED') }}
+      </p>
+      <p class="mt-2 text-[11px] text-n-slate-10">
+        {{
+          $t('RAMON.ZAPSIGN.TEMPLATE_USED', {
+            name: zapsign.template_name || '—',
+          })
+        }}
+      </p>
+    </template>
 
     <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
-      <template v-if="zapsign?.sign_url">
+      <template v-if="!mostrarForm">
         <a
           :href="zapsign.sign_url"
           target="_blank"
@@ -180,21 +439,42 @@ const copyLink = async () => {
           :label="$t('RAMON.ZAPSIGN.COPY')"
           @click="copyLink"
         />
+        <Button
+          v-if="!assinado"
+          data-testid="zapsign-regenerate"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.ZAPSIGN.REGENERATE')"
+          @click="refazendo = true"
+        />
+      </template>
+      <template v-else>
+        <Button
+          data-testid="zapsign-generate"
+          sm
+          :disabled="loading || !templateId"
+          :label="
+            loading
+              ? $t('RAMON.ZAPSIGN.GENERATING')
+              : zapsign?.doc_token
+                ? $t('RAMON.ZAPSIGN.REGENERATE')
+                : $t('RAMON.ZAPSIGN.GENERATE_SHORT')
+          "
+          @click="onGenerate"
+        />
+        <Button
+          v-if="refazendo"
+          data-testid="zapsign-regenerate-cancel"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.MODAL.CANCEL')"
+          @click="refazendo = false"
+        />
       </template>
       <Button
-        v-else
-        data-testid="zapsign-generate"
-        sm
-        :disabled="loading || missing.length > 0 || !templateId"
-        :label="
-          loading
-            ? $t('RAMON.ZAPSIGN.GENERATING')
-            : $t('RAMON.ZAPSIGN.GENERATE_SHORT')
-        "
-        @click="generate"
-      />
-      <Button
-        v-if="missing.length"
+        v-if="faltaForaDoForm"
         data-testid="zapsign-complete-data"
         sm
         faded
@@ -203,5 +483,14 @@ const copyLink = async () => {
         @click="emit('completeData')"
       />
     </div>
+
+    <ConfirmModal
+      v-if="confirmando"
+      :title="$t('RAMON.ZAPSIGN.REGENERATE_TITLE')"
+      :message="$t('RAMON.ZAPSIGN.REGENERATE_MESSAGE')"
+      :confirm-label="$t('RAMON.ZAPSIGN.REGENERATE')"
+      @confirm="generate"
+      @cancel="confirmando = false"
+    />
   </div>
 </template>

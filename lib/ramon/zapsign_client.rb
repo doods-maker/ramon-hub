@@ -63,6 +63,13 @@ class Ramon::ZapsignClient
     request(:get, "/docs/#{token}/")
   end
 
+  # Cancela o doc (POST /refuse/, docs.zapsign.com.br/documentos/cancelar-documentos):
+  # fica "recusado" e não pode mais ser assinado. O DELETE /docs/{token}/ só
+  # esconde da tela (soft delete) — não serve pra matar o link já entregue.
+  def self.refuse_doc(token, motivo)
+    request(:post, '/refuse/', { doc_token: token, rejected_reason: motivo, notify_signer: false })
+  end
+
   # auth_mode/cpf/redirect_link do signatário depois da criação (o endpoint de
   # modelo não aceita esses campos de forma confiável).
   def self.update_signer(signer_token, body)

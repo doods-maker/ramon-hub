@@ -51,6 +51,21 @@ const compactValue = computed(() => {
 const prescription = computed(() => prescriptionInfo(props.lead));
 // Selo do contrato limpo (só lead assinado): verde = carimbado.
 const contrato = computed(() => contratoLimpoStatus(props.lead));
+// Selo do ZapSign (webhook): assinado = teal, recusado = ruby. Não é ganho.
+const zapsignTitle = computed(() => {
+  if (props.lead.zapsign_status === 'refused')
+    return t('RAMON.ZAPSIGN.SEAL_REFUSED');
+  if (props.lead.zapsign_status !== 'signed') return null;
+  const em = props.lead.zapsign_assinado_em;
+  return em
+    ? t('RAMON.ZAPSIGN.SEAL_SIGNED_AT', {
+        date: new Date(em).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+        }),
+      })
+    : t('RAMON.ZAPSIGN.SEAL_SIGNED');
+});
 const prescriptionLabel = computed(() => {
   const p = prescription.value;
   if (!p) return null;
@@ -364,6 +379,18 @@ const onSchedule = async ({ dueAt, title }) => {
         :class="contrato.key === 'LIMPO' ? 'text-n-teal-11' : 'text-n-amber-11'"
       >
         <span class="i-lucide-badge-check size-3" />
+      </span>
+      <span
+        v-if="zapsignTitle"
+        data-testid="zapsign-seal"
+        :title="zapsignTitle"
+        :aria-label="zapsignTitle"
+        class="inline-flex items-center"
+        :class="
+          lead.zapsign_status === 'signed' ? 'text-n-teal-11' : 'text-n-ruby-11'
+        "
+      >
+        <span class="i-lucide-pen-line size-3" />
       </span>
       <span v-if="lead.benefit_type_name" class="text-n-slate-10">
         {{ lead.benefit_type_name }}

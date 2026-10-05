@@ -172,7 +172,8 @@
       "ramon_meeting_scheduled": "Meeting booked",
       "ramon_meeting_reminder": "Meeting reminder",
       "ramon_meeting_cancelled": "Meeting cancelled",
-      "ramon_sla_breach": "First reply overdue"
+      "ramon_sla_breach": "First reply overdue",
+      "ramon_contract_status": "Contract signed/refused (ZapSign)"
     }
   },
   "NETWORK": {

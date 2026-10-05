@@ -341,6 +341,7 @@ Rails.application.routes.draw do
               post :for_conversation
               post :encaminhar_comercial
               get :zapsign_templates, to: 'lead_zapsign#templates'
+              get :zapsign_cep, to: 'lead_zapsign#cep'
             end
             member do
               get :dossie, to: 'lead_dossies#show'
@@ -371,7 +372,10 @@ Rails.application.routes.draw do
             resource :liquidacao, only: [:create], controller: 'lead_liquidacoes' do
               post :pdf
             end
-            resource :zapsign, only: [:create], controller: 'lead_zapsign'
+            resource :zapsign, only: [:create], controller: 'lead_zapsign' do
+              get :preview
+              put :dados
+            end
             resource :reuniao_agendada, only: [:create], controller: 'lead_reunioes_agendadas'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks

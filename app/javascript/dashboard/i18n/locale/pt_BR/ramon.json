@@ -818,7 +818,9 @@
           "ESTEIRA_DONE": "resolveu na Esteira",
           "THESIS_CHANGED": "mudou a tese",
           "LP_RECAPTURED": "recebeu novo formulário da LP",
-          "REUNIAO_REGISTRADA": "registrou a reunião"
+          "REUNIAO_REGISTRADA": "registrou a reunião",
+          "ZAPSIGN_SIGNED": "contrato assinado no ZapSign",
+          "ZAPSIGN_REFUSED": "contrato recusado no ZapSign"
         },
         "EMPTY": "Nenhuma atividade registrada ainda.",
         "LOADING": "Carregando histórico…",
@@ -865,7 +867,34 @@
       "COPIED": "Link de assinatura copiado",
       "TEMPLATE_LABEL": "Modelo do contrato",
       "TEMPLATES_ERROR": "Não foi possível carregar os modelos do ZapSign",
-      "TEMPLATE_USED": "Modelo: {name}"
+      "TEMPLATE_USED": "Modelo: {name}",
+      "FORM_TITLE": "Dados do contrato",
+      "CAMPOS": {
+        "CEP": "CEP",
+        "RUA": "Rua",
+        "NUMERO": "Número",
+        "COMPLEMENTO": "Complemento",
+        "BAIRRO": "Bairro",
+        "CIDADE": "Cidade",
+        "UF": "UF",
+        "ESTADO_CIVIL": "Estado civil",
+        "PROFISSAO": "Profissão",
+        "EMAIL": "E-mail"
+      },
+      "OPTIONAL": "opcional",
+      "SAVE_DATA": "Salvar dados",
+      "SAVE_ERROR": "Não foi possível salvar os dados do contrato — tente de novo",
+      "CEP_NOT_FOUND": "CEP não encontrado — preencha o endereço à mão",
+      "CEP_ERROR": "Não deu pra buscar o CEP — preencha o endereço à mão",
+      "BLANKS_HINT": "Vão em branco no contrato:",
+      "NO_BLANKS": "Nenhum campo do contrato vai em branco.",
+      "REGENERATE": "Gerar de novo",
+      "REGENERATE_TITLE": "Gerar o contrato de novo?",
+      "REGENERATE_MESSAGE": "O documento anterior será cancelado no ZapSign e o link de assinatura dele deixa de funcionar. Um link novo é criado com os dados atuais.",
+      "CANCELLED_HINT": "O contrato anterior foi cancelado no ZapSign — gere um novo.",
+      "SEAL_SIGNED": "Assinado",
+      "SEAL_SIGNED_AT": "Assinado em {date}",
+      "SEAL_REFUSED": "Recusado"
     },
     "ADVBOX": {
       "TITLE": "AdvBox",

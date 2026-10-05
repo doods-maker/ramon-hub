@@ -1,4 +1,6 @@
-# Webhook do ZapSign (cadastrado por conta no painel deles, evento doc_signed).
+# Webhook do ZapSign (cadastrado por conta no painel deles, evento doc_signed;
+# pro selo "Recusado" do contrato do lead, cadastrar também doc_refused).
+# Casa o doc_token com a assinatura do portal OU com o contrato do lead.
 # O ZapSign não assina HMAC: a auth é um header customizado com segredo fixo
 # (X-Ramon-Secret) + rate-limit. O payload nunca é a verdade — o job re-consulta
 # GET /docs/{token}/ antes de marcar assinado.
@@ -6,8 +8,12 @@ class Public::Api::V1::ZapsignWebhooksController < PublicController
   before_action :verify_secret
 
   def create
-    assinatura = PortalAssinatura.find_by(doc_token: params[:token].to_s)
+    token = params[:token].to_s
+    assinatura = PortalAssinatura.find_by(doc_token: token)
     Ramon::ZapsignStatusJob.perform_later(assinatura.id) if assinatura
+    # contrato gerado pelo cartão do painel (lead.custom_attributes['zapsign'])
+    lead = Lead.find_by("custom_attributes -> 'zapsign' ->> 'doc_token' = ?", token) if token.present?
+    Ramon::ZapsignLeadStatusJob.perform_later(lead.id, token) if lead
     render json: { ok: true }
   end
 
