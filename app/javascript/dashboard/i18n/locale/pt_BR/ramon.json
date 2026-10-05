@@ -750,8 +750,8 @@
         "NOTES": "Notas",
         "PLAYBOOK": "Scripts",
         "IA": "IA",
-        "SIMULADOR": "Simular",
-        "DOCUMENTS": "Docs",
+        "SIMULADOR": "Simulador",
+        "DOCUMENTS": "Documentos",
         "CONTRACT": "Contrato"
       },
       "NAV_LABEL": "Seções do painel do lead",

@@ -214,6 +214,17 @@ describe('LeadPanelBody', () => {
         .find('[data-testid="lead-nav-contrato"]')
         .exists();
 
+    it('é só ícone, no topo do painel, com o nome no title e no aria-label', () => {
+      const wrapper = mountBody();
+      const nav = wrapper.find('nav');
+      expect(wrapper.element.firstElementChild).toBe(nav.element);
+      nav.findAll('button').forEach(botao => {
+        expect(botao.text()).toBe('');
+        expect(botao.attributes('title')).toMatch(/^RAMON\.LEAD_PANEL\.TABS\./);
+        expect(botao.attributes('aria-label')).toBe(botao.attributes('title'));
+      });
+    });
+
     it('abre no Resumo por padrão com o card de próxima ação', () => {
       const wrapper = mountBody();
       expect(wrapper.findComponent({ name: 'LeadNextAction' }).exists()).toBe(

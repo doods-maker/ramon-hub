@@ -750,8 +750,8 @@
         "NOTES": "Notes",
         "PLAYBOOK": "Scripts",
         "IA": "AI",
-        "SIMULADOR": "Simulate",
-        "DOCUMENTS": "Docs",
+        "SIMULADOR": "Simulator",
+        "DOCUMENTS": "Documents",
         "CONTRACT": "Contract"
       },
       "NAV_LABEL": "Lead panel sections",

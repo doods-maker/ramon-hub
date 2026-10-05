@@ -609,8 +609,47 @@ const discard = async () => {
 
 <template>
   <div class="flex flex-col flex-1 h-full min-w-0 overflow-hidden">
+    <!-- navegação só por ícone, no topo do painel (nome no title) -->
+    <nav
+      class="flex shrink-0 gap-1 px-3 py-2 border-b border-n-weak"
+      :aria-label="$t('RAMON.LEAD_PANEL.NAV_LABEL')"
+    >
+      <button
+        v-for="item in NAV"
+        :key="item.id"
+        type="button"
+        :aria-label="$t(`RAMON.LEAD_PANEL.TABS.${item.label}`)"
+        :title="$t(`RAMON.LEAD_PANEL.TABS.${item.label}`)"
+        :aria-current="navAtivo === item.id ? 'page' : undefined"
+        :data-testid="`lead-nav-${item.id}`"
+        :class="[
+          NAV_ICONE,
+          navAtivo === item.id ? NAV_ICONE_ATIVO : NAV_ICONE_INATIVO,
+        ]"
+        @click="onNav(item.id)"
+      >
+        <span class="relative">
+          <span class="block size-5" :class="item.icon" />
+          <span
+            v-if="item.dot?.value"
+            :data-testid="`lead-nav-dot-${item.id}`"
+            class="absolute -top-0.5 -right-1 size-2 rounded-full"
+            :class="item.dot.value"
+          />
+          <span
+            v-if="item.count"
+            :data-testid="`lead-nav-count-${item.id}`"
+            class="absolute -top-1.5 left-3 min-w-4 rounded-full px-1 font-mono text-[9.5px] font-medium leading-4 text-center"
+            :class="TOM.slate"
+          >
+            {{ item.count }}
+          </span>
+        </span>
+      </button>
+    </nav>
+
     <!-- cabeçalho fixo: quem e quanto sem rolar -->
-    <div class="shrink-0 px-3 pt-3 border-b border-n-weak">
+    <div class="shrink-0 p-3 border-b border-n-weak">
       <router-link
         v-if="lead?.id"
         v-slot="{ navigate }"
@@ -964,47 +1003,6 @@ const discard = async () => {
           />
         </div>
       </div>
-
-      <!-- navegação: ícone + rótulo curto, dot de status no ícone -->
-      <nav
-        class="flex gap-1 mt-2 mb-2"
-        :aria-label="$t('RAMON.LEAD_PANEL.NAV_LABEL')"
-      >
-        <button
-          v-for="item in NAV"
-          :key="item.id"
-          type="button"
-          :aria-label="$t(`RAMON.LEAD_PANEL.TABS.${item.label}`)"
-          :aria-current="navAtivo === item.id ? 'page' : undefined"
-          :data-testid="`lead-nav-${item.id}`"
-          :class="[
-            NAV_ICONE,
-            navAtivo === item.id ? NAV_ICONE_ATIVO : NAV_ICONE_INATIVO,
-          ]"
-          @click="onNav(item.id)"
-        >
-          <span class="relative">
-            <span class="block size-[18px]" :class="item.icon" />
-            <span
-              v-if="item.dot?.value"
-              :data-testid="`lead-nav-dot-${item.id}`"
-              class="absolute -top-0.5 -right-1 size-2 rounded-full"
-              :class="item.dot.value"
-            />
-            <span
-              v-if="item.count"
-              :data-testid="`lead-nav-count-${item.id}`"
-              class="absolute -top-1.5 left-3 min-w-4 rounded-full px-1 font-mono text-[9.5px] font-medium leading-4 text-center"
-              :class="TOM.slate"
-            >
-              {{ item.count }}
-            </span>
-          </span>
-          <span class="max-w-full truncate">
-            {{ $t(`RAMON.LEAD_PANEL.TABS.${item.label}`) }}
-          </span>
-        </button>
-      </nav>
     </div>
 
     <!-- corpo da aba ativa -->

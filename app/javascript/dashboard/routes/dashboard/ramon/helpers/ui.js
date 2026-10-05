@@ -53,11 +53,11 @@ export const TOM = {
   amber: 'bg-n-amber-9/15 text-n-amber-11',
   ruby: 'bg-n-ruby-9/10 text-n-ruby-11',
 };
-// Navegação do painel do lead: ícone em cima, rótulo curto embaixo; os itens
-// dividem a largura (5 cabem nos 400px do painel). Ativo = azul da marca.
+// Navegação do painel do lead: só ícone (nome no title/aria-label), itens
+// distribuídos por igual no topo do painel. Ativo = pílula translúcida azul.
 export const NAV_ICONE =
-  'flex flex-1 min-w-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] leading-4';
-export const NAV_ICONE_ATIVO = `${TOM.blue} font-semibold`;
+  'flex flex-1 min-w-0 items-center justify-center rounded-lg py-2';
+export const NAV_ICONE_ATIVO = TOM.blue;
 export const NAV_ICONE_INATIVO =
   'text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12';
 

@@ -77,7 +77,7 @@ onKeyStroke('Escape', () => {
         <LeadPanelBody
           :lead="lead"
           context="drawer"
-          class="pt-1 [&>div:first-child]:pr-10"
+          class="pt-1 [&>:first-child]:pr-10"
           @open-conversation="openConversation"
           @navigate="close"
         />
