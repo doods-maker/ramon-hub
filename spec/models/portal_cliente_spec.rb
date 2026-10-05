@@ -54,6 +54,19 @@ RSpec.describe PortalCliente do
     expect(cliente.processo(1)).to be_nil
   end
 
+  it 'documento pedido vira enviado (com a data) quando chega o envio do mesmo pedido; a_enviar ignora processo encerrado' do
+    cliente.update!(processos: [
+                      { 'id' => 7, 'fase' => 'JUDICIAL', 'docs_pendentes' => [{ 'item' => 'RG', 'post_id' => 1 }, { 'item' => 'CNIS', 'post_id' => 1 }] },
+                      { 'id' => 8, 'fase' => 'ARQUIVAMENTO', 'docs_pendentes' => [{ 'item' => 'Laudo', 'post_id' => 2 }] }
+                    ])
+    cliente.envios.create!(lawsuit_id: 7, solicitacao_post_id: 1, item: 'RG')
+
+    status = cliente.pendentes_com_status(cliente.processo(7))
+    expect(status.map { |d| [d['item'], d['enviado']] }).to eq [['RG', true], ['CNIS', false]]
+    expect(status.first['enviado_em']).to be_present
+    expect(cliente.a_enviar.map { |_p, d| d['item'] }).to eq ['CNIS']
+  end
+
   it 'normaliza e-mail e CPF' do
     c = create(:portal_cliente, email: ' Maria@Exemplo.COM ', cpf: '123.456.789-01')
     expect(c.email).to eq 'maria@exemplo.com'

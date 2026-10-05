@@ -22,7 +22,11 @@ const PROCESSOS_MARIA = [
     fase: 'JUDICIAL',
     cliente_ve: 'Perícia agendada',
     etapa_interna: false,
-    docs_pendentes: ['Laudo do ortopedista', 'Comprovante de residência'],
+    documentos: [
+      { item: 'Laudo do ortopedista', enviado: true, enviado_em: diasAtras(0) },
+      { item: 'Comprovante de residência', enviado: false },
+      { item: 'Exame de imagem do joelho', enviado: false },
+    ],
   },
   {
     id: 502,
@@ -32,7 +36,7 @@ const PROCESSOS_MARIA = [
     fase: 'ADMINISTRATIVO',
     cliente_ve: 'Pedido protocolado no INSS',
     etapa_interna: true,
-    docs_pendentes: [],
+    documentos: [],
   },
 ];
 
@@ -125,18 +129,21 @@ const MARIA = {
       id: 71,
       item: 'Laudo do ortopedista',
       drive_file_id: null,
+      drive_url: null,
       created_at: diasAtras(0),
     },
     {
       id: 70,
       item: 'Carteira de trabalho',
       drive_file_id: 'drv-70',
+      drive_url: 'https://drive.google.com/file/d/drv-70',
       created_at: diasAtras(6),
     },
     {
       id: 69,
       item: 'RG e CPF',
       drive_file_id: 'drv-69',
+      drive_url: 'https://drive.google.com/file/d/drv-69',
       created_at: diasAtras(12),
     },
   ],

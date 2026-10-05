@@ -742,7 +742,11 @@
       "CLIENT_SEES": "O cliente vê:",
       "INTERNAL_STAGE": "Etapa interna no ADVBOX: o cliente não vê esta etapa nem recebe aviso; o painel dele segue em “{titulo}”. Fale com ele antes de mover o processo.",
       "RECADO_PREVIEW": "Prévia: o que o cliente vai ver depois de salvar",
-      "RECADO_PREVIEW_HEADING": "Recado da equipe"
+      "RECADO_PREVIEW_HEADING": "Recado da equipe",
+      "DOC_SENT_ON": "enviado em",
+      "DOC_MISSING": "falta",
+      "DRIVE_OPEN": "abrir no Drive",
+      "DRIVE_PENDING": "ainda não foi pro Drive"
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

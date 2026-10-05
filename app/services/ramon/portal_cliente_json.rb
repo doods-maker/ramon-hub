@@ -9,7 +9,7 @@ module Ramon::PortalClienteJson
 
   def linha(cliente)
     cliente.as_json(only: CAMPOS).merge(
-      'processos' => cliente.processos.map { |p| p.slice('id', 'numero', 'tipo', 'etapa', 'fase', 'docs_pendentes') },
+      'docs_pendentes' => cliente.a_enviar.size,
       'envios_count' => cliente.envios.count, 'assinaturas_pendentes' => cliente.assinaturas.pendentes.count
     )
   end
@@ -17,7 +17,7 @@ module Ramon::PortalClienteJson
   def detalhe(cliente)
     linha(cliente).merge(
       'recados' => cliente.recados,
-      'processos' => cliente.processos.map { |p| processo(p) },
+      'processos' => cliente.processos.map { |p| processo(cliente, p) },
       'envios' => cliente.envios.order(created_at: :desc).map { |e| envio(e) },
       'assinaturas' => cliente.assinaturas.order(created_at: :desc).map { |a| a.as_json(only: %w[id nome status assinado_em created_at]) },
       'eventos' => eventos(cliente)
@@ -26,14 +26,19 @@ module Ramon::PortalClienteJson
 
   # cliente_ve = o título que o Painel do Cliente mostra (mesma tradução do portal,
   # Ramon::PortalTexto). Etapa interna: o cliente segue vendo a anterior, sem aviso.
-  def processo(proc)
-    proc.slice('id', 'numero', 'tipo', 'etapa', 'fase', 'docs_pendentes').merge(
+  # documentos = cada item pedido com enviado/enviado_em (mesma regra do portal).
+  def processo(cliente, proc)
+    proc.slice('id', 'numero', 'tipo', 'etapa', 'fase').merge(
       'cliente_ve' => Ramon::PortalTexto.etapa(PortalCliente.etapa_cliente(proc))['titulo'],
-      'etapa_interna' => Ramon::PortalTexto.interna?(proc['etapa'])
+      'etapa_interna' => Ramon::PortalTexto.interna?(proc['etapa']),
+      'documentos' => cliente.pendentes_com_status(proc).map { |d| d.slice('item', 'enviado', 'enviado_em') }
     )
   end
 
-  def envio(envio) = envio.as_json(only: %w[id item lawsuit_id drive_file_id advbox_post_id created_at])
+  def envio(envio)
+    envio.as_json(only: %w[id item lawsuit_id drive_file_id advbox_post_id created_at])
+         .merge('drive_url' => envio.drive_file_id.presence && "https://drive.google.com/file/d/#{envio.drive_file_id}")
+  end
 
   # Histórico do hub (quem fez o quê), mais recente primeiro.
   def eventos(cliente)
@@ -50,7 +55,7 @@ module Ramon::PortalClienteJson
     funil(convidados).merge(
       enviaram: envios.distinct.count(:portal_cliente_id),
       assinaram: PortalAssinatura.where(portal_cliente_id: ids, status: 'signed').distinct.count(:portal_cliente_id),
-      docs_pedidos: convidados.sum { |c| c.processos.sum { |p| Array(p['docs_pendentes']).size } },
+      docs_pedidos: convidados.sum { |c| c.a_enviar.size },
       docs_enviados: envios.count
     )
   end

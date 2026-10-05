@@ -105,6 +105,8 @@ const TOM_ASSINATURA = { signed: TOM.teal, refused: TOM.ruby };
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
 
+const faltam = p => (p.documentos || []).filter(d => !d.enviado).length;
+
 const dataHora = iso =>
   new Date(iso).toLocaleString('pt-BR', {
     day: '2-digit',
@@ -148,8 +150,8 @@ const dataHora = iso =>
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <span class="font-mono text-n-slate-12">{{ p.numero }}</span>
         <span class="text-n-slate-10">· {{ p.tipo }} · {{ p.etapa }}</span>
-        <span v-if="p.docs_pendentes.length" :class="[CHIP, TOM.amber]">
-          <span class="font-mono">{{ p.docs_pendentes.length }}</span>
+        <span v-if="faltam(p)" :class="[CHIP, TOM.amber]">
+          <span class="font-mono">{{ faltam(p) }}</span>
           {{ t('RAMON.PORTAL_CLIENTES.PENDING_DOCS') }}
         </span>
       </div>
@@ -167,6 +169,35 @@ const dataHora = iso =>
           t('RAMON.PORTAL_CLIENTES.INTERNAL_STAGE', { titulo: p.cliente_ve })
         }}
       </p>
+      <!-- Cada documento pedido: falta / enviado em dd/mm (mesma regra do portal) -->
+      <ul
+        v-if="p.documentos && p.documentos.length"
+        data-testid="portal-documentos"
+        class="m-0 flex list-none flex-col gap-1 p-0 text-xs"
+      >
+        <li
+          v-for="(d, i) in p.documentos"
+          :key="`${d.item}-${i}`"
+          class="flex items-center gap-2"
+        >
+          <span
+            class="size-3.5 shrink-0"
+            :class="
+              d.enviado
+                ? 'i-lucide-circle-check text-n-teal-11'
+                : 'i-lucide-circle-dashed text-n-amber-11'
+            "
+          />
+          <span class="text-n-slate-12">{{ d.item }}</span>
+          <span v-if="d.enviado" :class="[CHIP, TOM.teal]">
+            {{ t('RAMON.PORTAL_CLIENTES.DOC_SENT_ON') }}
+            <span class="font-mono">{{ dataCurta(d.enviado_em) }}</span>
+          </span>
+          <span v-else :class="[CHIP, TOM.amber]">
+            {{ t('RAMON.PORTAL_CLIENTES.DOC_MISSING') }}
+          </span>
+        </li>
+      </ul>
       <label :class="ROTULO">
         {{ t('RAMON.PORTAL_CLIENTES.RECADO') }}
         <textarea v-model="recados[p.id]" rows="2" :class="TEXTAREA" />
@@ -253,9 +284,19 @@ const dataHora = iso =>
         <span class="font-mono text-n-slate-10">{{
           dataCurta(e.created_at)
         }}</span>
-        · {{ e.item }} · {{ t('RAMON.PORTAL_CLIENTES.DRIVE') }}
-        <span :class="e.drive_file_id ? 'text-n-teal-11' : 'text-n-slate-10'">{{
-          e.drive_file_id ? '✓' : '…'
+        · {{ e.item }} ·
+        <a
+          v-if="e.drive_url"
+          :href="e.drive_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-0.5 text-xs text-n-blue-11 hover:underline"
+        >
+          {{ t('RAMON.PORTAL_CLIENTES.DRIVE_OPEN') }}
+          <span class="i-lucide-external-link size-3" />
+        </a>
+        <span v-else class="text-n-slate-10">{{
+          t('RAMON.PORTAL_CLIENTES.DRIVE_PENDING')
         }}</span>
       </li>
     </ul>

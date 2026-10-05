@@ -124,6 +124,22 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(vistos).to eq [['Perícia agendada', false], ['Pedido protocolado no INSS', true]]
   end
 
+  it 'conta só o que falta (descontando o que o cliente já mandou) e lista cada documento com o link do Drive' do
+    cliente = create(:portal_cliente, account: account, convidado_em: 1.day.ago, processos: [
+                       { 'id' => 7, 'docs_pendentes' => [{ 'item' => 'RG', 'post_id' => 1 }, { 'item' => 'CNIS', 'post_id' => 1 }] }
+                     ])
+    cliente.envios.create!(lawsuit_id: 7, solicitacao_post_id: 1, item: 'RG', drive_file_id: 'abc')
+
+    get base, headers: headers
+    expect(response.parsed_body['payload'].first['docs_pendentes']).to eq 1
+    expect(response.parsed_body['metricas']['docs_pedidos']).to eq 1
+
+    get "#{base}/#{cliente.id}", headers: headers
+    docs = response.parsed_body['processos'].first['documentos']
+    expect(docs.map { |d| d.values_at('item', 'enviado') }).to eq [['RG', true], ['CNIS', false]]
+    expect(response.parsed_body['envios'].first['drive_url']).to eq 'https://drive.google.com/file/d/abc'
+  end
+
   it 'registra a trilha (quem fez o quê) e devolve o histórico no detalhe' do
     na_recepcao(agent)
     cliente = create(:portal_cliente, account: account, processos: [{ 'id' => 7, 'docs_pendentes' => [] }])

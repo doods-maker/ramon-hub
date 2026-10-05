@@ -82,6 +82,24 @@ class PortalCliente < ApplicationRecord
     atualizacao_pedida_em.blank? || atualizacao_pedida_em < INTERVALO_ATUALIZACAO.ago
   end
 
+  # Documento pedido vira "enviado" quando existe PortalEnvio do mesmo pedido (post_id) e
+  # item — regra única do Painel do Cliente e do hub. enviado_em = quando chegou.
+  def pendentes_com_status(processo)
+    enviados = envios.where(lawsuit_id: processo['id']).pluck(:solicitacao_post_id, :item, :created_at)
+                     .to_h { |post_id, item, em| [[post_id, item], em] }
+    Array(processo['docs_pendentes']).map do |d|
+      em = enviados[[d['post_id'], d['item']]]
+      d.merge('enviado' => em.present?, 'enviado_em' => em&.iso8601)
+    end
+  end
+
+  # [[processo, doc]] ainda não enviados, dos processos ativos (o que falta de verdade).
+  # ponytail: 1 consulta de envios por processo; agrupar numa só se a lista crescer.
+  def a_enviar
+    @a_enviar ||= processos.reject { |p| Ramon::PortalTexto.encerrado?(p['fase']) }
+                           .flat_map { |p| pendentes_com_status(p).reject { |d| d['enviado'] }.map { |d| [p, d] } }
+  end
+
   def processo(lawsuit_id)
     processos.find { |p| p['id'].to_s == lawsuit_id.to_s }
   end
