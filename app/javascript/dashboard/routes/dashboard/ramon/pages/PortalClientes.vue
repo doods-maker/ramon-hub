@@ -1,6 +1,7 @@
 <script setup>
 // app/javascript/dashboard/routes/dashboard/ramon/pages/PortalClientes.vue
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import PortalClientesAPI from 'dashboard/api/portalClientes';
@@ -11,10 +12,12 @@ import PortalClienteDetalhe from '../components/portal/PortalClienteDetalhe.vue'
 import ConfirmModal from '../components/ConfirmModal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { AVISO, CAMPO, CARTAO, CHIP, SECAO, TITULO, TOM } from '../helpers/ui';
+import { FILTROS, filtrarClientes } from '../helpers/portalClientes';
 
 defineOptions({ name: 'RamonPortalClientes' });
 
 const { t } = useI18n();
+const route = useRoute();
 const clientes = ref([]);
 const metricas = ref(null); // funil do piloto + documentos
 const isLoading = ref(false);
@@ -223,7 +226,27 @@ const METRICAS = [
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
 
-onMounted(carregar);
+// Lista: busca por nome/CPF + um filtro rápido por vez.
+const filtroBusca = ref('');
+const filtro = ref(null);
+const visiveis = computed(() =>
+  filtrarClientes(clientes.value, {
+    busca: filtroBusca.value,
+    filtro: filtro.value,
+  })
+);
+const contagem = chave =>
+  filtrarClientes(clientes.value, { filtro: chave }).length;
+const alternarFiltro = chave => {
+  filtro.value = filtro.value === chave ? null : chave;
+};
+
+// Deep link …/ramon/portal?cliente=<id> (painel do lead): já abre o cliente.
+onMounted(async () => {
+  await carregar();
+  const id = Number(route.query?.cliente);
+  if (id && clientes.value.some(c => c.id === id)) await abrir(id);
+});
 </script>
 
 <template>
@@ -440,122 +463,168 @@ onMounted(carregar);
       >
         {{ t('RAMON.PORTAL_CLIENTES.EMPTY') }}
       </p>
-      <ul
-        v-else
-        class="m-0 flex list-none flex-col divide-y divide-n-weak !p-0"
-        :class="CARTAO"
-      >
-        <li v-for="c in clientes" :key="c.id" class="px-4 py-3 text-sm">
-          <div class="flex items-center gap-4">
-            <button
-              type="button"
-              class="flex min-w-0 flex-1 flex-col items-start gap-1 text-start"
-              @click="abrir(c.id)"
-            >
-              <span class="flex min-w-0 max-w-full items-center gap-2">
-                <span
-                  class="size-3.5 shrink-0 text-n-slate-10"
-                  :class="
-                    aberto && aberto.id === c.id
-                      ? 'i-lucide-chevron-down'
-                      : 'i-lucide-chevron-right'
-                  "
-                />
-                <span class="truncate font-medium text-n-slate-12">{{
-                  c.nome
-                }}</span>
-                <span v-if="c.suspenso_em" :class="[CHIP, TOM.ruby]">
-                  {{ t('RAMON.PORTAL_CLIENTES.SUSPENDED') }}
-                </span>
-                <span
-                  v-else
-                  :class="[CHIP, c.convidado_em ? TOM.blue : TOM.slate]"
-                >
-                  {{
-                    c.convidado_em
-                      ? t('RAMON.PORTAL_CLIENTES.INVITED')
-                      : t('RAMON.PORTAL_CLIENTES.NOT_INVITED')
-                  }}
-                </span>
-                <span v-if="c.termos_aceitos_em" :class="[CHIP, TOM.teal]">
-                  {{ t('RAMON.PORTAL_CLIENTES.TERMS_OK') }}
-                </span>
-              </span>
-              <!-- cada trecho "rótulo valor" não quebra no meio -->
-              <span class="ps-5 text-xs text-n-slate-10">
-                <span class="font-mono">{{ c.cpf }}</span>
-                <template v-if="c.email"> · {{ c.email }}</template>
-                ·
-                <span class="whitespace-nowrap">
-                  {{ t('RAMON.PORTAL_CLIENTES.LAST_ACCESS') }}
-                  <span class="font-mono">{{
-                    dataCurta(c.ultimo_acesso_em)
-                  }}</span>
-                </span>
-                ·
-                <span class="whitespace-nowrap">{{
-                  t('RAMON.PORTAL_CLIENTES.ACCESS_DAYS', { n: c.dias_acesso })
-                }}</span>
-                ·
-                <span class="whitespace-nowrap">
-                  {{ t('RAMON.PORTAL_CLIENTES.SYNCED') }}
-                  <span class="font-mono">{{
-                    dataCurta(c.sincronizado_em)
-                  }}</span>
-                </span>
-              </span>
-            </button>
-            <span class="whitespace-nowrap text-xs text-n-slate-11">
-              <span class="font-mono">{{ c.envios_count }}</span>
-              {{ t('RAMON.PORTAL_CLIENTES.UPLOADS') }}
-            </span>
-            <!-- 1º convite: todo agente; senha nova/suspender: gerir_acesso; excluir: admin -->
-            <Button
-              v-if="
-                !c.suspenso_em && (!c.convidado_em || permissoes.gerir_acesso)
-              "
-              link
-              xs
-              :label="t('RAMON.PORTAL_CLIENTES.REINVITE')"
-              @click="reenviar(c)"
-            />
-            <template v-if="permissoes.gerir_acesso && c.convidado_em">
-              <Button
-                v-if="c.suspenso_em"
-                link
-                xs
-                :label="t('RAMON.PORTAL_CLIENTES.REACTIVATE')"
-                @click="reativar(c)"
-              />
-              <Button
-                v-else
-                link
-                xs
-                ruby
-                :label="t('RAMON.PORTAL_CLIENTES.SUSPEND')"
-                @click="suspender(c)"
-              />
-            </template>
-            <Button
-              v-if="permissoes.excluir"
-              link
-              xs
-              ruby
-              :label="t('RAMON.PORTAL_CLIENTES.DELETE')"
-              @click="excluir(c)"
-            />
-          </div>
-
-          <PortalClienteDetalhe
-            v-if="aberto && aberto.id === c.id"
-            :key="aberto.id"
-            :cliente="aberto"
-            :templates="templates"
-            @atualizar="aberto = $event"
-            @recarregar="carregar"
+      <template v-else>
+        <!-- Busca + filtros rápidos (um por vez) -->
+        <div
+          class="flex flex-wrap items-center gap-2"
+          data-testid="portal-filtros"
+        >
+          <input
+            v-model="filtroBusca"
+            type="search"
+            :class="CAMPO"
+            class="!w-64"
+            :placeholder="t('RAMON.PORTAL_CLIENTES.FILTER_SEARCH')"
           />
-        </li>
-      </ul>
+          <button
+            v-for="chave in Object.keys(FILTROS)"
+            :key="chave"
+            type="button"
+            class="transition-none"
+            :class="[
+              CHIP,
+              filtro === chave
+                ? `${TOM.blue} ring-1 ring-n-blue-9/40`
+                : TOM.slate,
+            ]"
+            @click="alternarFiltro(chave)"
+          >
+            {{ t(`RAMON.PORTAL_CLIENTES.FILTERS.${chave.toUpperCase()}`) }}
+            <span class="font-mono">{{ contagem(chave) }}</span>
+          </button>
+        </div>
+        <p
+          v-if="!visiveis.length"
+          :class="CARTAO"
+          class="m-0 py-6 text-center text-sm text-n-slate-10"
+        >
+          {{ t('RAMON.PORTAL_CLIENTES.FILTER_EMPTY') }}
+        </p>
+        <ul
+          v-else
+          class="m-0 flex list-none flex-col divide-y divide-n-weak !p-0"
+          :class="CARTAO"
+        >
+          <li v-for="c in visiveis" :key="c.id" class="px-4 py-3 text-sm">
+            <div class="flex items-center gap-4">
+              <button
+                type="button"
+                class="flex min-w-0 flex-1 flex-col items-start gap-1 text-start"
+                @click="abrir(c.id)"
+              >
+                <span class="flex min-w-0 max-w-full items-center gap-2">
+                  <span
+                    class="size-3.5 shrink-0 text-n-slate-10"
+                    :class="
+                      aberto && aberto.id === c.id
+                        ? 'i-lucide-chevron-down'
+                        : 'i-lucide-chevron-right'
+                    "
+                  />
+                  <span class="truncate font-medium text-n-slate-12">{{
+                    c.nome
+                  }}</span>
+                  <span v-if="c.suspenso_em" :class="[CHIP, TOM.ruby]">
+                    {{ t('RAMON.PORTAL_CLIENTES.SUSPENDED') }}
+                  </span>
+                  <span
+                    v-else
+                    :class="[CHIP, c.convidado_em ? TOM.blue : TOM.slate]"
+                  >
+                    {{
+                      c.convidado_em
+                        ? t('RAMON.PORTAL_CLIENTES.INVITED')
+                        : t('RAMON.PORTAL_CLIENTES.NOT_INVITED')
+                    }}
+                  </span>
+                  <span v-if="c.termos_aceitos_em" :class="[CHIP, TOM.teal]">
+                    {{ t('RAMON.PORTAL_CLIENTES.TERMS_OK') }}
+                  </span>
+                </span>
+                <!-- cada trecho "rótulo valor" não quebra no meio -->
+                <span class="ps-5 text-xs text-n-slate-10">
+                  <span class="font-mono">{{ c.cpf }}</span>
+                  <template v-if="c.email"> · {{ c.email }}</template>
+                  ·
+                  <span class="whitespace-nowrap">{{
+                    t('RAMON.PORTAL_CLIENTES.ACCESS_DAYS', { n: c.dias_acesso })
+                  }}</span>
+                  ·
+                  <span class="whitespace-nowrap">
+                    {{ t('RAMON.PORTAL_CLIENTES.SYNCED') }}
+                    <span class="font-mono">{{
+                      dataCurta(c.sincronizado_em)
+                    }}</span>
+                  </span>
+                </span>
+              </button>
+              <!-- Último acesso em coluna própria -->
+              <span class="flex w-24 shrink-0 flex-col items-end">
+                <span class="text-[10px] text-n-slate-10">{{
+                  t('RAMON.PORTAL_CLIENTES.LAST_ACCESS')
+                }}</span>
+                <span class="font-mono text-xs text-n-slate-12">{{
+                  dataCurta(c.ultimo_acesso_em)
+                }}</span>
+              </span>
+              <span
+                class="w-16 shrink-0 whitespace-nowrap text-right text-xs text-n-slate-11"
+              >
+                <span class="font-mono">{{ c.envios_count }}</span>
+                {{ t('RAMON.PORTAL_CLIENTES.UPLOADS') }}
+              </span>
+              <!-- 1º convite: todo agente; senha nova/suspender: gerir_acesso; excluir: admin.
+                   Largura fixa: a coluna "Último acesso" fica alinhada entre as linhas. -->
+              <div class="flex w-[19rem] shrink-0 justify-end gap-4">
+                <Button
+                  v-if="
+                    !c.suspenso_em &&
+                    (!c.convidado_em || permissoes.gerir_acesso)
+                  "
+                  link
+                  xs
+                  :label="t('RAMON.PORTAL_CLIENTES.REINVITE')"
+                  @click="reenviar(c)"
+                />
+                <template v-if="permissoes.gerir_acesso && c.convidado_em">
+                  <Button
+                    v-if="c.suspenso_em"
+                    link
+                    xs
+                    :label="t('RAMON.PORTAL_CLIENTES.REACTIVATE')"
+                    @click="reativar(c)"
+                  />
+                  <Button
+                    v-else
+                    link
+                    xs
+                    ruby
+                    :label="t('RAMON.PORTAL_CLIENTES.SUSPEND')"
+                    @click="suspender(c)"
+                  />
+                </template>
+                <Button
+                  v-if="permissoes.excluir"
+                  link
+                  xs
+                  ruby
+                  :label="t('RAMON.PORTAL_CLIENTES.DELETE')"
+                  @click="excluir(c)"
+                />
+              </div>
+            </div>
+
+            <PortalClienteDetalhe
+              v-if="aberto && aberto.id === c.id"
+              :key="aberto.id"
+              :cliente="aberto"
+              :templates="templates"
+              @atualizar="aberto = $event"
+              @recarregar="carregar"
+            />
+          </li>
+        </ul>
+      </template>
     </div>
 
     <ConfirmModal

@@ -154,5 +154,22 @@ describe('LeadFields.vue', () => {
         'https://hub/portal/tok123'
       );
     });
+
+    it('linka o Painel do cliente só quando o contato tem acesso (mesmo CPF)', () => {
+      const montar = extra =>
+        shallowMount(LeadFields, {
+          props: { lead: { ...lead, contact_id: 9, ...extra } },
+          global: {
+            plugins: [build()],
+            mocks: { $t: k => k },
+            stubs: {
+              RouterLink: { template: '<a><slot :navigate="() => {}" /></a>' },
+            },
+          },
+        });
+      const sel = '[data-testid="field-portal-cliente-link"]';
+      expect(montar({}).find(sel).exists()).toBe(false);
+      expect(montar({ portal_cliente_id: 4 }).find(sel).exists()).toBe(true);
+    });
   });
 });

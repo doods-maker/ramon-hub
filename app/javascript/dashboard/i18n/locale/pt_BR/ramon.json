@@ -746,7 +746,16 @@
       "DOC_SENT_ON": "enviado em",
       "DOC_MISSING": "falta",
       "DRIVE_OPEN": "abrir no Drive",
-      "DRIVE_PENDING": "ainda não foi pro Drive"
+      "DRIVE_PENDING": "ainda não foi pro Drive",
+      "FILTER_SEARCH": "Filtrar por nome ou CPF",
+      "FILTER_EMPTY": "Nenhum cliente com esse filtro.",
+      "FILTERS": {
+        "NUNCA_ENTROU": "Nunca entrou",
+        "SEM_ACESSO": "Sem acesso há 30+ dias",
+        "SUSPENSOS": "Suspensos",
+        "DOC_PENDENTE": "Com documento pendente"
+      },
+      "OPEN_PORTAL_CLIENT": "Painel do cliente"
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

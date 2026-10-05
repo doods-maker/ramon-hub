@@ -746,7 +746,16 @@
       "DOC_SENT_ON": "sent on",
       "DOC_MISSING": "missing",
       "DRIVE_OPEN": "open in Drive",
-      "DRIVE_PENDING": "not in Drive yet"
+      "DRIVE_PENDING": "not in Drive yet",
+      "FILTER_SEARCH": "Filter by name or CPF",
+      "FILTER_EMPTY": "No client matches this filter.",
+      "FILTERS": {
+        "NUNCA_ENTROU": "Never signed in",
+        "SEM_ACESSO": "No access for 30+ days",
+        "SUSPENSOS": "Suspended",
+        "DOC_PENDENTE": "Document pending"
+      },
+      "OPEN_PORTAL_CLIENT": "Client portal"
     },
     "DOSSIE": {
       "OPEN": "Dossier",

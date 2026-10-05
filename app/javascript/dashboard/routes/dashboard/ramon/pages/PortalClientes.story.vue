@@ -3,6 +3,8 @@
 // print, claro/escuro. Sem rede: window.axios responde com dados FICTÍCIOS por
 // URL. As variantes "aberto", "busca" e "senha" clicam na tela depois de
 // montar (pelo texto do botão, pra servir no código antigo e no novo).
+import { provide, reactive } from 'vue';
+import { routeLocationKey, routerKey } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import PortalClientes from './PortalClientes.vue';
@@ -50,8 +52,9 @@ const CLIENTES = [
     convidado_em: diasAtras(20),
     termos_aceitos_em: diasAtras(19),
     sincronizado_em: diasAtras(0),
-    ultimo_acesso_em: diasAtras(1),
+    ultimo_acesso_em: diasAtras(38),
     dias_acesso: 6,
+    docs_pendentes: 0,
     processos: [],
     envios_count: 3,
     assinaturas_pendentes: 0,
@@ -97,6 +100,7 @@ const CLIENTES = [
     sincronizado_em: diasAtras(0),
     ultimo_acesso_em: diasAtras(0),
     dias_acesso: 14,
+    docs_pendentes: 2,
     processos: PROCESSOS_MARIA,
     envios_count: 7,
     assinaturas_pendentes: 1,
@@ -290,6 +294,11 @@ window.axios = {
   delete: responder,
 };
 
+// A página lê ?cliente= com useRoute(): rota fake, mutável por variante.
+const rota = reactive({ params: { accountId: 1 }, query: {} });
+provide(routeLocationKey, rota);
+provide(routerKey, { push: () => {}, resolve: () => ({ href: '#' }) });
+
 const store = useStore();
 // sem router: getCurrentAccountId lê a conta de rootState.route
 store.registerModule('route', { state: { params: { accountId: 1 } } });
@@ -332,6 +341,13 @@ const recadoPrevia = depois(1500, () => {
       'Dona Maria, precisamos conversar sobre o resultado do pedido no INSS.\nPode nos ligar amanhã de manhã?';
     campo.dispatchEvent(new Event('input'));
   }, 800);
+});
+const linkDireto = () => {
+  rota.query = { cliente: '4' };
+};
+const filtrar = depois(1500, () => {
+  clicar('Com documento pendente');
+  document.activeElement?.blur();
 });
 const clicarEm = texto => depois(1500, () => clicar(texto));
 const confirmarSenha = depois(1500, () => clicar('Nova senha provisória', 0));
@@ -376,6 +392,12 @@ const busca = depois(1500, () => {
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="PC5 recado previa" :init-state="recadoPrevia">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC7 filtro" :init-state="filtrar">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC7 link direto" :init-state="linkDireto">
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="Vazio" :init-state="vazio">
