@@ -490,7 +490,17 @@ describe('LeadPanelBody', () => {
     });
   });
 
-  describe('cartão Caso editável no lugar', () => {
+  describe('Caso no cabeçalho, editável no lugar', () => {
+    it('fica no cabeçalho fixo, não no corpo do Resumo', () => {
+      const wrapper = mountBody();
+      const corpo = wrapper.find('[data-testid="lead-panel-corpo"]');
+      expect(wrapper.find('[data-testid="panel-caso"]').exists()).toBe(true);
+      expect(corpo.find('[data-testid="field-thesis"]').exists()).toBe(false);
+      expect(corpo.find('[data-testid="panel-card-caso"]').exists()).toBe(
+        false
+      );
+    });
+
     it('tese, benefício e canal salvam no change', async () => {
       const update = vi.fn();
       const wrapper = mountBody({ spies: { update } });
@@ -639,7 +649,7 @@ describe('LeadPanelBody', () => {
       expect(copyTextToClipboard).toHaveBeenCalledWith('+55489999');
     });
 
-    it('mostra o cartão Qualificação viva logo após o cartão Caso', () => {
+    it('mostra o cartão Qualificação viva', () => {
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_id: 3 } },
       });

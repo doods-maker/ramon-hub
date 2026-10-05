@@ -791,11 +791,10 @@
         "LAST_SIM_EM": "em",
         "CHANCE": "chance"
       },
-      "CASE_TITLE": "Caso",
       "CONTACT_DATA": "Dados do contato",
       "FIELDS": {
         "OWNERS": "SDR / Closer",
-        "DCB": "DCB em",
+        "DCB": "DCB",
         "PHONE": "Telefone",
         "CHANNEL": "Canal"
       },

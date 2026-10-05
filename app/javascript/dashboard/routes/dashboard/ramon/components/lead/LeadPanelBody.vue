@@ -575,6 +575,75 @@ const discard = async () => {
         {{ lead.name }}
       </h2>
 
+      <!-- Caso numa linha: tese · benefício · DCB · canal, clicar = editar -->
+      <div
+        data-testid="panel-caso"
+        class="flex flex-wrap items-center gap-x-1 gap-y-0.5 mt-1 min-w-0 text-n-slate-9"
+      >
+        <select
+          data-testid="field-thesis"
+          :value="lead.thesis_id ?? ''"
+          :aria-label="$t('RAMON.DRAWER.THESIS')"
+          class="font-semibold"
+          :class="EDITAVEL"
+          @change="e => saveSelect('thesis_id', e.target.value)"
+        >
+          <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
+          <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
+          <option v-if="thesisFora" :value="lead.thesis_id">
+            {{ lead.thesis_name }}
+          </option>
+          <option v-for="th in activeTheses" :key="th.id" :value="th.id">
+            {{ th.name }}
+          </option>
+        </select>
+        <span>·</span>
+        <select
+          data-testid="field-benefit"
+          :value="lead.benefit_type_id ?? ''"
+          :aria-label="$t('RAMON.DRAWER.BENEFIT')"
+          :class="EDITAVEL"
+          @change="e => saveSelect('benefit_type_id', e.target.value)"
+        >
+          <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
+          <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
+            {{ b.name }}
+          </option>
+        </select>
+        <span>·</span>
+        <label class="flex items-center gap-1 text-[13px]">
+          {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
+          <input
+            data-testid="field-dcb-em"
+            type="date"
+            :value="lead.dcb_em || ''"
+            class="font-mono"
+            :class="[EDITAVEL, bleeding ? '!text-n-ruby-11' : '']"
+            @change="e => save({ dcb_em: e.target.value || null })"
+          />
+        </label>
+        <span>·</span>
+        <select
+          data-testid="field-channel"
+          :value="lead.channel ?? ''"
+          :aria-label="$t('RAMON.LEAD_PANEL.FIELDS.CHANNEL')"
+          :class="EDITAVEL"
+          @change="e => saveSelect('channel', e.target.value, false)"
+        >
+          <option value="">{{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}</option>
+          <option v-for="c in channels" :key="c.key" :value="c.key">
+            {{ c.label }}
+          </option>
+        </select>
+      </div>
+      <p
+        v-if="!lead.thesis_id"
+        data-testid="no-thesis-hint"
+        class="mt-0.5 text-xs text-n-slate-9"
+      >
+        {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
+      </p>
+
       <div class="flex flex-wrap items-center gap-1.5 mt-1.5 min-w-0">
         <!-- h-auto + bg-none: o CSS global de <select> (_base.scss) impõe h-10
              e seta de fundo — sem isso o chip vira caixa de formulário -->
@@ -979,84 +1048,6 @@ const discard = async () => {
             <div class="h-full bg-n-blue-9" :style="{ width: `${docsPct}%` }" />
           </div>
         </button>
-
-        <!-- Caso: tese, benefício, DCB e canal editáveis no lugar (clicar = editar) -->
-        <div :class="CARTAO" data-testid="panel-card-caso">
-          <p :class="TITULO">
-            {{ $t('RAMON.LEAD_PANEL.CASE_TITLE') }}
-          </p>
-          <div class="flex flex-wrap items-center gap-x-1 mt-1">
-            <select
-              data-testid="field-thesis"
-              :value="lead.thesis_id ?? ''"
-              :aria-label="$t('RAMON.DRAWER.THESIS')"
-              class="font-semibold"
-              :class="EDITAVEL"
-              @change="e => saveSelect('thesis_id', e.target.value)"
-            >
-              <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
-              <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
-              <option v-if="thesisFora" :value="lead.thesis_id">
-                {{ lead.thesis_name }}
-              </option>
-              <option v-for="th in activeTheses" :key="th.id" :value="th.id">
-                {{ th.name }}
-              </option>
-            </select>
-            <span class="text-n-slate-9">·</span>
-            <select
-              data-testid="field-benefit"
-              :value="lead.benefit_type_id ?? ''"
-              :aria-label="$t('RAMON.DRAWER.BENEFIT')"
-              class="font-semibold"
-              :class="EDITAVEL"
-              @change="e => saveSelect('benefit_type_id', e.target.value)"
-            >
-              <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
-              <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-                {{ b.name }}
-              </option>
-            </select>
-          </div>
-          <p
-            v-if="!lead.thesis_id"
-            data-testid="no-thesis-hint"
-            class="mt-1 text-xs text-n-slate-9"
-          >
-            {{ $t('RAMON.DRAWER.NO_THESIS_HINT') }}
-          </p>
-          <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-2">
-            <label class="min-w-0">
-              <span class="block text-[10.5px] text-n-slate-9">
-                {{ $t('RAMON.LEAD_PANEL.FIELDS.DCB') }}
-              </span>
-              <input
-                data-testid="field-dcb-em"
-                type="date"
-                :value="lead.dcb_em || ''"
-                class="font-mono"
-                :class="[EDITAVEL, bleeding ? '!text-n-ruby-11' : '']"
-                @change="e => save({ dcb_em: e.target.value || null })"
-              />
-            </label>
-            <label class="min-w-0">
-              <span class="block text-[10.5px] text-n-slate-9">
-                {{ $t('RAMON.LEAD_PANEL.FIELDS.CHANNEL') }}
-              </span>
-              <select
-                data-testid="field-channel"
-                :value="lead.channel ?? ''"
-                :class="EDITAVEL"
-                @change="e => saveSelect('channel', e.target.value, false)"
-              >
-                <option value="">—</option>
-                <option v-for="c in channels" :key="c.key" :value="c.key">
-                  {{ c.label }}
-                </option>
-              </select>
-            </label>
-          </div>
-        </div>
 
         <QualificacaoViva :lead="lead" :context="context" />
 
