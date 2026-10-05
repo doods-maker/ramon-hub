@@ -546,7 +546,7 @@ useKeyboardEvents({
           <template v-if="sim">
             <div class="flex items-baseline gap-2">
               <span class="font-mono text-2xl font-medium text-n-slate-12">
-                {{ money(sim.atrasados) }}
+                {{ `~${money(sim.atrasados)}` }}
               </span>
               <span class="text-[11px] text-n-slate-10">
                 {{ t('RAMON.ESTEIRA.LAST_SIMULATION_HINT') }}

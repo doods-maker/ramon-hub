@@ -158,6 +158,11 @@ describe('LeadSimulador.vue', () => {
     expect(
       wrapper.find('[data-testid="sim-aviso-qualidade"]').text()
     ).toContain('qualidade de segurado');
+    // K5: valor mensal com um nome só e "~" de estimativa
+    const mensal = wrapper.find('[data-testid="sim-mensal"]').text();
+    expect(mensal).toContain('RAMON.SIMULADOR.MENSAL_ESTIMADO');
+    expect(mensal).toContain('~R$');
+    expect(mensal).toContain('1.700,00');
   });
 
   it('mostra o banner de qualidade em risco quando o aviso cita o art. 27-A', async () => {
@@ -706,6 +711,8 @@ describe('LeadSimulador.vue', () => {
       expect(card.text()).toContain('RAMON.SIMULADOR.ULTIMA_TITULO');
       expect(card.text()).toContain('25.416,00');
       expect(card.text()).toContain('706,00');
+      expect(card.text()).toContain('RAMON.SIMULADOR.MENSAL_ESTIMADO');
+      expect(card.text()).not.toContain('RMI');
     });
 
     it('resultado novo substitui o cartão da última simulação', async () => {

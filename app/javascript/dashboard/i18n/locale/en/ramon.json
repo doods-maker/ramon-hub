@@ -215,9 +215,9 @@
       "LAST_SIMULATION": "Simulator · last simulation",
       "LAST_SIMULATION_HINT": "estimated arrears",
       "LAST_SIMULATION_EMPTY": "No simulation yet — run one from the lead's conversation.",
-      "LAST_SIMULATION_RMI": "RMI {value}",
+      "LAST_SIMULATION_RMI": "estimated monthly benefit (today's value) ~{value}",
       "LAST_SIMULATION_DER": "DER {value}",
-      "LAST_SIMULATION_FEE": "fee {value}",
+      "LAST_SIMULATION_FEE": "fee ~{value}",
       "LAST_SIMULATION_AT": "on {date}",
       "AFTER_THIS": "After this one",
       "KEY": {
@@ -815,7 +815,7 @@
         "IN_STAGE": "In this stage for {days} d",
         "LAST_SIM": "Last simulation:",
         "LAST_SIM_ATRASADOS": "arrears",
-        "LAST_SIM_RMI": "RMI",
+        "LAST_SIM_RMI": "estimated monthly benefit (today's value)",
         "LAST_SIM_EM": "on",
         "CHANCE": "chance"
       },
@@ -1057,10 +1057,9 @@
       "SIMULAR": "Simulate",
       "SIMULANDO": "Simulating…",
       "ULTIMA_TITULO": "Last simulation · {data}",
-      "ULTIMA_RMI": "RMI",
       "ULTIMA_HINT": "Its parameters are already in the form — click Simulate to recalculate.",
       "ATRASADOS": "Estimated back pay",
-      "PERDA_MENSAL": "Waiting, you lose {value}/month",
+      "PERDA_MENSAL": "Each month without the benefit: ~{value}",
       "HONORARIO": "Estimated fee",
       "HONORARIO_FORMULA": "{percentual}% of back pay + {n} monthly benefits ({tese})",
       "NO_FEE_CONFIG": "The lead's thesis has no fee configured (% and monthly benefits) — set it up in Playbooks.",
@@ -1194,7 +1193,8 @@
       "TESE_ESCOLHA": "Choose the thesis above to calculate the fee.",
       "SALVAR_VALOR": "Save as this lead's value",
       "VALOR_SALVO": "Lead value updated",
-      "SALVAR_VALOR_ERRO": "Could not save the lead value."
+      "SALVAR_VALOR_ERRO": "Could not save the lead value.",
+      "MENSAL_ESTIMADO": "Estimated monthly benefit (today's value)"
     },
     "LIQUIDACAO": {
       "TITULO": "Judgment liquidation",

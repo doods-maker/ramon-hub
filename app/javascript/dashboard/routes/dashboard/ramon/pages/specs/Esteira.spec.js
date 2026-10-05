@@ -178,6 +178,9 @@ describe('Esteira.vue', () => {
     ).toContain('remarcaram minha perícia');
     expect(
       wrapper.find('[data-testid="esteira-last-simulation"]').text()
+    ).toContain('~R$');
+    expect(
+      wrapper.find('[data-testid="esteira-last-simulation"]').text()
     ).toContain('46.900');
     expect(wrapper.find('[data-testid="esteira-sim-params"]').text()).toContain(
       'RAMON.ESTEIRA.LAST_SIMULATION_RMI'

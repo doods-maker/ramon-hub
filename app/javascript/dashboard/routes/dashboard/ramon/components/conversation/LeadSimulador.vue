@@ -936,10 +936,10 @@ const aba = ref(
         </p>
         <p v-if="ultimaSimulacao.mensal != null" class="mb-0 text-sm">
           <span class="text-n-slate-10">
-            {{ $t('RAMON.SIMULADOR.ULTIMA_RMI') }}:
+            {{ $t('RAMON.SIMULADOR.MENSAL_ESTIMADO') }}:
           </span>
           <span class="font-mono font-semibold text-n-slate-12">
-            {{ money(ultimaSimulacao.mensal) }}
+            {{ `~${money(ultimaSimulacao.mensal)}` }}
           </span>
         </p>
         <p v-if="ultimaSimulacao.honorario_valor" class="mb-0 text-sm">
@@ -969,7 +969,17 @@ const aba = ref(
             {{ `~${money(resultado.atrasados)}` }}
           </span>
         </p>
-        <p class="mb-0 text-sm text-n-slate-12" data-testid="sim-perda-mensal">
+        <!-- Um número só, um nome só: o mesmo valor mensal que a Esteira, o
+             painel e a "Última simulação" mostram. -->
+        <p class="mb-0 text-sm text-n-slate-12" data-testid="sim-mensal">
+          <span class="text-n-slate-10">
+            {{ $t('RAMON.SIMULADOR.MENSAL_ESTIMADO') }}:
+          </span>
+          <span class="font-mono font-semibold">
+            {{ `~${money(resultado.mensal)}` }}
+          </span>
+        </p>
+        <p class="mb-0 text-xs text-n-slate-10" data-testid="sim-perda-mensal">
           {{
             $t('RAMON.SIMULADOR.PERDA_MENSAL', {
               value: money(resultado.perda_mensal),

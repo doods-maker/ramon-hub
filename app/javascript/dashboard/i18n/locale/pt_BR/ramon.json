@@ -215,9 +215,9 @@
       "LAST_SIMULATION": "Simulador · última simulação",
       "LAST_SIMULATION_HINT": "atrasados estimados",
       "LAST_SIMULATION_EMPTY": "Sem simulação ainda — rode uma na conversa do lead.",
-      "LAST_SIMULATION_RMI": "RMI {value}",
+      "LAST_SIMULATION_RMI": "benefício mensal estimado (valor de hoje) ~{value}",
       "LAST_SIMULATION_DER": "DER {value}",
-      "LAST_SIMULATION_FEE": "honorário {value}",
+      "LAST_SIMULATION_FEE": "honorário ~{value}",
       "LAST_SIMULATION_AT": "em {date}",
       "AFTER_THIS": "Depois desta",
       "KEY": {
@@ -815,7 +815,7 @@
         "IN_STAGE": "Nesta etapa há {days} d",
         "LAST_SIM": "Última simulação:",
         "LAST_SIM_ATRASADOS": "atrasados",
-        "LAST_SIM_RMI": "RMI",
+        "LAST_SIM_RMI": "benefício mensal estimado (valor de hoje)",
         "LAST_SIM_EM": "em",
         "CHANCE": "chance"
       },
@@ -1057,10 +1057,9 @@
       "SIMULAR": "Simular",
       "SIMULANDO": "Simulando…",
       "ULTIMA_TITULO": "Última simulação · {data}",
-      "ULTIMA_RMI": "RMI",
       "ULTIMA_HINT": "Parâmetros dela já estão no formulário — clique em Simular para recalcular.",
       "ATRASADOS": "Atrasados estimados",
-      "PERDA_MENSAL": "Esperando, você perde {value}/mês",
+      "PERDA_MENSAL": "Cada mês sem o benefício: ~{value}",
       "HONORARIO": "Honorário estimado",
       "HONORARIO_FORMULA": "{percentual}% dos atrasados + {n} mensalidades ({tese})",
       "NO_FEE_CONFIG": "A tese do lead está sem honorário configurado (% e nº de mensalidades) — cadastre em Playbooks.",
@@ -1194,7 +1193,8 @@
       "TESE_ESCOLHA": "Escolha a tese acima para calcular o honorário.",
       "SALVAR_VALOR": "Salvar como valor deste lead",
       "VALOR_SALVO": "Valor do lead atualizado",
-      "SALVAR_VALOR_ERRO": "Não foi possível salvar o valor do lead."
+      "SALVAR_VALOR_ERRO": "Não foi possível salvar o valor do lead.",
+      "MENSAL_ESTIMADO": "Benefício mensal estimado (valor de hoje)"
     },
     "LIQUIDACAO": {
       "TITULO": "Liquidação de sentença",
