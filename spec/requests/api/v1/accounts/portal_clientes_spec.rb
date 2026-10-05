@@ -111,6 +111,21 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(PortalCliente.exists?(cliente.id)).to be false
     expect(PortalEnvio.where(portal_cliente_id: cliente.id)).to be_empty
     expect(PortalAcesso.where(portal_cliente_id: cliente.id).pluck(:cpf, :ip)).to eq [%w[12345678901 1.2.3.4]]
+    expect(PortalEvento.where(portal_cliente_id: cliente.id).pluck(:acao, :user_id)).to include(['excluiu', admin.id])
+  end
+
+  it 'registra a trilha (quem fez o quê) e devolve o histórico no detalhe' do
+    na_recepcao(agent)
+    cliente = create(:portal_cliente, account: account, processos: [{ 'id' => 7, 'docs_pendentes' => [] }])
+    post "#{base}/#{cliente.id}/convidar", headers: headers
+    post "#{base}/#{cliente.id}/convidar", headers: headers
+    patch "#{base}/#{cliente.id}", params: { recados: { '7' => 'Oi' } }, headers: headers, as: :json
+    post "#{base}/#{cliente.id}/suspender", headers: headers
+
+    get "#{base}/#{cliente.id}", headers: headers
+    eventos = response.parsed_body['eventos']
+    expect(eventos.pluck('acao')).to eq %w[suspendeu salvou_recado nova_senha convidou]
+    expect(eventos.first['user_name']).to eq agent.name
   end
 
   describe 'suspender, reativar e senha nova de quem já tem acesso' do

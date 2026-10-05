@@ -726,7 +726,19 @@
       "REACTIVATE": "Reactivate access",
       "SUSPEND_TITLE": "Suspend {nome}'s access?",
       "SUSPEND_CONFIRM": "The client can no longer sign in and is signed out now. Nothing is deleted: uploads, signatures and history stay, and you can reactivate later.",
-      "DELETE_TITLE": "Delete {nome} from the Client Portal?"
+      "DELETE_TITLE": "Delete {nome} from the Client Portal?",
+      "HISTORY": "History",
+      "EVENTS": {
+        "CONVIDOU": "invited to the portal",
+        "NOVA_SENHA": "generated a new password",
+        "SUSPENDEU": "suspended access",
+        "REATIVOU": "reactivated access",
+        "EXCLUIU": "deleted the account",
+        "ALTEROU_EMAIL": "changed the e-mail",
+        "SALVOU_RECADO": "saved the message to the client",
+        "ENVIOU_ASSINATURA": "sent for signature",
+        "CANCELOU_ASSINATURA": "cancelled the document"
+      }
     },
     "DOSSIE": {
       "OPEN": "Dossier",

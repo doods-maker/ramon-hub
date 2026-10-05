@@ -99,6 +99,15 @@ const TOM_ASSINATURA = { signed: TOM.teal, refused: TOM.ruby };
 
 const dataCurta = iso =>
   iso ? new Date(iso).toLocaleDateString('pt-BR') : '—';
+
+const dataHora = iso =>
+  new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 </script>
 
 <template>
@@ -215,5 +224,25 @@ const dataCurta = iso =>
         }}</span>
       </li>
     </ul>
+
+    <!-- Histórico do hub: quem fez o quê neste cliente -->
+    <div v-if="cliente.eventos && cliente.eventos.length" :class="SECAO">
+      <p :class="TITULO" class="m-0 mb-2">
+        {{ t('RAMON.PORTAL_CLIENTES.HISTORY') }}
+      </p>
+      <ul
+        data-testid="portal-historico"
+        class="m-0 flex list-none flex-col gap-1 p-0 text-xs text-n-slate-11"
+      >
+        <li v-for="ev in cliente.eventos" :key="ev.id">
+          <span class="font-mono text-n-slate-10">{{
+            dataHora(ev.created_at)
+          }}</span>
+          · <span class="text-n-slate-12">{{ ev.user_name || '—' }}</span>
+          {{ t(`RAMON.PORTAL_CLIENTES.EVENTS.${ev.acao.toUpperCase()}`) }}
+          <template v-if="ev.detalhe">· {{ ev.detalhe }}</template>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>

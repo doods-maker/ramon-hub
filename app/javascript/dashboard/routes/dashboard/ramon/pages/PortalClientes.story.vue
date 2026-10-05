@@ -136,6 +136,33 @@ const MARIA = {
       created_at: diasAtras(12),
     },
   ],
+  eventos: [
+    {
+      id: 5,
+      acao: 'salvou_recado',
+      user_name: 'Gabriela Matos',
+      created_at: diasAtras(0),
+    },
+    {
+      id: 4,
+      acao: 'enviou_assinatura',
+      detalhe: 'Procuração',
+      user_name: 'Eduardo Schlata',
+      created_at: diasAtras(2),
+    },
+    {
+      id: 3,
+      acao: 'nova_senha',
+      user_name: 'Recepção — Juliana',
+      created_at: diasAtras(20),
+    },
+    {
+      id: 1,
+      acao: 'convidou',
+      user_name: 'Eduardo Schlata',
+      created_at: diasAtras(35),
+    },
+  ],
   assinaturas: [
     {
       id: 31,

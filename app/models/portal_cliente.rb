@@ -17,6 +17,8 @@ class PortalCliente < ApplicationRecord
   # Marco Civil art. 15: o registro de acesso fica 6 meses mesmo depois de excluir
   # o cliente (leva o CPF na linha); quem apaga é o expurgo noturno do PortalAcesso.
   has_many :acessos, class_name: 'PortalAcesso', dependent: nil
+  # Trilha do hub (PortalEvento): fica depois da exclusão, como o registro de acesso.
+  has_many :eventos, class_name: 'PortalEvento', dependent: nil
 
   before_validation :normalizar
 

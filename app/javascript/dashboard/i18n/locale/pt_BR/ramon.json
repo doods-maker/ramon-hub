@@ -726,7 +726,19 @@
       "REACTIVATE": "Reativar acesso",
       "SUSPEND_TITLE": "Suspender o acesso de {nome}?",
       "SUSPEND_CONFIRM": "O cliente não consegue mais entrar e é desconectado agora. Nada é apagado: envios, assinaturas e histórico ficam, e dá pra reativar depois.",
-      "DELETE_TITLE": "Excluir {nome} do Painel do Cliente?"
+      "DELETE_TITLE": "Excluir {nome} do Painel do Cliente?",
+      "HISTORY": "Histórico",
+      "EVENTS": {
+        "CONVIDOU": "convidou para o painel",
+        "NOVA_SENHA": "gerou senha nova",
+        "SUSPENDEU": "suspendeu o acesso",
+        "REATIVOU": "reativou o acesso",
+        "EXCLUIU": "excluiu a conta",
+        "ALTEROU_EMAIL": "alterou o e-mail",
+        "SALVOU_RECADO": "salvou recado ao cliente",
+        "ENVIOU_ASSINATURA": "enviou pra assinatura",
+        "CANCELOU_ASSINATURA": "cancelou o documento"
+      }
     },
     "DOSSIE": {
       "OPEN": "Dossiê",
