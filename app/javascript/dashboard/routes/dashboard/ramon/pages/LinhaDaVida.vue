@@ -6,6 +6,7 @@ import LinhaDaVidaAPI from 'dashboard/api/linhaDaVida';
 import ContactAPI from 'dashboard/api/contacts';
 import { formatCpf } from '../helpers/cpf';
 import { formatBrl } from '../helpers/currency';
+import { prescriptionText } from '../helpers/prescription';
 import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import { frontendURL } from '../../../../helper/URLHelper';
 import {
@@ -52,40 +53,51 @@ watch(() => route.params.contactId, fetchData, { immediate: true });
 const query = ref('');
 const results = ref([]);
 const searching = ref(false);
+// Falha de rede/servidor ≠ "ninguém encontrado": mostra erro com tentar de novo.
+const searchError = ref(false);
 let searchTimer = null;
 let searchAbort = null;
+
+const buscar = async term => {
+  // Aborta a request anterior: resposta velha não sobrescreve a atual.
+  searchAbort?.abort();
+  const controller = new AbortController();
+  searchAbort = controller;
+  searching.value = true;
+  searchError.value = false;
+  try {
+    // encodeURIComponent: telefone com "+" (e termos com &/#) chegam
+    // intactos na query — o endpoint recebe o termo cru interpolado.
+    const { data: resp } = await ContactAPI.search(
+      encodeURIComponent(term),
+      1,
+      'name',
+      '',
+      { signal: controller.signal }
+    );
+    results.value = resp.payload || [];
+  } catch (e) {
+    if (!controller.signal.aborted) {
+      results.value = [];
+      searchError.value = true;
+    }
+  } finally {
+    if (searchAbort === controller) searching.value = false;
+  }
+};
+const retrySearch = () => buscar(query.value.trim());
+
 watch(query, value => {
   clearTimeout(searchTimer);
   const term = value.trim();
+  searchError.value = false;
   if (term.length < 2) {
     searchAbort?.abort();
     results.value = [];
     searching.value = false;
     return;
   }
-  searchTimer = setTimeout(async () => {
-    // Aborta a request anterior: resposta velha não sobrescreve a atual.
-    searchAbort?.abort();
-    const controller = new AbortController();
-    searchAbort = controller;
-    searching.value = true;
-    try {
-      // encodeURIComponent: telefone com "+" (e termos com &/#) chegam
-      // intactos na query — o endpoint recebe o termo cru interpolado.
-      const { data: resp } = await ContactAPI.search(
-        encodeURIComponent(term),
-        1,
-        'name',
-        '',
-        { signal: controller.signal }
-      );
-      results.value = resp.payload || [];
-    } catch (e) {
-      if (!controller.signal.aborted) results.value = [];
-    } finally {
-      if (searchAbort === controller) searching.value = false;
-    }
-  }, 300);
+  searchTimer = setTimeout(() => buscar(term), 300);
 });
 
 const openPessoa = contact =>
@@ -128,6 +140,13 @@ const FUTURO_VISUAL = {
   dcb: { icone: 'i-lucide-calendar-x', tom: TOM.amber },
   prescricao: { icone: 'i-lucide-hourglass', tom: TOM.ruby },
 };
+
+// Prescrição já correndo (parcelas perdidas), da API (Lead#prescription), nas
+// mesmas frases do chip do painel do lead.
+const prescricaoCorrendo = lead =>
+  lead.prescription?.lost_installments > 0
+    ? prescriptionText(t, lead.prescription, lead.benefit_monthly_value)
+    : null;
 
 // benefício · tese do caso aberto (o valor vem à parte, em mono)
 const detalhes = lead =>
@@ -206,6 +225,23 @@ const conversationUrl = lead =>
       <p v-if="searching" class="text-sm text-n-slate-10">
         {{ $t('RAMON.LINHA_DA_VIDA.SEARCHING') }}
       </p>
+      <div
+        v-else-if="searchError"
+        class="text-sm"
+        data-testid="pessoa-search-error"
+      >
+        <p class="text-n-ruby-11">
+          {{ $t('RAMON.LINHA_DA_VIDA.SEARCH_ERROR') }}
+        </p>
+        <Button
+          data-testid="pessoa-search-retry"
+          link
+          xs
+          class="mt-1"
+          :label="$t('RAMON.LEAD_PANEL.RETRY')"
+          @click="retrySearch"
+        />
+      </div>
       <ul
         v-else-if="results.length"
         class="flex flex-col list-none !p-1.5"
@@ -383,6 +419,15 @@ const conversationUrl = lead =>
                 }}</span>
               </template>
             </p>
+            <span
+              v-if="prescricaoCorrendo(lead)"
+              data-testid="lifeline-prescricao"
+              class="mt-1"
+              :class="[CHIP, TOM.ruby]"
+            >
+              <span class="i-lucide-hourglass size-3 shrink-0" />
+              {{ prescricaoCorrendo(lead) }}
+            </span>
             <div class="flex items-center gap-3 mt-1">
               <router-link
                 v-if="lead.conversation_id"
@@ -468,6 +513,33 @@ const conversationUrl = lead =>
                 </template>
                 <span v-if="lead.lost_reason"> · {{ lead.lost_reason }}</span>
               </p>
+              <div class="flex flex-wrap items-center gap-3 mt-1">
+                <span
+                  v-if="prescricaoCorrendo(lead)"
+                  data-testid="lifeline-prescricao"
+                  :class="[CHIP, TOM.ruby]"
+                >
+                  <span class="i-lucide-hourglass size-3 shrink-0" />
+                  {{ prescricaoCorrendo(lead) }}
+                </span>
+                <router-link
+                  v-slot="{ navigate }"
+                  custom
+                  :to="{
+                    name: 'ramon_lead_dossie',
+                    params: { leadId: lead.id },
+                  }"
+                >
+                  <Button
+                    data-testid="lifeline-dossie-link"
+                    link
+                    xs
+                    icon="i-lucide-file-text"
+                    :label="$t('RAMON.DOSSIE.OPEN')"
+                    @click="navigate"
+                  />
+                </router-link>
+              </div>
             </div>
             <span
               class="flex items-center gap-1 mt-1 font-mono text-xs tabular-nums shrink-0 text-n-slate-10"
