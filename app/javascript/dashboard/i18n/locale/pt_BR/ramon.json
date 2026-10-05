@@ -738,7 +738,11 @@
         "SALVOU_RECADO": "salvou recado ao cliente",
         "ENVIOU_ASSINATURA": "enviou pra assinatura",
         "CANCELOU_ASSINATURA": "cancelou o documento"
-      }
+      },
+      "CLIENT_SEES": "O cliente vê:",
+      "INTERNAL_STAGE": "Etapa interna no ADVBOX: o cliente não vê esta etapa nem recebe aviso; o painel dele segue em “{titulo}”. Fale com ele antes de mover o processo.",
+      "RECADO_PREVIEW": "Prévia: o que o cliente vai ver depois de salvar",
+      "RECADO_PREVIEW_HEADING": "Recado da equipe"
     },
     "DOSSIE": {
       "OPEN": "Dossiê",

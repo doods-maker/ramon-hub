@@ -17,9 +17,19 @@ module Ramon::PortalClienteJson
   def detalhe(cliente)
     linha(cliente).merge(
       'recados' => cliente.recados,
+      'processos' => cliente.processos.map { |p| processo(p) },
       'envios' => cliente.envios.order(created_at: :desc).map { |e| envio(e) },
       'assinaturas' => cliente.assinaturas.order(created_at: :desc).map { |a| a.as_json(only: %w[id nome status assinado_em created_at]) },
       'eventos' => eventos(cliente)
+    )
+  end
+
+  # cliente_ve = o título que o Painel do Cliente mostra (mesma tradução do portal,
+  # Ramon::PortalTexto). Etapa interna: o cliente segue vendo a anterior, sem aviso.
+  def processo(proc)
+    proc.slice('id', 'numero', 'tipo', 'etapa', 'fase', 'docs_pendentes').merge(
+      'cliente_ve' => Ramon::PortalTexto.etapa(PortalCliente.etapa_cliente(proc))['titulo'],
+      'etapa_interna' => Ramon::PortalTexto.interna?(proc['etapa'])
     )
   end
 

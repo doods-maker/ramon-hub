@@ -738,7 +738,11 @@
         "SALVOU_RECADO": "saved the message to the client",
         "ENVIOU_ASSINATURA": "sent for signature",
         "CANCELOU_ASSINATURA": "cancelled the document"
-      }
+      },
+      "CLIENT_SEES": "The client sees:",
+      "INTERNAL_STAGE": "Internal stage in ADVBOX: the client does not see this stage nor gets notified; their portal stays at “{titulo}”. Talk to them before moving the case.",
+      "RECADO_PREVIEW": "Preview: what the client will see after you save",
+      "RECADO_PREVIEW_HEADING": "Recado da equipe"
     },
     "DOSSIE": {
       "OPEN": "Dossier",

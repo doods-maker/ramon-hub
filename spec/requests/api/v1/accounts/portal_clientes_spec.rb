@@ -114,6 +114,16 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(PortalEvento.where(portal_cliente_id: cliente.id).pluck(:acao, :user_id)).to include(['excluiu', admin.id])
   end
 
+  it 'detalhe mostra o que o cliente vê na etapa (mesma tradução do portal) e marca a etapa interna' do
+    cliente = create(:portal_cliente, account: account, processos: [
+                       { 'id' => 1, 'etapa' => 'PERICIA AGENDADA', 'etapa_cliente' => 'PERICIA AGENDADA', 'docs_pendentes' => [] },
+                       { 'id' => 2, 'etapa' => 'NEGADO / AVISAR CLIENTE', 'etapa_cliente' => 'REQUERIMENTO PROTOCOLADO', 'docs_pendentes' => [] }
+                     ])
+    get "#{base}/#{cliente.id}", headers: headers
+    vistos = response.parsed_body['processos'].map { |p| p.values_at('cliente_ve', 'etapa_interna') }
+    expect(vistos).to eq [['Perícia agendada', false], ['Pedido protocolado no INSS', true]]
+  end
+
   it 'registra a trilha (quem fez o quê) e devolve o histórico no detalhe' do
     na_recepcao(agent)
     cliente = create(:portal_cliente, account: account, processos: [{ 'id' => 7, 'docs_pendentes' => [] }])

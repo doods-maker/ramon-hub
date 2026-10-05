@@ -18,16 +18,20 @@ const PROCESSOS_MARIA = [
     id: 501,
     numero: '5003421-18.2025.4.04.7207',
     tipo: 'Auxílio-acidente',
-    etapa: 'Aguardando perícia',
-    fase: 'Judicial',
+    etapa: 'PERÍCIA AGENDADA',
+    fase: 'JUDICIAL',
+    cliente_ve: 'Perícia agendada',
+    etapa_interna: false,
     docs_pendentes: ['Laudo do ortopedista', 'Comprovante de residência'],
   },
   {
     id: 502,
     numero: 'NB 712.345.678-9',
     tipo: 'Aposentadoria por idade',
-    etapa: 'Requerimento no INSS',
-    fase: 'Administrativo',
+    etapa: 'NEGADO / AVISAR CLIENTE',
+    fase: 'ADMINISTRATIVO',
+    cliente_ve: 'Pedido protocolado no INSS',
+    etapa_interna: true,
     docs_pendentes: [],
   },
 ];
@@ -312,6 +316,16 @@ const novaSenha = n =>
     clicar('Nova senha provisória', n);
     setTimeout(() => clicar('Gerar senha nova'), 300);
   });
+// Abre a Maria e digita um recado novo no 2º processo (prévia antes de salvar).
+const recadoPrevia = depois(1500, () => {
+  clicar('Maria Aparecida');
+  setTimeout(() => {
+    const campo = document.querySelectorAll('textarea')[1];
+    campo.value =
+      'Dona Maria, precisamos conversar sobre o resultado do pedido no INSS.\nPode nos ligar amanhã de manhã?';
+    campo.dispatchEvent(new Event('input'));
+  }, 800);
+});
 const clicarEm = texto => depois(1500, () => clicar(texto));
 const confirmarSenha = depois(1500, () => clicar('Nova senha provisória', 0));
 const busca = depois(1500, () => {
@@ -352,6 +366,9 @@ const busca = depois(1500, () => {
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="PC3 excluir" :init-state="clicarEm('Excluir')">
+      <div class="h-screen"><PortalClientes /></div>
+    </Variant>
+    <Variant title="PC5 recado previa" :init-state="recadoPrevia">
       <div class="h-screen"><PortalClientes /></div>
     </Variant>
     <Variant title="Vazio" :init-state="vazio">

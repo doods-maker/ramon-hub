@@ -27,6 +27,10 @@ const emit = defineEmits(['atualizar', 'recarregar']);
 
 const { t } = useI18n();
 const recados = ref({ ...props.cliente.recados });
+// O que já está no ar pro cliente: a prévia aparece quando o texto mudou.
+const recadosSalvos = ref({ ...props.cliente.recados });
+const recadoMudou = id =>
+  (recados.value[id] || '').trim() !== (recadosSalvos.value[id] || '').trim();
 const emailEdit = ref(props.cliente.email || '');
 const aviso = ref('');
 const templateId = ref(null);
@@ -75,6 +79,7 @@ const salvarRecados = async () => {
     await PortalClientesAPI.update(props.cliente.id, {
       recados: recados.value,
     });
+    recadosSalvos.value = { ...recados.value };
     avisarSalvo();
   } catch (e) {
     erro(e);
@@ -148,10 +153,40 @@ const dataHora = iso =>
           {{ t('RAMON.PORTAL_CLIENTES.PENDING_DOCS') }}
         </span>
       </div>
+      <p class="m-0 text-xs text-n-slate-11" data-testid="portal-cliente-ve">
+        {{ t('RAMON.PORTAL_CLIENTES.CLIENT_SEES') }}
+        <span class="font-medium text-n-slate-12">{{ p.cliente_ve }}</span>
+      </p>
+      <p
+        v-if="p.etapa_interna"
+        data-testid="portal-etapa-interna"
+        :class="[AVISO, TOM.amber]"
+        class="m-0"
+      >
+        {{
+          t('RAMON.PORTAL_CLIENTES.INTERNAL_STAGE', { titulo: p.cliente_ve })
+        }}
+      </p>
       <label :class="ROTULO">
         {{ t('RAMON.PORTAL_CLIENTES.RECADO') }}
         <textarea v-model="recados[p.id]" rows="2" :class="TEXTAREA" />
       </label>
+      <!-- Prévia do recado como o cliente vai ver (só quando ainda não foi salvo) -->
+      <div
+        v-if="recadoMudou(p.id) && (recados[p.id] || '').trim()"
+        data-testid="portal-recado-previa"
+        :class="[AVISO, TOM.slate]"
+      >
+        <p :class="TITULO" class="m-0 mb-1">
+          {{ t('RAMON.PORTAL_CLIENTES.RECADO_PREVIEW') }}
+        </p>
+        <p class="m-0 text-xs font-semibold text-n-slate-12">
+          {{ t('RAMON.PORTAL_CLIENTES.RECADO_PREVIEW_HEADING') }}
+        </p>
+        <p class="m-0 whitespace-pre-line text-sm text-n-slate-12">
+          {{ recados[p.id].trim() }}
+        </p>
+      </div>
     </div>
     <div class="flex items-center gap-3">
       <Button
