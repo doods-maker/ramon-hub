@@ -618,14 +618,33 @@ describe('LeadSimulador.vue', () => {
     );
   });
 
-  it('gerar liquidacao pre-preenche a RMI do cartao (com descartes quando houver)', async () => {
+  it('"Usar esta RMI na liquidação" abre a aba Liquidação com a RMI do cartão (com descartes quando houver) (K8)', async () => {
     const wrapper = await montarComPainelCalculado();
+    const liq = () =>
+      wrapper
+        .find('[data-testid="sim-liquidacao-secao"]')
+        .attributes('style') || '';
+    expect(liq()).toContain('display: none');
     await wrapper
       .find('[data-testid="sim-cartao-liquidar-idade_pre"]')
       .trigger('click');
+    await flushPromises();
     expect(wrapper.find('[data-testid="liq-rmi"]').element.value).toBe(
       '3500.00'
     );
+    expect(liq()).not.toContain('display: none');
+    expect(
+      wrapper
+        .find('[data-testid="sim-aba-liquidacao"]')
+        .attributes('aria-selected')
+    ).toBe('true');
+    // a liquidação não fica mais escondida no fim de Possibilidades
+    expect(
+      wrapper
+        .find('[data-testid="sim-painel-secao"]')
+        .find('[data-testid="liq-form"]')
+        .exists()
+    ).toBe(false);
   });
 
   describe('abas', () => {

@@ -9,7 +9,6 @@ import {
   CAMPO,
   CARTAO,
   ROTULO,
-  SECAO,
   SELECT,
   TITULO,
   TOM,
@@ -176,7 +175,7 @@ const baixarPdf = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-2" :class="SECAO" data-testid="liq-form">
+  <div class="flex flex-col gap-2" data-testid="liq-form">
     <span :class="TITULO">
       {{ $t('RAMON.LIQUIDACAO.TITULO') }}
     </span>

@@ -1109,7 +1109,7 @@
       "PAINEL_FALTOU": "{requisito}: {atual} — missing {faltou}",
       "PAINEL_DESCARTES": "With discard rule: {valor}",
       "PAINEL_PREVISAO": "Expected fulfillment: {data}",
-      "PAINEL_LIQUIDAR": "Generate liquidation",
+      "PAINEL_LIQUIDAR": "Use this RMI in the liquidation",
       "REQ_IDADE": "Age",
       "REQ_TEMPO_CONTRIBUICAO": "Contribution time",
       "REQ_PONTOS": "Points",
@@ -1198,7 +1198,8 @@
       "SALVAR_VALOR": "Save as this lead's value",
       "VALOR_SALVO": "Lead value updated",
       "SALVAR_VALOR_ERRO": "Could not save the lead value.",
-      "MENSAL_ESTIMADO": "Estimated monthly benefit (today's value)"
+      "MENSAL_ESTIMADO": "Estimated monthly benefit (today's value)",
+      "ABA_LIQUIDACAO": "Liquidation"
     },
     "LIQUIDACAO": {
       "TITULO": "Judgment liquidation",

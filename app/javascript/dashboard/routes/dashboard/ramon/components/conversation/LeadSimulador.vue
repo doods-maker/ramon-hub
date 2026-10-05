@@ -511,11 +511,6 @@ const escolherTese = async () => {
 
 const liquidacaoRef = ref(null);
 
-// RMI com descartes é a que o advogado usa na conta quando existe (é a maior).
-const liquidarCartao = cartao => {
-  liquidacaoRef.value?.preencher(cartao.rmi_com_descartes || cartao.rmi);
-};
-
 // filete do cartão: verde = elegível, vermelho = não, âmbar = depende
 const bordaDe = cartao => {
   if (cartao.elegivel === true) return FILETE.teal;
@@ -532,6 +527,13 @@ const dataBr = iso => (iso ? iso.split('-').reverse().join('/') : '');
 const aba = ref(
   props.inicial?.tipo || (props.ultimaSimulacao ? 'honorario' : 'painel')
 );
+
+// "Usar esta RMI na liquidação": leva a RMI do cartão pra aba Liquidação e
+// abre a aba. RMI com descartes é a que o advogado usa quando existe (é a maior).
+const liquidarCartao = cartao => {
+  liquidacaoRef.value?.preencher(cartao.rmi_com_descartes || cartao.rmi);
+  aba.value = 'liquidacao';
+};
 
 // Reabrir volta com o RESULTADO na tela, não só o formulário: recalcula na
 // hora (sem gravar outra linha no histórico). As abas filhas recebem os
@@ -835,6 +837,16 @@ if (props.inicial?.tipo === 'honorario' && canSimulate.value)
         @click="aba = 'planejamento'"
       >
         {{ $t('RAMON.SIMULADOR.ABA_PLANEJAMENTO') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="aba === 'liquidacao'"
+        data-testid="sim-aba-liquidacao"
+        :class="[ABA, aba === 'liquidacao' ? ABA_ATIVA : ABA_INATIVA]"
+        @click="aba = 'liquidacao'"
+      >
+        {{ $t('RAMON.SIMULADOR.ABA_LIQUIDACAO') }}
       </button>
     </div>
 
@@ -1390,6 +1402,15 @@ if (props.inicial?.tipo === 'honorario' && canSimulate.value)
           <li v-for="(aviso, i) in painel.avisos" :key="i">{{ aviso }}</li>
         </ul>
       </div>
+    </div>
+
+    <!-- Liquidação de sentença: aba própria (antes ficava escondida no fim de
+         Possibilidades). Não depende do CNIS. -->
+    <div
+      v-show="aba === 'liquidacao'"
+      class="flex flex-col gap-2"
+      data-testid="sim-liquidacao-secao"
+    >
       <LeadLiquidacao ref="liquidacaoRef" :lead="lead" />
     </div>
 
