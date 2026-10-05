@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { dynamicTime } from 'shared/helpers/timeHelper';
@@ -7,29 +7,31 @@ import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { CAMPO, SELECT, TITULO } from '../../helpers/ui';
+import { SELECT, TEXTAREA } from '../../helpers/ui';
 
+// Item "Notas" do painel: editor no topo, lista inteira embaixo. A lista vem
+// do painel (ele carrega uma vez e usa também no Resumo e no contador).
 const props = defineProps({
   leadId: { type: Number, required: true },
-  // muda quando o backend grava algo nas notas fora daqui (ex.: retomada)
-  refreshKey: { type: String, default: null },
+  notes: { type: Array, default: () => [] },
   inConversation: { type: Boolean, default: false },
 });
+const emit = defineEmits(['created']);
 
 defineOptions({ name: 'LeadNotes' });
 const { t } = useI18n();
 
-const notes = ref([]);
 const draft = ref('');
 const saving = ref(false);
-
-// Lista única de notas do lead: as 5 últimas, "ver todas" abre o resto aqui
-// mesmo, texto inteiro (a aba Histórico só guarda um resumo de 60 caracteres).
-const showAll = ref(false);
-const visible = computed(() =>
-  showAll.value ? notes.value : notes.value.slice(-5)
+watch(
+  () => props.leadId,
+  () => {
+    draft.value = '';
+  }
 );
-const hiddenCount = computed(() => Math.max(0, notes.value.length - 5));
+
+// mais recente no topo, logo abaixo do editor
+const ordered = computed(() => [...props.notes].reverse());
 
 // Templates de nota rápida: chaves fixas, texto no i18n.
 const NOTE_TEMPLATE_KEYS = [
@@ -45,29 +47,6 @@ const applyNoteTemplate = e => {
   draft.value = draft.value ? `${draft.value} ${text}` : text;
   e.target.value = '';
 };
-
-const load = async id => {
-  if (!id) return;
-  try {
-    const { data } = await LeadsAPI.getNotes(id);
-    notes.value = data.payload || [];
-  } catch (e) {
-    // painel segue utilizável sem as notas; salvar avisa se falhar
-    notes.value = [];
-  }
-};
-onMounted(() => load(props.leadId));
-watch(
-  () => [props.leadId, props.refreshKey],
-  ([id], [prevId]) => {
-    if (id !== prevId) {
-      notes.value = [];
-      draft.value = '';
-      showAll.value = false;
-    }
-    load(id);
-  }
-);
 
 // Cabeçalho que o backend põe nas notas-rascunho (retomada, AdvBox, copiloto
 // noturno, Cal.com): 1ª linha "RASCUNHO (revisar antes de enviar) — <motivo>:",
@@ -87,7 +66,7 @@ const save = async () => {
   saving.value = true;
   try {
     const { data } = await LeadsAPI.createNote(props.leadId, body);
-    notes.value = [...notes.value, data];
+    emit('created', data);
     draft.value = '';
   } catch (e) {
     useAlert(t('RAMON.LEAD_PANEL.NOTES.SAVE_ERROR'));
@@ -101,29 +80,47 @@ const noteTime = createdAt =>
 </script>
 
 <template>
-  <!-- Seção "Notas" do mock 1f: entradas com filete bronze + input inline -->
   <div data-testid="lead-notes" class="flex flex-col gap-2">
-    <p :class="TITULO">
-      {{ $t('RAMON.LEAD_PANEL.NOTES.TITLE') }}
-    </p>
-    <Button
-      v-if="hiddenCount"
-      data-testid="lead-notes-ver-todas"
-      link
-      slate
-      xs
-      class="self-start"
-      :label="
-        showAll
-          ? $t('RAMON.LEAD_PANEL.NOTES.SHOW_LESS')
-          : $t('RAMON.LEAD_PANEL.NOTES.SHOW_ALL', { count: notes.length })
-      "
-      @click="showAll = !showAll"
+    <!-- 3 linhas, cresce com o texto (field-sizing; sem suporte fica em 3) -->
+    <textarea
+      v-model="draft"
+      data-testid="lead-note-input"
+      rows="3"
+      :placeholder="$t('RAMON.LEAD_PANEL.NOTES.PLACEHOLDER')"
+      :disabled="saving"
+      class="[field-sizing:content] min-h-[4.75rem] max-h-72 resize-none"
+      :class="TEXTAREA"
+      @keydown.enter.ctrl.prevent="save"
+      @keydown.enter.meta.prevent="save"
     />
+    <div class="flex gap-2">
+      <select
+        data-testid="note-template-select"
+        class="flex-1 min-w-0"
+        :class="SELECT"
+        @change="applyNoteTemplate"
+      >
+        <option value="">
+          {{ $t('RAMON.DRAWER.NOTE_TEMPLATES.LABEL') }}
+        </option>
+        <option v-for="key in NOTE_TEMPLATE_KEYS" :key="key" :value="key">
+          {{ $t(`RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.${key}`) }}
+        </option>
+      </select>
+      <Button
+        data-testid="lead-note-save"
+        sm
+        :label="$t('RAMON.LEAD_PANEL.NOTES.SAVE')"
+        :title="$t('RAMON.LEAD_PANEL.NOTES.SAVE_HINT')"
+        :disabled="saving || !draft.trim()"
+        @click="save"
+      />
+    </div>
     <div
-      v-for="note in visible"
+      v-for="note in ordered"
       :key="note.id"
-      class="pl-2.5 border-l-2 border-n-blue-9/40"
+      data-testid="lead-note"
+      class="pl-2.5 mt-1 border-l-2 border-n-blue-9/40"
     >
       <p class="text-[10.5px] text-n-slate-10">
         {{ note.author_name || $t('RAMON.LEAD_PANEL.NOTES.SYSTEM') }} ·
@@ -144,25 +141,5 @@ const noteTime = createdAt =>
         @click="usarNoEditor(note)"
       />
     </div>
-    <select
-      data-testid="note-template-select"
-      :class="SELECT"
-      @change="applyNoteTemplate"
-    >
-      <option value="">
-        {{ $t('RAMON.DRAWER.NOTE_TEMPLATES.LABEL') }}
-      </option>
-      <option v-for="key in NOTE_TEMPLATE_KEYS" :key="key" :value="key">
-        {{ $t(`RAMON.DRAWER.NOTE_TEMPLATES.ITEMS.${key}`) }}
-      </option>
-    </select>
-    <input
-      v-model="draft"
-      data-testid="lead-note-input"
-      :placeholder="$t('RAMON.LEAD_PANEL.NOTES.PLACEHOLDER')"
-      :disabled="saving"
-      :class="CAMPO"
-      @keyup.enter="save"
-    />
   </div>
 </template>

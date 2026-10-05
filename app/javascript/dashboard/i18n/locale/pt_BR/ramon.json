@@ -747,6 +747,7 @@
       "ENCAMINHAR_COMERCIAL": "Encaminhar ao comercial",
       "TABS": {
         "SUMMARY": "Resumo",
+        "NOTES": "Notas",
         "PLAYBOOK": "Scripts",
         "IA": "IA",
         "SIMULADOR": "Simular",
@@ -759,13 +760,13 @@
       "MACROS_TITLE": "Macros da conversa",
       "CONVERSATION_EXTRAS": "Mais da conversa",
       "NOTES": {
-        "TITLE": "Notas",
         "PLACEHOLDER": "Adicionar nota…",
+        "SAVE": "Salvar",
+        "SAVE_HINT": "Ctrl+Enter salva",
+        "LAST": "Última nota:",
         "SAVE_ERROR": "Não foi possível salvar a nota — tente de novo",
         "SYSTEM": "Sistema",
-        "USE_IN_EDITOR": "Usar no editor",
-        "SHOW_ALL": "ver todas ({count})",
-        "SHOW_LESS": "ver menos"
+        "USE_IN_EDITOR": "Usar no editor"
       },
       "QUIZ": {
         "TITLE": "Triagem da LP",

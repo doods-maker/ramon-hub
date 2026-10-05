@@ -27,6 +27,8 @@ import { prescriptionInfo } from '../../helpers/prescription';
 import { formatBrl, parseBrlInput } from '../../helpers/currency';
 import { waMeUrl } from '../../helpers/phone';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { dynamicTime } from 'shared/helpers/timeHelper';
+import LeadsAPI from 'dashboard/api/leads';
 import {
   CARTAO,
   CARTAO_STATUS,
@@ -395,6 +397,38 @@ const showReuniao = computed(() => {
   );
 });
 
+// ----- notas: o painel carrega uma vez e usa no item Notas, no contador e na
+// "Última nota" do Resumo. follow_up_last_at muda no broadcast lead.updated
+// quando a retomada grava nota + contador (mesma transação); notesTick sobe
+// quando a reunião marcada aqui grava o rascunho → as notas recarregam -----
+const notes = ref([]);
+const loadNotes = async id => {
+  try {
+    const { data } = await LeadsAPI.getNotes(id);
+    notes.value = data.payload || [];
+  } catch (e) {
+    // painel segue utilizável sem as notas; salvar avisa se falhar
+    notes.value = [];
+  }
+};
+watch(
+  () => [props.lead?.id, props.lead?.follow_up_last_at, notesTick.value],
+  ([id], prev) => {
+    if (id !== prev?.[0]) notes.value = [];
+    if (id) loadNotes(id);
+  },
+  { immediate: true }
+);
+const onNoteCreated = note => {
+  notes.value = [...notes.value, note];
+};
+const ultimaNota = computed(() => notes.value[notes.value.length - 1]);
+const ultimaNotaQuando = computed(() =>
+  ultimaNota.value?.created_at
+    ? dynamicTime(new Date(ultimaNota.value.created_at).getTime() / 1000)
+    : ''
+);
+
 // ----- navegação por ícone -----
 const { activeTab, setTab } = useLeadPanelTabs();
 // Contrato só com contrato em jogo: Reunião realizada ou depois na posição do
@@ -431,6 +465,12 @@ const NAV = computed(() => [
       ]
     : []),
   { id: 'playbook', label: 'PLAYBOOK', icon: 'i-lucide-message-square-text' },
+  {
+    id: 'notas',
+    label: 'NOTES',
+    icon: 'i-lucide-notebook-pen',
+    count: notes.value.length,
+  },
   {
     id: 'simulador',
     label: 'SIMULADOR',
@@ -883,6 +923,14 @@ const discard = async () => {
               class="absolute -top-0.5 -right-1 size-2 rounded-full"
               :class="item.dot.value"
             />
+            <span
+              v-if="item.count"
+              :data-testid="`lead-nav-count-${item.id}`"
+              class="absolute -top-1.5 left-3 min-w-4 rounded-full px-1 font-mono text-[9.5px] font-medium leading-4 text-center"
+              :class="TOM.slate"
+            >
+              {{ item.count }}
+            </span>
           </span>
           <span class="max-w-full truncate">
             {{ $t(`RAMON.LEAD_PANEL.TABS.${item.label}`) }}
@@ -1052,14 +1100,23 @@ const discard = async () => {
         <QualificacaoViva :lead="lead" :context="context" />
 
         <LeadQuizResumo :lead="lead" />
-        <!-- follow_up_last_at muda no broadcast lead.updated quando a retomada
-             grava nota + contador (mesma transação); notesTick sobe quando a
-             reunião marcada aqui grava o rascunho → as notas recarregam -->
-        <LeadNotes
-          :lead-id="lead.id"
-          :refresh-key="`${lead.follow_up_last_at}-${notesTick}`"
-          :in-conversation="inConversation"
-        />
+
+        <!-- só a última nota, numa linha; a lista inteira mora no item Notas -->
+        <button
+          v-if="ultimaNota"
+          type="button"
+          data-testid="panel-ultima-nota"
+          class="flex items-center w-full gap-1 p-0 text-left text-xs text-n-slate-11 hover:text-n-slate-12"
+          @click="setTab('notas')"
+        >
+          <span class="shrink-0 text-n-slate-10">
+            {{ $t('RAMON.LEAD_PANEL.NOTES.LAST') }}
+          </span>
+          <span class="truncate">{{ ultimaNota.body }}</span>
+          <span class="shrink-0 text-n-slate-10">
+            {{ `· ${ultimaNotaQuando}` }}
+          </span>
+        </button>
 
         <!-- Dados do contato (recolhido — mesmo padrão do "Mais da conversa") -->
         <div class="min-w-0" :class="SECAO">
@@ -1230,6 +1287,14 @@ const discard = async () => {
       </template>
 
       <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
+
+      <LeadNotes
+        v-else-if="shownTab === 'notas'"
+        :lead-id="lead.id"
+        :notes="notes"
+        :in-conversation="inConversation"
+        @created="onNoteCreated"
+      />
 
       <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-3">
         <DocChecklist :lead="lead" :context="context" />

@@ -6,7 +6,13 @@ import { ref } from 'vue';
 // é mais aba (historico saiu pra ficha; simulador abre largo, por cima) volta
 // pro Resumo.
 const TAB_KEY = 'ramon_lead_panel_tab';
-export const LEAD_PANEL_TABS = ['resumo', 'playbook', 'documentos', 'contrato'];
+export const LEAD_PANEL_TABS = [
+  'resumo',
+  'playbook',
+  'notas',
+  'documentos',
+  'contrato',
+];
 
 const readStored = () => {
   try {

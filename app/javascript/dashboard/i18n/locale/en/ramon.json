@@ -747,6 +747,7 @@
       "ENCAMINHAR_COMERCIAL": "Forward to sales",
       "TABS": {
         "SUMMARY": "Summary",
+        "NOTES": "Notes",
         "PLAYBOOK": "Scripts",
         "IA": "AI",
         "SIMULADOR": "Simulate",
@@ -759,13 +760,13 @@
       "MACROS_TITLE": "Conversation macros",
       "CONVERSATION_EXTRAS": "More from the conversation",
       "NOTES": {
-        "TITLE": "Notes",
         "PLACEHOLDER": "Add a note…",
+        "SAVE": "Save",
+        "SAVE_HINT": "Ctrl+Enter saves",
+        "LAST": "Last note:",
         "SAVE_ERROR": "Could not save the note — try again",
         "SYSTEM": "System",
-        "USE_IN_EDITOR": "Use in editor",
-        "SHOW_ALL": "see all ({count})",
-        "SHOW_LESS": "see fewer"
+        "USE_IN_EDITOR": "Use in editor"
       },
       "QUIZ": {
         "TITLE": "LP triage",

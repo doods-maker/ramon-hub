@@ -7,10 +7,20 @@ import LeadReuniao from '../LeadReuniao.vue';
 import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import LeadsAPI from 'dashboard/api/leads';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('shared/helpers/clipboard', () => ({ copyTextToClipboard: vi.fn() }));
+vi.mock('dashboard/api/leads', () => ({ default: { getNotes: vi.fn() } }));
+
+const notesPayload = notes => ({ data: { payload: notes } });
+const nota = (id, body) => ({
+  id,
+  body,
+  author_name: 'Eduardo',
+  created_at: '2026-10-04T12:00:00Z',
+});
 
 const lead = {
   id: 7,
@@ -122,6 +132,77 @@ describe('LeadPanelBody', () => {
   beforeEach(() => {
     localStorage.clear();
     Element.prototype.scrollIntoView = vi.fn();
+    LeadsAPI.getNotes.mockReset();
+    LeadsAPI.getNotes.mockResolvedValue(notesPayload([]));
+  });
+
+  describe('Notas', () => {
+    const comNotas = async notes => {
+      LeadsAPI.getNotes.mockResolvedValue(notesPayload(notes));
+      const wrapper = mountBody();
+      await flushPromises();
+      return wrapper;
+    };
+
+    it('item Notas fica entre Scripts e Simular, com o número de notas', async () => {
+      const wrapper = await comNotas([nota(1, 'a'), nota(2, 'b')]);
+      const ids = wrapper
+        .findAll('nav button')
+        .map(b => b.attributes('data-testid'));
+      expect(ids.indexOf('lead-nav-notas')).toBe(
+        ids.indexOf('lead-nav-playbook') + 1
+      );
+      expect(ids[ids.indexOf('lead-nav-notas') + 1]).toBe('lead-nav-simulador');
+      expect(wrapper.find('[data-testid="lead-nav-count-notas"]').text()).toBe(
+        '2'
+      );
+    });
+
+    it('sem notas: sem número no ícone e sem "Última nota" no Resumo', async () => {
+      const wrapper = await comNotas([]);
+      expect(
+        wrapper.find('[data-testid="lead-nav-count-notas"]').exists()
+      ).toBe(false);
+      expect(wrapper.find('[data-testid="panel-ultima-nota"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('Resumo mostra só a última nota e ela abre o item Notas', async () => {
+      const wrapper = await comNotas([nota(1, 'antiga'), nota(2, 'recente')]);
+      expect(wrapper.findComponent({ name: 'LeadNotes' }).exists()).toBe(false);
+      const linha = wrapper.find('[data-testid="panel-ultima-nota"]');
+      expect(linha.text()).toContain('recente');
+      expect(linha.text()).not.toContain('antiga');
+      await linha.trigger('click');
+      const notas = wrapper.findComponent({ name: 'LeadNotes' });
+      expect(notas.props('notes')).toHaveLength(2);
+      expect(notas.props('inConversation')).toBe(true);
+      expect(localStorage.getItem('ramon_lead_panel_tab')).toBe('notas');
+    });
+
+    it('nota criada no item Notas entra na lista e no contador', async () => {
+      localStorage.setItem('ramon_lead_panel_tab', 'notas');
+      const wrapper = await comNotas([nota(1, 'a')]);
+      wrapper
+        .findComponent({ name: 'LeadNotes' })
+        .vm.$emit('created', nota(2, 'nova'));
+      await flushPromises();
+      expect(
+        wrapper.findComponent({ name: 'LeadNotes' }).props('notes')
+      ).toHaveLength(2);
+      expect(wrapper.find('[data-testid="lead-nav-count-notas"]').text()).toBe(
+        '2'
+      );
+    });
+
+    it('6 itens na fase de contrato (com tese): todos na navegação', async () => {
+      LeadsAPI.getNotes.mockResolvedValue(notesPayload([]));
+      const wrapper = mountBody({
+        props: { lead: { ...lead, thesis_id: 3, lead_stage_id: 5 } },
+      });
+      expect(wrapper.findAll('nav button')).toHaveLength(6);
+    });
   });
 
   describe('navegação por ícone', () => {
@@ -591,9 +672,8 @@ describe('LeadPanelBody', () => {
         title: 'Reunião',
       });
       expect(useAlert).toHaveBeenCalledWith('RAMON.TASKS.MEETING_SCHEDULED');
-      expect(
-        wrapper.findComponent({ name: 'LeadNotes' }).props('refreshKey')
-      ).toBe('undefined-1');
+      // rascunho de confirmação nasce no backend: notas recarregam
+      expect(LeadsAPI.getNotes).toHaveBeenCalledTimes(2);
       expect(wrapper.find('[data-testid="panel-task-form"]').exists()).toBe(
         false
       );
@@ -848,13 +928,16 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('notas recarregam pelo follow_up_last_at do broadcast', () => {
-      const wrapper = mountBody({
-        props: { lead: { ...lead, follow_up_last_at: '2026-10-05T12:00:00Z' } },
+    it('notas recarregam pelo follow_up_last_at do broadcast', async () => {
+      const wrapper = mountBody();
+      await flushPromises();
+      expect(LeadsAPI.getNotes).toHaveBeenCalledTimes(1);
+      await wrapper.setProps({
+        lead: { ...lead, follow_up_last_at: '2026-10-05T12:00:00Z' },
       });
-      const notas = wrapper.findComponent({ name: 'LeadNotes' });
-      expect(notas.props('refreshKey')).toBe('2026-10-05T12:00:00Z-0');
-      expect(notas.props('inConversation')).toBe(true);
+      await flushPromises();
+      expect(LeadsAPI.getNotes).toHaveBeenCalledTimes(2);
+      expect(LeadsAPI.getNotes).toHaveBeenLastCalledWith(7);
     });
 
     it('Andamento mostra a última simulação e leva ao Simulador', async () => {
