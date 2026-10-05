@@ -26,7 +26,7 @@ real sem executar nada, publica, e depois abre qualquer execução e vê o camin
 | # | Decisão |
 |---|---|
 | D1 | Motor de fluxos **próprio** dentro do hub (não instalar o n8n; não só "pele" nas regras nativas). |
-| D2 | Quadro livre (Vue Flow) com as travas de esteira do Flowter: **1 gatilho por fluxo**, espera conta **do passo anterior**, ramos só **sim/não**, sem laços. |
+| D2 | Quadro livre (Vue Flow) com as travas de esteira do Flowter: **1 gatilho por fluxo**, espera conta **do passo anterior**, ramos **sim/não** (`se`) ou **escolha por valor** com várias saídas (`escolha`, incluída a pedido do Eduardo em 05/10), sem laços. |
 | D3 | Mensagem ao cliente **sempre rascunho** (nota privada "RASCUNHO…"); quem envia é uma pessoa. |
 | D4 | Só **administradores** montam/editam; equipe vê o efeito (balão de evento na conversa, atividade do lead). |
 | D5 | Automações ficam **dentro da Inteligência** no menu. |
@@ -51,7 +51,7 @@ real sem executar nada, publica, e depois abre qualquer execução e vê o camin
 ## 4. Peças (catálogo)
 
 Cada nó do desenho: `{ id, tipo, config, posicao: {x, y} }`. Setas: `{ de, saida, para }`,
-`saida ∈ {s, sim, nao}`.
+`saida ∈ {s, sim, nao}` ou, no `escolha`, a chave de um caso (`c1`, `c2`, …) / `outro`.
 
 ### 4.1 Gatilhos (exatamente 1 por fluxo)
 
@@ -80,6 +80,11 @@ contexto carrega os dois; idem ao contrário.
 - `se` — lista de condições com **E/OU** sobre o contexto (campo, operador, valor). Operadores:
   `igual, diferente, contem, nao_contem, maior, menor, existe, vazio, em_horario_comercial`.
   Saídas `sim` e `nao` (uma delas pode ficar sem seta = termina).
+- `escolha` — olha **um** campo (tese, etapa, origem, caixa, responsável, prioridade ou
+  qualquer variável) e abre **uma saída por valor** cadastrado + a saída **"outro"**
+  (nenhum caso bateu). Ex.: tese → Auxílio-acidente · BPC · Aposentadoria · outro. Cada
+  caso é `{chave, rotulo, valores: []}` (um caso pode juntar vários valores). Saída sem seta
+  = termina. No quadro, as setas saem com o rótulo do caso.
 - `perguntar_ia` — pergunta de sim/não ao LLM (`Ramon::LlmClient`) com a conversa/lead no
   contexto; resposta normalizada para `sim|nao`; o texto da justificativa vira `{resposta_ia}`.
 
@@ -131,7 +136,7 @@ o que cada passo devolve (`{resposta_ia}`, `{prazo_advbox}`, …). Substituiçã
 - Índice parcial `(retomar_em) WHERE status = 'esperando'`.
 
 **Publicar** valida o rascunho: 1 gatilho; sem ciclo; todo passo alcançável; `webhook` sem
-saída; `se` com ≥1 saída; config obrigatória preenchida. Erro → aponta o passo no quadro.
+saída; `se` com ≥1 saída; `escolha` com ≥2 casos, chaves únicas e sem valor repetido entre casos; config obrigatória preenchida. Erro → aponta o passo no quadro.
 
 ## 6. Motor
 
@@ -225,7 +230,7 @@ lembretes de reunião → SLA → cadência → lead ganho → eventos do ADVBOX
 
 | Fatia | Conteúdo | Migração |
 |---|---|---|
-| **B1** | tabelas, motor, relógio, gatilhos de conversa/lead/manual, ações básicas (rascunho texto, nota, etiqueta via `acao_chatwoot`, mover etapa, tarefa, sino/push, esperar, se), API de execuções | sim (3 tabelas) |
+| **B1** | tabelas, motor, relógio, gatilhos de conversa/lead/manual, ações básicas (rascunho texto, nota, etiqueta via `acao_chatwoot`, mover etapa, tarefa, sino/push, esperar, se, escolha), API de execuções | sim (3 tabelas) |
 | **B2** | quadro (lista, editor Vue Flow, versões, ensaio, execução acesa, modelos) + menu | não |
 | **B2b** | passos de IA (`perguntar_ia`, `rascunho_ia`, `rodar_skill`), `advbox`, `webhook`, gatilhos externos (reunião, ADVBOX, ZapSign, documento), `lead_parado`, `relogio` | não |
 | **B3** | conversão das regras nativas + aba "Do sistema" + sai "Configurações → Automação" | não |
@@ -237,7 +242,7 @@ Motor entra **desligado** (nenhum fluxo ativo) até o smoke.
 
 ## 11. Fora de escopo (agora)
 
-Laços/loops e "para cada item"; ramos com mais de 2 saídas; envio automático ao cliente;
+Laços/loops e "para cada item"; envio automático ao cliente;
 edição por não-admin; fluxos entre contas; n8n externo; gatilho por webhook de entrada
 genérico (só os 4 externos conhecidos).
 
