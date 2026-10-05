@@ -5,6 +5,10 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 
 vi.mock('vue-router', () => ({
   useRoute: () => ({ params: { accountId: '1', leadId: '5' } }),
+  useRouter: () => ({ push: vi.fn() }),
+}));
+vi.mock('dashboard/composables/store', () => ({
+  useStore: () => ({ dispatch: vi.fn() }),
 }));
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key, te: () => false }),
@@ -63,10 +67,22 @@ const payload = {
     ],
     docs_missing: [{ title: 'Laudo', status: 'pendente' }],
   },
+  passagem: {
+    nome: 'Maria das Dores',
+    cpf: '52998224725',
+    contrato: { status: 'signed', assinado_em: '2026-10-04T15:00:00Z' },
+    advbox: null,
+    drive_url: null,
+    cnis: null,
+    simulacao: null,
+    reuniao: null,
+    prescription: { lost_installments: 0, months_to_cliff: 20 },
+  },
+  passagem_texto: 'DOSSIÊ DE PASSAGEM — Maria das Dores',
 };
 
-const mountDossie = async () => {
-  LeadsAPI.getDossie.mockResolvedValue({ data: payload });
+const mountDossie = async (extra = {}) => {
+  LeadsAPI.getDossie.mockResolvedValue({ data: { ...payload, ...extra } });
   const wrapper = mount(Dossie, {
     global: { mocks: { $t: key => key }, stubs: { RouterLink: true } },
   });
@@ -91,13 +107,49 @@ describe('Dossie.vue', () => {
     expect(wrapper.findAll('[data-testid="dossie-doc"]')).toHaveLength(1);
   });
 
-  it('copia o dossiê em markdown', async () => {
+  it('copia o texto único de passagem gerado no servidor', async () => {
     const wrapper = await mountDossie();
     await wrapper.find('[data-testid="dossie-copy"]').trigger('click');
-    expect(copyTextToClipboard).toHaveBeenCalled();
-    const markdown = copyTextToClipboard.mock.calls[0][0];
-    expect(markdown).toContain('Maria das Dores');
-    expect(markdown).toContain('30% dos atrasados + 3 mensalidades');
-    expect(markdown).toContain('- [ ] Confirmar reunião');
+    expect(copyTextToClipboard).toHaveBeenCalledWith(
+      'DOSSIÊ DE PASSAGEM — Maria das Dores'
+    );
+  });
+
+  it('mostra a passagem ao jurídico e o que falta sem quebrar', async () => {
+    const wrapper = await mountDossie();
+    const bloco = wrapper.find('[data-testid="ficha-passagem"]');
+    expect(bloco.find('[data-testid="passagem-cpf"]').text()).toBe(
+      '529.982.247-25'
+    );
+    expect(bloco.find('[data-testid="passagem-contrato"]').text()).toBe(
+      'RAMON.FICHA.PASSAGEM.CONTRACT_SIGNED'
+    );
+    expect(bloco.find('[data-testid="passagem-advbox"]').text()).toBe(
+      'RAMON.FICHA.PASSAGEM.ADVBOX_NONE'
+    );
+    expect(bloco.find('[data-testid="passagem-prescricao"]').text()).toBe(
+      'RAMON.KANBAN.CARD.PRESCRIPTION_SOON'
+    );
+  });
+
+  it('esconde a triagem quando não há registro concluído', async () => {
+    const wrapper = await mountDossie({ triagem: null });
+    expect(wrapper.find('[data-testid="dossie-triagem"]').exists()).toBe(false);
+  });
+
+  it('mostra o histórico completo aos poucos (ver mais)', async () => {
+    const timeline = Array.from({ length: 25 }, (_, i) => ({
+      type: 'activity',
+      kind: 'stage_changed',
+      to_value: `Etapa ${i}`,
+      created_at: '2026-07-08T10:00:00Z',
+    }));
+    const wrapper = await mountDossie({ timeline });
+    expect(wrapper.findAll('[data-testid="activity-row"]')).toHaveLength(20);
+    await wrapper.find('[data-testid="dossie-timeline-more"]').trigger('click');
+    expect(wrapper.findAll('[data-testid="activity-row"]')).toHaveLength(25);
+    expect(wrapper.find('[data-testid="dossie-timeline-more"]').exists()).toBe(
+      false
+    );
   });
 });
