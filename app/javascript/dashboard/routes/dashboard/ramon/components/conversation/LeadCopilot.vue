@@ -110,26 +110,29 @@ const generate = async () => {
           @click="generate"
         />
       </div>
-      <p
-        data-testid="copilot-summary"
-        class="mt-1 text-[12.5px] leading-[1.55] text-n-slate-11 whitespace-pre-wrap break-words"
-        :class="{ 'line-clamp-3': !expanded }"
-      >
-        {{ summary }}
-      </p>
-      <Button
-        v-if="longo"
-        data-testid="copilot-toggle"
-        link
-        slate
-        xs
-        trailing-icon
-        :icon="expanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-        :label="
-          expanded ? $t('RAMON.COPILOT.SEE_LESS') : $t('RAMON.COPILOT.SEE_ALL')
-        "
-        @click="expanded = !expanded"
-      />
+      <!-- resumo num quadro cinza com filete à esquerda (como na referência) -->
+      <div class="mt-2 rounded-lg bg-n-alpha-1 px-3 py-2">
+        <p
+          data-testid="copilot-summary"
+          class="border-l-2 border-n-slate-6 pl-2.5 text-[12.5px] leading-[1.55] text-n-slate-11 whitespace-pre-wrap break-words"
+          :class="{ 'line-clamp-3': !expanded }"
+        >
+          {{ summary }}
+        </p>
+        <Button
+          v-if="longo"
+          data-testid="copilot-toggle"
+          link
+          xs
+          class="mt-1"
+          :label="
+            expanded
+              ? $t('RAMON.COPILOT.SEE_LESS')
+              : $t('RAMON.COPILOT.SEE_ALL')
+          "
+          @click="expanded = !expanded"
+        />
+      </div>
     </template>
   </div>
 </template>

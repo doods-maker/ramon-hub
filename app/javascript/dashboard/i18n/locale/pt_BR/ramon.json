@@ -977,8 +977,8 @@
       "WORKING": "Gerando…",
       "SUMMARY_TITLE": "Resumo da IA",
       "GENERATE": "gerar →",
-      "SEE_ALL": "ver tudo",
-      "SEE_LESS": "ver menos",
+      "SEE_ALL": "…Ver mais",
+      "SEE_LESS": "Ver menos",
       "DRAFT_READY": "Rascunho inserido no editor — revise antes de enviar",
       "ERROR": "Não foi possível gerar. Tente de novo."
     },

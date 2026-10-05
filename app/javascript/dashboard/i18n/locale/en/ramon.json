@@ -977,8 +977,8 @@
       "WORKING": "Generating…",
       "SUMMARY_TITLE": "AI summary",
       "GENERATE": "generate →",
-      "SEE_ALL": "see all",
-      "SEE_LESS": "see less",
+      "SEE_ALL": "…See more",
+      "SEE_LESS": "See less",
       "DRAFT_READY": "Draft inserted into the editor — review before sending",
       "ERROR": "Could not generate. Try again."
     },

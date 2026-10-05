@@ -217,6 +217,37 @@ describe('LeadPanelBody', () => {
     });
   });
 
+  it('Resumo na ordem: identidade, campos, Resumo da IA, Andamento, Documentos, última nota, Dados do contato', async () => {
+    LeadsAPI.getNotes.mockResolvedValue(notesPayload([nota(1, 'oi')]));
+    const wrapper = mountBody({
+      props: {
+        lead: {
+          ...lead,
+          lead_stage_id: 5,
+          thesis_id: 3,
+          docs_total: 2,
+          docs_received: 1,
+        },
+      },
+    });
+    await flushPromises();
+    const blocos = [
+      ...wrapper.find('[data-testid="lead-panel-corpo"]').element.children,
+    ];
+    const pos = el => blocos.indexOf(el);
+    const ordem = [
+      wrapper.find('[data-testid="panel-identidade"]').element,
+      wrapper.find('[data-testid="panel-campos"]').element,
+      wrapper.findComponent({ name: 'LeadCopilot' }).element,
+      wrapper.find('[data-testid="panel-card-andamento"]').element,
+      wrapper.find('[data-testid="panel-card-docs"]').element,
+      wrapper.find('[data-testid="panel-ultima-nota"]').element,
+      wrapper.find('[data-testid="contact-data-toggle"]').element.parentElement,
+    ].map(pos);
+    expect(ordem.every(i => i >= 0)).toBe(true);
+    expect([...ordem].sort((a, b) => a - b)).toEqual(ordem);
+  });
+
   describe('campos rotulados', () => {
     const campos = w => w.find('[data-testid="panel-campos"]');
 
