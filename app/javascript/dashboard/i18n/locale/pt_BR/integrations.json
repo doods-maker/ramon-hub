@@ -569,12 +569,8 @@
         "VIEW_CONNECTED_INBOXES": "Ver caixas de entrada conectadas"
       },
       "EMPTY_STATE": {
-        "TITLE": "Não há assistentes disponíveis",
-        "SUBTITLE": "Crie um assistente para fornecer respostas rápidas e precisas aos seus usuários. Ele pode aprender com seus artigos de ajuda e conversas passadas.",
-        "FEATURE_SPOTLIGHT": {
-          "TITLE": "Assistente da Inteligência",
-          "NOTE": "O Assistente da Inteligência interage diretamente com os clientes, aprende com seus documentos de ajuda e conversas anteriores e fornece respostas instantâneas e precisas. Ele lida com as solicitações iniciais, oferecendo resoluções rápidas antes de transferir para um agente quando necessário."
-        }
+        "TITLE": "Os assistentes abrem pelo seletor",
+        "SUBTITLE": "Escolha o Atendimento ou o Copiloto do Escritório no seletor que fica no topo das telas de FAQs, Skills, Testar e Configurações."
       },
       "GUARDRAILS": {
         "TITLE": "Proteções",
@@ -839,14 +835,10 @@
         "DELETE_DOCUMENT": "Excluir Documento"
       },
       "EMPTY_STATE": {
-        "TITLE": "Nenhum documento disponível",
-        "SUBTITLE": "Os documentos são usados pelo seu assistente para gerar perguntas frequentes. Pode importar documentos para fornecer um contexto para seu assistente.",
+        "TITLE": "Ainda não há documentos",
+        "SUBTITLE": "Cole o link de uma página e a Inteligência gera FAQs pendentes para você aprovar.",
         "FILTERED_TITLE": "Nenhum documento correspondente",
-        "FILTERED_SUBTITLE": "Tente alterar a origem, o status ou o termo de pesquisa.",
-        "FEATURE_SPOTLIGHT": {
-          "TITLE": "Documento da Inteligência",
-          "NOTE": "Um documento na Inteligência serve como um recurso de conhecimento para o assistente. Ao conectar sua central de ajuda ou guias, a Inteligência pode analisar o conteúdo e fornecer respostas precisas para as dúvidas dos clientes."
-        }
+        "FILTERED_SUBTITLE": "Tente alterar a origem, o status ou o termo de pesquisa."
       }
     },
     "CUSTOM_TOOLS": {
@@ -854,12 +846,8 @@
       "ADD_NEW": "Criar ferramenta",
       "SOFT_LIMIT_WARNING": "Ter mais de 10 ferramentas pode reduzir a confiabilidade do assistente na seleção da ferramenta certa. Considere remover ferramentas não utilizadas para melhores resultados.",
       "EMPTY_STATE": {
-        "TITLE": "Não há ferramentas personalizadas disponíveis",
-        "SUBTITLE": "Crie ferramentas personalizadas para conectar com APIs e serviços externos, permitindo obter dados e agir por você.",
-        "FEATURE_SPOTLIGHT": {
-          "TITLE": "Ferramentas Personalizadas",
-          "NOTE": "Ferramentas personalizadas permitem seu assistente interagir com APIs e serviços externos. Crie ferramentas para obter dados, realizar ações ou integre com seus sistemas existentes para melhorar as capacidades do seu assistente."
-        }
+        "TITLE": "Não há ferramentas personalizadas",
+        "SUBTITLE": "Ferramentas personalizadas ligam o assistente a outros sistemas por HTTP. As ferramentas do hub (AdvBox, motor de cálculos, funil, agenda) já vêm prontas e não aparecem aqui."
       },
       "FORM_DESCRIPTION": "Configure sua ferramenta personalizada para se conectar a APIs externas",
       "OPTIONS": {
@@ -1054,14 +1042,10 @@
         "DELETE_RESPONSE": "Excluir"
       },
       "EMPTY_STATE": {
-        "TITLE": "Nenhuma FAQ encontrada",
+        "TITLE": "Ainda não há FAQs",
         "NO_PENDING_TITLE": "Não há mais FAQs pendentes para revisão",
-        "SUBTITLE": "Perguntas Frequentes ajudam seu assistente a fornecer respostas rápidas e precisas para perguntas de seus clientes. Eles podem ser gerados automaticamente a partir do seu conteúdo ou podem ser adicionados manualmente.",
-        "CLEAR_SEARCH": "Limpar filtros ativos",
-        "FEATURE_SPOTLIGHT": {
-          "TITLE": "FAQ da Inteligência",
-          "NOTE": "As FAQs da Inteligência identificam as perguntas mais comuns dos clientes — tanto as que ainda não existem na sua base de conhecimento quanto as mais recorrentes — e gera FAQs relevantes para melhorar o atendimento. Você pode revisar cada sugestão e decidir se aprova ou rejeita."
-        }
+        "SUBTITLE": "Clique em “Criar nova FAQ” para escrever uma, ou gere FAQs pendentes a partir de um documento.",
+        "CLEAR_SEARCH": "Limpar filtros ativos"
       }
     },
     "INBOXES": {
@@ -1091,8 +1075,8 @@
         }
       },
       "EMPTY_STATE": {
-        "TITLE": "Caixa de entrada não conectada",
-        "SUBTITLE": "Conectar uma caixa de entrada permite ao assistente lidar com perguntas iniciais de seus clientes antes de transferi-las para você."
+        "TITLE": "Nenhuma caixa conectada",
+        "SUBTITLE": "Conecte uma caixa para o assistente começar a escrever rascunhos de resposta nas conversas dela."
       }
     }
   }
