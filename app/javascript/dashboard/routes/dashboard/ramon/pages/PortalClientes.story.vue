@@ -120,7 +120,7 @@ const MARIA = {
     {
       id: 31,
       nome: 'Procuração',
-      status: 'pending',
+      status: 'pendente',
       created_at: diasAtras(2),
     },
     {
