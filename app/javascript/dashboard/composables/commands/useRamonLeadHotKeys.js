@@ -68,6 +68,19 @@ export function useRamonLeadHotKeys() {
   };
 
   const moveLead = async (lead, stage) => {
+    // Ganho dispara automações (passagem, AdvBox, NPS, Drive): passa pelo
+    // modal de valor do funil, igual ao arrastar o card.
+    if (stage.is_won) {
+      store.dispatch('leads/requestWon', {
+        id: lead.id,
+        leadStageId: stage.id,
+      });
+      router.push({
+        name: 'ramon_funil',
+        params: { accountId: accountId.value },
+      });
+      return;
+    }
     try {
       await store.dispatch('leads/move', {
         id: lead.id,

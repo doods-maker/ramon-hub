@@ -185,6 +185,35 @@ describe('KanbanColumn.vue', () => {
       expect(alert.classes()).toContain('text-n-ruby-11');
     });
 
+    it('fora da etapa de entrada não conta "fora do SLA"', () => {
+      const wrapper = mount(KanbanColumn, {
+        props: {
+          stage: { id: 3, name: 'Reunião' },
+          leads: [{ id: 1, lead_stage_id: 3, sla: breachedSla }],
+        },
+        global: {
+          mocks: { $t: k => k },
+          plugins: [
+            {
+              install: app => {
+                app.config.globalProperties.$store = {
+                  getters: {
+                    'leadConfig/getStages': [
+                      { id: 1, position: 1 },
+                      { id: 3, position: 3 },
+                    ],
+                  },
+                };
+              },
+            },
+          ],
+        },
+      });
+      expect(wrapper.find('[data-testid="column-alert-sla"]').exists()).toBe(
+        false
+      );
+    });
+
     it('prioriza prescrevendo > SLA > parados e mostra até 2 alertas', () => {
       const wrapper = mountWith([
         // dcb_em bem além da janela de 60m => lostInstallments > 0

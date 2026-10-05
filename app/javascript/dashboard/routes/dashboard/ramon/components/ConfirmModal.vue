@@ -14,6 +14,8 @@ defineProps({
   title: { type: String, required: true },
   message: { type: String, default: '' },
   confirmLabel: { type: String, required: true },
+  // ruby = destrutivo (padrão); blue = ação consequente mas não destrutiva.
+  confirmColor: { type: String, default: 'ruby' },
 });
 const emit = defineEmits(['confirm', 'cancel']);
 
@@ -42,7 +44,7 @@ onKeyStroke('Escape', () => emit('cancel'));
           ref="confirmButton"
           data-testid="confirm-modal-confirm"
           sm
-          ruby
+          :color="confirmColor"
           :label="confirmLabel"
           @click="emit('confirm')"
         />

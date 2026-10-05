@@ -2,7 +2,8 @@
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Draggable from 'vuedraggable';
-import { DEFAULT_STAGE_COLOR } from '../../helpers/stage';
+import { useStore } from 'dashboard/composables/store';
+import { DEFAULT_STAGE_COLOR, slaApplies } from '../../helpers/stage';
 import { brlCompact } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -17,6 +18,8 @@ const props = defineProps({
   selectable: { type: Boolean, default: false },
   selectedLeadIds: { type: Array, default: () => [] },
   conversionRate: { type: Number, default: null },
+  // Etapas são do admin (LeadStagePolicy): só ele vê o menu e arrasta a coluna.
+  editable: { type: Boolean, default: false },
 });
 const emit = defineEmits([
   'move',
@@ -67,6 +70,8 @@ const weightedValue = computed(
 );
 
 const { t } = useI18n();
+// useStore devolve undefined em teste sem store: leitura defensiva.
+const store = useStore();
 
 // Alertas agregados do header — prioridade: prescrevendo (ruby) > fora do
 // SLA (ruby) > parados (âmbar); mostramos até 2.
@@ -92,15 +97,17 @@ onMounted(() => {
 });
 onUnmounted(() => clearInterval(slaTimer));
 
-const slaBreachedCount = computed(
-  () =>
-    props.leads.filter(
-      lead =>
-        lead.sla?.due_at &&
-        !lead.sla.replied_at &&
-        new Date(lead.sla.due_at).getTime() < now.value
-    ).length
-);
+// Mesma regra do card: só a etapa de entrada conta "fora do SLA".
+const slaBreachedCount = computed(() => {
+  const stages = store?.getters?.['leadConfig/getStages'];
+  if (!slaApplies(props.stage.id, stages)) return 0;
+  return props.leads.filter(
+    lead =>
+      lead.sla?.due_at &&
+      !lead.sla.replied_at &&
+      new Date(lead.sla.due_at).getTime() < now.value
+  ).length;
+});
 
 const alerts = computed(() =>
   [
@@ -194,7 +201,8 @@ const toggleCollapsed = () => {
           class="flex flex-wrap items-center flex-1 min-w-0 gap-x-2 gap-y-1 min-h-6"
         >
           <span
-            class="flex items-center gap-1.5 max-w-full text-sm font-medium text-n-slate-12 stage-drag-handle cursor-grab"
+            class="flex items-center gap-1.5 max-w-full text-sm font-medium text-n-slate-12 stage-drag-handle"
+            :class="{ 'cursor-grab': editable }"
           >
             <span
               class="ramon-stage-pill inline-flex items-center gap-1.5 min-w-0 rounded-full border px-2.5 py-0.5 text-[12px] font-semibold"
@@ -239,6 +247,7 @@ const toggleCollapsed = () => {
             @click="toggleCollapsed"
           />
           <StageHeaderMenu
+            v-if="editable"
             :stage="stage"
             @rename="name => emit('renameStage', { id: stage.id, name })"
             @recolor="color => emit('recolorStage', { id: stage.id, color })"

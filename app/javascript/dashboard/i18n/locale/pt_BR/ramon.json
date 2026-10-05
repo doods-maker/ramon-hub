@@ -346,8 +346,7 @@
       },
       "DOCK_CLOSE": "Fechar conversa",
       "LOAD_ERROR": "Não foi possível carregar o funil",
-      "CONVERSATION_ERROR": "Não foi possível carregar a conversa",
-      "SEARCH_HINT": "Buscar (Ctrl K)"
+      "CONVERSATION_ERROR": "Não foi possível carregar a conversa"
     },
     "KANBAN": {
       "CARD": {
@@ -387,7 +386,7 @@
       },
       "COLUMN": {
         "CONVERSION_TIP": "% de leads que avançam desta etapa (90d)",
-        "STALLED": "{count} sem contato >24h",
+        "STALLED": "{count} parados",
         "PRESCRIBING": "{value}/mês prescrevendo",
         "COLLAPSE": "Recolher coluna",
         "EXPAND": "Expandir coluna",
@@ -430,7 +429,10 @@
         "CLEAR": "Limpar",
         "ESC_HINT": "Esc cancela",
         "QUEUED": "Lote na fila — os cards atualizam em instantes",
-        "ERROR": "Não foi possível executar o lote — tente de novo"
+        "ERROR": "Não foi possível executar o lote — tente de novo",
+        "WON_TITLE": "Marcar {count} lead(s) como ganho?",
+        "WON_MESSAGE": "Marcar como ganho dispara, para cada lead, a passagem pro jurídico, o fechamento no AdvBox, o rascunho de NPS e a exportação pro Drive. Cada lead mantém o próprio valor.",
+        "WON_CONFIRM": "Marcar como ganho"
       }
     },
     "TASKS": {

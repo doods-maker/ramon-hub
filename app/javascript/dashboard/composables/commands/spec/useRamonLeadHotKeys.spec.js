@@ -14,6 +14,7 @@ const STAGES = [
   { id: 1, name: 'Novo', position: 1 },
   { id: 2, name: 'Qualificado', position: 2 },
   { id: 3, name: 'Perdemos', position: 3, is_lost: true },
+  { id: 4, name: 'Ganhamos', position: 4, is_won: true },
 ];
 
 const LEADS = [
@@ -136,6 +137,7 @@ describe('useRamonLeadHotKeys', () => {
     expect(move.children).toEqual([
       'ramon_lead_10_move_1',
       'ramon_lead_10_move_2',
+      'ramon_lead_10_move_4',
     ]);
     expect(
       ramonLeadHotKeys.value.find(a => a.id === 'ramon_lead_10_move_3')
@@ -153,6 +155,26 @@ describe('useRamonLeadHotKeys', () => {
       leadStageId: 2,
     });
     expect(useAlert).toHaveBeenCalledWith('RAMON.KANBAN.MOVE_DONE');
+  });
+
+  it('won stage goes through the funnel value modal instead of moving', async () => {
+    const { ramonLeadHotKeys } = setup();
+    const won = ramonLeadHotKeys.value.find(
+      a => a.id === 'ramon_lead_10_move_4'
+    );
+    await won.handler();
+    expect(store.dispatch).toHaveBeenCalledWith('leads/requestWon', {
+      id: 10,
+      leadStageId: 4,
+    });
+    expect(router.push).toHaveBeenCalledWith({
+      name: 'ramon_funil',
+      params: { accountId: 1 },
+    });
+    expect(store.dispatch).not.toHaveBeenCalledWith(
+      'leads/move',
+      expect.anything()
+    );
   });
 
   it('creates a follow-up task for tomorrow 9h with the default title', async () => {

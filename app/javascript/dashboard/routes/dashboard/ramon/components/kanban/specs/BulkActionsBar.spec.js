@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import BulkActionsBar from '../BulkActionsBar.vue';
 import LostReasonModal from '../LostReasonModal.vue';
+import ConfirmModal from '../../ConfirmModal.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
@@ -19,6 +20,7 @@ const stubStore = {
     'leadConfig/getStages': [
       { id: 1, name: 'Novo', color: '#000' },
       { id: 9, name: 'Perdido', color: '#111', is_lost: true },
+      { id: 8, name: 'Ganho', color: '#222', is_won: true },
     ],
     'leadConfig/getLostReasons': [{ id: 5, name: 'Preço' }],
     'agents/getAgents': [{ id: 3, name: 'Eduardo' }],
@@ -77,6 +79,37 @@ describe('BulkActionsBar', () => {
     expect(dispatch).toHaveBeenCalledWith('leads/bulkAction', {
       fields: { lead_stage_id: 9, lost_reason: 'Preço' },
     });
+  });
+
+  it('mover para etapa de ganho pede confirmação antes do lote', async () => {
+    const wrapper = mountBar();
+    await wrapper.find('[data-testid="bulk-move-stage"]').trigger('click');
+    const options = wrapper.findAll('[data-testid="bulk-stage-option"]');
+    await options[2].trigger('click');
+
+    // ganho dispara automações: nada sai sem o confirmar
+    expect(dispatch).not.toHaveBeenCalled();
+    const modal = wrapper.findComponent(ConfirmModal);
+    expect(modal.exists()).toBe(true);
+    expect(modal.props('title')).toBe('RAMON.KANBAN.BULK.WON_TITLE');
+
+    modal.vm.$emit('confirm');
+    await wrapper.vm.$nextTick();
+    expect(dispatch).toHaveBeenCalledWith('leads/bulkAction', {
+      fields: { lead_stage_id: 8 },
+    });
+  });
+
+  it('cancelar a confirmação de ganho não dispara o lote', async () => {
+    const wrapper = mountBar();
+    await wrapper.find('[data-testid="bulk-move-stage"]').trigger('click');
+    await wrapper
+      .findAll('[data-testid="bulk-stage-option"]')[2]
+      .trigger('click');
+    wrapper.findComponent(ConfirmModal).vm.$emit('cancel');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent(ConfirmModal).exists()).toBe(false);
+    expect(dispatch).not.toHaveBeenCalled();
   });
 
   it('atribuir SDR dispara bulkAction com sdr_id', async () => {
