@@ -752,7 +752,8 @@
         "IA": "AI",
         "SIMULADOR": "Simulator",
         "DOCUMENTS": "Documents",
-        "CONTRACT": "Contract"
+        "CONTRACT": "Contract",
+        "ACTIVITY": "Activity"
       },
       "SINCE": "Lead since {date}",
       "VIA": "via {source}",
@@ -819,6 +820,18 @@
       "DISCARD": "Not a lead",
       "CLOSE": "Close panel",
       "HISTORY": {
+        "TITLE": "Recent activity",
+        "EMPTY": "No activity recorded yet.",
+        "LOADING": "Loading activity…",
+        "LOAD_ERROR": "Could not load the activity.",
+        "DETAIL": {
+          "STAGE": "Stage",
+          "VALUE": "Value",
+          "THESIS": "Thesis",
+          "PRIORITY": "Priority",
+          "SDR": "SDR",
+          "CLOSER": "Closer"
+        },
         "SYSTEM": "System",
         "KIND": {
           "CREATED": "created the lead",

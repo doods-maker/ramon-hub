@@ -367,12 +367,12 @@ describe('LeadPanelBody', () => {
       );
     });
 
-    it('6 itens na fase de contrato (com tese): todos na navegação', async () => {
+    it('7 ícones na fase de contrato (com tese): todos na navegação', async () => {
       LeadsAPI.getNotes.mockResolvedValue(notesPayload([]));
       const wrapper = mountBody({
         props: { lead: { ...lead, thesis_id: 3, lead_stage_id: 5 } },
       });
-      expect(wrapper.findAll('nav button')).toHaveLength(6);
+      expect(wrapper.findAll('nav button')).toHaveLength(7);
     });
   });
 
@@ -591,17 +591,34 @@ describe('LeadPanelBody', () => {
     });
   });
 
-  it('"Histórico completo na ficha" navega pro Dossiê como o "Abrir ficha"', async () => {
-    navigate.mockClear();
-    const wrapper = mountBody();
-    await wrapper.find('[data-testid="lead-historico-ficha"]').trigger('click');
-    expect(navigate).toHaveBeenCalledTimes(1);
-    expect(wrapper.emitted('navigate')).toHaveLength(1);
-    const rotas = wrapper.findAllComponents(RouterLink).map(r => r.props('to'));
-    expect(rotas).toEqual([
-      { name: 'ramon_lead_dossie', params: { leadId: 7 } },
-      { name: 'ramon_lead_dossie', params: { leadId: 7 } },
-    ]);
+  describe('Atividade', () => {
+    it('é o último ícone da navegação', () => {
+      const ids = mountBody({ props: { lead: { ...lead, lead_stage_id: 5 } } })
+        .findAll('nav button')
+        .map(b => b.attributes('data-testid'));
+      expect(ids[ids.length - 1]).toBe('lead-nav-atividade');
+    });
+
+    it('mostra a atividade recente e, no fim, o link pra ficha completa', async () => {
+      navigate.mockClear();
+      const wrapper = mountBody();
+      // o link saiu do fim do Resumo
+      expect(
+        wrapper.find('[data-testid="lead-historico-ficha"]').exists()
+      ).toBe(false);
+      await wrapper.find('[data-testid="lead-nav-atividade"]').trigger('click');
+      expect(
+        wrapper.findComponent({ name: 'LeadHistory' }).props('leadId')
+      ).toBe(7);
+      const link = wrapper.find('[data-testid="lead-historico-ficha"]');
+      await link.trigger('click');
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(wrapper.emitted('navigate')).toHaveLength(1);
+      expect(wrapper.findComponent(RouterLink).props('to')).toEqual({
+        name: 'ramon_lead_dossie',
+        params: { leadId: 7 },
+      });
+    });
   });
 
   describe('badge de valor estimado automático no chip', () => {

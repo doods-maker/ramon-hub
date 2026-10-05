@@ -18,6 +18,7 @@ import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
+import LeadHistory from '../conversation/LeadHistory.vue';
 import LeadSugerirResposta from '../conversation/LeadSugerirResposta.vue';
 import LeadPlaybook from '../conversation/LeadPlaybook.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
@@ -533,6 +534,7 @@ const NAV = computed(() => [
   ...(showContrato.value
     ? [{ id: 'contrato', label: 'CONTRACT', icon: 'i-lucide-file-pen-line' }]
     : []),
+  { id: 'atividade', label: 'ACTIVITY', icon: 'i-lucide-activity' },
 ]);
 const shownTab = computed(() => {
   if (activeTab.value === 'documentos' && !temDocs.value) return 'resumo';
@@ -1414,7 +1416,25 @@ const discard = async () => {
             </div>
           </div>
         </div>
+      </template>
 
+      <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
+
+      <LeadNotes
+        v-else-if="shownTab === 'notas'"
+        :lead-id="lead.id"
+        :notes="notes"
+        :in-conversation="inConversation"
+        @created="onNoteCreated"
+      />
+
+      <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-5">
+        <DocChecklist v-if="lead.thesis_id" :lead="lead" :context="context" />
+        <ArquivosRecebidos v-if="conversaId" :conversation-id="conversaId" />
+      </div>
+
+      <div v-else-if="shownTab === 'atividade'" class="flex flex-col gap-3">
+        <LeadHistory :lead-id="lead.id" />
         <!-- linha do tempo completa mora na ficha (Dossiê) -->
         <router-link v-slot="{ navigate }" custom :to="dossieRoute">
           <Button
@@ -1432,21 +1452,6 @@ const discard = async () => {
             "
           />
         </router-link>
-      </template>
-
-      <LeadPlaybook v-else-if="shownTab === 'playbook'" :lead="lead" />
-
-      <LeadNotes
-        v-else-if="shownTab === 'notas'"
-        :lead-id="lead.id"
-        :notes="notes"
-        :in-conversation="inConversation"
-        @created="onNoteCreated"
-      />
-
-      <div v-else-if="shownTab === 'documentos'" class="flex flex-col gap-5">
-        <DocChecklist v-if="lead.thesis_id" :lead="lead" :context="context" />
-        <ArquivosRecebidos v-if="conversaId" :conversation-id="conversaId" />
       </div>
 
       <LeadZapsignCard

@@ -752,7 +752,8 @@
         "IA": "IA",
         "SIMULADOR": "Simulador",
         "DOCUMENTS": "Documentos",
-        "CONTRACT": "Contrato"
+        "CONTRACT": "Contrato",
+        "ACTIVITY": "Atividade"
       },
       "SINCE": "Lead desde {date}",
       "VIA": "via {source}",
@@ -819,6 +820,18 @@
       "DISCARD": "Não é lead",
       "CLOSE": "Fechar painel",
       "HISTORY": {
+        "TITLE": "Atividade recente",
+        "EMPTY": "Nenhuma atividade registrada ainda.",
+        "LOADING": "Carregando atividade…",
+        "LOAD_ERROR": "Não foi possível carregar a atividade.",
+        "DETAIL": {
+          "STAGE": "Etapa",
+          "VALUE": "Valor",
+          "THESIS": "Tese",
+          "PRIORITY": "Prioridade",
+          "SDR": "SDR",
+          "CLOSER": "Closer"
+        },
         "SYSTEM": "Sistema",
         "KIND": {
           "CREATED": "criou o lead",

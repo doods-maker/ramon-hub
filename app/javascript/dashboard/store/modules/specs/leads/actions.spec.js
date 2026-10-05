@@ -105,6 +105,13 @@ describe('leads actions', () => {
     expect(commit).not.toHaveBeenCalled();
   });
 
+  it('fetchActivities gets activities for a lead and returns the payload array', async () => {
+    const activities = [{ id: 1, kind: 'created' }];
+    axios.get.mockResolvedValue({ data: { payload: activities } });
+    const result = await actions.fetchActivities({}, 7);
+    expect(result).toEqual(activities);
+  });
+
   it('agendarReuniao posts the meeting, edits the lead and reloads its tasks', async () => {
     const lead = { id: 5, lead_stage_id: 3 };
     axios.post.mockResolvedValue({ data: lead });
