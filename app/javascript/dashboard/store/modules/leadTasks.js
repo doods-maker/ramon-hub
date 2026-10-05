@@ -85,8 +85,8 @@ export const actions = {
 
   // Marca como concluída e atualiza só o record local. Não refaz fetch de
   // leads: o broadcast lead.updated cuida de atualizar o card no Kanban.
-  complete: async ({ commit }, { leadId, taskId }) => {
-    const { data } = await LeadTasksAPI.complete(leadId, taskId);
+  complete: async ({ commit }, { leadId, taskId, resultado }) => {
+    const { data } = await LeadTasksAPI.complete(leadId, taskId, resultado);
     commit(types.MERGE_LEAD_TASK, data);
     return data;
   },

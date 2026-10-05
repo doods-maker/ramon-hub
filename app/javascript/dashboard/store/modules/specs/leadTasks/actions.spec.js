@@ -135,4 +135,16 @@ describe('leadTasks actions', () => {
     );
     expect(commit).toHaveBeenCalledWith(types.DELETE_LEAD_TASK, 3);
   });
+
+  it('complete com resultado (no-show) manda o resultado no corpo', async () => {
+    axios.post.mockResolvedValue({ data: { id: 3 } });
+    await actions.complete(
+      { commit },
+      { leadId: 10, taskId: 3, resultado: 'nao_compareceu' }
+    );
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/leads/10/tasks/3/complete'),
+      { resultado: 'nao_compareceu' }
+    );
+  });
 });

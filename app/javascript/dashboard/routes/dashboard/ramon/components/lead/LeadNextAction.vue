@@ -138,6 +138,41 @@ const remarcar = () =>
     useAlert(t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCADA'));
   });
 
+// ----- "Feito" numa reunião: como foi? Qualificada/Não qualificada registram
+// o resultado (mesma regra do Andamento: só o Closer do lead, o time closer
+// com lead sem Closer, ou o gestor) e concluem a tarefa; Não compareceu
+// conclui com no-show, sem resultado (o prêmio do SDR só conta qualificada).
+const role = useMapGetter('getCurrentRole');
+const meuId = useMapGetter('getCurrentUserID');
+const podeRegistrar = computed(() => {
+  if (role.value === 'administrator') return true;
+  const closerId = task.value?.closer_id;
+  return !closerId || closerId === meuId.value;
+});
+const resultadoAberto = ref(false);
+const registrarResultado = resultado =>
+  run(async () => {
+    resultadoAberto.value = false;
+    await store.dispatch('leads/registrarReuniao', {
+      id: props.leadId,
+      resultado,
+      taskId: task.value.id,
+    });
+  });
+const naoCompareceu = () =>
+  run(async () => {
+    resultadoAberto.value = false;
+    await store.dispatch('leadTasks/complete', {
+      leadId: props.leadId,
+      taskId: task.value.id,
+      resultado: 'nao_compareceu',
+    });
+  });
+const onDone = () => {
+  if (isMeeting.value) resultadoAberto.value = true;
+  else complete();
+};
+
 // Cancelar: mesmo efeito do cancel do Cal.com (atividade + sino); nada vai ao
 // cliente. Os lembretes já enfileirados morrem no guard do job.
 const cancelarAberto = ref(false);
@@ -231,7 +266,7 @@ const reschedule = ({ dueAt }) =>
         sm
         :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.DONE')"
         :disabled="busy"
-        @click="complete"
+        @click="onDone"
       />
       <Button
         v-if="isMeeting"
@@ -276,6 +311,69 @@ const reschedule = ({ dueAt }) =>
     </div>
 
     <Teleport to="body">
+      <div
+        v-if="resultadoAberto"
+        :class="FUNDO_JANELA"
+        @click.self="resultadoAberto = false"
+      >
+        <div :class="JANELA" data-testid="resultado-janela">
+          <h3 :class="TITULO_JANELA">
+            {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.RESULTADO_TITULO') }}
+          </h3>
+          <p class="mb-3 text-xs text-n-slate-10">
+            {{ task.title
+            }}<template v-if="meetingWhen">
+              · <span class="font-mono">{{ meetingWhen }}</span>
+            </template>
+          </p>
+          <div class="flex flex-col gap-2">
+            <Button
+              data-testid="resultado-qualificada"
+              sm
+              teal
+              icon="i-lucide-check"
+              :label="$t('RAMON.REUNIAO.QUALIFICADA')"
+              :disabled="busy || !podeRegistrar"
+              @click="registrarResultado('qualificada')"
+            />
+            <Button
+              data-testid="resultado-nao-qualificada"
+              sm
+              faded
+              slate
+              :label="$t('RAMON.REUNIAO.NAO_QUALIFICADA')"
+              :disabled="busy || !podeRegistrar"
+              @click="registrarResultado('nao_qualificada')"
+            />
+            <Button
+              data-testid="resultado-nao-compareceu"
+              sm
+              faded
+              amber
+              icon="i-lucide-user-x"
+              :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.NAO_COMPARECEU')"
+              :disabled="busy"
+              @click="naoCompareceu"
+            />
+          </div>
+          <p
+            v-if="!podeRegistrar"
+            data-testid="resultado-so-closer"
+            class="mt-3 mb-0 text-xs text-n-slate-10"
+          >
+            {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.SO_CLOSER') }}
+          </p>
+          <div :class="RODAPE_JANELA">
+            <Button
+              sm
+              ghost
+              slate
+              :label="$t('RAMON.MODAL.CANCEL')"
+              @click="resultadoAberto = false"
+            />
+          </div>
+        </div>
+      </div>
       <ConfirmModal
         v-if="cancelarAberto"
         :title="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"

@@ -50,6 +50,7 @@ const GRUPO = {
   meeting_scheduled: 'reuniao',
   meeting_cancelled: 'reuniao',
   meeting_rescheduled: 'reuniao',
+  meeting_no_show: 'reuniao',
   reuniao_registrada: 'reuniao',
 };
 const grupoDe = activity => {

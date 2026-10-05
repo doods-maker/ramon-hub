@@ -23,8 +23,10 @@ class LeadTasksAPI extends ApiClient {
     return axios.patch(`${this.url}/${leadId}/tasks/${id}`, payload);
   }
 
-  complete(leadId, id) {
-    return axios.post(`${this.url}/${leadId}/tasks/${id}/complete`);
+  // resultado 'nao_compareceu': reunião sem o cliente (no-show)
+  complete(leadId, id, resultado) {
+    const url = `${this.url}/${leadId}/tasks/${id}/complete`;
+    return resultado ? axios.post(url, { resultado }) : axios.post(url);
   }
 
   // Remarcar reunião: passa pelo agendamento (lembretes, rascunho, sino)

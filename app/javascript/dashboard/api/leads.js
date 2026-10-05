@@ -127,8 +127,13 @@ class LeadsAPI extends ApiClient {
   }
 
   // resultado: 'qualificada' | 'nao_qualificada' (Closer, base do prêmio do SDR)
-  registrarReuniao(leadId, resultado) {
-    return axios.post(`${this.url}/${leadId}/reuniao`, { resultado });
+  // taskId: a reunião que o "Feito" está fechando (sem ele, o backend fecha
+  // a aberta mais antiga até hoje)
+  registrarReuniao(leadId, resultado, taskId) {
+    return axios.post(`${this.url}/${leadId}/reuniao`, {
+      resultado,
+      ...(taskId ? { task_id: taskId } : {}),
+    });
   }
 
   // Reunião marcada pelo painel: mesmo efeito do Cal.com (etapa, Closer,

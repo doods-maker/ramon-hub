@@ -43,6 +43,16 @@ RSpec.describe 'Lead Tasks API', type: :request do
     expect(response.parsed_body['completed_at']).to be_present
   end
 
+  it 'não compareceu: conclui a reunião, registra o no-show e não grava resultado', :aggregate_failures do
+    task = create(:lead_task, account: account, lead: lead, kind: 'meeting', due_at: 1.hour.ago)
+    post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/tasks/#{task.id}/complete",
+         params: { resultado: 'nao_compareceu' }, headers: agent.create_new_auth_token, as: :json
+
+    expect(task.reload.completed_at).to be_present
+    expect(lead.lead_activities.where(kind: 'meeting_no_show')).to exist
+    expect(lead.reload.reuniao_resultado).to be_nil
+  end
+
   it 'destroys a task' do
     task = create(:lead_task, account: account, lead: lead)
     expect do

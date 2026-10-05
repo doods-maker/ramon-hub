@@ -930,7 +930,10 @@
         "CANCELAR": "Cancel meeting",
         "CANCELAR_CONFIRM": "Cancel the meeting on {quando}? Reminders stop and the cancellation goes to the lead history. Nothing is sent to the client.",
         "CALCOM_CANCELAR": "Cal.com meeting: cancel it on Cal.com too.",
-        "CANCELADA": "Meeting cancelled"
+        "CANCELADA": "Meeting cancelled",
+        "RESULTADO_TITULO": "How did the meeting go?",
+        "NAO_COMPARECEU": "No-show",
+        "SO_CLOSER": "Qualified or not: only the lead's Closer (or a manager) records it."
       },
       "ANDAMENTO": {
         "TITLE": "Progress",
@@ -983,7 +986,8 @@
           "REUNIAO_REGISTRADA": "recorded the meeting",
           "ZAPSIGN_SIGNED": "signed the contract on ZapSign",
           "ZAPSIGN_REFUSED": "refused the contract on ZapSign",
-          "MEETING_RESCHEDULED": "rescheduled the meeting"
+          "MEETING_RESCHEDULED": "rescheduled the meeting",
+          "MEETING_NO_SHOW": "recorded a no-show"
         }
       },
       "LOADING": "Loading lead…",

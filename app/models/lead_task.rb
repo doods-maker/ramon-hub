@@ -17,9 +17,14 @@ class LeadTask < ApplicationRecord
   after_create_commit :record_created_activity, :touch_lead
   after_update_commit :touch_lead
 
-  def complete!(completing_user)
+  # no_show: reunião em que o cliente não veio — conclui sem resultado de
+  # reunião (o prêmio do SDR só conta a qualificada) e registra o no-show.
+  def complete!(completing_user, no_show: false)
     update!(completed_at: Time.current)
     lead.lead_activities.create!(account: account, user: completing_user, kind: 'task_completed', to_value: title)
+    return unless no_show && kind == 'meeting'
+
+    lead.lead_activities.create!(account: account, user: completing_user, kind: 'meeting_no_show', to_value: title)
   end
 
   private

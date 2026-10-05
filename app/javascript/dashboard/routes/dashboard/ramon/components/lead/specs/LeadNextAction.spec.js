@@ -20,9 +20,17 @@ const build = ({
   fetchForLead = vi.fn(),
   remarcarReuniao = vi.fn(),
   cancelarReuniao = vi.fn(),
+  registrarReuniao = vi.fn(),
+  role = 'agent',
+  userId = 1,
 } = {}) =>
   createStore({
+    getters: {
+      getCurrentRole: () => role,
+      getCurrentUserID: () => userId,
+    },
     modules: {
+      leads: { namespaced: true, actions: { registrarReuniao } },
       leadTasks: {
         namespaced: true,
         getters: { getByLead: () => () => tasks },
@@ -134,6 +142,63 @@ describe('LeadNextAction', () => {
     const futuro = new Date(Date.now() + 3 * 86400000);
     futuro.setHours(14, 0, 0, 0);
     const reuniao = { ...task, kind: 'meeting', due_at: futuro.toISOString() };
+
+    it('Feito pergunta como foi; Qualificada registra o resultado com a tarefa', async () => {
+      const registrarReuniao = vi.fn().mockResolvedValue({});
+      const complete = vi.fn();
+      const wrapper = mountCard({
+        tasks: [reuniao],
+        registrarReuniao,
+        complete,
+      });
+      await wrapper.find('[data-testid="next-action-done"]').trigger('click');
+      expect(complete).not.toHaveBeenCalled();
+      await wrapper
+        .find('[data-testid="resultado-qualificada"]')
+        .trigger('click');
+      await flushPromises();
+      expect(registrarReuniao).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        resultado: 'qualificada',
+        taskId: 3,
+      });
+    });
+
+    it('Não compareceu conclui a tarefa com no-show', async () => {
+      const complete = vi.fn().mockResolvedValue({});
+      const wrapper = mountCard({ tasks: [reuniao], complete });
+      await wrapper.find('[data-testid="next-action-done"]').trigger('click');
+      await wrapper
+        .find('[data-testid="resultado-nao-compareceu"]')
+        .trigger('click');
+      await flushPromises();
+      expect(complete).toHaveBeenCalledWith(expect.anything(), {
+        leadId: 7,
+        taskId: 3,
+        resultado: 'nao_compareceu',
+      });
+    });
+
+    it('quem não é o Closer do lead só marca Não compareceu', async () => {
+      const wrapper = mountCard({
+        tasks: [{ ...reuniao, closer_id: 99 }],
+        userId: 1,
+      });
+      await wrapper.find('[data-testid="next-action-done"]').trigger('click');
+      expect(
+        wrapper
+          .find('[data-testid="resultado-qualificada"]')
+          .attributes('disabled')
+      ).toBeDefined();
+      expect(
+        wrapper
+          .find('[data-testid="resultado-nao-compareceu"]')
+          .attributes('disabled')
+      ).toBeUndefined();
+      expect(wrapper.find('[data-testid="resultado-so-closer"]').exists()).toBe(
+        true
+      );
+    });
 
     it('troca Adiar/Reagendar por Remarcar', () => {
       const wrapper = mountCard({ tasks: [reuniao] });

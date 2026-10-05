@@ -17,7 +17,7 @@ class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
   end
 
   def complete
-    @lead_task.complete!(Current.user)
+    @lead_task.complete!(Current.user, no_show: params[:resultado] == 'nao_compareceu')
     render :update
   end
 
