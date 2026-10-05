@@ -12,7 +12,8 @@ RSpec.describe 'Lead Dossiê API', type: :request do
 
       expect(response).to have_http_status(:success)
       body = response.parsed_body
-      expect(body.keys).to include('pessoa', 'origem', 'triagem', 'tese', 'timeline', 'pendencias')
+      expect(body.keys).to include('pessoa', 'origem', 'triagem', 'tese', 'timeline', 'pendencias', 'passagem', 'passagem_texto')
+      expect(body['passagem_texto']).to start_with("DOSSIÊ DE PASSAGEM — #{lead.name}")
       expect(body['pessoa']['lead_id']).to eq(lead.id)
       expect(body['pessoa']['stage_name']).to eq(lead.lead_stage.name)
     end
