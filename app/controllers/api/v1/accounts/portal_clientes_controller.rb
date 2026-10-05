@@ -145,3 +145,4 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
   rescue Ramon::AdvboxClient::UnavailableError, Ramon::AdvboxClient::RequestError => e
     Rails.logger.warn("[PortalClientes] sync falhou cliente=#{cliente.id}: #{e.message}")
   end
+end
