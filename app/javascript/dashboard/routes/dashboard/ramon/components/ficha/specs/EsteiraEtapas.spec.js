@@ -43,7 +43,7 @@ describe('EsteiraEtapas', () => {
   it('etapas passadas mostram check, futuras mostram posição', () => {
     const wrapper = mount(EsteiraEtapas, { props: { stages } });
     const selos = wrapper.findAll('[data-testid="esteira-selo"]');
-    expect(selos[0].classes().join(' ')).toContain('bg-n-iris-9');
+    expect(selos[0].find('.i-lucide-check').exists()).toBe(true);
     expect(selos[2].text()).toBe('3');
   });
 

@@ -14,6 +14,24 @@ const currentIndex = computed(() =>
 const currentIsLost = computed(
   () => props.stages[currentIndex.value]?.is_lost === true
 );
+const currentIsWon = computed(
+  () => props.stages[currentIndex.value]?.is_won === true
+);
+// cor da etapa atual: perda = ruby, ganho = teal, andamento = azul
+const tomAtual = computed(() => {
+  if (currentIsLost.value) return 'ruby';
+  return currentIsWon.value ? 'teal' : 'blue';
+});
+const SELO_ATUAL = {
+  blue: 'bg-n-blue-9 text-white ring-4 ring-n-blue-9/15',
+  teal: 'bg-n-teal-9 text-white ring-4 ring-n-teal-9/15',
+  ruby: 'bg-n-ruby-9 text-white ring-4 ring-n-ruby-9/15',
+};
+const NOME_ATUAL = {
+  blue: 'font-semibold text-n-blue-11',
+  teal: 'font-semibold text-n-teal-11',
+  ruby: 'font-semibold text-n-ruby-11',
+};
 const decorated = computed(() =>
   props.stages.map((stage, index) => ({
     ...stage,
@@ -34,7 +52,7 @@ const fmtDate = value => {
 </script>
 
 <template>
-  <ol class="flex items-start w-full pt-2">
+  <ol class="flex items-start w-full pt-2 list-none">
     <li
       v-for="(stage, index) in decorated"
       :key="stage.id"
@@ -44,33 +62,35 @@ const fmtDate = value => {
       <div
         v-if="index > 0"
         class="absolute top-[13px] h-0.5 w-full -translate-x-1/2"
-        :class="stage.done || stage.current ? 'bg-n-iris-9' : 'bg-n-weak'"
+        :class="stage.done || stage.current ? 'bg-n-blue-9' : 'bg-n-weak'"
       />
+      <!-- passada = contorno azul com ✓; atual = cheia na cor de tomAtual -->
       <div
         data-testid="esteira-selo"
-        class="relative z-10 mx-auto mb-1.5 flex size-7 items-center justify-center rounded-full border-2 text-xs font-semibold"
+        class="relative z-10 mx-auto mb-1.5 flex size-7 items-center justify-center rounded-full font-mono text-xs font-medium"
         :class="[
-          stage.done || stage.current
-            ? stage.current && currentIsLost
-              ? 'bg-n-ruby-9 border-n-ruby-9 text-white'
-              : 'bg-n-iris-9 border-n-iris-9 text-white'
-            : 'bg-n-solid-1 border-n-weak text-n-slate-10',
-          stage.current ? 'ring-4 ring-n-iris-9/15' : '',
+          stage.current
+            ? SELO_ATUAL[tomAtual]
+            : stage.done
+              ? 'bg-n-solid-1 text-n-blue-11 outline outline-1 outline-n-blue-9'
+              : 'bg-n-solid-1 text-n-slate-10 outline outline-1 outline-n-weak',
         ]"
       >
         <span v-if="stage.done" class="i-lucide-check size-3.5" />
         <span v-else>{{ index + 1 }}</span>
       </div>
       <p
-        class="text-xs font-semibold"
-        :class="stage.current ? 'text-n-iris-11' : 'text-n-slate-10'"
+        class="text-xs"
+        :class="
+          stage.current ? NOME_ATUAL[tomAtual] : 'font-medium text-n-slate-10'
+        "
         :data-testid="stage.current ? 'esteira-atual' : undefined"
       >
         {{ stage.name }}
       </p>
       <p
         v-if="stage.entered_at"
-        class="text-[11px] tabular-nums text-n-slate-9"
+        class="mt-0.5 font-mono text-[11px] tabular-nums text-n-slate-9"
       >
         {{ fmtDate(stage.entered_at) }}
       </p>
