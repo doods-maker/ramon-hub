@@ -694,7 +694,7 @@
               },
               "INSTRUCTION": {
                 "LABEL": "Como conduzir",
-                "PLACEHOLDER": "Passo a passo do que o assistente faz — digite @ para chamar uma ferramenta",
+                "PLACEHOLDER": "Passo a passo do que o assistente faz — digite {'@'} para chamar uma ferramenta",
                 "ERROR": "Escreva como conduzir esta skill"
               },
               "CREATE": "Criar",
@@ -1067,7 +1067,7 @@
           "PLACEHOLDER": "Selecione a caixa de entrada para implantar o assistente.",
           "ERROR": "É obrigatório selecionar uma caixa de entrada."
         },
-        "AVISO_RASCUNHO": "Ao conectar, o assistente começa na hora a escrever rascunhos de resposta nas conversas desta caixa. Modo padrão das conversas novas: {modo} — nos modos de piloto, mensagens de logística podem sair sem você enviar. Dá para trocar em cada conversa."
+        "AVISO_RASCUNHO": "Ao conectar, o assistente passa a atuar nas conversas desta caixa. Modo das conversas novas: {modo}. Rascunho: tudo vira rascunho para a equipe enviar. Piloto com limites: só logística sai sozinha. Piloto total: tudo sai sozinho. Manual: o assistente não age."
       },
       "EMPTY_STATE": {
         "TITLE": "Nenhuma caixa conectada",

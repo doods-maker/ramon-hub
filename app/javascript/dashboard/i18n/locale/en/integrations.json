@@ -694,7 +694,7 @@
               },
               "INSTRUCTION": {
                 "LABEL": "How to handle",
-                "PLACEHOLDER": "Step by step of what the assistant does — type @ to call a tool",
+                "PLACEHOLDER": "Step by step of what the assistant does — type {'@'} to call a tool",
                 "ERROR": "Write how to handle this skill"
               },
               "CREATE": "Create",
@@ -1068,7 +1068,7 @@
           "PLACEHOLDER": "Choose the inbox to deploy the assistant.",
           "ERROR": "An inbox selection is required."
         },
-        "AVISO_RASCUNHO": "Once connected, the assistant immediately starts drafting replies in this inbox's conversations. Default mode for new conversations: {modo} — in the pilot modes, logistics messages can go out without you sending them. You can change it per conversation."
+        "AVISO_RASCUNHO": "Once connected, the assistant starts acting in this inbox's conversations. Default mode for new conversations: {modo}. Draft: everything becomes a draft for the team to send. Limited pilot: only logistics goes out on its own. Full pilot: everything goes out on its own. Manual: the assistant does not act."
       },
       "EMPTY_STATE": {
         "TITLE": "No connected inboxes",
