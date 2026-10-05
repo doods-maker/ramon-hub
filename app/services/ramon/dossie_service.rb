@@ -4,8 +4,6 @@
 # sabe do lead — pessoa, atribuição, triagem, tese/honorário/objeções, timeline
 # e pendências — pro closer ler antes/durante a reunião de fechamento.
 class Ramon::DossieService
-  TIMELINE_LIMIT = 10
-
   def initialize(lead:)
     @lead = lead
     @contact = lead.contact
@@ -13,8 +11,11 @@ class Ramon::DossieService
   end
 
   def perform
+    passagem = Ramon::DossiePassagem.new(lead: @lead).perform
     {
       pessoa: pessoa_block,
+      passagem: passagem,
+      passagem_texto: Ramon::DossiePassagemTexto.new(lead: @lead, passagem: passagem).perform,
       origem: origem_block,
       triagem: triagem_block,
       tese: tese_block,
@@ -77,9 +78,11 @@ class Ramon::DossieService
     }
   end
 
+  # Triagem por IA aposentada (16/08): só o registro histórico de uma triagem
+  # concluída com viabilidade; em andamento/erro/sem conclusão some da ficha.
   def triagem_block
     triage = @lead.latest_triage
-    return nil if triage.blank?
+    return nil if triage.blank? || triage.status != 'done' || triage.viability.blank?
 
     {
       id: triage.id,
@@ -140,17 +143,7 @@ class Ramon::DossieService
   # Checklist completo (o docs_missing das pendências segue só com faltantes).
   def docs_block
     counts = @lead.docs_counts
-    { received: counts[:received], total: counts[:total], itens: docs_itens }
-  end
-
-  def docs_itens
-    return [] if @thesis.blank?
-
-    status_map = @lead.custom_attributes&.dig('doc_status') || {}
-    thesis_items_by_section('documento').map do |item|
-      { id: item.id, title: item.title.presence || item.content,
-        status: status_map[item.id.to_s].presence || 'pendente' }
-    end
+    { received: counts[:received], total: counts[:total], itens: @lead.doc_checklist }
   end
 
   def calculos_block
@@ -161,17 +154,17 @@ class Ramon::DossieService
 
   def reunioes_block
     @lead.reunioes.reorder(created_at: :desc).limit(5).map do |r|
-      { id: r.id, titulo: r.titulo_exibicao, status: r.status, created_at: r.created_at }
+      { id: r.id, titulo: r.titulo_exibicao, status: r.status, created_at: r.created_at,
+        ata_resumo: Ramon::DossiePassagem.ata_resumo(r.ata) }
     end
   end
 
+  # Histórico completo (atividades + notas), mais recente primeiro; a ficha
+  # pagina no cliente ("ver mais").
   def timeline_block
-    activities = @lead.lead_activities.includes(:user)
-                      .reorder(created_at: :desc, id: :desc).limit(TIMELINE_LIMIT)
-    notes = @lead.lead_notes.includes(:user)
-                 .reorder(created_at: :desc, id: :desc).limit(TIMELINE_LIMIT)
-    items = activities.map { |a| activity_item(a) } + notes.map { |n| note_item(n) }
-    items.sort_by { |item| item[:created_at] }.reverse.first(TIMELINE_LIMIT)
+    activities = @lead.lead_activities.includes(:user).map { |a| activity_item(a) }
+    notes = @lead.lead_notes.includes(:user).map { |n| note_item(n) }
+    (activities + notes).sort_by { |item| item[:created_at] }.reverse
   end
 
   def activity_item(activity)
@@ -195,18 +188,8 @@ class Ramon::DossieService
     end
   end
 
-  # Reusa o dado do DocChecklist: itens 'documento' da tese × custom_attributes.doc_status.
+  # Mesmo checklist do DocChecklist, só o que ainda não chegou.
   def docs_missing
-    return [] if @thesis.blank?
-
-    status_map = @lead.custom_attributes&.dig('doc_status') || {}
-    thesis_items_by_section('documento').filter_map { |item| missing_doc(item, status_map) }
-  end
-
-  def missing_doc(item, status_map)
-    status = status_map[item.id.to_s].presence || 'pendente'
-    return if status == 'recebido'
-
-    { title: item.title.presence || item.content, status: status }
+    @lead.doc_checklist.reject { |doc| doc[:status] == 'recebido' }.map { |doc| doc.slice(:title, :status) }
   end
 end

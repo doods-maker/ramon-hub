@@ -42,7 +42,12 @@ const build = fetchSpy =>
 const mountHistory = (fetchSpy = vi.fn().mockResolvedValue(activities)) =>
   shallowMount(LeadHistory, {
     props: { leadId: 7 },
-    global: { plugins: [build(fetchSpy)], mocks: { $t: k => k } },
+    global: {
+      plugins: [build(fetchSpy)],
+      mocks: { $t: k => k },
+      // as linhas vivem na ListaAtividades (compartilhada com o Dossiê)
+      stubs: { ListaAtividades: false },
+    },
   });
 const linhas = async lista => {
   const wrapper = mountHistory(vi.fn().mockResolvedValue(lista));

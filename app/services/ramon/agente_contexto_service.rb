@@ -2,6 +2,9 @@
 # mensagens (com transcrições/anexos por nome), contato, lead (DossieService) e ids do ADVBOX.
 class Ramon::AgenteContextoService
   LIMITE_MENSAGENS = 200
+  # A ficha mostra o histórico completo; pro agente seguem só os 10 mais
+  # recentes (como antes), pra não inchar o contexto do LLM.
+  LIMITE_TIMELINE = 10
 
   def initialize(conversation)
     @conversation = conversation
@@ -20,7 +23,7 @@ class Ramon::AgenteContextoService
     return { lead: nil, lead_id: nil, thesis_name: nil, advbox_lawsuit_id: nil } if @lead.blank?
 
     {
-      lead: Ramon::DossieService.new(lead: @lead).perform,
+      lead: Ramon::DossieService.new(lead: @lead).perform.then { |d| d.merge(timeline: d[:timeline].first(LIMITE_TIMELINE)) },
       lead_id: @lead.id,
       thesis_name: @lead.thesis&.name,
       advbox_lawsuit_id: @lead.custom_attributes&.dig('advbox', 'lawsuits_id')

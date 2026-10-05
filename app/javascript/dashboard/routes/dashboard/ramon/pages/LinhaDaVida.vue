@@ -6,9 +6,20 @@ import LinhaDaVidaAPI from 'dashboard/api/linhaDaVida';
 import ContactAPI from 'dashboard/api/contacts';
 import { formatCpf } from '../helpers/cpf';
 import { formatBrl } from '../helpers/currency';
+import { prescriptionText } from '../helpers/prescription';
 import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
 import { frontendURL } from '../../../../helper/URLHelper';
-import RamonPageHeader from '../components/RamonPageHeader.vue';
+import {
+  AVISO,
+  CAMPO_GRANDE,
+  CARTAO,
+  CHIP,
+  LINHA,
+  SECAO,
+  TITULO,
+  TOM,
+} from '../helpers/ui';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -42,40 +53,51 @@ watch(() => route.params.contactId, fetchData, { immediate: true });
 const query = ref('');
 const results = ref([]);
 const searching = ref(false);
+// Falha de rede/servidor ≠ "ninguém encontrado": mostra erro com tentar de novo.
+const searchError = ref(false);
 let searchTimer = null;
 let searchAbort = null;
+
+const buscar = async term => {
+  // Aborta a request anterior: resposta velha não sobrescreve a atual.
+  searchAbort?.abort();
+  const controller = new AbortController();
+  searchAbort = controller;
+  searching.value = true;
+  searchError.value = false;
+  try {
+    // encodeURIComponent: telefone com "+" (e termos com &/#) chegam
+    // intactos na query — o endpoint recebe o termo cru interpolado.
+    const { data: resp } = await ContactAPI.search(
+      encodeURIComponent(term),
+      1,
+      'name',
+      '',
+      { signal: controller.signal }
+    );
+    results.value = resp.payload || [];
+  } catch (e) {
+    if (!controller.signal.aborted) {
+      results.value = [];
+      searchError.value = true;
+    }
+  } finally {
+    if (searchAbort === controller) searching.value = false;
+  }
+};
+const retrySearch = () => buscar(query.value.trim());
+
 watch(query, value => {
   clearTimeout(searchTimer);
   const term = value.trim();
+  searchError.value = false;
   if (term.length < 2) {
     searchAbort?.abort();
     results.value = [];
     searching.value = false;
     return;
   }
-  searchTimer = setTimeout(async () => {
-    // Aborta a request anterior: resposta velha não sobrescreve a atual.
-    searchAbort?.abort();
-    const controller = new AbortController();
-    searchAbort = controller;
-    searching.value = true;
-    try {
-      // encodeURIComponent: telefone com "+" (e termos com &/#) chegam
-      // intactos na query — o endpoint recebe o termo cru interpolado.
-      const { data: resp } = await ContactAPI.search(
-        encodeURIComponent(term),
-        1,
-        'name',
-        '',
-        { signal: controller.signal }
-      );
-      results.value = resp.payload || [];
-    } catch (e) {
-      if (!controller.signal.aborted) results.value = [];
-    } finally {
-      if (searchAbort === controller) searching.value = false;
-    }
-  }, 300);
+  searchTimer = setTimeout(() => buscar(term), 300);
 });
 
 const openPessoa = contact =>
@@ -96,19 +118,39 @@ const fmtDate = value => {
   );
 };
 
-// Subtítulo do cabeçalho: CPF · nascimento · telefone (só o que existir).
-const headerSubtitle = computed(() => {
+// Linha do cabeçalho: CPF · nascimento · telefone (só o que existir); o
+// número vai em mono, o rótulo não.
+const headerParts = computed(() => {
   const c = contact.value;
-  if (!c) return '';
+  if (!c) return [];
   const parts = [];
-  if (c.cpf) parts.push(formatCpf(c.cpf));
+  if (c.cpf) parts.push({ label: '', value: formatCpf(c.cpf) });
   if (c.data_nascimento)
-    parts.push(
-      `${t('RAMON.LINHA_DA_VIDA.BORN_AT')} ${fmtDate(c.data_nascimento)}`
-    );
-  if (c.phone_number) parts.push(c.phone_number);
-  return parts.join(' · ');
+    parts.push({
+      label: t('RAMON.LINHA_DA_VIDA.BORN_AT'),
+      value: fmtDate(c.data_nascimento),
+    });
+  if (c.phone_number) parts.push({ label: '', value: c.phone_number });
+  return parts;
 });
+
+// Ícone por tipo de marco futuro (mesmos ícones translúcidos da Atividade).
+const FUTURO_VISUAL = {
+  marco: { icone: 'i-lucide-cake', tom: TOM.blue },
+  dcb: { icone: 'i-lucide-calendar-x', tom: TOM.amber },
+  prescricao: { icone: 'i-lucide-hourglass', tom: TOM.ruby },
+};
+
+// Prescrição já correndo (parcelas perdidas), da API (Lead#prescription), nas
+// mesmas frases do chip do painel do lead.
+const prescricaoCorrendo = lead =>
+  lead.prescription?.lost_installments > 0
+    ? prescriptionText(t, lead.prescription, lead.benefit_monthly_value)
+    : null;
+
+// benefício · tese do caso aberto (o valor vem à parte, em mono)
+const detalhes = lead =>
+  [lead.benefit_type_name, lead.thesis_name].filter(Boolean).join(' · ');
 
 // Presente = casos vivos no funil; passado = fechados (ganhos e perdidos).
 const openLeads = computed(() =>
@@ -156,100 +198,157 @@ const conversationUrl = lead =>
 <template>
   <div class="flex-1 w-full h-full p-4 sm:p-8 overflow-y-auto bg-n-background">
     <!-- Modo busca: rota sem contactId (entrada "Linha da Vida" do menu) -->
-    <template v-if="!route.params.contactId">
-      <RamonPageHeader
-        :title="$t('RAMON.LINHA_DA_VIDA.TITLE')"
-        :subtitle="$t('RAMON.LINHA_DA_VIDA.SEARCH_HINT')"
-      />
-      <div class="max-w-xl">
+    <div
+      v-if="!route.params.contactId"
+      class="flex flex-col max-w-xl gap-4 mx-auto"
+    >
+      <header>
+        <h1 class="text-[28px] font-semibold leading-tight text-n-slate-12">
+          {{ $t('RAMON.LINHA_DA_VIDA.TITLE') }}
+        </h1>
+        <p class="mt-1 text-sm text-n-slate-11">
+          {{ $t('RAMON.LINHA_DA_VIDA.SEARCH_HINT') }}
+        </p>
+      </header>
+      <label class="relative block">
+        <span
+          class="absolute -translate-y-1/2 pointer-events-none i-lucide-search size-4 left-3 top-1/2 text-n-slate-10"
+        />
         <input
           v-model="query"
           data-testid="pessoa-search"
-          class="w-full px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
+          class="!pl-9"
+          :class="CAMPO_GRANDE"
           :placeholder="$t('RAMON.LINHA_DA_VIDA.SEARCH_PLACEHOLDER')"
         />
-        <p v-if="searching" class="mt-3 text-sm text-n-slate-10">
-          {{ $t('RAMON.LINHA_DA_VIDA.SEARCHING') }}
+      </label>
+      <p v-if="searching" class="text-sm text-n-slate-10">
+        {{ $t('RAMON.LINHA_DA_VIDA.SEARCHING') }}
+      </p>
+      <div
+        v-else-if="searchError"
+        class="text-sm"
+        data-testid="pessoa-search-error"
+      >
+        <p class="text-n-ruby-11">
+          {{ $t('RAMON.LINHA_DA_VIDA.SEARCH_ERROR') }}
         </p>
-        <ul
-          v-else-if="results.length"
-          class="mt-3 rounded-lg border border-n-weak divide-y divide-n-weak"
-        >
-          <li v-for="c in results" :key="c.id">
-            <button
-              data-testid="pessoa-result"
-              class="flex items-center justify-between w-full gap-3 px-3 py-2 text-left hover:bg-n-alpha-2"
-              @click="openPessoa(c)"
-            >
-              <span class="text-sm truncate text-n-slate-12">
-                {{ c.name }}
-              </span>
-              <span class="text-xs shrink-0 text-n-slate-10">
-                {{ c.phone_number || c.email || '' }}
-              </span>
-            </button>
-          </li>
-        </ul>
-        <p
-          v-else-if="query.trim().length >= 2"
-          class="mt-3 text-sm text-n-slate-10"
-        >
-          {{ $t('RAMON.LINHA_DA_VIDA.SEARCH_EMPTY') }}
-        </p>
+        <Button
+          data-testid="pessoa-search-retry"
+          link
+          xs
+          class="mt-1"
+          :label="$t('RAMON.LEAD_PANEL.RETRY')"
+          @click="retrySearch"
+        />
       </div>
-    </template>
+      <ul
+        v-else-if="results.length"
+        class="flex flex-col list-none !p-1.5"
+        :class="CARTAO"
+      >
+        <li v-for="c in results" :key="c.id">
+          <button
+            type="button"
+            data-testid="pessoa-result"
+            class="flex items-center justify-between gap-3"
+            :class="LINHA"
+            @click="openPessoa(c)"
+          >
+            <span class="font-medium truncate text-n-slate-12">
+              {{ c.name }}
+            </span>
+            <span
+              class="text-xs shrink-0 text-n-slate-10"
+              :class="{ 'font-mono': c.phone_number }"
+            >
+              {{ c.phone_number || c.email || '' }}
+            </span>
+          </button>
+        </li>
+      </ul>
+      <p v-else-if="query.trim().length >= 2" class="text-sm text-n-slate-10">
+        {{ $t('RAMON.LINHA_DA_VIDA.SEARCH_EMPTY') }}
+      </p>
+    </div>
     <div
       v-else-if="loading"
-      class="flex flex-col max-w-2xl gap-4 animate-pulse"
+      class="flex flex-col max-w-5xl gap-5 mx-auto animate-pulse"
       data-testid="lifeline-skeleton"
     >
-      <div class="w-1/3 h-8 rounded bg-n-solid-2" />
-      <div class="h-24 rounded-xl bg-n-solid-2" />
-      <div class="h-24 rounded-xl bg-n-solid-2" />
-      <div class="h-40 rounded-xl bg-n-solid-2" />
+      <div class="w-1/3 h-8 rounded-lg bg-n-alpha-2" />
+      <div class="h-40 rounded-xl bg-n-alpha-2" />
+      <div class="h-32 rounded-xl bg-n-alpha-2" />
+      <div class="h-32 rounded-xl bg-n-alpha-2" />
     </div>
-    <div v-else-if="error" class="flex items-center gap-3">
-      <p class="text-sm text-n-ruby-11">
+    <div v-else-if="error" class="text-sm">
+      <p class="text-n-ruby-11">
         {{ $t('RAMON.LINHA_DA_VIDA.ERROR') }}
       </p>
-      <button
+      <Button
         data-testid="lifeline-retry"
-        class="text-sm text-n-iris-11 hover:underline"
+        link
+        xs
+        class="mt-2"
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="fetchData"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
 
-    <template v-else-if="contact">
-      <RamonPageHeader :title="contact.name" :subtitle="headerSubtitle" />
-      <p
-        v-if="!contact.data_nascimento"
-        data-testid="lifeline-no-birthdate"
-        class="-mt-4 mb-6 text-xs text-n-amber-11"
-      >
-        {{ $t('RAMON.LINHA_DA_VIDA.NO_BIRTHDATE_HINT') }}
-      </p>
+    <div v-else-if="contact" class="flex flex-col max-w-5xl gap-5 mx-auto">
+      <!-- Cabeçalho: quem é + CPF · nascimento · telefone (só o que existir) -->
+      <header>
+        <p :class="TITULO">{{ $t('RAMON.LINHA_DA_VIDA.TITLE') }}</p>
+        <h1
+          class="mt-1 text-[28px] font-semibold leading-tight text-n-slate-12"
+        >
+          {{ contact.name }}
+        </h1>
+        <p
+          v-if="headerParts.length"
+          class="flex flex-wrap items-center gap-x-2 mt-1 text-sm text-n-slate-11"
+        >
+          <template v-for="(part, i) in headerParts" :key="i">
+            <span v-if="i" class="text-n-slate-9">·</span>
+            <span>
+              {{ part.label }}
+              <span class="font-mono tabular-nums">{{ part.value }}</span>
+            </span>
+          </template>
+        </p>
+        <p
+          v-if="!contact.data_nascimento"
+          data-testid="lifeline-no-birthdate"
+          class="flex items-center gap-1.5 mt-3"
+          :class="[AVISO, TOM.amber]"
+        >
+          <span class="i-lucide-cake size-3.5 shrink-0" />
+          {{ $t('RAMON.LINHA_DA_VIDA.NO_BIRTHDATE_HINT') }}
+        </p>
+      </header>
 
       <!-- FUTURO -->
-      <section class="mb-8" data-testid="lifeline-future">
-        <h2 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
+      <section :class="CARTAO" class="!p-4" data-testid="lifeline-future">
+        <h2 class="mb-1" :class="TITULO">
           {{ $t('RAMON.LINHA_DA_VIDA.FUTURE') }}
         </h2>
-        <p v-if="!futureItems.length" class="text-sm text-n-slate-10">
+        <p v-if="!futureItems.length" class="py-2 text-sm text-n-slate-10">
           {{ $t('RAMON.LINHA_DA_VIDA.FUTURE_EMPTY') }}
         </p>
-        <ul class="flex flex-col gap-2">
+        <ul class="list-none">
           <li
             v-for="(item, i) in futureItems"
             :key="i"
-            class="flex items-baseline gap-3 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+            class="flex items-center gap-3 py-2.5 border-t border-n-weak first:border-t-0"
           >
-            <span class="text-xs tabular-nums text-n-slate-10 shrink-0">
-              {{ fmtDate(item.date) }}
+            <span
+              class="flex items-center justify-center rounded-full size-8 shrink-0"
+              :class="FUTURO_VISUAL[item.type].tom"
+            >
+              <span class="size-4" :class="FUTURO_VISUAL[item.type].icone" />
             </span>
-            <template v-if="item.type === 'marco'">
-              <span class="text-sm text-n-slate-12">
+            <span class="flex-1 min-w-0 text-sm text-n-slate-12">
+              <template v-if="item.type === 'marco'">
                 {{ $t(`RAMON.LINHA_DA_VIDA.MARCOS.${item.marco.key}`) }}
                 ({{ item.marco.idade }}
                 <template v-if="item.marco.sexo">
@@ -260,117 +359,197 @@ const conversationUrl = lead =>
                       : $t('RAMON.DRAWER.PESSOA.SEX_F')
                   }}</template
                 >)
-              </span>
-            </template>
-            <template v-else-if="item.type === 'dcb'">
-              <span class="text-sm text-n-slate-12">
+              </template>
+              <template v-else-if="item.type === 'dcb'">
                 {{ $t('RAMON.LINHA_DA_VIDA.DCB_OF', { name: item.lead.name }) }}
-              </span>
-            </template>
-            <template v-else>
-              <span class="text-sm text-n-slate-12">
+              </template>
+              <template v-else>
                 {{
                   $t('RAMON.LINHA_DA_VIDA.PRESCRIPTION_OF', {
                     name: item.lead.name,
                   })
                 }}
-              </span>
-            </template>
+              </template>
+            </span>
+            <span
+              class="flex items-center gap-1 font-mono text-xs tabular-nums shrink-0 text-n-slate-10"
+            >
+              <span class="i-lucide-calendar size-3" />
+              {{ fmtDate(item.date) }}
+            </span>
           </li>
         </ul>
-        <p class="mt-2 text-xs text-n-slate-9">
+        <p class="mt-2 text-[11px] text-n-slate-10" :class="SECAO">
           {{ $t('RAMON.LINHA_DA_VIDA.DISCLAIMER') }}
         </p>
       </section>
 
       <!-- PRESENTE -->
-      <section class="mb-8" data-testid="lifeline-present">
-        <h2 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
+      <section :class="CARTAO" class="!p-4" data-testid="lifeline-present">
+        <h2 class="mb-1" :class="TITULO">
           {{ $t('RAMON.LINHA_DA_VIDA.PRESENT') }}
         </h2>
-        <p v-if="!openLeads.length" class="text-sm text-n-slate-10">
+        <p v-if="!openLeads.length" class="py-2 text-sm text-n-slate-10">
           {{ $t('RAMON.LINHA_DA_VIDA.PRESENT_EMPTY') }}
         </p>
-        <ul class="flex flex-col gap-2">
+        <ul class="list-none">
           <li
             v-for="lead in openLeads"
             :key="lead.id"
-            class="p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+            class="py-2.5 border-t border-n-weak first:border-t-0"
           >
             <div class="flex items-center justify-between gap-2">
-              <span class="text-sm text-n-slate-12">{{ lead.name }}</span>
+              <span class="text-sm font-medium truncate text-n-slate-12">
+                {{ lead.name }}
+              </span>
               <span
-                class="ramon-stage-pill px-2 py-0.5 text-xs font-medium rounded-full border shrink-0"
+                class="ramon-stage-pill border shrink-0"
+                :class="CHIP"
                 :style="{ '--stage': lead.stage_color || DEFAULT_STAGE_COLOR }"
               >
                 {{ lead.stage_name }}
               </span>
             </div>
-            <p class="text-xs text-n-slate-10">
-              <span v-if="lead.benefit_type_name"
-                >{{ lead.benefit_type_name }} ·
-              </span>
-              <span v-if="lead.thesis_name">{{ lead.thesis_name }} · </span>
-              <span v-if="lead.value">{{ formatBrl(lead.value) }}</span>
+            <p class="mt-0.5 text-xs text-n-slate-10">
+              {{ detalhes(lead) }}
+              <template v-if="lead.value">
+                <span v-if="detalhes(lead)"> · </span>
+                <span class="font-mono tabular-nums">{{
+                  formatBrl(lead.value)
+                }}</span>
+              </template>
             </p>
-            <router-link
-              v-if="lead.conversation_id"
-              :to="conversationUrl(lead)"
-              class="text-xs text-n-iris-11 hover:underline"
+            <span
+              v-if="prescricaoCorrendo(lead)"
+              data-testid="lifeline-prescricao"
+              class="mt-1"
+              :class="[CHIP, TOM.ruby]"
             >
-              {{ $t('RAMON.FUNIL.OPEN_CONVERSATION') }}
-            </router-link>
-            <router-link
-              data-testid="lifeline-dossie-link"
-              :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
-              class="ml-3 text-xs text-n-iris-11 hover:underline"
-            >
-              {{ $t('RAMON.DOSSIE.OPEN') }}
-            </router-link>
+              <span class="i-lucide-hourglass size-3 shrink-0" />
+              {{ prescricaoCorrendo(lead) }}
+            </span>
+            <div class="flex items-center gap-3 mt-1">
+              <router-link
+                v-if="lead.conversation_id"
+                v-slot="{ navigate }"
+                custom
+                :to="conversationUrl(lead)"
+              >
+                <Button
+                  link
+                  xs
+                  icon="i-lucide-message-square"
+                  :label="$t('RAMON.FUNIL.OPEN_CONVERSATION')"
+                  @click="navigate"
+                />
+              </router-link>
+              <router-link
+                v-slot="{ navigate }"
+                custom
+                :to="{ name: 'ramon_lead_dossie', params: { leadId: lead.id } }"
+              >
+                <Button
+                  data-testid="lifeline-dossie-link"
+                  link
+                  xs
+                  icon="i-lucide-file-text"
+                  :label="$t('RAMON.DOSSIE.OPEN')"
+                  @click="navigate"
+                />
+              </router-link>
+            </div>
           </li>
         </ul>
       </section>
 
       <!-- PASSADO -->
-      <section class="mb-8" data-testid="lifeline-past">
-        <h2 class="mb-2 text-sm uppercase tracking-widest text-n-slate-9">
+      <section :class="CARTAO" class="!p-4" data-testid="lifeline-past">
+        <h2 class="mb-1" :class="TITULO">
           {{ $t('RAMON.LINHA_DA_VIDA.PAST') }}
         </h2>
-        <p v-if="!closedLeads.length" class="text-sm text-n-slate-10">
+        <p v-if="!closedLeads.length" class="py-2 text-sm text-n-slate-10">
           {{ $t('RAMON.LINHA_DA_VIDA.PAST_EMPTY') }}
         </p>
-        <ul class="flex flex-col gap-2">
+        <ul class="list-none">
           <li
             v-for="lead in closedLeads"
             :key="lead.id"
-            class="flex items-baseline gap-3 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
+            class="flex items-start gap-3 py-2.5 border-t border-n-weak first:border-t-0"
           >
-            <span class="text-xs tabular-nums text-n-slate-10 shrink-0">
-              {{ fmtDate(lead.won_at || lead.lost_at) }}
-            </span>
-            <div>
-              <span class="text-sm text-n-slate-12">{{ lead.name }}</span>
+            <span
+              class="flex items-center justify-center rounded-full size-8 shrink-0"
+              :class="lead.is_won ? TOM.teal : TOM.ruby"
+            >
               <span
-                class="ml-2 text-xs"
-                :class="lead.is_won ? 'text-n-teal-11' : 'text-n-ruby-11'"
-              >
-                {{
-                  lead.is_won
-                    ? $t('RAMON.LINHA_DA_VIDA.WON')
-                    : $t('RAMON.LINHA_DA_VIDA.LOST')
-                }}
-              </span>
-              <p class="text-xs text-n-slate-10">
-                <span v-if="lead.benefit_type_name"
-                  >{{ lead.benefit_type_name }} ·
+                class="size-4"
+                :class="lead.is_won ? 'i-lucide-trophy' : 'i-lucide-x'"
+              />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="flex items-center gap-2 min-w-0">
+                <span class="text-sm font-medium truncate text-n-slate-12">
+                  {{ lead.name }}
                 </span>
-                <span v-if="lead.value">{{ formatBrl(lead.value) }}</span>
+                <span
+                  class="shrink-0"
+                  :class="[CHIP, lead.is_won ? TOM.teal : TOM.ruby]"
+                >
+                  {{
+                    lead.is_won
+                      ? $t('RAMON.LINHA_DA_VIDA.WON')
+                      : $t('RAMON.LINHA_DA_VIDA.LOST')
+                  }}
+                </span>
+              </p>
+              <p class="mt-0.5 text-xs text-n-slate-10">
+                <span v-if="lead.benefit_type_name">{{
+                  lead.benefit_type_name
+                }}</span>
+                <template v-if="lead.value">
+                  <span v-if="lead.benefit_type_name"> · </span>
+                  <span class="font-mono tabular-nums">{{
+                    formatBrl(lead.value)
+                  }}</span>
+                </template>
                 <span v-if="lead.lost_reason"> · {{ lead.lost_reason }}</span>
               </p>
+              <div class="flex flex-wrap items-center gap-3 mt-1">
+                <span
+                  v-if="prescricaoCorrendo(lead)"
+                  data-testid="lifeline-prescricao"
+                  :class="[CHIP, TOM.ruby]"
+                >
+                  <span class="i-lucide-hourglass size-3 shrink-0" />
+                  {{ prescricaoCorrendo(lead) }}
+                </span>
+                <router-link
+                  v-slot="{ navigate }"
+                  custom
+                  :to="{
+                    name: 'ramon_lead_dossie',
+                    params: { leadId: lead.id },
+                  }"
+                >
+                  <Button
+                    data-testid="lifeline-dossie-link"
+                    link
+                    xs
+                    icon="i-lucide-file-text"
+                    :label="$t('RAMON.DOSSIE.OPEN')"
+                    @click="navigate"
+                  />
+                </router-link>
+              </div>
             </div>
+            <span
+              class="flex items-center gap-1 mt-1 font-mono text-xs tabular-nums shrink-0 text-n-slate-10"
+            >
+              <span class="i-lucide-calendar size-3" />
+              {{ fmtDate(lead.won_at || lead.lost_at) }}
+            </span>
           </li>
         </ul>
       </section>
-    </template>
+    </div>
   </div>
 </template>

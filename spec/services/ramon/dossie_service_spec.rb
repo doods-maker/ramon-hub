@@ -45,16 +45,24 @@ RSpec.describe Ramon::DossieService do
       expect(described_class.new(lead: lead).perform[:tese][:honorario_text]).to eq('12,5% dos atrasados')
     end
 
-    it 'expõe a última triagem (histórico), sem o aviso de aguardando humano' do
+    it 'expõe a última triagem concluída com viabilidade (registro histórico)' do
       lead = create(:lead, account: account, lead_stage: stage)
       lead.lead_triages.create!(account: account, status: 'done', viability: 'alta')
-      last = lead.lead_triages.create!(account: account, status: 'done', result: 'sem conclusão')
+      last = lead.lead_triages.create!(account: account, status: 'done', viability: 'media', result: 'indício de nexo')
 
       triagem = described_class.new(lead: lead).perform[:triagem]
 
       expect(triagem[:id]).to eq(last.id)
       expect(triagem).not_to have_key(:awaiting_human)
-      expect(triagem[:result]).to eq('sem conclusão')
+      expect(triagem[:result]).to eq('indício de nexo')
+    end
+
+    it 'esconde a triagem (recurso aposentado) quando a última não concluiu com viabilidade' do
+      lead = create(:lead, account: account, lead_stage: stage)
+      lead.lead_triages.create!(account: account, status: 'done', viability: 'alta')
+      lead.lead_triages.create!(account: account, status: 'done', result: 'sem conclusão')
+
+      expect(described_class.new(lead: lead).perform[:triagem]).to be_nil
     end
 
     it 'mescla atividades e notas na timeline' do
@@ -68,13 +76,17 @@ RSpec.describe Ramon::DossieService do
       expect(note[:body]).to eq('Cliente vai pensar')
     end
 
-    it 'limita a timeline a 10 itens, mais recente primeiro' do
+    it 'devolve o histórico completo, mais recente primeiro (a ficha pagina)' do
       lead = create(:lead, account: account, lead_stage: stage)
-      12.times { |i| lead.lead_activities.create!(account: account, kind: 'stage_changed', to_value: "Etapa #{i}") }
+      12.times do |i|
+        travel_to((i + 1).minutes.from_now) do
+          lead.lead_activities.create!(account: account, kind: 'stage_changed', to_value: "Etapa #{i}")
+        end
+      end
 
       timeline = described_class.new(lead: lead).perform[:timeline]
 
-      expect(timeline.size).to eq(10)
+      expect(timeline.size).to eq(lead.lead_activities.count)
       expect(timeline.map { |item| item[:created_at] }).to eq(timeline.map { |item| item[:created_at] }.sort.reverse)
       expect(timeline.first[:to_value]).to eq('Etapa 11')
     end
@@ -129,14 +141,20 @@ RSpec.describe Ramon::DossieService do
       expect(payload[:pessoa][:valor_estimado_origem]).to eq('auto')
     end
 
-    it 'lista calculos e reunioes recentes do lead' do
-      reuniao = Reuniao.create!(account: account, user: create(:user, account: account), lead: lead, titulo: 'Fechamento')
-      expect(payload[:reunioes].first).to include(id: reuniao.id, titulo: 'Fechamento')
+    it 'lista calculos e reunioes recentes do lead, com o resumo da ata' do
+      reuniao = Reuniao.create!(account: account, user: create(:user, account: account), lead: lead, titulo: 'Fechamento',
+                                ata: "## Resumo\nCliente assina amanhã.")
+      expect(payload[:reunioes].first).to include(id: reuniao.id, titulo: 'Fechamento', ata_resumo: 'Cliente assina amanhã.')
       expect(payload[:calculos]).to eq([])
     end
 
     it 'docs traz o checklist completo com status' do
       expect(payload[:docs]).to include(:received, :total, :itens)
+    end
+
+    it 'traz o bloco de passagem ao jurídico e o texto único de passagem' do
+      expect(payload[:passagem]).to include(:contrato, :advbox, :drive_url, :cnis, :simulacao, :reuniao, :ficha_url)
+      expect(payload[:passagem_texto]).to start_with("DOSSIÊ DE PASSAGEM — #{lead.name}")
     end
   end
 end

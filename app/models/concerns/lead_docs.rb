@@ -13,6 +13,16 @@ module LeadDocs
     { received: items.count { |i| status[i.id.to_s] == 'recebido' }, total: items.size }
   end
 
+  # Checklist da tese com o status de cada item (ficha e texto de passagem).
+  def doc_checklist
+    return [] if thesis.nil?
+
+    status = custom_attributes&.dig('doc_status') || {}
+    doc_items.map do |item|
+      { id: item.id, title: item.title.presence || item.content, status: status[item.id.to_s].presence || 'pendente' }
+    end
+  end
+
   private
 
   def doc_items

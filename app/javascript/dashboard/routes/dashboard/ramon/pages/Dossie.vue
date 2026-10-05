@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useStore } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
@@ -8,12 +9,28 @@ import LeadsAPI from 'dashboard/api/leads';
 import { formatBrl } from '../helpers/currency';
 import { waMeUrl } from '../helpers/phone';
 import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
+import {
+  AVISO,
+  CARTAO,
+  CARTAO_STATUS,
+  CHIP,
+  FILETE,
+  LINHA,
+  SECAO,
+  TITULO,
+  TOM,
+} from '../helpers/ui';
+import Button from 'dashboard/components-next/button/Button.vue';
 import EsteiraEtapas from '../components/ficha/EsteiraEtapas.vue';
+import ListaAtividades from '../components/conversation/ListaAtividades.vue';
+import PassagemJuridico from '../components/ficha/PassagemJuridico.vue';
 
 defineOptions({ name: 'RamonDossie' });
 
 const route = useRoute();
-const { t, te } = useI18n();
+const { t } = useI18n();
+const router = useRouter();
+const store = useStore();
 
 const data = ref(null);
 const loading = ref(false);
@@ -73,33 +90,34 @@ const fmtDateTime = value => {
   });
 };
 
-const kindLabel = kind => {
-  const key = `RAMON.LEAD_PANEL.HISTORY.KIND.${(kind || '').toUpperCase()}`;
-  return te(key) ? t(key) : kind;
-};
-
 const viabilityLabel = viability =>
   t(`RAMON.TRIAGE.VIABILITY.${(viability || 'unknown').toUpperCase()}`);
-
-const timelineText = item => {
-  if (item.type === 'note') return item.body;
-  let text = kindLabel(item.kind);
-  if (item.to_value) text += ` → ${item.to_value}`;
-  return text;
-};
 
 const docStatusLabel = status =>
   t(`RAMON.DOCS.STATUS.${(status || 'pendente').toUpperCase()}`);
 
-// mesmas cores por status do DocChecklist (recebido=teal, solicitado=iris,
+// mesmas cores por status do DocChecklist (recebido=teal, solicitado=blue,
 // pendente=amber), aqui só como selo de leitura.
-const docChipClass = status => {
-  if (status === 'recebido')
-    return 'bg-n-teal-3 text-n-teal-11 border-n-teal-6';
-  if (status === 'solicitado')
-    return 'bg-n-iris-3 text-n-iris-11 border-n-iris-6';
-  return 'bg-n-amber-3 text-n-amber-11 border-n-amber-6';
-};
+const docTom = status =>
+  ({ recebido: TOM.teal, solicitado: TOM.blue })[status] || TOM.amber;
+
+const VIABILIDADE_TOM = { alta: TOM.teal, media: TOM.amber, baixa: TOM.ruby };
+const viabilityTom = viability => VIABILIDADE_TOM[viability] || TOM.slate;
+
+// a linha do tempo usa a mesma lista da Atividade do painel do lead: nota vira
+// note_added (texto no to_value), etapas da esteira dão a cor do destino
+const atividades = computed(() =>
+  timeline.value.map(item =>
+    item.type === 'note'
+      ? {
+          kind: 'note_added',
+          to_value: item.body,
+          author_name: item.author_name,
+          created_at: item.created_at,
+        }
+      : item
+  )
+);
 
 const CALCULO_TIPO_LABEL = {
   painel: 'RAMON.SIMULADOR.ABA_POSSIBILIDADES',
@@ -118,90 +136,46 @@ const REUNIAO_STATUS_LABEL = {
   erro: 'RAMON.REUNIOES.STATUS_ERRO',
 };
 const reuniaoStatusLabel = status => t(REUNIAO_STATUS_LABEL[status]);
+const REUNIAO_TOM = {
+  transcrevendo: TOM.blue,
+  pronta: TOM.teal,
+  erro: TOM.ruby,
+};
 
-// --- Copiar dossiê (markdown → clipboard, insumo do dossiê W3 pro jurídico) ---
-const line = (label, value) => (value ? `- ${label}: ${value}` : null);
-
-const markdown = computed(() => {
-  const p = pessoa.value;
-  const o = origem.value;
-  const parts = [
-    `# ${t('RAMON.DOSSIE.TITLE')} — ${p.lead_name || ''}`,
-    '',
-    `## ${t('RAMON.DOSSIE.WHO')}`,
-    line(t('RAMON.DRAWER.NAME'), p.contact_name || p.lead_name),
-    line(t('RAMON.DOSSIE.PHONE'), p.phone_number),
-    line(t('RAMON.DOSSIE.AGE_LABEL'), p.idade),
-    line(t('RAMON.DOSSIE.CITY'), p.cidade),
-    line(t('RAMON.DOSSIE.STAGE'), p.stage_name),
-    line(t('RAMON.DOSSIE.VALUE'), p.value ? formatBrl(p.value) : null),
-    line(
-      t('RAMON.DOSSIE.CONSENT'),
-      p.consent_marketing
-        ? t('RAMON.DOSSIE.CONSENT_YES')
-        : t('RAMON.DOSSIE.CONSENT_NO')
-    ),
-    '',
-    `## ${t('RAMON.DOSSIE.ORIGIN')}`,
-    line(t('RAMON.DRAWER.SOURCE'), o.source),
-    line(t('RAMON.DRAWER.CHANNEL'), o.channel_label || o.channel),
-    ...utmEntries.value.map(([k, v]) => `- ${k}: ${v}`),
-    o.indicacao ? `- ${t('RAMON.DOSSIE.REFERRAL')}` : null,
-    '',
-    `## ${t('RAMON.DOSSIE.TRIAGE')}`,
-  ];
-
-  if (triagem.value) {
-    parts.push(
-      line(
-        t('RAMON.TRIAGE.VIABILITY.LABEL'),
-        viabilityLabel(triagem.value.viability)
-      )
-    );
-    if (triagem.value.result) parts.push('', triagem.value.result);
-  } else {
-    parts.push(t('RAMON.DOSSIE.TRIAGE_EMPTY'));
-  }
-
-  parts.push('', `## ${t('RAMON.DOSSIE.THESIS')}`);
-  if (tese.value) {
-    parts.push(line(t('RAMON.DRAWER.THESIS'), tese.value.name));
-    parts.push(line(t('RAMON.DOSSIE.FEE'), tese.value.honorario_text));
-    if (tese.value.objecoes?.length) {
-      parts.push('', `### ${t('RAMON.DOSSIE.OBJECTIONS')}`);
-      tese.value.objecoes.forEach(obj =>
-        parts.push(`- **${obj.title}** — ${obj.content}`)
-      );
-    }
-  } else {
-    parts.push(t('RAMON.DOSSIE.THESIS_EMPTY'));
-  }
-
-  parts.push('', `## ${t('RAMON.DOSSIE.TIMELINE')}`);
-  timeline.value.forEach(item =>
-    parts.push(
-      `- ${fmtDateTime(item.created_at)} — ${item.author_name || t('RAMON.LEAD_PANEL.HISTORY.SYSTEM')}: ${timelineText(item)}`
-    )
-  );
-
-  parts.push('', `## ${t('RAMON.DOSSIE.PENDING')}`);
-  tasks.value.forEach(task =>
-    parts.push(`- [ ] ${task.title} (${fmtDateTime(task.due_at)})`)
-  );
-  docsMissing.value.forEach(doc =>
-    parts.push(`- [ ] ${t('RAMON.DOSSIE.DOC_PREFIX')} ${doc.title}`)
-  );
-
-  return parts.filter(part => part !== null).join('\n');
-});
-
+// --- Copiar dossiê: o texto único de passagem, gerado no servidor
+// (Ramon::DossiePassagemTexto) — o mesmo da nota do ganho.
 const copyDossie = async () => {
   try {
-    await copyTextToClipboard(markdown.value);
+    await copyTextToClipboard(data.value?.passagem_texto || '');
     useAlert(t('RAMON.DOSSIE.COPIED'));
   } catch (e) {
     useAlert(t('RAMON.DOSSIE.COPY_FAILED'));
   }
+};
+
+// Histórico completo vem do servidor; a ficha mostra aos poucos.
+const PAGINA_HISTORICO = 20;
+const historicoVisivel = ref(PAGINA_HISTORICO);
+watch(
+  () => route.params.leadId,
+  () => {
+    historicoVisivel.value = PAGINA_HISTORICO;
+  }
+);
+const atividadesVisiveis = computed(() =>
+  atividades.value.slice(0, historicoVisivel.value)
+);
+const historicoRestante = computed(
+  () => atividades.value.length - atividadesVisiveis.value.length
+);
+
+// Volta pro lead no funil (abre o painel dele), como o Centro de Comando faz.
+const abrirNoFunil = () => {
+  router.push({
+    name: 'ramon_funil',
+    params: { accountId: route.params.accountId },
+  });
+  store.dispatch('leads/select', pessoa.value.lead_id);
 };
 </script>
 
@@ -209,56 +183,53 @@ const copyDossie = async () => {
   <div class="flex-1 w-full h-full p-4 sm:p-8 overflow-y-auto bg-n-background">
     <div
       v-if="loading"
-      class="flex flex-col max-w-5xl gap-4 mx-auto animate-pulse"
+      class="flex flex-col max-w-5xl gap-5 mx-auto animate-pulse"
       data-testid="dossie-skeleton"
     >
-      <div class="w-1/3 h-8 rounded bg-n-solid-2" />
-      <div class="h-24 rounded-xl bg-n-solid-2" />
-      <div class="h-24 rounded-xl bg-n-solid-2" />
-      <div class="h-40 rounded-xl bg-n-solid-2" />
+      <div class="h-40 rounded-xl bg-n-alpha-2" />
+      <div class="grid gap-5 lg:grid-cols-[1fr_340px]">
+        <div class="h-64 rounded-xl bg-n-alpha-2" />
+        <div class="h-64 rounded-xl bg-n-alpha-2" />
+      </div>
     </div>
     <div v-else-if="error" class="text-sm" data-testid="dossie-error">
       <p class="text-n-ruby-11">{{ $t('RAMON.DOSSIE.ERROR') }}</p>
-      <button
-        type="button"
+      <Button
         data-testid="dossie-retry"
-        class="mt-2 text-xs text-n-iris-11 hover:underline"
+        link
+        xs
+        class="mt-2"
+        :label="$t('RAMON.LEAD_PANEL.RETRY')"
         @click="fetchData"
-      >
-        {{ $t('RAMON.LEAD_PANEL.RETRY') }}
-      </button>
+      />
     </div>
 
-    <div v-else-if="data" class="max-w-5xl mx-auto">
+    <div v-else-if="data" class="flex flex-col max-w-5xl gap-5 mx-auto">
       <!-- Cabeçalho da ficha: quem é, quanto vale, a esteira -->
-      <section
-        class="p-6 border shadow-sm rounded-2xl bg-n-solid-1 border-n-weak"
-        data-testid="ficha-header"
-      >
+      <section :class="CARTAO" class="!p-5" data-testid="ficha-header">
         <div class="flex flex-wrap items-start gap-4">
-          <div
-            class="grid text-xl font-semibold rounded-full size-14 shrink-0 place-items-center bg-n-iris-3 text-n-iris-11"
+          <span
+            class="flex items-center justify-center text-xl font-semibold rounded-full size-14 shrink-0"
+            :class="TOM.blue"
           >
             {{ initial }}
-          </div>
+          </span>
           <div class="min-w-0">
-            <p class="text-xs tracking-[0.2em] uppercase text-n-slate-11">
-              {{ $t('RAMON.FICHA.TITLE') }}
-            </p>
-            <h1 class="text-3xl font-semibold text-n-slate-12">
+            <p :class="TITULO">{{ $t('RAMON.FICHA.TITLE') }}</p>
+            <h1
+              class="mt-1 text-[28px] font-semibold leading-tight text-n-slate-12"
+            >
               {{ pessoa.lead_name }}
             </h1>
-            <div class="flex flex-wrap gap-2 mt-2">
-              <span
-                v-if="pessoa.thesis_name"
-                class="px-2 py-0.5 text-xs font-semibold rounded-full bg-n-iris-3 text-n-iris-11"
-              >
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <span v-if="pessoa.thesis_name" :class="[CHIP, TOM.blue]">
                 {{ pessoa.thesis_name }}
               </span>
               <span
                 v-if="esteiraSemAtual && pessoa.stage_name"
                 data-testid="ficha-stage-chip-fallback"
-                class="ramon-stage-pill inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border"
+                class="ramon-stage-pill border"
+                :class="CHIP"
                 :style="{
                   '--stage': pessoa.stage_color || DEFAULT_STAGE_COLOR,
                 }"
@@ -266,10 +237,7 @@ const copyDossie = async () => {
                 <span class="size-1.5 rounded-full bg-current" />
                 {{ pessoa.stage_name }}
               </span>
-              <span
-                v-if="origem.channel_label"
-                class="px-2 py-0.5 text-xs rounded-full bg-n-alpha-2 text-n-slate-11"
-              >
+              <span v-if="origem.channel_label" :class="[CHIP, TOM.slate]">
                 {{ origem.channel_label }}
               </span>
               <a
@@ -277,80 +245,123 @@ const copyDossie = async () => {
                 :href="waMeUrl(pessoa.phone_number)"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-n-alpha-2 text-n-iris-11 hover:underline"
+                class="font-mono hover:underline"
+                :class="[CHIP, TOM.blue]"
               >
                 <span class="i-lucide-phone size-3" />{{ pessoa.phone_number }}
               </a>
-              <span
-                v-if="pessoa.cidade"
-                class="px-2 py-0.5 text-xs rounded-full bg-n-alpha-2 text-n-slate-11"
-              >
+              <span v-if="pessoa.cidade" :class="[CHIP, TOM.slate]">
                 {{ pessoa.cidade }}
               </span>
             </div>
+            <!-- de volta ao lead: funil (painel aberto) e Linha da Vida da pessoa -->
+            <div class="flex flex-wrap items-center gap-4 mt-2">
+              <Button
+                data-testid="ficha-open-funil"
+                link
+                xs
+                slate
+                icon="i-lucide-kanban"
+                :label="$t('RAMON.FICHA.OPEN_FUNIL')"
+                @click="abrirNoFunil"
+              />
+              <router-link
+                v-if="pessoa.contact_id"
+                v-slot="{ navigate }"
+                custom
+                :to="{
+                  name: 'ramon_linha_da_vida',
+                  params: { contactId: pessoa.contact_id },
+                }"
+              >
+                <Button
+                  data-testid="ficha-linha-da-vida"
+                  link
+                  xs
+                  slate
+                  icon="i-lucide-history"
+                  :label="$t('RAMON.LINHA_DA_VIDA.OPEN')"
+                  @click="navigate"
+                />
+              </router-link>
+            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-3 ml-auto">
+          <div class="flex flex-wrap items-center gap-4 ml-auto">
             <div
               v-if="pessoa.value"
               class="text-right"
               data-testid="ficha-valor"
             >
-              <p class="text-xl font-bold tabular-nums text-n-slate-12">
+              <p
+                class="font-mono text-xl font-medium tabular-nums text-n-blue-11"
+              >
                 {{ formatBrl(pessoa.value) }}
               </p>
-              <p class="text-xs text-n-slate-11">
-                <span v-if="pessoa.probability" class="tabular-nums">
-                  {{ pessoa.probability }}% {{ $t('RAMON.FICHA.PROBABILITY') }}
+              <p
+                class="flex items-center justify-end gap-1.5 mt-0.5 text-[11px] text-n-slate-10"
+              >
+                <span v-if="pessoa.probability">
+                  <span class="font-mono tabular-nums">{{
+                    `${pessoa.probability}%`
+                  }}</span>
+                  {{ $t('RAMON.FICHA.PROBABILITY') }}
                 </span>
                 <span
                   v-if="pessoa.valor_estimado_origem === 'auto'"
-                  class="ml-1 px-1.5 py-0.5 rounded-full bg-n-amber-3 text-n-amber-11"
+                  :class="[CHIP, TOM.blue]"
                 >
+                  <span class="i-lucide-sparkles size-2.5" />
                   {{ $t('RAMON.FICHA.ESTIMATED') }}
                 </span>
               </p>
             </div>
-            <button
-              type="button"
-              data-testid="dossie-copy"
-              class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak hover:bg-n-alpha-2 shrink-0"
-              @click="copyDossie"
-            >
-              <span class="i-lucide-clipboard-copy size-4" />{{
-                $t('RAMON.DOSSIE.COPY')
-              }}
-            </button>
-            <router-link
-              v-if="pessoa.conversation_id"
-              :to="{
-                name: 'inbox_conversation',
-                params: { conversation_id: pessoa.conversation_id },
-              }"
-              data-testid="ficha-open-conversation"
-              class="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white rounded-lg shadow-sm bg-n-iris-9 hover:bg-n-iris-10 shrink-0"
-            >
-              <span class="i-lucide-message-square size-4" />{{
-                $t('RAMON.FICHA.OPEN_CONVERSATION')
-              }}
-            </router-link>
+            <div class="flex items-center gap-2">
+              <Button
+                data-testid="dossie-copy"
+                sm
+                faded
+                slate
+                icon="i-lucide-clipboard-copy"
+                :label="$t('RAMON.DOSSIE.COPY')"
+                @click="copyDossie"
+              />
+              <router-link
+                v-if="pessoa.conversation_id"
+                v-slot="{ navigate }"
+                custom
+                :to="{
+                  name: 'inbox_conversation',
+                  params: { conversation_id: pessoa.conversation_id },
+                }"
+              >
+                <Button
+                  data-testid="ficha-open-conversation"
+                  sm
+                  icon="i-lucide-message-square"
+                  :label="$t('RAMON.FICHA.OPEN_CONVERSATION')"
+                  @click="navigate"
+                />
+              </router-link>
+            </div>
           </div>
         </div>
 
-        <div v-if="esteira.length" class="pt-4 mt-6 border-t border-n-weak">
+        <div v-if="esteira.length" class="mt-5" :class="SECAO">
           <EsteiraEtapas :stages="esteira" />
         </div>
       </section>
 
-      <div class="grid items-start gap-5 mt-5 lg:grid-cols-[1fr_340px]">
+      <PassagemJuridico v-if="data.passagem" :passagem="data.passagem" />
+
+      <div class="grid items-start gap-5 lg:grid-cols-[1fr_340px]">
         <!-- Coluna principal: o que fazer agora -->
-        <div class="flex flex-col gap-5">
+        <div class="flex flex-col gap-5 min-w-0">
           <section
-            class="p-4 border border-l-4 shadow-sm rounded-xl bg-n-solid-1 border-n-weak border-l-n-iris-9"
+            :class="[CARTAO_STATUS, FILETE.blue]"
+            class="!p-4"
             data-testid="dossie-pendencias"
           >
-            <h2
-              class="mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
-            >
+            <h2 class="mb-2" :class="TITULO">
               {{ $t('RAMON.FICHA.NEXT_TITLE') }}
             </h2>
             <template v-if="nextTask">
@@ -362,43 +373,47 @@ const copyDossie = async () => {
               </p>
               <p
                 v-if="nextTask.due_at"
-                class="text-sm tabular-nums text-n-slate-11"
+                class="flex items-center gap-1 mt-0.5 font-mono text-xs tabular-nums text-n-slate-10"
               >
+                <span class="i-lucide-clock size-3" />
                 {{ fmtDateTime(nextTask.due_at) }}
               </p>
             </template>
             <p v-else class="text-sm text-n-slate-10">
               {{ $t('RAMON.FICHA.NEXT_EMPTY') }}
             </p>
-            <ul v-if="docsMissing.length" class="flex flex-col gap-1 mt-3">
+            <ul
+              v-if="docsMissing.length"
+              class="flex flex-col gap-1.5 mt-3 list-none"
+              :class="SECAO"
+            >
               <li
                 v-for="(doc, i) in docsMissing"
                 :key="`doc-${i}`"
-                class="flex items-baseline gap-2 text-sm text-n-amber-11"
+                class="flex items-center gap-2 text-sm text-n-slate-12"
                 data-testid="dossie-doc"
               >
                 <span
-                  class="i-lucide-file-warning size-3 shrink-0 self-center"
+                  class="i-lucide-file-warning size-3.5 shrink-0 text-n-amber-11"
                 />
-                {{ doc.title }}
-                <span class="text-xs text-n-slate-10">{{
-                  docStatusLabel(doc.status)
-                }}</span>
+                <span class="truncate">{{ doc.title }}</span>
+                <span class="shrink-0" :class="[CHIP, docTom(doc.status)]">
+                  {{ docStatusLabel(doc.status) }}
+                </span>
               </li>
             </ul>
           </section>
 
           <section
             v-if="docs.itens.length"
-            class="p-4 border shadow-sm rounded-xl bg-n-solid-1 border-n-weak"
+            :class="CARTAO"
+            class="!p-4"
             data-testid="dossie-docs"
           >
-            <h2
-              class="flex items-center mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
-            >
+            <h2 class="flex items-center mb-2" :class="TITULO">
               {{ $t('RAMON.FICHA.DOCS_TITLE') }}
               <span
-                class="ml-auto font-normal tracking-normal normal-case tabular-nums"
+                class="ml-auto font-mono text-xs font-normal tracking-normal normal-case tabular-nums"
               >
                 {{
                   $t('RAMON.DOCS.COUNT', {
@@ -410,21 +425,21 @@ const copyDossie = async () => {
             </h2>
             <div class="h-1.5 overflow-hidden rounded-full bg-n-alpha-2">
               <div
-                class="h-full rounded-full bg-n-iris-9"
+                class="h-full rounded-full bg-n-blue-9"
                 :style="{ width: `${docsPercent}%` }"
               />
             </div>
-            <ul class="mt-2 divide-y divide-n-weak">
+            <ul class="mt-2 list-none">
               <li
                 v-for="item in docs.itens"
                 :key="item.id"
-                class="flex items-center gap-2 py-2 text-sm"
+                class="flex items-center gap-2 py-2 text-sm border-t border-n-weak first:border-t-0"
                 data-testid="ficha-doc-item"
               >
                 <span class="truncate text-n-slate-12">{{ item.title }}</span>
                 <span
-                  class="ml-auto shrink-0 rounded-full border px-2 py-0.5 text-[11px] uppercase"
-                  :class="docChipClass(item.status)"
+                  class="ml-auto shrink-0"
+                  :class="[CHIP, docTom(item.status)]"
                 >
                   {{ docStatusLabel(item.status) }}
                 </span>
@@ -432,67 +447,65 @@ const copyDossie = async () => {
             </ul>
           </section>
 
-          <section
-            class="p-4 border shadow-sm rounded-xl bg-n-solid-1 border-n-weak"
-            data-testid="dossie-timeline"
-          >
+          <section :class="CARTAO" class="!p-4" data-testid="dossie-timeline">
             <h2
-              class="mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
+              class="flex items-center gap-1.5 text-sm font-semibold text-n-slate-12"
             >
+              <span class="i-lucide-activity size-4 text-n-slate-10" />
               {{ $t('RAMON.DOSSIE.TIMELINE') }}
             </h2>
-            <p v-if="!timeline.length" class="text-sm text-n-slate-10">
+            <p v-if="!timeline.length" class="mt-3 text-xs text-n-slate-9">
               {{ $t('RAMON.DOSSIE.TIMELINE_EMPTY') }}
             </p>
-            <ul class="divide-y divide-n-weak">
-              <li
-                v-for="(item, i) in timeline"
-                :key="i"
-                class="flex items-baseline gap-3 py-2 text-sm"
-              >
-                <span class="text-xs tabular-nums text-n-slate-10 shrink-0">
-                  {{ fmtDateTime(item.created_at) }}
-                </span>
-                <span class="text-n-slate-11">
-                  <strong v-if="item.author_name" class="text-n-slate-12">{{
-                    item.author_name
-                  }}</strong>
-                  <span v-else>{{
-                    $t('RAMON.LEAD_PANEL.HISTORY.SYSTEM')
-                  }}</span>
-                  · {{ timelineText(item) }}
-                </span>
-              </li>
-            </ul>
+            <template v-else>
+              <ListaAtividades
+                :activities="atividadesVisiveis"
+                :stages="esteira"
+                absoluta
+              />
+              <Button
+                v-if="historicoRestante > 0"
+                data-testid="dossie-timeline-more"
+                link
+                xs
+                icon="i-lucide-chevron-down"
+                class="mt-1"
+                :label="
+                  $t('RAMON.FICHA.HISTORY_MORE', { count: historicoRestante })
+                "
+                @click="historicoVisivel += PAGINA_HISTORICO"
+              />
+            </template>
           </section>
         </div>
 
         <!-- Coluna lateral: o dossiê de leitura -->
-        <div class="flex flex-col gap-5">
-          <section
-            class="p-4 border shadow-sm rounded-xl bg-n-solid-1 border-n-weak"
-          >
+        <div class="flex flex-col gap-5 min-w-0">
+          <section :class="CARTAO" class="!p-4">
             <div data-testid="dossie-pessoa">
-              <h2
-                class="mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
-              >
+              <h2 class="mb-2" :class="TITULO">
                 {{ $t('RAMON.DOSSIE.WHO') }}
               </h2>
               <p class="text-sm text-n-slate-12">
-                <span>{{ pessoa.contact_name || pessoa.lead_name }}</span>
-                <span v-if="pessoa.idade">
+                <span class="font-medium">{{
+                  pessoa.contact_name || pessoa.lead_name
+                }}</span>
+                <span v-if="pessoa.idade" class="text-n-slate-11">
                   · {{ $t('RAMON.DOSSIE.AGE', { age: pessoa.idade }) }}</span
                 >
-                <span v-if="pessoa.cidade"> · {{ pessoa.cidade }}</span>
+                <span v-if="pessoa.cidade" class="text-n-slate-11">
+                  · {{ pessoa.cidade }}</span
+                >
               </p>
-              <p class="mt-1 text-xs text-n-slate-10">
+              <p
+                class="flex items-center gap-1.5 mt-1.5 text-xs text-n-slate-10"
+              >
                 {{ $t('RAMON.DOSSIE.CONSENT') }}:
                 <span
-                  :class="
-                    pessoa.consent_marketing
-                      ? 'text-n-teal-11'
-                      : 'text-n-amber-11'
-                  "
+                  :class="[
+                    CHIP,
+                    pessoa.consent_marketing ? TOM.teal : TOM.amber,
+                  ]"
                 >
                   {{
                     pessoa.consent_marketing
@@ -503,17 +516,12 @@ const copyDossie = async () => {
               </p>
             </div>
 
-            <div
-              class="pt-3 mt-3 border-t border-n-weak"
-              data-testid="dossie-origem"
-            >
-              <h2
-                class="mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
-              >
+            <div class="mt-3" :class="SECAO" data-testid="dossie-origem">
+              <h2 class="mb-2" :class="TITULO">
                 {{ $t('RAMON.DOSSIE.ORIGIN') }}
               </h2>
               <p class="text-sm text-n-slate-12">
-                <span v-if="origem.channel_label">{{
+                <span v-if="origem.channel_label" class="font-medium">{{
                   origem.channel_label
                 }}</span>
                 <span v-if="origem.source" class="text-n-slate-11">
@@ -523,7 +531,8 @@ const copyDossie = async () => {
               </p>
               <p
                 v-if="origem.indicacao"
-                class="mt-1 text-xs text-n-teal-11"
+                class="mt-1.5"
+                :class="[CHIP, TOM.teal]"
                 data-testid="dossie-indicacao"
               >
                 {{ $t('RAMON.DOSSIE.REFERRAL') }}
@@ -531,136 +540,188 @@ const copyDossie = async () => {
               <p
                 v-for="[key, value] in utmEntries"
                 :key="key"
-                class="text-xs text-n-slate-10"
+                class="mt-0.5 font-mono text-[11px] text-n-slate-10"
               >
                 {{ key }}: {{ value }}
               </p>
             </div>
 
+            <!-- triagem por IA aposentada (16/08): só o registro histórico de
+                 uma triagem concluída com viabilidade (o servidor filtra) -->
             <div
-              class="pt-3 mt-3 border-t border-n-weak"
+              v-if="triagem"
+              class="mt-3"
+              :class="SECAO"
               data-testid="dossie-triagem"
             >
-              <h2
-                class="mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
-              >
+              <h2 class="mb-2" :class="TITULO">
                 {{ $t('RAMON.DOSSIE.TRIAGE') }}
               </h2>
-              <p v-if="!triagem" class="text-sm text-n-slate-10">
-                {{ $t('RAMON.DOSSIE.TRIAGE_EMPTY') }}
-              </p>
-              <template v-else>
-                <p class="text-sm text-n-slate-12">
-                  {{ $t('RAMON.TRIAGE.VIABILITY.LABEL') }}:
+              <p class="flex items-center gap-1.5 text-xs text-n-slate-10">
+                {{ $t('RAMON.TRIAGE.VIABILITY.LABEL') }}:
+                <span :class="[CHIP, viabilityTom(triagem.viability)]">
                   {{ viabilityLabel(triagem.viability) }}
-                </p>
-                <p
-                  v-if="triagem.result"
-                  class="mt-1 text-sm whitespace-pre-wrap text-n-slate-11"
-                >
-                  {{ triagem.result }}
-                </p>
-              </template>
+                </span>
+              </p>
+              <p
+                v-if="triagem.result"
+                class="mt-2 text-sm whitespace-pre-wrap text-n-slate-11"
+              >
+                {{ triagem.result }}
+              </p>
             </div>
           </section>
 
-          <section
-            class="p-4 border shadow-sm rounded-xl bg-n-solid-1 border-n-weak"
-            data-testid="dossie-calculos"
-          >
-            <h2
-              class="mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
-            >
+          <section :class="CARTAO" class="!p-4" data-testid="dossie-calculos">
+            <h2 class="mb-2" :class="TITULO">
               {{ $t('RAMON.FICHA.CALCULOS_TITLE') }}
             </h2>
             <p v-if="!calculos.length" class="text-sm text-n-slate-10">
               {{ $t('RAMON.FICHA.CALCULOS_EMPTY') }}
             </p>
-            <ul v-else class="divide-y divide-n-weak">
-              <li v-for="calculo in calculos" :key="calculo.id" class="py-2">
-                <p class="text-sm font-semibold text-n-slate-12">
-                  {{ calculoTipoLabel(calculo.tipo) }}
-                </p>
-                <p class="text-xs text-n-slate-10">
-                  <span v-if="calculo.segurado_nome">
-                    {{ calculo.segurado_nome }} ·
-                  </span>
-                  <span class="tabular-nums">{{
-                    fmtDateTime(calculo.created_at)
-                  }}</span>
-                </p>
+            <ul v-else class="-mx-2 list-none">
+              <li
+                v-for="calculo in calculos"
+                :key="calculo.id"
+                class="border-t border-n-weak first:border-t-0"
+              >
+                <router-link
+                  v-slot="{ navigate }"
+                  custom
+                  :to="{
+                    name: 'ramon_calculos_lead',
+                    params: { leadId: pessoa.lead_id },
+                  }"
+                >
+                  <button
+                    type="button"
+                    data-testid="dossie-calculo"
+                    class="flex items-center gap-2 !py-2"
+                    :class="LINHA"
+                    @click="navigate"
+                  >
+                    <span class="flex-1 min-w-0">
+                      <span class="block font-medium truncate text-n-slate-12">
+                        {{ calculoTipoLabel(calculo.tipo) }}
+                      </span>
+                      <span class="block text-xs text-n-slate-10">
+                        <span v-if="calculo.segurado_nome">
+                          {{ calculo.segurado_nome }} ·
+                        </span>
+                        <span class="font-mono tabular-nums">{{
+                          fmtDateTime(calculo.created_at)
+                        }}</span>
+                      </span>
+                    </span>
+                    <span
+                      class="i-lucide-chevron-right size-4 shrink-0 text-n-slate-9"
+                    />
+                  </button>
+                </router-link>
               </li>
             </ul>
           </section>
 
-          <section
-            class="p-4 border shadow-sm rounded-xl bg-n-solid-1 border-n-weak"
-            data-testid="dossie-reunioes"
-          >
-            <h2
-              class="mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
-            >
+          <section :class="CARTAO" class="!p-4" data-testid="dossie-reunioes">
+            <h2 class="mb-2" :class="TITULO">
               {{ $t('RAMON.FICHA.REUNIOES_TITLE') }}
             </h2>
             <p v-if="!reunioes.length" class="text-sm text-n-slate-10">
               {{ $t('RAMON.FICHA.REUNIOES_EMPTY') }}
             </p>
-            <ul v-else class="divide-y divide-n-weak">
-              <li v-for="reuniao in reunioes" :key="reuniao.id" class="py-2">
-                <p class="text-sm font-semibold text-n-slate-12">
-                  {{ reuniao.titulo }}
-                </p>
-                <p class="text-xs text-n-slate-10">
-                  {{ reuniaoStatusLabel(reuniao.status) }} ·
-                  <span class="tabular-nums">{{
-                    fmtDateTime(reuniao.created_at)
-                  }}</span>
-                </p>
+            <ul v-else class="-mx-2 list-none">
+              <li
+                v-for="reuniao in reunioes"
+                :key="reuniao.id"
+                class="border-t border-n-weak first:border-t-0"
+              >
+                <router-link
+                  v-slot="{ navigate }"
+                  custom
+                  :to="{
+                    name: 'ramon_reuniao',
+                    params: { reuniaoId: reuniao.id },
+                  }"
+                >
+                  <button
+                    type="button"
+                    data-testid="dossie-reuniao"
+                    class="flex items-center gap-2 !py-2"
+                    :class="LINHA"
+                    @click="navigate"
+                  >
+                    <span class="flex-1 min-w-0">
+                      <span class="block font-medium truncate text-n-slate-12">
+                        {{ reuniao.titulo }}
+                      </span>
+                      <span class="flex items-center gap-1.5 mt-0.5 text-xs">
+                        <span :class="[CHIP, REUNIAO_TOM[reuniao.status]]">
+                          {{ reuniaoStatusLabel(reuniao.status) }}
+                        </span>
+                        <span class="font-mono tabular-nums text-n-slate-10">{{
+                          fmtDateTime(reuniao.created_at)
+                        }}</span>
+                      </span>
+                      <span
+                        v-if="reuniao.ata_resumo"
+                        data-testid="dossie-reuniao-ata"
+                        class="block mt-1 text-xs italic whitespace-normal text-n-slate-11 line-clamp-3"
+                      >
+                        {{ `“${reuniao.ata_resumo}”` }}
+                      </span>
+                    </span>
+                    <span
+                      class="i-lucide-chevron-right size-4 shrink-0 text-n-slate-9"
+                    />
+                  </button>
+                </router-link>
               </li>
             </ul>
             <router-link
+              v-slot="{ navigate }"
+              custom
               :to="{
                 name: 'ramon_reunioes',
                 query: { leadId: pessoa.lead_id },
               }"
-              data-testid="ficha-record-meeting"
-              class="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-n-iris-11 hover:underline"
             >
-              <span class="i-lucide-mic size-3.5" />{{
-                $t('RAMON.FICHA.RECORD_MEETING')
-              }}
+              <Button
+                data-testid="ficha-record-meeting"
+                link
+                xs
+                icon="i-lucide-mic"
+                class="mt-3"
+                :label="$t('RAMON.FICHA.RECORD_MEETING')"
+                @click="navigate"
+              />
             </router-link>
           </section>
 
-          <section
-            class="p-4 border shadow-sm rounded-xl bg-n-solid-1 border-n-weak"
-            data-testid="dossie-tese"
-          >
-            <h2
-              class="mb-2 text-xs font-bold tracking-widest uppercase text-n-slate-11"
-            >
+          <section :class="CARTAO" class="!p-4" data-testid="dossie-tese">
+            <h2 class="mb-2" :class="TITULO">
               {{ $t('RAMON.DOSSIE.THESIS') }}
             </h2>
             <p v-if="!tese" class="text-sm text-n-slate-10">
               {{ $t('RAMON.DOSSIE.THESIS_EMPTY') }}
             </p>
             <template v-else>
-              <p class="text-sm text-n-slate-12">{{ tese.name }}</p>
+              <p class="text-sm font-medium text-n-slate-12">{{ tese.name }}</p>
               <p
                 v-if="tese.honorario_text"
-                class="mt-1 text-sm text-n-slate-11"
+                class="mt-2"
+                :class="[AVISO, TOM.blue]"
                 data-testid="dossie-honorario"
               >
                 {{ $t('RAMON.DOSSIE.FEE') }}: {{ tese.honorario_text }}
               </p>
-              <template v-if="tese.objecoes?.length">
-                <p class="mt-3 mb-1 text-xs uppercase text-n-slate-10">
+              <div v-if="tese.objecoes?.length" class="mt-3" :class="SECAO">
+                <p class="mb-2" :class="TITULO">
                   {{ $t('RAMON.DOSSIE.OBJECTIONS') }}
                 </p>
                 <div
                   v-for="(obj, i) in tese.objecoes"
                   :key="i"
-                  class="mb-2"
+                  class="mb-2.5 last:mb-0"
                   data-testid="dossie-objecao"
                 >
                   <p class="text-sm font-medium text-n-slate-12">
@@ -668,7 +729,7 @@ const copyDossie = async () => {
                   </p>
                   <p class="text-sm text-n-slate-11">{{ obj.content }}</p>
                 </div>
-              </template>
+              </div>
             </template>
           </section>
         </div>
