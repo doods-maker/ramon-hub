@@ -105,6 +105,8 @@ contexto carrega os dois; idem ao contrário.
 | `advbox` | criar tarefa ou movimentação **fixa** (IDs escolhidos na tela a partir de `advbox_configuracoes`) | `Ramon::AdvboxMcpService` |
 | `webhook` | POST JSON do contexto para uma URL | — ; **só como último passo** (regra do Flowter) |
 
+Nota: nota de rascunho criada por fluxo não entra no carimbo `bi_ia` — este só mede notas do Assistente.
+
 ### 4.4 Controle
 
 - `esperar` — X min/h/dias **ou** "até o próximo horário comercial"; conta do passo anterior.
@@ -128,7 +130,8 @@ o que cada passo devolve (`{resposta_ia}`, `{prazo_advbox}`, …). Substituiçã
 `publicado_por_id`, `created_at`. Imutável.
 
 **`ramon_fluxo_execucoes`** — `account_id`, `fluxo_id`, `versao_id`, `alvo_type/alvo_id`
-(Lead|Conversation), `status` (`rodando|esperando|concluida|falhou|cancelada|ensaio`),
+(Lead|Conversation), `status` (`rodando|esperando|concluida|falhou|cancelada`) e `ensaio` boolean
+(`versao_id` nulo quando se ensaia o rascunho),
 `no_atual`, `retomar_em`, `tentativas`, `contexto` jsonb, `trilha` jsonb (array
 `{no, inicio, fim, resultado, saida, erro}`), `profundidade`, `erro`, timestamps.
 - Índice **único parcial** `(fluxo_id, alvo_type, alvo_id) WHERE status IN ('rodando','esperando')`
@@ -230,7 +233,7 @@ lembretes de reunião → SLA → cadência → lead ganho → eventos do ADVBOX
 
 | Fatia | Conteúdo | Migração |
 |---|---|---|
-| **B1** | tabelas, motor, relógio, gatilhos de conversa/lead/manual, ações básicas (rascunho texto, nota, etiqueta via `acao_chatwoot`, mover etapa, tarefa, sino/push, esperar, se, escolha), API de execuções | sim (3 tabelas) |
+| **B1** | tabelas, motor, relógio, gatilhos de conversa/lead/manual, ações básicas (`registrar_atividade`, `trocar_responsavel` e `preencher_campo` ficam p/ a B2b; rascunho texto, nota, etiqueta via `acao_chatwoot`, mover etapa, tarefa, sino/push, esperar, se, escolha), API de execuções | sim (3 tabelas) |
 | **B2** | quadro (lista, editor Vue Flow, versões, ensaio, execução acesa, modelos) + menu | não |
 | **B2b** | passos de IA (`perguntar_ia`, `rascunho_ia`, `rodar_skill`), `advbox`, `webhook`, gatilhos externos (reunião, ADVBOX, ZapSign, documento), `lead_parado`, `relogio` | não |
 | **B3** | conversão das regras nativas + aba "Do sistema" + sai "Configurações → Automação" | não |
