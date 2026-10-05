@@ -105,6 +105,7 @@ const LEAD = {
   id: 42,
   name: 'João Carlos Pereira',
   lead_stage_id: 3,
+  created_at: diasAtras(9),
   stage_entered_at: diasAtras(4),
   value: 18500,
   thesis_id: 1,
@@ -265,6 +266,28 @@ const API = {
       },
     ],
   },
+  'leads/45/tasks': {
+    payload: [
+      {
+        id: 3,
+        lead_id: 45,
+        title: 'Perguntar se tinha carteira assinada',
+        kind: 'follow_up',
+        due_at: emDias(0.2),
+      },
+    ],
+  },
+  'leads/46/tasks': {
+    payload: [
+      {
+        id: 4,
+        lead_id: 46,
+        title: 'Mandar o contrato pelo ZapSign',
+        kind: 'follow_up',
+        due_at: emDias(1),
+      },
+    ],
+  },
   'leads/44/tasks': {
     payload: [
       {
@@ -298,6 +321,22 @@ const API = {
       ...NOTAS_FASE,
     ],
   },
+  'conversations/101/attachments': {
+    payload: [
+      ['audio', 'Áudio-1.ogg', 0.1],
+      ['image', 'Laudo do ortopedista.jpg', 0.2],
+      ['file', 'CTPS - João Carlos.pdf', 1.1],
+      ['audio', 'Áudio-2.ogg', 1.15],
+      ['video', 'Mão direita.mp4', 3.2],
+      ['file', 'Comprovante de residência.docx', 3.3],
+    ].map(([tipo, nome, dias], i) => ({
+      id: i + 1,
+      file_type: tipo,
+      extension: nome.split('.').pop(),
+      data_url: `https://hub.exemplo/rails/active_storage/blobs/redirect/x${i}/${encodeURIComponent(nome)}`,
+      created_at: Math.floor(Date.now() / 1000 - dias * 86400),
+    })),
+  },
   'conversations/101/ramon_copilot': {
     content:
       'João sofreu acidente de trabalho em 2019 (metalúrgica), ficou afastado pelo B91 até 12/2021 e voltou com perda de força na mão direita. Tem CAT e CTPS; falta o laudo atualizado. Perguntou quanto tempo demora e se paga algo antes — respondi que não há cobrança adiantada. Está animado, mas com receio de perder o emprego.',
@@ -330,10 +369,16 @@ const API = {
   },
   'leads/42/activities': {
     payload: [
-      { id: 1, kind: 'created', created_at: diasAtras(9) },
+      {
+        id: 1,
+        kind: 'created',
+        to_value: 'Meta Ads',
+        created_at: diasAtras(9),
+      },
       {
         id: 2,
         kind: 'stage_changed',
+        from_value: 'Novo',
         to_value: 'Qualificação',
         author_name: 'Eduardo',
         created_at: diasAtras(7),
@@ -346,10 +391,31 @@ const API = {
       },
       {
         id: 4,
+        kind: 'closer_changed',
+        to_value: 'Dr. Ramon',
+        author_name: 'Eduardo',
+        created_at: diasAtras(5),
+      },
+      {
+        id: 5,
         kind: 'stage_changed',
+        from_value: 'Qualificação',
         to_value: 'Reunião agendada',
         author_name: 'Eduardo',
         created_at: diasAtras(4),
+      },
+      {
+        id: 6,
+        kind: 'meeting_scheduled',
+        to_value: 'Primeiro Atendimento',
+        created_at: diasAtras(4),
+      },
+      {
+        id: 7,
+        kind: 'note_added',
+        to_value: 'Cliente mandou a CTPS pelo WhatsApp. Falta o laudo.',
+        author_name: 'Eduardo',
+        created_at: diasAtras(1),
       },
     ],
   },
@@ -577,6 +643,7 @@ const rolandoAoFim = () => {
       title="ResumoIA"
       :init-state="clicando('copilot-summarize', 'copilot-toggle')"
     >
+    <Variant title="ResumoIA" :init-state="clicando('copilot-summarize')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
           :lead="LEAD_CONTRATO"
@@ -616,6 +683,15 @@ const rolandoAoFim = () => {
       </div>
     </Variant>
     <Variant title="Historico" :init-state="comAba('historico')">
+    <Variant title="Atividade" :init-state="comAba('atividade')">
+      <div class="h-screen w-[400px] flex bg-n-background">
+        <LeadPanelBody
+          :lead="LEAD"
+          context="conversation"
+          :conversation-id="101"
+        />
+      </div>
+    </Variant>
     <Variant title="Scripts" :init-state="comAba('playbook')">
       <div class="h-screen w-[400px] flex bg-n-background">
         <LeadPanelBody
