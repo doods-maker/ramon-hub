@@ -28,10 +28,13 @@ const { accountScopedRoute } = useAccount();
 // ---- estado da visão: dia | semana | mês, ancorado numa data de referência
 const VIEWS = ['day', 'week', 'month'];
 const KIND_FILTERS = ['all', 'meeting', 'follow_up'];
+// Minhas = leads em que sou SDR ou Closer (lead sem dono: tarefa que criei)
+const OWNERS = ['mine', 'team'];
 
 // view e filtro persistem em localStorage; a âncora de data é volátil.
 const VIEW_KEY = 'ramon_agenda_view';
 const KIND_KEY = 'ramon_agenda_kind';
+const OWNER_KEY = 'ramon_agenda_owner';
 const loadPref = (key, valid, fallback) => {
   try {
     const value = localStorage.getItem(key);
@@ -45,11 +48,20 @@ const view = ref(loadPref(VIEW_KEY, VIEWS, 'week'));
 const anchor = ref(new Date());
 // Filtro por tipo: all | meeting | follow_up (follow_up = tudo que não é reunião)
 const kindFilter = ref(loadPref(KIND_KEY, KIND_FILTERS, 'all'));
+// padrão: gestor vê o time, agente vê as suas
+const owner = ref(
+  loadPref(
+    OWNER_KEY,
+    OWNERS,
+    getters.getCurrentRole?.value === 'administrator' ? 'team' : 'mine'
+  )
+);
 
-watch([view, kindFilter], () => {
+watch([view, kindFilter, owner], () => {
   try {
     localStorage.setItem(VIEW_KEY, view.value);
     localStorage.setItem(KIND_KEY, kindFilter.value);
+    localStorage.setItem(OWNER_KEY, owner.value);
   } catch (e) {
     // localStorage indisponível: seguimos sem persistir
   }
@@ -80,10 +92,20 @@ const matchesKind = task => {
   return task.kind !== 'meeting';
 };
 
+const matchesOwner = task => {
+  if (owner.value === 'team') return true;
+  const me = getters.getCurrentUserID?.value;
+  if (task.sdr_id || task.closer_id) {
+    return task.sdr_id === me || task.closer_id === me;
+  }
+  return task.user_id === me;
+};
+
 const tasksByDay = computed(() => {
   const map = {};
   getters['leadTasks/getAccountTasks'].value.forEach(task => {
-    if (!task.due_at || task.completed_at || !matchesKind(task)) return;
+    if (!task.due_at || task.completed_at) return;
+    if (!matchesKind(task) || !matchesOwner(task)) return;
     const key = dayKey(new Date(task.due_at));
     if (!map[key]) map[key] = [];
     map[key].push(task);
@@ -261,6 +283,26 @@ const hasVisibleTasks = computed(() =>
               @click="kindFilter = k"
             >
               {{ t(`RAMON.AGENDA.FILTER_${k.toUpperCase()}`) }}
+            </button>
+          </div>
+          <div
+            class="flex items-center gap-1 pb-1.5"
+            data-testid="agenda-owner-switch"
+          >
+            <button
+              v-for="o in OWNERS"
+              :key="o"
+              type="button"
+              :data-testid="`agenda-owner-${o}`"
+              :class="[
+                CHIP,
+                owner === o
+                  ? TOM.blue
+                  : 'text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12',
+              ]"
+              @click="owner = o"
+            >
+              {{ t(`RAMON.AGENDA.OWNER_${o.toUpperCase()}`) }}
             </button>
           </div>
         </div>

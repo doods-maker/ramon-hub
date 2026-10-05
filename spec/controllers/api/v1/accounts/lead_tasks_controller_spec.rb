@@ -69,4 +69,16 @@ RSpec.describe 'Lead Tasks API', type: :request do
     expect(titles).to eq(['atrasada'])
     expect(response.parsed_body['payload'].first['lead_name']).to eq(lead.name)
   end
+
+  it 'traz o SDR e o Closer do lead em cada tarefa (filtro Minhas | Time)', :aggregate_failures do
+    closer = create(:user, account: account, role: :agent, name: 'Clara Closer')
+    lead.update!(sdr: agent, closer: closer)
+    create(:lead_task, account: account, lead: lead, title: 'reunião', kind: 'meeting', due_at: 1.day.from_now)
+    get "/api/v1/accounts/#{account.id}/lead_tasks", headers: agent.create_new_auth_token, as: :json
+    row = response.parsed_body['payload'].first
+    expect(row['sdr_id']).to eq(agent.id)
+    expect(row['sdr_name']).to eq(agent.name)
+    expect(row['closer_id']).to eq(closer.id)
+    expect(row['closer_name']).to eq('Clara Closer')
+  end
 end

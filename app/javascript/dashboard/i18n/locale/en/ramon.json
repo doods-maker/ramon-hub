@@ -46,6 +46,8 @@
       "VIEW_MONTH": "Month",
       "FILTER_ALL": "All",
       "FILTER_MEETING": "Meetings",
+      "OWNER_MINE": "Mine",
+      "OWNER_TEAM": "Team",
       "FILTER_FOLLOW_UP": "Follow-ups",
       "PICK_MONTH": "Month",
       "EMPTY_DAY": "Nothing scheduled for this day.",

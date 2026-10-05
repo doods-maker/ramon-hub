@@ -29,7 +29,7 @@ class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
   private
 
   def account_scope
-    scope = Current.account.lead_tasks.includes(:lead)
+    scope = Current.account.lead_tasks.includes(lead: [:sdr, :closer])
     case params[:scope]
     when 'overdue' then scope.overdue.order(:due_at)
     when 'today' then scope.due_today.order(:due_at)

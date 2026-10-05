@@ -44,13 +44,19 @@ class Ramon::CockpitMetrics
 
   # ---- Agenda de hoje -----------------------------------------------------
 
-  # Reuniões de hoje, abertas ou não (o Cockpit mostra o dia inteiro).
+  # Reuniões de hoje, abertas ou não (o Cockpit mostra o dia inteiro). Quem
+  # aparece é o dono da reunião: Closer, senão SDR, senão quem criou a tarefa
+  # (a do Cal.com nasce sem criador).
   def agenda_today
     @account.lead_tasks.where(kind: 'meeting', due_at: today_range)
-            .includes(:user, :lead).order(:due_at).limit(AGENDA_LIMIT).map do |task|
+            .includes(:user, lead: [:closer, :sdr]).order(:due_at).limit(AGENDA_LIMIT).map do |task|
       { id: task.id, lead_id: task.lead_id, lead_name: task.lead&.name, title: task.title,
-        due_at: task.due_at, user_name: task.user&.name, source: task.lead&.source }
+        due_at: task.due_at, user_name: dono_da_reuniao(task), source: task.lead&.source }
     end
+  end
+
+  def dono_da_reuniao(task)
+    task.lead&.closer&.name || task.lead&.sdr&.name || task.user&.name
   end
 
   # ---- Perdas por tese (90d + trimestre anterior p/ o delta ↑/↓) ----------

@@ -162,6 +162,14 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(agenda.first['source']).to eq('lp-auxilio-acidente')
   end
 
+  it 'na agenda de hoje mostra o Closer do lead (Cal.com nasce sem criador)' do
+    closer = create(:user, account: account, role: :agent, name: 'Clara Closer')
+    lead = create(:lead, account: account, lead_stage: active_stage, closer: closer)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião Cal.com: consulta', due_at: Time.current)
+    get url, headers: agent.create_new_auth_token, as: :json
+    expect(response.parsed_body['agenda_today'].first['user_name']).to eq('Clara Closer')
+  end
+
   it 'agrupa as perdas por tese com motivos e trimestre anterior' do
     lost_stage = account.lead_stages.find_by(is_lost: true)
     thesis = account.theses.first || create(:thesis, account: account)

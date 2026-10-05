@@ -26,8 +26,8 @@ class Ramon::MeetingReminderJob < ApplicationJob
     return unless Rails.cache.write("ramon:reminder:#{lead_id}:#{start_at_iso}:#{label}", true, unless_exist: true, expires_in: 25.hours)
 
     hora = start_at.in_time_zone(TIME_ZONE).strftime('%d/%m %H:%M')
-    # sino do hub (todo usuário da conta) — o ntfy é opcional, o hub não
-    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_meeting_reminder',
+    # sino do hub só pra quem faz a reunião — o ntfy é opcional, o hub não
+    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_meeting_reminder', user_ids: destinatarios(lead),
                                        meta: { 'quando' => hora, 'label' => label }).perform
     return if ENV.fetch('NTFY_TOPIC', nil).blank?
 
@@ -37,6 +37,12 @@ class Ramon::MeetingReminderJob < ApplicationJob
   end
 
   private
+
+  # Closer e SDR do lead; lead sem dono avisa os gestores (nunca a conta toda).
+  def destinatarios(lead)
+    ids = [lead.closer_id, lead.sdr_id].compact.uniq
+    ids.presence || lead.account.account_users.administrator.pluck(:user_id)
+  end
 
   def meeting_open?(lead, start_at)
     return false if start_at.blank?
