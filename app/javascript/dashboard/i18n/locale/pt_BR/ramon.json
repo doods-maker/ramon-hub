@@ -1,5 +1,6 @@
 {
   "RAMON": {
+    "NOTA_PRIVADA_ROTULO": "Nota privada",
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",
       "SEM_RESPOSTA": "{quem} não respondeu em 3 min",

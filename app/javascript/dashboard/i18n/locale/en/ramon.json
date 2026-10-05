@@ -1,5 +1,6 @@
 {
   "RAMON": {
+    "NOTA_PRIVADA_ROTULO": "Private note",
     "CHEGADA": {
       "CHEGOU": "{quem}: a client has arrived",
       "SEM_RESPOSTA": "{quem} didn't answer in 3 min",

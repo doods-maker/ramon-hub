@@ -19,18 +19,22 @@ const { variant, orientation, inReplyTo, shouldGroupWithNext } =
   useMessageContext();
 const { t } = useI18n();
 
+// Hub: o que o escritório envia (agente, automação, modelo) fica no verde do
+// WhatsApp; nota privada em âmbar translúcido com rótulo (05/10/2026).
+const ENVIADA = 'bg-[rgb(var(--ramon-enviada))] text-n-slate-12';
+
 const varaintBaseMap = {
-  [MESSAGE_VARIANTS.AGENT]: 'bg-n-solid-blue text-n-slate-12',
+  [MESSAGE_VARIANTS.AGENT]: ENVIADA,
   [MESSAGE_VARIANTS.PRIVATE]:
-    'bg-n-solid-amber text-n-amber-12 [&_.prosemirror-mention-node]:font-semibold',
+    'bg-n-amber-9/15 text-n-slate-12 [&_.prosemirror-mention-node]:font-semibold',
   [MESSAGE_VARIANTS.USER]: 'bg-n-slate-4 text-n-slate-12',
   [MESSAGE_VARIANTS.ACTIVITY]: 'bg-n-alpha-1 text-n-slate-11 text-sm',
-  [MESSAGE_VARIANTS.BOT]: 'bg-n-solid-iris text-n-slate-12',
-  [MESSAGE_VARIANTS.TEMPLATE]: 'bg-n-solid-iris text-n-slate-12',
+  [MESSAGE_VARIANTS.BOT]: ENVIADA,
+  [MESSAGE_VARIANTS.TEMPLATE]: ENVIADA,
   [MESSAGE_VARIANTS.ERROR]: 'bg-n-ruby-4 text-n-ruby-12',
   [MESSAGE_VARIANTS.EMAIL]: 'w-full',
   [MESSAGE_VARIANTS.UNSUPPORTED]:
-    'bg-n-solid-amber/70 border border-dashed border-n-amber-12 text-n-amber-12',
+    'bg-n-amber-9/10 border border-dashed border-n-amber-9 text-n-slate-12',
 };
 
 const orientationMap = {
@@ -113,17 +117,21 @@ const replyToPreview = computed(() => {
         class="prose prose-bubble line-clamp-2"
       />
     </div>
+    <p
+      v-if="variant === MESSAGE_VARIANTS.PRIVATE"
+      class="mb-1 text-[11px] font-semibold text-n-amber-11"
+      data-testid="nota-privada-rotulo"
+    >
+      {{ t('RAMON.NOTA_PRIVADA_ROTULO') }}
+    </p>
     <slot />
     <MessageMeta
       v-if="shouldShowMeta"
       :class="[
         flexOrientationClass,
         variant === MESSAGE_VARIANTS.EMAIL ? 'px-3 pb-3' : '',
-        variant === MESSAGE_VARIANTS.PRIVATE
-          ? 'text-n-amber-12/50'
-          : 'text-n-slate-11',
       ]"
-      class="mt-2"
+      class="mt-2 text-n-slate-11"
     />
   </div>
 </template>
