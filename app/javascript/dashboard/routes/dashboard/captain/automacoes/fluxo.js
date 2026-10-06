@@ -209,6 +209,16 @@ export const REGRAS_ADVBOX = [
   'concessao',
   'arquivado',
 ];
+// Fluxos do sistema (B3, db/seeds/ramon/fluxos/sistema/*.json): grupos da aba "Do sistema"
+// na ordem da tela, e o selo de quem sai para fora sem uma pessoa no meio.
+export const GRUPOS_SISTEMA = [
+  'leads_conversas',
+  'contrato_documentos',
+  'painel_cliente',
+  'rotinas_relatorios',
+  'instagram',
+];
+export const ALCANCES = ['fala_com_cliente', 'publica'];
 export const PAPEIS = ['sdr', 'closer']; // Ramon::Papeis::COLUNA
 
 // Ramon::Fluxos::Contexto#dados — o que o {chave} dos textos e as condições enxergam.

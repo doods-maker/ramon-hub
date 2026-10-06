@@ -1,0 +1,31 @@
+{
+  "nome": "SLA da 1ª resposta",
+  "grupo": "leads_conversas",
+  "descricao": "No código: RamonLeadListener#conversation_created (caixas com Criar lead ligado) agenda Ramon::FirstResponseSlaJob para N minutos depois; o próprio job agenda a escalada de 60 minutos.\n\nO desenho não consegue mostrar:\n• o tempo vem do SLA de cada caixa (padrão de 5 min no env RAMON_SLA_FIRST_RESPONSE_MINUTES) e a escalada conta 60 min desde a criação da conversa;\n• \"ainda sem 1ª resposta\" não tem campo — o Se só confere se a conversa segue aberta; o código também desiste se a conversa não tem lead;\n• o horário do código é das 7h às 21h, todos os dias — diferente do horário comercial dos fluxos (seg–sex, 8h–18h);\n• a escalada é agendada mesmo fora do horário; só o aviso respeita o horário;\n• o sino vai para o SDR do lead (sem SDR, para os gestores) e, na escalada, para os gestores — o passo Sino não escolhe por papel.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"conversa_criada"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"esperar","config":{"rotulo":"SLA da caixa (padrão 5 min)","quantidade":5,"unidade":"minutos"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"se","config":{"rotulo":"Ainda sem 1ª resposta e aberta?","juncao":"e","condicoes":[{"campo":"status","operador":"igual","valor":"open"}]},"posicao":{"x":0,"y":280}},
+      {"id":"n4","tipo":"se","config":{"rotulo":"Entre 7h e 21h?","juncao":"e","condicoes":[{"campo":"texto","operador":"em_horario_comercial","valor":""}]},"posicao":{"x":-130,"y":440}},
+      {"id":"n5","tipo":"avisar_sino","config":{"rotulo":"Sino do SDR (sem SDR: gestores)","texto":"Lead aguardando 1ª resposta há 5 min: {nome_completo}"},"posicao":{"x":-260,"y":600}},
+      {"id":"n6","tipo":"avisar_push","config":{"rotulo":"Push: lead aguardando","titulo":"Lead aguardando 1a resposta","texto":"Lead aguardando 1ª resposta há 5min: {nome_completo}"},"posicao":{"x":-260,"y":740}},
+      {"id":"n7","tipo":"esperar","config":{"rotulo":"Até 60 min da criação da conversa","quantidade":55,"unidade":"minutos"},"posicao":{"x":0,"y":880}},
+      {"id":"n8","tipo":"se","config":{"rotulo":"Ainda sem 1ª resposta e aberta?","juncao":"e","condicoes":[{"campo":"status","operador":"igual","valor":"open"}]},"posicao":{"x":0,"y":1020}},
+      {"id":"n9","tipo":"se","config":{"rotulo":"Entre 7h e 21h?","juncao":"e","condicoes":[{"campo":"texto","operador":"em_horario_comercial","valor":""}]},"posicao":{"x":-130,"y":1180}},
+      {"id":"n10","tipo":"avisar_sino","config":{"rotulo":"Escalada: sino dos gestores","texto":"Lead aguardando 1ª resposta há 60 min: {nome_completo}"},"posicao":{"x":-260,"y":1340}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"},
+      {"de":"n3","saida":"sim","para":"n4"},
+      {"de":"n4","saida":"sim","para":"n5"},
+      {"de":"n5","saida":"s","para":"n6"},
+      {"de":"n6","saida":"s","para":"n7"},
+      {"de":"n4","saida":"nao","para":"n7"},
+      {"de":"n7","saida":"s","para":"n8"},
+      {"de":"n8","saida":"sim","para":"n9"},
+      {"de":"n9","saida":"sim","para":"n10"}
+    ]
+  }
+}

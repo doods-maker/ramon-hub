@@ -1,0 +1,16 @@
+{
+  "nome": "Resumo do dia",
+  "grupo": "rotinas_relatorios",
+  "descricao": "No código: Ramon::DailyDigestJob (todo dia às 08:00) → Ramon::DailyDigestService; o e-mail sai pelo AdministratorNotifications::RamonDigestMailer.\n\nFica no código (spec §8): é relatório, não fluxo — o desenho é só para conferir.\n\nO desenho não consegue mostrar:\n• roda uma vez por conta, não uma vez por lead como o gatilho Relógio;\n• o push só sai se o dia tem algo (tarefas vencidas, conversas fora do SLA, reunião ainda hoje ou valor em jogo) e só com o ntfy configurado;\n• o e-mail de gestão (leads novos, ganhos, perdidos e 1ª resposta de ontem) só sai com SMTP configurado — o quadro não tem passo de e-mail.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"08:00","rotulo":"Todo dia às 08:00 (1 vez por conta)"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"avisar_push","config":{"rotulo":"Push: seu dia (só se houver algo)","titulo":"Ramon Hub · seu dia","texto":"N tarefas vencidas · N fora do SLA · reunião HH:MM (nome) · R$ em jogo"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"nota_privada","config":{"rotulo":"E-mail de gestão: números de ontem (só com SMTP)","texto":"Leads novos, ganhos, perdidos e tempo de 1ª resposta de ontem"},"posicao":{"x":0,"y":280}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"}
+    ]
+  }
+}
