@@ -1,11 +1,12 @@
 # Anda uma execução de fluxo passo a passo (spec §6). Seguro para chamada dupla:
 # reivindica a execução (esperando e vencida → rodando) numa transação curta e só
 # então anda — os passos rodam fora de transação (cada um commita o seu).
+# Passos lentos (IA, ADVBOX) também rodam fora de transação; a execução é gravada a cada passo.
 # Esperar só anota retomar_em — quem retoma é o Ramon::FluxoRelogioJob.
 class Ramon::Fluxos::Executor
   LIMITE_PASSOS = 50
   ESPERAS_ERRO = [1, 5, 15].freeze # minutos até a próxima tentativa
-  VISIVEIS = %w[mover_etapa criar_tarefa acao_chatwoot avisar_sino avisar_push].freeze
+  VISIVEIS = %w[mover_etapa criar_tarefa acao_chatwoot avisar_sino avisar_push trocar_responsavel preencher_campo].freeze
   # tipo do passo → módulo que tem o método de mesmo nome (chamado por nome: dá pra stubar no spec)
   PASSOS = {
     'se' => Ramon::Fluxos::Passos::Logica, 'escolha' => Ramon::Fluxos::Passos::Logica,
@@ -13,6 +14,8 @@ class Ramon::Fluxos::Executor
     'rascunho_texto' => Ramon::Fluxos::Passos::Conversa, 'nota_privada' => Ramon::Fluxos::Passos::Conversa,
     'acao_chatwoot' => Ramon::Fluxos::Passos::Conversa,
     'mover_etapa' => Ramon::Fluxos::Passos::Lead, 'criar_tarefa' => Ramon::Fluxos::Passos::Lead,
+    'registrar_atividade' => Ramon::Fluxos::Passos::Lead, 'trocar_responsavel' => Ramon::Fluxos::Passos::Lead,
+    'preencher_campo' => Ramon::Fluxos::Passos::Lead,
     'avisar_sino' => Ramon::Fluxos::Passos::Aviso, 'avisar_push' => Ramon::Fluxos::Passos::Aviso
   }.freeze
 
@@ -80,6 +83,7 @@ class Ramon::Fluxos::Executor
       return if resultado.nil? # erro: já ficou esperando nova tentativa ou falhou
 
       registrar(passo, resultado)
+      @execucao.save! # a cada passo: o relógio só vê "órfã" se UM passo passar de 10 min
       return @execucao.status = 'concluida' if resultado[:parar]
 
       @execucao.no_atual = grafo.proximo(passo['id'], resultado[:saida])

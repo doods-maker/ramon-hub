@@ -1027,6 +1027,7 @@
           "LP_RECAPTURED": "recebeu novo formulário da LP",
           "REUNIAO_REGISTRADA": "registrou a reunião",
           "ZAPSIGN_SIGNED": "contrato assinado no ZapSign",
+          "FLUXO": "registrou (automação)",
           "ZAPSIGN_REFUSED": "contrato recusado no ZapSign",
           "MEETING_RESCHEDULED": "remarcou a reunião",
           "MEETING_NO_SHOW": "registrou que o cliente não compareceu"

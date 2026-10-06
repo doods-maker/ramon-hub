@@ -5,6 +5,10 @@ class Ramon::Fluxos::Contexto
   # {regra} do evento do ADVBOX, {documento} do anexo casado com o checklist
   DO_GATILHO = %w[texto quando regra documento].freeze
 
+  # chaves que o próprio hub monta em `dados`: preencher_campo recusa (o campo nunca apareceria)
+  RESERVADAS = (DO_GATILHO + %w[nome nome_completo telefone responsavel responsavel_id etapa etapa_id tese tese_id origem canal
+                                valor prioridade caixa caixa_id status etiquetas documentos_completos documentos_faltantes]).freeze
+
   attr_reader :execucao
 
   def initialize(execucao)

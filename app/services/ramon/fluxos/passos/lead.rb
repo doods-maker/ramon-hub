@@ -24,6 +24,45 @@ module Ramon::Fluxos::Passos::Lead
     { saida: 's', resumo: "tarefa \"#{titulo}\" · #{responsavel&.name || 'sem responsável'}" }
   end
 
+  def registrar_atividade(config, ctx)
+    lead = exigir_lead(ctx)
+    texto = ctx.interpolar(config['texto']).truncate(255)
+    return { saida: 's', resumo: "faria: atividade \"#{texto.truncate(80)}\"" } if ctx.ensaio?
+
+    lead.lead_activities.create!(account: lead.account, kind: 'fluxo', to_value: texto)
+    { saida: 's', resumo: "atividade: #{texto.truncate(80)}" }
+  end
+
+  # SDR/Closer (Ramon::Papeis): pessoa escolhida na tela ou o próximo do time (menos leads abertos).
+  # A troca grava sdr_changed/closer_changed pelo callback do Lead.
+  def trocar_responsavel(config, ctx)
+    lead = exigir_lead(ctx)
+    papel = config['papel']
+    coluna = Ramon::Papeis::COLUNA.fetch(papel)
+    pessoa = config['user_id'].present? ? lead.account.users.find(config['user_id']) : Ramon::Papeis.proximo(lead.account, papel)
+    return { saida: 's', resumo: "#{papel}: ninguém no time" } if pessoa.nil?
+    return { saida: 's', resumo: "faria: #{papel} → #{pessoa.name}" } if ctx.ensaio?
+
+    lead.update!(coluna => pessoa.id)
+    { saida: 's', resumo: "#{papel} → #{pessoa.name}" }
+  end
+
+  # Grava em custom_attributes['campos'] (nunca na raiz: zapsign/advbox/doc_status são do hub).
+  # Lição lost update: relê e junta só a chave do fluxo. Nome reservado do hub seria invisível em `dados`.
+  def preencher_campo(config, ctx)
+    lead = exigir_lead(ctx)
+    chave = config['chave']
+    raise Ramon::Fluxos::PassoImpossivel, "#{chave} é um nome reservado do hub" if Ramon::Fluxos::Contexto::RESERVADAS.include?(chave)
+
+    valor = ctx.interpolar(config['valor']).truncate(500)
+    return { saida: 's', resumo: "faria: #{chave} = #{valor.truncate(60)}" } if ctx.ensaio?
+
+    lead.reload
+    campos = (lead.custom_attributes['campos'] || {}).merge(chave => valor)
+    lead.update!(custom_attributes: lead.custom_attributes.to_h.merge('campos' => campos))
+    { saida: 's', resumo: "#{chave} = #{valor.truncate(60)}" }
+  end
+
   def responsavel_da_tarefa(lead, config)
     config['responsavel_id'].present? ? lead.account.users.find(config['responsavel_id']) : (lead.closer || lead.sdr)
   end

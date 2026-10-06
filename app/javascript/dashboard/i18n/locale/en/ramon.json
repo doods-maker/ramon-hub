@@ -1027,6 +1027,7 @@
           "LP_RECAPTURED": "received a new landing page form",
           "REUNIAO_REGISTRADA": "recorded the meeting",
           "ZAPSIGN_SIGNED": "signed the contract on ZapSign",
+          "FLUXO": "logged (automation)",
           "ZAPSIGN_REFUSED": "refused the contract on ZapSign",
           "MEETING_RESCHEDULED": "rescheduled the meeting",
           "MEETING_NO_SHOW": "recorded a no-show"

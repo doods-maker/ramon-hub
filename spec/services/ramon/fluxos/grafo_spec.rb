@@ -97,6 +97,11 @@ RSpec.describe Ramon::Fluxos::Grafo do
                                   'Passo p2: falta assistente_id', 'Passo p2: falta skill_id'])
   end
 
+  it 'preencher campo recusa nome reservado do hub' do
+    d = grafo_linear({ 'tipo' => 'manual' }, ['preencher_campo', { 'chave' => 'nome' }])
+    expect(grafo(d).erros).to eq(['Passo p1: nome é um nome reservado do hub'])
+  end
+
   it 'relógio precisa da hora; hora torta é recusada; lead parado aceita sem hora' do
     expect(grafo(grafo_linear({ 'tipo' => 'relogio' })).erros).to eq(['O relógio precisa da hora (HH:MM)'])
     expect(grafo(grafo_linear({ 'tipo' => 'lead_parado', 'hora' => '25:00' })).erros).to eq(['Hora do gatilho inválida (use HH:MM)'])

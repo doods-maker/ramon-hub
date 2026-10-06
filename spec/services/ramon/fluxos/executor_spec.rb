@@ -140,4 +140,16 @@ RSpec.describe Ramon::Fluxos::Executor do
     expect(e.status).to eq('esperando')
     travel(2.hours) { expect(avancar(e).status).to eq('concluida') }
   end
+
+  it 'grava a execução a cada passo (passo lento não parece órfão ao relógio)' do
+    vistos = []
+    allow(Ramon::Fluxos::Passos::Lead).to receive(:registrar_atividade) do |_config, ctx|
+      vistos << FluxoExecucao.find(ctx.execucao.id).trilha.size
+      { saida: 's', resumo: 'ok' }
+    end
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['nota_privada', { 'texto' => 'a' }], ['registrar_atividade', { 'texto' => 'b' }]))
+    avancar(e)
+    expect(vistos).to eq([1])
+    expect(e.status).to eq('concluida')
+  end
 end

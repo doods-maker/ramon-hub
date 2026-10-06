@@ -163,7 +163,10 @@ class Ramon::Fluxos::Grafo
   end
 
   def erros_campo(passo, config)
-    config['chave'].to_s.match?(CHAVE_CAMPO) ? [] : ["Passo #{passo['id']}: nome do campo só com letras minúsculas, números e _ (até 40)"]
+    chave = config['chave'].to_s
+    return ["Passo #{passo['id']}: nome do campo só com letras minúsculas, números e _ (até 40)"] unless chave.match?(CHAVE_CAMPO)
+
+    Ramon::Fluxos::Contexto::RESERVADAS.include?(chave) ? ["Passo #{passo['id']}: #{chave} é um nome reservado do hub"] : []
   end
 
   def erros_escolha(passo, config)
