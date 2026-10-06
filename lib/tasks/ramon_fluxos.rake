@@ -21,6 +21,17 @@ namespace :ramon do
         Ramon::Fluxos::Reunioes.mudar_modo!(account, args[:modo])
         puts Ramon::Fluxos::Reunioes.descrever(account)
       end
+
+      desc 'SO LEITURA: agendamentos e lembretes do codigo x fluxos em sombra (janela de no maximo 8 dias). ' \
+           'Uso: rake ramon:fluxos:reunioes:comparar[account_id,dias] (padrao 1 dia; rodar todo dia)'
+      task :comparar, [:account_id, :dias] => :environment do |_task, args|
+        account = conta.call(args)
+        dias = (args[:dias].presence || 1).to_i
+        comparacoes = [Ramon::Fluxos::CompararAgendamentos, Ramon::Fluxos::CompararLembretes].map { |k| k.new(account, dias: dias) }
+        puts comparacoes.map(&:relatorio).join("\n\n")
+        geral = comparacoes.sum(&:divergencias).zero? ? 'BATEU' : 'NÃO BATEU'
+        puts "\nResultado geral: #{geral} (#{comparacoes.sum { |c| c.linhas.size }} comparações)"
+      end
     end
   end
 end
