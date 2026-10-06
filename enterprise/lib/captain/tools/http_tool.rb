@@ -12,6 +12,9 @@ class Captain::Tools::HttpTool < Agents::Tool
   end
 
   def perform(tool_context, **params)
+    # ramon: ferramenta HTTP personalizada pode escrever fora do hub — no modo teste nunca chama.
+    return Captain::Tools::BasePublicTool.simulacao(@custom_tool.slug, params) if Captain::Tools::BasePublicTool.teste?(tool_context)
+
     url = @custom_tool.build_request_url(params)
     body = @custom_tool.build_request_body(params)
 

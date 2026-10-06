@@ -21,7 +21,7 @@ class Api::V1::Accounts::CaptainToolRunsController < Api::V1::Accounts::BaseCont
   end
 
   def escopo
-    runs = Captain::ToolRun.where(account_id: Current.account.id)
+    runs = Captain::ToolRun.fora_de_teste.where(account_id: Current.account.id)
     runs = runs.where(tool_name: params[:tool_name]) if params[:tool_name].present?
     runs = runs.where(status: params[:status]) if params[:status].present?
     runs
@@ -29,12 +29,12 @@ class Api::V1::Accounts::CaptainToolRunsController < Api::V1::Accounts::BaseCont
 
   def resumo
     desde = 24.hours.ago
-    janela = Captain::ToolRun.where(account_id: Current.account.id, created_at: desde..)
+    janela = Captain::ToolRun.fora_de_teste.where(account_id: Current.account.id, created_at: desde..)
     {
       total_24h: janela.count,
       erros_24h: janela.where(status: 'erro').count,
       por_tool: janela.group(:tool_name).count,
-      tools: Captain::ToolRun.where(account_id: Current.account.id).distinct.pluck(:tool_name).sort
+      tools: Captain::ToolRun.fora_de_teste.where(account_id: Current.account.id).distinct.pluck(:tool_name).sort
     }
   end
 end
