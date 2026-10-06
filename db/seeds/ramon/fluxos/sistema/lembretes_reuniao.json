@@ -1,0 +1,33 @@
+{
+  "nome": "Lembretes de reunião",
+  "grupo": "leads_conversas",
+  "descricao": "No código: Ramon::ReuniaoAgendamento.call (reunião marcada pelo painel do lead ou pelo Cal.com) e Ramon::MeetingReminderJob (os lembretes).\n\nO desenho não consegue mostrar:\n• os 5 lembretes (24h, 8h, 1h, 30 min e 5 min antes) contam para trás a partir da hora da reunião — a espera dos fluxos só conta para a frente; aqui eles aparecem como um ciclo só, e saem apenas os que ainda estão no futuro;\n• cada lembrete confere se a tarefa da reunião segue aberta naquele horário (cancelou ou remarcou → o lembrete antigo é descartado) e não repete o mesmo lembrete;\n• o texto da atividade no código é \"<título> em dd/mm/aaaa HH:MM\"; o desenho só tem {quando} (ex.: \"quinta, 20/08 às 14:00\"), então o formato é aproximado;\n• o sino do lembrete vai para o Closer e o SDR do lead e, se não houver nenhum dos dois, para os administradores da conta; os pushes (reunião marcada e lembretes) só saem com NTFY_TOPIC configurado;\n• a tarefa da reunião vence na hora marcada; a etapa só anda para a frente (quem já está adiante fica onde está);\n• o Closer só é escolhido se o lead ainda não tem;\n• o rascunho de confirmação vai para as notas do lead (não para a conversa) e o sino de reunião marcada vai para toda a conta;\n• remarcar refaz atividade, rascunho, lembretes e sino (sem mexer em tarefa nova, etapa ou Closer); cancelar registra a atividade, apaga a tarefa e avisa no sino e no push.",
+  "resumo": "Quando a reunião é marcada, confirma com o lead e avisa a equipe 24h, 8h, 1h, 30 min e 5 min antes.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"reuniao_marcada"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"registrar_atividade","config":{"rotulo":"Atividade: reunião agendada (título em dd/mm/aaaa HH:MM)","texto":"{titulo} em {quando}"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"criar_tarefa","config":{"rotulo":"Tarefa da reunião (vence na hora marcada)","titulo":"Reunião","tipo":"meeting","prazo_dias":0},"posicao":{"x":0,"y":280}},
+      {"id":"n4","tipo":"mover_etapa","config":{"rotulo":"Mover para Reunião agendada (só para a frente)","etapa_id":null},"posicao":{"x":0,"y":420}},
+      {"id":"n5","tipo":"trocar_responsavel","config":{"rotulo":"Closer automático (se o lead ainda não tem)","papel":"closer"},"posicao":{"x":0,"y":560}},
+      {"id":"n6","tipo":"rascunho_texto","config":{"rotulo":"Rascunho de confirmação (nas notas do lead)","texto":"Oi {nome}! Nossa conversa está confirmada pra {quando}. Vou te esperar, tá? Se não puder comparecer, me avise com antecedência que a gente remarca sem problema."},"posicao":{"x":0,"y":700}},
+      {"id":"n7","tipo":"avisar_sino","config":{"rotulo":"Sino para toda a conta","texto":"Reunião marcada: {nome_completo} — {quando}"},"posicao":{"x":0,"y":860}},
+      {"id":"n8","tipo":"avisar_push","config":{"rotulo":"Push: reunião marcada","titulo":"Reuniao marcada: {nome_completo}","texto":"{quando}"},"posicao":{"x":0,"y":1000}},
+      {"id":"n9","tipo":"esperar","config":{"rotulo":"Ciclo de lembretes: 24h · 8h · 1h · 30 min · 5 min antes da reunião (a espera do desenho é só ilustrativa)","quantidade":1,"unidade":"dias"},"posicao":{"x":0,"y":1140}},
+      {"id":"n10","tipo":"avisar_sino","config":{"rotulo":"Lembrete ao Closer e ao SDR (se a reunião segue marcada)","texto":"Reunião de {nome_completo}: {quando}"},"posicao":{"x":0,"y":1280}},
+      {"id":"n11","tipo":"avisar_push","config":{"rotulo":"Push do lembrete","titulo":"Lembrete de reunião: {nome_completo}","texto":"{quando} — hora de mandar a mensagem de confirmação pro cliente"},"posicao":{"x":0,"y":1420}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"},
+      {"de":"n3","saida":"s","para":"n4"},
+      {"de":"n4","saida":"s","para":"n5"},
+      {"de":"n5","saida":"s","para":"n6"},
+      {"de":"n6","saida":"s","para":"n7"},
+      {"de":"n7","saida":"s","para":"n8"},
+      {"de":"n8","saida":"s","para":"n9"},
+      {"de":"n9","saida":"s","para":"n10"},
+      {"de":"n10","saida":"s","para":"n11"}
+    ]
+  }
+}

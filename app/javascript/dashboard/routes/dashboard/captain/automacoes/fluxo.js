@@ -188,7 +188,7 @@ export const ACOES_CHATWOOT = [
   { nome: 'mute_conversation', parametro: null },
   { nome: 'send_email_to_team', parametro: 'email_time' },
 ];
-// = Grafo.permitidas_chatwoot (inclui as que vêm de regras convertidas na B3)
+// = Grafo.permitidas_chatwoot (o que a regra nativa aceita, menos as proibidas)
 export const CHATWOOT_PERMITIDAS = [
   ...ACOES_CHATWOOT.map(a => a.nome),
   'change_status',
@@ -209,6 +209,16 @@ export const REGRAS_ADVBOX = [
   'concessao',
   'arquivado',
 ];
+// Fluxos do sistema (B3, db/seeds/ramon/fluxos/sistema/*.json): grupos da aba "Do sistema"
+// na ordem da tela, e o selo de quem sai para fora sem uma pessoa no meio.
+export const GRUPOS_SISTEMA = [
+  'leads_conversas',
+  'contrato_documentos',
+  'painel_cliente',
+  'rotinas_relatorios',
+  'instagram',
+];
+export const ALCANCES = ['fala_com_cliente', 'publica'];
 export const PAPEIS = ['sdr', 'closer']; // Ramon::Papeis::COLUNA
 
 // Ramon::Fluxos::Contexto#dados — o que o {chave} dos textos e as condições enxergam.
@@ -246,6 +256,7 @@ export const CAMPOS = [
   'nome',
   'telefone',
   'documentos_completos',
+  'regra',
 ];
 export const OPERADORES = [
   'igual',

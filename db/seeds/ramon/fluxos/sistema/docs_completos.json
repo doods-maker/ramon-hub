@@ -1,0 +1,17 @@
+{
+  "nome": "Documentos completos",
+  "grupo": "contrato_documentos",
+  "descricao": "No código: LeadComercial before_save :stamp_docs_completos (app/models/concerns/lead_comercial.rb).\n\nO desenho não consegue mostrar:\n• roda a cada gravação do lead que mexa nos documentos ou na tese — os fluxos não têm esse gatilho (aqui: Rodar na mão);\n• grava a coluna docs_completos_em (usada no contrato limpo e nos relatórios), não um campo livre, e apaga o carimbo se o checklist voltar a ficar incompleto;\n• só conta o que a equipe confirmou.",
+  "resumo": "Quando o checklist de documentos do lead fica completo, registra a data.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Equipe confirma documento ou muda a tese"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"se","config":{"rotulo":"Documentos completos?","juncao":"e","condicoes":[{"campo":"documentos_completos","operador":"igual","valor":"sim"}]},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"preencher_campo","config":{"rotulo":"Carimba docs_completos_em","chave":"docs_completos_em","valor":"agora"},"posicao":{"x":0,"y":280}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"sim","para":"n3"}
+    ]
+  }
+}

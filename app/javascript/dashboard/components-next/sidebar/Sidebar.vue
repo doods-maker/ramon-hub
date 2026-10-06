@@ -807,12 +807,8 @@ const menuItems = computed(() => {
           icon: 'i-lucide-code',
           to: accountScopedRoute('attributes_list'),
         },
-        {
-          name: 'Settings Automation',
-          label: t('SIDEBAR.AUTOMATION'),
-          icon: 'i-lucide-repeat',
-          to: accountScopedRoute('automation_list'),
-        },
+        // FORK(ramon): a "Automação" nativa saiu daqui — as automações vivem em
+        // Inteligência → Automações (fluxos, fatia B3); o link antigo redireciona.
         {
           name: 'Settings Agent Bots',
           label: t('SIDEBAR.AGENT_BOTS'),

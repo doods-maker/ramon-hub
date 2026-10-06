@@ -5,8 +5,10 @@ import enSettings from 'dashboard/i18n/locale/en/settings.json';
 import ptSettings from 'dashboard/i18n/locale/pt_BR/settings.json';
 import {
   ACOES_CHATWOOT,
+  ALCANCES,
   CAMPOS,
   GATILHOS,
+  GRUPOS_SISTEMA,
   OPERADORES,
   PALETA,
   PAPEIS,
@@ -113,6 +115,26 @@ describe('textos das automações', () => {
     MODELOS.forEach(m => expect(FLUXOS_PT.MODELOS[m.chave].NOME).toBeTruthy());
     REGRAS_ADVBOX.forEach(r => expect(FLUXOS_PT.REGRAS_ADVBOX[r]).toBeTruthy());
     PAPEIS.forEach(p => expect(FLUXOS_PT.PAPEIS[p]).toBeTruthy());
+    // chaves do HOJE em app/services/ramon/fluxos/sistema.rb: cada uma precisa da dica
+    [
+      'cadencia',
+      'sla_primeira_resposta',
+      'lembretes_reuniao',
+      'eventos_advbox',
+      'lead_ganho',
+      'docs_completos',
+      'contrato_limpo',
+      'copiloto_noturno',
+      'chegada_cliente',
+      'publicar_pecas',
+    ].forEach(k => {
+      expect(FLUXOS_PT.SISTEMA.HOJE_DE[k]).toBeTruthy();
+      expect(FLUXOS_EN.SISTEMA.HOJE_DE[k]).toBeTruthy();
+    });
+    GRUPOS_SISTEMA.forEach(g =>
+      expect(FLUXOS_PT.SISTEMA.GRUPOS[g]).toBeTruthy()
+    );
+    ALCANCES.forEach(a => expect(FLUXOS_PT.SISTEMA.ALCANCE[a]).toBeTruthy());
     [
       ...Object.values(OBRIGATORIOS).flat(),
       'tipo_tarefa_id',

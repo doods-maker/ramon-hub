@@ -2,17 +2,17 @@
 class Api::V1::Accounts::RamonFluxosController < Api::V1::Accounts::BaseController
   before_action :check_authorization
   before_action :fluxo, except: [:index, :create, :opcoes_advbox]
-  before_action :bloquear_sistema, only: [:update, :destroy, :publicar, :rodar]
+  before_action :bloquear_sistema, only: [:update, :destroy, :publicar, :rodar, :ensaio]
 
   def index
-    fluxos = Current.account.fluxos.includes(:versao_publicada).order(:origem, :nome)
-    payload = fluxos.map(&:resumo_json)
-    render json: { payload: payload, resumo: resumo(payload) }
+    Ramon::Fluxos::Sistema.sincronizar(Current.account)
+    payload = Current.account.fluxos.includes(:versao_publicada).order(:origem, :nome).map { |fluxo| item(fluxo) }
+    render json: { payload: payload, resumo: resumo(payload.reject { |f| f[:origem] == 'sistema' }) }
   end
 
   def show
-    render json: @fluxo.resumo_json.merge(rascunho: @fluxo.rascunho,
-                                          versoes: @fluxo.versoes.order(numero: :desc).map { |v| { numero: v.numero, created_at: v.created_at } })
+    render json: item(@fluxo).merge(rascunho: @fluxo.rascunho,
+                                    versoes: @fluxo.versoes.order(numero: :desc).map { |v| { numero: v.numero, created_at: v.created_at } })
   end
 
   def create
@@ -91,6 +91,12 @@ class Api::V1::Accounts::RamonFluxosController < Api::V1::Accounts::BaseControll
     permitidos = params.permit(:nome, :descricao, :ativo, :limite_dia, :modo).to_h
     permitidos[:rascunho] = params[:rascunho].permit!.to_h if params[:rascunho].present?
     permitidos
+  end
+
+  # Do sistema: Hoje (rastro do código), grupo, selo e rótulo do gatilho real vêm do desenho (Sistema.extras).
+  def item(fluxo)
+    json = fluxo.resumo_json
+    fluxo.origem == 'sistema' ? json.merge(Ramon::Fluxos::Sistema.extras(Current.account, fluxo.sistema_chave)) : json
   end
 
   def resumo(payload)

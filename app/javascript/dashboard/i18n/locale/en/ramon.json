@@ -1866,8 +1866,49 @@
       "NOVO": "New flow",
       "FECHAR": "Close",
       "ABA_MEUS": "My flows",
+      "ABA_SISTEMA": "Built-in",
       "VAZIO": "No flows yet. Start from a template in New flow.",
       "ERRO_CRIAR": "Could not create the flow.",
+      "SISTEMA": {
+        "EXPLICA": "These automations run today in the hub code, not on the board. Here you see each one drawn, read-only, so you can check what the hub does on its own. They will become editable flows one by one: first they run side by side as a dry run, we compare them with the code and, if they match, the flow takes over.",
+        "SEM_CONTADOR": "No cheap counter for today",
+        "HOJE_DE": {
+          "cadencia": "follow-up drafts created today",
+          "sla_primeira_resposta": "new conversations today in inboxes that create leads (does not count missed deadlines)",
+          "lembretes_reuniao": "meetings scheduled or rescheduled today (does not count reminders sent)",
+          "eventos_advbox": "ADVBOX events processed today",
+          "lead_ganho": "leads won today",
+          "docs_completos": "leads that completed their documents today",
+          "contrato_limpo": "clean contracts today",
+          "copiloto_noturno": "copilot suggestions generated today",
+          "chegada_cliente": "client arrivals escalated today",
+          "publicar_pecas": "publications started today"
+        },
+        "GRUPOS": {
+          "leads_conversas": "Leads and conversations",
+          "contrato_documentos": "Contract and documents",
+          "painel_cliente": "Client Portal",
+          "rotinas_relatorios": "Routines and reports",
+          "instagram": "Instagram"
+        },
+        "ALCANCE": {
+          "fala_com_cliente": "talks to the client",
+          "publica": "publishes"
+        }
+      },
+      "RODAR": {
+        "ITEM": "Run flow…",
+        "TITULO": "Run flow",
+        "AJUDA": "Published, enabled flows with the Run by hand trigger. Messages to the client are drafts.",
+        "CARREGANDO": "Loading…",
+        "VAZIO": "No published, enabled Run by hand flow.",
+        "IR_AUTOMACOES": "Open Automations",
+        "RODOU": "Flow {nome} running.",
+        "VER_EXECUCAO": "See run",
+        "NAO_RODOU": "The flow did not run: it is off, unpublished, at its daily limit or already running here.",
+        "ERRO": "Could not run the flow. Try again.",
+        "ERRO_LISTA": "Could not load the flows."
+      },
       "RESUMO": {
         "LIGADOS": "On",
         "DE": "of {total}",
@@ -1888,7 +1929,8 @@
       "SELO": {
         "OK": "ok",
         "FALHOU": "{n} failed",
-        "DESLIGADO": "off"
+        "DESLIGADO": "off",
+        "NO_CODIGO": "runs in code"
       },
       "GATILHOS": {
         "conversa_criada": "New conversation",
@@ -2021,7 +2063,8 @@
         "EXCLUIR_MSG": "The design, versions and run history go away. This cannot be undone.",
         "EXECUCOES": "Recent runs",
         "SEM_EXECUCOES": "No runs yet. Use Test with a lead… to see the path.",
-        "SELECIONE": "Click a step to configure it."
+        "SELECIONE": "Click a step to configure it.",
+        "COMO_RODA": "How it runs today"
       },
       "NO": {
         "SAI_RASCUNHO": "goes out as a draft",
@@ -2160,7 +2203,8 @@
         "texto": "Message text",
         "nome": "Name",
         "telefone": "Phone",
-        "documentos_completos": "Documents complete (yes or no)"
+        "documentos_completos": "Documents complete (yes or no)",
+        "regra": "ADVBOX rule (event)"
       },
       "OPERADORES": {
         "igual": "equals",
@@ -2183,6 +2227,11 @@
         "minutos": "minutes",
         "horas": "hours",
         "dias": "days"
+      },
+      "UNIDADES_UM": {
+        "minutos": "minute",
+        "horas": "hour",
+        "dias": "day"
       },
       "CAMPOS_OBRIGATORIOS": {
         "texto": "the text",

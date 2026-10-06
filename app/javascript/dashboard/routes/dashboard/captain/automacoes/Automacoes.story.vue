@@ -10,6 +10,7 @@ import types from 'dashboard/store/mutation-types';
 import Lista from './Lista.vue';
 import Editor from './Editor.vue';
 import Execucao from './Execucao.vue';
+import RodarFluxo from './RodarFluxo.vue';
 import { MODELOS } from './modelos';
 
 const { locale } = useI18n({ useScope: 'global' });
@@ -155,6 +156,50 @@ const FLUXO = {
   rascunho: GRAFO,
   versoes: [3, 2, 1].map(n => ({ numero: n, created_at: atras(n * DIA) })),
 };
+// B3: a aba "Do sistema" e os desenhos abertos vêm dos JSON de verdade
+// (db/seeds/ramon/fluxos/sistema); "Hoje" FICTÍCIO, sem contador = "—".
+const DESENHOS_SISTEMA = import.meta.glob(
+  '../../../../../../../db/seeds/ramon/fluxos/sistema/*.json',
+  { eager: true, import: 'default' }
+);
+const HOJE_SISTEMA = {
+  cadencia: 6,
+  sla_primeira_resposta: 9,
+  lembretes_reuniao: 2,
+  eventos_advbox: 4,
+  lead_ganho: 1,
+  docs_completos: 2,
+  contrato_limpo: 1,
+  copiloto_noturno: 12,
+  chegada_cliente: 0,
+  publicar_pecas: 1,
+};
+const SISTEMA = Object.entries(DESENHOS_SISTEMA).map(([arquivo, d], i) => {
+  const chave = arquivo.split('/').pop().replace('.json', '');
+  const gatilho = d.desenho.nos.find(n => n.tipo === 'gatilho').config;
+  return {
+    ...FLUXO,
+    id: 101 + i,
+    nome: d.nome,
+    descricao: d.descricao,
+    resumo: d.resumo,
+    gatilho_tipo: gatilho.tipo,
+    gatilho_rotulo: gatilho.rotulo ?? null,
+    grupo: d.grupo,
+    alcance: d.alcance ?? null,
+    ativo: false,
+    limite_dia: d.limite_dia ?? null,
+    origem: 'sistema',
+    sistema_chave: chave,
+    versao: null,
+    hoje: HOJE_SISTEMA[chave] ?? null,
+    esperando: 0,
+    falharam_24h: 0,
+    ultima_em: null,
+    rascunho: d.desenho,
+    versoes: [],
+  };
+});
 const API = {
   ramon_fluxos: {
     payload: [
@@ -193,10 +238,12 @@ const API = {
         esperando: 0,
         ultima_em: null,
       },
+      ...SISTEMA,
     ],
     resumo: { ligados: 3, total: 4, hoje: 18, esperando: 8, falharam_24h: 1 },
   },
   'ramon_fluxos/1': FLUXO,
+  ...Object.fromEntries(SISTEMA.map(f => [`ramon_fluxos/${f.id}`, f])),
   'ramon_fluxos/1/execucoes': {
     payload: [
       { ...EXEC, grafo: undefined },
@@ -330,6 +377,23 @@ const paletaAoFim = () => {
   clicarEm('Adicionar passo')();
   rolarPaleta();
 };
+// B3: a lista abre na aba "Do sistema" (como na volta do desenho do sistema)
+const abaSistema = () => {
+  rota.query = { aba: 'sistema' };
+};
+// B3: o editor abre um desenho do sistema (só leitura + "Como roda hoje")
+const abreSistema = chave => () => {
+  rota.params.fluxoId = String(SISTEMA.find(f => f.sistema_chave === chave).id);
+};
+// B3: "Rodar fluxo…" lista só fluxos manuais, ligados e publicados
+const rodarFluxo = () => {
+  API.ramon_fluxos = {
+    payload: [
+      { ...FLUXO, id: 5, nome: 'Pedir documentos', gatilho_tipo: 'manual' },
+      { ...FLUXO, id: 6, nome: 'Reativar lead parado', gatilho_tipo: 'manual' },
+    ],
+  };
+};
 </script>
 
 <template>
@@ -429,6 +493,21 @@ const paletaAoFim = () => {
       "
     >
       <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant title="DoSistema" :init-state="abaSistema">
+      <div class="h-screen"><Lista /></div>
+    </Variant>
+    <Variant
+      title="SistemaLembretes"
+      :init-state="abreSistema('lembretes_reuniao')"
+    >
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant title="SistemaAvisos" :init-state="abreSistema('avisos_painel')">
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant title="RodarFluxo" :init-state="rodarFluxo">
+      <RodarFluxo :alvo="{ lead_id: 231 }" />
     </Variant>
     <Variant title="Execucao">
       <div class="h-screen"><Execucao /></div>

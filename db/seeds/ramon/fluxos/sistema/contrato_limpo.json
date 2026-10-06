@@ -1,0 +1,17 @@
+{
+  "nome": "Contrato limpo",
+  "grupo": "contrato_documentos",
+  "descricao": "No código: Ramon::ContratoLimpoJob (toda hora, aos 10 min — config/schedule.yml).\n\nO desenho não consegue mostrar:\n• roda de hora em hora para todos os leads ganhos, não 1 vez por lead — aqui o gatilho é Rodar na mão com o rótulo do horário real;\n• o passo Se é só um substituto: a regra real exige won_at preenchido, docs_completos_em preenchido e nenhum cancelamento (cancelar em até 7 dias tira o lead de Fechado e nunca carimba);\n• o carimbo é GREATEST(won_at + 7 dias, docs_completos_em), gravado só quando esse momento já passou, e não muda mais (vale para o extrato da variável);\n• grava a coluna contrato_limpo_em, não um campo livre.",
+  "resumo": "De hora em hora, marca como \"limpo\" o contrato ganho que ficou 7 dias sem cancelamento.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Toda hora, aos 10 minutos"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"se","config":{"rotulo":"Substituto: ganho e documentos completos, sem cancelar (a regra real está na descrição)","juncao":"e","condicoes":[{"campo":"documentos_completos","operador":"igual","valor":"sim"}]},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"preencher_campo","config":{"rotulo":"Carimba contrato_limpo_em (extrato da variável)","chave":"contrato_limpo_em","valor":"momento em que ficou limpo"},"posicao":{"x":0,"y":280}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"sim","para":"n3"}
+    ]
+  }
+}

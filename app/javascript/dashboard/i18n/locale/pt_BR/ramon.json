@@ -1871,8 +1871,49 @@
       "NOVO": "Novo fluxo",
       "FECHAR": "Fechar",
       "ABA_MEUS": "Meus fluxos",
+      "ABA_SISTEMA": "Do sistema",
       "VAZIO": "Nenhum fluxo ainda. Comece por um modelo pronto em Novo fluxo.",
       "ERRO_CRIAR": "Não consegui criar o fluxo.",
+      "SISTEMA": {
+        "EXPLICA": "Estas automações rodam hoje pelo código do hub, não pelo quadro. Aqui você vê o desenho de cada uma, só para leitura, para conferir o que o hub faz sozinho. Elas vão virar fluxos editáveis uma a uma: primeiro rodam lado a lado em modo ensaio, comparamos com o código e, se baterem, o fluxo assume.",
+        "SEM_CONTADOR": "Sem contador barato para hoje",
+        "HOJE_DE": {
+          "cadencia": "rascunhos de retomada criados hoje",
+          "sla_primeira_resposta": "conversas novas hoje nas caixas que criam lead (não conta estouros de prazo)",
+          "lembretes_reuniao": "reuniões marcadas ou remarcadas hoje (não conta lembretes enviados)",
+          "eventos_advbox": "eventos do ADVBOX processados hoje",
+          "lead_ganho": "leads ganhos hoje",
+          "docs_completos": "leads que completaram os documentos hoje",
+          "contrato_limpo": "contratos limpos hoje",
+          "copiloto_noturno": "sugestões do copiloto geradas hoje",
+          "chegada_cliente": "chegadas de cliente escaladas hoje",
+          "publicar_pecas": "publicações iniciadas hoje"
+        },
+        "GRUPOS": {
+          "leads_conversas": "Leads e conversas",
+          "contrato_documentos": "Contrato e documentos",
+          "painel_cliente": "Painel do Cliente",
+          "rotinas_relatorios": "Rotinas e relatórios",
+          "instagram": "Instagram"
+        },
+        "ALCANCE": {
+          "fala_com_cliente": "fala com o cliente",
+          "publica": "publica"
+        }
+      },
+      "RODAR": {
+        "ITEM": "Rodar fluxo…",
+        "TITULO": "Rodar fluxo",
+        "AJUDA": "Fluxos publicados e ligados com o gatilho Rodar na mão. Mensagem ao cliente sai como rascunho.",
+        "CARREGANDO": "Carregando…",
+        "VAZIO": "Nenhum fluxo de Rodar na mão publicado e ligado.",
+        "IR_AUTOMACOES": "Abrir Automações",
+        "RODOU": "Fluxo {nome} rodando.",
+        "VER_EXECUCAO": "Ver execução",
+        "NAO_RODOU": "O fluxo não rodou: está desligado, sem versão publicada, no limite do dia ou já rodando aqui.",
+        "ERRO": "Não consegui rodar o fluxo. Tente de novo.",
+        "ERRO_LISTA": "Não consegui carregar os fluxos."
+      },
       "RESUMO": {
         "LIGADOS": "Ligados",
         "DE": "de {total}",
@@ -1893,7 +1934,8 @@
       "SELO": {
         "OK": "ok",
         "FALHOU": "{n} falhou",
-        "DESLIGADO": "desligado"
+        "DESLIGADO": "desligado",
+        "NO_CODIGO": "roda no código"
       },
       "GATILHOS": {
         "conversa_criada": "Nova conversa",
@@ -2026,7 +2068,8 @@
         "EXCLUIR_MSG": "Some o desenho, as versões e o histórico de execuções. Não dá para desfazer.",
         "EXECUCOES": "Execuções recentes",
         "SEM_EXECUCOES": "Nenhuma execução ainda. Use Testar com um lead… para ver o caminho.",
-        "SELECIONE": "Clique num passo para configurar."
+        "SELECIONE": "Clique num passo para configurar.",
+        "COMO_RODA": "Como roda hoje"
       },
       "NO": {
         "SAI_RASCUNHO": "sai como rascunho",
@@ -2165,7 +2208,8 @@
         "texto": "Texto da mensagem",
         "nome": "Nome",
         "telefone": "Telefone",
-        "documentos_completos": "Documentos completos (sim ou não)"
+        "documentos_completos": "Documentos completos (sim ou não)",
+        "regra": "Regra do ADVBOX (evento)"
       },
       "OPERADORES": {
         "igual": "é igual a",
@@ -2188,6 +2232,11 @@
         "minutos": "minutos",
         "horas": "horas",
         "dias": "dias"
+      },
+      "UNIDADES_UM": {
+        "minutos": "minuto",
+        "horas": "hora",
+        "dias": "dia"
       },
       "CAMPOS_OBRIGATORIOS": {
         "texto": "o texto",
