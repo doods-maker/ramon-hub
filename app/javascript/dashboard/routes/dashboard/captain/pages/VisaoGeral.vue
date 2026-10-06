@@ -292,7 +292,7 @@ const ir = (name, params = {}) => router.push(accountScopedRoute(name, params));
                 {{
                   resposta[lado]
                     ? t('CAPTAIN_RAMON.VISAO_GERAL.RESPOSTA.MEDIANA', {
-                        min: resposta[lado].mediana_min,
+                        min: resposta[lado].mediana_min.toLocaleString('pt-BR'),
                       })
                     : t('CAPTAIN_RAMON.VISAO_GERAL.RESPOSTA.SEM_DADOS')
                 }}
