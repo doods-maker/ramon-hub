@@ -236,6 +236,18 @@ describe('adicionar, duplicar, trocar config', () => {
     expect(copia.data).toEqual(nodes.find(n => n.id === 'n4').data);
     expect(copia.data).not.toBe(nodes.find(n => n.id === 'n4').data);
   });
+
+  it('não duplica o gatilho', () => {
+    const { nodes } = paraVueFlow(DESENHO);
+    const gatilho = nodes.find(n => n.data.tipo === 'gatilho');
+    expect(duplicarPasso(nodes, gatilho.id)).toEqual({ nodes, id: gatilho.id });
+  });
+
+  it('quadro vazio: o passo entra na origem, sem quebrar', () => {
+    const r = adicionarPasso([], [], { tipo: 'parar' }, null);
+    expect(r.nodes[0].position).toEqual({ x: 0, y: 0 });
+    expect(r.edges).toEqual([]);
+  });
 });
 
 describe('erros do back e caminho aceso', () => {

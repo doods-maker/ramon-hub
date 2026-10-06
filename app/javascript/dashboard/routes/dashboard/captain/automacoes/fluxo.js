@@ -307,7 +307,10 @@ export const adicionarPasso = (
   const no = {
     id,
     type: 'passo',
-    position: { x: base.position.x, y: base.position.y + ESPACO_Y },
+    // quadro vazio (sem nem o gatilho): entra na origem
+    position: base
+      ? { x: base.position.x, y: base.position.y + ESPACO_Y }
+      : { x: 0, y: 0 },
     data: { tipo, config: config ? copia(config) : configInicial(tipo) },
     deletable: true,
   };
@@ -336,6 +339,8 @@ export const adicionarPasso = (
 
 export const duplicarPasso = (nodes, id) => {
   const original = nodes.find(n => n.id === id);
+  // o gatilho é único no fluxo: não se duplica
+  if (!original || original.data.tipo === 'gatilho') return { nodes, id };
   const novoId = proximoId(nodes);
   const novo = {
     id: novoId,
