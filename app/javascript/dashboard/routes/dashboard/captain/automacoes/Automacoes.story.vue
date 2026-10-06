@@ -10,6 +10,7 @@ import types from 'dashboard/store/mutation-types';
 import Lista from './Lista.vue';
 import Editor from './Editor.vue';
 import Execucao from './Execucao.vue';
+import { MODELOS } from './modelos';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
@@ -209,6 +210,29 @@ const API = {
     ],
   },
   'ramon_fluxos/1/execucoes/412': EXEC,
+  // B2b: opções do passo ADVBOX e assistentes/skills do Captain
+  'ramon_fluxos/opcoes_advbox': {
+    usuarios: [
+      { id: 11, nome: 'Ana Souza' },
+      { id: 12, nome: 'Carlos Lima' },
+    ],
+    tipos_tarefa: [
+      { id: 21, nome: 'Conferir documentos' },
+      { id: 22, nome: 'Protocolar requerimento' },
+    ],
+  },
+  'captain/assistants': {
+    payload: [
+      { id: 1, name: 'Assistente Previdenciário' },
+      { id: 2, name: 'Assistente Trabalhista' },
+    ],
+  },
+  'captain/assistants/1/scenarios': {
+    payload: [
+      { id: 31, title: 'Resumir documentos recebidos' },
+      { id: 32, title: 'Montar checklist do caso' },
+    ],
+  },
 };
 const responder = async url => ({
   data: API[url.replace(/^\/api\/v1\/(accounts\/\d+\/)?/, '')] ?? {
@@ -267,6 +291,27 @@ store.commit(`theses/${types.SET_THESES}`, [
 const comNo = id => () => {
   rota.query = { no: id };
 };
+// B2b: o editor abre com o modelo Pós-contrato; `ajusta` troca o que cada tela mostra
+const posContrato = ajusta => () => {
+  const g = structuredClone(
+    MODELOS.find(m => m.chave === 'pos_contrato').desenho
+  );
+  const passo = id => g.nos.find(n => n.id === id);
+  ajusta?.(passo);
+  FLUXO.rascunho = g;
+};
+const trocaPasso = (id, tipo, config) => passo => {
+  Object.assign(passo(id), { tipo, config });
+};
+// o Editor ignora ?no=, então o passo abre por clique no nó do quadro
+const abrePasso = (id, ajusta) => () => {
+  posContrato(ajusta)();
+  setTimeout(
+    () =>
+      document.querySelector(`.vue-flow__node[data-id="${id}"] > *`)?.click(),
+    3000
+  );
+};
 const clicarEm = texto => () =>
   setTimeout(
     () =>
@@ -275,6 +320,16 @@ const clicarEm = texto => () =>
         ?.click(),
     2000
   );
+const rolarPaleta = () =>
+  setTimeout(() => {
+    const p = document.querySelector('[data-testid="fluxo-paleta"]');
+    if (p) p.scrollTop = p.scrollHeight;
+  }, 3000);
+const paletaAoFim = () => {
+  posContrato()();
+  clicarEm('Adicionar passo')();
+  rolarPaleta();
+};
 </script>
 
 <template>
@@ -289,6 +344,90 @@ const clicarEm = texto => () =>
       <div class="h-screen"><Editor /></div>
     </Variant>
     <Variant title="Paleta" :init-state="clicarEm('Adicionar passo')">
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant title="PosContrato" :init-state="posContrato()">
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant title="PaletaB2b" :init-state="paletaAoFim">
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant
+      title="PainelIa"
+      :init-state="
+        abrePasso(
+          'n6',
+          trocaPasso('n6', 'rascunho_ia', {
+            rotulo: 'Lembrete dos documentos',
+            instrucao:
+              'Lembre {nome}, com gentileza, dos documentos que ainda faltam. Não prometa resultado nem prazo.',
+          })
+        )
+      "
+    >
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant
+      title="PainelSkill"
+      :init-state="
+        abrePasso(
+          'n6',
+          trocaPasso('n6', 'rodar_skill', {
+            rotulo: 'Resumir documentos',
+            assistente_id: 1,
+            skill_id: 31,
+            instrucao: 'Resuma os documentos que {nome} enviou.',
+          })
+        )
+      "
+    >
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant
+      title="PainelAdvbox"
+      :init-state="
+        abrePasso(
+          'n3',
+          trocaPasso('n3', 'advbox', {
+            rotulo: 'Tarefa no ADVBOX',
+            acao: 'tarefa',
+            tipo_tarefa_id: 21,
+            responsavel_id: 11,
+            prazo_dias: 2,
+            descricao: 'Conferir os documentos enviados por {nome}.',
+          })
+        )
+      "
+    >
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant
+      title="PainelWebhook"
+      :init-state="
+        abrePasso(
+          'n7',
+          trocaPasso('n7', 'webhook', {
+            rotulo: 'Avisar o n8n',
+            url: 'https://n8n.exemplo.com.br/webhook/pos-contrato',
+          })
+        )
+      "
+    >
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant
+      title="GatilhoRelogio"
+      :init-state="
+        abrePasso(
+          'n1',
+          trocaPasso('n1', 'gatilho', {
+            tipo: 'lead_parado',
+            dias: 3,
+            hora: '11:00',
+          })
+        )
+      "
+    >
       <div class="h-screen"><Editor /></div>
     </Variant>
     <Variant title="Execucao">
