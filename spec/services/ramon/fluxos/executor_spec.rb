@@ -16,6 +16,10 @@ RSpec.describe Ramon::Fluxos::Executor do
 
   def avancar(execucao) = described_class.new(execucao).avancar!.then { execucao.reload }
 
+  it 'todo tipo de passo do desenho tem quem execute' do
+    expect(described_class::PASSOS.keys).to match_array(Ramon::Fluxos::Grafo::TIPOS_PASSO)
+  end
+
   it 'anda até o fim, grava trilha e balão na conversa' do
     e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['nota_privada', { 'texto' => 'a' }],
                              ['criar_tarefa', { 'titulo' => 'T' }]))
