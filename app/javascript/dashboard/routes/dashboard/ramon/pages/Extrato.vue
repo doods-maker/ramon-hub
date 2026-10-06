@@ -6,7 +6,9 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import RamonExtratoAPI from 'dashboard/api/ramonExtrato';
+import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import { CAMPO, CARTAO, CHIP, ROTULO, SECAO, TITULO, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonExtrato' });
 
@@ -106,180 +108,201 @@ onMounted(carregar);
 </script>
 
 <template>
-  <div
-    class="flex flex-col w-full h-full bg-n-background p-4 sm:p-8 overflow-y-auto"
-  >
-    <RamonPageHeader
-      :title="t('RAMON.EXTRATO.TITLE')"
-      :subtitle="t('RAMON.EXTRATO.SUBTITLE')"
-      compact
-    />
-    <div class="flex flex-wrap items-end gap-3 mb-4">
-      <label class="flex flex-col text-xs text-n-slate-10">
-        {{ t('RAMON.EXTRATO.MES') }}
-        <input
-          v-model="mes"
-          type="month"
-          data-testid="extrato-mes"
-          class="w-44 px-3 py-2 mt-1 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
+  <div class="h-full w-full overflow-y-auto bg-n-background p-4 sm:p-8">
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-5">
+      <RamonPageHeader
+        class="!mb-0"
+        :title="t('RAMON.EXTRATO.TITLE')"
+        :subtitle="t('RAMON.EXTRATO.SUBTITLE')"
+        compact
+      />
+      <div class="flex flex-wrap items-end gap-3">
+        <label :class="ROTULO">
+          {{ t('RAMON.EXTRATO.MES') }}
+          <input
+            v-model="mes"
+            type="month"
+            data-testid="extrato-mes"
+            :class="CAMPO"
+            class="w-44"
+          />
+        </label>
+        <Button
+          v-if="pessoas.length"
+          data-testid="extrato-csv"
+          sm
+          faded
+          slate
+          icon="i-lucide-download"
+          :label="t('RAMON.EXTRATO.EXPORTAR')"
+          @click="exportarCsv"
         />
-      </label>
-      <button
-        v-if="pessoas.length"
-        data-testid="extrato-csv"
-        class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 text-n-slate-12 hover:bg-n-alpha-3"
-        @click="exportarCsv"
+      </div>
+
+      <div v-if="loading" class="h-32 animate-pulse rounded-xl bg-n-alpha-2" />
+      <div v-else-if="error" class="flex flex-col items-start gap-1 text-sm">
+        <p class="m-0 text-n-ruby-11">{{ t('RAMON.EXTRATO.LOAD_ERROR') }}</p>
+        <Button link xs :label="t('RAMON.EXTRATO.RETRY')" @click="carregar" />
+      </div>
+      <p
+        v-else-if="!pessoas.length"
+        data-testid="extrato-vazio"
+        class="m-0 text-sm text-n-slate-10"
       >
-        {{ t('RAMON.EXTRATO.EXPORTAR') }}
-      </button>
-    </div>
-
-    <div v-if="loading" class="flex-1" />
-    <div v-else-if="error" class="flex flex-col items-start gap-2">
-      <p class="text-n-slate-11">{{ t('RAMON.EXTRATO.LOAD_ERROR') }}</p>
-      <button class="text-n-iris-11 underline" @click="carregar">
-        {{ t('RAMON.EXTRATO.RETRY') }}
-      </button>
-    </div>
-    <p
-      v-else-if="!pessoas.length"
-      data-testid="extrato-vazio"
-      class="text-n-slate-11"
-    >
-      {{ t(isAdmin ? 'RAMON.EXTRATO.VAZIO_GESTOR' : 'RAMON.EXTRATO.VAZIO') }}
-    </p>
-    <div v-else class="grid gap-4 xl:grid-cols-2">
-      <section
-        v-for="p in pessoas"
-        :key="`${p.user.id}-${p.papel}`"
-        data-testid="extrato-pessoa"
-        class="flex flex-col gap-3 p-4 rounded-xl border border-n-weak bg-n-solid-1"
-      >
-        <header class="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 class="text-base font-semibold text-n-slate-12">
-            {{ p.user.name }}
-            <span class="ms-1 text-xs font-normal text-n-slate-10">
-              {{ t(`RAMON.EXTRATO.PAPEL.${p.papel}`) }}
-            </span>
-          </h3>
-          <span
-            data-testid="extrato-total"
-            class="text-lg font-semibold text-n-slate-12"
-          >
-            {{ brl(p.total) }}
-          </span>
-        </header>
-
-        <div class="flex flex-wrap items-end gap-3 text-sm">
-          <template v-if="isAdmin">
-            <label class="flex flex-col text-xs text-n-slate-10">
-              {{ t('RAMON.EXTRATO.META') }}
-              <input
-                v-model="edicao[p.user.id].meta"
-                type="number"
-                min="0"
-                data-testid="extrato-meta"
-                class="w-24 px-2 py-1.5 mt-1 text-sm rounded-lg bg-n-alpha-1 text-n-slate-12 border border-n-weak outline-none focus:border-n-slate-8"
-              />
-            </label>
-            <label
-              class="flex items-center gap-1.5 text-xs text-n-slate-11 pb-2"
+        {{ t(isAdmin ? 'RAMON.EXTRATO.VAZIO_GESTOR' : 'RAMON.EXTRATO.VAZIO') }}
+      </p>
+      <div v-else class="grid gap-4 xl:grid-cols-2">
+        <section
+          v-for="p in pessoas"
+          :key="`${p.user.id}-${p.papel}`"
+          data-testid="extrato-pessoa"
+          :class="CARTAO"
+          class="flex flex-col gap-3"
+        >
+          <header class="flex flex-wrap items-center justify-between gap-2">
+            <h3
+              class="m-0 flex items-center gap-2 text-base font-semibold text-n-slate-12"
             >
-              <input v-model="edicao[p.user.id].rampa" type="checkbox" />
-              {{ t('RAMON.EXTRATO.RAMPA') }}
-            </label>
-            <button
-              data-testid="extrato-salvar-meta"
-              class="px-3 py-1.5 text-xs rounded-lg bg-n-iris-9 text-white hover:bg-n-iris-10"
-              @click="salvarMeta(p)"
-            >
-              {{ t('RAMON.EXTRATO.SALVAR') }}
-            </button>
-          </template>
-          <span v-else class="text-n-slate-11">
-            {{ t('RAMON.EXTRATO.META') }}: {{ p.meta ?? '—' }}
-            <template v-if="p.rampa">· {{ t('RAMON.EXTRATO.RAMPA') }}</template>
-          </span>
-        </div>
-
-        <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
-          <div>
-            <dt class="text-xs text-n-slate-10">
-              {{ t(`RAMON.EXTRATO.CONTAGEM.${p.papel}`) }}
-            </dt>
-            <dd class="text-n-slate-12">{{ p.contagem }}</dd>
-          </div>
-          <div>
-            <dt class="text-xs text-n-slate-10">
-              {{ t('RAMON.EXTRATO.UNIDADES') }}
-            </dt>
-            <dd class="text-n-slate-12">{{ brl(p.subtotal) }}</dd>
-          </div>
-          <div>
-            <dt class="text-xs text-n-slate-10">
-              {{ t('RAMON.EXTRATO.BONUS') }}
-            </dt>
-            <dd class="text-n-slate-12">
-              {{ brl(p.bonus) }}
-              <span v-if="p.degraus" class="text-xs text-n-slate-10">
-                {{ t('RAMON.EXTRATO.DEGRAUS', { count: p.degraus }) }}
+              {{ p.user.name }}
+              <span :class="[CHIP, TOM.slate]">
+                {{ t(`RAMON.EXTRATO.PAPEL.${p.papel}`) }}
               </span>
-            </dd>
-          </div>
-          <div>
-            <dt class="text-xs text-n-slate-10">
-              {{ t('RAMON.EXTRATO.OBS') }}
-            </dt>
-            <dd class="text-xs text-n-slate-11">
-              <template v-if="p.garantia_aplicada">
-                {{ t('RAMON.EXTRATO.GARANTIA') }}
-              </template>
-              <template v-else>—</template>
-            </dd>
-          </div>
-        </dl>
-
-        <table v-if="p.unidades.length" class="w-full text-sm">
-          <thead>
-            <tr class="text-xs text-left text-n-slate-10">
-              <th class="py-1 font-normal">
-                {{ t('RAMON.EXTRATO.COL.DATA') }}
-              </th>
-              <th class="py-1 font-normal">
-                {{ t('RAMON.EXTRATO.COL.LEAD') }}
-              </th>
-              <th class="py-1 font-normal">
-                {{ t('RAMON.EXTRATO.COL.EVENTO') }}
-              </th>
-              <th class="py-1 font-normal text-right">
-                {{ t('RAMON.EXTRATO.COL.VALOR') }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="u in p.unidades"
-              :key="`${u.evento}-${u.lead_id}`"
-              data-testid="extrato-unidade"
-              class="border-t border-n-weak"
+            </h3>
+            <span
+              data-testid="extrato-total"
+              class="font-mono text-lg font-medium tabular-nums text-n-slate-12"
             >
-              <td class="py-1 text-n-slate-11">{{ dataBr(u.data) }}</td>
-              <td class="py-1 text-n-slate-12 truncate max-w-48">
-                {{ u.lead_nome }}
-              </td>
-              <td class="py-1 text-n-slate-11">
-                {{ t(`RAMON.EXTRATO.EVENTO.${u.evento}`) }}
-              </td>
-              <td class="py-1 text-right text-n-slate-12">
-                {{ brl(u.valor) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else class="text-sm text-n-slate-10">
-          {{ t('RAMON.EXTRATO.SEM_UNIDADES') }}
-        </p>
-      </section>
+              {{ brl(p.total) }}
+            </span>
+          </header>
+
+          <div class="flex flex-wrap items-end gap-3 text-sm">
+            <template v-if="isAdmin">
+              <label :class="ROTULO">
+                {{ t('RAMON.EXTRATO.META') }}
+                <input
+                  v-model="edicao[p.user.id].meta"
+                  type="number"
+                  min="0"
+                  data-testid="extrato-meta"
+                  :class="CAMPO"
+                  class="w-24 font-mono tabular-nums"
+                />
+              </label>
+              <label
+                class="flex h-8 items-center gap-1.5 text-xs text-n-slate-11"
+              >
+                <input v-model="edicao[p.user.id].rampa" type="checkbox" />
+                {{ t('RAMON.EXTRATO.RAMPA') }}
+              </label>
+              <Button
+                data-testid="extrato-salvar-meta"
+                sm
+                :label="t('RAMON.EXTRATO.SALVAR')"
+                @click="salvarMeta(p)"
+              />
+            </template>
+            <span v-else class="text-n-slate-11">
+              {{ t('RAMON.EXTRATO.META') }}:
+              <span class="font-mono tabular-nums text-n-slate-12">
+                {{ p.meta ?? '—' }}
+              </span>
+              <template v-if="p.rampa">
+                · {{ t('RAMON.EXTRATO.RAMPA') }}
+              </template>
+            </span>
+          </div>
+
+          <dl
+            class="m-0 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4"
+            :class="SECAO"
+          >
+            <div class="flex flex-col justify-between">
+              <dt :class="TITULO">
+                {{ t(`RAMON.EXTRATO.CONTAGEM.${p.papel}`) }}
+              </dt>
+              <dd class="m-0 mt-1 font-mono tabular-nums text-n-slate-12">
+                {{ p.contagem }}
+              </dd>
+            </div>
+            <div class="flex flex-col justify-between">
+              <dt :class="TITULO">
+                {{ t('RAMON.EXTRATO.UNIDADES') }}
+              </dt>
+              <dd class="m-0 mt-1 font-mono tabular-nums text-n-slate-12">
+                {{ brl(p.subtotal) }}
+              </dd>
+            </div>
+            <div class="flex flex-col justify-between">
+              <dt :class="TITULO">
+                {{ t('RAMON.EXTRATO.BONUS') }}
+              </dt>
+              <dd class="m-0 mt-1 text-n-slate-12">
+                <span class="font-mono tabular-nums">{{ brl(p.bonus) }}</span>
+                <span v-if="p.degraus" class="ms-1 text-xs text-n-slate-10">
+                  {{ t('RAMON.EXTRATO.DEGRAUS', { count: p.degraus }) }}
+                </span>
+              </dd>
+            </div>
+            <div class="flex flex-col justify-between">
+              <dt :class="TITULO">
+                {{ t('RAMON.EXTRATO.OBS') }}
+              </dt>
+              <dd class="m-0 mt-1 text-xs text-n-slate-11">
+                <template v-if="p.garantia_aplicada">
+                  {{ t('RAMON.EXTRATO.GARANTIA') }}
+                </template>
+                <template v-else>—</template>
+              </dd>
+            </div>
+          </dl>
+
+          <table v-if="p.unidades.length" class="w-full text-sm">
+            <thead>
+              <tr class="text-left">
+                <th class="py-1.5 pe-3" :class="TITULO">
+                  {{ t('RAMON.EXTRATO.COL.DATA') }}
+                </th>
+                <th class="py-1.5 pe-3" :class="TITULO">
+                  {{ t('RAMON.EXTRATO.COL.LEAD') }}
+                </th>
+                <th class="py-1.5 pe-3" :class="TITULO">
+                  {{ t('RAMON.EXTRATO.COL.EVENTO') }}
+                </th>
+                <th class="py-1.5 text-right" :class="TITULO">
+                  {{ t('RAMON.EXTRATO.COL.VALOR') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="u in p.unidades"
+                :key="`${u.evento}-${u.lead_id}`"
+                data-testid="extrato-unidade"
+                class="border-t border-n-weak"
+              >
+                <td class="py-1.5 pe-3 font-mono tabular-nums text-n-slate-11">
+                  {{ dataBr(u.data) }}
+                </td>
+                <td class="max-w-48 truncate py-1.5 pe-3 text-n-slate-12">
+                  {{ u.lead_nome }}
+                </td>
+                <td class="py-1.5 pe-3 text-n-slate-11">
+                  {{ t(`RAMON.EXTRATO.EVENTO.${u.evento}`) }}
+                </td>
+                <td
+                  class="py-1.5 text-right font-mono tabular-nums text-n-slate-12"
+                >
+                  {{ brl(u.valor) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else class="m-0 text-sm text-n-slate-10">
+            {{ t('RAMON.EXTRATO.SEM_UNIDADES') }}
+          </p>
+        </section>
+      </div>
     </div>
   </div>
 </template>
