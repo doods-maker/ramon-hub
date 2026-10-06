@@ -49,7 +49,8 @@ class Leads::KitService
   def call_llm
     Ramon::LlmClient.complete(provider: @agent.provider, model: @agent.model,
                               system: @agent.kit_system_prompt.presence || KIT_SYSTEM_PROMPT_DEFAULT,
-                              user: user_prompt, sensitive: @agent.sensitive)
+                              user: user_prompt, sensitive: @agent.sensitive,
+                              funcao: 'kit', account_id: @lead.account_id, lead_id: @lead.id)
   end
 
   def user_prompt

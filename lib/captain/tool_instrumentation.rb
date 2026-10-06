@@ -4,8 +4,13 @@ module Captain::ToolInstrumentation
 
   private
 
+  # FORK-PONTO (ramon): também grava uso/custo (Ramon::LlmUso), como o instrument_llm_call.
+  def instrument_tool_session(params, &)
+    Ramon::LlmUso.medir(Ramon::LlmUso.de_instrumentacao(params)) { instrument_tool_session_traced(params, &) }
+  end
+
   # Custom instrumentation for tool flows - outputs just the message (not full hash)
-  def instrument_tool_session(params)
+  def instrument_tool_session_traced(params)
     return yield unless ChatwootApp.otel_enabled?
 
     response = nil

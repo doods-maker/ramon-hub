@@ -37,7 +37,7 @@ RSpec.describe Leads::KitService do
   end
 
   it 'monta o prompt do usuário com viabilidade e análise e repassa a trava LGPD' do
-    expect(Ramon::LlmClient).to receive(:complete) do |provider:, model:, system:, user:, sensitive:|
+    expect(Ramon::LlmClient).to receive(:complete) do |provider:, model:, system:, user:, sensitive:, **|
       expect(provider).to eq('deepseek')
       expect(model).to eq('deepseek-chat')
       expect(system).to include('Kit do Closer')

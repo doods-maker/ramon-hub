@@ -581,6 +581,32 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
     end
   end
 
+  # ramon: tela Uso e custo — uma linha por execução, tokens somados pelo runner.
+  describe 'uso e custo' do
+    it 'grava a execução com os tokens do RunResult e a origem do chamador' do
+      usage = Agents::RunContext::Usage.new
+      usage.input_tokens = 1200
+      usage.output_tokens = 300
+      allow(mock_result).to receive_messages(usage: usage, error: nil)
+
+      described_class.new(assistant: assistant, conversation: conversation, source: 'playground')
+                     .generate_response(message_history: message_history)
+
+      expect(LlmChamada.last).to have_attributes(account_id: account.id, assistant_id: assistant.id, conversation_id: conversation.id,
+                                                 funcao: 'atendimento', origem: 'playground', input_tokens: 1200,
+                                                 output_tokens: 300, status: 'ok')
+    end
+
+    it 'erro do runner vira linha de erro sem mudar a resposta de handoff' do
+      allow(mock_runner).to receive(:run).and_raise(StandardError, 'boom')
+
+      response = described_class.new(assistant: assistant, conversation: conversation).generate_response(message_history: message_history)
+
+      expect(response['response']).to eq('conversation_handoff')
+      expect(LlmChamada.last).to have_attributes(funcao: 'atendimento', origem: 'real', status: 'erro')
+    end
+  end
+
   describe 'constants' do
     it 'defines conversation state attributes' do
       expect(described_class::CONVERSATION_STATE_ATTRIBUTES).to include(

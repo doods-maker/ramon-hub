@@ -4,8 +4,6 @@
 # Grava a sugestão em custom_attributes['doc_sugestao']; confirmação humana
 # fica pro painel (Task 6).
 class Ramon::DocMatchService
-  PROVIDER = 'deepseek'.freeze
-
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você recebe um checklist de documentos de um caso previdenciário, os dados de um
     arquivo que o cliente acabou de enviar e o fim da conversa. Aponte QUAL item do
@@ -52,9 +50,10 @@ class Ramon::DocMatchService
     arquivo = "arquivo: #{filename} (#{attachment.file.content_type})"
     conversa = Ramon::Pseudonymizer.mask(transcript(lead), names: [lead.contact&.name].compact)
     result = Ramon::LlmClient.complete(
-      provider: PROVIDER, model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
+      **Ramon::LlmEscolha.para(lead.account, 'copiloto'),
       system: SYSTEM_PROMPT,
-      user: "Checklist:\n#{checklist}\n\n#{arquivo}\n\nFim da conversa:\n#{conversa}"
+      user: "Checklist:\n#{checklist}\n\n#{arquivo}\n\nFim da conversa:\n#{conversa}",
+      funcao: 'doc_match', account_id: lead.account_id, lead_id: lead.id, conversation_id: lead.conversation_id
     )
     parse_item_id(result.content)
   end

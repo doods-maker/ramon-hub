@@ -83,7 +83,8 @@ class Ramon::ReuniaoAtaService
     Ramon::LlmClient.complete(
       provider: ENV.fetch('RAMON_REUNIAO_PROVIDER', 'deepseek'),
       model: ENV.fetch('RAMON_REUNIAO_MODEL', 'deepseek-chat'),
-      system: SYSTEM_PROMPT, user: transcricao, sensitive: true
+      system: SYSTEM_PROMPT, user: transcricao, sensitive: true,
+      funcao: 'ata', account_id: @reuniao.account_id, lead_id: @reuniao.lead_id
     ).content
   end
 end

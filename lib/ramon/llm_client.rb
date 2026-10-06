@@ -13,6 +13,8 @@ class Ramon::LlmClient
     'anthropic' => 'ANTHROPIC_API_KEY',
     'openai' => 'OPENAI_API_KEY'
   }.freeze
+  # campos de uso (tela Uso e custo) aceitos em `complete`
+  USO = %i[funcao account_id lead_id conversation_id origem].freeze
 
   # Providers autorizados a receber dado pessoal (LGPD). Configurável via env
   # RAMON_LLM_SENSITIVE_OK_PROVIDERS (decisão do Eduardo 20/07/2026: deepseek
@@ -22,8 +24,10 @@ class Ramon::LlmClient
        .split(',').map(&:strip).reject(&:empty?)
   end
 
-  def self.complete(provider:, model:, system:, user:, sensitive: false)
-    if sensitive && sensitive_ok_providers.exclude?(provider)
+  # opcoes: sensitive (trava LGPD) e, para a tela Uso e custo, funcao/account_id/lead_id/
+  # conversation_id/origem — sem elas, Ramon::LlmUso deduz pelo chamador (fluxos).
+  def self.complete(provider:, model:, system:, user:, **opcoes)
+    if opcoes[:sensitive] && sensitive_ok_providers.exclude?(provider)
       raise SensitiveProviderError, "Agente sensível (LGPD): provider #{provider} não autorizado"
     end
 
@@ -31,9 +35,12 @@ class Ramon::LlmClient
     api_key = ENV.fetch(env_key, nil)
     raise MissingApiKeyError, "ENV #{env_key} ausente" if api_key.blank?
 
-    message = ask(provider: provider, model: model, system: system, user: user)
-    Result.new(content: message.content, input_tokens: message.input_tokens,
-               output_tokens: message.output_tokens)
+    uso = Ramon::LlmUso.contexto(caller_locations(1, 1).first&.path)
+                       .merge(opcoes.slice(*USO).compact, provider: provider, model: model)
+    Ramon::LlmUso.medir(uso) do
+      message = ask(provider: provider, model: model, system: system, user: user)
+      Result.new(content: message.content, input_tokens: message.input_tokens, output_tokens: message.output_tokens)
+    end
   end
 
   # Copilot e "Perguntar ao AdvBox" chamam isto SÍNCRONO na thread do Puma; sem
