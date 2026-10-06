@@ -2105,7 +2105,7 @@
         "ADVBOX_DESCRICAO": "Descrição",
         "ADVBOX_INDISPONIVEL": "O ADVBOX não respondeu. Tente de novo em instantes.",
         "WEBHOOK_URL": "Endereço (https)",
-        "WEBHOOK_AJUDA": "Envia nome, telefone, etapa e tese do lead em JSON. É sempre o último passo.",
+        "WEBHOOK_AJUDA": "Envia em JSON só nome, telefone, etapa, tese, origem, canal, valor, prioridade e responsável do lead — nunca campos livres nem documentos. É sempre o último passo.",
         "PAPEL": "Papel",
         "DISTRIBUIR_NO_TIME": "Distribuir no time (quem tem menos leads)",
         "CHAVE_CAMPO": "Nome do campo",
@@ -2219,7 +2219,7 @@
         "ADVBOX_DESCRICAO": "A movimentação precisa de pelo menos 10 letras.",
         "WEBHOOK_HTTPS": "O endereço precisa começar com https.",
         "WEBHOOK_ULTIMO": "O webhook tem que ser o último passo.",
-        "CAMPO_CHAVE": "Nome do campo só com letras minúsculas, números e _."
+        "CAMPO_CHAVE": "Nome do campo só com letras minúsculas, números e _, e diferente dos nomes que o hub já usa (nome, etapa, telefone…)."
       },
       "TESTAR": {
         "TITULO": "Testar com um lead",

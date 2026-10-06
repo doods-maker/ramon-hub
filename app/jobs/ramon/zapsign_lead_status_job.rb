@@ -23,12 +23,16 @@ class Ramon::ZapsignLeadStatusJob < ApplicationJob
 
     zapsign = lead.custom_attributes['zapsign'].merge('status' => doc['status'], chave => data_do_evento(doc))
     lead.update!(custom_attributes: lead.custom_attributes.merge('zapsign' => zapsign))
-    lead.lead_activities.create!(account: lead.account, kind: kind, to_value: zapsign['template_name'])
-    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_contract_status', meta: { 'label' => rotulo }).perform
+    avisar(lead, kind, rotulo, zapsign['template_name'])
     Ramon::Fluxos::Disparo.externo(gatilho, lead)
   end
 
   private
+
+  def avisar(lead, kind, rotulo, modelo)
+    lead.lead_activities.create!(account: lead.account, kind: kind, to_value: modelo)
+    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_contract_status', meta: { 'label' => rotulo }).perform
+  end
 
   # Só o doc vigente do lead e só a 1ª mudança: doc trocado ("Gerar de novo"),
   # cancelado por nós ou já assinado/recusado não gera selo nem sino de novo.

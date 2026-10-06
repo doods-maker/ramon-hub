@@ -2100,7 +2100,7 @@
         "ADVBOX_DESCRICAO": "Description",
         "ADVBOX_INDISPONIVEL": "ADVBOX did not answer. Try again in a moment.",
         "WEBHOOK_URL": "Address (https)",
-        "WEBHOOK_AJUDA": "Sends the lead name, phone, stage and thesis as JSON. Always the last step.",
+        "WEBHOOK_AJUDA": "Sends only the lead name, phone, stage, thesis, source, channel, value, priority and owner as JSON — never free fields or documents. Always the last step.",
         "PAPEL": "Role",
         "DISTRIBUIR_NO_TIME": "Distribute in the team (fewest leads)",
         "CHAVE_CAMPO": "Field name",
@@ -2214,7 +2214,7 @@
         "ADVBOX_DESCRICAO": "The movement needs at least 10 letters.",
         "WEBHOOK_HTTPS": "The address must start with https.",
         "WEBHOOK_ULTIMO": "The webhook must be the last step.",
-        "CAMPO_CHAVE": "Field name only with lowercase letters, numbers and _."
+        "CAMPO_CHAVE": "Field name only with lowercase letters, numbers and _, and not a name the hub already uses (nome, etapa, telefone…)."
       },
       "TESTAR": {
         "TITULO": "Test with a lead",

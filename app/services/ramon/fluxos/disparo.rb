@@ -29,7 +29,7 @@ class Ramon::Fluxos::Disparo
     call(gatilho_tipo, alvo, dados)
   rescue StandardError => e
     ChatwootExceptionTracker.new(e, account: alvo.try(:account)).capture_exception
-    Rails.logger.warn("[Ramon::Fluxos::Disparo] #{gatilho_tipo}: #{e.class}: #{e.message}")
+    Rails.logger.warn("[Ramon::Fluxos::Disparo] #{gatilho_tipo}: #{e.class}") # a mensagem pode ter dado do lead
     []
   end
 

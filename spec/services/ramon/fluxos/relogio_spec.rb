@@ -57,4 +57,13 @@ RSpec.describe Ramon::Fluxos::Relogio do
     travel_to(sp('2026-10-06 09:00')) { described_class.disparar_do_dia }
     expect(fluxo.execucoes.count).to eq(1)
   end
+
+  it 'erro num lead não derruba os outros' do
+    leads = Array.new(2) { create(:lead, account: account, lead_stage: etapa) }
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'relogio', 'hora' => '09:00', 'etapa_ids' => [etapa.id] }, nota))
+    allow(Ramon::Fluxos::Disparo).to receive(:new).and_call_original
+    allow(Ramon::Fluxos::Disparo).to receive(:new).with(fluxo, leads.first, {}, nil).and_raise(ActiveRecord::RecordInvalid)
+    travel_to(sp('2026-10-06 09:00')) { described_class.disparar_do_dia }
+    expect(fluxo.execucoes.pluck(:alvo_id)).to eq([leads.last.id])
+  end
 end

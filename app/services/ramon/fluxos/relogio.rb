@@ -18,9 +18,17 @@ module Ramon::Fluxos::Relogio
         # ponytail: 1 count por lead; agregar se grupos grandes com limite virarem rotina
         break if fluxo.modo == 'normal' && fluxo.limite_atingido?
 
-        Ramon::Fluxos::Disparo.new(fluxo, lead, {}, nil).iniciar
+        disparar(fluxo, lead)
       end
     end
+  end
+
+  # Erro num lead não derruba os outros leads nem os outros fluxos (o dia já foi reivindicado).
+  def disparar(fluxo, lead)
+    Ramon::Fluxos::Disparo.new(fluxo, lead, {}, nil).iniciar
+  rescue StandardError => e
+    ChatwootExceptionTracker.new(e, account: fluxo.account).capture_exception
+    Rails.logger.warn("[Ramon::Fluxos::Relogio] fluxo #{fluxo.id} lead #{lead.id}: #{e.class}")
   end
 
   def na_hora?(config, agora)
