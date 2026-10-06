@@ -181,6 +181,62 @@ const POS_VENDA = {
   ],
 };
 
+// Melhorias C2/C3/C6/C9: sem tese, prescrição + docs que faltam por linha
+// (ordem por urgência, como o backend manda) e total real de concluídos.
+const docs = (...lista) =>
+  lista.map(([id, title, status]) => ({ id, title, status }));
+const POS_VENDA_C = {
+  pendentes: [
+    {
+      ...POS_VENDA.pendentes[1],
+      lead_name: 'Ivone Schmitz da Silva',
+      dcb_em: '2021-06-10',
+      benefit_monthly_value: 1830,
+      docs_pendentes: docs([1, 'Laudo do ortopedista', 'solicitado']),
+    },
+    {
+      ...POS_VENDA.pendentes[2],
+      lead_name: 'Rosângela Pereira Costa',
+      dcb_em: '2021-12-20',
+      benefit_monthly_value: 1518,
+      docs_pendentes: docs(
+        [2, 'RG e CPF', 'pendente'],
+        [3, 'Comprovante de residência', 'pendente'],
+        [4, 'CAT (comunicação do acidente)', 'pendente'],
+        [5, 'Exame de imagem do joelho', 'pendente']
+      ),
+    },
+    {
+      ...POS_VENDA.pendentes[0],
+      lead_name: 'Valdir Coelho Martins',
+      dcb_em: null,
+      benefit_monthly_value: null,
+      docs_pendentes: docs(
+        [6, 'Carteira de trabalho', 'solicitado'],
+        [7, 'PPP da empresa', 'pendente'],
+        [8, 'Laudo do ortopedista', 'pendente'],
+        [9, 'Comprovante de residência', 'pendente']
+      ),
+    },
+  ],
+  concluidos: POS_VENDA.concluidos,
+  concluidos_total: 35,
+  sem_tese: [
+    { id: 31, name: 'Jair Hoffmann', dias: 12, conversation_id: 811 },
+    { id: 32, name: 'Marlene Bez Batti', dias: 2, conversation_id: null },
+  ],
+};
+// C3/C4: cliente (ganho) ainda juntando documentos no Radar + contagem da
+// campanha sobre o radar inteiro (contatos com WhatsApp).
+const RADAR_C = {
+  summary: { ...RADAR.summary, total_count: 132, rescue_count: 97 },
+  items: RADAR.items.map(item =>
+    item.lead_id === 5
+      ? { ...item, stage_name: 'Fechado', is_client: true }
+      : item
+  ),
+};
+
 const API = {
   ramon_extrato: { pessoas: [LARISSA, RAFAEL, BRUNA] },
   ramon_prescription_radar: RADAR,
@@ -285,8 +341,28 @@ const radarVazio = () => {
     },
   };
 };
-const radarModal = depois(1500, () => clicar('Criar campanha de resgate'));
+const abrirCampanha = depois(1500, () => clicar('Criar campanha de resgate'));
+const radarModal = () => {
+  gestor();
+  abrirCampanha();
+};
+const radarC = () => {
+  gestor();
+  respostas = { ...API, ramon_prescription_radar: RADAR_C };
+};
+const radarCModal = () => {
+  radarC();
+  abrirCampanha();
+};
+const radarCAgente = () => {
+  papel('agent');
+  respostas = { ...API, ramon_prescription_radar: RADAR_C };
+};
 const posVendaAberto = depois(1500, () => clicar('Concluídos'));
+const posVendaC = () => {
+  respostas = { ...API, ramon_pos_venda: POS_VENDA_C };
+  posVendaAberto();
+};
 const posVendaVazio = () => {
   respostas = {
     ...API,
@@ -312,7 +388,16 @@ const posVendaVazio = () => {
     <Variant title="Extrato erro" :init-state="erro">
       <div class="h-screen"><Extrato /></div>
     </Variant>
-    <Variant title="Radar">
+    <Variant title="Radar" :init-state="gestor">
+      <div class="h-screen"><RadarPrescricao /></div>
+    </Variant>
+    <Variant title="Radar C" :init-state="radarC">
+      <div class="h-screen"><RadarPrescricao /></div>
+    </Variant>
+    <Variant title="Radar C campanha" :init-state="radarCModal">
+      <div class="h-screen"><RadarPrescricao /></div>
+    </Variant>
+    <Variant title="Radar C agente" :init-state="radarCAgente">
       <div class="h-screen"><RadarPrescricao /></div>
     </Variant>
     <Variant title="Radar campanha" :init-state="radarModal">
@@ -325,6 +410,9 @@ const posVendaVazio = () => {
       <div class="h-screen"><RadarPrescricao /></div>
     </Variant>
     <Variant title="Pos-venda" :init-state="posVendaAberto">
+      <div class="h-screen"><PosVenda /></div>
+    </Variant>
+    <Variant title="Pos-venda C" :init-state="posVendaC">
       <div class="h-screen"><PosVenda /></div>
     </Variant>
     <Variant title="Pos-venda vazio" :init-state="posVendaVazio">
