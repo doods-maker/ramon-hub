@@ -128,17 +128,19 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
   it 'sino para Closer e SDR (sem nenhum dos dois, os administradores) e para a conta toda' do
     closer = create(:user, account: account)
     sdr = create(:user, account: account)
-    admin = create(:user, account: account, role: :administrator)
+    create(:user, account: account, role: :administrator)
     c = ctx
     c.lead.update!(closer: closer, sdr: sdr)
-    avisados = -> { Notification.where(notification_type: 'ramon_fluxo_aviso').pluck(:user_id) }
-    Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Reunião', 'para' => 'closer_e_sdr' }, c)
-    expect(avisados.call).to contain_exactly(closer.id, sdr.id)
+    # o builder cria 1 sino por pessoa a cada chamada (a deduplicação roda em job, não aqui): olhar só as linhas novas
+    avisar = lambda do |para|
+      antes = Notification.maximum(:id).to_i
+      Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Reunião', 'para' => para }, c)
+      Notification.where(notification_type: 'ramon_fluxo_aviso').where('id > ?', antes).pluck(:user_id)
+    end
+    expect(avisar.call('closer_e_sdr')).to contain_exactly(closer.id, sdr.id)
     c.lead.update!(closer: nil, sdr: nil)
-    Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Reunião', 'para' => 'closer_e_sdr' }, c)
-    expect(avisados.call).to contain_exactly(closer.id, sdr.id, admin.id)
-    Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Marcada', 'para' => 'conta' }, c)
-    expect(avisados.call.count).to eq(3 + account.account_users.count)
+    expect(avisar.call('closer_e_sdr')).to match_array(account.account_users.administrator.pluck(:user_id))
+    expect(avisar.call('conta')).to match_array(account.account_users.pluck(:user_id))
   end
 
   it 'ensaio do sino diz quem receberia, sem gravar nada' do
