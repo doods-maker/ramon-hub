@@ -14,4 +14,17 @@ RSpec.describe Ramon::StageSlug do
       expect(described_class.label_for('  Proposta enviada  ')).to eq('fase-proposta-enviada')
     end
   end
+
+  describe '.unique_label_for' do
+    let(:account) { create(:account) }
+
+    it 'devolve o label base quando está livre' do
+      expect(described_class.unique_label_for(account, 'Proposta enviada')).to eq('fase-proposta-enviada')
+    end
+
+    it 'acrescenta sufixo quando outra etapa (renomeada) ainda usa o label' do
+      account.lead_stages.create!(name: 'Proposta renomeada', label: 'fase-proposta', position: 90)
+      expect(described_class.unique_label_for(account, 'Proposta')).to eq('fase-proposta-2')
+    end
+  end
 end

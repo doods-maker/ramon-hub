@@ -8,6 +8,8 @@ json.stages do
     json.position stage.position
     json.is_won stage.is_won
     json.is_lost stage.is_lost
+    # protegida: o código acha a etapa pelo label (não pode ser removida)
+    json.automacao stage.automacao?
     json.probability stage.probability
     json.stalled_after_days stage.stalled_after_days
   end

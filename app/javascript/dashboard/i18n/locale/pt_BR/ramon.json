@@ -305,7 +305,8 @@
         "MENU": "Opções da etapa",
         "REMOVE_COUNT": "{count} lead(s) visíveis nesta etapa serão movidos para a etapa destino.",
         "REMOVE_EMPTY": "Nenhum lead visível nesta etapa — se houver leads fora do filtro atual, serão movidos para a etapa destino.",
-        "REMOVE_NO_TARGET": "Não há outra etapa para receber os leads — crie uma antes de remover."
+        "REMOVE_NO_TARGET": "Não há outra etapa para receber os leads — crie uma antes de remover.",
+        "REMOVE_LOCKED": "Usada pelas automações (quiz, agendamento, contrato) — não pode ser removida"
       },
       "FILTERS": {
         "SEARCH": "Buscar nome ou contato…",

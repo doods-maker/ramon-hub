@@ -30,4 +30,13 @@ describe('StageHeaderMenu', () => {
     await wrapper.find('[data-testid="stage-type-won"]').trigger('click');
     expect(wrapper.emitted().setType[0]).toEqual(['won']);
   });
+  it('trava remover na etapa das automações', async () => {
+    const wrapper = stub({ stage: { ...stage, automacao: true } });
+    await wrapper.find('[data-testid="stage-menu-toggle"]').trigger('click');
+    const remove = wrapper.find('[data-testid="stage-remove"]');
+    expect(remove.attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="stage-remove-locked"]').exists()).toBe(
+      true
+    );
+  });
 });

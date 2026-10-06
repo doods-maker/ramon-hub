@@ -214,14 +214,24 @@ const remove = () => {
               class="i-lucide-check size-3.5 text-n-blue-11"
             />
           </button>
+          <!-- etapa das automações (quiz, agendamento, contrato): o código a
+               acha pelo label, então não pode sumir — o servidor também recusa -->
           <button
             data-testid="stage-remove"
             class="block text-n-ruby-11"
             :class="LINHA"
+            :disabled="stage.automacao"
             @click="remove"
           >
             {{ $t('RAMON.FUNIL.STAGE.REMOVE') }}
           </button>
+          <p
+            v-if="stage.automacao"
+            data-testid="stage-remove-locked"
+            class="m-0 px-2 pb-1 text-[11px] leading-snug text-n-slate-10"
+          >
+            {{ $t('RAMON.FUNIL.STAGE.REMOVE_LOCKED') }}
+          </p>
         </template>
       </div>
     </Teleport>

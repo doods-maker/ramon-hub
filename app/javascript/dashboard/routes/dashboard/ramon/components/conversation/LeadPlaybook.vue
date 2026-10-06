@@ -20,28 +20,29 @@ const stages = useMapGetter('leadConfig/getStages');
 // seções que aparecem no painel de consulta durante a conversa
 const SECTIONS = ['qualificacao', 'apresentacao', 'objecao', 'documento'];
 
-// mapa estático etapa (nome seedado) → seção destacada "nesta etapa".
-// Etapa custom sem match cai no comportamento padrão (nenhum destaque).
+// etapa (label fixo do seed — renomear a etapa não muda o label) → seção
+// destacada "nesta etapa". Etapa custom sem match: nenhum destaque.
 const STAGE_SECTION = {
-  Novo: 'qualificacao',
-  Qualificação: 'qualificacao',
-  'Reunião agendada': 'apresentacao',
-  'Reunião realizada': 'apresentacao',
-  Negociação: 'objecao',
-  'Última chance': 'objecao',
-  Fechado: 'documento',
+  'fase-novo': 'qualificacao',
+  'fase-qualificacao': 'qualificacao',
+  'fase-reuniao-agendada': 'apresentacao',
+  'fase-reuniao-realizada': 'apresentacao',
+  'fase-negociacao': 'objecao',
+  'fase-ultima-chance': 'objecao',
+  'fase-fechado': 'documento',
 };
 
 const thesis = computed(() =>
   theses.value.find(x => x.id === props.lead?.thesis_id)
 );
 
-const currentStageName = computed(
-  () => (stages.value || []).find(s => s.id === props.lead?.lead_stage_id)?.name
+const currentStageLabel = computed(
+  () =>
+    (stages.value || []).find(s => s.id === props.lead?.lead_stage_id)?.label
 );
 
 const highlightedSection = computed(
-  () => STAGE_SECTION[currentStageName.value] || null
+  () => STAGE_SECTION[currentStageLabel.value] || null
 );
 
 const loadFailed = ref(false);

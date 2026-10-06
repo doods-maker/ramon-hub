@@ -37,7 +37,7 @@ const thesisWithoutItems = {
   position: 1,
 };
 
-const build = (theses, showSpy = vi.fn()) =>
+const build = (theses, showSpy = vi.fn(), stages = []) =>
   createStore({
     modules: {
       theses: {
@@ -45,14 +45,23 @@ const build = (theses, showSpy = vi.fn()) =>
         getters: { getTheses: () => theses },
         actions: { show: showSpy },
       },
+      leadConfig: {
+        namespaced: true,
+        getters: { getStages: () => stages },
+      },
     },
   });
 
-const mountPlaybook = (lead, theses = [thesisWithItems], showSpy = vi.fn()) =>
+const mountPlaybook = (
+  lead,
+  theses = [thesisWithItems],
+  showSpy = vi.fn(),
+  stages = []
+) =>
   shallowMount(LeadPlaybook, {
     props: { lead },
     global: {
-      plugins: [build(theses, showSpy)],
+      plugins: [build(theses, showSpy, stages)],
       mocks: { $t: k => k },
       stubs: { Button: false },
     },
@@ -101,5 +110,18 @@ describe('LeadPlaybook.vue', () => {
     );
     await flushPromises();
     expect(button.text()).toBe('RAMON.PLAYBOOK.COPIED');
+  });
+  it('destaca a seção da etapa pelo label, mesmo com a etapa renomeada', () => {
+    const wrapper = mountPlaybook(
+      { id: 1, thesis_id: 1, lead_stage_id: 9 },
+      [thesisWithItems],
+      vi.fn(),
+      [{ id: 9, name: 'Proposta na mesa', label: 'fase-negociacao' }]
+    );
+    const first = wrapper.findAll('[data-testid="playbook-section"]')[0];
+    expect(first.text()).toContain('RAMON.PLAYBOOK.SECTIONS.OBJECAO');
+    expect(first.find('[data-testid="playbook-stage-badge"]').exists()).toBe(
+      true
+    );
   });
 });

@@ -1,4 +1,9 @@
 class LeadStage < ApplicationRecord
+  # Etiquetas que o código procura pelo `label` (quiz/LP → qualificação,
+  # agendamento de reunião, contrato na reunião): a etapa pode ser renomeada
+  # (o label é fixo desde a criação), mas não removida.
+  AUTOMATION_LABELS = %w[fase-qualificacao fase-reuniao-agendada fase-reuniao-realizada].freeze
+
   belongs_to :account
   has_many :leads, dependent: :restrict_with_exception
 
@@ -8,6 +13,10 @@ class LeadStage < ApplicationRecord
   default_scope { order(:position) }
 
   before_save :ensure_single_won_lost
+
+  def automacao?
+    AUTOMATION_LABELS.include?(label)
+  end
 
   private
 
