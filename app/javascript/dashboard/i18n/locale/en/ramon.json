@@ -1513,7 +1513,8 @@
       "NEXT": "Next appointment",
       "NEXT_EMPTY": "Nothing scheduled.",
       "TICKER_NOW": "Now:",
-      "TICKER": "{closer} closed {lead} — {value} · {benefit}"
+      "TICKER": "{closer} closed {lead} — {value} · {benefit}",
+      "STALE": "out of date for {min} min"
     },
     "COPILOTO": {
       "BTN": "Copilot: {modo}",

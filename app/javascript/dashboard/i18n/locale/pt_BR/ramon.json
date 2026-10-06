@@ -1513,7 +1513,8 @@
       "NEXT": "Próximo compromisso",
       "NEXT_EMPTY": "sem compromisso agendado",
       "TICKER_NOW": "Agora:",
-      "TICKER": "{closer} fechou {lead} — {value} · {benefit}"
+      "TICKER": "{closer} fechou {lead} — {value} · {benefit}",
+      "STALE": "desatualizado há {min} min"
     },
     "COPILOTO": {
       "BTN": "Copiloto: {modo}",

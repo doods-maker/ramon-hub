@@ -3,7 +3,7 @@
 // (classe `dark` na raiz: tokens do tema preto mesmo com o hub no claro):
 // base fixa 1280×720 escalada por transform pra caber em qualquer 16:9.
 // Kit visual do hub em tamanho de TV (lê de longe); números em font-mono.
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { brlCompact } from '../helpers/currency';
@@ -46,6 +46,26 @@ const clock = computed(() =>
 );
 const monthName = computed(() =>
   new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(now.value)
+);
+
+// "ao vivo" honesto: cada fetch bem-sucedido troca o objeto do store; se
+// passar de 3 min sem troca (cable e fallback falhando), o selo avisa.
+const DESATUALIZADO_MIN = 3;
+const atualizadoEm = ref(null);
+watch(
+  data,
+  valor => {
+    if (valor) atualizadoEm.value = Date.now();
+  },
+  { immediate: true }
+);
+const minutosSemAtualizar = computed(() =>
+  atualizadoEm.value
+    ? Math.floor((now.value.getTime() - atualizadoEm.value) / 60000)
+    : 0
+);
+const desatualizado = computed(
+  () => minutosSemAtualizar.value >= DESATUALIZADO_MIN
 );
 
 const refetch = () => store.dispatch('ramonDashboard/fetch');
@@ -177,10 +197,19 @@ const funnelLine = computed(() => {
           {{ `${t('RAMON.TV.EYEBROW')} · ${monthName}` }}
         </p>
         <span
-          class="ml-auto inline-flex items-center gap-1.5 text-xs text-n-slate-11"
+          data-testid="tv-live"
+          class="ml-auto inline-flex items-center gap-1.5 text-xs"
+          :class="desatualizado ? 'text-n-amber-11' : 'text-n-slate-11'"
         >
-          <span class="size-[7px] rounded-full bg-n-teal-9" />
-          {{ `${t('RAMON.TV.LIVE')} ·` }}
+          <span
+            class="size-[7px] rounded-full"
+            :class="desatualizado ? 'bg-n-amber-9' : 'bg-n-teal-9'"
+          />
+          <template v-if="desatualizado">
+            {{ t('RAMON.TV.STALE', { min: minutosSemAtualizar }) }}
+          </template>
+          <template v-else>{{ t('RAMON.TV.LIVE') }}</template>
+          ·
           <span class="font-mono tabular-nums">{{ clock }}</span>
         </span>
       </div>
