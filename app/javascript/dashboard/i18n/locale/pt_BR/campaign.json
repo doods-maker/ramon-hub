@@ -199,6 +199,10 @@
           "API": {
             "SUCCESS_MESSAGE": "Campanha do WhatsApp criada com sucesso",
             "ERROR_MESSAGE": "Houve um erro. Por favor, tente novamente."
+          },
+          "CONSENT": {
+            "LABEL": "Enviar só para quem tem consentimento de marketing registrado",
+            "HINT": "Desligado: envia para todos os contatos da etiqueta."
           }
         }
       }

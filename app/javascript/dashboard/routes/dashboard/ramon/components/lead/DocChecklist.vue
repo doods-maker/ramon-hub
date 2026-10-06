@@ -7,6 +7,7 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { useDocSugestao } from '../../composables/useDocSugestao';
+import { docChargeDraft } from '../../helpers/docCobranca';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { SECAO, TITULO, CHIP, TOM, AVISO, LINHA } from '../../helpers/ui';
 
@@ -119,23 +120,15 @@ const chargePending = async () => {
   const pending = docItems.value.filter(item => statusOf(item) !== 'recebido');
   if (!pending.length) return;
 
-  const lines = [
-    t('RAMON.DOCS.DRAFT.GREETING', { name: props.lead?.name || '' }),
-    '',
-    ...pending.map(item =>
-      t('RAMON.DOCS.DRAFT.ITEM', { item: itemLabel(item) })
-    ),
-    '',
-    t('RAMON.DOCS.DRAFT.CLOSING'),
-  ];
+  const draft = docChargeDraft(t, props.lead?.name, pending.map(itemLabel));
   // Princípio de aprovação: o texto cai como RASCUNHO no editor — quem envia é
   // o Eduardo. Na gaveta (sem ReplyBox montado) o clipboard continua o caminho.
   if (props.context === 'conversation') {
-    emitter.emit(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, lines.join('\n'));
+    emitter.emit(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, draft);
     useAlert(t('RAMON.DOCS.DRAFT_READY'));
   } else {
     try {
-      await copyTextToClipboard(lines.join('\n'));
+      await copyTextToClipboard(draft);
     } catch (error) {
       useAlert(t('RAMON.DOCS.COPY_FAILED'));
       return;

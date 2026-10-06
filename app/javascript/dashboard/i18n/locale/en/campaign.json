@@ -199,6 +199,10 @@
           "API": {
             "SUCCESS_MESSAGE": "WhatsApp campaign created successfully",
             "ERROR_MESSAGE": "There was an error. Please try again."
+          },
+          "CONSENT": {
+            "LABEL": "Only send to contacts with recorded marketing consent",
+            "HINT": "Off: sends to every contact with the label."
           }
         }
       }

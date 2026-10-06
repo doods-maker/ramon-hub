@@ -6,6 +6,8 @@ module Ramon::LeadRadar
   CLOSED_WINDOW = 90.days
   # Filtros que miram fechados de propósito (ou uma pessoa) dispensam a janela.
   CLOSED_WINDOW_BYPASS = %i[closed_all won_since lead_stage_id q contact_id].freeze
+  # Pós-venda: concluídos mostrados (os mais recentes); o total vem à parte.
+  CONCLUIDOS_LIMITE = 20
 
   module_function
 
@@ -59,12 +61,27 @@ module Ramon::LeadRadar
 
   # Pós-venda (ADR-0001): ganhos ficam em "Fechado"; aqui a visão deriva o
   # estado — pendente = checklist de documento incompleto; concluído = completo.
-  # Ganho sem item de documento na tese fica fora (nada a coletar).
+  # Ganho sem tese não tem checklist (nunca vira contrato limpo): vai pro bloco
+  # "Ganhos sem tese". Tese sem item de documento fica fora (nada a coletar).
   def pos_venda(account)
-    ganhos = account.leads.funil.where.not(won_at: nil)
-                    .includes(:contact, thesis: :thesis_items)
+    ganhos = ganhos_pos_venda(account)
     com_docs = ganhos.select { |l| l.docs_counts[:total].positive? }
     pendentes, concluidos = com_docs.partition { |l| l.docs_counts[:received] < l.docs_counts[:total] }
-    { pendentes: pendentes.sort_by(&:won_at), concluidos: concluidos.sort_by(&:won_at).last(20).reverse }
+    { pendentes: pendentes.sort_by { |l| urgencia(l) }, concluidos: concluidos.sort_by(&:won_at).last(CONCLUIDOS_LIMITE).reverse,
+      concluidos_total: concluidos.size, sem_tese: ganhos.select { |l| l.thesis_id.nil? }.sort_by(&:won_at) }
+  end
+
+  def ganhos_pos_venda(account)
+    account.leads.funil.where.not(won_at: nil).includes(:contact, thesis: :thesis_items)
+  end
+
+  # Ordem dos pendentes por prescrição: sangrando primeiro (maior valor mensal
+  # antes), depois o prazo mais curto, sem DCB por último; empate → ganho mais antigo.
+  def urgencia(lead)
+    info = lead.prescription
+    return [2, 0, lead.won_at] if info.nil?
+    return [0, -lead.benefit_monthly_value.to_f, lead.won_at] if info[:lost_installments].positive?
+
+    [1, Lead::PRESCRIPTION_WINDOW_MONTHS - info[:months_since_dcb], lead.won_at]
   end
 end

@@ -1181,6 +1181,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_100001) do
     t.datetime "reuniao_registrada_em"
     t.datetime "docs_completos_em"
     t.datetime "contrato_limpo_em"
+    t.datetime "contrato_cancelado_em"
     t.index ["account_id", "lead_stage_id"], name: "index_leads_on_account_id_and_lead_stage_id"
     t.index ["account_id"], name: "index_leads_on_account_id"
     t.index ["benefit_type_id"], name: "index_leads_on_benefit_type_id"
@@ -1474,6 +1475,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_100001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "created_at"], name: "index_ramon_chegadas_on_account_id_and_created_at"
+  end
+
+  create_table "ramon_extratos_fechados", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id", null: false
+    t.string "papel", null: false
+    t.date "competencia", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "fechado_em", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "competencia", "user_id", "papel"], name: "idx_ramon_extratos_fechados_unico", unique: true
+    t.index ["account_id"], name: "index_ramon_extratos_fechados_on_account_id"
+    t.index ["user_id"], name: "index_ramon_extratos_fechados_on_user_id"
   end
 
   create_table "ramon_fluxo_execucoes", force: :cascade do |t|

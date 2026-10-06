@@ -52,9 +52,10 @@ class Whatsapp::OneoffCampaignService
       return
     end
 
-    # Ramon fork (LGPD): campanha em massa só dispara pra quem tem consentimento
-    # de marketing registrado no contato (custom_attributes.consent_marketing).
-    unless marketing_consent_granted?(contact)
+    # Ramon fork (LGPD): por padrão a campanha em massa só dispara pra quem tem
+    # consentimento de marketing registrado no contato (custom_attributes.consent_marketing).
+    # O gestor pode desligar o filtro na campanha (consentimento via contrato/procuração).
+    if consent_filter? && !marketing_consent_granted?(contact)
       @skipped_without_consent += 1
       Rails.logger.info "Skipping contact #{contact.name} - no marketing consent (LGPD)"
       return
@@ -80,6 +81,11 @@ class Whatsapp::OneoffCampaignService
 
     Rails.logger.info "Campaign #{campaign.id}: #{@skipped_without_consent} contact(s) skipped without marketing consent (LGPD)"
     Rails.logger.info "Campaign #{campaign.id} processing completed"
+  end
+
+  # trigger_rules.only_with_marketing_consent: false desliga o filtro; ausente = ligado.
+  def consent_filter?
+    campaign.trigger_rules&.dig('only_with_marketing_consent') != false
   end
 
   def marketing_consent_granted?(contact)

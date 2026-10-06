@@ -10,6 +10,7 @@ module LeadComercial
   included do
     before_create :assign_sdr
     before_save :stamp_docs_completos, if: -> { new_record? || will_save_change_to_custom_attributes? || will_save_change_to_thesis_id? }
+    after_save :cancelar_contrato_limpo, if: -> { saved_change_to_won_at? && won_at.nil? && contrato_limpo_em.present? }
     after_commit :assign_conversation_to_sdr, on: [:create, :update],
                                               if: -> { saved_change_to_sdr_id? || saved_change_to_conversation_id? }
   end
@@ -63,6 +64,15 @@ module LeadComercial
     return if sdr_id.blank? || conversation.blank? || conversation.assignee_id.present?
 
     conversation.update!(assignee_id: sdr_id)
+  end
+
+  # Saiu de Fechado depois de limpo (regulamento §5.2): apaga o carimbo (se
+  # voltar a fechar, carimba de novo na data nova) e registra quando — base do
+  # desconto na apuração seguinte se a unidade já estava num extrato fechado
+  # (Ramon::ExtratoDescontos). Mês fechado não muda. after_save: o won_at só
+  # zera no track_stage_cycle do Lead, que roda depois dos before_save daqui.
+  def cancelar_contrato_limpo
+    update_columns(contrato_cancelado_em: Time.current, contrato_limpo_em: nil) # rubocop:disable Rails/SkipsModelValidations
   end
 
   # Documentos mínimos = checklist inteira da tese "recebido" (decisão 02/10).

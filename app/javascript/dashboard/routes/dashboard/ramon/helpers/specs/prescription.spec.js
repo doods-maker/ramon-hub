@@ -1,4 +1,8 @@
-import { prescriptionInfo, prescriptionText } from '../prescription';
+import {
+  prescriptionChip,
+  prescriptionInfo,
+  prescriptionText,
+} from '../prescription';
 
 describe('prescriptionInfo', () => {
   const now = new Date(2026, 6, 6); // 06/07/2026
@@ -43,5 +47,34 @@ describe('prescriptionText', () => {
     ).toBe('RAMON.KANBAN.CARD.PRESCRIPTION_SOON:{"months":4}');
     expect(prescriptionText(t, { lost_installments: 0 })).toBeNull();
     expect(prescriptionText(t, null)).toBeNull();
+  });
+});
+
+describe('prescriptionChip', () => {
+  const t = (key, params) => `${key}:${JSON.stringify(params)}`;
+
+  it('mesma frase do painel: sangrando com valor, sem valor e prazo curto', () => {
+    expect(
+      prescriptionChip(t, { lostInstallments: 2, monthlyValue: 1412 })
+    ).toEqual({
+      bleeding: true,
+      text: expect.stringContaining('PRESCRIPTION_BLEEDING'),
+    });
+    expect(prescriptionChip(t, { lostInstallments: 2 }).text).toBe(
+      'RAMON.KANBAN.CARD.PRESCRIPTION_LOST:{"count":2}'
+    );
+    expect(
+      prescriptionChip(t, { lostInstallments: 0, monthsToCliff: 4 })
+    ).toEqual({
+      bleeding: false,
+      text: 'RAMON.KANBAN.CARD.PRESCRIPTION_SOON:{"months":4}',
+    });
+  });
+
+  it('prazo longo só aparece com soonMonths maior (Radar)', () => {
+    const longe = { lostInstallments: 0, monthsToCliff: 20 };
+    expect(prescriptionChip(t, longe)).toBeNull();
+    expect(prescriptionChip(t, longe, Infinity).bleeding).toBe(false);
+    expect(prescriptionChip(t, null)).toBeNull();
   });
 });

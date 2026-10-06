@@ -150,6 +150,22 @@ RSpec.describe 'Campaigns API', type: :request do
         expect(response_data[:scheduled_at]).to eq(scheduled_at.to_i)
         expect(response_data[:audience].pluck(:id)).to include(label1.id, label2.id)
       end
+
+      it 'persists the per-campaign marketing consent filter in trigger_rules (Ramon fork)' do
+        twilio_inbox = create(:inbox, channel: create(:channel_twilio_sms, account: account), account: account)
+
+        post "/api/v1/accounts/#{account.id}/campaigns",
+             params: {
+               inbox_id: twilio_inbox.id, title: 'resgate', message: 'test message',
+               audience: [{ type: 'Label', id: create(:label, account: account).id }],
+               trigger_rules: { only_with_marketing_consent: false }
+             },
+             headers: administrator.create_new_auth_token,
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(account.campaigns.find_by(title: 'resgate').trigger_rules).to eq('only_with_marketing_consent' => false)
+      end
     end
   end
 

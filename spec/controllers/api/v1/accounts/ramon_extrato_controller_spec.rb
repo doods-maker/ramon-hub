@@ -27,10 +27,12 @@ RSpec.describe 'Ramon Extrato API', type: :request do
   end
 
   it 'gestor lança a meta do mês (cria e atualiza)', :aggregate_failures do
-    put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 25, rampa: true },
-                       headers: admin.create_new_auth_token, as: :json
-    put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 30, rampa: true },
-                       headers: admin.create_new_auth_token, as: :json
+    travel_to(Time.zone.parse('2026-11-15 12:00:00 UTC')) do
+      put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 25, rampa: true },
+                         headers: admin.create_new_auth_token, as: :json
+      put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 30, rampa: true },
+                         headers: admin.create_new_auth_token, as: :json
+    end
 
     expect(response).to have_http_status(:success)
     expect(MetaComercial.where(user: sdr).pluck(:mes, :meta, :rampa)).to eq([[Date.new(2026, 11, 1), 30, true]])
@@ -41,5 +43,16 @@ RSpec.describe 'Ramon Extrato API', type: :request do
                        headers: sdr.create_new_auth_token, as: :json
 
     expect(response).to have_http_status(:unauthorized)
+  end
+
+  it 'mês fechado (3º dia útil): devolve o extrato guardado e não aceita meta', :aggregate_failures do
+    travel_to(Time.zone.parse('2026-12-10 12:00:00 UTC')) do
+      put "#{url}/meta", params: { mes: '2026-11', user_id: sdr.id, papel: 'sdr', meta: 25 },
+                         headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      get url, params: { mes: '2026-11' }, headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['pessoas'].pluck('fechado_em')).to all(be_present)
+    end
   end
 end

@@ -1596,14 +1596,18 @@
       },
       "EVENTO": {
         "reuniao_qualificada": "Reunião qualificada",
-        "contrato_limpo": "Contrato limpo"
+        "contrato_limpo": "Contrato limpo",
+        "desconto": "Desconto: contrato cancelado após pagamento",
+        "desconto_bonus": "Desconto: bônus/degrau desfeito pelo cancelamento"
       },
       "COL": {
         "DATA": "Data",
         "LEAD": "Lead",
         "EVENTO": "Evento",
         "VALOR": "Valor"
-      }
+      },
+      "FECHADO": "Fechado em {data}",
+      "DESCONTOS": "Descontos"
     },
     "RADAR": {
       "PER_MONTH": "/mês",
@@ -1612,15 +1616,18 @@
       "DCB": "DCB {date}",
       "LOST_CHIP": "Perdemos (reativar?)",
       "CAMPAIGN_CTA": "Criar campanha de resgate ({count})",
-      "CAMPAIGN_TOOLTIP": "só contatos com consentimento LGPD ({n} de {m})",
+      "CAMPAIGN_TOOLTIP": "contatos com WhatsApp ({n} de {m} no radar)",
       "CAMPAIGN_MODAL_TITLE": "Criar campanha de resgate",
-      "CAMPAIGN_MODAL_MESSAGE": "Vamos abrir a tela de campanhas do WhatsApp para montar o resgate com os {n} contatos com consentimento LGPD (de {m} no radar). Nada é enviado automaticamente.",
-      "CAMPAIGN_MODAL_CONFIRM": "Abrir campanhas",
+      "CAMPAIGN_MODAL_MESSAGE": "Vamos colocar a etiqueta resgate-prescricao nos {n} contatos com WhatsApp (de {m} leads no radar) e abrir a tela de campanhas do WhatsApp. Nada é enviado: você monta a campanha e envia.",
+      "CAMPAIGN_MODAL_CONFIRM": "Etiquetar contatos",
       "LOAD_ERROR": "Não deu para carregar o radar.",
       "TITLE": "Radar de prescrição",
       "SUBTITLE": "toda a base · atualizado agora",
       "RETRY": "Tentar de novo",
-      "EMPTY": "Nenhum lead em risco."
+      "EMPTY": "Nenhum lead em risco.",
+      "CLIENT_CHIP": "Cliente — docs pendentes",
+      "CAMPAIGN_DONE": "{n} contatos com a etiqueta resgate-prescricao — monte a campanha e envie você",
+      "CAMPAIGN_ERROR": "Não deu para etiquetar os contatos. Tente de novo."
     },
     "POS_VENDA": {
       "DIAS": "{dias} dias desde o ganho",
@@ -1628,11 +1635,14 @@
       "CONCLUIDOS": "Concluídos ({count})",
       "DRIVE_CHIP": "no Drive",
       "TITLE": "Pós-venda",
-      "SUBTITLE": "Ganhos aguardando documentos — do mais antigo pro mais novo",
+      "SUBTITLE": "Ganhos aguardando documentos — os mais urgentes na prescrição primeiro",
       "DOCS": "docs {received}/{total}",
       "EMPTY": "Nenhum ganho com documentos pendentes 🎉",
       "RETRY": "Tentar de novo",
-      "OPEN_CONVERSATION": "Conversa"
+      "OPEN_CONVERSATION": "Conversa",
+      "SEM_TESE": "Ganhos sem tese — defina a tese ({count})",
+      "SEM_TESE_HINT": "Sem tese não há lista de documentos para cobrar nem contrato limpo.",
+      "CONCLUIDOS_RECENTES": "mostrando os {count} mais recentes"
     },
     "NAV": {
       "TITLE": "Intranet",

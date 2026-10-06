@@ -1,5 +1,6 @@
 class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::BaseController
   LIST_LIMIT = 100
+  RESGATE_LABEL = 'resgate-prescricao'.freeze
 
   before_action :current_account
   before_action :check_authorization
@@ -10,19 +11,34 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
     @items = rows.first(LIST_LIMIT)
   end
 
+  # Campanha de resgate (só gestor): etiqueta os contatos com WhatsApp de TODOS
+  # os leads do radar (não só os 100 da lista). Consentimento vem do contrato/
+  # procuração (regra do escritório) — sem filtrar pela flag do hub. Nada é
+  # criado nem enviado aqui: a campanha quem monta e envia é o gestor.
+  def resgate
+    Current.account.labels.find_or_create_by!(title: RESGATE_LABEL)
+    contatos = contatos_com_whatsapp(radar_rows)
+    contatos.each { |contact| contact.add_labels([RESGATE_LABEL]) }
+    render json: { label: RESGATE_LABEL, count: contatos.size }
+  end
+
   private
 
-  # Mesmas permissões do Centro de Comando (admin + agent).
   def check_authorization
-    authorize(:ramon_dashboard, :show?)
+    authorize(:ramon_prescription_radar, :"#{action_name}?")
+  end
+
+  def contatos_com_whatsapp(rows)
+    Current.account.contacts.where(id: rows.filter_map { |row| row[:contact_id] if row[:has_whatsapp] })
   end
 
   # Toda a base do funil com DCB conhecida — abertos E perdidos (o prazo do
-  # lead perdido continua correndo); ganhos ficam de fora.
+  # lead perdido continua correndo) e clientes ainda juntando documentos (o
+  # prazo corre até o protocolo); ganho com docs completos fica de fora.
   def leads_with_dcb
     Current.account.leads.funil
            .where.not(dcb_em: nil)
-           .joins(:lead_stage).where(lead_stages: { is_won: false })
+           .joins(:lead_stage).where('lead_stages.is_won = FALSE OR leads.docs_completos_em IS NULL')
            .includes(:lead_stage, :benefit_type, :contact)
   end
 
@@ -35,7 +51,6 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
   end
 
   def row_for(lead)
-    info = lead.prescription
     {
       lead_id: lead.id,
       name: lead.name,
@@ -43,14 +58,20 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
       dcb_em: lead.dcb_em,
       stage_name: lead.lead_stage.name,
       is_lost: lead.lead_stage.is_lost,
+      is_client: lead.lead_stage.is_won,
       monthly_value: lead.benefit_monthly_value&.to_f,
+      contact_id: lead.contact_id,
+      has_whatsapp: lead.contact&.phone_number.present? || false
+    }.merge(prazo(lead.prescription))
+  end
+
+  def prazo(info)
+    {
       months_since_dcb: info[:months_since_dcb],
       lost_installments: info[:lost_installments],
       lost_value: info[:lost_value]&.to_f,
       months_to_cliff: [Lead::PRESCRIPTION_WINDOW_MONTHS - info[:months_since_dcb], 0].max,
-      pct_consumed: [info[:months_since_dcb].fdiv(Lead::PRESCRIPTION_WINDOW_MONTHS), 1.0].min,
-      # Mesmo critério do guard LGPD do envio em massa (Whatsapp::OneoffCampaignService).
-      consent_marketing: lead.contact&.custom_attributes&.dig('consent_marketing', 'granted') == true
+      pct_consumed: [info[:months_since_dcb].fdiv(Lead::PRESCRIPTION_WINDOW_MONTHS), 1.0].min
     }
   end
 
@@ -62,7 +83,10 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
       bleeding_monthly: monthly_sum(bleeding),
       bleeding_count: bleeding.size,
       at_risk_90d_monthly: monthly_sum(at_risk),
-      at_risk_90d_count: at_risk.size
+      at_risk_90d_count: at_risk.size,
+      total_count: rows.size,
+      # contatos (distintos) que a campanha de resgate etiqueta
+      rescue_count: rows.filter_map { |row| row[:contact_id] if row[:has_whatsapp] }.uniq.size
     }
   end
 

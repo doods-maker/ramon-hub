@@ -22,9 +22,10 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
     expect(body['summary']).to include('at_risk_90d_monthly' => 500.0, 'at_risk_90d_count' => 1)
   end
 
-  it 'exclui ganhos, caso de cálculo, sem DCB e quem consumiu menos da metade do prazo' do
+  it 'exclui ganhos com docs completos, caso de cálculo, sem DCB e quem consumiu menos da metade do prazo' do
     won_stage = account.lead_stages.find_by(is_won: true)
-    create(:lead, account: account, lead_stage: won_stage, dcb_em: 70.months.ago.to_date, benefit_monthly_value: 900)
+    ganho = create(:lead, account: account, lead_stage: won_stage, dcb_em: 70.months.ago.to_date, benefit_monthly_value: 900)
+    ganho.update_columns(docs_completos_em: 1.day.ago) # rubocop:disable Rails/SkipsModelValidations
     create(:lead, account: account, lead_stage: active_stage, dcb_em: 70.months.ago.to_date, source: Lead::FONTE_CALCULO)
     create(:lead, account: account, lead_stage: active_stage, dcb_em: 10.months.ago.to_date)
     create(:lead, account: account, lead_stage: active_stage)
@@ -39,15 +40,44 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
     expect(body['summary']).to include('bleeding_count' => 0, 'at_risk_90d_count' => 0)
   end
 
-  it 'expõe o consent_marketing do contato (critério do guard de campanha)' do
-    contact = create(:contact, account: account, custom_attributes: { 'consent_marketing' => { 'granted' => true } })
-    create(:lead, account: account, lead_stage: active_stage, contact: contact, dcb_em: 62.months.ago.to_date, benefit_monthly_value: 800)
-    create(:lead, account: account, lead_stage: active_stage, dcb_em: 61.months.ago.to_date)
+  it 'inclui cliente (ganho) ainda juntando documentos, marcado como cliente', :aggregate_failures do
+    won_stage = account.lead_stages.find_by(is_won: true)
+    cliente = create(:lead, account: account, lead_stage: won_stage, dcb_em: 62.months.ago.to_date, benefit_monthly_value: 900)
 
     get url, headers: agent.create_new_auth_token, as: :json
 
-    consents = response.parsed_body['items'].to_h { |item| [item['lead_id'], item['consent_marketing']] }
-    expect(consents.values).to contain_exactly(true, false)
+    item = response.parsed_body['items'].first
+    expect(item).to include('lead_id' => cliente.id, 'is_client' => true, 'lost_installments' => 2)
+    expect(response.parsed_body['summary']).to include('bleeding_count' => 1)
+  end
+
+  describe 'POST resgate (campanha de resgate)' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
+
+    it 'gestor etiqueta resgate-prescricao em TODOS os contatos com WhatsApp do radar, sem olhar a flag do hub', :aggregate_failures do
+      com_whatsapp = %w[+5548999000001 +5548999000002].map { |fone| create(:contact, account: account, phone_number: fone) }
+      sem_whatsapp = create(:contact, account: account, phone_number: nil)
+      [*com_whatsapp, sem_whatsapp].each do |contact|
+        create(:lead, account: account, lead_stage: active_stage, contact: contact, dcb_em: 62.months.ago.to_date)
+      end
+      stub_const('Api::V1::Accounts::RamonPrescriptionRadarController::LIST_LIMIT', 1)
+
+      get url, headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['summary']).to include('rescue_count' => 2, 'total_count' => 3)
+
+      post "#{url}/resgate", headers: admin.create_new_auth_token, as: :json
+
+      expect(response.parsed_body).to include('label' => 'resgate-prescricao', 'count' => 2)
+      expect(account.labels.pluck(:title)).to include('resgate-prescricao')
+      expect(com_whatsapp.map { |c| c.reload.label_list }).to all(include('resgate-prescricao'))
+      expect(sem_whatsapp.reload.label_list).to be_empty
+    end
+
+    it 'agente não etiqueta a base' do
+      post "#{url}/resgate", headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
   end
 
   describe 'Ramon Pos Venda API' do
@@ -72,8 +102,35 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
       body = response.parsed_body
       expect(body['pendentes'].pluck('id')).to eq([pendente.id])
       expect(body['pendentes'].first).to include('docs_received' => 0, 'docs_total' => 1)
+      expect(body['pendentes'].first['docs_pendentes']).to contain_exactly(include('id' => doc_item.id, 'status' => 'pendente'))
       expect(body['concluidos'].pluck('id')).to eq([concluido.id])
+      expect(body['concluidos_total']).to eq(1)
       expect((body['pendentes'] + body['concluidos']).pluck('id')).not_to include(fora.id)
+    end
+
+    it 'ordena os pendentes por urgência de prescrição: sangrando (maior valor) → prazo curto → sem DCB' do
+      thesis = create(:thesis, account: account)
+      create(:thesis_item, thesis: thesis, section: 'documento')
+      pendente = ->(**attrs) { create(:lead, account: account, lead_stage: won_stage, thesis: thesis, **attrs) }
+      sem_dcb = pendente.call
+      prazo_curto = pendente.call(dcb_em: 58.months.ago.to_date)
+      sangra_pouco = pendente.call(dcb_em: 62.months.ago.to_date, benefit_monthly_value: 500)
+      sangra_muito = pendente.call(dcb_em: 61.months.ago.to_date, benefit_monthly_value: 2000)
+
+      get url, headers: agent.create_new_auth_token, as: :json
+
+      expect(response.parsed_body['pendentes'].pluck('id')).to eq([sangra_muito.id, sangra_pouco.id, prazo_curto.id, sem_dcb.id])
+    end
+
+    it 'lista os ganhos sem tese à parte (defina a tese), fora de pendentes e concluídos', :aggregate_failures do
+      sem_tese = create(:lead, account: account, lead_stage: won_stage)
+      create(:lead, account: account, lead_stage: account.lead_stages.find_by(is_won: false, is_lost: false))
+
+      get url, headers: agent.create_new_auth_token, as: :json
+
+      body = response.parsed_body
+      expect(body['sem_tese'].pluck('id')).to eq([sem_tese.id])
+      expect((body['pendentes'] + body['concluidos']).pluck('id')).to be_empty
     end
   end
 end

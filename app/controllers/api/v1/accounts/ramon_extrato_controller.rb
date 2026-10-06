@@ -1,16 +1,19 @@
 # Extrato mensal da variável (playbook §13, item 6): o gestor vê todo mundo e
 # lança a meta do mês; SDR/Closer veem só o próprio extrato (somente leitura).
+# Mês fechado (regulamento §6) = o extrato guardado, com fechado_em; meta não muda mais.
 class Api::V1::Accounts::RamonExtratoController < Api::V1::Accounts::BaseController
   before_action :current_account
   before_action :check_authorization
 
   def show
-    pessoas = Ramon::ExtratoVariavel.new(account: Current.account, mes: mes).pessoas
+    pessoas = Ramon::ExtratoFechamento.pessoas(Current.account, mes)
     pessoas = pessoas.select { |p| p[:user][:id] == Current.user.id } unless Current.account_user.administrator?
     render json: { mes: mes.strftime('%Y-%m'), regras: Ramon::ExtratoVariavel::REGRAS, pessoas: pessoas }
   end
 
   def meta
+    return render json: { error: 'mes_fechado' }, status: :unprocessable_entity if Ramon::ExtratoFechamento.fechado?(mes)
+
     user = Current.account.users.find(params[:user_id])
     registro = MetaComercial.find_or_initialize_by(account: Current.account, user: user, mes: mes)
     registro.update!(papel: params[:papel], meta: params[:meta].to_i, rampa: ActiveModel::Type::Boolean.new.cast(params[:rampa]) || false)

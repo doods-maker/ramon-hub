@@ -7,6 +7,7 @@ import { useMapGetter } from 'dashboard/composables/store';
 
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import TagMultiSelectComboBox from 'dashboard/components-next/combobox/TagMultiSelectComboBox.vue';
 import WhatsAppTemplateParser from 'dashboard/components-next/whatsapp/WhatsAppTemplateParser.vue';
@@ -30,6 +31,9 @@ const initialState = {
   templateId: null,
   scheduledAt: null,
   selectedAudience: [],
+  // Ramon fork (LGPD): filtro de consentimento por campanha — ligado = só quem
+  // tem consent_marketing registrado (padrão de antes); desligado = a etiqueta toda.
+  onlyWithConsent: true,
 };
 
 const state = reactive({ ...initialState });
@@ -149,6 +153,7 @@ const prepareCampaignDetails = () => {
       id,
       type: 'Label',
     })),
+    trigger_rules: { only_with_marketing_consent: state.onlyWithConsent },
   };
 };
 
@@ -244,6 +249,21 @@ watch(
       :message="formErrors.scheduledAt"
       :message-type="formErrors.scheduledAt ? 'error' : 'info'"
     />
+
+    <label
+      data-testid="campaign-consent-filter"
+      class="flex items-start gap-2 cursor-pointer"
+    >
+      <Checkbox v-model="state.onlyWithConsent" class="mt-0.5 shrink-0" />
+      <span class="flex flex-col gap-0.5">
+        <span class="text-sm font-medium text-n-slate-12">
+          {{ t('CAMPAIGN.WHATSAPP.CREATE.FORM.CONSENT.LABEL') }}
+        </span>
+        <span class="text-xs text-n-slate-11">
+          {{ t('CAMPAIGN.WHATSAPP.CREATE.FORM.CONSENT.HINT') }}
+        </span>
+      </span>
+    </label>
 
     <div class="flex gap-3 justify-between items-center w-full">
       <Button
