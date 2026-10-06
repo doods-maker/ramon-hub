@@ -21,9 +21,8 @@ class Ramon::AdvboxEventProcessor
     exigencia: ['CARTA DE EXIGENCIAS'],
     reativacao_futura: ['BENEFICIO FUTURO / ANOTAR NA AGENDA', 'AGUARDAR - APOSENTADORIA FUTURA', 'CHAMAR - APOSENTADORIA PROXIMA'],
     exito: ['PAGAMENTO RECEBIDO / PAGAR CLIENTE', 'RPV / PRECATORIO EMITIDO'],
-    marco: ['SENTENCA PROFERIDA', 'RECURSO JULGADO', 'PERICIA AGENDADA', 'AUDIENCIA / PERICIA REALIZADA',
-            'ACAO PROTOCOLADA', 'INICIAL / DEFESA PROTOCOLADA', 'RECURSO PROTOCOLADO',
-            'RECURSO ADMINISTRATIVO PROTOCOLADO', 'PROCESSO SOBRESTADO',
+    marco: ['SENTENCA PROFERIDA', 'RECURSO JULGADO', 'PERICIA AGENDADA', 'AUDIENCIA / PERICIA REALIZADA', 'ACAO PROTOCOLADA',
+            'INICIAL / DEFESA PROTOCOLADA', 'RECURSO PROTOCOLADO', 'RECURSO ADMINISTRATIVO PROTOCOLADO', 'PROCESSO SOBRESTADO',
             'INFORMAR CLIENTE DO ANDAMENTO DO PROCESSO'],
     concessao: ['BENEFICIO CONCEDIDO / IMPLANTACAO'],
     arquivado: ['ARQUIVADO/ENCERRADO', 'ARQUIVADO POR DESINTERESSE CLIENTE', 'ARQUIVADO POR DETERMINACAO JUDICIAL',
@@ -47,6 +46,7 @@ class Ramon::AdvboxEventProcessor
 
     send(handler, lead, name)
     @event.update!(status: 'processed', note: "#{name} -> lead ##{lead.id}".truncate(255))
+    Ramon::Fluxos::Disparo.externo('evento_advbox', lead, 'regra' => handler.to_s, 'texto' => name)
   end
 
   private

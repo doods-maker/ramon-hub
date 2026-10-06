@@ -92,4 +92,66 @@ describe('PainelPasso', () => {
     });
     expect(wrapper.text()).toContain('Falta preencher o texto.');
   });
+
+  it('webhook: só o endereço', async () => {
+    const wrapper = montar({ id: 'n9', data: { tipo: 'webhook', config: {} } });
+    await wrapper
+      .find('[data-testid="webhook-url"]')
+      .setValue('https://hooks.exemplo.com.br/a');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { url: 'https://hooks.exemplo.com.br/a' },
+    ]);
+  });
+
+  it('trocar responsável: papel + pessoa (vazio = distribuir no time)', async () => {
+    const wrapper = montar({
+      id: 'n4',
+      data: { tipo: 'trocar_responsavel', config: { papel: 'closer' } },
+    });
+    await wrapper.find('[data-testid="papel"]').setValue('sdr');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([{ papel: 'sdr' }]);
+  });
+
+  it('preencher campo: chave e valor', async () => {
+    const wrapper = montar({
+      id: 'n5',
+      data: { tipo: 'preencher_campo', config: {} },
+    });
+    await wrapper.find('[data-testid="campo-chave"]').setValue('beneficio');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { chave: 'beneficio' },
+    ]);
+  });
+
+  it('rascunho da IA mostra o aviso de rascunho', () => {
+    const wrapper = montar({
+      id: 'n6',
+      data: { tipo: 'rascunho_ia', config: {} },
+    });
+    expect(wrapper.find('[data-testid="painel-aviso-rascunho"]').exists()).toBe(
+      true
+    );
+  });
+
+  it('gatilho relógio: hora', async () => {
+    const wrapper = montar({
+      id: 'n1',
+      data: { tipo: 'gatilho', config: { tipo: 'relogio' } },
+    });
+    await wrapper.find('[data-testid="gatilho-hora"]').setValue('09:30');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { tipo: 'relogio', hora: '09:30' },
+    ]);
+  });
+
+  it('gatilho evento do ADVBOX: marca as regras', async () => {
+    const wrapper = montar({
+      id: 'n1',
+      data: { tipo: 'gatilho', config: { tipo: 'evento_advbox' } },
+    });
+    await wrapper.find('input[type="checkbox"]').setValue(true);
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { tipo: 'evento_advbox', regras: ['contrato_fechado'] },
+    ]);
+  });
 });

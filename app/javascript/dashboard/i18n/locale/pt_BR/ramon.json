@@ -1027,6 +1027,7 @@
           "LP_RECAPTURED": "recebeu novo formulário da LP",
           "REUNIAO_REGISTRADA": "registrou a reunião",
           "ZAPSIGN_SIGNED": "contrato assinado no ZapSign",
+          "FLUXO": "registrou (automação)",
           "ZAPSIGN_REFUSED": "contrato recusado no ZapSign",
           "MEETING_RESCHEDULED": "remarcou a reunião",
           "MEETING_NO_SHOW": "registrou que o cliente não compareceu"
@@ -1897,7 +1898,15 @@
         "lead_mudou_etapa": "Lead mudou de etapa",
         "lead_ganho": "Lead ganho",
         "lead_perdido": "Lead perdido",
-        "manual": "Rodar na mão"
+        "manual": "Rodar na mão",
+        "reuniao_marcada": "Reunião marcada",
+        "reuniao_cancelada": "Reunião cancelada",
+        "contrato_assinado": "Contrato assinado (ZapSign)",
+        "contrato_recusado": "Contrato recusado (ZapSign)",
+        "documento_recebido": "Documento recebido (checklist)",
+        "evento_advbox": "Evento do ADVBOX",
+        "lead_parado": "Lead parado na etapa",
+        "relogio": "Todo dia, num horário"
       },
       "PASSOS": {
         "gatilho": "Gatilho",
@@ -1911,7 +1920,15 @@
         "avisar_sino": "Sino do hub",
         "avisar_push": "Push no celular",
         "esperar": "Esperar",
-        "parar": "Parar"
+        "parar": "Parar",
+        "perguntar_ia": "Perguntar à IA",
+        "rascunho_ia": "Rascunho escrito pela IA",
+        "rodar_skill": "Rodar uma skill",
+        "trocar_responsavel": "Trocar responsável",
+        "preencher_campo": "Preencher campo",
+        "registrar_atividade": "Registrar atividade",
+        "advbox": "ADVBOX",
+        "webhook": "Webhook"
       },
       "CABECALHO": {
         "gatilho": "Gatilho",
@@ -1925,7 +1942,15 @@
         "avisar_sino": "Avisar",
         "avisar_push": "Avisar",
         "esperar": "Esperar",
-        "parar": "Parar"
+        "parar": "Parar",
+        "perguntar_ia": "Condição com IA",
+        "rascunho_ia": "Mensagem ao cliente",
+        "rodar_skill": "IA",
+        "trocar_responsavel": "Lead",
+        "preencher_campo": "Lead",
+        "registrar_atividade": "Lead",
+        "advbox": "Integração",
+        "webhook": "Integração"
       },
       "GRUPOS": {
         "CONDICAO": "Condição",
@@ -1933,7 +1958,9 @@
         "CONVERSA": "Conversa",
         "LEAD": "Lead",
         "AVISAR": "Avisar",
-        "CONTROLE": "Controle"
+        "CONTROLE": "Controle",
+        "IA": "Inteligência artificial",
+        "INTEGRACOES": "Integrações"
       },
       "PALETA": {
         "se": "Se… (sim / não)",
@@ -1948,7 +1975,15 @@
         "avisar_sino": "Sino do hub",
         "avisar_push": "Push no celular",
         "esperar": "Esperar",
-        "parar": "Parar"
+        "parar": "Parar",
+        "perguntar_ia": "Perguntar à IA (sim / não)",
+        "rascunho_ia": "Rascunho escrito pela IA",
+        "rodar_skill": "Rodar uma skill de assistente",
+        "trocar_responsavel": "Trocar SDR / Closer",
+        "preencher_campo": "Preencher campo do lead",
+        "registrar_atividade": "Registrar atividade",
+        "advbox": "Tarefa ou movimentação no ADVBOX",
+        "webhook": "Webhook (último passo)"
       },
       "SAIDAS": {
         "sim": "sim",
@@ -1992,7 +2027,9 @@
         "QUALQUER_ETAPA": "qualquer mudança de etapa",
         "CAIXAS": "caixas: {caixas}",
         "CONDICOES": "{n} condição(ões)",
-        "PASSO_N": "passo {id}"
+        "PASSO_N": "passo {id}",
+        "AS_HORA": "todo dia a partir de {quando}",
+        "QUALQUER_EVENTO": "qualquer evento"
       },
       "PAINEL": {
         "ROTULO": "Nome do passo (opcional)",
@@ -2047,7 +2084,43 @@
         "TIMES": "Times",
         "PRIORIDADE": "Prioridade",
         "MENSAGEM_EMAIL": "Mensagem do e-mail",
-        "ESCOLHA": "Escolha…"
+        "ESCOLHA": "Escolha…",
+        "PERGUNTA": "Pergunta de sim ou não",
+        "PERGUNTA_AJUDA": "A IA lê a conversa e o lead e responde sim ou não. A justificativa vira a variável resposta_ia.",
+        "INSTRUCAO": "O que a IA deve escrever",
+        "INSTRUCAO_AJUDA": "Sai como nota RASCUNHO. A IA segue as regras da OAB e nunca promete resultado, prazo ou valor.",
+        "ASSISTENTE": "Assistente",
+        "SKILL": "Skill",
+        "INSTRUCAO_SKILL": "Pedido para a skill (opcional)",
+        "SKILL_AJUDA": "A skill roda só para pensar: não age na conversa. O resultado vira nota privada e a variável resposta_ia.",
+        "SEM_CAPTAIN": "Não consegui listar os assistentes do Captain.",
+        "ADVBOX_AVISO": "Grava de verdade no ADVBOX, no processo do lead criado no fechamento.",
+        "ADVBOX_ACOES": {
+          "tarefa": "Criar tarefa",
+          "movimentacao": "Registrar movimentação"
+        },
+        "ADVBOX_TIPO": "Tipo de tarefa",
+        "ADVBOX_RESPONSAVEL": "Responsável no ADVBOX",
+        "ADVBOX_PRAZO": "Prazo (dias a partir de hoje, vazio = sem prazo)",
+        "ADVBOX_DESCRICAO": "Descrição",
+        "ADVBOX_INDISPONIVEL": "O ADVBOX não respondeu. Tente de novo em instantes.",
+        "WEBHOOK_URL": "Endereço (https)",
+        "WEBHOOK_AJUDA": "Envia em JSON só nome, telefone, etapa, tese, origem, canal, valor, prioridade e responsável do lead — nunca campos livres nem documentos. É sempre o último passo.",
+        "PAPEL": "Papel",
+        "DISTRIBUIR_NO_TIME": "Distribuir no time (quem tem menos leads)",
+        "CHAVE_CAMPO": "Nome do campo",
+        "CHAVE_CAMPO_AJUDA": "Letras minúsculas, números e _. Depois vira variável com o mesmo nome.",
+        "HORA": "A partir de que horas",
+        "DIAS_PARADO": "Parado há mais de quantos dias",
+        "DIAS_PARADO_AJUDA": "Vazio = o prazo de parado de cada etapa. Cada lead entra 1 vez por parada.",
+        "GRUPO_ETAPAS": "Leads nestas etapas",
+        "GRUPO_TESES": "Destas teses",
+        "GRUPO_RESPONSAVEIS": "Destes responsáveis",
+        "GRUPO_AJUDA": "Nenhuma etapa marcada = leads abertos. Roda 1 vez por dia.",
+        "REGRAS": "Só nestes eventos",
+        "REGRAS_AJUDA": "Nenhum marcado = qualquer evento reconhecido.",
+        "REUNIAO_AJUDA": "Vale para o Cal.com e para o painel do lead. Remarcar conta como marcada.",
+        "DOCUMENTO_AJUDA": "Quando a IA casa um anexo com um item do checklist. A confirmação continua com a equipe."
       },
       "ACOES_CHATWOOT": {
         "add_label": "Pôr etiqueta",
@@ -2084,7 +2157,8 @@
         "valor": "Valor",
         "texto": "Texto da mensagem",
         "nome": "Nome",
-        "telefone": "Telefone"
+        "telefone": "Telefone",
+        "documentos_completos": "Documentos completos (sim ou não)"
       },
       "OPERADORES": {
         "igual": "é igual a",
@@ -2112,7 +2186,14 @@
         "texto": "o texto",
         "etapa_id": "a etapa",
         "titulo": "o título",
-        "campo": "o campo"
+        "campo": "o campo",
+        "pergunta": "a pergunta",
+        "instrucao": "a instrução",
+        "assistente_id": "o assistente",
+        "skill_id": "a skill",
+        "papel": "o papel",
+        "tipo_tarefa_id": "o tipo de tarefa",
+        "responsavel_id": "o responsável no ADVBOX"
       },
       "ERROS": {
         "UM_GATILHO": "O fluxo precisa de exatamente 1 gatilho.",
@@ -2132,7 +2213,13 @@
         "CHATWOOT_SEM_ACAO": "Escolha pelo menos uma ação.",
         "CHATWOOT_MENSAGEM": "Mensagem ao cliente só como rascunho.",
         "CHATWOOT_PROIBIDA": "Ação não permitida no fluxo ({nome}).",
-        "CHATWOOT_DESCONHECIDA": "Ação desconhecida ({nome})."
+        "CHATWOOT_DESCONHECIDA": "Ação desconhecida ({nome}).",
+        "GATILHO_HORA": "Informe a hora no formato HH:MM.",
+        "ADVBOX_ACAO": "Escolha tarefa ou movimentação.",
+        "ADVBOX_DESCRICAO": "A movimentação precisa de pelo menos 10 letras.",
+        "WEBHOOK_HTTPS": "O endereço precisa começar com https.",
+        "WEBHOOK_ULTIMO": "O webhook tem que ser o último passo.",
+        "CAMPO_CHAVE": "Nome do campo só com letras minúsculas, números e _, e diferente dos nomes que o hub já usa (nome, etapa, telefone…)."
       },
       "TESTAR": {
         "TITULO": "Testar com um lead",
@@ -2179,7 +2266,7 @@
         },
         "pos_contrato": {
           "NOME": "Pós-contrato: pedir documentos",
-          "DESCRICAO": "Mudou de etapa → boas-vindas → tarefa → espera 2 dias → lembrete + push"
+          "DESCRICAO": "Contrato assinado → boas-vindas → tarefa → espera 2 dias → documentos completos: aviso no sino; faltando: rascunho da IA + push"
         },
         "fora_do_horario": {
           "NOME": "Fora do horário",
@@ -2193,6 +2280,22 @@
           "NOME": "Lead ganho",
           "DESCRICAO": "Nota de passagem pro jurídico + tarefa + sino"
         }
+      },
+      "PAPEIS": {
+        "sdr": "SDR",
+        "closer": "Closer"
+      },
+      "REGRAS_ADVBOX": {
+        "contrato_fechado": "Contrato fechado",
+        "requerimento_protocolado": "Requerimento protocolado no INSS",
+        "indeferimento": "INSS negou",
+        "decisao": "Decisão proferida",
+        "exigencia": "Carta de exigências",
+        "reativacao_futura": "Benefício futuro",
+        "exito": "Pagamento recebido ou RPV",
+        "marco": "Marco do processo",
+        "concessao": "Benefício concedido",
+        "arquivado": "Arquivado"
       }
     },
     "MESSAGE_TEMPLATES": {

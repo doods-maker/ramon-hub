@@ -9,7 +9,7 @@ import {
   alcancaveis,
 } from './fluxo';
 
-const OBRIGATORIOS = {
+export const OBRIGATORIOS = {
   rascunho_texto: ['texto'],
   nota_privada: ['texto'],
   mover_etapa: ['etapa_id'],
@@ -17,12 +17,46 @@ const OBRIGATORIOS = {
   escolha: ['campo'],
   avisar_sino: ['texto'],
   avisar_push: ['texto'],
+  perguntar_ia: ['pergunta'],
+  rascunho_ia: ['instrucao'],
+  rodar_skill: ['assistente_id', 'skill_id'],
+  registrar_atividade: ['texto'],
+  trocar_responsavel: ['papel'],
 };
 const MENSAGEM_CLIENTE = ['send_message', 'send_attachment'];
 const PROIBIDAS = [
   ...MENSAGEM_CLIENTE,
   'send_email_transcript',
   'send_webhook_event',
+];
+const HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
+const CHAVE_CAMPO = /^[a-z][a-z0-9_]{0,39}$/;
+// = Ramon::Fluxos::Contexto::RESERVADAS (app/services/ramon/fluxos/contexto.rb): nomes que o hub monta em `dados`
+const RESERVADAS = [
+  'texto',
+  'quando',
+  'regra',
+  'documento',
+  'nome',
+  'nome_completo',
+  'telefone',
+  'responsavel',
+  'responsavel_id',
+  'etapa',
+  'etapa_id',
+  'tese',
+  'tese_id',
+  'origem',
+  'canal',
+  'valor',
+  'prioridade',
+  'caixa',
+  'caixa_id',
+  'status',
+  'etiquetas',
+  'documentos_completos',
+  'documentos_faltantes',
+  'resposta_ia',
 ];
 
 const erro = (no, codigo, params = {}) => ({ no, codigo, params });
@@ -34,6 +68,43 @@ const vazio = v =>
   (typeof v === 'string' && !v.trim()) ||
   (Array.isArray(v) && !v.length) ||
   (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
+
+const temSaida = (id, setas) => setas.some(s => s.de === id);
+
+// relógio exige a hora; lead parado usa 11:00 se vier vazia (Grafo#erros_hora)
+const errosHora = gatilho => {
+  const c = gatilho.config || {};
+  const hora = String(c.hora ?? '');
+  if (c.tipo === 'relogio' && !hora) return [erro(gatilho.id, 'GATILHO_HORA')];
+  return !hora || HORA.test(hora) ? [] : [erro(gatilho.id, 'GATILHO_HORA')];
+};
+
+const errosAdvbox = (id, c) => {
+  if (c.acao === 'tarefa')
+    return ['tipo_tarefa_id', 'responsavel_id']
+      .filter(k => vazio(c[k]))
+      .map(campo => erro(id, 'FALTA', { campo }));
+  if (c.acao === 'movimentacao')
+    return String(c.descricao ?? '').trim().length >= 10
+      ? []
+      : [erro(id, 'ADVBOX_DESCRICAO')];
+  return [erro(id, 'ADVBOX_ACAO')];
+};
+
+const errosWebhook = (id, c, setas) => [
+  ...(String(c.url ?? '').startsWith('https://')
+    ? []
+    : [erro(id, 'WEBHOOK_HTTPS')]),
+  ...(temSaida(id, setas) ? [erro(id, 'WEBHOOK_ULTIMO')] : []),
+];
+
+// chave fora do padrão ou reservada (Grafo#erros_campo)
+const errosCampo = (id, c) => {
+  const chave = String(c.chave ?? '');
+  return CHAVE_CAMPO.test(chave) && !RESERVADAS.includes(chave)
+    ? []
+    : [erro(id, 'CAMPO_CHAVE')];
+};
 
 const errosSetas = (nos, setas) => {
   const ids = new Set(nos.map(n => n.id));
@@ -115,10 +186,16 @@ const errosEspecificos = (no, config, setas) => {
         ...((config.condicoes || []).length
           ? []
           : [erro(no.id, 'SE_SEM_CONDICOES')]),
-        ...(setas.some(s => s.de === no.id)
-          ? []
-          : [erro(no.id, 'SE_SEM_SAIDA')]),
+        ...(temSaida(no.id, setas) ? [] : [erro(no.id, 'SE_SEM_SAIDA')]),
       ];
+    case 'perguntar_ia':
+      return temSaida(no.id, setas) ? [] : [erro(no.id, 'SE_SEM_SAIDA')];
+    case 'advbox':
+      return errosAdvbox(no.id, config);
+    case 'webhook':
+      return errosWebhook(no.id, config, setas);
+    case 'preencher_campo':
+      return errosCampo(no.id, config);
     case 'escolha':
       return errosEscolha(no.id, config);
     case 'esperar':
@@ -147,6 +224,8 @@ export const validar = ({ nos = [], setas = [] } = {}) => {
   const [gatilho] = gatilhos;
   if (!GATILHOS.some(x => x.tipo === gatilho.config?.tipo))
     return [erro(gatilho.id, 'GATILHO_DESCONHECIDO')];
+  const hora = errosHora(gatilho);
+  if (hora.length) return hora;
   return [
     ...errosSetas(nos, setas),
     ...errosAlcance(nos, setas, gatilho.id),

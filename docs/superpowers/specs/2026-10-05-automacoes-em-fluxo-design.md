@@ -256,3 +256,17 @@ genérico (só os 4 externos conhecidos).
 - **Fluxo encadeando fluxo**: profundidade ≤ 3 + não-autodisparo.
 - **Mudança de comportamento na conversão** (`send_message` → rascunho): listada antes, aprovada pelo Eduardo.
 - **Dependência nova** (Vue Flow): MIT, Vue 3 nativo, isolada nas 2 telas do quadro.
+
+## 13. Notas da B2b (06/10/2026)
+
+- `rascunho_ia` não tem assistente/skill opcional: para texto escrito por skill, `rodar_skill` → `rascunho_texto` com `{resposta_ia}`.
+- `rodar_skill` roda sem conversa no estado do runner (como o Testar): ferramentas da skill não agem na conversa; resultado = nota privada + `{resposta_ia}`. Ferramenta HTTP própria do assistente (CustomTool) ainda chama o serviço dela — só vê texto pseudonimizado.
+- `documento_recebido` nasce em `Ramon::DocMatchService#gravar_sugestao` (o `DocMatchJob` não sabe se houve casamento); é sugestão da IA — "Documentos completos?" conta só o confirmado pela equipe.
+- Reunião: 1 linha em `Ramon::ReuniaoAgendamento.notify` (cobre painel e Cal.com, inclusive o cancel do Cal.com); remarcar = `reuniao_marcada`.
+- `preencher_campo` grava em `custom_attributes['campos'][chave]` e o campo vira variável; nomes que o hub já usa (`Contexto::RESERVADAS`) são recusados ao publicar e ao rodar.
+- `lead_parado` dispara 1 vez por parada; `relogio`/`lead_parado` 1×/dia por fluxo (`ultimo_disparo_em`, fuso SP, reivindicado antes de disparar); erro num lead não derruba os outros.
+- O executor grava a execução a cada passo, já apontando o próximo (passo lento não parece órfão; queda não repete o passo feito).
+- Teto próprio de IA: `RAMON_FLUXO_IA_DIA` (padrão 200 chamadas/conta/dia, conta tentativas); estourou → passo falha + sino.
+- Webhook (decisão do Eduardo, "nome e telefone, sem CPF, sem documentos"): `dados` leva só `Passos::Externo::CAMPOS_WEBHOOK` — campos livres nunca saem; só https (publicar) + `SafeFetch` (rede interna barrada; não ligar `SAFE_FETCH_ALLOW_PRIVATE_NETWORK` na VPS).
+- Erro de configuração (ADVBOX sem token, ação/IDs faltando, webhook 4xx exceto 408/429, papel/pessoa inválidos) falha na hora, sem nova tentativa; erro passageiro repete 1/5/15 min.
+- ADVBOX e webhook são "pelo menos uma vez": se o outro lado gravou mas a resposta não chegou, a nova tentativa repete. O payload leva `execucao_id` para o receptor descartar repetido.

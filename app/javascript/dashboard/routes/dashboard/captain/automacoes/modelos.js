@@ -1,5 +1,4 @@
-// Modelos do "Novo fluxo" (B2): só passos que a B1 executa. Textos ao cliente
-// saem como RASCUNHO e passam pelo Eduardo antes de qualquer fluxo publicado.
+// Modelos do "Novo fluxo". Textos ao cliente saem como RASCUNHO e passam pelo Eduardo antes de qualquer fluxo publicado.
 const no = (id, tipo, config, x, y) => ({
   id,
   tipo,
@@ -23,10 +22,11 @@ export const MODELOS = [
     limite_dia: 20,
     desenho: {
       nos: [
+        // contrato assinado move o lead (ganho/ADVBOX): a espera de 2 dias não pode cancelar
         no(
           'n1',
           'gatilho',
-          { tipo: 'lead_mudou_etapa', para_etapa_ids: [] },
+          { tipo: 'contrato_assinado', cancelar_se_sair_da_etapa: false },
           0,
           0
         ),
@@ -55,20 +55,48 @@ export const MODELOS = [
         no('n4', 'esperar', { quantidade: 2, unidade: 'dias' }, 0, 440),
         no(
           'n5',
-          'rascunho_texto',
+          'se',
           {
-            rotulo: 'Lembrete dos documentos',
-            texto:
-              'Oi, {nome}! Passando para lembrar dos documentos do seu caso. Se tiver dúvida sobre algum deles, é só me chamar por aqui.',
+            rotulo: 'Documentos completos?',
+            juncao: 'e',
+            condicoes: [
+              {
+                campo: 'documentos_completos',
+                operador: 'igual',
+                valor: 'sim',
+              },
+            ],
           },
           0,
           580
         ),
         no(
           'n6',
+          'rascunho_ia',
+          {
+            rotulo: 'Lembrete dos documentos',
+            instrucao:
+              'Lembre {nome}, com gentileza, dos documentos que ainda faltam: {documentos_faltantes}. Ofereça ajuda para conseguir algum deles. Não prometa resultado nem prazo.',
+          },
+          130,
+          740
+        ),
+        no(
+          'n7',
           'avisar_push',
           { texto: 'Lembrete de documentos pronto para revisar: {nome}' },
-          0,
+          130,
+          900
+        ),
+        // "sim" avisa em vez de mover: a etapa é do funil de cada conta (troque por "Mover etapa")
+        no(
+          'n8',
+          'avisar_sino',
+          {
+            texto:
+              'Documentos de {nome} completos — pode seguir para a próxima etapa',
+          },
+          -130,
           740
         ),
       ],
@@ -77,7 +105,9 @@ export const MODELOS = [
         seta('n2', 's', 'n3'),
         seta('n3', 's', 'n4'),
         seta('n4', 's', 'n5'),
-        seta('n5', 's', 'n6'),
+        seta('n5', 'nao', 'n6'),
+        seta('n6', 's', 'n7'),
+        seta('n5', 'sim', 'n8'),
       ],
     },
   },

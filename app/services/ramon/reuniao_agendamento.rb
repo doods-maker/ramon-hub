@@ -54,6 +54,7 @@ class Ramon::ReuniaoAgendamento
     Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: type, meta: { 'quando' => quando }).perform
     verbo ||= type == 'ramon_meeting_cancelled' ? 'cancelada' : 'marcada'
     Ramon::NtfyPushJob.perform_later(lead.id, title: "Reuniao #{verbo}: #{lead.name}", body: "#{quando} — #{title}")
+    Ramon::Fluxos::Disparo.externo(type == 'ramon_meeting_cancelled' ? 'reuniao_cancelada' : 'reuniao_marcada', lead, 'quando' => quando)
   end
 
   # "Primeiro Atendimento em 20/08/2026 14:00" — to_value da atividade.

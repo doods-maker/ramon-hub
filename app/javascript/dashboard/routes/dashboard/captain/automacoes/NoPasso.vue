@@ -71,6 +71,15 @@ const detalhe = computed(() => {
   const c = props.config;
   switch (props.tipo) {
     case 'gatilho':
+      if (['relogio', 'lead_parado'].includes(c.tipo))
+        return t(`${K}.NO.AS_HORA`, {
+          quando: c.hora || (c.tipo === 'lead_parado' ? '11:00' : '—'),
+        });
+      if (c.tipo === 'evento_advbox')
+        return (
+          (c.regras || []).map(r => t(`${K}.REGRAS_ADVBOX.${r}`)).join(', ') ||
+          t(`${K}.NO.QUALQUER_EVENTO`)
+        );
       if (c.tipo === 'lead_mudou_etapa') {
         return c.para_etapa_ids?.length
           ? t(`${K}.NO.PARA`, { etapas: nomes(etapas.value, c.para_etapa_ids) })
@@ -95,6 +104,20 @@ const detalhe = computed(() => {
       return (c.acoes || [])
         .map(a => t(`${K}.ACOES_CHATWOOT.${a.action_name}`, a.action_name))
         .join(', ');
+    case 'perguntar_ia':
+      return curto(c.pergunta);
+    case 'rascunho_ia':
+    case 'rodar_skill':
+      return curto(c.instrucao);
+    case 'advbox':
+      return c.acao ? t(`${K}.PAINEL.ADVBOX_ACOES.${c.acao}`) : '';
+    case 'webhook':
+      // só o host: o caminho/query pode levar token do hook
+      return c.url?.match(/^https?:\/\/([^/?#]+)/)?.[1] || '';
+    case 'trocar_responsavel':
+      return c.papel ? t(`${K}.PAPEIS.${c.papel}`) : '';
+    case 'preencher_campo':
+      return c.chave || '';
     case 'parar':
       return '';
     default:

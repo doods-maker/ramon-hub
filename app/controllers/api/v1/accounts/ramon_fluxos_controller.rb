@@ -1,7 +1,7 @@
 # Automações em fluxo (spec §7): CRUD do rascunho, publicar, ensaiar e rodar na mão.
 class Api::V1::Accounts::RamonFluxosController < Api::V1::Accounts::BaseController
   before_action :check_authorization
-  before_action :fluxo, except: [:index, :create]
+  before_action :fluxo, except: [:index, :create, :opcoes_advbox]
   before_action :bloquear_sistema, only: [:update, :destroy, :publicar, :rodar]
 
   def index
@@ -49,6 +49,15 @@ class Api::V1::Accounts::RamonFluxosController < Api::V1::Accounts::BaseControll
     return render json: { erro: 'FLUXO_NAO_RODOU' }, status: :unprocessable_entity if execucao.nil?
 
     render json: execucao.resumo_json
+  end
+
+  # Selects do passo ADVBOX: usuários e tipos de tarefa da conta AdvBox (sem e-mail/telefone).
+  def opcoes_advbox
+    cfg = Ramon::AdvboxClient.settings
+    render json: { usuarios: Array(cfg['users']).map { |u| { id: u['id'], nome: u['name'] } },
+                   tipos_tarefa: Array(cfg['tasks']).map { |t| { id: t['id'], nome: t['task'] } } }
+  rescue Ramon::AdvboxClient::UnavailableError, Ramon::AdvboxClient::RequestError => e
+    render json: { erro: e.message }, status: :service_unavailable
   end
 
   private

@@ -5,8 +5,12 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
-import { ROTULO, SELECT } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { GATILHOS, gatilhoInfo } from './fluxo';
+import {
+  CAMPO,
+  ROTULO,
+  SELECT,
+} from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { GATILHOS, REGRAS_ADVBOX, gatilhoInfo } from './fluxo';
 import ListaMarcar from './ListaMarcar.vue';
 
 const props = defineProps({ config: { type: Object, required: true } });
@@ -15,12 +19,29 @@ const K = 'CAPTAIN_RAMON.FLUXOS.PAINEL';
 const { t } = useI18n();
 const etapas = useMapGetter('leadConfig/getStages');
 const caixas = useMapGetter('inboxes/getInboxes');
+const teses = useMapGetter('theses/getTheses');
+const pessoas = useMapGetter('agents/getAgents');
 
 const opcoesEtapas = computed(() =>
   etapas.value.map(e => ({ id: e.id, nome: e.name }))
 );
 const opcoesCaixas = computed(() =>
   caixas.value.map(c => ({ id: c.id, nome: c.name }))
+);
+const opcoesTeses = computed(() =>
+  teses.value.map(x => ({ id: x.id, nome: x.name }))
+);
+const opcoesPessoas = computed(() =>
+  pessoas.value.map(x => ({ id: x.id, nome: x.name }))
+);
+const opcoesRegras = computed(() =>
+  REGRAS_ADVBOX.map(r => ({
+    id: r,
+    nome: t(`CAPTAIN_RAMON.FLUXOS.REGRAS_ADVBOX.${r}`),
+  }))
+);
+const relogio = computed(() =>
+  ['relogio', 'lead_parado'].includes(props.config.tipo)
 );
 const alvo = computed(() => gatilhoInfo(props.config.tipo)?.alvo);
 const cancelar = computed(
@@ -84,6 +105,85 @@ const trocaTipo = tipo =>
         <span>{{ t(`${K}.ETAPAS_AJUDA`) }}</span>
       </div>
     </template>
+
+    <label v-if="relogio" :class="ROTULO">
+      {{ t(`${K}.HORA`) }}
+      <input
+        data-testid="gatilho-hora"
+        :class="CAMPO"
+        type="time"
+        :value="config.hora || (config.tipo === 'lead_parado' ? '11:00' : '')"
+        @input="muda('hora', $event.target.value)"
+      />
+    </label>
+
+    <label v-if="config.tipo === 'lead_parado'" :class="ROTULO">
+      {{ t(`${K}.DIAS_PARADO`) }}
+      <input
+        :class="CAMPO"
+        type="number"
+        min="1"
+        :value="config.dias ?? ''"
+        @change="
+          muda(
+            'dias',
+            $event.target.value === '' ? null : Number($event.target.value)
+          )
+        "
+      />
+      <span>{{ t(`${K}.DIAS_PARADO_AJUDA`) }}</span>
+    </label>
+
+    <template v-if="config.tipo === 'relogio'">
+      <div :class="ROTULO">
+        {{ t(`${K}.GRUPO_ETAPAS`) }}
+        <ListaMarcar
+          :opcoes="opcoesEtapas"
+          :model-value="config.etapa_ids || []"
+          @update:model-value="v => muda('etapa_ids', v)"
+        />
+      </div>
+      <div :class="ROTULO">
+        {{ t(`${K}.GRUPO_TESES`) }}
+        <ListaMarcar
+          :opcoes="opcoesTeses"
+          :model-value="config.tese_ids || []"
+          @update:model-value="v => muda('tese_ids', v)"
+        />
+      </div>
+      <div :class="ROTULO">
+        {{ t(`${K}.GRUPO_RESPONSAVEIS`) }}
+        <ListaMarcar
+          :opcoes="opcoesPessoas"
+          :model-value="config.responsavel_ids || []"
+          @update:model-value="v => muda('responsavel_ids', v)"
+        />
+        <span>{{ t(`${K}.GRUPO_AJUDA`) }}</span>
+      </div>
+    </template>
+
+    <div v-if="config.tipo === 'evento_advbox'" :class="ROTULO">
+      {{ t(`${K}.REGRAS`) }}
+      <ListaMarcar
+        :opcoes="opcoesRegras"
+        :model-value="config.regras || []"
+        @update:model-value="v => muda('regras', v)"
+      />
+      <span>{{ t(`${K}.REGRAS_AJUDA`) }}</span>
+    </div>
+
+    <p
+      v-if="['reuniao_marcada', 'reuniao_cancelada'].includes(config.tipo)"
+      class="text-xs text-n-slate-10"
+    >
+      {{ t(`${K}.REUNIAO_AJUDA`) }}
+    </p>
+    <p
+      v-if="config.tipo === 'documento_recebido'"
+      class="text-xs text-n-slate-10"
+    >
+      {{ t(`${K}.DOCUMENTO_AJUDA`) }}
+    </p>
 
     <p v-if="config.tipo === 'manual'" class="text-xs text-n-slate-10">
       {{ t(`${K}.MANUAL_AJUDA`) }}

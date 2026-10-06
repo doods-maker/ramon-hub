@@ -23,6 +23,16 @@ class Ramon::Fluxos::Disparo
     new(fluxo, alvo, {}, nil, ensaio: usar).iniciar
   end
 
+  # Gatilhos que nascem fora do ouvinte (reunião, ADVBOX, ZapSign, documento). Erro do motor
+  # nunca derruba quem chamou: o job do ADVBOX/ZapSign repetiria e duplicaria atividade, nota e sino.
+  def self.externo(gatilho_tipo, alvo, dados = {})
+    call(gatilho_tipo, alvo, dados)
+  rescue StandardError => e
+    ChatwootExceptionTracker.new(e, account: alvo.try(:account)).capture_exception
+    Rails.logger.warn("[Ramon::Fluxos::Disparo] #{gatilho_tipo}: #{e.class}") # a mensagem pode ter dado do lead
+    []
+  end
+
   def self.passa?(fluxo, dados, origem)
     return false if origem && (origem.fluxo_id == fluxo.id || origem.profundidade + 1 > PROFUNDIDADE_MAX)
     return false if fluxo.modo == 'normal' && fluxo.limite_atingido?
@@ -31,6 +41,9 @@ class Ramon::Fluxos::Disparo
   end
 
   def self.filtro_ok?(config, dados)
+    regras = Array(config['regras'])
+    return false unless regras.empty? || regras.include?(dados['regra'])
+
     { 'caixa_ids' => 'caixa_id', 'de_etapa_ids' => 'de_etapa_id', 'para_etapa_ids' => 'para_etapa_id' }.all? do |filtro, campo|
       lista = Array(config[filtro]).map(&:to_i)
       lista.empty? || lista.include?(dados[campo].to_i)

@@ -68,4 +68,25 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
     get "#{url}/#{fluxo.id}/execucoes/#{execucao.id}", headers: admin.create_new_auth_token, as: :json
     expect(response.parsed_body['grafo']['nos'].pluck('id')).to eq(%w[g p1])
   end
+
+  it 'opções do ADVBOX para o passo (só admin, sem e-mail)' do
+    allow(Ramon::AdvboxClient).to receive(:settings).and_return(
+      'users' => [{ 'id' => 266_778, 'name' => 'EDUARDO SCHLATA', 'email' => 'nao-sai' }],
+      'tasks' => [{ 'id' => 8_745_408, 'task' => 'AGUARDANDO DOCUMENTOS CLIENTE', 'reward' => 5 }]
+    )
+    get "#{url}/opcoes_advbox", headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body).to eq('usuarios' => [{ 'id' => 266_778, 'nome' => 'EDUARDO SCHLATA' }],
+                                       'tipos_tarefa' => [{ 'id' => 8_745_408, 'nome' => 'AGUARDANDO DOCUMENTOS CLIENTE' }])
+    get "#{url}/opcoes_advbox", headers: agente.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:unauthorized)
+  end
+
+  it 'ADVBOX fora do ar ou recusando (4xx) devolve 503' do
+    [Ramon::AdvboxClient::UnavailableError.new('AdvBox indisponível'), Ramon::AdvboxClient::RequestError.new(401, {})].each do |erro|
+      allow(Ramon::AdvboxClient).to receive(:settings).and_raise(erro)
+      get "#{url}/opcoes_advbox", headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:service_unavailable)
+      expect(response.parsed_body).to eq('erro' => erro.message)
+    end
+  end
 end

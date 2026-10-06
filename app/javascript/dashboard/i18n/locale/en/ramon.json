@@ -1027,6 +1027,7 @@
           "LP_RECAPTURED": "received a new landing page form",
           "REUNIAO_REGISTRADA": "recorded the meeting",
           "ZAPSIGN_SIGNED": "signed the contract on ZapSign",
+          "FLUXO": "logged (automation)",
           "ZAPSIGN_REFUSED": "refused the contract on ZapSign",
           "MEETING_RESCHEDULED": "rescheduled the meeting",
           "MEETING_NO_SHOW": "recorded a no-show"
@@ -1892,7 +1893,15 @@
         "lead_mudou_etapa": "Lead changed stage",
         "lead_ganho": "Lead won",
         "lead_perdido": "Lead lost",
-        "manual": "Run by hand"
+        "manual": "Run by hand",
+        "reuniao_marcada": "Meeting scheduled",
+        "reuniao_cancelada": "Meeting cancelled",
+        "contrato_assinado": "Contract signed (ZapSign)",
+        "contrato_recusado": "Contract refused (ZapSign)",
+        "documento_recebido": "Document received (checklist)",
+        "evento_advbox": "ADVBOX event",
+        "lead_parado": "Lead stalled in stage",
+        "relogio": "Every day at a set time"
       },
       "PASSOS": {
         "gatilho": "Trigger",
@@ -1906,7 +1915,15 @@
         "avisar_sino": "Hub bell",
         "avisar_push": "Phone push",
         "esperar": "Wait",
-        "parar": "Stop"
+        "parar": "Stop",
+        "perguntar_ia": "Ask the AI",
+        "rascunho_ia": "AI-written draft",
+        "rodar_skill": "Run a skill",
+        "trocar_responsavel": "Change owner",
+        "preencher_campo": "Fill a field",
+        "registrar_atividade": "Log activity",
+        "advbox": "ADVBOX",
+        "webhook": "Webhook"
       },
       "CABECALHO": {
         "gatilho": "Trigger",
@@ -1920,7 +1937,15 @@
         "avisar_sino": "Notify",
         "avisar_push": "Notify",
         "esperar": "Wait",
-        "parar": "Stop"
+        "parar": "Stop",
+        "perguntar_ia": "AI condition",
+        "rascunho_ia": "Message to client",
+        "rodar_skill": "AI",
+        "trocar_responsavel": "Lead",
+        "preencher_campo": "Lead",
+        "registrar_atividade": "Lead",
+        "advbox": "Integration",
+        "webhook": "Integration"
       },
       "GRUPOS": {
         "CONDICAO": "Condition",
@@ -1928,7 +1953,9 @@
         "CONVERSA": "Conversation",
         "LEAD": "Lead",
         "AVISAR": "Notify",
-        "CONTROLE": "Control"
+        "CONTROLE": "Control",
+        "IA": "Artificial intelligence",
+        "INTEGRACOES": "Integrations"
       },
       "PALETA": {
         "se": "If… (yes / no)",
@@ -1943,7 +1970,15 @@
         "avisar_sino": "Hub bell",
         "avisar_push": "Phone push",
         "esperar": "Wait",
-        "parar": "Stop"
+        "parar": "Stop",
+        "perguntar_ia": "Ask the AI (yes / no)",
+        "rascunho_ia": "AI-written draft",
+        "rodar_skill": "Run an assistant skill",
+        "trocar_responsavel": "Change SDR / Closer",
+        "preencher_campo": "Fill a lead field",
+        "registrar_atividade": "Log activity",
+        "advbox": "Task or movement in ADVBOX",
+        "webhook": "Webhook (last step)"
       },
       "SAIDAS": {
         "sim": "yes",
@@ -1987,7 +2022,9 @@
         "QUALQUER_ETAPA": "any stage change",
         "CAIXAS": "inboxes: {caixas}",
         "CONDICOES": "{n} condition(s)",
-        "PASSO_N": "step {id}"
+        "PASSO_N": "step {id}",
+        "AS_HORA": "every day from {quando}",
+        "QUALQUER_EVENTO": "any event"
       },
       "PAINEL": {
         "ROTULO": "Step name (optional)",
@@ -2042,7 +2079,43 @@
         "TIMES": "Teams",
         "PRIORIDADE": "Priority",
         "MENSAGEM_EMAIL": "Email message",
-        "ESCOLHA": "Choose…"
+        "ESCOLHA": "Choose…",
+        "PERGUNTA": "Yes or no question",
+        "PERGUNTA_AJUDA": "The AI reads the conversation and the lead and answers yes or no. The reason becomes the resposta_ia variable.",
+        "INSTRUCAO": "What the AI should write",
+        "INSTRUCAO_AJUDA": "Goes out as a DRAFT note. The AI follows the bar rules and never promises results, deadlines or amounts.",
+        "ASSISTENTE": "Assistant",
+        "SKILL": "Skill",
+        "INSTRUCAO_SKILL": "Request for the skill (optional)",
+        "SKILL_AJUDA": "The skill only thinks: it does not act on the conversation. The result becomes a private note and the resposta_ia variable.",
+        "SEM_CAPTAIN": "Could not list the Captain assistants.",
+        "ADVBOX_AVISO": "Really writes to ADVBOX, on the lead case created at closing.",
+        "ADVBOX_ACOES": {
+          "tarefa": "Create task",
+          "movimentacao": "Log movement"
+        },
+        "ADVBOX_TIPO": "Task type",
+        "ADVBOX_RESPONSAVEL": "Owner in ADVBOX",
+        "ADVBOX_PRAZO": "Due (days from today, empty = no due date)",
+        "ADVBOX_DESCRICAO": "Description",
+        "ADVBOX_INDISPONIVEL": "ADVBOX did not answer. Try again in a moment.",
+        "WEBHOOK_URL": "Address (https)",
+        "WEBHOOK_AJUDA": "Sends only the lead name, phone, stage, thesis, source, channel, value, priority and owner as JSON — never free fields or documents. Always the last step.",
+        "PAPEL": "Role",
+        "DISTRIBUIR_NO_TIME": "Distribute in the team (fewest leads)",
+        "CHAVE_CAMPO": "Field name",
+        "CHAVE_CAMPO_AJUDA": "Lowercase letters, numbers and _. It becomes a variable with the same name.",
+        "HORA": "From what time",
+        "DIAS_PARADO": "Stalled for more than how many days",
+        "DIAS_PARADO_AJUDA": "Empty = each stage stalled limit. Each lead enters once per stall.",
+        "GRUPO_ETAPAS": "Leads in these stages",
+        "GRUPO_TESES": "From these theses",
+        "GRUPO_RESPONSAVEIS": "From these owners",
+        "GRUPO_AJUDA": "No stage selected = open leads. Runs once a day.",
+        "REGRAS": "Only these events",
+        "REGRAS_AJUDA": "None selected = any recognized event.",
+        "REUNIAO_AJUDA": "Works for Cal.com and the lead panel. Rescheduling counts as scheduled.",
+        "DOCUMENTO_AJUDA": "When the AI matches an attachment to a checklist item. Confirmation stays with the team."
       },
       "ACOES_CHATWOOT": {
         "add_label": "Add label",
@@ -2079,7 +2152,8 @@
         "valor": "Value",
         "texto": "Message text",
         "nome": "Name",
-        "telefone": "Phone"
+        "telefone": "Phone",
+        "documentos_completos": "Documents complete (yes or no)"
       },
       "OPERADORES": {
         "igual": "equals",
@@ -2107,7 +2181,14 @@
         "texto": "the text",
         "etapa_id": "the stage",
         "titulo": "the title",
-        "campo": "the field"
+        "campo": "the field",
+        "pergunta": "the question",
+        "instrucao": "the instruction",
+        "assistente_id": "the assistant",
+        "skill_id": "the skill",
+        "papel": "the role",
+        "tipo_tarefa_id": "the task type",
+        "responsavel_id": "the ADVBOX owner"
       },
       "ERROS": {
         "UM_GATILHO": "The flow needs exactly 1 trigger.",
@@ -2127,7 +2208,13 @@
         "CHATWOOT_SEM_ACAO": "Choose at least one action.",
         "CHATWOOT_MENSAGEM": "Messages to the client only as drafts.",
         "CHATWOOT_PROIBIDA": "Action not allowed in a flow ({nome}).",
-        "CHATWOOT_DESCONHECIDA": "Unknown action ({nome})."
+        "CHATWOOT_DESCONHECIDA": "Unknown action ({nome}).",
+        "GATILHO_HORA": "Enter the time as HH:MM.",
+        "ADVBOX_ACAO": "Choose task or movement.",
+        "ADVBOX_DESCRICAO": "The movement needs at least 10 letters.",
+        "WEBHOOK_HTTPS": "The address must start with https.",
+        "WEBHOOK_ULTIMO": "The webhook must be the last step.",
+        "CAMPO_CHAVE": "Field name only with lowercase letters, numbers and _, and not a name the hub already uses (nome, etapa, telefone…)."
       },
       "TESTAR": {
         "TITULO": "Test with a lead",
@@ -2174,7 +2261,7 @@
         },
         "pos_contrato": {
           "NOME": "After contract: ask for documents",
-          "DESCRICAO": "Stage changed → welcome → task → wait 2 days → reminder + push"
+          "DESCRICAO": "Contract signed → welcome → task → wait 2 days → documents complete: bell notice; missing: AI draft + push"
         },
         "fora_do_horario": {
           "NOME": "After hours",
@@ -2188,6 +2275,22 @@
           "NOME": "Lead won",
           "DESCRICAO": "Handover note for legal + task + bell"
         }
+      },
+      "PAPEIS": {
+        "sdr": "SDR",
+        "closer": "Closer"
+      },
+      "REGRAS_ADVBOX": {
+        "contrato_fechado": "Contract closed",
+        "requerimento_protocolado": "Request filed at INSS",
+        "indeferimento": "INSS denied",
+        "decisao": "Decision issued",
+        "exigencia": "Requirements letter",
+        "reativacao_futura": "Future benefit",
+        "exito": "Payment received or RPV",
+        "marco": "Case milestone",
+        "concessao": "Benefit granted",
+        "arquivado": "Archived"
       }
     },
     "MESSAGE_TEMPLATES": {

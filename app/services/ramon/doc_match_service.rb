@@ -93,5 +93,6 @@ class Ramon::DocMatchService
       tipo: 'doc_match',
       extra: { 'item_id' => item.id, 'attachment_id' => attachment.id, 'lead_id' => lead.id }
     )
+    Ramon::Fluxos::Disparo.externo('documento_recebido', lead, 'documento' => titulo)
   end
 end

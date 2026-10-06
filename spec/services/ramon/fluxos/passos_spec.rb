@@ -98,4 +98,61 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     expect { r = Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Ver' }, ctx) }.not_to change(Notification, :count)
     expect(r[:resumo]).to eq('sino: sem responsável')
   end
+
+  it 'registrar atividade escreve na linha do tempo do lead' do
+    Ramon::Fluxos::Passos::Lead.registrar_atividade({ 'texto' => 'Boas-vindas para {nome}' }, ctx)
+    expect(lead.lead_activities.find_by(kind: 'fluxo').to_value).to start_with('Boas-vindas para')
+  end
+
+  it 'trocar responsável: a pessoa escolhida ou o próximo do time' do
+    ana = create(:user, account: account)
+    c = ctx # uma execução só: a 2ª ativa do mesmo fluxo/lead bateria no índice único
+    Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'closer', 'user_id' => ana.id }, c)
+    expect(lead.reload.closer).to eq(ana)
+    create(:team_member, team: create(:team, account: account, name: 'sdr'), user: ana)
+    r = Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr' }, c)
+    expect(lead.reload.sdr).to eq(ana)
+    expect(r[:resumo]).to eq("sdr → #{ana.name}")
+  end
+
+  it 'trocar responsável: papel inválido ou pessoa de outra conta é erro de config (sem nova tentativa)' do
+    estranha = create(:user, account: create(:account))
+    c = ctx
+    expect { Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'chefe' }, c) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, /papel/)
+    expect { Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr', 'user_id' => estranha.id }, c) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, /pessoa/)
+  end
+
+  it 'trocar responsável com time vazio não quebra' do
+    r = Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr' }, ctx)
+    expect(r[:resumo]).to eq('sdr: ninguém no time')
+  end
+
+  it 'preencher campo relê o lead e junta só na chave campos' do
+    c = ctx
+    c.lead # carregado antes da escrita concorrente
+    Lead.find(lead.id).update!(custom_attributes: { 'zapsign' => { 'status' => 'signed' } })
+    Ramon::Fluxos::Passos::Lead.preencher_campo({ 'chave' => 'beneficio', 'valor' => 'BPC' }, c)
+    expect(lead.reload.custom_attributes).to eq('zapsign' => { 'status' => 'signed' }, 'campos' => { 'beneficio' => 'BPC' })
+  end
+
+  it 'preencher campo recusa nome reservado do hub' do
+    expect { Ramon::Fluxos::Passos::Lead.preencher_campo({ 'chave' => 'nome', 'valor' => 'x' }, ctx) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, /reservado/)
+  end
+
+  it 'RESERVADAS cobre toda chave que o Contexto monta sozinho' do
+    c = ctx
+    montadas = c.dados.keys - ((lead.custom_attributes['campos'] || {}).keys + (c.execucao.contexto['vars'] || {}).keys)
+    expect(montadas - Ramon::Fluxos::Contexto::RESERVADAS).to eq([])
+  end
+
+  it 'ensaio dos passos de lead não grava nada' do
+    c = ctx(ensaio: true)
+    expect do
+      Ramon::Fluxos::Passos::Lead.registrar_atividade({ 'texto' => 'a' }, c)
+      Ramon::Fluxos::Passos::Lead.preencher_campo({ 'chave' => 'x', 'valor' => 'y' }, c)
+    end.not_to(change { [lead.lead_activities.count, lead.reload.custom_attributes] })
+  end
 end

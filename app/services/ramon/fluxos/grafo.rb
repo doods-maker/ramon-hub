@@ -1,17 +1,31 @@
 # Desenho de um fluxo: { 'nos' => [{id, tipo, config, posicao}], 'setas' => [{de, saida, para}] }.
 # Regras de publicação (spec §5): 1 gatilho; sem ciclo; tudo ligado ao gatilho;
-# saídas válidas por tipo; mensagem ao cliente só como rascunho.
+# saídas válidas por tipo; mensagem ao cliente só como rascunho; webhook só como último passo.
 class Ramon::Fluxos::Grafo
   class Invalido < StandardError; end
 
   GATILHOS = %w[conversa_criada mensagem_recebida conversa_resolvida conversa_reaberta conversa_atribuida
-                lead_criado lead_mudou_etapa lead_ganho lead_perdido manual].freeze
+                lead_criado lead_mudou_etapa lead_ganho lead_perdido manual
+                lead_parado relogio reuniao_marcada reuniao_cancelada evento_advbox
+                contrato_assinado contrato_recusado documento_recebido].freeze
   TIPOS_PASSO = %w[se escolha esperar parar rascunho_texto nota_privada acao_chatwoot
-                   mover_etapa criar_tarefa avisar_sino avisar_push].freeze
+                   mover_etapa criar_tarefa avisar_sino avisar_push
+                   perguntar_ia rascunho_ia rodar_skill advbox webhook
+                   registrar_atividade trocar_responsavel preencher_campo].freeze
   OBRIGATORIOS = {
     'rascunho_texto' => %w[texto], 'nota_privada' => %w[texto], 'mover_etapa' => %w[etapa_id],
-    'criar_tarefa' => %w[titulo], 'escolha' => %w[campo], 'avisar_sino' => %w[texto], 'avisar_push' => %w[texto]
+    'criar_tarefa' => %w[titulo], 'escolha' => %w[campo], 'avisar_sino' => %w[texto], 'avisar_push' => %w[texto],
+    'perguntar_ia' => %w[pergunta], 'rascunho_ia' => %w[instrucao], 'rodar_skill' => %w[assistente_id skill_id],
+    'registrar_atividade' => %w[texto], 'trocar_responsavel' => %w[papel]
   }.freeze
+  # tipo → método com as regras próprias do passo (além dos obrigatórios)
+  ESPECIFICOS = {
+    'se' => :erros_se, 'perguntar_ia' => :erros_saida, 'escolha' => :erros_escolha, 'esperar' => :erros_esperar,
+    'acao_chatwoot' => :erros_chatwoot, 'advbox' => :erros_advbox, 'webhook' => :erros_webhook, 'preencher_campo' => :erros_campo
+  }.freeze
+  NOMES = { 'se' => 'Se', 'perguntar_ia' => 'Perguntar à IA' }.freeze
+  HORA = /\A([01]\d|2[0-3]):[0-5]\d\z/
+  CHAVE_CAMPO = /\A[a-z][a-z0-9_]{0,39}\z/
   MENSAGEM_CLIENTE = %w[send_message send_attachment].freeze
   # sem envio externo: transcript pode ir pro e-mail do contato; webhook vira passo próprio (B2b)
   PROIBIDAS_CHATWOOT = (MENSAGEM_CLIENTE + %w[send_email_transcript send_webhook_event]).freeze
@@ -48,8 +62,18 @@ class Ramon::Fluxos::Grafo
     gatilhos = nos.select { |n| n['tipo'] == 'gatilho' }
     return ['O fluxo precisa de exatamente 1 gatilho'] unless gatilhos.one?
 
-    tipo = gatilhos.first.dig('config', 'tipo')
-    GATILHOS.include?(tipo) ? [] : ["Gatilho desconhecido: #{tipo}"]
+    config = gatilhos.first['config'] || {}
+    return ["Gatilho desconhecido: #{config['tipo']}"] unless GATILHOS.include?(config['tipo'])
+
+    erros_hora(config)
+  end
+
+  # relógio exige a hora; lead parado usa 11:00 (Relogio::HORA_PADRAO) se vier vazia
+  def erros_hora(config)
+    hora = config['hora'].to_s
+    return ['O relógio precisa da hora (HH:MM)'] if config['tipo'] == 'relogio' && hora.empty?
+
+    hora.empty? || hora.match?(HORA) ? [] : ['Hora do gatilho inválida (use HH:MM)']
   end
 
   def erros_setas
@@ -102,20 +126,47 @@ class Ramon::Fluxos::Grafo
   end
 
   def erros_especificos(passo, config)
-    case passo['tipo']
-    when 'se' then erros_se(passo, config)
-    when 'escolha' then erros_escolha(passo, config)
-    when 'esperar' then espera_valida?(config) ? [] : ["Passo #{passo['id']}: falta o tempo de espera"]
-    when 'acao_chatwoot' then erros_chatwoot(passo, config)
-    else []
-    end
+    metodo = ESPECIFICOS[passo['tipo']]
+    metodo ? send(metodo, passo, config) : []
   end
 
   def erros_se(passo, config)
+    erros = Array(config['condicoes']).empty? ? ["Passo #{passo['id']} (Se) precisa de condições"] : []
+    erros + erros_saida(passo, config)
+  end
+
+  def erros_saida(passo, _config)
+    return [] if setas.any? { |s| s['de'] == passo['id'] }
+
+    ["Passo #{passo['id']} (#{NOMES[passo['tipo']]}) precisa de pelo menos uma saída"]
+  end
+
+  def erros_esperar(passo, config) = espera_valida?(config) ? [] : ["Passo #{passo['id']}: falta o tempo de espera"]
+
+  # IDs fixos escolhidos na tela (advbox_configuracoes) — escrita determinística, não é a IA decidindo
+  def erros_advbox(passo, config)
+    id = passo['id']
+    case config['acao']
+    when 'tarefa' then %w[tipo_tarefa_id responsavel_id].select { |k| config[k].blank? }.map { |k| "Passo #{id}: falta #{k}" }
+    when 'movimentacao'
+      config['descricao'].to_s.strip.length >= 10 ? [] : ["Passo #{id}: a movimentação do ADVBOX precisa de pelo menos 10 letras"]
+    else ["Passo #{id}: escolha tarefa ou movimentação do ADVBOX"]
+    end
+  end
+
+  # regra do Flowter: webhook só no fim; https só (o SafeFetch ainda barra rede interna na hora de rodar)
+  def erros_webhook(passo, config)
     erros = []
-    erros << "Passo #{passo['id']} (Se) precisa de condições" if Array(config['condicoes']).empty?
-    erros << "Passo #{passo['id']} (Se) precisa de pelo menos uma saída" if setas.none? { |s| s['de'] == passo['id'] }
+    erros << "Passo #{passo['id']}: o webhook precisa de um endereço https://" unless config['url'].to_s.start_with?('https://')
+    erros << "Passo #{passo['id']} (Webhook) tem que ser o último passo" if setas.any? { |s| s['de'] == passo['id'] }
     erros
+  end
+
+  def erros_campo(passo, config)
+    chave = config['chave'].to_s
+    return ["Passo #{passo['id']}: nome do campo só com letras minúsculas, números e _ (até 40)"] unless chave.match?(CHAVE_CAMPO)
+
+    Ramon::Fluxos::Contexto::RESERVADAS.include?(chave) ? ["Passo #{passo['id']}: #{chave} é um nome reservado do hub"] : []
   end
 
   def erros_escolha(passo, config)
