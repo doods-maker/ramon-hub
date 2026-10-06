@@ -63,7 +63,9 @@ class Ramon::CockpitMetrics
   end
 
   def dono_da_reuniao(task)
-    task.lead&.closer&.name || task.lead&.sdr&.name || task.user&.name
+    lead = task.lead
+    dono = lead && (lead.closer || lead.sdr)
+    dono&.name || task.user&.name
   end
 
   # ---- Perdas por tese (90d + trimestre anterior p/ o delta ↑/↓) ----------

@@ -16,14 +16,6 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
     render json: { payload: reunioes.limit(LIMIT).map { |reuniao| linha(reuniao) } }
   end
 
-  # Vincular a um lead (gravada pela barra lateral nasce sem lead); lead_id
-  # vazio desvincula.
-  def update
-    lead = params[:lead_id].present? ? Current.account.leads.find(params[:lead_id]) : nil
-    @reuniao.update!(lead: lead)
-    render json: detalhe(@reuniao)
-  end
-
   def show
     render json: detalhe(@reuniao)
   end
@@ -42,6 +34,14 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
     reuniao.audio.attach(audio)
     Ramon::ReuniaoAtaJob.perform_later(reuniao.id)
     render json: detalhe(reuniao)
+  end
+
+  # Vincular a um lead (gravada pela barra lateral nasce sem lead); lead_id
+  # vazio desvincula.
+  def update
+    lead = params[:lead_id].present? ? Current.account.leads.find(params[:lead_id]) : nil
+    @reuniao.update!(lead: lead)
+    render json: detalhe(@reuniao)
   end
 
   def destroy

@@ -111,11 +111,18 @@ class Ramon::EsteiraBuilder
     return if lead.nil?
 
     entry = @entries[lead.id] ||= { lead: lead, reasons: [], task_id: nil, task_kind: nil }
-    entry[:task_kind] = task.kind if task && entry[:task_id].nil?
-    entry[:task_id] ||= task&.id
+    guardar_task(entry, task)
     return if entry[:reasons].any? { |r| r[:key] == key }
 
     entry[:reasons] << { key: key, params: params }
+  end
+
+  # A 1ª task que chega é a mais urgente (vencidas vêm antes) — as seguintes não trocam.
+  def guardar_task(entry, task)
+    return if task.nil? || entry[:task_id]
+
+    entry[:task_id] = task.id
+    entry[:task_kind] = task.kind
   end
 
   def build_items

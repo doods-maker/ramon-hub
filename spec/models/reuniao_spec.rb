@@ -17,7 +17,7 @@ RSpec.describe Reuniao do
 
     it 'falls back to timestamp when blank' do
       reuniao = create(:reuniao, titulo: nil)
-      expect(reuniao.titulo_exibicao).to include(reuniao.created_at.strftime('%d/%m'))
+      expect(reuniao.titulo_exibicao).to include(reuniao.created_at.in_time_zone('America/Sao_Paulo').strftime('%d/%m'))
     end
 
     it 'usa a hora de Brasília no título automático' do
