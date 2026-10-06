@@ -1,11 +1,21 @@
 <script setup>
-// Placar de TV (/tv) — mock 5a. Página standalone sem chrome, dark sempre:
+// Placar de TV (/tv) — mock 5a. Página standalone sem chrome, escura sempre
+// (classe `dark` na raiz: tokens do tema preto mesmo com o hub no claro):
 // base fixa 1280×720 escalada por transform pra caber em qualquer 16:9.
-// Cores fixas do mock de propósito (ambiente controlado de TV).
+// Kit visual do hub em tamanho de TV (lê de longe); números em font-mono.
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { brlCompact } from '../helpers/currency';
+import { CARTAO } from '../helpers/ui';
+
+// Kit em tamanho de TV: rótulo/sub/número maiores que os do hub.
+const ROTULO_TV =
+  'm-0 text-xs font-semibold uppercase tracking-widest text-n-slate-11';
+const SUB_TV = 'm-0 text-[11px] text-n-slate-11';
+const NUMERO_TV =
+  'm-0 font-mono text-[32px] font-medium leading-[1.1] tabular-nums text-n-slate-12';
+const CARTAO_TV = `${CARTAO} !px-5 !py-4`;
 
 const { t } = useI18n();
 const store = useStore();
@@ -96,7 +106,14 @@ const goalPct = computed(() =>
 const goalBarWidth = computed(() => `${Math.min(100, goalPct.value)}%`);
 
 // ---- Por tese: dot + subnota ---------------------------------------------
-const DOT_COLORS = ['#60a5fa', '#a78bfa', '#f472b6', '#2dd4bf', '#a1a1a1'];
+// Só marcador de linha (sem significado): azul da marca em degradê.
+const DOT_COLORS = [
+  'bg-n-blue-9',
+  'bg-n-blue-9/80',
+  'bg-n-blue-9/60',
+  'bg-n-blue-9/45',
+  'bg-n-slate-9',
+];
 const dotColor = index => DOT_COLORS[index % DOT_COLORS.length];
 
 // Melhor conversão do mês: maior conversion_pct entre teses com ganho no mês.
@@ -114,19 +131,19 @@ const thesisNote = row => {
   if (row.prescribing_count > 0) {
     return {
       text: t('RAMON.TV.NOTE_PRESCRIBING', { count: row.prescribing_count }),
-      cls: 'text-[#ff949d]',
+      cls: 'text-n-ruby-11',
     };
   }
   if (bestThesis.value === row) {
-    return { text: t('RAMON.TV.NOTE_BEST'), cls: 'text-[#0bd8b6]' };
+    return { text: t('RAMON.TV.NOTE_BEST'), cls: 'text-n-teal-11' };
   }
   if (row.stalled_count > 0) {
     return {
       text: t('RAMON.TV.NOTE_STALLED', { count: row.stalled_count }),
-      cls: 'text-[#ffca16]',
+      cls: 'text-n-amber-11',
     };
   }
-  return { text: t('RAMON.TV.NOTE_STABLE'), cls: 'text-[#737373]' };
+  return { text: t('RAMON.TV.NOTE_STABLE'), cls: 'text-n-slate-11' };
 };
 
 // ---- Funil ativo em 1 linha ----------------------------------------------
@@ -145,23 +162,26 @@ const funnelLine = computed(() => {
 
 <template>
   <div
-    class="fixed inset-0 flex items-center justify-center overflow-hidden bg-[#000000] cursor-none"
+    class="dark fixed inset-0 flex cursor-none items-center justify-center overflow-hidden bg-n-background text-n-slate-12"
   >
     <div
       data-testid="tv-stage"
-      class="flex h-[720px] w-[1280px] flex-none flex-col box-border bg-[#0a0a0a] px-[52px] py-[40px] font-inter"
+      class="box-border flex h-[720px] w-[1280px] flex-none flex-col bg-n-background px-[52px] py-[40px]"
       :style="{ transform: `scale(${scale})` }"
     >
       <!-- Topo: eyebrow + relógio -->
       <div class="flex items-baseline gap-4">
-        <p class="m-0 text-[11px] uppercase tracking-[.24em] text-[#60a5fa]">
+        <p
+          class="m-0 text-xs font-semibold uppercase tracking-[.24em] text-n-blue-11"
+        >
           {{ `${t('RAMON.TV.EYEBROW')} · ${monthName}` }}
         </p>
         <span
-          class="ml-auto inline-flex items-center gap-1.5 text-[11px] text-[#737373]"
+          class="ml-auto inline-flex items-center gap-1.5 text-xs text-n-slate-11"
         >
-          <span class="h-[7px] w-[7px] rounded-full bg-[#0bd8b6]" />
-          {{ `${t('RAMON.TV.LIVE')} · ${clock}` }}
+          <span class="size-[7px] rounded-full bg-n-teal-9" />
+          {{ `${t('RAMON.TV.LIVE')} ·` }}
+          <span class="font-mono tabular-nums">{{ clock }}</span>
         </span>
       </div>
 
@@ -169,12 +189,10 @@ const funnelLine = computed(() => {
         <!-- Hero: ganhos no mês + meta + hoje -->
         <div class="mt-5 flex items-end gap-12">
           <div>
-            <p class="m-0 text-[11px] uppercase tracking-[.1em] text-[#a1a1a1]">
-              {{ t('RAMON.TV.MONTH_WON') }}
-            </p>
+            <p :class="ROTULO_TV">{{ t('RAMON.TV.MONTH_WON') }}</p>
             <p
               data-testid="tv-hero-value"
-              class="m-0 text-[88px] font-semibold leading-none text-[#ededed]"
+              class="m-0 mt-1 font-mono text-[80px] font-medium leading-none tracking-tight tabular-nums text-n-slate-12"
             >
               {{ brlCompact(month.won_value) }}
             </p>
@@ -184,69 +202,55 @@ const funnelLine = computed(() => {
             data-testid="tv-goal"
             class="max-w-[380px] flex-1 pb-3"
           >
-            <p class="m-0 text-[11px] uppercase tracking-[.1em] text-[#a1a1a1]">
+            <p :class="ROTULO_TV">
               {{ t('RAMON.TV.GOAL', { value: brlCompact(goalValue) }) }}
             </p>
             <div class="mt-2 flex items-center gap-3">
-              <span class="block h-2 flex-1 rounded-full bg-[#60a5fa]/[.14]">
+              <span
+                class="block h-2.5 flex-1 overflow-hidden rounded-full bg-n-alpha-2"
+              >
                 <span
-                  class="block h-full rounded-full bg-gradient-to-r from-[#2563eb] to-[#60a5fa]"
+                  class="block h-full rounded-full bg-n-blue-9"
                   :style="{ width: goalBarWidth }"
                 />
               </span>
-              <span class="text-base font-semibold text-[#60a5fa]">
+              <span
+                class="font-mono text-lg font-medium tabular-nums text-n-blue-11"
+              >
                 {{ `${goalPct}%` }}
               </span>
             </div>
-            <p class="mb-0 mt-[5px] text-[11px] text-[#737373]">
+            <p class="mb-0 mt-1.5 text-xs text-n-slate-11">
               {{ t('RAMON.TV.DAYS_LEFT', { count: month.business_days_left }) }}
             </p>
           </div>
           <div class="ml-auto pb-2 text-right">
-            <p class="m-0 text-[11px] uppercase tracking-[.1em] text-[#a1a1a1]">
-              {{ t('RAMON.TV.TODAY') }}
-            </p>
+            <p :class="ROTULO_TV">{{ t('RAMON.TV.TODAY') }}</p>
             <div data-testid="tv-today" class="mt-1 flex gap-[26px]">
               <div>
-                <p
-                  class="m-0 text-[32px] font-semibold leading-[1.1] text-[#0bd8b6]"
-                >
+                <p :class="NUMERO_TV" class="!text-n-teal-11">
                   {{ today.won_count }}
                 </p>
-                <p class="m-0 text-[10px] text-[#737373]">
-                  {{ t('RAMON.TV.TODAY_WON') }}
-                </p>
+                <p :class="SUB_TV">{{ t('RAMON.TV.TODAY_WON') }}</p>
               </div>
               <div>
-                <p
-                  class="m-0 text-[32px] font-semibold leading-[1.1] text-[#ededed]"
-                >
-                  {{ today.new_count }}
-                </p>
-                <p class="m-0 text-[10px] text-[#737373]">
-                  {{ t('RAMON.TV.TODAY_NEW') }}
-                </p>
+                <p :class="NUMERO_TV">{{ today.new_count }}</p>
+                <p :class="SUB_TV">{{ t('RAMON.TV.TODAY_NEW') }}</p>
               </div>
               <div>
-                <p
-                  class="m-0 text-[32px] font-semibold leading-[1.1] text-[#ededed]"
-                >
+                <p :class="NUMERO_TV">
                   {{ minutesLabel(today.avg_first_response_minutes) }}
                 </p>
-                <p class="m-0 text-[10px] text-[#737373]">
-                  {{ t('RAMON.TV.TODAY_RESPONSE') }}
-                </p>
+                <p :class="SUB_TV">{{ t('RAMON.TV.TODAY_RESPONSE') }}</p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Centro: por tese + coluna direita -->
-        <div class="mt-[34px] grid min-h-0 flex-1 grid-cols-[1.7fr_1fr] gap-11">
+        <div class="mt-[30px] grid min-h-0 flex-1 grid-cols-[1.7fr_1fr] gap-11">
           <div>
-            <p
-              class="mb-3.5 mt-0 text-[10px] font-semibold uppercase tracking-[.16em] text-[#a1a1a1]"
-            >
+            <p :class="ROTULO_TV" class="!mb-3">
               {{ t('RAMON.TV.BY_THESIS') }}
             </p>
             <div class="flex flex-col">
@@ -254,41 +258,37 @@ const funnelLine = computed(() => {
                 v-for="(row, index) in byThesis"
                 :key="row.thesis_id ?? 'none'"
                 data-testid="tv-thesis-row"
-                class="flex items-center gap-4 border-t border-[#60a5fa]/10 py-[13px] last:border-b"
+                class="flex items-center gap-4 border-t border-n-weak py-3 last:border-b"
               >
                 <span
-                  class="h-[9px] w-[9px] flex-none rounded-full"
-                  :style="{ background: dotColor(index) }"
+                  class="size-2.5 flex-none rounded-full"
+                  :class="dotColor(index)"
                 />
                 <div class="min-w-0 flex-1">
-                  <p class="m-0 text-base font-medium text-[#ededed]">
+                  <p class="m-0 text-[17px] font-medium text-n-slate-12">
                     {{ row.name }}
                   </p>
                   <p
                     data-testid="tv-thesis-note"
-                    class="mb-0 mt-px text-[11px]"
+                    class="mb-0 mt-px text-xs"
                     :class="thesisNote(row).cls"
                   >
                     {{ thesisNote(row).text }}
                   </p>
                 </div>
-                <div class="w-[110px] text-right">
-                  <p
-                    class="m-0 text-[26px] font-semibold leading-[1.1] text-[#ededed]"
-                  >
+                <div class="w-[120px] text-right">
+                  <p :class="NUMERO_TV" class="!text-[26px]">
                     {{ row.leads_count }}
                   </p>
-                  <p class="m-0 text-[9.5px] text-[#737373]">
+                  <p :class="SUB_TV">
                     {{ t('RAMON.TV.LEADS_SUB', { count: row.new_week }) }}
                   </p>
                 </div>
                 <div class="w-[90px] text-right">
-                  <p
-                    class="m-0 text-[26px] font-semibold leading-[1.1] text-[#0bd8b6]"
-                  >
+                  <p :class="NUMERO_TV" class="!text-[26px] !text-n-teal-11">
                     {{ row.won_month }}
                   </p>
-                  <p class="m-0 text-[9.5px] text-[#737373]">
+                  <p :class="SUB_TV">
                     <template v-if="row.conversion_pct !== null">
                       {{ t('RAMON.TV.WON_SUB', { pct: row.conversion_pct }) }}
                     </template>
@@ -299,7 +299,7 @@ const funnelLine = computed(() => {
                 </div>
                 <div class="w-[110px] text-right">
                   <p
-                    class="m-0 text-[17px] font-semibold tabular-nums text-[#0bd8b6]"
+                    class="m-0 font-mono text-lg font-medium tabular-nums text-n-teal-11"
                   >
                     {{ brlCompact(row.won_value_month) }}
                   </p>
@@ -309,60 +309,53 @@ const funnelLine = computed(() => {
             <p
               v-if="funnelLine"
               data-testid="tv-funnel-line"
-              class="mb-0 mt-3.5 text-[11px] text-[#737373]"
+              class="mb-0 mt-3 text-xs text-n-slate-11"
             >
               {{ funnelLine }}
             </p>
           </div>
 
           <div class="flex flex-col gap-4">
-            <div
-              class="rounded-[14px] border border-[#60a5fa]/10 bg-[#141414] px-5 py-[18px]"
-            >
-              <p
-                class="mb-3 mt-0 text-[10px] font-semibold uppercase tracking-[.12em] text-[#a1a1a1]"
-              >
-                {{ t('RAMON.TV.RACE') }}
-              </p>
-              <div class="flex flex-col gap-2.5">
-                <div
+            <div :class="CARTAO_TV">
+              <p :class="ROTULO_TV" class="!mb-3">{{ t('RAMON.TV.RACE') }}</p>
+              <ol class="m-0 flex list-none flex-col gap-2.5 p-0">
+                <li
                   v-for="(runner, index) in race"
                   :key="runner.name"
                   data-testid="tv-race-row"
                   class="flex items-center gap-2.5"
                 >
                   <span
-                    class="w-[18px] text-xl"
-                    :class="index === 0 ? 'text-[#60a5fa]' : 'text-[#a1a1a1]'"
+                    class="w-[18px] font-mono text-xl tabular-nums"
+                    :class="index === 0 ? 'text-n-blue-11' : 'text-n-slate-11'"
                   >
                     {{ index + 1 }}
                   </span>
-                  <span class="text-sm font-medium text-[#ededed]">
+                  <span class="text-[15px] font-medium text-n-slate-12">
                     {{ runner.name }}
                   </span>
                   <span
-                    class="ml-auto text-sm font-semibold tabular-nums text-[#0bd8b6]"
+                    class="ml-auto font-mono text-[15px] font-medium tabular-nums text-n-teal-11"
                   >
                     {{ brlCompact(runner.won_value) }}
                   </span>
-                </div>
-                <p v-if="!race.length" class="m-0 text-[11px] text-[#737373]">
-                  {{ t('RAMON.TV.RACE_EMPTY') }}
-                </p>
-              </div>
+                </li>
+              </ol>
+              <p v-if="!race.length" class="m-0 text-xs text-n-slate-11">
+                {{ t('RAMON.TV.RACE_EMPTY') }}
+              </p>
             </div>
 
             <div
               data-testid="tv-prescribing"
-              class="rounded-[14px] border border-[#e54666]/30 bg-[#141414] px-5 py-[18px]"
+              :class="CARTAO_TV"
+              class="border-l-4 border-l-n-ruby-9"
             >
-              <p
-                class="m-0 text-[10px] font-semibold uppercase tracking-[.12em] text-[#ff949d]"
-              >
+              <p :class="ROTULO_TV" class="!text-n-ruby-11">
                 {{ t('RAMON.TV.PRESCRIBING') }}
               </p>
               <p
-                class="mb-0 mt-2 text-[34px] font-semibold leading-none text-[#ff949d]"
+                class="mb-0 mt-2 font-mono text-[30px] font-medium leading-none tabular-nums text-n-ruby-11"
               >
                 {{
                   t('RAMON.TV.PRESCRIBING_MONTH', {
@@ -370,7 +363,7 @@ const funnelLine = computed(() => {
                   })
                 }}
               </p>
-              <p class="mb-0 mt-1 text-[10.5px] text-[#737373]">
+              <p class="mb-0 mt-1.5 text-xs text-n-slate-11">
                 {{
                   t('RAMON.TV.PRESCRIBING_SUB', {
                     count: byThesis.reduce(
@@ -382,28 +375,23 @@ const funnelLine = computed(() => {
               </p>
             </div>
 
-            <div
-              data-testid="tv-next-meeting"
-              class="rounded-[14px] border border-[#60a5fa]/10 bg-[#141414] px-5 py-4"
-            >
-              <p
-                class="m-0 text-[10px] font-semibold uppercase tracking-[.12em] text-[#a1a1a1]"
-              >
-                {{ t('RAMON.TV.NEXT') }}
-              </p>
+            <div data-testid="tv-next-meeting" :class="CARTAO_TV">
+              <p :class="ROTULO_TV">{{ t('RAMON.TV.NEXT') }}</p>
               <template v-if="nextMeeting">
-                <p class="mb-0 mt-2 text-sm text-[#ededed]">
-                  <b class="text-[#60a5fa]">{{ hourLabel(nextMeeting.at) }}</b>
+                <p class="mb-0 mt-2 text-[15px] text-n-slate-12">
+                  <b class="font-mono font-medium text-n-blue-11">
+                    {{ hourLabel(nextMeeting.at) }}
+                  </b>
                   {{ `· ${nextMeeting.lead_name}` }}
                 </p>
                 <p
                   v-if="nextMeeting.user_name"
-                  class="mb-0 mt-0.5 text-[11px] text-[#737373]"
+                  class="mb-0 mt-0.5 text-xs text-n-slate-11"
                 >
                   {{ nextMeeting.user_name }}
                 </p>
               </template>
-              <p v-else class="mb-0 mt-2 text-[11px] text-[#737373]">
+              <p v-else class="mb-0 mt-2 text-xs text-n-slate-11">
                 {{ t('RAMON.TV.NEXT_EMPTY') }}
               </p>
             </div>
@@ -416,9 +404,9 @@ const funnelLine = computed(() => {
           data-testid="tv-ticker"
           class="mt-auto flex items-center gap-2.5 pt-5"
         >
-          <span class="h-2 w-2 rounded-full bg-[#0bd8b6]" />
-          <p class="m-0 text-sm text-[#d4d4d4]">
-            <b class="text-[#0bd8b6]">{{ t('RAMON.TV.TICKER_NOW') }}</b>
+          <span class="size-2 rounded-full bg-n-teal-9" />
+          <p class="m-0 text-[15px] text-n-slate-12">
+            <b class="text-n-teal-11">{{ t('RAMON.TV.TICKER_NOW') }}</b>
             {{
               t('RAMON.TV.TICKER', {
                 closer: lastWon.closer_name || '—',
