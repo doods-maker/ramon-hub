@@ -8,8 +8,7 @@ class Api::V1::Accounts::RamonInteligenciaController < Api::V1::Accounts::BaseCo
   JANELA = 30.days
   # D7: o padrão vira piloto_limitado depois de ~20 conversas revisadas.
   META_PILOTO = 20
-  # ponytail: o teto de verdade mora no runner da VPS (30/dia); aqui só desenha a barra.
-  TETO_AGENTE = 30
+  TETO_AGENTE = AgenteExecucao::TETO_DIA
   REVISADOS = %w[igual editado descartado].freeze
 
   SQL_RASCUNHOS = <<~SQL.squish.freeze
