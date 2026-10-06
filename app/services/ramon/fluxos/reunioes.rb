@@ -56,10 +56,12 @@ module Ramon::Fluxos::Reunioes
 
   # A chave (B4.1): os fluxos fazem o agendamento inteiro só com a env ligada E os 3 fluxos migrados ligados,
   # publicados, em modo normal e com o gatilho esperado. Qualquer peça fora → o código faz tudo e os fluxos ensaiam.
+  # Sem limite do dia: com limite, o Disparo pularia o fluxo depois do N-ésimo evento e ninguém faria. Os filtros do
+  # gatilho (regras, caixas, etapas) ficam a cargo do admin (E6: editar o fluxo pode tirar efeitos).
   def assumiu?(account)
     return false unless ligada?
 
-    atuais = account.fluxos.executaveis.where(origem: 'usuario', modo: 'normal', sistema_chave: GATILHOS.keys)
+    atuais = account.fluxos.executaveis.where(origem: 'usuario', modo: 'normal', limite_dia: nil, sistema_chave: GATILHOS.keys)
                     .pluck(:sistema_chave, :gatilho_tipo)
     atuais.sort == GATILHOS.to_a.sort
   end

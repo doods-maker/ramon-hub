@@ -203,12 +203,14 @@ RSpec.describe Ramon::ReuniaoAgendamento do
 
       it 'remarcar: o código só move a tarefa' do
         task = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Primeiro Atendimento', due_at: starts_at)
+        allow(Ramon::Fluxos::Reunioes).to receive(:assumiu?).and_call_original
         travel_to(Time.zone.parse('2026-07-14T12:00:00Z')) do
           expect { described_class.remarcar(task: task, starts_at: starts_at + 1.day, user: user) }
             .not_to have_enqueued_job(Ramon::MeetingReminderJob)
         end
         expect(task.reload.due_at).to eq(starts_at + 1.day)
         expect(lead.lead_activities.where(kind: 'meeting_rescheduled')).to be_empty
+        expect(Ramon::Fluxos::Reunioes).to have_received(:assumiu?).once # o evento decide uma vez só
       end
 
       it 'chave ligada: um fluxo comum em reunião marcada segue disparando 1 vez, depois do fluxo migrado' do

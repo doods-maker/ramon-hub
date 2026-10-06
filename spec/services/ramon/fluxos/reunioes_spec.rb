@@ -70,6 +70,14 @@ RSpec.describe Ramon::Fluxos::Reunioes do
       expect(described_class.assumiu?(account)).to be(false) # sem a env
     end
 
+    it 'limite do dia num dos 3 devolve tudo ao código (o Disparo pularia o fluxo e ninguém faria)' do
+      with_modified_env(RAMON_FLUXO_REUNIOES: 'on') do
+        described_class.mudar_modo!(account, 'normal')
+        fluxos['reuniao_cancelada'].update!(limite_dia: 5)
+        expect(described_class.assumiu?(account)).to be(false)
+      end
+    end
+
     it 'virar para normal sem a env é recusado; voltar para sombra vira os 3 juntos' do
       expect { described_class.mudar_modo!(account, 'normal') }.to raise_error(ArgumentError, /RAMON_FLUXO_REUNIOES/)
       with_modified_env(RAMON_FLUXO_REUNIOES: 'on') do
