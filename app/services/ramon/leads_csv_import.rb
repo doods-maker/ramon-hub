@@ -87,7 +87,8 @@ class Ramon::LeadsCsvImport
       name: contact.name, contact_id: contact.id, lead_stage: stage,
       benefit_type: benefit, thesis: thesis, won_at: won_at,
       value: parse_decimal(attrs['valor']),
-      source: attrs['origem'], channel: valid_channel(attrs['canal'])
+      source: attrs['origem'], channel: valid_channel(attrs['canal']),
+      lost_reason: ('Importação de planilha' if stage.is_lost)
     )
   end
 

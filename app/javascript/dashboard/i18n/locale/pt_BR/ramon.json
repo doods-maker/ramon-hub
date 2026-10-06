@@ -266,6 +266,8 @@
         "TITLE": "Por que este lead foi perdido?",
         "PICK": "Escolha um motivo",
         "DETAIL_PLACEHOLDER": "Detalhe (opcional)",
+        "OTHER": "Outro",
+        "OTHER_PLACEHOLDER": "Descreva o motivo (obrigatório)",
         "CONFIRM": "Marcar como perda",
         "CANCEL": "Cancelar",
         "NO_REASONS": "Nenhum motivo de perda cadastrado ainda.",

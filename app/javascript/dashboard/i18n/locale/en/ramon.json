@@ -266,6 +266,8 @@
         "TITLE": "Why was this lead lost?",
         "PICK": "Choose a reason",
         "DETAIL_PLACEHOLDER": "Details (optional)",
+        "OTHER": "Other",
+        "OTHER_PLACEHOLDER": "Describe the reason (required)",
         "CONFIRM": "Mark as lost",
         "CANCEL": "Cancel",
         "NO_REASONS": "No lost reasons configured yet.",

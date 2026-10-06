@@ -668,6 +668,17 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent(LostReasonModal).exists()).toBe(true);
     });
 
+    it('pede o motivo mesmo se o lead carrega um motivo antigo', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({
+        props: { lead: { ...lead, lost_reason: 'antigo' } },
+        spies: { update },
+      });
+      await wrapper.find('[data-testid="panel-stage"]').setValue(3);
+      expect(update).not.toHaveBeenCalled();
+      expect(wrapper.findComponent(LostReasonModal).exists()).toBe(true);
+    });
+
     it('faz o PATCH com lost_reason quando o modal confirma', async () => {
       const update = vi.fn();
       const wrapper = mountBody({ spies: { update } });
@@ -1091,7 +1102,7 @@ describe('LeadPanelBody', () => {
     });
 
     it('"Não é lead" mora no menu ⋯ ao lado do nome', async () => {
-      const wrapper = mountBody();
+      const wrapper = mountBody({ spies: { role: 'administrator' } });
       expect(wrapper.find('[data-testid="lead-discard"]').exists()).toBe(false);
       await wrapper.find('[data-testid="lead-more"]').trigger('click');
       expect(
@@ -1102,9 +1113,15 @@ describe('LeadPanelBody', () => {
       ).toBe(true);
     });
 
+    it('excluir lead é só do admin: o agente na conversa não vê o ⋯', () => {
+      const agente = mountBody();
+      expect(agente.find('[data-testid="lead-more"]').exists()).toBe(false);
+      expect(agente.find('[data-testid="lead-discard"]').exists()).toBe(false);
+    });
+
     it('descarta o lead só depois da janela de confirmação', async () => {
       const del = vi.fn();
-      const wrapper = mountBody({ spies: { del } });
+      const wrapper = mountBody({ spies: { del, role: 'administrator' } });
       const janela = () => wrapper.findComponent(ConfirmModal);
       await wrapper.find('[data-testid="lead-more"]').trigger('click');
       await wrapper.find('[data-testid="lead-discard"]').trigger('click');
@@ -1125,7 +1142,7 @@ describe('LeadPanelBody', () => {
 
     it('Cancelar fecha a janela sem apagar', async () => {
       const del = vi.fn();
-      const wrapper = mountBody({ spies: { del } });
+      const wrapper = mountBody({ spies: { del, role: 'administrator' } });
       await wrapper.find('[data-testid="lead-more"]').trigger('click');
       await wrapper.find('[data-testid="lead-discard"]').trigger('click');
       wrapper.findComponent(ConfirmModal).vm.$emit('cancel');

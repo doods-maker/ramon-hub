@@ -48,6 +48,14 @@ RSpec.describe Ramon::LeadsCsvImport do
     expect(account.contacts.where(cpf: '52998224725').count).to eq(1)
   end
 
+  it 'caso importado direto em Perdido leva o motivo da importação' do
+    run_import(<<~CSV)
+      nome,telefone,email,cpf,data_nascimento,sexo,beneficio,tese,etapa,valor,ganho_em,canal,origem
+      João,4899990001,,,,M,Auxílio-acidente,,Perdido,,,,
+    CSV
+    expect(account.leads.reorder(:id).last.lost_reason).to eq('Importação de planilha')
+  end
+
   it 'cria caso ganho com won_at na data do ganho' do
     run_import(<<~CSV)
       nome,telefone,email,cpf,data_nascimento,sexo,beneficio,tese,etapa,valor,ganho_em,canal,origem

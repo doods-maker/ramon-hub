@@ -46,6 +46,13 @@ RSpec.describe Ramon::StageLabelSync do
   end
 
   describe '.apply_to_lead' do
+    it 'fase-perdido na conversa marca perdido com o motivo da etiqueta, mesmo com pessoa logada' do
+      Current.user = create(:user, account: account)
+      lead = create(:lead, account: account, lead_stage: novo, conversation: conversation)
+      described_class.apply_to_lead(conversation, ['fase-perdido'])
+      expect(lead.reload.lost_reason).to eq('Automação: etiqueta fase-perdido na conversa')
+    end
+
     it 'move o lead pra etapa da fase-* adicionada' do
       lead = create(:lead, account: account, lead_stage: novo, conversation: conversation)
       described_class.apply_to_lead(conversation, ['fase-qualificacao'])

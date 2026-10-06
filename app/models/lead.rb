@@ -15,12 +15,16 @@ class Lead < ApplicationRecord
   belongs_to :thesis, optional: true
   belongs_to :sdr, class_name: 'User', optional: true
   belongs_to :closer, class_name: 'User', optional: true
-  has_many :lead_activities, dependent: :destroy_async
-  has_many :calculos, dependent: :destroy_async
-  has_many :lead_notes, dependent: :destroy_async
+  # delete_all nas tabelas com FK sem cascade: com destroy_async o DELETE do lead
+  # estourava a FK antes do job apagar os filhos (todo lead tem a atividade
+  # 'created'). Nenhum filho tem callback de destroy nem é auditado; as linhas
+  # de audits do lead (somente-inclusão) ficam — só ganham a do destroy.
+  has_many :lead_activities, dependent: :delete_all
+  has_many :calculos, dependent: :delete_all
+  has_many :lead_notes, dependent: :delete_all
   has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
   has_many :lead_triages, dependent: :destroy_async
-  has_many :copilot_suggestions, dependent: :destroy_async
+  has_many :copilot_suggestions, dependent: :delete_all
   has_many :reunioes, class_name: 'Reuniao', dependent: :nullify
 
   validates :lead_stage, presence: true

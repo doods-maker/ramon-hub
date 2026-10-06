@@ -20,6 +20,25 @@ describe('leads actions', () => {
     ]);
   });
 
+  it('move manda o lost_reason só quando vem (desfazer a saída do Perdido)', async () => {
+    axios.patch.mockResolvedValue({ data: { id: 3 } });
+    const commit = vi.fn();
+    await actions.move(
+      { commit },
+      { id: 3, leadStageId: 9, position: 0, lostReason: 'Preço' }
+    );
+    expect(axios.patch).toHaveBeenLastCalledWith(expect.stringMatching(/3$/), {
+      lead_stage_id: 9,
+      position: 0,
+      lost_reason: 'Preço',
+    });
+    await actions.move({ commit }, { id: 3, leadStageId: 2, position: 1 });
+    expect(axios.patch).toHaveBeenLastCalledWith(expect.stringMatching(/3$/), {
+      lead_stage_id: 2,
+      position: 1,
+    });
+  });
+
   it('upsert faz commit de MERGE_LEAD', () => {
     const commit = vi.fn();
     actions.upsert({ commit }, { id: 7, name: 'Live' });

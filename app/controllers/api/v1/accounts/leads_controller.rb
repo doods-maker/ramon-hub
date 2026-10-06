@@ -23,8 +23,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def update
-    ensure_lost_reason!
-    ensure_assignment_permission! unless performed?
+    ensure_assignment_permission!
     return if performed?
 
     @lead.update!(merged_params)
@@ -167,17 +166,6 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     leads = Ramon::Cadencia.parados(leads) if params[:stalled].present?
     leads = leads.where.not(id: Current.account.lead_tasks.open_tasks.select(:lead_id)) if params[:no_open_task].present?
     Ramon::LeadRadar.kpi_filters(Current.account, leads, params)
-  end
-
-  def ensure_lost_reason!
-    target_stage_id = permitted_params[:lead_stage_id]
-    return if target_stage_id.blank?
-
-    stage = Current.account.lead_stages.find_by(id: target_stage_id)
-    return unless stage&.is_lost
-    return if permitted_params[:lost_reason].presence || @lead.lost_reason.presence
-
-    render json: { error: 'LOST_REASON_REQUIRED' }, status: :unprocessable_entity
   end
 
   # Papéis (playbook §13): só o gestor troca SDR/Closer — o normal é a atribuição automática.

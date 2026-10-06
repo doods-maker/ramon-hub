@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 import {
   SELECT,
@@ -15,20 +16,30 @@ const props = defineProps({
   lostReasons: { type: Array, default: () => [] },
 });
 const emit = defineEmits(['confirmMove', 'cancelMove']);
+const { t } = useI18n();
 
+// "Outro": texto livre obrigatório quando nenhum motivo da lista serve.
+const OUTRO = 'outro';
 const reasonId = ref(null);
 const detail = ref('');
 
-const selectedReason = computed(() =>
-  props.lostReasons.find(r => r.id === reasonId.value)
+const isOutro = computed(() => reasonId.value === OUTRO);
+const reasonName = computed(() =>
+  isOutro.value
+    ? t('RAMON.FUNIL.LOST.OTHER')
+    : props.lostReasons.find(r => r.id === reasonId.value)?.name
+);
+// Sem motivo, não confirma (regra 06/10: perdido sempre com motivo).
+const canConfirm = computed(
+  () => !!reasonName.value && (!isOutro.value || !!detail.value.trim())
 );
 
 const confirm = () => {
-  if (!selectedReason.value) return;
+  if (!canConfirm.value) return;
   // Concatena "Motivo — detalhe" quando há um detalhe livre.
   const text = detail.value.trim()
-    ? `${selectedReason.value.name} — ${detail.value.trim()}`
-    : selectedReason.value.name;
+    ? `${reasonName.value} — ${detail.value.trim()}`
+    : reasonName.value;
   emit('confirmMove', { lostReason: text });
 };
 
@@ -50,9 +61,9 @@ onKeyStroke('Escape', () => {
       <h3 :class="TITULO_JANELA">
         {{ $t('RAMON.FUNIL.LOST.TITLE') }}
       </h3>
-      <!-- sem motivos cadastrados: aponta pra Config em vez do beco sem saída -->
-      <template v-if="!lostReasons.length">
-        <p data-testid="lost-no-reasons" class="mb-2 text-sm text-n-slate-11">
+      <!-- sem motivos cadastrados: aponta pra Config; o "Outro" segue valendo -->
+      <div v-if="!lostReasons.length" class="mb-3">
+        <p data-testid="lost-no-reasons" class="mb-1 text-sm text-n-slate-11">
           {{ $t('RAMON.FUNIL.LOST.NO_REASONS') }}
         </p>
         <router-link
@@ -61,8 +72,8 @@ onKeyStroke('Escape', () => {
         >
           {{ $t('RAMON.FUNIL.LOST.CONFIG_LINK') }}
         </router-link>
-      </template>
-      <div v-else class="flex flex-col gap-3">
+      </div>
+      <div class="flex flex-col gap-3">
         <select
           v-model="reasonId"
           data-testid="lost-reason-select"
@@ -74,13 +85,18 @@ onKeyStroke('Escape', () => {
           <option v-for="r in lostReasons" :key="r.id" :value="r.id">
             {{ r.name }}
           </option>
+          <option :value="OUTRO">{{ $t('RAMON.FUNIL.LOST.OTHER') }}</option>
         </select>
         <textarea
           v-model="detail"
           data-testid="lost-reason-detail"
           rows="2"
           maxlength="500"
-          :placeholder="$t('RAMON.FUNIL.LOST.DETAIL_PLACEHOLDER')"
+          :placeholder="
+            isOutro
+              ? $t('RAMON.FUNIL.LOST.OTHER_PLACEHOLDER')
+              : $t('RAMON.FUNIL.LOST.DETAIL_PLACEHOLDER')
+          "
           class="resize-none"
           :class="TEXTAREA"
         />
@@ -94,12 +110,11 @@ onKeyStroke('Escape', () => {
           @click="emit('cancelMove')"
         />
         <Button
-          v-if="lostReasons.length"
           data-testid="lost-reason-confirm"
           sm
           ruby
           :label="$t('RAMON.FUNIL.LOST.CONFIRM')"
-          :disabled="!selectedReason"
+          :disabled="!canConfirm"
           @click="confirm"
         />
       </div>

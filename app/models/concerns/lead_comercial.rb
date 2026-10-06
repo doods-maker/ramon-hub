@@ -22,6 +22,10 @@ module LeadComercial
     # aparece como won_at → nil na mesma linha da troca de etapa.
     audited only: %w[lead_stage_id value sdr_id closer_id won_at lost_reason contact_id],
             on: [:update, :destroy], associated_with: :account
+    # Perdido exige motivo (regra 06/10), de qualquer pessoa, admin inclusive. Ponto
+    # único: tela, API, lote e IA passam por aqui; o controller devolve 422.
+    before_validation :motivo_da_perda_automatico, if: :sem_motivo_da_perda?
+    validate :exigir_motivo_da_perda, if: :sem_motivo_da_perda?
   end
 
   # Closer registra a reunião (regulamento §2): qualificada ou não. A 1ª data
@@ -53,6 +57,26 @@ module LeadComercial
   end
 
   private
+
+  # Entrando em Perdido (ou apagando o motivo lá dentro) sem motivo.
+  def sem_motivo_da_perda?
+    return false if lost_reason.present?
+
+    (new_record? || will_save_change_to_lead_stage_id? || will_save_change_to_lost_reason?) && lead_stage&.is_lost
+  end
+
+  # Automação não abre janela: fluxo, regra do Chatwoot, IA ou job sem pessoa
+  # gravam "Automação: <origem>" em vez de quebrar. Pessoa sem motivo → 422.
+  def motivo_da_perda_automatico
+    autor = Current.executed_by
+    return if autor.blank? && Current.user.present?
+
+    self.lost_reason = "Automação: #{autor.try(:fluxo).try(:nome) || autor.try(:name) || 'sistema'}"
+  end
+
+  def exigir_motivo_da_perda
+    errors.add(:base, 'Escolha o motivo da perda para marcar o lead como perdido.')
+  end
 
   def registrar_atividades_da_reuniao(resultado, user, vou_pensar)
     lead_activities.create!(account: account, user: user, kind: 'reuniao_registrada', to_value: resultado)

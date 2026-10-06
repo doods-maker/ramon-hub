@@ -31,11 +31,16 @@ class Ramon::StageLabelSync
     stage = account.lead_stages.find_by(label: target)
     return if stage.nil?
 
-    lead.update!(lead_stage: stage) unless lead.lead_stage_id == stage.id
+    mover_lead(lead, stage) unless lead.lead_stage_id == stage.id
     # Self-heal INCONDICIONAL (mesmo se a etapa já estava certa): garante
     # exatamente uma fase-* na conversa, removendo uma 2ª fase-* que tenha
     # chegado junto. É o que faz valer a exclusividade "a adicionada vence".
     set_conversation_fase(conversation, target)
+  end
+
+  # Etiqueta não abre janela de motivo: Perdido por etiqueta grava de onde veio.
+  def self.mover_lead(lead, stage)
+    lead.update!(lead_stage: stage, lost_reason: ("Automação: etiqueta #{stage.label} na conversa" if stage.is_lost))
   end
 
   # Mantém na conversa as labels não-fase + exatamente `target`. No-op se já igual.

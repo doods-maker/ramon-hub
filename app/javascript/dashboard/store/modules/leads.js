@@ -183,10 +183,11 @@ export const actions = {
     await dispatch('leadTasks/fetchForLead', id, { root: true });
     return response.data;
   },
-  move: async ({ commit }, { id, leadStageId, position }) => {
+  move: async ({ commit }, { id, leadStageId, position, lostReason }) => {
     const response = await LeadsAPI.update(id, {
       lead_stage_id: leadStageId,
       position,
+      ...(lostReason ? { lost_reason: lostReason } : {}),
     });
     commit(types.EDIT_LEAD, response.data);
   },
