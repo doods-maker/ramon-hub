@@ -14,8 +14,9 @@ class Api::V1::Accounts::Captain::FerramentasController < Api::V1::Accounts::Bas
     erros = semana.where(status: 'erro').group(:tool_name).count
 
     payload = Captain::Assistant.built_in_agent_tools.map do |tool|
-      tool.merge(skills: skills.fetch(tool[:id], []), ultima_execucao_em: ultimas[tool[:id]],
-                 execucoes_7d: execucoes.fetch(tool[:id], 0), erros_7d: erros.fetch(tool[:id], 0))
+      id = tool[:id]
+      tool.merge(skills: skills.fetch(id, []), ultima_execucao_em: ultimas[id],
+                 execucoes_7d: execucoes.fetch(id, 0), erros_7d: erros.fetch(id, 0))
     end
     render json: { payload: payload }
   end
