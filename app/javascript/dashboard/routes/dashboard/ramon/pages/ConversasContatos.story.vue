@@ -149,6 +149,45 @@ const CONVERSAS = [
 
 const STATS = { mine_count: 5, unassigned_count: 1, all_count: 6 };
 
+// Melhorias (06/10): o lead da conversa (linha "Etapa · Tese · Responsável"
+// no card) e as etiquetas espelhadas fase-*/tese-*, que o card esconde.
+const leadSlim = (id, stage, cor, tese, responsavel) => ({
+  id,
+  stage_name: stage,
+  stage_color: cor,
+  thesis_name: tese,
+  sdr_name: 'Ana',
+  closer_name: responsavel,
+});
+const LEADS = {
+  101: leadSlim(1, 'Novo', '#64748b', 'BPC/LOAS', null),
+  102: leadSlim(2, 'Em qualificação', '#0ea5e9', 'Auxílio-acidente', null),
+  103: leadSlim(
+    3,
+    'Reunião marcada',
+    '#8b5cf6',
+    'Aposentadoria especial',
+    'Bruno'
+  ),
+  104: leadSlim(
+    4,
+    'Aguardando assinatura',
+    '#ec4899',
+    'Auxílio-doença',
+    'Bruno'
+  ),
+  106: leadSlim(6, 'Novo', '#64748b', null, null),
+};
+const CONVERSAS_COM_LEAD = CONVERSAS.map(c =>
+  LEADS[c.id]
+    ? {
+        ...c,
+        ramon_lead: LEADS[c.id],
+        labels: [...c.labels, 'fase-novo', 'tese-bpc-loas'],
+      }
+    : c
+);
+
 const CONTATOS = [
   pessoa(1, 'Helena Duarte', { email: 'helena@exemplo.com.br' }),
   pessoa(2, 'Joaquim Farias'),
@@ -164,6 +203,28 @@ const CONTATO_DETALHE = {
   ...CONTATOS[0],
   identifier: 'CLI-0001',
   blocked: false,
+  cpf: '52998224725',
+  data_nascimento: '1970-03-15',
+};
+
+// /linha_da_vida do contato com um lead aberto (bloco "Lead aberto" da ficha).
+const LINHA_DA_VIDA = {
+  contact: CONTATO_DETALHE,
+  leads: [
+    {
+      id: 1,
+      name: 'Helena Duarte',
+      stage_name: 'Em qualificação',
+      stage_color: '#0ea5e9',
+      thesis_name: 'BPC/LOAS',
+      sdr_name: 'Ana',
+      closer_name: null,
+      conversation_id: 101,
+      is_won: false,
+      is_lost: false,
+    },
+  ],
+  marcos: [],
 };
 
 const ERRO = Symbol('erro');
@@ -244,8 +305,8 @@ const ir = (nome, params = {}, extra = {}) => {
   respostas = { ...API, ...extra };
 };
 // Conversa aberta no painel = card ativo da lista.
-const abrirConversa = () => {
-  ir('home');
+const abrirConversa = (extra = {}) => {
+  ir('home', {}, extra);
   setTimeout(
     () => store.commit(types.SET_CURRENT_CHAT_WINDOW, { id: 103 }),
     1000
@@ -267,13 +328,29 @@ const abaTodas = () => {
     title="Ramon/Conversas e Contatos (nativas)"
     :layout="{ type: 'single', iframe: true }"
   >
-    <Variant title="Conversas" :init-state="abrirConversa">
+    <Variant title="Conversas" :init-state="() => abrirConversa()">
       <div class="flex h-screen bg-n-surface-1">
         <ChatList />
         <div class="flex-1 border-l border-n-weak" />
       </div>
     </Variant>
     <Variant title="Conversas todas" :init-state="abaTodas">
+      <div class="flex h-screen bg-n-surface-1">
+        <ChatList />
+        <div class="flex-1 border-l border-n-weak" />
+      </div>
+    </Variant>
+    <Variant
+      title="Conversas com lead"
+      :init-state="
+        () =>
+          abrirConversa({
+            conversations: {
+              data: { meta: STATS, payload: CONVERSAS_COM_LEAD },
+            },
+          })
+      "
+    >
       <div class="flex h-screen bg-n-surface-1">
         <ChatList />
         <div class="flex-1 border-l border-n-weak" />
@@ -324,6 +401,19 @@ const abaTodas = () => {
     <Variant
       title="Contato detalhe"
       :init-state="() => ir('contacts_edit', { contactId: '1' })"
+    >
+      <div class="h-screen"><ContactManageView /></div>
+    </Variant>
+    <Variant
+      title="Contato detalhe com lead"
+      :init-state="
+        () =>
+          ir(
+            'contacts_edit',
+            { contactId: '1' },
+            { 'contacts/1/linha_da_vida': LINHA_DA_VIDA }
+          )
+      "
     >
       <div class="h-screen"><ContactManageView /></div>
     </Variant>
