@@ -1,0 +1,118 @@
+{
+  "IA_USO": {
+    "TITULO": "Uso e custo",
+    "SUBTITULO": "Quanto a IA do hub gastou, em quê e com qual modelo. O custo vem da tabela de preços do provedor no momento da chamada.",
+    "CARREGANDO": "Carregando...",
+    "ERRO": "Não consegui carregar agora.",
+    "TENTAR": "Tentar de novo",
+    "PERIODO": {
+      "hoje": "Hoje",
+      "7d": "7 dias",
+      "30d": "30 dias",
+      "mes": "Este mês"
+    },
+    "RESUMO": {
+      "CUSTO": "Custo no período",
+      "SEM_PRECO": "{n} chamadas sem preço conhecido",
+      "HOJE": "Hoje",
+      "TETO": "teto {valor}",
+      "SEM_TETO": "sem teto de alerta",
+      "CHAMADAS": "Chamadas",
+      "ERROS": "{n} com erro",
+      "TOKENS": "Tokens",
+      "ENTRADA_SAIDA": "{entrada} entrada · {saida} saída"
+    },
+    "GRAFICO": {
+      "TITULO": "Custo por dia",
+      "DICA": "{dia}: {custo} em {n} chamadas"
+    },
+    "AGENTE": {
+      "TITULO": "Agente {'@'}claude",
+      "HOJE": "{n} de {teto} hoje",
+      "EQUIVALENTE": "{valor} equivalente no período",
+      "NOTA": "Roda na assinatura do Claude: o valor é o que custaria por API, não uma cobrança."
+    },
+    "FLUXOS": {
+      "TITULO": "Fluxos com IA",
+      "HOJE": "{n} de {teto} chamadas hoje",
+      "NOTA": "O teto diário dos fluxos vem do servidor (RAMON_FLUXO_IA_DIA)."
+    },
+    "TABELA": {
+      "TITULO": "Detalhe",
+      "funcao": "Por função",
+      "assistente": "Por assistente",
+      "modelo": "Por modelo",
+      "NOME": "Nome",
+      "CHAMADAS": "Chamadas",
+      "TOKENS": "Tokens",
+      "CUSTO": "Custo",
+      "ERROS": "Erros",
+      "VAZIO": "Nenhuma chamada no período.",
+      "SEM_NOME": "Assistente #{id}"
+    },
+    "ESCOLHA": {
+      "TITULO": "Provedor e modelo por função",
+      "DESCRICAO": "Trocar aqui vale na próxima chamada. Sem escolha, vale o padrão do servidor.",
+      "PROVEDOR": "Provedor",
+      "MODELO": "Modelo",
+      "PADRAO": "Padrão do servidor",
+      "EM_USO": "Em uso: {modelo}",
+      "SEM_CHAVE": "sem chave",
+      "SALVO": "Modelo salvo.",
+      "ERRO_SALVAR": "Não consegui salvar o modelo.",
+      "ASSINATURA": "Assinatura do Claude só para uso interno do gestor: nunca atende cliente nem a equipe.",
+      "FIXO": "Fixo",
+      "FUNCOES": {
+        "atendimento": "Atendimento (assistentes)",
+        "copiloto": "Copiloto e funções do hub",
+        "documentos": "Documentos (FAQ de documento)",
+        "agente": "Agente {'@'}claude"
+      },
+      "DESCRICOES": {
+        "atendimento": "O agente que responde no WhatsApp e o Testar.",
+        "copiloto": "Resumo e rascunho do copiloto, AdvBox, coach, documentos recebidos, retomadas e noturno.",
+        "documentos": "Gera as FAQs a partir de um documento enviado.",
+        "agente": "Nota {'@'}claude do gestor, rodada no servidor da VPS."
+      }
+    },
+    "CHAVES": {
+      "TITULO": "Chaves no servidor",
+      "SIM": "configurada",
+      "NAO": "não configurada"
+    },
+    "PROVEDORES": {
+      "deepseek": "DeepSeek",
+      "openai": "OpenAI",
+      "anthropic": "Claude (chave de API)",
+      "claude_vps": "Claude da VPS (assinatura)"
+    },
+    "ALERTA": {
+      "TITULO": "Alerta de gasto",
+      "DESCRICAO": "Quando o custo do dia passar do teto, os administradores recebem um aviso no sino, uma vez por dia. O agente {'@'}claude fica de fora.",
+      "TETO": "Teto diário (US$)",
+      "SALVAR": "Salvar teto",
+      "SALVO": "Teto salvo.",
+      "ERRO": "Teto inválido."
+    },
+    "FUNCOES": {
+      "atendimento": "Atendimento",
+      "copiloto": "Copiloto",
+      "copiloto_captain": "Copiloto do Captain",
+      "documentos": "Documentos",
+      "resumo": "Resumo",
+      "advbox_pergunta": "Perguntar ao AdvBox",
+      "coach_objecao": "Coach de objeção",
+      "doc_match": "Documento recebido",
+      "follow_up": "Retomada",
+      "copiloto_noturno": "Copiloto noturno",
+      "piloto_logistica": "Piloto (logística)",
+      "portal_docs": "Portal: documentos",
+      "colheita": "Colheita",
+      "ata": "Ata de reunião",
+      "triagem": "Triagem",
+      "kit": "Kit do closer",
+      "fluxo": "Fluxos",
+      "teste": "Casos de teste"
+    }
+  }
+}
