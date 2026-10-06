@@ -11,7 +11,8 @@ class Api::V1::Accounts::RamonFluxoExecucoesController < Api::V1::Accounts::Base
   end
 
   def show
-    render json: fluxo.execucoes.find(params[:id]).resumo_json
+    execucao = fluxo.execucoes.find(params[:id])
+    render json: execucao.resumo_json.merge(grafo: execucao.contexto['grafo'] || execucao.versao&.grafo)
   end
 
   private
