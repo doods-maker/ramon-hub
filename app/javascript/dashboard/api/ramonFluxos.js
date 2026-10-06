@@ -20,6 +20,11 @@ class RamonFluxosAPI extends ApiClient {
     return axios.post(`${this.url}/${id}/rodar`, params);
   }
 
+  // { usuarios: [{id, nome}], tipos_tarefa: [{id, nome}] } — passo ADVBOX
+  opcoesAdvbox() {
+    return axios.get(`${this.url}/opcoes_advbox`);
+  }
+
   execucoes(id) {
     return axios.get(`${this.url}/${id}/execucoes`);
   }

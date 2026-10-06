@@ -347,6 +347,9 @@ Rails.application.routes.draw do
               post :ensaio
               post :rodar
             end
+            collection do
+              get :opcoes_advbox
+            end
             resources :execucoes, only: [:index, :show], controller: 'ramon_fluxo_execucoes'
           end
           resource :ramon_relatorios, only: [:show], controller: 'ramon_relatorios'
