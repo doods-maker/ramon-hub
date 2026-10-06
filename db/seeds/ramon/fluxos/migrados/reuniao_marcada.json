@@ -1,0 +1,30 @@
+{
+  "nome": "Reunião marcada",
+  "descricao": "Reunião marcada ou remarcada (painel do lead ou Cal.com), no lugar do código (B4.1): atividade, tarefa da reunião, etapa (só para a frente), Closer automático, rascunho de confirmação nas notas do lead, sino para a conta e push. Remarcar refaz a atividade, o rascunho e o sino, sem tarefa nova, etapa ou Closer. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"reuniao_marcada","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"escolha","config":{"rotulo":"Marcada ou remarcada?","campo":"evento","casos":[{"chave":"c1","rotulo":"Marcada","valores":["marcada"]},{"chave":"c2","rotulo":"Remarcada","valores":["remarcada"]}]},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"registrar_atividade","config":{"rotulo":"Atividade: reunião agendada","tipo":"meeting_scheduled","texto":"{resumo}"},"posicao":{"x":-160,"y":280}},
+      {"id":"n4","tipo":"criar_tarefa","config":{"rotulo":"Tarefa da reunião (vence na hora, fica com quem marcou)","titulo":"{titulo_tarefa}","tipo":"meeting","prazo":"reuniao"},"posicao":{"x":-160,"y":420}},
+      {"id":"n5","tipo":"mover_etapa","config":{"rotulo":"Mover para Reunião agendada (só para a frente)","etapa_id":null,"so_para_frente":true},"posicao":{"x":-160,"y":560}},
+      {"id":"n6","tipo":"trocar_responsavel","config":{"rotulo":"Closer automático (se o lead ainda não tem)","papel":"closer","so_se_vazio":true},"posicao":{"x":-160,"y":700}},
+      {"id":"n7","tipo":"registrar_atividade","config":{"rotulo":"Atividade: reunião remarcada (de → para)","tipo":"meeting_rescheduled","de":"{resumo_antes}","texto":"{resumo}"},"posicao":{"x":200,"y":280}},
+      {"id":"n8","tipo":"rascunho_texto","config":{"rotulo":"Rascunho de confirmação (nas notas do lead)","onde":"notas_do_lead","titulo":"confirmação de reunião","texto":"\"Oi {primeiro_nome}! Nossa conversa está confirmada pra {quando}. Vou te esperar, tá? Se não puder comparecer, me avise com antecedência que a gente remarca sem problema.\""},"posicao":{"x":0,"y":840}},
+      {"id":"n9","tipo":"avisar_sino","config":{"rotulo":"Sino para toda a conta","para":"conta","texto":"Reunião {evento} com {nome_completo}: {quando}"},"posicao":{"x":0,"y":980}},
+      {"id":"n10","tipo":"avisar_push","config":{"rotulo":"Push: reunião marcada/remarcada","titulo":"Reuniao {evento}: {nome_completo}","texto":"{quando} — {titulo}"},"posicao":{"x":0,"y":1120}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"c1","para":"n3"},
+      {"de":"n3","saida":"s","para":"n4"},
+      {"de":"n4","saida":"s","para":"n5"},
+      {"de":"n5","saida":"s","para":"n6"},
+      {"de":"n6","saida":"s","para":"n8"},
+      {"de":"n2","saida":"c2","para":"n7"},
+      {"de":"n7","saida":"s","para":"n8"},
+      {"de":"n8","saida":"s","para":"n9"},
+      {"de":"n9","saida":"s","para":"n10"}
+    ]
+  }
+}

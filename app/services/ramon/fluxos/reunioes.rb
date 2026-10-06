@@ -6,6 +6,7 @@ module Ramon::Fluxos::Reunioes
   # Os 3 fluxos que substituem o código (spec §14: fluxo próprio, origem 'usuario'): sistema_chave → gatilho esperado.
   GATILHOS = { 'reuniao_marcada' => 'reuniao_marcada', 'reuniao_cancelada' => 'reuniao_cancelada',
                'lembretes_reuniao' => 'reuniao_na_agenda' }.freeze
+  PASTA = Rails.root.join('db/seeds/ramon/fluxos/migrados')
   RASTRO_RETENCAO = 8.days
 
   module_function
@@ -82,5 +83,28 @@ module Ramon::Fluxos::Reunioes
     quem = assumiu?(account) ? 'os FLUXOS fazem o agendamento (o código não faz mais)' : 'o CÓDIGO faz o agendamento (os fluxos ensaiam)'
     linhas = fluxos(account).map { |f| "Fluxo ##{f.id} \"#{f.nome}\" — modo #{f.modo}, #{f.ativo ? 'ligado' : 'desligado'}" }
     [*linhas, "Agora #{quem}."].join("\n")
+  end
+
+  def fluxo(account, chave) = account.fluxos.where(origem: 'usuario', sistema_chave: chave).order(:id).first
+
+  # Cria os que faltam, em sombra, ligados e publicados. Já existe → devolve sem tocar (o Eduardo pode ter editado).
+  def semear(account) = GATILHOS.keys.map { |chave| fluxo(account, chave) || criar(account, chave) }
+
+  def criar(account, chave)
+    dados = JSON.parse(PASTA.join("#{chave}.json").read)
+    Fluxo.transaction do
+      novo = account.fluxos.create!(nome: dados['nome'], descricao: dados['descricao'], origem: 'usuario', sistema_chave: chave,
+                                    modo: 'sombra', ativo: true, rascunho: com_etapa(account, dados['desenho']))
+      novo.publicar!(nil)
+      novo.reload
+    end
+  end
+
+  # mover_etapa vem sem etapa no JSON (a etapa é do funil de cada conta): a "Reunião agendada" desta conta.
+  def com_etapa(account, desenho)
+    return desenho if desenho['nos'].none? { |n| n['tipo'] == 'mover_etapa' }
+
+    etapa_id = account.lead_stages.find_by!(label: Ramon::ReuniaoAgendamento::STAGE_LABEL).id
+    desenho.merge('nos' => desenho['nos'].map { |n| n['tipo'] == 'mover_etapa' ? n.deep_merge('config' => { 'etapa_id' => etapa_id }) : n })
   end
 end
