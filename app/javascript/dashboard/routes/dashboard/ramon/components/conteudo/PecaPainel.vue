@@ -6,6 +6,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import RamonConteudoAPI from 'dashboard/api/ramonConteudo';
 import { paraInputLocal } from '../../helpers/dataLocal';
 import PostPrevia from './PostPrevia.vue';
+import { AVISO, CAMPO, SECAO, TEXTAREA, TITULO, TOM } from '../../helpers/ui';
 
 const props = defineProps({ pecaId: { type: Number, required: true } });
 const emit = defineEmits(['changed', 'close']);
@@ -63,29 +64,35 @@ watch(() => props.pecaId, carregar, { immediate: true });
 <template>
   <aside
     v-if="peca"
-    class="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col gap-4 overflow-y-auto bg-n-solid-1 p-6 shadow-xl"
+    class="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col gap-4 overflow-y-auto border-l border-n-weak bg-n-solid-2 p-6 shadow-xl"
   >
     <header class="flex items-start justify-between gap-2">
-      <h2 class="text-lg font-medium text-n-slate-12">{{ peca.gancho }}</h2>
+      <h2 class="text-lg font-semibold leading-snug text-n-slate-12">
+        {{ peca.gancho }}
+      </h2>
       <Button ghost slate sm icon="i-lucide-x" @click="emit('close')" />
     </header>
-    <p v-if="peca.erro" class="rounded bg-n-ruby-3 p-2 text-sm text-n-ruby-11">
+    <p v-if="peca.erro" :class="[AVISO, TOM.ruby]">
       {{ peca.erro }}
     </p>
 
     <template v-if="peca.status === 'rascunho'">
-      <dl class="flex flex-col gap-2 text-sm">
+      <dl class="flex flex-col gap-3 text-sm">
         <div v-for="[chave, valor] in campos" :key="chave">
-          <dt class="text-xs text-n-slate-10">{{ chave }}</dt>
-          <dd class="whitespace-pre-line text-n-slate-12">{{ valor }}</dd>
+          <dt :class="TITULO">{{ chave }}</dt>
+          <dd class="mt-0.5 whitespace-pre-line text-n-slate-12">
+            {{ valor }}
+          </dd>
         </div>
       </dl>
-      <p class="whitespace-pre-line rounded bg-n-alpha-1 p-3 text-sm">
+      <p
+        class="whitespace-pre-line rounded-lg bg-n-alpha-1 px-3 py-2 text-sm text-n-slate-12"
+      >
         {{ peca.legenda }}
       </p>
       <textarea
         v-model="nota"
-        class="rounded border border-n-weak p-2 text-sm"
+        :class="TEXTAREA"
         :placeholder="t('RAMON.CONTEUDO.NOTA_PLACEHOLDER')"
       />
       <div class="flex gap-2">
@@ -97,7 +104,7 @@ watch(() => props.pecaId, carregar, { immediate: true });
         />
         <Button
           ruby
-          outline
+          faded
           :label="t('RAMON.CONTEUDO.REPROVAR')"
           :is-loading="ocupado"
           @click="agir(() => RamonConteudoAPI.reprovar(peca.id, nota))"
@@ -107,7 +114,7 @@ watch(() => props.pecaId, carregar, { immediate: true });
 
     <p
       v-else-if="['aprovado', 'montando'].includes(peca.status)"
-      class="text-sm text-n-slate-11"
+      :class="[AVISO, TOM.slate]"
     >
       {{ t('RAMON.CONTEUDO.MONTANDO_INFO') }}
     </p>
@@ -119,14 +126,12 @@ watch(() => props.pecaId, carregar, { immediate: true });
     >
       <PostPrevia :imagens="peca.imagens || []" :legenda="legenda" />
       <template v-if="['montado', 'agendado'].includes(peca.status)">
-        <textarea
-          v-model="legenda"
-          rows="8"
-          class="rounded border border-n-weak p-2 text-sm"
-        />
+        <textarea v-model="legenda" rows="8" :class="TEXTAREA" />
         <Button
           sm
-          outline
+          slate
+          faded
+          class="self-start"
           :label="t('RAMON.CONTEUDO.SALVAR_LEGENDA')"
           :disabled="legenda === peca.legenda"
           @click="
@@ -136,13 +141,14 @@ watch(() => props.pecaId, carregar, { immediate: true });
       </template>
       <div
         v-if="peca.status === 'montado'"
-        class="flex flex-wrap items-center gap-2 text-sm"
+        :class="SECAO"
+        class="flex flex-wrap items-center gap-3 text-sm text-n-slate-12"
       >
         <span>{{ t('RAMON.CONTEUDO.REFAZER') }}</span>
         <label
           v-for="n in (peca.imagens || []).length"
           :key="n"
-          class="flex items-center gap-1"
+          class="flex items-center gap-1 font-mono tabular-nums"
         >
           <input v-model="refazerCards" type="checkbox" :value="n" />
           {{ n }}
@@ -150,17 +156,23 @@ watch(() => props.pecaId, carregar, { immediate: true });
         <Button
           sm
           slate
+          faded
           :label="t('RAMON.CONTEUDO.REFAZER_BOTAO')"
           :disabled="!refazerCards.length"
           @click="agir(() => RamonConteudoAPI.refazer(peca.id, refazerCards))"
         />
       </div>
-      <div v-if="peca.status === 'montado'" class="flex flex-col gap-2">
+      <div
+        v-if="peca.status === 'montado'"
+        :class="SECAO"
+        class="flex flex-col gap-2"
+      >
         <input
           v-model="quando"
           data-testid="agendar-quando"
           type="datetime-local"
-          class="rounded border border-n-weak p-2 text-sm"
+          :class="CAMPO"
+          class="font-mono"
         />
         <div class="flex gap-2">
           <Button
@@ -180,7 +192,8 @@ watch(() => props.pecaId, carregar, { immediate: true });
             "
           />
           <Button
-            outline
+            slate
+            faded
             :label="t('RAMON.CONTEUDO.PUBLICAR_AGORA')"
             :disabled="ocupado"
             @click="
@@ -191,7 +204,8 @@ watch(() => props.pecaId, carregar, { immediate: true });
       </div>
       <div
         v-if="peca.status === 'agendado'"
-        class="flex flex-col gap-2 text-sm"
+        :class="SECAO"
+        class="flex flex-col gap-2 text-sm text-n-slate-12"
       >
         <span>
           {{
@@ -205,7 +219,8 @@ watch(() => props.pecaId, carregar, { immediate: true });
         </span>
         <div class="flex gap-2">
           <Button
-            outline
+            slate
+            faded
             :label="t('RAMON.CONTEUDO.PUBLICAR_AGORA')"
             :disabled="ocupado"
             @click="
@@ -214,7 +229,7 @@ watch(() => props.pecaId, carregar, { immediate: true });
           />
           <Button
             ruby
-            outline
+            faded
             :label="t('RAMON.CONTEUDO.CANCELAR')"
             :disabled="ocupado"
             @click="agir(() => RamonConteudoAPI.cancelarAgendamento(peca.id))"
@@ -223,6 +238,7 @@ watch(() => props.pecaId, carregar, { immediate: true });
       </div>
       <Button
         v-if="peca.status === 'falhou'"
+        class="self-start"
         :label="t('RAMON.CONTEUDO.TENTAR_DE_NOVO')"
         :disabled="ocupado"
         @click="agir(() => RamonConteudoAPI.tentarDeNovo(peca.id))"
@@ -232,7 +248,7 @@ watch(() => props.pecaId, carregar, { immediate: true });
         :href="peca.permalink"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-sm text-n-blue-11 underline"
+        class="self-start text-sm text-n-blue-11 hover:underline"
       >
         {{ t('RAMON.CONTEUDO.VER_NO_INSTAGRAM') }}
       </a>
