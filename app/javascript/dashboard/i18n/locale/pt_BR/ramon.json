@@ -664,7 +664,10 @@
       "SEM_TOKEN": "Token do Instagram não configurado — agendar e publicar ficam bloqueados até configurar no super admin (RAMON_IG_PUBLISH_TOKEN).",
       "VOLTAR_PRONTAS": "Voltar para Prontas",
       "CONTADOR_CARACTERES": "{n}/{limite} caracteres",
-      "CONTADOR_HASHTAGS": "{n}/{limite} hashtags"
+      "CONTADOR_HASHTAGS": "{n}/{limite} hashtags",
+      "PUBLICANDO": "Publicando no Instagram…",
+      "NA_FILA": "Na fila de publicação — vai ao ar em até 1 minuto",
+      "COLABORADORES": "convida {nomes} como colaborador"
     },
     "REUNIOES": {
       "TITLE": "Reuniões",

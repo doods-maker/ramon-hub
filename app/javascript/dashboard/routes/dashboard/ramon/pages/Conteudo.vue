@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RamonConteudoAPI from 'dashboard/api/ramonConteudo';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
@@ -44,7 +44,25 @@ const carregar = async () => {
 
 const onChanged = () => carregar();
 
+// Tela sempre atual: com peça agendada ou publicando, recarrega a cada 30s;
+// sem nenhuma, o timer para.
+const RECARGA_MS = 30 * 1000;
+const EM_ANDAMENTO = ['agendado', 'publicando'];
+const emAndamento = computed(() =>
+  pecas.value.some(p => EM_ANDAMENTO.includes(p.status))
+);
+let recarga = null;
+watch(emAndamento, ativo => {
+  clearInterval(recarga);
+  recarga = ativo ? setInterval(carregar, RECARGA_MS) : null;
+});
+// Status da peça aberta segundo a lista: o painel recarrega quando muda.
+const statusAberta = computed(
+  () => pecas.value.find(p => p.id === aberta.value)?.status || ''
+);
+
 onMounted(carregar);
+onUnmounted(() => clearInterval(recarga));
 </script>
 
 <template>
@@ -101,6 +119,14 @@ onMounted(carregar);
               {{ peca.tese }}
             </span>
             <span
+              v-if="peca.status === 'publicando'"
+              :class="[CHIP, TOM.blue]"
+              class="self-start"
+            >
+              <span class="i-lucide-loader-circle size-3 animate-spin" />
+              {{ t('RAMON.CONTEUDO.PUBLICANDO') }}
+            </span>
+            <span
               v-if="peca.travada"
               data-testid="peca-travada"
               :class="[AVISO, TOM.amber]"
@@ -127,6 +153,7 @@ onMounted(carregar);
       v-if="aberta"
       :peca-id="aberta"
       :token-ig="tokenIg"
+      :status="statusAberta"
       @changed="onChanged"
       @close="aberta = null"
     />

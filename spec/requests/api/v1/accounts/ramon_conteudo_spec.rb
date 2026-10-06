@@ -28,6 +28,12 @@ RSpec.describe 'Ramon Conteudo API', type: :request do
     expect(response.parsed_body['token_ig']).to be(true)
   end
 
+  it 'detalhe traz quem será convidado como colaborador' do
+    peca.update_columns(legenda: 'Com Dr. Ramon Antonio e Brenda Antunes') # rubocop:disable Rails/SkipsModelValidations
+    get "#{base}/#{peca.id}", headers: admin.create_new_auth_token
+    expect(response.parsed_body['colaboradores']).to eq %w[ramon_antonio__ brendantunes]
+  end
+
   it 'aprova a pauta' do
     post "#{base}/#{peca.id}/aprovar", headers: admin.create_new_auth_token
     expect(response).to have_http_status(:ok)

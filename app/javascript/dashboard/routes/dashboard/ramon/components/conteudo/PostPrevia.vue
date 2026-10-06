@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps({
   imagens: { type: Array, required: true },
   legenda: { type: String, default: '' },
+  // @ que a Meta vai convidar como colaborador (detalhe.colaboradores).
+  colaboradores: { type: Array, default: () => [] },
 });
 
 const CONTA = 'ramonantonioadvogados'; // handle fixo da banca
@@ -39,7 +41,20 @@ watch(
       >
         {{ SIGLA }}
       </span>
-      <span class="text-sm font-semibold">{{ CONTA }}</span>
+      <span class="flex min-w-0 flex-col">
+        <span class="text-sm font-semibold">{{ CONTA }}</span>
+        <span
+          v-if="colaboradores.length"
+          data-testid="colaboradores"
+          class="truncate text-xs text-n-slate-11"
+        >
+          {{
+            t('RAMON.CONTEUDO.COLABORADORES', {
+              nomes: colaboradores.map(c => `@${c}`).join(', '),
+            })
+          }}
+        </span>
+      </span>
     </header>
     <div class="relative aspect-[4/5] bg-n-alpha-2">
       <a :href="imagens[indice]" target="_blank" rel="noopener noreferrer">

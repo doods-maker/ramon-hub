@@ -19,6 +19,8 @@ const props = defineProps({
   pecaId: { type: Number, required: true },
   // Sem token do IG não dá pra agendar nem publicar (index devolve token_ig).
   tokenIg: { type: Boolean, default: true },
+  // Status da peça na lista do quadro (que recarrega sozinho): mudou, recarrega.
+  status: { type: String, default: '' },
 });
 const emit = defineEmits(['changed', 'close']);
 
@@ -126,7 +128,23 @@ const tentarDeNovo = () =>
     () => RamonConteudoAPI.tentarDeNovo(peca.value.id, conferido.value)
   );
 
+// Faixa de andamento: publicando agora, ou agendada com horário vencido (o
+// cron de 1 min ainda vai pegar).
+const andamento = computed(() => {
+  if (peca.value?.status === 'publicando') return 'PUBLICANDO';
+  const vencida =
+    peca.value?.status === 'agendado' &&
+    new Date(peca.value.agendado_para) <= new Date();
+  return vencida ? 'NA_FILA' : null;
+});
+
 watch(() => props.pecaId, carregar, { immediate: true });
+watch(
+  () => props.status,
+  novo => {
+    if (peca.value && novo && novo !== peca.value.status) carregar();
+  }
+);
 </script>
 
 <template>
@@ -140,6 +158,19 @@ watch(() => props.pecaId, carregar, { immediate: true });
       </h2>
       <Button ghost slate sm icon="i-lucide-x" @click="emit('close')" />
     </header>
+    <p
+      v-if="andamento"
+      data-testid="peca-andamento"
+      :class="[AVISO, TOM.blue]"
+      class="flex items-center gap-2"
+    >
+      <span class="i-lucide-loader-circle size-3.5 animate-spin" />
+      {{
+        andamento === 'PUBLICANDO'
+          ? t('RAMON.CONTEUDO.PUBLICANDO')
+          : t('RAMON.CONTEUDO.NA_FILA')
+      }}
+    </p>
     <p v-if="peca.erro" :class="[AVISO, TOM.ruby]">
       {{ peca.erro }}
     </p>
@@ -198,7 +229,11 @@ watch(() => props.pecaId, carregar, { immediate: true });
         ['montado', 'agendado', 'falhou', 'publicado'].includes(peca.status)
       "
     >
-      <PostPrevia :imagens="peca.imagens || []" :legenda="legenda" />
+      <PostPrevia
+        :imagens="peca.imagens || []"
+        :legenda="legenda"
+        :colaboradores="peca.colaboradores || []"
+      />
       <template v-if="['montado', 'agendado'].includes(peca.status)">
         <div class="flex flex-col gap-1">
           <textarea v-model="legenda" rows="8" :class="TEXTAREA" />

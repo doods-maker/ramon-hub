@@ -664,7 +664,10 @@
       "SEM_TOKEN": "Instagram token not configured — scheduling and publishing are blocked until it is set in super admin (RAMON_IG_PUBLISH_TOKEN).",
       "VOLTAR_PRONTAS": "Back to Ready",
       "CONTADOR_CARACTERES": "{n}/{limite} characters",
-      "CONTADOR_HASHTAGS": "{n}/{limite} hashtags"
+      "CONTADOR_HASHTAGS": "{n}/{limite} hashtags",
+      "PUBLICANDO": "Publishing to Instagram…",
+      "NA_FILA": "In the publishing queue — goes live within a minute",
+      "COLABORADORES": "invites {nomes} as collaborator"
     },
     "REUNIOES": {
       "TITLE": "Meetings",

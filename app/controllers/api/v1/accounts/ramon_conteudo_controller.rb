@@ -116,7 +116,7 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
 
   def detalhe(peca)
     linha(peca).merge(conteudo: peca.conteudo, legenda: peca.legenda, imagens: peca.imagens,
-                      nota_reprovacao: peca.nota_reprovacao,
+                      nota_reprovacao: peca.nota_reprovacao, colaboradores: Ramon::InstagramPublisher.colaboradores(peca.legenda),
                       sugestao_horario: peca.status == 'montado' ? Ramon::GradeConteudo.proximo_horario(peca.account)&.iso8601 : nil)
   end
 end

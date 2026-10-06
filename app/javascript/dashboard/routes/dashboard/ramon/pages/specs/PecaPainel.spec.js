@@ -147,3 +147,25 @@ describe('PecaPainel token, falha e legenda', () => {
     expect(contador[1].classes()).toContain('text-n-ruby-11');
   });
 });
+
+describe('PecaPainel andamento', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('mostra a faixa "publicando" e recarrega quando o status da lista muda', async () => {
+    RamonConteudoAPI.show.mockResolvedValue({
+      data: { ...montada, status: 'publicando' },
+    });
+    const w = montar({ status: 'publicando' });
+    await flushPromises();
+    expect(w.find('[data-testid="peca-andamento"]').text()).toBe(
+      'RAMON.CONTEUDO.PUBLICANDO'
+    );
+    RamonConteudoAPI.show.mockResolvedValue({
+      data: { ...montada, status: 'publicado' },
+    });
+    await w.setProps({ status: 'publicado' });
+    await flushPromises();
+    expect(RamonConteudoAPI.show).toHaveBeenCalledTimes(2);
+    expect(w.find('[data-testid="peca-andamento"]').exists()).toBe(false);
+  });
+});
