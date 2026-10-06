@@ -355,6 +355,12 @@ export const duplicarPasso = (nodes, id) => {
 export const trocarConfig = (nodes, id, config) =>
   nodes.map(n => (n.id === id ? { ...n, data: { ...n.data, config } } : n));
 
+// Caso apagado do escolha: a seta da porta que sumiu sai do quadro na hora.
+export const podarSetas = (edges, no) => {
+  const s = saidasDe(no.data.tipo, no.data.config);
+  return edges.filter(e => e.source !== no.id || s.includes(e.sourceHandle));
+};
+
 // Mensagens do Grafo#erros que apontam passo: "Passo n3: …", "Passo n3 (Se) …", "Passo n3 não …".
 export const idDoErro = msg => /^Passo (\S+?)(?::|\s|$)/.exec(msg)?.[1] ?? null;
 

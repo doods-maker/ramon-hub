@@ -1,6 +1,6 @@
 <script setup>
 // Escolha: um campo e uma saída por caso ({chave, rotulo, valores}) + "outro".
-// Apagar um caso leva a seta junto (deVueFlow poda a porta que sumiu).
+// Apagar um caso leva a seta junto (o Editor poda a porta que sumiu).
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -27,11 +27,13 @@ const mudaCaso = (i, chave, valor) =>
     'casos',
     casos().map((c, j) => (j === i ? { ...c, [chave]: valor } : c))
   );
+// valor sendo digitado guardado pela chave do caso (apagar um caso não desloca os outros)
 const incluirValor = i => {
-  const v = (novos.value[i] || '').trim();
+  const { chave } = casos()[i];
+  const v = (novos.value[chave] || '').trim();
   if (!v) return;
   mudaCaso(i, 'valores', [...(casos()[i].valores || []), v]);
-  novos.value[i] = '';
+  novos.value[chave] = '';
 };
 const tirarValor = (i, v) =>
   mudaCaso(
@@ -82,7 +84,7 @@ const remover = i =>
       <label :class="ROTULO">
         {{ t(`${K}.PAINEL.VALORES`) }}
         <input
-          v-model="novos[i]"
+          v-model="novos[caso.chave]"
           :class="CAMPO"
           @keydown.enter.prevent="incluirValor(i)"
         />

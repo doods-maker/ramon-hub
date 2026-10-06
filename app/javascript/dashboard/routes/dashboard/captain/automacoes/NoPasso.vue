@@ -2,9 +2,9 @@
 // Um passo no quadro (mockup .no): ícone colorido por categoria, título,
 // detalhe, selo "sai como rascunho"; porta de entrada em cima e uma porta de
 // saída por saída possível (sim/não, um por caso + outro) embaixo.
-import { computed } from 'vue';
+import { computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Handle, Position } from '@vue-flow/core';
+import { Handle, Position, useVueFlow } from '@vue-flow/core';
 import { useMapGetter } from 'dashboard/composables/store';
 import { CHIP, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { PASSOS, gatilhoInfo, saidasDe } from './fluxo';
@@ -44,6 +44,12 @@ const icone = computed(() =>
     : info.value.icone
 );
 const saidas = computed(() => saidasDe(props.tipo, props.config));
+// porta nova/apagada (casos do escolha): o Vue Flow remede as portas do passo
+const { updateNodeInternals } = useVueFlow();
+watch(
+  () => saidas.value.join(),
+  () => nextTick(() => updateNodeInternals([props.id]))
+);
 const titulo = computed(() => {
   if (props.config.rotulo) return props.config.rotulo;
   if (gatilho.value)

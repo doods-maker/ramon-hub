@@ -27,6 +27,7 @@ import {
   duplicarPasso,
   idDoErro,
   ligar,
+  podarSetas,
   quando,
   trocarConfig,
 } from './fluxo';
@@ -164,7 +165,13 @@ const adicionar = item => {
   paleta.value = false;
 };
 const mudarConfig = config => {
-  nodes.value = trocarConfig(nodes.value, selecionado.value, config);
+  const id = selecionado.value;
+  nodes.value = trocarConfig(nodes.value, id, config);
+  const f = podarSetas(
+    edges.value,
+    nodes.value.find(n => n.id === id)
+  );
+  if (f.length !== edges.value.length) edges.value = f;
 };
 const duplicar = () => {
   const r = duplicarPasso(nodes.value, selecionado.value);

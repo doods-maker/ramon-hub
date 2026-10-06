@@ -7,6 +7,7 @@ import {
   ligar,
   novaChave,
   paraVueFlow,
+  podarSetas,
   saidasDe,
   trocarConfig,
 } from '../fluxo';
@@ -113,6 +114,28 @@ describe('conversor desenho ↔ Vue Flow', () => {
     const setas = deVueFlow(semC2, edges).setas;
     expect(setas.find(s => s.saida === 'c2')).toBeUndefined();
     expect(setas.find(s => s.saida === 'outro')).toBeDefined();
+  });
+
+  it('apagar um caso do escolha tira a seta dele do quadro na hora', () => {
+    const { nodes, edges } = paraVueFlow(DESENHO);
+    const semC2 = trocarConfig(nodes, 'n3', {
+      campo: 'tese',
+      casos: [{ chave: 'c1', rotulo: 'BPC', valores: ['BPC'] }],
+    });
+    const novas = podarSetas(
+      edges,
+      semC2.find(n => n.id === 'n3')
+    );
+    expect(novas.map(e => e.id)).toEqual(
+      edges.map(e => e.id).filter(id => id !== 'n3:c2')
+    );
+    // passo que não perdeu porta: devolve todas as setas
+    expect(
+      podarSetas(
+        edges,
+        nodes.find(n => n.id === 'n2')
+      )
+    ).toEqual(edges);
   });
 });
 
