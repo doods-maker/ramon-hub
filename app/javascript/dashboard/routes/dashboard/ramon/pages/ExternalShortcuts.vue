@@ -56,6 +56,8 @@ const parseHttpUrl = candidate => {
 };
 const normalizeUrl = raw => {
   const url = raw.trim();
+  // o Chrome aceita espaço no host ("site invalido" vira site%20invalido)
+  if (/\s/.test(url)) return null;
   return parseHttpUrl(url) || parseHttpUrl(`https://${url}`);
 };
 
