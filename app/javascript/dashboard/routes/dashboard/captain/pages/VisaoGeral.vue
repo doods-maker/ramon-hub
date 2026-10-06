@@ -432,7 +432,7 @@ const ir = (name, params = {}) => router.push(accountScopedRoute(name, params));
           <h2 :class="TITULO">
             {{ t('CAPTAIN_RAMON.VISAO_GERAL.BASE.TITULO') }}
           </h2>
-          <ul class="flex flex-col gap-2 mt-2">
+          <ul class="flex flex-col gap-2 mt-2 list-none">
             <li v-for="assistente in assistentes" :key="assistente.id">
               <p class="text-sm font-medium text-n-slate-12">
                 {{ assistente.name }}
