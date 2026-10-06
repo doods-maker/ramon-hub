@@ -69,11 +69,13 @@ Rails.application.routes.draw do
               end
               collection do
                 get :tools
+                get :stats
               end
               resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
               resources :scenarios
             end
             resources :assistant_responses
+            resources :ferramentas, only: [:index]
             resources :bulk_actions, only: [:create]
             resources :copilot_threads, only: [:index, :create] do
               resources :copilot_messages, only: [:index, :create]
@@ -335,6 +337,7 @@ Rails.application.routes.draw do
           resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'
           resource :ramon_pos_venda, only: [:show], controller: 'ramon_pos_venda'
           resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
+          resource :ramon_inteligencia, only: [:show], controller: 'ramon_inteligencia'
           resources :ramon_fluxos, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_fluxos' do
             member do
               post :publicar

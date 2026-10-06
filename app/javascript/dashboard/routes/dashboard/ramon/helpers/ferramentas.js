@@ -22,3 +22,20 @@ export const ferramentaInfo = (id, catalogo = []) => {
     tom: NIVEL_TOM[tool?.nivel] || TOM.slate,
   };
 };
+
+// Seções da tela Ferramentas, na ordem da tela (campo `sistema` do tools.yml).
+export const SISTEMAS = [
+  'funil',
+  'advbox',
+  'motor',
+  'zapsign',
+  'calcom',
+  'faq',
+  'conversa',
+];
+
+export const agruparPorSistema = ferramentas =>
+  SISTEMAS.map(sistema => ({
+    sistema,
+    ferramentas: ferramentas.filter(tool => tool.sistema === sistema),
+  })).filter(grupo => grupo.ferramentas.length);

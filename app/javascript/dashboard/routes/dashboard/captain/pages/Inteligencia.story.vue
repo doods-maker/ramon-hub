@@ -19,10 +19,14 @@ import SettingsIndex from '../assistants/settings/Settings.vue';
 import GuardrailsIndex from '../assistants/guardrails/Index.vue';
 import GuidelinesIndex from '../assistants/guidelines/Index.vue';
 import Execucoes from './Execucoes.vue';
-import Watchdog from './Watchdog.vue';
+import VisaoGeral from './VisaoGeral.vue';
+import FerramentasPage from './Ferramentas.vue';
+import TOOLS_YML from '../../../../../../../config/agents/tools.yml';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
+// Produção desde 17/08 (D7): conversas novas começam em Piloto com limites.
+window.chatwootConfig = { ramonCopilotoModoDefault: 'piloto_limitado' };
 
 const DIA = 86400000;
 const diasAtras = n => new Date(Date.now() - n * DIA).toISOString();
@@ -199,6 +203,60 @@ const RUNS = [
   created_at: diasAtras(dias),
 }));
 
+// Catálogo real (tools.yml) com as skills e execuções fictícias acima.
+const FERRAMENTAS = {
+  payload: TOOLS_YML.map(tool => {
+    const runs = RUNS.filter(run => run.tool_name === tool.id);
+    return {
+      ...tool,
+      skills: SKILLS.filter(skill => (skill.tools || []).includes(tool.id)).map(
+        skill => ({
+          id: skill.id,
+          title: skill.title,
+          assistant_id: 1,
+          assistant_name: ATENDIMENTO.name,
+        })
+      ),
+      ultima_execucao_em: runs[0]?.created_at ?? null,
+      execucoes_7d: runs.length,
+      erros_7d: runs.filter(run => run.status === 'erro').length,
+    };
+  }),
+};
+
+const STATS = {
+  payload: [
+    {
+      id: 1,
+      name: ATENDIMENTO.name,
+      description: ATENDIMENTO.description,
+      publico: 'lead',
+      skills_ativas: 6,
+      faqs_aprovadas: 62,
+      faqs_pendentes: 1,
+      caixas: [
+        {
+          id: 7,
+          name: 'WhatsApp Escritório',
+          channel_type: 'Channel::Whatsapp',
+        },
+      ],
+      conversas_por_modo: { rascunho: 2, piloto_limitado: 5 },
+    },
+    {
+      id: 2,
+      name: COPILOTO.name,
+      description: COPILOTO.description,
+      publico: 'equipe',
+      skills_ativas: 9,
+      faqs_aprovadas: 0,
+      faqs_pendentes: 0,
+      caixas: [],
+      conversas_por_modo: {},
+    },
+  ],
+};
+
 const API = {
   'captain/assistants': {
     payload: [ATENDIMENTO, COPILOTO],
@@ -206,6 +264,7 @@ const API = {
   },
   'captain/assistants/1': ATENDIMENTO,
   'captain/assistants/tools': CATALOGO,
+  'captain/assistants/stats': STATS,
   'captain/assistants/1/scenarios': {
     payload: SKILLS,
     meta: { total_count: 4, page: 1 },
@@ -217,6 +276,7 @@ const API = {
   },
   'captain/documents': { payload: DOCS, meta: { total_count: 1, page: 1 } },
   'captain/custom_tools': { payload: [], meta: { total_count: 0, page: 1 } },
+  'captain/ferramentas': FERRAMENTAS,
   captain_tool_runs: {
     resumo: {
       total_24h: 4,
@@ -226,6 +286,31 @@ const API = {
     },
     items: RUNS,
     catalogo: CATALOGO,
+  },
+  ramon_inteligencia: {
+    rascunhos: {
+      igual: 9,
+      editado: 6,
+      descartado: 2,
+      sem_resposta: 1,
+      pendente: 1,
+    },
+    piloto: { conversas: 14, meta: 20, sem_correcao_pct: 53 },
+    primeira_resposta: {
+      com_ia: { conversas: 12, mediana_min: 3.5 },
+      sem_ia: { conversas: 20, mediana_min: 42 },
+    },
+    transferencias: { total: 3, conversas: [482, 477, 470] },
+    aprovacoes: {
+      sugestoes: 3,
+      sugestoes_por_tipo: { move_stage: 1, zapsign: 1, draft: 1 },
+    },
+    agente: {
+      hoje: 4,
+      teto: 30,
+      problemas_hoje: 1,
+      ultima_em: diasAtras(0.05),
+    },
   },
   ramon_watchdog: {
     thresholds: {
@@ -325,6 +410,11 @@ const clicarEm = texto => () =>
         ?.click(),
     2000
   );
+
+// Visão geral com o padrão antigo (antes da D7): título "Rumo ao piloto".
+const modoRascunho = () => {
+  window.chatwootConfig = { ramonCopilotoModoDefault: 'rascunho' };
+};
 </script>
 
 <template>
@@ -354,6 +444,9 @@ const clicarEm = texto => () =>
       <div class="h-screen"><ScenariosIndex /></div>
     </Variant>
     <Variant title="Ferramentas">
+      <div class="h-screen"><FerramentasPage /></div>
+    </Variant>
+    <Variant title="Ferramentas HTTP">
       <div class="h-screen"><CustomToolsIndex /></div>
     </Variant>
     <Variant title="Testar">
@@ -380,8 +473,11 @@ const clicarEm = texto => () =>
     <Variant title="Execucoes">
       <div class="h-screen"><Execucoes /></div>
     </Variant>
-    <Variant title="Vigia">
-      <div class="h-screen"><Watchdog /></div>
+    <Variant title="Visao geral">
+      <div class="h-screen"><VisaoGeral /></div>
+    </Variant>
+    <Variant title="Visao geral rascunho" :init-state="modoRascunho">
+      <div class="h-screen"><VisaoGeral /></div>
     </Variant>
   </Story>
 </template>

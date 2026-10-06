@@ -1,5 +1,10 @@
 import tools from '../../../../../../../../config/agents/tools.yml';
-import { NIVEL_TOM, ferramentaInfo } from '../ferramentas';
+import {
+  NIVEL_TOM,
+  SISTEMAS,
+  agruparPorSistema,
+  ferramentaInfo,
+} from '../ferramentas';
 import { TOM } from '../ui';
 
 describe('ferramentas', () => {
@@ -34,5 +39,32 @@ describe('ferramentas', () => {
       tom: TOM.slate,
     });
     expect(ferramentaInfo('minha_http', null).title).toBe('minha_http');
+  });
+
+  it('toda ferramenta do tools.yml tem um sistema com seção na tela', () => {
+    tools.forEach(tool => {
+      expect(SISTEMAS).toContain(tool.sistema);
+    });
+  });
+
+  it('toda ferramenta *_advbox mexe no AdvBox', () => {
+    tools
+      .filter(tool => tool.id.endsWith('_advbox'))
+      .forEach(tool => {
+        expect(tool.sistema).toBe('advbox');
+      });
+  });
+
+  it('agrupa na ordem da tela e omite sistema sem ferramenta', () => {
+    const grupos = agruparPorSistema([
+      { id: 'nota', sistema: 'conversa' },
+      { id: 'a_advbox', sistema: 'advbox' },
+      { id: 'b_advbox', sistema: 'advbox' },
+    ]);
+    expect(grupos.map(grupo => grupo.sistema)).toEqual(['advbox', 'conversa']);
+    expect(grupos[0].ferramentas.map(tool => tool.id)).toEqual([
+      'a_advbox',
+      'b_advbox',
+    ]);
   });
 });

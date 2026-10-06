@@ -43,6 +43,12 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     @tools = assistant.available_agent_tools
   end
 
+  # ramon: tela Assistentes (I-AS1/I-AS2/I-AS3) — um cartão por assistente.
+  # ponytail: ~5 consultas por assistente; são 2. Se passar de 10, agrupar.
+  def stats
+    render json: { payload: account_assistants.order(:id).map { |assistant| cartao(assistant) } }
+  end
+
   private
 
   def set_assistant
@@ -51,6 +57,29 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
 
   def account_assistants
     @account_assistants ||= Captain::Assistant.for_account(Current.account.id)
+  end
+
+  def cartao(assistant)
+    caixas = assistant.inboxes.order(:id).pluck(:id, :name, :channel_type)
+                      .map { |id, name, tipo| { id: id, name: name, channel_type: tipo } }
+    {
+      id: assistant.id, name: assistant.name, description: assistant.description,
+      # ponytail: público pela caixa — com caixa fala com o lead; sem caixa, só pela tela Testar (equipe).
+      publico: caixas.any? ? 'lead' : 'equipe',
+      skills_ativas: assistant.scenarios.enabled.count,
+      faqs_aprovadas: assistant.responses.approved.count, faqs_pendentes: assistant.responses.pending.count,
+      caixas: caixas, conversas_por_modo: conversas_por_modo(caixas.pluck(:id))
+    }
+  end
+
+  # Conversas abertas nas caixas do assistente pelo modo efetivo (como Ramon::CopilotoModo.of):
+  # sem atributo ou com valor fora da lista conta no padrão do servidor.
+  def conversas_por_modo(inbox_ids)
+    abertas = Current.account.conversations.where(status: :open, inbox_id: inbox_ids)
+    contagem = abertas.group(Arel.sql("custom_attributes->>'copiloto_modo'")).count
+    contagem.each_with_object(Hash.new(0)) do |(modo, total), soma|
+      soma[Ramon::CopilotoModo::MODOS.include?(modo) ? modo : Ramon::CopilotoModo.default] += total
+    end
   end
 
   def assistant_params
