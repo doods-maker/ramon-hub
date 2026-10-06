@@ -33,6 +33,11 @@ class LeadsAPI extends ApiClient {
     return axios.get(`${this.url}/${leadId}/dossie`);
   }
 
+  // "Dossiê entregue" ao jurídico (idempotente); devolve o dossiê atualizado
+  dossieEntregue(leadId) {
+    return axios.post(`${this.url}/${leadId}/dossie_entregue`);
+  }
+
   simulate(leadId, payload) {
     return axios.post(`${this.url}/${leadId}/simulacao`, payload);
   }

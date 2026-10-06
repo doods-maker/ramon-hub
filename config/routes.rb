@@ -368,6 +368,7 @@ Rails.application.routes.draw do
             end
             member do
               get :dossie, to: 'lead_dossies#show'
+              post :dossie_entregue, to: 'lead_dossies#entregue'
               post :portal_link
               post :follow_up_draft
               post :reuniao

@@ -55,6 +55,7 @@ const GRUPO = {
   vou_pensar: 'reuniao',
   contrato_cancelado: 'perda',
   registro_completo: 'campo',
+  dossie_entregue: 'campo',
 };
 const grupoDe = activity => {
   if (activity.kind !== 'stage_changed') return GRUPO[activity.kind] || 'outro';

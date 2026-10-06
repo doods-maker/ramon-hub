@@ -12,7 +12,10 @@ import { CARTAO, CHIP, TITULO, TOM } from '../../helpers/ui';
 // "ainda não" de cada item, nunca quebra.
 const props = defineProps({
   passagem: { type: Object, required: true },
+  entregando: { type: Boolean, default: false },
 });
+// "Dossiê entregue" (Painel do time): só no lead ganho; quem chama grava.
+const emit = defineEmits(['entregar']);
 defineOptions({ name: 'PassagemJuridico' });
 
 const { t } = useI18n();
@@ -86,10 +89,38 @@ const reuniao = computed(() => p.value.reuniao);
 
 <template>
   <section :class="CARTAO" class="!p-4" data-testid="ficha-passagem">
-    <h2 class="flex items-center gap-1.5 text-sm font-semibold text-n-slate-12">
-      <span class="i-lucide-briefcase size-4 text-n-slate-10" />
-      {{ $t('RAMON.FICHA.PASSAGEM.TITLE') }}
-    </h2>
+    <header class="flex flex-wrap items-center justify-between gap-2">
+      <h2
+        class="flex items-center gap-1.5 text-sm font-semibold text-n-slate-12"
+      >
+        <span class="i-lucide-briefcase size-4 text-n-slate-10" />
+        {{ $t('RAMON.FICHA.PASSAGEM.TITLE') }}
+      </h2>
+      <span
+        v-if="p.entrega?.entregue_em"
+        data-testid="passagem-entregue"
+        :class="[CHIP, TOM.teal]"
+        :title="p.entrega.por"
+      >
+        <span class="i-lucide-check size-3" />
+        {{
+          $t('RAMON.FICHA.PASSAGEM.ENTREGUE_EM', {
+            data: dia(p.entrega.entregue_em, false),
+          })
+        }}
+      </span>
+      <Button
+        v-else-if="p.entrega"
+        data-testid="passagem-entregar"
+        sm
+        faded
+        teal
+        icon="i-lucide-send"
+        :disabled="entregando"
+        :label="$t('RAMON.FICHA.PASSAGEM.ENTREGAR')"
+        @click="emit('entregar')"
+      />
+    </header>
 
     <dl class="grid gap-x-6 gap-y-4 mt-3 sm:grid-cols-2 lg:grid-cols-4">
       <div>

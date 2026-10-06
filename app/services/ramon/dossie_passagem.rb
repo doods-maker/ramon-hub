@@ -34,6 +34,7 @@ class Ramon::DossiePassagem
       cnis: cnis,
       simulacao: fatia('ultima_simulacao', %w[atrasados mensal honorario_valor em]),
       reuniao: reuniao,
+      entrega: entrega,
       ficha_url: self.class.ficha_url(@lead)
     )
   end
@@ -87,6 +88,15 @@ class Ramon::DossiePassagem
       vinculos: resumo[:vinculos],
       sexo: @lead.cnis.dig('entrada', 'segurado', 'sexo')
     }
+  end
+
+  # Botão "Dossiê entregue" (Painel do time, KPI do Closer): só no lead ganho;
+  # a marca é a atividade dossie_entregue, gravada uma vez só.
+  def entrega
+    return nil if @lead.won_at.blank?
+
+    marca = @lead.lead_activities.find_by(kind: 'dossie_entregue')
+    { ganho_em: @lead.won_at, entregue_em: marca&.created_at, por: marca&.user&.name }
   end
 
   def reuniao

@@ -869,6 +869,9 @@
       "OPEN_FULL": "Abrir ficha completa",
       "PASSAGEM": {
         "TITLE": "Passagem ao jurídico",
+        "ENTREGAR": "Dossiê entregue",
+        "ENTREGUE_EM": "Dossiê entregue em {data}",
+        "ENTREGAR_ERRO": "Não foi possível marcar a entrega — tente de novo",
         "CPF": "CPF",
         "BIRTH": "Nascimento",
         "BENEFIT": "Benefício",
@@ -1034,7 +1037,8 @@
           "MEETING_NO_SHOW": "registrou que o cliente não compareceu",
           "VOU_PENSAR": "marcou que o cliente vai pensar",
           "CONTRATO_CANCELADO": "contrato cancelado (saiu de Fechado)",
-          "REGISTRO_COMPLETO": "registro completo (tese, CPF, nascimento e nota do SDR)"
+          "REGISTRO_COMPLETO": "registro completo (tese, CPF, nascimento e nota do SDR)",
+          "DOSSIE_ENTREGUE": "marcou o dossiê como entregue ao jurídico"
         }
       },
       "LOADING": "Carregando lead…",

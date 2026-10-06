@@ -869,6 +869,9 @@
       "OPEN_FULL": "Open full file",
       "PASSAGEM": {
         "TITLE": "Handover to the legal team",
+        "ENTREGAR": "Dossier delivered",
+        "ENTREGUE_EM": "Dossier delivered on {data}",
+        "ENTREGAR_ERRO": "Could not mark the delivery — try again",
         "CPF": "CPF",
         "BIRTH": "Date of birth",
         "BENEFIT": "Benefit",
@@ -1034,7 +1037,8 @@
           "MEETING_NO_SHOW": "recorded a no-show",
           "VOU_PENSAR": "marked that the client will think it over",
           "CONTRATO_CANCELADO": "contract cancelled (left Closed)",
-          "REGISTRO_COMPLETO": "record complete (thesis, CPF, birth date and SDR note)"
+          "REGISTRO_COMPLETO": "record complete (thesis, CPF, birth date and SDR note)",
+          "DOSSIE_ENTREGUE": "marked the dossier as delivered to the legal team"
         }
       },
       "LOADING": "Loading lead…",
