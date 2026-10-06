@@ -68,7 +68,7 @@ module Ramon::Fluxos::Passos::Lead
   end
 
   def responsavel_da_tarefa(lead, config)
-    config['responsavel_id'].present? ? lead.account.users.find(config['responsavel_id']) : (lead.closer || lead.sdr)
+    config['responsavel_id'].present? ? usuario_da_conta(lead, config['responsavel_id']) : (lead.closer || lead.sdr)
   end
 
   def kind_da_tarefa(config)

@@ -81,9 +81,12 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
     expect(response).to have_http_status(:unauthorized)
   end
 
-  it 'ADVBOX fora do ar devolve 503' do
-    allow(Ramon::AdvboxClient).to receive(:settings).and_raise(Ramon::AdvboxClient::UnavailableError, 'AdvBox indisponível')
-    get "#{url}/opcoes_advbox", headers: admin.create_new_auth_token, as: :json
-    expect(response).to have_http_status(:service_unavailable)
+  it 'ADVBOX fora do ar ou recusando (4xx) devolve 503' do
+    [Ramon::AdvboxClient::UnavailableError.new('AdvBox indisponível'), Ramon::AdvboxClient::RequestError.new(401, {})].each do |erro|
+      allow(Ramon::AdvboxClient).to receive(:settings).and_raise(erro)
+      get "#{url}/opcoes_advbox", headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:service_unavailable)
+      expect(response.parsed_body).to eq('erro' => erro.message)
+    end
   end
 end

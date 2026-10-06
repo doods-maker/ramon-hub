@@ -6,11 +6,13 @@ module Ramon::Cadencia
 
   # ---- Parado na etapa (threshold por etapa: lead_stages.stalled_after_days) --
 
-  # Variante SQL — filtra um escopo de leads pelos parados.
-  def parados(leads)
+  # Variante SQL — filtra um escopo de leads pelos parados. `agora` vai como bind (e não NOW()) para
+  # o relógio dos fluxos e o travel_to dos specs valerem; o bind fica do lado da coluna timestamp
+  # (bind menos interval o PG tentaria ler como interval — ver sla_breached_count).
+  def parados(leads, agora = Time.current)
     leads.joins(:lead_stage)
          .where.not(lead_stages: { stalled_after_days: nil })
-         .where("leads.stage_entered_at < NOW() - (lead_stages.stalled_after_days || ' days')::interval")
+         .where("leads.stage_entered_at + (lead_stages.stalled_after_days || ' days')::interval < ?", agora)
   end
 
   # Variante Ruby — o booleano do jbuilder/broadcast (Lead#stalled?).

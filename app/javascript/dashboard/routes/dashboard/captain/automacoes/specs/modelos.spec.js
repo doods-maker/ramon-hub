@@ -30,7 +30,10 @@ describe('modelos prontos', () => {
 
   it('Pós-contrato: contrato assinado → … → se documentos completos, senão rascunho da IA + push', () => {
     const { desenho } = MODELOS.find(m => m.chave === 'pos_contrato');
-    expect(desenho.nos[0].config.tipo).toBe('contrato_assinado');
+    expect(desenho.nos[0].config).toEqual({
+      tipo: 'contrato_assinado',
+      cancelar_se_sair_da_etapa: false,
+    });
     const se = desenho.nos.find(n => n.tipo === 'se');
     expect(se.config.condicoes).toEqual([
       { campo: 'documentos_completos', operador: 'igual', valor: 'sim' },

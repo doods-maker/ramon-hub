@@ -37,12 +37,15 @@ module Ramon::Fluxos::Passos::Externo
     raise
   end
 
+  # datas no fuso da banca (o padrão do fetcher seria o dia em UTC)
   def argumentos(config, processo, ctx)
-    base = { 'processo_id' => processo, 'descricao' => ctx.interpolar(config['descricao']) }
+    hoje = Time.find_zone!(Fluxo::ZONA).today
+    base = { 'processo_id' => processo, 'descricao' => ctx.interpolar(config['descricao']), 'data' => hoje.iso8601 }
     return base if config['acao'] == 'movimentacao'
 
-    prazo = (Time.find_zone!(Fluxo::ZONA).today + config['prazo_dias'].to_i).iso8601 if config['prazo_dias'].present?
-    base.merge('tipo_tarefa_id' => config['tipo_tarefa_id'], 'responsavel_id' => config['responsavel_id'], 'prazo' => prazo)
+    prazo = (hoje + config['prazo_dias'].to_i).iso8601 if config['prazo_dias'].present?
+    # compact_blank: ID faltando some do hash → o fetch do fetcher dá KeyError → "incompleto"
+    base.merge('tipo_tarefa_id' => config['tipo_tarefa_id'], 'responsavel_id' => config['responsavel_id'], 'prazo' => prazo).compact_blank
   end
 
   def webhook(config, ctx)
@@ -52,8 +55,9 @@ module Ramon::Fluxos::Passos::Externo
     SafeFetch.fetch(url, method: :post, body: payload(ctx).to_json, headers: { 'Content-Type' => 'application/json' },
                          open_timeout: ABRIR, read_timeout: LER, validate_content_type: false) { |_resposta| nil }
     { saida: 's', resumo: "webhook: POST para #{host(url)}" }
-  rescue SafeFetch::InvalidUrlError, SafeFetch::UnsafeUrlError => e
-    raise IMPOSSIVEL, "endereço do webhook recusado (#{e.message.truncate(80)})"
+  rescue SafeFetch::InvalidUrlError, SafeFetch::UnsafeUrlError
+    # a mensagem do SafeFetch pode repetir a URL inteira (URI::InvalidURIError, redirects): só o host
+    raise IMPOSSIVEL, "endereço do webhook recusado (#{host(url)})"
   rescue SafeFetch::HttpError => e
     status = e.message[/\A\d{3}/].to_i # HttpError só traz "404 Not Found" na mensagem
     raise IMPOSSIVEL, "webhook recusado por #{host(url)} (HTTP #{status})" if status.between?(400, 499) && [408, 429].exclude?(status)
@@ -69,5 +73,5 @@ module Ramon::Fluxos::Passos::Externo
   end
 
   # a URL pode carregar token (ex.: hooks do Make/Zapier): na trilha só o host
-  def host(url) = url[%r{\Ahttps?://([^/?#]+)}, 1] || '?'
+  def host(url) = url[%r{\Ahttps?://(?:[^/?#@]*@)?([^/?#@]+)}, 1] || '?'
 end

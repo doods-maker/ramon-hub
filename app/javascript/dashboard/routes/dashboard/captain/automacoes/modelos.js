@@ -22,7 +22,14 @@ export const MODELOS = [
     limite_dia: 20,
     desenho: {
       nos: [
-        no('n1', 'gatilho', { tipo: 'contrato_assinado' }, 0, 0),
+        // contrato assinado move o lead (ganho/ADVBOX): a espera de 2 dias não pode cancelar
+        no(
+          'n1',
+          'gatilho',
+          { tipo: 'contrato_assinado', cancelar_se_sair_da_etapa: false },
+          0,
+          0
+        ),
         no(
           'n2',
           'rascunho_texto',

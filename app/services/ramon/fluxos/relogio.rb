@@ -14,7 +14,7 @@ module Ramon::Fluxos::Relogio
       config = Ramon::Fluxos::Grafo.new(fluxo.versao_publicada.grafo).gatilho['config'] || {}
       next unless na_hora?(config, agora) && reivindicar_dia(fluxo, agora)
 
-      grupo(fluxo, config).limit(MAX_LEADS).each do |lead|
+      grupo(fluxo, config, agora).limit(MAX_LEADS).each do |lead|
         # ponytail: 1 count por lead; agregar se grupos grandes com limite virarem rotina
         break if fluxo.modo == 'normal' && fluxo.limite_atingido?
 
@@ -42,8 +42,8 @@ module Ramon::Fluxos::Relogio
          .update_all(ultimo_disparo_em: agora) == 1 # rubocop:disable Rails/SkipsModelValidations
   end
 
-  def grupo(fluxo, config)
-    fluxo.gatilho_tipo == 'lead_parado' ? parados(fluxo, config) : filtrados(fluxo.account, config)
+  def grupo(fluxo, config, agora)
+    fluxo.gatilho_tipo == 'lead_parado' ? parados(fluxo, config, agora) : filtrados(fluxo.account, config)
   end
 
   # Sem etapa marcada: leads abertos (nem ganho nem perdido). Com etapa: inclusive pós-ganho.
@@ -56,10 +56,10 @@ module Ramon::Fluxos::Relogio
   end
 
   # 1 vez por parada: lead que já teve execução deste fluxo depois de entrar na etapa fica de fora.
-  def parados(fluxo, config)
+  def parados(fluxo, config, agora)
     dias = config['dias'].to_i
     leads = fluxo.account.leads.open
-    leads = dias.positive? ? leads.where(stage_entered_at: ...dias.days.ago) : Ramon::Cadencia.parados(leads)
+    leads = dias.positive? ? leads.where(stage_entered_at: ...(agora - dias.days)) : Ramon::Cadencia.parados(leads, agora)
     ja = FluxoExecucao.where(fluxo_id: fluxo.id, alvo_type: 'Lead', ensaio: false)
                       .where('ramon_fluxo_execucoes.alvo_id = leads.id AND ramon_fluxo_execucoes.created_at >= leads.stage_entered_at')
     leads.where(ja.arel.exists.not).reorder(:id)

@@ -49,29 +49,32 @@ RSpec.describe Ramon::Fluxos::Passos::Externo do
 
   describe 'configuração faltando não se repete' do
     it 'ação inválida e IDs faltando' do
-      expect { described_class.advbox({ 'acao' => 'xyz' }, ctx) }.to raise_error(Ramon::Fluxos::PassoImpossivel, /ação válida/)
-      expect { described_class.advbox({ 'acao' => 'tarefa' }, ctx) }.to raise_error(Ramon::Fluxos::PassoImpossivel, /incompleto/)
+      c = ctx # uma execução só: a 2ª ativa do mesmo fluxo/lead bateria no índice único
+      expect { described_class.advbox({ 'acao' => 'xyz' }, c) }.to raise_error(Ramon::Fluxos::PassoImpossivel, /ação válida/)
+      expect { described_class.advbox({ 'acao' => 'tarefa' }, c) }.to raise_error(Ramon::Fluxos::PassoImpossivel, /incompleto/)
     end
 
     it 'token do ADVBOX ausente é impossível; outra indisponibilidade segue com nova tentativa' do
+      c = ctx
       allow(Ramon::AdvboxClient).to receive(:create_movement)
         .and_raise(Ramon::AdvboxClient::UnavailableError, 'AdvBox indisponível: ADVBOX_API_TOKEN não configurado')
-      expect { described_class.advbox({ 'acao' => 'movimentacao', 'descricao' => 'x' }, ctx) }
+      expect { described_class.advbox({ 'acao' => 'movimentacao', 'descricao' => 'x' }, c) }
         .to raise_error(Ramon::Fluxos::PassoImpossivel, /não configurado/)
       allow(Ramon::AdvboxClient).to receive(:create_movement)
         .and_raise(Ramon::AdvboxClient::UnavailableError, 'AdvBox respondeu HTTP 503')
-      expect { described_class.advbox({ 'acao' => 'movimentacao', 'descricao' => 'x' }, ctx) }
+      expect { described_class.advbox({ 'acao' => 'movimentacao', 'descricao' => 'x' }, c) }
         .to raise_error(Ramon::AdvboxClient::UnavailableError)
     end
 
     it 'webhook: 4xx não repete (só o host na mensagem), 429 e 5xx repetem' do
       url = 'https://hooks.exemplo.com.br/x?token=segredo'
+      c = ctx
       allow(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError, '404 Not Found')
-      expect { described_class.webhook({ 'url' => url }, ctx) }
+      expect { described_class.webhook({ 'url' => url }, c) }
         .to raise_error(Ramon::Fluxos::PassoImpossivel, 'webhook recusado por hooks.exemplo.com.br (HTTP 404)')
       %w[429\ Too\ Many 503\ Unavailable].each do |msg|
         allow(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError, msg)
-        expect { described_class.webhook({ 'url' => url }, ctx) }.to raise_error(SafeFetch::HttpError)
+        expect { described_class.webhook({ 'url' => url }, c) }.to raise_error(SafeFetch::HttpError)
       end
     end
   end

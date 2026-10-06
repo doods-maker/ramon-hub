@@ -56,6 +56,7 @@ const RESERVADAS = [
   'etiquetas',
   'documentos_completos',
   'documentos_faltantes',
+  'resposta_ia',
 ];
 
 const erro = (no, codigo, params = {}) => ({ no, codigo, params });

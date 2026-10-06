@@ -56,7 +56,7 @@ class Api::V1::Accounts::RamonFluxosController < Api::V1::Accounts::BaseControll
     cfg = Ramon::AdvboxClient.settings
     render json: { usuarios: Array(cfg['users']).map { |u| { id: u['id'], nome: u['name'] } },
                    tipos_tarefa: Array(cfg['tasks']).map { |t| { id: t['id'], nome: t['task'] } } }
-  rescue Ramon::AdvboxClient::UnavailableError => e
+  rescue Ramon::AdvboxClient::UnavailableError, Ramon::AdvboxClient::RequestError => e
     render json: { erro: e.message }, status: :service_unavailable
   end
 

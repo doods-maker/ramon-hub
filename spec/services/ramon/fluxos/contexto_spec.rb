@@ -29,9 +29,9 @@ RSpec.describe Ramon::Fluxos::Contexto do
 
   describe 'documentos do checklist' do
     let(:tese) { create(:thesis, account: account) }
-    let!(:rg) { create(:thesis_item, thesis: tese, section: 'documento', title: 'RG', content: 'RG') }
+    let!(:rg) { create(:thesis_item, thesis: tese, section: 'documento', title: 'RG', content: 'RG', position: 1) }
 
-    before { create(:thesis_item, thesis: tese, section: 'documento', title: 'CNIS', content: 'CNIS') }
+    before { create(:thesis_item, thesis: tese, section: 'documento', title: 'CNIS', content: 'CNIS', position: 2) }
 
     it 'diz se está completo e lista o que falta' do
       lead.update!(thesis: tese, custom_attributes: { 'doc_status' => { rg.id.to_s => 'recebido' } })

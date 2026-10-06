@@ -106,19 +106,21 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
 
   it 'trocar responsável: a pessoa escolhida ou o próximo do time' do
     ana = create(:user, account: account)
-    Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'closer', 'user_id' => ana.id }, ctx)
+    c = ctx # uma execução só: a 2ª ativa do mesmo fluxo/lead bateria no índice único
+    Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'closer', 'user_id' => ana.id }, c)
     expect(lead.reload.closer).to eq(ana)
     create(:team_member, team: create(:team, account: account, name: 'sdr'), user: ana)
-    r = Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr' }, ctx)
+    r = Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr' }, c)
     expect(lead.reload.sdr).to eq(ana)
     expect(r[:resumo]).to eq("sdr → #{ana.name}")
   end
 
   it 'trocar responsável: papel inválido ou pessoa de outra conta é erro de config (sem nova tentativa)' do
     estranha = create(:user, account: create(:account))
-    expect { Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'chefe' }, ctx) }
+    c = ctx
+    expect { Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'chefe' }, c) }
       .to raise_error(Ramon::Fluxos::PassoImpossivel, /papel/)
-    expect { Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr', 'user_id' => estranha.id }, ctx) }
+    expect { Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr', 'user_id' => estranha.id }, c) }
       .to raise_error(Ramon::Fluxos::PassoImpossivel, /pessoa/)
   end
 
