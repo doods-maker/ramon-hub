@@ -18,4 +18,10 @@ RSpec.describe Ramon::FluxoRelogioJob do
     expect(orfa.reload.status).to eq('esperando')
     expect(recente.reload.status).to eq('rodando')
   end
+
+  it 'dispara os gatilhos de relógio do dia' do
+    allow(Ramon::Fluxos::Relogio).to receive(:disparar_do_dia)
+    described_class.perform_now
+    expect(Ramon::Fluxos::Relogio).to have_received(:disparar_do_dia)
+  end
 end
