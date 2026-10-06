@@ -17,4 +17,7 @@ class Captain::ToolRun < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
 
   scope :recentes, -> { order(created_at: :desc) }
+  # Casos de teste da IA rodam com source 'teste': ficam fora das telas.
+  # IS DISTINCT FROM mantém as linhas antigas (source nulo).
+  scope :fora_de_teste, -> { where("#{table_name}.source IS DISTINCT FROM 'teste'") }
 end

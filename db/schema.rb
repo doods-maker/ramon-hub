@@ -484,6 +484,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_400001) do
     t.jsonb "params", default: {}
     t.text "resultado"
     t.datetime "created_at", null: false
+    t.string "source"
     t.index ["account_id", "created_at"], name: "index_captain_tool_runs_on_account_id_and_created_at"
     t.index ["account_id"], name: "index_captain_tool_runs_on_account_id"
   end
@@ -1539,6 +1540,39 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_400001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "gatilho_tipo"], name: "index_ramon_fluxos_on_account_id_and_gatilho_tipo"
+  end
+
+  create_table "ramon_ia_casos", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "assistant_id", null: false
+    t.string "codigo"
+    t.string "titulo", null: false
+    t.string "grupo"
+    t.jsonb "mensagens", default: [], null: false
+    t.jsonb "criterios", default: {}, null: false
+    t.boolean "ativo", default: true, null: false
+    t.string "origem", default: "usuario", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "assistant_id"], name: "index_ramon_ia_casos_on_account_id_and_assistant_id"
+    t.index ["assistant_id", "codigo"], name: "index_ramon_ia_casos_on_assistant_id_and_codigo", unique: true, where: "(codigo IS NOT NULL)"
+  end
+
+  create_table "ramon_ia_rodadas", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "assistant_id", null: false
+    t.bigint "disparado_por_id"
+    t.string "status", default: "fila", null: false
+    t.integer "total", default: 0, null: false
+    t.integer "passou", default: 0, null: false
+    t.integer "falhou", default: 0, null: false
+    t.integer "duracao_ms"
+    t.text "erro"
+    t.jsonb "resultados", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assistant_id", "created_at"], name: "index_ramon_ia_rodadas_on_assistant_id_and_created_at"
+    t.index ["assistant_id"], name: "idx_ramon_ia_rodadas_uma_ativa", unique: true, where: "((status)::text = ANY ((ARRAY['fila'::character varying, 'rodando'::character varying])::text[]))"
   end
 
   create_table "ramon_metas_comerciais", force: :cascade do |t|
