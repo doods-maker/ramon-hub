@@ -2,6 +2,7 @@
   "nome": "Eventos do ADVBOX",
   "grupo": "contrato_documentos",
   "descricao": "No código: Flowter → webhook do hub → Ramon::AdvboxEventJob → Ramon::AdvboxEventProcessor (cada regra é um método com o nome da chave).\n\nO desenho não consegue mostrar:\n• a regra sai do nome da etapa/tarefa no payload do Flowter, e o lead é achado pelo CPF ou pelo telefone (lead aberto; senão o mais recente do funil) — sem regra ou sem lead o evento fica guardado e nada roda;\n• cada atividade tem um tipo próprio (advbox_contrato_fechado, advbox_indeferido, …) e leva o nome da etapa do ADVBOX;\n• os rascunhos vão para as notas do lead (não para a conversa); a pesquisa NPS de êxito e de concessão usa a trava nps.pedido_exito_em (a do ganho é outra, pedido_em — um lead pode receber 2 rascunhos de NPS); o link do Google vem da variável RAMON_GOOGLE_REVIEW_URL; sem ela o código escreve [link do Google Meu Negócio] (o desenho mostra esse texto);\n• os pushes só saem com o ntfy configurado (NTFY_TOPIC);\n• Contrato fechado move o lead para a etapa de ganho da conta (se ainda não estava), o que grava won_at e dispara também o Lead ganho (dossiê, ADVBOX, NPS e Drive) — não migrar essas ações duas vezes; em Arquivado todas as tarefas abertas do lead são concluídas — não há passo para isso.",
+  "resumo": "Quando o ADVBOX avisa uma mudança no processo, atualiza o lead e prepara os próximos passos.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"evento_advbox"},"posicao":{"x":0,"y":0}},

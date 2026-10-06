@@ -39,6 +39,7 @@ const SISTEMA = {
   nome: 'Cadência de retomada',
   descricao:
     'No código: Ramon::DailyFollowUpJob (todo dia às 11:00)\n\nO desenho não consegue mostrar: o teto de 15 por dia',
+  resumo: 'Todo dia às 11h, prepara rascunhos de retomada para leads parados.',
   gatilho_tipo: 'lead_parado',
   ativo: false,
   limite_dia: 15,
@@ -183,8 +184,10 @@ describe('Lista de automações', () => {
     const linhas = wrapper.findAll('[data-testid="sistema-linha"]');
     expect(linhas).toHaveLength(3);
     expect(linhas[0].text()).toContain(
-      'No código: Ramon::DailyFollowUpJob (todo dia às 11:00)'
+      'Todo dia às 11h, prepara rascunhos de retomada para leads parados.'
     );
+    expect(linhas[0].text()).not.toContain('No código');
+    expect(linhas[0].text()).not.toContain('Ramon::');
     expect(linhas[0].text()).not.toContain('O desenho não consegue');
     expect(linhas[0].text()).toContain('2 / 15');
     expect(linhas[2].text()).toContain('—');

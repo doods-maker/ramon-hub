@@ -2,6 +2,7 @@
   "nome": "Etiquetas de etapa e tese",
   "grupo": "leads_conversas",
   "descricao": "No código: RamonLeadListener#lead_created, #lead_updated e #conversation_updated → Ramon::StageLabelSync e Ramon::TeseLabelSync.\n\nO desenho não consegue mostrar:\n• põe na conversa a etiqueta fase-<etapa> e tese-<tese> do lead (e tira a antiga); a etiqueta da etapa sai do campo label da etapa (não do nome), o passo usa etiqueta fixa;\n• no sentido contrário, etiqueta fase-* posta à mão na conversa move o lead — os fluxos não têm gatilho de etiqueta;\n• também roda quando o lead é criado.",
+  "resumo": "Mantém nas conversas as etiquetas da etapa e da tese do lead, sempre atualizadas.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_mudou_etapa"},"posicao":{"x":0,"y":0}},

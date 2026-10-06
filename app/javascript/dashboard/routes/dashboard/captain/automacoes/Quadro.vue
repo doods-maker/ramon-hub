@@ -35,6 +35,13 @@ const estado = id => {
   return id === props.selecionado ? 'selecionado' : '';
 };
 const folha = id => !edges.value.some(e => e.source === id);
+// Ajuste inicial (1x): fluxo longo não encolhe abaixo de 0.75 (nós legíveis, o resto se rola); curto fica como antes.
+let ajustou = false;
+const ajustarNaEntrada = () => {
+  if (ajustou) return;
+  ajustou = true;
+  fitView({ minZoom: 0.75 }); // maxZoom segue o do quadro (1.5): curto fica como antes
+};
 </script>
 
 <template>
@@ -49,7 +56,7 @@ const folha = id => !edges.value.some(e => e.source === id);
     :delete-key-code="somenteLeitura ? null : ['Backspace', 'Delete']"
     :min-zoom="0.4"
     :max-zoom="1.5"
-    fit-view-on-init
+    @nodes-initialized="ajustarNaEntrada"
     @connect="emit('conectar', $event)"
     @node-click="({ node }) => emit('selecionar', node.id)"
     @pane-click="emit('selecionar', null)"

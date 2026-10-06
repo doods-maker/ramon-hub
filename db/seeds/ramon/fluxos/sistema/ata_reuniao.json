@@ -2,6 +2,7 @@
   "nome": "Ata da reunião",
   "grupo": "leads_conversas",
   "descricao": "No código: RamonReunioesController (gravar e refazer) → Ramon::ReuniaoAtaJob → Ramon::ReuniaoAtaService.\n\nO desenho não consegue mostrar:\n• começa quando a reunião é gravada no hub (ou alguém pede para refazer a ata) — os fluxos não têm esse gatilho (aqui: Rodar na mão);\n• transcreve o áudio no whisper local e a IA escreve a ata na própria reunião (não é nota de conversa); tenta de novo até 3 vezes se o LLM falhar.",
+  "resumo": "Depois que a reunião é gravada, transcreve o áudio e escreve a ata na própria reunião.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Reunião gravada (ou Refazer ata)"},"posicao":{"x":0,"y":0}},

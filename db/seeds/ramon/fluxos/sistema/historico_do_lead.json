@@ -2,6 +2,7 @@
   "nome": "Histórico do lead",
   "grupo": "leads_conversas",
   "descricao": "No código: callbacks de Lead (record_created_activity, record_change_activities), LeadNote e LeadTask (record_*_activity).\n\nO desenho não consegue mostrar:\n• cada mudança do lead (etapa, responsável, valor, motivo de perda…), nota e tarefa vira uma linha no histórico, cada uma com o seu tipo;\n• o mesmo vale para lead criado, nota e tarefa nova — o quadro tem 1 gatilho só.",
+  "resumo": "Registra no histórico do lead cada mudança, nota e tarefa.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_mudou_etapa"},"posicao":{"x":0,"y":0}},

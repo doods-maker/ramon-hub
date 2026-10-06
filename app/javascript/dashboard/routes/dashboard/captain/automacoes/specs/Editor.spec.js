@@ -77,4 +77,41 @@ describe('Editor — desenho do sistema', () => {
     });
     expect(RamonFluxosAPI.update).not.toHaveBeenCalled();
   });
+
+  it('fluxo do usuário: Versões e Testar com um lead presentes; Voltar vai à lista sem aba', async () => {
+    RamonFluxosAPI.show.mockResolvedValue({
+      data: {
+        ...SISTEMA,
+        origem: 'usuario',
+        sistema_chave: null,
+        versoes: [],
+        alcance: null,
+      },
+    });
+    RamonFluxosAPI.execucoes.mockResolvedValue({ data: { payload: [] } });
+    const wrapper = mount(Editor, {
+      global: {
+        stubs: {
+          Quadro: true,
+          RouterLink: {
+            name: 'RouterLink',
+            template: '<a><slot /></a>',
+            props: ['to'],
+          },
+        },
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Versions');
+    expect(wrapper.text()).toContain('Test with a lead');
+    expect(wrapper.find('[data-testid="sistema-descricao"]').exists()).toBe(
+      false
+    );
+    expect(wrapper.findComponent({ name: 'RouterLink' }).props('to')).toEqual({
+      name: 'captain_automacoes_index',
+      params: {},
+      query: {},
+    });
+  });
 });

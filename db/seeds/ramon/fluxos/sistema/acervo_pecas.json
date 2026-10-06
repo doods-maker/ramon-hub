@@ -2,6 +2,7 @@
   "nome": "Acervo das peças (Drive e Notion)",
   "grupo": "instagram",
   "descricao": "No código: Ramon::ConteudoDriveJob (depois de publicar) e Ramon::NotionEspelhoJob (Peca after_update_commit quando o status muda).\n\nO desenho não consegue mostrar:\n• copia a peça publicada (JPEGs + legenda) para Posts Instagram/<tipo>/<rodada — gancho> no Drive e espelha o status no kanban Peças do Notion (só com RAMON_NOTION_TOKEN) — não há passo de Drive nem de Notion;\n• best-effort: erro não volta; não é lead nem conversa.",
+  "resumo": "Quando uma peça é publicada, guarda uma cópia no Drive e atualiza o quadro de peças no Notion.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Peça publicada ou status mudou"},"posicao":{"x":0,"y":0}},

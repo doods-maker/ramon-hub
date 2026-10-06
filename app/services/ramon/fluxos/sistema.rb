@@ -45,11 +45,11 @@ module Ramon::Fluxos::Sistema
   end
 
   # O que a lista e o desenho mostram além das colunas do Fluxo (vem do JSON em memória, sem coluna nova).
-  # gatilho_rotulo: quando o gatilho real não existe nos fluxos, o desenho usa o mais próximo e o rótulo diz o real.
+  # resumo: frase simples da lista. gatilho_rotulo: quando o gatilho real não existe nos fluxos, o desenho usa o mais próximo e o rótulo diz o real.
   def extras(account, chave)
     desenho = desenhos[chave] || {}
     {
-      hoje: hoje(account, chave), grupo: desenho['grupo'], alcance: desenho['alcance'],
+      hoje: hoje(account, chave), grupo: desenho['grupo'], alcance: desenho['alcance'], resumo: desenho['resumo'],
       gatilho_rotulo: Ramon::Fluxos::Grafo.new(desenho['desenho']).gatilho&.dig('config', 'rotulo')
     }
   end

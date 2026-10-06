@@ -2,6 +2,7 @@ import { mount, flushPromises, RouterLinkStub } from '@vue/test-utils';
 import RamonFluxosAPI from 'dashboard/api/ramonFluxos';
 import { useAlert } from 'dashboard/composables';
 import RodarFluxo from '../RodarFluxo.vue';
+import en from 'dashboard/i18n/locale/en/ramon.json';
 
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('dashboard/composables/useAccount', () => ({
@@ -88,8 +89,43 @@ describe('Rodar fluxo…', () => {
     await flushPromises();
     await wrapper.find('[data-testid="rodar-fluxo-item"]').trigger('click');
     await flushPromises();
-    expect(wrapper.text()).toContain('did not run');
+    expect(wrapper.get('[data-testid="rodar-erro"]').text()).toBe(
+      en.CAPTAIN_RAMON.FLUXOS.RODAR.NAO_RODOU
+    );
     expect(wrapper.emitted('fechar')).toBeUndefined();
     expect(useAlert).not.toHaveBeenCalled();
+  });
+
+  it('erro genérico (403) mostra ERRO e não fecha', async () => {
+    RamonFluxosAPI.rodar.mockRejectedValue({
+      response: { status: 403, data: {} },
+    });
+    const wrapper = montar();
+    await flushPromises();
+    await wrapper.find('[data-testid="rodar-fluxo-item"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.get('[data-testid="rodar-erro"]').text()).toBe(
+      en.CAPTAIN_RAMON.FLUXOS.RODAR.ERRO
+    );
+    expect(wrapper.emitted('fechar')).toBeUndefined();
+  });
+
+  it('falha ao carregar a lista mostra ERRO_LISTA e o estado vazio', async () => {
+    RamonFluxosAPI.get.mockRejectedValue(new Error('rede'));
+    const wrapper = montar();
+    await flushPromises();
+    expect(wrapper.get('[data-testid="rodar-erro"]').text()).toBe(
+      en.CAPTAIN_RAMON.FLUXOS.RODAR.ERRO_LISTA
+    );
+    expect(wrapper.find('[data-testid="rodar-vazio"]').exists()).toBe(true);
+  });
+
+  it('enquanto roda, Fechar e fundo são ignorados', async () => {
+    RamonFluxosAPI.rodar.mockReturnValue(new Promise(() => {}));
+    const wrapper = montar();
+    await flushPromises();
+    await wrapper.find('[data-testid="rodar-fluxo-item"]').trigger('click');
+    await wrapper.find('button:not([data-testid])').trigger('click');
+    expect(wrapper.emitted('fechar')).toBeUndefined();
   });
 });

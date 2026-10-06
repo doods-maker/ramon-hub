@@ -2,6 +2,7 @@
   "nome": "Cadência de retomada",
   "grupo": "leads_conversas",
   "descricao": "No código: Ramon::DailyFollowUpJob (todo dia às 11:00) → Ramon::FollowUpDraftService; também roda na hora pelo botão Preparar retomada do painel do lead (Ramon::FollowUpDraftJob).\n\nO desenho não consegue mostrar:\n• o Se só confere se há conversa; as outras regras (nenhuma tarefa de retomada aberta e a última retomada há mais de 5 dias) estão só no rótulo;\n• o código roda todo dia para quem segue parado (o gatilho Lead parado dos fluxos dispara 1 vez por parada);\n• o teto é de 15 retomadas por dia por conta, na ordem do radar de parados;\n• o rascunho vai para as notas do lead (não para a conversa) e, se a IA falhar, entra um texto fixo de retomada;\n• o contador de tentativas fica em custom_attributes.follow_up (o passo Preencher campo grava em campos);\n• o aviso na conversa é um balão de evento (não nota privada) e o push é um só por conta, com o total do lote, e só sai com NTFY_TOPIC configurado.",
+  "resumo": "Todo dia às 11h, prepara rascunhos de retomada para leads parados.",
   "limite_dia": 15,
   "desenho": {
     "nos": [

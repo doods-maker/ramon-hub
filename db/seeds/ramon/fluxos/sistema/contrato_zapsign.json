@@ -2,6 +2,7 @@
   "nome": "Contrato no ZapSign",
   "grupo": "contrato_documentos",
   "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignLeadStatusJob; também logo depois do envio do contrato (Ramon::ZapsignContractService).\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real (o payload do webhook não é a verdade) e grava o selo em custom_attributes.zapsign — o passo Preencher campo grava em campos;\n• nunca marca o lead como ganho: ganho continua sendo decisão do Closer;\n• é daqui que nascem os gatilhos Contrato assinado e Contrato recusado dos fluxos (o desenho usa o de assinado; recusado faz o mesmo).",
+  "resumo": "Quando o contrato muda no ZapSign, atualiza no lead se foi assinado ou recusado.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"contrato_assinado","rotulo":"ZapSign: contrato assinado ou recusado"},"posicao":{"x":0,"y":0}},

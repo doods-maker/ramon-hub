@@ -69,6 +69,9 @@ describe('fluxos do sistema', () => {
       expect(GRUPOS_SISTEMA).toContain(d.grupo);
       expect([undefined, ...ALCANCES]).toContain(d.alcance);
       expect(d.descricao.split('\n')[0]).toMatch(/^No código: /);
+      expect(d.resumo.length).toBeGreaterThan(0);
+      expect(d.resumo.length).toBeLessThanOrEqual(120);
+      expect(d.resumo).not.toMatch(/::|#|No código/);
       const erros = validar(d.desenho).filter(
         e => !(e.codigo === 'FALTA' && e.params.campo === 'etapa_id')
       );

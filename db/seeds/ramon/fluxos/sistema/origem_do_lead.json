@@ -2,6 +2,7 @@
   "nome": "Origem do lead",
   "grupo": "leads_conversas",
   "descricao": "No código: RamonLeadListener#message_created → apply_meta_referral e derive_channel_from_first_contact.\n\nO desenho não consegue mostrar:\n• lê o anúncio da Meta (click-to-WhatsApp) que chega com a mensagem e grava origem e canal; sem anúncio e sem assinatura de site/LP/bio, o canal vira indicação (ou instagram, se a caixa for do Instagram);\n• grava nas colunas do lead (source, channel) e em custom_attributes.meta_referral — o passo Preencher campo só grava em campos;\n• origem_detectada é só uma chave de exemplo do desenho — não existe campo com esse nome;\n• nunca sobrescreve um canal já definido.",
+  "resumo": "Quando o lead chega, descobre se veio de anúncio, site ou indicação e anota a origem.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida"},"posicao":{"x":0,"y":0}},

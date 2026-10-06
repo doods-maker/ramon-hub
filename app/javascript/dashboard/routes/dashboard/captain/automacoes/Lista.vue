@@ -137,8 +137,6 @@ const hojeTitulo = f =>
   f.hoje == null
     ? t(`${K}.SISTEMA.SEM_CONTADOR`)
     : t(`${K}.SISTEMA.HOJE_DE.${f.sistema_chave}`);
-// 1ª linha da descrição = onde vive no código (o resto aparece no desenho)
-const ondeVive = f => (f.descricao || '').split('\n')[0];
 </script>
 
 <template>
@@ -256,7 +254,7 @@ const ondeVive = f => (f.descricao || '').split('\n')[0];
               <th class="w-11 p-2" />
               <th class="p-2 font-medium">{{ t(`${K}.TABELA.FLUXO`) }}</th>
               <th class="p-2 font-medium">{{ t(`${K}.TABELA.GATILHO`) }}</th>
-              <th class="p-2 font-medium">
+              <th class="whitespace-nowrap p-2 font-medium">
                 {{ t(`${K}.TABELA.HOJE_LIMITE`) }}
               </th>
               <th class="p-2 font-medium">{{ t(`${K}.TABELA.ESPERANDO`) }}</th>
@@ -293,7 +291,7 @@ const ondeVive = f => (f.descricao || '').split('\n')[0];
               <td class="p-2">
                 <GatilhoCelula :fluxo="f" />
               </td>
-              <td class="p-2 font-mono text-[12.5px]">
+              <td class="whitespace-nowrap p-2 font-mono text-[12.5px]">
                 {{ hojeLimite(f) }}
                 <span
                   v-if="f.limite_dia"
@@ -339,7 +337,7 @@ const ondeVive = f => (f.descricao || '').split('\n')[0];
             >
               <th class="p-2 font-medium">{{ t(`${K}.TABELA.FLUXO`) }}</th>
               <th class="p-2 font-medium">{{ t(`${K}.TABELA.GATILHO`) }}</th>
-              <th class="p-2 font-medium">
+              <th class="whitespace-nowrap p-2 font-medium">
                 {{ t(`${K}.TABELA.HOJE_LIMITE`) }}
               </th>
               <th class="p-2" />
@@ -371,23 +369,29 @@ const ondeVive = f => (f.descricao || '').split('\n')[0];
                   v-if="f.alcance"
                   data-testid="sistema-alcance"
                   :class="[CHIP, TOM.amber]"
-                  class="ml-2 font-mono"
+                  class="ml-2 whitespace-nowrap font-mono"
                 >
                   <i class="i-lucide-triangle-alert size-3" />
                   {{ t(`${K}.SISTEMA.ALCANCE.${f.alcance}`) }}
                 </span>
                 <span class="block text-[12.5px] text-n-slate-11">
-                  {{ ondeVive(f) }}
+                  {{ f.resumo }}
                 </span>
               </td>
               <td class="p-2">
                 <GatilhoCelula :fluxo="f" />
               </td>
-              <td class="p-2 font-mono text-[12.5px]" :title="hojeTitulo(f)">
+              <td
+                class="whitespace-nowrap p-2 font-mono text-[12.5px]"
+                :title="hojeTitulo(f)"
+              >
                 {{ hojeLimite(f) }}
               </td>
               <td class="p-2">
-                <span :class="[CHIP, TOM.blue]" class="font-mono">
+                <span
+                  :class="[CHIP, TOM.blue]"
+                  class="whitespace-nowrap font-mono"
+                >
                   {{ t(`${K}.SELO.NO_CODIGO`) }}
                 </span>
               </td>

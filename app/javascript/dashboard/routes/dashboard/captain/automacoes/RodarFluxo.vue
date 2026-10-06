@@ -27,11 +27,16 @@ const emit = defineEmits(['fechar']);
 const K = 'CAPTAIN_RAMON.FLUXOS.RODAR';
 const { t } = useI18n();
 const { accountScopedRoute } = useAccount();
-onKeyStroke('Escape', () => emit('fechar'));
 
 const fluxos = ref(null); // null = carregando
 const rodando = ref(null);
 const erro = ref('');
+
+// fechar (Esc, fundo, botão) não vale enquanto um fluxo está rodando; o fechar do sucesso sai direto
+const fechar = () => {
+  if (!rodando.value) emit('fechar');
+};
+onKeyStroke('Escape', fechar);
 
 onMounted(async () => {
   try {
@@ -78,11 +83,18 @@ const rodar = async fluxo => {
 
 <template>
   <Teleport to="body">
-    <div :class="FUNDO_JANELA" @click.self="emit('fechar')">
+    <div :class="FUNDO_JANELA" @click.self="fechar">
       <div :class="JANELA" class="!w-[420px]" data-testid="rodar-fluxo">
         <h2 :class="TITULO_JANELA">{{ t(`${K}.TITULO`) }}</h2>
         <p class="mb-3 text-xs text-n-slate-10">{{ t(`${K}.AJUDA`) }}</p>
-        <p v-if="erro" :class="[AVISO, TOM.ruby]" class="mb-3">{{ erro }}</p>
+        <p
+          v-if="erro"
+          data-testid="rodar-erro"
+          :class="[AVISO, TOM.ruby]"
+          class="mb-3"
+        >
+          {{ erro }}
+        </p>
 
         <p v-if="fluxos === null" class="text-sm text-n-slate-10">
           {{ t(`${K}.CARREGANDO`) }}
@@ -127,7 +139,7 @@ const rodar = async fluxo => {
             slate
             sm
             :label="t('CAPTAIN_RAMON.FLUXOS.FECHAR')"
-            @click="emit('fechar')"
+            @click="fechar"
           />
         </div>
       </div>

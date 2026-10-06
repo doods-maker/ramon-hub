@@ -182,6 +182,7 @@ const SISTEMA = Object.entries(DESENHOS_SISTEMA).map(([arquivo, d], i) => {
     id: 101 + i,
     nome: d.nome,
     descricao: d.descricao,
+    resumo: d.resumo,
     gatilho_tipo: gatilho.tipo,
     gatilho_rotulo: gatilho.rotulo ?? null,
     grupo: d.grupo,

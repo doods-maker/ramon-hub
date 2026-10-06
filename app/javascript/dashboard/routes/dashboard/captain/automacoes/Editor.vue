@@ -325,7 +325,7 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
           v-if="somenteLeitura && fluxo.alcance"
           data-testid="sistema-alcance"
           :class="[CHIP, TOM.amber]"
-          class="font-mono"
+          class="shrink-0 font-mono"
         >
           <i class="i-lucide-triangle-alert size-3" />
           {{ t(`${K}.SISTEMA.ALCANCE.${fluxo.alcance}`) }}

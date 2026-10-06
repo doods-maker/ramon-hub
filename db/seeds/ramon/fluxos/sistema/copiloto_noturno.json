@@ -2,6 +2,7 @@
   "nome": "Copiloto noturno",
   "grupo": "rotinas_relatorios",
   "descricao": "No código: Ramon::NightCopilotJob (todo dia às 05:00) → Ramon::NightCopilotService.\n\nO desenho não consegue mostrar:\n• varre os leads parados todo dia (no máximo RAMON_NIGHT_COPILOT_LIMIT, padrão 15) — o gatilho Lead parado dos fluxos dispara 1 vez por parada;\n• o resultado é uma sugestão pendente no Cockpit (rascunho de mensagem, mover etapa ou alerta) que uma pessoa aprova de manhã — não é nota na conversa.",
+  "resumo": "Toda madrugada, prepara sugestões para os leads parados, que a equipe aprova de manhã.",
   "limite_dia": 15,
   "desenho": {
     "nos": [

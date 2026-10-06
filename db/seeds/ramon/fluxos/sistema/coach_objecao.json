@@ -2,6 +2,7 @@
   "nome": "Coach de objeção",
   "grupo": "leads_conversas",
   "descricao": "No código: RamonLeadListener#message_created → Ramon::CoachObjecaoJob → Ramon::CoachObjecaoService (texto com 20 caracteres ou mais, contados no texto sem espaços nas pontas).\n\nO desenho não consegue mostrar:\n• só roda se o lead tem tese com playbook de objeções (elegivel?);\n• no máximo 1 vez a cada 10 min por conversa; qualquer erro = silêncio;\n• as 2 respostas vêm do playbook da tese (objeções) e aparecem num balão de evento — \"Usar →\" só coloca o texto no editor, quem envia é a pessoa.",
+  "resumo": "Quando o cliente manda mensagem com uma objeção, sugere 2 respostas para a equipe.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida","rotulo":"Mensagem com texto (20 caracteres ou mais)"},"posicao":{"x":0,"y":0}},

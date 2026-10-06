@@ -50,6 +50,7 @@ RSpec.describe Ramon::Fluxos::Sistema do
   it 'extras: grupo, selo de quem sai para fora e o rótulo do gatilho real' do
     expect(described_class.extras(account, 'avisos_painel')).to eq(
       hoje: nil, grupo: 'painel_cliente', alcance: 'fala_com_cliente',
+      resumo: 'Todo dia às 8h, avisa o cliente por e-mail das novidades do caso (desligado até aprovarmos os textos).',
       gatilho_rotulo: 'Todo dia às 08:00 (só com PORTAL_AVISOS=on)'
     )
     expect(described_class.extras(account, 'publicar_pecas')).to include(grupo: 'instagram', alcance: 'publica', hoje: 0)
