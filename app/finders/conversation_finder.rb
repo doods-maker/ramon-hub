@@ -211,9 +211,8 @@ class ConversationFinder
 
   def conversations_base_query
     @conversations.includes(
-      :taggings, :inbox, { assignee: { avatar_attachment: [:blob] } }, { contact: { avatar_attachment: [:blob] } }, :team, :contact_inbox,
-      ramon_lead: [:lead_stage, :thesis, :sdr, :closer] # FORK(ramon): linha do lead no card
-    )
+      :taggings, :inbox, { assignee: { avatar_attachment: [:blob] } }, { contact: { avatar_attachment: [:blob] } }, :team, :contact_inbox
+    ).includes(ramon_lead: [:lead_stage, :thesis, :sdr, :closer]) # FORK(ramon): linha do lead no card
   end
 
   def conversations
