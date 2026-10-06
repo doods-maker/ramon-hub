@@ -316,11 +316,11 @@
         "CLIENT_NAME": "Name for the client",
         "CLIENT_NAME_HINT": "Shown in the client portal (lead link). Empty = uses the stage name.",
         "CLIENT_SUGGEST": {
-          "NOVO": "E.g.: We received your contact",
-          "QUALIFICACAO": "E.g.: Understanding your case",
-          "REUNIAO_AGENDADA": "E.g.: Meeting scheduled",
-          "REUNIAO_REALIZADA": "E.g.: Meeting held",
-          "NEGOCIACAO": "E.g.: Proposal under review"
+          "NOVO": "Contact received",
+          "QUALIFICACAO": "Understanding your case",
+          "REUNIAO_AGENDADA": "Meeting scheduled",
+          "REUNIAO_REALIZADA": "Meeting held",
+          "NEGOCIACAO": "Proposal under review"
         }
       },
       "FILTERS": {

@@ -316,11 +316,11 @@
         "CLIENT_NAME": "Nome para o cliente",
         "CLIENT_NAME_HINT": "Aparece no portal do cliente (link do lead). Vazio = usa o nome da etapa.",
         "CLIENT_SUGGEST": {
-          "NOVO": "Ex.: Recebemos o seu contato",
-          "QUALIFICACAO": "Ex.: Entendendo o seu caso",
-          "REUNIAO_AGENDADA": "Ex.: Reunião marcada",
-          "REUNIAO_REALIZADA": "Ex.: Reunião realizada",
-          "NEGOCIACAO": "Ex.: Proposta em análise"
+          "NOVO": "Contato recebido",
+          "QUALIFICACAO": "Entendendo o seu caso",
+          "REUNIAO_AGENDADA": "Reunião marcada",
+          "REUNIAO_REALIZADA": "Reunião realizada",
+          "NEGOCIACAO": "Proposta em análise"
         }
       },
       "FILTERS": {
