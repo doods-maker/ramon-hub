@@ -189,6 +189,16 @@ RSpec.describe Concerns::Agentable do
         expect(dummy_instance.send(:agent_model)).to eq('gpt-4-turbo')
       end
     end
+
+    # ramon: provedor e modelo por função (tela Uso e custo) — a escolha da conta vence o env.
+    it 'usa o modelo escolhido para Atendimento na conta' do
+      account = create(:account, captain_models: { 'assistant' => 'deepseek-v4-flash' })
+      dummy_instance.define_singleton_method(:account) { account }
+
+      with_modified_env RAMON_CAPTAIN_MODEL: 'deepseek-v4-pro', DEEPSEEK_API_KEY: 'k' do
+        expect(dummy_instance.send(:agent_model)).to eq('deepseek-v4-flash')
+      end
+    end
   end
 
   describe '#agent_response_schema' do

@@ -7,6 +7,8 @@ class Captain::Llm::FaqGeneratorService < Llm::BaseAiService
     @content = document.content
     @language = document.account.locale_english_name
     @account_id = document.account_id
+    # ramon: modelo da função "Documentos" (tela Uso e custo); sem escolha, o de antes.
+    @model = Ramon::LlmEscolha.para(document.account, 'documentos')[:model]
   end
 
   def generate

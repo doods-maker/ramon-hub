@@ -48,10 +48,10 @@ module Concerns::Agentable
   # Llm::LegacyBaseOpenAiService. Apontar aquele valor para um LLM de chat quebra a
   # transcricao de audio do WhatsApp. Por isso o agente ganha env propria: sem
   # RAMON_CAPTAIN_MODEL o comportamento e identico ao upstream.
+  # Desde a tela Uso e custo, o modelo escolhido para "Atendimento" vence; sem escolha
+  # vale a cadeia acima (reserva em Ramon::LlmEscolha).
   def agent_model
-    ENV.fetch('RAMON_CAPTAIN_MODEL', nil).presence ||
-      InstallationConfig.find_by(name: 'CAPTAIN_OPEN_AI_MODEL')&.value.presence ||
-      LlmConstants::DEFAULT_MODEL
+    Ramon::LlmEscolha.para(try(:account), 'atendimento')[:model]
   end
 
   # FORK-PONTO (ramon): o DeepSeek — unico provedor desta instalacao — recusa

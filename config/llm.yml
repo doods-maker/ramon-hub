@@ -63,6 +63,34 @@ models:
     provider: openai
     display_name: 'Text Embedding 3 Small'
     credit_multiplier: 1
+  # ramon: provedor e modelo por função (Inteligência → Uso e custo). IDs = os do
+  # registro do RubyLLM (config/llm_models.json), que dá o provedor e o preço.
+  deepseek-chat:
+    provider: deepseek
+    display_name: 'DeepSeek Chat'
+    credit_multiplier: 1
+  deepseek-v4-flash:
+    provider: deepseek
+    display_name: 'DeepSeek V4 Flash'
+    credit_multiplier: 1
+  deepseek-v4-pro:
+    provider: deepseek
+    display_name: 'DeepSeek V4 Pro'
+    credit_multiplier: 2
+  claude-haiku-4-5:
+    provider: anthropic
+    display_name: 'Claude Haiku 4.5'
+    credit_multiplier: 2
+  claude-sonnet-4-6:
+    provider: anthropic
+    display_name: 'Claude Sonnet 4.6'
+    credit_multiplier: 3
+  # Assinatura do Claude (runner da VPS): fora de toda feature — só o agente
+  # @claude do gestor (termos de uso; trava em Ramon::LlmEscolha e CaptainFeaturable).
+  claude-vps:
+    provider: claude_vps
+    display_name: 'Claude da VPS (assinatura)'
+    credit_multiplier: 0
 
 features:
   editor:
@@ -82,6 +110,12 @@ features:
   assistant:
     models:
       [
+        deepseek-chat,
+        deepseek-v4-flash,
+        deepseek-v4-pro,
+        claude-haiku-4-5,
+        claude-sonnet-4-6,
+        gpt-4.1-mini,
         gpt-5-mini,
         gpt-4.1,
         gpt-5.1,
@@ -95,6 +129,12 @@ features:
   copilot:
     models:
       [
+        deepseek-chat,
+        deepseek-v4-flash,
+        deepseek-v4-pro,
+        claude-haiku-4-5,
+        claude-sonnet-4-6,
+        gpt-4.1-mini,
         gpt-5-mini,
         gpt-4.1,
         gpt-5.1,
@@ -105,6 +145,20 @@ features:
         gemini-3-pro,
       ]
     default: gpt-5.1
+  # ramon: FAQ gerada a partir de documento (Captain::Llm::FaqGeneratorService)
+  documentos:
+    models:
+      [
+        deepseek-chat,
+        deepseek-v4-flash,
+        deepseek-v4-pro,
+        claude-haiku-4-5,
+        claude-sonnet-4-6,
+        gpt-4.1-mini,
+        gpt-4.1,
+        gpt-5-mini,
+      ]
+    default: gpt-4.1-mini
   label_suggestion:
     models:
       [gpt-4.1-nano, gpt-4.1-mini, gpt-5-mini, gemini-3-flash, claude-haiku-4.5]
