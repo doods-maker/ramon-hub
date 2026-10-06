@@ -28,6 +28,15 @@ RSpec.describe Ramon::Fluxos::Relogio do
     expect(fluxo.execucoes.count).to eq(1)
   end
 
+  it 'fluxo do sistema com relógio nunca dispara (o resumo do dia é do código)' do
+    create(:lead, account: account, lead_stage: etapa)
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'relogio', 'hora' => '08:00', 'etapa_ids' => [etapa.id] }, nota),
+                            origem: 'sistema')
+    travel_to(sp('2026-10-06 09:00')) { described_class.disparar_do_dia }
+    expect(fluxo.execucoes.count).to eq(0)
+    expect(fluxo.reload.ultimo_disparo_em).to be_nil
+  end
+
   it 'lead parado dispara 1 vez por parada (padrão 11:00, regra da etapa)' do
     parado = create(:lead, account: account, lead_stage: etapa)
     parado.update_columns(stage_entered_at: sp('2026-10-01 10:00')) # rubocop:disable Rails/SkipsModelValidations

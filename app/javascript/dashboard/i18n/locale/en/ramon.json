@@ -869,6 +869,9 @@
       "OPEN_FULL": "Open full file",
       "PASSAGEM": {
         "TITLE": "Handover to the legal team",
+        "ENTREGAR": "Dossier delivered",
+        "ENTREGUE_EM": "Dossier delivered on {data}",
+        "ENTREGAR_ERRO": "Could not mark the delivery — try again",
         "CPF": "CPF",
         "BIRTH": "Date of birth",
         "BENEFIT": "Benefit",
@@ -1031,7 +1034,11 @@
           "FLUXO": "logged (automation)",
           "ZAPSIGN_REFUSED": "refused the contract on ZapSign",
           "MEETING_RESCHEDULED": "rescheduled the meeting",
-          "MEETING_NO_SHOW": "recorded a no-show"
+          "MEETING_NO_SHOW": "recorded a no-show",
+          "VOU_PENSAR": "marked that the client will think it over",
+          "CONTRATO_CANCELADO": "contract cancelled (left Closed)",
+          "REGISTRO_COMPLETO": "record complete (thesis, CPF, birth date and SDR note)",
+          "DOSSIE_ENTREGUE": "marked the dossier as delivered to the legal team"
         }
       },
       "LOADING": "Loading lead…",
@@ -1568,6 +1575,7 @@
       "TITULO": "Meeting (Closer)",
       "QUALIFICADA": "Qualified",
       "NAO_QUALIFICADA": "Not qualified",
+      "VOU_PENSAR": "Client will think it over (did not sign on the spot)",
       "SEM_REGISTRO": "Meeting not recorded yet",
       "REGISTRADA_EM": "recorded on {data}",
       "ERRO": "Could not record the meeting — only the lead Closer or a manager can",
@@ -1581,6 +1589,94 @@
       "FALTAM_DOCS": "Clean contract: {count} document missing | Clean contract: {count} documents missing",
       "SEM_CHECKLIST": "Clean contract: pick the thesis to get the document checklist",
       "EM_DIAS": "Clean contract within the hour | Clean contract in {count} day | Clean contract in {count} days"
+    },
+    "PAINEL_TIME": {
+      "TITLE": "Team dashboard",
+      "SUBTITLE": "Speed, quality and volume of the SDR and the Closer against the plan targets",
+      "PAPEL": {
+        "sdr": "SDR",
+        "closer": "Closer"
+      },
+      "PERIODO": {
+        "hoje": "Today",
+        "semana": "Week",
+        "mes": "This month",
+        "mes_passado": "Last month"
+      },
+      "TIME_TODO": "Whole team",
+      "BLOCO": {
+        "META": "Monthly target",
+        "VELOCIDADE": "Speed and discipline",
+        "QUALIDADE": "Scheduling quality",
+        "FECHAMENTO": "Closing",
+        "POS_FECHAMENTO": "After closing",
+        "VOLUME": "Volume",
+        "POR_PESSOA": "By person"
+      },
+      "META": {
+        "sdr": "Qualified meetings × target",
+        "closer": "Clean contracts × target",
+        "SEM_META": "No target set for the month (Variable pay statement)",
+        "FALTAM": "{n} to go in {dias} business days · pace needed {ritmo}/day",
+        "BATIDA": "target reached",
+        "AGUARDANDO": "+ {n} closed waiting for documents/7 days"
+      },
+      "KPI": {
+        "primeira_resposta": "First response (median, business hours)",
+        "sem_resposta": "Leads unanswered for 1h+ (now)",
+        "registro_completo": "Complete record on the same day",
+        "qualificado_agendada": "Qualified → scheduled",
+        "show": "Show rate",
+        "nao_qualificada": "\"Not qualified\" meetings",
+        "conversao": "Qualified meeting → contract",
+        "assinado_na_reuniao": "Signed during the meeting",
+        "vou_pensar_48h": "\"Will think it over\" followed up in 48h",
+        "docs_7d": "Documents complete in 7 days",
+        "cancelamento_7d": "Cancelled within 7 days",
+        "painel": "Client portal delivered",
+        "dossie_24h": "Dossier delivered in 24h"
+      },
+      "COLUNA": {
+        "PESSOA": "Person",
+        "META": "Target",
+        "LEADS": "Leads",
+        "CONTRATOS": "Contracts",
+        "primeira_resposta": "1st response",
+        "sem_resposta": "Unanswered 1h+",
+        "show": "Show",
+        "nao_qualificada": "Not qualif.",
+        "registro_completo": "Record",
+        "conversao": "Conversion",
+        "assinado_na_reuniao": "In meeting",
+        "docs_7d": "Docs 7d",
+        "cancelamento_7d": "Cancel. 7d",
+        "painel": "Portal",
+        "dossie_24h": "Dossier 24h"
+      },
+      "ALVO": {
+        "min": "target ≥ {alvo}",
+        "max": "target ≤ {alvo}",
+        "ZERO": "target 0"
+      },
+      "DE": "{num} of {den}",
+      "RESPOSTAS": "{n} response | {n} responses",
+      "STATUS": {
+        "ok": "ok",
+        "atencao": "watch",
+        "cobrar": "act",
+        "SEM_DADO": "no data"
+      },
+      "VOLUME": {
+        "sdr": "Leads received per day",
+        "closer": "Contracts per week",
+        "TOTAL": "{n} in the period",
+        "MEDIA": "average {media}/business day"
+      },
+      "NOTA": "How to read: green = within the plan target, amber = close, red = act on it. Business hours: Mon–Fri, 8:30–12:00 and 13:30–18:00. A deadline still running (7 days, 24h, 48h) only counts once it is over or already met.",
+      "VAZIO": "Nobody in the {papel} team yet — the team comes from Settings → Teams.",
+      "VAZIO_AGENTE": "You are not in the {papel} team.",
+      "LOAD_ERROR": "Could not load the dashboard.",
+      "RETRY": "Try again"
     },
     "EXTRATO": {
       "TITLE": "Variable pay statement",
@@ -1798,6 +1894,7 @@
       "TV": "TV scoreboard",
       "RELATORIOS": "Reports",
       "EXTRATO": "Variable pay statement",
+      "PAINEL_TIME": "Team dashboard",
       "REGISTRO_ACOES": "Action log"
     },
     "RAIL": {
@@ -1976,8 +2073,49 @@
       "NOVO": "New flow",
       "FECHAR": "Close",
       "ABA_MEUS": "My flows",
+      "ABA_SISTEMA": "Built-in",
       "VAZIO": "No flows yet. Start from a template in New flow.",
       "ERRO_CRIAR": "Could not create the flow.",
+      "SISTEMA": {
+        "EXPLICA": "These automations run today in the hub code, not on the board. Here you see each one drawn, read-only, so you can check what the hub does on its own. They will become editable flows one by one: first they run side by side as a dry run, we compare them with the code and, if they match, the flow takes over.",
+        "SEM_CONTADOR": "No cheap counter for today",
+        "HOJE_DE": {
+          "cadencia": "follow-up drafts created today",
+          "sla_primeira_resposta": "new conversations today in inboxes that create leads (does not count missed deadlines)",
+          "lembretes_reuniao": "meetings scheduled or rescheduled today (does not count reminders sent)",
+          "eventos_advbox": "ADVBOX events processed today",
+          "lead_ganho": "leads won today",
+          "docs_completos": "leads that completed their documents today",
+          "contrato_limpo": "clean contracts today",
+          "copiloto_noturno": "copilot suggestions generated today",
+          "chegada_cliente": "client arrivals escalated today",
+          "publicar_pecas": "publications started today"
+        },
+        "GRUPOS": {
+          "leads_conversas": "Leads and conversations",
+          "contrato_documentos": "Contract and documents",
+          "painel_cliente": "Client Portal",
+          "rotinas_relatorios": "Routines and reports",
+          "instagram": "Instagram"
+        },
+        "ALCANCE": {
+          "fala_com_cliente": "talks to the client",
+          "publica": "publishes"
+        }
+      },
+      "RODAR": {
+        "ITEM": "Run flow…",
+        "TITULO": "Run flow",
+        "AJUDA": "Published, enabled flows with the Run by hand trigger. Messages to the client are drafts.",
+        "CARREGANDO": "Loading…",
+        "VAZIO": "No published, enabled Run by hand flow.",
+        "IR_AUTOMACOES": "Open Automations",
+        "RODOU": "Flow {nome} running.",
+        "VER_EXECUCAO": "See run",
+        "NAO_RODOU": "The flow did not run: it is off, unpublished, at its daily limit or already running here.",
+        "ERRO": "Could not run the flow. Try again.",
+        "ERRO_LISTA": "Could not load the flows."
+      },
       "RESUMO": {
         "LIGADOS": "On",
         "DE": "of {total}",
@@ -1998,7 +2136,8 @@
       "SELO": {
         "OK": "ok",
         "FALHOU": "{n} failed",
-        "DESLIGADO": "off"
+        "DESLIGADO": "off",
+        "NO_CODIGO": "runs in code"
       },
       "GATILHOS": {
         "conversa_criada": "New conversation",
@@ -2131,7 +2270,8 @@
         "EXCLUIR_MSG": "The design, versions and run history go away. This cannot be undone.",
         "EXECUCOES": "Recent runs",
         "SEM_EXECUCOES": "No runs yet. Use Test with a lead… to see the path.",
-        "SELECIONE": "Click a step to configure it."
+        "SELECIONE": "Click a step to configure it.",
+        "COMO_RODA": "How it runs today"
       },
       "NO": {
         "SAI_RASCUNHO": "goes out as a draft",
@@ -2270,7 +2410,8 @@
         "texto": "Message text",
         "nome": "Name",
         "telefone": "Phone",
-        "documentos_completos": "Documents complete (yes or no)"
+        "documentos_completos": "Documents complete (yes or no)",
+        "regra": "ADVBOX rule (event)"
       },
       "OPERADORES": {
         "igual": "equals",
@@ -2293,6 +2434,11 @@
         "minutos": "minutes",
         "horas": "hours",
         "dias": "days"
+      },
+      "UNIDADES_UM": {
+        "minutos": "minute",
+        "horas": "hour",
+        "dias": "day"
       },
       "CAMPOS_OBRIGATORIOS": {
         "texto": "the text",

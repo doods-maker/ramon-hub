@@ -31,13 +31,18 @@ const registradaEm = computed(() =>
 
 const contrato = computed(() => contratoLimpoStatus(props.lead));
 
+// "Cliente vai pensar": marca à parte (Painel do time), não muda o resultado
+const vouPensar = ref(false);
+
 const marcar = async resultado => {
   saving.value = true;
   try {
     await store.dispatch('leads/registrarReuniao', {
       id: props.lead.id,
       resultado,
+      vouPensar: vouPensar.value,
     });
+    vouPensar.value = false;
   } catch (e) {
     useAlert(t('RAMON.REUNIAO.ERRO'));
   } finally {
@@ -56,6 +61,18 @@ const variante = ativo =>
   <div data-testid="lead-reuniao" class="mt-3" :class="SECAO">
     <label class="block mb-1 text-xs text-n-slate-10">
       {{ $t('RAMON.REUNIAO.TITULO') }}
+    </label>
+    <label
+      v-if="podeMarcar"
+      class="mb-2 flex items-center gap-1.5 text-xs text-n-slate-11"
+    >
+      <input
+        v-model="vouPensar"
+        type="checkbox"
+        data-testid="reuniao-vou-pensar"
+        :disabled="saving"
+      />
+      {{ $t('RAMON.REUNIAO.VOU_PENSAR') }}
     </label>
     <div class="flex flex-wrap items-center gap-2">
       <template v-if="podeMarcar">

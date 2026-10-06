@@ -869,6 +869,9 @@
       "OPEN_FULL": "Abrir ficha completa",
       "PASSAGEM": {
         "TITLE": "Passagem ao jurídico",
+        "ENTREGAR": "Dossiê entregue",
+        "ENTREGUE_EM": "Dossiê entregue em {data}",
+        "ENTREGAR_ERRO": "Não foi possível marcar a entrega — tente de novo",
         "CPF": "CPF",
         "BIRTH": "Nascimento",
         "BENEFIT": "Benefício",
@@ -1031,7 +1034,11 @@
           "FLUXO": "registrou (automação)",
           "ZAPSIGN_REFUSED": "contrato recusado no ZapSign",
           "MEETING_RESCHEDULED": "remarcou a reunião",
-          "MEETING_NO_SHOW": "registrou que o cliente não compareceu"
+          "MEETING_NO_SHOW": "registrou que o cliente não compareceu",
+          "VOU_PENSAR": "marcou que o cliente vai pensar",
+          "CONTRATO_CANCELADO": "contrato cancelado (saiu de Fechado)",
+          "REGISTRO_COMPLETO": "registro completo (tese, CPF, nascimento e nota do SDR)",
+          "DOSSIE_ENTREGUE": "marcou o dossiê como entregue ao jurídico"
         }
       },
       "LOADING": "Carregando lead…",
@@ -1573,6 +1580,7 @@
       "TITULO": "Reunião (Closer)",
       "QUALIFICADA": "Qualificada",
       "NAO_QUALIFICADA": "Não qualificada",
+      "VOU_PENSAR": "Cliente vai pensar (não fechou na hora)",
       "SEM_REGISTRO": "Reunião ainda não registrada",
       "REGISTRADA_EM": "registrada em {data}",
       "ERRO": "Não foi possível registrar a reunião — só o Closer do lead ou o gestor pode marcar",
@@ -1586,6 +1594,94 @@
       "FALTAM_DOCS": "Contrato limpo: falta {count} documento | Contrato limpo: faltam {count} documentos",
       "SEM_CHECKLIST": "Contrato limpo: escolha a tese pra ter a checklist de documentos",
       "EM_DIAS": "Contrato limpo na próxima hora | Contrato limpo em {count} dia | Contrato limpo em {count} dias"
+    },
+    "PAINEL_TIME": {
+      "TITLE": "Painel do time",
+      "SUBTITLE": "Velocidade, qualidade e volume do SDR e do Closer contra as metas do plano",
+      "PAPEL": {
+        "sdr": "SDR",
+        "closer": "Closer"
+      },
+      "PERIODO": {
+        "hoje": "Hoje",
+        "semana": "Semana",
+        "mes": "Este mês",
+        "mes_passado": "Mês passado"
+      },
+      "TIME_TODO": "Time todo",
+      "BLOCO": {
+        "META": "Meta do mês",
+        "VELOCIDADE": "Velocidade e disciplina",
+        "QUALIDADE": "Qualidade do agendamento",
+        "FECHAMENTO": "Fechamento",
+        "POS_FECHAMENTO": "Pós-fechamento",
+        "VOLUME": "Volume",
+        "POR_PESSOA": "Por pessoa"
+      },
+      "META": {
+        "sdr": "Reuniões qualificadas × meta",
+        "closer": "Contratos limpos × meta",
+        "SEM_META": "Sem meta lançada no mês (Extrato da variável)",
+        "FALTAM": "faltam {n} em {dias} dias úteis · ritmo necessário {ritmo}/dia",
+        "BATIDA": "meta batida",
+        "AGUARDANDO": "+ {n} fechados aguardando docs/7 dias"
+      },
+      "KPI": {
+        "primeira_resposta": "1ª resposta (mediana, horário comercial)",
+        "sem_resposta": "Leads sem resposta há +1h (agora)",
+        "registro_completo": "Registro completo no mesmo dia",
+        "qualificado_agendada": "Qualificado → agendada",
+        "show": "Comparecimento (show)",
+        "nao_qualificada": "Reuniões \"não qualificada\"",
+        "conversao": "Reunião qualificada → contrato",
+        "assinado_na_reuniao": "Assinados na própria reunião",
+        "vou_pensar_48h": "\"Vou pensar\" retomado em 48h",
+        "docs_7d": "Docs completos em 7 dias",
+        "cancelamento_7d": "Cancelamento em 7 dias",
+        "painel": "Painel do Cliente entregue",
+        "dossie_24h": "Dossiê entregue em 24h"
+      },
+      "COLUNA": {
+        "PESSOA": "Pessoa",
+        "META": "Meta",
+        "LEADS": "Leads",
+        "CONTRATOS": "Contratos",
+        "primeira_resposta": "1ª resposta",
+        "sem_resposta": "Sem resp. +1h",
+        "show": "Show",
+        "nao_qualificada": "Não qualif.",
+        "registro_completo": "Registro",
+        "conversao": "Conversão",
+        "assinado_na_reuniao": "Na reunião",
+        "docs_7d": "Docs 7d",
+        "cancelamento_7d": "Cancel. 7d",
+        "painel": "Painel",
+        "dossie_24h": "Dossiê 24h"
+      },
+      "ALVO": {
+        "min": "meta ≥ {alvo}",
+        "max": "meta ≤ {alvo}",
+        "ZERO": "meta 0"
+      },
+      "DE": "{num} de {den}",
+      "RESPOSTAS": "{n} resposta | {n} respostas",
+      "STATUS": {
+        "ok": "ok",
+        "atencao": "atenção",
+        "cobrar": "cobrar",
+        "SEM_DADO": "sem dado"
+      },
+      "VOLUME": {
+        "sdr": "Leads recebidos por dia",
+        "closer": "Contratos por semana",
+        "TOTAL": "{n} no período",
+        "MEDIA": "média {media}/dia útil"
+      },
+      "NOTA": "Como ler: filete verde = dentro da meta do plano, âmbar = perto, vermelho = cobrar. Horário comercial: seg–sex, 8h30–12h e 13h30–18h. Prazo ainda correndo (7 dias, 24h, 48h) só conta quando venceu ou já foi cumprido.",
+      "VAZIO": "Ninguém no time {papel} ainda — o time vem de Configurações → Times.",
+      "VAZIO_AGENTE": "Você não está no time {papel}.",
+      "LOAD_ERROR": "Não foi possível carregar o painel.",
+      "RETRY": "Tentar de novo"
     },
     "EXTRATO": {
       "TITLE": "Extrato da variável",
@@ -1803,6 +1899,7 @@
       "TV": "Placar da TV",
       "RELATORIOS": "Relatórios",
       "EXTRATO": "Extrato da variável",
+      "PAINEL_TIME": "Painel do time",
       "REGISTRO_ACOES": "Registro de ações"
     },
     "RAIL": {
@@ -1981,8 +2078,49 @@
       "NOVO": "Novo fluxo",
       "FECHAR": "Fechar",
       "ABA_MEUS": "Meus fluxos",
+      "ABA_SISTEMA": "Do sistema",
       "VAZIO": "Nenhum fluxo ainda. Comece por um modelo pronto em Novo fluxo.",
       "ERRO_CRIAR": "Não consegui criar o fluxo.",
+      "SISTEMA": {
+        "EXPLICA": "Estas automações rodam hoje pelo código do hub, não pelo quadro. Aqui você vê o desenho de cada uma, só para leitura, para conferir o que o hub faz sozinho. Elas vão virar fluxos editáveis uma a uma: primeiro rodam lado a lado em modo ensaio, comparamos com o código e, se baterem, o fluxo assume.",
+        "SEM_CONTADOR": "Sem contador barato para hoje",
+        "HOJE_DE": {
+          "cadencia": "rascunhos de retomada criados hoje",
+          "sla_primeira_resposta": "conversas novas hoje nas caixas que criam lead (não conta estouros de prazo)",
+          "lembretes_reuniao": "reuniões marcadas ou remarcadas hoje (não conta lembretes enviados)",
+          "eventos_advbox": "eventos do ADVBOX processados hoje",
+          "lead_ganho": "leads ganhos hoje",
+          "docs_completos": "leads que completaram os documentos hoje",
+          "contrato_limpo": "contratos limpos hoje",
+          "copiloto_noturno": "sugestões do copiloto geradas hoje",
+          "chegada_cliente": "chegadas de cliente escaladas hoje",
+          "publicar_pecas": "publicações iniciadas hoje"
+        },
+        "GRUPOS": {
+          "leads_conversas": "Leads e conversas",
+          "contrato_documentos": "Contrato e documentos",
+          "painel_cliente": "Painel do Cliente",
+          "rotinas_relatorios": "Rotinas e relatórios",
+          "instagram": "Instagram"
+        },
+        "ALCANCE": {
+          "fala_com_cliente": "fala com o cliente",
+          "publica": "publica"
+        }
+      },
+      "RODAR": {
+        "ITEM": "Rodar fluxo…",
+        "TITULO": "Rodar fluxo",
+        "AJUDA": "Fluxos publicados e ligados com o gatilho Rodar na mão. Mensagem ao cliente sai como rascunho.",
+        "CARREGANDO": "Carregando…",
+        "VAZIO": "Nenhum fluxo de Rodar na mão publicado e ligado.",
+        "IR_AUTOMACOES": "Abrir Automações",
+        "RODOU": "Fluxo {nome} rodando.",
+        "VER_EXECUCAO": "Ver execução",
+        "NAO_RODOU": "O fluxo não rodou: está desligado, sem versão publicada, no limite do dia ou já rodando aqui.",
+        "ERRO": "Não consegui rodar o fluxo. Tente de novo.",
+        "ERRO_LISTA": "Não consegui carregar os fluxos."
+      },
       "RESUMO": {
         "LIGADOS": "Ligados",
         "DE": "de {total}",
@@ -2003,7 +2141,8 @@
       "SELO": {
         "OK": "ok",
         "FALHOU": "{n} falhou",
-        "DESLIGADO": "desligado"
+        "DESLIGADO": "desligado",
+        "NO_CODIGO": "roda no código"
       },
       "GATILHOS": {
         "conversa_criada": "Nova conversa",
@@ -2136,7 +2275,8 @@
         "EXCLUIR_MSG": "Some o desenho, as versões e o histórico de execuções. Não dá para desfazer.",
         "EXECUCOES": "Execuções recentes",
         "SEM_EXECUCOES": "Nenhuma execução ainda. Use Testar com um lead… para ver o caminho.",
-        "SELECIONE": "Clique num passo para configurar."
+        "SELECIONE": "Clique num passo para configurar.",
+        "COMO_RODA": "Como roda hoje"
       },
       "NO": {
         "SAI_RASCUNHO": "sai como rascunho",
@@ -2275,7 +2415,8 @@
         "texto": "Texto da mensagem",
         "nome": "Nome",
         "telefone": "Telefone",
-        "documentos_completos": "Documentos completos (sim ou não)"
+        "documentos_completos": "Documentos completos (sim ou não)",
+        "regra": "Regra do ADVBOX (evento)"
       },
       "OPERADORES": {
         "igual": "é igual a",
@@ -2298,6 +2439,11 @@
         "minutos": "minutos",
         "horas": "horas",
         "dias": "dias"
+      },
+      "UNIDADES_UM": {
+        "minutos": "minuto",
+        "horas": "hora",
+        "dias": "dia"
       },
       "CAMPOS_OBRIGATORIOS": {
         "texto": "o texto",

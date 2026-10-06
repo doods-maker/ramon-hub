@@ -30,6 +30,21 @@ describe('NoPasso — webhook', () => {
   });
 });
 
+describe('NoPasso — esperar', () => {
+  it('singular com 1 (1 dia, não "1 dias")', () => {
+    const um = montar({
+      tipo: 'esperar',
+      config: { quantidade: 1, unidade: 'dias' },
+    });
+    const dois = montar({
+      tipo: 'esperar',
+      config: { quantidade: 2, unidade: 'dias' },
+    });
+    expect(um.text()).toMatch(/1 day\b/);
+    expect(dois.text()).toMatch(/2 days/);
+  });
+});
+
 describe('NoPasso — saída tomada', () => {
   it('acende só o rótulo da saída tomada', () => {
     const w = montar({ saidaTomada: 'sim' });

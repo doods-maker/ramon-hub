@@ -14,7 +14,7 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key, te: () => false }),
 }));
 vi.mock('dashboard/api/leads', () => ({
-  default: { getDossie: vi.fn() },
+  default: { getDossie: vi.fn(), dossieEntregue: vi.fn() },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('shared/helpers/clipboard', () => ({
@@ -149,6 +149,45 @@ describe('Dossie.vue', () => {
     await wrapper.find('[data-testid="dossie-timeline-more"]').trigger('click');
     expect(wrapper.findAll('[data-testid="activity-row"]')).toHaveLength(25);
     expect(wrapper.find('[data-testid="dossie-timeline-more"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('Dossiê entregue: botão no lead ganho grava e vira o selo com a data', async () => {
+    const ganho = {
+      passagem: {
+        ...payload.passagem,
+        entrega: { ganho_em: '2026-10-05T12:00:00Z', entregue_em: null },
+      },
+    };
+    const wrapper = await mountDossie(ganho);
+    LeadsAPI.dossieEntregue.mockResolvedValue({
+      data: {
+        ...payload,
+        passagem: {
+          ...payload.passagem,
+          entrega: {
+            ganho_em: '2026-10-05T12:00:00Z',
+            entregue_em: '2026-10-05T15:00:00Z',
+            por: 'Bruno',
+          },
+        },
+      },
+    });
+    await wrapper.find('[data-testid="passagem-entregar"]').trigger('click');
+    await flushPromises();
+    expect(LeadsAPI.dossieEntregue).toHaveBeenCalledWith('5');
+    expect(wrapper.find('[data-testid="passagem-entregar"]').exists()).toBe(
+      false
+    );
+    expect(wrapper.find('[data-testid="passagem-entregue"]').exists()).toBe(
+      true
+    );
+  });
+
+  it('sem ganho não mostra o botão de entrega', async () => {
+    const wrapper = await mountDossie();
+    expect(wrapper.find('[data-testid="passagem-entregar"]').exists()).toBe(
       false
     );
   });

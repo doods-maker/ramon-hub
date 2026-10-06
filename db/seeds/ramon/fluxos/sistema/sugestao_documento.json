@@ -1,0 +1,15 @@
+{
+  "nome": "Sugestão de documento",
+  "grupo": "contrato_documentos",
+  "descricao": "No código: RamonLeadListener#message_created → Ramon::DocMatchJob → Ramon::DocMatchService (anexo de imagem ou arquivo).\n\nO desenho não consegue mostrar:\n• a IA compara o anexo com o checklist da tese e grava uma sugestão (custom_attributes.doc_sugestao) — quem confirma é a equipe, no painel;\n• o aviso na conversa é um balão de evento (não nota privada);\n• é daqui que nasce o gatilho Documento recebido dos fluxos.",
+  "resumo": "Quando o cliente manda um anexo, sugere a qual documento do checklist ele corresponde.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida","rotulo":"Mensagem com anexo (imagem ou arquivo)"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"nota_privada","config":{"rotulo":"IA sugere o item do checklist (a equipe confirma)","texto":"Balão: o anexo parece ser um documento do checklist — confirmar no painel"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

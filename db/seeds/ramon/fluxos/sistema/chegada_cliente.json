@@ -1,0 +1,17 @@
+{
+  "nome": "Chegada de cliente",
+  "grupo": "leads_conversas",
+  "descricao": "No código: RamonChegadasController#create agenda Ramon::ChegadaEscalarJob para 3 min depois (Chegada::ESCALAR_APOS).\n\nO desenho não consegue mostrar:\n• o aviso de chegada é feito pela recepção no hub — os fluxos não têm esse gatilho (aqui: Rodar na mão com o rótulo do evento real);\n• só escala se ninguém respondeu; o alerta volta a tocar na tela de quem avisou (ao vivo, não é o sino).",
+  "resumo": "Se ninguém atende o cliente que chegou ao escritório em 3 minutos, avisa a equipe.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Recepção avisa a chegada do cliente"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"esperar","config":{"rotulo":"3 minutos","quantidade":3,"unidade":"minutos"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"avisar_sino","config":{"rotulo":"Escala de volta para quem avisou (se ninguém respondeu)","texto":"Cliente chegou e ninguém respondeu"},"posicao":{"x":0,"y":280}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"}
+    ]
+  }
+}

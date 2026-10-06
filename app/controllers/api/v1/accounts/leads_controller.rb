@@ -51,12 +51,14 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     head :accepted
   end
 
-  # Closer registra a reunião: qualificada ou não (base do prêmio do SDR).
+  # Closer registra a reunião: qualificada ou não (base do prêmio do SDR);
+  # vou_pensar=true marca à parte que o cliente vai pensar (Painel do time).
   def reuniao
     resultado = params[:resultado].to_s
     return render json: { error: 'RESULTADO_INVALIDO' }, status: :unprocessable_entity unless Lead::REUNIAO_RESULTADOS.include?(resultado)
 
-    @lead.registrar_reuniao!(resultado, Current.user, task: @lead.lead_tasks.open_tasks.find_by(id: params[:task_id], kind: 'meeting'))
+    task = @lead.lead_tasks.open_tasks.find_by(id: params[:task_id], kind: 'meeting')
+    @lead.registrar_reuniao!(resultado, Current.user, task: task, vou_pensar: ActiveModel::Type::Boolean.new.cast(params[:vou_pensar]))
     render :show
   end
 

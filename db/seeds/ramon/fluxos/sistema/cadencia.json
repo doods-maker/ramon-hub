@@ -1,0 +1,26 @@
+{
+  "nome": "Cadência de retomada",
+  "grupo": "leads_conversas",
+  "descricao": "No código: Ramon::DailyFollowUpJob (todo dia às 11:00) → Ramon::FollowUpDraftService; também roda na hora pelo botão Preparar retomada do painel do lead (Ramon::FollowUpDraftJob).\n\nO desenho não consegue mostrar:\n• o Se só confere se há conversa; as outras regras (nenhuma tarefa de retomada aberta e a última retomada há mais de 5 dias) estão só no rótulo;\n• o código roda todo dia para quem segue parado (o gatilho Lead parado dos fluxos dispara 1 vez por parada);\n• o teto é de 15 retomadas por dia por conta, na ordem do radar de parados;\n• o rascunho vai para as notas do lead (não para a conversa) e, se a IA falhar, entra um texto fixo de retomada;\n• o contador de tentativas fica em custom_attributes.follow_up (o passo Preencher campo grava em campos);\n• o aviso na conversa é um balão de evento (não nota privada) e o push é um só por conta, com o total do lote, e só sai com NTFY_TOPIC configurado.",
+  "resumo": "Todo dia às 11h, prepara rascunhos de retomada para leads parados.",
+  "limite_dia": 15,
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_parado","hora":"11:00"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"se","config":{"rotulo":"Pode retomar? (tem conversa, nenhuma retomada aberta, última há mais de 5 dias)","juncao":"e","condicoes":[{"campo":"caixa","operador":"existe","valor":""}]},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"rascunho_ia","config":{"rotulo":"Rascunho de retomada nº N (nas notas do lead)","instrucao":"Mensagem de retomada de WhatsApp para um lead que parou de responder: 2 a 4 frases, tom de médico de confiança, sem pressão. O ângulo muda com a tentativa — 1ª: lembrete leve de que estamos à disposição; 2ª: uma informação nova e útil sobre a tese; 3ª em diante: pergunta direta sobre o interesse, deixando a porta aberta. Nunca prometa resultado do caso nem prazo do INSS. Não invente fatos que não estejam na conversa."},"posicao":{"x":0,"y":300}},
+      {"id":"n4","tipo":"criar_tarefa","config":{"rotulo":"Tarefa de retomada para hoje","titulo":"Retomada nº N","tipo":"follow_up","prazo_dias":0},"posicao":{"x":0,"y":460}},
+      {"id":"n5","tipo":"preencher_campo","config":{"rotulo":"Conta a tentativa (custom_attributes.follow_up)","chave":"follow_up","valor":"tentativa nº N, hoje"},"posicao":{"x":0,"y":600}},
+      {"id":"n6","tipo":"nota_privada","config":{"rotulo":"Balão na conversa: Cadência do hub","texto":"⟳ Cadência do hub preparou o rascunho de retomada nº N — revise e envie pelo painel."},"posicao":{"x":0,"y":740}},
+      {"id":"n7","tipo":"avisar_push","config":{"rotulo":"Push: retomadas prontas (1 por conta)","titulo":"Retomadas prontas pra revisar","texto":"N rascunho(s) de retomada esperando revisão no hub"},"posicao":{"x":0,"y":880}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"sim","para":"n3"},
+      {"de":"n3","saida":"s","para":"n4"},
+      {"de":"n4","saida":"s","para":"n5"},
+      {"de":"n5","saida":"s","para":"n6"},
+      {"de":"n6","saida":"s","para":"n7"}
+    ]
+  }
+}

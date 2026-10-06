@@ -1,0 +1,16 @@
+{
+  "nome": "Publicar peças no Instagram",
+  "grupo": "instagram",
+  "alcance": "publica",
+  "descricao": "No código: Ramon::PublicarPecasJob (a cada minuto) → Ramon::InstagramPublisher (API oficial da Meta).\n\nO desenho não consegue mostrar:\n• publica no Instagram da banca as peças com status agendado e data já vencida; o job só confere isso — a aprovação (\"pode postar\") acontece antes, ao agendar;\n• peças presas em publicando há mais de 30 min são marcadas como interrompidas (falhou, ou publicado se o id da Meta já estava gravado);\n• roda a cada minuto, não 1 vez por dia (aqui: Rodar na mão com o rótulo do horário real); não é lead nem conversa;\n• sem nova tentativa automática: falhou → status falhou + push, e o Eduardo decide tentar de novo.",
+  "resumo": "A cada minuto, publica no Instagram as peças agendadas cuja hora chegou.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"A cada minuto: peças agendadas que venceram"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"webhook","config":{"rotulo":"Publica no Instagram (API oficial da Meta)","url":"https://graph.facebook.com"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

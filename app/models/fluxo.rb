@@ -44,7 +44,7 @@ class Fluxo < ApplicationRecord
       id: id, nome: nome, descricao: descricao, gatilho_tipo: gatilho_tipo, ativo: ativo, limite_dia: limite_dia,
       origem: origem, sistema_chave: sistema_chave, modo: modo, versao: versao_publicada&.numero,
       editado_em: updated_at
-    }.merge(contadores)
+    }.merge(origem == 'sistema' ? {} : contadores) # do sistema: o motor não os roda; o "Hoje" vem de Sistema.extras
   end
 
   private

@@ -1,0 +1,17 @@
+{
+  "nome": "Coach de objeção",
+  "grupo": "leads_conversas",
+  "descricao": "No código: RamonLeadListener#message_created → Ramon::CoachObjecaoJob → Ramon::CoachObjecaoService (texto com 20 caracteres ou mais, contados no texto sem espaços nas pontas).\n\nO desenho não consegue mostrar:\n• só roda se o lead tem tese com playbook de objeções (elegivel?);\n• no máximo 1 vez a cada 10 min por conversa; qualquer erro = silêncio;\n• as 2 respostas vêm do playbook da tese (objeções) e aparecem num balão de evento — \"Usar →\" só coloca o texto no editor, quem envia é a pessoa.",
+  "resumo": "Quando o cliente manda mensagem com uma objeção, sugere 2 respostas para a equipe.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida","rotulo":"Mensagem com texto (20 caracteres ou mais)"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"perguntar_ia","config":{"rotulo":"Há objeção nesta mensagem?","pergunta":"O cliente levantou uma objeção (preço, desconfiança, \"vou pensar\"…)?"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"nota_privada","config":{"rotulo":"Balão com 2 respostas do playbook (Usar → só preenche o editor)","texto":"Duas respostas prontas para a objeção, tiradas do playbook da tese"},"posicao":{"x":0,"y":280}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"sim","para":"n3"}
+    ]
+  }
+}

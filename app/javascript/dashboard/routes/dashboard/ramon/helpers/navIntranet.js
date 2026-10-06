@@ -68,6 +68,7 @@ const SECOES = [
         label: 'RAMON.NAV.RESULTADOS',
         icon: 'i-lucide-bar-chart-3',
         abas: [
+          aba('ramon_painel_time', 'PAINEL_TIME'),
           aba('ramon_extrato', 'EXTRATO'),
           aba('ramon_relatorios', 'RELATORIOS', { adminOnly: true }),
           // Placar é standalone (fora do layout): a aba só navega até ele.

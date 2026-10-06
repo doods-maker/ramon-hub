@@ -20,8 +20,8 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
     expect(response.parsed_body).to include('versao' => 1)
 
     get url, headers: admin.create_new_auth_token, as: :json
-    expect(response.parsed_body['payload'].first).to include('nome' => 'Pós-contrato', 'gatilho_tipo' => 'manual', 'versao' => 1,
-                                                             'ativo' => true, 'hoje' => 0)
+    meu = response.parsed_body['payload'].find { |f| f['origem'] == 'usuario' }
+    expect(meu).to include('nome' => 'Pós-contrato', 'gatilho_tipo' => 'manual', 'versao' => 1, 'ativo' => true, 'hoje' => 0)
     expect(response.parsed_body['resumo']).to include('ligados' => 1, 'total' => 1)
   end
 
@@ -48,10 +48,34 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
     expect(response.parsed_body['erros']).to eq(['O fluxo ainda não foi publicado'])
   end
 
-  it 'fluxo do sistema é só leitura' do
+  it 'fluxo do sistema é só leitura: não edita, não publica, não roda e não ensaia' do
     fluxo = fluxo_publicado(account, grafo, origem: 'sistema')
+    lead = create(:lead, account: account)
     patch "#{url}/#{fluxo.id}", params: { nome: 'Y' }, headers: admin.create_new_auth_token, as: :json
     expect(response).to have_http_status(:forbidden)
+    post "#{url}/#{fluxo.id}/publicar", headers: admin.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:forbidden)
+    post "#{url}/#{fluxo.id}/ensaio", params: { lead_id: lead.id }, headers: admin.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:forbidden)
+    post "#{url}/#{fluxo.id}/rodar", params: { lead_id: lead.id }, headers: admin.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:forbidden)
+    expect(fluxo.execucoes.count).to eq(0)
+  end
+
+  it 'a lista traz os 29 do sistema com Hoje, grupo e selo; os 4 números contam só os meus' do
+    fluxo_publicado(account, grafo)
+    get url, headers: admin.create_new_auth_token, as: :json
+    sistema = response.parsed_body['payload'].select { |f| f['origem'] == 'sistema' }
+    expect(sistema.size).to eq(29)
+    avisos = sistema.find { |f| f['sistema_chave'] == 'avisos_painel' }
+    expect(avisos).to include('hoje' => nil, 'ativo' => false, 'versao' => nil, 'grupo' => 'painel_cliente',
+                              'alcance' => 'fala_com_cliente', 'gatilho_rotulo' => 'Todo dia às 08:00 (só com PORTAL_AVISOS=on)')
+    expect(sistema.find { |f| f['sistema_chave'] == 'lead_ganho' }).to include('hoje' => 0, 'alcance' => nil)
+    expect(response.parsed_body['resumo']).to include('ligados' => 1, 'total' => 1)
+
+    get "#{url}/#{avisos['id']}", headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body).to include('alcance' => 'fala_com_cliente', 'origem' => 'sistema')
+    expect(response.parsed_body['rascunho']['nos']).to be_present
   end
 
   it 'lista execuções do fluxo' do

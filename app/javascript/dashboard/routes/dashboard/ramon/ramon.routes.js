@@ -132,4 +132,11 @@ export const routes = [
     component: () => import('./pages/Extrato.vue'),
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
+  {
+    // Agente também entra: o backend só devolve a própria linha.
+    path: frontendURL('accounts/:accountId/ramon/painel-do-time'),
+    name: 'ramon_painel_time',
+    component: () => import('./pages/PainelTime.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
 ];

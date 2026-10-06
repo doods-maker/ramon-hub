@@ -356,6 +356,7 @@ Rails.application.routes.draw do
           resource :ramon_extrato, only: [:show], controller: 'ramon_extrato' do
             put :meta
           end
+          resource :ramon_painel_time, only: [:show], controller: 'ramon_painel_time'
           resources :ramon_registro_acoes, only: [:index], controller: 'ramon_registro_acoes'
           resources :captain_tool_runs, only: [:index]
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
@@ -369,6 +370,7 @@ Rails.application.routes.draw do
             end
             member do
               get :dossie, to: 'lead_dossies#show'
+              post :dossie_entregue, to: 'lead_dossies#entregue'
               post :portal_link
               post :follow_up_draft
               post :reuniao

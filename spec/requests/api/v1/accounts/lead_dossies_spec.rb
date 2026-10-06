@@ -30,4 +30,18 @@ RSpec.describe 'Lead Dossiê API', type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe 'POST /api/v1/accounts/:account_id/leads/:id/dossie_entregue' do
+    let(:ganho) { create(:lead, account: account, lead_stage: account.lead_stages.find_by(is_won: true)) }
+    let(:url) { "/api/v1/accounts/#{account.id}/leads/#{ganho.id}/dossie_entregue" }
+
+    it 'marca uma vez só e devolve o dossiê com a entrega', :aggregate_failures do
+      2.times { post url, headers: agent.create_new_auth_token, as: :json }
+
+      expect(response).to have_http_status(:success)
+      expect(ganho.lead_activities.where(kind: 'dossie_entregue').pluck(:user_id)).to eq([agent.id])
+      expect(response.parsed_body.dig('passagem', 'entrega', 'entregue_em')).to be_present
+      expect(response.parsed_body.dig('passagem', 'entrega', 'por')).to eq(agent.name)
+    end
+  end
 end

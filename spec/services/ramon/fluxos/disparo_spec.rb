@@ -59,6 +59,14 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect(fluxo.execucoes.last.ensaio).to be(true)
   end
 
+  it 'fluxo do sistema nunca roda pelo motor, nem ligado e publicado (D7: quem roda é o código)' do
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, nota), origem: 'sistema')
+    expect(described_class.call('manual', lead)).to eq([])
+    expect(described_class.manual(fluxo, lead)).to be_nil
+    expect(described_class.ensaiar(fluxo, lead)).to be_nil
+    expect(fluxo.execucoes.count).to eq(0)
+  end
+
   it 'ensaio do rascunho roda na hora e não grava nada' do
     fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, nota))
     fluxo.update!(rascunho: grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'quantidade' => 1, 'unidade' => 'dias' }], nota))

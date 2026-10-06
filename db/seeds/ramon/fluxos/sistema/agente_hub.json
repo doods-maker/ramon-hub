@@ -1,0 +1,15 @@
+{
+  "nome": "Agente do hub (@claude)",
+  "grupo": "leads_conversas",
+  "descricao": "No código: RamonAgenteListener#message_created → Ramon::AgenteNotifyJob.\n\nO desenho não consegue mostrar:\n• só nota privada começando com @claude, escrita pelo e-mail do Eduardo (RAMON_AGENTE_EDUARDO_EMAIL) e com RAMON_AGENTE_RUNNER_URL — os fluxos não têm gatilho de nota privada (aqui: Rodar na mão);\n• quem responde é o agente na VPS, também como nota privada; falha de rede só vai para o log.",
+  "resumo": "Quando o Eduardo escreve @claude numa nota privada, o assistente da VPS responde na própria nota.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Nota privada @claude do Eduardo"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"webhook","config":{"rotulo":"Avisa o agente do hub na VPS","url":"https://RAMON_AGENTE_RUNNER_URL"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}
