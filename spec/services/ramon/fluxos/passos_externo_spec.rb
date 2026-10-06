@@ -47,6 +47,35 @@ RSpec.describe Ramon::Fluxos::Passos::Externo do
     end
   end
 
+  describe 'configuração faltando não se repete' do
+    it 'ação inválida e IDs faltando' do
+      expect { described_class.advbox({ 'acao' => 'xyz' }, ctx) }.to raise_error(Ramon::Fluxos::PassoImpossivel, /ação válida/)
+      expect { described_class.advbox({ 'acao' => 'tarefa' }, ctx) }.to raise_error(Ramon::Fluxos::PassoImpossivel, /incompleto/)
+    end
+
+    it 'token do ADVBOX ausente é impossível; outra indisponibilidade segue com nova tentativa' do
+      allow(Ramon::AdvboxClient).to receive(:create_movement)
+        .and_raise(Ramon::AdvboxClient::UnavailableError, 'AdvBox indisponível: ADVBOX_API_TOKEN não configurado')
+      expect { described_class.advbox({ 'acao' => 'movimentacao', 'descricao' => 'x' }, ctx) }
+        .to raise_error(Ramon::Fluxos::PassoImpossivel, /não configurado/)
+      allow(Ramon::AdvboxClient).to receive(:create_movement)
+        .and_raise(Ramon::AdvboxClient::UnavailableError, 'AdvBox respondeu HTTP 503')
+      expect { described_class.advbox({ 'acao' => 'movimentacao', 'descricao' => 'x' }, ctx) }
+        .to raise_error(Ramon::AdvboxClient::UnavailableError)
+    end
+
+    it 'webhook: 4xx não repete (só o host na mensagem), 429 e 5xx repetem' do
+      url = 'https://hooks.exemplo.com.br/x?token=segredo'
+      allow(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError, '404 Not Found')
+      expect { described_class.webhook({ 'url' => url }, ctx) }
+        .to raise_error(Ramon::Fluxos::PassoImpossivel, 'webhook recusado por hooks.exemplo.com.br (HTTP 404)')
+      %w[429\ Too\ Many 503\ Unavailable].each do |msg|
+        allow(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError, msg)
+        expect { described_class.webhook({ 'url' => url }, ctx) }.to raise_error(SafeFetch::HttpError)
+      end
+    end
+  end
+
   describe 'webhook' do
     let(:url) { 'https://hooks.exemplo.com.br/fluxo' }
 
@@ -58,6 +87,15 @@ RSpec.describe Ramon::Fluxos::Passos::Externo do
       expect(corpo.keys).to match_array(%w[fluxo fluxo_id execucao_id alvo_tipo alvo_id lead_id enviado_em dados])
       expect(corpo).to include('fluxo' => 'Pós-contrato', 'lead_id' => lead.id)
       expect(corpo['dados']).to include('nome', 'telefone')
+    end
+
+    it 'dados só com campos liberados: CPF de campo livre nunca sai' do
+      corpo = nil
+      allow(SafeFetch).to receive(:fetch) { |_u, **opts| corpo = JSON.parse(opts[:body]) }
+      lead.update!(custom_attributes: lead.custom_attributes.merge('campos' => { 'cpf' => '123' }))
+      described_class.webhook({ 'url' => url }, ctx)
+      expect(corpo['dados']).to include('nome', 'telefone')
+      expect(corpo['dados']).not_to have_key('cpf')
     end
 
     it 'endereço de rede interna é recusado na hora' do
