@@ -14,6 +14,8 @@
   end
 end
 
+json.concluidos_total @dados[:concluidos_total]
+
 # Ganhos sem tese (sem checklist → nunca contrato limpo): pedem "defina a tese".
 json.sem_tese @dados[:sem_tese] do |lead|
   json.id lead.id

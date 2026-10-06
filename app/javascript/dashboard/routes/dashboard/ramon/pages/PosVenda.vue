@@ -47,6 +47,10 @@ const pendentes = computed(() => data.value?.pendentes ?? []);
 const concluidos = computed(() => data.value?.concluidos ?? []);
 // Ganho sem tese: sem checklist não há docs a cobrar nem contrato limpo.
 const semTese = computed(() => data.value?.sem_tese ?? []);
+// A lista traz só os mais recentes; o total real vem à parte.
+const concluidosTotal = computed(
+  () => data.value?.concluidos_total ?? concluidos.value.length
+);
 
 // Padrão das outras páginas: abre o Funil e seleciona o lead (drawer).
 const openLead = id => {
@@ -191,8 +195,19 @@ const openConversation = conversationId => {
               class="i-lucide-chevron-right size-4 transition-transform"
               :class="showConcluidos ? 'rotate-90' : ''"
             />
-            {{ t('RAMON.POS_VENDA.CONCLUIDOS', { count: concluidos.length }) }}
+            {{ t('RAMON.POS_VENDA.CONCLUIDOS', { count: concluidosTotal }) }}
           </button>
+          <p
+            v-if="showConcluidos && concluidosTotal > concluidos.length"
+            data-testid="pos-venda-concluidos-recentes"
+            class="m-0 text-xs text-n-slate-10"
+          >
+            {{
+              t('RAMON.POS_VENDA.CONCLUIDOS_RECENTES', {
+                count: concluidos.length,
+              })
+            }}
+          </p>
 
           <template v-if="showConcluidos">
             <div

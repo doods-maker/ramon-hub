@@ -1633,7 +1633,8 @@
       "RETRY": "Retry",
       "OPEN_CONVERSATION": "Conversation",
       "SEM_TESE": "Wins without a thesis â€” set the thesis ({count})",
-      "SEM_TESE_HINT": "Without a thesis there is no document list to request and no clean contract."
+      "SEM_TESE_HINT": "Without a thesis there is no document list to request and no clean contract.",
+      "CONCLUIDOS_RECENTES": "showing the {count} most recent"
     },
     "NAV": {
       "TITLE": "Intranet",

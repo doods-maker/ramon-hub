@@ -6,6 +6,8 @@ module Ramon::LeadRadar
   CLOSED_WINDOW = 90.days
   # Filtros que miram fechados de propósito (ou uma pessoa) dispensam a janela.
   CLOSED_WINDOW_BYPASS = %i[closed_all won_since lead_stage_id q contact_id].freeze
+  # Pós-venda: concluídos mostrados (os mais recentes); o total vem à parte.
+  CONCLUIDOS_LIMITE = 20
 
   module_function
 
@@ -66,7 +68,7 @@ module Ramon::LeadRadar
                     .includes(:contact, thesis: :thesis_items)
     com_docs = ganhos.select { |l| l.docs_counts[:total].positive? }
     pendentes, concluidos = com_docs.partition { |l| l.docs_counts[:received] < l.docs_counts[:total] }
-    { pendentes: pendentes.sort_by(&:won_at), concluidos: concluidos.sort_by(&:won_at).last(20).reverse,
-      sem_tese: ganhos.select { |l| l.thesis_id.nil? }.sort_by(&:won_at) }
+    { pendentes: pendentes.sort_by(&:won_at), concluidos: concluidos.sort_by(&:won_at).last(CONCLUIDOS_LIMITE).reverse,
+      concluidos_total: concluidos.size, sem_tese: ganhos.select { |l| l.thesis_id.nil? }.sort_by(&:won_at) }
   end
 end
