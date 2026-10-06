@@ -7,8 +7,10 @@ class Notification::RemoveDuplicateNotificationJob < ApplicationJob
     user_id = notification.user_id
     primary_actor_id = notification.primary_actor_id
 
-    # Find older notifications with the same user and primary_actor_id
-    duplicate_notifications = Notification.where(user_id: user_id, primary_actor_id: primary_actor_id)
+    # Find older notifications with the same user and primary_actor
+    # ramon: o tipo do ator entra na chave — Lead, Conversation e LlmChamada dividem ids.
+    duplicate_notifications = Notification.where(user_id: user_id, primary_actor_type: notification.primary_actor_type,
+                                                 primary_actor_id: primary_actor_id)
                                           .order(created_at: :desc)
 
     # Skip the first one (the latest notification) and destroy the rest

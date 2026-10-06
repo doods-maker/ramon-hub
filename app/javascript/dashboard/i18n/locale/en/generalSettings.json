@@ -175,7 +175,8 @@
       "ramon_sla_breach": "First reply overdue",
       "ramon_contract_status": "Contract signed/refused (ZapSign)",
       "ramon_fluxo_aviso": "Automation notice",
-      "ramon_fluxo_falhou": "Automation failed"
+      "ramon_fluxo_falhou": "Automation failed",
+      "ramon_ia_gasto": "AI spend over the cap"
     }
   },
   "NETWORK": {

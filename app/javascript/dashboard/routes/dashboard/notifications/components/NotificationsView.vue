@@ -45,6 +45,15 @@ export default {
         unreadCount: this.meta.unreadCount,
       });
 
+      // ramon: alerta de gasto da IA abre a tela Uso e custo
+      if (notificationType === 'ramon_ia_gasto') {
+        this.$router.push({
+          name: 'captain_ia_uso_index',
+          params: { accountId: this.accountId },
+        });
+        return;
+      }
+
       if (notificationType.startsWith('ramon_')) {
         this.$router.push({
           name: 'kanban_board',

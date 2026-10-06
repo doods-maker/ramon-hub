@@ -19,4 +19,13 @@ RSpec.describe Notification::RemoveDuplicateNotificationJob do
     described_class.perform_now(duplicate_notification)
     expect(Notification.count).to eq(1)
   end
+
+  it 'keeps notifications whose primary actor only shares the id (different type)' do
+    create(:notification, user: user, notification_type: 'conversation_creation', primary_actor: conversation)
+    chamada = LlmChamada.create!(id: conversation.id, account: conversation.account, funcao: 'copiloto', created_at: Time.current)
+    alerta = create(:notification, user: user, notification_type: 'ramon_ia_gasto', primary_actor: chamada)
+
+    described_class.perform_now(alerta)
+    expect(Notification.count).to eq(2)
+  end
 end

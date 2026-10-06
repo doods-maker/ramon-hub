@@ -33,7 +33,7 @@ module Ramon::LlmUso
     dados = dados.merge(do_resultado(resultado))
     return if dados[:account_id].blank?
 
-    LlmChamada.create!(atributos(dados))
+    Ramon::IaGastoAlerta.verificar(LlmChamada.create!(atributos(dados)))
   rescue StandardError => e
     Rails.logger.warn("[Ramon::LlmUso] uso não gravado: #{e.class}: #{e.message}")
   end

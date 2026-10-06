@@ -235,6 +235,7 @@ pt_BR:
       ramon_contract_status: 'Contrato de %{name} %{label} no ZapSign'
       ramon_fluxo_aviso: 'Automação: %{label} (%{name})'
       ramon_fluxo_falhou: 'Automação "%{label}" falhou para %{name}'
+      ramon_ia_gasto: 'Gasto de IA hoje passou do teto: %{label}'
     attachment: 'Anexo'
     no_content: 'Sem conteúdo'
   conversations:

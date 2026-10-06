@@ -256,6 +256,7 @@ en:
       ramon_contract_status: 'Contract of %{name} %{label} on ZapSign'
       ramon_fluxo_aviso: 'Automation: %{label} (%{name})'
       ramon_fluxo_falhou: 'Automation "%{label}" failed for %{name}'
+      ramon_ia_gasto: 'AI spend today is over the cap: %{label}'
     attachment: 'Attachment'
     no_content: 'No content'
   conversations:
