@@ -101,7 +101,7 @@ const openLead = id => {
           }}
         </span>
       </div>
-      <p class="mt-2 text-xs text-n-slate-10">
+      <p v-if="!loading" class="mt-2 text-xs text-n-slate-10">
         {{
           t('CAPTAIN_RAMON.WATCHDOG.REGUA', {
             cap: thresholds.teto_diario,
