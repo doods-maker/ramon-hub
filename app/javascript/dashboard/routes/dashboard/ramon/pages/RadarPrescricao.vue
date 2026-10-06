@@ -201,14 +201,22 @@ const goToCampaigns = async () => {
             <p class="m-0 text-sm font-medium truncate text-n-slate-12">
               {{ item.name }}
             </p>
-            <p class="m-0 mt-0.5 text-xs truncate text-n-slate-10">
-              <template v-if="item.benefit_type_name">
-                {{ item.benefit_type_name }} ·
-              </template>
-              {{ t('RAMON.RADAR.DCB', { date: fmtDcb(item.dcb_em) }) }} ·
+            <p
+              class="m-0 mt-0.5 flex min-w-0 items-center gap-1 text-xs text-n-slate-10"
+            >
+              <span class="truncate">
+                <template v-if="item.benefit_type_name">
+                  {{ item.benefit_type_name }} ·
+                </template>
+                {{ t('RAMON.RADAR.DCB', { date: fmtDcb(item.dcb_em) }) }} ·
+                <template v-if="!item.is_lost && !item.is_client">
+                  {{ item.stage_name }}
+                </template>
+              </span>
               <span
                 v-if="item.is_lost"
                 data-testid="radar-lost-chip"
+                class="shrink-0"
                 :class="[CHIP, TOM.amber]"
               >
                 {{ t('RAMON.RADAR.LOST_CHIP') }}
@@ -216,11 +224,11 @@ const goToCampaigns = async () => {
               <span
                 v-else-if="item.is_client"
                 data-testid="radar-client-chip"
+                class="shrink-0"
                 :class="[CHIP, TOM.blue]"
               >
                 {{ t('RAMON.RADAR.CLIENT_CHIP') }}
               </span>
-              <template v-else>{{ item.stage_name }}</template>
             </p>
           </div>
           <div class="h-1.5 rounded-full bg-n-alpha-2">

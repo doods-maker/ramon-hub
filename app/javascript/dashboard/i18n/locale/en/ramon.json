@@ -1602,7 +1602,7 @@
         "VALOR": "Amount"
       },
       "FECHADO": "Closed on {data}",
-      "DESCONTOS": "Deductions: {valor}"
+      "DESCONTOS": "Deductions"
     },
     "RADAR": {
       "PER_MONTH": "/mo",
@@ -1614,14 +1614,14 @@
       "CAMPAIGN_TOOLTIP": "contacts with WhatsApp ({n} of {m} on the radar)",
       "CAMPAIGN_MODAL_TITLE": "Create rescue campaign",
       "CAMPAIGN_MODAL_MESSAGE": "We will add the resgate-prescricao label to the {n} contacts with WhatsApp (of {m} leads on the radar) and open the WhatsApp campaigns screen. Nothing is sent: you build the campaign and send it.",
-      "CAMPAIGN_MODAL_CONFIRM": "Label and open campaigns",
+      "CAMPAIGN_MODAL_CONFIRM": "Label contacts",
       "LOAD_ERROR": "Could not load the radar.",
       "TITLE": "Prescription radar",
       "SUBTITLE": "whole base · updated now",
       "RETRY": "Retry",
       "EMPTY": "No leads at risk.",
-      "CLIENT_CHIP": "Client â€” documents pending",
-      "CAMPAIGN_DONE": "{n} contacts labeled resgate-prescricao â€” build the campaign and send it yourself",
+      "CLIENT_CHIP": "Client — documents pending",
+      "CAMPAIGN_DONE": "{n} contacts labeled resgate-prescricao — build the campaign and send it yourself",
       "CAMPAIGN_ERROR": "Could not label the contacts. Try again."
     },
     "POS_VENDA": {
@@ -1630,12 +1630,12 @@
       "CONCLUIDOS": "Completed ({count})",
       "DRIVE_CHIP": "on Drive",
       "TITLE": "Post-sale",
-      "SUBTITLE": "Wins awaiting documents â€” most urgent prescription first",
+      "SUBTITLE": "Wins awaiting documents — most urgent prescription first",
       "DOCS": "docs {received}/{total}",
       "EMPTY": "No wins with pending documents 🎉",
       "RETRY": "Retry",
       "OPEN_CONVERSATION": "Conversation",
-      "SEM_TESE": "Wins without a thesis â€” set the thesis ({count})",
+      "SEM_TESE": "Wins without a thesis — set the thesis ({count})",
       "SEM_TESE_HINT": "Without a thesis there is no document list to request and no clean contract.",
       "CONCLUIDOS_RECENTES": "showing the {count} most recent"
     },

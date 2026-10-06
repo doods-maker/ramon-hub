@@ -276,9 +276,10 @@ onMounted(carregar);
                   data-testid="extrato-descontos"
                   class="block text-n-ruby-11"
                 >
-                  {{
-                    t('RAMON.EXTRATO.DESCONTOS', { valor: brl(p.descontos) })
-                  }}
+                  {{ t('RAMON.EXTRATO.DESCONTOS') }}
+                  <span class="whitespace-nowrap font-mono tabular-nums">
+                    {{ brl(p.descontos) }}
+                  </span>
                 </span>
                 <template v-if="!p.garantia_aplicada && !(p.descontos < 0)">
                   —
@@ -321,7 +322,7 @@ onMounted(carregar);
                   {{ t(`RAMON.EXTRATO.EVENTO.${u.evento}`) }}
                 </td>
                 <td
-                  class="py-1.5 text-right font-mono tabular-nums"
+                  class="whitespace-nowrap py-1.5 text-right font-mono tabular-nums"
                   :class="u.valor < 0 ? 'text-n-ruby-11' : 'text-n-slate-12'"
                 >
                   {{ brl(u.valor) }}
