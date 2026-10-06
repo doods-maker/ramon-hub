@@ -4,11 +4,16 @@
 # Toda execução nasce 'esperando' e vencida: o Executor a reivindica (ensaio: na hora).
 class Ramon::Fluxos::Disparo
   PROFUNDIDADE_MAX = 3
+  # B4.1: a mesma reunião de novo na agenda (remarcada) cancela a espera do ciclo dela e recomeça pelo horário novo.
+  RECOMECA = %w[reuniao_na_agenda].freeze
+  # B4.1: os fluxos migrados de marcar/cancelar rodam na hora, dentro da requisição (o painel vê a tarefa ao recarregar;
+  # em sombra, o ensaio vê o lead antes de o código mexer).
+  NA_HORA = %w[reuniao_marcada reuniao_cancelada].freeze
 
   def self.call(gatilho_tipo, alvo, dados = {}, origem: nil)
     account = alvo.account
     account.fluxos.executaveis.where(gatilho_tipo: gatilho_tipo).includes(:versao_publicada).filter_map do |fluxo|
-      new(fluxo, alvo, dados, origem).iniciar if passa?(fluxo, dados, origem)
+      new(fluxo, alvo, dados, origem).iniciar if da_vez?(fluxo, dados) && passa?(fluxo, dados, origem)
     end
   end
 
@@ -31,6 +36,12 @@ class Ramon::Fluxos::Disparo
     ChatwootExceptionTracker.new(e, account: alvo.try(:account)).capture_exception
     Rails.logger.warn("[Ramon::Fluxos::Disparo] #{gatilho_tipo}: #{e.class}") # a mensagem pode ter dado do lead
     []
+  end
+
+  # B4.1: nos gatilhos NA_HORA o evento dispara 2 vezes. Antes dos efeitos, com 'assumido': só os 3 fluxos migrados
+  # (o ensaio vê o lead como estava). Depois dos efeitos, sem 'assumido': só os demais fluxos (veem o lead já mexido, como hoje).
+  def self.da_vez?(fluxo, dados)
+    NA_HORA.exclude?(fluxo.gatilho_tipo) || Ramon::Fluxos::Reunioes.migrado?(fluxo) == dados.key?('assumido')
   end
 
   def self.passa?(fluxo, dados, origem)
@@ -61,8 +72,9 @@ class Ramon::Fluxos::Disparo
   def iniciar
     return if @fluxo.origem == 'sistema' # D7: desenho só-leitura; quem roda é o código de hoje
 
+    recomecar if RECOMECA.include?(@fluxo.gatilho_tipo) && @ensaio.nil?
     execucao = @fluxo.execucoes.create!(atributos)
-    return Ramon::Fluxos::Executor.new(execucao).avancar! if @ensaio
+    return Ramon::Fluxos::Executor.new(execucao).avancar! if @ensaio || na_hora?
 
     Ramon::FluxoAvancarJob.perform_later(execucao.id)
     execucao
@@ -72,11 +84,38 @@ class Ramon::Fluxos::Disparo
 
   private
 
+  def na_hora? = NA_HORA.include?(@fluxo.gatilho_tipo) && Ramon::Fluxos::Reunioes.migrado?(@fluxo)
+
+  # Fluxo migrado do código (B4.1): quem decide se age é o evento ('assumido', lido 1 vez pelo código); os demais, o modo.
+  def sombra? = Ramon::Fluxos::Reunioes.migrado?(@fluxo) ? !@dados['assumido'] : @fluxo.modo == 'sombra'
+
+  def lead_do_alvo
+    case @alvo
+    when Lead then @alvo
+    when LeadTask then @alvo.lead
+    else @fluxo.account.leads.where(conversation_id: @alvo.id).reorder(id: :desc).first
+    end
+  end
+
+  # Sem isto, em modo normal o índice único barraria o ciclo novo e os lembretes seguiriam o horário antigo.
+  # ponytail: só 'esperando' — uma execução 'rodando' (milissegundos entre passos) ainda barra a nova.
+  def recomecar
+    @fluxo.execucoes.where(alvo: @alvo, status: 'esperando').find_each do |velha|
+      velha.with_lock do
+        next unless velha.status == 'esperando' # o relógio pode ter acabado de reivindicar
+
+        linha = { 'no' => 'cancelado', 'tipo' => 'cancelado', 'em' => Time.current.iso8601, 'saida' => nil,
+                  'resumo' => 'cancelado: a reunião foi remarcada', 'erro' => false }
+        velha.update!(status: 'cancelada', trilha: velha.trilha + [linha])
+      end
+    end
+  end
+
   def atributos
     g = grafo.gatilho
     {
       account: @fluxo.account, versao: (@ensaio == 'rascunho' ? nil : @fluxo.versao_publicada), alvo: @alvo,
-      ensaio: @ensaio.present? || @fluxo.modo == 'sombra', profundidade: @origem ? @origem.profundidade + 1 : 0,
+      ensaio: @ensaio.present? || sombra?, profundidade: @origem ? @origem.profundidade + 1 : 0,
       no_atual: grafo.proximo(g['id'], 's'), contexto: contexto, status: 'esperando', retomar_em: Time.current,
       trilha: [{ 'no' => g['id'], 'tipo' => 'gatilho', 'em' => Time.current.iso8601, 'saida' => 's',
                  'resumo' => g.dig('config', 'tipo'), 'erro' => false }]
@@ -88,8 +127,7 @@ class Ramon::Fluxos::Disparo
   end
 
   def contexto
-    lead = @alvo.is_a?(Lead) ? @alvo : @fluxo.account.leads.where(conversation_id: @alvo.id).reorder(id: :desc).first
-    base = { 'gatilho' => @dados, 'vars' => {}, 'etapa_inicial_id' => lead&.lead_stage_id }
+    base = { 'gatilho' => @dados, 'vars' => {}, 'etapa_inicial_id' => lead_do_alvo&.lead_stage_id }
     base['grafo'] = @fluxo.rascunho if @ensaio == 'rascunho'
     base['pular_esperas'] = true if @ensaio
     base.compact

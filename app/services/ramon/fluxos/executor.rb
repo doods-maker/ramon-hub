@@ -56,7 +56,7 @@ class Ramon::Fluxos::Executor
 
   # Roda já com status 'rodando' (reivindicada).
   def cancelar_se_preciso
-    motivo = if @execucao.alvo.nil? then 'o lead/conversa foi apagado'
+    motivo = if @execucao.alvo.nil? then 'o alvo foi apagado (lead, conversa ou reunião)'
              elsif desligado? then 'o fluxo foi desligado'
              elsif saiu_da_etapa? then 'o lead saiu da etapa'
              end
@@ -66,7 +66,9 @@ class Ramon::Fluxos::Executor
     true
   end
 
-  def desligado? = !@execucao.ensaio && !@execucao.fluxo&.ativo
+  # Vale para execução normal e para a sombra (B4.1: desligar é como se para a sombra); o "Testar com um lead…"
+  # (pular_esperas) roda até com o fluxo desligado.
+  def desligado? = !@execucao.contexto['pular_esperas'] && !@execucao.fluxo&.ativo
 
   def saiu_da_etapa?
     inicial = @execucao.contexto['etapa_inicial_id']

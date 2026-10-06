@@ -3,6 +3,9 @@
 # Ramon::ReuniaoAgendamento) e os fluxos —, então a sombra compara exatamente a mesma regra.
 module Ramon::Fluxos::Reunioes
   TOLERANCIA = 60.seconds
+  # Os 3 fluxos que substituem o código (spec §14: fluxo próprio, origem 'usuario'): sistema_chave → gatilho esperado.
+  GATILHOS = { 'reuniao_marcada' => 'reuniao_marcada', 'reuniao_cancelada' => 'reuniao_cancelada',
+               'lembretes_reuniao' => 'reuniao_na_agenda' }.freeze
   RASTRO_RETENCAO = 8.days
 
   module_function
@@ -37,5 +40,15 @@ module Ramon::Fluxos::Reunioes
 
   def chave_rastro(account)
     "ramon:reunioes:rastro:#{account.id}"
+  end
+
+  def migrado?(fluxo) = fluxo.origem == 'usuario' && GATILHOS.key?(fluxo.sistema_chave)
+
+  # A reunião entrou na agenda (tarefa criada ou movida): começa o ciclo de lembretes DESSA reunião (alvo = a tarefa).
+  # 'assumido' = a decisão do evento que a pôs na agenda (código ou fluxos no comando).
+  def na_agenda(tarefa, assumido)
+    dados = { 'inicio' => tarefa.due_at.iso8601, 'quando' => Ramon::ReuniaoAgendamento.quando(tarefa.due_at),
+              'lead_id' => tarefa.lead_id, 'assumido' => assumido }
+    Ramon::Fluxos::Disparo.externo('reuniao_na_agenda', tarefa, dados)
   end
 end

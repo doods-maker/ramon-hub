@@ -59,6 +59,45 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect(fluxo.execucoes.last.ensaio).to be(true)
   end
 
+  it 'cada reunião (tarefa) tem o seu ciclo; remarcar recomeça só o dela (normal e sombra)' do
+    espera = ['esperar', { 'quantidade' => 1, 'unidade' => 'dias' }]
+    normal = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_na_agenda' }, espera))
+    sombra = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_na_agenda' }, espera), modo: 'sombra')
+    t1 = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'R1', due_at: 2.days.from_now)
+    t2 = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'R2', due_at: 3.days.from_now)
+    [t1, t2, t1].each { |t| described_class.call('reuniao_na_agenda', t, { 'inicio' => t.due_at.iso8601 }) }
+    [normal, sombra].each do |f|
+      expect(f.execucoes.where(alvo: t1).order(:id).pluck(:status)).to eq(%w[cancelada esperando])
+      expect(f.execucoes.where(alvo: t2).pluck(:status)).to eq(%w[esperando])
+    end
+    expect(normal.execucoes.where(alvo: t1).order(:id).first.trilha.last['resumo']).to eq('cancelado: a reunião foi remarcada')
+  end
+
+  it 'com a tarefa da reunião como alvo, o fluxo enxerga o lead e a conversa dela' do
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_na_agenda' }, nota))
+    tarefa = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'R', due_at: 1.day.from_now)
+    described_class.call('reuniao_na_agenda', tarefa, {})
+    e = fluxo.execucoes.last
+    expect([e.lead, e.conversa, e.contexto['etapa_inicial_id']]).to eq([lead, conversa, lead.lead_stage_id])
+    expect(e.resumo_json[:alvo_nome]).to eq(lead.name)
+  end
+
+  it 'fluxo migrado do código: quem decide se age é o evento (assumido), e roda na hora' do
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_cancelada' }, nota), sistema_chave: 'reuniao_cancelada')
+    described_class.call('reuniao_cancelada', lead, { 'assumido' => false })
+    described_class.call('reuniao_cancelada', lead, { 'assumido' => true })
+    expect(fluxo.execucoes.order(:id).pluck(:ensaio, :status)).to eq([[true, 'concluida'], [false, 'concluida']])
+    expect(conversa.messages.where(private: true, content: 'oi').count).to eq(1)
+  end
+
+  it 'reunião marcada/cancelada: o disparo com assumido (antes dos efeitos) é só dos migrados; o sem, só dos outros' do
+    migrado = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_marcada' }, nota), sistema_chave: 'reuniao_marcada')
+    comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_marcada' }, nota))
+    expect(described_class.call('reuniao_marcada', lead, { 'assumido' => false }).map(&:fluxo)).to eq([migrado])
+    expect(described_class.call('reuniao_marcada', lead, { 'quando' => 'x' }).map(&:fluxo)).to eq([comum])
+    expect([migrado.execucoes.count, comum.execucoes.count]).to eq([1, 1])
+  end
+
   it 'fluxo do sistema nunca roda pelo motor, nem ligado e publicado (D7: quem roda é o código)' do
     fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, nota), origem: 'sistema')
     expect(described_class.call('manual', lead)).to eq([])

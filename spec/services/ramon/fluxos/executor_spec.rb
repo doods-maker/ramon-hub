@@ -64,6 +64,29 @@ RSpec.describe Ramon::Fluxos::Executor do
     expect(conversa.messages.where(private: true, content: 'x')).to be_empty
   end
 
+  it 'sombra: desligar o fluxo cancela quem espera (é assim que se para a sombra)' do
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'quantidade' => 1, 'unidade' => 'horas' }],
+                             ['nota_privada', { 'texto' => 'x' }]), ensaio: true)
+    avancar(e)
+    e.fluxo.update!(ativo: false)
+    travel(2.hours) { expect(avancar(e).status).to eq('cancelada') }
+  end
+
+  it '"Testar com um lead…" roda mesmo com o fluxo desligado' do
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, ['nota_privada', { 'texto' => 'x' }]), ativo: false)
+    expect(Ramon::Fluxos::Disparo.ensaiar(fluxo, lead, usar: 'publicada').status).to eq('concluida')
+  end
+
+  it 'a reunião (tarefa) apagada durante a espera cancela o ciclo dela' do
+    tarefa = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'R', due_at: 2.days.from_now)
+    e = iniciar(grafo_linear({ 'tipo' => 'reuniao_na_agenda' }, ['esperar', { 'quantidade' => 1, 'unidade' => 'horas' }],
+                             ['nota_privada', { 'texto' => 'x' }]), alvo: tarefa)
+    avancar(e)
+    tarefa.destroy!
+    travel(2.hours) { expect(avancar(e).status).to eq('cancelada') }
+    expect(e.trilha.last['resumo']).to eq('cancelado: o alvo foi apagado (lead, conversa ou reunião)')
+  end
+
   it 'versão congelada: publicar de novo não muda execução em andamento' do
     e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'quantidade' => 1, 'unidade' => 'horas' }],
                              ['nota_privada', { 'texto' => 'v1' }]))
