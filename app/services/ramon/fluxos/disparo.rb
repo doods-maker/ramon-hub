@@ -59,6 +59,8 @@ class Ramon::Fluxos::Disparo
   end
 
   def iniciar
+    return if @fluxo.origem == 'sistema' # D7: desenho só-leitura; quem roda é o código de hoje
+
     execucao = @fluxo.execucoes.create!(atributos)
     return Ramon::Fluxos::Executor.new(execucao).avancar! if @ensaio
 
