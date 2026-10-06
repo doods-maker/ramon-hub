@@ -22,6 +22,7 @@ module AccountSettingsSchema
             'editor': { 'type': %w[string null] },
             'assistant': { 'type': %w[string null] },
             'copilot': { 'type': %w[string null] },
+            'documentos': { 'type': %w[string null] }, # FORK(ramon): modelo dos Documentos (FAQ)
             'label_suggestion': { 'type': %w[string null] },
             'audio_transcription': { 'type': %w[string null] },
             'help_center_search': { 'type': %w[string null] }
@@ -34,6 +35,7 @@ module AccountSettingsSchema
             'editor': { 'type': %w[boolean null] },
             'assistant': { 'type': %w[boolean null] },
             'copilot': { 'type': %w[boolean null] },
+            'documentos': { 'type': %w[boolean null] }, # FORK(ramon)
             'label_suggestion': { 'type': %w[boolean null] },
             'audio_transcription': { 'type': %w[boolean null] },
             'help_center_search': { 'type': %w[boolean null] }
