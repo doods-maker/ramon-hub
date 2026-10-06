@@ -85,4 +85,18 @@ describe('Lista de automações', () => {
     expect(RamonFluxosAPI.update).toHaveBeenCalledWith(1, { ativo: false });
     expect(push).not.toHaveBeenCalled();
   });
+
+  it('fluxo nunca publicado: chave desabilitada; erro ao ligar avisa e recarrega', async () => {
+    const wrapper = mount(Lista);
+    await flushPromises();
+    const [publicado, rascunho] = wrapper.findAll(
+      '[data-testid="fluxo-linha"] [role="switch"]'
+    );
+    expect(rascunho.attributes('disabled')).toBeDefined();
+    RamonFluxosAPI.update.mockRejectedValueOnce(new Error('422'));
+    RamonFluxosAPI.get.mockClear();
+    await publicado.trigger('click');
+    await flushPromises();
+    expect(RamonFluxosAPI.get).toHaveBeenCalled();
+  });
 });

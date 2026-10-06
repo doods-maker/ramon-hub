@@ -30,6 +30,7 @@ const fluxos = ref([]);
 const resumo = ref({});
 const erro = ref(false);
 const novo = ref(false);
+const criando = ref(false);
 
 const carregar = async () => {
   erro.value = false;
@@ -47,11 +48,19 @@ const abrir = id =>
   router.push(accountScopedRoute('captain_automacoes_editor', { fluxoId: id }));
 
 const ligar = async (fluxo, ativo) => {
-  await RamonFluxosAPI.update(fluxo.id, { ativo });
-  carregar();
+  try {
+    await RamonFluxosAPI.update(fluxo.id, { ativo });
+  } catch (e) {
+    useAlert(t(`${K}.EDITOR.ERRO_SALVAR`));
+  } finally {
+    carregar();
+  }
 };
 
+// clique duplo no modelo não cria dois fluxos
 const criar = async modelo => {
+  if (criando.value) return;
+  criando.value = true;
   try {
     const { data } = await RamonFluxosAPI.create({
       nome: t(`${K}.MODELOS.${modelo.chave}.NOME`),
@@ -61,6 +70,8 @@ const criar = async modelo => {
     abrir(data.id);
   } catch (e) {
     useAlert(t(`${K}.ERRO_CRIAR`));
+  } finally {
+    criando.value = false;
   }
 };
 
@@ -209,9 +220,10 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
               <td class="p-2" @click.stop>
                 <span
                   :title="f.versao ? '' : t(`${K}.PUBLIQUE_ANTES`)"
-                  :class="f.versao ? '' : 'pointer-events-none opacity-50'"
+                  :class="f.versao ? '' : 'opacity-50'"
                 >
                   <Switch
+                    :disabled="!f.versao"
                     :model-value="f.ativo"
                     @update:model-value="v => ligar(f, v)"
                   />
@@ -267,6 +279,11 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
       </template>
     </div>
 
-    <NovoFluxo v-if="novo" @criar="criar" @fechar="novo = false" />
+    <NovoFluxo
+      v-if="novo"
+      :ocupado="criando"
+      @criar="criar"
+      @fechar="novo = false"
+    />
   </section>
 </template>

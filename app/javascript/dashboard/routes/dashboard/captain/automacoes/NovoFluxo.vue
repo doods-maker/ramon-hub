@@ -9,6 +9,7 @@ import {
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { MODELOS } from './modelos';
 
+defineProps({ ocupado: { type: Boolean, default: false } });
 const emit = defineEmits(['criar', 'fechar']);
 const { t } = useI18n();
 onKeyStroke('Escape', () => emit('fechar'));
@@ -37,7 +38,8 @@ onKeyStroke('Escape', () => emit('fechar'));
           :key="modelo.chave"
           type="button"
           data-testid="fluxo-modelo"
-          class="flex gap-3 rounded-xl border border-n-weak p-3 text-left hover:border-n-blue-9 hover:bg-n-blue-9/[0.08]"
+          :disabled="ocupado"
+          class="flex gap-3 rounded-xl border border-n-weak p-3 text-left hover:border-n-blue-9 hover:bg-n-blue-9/[0.08] disabled:cursor-wait disabled:opacity-60"
           :class="modelo.chave === 'branco' ? 'border-dashed' : ''"
           @click="emit('criar', modelo)"
         >
