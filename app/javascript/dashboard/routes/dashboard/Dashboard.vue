@@ -4,6 +4,7 @@ import { defineAsyncComponent, ref, computed } from 'vue';
 import NextSidebar from 'next/sidebar/Sidebar.vue';
 import WorldRail from './ramon/components/WorldRail.vue';
 import IntranetSidebar from './ramon/components/IntranetSidebar.vue';
+import AbasIntranet from './ramon/components/AbasIntranet.vue';
 import AlertaChegada from './ramon/components/equipe/AlertaChegada.vue';
 import ChegouCliente from './ramon/components/equipe/ChegouCliente.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
@@ -35,6 +36,7 @@ export default {
     NextSidebar,
     WorldRail,
     IntranetSidebar,
+    AbasIntranet,
     CommandBar,
     WootKeyShortcutModal,
     AddAccountModal,
@@ -172,7 +174,18 @@ export default {
         />
       </UpgradePage>
       <template v-if="!showUpgradePage">
-        <router-view />
+        <!-- Intranet: faixa de abas do item do menu sobre a página; as páginas
+             usam h-full com rolagem interna, então a coluna dá a altura. -->
+        <div
+          v-if="isIntranetWorld"
+          class="flex flex-col flex-1 min-w-0 min-h-0"
+        >
+          <AbasIntranet />
+          <div class="flex flex-1 min-h-0">
+            <router-view />
+          </div>
+        </div>
+        <router-view v-else />
         <CommandBar />
         <CopilotLauncher />
         <MobileSidebarLauncher
