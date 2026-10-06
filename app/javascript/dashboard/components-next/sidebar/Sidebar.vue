@@ -455,6 +455,16 @@ const menuItems = computed(() => {
           to: accountScopedRoute('captain_visao_geral_index'),
         },
         {
+          name: 'Automacoes',
+          label: t('SIDEBAR.CAPTAIN_AUTOMACOES'),
+          activeOn: [
+            'captain_automacoes_index',
+            'captain_automacoes_editor',
+            'captain_automacoes_execucao',
+          ],
+          to: accountScopedRoute('captain_automacoes_index'),
+        },
+        {
           name: 'Assistants',
           label: t('SIDEBAR.CAPTAIN_ASSISTANTS'),
           activeOn: [

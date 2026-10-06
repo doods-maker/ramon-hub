@@ -35,6 +35,9 @@ const metaV2 = {
   installationTypes: [INSTALLATION_TYPES.CLOUD, INSTALLATION_TYPES.ENTERPRISE],
 };
 
+// ramon: Automações (fluxos) — a API é só de administrador.
+const metaAdmin = { ...meta, permissions: ['administrator'] };
+
 const assistantRoutes = [
   {
     path: frontendURL('accounts/:accountId/captain/:assistantId/faqs'),
@@ -140,6 +143,26 @@ const assistantRoutes = [
       name: 'captain_visao_geral_index',
       params: to.params,
     }),
+  },
+  {
+    path: frontendURL('accounts/:accountId/captain/automacoes'),
+    component: () => import('./automacoes/Lista.vue'),
+    name: 'captain_automacoes_index',
+    meta: metaAdmin,
+  },
+  {
+    path: frontendURL('accounts/:accountId/captain/automacoes/:fluxoId'),
+    component: () => import('./automacoes/Editor.vue'),
+    name: 'captain_automacoes_editor',
+    meta: metaAdmin,
+  },
+  {
+    path: frontendURL(
+      'accounts/:accountId/captain/automacoes/:fluxoId/execucoes/:execId'
+    ),
+    component: () => import('./automacoes/Execucao.vue'),
+    name: 'captain_automacoes_execucao',
+    meta: metaAdmin,
   },
   {
     path: frontendURL('accounts/:accountId/captain/:navigationPath'),
