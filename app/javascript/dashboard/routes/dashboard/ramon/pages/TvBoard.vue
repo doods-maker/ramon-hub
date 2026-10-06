@@ -5,6 +5,9 @@
 // Kit visual do hub em tamanho de TV (lê de longe); números em font-mono.
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
+import { useAccount } from 'dashboard/composables/useAccount';
+import Button from 'dashboard/components-next/button/Button.vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { brlCompact } from '../helpers/currency';
 import { CARTAO } from '../helpers/ui';
@@ -18,6 +21,8 @@ const NUMERO_TV =
 const CARTAO_TV = `${CARTAO} !px-5 !py-4`;
 
 const { t } = useI18n();
+const router = useRouter();
+const { accountScopedRoute } = useAccount();
 const store = useStore();
 const getters = useStoreGetters();
 
@@ -98,6 +103,40 @@ onUnmounted(() => {
   clearTimeout(debounceTimer);
   if (unsubscribe) unsubscribe();
 });
+// ---- Controles (só admin abre o placar): aparecem ao mexer o mouse ------
+// "Voltar ao hub" e tela cheia; Esc fora da tela cheia também volta.
+const controles = ref(false);
+const telaCheia = ref(false);
+let controlesTimer;
+const mostrarControles = () => {
+  controles.value = true;
+  clearTimeout(controlesTimer);
+  controlesTimer = setTimeout(() => {
+    controles.value = false;
+  }, 3000);
+};
+const voltar = () => router.push(accountScopedRoute('ramon_index'));
+const alternarTelaCheia = () =>
+  document.fullscreenElement
+    ? document.exitFullscreen()
+    : document.documentElement.requestFullscreen();
+const aoMudarTelaCheia = () => {
+  telaCheia.value = !!document.fullscreenElement;
+};
+const aoTeclar = event => {
+  if (event.key === 'Escape' && !document.fullscreenElement) voltar();
+};
+onMounted(() => {
+  document.addEventListener('fullscreenchange', aoMudarTelaCheia);
+  window.addEventListener('keydown', aoTeclar);
+});
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', aoMudarTelaCheia);
+  window.removeEventListener('keydown', aoTeclar);
+  clearTimeout(controlesTimer);
+  if (document.fullscreenElement) document.exitFullscreen();
+});
+
 // ponytail: sem rotação de destaque a cada 30s — adicionar se a TV pedir variedade.
 
 // ---- Formatação -----------------------------------------------------------
@@ -182,8 +221,36 @@ const funnelLine = computed(() => {
 
 <template>
   <div
-    class="dark fixed inset-0 flex cursor-none items-center justify-center overflow-hidden bg-n-background text-n-slate-12"
+    class="dark fixed inset-0 flex items-center justify-center overflow-hidden bg-n-background text-n-slate-12"
+    :class="{ 'cursor-none': !controles }"
+    @mousemove="mostrarControles"
   >
+    <div
+      data-testid="tv-controles"
+      class="absolute right-4 top-4 z-10 flex gap-2 transition-opacity duration-300"
+      :class="controles ? 'opacity-100' : 'pointer-events-none opacity-0'"
+    >
+      <Button
+        data-testid="tv-tela-cheia"
+        :icon="telaCheia ? 'i-lucide-minimize' : 'i-lucide-maximize'"
+        :label="
+          telaCheia ? t('RAMON.TV.SAIR_TELA_CHEIA') : t('RAMON.TV.TELA_CHEIA')
+        "
+        sm
+        faded
+        slate
+        @click="alternarTelaCheia"
+      />
+      <Button
+        data-testid="tv-voltar"
+        icon="i-lucide-x"
+        :label="t('RAMON.TV.VOLTAR')"
+        sm
+        faded
+        slate
+        @click="voltar"
+      />
+    </div>
     <div
       data-testid="tv-stage"
       class="box-border flex h-[720px] w-[1280px] flex-none flex-col bg-n-background px-[52px] py-[40px]"

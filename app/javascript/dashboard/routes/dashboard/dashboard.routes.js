@@ -48,7 +48,7 @@ export default {
       path: frontendURL('accounts/:accountId/tv'),
       name: 'ramon_tv',
       meta: {
-        permissions: ['administrator', 'agent'],
+        permissions: ['administrator'],
       },
       component: () => import('./ramon/pages/TvBoard.vue'),
     },

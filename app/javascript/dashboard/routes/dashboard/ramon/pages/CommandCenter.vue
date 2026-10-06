@@ -351,6 +351,16 @@ useKeyboardEvents({
           </div>
         </div>
         <Button
+          v-if="isAdmin"
+          data-testid="abrir-placar"
+          icon="i-lucide-tv"
+          :label="t('RAMON.COMMAND.PLACAR')"
+          sm
+          ghost
+          slate
+          @click="router.push(accountScopedRoute('ramon_tv'))"
+        />
+        <Button
           data-testid="reload"
           :title="t('RAMON.COMMAND.RELOAD')"
           icon="i-lucide-refresh-cw"

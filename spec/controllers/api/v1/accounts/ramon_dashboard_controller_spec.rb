@@ -3,6 +3,7 @@ require 'rails_helper'
 RSpec.describe 'Ramon Dashboard API', type: :request do
   let(:account) { create(:account) }
   let(:agent) { create(:user, account: account, role: :agent) }
+  let(:admin) { create(:user, account: account, role: :administrator) }
   let(:url) { "/api/v1/accounts/#{account.id}/ramon_dashboard" }
   let(:active_stage) { account.lead_stages.find_by(is_won: false, is_lost: false) }
 
@@ -234,6 +235,11 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(sla['avg_first_response_minutes']).to be_nil
   end
 
+  it 'placar de TV só vai para o admin' do
+    get url, headers: agent.create_new_auth_token, as: :json
+    expect(response.parsed_body['tv']).to be_nil
+  end
+
   describe 'seção tv (Placar de TV)' do
     let(:won_stage) { account.lead_stages.find_by(is_won: true) }
     let(:thesis) { account.theses.first || create(:thesis, account: account) }
@@ -252,7 +258,7 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
       create(:lead, account: account, lead_stage: active_stage, thesis: thesis,
                     dcb_em: 10.years.ago.to_date, benefit_monthly_value: 1412)
       create(:lead, account: account, lead_stage: active_stage) # sem tese
-      get url, headers: agent.create_new_auth_token, as: :json
+      get url, headers: admin.create_new_auth_token, as: :json
     end
 
     it 'soma o mês (sem meta por padrão) e o placar de hoje' do
@@ -299,7 +305,7 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     it 'lê a meta mensal do env e devolve conversão nula sem fechamento' do
       create(:lead, account: account, lead_stage: active_stage, thesis: thesis)
       with_modified_env RAMON_MONTHLY_GOAL_BRL: '400000' do
-        get url, headers: agent.create_new_auth_token, as: :json
+        get url, headers: admin.create_new_auth_token, as: :json
       end
       tv = response.parsed_body['tv']
       expect(tv['month']['goal']).to eq(400_000.0)
