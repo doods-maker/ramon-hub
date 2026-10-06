@@ -105,13 +105,6 @@ const sections = computed(() =>
           names: ['ramon_pos_venda'],
         },
         {
-          key: 'tv',
-          label: t('RAMON.NAV.TV'),
-          icon: 'i-lucide-tv',
-          to: accountScopedRoute('ramon_tv'),
-          names: ['ramon_tv'],
-        },
-        {
           key: 'funil_config',
           label: t('RAMON.NAV.FUNIL_CONFIG'),
           icon: 'i-lucide-sliders-horizontal',

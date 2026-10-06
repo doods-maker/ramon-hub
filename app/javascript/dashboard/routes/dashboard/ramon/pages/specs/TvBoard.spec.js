@@ -4,6 +4,12 @@ import TvBoard from '../TvBoard.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 
+const routerPush = vi.fn();
+vi.mock('vue-router', () => ({ useRouter: () => ({ push: routerPush }) }));
+vi.mock('dashboard/composables/useAccount', () => ({
+  useAccount: () => ({ accountScopedRoute: name => ({ name }) }),
+}));
+
 const dispatchSpy = vi.fn();
 const subscribers = [];
 const unsubscribeSpy = vi.fn();
@@ -234,5 +240,22 @@ describe('TvBoard.vue', () => {
     wrapper.unmount();
     expect(unsubscribeSpy).toHaveBeenCalled();
     vi.useRealTimers();
+  });
+
+  it('mostra os controles ao mexer o mouse e volta ao hub (botão e Esc)', async () => {
+    const wrapper = await mountPage();
+    const controles = wrapper.find('[data-testid="tv-controles"]');
+    expect(controles.classes()).toContain('opacity-0');
+
+    await wrapper.trigger('mousemove');
+    expect(controles.classes()).toContain('opacity-100');
+
+    await wrapper.find('[data-testid="tv-voltar"]').trigger('click');
+    expect(routerPush).toHaveBeenCalledWith({ name: 'ramon_index' });
+
+    routerPush.mockClear();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(routerPush).toHaveBeenCalledWith({ name: 'ramon_index' });
+    wrapper.unmount();
   });
 });

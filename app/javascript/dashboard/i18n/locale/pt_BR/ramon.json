@@ -71,6 +71,7 @@
     "COMMAND": {
       "TITLE": "Centro de Comando",
       "RELOAD": "Recarregar",
+      "PLACAR": "Placar da TV",
       "GREETING_MORNING": "Bom dia, {name}",
       "GREETING_AFTERNOON": "Boa tarde, {name}",
       "GREETING_EVENING": "Boa noite, {name}",
@@ -1505,6 +1506,9 @@
     },
     "TV": {
       "EYEBROW": "Ramon Antonio",
+      "TELA_CHEIA": "Tela cheia",
+      "SAIR_TELA_CHEIA": "Sair da tela cheia",
+      "VOLTAR": "Voltar ao hub",
       "LIVE": "ao vivo",
       "MONTH_WON": "Ganhos no mês",
       "GOAL": "Meta {value}",

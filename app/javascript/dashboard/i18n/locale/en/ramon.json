@@ -71,6 +71,7 @@
     "COMMAND": {
       "TITLE": "Command Center",
       "RELOAD": "Reload",
+      "PLACAR": "TV scoreboard",
       "GREETING_MORNING": "Good morning, {name}",
       "GREETING_AFTERNOON": "Good afternoon, {name}",
       "GREETING_EVENING": "Good evening, {name}",
@@ -1505,6 +1506,9 @@
     },
     "TV": {
       "EYEBROW": "Ramon Antonio",
+      "TELA_CHEIA": "Full screen",
+      "SAIR_TELA_CHEIA": "Exit full screen",
+      "VOLTAR": "Back to hub",
       "LIVE": "live",
       "MONTH_WON": "Won this month",
       "GOAL": "Goal {value}",
