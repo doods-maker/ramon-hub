@@ -3,7 +3,7 @@
 // fundo pontilhado como o mockup. Editor = arrasta/liga/apaga; execução =
 // só leitura com o caminho aceso (acesos != null).
 import { useI18n } from 'vue-i18n';
-import { VueFlow, Panel, useVueFlow } from '@vue-flow/core';
+import { ConnectionMode, VueFlow, Panel, useVueFlow } from '@vue-flow/core';
 import { MiniMap } from '@vue-flow/minimap';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/minimap/dist/style.css';
@@ -44,6 +44,7 @@ const folha = id => !edges.value.some(e => e.source === id);
     class="h-full bg-n-surface-2 [background-image:radial-gradient(rgb(var(--slate-6))_1.2px,transparent_1.2px)] [background-size:20px_20px] [&_.vue-flow\_\_edge-path]:stroke-n-slate-7 [&_.vue-flow\_\_edge-path]:[stroke-width:2] [&_.aceso_.vue-flow\_\_edge-path]:stroke-n-teal-9 [&_.aceso_.vue-flow\_\_edge-path]:[stroke-width:2.5] [&_.selected_.vue-flow\_\_edge-path]:stroke-n-blue-9"
     :nodes-draggable="!somenteLeitura"
     :nodes-connectable="!somenteLeitura"
+    :connection-mode="ConnectionMode.Strict"
     :elements-selectable="!somenteLeitura"
     :delete-key-code="somenteLeitura ? null : ['Backspace', 'Delete']"
     :min-zoom="0.4"
