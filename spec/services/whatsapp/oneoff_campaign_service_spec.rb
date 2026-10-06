@@ -142,6 +142,26 @@ describe Whatsapp::OneoffCampaignService do
         described_class.new(campaign: campaign).perform
       end
 
+      it 'sends to contacts without consent when the campaign turns the consent filter off' do
+        campaign.update!(trigger_rules: { 'only_with_marketing_consent' => false })
+        contact = create(:contact, :with_phone_number, account: account)
+        contact.update_labels([label1.title])
+
+        expect(whatsapp_channel).to receive(:send_template).with(contact.phone_number, anything, nil).once
+
+        described_class.new(campaign: campaign).perform
+      end
+
+      it 'keeps skipping contacts without consent when the filter is explicitly on' do
+        campaign.update!(trigger_rules: { 'only_with_marketing_consent' => true })
+        contact = create(:contact, :with_phone_number, account: account)
+        contact.update_labels([label1.title])
+
+        expect(whatsapp_channel).not_to receive(:send_template)
+
+        described_class.new(campaign: campaign).perform
+      end
+
       it 'skips contacts without phone numbers' do
         contact_without_phone = create(:contact, account: account, phone_number: nil)
         contact_without_phone.update_labels([label1.title])
