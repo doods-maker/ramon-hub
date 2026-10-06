@@ -52,6 +52,9 @@ RSpec.describe 'Ramon Inteligencia API', type: :request do
       create(:copilot_suggestion, account: account, status: 'applied')
       account.agente_execucoes.create!(pedido: 'resumo do caso', status: 'ok')
       account.agente_execucoes.create!(pedido: 'falhou', status: 'erro')
+      # cap/pausa: o runner grava a linha sem rodar o claude — não conta na cota do dia
+      account.agente_execucoes.create!(pedido: 'sem cota', status: 'cap',
+                                       resumo: 'Cap diário atingido (ou pausado até amanhã por limite de uso). Não executei.')
       account.agente_execucoes.create!(pedido: 'de manha', status: 'ok', created_at: 12.hours.ago)
       account.agente_execucoes.create!(pedido: 'ontem', status: 'ok', created_at: 23.hours.ago)
 
@@ -59,7 +62,7 @@ RSpec.describe 'Ramon Inteligencia API', type: :request do
 
       expect(body['transferencias']).to eq('total' => 1, 'conversas' => [conversa.display_id])
       expect(body['aprovacoes']).to eq('sugestoes' => 2, 'sugestoes_por_tipo' => { 'move_stage' => 1, 'zapsign' => 1 })
-      expect(body['agente']).to include('hoje' => 3, 'teto' => 30, 'problemas_hoje' => 1)
+      expect(body['agente']).to include('hoje' => 3, 'teto' => 30, 'problemas_hoje' => 2)
     end
   end
 

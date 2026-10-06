@@ -158,10 +158,25 @@ def extrair_estruturado(saida):
     return {}
 
 
+def extrair_uso(saida):
+    """Tokens e custo do `claude -p --output-format json` (usage + total_cost_usd) para a tela Uso e custo
+    do hub. Custo NOMINAL: a assinatura não cobra por chamada — o hub mostra como "equivalente"."""
+    try:
+        out = json.loads(saida) if (saida or '').strip().startswith('{') else {}
+    except ValueError:
+        return {}
+    u = out.get('usage') or {}
+    entrada = sum(int(u.get(k) or 0) for k in ('input_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens'))
+    uso = {'input_tokens': entrada, 'output_tokens': int(u.get('output_tokens') or 0)} if u else {}
+    if out.get('total_cost_usd') is not None:
+        uso['custo_usd'] = out['total_cost_usd']
+    return uso
+
+
 def executar(cfg, cap, job):
     t0 = time.time(); p = parse_pedido(job['content']); acoes = []; status = 'ok'; resposta = ''
     conv, lead_id = job['conversation_id'], job.get('lead_id')
-    prompt_path = None
+    prompt_path = None; uso = {}
     try:
         if not cap.pode():
             status = 'cap' if not cap.pausado() else 'limite'
@@ -177,6 +192,7 @@ def executar(cfg, cap, job):
             r = subprocess.run(montar_cmd(cfg, p['esforco']), input=open(prompt_path).read(), capture_output=True, text=True, timeout=360,
                                cwd=work, env={**os.environ, 'CLAUDE_CODE_OAUTH_TOKEN': cfg.CLAUDE_CODE_OAUTH_TOKEN, 'HOME': os.path.expanduser('~')})
             saida = r.stdout or ''
+            uso = extrair_uso(saida)
             if detecta_limite(saida + (r.stderr or '')):
                 status = 'limite'; cap.pausar_ate_amanha(); resposta = 'Limite de uso da assinatura detectado — pausei até amanhã.'
             else:
@@ -213,7 +229,7 @@ def executar(cfg, cap, job):
         print('nota falhou', e, file=sys.stderr)
     try:
         hub(cfg, 'POST', 'execucoes', {'conversation_id': conv, 'lead_id': lead_id, 'pedido': p['pedido'][:2000], 'status': status,
-                                       'resumo': resposta[:2000], 'acoes': acoes, 'modelo': cfg.MODELO, 'esforco': p['esforco'], 'duracao_ms': int(dur * 1000)})
+                                       'resumo': resposta[:2000], 'acoes': acoes, 'modelo': cfg.MODELO, 'esforco': p['esforco'], 'duracao_ms': int(dur * 1000), **uso})
     except Exception as e:
         print('trilha falhou', e, file=sys.stderr)
 
