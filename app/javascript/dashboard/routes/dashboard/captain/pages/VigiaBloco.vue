@@ -27,7 +27,7 @@ const router = useRouter();
 const { accountScopedRoute } = useAccount();
 
 const data = ref(null);
-const loading = ref(false);
+const loading = ref(true);
 const error = ref(false);
 const mostrarTodos = ref(false);
 
