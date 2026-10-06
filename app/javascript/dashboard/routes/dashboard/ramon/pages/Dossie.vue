@@ -153,6 +153,20 @@ const copyDossie = async () => {
   }
 };
 
+// "Dossiê entregue" ao jurídico: grava a marca e recarrega com a resposta.
+const entregando = ref(false);
+const entregarDossie = async () => {
+  entregando.value = true;
+  try {
+    const response = await LeadsAPI.dossieEntregue(route.params.leadId);
+    data.value = response.data;
+  } catch (e) {
+    useAlert(t('RAMON.FICHA.PASSAGEM.ENTREGAR_ERRO'));
+  } finally {
+    entregando.value = false;
+  }
+};
+
 // Histórico completo vem do servidor; a ficha mostra aos poucos.
 const PAGINA_HISTORICO = 20;
 const historicoVisivel = ref(PAGINA_HISTORICO);
@@ -351,7 +365,12 @@ const abrirNoFunil = () => {
         </div>
       </section>
 
-      <PassagemJuridico v-if="data.passagem" :passagem="data.passagem" />
+      <PassagemJuridico
+        v-if="data.passagem"
+        :passagem="data.passagem"
+        :entregando="entregando"
+        @entregar="entregarDossie"
+      />
 
       <div class="grid items-start gap-5 lg:grid-cols-[1fr_340px]">
         <!-- Coluna principal: o que fazer agora -->

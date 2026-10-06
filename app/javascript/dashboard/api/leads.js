@@ -33,6 +33,11 @@ class LeadsAPI extends ApiClient {
     return axios.get(`${this.url}/${leadId}/dossie`);
   }
 
+  // "Dossiê entregue" ao jurídico (idempotente); devolve o dossiê atualizado
+  dossieEntregue(leadId) {
+    return axios.post(`${this.url}/${leadId}/dossie_entregue`);
+  }
+
   simulate(leadId, payload) {
     return axios.post(`${this.url}/${leadId}/simulacao`, payload);
   }
@@ -129,10 +134,13 @@ class LeadsAPI extends ApiClient {
   // resultado: 'qualificada' | 'nao_qualificada' (Closer, base do prêmio do SDR)
   // taskId: a reunião que o "Feito" está fechando (sem ele, o backend fecha
   // a aberta mais antiga até hoje)
-  registrarReuniao(leadId, resultado, taskId) {
+  // vouPensar: marca à parte "cliente vai pensar" (Painel do time) — não muda
+  // o resultado
+  registrarReuniao(leadId, resultado, taskId, vouPensar) {
     return axios.post(`${this.url}/${leadId}/reuniao`, {
       resultado,
       ...(taskId ? { task_id: taskId } : {}),
+      ...(vouPensar ? { vou_pensar: true } : {}),
     });
   }
 

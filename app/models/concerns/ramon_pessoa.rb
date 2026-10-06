@@ -13,6 +13,9 @@ module RamonPessoa
     # de PII pra não inflar a tabela com last_activity_at e afins.
     audited only: %w[name email phone_number identifier cpf data_nascimento sexo blocked],
             associated_with: :account
+
+    # Painel do time: CPF/nascimento fazem parte do "registro completo" do lead.
+    after_update_commit -> { Ramon::RegistroCompleto.verificar_contato(self) }, if: -> { saved_change_to_cpf? || saved_change_to_data_nascimento? }
   end
 
   private

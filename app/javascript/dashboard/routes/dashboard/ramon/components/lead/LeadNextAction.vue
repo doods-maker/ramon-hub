@@ -150,6 +150,8 @@ const podeRegistrar = computed(() => {
   return !closerId || closerId === meuId.value;
 });
 const resultadoAberto = ref(false);
+// "Cliente vai pensar": marca à parte (Painel do time), não muda o resultado
+const vouPensar = ref(false);
 const registrarResultado = resultado =>
   run(async () => {
     resultadoAberto.value = false;
@@ -157,6 +159,7 @@ const registrarResultado = resultado =>
       id: props.leadId,
       resultado,
       taskId: task.value.id,
+      vouPensar: vouPensar.value,
     });
   });
 const naoCompareceu = () =>
@@ -169,8 +172,12 @@ const naoCompareceu = () =>
     });
   });
 const onDone = () => {
-  if (isMeeting.value) resultadoAberto.value = true;
-  else complete();
+  if (!isMeeting.value) {
+    complete();
+    return;
+  }
+  vouPensar.value = false;
+  resultadoAberto.value = true;
 };
 
 // Cancelar: mesmo efeito do cancel do Cal.com (atividade + sino); nada vai ao
@@ -324,6 +331,15 @@ const reschedule = ({ dueAt }) =>
             {{ task.title
             }}<template v-if="meetingWhen"> · {{ meetingWhen }} </template>
           </p>
+          <label class="mb-3 flex items-center gap-1.5 text-xs text-n-slate-11">
+            <input
+              v-model="vouPensar"
+              type="checkbox"
+              data-testid="resultado-vou-pensar"
+              :disabled="busy || !podeRegistrar"
+            />
+            {{ $t('RAMON.REUNIAO.VOU_PENSAR') }}
+          </label>
           <div class="flex flex-col gap-2">
             <Button
               data-testid="resultado-qualificada"

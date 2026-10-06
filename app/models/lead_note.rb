@@ -8,6 +8,7 @@ class LeadNote < ApplicationRecord
   default_scope { order(created_at: :asc) }
 
   after_create_commit :record_note_activity
+  after_create_commit -> { Ramon::RegistroCompleto.verificar(lead) }
 
   private
 

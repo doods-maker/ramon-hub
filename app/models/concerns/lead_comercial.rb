@@ -11,6 +11,8 @@ module LeadComercial
     before_create :assign_sdr
     before_save :stamp_docs_completos, if: -> { new_record? || will_save_change_to_custom_attributes? || will_save_change_to_thesis_id? }
     after_save :cancelar_contrato_limpo, if: -> { saved_change_to_won_at? && won_at.nil? && contrato_limpo_em.present? }
+    after_save :registrar_contrato_cancelado, if: -> { saved_change_to_won_at? && won_at.nil? }
+    after_commit :verificar_registro_completo, on: [:create, :update], if: -> { saved_change_to_thesis_id? || saved_change_to_contact_id? }
     after_commit :assign_conversation_to_sdr, on: [:create, :update],
                                               if: -> { saved_change_to_sdr_id? || saved_change_to_conversation_id? }
   end
@@ -19,13 +21,15 @@ module LeadComercial
   # vale (correção não muda o mês da apuração); quem marca vira Closer se o lead
   # não tinha; o lead anda pra "Reunião realizada", nunca volta. A tarefa da
   # reunião (a informada, senão a aberta mais antiga até hoje) é concluída.
-  def registrar_reuniao!(resultado, user, task: nil)
+  # vou_pensar: o cliente vai pensar — marca à parte (atividade), NUNCA um 3º
+  # resultado: a qualificação é o que paga o SDR e não muda por isso.
+  def registrar_reuniao!(resultado, user, task: nil, vou_pensar: false)
     attrs = { reuniao_resultado: resultado, reuniao_registrada_em: reuniao_registrada_em || Time.current }
     attrs[:closer] = user if closer_id.blank?
     stage = account.lead_stages.find_by(label: ETAPA_REUNIAO_REALIZADA)
     attrs[:lead_stage] = stage if stage && lead_stage.position < stage.position
     update!(attrs)
-    lead_activities.create!(account: account, user: user, kind: 'reuniao_registrada', to_value: resultado)
+    registrar_atividades_da_reuniao(resultado, user, vou_pensar)
     (task || reuniao_em_aberto)&.complete!(user)
   end
 
@@ -42,6 +46,11 @@ module LeadComercial
   end
 
   private
+
+  def registrar_atividades_da_reuniao(resultado, user, vou_pensar)
+    lead_activities.create!(account: account, user: user, kind: 'reuniao_registrada', to_value: resultado)
+    lead_activities.create!(account: account, user: user, kind: 'vou_pensar') if vou_pensar
+  end
 
   # Reunião que acabou de acontecer: aberta, marcada até o fim de hoje (a
   # futura, de outra conversa já marcada, não é fechada por engano).
@@ -74,6 +83,16 @@ module LeadComercial
   def cancelar_contrato_limpo
     update_columns(contrato_cancelado_em: Time.current, contrato_limpo_em: nil) # rubocop:disable Rails/SkipsModelValidations
   end
+
+  # Saiu de Fechado (Painel do time, KPI "cancelamento em 7 dias"): o won_at
+  # volta a nil no track_stage_cycle; a atividade guarda o won_at antigo em
+  # from_value — é dele que o KPI conta os 7 dias. Vale daqui pra frente.
+  def registrar_contrato_cancelado
+    lead_activities.create!(account: account, user: Current.user, kind: 'contrato_cancelado',
+                            from_value: saved_change_to_won_at.first&.iso8601)
+  end
+
+  def verificar_registro_completo = Ramon::RegistroCompleto.verificar(self)
 
   # Documentos mínimos = checklist inteira da tese "recebido" (decisão 02/10).
   # Carimba o momento em que completou; desmarcar um item apaga o carimbo.
