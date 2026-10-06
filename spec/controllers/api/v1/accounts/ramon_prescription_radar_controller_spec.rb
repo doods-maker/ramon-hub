@@ -75,5 +75,16 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
       expect(body['concluidos'].pluck('id')).to eq([concluido.id])
       expect((body['pendentes'] + body['concluidos']).pluck('id')).not_to include(fora.id)
     end
+
+    it 'lista os ganhos sem tese à parte (defina a tese), fora de pendentes e concluídos', :aggregate_failures do
+      sem_tese = create(:lead, account: account, lead_stage: won_stage)
+      create(:lead, account: account, lead_stage: account.lead_stages.find_by(is_won: false, is_lost: false))
+
+      get url, headers: agent.create_new_auth_token, as: :json
+
+      body = response.parsed_body
+      expect(body['sem_tese'].pluck('id')).to eq([sem_tese.id])
+      expect((body['pendentes'] + body['concluidos']).pluck('id')).to be_empty
+    end
   end
 end

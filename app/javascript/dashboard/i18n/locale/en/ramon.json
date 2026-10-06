@@ -1631,7 +1631,9 @@
       "DOCS": "docs {received}/{total}",
       "EMPTY": "No wins with pending documents 🎉",
       "RETRY": "Retry",
-      "OPEN_CONVERSATION": "Conversation"
+      "OPEN_CONVERSATION": "Conversation",
+      "SEM_TESE": "Wins without a thesis â€” set the thesis ({count})",
+      "SEM_TESE_HINT": "Without a thesis there is no document list to request and no clean contract."
     },
     "NAV": {
       "TITLE": "Intranet",

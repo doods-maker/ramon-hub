@@ -1636,7 +1636,9 @@
       "DOCS": "docs {received}/{total}",
       "EMPTY": "Nenhum ganho com documentos pendentes 🎉",
       "RETRY": "Tentar de novo",
-      "OPEN_CONVERSATION": "Conversa"
+      "OPEN_CONVERSATION": "Conversa",
+      "SEM_TESE": "Ganhos sem tese â€” defina a tese ({count})",
+      "SEM_TESE_HINT": "Sem tese nÃ£o hÃ¡ lista de documentos para cobrar nem contrato limpo."
     },
     "NAV": {
       "TITLE": "Intranet",

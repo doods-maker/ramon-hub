@@ -13,3 +13,11 @@
     end
   end
 end
+
+# Ganhos sem tese (sem checklist → nunca contrato limpo): pedem "defina a tese".
+json.sem_tese @dados[:sem_tese] do |lead|
+  json.id lead.id
+  json.name lead.contact&.name || lead.name
+  json.dias ((Time.zone.now - lead.won_at) / 1.day).floor
+  json.conversation_id lead.conversation_id
+end

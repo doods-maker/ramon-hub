@@ -7,7 +7,15 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import RamonPosVendaAPI from 'dashboard/api/ramonPosVenda';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
-import { CARTAO, CARTAO_STATUS, CHIP, FILETE, TOM } from '../helpers/ui';
+import {
+  CARTAO,
+  CARTAO_STATUS,
+  CHIP,
+  FILETE,
+  LINHA,
+  TITULO,
+  TOM,
+} from '../helpers/ui';
 
 defineOptions({ name: 'RamonPosVenda' });
 
@@ -37,6 +45,8 @@ onMounted(fetchData);
 
 const pendentes = computed(() => data.value?.pendentes ?? []);
 const concluidos = computed(() => data.value?.concluidos ?? []);
+// Ganho sem tese: sem checklist não há docs a cobrar nem contrato limpo.
+const semTese = computed(() => data.value?.sem_tese ?? []);
 
 // Padrão das outras páginas: abre o Funil e seleciona o lead (drawer).
 const openLead = id => {
@@ -86,6 +96,39 @@ const openConversation = conversationId => {
       </div>
 
       <template v-else-if="data">
+        <!-- Ganhos sem tese: pedem a tese antes de tudo -->
+        <section
+          v-if="semTese.length"
+          data-testid="pos-venda-sem-tese"
+          class="flex flex-col gap-2"
+          :class="[CARTAO_STATUS, FILETE.amber]"
+        >
+          <div>
+            <p class="m-0" :class="TITULO">
+              {{ t('RAMON.POS_VENDA.SEM_TESE', { count: semTese.length }) }}
+            </p>
+            <p class="m-0 mt-0.5 text-xs text-n-slate-10">
+              {{ t('RAMON.POS_VENDA.SEM_TESE_HINT') }}
+            </p>
+          </div>
+          <ul class="m-0 flex list-none flex-col p-0">
+            <li v-for="item in semTese" :key="item.id">
+              <button
+                type="button"
+                data-testid="pos-venda-sem-tese-row"
+                class="flex items-center justify-between gap-3"
+                :class="LINHA"
+                @click="openLead(item.id)"
+              >
+                <span class="truncate text-n-slate-12">{{ item.name }}</span>
+                <span class="shrink-0 text-xs text-n-slate-10">
+                  {{ t('RAMON.POS_VENDA.DIAS', { dias: item.dias }) }}
+                </span>
+              </button>
+            </li>
+          </ul>
+        </section>
+
         <!-- Vazio -->
         <p
           v-if="!pendentes.length"
