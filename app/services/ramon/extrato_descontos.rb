@@ -35,12 +35,13 @@ class Ramon::ExtratoDescontos
 
   # lead_id => extrato fechado mais recente em que a unidade foi paga (só os ainda não descontados).
   def pagos_sem_desconto
-    @pagos_sem_desconto ||= begin
-      descontados = linhas_fechadas.filter_map { |_registro, u| u['lead_id'] if u['evento'] == DESCONTO }.tally
-      linhas_fechadas.select { |_registro, u| u['evento'] == CONTRATO }
-                     .group_by { |_registro, u| u['lead_id'] }
-                     .filter_map { |id, pagas| [id, pagas.last] if pagas.size > descontados.fetch(id, 0) }.to_h
-    end
+    @pagos_sem_desconto ||= linhas_fechadas.select { |_registro, u| u['evento'] == CONTRATO }
+                                           .group_by { |_registro, u| u['lead_id'] }
+                                           .filter_map { |id, pagas| [id, pagas.last] if pagas.size > descontados.fetch(id, 0) }.to_h
+  end
+
+  def descontados
+    @descontados ||= linhas_fechadas.filter_map { |_registro, u| u['lead_id'] if u['evento'] == DESCONTO }.tally
   end
 
   def linhas_do(lead)

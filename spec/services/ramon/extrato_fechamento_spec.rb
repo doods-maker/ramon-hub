@@ -14,9 +14,9 @@ RSpec.describe Ramon::ExtratoFechamento do
     create(:team_member, team: create(:team, account: account, name: 'closer'), user: closer)
   end
 
-  def contrato_limpo(em)
+  def contrato_limpo(quando)
     create(:lead, account: account, lead_stage: won_stage, sdr: sdr, closer: closer, reuniao_resultado: 'qualificada').tap do |lead|
-      lead.update_columns(contrato_limpo_em: em) # rubocop:disable Rails/SkipsModelValidations
+      lead.update_columns(contrato_limpo_em: quando) # rubocop:disable Rails/SkipsModelValidations
     end
   end
 
