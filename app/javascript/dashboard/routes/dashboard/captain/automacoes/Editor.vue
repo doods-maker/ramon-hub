@@ -291,7 +291,13 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
       class="flex h-14 shrink-0 items-center gap-2.5 border-b border-n-weak pl-5 pr-4"
     >
       <router-link
-        :to="accountScopedRoute('captain_automacoes_index')"
+        :to="
+          accountScopedRoute(
+            'captain_automacoes_index',
+            {},
+            somenteLeitura ? { aba: 'sistema' } : {}
+          )
+        "
         class="flex items-center gap-1 text-[13px] text-n-slate-10 hover:text-n-slate-12"
       >
         <i class="i-lucide-chevron-left size-4" />
@@ -314,6 +320,15 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
         </span>
         <span v-else :class="[CHIP, TOM.slate]" class="font-mono">
           {{ salvando ? t(`${K}.EDITOR.SALVANDO`) : seloRascunho }}
+        </span>
+        <span
+          v-if="somenteLeitura && fluxo.alcance"
+          data-testid="sistema-alcance"
+          :class="[CHIP, TOM.amber]"
+          class="font-mono"
+        >
+          <i class="i-lucide-triangle-alert size-3" />
+          {{ t(`${K}.SISTEMA.ALCANCE.${fluxo.alcance}`) }}
         </span>
 
         <div class="ml-auto flex items-center gap-2">
@@ -342,7 +357,7 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
             />
             {{ t(`${K}.EDITOR.POR_DIA`) }}
           </span>
-          <div ref="versoesRef" class="relative">
+          <div v-if="!somenteLeitura" ref="versoesRef" class="relative">
             <Button
               outline
               slate
@@ -475,6 +490,22 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
           @duplicar="duplicar"
           @excluir="excluirPasso"
         />
+        <div
+          v-else-if="somenteLeitura"
+          data-testid="sistema-descricao"
+          class="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3.5"
+        >
+          <h4
+            class="mb-2 text-[11px] font-medium uppercase tracking-wider text-n-slate-10"
+          >
+            {{ t(`${K}.EDITOR.COMO_RODA`) }}
+          </h4>
+          <p
+            class="whitespace-pre-line text-[13px] leading-relaxed text-n-slate-11"
+          >
+            {{ fluxo.descricao }}
+          </p>
+        </div>
         <div v-else class="flex min-h-0 flex-1 flex-col px-4 py-3.5">
           <p class="mb-3 text-xs text-n-slate-10">
             {{ t(`${K}.EDITOR.SELECIONE`) }}
