@@ -8,6 +8,7 @@ import RamonPageHeader from '../components/RamonPageHeader.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { DEFAULT_STAGE_COLOR } from '../helpers/stage';
+import { mensagemErro } from '../helpers/erro';
 import {
   CARTAO,
   SECAO,
@@ -27,14 +28,15 @@ const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const stages = computed(() => getters['leadConfig/getStages'].value);
 
 const saveStalled = (stage, raw) => {
-  const days = raw === '' ? null : Math.max(0, Math.floor(Number(raw)));
+  // o servidor exige > 0 (vazio = sem limite): 0 vira 1 antes de mandar
+  const days = raw === '' ? null : Math.max(1, Math.floor(Number(raw)));
   if (days === (stage.stalled_after_days ?? null)) return;
   store
     .dispatch('leadConfig/updateStage', {
       id: stage.id,
       stalled_after_days: days,
     })
-    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
 };
 
 const saveProbability = (stage, raw) => {
@@ -43,7 +45,7 @@ const saveProbability = (stage, raw) => {
   if (value === (stage.probability ?? null)) return;
   store
     .dispatch('leadConfig/updateStage', { id: stage.id, probability: value })
-    .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
 };
 
 const newBenefit = ref('');
@@ -313,7 +315,7 @@ const submitImport = async () => {
                 :value="s.stalled_after_days"
                 data-testid="stage-stalled-days"
                 type="number"
-                min="0"
+                min="1"
                 class="!w-20 font-mono"
                 :class="CAMPO"
                 @change="e => saveStalled(s, e.target.value)"
