@@ -6,8 +6,8 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
   let(:lead) { create(:lead, account: account, conversation: conversa, contact: conversa.contact) }
   let(:fluxo) { fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' })) }
 
-  def ctx(alvo: lead, ensaio: false)
-    Ramon::Fluxos::Contexto.new(fluxo.execucoes.create!(account: account, alvo: alvo, ensaio: ensaio))
+  def ctx(alvo: lead, ensaio: false, contexto: {})
+    Ramon::Fluxos::Contexto.new(fluxo.execucoes.create!(account: account, alvo: alvo, ensaio: ensaio, contexto: contexto))
   end
 
   it 'rascunho vira nota privada com o prefixo, nunca mensagem pública' do
@@ -74,6 +74,32 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     freeze_time do
       r = Ramon::Fluxos::Passos::Logica.esperar({ 'quantidade' => 2, 'unidade' => 'dias' }, ctx)
       expect(r[:esperar_ate]).to eq(2.days.from_now)
+    end
+  end
+
+  describe 'esperar antes da reunião (B4.1)' do
+    let(:config) { { 'antes_de' => 'reuniao', 'quantidade' => 8, 'unidade' => 'horas' } }
+    let(:gatilho) { { 'gatilho' => { 'inicio' => '2026-10-07T22:00:00Z' } } }
+
+    it 'conta para trás a partir da reunião do gatilho' do
+      travel_to(Time.zone.parse('2026-10-07T12:00:00Z')) do
+        r = Ramon::Fluxos::Passos::Logica.esperar(config, ctx(contexto: gatilho))
+        expect(r[:esperar_ate]).to eq(Time.zone.parse('2026-10-07T14:00:00Z'))
+        expect(r[:vars]).to eq('horario_passou' => 'nao')
+      end
+    end
+
+    it 'horário já passado: segue sem esperar e marca horario_passou = sim (o código também não agenda)' do
+      travel_to(Time.zone.parse('2026-10-07T15:00:00Z')) do
+        r = Ramon::Fluxos::Passos::Logica.esperar(config, ctx(contexto: gatilho))
+        expect(r[:esperar_ate]).to be_nil
+        expect(r[:vars]).to eq('horario_passou' => 'sim')
+        expect(r[:resumo]).to include('já passou')
+      end
+    end
+
+    it 'sem reunião nenhuma é erro de configuração (não repete)' do
+      expect { Ramon::Fluxos::Passos::Logica.esperar(config, ctx) }.to raise_error(Ramon::Fluxos::PassoImpossivel, /reunião/)
     end
   end
 
