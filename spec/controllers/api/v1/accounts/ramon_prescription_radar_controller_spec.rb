@@ -102,6 +102,7 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
       body = response.parsed_body
       expect(body['pendentes'].pluck('id')).to eq([pendente.id])
       expect(body['pendentes'].first).to include('docs_received' => 0, 'docs_total' => 1)
+      expect(body['pendentes'].first['docs_pendentes']).to contain_exactly(include('id' => doc_item.id, 'status' => 'pendente'))
       expect(body['concluidos'].pluck('id')).to eq([concluido.id])
       expect(body['concluidos_total']).to eq(1)
       expect((body['pendentes'] + body['concluidos']).pluck('id')).not_to include(fora.id)

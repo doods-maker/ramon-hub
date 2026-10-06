@@ -13,6 +13,9 @@
       # prescrição: o front calcula com o mesmo helper do painel (prescriptionInfo)
       json.dcb_em lead.dcb_em
       json.benefit_monthly_value lead.benefit_monthly_value&.to_f
+      # o que falta (mesma fonte do checklist do painel) + nome pro rascunho "Cobrar pendentes"
+      json.lead_name lead.name
+      json.docs_pendentes(lead.doc_checklist.reject { |item| item[:status] == 'recebido' })
     end
   end
 end

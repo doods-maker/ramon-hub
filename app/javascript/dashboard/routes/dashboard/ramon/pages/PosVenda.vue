@@ -4,10 +4,14 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
+import { useAlert } from 'dashboard/composables';
+import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import RamonPosVendaAPI from 'dashboard/api/ramonPosVenda';
+import LeadsAPI from 'dashboard/api/leads';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { prescriptionChip, prescriptionInfo } from '../helpers/prescription';
+import { docChargeDraft } from '../helpers/docCobranca';
 import {
   CARTAO,
   CARTAO_STATUS,
@@ -66,6 +70,57 @@ const openLead = id => {
 const openConversation = conversationId => {
   router.push(accountScopedRoute('ramon_funil'));
   store.dispatch('leads/toggleDock', conversationId);
+};
+
+// "Cobrar pendentes" — o mesmo do painel do lead (DocChecklist): monta o
+// rascunho e marca os pendentes como solicitados. Com conversa, o texto cai no
+// campo de resposta (rascunho do ReplyBox, como o "Rascunho da IA" do Centro) e
+// abre o dock; sem conversa, vai pra área de transferência. Nada é enviado.
+const cobrando = ref(null);
+const statusChip = doc => (doc.status === 'solicitado' ? TOM.blue : TOM.amber);
+const cobrar = async item => {
+  const docs = item.docs_pendentes || [];
+  if (!docs.length || cobrando.value) return;
+  cobrando.value = item.id;
+  const draft = docChargeDraft(
+    t,
+    item.lead_name,
+    docs.map(doc => doc.title)
+  );
+  try {
+    if (item.conversation_id) {
+      await store.dispatch('draftMessages/set', {
+        key: `draft-${item.conversation_id}-REPLY`,
+        message: draft,
+      });
+      openConversation(item.conversation_id);
+      useAlert(t('RAMON.DOCS.DRAFT_READY'));
+    } else {
+      try {
+        await copyTextToClipboard(draft);
+      } catch (e) {
+        useAlert(t('RAMON.DOCS.COPY_FAILED'));
+        return;
+      }
+      useAlert(t('RAMON.DOCS.COPIED'));
+    }
+    const pendentesAgora = docs.filter(doc => doc.status === 'pendente');
+    if (!pendentesAgora.length) return;
+    try {
+      await LeadsAPI.update(item.id, {
+        custom_attributes: {
+          doc_status: Object.fromEntries(
+            pendentesAgora.map(doc => [doc.id, 'solicitado'])
+          ),
+        },
+      });
+      fetchData();
+    } catch (e) {
+      useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    }
+  } finally {
+    cobrando.value = null;
+  }
 };
 </script>
 
@@ -159,7 +214,7 @@ const openConversation = conversationId => {
             ]"
             @click="openLead(item.id)"
           >
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <p class="m-0 text-sm font-medium truncate text-n-slate-12">
                 {{ item.name }}
               </p>
@@ -172,6 +227,21 @@ const openConversation = conversationId => {
                   })
                 }}
               </p>
+              <!-- O que falta: mesmas cores do checklist do painel -->
+              <ul
+                v-if="item.docs_pendentes?.length"
+                data-testid="pos-venda-docs-pendentes"
+                class="m-0 mt-1.5 flex list-none flex-wrap gap-1 p-0"
+              >
+                <li
+                  v-for="doc in item.docs_pendentes"
+                  :key="doc.id"
+                  :class="[CHIP, statusChip(doc)]"
+                  :title="t(`RAMON.DOCS.STATUS.${doc.status.toUpperCase()}`)"
+                >
+                  {{ doc.title }}
+                </li>
+              </ul>
             </div>
             <div class="flex shrink-0 items-center gap-2">
               <span
@@ -185,6 +255,17 @@ const openConversation = conversationId => {
               >
                 {{ prescricao(item).text }}
               </span>
+              <Button
+                v-if="item.docs_pendentes?.length"
+                data-testid="pos-venda-cobrar"
+                xs
+                faded
+                slate
+                icon="i-lucide-file-text"
+                :label="t('RAMON.DOCS.CHARGE')"
+                :is-loading="cobrando === item.id"
+                @click.stop="cobrar(item)"
+              />
               <Button
                 v-if="item.conversation_id"
                 data-testid="pos-venda-open-conversation"
