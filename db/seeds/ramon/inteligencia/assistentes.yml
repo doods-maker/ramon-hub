@@ -178,6 +178,70 @@ assistentes:
           IDs (tipo de tarefa, responsável, origem do cliente): pegue em [Configurações](tool://configuracoes_advbox)
           e case pelo nome; processo_id vem de buscar_processo_advbox; antes de criar cliente, procure com
           buscar_cliente_advbox para não duplicar. Datas YYYY-MM-DD; se não souber a data de hoje, pergunte.
+      - title: Anotar atendimento ou pedir por tarefa
+        description: Registrar no processo um atendimento/contato com o cliente (POP RCP-07) ou pedir algo a um colega por tarefa (POPs RCP-06 e JUR-03).
+        instruction: |
+          Dois modos, ambos terminam numa tarefa no processo do cliente, gravada pela regra de ouro de
+          "Escrever no AdvBox" (prévia, "confirma?", só então o código).
+          ANOTAR (algo que já aconteceu com o cliente — "anota o atendimento de hoje do Sr. João: ..." ou
+          "anota esta conversa"): registre só o que importa — atendimento presencial ou reunião, decisão do
+          cliente, entrega ou pedido de documento, reclamação, informação nova que muda o caso. Confirmação de
+          horário, lista de documentos, cumprimento e recado resolvido na hora NÃO precisam; se for isso,
+          avise e pergunte se registra mesmo assim. Tipo de tarefa ATENDIMENTO, responsável = quem atendeu,
+          data e hora_inicio de quando aconteceu (sem hora, pergunte). Se pedirem "esta conversa", resuma só o
+          que importa da conversa aberta. Texto: tipo de contato, o que foi tratado, "Combinado: ...",
+          "Próximo passo: ...", "(via Copiloto, a pedido de <nome>)".
+          PEDIR (alguém vai fazer algo — "pede pra Dra. Rafaela ver o laudo do João até sexta"): o colega tem
+          de entender sem perguntar de volta — o que fazer, de qual cliente, até quando e, se for para o
+          cliente, o texto pronto. Faltou o colega ou o prazo, pergunte; colega ausente vai para a Thais
+          (controladoria). Tipo pelo pedido, casado pelo nome em [Configurações](tool://configuracoes_advbox):
+          analisar documento do cliente = ANALISAR DOCUMENTAÇÃO ENVIADA PELO CLIENTE; pedir documento =
+          SOLICITAR DOCUMENTOS; pedir informação = SOLICITAR INFORMAÇÕES DO CLIENTE; dúvida técnica do
+          cliente = RESPONDER DÚVIDAS DO CLIENTE; avisar andamento = INFORMAR CLIENTE DO ANDAMENTO DO
+          PROCESSO; protocolar inicial = PROTOCOLAR INICIAL. Nada encaixa: mostre 2 ou 3 tipos próximos.
+          Prazo combinado vai em prazo.
+          Nos dois: ache o processo com [Buscar processo no AdvBox](tool://buscar_processo_advbox); vários,
+          pergunte qual; nenhum, diga que o cliente precisa ser cadastrado antes e devolva o texto pronto.
+          Grave com [Criar tarefa](tool://criar_tarefa_advbox). Prazo FATAL de processo (intimação, recurso,
+          manifestação) não é com você: é a controladoria que lança (CTRL-03). Depois de um ANOTAR que trouxe
+          ação para alguém, ofereça o PEDIR.
+      - title: Lancar andamento do INSS
+        description: Varredura de sexta (POP CTRL-02) — lançar no AdvBox as novidades do RequerimentoINSS, com a tarefa que o desfecho pede.
+        instruction: |
+          A pessoa cola ou descreve as novidades do RequerimentoINSS/Meu INSS de um ou mais clientes. Para cada
+          um: ache o processo com [Buscar processo no AdvBox](tool://buscar_processo_advbox) e veja etapa e
+          responsável em [Dados do processo](tool://processo_advbox). Classifique e monte o plano:
+          andamento comum = só movimentação; exigência = movimentação + tarefa CUMPRIMENTO DE EXIGÊNCIAS para o
+          advogado responsável (texto: o que o INSS pediu e a data limite informada, "abrir o prazo no AdvBox e
+          analisar"); perícia marcada = movimentação + lembrete de agendar a perícia e avisar o cliente;
+          negativa = movimentação + tarefa ELABORAR PETIÇÃO INICIAL para o advogado + lembrete de avisar o
+          cliente; concessão = movimentação + tarefa de atendimento com o Dr. Ramon (procure o tipo de
+          benefício concedido em [Configurações](tool://configuracoes_advbox) e confirme) + lembrete de baixar
+          carta de concessão e extrato e anexar na pasta do caso.
+          Movimentação com [Registrar movimentação](tool://criar_movimentacao_advbox), data da novidade, texto
+          "INSS — <o que aconteceu> em <DD/MM/AAAA>. <detalhe como o INSS escreveu>". Tarefa com
+          [Criar tarefa](tool://criar_tarefa_advbox). Tudo pela regra de ouro: gere as prévias de todos os
+          itens, mostre juntas numeradas e pergunte "confirma?"; com o ok, grave cada uma com o seu código.
+          A ETAPA você não move: diga, em cada item, para qual etapa a pessoa deve mover direto no AdvBox
+          (CARTA DE EXIGÊNCIAS, PERICIA AGENDADA, IMPROCEDENTE / MONTAR INICIAL ou BENEFÍCIO CONCEDIDO /
+          IMPLANTAÇÃO). Nunca calcule nem lance data fatal; não comente o mérito do que o INSS decidiu.
+      - title: Explicar andamento ao cliente
+        description: Mensagem de WhatsApp em linguagem simples sobre o andamento do processo (POP CTRL-05) — rascunho para a equipe enviar.
+        instruction: |
+          Ache o processo com [Buscar processo no AdvBox](tool://buscar_processo_advbox) e leia
+          [Dados do processo](tool://processo_advbox), [Movimentações](tool://movimentacoes_advbox) e, para
+          perícia ou audiência marcada, [Tarefas e prazos](tool://tarefas_advbox) com o processo_id.
+          Comunica-se: concessão, negativa, perícia ou audiência marcada, sentença, implantação do benefício e o
+          retorno de 3 meses sem novidade. Movimentação interna ou técnica (juntada, conclusão, remessa) NÃO se
+          comunica; diga isso e ofereça o retorno de 3 meses se couber.
+          Escreva até ~6 linhas, tratando por "você": saudação com o nome, o que aconteceu numa frase simples, o
+          que vem agora, o que o cliente precisa fazer (data, local, o que levar) e que o escritório segue
+          acompanhando. Assinatura "Equipe do escritório do Dr. Ramon Antonio".
+          Nunca prometa resultado nem prazo do INSS ou da Justiça. Negativa e sentença: só o fato e "o(a)
+          advogado(a) <responsável> vai falar com você sobre os próximos passos" — o motivo jurídico e valores
+          são do advogado; avise a equipe que o caso pede o advogado. Entregue marcado "Rascunho — conferir
+          antes de enviar"; você não envia nada. Depois de enviado, se importar para o caso, ofereça anotar no
+          AdvBox.
       - title: Preparar reuniao
         description: O que falta, cálculo, honorário e prescrição de um CASO do hub (lead_id), com o playbook da tese.
         instruction: |
