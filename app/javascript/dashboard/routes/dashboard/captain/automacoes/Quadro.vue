@@ -16,6 +16,7 @@ const props = defineProps({
   erros: { type: Object, default: () => new Set() },
   acesos: { type: Object, default: null },
   atual: { type: String, default: null },
+  saidasTomadas: { type: Object, default: () => ({}) },
 });
 // adicionar(id) = "+" tracejado de um passo folha (mockup .mais)
 const emit = defineEmits(['selecionar', 'conectar', 'adicionar']);
@@ -59,6 +60,7 @@ const folha = id => !edges.value.some(e => e.source === id);
         :config="data.config"
         :estado="estado(id)"
         :somente-leitura="somenteLeitura"
+        :saida-tomada="saidasTomadas[id]"
         :folha="folha(id)"
         @adicionar="emit('adicionar', id)"
       />

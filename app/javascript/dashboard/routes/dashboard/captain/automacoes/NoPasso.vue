@@ -16,6 +16,7 @@ const props = defineProps({
   estado: { type: String, default: '' },
   somenteLeitura: { type: Boolean, default: false },
   folha: { type: Boolean, default: false },
+  saidaTomada: { type: String, default: null },
 });
 const emit = defineEmits(['adicionar']);
 
@@ -164,7 +165,11 @@ const rotuloSaida = saida => {
         <span
           v-if="saidas.length > 1"
           class="mt-0.5 max-w-[64px] truncate font-mono text-[10.5px]"
-          :class="estado === 'aceso' ? 'text-n-teal-11' : 'text-n-slate-10'"
+          :class="
+            estado === 'aceso' && saida === saidaTomada
+              ? 'text-n-teal-11'
+              : 'text-n-slate-10'
+          "
         >
           {{ rotuloSaida(saida) }}
         </span>
