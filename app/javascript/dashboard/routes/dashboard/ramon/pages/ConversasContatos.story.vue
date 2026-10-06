@@ -172,7 +172,10 @@ const API = {
     data: { meta: STATS, payload: CONVERSAS },
   },
   'conversations/meta': { meta: STATS },
-  contacts: { payload: CONTATOS, meta: { count: CONTATOS.length } },
+  contacts: {
+    payload: CONTATOS,
+    meta: { count: CONTATOS.length, current_page: 1 },
+  },
   'contacts/1': { payload: CONTATO_DETALHE },
   'contacts/1/labels': { payload: ['bpc-loas', 'documentos'] },
   'contacts/1/notes': [],

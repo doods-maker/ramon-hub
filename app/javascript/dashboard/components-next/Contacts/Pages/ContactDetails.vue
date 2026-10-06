@@ -223,7 +223,7 @@ const handleAvatarDelete = async () => {
     </div>
     <Policy :permissions="['administrator']">
       <div
-        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-strong"
+        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-weak"
       >
         <div class="flex flex-col gap-2">
           <h6 class="text-base font-medium text-n-slate-12">
@@ -242,7 +242,7 @@ const handleAvatarDelete = async () => {
         />
       </div>
       <div
-        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-strong"
+        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-weak"
       >
         <div class="flex flex-col gap-2">
           <h6 class="text-base font-medium text-n-slate-12">

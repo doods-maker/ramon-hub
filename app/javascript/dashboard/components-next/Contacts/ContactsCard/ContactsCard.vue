@@ -171,7 +171,10 @@ const handleAvatarHover = isHovered => {
               </span>
             </div>
             <div v-if="email" class="w-px h-3 truncate bg-n-slate-6" />
-            <span v-if="phoneNumber" class="text-sm truncate text-n-slate-11">
+            <span
+              v-if="phoneNumber"
+              class="font-mono text-sm truncate text-n-slate-11"
+            >
               {{ phoneNumber }}
             </span>
             <div v-if="phoneNumber" class="w-px h-3 truncate bg-n-slate-6" />
@@ -212,7 +215,7 @@ const handleAvatarHover = isHovered => {
           "
         >
           <div class="overflow-hidden">
-            <div class="flex flex-col gap-6 p-6 border-t border-n-strong">
+            <div class="flex flex-col gap-6 p-6 border-t border-n-weak">
               <ContactsForm
                 ref="contactsFormRef"
                 :contact-data="contactData"
