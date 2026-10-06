@@ -93,6 +93,26 @@ RSpec.describe 'Ramon Conteudo API', type: :request do
       expect(peca.reload).to have_attributes(status: 'montado', agendado_para: nil)
     end
 
+    it 'falha ambígua só tenta de novo com a conferência marcada', :aggregate_failures do
+      erro = 'Pode ter ido ao ar — conferir no Instagram antes de tentar de novo. (timeout)'
+      peca.update_columns(status: 'falhou', erro: erro) # rubocop:disable Rails/SkipsModelValidations
+      get base, headers: admin.create_new_auth_token
+      expect(response.parsed_body['payload'].first['ambigua']).to be(true)
+
+      post "#{base}/#{peca.id}/tentar_de_novo", headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(peca.reload.status).to eq 'falhou'
+
+      post "#{base}/#{peca.id}/tentar_de_novo", params: { conferido: true }, headers: admin.create_new_auth_token
+      expect(peca.reload.status).to eq 'agendado'
+    end
+
+    it 'falha comum tenta de novo sem conferência' do
+      peca.update_columns(status: 'falhou', erro: 'Contêiner p1: ERROR') # rubocop:disable Rails/SkipsModelValidations
+      post "#{base}/#{peca.id}/tentar_de_novo", headers: admin.create_new_auth_token
+      expect(peca.reload.status).to eq 'agendado'
+    end
+
     it 'tentar de novo recusa peça que já tem id na Meta' do
       peca.update_columns(status: 'falhou', ig_media_id: 'm1') # rubocop:disable Rails/SkipsModelValidations
       post "#{base}/#{peca.id}/tentar_de_novo", headers: admin.create_new_auth_token

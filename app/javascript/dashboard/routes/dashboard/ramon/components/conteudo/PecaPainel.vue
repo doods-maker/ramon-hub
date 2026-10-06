@@ -6,6 +6,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import RamonConteudoAPI from 'dashboard/api/ramonConteudo';
 import { paraInputLocal } from '../../helpers/dataLocal';
 import PostPrevia from './PostPrevia.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 import { AVISO, CAMPO, SECAO, TEXTAREA, TITULO, TOM } from '../../helpers/ui';
 
 const props = defineProps({ pecaId: { type: Number, required: true } });
@@ -18,6 +19,10 @@ const ocupado = ref(false);
 const legenda = ref('');
 const refazerCards = ref([]);
 const quando = ref('');
+// Publicar/tentar de novo vai ao ar de verdade: passa por confirmação.
+const confirmacao = ref(null);
+// Falha ambígua (pode ter ido ao ar): só libera depois do "conferi".
+const conferido = ref(false);
 
 const campos = computed(() =>
   Object.entries(peca.value?.conteudo?.fields || {}).filter(
@@ -40,6 +45,7 @@ const agir = async acao => {
     legenda.value = data.legenda || '';
     quando.value = paraInputLocal(data.sugestao_horario || data.agendado_para);
     refazerCards.value = [];
+    conferido.value = false;
     emit('changed');
   } catch (e) {
     useAlert(e?.response?.data?.error || t('RAMON.CONTEUDO.ACAO_ERRO'));
@@ -57,6 +63,33 @@ const comLegenda = acao => () => {
     acao
   );
 };
+
+const pedirConfirmacao = (textos, acao) => {
+  confirmacao.value = { ...textos, acao };
+};
+const confirmar = () => {
+  const { acao } = confirmacao.value;
+  confirmacao.value = null;
+  agir(acao);
+};
+const publicarAgora = () =>
+  pedirConfirmacao(
+    {
+      titulo: t('RAMON.CONTEUDO.CONFIRMAR_PUBLICAR'),
+      mensagem: t('RAMON.CONTEUDO.CONFIRMAR_PUBLICAR_MSG'),
+      rotulo: t('RAMON.CONTEUDO.PUBLICAR_AGORA'),
+    },
+    comLegenda(() => RamonConteudoAPI.publicarAgora(peca.value.id))
+  );
+const tentarDeNovo = () =>
+  pedirConfirmacao(
+    {
+      titulo: t('RAMON.CONTEUDO.CONFIRMAR_TENTAR'),
+      mensagem: t('RAMON.CONTEUDO.CONFIRMAR_TENTAR_MSG'),
+      rotulo: t('RAMON.CONTEUDO.TENTAR_DE_NOVO'),
+    },
+    () => RamonConteudoAPI.tentarDeNovo(peca.value.id, conferido.value)
+  );
 
 watch(() => props.pecaId, carregar, { immediate: true });
 </script>
@@ -195,10 +228,9 @@ watch(() => props.pecaId, carregar, { immediate: true });
             slate
             faded
             :label="t('RAMON.CONTEUDO.PUBLICAR_AGORA')"
+            data-testid="publicar-agora"
             :disabled="ocupado"
-            @click="
-              agir(comLegenda(() => RamonConteudoAPI.publicarAgora(peca.id)))
-            "
+            @click="publicarAgora"
           />
         </div>
       </div>
@@ -222,10 +254,9 @@ watch(() => props.pecaId, carregar, { immediate: true });
             slate
             faded
             :label="t('RAMON.CONTEUDO.PUBLICAR_AGORA')"
+            data-testid="publicar-agora"
             :disabled="ocupado"
-            @click="
-              agir(comLegenda(() => RamonConteudoAPI.publicarAgora(peca.id)))
-            "
+            @click="publicarAgora"
           />
           <Button
             ruby
@@ -236,13 +267,28 @@ watch(() => props.pecaId, carregar, { immediate: true });
           />
         </div>
       </div>
-      <Button
+      <div
         v-if="peca.status === 'falhou'"
-        class="self-start"
-        :label="t('RAMON.CONTEUDO.TENTAR_DE_NOVO')"
-        :disabled="ocupado"
-        @click="agir(() => RamonConteudoAPI.tentarDeNovo(peca.id))"
-      />
+        class="flex flex-col items-start gap-2"
+      >
+        <label
+          v-if="peca.ambigua"
+          class="flex items-center gap-2 text-sm text-n-slate-12"
+        >
+          <input
+            v-model="conferido"
+            data-testid="conferi-instagram"
+            type="checkbox"
+          />
+          {{ t('RAMON.CONTEUDO.CONFERI') }}
+        </label>
+        <Button
+          data-testid="tentar-de-novo"
+          :label="t('RAMON.CONTEUDO.TENTAR_DE_NOVO')"
+          :disabled="ocupado || (peca.ambigua && !conferido)"
+          @click="tentarDeNovo"
+        />
+      </div>
       <a
         v-if="peca.permalink"
         :href="peca.permalink"
@@ -253,5 +299,14 @@ watch(() => props.pecaId, carregar, { immediate: true });
         {{ t('RAMON.CONTEUDO.VER_NO_INSTAGRAM') }}
       </a>
     </template>
+    <ConfirmModal
+      v-if="confirmacao"
+      :title="confirmacao.titulo"
+      :message="confirmacao.mensagem"
+      :confirm-label="confirmacao.rotulo"
+      confirm-color="blue"
+      @confirm="confirmar"
+      @cancel="confirmacao = null"
+    />
   </aside>
 </template>

@@ -9,6 +9,7 @@ vi.mock('dashboard/api/ramonConteudo', () => ({
     agendar: vi.fn(),
     publicarAgora: vi.fn(),
     atualizarLegenda: vi.fn(),
+    tentarDeNovo: vi.fn(),
   },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
@@ -61,5 +62,47 @@ describe('PecaPainel agenda', () => {
     await flushPromises();
     expect(RamonConteudoAPI.atualizarLegenda).toHaveBeenCalledWith(3, 'Nova');
     expect(ordem).toEqual(['legenda', 'agendar']);
+  });
+});
+
+const montar = () =>
+  mount(PecaPainel, {
+    props: { pecaId: 3 },
+    global: { mocks: { $t: key => key } },
+  });
+
+describe('PecaPainel publicação', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('publicar agora pede confirmação antes de chamar a API', async () => {
+    RamonConteudoAPI.show.mockResolvedValue({ data: montada });
+    RamonConteudoAPI.publicarAgora.mockResolvedValue({
+      data: { ...montada, status: 'agendado' },
+    });
+    const w = montar();
+    await flushPromises();
+    await w.find('[data-testid="publicar-agora"]').trigger('click');
+    expect(RamonConteudoAPI.publicarAgora).not.toHaveBeenCalled();
+    await w.find('[data-testid="confirm-modal-confirm"]').trigger('click');
+    await flushPromises();
+    expect(RamonConteudoAPI.publicarAgora).toHaveBeenCalledWith(3);
+  });
+
+  it('falha ambígua só libera tentar de novo depois do "conferi"', async () => {
+    const falhou = { ...montada, status: 'falhou', ambigua: true, erro: 'x' };
+    RamonConteudoAPI.show.mockResolvedValue({ data: falhou });
+    RamonConteudoAPI.tentarDeNovo.mockResolvedValue({
+      data: { ...falhou, status: 'agendado' },
+    });
+    const w = montar();
+    await flushPromises();
+    const botao = () => w.find('[data-testid="tentar-de-novo"]');
+    expect(botao().attributes('disabled')).toBeDefined();
+    await w.find('[data-testid="conferi-instagram"]').setValue(true);
+    expect(botao().attributes('disabled')).toBeUndefined();
+    await botao().trigger('click');
+    await w.find('[data-testid="confirm-modal-confirm"]').trigger('click');
+    await flushPromises();
+    expect(RamonConteudoAPI.tentarDeNovo).toHaveBeenCalledWith(3, true);
   });
 });

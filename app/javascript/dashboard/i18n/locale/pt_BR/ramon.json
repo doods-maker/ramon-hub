@@ -655,7 +655,12 @@
       "AGENDADA_PARA": "Agendada para {quando}",
       "CANCELAR": "Cancelar agendamento",
       "TENTAR_DE_NOVO": "Tentar de novo",
-      "VER_NO_INSTAGRAM": "Ver no Instagram"
+      "VER_NO_INSTAGRAM": "Ver no Instagram",
+      "CONFIRMAR_PUBLICAR": "Publicar agora?",
+      "CONFIRMAR_PUBLICAR_MSG": "O post vai ao ar no Instagram em até 1 minuto. Daqui não dá pra desfazer.",
+      "CONFIRMAR_TENTAR": "Tentar publicar de novo?",
+      "CONFIRMAR_TENTAR_MSG": "A peça volta pra fila e vai ao ar em até 1 minuto.",
+      "CONFERI": "Conferi no Instagram e o post não está lá"
     },
     "REUNIOES": {
       "TITLE": "Reuniões",

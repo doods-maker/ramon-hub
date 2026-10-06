@@ -655,7 +655,12 @@
       "AGENDADA_PARA": "Scheduled for {quando}",
       "CANCELAR": "Cancel schedule",
       "TENTAR_DE_NOVO": "Try again",
-      "VER_NO_INSTAGRAM": "View on Instagram"
+      "VER_NO_INSTAGRAM": "View on Instagram",
+      "CONFIRMAR_PUBLICAR": "Publish now?",
+      "CONFIRMAR_PUBLICAR_MSG": "The post goes live on Instagram within about a minute. This cannot be undone from here.",
+      "CONFIRMAR_TENTAR": "Try publishing again?",
+      "CONFIRMAR_TENTAR_MSG": "The post goes back to the queue and goes live within about a minute.",
+      "CONFERI": "I checked Instagram and the post is not there"
     },
     "REUNIOES": {
       "TITLE": "Meetings",

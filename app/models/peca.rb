@@ -7,6 +7,9 @@ class Peca < ApplicationRecord
   STATUSES = %w[rascunho aprovado montando montado agendado publicando publicado reprovado falhou].freeze
   TIPOS = %w[carrossel estatico].freeze
   TRAVA = 15.minutes
+  # Falha em que a Meta pode ter publicado sem devolver o id (textos de
+  # Ramon::InstagramPublisher#publicar_container e PublicarPecasJob#interromper).
+  AMBIGUA = /Pode ter ido ao ar|interrompida no meio/
 
   class TransicaoInvalida < StandardError; end
 
@@ -28,6 +31,10 @@ class Peca < ApplicationRecord
 
       update!(status: para, **attrs)
     end
+  end
+
+  def publicacao_ambigua?
+    status == 'falhou' && AMBIGUA.match?(erro.to_s)
   end
 
   def travada?

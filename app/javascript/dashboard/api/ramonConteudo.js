@@ -36,8 +36,8 @@ class RamonConteudoAPI extends ApiClient {
     return axios.post(`${this.url}/${id}/cancelar_agendamento`);
   }
 
-  tentarDeNovo(id) {
-    return axios.post(`${this.url}/${id}/tentar_de_novo`);
+  tentarDeNovo(id, conferido = false) {
+    return axios.post(`${this.url}/${id}/tentar_de_novo`, { conferido });
   }
 }
 
