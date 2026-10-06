@@ -63,7 +63,7 @@ class Captain::IaAvaliadorService
     else
       normalizar(@saida[:resposta]).include?(normalizar(padrao))
     end
-  rescue RegexpError, Regexp::TimeoutError
+  rescue RegexpError # inclui Regexp::TimeoutError
     false
   end
 
