@@ -8,16 +8,25 @@ module Ramon::Fluxos::Passos::Lead
   def mover_etapa(config, ctx)
     lead = exigir_lead(ctx)
     etapa = lead.account.lead_stages.find(config['etapa_id'])
-    # B4.1: "só para a frente" (como a reunião marcada do código): quem já está adiante fica onde está
-    if config['so_para_frente'] && lead.lead_stage.position >= etapa.position
-      return { saida: 's', resumo: "etapa: já está em #{lead.lead_stage.name} (só para a frente)" }
-    end
-    return { saida: 's', resumo: "faria: mover para #{etapa.name}" } if ctx.ensaio?
+    adiante = ja_adiante(config, lead, etapa)
+    return adiante if adiante
 
-    lead.update!(lead_stage: etapa)
+    # PR #216: perda exige motivo. Com motivo no passo, vai ele; sem, o Lead preenche "Automação: <fluxo>".
+    motivo = ctx.interpolar(config['motivo']).strip.presence if etapa.is_lost
+    destino = motivo ? "#{etapa.name} (motivo: #{motivo})" : etapa.name
+    return { saida: 's', resumo: "faria: mover para #{destino}" } if ctx.ensaio?
+
+    lead.update!({ lead_stage: etapa, lost_reason: motivo }.compact)
     # a mudança feita pelo próprio fluxo não pode cancelá-lo na próxima espera
     ctx.execucao.contexto = ctx.execucao.contexto.merge('etapa_inicial_id' => etapa.id)
-    { saida: 's', resumo: "moveu para #{etapa.name}" }
+    { saida: 's', resumo: "moveu para #{destino}" }
+  end
+
+  # B4.1: "só para a frente" (como a reunião marcada do código): quem já está adiante fica onde está.
+  def ja_adiante(config, lead, etapa)
+    return unless config['so_para_frente'] && lead.lead_stage.position >= etapa.position
+
+    { saida: 's', resumo: "etapa: já está em #{lead.lead_stage.name} (só para a frente)" }
   end
 
   def criar_tarefa(config, ctx)

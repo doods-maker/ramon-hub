@@ -7,8 +7,12 @@ const store = createStore({
     leadConfig: {
       namespaced: true,
       getters: {
-        getStages: () => [{ id: 3, name: 'Contrato assinado' }],
+        getStages: () => [
+          { id: 3, name: 'Contrato assinado' },
+          { id: 9, name: 'Perdido', is_lost: true },
+        ],
         getPriorities: () => [],
+        getLostReasons: () => [{ id: 1, name: 'Sem interesse' }],
       },
     },
     agents: {
@@ -253,6 +257,29 @@ describe('PainelPasso', () => {
     await closer.find('[data-testid="so-se-vazio"]').setValue(true);
     expect(closer.emitted('update:config').at(-1)).toEqual([
       { papel: 'closer', so_se_vazio: true },
+    ]);
+  });
+
+  it('motivo da perda só aparece para etapa de perda (lista da conta + Outro)', async () => {
+    const comum = montar({
+      id: 'n5',
+      data: { tipo: 'mover_etapa', config: { etapa_id: 3 } },
+    });
+    expect(comum.find('[data-testid="motivo-perda"]').exists()).toBe(false);
+    const perda = montar({
+      id: 'n5',
+      data: { tipo: 'mover_etapa', config: { etapa_id: 9 } },
+    });
+    await perda.find('[data-testid="motivo-perda"]').setValue('Sem interesse');
+    expect(perda.emitted('update:config').at(-1)).toEqual([
+      { etapa_id: 9, motivo: 'Sem interesse' },
+    ]);
+    await perda.find('[data-testid="motivo-perda"]').setValue('__outro');
+    await perda
+      .find('[data-testid="motivo-outro"]')
+      .setValue('Mudou de cidade');
+    expect(perda.emitted('update:config').at(-1)).toEqual([
+      { etapa_id: 9, motivo: 'Mudou de cidade' },
     ]);
   });
 });

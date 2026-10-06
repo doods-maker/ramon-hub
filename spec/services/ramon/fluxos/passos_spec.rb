@@ -275,4 +275,25 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       expect(r[:resumo]).to eq("apagou tarefas ##{t1.id}") # lista o que apagou de fato
     end
   end
+
+  describe 'mover para etapa de perda (motivo; regra do PR #216)' do
+    let(:perdido) { create(:lead_stage, account: account, position: 99, is_lost: true) }
+
+    it 'com motivo: grava o motivo escolhido' do
+      r = Ramon::Fluxos::Passos::Lead.mover_etapa({ 'etapa_id' => perdido.id, 'motivo' => 'Sem interesse' }, ctx)
+      expect(lead.reload.lost_reason).to eq('Sem interesse')
+      expect(r[:resumo]).to eq("moveu para #{perdido.name} (motivo: Sem interesse)")
+    end
+
+    it 'sem motivo: o hub preenche "Automação: …" (quem age é a automação)' do
+      Ramon::Fluxos::Passos::Lead.mover_etapa({ 'etapa_id' => perdido.id }, ctx)
+      expect(lead.reload.lost_reason).to start_with('Automação:')
+    end
+
+    it 'motivo em etapa que não é de perda é ignorado' do
+      comum = create(:lead_stage, account: account, position: 50)
+      Ramon::Fluxos::Passos::Lead.mover_etapa({ 'etapa_id' => comum.id, 'motivo' => 'Sem interesse' }, ctx)
+      expect(lead.reload).to have_attributes(lead_stage: comum, lost_reason: nil)
+    end
+  end
 end

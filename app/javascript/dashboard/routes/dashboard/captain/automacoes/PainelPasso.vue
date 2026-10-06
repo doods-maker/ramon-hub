@@ -1,7 +1,7 @@
 <script setup>
 // Painel direito do editor (mockup .painel): config do passo selecionado.
 // Sempre emite config NOVA (o editor troca no node do Vue Flow).
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -84,6 +84,22 @@ const trocaEspera = modo =>
 // opção liga/desliga: desligada some do JSON
 const marca = (chave, ligada, valor = true) =>
   muda(chave, ligada ? valor : undefined);
+// mover para etapa de perda (PR #216): motivo da lista da conta, "Outro" (texto livre) ou vazio = automático
+const motivosPerda = useMapGetter('leadConfig/getLostReasons');
+const OUTRO = '__outro';
+const outroMotivo = ref(false);
+const etapaPerda = computed(
+  () => etapas.value.find(e => e.id === config.value.etapa_id)?.is_lost
+);
+const motivoEscolhido = computed(() => {
+  const motivo = config.value.motivo;
+  const daLista = motivosPerda.value.some(r => r.name === motivo);
+  return outroMotivo.value || (motivo && !daLista) ? OUTRO : motivo || '';
+});
+const escolheMotivo = valor => {
+  outroMotivo.value = valor === OUTRO;
+  muda('motivo', outroMotivo.value || !valor ? undefined : valor);
+};
 </script>
 
 <template>
@@ -249,6 +265,33 @@ const marca = (chave, ligada, valor = true) =>
             </option>
           </select>
         </label>
+        <template v-if="etapaPerda">
+          <label :class="ROTULO">
+            {{ t(`${K}.PAINEL.MOTIVO_PERDA`) }}
+            <select
+              data-testid="motivo-perda"
+              :class="SELECT"
+              :value="motivoEscolhido"
+              @change="escolheMotivo($event.target.value)"
+            >
+              <option value="">{{ t(`${K}.PAINEL.MOTIVO_AUTOMATICO`) }}</option>
+              <option v-for="m in motivosPerda" :key="m.id" :value="m.name">
+                {{ m.name }}
+              </option>
+              <option :value="OUTRO">
+                {{ t(`${K}.PAINEL.MOTIVO_OUTRO`) }}
+              </option>
+            </select>
+          </label>
+          <input
+            v-if="motivoEscolhido === OUTRO"
+            data-testid="motivo-outro"
+            :class="CAMPO"
+            :placeholder="t(`${K}.PAINEL.MOTIVO_OUTRO_PLACEHOLDER`)"
+            :value="config.motivo || ''"
+            @input="muda('motivo', $event.target.value)"
+          />
+        </template>
         <label class="flex items-center gap-2 text-[13px] text-n-slate-12">
           <input
             data-testid="so-para-frente"
