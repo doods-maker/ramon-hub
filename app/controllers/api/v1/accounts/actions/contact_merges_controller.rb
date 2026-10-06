@@ -1,6 +1,8 @@
 class Api::V1::Accounts::Actions::ContactMergesController < Api::V1::Accounts::BaseController
   before_action :set_base_contact, only: [:create]
   before_action :set_mergee_contact, only: [:create]
+  # FORK(ramon): mesclar destrói o contato que sai — só administrador (mesma regra do destroy).
+  before_action -> { authorize(@mergee_contact, :destroy?) }, only: [:create]
 
   def create
     contact_merge_action = ContactMergeAction.new(
