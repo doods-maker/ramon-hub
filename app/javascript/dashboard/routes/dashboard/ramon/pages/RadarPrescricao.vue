@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
+import { useAlert } from 'dashboard/composables';
 import { useAccount } from 'dashboard/composables/useAccount';
 import RamonPrescriptionRadarAPI from 'dashboard/api/ramonPrescriptionRadar';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -40,9 +41,16 @@ onMounted(fetchData);
 
 const summary = computed(() => data.value?.summary ?? {});
 const items = computed(() => data.value?.items ?? []);
-const consentedCount = computed(
-  () => items.value.filter(item => item.consent_marketing).length
+// Campanha de resgate: só o gestor (a tela de campanhas é só de admin). A
+// contagem vem da API sobre o radar inteiro, não só da lista.
+const isAdmin = computed(
+  () => store.getters.getCurrentRole === 'administrator'
 );
+const rescueCount = computed(() => summary.value.rescue_count ?? 0);
+const totalCount = computed(
+  () => summary.value.total_count ?? items.value.length
+);
+const tagging = ref(false);
 
 const isBleeding = item => item.lost_installments > 0;
 const isHot = item => item.pct_consumed > 0.75;
@@ -70,11 +78,21 @@ const openLead = id => {
   store.dispatch('leads/select', id);
 };
 
-// Nada é disparado daqui — só navega pra tela de campanhas do Chatwoot;
-// o guard LGPD real (consent_marketing) já vive no envio em massa.
-const goToCampaigns = () => {
-  showCampaignModal.value = false;
-  router.push(accountScopedRoute('campaigns_whatsapp_index'));
+// O servidor etiqueta os contatos (resgate-prescricao) e a gente abre a tela
+// de campanhas — nada é criado nem enviado daqui: quem monta e envia é o gestor.
+const goToCampaigns = async () => {
+  if (tagging.value) return;
+  tagging.value = true;
+  try {
+    const { data: result } = await RamonPrescriptionRadarAPI.resgate();
+    showCampaignModal.value = false;
+    useAlert(t('RAMON.RADAR.CAMPAIGN_DONE', { n: result.count }));
+    router.push(accountScopedRoute('campaigns_whatsapp_index'));
+  } catch (e) {
+    useAlert(t('RAMON.RADAR.CAMPAIGN_ERROR'));
+  } finally {
+    tagging.value = false;
+  }
 };
 </script>
 
@@ -87,19 +105,22 @@ const goToCampaigns = () => {
         :subtitle="t('RAMON.RADAR.SUBTITLE')"
       >
         <template #actions>
-          <div v-if="items.length" class="flex flex-col items-end gap-1">
+          <div
+            v-if="isAdmin && items.length"
+            class="flex flex-col items-end gap-1"
+          >
             <Button
               data-testid="radar-campaign-cta"
               sm
               icon="i-lucide-megaphone"
-              :label="t('RAMON.RADAR.CAMPAIGN_CTA', { count: consentedCount })"
+              :label="t('RAMON.RADAR.CAMPAIGN_CTA', { count: rescueCount })"
               @click="showCampaignModal = true"
             />
             <span class="text-[11px] text-n-slate-10">
               {{
                 t('RAMON.RADAR.CAMPAIGN_TOOLTIP', {
-                  n: consentedCount,
-                  m: items.length,
+                  n: rescueCount,
+                  m: totalCount,
                 })
               }}
             </span>
@@ -234,8 +255,8 @@ const goToCampaigns = () => {
       :title="t('RAMON.RADAR.CAMPAIGN_MODAL_TITLE')"
       :message="
         t('RAMON.RADAR.CAMPAIGN_MODAL_MESSAGE', {
-          n: consentedCount,
-          m: items.length,
+          n: rescueCount,
+          m: totalCount,
         })
       "
       :confirm-label="t('RAMON.RADAR.CAMPAIGN_MODAL_CONFIRM')"

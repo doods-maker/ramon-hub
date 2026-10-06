@@ -332,7 +332,9 @@ Rails.application.routes.draw do
             end
           end
           resources :ramon_lead_imports, only: [:create, :show]
-          resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar'
+          resource :ramon_prescription_radar, only: [:show], controller: 'ramon_prescription_radar' do
+            post :resgate
+          end
           resource :ramon_pos_venda, only: [:show], controller: 'ramon_pos_venda'
           resource :ramon_watchdog, only: [:show], controller: 'ramon_watchdog'
           resources :ramon_fluxos, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_fluxos' do

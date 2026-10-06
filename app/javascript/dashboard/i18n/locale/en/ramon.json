@@ -1611,16 +1611,18 @@
       "DCB": "DCB {date}",
       "LOST_CHIP": "We lost them (reactivate?)",
       "CAMPAIGN_CTA": "Create rescue campaign ({count})",
-      "CAMPAIGN_TOOLTIP": "only contacts with LGPD consent ({n} of {m})",
+      "CAMPAIGN_TOOLTIP": "contacts with WhatsApp ({n} of {m} on the radar)",
       "CAMPAIGN_MODAL_TITLE": "Create rescue campaign",
-      "CAMPAIGN_MODAL_MESSAGE": "We will open the WhatsApp campaigns screen to build the rescue with the {n} contacts with LGPD consent (out of {m} on the radar). Nothing is sent automatically.",
-      "CAMPAIGN_MODAL_CONFIRM": "Open campaigns",
+      "CAMPAIGN_MODAL_MESSAGE": "We will add the resgate-prescricao label to the {n} contacts with WhatsApp (of {m} leads on the radar) and open the WhatsApp campaigns screen. Nothing is sent: you build the campaign and send it.",
+      "CAMPAIGN_MODAL_CONFIRM": "Label and open campaigns",
       "LOAD_ERROR": "Could not load the radar.",
       "TITLE": "Prescription radar",
       "SUBTITLE": "whole base · updated now",
       "RETRY": "Retry",
       "EMPTY": "No leads at risk.",
-      "CLIENT_CHIP": "Client â€” documents pending"
+      "CLIENT_CHIP": "Client â€” documents pending",
+      "CAMPAIGN_DONE": "{n} contacts labeled resgate-prescricao â€” build the campaign and send it yourself",
+      "CAMPAIGN_ERROR": "Could not label the contacts. Try again."
     },
     "POS_VENDA": {
       "DIAS": "{dias} days since the win",

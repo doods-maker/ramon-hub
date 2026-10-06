@@ -11,9 +11,13 @@ const routerPush = vi.fn();
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: routerPush }) }));
 
 const dispatchSpy = vi.fn();
+const getters = { getCurrentRole: 'administrator' };
 vi.mock('dashboard/composables/store', () => ({
-  useStore: () => ({ dispatch: dispatchSpy }),
+  useStore: () => ({ dispatch: dispatchSpy, getters }),
 }));
+
+const alertSpy = vi.fn();
+vi.mock('dashboard/composables', () => ({ useAlert: msg => alertSpy(msg) }));
 
 vi.mock('dashboard/composables/useAccount', () => ({
   useAccount: () => ({
@@ -22,7 +26,7 @@ vi.mock('dashboard/composables/useAccount', () => ({
 }));
 
 vi.mock('dashboard/api/ramonPrescriptionRadar', () => ({
-  default: { get: vi.fn() },
+  default: { get: vi.fn(), resgate: vi.fn() },
 }));
 
 const payload = () => ({
@@ -31,6 +35,8 @@ const payload = () => ({
     bleeding_count: 8,
     at_risk_90d_monthly: 23700,
     at_risk_90d_count: 5,
+    total_count: 140,
+    rescue_count: 97,
   },
   items: [
     {
@@ -88,6 +94,8 @@ describe('RadarPrescricao.vue', () => {
   beforeEach(() => {
     routerPush.mockClear();
     dispatchSpy.mockClear();
+    alertSpy.mockClear();
+    getters.getCurrentRole = 'administrator';
   });
 
   it('renders the summary line with bleeding and at-risk numbers', async () => {
@@ -140,10 +148,18 @@ describe('RadarPrescricao.vue', () => {
     expect(phrases[2]).toBe('RAMON.KANBAN.CARD.PRESCRIPTION_SOON 2');
   });
 
-  it('counts only consented contacts in the campaign CTA', async () => {
+  it('counts the WhatsApp contacts of the whole radar in the campaign CTA', async () => {
     const wrapper = await mountPage();
     const cta = wrapper.find('[data-testid="radar-campaign-cta"]');
-    expect(cta.text()).toBe('RAMON.RADAR.CAMPAIGN_CTA 2');
+    expect(cta.text()).toBe('RAMON.RADAR.CAMPAIGN_CTA 97');
+  });
+
+  it('hides the campaign CTA from agents', async () => {
+    getters.getCurrentRole = 'agent';
+    const wrapper = await mountPage();
+    expect(wrapper.find('[data-testid="radar-campaign-cta"]').exists()).toBe(
+      false
+    );
   });
 
   it('opens the lead in the funil on row click', async () => {
@@ -156,12 +172,18 @@ describe('RadarPrescricao.vue', () => {
     expect(dispatchSpy).toHaveBeenCalledWith('leads/select', 2);
   });
 
-  it('confirming the campaign modal navigates to WhatsApp campaigns', async () => {
+  it('confirming labels the contacts on the server, toasts the count and opens campaigns', async () => {
+    RamonPrescriptionRadarAPI.resgate.mockResolvedValue({
+      data: { label: 'resgate-prescricao', count: 97 },
+    });
     const wrapper = await mountPage();
     await wrapper.find('[data-testid="radar-campaign-cta"]').trigger('click');
     await wrapper
       .find('[data-testid="confirm-modal-confirm"]')
       .trigger('click');
+    await flushPromises();
+    expect(RamonPrescriptionRadarAPI.resgate).toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.RADAR.CAMPAIGN_DONE 97');
     expect(routerPush).toHaveBeenCalledWith({
       name: 'campaigns_whatsapp_index',
       params: undefined,

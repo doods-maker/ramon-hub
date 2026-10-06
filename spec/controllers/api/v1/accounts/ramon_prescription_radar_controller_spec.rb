@@ -51,15 +51,33 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
     expect(response.parsed_body['summary']).to include('bleeding_count' => 1)
   end
 
-  it 'expõe o consent_marketing do contato (critério do guard de campanha)' do
-    contact = create(:contact, account: account, custom_attributes: { 'consent_marketing' => { 'granted' => true } })
-    create(:lead, account: account, lead_stage: active_stage, contact: contact, dcb_em: 62.months.ago.to_date, benefit_monthly_value: 800)
-    create(:lead, account: account, lead_stage: active_stage, dcb_em: 61.months.ago.to_date)
+  describe 'POST resgate (campanha de resgate)' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
 
-    get url, headers: agent.create_new_auth_token, as: :json
+    it 'gestor etiqueta resgate-prescricao em TODOS os contatos com WhatsApp do radar, sem olhar a flag do hub', :aggregate_failures do
+      com_whatsapp = %w[+5548999000001 +5548999000002].map { |fone| create(:contact, account: account, phone_number: fone) }
+      sem_whatsapp = create(:contact, account: account, phone_number: nil)
+      [*com_whatsapp, sem_whatsapp].each do |contact|
+        create(:lead, account: account, lead_stage: active_stage, contact: contact, dcb_em: 62.months.ago.to_date)
+      end
+      stub_const('Api::V1::Accounts::RamonPrescriptionRadarController::LIST_LIMIT', 1)
 
-    consents = response.parsed_body['items'].to_h { |item| [item['lead_id'], item['consent_marketing']] }
-    expect(consents.values).to contain_exactly(true, false)
+      get url, headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['summary']).to include('rescue_count' => 2, 'total_count' => 3)
+
+      post "#{url}/resgate", headers: admin.create_new_auth_token, as: :json
+
+      expect(response.parsed_body).to include('label' => 'resgate-prescricao', 'count' => 2)
+      expect(account.labels.pluck(:title)).to include('resgate-prescricao')
+      expect(com_whatsapp.map { |c| c.reload.label_list }).to all(include('resgate-prescricao'))
+      expect(sem_whatsapp.reload.label_list).to be_empty
+    end
+
+    it 'agente não etiqueta a base' do
+      post "#{url}/resgate", headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
   end
 
   describe 'Ramon Pos Venda API' do
