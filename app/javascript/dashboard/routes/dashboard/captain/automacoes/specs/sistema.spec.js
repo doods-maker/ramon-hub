@@ -85,4 +85,46 @@ describe('fluxos do sistema', () => {
       expect(semRotulo).toEqual([]);
     }
   );
+
+  it('nenhum desenho manda mensagem direto ao cliente (só rascunho, nota e aviso)', () => {
+    const ENVIOS = ['send_message', 'send_attachment', 'send_email_transcript'];
+    const CONHECIDOS = [
+      'acao_chatwoot',
+      'advbox',
+      'avisar_push',
+      'avisar_sino',
+      'criar_tarefa',
+      'escolha',
+      'esperar',
+      'gatilho',
+      'mover_etapa',
+      'nota_privada',
+      'perguntar_ia',
+      'preencher_campo',
+      'rascunho_ia',
+      'rascunho_texto',
+      'registrar_atividade',
+      'se',
+      'trocar_responsavel',
+      'webhook', // agente_hub (interno) e publicar_pecas (Instagram, selo publica)
+    ];
+    const nos = DESENHOS.flatMap(([, d]) => d.desenho.nos);
+    const envios = nos
+      .filter(n => n.tipo === 'acao_chatwoot')
+      .flatMap(n => n.config.acoes.map(a => a.action_name))
+      .filter(a => ENVIOS.includes(a));
+    expect(envios).toEqual([]);
+    expect(nos.map(n => n.tipo).filter(t => !CONHECIDOS.includes(t))).toEqual(
+      []
+    );
+  });
+
+  it('o ciclo de lembretes de reunião não fixa "24h" no título do push', () => {
+    const d = Object.fromEntries(DESENHOS).lembretes_reuniao;
+    const titulos = d.desenho.nos
+      .filter(n => n.tipo === 'avisar_push')
+      .map(n => n.config.titulo);
+    expect(titulos.length).toBeGreaterThan(0);
+    titulos.forEach(t => expect(t).not.toMatch(/24h/));
+  });
 });
