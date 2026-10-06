@@ -334,6 +334,8 @@ RSpec.describe Lead do
     it 'fluxo sem motivo grava Automação: <nome do fluxo>, mesmo com pessoa por trás' do
       Current.user = human
       Current.executed_by = FluxoExecucao.new(fluxo: Fluxo.new(nome: 'Esfriou 30 dias'))
+      # execução não salva não vira GlobalID no job do evento; aqui só importa o motivo
+      allow(Rails.configuration.dispatcher).to receive(:dispatch)
       lead.update!(lead_stage: perdido)
       expect(lead.reload.lost_reason).to eq('Automação: Esfriou 30 dias')
     end
