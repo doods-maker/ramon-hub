@@ -6,6 +6,9 @@ class ExtratoFechado < ApplicationRecord
   belongs_to :account
   belongs_to :user
 
+  # Registro de ações: quem fechou o mês de quem (o payload fica de fora).
+  audited only: %w[user_id papel competencia], associated_with: :account
+
   validates :papel, inclusion: { in: MetaComercial::PAPEIS }
   validates :competencia, presence: true, uniqueness: { scope: [:account_id, :user_id, :papel] }
 end
