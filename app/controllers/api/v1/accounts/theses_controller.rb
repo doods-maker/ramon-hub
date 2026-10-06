@@ -10,7 +10,7 @@ class Api::V1::Accounts::ThesesController < Api::V1::Accounts::BaseController
   def show; end
 
   def create
-    @thesis = Current.account.theses.new(permitted_params)
+    @thesis = Current.account.theses.new(permitted_params.reverse_merge(Thesis::HONORARIO_PADRAO))
     @thesis.position = next_position
     @thesis.save!
     render :show

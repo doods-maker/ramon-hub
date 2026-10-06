@@ -48,6 +48,20 @@ RSpec.describe 'Theses API', type: :request do
       expect(response.parsed_body['position']).to eq(6)
     end
 
+    it 'nasce com o honorário padrão do escritório (30% + 3)', :aggregate_failures do
+      post "/api/v1/accounts/#{account.id}/theses",
+           params: { name: 'Tese Padrão' }, headers: admin.create_new_auth_token
+      body = response.parsed_body
+      expect(body['honorario_percentual'].to_f).to eq(30.0)
+      expect(body['honorario_n_mensalidades']).to eq(3)
+    end
+
+    it 'respeita o honorário enviado na criação' do
+      post "/api/v1/accounts/#{account.id}/theses",
+           params: { name: 'Tese Própria', honorario_percentual: 25 }, headers: admin.create_new_auth_token
+      expect(response.parsed_body['honorario_percentual'].to_f).to eq(25.0)
+    end
+
     it 'barra agente (admin-only)' do
       post "/api/v1/accounts/#{account.id}/theses",
            params: { name: 'X' }, headers: agent.create_new_auth_token

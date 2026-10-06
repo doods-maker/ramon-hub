@@ -472,6 +472,12 @@ onMounted(() => store.dispatch('theses/get'));
                   />
                 </label>
               </div>
+              <p
+                data-testid="playbooks-honorario-padrao"
+                class="m-0 text-xs text-n-slate-10"
+              >
+                {{ $t('RAMON.PLAYBOOKS.HONORARIO_PADRAO') }}
+              </p>
             </div>
 
             <p

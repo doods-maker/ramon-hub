@@ -21,6 +21,9 @@ defineOptions({ name: 'LeadLiquidacao' });
 
 const { t } = useI18n();
 
+// Honorário contratual nasce com o % da tese do lead (padrão 30%), editável.
+const pctDaTese = props.lead?.thesis_honorario_percentual;
+
 const form = ref({
   rmi: '',
   dib: '',
@@ -32,7 +35,8 @@ const form = ref({
   no_piso: false,
   regime_pos_ec136: 'art406',
   honorarios_sucumbenciais_pct: '',
-  honorarios_contratuais_pct: '',
+  honorarios_contratuais_pct:
+    pctDaTese == null ? '' : String(Number(pctDaTese)),
 });
 const abatimentos = ref([]);
 const cabecalho = ref({
