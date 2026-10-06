@@ -9,6 +9,7 @@ import {
   CONVERSATION_ATTRIBUTES,
 } from './helper/filterHelper';
 import languages from 'dashboard/components/widgets/conversation/advancedFilterItems/languages.js';
+import { semFiltrosOcultos } from 'dashboard/routes/dashboard/ramon/helpers/filtrosConversa';
 
 /**
  * @typedef {Object} FilterOption
@@ -287,5 +288,6 @@ export function useConversationFilterContext() {
     ...customFilterTypes.value,
   ]);
 
-  return { filterTypes };
+  // FORK(ramon): sem idioma do navegador, link de origem e campanha.
+  return { filterTypes: computed(() => semFiltrosOcultos(filterTypes.value)) };
 }

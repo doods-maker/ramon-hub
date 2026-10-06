@@ -6,11 +6,15 @@ class Ramon::StageSlug
   PREFIX = 'fase-'
 
   def self.label_for(name)
-    slug = I18n.transliterate(name.to_s.strip.downcase)
-               .gsub(/[^a-z0-9]+/, '-')
-               .squeeze('-')
-               .gsub(/\A-|-\z/, '')
-    "#{PREFIX}#{slug}"
+    "#{PREFIX}#{slug(name)}"
+  end
+
+  # Também usado pela etiqueta tese-* (Ramon::TeseLabelSync).
+  def self.slug(name)
+    I18n.transliterate(name.to_s.strip.downcase)
+        .gsub(/[^a-z0-9]+/, '-')
+        .squeeze('-')
+        .gsub(/\A-|-\z/, '')
   end
 
   # O label é fixo desde a criação (renomear não muda): uma etapa nova com o
