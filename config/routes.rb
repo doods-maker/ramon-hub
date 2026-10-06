@@ -73,6 +73,9 @@ Rails.application.routes.draw do
               end
               resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
               resources :scenarios
+              # ramon: Casos de teste da IA
+              resources :ia_casos, only: [:index, :create, :update, :destroy]
+              resources :ia_rodadas, only: [:index, :show, :create]
             end
             resources :assistant_responses
             resources :ferramentas, only: [:index]
