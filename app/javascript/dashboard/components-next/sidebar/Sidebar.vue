@@ -2,6 +2,8 @@
 import { h, ref, computed, onMounted, watch } from 'vue';
 import { provideSidebarContext, useSidebarResize } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
+import { useAdmin } from 'dashboard/composables/useAdmin';
+import { enxugarMenuConversas } from 'dashboard/routes/dashboard/ramon/helpers/menuConversas'; // FORK(ramon)
 import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
@@ -43,6 +45,7 @@ const emit = defineEmits([
 ]);
 
 const { accountScopedRoute, isOnChatwootCloud } = useAccount();
+const { isAdmin } = useAdmin();
 const store = useStore();
 const searchShortcut = useKbd([`$mod`, 'k']);
 const { t } = useI18n();
@@ -990,7 +993,7 @@ const menuItems = computed(() => {
         :class="{ 'items-center': isEffectivelyCollapsed }"
       >
         <SidebarGroup
-          v-for="item in menuItems"
+          v-for="item in enxugarMenuConversas(menuItems, { isAdmin })"
           :key="item.name"
           v-bind="item"
         />
