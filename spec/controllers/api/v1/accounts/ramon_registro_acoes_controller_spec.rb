@@ -5,8 +5,8 @@ RSpec.describe 'Ramon Registro de ações API', type: :request do
   let(:admin) { create(:user, account: account, role: :administrator, name: 'Ana Gestora') }
   let(:agente) { create(:user, account: account, role: :agent, name: 'Bruno SDR') }
   let(:url) { "/api/v1/accounts/#{account.id}/ramon_registro_acoes" }
-  let(:qualificacao) { create(:lead_stage, account: account, name: 'Qualificação', position: 1) }
-  let(:negociacao) { create(:lead_stage, account: account, name: 'Negociação', position: 2) }
+  let(:qualificacao) { account.lead_stages.find_by(name: 'Qualificação') }
+  let(:negociacao) { account.lead_stages.find_by(name: 'Negociação') }
   let(:contato) { create(:contact, account: account, name: 'Maria Souza') }
   let!(:lead) { create(:lead, account: account, name: 'Maria — auxílio-acidente', contact: contato, lead_stage: qualificacao) }
 

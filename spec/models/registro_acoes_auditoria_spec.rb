@@ -13,7 +13,7 @@ RSpec.describe 'Registro de ações — auditoria', type: :model do
 
   describe 'lead' do
     let(:contact) { create(:contact, account: account) }
-    let(:fechado) { create(:lead_stage, account: account, name: 'Fechado', is_won: true, position: 5) }
+    let(:fechado) { account.lead_stages.find_by(is_won: true) }
     let(:lead) { create(:lead, account: account, contact: contact) }
 
     it 'grava etapa, ganho e SDR com o antes e o depois', :aggregate_failures do
@@ -34,7 +34,10 @@ RSpec.describe 'Registro de ações — auditoria', type: :model do
       expect(trilha(lead)).to be_empty
     end
 
+    # Hoje o lead com atividades não sai (lead_activities é destroy_async e a FK
+    # não tem cascade); o teste tira as atividades antes para exercer o destroy.
     it 'grava a exclusão com o contato do lead', :aggregate_failures do
+      LeadActivity.where(lead_id: lead.id).delete_all
       lead.destroy!
 
       audit = trilha(lead, 'destroy').last

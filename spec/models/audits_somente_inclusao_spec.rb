@@ -4,7 +4,8 @@ require 'rails_helper'
 # apaga a trilha; só a redação LGPD do anonimizador reescreve audited_changes.
 RSpec.describe 'audits somente-inclusão', type: :model do
   let(:contact) { create(:contact, account: create(:account), phone_number: '+5548999998888') }
-  let(:audit) { Audited.audit_class.where(auditable: contact).last }
+  # let!: criar fora do savepoint do `tentar` (senão o rollback leva o contato e o audit junto)
+  let!(:audit) { Audited.audit_class.where(auditable: contact).last }
 
   # savepoint: o erro do Postgres não derruba a transação do teste
   def tentar(&)

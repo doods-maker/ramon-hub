@@ -51,7 +51,7 @@ class Ramon::RegistroAcoes
   def base
     Audited.audit_class
            .where(associated_type: 'Account', associated_id: @account.id, auditable_type: TIPOS.fetch(@params[:tipo], TIPOS.values.flatten))
-           .where.not(auditable_type: 'Contact', action: 'create')
+           .where.not("audits.auditable_type = 'Contact' AND audits.action = 'create'")
            .where.not("audits.auditable_type = 'AccountUser' AND audits.action = 'update' AND audits.audited_changes->'role' IS NULL")
   end
 
