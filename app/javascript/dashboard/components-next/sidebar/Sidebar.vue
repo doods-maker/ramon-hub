@@ -446,29 +446,22 @@ const menuItems = computed(() => {
       icon: 'i-woot-captain',
       label: t('SIDEBAR.CAPTAIN'),
       activeOn: ['captain_assistants_create_index'],
-      // ponytail: Vigia no topo e Caixas logo após Assistentes = lugar da
-      // Visão geral (I-VG1) e do cartão do assistente (I-AS3); saem do menu
-      // quando esses destinos existirem.
+      // Vigia virou bloco da Visão geral; Caixas, seção do cartão do assistente.
       children: [
         {
-          name: 'Watchdog',
-          label: t('SIDEBAR.CAPTAIN_WATCHDOG'),
-          activeOn: ['captain_watchdog_index'],
-          to: accountScopedRoute('captain_watchdog_index'),
+          name: 'VisaoGeral',
+          label: t('SIDEBAR.CAPTAIN_VISAO_GERAL'),
+          activeOn: ['captain_visao_geral_index'],
+          to: accountScopedRoute('captain_visao_geral_index'),
         },
         {
           name: 'Assistants',
           label: t('SIDEBAR.CAPTAIN_ASSISTANTS'),
-          activeOn: ['captain_assistants_create_index'],
+          activeOn: [
+            'captain_assistants_create_index',
+            'captain_assistants_inboxes_index',
+          ],
           to: accountScopedRoute('captain_assistants_create_index'),
-        },
-        {
-          name: 'Inboxes',
-          label: t('SIDEBAR.CAPTAIN_INBOXES'),
-          activeOn: ['captain_assistants_inboxes_index'],
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_assistants_inboxes_index',
-          }),
         },
         {
           name: 'Scenarios',
@@ -481,10 +474,8 @@ const menuItems = computed(() => {
         {
           name: 'Tools',
           label: t('SIDEBAR.CAPTAIN_TOOLS'),
-          activeOn: ['captain_tools_index'],
-          to: accountScopedRoute('captain_assistants_index', {
-            navigationPath: 'captain_tools_index',
-          }),
+          activeOn: ['captain_ferramentas_index', 'captain_tools_index'],
+          to: accountScopedRoute('captain_ferramentas_index'),
         },
         {
           name: 'FAQs',
