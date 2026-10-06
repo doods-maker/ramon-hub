@@ -15,6 +15,13 @@ module LeadComercial
     after_commit :verificar_registro_completo, on: [:create, :update], if: -> { saved_change_to_thesis_id? || saved_change_to_contact_id? }
     after_commit :assign_conversation_to_sdr, on: [:create, :update],
                                               if: -> { saved_change_to_sdr_id? || saved_change_to_conversation_id? }
+    # Registro de ações (audits, somente-inclusão, 5 anos): etapa, ganho/perda,
+    # valor e dono do lead, e a exclusão. Aqui e não no Lead (no teto do
+    # ClassLength). contact_id fica no destroy para a tela saber de quem era.
+    # contrato_cancelado_em é update_columns (sem callback): o cancelamento
+    # aparece como won_at → nil na mesma linha da troca de etapa.
+    audited only: %w[lead_stage_id value sdr_id closer_id won_at lost_reason contact_id],
+            on: [:update, :destroy], associated_with: :account
   end
 
   # Closer registra a reunião (regulamento §2): qualificada ou não. A 1ª data

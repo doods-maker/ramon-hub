@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_06_100001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_06_400001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -2030,6 +2030,21 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_100001) do
       before(:insert).
       for_each(:row) do
     "NEW.display_id := nextval('camp_dpid_seq_' || NEW.account_id);"
+  end
+
+  create_trigger("audits_somente_inclusao", :generated => true, :compatibility => 1).
+      on("audits").
+      before(:update, :delete).
+      for_each(:row) do
+    <<-SQL_ACTIONS
+IF TG_OP = 'UPDATE'
+   AND current_setting('ramon.redacao_lgpd', true) = 'on'
+   AND (to_jsonb(NEW) - 'audited_changes') = (to_jsonb(OLD) - 'audited_changes') THEN
+  RETURN NEW;
+END IF;
+RAISE EXCEPTION 'Registro de ações: audits é somente-inclusão (% bloqueado no id %)', TG_OP, OLD.id
+  USING HINT = 'A trilha fica guardada por 5 anos (LGPD). Só a redação LGPD do anonimizador reescreve audited_changes.';
+    SQL_ACTIONS
   end
 
 end

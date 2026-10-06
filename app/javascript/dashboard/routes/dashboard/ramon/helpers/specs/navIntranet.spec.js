@@ -34,7 +34,10 @@ describe('secoesIntranet', () => {
               'ramon_tv',
             ],
           ],
-          ['configuracoes', ['ramon_funil_config', 'ramon_playbooks']],
+          [
+            'configuracoes',
+            ['ramon_funil_config', 'ramon_playbooks', 'ramon_registro_acoes'],
+          ],
         ],
       ],
     ]);
@@ -62,6 +65,7 @@ describe('grupoDaRota', () => {
     ['ramon_calculos_lead', 'clientes'],
     ['ramon_relatorios', 'resultados'],
     ['ramon_playbooks', 'configuracoes'],
+    ['ramon_registro_acoes', 'configuracoes'],
   ])('%s acende %s', (rota, grupo) => {
     expect(grupoDaRota(rota, true).key).toBe(grupo);
   });
@@ -76,6 +80,7 @@ describe('grupoDaRota', () => {
 
   it('agente não acha grupo de rota só de admin; fora da intranet = nada', () => {
     expect(grupoDaRota('ramon_funil_config', false)).toBeUndefined();
+    expect(grupoDaRota('ramon_registro_acoes', false)).toBeUndefined();
     expect(grupoDaRota('ramon_extrato', false).abas).toHaveLength(2);
     expect(grupoDaRota('ramon_external_shortcuts', true)).toBeUndefined();
   });

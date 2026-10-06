@@ -27,17 +27,19 @@
 #  user_index                    (user_id,user_type)
 #
 class Enterprise::AuditLog < Audited::Audit
-  after_save :log_additional_information
+  # FORK(ramon): before_create (era after_save + update_columns) — audits é
+  # somente-inclusão (trigger audits_somente_inclusao). Roda depois do
+  # set_audit_user do audited (callback da classe-mãe vem antes).
+  before_create :log_additional_information
 
   private
 
   def log_additional_information
-    # rubocop:disable Rails/SkipsModelValidations
     if auditable_type == 'Account' && auditable_id.present?
-      update_columns(associated_type: auditable_type, associated_id: auditable_id, username: user&.email)
-    else
-      update_columns(username: user&.email)
+      self.associated_type = auditable_type
+      self.associated_id = auditable_id
     end
-    # rubocop:enable Rails/SkipsModelValidations
+    # try: o autor pode ser AgentBot (token de API), que não tem e-mail
+    self.username = user_as_model.try(:email)
   end
 end

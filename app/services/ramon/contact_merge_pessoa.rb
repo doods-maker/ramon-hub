@@ -16,6 +16,10 @@ module Ramon::ContactMergePessoa
     # CPF é único por conta: sai do contato que some antes de ir para o base.
     @mergee_contact.update_columns(cpf: nil) if @mergee_contact.cpf.present?
     # rubocop:enable Rails/SkipsModelValidations
+    # Registro de ações: o destroy do contato que sai vira "mesclou em #base"
+    # (o reload do super mantém o audit_comment) — e a anonimização do base
+    # redige também essa trilha (Ramon::ContactAnonymizer).
+    @mergee_contact.audit_comment = "mesclado:#{@base_contact.id}"
     super
     @base_contact.update!(pessoa) if pessoa.present?
   end

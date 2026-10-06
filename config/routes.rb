@@ -357,6 +357,7 @@ Rails.application.routes.draw do
             put :meta
           end
           resource :ramon_painel_time, only: [:show], controller: 'ramon_painel_time'
+          resources :ramon_registro_acoes, only: [:index], controller: 'ramon_registro_acoes'
           resources :captain_tool_runs, only: [:index]
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'

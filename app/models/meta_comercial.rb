@@ -8,6 +8,9 @@ class MetaComercial < ApplicationRecord
   belongs_to :account
   belongs_to :user
 
+  # Registro de ações: quem lançou/mudou a meta de quem.
+  audited only: %w[user_id papel mes meta rampa], associated_with: :account
+
   validates :papel, inclusion: { in: PAPEIS }
   validates :mes, presence: true, uniqueness: { scope: [:account_id, :user_id] }
   validates :meta, numericality: { only_integer: true, greater_than_or_equal_to: 0 }

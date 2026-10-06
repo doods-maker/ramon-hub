@@ -82,6 +82,7 @@ const SECOES = [
         abas: [
           aba('ramon_funil_config', 'FUNIL_CONFIG', { adminOnly: true }),
           aba('ramon_playbooks', 'PLAYBOOKS', { adminOnly: true }),
+          aba('ramon_registro_acoes', 'REGISTRO_ACOES', { adminOnly: true }),
         ],
       },
     ],

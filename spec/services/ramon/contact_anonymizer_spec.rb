@@ -42,11 +42,34 @@ describe Ramon::ContactAnonymizer do
     expect(note.content).not_to include('529.982.247-25')
   end
 
-  it 'purges the audit trail so old PII values do not survive in audits' do
-    contact.update!(phone_number: '+5548988887777')
-    expect(Audited.audit_class.where(auditable: contact)).to be_present
+  # Registro de ações: a trilha fica (somente-inclusão), só os valores de PII somem.
+  it 'keeps the audit trail but redacts the old PII values', :aggregate_failures do
+    contact.update!(phone_number: '+5548988887777', blocked: true)
 
     perform
-    expect(Audited.audit_class.where(auditable: contact)).to be_empty
+    trilha = Audited.audit_class.where(auditable: contact).order(:id)
+    edicao = trilha.find { |audit| audit.audited_changes.key?('blocked') && audit.action == 'update' }
+    expect(edicao.audited_changes['phone_number']).to eq(%w[[anonimizado] [anonimizado]])
+    expect(edicao.audited_changes['blocked']).to eq([false, true])
+    expect(trilha.last.comment).to eq('anonimizado')
+    expect(trilha.flat_map { |audit| audit.audited_changes.to_json }.join).not_to include('Joao', '52998224725', '8888')
+  end
+
+  it 'redacts the trail of a contact merged into this one' do
+    duplicado = create(:contact, account: account, name: 'Joao Duplicado', phone_number: '+5548977776666')
+    ContactMergeAction.new(account: account, base_contact: contact, mergee_contact: duplicado).perform
+
+    perform
+    destroy = Audited.audit_class.find_by(auditable_type: 'Contact', auditable_id: duplicado.id, action: 'destroy')
+    expect(destroy.audited_changes.to_json).not_to include('Duplicado', '7777')
+  end
+
+  it 'records the bulk deletion as made by who asked', :aggregate_failures do
+    admin = create(:user, account: account, role: :administrator)
+    Contacts::BulkActionService.new(account: account, user: admin, params: { action_name: 'delete', ids: [contact.id] }).perform
+
+    audit = Audited.audit_class.where(auditable: contact).order(:id).last
+    expect(audit.comment).to eq('anonimizado_em_massa')
+    expect(audit.user).to eq(admin)
   end
 end
