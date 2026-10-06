@@ -937,7 +937,7 @@ watch(conversationFilters, (newVal, oldVal) => {
 
     <p
       v-if="!chatListLoading && !conversationList.length"
-      class="flex overflow-auto justify-center items-center p-4"
+      class="flex overflow-auto justify-center items-center p-4 text-sm text-n-slate-11"
     >
       {{ $t('CHAT_LIST.LIST.404') }}
     </p>
