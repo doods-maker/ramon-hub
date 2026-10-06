@@ -1,9 +1,12 @@
 <script setup>
-// Automações (B2, mockup tela 1): 4 números, a lista de fluxos com liga/desliga
-// e o que rodou hoje. A aba "Do sistema" chega na B3 (spec §8).
-import { onMounted, ref } from 'vue';
+// Automações (mockup tela 1). Aba "Meus fluxos": 4 números, a lista com
+// liga/desliga e o que rodou hoje. Aba "Do sistema" (B3, spec §7/§8): o
+// desenho só-leitura das 29 automações que ainda rodam no código, em grupos —
+// sem chave liga/desliga, selo em quem sai para fora sem uma pessoa no meio e
+// "Hoje" só onde o código tem contador barato (senão "—").
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
 import { dynamicTime } from 'shared/helpers/timeHelper';
@@ -13,16 +16,20 @@ import RamonFluxosAPI from 'dashboard/api/ramonFluxos';
 import {
   ABA,
   ABA_ATIVA,
+  ABA_INATIVA,
+  AVISO,
   CHIP,
   TOM,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { gatilhoInfo } from './fluxo';
+import { GRUPOS_SISTEMA } from './fluxo';
+import GatilhoCelula from './GatilhoCelula.vue';
 import NovoFluxo from './NovoFluxo.vue';
 
 defineOptions({ name: 'CaptainAutomacoes' });
 
 const K = 'CAPTAIN_RAMON.FLUXOS';
 const { t } = useI18n();
+const route = useRoute();
 const router = useRouter();
 const { accountScopedRoute } = useAccount();
 
@@ -31,12 +38,25 @@ const resumo = ref({});
 const erro = ref(false);
 const novo = ref(false);
 const criando = ref(false);
+// ?aba=sistema: o "Voltar" do desenho do sistema cai de novo nesta aba
+const aba = ref(route.query.aba === 'sistema' ? 'sistema' : 'meus');
+const meus = computed(() => fluxos.value.filter(f => f.origem !== 'sistema'));
+const doSistema = computed(() =>
+  fluxos.value.filter(f => f.origem === 'sistema')
+);
+// "Do sistema" em grupos (GRUPOS_SISTEMA = ordem da tela); grupo vazio não aparece
+const gruposSistema = computed(() =>
+  GRUPOS_SISTEMA.map(chave => ({
+    chave,
+    fluxos: doSistema.value.filter(f => f.grupo === chave),
+  })).filter(g => g.fluxos.length)
+);
 
 const carregar = async () => {
   erro.value = false;
   try {
     const { data } = await RamonFluxosAPI.get();
-    fluxos.value = data.payload.filter(f => f.origem !== 'sistema');
+    fluxos.value = data.payload;
     resumo.value = data.resumo;
   } catch (e) {
     erro.value = true;
@@ -94,12 +114,22 @@ const subtitulo = f =>
         data: new Date(f.editado_em).toLocaleDateString('pt-BR'),
       })
     : t(`${K}.NUNCA_PUBLICADO`);
-const hojeLimite = f => `${f.hoje} / ${f.limite_dia ?? TRACO}`;
 const largura = f =>
   `${Math.min(100, Math.round((f.hoje / f.limite_dia) * 100))}%`;
 const ultima = iso =>
   iso ? dynamicTime(Math.floor(new Date(iso).getTime() / 1000)) : TRACO;
-const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
+// "Hoje" das duas abas; do sistema, sem contador barato o back manda hoje = null
+const hojeLimite = f => {
+  if (f.hoje == null) return TRACO;
+  return f.limite_dia ? `${f.hoje} / ${f.limite_dia}` : String(f.hoje);
+};
+// o que o número do sistema conta (cada um conta uma coisa diferente)
+const hojeTitulo = f =>
+  f.hoje == null
+    ? t(`${K}.SISTEMA.SEM_CONTADOR`)
+    : t(`${K}.SISTEMA.HOJE_DE.${f.sistema_chave}`);
+// 1ª linha da descrição = onde vive no código (o resto aparece no desenho)
+const ondeVive = f => (f.descricao || '').split('\n')[0];
 </script>
 
 <template>
@@ -122,12 +152,28 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
       />
     </div>
     <div class="flex gap-1 border-b border-n-weak px-7 pt-3">
-      <span :class="[ABA, ABA_ATIVA]">
+      <button
+        type="button"
+        data-testid="aba-meus"
+        :class="[ABA, aba === 'meus' ? ABA_ATIVA : ABA_INATIVA]"
+        @click="aba = 'meus'"
+      >
         {{ t(`${K}.ABA_MEUS`) }}
         <span class="font-mono text-[11.5px] text-n-slate-10">
-          {{ fluxos.length }}
+          {{ meus.length }}
         </span>
-      </span>
+      </button>
+      <button
+        type="button"
+        data-testid="aba-sistema"
+        :class="[ABA, aba === 'sistema' ? ABA_ATIVA : ABA_INATIVA]"
+        @click="aba = 'sistema'"
+      >
+        {{ t(`${K}.ABA_SISTEMA`) }}
+        <span class="font-mono text-[11.5px] text-n-slate-10">
+          {{ doSistema.length }}
+        </span>
+      </button>
     </div>
 
     <div class="flex-1 overflow-y-auto px-7 pb-12 pt-5">
@@ -142,7 +188,7 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
         </button>
       </div>
 
-      <template v-else>
+      <template v-else-if="aba === 'meus'">
         <div
           data-testid="fluxos-resumo"
           class="mb-5 grid max-w-[1100px] grid-cols-2 gap-3 md:grid-cols-4"
@@ -154,7 +200,7 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
             <b class="font-mono text-xl font-medium text-n-slate-12">
               {{ resumo.ligados ?? 0 }}
               <small class="text-xs font-normal text-n-slate-10">
-                {{ t(`${K}.RESUMO.DE`, { total: fluxos.length }) }}
+                {{ t(`${K}.RESUMO.DE`, { total: meus.length }) }}
               </small>
             </b>
           </div>
@@ -189,7 +235,7 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
           </div>
         </div>
 
-        <p v-if="!fluxos.length" class="text-sm text-n-slate-10">
+        <p v-if="!meus.length" class="text-sm text-n-slate-10">
           {{ t(`${K}.VAZIO`) }}
         </p>
 
@@ -211,7 +257,7 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
           </thead>
           <tbody>
             <tr
-              v-for="f in fluxos"
+              v-for="f in meus"
               :key="f.id"
               data-testid="fluxo-linha"
               class="cursor-pointer border-b border-n-weak text-[13.5px] hover:bg-n-alpha-2"
@@ -236,16 +282,7 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
                 </span>
               </td>
               <td class="p-2">
-                <span
-                  class="inline-flex items-center gap-1.5 text-[12.5px] text-n-slate-11"
-                >
-                  <i
-                    v-if="f.gatilho_tipo"
-                    :class="gatilhoInfo(f.gatilho_tipo)?.icone"
-                    class="size-3.5 text-n-blue-11"
-                  />
-                  {{ gatilho(f.gatilho_tipo) }}
-                </span>
+                <GatilhoCelula :fluxo="f" />
               </td>
               <td class="p-2 font-mono text-[12.5px]">
                 {{ hojeLimite(f) }}
@@ -271,6 +308,78 @@ const gatilho = tipo => (tipo ? t(`${K}.GATILHOS.${tipo}`) : TRACO);
                     class="size-3"
                   />
                   {{ selo(f).texto }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
+
+      <template v-else>
+        <p
+          data-testid="sistema-explica"
+          :class="[AVISO, TOM.blue]"
+          class="mb-5 max-w-[1100px] leading-relaxed"
+        >
+          {{ t(`${K}.SISTEMA.EXPLICA`) }}
+        </p>
+        <table class="w-full max-w-[1100px] border-collapse">
+          <thead>
+            <tr
+              class="border-b border-n-weak text-left text-xs font-medium text-n-slate-10"
+            >
+              <th class="p-2 font-medium">{{ t(`${K}.TABELA.FLUXO`) }}</th>
+              <th class="p-2 font-medium">{{ t(`${K}.TABELA.GATILHO`) }}</th>
+              <th class="p-2 font-medium">
+                {{ t(`${K}.TABELA.HOJE_LIMITE`) }}
+              </th>
+              <th class="p-2" />
+            </tr>
+          </thead>
+          <tbody
+            v-for="g in gruposSistema"
+            :key="g.chave"
+            :data-testid="`sistema-grupo-${g.chave}`"
+          >
+            <tr>
+              <td
+                colspan="4"
+                class="px-2 pb-1.5 pt-5 text-[11px] font-medium uppercase tracking-wider text-n-slate-10"
+              >
+                {{ t(`${K}.SISTEMA.GRUPOS.${g.chave}`) }}
+              </td>
+            </tr>
+            <tr
+              v-for="f in g.fluxos"
+              :key="f.id"
+              data-testid="sistema-linha"
+              class="cursor-pointer border-b border-n-weak text-[13.5px] hover:bg-n-alpha-2"
+              @click="abrir(f.id)"
+            >
+              <td class="p-2">
+                <b class="font-medium text-n-slate-12">{{ f.nome }}</b>
+                <span
+                  v-if="f.alcance"
+                  data-testid="sistema-alcance"
+                  :class="[CHIP, TOM.amber]"
+                  class="ml-2 font-mono"
+                >
+                  <i class="i-lucide-triangle-alert size-3" />
+                  {{ t(`${K}.SISTEMA.ALCANCE.${f.alcance}`) }}
+                </span>
+                <span class="block text-[12.5px] text-n-slate-11">
+                  {{ ondeVive(f) }}
+                </span>
+              </td>
+              <td class="p-2">
+                <GatilhoCelula :fluxo="f" />
+              </td>
+              <td class="p-2 font-mono text-[12.5px]" :title="hojeTitulo(f)">
+                {{ hojeLimite(f) }}
+              </td>
+              <td class="p-2">
+                <span :class="[CHIP, TOM.blue]" class="font-mono">
+                  {{ t(`${K}.SELO.NO_CODIGO`) }}
                 </span>
               </td>
             </tr>

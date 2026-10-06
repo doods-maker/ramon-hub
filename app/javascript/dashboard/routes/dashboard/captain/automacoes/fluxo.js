@@ -188,7 +188,7 @@ export const ACOES_CHATWOOT = [
   { nome: 'mute_conversation', parametro: null },
   { nome: 'send_email_to_team', parametro: 'email_time' },
 ];
-// = Grafo.permitidas_chatwoot (inclui as que vêm de regras convertidas na B3)
+// = Grafo.permitidas_chatwoot (o que a regra nativa aceita, menos as proibidas)
 export const CHATWOOT_PERMITIDAS = [
   ...ACOES_CHATWOOT.map(a => a.nome),
   'change_status',
@@ -256,6 +256,7 @@ export const CAMPOS = [
   'nome',
   'telefone',
   'documentos_completos',
+  'regra',
 ];
 export const OPERADORES = [
   'igual',
