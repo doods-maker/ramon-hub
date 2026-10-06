@@ -7,8 +7,10 @@ import {
   ligar,
   novaChave,
   paraVueFlow,
+  PALETA,
   podarSetas,
   saidasDe,
+  TIPOS_PASSO,
   trocarConfig,
 } from '../fluxo';
 
@@ -149,6 +151,15 @@ describe('portas de saída', () => {
     expect(saidasDe('escolha', {})).toEqual(['outro']);
     expect(saidasDe('parar', {})).toEqual([]);
     expect(saidasDe('esperar', {})).toEqual(['s']);
+    expect(saidasDe('perguntar_ia', {})).toEqual(['sim', 'nao']);
+    expect(saidasDe('webhook', {})).toEqual([]);
+  });
+
+  it('todo passo que o motor roda está na paleta', () => {
+    const naPaleta = PALETA.flatMap(g => g.itens.map(i => i.tipo));
+    TIPOS_PASSO.forEach(t =>
+      expect([t, naPaleta.includes(t)]).toEqual([t, true])
+    );
   });
 
   it('nova chave de caso não repete', () => {

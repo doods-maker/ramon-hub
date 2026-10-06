@@ -9,9 +9,12 @@ import {
   GATILHOS,
   OPERADORES,
   PALETA,
+  PAPEIS,
   PASSOS,
+  REGRAS_ADVBOX,
 } from '../fluxo';
 import { MODELOS } from '../modelos';
+import { OBRIGATORIOS } from '../validar';
 
 const folhas = (obj, prefixo = '') =>
   Object.entries(obj).flatMap(([k, v]) =>
@@ -108,5 +111,22 @@ describe('textos das automações', () => {
     CAMPOS.forEach(c => expect(FLUXOS_PT.CAMPOS[c]).toBeTruthy());
     OPERADORES.forEach(o => expect(FLUXOS_PT.OPERADORES[o]).toBeTruthy());
     MODELOS.forEach(m => expect(FLUXOS_PT.MODELOS[m.chave].NOME).toBeTruthy());
+    REGRAS_ADVBOX.forEach(r => expect(FLUXOS_PT.REGRAS_ADVBOX[r]).toBeTruthy());
+    PAPEIS.forEach(p => expect(FLUXOS_PT.PAPEIS[p]).toBeTruthy());
+    [
+      ...Object.values(OBRIGATORIOS).flat(),
+      'tipo_tarefa_id',
+      'responsavel_id',
+    ].forEach(c =>
+      expect([c, Boolean(FLUXOS_PT.CAMPOS_OBRIGATORIOS[c])]).toEqual([c, true])
+    );
+    [
+      'GATILHO_HORA',
+      'ADVBOX_ACAO',
+      'ADVBOX_DESCRICAO',
+      'WEBHOOK_HTTPS',
+      'WEBHOOK_ULTIMO',
+      'CAMPO_CHAVE',
+    ].forEach(c => expect(FLUXOS_PT.ERROS[c]).toBeTruthy());
   });
 });

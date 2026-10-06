@@ -32,6 +32,14 @@ export const GATILHOS = [
   },
   { tipo: 'lead_ganho', icone: 'i-lucide-trophy', alvo: 'lead' },
   { tipo: 'lead_perdido', icone: 'i-lucide-circle-x', alvo: 'lead' },
+  { tipo: 'reuniao_marcada', icone: 'i-lucide-calendar-check', alvo: 'lead' },
+  { tipo: 'reuniao_cancelada', icone: 'i-lucide-calendar-x', alvo: 'lead' },
+  { tipo: 'contrato_assinado', icone: 'i-lucide-file-signature', alvo: 'lead' },
+  { tipo: 'contrato_recusado', icone: 'i-lucide-file-x', alvo: 'lead' },
+  { tipo: 'documento_recebido', icone: 'i-lucide-file-input', alvo: 'lead' },
+  { tipo: 'evento_advbox', icone: 'i-lucide-scale', alvo: 'lead' },
+  { tipo: 'lead_parado', icone: 'i-lucide-timer-off', alvo: 'lead' },
+  { tipo: 'relogio', icone: 'i-lucide-alarm-clock', alvo: 'lead' },
   { tipo: 'manual', icone: 'i-lucide-hand', alvo: 'lead' },
 ];
 export const gatilhoInfo = tipo => GATILHOS.find(g => g.tipo === tipo);
@@ -57,12 +65,41 @@ export const PASSOS = {
   criar_tarefa: { grupo: 'LEAD', icone: 'i-lucide-list-todo', tom: 'slate' },
   avisar_sino: { grupo: 'AVISAR', icone: 'i-lucide-bell', tom: 'slate' },
   avisar_push: { grupo: 'AVISAR', icone: 'i-lucide-smartphone', tom: 'slate' },
+  perguntar_ia: {
+    grupo: 'IA',
+    icone: 'i-lucide-message-circle-question',
+    tom: 'amber',
+  },
+  rascunho_ia: {
+    grupo: 'IA',
+    icone: 'i-lucide-sparkles',
+    tom: 'slate',
+    rascunho: true,
+  },
+  rodar_skill: { grupo: 'IA', icone: 'i-lucide-wand-sparkles', tom: 'slate' },
+  trocar_responsavel: {
+    grupo: 'LEAD',
+    icone: 'i-lucide-user-round-cog',
+    tom: 'slate',
+  },
+  preencher_campo: {
+    grupo: 'LEAD',
+    icone: 'i-lucide-text-cursor-input',
+    tom: 'slate',
+  },
+  registrar_atividade: {
+    grupo: 'LEAD',
+    icone: 'i-lucide-history',
+    tom: 'slate',
+  },
+  advbox: { grupo: 'INTEGRACOES', icone: 'i-lucide-scale', tom: 'slate' },
+  webhook: { grupo: 'INTEGRACOES', icone: 'i-lucide-webhook', tom: 'slate' },
   esperar: { grupo: 'CONTROLE', icone: 'i-lucide-hourglass', tom: 'slate' },
   parar: { grupo: 'CONTROLE', icone: 'i-lucide-octagon-x', tom: 'slate' },
 };
 export const TIPOS_PASSO = Object.keys(PASSOS).filter(t => t !== 'gatilho');
 
-// "+ Adicionar passo": só o que a B1 roda (B2b — IA, ADVBOX, webhook — entra com o motor dela).
+// "+ Adicionar passo": tudo que o motor roda (B1 + B2b).
 export const PALETA = [
   {
     grupo: 'CONDICAO',
@@ -97,6 +134,24 @@ export const PALETA = [
     itens: [
       { chave: 'mover_etapa', tipo: 'mover_etapa' },
       { chave: 'criar_tarefa', tipo: 'criar_tarefa' },
+      { chave: 'trocar_responsavel', tipo: 'trocar_responsavel' },
+      { chave: 'preencher_campo', tipo: 'preencher_campo' },
+      { chave: 'registrar_atividade', tipo: 'registrar_atividade' },
+    ],
+  },
+  {
+    grupo: 'IA',
+    itens: [
+      { chave: 'perguntar_ia', tipo: 'perguntar_ia' },
+      { chave: 'rascunho_ia', tipo: 'rascunho_ia' },
+      { chave: 'rodar_skill', tipo: 'rodar_skill' },
+    ],
+  },
+  {
+    grupo: 'INTEGRACOES',
+    itens: [
+      { chave: 'advbox', tipo: 'advbox' },
+      { chave: 'webhook', tipo: 'webhook' },
     ],
   },
   {
@@ -141,6 +196,20 @@ export const CHATWOOT_PERMITIDAS = [
   'add_sla',
 ];
 export const PRIORIDADES = ['urgent', 'high', 'medium', 'low', 'nil'];
+// = handlers do Ramon::AdvboxEventProcessor::RULES (chave do filtro do gatilho evento_advbox)
+export const REGRAS_ADVBOX = [
+  'contrato_fechado',
+  'requerimento_protocolado',
+  'indeferimento',
+  'decisao',
+  'exigencia',
+  'reativacao_futura',
+  'exito',
+  'marco',
+  'concessao',
+  'arquivado',
+];
+export const PAPEIS = ['sdr', 'closer']; // Ramon::Papeis::COLUNA
 
 // Ramon::Fluxos::Contexto#dados — o que o {chave} dos textos e as condições enxergam.
 export const VARIAVEIS = [
@@ -156,6 +225,9 @@ export const VARIAVEIS = [
   'caixa',
   'status',
   'texto',
+  'documentos_faltantes',
+  'resposta_ia',
+  'quando',
 ];
 export const CAMPOS = [
   'etapa',
@@ -171,6 +243,7 @@ export const CAMPOS = [
   'texto',
   'nome',
   'telefone',
+  'documentos_completos',
 ];
 export const OPERADORES = [
   'igual',
@@ -204,12 +277,14 @@ const CONFIG_INICIAL = {
   esperar: { quantidade: 1, unidade: 'dias' },
   criar_tarefa: { titulo: '', tipo: 'other', prazo_dias: 1 },
   acao_chatwoot: { acoes: [] },
+  advbox: { acao: 'tarefa', prazo_dias: 1 },
+  trocar_responsavel: { papel: 'closer' },
 };
 export const configInicial = tipo => copia(CONFIG_INICIAL[tipo] || {});
 
 export const saidasDe = (tipo, config = {}) => {
-  if (tipo === 'parar') return [];
-  if (tipo === 'se') return ['sim', 'nao'];
+  if (['parar', 'webhook'].includes(tipo)) return [];
+  if (['se', 'perguntar_ia'].includes(tipo)) return ['sim', 'nao'];
   if (tipo === 'escolha')
     return [...(config.casos || []).map(c => c.chave), 'outro'];
   return ['s'];

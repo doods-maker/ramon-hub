@@ -25,5 +25,17 @@ describe('modelos prontos', () => {
   it('todo texto ao cliente é rascunho_texto (nunca envio)', () => {
     const tipos = MODELOS.flatMap(m => m.desenho.nos.map(n => n.tipo));
     expect(tipos).not.toContain('acao_chatwoot');
+    expect(tipos).not.toContain('webhook');
+  });
+
+  it('Pós-contrato: contrato assinado → … → se documentos completos, senão rascunho da IA + push', () => {
+    const { desenho } = MODELOS.find(m => m.chave === 'pos_contrato');
+    expect(desenho.nos[0].config.tipo).toBe('contrato_assinado');
+    const se = desenho.nos.find(n => n.tipo === 'se');
+    expect(se.config.condicoes).toEqual([
+      { campo: 'documentos_completos', operador: 'igual', valor: 'sim' },
+    ]);
+    const nao = desenho.setas.find(s => s.de === se.id && s.saida === 'nao');
+    expect(desenho.nos.find(n => n.id === nao.para).tipo).toBe('rascunho_ia');
   });
 });

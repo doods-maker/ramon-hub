@@ -39,7 +39,7 @@ describe('validar (espelho do Grafo#erros)', () => {
   });
 
   it('gatilho fora da lista da B1', () => {
-    expect(codigos({ nos: [g({ tipo: 'relogio' })], setas: [] })).toEqual([
+    expect(codigos({ nos: [g({ tipo: 'inventado' })], setas: [] })).toEqual([
       ['g', 'GATILHO_DESCONHECIDO'],
     ]);
   });
@@ -70,9 +70,73 @@ describe('validar (espelho do Grafo#erros)', () => {
     expect(codigos(d)).toEqual([['p9', 'SOLTO']]);
   });
 
-  it('tipo desconhecido (ex.: passo da B2b)', () => {
-    expect(codigos(linear(p('p1', 'webhook', { url: 'x' })))).toEqual([
+  it('tipo desconhecido', () => {
+    expect(codigos(linear(p('p1', 'inventado', {})))).toEqual([
       ['p1', 'TIPO_DESCONHECIDO'],
+    ]);
+  });
+
+  it('gatilhos e passos da B2b válidos', () => {
+    const d = linear(
+      p('p1', 'registrar_atividade', { texto: 'a' }),
+      p('p2', 'preencher_campo', { chave: 'beneficio', valor: 'BPC' }),
+      p('p3', 'advbox', {
+        acao: 'movimentacao',
+        descricao: 'Contrato assinado no hub',
+      }),
+      p('p4', 'webhook', { url: 'https://hooks.exemplo.com.br/x' })
+    );
+    d.nos[0].config = { tipo: 'relogio', hora: '09:00' };
+    expect(codigos(d)).toEqual([]);
+  });
+
+  it('relógio sem hora / hora torta', () => {
+    const d = linear();
+    d.nos[0].config = { tipo: 'relogio' };
+    expect(codigos(d)).toEqual([['g', 'GATILHO_HORA']]);
+    d.nos[0].config = { tipo: 'lead_parado', hora: '25:00' };
+    expect(codigos(d)).toEqual([['g', 'GATILHO_HORA']]);
+    d.nos[0].config = { tipo: 'lead_parado' };
+    expect(codigos(d)).toEqual([]);
+  });
+
+  it('webhook só https e só no fim; advbox; chave do campo; IA sem saída', () => {
+    expect(
+      codigos(
+        linear(
+          p('p1', 'webhook', { url: 'http://x.com' }),
+          p('p2', 'nota_privada', { texto: 'a' })
+        )
+      )
+    ).toEqual([
+      ['p1', 'WEBHOOK_HTTPS'],
+      ['p1', 'WEBHOOK_ULTIMO'],
+    ]);
+    expect(codigos(linear(p('p1', 'advbox', {})))).toEqual([
+      ['p1', 'ADVBOX_ACAO'],
+    ]);
+    expect(codigos(linear(p('p1', 'advbox', { acao: 'tarefa' })))).toEqual([
+      ['p1', 'FALTA'],
+      ['p1', 'FALTA'],
+    ]);
+    expect(
+      codigos(
+        linear(p('p1', 'advbox', { acao: 'movimentacao', descricao: 'curta' }))
+      )
+    ).toEqual([['p1', 'ADVBOX_DESCRICAO']]);
+    expect(
+      codigos(linear(p('p1', 'preencher_campo', { chave: 'Benefício' })))
+    ).toEqual([['p1', 'CAMPO_CHAVE']]);
+    // nome reservado do hub (Contexto::RESERVADAS)
+    expect(
+      codigos(linear(p('p1', 'preencher_campo', { chave: 'telefone' })))
+    ).toEqual([['p1', 'CAMPO_CHAVE']]);
+    expect(codigos(linear(p('p1', 'perguntar_ia', { pergunta: 'x' })))).toEqual(
+      [['p1', 'SE_SEM_SAIDA']]
+    );
+    expect(codigos(linear(p('p1', 'rodar_skill', {})))).toEqual([
+      ['p1', 'FALTA'],
+      ['p1', 'FALTA'],
     ]);
   });
 

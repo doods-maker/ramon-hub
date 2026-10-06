@@ -1,5 +1,4 @@
-// Modelos do "Novo fluxo" (B2): só passos que a B1 executa. Textos ao cliente
-// saem como RASCUNHO e passam pelo Eduardo antes de qualquer fluxo publicado.
+// Modelos do "Novo fluxo". Textos ao cliente saem como RASCUNHO e passam pelo Eduardo antes de qualquer fluxo publicado.
 const no = (id, tipo, config, x, y) => ({
   id,
   tipo,
@@ -23,13 +22,7 @@ export const MODELOS = [
     limite_dia: 20,
     desenho: {
       nos: [
-        no(
-          'n1',
-          'gatilho',
-          { tipo: 'lead_mudou_etapa', para_etapa_ids: [] },
-          0,
-          0
-        ),
+        no('n1', 'gatilho', { tipo: 'contrato_assinado' }, 0, 0),
         no(
           'n2',
           'rascunho_texto',
@@ -55,21 +48,38 @@ export const MODELOS = [
         no('n4', 'esperar', { quantidade: 2, unidade: 'dias' }, 0, 440),
         no(
           'n5',
-          'rascunho_texto',
+          'se',
           {
-            rotulo: 'Lembrete dos documentos',
-            texto:
-              'Oi, {nome}! Passando para lembrar dos documentos do seu caso. Se tiver dúvida sobre algum deles, é só me chamar por aqui.',
+            rotulo: 'Documentos completos?',
+            juncao: 'e',
+            condicoes: [
+              {
+                campo: 'documentos_completos',
+                operador: 'igual',
+                valor: 'sim',
+              },
+            ],
           },
           0,
           580
         ),
         no(
           'n6',
+          'rascunho_ia',
+          {
+            rotulo: 'Lembrete dos documentos',
+            instrucao:
+              'Lembre {nome}, com gentileza, dos documentos que ainda faltam: {documentos_faltantes}. Ofereça ajuda para conseguir algum deles. Não prometa resultado nem prazo.',
+          },
+          130,
+          740
+        ),
+        no(
+          'n7',
           'avisar_push',
           { texto: 'Lembrete de documentos pronto para revisar: {nome}' },
-          0,
-          740
+          130,
+          900
         ),
       ],
       setas: [
@@ -77,7 +87,8 @@ export const MODELOS = [
         seta('n2', 's', 'n3'),
         seta('n3', 's', 'n4'),
         seta('n4', 's', 'n5'),
-        seta('n5', 's', 'n6'),
+        seta('n5', 'nao', 'n6'),
+        seta('n6', 's', 'n7'),
       ],
     },
   },
