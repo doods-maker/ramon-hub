@@ -7,7 +7,7 @@ module Ramon::Fluxos::Passos::Conversa
     texto = ctx.interpolar(config['texto'])
     return { saida: 's', resumo: "faria: rascunho \"#{texto.truncate(120)}\"" } if ctx.ensaio?
 
-    escrever(ctx, "#{Ramon::RascunhoCarimbo::PREFIXO}\n#{texto}")
+    escrever(ctx, "#{cabecalho(config)}\n#{texto}", onde: config['onde'])
     { saida: 's', resumo: "rascunho criado: #{texto.truncate(120)}" }
   end
 

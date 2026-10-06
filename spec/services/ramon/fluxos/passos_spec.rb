@@ -263,8 +263,7 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     it 'rascunho nas notas do lead com o título do código, mesmo com conversa' do
       config = { 'onde' => 'notas_do_lead', 'titulo' => 'confirmação de reunião', 'texto' => 'Oi {nome}!' }
       expect { Ramon::Fluxos::Passos::Conversa.rascunho_texto(config, ctx) }.not_to(change { conversa.messages.count })
-      expect(lead.lead_notes.last.body).to start_with("RASCUNHO (revisar antes de enviar) — confirmação de reunião:
-Oi ")
+      expect(lead.lead_notes.last.body).to start_with("RASCUNHO (revisar antes de enviar) — confirmação de reunião:\nOi ")
     end
 
     it 'apagar a reunião: só as tarefas de reunião do evento, do próprio lead' do
