@@ -12,4 +12,14 @@ class Ramon::StageSlug
                .gsub(/\A-|-\z/, '')
     "#{PREFIX}#{slug}"
   end
+
+  # O label é fixo desde a criação (renomear não muda): uma etapa nova com o
+  # nome antigo de outra ganha sufixo (-2, -3…) em vez de colidir no índice único.
+  def self.unique_label_for(account, name)
+    base = label_for(name)
+    label = base
+    suffix = 1
+    label = "#{base}-#{suffix += 1}" while account.lead_stages.exists?(label: label)
+    label
+  end
 end

@@ -305,7 +305,23 @@
         "MENU": "Opções da etapa",
         "REMOVE_COUNT": "{count} lead(s) visíveis nesta etapa serão movidos para a etapa destino.",
         "REMOVE_EMPTY": "Nenhum lead visível nesta etapa — se houver leads fora do filtro atual, serão movidos para a etapa destino.",
-        "REMOVE_NO_TARGET": "Não há outra etapa para receber os leads — crie uma antes de remover."
+        "REMOVE_NO_TARGET": "Não há outra etapa para receber os leads — crie uma antes de remover.",
+        "REMOVE_LOCKED": "Usada pelas automações (quiz, agendamento, contrato) — não pode ser removida",
+        "CONFIRM_WON_TITLE": "Marcar \"{name}\" como etapa de ganho?",
+        "CONFIRM_WON_EFFECT": "Leads que entrarem nesta etapa abrem caso no AdvBox, exportam para o Drive, geram NPS e a nota de passagem.",
+        "CONFIRM_WON_PREVIOUS": "A etapa \"{name}\" deixa de ser a de ganho.",
+        "CONFIRM_LOST_TITLE": "Marcar \"{name}\" como etapa de perda?",
+        "CONFIRM_LOST_EFFECT": "Leads movidos para esta etapa pedem o motivo da perda e passam a contar como perdidos nos relatórios.",
+        "CONFIRM_LOST_PREVIOUS": "A etapa \"{name}\" deixa de ser a de perda.",
+        "CLIENT_NAME": "Nome para o cliente",
+        "CLIENT_NAME_HINT": "Aparece no portal do cliente (link do lead). Vazio = usa o nome da etapa.",
+        "CLIENT_SUGGEST": {
+          "NOVO": "Contato recebido",
+          "QUALIFICACAO": "Entendendo o seu caso",
+          "REUNIAO_AGENDADA": "Reunião marcada",
+          "REUNIAO_REALIZADA": "Reunião realizada",
+          "NEGOCIACAO": "Proposta em análise"
+        }
       },
       "FILTERS": {
         "SEARCH": "Buscar nome ou contato…",
@@ -1017,6 +1033,8 @@
       "COPIED": "Copiado!",
       "THIS_STAGE": "nesta etapa",
       "SECTIONS": {
+        "ABERTURA": "Abertura",
+        "ROTEIRO": "Roteiro da reunião",
         "QUALIFICACAO": "Qualificação",
         "APRESENTACAO": "Apresentação",
         "OBJECAO": "Objeções",
@@ -1132,6 +1150,21 @@
       "ITEM_CONTENT_PLACEHOLDER": "Conteúdo / roteiro…",
       "ITEM_ADD": "Adicionar item",
       "ITEM_EMPTY": "Nenhum item nesta seção ainda.",
+      "NOME_HINT": "Use {marcador} no roteiro — o primeiro nome do lead entra na hora de copiar.",
+      "HONORARIO_PADRAO": "Padrão do escritório: 30% dos atrasados + 3 benefícios.",
+      "DELETE_IN_USE": "1 lead usa esta tese — desative em vez de excluir | {count} leads usam esta tese — desative em vez de excluir",
+      "DELETE_IN_USE_HINT": "Desativada, a tese continua nos leads que já a usam e sai da escolha de tese dos leads novos.",
+      "DEACTIVATE": "Desativar tese",
+      "DOCUMENTO_CLIENTE": "O título de cada documento aparece para o cliente no portal (link do lead), na lista do que falta enviar.",
+      "APARECE_EM": {
+        "ABERTURA": "Aparece em: Esteira (2 primeiros) · Scripts do painel · agente",
+        "APRESENTACAO": "Aparece em: Scripts do painel · agente",
+        "QUALIFICACAO": "Aparece em: Scripts do painel · checklist de Qualificação do lead · agente",
+        "OBJECAO": "Aparece em: Esteira (2 primeiros) · Scripts do painel · coach de objeções · Dossiê · agente",
+        "DOCUMENTO": "Aparece em: checklist de documentos · Scripts do painel · link do portal do cliente · exportação ao Drive · agente",
+        "ROTEIRO": "Aparece em: Scripts do painel (em destaque nas etapas de reunião) · agente",
+        "COLHEITA": "Aparece em: extração da IA depois da reunião (checklist da colheita) · agente"
+      },
       "SECTIONS": {
         "ABERTURA": "Abertura",
         "APRESENTACAO": "Apresentação",

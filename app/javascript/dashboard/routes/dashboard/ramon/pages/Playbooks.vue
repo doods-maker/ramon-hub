@@ -3,9 +3,23 @@ import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import Button from 'dashboard/components-next/button/Button.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { THESIS_SECTIONS as SECTIONS } from '../helpers/sections';
+import { mensagemErro } from '../helpers/erro';
+import {
+  CARTAO,
+  SECAO,
+  TITULO,
+  CAMPO,
+  CAMPO_GRANDE,
+  TEXTAREA,
+  ROTULO,
+  CHIP,
+  TOM,
+  AVISO,
+} from '../helpers/ui';
 
 const store = useStore();
 const getters = useStoreGetters();
@@ -73,6 +87,7 @@ const addThesis = async () => {
 };
 
 const thesisToRemove = ref(null);
+const thesisInUse = ref(null);
 const removeThesis = thesis => {
   thesisToRemove.value = thesis;
 };
@@ -81,8 +96,26 @@ const confirmRemoveThesis = async () => {
   if (!thesis) return;
   // Fecha o modal antes do await: sem janela pra duplo-clique despachar 2x.
   thesisToRemove.value = null;
-  await store.dispatch('theses/delete', thesis.id);
-  if (selectedId.value === thesis.id) selectedId.value = null;
+  try {
+    await store.dispatch('theses/delete', thesis.id);
+    if (selectedId.value === thesis.id) selectedId.value = null;
+  } catch (e) {
+    // tese com leads: o servidor recusa (422 + leads_count) → oferecer desativar
+    const count = e?.response?.data?.leads_count;
+    if (count) thesisInUse.value = { thesis, count };
+    else useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR')));
+  }
+};
+
+const deactivateThesisInUse = () => {
+  const { thesis } = thesisInUse.value;
+  thesisInUse.value = null;
+  store
+    .dispatch('theses/update', { id: thesis.id, active: false })
+    .then(() => {
+      if (selectedId.value === thesis.id) detail.active = false;
+    })
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
 };
 
 const moveThesis = (thesis, direction) => {
@@ -92,7 +125,9 @@ const moveThesis = (thesis, direction) => {
   if (index < 0 || targetIndex < 0 || targetIndex >= ordered.length) return;
   const ids = ordered.map(th => th.id);
   [ids[index], ids[targetIndex]] = [ids[targetIndex], ids[index]];
-  store.dispatch('theses/reorder', ids);
+  store
+    .dispatch('theses/reorder', ids)
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
 };
 
 const saveDetail = () => {
@@ -209,6 +244,30 @@ const confirmRemoveItem = () => {
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
+// Troca o item com o vizinho da mesma seção e manda a ordem da tese inteira
+// (as posições são da tese, não da seção) pelo reorder já existente.
+const moveItem = (section, index, direction) => {
+  const daSecao = itemsBySection.value[section];
+  const vizinho = daSecao[index + direction];
+  if (!vizinho) return;
+  const ids = (selectedThesis.value.items || []).map(item => item.id);
+  const a = ids.indexOf(daSecao[index].id);
+  const b = ids.indexOf(vizinho.id);
+  [ids[a], ids[b]] = [ids[b], ids[a]];
+  store
+    .dispatch('theses/reorderItems', {
+      thesisId: selectedThesis.value.id,
+      ids,
+    })
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
+};
+
+const sectionUsoKey = section =>
+  `RAMON.PLAYBOOKS.APARECE_EM.${section.toUpperCase()}`;
+
+// marcador literal: dentro do template, as chaves duplas fechariam o {{ }}
+const MARCADOR_NOME = '{{nome}}';
+
 const sectionLabelKey = section =>
   `RAMON.PLAYBOOKS.SECTIONS.${section.toUpperCase()}`;
 
@@ -216,279 +275,361 @@ onMounted(() => store.dispatch('theses/get'));
 </script>
 
 <template>
-  <!-- w-full explícito: sem ele a página encolhe pro conteúdo e sobra um
-       deserto à direita (o container do router é flex) -->
-  <div class="flex flex-col md:flex-row w-full h-full bg-n-background">
-    <div
-      class="flex flex-col w-full md:w-[340px] md:flex-shrink-0 max-h-[40vh] md:max-h-none md:h-full p-4 overflow-y-auto border-b md:border-b-0 md:border-r border-n-weak"
-    >
-      <RamonPageHeader compact :title="$t('RAMON.PLAYBOOKS.TITLE')" />
-      <h2 class="mb-2 text-xs uppercase tracking-widest text-n-slate-9">
-        {{ $t('RAMON.PLAYBOOKS.LIST_TITLE') }}
-      </h2>
+  <div class="h-full w-full overflow-y-auto bg-n-background p-4 sm:p-8">
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-5">
+      <RamonPageHeader class="!mb-0" :title="$t('RAMON.PLAYBOOKS.TITLE')" />
 
-      <ul data-testid="playbooks-list" class="flex flex-col mb-3 gap-0.5">
-        <li
-          v-for="(thesis, index) in theses"
-          :key="thesis.id"
-          data-testid="playbooks-item"
-          class="flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer"
-          :class="
-            selectedId === thesis.id ? 'bg-n-iris-3' : 'hover:bg-n-alpha-2'
-          "
-          @click="selectThesis(thesis)"
+      <div class="flex flex-col items-start gap-5 md:flex-row">
+        <!-- Teses: cartão fixo à esquerda enquanto o detalhe rola -->
+        <aside
+          class="flex w-full flex-col gap-3 md:sticky md:top-0 md:w-80 md:shrink-0"
+          :class="CARTAO"
         >
-          <span class="flex-1 min-w-0 truncate text-sm text-n-slate-12">
-            {{ thesis.name }}
-          </span>
-          <span
-            class="px-1.5 py-0.5 text-[10px] rounded-full"
-            :class="
-              thesis.active !== false
-                ? 'bg-n-teal-3 text-n-teal-11'
-                : 'bg-n-alpha-2 text-n-slate-9'
-            "
-          >
-            {{
-              thesis.active !== false
-                ? $t('RAMON.PLAYBOOKS.ACTIVE')
-                : $t('RAMON.PLAYBOOKS.INACTIVE')
-            }}
-          </span>
-          <button
-            data-testid="playbooks-item-up"
-            class="text-n-slate-9 disabled:opacity-30"
-            :aria-label="$t('RAMON.PLAYBOOKS.MOVE_UP')"
-            :disabled="index === 0"
-            @click.stop="moveThesis(thesis, -1)"
-          >
-            <span class="i-lucide-chevron-up size-3.5" />
-          </button>
-          <button
-            data-testid="playbooks-item-down"
-            class="text-n-slate-9 disabled:opacity-30"
-            :aria-label="$t('RAMON.PLAYBOOKS.MOVE_DOWN')"
-            :disabled="index === theses.length - 1"
-            @click.stop="moveThesis(thesis, 1)"
-          >
-            <span class="i-lucide-chevron-down size-3.5" />
-          </button>
-          <button
-            data-testid="playbooks-item-remove"
-            class="text-n-slate-9 hover:text-n-ruby-11"
-            :title="$t('RAMON.PLAYBOOKS.DELETE')"
-            @click.stop="removeThesis(thesis)"
-          >
-            <span class="i-lucide-trash-2 size-3.5" />
-          </button>
-        </li>
-        <li
-          v-if="!uiFlags.isFetching && !theses.length"
-          class="px-2 py-1.5 text-sm text-n-slate-9"
-        >
-          {{ $t('RAMON.PLAYBOOKS.EMPTY_LIST') }}
-        </li>
-      </ul>
+          <h2 class="m-0" :class="TITULO">
+            {{ $t('RAMON.PLAYBOOKS.LIST_TITLE') }}
+          </h2>
 
-      <div class="flex gap-2">
-        <input
-          v-model="newThesisName"
-          data-testid="playbooks-add-input"
-          class="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-          :placeholder="$t('RAMON.PLAYBOOKS.ADD_PLACEHOLDER')"
-          @keyup.enter="addThesis"
-        />
-        <button
-          data-testid="playbooks-add-button"
-          class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
-          :disabled="addingThesis"
-          @click="addThesis"
-        >
-          {{ $t('RAMON.PLAYBOOKS.ADD') }}
-        </button>
-      </div>
-    </div>
-
-    <div class="flex-1 h-full p-6 overflow-y-auto">
-      <p
-        v-if="!selectedThesis"
-        data-testid="playbooks-empty-detail"
-        class="text-sm text-n-slate-9"
-      >
-        {{ $t('RAMON.PLAYBOOKS.EMPTY_DETAIL') }}
-      </p>
-
-      <template v-else>
-        <div
-          class="flex flex-col gap-3 p-4 mb-6 border rounded-xl border-n-weak bg-n-solid-1"
-          data-testid="playbooks-detail"
-        >
-          <div class="flex flex-wrap items-end gap-3">
-            <label class="flex flex-col flex-1 min-w-0 md:min-w-64 gap-1">
-              <span class="text-xs text-n-slate-10">
-                {{ $t('RAMON.PLAYBOOKS.NAME') }}
-              </span>
-              <input
-                v-model="detail.name"
-                data-testid="playbooks-name-input"
-                class="px-3 py-2 text-lg rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-                :placeholder="$t('RAMON.PLAYBOOKS.NAME')"
-                @blur="saveDetail"
-              />
-            </label>
-            <label
-              class="flex items-center gap-2 pb-2.5 text-sm text-n-slate-12 whitespace-nowrap"
+          <ul
+            data-testid="playbooks-list"
+            class="m-0 flex list-none flex-col gap-0.5 p-0"
+          >
+            <li
+              v-for="(thesis, index) in theses"
+              :key="thesis.id"
+              data-testid="playbooks-item"
+              class="flex cursor-pointer items-center gap-1 rounded-lg py-1 pe-1 ps-2"
+              :class="
+                selectedId === thesis.id ? TOM.blue : 'hover:bg-n-alpha-2'
+              "
+              @click="selectThesis(thesis)"
             >
-              <input
-                v-model="detail.active"
-                type="checkbox"
-                data-testid="playbooks-active-toggle"
-                @change="saveActive"
+              <span
+                class="min-w-0 flex-1 truncate text-sm"
+                :class="
+                  selectedId === thesis.id ? 'font-medium' : 'text-n-slate-12'
+                "
+              >
+                {{ thesis.name }}
+              </span>
+              <span
+                class="shrink-0"
+                :class="[CHIP, thesis.active !== false ? TOM.teal : TOM.slate]"
+              >
+                {{
+                  thesis.active !== false
+                    ? $t('RAMON.PLAYBOOKS.ACTIVE')
+                    : $t('RAMON.PLAYBOOKS.INACTIVE')
+                }}
+              </span>
+              <Button
+                data-testid="playbooks-item-up"
+                xs
+                ghost
+                slate
+                icon="i-lucide-chevron-up"
+                :aria-label="$t('RAMON.PLAYBOOKS.MOVE_UP')"
+                :disabled="index === 0"
+                @click.stop="moveThesis(thesis, -1)"
               />
-              {{ $t('RAMON.PLAYBOOKS.ACTIVE_TOGGLE') }}
-            </label>
-          </div>
-          <label class="flex flex-col gap-1">
-            <span class="text-xs text-n-slate-10">
-              {{ $t('RAMON.PLAYBOOKS.DESCRIPTION') }}
-            </span>
-            <textarea
-              v-model="detail.description"
-              data-testid="playbooks-description-input"
-              rows="2"
-              class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-              :placeholder="$t('RAMON.PLAYBOOKS.DESCRIPTION')"
-              @blur="saveDetail"
+              <Button
+                data-testid="playbooks-item-down"
+                xs
+                ghost
+                slate
+                icon="i-lucide-chevron-down"
+                :aria-label="$t('RAMON.PLAYBOOKS.MOVE_DOWN')"
+                :disabled="index === theses.length - 1"
+                @click.stop="moveThesis(thesis, 1)"
+              />
+              <Button
+                data-testid="playbooks-item-remove"
+                xs
+                ghost
+                slate
+                icon="i-lucide-trash-2"
+                :aria-label="$t('RAMON.PLAYBOOKS.DELETE')"
+                :title="$t('RAMON.PLAYBOOKS.DELETE')"
+                @click.stop="removeThesis(thesis)"
+              />
+            </li>
+            <li
+              v-if="!uiFlags.isFetching && !theses.length"
+              class="px-2 py-1.5 text-sm text-n-slate-10"
+            >
+              {{ $t('RAMON.PLAYBOOKS.EMPTY_LIST') }}
+            </li>
+          </ul>
+
+          <div class="flex gap-2" :class="SECAO">
+            <input
+              v-model="newThesisName"
+              data-testid="playbooks-add-input"
+              class="min-w-0 flex-1"
+              :class="CAMPO"
+              :placeholder="$t('RAMON.PLAYBOOKS.ADD_PLACEHOLDER')"
+              @keyup.enter="addThesis"
             />
-          </label>
-          <div class="grid gap-3 md:grid-cols-3">
-            <label class="flex flex-col gap-1">
-              <span class="text-xs text-n-slate-10">
-                {{ $t('RAMON.PLAYBOOKS.AREA') }}
-              </span>
-              <input
-                v-model="detail.area"
-                data-testid="playbooks-area-input"
-                class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-                :placeholder="$t('RAMON.PLAYBOOKS.AREA')"
-                @blur="saveDetail"
-              />
-            </label>
-            <label class="flex flex-col gap-1">
-              <span class="text-xs text-n-slate-10">
-                {{ $t('RAMON.PLAYBOOKS.HONORARIO_PERCENT') }}
-              </span>
-              <input
-                v-model="detail.honorarioPercentual"
-                type="number"
-                min="0"
-                max="100"
-                step="0.5"
-                data-testid="playbooks-honorario-percentual-input"
-                class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-                :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_PERCENT')"
-                @blur="saveDetail"
-              />
-            </label>
-            <label class="flex flex-col gap-1">
-              <span class="text-xs text-n-slate-10">
-                {{ $t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS') }}
-              </span>
-              <input
-                v-model="detail.honorarioNMensalidades"
-                type="number"
-                min="0"
-                step="1"
-                data-testid="playbooks-honorario-mensalidades-input"
-                class="px-3 py-2 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-                :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS')"
-                @blur="saveDetail"
-              />
-            </label>
+            <Button
+              data-testid="playbooks-add-button"
+              sm
+              class="shrink-0"
+              :label="$t('RAMON.PLAYBOOKS.ADD')"
+              :disabled="addingThesis"
+              @click="addThesis"
+            />
           </div>
-        </div>
+        </aside>
 
-        <!-- Seções lado a lado em telas largas: usa a tela cheia de verdade -->
-        <div class="grid items-start gap-6 xl:grid-cols-2">
-          <section
-            v-for="section in SECTIONS"
-            :key="section"
-            class="p-4 border rounded-xl border-n-weak bg-n-solid-1"
-            data-testid="playbooks-section"
+        <div class="flex w-full min-w-0 flex-1 flex-col gap-5">
+          <p
+            v-if="!selectedThesis"
+            data-testid="playbooks-empty-detail"
+            class="m-0 py-6 text-center text-sm text-n-slate-10"
+            :class="CARTAO"
           >
-            <h3 class="mb-2 text-xs uppercase tracking-widest text-n-slate-9">
-              {{ $t(sectionLabelKey(section)) }}
-            </h3>
+            {{ $t('RAMON.PLAYBOOKS.EMPTY_DETAIL') }}
+          </p>
 
-            <ul class="flex flex-col mb-3 gap-2">
-              <li
-                v-for="item in itemsBySection[section]"
-                :key="item.id"
-                data-testid="playbooks-item-row"
-                class="flex flex-col gap-1 p-3 rounded-lg bg-n-alpha-1 border border-n-weak"
-              >
-                <div class="flex items-center gap-2">
+          <template v-else>
+            <div
+              class="flex flex-col gap-3 !p-4"
+              :class="CARTAO"
+              data-testid="playbooks-detail"
+            >
+              <div class="flex flex-wrap items-end gap-3">
+                <label class="min-w-0 flex-1 md:min-w-64" :class="ROTULO">
+                  {{ $t('RAMON.PLAYBOOKS.NAME') }}
                   <input
-                    v-model="itemDrafts[item.id].title"
-                    data-testid="playbooks-item-title-input"
-                    class="flex-1 px-2 py-1 text-sm font-medium rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-                    :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
-                    @blur="saveItem(item)"
+                    v-model="detail.name"
+                    data-testid="playbooks-name-input"
+                    class="!text-base font-medium"
+                    :class="CAMPO_GRANDE"
+                    :placeholder="$t('RAMON.PLAYBOOKS.NAME')"
+                    @blur="saveDetail"
                   />
-                  <button
-                    data-testid="playbooks-item-remove-item"
-                    class="text-n-slate-9 hover:text-n-ruby-11"
-                    :title="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
-                    @click="removeItem(item)"
-                  >
-                    <span class="i-lucide-trash-2 size-3.5" />
-                  </button>
-                </div>
-                <!-- field-sizing: auto-cresce com o roteiro (fallback = rows fixo) -->
+                </label>
+                <label
+                  class="flex items-center gap-2 whitespace-nowrap pb-2.5 text-sm text-n-slate-12"
+                >
+                  <input
+                    v-model="detail.active"
+                    type="checkbox"
+                    data-testid="playbooks-active-toggle"
+                    @change="saveActive"
+                  />
+                  {{ $t('RAMON.PLAYBOOKS.ACTIVE_TOGGLE') }}
+                </label>
+              </div>
+              <label :class="ROTULO">
+                {{ $t('RAMON.PLAYBOOKS.DESCRIPTION') }}
                 <textarea
-                  v-model="itemDrafts[item.id].content"
-                  data-testid="playbooks-item-content-input"
+                  v-model="detail.description"
+                  data-testid="playbooks-description-input"
                   rows="2"
-                  class="px-2 py-1 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12 [field-sizing:content] min-h-16 max-h-64"
-                  :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
-                  @blur="saveItem(item)"
+                  :class="TEXTAREA"
+                  :placeholder="$t('RAMON.PLAYBOOKS.DESCRIPTION')"
+                  @blur="saveDetail"
                 />
-              </li>
-              <li
-                v-if="!itemsBySection[section].length"
-                class="px-1 text-xs text-n-slate-9"
+              </label>
+              <div class="grid gap-3 md:grid-cols-3">
+                <label :class="ROTULO">
+                  {{ $t('RAMON.PLAYBOOKS.AREA') }}
+                  <input
+                    v-model="detail.area"
+                    data-testid="playbooks-area-input"
+                    :class="CAMPO"
+                    :placeholder="$t('RAMON.PLAYBOOKS.AREA')"
+                    @blur="saveDetail"
+                  />
+                </label>
+                <label :class="ROTULO">
+                  {{ $t('RAMON.PLAYBOOKS.HONORARIO_PERCENT') }}
+                  <input
+                    v-model="detail.honorarioPercentual"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    data-testid="playbooks-honorario-percentual-input"
+                    class="font-mono"
+                    :class="CAMPO"
+                    :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_PERCENT')"
+                    @blur="saveDetail"
+                  />
+                </label>
+                <label :class="ROTULO">
+                  {{ $t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS') }}
+                  <input
+                    v-model="detail.honorarioNMensalidades"
+                    type="number"
+                    min="0"
+                    step="1"
+                    data-testid="playbooks-honorario-mensalidades-input"
+                    class="font-mono"
+                    :class="CAMPO"
+                    :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS')"
+                    @blur="saveDetail"
+                  />
+                </label>
+              </div>
+              <p
+                data-testid="playbooks-honorario-padrao"
+                class="m-0 text-xs text-n-slate-10"
               >
-                {{ $t('RAMON.PLAYBOOKS.ITEM_EMPTY') }}
-              </li>
-            </ul>
-
-            <div class="flex gap-2">
-              <input
-                v-model="newItemDrafts[section].title"
-                data-testid="playbooks-item-add-title"
-                class="w-40 shrink-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-                :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
-                @keyup.enter="addItem(section)"
-              />
-              <input
-                v-model="newItemDrafts[section].content"
-                data-testid="playbooks-item-add-content"
-                class="flex-1 min-w-0 px-2 py-1.5 text-sm rounded-lg bg-n-alpha-2 border border-transparent outline-none focus:border-n-slate-8 text-n-slate-12"
-                :placeholder="$t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')"
-                @keyup.enter="addItem(section)"
-              />
-              <button
-                data-testid="playbooks-item-add"
-                class="shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-lg bg-n-iris-9 text-white disabled:opacity-50"
-                :disabled="addingItem === section"
-                @click="addItem(section)"
-              >
-                {{ $t('RAMON.PLAYBOOKS.ITEM_ADD') }}
-              </button>
+                {{ $t('RAMON.PLAYBOOKS.HONORARIO_PADRAO') }}
+              </p>
             </div>
-          </section>
+
+            <p
+              data-testid="playbooks-nome-hint"
+              class="m-0 flex items-center gap-1.5 text-xs text-n-slate-10"
+            >
+              <span class="i-lucide-info size-3.5 shrink-0" />
+              {{ $t('RAMON.PLAYBOOKS.NOME_HINT', { marcador: MARCADOR_NOME }) }}
+            </p>
+
+            <!-- Seções em coluna única: roteiro longo pede linha larga (lado a lado
+                 o campo de novo item ficava estreito demais) -->
+            <div class="flex flex-col gap-5">
+              <section
+                v-for="section in SECTIONS"
+                :key="section"
+                class="flex flex-col gap-3 !p-4"
+                :class="CARTAO"
+                data-testid="playbooks-section"
+              >
+                <div>
+                  <h3 class="m-0" :class="TITULO">
+                    {{ $t(sectionLabelKey(section)) }}
+                  </h3>
+                  <!-- onde o item desta seção é usado (conferido no código) -->
+                  <p
+                    data-testid="playbooks-section-uso"
+                    class="m-0 mt-1 text-xs text-n-slate-10"
+                  >
+                    {{ $t(sectionUsoKey(section)) }}
+                  </p>
+                </div>
+                <p
+                  v-if="section === 'documento'"
+                  data-testid="playbooks-documento-aviso"
+                  class="m-0"
+                  :class="[AVISO, TOM.amber]"
+                >
+                  {{ $t('RAMON.PLAYBOOKS.DOCUMENTO_CLIENTE') }}
+                </p>
+
+                <!-- itens separados por linha, sem caixa dentro do cartão -->
+                <ul
+                  class="m-0 flex list-none flex-col divide-y divide-n-weak p-0"
+                >
+                  <li
+                    v-for="(item, itemIndex) in itemsBySection[section]"
+                    :key="item.id"
+                    data-testid="playbooks-item-row"
+                    class="flex flex-col gap-1.5 py-3 first:pt-0"
+                  >
+                    <div class="flex items-center gap-1">
+                      <input
+                        v-model="itemDrafts[item.id].title"
+                        data-testid="playbooks-item-title-input"
+                        class="flex-1 font-medium"
+                        :class="CAMPO"
+                        :placeholder="
+                          $t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')
+                        "
+                        @blur="saveItem(item)"
+                      />
+                      <Button
+                        data-testid="playbooks-item-move-up"
+                        xs
+                        ghost
+                        slate
+                        icon="i-lucide-chevron-up"
+                        :aria-label="$t('RAMON.PLAYBOOKS.MOVE_UP')"
+                        :disabled="itemIndex === 0"
+                        @click="moveItem(section, itemIndex, -1)"
+                      />
+                      <Button
+                        data-testid="playbooks-item-move-down"
+                        xs
+                        ghost
+                        slate
+                        icon="i-lucide-chevron-down"
+                        :aria-label="$t('RAMON.PLAYBOOKS.MOVE_DOWN')"
+                        :disabled="
+                          itemIndex === itemsBySection[section].length - 1
+                        "
+                        @click="moveItem(section, itemIndex, 1)"
+                      />
+                      <Button
+                        data-testid="playbooks-item-remove-item"
+                        xs
+                        ghost
+                        slate
+                        icon="i-lucide-trash-2"
+                        :aria-label="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
+                        :title="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
+                        @click="removeItem(item)"
+                      />
+                    </div>
+                    <!-- field-sizing: auto-cresce com o roteiro (fallback = rows fixo) -->
+                    <textarea
+                      v-model="itemDrafts[item.id].content"
+                      data-testid="playbooks-item-content-input"
+                      rows="2"
+                      class="max-h-64 min-h-16 [field-sizing:content]"
+                      :class="TEXTAREA"
+                      :placeholder="
+                        $t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')
+                      "
+                      @blur="saveItem(item)"
+                    />
+                  </li>
+                  <li
+                    v-if="!itemsBySection[section].length"
+                    class="text-xs text-n-slate-10"
+                  >
+                    {{ $t('RAMON.PLAYBOOKS.ITEM_EMPTY') }}
+                  </li>
+                </ul>
+
+                <div class="flex gap-2" :class="SECAO">
+                  <input
+                    v-model="newItemDrafts[section].title"
+                    data-testid="playbooks-item-add-title"
+                    class="!w-40 shrink-0"
+                    :class="CAMPO"
+                    :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
+                    @keyup.enter="addItem(section)"
+                  />
+                  <input
+                    v-model="newItemDrafts[section].content"
+                    data-testid="playbooks-item-add-content"
+                    class="min-w-0 flex-1"
+                    :class="CAMPO"
+                    :placeholder="
+                      $t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')
+                    "
+                    @keyup.enter="addItem(section)"
+                  />
+                  <Button
+                    data-testid="playbooks-item-add"
+                    sm
+                    faded
+                    slate
+                    icon="i-lucide-plus"
+                    class="shrink-0"
+                    :label="$t('RAMON.PLAYBOOKS.ITEM_ADD')"
+                    :disabled="addingItem === section"
+                    @click="addItem(section)"
+                  />
+                </div>
+              </section>
+            </div>
+          </template>
         </div>
-      </template>
+      </div>
     </div>
     <ConfirmModal
       v-if="thesisToRemove"
@@ -496,6 +637,22 @@ onMounted(() => store.dispatch('theses/get'));
       :confirm-label="$t('RAMON.PLAYBOOKS.DELETE')"
       @confirm="confirmRemoveThesis"
       @cancel="thesisToRemove = null"
+    />
+    <ConfirmModal
+      v-if="thesisInUse"
+      data-testid="playbooks-thesis-in-use"
+      :title="
+        $t(
+          'RAMON.PLAYBOOKS.DELETE_IN_USE',
+          { count: thesisInUse.count },
+          thesisInUse.count
+        )
+      "
+      :message="$t('RAMON.PLAYBOOKS.DELETE_IN_USE_HINT')"
+      :confirm-label="$t('RAMON.PLAYBOOKS.DEACTIVATE')"
+      confirm-color="blue"
+      @confirm="deactivateThesisInUse"
+      @cancel="thesisInUse = null"
     />
     <ConfirmModal
       v-if="itemToRemove"

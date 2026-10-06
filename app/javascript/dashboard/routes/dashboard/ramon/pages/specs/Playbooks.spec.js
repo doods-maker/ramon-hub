@@ -1,9 +1,19 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import Playbooks from '../Playbooks.vue';
 
 const theses = [
-  { id: 1, name: 'Auxílio-acidente', active: true, position: 0 },
+  {
+    id: 1,
+    name: 'Auxílio-acidente',
+    active: true,
+    position: 0,
+    items: [
+      { id: 11, section: 'abertura', title: 'A', content: 'a', position: 0 },
+      { id: 12, section: 'objecao', title: 'O', content: 'o', position: 1 },
+      { id: 13, section: 'abertura', title: 'B', content: 'b', position: 2 },
+    ],
+  },
   { id: 2, name: 'BPC/LOAS', active: false, position: 1 },
 ];
 
@@ -60,5 +70,50 @@ describe('Playbooks.vue', () => {
     expect(
       wrapper.find('[data-testid="playbooks-empty-detail"]').exists()
     ).toBe(true);
+  });
+
+  it('desce um item dentro da seção mandando a ordem da tese inteira', async () => {
+    const { wrapper, store } = mountPlaybooks();
+    await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
+    const rows = wrapper.findAll('[data-testid="playbooks-item-row"]');
+    expect(
+      rows[0].find('[data-testid="playbooks-item-move-up"]').attributes()
+    ).toHaveProperty('disabled');
+    await rows[0]
+      .find('[data-testid="playbooks-item-move-down"]')
+      .trigger('click');
+    expect(store.dispatch).toHaveBeenCalledWith('theses/reorderItems', {
+      thesisId: 1,
+      ids: [13, 12, 11],
+    });
+  });
+  it('tese com leads: oferece desativar em vez de excluir', async () => {
+    const { wrapper, store } = mountPlaybooks();
+    store.dispatch.mockImplementation(action =>
+      action === 'theses/delete'
+        ? Promise.reject(
+            Object.assign(new Error('422'), {
+              response: { data: { leads_count: 3 } },
+            })
+          )
+        : Promise.resolve({})
+    );
+    await wrapper
+      .findAll('[data-testid="playbooks-item-remove"]')[0]
+      .trigger('click');
+    await wrapper
+      .find('[data-testid="confirm-modal-confirm"]')
+      .trigger('click');
+    await flushPromises();
+    expect(
+      wrapper.find('[data-testid="playbooks-thesis-in-use"]').exists()
+    ).toBe(true);
+    await wrapper
+      .find('[data-testid="confirm-modal-confirm"]')
+      .trigger('click');
+    expect(store.dispatch).toHaveBeenCalledWith('theses/update', {
+      id: 1,
+      active: false,
+    });
   });
 });

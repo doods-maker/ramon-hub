@@ -152,4 +152,19 @@ describe('LeadLiquidacao', () => {
       })
     );
   });
+  it('pré-preenche o honorário contratual com o % da tese do lead', () => {
+    const wrapper = mountLiq({
+      lead: { id: 7, thesis_honorario_percentual: '30.0' },
+    });
+    expect(wrapper.find('[data-testid="liq-hon-contr"]').element.value).toBe(
+      '30'
+    );
+  });
+
+  it('sem tese, o honorário contratual começa vazio', () => {
+    const wrapper = mountLiq();
+    expect(wrapper.find('[data-testid="liq-hon-contr"]').element.value).toBe(
+      ''
+    );
+  });
 });

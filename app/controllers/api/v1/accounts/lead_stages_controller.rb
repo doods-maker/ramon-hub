@@ -5,32 +5,30 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
   def create
     authorize LeadStage
     @stage = Current.account.lead_stages.new(permitted_params)
-    @stage.label = Ramon::StageSlug.label_for(@stage.name)
+    @stage.label = Ramon::StageSlug.unique_label_for(Current.account, @stage.name)
     @stage.position = next_position
     @stage.save!
     render :show
   end
 
+  # Renomear muda só o nome exibido: o label (fase-*) é fixo desde a criação,
+  # porque o código acha etapas por ele (quiz, agendamento, contrato) e as
+  # conversas já carregam a label fase-* correspondente.
   def update
     authorize @stage
-    old_label = @stage.label
-    @stage.assign_attributes(permitted_params)
-    @stage.label = Ramon::StageSlug.label_for(@stage.name) if @stage.name_changed?
     ActiveRecord::Base.transaction do
-      @stage.save!
-      sync_labels(old_label)
+      @stage.update!(permitted_params)
+      recolor_label
     end
     render :show
   end
 
   def destroy
     authorize @stage
-    return render_error('destino obrigatório') if params[:move_to_stage_id].blank?
-    return render_error('destino não pode ser a própria etapa') if params[:move_to_stage_id].to_s == @stage.id.to_s
-    return render_error('não é possível remover a última etapa') if Current.account.lead_stages.count <= 1
+    error = destroy_error
+    return render_error(error) if error
 
-    target = Current.account.lead_stages.find(params[:move_to_stage_id])
-    enqueue_stage_merge(target)
+    enqueue_stage_merge(Current.account.lead_stages.find(params[:move_to_stage_id]))
     head :ok
   rescue ActiveRecord::RecordNotFound
     render_error('etapa destino inválida')
@@ -53,6 +51,14 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     @stage = Current.account.lead_stages.find(params[:id])
   end
 
+  def destroy_error
+    return 'etapa usada pelas automações (quiz, agendamento, contrato) — não pode ser removida' if @stage.automacao?
+    return 'destino obrigatório' if params[:move_to_stage_id].blank?
+    return 'destino não pode ser a própria etapa' if params[:move_to_stage_id].to_s == @stage.id.to_s
+
+    'não é possível remover a última etapa' if Current.account.lead_stages.count <= 1
+  end
+
   # Mover N leads é trabalho de fundo (com centenas, travava o request);
   # a etapa some do config na hora e os cards migram via broadcast.
   def enqueue_stage_merge(target)
@@ -63,12 +69,8 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
     (Current.account.lead_stages.maximum(:position) || -1) + 1
   end
 
-  def sync_labels(old_label)
-    if @stage.saved_change_to_label?
-      Ramon::StageLabelSync.rename_label(Current.account, old_label, @stage.label, @stage.color)
-    elsif @stage.saved_change_to_color?
-      Ramon::StageLabelSync.recolor_label(Current.account, @stage.label, @stage.color)
-    end
+  def recolor_label
+    Ramon::StageLabelSync.recolor_label(Current.account, @stage.label, @stage.color) if @stage.saved_change_to_color?
   end
 
   def render_error(message)
@@ -76,6 +78,6 @@ class Api::V1::Accounts::LeadStagesController < Api::V1::Accounts::BaseControlle
   end
 
   def permitted_params
-    params.permit(:name, :color, :is_won, :is_lost, :probability, :stalled_after_days)
+    params.permit(:name, :color, :is_won, :is_lost, :probability, :stalled_after_days, :nome_cliente)
   end
 end

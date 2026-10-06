@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_05_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_06_100001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1108,6 +1108,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_05_000002) do
     t.string "color"
     t.integer "probability", default: 0, null: false
     t.integer "stalled_after_days"
+    t.string "nome_cliente"
     t.index ["account_id", "label"], name: "index_lead_stages_on_account_id_and_label", unique: true
     t.index ["account_id", "name"], name: "index_lead_stages_on_account_id_and_name", unique: true
   end

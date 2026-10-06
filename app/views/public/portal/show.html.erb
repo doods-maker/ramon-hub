@@ -4,7 +4,7 @@
 <% if @lead.won_at.present? %>
   <h1>Seu atendimento avançou com a nossa equipe</h1>
 <% elsif @current_index %>
-  <h1>Seu caso está em: <%= @stages[@current_index].name %></h1>
+  <h1>Seu caso está em: <%= @stages[@current_index].nome_para_cliente %></h1>
 <% else %>
   <%# Lead fora do fluxo normal (inclui perdido): nunca expor "perdido" ao cliente %>
   <h1>Seu caso está em análise da equipe</h1>
@@ -42,14 +42,14 @@
         <div class="step-text">
           <% if done || current %>
             <p class="step-title">
-              <%= stage.name %>
+              <%= stage.nome_para_cliente %>
               <% if current %><span class="pill-now">agora</span><% end %>
             </p>
             <% if current %>
               <p class="step-sub">Estamos cuidando desta etapa agora. Avisamos você a cada avanço.</p>
             <% end %>
           <% else %>
-            <p class="step-title-future"><%= stage.name %></p>
+            <p class="step-title-future"><%= stage.nome_para_cliente %></p>
           <% end %>
         </div>
       </div>

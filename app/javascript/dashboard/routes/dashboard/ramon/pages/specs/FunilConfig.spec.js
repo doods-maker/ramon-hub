@@ -74,6 +74,18 @@ it('truncates decimals before saving', async () => {
   });
 });
 
+it('dias até parado: 0 vira 1 (o servidor exige > 0)', async () => {
+  const updateStage = vi.fn();
+  const wrapper = mountPage({ updateStage });
+  const first = wrapper.findAll('[data-testid="stage-stalled-days"]')[0];
+  expect(first.attributes('min')).toBe('1');
+  await first.setValue('0');
+  expect(updateStage).toHaveBeenCalledWith(expect.anything(), {
+    id: 1,
+    stalled_after_days: 1,
+  });
+});
+
 it('does not save when the value is unchanged', async () => {
   const updateStage = vi.fn();
   const wrapper = mountPage({ updateStage });

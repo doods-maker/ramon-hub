@@ -6,4 +6,7 @@ json.array! @stages do |stage|
   json.position stage.position
   json.is_won stage.is_won
   json.is_lost stage.is_lost
+  # protegida: o código acha a etapa pelo label (não pode ser removida)
+  json.automacao stage.automacao?
+  json.nome_cliente stage.nome_cliente
 end

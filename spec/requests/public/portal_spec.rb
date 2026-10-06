@@ -20,6 +20,15 @@ RSpec.describe 'Portal do cliente (link mágico)', type: :request do
       expect(response.body).to include('agora')
     end
 
+    it 'mostra o nome para o cliente da etapa quando definido', :aggregate_failures do
+      lead.lead_stage.update!(nome_cliente: 'Analisando o seu caso')
+
+      get "/portal/#{lead.ensure_portal_token!}"
+
+      expect(response.body).to include('Seu caso está em: Analisando o seu caso')
+      expect(response.body).not_to include("Seu caso está em: #{lead.lead_stage.name}")
+    end
+
     it 'token inválido devolve 404 com página neutra' do
       get '/portal/token-que-nao-existe'
 

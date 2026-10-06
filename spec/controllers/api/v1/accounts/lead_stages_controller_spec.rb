@@ -27,6 +27,33 @@ RSpec.describe 'Lead Stages API', type: :request do
            params: { name: 'X' }, headers: agent.create_new_auth_token
       expect(response).to have_http_status(:unauthorized)
     end
+
+    it 'não colide com o label fixo de uma etapa renomeada' do
+      account.lead_stages.create!(name: 'Proposta antiga', label: 'fase-proposta', position: 0)
+      post "/api/v1/accounts/#{account.id}/lead_stages",
+           params: { name: 'Proposta' }, headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['label']).to eq('fase-proposta-2')
+    end
+  end
+
+  describe 'PATCH update' do
+    it 'renomeia só o nome exibido: o label fica fixo', :aggregate_failures do
+      stage = account.lead_stages.create!(name: 'Reunião agendada', label: 'fase-reuniao-agendada', position: 0)
+      patch "/api/v1/accounts/#{account.id}/lead_stages/#{stage.id}",
+            params: { name: 'Reunião marcada' }, headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:success)
+      expect(stage.reload.name).to eq('Reunião marcada')
+      expect(stage.label).to eq('fase-reuniao-agendada')
+    end
+
+    it 'salva o nome para o cliente', :aggregate_failures do
+      stage = account.lead_stages.create!(name: 'Negociação', position: 0)
+      patch "/api/v1/accounts/#{account.id}/lead_stages/#{stage.id}",
+            params: { nome_cliente: 'Proposta em análise' }, headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['nome_cliente']).to eq('Proposta em análise')
+    end
   end
 
   describe 'DELETE destroy' do
@@ -59,6 +86,16 @@ RSpec.describe 'Lead Stages API', type: :request do
       expect(response).to have_http_status(:success)
       expect(Ramon::StageMergeJob).to have_been_enqueued.with(origem.id, destino.id, admin.id)
       expect(lead.reload.lead_stage_id).to eq(origem.id)
+    end
+
+    it 'recusa remover etapa usada pelas automações' do
+      protegida = account.lead_stages.create!(name: 'Qualificação', label: 'fase-qualificacao', position: 0)
+      destino = account.lead_stages.create!(name: 'Destino', position: 1)
+      delete "/api/v1/accounts/#{account.id}/lead_stages/#{protegida.id}",
+             params: { move_to_stage_id: destino.id },
+             headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(account.lead_stages.exists?(protegida.id)).to be(true)
     end
 
     it 'recusa sem destino válido' do

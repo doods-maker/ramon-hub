@@ -58,6 +58,8 @@ json.stage_color lead.lead_stage&.color
 json.benefit_type_name lead.benefit_type&.name
 json.lead_priority_name lead.lead_priority&.name
 json.thesis_name lead.thesis&.name
+# pré-preenche o honorário contratual da Liquidação (continua editável)
+json.thesis_honorario_percentual lead.thesis&.honorario_percentual
 json.sdr_name lead.sdr&.name
 json.closer_name lead.closer&.name
 

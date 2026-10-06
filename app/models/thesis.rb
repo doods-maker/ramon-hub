@@ -1,4 +1,9 @@
 class Thesis < ApplicationRecord
+  # Padrão do escritório em TODAS as teses: 30% dos atrasados + 3 benefícios.
+  # Aplicado na criação pela tela (ThesesController#create), não como default
+  # de coluna: teses existentes e criadas por seed/spec ficam como estão.
+  HONORARIO_PADRAO = { honorario_percentual: 30, honorario_n_mensalidades: 3 }.freeze
+
   belongs_to :account
   has_many :thesis_items, -> { order(:position) }, dependent: :destroy, inverse_of: :thesis
   has_many :leads, dependent: :nullify

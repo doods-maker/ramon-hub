@@ -30,6 +30,7 @@ const emit = defineEmits([
   'renameStage',
   'recolorStage',
   'setStageType',
+  'setStageClientName',
   'removeStage',
 ]);
 
@@ -252,6 +253,10 @@ const toggleCollapsed = () => {
             @rename="name => emit('renameStage', { id: stage.id, name })"
             @recolor="color => emit('recolorStage', { id: stage.id, color })"
             @set-type="type => emit('setStageType', { id: stage.id, type })"
+            @set-client-name="
+              nomeCliente =>
+                emit('setStageClientName', { id: stage.id, nomeCliente })
+            "
             @remove="s => emit('removeStage', s)"
           />
         </span>

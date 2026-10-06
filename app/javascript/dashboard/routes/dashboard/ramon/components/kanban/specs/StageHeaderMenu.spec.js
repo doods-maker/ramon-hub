@@ -30,4 +30,33 @@ describe('StageHeaderMenu', () => {
     await wrapper.find('[data-testid="stage-type-won"]').trigger('click');
     expect(wrapper.emitted().setType[0]).toEqual(['won']);
   });
+  it('trava remover na etapa das automações', async () => {
+    const wrapper = stub({ stage: { ...stage, automacao: true } });
+    await wrapper.find('[data-testid="stage-menu-toggle"]').trigger('click');
+    const remove = wrapper.find('[data-testid="stage-remove"]');
+    expect(remove.attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-testid="stage-remove-locked"]').exists()).toBe(
+      true
+    );
+  });
+  it('emite setClientName com o nome para o cliente (vazio = null)', async () => {
+    const wrapper = stub({ stage: { ...stage, nome_cliente: 'Antigo' } });
+    await wrapper.find('[data-testid="stage-menu-toggle"]').trigger('click');
+    await wrapper.find('[data-testid="stage-client-name"]').trigger('click');
+    await wrapper
+      .find('[data-testid="stage-client-name-input"]')
+      .setValue('  Proposta em análise ');
+    await wrapper
+      .find('[data-testid="stage-client-name-confirm"]')
+      .trigger('click');
+    expect(wrapper.emitted().setClientName[0]).toEqual(['Proposta em análise']);
+
+    await wrapper.find('[data-testid="stage-menu-toggle"]').trigger('click');
+    await wrapper.find('[data-testid="stage-client-name"]').trigger('click');
+    await wrapper.find('[data-testid="stage-client-name-input"]').setValue('');
+    await wrapper
+      .find('[data-testid="stage-client-name-confirm"]')
+      .trigger('click');
+    expect(wrapper.emitted().setClientName[1]).toEqual([null]);
+  });
 });

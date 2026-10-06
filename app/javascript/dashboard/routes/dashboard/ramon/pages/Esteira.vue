@@ -11,6 +11,7 @@ import { dynamicTime } from 'shared/helpers/timeHelper';
 import RamonEsteiraAPI from 'dashboard/api/ramonEsteira';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { brlCompact } from '../helpers/currency';
+import { preencherScript } from '../helpers/scripts';
 import { reasonLabel, severityDotClass, tomMotivo } from '../helpers/esteira';
 import {
   ATALHO,
@@ -107,7 +108,7 @@ const objecoesOpen = ref(false);
 const copiedId = ref(null);
 const copyScript = async item => {
   try {
-    await copyTextToClipboard(item.content);
+    await copyTextToClipboard(preencherScript(item.content, current.value));
   } catch (e) {
     useAlert(t('RAMON.DOCS.COPY_FAILED'));
     return;

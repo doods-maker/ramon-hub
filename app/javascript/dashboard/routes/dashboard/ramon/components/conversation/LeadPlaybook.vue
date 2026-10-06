@@ -6,6 +6,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, TITULO, CHIP, TOM } from '../../helpers/ui';
+import { preencherScript } from '../../helpers/scripts';
 
 const props = defineProps({
   lead: { type: Object, default: null },
@@ -17,31 +18,40 @@ const store = useStore();
 const theses = useMapGetter('theses/getTheses');
 const stages = useMapGetter('leadConfig/getStages');
 
-// seções que aparecem no painel de consulta durante a conversa
-const SECTIONS = ['qualificacao', 'apresentacao', 'objecao', 'documento'];
+// seções que aparecem no painel de consulta durante a conversa (colheita
+// fica de fora: é o checklist que a IA preenche depois da reunião)
+const SECTIONS = [
+  'abertura',
+  'qualificacao',
+  'apresentacao',
+  'roteiro',
+  'objecao',
+  'documento',
+];
 
-// mapa estático etapa (nome seedado) → seção destacada "nesta etapa".
-// Etapa custom sem match cai no comportamento padrão (nenhum destaque).
+// etapa (label fixo do seed — renomear a etapa não muda o label) → seção
+// destacada "nesta etapa". Etapa custom sem match: nenhum destaque.
 const STAGE_SECTION = {
-  Novo: 'qualificacao',
-  Qualificação: 'qualificacao',
-  'Reunião agendada': 'apresentacao',
-  'Reunião realizada': 'apresentacao',
-  Negociação: 'objecao',
-  'Última chance': 'objecao',
-  Fechado: 'documento',
+  'fase-novo': 'qualificacao',
+  'fase-qualificacao': 'qualificacao',
+  'fase-reuniao-agendada': 'roteiro',
+  'fase-reuniao-realizada': 'roteiro',
+  'fase-negociacao': 'objecao',
+  'fase-ultima-chance': 'objecao',
+  'fase-fechado': 'documento',
 };
 
 const thesis = computed(() =>
   theses.value.find(x => x.id === props.lead?.thesis_id)
 );
 
-const currentStageName = computed(
-  () => (stages.value || []).find(s => s.id === props.lead?.lead_stage_id)?.name
+const currentStageLabel = computed(
+  () =>
+    (stages.value || []).find(s => s.id === props.lead?.lead_stage_id)?.label
 );
 
 const highlightedSection = computed(
-  () => STAGE_SECTION[currentStageName.value] || null
+  () => STAGE_SECTION[currentStageLabel.value] || null
 );
 
 const loadFailed = ref(false);
@@ -81,7 +91,7 @@ const sections = computed(() => {
 const copiedId = ref(null);
 const copy = async item => {
   try {
-    await copyTextToClipboard(item.content);
+    await copyTextToClipboard(preencherScript(item.content, props.lead));
   } catch (e) {
     useAlert(t('RAMON.DOCS.COPY_FAILED'));
     return;
