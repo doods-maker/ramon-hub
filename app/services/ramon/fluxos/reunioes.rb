@@ -51,4 +51,34 @@ module Ramon::Fluxos::Reunioes
               'lead_id' => tarefa.lead_id, 'assumido' => assumido }
     Ramon::Fluxos::Disparo.externo('reuniao_na_agenda', tarefa, dados)
   end
+
+  def ligada? = ENV.fetch('RAMON_FLUXO_REUNIOES', nil) == 'on'
+
+  # A chave (B4.1): os fluxos fazem o agendamento inteiro só com a env ligada E os 3 fluxos migrados ligados,
+  # publicados, em modo normal e com o gatilho esperado. Qualquer peça fora → o código faz tudo e os fluxos ensaiam.
+  def assumiu?(account)
+    return false unless ligada?
+
+    atuais = account.fluxos.executaveis.where(origem: 'usuario', modo: 'normal', sistema_chave: GATILHOS.keys)
+                    .pluck(:sistema_chave, :gatilho_tipo)
+    atuais.sort == GATILHOS.to_a.sort
+  end
+
+  def fluxos(account) = account.fluxos.where(origem: 'usuario', sistema_chave: GATILHOS.keys).order(:id)
+
+  # normal = os fluxos assumem o agendamento inteiro; sombra = devolve ao código na hora. Os 3 juntos.
+  def mudar_modo!(account, modo)
+    lista = fluxos(account).to_a
+    raise ArgumentError, 'Os fluxos de reunião ainda não existem: rode ramon:fluxos:reunioes:sombra' if lista.size < GATILHOS.size
+    raise ArgumentError, 'Ligue RAMON_FLUXO_REUNIOES=on antes (sem ela o código continua fazendo tudo)' if modo == 'normal' && !ligada?
+
+    Fluxo.transaction { lista.each { |fluxo| fluxo.update!(modo: modo) } }
+    lista
+  end
+
+  def descrever(account)
+    quem = assumiu?(account) ? 'os FLUXOS fazem o agendamento (o código não faz mais)' : 'o CÓDIGO faz o agendamento (os fluxos ensaiam)'
+    linhas = fluxos(account).map { |f| "Fluxo ##{f.id} \"#{f.nome}\" — modo #{f.modo}, #{f.ativo ? 'ligado' : 'desligado'}" }
+    [*linhas, "Agora #{quem}."].join("\n")
+  end
 end

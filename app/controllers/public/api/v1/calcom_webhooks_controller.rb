@@ -58,9 +58,9 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
     lead = open_lead_for(matched_contact)
     return :ok if lead.blank?
 
-    purge_calcom_tasks(lead, due_at: start_at)
-    lead.lead_activities.create!(account: account, kind: 'meeting_cancelled', to_value: meeting_summary)
-    notify(lead, 'ramon_meeting_cancelled')
+    # B4.1: o mesmo cancelar do painel (o código ou o fluxo "Reunião cancelada" faz, conforme a chave)
+    Ramon::ReuniaoAgendamento.cancelar_tarefas(lead: lead, tarefas: calcom_tasks(lead, due_at: start_at).to_a,
+                                               starts_at: start_at, title: event_title)
     :ok
   end
 
@@ -71,7 +71,7 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
     # antigo — apaga as reuniões Cal.com abertas do lead e cria a nova; se um
     # lead precisar de várias reuniões simultâneas, gravar o uid na task.
     lead = matched_or_created_lead
-    purge_calcom_tasks(lead)
+    calcom_tasks(lead).destroy_all
     register_meeting(lead)
     :ok
   end
@@ -83,10 +83,6 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
                                    task_title: "#{TASK_TITLE_PREFIX}: #{event_title}")
   end
 
-  def notify(lead, type)
-    Ramon::ReuniaoAgendamento.notify(lead, type, start_at, event_title)
-  end
-
   # Nome do tipo de evento ("Primeiro Atendimento"), não o título do booking
   # ("Primeiro Atendimento between X and Y") que o Cal.com monta.
   def event_title
@@ -94,14 +90,9 @@ class Public::Api::V1::CalcomWebhooksController < PublicController
       booking[:title].to_s.sub(/ between .*\z/, '')
   end
 
-  def purge_calcom_tasks(lead, due_at: nil)
+  def calcom_tasks(lead, due_at: nil)
     tasks = lead.lead_tasks.open_tasks.where(kind: 'meeting').where('title LIKE ?', "#{TASK_TITLE_PREFIX}%")
-    tasks = tasks.where(due_at: due_at) if due_at.present?
-    tasks.destroy_all
-  end
-
-  def meeting_summary
-    Ramon::ReuniaoAgendamento.resumo(event_title, start_at)
+    due_at.present? ? tasks.where(due_at: due_at) : tasks
   end
 
   def booking

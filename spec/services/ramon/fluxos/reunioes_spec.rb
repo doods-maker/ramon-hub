@@ -49,4 +49,35 @@ RSpec.describe Ramon::Fluxos::Reunioes do
       expect(lidos.pluck('tipo')).to eq(['novo'])
     end
   end
+
+  describe 'a chave (RAMON_FLUXO_REUNIOES=on + os 3 fluxos em modo normal)' do
+    let!(:fluxos) do
+      described_class::GATILHOS.to_h do |chave, gatilho|
+        [chave, fluxo_publicado(account, grafo_linear({ 'tipo' => gatilho }, ['parar', {}]), sistema_chave: chave, modo: 'sombra')]
+      end
+    end
+
+    it 'só assume com a env ligada e os 3 normais, ligados, publicados e com o gatilho certo' do
+      expect(described_class.assumiu?(account)).to be(false)
+      with_modified_env(RAMON_FLUXO_REUNIOES: 'on') do
+        expect(described_class.assumiu?(account)).to be(false) # ainda em sombra
+        described_class.mudar_modo!(account, 'normal')
+        expect(described_class.assumiu?(account)).to be(true)
+        fluxos['reuniao_cancelada'].update!(ativo: false)
+        expect(described_class.assumiu?(account)).to be(false) # 1 desligado na tela devolve tudo ao código
+      end
+      fluxos['reuniao_cancelada'].update!(ativo: true)
+      expect(described_class.assumiu?(account)).to be(false) # sem a env
+    end
+
+    it 'virar para normal sem a env é recusado; voltar para sombra vira os 3 juntos' do
+      expect { described_class.mudar_modo!(account, 'normal') }.to raise_error(ArgumentError, /RAMON_FLUXO_REUNIOES/)
+      with_modified_env(RAMON_FLUXO_REUNIOES: 'on') do
+        described_class.mudar_modo!(account, 'normal')
+        described_class.mudar_modo!(account, 'sombra')
+      end
+      expect(fluxos.values.map { |f| f.reload.modo }).to all(eq('sombra'))
+      expect(described_class.descrever(account)).to include('o CÓDIGO faz o agendamento')
+    end
+  end
 end
