@@ -93,6 +93,18 @@ describe('#shortTimestamp', () => {
     expect(shortTimestamp('1 year ago', true)).toEqual('1y ago');
     expect(shortTimestamp('4 years ago', true)).toEqual('4y ago');
   });
+
+  it('encurta o tempo em pt-BR (saída do dynamicTime)', () => {
+    expect(shortTimestamp('há menos de um minuto')).toEqual('agora');
+    expect(shortTimestamp('há 1 minuto')).toEqual('1min');
+    expect(shortTimestamp('há 12 minutos')).toEqual('12min');
+    expect(shortTimestamp('há cerca de 10 horas')).toEqual('10h');
+    expect(shortTimestamp('há 3 dias')).toEqual('3d');
+    expect(shortTimestamp('há cerca de 1 mês')).toEqual('1mês');
+    expect(shortTimestamp('há 2 meses')).toEqual('2mês');
+    expect(shortTimestamp('há mais de 1 ano')).toEqual('1a');
+    expect(shortTimestamp('há 3 dias', true)).toEqual('há 3d');
+  });
 });
 
 describe('#getDayDifferenceFromNow', () => {
