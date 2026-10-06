@@ -1139,6 +1139,7 @@
       "ITEM_CONTENT_PLACEHOLDER": "Conteúdo / roteiro…",
       "ITEM_ADD": "Adicionar item",
       "ITEM_EMPTY": "Nenhum item nesta seção ainda.",
+      "NOME_HINT": "Use {marcador} no roteiro — o primeiro nome do lead entra na hora de copiar.",
       "SECTIONS": {
         "ABERTURA": "Abertura",
         "APRESENTACAO": "Apresentação",

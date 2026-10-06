@@ -1139,6 +1139,7 @@
       "ITEM_CONTENT_PLACEHOLDER": "Content / script…",
       "ITEM_ADD": "Add item",
       "ITEM_EMPTY": "No items in this section yet.",
+      "NOME_HINT": "Use {marcador} in the script — the lead’s first name is filled in when copying.",
       "SECTIONS": {
         "ABERTURA": "Opening",
         "APRESENTACAO": "Presentation",

@@ -6,6 +6,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, TITULO, CHIP, TOM } from '../../helpers/ui';
+import { preencherScript } from '../../helpers/scripts';
 
 const props = defineProps({
   lead: { type: Object, default: null },
@@ -82,7 +83,7 @@ const sections = computed(() => {
 const copiedId = ref(null);
 const copy = async item => {
   try {
-    await copyTextToClipboard(item.content);
+    await copyTextToClipboard(preencherScript(item.content, props.lead));
   } catch (e) {
     useAlert(t('RAMON.DOCS.COPY_FAILED'));
     return;

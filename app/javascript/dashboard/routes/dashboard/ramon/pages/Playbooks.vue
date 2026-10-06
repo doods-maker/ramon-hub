@@ -221,6 +221,9 @@ const confirmRemoveItem = () => {
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
+// marcador literal: dentro do template, as chaves duplas fechariam o {{ }}
+const MARCADOR_NOME = '{{nome}}';
+
 const sectionLabelKey = section =>
   `RAMON.PLAYBOOKS.SECTIONS.${section.toUpperCase()}`;
 
@@ -426,6 +429,14 @@ onMounted(() => store.dispatch('theses/get'));
                 </label>
               </div>
             </div>
+
+            <p
+              data-testid="playbooks-nome-hint"
+              class="m-0 flex items-center gap-1.5 text-xs text-n-slate-10"
+            >
+              <span class="i-lucide-info size-3.5 shrink-0" />
+              {{ $t('RAMON.PLAYBOOKS.NOME_HINT', { marcador: MARCADOR_NOME }) }}
+            </p>
 
             <!-- Seções em coluna única: roteiro longo pede linha larga (lado a lado
                  o campo de novo item ficava estreito demais) -->

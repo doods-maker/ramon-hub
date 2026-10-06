@@ -124,4 +124,25 @@ describe('LeadPlaybook.vue', () => {
       true
     );
   });
+  it('copia o roteiro com {{nome}} já trocado pelo primeiro nome do lead', async () => {
+    const thesis = {
+      ...thesisWithItems,
+      items: [
+        {
+          id: 7,
+          section: 'qualificacao',
+          title: 'Abrir',
+          content: 'Olá {{nome}}, tudo bem?',
+        },
+      ],
+    };
+    const wrapper = mountPlaybook(
+      { id: 1, thesis_id: 1, contact_name: 'Maria Souza' },
+      [thesis]
+    );
+    await wrapper.find('[data-testid="playbook-copy"]').trigger('click');
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      'Olá Maria, tudo bem?'
+    );
+  });
 });
