@@ -705,6 +705,15 @@ RSpec.describe 'Leads API', type: :request do
       expect { registrar(closer) }.not_to(change { lead.reload.reuniao_registrada_em })
     end
 
+    it 'vou_pensar grava a marca à parte, sem mexer no resultado', :aggregate_failures do
+      lead.update!(closer: closer)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao",
+           params: { resultado: 'qualificada', vou_pensar: true }, headers: closer.create_new_auth_token, as: :json
+
+      expect(lead.reload.reuniao_resultado).to eq('qualificada')
+      expect(lead.lead_activities.where(kind: 'vou_pensar').count).to eq(1)
+    end
+
     it 'resultado inválido dá 422' do
       registrar(admin, 'talvez')
       expect(response).to have_http_status(:unprocessable_entity)

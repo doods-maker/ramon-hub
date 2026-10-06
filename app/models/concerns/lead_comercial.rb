@@ -21,13 +21,15 @@ module LeadComercial
   # vale (correção não muda o mês da apuração); quem marca vira Closer se o lead
   # não tinha; o lead anda pra "Reunião realizada", nunca volta. A tarefa da
   # reunião (a informada, senão a aberta mais antiga até hoje) é concluída.
-  def registrar_reuniao!(resultado, user, task: nil)
+  # vou_pensar: o cliente vai pensar — marca à parte (atividade), NUNCA um 3º
+  # resultado: a qualificação é o que paga o SDR e não muda por isso.
+  def registrar_reuniao!(resultado, user, task: nil, vou_pensar: false)
     attrs = { reuniao_resultado: resultado, reuniao_registrada_em: reuniao_registrada_em || Time.current }
     attrs[:closer] = user if closer_id.blank?
     stage = account.lead_stages.find_by(label: ETAPA_REUNIAO_REALIZADA)
     attrs[:lead_stage] = stage if stage && lead_stage.position < stage.position
     update!(attrs)
-    lead_activities.create!(account: account, user: user, kind: 'reuniao_registrada', to_value: resultado)
+    registrar_atividades_da_reuniao(resultado, user, vou_pensar)
     (task || reuniao_em_aberto)&.complete!(user)
   end
 
@@ -44,6 +46,11 @@ module LeadComercial
   end
 
   private
+
+  def registrar_atividades_da_reuniao(resultado, user, vou_pensar)
+    lead_activities.create!(account: account, user: user, kind: 'reuniao_registrada', to_value: resultado)
+    lead_activities.create!(account: account, user: user, kind: 'vou_pensar') if vou_pensar
+  end
 
   # Reunião que acabou de acontecer: aberta, marcada até o fim de hoje (a
   # futura, de outra conversa já marcada, não é fechada por engano).

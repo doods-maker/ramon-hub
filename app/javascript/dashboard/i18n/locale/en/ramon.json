@@ -1031,7 +1031,10 @@
           "FLUXO": "logged (automation)",
           "ZAPSIGN_REFUSED": "refused the contract on ZapSign",
           "MEETING_RESCHEDULED": "rescheduled the meeting",
-          "MEETING_NO_SHOW": "recorded a no-show"
+          "MEETING_NO_SHOW": "recorded a no-show",
+          "VOU_PENSAR": "marked that the client will think it over",
+          "CONTRATO_CANCELADO": "contract cancelled (left Closed)",
+          "REGISTRO_COMPLETO": "record complete (thesis, CPF, birth date and SDR note)"
         }
       },
       "LOADING": "Loading lead…",
@@ -1568,6 +1571,7 @@
       "TITULO": "Meeting (Closer)",
       "QUALIFICADA": "Qualified",
       "NAO_QUALIFICADA": "Not qualified",
+      "VOU_PENSAR": "Client will think it over (did not sign on the spot)",
       "SEM_REGISTRO": "Meeting not recorded yet",
       "REGISTRADA_EM": "recorded on {data}",
       "ERRO": "Could not record the meeting — only the lead Closer or a manager can",

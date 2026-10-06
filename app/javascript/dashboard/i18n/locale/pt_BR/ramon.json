@@ -1031,7 +1031,10 @@
           "FLUXO": "registrou (automação)",
           "ZAPSIGN_REFUSED": "contrato recusado no ZapSign",
           "MEETING_RESCHEDULED": "remarcou a reunião",
-          "MEETING_NO_SHOW": "registrou que o cliente não compareceu"
+          "MEETING_NO_SHOW": "registrou que o cliente não compareceu",
+          "VOU_PENSAR": "marcou que o cliente vai pensar",
+          "CONTRATO_CANCELADO": "contrato cancelado (saiu de Fechado)",
+          "REGISTRO_COMPLETO": "registro completo (tese, CPF, nascimento e nota do SDR)"
         }
       },
       "LOADING": "Carregando lead…",
@@ -1573,6 +1576,7 @@
       "TITULO": "Reunião (Closer)",
       "QUALIFICADA": "Qualificada",
       "NAO_QUALIFICADA": "Não qualificada",
+      "VOU_PENSAR": "Cliente vai pensar (não fechou na hora)",
       "SEM_REGISTRO": "Reunião ainda não registrada",
       "REGISTRADA_EM": "registrada em {data}",
       "ERRO": "Não foi possível registrar a reunião — só o Closer do lead ou o gestor pode marcar",

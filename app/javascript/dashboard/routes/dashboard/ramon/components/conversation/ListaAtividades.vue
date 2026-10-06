@@ -52,6 +52,9 @@ const GRUPO = {
   meeting_rescheduled: 'reuniao',
   meeting_no_show: 'reuniao',
   reuniao_registrada: 'reuniao',
+  vou_pensar: 'reuniao',
+  contrato_cancelado: 'perda',
+  registro_completo: 'campo',
 };
 const grupoDe = activity => {
   if (activity.kind !== 'stage_changed') return GRUPO[activity.kind] || 'outro';

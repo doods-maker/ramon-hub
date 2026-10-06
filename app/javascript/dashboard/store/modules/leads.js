@@ -155,8 +155,16 @@ export const actions = {
   },
   // Registrar o resultado também conclui a tarefa da reunião: recarrega as
   // tarefas do lead (Próximo passo / Agenda).
-  registrarReuniao: async ({ commit, dispatch }, { id, resultado, taskId }) => {
-    const response = await LeadsAPI.registrarReuniao(id, resultado, taskId);
+  registrarReuniao: async (
+    { commit, dispatch },
+    { id, resultado, taskId, vouPensar }
+  ) => {
+    const response = await LeadsAPI.registrarReuniao(
+      id,
+      resultado,
+      taskId,
+      vouPensar
+    );
     commit(types.EDIT_LEAD, response.data);
     await dispatch('leadTasks/fetchForLead', id, { root: true });
     return response.data;

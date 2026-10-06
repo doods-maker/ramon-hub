@@ -161,7 +161,23 @@ describe('LeadNextAction', () => {
         id: 7,
         resultado: 'qualificada',
         taskId: 3,
+        vouPensar: false,
       });
+    });
+
+    it('"Cliente vai pensar" vai junto com o resultado', async () => {
+      const registrarReuniao = vi.fn().mockResolvedValue({});
+      const wrapper = mountCard({ tasks: [reuniao], registrarReuniao });
+      await wrapper.find('[data-testid="next-action-done"]').trigger('click');
+      await wrapper.find('[data-testid="resultado-vou-pensar"]').setValue(true);
+      await wrapper
+        .find('[data-testid="resultado-qualificada"]')
+        .trigger('click');
+      await flushPromises();
+      expect(registrarReuniao).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ resultado: 'qualificada', vouPensar: true })
+      );
     });
 
     it('Não compareceu conclui a tarefa com no-show', async () => {
