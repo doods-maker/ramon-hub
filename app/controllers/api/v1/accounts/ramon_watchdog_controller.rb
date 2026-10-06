@@ -36,7 +36,7 @@ class Api::V1::Accounts::RamonWatchdogController < Api::V1::Accounts::BaseContro
     {
       retomadas_24h: Current.account.lead_tasks.where(kind: 'follow_up', created_at: desde..).count,
       sugestoes_pendentes: Current.account.copilot_suggestions.pending.count,
-      execucoes_24h: Captain::ToolRun.where(account_id: Current.account.id, created_at: desde..).count,
+      execucoes_24h: Captain::ToolRun.fora_de_teste.where(account_id: Current.account.id, created_at: desde..).count,
       parados_agora: parados.size
     }
   end

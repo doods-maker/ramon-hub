@@ -29,9 +29,21 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   # fica registrado com status 'erro' na tela Execucoes.
   ERRO_NA_TOOL = 'A ferramenta falhou agora. Siga sem ela e avise que esse dado nao pode ser consultado no momento.'.freeze
 
+  # ramon: modo teste (Casos de teste da IA). Com source 'teste' no estado, so
+  # as consultas rodam; o resto devolve o que faria, sem executar nada.
+  SOURCE_TESTE = 'teste'.freeze
+
+  def self.teste?(tool_context)
+    tool_context&.state&.dig(:source).to_s == SOURCE_TESTE
+  end
+
+  def self.simulacao(nome, params)
+    "[TESTE] faria #{nome}(#{params.map { |chave, valor| "#{chave}: #{valor}" }.join(', ')})"
+  end
+
   def execute(tool_context, **params)
     inicio = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    resultado = super
+    resultado = escreve_em_teste?(tool_context) ? self.class.simulacao(id_catalogo, params) : super
     registrar_execucao(tool_context, params, resultado, 'ok', inicio)
     resultado
   rescue StandardError => e
@@ -42,20 +54,36 @@ class Captain::Tools::BasePublicTool < Agents::Tool
 
   private
 
+  # RubyLLM::Tool#name devolve "captain-tools-checar_prescricao"; o catalogo
+  # (config/agents/tools.yml) e as telas usam o id.
+  def id_catalogo
+    name.to_s.split('-').last
+  end
+
+  # Ferramenta fora do catalogo conta como escrita: no teste, na duvida, nao executa.
+  def escreve_em_teste?(tool_context)
+    return false unless self.class.teste?(tool_context)
+
+    ::Captain::Assistant.built_in_agent_tools.find { |tool| tool[:id] == id_catalogo }&.dig(:nivel) != 'consulta'
+  end
+
   def registrar_execucao(tool_context, params, resultado, status, inicio)
     ::Captain::ToolRun.create!(
-      account_id: @assistant&.account_id, assistant_id: @assistant&.id,
-      conversation_id: tool_context&.state&.dig(:conversation, :id),
+      account_id: @assistant&.account_id, assistant_id: @assistant&.id, **origem(tool_context),
       lead_id: Integer(params[:lead_id].to_s, exception: false),
-      # RubyLLM::Tool#name devolve "captain-tools-checar_prescricao"; a tela
-      # mostra o id do catalogo (config/agents/tools.yml).
-      tool_name: name.to_s.split('-').last, status: status,
+      tool_name: id_catalogo, status: status,
       params: params.except(:lead_id).transform_values(&:to_s),
       resultado: resultado.to_s.truncate(::Captain::ToolRun::MAX_RESULTADO),
       duration_ms: ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - inicio) * 1000).round
     )
   rescue StandardError => e
     Rails.logger.warn("Captain::ToolRun: nao registrou execucao de #{name} (#{e.class}: #{e.message})")
+  end
+
+  # source separa playground/teste do atendimento real nas telas.
+  def origem(tool_context)
+    state = tool_context&.state || {}
+    { conversation_id: state.dig(:conversation, :id), source: state[:source]&.to_s }
   end
 
   def account_scoped(model_class)

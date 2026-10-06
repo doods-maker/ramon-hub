@@ -69,6 +69,13 @@ const assistantRoutes = [
     name: 'captain_assistants_playground_index',
     meta,
   },
+  // ramon: Casos de teste da IA — aba do Testar, só administrador.
+  {
+    path: frontendURL('accounts/:accountId/captain/:assistantId/casos-teste'),
+    component: () => import('./casos/CasosTeste.vue'),
+    name: 'captain_assistants_casos_teste_index',
+    meta: metaAdmin,
+  },
   {
     path: frontendURL('accounts/:accountId/captain/:assistantId/inboxes'),
     component: AssistantInboxesIndex,
