@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps({
   imagens: { type: Array, required: true },
   legenda: { type: String, default: '' },
+  // @ que a Meta vai convidar como colaborador (detalhe.colaboradores).
+  colaboradores: { type: Array, default: () => [] },
 });
 
 const CONTA = 'ramonantonioadvogados'; // handle fixo da banca
@@ -31,15 +33,28 @@ watch(
 
 <template>
   <article
-    class="mx-auto w-full max-w-sm overflow-hidden rounded-xl border border-n-weak bg-white text-black"
+    class="mx-auto w-full max-w-sm overflow-hidden rounded-xl border border-n-weak bg-n-solid-1 text-n-slate-12"
   >
     <header class="flex items-center gap-2 p-3">
       <span
-        class="flex size-8 items-center justify-center rounded-full bg-black text-xs text-white"
+        class="flex size-8 items-center justify-center rounded-full bg-n-slate-12 text-xs font-semibold text-n-solid-1"
       >
         {{ SIGLA }}
       </span>
-      <span class="text-sm font-semibold">{{ CONTA }}</span>
+      <span class="flex min-w-0 flex-col">
+        <span class="text-sm font-semibold">{{ CONTA }}</span>
+        <span
+          v-if="colaboradores.length"
+          data-testid="colaboradores"
+          class="truncate text-xs text-n-slate-11"
+        >
+          {{
+            t('RAMON.CONTEUDO.COLABORADORES', {
+              nomes: colaboradores.map(c => `@${c}`).join(', '),
+            })
+          }}
+        </span>
+      </span>
     </header>
     <div class="relative aspect-[4/5] bg-n-alpha-2">
       <a :href="imagens[indice]" target="_blank" rel="noopener noreferrer">
@@ -54,7 +69,7 @@ watch(
         v-if="indice > 0"
         data-testid="anterior"
         type="button"
-        class="absolute left-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/80"
+        class="absolute left-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-n-solid-1/80 p-0 text-n-slate-12 shadow"
         @click="indice -= 1"
       >
         <span class="i-lucide-chevron-left" />
@@ -63,7 +78,7 @@ watch(
         v-if="indice < imagens.length - 1"
         data-testid="proximo"
         type="button"
-        class="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/80"
+        class="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-n-solid-1/80 p-0 text-n-slate-12 shadow"
         @click="indice += 1"
       >
         <span class="i-lucide-chevron-right" />
@@ -85,7 +100,7 @@ watch(
         v-if="cortada"
         data-testid="legenda-mais"
         type="button"
-        class="text-n-slate-10"
+        class="p-0 text-n-slate-10"
         @click="expandida = true"
       >
         {{ t('RAMON.CONTEUDO.MAIS') }}

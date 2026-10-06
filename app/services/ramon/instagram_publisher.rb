@@ -15,6 +15,11 @@ class Ramon::InstagramPublisher
 
   class Erro < StandardError; end
 
+  # Quem a Meta convida como colaborador: nomes citados na legenda (máx. 3).
+  def self.colaboradores(legenda)
+    COLABORADORES.filter_map { |nome, arroba| arroba if legenda.to_s.include?(nome) }.first(3)
+  end
+
   def initialize(peca, token: GlobalConfigService.load('RAMON_IG_PUBLISH_TOKEN', nil), espera: 5)
     @peca = peca
     @token = token
@@ -53,7 +58,7 @@ class Ramon::InstagramPublisher
   end
 
   def base
-    achados = COLABORADORES.filter_map { |nome, arroba| arroba if @peca.legenda.to_s.include?(nome) }.first(3)
+    achados = self.class.colaboradores(@peca.legenda)
     { caption: @peca.legenda }.merge(achados.any? ? { collaborators: achados.to_json } : {})
   end
 

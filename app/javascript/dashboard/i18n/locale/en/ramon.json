@@ -239,10 +239,9 @@
       "LABEL": "Name",
       "LABEL_PH": "AdvBox",
       "URL": "URL",
-      "ICON": "Icon (Lucide)",
+      "ICON": "Icon",
       "ADD": "Add",
       "URL_PH": "https://…",
-      "ICON_PH": "i-lucide-…",
       "URL_INVALID": "Invalid URL — check the address.",
       "REMOVE_CONFIRM": "Remove this shortcut?"
     },
@@ -655,7 +654,19 @@
       "AGENDADA_PARA": "Scheduled for {quando}",
       "CANCELAR": "Cancel schedule",
       "TENTAR_DE_NOVO": "Try again",
-      "VER_NO_INSTAGRAM": "View on Instagram"
+      "VER_NO_INSTAGRAM": "View on Instagram",
+      "CONFIRMAR_PUBLICAR": "Publish now?",
+      "CONFIRMAR_PUBLICAR_MSG": "The post goes live on Instagram within about a minute. This cannot be undone from here.",
+      "CONFIRMAR_TENTAR": "Try publishing again?",
+      "CONFIRMAR_TENTAR_MSG": "The post goes back to the queue and goes live within about a minute.",
+      "CONFERI": "I checked Instagram and the post is not there",
+      "SEM_TOKEN": "Instagram token not configured — scheduling and publishing are blocked until it is set in super admin (RAMON_IG_PUBLISH_TOKEN).",
+      "VOLTAR_PRONTAS": "Back to Ready",
+      "CONTADOR_CARACTERES": "{n}/{limite} characters",
+      "CONTADOR_HASHTAGS": "{n}/{limite} hashtags",
+      "PUBLICANDO": "Publishing to Instagram…",
+      "NA_FILA": "In the publishing queue — goes live within a minute",
+      "COLABORADORES": "invites {nomes} as collaborator"
     },
     "REUNIOES": {
       "TITLE": "Meetings",
@@ -1513,7 +1524,8 @@
       "NEXT": "Next appointment",
       "NEXT_EMPTY": "Nothing scheduled.",
       "TICKER_NOW": "Now:",
-      "TICKER": "{closer} closed {lead} — {value} · {benefit}"
+      "TICKER": "{closer} closed {lead} — {value} · {benefit}",
+      "STALE": "out of date for {min} min"
     },
     "COPILOTO": {
       "BTN": "Copilot: {modo}",

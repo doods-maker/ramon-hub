@@ -12,9 +12,11 @@ class Api::V1::Accounts::RamonRelatoriosController < Api::V1::Accounts::BaseCont
     return render json: { configured: false } if not_configured
 
     # exp 8h (Metabase revalida a cada interação do iframe): URL-bearer vive mais no access log do bi.*, mas só lê o dashboard embarcado.
-    payload = { resource: { dashboard: dashboard_id.to_i }, params: {}, exp: 8.hours.from_now.to_i }
+    expira = 8.hours.from_now
+    payload = { resource: { dashboard: dashboard_id.to_i }, params: {}, exp: expira.to_i }
     token = JWT.encode(payload, secret, 'HS256')
-    render json: { configured: true, url: "#{site_url}/embed/dashboard/#{token}#{EMBED_HASH}" }
+    # expires_at: a tela renova o link um pouco antes de vencer.
+    render json: { configured: true, url: "#{site_url}/embed/dashboard/#{token}#{EMBED_HASH}", expires_at: expira.iso8601 }
   end
 
   private

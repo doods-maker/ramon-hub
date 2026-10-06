@@ -316,6 +316,7 @@ Rails.application.routes.draw do
               post :publicar_agora
               post :cancelar_agendamento
               post :tentar_de_novo
+              post :voltar_prontas
             end
           end
           resources :portal_clientes, only: [:index, :show, :create, :update, :destroy], controller: 'portal_clientes' do

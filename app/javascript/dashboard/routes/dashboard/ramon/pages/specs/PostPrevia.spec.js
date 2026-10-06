@@ -32,4 +32,15 @@ describe('PostPrevia', () => {
     await w.find('[data-testid="legenda-mais"]').trigger('click');
     expect(w.find('[data-testid="legenda"]').text()).toContain('a'.repeat(200));
   });
+
+  it('mostra quem será convidado como colaborador', () => {
+    const w = mount(PostPrevia, {
+      props: { imagens, legenda: 'x', colaboradores: ['brendantunes'] },
+    });
+    expect(w.find('[data-testid="colaboradores"]').text()).toBe(
+      'RAMON.CONTEUDO.COLABORADORES'
+    );
+    const sem = mount(PostPrevia, { props: { imagens, legenda: 'x' } });
+    expect(sem.find('[data-testid="colaboradores"]').exists()).toBe(false);
+  });
 });

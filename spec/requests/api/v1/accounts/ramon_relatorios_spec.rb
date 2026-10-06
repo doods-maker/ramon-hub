@@ -48,5 +48,6 @@ RSpec.describe 'Ramon Relatorios API', type: :request do
     expect(payload['resource']).to eq('dashboard' => 7)
     expect(body['url']).to start_with('https://bi.test/embed/dashboard/')
     expect(body['url']).to end_with('#theme=night&bordered=false&titled=false')
+    expect(Time.zone.parse(body['expires_at'])).to be_within(1.minute).of(8.hours.from_now)
   end
 end

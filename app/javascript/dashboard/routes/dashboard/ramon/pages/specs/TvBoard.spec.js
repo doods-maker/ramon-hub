@@ -182,6 +182,28 @@ describe('TvBoard.vue', () => {
     expect(notes[3]).toBe('RAMON.TV.NOTE_STABLE');
   });
 
+  it('troca "ao vivo" por "desatualizado" após 3 min sem fetch bem-sucedido', async () => {
+    vi.useFakeTimers();
+    const wrapper = await mountPage();
+    const selo = () => wrapper.find('[data-testid="tv-live"]').text();
+    expect(selo()).toContain('RAMON.TV.LIVE');
+
+    // fetch falhando: o objeto do store não muda
+    vi.advanceTimersByTime(2 * 60 * 1000);
+    await flushPromises();
+    expect(selo()).toContain('RAMON.TV.LIVE');
+    vi.advanceTimersByTime(60 * 1000);
+    await flushPromises();
+    expect(selo()).toContain('RAMON.TV.STALE');
+
+    // fetch voltou: dado novo volta o selo pra "ao vivo"
+    dataRef.value = payload();
+    await flushPromises();
+    expect(selo()).toContain('RAMON.TV.LIVE');
+    wrapper.unmount();
+    vi.useRealTimers();
+  });
+
   it('hides the ticker when there is no win today', async () => {
     const data = payload();
     data.tv.last_won = null;

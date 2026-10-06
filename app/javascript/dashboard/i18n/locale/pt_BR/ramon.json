@@ -239,10 +239,9 @@
       "LABEL": "Nome",
       "LABEL_PH": "AdvBox",
       "URL": "URL",
-      "ICON": "Ícone (Lucide)",
+      "ICON": "Ícone",
       "ADD": "Adicionar",
       "URL_PH": "https://…",
-      "ICON_PH": "i-lucide-…",
       "URL_INVALID": "URL inválida — confira o endereço.",
       "REMOVE_CONFIRM": "Remover este atalho?"
     },
@@ -655,7 +654,19 @@
       "AGENDADA_PARA": "Agendada para {quando}",
       "CANCELAR": "Cancelar agendamento",
       "TENTAR_DE_NOVO": "Tentar de novo",
-      "VER_NO_INSTAGRAM": "Ver no Instagram"
+      "VER_NO_INSTAGRAM": "Ver no Instagram",
+      "CONFIRMAR_PUBLICAR": "Publicar agora?",
+      "CONFIRMAR_PUBLICAR_MSG": "O post vai ao ar no Instagram em até 1 minuto. Daqui não dá pra desfazer.",
+      "CONFIRMAR_TENTAR": "Tentar publicar de novo?",
+      "CONFIRMAR_TENTAR_MSG": "A peça volta pra fila e vai ao ar em até 1 minuto.",
+      "CONFERI": "Conferi no Instagram e o post não está lá",
+      "SEM_TOKEN": "Token do Instagram não configurado — agendar e publicar ficam bloqueados até configurar no super admin (RAMON_IG_PUBLISH_TOKEN).",
+      "VOLTAR_PRONTAS": "Voltar para Prontas",
+      "CONTADOR_CARACTERES": "{n}/{limite} caracteres",
+      "CONTADOR_HASHTAGS": "{n}/{limite} hashtags",
+      "PUBLICANDO": "Publicando no Instagram…",
+      "NA_FILA": "Na fila de publicação — vai ao ar em até 1 minuto",
+      "COLABORADORES": "convida {nomes} como colaborador"
     },
     "REUNIOES": {
       "TITLE": "Reuniões",
@@ -1513,7 +1524,8 @@
       "NEXT": "Próximo compromisso",
       "NEXT_EMPTY": "sem compromisso agendado",
       "TICKER_NOW": "Agora:",
-      "TICKER": "{closer} fechou {lead} — {value} · {benefit}"
+      "TICKER": "{closer} fechou {lead} — {value} · {benefit}",
+      "STALE": "desatualizado há {min} min"
     },
     "COPILOTO": {
       "BTN": "Copiloto: {modo}",
