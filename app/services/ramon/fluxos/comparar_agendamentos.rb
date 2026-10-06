@@ -18,7 +18,8 @@ class Ramon::Fluxos::CompararAgendamentos
   def linhas
     @linhas ||= begin
       sobra = eventos_do_codigo
-      casadas = ensaios.map { |execucao| casar(execucao, sobra) }
+      lista = ensaios
+      casadas = lista.map { |execucao| casar(execucao, sobra, lista) }
       (casadas + sobra.map { |atividade| so_codigo(atividade) }).sort_by { |item| item[:em] }
     end
   end
@@ -31,21 +32,28 @@ class Ramon::Fluxos::CompararAgendamentos
 
   def ensaios
     fluxos = Ramon::Fluxos::Reunioes.fluxos(@account).where(sistema_chave: %w[reuniao_marcada reuniao_cancelada])
-    FluxoExecucao.where(fluxo: fluxos, ensaio: true, alvo_type: 'Lead', created_at: de..ate).includes(:alvo)
+    FluxoExecucao.where(fluxo: fluxos, ensaio: true, alvo_type: 'Lead', created_at: de..ate).order(:created_at).includes(:alvo)
                  .reject { |execucao| execucao.contexto['pular_esperas'] }
   end
 
   def eventos_do_codigo = @account.lead_activities.where(kind: KINDS.values, created_at: de..ate).includes(:lead).to_a
 
-  def casar(execucao, sobra)
+  def casar(execucao, sobra, todos)
     evento = execucao.contexto.dig('gatilho', 'evento')
     inicio = execucao.created_at
-    janela = inicio..(inicio + JANELA)
+    janela = inicio...fim(execucao, todos)
     atividade = sobra.delete(sobra.find { |a| a.lead_id == execucao.alvo_id && a.kind == KINDS[evento] && janela.cover?(a.created_at) })
     fluxo = do_fluxo(execucao)
     codigo = atividade ? do_codigo(execucao, janela) : []
     { evento: evento, em: inicio, lead_id: execucao.alvo_id, lead: execucao.alvo&.name,
       situacao: situacao(atividade, codigo, fluxo), so_no_codigo: menos(codigo, fluxo), so_no_fluxo: menos(fluxo, codigo) }
+  end
+
+  # Fim (exclusivo) da janela: 1 min depois do ensaio, ou o próximo ensaio do mesmo lead, se vier antes — dois eventos
+  # do mesmo lead no mesmo minuto não dividem rastros.
+  def fim(execucao, todos)
+    proximo = todos.find { |e| e.alvo_id == execucao.alvo_id && e.created_at > execucao.created_at }
+    [execucao.created_at + JANELA, proximo&.created_at].compact.min
   end
 
   def situacao(atividade, codigo, fluxo)

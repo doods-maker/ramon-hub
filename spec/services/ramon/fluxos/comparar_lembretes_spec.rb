@@ -17,17 +17,17 @@ RSpec.describe Ramon::Fluxos::CompararLembretes do
   after { Redis::Alfred.delete(Ramon::Fluxos::Reunioes.chave_rastro(account)) }
 
   # O que o MeetingReminderJob grava: 1 rastro por lembrete, com quem recebeu o sino.
-  def codigo_avisou(em, pessoas, rotulo: '8h antes', alvo: lead)
+  def codigo_avisou(momento, pessoas, rotulo: '8h antes', alvo: lead)
     dados = { 'tipo' => 'lembrete', 'lead_id' => alvo.id, 'inicio' => '2026-10-07T22:00:00Z', 'rotulo' => rotulo,
               'user_ids' => pessoas.map(&:id) }
-    travel_to(em) { Ramon::Fluxos::Reunioes.rastro!(account, dados) }
+    travel_to(momento) { Ramon::Fluxos::Reunioes.rastro!(account, dados) }
   end
 
   # O que a sombra grava: a linha "faria: sino para …" do ciclo (execuções concluídas: fora do índice único).
-  def fluxo_ensaiou(em, pessoas, contexto: {})
+  def fluxo_ensaiou(momento, pessoas, contexto: {})
     resumo = "faria: sino para #{pessoas.map(&:name).sort.join(', ')}: \"Reunião em 8h antes\""
-    linha = { 'no' => 'n8', 'tipo' => 'avisar_sino', 'em' => em.iso8601, 'saida' => 's', 'resumo' => resumo, 'erro' => false }
-    travel_to(em) do
+    linha = { 'no' => 'n8', 'tipo' => 'avisar_sino', 'em' => momento.iso8601, 'saida' => 's', 'resumo' => resumo, 'erro' => false }
+    travel_to(momento) do
       Ramon::Fluxos::Reunioes.fluxo(account, 'lembretes_reuniao').execucoes.create!(
         account: account, alvo: lead, ensaio: true, status: 'concluida', trilha: [linha],
         contexto: contexto.merge('gatilho' => { 'lead_id' => lead.id })

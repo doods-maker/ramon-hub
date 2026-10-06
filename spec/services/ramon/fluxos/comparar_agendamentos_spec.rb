@@ -41,6 +41,13 @@ RSpec.describe Ramon::Fluxos::CompararAgendamentos do
     expect(comparar.relatorio).to include('Resultado: NÃO BATEU')
   end
 
+  it 'dois eventos do mesmo lead no mesmo minuto: cada um fica com os seus rastros' do
+    marcar
+    tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
+    travel_to(agora + 30.seconds) { Ramon::ReuniaoAgendamento.remarcar(task: tarefa, starts_at: inicio + 1.day) }
+    expect(comparar.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada igual], %w[remarcada igual]])
+  end
+
   it 'evento que o fluxo não viu aparece como só no código' do
     travel_to(agora) { lead.lead_activities.create!(account: account, kind: 'meeting_cancelled', to_value: 'X em 07/10/2026 19:00') }
     expect(comparar.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[cancelada so_codigo]])

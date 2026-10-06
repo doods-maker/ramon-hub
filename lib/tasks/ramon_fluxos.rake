@@ -22,15 +22,16 @@ namespace :ramon do
         puts Ramon::Fluxos::Reunioes.descrever(account)
       end
 
-      desc 'SO LEITURA: agendamentos e lembretes do codigo x fluxos em sombra (janela de no maximo 8 dias). ' \
-           'Uso: rake ramon:fluxos:reunioes:comparar[account_id,dias] (padrao 1 dia; rodar todo dia)'
+      desc 'SO LEITURA: codigo x fluxos em sombra (max 8 dias). Uso: rake ramon:fluxos:reunioes:comparar[account_id,dias] (padrao 1 dia)'
       task :comparar, [:account_id, :dias] => :environment do |_task, args|
         account = conta.call(args)
         dias = (args[:dias].presence || 1).to_i
+        puts 'AVISO: fluxos no comando (atividades iguais às do código): a comparação não vale' if Ramon::Fluxos::Reunioes.assumiu?(account)
         comparacoes = [Ramon::Fluxos::CompararAgendamentos, Ramon::Fluxos::CompararLembretes].map { |k| k.new(account, dias: dias) }
         puts comparacoes.map(&:relatorio).join("\n\n")
-        geral = comparacoes.sum(&:divergencias).zero? ? 'BATEU' : 'NÃO BATEU'
-        puts "\nResultado geral: #{geral} (#{comparacoes.sum { |c| c.linhas.size }} comparações)"
+        total = comparacoes.sum { |c| c.linhas.size }
+        geral = comparacoes.sum(&:divergencias).zero? ? "BATEU (#{total} comparações)" : "NÃO BATEU (#{total} comparações)"
+        puts "\nResultado geral: #{total.zero? ? 'nada para comparar' : geral}"
       end
     end
   end
