@@ -647,6 +647,8 @@ const copyPhone = async () => {
 const conversationExtrasOpen = ref(false);
 
 // ----- "Não é lead" (destrutivo: confirmação inline, só na conversa) -----
+// Excluir lead é só do administrador (regra 06/10; o backend também recusa).
+const podeDescartar = computed(() => inConversation.value && isAdmin.value);
 const discardPrompt = ref(false);
 // "⋯" ao lado do nome: "Não é lead" e, para admin, "Rodar fluxo…"
 const menuAberto = ref(false);
@@ -775,7 +777,7 @@ const discard = async () => {
               />
             </router-link>
             <div
-              v-if="inConversation || podeRodarFluxo"
+              v-if="podeDescartar || podeRodarFluxo"
               ref="menuEl"
               class="relative shrink-0"
             >
@@ -795,7 +797,7 @@ const discard = async () => {
                 :class="MENU"
               >
                 <button
-                  v-if="inConversation"
+                  v-if="podeDescartar"
                   type="button"
                   data-testid="lead-discard"
                   class="flex items-center gap-2 text-n-ruby-11"
