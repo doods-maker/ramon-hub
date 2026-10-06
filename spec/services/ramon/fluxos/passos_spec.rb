@@ -125,6 +125,49 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     expect(r[:resumo]).to eq('sino: sem responsável')
   end
 
+  it 'sino para Closer e SDR (sem nenhum dos dois, os administradores) e para a conta toda' do
+    closer = create(:user, account: account)
+    sdr = create(:user, account: account)
+    admin = create(:user, account: account, role: :administrator)
+    c = ctx
+    c.lead.update!(closer: closer, sdr: sdr)
+    avisados = -> { Notification.where(notification_type: 'ramon_fluxo_aviso').pluck(:user_id) }
+    Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Reunião', 'para' => 'closer_e_sdr' }, c)
+    expect(avisados.call).to contain_exactly(closer.id, sdr.id)
+    c.lead.update!(closer: nil, sdr: nil)
+    Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Reunião', 'para' => 'closer_e_sdr' }, c)
+    expect(avisados.call).to contain_exactly(closer.id, sdr.id, admin.id)
+    Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Marcada', 'para' => 'conta' }, c)
+    expect(avisados.call.count).to eq(3 + account.account_users.count)
+  end
+
+  it 'ensaio do sino diz quem receberia, sem gravar nada' do
+    ana = create(:user, account: account, name: 'Ana')
+    c = ctx(ensaio: true)
+    c.lead.update!(closer: ana)
+    r = nil
+    expect { r = Ramon::Fluxos::Passos::Aviso.avisar_sino({ 'texto' => 'Ver {nome}' }, c) }.not_to change(Notification, :count)
+    expect(r[:resumo]).to start_with('faria: sino para Ana: "Ver ')
+  end
+
+  it 'etapa só para a frente: quem já está adiante fica onde está' do
+    atras = create(:lead_stage, account: account, position: 0)
+    c = ctx
+    r = Ramon::Fluxos::Passos::Lead.mover_etapa({ 'etapa_id' => atras.id, 'so_para_frente' => true }, c)
+    expect(r[:resumo]).to eq("etapa: já está em #{lead.lead_stage.name} (só para a frente)")
+    expect(lead.reload.lead_stage).not_to eq(atras)
+  end
+
+  it 'Closer só se o lead ainda não tem' do
+    ana = create(:user, account: account, name: 'Ana')
+    create(:team_member, team: create(:team, account: account, name: 'closer'), user: create(:user, account: account))
+    c = ctx
+    c.lead.update!(closer: ana)
+    r = Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'closer', 'so_se_vazio' => true }, c)
+    expect(r[:resumo]).to eq('closer: já tem Ana')
+    expect(lead.reload.closer).to eq(ana)
+  end
+
   it 'registrar atividade escreve na linha do tempo do lead' do
     Ramon::Fluxos::Passos::Lead.registrar_atividade({ 'texto' => 'Boas-vindas para {nome}' }, ctx)
     expect(lead.lead_activities.find_by(kind: 'fluxo').to_value).to start_with('Boas-vindas para')

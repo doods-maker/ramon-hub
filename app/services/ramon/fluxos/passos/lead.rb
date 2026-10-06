@@ -5,6 +5,10 @@ module Ramon::Fluxos::Passos::Lead
   def mover_etapa(config, ctx)
     lead = exigir_lead(ctx)
     etapa = lead.account.lead_stages.find(config['etapa_id'])
+    # B4.1: "só para a frente" (como a reunião marcada do código): quem já está adiante fica onde está
+    if config['so_para_frente'] && lead.lead_stage.position >= etapa.position
+      return { saida: 's', resumo: "etapa: já está em #{lead.lead_stage.name} (só para a frente)" }
+    end
     return { saida: 's', resumo: "faria: mover para #{etapa.name}" } if ctx.ensaio?
 
     lead.update!(lead_stage: etapa)
@@ -39,12 +43,22 @@ module Ramon::Fluxos::Passos::Lead
     lead = exigir_lead(ctx)
     papel = config['papel']
     coluna = Ramon::Papeis::COLUNA[papel] || raise(Ramon::Fluxos::PassoImpossivel, "papel desconhecido: #{papel}")
+    feito = ja_tem(config, lead, coluna, papel)
+    return feito if feito
+
     pessoa = config['user_id'].present? ? usuario_da_conta(lead, config['user_id']) : Ramon::Papeis.proximo(lead.account, papel)
     return { saida: 's', resumo: "#{papel}: ninguém no time" } if pessoa.nil?
     return { saida: 's', resumo: "faria: #{papel} → #{pessoa.name}" } if ctx.ensaio?
 
     lead.update!(coluna => pessoa.id)
     { saida: 's', resumo: "#{papel} → #{pessoa.name}" }
+  end
+
+  # B4.1: "só se ainda não tem" (o Closer automático da reunião marcada não troca quem já está).
+  def ja_tem(config, lead, coluna, papel)
+    return unless config['so_se_vazio'] && lead[coluna].present?
+
+    { saida: 's', resumo: "#{papel}: já tem #{User.find_by(id: lead[coluna])&.name}" }
   end
 
   # Grava em custom_attributes['campos'] (nunca na raiz: zapsign/advbox/doc_status são do hub).
