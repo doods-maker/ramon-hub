@@ -86,6 +86,10 @@ describe('Execução de fluxo', () => {
     expect(wrapper.text()).toContain('Aviso');
     expect(wrapper.text()).toContain('faria: nota "oi"');
     expect(wrapper.text()).toContain('dry run');
+    // gatilho: o título já traz o gatilho traduzido; a chave crua não aparece
+    const [gatilho] = wrapper.findAll('[data-testid="trilha-item"]');
+    expect(gatilho.find('b').text()).not.toBe('manual');
+    expect(gatilho.find('p').exists()).toBe(false);
   });
 
   it('"Voltar a editar" abre o editor do fluxo', async () => {

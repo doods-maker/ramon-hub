@@ -77,6 +77,12 @@ const tituloLinha = linha => {
     return t(`${K}.GATILHOS.${no?.config?.tipo}`, t(`${K}.PASSOS.gatilho`));
   return PASSOS[linha.tipo] ? t(`${K}.PASSOS.${linha.tipo}`) : linha.tipo;
 };
+// gatilho: o resumo é a chave do gatilho — traduz, e some se repete o título
+const resumoLinha = linha => {
+  if (linha.tipo !== 'gatilho') return linha.resumo;
+  const rotulo = t(`${K}.GATILHOS.${linha.resumo}`, linha.resumo);
+  return rotulo === tituloLinha(linha) ? '' : rotulo;
+};
 const corLinha = linha => {
   if (linha.erro) return 'bg-n-ruby-9';
   if (linha.no === 'cancelado') return 'bg-n-slate-8';
@@ -214,7 +220,10 @@ const verConversa = () =>
               >
                 {{ exec.alvo_nome }}
               </b>
-              <span class="text-xs text-n-slate-11">
+              <span
+                v-if="exec.lead_id || exec.conversation_display_id"
+                class="text-xs text-n-slate-11"
+              >
                 {{
                   exec.lead_id
                     ? t(`${K}.EXECUCAO.LEAD_N`, { id: exec.lead_id })
@@ -225,6 +234,7 @@ const verConversa = () =>
               </span>
             </div>
             <Button
+              v-if="exec.lead_id || exec.conversation_display_id"
               class="ml-auto"
               outline
               slate
@@ -234,7 +244,7 @@ const verConversa = () =>
             />
           </div>
 
-          <ol class="relative">
+          <ol class="relative list-none">
             <li
               v-for="(linha, i) in exec.trilha"
               :key="i"
@@ -256,10 +266,11 @@ const verConversa = () =>
                 tituloLinha(linha)
               }}</b>
               <p
+                v-if="resumoLinha(linha)"
                 class="mt-0.5 text-[12.5px] text-n-slate-11"
                 :class="linha.erro ? 'text-n-ruby-11' : ''"
               >
-                {{ linha.resumo }}
+                {{ resumoLinha(linha) }}
               </p>
             </li>
           </ol>
