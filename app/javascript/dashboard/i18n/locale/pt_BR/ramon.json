@@ -1696,16 +1696,16 @@
     "WATCHDOG": {
       "TITLE": "Vigia",
       "SUBTITLE": "O vigia que já roda: retomada dos casos parados e copiloto noturno.",
-      "PARADOS": "Parados agora",
-      "RETOMADAS_24H": "Retomadas 24h",
-      "PENDENTES": "Sugestões pendentes",
-      "EXECUCOES_24H": "Execuções 24h",
+      "PARADOS_N": "Parados agora: {n}",
+      "RETOMADAS_N": "Retomadas em 24h: {n}",
       "REGUA": "Régua: até {cap} retomadas por dia, no mínimo {gap} dias entre uma e outra. Retomada às {retomada}; copiloto noturno às {copiloto}.",
       "TENTATIVAS": "{count}ª retomada",
       "PARADO_HA": "parado há {days} dias",
       "ULTIMA": "última retomada:",
       "COM_TAREFA": "já tem tarefa aberta",
-      "EMPTY": "Nenhum caso parado no funil agora."
+      "EMPTY": "Nenhum caso parado no funil agora.",
+      "VER_TODOS": "Ver todos ({n})",
+      "VER_MENOS": "Ver menos"
     },
     "FERRAMENTAS": {
       "TITLE": "Ferramentas",
@@ -1756,6 +1756,78 @@
         "FAQS": "FAQs",
         "TESTAR": "Testar",
         "CONFIGURAR": "Configurar"
+      }
+    },
+    "VISAO_GERAL": {
+      "TITLE": "Visão geral",
+      "SUBTITLE": "O que a IA fez nos últimos 30 dias e o que está esperando você.",
+      "APROVACOES": {
+        "TITULO": "Aprovações esperando você",
+        "NADA": "Nada esperando você agora.",
+        "SUGESTOES": "Sugestões da IA pendentes: {n}",
+        "TIPO_N": "{tipo}: {n}",
+        "TIPO": {
+          "draft": "rascunho",
+          "move_stage": "mudar etapa",
+          "alert": "alerta",
+          "acao": "ação em sistema",
+          "zapsign": "contrato ZapSign",
+          "advbox": "caso no AdvBox",
+          "reuniao": "reunião",
+          "perdido": "marcar perdido"
+        },
+        "ABRIR_SUGESTOES": "Abrir no Centro de Comando",
+        "FAQS": "FAQs pendentes: {n}",
+        "ABRIR_FAQS": "Revisar FAQs pendentes"
+      },
+      "PILOTO": {
+        "TITULO_RUMO": "Rumo ao piloto limitado",
+        "TITULO_EM_VIGOR": "Piloto com limites em vigor",
+        "REGUA": "{conversas} de {meta} conversas com rascunho revisado",
+        "SEM_CORRECAO": "{pct}% dos rascunhos enviados sem correção",
+        "SEM_DADOS": "Ainda não há rascunho revisado.",
+        "EM_VIGOR": "Conversas novas já começam em Piloto com limites (decisão D7). A régua continua aqui para acompanhar a qualidade dos rascunhos."
+      },
+      "RASCUNHOS": {
+        "TITULO": "Rascunhos da IA · 30 dias",
+        "GERADOS": "rascunhos gerados",
+        "DESFECHO_N": "{desfecho}: {n}",
+        "igual": "enviados sem edição",
+        "editado": "editados",
+        "descartado": "descartados",
+        "sem_resposta": "ficaram sem uso",
+        "pendente": "aguardando"
+      },
+      "RESPOSTA": {
+        "TITULO": "Tempo até a 1ª resposta · 30 dias",
+        "com_ia": "Com IA",
+        "sem_ia": "Sem IA",
+        "MEDIANA": "{min} min",
+        "SEM_DADOS": "sem dados",
+        "CONVERSAS": "Conversas: {n}",
+        "NOTA": "Mediana: metade das conversas teve a 1ª resposta antes desse tempo."
+      },
+      "TRANSFERENCIAS": {
+        "TITULO": "Transferências para humano · 30 dias",
+        "TOTAL": "conversas em que a IA chamou alguém da equipe",
+        "CONVERSA": "Conversa #{id}"
+      },
+      "FERRAMENTAS": {
+        "TITULO": "Ferramentas · 24h",
+        "EXECUCOES": "Execuções: {n}",
+        "ERROS": "Erros: {n}",
+        "NADA": "Nenhuma ferramenta rodou nas últimas 24h.",
+        "VER": "Ver execuções"
+      },
+      "AGENTE": {
+        "TITULO": "Agente Claude",
+        "HOJE": "{n} de {teto} pedidos hoje",
+        "PROBLEMAS": "Com problema hoje: {n}",
+        "ULTIMA": "Último pedido: {quando}",
+        "NUNCA": "Nenhum pedido registrado ainda."
+      },
+      "BASE": {
+        "TITULO": "Base de conhecimento"
       }
     },
     "MESSAGE_TEMPLATES": {

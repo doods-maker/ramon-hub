@@ -1691,16 +1691,16 @@
     "WATCHDOG": {
       "TITLE": "Watchdog",
       "SUBTITLE": "The watchdog already running: stalled-case follow-ups and the night copilot.",
-      "PARADOS": "Stalled now",
-      "RETOMADAS_24H": "Follow-ups 24h",
-      "PENDENTES": "Pending suggestions",
-      "EXECUCOES_24H": "Runs 24h",
+      "PARADOS_N": "Stalled now: {n}",
+      "RETOMADAS_N": "Follow-ups in 24h: {n}",
       "REGUA": "Rule: up to {cap} follow-ups a day, at least {gap} days apart. Follow-ups at {retomada}; night copilot at {copiloto}.",
       "TENTATIVAS": "follow-up #{count}",
       "PARADO_HA": "stalled for {days} days",
       "ULTIMA": "last follow-up:",
       "COM_TAREFA": "task already open",
-      "EMPTY": "No stalled cases in the funnel right now."
+      "EMPTY": "No stalled cases in the funnel right now.",
+      "VER_TODOS": "See all ({n})",
+      "VER_MENOS": "See less"
     },
     "FERRAMENTAS": {
       "TITLE": "Tools",
@@ -1751,6 +1751,78 @@
         "FAQS": "FAQs",
         "TESTAR": "Test",
         "CONFIGURAR": "Configure"
+      }
+    },
+    "VISAO_GERAL": {
+      "TITLE": "Overview",
+      "SUBTITLE": "What the AI did in the last 30 days and what is waiting for you.",
+      "APROVACOES": {
+        "TITULO": "Approvals waiting for you",
+        "NADA": "Nothing waiting for you right now.",
+        "SUGESTOES": "Pending AI suggestions: {n}",
+        "TIPO_N": "{tipo}: {n}",
+        "TIPO": {
+          "draft": "draft",
+          "move_stage": "move stage",
+          "alert": "alert",
+          "acao": "system action",
+          "zapsign": "ZapSign contract",
+          "advbox": "AdvBox case",
+          "reuniao": "meeting",
+          "perdido": "mark as lost"
+        },
+        "ABRIR_SUGESTOES": "Open in Command Center",
+        "FAQS": "Pending FAQs: {n}",
+        "ABRIR_FAQS": "Review pending FAQs"
+      },
+      "PILOTO": {
+        "TITULO_RUMO": "Towards limited pilot",
+        "TITULO_EM_VIGOR": "Limited pilot in effect",
+        "REGUA": "{conversas} of {meta} conversations with a reviewed draft",
+        "SEM_CORRECAO": "{pct}% of drafts sent without changes",
+        "SEM_DADOS": "No reviewed draft yet.",
+        "EM_VIGOR": "New conversations already start in Limited pilot (decision D7). The gauge stays here to track draft quality."
+      },
+      "RASCUNHOS": {
+        "TITULO": "AI drafts · 30 days",
+        "GERADOS": "drafts generated",
+        "DESFECHO_N": "{desfecho}: {n}",
+        "igual": "sent unchanged",
+        "editado": "edited",
+        "descartado": "discarded",
+        "sem_resposta": "left unused",
+        "pendente": "waiting"
+      },
+      "RESPOSTA": {
+        "TITULO": "Time to first reply · 30 days",
+        "com_ia": "With AI",
+        "sem_ia": "Without AI",
+        "MEDIANA": "{min} min",
+        "SEM_DADOS": "no data",
+        "CONVERSAS": "Conversations: {n}",
+        "NOTA": "Median: half of the conversations got the first reply faster than this."
+      },
+      "TRANSFERENCIAS": {
+        "TITULO": "Handoffs to a human · 30 days",
+        "TOTAL": "conversations where the AI called someone from the team",
+        "CONVERSA": "Conversation #{id}"
+      },
+      "FERRAMENTAS": {
+        "TITULO": "Tools · 24h",
+        "EXECUCOES": "Runs: {n}",
+        "ERROS": "Errors: {n}",
+        "NADA": "No tool ran in the last 24h.",
+        "VER": "See executions"
+      },
+      "AGENTE": {
+        "TITULO": "Claude agent",
+        "HOJE": "{n} of {teto} requests today",
+        "PROBLEMAS": "With problems today: {n}",
+        "ULTIMA": "Last request: {quando}",
+        "NUNCA": "No request recorded yet."
+      },
+      "BASE": {
+        "TITULO": "Knowledge base"
       }
     },
     "MESSAGE_TEMPLATES": {

@@ -128,10 +128,18 @@ const assistantRoutes = [
     meta,
   },
   {
-    path: frontendURL('accounts/:accountId/captain/watchdog'),
-    component: () => import('./pages/Watchdog.vue'),
-    name: 'captain_watchdog_index',
+    path: frontendURL('accounts/:accountId/captain/visao-geral'),
+    component: () => import('./pages/VisaoGeral.vue'),
+    name: 'captain_visao_geral_index',
     meta,
+  },
+  // O Vigia virou bloco da Visão geral: link antigo cai lá.
+  {
+    path: frontendURL('accounts/:accountId/captain/watchdog'),
+    redirect: to => ({
+      name: 'captain_visao_geral_index',
+      params: to.params,
+    }),
   },
   {
     path: frontendURL('accounts/:accountId/captain/:navigationPath'),
@@ -145,15 +153,11 @@ export const routes = [
   {
     path: frontendURL('accounts/:accountId/captain'),
     component: CaptainPageRouteView,
-    redirect: to => {
-      return {
-        name: 'captain_assistants_index',
-        params: {
-          navigationPath: 'captain_assistants_responses_index',
-          ...to.params,
-        },
-      };
-    },
+    // A área abre na Visão geral (backlog §0).
+    redirect: to => ({
+      name: 'captain_visao_geral_index',
+      params: to.params,
+    }),
     children: [...assistantRoutes],
   },
 ];

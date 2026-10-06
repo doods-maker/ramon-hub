@@ -19,7 +19,7 @@ import SettingsIndex from '../assistants/settings/Settings.vue';
 import GuardrailsIndex from '../assistants/guardrails/Index.vue';
 import GuidelinesIndex from '../assistants/guidelines/Index.vue';
 import Execucoes from './Execucoes.vue';
-import Watchdog from './Watchdog.vue';
+import VisaoGeral from './VisaoGeral.vue';
 import FerramentasPage from './Ferramentas.vue';
 import TOOLS_YML from '../../../../../../../config/agents/tools.yml';
 
@@ -287,6 +287,31 @@ const API = {
     items: RUNS,
     catalogo: CATALOGO,
   },
+  ramon_inteligencia: {
+    rascunhos: {
+      igual: 9,
+      editado: 6,
+      descartado: 2,
+      sem_resposta: 1,
+      pendente: 1,
+    },
+    piloto: { conversas: 14, meta: 20, sem_correcao_pct: 53 },
+    primeira_resposta: {
+      com_ia: { conversas: 12, mediana_min: 3.5 },
+      sem_ia: { conversas: 20, mediana_min: 42 },
+    },
+    transferencias: { total: 3, conversas: [482, 477, 470] },
+    aprovacoes: {
+      sugestoes: 3,
+      sugestoes_por_tipo: { move_stage: 1, zapsign: 1, draft: 1 },
+    },
+    agente: {
+      hoje: 4,
+      teto: 30,
+      problemas_hoje: 1,
+      ultima_em: diasAtras(0.05),
+    },
+  },
   ramon_watchdog: {
     thresholds: {
       teto_diario: 3,
@@ -385,6 +410,11 @@ const clicarEm = texto => () =>
         ?.click(),
     2000
   );
+
+// Visão geral com o padrão antigo (antes da D7): título "Rumo ao piloto".
+const modoRascunho = () => {
+  window.chatwootConfig = { ramonCopilotoModoDefault: 'rascunho' };
+};
 </script>
 
 <template>
@@ -443,8 +473,11 @@ const clicarEm = texto => () =>
     <Variant title="Execucoes">
       <div class="h-screen"><Execucoes /></div>
     </Variant>
-    <Variant title="Vigia">
-      <div class="h-screen"><Watchdog /></div>
+    <Variant title="Visao geral">
+      <div class="h-screen"><VisaoGeral /></div>
+    </Variant>
+    <Variant title="Visao geral rascunho" :init-state="modoRascunho">
+      <div class="h-screen"><VisaoGeral /></div>
     </Variant>
   </Story>
 </template>
