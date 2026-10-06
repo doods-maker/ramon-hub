@@ -1151,6 +1151,9 @@
       "ITEM_ADD": "Add item",
       "ITEM_EMPTY": "No items in this section yet.",
       "NOME_HINT": "Use {marcador} in the script — the lead’s first name is filled in when copying.",
+      "DELETE_IN_USE": "1 lead uses this thesis — deactivate instead of deleting | {count} leads use this thesis — deactivate instead of deleting",
+      "DELETE_IN_USE_HINT": "Once deactivated, the thesis stays on the leads already using it and leaves the thesis choice for new leads.",
+      "DEACTIVATE": "Deactivate thesis",
       "DOCUMENTO_CLIENTE": "Each document title is shown to the client in the portal (lead link), in the list of what is missing.",
       "APARECE_EM": {
         "ABERTURA": "Shown in: Queue (first 2) · panel Scripts · agent",

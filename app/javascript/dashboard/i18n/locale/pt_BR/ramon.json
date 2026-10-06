@@ -1151,6 +1151,9 @@
       "ITEM_ADD": "Adicionar item",
       "ITEM_EMPTY": "Nenhum item nesta seção ainda.",
       "NOME_HINT": "Use {marcador} no roteiro — o primeiro nome do lead entra na hora de copiar.",
+      "DELETE_IN_USE": "1 lead usa esta tese — desative em vez de excluir | {count} leads usam esta tese — desative em vez de excluir",
+      "DELETE_IN_USE_HINT": "Desativada, a tese continua nos leads que já a usam e sai da escolha de tese dos leads novos.",
+      "DEACTIVATE": "Desativar tese",
       "DOCUMENTO_CLIENTE": "O título de cada documento aparece para o cliente no portal (link do lead), na lista do que falta enviar.",
       "APARECE_EM": {
         "ABERTURA": "Aparece em: Esteira (2 primeiros) · Scripts do painel · agente",

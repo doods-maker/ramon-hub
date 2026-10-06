@@ -21,7 +21,12 @@ class Api::V1::Accounts::ThesesController < Api::V1::Accounts::BaseController
     render :show
   end
 
+  # Tese com leads não é excluída (o destroy anularia a tese desses leads):
+  # o caminho é desativar, que a tira da escolha de tese dos leads novos.
   def destroy
+    leads_count = @thesis.leads.count
+    return render_tese_em_uso(leads_count) if leads_count.positive?
+
     @thesis.destroy!
     head :ok
   end
@@ -40,6 +45,12 @@ class Api::V1::Accounts::ThesesController < Api::V1::Accounts::BaseController
 
   def fetch_thesis
     @thesis = Current.account.theses.find(params[:id])
+  end
+
+  def render_tese_em_uso(count)
+    sujeito = count == 1 ? '1 lead usa' : "#{count} leads usam"
+    render json: { error: "#{sujeito} esta tese — desative em vez de excluir", leads_count: count },
+           status: :unprocessable_entity
   end
 
   def next_position

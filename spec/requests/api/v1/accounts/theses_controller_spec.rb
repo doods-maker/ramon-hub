@@ -84,15 +84,26 @@ RSpec.describe 'Theses API', type: :request do
   end
 
   describe 'DELETE destroy' do
-    it 'remove a tese e anula thesis_id nos leads vinculados (admin)' do
+    it 'remove a tese sem leads (admin)' do
       thesis = account.theses.create!(name: 'Tese Removida', position: 50)
-      lead = account.leads.create!(name: 'L', lead_stage: account.lead_stages.first, thesis: thesis)
 
       delete "/api/v1/accounts/#{account.id}/theses/#{thesis.id}", headers: admin.create_new_auth_token
 
       expect(response).to have_http_status(:success)
       expect(account.theses.exists?(thesis.id)).to be(false)
-      expect(lead.reload.thesis_id).to be_nil
+    end
+
+    it 'recusa remover tese usada por leads e devolve a contagem', :aggregate_failures do
+      thesis = account.theses.create!(name: 'Tese Em Uso', position: 50)
+      lead = account.leads.create!(name: 'L', lead_stage: account.lead_stages.first, thesis: thesis)
+
+      delete "/api/v1/accounts/#{account.id}/theses/#{thesis.id}", headers: admin.create_new_auth_token
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['leads_count']).to eq(1)
+      expect(response.parsed_body['error']).to include('desative em vez de excluir')
+      expect(account.theses.exists?(thesis.id)).to be(true)
+      expect(lead.reload.thesis_id).to eq(thesis.id)
     end
   end
 

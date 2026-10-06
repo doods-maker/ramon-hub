@@ -87,6 +87,7 @@ const addThesis = async () => {
 };
 
 const thesisToRemove = ref(null);
+const thesisInUse = ref(null);
 const removeThesis = thesis => {
   thesisToRemove.value = thesis;
 };
@@ -95,8 +96,26 @@ const confirmRemoveThesis = async () => {
   if (!thesis) return;
   // Fecha o modal antes do await: sem janela pra duplo-clique despachar 2x.
   thesisToRemove.value = null;
-  await store.dispatch('theses/delete', thesis.id);
-  if (selectedId.value === thesis.id) selectedId.value = null;
+  try {
+    await store.dispatch('theses/delete', thesis.id);
+    if (selectedId.value === thesis.id) selectedId.value = null;
+  } catch (e) {
+    // tese com leads: o servidor recusa (422 + leads_count) → oferecer desativar
+    const count = e?.response?.data?.leads_count;
+    if (count) thesisInUse.value = { thesis, count };
+    else useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR')));
+  }
+};
+
+const deactivateThesisInUse = () => {
+  const { thesis } = thesisInUse.value;
+  thesisInUse.value = null;
+  store
+    .dispatch('theses/update', { id: thesis.id, active: false })
+    .then(() => {
+      if (selectedId.value === thesis.id) detail.active = false;
+    })
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
 };
 
 const moveThesis = (thesis, direction) => {
@@ -106,7 +125,9 @@ const moveThesis = (thesis, direction) => {
   if (index < 0 || targetIndex < 0 || targetIndex >= ordered.length) return;
   const ids = ordered.map(th => th.id);
   [ids[index], ids[targetIndex]] = [ids[targetIndex], ids[index]];
-  store.dispatch('theses/reorder', ids);
+  store
+    .dispatch('theses/reorder', ids)
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
 };
 
 const saveDetail = () => {
@@ -610,6 +631,22 @@ onMounted(() => store.dispatch('theses/get'));
       :confirm-label="$t('RAMON.PLAYBOOKS.DELETE')"
       @confirm="confirmRemoveThesis"
       @cancel="thesisToRemove = null"
+    />
+    <ConfirmModal
+      v-if="thesisInUse"
+      data-testid="playbooks-thesis-in-use"
+      :title="
+        $t(
+          'RAMON.PLAYBOOKS.DELETE_IN_USE',
+          { count: thesisInUse.count },
+          thesisInUse.count
+        )
+      "
+      :message="$t('RAMON.PLAYBOOKS.DELETE_IN_USE_HINT')"
+      :confirm-label="$t('RAMON.PLAYBOOKS.DEACTIVATE')"
+      confirm-color="blue"
+      @confirm="deactivateThesisInUse"
+      @cancel="thesisInUse = null"
     />
     <ConfirmModal
       v-if="itemToRemove"

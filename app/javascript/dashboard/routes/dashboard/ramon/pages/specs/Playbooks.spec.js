@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import Playbooks from '../Playbooks.vue';
 
@@ -85,6 +85,35 @@ describe('Playbooks.vue', () => {
     expect(store.dispatch).toHaveBeenCalledWith('theses/reorderItems', {
       thesisId: 1,
       ids: [13, 12, 11],
+    });
+  });
+  it('tese com leads: oferece desativar em vez de excluir', async () => {
+    const { wrapper, store } = mountPlaybooks();
+    store.dispatch.mockImplementation(action =>
+      action === 'theses/delete'
+        ? Promise.reject(
+            Object.assign(new Error('422'), {
+              response: { data: { leads_count: 3 } },
+            })
+          )
+        : Promise.resolve({})
+    );
+    await wrapper
+      .findAll('[data-testid="playbooks-item-remove"]')[0]
+      .trigger('click');
+    await wrapper
+      .find('[data-testid="confirm-modal-confirm"]')
+      .trigger('click');
+    await flushPromises();
+    expect(
+      wrapper.find('[data-testid="playbooks-thesis-in-use"]').exists()
+    ).toBe(true);
+    await wrapper
+      .find('[data-testid="confirm-modal-confirm"]')
+      .trigger('click');
+    expect(store.dispatch).toHaveBeenCalledWith('theses/update', {
+      id: 1,
+      active: false,
     });
   });
 });
