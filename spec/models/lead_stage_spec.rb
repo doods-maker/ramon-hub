@@ -40,4 +40,10 @@ RSpec.describe LeadStage do
     expect(described_class.new(label: 'fase-reuniao-agendada')).to be_automacao
     expect(described_class.new(label: 'fase-negociacao')).not_to be_automacao
   end
+
+  it 'usa o nome para o cliente quando preenchido, senão o nome', :aggregate_failures do
+    expect(described_class.new(name: 'Negociação', nome_cliente: 'Proposta em análise').nome_para_cliente)
+      .to eq('Proposta em análise')
+    expect(described_class.new(name: 'Negociação', nome_cliente: '').nome_para_cliente).to eq('Negociação')
+  end
 end

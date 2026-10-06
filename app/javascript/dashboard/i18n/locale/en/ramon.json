@@ -312,7 +312,16 @@
         "CONFIRM_WON_PREVIOUS": "The stage \"{name}\" stops being the won stage.",
         "CONFIRM_LOST_TITLE": "Mark \"{name}\" as the lost stage?",
         "CONFIRM_LOST_EFFECT": "Leads moved to this stage ask for the lost reason and count as lost in reports.",
-        "CONFIRM_LOST_PREVIOUS": "The stage \"{name}\" stops being the lost stage."
+        "CONFIRM_LOST_PREVIOUS": "The stage \"{name}\" stops being the lost stage.",
+        "CLIENT_NAME": "Name for the client",
+        "CLIENT_NAME_HINT": "Shown in the client portal (lead link). Empty = uses the stage name.",
+        "CLIENT_SUGGEST": {
+          "NOVO": "E.g.: We received your contact",
+          "QUALIFICACAO": "E.g.: Understanding your case",
+          "REUNIAO_AGENDADA": "E.g.: Meeting scheduled",
+          "REUNIAO_REALIZADA": "E.g.: Meeting held",
+          "NEGOCIACAO": "E.g.: Proposal under review"
+        }
       },
       "FILTERS": {
         "SEARCH": "Search name or contact…",
@@ -1142,6 +1151,7 @@
       "ITEM_ADD": "Add item",
       "ITEM_EMPTY": "No items in this section yet.",
       "NOME_HINT": "Use {marcador} in the script — the lead’s first name is filled in when copying.",
+      "DOCUMENTO_CLIENTE": "Each document title is shown to the client in the portal (lead link), in the list of what is missing.",
       "APARECE_EM": {
         "ABERTURA": "Shown in: Queue (first 2) · panel Scripts · agent",
         "APRESENTACAO": "Shown in: panel Scripts · agent",

@@ -18,6 +18,12 @@ class LeadStage < ApplicationRecord
     AUTOMATION_LABELS.include?(label)
   end
 
+  # O que o cliente lê no portal (link mágico): o nome próprio para ele, se a
+  # equipe definiu um; senão o nome interno da etapa.
+  def nome_para_cliente
+    nome_cliente.presence || name
+  end
+
   private
 
   def ensure_single_won_lost

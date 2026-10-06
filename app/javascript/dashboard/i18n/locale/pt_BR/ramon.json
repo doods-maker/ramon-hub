@@ -312,7 +312,16 @@
         "CONFIRM_WON_PREVIOUS": "A etapa \"{name}\" deixa de ser a de ganho.",
         "CONFIRM_LOST_TITLE": "Marcar \"{name}\" como etapa de perda?",
         "CONFIRM_LOST_EFFECT": "Leads movidos para esta etapa pedem o motivo da perda e passam a contar como perdidos nos relatórios.",
-        "CONFIRM_LOST_PREVIOUS": "A etapa \"{name}\" deixa de ser a de perda."
+        "CONFIRM_LOST_PREVIOUS": "A etapa \"{name}\" deixa de ser a de perda.",
+        "CLIENT_NAME": "Nome para o cliente",
+        "CLIENT_NAME_HINT": "Aparece no portal do cliente (link do lead). Vazio = usa o nome da etapa.",
+        "CLIENT_SUGGEST": {
+          "NOVO": "Ex.: Recebemos o seu contato",
+          "QUALIFICACAO": "Ex.: Entendendo o seu caso",
+          "REUNIAO_AGENDADA": "Ex.: Reunião marcada",
+          "REUNIAO_REALIZADA": "Ex.: Reunião realizada",
+          "NEGOCIACAO": "Ex.: Proposta em análise"
+        }
       },
       "FILTERS": {
         "SEARCH": "Buscar nome ou contato…",
@@ -1142,6 +1151,7 @@
       "ITEM_ADD": "Adicionar item",
       "ITEM_EMPTY": "Nenhum item nesta seção ainda.",
       "NOME_HINT": "Use {marcador} no roteiro — o primeiro nome do lead entra na hora de copiar.",
+      "DOCUMENTO_CLIENTE": "O título de cada documento aparece para o cliente no portal (link do lead), na lista do que falta enviar.",
       "APARECE_EM": {
         "ABERTURA": "Aparece em: Esteira (2 primeiros) · Scripts do painel · agente",
         "APRESENTACAO": "Aparece em: Scripts do painel · agente",

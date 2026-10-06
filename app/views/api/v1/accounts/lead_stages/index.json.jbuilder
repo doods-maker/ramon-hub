@@ -8,4 +8,5 @@ json.array! @stages do |stage|
   json.is_lost stage.is_lost
   # protegida: o código acha a etapa pelo label (não pode ser removida)
   json.automacao stage.automacao?
+  json.nome_cliente stage.nome_cliente
 end

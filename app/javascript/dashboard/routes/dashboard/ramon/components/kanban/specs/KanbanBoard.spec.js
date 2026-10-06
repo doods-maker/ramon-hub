@@ -133,6 +133,17 @@ describe('KanbanBoard.vue', () => {
     });
   });
 
+  it('setStageClientName salva o nome para o cliente', () => {
+    const wrapper = mountBoard();
+    wrapper
+      .findComponent(KanbanColumn)
+      .vm.$emit('setStageClientName', { id: 1, nomeCliente: 'Em análise' });
+    expect(dispatch).toHaveBeenCalledWith('leadConfig/updateStage', {
+      id: 1,
+      nome_cliente: 'Em análise',
+    });
+  });
+
   it('setStageType ganho pede confirmação antes de salvar e recarrega as etapas', async () => {
     dispatch.mockResolvedValue({});
     const wrapper = mountBoard();

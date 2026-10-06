@@ -46,6 +46,14 @@ RSpec.describe 'Lead Stages API', type: :request do
       expect(stage.reload.name).to eq('Reunião marcada')
       expect(stage.label).to eq('fase-reuniao-agendada')
     end
+
+    it 'salva o nome para o cliente', :aggregate_failures do
+      stage = account.lead_stages.create!(name: 'Negociação', position: 0)
+      patch "/api/v1/accounts/#{account.id}/lead_stages/#{stage.id}",
+            params: { nome_cliente: 'Proposta em análise' }, headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['nome_cliente']).to eq('Proposta em análise')
+    end
   end
 
   describe 'DELETE destroy' do

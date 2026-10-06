@@ -18,6 +18,7 @@ import {
   ROTULO,
   CHIP,
   TOM,
+  AVISO,
 } from '../helpers/ui';
 
 const store = useStore();
@@ -482,6 +483,14 @@ onMounted(() => store.dispatch('theses/get'));
                     {{ $t(sectionUsoKey(section)) }}
                   </p>
                 </div>
+                <p
+                  v-if="section === 'documento'"
+                  data-testid="playbooks-documento-aviso"
+                  class="m-0"
+                  :class="[AVISO, TOM.amber]"
+                >
+                  {{ $t('RAMON.PLAYBOOKS.DOCUMENTO_CLIENTE') }}
+                </p>
 
                 <!-- itens separados por linha, sem caixa dentro do cartão -->
                 <ul

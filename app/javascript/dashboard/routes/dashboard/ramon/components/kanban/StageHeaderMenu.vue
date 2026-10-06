@@ -8,7 +8,25 @@ import { CAMPO, LINHA, MENU } from '../../helpers/ui';
 const props = defineProps({
   stage: { type: Object, required: true },
 });
-const emit = defineEmits(['rename', 'recolor', 'setType', 'remove']);
+const emit = defineEmits([
+  'rename',
+  'recolor',
+  'setType',
+  'setClientName',
+  'remove',
+]);
+
+// Sugestão (só placeholder, nunca gravada) do nome que o cliente lê no
+// portal, pelas etapas do seed; etapa custom sugere o próprio nome.
+const SUGESTAO_CLIENTE = {
+  'fase-novo': 'RAMON.FUNIL.STAGE.CLIENT_SUGGEST.NOVO',
+  'fase-qualificacao': 'RAMON.FUNIL.STAGE.CLIENT_SUGGEST.QUALIFICACAO',
+  'fase-reuniao-agendada': 'RAMON.FUNIL.STAGE.CLIENT_SUGGEST.REUNIAO_AGENDADA',
+  'fase-reuniao-realizada':
+    'RAMON.FUNIL.STAGE.CLIENT_SUGGEST.REUNIAO_REALIZADA',
+  'fase-negociacao': 'RAMON.FUNIL.STAGE.CLIENT_SUGGEST.NEGOCIACAO',
+  'fase-ultima-chance': 'RAMON.FUNIL.STAGE.CLIENT_SUGGEST.NEGOCIACAO',
+};
 
 // Paleta fixa (mesma das Labels do Chatwoot) + o fallback padrão de etapa.
 // Fica em hex de propósito: a cor escolhida é DADO salvo na etapa (banco) e
@@ -31,16 +49,20 @@ const toggleRef = ref(null);
 const renameInput = ref(null);
 const editingName = ref('');
 const renaming = ref(false);
+const clientInput = ref(null);
+const editingClientName = ref('');
+const clientNaming = ref(false);
 
 // O menu é teleportado pro body com position:fixed — a coluna tem
 // overflow-hidden e cortaria um dropdown absolute (mesmo padrão do TaskBellMenu).
 const MENU_WIDTH = 192; // w-48
-const MENU_HEIGHT = 320; // estimativa p/ decidir abrir pra cima
+const MENU_HEIGHT = 380; // estimativa p/ decidir abrir pra cima
 const pos = ref({ top: 0, left: 0 });
 
 const close = () => {
   open.value = false;
   renaming.value = false;
+  clientNaming.value = false;
 };
 
 // Esc fecha o menu (e cancela um rename em andamento).
@@ -100,6 +122,18 @@ const confirmRename = () => {
   if (name && name !== props.stage.name) emit('rename', name);
   close();
 };
+const startClientName = () => {
+  editingClientName.value = props.stage.nome_cliente || '';
+  clientNaming.value = true;
+  nextTick(() => clientInput.value?.focus());
+};
+const confirmClientName = () => {
+  const nome = editingClientName.value.trim();
+  if (nome !== (props.stage.nome_cliente || '')) {
+    emit('setClientName', nome || null);
+  }
+  close();
+};
 const pickColor = color => {
   emit('recolor', color);
   close();
@@ -154,6 +188,34 @@ const remove = () => {
             @click="confirmRename"
           />
         </template>
+        <template v-else-if="clientNaming">
+          <label class="mb-1.5 block px-0.5 text-[11px] text-n-slate-10">
+            {{ $t('RAMON.FUNIL.STAGE.CLIENT_NAME') }}
+            <input
+              ref="clientInput"
+              v-model="editingClientName"
+              data-testid="stage-client-name-input"
+              class="mt-1"
+              :class="CAMPO"
+              :placeholder="
+                SUGESTAO_CLIENTE[stage.label]
+                  ? $t(SUGESTAO_CLIENTE[stage.label])
+                  : stage.name
+              "
+              @keyup.enter="confirmClientName"
+            />
+          </label>
+          <p class="m-0 mb-1.5 px-0.5 text-[11px] leading-snug text-n-slate-10">
+            {{ $t('RAMON.FUNIL.STAGE.CLIENT_NAME_HINT') }}
+          </p>
+          <Button
+            data-testid="stage-client-name-confirm"
+            sm
+            class="w-full"
+            :label="$t('RAMON.FUNIL.STAGE.SAVE')"
+            @click="confirmClientName"
+          />
+        </template>
         <template v-else>
           <button
             data-testid="stage-rename"
@@ -162,6 +224,20 @@ const remove = () => {
             @click="startRename"
           >
             {{ $t('RAMON.FUNIL.STAGE.RENAME') }}
+          </button>
+          <button
+            data-testid="stage-client-name"
+            class="flex flex-col items-start text-n-slate-12"
+            :class="LINHA"
+            @click="startClientName"
+          >
+            {{ $t('RAMON.FUNIL.STAGE.CLIENT_NAME') }}
+            <span
+              v-if="stage.nome_cliente"
+              class="max-w-full truncate text-[11px] text-n-slate-10"
+            >
+              {{ stage.nome_cliente }}
+            </span>
           </button>
           <div class="flex flex-wrap gap-1 px-2 py-2">
             <button

@@ -364,6 +364,8 @@ const updateStage = async payload => {
 };
 const onRenameStage = ({ id, name }) => updateStage({ id, name });
 const onRecolorStage = ({ id, color }) => updateStage({ id, color });
+const onSetStageClientName = ({ id, nomeCliente }) =>
+  updateStage({ id, nome_cliente: nomeCliente });
 const applyStageType = async ({ id, type }) => {
   await updateStage({ id, is_won: type === 'won', is_lost: type === 'lost' });
   // o servidor desmarca a etapa de ganho/perda anterior: recarrega todas
@@ -644,6 +646,7 @@ const exportCsv = () => {
             @rename-stage="onRenameStage"
             @recolor-stage="onRecolorStage"
             @set-stage-type="onSetStageType"
+            @set-stage-client-name="onSetStageClientName"
             @remove-stage="onRemoveStage"
           />
         </template>
