@@ -72,7 +72,7 @@ RSpec.describe Ramon::Fluxos::Passos::Externo do
       allow(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError, '404 Not Found')
       expect { described_class.webhook({ 'url' => url }, c) }
         .to raise_error(Ramon::Fluxos::PassoImpossivel, 'webhook recusado por hooks.exemplo.com.br (HTTP 404)')
-      %w[429\ Too\ Many 503\ Unavailable].each do |msg|
+      ['429 Too Many', '503 Unavailable'].each do |msg|
         allow(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError, msg)
         expect { described_class.webhook({ 'url' => url }, c) }.to raise_error(SafeFetch::HttpError)
       end
