@@ -2,6 +2,7 @@
 // Casca do Vue Flow (spec §7): fluxo de cima para baixo, minimapa, zoom e
 // fundo pontilhado como o mockup. Editor = arrasta/liga/apaga; execução =
 // só leitura com o caminho aceso (acesos != null).
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ConnectionMode, VueFlow, Panel, useVueFlow } from '@vue-flow/core';
 import { MiniMap } from '@vue-flow/minimap';
@@ -24,7 +25,7 @@ const nodes = defineModel('nodes', { type: Array, required: true });
 const edges = defineModel('edges', { type: Array, required: true });
 
 const { t } = useI18n();
-const { zoomIn, zoomOut, fitView } = useVueFlow();
+const { zoomIn, zoomOut, fitView, getViewport, setViewport } = useVueFlow();
 
 const estado = id => {
   if (props.erros.has(id)) return 'erro';
@@ -36,11 +37,20 @@ const estado = id => {
 };
 const folha = id => !edges.value.some(e => e.source === id);
 // Ajuste inicial (1x): fluxo longo não encolhe abaixo de 0.75 (nós legíveis, o resto se rola); curto fica como antes.
+// Longo (zoom no piso): ancora o TOPO do fluxo (gatilho) a 20px do alto, x centrado do fit. O quadro fica invisível até o ajuste (sem flash em zoom 1).
+const MIN_ZOOM_FIT = 0.75;
+const pronto = ref(!nodes.value.length); // vazio não dispara nodesInitialized
 let ajustou = false;
-const ajustarNaEntrada = () => {
+const ajustarNaEntrada = async () => {
   if (ajustou) return;
   ajustou = true;
-  fitView({ minZoom: 0.75 }); // maxZoom segue o do quadro (1.5): curto fica como antes
+  await fitView({ minZoom: MIN_ZOOM_FIT }); // maxZoom segue o do quadro (1.5): curto fica como antes
+  const { x, zoom } = getViewport();
+  if (zoom <= MIN_ZOOM_FIT + 0.001) {
+    const topo = Math.min(...nodes.value.map(n => n.position.y));
+    await setViewport({ x, y: 20 - topo * zoom, zoom });
+  }
+  pronto.value = true;
 };
 </script>
 
@@ -49,6 +59,7 @@ const ajustarNaEntrada = () => {
     v-model:nodes="nodes"
     v-model:edges="edges"
     class="h-full bg-n-surface-2 [background-image:radial-gradient(rgb(var(--slate-6))_1.2px,transparent_1.2px)] [background-size:20px_20px] [&_.vue-flow\_\_edge-path]:stroke-n-slate-7 [&_.vue-flow\_\_edge-path]:[stroke-width:2] [&_.aceso_.vue-flow\_\_edge-path]:stroke-n-teal-9 [&_.aceso_.vue-flow\_\_edge-path]:[stroke-width:2.5] [&_.selected_.vue-flow\_\_edge-path]:stroke-n-blue-9"
+    :class="{ 'opacity-0': !pronto }"
     :nodes-draggable="!somenteLeitura"
     :nodes-connectable="!somenteLeitura"
     :connection-mode="ConnectionMode.Strict"

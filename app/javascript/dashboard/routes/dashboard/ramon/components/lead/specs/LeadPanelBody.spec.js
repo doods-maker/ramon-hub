@@ -1134,22 +1134,35 @@ describe('LeadPanelBody', () => {
       expect(del).not.toHaveBeenCalled();
     });
 
-    it('"Rodar fluxo…" no menu ⋯ só para admin, com o lead como alvo', async () => {
-      const agente = mountBody();
-      await agente.find('[data-testid="lead-more"]').trigger('click');
-      expect(agente.find('[data-testid="lead-rodar-fluxo"]').exists()).toBe(
-        false
-      );
-
+    it('na conversa o painel do lead NÃO oferece "Rodar fluxo…" (fica no ⋯ do cabeçalho)', async () => {
       const admin = mountBody({ spies: { role: 'administrator' } });
       await admin.find('[data-testid="lead-more"]').trigger('click');
-      await admin.find('[data-testid="lead-rodar-fluxo"]').trigger('click');
+      expect(admin.find('[data-testid="lead-discard"]').exists()).toBe(true);
       expect(admin.find('[data-testid="lead-rodar-fluxo"]').exists()).toBe(
         false
       );
+    });
+
+    it('no drawer, admin vê "Rodar fluxo…" com o lead como alvo (sem "Não é lead")', async () => {
+      const admin = mountBody({
+        props: { context: 'drawer' },
+        spies: { role: 'administrator' },
+      });
+      await admin.find('[data-testid="lead-more"]').trigger('click');
+      expect(admin.find('[data-testid="lead-discard"]').exists()).toBe(false);
+      await admin.find('[data-testid="lead-rodar-fluxo"]').trigger('click');
       expect(admin.findComponent(RodarFluxo).props('alvo')).toEqual({
         lead_id: 7,
       });
+      await admin.setProps({ lead: { ...lead, id: 99 } });
+      expect(admin.findComponent(RodarFluxo).props('alvo')).toEqual({
+        lead_id: 7,
+      });
+    });
+
+    it('no drawer, não-admin não vê o ⋯', () => {
+      const agente = mountBody({ props: { context: 'drawer' } });
+      expect(agente.find('[data-testid="lead-more"]').exists()).toBe(false);
     });
 
     it('seções nativas da conversa ficam recolhidas atrás de "Mais da conversa"', async () => {

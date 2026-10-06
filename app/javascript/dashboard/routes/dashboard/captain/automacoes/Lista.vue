@@ -4,7 +4,7 @@
 // desenho só-leitura das 29 automações que ainda rodam no código, em grupos —
 // sem chave liga/desliga, selo em quem sai para fora sem uma pessoa no meio e
 // "Hoje" só onde o código tem contador barato (senão "—").
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useAccount } from 'dashboard/composables/useAccount';
@@ -39,7 +39,15 @@ const erro = ref(false);
 const novo = ref(false);
 const criando = ref(false);
 // ?aba=sistema: o "Voltar" do desenho do sistema cai de novo nesta aba
-const aba = ref(route.query.aba === 'sistema' ? 'sistema' : 'meus');
+const abaDaUrl = () => (route.query.aba === 'sistema' ? 'sistema' : 'meus');
+const aba = ref(abaDaUrl());
+// a aba segue o endereço (ex.: clicar "Automações" na lateral estando em ?aba=sistema)
+watch(
+  () => route.query.aba,
+  () => {
+    aba.value = abaDaUrl();
+  }
+);
 const meus = computed(() => fluxos.value.filter(f => f.origem !== 'sistema'));
 const doSistema = computed(() =>
   fluxos.value.filter(f => f.origem === 'sistema')

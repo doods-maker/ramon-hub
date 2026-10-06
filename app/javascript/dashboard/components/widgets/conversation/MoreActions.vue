@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onUnmounted } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import { useToggle } from '@vueuse/core';
 import { useStore } from 'vuex';
 import { useAlert } from 'dashboard/composables';
@@ -25,7 +25,7 @@ const { t } = useI18n();
 
 const [showEmailActionsModal, toggleEmailModal] = useToggle(false);
 const [showActionsDropdown, toggleDropdown] = useToggle(false);
-const [showRodarFluxo, toggleRodarFluxo] = useToggle(false); // FORK(ramon)
+const alvoRodarFluxo = ref(null); // FORK(ramon): alvo congelado no clique
 const { isAdmin } = useAdmin(); // FORK(ramon)
 
 const currentChat = computed(() => store.getters.getSelectedChat);
@@ -81,7 +81,7 @@ const handleActionClick = ({ action }) => {
   } else if (action === 'send_transcript') {
     toggleEmailModal();
   } else if (action === 'rodar_fluxo') {
-    toggleRodarFluxo(true); // FORK(ramon)
+    alvoRodarFluxo.value = { conversation_id: currentChat.value.id }; // FORK(ramon)
   }
 };
 
@@ -141,9 +141,9 @@ onUnmounted(() => {
     />
     <!-- FORK(ramon): Rodar fluxo… (B3) -->
     <RodarFluxo
-      v-if="showRodarFluxo"
-      :alvo="{ conversation_id: currentChat.id }"
-      @fechar="toggleRodarFluxo(false)"
+      v-if="alvoRodarFluxo"
+      :alvo="alvoRodarFluxo"
+      @fechar="alvoRodarFluxo = null"
     />
   </div>
 </template>

@@ -1,10 +1,11 @@
+import { reactive, nextTick } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import RamonFluxosAPI from 'dashboard/api/ramonFluxos';
 import Lista from '../Lista.vue';
 
 const push = vi.fn();
 const replace = vi.fn();
-const rota = { query: {} };
+const rota = reactive({ query: {} });
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push, replace }),
   useRoute: () => rota,
@@ -227,5 +228,16 @@ describe('Lista de automações', () => {
     await flushPromises();
     expect(wrapper.findAll('[data-testid="sistema-linha"]')).toHaveLength(3);
     expect(wrapper.find('[data-testid="fluxo-linha"]').exists()).toBe(false);
+  });
+
+  it('a aba segue a URL quando ?aba muda sem remontar', async () => {
+    rota.query = { aba: 'sistema' };
+    const wrapper = mount(Lista);
+    await flushPromises();
+    expect(wrapper.findAll('[data-testid="sistema-linha"]')).toHaveLength(3);
+    rota.query = {};
+    await nextTick();
+    expect(wrapper.find('[data-testid="sistema-linha"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="fluxo-linha"]').exists()).toBe(true);
   });
 });
