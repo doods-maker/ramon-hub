@@ -33,10 +33,13 @@ class Contacts::BulkActionService
   end
 
   def delete_contacts
-    Contacts::BulkDeleteService.new(
-      account: @account,
-      contact_ids: ids
-    ).perform
+    # FORK(ramon): roda em job — o Registro de ações (audits) grava em nome de quem pediu.
+    Audited.audit_class.as_user(@user) do
+      Contacts::BulkDeleteService.new(
+        account: @account,
+        contact_ids: ids
+      ).perform
+    end
   end
 
   def ids

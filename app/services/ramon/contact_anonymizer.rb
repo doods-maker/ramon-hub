@@ -4,8 +4,31 @@
 # Usado pelo delete da UI (ContactsController#destroy); fluxos internos que
 # exigem destroy físico (ex.: merge de contatos duplicados) seguem intocados.
 class Ramon::ContactAnonymizer
-  def initialize(contact)
+  # A trilha (audits) é somente-inclusão e fica: o Registro de ações continua
+  # mostrando quem editou/anonimizou e quando. Os VALORES antigos de PII em
+  # audited_changes viram '[anonimizado]' — no contato e no(s) contato(s)
+  # mesclado(s) nele (1 nível; ver Ramon::ContactMergePessoa). É a única
+  # escrita que o trigger audits_somente_inclusao aceita: a flag vale só nesta
+  # transação e só audited_changes pode mudar. `blocked` não é PII e fica.
+  REDACAO_AUDITS_SQL = <<~SQL.squish.freeze
+    SELECT set_config('ramon.redacao_lgpd', 'on', true);
+    UPDATE audits SET audited_changes = (
+      SELECT jsonb_object_agg(chave, CASE
+        WHEN chave = 'blocked' THEN valor
+        WHEN jsonb_typeof(valor) = 'array' THEN '["[anonimizado]", "[anonimizado]"]'::jsonb
+        ELSE '"[anonimizado]"'::jsonb END)
+      FROM jsonb_each(audited_changes) AS par(chave, valor))
+    WHERE auditable_type = 'Contact' AND audited_changes <> '{}'::jsonb
+      AND (auditable_id = :id OR auditable_id IN (
+        SELECT mesclado.auditable_id FROM audits mesclado
+        WHERE mesclado.auditable_type = 'Contact' AND mesclado.action = 'destroy' AND mesclado.comment = :mesclado));
+    SELECT set_config('ramon.redacao_lgpd', 'off', true);
+  SQL
+
+  # comentario: vai no audit da anonimização (a tela diferencia a exclusão em massa).
+  def initialize(contact, comentario: 'anonimizado')
     @contact = contact
+    @comentario = comentario
   end
 
   def perform
@@ -13,7 +36,7 @@ class Ramon::ContactAnonymizer
     redact_notes
     @contact.avatar.purge if @contact.avatar.attached?
     anonymize_contact
-    purge_audits
+    redact_audits
     @contact
   end
 
@@ -46,6 +69,7 @@ class Ramon::ContactAnonymizer
 
   def anonymize_contact
     @contact.update!(
+      audit_comment: @comentario,
       name: "Titular anonimizado ##{@contact.id}",
       middle_name: '', last_name: '',
       email: nil, phone_number: nil, identifier: nil,
@@ -55,9 +79,8 @@ class Ramon::ContactAnonymizer
     )
   end
 
-  # A trilha do audited guarda os valores antigos (audited_changes) — manter
-  # seria desfazer a anonimização; o histórico de auditoria sai junto com a PII.
-  def purge_audits
-    Audited.audit_class.where(auditable: @contact).delete_all
+  def redact_audits
+    sql = ActiveRecord::Base.sanitize_sql([REDACAO_AUDITS_SQL, { id: @contact.id, mesclado: "mesclado:#{@contact.id}" }])
+    ActiveRecord::Base.connection.execute(sql)
   end
 end
