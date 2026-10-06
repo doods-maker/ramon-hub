@@ -6,6 +6,8 @@ json.name resource.name
 json.phone_number resource.phone_number
 json.blocked resource.blocked
 json.identifier resource.identifier
+json.cpf resource.cpf # FORK(ramon): ficha do contato
+json.data_nascimento resource.data_nascimento # FORK(ramon)
 json.company_id resource.company_id if Current.account&.feature_enabled?('companies')
 json.thumbnail resource.avatar_url
 json.custom_attributes resource.custom_attributes

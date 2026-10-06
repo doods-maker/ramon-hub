@@ -550,6 +550,11 @@
         }
       }
     },
+    "CONTATO": {
+      "CPF": "CPF (Brazilian taxpayer ID)",
+      "DATA_NASCIMENTO": "Date of birth",
+      "LEAD_ABERTO": "Open lead"
+    },
     "LINHA_DA_VIDA": {
       "OPEN": "Life timeline",
       "LOADING": "Loading…",

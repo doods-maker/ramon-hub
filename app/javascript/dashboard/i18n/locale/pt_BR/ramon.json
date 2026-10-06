@@ -550,6 +550,11 @@
       },
       "BENEFIT_MONTHLY_LABEL": "Benefício mensal estimado"
     },
+    "CONTATO": {
+      "CPF": "CPF",
+      "DATA_NASCIMENTO": "Data de nascimento",
+      "LEAD_ABERTO": "Lead aberto"
+    },
     "LINHA_DA_VIDA": {
       "OPEN": "Linha da Vida",
       "LOADING": "Carregando…",
