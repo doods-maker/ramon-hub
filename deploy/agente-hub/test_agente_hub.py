@@ -66,6 +66,17 @@ class TestExtrair(unittest.TestCase):
             self.assertEqual(ah.extrair_estruturado(s), {})
 
 
+class TestUso(unittest.TestCase):
+    def test_tokens_e_custo(self):
+        saida = ('{"total_cost_usd": 0.4213, "usage": {"input_tokens": 10, "cache_creation_input_tokens": 200, '
+                 '"cache_read_input_tokens": 3000, "output_tokens": 50}, "structured_output": {"resposta": "oi"}}')
+        self.assertEqual(ah.extrair_uso(saida), {'input_tokens': 3210, 'output_tokens': 50, 'custo_usd': 0.4213})
+
+    def test_sem_uso(self):
+        for s in ['', 'Not logged in', '{quebrado', '{"result": "x"}']:
+            self.assertEqual(ah.extrair_uso(s), {})
+
+
 class TestCmd(unittest.TestCase):
     def test_flags(self):
         cfg = ah.Cfg({'CLAUDE_CODE_OAUTH_TOKEN': 't', 'HUB_URL': 'h', 'ACCOUNT_ID': '2', 'HUB_AGENTE_TOKEN': 'a',

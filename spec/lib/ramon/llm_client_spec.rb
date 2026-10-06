@@ -104,4 +104,21 @@ RSpec.describe Ramon::LlmClient do
       end
     end
   end
+
+  describe 'uso e custo (tela Inteligência)' do
+    it 'grava a chamada com a função e a conta passadas pelo serviço' do
+      account = create(:account)
+      with_modified_env DEEPSEEK_API_KEY: 'k' do
+        chat = instance_double(RubyLLM::Chat)
+        allow(RubyLLM).to receive(:context).and_return(instance_double(RubyLLM::Context, chat: chat))
+        allow(chat).to receive(:with_instructions).and_return(chat)
+        allow(chat).to receive(:ask).and_return(instance_double(RubyLLM::Message, content: 'ok', input_tokens: 10, output_tokens: 5))
+        described_class.complete(provider: 'deepseek', model: 'deepseek-chat', system: 's', user: 'u',
+                                 funcao: 'copiloto', account_id: account.id, lead_id: 9)
+      end
+
+      expect(LlmChamada.last).to have_attributes(account_id: account.id, funcao: 'copiloto', provider: 'deepseek', model: 'deepseek-chat',
+                                                 lead_id: 9, input_tokens: 10, output_tokens: 5, status: 'ok')
+    end
+  end
 end

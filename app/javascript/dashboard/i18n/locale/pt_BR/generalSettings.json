@@ -175,7 +175,8 @@
       "ramon_sla_breach": "1ª resposta atrasada",
       "ramon_contract_status": "Contrato assinado/recusado (ZapSign)",
       "ramon_fluxo_aviso": "Aviso de automação",
-      "ramon_fluxo_falhou": "Automação falhou"
+      "ramon_fluxo_falhou": "Automação falhou",
+      "ramon_ia_gasto": "Gasto de IA acima do teto"
     }
   },
   "NETWORK": {

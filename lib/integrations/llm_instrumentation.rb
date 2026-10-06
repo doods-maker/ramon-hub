@@ -7,7 +7,13 @@ module Integrations::LlmInstrumentation
   include Integrations::LlmInstrumentationHelpers
   include Integrations::LlmInstrumentationSpans
 
-  def instrument_llm_call(params)
+  # FORK-PONTO (ramon): toda chamada instrumentada também vira linha de uso/custo
+  # (Ramon::LlmUso — tela Uso e custo). A gravação nunca quebra a chamada.
+  def instrument_llm_call(params, &)
+    Ramon::LlmUso.medir(Ramon::LlmUso.de_instrumentacao(params)) { instrument_llm_call_traced(params, &) }
+  end
+
+  def instrument_llm_call_traced(params)
     return yield unless ChatwootApp.otel_enabled?
 
     result = nil

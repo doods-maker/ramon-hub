@@ -143,6 +143,13 @@ const assistantRoutes = [
     name: 'captain_visao_geral_index',
     meta,
   },
+  // ramon: Uso e custo da IA — custo, provedor/modelo por função e alerta (só admin).
+  {
+    path: frontendURL('accounts/:accountId/captain/uso-e-custo'),
+    component: () => import('./pages/UsoCusto.vue'),
+    name: 'captain_ia_uso_index',
+    meta: metaAdmin,
+  },
   // O Vigia virou bloco da Visão geral: link antigo cai lá.
   {
     path: frontendURL('accounts/:accountId/captain/watchdog'),

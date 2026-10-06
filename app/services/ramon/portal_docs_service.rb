@@ -4,8 +4,6 @@
 # o CLIENTE precisa mandar, em nome curto pra leigo (decisão Eduardo 16/09).
 # 1 chamada por tarefa; o PortalSyncService reaproveita enquanto o texto não muda.
 class Ramon::PortalDocsService
-  PROVIDER = 'deepseek'.freeze
-
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você recebe as observações internas de uma tarefa "SOLICITAR DOCUMENTOS" de um escritório de advocacia previdenciária.
     Liste APENAS os documentos que o CLIENTE precisa enviar ou providenciar. Cada item é um nome curto e claro para leigo,
@@ -17,13 +15,14 @@ class Ramon::PortalDocsService
 
   # Devolve a lista de nomes; nil quando o LLM falhou (o sync então não grava
   # nada pra esse pedido e tenta de novo na próxima noite).
-  def self.itens(notes, nome: nil)
+  def self.itens(notes, nome: nil, account: nil)
     texto = notes.to_s.strip
     return [] if texto.blank?
 
     result = Ramon::LlmClient.complete(
-      provider: PROVIDER, model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
-      system: SYSTEM_PROMPT, user: Ramon::Pseudonymizer.mask(texto, names: [nome].compact)
+      **Ramon::LlmEscolha.para(account, 'copiloto'),
+      system: SYSTEM_PROMPT, user: Ramon::Pseudonymizer.mask(texto, names: [nome].compact),
+      funcao: 'portal_docs', account_id: account&.id
     )
     parse(result.content)
   rescue StandardError => e

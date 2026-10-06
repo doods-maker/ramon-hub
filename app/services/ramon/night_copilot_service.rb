@@ -4,7 +4,6 @@
 # manhã no Cockpit. NADA é enviado ao cliente por aqui.
 class Ramon::NightCopilotService
   MAX_MESSAGES = 200
-  PROVIDER = 'deepseek'.freeze
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você é o copiloto noturno de um escritório de advocacia previdenciária no Brasil.
@@ -63,9 +62,9 @@ class Ramon::NightCopilotService
   end
 
   def analysis_for(lead)
-    result = Ramon::LlmClient.complete(provider: PROVIDER,
-                                       model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
-                                       system: SYSTEM_PROMPT, user: user_prompt(lead))
+    result = Ramon::LlmClient.complete(**Ramon::LlmEscolha.para(@account, 'copiloto'),
+                                       system: SYSTEM_PROMPT, user: user_prompt(lead),
+                                       funcao: 'copiloto_noturno', account_id: @account.id, lead_id: lead.id)
     parse_analysis(lead, result.content)
   rescue StandardError => e
     Rails.logger.warn("NightCopilotService: LLM falhou p/ lead #{lead.id} (#{e.class}: #{e.message}) — pulando")

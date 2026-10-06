@@ -52,7 +52,7 @@ RSpec.describe Ramon::PortalSyncService do
     expect(p['docs_pendentes'].first['digest']).to be_present
     expect(Ramon::PortalDocsService).to have_received(:itens).once.with("CNIS atualizado
 Laudo médico
-", nome: cliente.nome)
+", nome: cliente.nome, account: cliente.account)
     expect(cliente.reload.sincronizado_em).to be_present
   end
 

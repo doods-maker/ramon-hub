@@ -31,14 +31,19 @@ class Public::Api::V1::AgenteController < PublicController
 
   def execucoes
     exec = @account.agente_execucoes.create!(
-      pedido: params[:pedido], status: params[:status], resumo: params[:resumo], modelo: params[:modelo],
-      esforco: params[:esforco], duracao_ms: params[:duracao_ms], lead_id: @account.leads.where(id: params[:lead_id]).pick(:id),
-      conversation_id: conversation_pk(params[:conversation_id]), acoes: acoes
+      **params.permit(:pedido, :status, :resumo, :modelo, :esforco, :duracao_ms).to_h.symbolize_keys,
+      lead_id: @account.leads.where(id: params[:lead_id]).pick(:id),
+      conversation_id: conversation_pk(params[:conversation_id]), acoes: acoes, **uso_do_runner
     )
     render json: { id: exec.id }, status: :created
   end
 
   private
+
+  # usage/total_cost_usd do `claude -p` (custo nominal da assinatura: a tela mostra "equivalente")
+  def uso_do_runner
+    params.permit(:input_tokens, :output_tokens, :custo_usd).to_h.symbolize_keys
+  end
 
   # Payload livre vindo do runner (já autenticado pelo token) — vai cru pro jsonb.
   def acoes

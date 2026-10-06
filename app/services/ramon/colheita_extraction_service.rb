@@ -83,8 +83,8 @@ class Ramon::ColheitaExtractionService
   def call_llm(transcript)
     text = "Tese: #{@lead.thesis.name}\n\n#{checklist_block}#{transcript}"
     text = Ramon::Pseudonymizer.mask(text, names: [@lead.name, @lead.contact&.name]) unless sensitive_ok?
-    Ramon::LlmClient.complete(provider: provider, model: model,
-                              system: SYSTEM_PROMPT, user: text, sensitive: sensitive_ok?)
+    Ramon::LlmClient.complete(provider: provider, model: model, system: SYSTEM_PROMPT, user: text, sensitive: sensitive_ok?,
+                              funcao: 'colheita', account_id: @lead.account_id, lead_id: @lead.id)
   end
 
   def checklist_items

@@ -38,6 +38,8 @@ module Llm::Config
         # O registry resolve deepseek-* para o provider :deepseek, que pede a
         # credencial propria - mesma env que Ramon::LlmClient ja usa.
         config.deepseek_api_key = ENV.fetch('DEEPSEEK_API_KEY', nil)
+        # Claude por chave de API (Anthropic) escolhido por função na tela Uso e custo.
+        config.anthropic_api_key = ENV.fetch('ANTHROPIC_API_KEY', nil)
         config.model_registry_file = Rails.root.join('config/llm_models.json').to_s
         config.logger = Rails.logger
       end

@@ -4,7 +4,6 @@
 # inline na conversa ("Usar →" só INSERE no editor — princípio de aprovação).
 # Fail-safe: qualquer erro = silêncio. Gap mínimo de 10 min por conversa.
 class Ramon::CoachObjecaoService
-  PROVIDER = 'deepseek'.freeze
   GAP_MINUTOS = 10
   MIN_CHARS = 20
 
@@ -72,9 +71,10 @@ class Ramon::CoachObjecaoService
   def ask_llm
     texto = Ramon::Pseudonymizer.mask(@message.content.to_s, names: [@lead.name, @lead.contact&.name].compact)
     result = Ramon::LlmClient.complete(
-      provider: PROVIDER, model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
+      **Ramon::LlmEscolha.para(@lead.account, 'copiloto'),
       system: SYSTEM_PROMPT,
-      user: "Playbook de objeções:\n#{playbook}\n\nMensagem do cliente:\n#{texto}"
+      user: "Playbook de objeções:\n#{playbook}\n\nMensagem do cliente:\n#{texto}",
+      funcao: 'coach_objecao', account_id: @lead.account_id, lead_id: @lead.id, conversation_id: @message.conversation_id
     )
     parsed = JSON.parse(result.content.to_s.sub(/\A```(?:json)?\s*/, '').sub(/```\s*\z/, ''))
     parsed.is_a?(Hash) ? parsed : nil

@@ -3,7 +3,6 @@ class Ramon::ConversationCopilotService
 
   MODES = %w[summary draft].freeze
   MAX_MESSAGES = 200
-  PROVIDER = 'deepseek'.freeze
 
   SUMMARY_SYSTEM_PROMPT = <<~PROMPT.freeze
     Você é o copiloto comercial de um escritório de advocacia previdenciária no Brasil.
@@ -46,9 +45,9 @@ class Ramon::ConversationCopilotService
   # Síncrono de propósito (mesmo desenho do "AI assist" upstream): o resultado é
   # efêmero — vai pro painel ou pro editor — então não há o que persistir/pollar.
   def perform
-    result = Ramon::LlmClient.complete(provider: PROVIDER,
-                                       model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
-                                       system: system_prompt, user: user_prompt)
+    result = Ramon::LlmClient.complete(**Ramon::LlmEscolha.para(@conversation.account, 'copiloto'),
+                                       system: system_prompt, user: user_prompt, funcao: 'copiloto',
+                                       account_id: @conversation.account_id, conversation_id: @conversation.id, lead_id: @lead&.id)
     restore_name(result.content)
   end
 

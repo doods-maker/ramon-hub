@@ -63,7 +63,7 @@ class Ramon::PortalSyncService
     return [] if notes.to_s.strip.blank?
     return [ITEM_SEM_IA] unless usa_ia?
 
-    Ramon::PortalDocsService.itens(notes, nome: @cliente.nome)
+    Ramon::PortalDocsService.itens(notes, nome: @cliente.nome, account: @cliente.account)
   end
 
   # Com os textos v2 ligados a IA exige a autorização do cliente; antes disso segue como está.

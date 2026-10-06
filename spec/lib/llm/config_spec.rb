@@ -14,6 +14,14 @@ RSpec.describe Llm::Config do
       end
     end
 
+    it 'configura a chave da Anthropic a partir da env (Claude por API escolhido por função)' do
+      with_modified_env ANTHROPIC_API_KEY: 'chave-anthropic' do
+        described_class.initialize!
+
+        expect(RubyLLM.config.anthropic_api_key).to eq('chave-anthropic')
+      end
+    end
+
     it 'nao levanta KeyError quando a env esta ausente' do
       with_modified_env DEEPSEEK_API_KEY: nil do
         expect { described_class.initialize! }.not_to raise_error

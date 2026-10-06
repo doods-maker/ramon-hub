@@ -11,7 +11,6 @@ class Ramon::AdvboxPerguntaService
   MAX_ANDAMENTOS = 8
   MAX_PUBLICACOES = 2
   TAMANHO_PUBLICACAO = 500
-  PROVIDER = 'deepseek'.freeze
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você é o assistente processual de um escritório de advocacia previdenciária e
@@ -37,10 +36,9 @@ class Ramon::AdvboxPerguntaService
   def perform
     @contexto ||= montar_contexto
     result = Ramon::LlmClient.complete(
-      provider: PROVIDER,
-      model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
-      system: SYSTEM_PROMPT,
-      user: user_prompt
+      **Ramon::LlmEscolha.para(@conversation.account, 'copiloto'),
+      system: SYSTEM_PROMPT, user: user_prompt, funcao: 'advbox_pergunta',
+      account_id: @conversation.account_id, conversation_id: @conversation.id, lead_id: @lead&.id
     )
     {
       message: restore_name(result.content),

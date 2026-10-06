@@ -1,0 +1,118 @@
+{
+  "IA_USO": {
+    "TITULO": "Usage and cost",
+    "SUBTITULO": "How much the hub AI spent, on what and with which model. Cost comes from the provider price table at call time.",
+    "CARREGANDO": "Loading...",
+    "ERRO": "Could not load right now.",
+    "TENTAR": "Try again",
+    "PERIODO": {
+      "hoje": "Today",
+      "7d": "7 days",
+      "30d": "30 days",
+      "mes": "This month"
+    },
+    "RESUMO": {
+      "CUSTO": "Cost in period",
+      "SEM_PRECO": "{n} calls without a known price",
+      "HOJE": "Today",
+      "TETO": "cap {valor}",
+      "SEM_TETO": "no alert cap",
+      "CHAMADAS": "Calls",
+      "ERROS": "{n} with errors",
+      "TOKENS": "Tokens",
+      "ENTRADA_SAIDA": "{entrada} input · {saida} output"
+    },
+    "GRAFICO": {
+      "TITULO": "Cost per day",
+      "DICA": "{dia}: {custo} in {n} calls"
+    },
+    "AGENTE": {
+      "TITULO": "{'@'}claude agent",
+      "HOJE": "{n} of {teto} today",
+      "EQUIVALENTE": "{valor} equivalent in period",
+      "NOTA": "Runs on the Claude subscription: the value is what it would cost via API, not a charge."
+    },
+    "FLUXOS": {
+      "TITULO": "AI in automations",
+      "HOJE": "{n} of {teto} calls today",
+      "NOTA": "The daily automation cap comes from the server (RAMON_FLUXO_IA_DIA)."
+    },
+    "TABELA": {
+      "TITULO": "Breakdown",
+      "funcao": "By function",
+      "assistente": "By assistant",
+      "modelo": "By model",
+      "NOME": "Name",
+      "CHAMADAS": "Calls",
+      "TOKENS": "Tokens",
+      "CUSTO": "Cost",
+      "ERROS": "Errors",
+      "VAZIO": "No calls in this period.",
+      "SEM_NOME": "Assistant #{id}"
+    },
+    "ESCOLHA": {
+      "TITULO": "Provider and model per function",
+      "DESCRICAO": "Changes apply on the next call. Without a choice, the server default applies.",
+      "PROVEDOR": "Provider",
+      "MODELO": "Model",
+      "PADRAO": "Server default",
+      "EM_USO": "In use: {modelo}",
+      "SEM_CHAVE": "no key",
+      "SALVO": "Model saved.",
+      "ERRO_SALVAR": "Could not save the model.",
+      "ASSINATURA": "The Claude subscription is for the manager's internal use only: it never serves clients or the team.",
+      "FIXO": "Fixed",
+      "FUNCOES": {
+        "atendimento": "Customer service (assistants)",
+        "copiloto": "Copilot and hub functions",
+        "documentos": "Documents (FAQ from document)",
+        "agente": "{'@'}claude agent"
+      },
+      "DESCRICOES": {
+        "atendimento": "The agent that answers on WhatsApp and the Test screen.",
+        "copiloto": "Copilot summary and draft, AdvBox, coach, received documents, follow-ups and night copilot.",
+        "documentos": "Generates FAQs from an uploaded document.",
+        "agente": "The manager's {'@'}claude note, run on the VPS server."
+      }
+    },
+    "CHAVES": {
+      "TITULO": "Keys on the server",
+      "SIM": "configured",
+      "NAO": "not configured"
+    },
+    "PROVEDORES": {
+      "deepseek": "DeepSeek",
+      "openai": "OpenAI",
+      "anthropic": "Claude (API key)",
+      "claude_vps": "Claude on the VPS (subscription)"
+    },
+    "ALERTA": {
+      "TITULO": "Spend alert",
+      "DESCRICAO": "When today's cost goes over the cap, administrators get a bell notification, once a day. The {'@'}claude agent is left out.",
+      "TETO": "Daily cap (US$)",
+      "SALVAR": "Save cap",
+      "SALVO": "Cap saved.",
+      "ERRO": "Invalid cap."
+    },
+    "FUNCOES": {
+      "atendimento": "Customer service",
+      "copiloto": "Copilot",
+      "copiloto_captain": "Captain copilot",
+      "documentos": "Documents",
+      "resumo": "Summary",
+      "advbox_pergunta": "Ask AdvBox",
+      "coach_objecao": "Objection coach",
+      "doc_match": "Received document",
+      "follow_up": "Follow-up",
+      "copiloto_noturno": "Night copilot",
+      "piloto_logistica": "Pilot (logistics)",
+      "portal_docs": "Portal: documents",
+      "colheita": "Data harvest",
+      "ata": "Meeting minutes",
+      "triagem": "Triage",
+      "kit": "Closer kit",
+      "fluxo": "Automations",
+      "teste": "Test cases"
+    }
+  }
+}

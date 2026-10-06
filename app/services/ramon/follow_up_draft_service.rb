@@ -6,7 +6,6 @@ class Ramon::FollowUpDraftService
   DAILY_CAP = 15
   MIN_GAP_DAYS = 5
   MAX_MESSAGES = 200
-  PROVIDER = 'deepseek'.freeze
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você redige uma mensagem de retomada de WhatsApp para o atendente de um escritório de advocacia
@@ -87,9 +86,9 @@ class Ramon::FollowUpDraftService
   end
 
   def message_for(lead, attempt)
-    result = Ramon::LlmClient.complete(provider: PROVIDER,
-                                       model: ENV.fetch('RAMON_COPILOT_MODEL', 'deepseek-chat'),
-                                       system: SYSTEM_PROMPT, user: user_prompt(lead, attempt))
+    result = Ramon::LlmClient.complete(**Ramon::LlmEscolha.para(@account, 'copiloto'),
+                                       system: SYSTEM_PROMPT, user: user_prompt(lead, attempt),
+                                       funcao: 'follow_up', account_id: @account.id, lead_id: lead.id)
     restore_name(lead, result.content)
   rescue StandardError => e
     # falha de LLM não derruba o lote — cai no texto estático

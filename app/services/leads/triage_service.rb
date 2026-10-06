@@ -48,7 +48,7 @@ class Leads::TriageService
                   'baixa quando faltarem elementos para classificar com segurança.'
     Ramon::LlmClient.complete(provider: @agent.provider, model: @agent.model,
                               system: @agent.system_prompt, user: user_prompt,
-                              sensitive: @agent.sensitive)
+                              sensitive: @agent.sensitive, funcao: 'triagem', account_id: @lead.account_id, lead_id: @lead.id)
   end
 
   # Handoff bot→humano: sem linha VIABILIDADE (parse falho / sem tese clara) ou

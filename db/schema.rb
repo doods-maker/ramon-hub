@@ -170,6 +170,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_400001) do
     t.integer "duracao_ms"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "input_tokens"
+    t.integer "output_tokens"
+    t.decimal "custo_usd", precision: 12, scale: 6
     t.index ["account_id", "created_at"], name: "index_agente_execucoes_on_account_id_and_created_at"
     t.index ["account_id"], name: "index_agente_execucoes_on_account_id"
     t.index ["conversation_id"], name: "index_agente_execucoes_on_conversation_id"
@@ -1573,6 +1576,25 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_400001) do
     t.datetime "updated_at", null: false
     t.index ["assistant_id", "created_at"], name: "index_ramon_ia_rodadas_on_assistant_id_and_created_at"
     t.index ["assistant_id"], name: "idx_ramon_ia_rodadas_uma_ativa", unique: true, where: "((status)::text = ANY ((ARRAY['fila'::character varying, 'rodando'::character varying])::text[]))"
+  end
+
+  create_table "ramon_llm_chamadas", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "funcao", null: false
+    t.string "origem", default: "real", null: false
+    t.bigint "assistant_id"
+    t.string "provider"
+    t.string "model"
+    t.integer "input_tokens", default: 0, null: false
+    t.integer "output_tokens", default: 0, null: false
+    t.decimal "custo_usd", precision: 12, scale: 6
+    t.integer "duracao_ms"
+    t.string "status", default: "ok", null: false
+    t.string "erro"
+    t.bigint "conversation_id"
+    t.bigint "lead_id"
+    t.datetime "created_at", null: false
+    t.index ["account_id", "created_at"], name: "index_ramon_llm_chamadas_on_account_id_and_created_at"
   end
 
   create_table "ramon_metas_comerciais", force: :cascade do |t|

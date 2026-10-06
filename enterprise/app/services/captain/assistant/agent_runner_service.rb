@@ -6,15 +6,10 @@ class Captain::Assistant::AgentRunnerService
   include Captain::Assistant::RunnerCallbacksHelper
   include Captain::Assistant::TracePayloadHelper
 
-  CONVERSATION_STATE_ATTRIBUTES = %i[
-    id display_id inbox_id contact_id status priority
-    label_list custom_attributes additional_attributes
-  ].freeze
+  # ramon: listas numa linha só — a classe está no teto do Metrics/ClassLength.
+  CONVERSATION_STATE_ATTRIBUTES = %i[id display_id inbox_id contact_id status priority label_list custom_attributes additional_attributes].freeze
 
-  CONTACT_STATE_ATTRIBUTES = %i[
-    id name email phone_number identifier contact_type
-    custom_attributes additional_attributes
-  ].freeze
+  CONTACT_STATE_ATTRIBUTES = %i[id name email phone_number identifier contact_type custom_attributes additional_attributes].freeze
 
   CONTACT_INBOX_STATE_ATTRIBUTES = %i[id hmac_verified].freeze
 
@@ -28,11 +23,15 @@ class Captain::Assistant::AgentRunnerService
   end
 
   def generate_response(message_history: [])
+    inicio = Ramon::LlmUso.agora_ms
     message_to_process, context = run_payload(message_history)
     result = runner.run(message_to_process, context: context, max_turns: 100)
+    # ramon: uso/custo da execução (tela Uso e custo); nunca quebra a resposta
+    Ramon::LlmUso.registrar_agente(assistant: @assistant, result: result, inicio: inicio, source: @source, conversation: @conversation)
 
     process_agent_result(result)
   rescue StandardError => e
+    Ramon::LlmUso.registrar_agente(assistant: @assistant, result: nil, inicio: inicio, source: @source, conversation: @conversation)
     # In rake/local runs, conversation may not be present, so account is optional here.
     ChatwootExceptionTracker.new(e, account: @conversation&.account).capture_exception
     Rails.logger.error "[Captain V2] AgentRunnerService error: #{e.message}"

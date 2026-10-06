@@ -5,6 +5,7 @@ module CaptainFeaturable
 
   included do
     validate :validate_captain_models
+    validate :validate_assinatura_interna
 
     # Dynamically define accessor methods for each captain feature
     Llm::Models.feature_keys.each do |feature_key|
@@ -58,5 +59,12 @@ module CaptainFeaturable
       allowed_models = Llm::Models.models_for(feature_key)
       errors.add(:captain_models, "'#{model_name}' is not a valid model for #{feature_key}. Allowed: #{allowed_models.join(', ')}")
     end
+  end
+
+  # FORK-PONTO (ramon): a assinatura do Claude (runner da VPS) só serve tarefa interna do
+  # gestor — nunca atendimento, copiloto ou documentos (termos de uso; Ramon::LlmEscolha).
+  def validate_assinatura_interna
+    vetados = (captain_models || {}).select { |_feature, model_name| Ramon::LlmEscolha.assinatura?(model_name) }
+    errors.add(:captain_models, "assinatura do Claude só para uso interno do gestor: #{vetados.keys.join(', ')}") if vetados.any?
   end
 end

@@ -5,6 +5,13 @@ class AgenteExecucao < ApplicationRecord
   self.table_name = 'agente_execucoes'
 
   STATUS = %w[ok erro limite cap timeout].freeze
+  # ponytail: o teto de verdade mora no runner da VPS (CAP_DIA=30); aqui só desenha a barra.
+  TETO_DIA = 30
+  # Resumo que o runner grava quando NÃO roda o claude (cap do dia ou pausa por limite):
+  # essas linhas não gastaram cota. "limite" detectado DEPOIS de rodar gastou (outro resumo).
+  NAO_EXECUTOU = 'Cap diário atingido%'.freeze
+
+  scope :consumiu_cota, -> { where('resumo IS NULL OR resumo NOT LIKE ?', NAO_EXECUTOU) }
 
   belongs_to :account
   belongs_to :conversation, optional: true

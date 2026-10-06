@@ -44,6 +44,14 @@ RSpec.describe 'Public Agente API', type: :request do
                                                    acoes: [{ 'tipo' => 'nota' }])
   end
 
+  it 'registra tokens e custo nominal da assinatura quando o runner manda' do
+    post "/public/api/v1/agente/execucoes?token=#{token}",
+         params: { account_id: account.id, conversation_id: conversation.display_id, pedido: 'resumo', status: 'ok',
+                   input_tokens: 3210, output_tokens: 50, custo_usd: 0.4213 }.to_json, headers: headers
+
+    expect(AgenteExecucao.last).to have_attributes(input_tokens: 3210, output_tokens: 50, custo_usd: BigDecimal('0.4213'))
+  end
+
   it 'arquivo: 503 sem Drive configurado' do
     lead = create(:lead, account: account, contact: contact, conversation: conversation)
     with_modified_env(RAMON_DRIVE_CREDENTIALS: nil) do

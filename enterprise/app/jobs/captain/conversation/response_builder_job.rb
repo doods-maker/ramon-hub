@@ -87,7 +87,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   def memoizar_logistica(content)
     return unless @copiloto_modo == 'piloto_limitado'
 
-    @logistica_ok = Ramon::PilotoLogisticaService.logistica?(content)
+    @logistica_ok = Ramon::PilotoLogisticaService.logistica?(content, account: @conversation.account)
   end
 
   def collect_previous_messages
