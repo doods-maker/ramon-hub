@@ -28,6 +28,8 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
       'name ILIKE :search OR email ILIKE :search OR phone_number ILIKE :search OR contacts.identifier LIKE :search',
       search: "%#{params[:q].strip}%"
     )
+    por_numero = Ramon::ContatoBusca.por_numero(Current.account.contacts, params[:q]) # FORK(ramon): CPF e celular com/sem 9
+    contacts = contacts.or(por_numero) if por_numero
     @contacts = fetch_contacts_with_has_more(contacts)
   end
 

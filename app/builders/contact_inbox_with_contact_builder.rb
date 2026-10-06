@@ -110,6 +110,7 @@ class ContactInboxWithContactBuilder
   def find_contact_by_phone_number(phone_number)
     return if phone_number.blank?
 
-    account.contacts.find_by(phone_number: phone_number)
+    account.contacts.find_by(phone_number: phone_number) ||
+      Ramon::Telefone.contato_por_variante(account.contacts, phone_number) # FORK(ramon): celular com/sem o 9
   end
 end
