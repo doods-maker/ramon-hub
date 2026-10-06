@@ -512,7 +512,10 @@ const menuItems = computed(() => {
         {
           name: 'Playground',
           label: t('SIDEBAR.CAPTAIN_PLAYGROUND'),
-          activeOn: ['captain_assistants_playground_index'],
+          activeOn: [
+            'captain_assistants_playground_index',
+            'captain_assistants_casos_teste_index',
+          ],
           to: accountScopedRoute('captain_assistants_index', {
             navigationPath: 'captain_assistants_playground_index',
           }),
@@ -522,6 +525,12 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.CAPTAIN_EXECUCOES'),
           activeOn: ['captain_execucoes_index'],
           to: accountScopedRoute('captain_execucoes_index'),
+        },
+        {
+          name: 'IaUso',
+          label: t('SIDEBAR.CAPTAIN_IA_USO'),
+          activeOn: ['captain_ia_uso_index'],
+          to: accountScopedRoute('captain_ia_uso_index'),
         },
         {
           name: 'Settings',
