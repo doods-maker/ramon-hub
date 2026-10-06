@@ -226,7 +226,9 @@ watch(
 
     <template
       v-if="
-        ['montado', 'agendado', 'falhou', 'publicado'].includes(peca.status)
+        ['montado', 'agendado', 'publicando', 'falhou', 'publicado'].includes(
+          peca.status
+        )
       "
     >
       <PostPrevia
