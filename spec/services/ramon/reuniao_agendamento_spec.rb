@@ -27,9 +27,9 @@ RSpec.describe Ramon::ReuniaoAgendamento do
   it 'marcar e cancelar disparam os fluxos de reunião' do
     allow(Ramon::Fluxos::Disparo).to receive(:externo)
     agendar
-    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_marcada', lead, hash_including('quando'))
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_marcada', lead, { 'quando' => anything })
     described_class.cancelar(task: lead.lead_tasks.find_by!(kind: 'meeting'), user: user)
-    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_cancelada', lead, hash_including('quando'))
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_cancelada', lead, { 'quando' => anything })
   end
 
   it 'usa o task_title quando informado (prefixo do Cal.com)' do

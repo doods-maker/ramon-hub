@@ -73,7 +73,7 @@ class Ramon::Fluxos::CompararLembretes
 
   # Só reuniões marcadas/remarcadas depois que a sombra nasceu: as de antes não têm ciclo para comparar.
   def leads_em_sombra
-    @account.lead_activities.where(kind: REUNIAO, created_at: @fluxo.created_at..).distinct.pluck(:lead_id)
+    @account.lead_activities.where(kind: REUNIAO, created_at: @fluxo.created_at..).pluck(:lead_id).uniq
   end
 
   # O ensaio: as linhas "faria: sino para …" dos ciclos em sombra ("Testar com um lead…" fica de fora). O alvo é a
