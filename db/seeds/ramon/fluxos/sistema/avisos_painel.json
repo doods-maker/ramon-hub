@@ -1,0 +1,17 @@
+{
+  "nome": "Avisos do Painel do Cliente",
+  "grupo": "painel_cliente",
+  "alcance": "fala_com_cliente",
+  "descricao": "No código: Ramon::PortalAvisosJob (todo dia às 08:00) — DESLIGADO até o Eduardo aprovar os textos (env PORTAL_AVISOS=on).\n\nO desenho não consegue mostrar:\n• quando ligado, manda e-mail DIRETO ao cliente com as novidades do espelho da noite, sem revisão de uma pessoa (etapas delicadas nunca vão por e-mail) — os fluxos não têm passo de e-mail e só fazem rascunho;\n• a equipe recebe 1 e-mail de resumo com o texto pronto de WhatsApp e o link wa.me de cada cliente — quem manda o WhatsApp é uma pessoa;\n• roda 1 vez por dia para todos os clientes, não por lead.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"08:00","rotulo":"Todo dia às 08:00 (só com PORTAL_AVISOS=on)"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"nota_privada","config":{"rotulo":"E-mail ao cliente com as novidades (direto, sem revisão)","texto":"Novidades do processo por e-mail — etapas delicadas nunca vão"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"nota_privada","config":{"rotulo":"E-mail de resumo para a equipe (WhatsApp pronto + wa.me)","texto":"Clientes com novidade hoje, com o texto de WhatsApp para uma pessoa enviar"},"posicao":{"x":0,"y":280}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"}
+    ]
+  }
+}

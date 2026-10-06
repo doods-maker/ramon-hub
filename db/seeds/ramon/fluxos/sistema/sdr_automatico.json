@@ -1,0 +1,16 @@
+{
+  "nome": "SDR automático",
+  "grupo": "leads_conversas",
+  "descricao": "No código: LeadComercial (app/models/concerns/lead_comercial.rb): before_create :assign_sdr e after_commit :assign_conversation_to_sdr.\n\nO desenho não consegue mostrar:\n• o SDR é o do time com menos leads abertos (Ramon::Papeis.proximo) e só entra se o lead nasce sem SDR; roda antes de o lead existir;\n• a conversa vai para o SDR também quando o SDR muda ou o lead ganha conversa;\n• o passo Atribuir escolhe uma pessoa fixa; aqui é sempre o SDR do lead.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_criado"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"trocar_responsavel","config":{"rotulo":"SDR automático (o do time com menos leads abertos)","papel":"sdr"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"acao_chatwoot","config":{"rotulo":"Conversa atribuída ao SDR do lead","acoes":[{"action_name":"assign_agent","action_params":[]}]},"posicao":{"x":0,"y":280}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"}
+    ]
+  }
+}

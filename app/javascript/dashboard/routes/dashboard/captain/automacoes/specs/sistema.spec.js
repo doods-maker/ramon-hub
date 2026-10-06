@@ -15,17 +15,51 @@ const DESENHOS = Object.entries(ARQUIVOS).map(([caminho, d]) => [
 ]);
 
 describe('fluxos do sistema', () => {
-  it('tem os 6 da spec §8', () => {
-    expect(DESENHOS.map(([chave]) => chave)).toEqual(
-      expect.arrayContaining([
-        'cadencia',
-        'eventos_advbox',
-        'lead_ganho',
-        'lembretes_reuniao',
-        'resumo_do_dia',
-        'sla_primeira_resposta',
+  it('são as 29 automações do código', () => {
+    expect(DESENHOS.map(([chave]) => chave).sort()).toEqual([
+      'acervo_pecas',
+      'agente_hub',
+      'assinatura_painel',
+      'ata_reuniao',
+      'avisos_painel',
+      'cadencia',
+      'chegada_cliente',
+      'coach_objecao',
+      'contrato_limpo',
+      'contrato_limpo_cancelado',
+      'contrato_zapsign',
+      'copiloto_noturno',
+      'criar_lead_da_conversa',
+      'docs_completos',
+      'documento_painel',
+      'espelho_painel',
+      'etiquetas_etapa_tese',
+      'eventos_advbox',
+      'fechamento_extrato',
+      'historico_do_lead',
+      'lead_ganho',
+      'lembretes_reuniao',
+      'origem_do_lead',
+      'publicar_pecas',
+      'resumo_do_dia',
+      'retrato_funil',
+      'sdr_automatico',
+      'sla_primeira_resposta',
+      'sugestao_documento',
+    ]);
+  });
+
+  it('só Avisos do Painel e Publicar peças saem para fora sem uma pessoa no meio', () => {
+    const comSelo = Object.fromEntries(
+      DESENHOS.filter(([, d]) => d.alcance).map(([chave, d]) => [
+        chave,
+        d.alcance,
       ])
     );
+    expect(comSelo).toEqual({
+      avisos_painel: 'fala_com_cliente',
+      publicar_pecas: 'publica',
+    });
   });
 
   it.each(DESENHOS)(

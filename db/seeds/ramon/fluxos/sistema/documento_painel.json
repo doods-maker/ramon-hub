@@ -1,0 +1,18 @@
+{
+  "nome": "Documento enviado pelo Painel",
+  "grupo": "painel_cliente",
+  "descricao": "No código: Cliente::PainelController (envio) → Ramon::PortalEnvioJob.\n\nO desenho não consegue mostrar:\n• começa com o cliente enviando um arquivo pelo Painel — os fluxos não têm esse gatilho (aqui: Rodar na mão);\n• antes de tudo o arquivo vai para o Drive (Clientes/<Nome — CPF>) — não há passo de Drive;\n• a 1ª tarefa vai para o responsável do processo no ADVBOX (o desenho mostra o padrão, Eduardo); cada passo é idempotente e o ADVBOX tenta de novo até 5 vezes.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Cliente envia documento pelo Painel"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"avisar_push","config":{"rotulo":"Push: documento do cliente","titulo":"Documento do cliente {nome_completo}","texto":"Arquivo enviado pelo Painel do Cliente"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"advbox","config":{"rotulo":"ADVBOX: ANALISAR DOCUMENTAÇÃO (responsável do processo)","acao":"tarefa","tipo_tarefa_id":9502039,"responsavel_id":266778,"descricao":"Cliente enviou pelo Painel do Cliente: <item> (link do Drive)"},"posicao":{"x":0,"y":280}},
+      {"id":"n4","tipo":"advbox","config":{"rotulo":"ADVBOX: ORGANIZAR DOCUMENTOS (recepção)","acao":"tarefa","tipo_tarefa_id":8745531,"responsavel_id":260014,"descricao":"Anexar no ADVBOX o arquivo enviado pelo Painel"},"posicao":{"x":0,"y":420}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"},
+      {"de":"n3","saida":"s","para":"n4"}
+    ]
+  }
+}

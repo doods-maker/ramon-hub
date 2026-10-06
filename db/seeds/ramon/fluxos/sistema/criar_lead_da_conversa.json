@@ -1,0 +1,14 @@
+{
+  "nome": "Criar lead da conversa",
+  "grupo": "leads_conversas",
+  "descricao": "No código: RamonLeadListener#conversation_created (app/listeners/ramon_lead_listener.rb), só em caixas com Criar lead ligado.\n\nO desenho não consegue mostrar:\n• cria o lead na 1ª etapa do funil ou liga a conversa ao lead aberto do mesmo contato — não há passo que crie lead;\n• o mesmo ouvinte agenda o SLA da 1ª resposta (ver \"SLA da 1ª resposta\").",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"conversa_criada","rotulo":"Conversa nova numa caixa com Criar lead"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"nota_privada","config":{"rotulo":"Cria o lead (ou liga a conversa ao lead aberto do contato)","texto":"Lead novo na 1ª etapa do funil, com o nome e o telefone do contato"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

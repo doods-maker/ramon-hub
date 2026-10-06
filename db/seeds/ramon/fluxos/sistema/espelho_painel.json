@@ -1,0 +1,14 @@
+{
+  "nome": "Espelho do Painel do Cliente",
+  "grupo": "painel_cliente",
+  "descricao": "No código: Ramon::PortalSyncJob (todo dia às 00:30) → Ramon::PortalSyncService.\n\nO desenho não consegue mostrar:\n• roda 1 vez por noite para todos os clientes do Painel, não por lead; falha de um cliente não derruba os outros;\n• copia do ADVBOX processos, andamentos e pedidos de documento — não há passo que leia do ADVBOX.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"00:30","rotulo":"Toda noite às 00:30 (todos os clientes)"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"nota_privada","config":{"rotulo":"Espelha processos e andamentos do ADVBOX no Painel","texto":"Atualiza o Painel do Cliente com o que mudou no ADVBOX"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

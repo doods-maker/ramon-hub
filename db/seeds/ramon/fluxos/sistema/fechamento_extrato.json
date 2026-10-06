@@ -1,0 +1,14 @@
+{
+  "nome": "Fechamento do extrato",
+  "grupo": "rotinas_relatorios",
+  "descricao": "No código: Ramon::ExtratoFechamentoJob (todo dia às 00:20; age no 3º dia útil) → Ramon::ExtratoFechamento.\n\nO desenho não consegue mostrar:\n• fecha o extrato da variável do mês anterior (regulamento §6) — é da conta, não de um lead;\n• a tela do Extrato também fecha na 1ª leitura depois da data; o job garante o fechamento mesmo se ninguém abrir.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"00:20","rotulo":"Todo dia às 00:20 (age no 3º dia útil)"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"nota_privada","config":{"rotulo":"Fecha o extrato da variável do mês anterior","texto":"Extrato do mês anterior fechado (não muda mais)"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

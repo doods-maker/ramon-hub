@@ -1,0 +1,14 @@
+{
+  "nome": "Retrato do funil",
+  "grupo": "rotinas_relatorios",
+  "descricao": "No código: Ramon::DailyFunnelSnapshotJob (todo dia às 00:05) → Ramon::FunnelSnapshotService.\n\nO desenho não consegue mostrar:\n• guarda o retrato agregado do funil do dia para os relatórios — é da conta, não de um lead; não há passo de relatório.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"00:05","rotulo":"Todo dia às 00:05"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"nota_privada","config":{"rotulo":"Tira o retrato do funil do dia","texto":"Números do funil do dia, guardados para os relatórios"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

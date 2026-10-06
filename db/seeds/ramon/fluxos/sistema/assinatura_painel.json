@@ -1,0 +1,14 @@
+{
+  "nome": "Assinatura pelo Painel do Cliente",
+  "grupo": "painel_cliente",
+  "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignStatusJob.\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real e marca a assinatura do Painel (PortalAssinatura) — não é lead nem conversa, e os fluxos não têm esse gatilho (aqui: Rodar na mão).",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"ZapSign: documento do Painel assinado"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"nota_privada","config":{"rotulo":"Marca a assinatura no Painel do Cliente","texto":"Assinatura do cliente registrada no Painel"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}
