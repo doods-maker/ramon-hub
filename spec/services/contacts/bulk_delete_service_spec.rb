@@ -9,10 +9,11 @@ RSpec.describe Contacts::BulkDeleteService do
   let(:contact_ids) { [contact_one.id, contact_two.id] }
 
   describe '#perform' do
-    it 'deletes the provided contacts' do
-      expect { service.perform }
-        .to change { account.contacts.exists?(contact_one.id) }.from(true).to(false)
-        .and change { account.contacts.exists?(contact_two.id) }.from(true).to(false)
+    # FORK(ramon/LGPD): excluir em massa anonimiza (preserva conversas e estatísticas).
+    it 'anonymizes the provided contacts instead of destroying them', :aggregate_failures do
+      expect { service.perform }.not_to change(Contact, :count)
+      expect(contact_one.reload.name).to eq("Titular anonimizado ##{contact_one.id}")
+      expect(contact_two.reload.email).to be_nil
     end
 
     it 'returns when no contact ids are provided' do

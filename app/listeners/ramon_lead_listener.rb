@@ -41,10 +41,12 @@ class RamonLeadListener < BaseListener
 
   def lead_created(event)
     Ramon::StageLabelSync.apply_to_conversation(event.data[:lead])
+    Ramon::TeseLabelSync.apply_to_conversation(event.data[:lead])
   end
 
   def lead_updated(event)
     Ramon::StageLabelSync.apply_to_conversation(event.data[:lead])
+    Ramon::TeseLabelSync.apply_to_conversation(event.data[:lead])
   end
 
   def conversation_updated(event)

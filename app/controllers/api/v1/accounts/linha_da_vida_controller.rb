@@ -5,7 +5,7 @@ class Api::V1::Accounts::LinhaDaVidaController < Api::V1::Accounts::BaseControll
   def show
     @contact = Current.account.contacts.find(params[:contact_id])
     @leads = Current.account.leads.where(contact_id: @contact.id)
-                    .reorder(:id).includes(:lead_stage, :benefit_type, :thesis)
+                    .reorder(:id).includes(:lead_stage, :benefit_type, :thesis, :sdr, :closer)
     @marcos = Ramon::MarcosEtarios.para(data_nascimento: @contact.data_nascimento, sexo: @contact.sexo)
   end
 

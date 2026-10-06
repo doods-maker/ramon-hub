@@ -25,6 +25,16 @@ RSpec.describe 'Linha da Vida API', type: :request do
     expect(body['marcos'].pluck('key')).to include('aposentadoria_idade_urbana')
   end
 
+  it 'traz o SDR e o Closer do caso (bloco "Lead aberto" da ficha do contato)' do
+    sdr = create(:user, account: account, name: 'Camila')
+    create(:lead, account: account, contact: contact, sdr: sdr)
+
+    get "/api/v1/accounts/#{account.id}/contacts/#{contact.id}/linha_da_vida",
+        headers: agent.create_new_auth_token
+
+    expect(response.parsed_body['leads'].first).to include('sdr_name' => 'Camila', 'closer_name' => nil)
+  end
+
   it '404 para contato de outra conta' do
     estranho = create(:contact, account: create(:account))
     get "/api/v1/accounts/#{account.id}/contacts/#{estranho.id}/linha_da_vida",

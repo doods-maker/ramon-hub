@@ -20,6 +20,8 @@ json.leads @leads do |lead|
   json.stage_color lead.lead_stage&.color
   json.benefit_type_name lead.benefit_type&.name
   json.thesis_name lead.thesis&.name
+  json.sdr_name lead.sdr&.name
+  json.closer_name lead.closer&.name
   json.value lead.value
   json.lost_reason lead.lost_reason
   json.dcb_em lead.dcb_em

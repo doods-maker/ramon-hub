@@ -224,3 +224,16 @@ describe('useConversationFilterContext', () => {
     ]);
   });
 });
+
+// FORK(ramon): filtros que não servem à banca ficam fora do menu.
+describe('useConversationFilterContext (ramon)', () => {
+  it('esconde idioma do navegador, link de origem e campanha', () => {
+    useMapGetter.mockImplementation(key => storeValues[key] || ref([]));
+    const { filterTypes } = useConversationFilterContext();
+    const chaves = filterTypes.value.map(filter => filter.attributeKey);
+    expect(chaves).not.toContain('browser_language');
+    expect(chaves).not.toContain('referer');
+    expect(chaves).not.toContain('campaign_id');
+    expect(chaves).toContain('labels');
+  });
+});

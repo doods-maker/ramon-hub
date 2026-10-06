@@ -63,7 +63,20 @@ export const dateFormat = (time, df = 'MMM d, yyyy') => {
  * @param {boolean} [withAgo=false] - Whether to append 'ago' to the result.
  * @returns {string} Shortened time description.
  */
+// FORK-PONTO: o dynamicTime sai em pt-BR ("há cerca de 3 horas"), que o mapa
+// em inglês abaixo não encurta — a hora longa invadia o nome no card da conversa.
+const UNIDADE_PT = { minuto: 'min', hora: 'h', dia: 'd', mês: 'mês', ano: 'a' };
+const shortTimestampPt = (time, withAgo) => {
+  if (/menos de um|meio minuto/.test(time)) return 'agora';
+  const [, n, unidade] =
+    time.match(/(\d+) (minuto|hora|dia|mês|mese|ano)/) || [];
+  if (!n) return time;
+  const curto = `${n}${UNIDADE_PT[unidade] || 'mês'}`;
+  return withAgo ? `há ${curto}` : curto;
+};
+
 export const shortTimestamp = (time, withAgo = false) => {
+  if (/^(há|em) /.test(time)) return shortTimestampPt(time, withAgo);
   // This function takes a time string and converts it to a short time string
   // with the following format: 1m, 1h, 1d, 1mo, 1y
   // The function also takes an optional boolean parameter withAgo

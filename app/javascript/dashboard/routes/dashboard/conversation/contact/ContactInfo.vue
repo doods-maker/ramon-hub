@@ -322,7 +322,7 @@ export default {
           sm
           @click="toggleEditModal"
         />
-        <ContactMergeModal :primary-contact="contact">
+        <ContactMergeModal v-if="isAdmin" :primary-contact="contact">
           <template #trigger>
             <NextButton
               v-tooltip.top-end="$t('CONTACT_PANEL.MERGE_CONTACT')"

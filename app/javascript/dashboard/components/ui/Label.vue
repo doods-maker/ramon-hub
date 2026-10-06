@@ -184,7 +184,7 @@ export default {
   }
 
   &.smooth {
-    @apply bg-transparent text-n-slate-11 dark:text-n-slate-12 border border-solid border-n-strong;
+    @apply rounded-full px-2 bg-n-slate-9/10 text-n-slate-11 dark:text-n-slate-12 border border-solid border-transparent;
   }
 
   &.dashed {
@@ -205,9 +205,9 @@ export default {
 }
 
 .label-color-dot {
-  @apply inline-block w-3 h-3 rounded-sm shadow-sm;
+  @apply inline-block w-3 h-3 rounded-full;
 }
 .label.small .label-color-dot {
-  @apply w-2 h-2 rounded-sm shadow-sm;
+  @apply w-2 h-2 rounded-full;
 }
 </style>

@@ -60,3 +60,4 @@ class ContactMergeAction
     @base_contact.update!(merged_attributes)
   end
 end
+ContactMergeAction.prepend(Ramon::ContactMergePessoa) # FORK(ramon): leads e CPF/nascimento/sexo

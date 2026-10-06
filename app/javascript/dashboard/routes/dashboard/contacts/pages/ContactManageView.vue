@@ -2,6 +2,7 @@
 import { onMounted, computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -45,8 +46,12 @@ const CONTACT_TABS_OPTIONS = [
   { key: 'MERGE', value: 'merge' },
 ];
 
+// FORK(ramon): mesclar é só para administrador (o backend também barra).
+const { isAdmin } = useAdmin();
 const tabs = computed(() => {
-  return CONTACT_TABS_OPTIONS.map(tab => ({
+  return CONTACT_TABS_OPTIONS.filter(
+    tab => tab.value !== 'merge' || isAdmin.value
+  ).map(tab => ({
     label: t(`CONTACTS_LAYOUT.SIDEBAR.TABS.${tab.key}`),
     value: tab.value,
   }));

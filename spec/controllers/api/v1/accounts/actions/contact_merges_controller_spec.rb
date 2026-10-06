@@ -14,8 +14,24 @@ RSpec.describe 'Contact Merge Action API', type: :request do
       end
     end
 
-    context 'when it is an authenticated user' do
+    # FORK(ramon): mesclar é só para administrador
+    context 'when it is an authenticated agent' do
       let(:agent) { create(:user, account: account, role: :agent) }
+
+      it 'returns unauthorized and does not merge' do
+        allow(ContactMergeAction).to receive(:new)
+        post "/api/v1/accounts/#{account.id}/actions/contact_merge",
+             params: { base_contact_id: base_contact.id, mergee_contact_id: mergee_contact.id },
+             headers: agent.create_new_auth_token,
+             as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(ContactMergeAction).not_to have_received(:new)
+      end
+    end
+
+    context 'when it is an authenticated administrator' do
+      let(:agent) { create(:user, account: account, role: :administrator) }
       let(:merge_action) { double }
 
       before do

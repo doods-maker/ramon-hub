@@ -13,6 +13,7 @@ import ContactLabels from 'dashboard/components-next/Contacts/ContactLabels/Cont
 import ContactsForm from 'dashboard/components-next/Contacts/ContactsForm/ContactsForm.vue';
 import ConfirmContactDeleteDialog from 'dashboard/components-next/Contacts/ContactsForm/ConfirmContactDeleteDialog.vue';
 import Policy from 'dashboard/components/policy.vue';
+import ContatoLeadAberto from 'dashboard/routes/dashboard/ramon/components/ficha/ContatoLeadAberto.vue';
 
 const props = defineProps({
   selectedContact: {
@@ -160,6 +161,7 @@ const handleAvatarDelete = async () => {
 
 <template>
   <div class="flex flex-col items-start gap-8 pb-6">
+    <ContatoLeadAberto :contact-id="selectedContact?.id" />
     <div class="flex flex-col items-start gap-3">
       <Avatar
         :src="avatarSrc || ''"
@@ -206,11 +208,12 @@ const handleAvatarDelete = async () => {
         @click="openLifeline"
       />
     </div>
-    <div class="flex flex-col items-start gap-6">
+    <div class="flex flex-col items-start w-full gap-6">
       <ContactsForm
         ref="contactsFormRef"
         :contact-data="contactData"
         is-details-view
+        class="w-full"
         @update="handleFormUpdate"
       />
       <Button
@@ -223,7 +226,7 @@ const handleAvatarDelete = async () => {
     </div>
     <Policy :permissions="['administrator']">
       <div
-        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-strong"
+        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-weak"
       >
         <div class="flex flex-col gap-2">
           <h6 class="text-base font-medium text-n-slate-12">
@@ -242,7 +245,7 @@ const handleAvatarDelete = async () => {
         />
       </div>
       <div
-        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-strong"
+        class="flex flex-col items-start w-full gap-4 pt-6 border-t border-n-weak"
       >
         <div class="flex flex-col gap-2">
           <h6 class="text-base font-medium text-n-slate-12">

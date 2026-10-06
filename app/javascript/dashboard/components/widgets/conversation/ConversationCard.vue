@@ -11,6 +11,8 @@ import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import LeadLinhaCard from 'dashboard/routes/dashboard/ramon/components/conversation/LeadLinhaCard.vue';
+import { semEtiquetasDoLead } from 'dashboard/routes/dashboard/ramon/helpers/leadNaConversa';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -59,8 +61,13 @@ const showMetaSection = computed(() => {
 
 const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
 
+// FORK(ramon): fase-*/tese-* saem do card quando a linha do lead aparece.
+const cardLabels = computed(() =>
+  semEtiquetasDoLead(props.chat.labels, props.chat.ramon_lead)
+);
+
 const showLabelsSection = computed(() => {
-  return props.chat.labels?.length > 0 || hasSlaPolicyId.value;
+  return cardLabels.value.length > 0 || hasSlaPolicyId.value;
 });
 
 const messagePreviewClass = computed(() => {
@@ -102,9 +109,9 @@ watch(
 
 <template>
   <div
-    class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation border-b border-n-slate-3 hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group hover:z-[1] before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']"
+    class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation border-b border-n-weak hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group hover:z-[1] before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']"
     :class="{
-      'active animate-card-select bg-n-background !border-n-surface-1':
+      'active animate-card-select bg-n-alpha-2 shadow-[inset_2px_0_0_rgb(var(--blue-9))] !border-n-surface-1':
         isActiveChat,
       'selected bg-n-slate-2 !border-n-surface-1': selected,
       'px-0': compact,
@@ -174,6 +181,7 @@ watch(
       >
         {{ currentContact.name }}
       </h4>
+      <LeadLinhaCard :lead="chat.ramon_lead" class="mx-2 ltr:pr-6 rtl:pl-6" />
       <VoiceCallStatus
         v-if="voiceCallData.status"
         key="voice-status-row"
@@ -207,7 +215,7 @@ watch(
         class="absolute flex flex-col ltr:right-3 rtl:left-3"
         :class="showMetaSection ? 'top-8' : 'top-4'"
       >
-        <span class="ml-auto font-normal leading-4 text-xxs">
+        <span class="ml-auto font-mono font-normal leading-4 text-xxs">
           <TimeAgo
             :last-activity-timestamp="chat.timestamp"
             :created-at-timestamp="chat.created_at"
@@ -222,7 +230,7 @@ watch(
       </div>
       <CardLabels
         v-if="showLabelsSection"
-        :conversation-labels="chat.labels"
+        :conversation-labels="cardLabels"
         class="mt-0.5 mx-2 mb-0"
       >
         <template v-if="hasSlaPolicyId" #before>

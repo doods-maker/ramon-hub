@@ -57,6 +57,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
 
   def find_or_create_contact(phone)
     account.contacts.find_by(phone_number: phone) ||
+      Ramon::Telefone.contato_por_variante(account.contacts, phone) ||
       account.contacts.create!(name: params[:nome].to_s.strip.presence || phone, phone_number: phone)
   end
 

@@ -609,8 +609,8 @@
     "DELETE_DIALOG": {
       "TITLE": "Excluir os contatos selecionados",
       "SINGULAR_TITLE": "Excluir o contato selecionado",
-      "DESCRIPTION": "Isso excluirá permanentemente {count} contatos selecionados. Esta ação não pode ser desfeita.",
-      "SINGULAR_DESCRIPTION": "Isso excluirá permanentemente o contato selecionado. Esta ação não pode ser desfeita.",
+      "DESCRIPTION": "Os {count} contatos selecionados serão anonimizados (LGPD): os dados pessoais são apagados e redigidos nas mensagens; conversas e estatísticas são preservadas. Esta ação é irreversível.",
+      "SINGULAR_DESCRIPTION": "O contato selecionado será anonimizado (LGPD): os dados pessoais são apagados e redigidos nas mensagens; conversas e estatísticas são preservadas. Esta ação é irreversível.",
       "CONFIRM_MULTIPLE": "Excluir contatos",
       "CONFIRM_SINGLE": "Excluir contato"
     }

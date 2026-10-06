@@ -12,6 +12,10 @@ import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import CompanySelector from 'dashboard/components-next/Companies/CompanySelector.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import PhoneNumberInput from 'dashboard/components-next/phonenumberinput/PhoneNumberInput.vue';
+import {
+  formatCpf,
+  stripCpf,
+} from 'dashboard/routes/dashboard/ramon/helpers/cpf';
 
 const props = defineProps({
   contactData: {
@@ -40,9 +44,15 @@ const FORM_CONFIG = {
   PHONE_NUMBER: { field: 'phoneNumber' },
   CITY: { field: 'additionalAttributes.city' },
   COUNTRY: { field: 'additionalAttributes.countryCode' },
-  BIO: { field: 'additionalAttributes.description' },
-  COMPANY_NAME: { field: 'additionalAttributes.companyName' },
+  // FORK(ramon): CPF e nascimento no lugar de bio e empresa; redes sociais fora.
+  CPF: { field: 'cpf', placeholder: 'RAMON.CONTATO.CPF', ramon: true },
+  DATA_NASCIMENTO: {
+    field: 'dataNascimento',
+    placeholder: 'RAMON.CONTATO.DATA_NASCIMENTO',
+    ramon: true,
+  },
 };
+const showSocialProfiles = false;
 
 const SOCIAL_CONFIG = {
   LINKEDIN: 'i-ri-linkedin-box-fill',
@@ -62,6 +72,8 @@ const defaultState = {
   firstName: '',
   lastName: '',
   phoneNumber: '',
+  cpf: '',
+  dataNascimento: '',
   additionalAttributes: {
     description: '',
     companyName: '',
@@ -120,6 +132,8 @@ const prepareStateBasedOnProps = () => {
     phoneNumber,
     companyId = '',
     additionalAttributes = {},
+    cpf,
+    dataNascimento,
   } = props.contactData || {};
   const { firstName, lastName } = splitName(name || '');
   const {
@@ -143,6 +157,8 @@ const prepareStateBasedOnProps = () => {
     lastName,
     email: emailAddress,
     phoneNumber,
+    cpf,
+    dataNascimento,
     additionalAttributes: {
       description,
       companyName,
@@ -161,13 +177,21 @@ const countryOptions = computed(() =>
   countries.map(({ name, id }) => ({ label: name, value: id }))
 );
 
+// FORK(ramon): CPF/nascimento só na ficha e no contato novo (o card da lista
+// não carrega esses campos).
 const editDetailsForm = computed(() =>
-  Object.keys(FORM_CONFIG).map(key => ({
-    key,
-    placeholder: t(
-      `CONTACTS_LAYOUT.CARD.EDIT_DETAILS_FORM.FORM.${key}.PLACEHOLDER`
-    ),
-  }))
+  Object.keys(FORM_CONFIG)
+    .filter(
+      key =>
+        !FORM_CONFIG[key].ramon || props.isDetailsView || props.isNewContact
+    )
+    .map(key => ({
+      key,
+      placeholder: t(
+        FORM_CONFIG[key].placeholder ||
+          `CONTACTS_LAYOUT.CARD.EDIT_DETAILS_FORM.FORM.${key}.PLACEHOLDER`
+      ),
+    }))
 );
 
 const socialProfilesForm = computed(() =>
@@ -198,6 +222,7 @@ const getFormBinding = key => {
       if (field === 'firstName' || field === 'lastName') {
         return state[field]?.toString() || '';
       }
+      if (field === 'cpf') return formatCpf(state.cpf); // FORK(ramon)
 
       // Handle nested vs non-nested fields
       const [base, nested] = field.split('.');
@@ -212,6 +237,8 @@ const getFormBinding = key => {
         state[field] = value;
         // Example: firstName="John", lastName="Doe" → name="John Doe"
         state.name = `${state.firstName} ${state.lastName}`.trim();
+      } else if (field === 'cpf') {
+        state.cpf = stripCpf(value).slice(0, 11); // FORK(ramon)
       } else {
         // Handle nested vs non-nested fields
         const [base, nested] = field.split('.');
@@ -310,6 +337,7 @@ defineExpose({
             v-else
             v-model="getFormBinding(item.key).value"
             :placeholder="item.placeholder"
+            :type="item.key === 'DATA_NASCIMENTO' ? 'date' : 'text'"
             :message-type="getMessageType(item.key)"
             :custom-input-class="`h-8 !pt-1 !pb-1 ${
               !isDetailsView
@@ -329,7 +357,7 @@ defineExpose({
         </template>
       </div>
     </div>
-    <div class="flex flex-col items-start gap-2">
+    <div v-if="showSocialProfiles" class="flex flex-col items-start gap-2">
       <span class="py-1 text-sm font-medium text-n-slate-12">
         {{ t('CONTACTS_LAYOUT.CARD.SOCIAL_MEDIA.TITLE') }}
       </span>
