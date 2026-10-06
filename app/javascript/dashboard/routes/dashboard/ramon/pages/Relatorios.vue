@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RamonRelatoriosAPI from 'dashboard/api/ramonRelatorios';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -14,13 +14,28 @@ const error = ref(false);
 const configured = ref(false);
 const embedUrl = ref('');
 
-const fetchEmbed = async () => {
-  loading.value = true;
+// O link assinado do Metabase vence (expires_at, 8h no backend): renova 5 min
+// antes, sem piscar a tela. Iframe com erro: busca um link novo uma vez só.
+const RENOVAR_ANTES_MS = 5 * 60 * 1000;
+const MINIMO_MS = 60 * 1000;
+let renovacao = null;
+let tentouDeNovo = false;
+
+const fetchEmbed = async ({ silencioso = false } = {}) => {
+  if (!silencioso) loading.value = true;
   error.value = false;
   try {
     const { data } = await RamonRelatoriosAPI.get();
     configured.value = data.configured;
     embedUrl.value = data.url || '';
+    clearTimeout(renovacao);
+    if (data.expires_at) {
+      const espera = new Date(data.expires_at) - Date.now() - RENOVAR_ANTES_MS;
+      renovacao = setTimeout(
+        () => fetchEmbed({ silencioso: true }),
+        Math.max(espera, MINIMO_MS)
+      );
+    }
   } catch {
     error.value = true;
   } finally {
@@ -28,7 +43,16 @@ const fetchEmbed = async () => {
   }
 };
 
+// ponytail: o navegador quase nunca dispara `error` em iframe (HTTP 4xx/5xx
+// carregam normal); cobre só falha de rede. Link vencido já é coberto acima.
+const onIframeErro = () => {
+  if (tentouDeNovo) return;
+  tentouDeNovo = true;
+  fetchEmbed({ silencioso: true });
+};
+
 onMounted(fetchEmbed);
+onUnmounted(() => clearTimeout(renovacao));
 </script>
 
 <template>
@@ -49,7 +73,7 @@ onMounted(fetchEmbed);
         link
         xs
         :label="t('RAMON.RELATORIOS.RETRY')"
-        @click="fetchEmbed"
+        @click="fetchEmbed()"
       />
     </div>
     <p v-else-if="!configured" :class="[AVISO, TOM.slate]" class="self-start">
@@ -63,6 +87,7 @@ onMounted(fetchEmbed);
         :src="embedUrl"
         class="border-0 w-full flex-1"
         :title="t('RAMON.RELATORIOS.TITLE')"
+        @error="onIframeErro"
       />
     </div>
   </div>

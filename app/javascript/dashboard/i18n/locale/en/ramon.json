@@ -239,10 +239,9 @@
       "LABEL": "Name",
       "LABEL_PH": "AdvBox",
       "URL": "URL",
-      "ICON": "Icon (Lucide)",
+      "ICON": "Icon",
       "ADD": "Add",
       "URL_PH": "https://…",
-      "ICON_PH": "i-lucide-…",
       "URL_INVALID": "Invalid URL — check the address.",
       "REMOVE_CONFIRM": "Remove this shortcut?"
     },

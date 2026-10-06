@@ -6,7 +6,7 @@ import { DEFAULT_EXTERNAL_SHORTCUTS } from '../externalShortcutsDefaults';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { CAMPO, CARTAO, ROTULO } from '../helpers/ui';
+import { CAMPO, CARTAO, ROTULO, TOM } from '../helpers/ui';
 
 const { t } = useI18n();
 const { uiSettings, updateUISettings } = useUISettings();
@@ -24,7 +24,24 @@ watch(
 );
 
 const draft = ref({ label: '', url: '', icon: 'i-lucide-external-link' });
-const urlError = ref(false);
+// Onde está a URL inválida: índice da linha ou 'novo' (formulário de baixo).
+const urlErro = ref(null);
+// Ícones prontos (lucide, já usados no hub) no lugar do campo técnico.
+const ICONES = [
+  'i-lucide-external-link',
+  'i-lucide-building-2',
+  'i-lucide-calendar',
+  'i-lucide-folder',
+  'i-lucide-file-text',
+  'i-lucide-mail',
+  'i-lucide-globe',
+  'i-lucide-scale',
+  'i-lucide-landmark',
+  'i-lucide-briefcase',
+  'i-lucide-phone',
+  'i-lucide-message-circle',
+];
+const CAMPO_ERRO = '!outline-n-ruby-9';
 
 const persist = () => updateUISettings({ external_shortcuts: shortcuts.value });
 
@@ -44,12 +61,13 @@ const normalizeUrl = raw => {
 
 // Blur da URL inline passa pela MESMA validação do add (bloqueia javascript:
 // e URL vazia/inválida — senão o rail renderizava href cru).
-const persistUrl = s => {
+const persistUrl = (s, i) => {
   const url = normalizeUrl(s.url || '');
   if (!url) {
-    urlError.value = true;
+    urlErro.value = i;
     return;
   }
+  if (urlErro.value === i) urlErro.value = null;
   s.url = url;
   persist();
 };
@@ -57,7 +75,7 @@ const persistUrl = s => {
 const add = () => {
   if (!draft.value.label || !draft.value.url) return;
   const url = normalizeUrl(draft.value.url);
-  urlError.value = !url;
+  urlErro.value = url ? null : 'novo';
   if (!url) return;
   shortcuts.value.push({ ...draft.value, url });
   draft.value = { label: '', url: '', icon: 'i-lucide-external-link' };
@@ -85,7 +103,7 @@ const confirmRemove = () => {
           v-for="(s, i) in shortcuts"
           :key="i"
           :class="CARTAO"
-          class="flex items-center gap-3"
+          class="flex flex-wrap items-center gap-3"
         >
           <span
             :class="s.icon || 'i-lucide-external-link'"
@@ -102,11 +120,11 @@ const confirmRemove = () => {
           <input
             v-model="s.url"
             data-testid="shortcut-url-input"
-            :class="CAMPO"
+            :class="[CAMPO, urlErro === i && CAMPO_ERRO]"
             class="min-w-0 flex-1"
             :placeholder="t('RAMON.SHORTCUTS.URL')"
-            @blur="persistUrl(s)"
-            @input="urlError = false"
+            @blur="persistUrl(s, i)"
+            @input="urlErro = null"
           />
           <Button
             data-testid="shortcut-remove"
@@ -118,6 +136,13 @@ const confirmRemove = () => {
             :title="t('RAMON.FUNIL_CONFIG.REMOVE')"
             @click="remove(i)"
           />
+          <span
+            v-if="urlErro === i"
+            data-testid="shortcut-url-error"
+            class="basis-full text-xs text-n-ruby-11"
+          >
+            {{ t('RAMON.SHORTCUTS.URL_INVALID') }}
+          </span>
         </li>
       </ul>
 
@@ -136,28 +161,42 @@ const confirmRemove = () => {
           <input
             v-model="draft.url"
             data-testid="shortcut-new-url"
-            :class="CAMPO"
+            :class="[CAMPO, urlErro === 'novo' && CAMPO_ERRO]"
             :placeholder="t('RAMON.SHORTCUTS.URL_PH')"
-            @input="urlError = false"
+            @input="urlErro = null"
           />
           <span
-            v-if="urlError"
+            v-if="urlErro === 'novo'"
             data-testid="shortcut-url-error"
             class="text-xs text-n-ruby-11"
           >
             {{ t('RAMON.SHORTCUTS.URL_INVALID') }}
           </span>
         </label>
-        <label :class="ROTULO">
+        <div :class="ROTULO">
           {{ t('RAMON.SHORTCUTS.ICON') }}
-          <input
-            v-model="draft.icon"
-            data-testid="shortcut-new-icon"
-            :class="CAMPO"
-            class="font-mono"
-            :placeholder="t('RAMON.SHORTCUTS.ICON_PH')"
-          />
-        </label>
+          <div class="flex flex-wrap gap-1" role="radiogroup">
+            <button
+              v-for="icone in ICONES"
+              :key="icone"
+              type="button"
+              role="radio"
+              data-testid="shortcut-new-icon"
+              :aria-checked="draft.icon === icone"
+              :aria-label="icone"
+              :title="icone"
+              class="flex size-8 items-center justify-center rounded-lg p-0"
+              :class="
+                draft.icon === icone
+                  ? TOM.blue
+                  : 'text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12'
+              "
+              @click="draft.icon = icone"
+            >
+              <span :class="icone" class="size-4" />
+            </button>
+          </div>
+        </div>
         <Button
           data-testid="shortcut-add"
           sm

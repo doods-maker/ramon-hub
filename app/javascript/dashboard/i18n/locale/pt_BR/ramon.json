@@ -239,10 +239,9 @@
       "LABEL": "Nome",
       "LABEL_PH": "AdvBox",
       "URL": "URL",
-      "ICON": "Ícone (Lucide)",
+      "ICON": "Ícone",
       "ADD": "Adicionar",
       "URL_PH": "https://…",
-      "ICON_PH": "i-lucide-…",
       "URL_INVALID": "URL inválida — confira o endereço.",
       "REMOVE_CONFIRM": "Remover este atalho?"
     },
