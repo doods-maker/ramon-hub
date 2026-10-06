@@ -1702,6 +1702,29 @@
       "COM_TAREFA": "task already open",
       "EMPTY": "No stalled cases in the funnel right now."
     },
+    "FERRAMENTAS": {
+      "TITLE": "Tools",
+      "SUBTITLE": "Everything the assistants can do: what each tool does, which system it touches, where it is used and when it ran.",
+      "GRUPO": "{sistema} · {n}",
+      "SISTEMA": {
+        "funil": "Funnel and hub cases",
+        "advbox": "AdvBox",
+        "motor": "Calculation engine",
+        "zapsign": "ZapSign",
+        "calcom": "Online scheduling (Cal.com)",
+        "faq": "FAQs",
+        "conversa": "Conversation"
+      },
+      "USADA_EM": "Used in:",
+      "SKILL": "{skill} ({assistente})",
+      "SEM_SKILL": "no active skill",
+      "ULTIMA": "Last run: {quando} · {n} in 7 days",
+      "NUNCA": "Never ran",
+      "ERROS_7D": "Errors in 7 days: {n}",
+      "AVANCADO_TITULO": "Advanced",
+      "AVANCADO_TEXTO": "Custom HTTP tools: they call an external address. Not used by the firm today.",
+      "AVANCADO_BOTAO": "Open HTTP tools"
+    },
     "MESSAGE_TEMPLATES": {
       "TAB": "Message templates",
       "NEW_TITLE": "New message template",

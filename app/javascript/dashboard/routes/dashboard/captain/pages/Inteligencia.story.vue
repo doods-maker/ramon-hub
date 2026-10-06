@@ -20,6 +20,8 @@ import GuardrailsIndex from '../assistants/guardrails/Index.vue';
 import GuidelinesIndex from '../assistants/guidelines/Index.vue';
 import Execucoes from './Execucoes.vue';
 import Watchdog from './Watchdog.vue';
+import FerramentasPage from './Ferramentas.vue';
+import TOOLS_YML from '../../../../../../../config/agents/tools.yml';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
@@ -199,6 +201,27 @@ const RUNS = [
   created_at: diasAtras(dias),
 }));
 
+// Catálogo real (tools.yml) com as skills e execuções fictícias acima.
+const FERRAMENTAS = {
+  payload: TOOLS_YML.map(tool => {
+    const runs = RUNS.filter(run => run.tool_name === tool.id);
+    return {
+      ...tool,
+      skills: SKILLS.filter(skill => (skill.tools || []).includes(tool.id)).map(
+        skill => ({
+          id: skill.id,
+          title: skill.title,
+          assistant_id: 1,
+          assistant_name: ATENDIMENTO.name,
+        })
+      ),
+      ultima_execucao_em: runs[0]?.created_at ?? null,
+      execucoes_7d: runs.length,
+      erros_7d: runs.filter(run => run.status === 'erro').length,
+    };
+  }),
+};
+
 const API = {
   'captain/assistants': {
     payload: [ATENDIMENTO, COPILOTO],
@@ -217,6 +240,7 @@ const API = {
   },
   'captain/documents': { payload: DOCS, meta: { total_count: 1, page: 1 } },
   'captain/custom_tools': { payload: [], meta: { total_count: 0, page: 1 } },
+  'captain/ferramentas': FERRAMENTAS,
   captain_tool_runs: {
     resumo: {
       total_24h: 4,
@@ -354,6 +378,9 @@ const clicarEm = texto => () =>
       <div class="h-screen"><ScenariosIndex /></div>
     </Variant>
     <Variant title="Ferramentas">
+      <div class="h-screen"><FerramentasPage /></div>
+    </Variant>
+    <Variant title="Ferramentas HTTP">
       <div class="h-screen"><CustomToolsIndex /></div>
     </Variant>
     <Variant title="Testar">

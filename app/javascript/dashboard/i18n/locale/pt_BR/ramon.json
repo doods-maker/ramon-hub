@@ -1707,6 +1707,29 @@
       "COM_TAREFA": "já tem tarefa aberta",
       "EMPTY": "Nenhum caso parado no funil agora."
     },
+    "FERRAMENTAS": {
+      "TITLE": "Ferramentas",
+      "SUBTITLE": "Tudo que os assistentes sabem fazer: o que cada ferramenta faz, em qual sistema mexe, onde é usada e quando rodou.",
+      "GRUPO": "{sistema} · {n}",
+      "SISTEMA": {
+        "funil": "Funil e casos do hub",
+        "advbox": "AdvBox",
+        "motor": "Motor de cálculos",
+        "zapsign": "ZapSign",
+        "calcom": "Agenda online (Cal.com)",
+        "faq": "FAQs",
+        "conversa": "Conversa"
+      },
+      "USADA_EM": "Usada em:",
+      "SKILL": "{skill} ({assistente})",
+      "SEM_SKILL": "nenhuma skill ativa",
+      "ULTIMA": "Última vez: {quando} · {n} em 7 dias",
+      "NUNCA": "Nunca rodou",
+      "ERROS_7D": "Erros em 7 dias: {n}",
+      "AVANCADO_TITULO": "Avançado",
+      "AVANCADO_TEXTO": "Ferramentas HTTP personalizadas: chamam um endereço externo. A banca não usa hoje.",
+      "AVANCADO_BOTAO": "Abrir ferramentas HTTP"
+    },
     "MESSAGE_TEMPLATES": {
       "TAB": "Modelos de mensagem",
       "NEW_TITLE": "Novo modelo de mensagem",
