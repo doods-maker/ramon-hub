@@ -20,8 +20,12 @@ export const useFluxoEditor = () => {
 
   const desenho = computed(() => deVueFlow(nodes.value, edges.value));
   const json = computed(() => JSON.stringify(desenho.value));
+  // fluxo do sistema (D7) é só leitura: nunca fica sujo, então nada salva sozinho nem prende a saída
   const sujo = computed(
-    () => Boolean(fluxo.value) && json.value !== salvo.value
+    () =>
+      Boolean(fluxo.value) &&
+      fluxo.value.origem !== 'sistema' &&
+      json.value !== salvo.value
   );
   const errosFront = computed(() => validar(desenho.value));
   const nosComErro = computed(

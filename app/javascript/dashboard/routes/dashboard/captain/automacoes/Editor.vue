@@ -67,7 +67,7 @@ const {
   rodar,
 } = useFluxoEditor();
 
-const selecionado = ref(route.query.no || null);
+const selecionado = ref(null);
 const paleta = ref(false);
 const versoesAbertas = ref(false);
 const versoesRef = ref(null);
@@ -91,14 +91,26 @@ const carregarExecucoes = async () => {
 const avisarSaida = e => {
   if (sujo.value) e.preventDefault();
 };
-onMounted(async () => {
+const erroCarga = ref(false);
+const abrirFluxo = async () => {
+  erroCarga.value = false;
+  try {
+    await carregar(fluxoId.value);
+  } catch (e) {
+    erroCarga.value = true;
+    return;
+  }
+  carregarExecucoes();
+};
+onMounted(() => {
   window.addEventListener('beforeunload', avisarSaida);
   if (!etapas.value.length) store.dispatch('leadConfig/get');
   if (!pessoas.value.length) store.dispatch('agents/get');
   if (!teses.value.length) store.dispatch('theses/get');
-  await carregar(fluxoId.value);
-  carregarExecucoes();
+  abrirFluxo();
 });
+// fluxo do sistema (D7): só leitura — o back recusa salvar, publicar e rodar
+const somenteLeitura = computed(() => fluxo.value?.origem === 'sistema');
 // excluído: não há mais rascunho para salvar (o save daria 404 e prenderia a tela)
 const deletado = ref(false);
 onBeforeRouteLeave(async () => {
@@ -193,16 +205,22 @@ const seloRascunho = computed(() =>
     ? t(`${K}.EDITOR.SELO_PUBLICADA`, { versao: fluxo.value.versao })
     : t(`${K}.EDITOR.SELO_NUNCA`)
 );
+// re-render devolve aos campos (nome, limite) o valor salvo
+const desfazerCampos = () => {
+  fluxo.value = { ...fluxo.value };
+};
 const salvarSeguro = async attrs => {
   try {
     await atualizar(attrs);
   } catch (e) {
     useAlert(t(`${K}.EDITOR.ERRO_SALVAR`));
+    desfazerCampos();
   }
 };
 const mudarLimite = valor =>
   salvarSeguro({ limite_dia: valor ? Number(valor) : null });
-const mudarNome = nome => nome.trim() && salvarSeguro({ nome: nome.trim() });
+const mudarNome = nome =>
+  nome.trim() ? salvarSeguro({ nome: nome.trim() }) : desfazerCampos();
 const clicarPublicar = async () => {
   publicando.value = true;
   try {
@@ -283,15 +301,24 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
         <input
           class="reset-base min-w-0 max-w-xs flex-1 bg-transparent text-[15px] font-semibold text-n-slate-12 outline-none"
           :aria-label="t(`${K}.EDITOR.NOME`)"
+          :readonly="somenteLeitura"
           :value="fluxo.nome"
           @change="mudarNome($event.target.value)"
         />
-        <span :class="[CHIP, TOM.slate]" class="font-mono">
+        <span
+          v-if="somenteLeitura"
+          :class="[CHIP, TOM.slate]"
+          class="font-mono"
+        >
+          {{ t(`${K}.EDITOR.SOMENTE_LEITURA`) }}
+        </span>
+        <span v-else :class="[CHIP, TOM.slate]" class="font-mono">
           {{ salvando ? t(`${K}.EDITOR.SALVANDO`) : seloRascunho }}
         </span>
 
         <div class="ml-auto flex items-center gap-2">
           <span
+            v-if="!somenteLeitura"
             class="flex items-center gap-2 border-r border-n-weak pr-2.5 text-[12.5px] text-n-slate-11"
           >
             <span
@@ -356,6 +383,7 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
             </div>
           </div>
           <Button
+            v-if="!somenteLeitura"
             outline
             slate
             sm
@@ -364,6 +392,7 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
             @click="testando = true"
           />
           <Button
+            v-if="!somenteLeitura"
             sm
             icon="i-lucide-upload"
             :label="
@@ -385,19 +414,32 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
       </template>
     </div>
 
-    <div class="flex min-h-0 flex-1">
+    <div v-if="erroCarga" class="p-6 text-sm text-n-ruby-11">
+      {{ t('CAPTAIN_RAMON.LOAD_ERROR') }}
+      <button
+        type="button"
+        class="ml-1 text-n-blue-11 hover:underline"
+        @click="abrirFluxo"
+      >
+        {{ t('CAPTAIN_RAMON.RETRY') }}
+      </button>
+    </div>
+
+    <div v-else class="flex min-h-0 flex-1">
       <div class="relative min-w-0 flex-1">
         <Quadro
           v-if="fluxo"
           v-model:nodes="nodes"
           v-model:edges="edges"
+          :somente-leitura="somenteLeitura"
           :selecionado="selecionado"
           :erros="nosComErro"
-          @selecionar="id => (selecionado = id)"
+          @selecionar="id => (selecionado = somenteLeitura ? null : id)"
           @conectar="conectar"
           @adicionar="abrirPaleta"
         />
         <Button
+          v-if="fluxo && !somenteLeitura"
           class="!absolute left-3.5 top-3.5 z-10"
           faded
           blue

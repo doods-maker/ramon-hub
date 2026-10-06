@@ -1934,6 +1934,7 @@
         "SELO_PUBLICADA": "rascunho · v{versao} publicada",
         "SELO_NUNCA": "rascunho · nunca publicado",
         "SALVANDO": "salvando…",
+        "SOMENTE_LEITURA": "Fluxo do sistema · só leitura",
         "LIGADO": "Ligado",
         "LIMITE": "limite",
         "POR_DIA": "/dia",

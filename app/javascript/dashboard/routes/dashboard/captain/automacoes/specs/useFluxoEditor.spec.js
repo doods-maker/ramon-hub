@@ -56,6 +56,20 @@ describe('useFluxoEditor', () => {
     expect(ed.sujo.value).toBe(false);
   });
 
+  it('fluxo do sistema não fica sujo nem salva sozinho', async () => {
+    RamonFluxosAPI.show.mockResolvedValue({
+      data: { id: 7, origem: 'sistema', versoes: [], rascunho: RASCUNHO },
+    });
+    const ed = useFluxoEditor();
+    await ed.carregar(7);
+    ed.nodes.value = comTexto(ed.nodes.value, 'novo');
+    await nextTick();
+    vi.advanceTimersByTime(1000);
+    await flushPromises();
+    expect(ed.sujo.value).toBe(false);
+    expect(RamonFluxosAPI.update).not.toHaveBeenCalled();
+  });
+
   it('salva o rascunho 1 s depois da última mudança', async () => {
     const ed = useFluxoEditor();
     await ed.carregar(7);

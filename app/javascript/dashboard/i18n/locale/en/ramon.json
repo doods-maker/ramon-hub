@@ -1929,6 +1929,7 @@
         "SELO_PUBLICADA": "draft · v{versao} published",
         "SELO_NUNCA": "draft · never published",
         "SALVANDO": "saving…",
+        "SOMENTE_LEITURA": "System flow · read only",
         "LIGADO": "On",
         "LIMITE": "limit",
         "POR_DIA": "/day",
