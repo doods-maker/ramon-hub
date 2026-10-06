@@ -10,6 +10,7 @@ import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { CAMPO } from '../../helpers/ui';
 import { leadsToCsv } from '../../helpers/leadsCsv';
+import { mensagemErro } from '../../helpers/erro';
 import KanbanColumn from './KanbanColumn.vue';
 import KanbanFilters from './KanbanFilters.vue';
 import FilterChips from './FilterChips.vue';
@@ -23,6 +24,7 @@ import RemoveStageModal from './RemoveStageModal.vue';
 import LostReasonModal from './LostReasonModal.vue';
 import WonValueModal from './WonValueModal.vue';
 import NamePromptModal from '../NamePromptModal.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 import RamonPageHeader from '../RamonPageHeader.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 
@@ -52,6 +54,8 @@ const lostReasons = computed(() => getters['leadConfig/getLostReasons'].value);
 const orderedStages = ref([]);
 const stageToRemove = ref(null);
 const newStageModalOpen = ref(false);
+// Ganho/Perdido mudam o que acontece com os leads da etapa: confirmar antes.
+const stageTypeToConfirm = ref(null);
 
 // Estado do primeiro carregamento: skeleton enquanto busca, erro com retry.
 const uiFlags = computed(() => getters['leads/getUIFlags'].value);
@@ -320,6 +324,7 @@ const anyModalOpen = () =>
   lostModalOpen.value ||
   wonModalOpen.value ||
   !!stageToRemove.value ||
+  !!stageTypeToConfirm.value ||
   newStageModalOpen.value;
 
 useKeyboardEvents({
@@ -349,16 +354,66 @@ useKeyboardEvents({
   },
 });
 
-const onRenameStage = ({ id, name }) =>
-  store.dispatch('leadConfig/updateStage', { id, name });
-const onRecolorStage = ({ id, color }) =>
-  store.dispatch('leadConfig/updateStage', { id, color });
-const onSetStageType = ({ id, type }) =>
-  store.dispatch('leadConfig/updateStage', {
+// Erro do servidor (nome duplicado, valor inválido…) aparece com o motivo.
+const updateStage = async payload => {
+  try {
+    await store.dispatch('leadConfig/updateStage', payload);
+  } catch (e) {
+    useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR')));
+  }
+};
+const onRenameStage = ({ id, name }) => updateStage({ id, name });
+const onRecolorStage = ({ id, color }) => updateStage({ id, color });
+const applyStageType = async ({ id, type }) => {
+  await updateStage({ id, is_won: type === 'won', is_lost: type === 'lost' });
+  // o servidor desmarca a etapa de ganho/perda anterior: recarrega todas
+  store.dispatch('leadConfig/get');
+};
+const onSetStageType = ({ id, type }) => {
+  const stage = stages.value.find(s => s.id === id);
+  const flag = { won: 'is_won', lost: 'is_lost' }[type];
+  if (!flag || stage?.[flag]) {
+    applyStageType({ id, type });
+    return;
+  }
+  const atual = stages.value.find(s => s[flag] && s.id !== id);
+  stageTypeToConfirm.value = {
     id,
-    is_won: type === 'won',
-    is_lost: type === 'lost',
-  });
+    type,
+    name: stage?.name,
+    atual: atual?.name,
+  };
+};
+const stageTypeMessage = computed(() => {
+  const confirm = stageTypeToConfirm.value;
+  if (!confirm) return '';
+  const won = confirm.type === 'won';
+  const efeito = won
+    ? t('RAMON.FUNIL.STAGE.CONFIRM_WON_EFFECT')
+    : t('RAMON.FUNIL.STAGE.CONFIRM_LOST_EFFECT');
+  if (!confirm.atual) return efeito;
+  const anterior = won
+    ? t('RAMON.FUNIL.STAGE.CONFIRM_WON_PREVIOUS', { name: confirm.atual })
+    : t('RAMON.FUNIL.STAGE.CONFIRM_LOST_PREVIOUS', { name: confirm.atual });
+  return `${efeito} ${anterior}`;
+});
+const stageTypeTitle = computed(() => {
+  const confirm = stageTypeToConfirm.value;
+  if (!confirm) return '';
+  return confirm.type === 'won'
+    ? t('RAMON.FUNIL.STAGE.CONFIRM_WON_TITLE', { name: confirm.name })
+    : t('RAMON.FUNIL.STAGE.CONFIRM_LOST_TITLE', { name: confirm.name });
+});
+const stageTypeConfirmLabel = computed(() =>
+  stageTypeToConfirm.value?.type === 'won'
+    ? t('RAMON.FUNIL.STAGE.TYPE_WON')
+    : t('RAMON.FUNIL.STAGE.TYPE_LOST')
+);
+const confirmStageType = () => {
+  const confirm = stageTypeToConfirm.value;
+  stageTypeToConfirm.value = null;
+  applyStageType(confirm);
+};
 const onRemoveStage = stage => {
   stageToRemove.value = stage;
 };
@@ -369,7 +424,7 @@ const confirmRemove = async ({ id, moveToStageId }) => {
     // A movimentação roda em job; os cards migram conforme os broadcasts chegam.
     useAlert(t('RAMON.FUNIL.STAGE_MERGE_QUEUED'));
   } catch (e) {
-    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR')));
   }
 };
 const addStage = () => {
@@ -382,7 +437,7 @@ const confirmAddStage = async name => {
   try {
     await store.dispatch('leadConfig/createStage', { name });
   } catch (e) {
-    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
+    useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR')));
   }
 };
 const onColumnsReorder = () => {
@@ -684,5 +739,15 @@ const exportCsv = () => {
         @cancel="newStageModalOpen = false"
       />
     </Transition>
+    <ConfirmModal
+      v-if="stageTypeToConfirm"
+      data-testid="stage-type-confirm"
+      :title="stageTypeTitle"
+      :message="stageTypeMessage"
+      :confirm-label="stageTypeConfirmLabel"
+      :confirm-color="stageTypeToConfirm.type === 'won' ? 'blue' : 'ruby'"
+      @confirm="confirmStageType"
+      @cancel="stageTypeToConfirm = null"
+    />
   </div>
 </template>

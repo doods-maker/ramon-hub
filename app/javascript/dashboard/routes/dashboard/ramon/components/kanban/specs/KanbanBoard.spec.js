@@ -1,9 +1,10 @@
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import KanbanBoard from '../KanbanBoard.vue';
 import KanbanColumn from '../KanbanColumn.vue';
 import RemoveStageModal from '../RemoveStageModal.vue';
 import WonValueModal from '../WonValueModal.vue';
+import ConfirmModal from '../../ConfirmModal.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
@@ -132,16 +133,65 @@ describe('KanbanBoard.vue', () => {
     });
   });
 
-  it('setStageType dispara updateStage com is_won/is_lost', () => {
+  it('setStageType ganho pede confirmação antes de salvar e recarrega as etapas', async () => {
+    dispatch.mockResolvedValue({});
     const wrapper = mountBoard();
     wrapper
       .findComponent(KanbanColumn)
       .vm.$emit('setStageType', { id: 1, type: 'won' });
+    await wrapper.vm.$nextTick();
+    expect(dispatch).not.toHaveBeenCalledWith(
+      'leadConfig/updateStage',
+      expect.anything()
+    );
+    const modal = wrapper.findComponent(ConfirmModal);
+    expect(modal.props('message')).toContain(
+      'RAMON.FUNIL.STAGE.CONFIRM_WON_EFFECT'
+    );
+    dispatch.mockClear();
+    modal.vm.$emit('confirm');
+    await flushPromises();
     expect(dispatch).toHaveBeenCalledWith('leadConfig/updateStage', {
       id: 1,
       is_won: true,
       is_lost: false,
     });
+    expect(dispatch).toHaveBeenCalledWith('leadConfig/get');
+  });
+
+  it('setStageType perda avisa que a etapa de perda atual deixa de ser', async () => {
+    const wrapper = mountBoard();
+    wrapper
+      .findComponent(KanbanColumn)
+      .vm.$emit('setStageType', { id: 2, type: 'lost' });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent(ConfirmModal).props('message')).toContain(
+      'RAMON.FUNIL.STAGE.CONFIRM_LOST_PREVIOUS'
+    );
+  });
+
+  it('setStageType normal salva direto', () => {
+    const wrapper = mountBoard();
+    wrapper
+      .findComponent(KanbanColumn)
+      .vm.$emit('setStageType', { id: 9, type: 'normal' });
+    expect(dispatch).toHaveBeenCalledWith('leadConfig/updateStage', {
+      id: 9,
+      is_won: false,
+      is_lost: false,
+    });
+  });
+
+  it('mostra a mensagem do servidor quando renomear falha', async () => {
+    const wrapper = mountBoard();
+    dispatch.mockRejectedValueOnce({
+      response: { data: { message: 'Nome já está em uso' } },
+    });
+    wrapper
+      .findComponent(KanbanColumn)
+      .vm.$emit('renameStage', { id: 1, name: 'Qualificado' });
+    await flushPromises();
+    expect(useAlert).toHaveBeenCalledWith('Nome já está em uso');
   });
 
   it('removeStage abre o RemoveStageModal e confirm dispara deleteStage', async () => {
