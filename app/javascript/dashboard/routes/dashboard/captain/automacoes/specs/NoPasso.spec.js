@@ -18,6 +18,18 @@ const montar = props =>
     global: { stubs: { Handle: true } },
   });
 
+describe('NoPasso — webhook', () => {
+  it('mostra só o host, sem caminho nem token', () => {
+    const w = montar({
+      tipo: 'webhook',
+      config: { url: 'https://hook.make.com/abc123?token=x' },
+    });
+    expect(w.text()).toContain('hook.make.com');
+    expect(w.text()).not.toContain('abc123');
+    expect(w.text()).not.toContain('token');
+  });
+});
+
 describe('NoPasso — saída tomada', () => {
   it('acende só o rótulo da saída tomada', () => {
     const w = montar({ saidaTomada: 'sim' });

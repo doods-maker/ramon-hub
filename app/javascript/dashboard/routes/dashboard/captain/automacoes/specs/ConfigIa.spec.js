@@ -47,6 +47,37 @@ describe('ConfigIa', () => {
     ]);
   });
 
+  it('resposta velha de skills não sobrescreve a nova', async () => {
+    CaptainAssistantAPI.get.mockResolvedValue({
+      data: {
+        payload: [
+          { id: 1, name: 'A' },
+          { id: 2, name: 'B' },
+        ],
+      },
+    });
+    let soltaA;
+    CaptainScenariosAPI.get
+      .mockImplementationOnce(
+        () =>
+          new Promise(r => {
+            soltaA = r;
+          })
+      )
+      .mockResolvedValueOnce({
+        data: { payload: [{ id: 9, title: 'Skill B' }] },
+      });
+    const w = montar('rodar_skill', { assistente_id: 1 });
+    await flushPromises();
+    await w.find('[data-testid="ia-assistente"]').setValue('2');
+    await flushPromises();
+    soltaA({ data: { payload: [{ id: 8, title: 'Skill A' }] } });
+    await flushPromises();
+    const txt = w.find('[data-testid="ia-skill"]').text();
+    expect(txt).toContain('Skill B');
+    expect(txt).not.toContain('Skill A');
+  });
+
   it('sem Captain (FOSS): avisa e não quebra', async () => {
     CaptainAssistantAPI.get.mockRejectedValue(new Error('404'));
     const w = montar('rodar_skill', {});

@@ -272,6 +272,7 @@ const modoEspera = horario =>
             :value="config.papel || ''"
             @change="muda('papel', $event.target.value)"
           >
+            <option value="" disabled>{{ t(`${K}.PAINEL.ESCOLHA`) }}</option>
             <option v-for="p in PAPEIS" :key="p" :value="p">
               {{ t(`${K}.PAPEIS.${p}`) }}
             </option>

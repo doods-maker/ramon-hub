@@ -1,7 +1,7 @@
 <script setup>
 // Passos de IA: perguntar (sim/não), rascunho escrito pela IA, rodar uma skill do Captain.
 // Assistentes e skills vêm das APIs do Captain (enterprise); sem elas, aviso e nada quebra.
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
 import CaptainScenariosAPI from 'dashboard/api/captain/scenarios';
@@ -28,14 +28,19 @@ const muda = (chave, valor) =>
   emit('update:config', { ...props.config, [chave]: valor });
 const numeroOuNada = v => (v === '' ? null : Number(v));
 
+// descarta resposta velha (troca rápida de assistente ou componente desmontado)
+let seq = 0;
 const carregarSkills = async id => {
+  seq += 1;
+  const req = seq;
   skills.value = [];
   if (!id) return;
   try {
     const { data } = await CaptainScenariosAPI.get({ assistantId: id });
+    if (req !== seq) return;
     skills.value = data.payload || [];
   } catch {
-    semCaptain.value = true;
+    if (req === seq) semCaptain.value = true;
   }
 };
 
@@ -54,6 +59,9 @@ onMounted(async () => {
     return;
   }
   carregarSkills(props.config.assistente_id);
+});
+onBeforeUnmount(() => {
+  seq += 1;
 });
 </script>
 

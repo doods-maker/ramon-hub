@@ -112,7 +112,8 @@ const detalhe = computed(() => {
     case 'advbox':
       return c.acao ? t(`${K}.PAINEL.ADVBOX_ACOES.${c.acao}`) : '';
     case 'webhook':
-      return curto(c.url);
+      // só o host: o caminho/query pode levar token do hook
+      return c.url?.match(/^https?:\/\/([^/?#]+)/)?.[1] || '';
     case 'trocar_responsavel':
       return c.papel ? t(`${K}.PAPEIS.${c.papel}`) : '';
     case 'preencher_campo':
