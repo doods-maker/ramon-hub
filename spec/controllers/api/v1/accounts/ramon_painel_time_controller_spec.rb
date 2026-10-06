@@ -33,8 +33,7 @@ RSpec.describe 'Ramon Painel do time API', type: :request do
     get url, params: { papel: 'closer', periodo: 'mes_passado' }, headers: admin.create_new_auth_token, as: :json
 
     body = response.parsed_body
-    expect(body['time']['kpis'].keys).to contain_exactly('conversao', 'assinado_na_reuniao', 'docs_7d', 'cancelamento_7d',
-                                                          'painel', 'dossie_24h', 'vou_pensar_48h')
+    expect(body['time']['kpis'].keys).to match_array(%w[conversao assinado_na_reuniao docs_7d cancelamento_7d painel dossie_24h vou_pensar_48h])
     expect(body['metas']['cancelamento_7d']).to eq('alvo' => 5, 'sentido' => 'max', 'unidade' => '%')
     expect(body['pessoas']).to eq([])
   end
