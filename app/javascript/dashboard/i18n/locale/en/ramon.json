@@ -2261,7 +2261,7 @@
         },
         "pos_contrato": {
           "NOME": "After contract: ask for documents",
-          "DESCRICAO": "Contract signed → welcome → task → wait 2 days → if documents complete, else AI draft + push"
+          "DESCRICAO": "Contract signed → welcome → task → wait 2 days → documents complete: bell notice; missing: AI draft + push"
         },
         "fora_do_horario": {
           "NOME": "After hours",

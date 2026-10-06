@@ -2266,7 +2266,7 @@
         },
         "pos_contrato": {
           "NOME": "Pós-contrato: pedir documentos",
-          "DESCRICAO": "Contrato assinado → boas-vindas → tarefa → espera 2 dias → se documentos completos, senão rascunho da IA + push"
+          "DESCRICAO": "Contrato assinado → boas-vindas → tarefa → espera 2 dias → documentos completos: aviso no sino; faltando: rascunho da IA + push"
         },
         "fora_do_horario": {
           "NOME": "Fora do horário",

@@ -88,6 +88,17 @@ export const MODELOS = [
           130,
           900
         ),
+        // "sim" avisa em vez de mover: a etapa é do funil de cada conta (troque por "Mover etapa")
+        no(
+          'n8',
+          'avisar_sino',
+          {
+            texto:
+              'Documentos de {nome} completos — pode seguir para a próxima etapa',
+          },
+          -130,
+          740
+        ),
       ],
       setas: [
         seta('n1', 's', 'n2'),
@@ -96,6 +107,7 @@ export const MODELOS = [
         seta('n4', 's', 'n5'),
         seta('n5', 'nao', 'n6'),
         seta('n6', 's', 'n7'),
+        seta('n5', 'sim', 'n8'),
       ],
     },
   },

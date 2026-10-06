@@ -40,5 +40,7 @@ describe('modelos prontos', () => {
     ]);
     const nao = desenho.setas.find(s => s.de === se.id && s.saida === 'nao');
     expect(desenho.nos.find(n => n.id === nao.para).tipo).toBe('rascunho_ia');
+    const sim = desenho.setas.find(s => s.de === se.id && s.saida === 'sim');
+    expect(desenho.nos.find(n => n.id === sim.para).tipo).toBe('avisar_sino');
   });
 });
