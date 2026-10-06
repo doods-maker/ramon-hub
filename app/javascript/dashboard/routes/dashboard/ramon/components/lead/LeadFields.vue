@@ -298,7 +298,8 @@ const toggleConsent = () =>
         :class="SELECT"
         @change="e => saveSelect('lost_reason', e.target.value)"
       >
-        <option value="">—</option>
+        <!-- perdido sem motivo não existe: o vazio não é escolha -->
+        <option value="" disabled>—</option>
         <option
           v-if="lead.lost_reason && !reasonNames.includes(lead.lost_reason)"
           :value="lead.lost_reason"

@@ -332,7 +332,8 @@ const onStageChange = targetId => {
   lostModalOpen.value = false;
   wonPrompt.value = false;
   const target = stages.value.find(s => s.id === targetId);
-  if (target?.is_lost && !props.lead?.lost_reason) {
+  // Entrar em Perdido SEMPRE pede o motivo (regra 06/10).
+  if (target?.is_lost) {
     lostModalOpen.value = true;
     return;
   }

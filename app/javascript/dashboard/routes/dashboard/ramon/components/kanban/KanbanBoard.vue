@@ -141,8 +141,9 @@ const activeFilterCount = computed(() => {
 const onMove = async ({ id, leadStageId, newIndex }) => {
   const stage = findStage(leadStageId);
   const lead = findLead(id);
-  // Etapa de perda sem motivo: segura o movimento e exige o motivo.
-  if (stage?.is_lost && !lead?.lost_reason) {
+  // Entrar em Perdido SEMPRE pede o motivo (regra 06/10); reordenar dentro
+  // da coluna Perdido não. Cancelar a janela devolve o card à origem.
+  if (stage?.is_lost && lead?.lead_stage_id !== leadStageId) {
     pendingMove.value = { id, leadStageId, position: newIndex };
     lostModalOpen.value = true;
     return;
@@ -159,6 +160,7 @@ const onMove = async ({ id, leadStageId, newIndex }) => {
   const previous = {
     leadStageId: lead?.lead_stage_id,
     position: lead?.position,
+    lostReason: lead?.lost_reason,
   };
   // Demais casos persistem na hora.
   try {
@@ -174,11 +176,13 @@ const onMove = async ({ id, leadStageId, newIndex }) => {
       type: 'button',
       message: t('RAMON.KANBAN.MOVE_UNDO'),
       duration: 5000,
+      // desfazer a saída do Perdido volta com o motivo que o lead tinha
       onClick: () =>
         store.dispatch('leads/move', {
           id,
           leadStageId: previous.leadStageId,
           position: previous.position ?? 0,
+          ...(previous.lostReason ? { lostReason: previous.lostReason } : {}),
         }),
     });
   }

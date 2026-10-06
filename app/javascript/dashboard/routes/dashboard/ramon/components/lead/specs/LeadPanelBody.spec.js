@@ -668,6 +668,17 @@ describe('LeadPanelBody', () => {
       expect(wrapper.findComponent(LostReasonModal).exists()).toBe(true);
     });
 
+    it('pede o motivo mesmo se o lead carrega um motivo antigo', async () => {
+      const update = vi.fn();
+      const wrapper = mountBody({
+        props: { lead: { ...lead, lost_reason: 'antigo' } },
+        spies: { update },
+      });
+      await wrapper.find('[data-testid="panel-stage"]').setValue(3);
+      expect(update).not.toHaveBeenCalled();
+      expect(wrapper.findComponent(LostReasonModal).exists()).toBe(true);
+    });
+
     it('faz o PATCH com lost_reason quando o modal confirma', async () => {
       const update = vi.fn();
       const wrapper = mountBody({ spies: { update } });

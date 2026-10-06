@@ -4,6 +4,7 @@ import KanbanBoard from '../KanbanBoard.vue';
 import KanbanColumn from '../KanbanColumn.vue';
 import RemoveStageModal from '../RemoveStageModal.vue';
 import WonValueModal from '../WonValueModal.vue';
+import LostReasonModal from '../LostReasonModal.vue';
 import ConfirmModal from '../../ConfirmModal.vue';
 
 vi.mock('vue-i18n', () => ({
@@ -17,7 +18,11 @@ vi.mock('dashboard/composables', () => ({
 }));
 
 const dispatch = vi.fn();
-const buildStore = ({ role = 'administrator', wonRequest = null } = {}) =>
+const buildStore = ({
+  role = 'administrator',
+  wonRequest = null,
+  leads = [{ id: 10, lead_stage_id: 1, position: 0 }],
+} = {}) =>
   createStore({
     getters: { getCurrentRole: () => role },
     modules: {
@@ -25,7 +30,7 @@ const buildStore = ({ role = 'administrator', wonRequest = null } = {}) =>
         namespaced: true,
         getters: {
           getLeadsByStage: () => () => [],
-          getLeads: () => [{ id: 10, lead_stage_id: 1, position: 0 }],
+          getLeads: () => leads,
           getSelectedIds: () => [],
           getDockConversationId: () => null,
           getWonRequest: () => wonRequest,
@@ -384,6 +389,28 @@ describe('KanbanBoard.vue', () => {
       });
     });
 
+    it('desfazer a saída do Perdido volta com o motivo que o lead tinha', async () => {
+      const wrapper = mountBoard({
+        leads: [
+          { id: 10, lead_stage_id: 9, position: 2, lost_reason: 'Preço' },
+        ],
+      });
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 1, newIndex: 0 });
+      await flushPromises();
+
+      const [, action] = useAlert.mock.calls.at(-1);
+      dispatch.mockClear();
+      action.onClick();
+      expect(dispatch).toHaveBeenCalledWith('leads/move', {
+        id: 10,
+        leadStageId: 9,
+        position: 2,
+        lostReason: 'Preço',
+      });
+    });
+
     it('NÃO mostra toast quando o movimento cai no modal de perda', async () => {
       const wrapper = mountBoard();
       wrapper
@@ -393,6 +420,57 @@ describe('KanbanBoard.vue', () => {
       await wrapper.vm.$nextTick();
 
       expect(useAlert).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('arrastar para Perdido exige motivo', () => {
+    const arrastarParaPerdido = async wrapper => {
+      wrapper
+        .findComponent(KanbanColumn)
+        .vm.$emit('move', { id: 10, leadStageId: 9, newIndex: 0 });
+      await flushPromises();
+    };
+
+    it('abre a janela mesmo se o lead carrega um motivo antigo', async () => {
+      const wrapper = mountBoard({
+        leads: [{ id: 10, lead_stage_id: 1, position: 0, lost_reason: 'x' }],
+      });
+      await arrastarParaPerdido(wrapper);
+      expect(wrapper.findComponent(LostReasonModal).exists()).toBe(true);
+      expect(dispatch).not.toHaveBeenCalledWith(
+        'leads/move',
+        expect.anything()
+      );
+    });
+
+    it('confirmar grava etapa e motivo num update só', async () => {
+      const wrapper = mountBoard();
+      await arrastarParaPerdido(wrapper);
+      wrapper
+        .findComponent(LostReasonModal)
+        .vm.$emit('confirmMove', { lostReason: 'Preço' });
+      await flushPromises();
+      expect(dispatch).toHaveBeenCalledWith('leads/update', {
+        id: 10,
+        lead_stage_id: 9,
+        position: 0,
+        lost_reason: 'Preço',
+      });
+      expect(wrapper.findComponent(LostReasonModal).exists()).toBe(false);
+    });
+
+    it('cancelar fecha sem gravar e devolve o card à coluna de origem', async () => {
+      const wrapper = mountBoard();
+      await arrastarParaPerdido(wrapper);
+      const coluna = wrapper.findComponent(KanbanColumn);
+      const antes = coluna.props('leads');
+      dispatch.mockClear();
+      wrapper.findComponent(LostReasonModal).vm.$emit('cancelMove');
+      await flushPromises();
+      expect(wrapper.findComponent(LostReasonModal).exists()).toBe(false);
+      expect(dispatch).not.toHaveBeenCalled();
+      // nova referência = a coluna ressincroniza a cópia local (desfaz o drop)
+      expect(coluna.props('leads')).not.toBe(antes);
     });
   });
 });
