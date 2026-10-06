@@ -3,9 +3,10 @@ import RamonFluxosAPI from 'dashboard/api/ramonFluxos';
 import Lista from '../Lista.vue';
 
 const push = vi.fn();
+const replace = vi.fn();
 const rota = { query: {} };
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push }),
+  useRouter: () => ({ push, replace }),
   useRoute: () => rota,
 }));
 vi.mock('dashboard/composables/useAccount', () => ({
@@ -112,6 +113,32 @@ describe('Lista de automações', () => {
     expect(wrapper.text()).toContain('3 / 20');
     expect(wrapper.text()).toContain('1 failed');
     expect(wrapper.find('[data-testid="sistema-linha"]').exists()).toBe(false);
+  });
+
+  it('Meus fluxos sem limite mostra "3 / —"', async () => {
+    RamonFluxosAPI.get.mockResolvedValue({
+      data: {
+        payload: [{ ...FLUXO, limite_dia: null }],
+        resumo: {},
+      },
+    });
+    const wrapper = mount(Lista);
+    await flushPromises();
+    expect(wrapper.find('[data-testid="fluxo-linha"]').text()).toContain(
+      '3 / —'
+    );
+  });
+
+  it('trocar de aba escreve ?aba=sistema na URL e "Meus" a tira', async () => {
+    rota.query = { x: '1' };
+    const wrapper = mount(Lista);
+    await flushPromises();
+    await wrapper.find('[data-testid="aba-sistema"]').trigger('click');
+    expect(replace).toHaveBeenLastCalledWith({
+      query: { x: '1', aba: 'sistema' },
+    });
+    await wrapper.find('[data-testid="aba-meus"]').trigger('click');
+    expect(replace).toHaveBeenLastCalledWith({ query: { x: '1' } });
   });
 
   it('clicar na linha abre o editor', async () => {

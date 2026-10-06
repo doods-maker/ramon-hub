@@ -120,8 +120,17 @@ const ultima = iso =>
   iso ? dynamicTime(Math.floor(new Date(iso).getTime() / 1000)) : TRACO;
 // "Hoje" das duas abas; do sistema, sem contador barato o back manda hoje = null
 const hojeLimite = f => {
+  if (f.origem !== 'sistema') return `${f.hoje} / ${f.limite_dia ?? TRACO}`;
   if (f.hoje == null) return TRACO;
   return f.limite_dia ? `${f.hoje} / ${f.limite_dia}` : String(f.hoje);
+};
+// a aba vai para o endereço (recarregar e link compartilhado mantêm a aba)
+const trocarAba = nova => {
+  aba.value = nova;
+  const { aba: _, ...resto } = route.query;
+  router.replace({
+    query: nova === 'sistema' ? { ...resto, aba: nova } : resto,
+  });
 };
 // o que o número do sistema conta (cada um conta uma coisa diferente)
 const hojeTitulo = f =>
@@ -156,7 +165,7 @@ const ondeVive = f => (f.descricao || '').split('\n')[0];
         type="button"
         data-testid="aba-meus"
         :class="[ABA, aba === 'meus' ? ABA_ATIVA : ABA_INATIVA]"
-        @click="aba = 'meus'"
+        @click="trocarAba('meus')"
       >
         {{ t(`${K}.ABA_MEUS`) }}
         <span class="font-mono text-[11.5px] text-n-slate-10">
@@ -167,7 +176,7 @@ const ondeVive = f => (f.descricao || '').split('\n')[0];
         type="button"
         data-testid="aba-sistema"
         :class="[ABA, aba === 'sistema' ? ABA_ATIVA : ABA_INATIVA]"
-        @click="aba = 'sistema'"
+        @click="trocarAba('sistema')"
       >
         {{ t(`${K}.ABA_SISTEMA`) }}
         <span class="font-mono text-[11.5px] text-n-slate-10">
