@@ -13,6 +13,15 @@ RSpec.describe Ramon::AdvboxEventProcessor do
     event.reload
   end
 
+  it 'evento com regra dispara os fluxos de evento do ADVBOX (sem regra, não)' do
+    allow(Ramon::Fluxos::Disparo).to receive(:externo)
+    process({ 'stage' => 'SENTENCA PROFERIDA', 'cpf' => '52998224725' })
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo)
+      .with('evento_advbox', lead, { 'regra' => 'marco', 'texto' => 'SENTENCA PROFERIDA' })
+    process({ 'stage' => 'ETAPA QUE NAO EXISTE', 'cpf' => '52998224725' })
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).once
+  end
+
   it 'CONTRATO FECHADO move o lead pra etapa ganha e registra atividade (match por CPF)' do
     event = process({ 'event' => 'stage.changed',
                       'process' => { 'stage' => 'CONTRATO FECHADO' },

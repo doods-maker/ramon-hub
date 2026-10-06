@@ -47,6 +47,7 @@ class Ramon::AdvboxEventProcessor
 
     send(handler, lead, name)
     @event.update!(status: 'processed', note: "#{name} -> lead ##{lead.id}".truncate(255))
+    Ramon::Fluxos::Disparo.externo('evento_advbox', lead, 'regra' => handler.to_s, 'texto' => name)
   end
 
   private

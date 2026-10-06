@@ -68,6 +68,18 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect(e.trilha.pluck('no')).to eq(%w[g p1 p2])
   end
 
+  it 'evento do ADVBOX filtra pela regra' do
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'evento_advbox', 'regras' => ['exito'] }, nota))
+    expect(described_class.call('evento_advbox', lead, { 'regra' => 'marco' })).to eq([])
+    described_class.call('evento_advbox', lead, { 'regra' => 'exito' })
+    expect(fluxo.execucoes.count).to eq(1)
+  end
+
+  it 'externo nunca derruba quem chamou' do
+    allow(described_class).to receive(:call).and_raise(StandardError, 'bug no motor')
+    expect(described_class.externo('contrato_assinado', lead)).to eq([])
+  end
+
   it 'manual só para fluxo ligado com gatilho manual' do
     manual = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, nota))
     outro = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_criado' }, nota))

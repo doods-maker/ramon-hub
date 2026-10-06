@@ -6,17 +6,17 @@ class Ramon::ZapsignLeadStatusJob < ApplicationJob
   queue_as :low
   retry_on Ramon::ZapsignClient::UnavailableError, wait: :polynomially_longer, attempts: 5
 
-  # status do ZapSign => [kind da atividade, chave da data, rótulo do sino]
+  # status do ZapSign => [kind da atividade, chave da data, rótulo do sino, gatilho de fluxo]
   STATUS = {
-    'signed' => %w[zapsign_signed assinado_em assinado],
-    'refused' => %w[zapsign_refused recusado_em recusado]
+    'signed' => %w[zapsign_signed assinado_em assinado contrato_assinado],
+    'refused' => %w[zapsign_refused recusado_em recusado contrato_recusado]
   }.freeze
 
   def perform(lead_id, doc_token)
     return unless atual?(Lead.find_by(id: lead_id), doc_token)
 
     doc = Ramon::ZapsignClient.doc(doc_token)
-    kind, chave, rotulo = STATUS[doc['status'].to_s]
+    kind, chave, rotulo, gatilho = STATUS[doc['status'].to_s]
     # reload depois do HTTP: o "Gerar de novo" pode ter trocado o doc no meio
     lead = Lead.find_by(id: lead_id)
     return if kind.nil? || !atual?(lead, doc_token)
@@ -25,6 +25,7 @@ class Ramon::ZapsignLeadStatusJob < ApplicationJob
     lead.update!(custom_attributes: lead.custom_attributes.merge('zapsign' => zapsign))
     lead.lead_activities.create!(account: lead.account, kind: kind, to_value: zapsign['template_name'])
     Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_contract_status', meta: { 'label' => rotulo }).perform
+    Ramon::Fluxos::Disparo.externo(gatilho, lead)
   end
 
   private

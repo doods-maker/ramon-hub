@@ -25,6 +25,14 @@ RSpec.describe Ramon::DocMatchService do
     expect(sugestao['message_id']).to eq(message.id)
   end
 
+  it 'anexo casado com o checklist dispara documento_recebido' do
+    allow(Ramon::Fluxos::Disparo).to receive(:externo)
+    allow(Ramon::LlmClient).to receive(:complete)
+      .and_return(Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1))
+    described_class.new(message).perform
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('documento_recebido', lead, hash_including('documento'))
+  end
+
   it 'registra evento de automação doc_match na conversa' do
     allow(Ramon::LlmClient).to receive(:complete)
       .and_return(Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1))
