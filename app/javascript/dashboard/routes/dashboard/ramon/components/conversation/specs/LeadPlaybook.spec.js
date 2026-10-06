@@ -82,16 +82,40 @@ describe('LeadPlaybook.vue', () => {
     );
   });
 
-  it('renders only qualificacao/objecao/documento sections, grouped, when the thesis has items', () => {
+  it('mostra abertura, qualificação, objeção e documento agrupados (sem colheita)', () => {
     const wrapper = mountPlaybook({ id: 1, thesis_id: 1 });
     const sections = wrapper.findAll('[data-testid="playbook-section"]');
-    expect(sections).toHaveLength(3);
+    expect(sections).toHaveLength(4);
+    expect(sections[0].text()).toContain('RAMON.PLAYBOOK.SECTIONS.ABERTURA');
 
     const items = wrapper.findAll('[data-testid="playbook-item"]');
-    expect(items).toHaveLength(3);
-    expect(wrapper.text()).not.toContain('Bom dia');
+    expect(items).toHaveLength(4);
+    expect(wrapper.text()).toContain('Bom dia');
     expect(wrapper.text()).toContain('Perguntar sobre o acidente');
     expect(wrapper.text()).toContain('Precisamos da CAT.');
+  });
+
+  it('na etapa de reunião, o roteiro vem primeiro com o selo "nesta etapa"', () => {
+    const thesis = {
+      ...thesisWithItems,
+      items: [
+        ...thesisWithItems.items,
+        { id: 5, section: 'roteiro', title: 'Passo 1', content: 'Resumo' },
+        { id: 6, section: 'colheita', title: 'CPF', content: 'Colher CPF' },
+      ],
+    };
+    const wrapper = mountPlaybook(
+      { id: 1, thesis_id: 1, lead_stage_id: 3 },
+      [thesis],
+      vi.fn(),
+      [{ id: 3, name: 'Reunião marcada', label: 'fase-reuniao-agendada' }]
+    );
+    const first = wrapper.findAll('[data-testid="playbook-section"]')[0];
+    expect(first.text()).toContain('RAMON.PLAYBOOK.SECTIONS.ROTEIRO');
+    expect(first.find('[data-testid="playbook-stage-badge"]').exists()).toBe(
+      true
+    );
+    expect(wrapper.text()).not.toContain('Colher CPF');
   });
 
   it('fetches the thesis items when the selected thesis has none loaded yet', async () => {
@@ -105,9 +129,7 @@ describe('LeadPlaybook.vue', () => {
     const wrapper = mountPlaybook({ id: 1, thesis_id: 1 });
     const button = wrapper.findAll('[data-testid="playbook-copy"]')[0];
     await button.trigger('click');
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      'Me conta como aconteceu o acidente.'
-    );
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Bom dia…');
     await flushPromises();
     expect(button.text()).toBe('RAMON.PLAYBOOK.COPIED');
   });

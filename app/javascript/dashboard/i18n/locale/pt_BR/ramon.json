@@ -1024,6 +1024,8 @@
       "COPIED": "Copiado!",
       "THIS_STAGE": "nesta etapa",
       "SECTIONS": {
+        "ABERTURA": "Abertura",
+        "ROTEIRO": "Roteiro da reunião",
         "QUALIFICACAO": "Qualificação",
         "APRESENTACAO": "Apresentação",
         "OBJECAO": "Objeções",
@@ -1140,6 +1142,15 @@
       "ITEM_ADD": "Adicionar item",
       "ITEM_EMPTY": "Nenhum item nesta seção ainda.",
       "NOME_HINT": "Use {marcador} no roteiro — o primeiro nome do lead entra na hora de copiar.",
+      "APARECE_EM": {
+        "ABERTURA": "Aparece em: Esteira (2 primeiros) · Scripts do painel · agente",
+        "APRESENTACAO": "Aparece em: Scripts do painel · agente",
+        "QUALIFICACAO": "Aparece em: Scripts do painel · checklist de Qualificação do lead · agente",
+        "OBJECAO": "Aparece em: Esteira (2 primeiros) · Scripts do painel · coach de objeções · Dossiê · agente",
+        "DOCUMENTO": "Aparece em: checklist de documentos · Scripts do painel · link do portal do cliente · exportação ao Drive · agente",
+        "ROTEIRO": "Aparece em: Scripts do painel (em destaque nas etapas de reunião) · agente",
+        "COLHEITA": "Aparece em: extração da IA depois da reunião (checklist da colheita) · agente"
+      },
       "SECTIONS": {
         "ABERTURA": "Abertura",
         "APRESENTACAO": "Apresentação",

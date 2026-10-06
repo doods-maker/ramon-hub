@@ -1024,6 +1024,8 @@
       "COPIED": "Copied!",
       "THIS_STAGE": "this stage",
       "SECTIONS": {
+        "ABERTURA": "Opening",
+        "ROTEIRO": "Meeting script",
         "QUALIFICACAO": "Qualification",
         "APRESENTACAO": "Presentation",
         "OBJECAO": "Objections",
@@ -1140,6 +1142,15 @@
       "ITEM_ADD": "Add item",
       "ITEM_EMPTY": "No items in this section yet.",
       "NOME_HINT": "Use {marcador} in the script — the lead’s first name is filled in when copying.",
+      "APARECE_EM": {
+        "ABERTURA": "Shown in: Queue (first 2) · panel Scripts · agent",
+        "APRESENTACAO": "Shown in: panel Scripts · agent",
+        "QUALIFICACAO": "Shown in: panel Scripts · lead Qualification checklist · agent",
+        "OBJECAO": "Shown in: Queue (first 2) · panel Scripts · objection coach · Dossier · agent",
+        "DOCUMENTO": "Shown in: document checklist · panel Scripts · client portal link · Drive export · agent",
+        "ROTEIRO": "Shown in: panel Scripts (highlighted in meeting stages) · agent",
+        "COLHEITA": "Shown in: AI extraction after the meeting (harvest checklist) · agent"
+      },
       "SECTIONS": {
         "ABERTURA": "Opening",
         "APRESENTACAO": "Presentation",

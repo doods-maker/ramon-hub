@@ -7,6 +7,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { THESIS_SECTIONS as SECTIONS } from '../helpers/sections';
+import { mensagemErro } from '../helpers/erro';
 import {
   CARTAO,
   SECAO,
@@ -220,6 +221,27 @@ const confirmRemoveItem = () => {
     .then(() => delete itemDrafts[item.id])
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
+
+// Troca o item com o vizinho da mesma seção e manda a ordem da tese inteira
+// (as posições são da tese, não da seção) pelo reorder já existente.
+const moveItem = (section, index, direction) => {
+  const daSecao = itemsBySection.value[section];
+  const vizinho = daSecao[index + direction];
+  if (!vizinho) return;
+  const ids = (selectedThesis.value.items || []).map(item => item.id);
+  const a = ids.indexOf(daSecao[index].id);
+  const b = ids.indexOf(vizinho.id);
+  [ids[a], ids[b]] = [ids[b], ids[a]];
+  store
+    .dispatch('theses/reorderItems', {
+      thesisId: selectedThesis.value.id,
+      ids,
+    })
+    .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
+};
+
+const sectionUsoKey = section =>
+  `RAMON.PLAYBOOKS.APARECE_EM.${section.toUpperCase()}`;
 
 // marcador literal: dentro do template, as chaves duplas fechariam o {{ }}
 const MARCADOR_NOME = '{{nome}}';
@@ -448,16 +470,25 @@ onMounted(() => store.dispatch('theses/get'));
                 :class="CARTAO"
                 data-testid="playbooks-section"
               >
-                <h3 class="m-0" :class="TITULO">
-                  {{ $t(sectionLabelKey(section)) }}
-                </h3>
+                <div>
+                  <h3 class="m-0" :class="TITULO">
+                    {{ $t(sectionLabelKey(section)) }}
+                  </h3>
+                  <!-- onde o item desta seção é usado (conferido no código) -->
+                  <p
+                    data-testid="playbooks-section-uso"
+                    class="m-0 mt-1 text-xs text-n-slate-10"
+                  >
+                    {{ $t(sectionUsoKey(section)) }}
+                  </p>
+                </div>
 
                 <!-- itens separados por linha, sem caixa dentro do cartão -->
                 <ul
                   class="m-0 flex list-none flex-col divide-y divide-n-weak p-0"
                 >
                   <li
-                    v-for="item in itemsBySection[section]"
+                    v-for="(item, itemIndex) in itemsBySection[section]"
                     :key="item.id"
                     data-testid="playbooks-item-row"
                     class="flex flex-col gap-1.5 py-3 first:pt-0"
@@ -472,6 +503,28 @@ onMounted(() => store.dispatch('theses/get'));
                           $t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')
                         "
                         @blur="saveItem(item)"
+                      />
+                      <Button
+                        data-testid="playbooks-item-move-up"
+                        xs
+                        ghost
+                        slate
+                        icon="i-lucide-chevron-up"
+                        :aria-label="$t('RAMON.PLAYBOOKS.MOVE_UP')"
+                        :disabled="itemIndex === 0"
+                        @click="moveItem(section, itemIndex, -1)"
+                      />
+                      <Button
+                        data-testid="playbooks-item-move-down"
+                        xs
+                        ghost
+                        slate
+                        icon="i-lucide-chevron-down"
+                        :aria-label="$t('RAMON.PLAYBOOKS.MOVE_DOWN')"
+                        :disabled="
+                          itemIndex === itemsBySection[section].length - 1
+                        "
+                        @click="moveItem(section, itemIndex, 1)"
                       />
                       <Button
                         data-testid="playbooks-item-remove-item"

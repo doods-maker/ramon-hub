@@ -18,16 +18,24 @@ const store = useStore();
 const theses = useMapGetter('theses/getTheses');
 const stages = useMapGetter('leadConfig/getStages');
 
-// seções que aparecem no painel de consulta durante a conversa
-const SECTIONS = ['qualificacao', 'apresentacao', 'objecao', 'documento'];
+// seções que aparecem no painel de consulta durante a conversa (colheita
+// fica de fora: é o checklist que a IA preenche depois da reunião)
+const SECTIONS = [
+  'abertura',
+  'qualificacao',
+  'apresentacao',
+  'roteiro',
+  'objecao',
+  'documento',
+];
 
 // etapa (label fixo do seed — renomear a etapa não muda o label) → seção
 // destacada "nesta etapa". Etapa custom sem match: nenhum destaque.
 const STAGE_SECTION = {
   'fase-novo': 'qualificacao',
   'fase-qualificacao': 'qualificacao',
-  'fase-reuniao-agendada': 'apresentacao',
-  'fase-reuniao-realizada': 'apresentacao',
+  'fase-reuniao-agendada': 'roteiro',
+  'fase-reuniao-realizada': 'roteiro',
   'fase-negociacao': 'objecao',
   'fase-ultima-chance': 'objecao',
   'fase-fechado': 'documento',
