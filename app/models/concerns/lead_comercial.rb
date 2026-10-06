@@ -11,6 +11,8 @@ module LeadComercial
     before_create :assign_sdr
     before_save :stamp_docs_completos, if: -> { new_record? || will_save_change_to_custom_attributes? || will_save_change_to_thesis_id? }
     after_save :cancelar_contrato_limpo, if: -> { saved_change_to_won_at? && won_at.nil? && contrato_limpo_em.present? }
+    after_save :registrar_contrato_cancelado, if: -> { saved_change_to_won_at? && won_at.nil? }
+    after_commit :verificar_registro_completo, on: [:create, :update], if: -> { saved_change_to_thesis_id? || saved_change_to_contact_id? }
     after_commit :assign_conversation_to_sdr, on: [:create, :update],
                                               if: -> { saved_change_to_sdr_id? || saved_change_to_conversation_id? }
   end
@@ -74,6 +76,16 @@ module LeadComercial
   def cancelar_contrato_limpo
     update_columns(contrato_cancelado_em: Time.current, contrato_limpo_em: nil) # rubocop:disable Rails/SkipsModelValidations
   end
+
+  # Saiu de Fechado (Painel do time, KPI "cancelamento em 7 dias"): o won_at
+  # volta a nil no track_stage_cycle; a atividade guarda o won_at antigo em
+  # from_value — é dele que o KPI conta os 7 dias. Vale daqui pra frente.
+  def registrar_contrato_cancelado
+    lead_activities.create!(account: account, user: Current.user, kind: 'contrato_cancelado',
+                            from_value: saved_change_to_won_at.first&.iso8601)
+  end
+
+  def verificar_registro_completo = Ramon::RegistroCompleto.verificar(self)
 
   # Documentos mínimos = checklist inteira da tese "recebido" (decisão 02/10).
   # Carimba o momento em que completou; desmarcar um item apaga o carimbo.
