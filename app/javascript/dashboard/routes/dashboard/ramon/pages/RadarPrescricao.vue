@@ -7,6 +7,7 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import RamonPrescriptionRadarAPI from 'dashboard/api/ramonPrescriptionRadar';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { brlCompact, formatBrl } from '../helpers/currency';
+import { prescriptionChip } from '../helpers/prescription';
 import { CARTAO_STATUS, CHIP, FILETE, TOM } from '../helpers/ui';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
@@ -47,22 +48,18 @@ const isBleeding = item => item.lost_installments > 0;
 const isHot = item => item.pct_consumed > 0.75;
 const barWidth = item => `${Math.round(Math.min(item.pct_consumed, 1) * 100)}%`;
 
-// Mesma frase do card do funil e do painel do lead (KANBAN.CARD.PRESCRIPTION_*).
-const prescriptionLabel = item => {
-  if (isBleeding(item) && item.monthly_value)
-    return t('RAMON.KANBAN.CARD.PRESCRIPTION_BLEEDING', {
-      value: formatBrl(item.monthly_value),
-    });
-  if (isBleeding(item))
-    return t('RAMON.KANBAN.CARD.PRESCRIPTION_LOST', {
-      count: item.lost_installments,
-    });
-  return t(
-    'RAMON.KANBAN.CARD.PRESCRIPTION_SOON',
-    { months: item.months_to_cliff },
-    item.months_to_cliff
-  );
-};
+// Mesma frase do card do funil e do painel do lead (KANBAN.CARD.PRESCRIPTION_*);
+// no Radar o prazo aparece sempre, por longe que esteja.
+const prescriptionLabel = item =>
+  prescriptionChip(
+    t,
+    {
+      lostInstallments: item.lost_installments,
+      monthlyValue: item.monthly_value,
+      monthsToCliff: item.months_to_cliff,
+    },
+    Infinity
+  ).text;
 
 const fmtDcb = value =>
   new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR');
@@ -194,6 +191,13 @@ const goToCampaigns = () => {
                 :class="[CHIP, TOM.amber]"
               >
                 {{ t('RAMON.RADAR.LOST_CHIP') }}
+              </span>
+              <span
+                v-else-if="item.is_client"
+                data-testid="radar-client-chip"
+                :class="[CHIP, TOM.blue]"
+              >
+                {{ t('RAMON.RADAR.CLIENT_CHIP') }}
               </span>
               <template v-else>{{ item.stage_name }}</template>
             </p>

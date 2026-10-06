@@ -7,6 +7,7 @@ import { useAccount } from 'dashboard/composables/useAccount';
 import RamonPosVendaAPI from 'dashboard/api/ramonPosVenda';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import { prescriptionChip, prescriptionInfo } from '../helpers/prescription';
 import {
   CARTAO,
   CARTAO_STATUS,
@@ -51,6 +52,9 @@ const semTese = computed(() => data.value?.sem_tese ?? []);
 const concluidosTotal = computed(
   () => data.value?.concluidos_total ?? concluidos.value.length
 );
+
+// Mesma frase de prescrição do painel do lead (helpers/prescription).
+const prescricao = item => prescriptionChip(t, prescriptionInfo(item));
 
 // Padrão das outras páginas: abre o Funil e seleciona o lead (drawer).
 const openLead = id => {
@@ -142,7 +146,7 @@ const openConversation = conversationId => {
           {{ t('RAMON.POS_VENDA.EMPTY') }}
         </p>
 
-        <!-- Pendentes: mais antigo pro mais novo (ordem vem do backend) -->
+        <!-- Pendentes: mais urgentes na prescrição primeiro (ordem do backend) -->
         <div v-else class="flex flex-col gap-2">
           <div
             v-for="item in pendentes"
@@ -169,17 +173,29 @@ const openConversation = conversationId => {
                 }}
               </p>
             </div>
-            <Button
-              v-if="item.conversation_id"
-              data-testid="pos-venda-open-conversation"
-              xs
-              faded
-              slate
-              icon="i-lucide-message-circle"
-              :label="t('RAMON.POS_VENDA.OPEN_CONVERSATION')"
-              class="shrink-0"
-              @click.stop="openConversation(item.conversation_id)"
-            />
+            <div class="flex shrink-0 items-center gap-2">
+              <span
+                v-if="prescricao(item)"
+                data-testid="pos-venda-prescription"
+                class="whitespace-nowrap"
+                :class="[
+                  CHIP,
+                  prescricao(item).bleeding ? TOM.ruby : TOM.amber,
+                ]"
+              >
+                {{ prescricao(item).text }}
+              </span>
+              <Button
+                v-if="item.conversation_id"
+                data-testid="pos-venda-open-conversation"
+                xs
+                faded
+                slate
+                icon="i-lucide-message-circle"
+                :label="t('RAMON.POS_VENDA.OPEN_CONVERSATION')"
+                @click.stop="openConversation(item.conversation_id)"
+              />
+            </div>
           </div>
         </div>
 

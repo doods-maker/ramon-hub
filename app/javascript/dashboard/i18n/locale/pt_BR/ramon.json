@@ -1624,7 +1624,8 @@
       "TITLE": "Radar de prescrição",
       "SUBTITLE": "toda a base · atualizado agora",
       "RETRY": "Tentar de novo",
-      "EMPTY": "Nenhum lead em risco."
+      "EMPTY": "Nenhum lead em risco.",
+      "CLIENT_CHIP": "Cliente â€” docs pendentes"
     },
     "POS_VENDA": {
       "DIAS": "{dias} dias desde o ganho",
@@ -1632,7 +1633,7 @@
       "CONCLUIDOS": "Concluídos ({count})",
       "DRIVE_CHIP": "no Drive",
       "TITLE": "Pós-venda",
-      "SUBTITLE": "Ganhos aguardando documentos — do mais antigo pro mais novo",
+      "SUBTITLE": "Ganhos aguardando documentos â€” os mais urgentes na prescriÃ§Ã£o primeiro",
       "DOCS": "docs {received}/{total}",
       "EMPTY": "Nenhum ganho com documentos pendentes 🎉",
       "RETRY": "Tentar de novo",

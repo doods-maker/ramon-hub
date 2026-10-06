@@ -118,6 +118,28 @@ describe('RadarPrescricao.vue', () => {
     );
   });
 
+  it('marks won clients still collecting documents with the client chip', async () => {
+    const data = payload();
+    data.items[2].is_client = true;
+    const wrapper = await mountPage({ data });
+    const rows = wrapper.findAll('[data-testid="radar-row"]');
+    expect(rows[2].find('[data-testid="radar-client-chip"]').exists()).toBe(
+      true
+    );
+    expect(rows[0].find('[data-testid="radar-client-chip"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('uses the lead panel prescription phrase on each row', async () => {
+    const wrapper = await mountPage();
+    const phrases = wrapper
+      .findAll('[data-testid="radar-prescription"]')
+      .map(chip => chip.text());
+    expect(phrases[0]).toContain('RAMON.KANBAN.CARD.PRESCRIPTION_BLEEDING');
+    expect(phrases[2]).toBe('RAMON.KANBAN.CARD.PRESCRIPTION_SOON 2');
+  });
+
   it('counts only consented contacts in the campaign CTA', async () => {
     const wrapper = await mountPage();
     const cta = wrapper.find('[data-testid="radar-campaign-cta"]');

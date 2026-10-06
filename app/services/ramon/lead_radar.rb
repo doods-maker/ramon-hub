@@ -68,7 +68,17 @@ module Ramon::LeadRadar
                     .includes(:contact, thesis: :thesis_items)
     com_docs = ganhos.select { |l| l.docs_counts[:total].positive? }
     pendentes, concluidos = com_docs.partition { |l| l.docs_counts[:received] < l.docs_counts[:total] }
-    { pendentes: pendentes.sort_by(&:won_at), concluidos: concluidos.sort_by(&:won_at).last(CONCLUIDOS_LIMITE).reverse,
+    { pendentes: pendentes.sort_by { |l| urgencia(l) }, concluidos: concluidos.sort_by(&:won_at).last(CONCLUIDOS_LIMITE).reverse,
       concluidos_total: concluidos.size, sem_tese: ganhos.select { |l| l.thesis_id.nil? }.sort_by(&:won_at) }
+  end
+
+  # Ordem dos pendentes por prescrição: sangrando primeiro (maior valor mensal
+  # antes), depois o prazo mais curto, sem DCB por último; empate → ganho mais antigo.
+  def urgencia(lead)
+    info = lead.prescription
+    return [2, 0, lead.won_at] if info.nil?
+    return [0, -lead.benefit_monthly_value.to_f, lead.won_at] if info[:lost_installments].positive?
+
+    [1, Lead::PRESCRIPTION_WINDOW_MONTHS - info[:months_since_dcb], lead.won_at]
   end
 end

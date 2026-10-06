@@ -10,6 +10,9 @@
       json.docs_total docs[:total]
       json.conversation_id lead.conversation_id
       json.drive_concluido lead.custom_attributes&.dig('drive', 'concluido_em').present?
+      # prescrição: o front calcula com o mesmo helper do painel (prescriptionInfo)
+      json.dcb_em lead.dcb_em
+      json.benefit_monthly_value lead.benefit_monthly_value&.to_f
     end
   end
 end

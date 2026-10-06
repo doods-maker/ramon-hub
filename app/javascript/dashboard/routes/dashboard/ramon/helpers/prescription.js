@@ -41,3 +41,31 @@ export function prescriptionText(t, prescription, monthly) {
   if (months == null) return null;
   return t('RAMON.KANBAN.CARD.PRESCRIPTION_SOON', { months }, months);
 }
+
+// Frase do chip do card do funil e do painel do lead, a partir do
+// prescriptionInfo: "prescrevendo R$ X/mês" (sangrando com valor), "N parcelas
+// já prescritas" (sangrando sem valor) ou "prescreve em N meses" (até
+// `soonMonths`; o Radar passa Infinity). bleeding = tom ruby, senão âmbar.
+export function prescriptionChip(t, p, soonMonths = 6) {
+  if (!p) return null;
+  if (p.lostInstallments > 0)
+    return {
+      bleeding: true,
+      text: p.monthlyValue
+        ? t('RAMON.KANBAN.CARD.PRESCRIPTION_BLEEDING', {
+            value: formatBrl(p.monthlyValue),
+          })
+        : t('RAMON.KANBAN.CARD.PRESCRIPTION_LOST', {
+            count: p.lostInstallments,
+          }),
+    };
+  if (p.monthsToCliff > soonMonths) return null;
+  return {
+    bleeding: false,
+    text: t(
+      'RAMON.KANBAN.CARD.PRESCRIPTION_SOON',
+      { months: p.monthsToCliff },
+      p.monthsToCliff
+    ),
+  };
+}

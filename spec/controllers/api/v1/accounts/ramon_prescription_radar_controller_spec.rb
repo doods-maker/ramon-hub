@@ -22,9 +22,10 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
     expect(body['summary']).to include('at_risk_90d_monthly' => 500.0, 'at_risk_90d_count' => 1)
   end
 
-  it 'exclui ganhos, caso de cálculo, sem DCB e quem consumiu menos da metade do prazo' do
+  it 'exclui ganhos com docs completos, caso de cálculo, sem DCB e quem consumiu menos da metade do prazo' do
     won_stage = account.lead_stages.find_by(is_won: true)
-    create(:lead, account: account, lead_stage: won_stage, dcb_em: 70.months.ago.to_date, benefit_monthly_value: 900)
+    ganho = create(:lead, account: account, lead_stage: won_stage, dcb_em: 70.months.ago.to_date, benefit_monthly_value: 900)
+    ganho.update_columns(docs_completos_em: 1.day.ago) # rubocop:disable Rails/SkipsModelValidations
     create(:lead, account: account, lead_stage: active_stage, dcb_em: 70.months.ago.to_date, source: Lead::FONTE_CALCULO)
     create(:lead, account: account, lead_stage: active_stage, dcb_em: 10.months.ago.to_date)
     create(:lead, account: account, lead_stage: active_stage)
@@ -37,6 +38,17 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
     expect(body['items'].first['months_to_cliff']).to eq(20)
     expect(body['items'].first['pct_consumed']).to be_within(0.01).of(0.66)
     expect(body['summary']).to include('bleeding_count' => 0, 'at_risk_90d_count' => 0)
+  end
+
+  it 'inclui cliente (ganho) ainda juntando documentos, marcado como cliente', :aggregate_failures do
+    won_stage = account.lead_stages.find_by(is_won: true)
+    cliente = create(:lead, account: account, lead_stage: won_stage, dcb_em: 62.months.ago.to_date, benefit_monthly_value: 900)
+
+    get url, headers: agent.create_new_auth_token, as: :json
+
+    item = response.parsed_body['items'].first
+    expect(item).to include('lead_id' => cliente.id, 'is_client' => true, 'lost_installments' => 2)
+    expect(response.parsed_body['summary']).to include('bleeding_count' => 1)
   end
 
   it 'expõe o consent_marketing do contato (critério do guard de campanha)' do
@@ -75,6 +87,20 @@ RSpec.describe 'Ramon Prescription Radar API', type: :request do
       expect(body['concluidos'].pluck('id')).to eq([concluido.id])
       expect(body['concluidos_total']).to eq(1)
       expect((body['pendentes'] + body['concluidos']).pluck('id')).not_to include(fora.id)
+    end
+
+    it 'ordena os pendentes por urgência de prescrição: sangrando (maior valor) → prazo curto → sem DCB' do
+      thesis = create(:thesis, account: account)
+      create(:thesis_item, thesis: thesis, section: 'documento')
+      pendente = ->(**attrs) { create(:lead, account: account, lead_stage: won_stage, thesis: thesis, **attrs) }
+      sem_dcb = pendente.call
+      prazo_curto = pendente.call(dcb_em: 58.months.ago.to_date)
+      sangra_pouco = pendente.call(dcb_em: 62.months.ago.to_date, benefit_monthly_value: 500)
+      sangra_muito = pendente.call(dcb_em: 61.months.ago.to_date, benefit_monthly_value: 2000)
+
+      get url, headers: agent.create_new_auth_token, as: :json
+
+      expect(response.parsed_body['pendentes'].pluck('id')).to eq([sangra_muito.id, sangra_pouco.id, prazo_curto.id, sem_dcb.id])
     end
 
     it 'lista os ganhos sem tese à parte (defina a tese), fora de pendentes e concluídos', :aggregate_failures do

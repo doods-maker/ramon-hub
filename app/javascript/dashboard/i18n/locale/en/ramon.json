@@ -1619,7 +1619,8 @@
       "TITLE": "Prescription radar",
       "SUBTITLE": "whole base · updated now",
       "RETRY": "Retry",
-      "EMPTY": "No leads at risk."
+      "EMPTY": "No leads at risk.",
+      "CLIENT_CHIP": "Client â€” documents pending"
     },
     "POS_VENDA": {
       "DIAS": "{dias} days since the win",
@@ -1627,7 +1628,7 @@
       "CONCLUIDOS": "Completed ({count})",
       "DRIVE_CHIP": "on Drive",
       "TITLE": "Post-sale",
-      "SUBTITLE": "Wins awaiting documents — oldest to newest",
+      "SUBTITLE": "Wins awaiting documents â€” most urgent prescription first",
       "DOCS": "docs {received}/{total}",
       "EMPTY": "No wins with pending documents 🎉",
       "RETRY": "Retry",

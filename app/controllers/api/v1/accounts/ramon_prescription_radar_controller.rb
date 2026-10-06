@@ -18,11 +18,12 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
   end
 
   # Toda a base do funil com DCB conhecida — abertos E perdidos (o prazo do
-  # lead perdido continua correndo); ganhos ficam de fora.
+  # lead perdido continua correndo) e clientes ainda juntando documentos (o
+  # prazo corre até o protocolo); ganho com docs completos fica de fora.
   def leads_with_dcb
     Current.account.leads.funil
            .where.not(dcb_em: nil)
-           .joins(:lead_stage).where(lead_stages: { is_won: false })
+           .joins(:lead_stage).where('lead_stages.is_won = FALSE OR leads.docs_completos_em IS NULL')
            .includes(:lead_stage, :benefit_type, :contact)
   end
 
@@ -43,6 +44,7 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
       dcb_em: lead.dcb_em,
       stage_name: lead.lead_stage.name,
       is_lost: lead.lead_stage.is_lost,
+      is_client: lead.lead_stage.is_won,
       monthly_value: lead.benefit_monthly_value&.to_f,
       months_since_dcb: info[:months_since_dcb],
       lost_installments: info[:lost_installments],
