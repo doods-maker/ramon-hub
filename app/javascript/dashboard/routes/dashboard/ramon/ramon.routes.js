@@ -45,6 +45,13 @@ export const routes = [
     meta: { permissions: ['administrator'], world: 'intranet' },
   },
   {
+    // Registro de ações (audit log): só o gestor — o backend também barra.
+    path: frontendURL('accounts/:accountId/ramon/registro-de-acoes'),
+    name: 'ramon_registro_acoes',
+    component: () => import('./pages/RegistroAcoes.vue'),
+    meta: { permissions: ['administrator'], world: 'intranet' },
+  },
+  {
     // Sem contactId a mesma página vira a busca de pessoa (entrada do menu).
     path: frontendURL('accounts/:accountId/ramon/pessoa'),
     name: 'ramon_pessoas',
