@@ -4,6 +4,8 @@
 # tardio dos dois marcos), não a hora em que o job rodou — o mês da apuração
 # fica certo mesmo na virada. Uma vez carimbado não muda mais (extrato estável).
 # Cancelar em até 7 dias = sair de Fechado (won_at volta a nil) → nunca carimba.
+# Cancelar depois de limpo apaga o carimbo (LeadComercial#cancelar_contrato_limpo);
+# se o mês já fechou, o desconto vem na apuração seguinte.
 class Ramon::ContratoLimpoJob < ApplicationJob
   queue_as :scheduled_jobs
 

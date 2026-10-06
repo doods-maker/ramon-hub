@@ -18,7 +18,16 @@ class Ramon::ExtratoVariavel
   pattr_initialize [:account!, :mes!]
 
   def pessoas
-    pares.map { |user, papel| linha(user, papel) }
+    pares.map { |user, papel| com_descontos(linha(user, papel), user, papel) }
+  end
+
+  # §4-A: bateu a meta = +bônus; cada degrau de 20% da meta (arredondado pra
+  # cima) acima dela = +degrau. Devolve [bônus, degraus].
+  def self.bonus(regras, contagem, alvo)
+    return [0, 0] unless alvo.positive? && contagem >= alvo
+
+    degraus = (contagem - alvo) / ((alvo + 4) / 5)
+    [regras[:bonus] + (degraus * regras[:degrau]), degraus]
   end
 
   private
@@ -46,14 +55,18 @@ class Ramon::ExtratoVariavel
     }.merge(calculo(regras, unidades.sum { |u| u[:valor] }, contagem, meta))
   end
 
-  # §4-A: bateu a meta = +bônus; cada degrau de 20% da meta (arredondado pra
-  # cima) acima dela = +degrau. §7: rampa garante o mínimo sobre as unidades,
-  # bônus por cima. O teto vale pra unidades + bônus.
+  # §5.2: contrato pago num mês fechado e cancelado depois volta em linha
+  # negativa; o desconto sai do total já calculado (depois de garantia e teto).
+  def com_descontos(linha, user, papel)
+    descontos = Ramon::ExtratoDescontos.new(account: account, user: user, papel: papel, mes: mes, periodo: periodo).linhas
+    soma = descontos.sum { |u| u[:valor] }
+    linha.merge(unidades: linha[:unidades] + descontos, descontos: soma, total: linha[:total] + soma)
+  end
+
+  # §7: rampa garante o mínimo sobre as unidades, bônus por cima. O teto vale
+  # pra unidades + bônus.
   def calculo(regras, subtotal, contagem, meta)
-    alvo = meta&.meta.to_i
-    bateu = alvo.positive? && contagem >= alvo
-    degraus = bateu ? (contagem - alvo) / ((alvo + 4) / 5) : 0
-    bonus = bateu ? regras[:bonus] + (degraus * regras[:degrau]) : 0
+    bonus, degraus = self.class.bonus(regras, contagem, meta&.meta.to_i)
     base = meta&.rampa ? [subtotal, regras[:garantia]].max : subtotal
     { subtotal: subtotal, degraus: degraus, bonus: bonus, garantia_aplicada: base > subtotal, total: [base + bonus, regras[:teto]].min }
   end

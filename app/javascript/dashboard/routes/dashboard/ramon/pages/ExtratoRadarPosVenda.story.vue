@@ -221,6 +221,44 @@ const clicar = texto =>
 const depois = (ms, fn) => () => setTimeout(fn, ms);
 
 const gestor = () => papel('administrator');
+// C1: mês fechado (guardado, com fechado_em) e desconto de contrato pago num
+// mês fechado e cancelado depois (+ bônus desfeito, no Closer).
+const fechado = () => {
+  papel('administrator');
+  const fechadoEm = '2026-11-04T03:20:00Z';
+  const desconto = (lead_id, lead_nome, evento, valor) => ({
+    ...unidade(2, lead_id, lead_nome, evento, valor),
+    competencia_origem: '2026-09-01',
+  });
+  respostas = {
+    ...API,
+    ramon_extrato: {
+      pessoas: [
+        {
+          ...LARISSA,
+          fechado_em: fechadoEm,
+          unidades: [
+            ...LARISSA.unidades,
+            desconto(250, 'Neusa Maria Bonetti', 'desconto', -10),
+          ],
+          descontos: -10,
+          total: 410,
+        },
+        {
+          ...RAFAEL,
+          fechado_em: fechadoEm,
+          unidades: [
+            ...RAFAEL.unidades,
+            desconto(250, 'Neusa Maria Bonetti', 'desconto', -22),
+            desconto(250, 'Neusa Maria Bonetti', 'desconto_bonus', -150),
+          ],
+          descontos: -172,
+          total: 368,
+        },
+      ],
+    },
+  };
+};
 const agente = () => {
   papel('agent');
   respostas = { ...API, ramon_extrato: { pessoas: [LARISSA] } };
@@ -266,6 +304,9 @@ const posVendaVazio = () => {
       <div class="h-screen"><Extrato /></div>
     </Variant>
     <Variant title="Extrato vazio" :init-state="vazioGestor">
+      <div class="h-screen"><Extrato /></div>
+    </Variant>
+    <Variant title="Extrato fechado" :init-state="fechado">
       <div class="h-screen"><Extrato /></div>
     </Variant>
     <Variant title="Extrato erro" :init-state="erro">

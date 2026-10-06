@@ -1596,14 +1596,18 @@
       },
       "EVENTO": {
         "reuniao_qualificada": "Reunião qualificada",
-        "contrato_limpo": "Contrato limpo"
+        "contrato_limpo": "Contrato limpo",
+        "desconto": "Desconto: contrato cancelado apÃ³s pagamento",
+        "desconto_bonus": "Desconto: bÃ´nus/degrau desfeito pelo cancelamento"
       },
       "COL": {
         "DATA": "Data",
         "LEAD": "Lead",
         "EVENTO": "Evento",
         "VALOR": "Valor"
-      }
+      },
+      "FECHADO": "Fechado em {data}",
+      "DESCONTOS": "Descontos: {valor}"
     },
     "RADAR": {
       "PER_MONTH": "/mês",

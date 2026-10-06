@@ -1591,14 +1591,18 @@
       },
       "EVENTO": {
         "reuniao_qualificada": "Qualified meeting",
-        "contrato_limpo": "Clean contract"
+        "contrato_limpo": "Clean contract",
+        "desconto": "Deduction: contract cancelled after payment",
+        "desconto_bonus": "Deduction: bonus/step undone by the cancellation"
       },
       "COL": {
         "DATA": "Date",
         "LEAD": "Lead",
         "EVENTO": "Event",
         "VALOR": "Amount"
-      }
+      },
+      "FECHADO": "Closed on {data}",
+      "DESCONTOS": "Deductions: {valor}"
     },
     "RADAR": {
       "PER_MONTH": "/mo",

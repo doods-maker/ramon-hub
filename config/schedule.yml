@@ -140,3 +140,10 @@ ramon_contrato_limpo_job:
   cron: '10 * * * *'
   class: 'Ramon::ContratoLimpoJob'
   queue: scheduled_jobs
+
+# executed daily at 0320 UTC = 00:20 America/Sao_Paulo (UTC-3)
+# fecha o extrato da variável do mês anterior no 3º dia útil (regulamento §6)
+ramon_extrato_fechamento_job:
+  cron: '20 3 * * *'
+  class: 'Ramon::ExtratoFechamentoJob'
+  queue: scheduled_jobs

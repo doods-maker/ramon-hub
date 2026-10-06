@@ -34,6 +34,16 @@ const brl = valor =>
   );
 const dataBr = iso => new Date(iso).toLocaleDateString('pt-BR');
 
+// Mês fechado (regulamento §6): a API devolve o extrato guardado com
+// fechado_em — só leitura, meta não muda mais.
+const fechadoEm = computed(() => pessoas.value[0]?.fechado_em);
+const podeEditar = computed(() => isAdmin.value && !fechadoEm.value);
+const ddmm = iso =>
+  new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  });
+
 const carregar = async () => {
   loading.value = true;
   error.value = false;
@@ -137,6 +147,15 @@ onMounted(carregar);
           :label="t('RAMON.EXTRATO.EXPORTAR')"
           @click="exportarCsv"
         />
+        <span
+          v-if="fechadoEm"
+          data-testid="extrato-fechado"
+          class="mb-1.5"
+          :class="[CHIP, TOM.slate]"
+        >
+          <span class="i-lucide-lock size-3" />
+          {{ t('RAMON.EXTRATO.FECHADO', { data: ddmm(fechadoEm) }) }}
+        </span>
       </div>
 
       <div v-if="loading" class="h-32 animate-pulse rounded-xl bg-n-alpha-2" />
@@ -177,7 +196,7 @@ onMounted(carregar);
           </header>
 
           <div class="flex flex-wrap items-end gap-3 text-sm">
-            <template v-if="isAdmin">
+            <template v-if="podeEditar">
               <label :class="ROTULO">
                 {{ t('RAMON.EXTRATO.META') }}
                 <input
@@ -252,7 +271,18 @@ onMounted(carregar);
                 <template v-if="p.garantia_aplicada">
                   {{ t('RAMON.EXTRATO.GARANTIA') }}
                 </template>
-                <template v-else>—</template>
+                <span
+                  v-if="p.descontos < 0"
+                  data-testid="extrato-descontos"
+                  class="block text-n-ruby-11"
+                >
+                  {{
+                    t('RAMON.EXTRATO.DESCONTOS', { valor: brl(p.descontos) })
+                  }}
+                </span>
+                <template v-if="!p.garantia_aplicada && !(p.descontos < 0)">
+                  —
+                </template>
               </dd>
             </div>
           </dl>
@@ -291,7 +321,8 @@ onMounted(carregar);
                   {{ t(`RAMON.EXTRATO.EVENTO.${u.evento}`) }}
                 </td>
                 <td
-                  class="py-1.5 text-right font-mono tabular-nums text-n-slate-12"
+                  class="py-1.5 text-right font-mono tabular-nums"
+                  :class="u.valor < 0 ? 'text-n-ruby-11' : 'text-n-slate-12'"
                 >
                   {{ brl(u.valor) }}
                 </td>
