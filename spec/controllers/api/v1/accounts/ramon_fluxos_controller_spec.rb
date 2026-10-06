@@ -60,4 +60,12 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
     get "#{url}/#{fluxo.id}/execucoes", headers: admin.create_new_auth_token, as: :json
     expect(response.parsed_body['payload'].size).to eq(1)
   end
+
+  it 'uma execução devolve o desenho em que rodou' do
+    fluxo = fluxo_publicado(account, grafo)
+    execucao = Ramon::Fluxos::Disparo.ensaiar(fluxo, create(:lead, account: account), usar: 'publicada')
+    fluxo.update!(rascunho: { nos: [], setas: [] }) # editar depois não muda o desenho da execução
+    get "#{url}/#{fluxo.id}/execucoes/#{execucao.id}", headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['grafo']['nos'].pluck('id')).to eq(%w[g p1])
+  end
 end
