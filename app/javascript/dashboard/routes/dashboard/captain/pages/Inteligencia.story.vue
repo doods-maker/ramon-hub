@@ -25,6 +25,8 @@ import TOOLS_YML from '../../../../../../../config/agents/tools.yml';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
+// Produção desde 17/08 (D7): conversas novas começam em Piloto com limites.
+window.chatwootConfig = { ramonCopilotoModoDefault: 'piloto_limitado' };
 
 const DIA = 86400000;
 const diasAtras = n => new Date(Date.now() - n * DIA).toISOString();
@@ -222,6 +224,39 @@ const FERRAMENTAS = {
   }),
 };
 
+const STATS = {
+  payload: [
+    {
+      id: 1,
+      name: ATENDIMENTO.name,
+      description: ATENDIMENTO.description,
+      publico: 'lead',
+      skills_ativas: 6,
+      faqs_aprovadas: 62,
+      faqs_pendentes: 1,
+      caixas: [
+        {
+          id: 7,
+          name: 'WhatsApp Escritório',
+          channel_type: 'Channel::Whatsapp',
+        },
+      ],
+      conversas_por_modo: { rascunho: 2, piloto_limitado: 5 },
+    },
+    {
+      id: 2,
+      name: COPILOTO.name,
+      description: COPILOTO.description,
+      publico: 'equipe',
+      skills_ativas: 9,
+      faqs_aprovadas: 0,
+      faqs_pendentes: 0,
+      caixas: [],
+      conversas_por_modo: {},
+    },
+  ],
+};
+
 const API = {
   'captain/assistants': {
     payload: [ATENDIMENTO, COPILOTO],
@@ -229,6 +264,7 @@ const API = {
   },
   'captain/assistants/1': ATENDIMENTO,
   'captain/assistants/tools': CATALOGO,
+  'captain/assistants/stats': STATS,
   'captain/assistants/1/scenarios': {
     payload: SKILLS,
     meta: { total_count: 4, page: 1 },

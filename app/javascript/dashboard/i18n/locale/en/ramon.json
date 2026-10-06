@@ -1725,6 +1725,34 @@
       "AVANCADO_TEXTO": "Custom HTTP tools: they call an external address. Not used by the firm today.",
       "AVANCADO_BOTAO": "Open HTTP tools"
     },
+    "ASSISTENTES": {
+      "PUBLICO": {
+        "lead": "Talks to leads",
+        "equipe": "Talks to the team"
+      },
+      "SKILLS": "Active skills: {n}",
+      "FAQS": "Approved FAQs: {n}",
+      "FAQS_PENDENTES": "Pending FAQs: {n}",
+      "CAIXAS_N": "Inboxes: {n}",
+      "MODO": {
+        "TITULO": "Conversation mode",
+        "PADRAO": "New conversations start in: {modo}",
+        "CONTAGEM": "{modo}: {n}",
+        "SEM_CONVERSAS": "No open conversation in this assistant's inboxes.",
+        "SO_LEITURA": "Read only. Each conversation's mode is changed inside the conversation."
+      },
+      "CAIXAS": {
+        "TITULO": "Inboxes",
+        "NENHUMA": "No inbox connected: this assistant only talks through the Test screen.",
+        "GERENCIAR": "View and connect inboxes"
+      },
+      "ATALHOS": {
+        "SKILLS": "Skills",
+        "FAQS": "FAQs",
+        "TESTAR": "Test",
+        "CONFIGURAR": "Configure"
+      }
+    },
     "MESSAGE_TEMPLATES": {
       "TAB": "Message templates",
       "NEW_TITLE": "New message template",

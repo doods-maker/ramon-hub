@@ -63,6 +63,7 @@ watch(
 <template>
   <PageLayout
     :header-title="$t('CAPTAIN.INBOXES.HEADER')"
+    :back-url="{ name: 'captain_assistants_create_index' }"
     :button-label="$t('CAPTAIN.INBOXES.ADD_NEW')"
     :button-policy="['administrator']"
     :is-fetching="isFetchingAssistant || isFetching"

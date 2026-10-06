@@ -1730,6 +1730,34 @@
       "AVANCADO_TEXTO": "Ferramentas HTTP personalizadas: chamam um endereço externo. A banca não usa hoje.",
       "AVANCADO_BOTAO": "Abrir ferramentas HTTP"
     },
+    "ASSISTENTES": {
+      "PUBLICO": {
+        "lead": "Fala com o lead",
+        "equipe": "Fala com a equipe"
+      },
+      "SKILLS": "Skills ativas: {n}",
+      "FAQS": "FAQs aprovadas: {n}",
+      "FAQS_PENDENTES": "FAQs pendentes: {n}",
+      "CAIXAS_N": "Caixas: {n}",
+      "MODO": {
+        "TITULO": "Modo das conversas",
+        "PADRAO": "Conversas novas começam em: {modo}",
+        "CONTAGEM": "{modo}: {n}",
+        "SEM_CONVERSAS": "Nenhuma conversa aberta nas caixas deste assistente.",
+        "SO_LEITURA": "Só leitura. O modo de cada conversa se troca dentro da própria conversa."
+      },
+      "CAIXAS": {
+        "TITULO": "Caixas de entrada",
+        "NENHUMA": "Nenhuma caixa conectada: este assistente só conversa pela tela Testar.",
+        "GERENCIAR": "Ver e conectar caixas"
+      },
+      "ATALHOS": {
+        "SKILLS": "Skills",
+        "FAQS": "FAQs",
+        "TESTAR": "Testar",
+        "CONFIGURAR": "Configurar"
+      }
+    },
     "MESSAGE_TEMPLATES": {
       "TAB": "Modelos de mensagem",
       "NEW_TITLE": "Novo modelo de mensagem",
