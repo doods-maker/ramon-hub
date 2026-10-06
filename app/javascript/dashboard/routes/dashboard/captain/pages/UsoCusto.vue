@@ -34,7 +34,7 @@ const GRUPOS = [
 ];
 // "Claude da VPS" não entra aqui: a assinatura só serve o agente @claude.
 const PROVEDORES = ['deepseek', 'openai', 'anthropic'];
-const NUM = 'font-mono tabular-nums';
+const NUM = 'font-mono tabular-nums whitespace-nowrap';
 // <progress> nativo pintado só com Tailwind (mesmo da Visão geral).
 const BARRA =
   'mt-2 block h-2 w-full appearance-none overflow-hidden rounded-full bg-n-slate-9/10 [&::-webkit-progress-bar]:bg-n-slate-9/10 [&::-webkit-progress-value]:bg-n-blue-9 [&::-moz-progress-bar]:bg-n-blue-9';
@@ -57,6 +57,7 @@ const fetchData = async () => {
   try {
     const { data } = await RamonIaUsoAPI.get({ periodo: periodo.value });
     dados.value = data;
+    periodo.value = data.periodo ?? periodo.value;
     teto.value = data.teto_diario_usd ?? '';
   } catch (e) {
     error.value = true;
@@ -303,7 +304,7 @@ const salvarTeto = async () => {
             <p class="mt-2 text-2xl font-semibold text-n-slate-12" :class="NUM">
               {{ fmtCompacto(total.input_tokens + total.output_tokens) }}
             </p>
-            <p class="mt-1 text-xs text-n-slate-10" :class="NUM">
+            <p class="tabular-nums mt-1 text-xs text-n-slate-10">
               {{
                 t('IA_USO.RESUMO.ENTRADA_SAIDA', {
                   entrada: fmtCompacto(total.input_tokens),
@@ -360,13 +361,13 @@ const salvarTeto = async () => {
           <!-- agente @claude -->
           <section data-testid="uso-agente" :class="CARTAO">
             <h2 :class="TITULO">{{ t('IA_USO.AGENTE.TITULO') }}</h2>
-            <p class="mt-2 text-sm text-n-slate-12" :class="NUM">
+            <p class="tabular-nums mt-2 text-sm text-n-slate-12">
               {{
                 t('IA_USO.AGENTE.HOJE', { n: agente.hoje, teto: agente.teto })
               }}
             </p>
             <progress :class="BARRA" :value="agente.hoje" :max="agente.teto" />
-            <p class="mt-2 text-sm text-n-slate-12" :class="NUM">
+            <p class="tabular-nums mt-2 text-sm text-n-slate-12">
               {{
                 t('IA_USO.AGENTE.EQUIVALENTE', {
                   valor: fmtUsd(agente.custo_periodo_usd),
@@ -380,7 +381,7 @@ const salvarTeto = async () => {
           <!-- fluxos com IA -->
           <section data-testid="uso-fluxos" :class="CARTAO">
             <h2 :class="TITULO">{{ t('IA_USO.FLUXOS.TITULO') }}</h2>
-            <p class="mt-2 text-sm text-n-slate-12" :class="NUM">
+            <p class="tabular-nums mt-2 text-sm text-n-slate-12">
               {{
                 t('IA_USO.FLUXOS.HOJE', { n: fluxos.hoje, teto: fluxos.teto })
               }}
@@ -480,7 +481,7 @@ const salvarTeto = async () => {
                 <p class="text-xs text-n-slate-10">
                   {{ t(`IA_USO.ESCOLHA.DESCRICOES.${escolha.funcao}`) }}
                 </p>
-                <p class="mt-1 text-xs text-n-slate-11" :class="NUM">
+                <p class="tabular-nums mt-1 text-xs text-n-slate-11">
                   {{ emUso(escolha) }}
                 </p>
               </div>
