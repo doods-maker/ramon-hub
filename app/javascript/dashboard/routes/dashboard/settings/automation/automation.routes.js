@@ -1,30 +1,23 @@
-import { FEATURE_FLAGS } from '../../../../featureFlags';
 import { frontendURL } from '../../../../helper/URLHelper';
-import SettingsWrapper from '../SettingsWrapper.vue';
-import Automation from './Index.vue';
+
+// FORK(ramon): a Automação nativa saiu de Configurações (B3 das Automações em
+// fluxo, decisão do Eduardo 06/10). O motor nativo segue no código, sem tela; o
+// link antigo cai em Inteligência → Automações. Index.vue e o formulário ficam
+// no código (sem rota) para o merge com o upstream.
+const paraAutomacoes = to => ({
+  name: 'captain_automacoes_index',
+  params: { accountId: to.params.accountId },
+});
 
 export default {
   routes: [
     {
       path: frontendURL('accounts/:accountId/settings/automation'),
-      component: SettingsWrapper,
-      children: [
-        {
-          path: '',
-          redirect: to => {
-            return { name: 'automation_list', params: to.params };
-          },
-        },
-        {
-          path: 'list',
-          name: 'automation_list',
-          component: Automation,
-          meta: {
-            featureFlag: FEATURE_FLAGS.AUTOMATIONS,
-            permissions: ['administrator'],
-          },
-        },
-      ],
+      redirect: paraAutomacoes,
+    },
+    {
+      path: frontendURL('accounts/:accountId/settings/automation/list'),
+      redirect: paraAutomacoes,
     },
   ],
 };
