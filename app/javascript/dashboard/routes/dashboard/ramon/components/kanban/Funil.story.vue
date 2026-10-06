@@ -25,10 +25,20 @@ const emDiasAs = (n, h) => {
 };
 
 const STAGES = [
-  { id: 1, name: 'Novo', color: '#64748b', position: 1, probability: 10 },
+  {
+    id: 1,
+    name: 'Novo',
+    label: 'fase-novo',
+    color: '#64748b',
+    position: 1,
+    probability: 10,
+  },
   {
     id: 2,
     name: 'Qualificação',
+    // etapa das automações (quiz/LP): o menu trava "Remover etapa"
+    label: 'fase-qualificacao',
+    automacao: true,
     color: '#0ea5e9',
     position: 2,
     probability: 25,
@@ -518,6 +528,23 @@ const loteGanho = () => {
     document.querySelectorAll('[data-testid="bulk-stage-option"]')[4]?.click();
   }, 1500);
 };
+// Abre o menu da n-ª etapa e, se pedido, clica numa opção dele.
+const menuDaEtapa = (n, opcao) => () => {
+  estado();
+  semResize();
+  setTimeout(() => {
+    document.querySelectorAll('[data-testid="stage-menu-toggle"]')[n]?.click();
+    if (opcao)
+      setTimeout(
+        () => document.querySelector(`[data-testid="${opcao}"]`)?.click(),
+        300
+      );
+  }, 2000);
+};
+const etapaProtegida = menuDaEtapa(1);
+const confirmarGanho = menuDaEtapa(1, 'stage-type-won');
+const nomeParaCliente = menuDaEtapa(0, 'stage-client-name');
+
 // Agente (não admin): etapas não são editáveis por ele.
 const naoAdmin = () => {
   estado();
@@ -611,6 +638,21 @@ const naoAdmin = () => {
       <div class="h-screen flex flex-col bg-n-background">
         <KanbanBoard />
         <NewLeadModal />
+      </div>
+    </Variant>
+    <Variant title="Etapa protegida" :init-state="etapaProtegida">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
+    <Variant title="Confirmar ganho" :init-state="confirmarGanho">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
+      </div>
+    </Variant>
+    <Variant title="Nome para o cliente" :init-state="nomeParaCliente">
+      <div class="h-screen flex flex-col bg-n-background">
+        <KanbanBoard />
       </div>
     </Variant>
     <Variant title="Remover etapa" :init-state="colunas">

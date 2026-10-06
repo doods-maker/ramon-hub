@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import Playbooks from './Playbooks.vue';
 import FunilConfig from './FunilConfig.vue';
+import LeadPlaybook from '../components/conversation/LeadPlaybook.vue';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
@@ -21,7 +22,7 @@ const ITENS_ACIDENTE = [
     position: 1,
     title: 'Primeiro contato',
     content:
-      'Olá, aqui é do escritório Ramon Antonio Advogados. Vi que você teve um acidente e ficou com sequela. Posso te fazer umas perguntas rápidas pra ver se cabe o auxílio-acidente?',
+      'Olá {{nome}}, aqui é do escritório Ramon Antonio Advogados. Vi que você teve um acidente e ficou com sequela. Posso te fazer umas perguntas rápidas pra ver se cabe o auxílio-acidente?',
   },
   {
     id: 102,
@@ -129,6 +130,7 @@ const ETAPAS = [
     id: 1,
     position: 1,
     name: 'Novo lead',
+    label: 'fase-novo',
     color: '#3b82f6',
     probability: 5,
     stalled_after_days: 1,
@@ -138,6 +140,8 @@ const ETAPAS = [
     id: 2,
     position: 2,
     name: 'Qualificação',
+    label: 'fase-qualificacao',
+    automacao: true,
     color: '#06b6d4',
     probability: 20,
     stalled_after_days: 3,
@@ -146,6 +150,7 @@ const ETAPAS = [
     id: 3,
     position: 3,
     name: 'Aguardando documentos',
+    label: 'fase-aguardando-documentos',
     color: '#f59e0b',
     probability: 40,
     stalled_after_days: 5,
@@ -154,6 +159,9 @@ const ETAPAS = [
     id: 4,
     position: 4,
     name: 'Reunião marcada',
+    label: 'fase-reuniao-agendada',
+    automacao: true,
+    nome_cliente: 'Reunião com o advogado marcada',
     color: '#14b8a6',
     probability: 60,
     stalled_after_days: 2,
@@ -162,6 +170,7 @@ const ETAPAS = [
     id: 5,
     position: 5,
     name: 'Proposta enviada',
+    label: 'fase-negociacao',
     color: '#ec4899',
     probability: 75,
     stalled_after_days: 4,
@@ -170,6 +179,7 @@ const ETAPAS = [
     id: 6,
     position: 6,
     name: 'Contrato assinado',
+    label: 'fase-fechado',
     color: '#22c55e',
     probability: 100,
     stalled_after_days: null,
@@ -179,6 +189,7 @@ const ETAPAS = [
     id: 7,
     position: 7,
     name: 'Perdido',
+    label: 'fase-perdido',
     color: null,
     probability: 0,
     stalled_after_days: null,
@@ -210,23 +221,64 @@ const API = {
   lead_config: LEAD_CONFIG,
 };
 
+// Tese criada pela tela: nasce com o honorário padrão (30% + 3).
+const TESE_NOVA = {
+  id: 6,
+  position: 6,
+  name: 'Revisão do teto',
+  description: null,
+  area: null,
+  active: true,
+  ...HONORARIO,
+};
+const POST = { theses: TESE_NOVA };
+API['theses/6'] = { ...TESE_NOVA, items: [] };
+
 let falhar = false;
+const caminho = url => url.replace(/^\/api\/v1\/(accounts\/\d+\/)?/, '');
 const responder = async url => {
   if (falhar) throw new Error('offline');
-  const path = url.replace(/^\/api\/v1\/(accounts\/\d+\/)?/, '');
-  return { data: API[path] ?? {} };
+  return { data: API[caminho(url)] ?? {} };
+};
+// Tese com leads: o servidor recusa a exclusão (422 + leads_count).
+const excluir = async url => {
+  if (caminho(url) === 'theses/2') {
+    throw Object.assign(new Error('422'), {
+      response: {
+        status: 422,
+        data: {
+          error: '12 leads usam esta tese — desative em vez de excluir',
+          leads_count: 12,
+        },
+      },
+    });
+  }
+  return { data: {} };
 };
 window.axios = {
   get: responder,
-  post: responder,
+  post: async url => ({ data: POST[caminho(url)] ?? API[caminho(url)] ?? {} }),
   patch: responder,
   put: responder,
-  delete: responder,
+  delete: excluir,
 };
 
 const store = useStore();
 // sem router: getCurrentAccountId lê a conta de rootState.route
 store.registerModule('route', { state: { params: { accountId: 1 } } });
+
+// Lead fictício na etapa "Reunião marcada" (label fase-reuniao-agendada).
+const LEAD = {
+  id: 41,
+  name: 'Maria Aparecida Souza',
+  contact_name: 'Maria Aparecida Souza',
+  thesis_id: 1,
+  lead_stage_id: 4,
+};
+const scriptsDoLead = () => {
+  store.dispatch('leadConfig/get');
+  store.dispatch('theses/get');
+};
 
 const clicar = (testid, n = 0) =>
   document.querySelectorAll(`[data-testid="${testid}"]`)[n]?.click();
@@ -244,6 +296,16 @@ const editando = depois(1200, () => {
 });
 const removerTese = depois(1200, () => clicar('playbooks-item-remove', 1));
 const removerBeneficio = depois(1200, () => clicar('benefit-remove', 1));
+const teseEmUso = depois(1200, () => {
+  clicar('playbooks-item-remove', 1);
+  setTimeout(() => clicar('confirm-modal-confirm'), 400);
+});
+const teseNova = depois(1200, () => {
+  const campo = document.querySelector('[data-testid="playbooks-add-input"]');
+  campo.value = 'Revisão do teto';
+  campo.dispatchEvent(new Event('input'));
+  setTimeout(() => clicar('playbooks-add-button'), 200);
+});
 const erro = () => {
   falhar = true;
 };
@@ -262,6 +324,17 @@ const erro = () => {
     </Variant>
     <Variant title="Remover tese" :init-state="removerTese">
       <div class="h-screen"><Playbooks /></div>
+    </Variant>
+    <Variant title="Tese em uso" :init-state="teseEmUso">
+      <div class="h-screen"><Playbooks /></div>
+    </Variant>
+    <Variant title="Tese nova" :init-state="teseNova">
+      <div class="h-screen"><Playbooks /></div>
+    </Variant>
+    <Variant title="Scripts do lead" :init-state="scriptsDoLead">
+      <div class="h-screen overflow-y-auto bg-n-background py-6">
+        <div class="mx-auto w-[400px]"><LeadPlaybook :lead="LEAD" /></div>
+      </div>
     </Variant>
     <Variant title="Funil">
       <div class="h-screen"><FunilConfig /></div>
