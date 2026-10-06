@@ -29,9 +29,13 @@ class FluxoExecucao < ApplicationRecord
   def resumo_json
     {
       id: id, fluxo_id: fluxo_id, versao: versao&.numero, alvo_type: alvo_type, alvo_id: alvo_id,
-      alvo_nome: alvo.try(:name) || alvo.try(:contact)&.name || lead&.name, conversation_display_id: conversa&.display_id,
+      alvo_nome: alvo_nome, conversation_display_id: conversa&.display_id,
       lead_id: lead&.id, status: status, ensaio: ensaio, no_atual: no_atual, retomar_em: retomar_em,
       trilha: trilha, erro: erro, created_at: created_at, updated_at: updated_at
     }
   end
+
+  private
+
+  def alvo_nome = alvo.try(:name) || alvo.try(:contact)&.name || lead&.name
 end

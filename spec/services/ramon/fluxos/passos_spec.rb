@@ -242,13 +242,22 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
         .to eq(['Primeiro em 06/10/2026 19:00', 'Primeiro em 07/10/2026 19:00', agente])
     end
 
-    it 'tarefa da reunião: vence na hora, é de quem marcou e põe a reunião na agenda' do
+    it 'tarefa da reunião: vence na hora, é de quem marcou e põe a reunião na agenda (com a decisão do evento)' do
       allow(Ramon::Fluxos::Reunioes).to receive(:na_agenda)
       config = { 'titulo' => '{titulo_tarefa}', 'tipo' => 'meeting', 'prazo' => 'reuniao' }
-      Ramon::Fluxos::Passos::Lead.criar_tarefa(config, ctx(contexto: gatilho))
+      Ramon::Fluxos::Passos::Lead.criar_tarefa(config, ctx(contexto: gatilho.deep_merge('gatilho' => { 'assumido' => true })))
       tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
       expect([tarefa.title, tarefa.due_at, tarefa.user]).to eq(['Reunião Cal.com: Primeiro', Time.zone.parse('2026-10-07T22:00:00Z'), agente])
       expect(Ramon::Fluxos::Reunioes).to have_received(:na_agenda).with(tarefa, true)
+    end
+
+    it 'fluxo comum criando a tarefa da reunião com o código no comando: o ciclo de lembretes só ensaia' do
+      Ramon::Fluxos::Reunioes.semear(account)
+      config = { 'titulo' => '{titulo_tarefa}', 'tipo' => 'meeting', 'prazo' => 'reuniao' }
+      Ramon::Fluxos::Passos::Lead.criar_tarefa(config, ctx(contexto: gatilho))
+      tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
+      ciclo = Ramon::Fluxos::Reunioes.fluxo(account, 'lembretes_reuniao').execucoes.find_by!(alvo: tarefa)
+      expect(ciclo.ensaio).to be(true)
     end
 
     it 'ensaio da tarefa diz o prazo; da atividade, o tipo e o de → para' do

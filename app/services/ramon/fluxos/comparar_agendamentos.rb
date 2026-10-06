@@ -93,8 +93,11 @@ class Ramon::Fluxos::CompararAgendamentos
     end
   end
 
+  # A tarefa que o código criou ao marcar, como era na hora (do rastro): a viva pode ter sido remarcada ou apagada depois.
+  # Remarcar não cria tarefa (nem o código nem o ramo "Remarcada" do fluxo) — só 'marcada' entra.
   def tarefas(lead, janela)
-    lead.lead_tasks.where(kind: 'meeting', created_at: janela).map { |t| "tarefa \"#{t.title}\" para #{hora(t.due_at)}" }
+    do_rastro(lead, janela).select { |r| r['tipo'] == 'marcada' }
+                           .map { |r| "tarefa \"#{r['tarefa']}\" para #{hora(Time.zone.parse(r['inicio']))}" }
   end
 
   def rascunhos(lead, janela)
@@ -103,9 +106,10 @@ class Ramon::Fluxos::CompararAgendamentos
   end
 
   # O sino de marcada/remarcada/cancelada que o Ramon::ReuniaoAgendamento gravou no rastro (quem recebeu).
-  def sinos(lead, janela)
+  def sinos(lead, janela) = do_rastro(lead, janela).map { |r| sino(User.where(id: r['user_ids']).pluck(:name)) }
+
+  def do_rastro(lead, janela)
     rastros.select { |r| r['lead_id'] == lead.id && KINDS.key?(r['tipo']) && janela.cover?(Time.zone.at(r['em'])) }
-           .map { |r| sino(User.where(id: r['user_ids']).pluck(:name)) }
   end
 
   def rastros = @rastros ||= Ramon::Fluxos::Reunioes.rastros(@account, de, ate)

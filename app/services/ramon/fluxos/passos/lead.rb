@@ -37,9 +37,16 @@ module Ramon::Fluxos::Passos::Lead
 
     responsavel = responsavel_da_tarefa(lead, config, ctx)
     tarefa = lead.lead_tasks.create!(account: lead.account, kind: kind_da_tarefa(config), title: titulo, due_at: prazo, user: responsavel)
-    # B4.1: a tarefa da própria reunião põe a reunião na agenda → começa o ciclo de lembretes dela (fluxos no comando)
-    Ramon::Fluxos::Reunioes.na_agenda(tarefa, true) if config['prazo'] == 'reuniao' && tarefa.kind == 'meeting'
+    # B4.1: a tarefa da própria reunião põe a reunião na agenda → começa o ciclo de lembretes dela
+    Ramon::Fluxos::Reunioes.na_agenda(tarefa, decisao_do_evento(ctx, lead)) if config['prazo'] == 'reuniao' && tarefa.kind == 'meeting'
     { saida: 's', resumo: "tarefa \"#{titulo}\" · #{responsavel&.name || 'sem responsável'}" }
+  end
+
+  # Quem faz o ciclo de lembretes: a decisão do evento que trouxe a reunião ('assumido'); fluxo comum (gatilho sem ela),
+  # a chave da conta agora — código no comando → o ciclo só ensaia (o código não lembra tarefa criada por fluxo).
+  def decisao_do_evento(ctx, lead)
+    assumido = ctx.gatilho('assumido')
+    assumido.nil? ? Ramon::Fluxos::Reunioes.assumiu?(lead.account) : assumido
   end
 
   # B4.1: tipo (as de reunião iguais às do código), "de" opcional (remarcada: de → para) e a pessoa que marcou.

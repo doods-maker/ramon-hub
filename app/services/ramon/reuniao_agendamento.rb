@@ -122,7 +122,7 @@ class Ramon::ReuniaoAgendamento
     Ramon::Papeis.atribuir_closer!(@lead)
     confirmation_draft
     enqueue_reminders
-    notify('ramon_meeting_scheduled', 'marcada')
+    notify('ramon_meeting_scheduled', 'marcada', 'tarefa' => task.title) # a comparação lê a tarefa daqui (a viva pode mudar)
     Ramon::Fluxos::Reunioes.na_agenda(task, false)
   end
 

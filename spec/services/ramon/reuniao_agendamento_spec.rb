@@ -175,14 +175,14 @@ RSpec.describe Ramon::ReuniaoAgendamento do
 
       rastros = Ramon::Fluxos::Reunioes.rastros(account, 1.minute.ago, 1.minute.from_now)
       expect(rastros.map { |r| r.except('em', 'user_ids') }).to contain_exactly(
-        { 'tipo' => 'marcada', 'lead_id' => lead.id, 'inicio' => starts_at.iso8601 },
+        { 'tipo' => 'marcada', 'lead_id' => lead.id, 'inicio' => starts_at.iso8601, 'tarefa' => 'Primeiro Atendimento' },
         { 'tipo' => 'remarcada', 'lead_id' => lead.id, 'inicio' => (starts_at + 1.day).iso8601 },
         { 'tipo' => 'cancelada', 'lead_id' => lead.id, 'inicio' => (starts_at + 1.day).iso8601, 'tarefa_ids' => [task.id] }
       )
       expect(rastros.map { |r| r['user_ids'].sort }).to all(eq([user.id, admin.id].sort))
     end
 
-    context 'com os fluxos no comando (env + os 3 em modo normal)' do
+    describe 'com os fluxos no comando (env + os 3 em modo normal)' do
       around { |ex| with_modified_env(RAMON_FLUXO_REUNIOES: 'on') { ex.run } }
 
       before do
