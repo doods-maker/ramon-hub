@@ -1,6 +1,10 @@
 # O que um passo enxerga: o alvo (lead/conversa) recarregado a cada passo + variáveis
 # da execução. `dados` alimenta condições e o `{chave}` dos textos.
 class Ramon::Fluxos::Contexto
+  # o que o gatilho traz e vira variável: {texto} da mensagem, {quando} da reunião,
+  # {regra} do evento do ADVBOX, {documento} do anexo casado com o checklist
+  DO_GATILHO = %w[texto quando regra documento].freeze
+
   attr_reader :execucao
 
   def initialize(execucao)
@@ -13,10 +17,10 @@ class Ramon::Fluxos::Contexto
 
   def ensaio? = execucao.ensaio
 
+  # campos livres primeiro: um campo chamado "nome" nunca pisa no nome do lead
   def dados
-    @dados ||= dados_lead.merge(dados_funil).merge(dados_conversa).merge(
-      'texto' => execucao.contexto.dig('gatilho', 'texto')
-    ).merge(execucao.contexto['vars'] || {})
+    @dados ||= campos_livres.merge(dados_lead, dados_funil, dados_conversa, dados_docs, dados_gatilho,
+                                   execucao.contexto['vars'] || {})
   end
 
   def interpolar(texto)
@@ -54,5 +58,25 @@ class Ramon::Fluxos::Contexto
       'caixa' => conversa&.inbox&.name, 'caixa_id' => conversa&.inbox_id,
       'status' => conversa&.status, 'etiquetas' => conversa ? conversa.label_list.to_a : []
     }
+  end
+
+  def dados_gatilho
+    gatilho = execucao.contexto['gatilho'] || {}
+    DO_GATILHO.index_with { |chave| gatilho[chave] }
+  end
+
+  # preencher_campo grava em custom_attributes['campos'] (Passos::Lead)
+  def campos_livres
+    campos = lead&.custom_attributes&.dig('campos')
+    campos.is_a?(Hash) ? campos : {}
+  end
+
+  # Checklist da tese (LeadDocs): conta só o que a equipe confirmou ('recebido');
+  # sugestão da IA (doc_sugestao) não conta. Sem checklist → nil ("igual sim" dá não).
+  def dados_docs
+    lista = lead&.doc_checklist || []
+    faltam = lista.reject { |doc| doc[:status] == 'recebido' }
+    completos = faltam.empty? ? 'sim' : 'nao'
+    { 'documentos_completos' => (completos if lista.any?), 'documentos_faltantes' => faltam.pluck(:title).join(', ') }
   end
 end
