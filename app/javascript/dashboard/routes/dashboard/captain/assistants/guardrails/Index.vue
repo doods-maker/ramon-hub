@@ -48,21 +48,22 @@ const displayGuardrails = computed(() =>
   guardrailsContent.value.map((c, idx) => ({ id: idx, content: c }))
 );
 
+// Exemplos da banca (só entram no assistente se alguém clicar "Adicionar").
 const guardrailsExample = [
   {
     id: 1,
     content:
-      'Block queries that share or request sensitive personal information (e.g. phone numbers, passwords).',
+      'Nunca prometer resultado nem prazo do INSS ou da Justiça — nem "o caso está ganho", nem "sai em tantos dias".',
   },
   {
     id: 2,
     content:
-      'Reject queries that include offensive, discriminatory, or threatening language.',
+      "Seguir o Provimento 205/2021 da OAB: sem linguagem mercantil de captação (ex.: 'garanta já', promoção de preço) e sem comparar com outros escritórios.",
   },
   {
     id: 3,
     content:
-      'Deflect when the assistant is asked for legal or medical diagnosis or treatment.',
+      'Conteúdo jurídico, valores e prazos só saem como rascunho para a equipe revisar; no modo piloto limitado, só logística (horário, endereço, lista de documentos) sai sozinha.',
   },
 ];
 
@@ -177,7 +178,6 @@ const addAllExample = () => {
     :header-title="$t('CAPTAIN.ASSISTANTS.GUARDRAILS.TITLE')"
     :is-fetching="isFetching"
     :back-url="backUrl"
-    :show-know-more="false"
     :show-pagination-footer="false"
     :show-assistant-switcher="false"
   >

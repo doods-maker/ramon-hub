@@ -17,3 +17,9 @@ json.items @tool_runs do |run|
   json.assistant_id run.assistant_id
   json.created_at run.created_at
 end
+
+json.catalogo @catalogo do |tool|
+  json.id tool[:id]
+  json.title tool[:title]
+  json.nivel tool[:nivel]
+end

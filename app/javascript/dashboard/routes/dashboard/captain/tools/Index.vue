@@ -98,7 +98,6 @@ onMounted(() => {
     :show-pagination-footer="!isFetching && !!customTools.length"
     :is-fetching="isFetching"
     :is-empty="!customTools.length"
-    :show-know-more="false"
     @update:current-page="onPageChange"
     @click="openCreateDialog"
   >

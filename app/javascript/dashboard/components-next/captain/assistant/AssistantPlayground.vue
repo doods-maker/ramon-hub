@@ -129,9 +129,5 @@ const handleEnterKey = event => {
         @click="sendMessage"
       />
     </div>
-
-    <p class="text-xs text-n-slate-11 pt-2 text-center">
-      {{ t('CAPTAIN.PLAYGROUND.CREDIT_NOTE') }}
-    </p>
   </div>
 </template>

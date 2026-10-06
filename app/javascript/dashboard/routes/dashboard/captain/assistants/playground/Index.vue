@@ -12,7 +12,6 @@ const assistantId = computed(() => Number(route.params.assistantId));
   <PageLayout
     show-assistant-switcher
     :show-pagination-footer="false"
-    :show-know-more="false"
     class="h-full"
   >
     <template #body>

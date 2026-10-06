@@ -7,6 +7,8 @@ import { useMapGetter } from 'dashboard/composables/store';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
+import { AVISO, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { modoDefault } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 
 const props = defineProps({
   assistantId: {
@@ -49,6 +51,13 @@ const inboxList = computed(() => {
 const v$ = useVuelidate(validationRules, state);
 
 const isLoading = computed(() => formState.uiFlags.value.creatingItem);
+
+// Conectar liga a IA na caixa na hora — o aviso diz em que modo as conversas novas nascem.
+const avisoConexao = computed(() =>
+  t('CAPTAIN.INBOXES.FORM.AVISO_RASCUNHO', {
+    modo: t(`RAMON.COPILOTO.MODOS.${modoDefault()}.NOME`),
+  })
+);
 
 const getErrorMessage = (field, errorKey) => {
   return v$.value[field].$error
@@ -93,6 +102,14 @@ const handleSubmit = async () => {
         :message="formErrors.inboxId"
       />
     </div>
+
+    <p
+      data-testid="aviso-conectar-caixa"
+      class="mb-0"
+      :class="[AVISO, TOM.amber]"
+    >
+      {{ avisoConexao }}
+    </p>
 
     <div class="flex items-center justify-between w-full gap-3">
       <Button

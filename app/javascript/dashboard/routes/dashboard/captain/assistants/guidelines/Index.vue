@@ -50,21 +50,22 @@ const displayGuidelines = computed(() =>
   guidelinesContent.value.map((c, idx) => ({ id: idx, content: c }))
 );
 
+// Exemplos da banca (só entram no assistente se alguém clicar "Adicionar").
 const guidelinesExample = [
   {
     id: 1,
     content:
-      'Block queries that share or request sensitive personal information (e.g. phone numbers, passwords).',
+      'Honorário é sempre o padrão da banca, em todas as teses: 30% dos atrasados + 3 benefícios, sem valor inicial e sem outra cobrança. Exceção, só com o advogado.',
   },
   {
     id: 2,
     content:
-      'Reject queries that include offensive, discriminatory, or threatening language.',
+      'Escrever como um médico de confiança: acolhedor, simples, sem juridiquês, tratando a pessoa por "você".',
   },
   {
     id: 3,
     content:
-      'Deflect when the assistant is asked for legal or medical diagnosis or treatment.',
+      'Mensagens curtas, no ritmo do WhatsApp: uma ideia por mensagem e uma pergunta por vez.',
   },
 ];
 
@@ -184,7 +185,6 @@ const addAllExample = async () => {
     :header-title="$t('CAPTAIN.ASSISTANTS.RESPONSE_GUIDELINES.TITLE')"
     :is-fetching="isFetching"
     :back-url="backUrl"
-    :show-know-more="false"
     :show-pagination-footer="false"
     :show-assistant-switcher="false"
   >

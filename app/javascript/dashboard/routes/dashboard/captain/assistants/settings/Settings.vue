@@ -106,7 +106,6 @@ const handleDeleteSuccess = () => {
   <PageLayout
     :is-fetching="isFetching"
     :show-pagination-footer="false"
-    :show-know-more="false"
     :class="{
       '[&>header>div]:max-w-[80rem] [&>main>div]:max-w-[80rem]':
         isCaptainV2Enabled,

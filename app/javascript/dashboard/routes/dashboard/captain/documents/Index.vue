@@ -2,9 +2,8 @@
 import { computed, onUnmounted, ref, nextTick, watch } from 'vue';
 import { useTimeoutPoll } from '@vueuse/core';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
-import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import { debounce } from '@chatwoot/utils';
@@ -14,14 +13,14 @@ import DocumentCard from 'dashboard/components-next/captain/assistant/DocumentCa
 import DocumentFilter from 'dashboard/components-next/captain/assistant/DocumentFilter.vue';
 import DocumentBulkActions from 'dashboard/components-next/captain/assistant/DocumentBulkActions.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import { AVISO, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import Policy from 'dashboard/components/policy.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
 import RelatedResponses from 'dashboard/components-next/captain/pageComponents/document/RelatedResponses.vue';
 import CreateDocumentDialog from 'dashboard/components-next/captain/pageComponents/document/CreateDocumentDialog.vue';
 import DocumentPageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/DocumentPageEmptyState.vue';
-import FeatureSpotlightPopover from 'dashboard/components-next/feature-spotlight/FeatureSpotlightPopover.vue';
-import LimitBanner from 'dashboard/components-next/captain/pageComponents/document/LimitBanner.vue';
 import CaptainDocumentAPI from 'dashboard/api/captain/document';
 import { useI18n } from 'vue-i18n';
 
@@ -33,13 +32,21 @@ const { checkPermissions } = usePolicy();
 const SYNC_POLL_INTERVAL_MS = 5000;
 const SYNC_POLL_MAX_DURATION_MS = 15 * 60 * 1000;
 
-const { isOnChatwootCloud } = useAccount();
 const uiFlags = useMapGetter('captainDocuments/getUIFlags');
 const documents = useMapGetter('captainDocuments/getRecords');
 const isFetching = computed(() => uiFlags.value.fetchingList);
 const documentsMeta = useMapGetter('captainDocuments/getMeta');
 
 const selectedAssistantId = computed(() => Number(route.params.assistantId));
+const router = useRouter();
+const verFaqsGeradas = () =>
+  router.push({
+    name: 'captain_assistants_responses_pending',
+    params: {
+      accountId: route.params.accountId,
+      assistantId: selectedAssistantId.value,
+    },
+  });
 const canManageDocuments = computed(() => checkPermissions(['administrator']));
 
 const selectedDocument = ref(null);
@@ -333,6 +340,21 @@ onUnmounted(() => {
     @update:current-page="onPageChange"
     @click="handleCreateDocument"
   >
+    <template #controls>
+      <div
+        class="mb-4 flex flex-wrap items-center justify-between gap-2"
+        :class="[AVISO, TOM.blue]"
+      >
+        <span>{{ $t('CAPTAIN.DOCUMENTS.AVISO_FAQS') }}</span>
+        <Button
+          :label="$t('CAPTAIN.DOCUMENTS.VER_FAQS_GERADAS')"
+          link
+          sm
+          @click="verFaqsGeradas"
+        />
+      </div>
+    </template>
+
     <template #search>
       <div
         v-if="bulkSelectedIds.size === 0"
@@ -365,18 +387,6 @@ onUnmounted(() => {
         @change="onFiltersChanged"
       />
     </template>
-    <template #knowMore>
-      <FeatureSpotlightPopover
-        :button-label="$t('CAPTAIN.HEADER_KNOW_MORE')"
-        :title="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.FEATURE_SPOTLIGHT.TITLE')"
-        :note="$t('CAPTAIN.DOCUMENTS.EMPTY_STATE.FEATURE_SPOTLIGHT.NOTE')"
-        :hide-actions="!isOnChatwootCloud"
-        fallback-thumbnail="/assets/images/dashboard/captain/document-popover-light.svg"
-        fallback-thumbnail-dark="/assets/images/dashboard/captain/document-popover-dark.svg"
-        learn-more-url="https://chwt.app/captain-document"
-      />
-    </template>
-
     <template #emptyState>
       <DocumentPageEmptyState @click="handleCreateDocument" />
     </template>
@@ -386,8 +396,6 @@ onUnmounted(() => {
     </template>
 
     <template #body>
-      <LimitBanner class="mb-5" />
-
       <div
         v-if="!documents.length && hasActiveDocumentFilters"
         class="flex flex-col items-center justify-center min-h-80 gap-2 text-center"

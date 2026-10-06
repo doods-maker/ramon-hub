@@ -392,7 +392,6 @@
   },
   "CAPTAIN": {
     "NAME": "Inteligência",
-    "HEADER_KNOW_MORE": "Saiba mais",
     "ASSISTANT_SWITCHER": {
       "ASSISTANTS": "Assistentes",
       "SWITCH_ASSISTANT": "Alternar entre assistentes",
@@ -440,8 +439,7 @@
       "ASSISTANT": "Assistente",
       "MESSAGE_PLACEHOLDER": "Digite sua mensagem...",
       "HEADER": "Área de testes",
-      "DESCRIPTION": "Use este playground para enviar mensagens para seu assistente e verificar se ele responde com precisão, rápido e no tom que você espera.",
-      "CREDIT_NOTE": "As mensagens enviadas aqui usam os créditos do sua Inteligência."
+      "DESCRIPTION": "Converse com o assistente aqui para conferir se ele responde certo, rápido e no tom esperado."
     },
     "PAYWALL": {
       "TITLE": "Atualize para usar o Inteligência",
@@ -454,10 +452,6 @@
       "AVAILABLE_ON": "O Inteligência está disponível apenas nos planos Enterprise.",
       "UPGRADE_PROMPT": "Atualize seu plano para ter acesso aos nossos assistentes, copilotos e muito mais.",
       "ASK_ADMIN": "Entre em contato com seu administrador para fazer a atualização."
-    },
-    "BANNER": {
-      "RESPONSES": "Você usou mais de 80% do seu limite de respostas. Para continuar usando o Inteligência, faça o upgrade.",
-      "DOCUMENTS": "Limite de documentos atingido. Atualize para continuar usando o Inteligência."
     },
     "FORM": {
       "CANCEL": "Cancelar",
@@ -535,31 +529,31 @@
       },
       "EDIT": {
         "TITLE": "Atualizar o assistente",
-        "SUCCESS_MESSAGE": "O assistente foi criado com sucesso",
-        "ERROR_MESSAGE": "Ocorreu um erro ao criar o assistente, por favor tente novamente.",
+        "SUCCESS_MESSAGE": "O assistente foi atualizado com sucesso",
+        "ERROR_MESSAGE": "Ocorreu um erro ao atualizar o assistente, por favor tente novamente.",
         "NOT_FOUND": "Não foi possível encontrar o assistente. Tente novamente."
       },
       "SETTINGS": {
         "HEADER": "Configurações",
         "BASIC_SETTINGS": {
           "TITLE": "Configurações básicas",
-          "DESCRIPTION": "Personalize o que o assistente diz quando termina uma conversa ou transfere para um humano."
+          "DESCRIPTION": "Nome, descrição e o que o assistente pode usar nas respostas."
         },
         "SYSTEM_SETTINGS": {
           "TITLE": "Configurações do sistema",
-          "DESCRIPTION": "Personalize o que o assistente diz quando termina uma conversa ou transfere para um humano."
+          "DESCRIPTION": "Instruções gerais, mensagens de transferência e de encerramento e a temperatura das respostas."
         },
         "CONTROL_ITEMS": {
-          "TITLE": "As Coisas Divertidas",
-          "DESCRIPTION": "Adicione mais controle ao assistente. (algo mais visual como uma história: Consulta → cenários → saída) Força o usuário para realmente utilizá-los.",
+          "TITLE": "Regras do assistente",
+          "DESCRIPTION": "O que o assistente nunca pode fazer (Proteções) e como ele deve escrever (Diretrizes de resposta). Vale para todas as respostas.",
           "OPTIONS": {
             "GUARDRAILS": {
               "TITLE": "Proteções",
-              "DESCRIPTION": "Mantém as coisas no caminho — apenas os tipos de perguntas que você quer que seu assistente responda, nada fora de limites ou fora do tópico."
+              "DESCRIPTION": "O que o assistente nunca pode fazer ou dizer — por exemplo, prometer resultado ou prazo do INSS."
             },
             "RESPONSE_GUIDELINES": {
               "TITLE": "Diretrizes de resposta",
-              "DESCRIPTION": "O jeito e a estrutura das respostas do seu assistente — tranquilo e amigável? Curto e ágil? Detalhado e formal?"
+              "DESCRIPTION": "Como o assistente escreve: tom, tamanho das mensagens e o que dizer em cada assunto."
             }
           }
         },
@@ -575,16 +569,12 @@
         "VIEW_CONNECTED_INBOXES": "Ver caixas de entrada conectadas"
       },
       "EMPTY_STATE": {
-        "TITLE": "Não há assistentes disponíveis",
-        "SUBTITLE": "Crie um assistente para fornecer respostas rápidas e precisas aos seus usuários. Ele pode aprender com seus artigos de ajuda e conversas passadas.",
-        "FEATURE_SPOTLIGHT": {
-          "TITLE": "Assistente da Inteligência",
-          "NOTE": "O Assistente da Inteligência interage diretamente com os clientes, aprende com seus documentos de ajuda e conversas anteriores e fornece respostas instantâneas e precisas. Ele lida com as solicitações iniciais, oferecendo resoluções rápidas antes de transferir para um agente quando necessário."
-        }
+        "TITLE": "Os assistentes abrem pelo seletor",
+        "SUBTITLE": "Escolha o Atendimento ou o Copiloto do Escritório no seletor que fica no topo das telas de FAQs, Skills, Testar e Configurações."
       },
       "GUARDRAILS": {
         "TITLE": "Proteções",
-        "DESCRIPTION": "Mantém as coisas no caminho — apenas os tipos de perguntas que você quer que seu assistente responda, nada fora de limites ou fora do tópico.",
+        "DESCRIPTION": "O que o assistente nunca pode fazer ou dizer — por exemplo, prometer resultado ou prazo do INSS.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selecionado | {count} itens selecionados",
           "SELECT_ALL": "Selecionar todos ({count})",
@@ -629,7 +619,7 @@
       },
       "RESPONSE_GUIDELINES": {
         "TITLE": "Diretrizes de Resposta",
-        "DESCRIPTION": "O jeito e a estrutura das respostas do seu assistente — tranquilo e amigável? Curto e ágil? Detalhado e formal?",
+        "DESCRIPTION": "Como o assistente escreve: tom, tamanho das mensagens e o que dizer em cada assunto.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selecionado | {count} itens selecionados",
           "SELECT_ALL": "Selecionar todos ({count})",
@@ -673,8 +663,8 @@
         }
       },
       "SCENARIOS": {
-        "TITLE": "Cenários",
-        "DESCRIPTION": "Dê algum contexto ao seu assistente — como \"o que fazer quando um usuário estiver com problemas\", ou \"como agir durante uma solicitação de reembolso\".",
+        "TITLE": "Skills",
+        "DESCRIPTION": "Situações que o assistente sabe conduzir: quando usar cada skill, como conduzir e quais ferramentas ela usa.",
         "BULK_ACTION": {
           "SELECTED": "{count} item selecionado | {count} itens selecionados",
           "SELECT_ALL": "Selecionar todos ({count})",
@@ -683,29 +673,29 @@
         },
         "ADD": {
           "SUGGESTED": {
-            "TITLE": "Exemplos de cenários",
+            "TITLE": "Exemplos de skills",
             "ADD": "Adicionar todos",
             "ADD_SINGLE": "Adicionar este",
-            "TOOLS_USED": "Ferramentas usadas :"
+            "TOOLS_USED": "Ferramentas usadas:"
           },
           "NEW": {
-            "CREATE": "Adicionar um cenário",
-            "TITLE": "Criar um cenário",
+            "CREATE": "Adicionar uma skill",
+            "TITLE": "Criar uma skill",
             "FORM": {
               "TITLE": {
-                "LABEL": "Título",
-                "PLACEHOLDER": "Digite um nome para o cenário",
-                "ERROR": "O nome do cenário é obrigatório"
+                "LABEL": "Nome da skill",
+                "PLACEHOLDER": "Ex.: Lead que sumiu depois da reunião",
+                "ERROR": "O nome da skill é obrigatório"
               },
               "DESCRIPTION": {
-                "LABEL": "Descrição",
-                "PLACEHOLDER": "Descreva como e onde este cenário será utilizado",
-                "ERROR": "Descrição do cenário é obrigatória"
+                "LABEL": "Quando usar",
+                "PLACEHOLDER": "Em que situação o assistente deve seguir esta skill",
+                "ERROR": "Diga quando usar esta skill"
               },
               "INSTRUCTION": {
-                "LABEL": "Como lidar",
-                "PLACEHOLDER": "Descreva como e onde este cenário será utilizado",
-                "ERROR": "Conteúdo do cenário é obrigatório"
+                "LABEL": "Como conduzir",
+                "PLACEHOLDER": "Passo a passo do que o assistente faz — digite {'@'} para chamar uma ferramenta",
+                "ERROR": "Escreva como conduzir esta skill"
               },
               "CREATE": "Criar",
               "CANCEL": "Cancelar"
@@ -714,32 +704,39 @@
         },
         "UPDATE": {
           "CANCEL": "Cancelar",
-          "UPDATE": "Atualizar alterações"
+          "UPDATE": "Salvar alterações"
         },
         "LIST": {
           "SEARCH_PLACEHOLDER": "Pesquisar..."
         },
-        "EMPTY_MESSAGE": "Nenhum cenário encontrado. Crie ou adicione exemplos para começar.",
-        "SEARCH_EMPTY_MESSAGE": "Nenhum cenário encontrado para esta pesquisa.",
+        "EMPTY_MESSAGE": "Nenhuma skill ainda. Crie uma para começar.",
+        "SEARCH_EMPTY_MESSAGE": "Nenhuma skill encontrada para esta pesquisa.",
         "API": {
           "ADD": {
-            "SUCCESS": "Cenários adicionados com sucesso",
-            "ERROR": "Ocorreu um erro ao adicionar cenários, por favor tente novamente."
+            "SUCCESS": "Skills adicionadas com sucesso",
+            "ERROR": "Ocorreu um erro ao adicionar skills, por favor tente novamente."
           },
           "UPDATE": {
-            "SUCCESS": "Cenários atualizados com sucesso",
-            "ERROR": "Ocorreu um erro ao atualizar cenários, por favor tente novamente."
+            "SUCCESS": "Skill atualizada com sucesso",
+            "ERROR": "Ocorreu um erro ao atualizar a skill, por favor tente novamente."
           },
           "DELETE": {
-            "SUCCESS": "Cenários excluídos com sucesso",
-            "ERROR": "Ocorreu um erro ao excluir os cenários, por favor tente novamente."
+            "SUCCESS": "Skills excluídas com sucesso",
+            "ERROR": "Ocorreu um erro ao excluir as skills, por favor tente novamente."
           }
+        },
+        "EXAMPLE": {
+          "TITLE": "Lead que sumiu depois da reunião",
+          "DESCRIPTION": "Quando o lead não responde há dias depois da reunião de fechamento",
+          "INSTRUCTION": "Retome com gentileza, lembre o próximo passo combinado e ofereça novo horário; use [Playbook da tese](tool://playbook_da_tese) se precisar."
         }
       }
     },
     "DOCUMENTS": {
       "HEADER": "Documentos",
       "ADD_NEW": "Criar um novo documento",
+      "AVISO_FAQS": "O documento não é lido pelo assistente: ele vira FAQs pendentes, e só vale o que você aprovar.",
+      "VER_FAQS_GERADAS": "Ver FAQs geradas",
       "SELECTED": "{count} selecionado",
       "SELECT_ALL": "Selecionar todos ({count})",
       "UNSELECT_ALL": "Desmarcar todos ({count})",
@@ -801,30 +798,17 @@
         "TITLE": "FAQs Relacionadas",
         "DESCRIPTION": "Estes FAQs são gerados diretamente a partir do documento."
       },
-      "FORM_DESCRIPTION": "Digite o URL do documento para adicioná-lo como fonte de conhecimento e escolha o assistente para associá-lo.",
+      "FORM_DESCRIPTION": "Cole o link de uma página. A Inteligência lê a página e gera FAQs pendentes; o assistente só usa o que você aprovar.",
       "CREATE": {
         "TITLE": "Adicionar um documento",
         "SUCCESS_MESSAGE": "O documento foi criado com sucesso",
         "ERROR_MESSAGE": "Ocorreu um erro ao criar o documento, por favor, tente novamente."
       },
       "FORM": {
-        "TYPE": {
-          "LABEL": "Tipo do documento",
-          "URL": "URL:",
-          "PDF": "Arquivo PDF"
-        },
         "URL": {
-          "LABEL": "URL:",
-          "PLACEHOLDER": "Insira a URL do documento",
+          "LABEL": "Link da página",
+          "PLACEHOLDER": "Cole o link da página (https://...)",
           "ERROR": "Por favor forneça uma URL válida para o documento"
-        },
-        "PDF_FILE": {
-          "LABEL": "Arquivo PDF",
-          "CHOOSE_FILE": "Escolher arquivo PDF",
-          "ERROR": "Por favor, selecione um arquivo PDF",
-          "HELP_TEXT": "Tamanho máximo do arquivo: 10 MB",
-          "INVALID_TYPE": "Por favor, selecione um arquivo PDF válido",
-          "TOO_LARGE": "O tamanho do arquivo excede o limite de 10 MB"
         },
         "NAME": {
           "LABEL": "Nome do documento (opcional)",
@@ -845,14 +829,10 @@
         "DELETE_DOCUMENT": "Excluir Documento"
       },
       "EMPTY_STATE": {
-        "TITLE": "Nenhum documento disponível",
-        "SUBTITLE": "Os documentos são usados pelo seu assistente para gerar perguntas frequentes. Pode importar documentos para fornecer um contexto para seu assistente.",
+        "TITLE": "Ainda não há documentos",
+        "SUBTITLE": "Cole o link de uma página e a Inteligência gera FAQs pendentes para você aprovar.",
         "FILTERED_TITLE": "Nenhum documento correspondente",
-        "FILTERED_SUBTITLE": "Tente alterar a origem, o status ou o termo de pesquisa.",
-        "FEATURE_SPOTLIGHT": {
-          "TITLE": "Documento da Inteligência",
-          "NOTE": "Um documento na Inteligência serve como um recurso de conhecimento para o assistente. Ao conectar sua central de ajuda ou guias, a Inteligência pode analisar o conteúdo e fornecer respostas precisas para as dúvidas dos clientes."
-        }
+        "FILTERED_SUBTITLE": "Tente alterar a origem, o status ou o termo de pesquisa."
       }
     },
     "CUSTOM_TOOLS": {
@@ -860,12 +840,8 @@
       "ADD_NEW": "Criar ferramenta",
       "SOFT_LIMIT_WARNING": "Ter mais de 10 ferramentas pode reduzir a confiabilidade do assistente na seleção da ferramenta certa. Considere remover ferramentas não utilizadas para melhores resultados.",
       "EMPTY_STATE": {
-        "TITLE": "Não há ferramentas personalizadas disponíveis",
-        "SUBTITLE": "Crie ferramentas personalizadas para conectar com APIs e serviços externos, permitindo obter dados e agir por você.",
-        "FEATURE_SPOTLIGHT": {
-          "TITLE": "Ferramentas Personalizadas",
-          "NOTE": "Ferramentas personalizadas permitem seu assistente interagir com APIs e serviços externos. Crie ferramentas para obter dados, realizar ações ou integre com seus sistemas existentes para melhorar as capacidades do seu assistente."
-        }
+        "TITLE": "Não há ferramentas personalizadas",
+        "SUBTITLE": "Ferramentas personalizadas ligam o assistente a outros sistemas por HTTP. As ferramentas do hub (AdvBox, motor de cálculos, funil, agenda) já vêm prontas e não aparecem aqui."
       },
       "FORM_DESCRIPTION": "Configure sua ferramenta personalizada para se conectar a APIs externas",
       "OPTIONS": {
@@ -989,7 +965,7 @@
       "PENDING_FAQS": "FAQs pendentes",
       "ADD_NEW": "Criar nova FAQ",
       "DOCUMENTABLE": {
-        "CONVERSATION": "Conversação #{id}"
+        "CONVERSATION": "Conversa #{id}"
       },
       "SELECTED": "{count} selecionado",
       "SELECT_ALL": "Selecionar todos ({count})",
@@ -1005,7 +981,7 @@
         "TITLE": "Excluir as Perguntas Frequentes?",
         "DESCRIPTION": "Tem certeza que deseja excluir as Perguntas Frequentes selecionadas? Esta ação não pode ser desfeita.",
         "CONFIRM": "Sim, excluir todas",
-        "SUCCESS_MESSAGE": "Perguntas Frequentes excluídas com sucesso/",
+        "SUCCESS_MESSAGE": "Perguntas Frequentes excluídas com sucesso",
         "ERROR_MESSAGE": "Ocorreu um erro ao excluir as Perguntas Frequentes, por favor tente novamente."
       },
       "DELETE": {
@@ -1023,7 +999,7 @@
       "STATUS": {
         "TITLE": "Status",
         "PENDING": "Pendentes",
-        "APPROVED": "Aceito",
+        "APPROVED": "Aprovadas",
         "ALL": "Todos"
       },
       "PENDING_BANNER": {
@@ -1043,7 +1019,7 @@
           "ERROR": "Por favor, forneça uma pergunta válida."
         },
         "ANSWER": {
-          "LABEL": "Responder",
+          "LABEL": "Resposta",
           "PLACEHOLDER": "Digite a resposta aqui",
           "ERROR": "Por favor, forneça uma resposta válida."
         }
@@ -1060,14 +1036,10 @@
         "DELETE_RESPONSE": "Excluir"
       },
       "EMPTY_STATE": {
-        "TITLE": "Nenhuma FAQ encontrada",
+        "TITLE": "Ainda não há FAQs",
         "NO_PENDING_TITLE": "Não há mais FAQs pendentes para revisão",
-        "SUBTITLE": "Perguntas Frequentes ajudam seu assistente a fornecer respostas rápidas e precisas para perguntas de seus clientes. Eles podem ser gerados automaticamente a partir do seu conteúdo ou podem ser adicionados manualmente.",
-        "CLEAR_SEARCH": "Limpar filtros ativos",
-        "FEATURE_SPOTLIGHT": {
-          "TITLE": "FAQ da Inteligência",
-          "NOTE": "As FAQs da Inteligência identificam as perguntas mais comuns dos clientes — tanto as que ainda não existem na sua base de conhecimento quanto as mais recorrentes — e gera FAQs relevantes para melhorar o atendimento. Você pode revisar cada sugestão e decidir se aprova ou rejeita."
-        }
+        "SUBTITLE": "Clique em “Criar nova FAQ” para escrever uma, ou gere FAQs pendentes a partir de um documento.",
+        "CLEAR_SEARCH": "Limpar filtros ativos"
       }
     },
     "INBOXES": {
@@ -1094,11 +1066,12 @@
           "LABEL": "Caixa de Entrada",
           "PLACEHOLDER": "Selecione a caixa de entrada para implantar o assistente.",
           "ERROR": "É obrigatório selecionar uma caixa de entrada."
-        }
+        },
+        "AVISO_RASCUNHO": "Ao conectar, o assistente passa a atuar nas conversas desta caixa. Modo das conversas novas: {modo}. Rascunho: tudo vira rascunho para a equipe enviar. Piloto com limites: só logística sai sozinha. Piloto total: tudo sai sozinho. Manual: o assistente não age."
       },
       "EMPTY_STATE": {
-        "TITLE": "Caixa de entrada não conectada",
-        "SUBTITLE": "Conectar uma caixa de entrada permite ao assistente lidar com perguntas iniciais de seus clientes antes de transferi-las para você."
+        "TITLE": "Nenhuma caixa conectada",
+        "SUBTITLE": "Conecte uma caixa para o assistente começar a escrever rascunhos de resposta nas conversas dela."
       }
     }
   }
