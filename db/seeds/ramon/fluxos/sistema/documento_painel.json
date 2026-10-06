@@ -1,7 +1,7 @@
 {
   "nome": "Documento enviado pelo Painel",
   "grupo": "painel_cliente",
-  "descricao": "No código: Cliente::PainelController (envio) → Ramon::PortalEnvioJob.\n\nO desenho não consegue mostrar:\n• começa com o cliente enviando um arquivo pelo Painel — os fluxos não têm esse gatilho (aqui: Rodar na mão);\n• antes de tudo o arquivo vai para o Drive (Clientes/<Nome — CPF>) — não há passo de Drive;\n• a 1ª tarefa vai para o responsável do processo no ADVBOX (o desenho mostra o padrão, Eduardo); cada passo é idempotente e o ADVBOX tenta de novo até 5 vezes.",
+  "descricao": "No código: Cliente::PainelController (envio) → Ramon::PortalEnvioJob.\n\nO desenho não consegue mostrar:\n• começa com o cliente enviando um arquivo pelo Painel — os fluxos não têm esse gatilho (aqui: Rodar na mão);\n• antes de tudo o arquivo vai para o Drive (Clientes/<Nome — CPF>), mas só se o Drive estiver configurado (DriveClient.configured?) — sem isso o passo é pulado; não há passo de Drive;\n• o push só sai se NTFY_TOPIC estiver definido (Ramon::NtfyPushJob volta em silêncio sem ele);\n• a 1ª tarefa vai para o responsável do processo no ADVBOX (o desenho mostra o padrão, Eduardo); cada passo é idempotente e o ADVBOX tenta de novo até 5 vezes.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Cliente envia documento pelo Painel"},"posicao":{"x":0,"y":0}},
