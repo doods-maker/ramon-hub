@@ -33,6 +33,7 @@ import { waMeUrl, formatPhoneBr } from '../../helpers/phone';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { dynamicTime } from 'shared/helpers/timeHelper';
 import LeadsAPI from 'dashboard/api/leads';
+import RodarFluxo from 'dashboard/routes/dashboard/captain/automacoes/RodarFluxo.vue';
 import {
   CARTAO,
   CARTAO_STATUS,
@@ -647,8 +648,14 @@ const conversationExtrasOpen = ref(false);
 
 // ----- "Não é lead" (destrutivo: confirmação inline, só na conversa) -----
 const discardPrompt = ref(false);
-// "⋯" ao lado do nome: hoje só tem o "Não é lead"
+// "⋯" ao lado do nome: "Não é lead" e, para admin, "Rodar fluxo…"
 const menuAberto = ref(false);
+// "Rodar fluxo…" (Automações em fluxo, B3): só admin (isAdmin acima) — a API dos fluxos é admin-only
+const rodandoFluxo = ref(false);
+const abrirRodarFluxo = () => {
+  menuAberto.value = false;
+  rodandoFluxo.value = true;
+};
 const menuEl = ref(null);
 onClickOutside(menuEl, () => {
   menuAberto.value = false;
@@ -791,6 +798,17 @@ const discard = async () => {
                   <span class="i-lucide-user-x size-4 shrink-0" />
                   {{ $t('RAMON.LEAD_PANEL.DISCARD') }}
                 </button>
+                <button
+                  v-if="isAdmin"
+                  type="button"
+                  data-testid="lead-rodar-fluxo"
+                  class="flex items-center gap-2"
+                  :class="LINHA"
+                  @click="abrirRodarFluxo"
+                >
+                  <span class="i-lucide-workflow size-4 shrink-0" />
+                  {{ $t('CAPTAIN_RAMON.FLUXOS.RODAR.ITEM') }}
+                </button>
               </div>
             </div>
           </div>
@@ -821,6 +839,12 @@ const discard = async () => {
             {{ prescriptionLabel }}
           </span>
         </div>
+
+        <RodarFluxo
+          v-if="rodandoFluxo"
+          :alvo="{ lead_id: lead.id }"
+          @fechar="rodandoFluxo = false"
+        />
 
         <!-- reunião nova com outra aberta: confirma antes de marcar -->
         <Teleport to="body">

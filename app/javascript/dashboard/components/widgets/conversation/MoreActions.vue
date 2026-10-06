@@ -9,6 +9,9 @@ import EmailTranscriptModal from './EmailTranscriptModal.vue';
 import ResolveAction from '../../buttons/ResolveAction.vue';
 import ButtonV4 from 'dashboard/components-next/button/Button.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
+// FORK(ramon): "Rodar fluxo…" (Automações em fluxo, B3) — só admin, como a API
+import { useAdmin } from 'dashboard/composables/useAdmin';
+import RodarFluxo from 'dashboard/routes/dashboard/captain/automacoes/RodarFluxo.vue';
 
 import {
   CMD_MUTE_CONVERSATION,
@@ -22,6 +25,8 @@ const { t } = useI18n();
 
 const [showEmailActionsModal, toggleEmailModal] = useToggle(false);
 const [showActionsDropdown, toggleDropdown] = useToggle(false);
+const [showRodarFluxo, toggleRodarFluxo] = useToggle(false); // FORK(ramon)
+const { isAdmin } = useAdmin(); // FORK(ramon)
 
 const currentChat = computed(() => store.getters.getSelectedChat);
 
@@ -51,6 +56,16 @@ const actionMenuItems = computed(() => {
     value: 'send_transcript',
   });
 
+  // FORK(ramon): roda um fluxo de gatilho manual nesta conversa (só admin)
+  if (isAdmin.value) {
+    items.push({
+      icon: 'i-lucide-workflow',
+      label: t('CAPTAIN_RAMON.FLUXOS.RODAR.ITEM'),
+      action: 'rodar_fluxo',
+      value: 'rodar_fluxo',
+    });
+  }
+
   return items;
 });
 
@@ -65,6 +80,8 @@ const handleActionClick = ({ action }) => {
     useAlert(t('CONTACT_PANEL.UNMUTED_SUCCESS'));
   } else if (action === 'send_transcript') {
     toggleEmailModal();
+  } else if (action === 'rodar_fluxo') {
+    toggleRodarFluxo(true); // FORK(ramon)
   }
 };
 
@@ -121,6 +138,12 @@ onUnmounted(() => {
       :show="showEmailActionsModal"
       :current-chat="currentChat"
       @cancel="toggleEmailModal"
+    />
+    <!-- FORK(ramon): Rodar fluxo… (B3) -->
+    <RodarFluxo
+      v-if="showRodarFluxo"
+      :alvo="{ conversation_id: currentChat.id }"
+      @fechar="toggleRodarFluxo(false)"
     />
   </div>
 </template>

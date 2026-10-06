@@ -5,6 +5,7 @@ import LeadPanelBody from '../LeadPanelBody.vue';
 import LostReasonModal from '../../kanban/LostReasonModal.vue';
 import LeadReuniao from '../LeadReuniao.vue';
 import ConfirmModal from '../../ConfirmModal.vue';
+import RodarFluxo from 'dashboard/routes/dashboard/captain/automacoes/RodarFluxo.vue';
 import { formatBrl } from '../../../helpers/currency';
 import { useAlert } from 'dashboard/composables';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
@@ -1131,6 +1132,24 @@ describe('LeadPanelBody', () => {
       await flushPromises();
       expect(wrapper.findComponent(ConfirmModal).exists()).toBe(false);
       expect(del).not.toHaveBeenCalled();
+    });
+
+    it('"Rodar fluxo…" no menu ⋯ só para admin, com o lead como alvo', async () => {
+      const agente = mountBody();
+      await agente.find('[data-testid="lead-more"]').trigger('click');
+      expect(agente.find('[data-testid="lead-rodar-fluxo"]').exists()).toBe(
+        false
+      );
+
+      const admin = mountBody({ spies: { role: 'administrator' } });
+      await admin.find('[data-testid="lead-more"]').trigger('click');
+      await admin.find('[data-testid="lead-rodar-fluxo"]').trigger('click');
+      expect(admin.find('[data-testid="lead-rodar-fluxo"]').exists()).toBe(
+        false
+      );
+      expect(admin.findComponent(RodarFluxo).props('alvo')).toEqual({
+        lead_id: 7,
+      });
     });
 
     it('seções nativas da conversa ficam recolhidas atrás de "Mais da conversa"', async () => {
