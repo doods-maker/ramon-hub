@@ -226,4 +226,54 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       Ramon::Fluxos::Passos::Lead.preencher_campo({ 'chave' => 'x', 'valor' => 'y' }, c)
     end.not_to(change { [lead.lead_activities.count, lead.reload.custom_attributes] })
   end
+
+  describe 'passos da reunião (B4.1)' do
+    let(:agente) { create(:user, account: account, name: 'Bia') }
+    let(:gatilho) do
+      { 'gatilho' => { 'inicio' => '2026-10-07T22:00:00Z', 'quem_marcou_id' => agente.id, 'titulo_tarefa' => 'Reunião Cal.com: Primeiro',
+                       'resumo' => 'Primeiro em 07/10/2026 19:00', 'resumo_antes' => 'Primeiro em 06/10/2026 19:00' } }
+    end
+
+    it 'atividade de reunião com tipo, de → para e quem marcou' do
+      config = { 'tipo' => 'meeting_rescheduled', 'de' => '{resumo_antes}', 'texto' => '{resumo}' }
+      Ramon::Fluxos::Passos::Lead.registrar_atividade(config, ctx(contexto: gatilho))
+      atividade = lead.lead_activities.find_by!(kind: 'meeting_rescheduled')
+      expect([atividade.from_value, atividade.to_value, atividade.user])
+        .to eq(['Primeiro em 06/10/2026 19:00', 'Primeiro em 07/10/2026 19:00', agente])
+    end
+
+    it 'tarefa da reunião: vence na hora, é de quem marcou e põe a reunião na agenda' do
+      allow(Ramon::Fluxos::Reunioes).to receive(:na_agenda)
+      config = { 'titulo' => '{titulo_tarefa}', 'tipo' => 'meeting', 'prazo' => 'reuniao' }
+      Ramon::Fluxos::Passos::Lead.criar_tarefa(config, ctx(contexto: gatilho))
+      tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
+      expect([tarefa.title, tarefa.due_at, tarefa.user]).to eq(['Reunião Cal.com: Primeiro', Time.zone.parse('2026-10-07T22:00:00Z'), agente])
+      expect(Ramon::Fluxos::Reunioes).to have_received(:na_agenda).with(tarefa, true)
+    end
+
+    it 'ensaio da tarefa diz o prazo; da atividade, o tipo e o de → para' do
+      c = ctx(ensaio: true, contexto: gatilho)
+      tarefa = Ramon::Fluxos::Passos::Lead.criar_tarefa({ 'titulo' => '{titulo_tarefa}', 'tipo' => 'meeting', 'prazo' => 'reuniao' }, c)
+      atividade = Ramon::Fluxos::Passos::Lead.registrar_atividade({ 'tipo' => 'meeting_cancelled', 'texto' => '{resumo}' }, c)
+      expect(tarefa[:resumo]).to eq('faria: tarefa "Reunião Cal.com: Primeiro" para 07/10 19:00')
+      expect(atividade[:resumo]).to eq('faria: atividade meeting_cancelled: Primeiro em 07/10/2026 19:00')
+      expect(lead.lead_tasks.count + lead.lead_activities.where(kind: 'meeting_cancelled').count).to eq(0)
+    end
+
+    it 'rascunho nas notas do lead com o título do código, mesmo com conversa' do
+      config = { 'onde' => 'notas_do_lead', 'titulo' => 'confirmação de reunião', 'texto' => 'Oi {nome}!' }
+      expect { Ramon::Fluxos::Passos::Conversa.rascunho_texto(config, ctx) }.not_to(change { conversa.messages.count })
+      expect(lead.lead_notes.last.body).to start_with("RASCUNHO (revisar antes de enviar) — confirmação de reunião:
+Oi ")
+    end
+
+    it 'apagar a reunião: só as tarefas de reunião do evento, do próprio lead' do
+      t1 = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'R1', due_at: 1.day.from_now)
+      t2 = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'R2', due_at: 2.days.from_now)
+      outra = create(:lead_task, account: account, lead: create(:lead, account: account), kind: 'meeting', title: 'X', due_at: 1.day.from_now)
+      r = Ramon::Fluxos::Passos::Reuniao.apagar_reuniao({}, ctx(contexto: { 'gatilho' => { 'tarefa_ids' => [t1.id, outra.id] } }))
+      expect(LeadTask.where(id: [t1.id, t2.id, outra.id]).pluck(:id)).to contain_exactly(t2.id, outra.id)
+      expect(r[:resumo]).to eq("apagou tarefas ##{t1.id}") # lista o que apagou de fato
+    end
+  end
 end

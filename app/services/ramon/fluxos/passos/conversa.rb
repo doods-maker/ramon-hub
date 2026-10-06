@@ -29,8 +29,15 @@ module Ramon::Fluxos::Passos::Conversa
     { saida: 's', resumo: descricao }
   end
 
-  def escrever(ctx, texto)
-    if ctx.conversa
+  # "RASCUNHO (revisar antes de enviar):"; com título (B4.1), "RASCUNHO (revisar antes de enviar) — confirmação de reunião:"
+  def cabecalho(config)
+    titulo = config['titulo'].to_s.strip
+    titulo.empty? ? Ramon::RascunhoCarimbo::PREFIXO : "#{Ramon::RascunhoCarimbo::PREFIXO.delete_suffix(':')} — #{titulo}:"
+  end
+
+  # onde 'notas_do_lead' (B4.1): como o rascunho de confirmação do código, mesmo se o lead tiver conversa.
+  def escrever(ctx, texto, onde: nil)
+    if ctx.conversa && onde != 'notas_do_lead'
       Messages::MessageBuilder.new(nil, ctx.conversa, { content: texto, private: true,
                                                         content_attributes: { ramon_fluxo_execucao_id: ctx.execucao.id } }).perform
     elsif ctx.lead
