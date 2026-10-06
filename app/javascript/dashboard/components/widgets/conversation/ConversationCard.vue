@@ -11,6 +11,8 @@ import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import LeadLinhaCard from 'dashboard/routes/dashboard/ramon/components/conversation/LeadLinhaCard.vue';
+import { semEtiquetasDoLead } from 'dashboard/routes/dashboard/ramon/helpers/leadNaConversa';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -59,8 +61,13 @@ const showMetaSection = computed(() => {
 
 const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
 
+// FORK(ramon): fase-*/tese-* saem do card quando a linha do lead aparece.
+const cardLabels = computed(() =>
+  semEtiquetasDoLead(props.chat.labels, props.chat.ramon_lead)
+);
+
 const showLabelsSection = computed(() => {
-  return props.chat.labels?.length > 0 || hasSlaPolicyId.value;
+  return cardLabels.value.length > 0 || hasSlaPolicyId.value;
 });
 
 const messagePreviewClass = computed(() => {
@@ -174,6 +181,7 @@ watch(
       >
         {{ currentContact.name }}
       </h4>
+      <LeadLinhaCard :lead="chat.ramon_lead" class="mx-2 ltr:pr-6 rtl:pl-6" />
       <VoiceCallStatus
         v-if="voiceCallData.status"
         key="voice-status-row"
@@ -222,7 +230,7 @@ watch(
       </div>
       <CardLabels
         v-if="showLabelsSection"
-        :conversation-labels="chat.labels"
+        :conversation-labels="cardLabels"
         class="mt-0.5 mx-2 mb-0"
       >
         <template v-if="hasSlaPolicyId" #before>
