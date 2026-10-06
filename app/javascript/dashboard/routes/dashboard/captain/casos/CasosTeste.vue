@@ -12,6 +12,8 @@ import CaptainFerramentasAPI from 'dashboard/api/captain/ferramentas';
 import { ferramentaInfo } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
 import {
   CARTAO,
+  CARTAO_STATUS,
+  FILETE,
   CHIP,
   TOM,
   CAMPO,
@@ -191,7 +193,7 @@ const toggle = id => {
 const placar = item => `${item.passou}/${item.total}`;
 const linhaRodada = item =>
   `${fmtQuando(item.created_at)} · ${item.duracao_ms ? fmtDuracao(item.duracao_ms) : '—'}`;
-const fala = caso => caso.mensagens?.[caso.mensagens.length - 1]?.content;
+const fala = caso => caso.mensagens?.[caso.mensagens.length - 1]?.content || '';
 const nomeFerramenta = nome => ferramentaInfo(nome, ferramentas.value).title;
 
 const chipCaso = caso => {
@@ -209,6 +211,13 @@ const chipCaso = caso => {
   if (emAndamento.value)
     return { tom: TOM.slate, label: t('CAPTAIN_RAMON.CASOS.AGUARDANDO') };
   return null;
+};
+// piorou/melhorou ganham o filete do kit (ruby/teal) à esquerda
+const cartaoCaso = caso => {
+  const delta = resultados.value[caso.id]?.delta;
+  if (delta === 'piorou') return [CARTAO_STATUS, FILETE.ruby];
+  if (delta === 'melhorou') return [CARTAO_STATUS, FILETE.teal];
+  return CARTAO;
 };
 const tomStatus = status =>
   ({
@@ -408,16 +417,11 @@ const tomStatus = status =>
               {{ t('CAPTAIN_RAMON.CASOS.VAZIO') }}
             </p>
 
-            <ul class="flex flex-col gap-2 mt-3">
+            <ul class="flex flex-col gap-2 mt-3 list-none ps-0">
               <li
                 v-for="caso in visiveis"
                 :key="caso.id"
-                :class="[
-                  CARTAO,
-                  resultados[caso.id]?.delta === 'piorou'
-                    ? 'border-n-ruby-7'
-                    : '',
-                ]"
+                :class="cartaoCaso(caso)"
                 data-testid="caso-linha"
               >
                 <button
@@ -439,7 +443,10 @@ const tomStatus = status =>
                     >
                       {{ caso.titulo }}
                     </span>
-                    <span class="block text-xs text-n-slate-10 truncate">
+                    <span
+                      v-if="!caso.titulo.includes(fala(caso))"
+                      class="block text-xs text-n-slate-10 truncate"
+                    >
                       {{ fala(caso) }}
                     </span>
                   </span>
@@ -490,7 +497,10 @@ const tomStatus = status =>
                       >
                         {{ t('CAPTAIN_RAMON.CASOS.DETALHE.NENHUMA') }}
                       </p>
-                      <ul v-else class="mt-1 flex flex-col gap-1">
+                      <ul
+                        v-else
+                        class="mt-1 flex flex-col gap-1 list-none ps-0"
+                      >
                         <li
                           v-for="(tool, indice) in resultados[caso.id]
                             .ferramentas"
@@ -539,9 +549,12 @@ const tomStatus = status =>
           </section>
 
           <!-- histórico de rodadas -->
-          <aside class="min-w-0">
+          <aside v-if="rodadas.length" class="min-w-0">
             <p :class="TITULO">{{ t('CAPTAIN_RAMON.CASOS.HISTORICO') }}</p>
-            <ul class="flex flex-col gap-1 mt-2" data-testid="casos-historico">
+            <ul
+              class="flex flex-col gap-1 mt-2 list-none ps-0"
+              data-testid="casos-historico"
+            >
               <li v-for="item in rodadas" :key="item.id">
                 <button
                   type="button"
