@@ -228,6 +228,8 @@ export const VARIAVEIS = [
   'documentos_faltantes',
   'resposta_ia',
   'quando',
+  'regra',
+  'documento',
 ];
 export const CAMPOS = [
   'etapa',

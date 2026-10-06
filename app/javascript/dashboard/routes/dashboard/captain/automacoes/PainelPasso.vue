@@ -12,12 +12,14 @@ import {
   SELECT,
   TOM,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { PASSOS, TIPOS_TAREFA, UNIDADES, gatilhoInfo } from './fluxo';
+import { PAPEIS, PASSOS, TIPOS_TAREFA, UNIDADES, gatilhoInfo } from './fluxo';
 import CampoTexto from './CampoTexto.vue';
 import ConfigAcoesChatwoot from './ConfigAcoesChatwoot.vue';
 import ConfigCasos from './ConfigCasos.vue';
+import ConfigAdvbox from './ConfigAdvbox.vue';
 import ConfigCondicoes from './ConfigCondicoes.vue';
 import ConfigGatilho from './ConfigGatilho.vue';
+import ConfigIa from './ConfigIa.vue';
 import ListaMarcar from './ListaMarcar.vue';
 
 const props = defineProps({
@@ -121,9 +123,28 @@ const modoEspera = horario =>
         :config="config"
         @update:config="c => emit('update:config', c)"
       />
+      <ConfigIa
+        v-else-if="
+          ['perguntar_ia', 'rascunho_ia', 'rodar_skill'].includes(tipo)
+        "
+        :key="`${no.id}-${tipo}`"
+        :tipo="tipo"
+        :config="config"
+        @update:config="c => emit('update:config', c)"
+      />
+      <ConfigAdvbox
+        v-else-if="tipo === 'advbox'"
+        :key="no.id"
+        :config="config"
+        @update:config="c => emit('update:config', c)"
+      />
 
       <CampoTexto
-        v-else-if="['rascunho_texto', 'nota_privada'].includes(tipo)"
+        v-else-if="
+          ['rascunho_texto', 'nota_privada', 'registrar_atividade'].includes(
+            tipo
+          )
+        "
         :rotulo="t(`${K}.PAINEL.TEXTO`)"
         :model-value="config.texto || ''"
         @update:model-value="v => muda('texto', v)"
@@ -223,6 +244,70 @@ const modoEspera = horario =>
           :linhas="2"
           :model-value="config.texto || ''"
           @update:model-value="v => muda('texto', v)"
+        />
+      </template>
+
+      <template v-else-if="tipo === 'webhook'">
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.WEBHOOK_URL`) }}
+          <input
+            data-testid="webhook-url"
+            :class="CAMPO"
+            type="url"
+            :value="config.url || ''"
+            @input="muda('url', $event.target.value)"
+          />
+        </label>
+        <p class="text-xs text-n-slate-10">
+          {{ t(`${K}.PAINEL.WEBHOOK_AJUDA`) }}
+        </p>
+      </template>
+
+      <template v-else-if="tipo === 'trocar_responsavel'">
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.PAPEL`) }}
+          <select
+            data-testid="papel"
+            :class="SELECT"
+            :value="config.papel || ''"
+            @change="muda('papel', $event.target.value)"
+          >
+            <option v-for="p in PAPEIS" :key="p" :value="p">
+              {{ t(`${K}.PAPEIS.${p}`) }}
+            </option>
+          </select>
+        </label>
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.PESSOA`) }}
+          <select
+            :class="SELECT"
+            :value="config.user_id ?? ''"
+            @change="muda('user_id', numeroOuNada($event.target.value))"
+          >
+            <option value="">{{ t(`${K}.PAINEL.DISTRIBUIR_NO_TIME`) }}</option>
+            <option v-for="p in pessoas" :key="p.id" :value="p.id">
+              {{ p.name }}
+            </option>
+          </select>
+        </label>
+      </template>
+
+      <template v-else-if="tipo === 'preencher_campo'">
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.CHAVE_CAMPO`) }}
+          <input
+            data-testid="campo-chave"
+            :class="CAMPO"
+            :value="config.chave || ''"
+            @input="muda('chave', $event.target.value)"
+          />
+          <span>{{ t(`${K}.PAINEL.CHAVE_CAMPO_AJUDA`) }}</span>
+        </label>
+        <CampoTexto
+          :rotulo="t(`${K}.PAINEL.VALOR`)"
+          :linhas="2"
+          :model-value="config.valor || ''"
+          @update:model-value="v => muda('valor', v)"
         />
       </template>
 
