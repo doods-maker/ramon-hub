@@ -12,9 +12,9 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
     let!(:copiloto) { create(:captain_assistant, account: account, name: 'Copiloto do Escritorio') }
     let(:yml) { YAML.safe_load(Rails.root.join('db/seeds/ramon/ia_casos.yml').read) }
 
-    def rodar(*args)
+    def rodar(*)
       task.reenable
-      task.invoke(account.id.to_s, *args)
+      task.invoke(account.id.to_s, *)
     end
 
     def casos_do(assistant)
@@ -39,7 +39,7 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       a5 = casos_do(atendimento).find_by!(codigo: 'A5')
       a5.update!(titulo: 'Editado pelo Eduardo', ativo: false)
 
-      expect { rodar }.not_to(change { Captain::IaCaso.count })
+      expect { rodar }.not_to change(Captain::IaCaso, :count)
       expect(a5.reload).to have_attributes(titulo: 'Editado pelo Eduardo', ativo: false)
     end
 

@@ -61,7 +61,7 @@ class Captain::IaRodadaService
 
   def registrar(item)
     contador = item[:passou] ? :passou : :falhou
-    @rodada.update!(resultados: @rodada.resultados + [item.as_json], contador => @rodada.public_send(contador) + 1)
+    @rodada.update!({ 'resultados' => @rodada.resultados + [item.as_json], contador.to_s => @rodada.public_send(contador) + 1 })
   end
 
   def agora
