@@ -5,9 +5,23 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import TaskBellMenu from '../kanban/TaskBellMenu.vue';
-import { CARTAO_STATUS, FILETE, SOBRESCRITO } from '../../helpers/ui';
+import ConfirmModal from '../ConfirmModal.vue';
+import {
+  AVISO,
+  CAMPO,
+  CARTAO_STATUS,
+  FILETE,
+  FUNDO_JANELA,
+  JANELA,
+  RODAPE_JANELA,
+  SOBRESCRITO,
+  TITULO_JANELA,
+  TOM,
+} from '../../helpers/ui';
 
 const props = defineProps({ leadId: { type: Number, required: true } });
+// rascunho de confirmação nasce nas notas ao remarcar → o painel recarrega
+const emit = defineEmits(['notesChanged']);
 
 defineOptions({ name: 'LeadNextAction' });
 const store = useStore();
@@ -92,6 +106,96 @@ const snooze = () =>
     });
   });
 
+// ----- Reunião: não se adia — Remarcar passa pelo agendamento (lembretes do
+// horário novo, atividade de→para, novo rascunho de confirmação, sino).
+// Reunião do Cal.com: o hub não mexe no Cal.com — avisa pra remarcar lá.
+const isCalcom = computed(() =>
+  Boolean(task.value?.title?.startsWith('Reunião Cal.com'))
+);
+// datetime-local trabalha em hora local (YYYY-MM-DDTHH:mm)
+const paraCampo = date =>
+  new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+const remarcarAberto = ref(false);
+const novoHorario = ref('');
+const minHorario = ref('');
+const abrirRemarcar = () => {
+  novoHorario.value = paraCampo(new Date(task.value.due_at));
+  minHorario.value = paraCampo(new Date());
+  remarcarAberto.value = true;
+};
+const remarcar = () =>
+  run(async () => {
+    if (!novoHorario.value) return;
+    await store.dispatch('leadTasks/remarcarReuniao', {
+      leadId: props.leadId,
+      taskId: task.value.id,
+      startsAt: new Date(novoHorario.value).toISOString(),
+    });
+    remarcarAberto.value = false;
+    emit('notesChanged');
+    useAlert(t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCADA'));
+  });
+
+// ----- "Feito" numa reunião: como foi? Qualificada/Não qualificada registram
+// o resultado (mesma regra do Andamento: só o Closer do lead, o time closer
+// com lead sem Closer, ou o gestor) e concluem a tarefa; Não compareceu
+// conclui com no-show, sem resultado (o prêmio do SDR só conta qualificada).
+const role = useMapGetter('getCurrentRole');
+const meuId = useMapGetter('getCurrentUserID');
+const podeRegistrar = computed(() => {
+  if (role.value === 'administrator') return true;
+  const closerId = task.value?.closer_id;
+  return !closerId || closerId === meuId.value;
+});
+const resultadoAberto = ref(false);
+const registrarResultado = resultado =>
+  run(async () => {
+    resultadoAberto.value = false;
+    await store.dispatch('leads/registrarReuniao', {
+      id: props.leadId,
+      resultado,
+      taskId: task.value.id,
+    });
+  });
+const naoCompareceu = () =>
+  run(async () => {
+    resultadoAberto.value = false;
+    await store.dispatch('leadTasks/complete', {
+      leadId: props.leadId,
+      taskId: task.value.id,
+      resultado: 'nao_compareceu',
+    });
+  });
+const onDone = () => {
+  if (isMeeting.value) resultadoAberto.value = true;
+  else complete();
+};
+
+// Cancelar: mesmo efeito do cancel do Cal.com (atividade + sino); nada vai ao
+// cliente. Os lembretes já enfileirados morrem no guard do job.
+const cancelarAberto = ref(false);
+const cancelar = () =>
+  run(async () => {
+    cancelarAberto.value = false;
+    await store.dispatch('leadTasks/cancelarReuniao', {
+      leadId: props.leadId,
+      taskId: task.value.id,
+    });
+    useAlert(t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELADA'));
+  });
+const mensagemCancelar = computed(() =>
+  [
+    t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR_CONFIRM', {
+      quando: meetingWhen.value,
+    }),
+    isCalcom.value ? t('RAMON.LEAD_PANEL.NEXT_ACTION.CALCOM_CANCELAR') : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+);
+
 // Reagendar via TaskBellMenu: só a data muda — o título da tarefa fica.
 const reschedule = ({ dueAt }) =>
   run(() =>
@@ -162,24 +266,168 @@ const reschedule = ({ dueAt }) =>
         sm
         :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.DONE')"
         :disabled="busy"
-        @click="complete"
+        @click="onDone"
       />
       <Button
-        data-testid="next-action-snooze"
+        v-if="isMeeting"
+        data-testid="next-action-remarcar"
         sm
         faded
         slate
-        :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.SNOOZE')"
+        icon="i-lucide-calendar-sync"
+        :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCAR')"
         :disabled="busy"
-        @click="snooze"
+        @click="abrirRemarcar"
       />
-      <span
-        class="flex items-center gap-1 text-xs text-n-slate-11"
-        data-testid="next-action-reschedule"
-      >
-        {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.RESCHEDULE') }}
-        <TaskBellMenu @schedule="reschedule" />
-      </span>
+      <Button
+        v-if="isMeeting"
+        data-testid="next-action-cancelar"
+        sm
+        ghost
+        ruby
+        icon="i-lucide-calendar-x"
+        :title="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"
+        :disabled="busy"
+        @click="cancelarAberto = true"
+      />
+      <template v-else>
+        <Button
+          data-testid="next-action-snooze"
+          sm
+          faded
+          slate
+          :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.SNOOZE')"
+          :disabled="busy"
+          @click="snooze"
+        />
+        <span
+          class="flex items-center gap-1 text-xs text-n-slate-11"
+          data-testid="next-action-reschedule"
+        >
+          {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.RESCHEDULE') }}
+          <TaskBellMenu @schedule="reschedule" />
+        </span>
+      </template>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="resultadoAberto"
+        :class="FUNDO_JANELA"
+        @click.self="resultadoAberto = false"
+      >
+        <div :class="JANELA" data-testid="resultado-janela">
+          <h3 :class="TITULO_JANELA">
+            {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.RESULTADO_TITULO') }}
+          </h3>
+          <p class="mb-3 text-xs text-n-slate-10">
+            {{ task.title
+            }}<template v-if="meetingWhen"> · {{ meetingWhen }} </template>
+          </p>
+          <div class="flex flex-col gap-2">
+            <Button
+              data-testid="resultado-qualificada"
+              sm
+              teal
+              icon="i-lucide-check"
+              :label="$t('RAMON.REUNIAO.QUALIFICADA')"
+              :disabled="busy || !podeRegistrar"
+              @click="registrarResultado('qualificada')"
+            />
+            <Button
+              data-testid="resultado-nao-qualificada"
+              sm
+              faded
+              slate
+              :label="$t('RAMON.REUNIAO.NAO_QUALIFICADA')"
+              :disabled="busy || !podeRegistrar"
+              @click="registrarResultado('nao_qualificada')"
+            />
+            <Button
+              data-testid="resultado-nao-compareceu"
+              sm
+              faded
+              amber
+              icon="i-lucide-user-x"
+              :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.NAO_COMPARECEU')"
+              :disabled="busy"
+              @click="naoCompareceu"
+            />
+          </div>
+          <p
+            v-if="!podeRegistrar"
+            data-testid="resultado-so-closer"
+            class="mt-3 mb-0 text-xs text-n-slate-10"
+          >
+            {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.SO_CLOSER') }}
+          </p>
+          <div :class="RODAPE_JANELA">
+            <Button
+              sm
+              ghost
+              slate
+              :label="$t('RAMON.MODAL.CANCEL')"
+              @click="resultadoAberto = false"
+            />
+          </div>
+        </div>
+      </div>
+      <ConfirmModal
+        v-if="cancelarAberto"
+        :title="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"
+        :message="mensagemCancelar"
+        :confirm-label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR')"
+        :cancel-label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.MANTER')"
+        @confirm="cancelar"
+        @cancel="cancelarAberto = false"
+      />
+      <div
+        v-if="remarcarAberto"
+        :class="FUNDO_JANELA"
+        @click.self="remarcarAberto = false"
+      >
+        <div :class="JANELA" data-testid="remarcar-janela">
+          <h3 :class="TITULO_JANELA">
+            {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCAR_TITULO') }}
+          </h3>
+          <p class="mb-3 text-xs text-n-slate-10">{{ task.title }}</p>
+          <input
+            v-model="novoHorario"
+            data-testid="remarcar-data"
+            type="datetime-local"
+            :min="minHorario"
+            :class="CAMPO"
+            class="font-mono"
+          />
+          <p
+            v-if="isCalcom"
+            data-testid="remarcar-calcom"
+            :class="[AVISO, TOM.amber]"
+            class="mt-3 mb-0"
+          >
+            {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.CALCOM_REMARCAR') }}
+          </p>
+          <p class="mt-3 mb-0 text-xs text-n-slate-10">
+            {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCAR_HINT') }}
+          </p>
+          <div :class="RODAPE_JANELA">
+            <Button
+              sm
+              faded
+              slate
+              :label="$t('RAMON.MODAL.CANCEL')"
+              @click="remarcarAberto = false"
+            />
+            <Button
+              data-testid="remarcar-confirmar"
+              sm
+              :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCAR')"
+              :disabled="busy || !novoHorario"
+              @click="remarcar"
+            />
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

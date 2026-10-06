@@ -18,13 +18,29 @@ const build = ({
   complete = vi.fn(),
   update = vi.fn(),
   fetchForLead = vi.fn(),
+  remarcarReuniao = vi.fn(),
+  cancelarReuniao = vi.fn(),
+  registrarReuniao = vi.fn(),
+  role = 'agent',
+  userId = 1,
 } = {}) =>
   createStore({
+    getters: {
+      getCurrentRole: () => role,
+      getCurrentUserID: () => userId,
+    },
     modules: {
+      leads: { namespaced: true, actions: { registrarReuniao } },
       leadTasks: {
         namespaced: true,
         getters: { getByLead: () => () => tasks },
-        actions: { fetchForLead, complete, update },
+        actions: {
+          fetchForLead,
+          complete,
+          update,
+          remarcarReuniao,
+          cancelarReuniao,
+        },
       },
     },
   });
@@ -37,6 +53,7 @@ const mountCard = (storeOpts = {}) =>
       mocks: { $t: k => k },
       stubs: {
         TaskBellMenu: true,
+        teleport: true,
         // router-link custom: o stub precisa entregar o slot com navigate
         RouterLink: { template: '<slot :navigate="() => {}" />' },
       },
@@ -118,6 +135,143 @@ describe('LeadNextAction', () => {
       leadId: 7,
       taskId: 3,
       payload: { due_at: '2026-08-01T12:00:00.000Z' },
+    });
+  });
+
+  describe('reunião', () => {
+    const futuro = new Date(Date.now() + 3 * 86400000);
+    futuro.setHours(14, 0, 0, 0);
+    const reuniao = { ...task, kind: 'meeting', due_at: futuro.toISOString() };
+
+    it('Feito pergunta como foi; Qualificada registra o resultado com a tarefa', async () => {
+      const registrarReuniao = vi.fn().mockResolvedValue({});
+      const complete = vi.fn();
+      const wrapper = mountCard({
+        tasks: [reuniao],
+        registrarReuniao,
+        complete,
+      });
+      await wrapper.find('[data-testid="next-action-done"]').trigger('click');
+      expect(complete).not.toHaveBeenCalled();
+      await wrapper
+        .find('[data-testid="resultado-qualificada"]')
+        .trigger('click');
+      await flushPromises();
+      expect(registrarReuniao).toHaveBeenCalledWith(expect.anything(), {
+        id: 7,
+        resultado: 'qualificada',
+        taskId: 3,
+      });
+    });
+
+    it('Não compareceu conclui a tarefa com no-show', async () => {
+      const complete = vi.fn().mockResolvedValue({});
+      const wrapper = mountCard({ tasks: [reuniao], complete });
+      await wrapper.find('[data-testid="next-action-done"]').trigger('click');
+      await wrapper
+        .find('[data-testid="resultado-nao-compareceu"]')
+        .trigger('click');
+      await flushPromises();
+      expect(complete).toHaveBeenCalledWith(expect.anything(), {
+        leadId: 7,
+        taskId: 3,
+        resultado: 'nao_compareceu',
+      });
+    });
+
+    it('quem não é o Closer do lead só marca Não compareceu', async () => {
+      const wrapper = mountCard({
+        tasks: [{ ...reuniao, closer_id: 99 }],
+        userId: 1,
+      });
+      await wrapper.find('[data-testid="next-action-done"]').trigger('click');
+      expect(
+        wrapper
+          .find('[data-testid="resultado-qualificada"]')
+          .attributes('disabled')
+      ).toBeDefined();
+      expect(
+        wrapper
+          .find('[data-testid="resultado-nao-compareceu"]')
+          .attributes('disabled')
+      ).toBeUndefined();
+      expect(wrapper.find('[data-testid="resultado-so-closer"]').exists()).toBe(
+        true
+      );
+    });
+
+    it('troca Adiar/Reagendar por Remarcar', () => {
+      const wrapper = mountCard({ tasks: [reuniao] });
+      expect(wrapper.find('[data-testid="next-action-snooze"]').exists()).toBe(
+        false
+      );
+      expect(
+        wrapper.find('[data-testid="next-action-reschedule"]').exists()
+      ).toBe(false);
+      expect(
+        wrapper.find('[data-testid="next-action-remarcar"]').exists()
+      ).toBe(true);
+    });
+
+    it('Remarcar manda o horário novo pela store e avisa o painel', async () => {
+      const remarcarReuniao = vi.fn().mockResolvedValue({});
+      const wrapper = mountCard({ tasks: [reuniao], remarcarReuniao });
+      await wrapper
+        .find('[data-testid="next-action-remarcar"]')
+        .trigger('click');
+      expect(wrapper.find('[data-testid="remarcar-calcom"]').exists()).toBe(
+        false
+      );
+      await wrapper
+        .find('[data-testid="remarcar-data"]')
+        .setValue('2026-12-10T15:30');
+      await wrapper.find('[data-testid="remarcar-confirmar"]').trigger('click');
+      await flushPromises();
+      expect(remarcarReuniao).toHaveBeenCalledWith(expect.anything(), {
+        leadId: 7,
+        taskId: 3,
+        startsAt: new Date('2026-12-10T15:30').toISOString(),
+      });
+      expect(wrapper.emitted('notesChanged')).toHaveLength(1);
+      expect(wrapper.find('[data-testid="remarcar-janela"]').exists()).toBe(
+        false
+      );
+    });
+
+    it('Cancelar reunião pede confirmação e cancela pela store', async () => {
+      const cancelarReuniao = vi.fn().mockResolvedValue({});
+      const wrapper = mountCard({
+        tasks: [{ ...reuniao, title: 'Reunião Cal.com: Consulta' }],
+        cancelarReuniao,
+      });
+      await wrapper
+        .find('[data-testid="next-action-cancelar"]')
+        .trigger('click');
+      expect(cancelarReuniao).not.toHaveBeenCalled();
+      // mensagem leva o aviso do Cal.com
+      expect(wrapper.text()).toContain(
+        'RAMON.LEAD_PANEL.NEXT_ACTION.CALCOM_CANCELAR'
+      );
+      await wrapper
+        .find('[data-testid="confirm-modal-confirm"]')
+        .trigger('click');
+      await flushPromises();
+      expect(cancelarReuniao).toHaveBeenCalledWith(expect.anything(), {
+        leadId: 7,
+        taskId: 3,
+      });
+    });
+
+    it('reunião do Cal.com avisa pra remarcar lá também', async () => {
+      const wrapper = mountCard({
+        tasks: [{ ...reuniao, title: 'Reunião Cal.com: Consulta' }],
+      });
+      await wrapper
+        .find('[data-testid="next-action-remarcar"]')
+        .trigger('click');
+      expect(wrapper.find('[data-testid="remarcar-calcom"]').exists()).toBe(
+        true
+      );
     });
   });
 });

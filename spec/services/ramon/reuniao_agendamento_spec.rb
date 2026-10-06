@@ -65,4 +65,61 @@ RSpec.describe Ramon::ReuniaoAgendamento do
     agendar
     expect(Notification.where(notification_type: 'ramon_meeting_scheduled').last.meta['quando']).to eq 'quarta, 15/07 às 11:00'
   end
+
+  describe '.remarcar' do
+    let(:novo_horario) { Time.zone.parse('2026-07-17T17:30:00Z') }
+
+    def remarcar(task)
+      described_class.remarcar(task: task, starts_at: novo_horario, user: user)
+    end
+
+    it 'move a tarefa, registra de→para, novo rascunho e lembretes do horário novo', :aggregate_failures do
+      travel_to Time.zone.parse('2026-07-14T12:00:00Z') do
+        agendar(task_title: 'Reunião Cal.com: Primeiro Atendimento')
+        task = lead.lead_tasks.find_by!(kind: 'meeting')
+
+        expect { remarcar(task) }.to have_enqueued_job(Ramon::MeetingReminderJob).exactly(5).times
+        expect(task.reload.due_at).to eq novo_horario
+        activity = lead.lead_activities.find_by!(kind: 'meeting_rescheduled')
+        expect(activity.from_value).to eq 'Primeiro Atendimento em 15/07/2026 11:00'
+        expect(activity.to_value).to eq 'Primeiro Atendimento em 17/07/2026 14:30'
+        expect(lead.lead_notes.where("body LIKE 'RASCUNHO%'").count).to eq 2
+        expect(lead.lead_notes.order(:id).last.body).to include('sexta, 17/07 às 14:30')
+      end
+    end
+
+    it 'não manda nada ao cliente e avisa no sino com o horário novo', :aggregate_failures do
+      create(:user, account: account, role: :administrator)
+      agendar
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+
+      expect { remarcar(task) }.not_to change(Message, :count)
+      expect(Notification.where(notification_type: 'ramon_meeting_scheduled').last.meta['quando']).to eq 'sexta, 17/07 às 14:30'
+    end
+  end
+
+  describe '.cancelar' do
+    it 'tira a tarefa, registra o cancelamento e avisa no sino', :aggregate_failures do
+      create(:user, account: account, role: :administrator)
+      agendar
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+
+      described_class.cancelar(task: task, user: user)
+
+      expect(LeadTask.exists?(task.id)).to be(false)
+      activity = lead.lead_activities.find_by!(kind: 'meeting_cancelled')
+      expect(activity.to_value).to eq 'Primeiro Atendimento em 15/07/2026 11:00'
+      expect(activity.user).to eq user
+      expect(Notification.where(notification_type: 'ramon_meeting_cancelled')).to exist
+    end
+
+    it 'o lembrete já enfileirado vira órfão e não apita' do
+      allow(Ramon::NtfyPushJob).to receive(:perform_now)
+      agendar
+      described_class.cancelar(task: lead.lead_tasks.find_by!(kind: 'meeting'))
+
+      with_modified_env(NTFY_TOPIC: 'ramon') { Ramon::MeetingReminderJob.perform_now(lead.id, starts_at.iso8601, '1h antes') }
+      expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
+    end
+  end
 end

@@ -63,4 +63,23 @@ describe('AgendaToday.vue', () => {
       false
     );
   });
+
+  it('apaga a reunião feita (check) e marca a vencida', () => {
+    const wrapper = mountAgenda({
+      items: [
+        { ...items[0], id: 7, vencida: true, due_at: '2026-10-02T12:00:00Z' },
+        { ...items[1], id: 8, completed_at: new Date().toISOString() },
+      ],
+    });
+    const rows = wrapper.findAll('[data-testid="agenda-item"]');
+    expect(rows[0].find('[data-testid="agenda-item-overdue"]').exists()).toBe(
+      true
+    );
+    expect(rows[1].classes()).toContain('opacity-60');
+    expect(rows[1].find('[data-testid="agenda-item-done"]').exists()).toBe(
+      true
+    );
+    // feita não é "a próxima": nenhum bloco azul
+    expect(rows.some(row => row.find('.text-n-blue-11').exists())).toBe(false);
+  });
 });

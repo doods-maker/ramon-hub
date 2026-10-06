@@ -52,10 +52,10 @@ class Ramon::EsteiraBuilder
 
   def collect_tasks
     @account.lead_tasks.overdue.order(:due_at).includes(lead: [:lead_stage, :contact]).each do |task|
-      add(task.lead, 'TASK_OVERDUE', { title: task.title }, task_id: task.id)
+      add(task.lead, 'TASK_OVERDUE', { title: task.title }, task: task)
     end
     @account.lead_tasks.due_today.order(:due_at).includes(lead: [:lead_stage, :contact]).each do |task|
-      add(task.lead, 'TASK_TODAY', { title: task.title }, task_id: task.id)
+      add(task.lead, 'TASK_TODAY', { title: task.title }, task: task)
     end
   end
 
@@ -105,15 +105,24 @@ class Ramon::EsteiraBuilder
   # ---- Montagem ----------------------------------------------------------
 
   # Mescla por lead: 1ª ocorrência cria a entrada; motivos repetidos (ex.: duas
-  # tasks vencidas) não duplicam; task_id guarda a task mais urgente (p/ Adiar).
-  def add(lead, key, params = {}, task_id: nil)
+  # tasks vencidas) não duplicam; task_id guarda a task mais urgente (p/ Adiar)
+  # e task_kind diz se é reunião (essa não se adia: Remarcar no painel).
+  def add(lead, key, params = {}, task: nil)
     return if lead.nil?
 
-    entry = @entries[lead.id] ||= { lead: lead, reasons: [], task_id: nil }
-    entry[:task_id] ||= task_id
+    entry = @entries[lead.id] ||= { lead: lead, reasons: [], task_id: nil, task_kind: nil }
+    guardar_task(entry, task)
     return if entry[:reasons].any? { |r| r[:key] == key }
 
     entry[:reasons] << { key: key, params: params }
+  end
+
+  # A 1ª task que chega é a mais urgente (vencidas vêm antes) — as seguintes não trocam.
+  def guardar_task(entry, task)
+    return if task.nil? || entry[:task_id]
+
+    entry[:task_id] = task.id
+    entry[:task_kind] = task.kind
   end
 
   def build_items
@@ -127,7 +136,7 @@ class Ramon::EsteiraBuilder
     lead = entry[:lead]
     reasons = entry[:reasons].sort_by { |r| -WEIGHTS.fetch(r[:key]) }
     lead_fields(lead).merge(
-      task_id: entry[:task_id],
+      task_id: entry[:task_id], task_kind: entry[:task_kind],
       score: WEIGHTS.fetch(reasons.first[:key]),
       suggested_action: ACTIONS.fetch(reasons.first[:key]),
       reasons: reasons

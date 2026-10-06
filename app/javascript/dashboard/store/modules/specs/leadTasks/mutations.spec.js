@@ -70,4 +70,22 @@ describe('leadTasks mutations', () => {
     mutations[types.DELETE_LEAD_TASK](state, 1);
     expect(state.records).toEqual([{ id: 2 }]);
   });
+
+  it('REPLACE_LEAD_TASKS_PERIOD tira o que sumiu do período e da fila de vencidas', () => {
+    const state = {
+      records: [
+        { id: 1, due_at: '2026-10-06T12:00:00Z', completed_at: null },
+        { id: 2, due_at: '2020-01-01T12:00:00Z', completed_at: null },
+        { id: 3, due_at: '2020-01-01T12:00:00Z', completed_at: '2020-01-01' },
+        { id: 4, due_at: '2999-01-01T12:00:00Z', completed_at: null },
+      ],
+    };
+    mutations[types.REPLACE_LEAD_TASKS_PERIOD](state, {
+      from: '2026-10-05T00:00:00Z',
+      to: '2026-10-11T23:59:59Z',
+      tasks: [{ id: 5, due_at: '2026-10-07T12:00:00Z', completed_at: null }],
+    });
+    // 1 (cancelada no período) e 2 (vencida concluída em outra tela) saem
+    expect(state.records.map(t => t.id)).toEqual([3, 4, 5]);
+  });
 });

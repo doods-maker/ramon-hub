@@ -709,6 +709,25 @@ RSpec.describe 'Leads API', type: :request do
       registrar(admin, 'talvez')
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it 'conclui a reunião de hoje e deixa a futura aberta', :aggregate_failures do
+      lead.update!(closer: closer)
+      hoje = create(:lead_task, account: account, lead: lead, kind: 'meeting', due_at: 1.hour.ago)
+      futura = create(:lead_task, account: account, lead: lead, kind: 'meeting', due_at: 3.days.from_now)
+      registrar(closer)
+
+      expect(hoje.reload.completed_at).to be_present
+      expect(futura.reload.completed_at).to be_nil
+    end
+
+    it 'com task_id conclui exatamente aquela reunião' do
+      lead.update!(closer: closer)
+      futura = create(:lead_task, account: account, lead: lead, kind: 'meeting', due_at: 3.days.from_now)
+      post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao",
+           params: { resultado: 'nao_qualificada', task_id: futura.id }, headers: closer.create_new_auth_token, as: :json
+
+      expect(futura.reload.completed_at).to be_present
+    end
   end
 
   describe 'docs_completos_em (base do contrato limpo)' do

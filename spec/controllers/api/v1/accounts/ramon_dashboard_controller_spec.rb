@@ -162,6 +162,27 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     expect(agenda.first['source']).to eq('lp-auxilio-acidente')
   end
 
+  it 'na agenda de hoje fixa a vencida da semana no topo e marca a feita', :aggregate_failures do
+    lead = create(:lead, account: account, lead_stage: active_stage)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Vencida', due_at: 2.days.ago)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Antiga', due_at: 20.days.ago)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Feita', due_at: Time.current, completed_at: Time.current)
+    get url, headers: agent.create_new_auth_token, as: :json
+    agenda = response.parsed_body['agenda_today']
+    expect(agenda.map { |row| row['title'] }).to eq(%w[Vencida Feita])
+    expect(agenda.first['vencida']).to be(true)
+    expect(agenda.last['completed_at']).to be_present
+    expect(agenda.last['vencida']).to be(false)
+  end
+
+  it 'na agenda de hoje mostra o Closer do lead (Cal.com nasce sem criador)' do
+    closer = create(:user, account: account, role: :agent, name: 'Clara Closer')
+    lead = create(:lead, account: account, lead_stage: active_stage, closer: closer)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião Cal.com: consulta', due_at: Time.current)
+    get url, headers: agent.create_new_auth_token, as: :json
+    expect(response.parsed_body['agenda_today'].first['user_name']).to eq('Clara Closer')
+  end
+
   it 'agrupa as perdas por tese com motivos e trimestre anterior' do
     lost_stage = account.lead_stages.find_by(is_lost: true)
     thesis = account.theses.first || create(:thesis, account: account)

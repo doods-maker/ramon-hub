@@ -36,8 +36,10 @@ export const SELECT_GRANDE = `${CAMPO_GRANDE} py-0 pr-8`;
 export const ROTULO = 'flex flex-col gap-1 text-xs text-n-slate-10';
 
 // Abas sublinhadas (abas internas do simulador).
+// border-solid: o _base.scss zera a borda de todo <button> (border-none) —
+// sem ele o sublinhado da aba ativa some.
 export const ABA =
-  'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-[12.5px]';
+  'flex items-center gap-1.5 whitespace-nowrap border-b-2 border-solid px-3 py-2 text-[12.5px]';
 export const ABA_ATIVA = 'border-n-blue-9 font-semibold text-n-blue-11';
 export const ABA_INATIVA =
   'border-transparent text-n-slate-10 hover:text-n-slate-12';

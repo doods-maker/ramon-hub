@@ -43,6 +43,16 @@ RSpec.describe 'Lead Tasks API', type: :request do
     expect(response.parsed_body['completed_at']).to be_present
   end
 
+  it 'não compareceu: conclui a reunião, registra o no-show e não grava resultado', :aggregate_failures do
+    task = create(:lead_task, account: account, lead: lead, kind: 'meeting', due_at: 1.hour.ago)
+    post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/tasks/#{task.id}/complete",
+         params: { resultado: 'nao_compareceu' }, headers: agent.create_new_auth_token, as: :json
+
+    expect(task.reload.completed_at).to be_present
+    expect(lead.lead_activities.where(kind: 'meeting_no_show')).to exist
+    expect(lead.reload.reuniao_resultado).to be_nil
+  end
+
   it 'destroys a task' do
     task = create(:lead_task, account: account, lead: lead)
     expect do
@@ -68,5 +78,30 @@ RSpec.describe 'Lead Tasks API', type: :request do
     titles = response.parsed_body['payload'].map { |t| t['title'] }
     expect(titles).to eq(['atrasada'])
     expect(response.parsed_body['payload'].first['lead_name']).to eq(lead.name)
+  end
+
+  it 'traz o SDR e o Closer do lead em cada tarefa (filtro Minhas | Time)', :aggregate_failures do
+    closer = create(:user, account: account, role: :agent, name: 'Clara Closer')
+    lead.update!(sdr: agent, closer: closer)
+    create(:lead_task, account: account, lead: lead, title: 'reunião', kind: 'meeting', due_at: 1.day.from_now)
+    get "/api/v1/accounts/#{account.id}/lead_tasks", headers: agent.create_new_auth_token, as: :json
+    row = response.parsed_body['payload'].first
+    expect(row['sdr_id']).to eq(agent.id)
+    expect(row['sdr_name']).to eq(agent.name)
+    expect(row['closer_id']).to eq(closer.id)
+    expect(row['closer_name']).to eq('Clara Closer')
+  end
+
+  it 'scope=agenda devolve o período (abertas + feitas hoje) e as vencidas abertas', :aggregate_failures do
+    create(:lead_task, account: account, lead: lead, title: 'aberta', due_at: 2.days.from_now)
+    create(:lead_task, account: account, lead: lead, title: 'feita hoje', due_at: 2.days.from_now, completed_at: Time.current)
+    create(:lead_task, account: account, lead: lead, title: 'feita antes', due_at: 2.days.from_now, completed_at: 3.days.ago)
+    create(:lead_task, account: account, lead: lead, title: 'vencida', due_at: 20.days.ago)
+    create(:lead_task, account: account, lead: lead, title: 'fora', due_at: 30.days.from_now)
+    get "/api/v1/accounts/#{account.id}/lead_tasks",
+        params: { scope: 'agenda', from: 1.day.from_now.iso8601, to: 7.days.from_now.iso8601 },
+        headers: agent.create_new_auth_token
+    titles = response.parsed_body['payload'].map { |t| t['title'] }
+    expect(titles).to contain_exactly('aberta', 'feita hoje', 'vencida')
   end
 end

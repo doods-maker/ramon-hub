@@ -49,6 +49,8 @@ const GRUPO = {
   closer_changed: 'dono',
   meeting_scheduled: 'reuniao',
   meeting_cancelled: 'reuniao',
+  meeting_rescheduled: 'reuniao',
+  meeting_no_show: 'reuniao',
   reuniao_registrada: 'reuniao',
 };
 const grupoDe = activity => {
@@ -68,6 +70,8 @@ const DETALHE = {
   sdr_changed: 'SDR',
   closer_changed: 'CLOSER',
 };
+// atividades com "de → para" (etapa, horário da reunião remarcada)
+const COM_DE = ['stage_changed', 'meeting_rescheduled'];
 
 const quando = value => {
   if (!value) return '';
@@ -97,7 +101,7 @@ const itens = computed(() =>
       rotulo: DETALHE[activity.kind]
         ? t(`RAMON.LEAD_PANEL.HISTORY.DETAIL.${DETALHE[activity.kind]}`)
         : '',
-      de: activity.kind === 'stage_changed' ? activity.from_value : null,
+      de: COM_DE.includes(activity.kind) ? activity.from_value : null,
       para,
       corPara:
         activity.kind === 'stage_changed'

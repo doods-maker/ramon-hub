@@ -95,4 +95,56 @@ describe('leadTasks actions', () => {
     );
     expect(commit).toHaveBeenCalledWith(types.DELETE_LEAD_TASK, 3);
   });
+
+  it('fetchAccountScope com período (Agenda) troca as tarefas do período', async () => {
+    const payload = [{ id: 4, lead_id: 20 }];
+    axios.get.mockResolvedValue({ data: { payload } });
+    const query = { scope: 'agenda', from: '2026-10-05', to: '2026-10-11' };
+    await actions.fetchAccountScope({ commit }, query);
+    expect(axios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/lead_tasks'),
+      { params: query }
+    );
+    expect(commit).toHaveBeenCalledWith(types.REPLACE_LEAD_TASKS_PERIOD, {
+      from: '2026-10-05',
+      to: '2026-10-11',
+      tasks: payload,
+    });
+  });
+
+  it('remarcarReuniao faz PATCH no agendamento e MERGE_LEAD_TASK', async () => {
+    const task = { id: 3, due_at: '2026-12-10T18:30:00Z' };
+    axios.patch.mockResolvedValue({ data: task });
+    await actions.remarcarReuniao(
+      { commit },
+      { leadId: 10, taskId: 3, startsAt: '2026-12-10T18:30:00Z' }
+    );
+    expect(axios.patch).toHaveBeenCalledWith(
+      expect.stringContaining('/leads/10/reuniao_agendada'),
+      { task_id: 3, starts_at: '2026-12-10T18:30:00Z' }
+    );
+    expect(commit).toHaveBeenCalledWith(types.MERGE_LEAD_TASK, task);
+  });
+
+  it('cancelarReuniao faz DELETE no agendamento e tira a tarefa do cache', async () => {
+    axios.delete.mockResolvedValue({});
+    await actions.cancelarReuniao({ commit }, { leadId: 10, taskId: 3 });
+    expect(axios.delete).toHaveBeenCalledWith(
+      expect.stringContaining('/leads/10/reuniao_agendada'),
+      { params: { task_id: 3 } }
+    );
+    expect(commit).toHaveBeenCalledWith(types.DELETE_LEAD_TASK, 3);
+  });
+
+  it('complete com resultado (no-show) manda o resultado no corpo', async () => {
+    axios.post.mockResolvedValue({ data: { id: 3 } });
+    await actions.complete(
+      { commit },
+      { leadId: 10, taskId: 3, resultado: 'nao_compareceu' }
+    );
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/leads/10/tasks/3/complete'),
+      { resultado: 'nao_compareceu' }
+    );
+  });
 });

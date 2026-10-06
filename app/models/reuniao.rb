@@ -14,7 +14,8 @@ class Reuniao < ApplicationRecord
 
   scope :recentes, -> { order(created_at: :desc) }
 
+  # Hora do escritório (o servidor roda em UTC).
   def titulo_exibicao
-    titulo.presence || "Reunião de #{created_at.strftime('%d/%m %H:%M')}"
+    titulo.presence || "Reunião de #{created_at.in_time_zone('America/Sao_Paulo').strftime('%d/%m %H:%M')}"
   end
 end

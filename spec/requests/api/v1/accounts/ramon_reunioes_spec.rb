@@ -67,6 +67,36 @@ RSpec.describe 'Ramon Reunioes API', type: :request do
     end
   end
 
+  describe 'GET com busca (q)' do
+    it 'acha pelo título e pelo nome do lead' do
+      lead = create(:lead, account: account, name: 'Sebastião Nunes')
+      create(:reuniao, account: account, titulo: 'Fechamento Maria')
+      create(:reuniao, account: account, titulo: 'Documentos', lead: lead)
+      create(:reuniao, account: account, titulo: 'Outra')
+      get "/api/v1/accounts/#{account.id}/ramon_reunioes", params: { q: 'sebast' }, headers: agent.create_new_auth_token
+      expect(response.parsed_body['payload'].pluck('titulo')).to eq(['Documentos'])
+    end
+  end
+
+  describe 'PATCH /api/v1/accounts/:id/ramon_reunioes/:id (vincular lead)' do
+    it 'vincula e devolve o lead no detalhe', :aggregate_failures do
+      lead = create(:lead, account: account, name: 'Rosângela Vieira')
+      reuniao = create(:reuniao, account: account)
+      patch "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}",
+            params: { lead_id: lead.id }, headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(reuniao.reload.lead).to eq(lead)
+      expect(response.parsed_body['lead_name']).to eq('Rosângela Vieira')
+    end
+
+    it 'não vincula lead de outra conta' do
+      reuniao = create(:reuniao, account: account)
+      patch "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}",
+            params: { lead_id: create(:lead).id }, headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe 'POST /api/v1/accounts/:id/ramon_reunioes/:id/reprocessar' do
     it 'requeues when status is erro' do
       reuniao = create(:reuniao, account: account, status: 'erro', erro: 'boom')

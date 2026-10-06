@@ -16,14 +16,16 @@ module LeadComercial
 
   # Closer registra a reunião (regulamento §2): qualificada ou não. A 1ª data
   # vale (correção não muda o mês da apuração); quem marca vira Closer se o lead
-  # não tinha; o lead anda pra "Reunião realizada", nunca volta.
-  def registrar_reuniao!(resultado, user)
+  # não tinha; o lead anda pra "Reunião realizada", nunca volta. A tarefa da
+  # reunião (a informada, senão a aberta mais antiga até hoje) é concluída.
+  def registrar_reuniao!(resultado, user, task: nil)
     attrs = { reuniao_resultado: resultado, reuniao_registrada_em: reuniao_registrada_em || Time.current }
     attrs[:closer] = user if closer_id.blank?
     stage = account.lead_stages.find_by(label: ETAPA_REUNIAO_REALIZADA)
     attrs[:lead_stage] = stage if stage && lead_stage.position < stage.position
     update!(attrs)
     lead_activities.create!(account: account, user: user, kind: 'reuniao_registrada', to_value: resultado)
+    (task || reuniao_em_aberto)&.complete!(user)
   end
 
   def comercial_event_data
@@ -39,6 +41,13 @@ module LeadComercial
   end
 
   private
+
+  # Reunião que acabou de acontecer: aberta, marcada até o fim de hoje (a
+  # futura, de outra conversa já marcada, não é fechada por engano).
+  def reuniao_em_aberto
+    lead_tasks.open_tasks.where(kind: 'meeting', due_at: ..Time.current.in_time_zone('America/Sao_Paulo').end_of_day)
+              .order(:due_at).first
+  end
 
   # Lead novo de qualquer canal vai pro SDR com menos leads abertos.
   # Import e caso de cálculo ficam de fora.

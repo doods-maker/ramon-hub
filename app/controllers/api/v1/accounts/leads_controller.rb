@@ -56,7 +56,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     resultado = params[:resultado].to_s
     return render json: { error: 'RESULTADO_INVALIDO' }, status: :unprocessable_entity unless Lead::REUNIAO_RESULTADOS.include?(resultado)
 
-    @lead.registrar_reuniao!(resultado, Current.user)
+    @lead.registrar_reuniao!(resultado, Current.user, task: @lead.lead_tasks.open_tasks.find_by(id: params[:task_id], kind: 'meeting'))
     render :show
   end
 

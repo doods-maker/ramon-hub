@@ -378,8 +378,20 @@ const tomorrowAt9 = () => {
 };
 // guard de duplo-clique: dois cliques rápidos criavam a tarefa em dobro
 const savingTask = ref(false);
-const addTask = async () => {
+// reunião aberta devolvida pelo 409: pergunta antes de marcar outra
+const reuniaoAberta = ref(null);
+const reuniaoAbertaQuando = computed(() => {
+  if (!reuniaoAberta.value?.due_at) return '';
+  return new Date(reuniaoAberta.value.due_at).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+});
+const addTask = async (force = false) => {
   if (savingTask.value || (isMeetingForm.value && !taskDate.value)) return;
+  reuniaoAberta.value = null;
   savingTask.value = true;
   const title = taskTitle.value.trim();
   const due = taskDate.value ? new Date(taskDate.value) : tomorrowAt9();
@@ -389,6 +401,7 @@ const addTask = async () => {
         id: props.lead.id,
         startsAt: due.toISOString(),
         title,
+        force: force === true,
       });
       notesTick.value += 1;
       useAlert(t('RAMON.TASKS.MEETING_SCHEDULED'));
@@ -405,6 +418,10 @@ const addTask = async () => {
     taskKind.value = 'follow_up';
     taskFormOpen.value = false;
   } catch (e) {
+    if (isMeetingForm.value && e?.response?.status === 409) {
+      reuniaoAberta.value = e.response.data?.task || {};
+      return;
+    }
     useAlert(
       t(
         isMeetingForm.value
@@ -805,6 +822,23 @@ const discard = async () => {
           </span>
         </div>
 
+        <!-- reunião nova com outra aberta: confirma antes de marcar -->
+        <Teleport to="body">
+          <ConfirmModal
+            v-if="reuniaoAberta"
+            :title="$t('RAMON.TASKS.MEETING_CONFLICT_TITLE')"
+            :message="
+              $t('RAMON.TASKS.MEETING_CONFLICT', {
+                quando: reuniaoAbertaQuando,
+              })
+            "
+            :confirm-label="$t('RAMON.TASKS.MEETING_CONFLICT_CONFIRM')"
+            confirm-color="blue"
+            @confirm="addTask(true)"
+            @cancel="reuniaoAberta = null"
+          />
+        </Teleport>
+
         <!-- tirar do funil é destrutivo: janela de confirmação do kit -->
         <Teleport to="body">
           <ConfirmModal
@@ -925,7 +959,7 @@ const discard = async () => {
               sm
               :label="$t('RAMON.FUNIL.SAVE')"
               :disabled="savingTask || (isMeetingForm && !taskDate)"
-              @click="addTask"
+              @click="addTask()"
             />
           </div>
         </div>
@@ -1171,7 +1205,7 @@ const discard = async () => {
           </div>
 
           <!-- próximo passo (tarefa aberta mais próxima) -->
-          <LeadNextAction :lead-id="lead.id" />
+          <LeadNextAction :lead-id="lead.id" @notes-changed="notesTick += 1" />
         </div>
 
         <QualificacaoViva
@@ -1307,7 +1341,7 @@ const discard = async () => {
           v-if="lead.thesis_id && lead.docs_total"
           type="button"
           :class="CARTAO"
-          class="text-left w-full hover:border-n-blue-9/40"
+          class="text-left w-full border-solid hover:border-n-blue-9/40"
           data-testid="panel-card-docs"
           @click="setTab('documentos')"
         >

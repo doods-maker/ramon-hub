@@ -3,9 +3,11 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import ReunioesAPI from 'dashboard/api/reunioes';
+import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import ReuniaoRecorder from '../components/reunioes/ReuniaoRecorder.vue';
 import ReuniaoDetalhe from '../components/reunioes/ReuniaoDetalhe.vue';
+import { CAMPO, CARTAO, CHIP, LINHA, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonReunioes' });
 
@@ -19,11 +21,14 @@ const hasError = ref(false);
 
 const reuniaoId = computed(() => route.params.reuniaoId);
 
+// Busca no servidor (título ou nome do lead), com respiro de 300ms.
+const busca = ref('');
+let buscaTimer = null;
 const carregar = async () => {
   isLoading.value = true;
   hasError.value = false;
   try {
-    const { data } = await ReunioesAPI.get();
+    const { data } = await ReunioesAPI.buscar(busca.value.trim());
     reunioes.value = data.payload;
   } catch {
     hasError.value = true;
@@ -43,6 +48,7 @@ const STATUS_LABEL = {
   pronta: 'RAMON.REUNIOES.STATUS_PRONTA',
   erro: 'RAMON.REUNIOES.STATUS_ERRO',
 };
+const STATUS_TOM = { transcrevendo: 'amber', pronta: 'teal', erro: 'ruby' };
 const statusLabel = status => t(STATUS_LABEL[status]);
 
 const formatoData = iso =>
@@ -58,6 +64,10 @@ const formatoDuracao = total => {
 };
 
 onMounted(carregar);
+watch(busca, () => {
+  clearTimeout(buscaTimer);
+  buscaTimer = setTimeout(carregar, 300);
+});
 
 // O router reusa a instância entre lista e detalhe (mesmo componente); sem
 // isso, voltar do detalhe mostra a lista desatualizada (padrão do Calculos.vue).
@@ -67,87 +77,109 @@ watch(reuniaoId, id => {
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col overflow-y-auto p-8">
-    <template v-if="!reuniaoId">
-      <RamonPageHeader :title="t('RAMON.REUNIOES.TITLE')" />
-      <ReuniaoRecorder
-        class="mb-6"
-        :lead-id="route.query.leadId"
-        @created="onCreated"
-      />
-      <div
-        v-if="isLoading"
-        class="flex flex-col gap-3 animate-pulse"
-        data-testid="reunioes-skeleton"
-      >
-        <div class="h-12 rounded-lg bg-n-solid-2" />
-        <div class="h-12 rounded-lg bg-n-solid-2" />
-        <div class="h-12 rounded-lg bg-n-solid-2" />
-      </div>
-      <div
-        v-else-if="hasError"
-        class="flex items-center gap-2 text-sm text-n-ruby-11"
-      >
-        {{ t('RAMON.REUNIOES.LOAD_ERROR') }}
-        <button
-          type="button"
-          class="text-n-iris-11 hover:underline"
-          @click="carregar"
+  <div class="w-full h-full overflow-y-auto bg-n-background p-4 sm:p-8">
+    <div class="flex flex-col w-full max-w-3xl mx-auto">
+      <template v-if="!reuniaoId">
+        <RamonPageHeader :title="t('RAMON.REUNIOES.TITLE')" />
+        <ReuniaoRecorder
+          class="mb-6"
+          :lead-id="route.query.leadId"
+          @created="onCreated"
+        />
+        <input
+          v-model="busca"
+          type="search"
+          data-testid="reunioes-busca"
+          :class="CAMPO"
+          class="!mb-3"
+          :placeholder="t('RAMON.REUNIOES.SEARCH_PLACEHOLDER')"
+        />
+        <div
+          v-if="isLoading && !reunioes.length"
+          class="flex flex-col gap-3 animate-pulse"
+          data-testid="reunioes-skeleton"
         >
-          {{ t('RAMON.LEAD_PANEL.RETRY') }}
-        </button>
-      </div>
-      <p v-else-if="!reunioes.length" class="text-sm text-n-slate-11">
-        {{ t('RAMON.REUNIOES.EMPTY') }}
-      </p>
-      <ul
-        v-else
-        class="flex flex-col divide-y divide-n-weak rounded-xl border border-n-weak bg-n-solid-1 shadow-sm overflow-hidden"
-      >
-        <li v-for="reuniao in reunioes" :key="reuniao.id">
-          <button
-            type="button"
-            class="flex w-full items-center justify-between gap-4 py-3 px-4 text-start"
-            @click="abrir(reuniao.id)"
+          <div class="h-12 rounded-xl bg-n-alpha-2" />
+          <div class="h-12 rounded-xl bg-n-alpha-2" />
+          <div class="h-12 rounded-xl bg-n-alpha-2" />
+        </div>
+        <div
+          v-else-if="hasError"
+          class="flex items-center gap-2 text-sm text-n-ruby-11"
+        >
+          {{ t('RAMON.REUNIOES.LOAD_ERROR') }}
+          <Button
+            link
+            xs
+            :label="t('RAMON.LEAD_PANEL.RETRY')"
+            @click="carregar"
+          />
+        </div>
+        <p v-else-if="!reunioes.length" class="text-sm text-n-slate-10">
+          {{
+            busca.trim()
+              ? t('RAMON.REUNIOES.SEARCH_EMPTY')
+              : t('RAMON.REUNIOES.EMPTY')
+          }}
+        </p>
+        <ul
+          v-else
+          :class="CARTAO"
+          class="flex flex-col !p-1.5 list-none reset-base ms-0"
+        >
+          <li
+            v-for="(reuniao, index) in reunioes"
+            :key="reuniao.id"
+            :class="{ 'border-t border-n-weak': index > 0 }"
           >
-            <span
-              class="min-w-0 flex-1 truncate text-sm font-medium text-n-slate-12"
+            <button
+              type="button"
+              :class="LINHA"
+              class="flex items-center gap-4 !px-3 !py-2.5"
+              data-testid="reunioes-item"
+              @click="abrir(reuniao.id)"
             >
-              {{ reuniao.titulo }}
-            </span>
-            <span class="text-xs text-n-slate-11">{{
-              formatoDuracao(reuniao.duracao_segundos)
-            }}</span>
-            <span class="text-xs text-n-slate-11">{{
-              formatoData(reuniao.created_at)
-            }}</span>
-            <span
-              class="rounded-full px-2 py-0.5 text-xs"
-              :class="{
-                'bg-n-teal-3 text-n-teal-11': reuniao.status === 'pronta',
-                'bg-n-amber-3 text-n-amber-11':
-                  reuniao.status === 'transcrevendo',
-                'bg-n-ruby-3 text-n-ruby-11': reuniao.status === 'erro',
-              }"
-            >
-              {{ statusLabel(reuniao.status) }}
-            </span>
-          </button>
-        </li>
-      </ul>
-    </template>
-    <template v-else>
-      <button
-        type="button"
-        class="mb-4 self-start text-sm text-n-iris-11 hover:underline"
-        @click="router.push({ name: 'ramon_reunioes' })"
-      >
-        {{ t('RAMON.REUNIOES.BACK') }}
-      </button>
-      <ReuniaoDetalhe
-        :reuniao-id="reuniaoId"
-        @deleted="router.push({ name: 'ramon_reunioes' })"
-      />
-    </template>
+              <span class="flex flex-col flex-1 min-w-0">
+                <span class="text-sm font-medium truncate text-n-slate-12">
+                  {{ reuniao.titulo }}
+                </span>
+                <span
+                  v-if="reuniao.lead_name"
+                  class="flex items-center gap-1 text-xs truncate text-n-slate-10"
+                  data-testid="reunioes-item-lead"
+                >
+                  <span class="i-lucide-user size-3 shrink-0" />
+                  {{ reuniao.lead_name }}
+                </span>
+              </span>
+              <span class="font-mono text-xs tabular-nums text-n-slate-10">
+                {{ formatoDuracao(reuniao.duracao_segundos) }}
+              </span>
+              <span class="font-mono text-xs tabular-nums text-n-slate-10">
+                {{ formatoData(reuniao.created_at) }}
+              </span>
+              <span :class="[CHIP, TOM[STATUS_TOM[reuniao.status]]]">
+                {{ statusLabel(reuniao.status) }}
+              </span>
+            </button>
+          </li>
+        </ul>
+      </template>
+      <template v-else>
+        <Button
+          ghost
+          slate
+          sm
+          icon="i-lucide-arrow-left"
+          class="self-start mb-4 -ms-3"
+          :label="t('RAMON.REUNIOES.BACK')"
+          @click="router.push({ name: 'ramon_reunioes' })"
+        />
+        <ReuniaoDetalhe
+          :reuniao-id="reuniaoId"
+          @deleted="router.push({ name: 'ramon_reunioes' })"
+        />
+      </template>
+    </div>
   </div>
 </template>

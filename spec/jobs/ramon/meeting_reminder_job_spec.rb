@@ -61,4 +61,26 @@ RSpec.describe Ramon::MeetingReminderJob do
 
     expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
   end
+
+  describe 'quem recebe o lembrete no sino' do
+    let!(:admin) { create(:user, account: account, role: :administrator) }
+    let!(:sdr) { create(:user, account: account, role: :agent) }
+    let!(:closer) { create(:user, account: account, role: :agent) }
+
+    def lembrar
+      create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião', due_at: start_at)
+      with_modified_env(NTFY_TOPIC: nil) { described_class.perform_now(lead.id, start_at.iso8601, '1h antes') }
+      Notification.where(notification_type: 'ramon_meeting_reminder').pluck(:user_id)
+    end
+
+    it 'vai só pro Closer e pro SDR do lead' do
+      lead.update!(sdr: sdr, closer: closer)
+      expect(lembrar).to contain_exactly(sdr.id, closer.id)
+    end
+
+    it 'lead sem Closer nem SDR avisa os gestores' do
+      lead.update!(sdr: nil, closer: nil)
+      expect(lembrar).to contain_exactly(admin.id)
+    end
+  end
 end

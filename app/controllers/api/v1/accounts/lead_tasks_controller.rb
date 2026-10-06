@@ -17,7 +17,7 @@ class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
   end
 
   def complete
-    @lead_task.complete!(Current.user)
+    @lead_task.complete!(Current.user, no_show: params[:resultado] == 'nao_compareceu')
     render :update
   end
 
@@ -29,12 +29,21 @@ class Api::V1::Accounts::LeadTasksController < Api::V1::Accounts::BaseController
   private
 
   def account_scope
-    scope = Current.account.lead_tasks.includes(:lead)
+    scope = Current.account.lead_tasks.includes(lead: [:sdr, :closer])
     case params[:scope]
     when 'overdue' then scope.overdue.order(:due_at)
     when 'today' then scope.due_today.order(:due_at)
+    when 'agenda' then agenda_scope(scope).order(:due_at)
     else scope.open_tasks.order(:due_at)
     end
+  end
+
+  # Período da Agenda (from..to): abertas do período + concluídas hoje (a
+  # Agenda mostra apagadas) + vencidas abertas de qualquer dia (fixadas em Hoje).
+  def agenda_scope(scope)
+    periodo = scope.where(due_at: Time.zone.parse(params[:from].to_s)..Time.zone.parse(params[:to].to_s))
+    hoje = Time.current.in_time_zone('America/Sao_Paulo').all_day
+    periodo.open_tasks.or(periodo.where(completed_at: hoje)).or(scope.overdue)
   end
 
   def fetch_lead

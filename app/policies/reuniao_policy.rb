@@ -11,6 +11,10 @@ class ReuniaoPolicy < ApplicationPolicy
     index?
   end
 
+  def update?
+    index?
+  end
+
   def destroy?
     index?
   end

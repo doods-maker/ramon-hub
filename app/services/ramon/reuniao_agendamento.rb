@@ -9,11 +9,36 @@ class Ramon::ReuniaoAgendamento
   TIME_ZONE = 'America/Sao_Paulo'.freeze
   DIAS_SEMANA = %w[domingo segunda terça quarta quinta sexta sábado].freeze
   STAGE_LABEL = 'fase-reuniao-agendada'.freeze
+  # Prefixo do título da tarefa que veio do Cal.com (o webhook acha por ele).
+  CALCOM_PREFIX = 'Reunião Cal.com'.freeze
 
   # title = nome da reunião (atividade, sino); task_title = título da tarefa
   # (o Cal.com prefixa "Reunião Cal.com:" — o cancel/reschedule acham por ele).
   def self.call(lead:, starts_at:, title:, task_title: title, user: nil)
     new(lead, starts_at, title, user).call(task_title)
+  end
+
+  # Remarcar (painel do lead): a mesma reunião em outro horário — lembretes do
+  # horário novo (os do antigo viram órfãos e o job descarta), atividade
+  # de→para, novo rascunho de confirmação (não enviado) e aviso no sino.
+  def self.remarcar(task:, starts_at:, user: nil)
+    new(task.lead, starts_at, titulo_de(task), user).remarcar(task)
+  end
+
+  # Cancelar (painel do lead): mesmo efeito do cancel do Cal.com — atividade
+  # meeting_cancelled + sino/ntfy. A tarefa sai; os lembretes já enfileirados
+  # viram órfãos e o guard do MeetingReminderJob descarta.
+  def self.cancelar(task:, user: nil)
+    lead = task.lead
+    title = titulo_de(task)
+    lead.lead_activities.create!(account: lead.account, user: user, kind: 'meeting_cancelled', to_value: resumo(title, task.due_at))
+    task.destroy!
+    notify(lead, 'ramon_meeting_cancelled', task.due_at, title)
+  end
+
+  # "Reunião Cal.com: Primeiro Atendimento" → "Primeiro Atendimento"
+  def self.titulo_de(task)
+    task.title.delete_prefix("#{CALCOM_PREFIX}: ")
   end
 
   # "quinta, 20/08 às 14:00" — texto único pra sino e rascunho.
@@ -24,10 +49,10 @@ class Ramon::ReuniaoAgendamento
 
   # Sino do hub pra todo mundo da conta + push no celular na hora (o job é
   # no-op sem NTFY_TOPIC); os lembretes têm o seu no MeetingReminderJob.
-  def self.notify(lead, type, starts_at, title)
+  def self.notify(lead, type, starts_at, title, verbo: nil)
     quando = starts_at ? quando(starts_at) : ''
     Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: type, meta: { 'quando' => quando }).perform
-    verbo = type == 'ramon_meeting_cancelled' ? 'cancelada' : 'marcada'
+    verbo ||= type == 'ramon_meeting_cancelled' ? 'cancelada' : 'marcada'
     Ramon::NtfyPushJob.perform_later(lead.id, title: "Reuniao #{verbo}: #{lead.name}", body: "#{quando} — #{title}")
   end
 
@@ -54,6 +79,18 @@ class Ramon::ReuniaoAgendamento
     enqueue_reminders
     self.class.notify(@lead, 'ramon_meeting_scheduled', @starts_at, @title)
     @lead
+  end
+
+  def remarcar(task)
+    de = task.due_at
+    task.update!(due_at: @starts_at)
+    @lead.lead_activities.create!(account: @lead.account, user: @user, kind: 'meeting_rescheduled',
+                                  from_value: self.class.resumo(@title, de), to_value: self.class.resumo(@title, @starts_at))
+    confirmation_draft
+    enqueue_reminders
+    # sino reaproveita o tipo "reunião marcada" (texto: com o horário novo)
+    self.class.notify(@lead, 'ramon_meeting_scheduled', @starts_at, @title, verbo: 'remarcada')
+    task
   end
 
   private

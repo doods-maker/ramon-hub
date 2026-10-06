@@ -46,6 +46,9 @@
       "VIEW_MONTH": "Mês",
       "FILTER_ALL": "Todas",
       "FILTER_MEETING": "Reuniões",
+      "OVERDUE": "vencida",
+      "OWNER_MINE": "Minhas",
+      "OWNER_TEAM": "Time",
       "FILTER_FOLLOW_UP": "Follow-ups",
       "PICK_MONTH": "Mês",
       "EMPTY_DAY": "Nada agendado neste dia.",
@@ -101,7 +104,8 @@
       "AGENDA": {
         "TITLE": "Hoje na agenda",
         "EMPTY": "Sem reuniões hoje.",
-        "VIEW_WEEK": "ver semana inteira → Agenda"
+        "VIEW_WEEK": "ver semana inteira → Agenda",
+        "OVERDUE": "vencida {data}"
       },
       "FUNNEL": {
         "TITLE": "Funil · conversão",
@@ -227,7 +231,8 @@
         "SNOOZE": "A",
         "SKIP": "Espaço",
         "EXIT": "Esc"
-      }
+      },
+      "REMARCAR": "Remarcar no lead"
     },
     "SHORTCUTS": {
       "TITLE": "Atalhos externos",
@@ -454,7 +459,10 @@
       "MEETING_DATE_HINT": "Data e hora da reunião (obrigatório)",
       "MEETING_HINT": "O lead vai para Reunião agendada, ganha Closer e um rascunho de confirmação nas notas — nada é enviado ao cliente.",
       "MEETING_SCHEDULED": "Reunião marcada — o lead foi para Reunião agendada e o rascunho de confirmação está nas notas.",
-      "MEETING_ERROR": "Não foi possível marcar a reunião — tente de novo"
+      "MEETING_ERROR": "Não foi possível marcar a reunião — tente de novo",
+      "MEETING_CONFLICT_TITLE": "Já existe reunião aberta",
+      "MEETING_CONFLICT": "Já existe reunião aberta em {quando} — marcar outra mesmo assim?",
+      "MEETING_CONFLICT_CONFIRM": "Marcar mesmo assim"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
@@ -660,7 +668,16 @@
       "DELETE": "Apagar",
       "DELETE_CONFIRM": "Apagar esta reunião e o áudio? Não dá pra desfazer.",
       "RECORDED_BY": "Gravada por {name}",
-      "BACK": "Voltar"
+      "BACK": "Voltar",
+      "SEARCH_PLACEHOLDER": "Buscar por título ou nome do lead",
+      "SEARCH_EMPTY": "Nenhuma reunião encontrada.",
+      "LINK_LEAD": "Vincular a um lead",
+      "LINK_CHANGE": "Trocar lead",
+      "LINK_TITLE": "Vincular a um lead",
+      "LINK_HINT": "Busque a pessoa e escolha o caso dela.",
+      "LINK_SEARCH": "Nome ou telefone",
+      "LINK_NO_CASE": "{name} não tem caso no funil.",
+      "LINK_ERROR": "Não foi possível vincular — tente de novo"
     },
     "PORTAL_CLIENTES": {
       "ACCESS_DAYS": "{n} dias com acesso",
@@ -913,7 +930,20 @@
         "DONE": "Feito ✓",
         "SNOOZE": "Adiar 1d",
         "RESCHEDULE": "Reagendar",
-        "ERROR": "Não foi possível atualizar a tarefa — tente de novo"
+        "ERROR": "Não foi possível atualizar a tarefa — tente de novo",
+        "REMARCAR": "Remarcar",
+        "REMARCAR_TITULO": "Remarcar reunião",
+        "REMARCADA": "Reunião remarcada — confirmação em rascunho nas notas",
+        "CALCOM_REMARCAR": "Reunião do Cal.com: remarque também no Cal.com — o hub não altera o agendamento de lá.",
+        "REMARCAR_HINT": "Os lembretes vão para o horário novo e um rascunho de confirmação fica nas notas — nada é enviado ao cliente.",
+        "CANCELAR": "Cancelar reunião",
+        "CANCELAR_CONFIRM": "Cancelar a reunião de {quando}? Os lembretes param e o cancelamento entra no histórico do lead. Nada é enviado ao cliente.",
+        "CALCOM_CANCELAR": "Reunião do Cal.com: cancele também no Cal.com.",
+        "CANCELADA": "Reunião cancelada",
+        "RESULTADO_TITULO": "Como foi a reunião?",
+        "NAO_COMPARECEU": "Não compareceu",
+        "SO_CLOSER": "Qualificada ou não: só o Closer do lead (ou o gestor) registra.",
+        "MANTER": "Manter reunião"
       },
       "ANDAMENTO": {
         "TITLE": "Andamento",
@@ -958,14 +988,16 @@
           "NOTE_ADDED": "adicionou nota",
           "TASK_CREATED": "criou tarefa",
           "TASK_COMPLETED": "concluiu tarefa",
-          "MEETING_SCHEDULED": "agendou reunião via Cal.com",
-          "MEETING_CANCELLED": "reunião cancelada via Cal.com",
+          "MEETING_SCHEDULED": "agendou reunião",
+          "MEETING_CANCELLED": "cancelou a reunião",
           "ESTEIRA_DONE": "resolveu na Esteira",
           "THESIS_CHANGED": "mudou a tese",
           "LP_RECAPTURED": "recebeu novo formulário da LP",
           "REUNIAO_REGISTRADA": "registrou a reunião",
           "ZAPSIGN_SIGNED": "contrato assinado no ZapSign",
-          "ZAPSIGN_REFUSED": "contrato recusado no ZapSign"
+          "ZAPSIGN_REFUSED": "contrato recusado no ZapSign",
+          "MEETING_RESCHEDULED": "remarcou a reunião",
+          "MEETING_NO_SHOW": "registrou que o cliente não compareceu"
         }
       },
       "LOADING": "Carregando lead…",

@@ -297,7 +297,7 @@ Rails.application.routes.draw do
             post :criar_caso
             post :rascunho
           end
-          resources :ramon_reunioes, only: [:index, :show, :create, :destroy], controller: 'ramon_reunioes' do
+          resources :ramon_reunioes, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_reunioes' do
             member { post :reprocessar }
           end
           resources :ramon_chegadas, only: [:index, :create], controller: 'ramon_chegadas' do
@@ -390,7 +390,7 @@ Rails.application.routes.draw do
               get :preview
               put :dados
             end
-            resource :reuniao_agendada, only: [:create], controller: 'lead_reunioes_agendadas'
+            resource :reuniao_agendada, only: [:create, :update, :destroy], controller: 'lead_reunioes_agendadas'
           end
           resources :lead_tasks, only: [:index], as: :account_lead_tasks
           resources :copilot_suggestions, only: [:index] do

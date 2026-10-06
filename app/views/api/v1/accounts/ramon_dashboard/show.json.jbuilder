@@ -92,6 +92,8 @@ json.agenda_today @agenda_today do |row|
   json.due_at row[:due_at]
   json.user_name row[:user_name]
   json.source row[:source]
+  json.completed_at row[:completed_at]
+  json.vencida row[:vencida]
 end
 
 json.losses_by_thesis do

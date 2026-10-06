@@ -19,6 +19,9 @@ defineProps({
   // Terceira saída opcional (ex.: "Abrir no meu rascunho"), entre cancelar e
   // confirmar — secundário azul.
   altLabel: { type: String, default: '' },
+  // Rótulo do "Cancelar" quando a ação também se chama cancelar (ex.:
+  // "Cancelar reunião" → "Manter reunião").
+  cancelLabel: { type: String, default: '' },
 });
 const emit = defineEmits(['confirm', 'cancel', 'alt']);
 
@@ -40,7 +43,7 @@ onKeyStroke('Escape', () => emit('cancel'));
           sm
           faded
           slate
-          :label="$t('RAMON.MODAL.CANCEL')"
+          :label="cancelLabel || $t('RAMON.MODAL.CANCEL')"
           @click="emit('cancel')"
         />
         <Button

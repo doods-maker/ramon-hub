@@ -153,14 +153,24 @@ export const actions = {
     commit(types.EDIT_LEAD, response.data);
     return response.data;
   },
-  registrarReuniao: async ({ commit }, { id, resultado }) => {
-    const response = await LeadsAPI.registrarReuniao(id, resultado);
+  // Registrar o resultado também conclui a tarefa da reunião: recarrega as
+  // tarefas do lead (Próximo passo / Agenda).
+  registrarReuniao: async ({ commit, dispatch }, { id, resultado, taskId }) => {
+    const response = await LeadsAPI.registrarReuniao(id, resultado, taskId);
     commit(types.EDIT_LEAD, response.data);
+    await dispatch('leadTasks/fetchForLead', id, { root: true });
     return response.data;
   },
   // Devolve o lead já na etapa nova; a tarefa de reunião recarrega no painel.
-  agendarReuniao: async ({ commit, dispatch }, { id, startsAt, title }) => {
-    const response = await LeadsAPI.agendarReuniao(id, { startsAt, title });
+  agendarReuniao: async (
+    { commit, dispatch },
+    { id, startsAt, title, force }
+  ) => {
+    const response = await LeadsAPI.agendarReuniao(id, {
+      startsAt,
+      title,
+      force,
+    });
     commit(types.EDIT_LEAD, response.data);
     await dispatch('leadTasks/fetchForLead', id, { root: true });
     return response.data;
