@@ -631,6 +631,29 @@ RSpec.describe 'Leads API', type: :request do
     end
   end
 
+  describe 'DELETE /leads/:id (excluir: só o administrador)' do
+    let(:agent) { create(:user, account: account, role: :agent) }
+    let!(:lead) { create(:lead, account: account, lead_stage: novo) }
+
+    it 'agente recebe 401 e o lead fica', :aggregate_failures do
+      delete "/api/v1/accounts/#{account.id}/leads/#{lead.id}", headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(Lead.where(id: lead.id)).to exist
+    end
+
+    it 'admin exclui o lead com atividades, notas e sugestões; o Registro de ações guarda a exclusão', :aggregate_failures do
+      lead.lead_notes.create!(account: account, user: admin, body: 'nota')
+      create(:copilot_suggestion, account: account, lead: lead)
+      expect(lead.lead_activities.where(kind: 'created')).to exist
+
+      delete "/api/v1/accounts/#{account.id}/leads/#{lead.id}", headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:ok)
+      expect(Lead.where(id: lead.id)).not_to exist
+      expect(LeadActivity.where(lead_id: lead.id)).to be_empty
+      expect(Audited::Audit.where(auditable_type: 'Lead', auditable_id: lead.id, action: 'destroy')).to exist
+    end
+  end
+
   describe 'papéis: só o gestor troca SDR/Closer' do
     let(:agent) { create(:user, account: account, role: :agent) }
     let(:lead) { create(:lead, account: account, lead_stage: novo) }
