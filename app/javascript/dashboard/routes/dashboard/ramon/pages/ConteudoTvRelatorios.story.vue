@@ -83,6 +83,7 @@ const PECAS = [
     capa: card(1, 5),
     imagens: cards(5),
     sugestao_horario: daquiA(2),
+    colaboradores: ['ramon_antonio__'],
   },
   {
     ...BASE,
@@ -114,6 +115,30 @@ const PECAS = [
     permalink: '#',
   },
 ];
+// Estados só das variantes novas (o quadro base fica igual ao "antes").
+const EXTRAS = [
+  {
+    ...BASE,
+    id: 9,
+    status: 'publicando',
+    gancho: 'Auxílio-acidente depois da alta',
+    capa: card(1, 3),
+    imagens: cards(3),
+    agendado_para: daquiA(0, 0),
+  },
+  {
+    ...BASE,
+    id: 10,
+    status: 'falhou',
+    ambigua: true,
+    gancho: 'Revisão da vida toda: o que mudou',
+    capa: card(1, 5),
+    imagens: cards(5),
+    agendado_para: daquiA(-1),
+    erro: 'Pode ter ido ao ar — conferir no Instagram antes de tentar de novo. (Net::ReadTimeout)',
+  },
+];
+const COM_EXTRAS = { payload: [...PECAS, ...EXTRAS], token_ig: true };
 
 const TV = {
   funnel: [
@@ -230,7 +255,9 @@ const METABASE = `data:text/html;charset=utf-8,${encodeURIComponent(
 const ERRO = Symbol('erro');
 const API = {
   ramon_conteudo: { payload: PECAS },
-  ...Object.fromEntries(PECAS.map(p => [`ramon_conteudo/${p.id}`, p])),
+  ...Object.fromEntries(
+    [...PECAS, ...EXTRAS].map(p => [`ramon_conteudo/${p.id}`, p])
+  ),
   ramon_dashboard: TV,
   ramon_relatorios: { configured: true, url: METABASE },
 };
@@ -261,6 +288,34 @@ store.commit(types.SET_CURRENT_USER, {
 const com = extra => () => {
   respostas = { ...API, ...extra };
 };
+const comExtras =
+  (gancho, tokenIg = true) =>
+  () => {
+    respostas = {
+      ...API,
+      ramon_conteudo: { ...COM_EXTRAS, token_ig: tokenIg },
+    };
+    // eslint-disable-next-line no-use-before-define
+    if (gancho) abrir(gancho)();
+  };
+// TV sem fetch bem-sucedido há 5 min: o "atualizado em" nasce 5 min atrás.
+const tvDesatualizada = () => {
+  const real = Date.now;
+  Date.now = () => real() - 5 * 60 * 1000;
+  setTimeout(() => {
+    Date.now = real;
+  }, 3000);
+};
+// Atalho com URL inválida na 2ª linha.
+const atalhoInvalido = () =>
+  setTimeout(() => {
+    const campo = document.querySelectorAll(
+      '[data-testid="shortcut-url-input"]'
+    )[1];
+    campo.value = 'site invalido';
+    campo.dispatchEvent(new Event('input'));
+    campo.dispatchEvent(new Event('blur'));
+  }, 1500);
 // Abre a peça clicando no card (a peça aberta é estado interno da página).
 const abrir = gancho => () =>
   setTimeout(
@@ -313,6 +368,24 @@ const abrir = gancho => () =>
     <Variant title="Conteudo erro" :init-state="com({ ramon_conteudo: ERRO })">
       <div class="h-screen"><Conteudo /></div>
     </Variant>
+    <Variant
+      title="Conteudo publicando"
+      :init-state="comExtras('depois da alta')"
+    >
+      <div class="h-screen"><Conteudo /></div>
+    </Variant>
+    <Variant
+      title="Conteudo falha ambigua"
+      :init-state="comExtras('Revisão da vida toda')"
+    >
+      <div class="h-screen"><Conteudo /></div>
+    </Variant>
+    <Variant
+      title="Conteudo sem token"
+      :init-state="comExtras('Perícia negada', false)"
+    >
+      <div class="h-screen"><Conteudo /></div>
+    </Variant>
     <Variant title="TV">
       <TvBoard />
     </Variant>
@@ -335,6 +408,9 @@ const abrir = gancho => () =>
     >
       <TvBoard />
     </Variant>
+    <Variant title="TV desatualizada" :init-state="tvDesatualizada">
+      <TvBoard />
+    </Variant>
     <Variant title="Relatorios">
       <div class="h-screen"><Relatorios /></div>
     </Variant>
@@ -351,6 +427,9 @@ const abrir = gancho => () =>
       <div class="h-screen"><Relatorios /></div>
     </Variant>
     <Variant title="Atalhos">
+      <div class="h-screen"><ExternalShortcuts /></div>
+    </Variant>
+    <Variant title="Atalhos erro" :init-state="atalhoInvalido">
       <div class="h-screen"><ExternalShortcuts /></div>
     </Variant>
   </Story>
