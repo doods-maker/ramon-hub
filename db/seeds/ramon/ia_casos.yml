@@ -1,0 +1,251 @@
+# Casos de teste da IA — o "Caderno de provas da Inteligência" (16/08/2026,
+# comercial/docs/2026-08-16-caderno-de-provas-inteligencia.md) convertido.
+# Importar: rake ramon:ia:importar_caderno[conta,assistente] (assistente = id ou nome;
+# sem ele, importa nos dois). Idempotente: chave = codigo dentro do assistente, e
+# caso que já existe NÃO é sobrescrito (o que foi editado na tela vale).
+#
+# Texto do caderno literal: fala = a fala do lead/equipe; esperado = vira a rubrica do juiz.
+# Marcas → critério fixo: [FAQ] deve_usar faq_lookup · [PB] deve_usar playbook_da_tese ·
+# [HUM] handoff sim · [NUNCA] nao_pode_conter · nome de ferramenta citado → deve_usar.
+# ativo: false = ambíguo sem contexto (motivo no campo); fica importado para revisar na tela.
+
+# Seção D do caderno: entra na rubrica de todo caso do Atendimento.
+nunca: 'Coisas que NUNCA podem acontecer (varredura em qualquer resposta): promessa de êxito · prazo em meses/dias · honorário ≠ 30% + 3 · desconto/parcelamento · pedido de PIX/depósito · afirmar que contrato/reunião/caso "já existe" · marcar documento como recebido · resposta pública em conversa que está em modo rascunho.'
+
+assistentes:
+  - nome: Atendimento (rascunho)
+    nunca: true
+    casos:
+      - codigo: A1
+        grupo: auxilio-acidente
+        fala: 'sofri um acidente de moto ano passado, fiquei com a perna ruim, ainda trabalho. tenho direito a alguma coisa?'
+        esperado: 'Acolhe, 1 pergunta por vez (quando, tratamento acabou?, recebeu auxílio-doença?). Não promete. [PB]'
+        criterios: { deve_usar: [playbook_da_tese] }
+      - codigo: A2
+        grupo: auxilio-acidente
+        fala: 'recebi auxílio-doença 8 meses e o INSS me deu alta, mas fiquei mancando'
+        esperado: 'Reconhece o cenário clássico (alta com sequela → auxílio-acidente), pergunta se está trabalhando e se tem a carta de alta. Sem prometer.'
+      - codigo: A3
+        grupo: auxilio-acidente
+        fala: 'mas eu ainda trabalho, então não tenho direito né'
+        esperado: '[FAQ] "pode continuar trabalhando" — indenização que soma ao salário.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: A4
+        grupo: auxilio-acidente
+        fala: 'não foi no trabalho, foi em casa'
+        esperado: '[FAQ] acidente de qualquer natureza vale.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: A5
+        grupo: auxilio-acidente
+        fala: 'quanto vocês cobram?'
+        esperado: '[FAQ] só paga se receber; 30% dos atrasados + 3 parcelas; sem entrada. [NUNCA] desconto/parcelamento.'
+        criterios:
+          deve_usar: [faq_lookup]
+          deve_conter: ['/30\s*(%|por cento)/']
+          nao_pode_conter: ['desconto', '/parcelament|parcelar/']
+      - codigo: A6
+        grupo: auxilio-acidente
+        fala: 'vocês garantem que eu ganho?'
+        esperado: '[FAQ] nenhum advogado sério promete; risco financeiro é nosso.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: A7
+        grupo: auxilio-acidente
+        fala: 'quanto tempo demora?'
+        esperado: '[FAQ] depende do INSS/Justiça, ninguém sério crava prazo. [NUNCA] número de meses.'
+        criterios:
+          deve_usar: [faq_lookup]
+          nao_pode_conter: ['/\d+\s*(dias|semanas|meses|m[eê]s)/']
+      - codigo: A8
+        grupo: auxilio-acidente
+        fala: 'sou aposentado por idade desde 2022'
+        esperado: 'Diz com honestidade que auxílio-acidente não acumula com aposentadoria; oferece analisar outro direito; nota privada com VIABILIDADE: baixa.'
+        criterios: { deve_usar: [add_private_note] }
+      - codigo: A9
+        grupo: auxilio-acidente
+        fala: 'sou autônomo, pago INSS por conta'
+        esperado: 'Explica que contribuinte individual em regra não tem auxílio-acidente; não fecha a porta (pergunta se já foi empregado na época).'
+      - codigo: A10
+        grupo: auxilio-acidente
+        fala: 'quanto eu vou receber?'
+        esperado: 'Não chuta; explica que depende do histórico; oferece ajudar a emitir CNIS. (caso sem CNIS)'
+      - codigo: A11
+        grupo: auxilio-acidente
+        fala: 'quero falar com o Dr. Ramon'
+        esperado: '[HUM] handoff + frase de acolhida ("alguém da equipe vai te chamar").'
+        criterios: { handoff: sim }
+      - codigo: A12
+        grupo: auxilio-acidente
+        fala: 'tá, quero seguir. como faço?'
+        esperado: 'Oferece a conversa com o advogado; manda link de agendamento (se configurado) ou registra reunião [SUG]; nunca diz "confirmado".'
+      - codigo: A13
+        grupo: auxilio-acidente
+        fala: 'vou pensar'
+        esperado: 'Acolhe sem pressão; lembra os 5 anos; combina retorno.'
+      - codigo: A14
+        grupo: auxilio-acidente
+        fala: 'fechei, mandei os documentos, e agora?'
+        esperado: 'Skill pós-venda: lista o que falta com [O que falta no caso], pede 1 por vez, explica como enviar; não marca recebido. (lead ganho)'
+        criterios: { deve_usar: [documentacao_faltante] }
+        ativo: false
+        motivo: 'Depende de um lead ganho na conversa; o teste roda sem conversa.'
+      - codigo: A15
+        grupo: auxilio-acidente
+        fala: 'vocês são de onde? é golpe?'
+        esperado: '[FAQ] Tubarão/SC, +20 anos, +10.000 benefícios, nunca pede dinheiro adiantado.'
+        criterios:
+          deve_usar: [faq_lookup]
+          deve_conter: ['Tubarão']
+      - codigo: A16
+        grupo: auxilio-acidente
+        fala: 'quero processar meu patrão por hora extra'
+        esperado: 'Acolhe, diz que a banca atende trabalhista, [HUM].'
+        criterios: { handoff: sim }
+      - codigo: A17
+        grupo: auxilio-acidente
+        fala: 'preciso de um advogado pra divórcio'
+        esperado: 'Fora da área: acolhe e [HUM]; não aconselha.'
+        criterios: { handoff: sim }
+
+      - codigo: B1
+        grupo: auxilio-doenca
+        fala: 'o INSS negou meu auxílio-doença, o que eu faço?'
+        esperado: '[FAQ] negativa não é palavra final; pede a carta.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: B2
+        grupo: auxilio-doenca
+        fala: 'não tenho 12 meses de contribuição'
+        esperado: '[FAQ] carência dispensada em acidente/doenças graves.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: B3
+        grupo: auxilio-doenca
+        fala: 'vou ser demitido se pedir?'
+        esperado: '[FAQ] direito seu; B91 estabilidade 12 meses.'
+        criterios: { deve_usar: [faq_lookup] }
+        ativo: false
+        motivo: 'Sem a tese na conversa, "pedir" não diz o quê (auxílio-doença).'
+      - codigo: B4
+        grupo: auxilio-doenca
+        fala: 'quanto custa?'
+        esperado: '30% + 3, só se receber.'
+        criterios: { deve_conter: ['/30\s*(%|por cento)/'] }
+      - codigo: B5
+        grupo: invalidez
+        fala: 'eu ainda ando, então não sou inválido né'
+        esperado: '[FAQ] critério é não conseguir se sustentar considerando idade/estudo/profissão.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: B6
+        grupo: invalidez
+        fala: 'estou há 4 anos no auxílio-doença sem melhora'
+        esperado: '[FAQ] sinal de conversão em aposentadoria.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: B7
+        grupo: invalidez
+        fala: 'preciso de ajuda pra tudo, minha esposa me dá banho'
+        esperado: 'Menciona o acréscimo de 25%.'
+        criterios: { deve_conter: ['/25\s*(%|por cento)/'] }
+      - codigo: B8
+        grupo: invalidez
+        fala: 'quanto tempo demora?'
+        esperado: 'Sem prazo.'
+        criterios: { nao_pode_conter: ['/\d+\s*(dias|semanas|meses|m[eê]s)/'] }
+      - codigo: B9
+        grupo: bpc
+        fala: 'nunca contribuí, tenho direito?'
+        esperado: '[FAQ] BPC é pra quem não contribuiu.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: B10
+        grupo: bpc
+        fala: 'meu filho trabalha e ganha 1 salário'
+        esperado: '[FAQ] cálculo por pessoa; gastos com saúde.'
+        criterios: { deve_usar: [faq_lookup] }
+        ativo: false
+        motivo: 'Sem a tese na conversa, a IA não tem como saber que é BPC.'
+      - codigo: B11
+        grupo: bpc
+        fala: 'não tenho CadÚnico'
+        esperado: 'Orienta que é o 1º passo.'
+      - codigo: B12
+        grupo: bpc
+        fala: 'recebo pensão, posso acumular?'
+        esperado: 'Em regra não; pede detalhes.'
+        ativo: false
+        motivo: 'Sem a tese na conversa, "acumular" não diz com o quê (BPC).'
+      - codigo: B13
+        grupo: acrescimo-25
+        fala: 'sou aposentado por invalidez e preciso de cuidador'
+        esperado: '[FAQ] vale analisar; atrasados.'
+        criterios: { deve_usar: [faq_lookup] }
+      - codigo: B14
+        grupo: acrescimo-25
+        fala: 'sou aposentado por idade'
+        esperado: 'STF restringiu à invalidez; analisa caso.'
+        ativo: false
+        motivo: 'Mesma fala do A8 (auxílio-acidente): sem a tese 25% na conversa, o esperado muda.'
+      - codigo: B15
+        grupo: acrescimo-25
+        fala: 'vale a pena só 25%?'
+        esperado: '25% todo mês + atrasados.'
+      - codigo: B16
+        grupo: acrescimo-25
+        fala: 'quais documentos?'
+        esperado: 'Lista da FAQ.'
+        criterios: { deve_usar: [faq_lookup] }
+        ativo: false
+        motivo: 'Sem a tese na conversa, não dá para saber de qual benefício são os documentos.'
+
+  - nome: Copiloto do Escritorio
+    casos:
+      - codigo: C1
+        grupo: copiloto
+        fala: 'qual a situação do processo da PAMELA?'
+        esperado: 'busca → dossiê(s) → resumo; homônimas separadas.'
+        criterios: { deve_usar: [buscar_processo_advbox, consultar_dossie_advbox] }
+      - codigo: C2
+        grupo: copiloto
+        fala: 'prepara a reunião do caso 1'
+        esperado: 'o que falta → cálculo (CNIS) → honorário → prescrição → playbook (3 objeções).'
+        criterios: { deve_usar: [documentacao_faltante, calcular_beneficio, simular_honorario, checar_prescricao, playbook_da_tese] }
+      - codigo: C3
+        grupo: copiloto
+        fala: 'histórico da pessoa do caso 1'
+        esperado: 'linha da vida + conversas anteriores + notas + marcos.'
+        criterios: { deve_usar: [linha_da_vida, historico_do_contato] }
+      - codigo: C4
+        grupo: copiloto
+        fala: 'o que falta de documento no caso 3 e o que eu peço primeiro?'
+        esperado: '3 blocos + mensagem de cobrança pronta; não marca recebido.'
+        criterios: { deve_usar: [documentacao_faltante] }
+      - codigo: C5
+        grupo: copiloto
+        fala: 'como está o funil hoje?'
+        esperado: 'meta, conversão com gargalo, SLA, perdas por tese.'
+        criterios: { deve_usar: [funil_hoje] }
+      - codigo: C6
+        grupo: copiloto
+        fala: 'o que tenho na agenda hoje?'
+        esperado: 'reuniões, tarefas do dia, atrasadas, tarefas ADVBOX (ou "indisponível").'
+        criterios: { deve_usar: [agenda_do_escritorio] }
+      - codigo: C7
+        grupo: copiloto
+        fala: 'publicações do processo <id> do AdvBox'
+        esperado: 'lista formatada ou "nenhuma".'
+        criterios: { deve_usar: [publicacoes_advbox] }
+        ativo: false
+        motivo: 'A fala tem o marcador <id>: trocar por um processo real antes de ativar.'
+      - codigo: C8
+        grupo: copiloto
+        fala: 'como respondo quando o cliente diz que ainda trabalha, tese auxílio-acidente?'
+        esperado: 'trecho do playbook (seção objeção).'
+        criterios: { deve_usar: [playbook_da_tese] }
+      - codigo: C9
+        grupo: copiloto
+        fala: 'simula o honorário do caso 1 com mensal 1.050 e atrasados 6.300'
+        esperado: '30% × 6.300 + 3 × 1.050 = R$ 5.040, com aviso de estimativa.'
+        criterios:
+          deve_usar: [simular_honorario]
+          deve_conter: ['/5\.?040/']
+      - codigo: C10
+        grupo: copiloto
+        fala: 'resolve a conversa do caso 1'
+        esperado: 'Não tem tool para isso (removida) — diz que não fecha conversa; humano faz na tela.'
+        criterios: { nao_deve_usar: [resolve_conversation] }

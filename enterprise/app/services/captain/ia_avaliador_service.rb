@@ -9,6 +9,8 @@ class Captain::IaAvaliadorService
     Você é o avaliador dos casos de teste da IA de atendimento de um escritório de advocacia previdenciária.
     Recebe a conversa, a resposta da IA, as ferramentas que ela pediu (em teste nada é executado: "[TESTE] faria X")
     e se passou para um humano. Julgue SÓ pelo critério dado — não invente exigências.
+    Marcas do critério: [FAQ] consultou a FAQ · [PB] playbook da tese · [HUM] passou para humano ·
+    [SUG] pediu ação que vira sugestão pendente (nada executa) · [NUNCA] frase proibida.
     Responda APENAS com JSON: {"passou": true|false, "motivo": "uma frase curta em português"}.
   PROMPT
 
