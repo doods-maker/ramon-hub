@@ -63,7 +63,7 @@ RSpec.describe Ramon::LeadBulkActionJob do
 
   it 'keeps processing the batch when one lead fails' do
     # Falha real por item: etapa de perda sem lost_reason derruba só o lead_a
-    # (guard_lost_reason!); o lead_b, que já carrega motivo, segue no lote.
+    # (validação do Lead); o lead_b, que já carrega motivo, segue no lote.
     lost_stage = create(:lead_stage, account: account, name: 'Perda lote', is_lost: true)
     lead_b.update!(lost_reason: 'Sem retorno')
 

@@ -594,8 +594,16 @@ RSpec.describe 'Leads API', type: :request do
             params: { lead_stage_id: perdido.id },
             headers: admin.create_new_auth_token, as: :json
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.parsed_body['error']).to eq('LOST_REASON_REQUIRED')
+      expect(response.parsed_body['message']).to eq('Escolha o motivo da perda para marcar o lead como perdido.')
       expect(lead.reload.lead_stage).to eq(novo)
+    end
+
+    it 'não deixa apagar o motivo de quem já está perdido', :aggregate_failures do
+      lead = create(:lead, account: account, lead_stage: perdido, lost_reason: 'Honorário')
+      patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
+            params: { lost_reason: '' }, headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(lead.reload.lost_reason).to eq('Honorário')
     end
 
     it 'permite mover para etapa perdida com motivo e grava lost_at', :aggregate_failures do

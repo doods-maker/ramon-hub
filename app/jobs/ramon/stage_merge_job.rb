@@ -17,7 +17,9 @@ class Ramon::StageMergeJob < ApplicationJob
     # Sem transação global: retry retoma de onde parou (leads já movidos saem
     # do escopo). StageLabelSync roda via listener do lead_updated — o chamado
     # explícito que dobrava o trabalho por lead morreu junto com o caminho síncrono.
-    stage.leads.find_each { |lead| lead.update!(lead_stage: target) }
+    # Destino Perdido: a fusão é o motivo (o Lead exige um ao entrar em Perdido).
+    motivo = "Etapa #{stage.name} removida" if target.is_lost
+    stage.leads.find_each { |lead| lead.update!(lead_stage: target, lost_reason: motivo) }
     deleted_label = stage.label
     stage.destroy!
     stage.account.labels.find_by(title: deleted_label)&.destroy

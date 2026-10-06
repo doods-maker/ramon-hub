@@ -74,6 +74,17 @@ RSpec.describe 'Lead Stages API', type: :request do
       expect(lead.reload.lead_stage_id).to eq(destino.id)
     end
 
+    it 'fundir no Perdido grava o motivo da fusão (o admin não escolhe um por lead)' do
+      origem = account.lead_stages.create!(name: 'Origem', position: 0)
+      lead = account.leads.create!(name: 'L', lead_stage: origem)
+      perform_enqueued_jobs(only: Ramon::StageMergeJob) do
+        delete "/api/v1/accounts/#{account.id}/lead_stages/#{origem.id}",
+               params: { move_to_stage_id: account.lead_stages.find_by(is_lost: true).id },
+               headers: admin.create_new_auth_token
+      end
+      expect(lead.reload.lost_reason).to eq('Etapa Origem removida')
+    end
+
     it 'responde na hora e deixa a movimentação pro job' do
       origem = account.lead_stages.create!(name: 'Origem', position: 0)
       destino = account.lead_stages.create!(name: 'Destino', position: 1)

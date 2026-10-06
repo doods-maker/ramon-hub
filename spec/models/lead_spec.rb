@@ -313,4 +313,41 @@ RSpec.describe Lead do
       expect(first.ensure_portal_token!).not_to eq(second.ensure_portal_token!)
     end
   end
+
+  context 'when entering the lost stage (motivo da perda)' do
+    let(:perdido) { account.lead_stages.find_by(is_lost: true) }
+    let(:human) { create(:user, account: account) }
+    let(:lead) { create(:lead, account: account) }
+
+    it 'recusa a pessoa que marca perdido sem motivo, admin inclusive', :aggregate_failures do
+      Current.user = human
+      expect(lead.update(lead_stage: perdido)).to be(false)
+      expect(lead.errors[:base]).to include('Escolha o motivo da perda para marcar o lead como perdido.')
+    end
+
+    it 'aceita a pessoa com motivo' do
+      Current.user = human
+      lead.update!(lead_stage: perdido, lost_reason: 'Honorário')
+      expect(lead.reload.lost_reason).to eq('Honorário')
+    end
+
+    it 'fluxo sem motivo grava Automação: <nome do fluxo>, mesmo com pessoa por trás' do
+      Current.user = human
+      Current.executed_by = FluxoExecucao.new(fluxo: Fluxo.new(nome: 'Esfriou 30 dias'))
+      lead.update!(lead_stage: perdido)
+      expect(lead.reload.lost_reason).to eq('Automação: Esfriou 30 dias')
+    end
+
+    it 'job sem pessoa grava Automação: sistema' do
+      lead.update!(lead_stage: perdido)
+      expect(lead.reload.lost_reason).to eq('Automação: sistema')
+    end
+
+    it 'sair de Perdido limpa o motivo e voltar exige outro' do
+      lead.update!(lead_stage: perdido, lost_reason: 'Honorário')
+      Current.user = human
+      lead.update!(lead_stage: account.lead_stages.order(:position).first)
+      expect(lead.update(lead_stage: perdido)).to be(false)
+    end
+  end
 end
