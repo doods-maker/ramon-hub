@@ -2228,6 +2228,11 @@
         "horas": "hours",
         "dias": "days"
       },
+      "UNIDADES_UM": {
+        "minutos": "minute",
+        "horas": "hour",
+        "dias": "day"
+      },
       "CAMPOS_OBRIGATORIOS": {
         "texto": "the text",
         "etapa_id": "the stage",

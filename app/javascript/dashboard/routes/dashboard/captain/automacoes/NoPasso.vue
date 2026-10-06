@@ -99,7 +99,7 @@ const detalhe = computed(() => {
     case 'esperar':
       return c.ate === 'horario_comercial'
         ? t(`${K}.PAINEL.ESPERAR_HORARIO`)
-        : `${c.quantidade ?? ''} ${c.unidade ? t(`${K}.UNIDADES.${c.unidade}`) : ''}`;
+        : `${c.quantidade ?? ''} ${c.unidade ? t(`${K}.${Number(c.quantidade) === 1 ? 'UNIDADES_UM' : 'UNIDADES'}.${c.unidade}`) : ''}`;
     case 'acao_chatwoot':
       return (c.acoes || [])
         .map(a => t(`${K}.ACOES_CHATWOOT.${a.action_name}`, a.action_name))

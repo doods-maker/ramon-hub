@@ -2233,6 +2233,11 @@
         "horas": "horas",
         "dias": "dias"
       },
+      "UNIDADES_UM": {
+        "minutos": "minuto",
+        "horas": "hora",
+        "dias": "dia"
+      },
       "CAMPOS_OBRIGATORIOS": {
         "texto": "o texto",
         "etapa_id": "a etapa",
