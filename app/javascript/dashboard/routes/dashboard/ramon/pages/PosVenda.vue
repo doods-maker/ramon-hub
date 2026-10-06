@@ -5,7 +5,9 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import RamonPosVendaAPI from 'dashboard/api/ramonPosVenda';
+import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import { CARTAO, CARTAO_STATUS, CHIP, FILETE, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonPosVenda' });
 
@@ -50,127 +52,134 @@ const openConversation = conversationId => {
 </script>
 
 <template>
-  <div
-    class="flex flex-col w-full h-full overflow-y-auto bg-n-background p-4 sm:p-8"
-  >
-    <RamonPageHeader
-      :title="t('RAMON.POS_VENDA.TITLE')"
-      :subtitle="t('RAMON.POS_VENDA.SUBTITLE')"
-    />
+  <div class="h-full w-full overflow-y-auto bg-n-background p-4 sm:p-8">
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-5">
+      <RamonPageHeader
+        class="!mb-0"
+        :title="t('RAMON.POS_VENDA.TITLE')"
+        :subtitle="t('RAMON.POS_VENDA.SUBTITLE')"
+      />
 
-    <!-- Skeleton no primeiro load -->
-    <div
-      v-if="loading && !data"
-      data-testid="pos-venda-skeleton"
-      class="flex flex-col gap-2 animate-pulse"
-    >
-      <div v-for="i in 5" :key="i" class="h-14 rounded-xl bg-n-solid-2" />
-    </div>
-
-    <!-- Erro com retry explícito -->
-    <div
-      v-else-if="error && !data"
-      data-testid="pos-venda-error"
-      class="text-sm"
-    >
-      <p class="text-n-ruby-11">{{ t('RAMON.POS_VENDA.ERROR') }}</p>
-      <button
-        type="button"
-        data-testid="pos-venda-retry"
-        class="mt-2 text-xs text-n-iris-11 hover:underline"
-        @click="fetchData"
+      <!-- Skeleton no primeiro load -->
+      <div
+        v-if="loading && !data"
+        data-testid="pos-venda-skeleton"
+        class="flex flex-col gap-2 animate-pulse"
       >
-        {{ t('RAMON.POS_VENDA.RETRY') }}
-      </button>
-    </div>
-
-    <template v-else-if="data">
-      <!-- Vazio -->
-      <p
-        v-if="!pendentes.length"
-        data-testid="pos-venda-empty"
-        class="text-sm text-n-slate-10"
-      >
-        {{ t('RAMON.POS_VENDA.EMPTY') }}
-      </p>
-
-      <!-- Pendentes: mais antigo pro mais novo (ordem vem do backend) -->
-      <div v-else class="flex flex-col gap-1.5 max-w-3xl">
-        <div
-          v-for="item in pendentes"
-          :key="item.id"
-          data-testid="pos-venda-row"
-          class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl bg-n-solid-1 shadow-sm border border-n-weak border-l-[3px] cursor-pointer hover:bg-n-alpha-2"
-          :class="item.dias > 7 ? 'border-l-n-amber-9' : 'border-l-n-weak'"
-          @click="openLead(item.id)"
-        >
-          <div class="min-w-0">
-            <p class="text-sm font-medium truncate text-n-slate-12">
-              {{ item.name }}
-            </p>
-            <p class="text-xs truncate text-n-slate-10">
-              {{ t('RAMON.POS_VENDA.DIAS', { dias: item.dias }) }} ·
-              {{
-                t('RAMON.POS_VENDA.DOCS', {
-                  received: item.docs_received,
-                  total: item.docs_total,
-                })
-              }}
-            </p>
-          </div>
-          <button
-            v-if="item.conversation_id"
-            type="button"
-            data-testid="pos-venda-open-conversation"
-            class="shrink-0 px-2 py-1 text-xs font-medium rounded-md text-n-iris-11 hover:bg-n-alpha-2"
-            @click.stop="openConversation(item.conversation_id)"
-          >
-            {{ t('RAMON.POS_VENDA.OPEN_CONVERSATION') }}
-          </button>
-        </div>
+        <div v-for="i in 5" :key="i" class="h-14 rounded-xl bg-n-alpha-2" />
       </div>
 
-      <!-- Concluídos: colapsado por padrão -->
-      <div v-if="concluidos.length" class="mt-6 max-w-3xl">
-        <button
-          type="button"
-          data-testid="pos-venda-toggle-concluidos"
-          class="flex items-center gap-1.5 text-sm font-medium text-n-slate-11 hover:text-n-slate-12"
-          @click="showConcluidos = !showConcluidos"
-        >
-          <span
-            class="i-lucide-chevron-right size-4 transition-transform"
-            :class="showConcluidos ? 'rotate-90' : ''"
-          />
-          {{ t('RAMON.POS_VENDA.CONCLUIDOS', { count: concluidos.length }) }}
-        </button>
+      <!-- Erro com retry explícito -->
+      <div
+        v-else-if="error && !data"
+        data-testid="pos-venda-error"
+        class="flex flex-col items-start gap-1 text-sm"
+      >
+        <p class="m-0 text-n-ruby-11">{{ t('RAMON.POS_VENDA.ERROR') }}</p>
+        <Button
+          data-testid="pos-venda-retry"
+          link
+          xs
+          :label="t('RAMON.POS_VENDA.RETRY')"
+          @click="fetchData"
+        />
+      </div>
 
-        <div v-if="showConcluidos" class="flex flex-col gap-1.5 mt-2">
+      <template v-else-if="data">
+        <!-- Vazio -->
+        <p
+          v-if="!pendentes.length"
+          data-testid="pos-venda-empty"
+          class="m-0 text-sm text-n-slate-10"
+        >
+          {{ t('RAMON.POS_VENDA.EMPTY') }}
+        </p>
+
+        <!-- Pendentes: mais antigo pro mais novo (ordem vem do backend) -->
+        <div v-else class="flex flex-col gap-2">
           <div
-            v-for="item in concluidos"
+            v-for="item in pendentes"
             :key="item.id"
-            data-testid="pos-venda-row-concluido"
-            class="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl bg-n-solid-1 shadow-sm border border-n-weak cursor-pointer hover:bg-n-alpha-2"
+            data-testid="pos-venda-row"
+            class="flex items-center justify-between gap-3 cursor-pointer hover:bg-n-alpha-2"
+            :class="[
+              CARTAO_STATUS,
+              item.dias > 7 ? FILETE.amber : 'border-l-n-weak',
+            ]"
             @click="openLead(item.id)"
           >
-            <div class="flex items-center gap-2 min-w-0">
-              <span
-                class="i-lucide-check-circle-2 size-4 shrink-0 text-n-teal-11"
-              />
-              <p class="text-sm font-medium truncate text-n-slate-12">
+            <div class="min-w-0">
+              <p class="m-0 text-sm font-medium truncate text-n-slate-12">
                 {{ item.name }}
               </p>
+              <p class="m-0 mt-0.5 text-xs truncate text-n-slate-10">
+                {{ t('RAMON.POS_VENDA.DIAS', { dias: item.dias }) }} ·
+                {{
+                  t('RAMON.POS_VENDA.DOCS', {
+                    received: item.docs_received,
+                    total: item.docs_total,
+                  })
+                }}
+              </p>
             </div>
-            <span
-              v-if="item.drive_concluido"
-              data-testid="pos-venda-drive-chip"
-              class="shrink-0 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-n-teal-3 text-n-teal-11"
-            >
-              {{ t('RAMON.POS_VENDA.DRIVE_CHIP') }}
-            </span>
+            <Button
+              v-if="item.conversation_id"
+              data-testid="pos-venda-open-conversation"
+              xs
+              faded
+              slate
+              icon="i-lucide-message-circle"
+              :label="t('RAMON.POS_VENDA.OPEN_CONVERSATION')"
+              class="shrink-0"
+              @click.stop="openConversation(item.conversation_id)"
+            />
           </div>
         </div>
-      </div>
-    </template>
+
+        <!-- Concluídos: colapsado por padrão -->
+        <div v-if="concluidos.length" class="flex flex-col gap-2">
+          <button
+            type="button"
+            data-testid="pos-venda-toggle-concluidos"
+            class="flex items-center gap-1.5 self-start text-sm font-medium text-n-slate-11 hover:text-n-slate-12"
+            @click="showConcluidos = !showConcluidos"
+          >
+            <span
+              class="i-lucide-chevron-right size-4 transition-transform"
+              :class="showConcluidos ? 'rotate-90' : ''"
+            />
+            {{ t('RAMON.POS_VENDA.CONCLUIDOS', { count: concluidos.length }) }}
+          </button>
+
+          <template v-if="showConcluidos">
+            <div
+              v-for="item in concluidos"
+              :key="item.id"
+              data-testid="pos-venda-row-concluido"
+              class="flex items-center justify-between gap-3 cursor-pointer hover:bg-n-alpha-2"
+              :class="CARTAO"
+              @click="openLead(item.id)"
+            >
+              <div class="flex items-center gap-2 min-w-0">
+                <span
+                  class="i-lucide-check-circle-2 size-4 shrink-0 text-n-teal-11"
+                />
+                <p class="m-0 text-sm font-medium truncate text-n-slate-12">
+                  {{ item.name }}
+                </p>
+              </div>
+              <span
+                v-if="item.drive_concluido"
+                data-testid="pos-venda-drive-chip"
+                class="shrink-0"
+                :class="[CHIP, TOM.teal]"
+              >
+                {{ t('RAMON.POS_VENDA.DRIVE_CHIP') }}
+              </span>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
   </div>
 </template>
