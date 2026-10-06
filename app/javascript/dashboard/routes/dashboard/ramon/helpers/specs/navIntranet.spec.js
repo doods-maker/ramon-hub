@@ -25,17 +25,28 @@ describe('secoesIntranet', () => {
         'RAMON.NAV.GESTAO',
         [
           ['conteudo', ['ramon_conteudo']],
-          ['resultados', ['ramon_extrato', 'ramon_relatorios', 'ramon_tv']],
+          [
+            'resultados',
+            [
+              'ramon_painel_time',
+              'ramon_extrato',
+              'ramon_relatorios',
+              'ramon_tv',
+            ],
+          ],
           ['configuracoes', ['ramon_funil_config', 'ramon_playbooks']],
         ],
       ],
     ]);
   });
 
-  it('agente: sem Conteúdo e Configurações; Resultados só com o Extrato', () => {
+  it('agente: sem Conteúdo e Configurações; Resultados com Painel do time e Extrato', () => {
     const gestao = secoesIntranet(false)[1];
     expect(mapa([gestao])).toEqual([
-      ['RAMON.NAV.GESTAO', [['resultados', ['ramon_extrato']]]],
+      [
+        'RAMON.NAV.GESTAO',
+        [['resultados', ['ramon_painel_time', 'ramon_extrato']]],
+      ],
     ]);
     expect(secoesIntranet(false)[0].grupos).toHaveLength(4);
   });
@@ -65,7 +76,7 @@ describe('grupoDaRota', () => {
 
   it('agente não acha grupo de rota só de admin; fora da intranet = nada', () => {
     expect(grupoDaRota('ramon_funil_config', false)).toBeUndefined();
-    expect(grupoDaRota('ramon_extrato', false).abas).toHaveLength(1);
+    expect(grupoDaRota('ramon_extrato', false).abas).toHaveLength(2);
     expect(grupoDaRota('ramon_external_shortcuts', true)).toBeUndefined();
   });
 });

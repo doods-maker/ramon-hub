@@ -1590,6 +1590,94 @@
       "SEM_CHECKLIST": "Clean contract: pick the thesis to get the document checklist",
       "EM_DIAS": "Clean contract within the hour | Clean contract in {count} day | Clean contract in {count} days"
     },
+    "PAINEL_TIME": {
+      "TITLE": "Team dashboard",
+      "SUBTITLE": "Speed, quality and volume of the SDR and the Closer against the plan targets",
+      "PAPEL": {
+        "sdr": "SDR",
+        "closer": "Closer"
+      },
+      "PERIODO": {
+        "hoje": "Today",
+        "semana": "Week",
+        "mes": "This month",
+        "mes_passado": "Last month"
+      },
+      "TIME_TODO": "Whole team",
+      "BLOCO": {
+        "META": "Monthly target",
+        "VELOCIDADE": "Speed and discipline",
+        "QUALIDADE": "Scheduling quality",
+        "FECHAMENTO": "Closing",
+        "POS_FECHAMENTO": "After closing",
+        "VOLUME": "Volume",
+        "POR_PESSOA": "By person"
+      },
+      "META": {
+        "sdr": "Qualified meetings × target",
+        "closer": "Clean contracts × target",
+        "SEM_META": "No target set for the month (Variable pay statement)",
+        "FALTAM": "{n} to go in {dias} business days · pace needed {ritmo}/day",
+        "BATIDA": "target reached",
+        "AGUARDANDO": "+ {n} closed waiting for documents/7 days"
+      },
+      "KPI": {
+        "primeira_resposta": "First response (median, business hours)",
+        "sem_resposta": "Leads unanswered for 1h+ (now)",
+        "registro_completo": "Complete record on the same day",
+        "qualificado_agendada": "Qualified → scheduled",
+        "show": "Show rate",
+        "nao_qualificada": "\"Not qualified\" meetings",
+        "conversao": "Qualified meeting → contract",
+        "assinado_na_reuniao": "Signed during the meeting",
+        "vou_pensar_48h": "\"Will think it over\" followed up in 48h",
+        "docs_7d": "Documents complete in 7 days",
+        "cancelamento_7d": "Cancelled within 7 days",
+        "painel": "Client portal delivered",
+        "dossie_24h": "Dossier delivered in 24h"
+      },
+      "COLUNA": {
+        "PESSOA": "Person",
+        "META": "Target",
+        "LEADS": "Leads",
+        "CONTRATOS": "Contracts",
+        "primeira_resposta": "1st response",
+        "sem_resposta": "Unanswered 1h+",
+        "show": "Show",
+        "nao_qualificada": "Not qualif.",
+        "registro_completo": "Record",
+        "conversao": "Conversion",
+        "assinado_na_reuniao": "In meeting",
+        "docs_7d": "Docs 7d",
+        "cancelamento_7d": "Cancel. 7d",
+        "painel": "Portal",
+        "dossie_24h": "Dossier 24h"
+      },
+      "ALVO": {
+        "min": "target ≥ {alvo}",
+        "max": "target ≤ {alvo}",
+        "ZERO": "target 0"
+      },
+      "DE": "{num} of {den}",
+      "RESPOSTAS": "{n} response | {n} responses",
+      "STATUS": {
+        "ok": "ok",
+        "atencao": "watch",
+        "cobrar": "act",
+        "SEM_DADO": "no data"
+      },
+      "VOLUME": {
+        "sdr": "Leads received per day",
+        "closer": "Contracts per week",
+        "TOTAL": "{n} in the period",
+        "MEDIA": "average {media}/business day"
+      },
+      "NOTA": "How to read: green = within the plan target, amber = close, red = act on it. Business hours: Mon–Fri, 8:30–12:00 and 13:30–18:00. A deadline still running (7 days, 24h, 48h) only counts once it is over or already met.",
+      "VAZIO": "Nobody in the {papel} team yet — the team comes from Settings → Teams.",
+      "VAZIO_AGENTE": "You are not in the {papel} team.",
+      "LOAD_ERROR": "Could not load the dashboard.",
+      "RETRY": "Try again"
+    },
     "EXTRATO": {
       "TITLE": "Variable pay statement",
       "SUBTITLE": "Units, target bonus and monthly total per person",
@@ -1696,7 +1784,8 @@
       "POS_VENDA": "Post-sale",
       "TV": "TV scoreboard",
       "RELATORIOS": "Reports",
-      "EXTRATO": "Variable pay statement"
+      "EXTRATO": "Variable pay statement",
+      "PAINEL_TIME": "Team dashboard"
     },
     "RAIL": {
       "INTERNOS": "Internal",

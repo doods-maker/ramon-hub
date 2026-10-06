@@ -1595,6 +1595,94 @@
       "SEM_CHECKLIST": "Contrato limpo: escolha a tese pra ter a checklist de documentos",
       "EM_DIAS": "Contrato limpo na próxima hora | Contrato limpo em {count} dia | Contrato limpo em {count} dias"
     },
+    "PAINEL_TIME": {
+      "TITLE": "Painel do time",
+      "SUBTITLE": "Velocidade, qualidade e volume do SDR e do Closer contra as metas do plano",
+      "PAPEL": {
+        "sdr": "SDR",
+        "closer": "Closer"
+      },
+      "PERIODO": {
+        "hoje": "Hoje",
+        "semana": "Semana",
+        "mes": "Este mês",
+        "mes_passado": "Mês passado"
+      },
+      "TIME_TODO": "Time todo",
+      "BLOCO": {
+        "META": "Meta do mês",
+        "VELOCIDADE": "Velocidade e disciplina",
+        "QUALIDADE": "Qualidade do agendamento",
+        "FECHAMENTO": "Fechamento",
+        "POS_FECHAMENTO": "Pós-fechamento",
+        "VOLUME": "Volume",
+        "POR_PESSOA": "Por pessoa"
+      },
+      "META": {
+        "sdr": "Reuniões qualificadas × meta",
+        "closer": "Contratos limpos × meta",
+        "SEM_META": "Sem meta lançada no mês (Extrato da variável)",
+        "FALTAM": "faltam {n} em {dias} dias úteis · ritmo necessário {ritmo}/dia",
+        "BATIDA": "meta batida",
+        "AGUARDANDO": "+ {n} fechados aguardando docs/7 dias"
+      },
+      "KPI": {
+        "primeira_resposta": "1ª resposta (mediana, horário comercial)",
+        "sem_resposta": "Leads sem resposta há +1h (agora)",
+        "registro_completo": "Registro completo no mesmo dia",
+        "qualificado_agendada": "Qualificado → agendada",
+        "show": "Comparecimento (show)",
+        "nao_qualificada": "Reuniões \"não qualificada\"",
+        "conversao": "Reunião qualificada → contrato",
+        "assinado_na_reuniao": "Assinados na própria reunião",
+        "vou_pensar_48h": "\"Vou pensar\" retomado em 48h",
+        "docs_7d": "Docs completos em 7 dias",
+        "cancelamento_7d": "Cancelamento em 7 dias",
+        "painel": "Painel do Cliente entregue",
+        "dossie_24h": "Dossiê entregue em 24h"
+      },
+      "COLUNA": {
+        "PESSOA": "Pessoa",
+        "META": "Meta",
+        "LEADS": "Leads",
+        "CONTRATOS": "Contratos",
+        "primeira_resposta": "1ª resposta",
+        "sem_resposta": "Sem resp. +1h",
+        "show": "Show",
+        "nao_qualificada": "Não qualif.",
+        "registro_completo": "Registro",
+        "conversao": "Conversão",
+        "assinado_na_reuniao": "Na reunião",
+        "docs_7d": "Docs 7d",
+        "cancelamento_7d": "Cancel. 7d",
+        "painel": "Painel",
+        "dossie_24h": "Dossiê 24h"
+      },
+      "ALVO": {
+        "min": "meta ≥ {alvo}",
+        "max": "meta ≤ {alvo}",
+        "ZERO": "meta 0"
+      },
+      "DE": "{num} de {den}",
+      "RESPOSTAS": "{n} resposta | {n} respostas",
+      "STATUS": {
+        "ok": "ok",
+        "atencao": "atenção",
+        "cobrar": "cobrar",
+        "SEM_DADO": "sem dado"
+      },
+      "VOLUME": {
+        "sdr": "Leads recebidos por dia",
+        "closer": "Contratos por semana",
+        "TOTAL": "{n} no período",
+        "MEDIA": "média {media}/dia útil"
+      },
+      "NOTA": "Como ler: filete verde = dentro da meta do plano, âmbar = perto, vermelho = cobrar. Horário comercial: seg–sex, 8h30–12h e 13h30–18h. Prazo ainda correndo (7 dias, 24h, 48h) só conta quando venceu ou já foi cumprido.",
+      "VAZIO": "Ninguém no time {papel} ainda — o time vem de Configurações → Times.",
+      "VAZIO_AGENTE": "Você não está no time {papel}.",
+      "LOAD_ERROR": "Não foi possível carregar o painel.",
+      "RETRY": "Tentar de novo"
+    },
     "EXTRATO": {
       "TITLE": "Extrato da variável",
       "SUBTITLE": "Unidades, bônus de meta e total do mês por pessoa — regulamento de remuneração v2",
@@ -1701,7 +1789,8 @@
       "POS_VENDA": "Pós-venda",
       "TV": "Placar da TV",
       "RELATORIOS": "Relatórios",
-      "EXTRATO": "Extrato da variável"
+      "EXTRATO": "Extrato da variável",
+      "PAINEL_TIME": "Painel do time"
     },
     "RAIL": {
       "INTERNOS": "Internos",
