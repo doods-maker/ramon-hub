@@ -43,6 +43,13 @@ describe('NoPasso — esperar', () => {
     expect(um.text()).toMatch(/1 day\b/);
     expect(dois.text()).toMatch(/2 days/);
   });
+  it('antes da reunião diz que conta para trás', () => {
+    const w = montar({
+      tipo: 'esperar',
+      config: { antes_de: 'reuniao', quantidade: 24, unidade: 'horas' },
+    });
+    expect(w.text()).toContain('24 hours before the meeting');
+  });
 });
 
 describe('NoPasso — saída tomada', () => {

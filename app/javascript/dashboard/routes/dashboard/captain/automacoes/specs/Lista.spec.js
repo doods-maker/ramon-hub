@@ -240,4 +240,14 @@ describe('Lista de automações', () => {
     expect(wrapper.find('[data-testid="sistema-linha"]').exists()).toBe(false);
     expect(wrapper.find('[data-testid="fluxo-linha"]').exists()).toBe(true);
   });
+  it('fluxo em sombra tem selo próprio', async () => {
+    RamonFluxosAPI.get.mockResolvedValue({
+      data: { payload: [{ ...FLUXO, modo: 'sombra' }], resumo: {} },
+    });
+    const wrapper = mount(Lista);
+    await flushPromises();
+    expect(wrapper.find('[data-testid="fluxo-linha"]').text()).toContain(
+      'shadow'
+    );
+  });
 });
