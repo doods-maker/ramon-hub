@@ -45,17 +45,20 @@ class Ramon::DocMatchService
   end
 
   def ask_llm(lead, itens, attachment)
+    result = Ramon::LlmClient.complete(
+      **Ramon::LlmEscolha.para(lead.account, 'copiloto'),
+      system: SYSTEM_PROMPT, user: prompt_usuario(lead, itens, attachment),
+      funcao: 'doc_match', account_id: lead.account_id, lead_id: lead.id, conversation_id: lead.conversation_id
+    )
+    parse_item_id(result.content)
+  end
+
+  def prompt_usuario(lead, itens, attachment)
     checklist = itens.map { |i| "#{i.id}: #{i.title.presence || i.content}" }.join("\n")
     filename = Ramon::Pseudonymizer.mask(attachment.file.filename.to_s, names: [lead.contact&.name].compact)
     arquivo = "arquivo: #{filename} (#{attachment.file.content_type})"
     conversa = Ramon::Pseudonymizer.mask(transcript(lead), names: [lead.contact&.name].compact)
-    result = Ramon::LlmClient.complete(
-      **Ramon::LlmEscolha.para(lead.account, 'copiloto'),
-      system: SYSTEM_PROMPT,
-      user: "Checklist:\n#{checklist}\n\n#{arquivo}\n\nFim da conversa:\n#{conversa}",
-      funcao: 'doc_match', account_id: lead.account_id, lead_id: lead.id, conversation_id: lead.conversation_id
-    )
-    parse_item_id(result.content)
+    "Checklist:\n#{checklist}\n\n#{arquivo}\n\nFim da conversa:\n#{conversa}"
   end
 
   # DeepSeek roda sem json_schema — nada garante item_id numérico no wire (hábito

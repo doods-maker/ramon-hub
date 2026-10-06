@@ -48,6 +48,13 @@ module Ramon::LlmUso
   end
 
   # Runner do agente v2 (assistentes): uma linha por execução, tokens somados de todos os turnos.
+  # Captain::ChatHelper (módulo no limite de tamanho): lê o contexto do próprio helper.
+  def registrar_do_chat(helper, message)
+    registrar_mensagem(message, { account_id: helper.send(:resolved_account_id),
+                                  assistant_id: helper.instance_variable_get(:@assistant)&.id,
+                                  funcao: helper.send(:feature_name), origem: helper.instance_variable_get(:@source) })
+  end
+
   def registrar_agente(assistant:, result:, inicio:, source: nil, conversation: nil)
     registrar({ account_id: assistant.account_id, assistant_id: assistant.id, conversation_id: conversation&.id,
                 funcao: source == 'fluxo' ? 'fluxo' : 'atendimento', origem: source, duracao_ms: agora_ms - inicio,
