@@ -38,8 +38,8 @@ module Ramon::Fluxos::Passos::Lead
   def trocar_responsavel(config, ctx)
     lead = exigir_lead(ctx)
     papel = config['papel']
-    coluna = Ramon::Papeis::COLUNA.fetch(papel)
-    pessoa = config['user_id'].present? ? lead.account.users.find(config['user_id']) : Ramon::Papeis.proximo(lead.account, papel)
+    coluna = Ramon::Papeis::COLUNA[papel] || raise(Ramon::Fluxos::PassoImpossivel, "papel desconhecido: #{papel}")
+    pessoa = config['user_id'].present? ? usuario_da_conta(lead, config['user_id']) : Ramon::Papeis.proximo(lead.account, papel)
     return { saida: 's', resumo: "#{papel}: ninguém no time" } if pessoa.nil?
     return { saida: 's', resumo: "faria: #{papel} → #{pessoa.name}" } if ctx.ensaio?
 
@@ -61,6 +61,10 @@ module Ramon::Fluxos::Passos::Lead
     campos = (lead.custom_attributes['campos'] || {}).merge(chave => valor)
     lead.update!(custom_attributes: lead.custom_attributes.to_h.merge('campos' => campos))
     { saida: 's', resumo: "#{chave} = #{valor.truncate(60)}" }
+  end
+
+  def usuario_da_conta(lead, user_id)
+    lead.account.users.find_by(id: user_id) || raise(Ramon::Fluxos::PassoImpossivel, 'a pessoa escolhida não está mais na conta')
   end
 
   def responsavel_da_tarefa(lead, config)

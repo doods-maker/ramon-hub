@@ -84,10 +84,10 @@ class Ramon::Fluxos::Executor
       return if resultado.nil? # erro: já ficou esperando nova tentativa ou falhou
 
       registrar(passo, resultado)
-      @execucao.save! # a cada passo: o relógio só vê "órfã" se UM passo passar de 10 min
       return @execucao.status = 'concluida' if resultado[:parar]
 
       @execucao.no_atual = grafo.proximo(passo['id'], resultado[:saida])
+      @execucao.save! # a cada passo, JÁ no próximo: o relógio só vê "órfã" se UM passo passar de 10 min (sem repetir o feito)
       return esperar(resultado[:esperar_ate]) if resultado[:esperar_ate] && !@execucao.contexto['pular_esperas']
     end
     @execucao.assign_attributes(status: 'falhou', erro: "passou de #{LIMITE_PASSOS} passos")

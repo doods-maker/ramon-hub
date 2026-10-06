@@ -114,6 +114,14 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     expect(r[:resumo]).to eq("sdr → #{ana.name}")
   end
 
+  it 'trocar responsável: papel inválido ou pessoa de outra conta é erro de config (sem nova tentativa)' do
+    estranha = create(:user, account: create(:account))
+    expect { Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'chefe' }, ctx) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, /papel/)
+    expect { Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr', 'user_id' => estranha.id }, ctx) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, /pessoa/)
+  end
+
   it 'trocar responsável com time vazio não quebra' do
     r = Ramon::Fluxos::Passos::Lead.trocar_responsavel({ 'papel' => 'sdr' }, ctx)
     expect(r[:resumo]).to eq('sdr: ninguém no time')
@@ -130,6 +138,12 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
   it 'preencher campo recusa nome reservado do hub' do
     expect { Ramon::Fluxos::Passos::Lead.preencher_campo({ 'chave' => 'nome', 'valor' => 'x' }, ctx) }
       .to raise_error(Ramon::Fluxos::PassoImpossivel, /reservado/)
+  end
+
+  it 'RESERVADAS cobre toda chave que o Contexto monta sozinho' do
+    c = ctx
+    montadas = c.dados.keys - ((lead.custom_attributes['campos'] || {}).keys + (c.execucao.contexto['vars'] || {}).keys)
+    expect(montadas - Ramon::Fluxos::Contexto::RESERVADAS).to eq([])
   end
 
   it 'ensaio dos passos de lead não grava nada' do
