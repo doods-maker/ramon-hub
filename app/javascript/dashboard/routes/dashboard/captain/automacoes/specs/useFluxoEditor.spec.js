@@ -1,4 +1,4 @@
-import { nextTick } from 'vue';
+import { effectScope, nextTick } from 'vue';
 import { flushPromises } from '@vue/test-utils';
 import RamonFluxosAPI from 'dashboard/api/ramonFluxos';
 import { useFluxoEditor } from '../useFluxoEditor';
@@ -70,6 +70,18 @@ describe('useFluxoEditor', () => {
       RamonFluxosAPI.update.mock.calls[0][1].rascunho.nos[1].config
     ).toEqual({ texto: 'novo' });
     expect(ed.sujo.value).toBe(false);
+  });
+
+  it('sair da tela (fim do escopo) cancela o autosave pendente', async () => {
+    const escopo = effectScope();
+    const ed = escopo.run(() => useFluxoEditor());
+    await ed.carregar(7);
+    ed.nodes.value = comTexto(ed.nodes.value, 'novo');
+    await nextTick();
+    escopo.stop();
+    vi.advanceTimersByTime(1000);
+    await flushPromises();
+    expect(RamonFluxosAPI.update).not.toHaveBeenCalled();
   });
 
   it('publicar salva a mudança pendente ANTES de publicar', async () => {

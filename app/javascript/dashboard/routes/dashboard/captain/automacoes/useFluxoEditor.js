@@ -2,7 +2,7 @@
 // o rascunho salva sozinho 1 s depois da última mudança (só se o desenho mudou
 // de fato — mexer em seleção/medidas do Vue Flow não salva). Publicar e ensaiar
 // sempre salvam antes: o que vale é o que está na tela.
-import { computed, ref, watch } from 'vue';
+import { computed, getCurrentScope, onScopeDispose, ref, watch } from 'vue';
 import RamonFluxosAPI from 'dashboard/api/ramonFluxos';
 import { deVueFlow, idDoErro, paraVueFlow } from './fluxo';
 import { validar } from './validar';
@@ -74,6 +74,8 @@ export const useFluxoEditor = () => {
     clearTimeout(timer);
     timer = setTimeout(() => salvar().catch(() => {}), 1000);
   });
+  // saiu da tela: o autosave pendente morre aqui (o Editor salva na saída se ainda estiver sujo)
+  if (getCurrentScope()) onScopeDispose(() => clearTimeout(timer));
 
   const atualizar = async attrs => {
     const { data } = await RamonFluxosAPI.update(fluxo.value.id, attrs);

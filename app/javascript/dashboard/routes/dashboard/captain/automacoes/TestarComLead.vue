@@ -36,13 +36,21 @@ const leads = ref([]);
 const lead = ref(null);
 const conversa = ref('');
 
+// só a última busca vale: resposta atrasada de um termo velho é descartada
+let pedido = 0;
 const buscar = useDebounceFn(async () => {
+  pedido += 1;
+  const meu = pedido;
   if (busca.value.trim().length < 2) {
     leads.value = [];
     return;
   }
-  const { data } = await LeadsAPI.get({ q: busca.value.trim() });
-  leads.value = data.payload.slice(0, 8);
+  try {
+    const { data } = await LeadsAPI.get({ q: busca.value.trim() });
+    if (meu === pedido) leads.value = data.payload.slice(0, 8);
+  } catch (e) {
+    if (meu === pedido) leads.value = [];
+  }
 }, 300);
 
 const alvo = computed(() => {

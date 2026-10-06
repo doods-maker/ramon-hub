@@ -98,8 +98,10 @@ onMounted(async () => {
   await carregar(fluxoId.value);
   carregarExecucoes();
 });
+// excluído: não há mais rascunho para salvar (o save daria 404 e prenderia a tela)
+const deletado = ref(false);
 onBeforeRouteLeave(async () => {
-  if (!sujo.value) return true;
+  if (deletado.value || !sujo.value) return true;
   try {
     await salvar();
     return true;
@@ -110,7 +112,7 @@ onBeforeRouteLeave(async () => {
 });
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', avisarSaida);
-  if (sujo.value) salvar().catch(() => {});
+  if (!deletado.value && sujo.value) salvar().catch(() => {});
 });
 
 const noSelecionado = computed(
@@ -237,7 +239,14 @@ const testar = async (acao, alvo) => {
 };
 
 const excluirFluxo = async () => {
-  await RamonFluxosAPI.delete(fluxoId.value);
+  try {
+    await RamonFluxosAPI.delete(fluxoId.value);
+  } catch (e) {
+    useAlert(t(`${K}.EDITOR.ERRO_SALVAR`));
+    excluindo.value = false;
+    return;
+  }
+  deletado.value = true;
   router.push(accountScopedRoute('captain_automacoes_index'));
 };
 
@@ -280,9 +289,10 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
           >
             <span
               :title="fluxo.versao ? '' : t(`${K}.PUBLIQUE_ANTES`)"
-              :class="fluxo.versao ? '' : 'pointer-events-none opacity-50'"
+              :class="fluxo.versao ? '' : 'opacity-50'"
             >
               <Switch
+                :disabled="!fluxo.versao"
                 :model-value="fluxo.ativo"
                 @update:model-value="v => salvarSeguro({ ativo: v })"
               />
