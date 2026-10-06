@@ -660,7 +660,11 @@
       "CONFIRMAR_PUBLICAR_MSG": "O post vai ao ar no Instagram em até 1 minuto. Daqui não dá pra desfazer.",
       "CONFIRMAR_TENTAR": "Tentar publicar de novo?",
       "CONFIRMAR_TENTAR_MSG": "A peça volta pra fila e vai ao ar em até 1 minuto.",
-      "CONFERI": "Conferi no Instagram e o post não está lá"
+      "CONFERI": "Conferi no Instagram e o post não está lá",
+      "SEM_TOKEN": "Token do Instagram não configurado — agendar e publicar ficam bloqueados até configurar no super admin (RAMON_IG_PUBLISH_TOKEN).",
+      "VOLTAR_PRONTAS": "Voltar para Prontas",
+      "CONTADOR_CARACTERES": "{n}/{limite} caracteres",
+      "CONTADOR_HASHTAGS": "{n}/{limite} hashtags"
     },
     "REUNIOES": {
       "TITLE": "Reuniões",

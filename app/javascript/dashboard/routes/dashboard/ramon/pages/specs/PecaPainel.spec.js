@@ -10,6 +10,7 @@ vi.mock('dashboard/api/ramonConteudo', () => ({
     publicarAgora: vi.fn(),
     atualizarLegenda: vi.fn(),
     tentarDeNovo: vi.fn(),
+    voltarProntas: vi.fn(),
   },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
@@ -65,9 +66,9 @@ describe('PecaPainel agenda', () => {
   });
 });
 
-const montar = () =>
+const montar = (props = {}) =>
   mount(PecaPainel, {
-    props: { pecaId: 3 },
+    props: { pecaId: 3, ...props },
     global: { mocks: { $t: key => key } },
   });
 
@@ -104,5 +105,45 @@ describe('PecaPainel publicação', () => {
     await w.find('[data-testid="confirm-modal-confirm"]').trigger('click');
     await flushPromises();
     expect(RamonConteudoAPI.tentarDeNovo).toHaveBeenCalledWith(3, true);
+  });
+});
+
+describe('PecaPainel token, falha e legenda', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('sem token do IG bloqueia agendar e publicar', async () => {
+    RamonConteudoAPI.show.mockResolvedValue({ data: montada });
+    const w = montar({ tokenIg: false });
+    await flushPromises();
+    expect(w.text()).toContain('RAMON.CONTEUDO.SEM_TOKEN');
+    expect(
+      w.find('[data-testid="agendar"]').attributes('disabled')
+    ).toBeDefined();
+    expect(
+      w.find('[data-testid="publicar-agora"]').attributes('disabled')
+    ).toBeDefined();
+  });
+
+  it('peça que falhou volta pra Prontas', async () => {
+    const falhou = { ...montada, status: 'falhou', erro: 'x' };
+    RamonConteudoAPI.show.mockResolvedValue({ data: falhou });
+    RamonConteudoAPI.voltarProntas.mockResolvedValue({ data: montada });
+    const w = montar();
+    await flushPromises();
+    await w.find('[data-testid="voltar-prontas"]').trigger('click');
+    await flushPromises();
+    expect(RamonConteudoAPI.voltarProntas).toHaveBeenCalledWith(3, false);
+    expect(w.emitted('changed')).toBeTruthy();
+  });
+
+  it('contador da legenda fica ruby no limite de hashtags', async () => {
+    RamonConteudoAPI.show.mockResolvedValue({ data: montada });
+    const w = montar();
+    await flushPromises();
+    const tags = Array.from({ length: 30 }, (_, i) => `#t${i}`).join(' ');
+    await w.find('textarea').setValue(tags);
+    const contador = w.findAll('[data-testid="legenda-contador"] span');
+    expect(contador[0].classes()).toContain('text-n-slate-10');
+    expect(contador[1].classes()).toContain('text-n-ruby-11');
   });
 });

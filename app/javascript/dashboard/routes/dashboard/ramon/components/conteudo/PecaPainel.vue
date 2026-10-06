@@ -5,11 +5,21 @@ import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonConteudoAPI from 'dashboard/api/ramonConteudo';
 import { paraInputLocal } from '../../helpers/dataLocal';
+import {
+  LIMITE_CARACTERES,
+  LIMITE_HASHTAGS,
+  contarLegenda,
+  tomDoLimite,
+} from '../../helpers/legendaIg';
 import PostPrevia from './PostPrevia.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import { AVISO, CAMPO, SECAO, TEXTAREA, TITULO, TOM } from '../../helpers/ui';
 
-const props = defineProps({ pecaId: { type: Number, required: true } });
+const props = defineProps({
+  pecaId: { type: Number, required: true },
+  // Sem token do IG não dá pra agendar nem publicar (index devolve token_ig).
+  tokenIg: { type: Boolean, default: true },
+});
 const emit = defineEmits(['changed', 'close']);
 
 const { t } = useI18n();
@@ -23,6 +33,31 @@ const quando = ref('');
 const confirmacao = ref(null);
 // Falha ambígua (pode ter ido ao ar): só libera depois do "conferi".
 const conferido = ref(false);
+
+const TOM_TEXTO = {
+  slate: 'text-n-slate-10',
+  amber: 'text-n-amber-11',
+  ruby: 'text-n-ruby-11',
+};
+const contagem = computed(() => contarLegenda(legenda.value));
+const contadores = computed(() => [
+  {
+    chave: 'caracteres',
+    texto: t('RAMON.CONTEUDO.CONTADOR_CARACTERES', {
+      n: contagem.value.caracteres.toLocaleString('pt-BR'),
+      limite: LIMITE_CARACTERES.toLocaleString('pt-BR'),
+    }),
+    tom: TOM_TEXTO[tomDoLimite(contagem.value.caracteres, LIMITE_CARACTERES)],
+  },
+  {
+    chave: 'hashtags',
+    texto: t('RAMON.CONTEUDO.CONTADOR_HASHTAGS', {
+      n: contagem.value.hashtags,
+      limite: LIMITE_HASHTAGS,
+    }),
+    tom: TOM_TEXTO[tomDoLimite(contagem.value.hashtags, LIMITE_HASHTAGS)],
+  },
+]);
 
 const campos = computed(() =>
   Object.entries(peca.value?.conteudo?.fields || {}).filter(
@@ -108,6 +143,12 @@ watch(() => props.pecaId, carregar, { immediate: true });
     <p v-if="peca.erro" :class="[AVISO, TOM.ruby]">
       {{ peca.erro }}
     </p>
+    <p
+      v-if="!tokenIg && ['montado', 'agendado', 'falhou'].includes(peca.status)"
+      :class="[AVISO, TOM.amber]"
+    >
+      {{ t('RAMON.CONTEUDO.SEM_TOKEN') }}
+    </p>
 
     <template v-if="peca.status === 'rascunho'">
       <dl class="flex flex-col gap-3 text-sm">
@@ -159,7 +200,17 @@ watch(() => props.pecaId, carregar, { immediate: true });
     >
       <PostPrevia :imagens="peca.imagens || []" :legenda="legenda" />
       <template v-if="['montado', 'agendado'].includes(peca.status)">
-        <textarea v-model="legenda" rows="8" :class="TEXTAREA" />
+        <div class="flex flex-col gap-1">
+          <textarea v-model="legenda" rows="8" :class="TEXTAREA" />
+          <p
+            data-testid="legenda-contador"
+            class="flex justify-end gap-3 font-mono text-[11px] tabular-nums"
+          >
+            <span v-for="c in contadores" :key="c.chave" :class="c.tom">
+              {{ c.texto }}
+            </span>
+          </p>
+        </div>
         <Button
           sm
           slate
@@ -211,7 +262,7 @@ watch(() => props.pecaId, carregar, { immediate: true });
           <Button
             data-testid="agendar"
             :label="t('RAMON.CONTEUDO.AGENDAR')"
-            :disabled="!quando || ocupado"
+            :disabled="!quando || ocupado || !tokenIg"
             :is-loading="ocupado"
             @click="
               agir(
@@ -229,7 +280,7 @@ watch(() => props.pecaId, carregar, { immediate: true });
             faded
             :label="t('RAMON.CONTEUDO.PUBLICAR_AGORA')"
             data-testid="publicar-agora"
-            :disabled="ocupado"
+            :disabled="ocupado || !tokenIg"
             @click="publicarAgora"
           />
         </div>
@@ -255,7 +306,7 @@ watch(() => props.pecaId, carregar, { immediate: true });
             faded
             :label="t('RAMON.CONTEUDO.PUBLICAR_AGORA')"
             data-testid="publicar-agora"
-            :disabled="ocupado"
+            :disabled="ocupado || !tokenIg"
             @click="publicarAgora"
           />
           <Button
@@ -282,12 +333,24 @@ watch(() => props.pecaId, carregar, { immediate: true });
           />
           {{ t('RAMON.CONTEUDO.CONFERI') }}
         </label>
-        <Button
-          data-testid="tentar-de-novo"
-          :label="t('RAMON.CONTEUDO.TENTAR_DE_NOVO')"
-          :disabled="ocupado || (peca.ambigua && !conferido)"
-          @click="tentarDeNovo"
-        />
+        <div class="flex gap-2">
+          <Button
+            data-testid="tentar-de-novo"
+            :label="t('RAMON.CONTEUDO.TENTAR_DE_NOVO')"
+            :disabled="ocupado || !tokenIg || (peca.ambigua && !conferido)"
+            @click="tentarDeNovo"
+          />
+          <Button
+            data-testid="voltar-prontas"
+            slate
+            faded
+            :label="t('RAMON.CONTEUDO.VOLTAR_PRONTAS')"
+            :disabled="ocupado || (peca.ambigua && !conferido)"
+            @click="
+              agir(() => RamonConteudoAPI.voltarProntas(peca.id, conferido))
+            "
+          />
+        </div>
       </div>
       <a
         v-if="peca.permalink"

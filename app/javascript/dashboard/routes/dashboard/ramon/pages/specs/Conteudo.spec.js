@@ -56,4 +56,15 @@ describe('Conteudo', () => {
     await flushPromises();
     expect(wrapper.find('[data-testid="peca-travada"]').exists()).toBe(true);
   });
+
+  it('avisa no topo quando o token do IG não está configurado', async () => {
+    RamonConteudoAPI.get.mockResolvedValue({
+      data: { payload: [], token_ig: false },
+    });
+    const wrapper = mount(Conteudo, {
+      global: { stubs: { PecaPainel: true, RamonPageHeader: true } },
+    });
+    await flushPromises();
+    expect(wrapper.find('[data-testid="sem-token"]').exists()).toBe(true);
+  });
 });

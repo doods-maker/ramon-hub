@@ -660,7 +660,11 @@
       "CONFIRMAR_PUBLICAR_MSG": "The post goes live on Instagram within about a minute. This cannot be undone from here.",
       "CONFIRMAR_TENTAR": "Try publishing again?",
       "CONFIRMAR_TENTAR_MSG": "The post goes back to the queue and goes live within about a minute.",
-      "CONFERI": "I checked Instagram and the post is not there"
+      "CONFERI": "I checked Instagram and the post is not there",
+      "SEM_TOKEN": "Instagram token not configured — scheduling and publishing are blocked until it is set in super admin (RAMON_IG_PUBLISH_TOKEN).",
+      "VOLTAR_PRONTAS": "Back to Ready",
+      "CONTADOR_CARACTERES": "{n}/{limite} characters",
+      "CONTADOR_HASHTAGS": "{n}/{limite} hashtags"
     },
     "REUNIOES": {
       "TITLE": "Meetings",

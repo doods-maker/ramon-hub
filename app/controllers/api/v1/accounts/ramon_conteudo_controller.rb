@@ -7,7 +7,7 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
   before_action :fetch_peca, except: [:index]
   before_action :check_authorization
   before_action :recusar_se_refazendo, only: %i[agendar publicar_agora]
-  before_action :recusar_se_no_ar, :exigir_conferencia, only: %i[tentar_de_novo]
+  before_action :recusar_se_no_ar, :exigir_conferencia, only: %i[tentar_de_novo voltar_prontas]
 
   rescue_from Peca::TransicaoInvalida do |e|
     render json: { error: "A peça mudou de etapa (#{e.message}). Recarregue a tela." }, status: :conflict
@@ -15,7 +15,7 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
 
   def index
     pecas = Current.account.pecas.where.not(status: 'reprovado').order(created_at: :desc).limit(LIMIT)
-    render json: { payload: pecas.map { |peca| linha(peca) } }
+    render json: { payload: pecas.map { |peca| linha(peca) }, token_ig: GlobalConfigService.load('RAMON_IG_PUBLISH_TOKEN', nil).present? }
   end
 
   def show
@@ -67,6 +67,12 @@ class Api::V1::Accounts::RamonConteudoController < Api::V1::Accounts::BaseContro
   def tentar_de_novo
     @peca.transicionar!(de: 'falhou', para: 'agendado', agendado_para: Time.current, erro: nil)
     Ramon::PublicarPecasJob.perform_later
+    render json: detalhe(@peca)
+  end
+
+  # Falhou: volta pra Prontas pra corrigir a legenda e reagendar.
+  def voltar_prontas
+    @peca.transicionar!(de: 'falhou', para: 'montado', agendado_para: nil, erro: nil)
     render json: detalhe(@peca)
   end
 

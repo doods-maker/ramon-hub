@@ -20,6 +20,8 @@ const COLUNAS = [
 
 const pecas = ref([]);
 const hasError = ref(false);
+// Token do IG ausente: aviso no topo e agendar/publicar bloqueados no painel.
+const tokenIg = ref(true);
 const aberta = ref(null);
 
 const porColuna = computed(() =>
@@ -34,6 +36,7 @@ const carregar = async () => {
   try {
     const { data } = await RamonConteudoAPI.get();
     pecas.value = data.payload;
+    tokenIg.value = data.token_ig !== false;
   } catch {
     hasError.value = true;
   }
@@ -53,6 +56,14 @@ onMounted(carregar);
       <RamonPageHeader class="!mb-0" :title="t('RAMON.CONTEUDO.TITLE')" />
       <p v-if="hasError" :class="[AVISO, TOM.ruby]" class="self-start">
         {{ t('RAMON.CONTEUDO.LOAD_ERROR') }}
+      </p>
+      <p
+        v-if="!tokenIg"
+        data-testid="sem-token"
+        :class="[AVISO, TOM.amber]"
+        class="self-start"
+      >
+        {{ t('RAMON.CONTEUDO.SEM_TOKEN') }}
       </p>
       <div class="flex min-h-0 flex-1 gap-4 overflow-x-auto">
         <section
@@ -115,6 +126,7 @@ onMounted(carregar);
     <PecaPainel
       v-if="aberta"
       :peca-id="aberta"
+      :token-ig="tokenIg"
       @changed="onChanged"
       @close="aberta = null"
     />
