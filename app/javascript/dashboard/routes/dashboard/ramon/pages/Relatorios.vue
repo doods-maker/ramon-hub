@@ -2,7 +2,9 @@
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RamonRelatoriosAPI from 'dashboard/api/ramonRelatorios';
+import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
+import { AVISO, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonRelatorios' });
 
@@ -37,18 +39,25 @@ onMounted(fetchEmbed);
       compact
     />
     <div v-if="loading" class="flex-1" />
-    <div v-else-if="error" class="flex flex-col items-start gap-2">
-      <p class="text-n-slate-11">{{ t('RAMON.RELATORIOS.LOAD_ERROR') }}</p>
-      <button class="text-n-iris-11 underline" @click="fetchEmbed">
-        {{ t('RAMON.RELATORIOS.RETRY') }}
-      </button>
+    <div
+      v-else-if="error"
+      :class="[AVISO, TOM.ruby]"
+      class="flex items-center gap-3 self-start"
+    >
+      {{ t('RAMON.RELATORIOS.LOAD_ERROR') }}
+      <Button
+        link
+        xs
+        :label="t('RAMON.RELATORIOS.RETRY')"
+        @click="fetchEmbed"
+      />
     </div>
-    <p v-else-if="!configured" class="text-n-slate-11">
+    <p v-else-if="!configured" :class="[AVISO, TOM.slate]" class="self-start">
       {{ t('RAMON.RELATORIOS.NOT_CONFIGURED') }}
     </p>
     <div
       v-else
-      class="flex flex-1 rounded-xl border border-n-weak bg-n-solid-1 shadow-sm overflow-hidden"
+      class="flex flex-1 overflow-hidden rounded-xl border border-n-weak bg-n-solid-1"
     >
       <iframe
         :src="embedUrl"
