@@ -90,4 +90,13 @@ RSpec.describe Ramon::LlmUso do
     end.to change(LlmChamada, :count).by(1)
     expect(LlmChamada.last).to have_attributes(funcao: 'copiloto_captain', model: 'gpt-4.1-mini', input_tokens: 5)
   end
+
+  it '.registrar_agente: o painel do Copiloto tem linha própria (não soma no Atendimento)' do
+    assistente = Struct.new(:id, :account_id, :account).new(7, account.id, account)
+    resultado = Struct.new(:usage, :error).new(Struct.new(:input_tokens, :output_tokens).new(10, 2), nil)
+
+    described_class.registrar_agente(assistant: assistente, result: resultado, inicio: described_class.agora_ms, source: 'copiloto_painel')
+
+    expect(LlmChamada.last).to have_attributes(funcao: 'copiloto_painel', assistant_id: 7, input_tokens: 10, output_tokens: 2)
+  end
 end

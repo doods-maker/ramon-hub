@@ -14,6 +14,8 @@ module Ramon::LlmUso
   }.freeze
   CAMPOS = %i[account_id funcao origem assistant_id provider model input_tokens output_tokens duracao_ms
               status erro conversation_id lead_id].freeze
+  # source do runner do agente v2 → função na tela (o resto soma no Atendimento)
+  FUNCAO_DO_AGENTE = { 'fluxo' => 'fluxo', 'copiloto_painel' => 'copiloto_painel' }.freeze
 
   module_function
 
@@ -58,7 +60,7 @@ module Ramon::LlmUso
 
   def registrar_agente(assistant:, result:, inicio:, source: nil, conversation: nil)
     registrar({ account_id: assistant.account_id, assistant_id: assistant.id, conversation_id: conversation&.id,
-                funcao: source == 'fluxo' ? 'fluxo' : 'atendimento', origem: source, duracao_ms: agora_ms - inicio,
+                funcao: FUNCAO_DO_AGENTE.fetch(source.to_s, 'atendimento'), origem: source, duracao_ms: agora_ms - inicio,
                 model: Ramon::LlmEscolha.para(assistant.account, 'atendimento')[:model] }.merge(do_agente(result)))
   rescue StandardError => e
     Rails.logger.warn("[Ramon::LlmUso] uso do agente não gravado: #{e.class}: #{e.message}")

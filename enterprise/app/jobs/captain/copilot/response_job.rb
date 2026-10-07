@@ -15,6 +15,12 @@ class Captain::Copilot::ResponseJob < ApplicationJob
   private
 
   def generate_chat_response(assistant:, conversation_id:, user_id:, copilot_thread_id:, message:)
+    # FORK-PONTO (ramon): assistente da equipe com skills → o agente do Testar (Inteligência A4, I-X3)
+    if copilot_thread_id.present? && Captain::Copilot::SkillsService.usa?(assistant)
+      return Captain::Copilot::SkillsService.new(assistant, conversation_id: conversation_id,
+                                                            copilot_thread_id: copilot_thread_id).responder
+    end
+
     service = Captain::Copilot::ChatService.new(
       assistant,
       user_id: user_id,

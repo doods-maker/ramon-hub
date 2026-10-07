@@ -69,7 +69,7 @@
         "agente": "Agente {'@'}claude"
       },
       "DESCRICOES": {
-        "atendimento": "O agente que responde no WhatsApp e o Testar.",
+        "atendimento": "O agente que responde no WhatsApp, o Testar e o painel do Copiloto na conversa.",
         "copiloto": "Resumo e rascunho do copiloto, AdvBox, coach, documentos recebidos, retomadas e noturno.",
         "documentos": "Gera as FAQs pendentes a partir de um documento enviado e das conversas resolvidas.",
         "agente": "Nota {'@'}claude do gestor, rodada no servidor da VPS."
@@ -98,6 +98,7 @@
       "atendimento": "Atendimento",
       "copiloto": "Copiloto",
       "copiloto_captain": "Copiloto do Captain",
+      "copiloto_painel": "Copiloto (painel da conversa)",
       "documentos": "Documentos",
       "faq_conversa": "FAQ de conversa",
       "resumo": "Resumo",

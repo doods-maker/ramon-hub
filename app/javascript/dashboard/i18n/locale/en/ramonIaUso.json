@@ -69,7 +69,7 @@
         "agente": "{'@'}claude agent"
       },
       "DESCRICOES": {
-        "atendimento": "The agent that answers on WhatsApp and the Test screen.",
+        "atendimento": "The agent that answers on WhatsApp, the Test screen and the Copilot panel in the conversation.",
         "copiloto": "Copilot summary and draft, AdvBox, coach, received documents, follow-ups and night copilot.",
         "documentos": "Generates pending FAQs from an uploaded document and from resolved conversations.",
         "agente": "The manager's {'@'}claude note, run on the VPS server."
@@ -98,6 +98,7 @@
       "atendimento": "Customer service",
       "copiloto": "Copilot",
       "copiloto_captain": "Captain copilot",
+      "copiloto_painel": "Copilot (conversation panel)",
       "documentos": "Documents",
       "faq_conversa": "Conversation FAQ",
       "resumo": "Summary",
