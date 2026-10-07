@@ -3463,3 +3463,8 @@ https://claude.ai/code/session_01Q7cdLj5F9nZkRyjQT3uBrR
 | N5 | **Aba Agente Claude visível para agentes** (pedido e resposta do @claude), sem custo | Sim, mesma permissão das Execuções; custo continua só em Uso e custo (admin) | Task 9 |
 | N6 | **Filtro de fonte dos Documentos:** sai "PDFs", entra "Texto colado" | Aceitar (PDF não funciona aqui; quem tiver PDF cola o texto) | Task 2 |
 | N7 | **Aprovação visual por antes × depois** (como A1/A2) — a A3 não tem mockup prévio, são telas existentes ganhando função | Aceitar; se preferir ver mockup antes de implementar alguma tela (ex.: aba Agente Claude), dizer qual | Task 12 |
+
+
+## Respostas do Eduardo (07/10/2026)
+
+Todas as "Decisões novas que dependem do Eduardo" deste plano foram **ACEITAS como propostas** (formulário de 07/10).
