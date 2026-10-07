@@ -7,10 +7,11 @@ class Api::V1::Accounts::CaptainToolRunsController < Api::V1::Accounts::BaseCont
   before_action :check_authorization
 
   def index
-    @tool_runs = escopo.recentes.limit(LIST_LIMIT)
+    @tool_runs = escopo.recentes.limit(LIST_LIMIT).to_a
     @resumo = resumo
     # nome e nivel de cada ferramenta pra tela: o endpoint de ferramentas e so admin
     @catalogo = ChatwootApp.enterprise? ? Captain::Assistant.built_in_agent_tools : []
+    @nomes = nomes(@tool_runs)
   end
 
   private
@@ -25,6 +26,22 @@ class Api::V1::Accounts::CaptainToolRunsController < Api::V1::Accounts::BaseCont
     runs = runs.where(tool_name: params[:tool_name]) if params[:tool_name].present?
     runs = runs.where(status: params[:status]) if params[:status].present?
     runs
+  end
+
+  # I-EX2: nome do caso, nº da conversa (o que a rota da tela usa) e assistente
+  # de cada linha — 3 consultas para as 100 linhas.
+  def nomes(runs)
+    {
+      leads: Current.account.leads.where(id: runs.filter_map(&:lead_id)).pluck(:id, :name).to_h,
+      conversas: Current.account.conversations.where(id: runs.filter_map(&:conversation_id)).pluck(:id, :display_id).to_h,
+      assistentes: assistentes
+    }
+  end
+
+  def assistentes
+    return {} unless ChatwootApp.enterprise?
+
+    Captain::Assistant.for_account(Current.account.id).pluck(:id, :name).to_h
   end
 
   def resumo
