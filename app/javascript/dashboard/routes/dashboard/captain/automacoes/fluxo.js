@@ -253,6 +253,7 @@ export const VARIAVEIS = [
   'resumo',
   'resumo_antes',
   'primeiro_nome',
+  'sla_minutos',
 ];
 export const CAMPOS = [
   'etapa',
@@ -273,6 +274,7 @@ export const CAMPOS = [
   'evento',
   'reuniao_de_pe',
   'horario_passou',
+  'primeira_resposta',
 ];
 export const OPERADORES = [
   'igual',
@@ -295,6 +297,8 @@ export const TIPOS_ATIVIDADE = [
   'meeting_cancelled',
 ];
 export const UNIDADES = ['minutos', 'horas', 'dias'];
+// Ramon::Fluxos::Horario (B4.2): janela padrão quando o passo não tem a sua (0 = domingo)
+export const JANELA_PADRAO = { dias: [1, 2, 3, 4, 5], inicio: 8, fim: 18 };
 
 const copia = obj => JSON.parse(JSON.stringify(obj));
 

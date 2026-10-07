@@ -169,6 +169,60 @@ describe('PainelPasso', () => {
     ]);
   });
 
+  it('esperar: "O SLA da caixa" conta da criação da conversa, sem quantidade; "Até o horário" abre a janela do passo', async () => {
+    const wrapper = montar({
+      id: 'n2',
+      data: { tipo: 'esperar', config: { quantidade: 1, unidade: 'dias' } },
+    });
+    await wrapper.find('[data-testid="espera-sla"]').trigger('change');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { desde: 'conversa', prazo: 'sla_caixa' },
+    ]);
+    const horario = montar({
+      id: 'n2',
+      data: { tipo: 'esperar', config: { ate: 'horario_comercial' } },
+    });
+    await horario.find('[data-testid="janela-dia-0"]').setValue(true);
+    expect(horario.emitted('update:config').at(-1)).toEqual([
+      {
+        ate: 'horario_comercial',
+        dias: [0, 1, 2, 3, 4, 5],
+        inicio: 8,
+        fim: 18,
+      },
+    ]);
+  });
+
+  it('se: "agora é horário comercial" tem a janela da própria condição', async () => {
+    const cond = {
+      campo: 'status',
+      operador: 'em_horario_comercial',
+      valor: '',
+    };
+    const wrapper = montar({
+      id: 'n3',
+      data: { tipo: 'se', config: { juncao: 'e', condicoes: [cond] } },
+    });
+    await wrapper.find('[data-testid="janela-inicio"]').setValue('7');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      {
+        juncao: 'e',
+        condicoes: [{ ...cond, dias: [1, 2, 3, 4, 5], inicio: 7, fim: 18 }],
+      },
+    ]);
+  });
+
+  it('sino: "SDR do lead (sem SDR: gestores)" (B4.2)', async () => {
+    const wrapper = montar({
+      id: 'n4',
+      data: { tipo: 'avisar_sino', config: { texto: 'Oi' } },
+    });
+    await wrapper.find('[data-testid="sino-para"]').setValue('sdr_ou_gestores');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { texto: 'Oi', para: 'sdr_ou_gestores' },
+    ]);
+  });
+
   it('sino: "Quem recebe" troca a lista de pessoas por Closer e SDR ou pela conta', async () => {
     const wrapper = montar({
       id: 'n4',

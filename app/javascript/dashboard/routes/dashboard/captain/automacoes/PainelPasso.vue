@@ -27,6 +27,7 @@ import ConfigAdvbox from './ConfigAdvbox.vue';
 import ConfigCondicoes from './ConfigCondicoes.vue';
 import ConfigGatilho from './ConfigGatilho.vue';
 import ConfigIa from './ConfigIa.vue';
+import JanelaHorario from './JanelaHorario.vue';
 import ListaMarcar from './ListaMarcar.vue';
 
 const props = defineProps({
@@ -51,26 +52,50 @@ const icone = computed(() =>
 const opcoesPessoas = computed(() =>
   pessoas.value.map(p => ({ id: p.id, nome: p.name }))
 );
-// esperar: um tempo (do passo anterior), até o horário comercial, ou antes da reunião (B4.1: conta para trás)
+// esperar: um tempo (do passo anterior), até o horário comercial (B4.2: com a janela do passo), antes da reunião
+// (B4.1: conta para trás) ou a partir da criação da conversa (B4.2: um tempo ou o SLA da caixa)
 const modoEspera = computed(() => {
-  if (config.value.ate === 'horario_comercial') return 'horario';
-  return config.value.antes_de === 'reuniao' ? 'reuniao' : 'tempo';
+  const c = config.value;
+  if (c.ate === 'horario_comercial') return 'horario';
+  if (c.desde === 'conversa')
+    return c.prazo === 'sla_caixa' ? 'sla' : 'conversa';
+  return c.antes_de === 'reuniao' ? 'reuniao' : 'tempo';
 });
 const OPCOES_ESPERA = [
-  { modo: 'tempo', rotulo: 'ESPERAR_TEMPO' },
-  { modo: 'horario', rotulo: 'ESPERAR_HORARIO' },
-  { modo: 'reuniao', rotulo: 'ESPERAR_REUNIAO' },
+  { modo: 'tempo', rotulo: 'ESPERAR_TEMPO', ajuda: 'ESPERAR_AJUDA' },
+  { modo: 'horario', rotulo: 'ESPERAR_HORARIO', ajuda: 'ESPERAR_AJUDA' },
+  {
+    modo: 'reuniao',
+    rotulo: 'ESPERAR_REUNIAO',
+    ajuda: 'ESPERAR_REUNIAO_AJUDA',
+  },
+  {
+    modo: 'conversa',
+    rotulo: 'ESPERAR_CONVERSA',
+    ajuda: 'ESPERAR_CONVERSA_AJUDA',
+  },
+  { modo: 'sla', rotulo: 'ESPERAR_SLA', ajuda: 'ESPERAR_CONVERSA_AJUDA' },
 ];
 const CONFIG_ESPERA = {
   tempo: { quantidade: 1, unidade: 'dias' },
   horario: { ate: 'horario_comercial' },
   reuniao: { antes_de: 'reuniao', quantidade: 1, unidade: 'horas' },
+  conversa: { desde: 'conversa', quantidade: 60, unidade: 'minutos' },
+  sla: { desde: 'conversa', prazo: 'sla_caixa' },
 };
-// sino (B4.1): pessoas marcadas (padrão), Closer e SDR do lead, ou a conta toda
+const ajudaEspera = computed(
+  () => OPCOES_ESPERA.find(o => o.modo === modoEspera.value).ajuda
+);
+const pedeTempo = computed(
+  () => !['horario', 'sla'].includes(modoEspera.value)
+);
+// sino: pessoas marcadas (padrão), Closer e SDR do lead, a conta toda (B4.1), SDR ou gestores, gestores (B4.2)
 const PARA_SINO = [
   { valor: '', rotulo: 'PARA_PESSOAS' },
   { valor: 'closer_e_sdr', rotulo: 'PARA_CLOSER_SDR' },
   { valor: 'conta', rotulo: 'PARA_CONTA' },
+  { valor: 'sdr_ou_gestores', rotulo: 'PARA_SDR_GESTORES' },
+  { valor: 'gestores', rotulo: 'PARA_GESTORES' },
 ];
 
 const muda = (chave, valor) =>
@@ -499,7 +524,7 @@ const escolheMotivo = valor => {
             {{ t(`${K}.PAINEL.${o.rotulo}`) }}
           </label>
         </div>
-        <div v-if="modoEspera !== 'horario'" class="grid grid-cols-2 gap-2">
+        <div v-if="pedeTempo" class="grid grid-cols-2 gap-2">
           <label :class="ROTULO">
             {{ t(`${K}.PAINEL.QUANTIDADE`) }}
             <input
@@ -523,12 +548,13 @@ const escolheMotivo = valor => {
             </select>
           </label>
         </div>
+        <JanelaHorario
+          v-if="modoEspera === 'horario'"
+          :config="config"
+          @update:config="c => emit('update:config', c)"
+        />
         <p class="text-xs text-n-slate-10">
-          {{
-            t(
-              `${K}.PAINEL.${modoEspera === 'reuniao' ? 'ESPERAR_REUNIAO_AJUDA' : 'ESPERAR_AJUDA'}`
-            )
-          }}
+          {{ t(`${K}.PAINEL.${ajudaEspera}`) }}
         </p>
       </template>
 

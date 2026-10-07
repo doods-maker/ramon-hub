@@ -3,6 +3,7 @@
 import { validar } from '../validar';
 import marcada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_marcada.json';
 import cancelada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_cancelada.json';
+import sla from '../../../../../../../../db/seeds/ramon/fluxos/migrados/sla_primeira_resposta.json';
 import lembretes from '../../../../../../../../db/seeds/ramon/fluxos/migrados/lembretes_reuniao.json';
 
 const semEtapa = d =>
@@ -123,6 +124,74 @@ describe('fluxos migrados: agendamento de reuniões (B4.1)', () => {
       'registrar_atividade',
       'se',
       'trocar_responsavel',
+    ]);
+  });
+});
+
+describe('fluxo migrado: SLA da 1ª resposta (B4.2)', () => {
+  const de = (id, saida) =>
+    sla.desenho.setas.find(s => s.de === id && s.saida === saida)?.para;
+  const VIVA = [
+    { campo: 'primeira_resposta', operador: 'igual', valor: 'nao' },
+    { campo: 'status', operador: 'igual', valor: 'open' },
+    { campo: 'etapa', operador: 'existe', valor: '' },
+  ];
+  const HORARIO = {
+    campo: 'status',
+    operador: 'em_horario_comercial',
+    valor: '',
+    dias: [0, 1, 2, 3, 4, 5, 6],
+    inicio: 7,
+    fim: 21,
+  };
+
+  it('publica, nasce da conversa nova e não cancela por etapa', () => {
+    expect(validar(sla.desenho)).toEqual([]);
+    expect(sla.desenho.nos[0].config).toEqual({
+      tipo: 'conversa_criada',
+      cancelar_se_sair_da_etapa: false,
+    });
+  });
+
+  it('espera o SLA da caixa; depois até 60 min da criação da conversa', () => {
+    expect(doTipo(sla, 'esperar').map(n => n.config)).toEqual([
+      { rotulo: 'SLA da caixa', desde: 'conversa', prazo: 'sla_caixa' },
+      {
+        rotulo: 'Até 60 min da criação da conversa',
+        desde: 'conversa',
+        quantidade: 60,
+        unidade: 'minutos',
+      },
+    ]);
+  });
+
+  it('as guardas do código, a escalada só se ainda vale, e a janela 7h–21h todo dia', () => {
+    const [primeiro, horario1, segundo, horario2] = doTipo(sla, 'se').map(
+      n => n.config.condicoes
+    );
+    expect(primeiro).toEqual(VIVA);
+    expect(segundo).toEqual([
+      { campo: 'horario_passou', operador: 'igual', valor: 'nao' },
+      ...VIVA,
+    ]);
+    expect([horario1, horario2]).toEqual([[HORARIO], [HORARIO]]);
+  });
+
+  it('fora do horário pula o aviso, mas segue para a escalada', () => {
+    expect([de('n4', 'sim'), de('n4', 'nao'), de('n6', 's')]).toEqual([
+      'n5',
+      'n7',
+      'n7',
+    ]);
+  });
+
+  it('SDR (sem SDR: gestores) com push; a escalada só os gestores, sem push', () => {
+    expect(doTipo(sla, 'avisar_sino').map(n => n.config.para)).toEqual([
+      'sdr_ou_gestores',
+      'gestores',
+    ]);
+    expect(doTipo(sla, 'avisar_push').map(n => n.config.titulo)).toEqual([
+      'Lead aguardando 1a resposta',
     ]);
   });
 });
