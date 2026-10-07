@@ -37,14 +37,23 @@ module Ramon::Fluxos::Passos::Aviso
     titulo = ctx.interpolar(config['titulo'].presence || ctx.execucao.fluxo.nome)
     texto = ctx.interpolar(config['texto'])
     return { saida: 's', resumo: "faria: push \"#{texto.truncate(80)}\"" } if ctx.ensaio?
-    # sem_balao: o executor não põe na conversa (até 14 balões/dia de "já saiu" no lote da cadência)
-    return { saida: 's', resumo: 'push: já saiu hoje (1 por dia)', sem_balao: true } if config['uma_vez_por_dia'] && !primeiro_do_dia?(ctx)
+    pulo = pular_push(config, ctx)
+    return pulo if pulo
 
     Ramon::NtfyPushJob.perform_later(title: titulo, body: texto)
     { saida: 's', resumo: "push: #{texto.truncate(80)}" }
   end
 
   # B4.3: "uma vez por dia" (a cadência do código mandava 1 push por lote): só a 1ª execução do fluxo no dia (fuso SP) avisa.
+  # O botão "Preparar retomada" (gatilho 'botao') não avisa nem gasta o aviso do dia — o código não avisava no botão.
+  # sem_balao: o executor não põe na conversa (até 14 balões/dia de "já saiu" no lote da cadência).
+  def pular_push(config, ctx)
+    return unless config['uma_vez_por_dia']
+    return { saida: 's', resumo: 'push: só no lote do dia', sem_balao: true } if ctx.gatilho('botao')
+
+    { saida: 's', resumo: 'push: já saiu hoje (1 por dia)', sem_balao: true } unless primeiro_do_dia?(ctx)
+  end
+
   def primeiro_do_dia?(ctx)
     chave = "RAMON::FLUXO_PUSH::#{ctx.execucao.fluxo_id}::#{Time.find_zone!(Fluxo::ZONA).today}"
     Redis::Alfred.set(chave, '1', nx: true, ex: 2.days.to_i)

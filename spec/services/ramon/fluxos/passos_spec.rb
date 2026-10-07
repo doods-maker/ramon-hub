@@ -375,5 +375,17 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
         expect(r).to include(resumo: 'push: já saiu hoje (1 por dia)', sem_balao: true)
       end
     end
+
+    it 'o botão Preparar retomada não avisa nem gasta o aviso do dia; o lote depois ainda avisa' do
+      config = { 'texto' => 'Há rascunhos', 'uma_vez_por_dia' => true }
+      outro = create(:lead, account: account)
+      travel_to(dia) do
+        r = nil
+        expect { r = Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(contexto: { 'gatilho' => { 'botao' => true } })) }
+          .not_to have_enqueued_job(Ramon::NtfyPushJob)
+        expect(r).to include(resumo: 'push: só no lote do dia', sem_balao: true)
+        expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(alvo: outro)) }.to have_enqueued_job(Ramon::NtfyPushJob)
+      end
+    end
   end
 end

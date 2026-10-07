@@ -72,10 +72,11 @@ module Ramon::Fluxos::Retomada
   def teto(account) = assumiu?(account) ? fluxo(account).limite_dia : TETO
 
   # Botão "Preparar retomada" com o fluxo no comando: roda o fluxo para ESTE lead, sem o teto, revendo a regra (clique
-  # duplo). 'assumido': fluxo migrado sem ele nasce ensaio (Disparo#sombra?). Execução viva no lead → nil.
+  # duplo). 'assumido': fluxo migrado sem ele nasce ensaio (Disparo#sombra?); 'botao': o push 1 por dia fica para o lote
+  # (Passos::Aviso.pular_push — o código não avisava no botão). Execução viva no lead → nil.
   def disparar(lead)
     return if motivo(lead)
 
-    Ramon::Fluxos::Disparo.new(fluxo(lead.account), lead, { 'assumido' => true }, nil).iniciar
+    Ramon::Fluxos::Disparo.new(fluxo(lead.account), lead, { 'assumido' => true, 'botao' => true }, nil).iniciar
   end
 end
