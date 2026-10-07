@@ -61,6 +61,7 @@ const testar = async () => {
       />
       <Button
         type="submit"
+        class="shrink-0"
         size="sm"
         :label="t('INTEL.FAQ.TESTAR.BOTAO')"
         :is-loading="testando"

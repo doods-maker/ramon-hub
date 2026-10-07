@@ -10,7 +10,7 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
   RESULTS_PER_PAGE = 25
 
   def index
-    filtered_query = apply_filters(@responses)
+    filtered_query = filtrar_tese(apply_filters(@responses))
     @responses_count = filtered_query.count
     @responses = filtered_query.page(@current_page).per(RESULTS_PER_PAGE)
   end
@@ -54,7 +54,7 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
       )
     end
 
-    filtrar_tese(base_query)
+    base_query
   end
 
   # ramon: filtro por tese (I-FQ1); 'sem' = FAQ sem tese.

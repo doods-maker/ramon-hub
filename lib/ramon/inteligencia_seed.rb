@@ -84,7 +84,7 @@ class Ramon::InteligenciaSeed
 
     @contagem[faq.new_record? ? :faq_criadas : :faq_atualizadas] += 1
     faq.update!(answer: resposta, status: :approved, documentable: nil, tese: faq.tese || tese)
-    # O before_validation marca edited=true em qualquer update; seed nao conta como edicao na UI.
+    # mark_as_edited marca edited=true quando pergunta ou resposta mudam (aqui a resposta muda); seed nao conta como edicao na UI.
     faq.update_column(:edited, false) if faq.edited? # rubocop:disable Rails/SkipsModelValidations
   end
 
