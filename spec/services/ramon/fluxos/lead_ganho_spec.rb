@@ -9,8 +9,9 @@ RSpec.describe Ramon::Fluxos::LeadGanho do
   def pesquisas = lead.lead_notes.where('body LIKE ?', '%pesquisa NPS%').count
 
   before do
-    allow(Ramon::AdvboxClient).to receive_messages(create_customer: { 'customers_id' => 11 },
-                                                    create_lawsuit: { 'lawsuits_id' => 22 }, create_post: { 'posts_id' => 33 })
+    allow(Ramon::AdvboxClient).to receive_messages(
+      create_customer: { 'customers_id' => 11 }, create_lawsuit: { 'lawsuits_id' => 22 }, create_post: { 'posts_id' => 33 }
+    )
   end
 
   describe 'o fluxo "Lead ganho" (semeado)' do

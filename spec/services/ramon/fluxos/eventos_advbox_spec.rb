@@ -114,12 +114,14 @@ RSpec.describe Ramon::Fluxos::EventosAdvbox do
   describe 'contrato fechado nunca faz o Lead ganho em dobro (nem deixa de fazer)' do
     [[false, false], [true, false], [false, true], [true, true]].each do |advbox_flui, ganho_flui|
       it "eventos pelo #{advbox_flui ? 'fluxo' : 'código'}, lead ganho pelo #{ganho_flui ? 'fluxo' : 'código'}: 1 de cada" do
-        allow(Ramon::AdvboxClient).to receive_messages(create_customer: { 'customers_id' => 11 },
-                                                        create_lawsuit: { 'lawsuits_id' => 22 }, create_post: { 'posts_id' => 33 })
+        allow(Ramon::AdvboxClient).to receive_messages(
+          create_customer: { 'customers_id' => 11 }, create_lawsuit: { 'lawsuits_id' => 22 }, create_post: { 'posts_id' => 33 }
+        )
         allow(Ramon::Fluxos::LeadGanho).to receive(:pelo_codigo).and_call_original
         allow(Ramon::AdvboxEventRegras).to receive(:new).and_call_original
         with_modified_env(ADVBOX_API_TOKEN: 'tok', RAMON_FLUXO_EVENTOS_ADVBOX: 'on', RAMON_FLUXO_LEAD_GANHO: 'on') do
-          %w[eventos_advbox lead_ganho].each { |grupo| Ramon::Fluxos::Migracao.semear(account, grupo) }
+          Ramon::Fluxos::Migracao.semear(account, 'eventos_advbox')
+          Ramon::Fluxos::Migracao.semear(account, 'lead_ganho')
           Ramon::Fluxos::Migracao.mudar_modo!(account, 'eventos_advbox', 'normal') if advbox_flui
           Ramon::Fluxos::Migracao.mudar_modo!(account, 'lead_ganho', 'normal') if ganho_flui
           perform_enqueued_jobs { described_class.processar(lead, 'contrato_fechado', 'CONTRATO FECHADO') }

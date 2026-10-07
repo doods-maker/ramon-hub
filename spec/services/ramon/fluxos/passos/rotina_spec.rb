@@ -14,8 +14,9 @@ RSpec.describe Ramon::Fluxos::Passos::Rotina do
   end
 
   def advbox_no_ar
-    allow(Ramon::AdvboxClient).to receive_messages(create_customer: { 'customers_id' => 11 },
-                                                    create_lawsuit: { 'lawsuits_id' => 22 }, create_post: { 'posts_id' => 33 })
+    allow(Ramon::AdvboxClient).to receive_messages(
+      create_customer: { 'customers_id' => 11 }, create_lawsuit: { 'lawsuits_id' => 22 }, create_post: { 'posts_id' => 33 }
+    )
   end
 
   describe 'dossiê de passagem' do
