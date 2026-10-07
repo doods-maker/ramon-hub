@@ -39,4 +39,14 @@ RSpec.describe Ramon::Fluxos::Migracao do
     end
     expect(described_class.descrever(account, 'sla')).to include('Agora o CÓDIGO faz o aviso de SLA da 1ª resposta')
   end
+
+  it 'lead ganho e eventos do ADVBOX (B4.4/B4.5): cada migração com a sua chave e o seu gatilho' do
+    fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_ganho' }, ['parar', {}]), sistema_chave: 'lead_ganho', modo: 'normal')
+    fluxo_publicado(account, grafo_linear({ 'tipo' => 'evento_advbox' }, ['parar', {}]), sistema_chave: 'eventos_advbox', modo: 'normal')
+    with_modified_env(RAMON_FLUXO_LEAD_GANHO: 'on') do
+      expect(described_class.assumiu?(account, 'lead_ganho')).to be(true)
+      expect(described_class.assumiu?(account, 'eventos_advbox')).to be(false) # sem RAMON_FLUXO_EVENTOS_ADVBOX
+    end
+    expect(described_class.migrado?(Fluxo.new(origem: 'usuario', sistema_chave: 'eventos_advbox'))).to be(true)
+  end
 end
