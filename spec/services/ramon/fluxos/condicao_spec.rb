@@ -29,4 +29,12 @@ RSpec.describe Ramon::Fluxos::Condicao do
     expect(described_class.escolher(config, dados)).to eq('c2')
     expect(described_class.escolher(config, { 'tese' => 'Aposentadoria' })).to eq('outro')
   end
+
+  it 'agora é horário comercial: usa a janela da própria condição (B4.2)' do
+    travel_to(Time.find_zone!('America/Sao_Paulo').parse('2026-10-10 20:30')) do # sábado, 20h30
+      padrao = { 'campo' => 'status', 'operador' => 'em_horario_comercial', 'valor' => '' }
+      expect(described_class.teste(padrao, {})).to be(false)
+      expect(described_class.teste(padrao.merge('dias' => (0..6).to_a, 'inicio' => 7, 'fim' => 21), {})).to be(true)
+    end
+  end
 end

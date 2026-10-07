@@ -26,7 +26,7 @@ module Ramon::Fluxos::Condicao
     when 'menor' then atual.present? && atual.to_f < esperado.to_f
     when 'existe' then atual.present?
     when 'vazio' then atual.blank?
-    when 'em_horario_comercial' then Ramon::Fluxos::Horario.comercial?(Time.current)
+    when 'em_horario_comercial' then Ramon::Fluxos::Horario.comercial?(Time.current, condicao) # B4.2: janela da condição
     else false
     end
   end

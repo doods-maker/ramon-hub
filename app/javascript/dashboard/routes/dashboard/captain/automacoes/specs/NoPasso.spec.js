@@ -50,6 +50,21 @@ describe('NoPasso — esperar', () => {
     });
     expect(w.text()).toContain('24 hours before the meeting');
   });
+
+  it('SLA da caixa e "depois da criação da conversa" (B4.2)', () => {
+    const sla = montar({
+      tipo: 'esperar',
+      config: { desde: 'conversa', prazo: 'sla_caixa' },
+    });
+    const conversa = montar({
+      tipo: 'esperar',
+      config: { desde: 'conversa', quantidade: 60, unidade: 'minutos' },
+    });
+    expect(sla.text()).toContain('The inbox SLA');
+    expect(conversa.text()).toContain(
+      '60 minutes after the conversation was created'
+    );
+  });
 });
 
 describe('NoPasso — saída tomada', () => {

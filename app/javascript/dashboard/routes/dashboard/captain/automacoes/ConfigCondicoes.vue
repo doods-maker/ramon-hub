@@ -11,6 +11,7 @@ import {
   SELECT,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { CAMPOS, OPERADORES, SEM_VALOR } from './fluxo';
+import JanelaHorario from './JanelaHorario.vue';
 
 const props = defineProps({ config: { type: Object, required: true } });
 const emit = defineEmits(['update:config']);
@@ -40,6 +41,11 @@ const mudaCondicao = (i, chave, valor) =>
   muda(
     'condicoes',
     condicoes.value.map((c, j) => (j === i ? { ...c, [chave]: valor } : c))
+  );
+const trocaCondicao = (i, nova) =>
+  muda(
+    'condicoes',
+    condicoes.value.map((c, j) => (j === i ? nova : c))
   );
 const adicionar = () =>
   muda('condicoes', [
@@ -106,6 +112,11 @@ const remover = i =>
       <datalist :id="`sug-${i}`">
         <option v-for="s in sugestoes[c.campo] || []" :key="s" :value="s" />
       </datalist>
+      <JanelaHorario
+        v-if="c.operador === 'em_horario_comercial'"
+        :config="c"
+        @update:config="nova => trocaCondicao(i, nova)"
+      />
       <Button
         class="self-end"
         link

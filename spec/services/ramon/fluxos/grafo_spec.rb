@@ -107,4 +107,20 @@ RSpec.describe Ramon::Fluxos::Grafo do
     expect(grafo(grafo_linear({ 'tipo' => 'lead_parado', 'hora' => '25:00' })).erros).to eq(['Hora do gatilho inválida (use HH:MM)'])
     expect(grafo(grafo_linear({ 'tipo' => 'lead_parado' })).erros).to eq([])
   end
+
+  it 'janela de horário inválida no Se ou no Esperar até o horário recusa publicar (B4.2)' do
+    hc = { 'campo' => 'status', 'operador' => 'em_horario_comercial', 'dias' => [], 'inicio' => 7, 'fim' => 21 }
+    se = grafo(grafo_linear({ 'tipo' => 'manual' }, ['se', { 'condicoes' => [hc] }]))
+    espera = grafo(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'ate' => 'horario_comercial', 'inicio' => 20, 'fim' => 8 }]))
+    boa = grafo(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'ate' => 'horario_comercial', 'dias' => [0, 6], 'inicio' => 7, 'fim' => 21 }]))
+    expect(se.erros).to include('Passo p1: horário inválido (dias e início antes do fim)')
+    expect(espera.erros).to eq(['Passo p1: horário inválido (dias e início antes do fim)'])
+    expect(boa.erros).to eq([])
+  end
+
+  it 'esperar o SLA da caixa (a partir da criação da conversa) vale como tempo de espera (B4.2)' do
+    sem_desde = grafo(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'prazo' => 'sla_caixa' }])).erros
+    expect(sem_desde.join).to include('falta o tempo de espera')
+    expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'desde' => 'conversa', 'prazo' => 'sla_caixa' }])).erros).to eq([])
+  end
 end

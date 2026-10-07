@@ -305,4 +305,36 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       expect(lead.reload).to have_attributes(lead_stage: comum, lost_reason: nil)
     end
   end
+
+  describe 'SLA da 1ª resposta (B4.2)' do
+    it 'esperar a partir da criação da conversa: o SLA da caixa ou um tempo; já passou → segue e marca horario_passou' do
+      conversa.inbox.update!(first_response_sla_minutes: 15)
+      criada = conversa.reload.created_at
+      c = ctx(alvo: conversa)
+      sla = Ramon::Fluxos::Passos::Logica.esperar({ 'desde' => 'conversa', 'prazo' => 'sla_caixa' }, c)
+      expect(sla).to include(esperar_ate: criada + 15.minutes, vars: { 'horario_passou' => 'nao' })
+      travel_to(criada + 61.minutes) do
+        tarde = Ramon::Fluxos::Passos::Logica.esperar({ 'desde' => 'conversa', 'quantidade' => 60, 'unidade' => 'minutos' }, c)
+        expect(tarde).to include(vars: { 'horario_passou' => 'sim' })
+        expect(tarde).not_to have_key(:esperar_ate)
+      end
+    end
+
+    it 'variáveis {primeira_resposta} e {sla_minutos} (o SLA da caixa, como o código)' do
+      conversa.inbox.update!(first_response_sla_minutes: 15)
+      expect(ctx(alvo: conversa).dados.slice('primeira_resposta', 'sla_minutos')).to eq('primeira_resposta' => 'nao', 'sla_minutos' => 15)
+      conversa.update!(first_reply_created_at: Time.current)
+      expect(ctx(alvo: conversa, ensaio: true).dados['primeira_resposta']).to eq('sim')
+    end
+
+    it 'sino para o SDR do lead (sem SDR: gestores) e para os gestores' do
+      sdr = create(:user, account: account, role: :agent)
+      gestor = create(:user, account: account, role: :administrator)
+      para = ->(quem) { Ramon::Fluxos::Passos::Aviso.destinatarios(lead.reload, { 'para' => quem }) }
+      expect(para.call('sdr_ou_gestores')).to eq([gestor.id])
+      lead.update!(sdr_id: sdr.id)
+      expect(para.call('sdr_ou_gestores')).to eq([sdr.id])
+      expect(para.call('gestores')).to eq([gestor.id])
+    end
+  end
 end

@@ -214,6 +214,42 @@ describe('validar (espelho do Grafo#erros)', () => {
     ).toEqual([['p1', 'ESPERA_SEM_TEMPO']]);
   });
 
+  it('janela de horário (B4.2): no Se e no Esperar até o horário; SLA da caixa vale como tempo', () => {
+    const hc = { campo: 'status', operador: 'em_horario_comercial' };
+    const se = c => ({
+      nos: [g(), p('p1', 'se', { condicoes: [c] }), p('p2', 'parar')],
+      setas: [
+        { de: 'g', saida: 's', para: 'p1' },
+        { de: 'p1', saida: 'sim', para: 'p2' },
+      ],
+    });
+    expect(validar(se(hc))).toEqual([]);
+    expect(validar(se({ ...hc, dias: [0, 6], inicio: 7, fim: 21 }))).toEqual(
+      []
+    );
+    expect(codigos(se({ ...hc, dias: [] }))).toEqual([
+      ['p1', 'JANELA_INVALIDA'],
+    ]);
+    expect(
+      codigos(
+        linear(
+          p('p1', 'esperar', { ate: 'horario_comercial', inicio: 20, fim: 8 })
+        )
+      )
+    ).toEqual([['p1', 'JANELA_INVALIDA']]);
+    expect(
+      validar(
+        linear(p('p1', 'esperar', { desde: 'conversa', prazo: 'sla_caixa' }))
+      )
+    ).toEqual([]);
+  });
+
+  it('SLA da caixa só vale como espera desde a conversa', () => {
+    expect(codigos(linear(p('p1', 'esperar', { prazo: 'sla_caixa' })))).toEqual(
+      [['p1', 'ESPERA_SEM_TEMPO']]
+    );
+  });
+
   it('ação do Chatwoot: vazia, mensagem ao cliente, proibida, desconhecida', () => {
     const acao = (...nomes) =>
       linear(

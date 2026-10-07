@@ -5,6 +5,7 @@ import {
   CHATWOOT_PERMITIDAS,
   GATILHOS,
   TIPOS_PASSO,
+  JANELA_PADRAO,
   UNIDADES,
   alcancaveis,
 } from './fluxo';
@@ -65,6 +66,8 @@ const RESERVADAS = [
   'primeiro_nome',
   'reuniao_de_pe',
   'horario_passou',
+  'primeira_resposta',
+  'sla_minutos',
 ];
 
 const erro = (no, codigo, params = {}) => ({ no, codigo, params });
@@ -171,7 +174,25 @@ const errosEscolha = (id, config) => {
 
 const esperaValida = c =>
   c.ate === 'horario_comercial' ||
+  (c.desde === 'conversa' && c.prazo === 'sla_caixa') ||
   (Number.parseInt(c.quantidade, 10) > 0 && UNIDADES.includes(c.unidade));
+
+// Ramon::Fluxos::Horario.janela_valida? — sem as chaves vale o padrão
+const janelaValida = c => {
+  const dias =
+    'dias' in c ? [].concat(c.dias ?? []).map(Number) : JANELA_PADRAO.dias;
+  const inicio = Number(c.inicio ?? JANELA_PADRAO.inicio);
+  const fim = Number(c.fim ?? JANELA_PADRAO.fim);
+  return (
+    dias.length > 0 &&
+    dias.every(d => d >= 0 && d <= 6) &&
+    inicio >= 0 &&
+    inicio < fim &&
+    fim <= 24
+  );
+};
+const errosJanela = (id, c) =>
+  janelaValida(c) ? [] : [erro(id, 'JANELA_INVALIDA')];
 
 const errosChatwoot = (id, config) => {
   const nomes = (config.acoes || []).map(a => a.action_name);
@@ -194,6 +215,9 @@ const errosEspecificos = (no, config, setas) => {
         ...((config.condicoes || []).length
           ? []
           : [erro(no.id, 'SE_SEM_CONDICOES')]),
+        ...(config.condicoes || [])
+          .filter(c => c.operador === 'em_horario_comercial')
+          .flatMap(c => errosJanela(no.id, c)),
         ...(temSaida(no.id, setas) ? [] : [erro(no.id, 'SE_SEM_SAIDA')]),
       ];
     case 'perguntar_ia':
@@ -207,7 +231,12 @@ const errosEspecificos = (no, config, setas) => {
     case 'escolha':
       return errosEscolha(no.id, config);
     case 'esperar':
-      return esperaValida(config) ? [] : [erro(no.id, 'ESPERA_SEM_TEMPO')];
+      return [
+        ...(esperaValida(config) ? [] : [erro(no.id, 'ESPERA_SEM_TEMPO')]),
+        ...(config.ate === 'horario_comercial'
+          ? errosJanela(no.id, config)
+          : []),
+      ];
     case 'acao_chatwoot':
       return errosChatwoot(no.id, config);
     default:

@@ -17,8 +17,9 @@ module Ramon::Fluxos::Passos::Logica
 
   def esperar(config, ctx)
     return esperar_reuniao(config, ctx) if config['antes_de'] == 'reuniao'
+    return esperar_conversa(config, ctx) if config['desde'] == 'conversa'
 
-    ate = config['ate'] == 'horario_comercial' ? Ramon::Fluxos::Horario.proximo(Time.current) : Time.current + duracao(config)
+    ate = config['ate'] == 'horario_comercial' ? Ramon::Fluxos::Horario.proximo(Time.current, config) : Time.current + duracao(config)
     { saida: 's', resumo: "espera até #{hora(ate)}", esperar_ate: ate }
   end
 
@@ -26,7 +27,21 @@ module Ramon::Fluxos::Passos::Logica
   # {horario_passou} = sim; o `se` seguinte pula o aviso — como o código, que só agenda os lembretes ainda futuros.
   def esperar_reuniao(config, ctx)
     inicio = ctx.reuniao_em || raise(Ramon::Fluxos::PassoImpossivel, 'sem reunião marcada para contar o tempo')
-    ate = inicio - duracao(config)
+    ate_ou_passou(inicio - duracao(config))
+  end
+
+  # B4.2: conta a partir da CRIAÇÃO da conversa (SLA da 1ª resposta). prazo 'sla_caixa' = o SLA da caixa da conversa
+  # (Ramon::Cadencia.sla_minutes, a mesma regra do código). Já passou → segue e marca {horario_passou} = sim
+  # (a escalada de 60 min do código só é agendada se ainda for futura).
+  def esperar_conversa(config, ctx)
+    conversa = ctx.conversa
+    raise(Ramon::Fluxos::PassoImpossivel, 'sem conversa (ou caixa) para contar o tempo') unless conversa&.inbox
+
+    tempo = config['prazo'] == 'sla_caixa' ? Ramon::Cadencia.sla_minutes(conversa.inbox).minutes : duracao(config)
+    ate_ou_passou(conversa.created_at + tempo)
+  end
+
+  def ate_ou_passou(ate)
     return { saida: 's', resumo: "#{hora(ate)} já passou: segue sem esperar", vars: { 'horario_passou' => 'sim' } } if ate.past?
 
     { saida: 's', resumo: "espera até #{hora(ate)}", esperar_ate: ate, vars: { 'horario_passou' => 'nao' } }

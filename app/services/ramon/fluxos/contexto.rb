@@ -9,7 +9,7 @@ class Ramon::Fluxos::Contexto
   # chaves que o próprio hub monta em `dados`: preencher_campo recusa (o campo nunca apareceria)
   RESERVADAS = (DO_GATILHO + %w[nome nome_completo telefone responsavel responsavel_id etapa etapa_id tese tese_id origem canal
                                 valor prioridade caixa caixa_id status etiquetas documentos_completos documentos_faltantes
-                                resposta_ia reuniao_de_pe horario_passou]).freeze
+                                resposta_ia reuniao_de_pe horario_passou primeira_resposta sla_minutos]).freeze
 
   attr_reader :execucao
 
@@ -25,7 +25,7 @@ class Ramon::Fluxos::Contexto
 
   # campos livres primeiro: um campo chamado "nome" nunca pisa no nome do lead
   def dados
-    @dados ||= campos_livres.merge(dados_lead, dados_funil, dados_conversa, dados_docs, dados_reuniao, dados_gatilho,
+    @dados ||= campos_livres.merge(dados_lead, dados_funil, dados_conversa, dados_docs, dados_reuniao, dados_sla, dados_gatilho,
                                    execucao.contexto['vars'] || {})
   end
 
@@ -84,6 +84,14 @@ class Ramon::Fluxos::Contexto
       'caixa' => conversa&.inbox&.name, 'caixa_id' => conversa&.inbox_id,
       'status' => conversa&.status, 'etiquetas' => conversa ? conversa.label_list.to_a : []
     }
+  end
+
+  # B4.2: SLA da 1ª resposta — as mesmas regras do código (Ramon::FirstResponseSlaJob, Ramon::Cadencia.sla_minutes).
+  def dados_sla
+    c = conversa
+    return { 'primeira_resposta' => nil, 'sla_minutos' => nil } if c&.inbox.nil?
+
+    { 'primeira_resposta' => c.first_reply_created_at.present? ? 'sim' : 'nao', 'sla_minutos' => Ramon::Cadencia.sla_minutes(c.inbox) }
   end
 
   def dados_gatilho

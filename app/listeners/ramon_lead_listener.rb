@@ -67,7 +67,13 @@ class RamonLeadListener < BaseListener
   # SLA de 1ª resposta (mapa comercial): o vigia dispara N min depois e só
   # apita se a conversa seguir aberta e sem resposta. N = SLA da inbox,
   # senão o padrão do env — mesma regra do job e do Lead#sla_info.
+  # B4.2: a conversa decide UMA vez quem vigia (Ramon::Fluxos::Migracao, grupo 'sla'): com o fluxo "SLA da 1ª resposta"
+  # no comando E vigiando esta conversa, o job não é agendado; senão o código vigia (e o fluxo, se existir, só ensaia).
   def enqueue_first_response_sla(conversation)
+    assumido = Ramon::Fluxos::Migracao.assumiu?(conversation.account, 'sla')
+    dados = { 'caixa_id' => conversation.inbox_id, 'assumido' => assumido }
+    return if Ramon::Fluxos::Disparo.externo('conversa_criada', conversation, dados).any? && assumido
+
     minutes = Ramon::Cadencia.sla_minutes(conversation.inbox)
     Ramon::FirstResponseSlaJob.set(wait: minutes.minutes).perform_later(conversation.id)
   end
