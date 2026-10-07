@@ -18,7 +18,7 @@ module Ramon::Fluxos::Passos::Logica
   def esperar(config, ctx)
     return esperar_reuniao(config, ctx) if config['antes_de'] == 'reuniao'
 
-    ate = config['ate'] == 'horario_comercial' ? Ramon::Fluxos::Horario.proximo(Time.current) : Time.current + duracao(config)
+    ate = config['ate'] == 'horario_comercial' ? Ramon::Fluxos::Horario.proximo(Time.current, config) : Time.current + duracao(config)
     { saida: 's', resumo: "espera até #{hora(ate)}", esperar_ate: ate }
   end
 

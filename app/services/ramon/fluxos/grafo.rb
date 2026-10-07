@@ -132,7 +132,8 @@ class Ramon::Fluxos::Grafo
 
   def erros_se(passo, config)
     erros = Array(config['condicoes']).empty? ? ["Passo #{passo['id']} (Se) precisa de condições"] : []
-    erros + erros_saida(passo, config)
+    horarios = Array(config['condicoes']).select { |c| c['operador'] == 'em_horario_comercial' }
+    erros + horarios.flat_map { |c| erros_janela(passo, c) } + erros_saida(passo, config)
   end
 
   def erros_saida(passo, _config)
@@ -141,7 +142,15 @@ class Ramon::Fluxos::Grafo
     ["Passo #{passo['id']} (#{NOMES[passo['tipo']]}) precisa de pelo menos uma saída"]
   end
 
-  def erros_esperar(passo, config) = espera_valida?(config) ? [] : ["Passo #{passo['id']}: falta o tempo de espera"]
+  def erros_esperar(passo, config)
+    erros = espera_valida?(config) ? [] : ["Passo #{passo['id']}: falta o tempo de espera"]
+    config['ate'] == 'horario_comercial' ? erros + erros_janela(passo, config) : erros
+  end
+
+  # B4.2: janela de horário do próprio passo (Ramon::Fluxos::Horario.janela_valida?)
+  def erros_janela(passo, config)
+    Ramon::Fluxos::Horario.janela_valida?(config) ? [] : ["Passo #{passo['id']}: horário inválido (dias e início antes do fim)"]
+  end
 
   # IDs fixos escolhidos na tela (advbox_configuracoes) — escrita determinística, não é a IA decidindo
   def erros_advbox(passo, config)
