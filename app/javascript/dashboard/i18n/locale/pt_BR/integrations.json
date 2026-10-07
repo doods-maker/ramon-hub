@@ -521,7 +521,7 @@
         },
         "FEATURES": {
           "TITLE": "Funcionalidades",
-          "ALLOW_CONVERSATION_FAQS": "Gerar perguntas frequentes a partir de conversas resolvidas",
+          "ALLOW_CONVERSATION_FAQS": "Gerar FAQs pendentes das conversas resolvidas (só valem depois que um administrador aprovar)",
           "ALLOW_MEMORIES": "Capture os principais detalhes como memórias de interações do cliente.",
           "ALLOW_CITATIONS": "Incluir fonte de citações nas respostas",
           "ALLOW_CONTACT_ATTRIBUTES": "Permitir acesso às informações do contato"

@@ -65,13 +65,13 @@
       "FUNCOES": {
         "atendimento": "Customer service (assistants)",
         "copiloto": "Copilot and hub functions",
-        "documentos": "Documents (FAQ from document)",
+        "documentos": "Generated FAQs (documents and conversations)",
         "agente": "{'@'}claude agent"
       },
       "DESCRICOES": {
-        "atendimento": "The agent that answers on WhatsApp and the Test screen.",
+        "atendimento": "The agent that answers on WhatsApp, the Test screen and the Copilot panel in the conversation.",
         "copiloto": "Copilot summary and draft, AdvBox, coach, received documents, follow-ups and night copilot.",
-        "documentos": "Generates FAQs from an uploaded document.",
+        "documentos": "Generates pending FAQs from an uploaded document and from resolved conversations.",
         "agente": "The manager's {'@'}claude note, run on the VPS server."
       }
     },
@@ -98,7 +98,9 @@
       "atendimento": "Customer service",
       "copiloto": "Copilot",
       "copiloto_captain": "Captain copilot",
+      "copiloto_painel": "Copilot (conversation panel)",
       "documentos": "Documents",
+      "faq_conversa": "Conversation FAQ",
       "resumo": "Summary",
       "advbox_pergunta": "Ask AdvBox",
       "coach_objecao": "Objection coach",

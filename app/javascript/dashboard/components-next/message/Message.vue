@@ -387,6 +387,13 @@ const contextMenuEnabledOptions = computed(() => {
       !isFailedOrProcessing &&
       !isMessageDeleted.value,
     cannedResponse: isOutgoing && hasText && !isMessageDeleted.value,
+    // ramon (A4): só resposta enviada ao lead (não nota privada) vira FAQ pendente
+    virarFaq:
+      isOutgoing &&
+      hasText &&
+      !props.private &&
+      !isMessageDeleted.value &&
+      !isFailedOrProcessing,
     copyLink: !isFailedOrProcessing,
     translate: !isFailedOrProcessing && !isMessageDeleted.value && hasText,
     replyTo:

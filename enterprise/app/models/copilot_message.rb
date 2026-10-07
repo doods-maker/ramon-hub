@@ -60,7 +60,8 @@ class CopilotMessage < ApplicationRecord
   def validate_message_attributes
     return if message.blank?
 
-    allowed_keys = %w[content reasoning function_name reply_suggestion]
+    # FORK-PONTO (ramon): agent_name = skill dona da resposta no painel (Captain::Copilot::SkillsService), como no Testar
+    allowed_keys = %w[content reasoning function_name reply_suggestion agent_name]
     invalid_keys = message.keys - allowed_keys
 
     errors.add(:message, "contains invalid attributes: #{invalid_keys.join(', ')}") if invalid_keys.any?

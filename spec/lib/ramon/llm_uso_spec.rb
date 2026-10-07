@@ -74,6 +74,12 @@ RSpec.describe Ramon::LlmUso do
     expect(dados).to include(funcao: 'documentos', model: 'gpt-4.1-mini', assistant_id: 7)
   end
 
+  it '.de_instrumentacao: a FAQ de conversa tem linha própria na tela' do
+    dados = described_class.de_instrumentacao(account_id: 1, feature_name: 'conversation_faq', model: 'deepseek-chat')
+
+    expect(dados).to include(funcao: 'faq_conversa', model: 'deepseek-chat')
+  end
+
   it '.registrar_mensagem grava só a mensagem do assistente (tool result não tem tokens)' do
     assistente = instance_double(RubyLLM::Message, role: :assistant, model_id: 'gpt-4.1-mini', input_tokens: 5, output_tokens: 3)
     ferramenta = instance_double(RubyLLM::Message, role: :tool)
@@ -83,5 +89,14 @@ RSpec.describe Ramon::LlmUso do
       described_class.registrar_mensagem(assistente, { account_id: account.id, funcao: 'copilot' })
     end.to change(LlmChamada, :count).by(1)
     expect(LlmChamada.last).to have_attributes(funcao: 'copiloto_captain', model: 'gpt-4.1-mini', input_tokens: 5)
+  end
+
+  it '.registrar_agente: o painel do Copiloto tem linha própria (não soma no Atendimento)' do
+    assistente = Struct.new(:id, :account_id, :account).new(7, account.id, account)
+    resultado = Struct.new(:usage, :error).new(Struct.new(:input_tokens, :output_tokens).new(10, 2), nil)
+
+    described_class.registrar_agente(assistant: assistente, result: resultado, inicio: described_class.agora_ms, source: 'copiloto_painel')
+
+    expect(LlmChamada.last).to have_attributes(funcao: 'copiloto_painel', assistant_id: 7, input_tokens: 10, output_tokens: 2)
   end
 end

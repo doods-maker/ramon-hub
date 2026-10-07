@@ -2727,6 +2727,46 @@
         "PAUSED": "Paused",
         "DISABLED": "Disabled"
       }
+    },
+    "FAQ_CONVERSA": {
+      "MENU": "Turn into FAQ",
+      "CRIADA": "FAQ created as pending. An administrator approves it before the assistant uses it.",
+      "JA_EXISTIA": "This reply is already a FAQ (pending or approved).",
+      "VER_PENDENTES": "See pending FAQs",
+      "ERROS": {
+        "SEM_RESPOSTA": "Only a reply sent to the lead can become a FAQ.",
+        "SEM_PERGUNTA": "No lead question found before this reply.",
+        "SEM_ASSISTENTE": "No assistant serves leads yet: connect the customer service assistant to an inbox.",
+        "GERAL": "Could not create the FAQ. Try again."
+      }
+    },
+    "COPILOTO_ATALHOS": {
+      "KICKOFF": "Ask about the open case: AdvBox lawsuit, documents, meeting. Nothing goes to the client.",
+      "KICKOFF_GERAL": "Ask about the schedule, the funnel and AdvBox deadlines. Nothing goes to the client.",
+      "SITUACAO": {
+        "LABEL": "This client's case status",
+        "CONTENT": "What is the status of this client's lawsuit in AdvBox? Bring number, phase, owner, last movement with date and open tasks."
+      },
+      "DOCUMENTOS": {
+        "LABEL": "Missing documents",
+        "CONTENT": "Which documents are missing in this case? Split what arrived, what is missing (and why it matters) and the ready text to ask the client."
+      },
+      "REUNIAO": {
+        "LABEL": "Prepare the meeting",
+        "CONTENT": "Prepare this case's meeting: what we have, what is missing, value and fee estimate, prescription and the 3 most likely objections with the firm's answer."
+      },
+      "AGENDA": {
+        "LABEL": "Today's agenda",
+        "CONTENT": "What is the office agenda today? Meetings, tasks due, overdue and AdvBox deadlines, and what to do first."
+      },
+      "FUNIL": {
+        "LABEL": "Funnel today",
+        "CONTENT": "How is the funnel today? Daily goal, conversion by stage with the bottleneck, first response SLA and losses by thesis."
+      },
+      "PRAZOS": {
+        "LABEL": "This week's AdvBox deadlines",
+        "CONTENT": "What are this week's AdvBox tasks and deadlines, Monday to Sunday? Short list by day."
+      }
     }
   }
 }

@@ -160,6 +160,8 @@ Rails.application.routes.draw do
               resource :direct_uploads, only: [:create]
               resource :draft_messages, only: [:show, :update, :destroy]
               resource :ramon_copilot, only: [:create], controller: 'ramon_copilot'
+              # ramon: "Virar FAQ" numa resposta da conversa (Inteligência A4 — I-X1)
+              resources :faqs, only: [:create] if ChatwootApp.enterprise?
             end
             member do
               post :mute
