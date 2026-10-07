@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Api::V1::Accounts::Conversations::Faqs', type: :request, if: ChatwootApp.enterprise? do
+RSpec.describe 'Api::V1::Accounts::Conversations::Faqs', if: ChatwootApp.enterprise?, type: :request do
   let(:account) { create(:account) }
   let(:agente) { create(:user, account: account, role: :agent) }
   let(:inbox) { create(:inbox, account: account) }

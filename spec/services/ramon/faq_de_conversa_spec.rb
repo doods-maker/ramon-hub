@@ -102,8 +102,7 @@ RSpec.describe Ramon::FaqDeConversa do
       texto = described_class.texto(conversa)
 
       expect(texto.length).to eq(described_class::LIMITE_CONVERSA)
-      expect(texto).to end_with("aaa
-")
+      expect(texto).to end_with("aaa\n")
     end
 
     it 'corta no limite: o começo de uma conversa longa não vai', :aggregate_failures do
