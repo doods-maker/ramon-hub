@@ -125,7 +125,7 @@ RSpec.describe Ramon::Fluxos::Retomada do
         .and_return(Ramon::LlmClient::Result.new(content: 'Oi [nome], seguimos à disposição.', input_tokens: 1, output_tokens: 1))
     end
 
-    after { Redis::Alfred.delete("RAMON::FLUXO_PUSH::#{fluxo.id}::2026-10-07") }
+    after { %w[2026-10-07 2026-10-10].each { |dia| Redis::Alfred.delete("RAMON::FLUXO_PUSH::#{fluxo.id}::#{dia}") } }
 
     # O relógio dos fluxos sem o resto: dispara o do dia e anda o que ficou na fila.
     def relogio
@@ -200,6 +200,21 @@ RSpec.describe Ramon::Fluxos::Retomada do
         expect(fluxo.execucoes.count).to eq(0)
         expect(retomadas.count + retomadas(outro).count).to eq(2) # o código fez: o botão (Maria) e o lote (João)
         expect(fluxo.reload.ultimo_disparo_em).to be_present # o dia ficou reivindicado: virar depois das 11h não roda 2º lote
+      end
+
+      it 'fluxo desligado na tela: o código faz o lote e reivindica o dia do fluxo — religar depois das 11h não roda 2º lote' do
+        tarefa = create(:lead_task, account: account, lead: outro, kind: 'follow_up', due_at: onze + 1.hour)
+        with_modified_env(RAMON_FLUXO_CADENCIA: 'on') do
+          described_class.mudar_modo!(account, 'normal')
+          fluxo.reload.update!(ativo: false) # desligado na tela: quem faz é o código
+          travel_to(onze) { Ramon::DailyFollowUpJob.perform_now }
+          tarefa.update!(completed_at: onze) # o João fica livre para retomada depois do lote
+          fluxo.update!(ativo: true) # chave inteira de novo, às 11h30
+          travel_to(onze + 30.minutes) { relogio }
+        end
+        expect(retomadas.count).to eq(1) # o lote do código (a Maria)
+        expect(fluxo.reload.ultimo_disparo_em).to be_within(1.second).of(onze)
+        expect(fluxo.execucoes.count + retomadas(outro).count).to eq(0) # sem o dia reivindicado, o relógio retomaria o João
       end
     end
   end
