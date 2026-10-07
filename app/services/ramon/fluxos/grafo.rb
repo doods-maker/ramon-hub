@@ -11,12 +11,12 @@ class Ramon::Fluxos::Grafo
   TIPOS_PASSO = %w[se escolha esperar parar rascunho_texto nota_privada acao_chatwoot
                    mover_etapa criar_tarefa avisar_sino avisar_push
                    perguntar_ia rascunho_ia rodar_skill advbox webhook
-                   registrar_atividade trocar_responsavel preencher_campo apagar_reuniao registrar_retomada].freeze
+                   registrar_atividade trocar_responsavel preencher_campo apagar_reuniao registrar_retomada rotina].freeze
   OBRIGATORIOS = {
     'rascunho_texto' => %w[texto], 'nota_privada' => %w[texto], 'mover_etapa' => %w[etapa_id],
     'criar_tarefa' => %w[titulo], 'escolha' => %w[campo], 'avisar_sino' => %w[texto], 'avisar_push' => %w[texto],
     'perguntar_ia' => %w[pergunta], 'rascunho_ia' => %w[instrucao], 'rodar_skill' => %w[assistente_id skill_id],
-    'registrar_atividade' => %w[texto], 'trocar_responsavel' => %w[papel]
+    'registrar_atividade' => %w[texto], 'trocar_responsavel' => %w[papel], 'rotina' => %w[rotina]
   }.freeze
   # tipo → método com as regras próprias do passo (além dos obrigatórios)
   ESPECIFICOS = {

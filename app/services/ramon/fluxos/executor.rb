@@ -7,7 +7,7 @@ class Ramon::Fluxos::Executor
   LIMITE_PASSOS = 50
   ESPERAS_ERRO = [1, 5, 15].freeze # minutos até a próxima tentativa
   VISIVEIS = %w[mover_etapa criar_tarefa acao_chatwoot avisar_sino avisar_push trocar_responsavel preencher_campo advbox webhook
-                apagar_reuniao registrar_retomada].freeze
+                apagar_reuniao registrar_retomada rotina].freeze
   # tipo do passo → módulo que tem o método de mesmo nome (chamado por nome: dá pra stubar no spec)
   PASSOS = {
     'se' => Ramon::Fluxos::Passos::Logica, 'escolha' => Ramon::Fluxos::Passos::Logica,
@@ -19,6 +19,7 @@ class Ramon::Fluxos::Executor
     'preencher_campo' => Ramon::Fluxos::Passos::Lead,
     'apagar_reuniao' => Ramon::Fluxos::Passos::Reuniao,
     'registrar_retomada' => Ramon::Fluxos::Passos::Retomada,
+    'rotina' => Ramon::Fluxos::Passos::Rotina,
     'advbox' => Ramon::Fluxos::Passos::Externo, 'webhook' => Ramon::Fluxos::Passos::Externo,
     'perguntar_ia' => Ramon::Fluxos::Passos::Ia, 'rascunho_ia' => Ramon::Fluxos::Passos::Ia, 'rodar_skill' => Ramon::Fluxos::Passos::Ia,
     'avisar_sino' => Ramon::Fluxos::Passos::Aviso, 'avisar_push' => Ramon::Fluxos::Passos::Aviso

@@ -388,4 +388,12 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       end
     end
   end
+
+  it 'atividade com tipo do ADVBOX grava como o código: sem pessoa, texto com {texto} e {hoje} do gatilho (B4.5)' do
+    gatilho = { 'gatilho' => { 'texto' => 'REQUERIMENTO PROTOCOLADO', 'hoje' => '07/10/2026' } }
+    Ramon::Fluxos::Passos::Lead.registrar_atividade({ 'tipo' => 'advbox_inss_protocolado', 'texto' => 'ADVBOX: {texto} em {hoje}' },
+                                                    ctx(contexto: gatilho))
+    expect(lead.lead_activities.where(kind: 'advbox_inss_protocolado').pluck(:to_value, :user_id))
+      .to eq([['ADVBOX: REQUERIMENTO PROTOCOLADO em 07/10/2026', nil]])
+  end
 end

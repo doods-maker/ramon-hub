@@ -24,6 +24,17 @@ module Ramon::Fluxos::Migracao
     'cadencia' => {
       env: 'RAMON_FLUXO_CADENCIA', faz: 'a cadência de retomada',
       fluxos: { 'cadencia' => 'lead_parado' }.freeze, limite_devolve: false
+    },
+    # B4.4: o lead ganho (dossiê, NPS e caso no ADVBOX), decidido no callback do Lead (Ramon::Fluxos::LeadGanho).
+    'lead_ganho' => {
+      env: 'RAMON_FLUXO_LEAD_GANHO', faz: 'o lead ganho (dossiê, NPS e caso no ADVBOX)',
+      fluxos: { 'lead_ganho' => 'lead_ganho' }.freeze
+    },
+    # B4.5: os eventos do ADVBOX (Ramon::Fluxos::EventosAdvbox). O mover_etapa vem sem etapa: a de ganho da conta (a do código).
+    'eventos_advbox' => {
+      env: 'RAMON_FLUXO_EVENTOS_ADVBOX', faz: 'os eventos do ADVBOX',
+      fluxos: { 'eventos_advbox' => 'evento_advbox' }.freeze,
+      preparar: ->(account, desenho) { Ramon::Fluxos::Migracao.com_etapa(desenho, account.lead_stages.find_by!(is_won: true).id) }
     }
   }.freeze
 
@@ -84,5 +95,10 @@ module Ramon::Fluxos::Migracao
       novo.publicar!(nil)
       novo.reload
     end
+  end
+
+  # mover_etapa sem etapa no JSON recebe a etapa da conta (B4.5: a de ganho).
+  def com_etapa(desenho, etapa_id)
+    desenho.merge('nos' => desenho['nos'].map { |n| n['tipo'] == 'mover_etapa' ? n.deep_merge('config' => { 'etapa_id' => etapa_id }) : n })
   end
 end

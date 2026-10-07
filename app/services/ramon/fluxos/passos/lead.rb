@@ -2,8 +2,11 @@
 module Ramon::Fluxos::Passos::Lead
   module_function
 
-  # B4.1: tipos de atividade que um fluxo pode registrar (os de reunião aparecem como os do código).
-  TIPOS_ATIVIDADE = %w[fluxo meeting_scheduled meeting_rescheduled meeting_cancelled].freeze
+  # B4.1: tipos de atividade que um fluxo pode registrar (os de reunião aparecem como os do código);
+  # B4.5: os do ADVBOX, idem (Ramon::AdvboxEventRegras).
+  TIPOS_ATIVIDADE = %w[fluxo meeting_scheduled meeting_rescheduled meeting_cancelled
+                       advbox_contrato_fechado advbox_inss_protocolado advbox_indeferido advbox_decisao advbox_exigencia
+                       advbox_reativacao_futura advbox_exito advbox_marco advbox_concessao advbox_arquivado].freeze
 
   def mover_etapa(config, ctx)
     lead = exigir_lead(ctx)

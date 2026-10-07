@@ -98,6 +98,23 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect([migrado.execucoes.count, comum.execucoes.count]).to eq([1, 1])
   end
 
+  it 'lead ganho (B4.4): o disparo com assumido é só do migrado; o do ouvinte (sem), só dos outros' do
+    migrado = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_ganho' }, nota), sistema_chave: 'lead_ganho')
+    comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_ganho' }, nota))
+    expect(described_class.call('lead_ganho', lead, { 'assumido' => true }).map(&:fluxo)).to eq([migrado])
+    expect(described_class.call('lead_ganho', lead, { 'para_etapa_id' => lead.lead_stage_id }).map(&:fluxo)).to eq([comum])
+    expect(migrado.execucoes.sole.ensaio).to be(false) # assumido = age (não pelo modo)
+  end
+
+  it 'eventos do ADVBOX (B4.5): o migrado roda na hora, dentro do job do ADVBOX, e age ou ensaia pela decisão do evento' do
+    migrado = fluxo_publicado(account, grafo_linear({ 'tipo' => 'evento_advbox' }, nota), sistema_chave: 'eventos_advbox')
+    expect { described_class.call('evento_advbox', lead, { 'assumido' => false, 'regra' => 'marco' }) }
+      .not_to have_enqueued_job(Ramon::FluxoAvancarJob)
+    described_class.call('evento_advbox', lead, { 'assumido' => true, 'regra' => 'marco' })
+    expect(migrado.execucoes.order(:id).pluck(:ensaio, :status)).to eq([[true, 'concluida'], [false, 'concluida']])
+    expect(conversa.messages.where(private: true, content: 'oi').count).to eq(1)
+  end
+
   it 'fluxo do sistema nunca roda pelo motor, nem ligado e publicado (D7: quem roda é o código)' do
     fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, nota), origem: 'sistema')
     expect(described_class.call('manual', lead)).to eq([])

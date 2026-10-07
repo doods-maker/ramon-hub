@@ -15,6 +15,7 @@ import {
 import {
   PAPEIS,
   PASSOS,
+  ROTINAS,
   TIPOS_ATIVIDADE,
   TIPOS_TAREFA,
   UNIDADES,
@@ -565,6 +566,30 @@ const escolheMotivo = valor => {
         />
         <p class="text-xs text-n-slate-10">
           {{ t(`${K}.PAINEL.${ajudaEspera}`) }}
+        </p>
+      </template>
+
+      <template v-else-if="tipo === 'rotina'">
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.ROTINA`) }}
+          <select
+            data-testid="rotina"
+            :class="SELECT"
+            :value="config.rotina || ''"
+            @change="muda('rotina', $event.target.value)"
+          >
+            <option value="" disabled>{{ t(`${K}.PAINEL.ESCOLHA`) }}</option>
+            <option v-for="r in ROTINAS" :key="r" :value="r">
+              {{ t(`${K}.ROTINAS.${r}`) }}
+            </option>
+          </select>
+        </label>
+        <p
+          v-if="config.rotina"
+          data-testid="rotina-ajuda"
+          class="text-xs text-n-slate-10"
+        >
+          {{ t(`${K}.ROTINAS_AJUDA.${config.rotina}`) }}
         </p>
       </template>
 

@@ -23,6 +23,13 @@ const linear = (...passos) => ({
 const codigos = desenho => validar(desenho).map(e => [e.no, e.codigo]);
 
 describe('validar (espelho do Grafo#erros)', () => {
+  it('rotina pronta precisa dizer qual rotina (espelho do Grafo)', () => {
+    expect(codigos(linear(p('p1', 'rotina')))).toEqual([['p1', 'FALTA']]);
+    expect(validar(linear(p('p1', 'rotina')))[0].params).toEqual({
+      campo: 'rotina',
+    });
+  });
+
   it('desenho válido não tem erro', () => {
     expect(
       validar(

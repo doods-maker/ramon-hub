@@ -7,11 +7,14 @@ class Ramon::Fluxos::Disparo
   # B4.1: a mesma reunião de novo na agenda (remarcada) cancela a espera do ciclo dela e recomeça pelo horário novo.
   RECOMECA = %w[reuniao_na_agenda].freeze
   # B4.1: os fluxos migrados de marcar/cancelar rodam na hora, dentro da requisição (o painel vê a tarefa ao recarregar;
-  # em sombra, o ensaio vê o lead antes de o código mexer).
-  NA_HORA = %w[reuniao_marcada reuniao_cancelada].freeze
-  # B4.1/B4.2: gatilhos que o código dispara 2 vezes — com 'assumido' (a decisão do evento) só os fluxos migrados ouvem;
-  # sem (o ouvinte de sempre), só os demais. conversa_criada: o RamonLeadListener manda a decisão do SLA da 1ª resposta.
-  DUAS_VEZES = (NA_HORA + %w[conversa_criada]).freeze
+  # em sombra, o ensaio vê o lead antes de o código mexer). B4.5: o de eventos do ADVBOX também, dentro do job do ADVBOX —
+  # a execução vive só enquanto roda, então dois eventos seguidos do mesmo lead quase nunca se barram no índice único.
+  # Só os migrados: fluxo comum nesses gatilhos segue pelo job, como sempre.
+  NA_HORA = %w[reuniao_marcada reuniao_cancelada evento_advbox].freeze
+  # B4.1/B4.2/B4.4: gatilhos que o código dispara 2 vezes — com 'assumido' (a decisão do evento) só os fluxos migrados ouvem;
+  # sem (o ouvinte de sempre), só os demais. conversa_criada: o RamonLeadListener manda a decisão do SLA da 1ª resposta;
+  # lead_ganho: o callback do Lead (Ramon::Fluxos::LeadGanho) manda com, o RamonFluxoListener sem.
+  DUAS_VEZES = (NA_HORA + %w[conversa_criada lead_ganho]).freeze
 
   def self.call(gatilho_tipo, alvo, dados = {}, origem: nil)
     account = alvo.account

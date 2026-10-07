@@ -123,4 +123,8 @@ RSpec.describe Ramon::Fluxos::Grafo do
     expect(sem_desde.join).to include('falta o tempo de espera')
     expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'desde' => 'conversa', 'prazo' => 'sla_caixa' }])).erros).to eq([])
   end
+
+  it 'rotina pronta precisa dizer qual rotina (B4.4)' do
+    expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['rotina', {}])).erros).to eq(['Passo p1: falta rotina'])
+  end
 end

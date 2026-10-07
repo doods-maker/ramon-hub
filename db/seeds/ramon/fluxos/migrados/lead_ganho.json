@@ -1,0 +1,17 @@
+{
+  "nome": "Lead ganho",
+  "descricao": "Quando o lead é ganho, no lugar do código (B4.4): dossiê de passagem nas notas do lead, rascunho da pesquisa NPS (uma vez só) e o caso aberto no ADVBOX — cliente, processo na etapa CONTRATO FECHADO e tarefa 1º CONTATO. O ADVBOX grava de verdade, só com o token, nunca abre de novo um caso já aberto e fica por último: se estiver fora do ar, tenta de novo sem segurar o resto. O Drive continua no código. Contrato fechado no ADVBOX também chega aqui (o evento move o lead para o ganho). Se este fluxo não começar — ocupado com o mesmo lead ou erro —, o código faz aquele ganho, como antes. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_ganho","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"Dossiê de passagem para o jurídico (nas notas do lead)","rotina":"dossie_passagem"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"rotina","config":{"rotulo":"Rascunho: pesquisa NPS do ganho (nas notas do lead, 1 vez só)","rotina":"pesquisa_nps"},"posicao":{"x":0,"y":280}},
+      {"id":"n4","tipo":"rotina","config":{"rotulo":"ADVBOX: cliente, processo e tarefa 1º contato (grava no ADVBOX, só com token)","rotina":"abrir_caso_advbox"},"posicao":{"x":0,"y":420}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"},
+      {"de":"n3","saida":"s","para":"n4"}
+    ]
+  }
+}

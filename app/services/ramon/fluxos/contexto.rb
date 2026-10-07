@@ -3,8 +3,9 @@
 class Ramon::Fluxos::Contexto
   # o que o gatilho traz e vira variável: {texto} da mensagem, {quando} da reunião,
   # {regra} do evento do ADVBOX, {documento} do anexo casado com o checklist;
-  # B4.1: os textos prontos da reunião ({evento}, {titulo}, {titulo_tarefa}, {resumo}, {resumo_antes}, {primeiro_nome})
-  DO_GATILHO = %w[texto quando regra documento evento titulo titulo_tarefa resumo resumo_antes primeiro_nome].freeze
+  # B4.1: os textos prontos da reunião ({evento}, {titulo}, {titulo_tarefa}, {resumo}, {resumo_antes}, {primeiro_nome});
+  # B4.5: {hoje} (dd/mm/aaaa, a data que o código do ADVBOX escreve)
+  DO_GATILHO = %w[texto quando regra documento evento titulo titulo_tarefa resumo resumo_antes primeiro_nome hoje].freeze
 
   # chaves que o próprio hub monta em `dados`: preencher_campo recusa (o campo nunca apareceria)
   RESERVADAS = (DO_GATILHO + %w[nome nome_completo telefone responsavel responsavel_id etapa etapa_id tese tese_id origem canal

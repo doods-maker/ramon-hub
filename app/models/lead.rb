@@ -52,9 +52,7 @@ class Lead < ApplicationRecord
   after_update_commit :dispatch_update_event
   after_create_commit :record_created_activity
   after_update_commit :record_change_activities
-  after_update_commit :generate_handoff_note, if: :saved_change_to_won_at?
-  after_update_commit :enqueue_advbox_closing, if: :saved_change_to_won_at?
-  after_update_commit :enqueue_nps_draft, if: :saved_change_to_won_at?
+  after_update_commit :ganhou, if: :saved_change_to_won_at?
   after_update_commit :enqueue_drive_export, if: -> { saved_change_to_won_at? || saved_change_to_custom_attributes? }
 
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
@@ -183,24 +181,9 @@ class Lead < ApplicationRecord
     current || Time.current
   end
 
-  def generate_handoff_note
-    return if won_at.blank?
-
-    Leads::HandoffNoteService.new(lead: self).perform
-  end
-
-  # Item 21: fechamento → cliente/caso/tarefa no AdvBox (só com token configurado).
-  def enqueue_advbox_closing
-    return if won_at.blank? || ENV.fetch('ADVBOX_API_TOKEN', nil).blank?
-
-    Ramon::AdvboxClosingJob.perform_later(id)
-  end
-
-  # NPS pós-fechamento (mapa comercial): rascunho de pesquisa quando vira ganho.
-  def enqueue_nps_draft
-    return if won_at.blank?
-
-    Ramon::NpsDraftJob.perform_later(id)
+  # Lead ganho (dossiê, caso no ADVBOX, NPS): pelo código ou pelo fluxo "Lead ganho" — decide Ramon::Fluxos::LeadGanho (B4.4).
+  def ganhou
+    Ramon::Fluxos::LeadGanho.ganhou(self) if won_at.present?
   end
 
   # Ponte Drive (ADR-0002): export incremental dos docs conferidos de lead ganho.

@@ -1,4 +1,4 @@
-# Disparado quando um lead é marcado como ganho (Lead#enqueue_advbox_closing).
+# Disparado quando um lead é marcado como ganho (Ramon::Fluxos::LeadGanho.pelo_codigo).
 class Ramon::AdvboxClosingJob < ApplicationJob
   queue_as :low
   retry_on Ramon::AdvboxClient::UnavailableError, wait: :polynomially_longer, attempts: 3
