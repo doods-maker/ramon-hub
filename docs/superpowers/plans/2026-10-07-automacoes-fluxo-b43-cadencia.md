@@ -1378,3 +1378,8 @@ Saída: `Fluxo #N "Cadência de retomada" — modo sombra, ligado, teto 15/dia` 
 | N2 | A tarefa **"Retomada nº N"** passa a ter dono (o Closer do lead; sem Closer, o SDR) e vence às 23:59 de São Paulo; hoje nasce sem dono e vence no fim do dia do servidor | **Aceitar** — a tarefa aparece na Esteira de quem cuida do lead | Task 4 (desenho) |
 | N3 | O **texto da IA** passa a vir da instrução do fluxo (os mesmos 3 ângulos do código) + as regras gerais dos fluxos (OAB), com o modelo dos fluxos (DeepSeek), fora da escolha "Copiloto" da tela Uso e custo (o custo aparece como "fluxos"); a conversa vai pelos últimos ~8 mil caracteres (hoje, as últimas 200 mensagens). Continua rascunho | **Aceitar** — o texto muda pouco e sempre passa por revisão | Tasks 3–4 |
 | N4 | O teto de **15 por dia** passa a contar também as retomadas do botão naquele dia (hoje o botão não gasta o teto do lote) | **Aceitar** — raro e o teto continua editável na tela | Task 5 |
+
+
+## Respostas do Eduardo (07/10/2026)
+
+Todas as "Decisões novas que dependem do Eduardo" deste plano foram **ACEITAS como propostas** (formulário de 07/10).
