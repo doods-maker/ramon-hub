@@ -12,8 +12,9 @@ import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import CardLayout from 'dashboard/components-next/CardLayout.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 import { useMapGetter } from 'dashboard/composables/store';
-import { CHIP } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { CHIP, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { ferramentaInfo } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
 
 const props = defineProps({
@@ -45,9 +46,13 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // ramon: liga/desliga (I-SK4) e "editada na tela" (I-SK5)
+  enabled: { type: Boolean, default: true },
+  edited: { type: Boolean, default: false },
+  podeLigar: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['select', 'hover', 'delete', 'update']);
+const emit = defineEmits(['select', 'hover', 'delete', 'update', 'toggle']);
 
 const { t } = useI18n();
 const { formatMessage } = useMessageFormatter();
@@ -155,14 +160,30 @@ const renderInstruction = instruction => () =>
     <div v-if="!isEditing" class="flex flex-col w-full">
       <div class="flex items-start justify-between w-full gap-2">
         <div class="flex flex-col items-start">
-          <span class="text-sm text-n-slate-12 font-medium">{{ title }}</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-sm text-n-slate-12 font-medium">{{ title }}</span>
+            <span
+              v-if="edited"
+              data-testid="skill-editada"
+              :class="[CHIP, TOM.slate]"
+              :title="t('INTEL.SKILLS.EDITADA_AJUDA')"
+            >
+              {{ t('INTEL.SKILLS.EDITADA') }}
+            </span>
+          </div>
           <span class="text-sm text-n-slate-11 mt-2">
             {{ description }}
           </span>
         </div>
         <div class="flex items-center gap-2">
-          <!-- <Button label="Test" slate xs ghost class="!text-sm" />
-          <span class="w-px h-4 bg-n-weak" /> -->
+          <Switch
+            v-if="podeLigar"
+            data-testid="skill-chave"
+            :model-value="enabled"
+            :title="t('INTEL.SKILLS.LIGAR')"
+            @update:model-value="ligar => emit('toggle', ligar)"
+          />
+          <span v-if="podeLigar" class="w-px h-4 bg-n-weak" />
           <Button icon="i-lucide-pen" slate xs ghost @click="startEdit" />
           <span class="w-px h-4 bg-n-weak" />
           <Button
