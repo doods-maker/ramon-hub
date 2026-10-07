@@ -75,4 +75,53 @@ RSpec.describe Ramon::Fluxos::Relogio do
     travel_to(sp('2026-10-06 09:00')) { described_class.disparar_do_dia }
     expect(fluxo.execucoes.pluck(:alvo_id)).to eq([leads.last.id])
   end
+
+  describe 'lead parado com retomada (B4.3: a cadência)' do
+    def parado_com_conversa(na_etapa = etapa)
+      lead = create(:lead, account: account, lead_stage: na_etapa, conversation_id: create(:conversation, account: account).id)
+      lead.update_columns(stage_entered_at: sp('2026-10-01 10:00')) # rubocop:disable Rails/SkipsModelValidations
+      lead
+    end
+
+    it 'retomada: todo dia para quem segue parado e pode receber retomada (a regra do código, não 1 vez por parada)' do
+      pode = parado_com_conversa
+      create(:lead, account: account, lead_stage: etapa).update_columns(stage_entered_at: sp('2026-10-01 10:00')) # rubocop:disable Rails/SkipsModelValidations
+      recente = parado_com_conversa
+      recente.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 1, 'ultima_em' => sp('2026-10-05 11:00').iso8601 } })
+      fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_parado', 'retomada' => true }, nota))
+      travel_to(sp('2026-10-07 11:00')) { described_class.disparar_do_dia }
+      expect(fluxo.execucoes.pluck(:alvo_id)).to eq([pode.id]) # sem conversa e retomada há 2 dias ficam de fora
+      fluxo.execucoes.update_all(status: 'concluida') # rubocop:disable Rails/SkipsModelValidations
+      travel_to(sp('2026-10-10 11:00')) { described_class.disparar_do_dia }
+      expect(fluxo.execucoes.where(alvo_id: pode.id).count).to eq(2) # segue parado (a nota não conta retomada) → de novo
+      expect(fluxo.execucoes.where(alvo_id: recente.id).count).to eq(1) # 5 dias depois da última
+    end
+
+    it 'retomada: o limite do dia corta na ordem do funil (etapa, posição), como o radar do código' do
+      cedo = etapa
+      tarde = create(:lead_stage, account: account, stalled_after_days: 3, position: 1)
+      parado_com_conversa(tarde) # lead de id menor, mas na etapa de id maior
+      primeiro = parado_com_conversa(cedo)
+      fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_parado', 'retomada' => true }, nota), limite_dia: 1)
+      travel_to(sp('2026-10-07 11:00')) { described_class.disparar_do_dia }
+      expect(fluxo.execucoes.pluck(:alvo_id)).to eq([primeiro.id])
+    end
+
+    it 'retomada: data envenenada no lead não derruba o relógio' do
+      envenenado = parado_com_conversa
+      envenenado.update!(custom_attributes: { 'follow_up' => { 'ultima_em' => 'não é data' } })
+      fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_parado', 'retomada' => true }, nota))
+      travel_to(sp('2026-10-07 11:00')) { described_class.disparar_do_dia }
+      expect(fluxo.execucoes.pluck(:alvo_id)).to eq([envenenado.id])
+    end
+
+    it 'o fluxo da cadência (migrado) dispara assumido: execução de verdade, não ensaio' do
+      parado_com_conversa
+      fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'lead_parado', 'retomada' => true }, nota), sistema_chave: 'cadencia')
+      with_modified_env(RAMON_FLUXO_CADENCIA: 'on') do
+        travel_to(sp('2026-10-07 11:00')) { described_class.disparar_do_dia }
+      end
+      expect(fluxo.execucoes.pluck(:ensaio)).to eq([false])
+    end
+  end
 end

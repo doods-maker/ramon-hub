@@ -1,6 +1,7 @@
 # Gatilhos de relógio (spec §4.1), chamados a cada minuto pelo Ramon::FluxoRelogioJob:
 # - relogio: todo dia a partir de HH:MM, cada lead de um grupo (etapa/tese/responsável);
-# - lead_parado: 1×/dia a partir de HH:MM (padrão 11:00), leads parados na etapa — 1 vez por parada.
+# - lead_parado: 1×/dia a partir de HH:MM (padrão 11:00), leads parados na etapa — 1 vez por parada; com 'retomada'
+#   (B4.3), todo dia para quem pode receber retomada (Ramon::Fluxos::Retomada.motivo), na ordem do funil.
 # `ultimo_disparo_em` (fuso SP) garante 1 disparo por fluxo por dia; se o minuto exato passar
 # (deploy, hub fora do ar), dispara quando o relógio voltar, no mesmo dia.
 module Ramon::Fluxos::Relogio
@@ -14,18 +15,25 @@ module Ramon::Fluxos::Relogio
       config = Ramon::Fluxos::Grafo.new(fluxo.versao_publicada.grafo).gatilho['config'] || {}
       next unless na_hora?(config, agora) && reivindicar_dia(fluxo, agora)
 
-      grupo(fluxo, config, agora).limit(MAX_LEADS).each do |lead|
-        # ponytail: 1 count por lead; agregar se grupos grandes com limite virarem rotina
-        break if fluxo.modo == 'normal' && fluxo.limite_atingido?
+      disparar_grupo(fluxo, config, agora)
+    end
+  end
 
-        disparar(fluxo, lead)
-      end
+  def disparar_grupo(fluxo, config, agora)
+    dados = Ramon::Fluxos::Retomada.migrado?(fluxo) ? { 'assumido' => true } : {} # fluxo migrado sem 'assumido' nasce ensaio
+    grupo(fluxo, config, agora).limit(MAX_LEADS).each do |lead|
+      # ponytail: 1 count por lead; agregar se grupos grandes com limite virarem rotina
+      break if fluxo.modo == 'normal' && fluxo.limite_atingido?
+      # B4.3: retomada = a regra do código, lead a lead (em Ruby: a data do jsonb pode vir envenenada)
+      next if config['retomada'] && Ramon::Fluxos::Retomada.motivo(lead)
+
+      disparar(fluxo, lead, dados)
     end
   end
 
   # Erro num lead não derruba os outros leads nem os outros fluxos (o dia já foi reivindicado).
-  def disparar(fluxo, lead)
-    Ramon::Fluxos::Disparo.new(fluxo, lead, {}, nil).iniciar
+  def disparar(fluxo, lead, dados = {})
+    Ramon::Fluxos::Disparo.new(fluxo, lead, dados, nil).iniciar
   rescue StandardError => e
     ChatwootExceptionTracker.new(e, account: fluxo.account).capture_exception
     Rails.logger.warn("[Ramon::Fluxos::Relogio] fluxo #{fluxo.id} lead #{lead.id}: #{e.class}")
@@ -60,6 +68,10 @@ module Ramon::Fluxos::Relogio
     dias = config['dias'].to_i
     leads = fluxo.account.leads.open
     leads = dias.positive? ? leads.where(stage_entered_at: ...(agora - dias.days)) : Ramon::Cadencia.parados(leads, agora)
+    # B4.3: retomada = todo dia enquanto seguir parado (quem pode é decidido lead a lead) e na ordem do radar do código
+    # (default_scope do Lead: etapa, posição, id) — sem o "1 vez por parada" e sem reordenar por id.
+    return leads if config['retomada']
+
     ja = FluxoExecucao.where(fluxo_id: fluxo.id, alvo_type: 'Lead', ensaio: false)
                       .where('ramon_fluxo_execucoes.alvo_id = leads.id AND ramon_fluxo_execucoes.created_at >= leads.stage_entered_at')
     leads.where(ja.arel.exists.not).reorder(:id)

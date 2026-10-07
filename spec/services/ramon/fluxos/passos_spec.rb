@@ -213,6 +213,12 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       .to raise_error(Ramon::Fluxos::PassoImpossivel, /reservado/)
   end
 
+  it 'retomada: {tentativa} é a próxima (a contada + 1) e {dias_parado} os dias na etapa' do
+    lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 2 } })
+    lead.update_columns(stage_entered_at: 4.days.ago) # rubocop:disable Rails/SkipsModelValidations
+    expect(ctx.dados).to include('tentativa' => 3, 'dias_parado' => 4)
+  end
+
   it 'RESERVADAS cobre toda chave que o Contexto monta sozinho' do
     c = ctx
     montadas = c.dados.keys - ((lead.custom_attributes['campos'] || {}).keys + (c.execucao.contexto['vars'] || {}).keys)
