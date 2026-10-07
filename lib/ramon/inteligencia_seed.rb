@@ -65,7 +65,7 @@ class Ramon::InteligenciaSeed
 
   # [[tese, pergunta, resposta], ...] — tese = nome do arquivo (faq/<tese>.md).
   def faqs_do_seed
-    Dir[DIR.join('faq', '*.md').to_s].sort.flat_map do |arquivo|
+    Dir[DIR.join('faq', '*.md').to_s].flat_map do |arquivo|
       tese = File.basename(arquivo, '.md')
       File.read(arquivo).sub(FRONT_MATTER, '').split(/^## /).drop(1).map do |bloco|
         pergunta, resposta = bloco.split("\n", 2)
