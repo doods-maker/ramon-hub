@@ -6,7 +6,7 @@ RSpec.describe Ramon::Fluxos::EventosAdvbox do
   let(:lead) { novo_lead('+5548999000001') }
 
   def novo_lead(fone)
-    contato = create(:contact, account: account, phone_number: fone)
+    contato = create(:contact, account: account, phone_number: fone, name: 'Maria da Silva') # o dossiê começa pelo nome do contato
     create(:lead, account: account, lead_stage: account.lead_stages.order(:position).first, contact: contato, name: 'Maria da Silva')
   end
 
