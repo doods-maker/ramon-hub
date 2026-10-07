@@ -117,4 +117,8 @@ RSpec.describe Ramon::Fluxos::Grafo do
     expect(espera.erros).to eq(['Passo p1: horário inválido (dias e início antes do fim)'])
     expect(boa.erros).to eq([])
   end
+
+  it 'esperar o SLA da caixa (a partir da criação da conversa) vale como tempo de espera (B4.2)' do
+    expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'desde' => 'conversa', 'prazo' => 'sla_caixa' }])).erros).to eq([])
+  end
 end

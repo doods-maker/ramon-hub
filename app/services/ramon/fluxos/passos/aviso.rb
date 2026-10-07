@@ -1,5 +1,14 @@
 # Avisos internos: sino do hub (lead) e push no celular (ntfy).
 module Ramon::Fluxos::Passos::Aviso
+  # Quem recebe por papel. B4.1: 'closer_e_sdr' = a regra do lembrete de reunião; 'conta' = todo mundo (reunião
+  # marcada/cancelada). B4.2: 'sdr_ou_gestores' / 'gestores' = o SLA da 1ª resposta (Ramon::Papeis.gestor_ids).
+  PARA = {
+    'closer_e_sdr' => ->(lead) { Ramon::Fluxos::Reunioes.destinatarios(lead) },
+    'conta' => ->(lead) { lead.account.account_users.pluck(:user_id) },
+    'sdr_ou_gestores' => ->(lead) { lead.sdr_id ? [lead.sdr_id] : Ramon::Papeis.gestor_ids(lead.account) },
+    'gestores' => ->(lead) { Ramon::Papeis.gestor_ids(lead.account) }
+  }.freeze
+
   module_function
 
   def avisar_sino(config, ctx)
@@ -15,13 +24,9 @@ module Ramon::Fluxos::Passos::Aviso
   end
 
   # Só gente da conta. Lista vazia nunca chega ao builder: lá ela vira "todo mundo".
-  # B4.1: para 'closer_e_sdr' = a regra do lembrete de reunião; 'conta' = todo mundo (o sino de reunião marcada/cancelada).
   def destinatarios(lead, config)
-    ids = case config['para']
-          when 'closer_e_sdr' then Ramon::Fluxos::Reunioes.destinatarios(lead)
-          when 'conta' then lead.account.account_users.pluck(:user_id)
-          else Array(config['user_ids']).map(&:to_i).presence || [(lead.closer || lead.sdr)&.id]
-          end
+    regra = PARA[config['para']]
+    ids = regra ? regra.call(lead) : Array(config['user_ids']).map(&:to_i).presence || [(lead.closer || lead.sdr)&.id]
     ids.compact & lead.account.account_users.pluck(:user_id)
   end
 
