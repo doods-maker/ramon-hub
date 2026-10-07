@@ -44,6 +44,13 @@ RSpec.describe Ramon::Fluxos::Retomada do
       expect(described_class.motivo(lead)).to be_nil
     end
 
+    it 'tentativas que não é número (lista ou objeto no jsonb) conta como 0' do
+      lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => [1, 2] } })
+      expect(described_class.tentativa(lead)).to eq(1)
+      lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => { 'x' => 1 } } })
+      expect(described_class.tentativa(lead)).to eq(1)
+    end
+
     it 'registrar conta a tentativa e a data sem apagar as outras chaves do lead' do
       lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 1 }, 'campos' => { 'x' => '1' } })
       expect(described_class.registrar!(lead)).to eq(2)
@@ -58,6 +65,45 @@ RSpec.describe Ramon::Fluxos::Retomada do
       expect(described_class.dias_parado(lead)).to eq(4)
       lead.update_columns(stage_entered_at: nil) # rubocop:disable Rails/SkipsModelValidations
       expect(described_class.dias_parado(lead)).to eq(0)
+    end
+  end
+
+  describe 'a chave (RAMON_FLUXO_CADENCIA=on + o fluxo em modo normal)' do
+    let!(:fluxo) { described_class.semear(account) }
+
+    it 'semear cria o fluxo parado (modo sombra), ligado, publicado, com o teto do código — uma vez só' do
+      expect(fluxo).to have_attributes(origem: 'usuario', sistema_chave: 'cadencia', modo: 'sombra', ativo: true,
+                                       limite_dia: 15, gatilho_tipo: 'lead_parado')
+      expect(fluxo.versao_publicada.grafo['nos'].first['config']).to eq('tipo' => 'lead_parado', 'hora' => '11:00', 'retomada' => true)
+      fluxo.update!(nome: 'Minha cadência')
+      expect(described_class.semear(account).id).to eq(fluxo.id)
+      expect(fluxo.reload.nome).to eq('Minha cadência')
+    end
+
+    it 'só assume com a env ligada e o fluxo normal, ligado, publicado e com o gatilho Lead parado' do
+      expect(described_class.assumiu?(account)).to be(false)
+      with_modified_env(RAMON_FLUXO_CADENCIA: 'on') do
+        expect(described_class.assumiu?(account)).to be(false) # ainda parado
+        described_class.mudar_modo!(account, 'normal')
+        expect(described_class.assumiu?(account)).to be(true)
+        fluxo.update!(ativo: false)
+        expect(described_class.assumiu?(account)).to be(false) # desligado na tela devolve ao código
+      end
+      fluxo.update!(ativo: true)
+      expect(described_class.assumiu?(account)).to be(false) # sem a env
+    end
+
+    it 'virar para normal sem a env é recusado; voltar devolve ao código; o teto em vigor acompanha' do
+      expect { described_class.mudar_modo!(account, 'normal') }.to raise_error(ArgumentError, /RAMON_FLUXO_CADENCIA/)
+      with_modified_env(RAMON_FLUXO_CADENCIA: 'on') do
+        described_class.mudar_modo!(account, 'normal')
+        fluxo.reload.update!(limite_dia: 20)
+        expect(described_class.teto(account)).to eq(20)
+        expect(described_class.descrever(account)).to include('os FLUXOS fazem a cadência de retomada')
+        described_class.mudar_modo!(account, 'sombra')
+        expect(described_class.teto(account)).to eq(15)
+        expect(described_class.descrever(account)).to include('o CÓDIGO faz a cadência de retomada')
+      end
     end
   end
 end

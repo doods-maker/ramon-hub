@@ -372,7 +372,7 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
         expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx) }.to have_enqueued_job(Ramon::NtfyPushJob)
         r = nil
         expect { r = Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(alvo: outro)) }.not_to have_enqueued_job(Ramon::NtfyPushJob)
-        expect(r[:resumo]).to eq('push: já saiu hoje (1 por dia)')
+        expect(r).to include(resumo: 'push: já saiu hoje (1 por dia)', sem_balao: true)
       end
     end
   end

@@ -1,0 +1,20 @@
+{
+  "nome": "Cadência de retomada",
+  "descricao": "Todo dia às 11h, para os leads parados que podem receber retomada (têm conversa, nenhuma tarefa de retomada aberta e a última retomada há 5 dias ou mais), até 15 por dia na ordem do funil: a IA escreve o rascunho de retomada nº N nas notas do lead (se a IA falhar, entra o texto fixo), conta a tentativa no lead, cria a tarefa Retomada nº N para hoje e avisa no celular uma vez por dia. O botão Preparar retomada do painel roda este mesmo fluxo para um lead, sem o teto. No lugar do código (B4.3): com o selo \"em sombra\", está parado e quem faz é o código.",
+  "limite_dia": 15,
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_parado","hora":"11:00","retomada":true},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rascunho_ia","config":{"rotulo":"Rascunho de retomada nº N (nas notas do lead)","onde":"notas_do_lead","titulo":"retomada nº {tentativa}","instrucao":"Mensagem de retomada nº {tentativa} para um lead que parou de responder (parado há {dias_parado} dias sem avanço). Tom de médico de confiança: caloroso, acolhedor, simples, sem juridiquês e sem pressão. O ângulo muda com a tentativa — 1ª: lembrete leve e gentil de que estamos à disposição pra seguir com o caso; 2ª: agregue valor, traga UMA informação nova e útil sobre a tese/benefício em questão; 3ª em diante: faça uma pergunta direta sobre o interesse em seguir e deixe a porta aberta pra quando a pessoa quiser.","reserva":"Oi {nome}, tudo bem? Passando pra saber se você ainda tem interesse em olhar o seu caso com a gente. Qualquer coisa, estou por aqui!"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"registrar_retomada","config":{"rotulo":"Conta a tentativa no lead"},"posicao":{"x":0,"y":300}},
+      {"id":"n4","tipo":"criar_tarefa","config":{"rotulo":"Tarefa de retomada para hoje","titulo":"Retomada nº {tentativa}","tipo":"follow_up","prazo_dias":0},"posicao":{"x":0,"y":440}},
+      {"id":"n5","tipo":"avisar_push","config":{"rotulo":"Push: retomadas prontas (1 por dia)","titulo":"Retomadas prontas pra revisar","texto":"Há rascunhos de retomada esperando revisão no hub","uma_vez_por_dia":true},"posicao":{"x":0,"y":580}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"},
+      {"de":"n3","saida":"s","para":"n4"},
+      {"de":"n4","saida":"s","para":"n5"}
+    ]
+  }
+}

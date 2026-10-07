@@ -57,7 +57,8 @@ module Ramon::Fluxos::Passos::Ia
     raise if config['reserva'].blank?
 
     Rails.logger.warn("[Ramon::Fluxos::Passos::Ia] rascunho_ia: IA falhou (#{e.class}) — texto de reserva")
-    ctx.interpolar(config['reserva'])
+    # {nome} passa pelo restaurar da resposta da IA: sem nome, "cliente" (como o código), nunca "Oi , tudo bem?"
+    restaurar(ctx.interpolar(config['reserva'].gsub('{nome}', '[nome]')), ctx)
   end
 
   def rodar_skill(config, ctx)

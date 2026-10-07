@@ -69,6 +69,14 @@ RSpec.describe Ramon::Fluxos::Passos::Ia do
     expect(r[:saida]).to eq('s')
   end
 
+  it 'rascunho_ia: texto de reserva sem o nome do cliente diz "cliente" (como o código)' do
+    allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, 'timeout')
+    contato.update!(name: '')
+    lead.update!(name: nil)
+    described_class.rascunho_ia({ 'instrucao' => 'retome', 'reserva' => 'Oi {nome}, tudo bem?' }, ctx)
+    expect(conversa.messages.last.content).to eq("#{Ramon::RascunhoCarimbo::PREFIXO}\nOi cliente, tudo bem?")
+  end
+
   it 'rascunho_ia sem reserva: IA fora do ar sobe o erro (o executor tenta de novo em 1/5/15 min)' do
     allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, 'timeout')
     expect { described_class.rascunho_ia({ 'instrucao' => 'retome' }, ctx) }.to raise_error(Ramon::LlmClient::TransientError)

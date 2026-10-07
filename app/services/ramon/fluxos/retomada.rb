@@ -31,8 +31,8 @@ module Ramon::Fluxos::Retomada
     nil
   end
 
-  # A próxima retomada do lead (as contadas + 1).
-  def tentativa(lead) = contador(lead)['tentativas'].to_i + 1
+  # A próxima retomada do lead (as contadas + 1). to_s: valor não escalar (array/objeto gravado pela API) conta como 0.
+  def tentativa(lead) = contador(lead)['tentativas'].to_s.to_i + 1
 
   # O contador follow_up do lead; não-Hash (string/array gravado pela API) conta como vazio — não derruba o lote.
   def contador(lead)
@@ -52,6 +52,30 @@ module Ramon::Fluxos::Retomada
     numero
   end
 
+  # ---- A chave (B4.3, direto): Ramon::Fluxos::Migracao, grupo 'cadencia' ---------------------------------------------
+  # RAMON_FLUXO_CADENCIA=on E o fluxo ligado, publicado, em modo normal e com o gatilho Lead parado (o limite do dia é o
+  # teto — não devolve o comando). Qualquer peça fora → o código faz e o relógio nem dispara o fluxo.
+  def assumiu?(account) = Ramon::Fluxos::Migracao.assumiu?(account, GRUPO)
+
   # Só o fluxo da cadência (o Migracao.migrado? genérico pegaria os das outras migrações).
   def migrado?(fluxo) = fluxo.origem == 'usuario' && fluxo.sistema_chave == GRUPO
+
+  def fluxo(account) = Ramon::Fluxos::Migracao.fluxo(account, GRUPO)
+
+  def semear(account) = Ramon::Fluxos::Migracao.semear(account, GRUPO).first
+
+  def mudar_modo!(account, modo) = Ramon::Fluxos::Migracao.mudar_modo!(account, GRUPO, modo)
+
+  def descrever(account) = Ramon::Fluxos::Migracao.descrever(account, GRUPO)
+
+  # O teto em vigor (Watchdog): com o fluxo no comando, o limite do dia dele (nil = sem teto); senão, o do código.
+  def teto(account) = assumiu?(account) ? fluxo(account).limite_dia : TETO
+
+  # Botão "Preparar retomada" com o fluxo no comando: roda o fluxo para ESTE lead, sem o teto, revendo a regra (clique
+  # duplo). 'assumido': fluxo migrado sem ele nasce ensaio (Disparo#sombra?). Execução viva no lead → nil.
+  def disparar(lead)
+    return if motivo(lead)
+
+    Ramon::Fluxos::Disparo.new(fluxo(lead.account), lead, { 'assumido' => true }, nil).iniciar
+  end
 end

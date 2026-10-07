@@ -37,7 +37,8 @@ module Ramon::Fluxos::Passos::Aviso
     titulo = ctx.interpolar(config['titulo'].presence || ctx.execucao.fluxo.nome)
     texto = ctx.interpolar(config['texto'])
     return { saida: 's', resumo: "faria: push \"#{texto.truncate(80)}\"" } if ctx.ensaio?
-    return { saida: 's', resumo: 'push: já saiu hoje (1 por dia)' } if config['uma_vez_por_dia'] && !primeiro_do_dia?(ctx)
+    # sem_balao: o executor não põe na conversa (até 14 balões/dia de "já saiu" no lote da cadência)
+    return { saida: 's', resumo: 'push: já saiu hoje (1 por dia)', sem_balao: true } if config['uma_vez_por_dia'] && !primeiro_do_dia?(ctx)
 
     Ramon::NtfyPushJob.perform_later(title: titulo, body: texto)
     { saida: 's', resumo: "push: #{texto.truncate(80)}" }

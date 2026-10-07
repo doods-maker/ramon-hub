@@ -127,7 +127,7 @@ class Ramon::Fluxos::Executor
 
   def registrar(passo, resultado)
     @execucao.trilha = @execucao.trilha + [linha(passo['id'], passo['tipo'], resultado[:resumo], saida: resultado[:saida])]
-    return if @execucao.ensaio || VISIVEIS.exclude?(passo['tipo'])
+    return if @execucao.ensaio || VISIVEIS.exclude?(passo['tipo']) || resultado[:sem_balao]
 
     Ramon::EventoInline.registrar(@execucao.conversa, "⚙ Fluxo #{@execucao.fluxo&.nome}: #{resultado[:resumo]}", tipo: 'fluxo')
   end
