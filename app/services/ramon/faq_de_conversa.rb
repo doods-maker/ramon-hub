@@ -38,10 +38,10 @@ module Ramon::FaqDeConversa
       answer: Ramon::Pseudonymizer.mask(mensagem.content, names: nomes) }
   end
 
-  # As bolhas do lead entre a resposta anterior enviada (nota privada não conta) e esta.
+  # As bolhas do lead entre a resposta HUMANA anterior (nota privada e resposta de bot/fluxo não contam) e esta.
   def pergunta_antes(mensagem)
     mensagens = mensagem.conversation.messages
-    anterior = mensagens.where(message_type: :outgoing, private: false, id: ...mensagem.id).reorder(id: :desc).pick(:id) || 0
+    anterior = mensagens.where(message_type: :outgoing, private: false, sender_type: 'User', id: ...mensagem.id).reorder(id: :desc).pick(:id) || 0
     bolhas = mensagens.where(message_type: :incoming, id: (anterior + 1)...mensagem.id)
     bolhas.reorder(:id).pluck(:content).compact_blank.join("\n")
   end
@@ -62,7 +62,7 @@ module Ramon::FaqDeConversa
 
   def mensagens_publicas(conversa)
     conversa.messages.where(private: false).where.not(message_type: %i[activity template])
-            .reorder(id: :desc).limit(LIMITE_CONVERSA)
+            .reorder(id: :desc).limit(LIMITE_CONVERSA / 7) # linha mínima ~7 caracteres: mais que isso não cabe no corte
   end
 
   def linha(mensagem)

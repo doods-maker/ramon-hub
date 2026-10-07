@@ -25,6 +25,14 @@ RSpec.describe Ramon::FaqDeConversa do
       expect(faq[:answer]).to eq('[nome], a perícia do INSS é gratuita.')
     end
 
+    it 'a resposta automática de bot no meio não corta a pergunta do lead' do
+      msg(:incoming, 'Quanto custa?')
+      create(:message, :bot_message, account: account, conversation: conversa, inbox: conversa.inbox, content: 'Já te respondo')
+      resposta = msg(:outgoing, 'Você só paga se ganhar.')
+
+      expect(described_class.de_mensagem(resposta)[:question]).to eq('Quanto custa?')
+    end
+
     it 'mascara também o nome do lead (diferente do contato)' do
       create(:lead, account: account, conversation_id: conversa.id, name: 'Joana Dores')
       msg(:incoming, 'A Joana pode ir no meu lugar?')
