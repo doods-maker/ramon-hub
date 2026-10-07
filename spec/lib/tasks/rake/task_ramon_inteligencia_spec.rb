@@ -69,5 +69,20 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       expect { teses.invoke(account.id.to_s) }.to output(/faq_com_tese_preenchida: 1/).to_stdout
       expect(faq.reload).to have_attributes(tese: 'acrescimo-25', answer: 'Resposta mexida')
     end
+
+    it 'respeita skill editada, renomeada, desligada ou criada na tela' do
+      rodar
+      editada, renomeada, desligada = atendimento.scenarios.order(:id).first(3)
+      editada.update!(instruction: 'Como o Eduardo quer', edited: true)
+      renomeada.update!(title: 'Nome novo na tela', edited: true)
+      desligada.update!(enabled: false, edited: true)
+      criada = create(:captain_scenario, assistant: atendimento, account: account, title: 'Criada na tela', edited: true)
+
+      expect { rodar }.not_to change(Captain::Scenario, :count)
+      expect(editada.reload.instruction).to eq('Como o Eduardo quer')
+      expect(renomeada.reload.title).to eq('Nome novo na tela')
+      expect(desligada.reload).not_to be_enabled
+      expect(criada.reload).to be_enabled
+    end
   end
 end

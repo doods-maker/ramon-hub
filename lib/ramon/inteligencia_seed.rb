@@ -1,6 +1,6 @@
 # FORK-PONTO (ramon): seed idempotente da area Inteligencia — assistentes + skills
 # (db/seeds/ramon/inteligencia/assistentes.yml) e FAQ aprovada (faq/<tese>.md, tese = nome do arquivo).
-# Chaves: assistente por name; skill por (assistant, title); FAQ por (assistant Atendimento, question).
+# Chaves: assistente por name; skill por (assistant, seed_titulo|title), editada na tela fica; FAQ por (assistant Atendimento, question).
 class Ramon::InteligenciaSeed
   DIR = Rails.root.join('db/seeds/ramon/inteligencia')
   ATENDIMENTO = 'Atendimento (rascunho)'.freeze
@@ -43,15 +43,24 @@ class Ramon::InteligenciaSeed
   end
 
   def seed_skills(assistant, skills)
-    skills.each do |skill|
-      scenario = assistant.scenarios.find_or_initialize_by(title: skill['title'])
-      @contagem[scenario.new_record? ? :skills_criadas : :skills_atualizadas] += 1
-      scenario.update!(account: @account, description: skill['description'], instruction: skill['instruction'], enabled: true)
-    end
+    skills.each { |skill| seed_skill(assistant, skill) }
     # Skill que saiu do yml: desabilita sem revalidar (a instrucao antiga pode citar tool que ja nao existe).
+    # Editada ou criada na tela fica como esta (I-SK5).
     # rubocop:disable Rails/SkipsModelValidations
-    @contagem[:skills_desabilitadas] += assistant.scenarios.enabled.where.not(title: skills.pluck('title')).update_all(enabled: false)
+    @contagem[:skills_desabilitadas] += assistant.scenarios.enabled.where(edited: false)
+                                                 .where.not(title: skills.pluck('title')).update_all(enabled: false)
     # rubocop:enable Rails/SkipsModelValidations
+  end
+
+  # Acha pela origem no yml (sobrevive a renomear na tela) e, nas antigas, pelo título.
+  def seed_skill(assistant, skill)
+    scenario = assistant.scenarios.find_by(seed_titulo: skill['title']) ||
+               assistant.scenarios.find_or_initialize_by(title: skill['title'])
+    return @contagem[:skills_puladas_editadas] += 1 if scenario.edited?
+
+    @contagem[scenario.new_record? ? :skills_criadas : :skills_atualizadas] += 1
+    scenario.update!(account: @account, description: skill['description'], instruction: skill['instruction'],
+                     enabled: true, seed_titulo: skill['title'])
   end
 
   # [[tese, pergunta, resposta], ...] — tese = nome do arquivo (faq/<tese>.md).

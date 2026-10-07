@@ -4,6 +4,7 @@ json.description scenario.description
 json.instruction scenario.instruction
 json.tools scenario.tools
 json.enabled scenario.enabled
+json.edited scenario.edited
 json.assistant_id scenario.assistant_id
 json.account_id scenario.account_id
 json.created_at scenario.created_at
