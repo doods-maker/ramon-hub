@@ -17,13 +17,17 @@ class Captain::Copilot::SkillsService
   end
 
   # Sempre deixa uma resposta no painel (o "pensando" não fica girando) e não sobe o erro:
-  # retry do Sidekiq rodaria o agente de novo (pagaria duas vezes).
+  # retry do Sidekiq rodaria o agente de novo (pagaria duas vezes). Exceção: a thread ainda não
+  # existe (job enfileirado antes do commit em copilot_threads#create) — o find fica FORA do rescue,
+  # RecordNotFound sobe e o Sidekiq tenta de novo antes de qualquer custo de LLM.
   def responder
     thread = @assistant.account.copilot_threads.find(@copilot_thread_id)
-    thread.copilot_messages.create!(message: turno(thread), message_type: :assistant)
-  rescue StandardError => e
-    Rails.logger.error("[Captain::Copilot::SkillsService] painel sem resposta: #{e.class}: #{e.message}")
-    thread&.copilot_messages&.create(message: { content: ERRO }, message_type: :assistant)
+    begin
+      thread.copilot_messages.create!(message: turno(thread), message_type: :assistant)
+    rescue StandardError => e
+      Rails.logger.error("[Captain::Copilot::SkillsService] painel sem resposta: #{e.class}: #{e.message}")
+      thread.copilot_messages.create(message: { content: ERRO }, message_type: :assistant)
+    end
   end
 
   private

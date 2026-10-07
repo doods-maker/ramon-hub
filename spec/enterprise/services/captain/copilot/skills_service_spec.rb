@@ -59,6 +59,14 @@ RSpec.describe Captain::Copilot::SkillsService do
     expect(thread.copilot_messages.reorder(:id).last.message['content']).to eq(described_class::ERRO)
   end
 
+  it 'thread ainda inexistente sobe RecordNotFound (Sidekiq tenta de novo) sem chamar o agente' do
+    allow(runner).to receive(:generate_response)
+
+    expect { described_class.new(copiloto, conversation_id: nil, copilot_thread_id: 0).responder }
+      .to raise_error(ActiveRecord::RecordNotFound)
+    expect(runner).not_to have_received(:generate_response)
+  end
+
   it '.usa? só para assistente da equipe (sem caixa) com skills ligadas e v2', :aggregate_failures do
     account.enable_features!('captain_integration_v2')
     create(:captain_scenario, assistant: copiloto, account: account, enabled: true)
