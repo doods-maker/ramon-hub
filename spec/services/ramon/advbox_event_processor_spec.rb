@@ -13,13 +13,15 @@ RSpec.describe Ramon::AdvboxEventProcessor do
     event.reload
   end
 
-  it 'evento com regra dispara os fluxos de evento do ADVBOX (sem regra, não)' do
-    allow(Ramon::Fluxos::Disparo).to receive(:externo)
-    process({ 'stage' => 'SENTENCA PROFERIDA', 'cpf' => '52998224725' })
-    expect(Ramon::Fluxos::Disparo).to have_received(:externo)
-      .with('evento_advbox', lead, { 'regra' => 'marco', 'texto' => 'SENTENCA PROFERIDA' })
+  it 'evento com regra passa pela decisão do ADVBOX (fluxo migrado com a decisão, e os comuns depois); sem regra, não' do
+    allow(Ramon::Fluxos::Disparo).to receive(:externo).and_return([])
+    travel_to(Time.zone.parse('2026-10-07 13:00:00 UTC')) { process({ 'stage' => 'SENTENCA PROFERIDA', 'cpf' => '52998224725' }) }
+    dados = { 'regra' => 'marco', 'texto' => 'SENTENCA PROFERIDA', 'primeiro_nome' => 'Maria', 'hoje' => '07/10/2026' }
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('evento_advbox', lead, dados.merge('assumido' => false))
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('evento_advbox', lead, dados)
+    expect(lead.lead_activities.where(kind: 'advbox_marco')).to be_present # sem a chave, o código faz
     process({ 'stage' => 'ETAPA QUE NAO EXISTE', 'cpf' => '52998224725' })
-    expect(Ramon::Fluxos::Disparo).to have_received(:externo).once
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).twice
   end
 
   it 'CONTRATO FECHADO move o lead pra etapa ganha e registra atividade (match por CPF)' do

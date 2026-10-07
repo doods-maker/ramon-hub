@@ -82,4 +82,13 @@ RSpec.describe Ramon::Fluxos::LeadGanho do
       expect(dossies).to eq(1)
     end
   end
+
+  it 'pelo código: erro no dossiê não derruba o NPS nem o caso no ADVBOX (as filas vêm antes, como nos callbacks)' do
+    allow(Leads::HandoffNoteService).to receive(:new).and_raise(StandardError, 'dossiê')
+    with_modified_env(ADVBOX_API_TOKEN: 'tok') do
+      expect { described_class.pelo_codigo(lead) }.to raise_error(StandardError, 'dossiê')
+    end
+    expect(Ramon::NpsDraftJob).to have_been_enqueued.with(lead.id)
+    expect(Ramon::AdvboxClosingJob).to have_been_enqueued.with(lead.id)
+  end
 end

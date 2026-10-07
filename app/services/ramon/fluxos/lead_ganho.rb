@@ -16,10 +16,11 @@ module Ramon::Fluxos::LeadGanho
     pelo_codigo(lead) unless assumido && feitas.any?
   end
 
-  # O caminho de hoje, como morava nos callbacks do Lead (e a reserva do fluxo).
+  # O caminho de hoje, como morava nos callbacks do Lead (e a reserva do fluxo). Na ordem em que os callbacks rodavam
+  # (after_commit ao contrário): as 2 filas antes do dossiê — erro no dossiê não derruba o NPS nem o caso no ADVBOX.
   def pelo_codigo(lead)
-    Leads::HandoffNoteService.new(lead: lead).perform
-    Ramon::AdvboxClosingJob.perform_later(lead.id) if ENV.fetch('ADVBOX_API_TOKEN', nil).present?
     Ramon::NpsDraftJob.perform_later(lead.id)
+    Ramon::AdvboxClosingJob.perform_later(lead.id) if ENV.fetch('ADVBOX_API_TOKEN', nil).present?
+    Leads::HandoffNoteService.new(lead: lead).perform
   end
 end
