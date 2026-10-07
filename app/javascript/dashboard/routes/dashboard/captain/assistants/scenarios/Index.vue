@@ -1,5 +1,5 @@
 <script setup>
-import { computed, h, ref, onMounted } from 'vue';
+import { computed, h, ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { picoSearch } from '@scmmishra/pico-search';
@@ -110,6 +110,11 @@ const closeSuggestedRules = () => {
 const bulkSelectedIds = ref(new Set());
 const hoveredCard = ref(null);
 
+// seleção em lote só vale para a aba que se vê
+watch(aba, () => {
+  bulkSelectedIds.value = new Set();
+});
+
 const handleRuleSelect = id => {
   const selected = new Set(bulkSelectedIds.value);
   selected[selected.has(id) ? 'delete' : 'add'](id);
@@ -179,6 +184,9 @@ const alternarSkill = async (scenario, ligar) => {
       assistantId: assistantId.value,
       enabled: ligar,
     });
+    bulkSelectedIds.value = new Set(
+      [...bulkSelectedIds.value].filter(id => id !== scenario.id)
+    );
     useAlert(ligar ? t('INTEL.SKILLS.LIGADA') : t('INTEL.SKILLS.DESLIGADA'));
   } catch (error) {
     useAlert(
