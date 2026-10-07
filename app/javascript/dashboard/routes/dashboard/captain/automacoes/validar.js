@@ -23,6 +23,7 @@ export const OBRIGATORIOS = {
   rodar_skill: ['assistente_id', 'skill_id'],
   registrar_atividade: ['texto'],
   trocar_responsavel: ['papel'],
+  rotina: ['rotina'],
 };
 const MENSAGEM_CLIENTE = ['send_message', 'send_attachment'];
 const PROIBIDAS = [
@@ -64,6 +65,7 @@ const RESERVADAS = [
   'resumo',
   'resumo_antes',
   'primeiro_nome',
+  'hoje',
   'reuniao_de_pe',
   'horario_passou',
   'tentativa',

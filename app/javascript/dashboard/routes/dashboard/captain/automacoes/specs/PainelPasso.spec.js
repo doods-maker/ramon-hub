@@ -389,4 +389,19 @@ describe('PainelPasso', () => {
     });
     expect(wrapper.text()).toContain('Counts the attempt on the lead');
   });
+
+  it('rotina: escolhe da lista e explica o que ela faz', async () => {
+    const wrapper = montar({ id: 'n3', data: { tipo: 'rotina', config: {} } });
+    await wrapper.find('[data-testid="rotina"]').setValue('pesquisa_nps');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { rotina: 'pesquisa_nps' },
+    ]);
+    const advbox = montar({
+      id: 'n4',
+      data: { tipo: 'rotina', config: { rotina: 'abrir_caso_advbox' } },
+    });
+    expect(advbox.find('[data-testid="rotina-ajuda"]').text()).toContain(
+      'Writes to ADVBOX for real'
+    );
+  });
 });

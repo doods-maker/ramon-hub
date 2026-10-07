@@ -125,6 +125,8 @@ const detalhe = computed(() => {
       return c.papel ? t(`${K}.PAPEIS.${c.papel}`) : '';
     case 'preencher_campo':
       return c.chave || '';
+    case 'rotina':
+      return c.rotina ? t(`${K}.ROTINAS.${c.rotina}`) : '';
     case 'parar':
       return '';
     default:

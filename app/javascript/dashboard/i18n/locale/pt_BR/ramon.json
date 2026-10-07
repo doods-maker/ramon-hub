@@ -2275,6 +2275,7 @@
         "registrar_atividade": "Registrar atividade",
         "apagar_reuniao": "Apagar a tarefa da reunião",
         "registrar_retomada": "Registrar a retomada",
+        "rotina": "Rotina pronta do hub",
         "advbox": "ADVBOX",
         "webhook": "Webhook"
       },
@@ -2299,6 +2300,7 @@
         "registrar_atividade": "Lead",
         "apagar_reuniao": "Lead",
         "registrar_retomada": "Lead",
+        "rotina": "Lead",
         "advbox": "Integração",
         "webhook": "Integração"
       },
@@ -2334,6 +2336,7 @@
         "registrar_atividade": "Registrar atividade",
         "apagar_reuniao": "Apagar a tarefa da reunião",
         "registrar_retomada": "Registrar a retomada (conta a tentativa)",
+        "rotina": "Rotina pronta do hub (dossiê, NPS, caso no ADVBOX…)",
         "advbox": "Tarefa ou movimentação no ADVBOX",
         "webhook": "Webhook (último passo)"
       },
@@ -2445,6 +2448,7 @@
         "MOTIVO_AUTOMATICO": "Automático (Automação: nome do fluxo)",
         "MOTIVO_OUTRO": "Outro…",
         "MOTIVO_OUTRO_PLACEHOLDER": "Descreva em poucas palavras",
+        "ROTINA": "Qual rotina",
         "DUPLICAR": "Duplicar",
         "EXCLUIR": "Excluir passo",
         "GATILHO_TIPO": "Quando roda",
@@ -2577,7 +2581,31 @@
         "fluxo": "Automação",
         "meeting_scheduled": "Reunião agendada",
         "meeting_rescheduled": "Reunião remarcada",
-        "meeting_cancelled": "Reunião cancelada"
+        "meeting_cancelled": "Reunião cancelada",
+        "advbox_contrato_fechado": "ADVBOX: contrato fechado",
+        "advbox_inss_protocolado": "ADVBOX: requerimento protocolado",
+        "advbox_indeferido": "ADVBOX: INSS negou",
+        "advbox_decisao": "ADVBOX: decisão",
+        "advbox_exigencia": "ADVBOX: carta de exigências",
+        "advbox_reativacao_futura": "ADVBOX: benefício futuro",
+        "advbox_exito": "ADVBOX: êxito",
+        "advbox_marco": "ADVBOX: marco processual",
+        "advbox_concessao": "ADVBOX: benefício concedido",
+        "advbox_arquivado": "ADVBOX: arquivado"
+      },
+      "ROTINAS": {
+        "dossie_passagem": "Dossiê de passagem para o jurídico (nas notas do lead)",
+        "pesquisa_nps": "Pesquisa NPS do ganho (rascunho, 1 vez só)",
+        "pesquisa_nps_exito": "Pesquisa NPS do êxito (rascunho, 1 vez só)",
+        "abrir_caso_advbox": "Abrir o caso no ADVBOX (cliente, processo e tarefa 1º contato)",
+        "concluir_tarefas": "Concluir as tarefas abertas do lead"
+      },
+      "ROTINAS_AJUDA": {
+        "dossie_passagem": "O mesmo dossiê do código. Não repete se já há um dos últimos 5 minutos.",
+        "pesquisa_nps": "Rascunho nas notas do lead, com o texto e o link do Google de sempre. Pede uma vez só por lead (a do êxito é outra).",
+        "pesquisa_nps_exito": "Rascunho nas notas do lead, com o texto e o link do Google de sempre. Pede uma vez só por lead (a do ganho é outra).",
+        "abrir_caso_advbox": "Grava no ADVBOX de verdade: cliente, processo na etapa CONTRATO FECHADO e a tarefa 1º CONTATO COM O LEAD. Só com o token do ADVBOX; nunca abre o mesmo caso duas vezes; ADVBOX fora do ar, tenta de novo em 1, 5 e 15 min.",
+        "concluir_tarefas": "Conclui todas as tarefas abertas do lead na Esteira."
       },
       "TIPOS_TAREFA": {
         "follow_up": "Retorno",
@@ -2606,7 +2634,8 @@
         "skill_id": "a skill",
         "papel": "o papel",
         "tipo_tarefa_id": "o tipo de tarefa",
-        "responsavel_id": "o responsável no ADVBOX"
+        "responsavel_id": "o responsável no ADVBOX",
+        "rotina": "a rotina"
       },
       "ERROS": {
         "UM_GATILHO": "O fluxo precisa de exatamente 1 gatilho.",

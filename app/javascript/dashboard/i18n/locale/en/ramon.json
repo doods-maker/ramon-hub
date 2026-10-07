@@ -2270,6 +2270,7 @@
         "registrar_atividade": "Log activity",
         "apagar_reuniao": "Delete meeting task",
         "registrar_retomada": "Log the follow-up",
+        "rotina": "Hub routine",
         "advbox": "ADVBOX",
         "webhook": "Webhook"
       },
@@ -2294,6 +2295,7 @@
         "registrar_atividade": "Lead",
         "apagar_reuniao": "Lead",
         "registrar_retomada": "Lead",
+        "rotina": "Lead",
         "advbox": "Integration",
         "webhook": "Integration"
       },
@@ -2329,6 +2331,7 @@
         "registrar_atividade": "Log activity",
         "apagar_reuniao": "Delete meeting task",
         "registrar_retomada": "Log the follow-up (counts the attempt)",
+        "rotina": "Hub routine (dossier, NPS, ADVBOX case…)",
         "advbox": "Task or movement in ADVBOX",
         "webhook": "Webhook (last step)"
       },
@@ -2440,6 +2443,7 @@
         "MOTIVO_AUTOMATICO": "Automatic (Automation: flow name)",
         "MOTIVO_OUTRO": "Other…",
         "MOTIVO_OUTRO_PLACEHOLDER": "Describe it in a few words",
+        "ROTINA": "Which routine",
         "DUPLICAR": "Duplicate",
         "EXCLUIR": "Delete step",
         "GATILHO_TIPO": "When it runs",
@@ -2572,7 +2576,31 @@
         "fluxo": "Automation",
         "meeting_scheduled": "Meeting scheduled",
         "meeting_rescheduled": "Meeting rescheduled",
-        "meeting_cancelled": "Meeting cancelled"
+        "meeting_cancelled": "Meeting cancelled",
+        "advbox_contrato_fechado": "ADVBOX: contract closed",
+        "advbox_inss_protocolado": "ADVBOX: request filed",
+        "advbox_indeferido": "ADVBOX: INSS denied",
+        "advbox_decisao": "ADVBOX: decision",
+        "advbox_exigencia": "ADVBOX: requirement letter",
+        "advbox_reativacao_futura": "ADVBOX: future benefit",
+        "advbox_exito": "ADVBOX: success",
+        "advbox_marco": "ADVBOX: milestone",
+        "advbox_concessao": "ADVBOX: benefit granted",
+        "advbox_arquivado": "ADVBOX: archived"
+      },
+      "ROTINAS": {
+        "dossie_passagem": "Handoff dossier for the legal team (in the lead notes)",
+        "pesquisa_nps": "NPS survey after the win (draft, once)",
+        "pesquisa_nps_exito": "NPS survey after the case success (draft, once)",
+        "abrir_caso_advbox": "Open the case in ADVBOX (client, lawsuit and 1st contact task)",
+        "concluir_tarefas": "Complete the open tasks of the lead"
+      },
+      "ROTINAS_AJUDA": {
+        "dossie_passagem": "The same dossier the code writes. Not repeated if there is one from the last 5 minutes.",
+        "pesquisa_nps": "Draft in the lead notes, with the usual text and Google link. Asked once per lead (the success one is separate).",
+        "pesquisa_nps_exito": "Draft in the lead notes, with the usual text and Google link. Asked once per lead (the win one is separate).",
+        "abrir_caso_advbox": "Writes to ADVBOX for real: client, lawsuit in the CONTRATO FECHADO stage and the 1º CONTATO COM O LEAD task. Only with the ADVBOX token; never opens a case twice; if ADVBOX is down, tries again in 1, 5 and 15 min.",
+        "concluir_tarefas": "Completes every open task of the lead in the pipeline."
       },
       "TIPOS_TAREFA": {
         "follow_up": "Follow-up",
@@ -2601,7 +2629,8 @@
         "skill_id": "the skill",
         "papel": "the role",
         "tipo_tarefa_id": "the task type",
-        "responsavel_id": "the ADVBOX owner"
+        "responsavel_id": "the ADVBOX owner",
+        "rotina": "the routine"
       },
       "ERROS": {
         "UM_GATILHO": "The flow needs exactly 1 trigger.",

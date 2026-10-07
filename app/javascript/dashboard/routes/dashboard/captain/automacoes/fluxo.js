@@ -98,6 +98,7 @@ export const PASSOS = {
     icone: 'i-lucide-calendar-x',
     tom: 'slate',
   },
+  rotina: { grupo: 'LEAD', icone: 'i-lucide-package-check', tom: 'slate' },
   registrar_retomada: {
     grupo: 'LEAD',
     icone: 'i-lucide-repeat',
@@ -150,6 +151,7 @@ export const PALETA = [
       { chave: 'registrar_atividade', tipo: 'registrar_atividade' },
       { chave: 'apagar_reuniao', tipo: 'apagar_reuniao' },
       { chave: 'registrar_retomada', tipo: 'registrar_retomada' },
+      { chave: 'rotina', tipo: 'rotina' },
     ],
   },
   {
@@ -259,6 +261,7 @@ export const VARIAVEIS = [
   'resumo',
   'resumo_antes',
   'primeiro_nome',
+  'hoje',
   'sla_minutos',
   'tentativa',
   'dias_parado',
@@ -303,6 +306,24 @@ export const TIPOS_ATIVIDADE = [
   'meeting_scheduled',
   'meeting_rescheduled',
   'meeting_cancelled',
+  'advbox_contrato_fechado',
+  'advbox_inss_protocolado',
+  'advbox_indeferido',
+  'advbox_decisao',
+  'advbox_exigencia',
+  'advbox_reativacao_futura',
+  'advbox_exito',
+  'advbox_marco',
+  'advbox_concessao',
+  'advbox_arquivado',
+];
+// = Ramon::Fluxos::Passos::Rotina::ROTINAS (B4.4/B4.5: o mesmo código de hoje, com as mesmas travas)
+export const ROTINAS = [
+  'dossie_passagem',
+  'pesquisa_nps',
+  'pesquisa_nps_exito',
+  'abrir_caso_advbox',
+  'concluir_tarefas',
 ];
 export const UNIDADES = ['minutos', 'horas', 'dias'];
 // Ramon::Fluxos::Horario (B4.2): janela padrão quando o passo não tem a sua (0 = domingo)

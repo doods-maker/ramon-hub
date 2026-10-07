@@ -14,6 +14,8 @@ import {
   PAPEIS,
   PASSOS,
   REGRAS_ADVBOX,
+  ROTINAS,
+  TIPOS_ATIVIDADE,
 } from '../fluxo';
 import { MODELOS } from '../modelos';
 import { OBRIGATORIOS } from '../validar';
@@ -115,6 +117,13 @@ describe('textos das automações', () => {
     MODELOS.forEach(m => expect(FLUXOS_PT.MODELOS[m.chave].NOME).toBeTruthy());
     REGRAS_ADVBOX.forEach(r => expect(FLUXOS_PT.REGRAS_ADVBOX[r]).toBeTruthy());
     PAPEIS.forEach(p => expect(FLUXOS_PT.PAPEIS[p]).toBeTruthy());
+    ROTINAS.forEach(r => {
+      expect(FLUXOS_PT.ROTINAS[r]).toBeTruthy();
+      expect(FLUXOS_PT.ROTINAS_AJUDA[r]).toBeTruthy();
+    });
+    TIPOS_ATIVIDADE.forEach(k =>
+      expect(FLUXOS_PT.TIPOS_ATIVIDADE[k]).toBeTruthy()
+    );
     // chaves do HOJE em app/services/ramon/fluxos/sistema.rb: cada uma precisa da dica
     [
       'cadencia',

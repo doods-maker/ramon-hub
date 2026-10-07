@@ -75,3 +75,13 @@ describe('NoPasso — saída tomada', () => {
     expect(nao.classes()).not.toContain('text-n-teal-11');
   });
 });
+
+describe('NoPasso — rotina', () => {
+  it('mostra o nome da rotina escolhida', () => {
+    const w = montar({
+      tipo: 'rotina',
+      config: { rotina: 'abrir_caso_advbox' },
+    });
+    expect(w.text()).toContain('Open the case in ADVBOX');
+  });
+});

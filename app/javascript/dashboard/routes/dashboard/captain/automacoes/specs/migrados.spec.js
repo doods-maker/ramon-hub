@@ -1,11 +1,14 @@
 // Fluxos que substituem automações do código (B4.1, db/seeds/ramon/fluxos/migrados/*.json):
 // o quadro abre e publica cada um (validação = espelho do Grafo; a etapa o semear põe) e o desenho é fiel ao código.
 import { validar } from '../validar';
+import { REGRAS_ADVBOX, TIPOS_ATIVIDADE } from '../fluxo';
 import marcada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_marcada.json';
 import cancelada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_cancelada.json';
 import sla from '../../../../../../../../db/seeds/ramon/fluxos/migrados/sla_primeira_resposta.json';
 import lembretes from '../../../../../../../../db/seeds/ramon/fluxos/migrados/lembretes_reuniao.json';
 import cadencia from '../../../../../../../../db/seeds/ramon/fluxos/migrados/cadencia.json';
+import ganho from '../../../../../../../../db/seeds/ramon/fluxos/migrados/lead_ganho.json';
+import eventos from '../../../../../../../../db/seeds/ramon/fluxos/migrados/eventos_advbox.json';
 
 const semEtapa = d =>
   validar(d.desenho).filter(
@@ -231,5 +234,81 @@ describe('fluxo migrado: cadência de retomada (B4.3)', () => {
     expect(doTipo(cadencia, 'avisar_push')[0].config.uma_vez_por_dia).toBe(
       true
     );
+  });
+});
+
+// = Ramon::AdvboxEventRegras (o texto do código, com as aspas e a quebra de linha)
+const RASCUNHOS_ADVBOX = {
+  'INSS negou':
+    '"Oi {primeiro_nome}, tudo bem? Saiu a decisão do INSS sobre o seu pedido e, infelizmente, foi negativa.\nIsso não é o fim: muitos casos como o seu são revertidos na Justiça. Posso te explicar os próximos passos?"',
+  'exigência do INSS':
+    '"Oi {primeiro_nome}! O INSS pediu um documento a mais no seu processo. Pode me mandar por aqui quando conseguir? Te ajudo com o que precisar."',
+  'comunicado de êxito':
+    '"{primeiro_nome}, ótima notícia! 🎉 Saiu o pagamento do seu processo. Foi uma alegria acompanhar seu caso até aqui.\nSe puder, sua avaliação no Google ajuda muito outras pessoas a nos encontrarem."',
+  'benefício concedido':
+    '"{primeiro_nome}, notícia boa! 🎉 O INSS CONCEDEU o seu benefício. Agora vamos conferir a implantação e os valores — te aviso de cada passo."',
+};
+
+describe('fluxos migrados: lead ganho e eventos do ADVBOX (B4.4/B4.5)', () => {
+  it('os 2 publicam (só falta a etapa de ganho, que o semear põe)', () => {
+    [ganho, eventos].forEach(d => expect(semEtapa(d)).toEqual([]));
+    expect([ganho, eventos].map(d => d.desenho.nos[0].config)).toEqual([
+      { tipo: 'lead_ganho', cancelar_se_sair_da_etapa: false },
+      { tipo: 'evento_advbox', cancelar_se_sair_da_etapa: false },
+    ]);
+  });
+
+  it('lead ganho: dossiê → NPS → ADVBOX por último (fora do ar não segura o resto); o Drive fica no código', () => {
+    expect(ganho.desenho.nos.slice(1).map(n => n.config.rotina)).toEqual([
+      'dossie_passagem',
+      'pesquisa_nps',
+      'abrir_caso_advbox',
+    ]);
+  });
+
+  it('eventos: os 4 rascunhos ao cliente são o texto do código, nas notas do lead e com o título do código', () => {
+    const rascunhos = Object.fromEntries(
+      doTipo(eventos, 'rascunho_texto').map(n => [n.config.titulo, n.config])
+    );
+    Object.entries(RASCUNHOS_ADVBOX).forEach(([titulo, texto]) =>
+      expect(rascunhos[titulo]).toMatchObject({ onde: 'notas_do_lead', texto })
+    );
+    expect(Object.keys(rascunhos)).toHaveLength(4);
+  });
+
+  it('eventos: uma saída por regra, cada uma com a atividade do código; contrato fechado só marca ganho', () => {
+    const casos = eventos.desenho.nos[1].config.casos.map(c => c.valores[0]);
+    expect(casos).toEqual(REGRAS_ADVBOX);
+    expect(
+      doTipo(eventos, 'registrar_atividade').map(n => n.config.tipo)
+    ).toEqual(TIPOS_ATIVIDADE.filter(k => k.startsWith('advbox_')));
+    const { setas } = eventos.desenho;
+    const de = id => setas.find(s => s.de === id)?.para;
+    expect([de('n3'), de('n4'), de('n5')]).toEqual(['n4', 'n5', undefined]);
+  });
+
+  it('eventos: êxito e concessão pedem a NPS de êxito; arquivado conclui as tarefas antes da atividade', () => {
+    expect(doTipo(eventos, 'rotina').map(n => [n.id, n.config.rotina])).toEqual(
+      [
+        ['n24', 'pesquisa_nps_exito'],
+        ['n30', 'pesquisa_nps_exito'],
+        ['n32', 'concluir_tarefas'],
+      ]
+    );
+    expect(eventos.desenho.setas.find(s => s.de === 'n32').para).toBe('n33');
+  });
+
+  it('nenhum dos 2 fala com o cliente: o único texto ao cliente é rascunho (e a NPS, que é rascunho)', () => {
+    const tipos = [ganho, eventos].flatMap(d => d.desenho.nos.map(n => n.tipo));
+    expect([...new Set(tipos)].sort()).toEqual([
+      'avisar_push',
+      'criar_tarefa',
+      'escolha',
+      'gatilho',
+      'mover_etapa',
+      'rascunho_texto',
+      'registrar_atividade',
+      'rotina',
+    ]);
   });
 });
