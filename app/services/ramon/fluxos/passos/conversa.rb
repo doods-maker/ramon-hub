@@ -7,7 +7,7 @@ module Ramon::Fluxos::Passos::Conversa
     texto = ctx.interpolar(config['texto'])
     return { saida: 's', resumo: "faria: rascunho \"#{texto.truncate(120)}\"" } if ctx.ensaio?
 
-    escrever(ctx, "#{cabecalho(config)}\n#{texto}", onde: config['onde'])
+    escrever(ctx, "#{cabecalho(config, ctx)}\n#{texto}", onde: config['onde'])
     { saida: 's', resumo: "rascunho criado: #{texto.truncate(120)}" }
   end
 
@@ -29,9 +29,11 @@ module Ramon::Fluxos::Passos::Conversa
     { saida: 's', resumo: descricao }
   end
 
-  # "RASCUNHO (revisar antes de enviar):"; com título (B4.1), "RASCUNHO (revisar antes de enviar) — confirmação de reunião:"
-  def cabecalho(config)
-    titulo = config['titulo'].to_s.strip
+  # "RASCUNHO (revisar antes de enviar):"; com título (B4.1), "RASCUNHO (revisar antes de enviar) — confirmação de reunião:".
+  # B4.3: o título aceita variável ("— retomada nº {tentativa}:"); sem ctx, o texto cru
+  # (Ramon::Fluxos::CompararAgendamentos::RASCUNHO, no corpo da classe).
+  def cabecalho(config, ctx = nil)
+    titulo = (ctx ? ctx.interpolar(config['titulo']) : config['titulo']).to_s.strip
     titulo.empty? ? Ramon::RascunhoCarimbo::PREFIXO : "#{Ramon::RascunhoCarimbo::PREFIXO.delete_suffix(':')} — #{titulo}:"
   end
 

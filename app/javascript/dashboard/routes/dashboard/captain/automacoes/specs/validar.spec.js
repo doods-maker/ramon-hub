@@ -295,4 +295,12 @@ describe('validar (espelho do Grafo#erros)', () => {
       ).toEqual([['p1', 'CAMPO_CHAVE']])
     );
   });
+
+  it('os nomes da retomada (B4.3) também são reservados no Preencher campo', () => {
+    ['tentativa', 'dias_parado'].forEach(chave =>
+      expect(
+        codigos(linear(p('p1', 'preencher_campo', { chave, valor: 'x' })))
+      ).toEqual([['p1', 'CAMPO_CHAVE']])
+    );
+  });
 });

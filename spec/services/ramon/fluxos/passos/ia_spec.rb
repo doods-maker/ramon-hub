@@ -24,6 +24,13 @@ RSpec.describe Ramon::Fluxos::Passos::Ia do
       .with(hash_including(user: satisfy { |u| u.include?('[nome]') && u.exclude?('Maria') }))
   end
 
+  it 'sem tese, o prompt da IA usa o nome do benefício (como o código)' do
+    lead.update!(thesis: nil, benefit_type: create(:benefit_type, account: account, name: 'Benefício Teste B4.3'))
+    llm('{"resposta": "sim", "justificativa": "ok"}')
+    described_class.perguntar_ia({ 'pergunta' => 'x' }, ctx)
+    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(user: include('tese Benefício Teste B4.3')))
+  end
+
   it 'perguntar_ia: resposta que não é sim sai por não' do
     llm('{"resposta": "talvez", "justificativa": "não dá pra saber"}')
     expect(described_class.perguntar_ia({ 'pergunta' => 'x' }, ctx)[:saida]).to eq('nao')
@@ -51,6 +58,35 @@ RSpec.describe Ramon::Fluxos::Passos::Ia do
       described_class.perguntar_ia({ 'pergunta' => 'x' }, c)
       expect { described_class.perguntar_ia({ 'pergunta' => 'x' }, c) }.to raise_error(Ramon::Fluxos::PassoImpossivel, /teto/)
     end
+  end
+
+  it 'rascunho_ia nas notas do lead, com título que aceita variável (a retomada da cadência)' do
+    llm('Oi [nome], seguimos à disposição.')
+    lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 1 } })
+    config = { 'instrucao' => 'retome', 'onde' => 'notas_do_lead', 'titulo' => 'retomada nº {tentativa}' }
+    described_class.rascunho_ia(config, ctx)
+    expect(lead.lead_notes.last.body).to eq("RASCUNHO (revisar antes de enviar) — retomada nº 2:\nOi Maria, seguimos à disposição.")
+    expect(conversa.messages.where(private: true).count).to eq(0)
+  end
+
+  it 'rascunho_ia: IA fora do ar → o texto de reserva (como a cadência do código), sem nova tentativa' do
+    allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, 'timeout')
+    r = described_class.rascunho_ia({ 'instrucao' => 'retome', 'reserva' => 'Oi {nome}, tudo bem?' }, ctx)
+    expect(conversa.messages.last.content).to eq("#{Ramon::RascunhoCarimbo::PREFIXO}\nOi Maria, tudo bem?")
+    expect(r[:saida]).to eq('s')
+  end
+
+  it 'rascunho_ia: texto de reserva sem o nome do cliente diz "cliente" (como o código)' do
+    allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, 'timeout')
+    contato.update!(name: '')
+    lead.update!(name: nil)
+    described_class.rascunho_ia({ 'instrucao' => 'retome', 'reserva' => 'Oi {nome}, tudo bem?' }, ctx)
+    expect(conversa.messages.last.content).to eq("#{Ramon::RascunhoCarimbo::PREFIXO}\nOi cliente, tudo bem?")
+  end
+
+  it 'rascunho_ia sem reserva: IA fora do ar sobe o erro (o executor tenta de novo em 1/5/15 min)' do
+    allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, 'timeout')
+    expect { described_class.rascunho_ia({ 'instrucao' => 'retome' }, ctx) }.to raise_error(Ramon::LlmClient::TransientError)
   end
 
   it 'rodar_skill sem enterprise é impossível', unless: ChatwootApp.enterprise? do

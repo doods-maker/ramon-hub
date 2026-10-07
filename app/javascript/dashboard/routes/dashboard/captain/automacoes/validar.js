@@ -66,6 +66,8 @@ const RESERVADAS = [
   'primeiro_nome',
   'reuniao_de_pe',
   'horario_passou',
+  'tentativa',
+  'dias_parado',
   'primeira_resposta',
   'sla_minutos',
 ];

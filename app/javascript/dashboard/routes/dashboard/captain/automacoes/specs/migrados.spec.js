@@ -5,6 +5,7 @@ import marcada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reun
 import cancelada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_cancelada.json';
 import sla from '../../../../../../../../db/seeds/ramon/fluxos/migrados/sla_primeira_resposta.json';
 import lembretes from '../../../../../../../../db/seeds/ramon/fluxos/migrados/lembretes_reuniao.json';
+import cadencia from '../../../../../../../../db/seeds/ramon/fluxos/migrados/cadencia.json';
 
 const semEtapa = d =>
   validar(d.desenho).filter(
@@ -193,5 +194,42 @@ describe('fluxo migrado: SLA da 1ª resposta (B4.2)', () => {
     expect(doTipo(sla, 'avisar_push').map(n => n.config.titulo)).toEqual([
       'Lead aguardando 1a resposta',
     ]);
+  });
+});
+
+describe('fluxo migrado: cadência de retomada (B4.3)', () => {
+  const RESERVA =
+    'Oi {nome}, tudo bem? Passando pra saber se você ainda tem interesse em olhar o seu caso com a gente. Qualquer coisa, estou por aqui!';
+
+  it('publica sem erro; gatilho Lead parado com retomada às 11h', () => {
+    expect(validar(cadencia.desenho)).toEqual([]);
+    expect(cadencia.desenho.nos[0].config).toEqual({
+      tipo: 'lead_parado',
+      hora: '11:00',
+      retomada: true,
+    });
+  });
+
+  it('rascunho da IA nas notas (título com o nº, reserva = texto fixo do código), conta, tarefa de hoje, push 1 por dia', () => {
+    expect(cadencia.desenho.nos.map(n => n.tipo)).toEqual([
+      'gatilho',
+      'rascunho_ia',
+      'registrar_retomada',
+      'criar_tarefa',
+      'avisar_push',
+    ]);
+    expect(doTipo(cadencia, 'rascunho_ia')[0].config).toMatchObject({
+      onde: 'notas_do_lead',
+      titulo: 'retomada nº {tentativa}',
+      reserva: RESERVA,
+    });
+    expect(doTipo(cadencia, 'criar_tarefa')[0].config).toMatchObject({
+      titulo: 'Retomada nº {tentativa}',
+      tipo: 'follow_up',
+      prazo_dias: 0,
+    });
+    expect(doTipo(cadencia, 'avisar_push')[0].config.uma_vez_por_dia).toBe(
+      true
+    );
   });
 });

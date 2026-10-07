@@ -134,6 +134,20 @@ const trocaTipo = tipo =>
       <span>{{ t(`${K}.DIAS_PARADO_AJUDA`) }}</span>
     </label>
 
+    <template v-if="config.tipo === 'lead_parado'">
+      <label class="flex items-center gap-2 text-[13px] text-n-slate-12">
+        <input
+          data-testid="gatilho-retomada"
+          type="checkbox"
+          class="reset-base"
+          :checked="!!config.retomada"
+          @change="muda('retomada', $event.target.checked || undefined)"
+        />
+        {{ t(`${K}.RETOMADA`) }}
+      </label>
+      <p class="text-xs text-n-slate-10">{{ t(`${K}.RETOMADA_AJUDA`) }}</p>
+    </template>
+
     <template v-if="config.tipo === 'relogio'">
       <div :class="ROTULO">
         {{ t(`${K}.GRUPO_ETAPAS`) }}

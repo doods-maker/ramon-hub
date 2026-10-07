@@ -430,6 +430,16 @@ const escolheMotivo = valor => {
           :model-value="config.texto || ''"
           @update:model-value="v => muda('texto', v)"
         />
+        <label class="flex items-center gap-2 text-[13px] text-n-slate-12">
+          <input
+            data-testid="push-uma-vez"
+            type="checkbox"
+            class="reset-base"
+            :checked="!!config.uma_vez_por_dia"
+            @change="marca('uma_vez_por_dia', $event.target.checked)"
+          />
+          {{ t(`${K}.PAINEL.UMA_VEZ_POR_DIA`) }}
+        </label>
       </template>
 
       <template v-else-if="tipo === 'webhook'">
@@ -560,6 +570,13 @@ const escolheMotivo = valor => {
 
       <p v-else-if="tipo === 'apagar_reuniao'" class="text-xs text-n-slate-10">
         {{ t(`${K}.PAINEL.APAGAR_REUNIAO_AJUDA`) }}
+      </p>
+
+      <p
+        v-else-if="tipo === 'registrar_retomada'"
+        class="text-xs text-n-slate-10"
+      >
+        {{ t(`${K}.PAINEL.REGISTRAR_RETOMADA_AJUDA`) }}
       </p>
 
       <p v-else-if="tipo === 'parar'" class="text-xs text-n-slate-10">

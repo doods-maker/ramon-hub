@@ -7,7 +7,7 @@ class Ramon::Fluxos::Executor
   LIMITE_PASSOS = 50
   ESPERAS_ERRO = [1, 5, 15].freeze # minutos até a próxima tentativa
   VISIVEIS = %w[mover_etapa criar_tarefa acao_chatwoot avisar_sino avisar_push trocar_responsavel preencher_campo advbox webhook
-                apagar_reuniao].freeze
+                apagar_reuniao registrar_retomada].freeze
   # tipo do passo → módulo que tem o método de mesmo nome (chamado por nome: dá pra stubar no spec)
   PASSOS = {
     'se' => Ramon::Fluxos::Passos::Logica, 'escolha' => Ramon::Fluxos::Passos::Logica,
@@ -18,6 +18,7 @@ class Ramon::Fluxos::Executor
     'registrar_atividade' => Ramon::Fluxos::Passos::Lead, 'trocar_responsavel' => Ramon::Fluxos::Passos::Lead,
     'preencher_campo' => Ramon::Fluxos::Passos::Lead,
     'apagar_reuniao' => Ramon::Fluxos::Passos::Reuniao,
+    'registrar_retomada' => Ramon::Fluxos::Passos::Retomada,
     'advbox' => Ramon::Fluxos::Passos::Externo, 'webhook' => Ramon::Fluxos::Passos::Externo,
     'perguntar_ia' => Ramon::Fluxos::Passos::Ia, 'rascunho_ia' => Ramon::Fluxos::Passos::Ia, 'rodar_skill' => Ramon::Fluxos::Passos::Ia,
     'avisar_sino' => Ramon::Fluxos::Passos::Aviso, 'avisar_push' => Ramon::Fluxos::Passos::Aviso
@@ -126,7 +127,7 @@ class Ramon::Fluxos::Executor
 
   def registrar(passo, resultado)
     @execucao.trilha = @execucao.trilha + [linha(passo['id'], passo['tipo'], resultado[:resumo], saida: resultado[:saida])]
-    return if @execucao.ensaio || VISIVEIS.exclude?(passo['tipo'])
+    return if @execucao.ensaio || VISIVEIS.exclude?(passo['tipo']) || resultado[:sem_balao]
 
     Ramon::EventoInline.registrar(@execucao.conversa, "⚙ Fluxo #{@execucao.fluxo&.nome}: #{resultado[:resumo]}", tipo: 'fluxo')
   end

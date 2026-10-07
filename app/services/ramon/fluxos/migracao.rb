@@ -19,6 +19,11 @@ module Ramon::Fluxos::Migracao
     'sla' => {
       env: 'RAMON_FLUXO_SLA', faz: 'o aviso de SLA da 1ª resposta',
       fluxos: { 'sla_primeira_resposta' => 'conversa_criada' }.freeze
+    },
+    # B4.3: a cadência de retomada (Ramon::DailyFollowUpJob e o botão "Preparar retomada"). O limite do dia é o teto do código.
+    'cadencia' => {
+      env: 'RAMON_FLUXO_CADENCIA', faz: 'a cadência de retomada',
+      fluxos: { 'cadencia' => 'lead_parado' }.freeze, limite_devolve: false
     }
   }.freeze
 
@@ -65,7 +70,8 @@ module Ramon::Fluxos::Migracao
     [*linhas, "Agora #{quem}."].join("\n")
   end
 
-  # Cria os que faltam, em sombra, ligados e publicados. Já existe → devolve sem tocar (o Eduardo pode ter editado).
+  # Cria os que faltam, em sombra, ligados e publicados (com o limite do dia do JSON, se houver). Já existe → devolve
+  # sem tocar (o Eduardo pode ter editado).
   def semear(account, nome) = gatilhos(nome).keys.map { |chave| fluxo(account, chave) || criar(account, nome, chave) }
 
   def criar(account, nome, chave)
@@ -74,7 +80,7 @@ module Ramon::Fluxos::Migracao
     desenho = preparar ? preparar.call(account, dados['desenho']) : dados['desenho']
     Fluxo.transaction do
       novo = account.fluxos.create!(nome: dados['nome'], descricao: dados['descricao'], origem: 'usuario', sistema_chave: chave,
-                                    modo: 'sombra', ativo: true, rascunho: desenho)
+                                    modo: 'sombra', ativo: true, limite_dia: dados['limite_dia'], rascunho: desenho)
       novo.publicar!(nil)
       novo.reload
     end

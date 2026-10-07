@@ -213,6 +213,12 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       .to raise_error(Ramon::Fluxos::PassoImpossivel, /reservado/)
   end
 
+  it 'retomada: {tentativa} é a próxima (a contada + 1) e {dias_parado} os dias na etapa' do
+    lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 2 } })
+    lead.update_columns(stage_entered_at: 4.days.ago) # rubocop:disable Rails/SkipsModelValidations
+    expect(ctx.dados).to include('tentativa' => 3, 'dias_parado' => 4)
+  end
+
   it 'RESERVADAS cobre toda chave que o Contexto monta sozinho' do
     c = ctx
     montadas = c.dados.keys - ((lead.custom_attributes['campos'] || {}).keys + (c.execucao.contexto['vars'] || {}).keys)
@@ -335,6 +341,51 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       lead.update!(sdr_id: sdr.id)
       expect(para.call('sdr_ou_gestores')).to eq([sdr.id])
       expect(para.call('gestores')).to eq([gestor.id])
+    end
+  end
+
+  describe 'registrar a retomada (B4.3)' do
+    it 'conta a tentativa no lead (o contador do painel) e devolve o nº aos passos seguintes' do
+      lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 1 } })
+      r = Ramon::Fluxos::Passos::Retomada.registrar_retomada({}, ctx)
+      expect(r[:vars]).to eq('tentativa' => 2)
+      expect(r[:resumo]).to eq('rascunho de retomada nº 2 pronto nas notas do lead — revise e envie pelo painel')
+      expect(lead.reload.custom_attributes['follow_up']['tentativas']).to eq(2)
+    end
+
+    it 'ensaio só descreve' do
+      r = Ramon::Fluxos::Passos::Retomada.registrar_retomada({}, ctx(ensaio: true))
+      expect(r[:resumo]).to eq('faria: registrar a retomada nº 1')
+      expect(lead.reload.custom_attributes['follow_up']).to be_nil
+    end
+  end
+
+  describe 'push uma vez por dia (B4.3)' do
+    let(:dia) { Time.find_zone!('America/Sao_Paulo').parse('2026-10-07 11:00') }
+
+    after { Redis::Alfred.delete("RAMON::FLUXO_PUSH::#{fluxo.id}::2026-10-07") }
+
+    it 'só a 1ª execução do fluxo no dia avisa; as outras dizem que já saiu' do
+      config = { 'texto' => 'Há rascunhos', 'uma_vez_por_dia' => true }
+      outro = create(:lead, account: account)
+      travel_to(dia) do
+        expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx) }.to have_enqueued_job(Ramon::NtfyPushJob)
+        r = nil
+        expect { r = Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(alvo: outro)) }.not_to have_enqueued_job(Ramon::NtfyPushJob)
+        expect(r).to include(resumo: 'push: já saiu hoje (1 por dia)', sem_balao: true)
+      end
+    end
+
+    it 'o botão Preparar retomada não avisa nem gasta o aviso do dia; o lote depois ainda avisa' do
+      config = { 'texto' => 'Há rascunhos', 'uma_vez_por_dia' => true }
+      outro = create(:lead, account: account)
+      travel_to(dia) do
+        r = nil
+        expect { r = Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(contexto: { 'gatilho' => { 'botao' => true } })) }
+          .not_to have_enqueued_job(Ramon::NtfyPushJob)
+        expect(r).to include(resumo: 'push: só no lote do dia', sem_balao: true)
+        expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(alvo: outro)) }.to have_enqueued_job(Ramon::NtfyPushJob)
+      end
     end
   end
 end

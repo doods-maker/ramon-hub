@@ -28,6 +28,13 @@ RSpec.describe Ramon::Fluxos::Executor do
     expect(e.trilha.pluck('no')).to eq(%w[p1 p2])
   end
 
+  it 'push 1 por dia que já saiu hoje fica só na trilha (sem balão na conversa)' do
+    allow(Ramon::Fluxos::Passos::Aviso).to receive(:primeiro_do_dia?).and_return(false)
+    e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['avisar_push', { 'texto' => 'x', 'uma_vez_por_dia' => true }]))
+    expect { avancar(e) }.not_to have_enqueued_job(Conversations::ActivityMessageJob)
+    expect(e.trilha.last['resumo']).to eq('push: já saiu hoje (1 por dia)')
+  end
+
   it 'para na espera e retoma só quando vence (relógio duplicado não anda 2x)' do
     e = iniciar(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'quantidade' => 2, 'unidade' => 'dias' }],
                              ['nota_privada', { 'texto' => 'depois' }]))

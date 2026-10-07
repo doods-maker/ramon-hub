@@ -336,4 +336,57 @@ describe('PainelPasso', () => {
       { etapa_id: 9, motivo: 'Mudou de cidade' },
     ]);
   });
+
+  it('gatilho lead parado: retomada todo dia', async () => {
+    const wrapper = montar({
+      id: 'n1',
+      data: { tipo: 'gatilho', config: { tipo: 'lead_parado' } },
+    });
+    await wrapper.find('[data-testid="gatilho-retomada"]').setValue(true);
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { tipo: 'lead_parado', retomada: true },
+    ]);
+  });
+
+  it('rascunho da IA: nas notas do lead, com título e texto de reserva', async () => {
+    const wrapper = montar({
+      id: 'n2',
+      data: { tipo: 'rascunho_ia', config: { instrucao: 'x' } },
+    });
+    await wrapper.find('[data-testid="ia-onde"]').setValue('notas_do_lead');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { instrucao: 'x', onde: 'notas_do_lead' },
+    ]);
+    await wrapper
+      .find('[data-testid="ia-titulo"]')
+      .setValue('retomada nº {tentativa}');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { instrucao: 'x', titulo: 'retomada nº {tentativa}' },
+    ]);
+    await wrapper
+      .find('[data-testid="ia-reserva"] textarea')
+      .setValue('Oi {nome}');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { instrucao: 'x', reserva: 'Oi {nome}' },
+    ]);
+  });
+
+  it('push: só uma vez por dia', async () => {
+    const wrapper = montar({
+      id: 'n5',
+      data: { tipo: 'avisar_push', config: { texto: 'oi' } },
+    });
+    await wrapper.find('[data-testid="push-uma-vez"]').setValue(true);
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { texto: 'oi', uma_vez_por_dia: true },
+    ]);
+  });
+
+  it('registrar a retomada: só explica (sem configuração)', () => {
+    const wrapper = montar({
+      id: 'n3',
+      data: { tipo: 'registrar_retomada', config: {} },
+    });
+    expect(wrapper.text()).toContain('Counts the attempt on the lead');
+  });
 });

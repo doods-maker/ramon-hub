@@ -98,6 +98,11 @@ export const PASSOS = {
     icone: 'i-lucide-calendar-x',
     tom: 'slate',
   },
+  registrar_retomada: {
+    grupo: 'LEAD',
+    icone: 'i-lucide-repeat',
+    tom: 'slate',
+  },
   advbox: { grupo: 'INTEGRACOES', icone: 'i-lucide-scale', tom: 'slate' },
   webhook: { grupo: 'INTEGRACOES', icone: 'i-lucide-webhook', tom: 'slate' },
   esperar: { grupo: 'CONTROLE', icone: 'i-lucide-hourglass', tom: 'slate' },
@@ -144,6 +149,7 @@ export const PALETA = [
       { chave: 'preencher_campo', tipo: 'preencher_campo' },
       { chave: 'registrar_atividade', tipo: 'registrar_atividade' },
       { chave: 'apagar_reuniao', tipo: 'apagar_reuniao' },
+      { chave: 'registrar_retomada', tipo: 'registrar_retomada' },
     ],
   },
   {
@@ -254,6 +260,8 @@ export const VARIAVEIS = [
   'resumo_antes',
   'primeiro_nome',
   'sla_minutos',
+  'tentativa',
+  'dias_parado',
 ];
 export const CAMPOS = [
   'etapa',

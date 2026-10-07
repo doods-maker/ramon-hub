@@ -1,5 +1,5 @@
 # Tela do Watchdog (Fatia 3 da área de IA): mostra o vigia que já roda — o
-# rascunho de retomada diário (Ramon::DailyFollowUpJob, 11:00 BRT) e o copiloto
+# rascunho de retomada diário (Ramon::DailyFollowUpJob ou, desde a B4.3, o fluxo "Cadência de retomada", 11:00 BRT) e o copiloto
 # noturno — com os limites visíveis, os contadores das últimas 24h e a lista
 # dos casos em alerta. Não dispara nada: é leitura.
 class Api::V1::Accounts::RamonWatchdogController < Api::V1::Accounts::BaseController
@@ -23,8 +23,8 @@ class Api::V1::Accounts::RamonWatchdogController < Api::V1::Accounts::BaseContro
 
   def thresholds
     {
-      teto_diario: Ramon::FollowUpDraftService::DAILY_CAP,
-      intervalo_minimo_dias: Ramon::FollowUpDraftService::MIN_GAP_DAYS,
+      teto_diario: Ramon::Fluxos::Retomada.teto(Current.account),
+      intervalo_minimo_dias: Ramon::Fluxos::Retomada::INTERVALO_DIAS,
       teto_copiloto_noturno: ENV.fetch('RAMON_NIGHT_COPILOT_LIMIT', '15').to_i,
       horario_retomada: '11:00 (BRT)',
       horario_copiloto: '05:00 (BRT)'
