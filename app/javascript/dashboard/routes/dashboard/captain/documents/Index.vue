@@ -416,6 +416,7 @@ onUnmounted(() => {
           :name="doc.name || doc.external_link"
           :external-link="doc.external_link"
           :pdf-document="doc.pdf_document"
+          :text-document="doc.text_document"
           :assistant="doc.assistant"
           :created-at="doc.created_at"
           :status="doc.status"

@@ -763,7 +763,8 @@
         "SOURCE": {
           "ALL": "All sources",
           "WEB": "Web pages",
-          "PDF": "PDFs"
+          "PDF": "PDFs",
+          "TEXT": "Pasted text"
         },
         "STATUS": {
           "ANY": "Any status",
@@ -798,7 +799,7 @@
         "TITLE": "Related FAQs",
         "DESCRIPTION": "These FAQs are generated directly from the document."
       },
-      "FORM_DESCRIPTION": "Paste a page link. Captain reads the page and generates pending FAQs; the assistant only uses what you approve.",
+      "FORM_DESCRIPTION": "Paste a page link or some text. Captain reads it and generates pending FAQs; the assistant only uses what you approve.",
       "CREATE": {
         "TITLE": "Add a document",
         "SUCCESS_MESSAGE": "The document has been successfully created",

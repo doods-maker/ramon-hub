@@ -763,7 +763,8 @@
         "SOURCE": {
           "ALL": "Todas as fontes",
           "WEB": "Páginas da web",
-          "PDF": "PDF's"
+          "PDF": "PDF's",
+          "TEXT": "Texto colado"
         },
         "STATUS": {
           "ANY": "Qualquer status",
@@ -798,7 +799,7 @@
         "TITLE": "FAQs Relacionadas",
         "DESCRIPTION": "Estes FAQs são gerados diretamente a partir do documento."
       },
-      "FORM_DESCRIPTION": "Cole o link de uma página. A Inteligência lê a página e gera FAQs pendentes; o assistente só usa o que você aprovar.",
+      "FORM_DESCRIPTION": "Cole o link de uma página ou um texto. A Inteligência lê e gera FAQs pendentes; o assistente só usa o que você aprovar.",
       "CREATE": {
         "TITLE": "Adicionar um documento",
         "SUCCESS_MESSAGE": "O documento foi criado com sucesso",

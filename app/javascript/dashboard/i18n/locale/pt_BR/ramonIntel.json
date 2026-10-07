@@ -1,0 +1,79 @@
+{
+  "INTEL": {
+    "TESE": {
+      "auxilio-acidente": "Auxílio-acidente",
+      "auxilio-doenca": "Auxílio-doença",
+      "aposentadoria-invalidez": "Aposentadoria por invalidez",
+      "bpc-loas": "BPC/LOAS",
+      "acrescimo-25": "Acréscimo de 25%",
+      "geral": "Geral"
+    },
+    "DOCUMENTOS": {
+      "MODO_LINK": "Link de página",
+      "MODO_TEXTO": "Colar texto",
+      "TITULO_LABEL": "Título",
+      "TITULO_PLACEHOLDER": "Ex.: Regras do BPC — resumo da equipe",
+      "TITULO_ERRO": "Dê um título ao texto",
+      "TEXTO_LABEL": "Texto",
+      "TEXTO_PLACEHOLDER": "Cole aqui o texto (de um PDF, e-mail, manual...)",
+      "TEXTO_ERRO": "Cole o texto (até 200 mil caracteres)",
+      "TEXTO_COLADO": "Texto colado"
+    },
+    "FAQ": {
+      "TESE_LABEL": "Tese",
+      "TODAS_TESES": "Todas as teses",
+      "SEM_TESE": "Sem tese",
+      "TESTAR": {
+        "TITULO": "Testar pergunta",
+        "AJUDA": "Escreva como o lead perguntaria. A lista mostra as FAQs que o assistente acharia, na ordem em que ele recebe.",
+        "PLACEHOLDER": "Ex.: posso trabalhar recebendo auxílio-acidente?",
+        "BOTAO": "Testar",
+        "NADA": "O assistente não acharia nenhuma FAQ para essa pergunta. Vale criar uma.",
+        "ERRO": "Não foi possível testar agora. Tente de novo."
+      }
+    },
+    "SKILLS": {
+      "ABA_LIGADAS": "Ligadas ({n})",
+      "ABA_DESLIGADAS": "Desligadas ({n})",
+      "NENHUMA_DESLIGADA": "Nenhuma skill desligada.",
+      "LIGAR": "Ligar ou desligar esta skill",
+      "LIGADA": "Skill ligada: o assistente volta a usar.",
+      "DESLIGADA": "Skill desligada: o assistente para de usar.",
+      "EDITADA": "Editada aqui",
+      "EDITADA_AJUDA": "Editada na tela: a carga automática das skills não muda nem desliga esta."
+    },
+    "EXECUCOES": {
+      "ABA_FERRAMENTAS": "Ferramentas da IA",
+      "ABA_AGENTE": "Agente Claude",
+      "STATUS": {
+        "ok": "OK",
+        "erro": "Erro",
+        "limite": "Limite",
+        "cap": "Teto do dia",
+        "timeout": "Tempo esgotado"
+      },
+      "CASO": "Caso #{id}",
+      "CASO_NOME": "Caso #{id} · {nome}",
+      "CONVERSA": "Conversa #{id}",
+      "AGENTE": {
+        "SUBTITULO": "Cada pedido feito ao agente numa nota: o que pediu, o que ele respondeu e fez, e quanto demorou. O custo fica em Uso e custo.",
+        "HOJE": "Hoje: {n} de {teto} pedidos",
+        "PROBLEMAS": "Com problema hoje: {n}",
+        "VAZIO": "Nenhum pedido ao agente ainda.",
+        "VER_RESULTADO": "ver o que o agente respondeu",
+        "ESCONDER": "esconder",
+        "SEM_RESUMO": "Sem resposta registrada.",
+        "ACOES": "O que o agente fez",
+        "NENHUMA_ACAO": "Nenhuma escrita (só respondeu na nota)."
+      }
+    },
+    "VISAO_GERAL": {
+      "VER_TRILHA": "Ver a trilha do agente"
+    },
+    "SUGESTOES": {
+      "SO_TIPO": "Só: {tipo}",
+      "VER_TODAS": "ver todas",
+      "NENHUMA_DO_TIPO": "Nenhuma sugestão desse tipo agora."
+    }
+  }
+}

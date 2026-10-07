@@ -401,4 +401,28 @@ RSpec.describe 'Api::V1::Accounts::Captain::Documents', type: :request do
       end
     end
   end
+
+  describe 'texto colado (ramon, I-DO1)' do
+    let(:texto) { { document: { assistant_id: assistant.id, name: 'Honorários', content: 'O honorário é 30% dos atrasados + 3 benefícios.' } } }
+
+    it 'cria documento de texto ja disponivel, sem link, que gera FAQs' do
+      expect do
+        post "/api/v1/accounts/#{account.id}/captain/documents", params: texto, headers: admin.create_new_auth_token, as: :json
+      end.to have_enqueued_job(Captain::Documents::ResponseBuilderJob)
+
+      expect(response).to have_http_status(:success)
+      expect(json_response).to include(name: 'Honorários', status: 'available', text_document: true)
+      expect(json_response[:external_link]).to start_with('TEXT: Honorários_')
+    end
+
+    it 'filtra pela fonte texto colado' do
+      post "/api/v1/accounts/#{account.id}/captain/documents", params: texto, headers: admin.create_new_auth_token, as: :json
+      create(:captain_document, assistant: assistant, account: account, external_link: 'https://example.com/pagina')
+
+      get "/api/v1/accounts/#{account.id}/captain/documents", params: { source: 'text' }, headers: admin.create_new_auth_token, as: :json
+
+      expect(json_response[:payload].pluck(:name)).to eq(['Honorários'])
+      expect(json_response[:payload].first[:text_document]).to be(true)
+    end
+  end
 end

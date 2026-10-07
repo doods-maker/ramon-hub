@@ -32,6 +32,7 @@ import mfa from './mfa.json';
 import onboarding from './onboarding.json';
 import ramon from './ramon.json';
 import ramonIaUso from './ramonIaUso.json';
+import ramonIntel from './ramonIntel.json';
 import report from './report.json';
 import resetPassword from './resetPassword.json';
 import search from './search.json';
@@ -80,6 +81,7 @@ export default {
   ...onboarding,
   ...ramon,
   ...ramonIaUso,
+  ...ramonIntel,
   ...report,
   ...resetPassword,
   ...search,

@@ -1,0 +1,79 @@
+{
+  "INTEL": {
+    "TESE": {
+      "auxilio-acidente": "Accident benefit",
+      "auxilio-doenca": "Sickness benefit",
+      "aposentadoria-invalidez": "Disability retirement",
+      "bpc-loas": "BPC/LOAS",
+      "acrescimo-25": "25% supplement",
+      "geral": "General"
+    },
+    "DOCUMENTOS": {
+      "MODO_LINK": "Page link",
+      "MODO_TEXTO": "Paste text",
+      "TITULO_LABEL": "Title",
+      "TITULO_PLACEHOLDER": "E.g.: BPC rules — team summary",
+      "TITULO_ERRO": "Give the text a title",
+      "TEXTO_LABEL": "Text",
+      "TEXTO_PLACEHOLDER": "Paste the text here (from a PDF, e-mail, manual...)",
+      "TEXTO_ERRO": "Paste the text (up to 200 thousand characters)",
+      "TEXTO_COLADO": "Pasted text"
+    },
+    "FAQ": {
+      "TESE_LABEL": "Thesis",
+      "TODAS_TESES": "All theses",
+      "SEM_TESE": "No thesis",
+      "TESTAR": {
+        "TITULO": "Test a question",
+        "AJUDA": "Write it the way a lead would ask. The list shows the FAQs the assistant would find, in the order it gets them.",
+        "PLACEHOLDER": "E.g.: can I keep working while on accident benefit?",
+        "BOTAO": "Test",
+        "NADA": "The assistant would not find any FAQ for this question. Consider creating one.",
+        "ERRO": "Could not test right now. Try again."
+      }
+    },
+    "SKILLS": {
+      "ABA_LIGADAS": "On ({n})",
+      "ABA_DESLIGADAS": "Off ({n})",
+      "NENHUMA_DESLIGADA": "No skill is off.",
+      "LIGAR": "Turn this skill on or off",
+      "LIGADA": "Skill on: the assistant uses it again.",
+      "DESLIGADA": "Skill off: the assistant stops using it.",
+      "EDITADA": "Edited here",
+      "EDITADA_AJUDA": "Edited on screen: the automatic skill load does not change or turn off this one."
+    },
+    "EXECUCOES": {
+      "ABA_FERRAMENTAS": "AI tools",
+      "ABA_AGENTE": "Claude agent",
+      "STATUS": {
+        "ok": "OK",
+        "erro": "Error",
+        "limite": "Limit",
+        "cap": "Daily cap",
+        "timeout": "Timed out"
+      },
+      "CASO": "Case #{id}",
+      "CASO_NOME": "Case #{id} · {nome}",
+      "CONVERSA": "Conversation #{id}",
+      "AGENTE": {
+        "SUBTITULO": "Every request made to the agent in a note: what was asked, what it answered and did, and how long it took. Cost lives in Usage and cost.",
+        "HOJE": "Today: {n} of {teto} requests",
+        "PROBLEMAS": "With problems today: {n}",
+        "VAZIO": "No agent requests yet.",
+        "VER_RESULTADO": "show what the agent answered",
+        "ESCONDER": "hide",
+        "SEM_RESUMO": "No answer recorded.",
+        "ACOES": "What the agent did",
+        "NENHUMA_ACAO": "No writes (only answered in the note)."
+      }
+    },
+    "VISAO_GERAL": {
+      "VER_TRILHA": "See the agent trail"
+    },
+    "SUGESTOES": {
+      "SO_TIPO": "Only: {tipo}",
+      "VER_TODAS": "see all",
+      "NENHUMA_DO_TIPO": "No suggestion of this kind right now."
+    }
+  }
+}

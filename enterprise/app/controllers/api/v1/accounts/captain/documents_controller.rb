@@ -79,6 +79,8 @@ class Api::V1::Accounts::Captain::DocumentsController < Api::V1::Accounts::BaseC
     case source
     when 'web' then scope.syncable
     when 'pdf' then scope.pdf_documents
+    # FORK-PONTO (ramon): texto colado (I-DO1) — documento 'TEXT:' sem link nem PDF.
+    when 'text' then scope.where("captain_documents.external_link LIKE 'TEXT:%'")
     else scope
     end
   end
