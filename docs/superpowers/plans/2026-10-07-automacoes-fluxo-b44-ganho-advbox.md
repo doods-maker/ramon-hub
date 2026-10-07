@@ -675,10 +675,10 @@ end
 
 ```
 # ramon: lead ganho pelo fluxo (B4.4). on + o fluxo "Lead ganho" em modo normal = o fluxo faz dossie, NPS e o caso no
-# ADVBOX, e o codigo para. Padrao desligado. Virar/voltar: rake ramon:fluxos:migrados:modo[conta,lead_ganho,normal|sombra]
+# ADVBOX, e o codigo para. Padrao desligado. Virar/voltar: rake ramon:fluxos:migracao:modo[lead_ganho,conta,normal|sombra]
 # RAMON_FLUXO_LEAD_GANHO=off
 # ramon: eventos do ADVBOX pelo fluxo (B4.5). on + o fluxo "Eventos do ADVBOX" em modo normal = o fluxo faz o que cada
-# regra do Flowter fazia, e o codigo para. Padrao desligado. Virar/voltar: rake ramon:fluxos:migrados:modo[conta,eventos_advbox,normal|sombra]
+# regra do Flowter fazia, e o codigo para. Padrao desligado. Virar/voltar: rake ramon:fluxos:migracao:modo[eventos_advbox,conta,normal|sombra]
 # RAMON_FLUXO_EVENTOS_ADVBOX=off
 ```
 
@@ -1674,7 +1674,7 @@ Expected: o 1º vazio (sistema/*.json e linhas do sistema ficam — E7); no 2º,
 ```markdown
 ## NN. Notas da B4.4/B4.5 (07/10/2026) — lead ganho e eventos do ADVBOX
 
-- **Escopo (Eduardo, 07/10, o mesmo da B4.2):** direto, sem sombra nem comparação — deploy, semear, virar a chave e teste ao vivo. Chave por migração: `RAMON_FLUXO_LEAD_GANHO` / `RAMON_FLUXO_EVENTOS_ADVBOX` =on **e** o fluxo ("Lead ganho" / "Eventos do ADVBOX", `origem: usuario`, `sistema_chave` = `lead_ganho` / `eventos_advbox`) ligado, publicado, em modo normal, sem limite do dia e com o gatilho certo ⇒ o fluxo faz e o código para; qualquer peça fora ⇒ o código faz e o fluxo só ensaia. `rake ramon:fluxos:migrados:{semear,modo}[conta,chave(,modo)]`; voltar = `modo …,sombra`, sem deploy.
+- **Escopo (Eduardo, 07/10, o mesmo da B4.2):** direto, sem sombra nem comparação — deploy, semear, virar a chave e teste ao vivo. Chave por migração: `RAMON_FLUXO_LEAD_GANHO` / `RAMON_FLUXO_EVENTOS_ADVBOX` =on **e** o fluxo ("Lead ganho" / "Eventos do ADVBOX", `origem: usuario`, `sistema_chave` = `lead_ganho` / `eventos_advbox`) ligado, publicado, em modo normal, sem limite do dia e com o gatilho certo ⇒ o fluxo faz e o código para; qualquer peça fora ⇒ o código faz e o fluxo só ensaia. `rake ramon:fluxos:migracao:{criar[chave,conta],modo[chave,conta,modo]}`; voltar = `modo …,sombra`, sem deploy.
 - **Passo novo "rotina pronta do hub" (`rotina`):** `dossie_passagem` (`Leads::HandoffNoteService`), `pesquisa_nps` / `pesquisa_nps_exito` (`Ramon::NpsDraftJob`), `abrir_caso_advbox` (`Ramon::AdvboxClosingService`: só com token, nunca de novo com `advbox.sincronizado_em`, id guardado ao nascer; fora do ar → o motor tenta de novo em 1/5/15 min; 4xx anotado no lead e segue), `concluir_tarefas`. É o mesmo código de hoje: o texto da NPS e do dossiê não se edita na tela.
 - **A decisão é do evento:** o callback do Lead (`after_update_commit :ganhou`, `won_at` mudou) chama `Ramon::Fluxos::LeadGanho.ganhou`; o `AdvboxEventProcessor` chama `Ramon::Fluxos::EventosAdvbox.processar`. Cada um lê `assumiu?` uma vez e manda `assumido`; `lead_ganho` e `evento_advbox` entraram em `Disparo::PELO_EVENTO` (com `assumido` só os migrados; sem, só os comuns, como sempre). "Eventos do ADVBOX" roda **na hora** (dentro do job do ADVBOX). Se o fluxo do ADVBOX está no comando mas não pega o evento (mesmo lead numa execução viva, motor com erro), o código faz aquele evento — o filtro de regras do gatilho, por isso, não desliga efeito (apague o passo do ramo). O "Lead ganho" tem a mesma reserva (decisão extra do Eduardo, 07/10): se o fluxo no comando não começa aquele ganho (ocupado com o mesmo lead, erro do motor), o código faz o ganho como antes (dossiê, NPS, caso no ADVBOX) — uma decisão só por evento (`pelo_codigo unless assumido && feitas.any?`).
 - **Contrato fechado:** o ADVBOX só move o lead para o ganho (nos dois caminhos); dossiê/ADVBOX/NPS são sempre e só do "Lead ganho" — as 4 combinações de chave dão 1 de cada. Um lead pode ter 2 rascunhos de NPS (ganho e êxito), como antes.
@@ -1693,14 +1693,14 @@ Automações em fluxo — B4.4 + B4.5: o que o hub faz quando o **lead é ganho*
 - Spec `docs/superpowers/specs/2026-10-05-automacoes-em-fluxo-design.md` §8 (B4+: lead ganho e eventos do ADVBOX) e §14 ("não migrar em dobro"); notas novas no fim.
 
 ## How to test
-1. Depois do deploy: `rake "ramon:fluxos:migrados:semear[2,lead_ganho]"` e `…[2,eventos_advbox]` → "modo sombra, ligado" e "Agora o CÓDIGO faz".
+1. Depois do deploy: `rake "ramon:fluxos:migracao:criar[lead_ganho,2]"` e `…criar[eventos_advbox,2]` → "modo sombra, ligado" e "Agora o CÓDIGO faz … (os fluxos ensaiam)".
 2. Inteligência → Automações → Meus fluxos: "Lead ganho" (3 rotinas) e "Eventos do ADVBOX" (uma saída por regra), com o selo "em sombra".
 3. Lead de teste com a trava do ADVBOX pré-marcada → "Testar com um lead…" no "Lead ganho": a linha do ADVBOX diz "caso já aberto … (não chama de novo)".
 4. Virar as 2 chaves e rodar o teste ao vivo da seção "Operação" (contrato fechado + as outras 9 regras no lead de teste): tudo pelo fluxo, nada no ADVBOX.
 
 ## What changed
 - Passo `rotina` (o mesmo código de hoje como passo), `Ramon::Fluxos::Migrados` (chave por migração), `Ramon::Fluxos::LeadGanho` e `Ramon::Fluxos::EventosAdvbox` (decisão por evento), `Ramon::AdvboxEventRegras` (efeitos de hoje, mudados de arquivo); `Lead` e `AdvboxEventProcessor` ficaram menores. Eventos do ADVBOX migrados rodam na hora; `lead_ganho`/`evento_advbox` disparam com e sem a decisão.
-- Rake `ramon:fluxos:migrados:{semear,modo}`; envs `RAMON_FLUXO_LEAD_GANHO` e `RAMON_FLUXO_EVENTOS_ADVBOX` (desligadas). Sem migração. Drive fica no código.
+- Rake `ramon:fluxos:migracao:{criar,modo}`; envs `RAMON_FLUXO_LEAD_GANHO` e `RAMON_FLUXO_EVENTOS_ADVBOX` (desligadas). Sem migração. Drive fica no código.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
@@ -1725,14 +1725,21 @@ Sem push.
 
 Conta da banca = **2**; console = `docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "<task>"` / `… rails runner '<ruby>'` (Eduardo roda via `!` e cola a saída). Deploy = o de sempre (`docker compose pull chatwoot-web chatwoot-worker && docker compose up -d chatwoot-web chatwoot-worker`), **sem migração**. **Junto com o deploy**, acrescentar ao `chatwoot.env` em `/opt/intranet-ramon`: `RAMON_FLUXO_LEAD_GANHO=on` e `RAMON_FLUXO_EVENTOS_ADVBOX=on` — seguro: sem os fluxos em modo normal, o código segue fazendo tudo.
 
-**1. Semear (código ainda no comando).**
-```
-docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migrados:semear[2,lead_ganho]"
-docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migrados:semear[2,eventos_advbox]"
-```
-Esperado: cada um "Fluxo #… — modo sombra, ligado" e "Agora o CÓDIGO faz (o fluxo só ensaia)". Rodar de novo não duplica.
+**0. Deploy** (já descrito acima, com as 2 envs no `chatwoot.env`; recriar web **e** worker para lerem as envs).
 
-**2. Lead de teste com a trava do ADVBOX pré-marcada (garante que o teste NÃO grava no ADVBOX).** Sem tese (o Drive não sobe nada), telefone que não existe:
+**1. Checagem F9 (somente leitura).** Fluxos de usuário ativos com passo webhook/advbox nos gatilhos desta fatia; se vier algo, desligar na tela durante o teste ou PARAR:
+```
+docker exec intranet-ramon-chatwoot-web-1 bundle exec rails runner 'p Account.find(2).fluxos.executaveis.where(gatilho_tipo: %w[lead_ganho lead_mudou_etapa lead_criado evento_advbox]).select { |f| f.versao_publicada.grafo["nos"].any? { |n| %w[webhook advbox].include?(n["tipo"]) } }.map { |f| [f.id, f.nome] }'
+```
+
+**2. Criar os fluxos (código ainda no comando).**
+```
+docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migracao:criar[lead_ganho,2]"
+docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migracao:criar[eventos_advbox,2]"
+```
+Esperado: cada um "modo sombra, ligado" e "Agora o CÓDIGO faz … (os fluxos ensaiam)". Rodar de novo não duplica.
+
+**3. Lead de teste com a trava do ADVBOX pré-marcada (garante que o teste NÃO grava no ADVBOX).** Sem tese (o Drive não sobe nada), telefone que não existe:
 ```
 docker exec intranet-ramon-chatwoot-web-1 bundle exec rails runner '
 a = Account.find(2)
@@ -1742,16 +1749,16 @@ l.update!(custom_attributes: l.custom_attributes.to_h.merge("advbox" => { "sincr
 puts "lead #{l.id}"'
 ```
 
-**3. Conferir antes de virar.** Automações → "Lead ganho" → **Testar com um lead…** → o lead de teste. A trilha precisa dizer: "faria: dossiê…", "faria: rascunho da pesquisa NPS (comercial)…" e **"ADVBOX: caso já aberto em … (não chama de novo)"**. **Se a linha do ADVBOX disser "faria: abrir o caso", PARE** (a trava não pegou — não vire a chave do lead ganho).
+**4. Conferir antes de virar.** Automações → "Lead ganho" → **Testar com um lead…** → o lead de teste. Com a guarda do `won_at`, o lead de teste (sem ganho) mostra na trilha "dossiê: o lead não está mais ganho…" e "pesquisa NPS (comercial): o lead não está mais ganho…"; a linha que importa é só a do ADVBOX: **"ADVBOX: caso já aberto em … (não chama de novo)"**. **Se a linha do ADVBOX disser "faria: abrir o caso", PARE** (a trava não pegou — não vire a chave do lead ganho).
 
-**4. Virar.**
+**5. Virar.**
 ```
-docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migrados:modo[2,lead_ganho,normal]"
-docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migrados:modo[2,eventos_advbox,normal]"
+docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migracao:modo[lead_ganho,2,normal]"
+docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migracao:modo[eventos_advbox,2,normal]"
 ```
-Esperado: "Agora o FLUXO faz (o código não faz mais)" nos dois.
+Esperado: "Agora os FLUXOS fazem … (o código não faz mais)" nos dois.
 
-**5. Teste ao vivo (eventos do ADVBOX fabricados no console, para o lead de teste — nada vem do Flowter, nada vai para o ADVBOX).** Contrato fechado primeiro (ele aciona o "Lead ganho"), depois as outras 9 regras:
+**6. Teste ao vivo (eventos do ADVBOX fabricados no console, para o lead de teste — nada vem do Flowter, nada vai para o ADVBOX).** Contrato fechado primeiro (ele aciona o "Lead ganho"), depois as outras 9 regras:
 ```
 docker exec intranet-ramon-chatwoot-web-1 bundle exec rails runner '
 a = Account.find(2)
@@ -1769,7 +1776,7 @@ Esperado: 10 × `processed -> lead #…`. Depois, conferir na tela (em bloco):
 - Lead de teste: etapa = ganho; atividades "ADVBOX: …" (10) + a mudança de etapa; tarefas de 45, 1, 2, 2 e 180 dias — e todas concluídas pelo "arquivado" (o último); notas: 1 dossiê, 1 NPS do ganho, os 4 rascunhos (INSS negou, exigência, êxito, concedido) **com o texto de sempre**, 1 NPS de êxito (a concessão diz "já pedida"); pushes no celular (se o ntfy estiver ligado).
 - ADVBOX: buscar "Teste Fluxo B44" → **nada**.
 
-**6. Limpar o teste.**
+**7. Limpar o teste.**
 ```
 docker exec intranet-ramon-chatwoot-web-1 bundle exec rails runner '
 a = Account.find(2)
@@ -1781,8 +1788,8 @@ AdvboxEvent.where(account: a).where("event_key LIKE ?", "teste-b45-%").delete_al
 puts "ok"'
 ```
 
-**7. Rollback (a qualquer momento, sem deploy, cada um independente).**
-`docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migrados:modo[2,lead_ganho,sombra]"` (e/ou `…[2,eventos_advbox,sombra]`) → "Agora o CÓDIGO faz". Também seguro: desligar o fluxo na tela, ou tirar a env do `chatwoot.env` e recriar. Uma execução do "Lead ganho" que já esperava nova tentativa do ADVBOX termina pelo fluxo — sem dobra (o código só age em ganhos novos).
+**8. Rollback (a qualquer momento, sem deploy, cada um independente).**
+`docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migracao:modo[lead_ganho,2,sombra]"` (e/ou `…modo[eventos_advbox,2,sombra]`) → "Agora o CÓDIGO faz". Também seguro: desligar o fluxo na tela, ou tirar a env do `chatwoot.env` e recriar. Uma execução do "Lead ganho" que já esperava nova tentativa do ADVBOX termina pelo fluxo — sem dobra (o código só age em ganhos novos).
 
 **8. Depois (outro PR, E7).** Com 2 semanas em normal sem incidente: apagar `LeadGanho.pelo_codigo` (e a chamada), os JSON `db/seeds/ramon/fluxos/sistema/lead_ganho.json` e `eventos_advbox.json` **e** as linhas `origem: sistema` deles (a sincronização não apaga linha cujo JSON sumiu), as 2 envs; `Ramon::AdvboxEventRegras` conforme a N6.
 
