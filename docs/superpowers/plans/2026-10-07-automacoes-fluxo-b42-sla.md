@@ -1685,3 +1685,8 @@ Saída esperada: `Fluxo #N "SLA da 1ª resposta" — modo sombra, ligado` e `Ago
 | N1 | O fluxo "acorda" pelo relógio de minuto em minuto: o aviso pode chegar **até ~1 min depois** do prazo (o código chega no segundo certo) | Aceitar |
 | N2 | Se o fluxo estiver no comando mas **não pegar** uma conversa (ex.: alguém pôs filtro de caixa no gatilho, ou erro do sistema), o **código vigia aquela conversa**. Efeito colateral: filtro de caixa no fluxo não desliga o aviso daquela caixa | Aceitar (nunca fica sem aviso) |
 | N3 | Com o fluxo no comando, **desligar o fluxo na tela** cancela as vigílias em andamento (conversas da última hora ficam sem aviso). A volta segura é o comando "modo sombra" | Aceitar (igual à B4.1) |
+
+
+## Respostas do Eduardo (07/10/2026)
+
+Todas as "Decisões novas que dependem do Eduardo" deste plano foram **ACEITAS como propostas** (formulário de 07/10).
