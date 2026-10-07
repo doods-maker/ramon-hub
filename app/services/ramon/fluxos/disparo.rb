@@ -9,6 +9,9 @@ class Ramon::Fluxos::Disparo
   # B4.1: os fluxos migrados de marcar/cancelar rodam na hora, dentro da requisição (o painel vê a tarefa ao recarregar;
   # em sombra, o ensaio vê o lead antes de o código mexer).
   NA_HORA = %w[reuniao_marcada reuniao_cancelada].freeze
+  # B4.1/B4.2: gatilhos que o código dispara 2 vezes — com 'assumido' (a decisão do evento) só os fluxos migrados ouvem;
+  # sem (o ouvinte de sempre), só os demais. conversa_criada: o RamonLeadListener manda a decisão do SLA da 1ª resposta.
+  DUAS_VEZES = (NA_HORA + %w[conversa_criada]).freeze
 
   def self.call(gatilho_tipo, alvo, dados = {}, origem: nil)
     account = alvo.account
@@ -38,10 +41,10 @@ class Ramon::Fluxos::Disparo
     []
   end
 
-  # B4.1: nos gatilhos NA_HORA o evento dispara 2 vezes. Antes dos efeitos, com 'assumido': só os fluxos migrados
-  # (o ensaio vê o lead como estava). Depois dos efeitos, sem 'assumido': só os demais fluxos (veem o lead já mexido, como hoje).
+  # Nos gatilhos DUAS_VEZES: com 'assumido' só os migrados; sem, só os demais. Em reuniao_marcada/cancelada o disparo
+  # com 'assumido' vem antes dos efeitos do código (o ensaio vê o lead como estava).
   def self.da_vez?(fluxo, dados)
-    NA_HORA.exclude?(fluxo.gatilho_tipo) || Ramon::Fluxos::Migracao.migrado?(fluxo) == dados.key?('assumido')
+    DUAS_VEZES.exclude?(fluxo.gatilho_tipo) || Ramon::Fluxos::Migracao.migrado?(fluxo) == dados.key?('assumido')
   end
 
   def self.passa?(fluxo, dados, origem)

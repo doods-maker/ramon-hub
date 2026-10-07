@@ -25,4 +25,18 @@ RSpec.describe Ramon::Fluxos::Migracao do
     fluxo_publicado(account, grafo, sistema_chave: 'teste_limite', modo: 'normal', limite_dia: 15)
     with_modified_env(RAMON_FLUXO_TESTE: 'on') { expect(described_class.assumiu?(account, 'teste')).to be(true) }
   end
+
+  it 'SLA (B4.2): criar = 1 fluxo em sombra, ligado e publicado; virar exige RAMON_FLUXO_SLA; cada migração tem a sua chave' do
+    fluxos = described_class.semear(account, 'sla')
+    expect(fluxos.map { |f| [f.sistema_chave, f.gatilho_tipo, f.modo, f.ativo, f.versao_publicada_id.present?] })
+      .to eq([['sla_primeira_resposta', 'conversa_criada', 'sombra', true, true]])
+    expect { described_class.mudar_modo!(account, 'sla', 'normal') }.to raise_error(ArgumentError, /RAMON_FLUXO_SLA/)
+    with_modified_env(RAMON_FLUXO_SLA: 'on') do
+      expect(described_class.assumiu?(account, 'sla')).to be(false) # ainda em sombra
+      described_class.mudar_modo!(account, 'sla', 'normal')
+      expect(described_class.assumiu?(account, 'sla')).to be(true)
+      expect(described_class.assumiu?(account, 'reunioes')).to be(false)
+    end
+    expect(described_class.descrever(account, 'sla')).to include('Agora o CÓDIGO faz o aviso de SLA da 1ª resposta')
+  end
 end

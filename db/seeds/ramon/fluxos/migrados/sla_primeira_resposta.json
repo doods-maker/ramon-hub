@@ -1,0 +1,30 @@
+{
+  "nome": "SLA da 1ª resposta",
+  "descricao": "Migrado do código (B4.2). Conversa nova numa caixa com Criar lead → espera o SLA da caixa → se continua sem 1ª resposta, aberta e com lead, avisa o SDR do lead (sem SDR: os gestores) e manda o push, das 7h às 21h, todo dia → aos 60 min da criação da conversa, se continuar assim, avisa os gestores. Fora do horário o aviso é pulado, mas a escalada continua esperando. Quem dispara é o ouvinte de leads (onde o código agendava). Mudar o horário, os textos ou quem recebe muda o aviso de verdade.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"conversa_criada","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"esperar","config":{"rotulo":"SLA da caixa","desde":"conversa","prazo":"sla_caixa"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"se","config":{"rotulo":"Ainda sem 1ª resposta, aberta e com lead?","juncao":"e","condicoes":[{"campo":"primeira_resposta","operador":"igual","valor":"nao"},{"campo":"status","operador":"igual","valor":"open"},{"campo":"etapa","operador":"existe","valor":""}]},"posicao":{"x":0,"y":280}},
+      {"id":"n4","tipo":"se","config":{"rotulo":"Entre 7h e 21h?","juncao":"e","condicoes":[{"campo":"status","operador":"em_horario_comercial","valor":"","dias":[0,1,2,3,4,5,6],"inicio":7,"fim":21}]},"posicao":{"x":-130,"y":440}},
+      {"id":"n5","tipo":"avisar_sino","config":{"rotulo":"Sino do SDR (sem SDR: gestores)","para":"sdr_ou_gestores","texto":"Lead aguardando 1ª resposta há {sla_minutos} min: {nome_completo}"},"posicao":{"x":-260,"y":600}},
+      {"id":"n6","tipo":"avisar_push","config":{"rotulo":"Push: lead aguardando","titulo":"Lead aguardando 1a resposta","texto":"Lead aguardando 1ª resposta há {sla_minutos}min: {nome_completo}"},"posicao":{"x":-260,"y":740}},
+      {"id":"n7","tipo":"esperar","config":{"rotulo":"Até 60 min da criação da conversa","desde":"conversa","quantidade":60,"unidade":"minutos"},"posicao":{"x":0,"y":880}},
+      {"id":"n8","tipo":"se","config":{"rotulo":"A escalada ainda vale? Sem 1ª resposta, aberta e com lead?","juncao":"e","condicoes":[{"campo":"horario_passou","operador":"igual","valor":"nao"},{"campo":"primeira_resposta","operador":"igual","valor":"nao"},{"campo":"status","operador":"igual","valor":"open"},{"campo":"etapa","operador":"existe","valor":""}]},"posicao":{"x":0,"y":1020}},
+      {"id":"n9","tipo":"se","config":{"rotulo":"Entre 7h e 21h?","juncao":"e","condicoes":[{"campo":"status","operador":"em_horario_comercial","valor":"","dias":[0,1,2,3,4,5,6],"inicio":7,"fim":21}]},"posicao":{"x":-130,"y":1180}},
+      {"id":"n10","tipo":"avisar_sino","config":{"rotulo":"Escalada: sino dos gestores","para":"gestores","texto":"Lead aguardando 1ª resposta há 60 min: {nome_completo}"},"posicao":{"x":-260,"y":1340}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"},
+      {"de":"n3","saida":"sim","para":"n4"},
+      {"de":"n4","saida":"sim","para":"n5"},
+      {"de":"n4","saida":"nao","para":"n7"},
+      {"de":"n5","saida":"s","para":"n6"},
+      {"de":"n6","saida":"s","para":"n7"},
+      {"de":"n7","saida":"s","para":"n8"},
+      {"de":"n8","saida":"sim","para":"n9"},
+      {"de":"n9","saida":"sim","para":"n10"}
+    ]
+  }
+}

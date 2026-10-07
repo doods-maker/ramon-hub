@@ -14,6 +14,11 @@ module Ramon::Fluxos::Migracao
                 'lembretes_reuniao' => 'reuniao_na_agenda' }.freeze,
       # mover_etapa vem sem etapa no JSON (a etapa é do funil de cada conta)
       preparar: ->(account, desenho) { Ramon::Fluxos::Reunioes.com_etapa(account, desenho) }
+    },
+    # B4.2: o vigia do SLA da 1ª resposta (Ramon::FirstResponseSlaJob), disparado pelo RamonLeadListener.
+    'sla' => {
+      env: 'RAMON_FLUXO_SLA', faz: 'o aviso de SLA da 1ª resposta',
+      fluxos: { 'sla_primeira_resposta' => 'conversa_criada' }.freeze
     }
   }.freeze
 
