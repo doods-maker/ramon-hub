@@ -190,7 +190,7 @@ class Ramon::Fluxos::Grafo
   end
 
   def espera_valida?(config)
-    config['ate'] == 'horario_comercial' || config['prazo'] == 'sla_caixa' ||
+    config['ate'] == 'horario_comercial' || (config['desde'] == 'conversa' && config['prazo'] == 'sla_caixa') ||
       (config['quantidade'].to_i.positive? && %w[minutos horas dias].include?(config['unidade']))
   end
 

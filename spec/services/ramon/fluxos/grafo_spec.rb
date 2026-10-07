@@ -119,6 +119,8 @@ RSpec.describe Ramon::Fluxos::Grafo do
   end
 
   it 'esperar o SLA da caixa (a partir da criação da conversa) vale como tempo de espera (B4.2)' do
+    sem_desde = grafo(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'prazo' => 'sla_caixa' }])).erros
+    expect(sem_desde.join).to include('falta o tempo de espera')
     expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['esperar', { 'desde' => 'conversa', 'prazo' => 'sla_caixa' }])).erros).to eq([])
   end
 end

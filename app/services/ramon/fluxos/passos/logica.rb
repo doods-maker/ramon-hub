@@ -34,7 +34,8 @@ module Ramon::Fluxos::Passos::Logica
   # (Ramon::Cadencia.sla_minutes, a mesma regra do código). Já passou → segue e marca {horario_passou} = sim
   # (a escalada de 60 min do código só é agendada se ainda for futura).
   def esperar_conversa(config, ctx)
-    conversa = ctx.conversa || raise(Ramon::Fluxos::PassoImpossivel, 'sem conversa para contar o tempo')
+    conversa = ctx.conversa
+    raise(Ramon::Fluxos::PassoImpossivel, 'sem conversa (ou caixa) para contar o tempo') unless conversa&.inbox
     tempo = config['prazo'] == 'sla_caixa' ? Ramon::Cadencia.sla_minutes(conversa.inbox).minutes : duracao(config)
     ate_ou_passou(conversa.created_at + tempo)
   end

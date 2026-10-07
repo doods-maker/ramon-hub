@@ -89,7 +89,7 @@ class Ramon::Fluxos::Contexto
   # B4.2: SLA da 1ª resposta — as mesmas regras do código (Ramon::FirstResponseSlaJob, Ramon::Cadencia.sla_minutes).
   def dados_sla
     c = conversa
-    return { 'primeira_resposta' => nil, 'sla_minutos' => nil } if c.nil?
+    return { 'primeira_resposta' => nil, 'sla_minutos' => nil } if c&.inbox.nil?
 
     { 'primeira_resposta' => c.first_reply_created_at.present? ? 'sim' : 'nao', 'sla_minutos' => Ramon::Cadencia.sla_minutes(c.inbox) }
   end
