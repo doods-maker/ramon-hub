@@ -1,6 +1,12 @@
 import { createI18n } from 'vue-i18n/dist/vue-i18n.cjs.prod.js';
 import en from 'dashboard/i18n/locale/en/ramonIntel.json';
 import pt from 'dashboard/i18n/locale/pt_BR/ramonIntel.json';
+import { TESES } from '../../responses/teses';
+
+// 8 níveis acima de pages/specs = raiz do repo (só lista os nomes; não lê o conteúdo)
+const SEED = import.meta.glob(
+  '../../../../../../../../db/seeds/ramon/inteligencia/faq/*.md'
+);
 
 const folhas = (obj, prefixo = '') =>
   Object.entries(obj).flatMap(([k, v]) =>
@@ -12,6 +18,17 @@ const folhas = (obj, prefixo = '') =>
 describe('textos da Inteligência (A3)', () => {
   it('en e pt_BR têm as mesmas chaves, na mesma ordem', () => {
     expect(folhas(pt).map(([k]) => k)).toEqual(folhas(en).map(([k]) => k));
+  });
+
+  it('cada tese tem rótulo e a lista bate com os arquivos do seed', () => {
+    const arquivos = Object.keys(SEED)
+      .map(caminho => caminho.split('/').pop().replace('.md', ''))
+      .sort();
+    expect([...TESES].sort()).toEqual(arquivos);
+    TESES.forEach(tese => {
+      expect([tese, Boolean(pt.INTEL.TESE[tese])]).toEqual([tese, true]);
+      expect([tese, Boolean(en.INTEL.TESE[tese])]).toEqual([tese, true]);
+    });
   });
 
   it.each([

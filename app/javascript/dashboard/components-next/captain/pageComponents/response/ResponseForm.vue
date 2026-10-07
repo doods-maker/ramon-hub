@@ -8,6 +8,8 @@ import { useMapGetter } from 'dashboard/composables/store';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { ROTULO, SELECT } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { TESES } from 'dashboard/routes/dashboard/captain/responses/teses';
 
 const props = defineProps({
   mode: {
@@ -31,6 +33,7 @@ const formState = {
 const initialState = {
   question: '',
   answer: '',
+  tese: '',
 };
 
 const state = reactive({ ...initialState });
@@ -60,6 +63,7 @@ const handleCancel = () => emit('cancel');
 const prepareDocumentDetails = () => ({
   question: state.question,
   answer: state.answer,
+  tese: state.tese || null,
 });
 
 const handleSubmit = async () => {
@@ -74,12 +78,8 @@ const handleSubmit = async () => {
 const updateStateFromResponse = response => {
   if (!response) return;
 
-  const { question, answer } = response;
-
-  Object.assign(state, {
-    question,
-    answer,
-  });
+  const { question, answer, tese } = response;
+  Object.assign(state, { question, answer, tese: tese || '' });
 };
 
 watch(
@@ -102,6 +102,15 @@ watch(
       :message="formErrors.question"
       :message-type="formErrors.question ? 'error' : 'info'"
     />
+    <label :class="ROTULO">
+      {{ t('INTEL.FAQ.TESE_LABEL') }}
+      <select v-model="state.tese" data-testid="faq-tese" :class="SELECT">
+        <option value="">{{ t('INTEL.FAQ.SEM_TESE') }}</option>
+        <option v-for="tese in TESES" :key="tese" :value="tese">
+          {{ t(`INTEL.TESE.${tese}`) }}
+        </option>
+      </select>
+    </label>
     <Editor
       v-model="state.answer"
       :label="t('CAPTAIN.RESPONSES.FORM.ANSWER.LABEL')"

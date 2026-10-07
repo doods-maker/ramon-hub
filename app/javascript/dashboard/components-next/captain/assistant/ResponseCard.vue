@@ -10,6 +10,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Policy from 'dashboard/components/policy.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
+import { CHIP, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 
 const props = defineProps({
   id: {
@@ -36,6 +37,7 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  tese: { type: String, default: null },
   assistant: {
     type: Object,
     default: () => ({}),
@@ -213,6 +215,14 @@ const handleDocumentableClick = () => {
         :class="{ 'justify-between w-full': !showActions }"
       >
         <div class="inline-flex items-center gap-3 min-w-0">
+          <span
+            v-if="tese"
+            data-testid="faq-tese-chip"
+            class="shrink-0"
+            :class="[CHIP, TOM.blue]"
+          >
+            {{ t(`INTEL.TESE.${tese}`) }}
+          </span>
           <span
             v-if="status === 'approved'"
             class="text-sm shrink-0 truncate text-n-slate-11 inline-flex items-center gap-1"
