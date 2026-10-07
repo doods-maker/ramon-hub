@@ -36,6 +36,7 @@ module Ramon::Fluxos::Passos::Logica
   def esperar_conversa(config, ctx)
     conversa = ctx.conversa
     raise(Ramon::Fluxos::PassoImpossivel, 'sem conversa (ou caixa) para contar o tempo') unless conversa&.inbox
+
     tempo = config['prazo'] == 'sla_caixa' ? Ramon::Cadencia.sla_minutes(conversa.inbox).minutes : duracao(config)
     ate_ou_passou(conversa.created_at + tempo)
   end
