@@ -336,6 +336,7 @@ describe('PainelPasso', () => {
       { etapa_id: 9, motivo: 'Mudou de cidade' },
     ]);
   });
+
   it('gatilho lead parado: retomada todo dia', async () => {
     const wrapper = montar({
       id: 'n1',
@@ -362,7 +363,9 @@ describe('PainelPasso', () => {
     expect(wrapper.emitted('update:config').at(-1)).toEqual([
       { instrucao: 'x', titulo: 'retomada nº {tentativa}' },
     ]);
-    await wrapper.findAll('textarea').at(1).setValue('Oi {nome}');
+    await wrapper
+      .find('[data-testid="ia-reserva"] textarea')
+      .setValue('Oi {nome}');
     expect(wrapper.emitted('update:config').at(-1)).toEqual([
       { instrucao: 'x', reserva: 'Oi {nome}' },
     ]);

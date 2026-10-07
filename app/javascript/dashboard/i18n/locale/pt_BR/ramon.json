@@ -2028,7 +2028,7 @@
       "PARADOS_N": "Parados agora: {n}",
       "RETOMADAS_N": "Retomadas em 24h: {n}",
       "REGUA": "Régua: até {cap} retomadas por dia, no mínimo {gap} dias entre uma e outra. Retomada às {retomada}; copiloto noturno às {copiloto}.",
-      "SEM_TETO": "sem teto",
+      "REGUA_SEM_TETO": "Régua: sem teto de retomadas por dia, no mínimo {gap} dias entre uma e outra. Retomada às {retomada}; copiloto noturno às {copiloto}.",
       "TENTATIVAS": "{count}ª retomada",
       "PARADO_HA": "parado há {days} dias",
       "ULTIMA": "última retomada:",

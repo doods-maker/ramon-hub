@@ -104,10 +104,11 @@ onBeforeUnmount(() => {
           data-testid="ia-titulo"
           :class="CAMPO"
           :value="config.titulo || ''"
-          @input="muda('titulo', $event.target.value)"
+          @input="muda('titulo', $event.target.value || undefined)"
         />
       </label>
       <CampoTexto
+        data-testid="ia-reserva"
         :rotulo="t(`${K}.RESERVA_IA`)"
         :linhas="2"
         :model-value="config.reserva || ''"

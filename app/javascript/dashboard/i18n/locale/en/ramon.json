@@ -2023,7 +2023,7 @@
       "PARADOS_N": "Stalled now: {n}",
       "RETOMADAS_N": "Follow-ups in 24h: {n}",
       "REGUA": "Rule: up to {cap} follow-ups a day, at least {gap} days apart. Follow-ups at {retomada}; night copilot at {copiloto}.",
-      "SEM_TETO": "no cap",
+      "REGUA_SEM_TETO": "Rule: no daily cap on follow-ups, at least {gap} days apart. Follow-ups at {retomada}; night copilot at {copiloto}.",
       "TENTATIVAS": "follow-up #{count}",
       "PARADO_HA": "stalled for {days} days",
       "ULTIMA": "last follow-up:",
