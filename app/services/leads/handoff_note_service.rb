@@ -13,13 +13,14 @@ class Leads::HandoffNoteService
     @lead.lead_notes.create!(account: @lead.account, user: nil, body: body)
   end
 
-  private
-
+  # Público (B4.4): o passo "rotina" do fluxo pergunta antes, para o ensaio e a trilha.
   def recent_dossier?
     @lead.lead_notes
          .where('body LIKE ?', "#{DOSSIER_PREFIX}%")
          .exists?(created_at: DUPLICATE_WINDOW.ago..)
   end
+
+  private
 
   # Texto único de passagem (Ramon::DossiePassagemTexto). LeadNote#body vale
   # até 1000 caracteres: passando disso, corta e fecha com o link da ficha, onde
