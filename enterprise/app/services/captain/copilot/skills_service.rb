@@ -33,7 +33,7 @@ class Captain::Copilot::SkillsService
   private
 
   def turno(thread)
-    mensagens = Ramon::CopilotoPainel.com_contexto(historico(thread), @assistant.account, @conversation_id)
+    mensagens = Ramon::CopilotoPainel.com_contexto(historico(thread), @assistant.account, @conversation_id, thread.user)
     resposta = Captain::Assistant::AgentRunnerService.new(assistant: @assistant, source: 'copiloto_painel')
                                                      .generate_response(message_history: mensagens)
     { content: texto(resposta), agent_name: resposta['agent_name'] }.compact

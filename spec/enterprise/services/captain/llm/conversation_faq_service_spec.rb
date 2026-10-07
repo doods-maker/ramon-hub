@@ -17,6 +17,8 @@ RSpec.describe Captain::Llm::ConversationFaqService do
   end
 
   before do
+    create(:message, conversation: conversation, account: conversation.account, inbox: conversation.inbox,
+                     message_type: :incoming, content: 'Quanto custa?')
     create(:installation_config, name: 'CAPTAIN_OPEN_AI_API_KEY', value: 'test-key')
     allow(Captain::Llm::EmbeddingService).to receive(:new).and_return(embedding_service)
     allow(RubyLLM).to receive(:chat).and_return(mock_chat)
@@ -60,6 +62,15 @@ RSpec.describe Captain::Llm::ConversationFaqService do
       it 'does not call the LLM API' do
         expect(RubyLLM).not_to receive(:chat)
         service.generate_and_deduplicate
+      end
+    end
+
+    context 'without any public message' do
+      it 'does not call the LLM with an empty text' do
+        conversation.messages.destroy_all
+
+        expect(RubyLLM).not_to receive(:chat)
+        expect(service.generate_and_deduplicate).to eq([])
       end
     end
 

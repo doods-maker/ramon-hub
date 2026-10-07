@@ -96,6 +96,16 @@ RSpec.describe Ramon::FaqDeConversa do
       expect(texto.scan('[cpf]').size + texto.scan('[telefone]').size).to eq(6)
     end
 
+    it 'mensagem mais nova maior que o limite é cortada (fim), não vira texto vazio', :aggregate_failures do
+      msg(:incoming, 'a' * 9_000)
+
+      texto = described_class.texto(conversa)
+
+      expect(texto.length).to eq(described_class::LIMITE_CONVERSA)
+      expect(texto).to end_with("aaa
+")
+    end
+
     it 'corta no limite: o começo de uma conversa longa não vai', :aggregate_failures do
       msg(:incoming, 'a' * 5_000)
       msg(:incoming, 'b' * 5_000)

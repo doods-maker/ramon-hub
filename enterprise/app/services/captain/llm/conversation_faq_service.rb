@@ -17,7 +17,7 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
   # Skips processing if there was no human interaction
   def generate_and_deduplicate
     # ramon: no dia em que o gasto chega ao teto do alerta, a geração automática para
-    return [] if no_human_interaction? || Ramon::FaqDeConversa.pausada?(conversation.account)
+    return [] if no_human_interaction? || @content.blank? || Ramon::FaqDeConversa.pausada?(conversation.account)
 
     new_faqs = generate
     return [] if new_faqs.empty?

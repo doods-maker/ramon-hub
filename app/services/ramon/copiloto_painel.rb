@@ -5,9 +5,9 @@
 module Ramon::CopilotoPainel
   module_function
 
-  def contexto(account, display_id)
+  def contexto(account, display_id, user)
     hoje = Time.find_zone!(Ramon::CockpitMetrics::TIME_ZONE).today.strftime('%d/%m/%Y')
-    conversa = account.conversations.find_by(display_id: display_id) if display_id.present?
+    conversa = conversa_visivel(account, display_id, user)
     return "Contexto: hoje é #{hoje}; nenhuma conversa aberta na tela." if conversa.nil?
 
     lead = account.leads.find_by(conversation_id: conversa.id)
@@ -18,13 +18,23 @@ module Ramon::CopilotoPainel
   end
 
   # Contexto na frente só da última pergunta da pessoa (o que vai ao agente); o histórico salvo não muda.
-  def com_contexto(historico, account, display_id)
+  def com_contexto(historico, account, display_id, user)
     ultima = historico.rindex { |item| item[:role].to_s == 'user' }
     return historico if ultima.nil?
 
     historico.each_with_index.map do |item, indice|
-      indice == ultima ? item.merge(content: "#{contexto(account, display_id)}\n\n#{item[:content]}") : item
+      indice == ultima ? item.merge(content: "#{contexto(account, display_id, user)}\n\n#{item[:content]}") : item
     end
+  end
+
+  # Admin vê qualquer conversa da conta; agente só as das caixas dele (o job roda no Sidekiq: sem Current.user/account).
+  def conversa_visivel(account, display_id, user)
+    return if display_id.blank? || user.nil?
+
+    conversas = account.conversations
+    admin = user.account_users.find_by(account_id: account.id)&.administrator?
+    conversas = conversas.where(inbox_id: user.inboxes.select(:id)) unless admin
+    conversas.find_by(display_id: display_id)
   end
 
   def nome_cliente(lead, conversa)

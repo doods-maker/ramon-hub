@@ -52,12 +52,21 @@ module Ramon::FaqDeConversa
     total = 0
     mensagens_publicas(conversa).each do |mensagem|
       texto_linha = linha(mensagem)
-      break if total + texto_linha.length > LIMITE_CONVERSA
+      if total + texto_linha.length > LIMITE_CONVERSA
+        # a mais nova sozinha estoura o teto: corta ela (o fim, depois de mascarar) em vez de mandar vazio ao LLM
+        return mascarar(texto_linha, conversa) if linhas.empty?
+
+        break
+      end
 
       linhas.prepend(texto_linha)
       total += texto_linha.length
     end
-    Ramon::Pseudonymizer.mask(linhas.join, names: nomes(conversa)).last(LIMITE_CONVERSA)
+    mascarar(linhas.join, conversa)
+  end
+
+  def mascarar(texto, conversa)
+    Ramon::Pseudonymizer.mask(texto, names: nomes(conversa)).last(LIMITE_CONVERSA)
   end
 
   def mensagens_publicas(conversa)
