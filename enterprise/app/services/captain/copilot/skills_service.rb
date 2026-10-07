@@ -13,20 +13,39 @@ class Captain::Copilot::SkillsService
   def initialize(assistant, conversation_id:, copilot_thread_id:)
     @assistant = assistant
     @conversation_id = conversation_id
-    @thread = assistant.account.copilot_threads.find(copilot_thread_id)
+    @copilot_thread_id = copilot_thread_id
   end
 
+  # Sempre deixa uma resposta no painel (o "pensando" não fica girando) e não sobe o erro:
+  # retry do Sidekiq rodaria o agente de novo (pagaria duas vezes).
   def responder
-    historico = Ramon::CopilotoPainel.com_contexto(@thread.previous_history, @assistant.account, @conversation_id)
-    resposta = Captain::Assistant::AgentRunnerService.new(assistant: @assistant, source: 'copiloto_painel')
-                                                     .generate_response(message_history: historico)
-    @thread.copilot_messages.create!(message: { content: texto(resposta) }, message_type: :assistant)
+    thread = @assistant.account.copilot_threads.find(@copilot_thread_id)
+    thread.copilot_messages.create!(message: turno(thread), message_type: :assistant)
+  rescue StandardError => e
+    Rails.logger.error("[Captain::Copilot::SkillsService] painel sem resposta: #{e.class}: #{e.message}")
+    thread&.copilot_messages&.create(message: { content: ERRO }, message_type: :assistant)
   end
 
   private
 
+  def turno(thread)
+    mensagens = Ramon::CopilotoPainel.com_contexto(historico(thread), @assistant.account, @conversation_id)
+    resposta = Captain::Assistant::AgentRunnerService.new(assistant: @assistant, source: 'copiloto_painel')
+                                                     .generate_response(message_history: mensagens)
+    { content: texto(resposta), agent_name: resposta['agent_name'] }.compact
+  end
+
+  # Como o Testar: agent_name em cada resposta, para o runner devolver o turno à skill dona
+  # (prévia → "confirma?" → "sim" volta para a mesma skill, que grava no AdvBox).
+  def historico(thread)
+    thread.copilot_messages.where(message_type: %w[user assistant]).order(:created_at).map do |item|
+      { role: item.message_type, content: item.message['content'], agent_name: item.message['agent_name'] }.compact
+    end
+  end
+
   def texto(resposta)
-    falhou = resposta['reasoning'].to_s.start_with?('Error occurred') || resposta['response'] == 'conversation_handoff'
-    falhou ? ERRO : resposta['response'].to_s
+    return ERRO if resposta['reasoning'].to_s.start_with?('Error occurred') || resposta['response'] == 'conversation_handoff'
+
+    resposta['response'].to_s.presence || ERRO
   end
 end
