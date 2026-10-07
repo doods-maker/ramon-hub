@@ -1,5 +1,6 @@
 # B4.4/B4.5: rotinas prontas do hub como passo de fluxo — o MESMO código de hoje, com as mesmas travas:
 # - dossie_passagem: Leads::HandoffNoteService (nas notas do lead; não repete se já há um dos últimos 5 min)
+#   Dossiê e NPS do ganho só com o lead ainda ganho, como os callbacks do Lead: execução atrasada não escreve nada.
 # - pesquisa_nps / pesquisa_nps_exito: Ramon::NpsDraftJob (rascunho nas notas; 1 vez por fase — nps.pedido_em /
 #   nps.pedido_exito_em; link do Google = RAMON_GOOGLE_REVIEW_URL)
 # - abrir_caso_advbox: Ramon::AdvboxClosingService (cliente + processo em CONTRATO FECHADO + tarefa 1º CONTATO). Grava no
@@ -25,6 +26,7 @@ module Ramon::Fluxos::Passos::Rotina
   def dossie_passagem(lead, ensaio)
     servico = Leads::HandoffNoteService.new(lead: lead)
     return 'dossiê: já há um dos últimos 5 min (não repete)' if servico.recent_dossier?
+    return 'dossiê: o lead não está mais ganho, não escreveu' if lead.won_at.blank?
     return 'faria: dossiê de passagem nas notas do lead' if ensaio
 
     servico.perform
@@ -34,6 +36,7 @@ module Ramon::Fluxos::Passos::Rotina
   def nps(lead, fase, ensaio)
     pedido = lead.custom_attributes&.dig('nps', Ramon::NpsDraftJob::GUARD_KEYS.fetch(fase))
     return "pesquisa NPS (#{fase}): já pedida em #{pedido} (uma vez só)" if pedido.present?
+    return 'pesquisa NPS (comercial): o lead não está mais ganho, não pediu' if fase == 'comercial' && lead.won_at.blank?
     return "faria: rascunho da pesquisa NPS (#{fase}) nas notas do lead" if ensaio
 
     Ramon::NpsDraftJob.perform_now(lead.id, fase: fase)

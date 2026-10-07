@@ -38,6 +38,15 @@ RSpec.describe Ramon::Fluxos::Passos::Rotina do
     end
   end
 
+  it 'execução atrasada, com o lead já fora do ganho: dossiê e NPS do ganho não escrevem nada (como os callbacks do Lead)' do
+    lead.update!(lead_stage: account.lead_stages.order(:position).first)
+    expect(rodar('dossie_passagem')).to eq('dossiê: o lead não está mais ganho, não escreveu')
+    fluxo.execucoes.sole.update!(status: 'concluida') # libera o índice: 1 execução viva por fluxo e lead
+    expect(rodar('pesquisa_nps')).to eq('pesquisa NPS (comercial): o lead não está mais ganho, não pediu')
+    expect(lead.lead_notes.count).to eq(0)
+    expect(lead.reload.custom_attributes['nps']).to be_nil
+  end
+
   describe 'caso no ADVBOX (mesma garantia de hoje)' do
     it 'abre cliente, processo e tarefa pelo mesmo serviço do código; já aberto não chama de novo' do
       advbox_no_ar

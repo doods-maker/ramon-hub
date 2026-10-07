@@ -74,7 +74,7 @@ class CopilotSuggestion < ApplicationRecord
     recusar("O ZapSign recusou ou não respondeu: #{e.message.to_s.truncate(120)}")
   end
 
-  # Mesmo caminho do fechamento automático (Lead#enqueue_advbox_closing): job
+  # Mesmo caminho do fechamento automático (Ramon::Fluxos::LeadGanho.pelo_codigo): job
   # com retry, não chamada síncrona no clique do humano.
   def abrir_caso_advbox(user)
     return recusar('O caso ainda não está marcado como ganho') if lead.won_at.blank?

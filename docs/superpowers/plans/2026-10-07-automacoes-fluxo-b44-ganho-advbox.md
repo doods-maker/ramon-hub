@@ -82,7 +82,7 @@ Diferenças aceitas (internas — E3, N3, N4): o push usa o nome do contato (`{n
 - **Eventos do ADVBOX** — o processador acha a regra e o lead (como hoje) e chama `Ramon::Fluxos::EventosAdvbox.processar(lead, regra, nome)`: lê `assumiu?(account, 'eventos_advbox')` **uma vez**; dispara o fluxo migrado **na hora** (dentro do job do ADVBOX — `Disparo::NA_HORA`) com `assumido`; roda o código (`AdvboxEventRegras`) se não assumido **ou se o fluxo não pegou o evento** (lista vazia: execução viva do mesmo lead, motor com erro, fluxo desligado no meio — **nada se perde**, N6); por fim dispara os fluxos comuns de evento do ADVBOX **sem** `assumido`, como hoje.
 - **Contrato fechado:** nos dois caminhos o ADVBOX só **move o lead para o ganho**; quem faz dossiê/ADVBOX/NPS é o "Lead ganho", pela chave dele, lida uma vez no callback do Lead. As 4 combinações dão exatamente 1 de cada (Review Focus 1).
 - **Por que o "Eventos do ADVBOX" roda na hora:** o índice único admite 1 execução viva por (fluxo, lead). Rodando dentro do job do ADVBOX a execução vive milissegundos — dois eventos seguidos do mesmo lead quase nunca se encontram, e quando se encontram o código faz o 2º. Assíncrono, a janela seria o tempo de fila.
-- **Por que o "Lead ganho" NÃO cai no código quando o fluxo não pega:** o único jeito comum de não pegar é o lead ser ganho de novo enquanto a execução anterior ainda vive (ex.: ADVBOX fora, esperando nova tentativa) — e essa execução já vai fazer tudo; cair no código aí correria o ADVBOX duas vezes em paralelo (o próprio serviço documenta esse teto). Teto aceito: um erro do motor antes de criar a execução (raro, vai para o rastreador de erros) deixa aquele ganho sem dossiê/NPS/caso — refazer à mão.
+- **O "Lead ganho" também cai no código quando o fluxo não pega (reserva — decisão extra do Eduardo, 07/10):** `ganhou` guarda a lista de execuções que **este** evento criou (`Disparo.externo` com `assumido`) e roda `pelo_codigo` `unless assumido && feitas.any?`. Lista vazia = o fluxo no comando não começou (lead ganho de novo com a execução anterior viva → `RecordNotUnique`; erro do motor, que o `externo` engole e manda ao rastreador; fluxo desligado no meio) → o código faz aquele ganho como hoje (dossiê, NPS, caso no ADVBOX). Continua uma decisão só por evento: ou este evento criou a execução não-ensaio, ou o código roda. Teto aceito: no "ocupado", a execução viva (ex.: ADVBOX esperando nova tentativa) e o `AdvboxClosingJob` da reserva podem correr juntos — a mesma janela de hoje com 2 ganhos seguidos (`sincronizado_em` + id guardado a cada passo).
 - **Rodar 4 rotinas como um passo só ("rotina pronta")**: o motor não sabe criar cliente+processo no ADVBOX (o passo `advbox` só cria tarefa/movimentação num processo que existe), nem a trava 1-vez do NPS, nem o dossiê, nem concluir tarefas. Em vez de 4 passos novos com lógica copiada, 1 passo chama o código que já roda hoje — mesmas travas, mesmo texto, mesma garantia do ADVBOX (E5). Contrapartida: o texto do NPS e do dossiê não é editável na tela (N5).
 
 ## Mapa de arquivos
@@ -789,7 +789,7 @@ Expected: FAIL — `ENOENT … migrados/lead_ganho.json` / `uninitialized consta
 ```json
 {
   "nome": "Lead ganho",
-  "descricao": "Quando o lead é ganho, no lugar do código (B4.4): dossiê de passagem nas notas do lead, rascunho da pesquisa NPS (uma vez só) e o caso aberto no ADVBOX — cliente, processo na etapa CONTRATO FECHADO e tarefa 1º CONTATO. O ADVBOX grava de verdade, só com o token, nunca abre de novo um caso já aberto e fica por último: se estiver fora do ar, tenta de novo sem segurar o resto. O Drive continua no código. Contrato fechado no ADVBOX também chega aqui (o evento move o lead para o ganho). Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
+  "descricao": "Quando o lead é ganho, no lugar do código (B4.4): dossiê de passagem nas notas do lead, rascunho da pesquisa NPS (uma vez só) e o caso aberto no ADVBOX — cliente, processo na etapa CONTRATO FECHADO e tarefa 1º CONTATO. O ADVBOX grava de verdade, só com o token, nunca abre de novo um caso já aberto e fica por último: se estiver fora do ar, tenta de novo sem segurar o resto. O Drive continua no código. Contrato fechado no ADVBOX também chega aqui (o evento move o lead para o ganho). Se este fluxo não começar — ocupado com o mesmo lead ou erro —, o código faz aquele ganho, como antes. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_ganho","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
@@ -813,16 +813,16 @@ Expected: FAIL — `ENOENT … migrados/lead_ganho.json` / `uninitialized consta
 # pelo código (como sempre) ou pelo fluxo "Lead ganho", conforme a chave (RAMON_FLUXO_LEAD_GANHO + o fluxo em modo normal).
 # A decisão é do evento: lida UMA vez aqui e mandada no gatilho. Contrato fechado no ADVBOX também chega aqui (o evento
 # move o lead para o ganho), pelo caminho que for — por isso nunca roda em dobro.
-# Fluxo ocupado com o mesmo lead (ganho de novo com a execução anterior viva) NÃO cai no código: a viva já faz tudo, e
-# o ADVBOX não pode rodar em paralelo. O Drive fica no código (Lead#enqueue_drive_export: roda a cada atualização dos
-# documentos, não só no ganho).
+# Reserva (Eduardo, 07/10): fluxo no comando que NÃO começou este ganho (ocupado com o mesmo lead — execução anterior
+# viva —, erro do motor, desligado no meio) → o código faz este ganho, como antes. O Drive fica no código
+# (Lead#enqueue_drive_export: roda a cada atualização dos documentos, não só no ganho).
 module Ramon::Fluxos::LeadGanho
   module_function
 
   def ganhou(lead)
     assumido = Ramon::Fluxos::Migrados.assumiu?(lead.account, 'lead_ganho')
-    Ramon::Fluxos::Disparo.externo('lead_ganho', lead, { 'assumido' => assumido, 'para_etapa_id' => lead.lead_stage_id })
-    pelo_codigo(lead) unless assumido
+    feitas = Ramon::Fluxos::Disparo.externo('lead_ganho', lead, { 'assumido' => assumido, 'para_etapa_id' => lead.lead_stage_id })
+    pelo_codigo(lead) unless assumido && feitas.any? # reserva: o fluxo no comando não começou → o código faz
   end
 
   # O caminho de hoje, como morava nos callbacks do Lead (sai na limpeza, E7).
@@ -1676,12 +1676,12 @@ Expected: o 1º vazio (sistema/*.json e linhas do sistema ficam — E7); no 2º,
 
 - **Escopo (Eduardo, 07/10, o mesmo da B4.2):** direto, sem sombra nem comparação — deploy, semear, virar a chave e teste ao vivo. Chave por migração: `RAMON_FLUXO_LEAD_GANHO` / `RAMON_FLUXO_EVENTOS_ADVBOX` =on **e** o fluxo ("Lead ganho" / "Eventos do ADVBOX", `origem: usuario`, `sistema_chave` = `lead_ganho` / `eventos_advbox`) ligado, publicado, em modo normal, sem limite do dia e com o gatilho certo ⇒ o fluxo faz e o código para; qualquer peça fora ⇒ o código faz e o fluxo só ensaia. `rake ramon:fluxos:migrados:{semear,modo}[conta,chave(,modo)]`; voltar = `modo …,sombra`, sem deploy.
 - **Passo novo "rotina pronta do hub" (`rotina`):** `dossie_passagem` (`Leads::HandoffNoteService`), `pesquisa_nps` / `pesquisa_nps_exito` (`Ramon::NpsDraftJob`), `abrir_caso_advbox` (`Ramon::AdvboxClosingService`: só com token, nunca de novo com `advbox.sincronizado_em`, id guardado ao nascer; fora do ar → o motor tenta de novo em 1/5/15 min; 4xx anotado no lead e segue), `concluir_tarefas`. É o mesmo código de hoje: o texto da NPS e do dossiê não se edita na tela.
-- **A decisão é do evento:** o callback do Lead (`after_update_commit :ganhou`, `won_at` mudou) chama `Ramon::Fluxos::LeadGanho.ganhou`; o `AdvboxEventProcessor` chama `Ramon::Fluxos::EventosAdvbox.processar`. Cada um lê `assumiu?` uma vez e manda `assumido`; `lead_ganho` e `evento_advbox` entraram em `Disparo::PELO_EVENTO` (com `assumido` só os migrados; sem, só os comuns, como sempre). "Eventos do ADVBOX" roda **na hora** (dentro do job do ADVBOX). Se o fluxo do ADVBOX está no comando mas não pega o evento (mesmo lead numa execução viva, motor com erro), o código faz aquele evento — o filtro de regras do gatilho, por isso, não desliga efeito (apague o passo do ramo). O "Lead ganho" não tem essa reserva (a execução viva já faz tudo; o ADVBOX não pode rodar em paralelo).
+- **A decisão é do evento:** o callback do Lead (`after_update_commit :ganhou`, `won_at` mudou) chama `Ramon::Fluxos::LeadGanho.ganhou`; o `AdvboxEventProcessor` chama `Ramon::Fluxos::EventosAdvbox.processar`. Cada um lê `assumiu?` uma vez e manda `assumido`; `lead_ganho` e `evento_advbox` entraram em `Disparo::PELO_EVENTO` (com `assumido` só os migrados; sem, só os comuns, como sempre). "Eventos do ADVBOX" roda **na hora** (dentro do job do ADVBOX). Se o fluxo do ADVBOX está no comando mas não pega o evento (mesmo lead numa execução viva, motor com erro), o código faz aquele evento — o filtro de regras do gatilho, por isso, não desliga efeito (apague o passo do ramo). O "Lead ganho" tem a mesma reserva (decisão extra do Eduardo, 07/10): se o fluxo no comando não começa aquele ganho (ocupado com o mesmo lead, erro do motor), o código faz o ganho como antes (dossiê, NPS, caso no ADVBOX) — uma decisão só por evento (`pelo_codigo unless assumido && feitas.any?`).
 - **Contrato fechado:** o ADVBOX só move o lead para o ganho (nos dois caminhos); dossiê/ADVBOX/NPS são sempre e só do "Lead ganho" — as 4 combinações de chave dão 1 de cada. Um lead pode ter 2 rascunhos de NPS (ganho e êxito), como antes.
 - **Ficou no código:** o Drive (`Lead#enqueue_drive_export` — roda a cada atualização dos documentos, não só no ganho). Os efeitos de hoje mudaram de arquivo: `Ramon::Fluxos::LeadGanho.pelo_codigo` e `Ramon::AdvboxEventRegras` (cópia literal).
 - **Motor ganhou:** `{hoje}` (dd/mm/aaaa do código) e `{primeiro_nome}` no gatilho do ADVBOX; `registrar_atividade` com os 10 tipos `advbox_*`; `Ramon::Fluxos::Migrados` (registro por migração).
 - **Diferenças aceitas:** tarefas de follow-up do ADVBOX vencem no fim do dia (SP) e ficam com o Closer/SDR; push com o nome do contato; balão "⚙ Fluxo …" na conversa; ADVBOX do ganho por último no fluxo e, fora do ar, 4 tentativas em ~21 min + sino aos admins (antes: 3, em silêncio).
-- **Fica para a limpeza (outro PR, 2 semanas depois em normal):** `LeadGanho.pelo_codigo`, os JSON `sistema/lead_ganho.json` e `sistema/eventos_advbox.json` **e** as linhas `origem: sistema` deles, as 2 envs; `Ramon::AdvboxEventRegras` só se o Eduardo decidir abrir mão da reserva "fluxo ocupado ⇒ código" (N6).
+- **Fica para a limpeza (outro PR, 2 semanas depois em normal):** os JSON `sistema/lead_ganho.json` e `sistema/eventos_advbox.json` **e** as linhas `origem: sistema` deles, as 2 envs; `LeadGanho.pelo_codigo` e `Ramon::AdvboxEventRegras` só se o Eduardo decidir abrir mão das reservas "fluxo não começou ⇒ código" (N6 e a decisão extra).
 ```
 
 - [ ] **Step 4: Texto do PR (não abrir — gate do Eduardo)** — deixar no relatório final:
