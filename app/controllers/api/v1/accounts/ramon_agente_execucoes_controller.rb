@@ -8,8 +8,7 @@ class Api::V1::Accounts::RamonAgenteExecucoesController < Api::V1::Accounts::Bas
   before_action :check_authorization
 
   def index
-    execucoes = Current.account.agente_execucoes.includes(:lead, :conversation)
-                       .order(created_at: :desc, id: :desc).limit(LIMITE)
+    execucoes = visiveis.includes(:lead, :conversation).order(created_at: :desc, id: :desc).limit(LIMITE)
     render json: { resumo: resumo, items: execucoes.map { |execucao| linha(execucao) } }
   end
 
@@ -18,6 +17,15 @@ class Api::V1::Accounts::RamonAgenteExecucoesController < Api::V1::Accounts::Bas
   # Mesmas permissões das Execuções das ferramentas (admin + agent).
   def check_authorization
     authorize(:ramon_dashboard, :show?)
+  end
+
+  # Cada um vê só o que é seu: agente só enxerga pedidos de conversas das caixas de que participa
+  # (linha sem conversa some); admin vê a trilha toda. O resumo do dia é só contagem.
+  def visiveis
+    todas = Current.account.agente_execucoes
+    return todas if Current.account_user.administrator?
+
+    todas.where(conversation_id: Current.account.conversations.where(inbox_id: Current.user.inboxes.select(:id)).select(:id))
   end
 
   def resumo

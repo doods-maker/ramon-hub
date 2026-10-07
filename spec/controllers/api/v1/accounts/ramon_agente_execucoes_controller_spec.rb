@@ -7,16 +7,45 @@ RSpec.describe 'Ramon Agente Execucoes API', type: :request do
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:url) { "/api/v1/accounts/#{account.id}/ramon_agente_execucoes" }
 
+  describe 'visibilidade por caixa' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
+    let(:inbox_a) { create(:inbox, account: account) }
+    let(:inbox_b) { create(:inbox, account: account) }
+
+    before do
+      create(:inbox_member, user: agent, inbox: inbox_a)
+      conv_a = create(:conversation, account: account, inbox: inbox_a)
+      conv_b = create(:conversation, account: account, inbox: inbox_b)
+      account.agente_execucoes.create!(pedido: 'da caixa A', status: 'ok', conversation: conv_a)
+      account.agente_execucoes.create!(pedido: 'da caixa B', status: 'ok', conversation: conv_b)
+      account.agente_execucoes.create!(pedido: 'sem conversa', status: 'ok')
+    end
+
+    it 'agente ve so o pedido de conversa da sua caixa' do
+      get url, headers: agent.create_new_auth_token, as: :json
+
+      expect(response.parsed_body['items'].pluck('pedido')).to eq(['da caixa A'])
+      expect(response.parsed_body['resumo']['hoje']).to eq(3)
+    end
+
+    it 'administrador ve a trilha toda' do
+      get url, headers: admin.create_new_auth_token, as: :json
+
+      expect(response.parsed_body['items'].pluck('pedido')).to contain_exactly('da caixa A', 'da caixa B', 'sem conversa')
+    end
+  end
+
   it 'lista a trilha mais nova primeiro, com caso, conversa e acoes, e o uso de hoje' do
     lead = create(:lead, account: account, name: 'Maria Souza')
     conversa = create(:conversation, account: account)
+    admin = create(:user, account: account, role: :administrator)
     travel_to Time.zone.parse('2026-10-07 13:00:00') do # 10:00 em Brasília
       account.agente_execucoes.create!(pedido: 'ontem', status: 'ok', created_at: 1.day.ago)
       account.agente_execucoes.create!(pedido: 'sem cota', status: 'cap', resumo: 'Cap diário atingido (30)')
       account.agente_execucoes.create!(pedido: 'resuma o caso', status: 'erro', resumo: 'falhou', lead: lead,
                                        conversation: conversa, acoes: [{ 'tipo' => 'drive', 'ref' => 'https://drive/x' }],
                                        duracao_ms: 4200, modelo: 'opus', esforco: 'low')
-      get url, headers: agent.create_new_auth_token, as: :json
+      get url, headers: admin.create_new_auth_token, as: :json
     end
 
     body = response.parsed_body
