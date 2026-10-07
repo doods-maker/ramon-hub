@@ -74,6 +74,12 @@ RSpec.describe Ramon::LlmUso do
     expect(dados).to include(funcao: 'documentos', model: 'gpt-4.1-mini', assistant_id: 7)
   end
 
+  it '.de_instrumentacao: a FAQ de conversa tem linha própria na tela' do
+    dados = described_class.de_instrumentacao(account_id: 1, feature_name: 'conversation_faq', model: 'deepseek-chat')
+
+    expect(dados).to include(funcao: 'faq_conversa', model: 'deepseek-chat')
+  end
+
   it '.registrar_mensagem grava só a mensagem do assistente (tool result não tem tokens)' do
     assistente = instance_double(RubyLLM::Message, role: :assistant, model_id: 'gpt-4.1-mini', input_tokens: 5, output_tokens: 3)
     ferramenta = instance_double(RubyLLM::Message, role: :tool)

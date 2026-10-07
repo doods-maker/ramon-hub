@@ -128,27 +128,23 @@ RSpec.describe Captain::Llm::ConversationFaqService do
         expect(service.generate_and_deduplicate).to eq([])
       end
     end
-  end
 
-  describe 'language handling' do
-    context 'when conversation has different language' do
-      let(:account) { create(:account, locale: 'fr') }
-      let(:conversation) do
-        create(:conversation, account: account, first_reply_created_at: Time.zone.now)
+    describe 'regras da banca (Inteligência A4)' do
+      it 'não chama a IA no dia em que o gasto chegou ao teto' do
+        allow(Ramon::FaqDeConversa).to receive(:pausada?).and_return(true)
+
+        expect(RubyLLM).not_to receive(:chat)
+        expect(service.generate_and_deduplicate).to eq([])
       end
 
-      before do
-        allow(embedding_service).to receive(:get_embedding).and_return([0.1, 0.2, 0.3])
-        allow(captain_assistant.responses).to receive(:nearest_neighbors).and_return([])
-      end
-
-      it 'uses account language for system prompt' do
-        expect(Captain::Llm::SystemPromptsService).to receive(:conversation_faq_generator)
-          .with('french')
-          .at_least(:once)
-          .and_call_original
+      it 'manda a conversa pseudonimizada com o prompt da banca', :aggregate_failures do
+        allow(Ramon::FaqDeConversa).to receive(:texto).and_return('conversa mascarada')
+        allow(captain_assistant.responses).to receive(:where).and_return([])
 
         service.generate_and_deduplicate
+
+        expect(mock_chat).to have_received(:with_instructions).with(Ramon::FaqDeConversa::PROMPT)
+        expect(mock_chat).to have_received(:ask).with('conversa mascarada')
       end
     end
   end

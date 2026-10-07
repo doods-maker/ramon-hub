@@ -7,13 +7,17 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
     super()
     @assistant = assistant
     @conversation = conversation
-    @content = conversation.to_llm_text
+    # FORK-PONTO (ramon, A4): fim da conversa, sem notas privadas e pseudonimizado (LGPD) — Ramon::FaqDeConversa
+    @content = Ramon::FaqDeConversa.texto(conversation)
+    # ramon: modelo das "FAQs geradas" (tela Uso e custo — a mesma escolha dos Documentos)
+    @model = Ramon::LlmEscolha.para(conversation.account, 'documentos')[:model]
   end
 
   # Generates and deduplicates FAQs from conversation content
   # Skips processing if there was no human interaction
   def generate_and_deduplicate
-    return [] if no_human_interaction?
+    # ramon: no dia em que o gasto chega ao teto do alerta, a geração automática para
+    return [] if no_human_interaction? || Ramon::FaqDeConversa.pausada?(conversation.account)
 
     new_faqs = generate
     return [] if new_faqs.empty?
@@ -118,9 +122,9 @@ class Captain::Llm::ConversationFaqService < Llm::BaseAiService
     }
   end
 
+  # FORK-PONTO (ramon, A4): prompt da banca — FAQ genérica, sem dado pessoal, regras da OAB, no máximo 3
   def system_prompt
-    account_language = @conversation.account.locale_english_name
-    Captain::Llm::SystemPromptsService.conversation_faq_generator(account_language)
+    Ramon::FaqDeConversa::PROMPT
   end
 
   def parse_response(response)
