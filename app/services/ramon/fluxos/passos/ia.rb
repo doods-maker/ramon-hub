@@ -95,7 +95,8 @@ module Ramon::Fluxos::Passos::Ia
 
   def dados_do_caso(ctx)
     d = ctx.dados
-    "Caso: tese #{d['tese'] || 'não informada'}; etapa #{d['etapa'] || '—'}; origem #{d['origem'] || '—'}; " \
+    tese = d['tese'].presence || ctx.lead&.benefit_type&.name # como o código: tese ou benefício (só no prompt)
+    "Caso: tese #{tese || 'não informada'}; etapa #{d['etapa'] || '—'}; origem #{d['origem'] || '—'}; " \
       "documentos que faltam: #{d['documentos_faltantes'].presence || 'nenhum'}."
   end
 

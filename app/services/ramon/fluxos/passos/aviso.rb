@@ -37,6 +37,7 @@ module Ramon::Fluxos::Passos::Aviso
     titulo = ctx.interpolar(config['titulo'].presence || ctx.execucao.fluxo.nome)
     texto = ctx.interpolar(config['texto'])
     return { saida: 's', resumo: "faria: push \"#{texto.truncate(80)}\"" } if ctx.ensaio?
+
     pulo = pular_push(config, ctx)
     return pulo if pulo
 

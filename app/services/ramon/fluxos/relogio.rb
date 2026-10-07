@@ -7,6 +7,8 @@
 module Ramon::Fluxos::Relogio
   HORA_PADRAO = '11:00'.freeze
   MAX_LEADS = 500 # ponytail: por fluxo por dia; paginar se um grupo passar disso
+  # ponytail: na retomada os 500 valem ANTES do filtro de elegibilidade; leads parados se acumulam e, passando de 500,
+  # um elegível pode nunca ser alcançado — upgrade: filtrar no SQL.
 
   module_function
 
