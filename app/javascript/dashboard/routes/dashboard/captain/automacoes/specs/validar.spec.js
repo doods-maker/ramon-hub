@@ -243,4 +243,20 @@ describe('validar (espelho do Grafo#erros)', () => {
       []
     );
   });
+  it('os nomes da reunião (B4.1) também são reservados no Preencher campo', () => {
+    [
+      'evento',
+      'titulo',
+      'titulo_tarefa',
+      'resumo',
+      'resumo_antes',
+      'primeiro_nome',
+      'reuniao_de_pe',
+      'horario_passou',
+    ].forEach(chave =>
+      expect(
+        codigos(linear(p('p1', 'preencher_campo', { chave, valor: 'x' })))
+      ).toEqual([['p1', 'CAMPO_CHAVE']])
+    );
+  });
 });

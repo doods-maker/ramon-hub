@@ -57,4 +57,38 @@ RSpec.describe Ramon::Fluxos::Contexto do
     e = fluxo.execucoes.create!(account: account, alvo: lead, contexto: { 'gatilho' => { 'quando' => 'quinta, 20/08 às 14:00', 'regra' => 'exito' } })
     expect(described_class.new(e).dados).to include('quando' => 'quinta, 20/08 às 14:00', 'regra' => 'exito', 'texto' => nil)
   end
+
+  describe 'reunião (B4.1)' do
+    let(:inicio) { 2.days.from_now.change(usec: 0) }
+
+    it 'os textos prontos do gatilho viram variáveis; quem marcou vem do id' do
+      agente = create(:user, account: account)
+      e = fluxo.execucoes.create!(account: account, alvo: lead, contexto: { 'gatilho' => {
+                                    'evento' => 'marcada', 'resumo' => 'Primeiro Atendimento em 07/10/2026 19:00',
+                                    'primeiro_nome' => 'Maria', 'quem_marcou_id' => agente.id
+                                  } })
+      ctx = described_class.new(e)
+      expect(ctx.dados).to include('evento' => 'marcada', 'resumo' => 'Primeiro Atendimento em 07/10/2026 19:00', 'primeiro_nome' => 'Maria')
+      expect(ctx.quem_marcou).to eq(agente)
+    end
+
+    it 'reuniao_de_pe: sim com a tarefa aberta no horário do gatilho; não depois de remarcada' do
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião', due_at: inicio)
+      e = fluxo.execucoes.create!(account: account, alvo: lead, contexto: { 'gatilho' => { 'inicio' => inicio.iso8601 } })
+      expect(described_class.new(e).dados['reuniao_de_pe']).to eq('sim')
+      task.update!(due_at: inicio + 1.day)
+      expect(described_class.new(e).dados['reuniao_de_pe']).to eq('nao')
+    end
+
+    it 'sem o horário no gatilho ("Testar com um lead…") usa a próxima reunião aberta do lead' do
+      create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião', due_at: inicio)
+      ctx = described_class.new(execucao(lead))
+      expect(ctx.reuniao_em).to eq(inicio)
+      expect(ctx.dados['reuniao_de_pe']).to eq('sim')
+    end
+
+    it 'lead sem reunião: nada a dizer' do
+      expect(described_class.new(execucao(lead)).dados['reuniao_de_pe']).to be_nil
+    end
+  end
 end

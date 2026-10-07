@@ -6,12 +6,12 @@ class Ramon::Fluxos::Grafo
 
   GATILHOS = %w[conversa_criada mensagem_recebida conversa_resolvida conversa_reaberta conversa_atribuida
                 lead_criado lead_mudou_etapa lead_ganho lead_perdido manual
-                lead_parado relogio reuniao_marcada reuniao_cancelada evento_advbox
+                lead_parado relogio reuniao_marcada reuniao_cancelada reuniao_na_agenda evento_advbox
                 contrato_assinado contrato_recusado documento_recebido].freeze
   TIPOS_PASSO = %w[se escolha esperar parar rascunho_texto nota_privada acao_chatwoot
                    mover_etapa criar_tarefa avisar_sino avisar_push
                    perguntar_ia rascunho_ia rodar_skill advbox webhook
-                   registrar_atividade trocar_responsavel preencher_campo].freeze
+                   registrar_atividade trocar_responsavel preencher_campo apagar_reuniao].freeze
   OBRIGATORIOS = {
     'rascunho_texto' => %w[texto], 'nota_privada' => %w[texto], 'mover_etapa' => %w[etapa_id],
     'criar_tarefa' => %w[titulo], 'escolha' => %w[campo], 'avisar_sino' => %w[texto], 'avisar_push' => %w[texto],

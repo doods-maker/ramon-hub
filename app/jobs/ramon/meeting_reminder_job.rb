@@ -1,6 +1,7 @@
 # Lembrete anti no-show (mapa comercial 23/07): agendado via set(wait_until:)
-# pelo webhook do Cal.com. Cancel/reschedule não desagenda nada — o guard da
-# tarefa aberta mata o lembrete órfão (mesmo padrão do controller: recompute).
+# pelo Ramon::ReuniaoAgendamento. Cancel/reschedule não desagenda nada — o guard da
+# tarefa aberta mata o lembrete órfão. As regras (reunião de pé, quem recebe) moram em
+# Ramon::Fluxos::Reunioes: são as mesmas do fluxo que vai substituir este job (B4.1).
 class Ramon::MeetingReminderJob < ApplicationJob
   queue_as :low
 
@@ -13,13 +14,12 @@ class Ramon::MeetingReminderJob < ApplicationJob
     5.minutes => '5min antes'
   }.freeze
 
-  TOLERANCE = 60.seconds
   TIME_ZONE = 'America/Sao_Paulo'.freeze
 
   def perform(lead_id, start_at_iso, label)
     lead = Lead.find_by(id: lead_id)
     start_at = Time.zone.parse(start_at_iso)
-    unless lead && meeting_open?(lead, start_at)
+    unless lead && Ramon::Fluxos::Reunioes.reuniao_aberta?(lead, start_at)
       return Rails.logger.info("MeetingReminderJob: lead #{lead_id} sem reunião aberta em #{start_at_iso} — lembrete órfão descartado")
     end
     # dedup: reschedule ida-e-volta re-enfileira os mesmos offsets — só o 1º apita
@@ -27,26 +27,15 @@ class Ramon::MeetingReminderJob < ApplicationJob
 
     hora = start_at.in_time_zone(TIME_ZONE).strftime('%d/%m %H:%M')
     # sino do hub só pra quem faz a reunião — o ntfy é opcional, o hub não
-    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_meeting_reminder', user_ids: destinatarios(lead),
+    destinatarios = Ramon::Fluxos::Reunioes.destinatarios(lead)
+    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_meeting_reminder', user_ids: destinatarios,
                                        meta: { 'quando' => hora, 'label' => label }).perform
+    Ramon::Fluxos::Reunioes.rastro!(lead.account, 'tipo' => 'lembrete', 'lead_id' => lead.id, 'inicio' => start_at.iso8601,
+                                                  'rotulo' => label, 'user_ids' => destinatarios)
     return if ENV.fetch('NTFY_TOPIC', nil).blank?
 
     # timing já resolvido pelo wait_until — push direto, sem re-enfileirar
     Ramon::NtfyPushJob.perform_now(lead_id, title: "Reunião #{lead.name} em #{label}",
                                             body: "#{hora} — hora de mandar a mensagem de confirmação pro cliente")
-  end
-
-  private
-
-  # Closer e SDR do lead; lead sem dono avisa os gestores (nunca a conta toda).
-  def destinatarios(lead)
-    ids = [lead.closer_id, lead.sdr_id].compact.uniq
-    ids.presence || lead.account.account_users.administrator.pluck(:user_id)
-  end
-
-  def meeting_open?(lead, start_at)
-    return false if start_at.blank?
-
-    lead.lead_tasks.open_tasks.exists?(kind: 'meeting', due_at: (start_at - TOLERANCE)..(start_at + TOLERANCE))
   end
 end

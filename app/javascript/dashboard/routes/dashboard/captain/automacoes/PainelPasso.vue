@@ -1,7 +1,7 @@
 <script setup>
 // Painel direito do editor (mockup .painel): config do passo selecionado.
 // Sempre emite config NOVA (o editor troca no node do Vue Flow).
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -12,7 +12,14 @@ import {
   SELECT,
   TOM,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { PAPEIS, PASSOS, TIPOS_TAREFA, UNIDADES, gatilhoInfo } from './fluxo';
+import {
+  PAPEIS,
+  PASSOS,
+  TIPOS_ATIVIDADE,
+  TIPOS_TAREFA,
+  UNIDADES,
+  gatilhoInfo,
+} from './fluxo';
 import CampoTexto from './CampoTexto.vue';
 import ConfigAcoesChatwoot from './ConfigAcoesChatwoot.vue';
 import ConfigCasos from './ConfigCasos.vue';
@@ -44,18 +51,55 @@ const icone = computed(() =>
 const opcoesPessoas = computed(() =>
   pessoas.value.map(p => ({ id: p.id, nome: p.name }))
 );
-const esperaHorario = computed(() => config.value.ate === 'horario_comercial');
+// esperar: um tempo (do passo anterior), até o horário comercial, ou antes da reunião (B4.1: conta para trás)
+const modoEspera = computed(() => {
+  if (config.value.ate === 'horario_comercial') return 'horario';
+  return config.value.antes_de === 'reuniao' ? 'reuniao' : 'tempo';
+});
+const OPCOES_ESPERA = [
+  { modo: 'tempo', rotulo: 'ESPERAR_TEMPO' },
+  { modo: 'horario', rotulo: 'ESPERAR_HORARIO' },
+  { modo: 'reuniao', rotulo: 'ESPERAR_REUNIAO' },
+];
+const CONFIG_ESPERA = {
+  tempo: { quantidade: 1, unidade: 'dias' },
+  horario: { ate: 'horario_comercial' },
+  reuniao: { antes_de: 'reuniao', quantidade: 1, unidade: 'horas' },
+};
+// sino (B4.1): pessoas marcadas (padrão), Closer e SDR do lead, ou a conta toda
+const PARA_SINO = [
+  { valor: '', rotulo: 'PARA_PESSOAS' },
+  { valor: 'closer_e_sdr', rotulo: 'PARA_CLOSER_SDR' },
+  { valor: 'conta', rotulo: 'PARA_CONTA' },
+];
 
 const muda = (chave, valor) =>
   emit('update:config', { ...config.value, [chave]: valor });
 const numeroOuNada = v => (v === '' ? null : Number(v));
-const modoEspera = horario =>
-  emit(
-    'update:config',
-    horario
-      ? { rotulo: config.value.rotulo, ate: 'horario_comercial' }
-      : { rotulo: config.value.rotulo, quantidade: 1, unidade: 'dias' }
-  );
+const trocaEspera = modo =>
+  emit('update:config', {
+    rotulo: config.value.rotulo,
+    ...CONFIG_ESPERA[modo],
+  });
+// opção liga/desliga: desligada some do JSON
+const marca = (chave, ligada, valor = true) =>
+  muda(chave, ligada ? valor : undefined);
+// mover para etapa de perda (PR #216): motivo da lista da conta, "Outro" (texto livre) ou vazio = automático
+const motivosPerda = useMapGetter('leadConfig/getLostReasons');
+const OUTRO = '__outro';
+const outroMotivo = ref(false);
+const etapaPerda = computed(
+  () => etapas.value.find(e => e.id === config.value.etapa_id)?.is_lost
+);
+const motivoEscolhido = computed(() => {
+  const motivo = config.value.motivo;
+  const daLista = motivosPerda.value.some(r => r.name === motivo);
+  return outroMotivo.value || (motivo && !daLista) ? OUTRO : motivo || '';
+});
+const escolheMotivo = valor => {
+  outroMotivo.value = valor === OUTRO;
+  muda('motivo', outroMotivo.value || !valor ? undefined : valor);
+};
 </script>
 
 <template>
@@ -140,31 +184,125 @@ const modoEspera = horario =>
       />
 
       <CampoTexto
-        v-else-if="
-          ['rascunho_texto', 'nota_privada', 'registrar_atividade'].includes(
-            tipo
-          )
-        "
+        v-else-if="tipo === 'nota_privada'"
         :rotulo="t(`${K}.PAINEL.TEXTO`)"
         :model-value="config.texto || ''"
         @update:model-value="v => muda('texto', v)"
       />
 
-      <label v-else-if="tipo === 'mover_etapa'" :class="ROTULO">
-        {{ t(`${K}.PAINEL.ETAPA`) }}
-        <select
-          :class="SELECT"
-          :value="config.etapa_id ?? ''"
-          @change="muda('etapa_id', Number($event.target.value))"
-        >
-          <option value="" disabled>
-            {{ t(`${K}.PAINEL.ESCOLHA_ETAPA`) }}
-          </option>
-          <option v-for="e in etapas" :key="e.id" :value="e.id">
-            {{ e.name }}
-          </option>
-        </select>
-      </label>
+      <template v-else-if="tipo === 'rascunho_texto'">
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.ONDE_RASCUNHO`) }}
+          <select
+            data-testid="rascunho-onde"
+            :class="SELECT"
+            :value="config.onde || ''"
+            @change="muda('onde', $event.target.value || undefined)"
+          >
+            <option value="">{{ t(`${K}.PAINEL.ONDE_CONVERSA`) }}</option>
+            <option value="notas_do_lead">
+              {{ t(`${K}.PAINEL.ONDE_NOTAS`) }}
+            </option>
+          </select>
+        </label>
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.TITULO_RASCUNHO`) }}
+          <input
+            data-testid="rascunho-titulo"
+            :class="CAMPO"
+            :value="config.titulo || ''"
+            @input="muda('titulo', $event.target.value)"
+          />
+        </label>
+        <CampoTexto
+          :rotulo="t(`${K}.PAINEL.TEXTO`)"
+          :model-value="config.texto || ''"
+          @update:model-value="v => muda('texto', v)"
+        />
+      </template>
+
+      <template v-else-if="tipo === 'registrar_atividade'">
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.TIPO_ATIVIDADE`) }}
+          <select
+            data-testid="atividade-tipo"
+            :class="SELECT"
+            :value="config.tipo || 'fluxo'"
+            @change="muda('tipo', $event.target.value)"
+          >
+            <option v-for="k in TIPOS_ATIVIDADE" :key="k" :value="k">
+              {{ t(`${K}.TIPOS_ATIVIDADE.${k}`) }}
+            </option>
+          </select>
+        </label>
+        <CampoTexto
+          v-if="config.tipo === 'meeting_rescheduled'"
+          :rotulo="t(`${K}.PAINEL.DE`)"
+          :linhas="2"
+          :model-value="config.de || ''"
+          @update:model-value="v => muda('de', v)"
+        />
+        <CampoTexto
+          :rotulo="t(`${K}.PAINEL.TEXTO`)"
+          :model-value="config.texto || ''"
+          @update:model-value="v => muda('texto', v)"
+        />
+      </template>
+
+      <template v-else-if="tipo === 'mover_etapa'">
+        <label :class="ROTULO">
+          {{ t(`${K}.PAINEL.ETAPA`) }}
+          <select
+            :class="SELECT"
+            :value="config.etapa_id ?? ''"
+            @change="muda('etapa_id', Number($event.target.value))"
+          >
+            <option value="" disabled>
+              {{ t(`${K}.PAINEL.ESCOLHA_ETAPA`) }}
+            </option>
+            <option v-for="e in etapas" :key="e.id" :value="e.id">
+              {{ e.name }}
+            </option>
+          </select>
+        </label>
+        <template v-if="etapaPerda">
+          <label :class="ROTULO">
+            {{ t(`${K}.PAINEL.MOTIVO_PERDA`) }}
+            <select
+              data-testid="motivo-perda"
+              :class="SELECT"
+              :value="motivoEscolhido"
+              @change="escolheMotivo($event.target.value)"
+            >
+              <option value="">{{ t(`${K}.PAINEL.MOTIVO_AUTOMATICO`) }}</option>
+              <option v-for="m in motivosPerda" :key="m.id" :value="m.name">
+                {{ m.name }}
+              </option>
+              <option :value="OUTRO">
+                {{ t(`${K}.PAINEL.MOTIVO_OUTRO`) }}
+              </option>
+            </select>
+          </label>
+          <input
+            v-if="motivoEscolhido === OUTRO"
+            data-testid="motivo-outro"
+            :class="CAMPO"
+            :placeholder="t(`${K}.PAINEL.MOTIVO_OUTRO_PLACEHOLDER`)"
+            :value="config.motivo || ''"
+            @input="muda('motivo', $event.target.value)"
+          />
+        </template>
+        <label class="flex items-center gap-2 text-[13px] text-n-slate-12">
+          <input
+            data-testid="so-para-frente"
+            type="checkbox"
+            class="reset-base"
+            :checked="!!config.so_para_frente"
+            @change="marca('so_para_frente', $event.target.checked)"
+          />
+          {{ t(`${K}.PAINEL.SO_PARA_FRENTE`) }}
+        </label>
+      </template>
 
       <template v-else-if="tipo === 'criar_tarefa'">
         <CampoTexto
@@ -173,6 +311,16 @@ const modoEspera = horario =>
           :model-value="config.titulo || ''"
           @update:model-value="v => muda('titulo', v)"
         />
+        <label class="flex items-center gap-2 text-[13px] text-n-slate-12">
+          <input
+            data-testid="tarefa-da-reuniao"
+            type="checkbox"
+            class="reset-base"
+            :checked="config.prazo === 'reuniao'"
+            @change="marca('prazo', $event.target.checked, 'reuniao')"
+          />
+          {{ t(`${K}.PAINEL.TAREFA_DA_REUNIAO`) }}
+        </label>
         <div class="grid grid-cols-2 gap-2">
           <label :class="ROTULO">
             {{ t(`${K}.PAINEL.TIPO_TAREFA`) }}
@@ -186,7 +334,7 @@ const modoEspera = horario =>
               </option>
             </select>
           </label>
-          <label :class="ROTULO">
+          <label v-if="config.prazo !== 'reuniao'" :class="ROTULO">
             {{ t(`${K}.PAINEL.PRAZO`) }}
             <input
               :class="CAMPO"
@@ -197,7 +345,7 @@ const modoEspera = horario =>
             />
           </label>
         </div>
-        <label :class="ROTULO">
+        <label v-if="config.prazo !== 'reuniao'" :class="ROTULO">
           {{ t(`${K}.PAINEL.RESPONSAVEL`) }}
           <select
             :class="SELECT"
@@ -219,8 +367,20 @@ const modoEspera = horario =>
           :model-value="config.texto || ''"
           @update:model-value="v => muda('texto', v)"
         />
-        <div :class="ROTULO">
+        <label :class="ROTULO">
           {{ t(`${K}.PAINEL.QUEM_RECEBE`) }}
+          <select
+            data-testid="sino-para"
+            :class="SELECT"
+            :value="config.para || ''"
+            @change="muda('para', $event.target.value || undefined)"
+          >
+            <option v-for="o in PARA_SINO" :key="o.valor" :value="o.valor">
+              {{ t(`${K}.PAINEL.${o.rotulo}`) }}
+            </option>
+          </select>
+        </label>
+        <div v-if="!config.para" :class="ROTULO">
           <ListaMarcar
             :opcoes="opcoesPessoas"
             :model-value="config.user_ids || []"
@@ -278,6 +438,16 @@ const modoEspera = horario =>
             </option>
           </select>
         </label>
+        <label class="flex items-center gap-2 text-[13px] text-n-slate-12">
+          <input
+            data-testid="so-se-vazio"
+            type="checkbox"
+            class="reset-base"
+            :checked="!!config.so_se_vazio"
+            @change="marca('so_se_vazio', $event.target.checked)"
+          />
+          {{ t(`${K}.PAINEL.SO_SE_VAZIO`) }}
+        </label>
         <label :class="ROTULO">
           {{ t(`${K}.PAINEL.PESSOA`) }}
           <select
@@ -314,26 +484,22 @@ const modoEspera = horario =>
 
       <template v-else-if="tipo === 'esperar'">
         <div class="flex flex-col gap-1.5 text-[13px] text-n-slate-12">
-          <label class="flex items-center gap-2">
+          <label
+            v-for="o in OPCOES_ESPERA"
+            :key="o.modo"
+            class="flex items-center gap-2"
+          >
             <input
               type="radio"
               class="reset-base"
-              :checked="!esperaHorario"
-              @change="modoEspera(false)"
+              :data-testid="`espera-${o.modo}`"
+              :checked="modoEspera === o.modo"
+              @change="trocaEspera(o.modo)"
             />
-            {{ t(`${K}.PAINEL.ESPERAR_TEMPO`) }}
-          </label>
-          <label class="flex items-center gap-2">
-            <input
-              type="radio"
-              class="reset-base"
-              :checked="esperaHorario"
-              @change="modoEspera(true)"
-            />
-            {{ t(`${K}.PAINEL.ESPERAR_HORARIO`) }}
+            {{ t(`${K}.PAINEL.${o.rotulo}`) }}
           </label>
         </div>
-        <div v-if="!esperaHorario" class="grid grid-cols-2 gap-2">
+        <div v-if="modoEspera !== 'horario'" class="grid grid-cols-2 gap-2">
           <label :class="ROTULO">
             {{ t(`${K}.PAINEL.QUANTIDADE`) }}
             <input
@@ -358,9 +524,17 @@ const modoEspera = horario =>
           </label>
         </div>
         <p class="text-xs text-n-slate-10">
-          {{ t(`${K}.PAINEL.ESPERAR_AJUDA`) }}
+          {{
+            t(
+              `${K}.PAINEL.${modoEspera === 'reuniao' ? 'ESPERAR_REUNIAO_AJUDA' : 'ESPERAR_AJUDA'}`
+            )
+          }}
         </p>
       </template>
+
+      <p v-else-if="tipo === 'apagar_reuniao'" class="text-xs text-n-slate-10">
+        {{ t(`${K}.PAINEL.APAGAR_REUNIAO_AJUDA`) }}
+      </p>
 
       <p v-else-if="tipo === 'parar'" class="text-xs text-n-slate-10">
         {{ t(`${K}.PAINEL.PARAR_AJUDA`) }}

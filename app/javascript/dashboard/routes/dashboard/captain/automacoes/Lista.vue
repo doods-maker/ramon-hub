@@ -113,6 +113,13 @@ const selo = f => {
     };
   if (!f.ativo)
     return { classe: TOM.slate, icone: '', texto: t(`${K}.SELO.DESLIGADO`) };
+  // B4.1: em sombra só ensaia nos eventos reais (quem age ainda é o código)
+  if (f.modo === 'sombra')
+    return {
+      classe: TOM.amber,
+      icone: 'i-lucide-eye',
+      texto: t(`${K}.SELO.SOMBRA`),
+    };
   return { classe: TOM.teal, icone: '', texto: t(`${K}.SELO.OK`) };
 };
 const subtitulo = f =>

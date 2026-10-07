@@ -7,8 +7,12 @@ const store = createStore({
     leadConfig: {
       namespaced: true,
       getters: {
-        getStages: () => [{ id: 3, name: 'Contrato assinado' }],
+        getStages: () => [
+          { id: 3, name: 'Contrato assinado' },
+          { id: 9, name: 'Perdido', is_lost: true },
+        ],
         getPriorities: () => [],
+        getLostReasons: () => [{ id: 1, name: 'Sem interesse' }],
       },
     },
     agents: {
@@ -152,6 +156,130 @@ describe('PainelPasso', () => {
     await wrapper.find('input[type="checkbox"]').setValue(true);
     expect(wrapper.emitted('update:config').at(-1)).toEqual([
       { tipo: 'evento_advbox', regras: ['contrato_fechado'] },
+    ]);
+  });
+  it('esperar: "Antes da reunião" conta para trás (quantidade e unidade continuam)', async () => {
+    const wrapper = montar({
+      id: 'n2',
+      data: { tipo: 'esperar', config: { quantidade: 1, unidade: 'dias' } },
+    });
+    await wrapper.find('[data-testid="espera-reuniao"]').trigger('change');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { antes_de: 'reuniao', quantidade: 1, unidade: 'horas' },
+    ]);
+  });
+
+  it('sino: "Quem recebe" troca a lista de pessoas por Closer e SDR ou pela conta', async () => {
+    const wrapper = montar({
+      id: 'n4',
+      data: { tipo: 'avisar_sino', config: { texto: 'Oi' } },
+    });
+    await wrapper.find('[data-testid="sino-para"]').setValue('closer_e_sdr');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { texto: 'Oi', para: 'closer_e_sdr' },
+    ]);
+    const conta = montar({
+      id: 'n4',
+      data: { tipo: 'avisar_sino', config: { texto: 'Oi', para: 'conta' } },
+    });
+    expect(conta.text()).not.toContain('Ana');
+  });
+
+  it('rascunho: nas notas do lead e com título', async () => {
+    const wrapper = montar({
+      id: 'n8',
+      data: { tipo: 'rascunho_texto', config: { texto: 'Oi' } },
+    });
+    await wrapper
+      .find('[data-testid="rascunho-onde"]')
+      .setValue('notas_do_lead');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { texto: 'Oi', onde: 'notas_do_lead' },
+    ]);
+    await wrapper
+      .find('[data-testid="rascunho-titulo"]')
+      .setValue('confirmação');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { texto: 'Oi', titulo: 'confirmação' },
+    ]);
+  });
+
+  it('tarefa da reunião esconde prazo e responsável', async () => {
+    const wrapper = montar({
+      id: 'n3',
+      data: { tipo: 'criar_tarefa', config: { titulo: 'T' } },
+    });
+    await wrapper.find('[data-testid="tarefa-da-reuniao"]').setValue(true);
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { titulo: 'T', prazo: 'reuniao' },
+    ]);
+    const daReuniao = montar({
+      id: 'n3',
+      data: { tipo: 'criar_tarefa', config: { titulo: 'T', prazo: 'reuniao' } },
+    });
+    expect(daReuniao.text()).not.toContain('Ana');
+  });
+
+  it('atividade: tipo de reunião; remarcada pede o "de"', async () => {
+    const wrapper = montar({
+      id: 'n7',
+      data: { tipo: 'registrar_atividade', config: { texto: 'x' } },
+    });
+    await wrapper
+      .find('[data-testid="atividade-tipo"]')
+      .setValue('meeting_rescheduled');
+    expect(wrapper.emitted('update:config').at(-1)).toEqual([
+      { texto: 'x', tipo: 'meeting_rescheduled' },
+    ]);
+    const remarcada = montar({
+      id: 'n7',
+      data: {
+        tipo: 'registrar_atividade',
+        config: { texto: 'x', tipo: 'meeting_rescheduled' },
+      },
+    });
+    expect(remarcada.findAll('textarea')).toHaveLength(2);
+  });
+
+  it('etapa só para a frente e Closer só se não tem', async () => {
+    const etapa = montar({
+      id: 'n5',
+      data: { tipo: 'mover_etapa', config: {} },
+    });
+    await etapa.find('[data-testid="so-para-frente"]').setValue(true);
+    expect(etapa.emitted('update:config').at(-1)).toEqual([
+      { so_para_frente: true },
+    ]);
+    const closer = montar({
+      id: 'n6',
+      data: { tipo: 'trocar_responsavel', config: { papel: 'closer' } },
+    });
+    await closer.find('[data-testid="so-se-vazio"]').setValue(true);
+    expect(closer.emitted('update:config').at(-1)).toEqual([
+      { papel: 'closer', so_se_vazio: true },
+    ]);
+  });
+
+  it('motivo da perda só aparece para etapa de perda (lista da conta + Outro)', async () => {
+    const comum = montar({
+      id: 'n5',
+      data: { tipo: 'mover_etapa', config: { etapa_id: 3 } },
+    });
+    expect(comum.find('[data-testid="motivo-perda"]').exists()).toBe(false);
+    const perda = montar({
+      id: 'n5',
+      data: { tipo: 'mover_etapa', config: { etapa_id: 9 } },
+    });
+    await perda.find('[data-testid="motivo-perda"]').setValue('Sem interesse');
+    expect(perda.emitted('update:config').at(-1)).toEqual([
+      { etapa_id: 9, motivo: 'Sem interesse' },
+    ]);
+    await perda.find('[data-testid="motivo-perda"]').setValue('__outro');
+    await perda
+      .find('[data-testid="motivo-outro"]')
+      .setValue('Mudou de cidade');
+    expect(perda.emitted('update:config').at(-1)).toEqual([
+      { etapa_id: 9, motivo: 'Mudou de cidade' },
     ]);
   });
 });

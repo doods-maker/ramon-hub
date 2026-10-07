@@ -34,6 +34,7 @@ export const GATILHOS = [
   { tipo: 'lead_perdido', icone: 'i-lucide-circle-x', alvo: 'lead' },
   { tipo: 'reuniao_marcada', icone: 'i-lucide-calendar-check', alvo: 'lead' },
   { tipo: 'reuniao_cancelada', icone: 'i-lucide-calendar-x', alvo: 'lead' },
+  { tipo: 'reuniao_na_agenda', icone: 'i-lucide-calendar-clock', alvo: 'lead' },
   { tipo: 'contrato_assinado', icone: 'i-lucide-file-signature', alvo: 'lead' },
   { tipo: 'contrato_recusado', icone: 'i-lucide-file-x', alvo: 'lead' },
   { tipo: 'documento_recebido', icone: 'i-lucide-file-input', alvo: 'lead' },
@@ -92,6 +93,11 @@ export const PASSOS = {
     icone: 'i-lucide-history',
     tom: 'slate',
   },
+  apagar_reuniao: {
+    grupo: 'LEAD',
+    icone: 'i-lucide-calendar-x',
+    tom: 'slate',
+  },
   advbox: { grupo: 'INTEGRACOES', icone: 'i-lucide-scale', tom: 'slate' },
   webhook: { grupo: 'INTEGRACOES', icone: 'i-lucide-webhook', tom: 'slate' },
   esperar: { grupo: 'CONTROLE', icone: 'i-lucide-hourglass', tom: 'slate' },
@@ -137,6 +143,7 @@ export const PALETA = [
       { chave: 'trocar_responsavel', tipo: 'trocar_responsavel' },
       { chave: 'preencher_campo', tipo: 'preencher_campo' },
       { chave: 'registrar_atividade', tipo: 'registrar_atividade' },
+      { chave: 'apagar_reuniao', tipo: 'apagar_reuniao' },
     ],
   },
   {
@@ -240,6 +247,12 @@ export const VARIAVEIS = [
   'quando',
   'regra',
   'documento',
+  'evento',
+  'titulo',
+  'titulo_tarefa',
+  'resumo',
+  'resumo_antes',
+  'primeiro_nome',
 ];
 export const CAMPOS = [
   'etapa',
@@ -257,6 +270,9 @@ export const CAMPOS = [
   'telefone',
   'documentos_completos',
   'regra',
+  'evento',
+  'reuniao_de_pe',
+  'horario_passou',
 ];
 export const OPERADORES = [
   'igual',
@@ -271,6 +287,13 @@ export const OPERADORES = [
 ];
 export const SEM_VALOR = ['existe', 'vazio', 'em_horario_comercial'];
 export const TIPOS_TAREFA = ['follow_up', 'document', 'meeting', 'other']; // LeadTask::KINDS
+// = Ramon::Fluxos::Passos::Lead::TIPOS_ATIVIDADE (as de reunião aparecem como as do código)
+export const TIPOS_ATIVIDADE = [
+  'fluxo',
+  'meeting_scheduled',
+  'meeting_rescheduled',
+  'meeting_cancelled',
+];
 export const UNIDADES = ['minutos', 'horas', 'dias'];
 
 const copia = obj => JSON.parse(JSON.stringify(obj));

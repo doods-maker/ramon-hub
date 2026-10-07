@@ -27,9 +27,9 @@ RSpec.describe Ramon::ReuniaoAgendamento do
   it 'marcar e cancelar disparam os fluxos de reunião' do
     allow(Ramon::Fluxos::Disparo).to receive(:externo)
     agendar
-    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_marcada', lead, hash_including('quando'))
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_marcada', lead, { 'quando' => anything })
     described_class.cancelar(task: lead.lead_tasks.find_by!(kind: 'meeting'), user: user)
-    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_cancelada', lead, hash_including('quando'))
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_cancelada', lead, { 'quando' => anything })
   end
 
   it 'usa o task_title quando informado (prefixo do Cal.com)' do
@@ -128,6 +128,96 @@ RSpec.describe Ramon::ReuniaoAgendamento do
 
       with_modified_env(NTFY_TOPIC: 'ramon') { Ramon::MeetingReminderJob.perform_now(lead.id, starts_at.iso8601, '1h antes') }
       expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
+    end
+  end
+
+  describe 'B4.1: o evento decide uma vez quem faz' do
+    it 'código no comando: o ensaio dos fluxos vem antes e leva os textos prontos' do
+      tarefas_no_ensaio = nil
+      allow(Ramon::Fluxos::Disparo).to receive(:externo) { |gatilho, *| tarefas_no_ensaio ||= lead.lead_tasks.count if gatilho == 'reuniao_marcada' }
+      agendar
+      expect(tarefas_no_ensaio).to eq(0)
+      expect(Ramon::Fluxos::Disparo).to have_received(:externo).with(
+        'reuniao_marcada', lead,
+        hash_including('evento' => 'marcada', 'assumido' => false, 'inicio' => starts_at.iso8601, 'quem_marcou_id' => user.id,
+                       'resumo' => 'Primeiro Atendimento em 15/07/2026 11:00', 'primeiro_nome' => 'João',
+                       'titulo_tarefa' => 'Primeiro Atendimento')
+      )
+      expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('reuniao_na_agenda', lead.lead_tasks.last, hash_including('assumido' => false))
+    end
+
+    it 'remarcar leva o resumo de antes; cancelar leva as tarefas' do
+      allow(Ramon::Fluxos::Disparo).to receive(:externo)
+      agendar
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+      described_class.remarcar(task: task, starts_at: starts_at + 1.day, user: user)
+      described_class.cancelar(task: task.reload, user: user)
+      expect(Ramon::Fluxos::Disparo).to have_received(:externo)
+        .with('reuniao_marcada', lead, hash_including('evento' => 'remarcada', 'resumo_antes' => 'Primeiro Atendimento em 15/07/2026 11:00'))
+      expect(Ramon::Fluxos::Disparo).to have_received(:externo)
+        .with('reuniao_cancelada', lead, hash_including('evento' => 'cancelada', 'tarefa_ids' => [task.id]))
+    end
+
+    it 'chave desligada: um fluxo comum em reunião marcada dispara 1 vez, depois dos efeitos (vê a etapa já movida)' do
+      comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_marcada' }, ['parar', {}]))
+      agendar
+      expect(comum.execucoes.map { |e| [e.ensaio, e.contexto['etapa_inicial_id'], e.contexto['gatilho'].key?('assumido')] })
+        .to eq([[false, agendada.id, false]])
+    end
+
+    it 'o sino do código deixa rastro (Redis) para a comparação: marcada, remarcada e cancelada' do
+      admin = create(:user, account: account, role: :administrator)
+      Redis::Alfred.delete(Ramon::Fluxos::Reunioes.chave_rastro(account))
+      agendar
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+      described_class.remarcar(task: task, starts_at: starts_at + 1.day, user: user)
+      described_class.cancelar(task: task.reload, user: user)
+
+      rastros = Ramon::Fluxos::Reunioes.rastros(account, 1.minute.ago, 1.minute.from_now)
+      expect(rastros.map { |r| r.except('em', 'user_ids') }).to contain_exactly(
+        { 'tipo' => 'marcada', 'lead_id' => lead.id, 'inicio' => starts_at.iso8601, 'tarefa' => 'Primeiro Atendimento' },
+        { 'tipo' => 'remarcada', 'lead_id' => lead.id, 'inicio' => (starts_at + 1.day).iso8601 },
+        { 'tipo' => 'cancelada', 'lead_id' => lead.id, 'inicio' => (starts_at + 1.day).iso8601, 'tarefa_ids' => [task.id] }
+      )
+      expect(rastros.map { |r| r['user_ids'].sort }).to all(eq([user.id, admin.id].sort))
+    end
+
+    describe 'com os fluxos no comando (env + os 3 em modo normal)' do
+      around { |ex| with_modified_env(RAMON_FLUXO_REUNIOES: 'on') { ex.run } }
+
+      before do
+        Ramon::Fluxos::Reunioes::GATILHOS.each do |chave, gatilho|
+          fluxo_publicado(account, grafo_linear({ 'tipo' => gatilho }, ['parar', {}]), sistema_chave: chave, modo: 'normal')
+        end
+      end
+
+      it 'marcar e cancelar: o código só dispara (quem faz é o fluxo — aqui, de teste, só "parar")' do
+        travel_to(Time.zone.parse('2026-07-14T12:00:00Z')) do
+          expect { agendar }.not_to have_enqueued_job(Ramon::MeetingReminderJob)
+        end
+        expect([lead.lead_tasks.count, lead.lead_activities.where(kind: 'meeting_scheduled').count, lead.lead_notes.count]).to eq([0, 0, 0])
+        task = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Primeiro Atendimento', due_at: starts_at)
+        described_class.cancelar(task: task, user: user)
+        expect(LeadTask.exists?(task.id)).to be(true)
+      end
+
+      it 'remarcar: o código só move a tarefa' do
+        task = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Primeiro Atendimento', due_at: starts_at)
+        allow(Ramon::Fluxos::Reunioes).to receive(:assumiu?).and_call_original
+        travel_to(Time.zone.parse('2026-07-14T12:00:00Z')) do
+          expect { described_class.remarcar(task: task, starts_at: starts_at + 1.day, user: user) }
+            .not_to have_enqueued_job(Ramon::MeetingReminderJob)
+        end
+        expect(task.reload.due_at).to eq(starts_at + 1.day)
+        expect(lead.lead_activities.where(kind: 'meeting_rescheduled')).to be_empty
+        expect(Ramon::Fluxos::Reunioes).to have_received(:assumiu?).once # o evento decide uma vez só
+      end
+
+      it 'chave ligada: um fluxo comum em reunião marcada segue disparando 1 vez, depois do fluxo migrado' do
+        comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_marcada' }, ['parar', {}]))
+        agendar
+        expect(comum.execucoes.map { |e| [e.ensaio, e.contexto['gatilho'].key?('assumido')] }).to eq([[false, false]])
+      end
     end
   end
 end

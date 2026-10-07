@@ -2,34 +2,62 @@
 module Ramon::Fluxos::Passos::Lead
   module_function
 
+  # B4.1: tipos de atividade que um fluxo pode registrar (os de reunião aparecem como os do código).
+  TIPOS_ATIVIDADE = %w[fluxo meeting_scheduled meeting_rescheduled meeting_cancelled].freeze
+
   def mover_etapa(config, ctx)
     lead = exigir_lead(ctx)
     etapa = lead.account.lead_stages.find(config['etapa_id'])
-    return { saida: 's', resumo: "faria: mover para #{etapa.name}" } if ctx.ensaio?
+    adiante = ja_adiante(config, lead, etapa)
+    return adiante if adiante
 
-    lead.update!(lead_stage: etapa)
+    # PR #216: perda exige motivo. Com motivo no passo, vai ele; sem, o Lead preenche "Automação: <fluxo>".
+    motivo = ctx.interpolar(config['motivo']).strip.presence if etapa.is_lost
+    destino = motivo ? "#{etapa.name} (motivo: #{motivo})" : etapa.name
+    return { saida: 's', resumo: "faria: mover para #{destino}" } if ctx.ensaio?
+
+    lead.update!({ lead_stage: etapa, lost_reason: motivo }.compact)
     # a mudança feita pelo próprio fluxo não pode cancelá-lo na próxima espera
     ctx.execucao.contexto = ctx.execucao.contexto.merge('etapa_inicial_id' => etapa.id)
-    { saida: 's', resumo: "moveu para #{etapa.name}" }
+    { saida: 's', resumo: "moveu para #{destino}" }
+  end
+
+  # B4.1: "só para a frente" (como a reunião marcada do código): quem já está adiante fica onde está.
+  def ja_adiante(config, lead, etapa)
+    return unless config['so_para_frente'] && lead.lead_stage.position >= etapa.position
+
+    { saida: 's', resumo: "etapa: já está em #{lead.lead_stage.name} (só para a frente)" }
   end
 
   def criar_tarefa(config, ctx)
     lead = exigir_lead(ctx)
     titulo = ctx.interpolar(config['titulo']).truncate(255)
-    prazo = (Time.find_zone!(Fluxo::ZONA).now + config.fetch('prazo_dias', 1).to_i.days).end_of_day
-    return { saida: 's', resumo: "faria: tarefa \"#{titulo}\"" } if ctx.ensaio?
+    prazo = prazo_da_tarefa(config, ctx)
+    return { saida: 's', resumo: "faria: tarefa \"#{titulo}\" para #{Ramon::Fluxos::Passos::Logica.hora(prazo)}" } if ctx.ensaio?
 
-    responsavel = responsavel_da_tarefa(lead, config)
-    lead.lead_tasks.create!(account: lead.account, kind: kind_da_tarefa(config), title: titulo, due_at: prazo, user: responsavel)
+    responsavel = responsavel_da_tarefa(lead, config, ctx)
+    tarefa = lead.lead_tasks.create!(account: lead.account, kind: kind_da_tarefa(config), title: titulo, due_at: prazo, user: responsavel)
+    # B4.1: a tarefa da própria reunião põe a reunião na agenda → começa o ciclo de lembretes dela
+    Ramon::Fluxos::Reunioes.na_agenda(tarefa, decisao_do_evento(ctx, lead)) if config['prazo'] == 'reuniao' && tarefa.kind == 'meeting'
     { saida: 's', resumo: "tarefa \"#{titulo}\" · #{responsavel&.name || 'sem responsável'}" }
   end
 
+  # Quem faz o ciclo de lembretes: a decisão do evento que trouxe a reunião ('assumido'); fluxo comum (gatilho sem ela),
+  # a chave da conta agora — código no comando → o ciclo só ensaia (o código não lembra tarefa criada por fluxo).
+  def decisao_do_evento(ctx, lead)
+    assumido = ctx.gatilho('assumido')
+    assumido.nil? ? Ramon::Fluxos::Reunioes.assumiu?(lead.account) : assumido
+  end
+
+  # B4.1: tipo (as de reunião iguais às do código), "de" opcional (remarcada: de → para) e a pessoa que marcou.
   def registrar_atividade(config, ctx)
     lead = exigir_lead(ctx)
+    tipo = TIPOS_ATIVIDADE.include?(config['tipo']) ? config['tipo'] : 'fluxo'
     texto = ctx.interpolar(config['texto']).truncate(255)
-    return { saida: 's', resumo: "faria: atividade \"#{texto.truncate(80)}\"" } if ctx.ensaio?
+    de = ctx.interpolar(config['de']).truncate(255).presence
+    return { saida: 's', resumo: "faria: atividade #{tipo}: #{[de, texto].compact.join(' → ')}" } if ctx.ensaio?
 
-    lead.lead_activities.create!(account: lead.account, kind: 'fluxo', to_value: texto)
+    lead.lead_activities.create!(account: lead.account, user: ctx.quem_marcou, kind: tipo, from_value: de, to_value: texto)
     { saida: 's', resumo: "atividade: #{texto.truncate(80)}" }
   end
 
@@ -39,12 +67,22 @@ module Ramon::Fluxos::Passos::Lead
     lead = exigir_lead(ctx)
     papel = config['papel']
     coluna = Ramon::Papeis::COLUNA[papel] || raise(Ramon::Fluxos::PassoImpossivel, "papel desconhecido: #{papel}")
+    feito = ja_tem(config, lead, coluna, papel)
+    return feito if feito
+
     pessoa = config['user_id'].present? ? usuario_da_conta(lead, config['user_id']) : Ramon::Papeis.proximo(lead.account, papel)
     return { saida: 's', resumo: "#{papel}: ninguém no time" } if pessoa.nil?
     return { saida: 's', resumo: "faria: #{papel} → #{pessoa.name}" } if ctx.ensaio?
 
     lead.update!(coluna => pessoa.id)
     { saida: 's', resumo: "#{papel} → #{pessoa.name}" }
+  end
+
+  # B4.1: "só se ainda não tem" (o Closer automático da reunião marcada não troca quem já está).
+  def ja_tem(config, lead, coluna, papel)
+    return unless config['so_se_vazio'] && lead[coluna].present?
+
+    { saida: 's', resumo: "#{papel}: já tem #{User.find_by(id: lead[coluna])&.name}" }
   end
 
   # Grava em custom_attributes['campos'] (nunca na raiz: zapsign/advbox/doc_status são do hub).
@@ -67,7 +105,17 @@ module Ramon::Fluxos::Passos::Lead
     lead.account.users.find_by(id: user_id) || raise(Ramon::Fluxos::PassoImpossivel, 'a pessoa escolhida não está mais na conta')
   end
 
-  def responsavel_da_tarefa(lead, config)
+  # B4.1: prazo 'reuniao' = vence na hora da reunião do gatilho; senão, N dias a partir de hoje (fim do dia, SP).
+  def prazo_da_tarefa(config, ctx)
+    return ctx.reuniao_em || raise(Ramon::Fluxos::PassoImpossivel, 'sem reunião marcada para o prazo') if config['prazo'] == 'reuniao'
+
+    (Time.find_zone!(Fluxo::ZONA).now + config.fetch('prazo_dias', 1).to_i.days).end_of_day
+  end
+
+  # Tarefa da reunião é de quem marcou (como no código); as outras, a pessoa escolhida ou o responsável do lead.
+  def responsavel_da_tarefa(lead, config, ctx)
+    return ctx.quem_marcou if config['prazo'] == 'reuniao'
+
     config['responsavel_id'].present? ? usuario_da_conta(lead, config['responsavel_id']) : (lead.closer || lead.sdr)
   end
 

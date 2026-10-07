@@ -2224,7 +2224,8 @@
         "OK": "ok",
         "FALHOU": "{n} failed",
         "DESLIGADO": "off",
-        "NO_CODIGO": "runs in code"
+        "NO_CODIGO": "runs in code",
+        "SOMBRA": "shadow"
       },
       "GATILHOS": {
         "conversa_criada": "New conversation",
@@ -2239,6 +2240,7 @@
         "manual": "Run by hand",
         "reuniao_marcada": "Meeting scheduled",
         "reuniao_cancelada": "Meeting cancelled",
+        "reuniao_na_agenda": "Meeting on the calendar (task created or moved)",
         "contrato_assinado": "Contract signed (ZapSign)",
         "contrato_recusado": "Contract refused (ZapSign)",
         "documento_recebido": "Document received (checklist)",
@@ -2265,6 +2267,7 @@
         "trocar_responsavel": "Change owner",
         "preencher_campo": "Fill a field",
         "registrar_atividade": "Log activity",
+        "apagar_reuniao": "Delete meeting task",
         "advbox": "ADVBOX",
         "webhook": "Webhook"
       },
@@ -2287,6 +2290,7 @@
         "trocar_responsavel": "Lead",
         "preencher_campo": "Lead",
         "registrar_atividade": "Lead",
+        "apagar_reuniao": "Lead",
         "advbox": "Integration",
         "webhook": "Integration"
       },
@@ -2320,6 +2324,7 @@
         "trocar_responsavel": "Change SDR / Closer",
         "preencher_campo": "Fill a lead field",
         "registrar_atividade": "Log activity",
+        "apagar_reuniao": "Delete meeting task",
         "advbox": "Task or movement in ADVBOX",
         "webhook": "Webhook (last step)"
       },
@@ -2368,7 +2373,8 @@
         "CONDICOES": "{n} condition(s)",
         "PASSO_N": "step {id}",
         "AS_HORA": "every day from {quando}",
-        "QUALQUER_EVENTO": "any event"
+        "QUALQUER_EVENTO": "any event",
+        "ANTES_DA_REUNIAO": "{tempo} before the meeting"
       },
       "PAINEL": {
         "ROTULO": "Step name (optional)",
@@ -2391,6 +2397,25 @@
         "UNIDADE": "Unit",
         "ESPERAR_AJUDA": "Counts from the previous step.",
         "PARAR_AJUDA": "Ends the run here.",
+        "ESPERAR_REUNIAO": "Before the meeting",
+        "ESPERAR_REUNIAO_AJUDA": "Counts back from the meeting time. If that moment has already passed, it does not wait and sets Reminder time already passed = yes.",
+        "PARA_PESSOAS": "People checked below (none = lead owner)",
+        "PARA_CLOSER_SDR": "Lead Closer and SDR (neither: the administrators)",
+        "PARA_CONTA": "Everyone in the account",
+        "SO_PARA_FRENTE": "Only forward (a lead already past this stage stays)",
+        "SO_SE_VAZIO": "Only if the lead does not have one yet",
+        "TAREFA_DA_REUNIAO": "Task of the meeting itself (due at the meeting time, owned by who booked it)",
+        "TIPO_ATIVIDADE": "Activity type",
+        "DE": "From (previous value)",
+        "ONDE_RASCUNHO": "Where the draft goes",
+        "ONDE_CONVERSA": "In the conversation (or the lead notes, without a conversation)",
+        "ONDE_NOTAS": "In the lead notes",
+        "TITULO_RASCUNHO": "Draft title (optional)",
+        "APAGAR_REUNIAO_AJUDA": "Deletes the meeting task of the cancelled meeting (and stops its reminders).",
+        "MOTIVO_PERDA": "Loss reason",
+        "MOTIVO_AUTOMATICO": "Automatic (Automation: flow name)",
+        "MOTIVO_OUTRO": "Other…",
+        "MOTIVO_OUTRO_PLACEHOLDER": "Describe it in a few words",
         "DUPLICAR": "Duplicate",
         "EXCLUIR": "Delete step",
         "GATILHO_TIPO": "When it runs",
@@ -2498,7 +2523,10 @@
         "nome": "Name",
         "telefone": "Phone",
         "documentos_completos": "Documents complete (yes or no)",
-        "regra": "ADVBOX rule (event)"
+        "regra": "ADVBOX rule (event)",
+        "evento": "Meeting event (marcada, remarcada, cancelada)",
+        "reuniao_de_pe": "Meeting still booked (yes or no)",
+        "horario_passou": "Reminder time already passed (yes or no)"
       },
       "OPERADORES": {
         "igual": "equals",
@@ -2510,6 +2538,12 @@
         "existe": "is filled",
         "vazio": "is empty",
         "em_horario_comercial": "it is business hours now"
+      },
+      "TIPOS_ATIVIDADE": {
+        "fluxo": "Automation",
+        "meeting_scheduled": "Meeting scheduled",
+        "meeting_rescheduled": "Meeting rescheduled",
+        "meeting_cancelled": "Meeting cancelled"
       },
       "TIPOS_TAREFA": {
         "follow_up": "Follow-up",

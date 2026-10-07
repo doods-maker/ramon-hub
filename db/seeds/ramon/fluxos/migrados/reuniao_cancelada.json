@@ -1,0 +1,19 @@
+{
+  "nome": "Reunião cancelada",
+  "descricao": "Reunião cancelada (painel do lead ou Cal.com), no lugar do código (B4.1): atividade, a tarefa da reunião apagada (o que também encerra os lembretes dela), sino para a conta e push. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"reuniao_cancelada","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"registrar_atividade","config":{"rotulo":"Atividade: reunião cancelada","tipo":"meeting_cancelled","texto":"{resumo}"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"apagar_reuniao","config":{"rotulo":"Apagar a tarefa da reunião"},"posicao":{"x":0,"y":280}},
+      {"id":"n4","tipo":"avisar_sino","config":{"rotulo":"Sino para toda a conta","para":"conta","texto":"Reunião com {nome_completo} cancelada ({quando})"},"posicao":{"x":0,"y":420}},
+      {"id":"n5","tipo":"avisar_push","config":{"rotulo":"Push: reunião cancelada","titulo":"Reuniao cancelada: {nome_completo}","texto":"{quando} — {titulo}"},"posicao":{"x":0,"y":560}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"},
+      {"de":"n3","saida":"s","para":"n4"},
+      {"de":"n4","saida":"s","para":"n5"}
+    ]
+  }
+}

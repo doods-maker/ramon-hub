@@ -2229,7 +2229,8 @@
         "OK": "ok",
         "FALHOU": "{n} falhou",
         "DESLIGADO": "desligado",
-        "NO_CODIGO": "roda no código"
+        "NO_CODIGO": "roda no código",
+        "SOMBRA": "em sombra"
       },
       "GATILHOS": {
         "conversa_criada": "Nova conversa",
@@ -2244,6 +2245,7 @@
         "manual": "Rodar na mão",
         "reuniao_marcada": "Reunião marcada",
         "reuniao_cancelada": "Reunião cancelada",
+        "reuniao_na_agenda": "Reunião na agenda (tarefa criada ou remarcada)",
         "contrato_assinado": "Contrato assinado (ZapSign)",
         "contrato_recusado": "Contrato recusado (ZapSign)",
         "documento_recebido": "Documento recebido (checklist)",
@@ -2270,6 +2272,7 @@
         "trocar_responsavel": "Trocar responsável",
         "preencher_campo": "Preencher campo",
         "registrar_atividade": "Registrar atividade",
+        "apagar_reuniao": "Apagar a tarefa da reunião",
         "advbox": "ADVBOX",
         "webhook": "Webhook"
       },
@@ -2292,6 +2295,7 @@
         "trocar_responsavel": "Lead",
         "preencher_campo": "Lead",
         "registrar_atividade": "Lead",
+        "apagar_reuniao": "Lead",
         "advbox": "Integração",
         "webhook": "Integração"
       },
@@ -2325,6 +2329,7 @@
         "trocar_responsavel": "Trocar SDR / Closer",
         "preencher_campo": "Preencher campo do lead",
         "registrar_atividade": "Registrar atividade",
+        "apagar_reuniao": "Apagar a tarefa da reunião",
         "advbox": "Tarefa ou movimentação no ADVBOX",
         "webhook": "Webhook (último passo)"
       },
@@ -2373,7 +2378,8 @@
         "CONDICOES": "{n} condição(ões)",
         "PASSO_N": "passo {id}",
         "AS_HORA": "todo dia a partir de {quando}",
-        "QUALQUER_EVENTO": "qualquer evento"
+        "QUALQUER_EVENTO": "qualquer evento",
+        "ANTES_DA_REUNIAO": "{tempo} antes da reunião"
       },
       "PAINEL": {
         "ROTULO": "Nome do passo (opcional)",
@@ -2396,6 +2402,25 @@
         "UNIDADE": "Unidade",
         "ESPERAR_AJUDA": "Conta a partir do passo anterior.",
         "PARAR_AJUDA": "Encerra a execução aqui.",
+        "ESPERAR_REUNIAO": "Antes da reunião",
+        "ESPERAR_REUNIAO_AJUDA": "Conta para trás a partir do horário da reunião. Se esse momento já passou, não espera e marca Horário do lembrete já passou = sim.",
+        "PARA_PESSOAS": "As pessoas marcadas abaixo (ninguém = responsável do lead)",
+        "PARA_CLOSER_SDR": "Closer e SDR do lead (sem nenhum dos dois: os administradores)",
+        "PARA_CONTA": "Todo mundo da conta",
+        "SO_PARA_FRENTE": "Só para a frente (quem já passou desta etapa fica onde está)",
+        "SO_SE_VAZIO": "Só se o lead ainda não tem",
+        "TAREFA_DA_REUNIAO": "Tarefa da própria reunião (vence na hora da reunião e fica com quem marcou)",
+        "TIPO_ATIVIDADE": "Tipo da atividade",
+        "DE": "De (valor anterior)",
+        "ONDE_RASCUNHO": "Onde o rascunho fica",
+        "ONDE_CONVERSA": "Na conversa (ou nas notas do lead, sem conversa)",
+        "ONDE_NOTAS": "Nas notas do lead",
+        "TITULO_RASCUNHO": "Título do rascunho (opcional)",
+        "APAGAR_REUNIAO_AJUDA": "Apaga a tarefa da reunião cancelada (e para os lembretes dela).",
+        "MOTIVO_PERDA": "Motivo da perda",
+        "MOTIVO_AUTOMATICO": "Automático (Automação: nome do fluxo)",
+        "MOTIVO_OUTRO": "Outro…",
+        "MOTIVO_OUTRO_PLACEHOLDER": "Descreva em poucas palavras",
         "DUPLICAR": "Duplicar",
         "EXCLUIR": "Excluir passo",
         "GATILHO_TIPO": "Quando roda",
@@ -2503,7 +2528,10 @@
         "nome": "Nome",
         "telefone": "Telefone",
         "documentos_completos": "Documentos completos (sim ou não)",
-        "regra": "Regra do ADVBOX (evento)"
+        "regra": "Regra do ADVBOX (evento)",
+        "evento": "Evento da reunião (marcada, remarcada, cancelada)",
+        "reuniao_de_pe": "Reunião segue marcada (sim ou não)",
+        "horario_passou": "Horário do lembrete já passou (sim ou não)"
       },
       "OPERADORES": {
         "igual": "é igual a",
@@ -2515,6 +2543,12 @@
         "existe": "está preenchido",
         "vazio": "está vazio",
         "em_horario_comercial": "agora é horário comercial"
+      },
+      "TIPOS_ATIVIDADE": {
+        "fluxo": "Automação",
+        "meeting_scheduled": "Reunião agendada",
+        "meeting_rescheduled": "Reunião remarcada",
+        "meeting_cancelled": "Reunião cancelada"
       },
       "TIPOS_TAREFA": {
         "follow_up": "Retorno",

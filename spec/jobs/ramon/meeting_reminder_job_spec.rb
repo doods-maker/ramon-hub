@@ -6,6 +6,7 @@ RSpec.describe Ramon::MeetingReminderJob do
   let(:start_at) { 2.hours.from_now.change(usec: 0) }
 
   before { allow(Ramon::NtfyPushJob).to receive(:perform_now) }
+  after { Redis::Alfred.delete("ramon:reunioes:rastro:#{account.id}") }
   # ntfy ligado por padrao nos cenarios de push; o teste do sino desliga.
   around { |ex| with_modified_env(NTFY_TOPIC: 'ramon') { ex.run } }
 
@@ -27,6 +28,17 @@ RSpec.describe Ramon::MeetingReminderJob do
     end.to change(Notification.where(notification_type: 'ramon_meeting_reminder'), :count).by(1)
     expect(Ramon::NtfyPushJob).not_to have_received(:perform_now)
     expect(Notification.last.push_message_title).to include('Maria da Silva', '1h antes')
+  end
+
+  it 'deixa o rastro do lembrete para a comparação com os fluxos' do
+    create(:user, account: account, role: :administrator)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião Cal.com: consulta', due_at: start_at)
+
+    described_class.perform_now(lead.id, start_at.iso8601, '1h antes')
+
+    rastros = Ramon::Fluxos::Reunioes.rastros(account, 1.minute.ago, 1.minute.from_now)
+    expect(rastros).to contain_exactly(include('tipo' => 'lembrete', 'lead_id' => lead.id, 'inicio' => start_at.iso8601,
+                                               'rotulo' => '1h antes', 'user_ids' => Ramon::Fluxos::Reunioes.destinatarios(lead)))
   end
 
   it 'tolera diferença de até 60s entre o due_at da task e o start_at' do

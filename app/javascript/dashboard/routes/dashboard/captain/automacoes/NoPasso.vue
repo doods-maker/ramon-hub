@@ -96,10 +96,14 @@ const detalhe = computed(() => {
       return nomes(etapas.value, [c.etapa_id]);
     case 'criar_tarefa':
       return curto(c.titulo);
-    case 'esperar':
-      return c.ate === 'horario_comercial'
-        ? t(`${K}.PAINEL.ESPERAR_HORARIO`)
-        : `${c.quantidade ?? ''} ${c.unidade ? t(`${K}.${Number(c.quantidade) === 1 ? 'UNIDADES_UM' : 'UNIDADES'}.${c.unidade}`) : ''}`;
+    case 'esperar': {
+      if (c.ate === 'horario_comercial')
+        return t(`${K}.PAINEL.ESPERAR_HORARIO`);
+      const tempo = `${c.quantidade ?? ''} ${c.unidade ? t(`${K}.${Number(c.quantidade) === 1 ? 'UNIDADES_UM' : 'UNIDADES'}.${c.unidade}`) : ''}`;
+      return c.antes_de === 'reuniao'
+        ? t(`${K}.NO.ANTES_DA_REUNIAO`, { tempo })
+        : tempo;
+    }
     case 'acao_chatwoot':
       return (c.acoes || [])
         .map(a => t(`${K}.ACOES_CHATWOOT.${a.action_name}`, a.action_name))

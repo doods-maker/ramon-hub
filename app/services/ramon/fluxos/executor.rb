@@ -6,7 +6,8 @@
 class Ramon::Fluxos::Executor
   LIMITE_PASSOS = 50
   ESPERAS_ERRO = [1, 5, 15].freeze # minutos até a próxima tentativa
-  VISIVEIS = %w[mover_etapa criar_tarefa acao_chatwoot avisar_sino avisar_push trocar_responsavel preencher_campo advbox webhook].freeze
+  VISIVEIS = %w[mover_etapa criar_tarefa acao_chatwoot avisar_sino avisar_push trocar_responsavel preencher_campo advbox webhook
+                apagar_reuniao].freeze
   # tipo do passo → módulo que tem o método de mesmo nome (chamado por nome: dá pra stubar no spec)
   PASSOS = {
     'se' => Ramon::Fluxos::Passos::Logica, 'escolha' => Ramon::Fluxos::Passos::Logica,
@@ -16,6 +17,7 @@ class Ramon::Fluxos::Executor
     'mover_etapa' => Ramon::Fluxos::Passos::Lead, 'criar_tarefa' => Ramon::Fluxos::Passos::Lead,
     'registrar_atividade' => Ramon::Fluxos::Passos::Lead, 'trocar_responsavel' => Ramon::Fluxos::Passos::Lead,
     'preencher_campo' => Ramon::Fluxos::Passos::Lead,
+    'apagar_reuniao' => Ramon::Fluxos::Passos::Reuniao,
     'advbox' => Ramon::Fluxos::Passos::Externo, 'webhook' => Ramon::Fluxos::Passos::Externo,
     'perguntar_ia' => Ramon::Fluxos::Passos::Ia, 'rascunho_ia' => Ramon::Fluxos::Passos::Ia, 'rodar_skill' => Ramon::Fluxos::Passos::Ia,
     'avisar_sino' => Ramon::Fluxos::Passos::Aviso, 'avisar_push' => Ramon::Fluxos::Passos::Aviso
@@ -56,7 +58,7 @@ class Ramon::Fluxos::Executor
 
   # Roda já com status 'rodando' (reivindicada).
   def cancelar_se_preciso
-    motivo = if @execucao.alvo.nil? then 'o lead/conversa foi apagado'
+    motivo = if @execucao.alvo.nil? then 'o alvo foi apagado (lead, conversa ou reunião)'
              elsif desligado? then 'o fluxo foi desligado'
              elsif saiu_da_etapa? then 'o lead saiu da etapa'
              end
@@ -66,7 +68,9 @@ class Ramon::Fluxos::Executor
     true
   end
 
-  def desligado? = !@execucao.ensaio && !@execucao.fluxo&.ativo
+  # Vale para execução normal e para a sombra (B4.1: desligar é como se para a sombra); o "Testar com um lead…"
+  # (pular_esperas) roda até com o fluxo desligado.
+  def desligado? = !@execucao.contexto['pular_esperas'] && !@execucao.fluxo&.ativo
 
   def saiu_da_etapa?
     inicial = @execucao.contexto['etapa_inicial_id']
