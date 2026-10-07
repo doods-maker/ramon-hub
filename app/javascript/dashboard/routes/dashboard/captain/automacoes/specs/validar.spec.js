@@ -244,6 +244,12 @@ describe('validar (espelho do Grafo#erros)', () => {
     ).toEqual([]);
   });
 
+  it('SLA da caixa só vale como espera desde a conversa', () => {
+    expect(codigos(linear(p('p1', 'esperar', { prazo: 'sla_caixa' })))).toEqual(
+      [['p1', 'ESPERA_SEM_TEMPO']]
+    );
+  });
+
   it('ação do Chatwoot: vazia, mensagem ao cliente, proibida, desconhecida', () => {
     const acao = (...nomes) =>
       linear(

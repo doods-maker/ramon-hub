@@ -174,12 +174,13 @@ const errosEscolha = (id, config) => {
 
 const esperaValida = c =>
   c.ate === 'horario_comercial' ||
-  c.prazo === 'sla_caixa' ||
+  (c.desde === 'conversa' && c.prazo === 'sla_caixa') ||
   (Number.parseInt(c.quantidade, 10) > 0 && UNIDADES.includes(c.unidade));
 
 // Ramon::Fluxos::Horario.janela_valida? — sem as chaves vale o padrão
 const janelaValida = c => {
-  const dias = 'dias' in c ? (c.dias || []).map(Number) : JANELA_PADRAO.dias;
+  const dias =
+    'dias' in c ? [].concat(c.dias ?? []).map(Number) : JANELA_PADRAO.dias;
   const inicio = Number(c.inicio ?? JANELA_PADRAO.inicio);
   const fim = Number(c.fim ?? JANELA_PADRAO.fim);
   return (

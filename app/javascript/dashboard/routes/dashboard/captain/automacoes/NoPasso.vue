@@ -99,7 +99,8 @@ const detalhe = computed(() => {
     case 'esperar': {
       if (c.ate === 'horario_comercial')
         return t(`${K}.PAINEL.ESPERAR_HORARIO`);
-      if (c.prazo === 'sla_caixa') return t(`${K}.PAINEL.ESPERAR_SLA`);
+      if (c.desde === 'conversa' && c.prazo === 'sla_caixa')
+        return t(`${K}.PAINEL.ESPERAR_SLA`);
       const tempo = `${c.quantidade ?? ''} ${c.unidade ? t(`${K}.${Number(c.quantidade) === 1 ? 'UNIDADES_UM' : 'UNIDADES'}.${c.unidade}`) : ''}`;
       if (c.desde === 'conversa') return t(`${K}.NO.DESDE_CONVERSA`, { tempo });
       return c.antes_de === 'reuniao'
