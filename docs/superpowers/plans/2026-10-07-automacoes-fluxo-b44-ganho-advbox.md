@@ -1822,3 +1822,10 @@ puts "ok"'
 | N5 | O texto da **pesquisa NPS** e do **dossiê** continua o de hoje e **não se edita na tela** (é rotina pronta; mudar = pedir um PR). Os 4 rascunhos do ADVBOX (INSS negou, exigência, êxito, concedido) ficam editáveis na tela | Aceitar | Tasks 1, 6 |
 | N6 | Evento do ADVBOX que chega com o fluxo **ocupado com o mesmo lead** (dois avisos do Flowter no mesmo instante, ou o fluxo esperando nova tentativa) é feito **pelo código** — nada se perde. Consequência: o filtro "regras" do gatilho não desliga efeito (para tirar um efeito, apaga-se o passo do ramo). Na limpeza: **manter** esse código-reserva, ou apagar e aceitar perder esse evento raro | Agora: reserva ligada. Limpeza: manter | Tasks 4, 7 |
 | N7 | O teste ao vivo usa um **lead de teste com a trava do ADVBOX pré-marcada** e **eventos do ADVBOX fabricados no console** (o caminho Flowter → webhook não muda e não é exercitado). O "abrir caso no ADVBOX de verdade" só será visto no 1º ganho real depois de virar (é o mesmo serviço de hoje) | Aceitar | Operação §2–§5 |
+
+
+## Respostas do Eduardo (07/10/2026)
+
+Todas as "Decisões novas que dependem do Eduardo" deste plano foram **ACEITAS como propostas** (formulário de 07/10).
+
+**Decisão extra do Eduardo (07/10):** o Lead ganho TAMBÉM tem reserva — se o fluxo não começar (erro do motor antes de criar a execução, ou fluxo ocupado), o código faz o ganho como hoje (dossiê, NPS, caso no ADVBOX), com a mesma regra de decisão única do evento (nunca em dobro). A Task 3 deve implementar e testar isso.
