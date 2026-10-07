@@ -20,6 +20,9 @@ vi.mock('dashboard/composables/useAccount', () => ({
 vi.mock('dashboard/api/captainToolRuns', () => ({
   default: { list: vi.fn() },
 }));
+vi.mock('../ExecucoesAgente.vue', () => ({
+  default: { template: '<div data-testid="aba-agente-conteudo" />' },
+}));
 
 const RUN = {
   id: 1,
@@ -103,5 +106,20 @@ describe('Execucoes.vue', () => {
     expect(linha.find('[data-testid="execucoes-conversa"]').exists()).toBe(
       false
     );
+  });
+
+  it('?aba=agente abre a aba do agente Claude; a aba de ferramentas volta', async () => {
+    query = { aba: 'agente' };
+    const wrapper = await montar();
+    expect(wrapper.find('[data-testid="aba-agente-conteudo"]').exists()).toBe(
+      true
+    );
+    expect(wrapper.find('[data-testid="execucoes-linha"]').exists()).toBe(
+      false
+    );
+    await wrapper
+      .find('[data-testid="execucoes-aba-ferramentas"]')
+      .trigger('click');
+    expect(wrapper.findAll('[data-testid="execucoes-linha"]')).toHaveLength(2);
   });
 });
