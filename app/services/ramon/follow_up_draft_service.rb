@@ -3,8 +3,8 @@
 # custom_attributes.follow_up. Nada é enviado ao cliente — nota nasce RASCUNHO
 # e quem revisa e manda é o Eduardo.
 class Ramon::FollowUpDraftService
-  DAILY_CAP = 15
-  MIN_GAP_DAYS = 5
+  DAILY_CAP = Ramon::Fluxos::Retomada::TETO
+  MIN_GAP_DAYS = Ramon::Fluxos::Retomada::INTERVALO_DIAS
   MAX_MESSAGES = 200
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
@@ -43,42 +43,22 @@ class Ramon::FollowUpDraftService
     true
   end
 
-  # Por que o lead NÃO pode receber retomada agora (nil = pode). O controller
-  # checa antes de enfileirar: o botão do painel dizia "em preparo" mesmo
-  # quando o job ia desistir calado.
-  def ineligibility(lead)
-    return { reason: 'no_conversation' } if lead.conversation_id.blank?
-    return { reason: 'open_follow_up' } if lead.lead_tasks.open_tasks.exists?(kind: 'follow_up')
-
-    last_at = last_follow_up_at(lead)
-    return if last_at.nil? || last_at <= MIN_GAP_DAYS.days.ago
-
-    { reason: 'recent_follow_up', last_at: last_at.iso8601,
-      days_ago: (Time.zone.today - last_at.to_date).to_i, min_gap_days: MIN_GAP_DAYS }
-  end
+  # Por que o lead NÃO pode receber retomada agora (nil = pode). A regra mora em Ramon::Fluxos::Retomada (B4.3: a mesma
+  # do fluxo da cadência); o controller checa antes de enfileirar.
+  def ineligibility(lead) = Ramon::Fluxos::Retomada.motivo(lead)
 
   private
 
   def eligible?(lead) = ineligibility(lead).nil?
 
-  # data venenosa (API grava qualquer coisa no jsonb) → nil, tratada como "nunca"
-  def last_follow_up_at(lead)
-    last_at = lead.custom_attributes.dig('follow_up', 'ultima_em')
-    return if last_at.blank?
-
-    Time.zone.parse(last_at.to_s)
-  rescue ArgumentError
-    nil
-  end
-
   def draft_for(lead)
-    attempt = lead.custom_attributes.dig('follow_up', 'tentativas').to_i + 1
+    attempt = Ramon::Fluxos::Retomada.tentativa(lead)
     body = "RASCUNHO (revisar antes de enviar) — retomada nº #{attempt}:\n#{message_for(lead, attempt)}"
     # atômico: falha parcial deixaria nota órfã sem task/contador → retomada duplicada amanhã
     lead.transaction do
       lead.lead_notes.create!(account: @account, body: body.truncate(1000))
       lead.lead_tasks.create!(account: @account, kind: 'follow_up', title: "Retomada nº #{attempt}", due_at: Time.current.end_of_day)
-      register_attempt(lead, attempt)
+      Ramon::Fluxos::Retomada.registrar!(lead)
     end
     Ramon::EventoInline.registrar(lead.conversation,
                                   "⟳ Cadência do hub preparou o rascunho de retomada nº #{attempt} — revise e envie pelo painel.",
@@ -105,7 +85,7 @@ class Ramon::FollowUpDraftService
   def user_prompt(lead, attempt)
     header = ["Tentativa de retomada nº #{attempt} — ângulo: #{angle_for(attempt)}.",
               "Tese/benefício: #{lead.thesis&.name || lead.benefit_type&.name || 'não informado'}.",
-              "Lead parado há #{days_stalled(lead)} dias sem avanço."].join("\n")
+              "Lead parado há #{Ramon::Fluxos::Retomada.dias_parado(lead)} dias sem avanço."].join("\n")
     text = [header, transcript(lead.conversation)].compact_blank.join("\n\n")
     Ramon::Pseudonymizer.mask(text, names: [lead.name, lead.contact&.name])
   end
@@ -117,12 +97,6 @@ class Ramon::FollowUpDraftService
     when 2 then 'agregue valor: traga UMA informação nova e útil sobre a tese/benefício em questão'
     else 'faça uma pergunta direta sobre o interesse em seguir e deixe a porta aberta pra quando a pessoa quiser'
     end
-  end
-
-  def days_stalled(lead)
-    return 0 if lead.stage_entered_at.blank?
-
-    (Time.zone.today - lead.stage_entered_at.to_date).to_i
   end
 
   # ponytail: espelha ConversationCopilotService#transcript; extrair helper comum se surgir um 4º consumidor.
@@ -147,13 +121,6 @@ class Ramon::FollowUpDraftService
 
   def first_name(lead)
     lead.name.to_s.split.first.presence || 'cliente'
-  end
-
-  # lição lost update: reload antes do merge; escrever SÓ a chave follow_up.
-  def register_attempt(lead, attempt)
-    lead.reload
-    follow_up = { 'tentativas' => attempt, 'ultima_em' => Time.current.iso8601 }
-    lead.update!(custom_attributes: lead.custom_attributes.merge('follow_up' => follow_up))
   end
 
   # 1 push resumo por conta (não 1 por lead); o NtfyPushJob exige um lead — vai o último do lote.
