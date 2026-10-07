@@ -37,6 +37,13 @@ RSpec.describe Ramon::Fluxos::Retomada do
       expect(described_class.tentativa(lead)).to eq(3)
     end
 
+    it 'contador que não é objeto no jsonb (a API grava qualquer coisa) conta como vazio' do
+      lead.update!(custom_attributes: { 'follow_up' => 'lixo' })
+      expect(described_class.tentativa(lead)).to eq(1)
+      expect(described_class.ultima_em(lead)).to be_nil
+      expect(described_class.motivo(lead)).to be_nil
+    end
+
     it 'registrar conta a tentativa e a data sem apagar as outras chaves do lead' do
       lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 1 }, 'campos' => { 'x' => '1' } })
       expect(described_class.registrar!(lead)).to eq(2)

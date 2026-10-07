@@ -23,7 +23,7 @@ module Ramon::Fluxos::Retomada
 
   # Data venenosa (a API grava qualquer coisa no jsonb) → nil, tratada como "nunca".
   def ultima_em(lead)
-    valor = lead.custom_attributes.dig('follow_up', 'ultima_em')
+    valor = contador(lead)['ultima_em']
     return if valor.blank?
 
     Time.zone.parse(valor.to_s)
@@ -32,7 +32,14 @@ module Ramon::Fluxos::Retomada
   end
 
   # A próxima retomada do lead (as contadas + 1).
-  def tentativa(lead) = lead.custom_attributes.dig('follow_up', 'tentativas').to_i + 1
+  def tentativa(lead) = contador(lead)['tentativas'].to_i + 1
+
+  # O contador follow_up do lead; não-Hash (string/array gravado pela API) conta como vazio — não derruba o lote.
+  def contador(lead)
+    valor = lead.custom_attributes['follow_up']
+    valor.is_a?(Hash) ? valor : {}
+  end
+  private_class_method :contador
 
   def dias_parado(lead) = lead.stage_entered_at.blank? ? 0 : (Time.zone.today - lead.stage_entered_at.to_date).to_i
 

@@ -37,8 +37,15 @@ module Ramon::Fluxos::Passos::Aviso
     titulo = ctx.interpolar(config['titulo'].presence || ctx.execucao.fluxo.nome)
     texto = ctx.interpolar(config['texto'])
     return { saida: 's', resumo: "faria: push \"#{texto.truncate(80)}\"" } if ctx.ensaio?
+    return { saida: 's', resumo: 'push: já saiu hoje (1 por dia)' } if config['uma_vez_por_dia'] && !primeiro_do_dia?(ctx)
 
     Ramon::NtfyPushJob.perform_later(title: titulo, body: texto)
     { saida: 's', resumo: "push: #{texto.truncate(80)}" }
+  end
+
+  # B4.3: "uma vez por dia" (a cadência do código mandava 1 push por lote): só a 1ª execução do fluxo no dia (fuso SP) avisa.
+  def primeiro_do_dia?(ctx)
+    chave = "RAMON::FLUXO_PUSH::#{ctx.execucao.fluxo_id}::#{Time.find_zone!(Fluxo::ZONA).today}"
+    Redis::Alfred.set(chave, '1', nx: true, ex: 2.days.to_i)
   end
 end

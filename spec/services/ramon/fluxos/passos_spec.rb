@@ -343,4 +343,37 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
       expect(para.call('gestores')).to eq([gestor.id])
     end
   end
+
+  describe 'registrar a retomada (B4.3)' do
+    it 'conta a tentativa no lead (o contador do painel) e devolve o nº aos passos seguintes' do
+      lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 1 } })
+      r = Ramon::Fluxos::Passos::Retomada.registrar_retomada({}, ctx)
+      expect(r[:vars]).to eq('tentativa' => 2)
+      expect(r[:resumo]).to eq('rascunho de retomada nº 2 pronto nas notas do lead — revise e envie pelo painel')
+      expect(lead.reload.custom_attributes['follow_up']['tentativas']).to eq(2)
+    end
+
+    it 'ensaio só descreve' do
+      r = Ramon::Fluxos::Passos::Retomada.registrar_retomada({}, ctx(ensaio: true))
+      expect(r[:resumo]).to eq('faria: registrar a retomada nº 1')
+      expect(lead.reload.custom_attributes['follow_up']).to be_nil
+    end
+  end
+
+  describe 'push uma vez por dia (B4.3)' do
+    let(:dia) { Time.find_zone!('America/Sao_Paulo').parse('2026-10-07 11:00') }
+
+    after { Redis::Alfred.delete("RAMON::FLUXO_PUSH::#{fluxo.id}::2026-10-07") }
+
+    it 'só a 1ª execução do fluxo no dia avisa; as outras dizem que já saiu' do
+      config = { 'texto' => 'Há rascunhos', 'uma_vez_por_dia' => true }
+      outro = create(:lead, account: account)
+      travel_to(dia) do
+        expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx) }.to have_enqueued_job(Ramon::NtfyPushJob)
+        r = nil
+        expect { r = Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx(alvo: outro)) }.not_to have_enqueued_job(Ramon::NtfyPushJob)
+        expect(r[:resumo]).to eq('push: já saiu hoje (1 por dia)')
+      end
+    end
+  end
 end

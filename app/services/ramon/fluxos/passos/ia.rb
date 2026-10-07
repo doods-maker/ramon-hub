@@ -37,14 +37,27 @@ module Ramon::Fluxos::Passos::Ia
       resumo: "IA: #{sim ? 'sim' : 'não'} — #{justificativa.truncate(100)}" }
   end
 
+  # B4.3: onde/título como o rascunho de texto (a retomada vai para as notas do lead, "— retomada nº N:") e `reserva`:
+  # se a IA falhar, entra esse texto fixo na hora (como a cadência do código) em vez de tentar de novo.
   def rascunho_ia(config, ctx)
     instrucao = ctx.interpolar(config['instrucao'])
     return { saida: 's', resumo: "faria: rascunho da IA (#{instrucao.truncate(80)})" } if ctx.ensaio?
 
     cota!(ctx)
-    texto = restaurar(perguntar(SISTEMA_RASCUNHO, "Instrução: #{instrucao}", ctx), ctx).strip
-    Ramon::Fluxos::Passos::Conversa.escrever(ctx, "#{Ramon::RascunhoCarimbo::PREFIXO}\n#{texto}")
+    texto = texto_da_ia(instrucao, config, ctx)
+    conversa = Ramon::Fluxos::Passos::Conversa
+    conversa.escrever(ctx, "#{conversa.cabecalho(config, ctx)}\n#{texto}", onde: config['onde'])
     { saida: 's', vars: { 'resposta_ia' => texto }, resumo: "rascunho da IA: #{texto.truncate(120)}" }
+  end
+
+  # O cota! fica fora do rescue: teto de IA estourado continua falhando na hora, com sino.
+  def texto_da_ia(instrucao, config, ctx)
+    restaurar(perguntar(SISTEMA_RASCUNHO, "Instrução: #{instrucao}", ctx), ctx).strip
+  rescue StandardError => e
+    raise if config['reserva'].blank?
+
+    Rails.logger.warn("[Ramon::Fluxos::Passos::Ia] rascunho_ia: IA falhou (#{e.class}) — texto de reserva")
+    ctx.interpolar(config['reserva'])
   end
 
   def rodar_skill(config, ctx)
