@@ -95,10 +95,13 @@ module Ramon::Fluxos::Passos::Ia
 
   def dados_do_caso(ctx)
     d = ctx.dados
-    tese = d['tese'].presence || ctx.lead&.benefit_type&.name # como o código: tese ou benefício (só no prompt)
+    tese = tese_do_caso(d, ctx)
     "Caso: tese #{tese || 'não informada'}; etapa #{d['etapa'] || '—'}; origem #{d['origem'] || '—'}; " \
       "documentos que faltam: #{d['documentos_faltantes'].presence || 'nenhum'}."
   end
+
+  # como o código: tese ou benefício (só no prompt)
+  def tese_do_caso(dados, ctx) = dados['tese'].presence || ctx.lead&.benefit_type&.name
 
   def transcricao(ctx)
     return if ctx.conversa.blank?

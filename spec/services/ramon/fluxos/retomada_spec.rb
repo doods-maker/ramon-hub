@@ -38,16 +38,20 @@ RSpec.describe Ramon::Fluxos::Retomada do
     end
 
     it 'contador que não é objeto no jsonb (a API grava qualquer coisa) conta como vazio' do
-      lead.update!(custom_attributes: { 'follow_up' => 'lixo' })
+      # rubocop:disable Rails/SkipsModelValidations
+      lead.update_column(:custom_attributes, { 'follow_up' => 'lixo' }) # direto: o callback do modelo não aceita
+      # rubocop:enable Rails/SkipsModelValidations
       expect(described_class.tentativa(lead)).to eq(1)
       expect(described_class.ultima_em(lead)).to be_nil
       expect(described_class.motivo(lead)).to be_nil
     end
 
     it 'tentativas que não é número (lista ou objeto no jsonb) conta como 0' do
-      lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => [1, 2] } })
+      # rubocop:disable Rails/SkipsModelValidations
+      lead.update_column(:custom_attributes, { 'follow_up' => { 'tentativas' => [1, 2] } })
       expect(described_class.tentativa(lead)).to eq(1)
-      lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => { 'x' => 1 } } })
+      lead.update_column(:custom_attributes, { 'follow_up' => { 'tentativas' => { 'x' => 1 } } })
+      # rubocop:enable Rails/SkipsModelValidations
       expect(described_class.tentativa(lead)).to eq(1)
     end
 
