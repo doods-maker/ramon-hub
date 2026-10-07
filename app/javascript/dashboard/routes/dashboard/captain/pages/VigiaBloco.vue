@@ -104,7 +104,7 @@ const openLead = id => {
       <p v-if="!loading" class="mt-2 text-xs text-n-slate-10">
         {{
           t('CAPTAIN_RAMON.WATCHDOG.REGUA', {
-            cap: thresholds.teto_diario,
+            cap: thresholds.teto_diario ?? t('CAPTAIN_RAMON.WATCHDOG.SEM_TETO'),
             gap: thresholds.intervalo_minimo_dias,
             retomada: thresholds.horario_retomada,
             copiloto: thresholds.horario_copiloto,

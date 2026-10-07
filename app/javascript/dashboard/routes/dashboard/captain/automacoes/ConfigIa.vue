@@ -7,6 +7,7 @@ import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
 import CaptainScenariosAPI from 'dashboard/api/captain/scenarios';
 import {
   AVISO,
+  CAMPO,
   ROTULO,
   SELECT,
   TOM,
@@ -85,6 +86,34 @@ onBeforeUnmount(() => {
         @update:model-value="v => muda('instrucao', v)"
       />
       <p class="text-xs text-n-slate-10">{{ t(`${K}.INSTRUCAO_AJUDA`) }}</p>
+      <label :class="ROTULO">
+        {{ t(`${K}.ONDE_RASCUNHO`) }}
+        <select
+          data-testid="ia-onde"
+          :class="SELECT"
+          :value="config.onde || ''"
+          @change="muda('onde', $event.target.value || undefined)"
+        >
+          <option value="">{{ t(`${K}.ONDE_CONVERSA`) }}</option>
+          <option value="notas_do_lead">{{ t(`${K}.ONDE_NOTAS`) }}</option>
+        </select>
+      </label>
+      <label :class="ROTULO">
+        {{ t(`${K}.TITULO_RASCUNHO`) }}
+        <input
+          data-testid="ia-titulo"
+          :class="CAMPO"
+          :value="config.titulo || ''"
+          @input="muda('titulo', $event.target.value)"
+        />
+      </label>
+      <CampoTexto
+        :rotulo="t(`${K}.RESERVA_IA`)"
+        :linhas="2"
+        :model-value="config.reserva || ''"
+        @update:model-value="v => muda('reserva', v || undefined)"
+      />
+      <p class="text-xs text-n-slate-10">{{ t(`${K}.RESERVA_IA_AJUDA`) }}</p>
     </template>
 
     <template v-else>
