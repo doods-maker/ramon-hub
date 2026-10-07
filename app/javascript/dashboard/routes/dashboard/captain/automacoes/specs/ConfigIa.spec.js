@@ -33,7 +33,7 @@ describe('ConfigIa', () => {
       },
     });
     CaptainScenariosAPI.get.mockResolvedValue({
-      data: { payload: [{ id: 5, title: 'Resumo do caso' }] },
+      data: { payload: [{ id: 5, title: 'Resumo do caso', enabled: true }] },
     });
     const w = montar('rodar_skill', { assistente_id: 1, skill_id: 5 });
     await flushPromises();
@@ -65,17 +65,36 @@ describe('ConfigIa', () => {
           })
       )
       .mockResolvedValueOnce({
-        data: { payload: [{ id: 9, title: 'Skill B' }] },
+        data: { payload: [{ id: 9, title: 'Skill B', enabled: true }] },
       });
     const w = montar('rodar_skill', { assistente_id: 1 });
     await flushPromises();
     await w.find('[data-testid="ia-assistente"]').setValue('2');
     await flushPromises();
-    soltaA({ data: { payload: [{ id: 8, title: 'Skill A' }] } });
+    soltaA({ data: { payload: [{ id: 8, title: 'Skill A', enabled: true }] } });
     await flushPromises();
     const txt = w.find('[data-testid="ia-skill"]').text();
     expect(txt).toContain('Skill B');
     expect(txt).not.toContain('Skill A');
+  });
+
+  it('rodar_skill não oferece skill desligada', async () => {
+    CaptainAssistantAPI.get.mockResolvedValue({
+      data: { payload: [{ id: 1, name: 'Atendente' }] },
+    });
+    CaptainScenariosAPI.get.mockResolvedValue({
+      data: {
+        payload: [
+          { id: 5, title: 'Ligada', enabled: true },
+          { id: 6, title: 'Desligada', enabled: false },
+        ],
+      },
+    });
+    const w = montar('rodar_skill', { assistente_id: 1 });
+    await flushPromises();
+    const txt = w.find('[data-testid="ia-skill"]').text();
+    expect(txt).toContain('Ligada');
+    expect(txt).not.toContain('Desligada');
   });
 
   it('sem Captain (FOSS): avisa e não quebra', async () => {
