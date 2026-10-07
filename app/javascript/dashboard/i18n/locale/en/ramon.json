@@ -2727,6 +2727,18 @@
         "PAUSED": "Paused",
         "DISABLED": "Disabled"
       }
+    },
+    "FAQ_CONVERSA": {
+      "MENU": "Turn into FAQ",
+      "CRIADA": "FAQ created as pending. An administrator approves it before the assistant uses it.",
+      "JA_EXISTIA": "This reply is already a FAQ (pending or approved).",
+      "VER_PENDENTES": "See pending FAQs",
+      "ERROS": {
+        "SEM_RESPOSTA": "Only a reply sent to the lead can become a FAQ.",
+        "SEM_PERGUNTA": "No lead question found before this reply.",
+        "SEM_ASSISTENTE": "No assistant serves leads yet: connect the customer service assistant to an inbox.",
+        "GERAL": "Could not create the FAQ. Try again."
+      }
     }
   }
 }

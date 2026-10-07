@@ -2732,6 +2732,18 @@
         "PAUSED": "Pausado",
         "DISABLED": "Desativado"
       }
+    },
+    "FAQ_CONVERSA": {
+      "MENU": "Virar FAQ",
+      "CRIADA": "FAQ criada como pendente. Um administrador aprova antes de o assistente usar.",
+      "JA_EXISTIA": "Esta resposta já virou FAQ (pendente ou aprovada).",
+      "VER_PENDENTES": "Ver FAQs pendentes",
+      "ERROS": {
+        "SEM_RESPOSTA": "Só uma resposta enviada ao lead vira FAQ.",
+        "SEM_PERGUNTA": "Não achei pergunta do lead antes desta resposta.",
+        "SEM_ASSISTENTE": "Nenhum assistente atende leads ainda: conecte o Atendimento a uma caixa.",
+        "GERAL": "Não consegui criar a FAQ. Tente de novo."
+      }
     }
   }
 }

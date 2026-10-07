@@ -14,6 +14,7 @@ import {
 import MenuItem from '../../../components/widgets/conversation/contextMenu/menuItem.vue';
 import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import VirarFaqMenuItem from './VirarFaqMenuItem.vue';
 
 export default {
   components: {
@@ -21,6 +22,7 @@ export default {
     MenuItem,
     ContextMenu,
     NextButton,
+    VirarFaqMenuItem,
   },
   props: {
     message: {
@@ -242,6 +244,12 @@ export default {
           }"
           variant="icon"
           @click.stop="showCannedResponseModal"
+        />
+        <VirarFaqMenuItem
+          v-if="enabledOptions['virarFaq']"
+          :conversation-id="conversationId"
+          :message-id="messageId"
+          @close="handleClose"
         />
         <hr v-if="enabledOptions['delete']" />
         <MenuItem
