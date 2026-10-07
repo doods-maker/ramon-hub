@@ -1,10 +1,14 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, CHIP, SECAO, TOM } from '../../helpers/ui';
+
+// I-WD2: a Visão geral abre o Centro com ?sugestoes=todas|<tipo> — o bloco já
+// vem aberto (sem gravar a preferência), rolado até aqui e, com tipo, filtrado.
+const props = defineProps({ foco: { type: String, default: '' } });
 
 // "Enquanto você dormia" (mock 4b): sugestões do copiloto noturno no topo do
 // Cockpit. Nada é enviado ao cliente — aplicar rascunho vira NOTA no lead.
@@ -29,7 +33,7 @@ const readExpanded = () => {
     return false;
   }
 };
-const expanded = ref(readExpanded());
+const expanded = ref(props.foco ? true : readExpanded());
 const toggleExpanded = () => {
   expanded.value = !expanded.value;
   try {
@@ -45,6 +49,33 @@ const bulkCount = computed(
   () =>
     suggestions.value.filter(s => s.kind === 'draft' || s.kind === 'alert')
       .length
+);
+
+// Tipo = a ação em sistema ou o kind (igual ao contador da Visão geral).
+const tipoDe = s => s.payload?.acao || s.kind;
+const tipoFiltro = ref(props.foco && props.foco !== 'todas' ? props.foco : '');
+const visiveis = computed(() =>
+  tipoFiltro.value
+    ? suggestions.value.filter(s => tipoDe(s) === tipoFiltro.value)
+    : suggestions.value
+);
+const rotuloTipo = computed(() =>
+  t(`CAPTAIN_RAMON.VISAO_GERAL.APROVACOES.TIPO.${tipoFiltro.value}`)
+);
+
+// Rola até o bloco quando as sugestões chegam (o bloco só existe com > 0).
+const raiz = ref(null);
+let rolou = false;
+watch(
+  () => suggestions.value.length,
+  total => {
+    if (!total || !props.foco || rolou) return;
+    rolou = true;
+    nextTick(() =>
+      raiz.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    );
+  },
+  { immediate: true }
 );
 
 const runTime = computed(() => {
@@ -170,6 +201,7 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
   <!-- Bloco some quando não há sugestão pendente -->
   <section
     v-else-if="suggestions.length"
+    ref="raiz"
     data-testid="night-copilot"
     :class="CARTAO"
     class="!p-4"
@@ -206,7 +238,7 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
       </div>
       <div class="flex items-center flex-none gap-1.5 ml-auto">
         <Button
-          v-if="bulkCount"
+          v-if="bulkCount && !tipoFiltro"
           data-testid="night-copilot-apply-all"
           sm
           :label="t('RAMON.NIGHT_COPILOT.APPROVE_ALL', { count: bulkCount })"
@@ -232,7 +264,26 @@ const retry = () => store.dispatch('copilotSuggestions/fetch');
 
     <div v-if="expanded" class="flex flex-col gap-3">
       <div
-        v-for="suggestion in suggestions"
+        v-if="tipoFiltro"
+        data-testid="night-copilot-filtro"
+        class="flex items-center gap-2 mt-2"
+      >
+        <span :class="[CHIP, TOM.amber]">
+          {{ t('INTEL.SUGESTOES.SO_TIPO', { tipo: rotuloTipo }) }}
+        </span>
+        <Button
+          data-testid="night-copilot-ver-todas"
+          link
+          xs
+          :label="t('INTEL.SUGESTOES.VER_TODAS')"
+          @click="tipoFiltro = ''"
+        />
+      </div>
+      <p v-if="tipoFiltro && !visiveis.length" class="text-xs text-n-slate-10">
+        {{ t('INTEL.SUGESTOES.NENHUMA_DO_TIPO') }}
+      </p>
+      <div
+        v-for="suggestion in visiveis"
         :key="suggestion.id"
         data-testid="night-copilot-card"
         :class="SECAO"

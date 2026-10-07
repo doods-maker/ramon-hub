@@ -8,7 +8,11 @@ import CommandCenter from '../CommandCenter.vue';
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: k => k }) }));
 
 const routerPush = vi.fn();
-vi.mock('vue-router', () => ({ useRouter: () => ({ push: routerPush }) }));
+let routeQuery = {};
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: routerPush }),
+  useRoute: () => ({ query: routeQuery }),
+}));
 
 const dispatchSpy = vi.fn();
 const dataRef = ref(null);
@@ -200,6 +204,7 @@ const mountPage = async (data = payload(), queue = esteira()) => {
 
 describe('CommandCenter.vue', () => {
   beforeEach(() => {
+    routeQuery = {};
     vi.clearAllMocks();
     dataRef.value = null;
     flagsRef.value = { isFetching: false, hasError: false };
@@ -469,5 +474,13 @@ describe('CommandCenter.vue', () => {
     dispatchSpy.mockClear();
     await wrapper.find('[data-testid="command-retry"]').trigger('click');
     expect(dispatchSpy).toHaveBeenCalledWith('ramonDashboard/fetch');
+  });
+
+  it('passes ?sugestoes from the Visão geral to the night copilot block', async () => {
+    routeQuery = { sugestoes: 'move_stage' };
+    const wrapper = await mountPage();
+    expect(wrapper.find('night-copilot-stub').attributes('foco')).toBe(
+      'move_stage'
+    );
   });
 });

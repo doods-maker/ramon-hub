@@ -165,10 +165,14 @@ const ir = (name, params = {}, query = {}) =>
               }}
             </p>
             <div class="flex flex-wrap gap-1.5 mt-1">
-              <span
+              <button
                 v-for="(n, tipo) in aprovacoes.sugestoes_por_tipo"
                 :key="tipo"
+                type="button"
+                data-testid="vg-sugestao-tipo"
+                class="hover:underline"
                 :class="[CHIP, TOM.amber]"
+                @click="ir('ramon_index', {}, { sugestoes: tipo })"
               >
                 {{
                   t('CAPTAIN_RAMON.VISAO_GERAL.APROVACOES.TIPO_N', {
@@ -178,7 +182,7 @@ const ir = (name, params = {}, query = {}) =>
                     n,
                   })
                 }}
-              </span>
+              </button>
             </div>
             <Button
               class="mt-2"
@@ -187,7 +191,7 @@ const ir = (name, params = {}, query = {}) =>
               color="amber"
               icon="i-lucide-arrow-right"
               :label="t('CAPTAIN_RAMON.VISAO_GERAL.APROVACOES.ABRIR_SUGESTOES')"
-              @click="ir('ramon_index')"
+              @click="ir('ramon_index', {}, { sugestoes: 'todas' })"
             />
           </div>
           <div v-if="faqsPendentes" class="mt-3">
