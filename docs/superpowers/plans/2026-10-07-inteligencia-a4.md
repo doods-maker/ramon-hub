@@ -1782,3 +1782,8 @@ Deploy de sempre (`docker compose pull chatwoot-web chatwoot-worker && docker co
 | N7 | Quais atalhos | Na conversa: "Situação do processo deste cliente", "O que falta de documento", "Preparar a reunião". Fora: "Agenda do dia", "Funil hoje", "Prazos da semana no AdvBox". **"Anotar esta conversa no AdvBox" (skill do #218) fica de fora**: exigiria mandar a conversa inteira ao LLM — fica para quando você quiser | Task 7 |
 | N8 | O que o Copiloto recebe do caso | Data de hoje, nº da conversa, nº do caso e o **nome** do cliente (a busca no AdvBox precisa); nunca CPF, telefone, documento ou o texto da conversa | Task 6 |
 | N9 | "Perguntar ao AdvBox" no menu de IA do editor | Fica como está (já entrega o panorama dos processos dentro da resposta); o atalho do painel é o caminho completo (dossiê, tarefas) | — |
+
+
+## Respostas do Eduardo (07/10/2026)
+
+Todas as "Decisões novas que dependem do Eduardo" deste plano foram **ACEITAS como propostas** (formulário de 07/10).
