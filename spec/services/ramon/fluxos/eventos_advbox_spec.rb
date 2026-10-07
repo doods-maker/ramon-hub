@@ -96,6 +96,19 @@ RSpec.describe Ramon::Fluxos::EventosAdvbox do
         expect(Ramon::Fluxos::LeadGanho).to have_received(:pelo_codigo).exactly(regra == 'contrato_fechado' ? 2 : 0).times
       end
     end
+
+    it 'contrato fechado com o lead em Perdido (depois do ganho no funil): o fluxo também marca como ganho, como o código' do
+      perdido = account.lead_stages.find_by!(is_lost: true)
+      [pelo_codigo, pelo_fluxo].each { |l| l.update!(lead_stage: perdido, lost_reason: 'Sumiu / não respondeu') }
+      perform_enqueued_jobs { described_class.processar(pelo_codigo, 'contrato_fechado', 'CONTRATO FECHADO') }
+      with_modified_env(RAMON_FLUXO_EVENTOS_ADVBOX: 'on') do
+        Ramon::Fluxos::Migracao.semear(account, 'eventos_advbox')
+        Ramon::Fluxos::Migracao.mudar_modo!(account, 'eventos_advbox', 'normal')
+        perform_enqueued_jobs { described_class.processar(pelo_fluxo, 'contrato_fechado', 'CONTRATO FECHADO') }
+      end
+      expect([pelo_codigo, pelo_fluxo].map { |l| [l.reload.lead_stage.is_won, l.won_at.present?] }).to eq([[true, true], [true, true]])
+      expect(rastro(pelo_fluxo)).to eq(rastro(pelo_codigo))
+    end
   end
 
   describe 'contrato fechado nunca faz o Lead ganho em dobro (nem deixa de fazer)' do
