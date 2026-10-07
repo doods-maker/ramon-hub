@@ -54,7 +54,14 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
       )
     end
 
-    base_query
+    filtrar_tese(base_query)
+  end
+
+  # ramon: filtro por tese (I-FQ1); 'sem' = FAQ sem tese.
+  def filtrar_tese(scope)
+    return scope if permitted_params[:tese].blank?
+
+    scope.where(tese: permitted_params[:tese] == 'sem' ? nil : permitted_params[:tese])
   end
 
   def set_assistant
@@ -74,7 +81,7 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
   end
 
   def permitted_params
-    params.permit(:id, :assistant_id, :page, :document_id, :account_id, :status, :search)
+    params.permit(:id, :assistant_id, :page, :document_id, :account_id, :status, :search, :tese)
   end
 
   def response_params
@@ -82,7 +89,8 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
       :question,
       :answer,
       :assistant_id,
-      :status
+      :status,
+      :tese
     )
   end
 end

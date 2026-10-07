@@ -267,4 +267,36 @@ RSpec.describe 'Api::V1::Accounts::Captain::AssistantResponses', type: :request 
       end
     end
   end
+
+  describe 'tese da FAQ (ramon, I-FQ1)' do
+    let(:url) { "/api/v1/accounts/#{account.id}/captain/assistant_responses" }
+
+    before do
+      create(:captain_assistant_response, assistant: assistant, account: account, question: 'BPC?', tese: 'bpc-loas')
+      create(:captain_assistant_response, assistant: assistant, account: account, question: 'Geral?', tese: 'geral')
+      create(:captain_assistant_response, assistant: assistant, account: account, question: 'Sem?')
+    end
+
+    it 'filtra por tese e por sem tese' do
+      get url, params: { tese: 'bpc-loas' }, headers: agent.create_new_auth_token, as: :json
+      expect(json_response[:payload].pluck(:question)).to eq(['BPC?'])
+      expect(json_response[:payload].first[:tese]).to eq('bpc-loas')
+
+      get url, params: { tese: 'sem' }, headers: agent.create_new_auth_token, as: :json
+      expect(json_response[:payload].pluck(:question)).to eq(['Sem?'])
+    end
+
+    it 'grava a tese escolhida na tela; vazio vira sem tese; tese desconhecida e recusada' do
+      faq = assistant.responses.find_by!(question: 'Sem?')
+      patch "#{url}/#{faq.id}", params: { assistant_response: { tese: 'auxilio-acidente' } }, headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+      expect(faq.reload.tese).to eq('auxilio-acidente')
+
+      patch "#{url}/#{faq.id}", params: { assistant_response: { tese: '' } }, headers: admin.create_new_auth_token, as: :json
+      expect(faq.reload.tese).to be_nil
+
+      patch "#{url}/#{faq.id}", params: { assistant_response: { tese: 'trabalhista' } }, headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
 end

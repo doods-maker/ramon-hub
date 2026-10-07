@@ -9,6 +9,7 @@
 #  embedding         :vector(1536)
 #  question          :string           not null
 #  status            :integer          default("approved"), not null
+#  tese              :string
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  account_id        :bigint           not null
@@ -31,8 +32,14 @@ class Captain::AssistantResponse < ApplicationRecord
   belongs_to :documentable, polymorphic: true, optional: true
   has_neighbors :embedding, normalize: true
 
+  # FORK-PONTO (ramon): tese da FAQ (I-FQ1) = nome do arquivo do seed; nil = sem tese.
+  # Mesma lista e ordem de captain/responses/teses.js (front).
+  TESES = %w[auxilio-acidente auxilio-doenca aposentadoria-invalidez bpc-loas acrescimo-25 geral].freeze
+
   validates :question, presence: true
   validates :answer, presence: true
+  validates :tese, inclusion: { in: TESES }, allow_nil: true
+  normalizes :tese, with: ->(valor) { valor.presence }
 
   before_validation :ensure_account
   before_validation :ensure_status
