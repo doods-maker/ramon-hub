@@ -2744,6 +2744,34 @@
         "SEM_ASSISTENTE": "Nenhum assistente atende leads ainda: conecte o Atendimento a uma caixa.",
         "GERAL": "Não consegui criar a FAQ. Tente de novo."
       }
+    },
+    "COPILOTO_ATALHOS": {
+      "KICKOFF": "Pergunte sobre o caso aberto: processo no AdvBox, documentos, reunião. Nada sai para o cliente.",
+      "KICKOFF_GERAL": "Pergunte sobre a agenda, o funil e os prazos no AdvBox. Nada sai para o cliente.",
+      "SITUACAO": {
+        "LABEL": "Situação do processo deste cliente",
+        "CONTENT": "Qual a situação do processo deste cliente no AdvBox? Traga número, fase, responsável, última movimentação com data e tarefas em aberto."
+      },
+      "DOCUMENTOS": {
+        "LABEL": "O que falta de documento",
+        "CONTENT": "O que falta de documento neste caso? Separe o que já chegou, o que falta (e por que importa) e o texto pronto para pedir ao cliente."
+      },
+      "REUNIAO": {
+        "LABEL": "Preparar a reunião",
+        "CONTENT": "Prepare a reunião deste caso: o que já temos, o que falta, estimativa de valores e honorário, prescrição e as 3 objeções mais prováveis com a resposta da casa."
+      },
+      "AGENDA": {
+        "LABEL": "Agenda do dia",
+        "CONTENT": "Qual a agenda do escritório hoje? Reuniões, tarefas vencendo, atrasadas e prazos do AdvBox, e o que fazer primeiro."
+      },
+      "FUNIL": {
+        "LABEL": "Funil hoje",
+        "CONTENT": "Como está o funil hoje? Meta do dia, conversão por etapa com o gargalo, SLA de primeira resposta e perdas por tese."
+      },
+      "PRAZOS": {
+        "LABEL": "Prazos da semana no AdvBox",
+        "CONTENT": "Quais as tarefas e prazos do AdvBox desta semana, de segunda a domingo? Lista curta por dia."
+      }
     }
   }
 }

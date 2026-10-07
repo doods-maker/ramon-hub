@@ -2,13 +2,14 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import { TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui.js';
 import Icon from '../icon/Icon.vue';
 
-defineProps({
-  hasAssistants: {
-    type: Boolean,
-    default: false,
-  },
+const props = defineProps({
+  hasAssistants: { type: Boolean, default: false },
+  // ramon (A4): assistente da equipe → atalhos da banca (rodam as skills do Copiloto do Escritório)
+  equipe: { type: Boolean, default: false },
+  naConversa: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['useSuggestion']);
@@ -42,16 +43,37 @@ const routePromptMap = {
   ],
 };
 
-const getCurrentRoute = () => {
-  const path = route.path;
-  if (path.includes('/conversations')) return 'conversations';
-  if (path.includes('/dashboard')) return 'dashboard';
-  return 'dashboard';
+const K = 'CAPTAIN_RAMON.COPILOTO_ATALHOS';
+const ATALHOS_EQUIPE = {
+  conversa: [
+    { chave: 'SITUACAO', icone: 'i-lucide-scale' },
+    { chave: 'DOCUMENTOS', icone: 'i-lucide-file-check' },
+    { chave: 'REUNIAO', icone: 'i-lucide-calendar-check' },
+  ],
+  geral: [
+    { chave: 'AGENDA', icone: 'i-lucide-calendar-days' },
+    { chave: 'FUNIL', icone: 'i-lucide-filter' },
+    { chave: 'PRAZOS', icone: 'i-lucide-alarm-clock' },
+  ],
 };
 
 const promptOptions = computed(() => {
-  const currentRoute = getCurrentRoute();
-  return routePromptMap[currentRoute] || routePromptMap.conversations;
+  if (props.equipe) {
+    return ATALHOS_EQUIPE[props.naConversa ? 'conversa' : 'geral'].map(
+      ({ chave, icone }) => ({
+        label: `${K}.${chave}.LABEL`,
+        prompt: `${K}.${chave}.CONTENT`,
+        icone,
+      })
+    );
+  }
+  return routePromptMap[props.naConversa ? 'conversations' : 'dashboard'];
+});
+
+// fora da conversa não há caso aberto: frase própria
+const kickoff = computed(() => {
+  if (!props.equipe) return t('CAPTAIN.COPILOT.KICK_OFF_MESSAGE');
+  return t(`${K}.${props.naConversa ? 'KICKOFF' : 'KICKOFF_GERAL'}`);
 });
 
 const handleSuggestion = opt => {
@@ -68,7 +90,7 @@ const handleSuggestion = opt => {
           {{ $t('CAPTAIN.COPILOT.PANEL_TITLE') }}
         </h3>
         <p class="text-sm text-n-slate-11 leading-6">
-          {{ $t('CAPTAIN.COPILOT.KICK_OFF_MESSAGE') }}
+          {{ kickoff }}
         </p>
       </div>
     </div>
@@ -96,11 +118,23 @@ const handleSuggestion = opt => {
         <button
           v-for="prompt in promptOptions"
           :key="prompt.label"
-          class="w-full px-3 py-2 rounded-md border border-n-weak bg-n-slate-2 text-n-slate-11 flex items-center justify-between hover:bg-n-slate-3 transition-colors"
+          class="w-full flex items-center justify-between gap-2 rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2 text-left text-sm text-n-slate-12 transition-colors hover:bg-n-alpha-2"
           @click="handleSuggestion(prompt)"
         >
-          <span>{{ t(prompt.label) }}</span>
-          <Icon icon="i-lucide-chevron-right" />
+          <span class="flex min-w-0 items-center gap-2">
+            <span
+              v-if="prompt.icone"
+              class="flex size-6 shrink-0 items-center justify-center rounded-md"
+              :class="TOM.blue"
+            >
+              <Icon :icon="prompt.icone" class="size-3.5" />
+            </span>
+            <span class="truncate">{{ t(prompt.label) }}</span>
+          </span>
+          <Icon
+            icon="i-lucide-chevron-right"
+            class="shrink-0 text-n-slate-10"
+          />
         </button>
       </div>
     </div>

@@ -3,7 +3,7 @@ import en from 'dashboard/i18n/locale/en/ramon.json';
 import pt from 'dashboard/i18n/locale/pt_BR/ramon.json';
 
 // Blocos de texto da Inteligência A4 (menu "Virar FAQ" e atalhos do Copiloto).
-const BLOCOS = ['FAQ_CONVERSA'];
+const BLOCOS = ['FAQ_CONVERSA', 'COPILOTO_ATALHOS'];
 
 const folhas = (obj, prefixo = '') =>
   Object.entries(obj).flatMap(([k, v]) =>

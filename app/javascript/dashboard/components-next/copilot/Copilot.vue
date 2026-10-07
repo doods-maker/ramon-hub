@@ -31,6 +31,9 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  // ramon (A4): assistente da equipe e conversa aberta → atalhos da banca no estado vazio
+  equipe: { type: Boolean, default: false },
+  naConversa: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['sendMessage', 'reset', 'setAssistant']);
@@ -160,6 +163,8 @@ watch(
       <CopilotEmptyState
         v-else
         :has-assistants="hasAssistants"
+        :equipe="equipe"
+        :na-conversa="naConversa"
         @use-suggestion="sendMessage"
       />
     </div>

@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useAlert } from 'dashboard/composables';
 import { useStore } from 'dashboard/composables/store';
 import Copilot from 'dashboard/components-next/copilot/Copilot.vue';
+import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
+import { escolherAssistente } from 'dashboard/components-next/copilot/escolherAssistente';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useConfig } from 'dashboard/composables/useConfig';
@@ -47,26 +49,17 @@ const isFeatureEnabledonAccount = useMapGetter(
 
 const selectedAssistantId = ref(null);
 
-const activeAssistant = computed(() => {
-  const preferredId = uiSettings.value.preferred_captain_assistant_id;
+// ramon (A4): ids dos assistentes da equipe (com skills ativas) — o painel abre neles e mostra os atalhos da banca.
+const equipeIds = ref([]);
 
-  // If the user has selected a specific assistant, it takes first preference for Copilot.
-  if (preferredId) {
-    const preferredAssistant = assistants.value.find(a => a.id === preferredId);
-    // Return the preferred assistant if found, otherwise continue to next cases
-    if (preferredAssistant) return preferredAssistant;
-  }
-
-  // If the above is not available, the assistant connected to the inbox takes preference.
-  if (inboxAssistant.value) {
-    const inboxMatchedAssistant = assistants.value.find(
-      a => a.id === inboxAssistant.value.id
-    );
-    if (inboxMatchedAssistant) return inboxMatchedAssistant;
-  }
-  // If neither of the above is available, the first assistant in the account takes preference.
-  return assistants.value[0];
-});
+const activeAssistant = computed(() =>
+  escolherAssistente({
+    assistants: assistants.value,
+    preferredId: uiSettings.value.preferred_captain_assistant_id,
+    equipeIds: equipeIds.value,
+    inboxAssistantId: inboxAssistant.value?.id,
+  })
+);
 
 const closeCopilotPanel = () => {
   if (isSmallScreen.value && uiSettings.value?.is_copilot_panel_open) {
@@ -125,6 +118,13 @@ const sendMessage = async message => {
 onMounted(() => {
   if (isEnterprise) {
     store.dispatch('captainAssistants/get');
+    CaptainAssistantAPI.stats()
+      .then(({ data }) => {
+        equipeIds.value = data.payload
+          .filter(a => a.publico === 'equipe' && a.skills_ativas > 0)
+          .map(a => a.id);
+      })
+      .catch(() => {}); // sem stats o painel segue como era (assistente da caixa)
   }
 });
 </script>
@@ -147,6 +147,8 @@ onMounted(() => {
       :conversation-inbox-type="conversationInboxType"
       :assistants="assistants"
       :active-assistant="activeAssistant"
+      :equipe="equipeIds.includes(activeAssistant?.id)"
+      :na-conversa="!!currentChat?.id"
       @set-assistant="setAssistant"
       @send-message="sendMessage"
       @reset="handleReset"
