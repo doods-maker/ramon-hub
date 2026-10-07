@@ -4,7 +4,7 @@ import ScenariosCard from '../ScenariosCard.vue';
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
 
-const montar = tools => {
+const montar = (tools, extra = {}) => {
   const store = createStore({
     modules: {
       captainTools: {
@@ -24,6 +24,7 @@ const montar = tools => {
       description: 'Quando o lead topa conversar',
       instruction: 'Conduza a conversa',
       tools,
+      ...extra,
     },
     global: {
       plugins: [store],
@@ -51,6 +52,20 @@ describe('ScenariosCard — ferramentas da skill', () => {
     ]);
     expect(chips[0].classes()).toContain('text-n-amber-11');
     expect(chips[1].classes()).toContain('text-n-slate-11');
+  });
+
+  it('chave liga/desliga emite toggle com o novo estado', async () => {
+    const wrapper = montar([], { enabled: true, podeLigar: true });
+    await wrapper.find('[data-testid="skill-chave"]').trigger('click');
+    expect(wrapper.emitted('toggle')[0]).toEqual([false]);
+  });
+
+  it('sem permissão não mostra a chave; editada mostra a marca', () => {
+    const wrapper = montar([], { edited: true });
+    expect(wrapper.find('[data-testid="skill-chave"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="skill-editada"]').text()).toBe(
+      'INTEL.SKILLS.EDITADA'
+    );
   });
 
   it('skill sem ferramentas (tools null da API) não mostra a linha', () => {

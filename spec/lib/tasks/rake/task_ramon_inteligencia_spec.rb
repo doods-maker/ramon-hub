@@ -42,5 +42,47 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       expect(extra.reload).not_to be_enabled
       expect(faq.reload.answer).to eq('Resposta editada pelo Eduardo')
     end
+
+    it 'grava a tese pelo arquivo e so preenche tese vazia (editada ou nao)' do
+      rodar
+      arquivos = Dir[Rails.root.join('db/seeds/ramon/inteligencia/faq/*.md')].map { |arquivo| File.basename(arquivo, '.md') }
+      expect(arquivos).to match_array(Captain::AssistantResponse::TESES)
+      expect(atendimento.responses.where(tese: nil)).to be_empty
+
+      editada = atendimento.responses.find_by!(tese: 'bpc-loas')
+      editada.update!(answer: 'Editada pelo Eduardo', tese: nil)
+      trocada = atendimento.responses.find_by!(tese: 'geral')
+      trocada.update!(tese: 'auxilio-doenca')
+      rodar
+
+      expect(editada.reload).to have_attributes(answer: 'Editada pelo Eduardo', tese: 'bpc-loas')
+      expect(trocada.reload.tese).to eq('auxilio-doenca')
+    end
+
+    it 'rake de teses so preenche a tese que falta e nao mexe em mais nada' do
+      rodar
+      faq = atendimento.responses.find_by!(tese: 'acrescimo-25')
+      faq.update_columns(tese: nil, answer: 'Resposta mexida') # rubocop:disable Rails/SkipsModelValidations
+      teses = described_class['ramon:inteligencia:teses']
+      teses.reenable
+
+      expect { teses.invoke(account.id.to_s) }.to output(/faq_com_tese_preenchida: 1/).to_stdout
+      expect(faq.reload).to have_attributes(tese: 'acrescimo-25', answer: 'Resposta mexida')
+    end
+
+    it 'respeita skill editada, renomeada, desligada ou criada na tela' do
+      rodar
+      editada, renomeada, desligada = atendimento.scenarios.order(:id).first(3)
+      editada.update!(instruction: 'Como o Eduardo quer', edited: true)
+      renomeada.update!(title: 'Nome novo na tela', edited: true)
+      desligada.update!(enabled: false, edited: true)
+      criada = create(:captain_scenario, assistant: atendimento, account: account, title: 'Criada na tela', edited: true)
+
+      expect { rodar }.not_to change(Captain::Scenario, :count)
+      expect(editada.reload.instruction).to eq('Como o Eduardo quer')
+      expect(renomeada.reload.title).to eq('Nome novo na tela')
+      expect(desligada.reload).not_to be_enabled
+      expect(criada.reload).to be_enabled
+    end
   end
 end

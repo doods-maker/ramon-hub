@@ -55,8 +55,11 @@ const suggestions = () => [
   },
 ];
 
-const mountBlock = async () => {
-  const wrapper = mount(NightCopilot, { global: { mocks: { $t: k => k } } });
+const mountBlock = async (props = {}) => {
+  const wrapper = mount(NightCopilot, {
+    props,
+    global: { mocks: { $t: k => k } },
+  });
   await flushPromises();
   return wrapper;
 };
@@ -165,5 +168,45 @@ describe('NightCopilot.vue', () => {
     dispatchSpy.mockClear();
     await wrapper.find('[data-testid="night-copilot-retry"]').trigger('click');
     expect(dispatchSpy).toHaveBeenCalledWith('copilotSuggestions/fetch');
+  });
+
+  it('foco "todas" abre o bloco mesmo recolhido no navegador, sem gravar', async () => {
+    localStorage.setItem('ramon_night_copilot_expanded', '0');
+    const wrapper = await mountBlock({ foco: 'todas' });
+    expect(wrapper.findAll('[data-testid="night-copilot-card"]')).toHaveLength(
+      3
+    );
+    expect(localStorage.getItem('ramon_night_copilot_expanded')).toBe('0');
+  });
+
+  it('foco num tipo filtra, esconde Aprovar todas e "ver todas" volta', async () => {
+    const wrapper = await mountBlock({ foco: 'move_stage' });
+    const cards = wrapper.findAll('[data-testid="night-copilot-card"]');
+    expect(cards).toHaveLength(1);
+    expect(cards[0].text()).toContain('Ivone Castro Dias');
+    expect(
+      wrapper.find('[data-testid="night-copilot-filtro"]').text()
+    ).toContain('INTEL.SUGESTOES.SO_TIPO');
+    expect(
+      wrapper.find('[data-testid="night-copilot-apply-all"]').exists()
+    ).toBe(false);
+
+    await wrapper
+      .find('[data-testid="night-copilot-ver-todas"]')
+      .trigger('click');
+    expect(wrapper.findAll('[data-testid="night-copilot-card"]')).toHaveLength(
+      3
+    );
+    expect(
+      wrapper.find('[data-testid="night-copilot-apply-all"]').exists()
+    ).toBe(true);
+  });
+
+  it('foco num tipo sem sugestão avisa', async () => {
+    const wrapper = await mountBlock({ foco: 'zapsign' });
+    expect(wrapper.findAll('[data-testid="night-copilot-card"]')).toHaveLength(
+      0
+    );
+    expect(wrapper.text()).toContain('INTEL.SUGESTOES.NENHUMA_DO_TIPO');
   });
 });

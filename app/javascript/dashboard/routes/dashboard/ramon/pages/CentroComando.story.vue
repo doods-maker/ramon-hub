@@ -1,6 +1,8 @@
 <script setup>
 // Story do Centro de Comando + Esteira (aprovação visual por print,
 // claro/escuro). Sem rede: window.axios responde com dados de exemplo por URL.
+import { provide, reactive } from 'vue';
+import { routeLocationKey } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'dashboard/composables/store';
 import types from 'dashboard/store/mutation-types';
@@ -9,6 +11,14 @@ import Esteira from './Esteira.vue';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
+
+// I-WD2: o Centro lê ?sugestoes= da rota (vindo da Visão geral).
+const rota = reactive({ query: {} });
+provide(routeLocationKey, rota);
+const sugestoesFiltradas = () => {
+  localStorage.setItem('ramon_night_copilot_expanded', '0');
+  rota.query = { sugestoes: 'move_stage' };
+};
 
 const DIA = 86400000;
 const diasAtras = n => new Date(Date.now() - n * DIA).toISOString();
@@ -385,6 +395,14 @@ const objecoes = () =>
       </div>
     </Variant>
     <Variant title="Centro copiloto aberto" :init-state="copiloto(true)">
+      <div class="h-screen">
+        <CommandCenter />
+      </div>
+    </Variant>
+    <Variant
+      title="Centro sugestoes filtradas"
+      :init-state="sugestoesFiltradas"
+    >
       <div class="h-screen">
         <CommandCenter />
       </div>

@@ -27,7 +27,7 @@ const MENU_CONFIG = [
     options: [
       { labelKey: 'SOURCE.ALL', value: 'all', icon: 'i-lucide-files' },
       { labelKey: 'SOURCE.WEB', value: 'web', icon: 'i-lucide-link' },
-      { labelKey: 'SOURCE.PDF', value: 'pdf', icon: 'i-lucide-file-text' },
+      { labelKey: 'SOURCE.TEXT', value: 'text', icon: 'i-lucide-text' },
     ],
   },
   {

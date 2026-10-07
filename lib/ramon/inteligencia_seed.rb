@@ -1,6 +1,6 @@
 # FORK-PONTO (ramon): seed idempotente da area Inteligencia — assistentes + skills
-# (db/seeds/ramon/inteligencia/assistentes.yml) e FAQ aprovada (faq/*.md).
-# Chaves: assistente por name; skill por (assistant, title); FAQ por (assistant Atendimento, question).
+# (db/seeds/ramon/inteligencia/assistentes.yml) e FAQ aprovada (faq/<tese>.md, tese = nome do arquivo).
+# Chaves: assistente por name; skill por (assistant, seed_titulo|title), editada na tela fica; FAQ por (assistant Atendimento, question).
 class Ramon::InteligenciaSeed
   DIR = Rails.root.join('db/seeds/ramon/inteligencia')
   ATENDIMENTO = 'Atendimento (rascunho)'.freeze
@@ -14,8 +14,17 @@ class Ramon::InteligenciaSeed
   # @return [Hash] contagens (criados/atualizados/pulados) por tipo
   def run
     YAML.safe_load(DIR.join('assistentes.yml').read).fetch('assistentes').each { |dados| seed_assistente(dados) }
-    Dir[DIR.join('faq', '*.md').to_s].each { |arquivo| seed_faq(arquivo) }
+    faqs_do_seed.each { |tese, pergunta, resposta| upsert_faq(pergunta, resposta, tese) }
     @contagem
+  end
+
+  # So preenche a tese das FAQs do seed que ainda nao tem (rake ramon:inteligencia:teses).
+  # Nao toca em resposta, status nem nas skills — pode rodar em producao sem medo.
+  # @return [Integer] quantas FAQs ganharam tese
+  def preencher_teses
+    faqs_do_seed.sum do |tese, pergunta, _resposta|
+      atendimento.responses.where(question: pergunta, tese: nil).update_all(tese: tese) # rubocop:disable Rails/SkipsModelValidations
+    end
   end
 
   private
@@ -34,31 +43,48 @@ class Ramon::InteligenciaSeed
   end
 
   def seed_skills(assistant, skills)
-    skills.each do |skill|
-      scenario = assistant.scenarios.find_or_initialize_by(title: skill['title'])
-      @contagem[scenario.new_record? ? :skills_criadas : :skills_atualizadas] += 1
-      scenario.update!(account: @account, description: skill['description'], instruction: skill['instruction'], enabled: true)
-    end
+    skills.each { |skill| seed_skill(assistant, skill) }
     # Skill que saiu do yml: desabilita sem revalidar (a instrucao antiga pode citar tool que ja nao existe).
+    # Editada ou criada na tela fica como esta (I-SK5).
     # rubocop:disable Rails/SkipsModelValidations
-    @contagem[:skills_desabilitadas] += assistant.scenarios.enabled.where.not(title: skills.pluck('title')).update_all(enabled: false)
+    @contagem[:skills_desabilitadas] += assistant.scenarios.enabled.where(edited: false)
+                                                 .where.not(title: skills.pluck('title')).update_all(enabled: false)
     # rubocop:enable Rails/SkipsModelValidations
   end
 
-  def seed_faq(arquivo)
-    File.read(arquivo).sub(FRONT_MATTER, '').split(/^## /).drop(1).each do |bloco|
-      pergunta, resposta = bloco.split("\n", 2)
-      upsert_faq(pergunta.strip, resposta.to_s.strip)
+  # Acha pela origem no yml (sobrevive a renomear na tela) e, nas antigas, pelo título.
+  def seed_skill(assistant, skill)
+    scenario = assistant.scenarios.find_by(seed_titulo: skill['title']) ||
+               assistant.scenarios.find_or_initialize_by(title: skill['title'])
+    return @contagem[:skills_puladas_editadas] += 1 if scenario.edited?
+
+    @contagem[scenario.new_record? ? :skills_criadas : :skills_atualizadas] += 1
+    scenario.update!(account: @account, description: skill['description'], instruction: skill['instruction'],
+                     enabled: true, seed_titulo: skill['title'])
+  end
+
+  # [[tese, pergunta, resposta], ...] — tese = nome do arquivo (faq/<tese>.md).
+  def faqs_do_seed
+    Dir[DIR.join('faq', '*.md').to_s].flat_map do |arquivo|
+      tese = File.basename(arquivo, '.md')
+      File.read(arquivo).sub(FRONT_MATTER, '').split(/^## /).drop(1).map do |bloco|
+        pergunta, resposta = bloco.split("\n", 2)
+        [tese, pergunta.strip, resposta.to_s.strip]
+      end
     end
   end
 
-  def upsert_faq(pergunta, resposta)
+  # Tese: so preenche se vazia (a escolhida na tela vale, editada ou nao).
+  def upsert_faq(pergunta, resposta, tese)
     faq = atendimento.responses.find_or_initialize_by(question: pergunta)
-    return @contagem[:faq_puladas_editadas] += 1 if faq.persisted? && faq.edited?
+    if faq.persisted? && faq.edited?
+      faq.update_column(:tese, tese) if faq.tese.nil? # rubocop:disable Rails/SkipsModelValidations
+      return @contagem[:faq_puladas_editadas] += 1
+    end
 
     @contagem[faq.new_record? ? :faq_criadas : :faq_atualizadas] += 1
-    faq.update!(answer: resposta, status: :approved, documentable: nil)
-    # O before_validation marca edited=true em qualquer update; seed nao conta como edicao na UI.
+    faq.update!(answer: resposta, status: :approved, documentable: nil, tese: faq.tese || tese)
+    # mark_as_edited marca edited=true quando pergunta ou resposta mudam (aqui a resposta muda); seed nao conta como edicao na UI.
     faq.update_column(:edited, false) if faq.edited? # rubocop:disable Rails/SkipsModelValidations
   end
 

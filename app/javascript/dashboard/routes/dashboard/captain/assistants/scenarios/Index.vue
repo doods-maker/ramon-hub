@@ -1,5 +1,5 @@
 <script setup>
-import { computed, h, ref, onMounted } from 'vue';
+import { computed, h, ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { picoSearch } from '@scmmishra/pico-search';
@@ -7,6 +7,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 
@@ -16,7 +17,12 @@ import SuggestedScenarios from 'dashboard/components-next/captain/assistant/Sugg
 import ScenariosCard from 'dashboard/components-next/captain/assistant/ScenariosCard.vue';
 import BulkSelectBar from 'dashboard/components-next/captain/assistant/BulkSelectBar.vue';
 import AddNewScenariosDialog from 'dashboard/components-next/captain/assistant/AddNewScenariosDialog.vue';
-import { CHIP } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import {
+  ABA,
+  ABA_ATIVA,
+  ABA_INATIVA,
+  CHIP,
+} from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import {
   NIVEL_TOM,
   ferramentaInfo,
@@ -28,6 +34,7 @@ const store = useStore();
 const { uiSettings, updateUISettings } = useUISettings();
 const { formatMessage } = useMessageFormatter();
 const assistantId = computed(() => Number(route.params.assistantId));
+const { isAdmin } = useAdmin();
 
 const uiFlags = useMapGetter('captainScenarios/getUIFlags');
 const isFetching = computed(() => uiFlags.value.fetchingList);
@@ -56,11 +63,39 @@ const scenariosExample = [
   },
 ];
 
+// I-SK4: a API devolve ligadas e desligadas; a tela separa em abas.
+const aba = ref('ligadas');
+const ligadas = computed(() => scenarios.value.filter(item => item.enabled));
+const desligadas = computed(() =>
+  scenarios.value.filter(item => !item.enabled)
+);
+const daAba = computed(() =>
+  aba.value === 'ligadas' ? ligadas.value : desligadas.value
+);
+const abas = computed(() => [
+  {
+    id: 'ligadas',
+    label: t('INTEL.SKILLS.ABA_LIGADAS', { n: ligadas.value.length }),
+  },
+  {
+    id: 'desligadas',
+    label: t('INTEL.SKILLS.ABA_DESLIGADAS', { n: desligadas.value.length }),
+  },
+]);
+const mensagemVazia = computed(() =>
+  aba.value === 'desligadas'
+    ? t('INTEL.SKILLS.NENHUMA_DESLIGADA')
+    : t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_MESSAGE')
+);
+
 const filteredScenarios = computed(() => {
   const query = searchQuery.value.trim();
-  const source = scenarios.value;
-  if (!query) return source;
-  return picoSearch(source, query, ['title', 'description', 'instruction']);
+  if (!query) return daAba.value;
+  return picoSearch(daAba.value, query, [
+    'title',
+    'description',
+    'instruction',
+  ]);
 });
 
 const shouldShowSuggestedRules = computed(() => {
@@ -75,6 +110,11 @@ const closeSuggestedRules = () => {
 const bulkSelectedIds = ref(new Set());
 const hoveredCard = ref(null);
 
+// seleção em lote só vale para a aba que se vê
+watch(aba, () => {
+  bulkSelectedIds.value = new Set();
+});
+
 const handleRuleSelect = id => {
   const selected = new Set(bulkSelectedIds.value);
   selected[selected.has(id) ? 'delete' : 'add'](id);
@@ -82,7 +122,7 @@ const handleRuleSelect = id => {
 };
 
 const buildSelectedCountLabel = computed(() => {
-  const count = scenarios.value.length || 0;
+  const count = daAba.value.length || 0;
   const isAllSelected = bulkSelectedIds.value.size === count && count > 0;
   return isAllSelected
     ? t('CAPTAIN.ASSISTANTS.SCENARIOS.BULK_ACTION.UNSELECT_ALL', { count })
@@ -134,6 +174,24 @@ const deleteScenario = async id => {
       error?.response?.message ||
       t('CAPTAIN.ASSISTANTS.SCENARIOS.API.DELETE.ERROR');
     useAlert(errorMessage);
+  }
+};
+
+const alternarSkill = async (scenario, ligar) => {
+  try {
+    await store.dispatch('captainScenarios/update', {
+      id: scenario.id,
+      assistantId: assistantId.value,
+      enabled: ligar,
+    });
+    bulkSelectedIds.value = new Set(
+      [...bulkSelectedIds.value].filter(id => id !== scenario.id)
+    );
+    useAlert(ligar ? t('INTEL.SKILLS.LIGADA') : t('INTEL.SKILLS.DESLIGADA'));
+  } catch (error) {
+    useAlert(
+      error?.message || t('CAPTAIN.ASSISTANTS.SCENARIOS.API.UPDATE.ERROR')
+    );
   }
 };
 
@@ -267,10 +325,24 @@ onMounted(() => {
         </SuggestedScenarios>
       </div>
       <div class="flex mt-7 flex-col gap-4">
+        <nav
+          data-testid="skills-abas"
+          class="flex gap-1 border-b border-n-weak"
+        >
+          <button
+            v-for="item in abas"
+            :key="item.id"
+            type="button"
+            :class="[ABA, aba === item.id ? ABA_ATIVA : ABA_INATIVA]"
+            @click="aba = item.id"
+          >
+            {{ item.label }}
+          </button>
+        </nav>
         <div class="flex justify-between items-center">
           <BulkSelectBar
             v-model="bulkSelectedIds"
-            :all-items="scenarios"
+            :all-items="daAba"
             :select-all-label="buildSelectedCountLabel"
             :selected-count-label="selectedCountLabel"
             :delete-label="
@@ -294,9 +366,9 @@ onMounted(() => {
             />
           </div>
         </div>
-        <div v-if="scenarios.length === 0" class="mt-1 mb-2">
+        <div v-if="daAba.length === 0" class="mt-1 mb-2">
           <span class="text-n-slate-11 text-sm">
-            {{ t('CAPTAIN.ASSISTANTS.SCENARIOS.EMPTY_MESSAGE') }}
+            {{ mensagemVazia }}
           </span>
         </div>
         <div v-else-if="filteredScenarios.length === 0" class="mt-1 mb-2">
@@ -313,6 +385,9 @@ onMounted(() => {
             :description="scenario.description"
             :instruction="scenario.instruction"
             :tools="scenario.tools"
+            :enabled="scenario.enabled"
+            :edited="scenario.edited"
+            :pode-ligar="isAdmin"
             :is-selected="bulkSelectedIds.has(scenario.id)"
             :selectable="
               hoveredCard === scenario.id || bulkSelectedIds.size > 0
@@ -320,6 +395,7 @@ onMounted(() => {
             @select="handleRuleSelect"
             @delete="deleteScenario(scenario.id)"
             @update="updateScenario"
+            @toggle="ligar => alternarSkill(scenario, ligar)"
             @hover="isHovered => handleRuleHover(isHovered, scenario.id)"
           />
         </div>

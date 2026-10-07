@@ -315,6 +315,7 @@ onMounted(() => {
           :answer="response.answer"
           :assistant="response.assistant"
           :documentable="response.documentable"
+          :tese="response.tese"
           :status="response.status"
           :created-at="response.created_at"
           :updated-at="response.updated_at"

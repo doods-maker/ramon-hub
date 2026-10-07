@@ -12,6 +12,8 @@ class AgenteExecucao < ApplicationRecord
   NAO_EXECUTOU = 'Cap diário atingido%'.freeze
 
   scope :consumiu_cota, -> { where('resumo IS NULL OR resumo NOT LIKE ?', NAO_EXECUTOU) }
+  # "Hoje" no fuso de Brasília — o servidor roda em UTC. Visão geral e aba Agente Claude.
+  scope :de_hoje, -> { where(created_at: Time.find_zone(Ramon::CockpitMetrics::TIME_ZONE).now.beginning_of_day..) }
 
   belongs_to :account
   belongs_to :conversation, optional: true

@@ -41,16 +41,16 @@ RSpec.describe 'Api::V1::Accounts::Captain::Scenarios', type: :request do
         expect(json_response[:payload].length).to eq(5)
       end
 
-      it 'returns only enabled scenarios' do
-        create(:captain_scenario, assistant: assistant, account: account, enabled: true)
-        create(:captain_scenario, assistant: assistant, account: account, enabled: false)
+      it 'devolve ligadas e desligadas, ligadas primeiro (I-SK4)' do
+        desligada = create(:captain_scenario, assistant: assistant, account: account, enabled: false)
+        ligada = create(:captain_scenario, assistant: assistant, account: account, enabled: true)
         get "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios",
             headers: admin.create_new_auth_token,
             as: :json
 
         expect(response).to have_http_status(:success)
-        expect(json_response[:payload].length).to eq(1)
-        expect(json_response[:payload].first[:enabled]).to be(true)
+        expect(json_response[:payload].pluck(:id)).to eq([ligada.id, desligada.id])
+        expect(json_response[:payload].pluck(:enabled)).to eq([true, false])
       end
     end
   end
@@ -131,6 +131,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Scenarios', type: :request do
         expect(json_response[:description]).to eq('Test description')
         expect(json_response[:enabled]).to be(true)
         expect(json_response[:assistant_id]).to eq(assistant.id)
+        expect(json_response[:edited]).to be(true)
       end
 
       context 'with invalid parameters' do
@@ -194,6 +195,35 @@ RSpec.describe 'Api::V1::Accounts::Captain::Scenarios', type: :request do
         expect(response).to have_http_status(:success)
         expect(json_response[:title]).to eq('Updated Scenario Title')
         expect(json_response[:enabled]).to be(false)
+      end
+
+      it 'marca a skill como editada na tela (o seed nao sobrescreve)' do
+        patch "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios/#{scenario.id}",
+              params: update_attributes, headers: admin.create_new_auth_token, as: :json
+
+        expect(scenario.reload).to be_edited
+      end
+
+      describe 'skill antiga cuja instrucao cita ferramenta que saiu do catalogo (ramon)' do
+        let(:url) { "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios/#{scenario.id}" }
+
+        before do
+          scenario.update_column(:instruction, 'Use [Antiga](tool://ferramenta_que_saiu)') # rubocop:disable Rails/SkipsModelValidations
+        end
+
+        it 'desliga mesmo assim' do
+          patch url, params: { scenario: { enabled: false } }, headers: admin.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(scenario.reload).not_to be_enabled
+        end
+
+        it 'nao religa sem corrigir a instrucao' do
+          scenario.update_column(:enabled, false) # rubocop:disable Rails/SkipsModelValidations
+          patch url, params: { scenario: { enabled: true } }, headers: admin.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+        end
       end
 
       context 'with invalid parameters' do

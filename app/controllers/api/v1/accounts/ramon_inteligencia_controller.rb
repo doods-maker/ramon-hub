@@ -91,7 +91,7 @@ class Api::V1::Accounts::RamonInteligenciaController < Api::V1::Accounts::BaseCo
   # "Hoje" no fuso de Brasília — o servidor roda em UTC.
   def agente
     execucoes = Current.account.agente_execucoes
-    hoje = execucoes.where(created_at: Time.find_zone(Ramon::CockpitMetrics::TIME_ZONE).now.beginning_of_day..)
+    hoje = execucoes.de_hoje
     {
       hoje: hoje.consumiu_cota.count, teto: TETO_AGENTE, problemas_hoje: hoje.where.not(status: 'ok').count,
       ultima_em: execucoes.maximum(:created_at)

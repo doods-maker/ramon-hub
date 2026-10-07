@@ -16,6 +16,9 @@ import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Pay
 import ResponseCard from 'dashboard/components-next/captain/assistant/ResponseCard.vue';
 import CreateResponseDialog from 'dashboard/components-next/captain/pageComponents/response/CreateResponseDialog.vue';
 import ResponsePageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/ResponsePageEmptyState.vue';
+import { SELECT } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { TESES, SEM_TESE } from './teses';
+import TestarPergunta from './TestarPergunta.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -31,6 +34,7 @@ const bulkDeleteDialog = ref(null);
 
 const dialogType = ref('');
 const searchQuery = ref('');
+const teseFiltro = ref('');
 const { t } = useI18n();
 
 const createDialog = ref(null);
@@ -79,15 +83,10 @@ const handleCreateClose = () => {
   selectedResponse.value = null;
 };
 
-const updateURLWithFilters = (page, search) => {
-  const query = {
-    page: page || 1,
-  };
-
-  if (search) {
-    query.search = search;
-  }
-
+const updateURLWithFilters = (page, search, tese) => {
+  const query = { page: page || 1 };
+  if (search) query.search = search;
+  if (tese) query.tese = tese;
   router.replace({ query });
 };
 
@@ -100,9 +99,10 @@ const fetchResponses = (page = 1) => {
   if (searchQuery.value) {
     filterParams.search = searchQuery.value;
   }
+  if (teseFiltro.value) filterParams.tese = teseFiltro.value;
 
   // Update URL with current filters
-  updateURLWithFilters(page, searchQuery.value);
+  updateURLWithFilters(page, searchQuery.value, teseFiltro.value);
 
   store.dispatch('captainResponses/get', filterParams);
 };
@@ -181,6 +181,7 @@ const initializeFromURL = () => {
   if (route.query.search) {
     searchQuery.value = route.query.search;
   }
+  if (route.query.tese) teseFiltro.value = route.query.tese;
   const pageFromURL = parseInt(route.query.page, 10) || 1;
   fetchResponses(pageFromURL);
 };
@@ -217,15 +218,30 @@ onMounted(() => {
         v-if="bulkSelectedIds.size === 0"
         class="flex gap-3 justify-between w-full items-center"
       >
-        <Input
-          v-model="searchQuery"
-          :placeholder="$t('CAPTAIN.RESPONSES.SEARCH_PLACEHOLDER')"
-          class="w-64"
-          size="sm"
-          type="search"
-          autofocus
-          @input="debouncedSearch"
-        />
+        <div class="flex items-center gap-2">
+          <Input
+            v-model="searchQuery"
+            :placeholder="$t('CAPTAIN.RESPONSES.SEARCH_PLACEHOLDER')"
+            class="w-64"
+            size="sm"
+            type="search"
+            autofocus
+            @input="debouncedSearch"
+          />
+          <select
+            v-model="teseFiltro"
+            data-testid="faq-filtro-tese"
+            class="!w-52"
+            :class="SELECT"
+            @change="fetchResponses(1)"
+          >
+            <option value="">{{ $t('INTEL.FAQ.TODAS_TESES') }}</option>
+            <option v-for="tese in TESES" :key="tese" :value="tese">
+              {{ $t(`INTEL.TESE.${tese}`) }}
+            </option>
+            <option :value="SEM_TESE">{{ $t('INTEL.FAQ.SEM_TESE') }}</option>
+          </select>
+        </div>
       </div>
     </template>
 
@@ -252,6 +268,13 @@ onMounted(() => {
       <CaptainPaywall />
     </template>
 
+    <template #controls>
+      <TestarPergunta
+        v-if="selectedAssistantId"
+        :assistant-id="selectedAssistantId"
+      />
+    </template>
+
     <template #body>
       <Banner
         v-if="pendingCount > 0"
@@ -272,6 +295,7 @@ onMounted(() => {
           :answer="response.answer"
           :assistant="response.assistant"
           :documentable="response.documentable"
+          :tese="response.tese"
           :status="response.status"
           :created-at="response.created_at"
           :updated-at="response.updated_at"

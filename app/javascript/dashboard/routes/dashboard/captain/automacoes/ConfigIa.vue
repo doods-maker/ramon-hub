@@ -38,7 +38,8 @@ const carregarSkills = async id => {
   try {
     const { data } = await CaptainScenariosAPI.get({ assistantId: id });
     if (req !== seq) return;
-    skills.value = data.payload || [];
+    // o index devolve ligadas e desligadas; skill desligada falha no fluxo
+    skills.value = (data.payload || []).filter(s => s.enabled);
   } catch {
     if (req === seq) semCaptain.value = true;
   }

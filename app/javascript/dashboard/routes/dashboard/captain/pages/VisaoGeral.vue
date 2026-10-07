@@ -111,7 +111,8 @@ const fmtHora = value =>
     minute: '2-digit',
   });
 
-const ir = (name, params = {}) => router.push(accountScopedRoute(name, params));
+const ir = (name, params = {}, query = {}) =>
+  router.push(accountScopedRoute(name, params, query));
 </script>
 
 <template>
@@ -164,10 +165,14 @@ const ir = (name, params = {}) => router.push(accountScopedRoute(name, params));
               }}
             </p>
             <div class="flex flex-wrap gap-1.5 mt-1">
-              <span
+              <button
                 v-for="(n, tipo) in aprovacoes.sugestoes_por_tipo"
                 :key="tipo"
+                type="button"
+                data-testid="vg-sugestao-tipo"
+                class="hover:underline"
                 :class="[CHIP, TOM.amber]"
+                @click="ir('ramon_index', {}, { sugestoes: tipo })"
               >
                 {{
                   t('CAPTAIN_RAMON.VISAO_GERAL.APROVACOES.TIPO_N', {
@@ -177,7 +182,7 @@ const ir = (name, params = {}) => router.push(accountScopedRoute(name, params));
                     n,
                   })
                 }}
-              </span>
+              </button>
             </div>
             <Button
               class="mt-2"
@@ -186,7 +191,7 @@ const ir = (name, params = {}) => router.push(accountScopedRoute(name, params));
               color="amber"
               icon="i-lucide-arrow-right"
               :label="t('CAPTAIN_RAMON.VISAO_GERAL.APROVACOES.ABRIR_SUGESTOES')"
-              @click="ir('ramon_index')"
+              @click="ir('ramon_index', {}, { sugestoes: 'todas' })"
             />
           </div>
           <div v-if="faqsPendentes" class="mt-3">
@@ -425,6 +430,16 @@ const ir = (name, params = {}) => router.push(accountScopedRoute(name, params));
                 : t('CAPTAIN_RAMON.VISAO_GERAL.AGENTE.NUNCA')
             }}
           </p>
+          <Button
+            class="mt-2"
+            size="xs"
+            variant="ghost"
+            color="slate"
+            icon="i-lucide-arrow-right"
+            data-testid="vg-agente-trilha"
+            :label="t('INTEL.VISAO_GERAL.VER_TRILHA')"
+            @click="ir('captain_execucoes_index', {}, { aba: 'agente' })"
+          />
         </section>
 
         <!-- base de conhecimento -->

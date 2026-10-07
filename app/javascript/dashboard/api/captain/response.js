@@ -6,7 +6,7 @@ class CaptainResponses extends ApiClient {
     super('captain/assistant_responses', { accountScoped: true });
   }
 
-  get({ page = 1, search, assistantId, documentId, status } = {}) {
+  get({ page = 1, search, assistantId, documentId, status, tese } = {}) {
     return axios.get(this.url, {
       params: {
         page,
@@ -14,6 +14,7 @@ class CaptainResponses extends ApiClient {
         assistant_id: assistantId,
         document_id: documentId,
         status,
+        tese,
       },
     });
   }

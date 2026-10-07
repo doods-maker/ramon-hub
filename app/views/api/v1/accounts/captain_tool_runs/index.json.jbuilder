@@ -15,6 +15,9 @@ json.items @tool_runs do |run|
   json.lead_id run.lead_id
   json.conversation_id run.conversation_id
   json.assistant_id run.assistant_id
+  json.lead_nome @nomes[:leads][run.lead_id]
+  json.conversa_display_id @nomes[:conversas][run.conversation_id]
+  json.assistente_nome @nomes[:assistentes][run.assistant_id]
   json.created_at run.created_at
 end
 

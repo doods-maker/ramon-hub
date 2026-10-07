@@ -105,6 +105,7 @@ const SKILLS = [
       'Quando o lead pergunta se o caso dele dá direito a benefício.',
     instruction: `Busque a resposta com ${link('faq_lookup')} e o ${link('playbook_da_tese')}. Confirmado um critério, use ${link('registrar_qualificacao')}.`,
     tools: ['faq_lookup', 'playbook_da_tese', 'registrar_qualificacao'],
+    enabled: true,
   },
   {
     id: 2,
@@ -116,6 +117,8 @@ const SKILLS = [
       'solicitar_documento',
       'enviar_link_portal',
     ],
+    enabled: true,
+    edited: true,
   },
   {
     id: 3,
@@ -123,6 +126,7 @@ const SKILLS = [
     description: 'Quando o lead topa conversar com o advogado.',
     instruction: `Mande o ${link('link_agendamento')}; com a data combinada, use ${link('agendar_reuniao')} e ${link('mover_etapa')}.`,
     tools: ['link_agendamento', 'agendar_reuniao', 'mover_etapa'],
+    enabled: true,
   },
   {
     id: 4,
@@ -130,6 +134,17 @@ const SKILLS = [
     description: 'Quando o lead manda só um oi ou agradece.',
     instruction: 'Responda com cordialidade e pergunte como pode ajudar.',
     tools: null,
+    enabled: true,
+  },
+  {
+    id: 5,
+    title: 'Lead pediu desconto no honorário',
+    description: 'Quando o lead pede para baixar o 30% + 3.',
+    instruction:
+      'Explique com calma que o honorário é fixo e só é pago se o benefício sair.',
+    tools: null,
+    enabled: false,
+    edited: false,
   },
 ];
 
@@ -140,6 +155,7 @@ const FAQS = [
     question: 'Quanto custa o trabalho de vocês?',
     answer:
       'O honorário é 30% dos atrasados + 3 benefícios, sem valor inicial e sem outra cobrança.',
+    tese: 'geral',
     status: 'approved',
     assistant: ASSISTENTE_FAQ,
     documentable: null,
@@ -150,6 +166,7 @@ const FAQS = [
     id: 2,
     question: 'Preciso levar algum documento na reunião?',
     answer: 'Traga RG, CPF e os laudos médicos que você tiver.',
+    tese: 'auxilio-acidente',
     status: 'approved',
     assistant: ASSISTENTE_FAQ,
     documentable: { type: 'Conversation', display_id: 482 },
@@ -163,6 +180,7 @@ const PENDENTES = [
     question: 'Quem recebe auxílio-acidente pode continuar trabalhando?',
     answer:
       'Pode. O auxílio-acidente é uma indenização e não impede o trabalho.',
+    tese: null,
     status: 'pending',
     assistant: ASSISTENTE_FAQ,
     documentable: {
@@ -183,6 +201,17 @@ const DOCS = [
     created_at: unix(5),
     updated_at: unix(5),
   },
+  {
+    id: 2,
+    name: 'Honorários — resumo da equipe',
+    external_link: 'TEXT: Honorários — resumo da equipe_20261007093000000',
+    text_document: true,
+    status: 'available',
+    sync_status: null,
+    assistant: ASSISTENTE_FAQ,
+    created_at: unix(1),
+    updated_at: unix(1),
+  },
 ];
 
 const RUNS = [
@@ -197,11 +226,60 @@ const RUNS = [
   duration_ms: 420 + i * 130,
   params: { lead_id: '123' },
   resultado: 'resultado da ferramenta',
-  lead_id: 123,
+  lead_id: i === 3 ? null : 123,
   conversation_id: 482,
   assistant_id: 1,
+  lead_nome: i === 3 ? null : 'Maria Souza',
+  conversa_display_id: i === 3 ? null : 482,
+  assistente_nome: ATENDIMENTO.name,
   created_at: diasAtras(dias),
 }));
+
+const AGENTE = [
+  {
+    id: 3,
+    pedido: 'resuma o caso da Maria e veja se tem perícia marcada',
+    status: 'ok',
+    resumo:
+      'Caso 123: auxílio-acidente, perícia marcada para 14/10 às 9h. Anotei na tarefa do AdvBox.',
+    acoes: [{ tipo: 'advbox_tarefa', ref: 'resp=12 {"id": 991}' }],
+    modelo: 'claude-opus',
+    esforco: 'low',
+    duracao_ms: 48000,
+    lead_id: 123,
+    lead_nome: 'Maria Souza',
+    conversa_display_id: 482,
+    created_at: diasAtras(0.05),
+  },
+  {
+    id: 2,
+    pedido: 'gere o PDF do cálculo e suba no Drive',
+    status: 'erro',
+    resumo: 'O motor de cálculos não respondeu.',
+    acoes: [],
+    modelo: 'claude-opus',
+    esforco: 'medium',
+    duracao_ms: 120000,
+    lead_id: 77,
+    lead_nome: 'José Ribeiro',
+    conversa_display_id: 470,
+    created_at: diasAtras(0.2),
+  },
+  {
+    id: 1,
+    pedido: 'quais documentos faltam?',
+    status: 'cap',
+    resumo: 'Cap diário atingido (30)',
+    acoes: [],
+    modelo: null,
+    esforco: null,
+    duracao_ms: null,
+    lead_id: null,
+    lead_nome: null,
+    conversa_display_id: 455,
+    created_at: diasAtras(1.1),
+  },
+];
 
 // Catálogo real (tools.yml) com as skills e execuções fictícias acima.
 const FERRAMENTAS = {
@@ -267,14 +345,26 @@ const API = {
   'captain/assistants/stats': STATS,
   'captain/assistants/1/scenarios': {
     payload: SKILLS,
-    meta: { total_count: 4, page: 1 },
+    meta: { total_count: 5, page: 1 },
   },
   'captain/assistants/1/inboxes': { payload: [], meta: {} },
   'captain/assistant_responses': {
     payload: FAQS,
     meta: { total_count: 2, page: 1 },
   },
-  'captain/documents': { payload: DOCS, meta: { total_count: 1, page: 1 } },
+  'captain/documents': { payload: DOCS, meta: { total_count: 2, page: 1 } },
+  'captain/assistants/1/buscar_faq': {
+    payload: FAQS.map(({ id, question, answer, tese }) => ({
+      id,
+      question,
+      answer,
+      tese,
+    })),
+  },
+  ramon_agente_execucoes: {
+    resumo: { hoje: 4, teto: 30, problemas_hoje: 1 },
+    items: AGENTE,
+  },
   'captain/custom_tools': { payload: [], meta: { total_count: 0, page: 1 } },
   'captain/ferramentas': FERRAMENTAS,
   captain_tool_runs: {
@@ -402,14 +492,34 @@ store.commit(`inboxes/${types.SET_INBOXES}`, [
 store.dispatch('captainAssistants/get');
 
 // Clica no botão cujo texto contém `texto`, depois de a tela montar.
-const clicarEm = texto => () =>
-  setTimeout(
-    () =>
-      [...document.querySelectorAll('button')]
-        .find(botao => botao.textContent.includes(texto))
-        ?.click(),
-    2000
-  );
+const clicar = texto =>
+  [...document.querySelectorAll('button')]
+    .find(botao => botao.textContent.includes(texto))
+    ?.click();
+const clicarEm = texto => () => setTimeout(() => clicar(texto), 2000);
+// Vários cliques em sequência (abrir diálogo e trocar de aba).
+const clicarNaOrdem = textos => () =>
+  textos.forEach((texto, i) => setTimeout(() => clicar(texto), 2000 + i * 600));
+// Digita no "Testar pergunta" e clica em Testar.
+const testarPergunta = texto => () =>
+  setTimeout(() => {
+    const campo = document.querySelector(
+      '[data-testid="testar-pergunta-campo"]'
+    );
+    if (!campo) return;
+    campo.value = texto;
+    campo.dispatchEvent(new Event('input'));
+    setTimeout(
+      () =>
+        [...document.querySelectorAll('button')]
+          .find(botao => botao.textContent.trim() === 'Testar')
+          ?.click(),
+      200
+    );
+  }, 2000);
+const abaAgente = () => {
+  rota.query = { aba: 'agente' };
+};
 
 // Visão geral com o padrão antigo (antes da D7): título "Rumo ao piloto".
 const modoRascunho = () => {
@@ -431,6 +541,14 @@ const modoRascunho = () => {
     <Variant title="FAQs pendentes">
       <div class="h-screen"><ResponsesPending /></div>
     </Variant>
+    <Variant
+      title="FAQs testar pergunta"
+      :init-state="
+        testarPergunta('posso trabalhar recebendo auxílio-acidente?')
+      "
+    >
+      <div class="h-screen"><ResponsesIndex /></div>
+    </Variant>
     <Variant title="Documentos">
       <div class="h-screen"><DocumentsIndex /></div>
     </Variant>
@@ -440,7 +558,16 @@ const modoRascunho = () => {
     >
       <div class="h-screen"><DocumentsIndex /></div>
     </Variant>
+    <Variant
+      title="Documentos novo texto"
+      :init-state="clicarNaOrdem(['Criar um novo documento', 'Colar texto'])"
+    >
+      <div class="h-screen"><DocumentsIndex /></div>
+    </Variant>
     <Variant title="Skills">
+      <div class="h-screen"><ScenariosIndex /></div>
+    </Variant>
+    <Variant title="Skills desligadas" :init-state="clicarEm('Desligadas')">
       <div class="h-screen"><ScenariosIndex /></div>
     </Variant>
     <Variant title="Ferramentas">
@@ -471,6 +598,9 @@ const modoRascunho = () => {
       <div class="h-screen"><GuidelinesIndex /></div>
     </Variant>
     <Variant title="Execucoes">
+      <div class="h-screen"><Execucoes /></div>
+    </Variant>
+    <Variant title="Execucoes agente" :init-state="abaAgente">
       <div class="h-screen"><Execucoes /></div>
     </Variant>
     <Variant title="Visao geral">

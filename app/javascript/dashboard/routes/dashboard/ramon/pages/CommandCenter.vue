@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
@@ -33,6 +33,9 @@ const { t } = useI18n();
 const store = useStore();
 const getters = useStoreGetters();
 const router = useRouter();
+// I-WD2: ?sugestoes=todas|<tipo> vindo da Visão geral abre e filtra o bloco.
+const route = useRoute();
+const focoSugestoes = computed(() => String(route?.query?.sugestoes || ''));
 const { accountScopedRoute } = useAccount();
 const { isAdmin } = useAdmin();
 
@@ -380,7 +383,7 @@ useKeyboardEvents({
     </header>
 
     <!-- Enquanto você dormia (copiloto noturno) — some quando 0 pendentes -->
-    <NightCopilot />
+    <NightCopilot :foco="focoSugestoes" />
 
     <div v-if="isLoading" class="flex flex-col gap-5 animate-pulse">
       <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5">

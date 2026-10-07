@@ -38,6 +38,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  textDocument: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Number,
     required: true,
@@ -99,15 +103,17 @@ const isPdf = computed(() => props.pdfDocument);
 const hasSafeLink = computed(() => isSafeHttpLink(props.externalLink));
 const canManage = computed(() => checkPermissions(['administrator']));
 const isAvailable = computed(() => props.status === 'available');
+// texto colado (I-DO1) não tem página para sincronizar
 const canSync = computed(
-  () => canManage.value && !isPdf.value && isAvailable.value
+  () =>
+    canManage.value && !isPdf.value && !props.textDocument && isAvailable.value
 );
 const isSyncing = computed(() => props.syncStatus === 'syncing');
 const isFailed = computed(() => props.syncStatus === 'failed');
 const isRetryableSync = computed(
   () => isFailed.value || (isSyncing.value && !props.syncInProgress)
 );
-const showSyncStatus = computed(() => !isPdf.value);
+const showSyncStatus = computed(() => !isPdf.value && !props.textDocument);
 
 const menuItems = computed(() => {
   const allOptions = [
@@ -144,14 +150,16 @@ const menuItems = computed(() => {
 
 const createdAtLabel = computed(() => dynamicTime(props.createdAt));
 
-const displayLink = computed(() =>
-  isPdf.value
+const displayLink = computed(() => {
+  if (props.textDocument) return t('INTEL.DOCUMENTOS.TEXTO_COLADO');
+  return isPdf.value
     ? formatDocumentLink(props.externalLink)
-    : getDocumentDisplayPath(props.externalLink)
-);
-const linkIcon = computed(() =>
-  isPdf.value ? 'i-ph-file-pdf' : 'i-ph-link-simple'
-);
+    : getDocumentDisplayPath(props.externalLink);
+});
+const linkIcon = computed(() => {
+  if (props.textDocument) return 'i-lucide-text';
+  return isPdf.value ? 'i-ph-file-pdf' : 'i-ph-link-simple';
+});
 
 const handleAction = ({ action, value }) => {
   toggleDropdown(false);

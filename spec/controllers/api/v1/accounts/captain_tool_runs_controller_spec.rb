@@ -47,6 +47,27 @@ RSpec.describe 'Captain Tool Runs API', type: :request do
     expect(response.parsed_body['catalogo']).to include({ 'id' => 'mover_etapa', 'title' => 'Mover de etapa', 'nivel' => 'sugestao' })
   end
 
+  it 'devolve o nome do caso e o numero da conversa de cada linha (I-EX2)' do
+    lead = create(:lead, account: account, name: 'Maria Souza')
+    conversa = create(:conversation, account: account)
+    Captain::ToolRun.create!(account_id: account.id, tool_name: 'mover_etapa', status: 'ok',
+                             lead_id: lead.id, conversation_id: conversa.id)
+
+    get url, headers: agent.create_new_auth_token, as: :json
+
+    expect(response.parsed_body['items'].first).to include('lead_nome' => 'Maria Souza',
+                                                           'conversa_display_id' => conversa.display_id)
+  end
+
+  it 'devolve o nome do assistente', if: ChatwootApp.enterprise? do
+    assistente = create(:captain_assistant, account: account, name: 'Atendimento')
+    Captain::ToolRun.create!(account_id: account.id, assistant_id: assistente.id, tool_name: 'faq_lookup', status: 'ok')
+
+    get url, headers: agent.create_new_auth_token, as: :json
+
+    expect(response.parsed_body['items'].first['assistente_nome']).to eq('Atendimento')
+  end
+
   it 'exige autenticacao' do
     get url, as: :json
 
