@@ -3,6 +3,8 @@ class Ramon::DailyFollowUpJob < ApplicationJob
 
   def perform
     Account.find_each do |account|
+      next if Ramon::Fluxos::Retomada.assumiu?(account) # B4.3: o fluxo "Cadência de retomada" faz (Ramon::Fluxos::Relogio)
+
       Ramon::FollowUpDraftService.new(account: account).perform
     rescue StandardError => e
       # uma conta com dado venenoso não pode abortar as demais nem virar retry-loop

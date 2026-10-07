@@ -14,6 +14,9 @@ module Ramon::Fluxos::Relogio
     Fluxo.executaveis.where(gatilho_tipo: %w[relogio lead_parado]).includes(:versao_publicada).find_each do |fluxo|
       config = Ramon::Fluxos::Grafo.new(fluxo.versao_publicada.grafo).gatilho['config'] || {}
       next unless na_hora?(config, agora) && reivindicar_dia(fluxo, agora)
+      # B4.3: o fluxo da cadência só roda com ele no comando; senão quem faz é o código (e o dia já ficou reivindicado:
+      # virar a chave depois das 11h não roda um 2º lote no mesmo dia).
+      next if Ramon::Fluxos::Retomada.migrado?(fluxo) && !Ramon::Fluxos::Retomada.assumiu?(fluxo.account)
 
       disparar_grupo(fluxo, config, agora)
     end

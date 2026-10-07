@@ -106,4 +106,101 @@ RSpec.describe Ramon::Fluxos::Retomada do
       end
     end
   end
+
+  describe 'ponta a ponta' do
+    let(:onze) { Time.find_zone!('America/Sao_Paulo').parse('2026-10-07 11:00') }
+    let(:joao) { create(:contact, account: account, name: 'João Pereira') }
+    let(:outro) do
+      create(:lead, account: account, lead_stage: novo, name: 'João Pereira', contact: joao,
+                    conversation: create(:conversation, account: account, contact: joao))
+    end
+    let!(:fluxo) { described_class.semear(account) }
+    let(:reserva) do
+      'Oi Maria, tudo bem? Passando pra saber se você ainda tem interesse em olhar o seu caso com a gente. Qualquer coisa, estou por aqui!'
+    end
+
+    before do
+      [lead, outro].each { |l| l.update_columns(stage_entered_at: onze - 10.days) } # rubocop:disable Rails/SkipsModelValidations
+      allow(Ramon::LlmClient).to receive(:complete)
+        .and_return(Ramon::LlmClient::Result.new(content: 'Oi [nome], seguimos à disposição.', input_tokens: 1, output_tokens: 1))
+    end
+
+    after { Redis::Alfred.delete("RAMON::FLUXO_PUSH::#{fluxo.id}::2026-10-07") }
+
+    # O relógio dos fluxos sem o resto: dispara o do dia e anda o que ficou na fila.
+    def relogio
+      Ramon::Fluxos::Relogio.disparar_do_dia
+      andar
+    end
+
+    def andar = FluxoExecucao.where(status: 'esperando', retomar_em: ..Time.current).find_each { |e| Ramon::Fluxos::Executor.new(e).avancar! }
+
+    def retomadas(alvo = lead) = alvo.lead_notes.where('body LIKE ?', 'RASCUNHO (revisar antes de enviar) — retomada%')
+
+    describe 'com o fluxo no comando' do
+      around { |ex| with_modified_env(RAMON_FLUXO_CADENCIA: 'on') { ex.run } }
+
+      before { described_class.mudar_modo!(account, 'normal') }
+
+      it 'às 11h o fluxo faz a retomada inteira e o código não faz nada' do
+        allow(Ramon::FollowUpDraftService).to receive(:new).and_call_original
+        travel_to(onze) do
+          expect { relogio }.to have_enqueued_job(Ramon::NtfyPushJob).exactly(:once) # 2 leads, 1 push
+          Ramon::DailyFollowUpJob.perform_now
+        end
+        expect(Ramon::FollowUpDraftService).not_to have_received(:new)
+        expect(retomadas.pluck(:body)).to eq(["RASCUNHO (revisar antes de enviar) — retomada nº 1:\nOi Maria, seguimos à disposição."])
+        expect(retomadas(outro).count).to eq(1)
+        expect(lead.lead_tasks.where(kind: 'follow_up').pluck(:title)).to eq(['Retomada nº 1'])
+        expect(lead.reload.custom_attributes['follow_up']['tentativas']).to eq(1)
+        expect(fluxo.execucoes.where(ensaio: false).pluck(:status)).to eq(%w[concluida concluida])
+      end
+
+      it 'a virada não repete: respeita a retomada recente e a tarefa aberta que o código deixou' do
+        lead.update!(custom_attributes: { 'follow_up' => { 'tentativas' => 2, 'ultima_em' => (onze - 2.days).iso8601 } })
+        create(:lead_task, account: account, lead: outro, kind: 'follow_up', due_at: onze + 1.hour)
+        travel_to(onze) { relogio }
+        expect(retomadas.count + retomadas(outro).count).to eq(0)
+        travel_to(onze + 3.days) { relogio }
+        expect(retomadas.last.body).to start_with('RASCUNHO (revisar antes de enviar) — retomada nº 3:')
+        expect(retomadas(outro).count).to eq(0) # a tarefa do código segue aberta
+      end
+
+      it 'o botão Preparar retomada roda o fluxo para o lead, sem o teto; o clique duplo não gera 2' do
+        fluxo.reload.update!(limite_dia: 1)
+        travel_to(onze - 2.hours) do
+          Ramon::FollowUpDraftJob.perform_now(outro.id) # gasta o limite do dia
+          2.times { Ramon::FollowUpDraftJob.perform_now(lead.id) }
+          andar
+          Ramon::FollowUpDraftJob.perform_now(lead.id) # já tem retomada aberta: nada
+          andar
+        end
+        expect(retomadas.count).to eq(1)
+        expect(retomadas(outro).count).to eq(1)
+        expect(fluxo.execucoes.where(alvo: lead).count).to eq(1)
+      end
+
+      it 'IA fora do ar: entra o texto fixo de reserva e a retomada segue (contador e tarefa)' do
+        allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::TransientError, 'timeout')
+        travel_to(onze) { relogio }
+        expect(retomadas.last.body).to eq("RASCUNHO (revisar antes de enviar) — retomada nº 1:\n#{reserva}")
+        expect(lead.lead_tasks.where(kind: 'follow_up').count).to eq(1)
+        expect(fluxo.execucoes.where(status: 'falhou').count).to eq(0)
+      end
+    end
+
+    describe 'com o código no comando' do
+      it 'fluxo em modo normal mas sem a env: o relógio nem dispara o fluxo; o lote e o botão são do código' do
+        with_modified_env(RAMON_FLUXO_CADENCIA: 'on') { described_class.mudar_modo!(account, 'normal') }
+        travel_to(onze) do
+          Ramon::FollowUpDraftJob.perform_now(lead.id) # o botão: o código faz na hora
+          relogio
+          Ramon::DailyFollowUpJob.perform_now
+        end
+        expect(fluxo.execucoes.count).to eq(0)
+        expect(retomadas.count + retomadas(outro).count).to eq(2) # o código fez: o botão (Maria) e o lote (João)
+        expect(fluxo.reload.ultimo_disparo_em).to be_present # o dia ficou reivindicado: virar depois das 11h não roda 2º lote
+      end
+    end
+  end
 end
