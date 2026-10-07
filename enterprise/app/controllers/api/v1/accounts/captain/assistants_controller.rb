@@ -2,7 +2,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   before_action :current_account
   before_action -> { check_authorization(Captain::Assistant) }
 
-  before_action :set_assistant, only: [:show, :update, :destroy, :playground]
+  before_action :set_assistant, only: [:show, :update, :destroy, :playground, :buscar_faq]
 
   def index
     @assistants = account_assistants.ordered
@@ -47,6 +47,15 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   # ponytail: ~5 consultas por assistente; são 2. Se passar de 10, agrupar.
   def stats
     render json: { payload: account_assistants.order(:id).map { |assistant| cartao(assistant) } }
+  end
+
+  # ramon: "Testar pergunta" (I-FQ2) — as FAQs que a ferramenta faq_lookup deste
+  # assistente acharia para a pergunta, na mesma ordem (mesma busca, até 5).
+  # Pergunta em branco não busca (no modo vetorial chamaria embedding à toa).
+  def buscar_faq
+    pergunta = params[:q].to_s.strip
+    faqs = pergunta.present? ? @assistant.responses.approved.search(pergunta).to_a : []
+    render json: { payload: faqs.map { |faq| faq.slice(:id, :question, :answer, :tese) } }
   end
 
   private

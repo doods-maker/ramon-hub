@@ -18,6 +18,7 @@ import CreateResponseDialog from 'dashboard/components-next/captain/pageComponen
 import ResponsePageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/ResponsePageEmptyState.vue';
 import { SELECT } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { TESES, SEM_TESE } from './teses';
+import TestarPergunta from './TestarPergunta.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -265,6 +266,13 @@ onMounted(() => {
 
     <template #paywall>
       <CaptainPaywall />
+    </template>
+
+    <template #controls>
+      <TestarPergunta
+        v-if="selectedAssistantId"
+        :assistant-id="selectedAssistantId"
+      />
     </template>
 
     <template #body>

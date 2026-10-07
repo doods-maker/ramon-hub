@@ -402,4 +402,39 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
   end
+
+  describe 'GET /api/v1/accounts/{account.id}/captain/assistants/{id}/buscar_faq' do
+    let(:assistant) { create(:captain_assistant, account: account) }
+
+    around { |example| with_modified_env(RAMON_FAQ_BUSCA: 'texto') { example.run } }
+
+    before do
+      create(:captain_assistant_response, assistant: assistant, account: account, tese: 'auxilio-acidente',
+                                          question: 'Posso continuar trabalhando recebendo auxílio-acidente?',
+                                          answer: 'Pode, é compatível com o trabalho.')
+      create(:captain_assistant_response, assistant: assistant, account: account, question: 'Quanto custa?',
+                                          answer: '30% dos atrasados + 3 benefícios.')
+      create(:captain_assistant_response, assistant: assistant, account: account, status: :pending,
+                                          question: 'Posso continuar trabalhando e receber o BPC?', answer: 'Depende da renda.')
+    end
+
+    def buscar(pergunta)
+      get "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/buscar_faq",
+          params: { q: pergunta }, headers: agent.create_new_auth_token, as: :json
+      json_response[:payload]
+    end
+
+    it 'devolve as FAQs aprovadas deste assistente que a busca do faq_lookup acharia' do
+      faqs = buscar('posso continuar trabalhando')
+
+      expect(response).to have_http_status(:success)
+      expect(faqs.pluck(:question)).to eq(['Posso continuar trabalhando recebendo auxílio-acidente?'])
+      expect(faqs.first).to include(tese: 'auxilio-acidente', answer: 'Pode, é compatível com o trabalho.')
+    end
+
+    it 'pergunta vazia ou sem nada parecido volta lista vazia' do
+      expect(buscar('   ')).to eq([])
+      expect(buscar('foguete lunar')).to eq([])
+    end
+  end
 end

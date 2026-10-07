@@ -25,6 +25,13 @@ class CaptainAssistant extends ApiClient {
   stats() {
     return axios.get(`${this.url}/stats`);
   }
+
+  // ramon: "Testar pergunta" (I-FQ2) — mesma busca do faq_lookup.
+  buscarFaq(assistantId, pergunta) {
+    return axios.get(`${this.url}/${assistantId}/buscar_faq`, {
+      params: { q: pergunta },
+    });
+  }
 }
 
 export default new CaptainAssistant();

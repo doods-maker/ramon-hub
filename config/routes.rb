@@ -66,6 +66,7 @@ Rails.application.routes.draw do
             resources :assistants do
               member do
                 post :playground
+                get :buscar_faq
               end
               collection do
                 get :tools

@@ -11,6 +11,10 @@ class Captain::AssistantPolicy < ApplicationPolicy
     true
   end
 
+  def buscar_faq?
+    true
+  end
+
   def tools?
     @account_user.administrator?
   end
