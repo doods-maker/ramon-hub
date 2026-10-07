@@ -38,10 +38,10 @@ class Ramon::Fluxos::Disparo
     []
   end
 
-  # B4.1: nos gatilhos NA_HORA o evento dispara 2 vezes. Antes dos efeitos, com 'assumido': só os 3 fluxos migrados
+  # B4.1: nos gatilhos NA_HORA o evento dispara 2 vezes. Antes dos efeitos, com 'assumido': só os fluxos migrados
   # (o ensaio vê o lead como estava). Depois dos efeitos, sem 'assumido': só os demais fluxos (veem o lead já mexido, como hoje).
   def self.da_vez?(fluxo, dados)
-    NA_HORA.exclude?(fluxo.gatilho_tipo) || Ramon::Fluxos::Reunioes.migrado?(fluxo) == dados.key?('assumido')
+    NA_HORA.exclude?(fluxo.gatilho_tipo) || Ramon::Fluxos::Migracao.migrado?(fluxo) == dados.key?('assumido')
   end
 
   def self.passa?(fluxo, dados, origem)
@@ -84,10 +84,10 @@ class Ramon::Fluxos::Disparo
 
   private
 
-  def na_hora? = NA_HORA.include?(@fluxo.gatilho_tipo) && Ramon::Fluxos::Reunioes.migrado?(@fluxo)
+  def na_hora? = NA_HORA.include?(@fluxo.gatilho_tipo) && Ramon::Fluxos::Migracao.migrado?(@fluxo)
 
-  # Fluxo migrado do código (B4.1): quem decide se age é o evento ('assumido', lido 1 vez pelo código); os demais, o modo.
-  def sombra? = Ramon::Fluxos::Reunioes.migrado?(@fluxo) ? !@dados['assumido'] : @fluxo.modo == 'sombra'
+  # Fluxo migrado do código (B4+): quem decide se age é o evento ('assumido', lido 1 vez pelo código); os demais, o modo.
+  def sombra? = Ramon::Fluxos::Migracao.migrado?(@fluxo) ? !@dados['assumido'] : @fluxo.modo == 'sombra'
 
   def lead_do_alvo
     case @alvo
