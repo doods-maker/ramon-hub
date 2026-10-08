@@ -43,6 +43,7 @@ export const GATILHOS = [
   { tipo: 'relogio', icone: 'i-lucide-alarm-clock', alvo: 'lead' },
   { tipo: 'manual', icone: 'i-lucide-hand', alvo: 'lead' },
   { tipo: 'horario_conta', icone: 'i-lucide-building-2', alvo: 'conta' },
+  { tipo: 'nota_escrita', icone: 'i-lucide-sticky-note', alvo: 'conversa' },
 ];
 export const gatilhoInfo = tipo => GATILHOS.find(g => g.tipo === tipo);
 

@@ -2255,7 +2255,8 @@
         "evento_advbox": "Evento do ADVBOX",
         "lead_parado": "Lead parado na etapa",
         "relogio": "Todo dia, num horário",
-        "horario_conta": "Horário da conta (a conta toda)"
+        "horario_conta": "Horário da conta (a conta toda)",
+        "nota_escrita": "Nota privada escrita (pela equipe)"
       },
       "PASSOS": {
         "gatilho": "Gatilho",
@@ -2616,7 +2617,12 @@
         "espelho_painel": "Espelho do Painel do Cliente (ADVBOX)",
         "copiloto_noturno": "Copiloto noturno (sugestões no Cockpit)",
         "publicar_pecas": "Publicar no Instagram as peças agendadas",
-        "avisos_painel": "Avisos do Painel do Cliente (e-mail ao cliente)"
+        "avisos_painel": "Avisos do Painel do Cliente (e-mail ao cliente)",
+        "criar_lead": "Criar o lead da conversa (ou ligar ao lead aberto do contato)",
+        "origem_do_lead": "Anotar a origem e o canal do lead",
+        "sugestao_documento": "Sugerir o documento do checklist (a IA lê o anexo)",
+        "coach_objecao": "Coach de objeção (2 respostas do playbook)",
+        "agente_hub": "Avisar o agente do hub (nota arroba claude do Eduardo)"
       },
       "ROTINAS_AJUDA": {
         "dossie_passagem": "O mesmo dossiê do código. Não repete se já há um dos últimos 5 minutos.",
@@ -2630,7 +2636,12 @@
         "espelho_painel": "Copia do ADVBOX processos, andamentos e pedidos de documento de todos os clientes do Painel. Vai para a fila (demora): o passo seguinte não espera terminar.",
         "copiloto_noturno": "Prepara sugestões para até 15 leads parados (rascunho, mover etapa ou alerta), que a equipe aprova no Cockpit. Nada vai ao cliente. Vai para a fila.",
         "publicar_pecas": "Publica no Instagram só as peças já agendadas (com o pode postar) cuja hora chegou. Sem peça vencida, o fluxo nem começa. Falhou: aviso no celular, sem nova tentativa. Vai para a fila.",
-        "avisos_painel": "E-mail DIRETO ao cliente com as novidades do espelho da noite (etapas delicadas nunca) e o resumo da equipe com o WhatsApp pronto. Só com PORTAL_AVISOS ligado — hoje desligado até aprovar os textos."
+        "avisos_painel": "E-mail DIRETO ao cliente com as novidades do espelho da noite (etapas delicadas nunca) e o resumo da equipe com o WhatsApp pronto. Só com PORTAL_AVISOS ligado — hoje desligado até aprovar os textos.",
+        "criar_lead": "O mesmo código de hoje: só em caixa com Criar lead ligado e conversa com contato. Liga a conversa ao lead aberto do mesmo contato ou cria o lead na 1ª etapa do funil. Os números do funil saem daqui.",
+        "origem_do_lead": "Lê o anúncio da Meta que chega com a mensagem e grava origem e canal; sem anúncio e sem assinatura de site, LP ou bio, o canal vira indicação (ou instagram, na caixa do Instagram). Nunca troca um canal já definido. Precisa da mensagem do gatilho.",
+        "sugestao_documento": "A IA compara o anexo com o checklist da tese e grava uma sugestão; quem confirma é a equipe, no painel. Quando casa, nasce o gatilho Documento recebido. IA fora do ar: tenta de novo em 1, 5 e 15 min e depois desiste em silêncio. Precisa da mensagem do gatilho.",
+        "coach_objecao": "Se a mensagem tem objeção e a tese tem playbook, mostra 2 respostas num balão (Usar só coloca o texto no editor). No máximo 1 vez a cada 10 min por conversa; erro = silêncio. Precisa da mensagem do gatilho.",
+        "agente_hub": "Avisa o agente do hub na VPS, que responde como nota privada. Trava fixa: só nota privada que começa com arroba claude, escrita pelo e-mail do Eduardo — nenhuma edição aqui tira isso."
       },
       "TIPOS_TAREFA": {
         "follow_up": "Retorno",

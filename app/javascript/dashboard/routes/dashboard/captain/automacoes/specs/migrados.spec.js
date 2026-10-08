@@ -1,7 +1,7 @@
 // Fluxos que substituem automações do código (B4.1, db/seeds/ramon/fluxos/migrados/*.json):
 // o quadro abre e publica cada um (validação = espelho do Grafo; a etapa o semear põe) e o desenho é fiel ao código.
 import { validar } from '../validar';
-import { REGRAS_ADVBOX, TIPOS_ATIVIDADE, rotinaAlvo } from '../fluxo';
+import { REGRAS_ADVBOX, ROTINAS, TIPOS_ATIVIDADE, rotinaAlvo } from '../fluxo';
 import marcada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_marcada.json';
 import cancelada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_cancelada.json';
 import sla from '../../../../../../../../db/seeds/ramon/fluxos/migrados/sla_primeira_resposta.json';
@@ -16,6 +16,11 @@ import espelhoPainel from '../../../../../../../../db/seeds/ramon/fluxos/migrado
 import copilotoNoturno from '../../../../../../../../db/seeds/ramon/fluxos/migrados/copiloto_noturno.json';
 import publicarPecas from '../../../../../../../../db/seeds/ramon/fluxos/migrados/publicar_pecas.json';
 import avisosPainel from '../../../../../../../../db/seeds/ramon/fluxos/migrados/avisos_painel.json';
+import criarLead from '../../../../../../../../db/seeds/ramon/fluxos/migrados/criar_lead_da_conversa.json';
+import origemLead from '../../../../../../../../db/seeds/ramon/fluxos/migrados/origem_do_lead.json';
+import sugestaoDoc from '../../../../../../../../db/seeds/ramon/fluxos/migrados/sugestao_documento.json';
+import coach from '../../../../../../../../db/seeds/ramon/fluxos/migrados/coach_objecao.json';
+import agente from '../../../../../../../../db/seeds/ramon/fluxos/migrados/agente_hub.json';
 
 const semEtapa = d =>
   validar(d.desenho).filter(
@@ -359,4 +364,27 @@ describe('fluxos migrados: rotinas da conta (B5-conta)', () => {
       avisos_painel: '08:00',
     });
   });
+});
+
+describe('fluxos migrados: leads e conversas (B5-leads)', () => {
+  it.each([
+    ['criar lead', criarLead, 'conversa_criada', 'criar_lead'],
+    ['origem', origemLead, 'mensagem_recebida', 'origem_do_lead'],
+    ['documento', sugestaoDoc, 'mensagem_recebida', 'sugestao_documento'],
+    ['coach', coach, 'mensagem_recebida', 'coach_objecao'],
+    ['agente', agente, 'nota_escrita', 'agente_hub'],
+  ])(
+    '%s: publica; gatilho certo sem cancelar por etapa; 1 rotina pronta do hub',
+    (_nome, d, gatilho, rotina) => {
+      expect(validar(d.desenho)).toEqual([]);
+      expect(d.desenho.nos[0].config).toEqual({
+        tipo: gatilho,
+        cancelar_se_sair_da_etapa: false,
+      });
+      expect(d.desenho.nos.map(n => n.tipo)).toEqual(['gatilho', 'rotina']);
+      expect(d.desenho.nos[1].config.rotina).toBe(rotina);
+      expect(ROTINAS).toContain(rotina);
+      expect(rotinaAlvo(rotina)).toBe('conversa');
+    }
+  );
 });
