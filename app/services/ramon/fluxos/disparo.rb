@@ -99,6 +99,7 @@ class Ramon::Fluxos::Disparo
     case @alvo
     when Lead then @alvo
     when LeadTask then @alvo.lead
+    when Account then nil # B5: o Horário da conta não tem lead (e o id da conta não é de conversa)
     else @fluxo.account.leads.where(conversation_id: @alvo.id).reorder(id: :desc).first
     end
   end

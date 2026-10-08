@@ -152,4 +152,13 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect(described_class.manual(outro, lead)).to be_nil
     expect(described_class.manual(desligado, lead)).to be_nil
   end
+
+  it 'alvo = a conta (B5): nem lead nem conversa, mesmo com uma conversa de mesmo id' do
+    conversa = create(:conversation, account: account, id: account.id)
+    create(:lead, account: account, conversation_id: conversa.id)
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }, ['parar', {}]))
+    execucao = described_class.new(fluxo, account, {}, nil).iniciar
+    expect([execucao.alvo, execucao.lead, execucao.conversa]).to eq([account, nil, nil])
+    expect(execucao.contexto).not_to have_key('etapa_inicial_id')
+  end
 end
