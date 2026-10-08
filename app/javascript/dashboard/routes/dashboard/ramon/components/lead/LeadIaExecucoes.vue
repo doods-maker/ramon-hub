@@ -26,26 +26,28 @@ const carregar = async () => {
   carregando.value = true;
   erro.value = false;
   try {
-    const [ferramentas, agente] = await Promise.all([
+    const [fer, age] = await Promise.allSettled([
       CaptainToolRunsAPI.list({ lead_id: props.leadId }),
       RamonAgenteExecucoesAPI.list({ lead_id: props.leadId }),
     ]);
-    const catalogo = ferramentas.data.catalogo || [];
+    // uma fonte pode falhar (ex.: agente é só de admin); erro só se as duas falham
+    erro.value = fer.status === 'rejected' && age.status === 'rejected';
+    const catalogo = fer.value?.data.catalogo || [];
     linhas.value = [
-      ...ferramentas.data.items.map(run => ({
+      ...(fer.value?.data.items || []).map(run => ({
         id: `f${run.id}`,
         em: run.created_at,
         status: run.status,
         texto: ferramentaInfo(run.tool_name, catalogo).title,
       })),
-      ...agente.data.items.map(item => ({
+      ...(age.value?.data.items || []).map(item => ({
         id: `a${item.id}`,
         em: item.created_at,
         status: item.status,
         texto: t('INTEL.CASO_IA.AGENTE', { nome: item.pedido }),
       })),
     ]
-      .sort((a, b) => new Date(b.em) - new Date(a.em))
+      .sort((x, y) => new Date(y.em) - new Date(x.em))
       .slice(0, VISIVEIS);
   } catch (e) {
     erro.value = true;

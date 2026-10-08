@@ -68,4 +68,33 @@ describe('LeadIaExecucoes (I-X8)', () => {
     await flushPromises();
     expect(wrapper.text()).toContain('INTEL.CASO_IA.VAZIO');
   });
+
+  it('agente falha: as ferramentas continuam aparecendo', async () => {
+    CaptainToolRunsAPI.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 1,
+            tool_name: 'mover_etapa',
+            status: 'ok',
+            created_at: '2026-10-07T10:00:00Z',
+          },
+        ],
+        catalogo: [],
+      },
+    });
+    RamonAgenteExecucoesAPI.list.mockRejectedValue(new Error('403'));
+    const wrapper = mount(LeadIaExecucoes, { props: { leadId: 12 } });
+    await flushPromises();
+    expect(wrapper.findAll('[data-testid="caso-ia-linha"]')).toHaveLength(1);
+    expect(wrapper.text()).not.toContain('INTEL.CASO_IA.ERRO');
+  });
+
+  it('as duas falham: erro', async () => {
+    CaptainToolRunsAPI.list.mockRejectedValue(new Error('500'));
+    RamonAgenteExecucoesAPI.list.mockRejectedValue(new Error('500'));
+    const wrapper = mount(LeadIaExecucoes, { props: { leadId: 12 } });
+    await flushPromises();
+    expect(wrapper.text()).toContain('INTEL.CASO_IA.ERRO');
+  });
 });
