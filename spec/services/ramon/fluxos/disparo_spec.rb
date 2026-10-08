@@ -186,4 +186,21 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect(described_class.call('nota_escrita', conversa, { 'assumido' => true, 'migracao' => 'agente' }).map(&:fluxo)).to eq([migrado])
     expect(described_class.call('nota_escrita', conversa, { 'texto' => 'oi' }).map(&:fluxo)).to eq([comum])
   end
+
+  it 'alvo de fora do funil (B5): a execução é do próprio registro, sem lead nem etapa — mesmo com id igual ao de uma conversa' do
+    lead # o lead da conversa existe
+    chegada = account.chegadas.create!(id: conversa.id, criado_por: create(:user, account: account),
+                                       destinatario: create(:user, account: account), cliente_nome: 'Maria')
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'chegada_cliente' }, nota))
+    described_class.call('chegada_cliente', chegada)
+    execucao = fluxo.execucoes.sole
+    expect([execucao.alvo, execucao.lead, execucao.contexto['etapa_inicial_id']]).to eq([chegada, nil, nil])
+  end
+
+  it 'assinatura do Painel (B5): a conta vem do cliente do Painel' do
+    assinatura = create(:portal_assinatura, portal_cliente: create(:portal_cliente, account: account))
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'assinatura_painel' }, nota))
+    described_class.call('assinatura_painel', assinatura)
+    expect(fluxo.execucoes.sole).to have_attributes(account_id: account.id, alvo_type: 'PortalAssinatura')
+  end
 end

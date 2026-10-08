@@ -106,14 +106,7 @@ class Ramon::Fluxos::Disparo
   # Fluxo migrado do código (B4+): quem decide se age é o evento ('assumido', lido 1 vez pelo código); os demais, o modo.
   def sombra? = Ramon::Fluxos::Migracao.migrado?(@fluxo) ? !@dados['assumido'] : @fluxo.modo == 'sombra'
 
-  def lead_do_alvo
-    case @alvo
-    when Lead then @alvo
-    when LeadTask then @alvo.lead
-    when Account then nil # B5: o Horário da conta não tem lead (e o id da conta não é de conversa)
-    else @fluxo.account.leads.where(conversation_id: @alvo.id).reorder(id: :desc).first
-    end
-  end
+  def lead_do_alvo = FluxoExecucao.lead_de(@alvo) # B5: só lead, tarefa, reunião e conversa têm lead
 
   # Sem isto, em modo normal o índice único barraria o ciclo novo e os lembretes seguiriam o horário antigo.
   # ponytail: só 'esperando' — uma execução 'rodando' (milissegundos entre passos) ainda barra a nova.
