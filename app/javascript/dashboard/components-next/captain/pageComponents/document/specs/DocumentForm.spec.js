@@ -37,6 +37,17 @@ describe('DocumentForm.vue', () => {
     expect(wrapper.emitted('submit')).toBeUndefined();
   });
 
+  it('link avisa que lê as páginas ligadas; colar texto não (I-DO4)', async () => {
+    const wrapper = montar();
+    expect(wrapper.find('[data-testid="documento-link-aviso"]').exists()).toBe(
+      true
+    );
+    await wrapper.find('[data-testid="documento-modo-texto"]').trigger('click');
+    expect(wrapper.find('[data-testid="documento-link-aviso"]').exists()).toBe(
+      false
+    );
+  });
+
   it('link continua igual: usa o link como nome quando o nome fica vazio', async () => {
     const wrapper = montar();
     await wrapper
