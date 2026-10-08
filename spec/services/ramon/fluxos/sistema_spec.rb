@@ -86,4 +86,10 @@ RSpec.describe Ramon::Fluxos::Sistema do
       travel_to(sp('2026-10-06 09:00')) { expect(described_class.hoje(account, 'lead_ganho')).to eq(0) }
     end
   end
+
+  it 'as 5 regras de dado são "regra fixa" (ficam no código, decisão do Eduardo 07/10)' do
+    account = create(:account)
+    fixas = described_class.desenhos.keys.select { |chave| described_class.extras(account, chave)[:fixa] }
+    expect(fixas).to eq(%w[contrato_limpo contrato_limpo_cancelado docs_completos historico_do_lead sdr_automatico])
+  end
 end

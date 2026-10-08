@@ -338,6 +338,15 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
           <i class="i-lucide-triangle-alert size-3" />
           {{ t(`${K}.SISTEMA.ALCANCE.${fluxo.alcance}`) }}
         </span>
+        <span
+          v-if="somenteLeitura && fluxo.fixa"
+          data-testid="sistema-fixa"
+          :class="[CHIP, TOM.slate]"
+          class="shrink-0 font-mono"
+          :title="t(`${K}.SISTEMA.FIXA_DICA`)"
+        >
+          {{ t(`${K}.SELO.REGRA_FIXA`) }}
+        </span>
 
         <div class="ml-auto flex items-center gap-2">
           <span

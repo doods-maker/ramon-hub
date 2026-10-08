@@ -2194,7 +2194,8 @@
         "ALCANCE": {
           "fala_com_cliente": "fala com o cliente",
           "publica": "publica"
-        }
+        },
+        "FIXA_DICA": "Regra de dado do hub: fica no código de propósito e não vira fluxo editável."
       },
       "RODAR": {
         "ITEM": "Rodar fluxo…",
@@ -2231,7 +2232,8 @@
         "FALHOU": "{n} falhou",
         "DESLIGADO": "desligado",
         "NO_CODIGO": "roda no código",
-        "SOMBRA": "em sombra"
+        "SOMBRA": "em sombra",
+        "REGRA_FIXA": "regra fixa (fica no código)"
       },
       "GATILHOS": {
         "conversa_criada": "Nova conversa",

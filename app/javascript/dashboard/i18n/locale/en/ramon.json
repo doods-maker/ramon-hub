@@ -2189,7 +2189,8 @@
         "ALCANCE": {
           "fala_com_cliente": "talks to the client",
           "publica": "publishes"
-        }
+        },
+        "FIXA_DICA": "Hub data rule: stays in code on purpose and does not become an editable flow."
       },
       "RODAR": {
         "ITEM": "Run flow…",
@@ -2226,7 +2227,8 @@
         "FALHOU": "{n} failed",
         "DESLIGADO": "off",
         "NO_CODIGO": "runs in code",
-        "SOMBRA": "shadow"
+        "SOMBRA": "shadow",
+        "REGRA_FIXA": "fixed rule (stays in code)"
       },
       "GATILHOS": {
         "conversa_criada": "New conversation",
