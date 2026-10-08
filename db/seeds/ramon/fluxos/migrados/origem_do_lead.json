@@ -1,0 +1,13 @@
+{
+  "nome": "Origem do lead",
+  "descricao": "Migrado do código (B5). Mensagem do cliente numa conversa com lead, quando há o que anotar (anúncio da Meta na mensagem, ou canal ainda não descoberto) → grava a origem e o canal: anúncio da Meta (com o anúncio guardado no lead), assinatura de site/LP/bio, instagram (caixa do Instagram) ou indicação. Nunca troca um canal já definido. Roda na hora, antes dos outros fluxos de mensagem recebida. Se este fluxo não começar, o código anota, como antes.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"Anota a origem e o canal do lead","rotina":"origem_do_lead"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

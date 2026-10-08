@@ -310,13 +310,18 @@ describe('erros do back e caminho aceso', () => {
 });
 
 describe('rotinas prontas (registro por plano, B5)', () => {
-  it('as 5 de lead da B4.4 + as 7 da conta (rotinas/conta.js)', () => {
+  it('as 5 de lead da B4.4 + as 5 de leads/conversas + as 7 da conta', () => {
     expect(rotinasPara('lead')).toEqual([
       'dossie_passagem',
       'pesquisa_nps',
       'pesquisa_nps_exito',
       'abrir_caso_advbox',
       'concluir_tarefas',
+      'criar_lead',
+      'origem_do_lead',
+      'sugestao_documento',
+      'coach_objecao',
+      'agente_hub',
     ]);
     expect(rotinasPara('conta')).toEqual([
       'resumo_do_dia',

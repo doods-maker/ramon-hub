@@ -49,4 +49,65 @@ RSpec.describe Ramon::Fluxos::Migracao do
     end
     expect(described_class.migrado?(Fluxo.new(origem: 'usuario', sistema_chave: 'eventos_advbox'))).to be(true)
   end
+
+  it 'leads e conversas (B5-leads): 5 migrações, cada uma com a sua chave e o seu gatilho' do
+    esperado = {
+      'criar_lead' => ['RAMON_FLUXO_CRIAR_LEAD', { 'criar_lead_da_conversa' => 'conversa_criada' }],
+      'origem_lead' => ['RAMON_FLUXO_ORIGEM_LEAD', { 'origem_do_lead' => 'mensagem_recebida' }],
+      'sugestao_doc' => ['RAMON_FLUXO_SUGESTAO_DOC', { 'sugestao_documento' => 'mensagem_recebida' }],
+      'coach' => ['RAMON_FLUXO_COACH', { 'coach_objecao' => 'mensagem_recebida' }],
+      'agente' => ['RAMON_FLUXO_AGENTE', { 'agente_hub' => 'nota_escrita' }]
+    }
+    expect(esperado.keys.index_with { |g| [described_class.grupo(g)[:env], described_class.gatilhos(g)] }).to eq(esperado)
+  end
+
+  it 'leads e conversas (B5-leads): criar = 1 fluxo por grupo, em sombra, ligado, publicado, gatilho certo e 1 rotina pronta' do
+    rotinas = { 'criar_lead' => 'criar_lead', 'origem_lead' => 'origem_do_lead', 'sugestao_doc' => 'sugestao_documento',
+                'coach' => 'coach_objecao', 'agente' => 'agente_hub' }
+    rotinas.each do |grupo, rotina|
+      fluxo = described_class.semear(account, grupo).sole
+      expect(described_class.semear(account, grupo)).to eq([fluxo])
+      gatilho = described_class.gatilhos(grupo).values.sole
+      expect([fluxo.origem, fluxo.modo, fluxo.ativo, fluxo.gatilho_tipo]).to eq(['usuario', 'sombra', true, gatilho])
+      nos = fluxo.versao_publicada.grafo['nos']
+      expect([nos.first.dig('config', 'cancelar_se_sair_da_etapa'), nos.filter_map { |n| n.dig('config', 'rotina') }]).to eq([false, [rotina]])
+    end
+  end
+
+  describe '.decidir (B5-leads): a decisão do evento, lida uma vez, com reserva' do
+    let(:conversa) { create(:conversation, account: account) }
+    let(:fluxo) do
+      fluxo_publicado(account, grafo_linear({ 'tipo' => 'mensagem_recebida' }, ['parar', {}]), sistema_chave: 'coach_objecao', modo: 'normal')
+    end
+
+    it 'código no comando (chave desligada): o bloco roda e o fluxo do grupo só ensaia' do
+      fluxo
+      expect { |b| described_class.decidir('coach', 'mensagem_recebida', conversa, {}, &b) }.to yield_control.once
+      expect(fluxo.execucoes.sole.ensaio).to be(true)
+    end
+
+    it 'fluxo no comando que pegou o evento: o bloco não roda (nunca em dobro)' do
+      fluxo
+      with_modified_env(RAMON_FLUXO_COACH: 'on') do
+        expect { |b| described_class.decidir('coach', 'mensagem_recebida', conversa, {}, &b) }.not_to yield_control
+      end
+      expect(fluxo.execucoes.sole.ensaio).to be(false)
+    end
+
+    it 'fluxo no comando que NÃO pegou o evento (ocupado com a mesma conversa): o bloco roda (reserva, nunca nenhum)' do
+      fluxo.execucoes.create!(account: account, alvo: conversa, status: 'esperando', retomar_em: 5.minutes.from_now)
+      with_modified_env(RAMON_FLUXO_COACH: 'on') do
+        expect { |b| described_class.decidir('coach', 'mensagem_recebida', conversa, {}, &b) }.to yield_control.once
+      end
+      expect(fluxo.execucoes.count).to eq(1)
+    end
+
+    it 'motor com erro: o bloco roda (o Disparo.externo engole o erro e devolve [])' do
+      allow(Ramon::Fluxos::Disparo).to receive(:call).and_raise(StandardError, 'motor')
+      with_modified_env(RAMON_FLUXO_COACH: 'on') do
+        fluxo
+        expect { |b| described_class.decidir('coach', 'mensagem_recebida', conversa, {}, &b) }.to yield_control.once
+      end
+    end
+  end
 end

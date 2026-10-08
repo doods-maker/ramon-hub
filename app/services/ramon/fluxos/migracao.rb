@@ -102,4 +102,13 @@ module Ramon::Fluxos::Migracao
   def com_etapa(desenho, etapa_id)
     desenho.merge('nos' => desenho['nos'].map { |n| n['tipo'] == 'mover_etapa' ? n.deep_merge('config' => { 'etapa_id' => etapa_id }) : n })
   end
+
+  # B5-leads: a decisão de um evento, lida UMA vez — dispara os fluxos migrados do grupo com 'assumido' (só eles ouvem;
+  # 'migracao' separa grupos que dividem o gatilho) e roda o código (o bloco) se o fluxo não está no comando OU não pegou
+  # este evento (reserva: ocupado com o mesmo alvo, filtro editado, erro do motor). Nunca em dobro, nunca nenhum.
+  def decidir(nome, gatilho, alvo, dados = {})
+    assumido = assumiu?(alvo.account, nome)
+    feitas = Ramon::Fluxos::Disparo.externo(gatilho, alvo, dados.merge('assumido' => assumido, 'migracao' => nome))
+    yield unless assumido && feitas.any?
+  end
 end

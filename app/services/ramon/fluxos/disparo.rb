@@ -11,10 +11,15 @@ class Ramon::Fluxos::Disparo
   # a execução vive só enquanto roda, então dois eventos seguidos do mesmo lead quase nunca se barram no índice único.
   # Só os migrados: fluxo comum nesses gatilhos segue pelo job, como sempre.
   NA_HORA = %w[reuniao_marcada reuniao_cancelada evento_advbox].freeze
+  # B5-leads: fluxos migrados que rodam na hora pela CHAVE do fluxo (não pelo gatilho — o SLA, o coach e a sugestão de
+  # documento dividem os gatilhos e seguem pelo job): o lead criado e a origem gravada precisam existir antes do SLA e
+  # dos fluxos comuns do mesmo evento — a ordem de sempre.
+  NA_HORA_CHAVES = %w[criar_lead_da_conversa origem_do_lead].freeze
   # B4.1/B4.2/B4.4: gatilhos que o código dispara 2 vezes — com 'assumido' (a decisão do evento) só os fluxos migrados ouvem;
   # sem (o ouvinte de sempre), só os demais. conversa_criada: o RamonLeadListener manda a decisão do SLA da 1ª resposta;
   # lead_ganho: o callback do Lead (Ramon::Fluxos::LeadGanho) manda com, o RamonFluxoListener sem.
-  DUAS_VEZES = (NA_HORA + %w[conversa_criada lead_ganho]).freeze
+  # B5-leads: mensagem_recebida (origem, documento, coach) e nota_escrita (agente); 'migracao' no evento separa os grupos.
+  DUAS_VEZES = (NA_HORA + %w[conversa_criada lead_ganho mensagem_recebida nota_escrita]).freeze
 
   def self.call(gatilho_tipo, alvo, dados = {}, origem: nil)
     account = alvo.account
@@ -44,10 +49,14 @@ class Ramon::Fluxos::Disparo
     []
   end
 
-  # Nos gatilhos DUAS_VEZES: com 'assumido' só os migrados; sem, só os demais. Em reuniao_marcada/cancelada o disparo
-  # com 'assumido' vem antes dos efeitos do código (o ensaio vê o lead como estava).
+  # Nos gatilhos DUAS_VEZES: com 'assumido' só os migrados (B5: do grupo que decidiu, quando o evento diz 'migracao' — vários
+  # grupos dividem conversa_criada e mensagem_recebida); sem, só os demais. Em reuniao_marcada/cancelada o disparo com
+  # 'assumido' vem antes dos efeitos do código (o ensaio vê o lead como estava).
   def self.da_vez?(fluxo, dados)
-    DUAS_VEZES.exclude?(fluxo.gatilho_tipo) || Ramon::Fluxos::Migracao.migrado?(fluxo) == dados.key?('assumido')
+    return true if DUAS_VEZES.exclude?(fluxo.gatilho_tipo)
+    return !dados.key?('assumido') unless Ramon::Fluxos::Migracao.migrado?(fluxo)
+
+    dados.key?('assumido') && (dados['migracao'].nil? || Ramon::Fluxos::Migracao.gatilhos(dados['migracao']).key?(fluxo.sistema_chave))
   end
 
   def self.passa?(fluxo, dados, origem)
@@ -90,7 +99,9 @@ class Ramon::Fluxos::Disparo
 
   private
 
-  def na_hora? = NA_HORA.include?(@fluxo.gatilho_tipo) && Ramon::Fluxos::Migracao.migrado?(@fluxo)
+  def na_hora?
+    (NA_HORA.include?(@fluxo.gatilho_tipo) || NA_HORA_CHAVES.include?(@fluxo.sistema_chave)) && Ramon::Fluxos::Migracao.migrado?(@fluxo)
+  end
 
   # Fluxo migrado do código (B4+): quem decide se age é o evento ('assumido', lido 1 vez pelo código); os demais, o modo.
   def sombra? = Ramon::Fluxos::Migracao.migrado?(@fluxo) ? !@dados['assumido'] : @fluxo.modo == 'sombra'

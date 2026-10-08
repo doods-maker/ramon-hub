@@ -14,11 +14,16 @@ class RamonFluxoListener < BaseListener
     disparar('conversa_atribuida', event.data[:conversation], event)
   end
 
+  # Mensagem do cliente → mensagem_recebida; nota privada de alguém da equipe (B5-leads) → nota_escrita. Notas escritas
+  # pelos fluxos não têm autor (Passos::Conversa#escrever) e não disparam nada. mensagem_id: as rotinas prontas leem a mensagem.
   def message_created(event)
     message = event.data[:message]
-    return unless message.incoming? && !message.private?
-
-    disparar('mensagem_recebida', message.conversation, event, 'texto' => message.content.to_s.truncate(500))
+    dados = { 'texto' => message.content.to_s.truncate(500), 'mensagem_id' => message.id }
+    if message.incoming? && !message.private?
+      disparar('mensagem_recebida', message.conversation, event, dados)
+    elsif message.private? && message.sender.is_a?(User)
+      disparar('nota_escrita', message.conversation, event, dados)
+    end
   end
 
   def lead_created(event) = disparar('lead_criado', event.data[:lead], event)

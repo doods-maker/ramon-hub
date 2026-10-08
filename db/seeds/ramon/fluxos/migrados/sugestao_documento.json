@@ -1,0 +1,13 @@
+{
+  "nome": "Sugestão de documento",
+  "descricao": "Migrado do código (B5). Cliente manda um anexo (imagem ou arquivo) numa conversa com lead → a IA compara com o checklist da tese e grava uma sugestão; quem confirma é a equipe, no painel. Quando casa, nasce o gatilho Documento recebido. IA fora do ar: tenta de novo em 1, 5 e 15 min e depois desiste em silêncio. Vários anexos de uma vez: o que chega enquanto este roda é feito pelo código (nada se perde).",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"IA sugere o item do checklist (a equipe confirma)","rotina":"sugestao_documento"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

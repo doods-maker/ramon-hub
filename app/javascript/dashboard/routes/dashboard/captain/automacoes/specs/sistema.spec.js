@@ -131,7 +131,7 @@ describe('fluxos do sistema', () => {
     titulos.forEach(t => expect(t).not.toMatch(/24h/));
   });
 
-  it('as 5 regras de dado são regra fixa (decisão do Eduardo 07/10)', () => {
+  it('as 5 regras de dado e as etiquetas são regra fixa (decisão do Eduardo 07/10)', () => {
     expect(
       DESENHOS.filter(([, d]) => d.fixa)
         .map(([chave]) => chave)
@@ -140,6 +140,7 @@ describe('fluxos do sistema', () => {
       'contrato_limpo',
       'contrato_limpo_cancelado',
       'docs_completos',
+      'etiquetas_etapa_tese',
       'historico_do_lead',
       'sdr_automatico',
     ]);
