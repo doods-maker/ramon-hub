@@ -2,6 +2,7 @@
 # do doc (o payload do webhook não é a verdade) e grava o selo assinado/recusado
 # em custom_attributes['zapsign'] + histórico + sino. NUNCA marca o lead como
 # ganho: ganho dispara AdvBox/Drive/NPS e continua sendo decisão do closer.
+# Histórico e sino: pelo código ou pelo fluxo (B5).
 class Ramon::ZapsignLeadStatusJob < ApplicationJob
   queue_as :low
   retry_on Ramon::ZapsignClient::UnavailableError, wait: :polynomially_longer, attempts: 5
@@ -23,8 +24,9 @@ class Ramon::ZapsignLeadStatusJob < ApplicationJob
 
     zapsign = lead.custom_attributes['zapsign'].merge('status' => doc['status'], chave => data_do_evento(doc))
     lead.update!(custom_attributes: lead.custom_attributes.merge('zapsign' => zapsign))
-    self.class.avisar(lead, doc['status'])
-    Ramon::Fluxos::Disparo.externo(gatilho, lead)
+    # B5: o selo acima é o evento em si (e a trava contra repetir). Histórico e sino: pelo código ou pelo fluxo
+    # "Contrato assinado/recusado no ZapSign" (RAMON_FLUXO_CONTRATO_ZAPSIGN); os fluxos comuns do gatilho, como sempre.
+    Ramon::Fluxos::Externos.evento('contrato_zapsign', gatilho, lead) { self.class.avisar(lead, doc['status']) }
   end
 
   # Público (B5): a rotina "aviso_contrato" do fluxo chama o mesmo — histórico + sino para todos da conta.
