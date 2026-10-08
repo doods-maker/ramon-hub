@@ -46,8 +46,7 @@ module Ramon::Fluxos::Rotinas::Leads
     return feito('faria: anotar a origem e o canal do lead (anúncio da Meta, site/LP/bio, instagram ou indicação)') if ctx.ensaio?
 
     lead = Ramon::Fluxos::Passos::Lead.exigir_lead(ctx)
-    Ramon::LeadDaConversa.origem(lead, mensagem!(ctx))
-    lead.reload
+    Ramon::LeadDaConversa.origem(lead, mensagem!(ctx)) # update! no mesmo objeto: sem reload
     quieto("origem do lead: canal #{lead.channel}#{", origem #{lead.source}" if lead.source.present?}")
   end
 
@@ -56,7 +55,7 @@ module Ramon::Fluxos::Rotinas::Leads
 
     msg = mensagem!(ctx)
     Ramon::DocMatchJob.new.perform(msg.id)
-    casou = ctx.lead&.reload&.custom_attributes&.dig('doc_sugestao', 'message_id') == msg.id
+    casou = sugeriu?(ctx.lead, msg)
     quieto(casou ? 'a IA sugeriu um documento do checklist (a equipe confirma no painel)' : 'a IA não reconheceu o anexo no checklist pendente')
   rescue *PASSAGEIROS => e
     raise if ctx.execucao.tentativas < Ramon::Fluxos::Executor::ESPERAS_ERRO.size
@@ -80,6 +79,9 @@ module Ramon::Fluxos::Rotinas::Leads
     Ramon::AgenteNotifyJob.new.perform(msg.id)
     quieto('avisou o agente do hub (a resposta chega como nota privada)')
   end
+
+  # A IA casou ESTA mensagem com um item do checklist (DocMatchService grava doc_sugestao.message_id).
+  def sugeriu?(lead, msg) = lead&.reload&.custom_attributes&.dig('doc_sugestao', 'message_id') == msg.id
 
   def feito(resumo) = { saida: 's', resumo: resumo }
 
