@@ -9,6 +9,8 @@ class Api::V1::Accounts::RamonAgenteExecucoesController < Api::V1::Accounts::Bas
 
   def index
     execucoes = visiveis.includes(:lead, :conversation).order(created_at: :desc, id: :desc).limit(LIMITE)
+    # I-X8: "o que a IA fez neste caso" (painel do lead)
+    execucoes = execucoes.where(lead_id: params[:lead_id]) if params[:lead_id].present?
     render json: { resumo: resumo, items: execucoes.map { |execucao| linha(execucao) } }
   end
 

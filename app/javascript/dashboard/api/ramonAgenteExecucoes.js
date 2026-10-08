@@ -7,8 +7,8 @@ class RamonAgenteExecucoesAPI extends ApiClient {
     super('ramon_agente_execucoes', { accountScoped: true });
   }
 
-  list() {
-    return axios.get(this.url);
+  list(params = {}) {
+    return axios.get(this.url, { params });
   }
 }
 

@@ -40,16 +40,32 @@ const error = ref(false);
 const filtroTool = ref('');
 const filtroStatus = ref('');
 const aberto = ref(null);
+const periodo = ref('');
+const linhas = ref([]);
+const carregandoMais = ref(false);
+const PERIODOS = [
+  { valor: '', rotulo: 'INTEL.EXECUCOES.PERIODO.TUDO' },
+  { valor: 'hoje', rotulo: 'INTEL.EXECUCOES.PERIODO.HOJE' },
+  { valor: '7d', rotulo: 'INTEL.EXECUCOES.PERIODO.D7' },
+  { valor: '30d', rotulo: 'INTEL.EXECUCOES.PERIODO.D30' },
+];
+
+const montarParams = antesDe => {
+  const params = {};
+  if (filtroTool.value) params.tool_name = filtroTool.value;
+  if (filtroStatus.value) params.status = filtroStatus.value;
+  if (periodo.value) params.periodo = periodo.value;
+  if (antesDe) params.antes_de = antesDe;
+  return params;
+};
 
 const fetchData = async () => {
   loading.value = true;
   error.value = false;
   try {
-    const params = {};
-    if (filtroTool.value) params.tool_name = filtroTool.value;
-    if (filtroStatus.value) params.status = filtroStatus.value;
-    const response = await CaptainToolRunsAPI.list(params);
+    const response = await CaptainToolRunsAPI.list(montarParams());
     data.value = response.data;
+    linhas.value = response.data.items;
   } catch (e) {
     error.value = true;
   } finally {
@@ -58,8 +74,30 @@ const fetchData = async () => {
 };
 onMounted(fetchData);
 
+// I-EX3: mais 100, a partir da última linha, com os mesmos filtros.
+const carregarMais = async () => {
+  carregandoMais.value = true;
+  try {
+    const { data: pagina } = await CaptainToolRunsAPI.list(
+      montarParams(linhas.value[linhas.value.length - 1].id)
+    );
+    linhas.value = [...linhas.value, ...pagina.items];
+    data.value = { ...data.value, mais: pagina.mais };
+  } catch (e) {
+    error.value = true;
+  } finally {
+    carregandoMais.value = false;
+  }
+};
+
+// I-EX5: atalho "só erros de hoje".
+const soErrosDeHoje = () => {
+  filtroStatus.value = 'erro';
+  periodo.value = 'hoje';
+  fetchData();
+};
+
 const resumo = computed(() => data.value?.resumo ?? {});
-const items = computed(() => data.value?.items ?? []);
 const tools = computed(() => resumo.value.tools ?? []);
 const catalogo = computed(() => data.value?.catalogo ?? []);
 const ferramenta = id => ferramentaInfo(id, catalogo.value);
@@ -182,13 +220,37 @@ const linhaTempo = run => `${fmtHora(run.created_at)} · ${run.duration_ms}ms`;
                 {{ t('INTEL.EXECUCOES.STATUS.erro') }}
               </option>
             </select>
+            <select
+              v-model="periodo"
+              data-testid="execucoes-periodo"
+              class="!w-44"
+              :class="SELECT"
+              @change="fetchData"
+            >
+              <option
+                v-for="item in PERIODOS"
+                :key="item.valor"
+                :value="item.valor"
+              >
+                {{ t(item.rotulo) }}
+              </option>
+            </select>
+            <button
+              type="button"
+              data-testid="execucoes-so-erros-hoje"
+              class="hover:brightness-110"
+              :class="[CHIP, TOM.ruby]"
+              @click="soErrosDeHoje"
+            >
+              {{ t('INTEL.EXECUCOES.SO_ERROS_HOJE') }}
+            </button>
           </div>
 
           <p v-if="loading" class="mt-6 text-sm text-n-slate-10">
             {{ t('CAPTAIN_RAMON.LOADING') }}
           </p>
           <p
-            v-else-if="!items.length"
+            v-else-if="!linhas.length"
             data-testid="execucoes-vazio"
             class="mt-6 text-sm text-n-slate-10"
           >
@@ -197,7 +259,7 @@ const linhaTempo = run => `${fmtHora(run.created_at)} · ${run.duration_ms}ms`;
 
           <ul v-else class="flex flex-col gap-2 mt-4 list-none">
             <li
-              v-for="run in items"
+              v-for="run in linhas"
               :key="run.id"
               data-testid="execucoes-linha"
               :class="CARTAO"
@@ -269,6 +331,17 @@ const linhaTempo = run => `${fmtHora(run.created_at)} · ${run.duration_ms}ms`;
               </div>
             </li>
           </ul>
+          <button
+            v-if="data?.mais && linhas.length"
+            type="button"
+            data-testid="execucoes-mais"
+            class="mt-3"
+            :class="LINK"
+            :disabled="carregandoMais"
+            @click="carregarMais"
+          >
+            {{ t('INTEL.EXECUCOES.CARREGAR_MAIS') }}
+          </button>
         </template>
       </template>
     </div>
