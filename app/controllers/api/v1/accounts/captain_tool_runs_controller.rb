@@ -33,9 +33,12 @@ class Api::V1::Accounts::CaptainToolRunsController < Api::V1::Accounts::BaseCont
   def escopo
     runs = Captain::ToolRun.fora_de_teste.where(account_id: Current.account.id)
     FILTROS.each { |campo| runs = runs.where(campo => params[campo]) if params[campo].present? }
-    runs = runs.where(created_at: PERIODOS[params[:periodo]].call) if PERIODOS.key?(params[:periodo])
-    params[:antes_de].present? ? runs.where(id: ...params[:antes_de].to_i) : runs
+    pagina(periodo(runs))
   end
+
+  def periodo(runs) = PERIODOS.key?(params[:periodo]) ? runs.where(created_at: PERIODOS[params[:periodo]].call) : runs
+
+  def pagina(runs) = params[:antes_de].present? ? runs.where(id: ...params[:antes_de].to_i) : runs
 
   # I-EX2: nome do caso, nº da conversa (o que a rota da tela usa) e assistente
   # de cada linha — 3 consultas para as 100 linhas.
