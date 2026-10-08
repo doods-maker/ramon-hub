@@ -2252,7 +2252,8 @@
         "documento_recebido": "Documento recebido (checklist)",
         "evento_advbox": "Evento do ADVBOX",
         "lead_parado": "Lead parado na etapa",
-        "relogio": "Todo dia, num horário"
+        "relogio": "Todo dia, num horário",
+        "horario_conta": "Horário da conta (a conta toda)"
       },
       "PASSOS": {
         "gatilho": "Gatilho",
@@ -2375,7 +2376,8 @@
         "EXECUCOES": "Execuções recentes",
         "SEM_EXECUCOES": "Nenhuma execução ainda. Use Testar com um lead… para ver o caminho.",
         "SELECIONE": "Clique num passo para configurar.",
-        "COMO_RODA": "Como roda hoje"
+        "COMO_RODA": "Como roda hoje",
+        "TESTAR_CONTA": "Testar na conta…"
       },
       "NO": {
         "SAI_RASCUNHO": "sai como rascunho",
@@ -2387,7 +2389,8 @@
         "AS_HORA": "todo dia a partir de {quando}",
         "QUALQUER_EVENTO": "qualquer evento",
         "ANTES_DA_REUNIAO": "{tempo} antes da reunião",
-        "DESDE_CONVERSA": "{tempo} depois da criação da conversa"
+        "DESDE_CONVERSA": "{tempo} depois da criação da conversa",
+        "A_CADA": "a cada {n} min"
       },
       "PAINEL": {
         "ROTULO": "Nome do passo (opcional)",
@@ -2521,7 +2524,13 @@
         "REGRAS": "Só nestes eventos",
         "REGRAS_AJUDA": "Nenhum marcado = qualquer evento reconhecido.",
         "REUNIAO_AJUDA": "Vale para o Cal.com e para o painel do lead. Remarcar conta como marcada.",
-        "DOCUMENTO_AJUDA": "Quando a IA casa um anexo com um item do checklist. A confirmação continua com a equipe."
+        "DOCUMENTO_AJUDA": "Quando a IA casa um anexo com um item do checklist. A confirmação continua com a equipe.",
+        "CONTA_QUANDO": "Quando roda",
+        "CONTA_UMA_VEZ": "Uma vez por dia",
+        "CONTA_INTERVALO": "A cada N minutos",
+        "CONTA_MINUTOS": "A cada quantos minutos (1 a 1440)",
+        "CONTA_DIAS": "Em que dias",
+        "CONTA_AJUDA": "Roda para a conta toda (não para um lead). Horário de São Paulo. Um fluxo novo começa no próximo horário."
       },
       "ACOES_CHATWOOT": {
         "add_label": "Pôr etiqueta",
@@ -2598,14 +2607,28 @@
         "pesquisa_nps": "Pesquisa NPS do ganho (rascunho, 1 vez só)",
         "pesquisa_nps_exito": "Pesquisa NPS do êxito (rascunho, 1 vez só)",
         "abrir_caso_advbox": "Abrir o caso no ADVBOX (cliente, processo e tarefa 1º contato)",
-        "concluir_tarefas": "Concluir as tarefas abertas do lead"
+        "concluir_tarefas": "Concluir as tarefas abertas do lead",
+        "resumo_do_dia": "Resumo do dia (push e e-mail de gestão)",
+        "retrato_funil": "Retrato do funil (para os relatórios)",
+        "fechamento_extrato": "Fechamento do extrato da variável",
+        "espelho_painel": "Espelho do Painel do Cliente (ADVBOX)",
+        "copiloto_noturno": "Copiloto noturno (sugestões no Cockpit)",
+        "publicar_pecas": "Publicar no Instagram as peças agendadas",
+        "avisos_painel": "Avisos do Painel do Cliente (e-mail ao cliente)"
       },
       "ROTINAS_AJUDA": {
         "dossie_passagem": "O mesmo dossiê do código. Não repete se já há um dos últimos 5 minutos.",
         "pesquisa_nps": "Rascunho nas notas do lead, com o texto e o link do Google de sempre. Pede uma vez só por lead (a do êxito é outra).",
         "pesquisa_nps_exito": "Rascunho nas notas do lead, com o texto e o link do Google de sempre. Pede uma vez só por lead (a do ganho é outra).",
         "abrir_caso_advbox": "Grava no ADVBOX de verdade: cliente, processo na etapa CONTRATO FECHADO e a tarefa 1º CONTATO COM O LEAD. Só com o token do ADVBOX; nunca abre o mesmo caso duas vezes; ADVBOX fora do ar, tenta de novo em 1, 5 e 15 min.",
-        "concluir_tarefas": "Conclui todas as tarefas abertas do lead na Esteira."
+        "concluir_tarefas": "Conclui todas as tarefas abertas do lead na Esteira.",
+        "resumo_do_dia": "O mesmo resumo do código: push \"seu dia\" para a equipe (só se o dia tem algo e com o ntfy ligado) e o e-mail de gestão com os números de ontem (só com SMTP).",
+        "retrato_funil": "Guarda a foto do funil do dia (etapas, teses e valores) para os relatórios. Rodar de novo no mesmo dia refaz a foto.",
+        "fechamento_extrato": "No 3º dia útil, fecha o extrato da variável do mês anterior (regulamento §6). Nos outros dias não faz nada; já fechado, não refaz.",
+        "espelho_painel": "Copia do ADVBOX processos, andamentos e pedidos de documento de todos os clientes do Painel. Vai para a fila (demora): o passo seguinte não espera terminar.",
+        "copiloto_noturno": "Prepara sugestões para até 15 leads parados (rascunho, mover etapa ou alerta), que a equipe aprova no Cockpit. Nada vai ao cliente. Vai para a fila.",
+        "publicar_pecas": "Publica no Instagram só as peças já agendadas (com o pode postar) cuja hora chegou. Sem peça vencida, o fluxo nem começa. Falhou: aviso no celular, sem nova tentativa. Vai para a fila.",
+        "avisos_painel": "E-mail DIRETO ao cliente com as novidades do espelho da noite (etapas delicadas nunca) e o resumo da equipe com o WhatsApp pronto. Só com PORTAL_AVISOS ligado — hoje desligado até aprovar os textos."
       },
       "TIPOS_TAREFA": {
         "follow_up": "Retorno",
@@ -2662,7 +2685,12 @@
         "ADVBOX_DESCRICAO": "A movimentação precisa de pelo menos 10 letras.",
         "WEBHOOK_HTTPS": "O endereço precisa começar com https.",
         "WEBHOOK_ULTIMO": "O webhook tem que ser o último passo.",
-        "CAMPO_CHAVE": "Nome do campo só com letras minúsculas, números e _, e diferente dos nomes que o hub já usa (nome, etapa, telefone…)."
+        "CAMPO_CHAVE": "Nome do campo só com letras minúsculas, números e _, e diferente dos nomes que o hub já usa (nome, etapa, telefone…).",
+        "CONTA_QUANDO": "Escolha uma hora ou \"a cada N minutos\" (1 a 1440) e pelo menos um dia.",
+        "CONTA_PASSO": "Este passo precisa de um lead. No Horário da conta só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta.",
+        "ROTINA_DESCONHECIDA": "Rotina desconhecida ({nome}).",
+        "ROTINA_DE_LEAD": "Esta rotina é de um lead: não roda no Horário da conta.",
+        "ROTINA_DA_CONTA": "Esta rotina é da conta toda: só roda no gatilho Horário da conta."
       },
       "TESTAR": {
         "TITULO": "Testar com um lead",
@@ -2676,7 +2704,9 @@
         "RODAR_AJUDA": "Executa a versão publicada neste lead (os textos saem como rascunho).",
         "ERRO": "Não consegui rodar o ensaio.",
         "NAO_RODOU": "Não rodou: o fluxo precisa estar ligado, publicado e dentro do limite do dia.",
-        "CANCELAR": "Cancelar"
+        "CANCELAR": "Cancelar",
+        "TITULO_CONTA": "Testar na conta",
+        "AJUDA_CONTA": "Ensaio na conta toda: as rotinas só dizem o que fariam — nada é executado."
       },
       "EXECUCAO": {
         "TITULO": "Execução #{id}",

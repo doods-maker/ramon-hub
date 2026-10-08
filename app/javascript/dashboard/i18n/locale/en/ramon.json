@@ -2247,7 +2247,8 @@
         "documento_recebido": "Document received (checklist)",
         "evento_advbox": "ADVBOX event",
         "lead_parado": "Lead stalled in stage",
-        "relogio": "Every day at a set time"
+        "relogio": "Every day at a set time",
+        "horario_conta": "Account schedule (whole account)"
       },
       "PASSOS": {
         "gatilho": "Trigger",
@@ -2370,7 +2371,8 @@
         "EXECUCOES": "Recent runs",
         "SEM_EXECUCOES": "No runs yet. Use Test with a lead… to see the path.",
         "SELECIONE": "Click a step to configure it.",
-        "COMO_RODA": "How it runs today"
+        "COMO_RODA": "How it runs today",
+        "TESTAR_CONTA": "Test on the account…"
       },
       "NO": {
         "SAI_RASCUNHO": "goes out as a draft",
@@ -2382,7 +2384,8 @@
         "AS_HORA": "every day from {quando}",
         "QUALQUER_EVENTO": "any event",
         "ANTES_DA_REUNIAO": "{tempo} before the meeting",
-        "DESDE_CONVERSA": "{tempo} after the conversation was created"
+        "DESDE_CONVERSA": "{tempo} after the conversation was created",
+        "A_CADA": "every {n} min"
       },
       "PAINEL": {
         "ROTULO": "Step name (optional)",
@@ -2516,7 +2519,13 @@
         "REGRAS": "Only these events",
         "REGRAS_AJUDA": "None selected = any recognized event.",
         "REUNIAO_AJUDA": "Works for Cal.com and the lead panel. Rescheduling counts as scheduled.",
-        "DOCUMENTO_AJUDA": "When the AI matches an attachment to a checklist item. Confirmation stays with the team."
+        "DOCUMENTO_AJUDA": "When the AI matches an attachment to a checklist item. Confirmation stays with the team.",
+        "CONTA_QUANDO": "When it runs",
+        "CONTA_UMA_VEZ": "Once a day",
+        "CONTA_INTERVALO": "Every N minutes",
+        "CONTA_MINUTOS": "Every how many minutes (1 to 1440)",
+        "CONTA_DIAS": "On which days",
+        "CONTA_AJUDA": "Runs for the whole account (not for a lead). São Paulo time. A new flow starts at the next scheduled time."
       },
       "ACOES_CHATWOOT": {
         "add_label": "Add label",
@@ -2593,14 +2602,28 @@
         "pesquisa_nps": "NPS survey after the win (draft, once)",
         "pesquisa_nps_exito": "NPS survey after the case success (draft, once)",
         "abrir_caso_advbox": "Open the case in ADVBOX (client, lawsuit and 1st contact task)",
-        "concluir_tarefas": "Complete the open tasks of the lead"
+        "concluir_tarefas": "Complete the open tasks of the lead",
+        "resumo_do_dia": "Daily summary (push and management e-mail)",
+        "retrato_funil": "Funnel snapshot (for reports)",
+        "fechamento_extrato": "Variable pay statement closing",
+        "espelho_painel": "Client Portal mirror (ADVBOX)",
+        "copiloto_noturno": "Night copilot (suggestions in the Cockpit)",
+        "publicar_pecas": "Publish scheduled pieces on Instagram",
+        "avisos_painel": "Client Portal notices (e-mail to the client)"
       },
       "ROTINAS_AJUDA": {
         "dossie_passagem": "The same dossier the code writes. Not repeated if there is one from the last 5 minutes.",
         "pesquisa_nps": "Draft in the lead notes, with the usual text and Google link. Asked once per lead (the success one is separate).",
         "pesquisa_nps_exito": "Draft in the lead notes, with the usual text and Google link. Asked once per lead (the win one is separate).",
         "abrir_caso_advbox": "Writes to ADVBOX for real: client, lawsuit in the CONTRATO FECHADO stage and the 1º CONTATO COM O LEAD task. Only with the ADVBOX token; never opens a case twice; if ADVBOX is down, tries again in 1, 5 and 15 min.",
-        "concluir_tarefas": "Completes every open task of the lead in the pipeline."
+        "concluir_tarefas": "Completes every open task of the lead in the pipeline.",
+        "resumo_do_dia": "The same summary as the code: \"your day\" push to the team (only if the day has something and ntfy is on) and the management e-mail with yesterday's numbers (only with SMTP).",
+        "retrato_funil": "Saves the day's funnel snapshot (stages, theses and values) for reports. Running again on the same day redoes it.",
+        "fechamento_extrato": "On the 3rd business day, closes last month's variable pay statement. On other days it does nothing; once closed, it is not redone.",
+        "espelho_painel": "Copies cases, updates and document requests of all Portal clients from ADVBOX. Goes to the queue (slow): the next step does not wait for it to finish.",
+        "copiloto_noturno": "Prepares suggestions for up to 15 stalled leads (draft, move stage or alert) for the team to approve in the Cockpit. Nothing goes to the client. Goes to the queue.",
+        "publicar_pecas": "Publishes on Instagram only pieces already scheduled (approved to post) whose time has come. With no piece due, the flow does not start. Failed: phone alert, no retry. Goes to the queue.",
+        "avisos_painel": "DIRECT e-mail to the client with the news from the nightly mirror (sensitive stages never) and the team summary with the WhatsApp text ready. Only with PORTAL_AVISOS on — off until the texts are approved."
       },
       "TIPOS_TAREFA": {
         "follow_up": "Follow-up",
@@ -2657,7 +2680,12 @@
         "ADVBOX_DESCRICAO": "The movement needs at least 10 letters.",
         "WEBHOOK_HTTPS": "The address must start with https.",
         "WEBHOOK_ULTIMO": "The webhook must be the last step.",
-        "CAMPO_CHAVE": "Field name only with lowercase letters, numbers and _, and not a name the hub already uses (nome, etapa, telefone…)."
+        "CAMPO_CHAVE": "Field name only with lowercase letters, numbers and _, and not a name the hub already uses (nome, etapa, telefone…).",
+        "CONTA_QUANDO": "Choose a time or \"every N minutes\" (1 to 1440) and at least one day.",
+        "CONTA_PASSO": "This step needs a lead. On the account schedule only If, Choose, Wait, Stop, Push and Ready routine are allowed.",
+        "ROTINA_DESCONHECIDA": "Unknown routine ({nome}).",
+        "ROTINA_DE_LEAD": "This routine belongs to a lead: it does not run on the account schedule.",
+        "ROTINA_DA_CONTA": "This routine is for the whole account: it only runs on the Account schedule trigger."
       },
       "TESTAR": {
         "TITULO": "Test with a lead",
@@ -2671,7 +2699,9 @@
         "RODAR_AJUDA": "Runs the published version on this lead (texts go out as drafts).",
         "ERRO": "Could not run the dry run.",
         "NAO_RODOU": "Did not run: the flow must be on, published and under today's limit.",
-        "CANCELAR": "Cancel"
+        "CANCELAR": "Cancel",
+        "TITULO_CONTA": "Test on the account",
+        "AJUDA_CONTA": "Dry run on the whole account: routines only say what they would do — nothing is executed."
       },
       "EXECUCAO": {
         "TITULO": "Run #{id}",

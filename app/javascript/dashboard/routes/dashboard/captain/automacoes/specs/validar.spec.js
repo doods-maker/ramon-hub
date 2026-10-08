@@ -310,4 +310,55 @@ describe('validar (espelho do Grafo#erros)', () => {
       ).toEqual([['p1', 'CAMPO_CHAVE']])
     );
   });
+
+  describe('Horário da conta (espelho de Ramon::Fluxos::HorarioConta.erros)', () => {
+    const conta = (config, ...passos) => ({
+      nos: [g({ tipo: 'horario_conta', ...config }), ...passos],
+      setas: passos.map((passo, i) => ({
+        de: i ? passos[i - 1].id : 'g',
+        saida: 's',
+        para: passo.id,
+      })),
+    });
+
+    it('hora ou a cada N minutos (1 a 1440) e pelo menos um dia', () => {
+      expect(validar(conta({ hora: '08:00' }, p('p1', 'parar')))).toEqual([]);
+      expect(validar(conta({ a_cada_minutos: 1 }, p('p1', 'parar')))).toEqual(
+        []
+      );
+      [
+        {},
+        { a_cada_minutos: 0 },
+        { a_cada_minutos: 1441 },
+        { hora: '08:00', dias: [] },
+        { hora: '08:00', dias: [7] },
+      ].forEach(c =>
+        expect(codigos(conta(c, p('p1', 'parar')))).toEqual([
+          ['g', 'CONTA_QUANDO'],
+        ])
+      );
+    });
+
+    it('só passos sem lead; rotina do alvo certo; desconhecida aponta o nome', () => {
+      const horas = { hora: '08:00' };
+      expect(
+        codigos(conta(horas, p('p1', 'mover_etapa', { etapa_id: 1 })))
+      ).toEqual([['p1', 'CONTA_PASSO']]);
+      expect(
+        codigos(conta(horas, p('p1', 'rotina', { rotina: 'dossie_passagem' })))
+      ).toEqual([['p1', 'ROTINA_DE_LEAD']]);
+      expect(
+        codigos(conta(horas, p('p1', 'rotina', { rotina: 'resumo_do_dia' })))
+      ).toEqual([]);
+      expect(
+        codigos(linear(p('p1', 'rotina', { rotina: 'resumo_do_dia' })))
+      ).toEqual([['p1', 'ROTINA_DA_CONTA']]);
+      expect(
+        validar(linear(p('p1', 'rotina', { rotina: 'xyz' })))[0]
+      ).toMatchObject({
+        codigo: 'ROTINA_DESCONHECIDA',
+        params: { nome: 'xyz' },
+      });
+    });
+  });
 });

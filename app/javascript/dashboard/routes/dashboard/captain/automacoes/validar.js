@@ -7,7 +7,9 @@ import {
   TIPOS_PASSO,
   JANELA_PADRAO,
   UNIDADES,
+  PASSOS_CONTA,
   alcancaveis,
+  rotinaAlvo,
 } from './fluxo';
 
 export const OBRIGATORIOS = {
@@ -259,6 +261,38 @@ const errosPasso = (no, setas) => {
   return [...faltas, ...errosEspecificos(no, config, setas)];
 };
 
+// = Ramon::Fluxos::HorarioConta.erros: o "quando" do Horário da conta, o que roda sem lead e a rotina do alvo certo
+const quandoValido = c => {
+  const n = c.a_cada_minutos;
+  const ok =
+    n != null && n !== ''
+      ? /^\d+$/.test(String(n)) && Number(n) >= 1 && Number(n) <= 1440
+      : !vazio(c.hora);
+  if (!ok || !('dias' in c)) return ok;
+  const dias = [].concat(c.dias ?? []).map(Number);
+  return dias.length > 0 && dias.every(d => d >= 0 && d <= 6);
+};
+
+const errosNoConta = (no, conta) => {
+  if (no.tipo === 'gatilho') return [];
+  if (conta && !PASSOS_CONTA.includes(no.tipo))
+    return [erro(no.id, 'CONTA_PASSO')];
+  const nome = no.config?.rotina;
+  if (no.tipo !== 'rotina' || vazio(nome)) return [];
+  const alvo = rotinaAlvo(nome);
+  if (!alvo) return [erro(no.id, 'ROTINA_DESCONHECIDA', { nome })];
+  if ((alvo === 'conta') === conta) return [];
+  return [erro(no.id, conta ? 'ROTINA_DE_LEAD' : 'ROTINA_DA_CONTA')];
+};
+
+const errosConta = (gatilho, nos) => {
+  const c = gatilho.config || {};
+  const conta = c.tipo === 'horario_conta';
+  const quando =
+    conta && !quandoValido(c) ? [erro(gatilho.id, 'CONTA_QUANDO')] : [];
+  return [...quando, ...nos.flatMap(n => errosNoConta(n, conta))];
+};
+
 export const validar = ({ nos = [], setas = [] } = {}) => {
   const gatilhos = nos.filter(n => n.tipo === 'gatilho');
   if (gatilhos.length !== 1) return [erro(null, 'UM_GATILHO')];
@@ -271,5 +305,6 @@ export const validar = ({ nos = [], setas = [] } = {}) => {
     ...errosSetas(nos, setas),
     ...errosAlcance(nos, setas, gatilho.id),
     ...nos.flatMap(n => errosPasso(n, setas)),
+    ...errosConta(gatilho, nos),
   ];
 };

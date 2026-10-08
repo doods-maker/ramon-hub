@@ -158,6 +158,11 @@ describe('textos das automações', () => {
       'WEBHOOK_HTTPS',
       'WEBHOOK_ULTIMO',
       'CAMPO_CHAVE',
+      'CONTA_QUANDO',
+      'CONTA_PASSO',
+      'ROTINA_DESCONHECIDA',
+      'ROTINA_DE_LEAD',
+      'ROTINA_DA_CONTA',
     ].forEach(c => expect(FLUXOS_PT.ERROS[c]).toBeTruthy());
   });
 });
