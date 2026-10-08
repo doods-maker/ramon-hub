@@ -1,0 +1,13 @@
+{
+  "nome": "Ata da reunião",
+  "descricao": "Quando uma reunião é gravada no hub (ou alguém pede Refazer ata), no lugar do código (B5): transcreve o áudio no whisper e a IA escreve a ata na própria reunião — o mesmo de hoje, na mesma fila; tenta de novo até 3 vezes e, se não der, a reunião fica com erro e o botão Refazer. Se este fluxo não começar, o código pede a ata, como antes. Enquanto o selo disser \"em sombra\", só ensaia.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"reuniao_gravada","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"Transcrever e escrever a ata","rotina":"escrever_ata"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

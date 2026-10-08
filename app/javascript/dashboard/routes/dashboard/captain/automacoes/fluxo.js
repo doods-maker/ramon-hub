@@ -44,6 +44,13 @@ export const GATILHOS = [
   { tipo: 'manual', icone: 'i-lucide-hand', alvo: 'lead' },
   { tipo: 'horario_conta', icone: 'i-lucide-building-2', alvo: 'conta' },
   { tipo: 'nota_escrita', icone: 'i-lucide-sticky-note', alvo: 'conversa' },
+  // B5-externos: o alvo é o registro do evento, não lead nem conversa (o "Testar com um lead" não serve)
+  { tipo: 'assinatura_painel', icone: 'i-lucide-pen-line', alvo: 'outro' },
+  { tipo: 'documento_painel', icone: 'i-lucide-file-up', alvo: 'outro' },
+  { tipo: 'chegada_cliente', icone: 'i-lucide-door-open', alvo: 'outro' },
+  { tipo: 'reuniao_gravada', icone: 'i-lucide-mic', alvo: 'outro' },
+  { tipo: 'peca_publicada', icone: 'i-lucide-image-up', alvo: 'outro' },
+  { tipo: 'peca_mudou_status', icone: 'i-lucide-images', alvo: 'outro' },
 ];
 export const gatilhoInfo = tipo => GATILHOS.find(g => g.tipo === tipo);
 
@@ -320,7 +327,7 @@ export const TIPOS_ATIVIDADE = [
   'advbox_arquivado',
 ];
 // Rotinas prontas do hub (= Ramon::Fluxos::Rotinas): as 5 da B4.4/B4.5 (de lead) + as de cada plano B5, um arquivo por
-// plano em ./rotinas/<plano>.js = [{ chave, alvo: 'conta' | 'lead' | 'conversa' }] (= ROTINAS do módulo do plano).
+// plano em ./rotinas/<plano>.js = [{ chave, alvo: 'conta' | 'lead' | 'conversa' | 'outro' }] (= ROTINAS do módulo do plano).
 const PLANOS = import.meta.glob('./rotinas/*.js', {
   eager: true,
   import: 'default',

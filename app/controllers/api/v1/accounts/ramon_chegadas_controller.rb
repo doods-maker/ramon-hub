@@ -14,7 +14,10 @@ class Api::V1::Accounts::RamonChegadasController < Api::V1::Accounts::BaseContro
     chegada = Current.account.chegadas.create!(
       chegada_params.merge(criado_por: Current.user, destinatario: Current.account.users.find(params[:destinatario_id]))
     )
-    Ramon::ChegadaEscalarJob.set(wait: Chegada::ESCALAR_APOS).perform_later(chegada.id)
+    # B5: pelo código (como sempre) ou pelo fluxo "Chegada de cliente" — espera do motor (3 a 4 min) — (RAMON_FLUXO_CHEGADA).
+    Ramon::Fluxos::Externos.evento('chegada_cliente', 'chegada_cliente', chegada) do
+      Ramon::ChegadaEscalarJob.set(wait: Chegada::ESCALAR_APOS).perform_later(chegada.id)
+    end
     render json: chegada.push_event_data
   end
 

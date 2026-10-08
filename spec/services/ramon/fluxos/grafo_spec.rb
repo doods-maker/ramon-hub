@@ -144,7 +144,7 @@ RSpec.describe Ramon::Fluxos::Grafo do
       expect(conta({ 'hora' => '08:00' }, ['mover_etapa', { 'etapa_id' => 1 }]))
         .to eq(['Passo p1: precisa de um lead — no Horário da conta só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta'])
       expect(conta({ 'hora' => '08:00' }, ['rotina', { 'rotina' => 'dossie_passagem' }]))
-        .to eq(['Passo p1: esta rotina é de um lead — não roda no Horário da conta'])
+        .to eq(['Passo p1: esta rotina não é da conta (precisa de um lead ou de outro evento) — não roda no Horário da conta'])
       expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['rotina', { 'rotina' => 'xyz' }])).erros)
         .to eq(['Passo p1: rotina desconhecida (xyz)'])
     end

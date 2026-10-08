@@ -10,7 +10,7 @@ class Public::Api::V1::ZapsignWebhooksController < PublicController
   def create
     token = params[:token].to_s
     assinatura = PortalAssinatura.find_by(doc_token: token)
-    Ramon::ZapsignStatusJob.perform_later(assinatura.id) if assinatura
+    conferir(assinatura) if assinatura
     # contrato gerado pelo cartão do painel (lead.custom_attributes['zapsign'])
     lead = Lead.find_by("custom_attributes -> 'zapsign' ->> 'doc_token' = ?", token) if token.present?
     Ramon::ZapsignLeadStatusJob.perform_later(lead.id, token) if lead
@@ -18,6 +18,11 @@ class Public::Api::V1::ZapsignWebhooksController < PublicController
   end
 
   private
+
+  # B5: pelo código (como sempre) ou pelo fluxo "Assinatura pelo Painel do Cliente" (RAMON_FLUXO_ASSINATURA_PAINEL).
+  def conferir(assinatura)
+    Ramon::Fluxos::Externos.evento('assinatura_painel', 'assinatura_painel', assinatura) { Ramon::ZapsignStatusJob.perform_later(assinatura.id) }
+  end
 
   def verify_secret
     secret = ENV.fetch('ZAPSIGN_WEBHOOK_SECRET', nil)

@@ -5,6 +5,14 @@ class FluxoExecucao < ApplicationRecord
   self.table_name = 'ramon_fluxo_execucoes'
 
   STATUS = %w[rodando esperando concluida falhou cancelada].freeze
+  # B5: alvos de fora do funil aparecem com o que são (a lista e a tela de execução não têm outra coluna).
+  NOMES_ALVO = {
+    'Chegada' => ->(alvo) { "Chegada: #{alvo.cliente_nome}" },
+    'Peca' => ->(alvo) { "Peça: #{alvo.gancho}" },
+    'Reuniao' => ->(alvo) { "Reunião gravada: #{alvo.titulo_exibicao}" },
+    'PortalAssinatura' => ->(alvo) { "Assinatura do Painel: #{alvo.portal_cliente.nome}" },
+    'PortalEnvio' => ->(alvo) { "Documento do Painel: #{alvo.portal_cliente.nome}" }
+  }.freeze
 
   belongs_to :account
   belongs_to :fluxo
@@ -15,14 +23,17 @@ class FluxoExecucao < ApplicationRecord
 
   def grafo = Ramon::Fluxos::Grafo.new(contexto['grafo'] || versao&.grafo)
 
-  # B4.1: o alvo também pode ser a tarefa da reunião (ciclo de lembretes) — lead e conversa vêm dela.
-  def lead
-    return alvo if alvo.is_a?(Lead)
-    return alvo.lead if alvo.is_a?(LeadTask)
-    return if alvo.nil? || alvo.is_a?(Account) # B5: o Horário da conta não tem lead
-
-    account.leads.where(conversation_id: alvo.id).reorder(id: :desc).first
+  # B4.1: o alvo também pode ser a tarefa da reunião (ciclo de lembretes); B5: a reunião gravada (com lead, se vinculada).
+  # Chegada, peça, Painel do Cliente e a conta (Horário) não têm lead — nunca adivinhar pelo id (não é id de conversa).
+  def self.lead_de(alvo)
+    case alvo
+    when Lead then alvo
+    when LeadTask, Reuniao then alvo.lead
+    when Conversation then alvo.account.leads.where(conversation_id: alvo.id).reorder(id: :desc).first
+    end
   end
+
+  def lead = self.class.lead_de(alvo)
 
   def conversa = alvo.is_a?(Conversation) ? alvo : lead&.conversation
 
@@ -37,5 +48,10 @@ class FluxoExecucao < ApplicationRecord
 
   private
 
-  def alvo_nome = alvo.try(:name) || alvo.try(:contact)&.name || lead&.name
+  def alvo_nome
+    externo = NOMES_ALVO[alvo_type]
+    return externo.call(alvo) if externo && alvo
+
+    alvo.try(:name) || alvo.try(:contact)&.name || lead&.name
+  end
 end

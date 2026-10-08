@@ -2,6 +2,7 @@
 # do doc (o payload do webhook não é a verdade) e grava o selo assinado/recusado
 # em custom_attributes['zapsign'] + histórico + sino. NUNCA marca o lead como
 # ganho: ganho dispara AdvBox/Drive/NPS e continua sendo decisão do closer.
+# Histórico e sino: pelo código ou pelo fluxo (B5).
 class Ramon::ZapsignLeadStatusJob < ApplicationJob
   queue_as :low
   retry_on Ramon::ZapsignClient::UnavailableError, wait: :polynomially_longer, attempts: 5
@@ -16,23 +17,26 @@ class Ramon::ZapsignLeadStatusJob < ApplicationJob
     return unless atual?(Lead.find_by(id: lead_id), doc_token)
 
     doc = Ramon::ZapsignClient.doc(doc_token)
-    kind, chave, rotulo, gatilho = STATUS[doc['status'].to_s]
+    _kind, chave, _rotulo, gatilho = STATUS[doc['status'].to_s]
     # reload depois do HTTP: o "Gerar de novo" pode ter trocado o doc no meio
     lead = Lead.find_by(id: lead_id)
-    return if kind.nil? || !atual?(lead, doc_token)
+    return if gatilho.nil? || !atual?(lead, doc_token)
 
     zapsign = lead.custom_attributes['zapsign'].merge('status' => doc['status'], chave => data_do_evento(doc))
     lead.update!(custom_attributes: lead.custom_attributes.merge('zapsign' => zapsign))
-    avisar(lead, kind, rotulo, zapsign['template_name'])
-    Ramon::Fluxos::Disparo.externo(gatilho, lead)
+    # B5: o selo acima é o evento em si (e a trava contra repetir). Histórico e sino: pelo código ou pelo fluxo
+    # "Contrato assinado/recusado no ZapSign" (RAMON_FLUXO_CONTRATO_ZAPSIGN); os fluxos comuns do gatilho, como sempre.
+    Ramon::Fluxos::Externos.evento('contrato_zapsign', gatilho, lead) { self.class.avisar(lead, doc['status']) }
+  end
+
+  # Público (B5): a rotina "aviso_contrato" do fluxo chama o mesmo — histórico + sino para todos da conta.
+  def self.avisar(lead, status)
+    kind, _chave, rotulo = STATUS.fetch(status)
+    lead.lead_activities.create!(account: lead.account, kind: kind, to_value: lead.custom_attributes.dig('zapsign', 'template_name'))
+    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_contract_status', meta: { 'label' => rotulo }).perform
   end
 
   private
-
-  def avisar(lead, kind, rotulo, modelo)
-    lead.lead_activities.create!(account: lead.account, kind: kind, to_value: modelo)
-    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_contract_status', meta: { 'label' => rotulo }).perform
-  end
 
   # Só o doc vigente do lead e só a 1ª mudança: doc trocado ("Gerar de novo"),
   # cancelado por nós ou já assinado/recusado não gera selo nem sino de novo.

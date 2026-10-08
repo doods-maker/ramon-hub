@@ -2,6 +2,7 @@
 # status espelha o ZapSign: pendente | signed | refused; cancelado = cancelado pelo hub.
 class PortalAssinatura < ApplicationRecord
   belongs_to :portal_cliente
+  delegate :account, to: :portal_cliente # B5: o Disparo dos fluxos lê alvo.account
 
   validates :doc_token, presence: true, uniqueness: true
 

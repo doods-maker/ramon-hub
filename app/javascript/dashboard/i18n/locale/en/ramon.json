@@ -2251,7 +2251,13 @@
         "lead_parado": "Lead stalled in stage",
         "relogio": "Every day at a set time",
         "horario_conta": "Account schedule (whole account)",
-        "nota_escrita": "Private note written (by the team)"
+        "nota_escrita": "Private note written (by the team)",
+        "assinatura_painel": "Client Portal signature changed (ZapSign)",
+        "documento_painel": "Client sent a document through the Portal",
+        "chegada_cliente": "Front desk announced a client arrival",
+        "reuniao_gravada": "Meeting recorded (or Redo minutes)",
+        "peca_publicada": "Post published on Instagram",
+        "peca_mudou_status": "Post changed status"
       },
       "PASSOS": {
         "gatilho": "Trigger",
@@ -2523,6 +2529,7 @@
         "REGRAS_AJUDA": "None selected = any recognized event.",
         "REUNIAO_AJUDA": "Works for Cal.com and the lead panel. Rescheduling counts as scheduled.",
         "DOCUMENTO_AJUDA": "When the AI matches an attachment to a checklist item. Confirmation stays with the team.",
+        "ALVO_OUTRO_AJUDA": "This trigger is not about a lead or a conversation: Test with a lead does not apply. Check the runs of the real events.",
         "CONTA_QUANDO": "When it runs",
         "CONTA_UMA_VEZ": "Once a day",
         "CONTA_INTERVALO": "Every N minutes",
@@ -2617,7 +2624,14 @@
         "origem_do_lead": "Record the lead source and channel",
         "sugestao_documento": "Suggest the checklist document (AI reads the attachment)",
         "coach_objecao": "Objection coach (2 replies from the playbook)",
-        "agente_hub": "Notify the hub agent (Eduardo at-claude note)"
+        "agente_hub": "Notify the hub agent (Eduardo at-claude note)",
+        "conferir_assinatura_painel": "Check on ZapSign and mark the Portal signature",
+        "aviso_contrato": "Contract history and bell (signed or refused)",
+        "processar_envio_painel": "Portal document: Drive, push and ADVBOX tasks",
+        "escalar_chegada": "Escalate the arrival (if nobody answered)",
+        "escrever_ata": "Transcribe and write the meeting minutes",
+        "acervo_drive": "Copy the published post to Drive",
+        "espelho_notion": "Mirror the post status on Notion"
       },
       "ROTINAS_AJUDA": {
         "dossie_passagem": "The same dossier the code writes. Not repeated if there is one from the last 5 minutes.",
@@ -2636,7 +2650,14 @@
         "origem_do_lead": "Reads the Meta ad that comes with the message and stores source and channel; with no ad and no site, LP or bio signature, the channel becomes referral (or instagram, in the Instagram inbox). Never changes a channel already set. Needs the trigger message.",
         "sugestao_documento": "AI compares the attachment with the case checklist and stores a suggestion; the team confirms it in the panel. When it matches, the Document received trigger fires. AI down: tries again in 1, 5 and 15 min, then gives up silently. Needs the trigger message.",
         "coach_objecao": "If the message has an objection and the case type has a playbook, shows 2 replies in a bubble (Use only fills the editor). At most once every 10 min per conversation; errors are silent. Needs the trigger message.",
-        "agente_hub": "Notifies the hub agent on the VPS, which replies as a private note. Fixed lock: only private notes starting with at-claude, written by Eduardo e-mail — no edit here removes it."
+        "agente_hub": "Notifies the hub agent on the VPS, which replies as a private note. Fixed lock: only private notes starting with at-claude, written by Eduardo e-mail — no edit here removes it.",
+        "conferir_assinatura_painel": "Same as today: asks ZapSign for the real status and marks it on the Client Portal. A signature cancelled in the hub does not change. ZapSign down: tries again by itself. Only for the Portal signature trigger.",
+        "aviso_contrato": "Same as today: a line in the lead history and a bell to everyone. Never marks the lead as won. The badge on the card and the ZapSign check stay in the code.",
+        "processar_envio_painel": "Same as today: saves the file on Drive (if set up), push on the phone and 2 ADVBOX tasks. Writes to ADVBOX for real, once per document; ADVBOX down, tries again up to 5 times. Only for the Portal document trigger.",
+        "escalar_chegada": "If nobody answered, the alert rings again on the screen of who announced it (live, not the bell). Already answered: does nothing. Put it after a wait. Only for the client arrival trigger.",
+        "escrever_ata": "Same as today: transcribes the audio and the AI writes the minutes in the meeting, in the usual queue (tries up to 3 times; if it fails, the meeting shows the error and the Redo button). Only for the recorded meeting trigger.",
+        "acervo_drive": "Same as today: images and caption in Posts Instagram, on Drive. Only for the published post trigger.",
+        "espelho_notion": "Same as today: updates the post status on the Notion board (only with the Notion token). Only for the post triggers."
       },
       "TIPOS_TAREFA": {
         "follow_up": "Follow-up",
@@ -2697,7 +2718,7 @@
         "CONTA_QUANDO": "Choose a time or \"every N minutes\" (1 to 1440) and at least one day.",
         "CONTA_PASSO": "This step needs a lead. On the account schedule only If, Choose, Wait, Stop, Push and Ready routine are allowed.",
         "ROTINA_DESCONHECIDA": "Unknown routine ({nome}).",
-        "ROTINA_DE_LEAD": "This routine belongs to a lead: it does not run on the account schedule.",
+        "ROTINA_DE_LEAD": "This routine is not an account routine (it needs a lead or another event): it does not run on the account schedule.",
         "ROTINA_DA_CONTA": "This routine is for the whole account: it only runs on the Account schedule trigger."
       },
       "TESTAR": {

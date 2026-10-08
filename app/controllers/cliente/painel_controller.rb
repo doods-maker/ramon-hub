@@ -82,7 +82,8 @@ class Cliente::PainelController < Cliente::BaseController
     return redirect_arquivo_invalido unless upload_valido?
 
     envio = criar_envio!
-    Ramon::PortalEnvioJob.perform_later(envio.id)
+    # B5: pelo código (como sempre) ou pelo fluxo "Documento enviado pelo Painel" (RAMON_FLUXO_DOCUMENTO_PAINEL).
+    Ramon::Fluxos::Externos.evento('documento_painel', 'documento_painel', envio) { Ramon::PortalEnvioJob.perform_later(envio.id) }
     flash[:portal_notice] = MSG_RECEBIDO
     redirect_to cliente_processo_path(@processo['id'])
   end

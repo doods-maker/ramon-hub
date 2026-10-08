@@ -207,12 +207,16 @@ const trocaTipo = tipo =>
       @update:config="c => emit('update:config', c)"
     />
 
+    <p v-if="alvo === 'outro'" class="text-xs text-n-slate-10">
+      {{ t(`${K}.ALVO_OUTRO_AJUDA`) }}
+    </p>
+
     <p v-if="config.tipo === 'manual'" class="text-xs text-n-slate-10">
       {{ t(`${K}.MANUAL_AJUDA`) }}
     </p>
 
     <div
-      v-if="alvo !== 'conta'"
+      v-if="alvo === 'lead' || alvo === 'conversa'"
       class="flex items-center justify-between border-t border-n-weak py-2 text-[13px] text-n-slate-12"
     >
       {{ t(`${K}.CANCELAR_ETAPA`) }}

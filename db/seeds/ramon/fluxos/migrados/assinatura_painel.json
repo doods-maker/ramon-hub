@@ -1,0 +1,13 @@
+{
+  "nome": "Assinatura pelo Painel do Cliente",
+  "descricao": "Quando o ZapSign avisa que um documento do Painel do Cliente mudou, no lugar do código (B5): pergunta ao ZapSign o status real e marca a assinatura no Painel — o mesmo de hoje, na mesma fila e com as mesmas novas tentativas. Assinatura cancelada no hub não muda. Se este fluxo não começar (ocupado com a mesma assinatura ou erro), o código faz aquele aviso, como antes. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"assinatura_painel","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"Conferir no ZapSign e marcar a assinatura no Painel","rotina":"conferir_assinatura_painel"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

@@ -1,7 +1,8 @@
 # B5 (decisão do Eduardo 07/10): registro das rotinas prontas do hub (passo `rotina`). Cada plano põe as suas num
 # arquivo próprio, app/services/ramon/fluxos/rotinas/<plano>.rb (Ramon::Fluxos::Rotinas::<Plano>), achado aqui sozinho:
 # plano novo não mexe em lista compartilhada. Contrato de cada módulo (plano B5-conta, "Contrato para os planos irmãos"):
-# - ROTINAS = { 'nome' => 'conta' | 'lead' | 'conversa' } — o alvo; 'conta' só no gatilho Horário da conta;
+# - ROTINAS = { 'nome' => 'conta' | 'lead' | 'conversa' | 'outro' } — o alvo; 'conta' só no gatilho Horário da conta;
+#   'outro' = o registro de um evento de fora do funil (B5-externos: chegada, reunião gravada, peça, Painel do Cliente);
 # - rodar(nome, ctx) → String (o resumo da trilha) ou Hash { resumo:, vars: }; no ensaio só descreve ("faria: …");
 # - opcional GRUPOS (formato de Migracao::GRUPOS — vai para lá) e PENDENTE = { 'nome' => ->(account) { Boolean } }.
 # As 5 rotinas da B4.4 (Passos::Rotina::ROTINAS) seguem lá, de lead.
