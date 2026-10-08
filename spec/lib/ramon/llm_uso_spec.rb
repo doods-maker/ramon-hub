@@ -80,6 +80,12 @@ RSpec.describe Ramon::LlmUso do
     expect(dados).to include(funcao: 'faq_conversa', model: 'deepseek-chat')
   end
 
+  it 'a memoria do contato tem funcao propria em Uso e custo' do
+    dados = described_class.de_instrumentacao(account_id: 1, feature_name: 'contact_notes', model: 'deepseek-chat')
+
+    expect(dados[:funcao]).to eq('memoria_contato')
+  end
+
   it '.registrar_mensagem grava só a mensagem do assistente (tool result não tem tokens)' do
     assistente = instance_double(RubyLLM::Message, role: :assistant, model_id: 'gpt-4.1-mini', input_tokens: 5, output_tokens: 3)
     ferramenta = instance_double(RubyLLM::Message, role: :tool)

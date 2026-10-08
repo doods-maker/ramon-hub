@@ -10,7 +10,7 @@ module Ramon::LlmUso
   FUNCOES = {
     'summarize' => 'resumo', 'assistant' => 'atendimento', 'copilot' => 'copiloto_captain',
     'faq_generator' => 'documentos', 'faq_generation' => 'documentos', 'paginated_faq_generation' => 'documentos',
-    'conversation_faq' => 'faq_conversa'
+    'conversation_faq' => 'faq_conversa', 'contact_notes' => 'memoria_contato'
   }.freeze
   CAMPOS = %i[account_id funcao origem assistant_id provider model input_tokens output_tokens duracao_ms
               status erro conversation_id lead_id].freeze

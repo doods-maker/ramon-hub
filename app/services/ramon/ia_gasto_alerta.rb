@@ -13,6 +13,13 @@ module Ramon::IaGastoAlerta
 
   def gasto_hoje(account_id) = LlmChamada.where(account_id: account_id, created_at: hoje).sum(:custo_usd).to_f
 
+  # O gasto do dia já chegou ao teto (sem teto = nunca): as rotinas automáticas de IA param no dia
+  # (FAQ de conversa, memória do contato, caderno da madrugada).
+  def passou_do_teto?(account)
+    limite = teto(account)
+    limite.to_f.positive? && gasto_hoje(account.id) >= limite
+  end
+
   def verificar(chamada)
     return if chamada.custo_usd.to_f.zero?
 

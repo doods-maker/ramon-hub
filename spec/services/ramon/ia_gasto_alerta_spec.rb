@@ -47,4 +47,15 @@ RSpec.describe Ramon::IaGastoAlerta do
 
     expect(alertas.count).to eq(1)
   end
+
+  describe '.passou_do_teto?' do
+    it 'so com teto definido e gasto do dia no teto ou acima', :aggregate_failures do
+      expect(described_class.passou_do_teto?(account)).to be(false)
+      account.update!(settings: (account.settings || {}).merge(described_class::CHAVE_TETO => '1.00'))
+      chamada(0.5)
+      expect(described_class.passou_do_teto?(account)).to be(false)
+      chamada(0.5)
+      expect(described_class.passou_do_teto?(account)).to be(true)
+    end
+  end
 end
