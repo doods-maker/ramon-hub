@@ -9,6 +9,7 @@ class Captain::CadernoNoturno
 
   def initialize(account)
     @account = account
+    @previsto = nil
   end
 
   def perform
@@ -27,7 +28,7 @@ class Captain::CadernoNoturno
     return if Captain::IaRodada.ativas.exists?(assistant_id: assistant.id)
 
     total = Captain::IaCaso.ativos.where(assistant_id: assistant.id).count
-    return if total.zero? || estoura_teto?(total) || !mudou?(assistant)
+    return if total.zero? || !mudou?(assistant) || estoura_teto?(total)
 
     rodada = Captain::IaRodada.create!(account: @account, assistant: assistant, total: total)
     Captain::IaRodadaJob.perform_later(rodada.id)
@@ -36,12 +37,16 @@ class Captain::CadernoNoturno
     nil
   end
 
-  # F5: não basta "já passou do teto" — o custo estimado da própria rodada também não pode estourá-lo.
+  # F5: o custo estimado da rodada também não pode estourar o teto — somado ao gasto de hoje e às rodadas já
+  # enfileiradas nesta madrugada (@previsto); só entra no previsto quem de fato foi enfileirado.
   def estoura_teto?(total)
     limite = Ramon::IaGastoAlerta.teto(@account)
-    return false unless limite.to_f.positive?
+    custo = Captain::IaRodada.estimativa(total)[:custo_usd]
+    @previsto ||= Ramon::IaGastoAlerta.gasto_hoje(@account.id)
+    return true if limite.to_f.positive? && @previsto + custo > limite
 
-    Ramon::IaGastoAlerta.gasto_hoje(@account.id) + Captain::IaRodada.estimativa(total)[:custo_usd] > limite
+    @previsto += custo
+    false
   end
 
   # Mudou = o assistente (configurações, regras), uma skill, uma FAQ aprovada ou um caso de teste mexidos depois

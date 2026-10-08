@@ -45,4 +45,15 @@ RSpec.describe Captain::CadernoNoturno do
     allow(Ramon::IaGastoAlerta).to receive(:gasto_hoje).and_return(0.5)
     expect { described_class.new(account).perform }.to have_enqueued_job(Captain::IaRodadaJob)
   end
+
+  it 'dois assistentes que cabem sozinhos mas somados passam do teto: so o primeiro entra', :aggregate_failures do
+    outro = create(:captain_assistant, account: account)
+    Captain::IaCaso.create!(account: account, assistant: outro, titulo: 'B1', mensagens: [{ role: 'user', content: 'oi' }])
+    custo = Captain::IaRodada.estimativa(1)[:custo_usd]
+    allow(Ramon::IaGastoAlerta).to receive_messages(passou_do_teto?: false, teto: custo * 1.5, gasto_hoje: 0.0)
+
+    rodadas = described_class.new(account).perform
+
+    expect(rodadas.map(&:assistant_id)).to eq([assistant.id])
+  end
 end
