@@ -6,6 +6,22 @@
 # ZapSign 5×, documento do Painel 5×, Drive 3×): o Ramon::FluxoRelogioJob devolve à fila a execução 'rodando' há mais
 # de 10 min — o whisper de uma reunião longa dentro do passo seria transcrito de novo.
 module Ramon::Fluxos::Rotinas::Externos
+  # As 6 migrações (juntadas em Migracao::GRUPOS pelo registro); quem decide cada evento é Ramon::Fluxos::Externos.evento.
+  GRUPOS = {
+    'assinatura_painel' => { env: 'RAMON_FLUXO_ASSINATURA_PAINEL', faz: 'a conferência das assinaturas do Painel do Cliente',
+                             fluxos: { 'assinatura_painel' => 'assinatura_painel' }.freeze },
+    'contrato_zapsign' => { env: 'RAMON_FLUXO_CONTRATO_ZAPSIGN', faz: 'o histórico e o sino do contrato no ZapSign',
+                            fluxos: { 'contrato_zapsign_assinado' => 'contrato_assinado',
+                                      'contrato_zapsign_recusado' => 'contrato_recusado' }.freeze },
+    'documento_painel' => { env: 'RAMON_FLUXO_DOCUMENTO_PAINEL', faz: 'os documentos enviados pelo Painel (Drive, push e ADVBOX)',
+                            fluxos: { 'documento_painel' => 'documento_painel' }.freeze },
+    'chegada_cliente' => { env: 'RAMON_FLUXO_CHEGADA', faz: 'a escalada da chegada de cliente',
+                           fluxos: { 'chegada_cliente' => 'chegada_cliente' }.freeze },
+    'ata_reuniao' => { env: 'RAMON_FLUXO_ATA_REUNIAO', faz: 'a ata das reuniões gravadas',
+                       fluxos: { 'ata_reuniao' => 'reuniao_gravada' }.freeze },
+    'acervo_pecas' => { env: 'RAMON_FLUXO_ACERVO_PECAS', faz: 'o acervo das peças (Drive e Notion)',
+                        fluxos: { 'acervo_pecas_drive' => 'peca_publicada', 'acervo_pecas_notion' => 'peca_mudou_status' }.freeze }
+  }.freeze
   # 'outro' = o alvo é o registro do evento (assinatura/documento do Painel, chegada, reunião gravada, peça); o contrato é do lead.
   ROTINAS = {
     'conferir_assinatura_painel' => 'outro', 'aviso_contrato' => 'lead', 'processar_envio_painel' => 'outro',

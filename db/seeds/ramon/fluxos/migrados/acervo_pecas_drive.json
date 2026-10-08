@@ -1,0 +1,13 @@
+{
+  "nome": "Acervo das peças no Drive",
+  "descricao": "Quando uma peça é publicada no Instagram, no lugar do código (B5): copia as imagens e a legenda para Posts Instagram/<Carrossel|Estático>/<rodada — gancho> no Drive — o mesmo de hoje (tenta de novo até 3 vezes). Anda junto com o fluxo \"Espelho das peças no Notion\" (uma chave para os dois). Se este fluxo não começar, o código copia, como antes. Enquanto o selo disser \"em sombra\", só ensaia.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"peca_publicada","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"Copiar a peça publicada para o Drive","rotina":"acervo_drive"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

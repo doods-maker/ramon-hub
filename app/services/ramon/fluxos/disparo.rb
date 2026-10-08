@@ -19,7 +19,8 @@ class Ramon::Fluxos::Disparo
   # sem (o ouvinte de sempre), só os demais. conversa_criada: o RamonLeadListener manda a decisão do SLA da 1ª resposta;
   # lead_ganho: o callback do Lead (Ramon::Fluxos::LeadGanho) manda com, o RamonFluxoListener sem.
   # B5-leads: mensagem_recebida (origem, documento, coach) e nota_escrita (agente); 'migracao' no evento separa os grupos.
-  DUAS_VEZES = (NA_HORA + %w[conversa_criada lead_ganho mensagem_recebida nota_escrita]).freeze
+  # B5-externos: os gatilhos de fora do funil (Ramon::Fluxos::Externos.evento manda com e sem a decisão).
+  DUAS_VEZES = (NA_HORA + %w[conversa_criada lead_ganho mensagem_recebida nota_escrita] + Ramon::Fluxos::Externos.gatilhos).freeze
 
   def self.call(gatilho_tipo, alvo, dados = {}, origem: nil)
     account = alvo.account

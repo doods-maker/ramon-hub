@@ -1,0 +1,15 @@
+{
+  "nome": "Chegada de cliente",
+  "descricao": "Quando a recepção avisa que um cliente chegou, no lugar do código (B5): espera 3 minutos e, se ninguém respondeu, o alerta volta a tocar na tela de quem avisou (ao vivo, não é o sino). O relógio dos fluxos anda de minuto em minuto: o alerta toca entre 3 e 4 minutos. Se este fluxo não começar, o código escala, como antes. Enquanto o selo disser \"em sombra\", só ensaia.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"chegada_cliente","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"esperar","config":{"rotulo":"3 minutos","quantidade":3,"unidade":"minutos"},"posicao":{"x":0,"y":140}},
+      {"id":"n3","tipo":"rotina","config":{"rotulo":"Escalar a chegada (se ninguém respondeu)","rotina":"escalar_chegada"},"posicao":{"x":0,"y":280}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"},
+      {"de":"n2","saida":"s","para":"n3"}
+    ]
+  }
+}
