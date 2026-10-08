@@ -58,7 +58,7 @@ RSpec.describe Ramon::Fluxos::Migracao do
       'coach' => ['RAMON_FLUXO_COACH', { 'coach_objecao' => 'mensagem_recebida' }],
       'agente' => ['RAMON_FLUXO_AGENTE', { 'agente_hub' => 'nota_escrita' }]
     }
-    expect(esperado.keys.to_h { |g| [g, [described_class.grupo(g)[:env], described_class.gatilhos(g)]] }).to eq(esperado)
+    expect(esperado.keys.index_with { |g| [described_class.grupo(g)[:env], described_class.gatilhos(g)] }).to eq(esperado)
   end
 
   it 'leads e conversas (B5-leads): criar = 1 fluxo por grupo, em sombra, ligado, publicado, gatilho certo e 1 rotina pronta' do

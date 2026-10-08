@@ -348,10 +348,16 @@ RSpec.describe RamonLeadListener do
     end
 
     # Cada disparo de fluxo, na ordem: [gatilho, grupo que decidiu (nil = os fluxos comuns), o que `olhar` vê naquela hora].
+    # A decisão de cada grupo é gravada na entrada do Migracao.decidir; os fluxos comuns, no Disparo.call sem 'assumido'.
     def gravar_disparos(&olhar)
+      ver = olhar
       disparos = []
+      allow(Ramon::Fluxos::Migracao).to receive(:decidir).and_wrap_original do |original, nome, gatilho, alvo, dados = {}, &bloco|
+        disparos << [gatilho, nome, ver.call]
+        original.call(nome, gatilho, alvo, dados, &bloco)
+      end
       allow(Ramon::Fluxos::Disparo).to receive(:call).and_wrap_original do |original, gatilho, alvo, dados = {}, **opcoes|
-        disparos << [gatilho, dados['migracao'], olhar.call]
+        disparos << [gatilho, nil, ver.call] unless dados.key?('assumido')
         original.call(gatilho, alvo, dados, **opcoes)
       end
       disparos
