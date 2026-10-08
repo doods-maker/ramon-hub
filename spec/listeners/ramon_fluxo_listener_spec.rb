@@ -8,15 +8,24 @@ RSpec.describe RamonFluxoListener do
 
   def evento(nome, dados) = Events::Base.new(nome, Time.zone.now, dados)
 
-  it 'mensagem recebida dispara com o texto; nota privada não' do
+  it 'mensagem recebida dispara com o texto e a mensagem (B5-leads: as rotinas leem a mensagem pelo id)' do
     msg = create(:message, conversation: conversa, account: account, inbox: conversa.inbox, message_type: :incoming, content: 'oi')
     expect(Ramon::Fluxos::Disparo).to receive(:call)
-      .with('mensagem_recebida', conversa, hash_including('texto' => 'oi', 'caixa_id' => conversa.inbox_id), origem: nil)
+      .with('mensagem_recebida', conversa, hash_including('texto' => 'oi', 'mensagem_id' => msg.id, 'caixa_id' => conversa.inbox_id), origem: nil)
     listener.message_created(evento('message.created', message: msg))
+  end
 
-    nota = create(:message, conversation: conversa, account: account, inbox: conversa.inbox, message_type: :outgoing, private: true)
-    expect(Ramon::Fluxos::Disparo).not_to receive(:call)
+  it 'nota privada de alguém da equipe dispara nota_escrita (B5-leads); a nota sem autor (a dos fluxos), nada' do
+    nota = create(:message, conversation: conversa, account: account, inbox: conversa.inbox, message_type: :outgoing, private: true,
+                            content: '@claude oi')
+    expect(Ramon::Fluxos::Disparo).to receive(:call)
+      .with('nota_escrita', conversa, hash_including('texto' => '@claude oi', 'mensagem_id' => nota.id), origem: nil)
     listener.message_created(evento('message.created', message: nota))
+
+    do_fluxo = create(:message, conversation: conversa, account: account, inbox: conversa.inbox, message_type: :outgoing, private: true)
+    do_fluxo.sender = nil # a fábrica põe um User em toda outgoing; nota de fluxo nasce sem autor (Passos::Conversa#escrever)
+    expect(Ramon::Fluxos::Disparo).not_to receive(:call)
+    listener.message_created(evento('message.created', message: do_fluxo))
   end
 
   it 'etapa mudou dispara etapa + ganho, com a execução autora como origem' do
