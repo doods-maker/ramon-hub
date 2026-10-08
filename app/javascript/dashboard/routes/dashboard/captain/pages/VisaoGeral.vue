@@ -503,15 +503,21 @@ const ir = (name, params = {}, query = {}) =>
           </ul>
         </section>
 
-        <!-- I-X6: caderno de provas (última rodada concluída por assistente) -->
-        <section data-testid="vg-caderno" :class="CARTAO">
+        <!-- I-X6: caderno de provas (última rodada concluída por assistente).
+             Largura cheia, assistentes lado a lado: é o 9º cartão da grade e
+             sozinho na coluna deixava um buraco à direita. -->
+        <section
+          data-testid="vg-caderno"
+          class="lg:col-span-2"
+          :class="[CARTAO]"
+        >
           <h2 :class="TITULO">
             {{ t('INTEL.VISAO_GERAL.CADERNO.TITULO') }}
           </h2>
           <p v-if="!caderno.length" class="mt-2 text-sm text-n-slate-10">
             {{ t('INTEL.VISAO_GERAL.CADERNO.NUNCA') }}
           </p>
-          <ul v-else class="flex flex-col gap-2 mt-2 list-none">
+          <ul v-else class="grid gap-2 mt-2 list-none lg:grid-cols-2">
             <li
               v-for="item in caderno"
               :key="item.assistant_id"
