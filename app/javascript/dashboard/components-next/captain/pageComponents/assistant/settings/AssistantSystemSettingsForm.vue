@@ -14,6 +14,11 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  // 'lead' (tem caixa conectada) | 'equipe' (só Testar e painel do Copiloto)
+  publico: {
+    type: String,
+    default: 'lead',
+  },
 });
 
 const emit = defineEmits(['submit']);
@@ -24,6 +29,9 @@ const { isCloudFeatureEnabled } = useAccount();
 const isCaptainV2Enabled = computed(() =>
   isCloudFeatureEnabled(FEATURE_FLAGS.CAPTAIN_V2)
 );
+
+// ramon (I-CF4): mensagens ao cliente (transferência/encerramento) só para quem fala com lead.
+const ehLead = computed(() => props.publico === 'lead');
 
 const initialState = {
   handoffMessage: '',
@@ -61,10 +69,12 @@ const updateStateFromAssistant = assistant => {
 };
 
 const handleSystemMessagesUpdate = async () => {
-  const validations = [
-    v$.value.handoffMessage.$validate(),
-    v$.value.resolutionMessage.$validate(),
-  ];
+  const validations = ehLead.value
+    ? [
+        v$.value.handoffMessage.$validate(),
+        v$.value.resolutionMessage.$validate(),
+      ]
+    : [];
 
   if (!isCaptainV2Enabled.value) {
     validations.push(v$.value.instructions.$validate());
@@ -103,6 +113,7 @@ watch(
 <template>
   <div class="flex flex-col gap-6">
     <Editor
+      v-if="ehLead"
       v-model="state.handoffMessage"
       :label="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.LABEL')"
       :placeholder="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.PLACEHOLDER')"
@@ -112,6 +123,7 @@ watch(
     />
 
     <Editor
+      v-if="ehLead"
       v-model="state.resolutionMessage"
       :label="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.LABEL')"
       :placeholder="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')"
@@ -142,11 +154,11 @@ watch(
           min="0"
           max="1"
           step="0.1"
-          class="w-full"
+          class="w-full accent-n-brand"
         />
         <span class="text-sm text-n-slate-12">{{ state.temperature }}</span>
       </div>
-      <p class="text-sm text-n-slate-11 italic">
+      <p class="text-sm text-n-slate-11">
         {{ t('CAPTAIN.ASSISTANTS.FORM.TEMPERATURE.DESCRIPTION') }}
       </p>
     </div>

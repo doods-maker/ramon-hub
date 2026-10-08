@@ -8,6 +8,7 @@ import { useMapGetter } from 'dashboard/composables/store';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 
 const props = defineProps({
   mode: {
@@ -35,7 +36,6 @@ const initialState = {
   productName: '',
   featureFaq: false,
   featureMemory: false,
-  featureCitation: false,
 };
 
 const state = reactive({ ...initialState });
@@ -71,7 +71,7 @@ const prepareAssistantDetails = () => ({
     product_name: state.productName,
     feature_faq: state.featureFaq,
     feature_memory: state.featureMemory,
-    feature_citation: state.featureCitation,
+    feature_citation: false,
   },
 });
 
@@ -95,7 +95,6 @@ const updateStateFromAssistant = assistant => {
     productName: config.product_name,
     featureFaq: config.feature_faq || false,
     featureMemory: config.feature_memory || false,
-    featureCitation: config.feature_citation || false,
   });
 };
 
@@ -142,23 +141,16 @@ watch(
       </legend>
 
       <label class="flex items-center gap-2">
-        <input v-model="state.featureFaq" type="checkbox" />
+        <Switch v-model="state.featureFaq" />
         <span class="text-sm font-medium text-n-slate-12">
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONVERSATION_FAQS') }}
         </span>
       </label>
 
       <label class="flex items-center gap-2">
-        <input v-model="state.featureMemory" type="checkbox" />
+        <Switch v-model="state.featureMemory" />
         <span class="text-sm font-medium text-n-slate-12">
           {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_MEMORIES') }}
-        </span>
-      </label>
-
-      <label class="flex items-center gap-2">
-        <input v-model="state.featureCitation" type="checkbox" />
-        <span class="text-sm font-medium text-n-slate-12">
-          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CITATIONS') }}
         </span>
       </label>
     </fieldset>

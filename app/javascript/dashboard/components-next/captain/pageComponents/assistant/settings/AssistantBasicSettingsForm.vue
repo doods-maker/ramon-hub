@@ -7,31 +7,53 @@ import { required, minLength } from '@vuelidate/validators';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
+import { AVISO, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 
 const props = defineProps({
   assistant: {
     type: Object,
     default: () => ({}),
   },
+  // 'lead' (tem caixa conectada) | 'equipe' (só Testar e painel do Copiloto)
+  publico: {
+    type: String,
+    default: 'lead',
+  },
 });
-
 const emit = defineEmits(['submit']);
+// ramon (I-CF3): o nome do escritório já vem preenchido quando o assistente não tem.
+const ESCRITORIO = 'Ramon Antonio Advogados';
+// ramon (I-CF4): chaves que só valem em conversa com lead. "Citações" sai da tela: no modo do agente não muda
+// nada e citação numerada não cabe em WhatsApp — é salva desligada.
+const CHAVES_DO_LEAD = [
+  {
+    campo: 'conversationFaqs',
+    rotulo: 'CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONVERSATION_FAQS',
+  },
+  {
+    campo: 'memories',
+    rotulo: 'CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_MEMORIES',
+    ajuda: 'INTEL.CONFIG.MEMORIA_AJUDA',
+  },
+  {
+    campo: 'contactAttributes',
+    rotulo: 'CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONTACT_ATTRIBUTES',
+  },
+];
 
 const { t } = useI18n();
 
-const initialState = {
+const state = reactive({
   name: '',
   description: '',
   productName: '',
   features: {
     conversationFaqs: false,
     memories: false,
-    citations: false,
     contactAttributes: false,
   },
-};
-
-const state = reactive({ ...initialState });
+});
 
 const validationRules = {
   name: { required, minLength: minLength(1) },
@@ -55,11 +77,10 @@ const updateStateFromAssistant = assistant => {
   const { config = {} } = assistant;
   state.name = assistant.name;
   state.description = assistant.description;
-  state.productName = config.product_name;
+  state.productName = config.product_name || ESCRITORIO;
   state.features = {
     conversationFaqs: config.feature_faq || false,
     memories: config.feature_memory || false,
-    citations: config.feature_citation || false,
     contactAttributes: config.feature_contact_attributes || false,
   };
 };
@@ -72,7 +93,7 @@ const handleBasicInfoUpdate = async () => {
   ]).then(results => results.every(Boolean));
   if (!result) return;
 
-  const payload = {
+  emit('submit', {
     name: state.name,
     description: state.description,
     config: {
@@ -80,12 +101,10 @@ const handleBasicInfoUpdate = async () => {
       product_name: state.productName,
       feature_faq: state.features.conversationFaqs,
       feature_memory: state.features.memories,
-      feature_citation: state.features.citations,
+      feature_citation: false,
       feature_contact_attributes: state.features.contactAttributes,
     },
-  };
-
-  emit('submit', payload);
+  });
 };
 
 watch(
@@ -124,28 +143,29 @@ watch(
       class="z-0"
     />
 
-    <div class="flex flex-col gap-2">
-      <label class="text-sm font-medium text-n-slate-12">
+    <div class="flex flex-col gap-3">
+      <span class="text-sm font-medium text-n-slate-12">
         {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.TITLE') }}
-      </label>
-      <div class="flex flex-col gap-2">
-        <label class="flex items-center gap-2">
-          <input v-model="state.features.conversationFaqs" type="checkbox" />
-          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONVERSATION_FAQS') }}
-        </label>
-        <label class="flex items-center gap-2">
-          <input v-model="state.features.memories" type="checkbox" />
-          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_MEMORIES') }}
-        </label>
-        <label class="flex items-center gap-2">
-          <input v-model="state.features.citations" type="checkbox" />
-          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CITATIONS') }}
-        </label>
-        <label class="flex items-center gap-2">
-          <input v-model="state.features.contactAttributes" type="checkbox" />
-          {{ t('CAPTAIN.ASSISTANTS.FORM.FEATURES.ALLOW_CONTACT_ATTRIBUTES') }}
-        </label>
-      </div>
+      </span>
+      <template v-if="publico === 'lead'">
+        <div
+          v-for="chave in CHAVES_DO_LEAD"
+          :key="chave.campo"
+          data-testid="config-chave"
+          class="flex items-start gap-3"
+        >
+          <Switch v-model="state.features[chave.campo]" class="mt-0.5" />
+          <div class="flex flex-col gap-1">
+            <span class="text-sm text-n-slate-12">{{ t(chave.rotulo) }}</span>
+            <span v-if="chave.ajuda" class="text-xs text-n-slate-10">
+              {{ t(chave.ajuda) }}
+            </span>
+          </div>
+        </div>
+      </template>
+      <p v-else :class="[AVISO, TOM.slate]">
+        {{ t('INTEL.CONFIG.SO_EQUIPE') }}
+      </p>
     </div>
 
     <div>
