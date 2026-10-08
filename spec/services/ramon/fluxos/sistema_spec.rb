@@ -87,9 +87,9 @@ RSpec.describe Ramon::Fluxos::Sistema do
     end
   end
 
-  it 'as 5 regras de dado são "regra fixa" (ficam no código, decisão do Eduardo 07/10)' do
+  it 'as 5 regras de dado e as etiquetas são "regra fixa" (ficam no código, decisão do Eduardo 07/10)' do
     account = create(:account)
     fixas = described_class.desenhos.keys.select { |chave| described_class.extras(account, chave)[:fixa] }
-    expect(fixas).to eq(%w[contrato_limpo contrato_limpo_cancelado docs_completos historico_do_lead sdr_automatico])
+    expect(fixas).to eq(%w[contrato_limpo contrato_limpo_cancelado docs_completos etiquetas_etapa_tese historico_do_lead sdr_automatico])
   end
 end
