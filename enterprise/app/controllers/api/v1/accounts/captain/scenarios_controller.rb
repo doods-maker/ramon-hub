@@ -7,6 +7,7 @@ class Api::V1::Accounts::Captain::ScenariosController < Api::V1::Accounts::BaseC
   def index
     # ramon: ligadas e desligadas (I-SK4) — a tela separa em abas; o agente segue só com as ligadas.
     @scenarios = assistant_scenarios.order(enabled: :desc, id: :asc)
+    @uso = uso_30d
   end
 
   def show; end
@@ -49,7 +50,16 @@ class Api::V1::Accounts::Captain::ScenariosController < Api::V1::Accounts::BaseC
     scenario_params.keys == ['enabled'] && !@scenario.enabled
   end
 
+  # ramon (I-SK7): quantas vezes cada ferramenta deste assistente rodou no atendimento de verdade em 30 dias —
+  # Testar (playground) e Casos de teste não contam. A tela soma as ferramentas de cada skill.
+  def uso_30d
+    Captain::ToolRun.fora_de_teste
+                    .where(account_id: Current.account.id, assistant_id: @assistant.id, created_at: 30.days.ago..)
+                    .where("#{Captain::ToolRun.table_name}.source IS DISTINCT FROM 'playground'")
+                    .group(:tool_name).count
+  end
+
   def scenario_params
-    params.require(:scenario).permit(:title, :description, :instruction, :enabled, tools: [])
+    params.require(:scenario).permit(:title, :description, :instruction, :enabled, :exemplo, tools: [], papeis: [])
   end
 end

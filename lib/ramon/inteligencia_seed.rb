@@ -64,11 +64,18 @@ class Ramon::InteligenciaSeed
   def seed_skill(assistant, skill)
     scenario = assistant.scenarios.find_by(seed_titulo: skill['title']) ||
                assistant.scenarios.find_or_initialize_by(title: skill['title'])
-    return @contagem[:skills_puladas_editadas] += 1 if scenario.edited?
+    return completar_editada(scenario, skill) if scenario.edited?
 
     @contagem[scenario.new_record? ? :skills_criadas : :skills_atualizadas] += 1
     scenario.update!(account: @account, description: skill['description'], instruction: skill['instruction'],
-                     enabled: true, seed_titulo: skill['title'])
+                     enabled: true, seed_titulo: skill['title'], exemplo: skill['exemplo'], papeis: skill['papeis'] || [])
+  end
+
+  # Editada na tela (I-SK5): o seed não mexe — só preenche fala de exemplo e papéis ainda vazios (A5).
+  def completar_editada(scenario, skill)
+    scenario.update_columns(exemplo: scenario.exemplo.presence || skill['exemplo'], # rubocop:disable Rails/SkipsModelValidations
+                            papeis: scenario.papeis.presence || skill['papeis'] || [])
+    @contagem[:skills_puladas_editadas] += 1
   end
 
   # [[tese, pergunta, resposta], ...] — tese = nome do arquivo (faq/<tese>.md).

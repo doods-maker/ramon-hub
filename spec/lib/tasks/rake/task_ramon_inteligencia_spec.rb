@@ -98,5 +98,19 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       expect(desligada.reload).not_to be_enabled
       expect(criada.reload).to be_enabled
     end
+
+    it 'grava fala de exemplo e papeis do yml; skill editada so ganha o que esta vazio (A5)', :aggregate_failures do
+      rodar
+      copiloto = account.captain_assistants.find_by!(name: 'Copiloto do Escritório')
+      skill = copiloto.scenarios.find_by!(seed_titulo: 'Funil hoje')
+      expect(skill).to have_attributes(exemplo: 'Como está o funil hoje?', papeis: ['comercial'])
+
+      skill.update!(edited: true, exemplo: 'Minha fala')
+      skill.update_columns(papeis: []) # rubocop:disable Rails/SkipsModelValidations
+      rodar
+
+      expect(skill.reload).to have_attributes(exemplo: 'Minha fala', papeis: ['comercial'])
+      expect(account.captain_assistants.find_by!(name: 'Atendimento').scenarios.where(exemplo: nil).count).to eq(0)
+    end
   end
 end

@@ -32,6 +32,7 @@ assistentes:
     skills:
       - title: Triagem e qualificação do lead novo
         description: Lead novo chegou pelo WhatsApp — acolher, entender o caso, avaliar viabilidade e registrar para a equipe.
+        exemplo: 'Oi, me machuquei no trabalho ano passado e fiquei com limitação na mão. Tenho direito a alguma coisa?'
         instruction: |
           Antes de perguntar qualquer coisa, consulte [Triagem da LP](tool://triagem_da_lp): quem chegou pela
           landing page já respondeu ao quiz — aproveite o que veio (não repita pergunta respondida; confirme
@@ -64,6 +65,7 @@ assistentes:
           de novo o que já ficou definido.
       - title: Dúvidas do lead e objeções
         description: Responder perguntas sobre o benefício, o escritório e o honorário; acolher objeções sem pressão.
+        exemplo: 'Quanto vocês cobram? Tenho medo de pagar e não dar em nada.'
         instruction: |
           Para qualquer pergunta do lead, primeiro consulte [FAQ](tool://faq_lookup); se a FAQ não cobrir,
           use [Playbook da tese](tool://playbook_da_tese) (seção de objeções e apresentação). Responda curto,
@@ -83,6 +85,7 @@ assistentes:
           do funil — isso só cria uma sugestão pendente para o humano confirmar no Cockpit.
       - title: Estimar valor do benefício e honorário
         description: Quando o lead pergunta "quanto vou receber", dar uma estimativa honesta só com base em dado real.
+        exemplo: 'Quanto eu vou receber de auxílio-acidente?'
         instruction: |
           Só estime valor quando houver dado real: CNIS anexado ao caso ou salário informado pelo lead. Use
           [Calcular benefício no motor](tool://calcular_beneficio) e, com o resultado, [Simular honorário](tool://simular_honorario). Se não houver CNIS nem salário, não chute: explique que o valor depende do
@@ -93,6 +96,7 @@ assistentes:
           (30% dos atrasados + 3 parcelas), lembrando que só paga se receber.
       - title: Agendar conversa com o advogado
         description: Combinar a reunião de análise/fechamento e registrar para a equipe.
+        exemplo: 'Pode ser, quero conversar com o advogado. Que dia tem?'
         instruction: |
           Quando o lead quiser avançar, ofereça a conversa com o advogado. Use [Link de agendamento](tool://link_agendamento) para obter o link em que ele escolhe dia e horário e envie com uma frase
           curta. Se ele preferir combinar por aqui, registre com [Agendar reunião](tool://agendar_reuniao) a
@@ -104,6 +108,7 @@ assistentes:
           [Criar tarefa de cadência](tool://criar_tarefa_esteira) usando a data que ele disse.
       - title: Fechar contrato
         description: O lead decidiu fechar — preparar contrato e caso, sempre com aprovação humana.
+        exemplo: 'Decidi, quero fechar com vocês. Como faço?'
         instruction: |
           Quando o lead decidir fechar, prepare — nunca execute:
           [Preparar contrato no ZapSign](tool://preparar_contrato_zapsign) para o contrato de honorários +
@@ -112,6 +117,7 @@ assistentes:
           honorário mais uma vez, com clareza. Nunca afirme que o contrato já existe.
       - title: Pós-venda — cobrar e receber documentos
         description: Depois do contrato, ajudar o cliente a enviar o que falta e orientar como enviar.
+        exemplo: 'Já assinei o contrato. Quais documentos eu preciso mandar?'
         instruction: |
           Use [O que falta no caso](tool://documentacao_faltante) para saber os documentos pendentes. Peça
           um por vez, em linguagem simples (ex.: "a carta que o INSS mandou quando cortou o benefício"),
@@ -143,6 +149,8 @@ assistentes:
     skills:
       - title: Situacao do processo
         description: Situação de um PROCESSO no AdvBox, a partir do nome ou do CPF do cliente.
+        exemplo: 'Qual a situação do processo deste cliente?'
+        papeis: [recepção, controladoria, advogados]
         instruction: |
           Quando pedirem a situação do processo de alguém, use [Buscar processo no AdvBox](tool://buscar_processo_advbox) com o nome, o CPF ou o número CNJ informado. Pegue o id do processo certo no
           resultado e chame [Consultar dossiê no AdvBox](tool://consultar_dossie_advbox) com esse id. Se
@@ -156,6 +164,8 @@ assistentes:
           separe por pessoa. Nunca invente dado que não veio do AdvBox.
       - title: Consultas no AdvBox
         description: Clientes, tarefas/prazos, documentos e radar de movimentações do AdvBox (leitura).
+        exemplo: 'Quais prazos vencem esta semana no AdvBox?'
+        papeis: [controladoria, advogados]
         instruction: |
           Para achar uma pessoa no AdvBox, use [Buscar cliente](tool://buscar_cliente_advbox) por nome, CPF,
           telefone ou cidade e, se pedirem a ficha, [Ficha do cliente](tool://cliente_advbox) com o id.
@@ -169,6 +179,8 @@ assistentes:
           Responda em lista curta com datas em DD/MM/AAAA.
       - title: Escrever no AdvBox
         description: Criar tarefa, registrar movimentação ou cadastrar cliente no AdvBox — sempre com confirmação do humano.
+        exemplo: 'Crie uma tarefa no AdvBox para conferir o laudo deste caso amanhã.'
+        papeis: [controladoria, advogados]
         instruction: |
           Você pode criar tarefa ([Criar tarefa](tool://criar_tarefa_advbox)), registrar andamento manual
           ([Registrar movimentação](tool://criar_movimentacao_advbox)) e cadastrar cliente
@@ -183,6 +195,8 @@ assistentes:
           buscar_cliente_advbox para não duplicar. Datas YYYY-MM-DD; se não souber a data de hoje, pergunte.
       - title: Anotar atendimento ou pedir por tarefa
         description: Registrar no processo um atendimento/contato com o cliente (POP RCP-07) ou pedir algo a um colega por tarefa (POPs RCP-06 e JUR-03).
+        exemplo: 'Anote no processo deste caso que a cliente ligou pedindo notícia da perícia.'
+        papeis: [recepção, controladoria, advogados]
         instruction: |
           Dois modos, ambos terminam numa tarefa no processo do cliente, gravada pela regra de ouro de
           "Escrever no AdvBox" (prévia, "confirma?", só então o código).
@@ -210,6 +224,8 @@ assistentes:
           ação para alguém, ofereça o PEDIR.
       - title: Lancar andamento do INSS
         description: Varredura de sexta (POP CTRL-02) — lançar no AdvBox as novidades do RequerimentoINSS, com a tarefa que o desfecho pede.
+        exemplo: 'Lance no AdvBox as novidades do INSS desta semana.'
+        papeis: [controladoria]
         instruction: |
           A pessoa cola ou descreve as novidades do RequerimentoINSS/Meu INSS de um ou mais clientes. Para cada
           um: ache o processo com [Buscar processo no AdvBox](tool://buscar_processo_advbox) e veja etapa e
@@ -230,6 +246,8 @@ assistentes:
           IMPLANTAÇÃO). Nunca calcule nem lance data fatal; não comente o mérito do que o INSS decidiu.
       - title: Explicar andamento ao cliente
         description: Mensagem de WhatsApp em linguagem simples sobre o andamento do processo (POP CTRL-05) — rascunho para a equipe enviar.
+        exemplo: 'Escreva a mensagem para o cliente deste caso explicando o andamento.'
+        papeis: [recepção, controladoria]
         instruction: |
           Ache o processo com [Buscar processo no AdvBox](tool://buscar_processo_advbox) e leia
           [Dados do processo](tool://processo_advbox), [Movimentações](tool://movimentacoes_advbox) e, para
@@ -247,6 +265,8 @@ assistentes:
           AdvBox.
       - title: Preparar reuniao
         description: O que falta, cálculo, honorário e prescrição de um CASO do hub (lead_id), com o playbook da tese.
+        exemplo: 'Prepare a reunião deste caso.'
+        papeis: [comercial]
         instruction: |
           Para preparar a reunião de um caso, faça nesta ordem:
           1. [O que falta no caso](tool://documentacao_faltante) — documentos pendentes, lacunas e tarefas;
@@ -261,6 +281,8 @@ assistentes:
           nunca prometa resultado nem prazo do INSS.
       - title: Historico da pessoa
         description: Todos os casos e conversas de uma pessoa no hub e os marcos etários que ainda vencem.
+        exemplo: 'Mostre o histórico da pessoa deste caso.'
+        papeis: [recepção, comercial]
         instruction: |
           Quando perguntarem o histórico de uma pessoa (não de um caso específico), use
           [Linha da vida da pessoa](tool://linha_da_vida) e [Histórico do contato](tool://historico_do_contato).
@@ -269,6 +291,8 @@ assistentes:
           a data de cada um.
       - title: Revisao de documentos do caso
         description: O que já chegou, o que falta e o que pedir ao cliente — com o texto pronto da cobrança.
+        exemplo: 'O que falta de documento neste caso?'
+        papeis: [comercial, controladoria]
         instruction: |
           Use [O que falta no caso](tool://documentacao_faltante). Responda em três blocos: (1) recebidos;
           (2) pendentes, dizendo para cada um por que importa; (3) o texto pronto de cobrança para colar no
@@ -276,18 +300,24 @@ assistentes:
           marque nada como recebido — isso é decisão da equipe na tela.
       - title: Funil hoje
         description: Números do funil e do dia — meta, conversão por etapa, SLA, perdas por tese.
+        exemplo: 'Como está o funil hoje?'
+        papeis: [comercial]
         instruction: |
           Quando perguntarem como está o funil, a meta, a conversão ou as perdas, use [Funil hoje](tool://funil_hoje) e responda em texto corrido e curto: meta do dia (feito/alvo), conversão por
           etapa destacando o gargalo, SLA de 1ª resposta (estouros e média), perdas por tese nos últimos 90
           dias com o motivo mais comum. Se pedirem, sugira 1 ação concreta para o gargalo.
       - title: Agenda do dia
         description: Reuniões e tarefas de hoje (hub e AdvBox) e o que está atrasado.
+        exemplo: 'O que tenho na agenda hoje?'
+        papeis: [recepção, comercial, advogados]
         instruction: |
           Use [Agenda do dia](tool://agenda_do_escritorio). Responda em ordem de horário: reuniões de hoje (com o
           lead e a etapa), tarefas do hub vencendo hoje, tarefas atrasadas, e as tarefas do AdvBox com prazo
           hoje. Termine com "o que fazer primeiro" em uma linha.
       - title: Playbook da tese
         description: Critérios, objeções, apresentação e honorário de uma tese, para a equipe consultar.
+        exemplo: 'Quais os critérios do auxílio-acidente?'
+        papeis: [comercial]
         instruction: |
           Quando alguém perguntar como responder uma objeção, quais são os critérios de qualificação, os
           documentos ou o honorário de uma tese, use [Playbook da tese](tool://playbook_da_tese) com o nome
