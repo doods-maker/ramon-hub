@@ -5,6 +5,7 @@
 # - por dia: 1 vez no dia; fluxo que nasceu depois da hora de hoje começa amanhã (nunca repete a vez que o código já fez);
 # - a cada N min: 1 vez por bloco de N minutos.
 # O job do código (Ramon::Fluxos::Rotinas::Conta.cada_conta) disputa a MESMA vez do fluxo migrado: quem pega faz.
+# Fluxo migrado de uma rotina do código (Rotinas::Conta): no comando o fluxo faz; não começou ou fora do comando, o código faz.
 module Ramon::Fluxos::HorarioConta
   GATILHO = 'horario_conta'.freeze
   PASSOS = %w[se escolha esperar parar avisar_push rotina].freeze # os que rodam sem lead
@@ -26,6 +27,7 @@ module Ramon::Fluxos::HorarioConta
 
   def disparar_fluxo(fluxo, agora)
     return unless na_hora?(config(fluxo), agora) && tem_o_que_fazer?(fluxo) && reivindicar(fluxo, agora)
+    return Ramon::Fluxos::Rotinas::Conta.decidir(fluxo) if Ramon::Fluxos::Rotinas::Conta.migrado?(fluxo) # B5: a vez é da rotina
     return if fluxo.modo == 'normal' && fluxo.limite_atingido?
 
     Ramon::Fluxos::Disparo.new(fluxo, fluxo.account, {}, nil).iniciar
