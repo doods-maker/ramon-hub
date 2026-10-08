@@ -9,17 +9,27 @@ module Ramon::MemoriaContato
   MAX_ITENS = 6
   ANTERIORES = 3
   # Nome/espécie de benefício não é dado de saúde: sai do item antes do teste (senão "auxílio-doença" cairia por "doença").
-  BENEFICIO = /aux[ií]lio[-\s]?(?:doen[cç]a|acidente)|aposentadoria\s+por\s+(?:incapacidade|invalidez)|\bBPC\b|\bLOAS\b|
-               \bB\s?(?:31|32|36|41|42|46|87|88|91|92|93|94)\b/ix
-  # ponytail: lista de palavras — cobre o comum (doença, código CID tipo M54/F32, parte do corpo); a regra principal é o
-  # PROMPT. Se escapar algo, somar aqui. LER só em maiúsculas ("não sabe ler" não é saúde).
+  BENEFICIO = /aux[ií]lio[-\s]?(?:doen[cç]a|acidente)|aposentadoria\s+por\s+(?:incapacidade|invalidez)|\bBPC\b|\bLOAS\b/i
+  # Espécie do INSS (B31, B91…). Algumas também são código CID (B91, B92…): perto de laudo/atestado/perícia, não sai.
+  ESPECIE = /\bB\s?(?:31|32|36|41|42|46|87|88|91|92|93|94)\b/i
+  DOC_MEDICO = /laudo|atestado|per[ií]cia/i
+  # ponytail: lista de palavras — cobre o comum (doença, código CID tipo M54/F32, parte do corpo, condições do BPC); a
+  # regra principal é o PROMPT. Se escapar algo, somar aqui. LER só em maiúsculas ("não sabe ler" não é saúde);
+  # "operador" e "mão de obra" passam.
   # Borda da palavra por lookaround com \p{L} (e não \b + \w): no Ruby o \w é só ASCII e o \b é Unicode, então
-  # "depress\w*\b" NÃO casaria "depressão".
-  SAUDE = /(?<![\p{L}\d])(?:cid|[a-z]\d{2}\.?\d?|diagn[oó]stic\p{L}*|doen[cç]a\p{L}*|les[aã]o|les[oõ]es|sequela\p{L}*|
-            fratur\p{L}*|cirurgi\p{L}*|rem[eé]di\p{L}*|medica\p{L}*|tratament\p{L}*|exame\p{L}*|depress\p{L}*|ansiedade|
-            c[aâ]ncer|tumor\p{L}*|h[eé]rnia\p{L}*|tendinite|bursite|lombalgia|amputa\p{L}*|psiqui\p{L}*|fisioterapi\p{L}*|
-            (?-i:LER)|dort|avc|infarto|coluna|lombar|cervical|joelho\p{L}*|ombro\p{L}*|bra[cç]o\p{L}*|perna\p{L}*|
-            dedo\p{L}*|punho\p{L}*|quadril|tornozelo\p{L}*|costas|sa[uú]de)(?![\p{L}\d])/ix
+  # "depress\w*\b" NÃO casaria "depressão". O lookbehind fica fora do /i (case fold de \p{L} no lookbehind pode não compilar).
+  SAUDE = /(?-i:(?<![\p{L}\d]))(?:
+            cid\d*|[a-z]\d{2}\.?\d?|diagn[oó]stic\p{L}*|doen[cç]a\p{L}*|doente\p{L}*|dor(?:es)?|les[aã]o|les[oõ]es|lesion\p{L}*|
+            machuc\p{L}*|sequela\p{L}*|fratur\p{L}*|cirurgi\p{L}*|operad[oa]s?|internad\p{L}*|interna[cç][aã]o|rem[eé]di\p{L}*|
+            medica\p{L}*|tratament\p{L}*|exame\p{L}*|depress\p{L}*|ansiedade|p[aâ]nico|s[ií]ndrome|transtorno|bipolar|
+            esquizo\p{L}*|burnout|psiqui\p{L}*|psic[oó]\p{L}*|\p{L}*ologista|ortoped\p{L}*|fisioterapi\p{L}*|c[aâ]ncer|
+            tumor\p{L}*|h[eé]rnia\p{L}*|tendinite|tend[aã]o|bursite|lombalgia|artros\p{L}*|artrit\p{L}*|fibromialg\p{L}*|
+            ligamento\p{L}*|menisco|amput\p{L}*|defici[eê]n\p{L}*|autis\p{L}*|diabet\p{L}*|press[aã]o\s+alta|hipertens\p{L}*|
+            hiv|aids|derrame|avc|infarto|epilep\p{L}*|hansen\p{L}*|gr[aá]vid\p{L}*|gesta[cçn]\p{L}*|(?-i:LER)|dort|
+            olhos?|vis[aã]o|ceg(?:[oa]s?|ueira)|surd\p{L}*|auditiv\p{L}*|coluna|lombar|cervical|joelho\p{L}*|ombro\p{L}*|
+            bra[cç]o\p{L}*|perna\p{L}*|m[aã]os?(?!\s+de\s+obra)|p[eé]s?|dedo\p{L}*|punho\p{L}*|quadril|tornozelo\p{L}*|
+            costas|sa[uú]de
+          )(?![\p{L}\d])/ix
   PROMPT = <<~TXT.freeze
     Você lê o fim de uma conversa de WhatsApp entre um escritório de advocacia previdenciária e trabalhista
     (Support Agent) e um lead (User) e anota, para a equipe, o que vale lembrar sobre ESTA pessoa na próxima conversa.
@@ -58,7 +68,11 @@ module Ramon::MemoriaContato
     []
   end
 
-  def saude?(item) = item.gsub(BENEFICIO, '').match?(SAUDE)
+  def saude?(item)
+    limpo = item.gsub(BENEFICIO, '')
+    limpo = limpo.gsub(ESPECIE, '') unless item.match?(DOC_MEDICO)
+    limpo.match?(SAUDE)
+  end
 
   # Uma nota no lead (sem autor: foi a IA). Nada a gravar (vazio, ou só item de saúde) → nil.
   def gravar!(lead, numero_conversa, itens)

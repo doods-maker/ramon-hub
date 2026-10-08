@@ -29,7 +29,28 @@ RSpec.describe Ramon::MemoriaContato do
     end
 
     it 'sem itens, ou so com item de saude, nao grava' do
-      expect { described_class.gravar!(lead, 1, ['', 'Tem depressão', 'Fez cirurgia no joelho', 'Tem LER e DORT']) }.not_to change(LeadNote, :count)
+      itens = ['', 'Tem depressão', 'Fez cirurgia no joelho', 'Tem LER e DORT', 'Amputou a mão', 'Tem deficiência visual']
+
+      expect { described_class.gravar!(lead, 1, itens) }.not_to change(LeadNote, :count)
+    end
+
+    it 'nenhum dado de saude comum no previdenciario passa (um item por vez)' do
+      saude = ['Está doente desde 2023', 'Sente muita dor ao trabalhar', 'Tem autismo', 'Filho autista', 'Amputou a mão na prensa',
+               'Machucou a mão no trabalho', 'Lesionou o pé', 'Foi operado em 2024', 'Ficou internado 30 dias', 'Teve internação',
+               'Faz acompanhamento psicológico', 'Consulta com ortopedista', 'Perdeu a visão de um olho', 'Perda auditiva',
+               'Surdez parcial', 'Tem diabetes e pressão alta', 'Tem HIV', 'Teve derrame', 'Tem epilepsia', 'Tem esquizofrenia',
+               'Transtorno bipolar', 'Síndrome do pânico', 'Tem artrose', 'Fibromialgia', 'Rompeu o ligamento', 'Tem hanseníase',
+               'Burnout', 'Está grávida', 'CID10', 'CID-10 M54', 'Laudo com B92']
+
+      expect(saude.reject { |item| described_class.saude?(item) }).to eq([])
+    end
+
+    it 'beneficio, especie e profissao passam' do
+      nota = described_class.gravar!(lead, 7, ['Trabalha como operador de máquina', 'Mão de obra na construção', 'Recebeu B31',
+                                               'Pediu auxílio-doença', 'Laudo com B92'])
+
+      expect(nota.body).to eq("MEMÓRIA DA IA (conversa #7):\n- Trabalha como operador de máquina\n- Mão de obra na construção\n" \
+                              "- Recebeu B31\n- Pediu auxílio-doença")
     end
 
     it 'no maximo 6 itens e 1000 caracteres', :aggregate_failures do
