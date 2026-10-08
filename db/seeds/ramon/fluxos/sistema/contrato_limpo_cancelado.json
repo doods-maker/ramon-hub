@@ -1,6 +1,7 @@
 {
   "nome": "Contrato limpo cancelado",
   "grupo": "contrato_documentos",
+  "fixa": true,
   "descricao": "No código: LeadComercial after_save :cancelar_contrato_limpo (app/models/concerns/lead_comercial.rb).\n\nO desenho não consegue mostrar:\n• só quando o ganho é desfeito (won_at volta a vazio) e o lead já tinha o carimbo de limpo;\n• apaga a coluna contrato_limpo_em e carimba contrato_cancelado_em; se o mês já fechou, o desconto entra na apuração seguinte (Ramon::ExtratoDescontos).",
   "resumo": "Quando um ganho é desfeito, tira a marca de contrato limpo e registra o cancelamento.",
   "desenho": {

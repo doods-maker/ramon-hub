@@ -113,4 +113,12 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
       expect(response.parsed_body).to eq('erro' => erro.message)
     end
   end
+
+  it 'ensaio do Horário da conta roda na conta toda (B5)' do
+    grafo_conta = grafo_linear({ 'tipo' => 'horario_conta', 'hora' => '08:00' }, ['avisar_push', { 'texto' => 'oi' }])
+    fluxo = fluxo_publicado(account, grafo_conta)
+    post "#{url}/#{fluxo.id}/ensaio", params: { conta: true, usar: 'publicada' }, headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body).to include('status' => 'concluida', 'ensaio' => true, 'alvo_type' => 'Account', 'alvo_id' => account.id)
+    expect(response.parsed_body['trilha'].last['resumo']).to eq('faria: push "oi"')
+  end
 end

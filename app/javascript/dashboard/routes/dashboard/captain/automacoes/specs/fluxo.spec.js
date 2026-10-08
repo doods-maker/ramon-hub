@@ -3,12 +3,17 @@ import {
   caminhoAceso,
   deVueFlow,
   duplicarPasso,
+  GATILHOS,
   idDoErro,
   ligar,
   novaChave,
   paraVueFlow,
   PALETA,
+  PASSOS_CONTA,
   podarSetas,
+  ROTINAS,
+  rotinaAlvo,
+  rotinasPara,
   saidasDe,
   TIPOS_PASSO,
   trocarConfig,
@@ -301,5 +306,40 @@ describe('erros do back e caminho aceso', () => {
     const { nos, setas } = caminhoAceso(trilha, DESENHO);
     expect([...nos]).toEqual(['n1', 'n2', 'n4']);
     expect([...setas]).toEqual(['n1:s', 'n2:nao']);
+  });
+});
+
+describe('rotinas prontas (registro por plano, B5)', () => {
+  it('as 5 de lead da B4.4 + as 7 da conta (rotinas/conta.js)', () => {
+    expect(rotinasPara('lead')).toEqual([
+      'dossie_passagem',
+      'pesquisa_nps',
+      'pesquisa_nps_exito',
+      'abrir_caso_advbox',
+      'concluir_tarefas',
+    ]);
+    expect(rotinasPara('conta')).toEqual([
+      'resumo_do_dia',
+      'retrato_funil',
+      'fechamento_extrato',
+      'espelho_painel',
+      'copiloto_noturno',
+      'publicar_pecas',
+      'avisos_painel',
+    ]);
+    expect(new Set(ROTINAS).size).toBe(ROTINAS.length);
+    expect(rotinaAlvo('xyz')).toBeUndefined();
+  });
+
+  it('o Horário da conta tem a conta de alvo e só os passos sem lead', () => {
+    expect(GATILHOS.find(g => g.tipo === 'horario_conta').alvo).toBe('conta');
+    expect(PASSOS_CONTA).toEqual([
+      'se',
+      'escolha',
+      'esperar',
+      'parar',
+      'avisar_push',
+      'rotina',
+    ]);
   });
 });

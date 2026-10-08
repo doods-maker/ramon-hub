@@ -51,7 +51,7 @@ RSpec.describe Ramon::Fluxos::Sistema do
     expect(described_class.extras(account, 'avisos_painel')).to eq(
       hoje: nil, grupo: 'painel_cliente', alcance: 'fala_com_cliente',
       resumo: 'Todo dia às 8h, avisa o cliente por e-mail das novidades do caso (desligado até aprovarmos os textos).',
-      gatilho_rotulo: 'Todo dia às 08:00 (só com PORTAL_AVISOS=on)'
+      gatilho_rotulo: 'Todo dia às 08:00 (só com PORTAL_AVISOS=on)', fixa: false
     )
     expect(described_class.extras(account, 'publicar_pecas')).to include(grupo: 'instagram', alcance: 'publica', hoje: 0)
     expect(described_class.extras(account, 'cadencia')).to include(alcance: nil, gatilho_rotulo: nil)
@@ -85,5 +85,11 @@ RSpec.describe Ramon::Fluxos::Sistema do
       travel_to(sp('2026-10-05 23:30')) { create(:lead, account: account, lead_stage: ganho) }
       travel_to(sp('2026-10-06 09:00')) { expect(described_class.hoje(account, 'lead_ganho')).to eq(0) }
     end
+  end
+
+  it 'as 5 regras de dado são "regra fixa" (ficam no código, decisão do Eduardo 07/10)' do
+    account = create(:account)
+    fixas = described_class.desenhos.keys.select { |chave| described_class.extras(account, chave)[:fixa] }
+    expect(fixas).to eq(%w[contrato_limpo contrato_limpo_cancelado docs_completos historico_do_lead sdr_automatico])
   end
 end

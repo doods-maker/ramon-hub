@@ -1,6 +1,6 @@
 # Fluxos do sistema (spec §8, D7; decisão do Eduardo 06/10: as 29 automações do código): o desenho
 # só-leitura de cada automação que ainda roda no código. Fonte = db/seeds/ramon/fluxos/sistema/<chave>.json
-# ({nome, grupo, alcance?, descricao, limite_dia?, desenho}). Cada conta tem 1 Fluxo origem 'sistema' por
+# ({nome, grupo, alcance?, fixa?, descricao, limite_dia?, desenho}). Cada conta tem 1 Fluxo origem 'sistema' por
 # arquivo (sistema_chave = nome do arquivo), criado ou atualizado quando a lista abre. O motor nunca os
 # executa (Fluxo.executaveis e Disparo#iniciar) e a API recusa editar, publicar, ensaiar e rodar.
 module Ramon::Fluxos::Sistema
@@ -44,12 +44,14 @@ module Ramon::Fluxos::Sistema
     HOJE[chave]&.call(account, Time.find_zone!(Fluxo::ZONA).now.all_day)
   end
 
+  # fixa: regra de dado que fica no código de propósito (selo "regra fixa"; decisão do Eduardo 07/10).
   # O que a lista e o desenho mostram além das colunas do Fluxo (vem do JSON em memória, sem coluna nova).
   # resumo: frase simples da lista. gatilho_rotulo: quando o gatilho real não existe nos fluxos, o desenho usa o mais próximo e o rótulo diz o real.
   def extras(account, chave)
     desenho = desenhos[chave] || {}
     {
-      hoje: hoje(account, chave), grupo: desenho['grupo'], alcance: desenho['alcance'], resumo: desenho['resumo'],
+      hoje: hoje(account, chave), grupo: desenho['grupo'], alcance: desenho['alcance'],
+      fixa: desenho['fixa'] == true, resumo: desenho['resumo'],
       gatilho_rotulo: Ramon::Fluxos::Grafo.new(desenho['desenho']).gatilho&.dig('config', 'rotulo')
     }
   end

@@ -25,6 +25,7 @@ import {
 import {
   adicionarPasso,
   duplicarPasso,
+  gatilhoInfo,
   idDoErro,
   ligar,
   podarSetas,
@@ -130,6 +131,13 @@ onBeforeUnmount(() => {
 
 const noSelecionado = computed(
   () => nodes.value.find(n => n.id === selecionado.value) || null
+);
+// B5-conta: o alvo do gatilho (lead/conversa ou a conta toda) — muda a paleta, as rotinas e o "Testar"
+const alvoGatilho = computed(
+  () =>
+    gatilhoInfo(
+      nodes.value.find(n => n.data.tipo === 'gatilho')?.data.config?.tipo
+    )?.alvo || 'lead'
 );
 // Delete/Backspace apaga direto no v-model do quadro: solta a seleção que sumiu.
 watch(nodes, lista => {
@@ -330,6 +338,15 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
           <i class="i-lucide-triangle-alert size-3" />
           {{ t(`${K}.SISTEMA.ALCANCE.${fluxo.alcance}`) }}
         </span>
+        <span
+          v-if="somenteLeitura && fluxo.fixa"
+          data-testid="sistema-fixa"
+          :class="[CHIP, TOM.slate]"
+          class="shrink-0 font-mono"
+          :title="t(`${K}.SISTEMA.FIXA_DICA`)"
+        >
+          {{ t(`${K}.SELO.REGRA_FIXA`) }}
+        </span>
 
         <div class="ml-auto flex items-center gap-2">
           <span
@@ -403,7 +420,11 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
             slate
             sm
             icon="i-lucide-flask-conical"
-            :label="t(`${K}.EDITOR.TESTAR`)"
+            :label="
+              t(
+                `${K}.EDITOR.${alvoGatilho === 'conta' ? 'TESTAR_CONTA' : 'TESTAR'}`
+              )
+            "
             @click="testando = true"
           />
           <Button
@@ -463,7 +484,12 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
           :label="t(`${K}.EDITOR.ADICIONAR`)"
           @click="paleta = true"
         />
-        <Paleta v-if="paleta" @escolher="adicionar" @fechar="paleta = false" />
+        <Paleta
+          v-if="paleta"
+          :alvo="alvoGatilho"
+          @escolher="adicionar"
+          @fechar="paleta = false"
+        />
         <div
           v-if="errosGerais.length || (mostrarErros && nosComErro.size)"
           :class="[AVISO, TOM.ruby]"
@@ -486,6 +512,7 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
           :key="noSelecionado.id"
           :no="noSelecionado"
           :erros="errosDoNo"
+          :alvo="alvoGatilho"
           @update:config="mudarConfig"
           @duplicar="duplicar"
           @excluir="excluirPasso"
@@ -551,6 +578,7 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
       :erros="errosTeste"
       :ocupado="ocupadoTeste"
       :pode-rodar="podeRodar"
+      :conta="alvoGatilho === 'conta'"
       @ensaiar="alvo => testar('ensaiar', alvo)"
       @rodar="alvo => testar('rodar', alvo)"
       @fechar="testando = false"

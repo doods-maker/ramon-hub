@@ -1,7 +1,7 @@
 {
   "nome": "Resumo do dia",
   "grupo": "rotinas_relatorios",
-  "descricao": "No código: Ramon::DailyDigestJob (todo dia às 08:00) → Ramon::DailyDigestService; o e-mail sai pelo AdministratorNotifications::RamonDigestMailer.\n\nFica no código (spec §8): é relatório, não fluxo — o desenho é só para conferir.\n\nO desenho não consegue mostrar:\n• roda uma vez por conta, não uma vez por lead como o gatilho Relógio;\n• o push só sai se o dia tem algo (tarefas vencidas, conversas fora do SLA, reunião ainda hoje ou valor em jogo) e só com o ntfy configurado;\n• o passo do e-mail é só uma representação: a ação real é um e-mail de gestão, que o quadro não tem como passo;\n• o e-mail de gestão (leads novos, ganhos, perdidos e 1ª resposta de ontem) só sai com SMTP configurado — o quadro não tem passo de e-mail.",
+  "descricao": "No código: Ramon::DailyDigestJob (todo dia às 08:00) → Ramon::DailyDigestService; o e-mail sai pelo AdministratorNotifications::RamonDigestMailer.\n\nO desenho não consegue mostrar:\n• roda uma vez por conta, não uma vez por lead como o gatilho Relógio;\n• o push só sai se o dia tem algo (tarefas vencidas, conversas fora do SLA, reunião ainda hoje ou valor em jogo) e só com o ntfy configurado;\n• o passo do e-mail é só uma representação: a ação real é um e-mail de gestão, que o quadro não tem como passo;\n• o e-mail de gestão (leads novos, ganhos, perdidos e 1ª resposta de ontem) só sai com SMTP configurado — o quadro não tem passo de e-mail.",
   "resumo": "Todo dia às 8h, avisa a equipe do que precisa de atenção hoje.",
   "desenho": {
     "nos": [

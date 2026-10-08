@@ -36,7 +36,8 @@ module Ramon::Fluxos::Migracao
       fluxos: { 'eventos_advbox' => 'evento_advbox' }.freeze,
       preparar: ->(account, desenho) { Ramon::Fluxos::Migracao.com_etapa(desenho, account.lead_stages.find_by!(is_won: true).id) }
     }
-  }.freeze
+    # B5: as migrações dos planos B5 vêm do registro de rotinas (o GRUPOS de cada Ramon::Fluxos::Rotinas::<Plano>).
+  }.merge(Ramon::Fluxos::Rotinas.grupos) { |chave| raise ArgumentError, "Migração repetida: #{chave}" }.freeze
 
   module_function
 

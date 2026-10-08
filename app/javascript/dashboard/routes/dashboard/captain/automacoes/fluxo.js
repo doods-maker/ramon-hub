@@ -42,6 +42,7 @@ export const GATILHOS = [
   { tipo: 'lead_parado', icone: 'i-lucide-timer-off', alvo: 'lead' },
   { tipo: 'relogio', icone: 'i-lucide-alarm-clock', alvo: 'lead' },
   { tipo: 'manual', icone: 'i-lucide-hand', alvo: 'lead' },
+  { tipo: 'horario_conta', icone: 'i-lucide-building-2', alvo: 'conta' },
 ];
 export const gatilhoInfo = tipo => GATILHOS.find(g => g.tipo === tipo);
 
@@ -317,13 +318,40 @@ export const TIPOS_ATIVIDADE = [
   'advbox_concessao',
   'advbox_arquivado',
 ];
-// = Ramon::Fluxos::Passos::Rotina::ROTINAS (B4.4/B4.5: o mesmo código de hoje, com as mesmas travas)
-export const ROTINAS = [
-  'dossie_passagem',
-  'pesquisa_nps',
-  'pesquisa_nps_exito',
-  'abrir_caso_advbox',
-  'concluir_tarefas',
+// Rotinas prontas do hub (= Ramon::Fluxos::Rotinas): as 5 da B4.4/B4.5 (de lead) + as de cada plano B5, um arquivo por
+// plano em ./rotinas/<plano>.js = [{ chave, alvo: 'conta' | 'lead' | 'conversa' }] (= ROTINAS do módulo do plano).
+const PLANOS = import.meta.glob('./rotinas/*.js', {
+  eager: true,
+  import: 'default',
+});
+export const ROTINAS_INFO = [
+  ...[
+    'dossie_passagem',
+    'pesquisa_nps',
+    'pesquisa_nps_exito',
+    'abrir_caso_advbox',
+    'concluir_tarefas',
+  ].map(chave => ({ chave, alvo: 'lead' })),
+  ...Object.keys(PLANOS)
+    .sort()
+    .flatMap(arquivo => PLANOS[arquivo]),
+];
+export const ROTINAS = ROTINAS_INFO.map(r => r.chave);
+export const rotinaAlvo = chave =>
+  ROTINAS_INFO.find(r => r.chave === chave)?.alvo;
+// o select do passo: no Horário da conta só as da conta; nos demais gatilhos, só as de lead/conversa
+export const rotinasPara = alvo =>
+  ROTINAS_INFO.filter(r => (r.alvo === 'conta') === (alvo === 'conta')).map(
+    r => r.chave
+  );
+// = Ramon::Fluxos::HorarioConta::PASSOS — o que roda sem lead (gatilho Horário da conta)
+export const PASSOS_CONTA = [
+  'se',
+  'escolha',
+  'esperar',
+  'parar',
+  'avisar_push',
+  'rotina',
 ];
 export const UNIDADES = ['minutos', 'horas', 'dias'];
 // Ramon::Fluxos::Horario (B4.2): janela padrão quando o passo não tem a sua (0 = domingo)

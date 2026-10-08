@@ -1,7 +1,7 @@
 // Fluxos que substituem automações do código (B4.1, db/seeds/ramon/fluxos/migrados/*.json):
 // o quadro abre e publica cada um (validação = espelho do Grafo; a etapa o semear põe) e o desenho é fiel ao código.
 import { validar } from '../validar';
-import { REGRAS_ADVBOX, TIPOS_ATIVIDADE } from '../fluxo';
+import { REGRAS_ADVBOX, TIPOS_ATIVIDADE, rotinaAlvo } from '../fluxo';
 import marcada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_marcada.json';
 import cancelada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/reuniao_cancelada.json';
 import sla from '../../../../../../../../db/seeds/ramon/fluxos/migrados/sla_primeira_resposta.json';
@@ -9,6 +9,13 @@ import lembretes from '../../../../../../../../db/seeds/ramon/fluxos/migrados/le
 import cadencia from '../../../../../../../../db/seeds/ramon/fluxos/migrados/cadencia.json';
 import ganho from '../../../../../../../../db/seeds/ramon/fluxos/migrados/lead_ganho.json';
 import eventos from '../../../../../../../../db/seeds/ramon/fluxos/migrados/eventos_advbox.json';
+import resumoDoDia from '../../../../../../../../db/seeds/ramon/fluxos/migrados/resumo_do_dia.json';
+import retratoFunil from '../../../../../../../../db/seeds/ramon/fluxos/migrados/retrato_funil.json';
+import fechamentoExtrato from '../../../../../../../../db/seeds/ramon/fluxos/migrados/fechamento_extrato.json';
+import espelhoPainel from '../../../../../../../../db/seeds/ramon/fluxos/migrados/espelho_painel.json';
+import copilotoNoturno from '../../../../../../../../db/seeds/ramon/fluxos/migrados/copiloto_noturno.json';
+import publicarPecas from '../../../../../../../../db/seeds/ramon/fluxos/migrados/publicar_pecas.json';
+import avisosPainel from '../../../../../../../../db/seeds/ramon/fluxos/migrados/avisos_painel.json';
 
 const semEtapa = d =>
   validar(d.desenho).filter(
@@ -310,5 +317,46 @@ describe('fluxos migrados: lead ganho e eventos do ADVBOX (B4.4/B4.5)', () => {
       'registrar_atividade',
       'rotina',
     ]);
+  });
+});
+
+const CONTA = {
+  resumo_do_dia: resumoDoDia,
+  retrato_funil: retratoFunil,
+  fechamento_extrato: fechamentoExtrato,
+  espelho_painel: espelhoPainel,
+  copiloto_noturno: copilotoNoturno,
+  publicar_pecas: publicarPecas,
+  avisos_painel: avisosPainel,
+};
+
+describe('fluxos migrados: rotinas da conta (B5-conta)', () => {
+  it.each(Object.entries(CONTA))(
+    '%s: publica, no Horário da conta, com a rotina de mesmo nome',
+    (chave, d) => {
+      expect(validar(d.desenho)).toEqual([]);
+      expect(d.desenho.nos.map(n => n.tipo)).toEqual(['gatilho', 'rotina']);
+      expect(d.desenho.nos[0].config.tipo).toBe('horario_conta');
+      expect(d.desenho.nos[1].config.rotina).toBe(chave);
+      expect(rotinaAlvo(chave)).toBe('conta');
+    }
+  );
+
+  it('no horário de hoje do código (config/schedule.yml, em São Paulo)', () => {
+    const quandoRoda = Object.fromEntries(
+      Object.entries(CONTA).map(([k, d]) => {
+        const c = d.desenho.nos[0].config;
+        return [k, c.hora || `${c.a_cada_minutos} min`];
+      })
+    );
+    expect(quandoRoda).toEqual({
+      resumo_do_dia: '08:00',
+      retrato_funil: '00:05',
+      fechamento_extrato: '00:20',
+      espelho_painel: '00:30',
+      copiloto_noturno: '05:00',
+      publicar_pecas: '1 min',
+      avisos_painel: '08:00',
+    });
   });
 });

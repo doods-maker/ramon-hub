@@ -11,7 +11,7 @@ class RamonFluxosAPI extends ApiClient {
     return axios.post(`${this.url}/${id}/publicar`);
   }
 
-  // params: { lead_id } | { conversation_id } (+ usar: 'rascunho'|'publicada')
+  // params: { lead_id } | { conversation_id } | { conta: true } (B5: Horário da conta) (+ usar: 'rascunho'|'publicada')
   ensaio(id, params) {
     return axios.post(`${this.url}/${id}/ensaio`, params);
   }

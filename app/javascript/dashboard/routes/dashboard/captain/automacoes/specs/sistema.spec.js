@@ -130,4 +130,19 @@ describe('fluxos do sistema', () => {
     expect(titulos.length).toBeGreaterThan(0);
     titulos.forEach(t => expect(t).not.toMatch(/24h/));
   });
+
+  it('as 5 regras de dado são regra fixa (decisão do Eduardo 07/10)', () => {
+    expect(
+      DESENHOS.filter(([, d]) => d.fixa)
+        .map(([chave]) => chave)
+        .sort()
+    ).toEqual([
+      'contrato_limpo',
+      'contrato_limpo_cancelado',
+      'docs_completos',
+      'historico_do_lead',
+      'sdr_automatico',
+    ]);
+    DESENHOS.forEach(([, d]) => expect([undefined, true]).toContain(d.fixa));
+  });
 });

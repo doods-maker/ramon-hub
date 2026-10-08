@@ -7,7 +7,7 @@ class Ramon::Fluxos::Grafo
   GATILHOS = %w[conversa_criada mensagem_recebida conversa_resolvida conversa_reaberta conversa_atribuida
                 lead_criado lead_mudou_etapa lead_ganho lead_perdido manual
                 lead_parado relogio reuniao_marcada reuniao_cancelada reuniao_na_agenda evento_advbox
-                contrato_assinado contrato_recusado documento_recebido].freeze
+                contrato_assinado contrato_recusado documento_recebido horario_conta].freeze
   TIPOS_PASSO = %w[se escolha esperar parar rascunho_texto nota_privada acao_chatwoot
                    mover_etapa criar_tarefa avisar_sino avisar_push
                    perguntar_ia rascunho_ia rodar_skill advbox webhook
@@ -53,7 +53,7 @@ class Ramon::Fluxos::Grafo
     e = erros_gatilho
     return e if e.any?
 
-    e + erros_setas + erros_alcance + nos.flat_map { |n| erros_passo(n) }
+    e + erros_setas + erros_alcance + nos.flat_map { |n| erros_passo(n) } + Ramon::Fluxos::HorarioConta.erros(self) # B5
   end
 
   private

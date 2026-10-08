@@ -8,6 +8,7 @@
 #   guardado assim que nasce (a nova tentativa do motor retoma dali). Fora do ar sobe o erro → o motor tenta de novo em
 #   1/5/15 min; recusa (4xx) fica anotada no lead (advbox.erro), como hoje, e o fluxo segue.
 # - concluir_tarefas: conclui as tarefas abertas do lead (ADVBOX arquivado)
+# B5: os demais nomes vêm do registro Ramon::Fluxos::Rotinas (um arquivo por plano em rotinas/).
 module Ramon::Fluxos::Passos::Rotina
   ROTINAS = %w[dossie_passagem pesquisa_nps pesquisa_nps_exito abrir_caso_advbox concluir_tarefas].freeze
   FASE_NPS = { 'pesquisa_nps' => 'comercial', 'pesquisa_nps_exito' => 'exito' }.freeze
@@ -16,7 +17,7 @@ module Ramon::Fluxos::Passos::Rotina
 
   def rotina(config, ctx)
     nome = config['rotina'].to_s
-    raise Ramon::Fluxos::PassoImpossivel, "rotina desconhecida: #{nome}" unless ROTINAS.include?(nome)
+    return Ramon::Fluxos::Rotinas.rodar(nome, ctx) unless ROTINAS.include?(nome) # B5: as rotinas dos planos (e o "desconhecida")
 
     lead = Ramon::Fluxos::Passos::Lead.exigir_lead(ctx)
     resumo = FASE_NPS.key?(nome) ? nps(lead, FASE_NPS[nome], ctx.ensaio?) : public_send(nome, lead, ctx.ensaio?)

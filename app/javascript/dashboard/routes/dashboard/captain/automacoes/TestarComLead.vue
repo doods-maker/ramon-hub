@@ -20,10 +20,11 @@ import {
   TOM,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 
-defineProps({
+const props = defineProps({
   erros: { type: Array, default: () => [] },
   ocupado: { type: Boolean, default: false },
   podeRodar: { type: Boolean, default: false },
+  conta: { type: Boolean, default: false }, // B5: Horário da conta — ensaio na conta toda
 });
 const emit = defineEmits(['ensaiar', 'rodar', 'fechar']);
 const K = 'CAPTAIN_RAMON.FLUXOS.TESTAR';
@@ -54,6 +55,7 @@ const buscar = useDebounceFn(async () => {
 }, 300);
 
 const alvo = computed(() => {
+  if (props.conta) return { conta: true };
   if (modo.value === 'lead')
     return lead.value ? { lead_id: lead.value.id } : null;
   return conversa.value ? { conversation_id: Number(conversa.value) } : null;
@@ -63,53 +65,59 @@ const alvo = computed(() => {
 <template>
   <div :class="FUNDO_JANELA" @click.self="emit('fechar')">
     <div :class="JANELA" class="!w-[28rem]">
-      <h3 :class="TITULO_JANELA">{{ t(`${K}.TITULO`) }}</h3>
-      <p class="mb-3 text-xs text-n-slate-11">{{ t(`${K}.AJUDA`) }}</p>
-      <div class="mb-3 flex border-b border-n-weak">
-        <button
-          type="button"
-          :class="[ABA, modo === 'lead' ? ABA_ATIVA : ABA_INATIVA]"
-          @click="modo = 'lead'"
-        >
-          {{ t(`${K}.LEAD`) }}
-        </button>
-        <button
-          type="button"
-          :class="[ABA, modo === 'conversa' ? ABA_ATIVA : ABA_INATIVA]"
-          @click="modo = 'conversa'"
-        >
-          {{ t(`${K}.CONVERSA`) }}
-        </button>
-      </div>
-
-      <template v-if="modo === 'lead'">
-        <input
-          v-model="busca"
-          :class="CAMPO"
-          :placeholder="t(`${K}.BUSCAR`)"
-          @input="buscar"
-        />
-        <div class="mt-2 flex max-h-56 flex-col overflow-y-auto">
+      <h3 :class="TITULO_JANELA">
+        {{ t(`${K}.${conta ? 'TITULO_CONTA' : 'TITULO'}`) }}
+      </h3>
+      <p class="mb-3 text-xs text-n-slate-11">
+        {{ t(`${K}.${conta ? 'AJUDA_CONTA' : 'AJUDA'}`) }}
+      </p>
+      <template v-if="!conta">
+        <div class="mb-3 flex border-b border-n-weak">
           <button
-            v-for="l in leads"
-            :key="l.id"
             type="button"
-            :class="[LINHA, lead?.id === l.id ? TOM.blue : '']"
-            @click="lead = l"
+            :class="[ABA, modo === 'lead' ? ABA_ATIVA : ABA_INATIVA]"
+            @click="modo = 'lead'"
           >
-            {{ l.name }}
-            <span class="font-mono text-xs text-n-slate-10">#{{ l.id }}</span>
+            {{ t(`${K}.LEAD`) }}
+          </button>
+          <button
+            type="button"
+            :class="[ABA, modo === 'conversa' ? ABA_ATIVA : ABA_INATIVA]"
+            @click="modo = 'conversa'"
+          >
+            {{ t(`${K}.CONVERSA`) }}
           </button>
         </div>
+
+        <template v-if="modo === 'lead'">
+          <input
+            v-model="busca"
+            :class="CAMPO"
+            :placeholder="t(`${K}.BUSCAR`)"
+            @input="buscar"
+          />
+          <div class="mt-2 flex max-h-56 flex-col overflow-y-auto">
+            <button
+              v-for="l in leads"
+              :key="l.id"
+              type="button"
+              :class="[LINHA, lead?.id === l.id ? TOM.blue : '']"
+              @click="lead = l"
+            >
+              {{ l.name }}
+              <span class="font-mono text-xs text-n-slate-10">#{{ l.id }}</span>
+            </button>
+          </div>
+        </template>
+        <input
+          v-else
+          v-model="conversa"
+          :class="CAMPO"
+          type="number"
+          min="1"
+          :placeholder="t(`${K}.NUMERO_CONVERSA`)"
+        />
       </template>
-      <input
-        v-else
-        v-model="conversa"
-        :class="CAMPO"
-        type="number"
-        min="1"
-        :placeholder="t(`${K}.NUMERO_CONVERSA`)"
-      />
 
       <div v-if="erros.length" :class="[AVISO, TOM.ruby]" class="mt-3">
         <p v-for="e in erros" :key="e">{{ e }}</p>

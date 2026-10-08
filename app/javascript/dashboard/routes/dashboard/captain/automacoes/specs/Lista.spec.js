@@ -250,4 +250,29 @@ describe('Lista de automações', () => {
       'shadow'
     );
   });
+
+  it('Do sistema: regra fixa ganha o selo próprio no lugar de "roda no código"', async () => {
+    rota.query = { aba: 'sistema' };
+    RamonFluxosAPI.get.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            ...SISTEMA,
+            id: 7,
+            nome: 'Histórico do lead',
+            sistema_chave: 'historico_do_lead',
+            fixa: true,
+          },
+          SISTEMA,
+        ],
+        resumo: {},
+      },
+    });
+    const wrapper = mount(Lista);
+    await flushPromises();
+    const fixas = wrapper.findAll('[data-testid="sistema-fixa"]');
+    expect(fixas).toHaveLength(1);
+    expect(fixas[0].text()).toContain('fixed rule (stays in code)');
+    expect(wrapper.text()).toContain('runs in code');
+  });
 });

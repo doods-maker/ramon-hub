@@ -15,11 +15,11 @@ import {
 import {
   PAPEIS,
   PASSOS,
-  ROTINAS,
   TIPOS_ATIVIDADE,
   TIPOS_TAREFA,
   UNIDADES,
   gatilhoInfo,
+  rotinasPara,
 } from './fluxo';
 import CampoTexto from './CampoTexto.vue';
 import ConfigAcoesChatwoot from './ConfigAcoesChatwoot.vue';
@@ -34,6 +34,7 @@ import ListaMarcar from './ListaMarcar.vue';
 const props = defineProps({
   no: { type: Object, required: true },
   erros: { type: Array, default: () => [] },
+  alvo: { type: String, default: 'lead' }, // B5: o alvo do gatilho do fluxo
 });
 const emit = defineEmits(['update:config', 'duplicar', 'excluir']);
 const K = 'CAPTAIN_RAMON.FLUXOS';
@@ -41,6 +42,7 @@ const { t } = useI18n();
 const etapas = useMapGetter('leadConfig/getStages');
 const pessoas = useMapGetter('agents/getAgents');
 
+const rotinas = computed(() => rotinasPara(props.alvo)); // B5: só as do alvo do gatilho
 const tipo = computed(() => props.no.data.tipo);
 const config = computed(() => props.no.data.config || {});
 const info = computed(() => PASSOS[tipo.value] || PASSOS.parar);
@@ -579,7 +581,7 @@ const escolheMotivo = valor => {
             @change="muda('rotina', $event.target.value)"
           >
             <option value="" disabled>{{ t(`${K}.PAINEL.ESCOLHA`) }}</option>
-            <option v-for="r in ROTINAS" :key="r" :value="r">
+            <option v-for="r in rotinas" :key="r" :value="r">
               {{ t(`${K}.ROTINAS.${r}`) }}
             </option>
           </select>

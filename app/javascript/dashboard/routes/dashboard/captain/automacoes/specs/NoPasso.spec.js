@@ -85,3 +85,18 @@ describe('NoPasso — rotina', () => {
     expect(w.text()).toContain('Open the case in ADVBOX');
   });
 });
+
+describe('NoPasso — Horário da conta', () => {
+  it('diz a hora ou o intervalo', () => {
+    const dia = montar({
+      tipo: 'gatilho',
+      config: { tipo: 'horario_conta', hora: '08:00' },
+    });
+    const intervalo = montar({
+      tipo: 'gatilho',
+      config: { tipo: 'horario_conta', a_cada_minutos: 5 },
+    });
+    expect(dia.text()).toContain('08:00');
+    expect(intervalo.text()).toContain('every 5 min');
+  });
+});

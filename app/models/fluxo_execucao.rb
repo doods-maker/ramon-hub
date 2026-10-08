@@ -19,7 +19,7 @@ class FluxoExecucao < ApplicationRecord
   def lead
     return alvo if alvo.is_a?(Lead)
     return alvo.lead if alvo.is_a?(LeadTask)
-    return if alvo.nil?
+    return if alvo.nil? || alvo.is_a?(Account) # B5: o Horário da conta não tem lead
 
     account.leads.where(conversation_id: alvo.id).reorder(id: :desc).first
   end

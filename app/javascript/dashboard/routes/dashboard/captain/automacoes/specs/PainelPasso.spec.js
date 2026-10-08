@@ -404,4 +404,28 @@ describe('PainelPasso', () => {
       'Writes to ADVBOX for real'
     );
   });
+
+  it('rotina no Horário da conta: só as rotinas da conta', () => {
+    const wrapper = mount(PainelPasso, {
+      props: {
+        no: { id: 'n2', data: { tipo: 'rotina', config: {} } },
+        erros: [],
+        alvo: 'conta',
+      },
+      global: { plugins: [store] },
+    });
+    const opcoes = wrapper
+      .findAll('[data-testid="rotina"] option')
+      .map(o => o.attributes('value'))
+      .filter(Boolean);
+    expect(opcoes).toEqual([
+      'resumo_do_dia',
+      'retrato_funil',
+      'fechamento_extrato',
+      'espelho_painel',
+      'copiloto_noturno',
+      'publicar_pecas',
+      'avisos_painel',
+    ]);
+  });
 });
