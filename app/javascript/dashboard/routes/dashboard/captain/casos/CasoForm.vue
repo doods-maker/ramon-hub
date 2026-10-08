@@ -4,6 +4,7 @@
 import { computed, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 import {
   CAMPO,
   SELECT,
@@ -212,7 +213,7 @@ const salvar = () => {
             </select>
           </label>
           <label class="flex items-center gap-2 text-sm text-n-slate-12 pt-5">
-            <input v-model="form.ativo" type="checkbox" class="reset-base" />
+            <Switch v-model="form.ativo" />
             {{ t('CAPTAIN_RAMON.CASOS.FORM.ATIVO') }}
           </label>
           <label class="sm:col-span-2" :class="[ROTULO]">
