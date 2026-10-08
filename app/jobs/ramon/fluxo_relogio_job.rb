@@ -13,7 +13,16 @@ class Ramon::FluxoRelogioJob < ApplicationJob
     orfas.update_all(status: 'esperando', retomar_em: Time.current, updated_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
     FluxoExecucao.where(status: 'esperando', retomar_em: ..Time.current).order(:retomar_em).limit(500).pluck(:id)
                  .each { |id| Ramon::FluxoAvancarJob.perform_later(id) }
-    Ramon::Fluxos::Relogio.disparar_do_dia
-    Ramon::Fluxos::HorarioConta.disparar # B5-conta: o gatilho "Horário da conta" (rotinas da conta)
+    # cada gatilho isolado: erro num não impede o outro nem vira retry-loop do cron
+    isolar('Relogio') { Ramon::Fluxos::Relogio.disparar_do_dia }
+    isolar('HorarioConta') { Ramon::Fluxos::HorarioConta.disparar } # B5-conta: "Horário da conta"
+  end
+
+  private
+
+  def isolar(nome)
+    yield
+  rescue StandardError => e
+    Rails.logger.error("FluxoRelogioJob: #{nome} falhou (#{e.class}: #{e.message})")
   end
 end

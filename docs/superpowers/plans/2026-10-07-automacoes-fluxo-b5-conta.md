@@ -2004,7 +2004,7 @@ Expected: o 1º vazio (sem migração, sem mexer no cron nem no enterprise); as 
 - **Registro de rotinas por plano:** `Ramon::Fluxos::Rotinas` acha `app/services/ramon/fluxos/rotinas/<plano>.rb` (`ROTINAS` nome → alvo, `rodar(nome, ctx)`, opcionais `GRUPOS` — juntados em `Migracao::GRUPOS` — e `PENDENTE`); o front acha `automacoes/rotinas/<plano>.js`. Publicar recusa rotina desconhecida e rotina do alvo errado.
 - **Regras de dado ficam no código** com o selo "regra fixa (fica no código)" na aba Do sistema (`"fixa": true` no JSON): histórico do lead, documentos completos, contrato limpo, contrato limpo cancelado, SDR automático.
 - **Tetos aceitos:** retrato do funil datado pelo relógio do servidor (UTC) — só muda de data se o horário for para 21:00–23:59; o resumo da equipe dos avisos é 1 por conta (há 1 conta); o expurgo de acessos do Painel fica no cron.
-- **Fica para a limpeza (outro PR, 2 semanas depois em normal):** tirar as 7 entradas do `config/schedule.yml` e o ramo "cron" do `cada_conta` (os jobs ficam: são a rotina), os JSON `sistema/<rotina>.json` **e** as linhas `origem: sistema` deles, as 3 envs.
+- **Fica para a limpeza (outro PR, 2 semanas depois em normal):** tirar 6 entradas do `config/schedule.yml` (todas menos `Ramon::PortalSyncJob`, que fica: é o cron dele que expurga os logs de acesso do Painel após 6 meses, Marco Civil, via `PortalAcesso.expurgar!`; ou vira job de expurgo próprio) e o ramo "cron" do `cada_conta` (os jobs ficam: são a rotina), os JSON `sistema/<rotina>.json` **e** as linhas `origem: sistema` deles, as 3 envs.
 ```
 
 - [ ] **Step 4: Texto do PR (não abrir — gate do Eduardo)** — deixar no relatório final:
@@ -2091,7 +2091,7 @@ Esperado agora: `resumo_do_dia: normal · <hoje HH:MM> concluida — fez: o resu
 
 **6. Rollback (a qualquer momento, sem deploy, cada rotina independente).** `docker exec intranet-ramon-chatwoot-web-1 bundle exec rake "ramon:fluxos:migracao:modo[<rotina>,2,sombra]"` → "Agora o CÓDIGO faz …" (os 7 de uma vez: o runner do passo 3 com `"sombra"`). Também seguro: desligar o fluxo na tela (N1) ou tirar a env e recriar. A vez de hoje que o fluxo já pegou não é refeita pelo código (e vice-versa).
 
-**7. Depois (outro PR, E7).** Com 2 semanas em normal sem incidente: tirar as 7 entradas do `config/schedule.yml` e o ramo "cron" de `Rotinas::Conta.cada_conta` (os jobs ficam: são a rotina), os JSON `db/seeds/ramon/fluxos/sistema/<rotina>.json` **e** as linhas `origem: sistema` deles (a sincronização não apaga linha cujo JSON sumiu), as 3 envs. Depois disso, desligar na tela = a rotina para (N1).
+**7. Depois (outro PR, E7).** Com 2 semanas em normal sem incidente: tirar 6 entradas do `config/schedule.yml` (todas menos `Ramon::PortalSyncJob`, que fica: é o cron dele que expurga os logs de acesso do Painel após 6 meses, Marco Civil, via `PortalAcesso.expurgar!`; ou vira job de expurgo próprio) e o ramo "cron" de `Rotinas::Conta.cada_conta` (os jobs ficam: são a rotina), os JSON `db/seeds/ramon/fluxos/sistema/<rotina>.json` **e** as linhas `origem: sistema` deles (a sincronização não apaga linha cujo JSON sumiu), as 3 envs. Depois disso, desligar na tela = a rotina para (N1).
 
 ---
 
