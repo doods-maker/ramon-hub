@@ -12,6 +12,22 @@ RSpec.describe Ramon::PublicarPecasJob do
     expect(peca.reload).to have_attributes(status: 'publicado', ig_media_id: 'm9', permalink: 'https://ig/p/x', erro: nil)
   end
 
+  it 'fluxos do acervo no comando: o Drive sai pelo fluxo; a rajada de status (publicando → publicado) não perde o Notion' do
+    peca
+    account = peca.account
+    with_modified_env(RAMON_FLUXO_ACERVO_PECAS: 'on') do
+      Ramon::Fluxos::Migracao.semear(account, 'acervo_pecas')
+      Ramon::Fluxos::Migracao.mudar_modo!(account, 'acervo_pecas', 'normal')
+      # 'publicando' cria a execução do espelho (ainda na fila); 'publicado' bate no índice único → o código espelha (reserva)
+      expect { described_class.perform_now }
+        .to have_enqueued_job(Ramon::NotionEspelhoJob).with(peca.id).exactly(:once)
+    end
+    expect(Ramon::Fluxos::Migracao.fluxo(account, 'acervo_pecas_notion').execucoes.count).to eq(1)
+    expect { perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) }
+      .to have_enqueued_job(Ramon::ConteudoDriveJob).with(peca.id).and have_enqueued_job(Ramon::NotionEspelhoJob).with(peca.id)
+    expect(peca.reload.status).to eq('publicado')
+  end
+
   it 'não mexe em peça agendada pro futuro' do
     peca.update_columns(agendado_para: 1.hour.from_now) # rubocop:disable Rails/SkipsModelValidations
     described_class.perform_now

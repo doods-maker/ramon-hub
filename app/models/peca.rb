@@ -41,6 +41,12 @@ class Peca < ApplicationRecord
     status == 'montando' && montagem_iniciada_em.present? && montagem_iniciada_em < TRAVA.ago
   end
 
+  # Público (B5): o PublicarPecasJob chama depois de update_columns (que pula o callback). Pelo código (como sempre) ou
+  # pelo fluxo "Espelho das peças no Notion" (RAMON_FLUXO_ACERVO_PECAS); {evento} = o status novo.
+  def espelhar_notion
+    Ramon::Fluxos::Externos.evento('acervo_pecas', 'peca_mudou_status', self, 'evento' => status) { Ramon::NotionEspelhoJob.perform_later(id) }
+  end
+
   private
 
   def legenda_inicial
@@ -48,9 +54,5 @@ class Peca < ApplicationRecord
 
     tags = Array(conteudo['hashtags']).join(' ')
     self.legenda = [conteudo['legenda'], tags.presence].compact.join("\n\n")
-  end
-
-  def espelhar_notion
-    Ramon::NotionEspelhoJob.perform_later(id)
   end
 end

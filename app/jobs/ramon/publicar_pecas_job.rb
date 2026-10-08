@@ -48,7 +48,8 @@ class Ramon::PublicarPecasJob < ApplicationJob
   end
 
   def pos_publicacao(peca)
-    Ramon::ConteudoDriveJob.perform_later(peca.id)
+    # B5: pelo código (como sempre) ou pelo fluxo "Acervo das peças no Drive" (RAMON_FLUXO_ACERVO_PECAS).
+    Ramon::Fluxos::Externos.evento('acervo_pecas', 'peca_publicada', peca) { Ramon::ConteudoDriveJob.perform_later(peca.id) }
     avisar("Publicado no Instagram: #{peca.gancho}", peca.permalink || 'link indisponível — ver no app')
   end
 
@@ -56,7 +57,7 @@ class Ramon::PublicarPecasJob < ApplicationJob
   def no_ar_apos_erro(peca, erro)
     Rails.logger.warn("PublicarPecasJob: peça #{peca.id} no ar (#{peca.ig_media_id}), pós-publicação falhou: #{erro.message}")
     peca.update_columns(status: 'publicado', erro: nil, ig_media_id: peca.ig_media_id) # rubocop:disable Rails/SkipsModelValidations
-    Ramon::NotionEspelhoJob.perform_later(peca.id) # update_columns pula o espelho do after_update_commit
+    peca.espelhar_notion # update_columns pula o espelho do after_update_commit
     pos_publicacao(peca)
   rescue StandardError => e
     Rails.logger.warn("PublicarPecasJob: peça #{peca.id} no ar, aviso/acervo não saiu: #{e.message}")
