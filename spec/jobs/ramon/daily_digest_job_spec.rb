@@ -59,5 +59,15 @@ RSpec.describe Ramon::DailyDigestJob do
 
       expect { described_class.perform_now }.not_to raise_error
     end
+
+    it 'B5: com o fluxo "Resumo do dia" no comando a conta fica de fora do cron; com o id, só ela' do
+      create_overdue_task
+      allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).and_call_original
+      allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).with(account, 'resumo_do_dia').and_return(true)
+      with_modified_env NTFY_TOPIC: 'ramon-leads' do
+        expect { described_class.perform_now }.not_to have_enqueued_job(Ramon::NtfyPushJob)
+        expect { described_class.perform_now(account.id) }.to have_enqueued_job(Ramon::NtfyPushJob).exactly(:once)
+      end
+    end
   end
 end

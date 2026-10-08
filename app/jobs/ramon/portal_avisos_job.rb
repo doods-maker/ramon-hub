@@ -7,19 +7,26 @@ class Ramon::PortalAvisosJob < ApplicationJob
 
   EQUIPE_PADRAO = 'ramonantonio.comercial@gmail.com'.freeze # teste antes da Gabriela (decisão Eduardo 28/09)
 
-  def perform
+  def perform(account_id = nil)
     return unless ENV['PORTAL_AVISOS'] == 'on'
 
+    # B5-conta: sem conta = o cron (as contas cujo fluxo "Avisos do Painel" não assumiu); com conta = o fluxo ou a reserva.
+    Ramon::Fluxos::Rotinas::Conta.cada_conta('avisos_painel', account_id) { |account| avisar_conta(account) }
+  end
+
+  private
+
+  # 1 resumo da equipe por conta (antes, 1 da instalação toda — há uma conta só, a banca: igual).
+  def avisar_conta(account)
     linhas = []
     # Suspenso não recebe aviso (nem entra no resumo): o acesso dele está parado.
-    PortalCliente.where.not(convidado_em: nil).where(suspenso_em: nil).find_each { |cliente| linhas.concat(avisar(cliente)) }
+    clientes = PortalCliente.where(account: account).where.not(convidado_em: nil).where(suspenso_em: nil)
+    clientes.find_each { |cliente| linhas.concat(avisar(cliente)) }
     return if linhas.empty?
 
     # ponytail: se o resumo falhar, as novidades já ficaram avisadas — o selo "Novo" segue no painel.
     Ramon::PortalMailer.with(linhas: linhas, para: ENV.fetch('PORTAL_AVISO_EQUIPE_EMAIL', EQUIPE_PADRAO)).resumo_equipe.deliver_now
   end
-
-  private
 
   def avisar(cliente)
     pendentes = pendentes(cliente)

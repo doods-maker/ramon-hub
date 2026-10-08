@@ -62,4 +62,15 @@ RSpec.describe Ramon::PortalAvisosJob do
     end
     expect(Ramon::PortalMailer).not_to have_received(:with)
   end
+
+  it 'B5: conta com o fluxo no comando fica de fora do cron; com o id, só ela (mesma trava PORTAL_AVISOS)' do
+    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).and_call_original
+    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).with(cliente.account, 'avisos_painel').and_return(true)
+    with_modified_env PORTAL_AVISOS: 'on' do
+      described_class.perform_now
+      expect(Ramon::PortalMailer).not_to have_received(:with)
+      described_class.perform_now(cliente.account_id)
+    end
+    expect(Ramon::PortalMailer).to have_received(:with).with(cliente: cliente, itens: kind_of(Array))
+  end
 end
