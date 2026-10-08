@@ -1,25 +1,24 @@
 # frozen_string_literal: true
 
+# Leads e conversas. B5-leads: cada efeito decide UMA vez, por evento, entre o código de sempre e o fluxo migrado
+# (Ramon::Fluxos::Migracao.decidir — com reserva: fluxo no comando que não pega o evento devolve aquele evento ao código).
+# A ordem é a de sempre (spec: "leads e conversas — código ou fluxo"): o lead nasce ANTES do SLA e dos fluxos comuns de
+# Conversa nova; a origem é gravada ANTES dos fluxos comuns de Mensagem recebida — os migrados de criar lead e de origem
+# rodam na hora (Disparo::NA_HORA_CHAVES) e o RamonFluxoListener vem depois deste no AsyncDispatcher.
 class RamonLeadListener < BaseListener
+  TIPOS_ANEXO = %w[image file].freeze # anexo que a IA tenta casar com o checklist
+
   def conversation_created(event)
-    conversation, account = extract_conversation_and_account(event)
-    return unless conversation.inbox&.auto_create_lead?
+    conversation = event.data[:conversation]
+    return unless Ramon::LeadDaConversa.cabe?(conversation)
 
-    contact = conversation.contact
-    return if contact.blank?
-
-    lead = account.leads.open.find_by(contact_id: contact.id)
-    if lead
-      lead.update!(conversation_id: conversation.id)
-    else
-      account.leads.create!(
-        name: contact.name.presence || contact.phone_number || contact.identifier,
-        lead_stage: account.lead_stages.order(:position).first,
-        contact_id: contact.id,
-        conversation_id: conversation.id
-      )
+    dados = { 'caixa_id' => conversation.inbox_id }
+    decidir('criar_lead', 'conversa_criada', conversation, dados) { Ramon::LeadDaConversa.criar_ou_ligar(conversation) }
+    # SLA da 1ª resposta (mapa comercial): o vigia dispara N min depois (SLA da caixa, senão o env) e só apita se a conversa
+    # seguir aberta e sem resposta. B4.2: com o fluxo "SLA da 1ª resposta" no comando e vigiando a conversa, o job não é agendado.
+    decidir('sla', 'conversa_criada', conversation, dados) do
+      Ramon::FirstResponseSlaJob.set(wait: Ramon::Cadencia.sla_minutes(conversation.inbox).minutes).perform_later(conversation.id)
     end
-    enqueue_first_response_sla(conversation)
   end
 
   def message_created(event)
@@ -27,16 +26,7 @@ class RamonLeadListener < BaseListener
     return unless message.incoming?
 
     lead = message.account.leads.find_by(conversation_id: message.conversation_id)
-    return if lead.blank?
-
-    apply_meta_referral(lead, message)
-    derive_channel_from_first_contact(lead, message)
-
-    # Anexo de documento → IA sugere o item do checklist (confirmação humana no painel).
-    Ramon::DocMatchJob.perform_later(message.id) if message.attachments.any? { |a| %w[image file].include?(a.file_type) }
-
-    # Objeção no texto → coach sugere 2 respostas prontas do playbook (Onda D).
-    Ramon::CoachObjecaoJob.perform_later(message.id) if message.content.to_s.strip.length >= 20
+    efeitos_da_mensagem(lead, message) if lead
   end
 
   def lead_created(event)
@@ -64,51 +54,25 @@ class RamonLeadListener < BaseListener
 
   private
 
-  # SLA de 1ª resposta (mapa comercial): o vigia dispara N min depois e só
-  # apita se a conversa seguir aberta e sem resposta. N = SLA da inbox,
-  # senão o padrão do env — mesma regra do job e do Lead#sla_info.
-  # B4.2: a conversa decide UMA vez quem vigia (Ramon::Fluxos::Migracao, grupo 'sla'): com o fluxo "SLA da 1ª resposta"
-  # no comando E vigiando esta conversa, o job não é agendado; senão o código vigia (e o fluxo, se existir, só ensaia).
-  def enqueue_first_response_sla(conversation)
-    assumido = Ramon::Fluxos::Migracao.assumiu?(conversation.account, 'sla')
-    dados = { 'caixa_id' => conversation.inbox_id, 'assumido' => assumido }
-    return if Ramon::Fluxos::Disparo.externo('conversa_criada', conversation, dados).any? && assumido
+  def decidir(grupo, gatilho, alvo, dados, &) = Ramon::Fluxos::Migracao.decidir(grupo, gatilho, alvo, dados, &)
 
-    minutes = Ramon::Cadencia.sla_minutes(conversation.inbox)
-    Ramon::FirstResponseSlaJob.set(wait: minutes.minutes).perform_later(conversation.id)
-  end
-
-  # Atribuição: o referral da Meta (click-to-WhatsApp) chega na primeira
-  # mensagem, depois do conversation_created — por isso o hook é aqui.
-  def apply_meta_referral(lead, message)
-    referral = message.content_attributes.with_indifferent_access[:referral]
-    return if referral.blank?
-
-    meta = referral.slice('source_id', 'source_type', 'source_url', 'headline', 'ctwa_clid').compact_blank
-    attrs = { custom_attributes: lead.custom_attributes.merge('meta_referral' => meta) }
-    if lead.source.blank?
-      attrs[:source] = referral_source_label(referral)
-      attrs[:channel] = 'meta_ads'
+  # Mensagem do cliente numa conversa com lead, na ordem de sempre: origem (na hora) → sugestão de documento (anexo) →
+  # coach de objeção (texto com 20+ caracteres). Colheita NÃO é automática (decisão 20/07).
+  def efeitos_da_mensagem(lead, message)
+    conversa = message.conversation
+    dados = dados_da_mensagem(message)
+    if Ramon::LeadDaConversa.origem_pendente?(lead, message)
+      decidir('origem_lead', 'mensagem_recebida', conversa, dados) { Ramon::LeadDaConversa.origem(lead, message) }
     end
-    lead.update!(attrs)
+    if message.attachments.any? { |a| TIPOS_ANEXO.include?(a.file_type) }
+      decidir('sugestao_doc', 'mensagem_recebida', conversa, dados) { Ramon::DocMatchJob.perform_later(message.id) }
+    end
+    return if message.content.to_s.strip.length < Ramon::CoachObjecaoService::MIN_CHARS
+
+    decidir('coach', 'mensagem_recebida', conversa, dados) { Ramon::CoachObjecaoJob.perform_later(message.id) }
   end
 
-  def referral_source_label(referral)
-    detail = referral['source_id'].presence || referral['headline'].presence
-    ['anuncio-meta', detail].compact.join(': ').truncate(255)
-  end
-
-  # Regra de negócio (13/08, design funil-estrategico): nos números da banca,
-  # quem chega sem anúncio e sem assinatura de site/LP/bio veio por indicação.
-  # 'outro' é o sentinela de "não derivado" — canal manual ou já derivado
-  # (landing_page, meta_ads) nunca é sobrescrito.
-  def derive_channel_from_first_contact(lead, message)
-    return unless lead.channel == 'outro'
-
-    channel, source = Ramon::SourceCatalog.derive_from_message(message.content)
-    channel ||= message.inbox&.channel_type == 'Channel::Instagram' ? 'instagram' : 'indicacao'
-    attrs = { channel: channel }
-    attrs[:source] = source if source.present? && lead.source.blank?
-    lead.update!(attrs)
+  def dados_da_mensagem(message)
+    { 'caixa_id' => message.conversation.inbox_id, 'mensagem_id' => message.id, 'texto' => message.content.to_s.truncate(500) }
   end
 end

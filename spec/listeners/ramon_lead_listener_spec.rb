@@ -330,4 +330,65 @@ RSpec.describe RamonLeadListener do
       end
     end
   end
+
+  describe 'leads e conversas — código ou fluxo (B5-leads)' do
+    # Chaves ligadas: sem os fluxos em modo normal, o código segue no comando (a chave é env + fluxo).
+    around do |ex|
+      chaves = { RAMON_FLUXO_CRIAR_LEAD: 'on', RAMON_FLUXO_ORIGEM_LEAD: 'on', RAMON_FLUXO_SUGESTAO_DOC: 'on', RAMON_FLUXO_COACH: 'on' }
+      with_modified_env(chaves) { ex.run }
+    end
+
+    let(:anuncio) { { 'source_id' => '12034', 'headline' => 'Machucou no trabalho?' } }
+
+    # Os ouvintes do hub na ordem REAL do AsyncDispatcher (os nativos não mexem em lead nem em fluxo).
+    def publicar(nome, dados)
+      ev = Events::Base.new(nome, Time.zone.now, dados)
+      AsyncDispatcher.new.listeners.select { |l| l.class.name.start_with?('Ramon') }
+                     .each { |l| l.public_send(ev.method_name, ev) if l.respond_to?(ev.method_name) }
+    end
+
+    # Cada disparo de fluxo, na ordem: [gatilho, grupo que decidiu (nil = os fluxos comuns), o que `olhar` vê naquela hora].
+    def gravar_disparos(&olhar)
+      disparos = []
+      allow(Ramon::Fluxos::Disparo).to receive(:call).and_wrap_original do |original, gatilho, alvo, dados = {}, **opcoes|
+        disparos << [gatilho, dados['migracao'], olhar.call]
+        original.call(gatilho, alvo, dados, **opcoes)
+      end
+      disparos
+    end
+
+    def lead_da_conversa = account.leads.find_by(conversation_id: conversation.id)
+
+    def mensagem(conteudo, *traits, **attrs)
+      create(:message, *traits, account: account, conversation: conversation, message_type: :incoming, content: conteudo, **attrs)
+    end
+
+    # Cria os fluxos do grupo e põe no comando (a env já está ligada no around).
+    def assumir(grupo)
+      Ramon::Fluxos::Migracao.semear(account, grupo)
+      Ramon::Fluxos::Migracao.mudar_modo!(account, grupo, 'normal').first
+    end
+
+    it 'código no comando: o lead nasce antes do SLA e dos fluxos comuns de Conversa nova; lead.created sai 1 vez' do
+      disparos = gravar_disparos { lead_da_conversa.present? }
+      expect { publicar('conversation.created', conversation: conversation) }
+        .to have_enqueued_job(Ramon::FirstResponseSlaJob).with(conversation.id)
+        .and have_enqueued_job(EventDispatcherJob).with('lead.created', anything, anything).exactly(:once)
+      expect(disparos).to eq([['conversa_criada', 'criar_lead', false], ['conversa_criada', 'sla', true], ['conversa_criada', nil, true]])
+    end
+
+    it 'código no comando: a origem é gravada antes dos fluxos comuns de Mensagem recebida' do
+      create(:lead, account: account, contact: contact, conversation: conversation, channel: 'outro', source: nil)
+      disparos = gravar_disparos { lead_da_conversa.source }
+      publicar('message.created', message: mensagem('oi', content_attributes: { referral: anuncio }))
+      expect(disparos).to eq([['mensagem_recebida', 'origem_lead', nil], ['mensagem_recebida', nil, 'anuncio-meta: 12034']])
+    end
+
+    it 'sem nada a anotar (canal já derivado, sem anúncio), a origem nem é decidida — só os fluxos comuns' do
+      create(:lead, account: account, contact: contact, conversation: conversation, channel: 'landing_page', source: 'auxilio-acidente')
+      disparos = gravar_disparos { nil }
+      publicar('message.created', message: mensagem('oi'))
+      expect(disparos).to eq([['mensagem_recebida', nil, nil]])
+    end
+  end
 end
