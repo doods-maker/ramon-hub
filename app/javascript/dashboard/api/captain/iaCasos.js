@@ -34,6 +34,13 @@ class CaptainIaCasos extends ApiClient {
   rodar(assistantId) {
     return axios.post(`${this.url}/${assistantId}/ia_rodadas`);
   }
+
+  // Caderno automático (I-X6): liga/desliga a rodada da madrugada da conta.
+  noturno(assistantId, ligado) {
+    return axios.patch(`${this.url}/${assistantId}/ia_rodadas/noturno`, {
+      ligado,
+    });
+  }
 }
 
 export default new CaptainIaCasos();

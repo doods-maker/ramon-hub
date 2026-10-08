@@ -7,6 +7,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 import IaCasosAPI from 'dashboard/api/captain/iaCasos';
 import CaptainFerramentasAPI from 'dashboard/api/captain/ferramentas';
 import { ferramentaInfo } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
@@ -50,6 +51,7 @@ const assistantId = computed(() => Number(route.params.assistantId));
 const casos = ref([]);
 const estimativa = ref({ casos: 0, custo_usd: 0, segundos: 0 });
 const rodadas = ref([]);
+const noturno = ref(false);
 const rodada = ref(null);
 const ferramentas = ref([]);
 const carregando = ref(false);
@@ -79,6 +81,20 @@ const carregarCasos = async () => {
 const carregarRodadas = async () => {
   const { data } = await IaCasosAPI.rodadas(assistantId.value);
   rodadas.value = data.payload;
+  noturno.value = !!data.noturno;
+};
+
+// I-X6: rodada da madrugada (vale para todos os assistentes da conta); erro volta a chave.
+const alternarNoturno = async ligado => {
+  noturno.value = ligado;
+  try {
+    await IaCasosAPI.noturno(assistantId.value, ligado);
+    aviso.value = ligado
+      ? t('INTEL.CADERNO.NOTURNO_LIGADO')
+      : t('INTEL.CADERNO.NOTURNO_DESLIGADO');
+  } catch (e) {
+    noturno.value = !ligado;
+  }
 };
 
 const abrirRodada = async id => {
@@ -278,6 +294,31 @@ const tomStatus = status =>
         <p class="text-sm text-n-slate-10">
           {{ t('CAPTAIN_RAMON.CASOS.SUBTITLE') }}
         </p>
+
+        <div
+          data-testid="casos-noturno"
+          class="flex items-start gap-3"
+          :class="CARTAO"
+        >
+          <Switch
+            data-testid="casos-noturno-chave"
+            class="mt-0.5"
+            :model-value="noturno"
+            @update:model-value="alternarNoturno"
+          />
+          <div class="flex flex-col gap-1">
+            <span class="text-sm text-n-slate-12">
+              {{ t('INTEL.CADERNO.NOTURNO') }}
+            </span>
+            <span class="text-xs text-n-slate-10">
+              {{
+                t('INTEL.CADERNO.NOTURNO_AJUDA', {
+                  n: fmtUsd(estimativa.custo_usd),
+                })
+              }}
+            </span>
+          </div>
+        </div>
 
         <p v-if="aviso" :class="[AVISO, TOM.amber]" data-testid="casos-aviso">
           {{ aviso }}
