@@ -390,5 +390,100 @@ RSpec.describe RamonLeadListener do
       publicar('message.created', message: mensagem('oi'))
       expect(disparos).to eq([['mensagem_recebida', nil, nil]])
     end
+
+    it 'fluxo no comando: a mesma ordem — o fluxo cria o lead na hora, antes do SLA e dos fluxos comuns; lead.created 1 vez' do
+      fluxo = assumir('criar_lead')
+      disparos = gravar_disparos { lead_da_conversa.present? }
+      expect { publicar('conversation.created', conversation: conversation) }
+        .to have_enqueued_job(Ramon::FirstResponseSlaJob).with(conversation.id)
+        .and have_enqueued_job(EventDispatcherJob).with('lead.created', anything, anything).exactly(:once)
+      expect(disparos).to eq([['conversa_criada', 'criar_lead', false], ['conversa_criada', 'sla', true], ['conversa_criada', nil, true]])
+      expect(fluxo.execucoes.pluck(:ensaio, :status)).to eq([[false, 'concluida']])
+      expect(lead_da_conversa).to have_attributes(contact_id: contact.id, name: 'Maria', lead_stage: account.lead_stages.order(:position).first)
+    end
+
+    it 'em sombra (criado, ainda não virado): o código cria o lead e o fluxo só ensaia — 1 lead' do
+      Ramon::Fluxos::Migracao.semear(account, 'criar_lead')
+      publicar('conversation.created', conversation: conversation)
+      trilha = Ramon::Fluxos::Migracao.fluxo(account, 'criar_lead_da_conversa').execucoes.sole.trilha.pluck('resumo')
+      expect(trilha).to include('faria: criar o lead na 1ª etapa do funil (ou ligar a conversa ao lead aberto do contato)')
+      expect(account.leads.where(contact_id: contact.id).count).to eq(1)
+    end
+
+    it 'fluxo no comando mas ocupado com a conversa: o código cria o lead (reserva) — nem 0 nem 2' do
+      fluxo = assumir('criar_lead')
+      fluxo.execucoes.create!(account: account, alvo: conversation, status: 'esperando', retomar_em: 5.minutes.from_now)
+      publicar('conversation.created', conversation: conversation)
+      expect(account.leads.where(conversation_id: conversation.id).count).to eq(1)
+      expect(fluxo.execucoes.count).to eq(1)
+    end
+
+    it 'fluxo no comando: liga a conversa ao lead aberto do mesmo contato, sem lead novo (como o código)' do
+      antiga = create(:conversation, account: account, inbox: inbox, contact: contact)
+      aberto = create(:lead, account: account, name: 'Maria', contact: contact, conversation: antiga,
+                             lead_stage: account.lead_stages.order(:position).first)
+      fluxo = assumir('criar_lead')
+      expect { publicar('conversation.created', conversation: conversation) }.not_to(change { account.leads.count })
+      expect(aberto.reload.conversation_id).to eq(conversation.id)
+      expect(fluxo.execucoes.sole.trilha.last['resumo']).to eq('conversa ligada ao lead aberto: Maria (Novo)')
+    end
+
+    it 'origem pelo fluxo: na hora, antes dos fluxos comuns de Mensagem recebida — a mesma origem do código' do
+      create(:lead, account: account, contact: contact, conversation: conversation, channel: 'outro', source: nil)
+      fluxo = assumir('origem_lead')
+      disparos = gravar_disparos { lead_da_conversa.source }
+      publicar('message.created', message: mensagem('oi', content_attributes: { referral: anuncio }))
+      expect(disparos).to eq([['mensagem_recebida', 'origem_lead', nil], ['mensagem_recebida', nil, 'anuncio-meta: 12034']])
+      expect(lead_da_conversa).to have_attributes(channel: 'meta_ads', source: 'anuncio-meta: 12034')
+      expect(lead_da_conversa.custom_attributes['meta_referral']).to include('source_id' => '12034')
+      expect(fluxo.execucoes.pluck(:ensaio, :status)).to eq([[false, 'concluida']])
+    end
+
+    describe 'coach e sugestão de documento pelo fluxo (pela fila, como o código)' do
+      let(:thesis) { create(:thesis, account: account) }
+      let!(:lead) { create(:lead, account: account, contact: contact, conversation: conversation, thesis: thesis, channel: 'landing_page') }
+
+      def llm(conteudo) = Ramon::LlmClient::Result.new(content: conteudo, input_tokens: 1, output_tokens: 1)
+
+      def ev(msg) = Events::Base.new('message.created', Time.zone.now, message: msg)
+
+      before { allow(Ramon::EventoInline).to receive(:registrar).and_call_original }
+
+      it 'coach: o ouvinte não enfileira o job; o fluxo roda o mesmo coach (balão do coach) sem balão ⚙ na conversa' do
+        create(:thesis_item, thesis: thesis, section: 'objecao', title: 'Advogado é caro', content: 'A análise é gratuita.')
+        allow(Ramon::LlmClient).to receive(:complete)
+          .and_return(llm('{"objecao": "custo", "opcoes": [{"titulo": "A", "texto": "a"}, {"titulo": "B", "texto": "b"}]}'))
+        fluxo = assumir('coach')
+        msg = mensagem('achei caro, vou pensar mais um pouco antes de fechar')
+        expect { listener.message_created(ev(msg)) }.not_to have_enqueued_job(Ramon::CoachObjecaoJob)
+        perform_enqueued_jobs(only: Ramon::FluxoAvancarJob)
+        expect(Ramon::EventoInline).to have_received(:registrar).with(conversation, anything, hash_including(tipo: 'coach')).once
+        expect(Ramon::EventoInline).not_to have_received(:registrar).with(anything, anything, hash_including(tipo: 'fluxo'))
+        expect(fluxo.execucoes.pluck(:ensaio, :status)).to eq([[false, 'concluida']])
+      end
+
+      it 'documento: o fluxo roda a mesma IA, grava a sugestão e o gatilho Documento recebido continua nascendo' do
+        rg = create(:thesis_item, thesis: thesis, section: 'documento', content: 'RG')
+        allow(Ramon::LlmClient).to receive(:complete).and_return(llm(%({"item_id": #{rg.id}})))
+        comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'documento_recebido' }, ['parar', {}]))
+        fluxo = assumir('sugestao_doc')
+        msg = mensagem('segue', :with_attachment)
+        expect { listener.message_created(ev(msg)) }.not_to have_enqueued_job(Ramon::DocMatchJob)
+        perform_enqueued_jobs(only: Ramon::FluxoAvancarJob)
+        expect(lead.reload.custom_attributes.dig('doc_sugestao', 'item_id')).to eq(rg.id)
+        expect(comum.execucoes.count).to eq(1)
+        expect(fluxo.execucoes.pluck(:ensaio, :status)).to eq([[false, 'concluida']])
+      end
+
+      it 'rajada de anexos com o fluxo no comando: o 1º vai pelo fluxo, os outros pelo código — nenhum se perde, nenhum em dobro' do
+        fluxo = assumir('sugestao_doc')
+        pelo_codigo = []
+        allow(Ramon::DocMatchJob).to receive(:perform_later) { |id| pelo_codigo << id }
+        msgs = Array.new(3) { mensagem('foto', :with_attachment) }
+        msgs.each { |m| listener.message_created(ev(m)) }
+        expect(fluxo.execucoes.sole.contexto.dig('gatilho', 'mensagem_id')).to eq(msgs[0].id)
+        expect(pelo_codigo).to eq([msgs[1].id, msgs[2].id])
+      end
+    end
   end
 end

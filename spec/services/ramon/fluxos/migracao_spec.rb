@@ -61,6 +61,19 @@ RSpec.describe Ramon::Fluxos::Migracao do
     expect(esperado.keys.to_h { |g| [g, [described_class.grupo(g)[:env], described_class.gatilhos(g)]] }).to eq(esperado)
   end
 
+  it 'leads e conversas (B5-leads): criar = 1 fluxo por grupo, em sombra, ligado, publicado, gatilho certo e 1 rotina pronta' do
+    rotinas = { 'criar_lead' => 'criar_lead', 'origem_lead' => 'origem_do_lead', 'sugestao_doc' => 'sugestao_documento',
+                'coach' => 'coach_objecao', 'agente' => 'agente_hub' }
+    rotinas.each do |grupo, rotina|
+      fluxo = described_class.semear(account, grupo).sole
+      expect(described_class.semear(account, grupo)).to eq([fluxo])
+      gatilho = described_class.gatilhos(grupo).values.sole
+      expect([fluxo.origem, fluxo.modo, fluxo.ativo, fluxo.gatilho_tipo]).to eq(['usuario', 'sombra', true, gatilho])
+      nos = fluxo.versao_publicada.grafo['nos']
+      expect([nos.first.dig('config', 'cancelar_se_sair_da_etapa'), nos.filter_map { |n| n.dig('config', 'rotina') }]).to eq([false, [rotina]])
+    end
+  end
+
   describe '.decidir (B5-leads): a decisão do evento, lida uma vez, com reserva' do
     let(:conversa) { create(:conversation, account: account) }
     let(:fluxo) do

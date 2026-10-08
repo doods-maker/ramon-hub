@@ -1,7 +1,7 @@
 {
   "nome": "Criar lead da conversa",
   "grupo": "leads_conversas",
-  "descricao": "No código: RamonLeadListener#conversation_created (app/listeners/ramon_lead_listener.rb), só em caixas com Criar lead ligado.\n\nO desenho não consegue mostrar:\n• cria o lead na 1ª etapa do funil ou liga a conversa ao lead aberto do mesmo contato — não há passo que crie lead;\n• o mesmo ouvinte agenda o SLA da 1ª resposta (ver \"SLA da 1ª resposta\").",
+  "descricao": "No código: RamonLeadListener#conversation_created → Ramon::LeadDaConversa.criar_ou_ligar, só em caixas com Criar lead ligado (decide: o código ou o fluxo migrado \"Criar lead da conversa\").\n\nO desenho não consegue mostrar:\n• cria o lead na 1ª etapa do funil ou liga a conversa ao lead aberto do mesmo contato — não há passo que crie lead;\n• o mesmo ouvinte agenda o SLA da 1ª resposta (ver \"SLA da 1ª resposta\").",
   "resumo": "Quando chega uma conversa nova numa caixa de atendimento, cria o lead no funil.",
   "desenho": {
     "nos": [

@@ -1,0 +1,13 @@
+{
+  "nome": "Agente do hub (@claude)",
+  "descricao": "Migrado do código (B5). Nota privada começando com @claude, escrita pelo Eduardo → avisa o agente do hub na VPS, que responde na própria conversa como nota privada. A trava (só @claude, só o e-mail do Eduardo, só com o agente configurado) é fixa: fica dentro do passo e nenhuma edição aqui a tira. Falha de rede só vai para o log.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"nota_escrita","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"Avisa o agente do hub na VPS","rotina":"agente_hub"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}
