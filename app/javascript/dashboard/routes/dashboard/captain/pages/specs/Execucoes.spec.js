@@ -36,10 +36,10 @@ const RUN = {
   conversation_id: 9,
   conversa_display_id: 482,
   assistant_id: 1,
-  assistente_nome: 'Atendimento (rascunho)',
+  assistente_nome: 'Atendimento',
   created_at: '2026-10-07T12:00:00Z',
 };
-const montar = async () => {
+const montar = async (extra = {}) => {
   CaptainToolRunsAPI.list.mockResolvedValue({
     data: {
       resumo: {
@@ -62,6 +62,7 @@ const montar = async () => {
       catalogo: [
         { id: 'mover_etapa', title: 'Mover de etapa', nivel: 'sugestao' },
       ],
+      ...extra,
     },
   });
   const wrapper = mount(Execucoes);
@@ -95,7 +96,7 @@ describe('Execucoes.vue', () => {
       })
     );
     expect(wrapper.find('[data-testid="execucoes-assistente"]').text()).toBe(
-      'Atendimento (rascunho)'
+      'Atendimento'
     );
   });
 
@@ -121,5 +122,46 @@ describe('Execucoes.vue', () => {
       .find('[data-testid="execucoes-aba-ferramentas"]')
       .trigger('click');
     expect(wrapper.findAll('[data-testid="execucoes-linha"]')).toHaveLength(2);
+  });
+});
+
+describe('Execuções — período e páginas (I-EX3, I-EX5)', () => {
+  beforeEach(() => {
+    query = {};
+  });
+
+  it('período e "só erros de hoje" vão na API', async () => {
+    const wrapper = await montar();
+    await wrapper.find('[data-testid="execucoes-periodo"]').setValue('7d');
+    expect(CaptainToolRunsAPI.list).toHaveBeenLastCalledWith({ periodo: '7d' });
+    await wrapper
+      .find('[data-testid="execucoes-so-erros-hoje"]')
+      .trigger('click');
+    expect(CaptainToolRunsAPI.list).toHaveBeenLastCalledWith({
+      status: 'erro',
+      periodo: 'hoje',
+    });
+  });
+
+  it('carregar mais pede antes_de com os mesmos filtros e soma as linhas', async () => {
+    const wrapper = await montar({ mais: true });
+    await wrapper.find('[data-testid="execucoes-periodo"]').setValue('30d');
+    await flushPromises();
+    CaptainToolRunsAPI.list.mockResolvedValueOnce({
+      data: {
+        resumo: {},
+        items: [{ ...RUN, id: 99 }],
+        catalogo: [],
+        mais: false,
+      },
+    });
+    await wrapper.find('[data-testid="execucoes-mais"]').trigger('click');
+    await flushPromises();
+    expect(CaptainToolRunsAPI.list).toHaveBeenLastCalledWith({
+      periodo: '30d',
+      antes_de: 2,
+    });
+    expect(wrapper.findAll('[data-testid="execucoes-linha"]')).toHaveLength(3);
+    expect(wrapper.find('[data-testid="execucoes-mais"]').exists()).toBe(false);
   });
 });

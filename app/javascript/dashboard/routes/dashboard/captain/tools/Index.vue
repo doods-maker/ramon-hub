@@ -3,6 +3,7 @@ import { computed, onMounted, ref, nextTick } from 'vue';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { usePolicy } from 'dashboard/composables/usePolicy';
+import { AVISO, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Paywall.vue';
@@ -113,7 +114,8 @@ onMounted(() => {
       <div class="flex flex-col gap-4">
         <div
           v-if="showSoftLimitWarning"
-          class="flex items-center gap-2 px-4 py-3 text-sm rounded-lg bg-n-amber-2 text-n-amber-11"
+          class="flex items-center gap-2"
+          :class="[AVISO, TOM.amber]"
         >
           <span class="i-lucide-triangle-alert size-4 shrink-0" />
           {{ $t('CAPTAIN.CUSTOM_TOOLS.SOFT_LIMIT_WARNING') }}

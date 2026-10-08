@@ -58,9 +58,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  // ramon (I-T4): seletor só em Skills, Testar, Casos de teste e Configurações — elas passam show-assistant-switcher.
   showAssistantSwitcher: {
     type: Boolean,
-    default: true,
+    default: false,
   },
 });
 

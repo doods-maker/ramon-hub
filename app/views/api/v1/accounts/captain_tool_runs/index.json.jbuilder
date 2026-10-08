@@ -1,3 +1,5 @@
+json.mais @mais
+
 json.resumo do
   json.total_24h @resumo[:total_24h]
   json.erros_24h @resumo[:erros_24h]

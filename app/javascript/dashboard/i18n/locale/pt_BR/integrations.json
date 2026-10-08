@@ -490,8 +490,8 @@
           "ERROR": "O nome é obrigatório"
         },
         "TEMPERATURE": {
-          "LABEL": "Temperatura da resposta",
-          "DESCRIPTION": "Ajuste o quão criativo ou restritivo as respostas do assistente devem ser. Valores mais baixos produzem respostas mais focadas e deterministas, enquanto valores mais altos permitem resultados mais criativos e variados."
+          "LABEL": "Criatividade (baixa = mais previsível)",
+          "DESCRIPTION": "Mais baixa: respostas parecidas e presas às regras. Mais alta: textos mais variados. Para atendimento jurídico, prefira entre 0,2 e 0,4."
         },
         "DESCRIPTION": {
           "LABEL": "Descrição",
@@ -499,9 +499,9 @@
           "ERROR": "A descrição é obrigatória"
         },
         "PRODUCT_NAME": {
-          "LABEL": "Nome do Produto",
-          "PLACEHOLDER": "Digite o nome do produto",
-          "ERROR": "O nome do produto é obrigatório"
+          "LABEL": "Nome do escritório",
+          "PLACEHOLDER": "Ex.: Ramon Antonio Advogados",
+          "ERROR": "O nome do escritório é obrigatório"
         },
         "WELCOME_MESSAGE": {
           "LABEL": "Mensagem de boas-vindas",
@@ -522,7 +522,7 @@
         "FEATURES": {
           "TITLE": "Funcionalidades",
           "ALLOW_CONVERSATION_FAQS": "Gerar FAQs pendentes das conversas resolvidas (só valem depois que um administrador aprovar)",
-          "ALLOW_MEMORIES": "Capture os principais detalhes como memórias de interações do cliente.",
+          "ALLOW_MEMORIES": "Memória do contato: ao resolver a conversa, anotar no lead o que a IA aprendeu",
           "ALLOW_CITATIONS": "Incluir fonte de citações nas respostas",
           "ALLOW_CONTACT_ATTRIBUTES": "Permitir acesso às informações do contato"
         }
@@ -570,7 +570,7 @@
       },
       "EMPTY_STATE": {
         "TITLE": "Os assistentes abrem pelo seletor",
-        "SUBTITLE": "Escolha o Atendimento ou o Copiloto do Escritório no seletor que fica no topo das telas de FAQs, Skills, Testar e Configurações."
+        "SUBTITLE": "Escolha o Atendimento ou o Copiloto do Escritório no seletor que fica no topo das telas de Skills, Testar e Configurações. FAQs e Documentos são sempre do Atendimento."
       },
       "GUARDRAILS": {
         "TITLE": "Proteções",
@@ -1051,8 +1051,8 @@
       },
       "DELETE": {
         "TITLE": "Tem certeza que deseja desconectar a caixa de entrada?",
-        "DESCRIPTION": "",
-        "CONFIRM": "Sim, excluir",
+        "DESCRIPTION": "O assistente para de agir nas conversas desta caixa. Dá para conectar de novo quando quiser.",
+        "CONFIRM": "Sim, desconectar",
         "SUCCESS_MESSAGE": "A caixa de entrada foi desconectada com sucesso.",
         "ERROR_MESSAGE": "Ocorreu um erro ao desconectar a caixa de entrada, por favor, tente novamente."
       },
@@ -1065,7 +1065,7 @@
       "FORM": {
         "INBOX": {
           "LABEL": "Caixa de Entrada",
-          "PLACEHOLDER": "Selecione a caixa de entrada para implantar o assistente.",
+          "PLACEHOLDER": "Escolha a caixa onde o assistente vai atuar.",
           "ERROR": "É obrigatório selecionar uma caixa de entrada."
         },
         "AVISO_RASCUNHO": "Ao conectar, o assistente passa a atuar nas conversas desta caixa. Modo das conversas novas: {modo}. Rascunho: tudo vira rascunho para a equipe enviar. Piloto com limites: só logística sai sozinha. Piloto total: tudo sai sozinho. Manual: o assistente não age."

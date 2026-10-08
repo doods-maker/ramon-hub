@@ -147,3 +147,10 @@ ramon_extrato_fechamento_job:
   cron: '20 3 * * *'
   class: 'Ramon::ExtratoFechamentoJob'
   queue: scheduled_jobs
+
+# executed daily at 0830 UTC = 05:30 America/Sao_Paulo (UTC-3), depois do copiloto noturno (05:00)
+# caderno de provas automático (Inteligência A5 — I-X6): só nas contas com a chave ligada
+ramon_caderno_noturno_job:
+  cron: '30 8 * * *'
+  class: 'Ramon::CadernoNoturnoJob'
+  queue: scheduled_jobs

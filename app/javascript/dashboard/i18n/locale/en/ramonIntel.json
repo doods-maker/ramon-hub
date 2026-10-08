@@ -17,7 +17,8 @@
       "TEXTO_LABEL": "Text",
       "TEXTO_PLACEHOLDER": "Paste the text here (from a PDF, e-mail, manual...)",
       "TEXTO_ERRO": "Paste the text (up to 200 thousand characters)",
-      "TEXTO_COLADO": "Pasted text"
+      "TEXTO_COLADO": "Pasted text",
+      "LINK_AVISO": "It reads this page and the pages linked from it on the same site — a home page link can pull the whole site. For a single text, use Paste text."
     },
     "FAQ": {
       "TESE_LABEL": "Thesis",
@@ -30,7 +31,10 @@
         "BOTAO": "Test",
         "NADA": "The assistant would not find any FAQ for this question. Consider creating one.",
         "ERRO": "Could not test right now. Try again."
-      }
+      },
+      "USADA": "Used {n}×",
+      "NUNCA_USADA": "Not used yet",
+      "USADA_AJUDA": "How many times the assistant used this FAQ in real conversations (Test does not count). Last time: {quando}."
     },
     "SKILLS": {
       "ABA_LIGADAS": "On ({n})",
@@ -40,7 +44,14 @@
       "LIGADA": "Skill on: the assistant uses it again.",
       "DESLIGADA": "Skill off: the assistant stops using it.",
       "EDITADA": "Edited here",
-      "EDITADA_AJUDA": "Edited on screen: the automatic skill load does not change or turn off this one."
+      "EDITADA_AJUDA": "Edited on screen: the automatic skill load does not change or turn off this one.",
+      "TESTAR": "Test this skill",
+      "USO_30D": "Ran {n}× in 30 days",
+      "SEM_USO_30D": "Did not run in 30 days",
+      "USO_AJUDA": "How many times this skill's tools ran in real conversations in the last 30 days. Test and test cases do not count; a tool used by two skills counts in both.",
+      "EXEMPLO_LABEL": "Sample message (shown in Test)",
+      "EXEMPLO_PLACEHOLDER": "E.g.: What documents are missing in this case?",
+      "PAPEIS_LABEL": "Roles that use it most (shown first in Test)"
     },
     "EXECUCOES": {
       "ABA_FERRAMENTAS": "AI tools",
@@ -65,15 +76,69 @@
         "SEM_RESUMO": "No answer recorded.",
         "ACOES": "What the agent did",
         "NENHUMA_ACAO": "No writes (only answered in the note)."
-      }
+      },
+      "PERIODO": {
+        "TUDO": "All time",
+        "HOJE": "Today",
+        "D7": "Last 7 days",
+        "D30": "Last 30 days"
+      },
+      "SO_ERROS_HOJE": "Only today's errors",
+      "CARREGAR_MAIS": "Load more"
     },
     "VISAO_GERAL": {
-      "VER_TRILHA": "See the agent trail"
+      "VER_TRILHA": "See the agent trail",
+      "CADERNO": {
+        "TITULO": "Test notebook",
+        "LINHA": "{nome}: {n} of {total} ok",
+        "QUANDO": "Last run: {quando}",
+        "NUNCA": "No finished run yet.",
+        "ABRIR": "Open the test cases"
+      }
     },
     "SUGESTOES": {
       "SO_TIPO": "Only: {tipo}",
       "VER_TODAS": "see all",
       "NENHUMA_DO_TIPO": "No suggestion of this kind right now."
+    },
+    "TESTAR": {
+      "FERRAMENTAS": "Tools used:",
+      "FERRAMENTA_ERRO": "{nome} (error)",
+      "SUGESTOES": "Try one (your role's first):",
+      "CASO_PLACEHOLDER": "Test with the case… (lead name)",
+      "CASO_AJUDA": "Picking a lead adds the case number to your message.",
+      "CASO_NENHUM": "No lead with that name."
+    },
+    "CONFIG": {
+      "SO_EQUIPE": "This assistant only talks to the team: customer messages, conversation FAQs and contact memory do not apply to it.",
+      "MEMORIA_AJUDA": "When the conversation is resolved, the AI notes on the lead (panel → Notes) what it learned: benefit of interest, work, dates, documents and objections. It never notes health data, ID numbers, phone or address. Stops on the day spending passes the cap.",
+      "ZONA_RISCO": "Danger zone",
+      "DIGITE_NOME": "Type {nome} to unlock deletion",
+      "TEXTO_FINAL": "See the final text the assistant receives",
+      "TEXTO_FINAL_AJUDA": "Guidelines, guardrails and the skill list together, the way they go to the AI, plus the text of each skill that is on. Read only.",
+      "TEXTO_FINAL_ASSISTENTE": "Assistant",
+      "TEXTO_FINAL_SKILL": "Skill: {nome}",
+      "TEXTO_FINAL_ERRO": "Could not load the text right now.",
+      "FECHAR": "Close"
+    },
+    "CAIXAS": {
+      "TITULO": "Connected inboxes — {nome}"
+    },
+    "VIGIA": {
+      "CONVERSA": "Open the conversation",
+      "NO_LIMITE": "At the end of the follow-up ladder"
+    },
+    "CASO_IA": {
+      "TITULO": "What the AI did in this case",
+      "AGENTE": "Claude agent: {nome}",
+      "VAZIO": "The AI has not done anything in this case yet.",
+      "ERRO": "Could not load right now."
+    },
+    "CADERNO": {
+      "NOTURNO": "Run by itself at dawn (05:30), if something changed",
+      "NOTURNO_AJUDA": "Applies to every assistant. Runs the active cases when a skill, FAQ, setting or case changed since the last run, and skips the day spending passed the cap (Usage and cost). Estimate: {n} per run of this assistant.",
+      "NOTURNO_LIGADO": "Dawn run on.",
+      "NOTURNO_DESLIGADO": "Dawn run off."
     }
   }
 }

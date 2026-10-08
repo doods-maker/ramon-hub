@@ -38,6 +38,8 @@ const props = defineProps({
     default: null,
   },
   tese: { type: String, default: null },
+  usos: { type: Number, default: 0 },
+  usadaEm: { type: Number, default: null },
   assistant: {
     type: Object,
     default: () => ({}),
@@ -73,6 +75,19 @@ const emit = defineEmits(['action', 'navigate', 'select', 'hover']);
 const { t } = useI18n();
 
 const [showActionsDropdown, toggleDropdown] = useToggle();
+
+const usoTexto = computed(() =>
+  props.usos
+    ? t('INTEL.FAQ.USADA', { n: props.usos })
+    : t('INTEL.FAQ.NUNCA_USADA')
+);
+const usoAjuda = computed(() =>
+  props.usadaEm
+    ? t('INTEL.FAQ.USADA_AJUDA', {
+        quando: new Date(props.usadaEm * 1000).toLocaleDateString('pt-BR'),
+      })
+    : ''
+);
 
 const modelValue = computed({
   get: () => props.isSelected,
@@ -222,6 +237,15 @@ const handleDocumentableClick = () => {
             :class="[CHIP, TOM.blue]"
           >
             {{ t(`INTEL.TESE.${tese}`) }}
+          </span>
+          <span
+            v-if="status === 'approved'"
+            data-testid="faq-uso"
+            class="shrink-0"
+            :class="[CHIP, usos ? TOM.blue : TOM.slate]"
+            :title="usoAjuda"
+          >
+            {{ usoTexto }}
           </span>
           <span
             v-if="status === 'approved'"

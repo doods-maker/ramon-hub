@@ -71,4 +71,19 @@ RSpec.describe 'Api::V1::Accounts::Captain::IaRodadas', type: :request do
     expect(json_response[:resultados].size).to eq(2)
     expect(json_response[:comparacao]).to eq(rodada_id: anterior.id, passou: 1, total: 2, pioraram: [caso.id], melhoraram: [outro.id])
   end
+
+  it 'admin liga a rodada da madrugada; o index conta (I-X6)', :aggregate_failures do
+    patch "#{url}/noturno", params: { ligado: true }, headers: admin.create_new_auth_token, as: :json
+
+    expect(json_response[:noturno]).to be(true)
+    expect(account.reload.settings[Ramon::CadernoNoturnoJob::CHAVE]).to be(true)
+    get url, headers: admin.create_new_auth_token, as: :json
+    expect(json_response[:noturno]).to be(true)
+  end
+
+  it 'agente nao liga a rodada da madrugada' do
+    patch "#{url}/noturno", params: { ligado: true }, headers: agent.create_new_auth_token, as: :json
+
+    expect(response).to have_http_status(:unauthorized)
+  end
 end

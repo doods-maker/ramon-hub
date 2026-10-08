@@ -22,6 +22,11 @@ import Execucoes from './Execucoes.vue';
 import VisaoGeral from './VisaoGeral.vue';
 import FerramentasPage from './Ferramentas.vue';
 import TOOLS_YML from '../../../../../../../config/agents/tools.yml';
+import LeadIaExecucoes from 'dashboard/routes/dashboard/ramon/components/lead/LeadIaExecucoes.vue';
+import {
+  conversaDe,
+  garantirConversa,
+} from 'dashboard/components-next/captain/assistant/testarConversas';
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
@@ -35,11 +40,11 @@ const unix = n => Math.floor((Date.now() - n * DIA) / 1000);
 const ATENDIMENTO = {
   id: 1,
   account_id: 1,
-  name: 'Atendimento (rascunho)',
+  name: 'Atendimento',
   description:
     'Responde leads no WhatsApp com rascunhos para a equipe revisar.',
   config: {
-    product_name: 'Ramon Antônio Advogados',
+    product_name: 'Ramon Antonio Advogados',
     feature_faq: false,
     feature_memory: false,
     feature_citation: false,
@@ -106,6 +111,9 @@ const SKILLS = [
     instruction: `Busque a resposta com ${link('faq_lookup')} e o ${link('playbook_da_tese')}. Confirmado um critério, use ${link('registrar_qualificacao')}.`,
     tools: ['faq_lookup', 'playbook_da_tese', 'registrar_qualificacao'],
     enabled: true,
+    exemplo: 'Oi, me machuquei no trabalho. Tenho direito?',
+    papeis: [],
+    uso_30d: 12,
   },
   {
     id: 2,
@@ -119,6 +127,9 @@ const SKILLS = [
     ],
     enabled: true,
     edited: true,
+    exemplo: 'O que falta de documento deste caso?',
+    papeis: ['comercial'],
+    uso_30d: 0,
   },
   {
     id: 3,
@@ -127,6 +138,7 @@ const SKILLS = [
     instruction: `Mande o ${link('link_agendamento')}; com a data combinada, use ${link('agendar_reuniao')} e ${link('mover_etapa')}.`,
     tools: ['link_agendamento', 'agendar_reuniao', 'mover_etapa'],
     enabled: true,
+    uso_30d: 3,
   },
   {
     id: 4,
@@ -159,6 +171,8 @@ const FAQS = [
     status: 'approved',
     assistant: ASSISTENTE_FAQ,
     documentable: null,
+    usos: 7,
+    usada_em: unix(1),
     created_at: unix(10),
     updated_at: unix(2),
   },
@@ -170,6 +184,7 @@ const FAQS = [
     status: 'approved',
     assistant: ASSISTENTE_FAQ,
     documentable: { type: 'Conversation', display_id: 482 },
+    usos: 0,
     created_at: unix(8),
     updated_at: unix(3),
   },
@@ -341,6 +356,21 @@ const API = {
     meta: { total_count: 2, page: 1 },
   },
   'captain/assistants/1': ATENDIMENTO,
+  'captain/assistants/2': COPILOTO,
+  teams: [
+    { id: 1, name: 'comercial', is_member: true },
+    { id: 2, name: 'recepção', is_member: false },
+  ],
+  'captain/assistants/1/texto_final': {
+    assistente:
+      'Você é o Atendimento da Ramon Antonio Advogados...\n\nProteções:\n- Não dê garantia de êxito nem estimativa de prazo.',
+    skills: [
+      {
+        title: 'Lead quer saber se tem direito',
+        texto: 'Busque a resposta com a FAQ e o playbook da tese...',
+      },
+    ],
+  },
   'captain/assistants/tools': CATALOGO,
   'captain/assistants/stats': STATS,
   'captain/assistants/1/scenarios': {
@@ -376,6 +406,7 @@ const API = {
     },
     items: RUNS,
     catalogo: CATALOGO,
+    mais: true,
   },
   ramon_inteligencia: {
     rascunhos: {
@@ -401,6 +432,22 @@ const API = {
       problemas_hoje: 1,
       ultima_em: diasAtras(0.05),
     },
+    caderno: [
+      {
+        assistant_id: 1,
+        nome: 'Atendimento',
+        passou: 41,
+        total: 43,
+        em: unix(0.3),
+      },
+      {
+        assistant_id: 2,
+        nome: 'Copiloto do Escritório',
+        passou: 10,
+        total: 10,
+        em: unix(0.3),
+      },
+    ],
   },
   ramon_watchdog: {
     thresholds: {
@@ -427,6 +474,19 @@ const API = {
         ultima_retomada_em: diasAtras(2),
         tarefa_aberta: false,
         conversation_id: 482,
+        conversa_display_id: 482,
+      },
+      {
+        lead_id: 13,
+        name: 'João Pereira',
+        stage_name: 'Qualificação',
+        dias_parado: 12,
+        limite_da_etapa: 3,
+        tentativas: 3,
+        ultima_retomada_em: diasAtras(2),
+        tarefa_aberta: false,
+        conversation_id: 482,
+        conversa_display_id: null,
       },
     ],
   },
@@ -525,6 +585,53 @@ const abaAgente = () => {
 const modoRascunho = () => {
   window.chatwootConfig = { ramonCopilotoModoDefault: 'rascunho' };
 };
+
+// Testar com a conversa já respondida (I-PG2): mensagens na memória da página.
+const testarRespondido = () => {
+  garantirConversa(1);
+  conversaDe(1).push(
+    {
+      content: 'Prepare a reunião deste caso. caso 123 (Maria Souza)',
+      sender: 'user',
+    },
+    {
+      content:
+        'Caso 123 — falta o CNIS e o laudo. Honorário: 30% dos atrasados + 3 parcelas. Prescrição: sem risco.',
+      sender: 'assistant',
+      ferramentas: [
+        {
+          id: 'documentacao_faltante',
+          title: 'O que falta no caso',
+          nivel: 'consulta',
+          status: 'ok',
+        },
+        {
+          id: 'mover_etapa',
+          title: 'Mover de etapa',
+          nivel: 'sugestao',
+          status: 'ok',
+        },
+        {
+          id: 'consultar_dossie_advbox',
+          title: 'Consultar dossiê no AdvBox',
+          nivel: 'consulta',
+          status: 'erro',
+        },
+      ],
+    }
+  );
+};
+const copiloto = () => {
+  rota.params.assistantId = 2;
+};
+const abrirZona = () =>
+  setTimeout(
+    () =>
+      document
+        .querySelector('[data-testid="zona-de-risco"]')
+        ?.setAttribute('open', ''),
+    2000
+  );
 </script>
 
 <template>
@@ -608,6 +715,21 @@ const modoRascunho = () => {
     </Variant>
     <Variant title="Visao geral rascunho" :init-state="modoRascunho">
       <div class="h-screen"><VisaoGeral /></div>
+    </Variant>
+    <Variant title="Testar respondeu" :init-state="testarRespondido">
+      <div class="h-screen"><PlaygroundIndex /></div>
+    </Variant>
+    <Variant title="Configuracoes copiloto" :init-state="copiloto">
+      <div class="h-screen"><SettingsIndex /></div>
+    </Variant>
+    <Variant title="Configuracoes zona" :init-state="abrirZona">
+      <div class="h-screen"><SettingsIndex /></div>
+    </Variant>
+    <Variant title="Texto final" :init-state="clicarEm('Ver o texto final')">
+      <div class="h-screen"><SettingsIndex /></div>
+    </Variant>
+    <Variant title="Caso IA">
+      <div class="w-[420px] p-4"><LeadIaExecucoes :lead-id="123" /></div>
     </Variant>
   </Story>
 </template>

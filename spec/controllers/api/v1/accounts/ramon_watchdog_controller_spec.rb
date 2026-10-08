@@ -27,6 +27,16 @@ RSpec.describe 'Ramon Watchdog API', type: :request do
     expect(body['counters']).to include('parados_agora' => 2)
   end
 
+  it 'devolve o numero da conversa de cada caso parado (I-WD3)' do
+    conversa = create(:conversation, account: account)
+    parado = create(:lead, account: account, lead_stage: stage, conversation: conversa)
+    Lead.where(id: parado.id).update_all(stage_entered_at: 10.days.ago) # rubocop:disable Rails/SkipsModelValidations
+
+    get url, headers: agent.create_new_auth_token, as: :json
+
+    expect(response.parsed_body['items'].first).to include('conversa_display_id' => conversa.display_id)
+  end
+
   it 'conta as retomadas e as sugestoes das ultimas 24h' do
     lead = create(:lead, account: account, lead_stage: stage)
     create(:lead_task, account: account, lead: lead, kind: 'follow_up', title: 'Retomada nº 1')

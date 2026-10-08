@@ -50,9 +50,20 @@ const props = defineProps({
   enabled: { type: Boolean, default: true },
   edited: { type: Boolean, default: false },
   podeLigar: { type: Boolean, default: false },
+  // ramon (A5): fala de exemplo (I-SK6), papéis = nomes de time (I-X5), uso em 30 dias (I-SK7; null = não veio)
+  exemplo: { type: String, default: '' },
+  papeis: { type: Array, default: () => [] },
+  usoMes: { type: Number, default: null },
 });
 
-const emit = defineEmits(['select', 'hover', 'delete', 'update', 'toggle']);
+const emit = defineEmits([
+  'select',
+  'hover',
+  'delete',
+  'update',
+  'toggle',
+  'testar',
+]);
 
 const { t } = useI18n();
 const { formatMessage } = useMessageFormatter();
@@ -62,6 +73,12 @@ const { formatMessage } = useMessageFormatter();
 const catalogo = useMapGetter('captainTools/getRecords');
 const ferramentas = computed(() =>
   (props.tools || []).map(id => ferramentaInfo(id, catalogo.value))
+);
+
+const usoTexto = computed(() =>
+  props.usoMes
+    ? t('INTEL.SKILLS.USO_30D', { n: props.usoMes })
+    : t('INTEL.SKILLS.SEM_USO_30D')
 );
 
 const modelValue = computed({
@@ -74,8 +91,17 @@ const state = reactive({
   title: '',
   description: '',
   instruction: '',
+  exemplo: '',
+  papeis: [],
 });
 
+const timesGetter = useMapGetter('teams/getTeams');
+const times = computed(() => timesGetter.value || []);
+const marcarPapel = (nome, marcado) => {
+  state.papeis = marcado
+    ? [...state.papeis, nome]
+    : state.papeis.filter(papel => papel !== nome);
+};
 const instructionContentRef = ref();
 
 const [isEditing, toggleEditing] = useToggle();
@@ -91,6 +117,8 @@ const startEdit = () => {
     description: props.description,
     instruction: props.instruction,
     tools: props.tools,
+    exemplo: props.exemplo || '',
+    papeis: [...props.papeis],
   });
   toggleEditing(true);
 };
@@ -129,7 +157,7 @@ const instructionError = computed(() =>
 );
 
 const LINK_INSTRUCTION_CLASS =
-  '[&_a[href^="tool://"]]:text-n-iris-11 [&_a:not([href^="tool://"])]:text-n-slate-12 [&_a]:pointer-events-none [&_a]:cursor-default';
+  '[&_a[href^="tool://"]]:text-n-blue-11 [&_a:not([href^="tool://"])]:text-n-slate-12 [&_a]:pointer-events-none [&_a]:cursor-default';
 
 const renderInstruction = instruction => () =>
   h('p', {
@@ -174,6 +202,36 @@ const renderInstruction = instruction => () =>
           <span class="text-sm text-n-slate-11 mt-2">
             {{ description }}
           </span>
+          <div class="flex flex-wrap items-center gap-1.5 mt-2">
+            <span
+              v-for="papel in papeis"
+              :key="papel"
+              data-testid="skill-papel"
+              :class="[CHIP, TOM.slate]"
+            >
+              {{ papel }}
+            </span>
+            <span
+              v-if="usoMes !== null"
+              data-testid="skill-uso"
+              :class="[CHIP, usoMes ? TOM.blue : TOM.slate]"
+              :title="t('INTEL.SKILLS.USO_AJUDA')"
+            >
+              {{ usoTexto }}
+            </span>
+            <button
+              v-if="exemplo && enabled"
+              type="button"
+              data-testid="skill-testar"
+              class="hover:brightness-110"
+              :class="[CHIP, TOM.blue]"
+              :title="exemplo"
+              @click="emit('testar')"
+            >
+              <span class="i-lucide-flask-conical size-3" />
+              {{ t('INTEL.SKILLS.TESTAR') }}
+            </button>
+          </div>
         </div>
         <div class="flex items-center gap-2">
           <Switch
@@ -279,6 +337,27 @@ const renderInstruction = instruction => () =>
         :show-character-count="false"
         enable-captain-tools
       />
+      <Input
+        v-model="state.exemplo"
+        :label="t('INTEL.SKILLS.EXEMPLO_LABEL')"
+        :placeholder="t('INTEL.SKILLS.EXEMPLO_PLACEHOLDER')"
+      />
+      <fieldset v-if="times.length" class="flex flex-col gap-1.5">
+        <legend class="mb-1 text-sm text-n-slate-12">
+          {{ t('INTEL.SKILLS.PAPEIS_LABEL') }}
+        </legend>
+        <label
+          v-for="time in times"
+          :key="time.id"
+          class="flex items-center gap-2 text-sm text-n-slate-11"
+        >
+          <Checkbox
+            :model-value="state.papeis.includes(time.name)"
+            @update:model-value="marcado => marcarPapel(time.name, marcado)"
+          />
+          {{ time.name }}
+        </label>
+      </fieldset>
       <div class="flex items-center gap-3">
         <Button
           faded

@@ -163,8 +163,9 @@ Pergunta que o *lead* faz e a resposta aprovada da banca, por Tese; o
 Assistente consulta antes de responder.
 
 **Documento (da Inteligência)**:
-Material de referência que o *Assistente* consulta (guia da tese, política de
-honorários, checklist) — distinto de Documento do cliente no Checklist.
+Página da web ou texto colado que o administrador cadastra para **gerar FAQs
+pendentes**. O *Assistente* não lê o documento: ele só usa as FAQs depois de
+aprovadas (decisão D4, 16/08/2026). Distinto de Documento do cliente no Checklist.
 _Avoid_: usar "documento" sem qualificar quando o contexto for pós-venda
 
 ### Atendimento do escritório

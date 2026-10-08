@@ -53,7 +53,15 @@ describe('textos da Inteligência (A3)', () => {
       missingWarn: false,
       fallbackWarn: false,
     });
-    const params = { n: 1, id: 1, nome: 'x', teto: 30, tipo: 'x' };
+    const params = {
+      n: 1,
+      id: 1,
+      nome: 'x',
+      teto: 30,
+      tipo: 'x',
+      total: 2,
+      quando: 'x',
+    };
     const erros = [];
     folhas(raiz).forEach(([chave]) => {
       try {
@@ -63,5 +71,23 @@ describe('textos da Inteligência (A3)', () => {
       }
     });
     expect(erros).toEqual([]);
+  });
+
+  it('chaves da A5 existem nos dois idiomas', () => {
+    const A5 = [
+      'INTEL.TESTAR.FERRAMENTAS',
+      'INTEL.CONFIG.ZONA_RISCO',
+      'INTEL.CAIXAS.TITULO',
+      'INTEL.VIGIA.CONVERSA',
+      'INTEL.CASO_IA.TITULO',
+      'INTEL.CADERNO.NOTURNO',
+      'INTEL.VISAO_GERAL.CADERNO.LINHA',
+      'INTEL.EXECUCOES.PERIODO.D7',
+      'INTEL.SKILLS.TESTAR',
+      'INTEL.FAQ.USADA',
+      'INTEL.DOCUMENTOS.LINK_AVISO',
+    ];
+    const chavesPt = folhas(pt).map(([k]) => k);
+    expect(A5.filter(chave => !chavesPt.includes(chave))).toEqual([]);
   });
 });

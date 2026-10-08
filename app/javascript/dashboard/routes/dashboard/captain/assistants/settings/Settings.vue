@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
@@ -7,6 +7,8 @@ import { useStore } from 'dashboard/composables/store';
 import { useMapGetter } from 'dashboard/composables/store';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useAccount } from 'dashboard/composables/useAccount';
+import Policy from 'dashboard/components/policy.vue';
+import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
 import Button from 'dashboard/components-next/button/Button.vue';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import SettingsHeader from 'dashboard/components-next/captain/pageComponents/settings/SettingsHeader.vue';
@@ -14,6 +16,12 @@ import AssistantBasicSettingsForm from 'dashboard/components-next/captain/pageCo
 import AssistantSystemSettingsForm from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantSystemSettingsForm.vue';
 import AssistantControlItems from 'dashboard/components-next/captain/pageComponents/assistant/settings/AssistantControlItems.vue';
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
+import TextoFinal from 'dashboard/components-next/captain/pageComponents/assistant/settings/TextoFinal.vue';
+import {
+  CAMPO,
+  CARTAO_STATUS,
+  FILETE,
+} from 'dashboard/routes/dashboard/ramon/helpers/ui';
 
 const { t } = useI18n();
 const { isCloudFeatureEnabled } = useAccount();
@@ -34,6 +42,35 @@ const assistantId = computed(() => Number(route.params.assistantId));
 const assistant = computed(() =>
   store.getters['captainAssistants/getRecord'](assistantId.value)
 );
+
+// I-CF4: público de cada assistente (lead = tem caixa conectada) — muda o que os formulários mostram.
+const cartoes = ref([]);
+onMounted(async () => {
+  try {
+    const { data } = await CaptainAssistantAPI.stats();
+    cartoes.value = data.payload;
+  } catch (e) {
+    cartoes.value = [];
+  }
+});
+const publico = computed(
+  () =>
+    cartoes.value.find(item => item.id === assistantId.value)?.publico || 'lead'
+);
+
+// I-CF5: excluir só depois de digitar o nome exato (zona de risco recolhida, só administrador).
+const confirmaNome = ref('');
+watch(assistantId, () => {
+  confirmaNome.value = '';
+});
+const podeExcluir = computed(
+  () =>
+    !!assistant.value?.name &&
+    confirmaNome.value.trim() === assistant.value.name
+);
+
+// I-CF6
+const textoFinalAberto = ref(false);
 
 const controlItems = computed(() => {
   return [
@@ -106,6 +143,7 @@ const handleDeleteSuccess = () => {
   <PageLayout
     :is-fetching="isFetching"
     :show-pagination-footer="false"
+    show-assistant-switcher
     :class="{
       '[&>header>div]:max-w-[80rem] [&>main>div]:max-w-[80rem]':
         isCaptainV2Enabled,
@@ -126,6 +164,7 @@ const handleDeleteSuccess = () => {
             />
             <AssistantBasicSettingsForm
               :assistant="assistant"
+              :publico="publico"
               @submit="handleSubmit"
             />
           </div>
@@ -139,32 +178,48 @@ const handleDeleteSuccess = () => {
             />
             <AssistantSystemSettingsForm
               :assistant="assistant"
+              :publico="publico"
               @submit="handleSubmit"
             />
           </div>
           <span class="h-px w-full bg-n-weak mt-2" />
-          <div class="flex items-end justify-between w-full gap-4">
-            <div class="flex flex-col gap-2">
-              <h6 class="text-n-slate-12 text-base font-medium">
-                {{ t('CAPTAIN.ASSISTANTS.SETTINGS.DELETE.TITLE') }}
-              </h6>
-              <span class="text-n-slate-11 text-sm">
+          <Policy :permissions="['administrator']">
+            <details
+              data-testid="zona-de-risco"
+              :class="[CARTAO_STATUS, FILETE.ruby]"
+            >
+              <summary
+                class="text-sm font-medium cursor-pointer text-n-ruby-11"
+              >
+                {{ t('INTEL.CONFIG.ZONA_RISCO') }}
+              </summary>
+              <p class="mt-2 text-sm text-n-slate-11">
                 {{ t('CAPTAIN.ASSISTANTS.SETTINGS.DELETE.DESCRIPTION') }}
-              </span>
-            </div>
-            <div class="flex-shrink-0">
+              </p>
+              <input
+                v-model="confirmaNome"
+                data-testid="zona-de-risco-nome"
+                class="mt-3"
+                :class="CAMPO"
+                :placeholder="
+                  t('INTEL.CONFIG.DIGITE_NOME', { nome: assistant?.name })
+                "
+              />
               <Button
+                data-testid="zona-de-risco-excluir"
+                class="mt-3 max-w-56 !w-fit"
+                color="ruby"
+                size="sm"
+                :disabled="!podeExcluir"
                 :label="
                   t('CAPTAIN.ASSISTANTS.SETTINGS.DELETE.BUTTON_TEXT', {
-                    assistantName: assistant.name,
+                    assistantName: assistant?.name,
                   })
                 "
-                color="ruby"
-                class="max-w-56 !w-fit"
                 @click="handleDelete"
               />
-            </div>
-          </div>
+            </details>
+          </Policy>
         </div>
         <div v-if="isCaptainV2Enabled" class="flex flex-col gap-6">
           <SettingsHeader
@@ -180,9 +235,23 @@ const handleDeleteSuccess = () => {
               :control-item="item"
             />
           </div>
+          <Button
+            variant="link"
+            size="sm"
+            icon="i-lucide-file-text"
+            class="self-start"
+            data-testid="ver-texto-final"
+            :label="t('INTEL.CONFIG.TEXTO_FINAL')"
+            @click="textoFinalAberto = true"
+          />
         </div>
       </div>
     </template>
+    <TextoFinal
+      v-if="textoFinalAberto"
+      :assistant-id="assistantId"
+      @fechar="textoFinalAberto = false"
+    />
     <DeleteDialog
       v-if="assistant"
       ref="deleteAssistantDialog"

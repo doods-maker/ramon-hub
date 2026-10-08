@@ -33,6 +33,24 @@ RSpec.describe 'Captain Tool Runs API', type: :request do
     expect(response.parsed_body['items'].pluck('tool_name')).to eq(['checar_prescricao'])
   end
 
+  it 'filtra por caso e por periodo e pagina com antes_de (I-EX3, I-X8)', :aggregate_failures do
+    lead = create(:lead, account: account)
+    velha = Captain::ToolRun.create!(account_id: account.id, tool_name: 'checar_prescricao', status: 'ok',
+                                     lead_id: lead.id, created_at: 10.days.ago)
+    nova = Captain::ToolRun.create!(account_id: account.id, tool_name: 'mover_etapa', status: 'ok', lead_id: lead.id)
+    registrar('calcular_beneficio')
+
+    get url, params: { lead_id: lead.id }, headers: agent.create_new_auth_token, as: :json
+    expect(response.parsed_body['items'].pluck('id')).to eq([nova.id, velha.id])
+    expect(response.parsed_body['mais']).to be(false)
+
+    get url, params: { lead_id: lead.id, periodo: '7d' }, headers: agent.create_new_auth_token, as: :json
+    expect(response.parsed_body['items'].pluck('id')).to eq([nova.id])
+
+    get url, params: { lead_id: lead.id, antes_de: nova.id }, headers: agent.create_new_auth_token, as: :json
+    expect(response.parsed_body['items'].pluck('id')).to eq([velha.id])
+  end
+
   it 'nao vaza execucao de outra conta' do
     registrar('checar_prescricao', conta: create(:account))
 

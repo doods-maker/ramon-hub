@@ -2,7 +2,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   before_action :current_account
   before_action -> { check_authorization(Captain::Assistant) }
 
-  before_action :set_assistant, only: [:show, :update, :destroy, :playground, :buscar_faq]
+  before_action :set_assistant, only: [:show, :update, :destroy, :playground, :buscar_faq, :texto_final]
 
   def index
     @assistants = account_assistants.ordered
@@ -24,18 +24,14 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   end
 
   def playground
-    response = if captain_v2_enabled?
-                 Captain::Assistant::AgentRunnerService.new(assistant: @assistant, source: 'playground').generate_response(
-                   message_history: playground_message_history
-                 )
-               else
-                 Captain::Llm::AssistantChatService.new(assistant: @assistant, source: 'playground').generate_response(
-                   additional_message: playground_params[:message_content],
-                   message_history: message_history
-                 )
-               end
+    return render(json: playground_legado) unless captain_v2_enabled?
 
-    render json: response
+    # ramon (I-PG2): as ferramentas que rodaram nesta resposta vão junto, para o Testar mostrar debaixo dela.
+    ferramentas = []
+    coletor = ->(nome, retorno, *) { ferramentas << ferramenta_usada(nome, retorno) }
+    runner = Captain::Assistant::AgentRunnerService.new(assistant: @assistant, source: 'playground',
+                                                        callbacks: { on_tool_complete: coletor })
+    render json: runner.generate_response(message_history: playground_message_history).merge('ferramentas' => ferramentas)
   end
 
   def tools
@@ -58,10 +54,31 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     render json: { payload: faqs.map { |faq| faq.slice(:id, :question, :answer, :tese) } }
   end
 
+  # ramon (I-CF6): o texto final que o assistente recebe — o dele (diretrizes, proteções e a lista de skills,
+  # montados pelo liquid) e o de cada skill ligada. Só leitura.
+  def texto_final
+    skills = @assistant.scenarios.enabled.order(:id).map { |skill| { title: skill.title, texto: skill.agent_instructions } }
+    render json: { assistente: @assistant.agent_instructions, skills: skills }
+  end
+
   private
 
   def set_assistant
     @assistant = account_assistants.find(params[:id])
+  end
+
+  def playground_legado
+    Captain::Llm::AssistantChatService.new(assistant: @assistant, source: 'playground').generate_response(
+      additional_message: playground_params[:message_content], message_history: message_history
+    )
+  end
+
+  # RubyLLM::Tool#name = "captain-tools-<id>"; erro = o aviso que o BasePublicTool devolve quando a ferramenta falha.
+  def ferramenta_usada(nome, retorno)
+    id = nome.to_s.split('-').last
+    info = Captain::Assistant.built_in_agent_tools.find { |tool| tool[:id] == id } || {}
+    { id: id, title: info[:title] || id, nivel: info[:nivel],
+      status: retorno.to_s == Captain::Tools::BasePublicTool::ERRO_NA_TOOL ? 'erro' : 'ok' }
   end
 
   def account_assistants

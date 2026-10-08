@@ -79,10 +79,7 @@ module Ramon::FaqDeConversa
     "#{autor}: #{mensagem.content_for_llm}\n"
   end
 
-  def pausada?(account)
-    teto = Ramon::IaGastoAlerta.teto(account)
-    teto.to_f.positive? && Ramon::IaGastoAlerta.gasto_hoje(account.id) >= teto
-  end
+  def pausada?(account) = Ramon::IaGastoAlerta.passou_do_teto?(account)
 
   def nomes(conversa)
     [conversa.contact&.name, conversa.account.leads.find_by(conversation_id: conversa.id)&.name]

@@ -1,9 +1,14 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import MessageList from './MessageList.vue';
 import CaptainAssistant from 'dashboard/api/captain/assistant';
+import {
+  conversaDe,
+  garantirConversa,
+  limparConversa,
+} from './testarConversas';
 
 const { assistantId } = defineProps({
   assistantId: {
@@ -13,7 +18,13 @@ const { assistantId } = defineProps({
 });
 
 const { t } = useI18n();
-const messages = ref([]);
+// I-PG3: a conversa é do assistente, guardada fora do componente (não some ao trocar de tela).
+watch(
+  () => assistantId,
+  id => garantirConversa(id),
+  { immediate: true }
+);
+const messages = computed(() => conversaDe(assistantId));
 const newMessage = ref('');
 const isLoading = ref(false);
 
@@ -33,19 +44,9 @@ const formatMessagesForApi = () => {
 };
 
 const resetConversation = () => {
-  messages.value = [];
+  limparConversa(assistantId);
   newMessage.value = '';
 };
-
-// Watch for assistant ID changes and reset conversation
-watch(
-  () => assistantId,
-  (newId, oldId) => {
-    if (oldId && newId !== oldId) {
-      resetConversation();
-    }
-  }
-);
 
 const sendMessage = async () => {
   if (!newMessage.value.trim() || isLoading.value) return;
@@ -55,7 +56,9 @@ const sendMessage = async () => {
     sender: 'user',
     timestamp: new Date().toISOString(),
   };
-  messages.value.push(userMessage);
+  const conversa = conversaDe(assistantId);
+  conversa.push(userMessage);
+  const historico = formatMessagesForApi();
   const currentMessage = newMessage.value;
   newMessage.value = '';
 
@@ -64,13 +67,14 @@ const sendMessage = async () => {
     const { data } = await CaptainAssistant.playground({
       assistantId,
       messageContent: currentMessage,
-      messageHistory: formatMessagesForApi(),
+      messageHistory: historico,
     });
 
-    messages.value.push({
+    conversa.push({
       content: data.response,
       sender: 'assistant',
       agentName: data.agent_name,
+      ferramentas: data.ferramentas || [],
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -86,6 +90,15 @@ const handleEnterKey = event => {
   event.preventDefault();
   sendMessage();
 };
+
+// A página do Testar põe a fala de uma skill (escrever) ou o nº do caso (anexar) — nada é enviado sozinho (N7).
+const escrever = texto => {
+  newMessage.value = texto;
+};
+const anexar = texto => {
+  newMessage.value = [newMessage.value.trim(), texto].filter(Boolean).join(' ');
+};
+defineExpose({ escrever, anexar });
 </script>
 
 <template>

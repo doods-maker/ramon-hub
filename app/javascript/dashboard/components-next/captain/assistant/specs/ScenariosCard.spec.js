@@ -7,6 +7,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
 const montar = (tools, extra = {}) => {
   const store = createStore({
     modules: {
+      teams: { namespaced: true, getters: { getTeams: () => [] } },
       captainTools: {
         namespaced: true,
         getters: {
@@ -72,5 +73,29 @@ describe('ScenariosCard — ferramentas da skill', () => {
     expect(montar(null).text()).not.toContain(
       'CAPTAIN.ASSISTANTS.SCENARIOS.ADD.SUGGESTED.TOOLS_USED'
     );
+  });
+});
+
+describe('ScenariosCard — A5', () => {
+  it('"Testar esta skill" só com fala de exemplo e emite testar', async () => {
+    expect(montar([]).find('[data-testid="skill-testar"]').exists()).toBe(
+      false
+    );
+    const wrapper = montar([], { exemplo: 'Como está o funil hoje?' });
+    await wrapper.find('[data-testid="skill-testar"]').trigger('click');
+    expect(wrapper.emitted('testar')).toHaveLength(1);
+  });
+
+  it('mostra o uso de 30 dias e os papéis', () => {
+    const wrapper = montar([], { usoMes: 4, papeis: ['comercial'] });
+    expect(wrapper.find('[data-testid="skill-uso"]').text()).toBe(
+      'INTEL.SKILLS.USO_30D'
+    );
+    expect(
+      wrapper.findAll('[data-testid="skill-papel"]').map(c => c.text())
+    ).toEqual(['comercial']);
+    expect(
+      montar([], { usoMes: 0 }).find('[data-testid="skill-uso"]').text()
+    ).toBe('INTEL.SKILLS.SEM_USO_30D');
   });
 });

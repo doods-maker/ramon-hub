@@ -8,7 +8,7 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
     subject(:task) { described_class['ramon:inteligencia:seed'] }
 
     let(:account) { create(:account) }
-    let(:atendimento) { account.captain_assistants.find_by!(name: 'Atendimento (rascunho)') }
+    let(:atendimento) { account.captain_assistants.find_by!(name: 'Atendimento') }
     let(:yml) { YAML.safe_load(Rails.root.join('db/seeds/ramon/inteligencia/assistentes.yml').read).fetch('assistentes') }
     let(:total_skills) { yml.sum { |a| a['skills'].size } }
 
@@ -22,6 +22,20 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       expect(account.captain_assistants.pluck(:name)).to match_array(yml.pluck('name'))
       expect(Captain::Scenario.where(account: account).count).to eq(total_skills)
       expect(atendimento.responses.approved.count).to be > 10
+    end
+
+    it 'renomeia o assistente pelo nome antigo e tira a marca morta (I-AS4, I-AS5)', :aggregate_failures do
+      antigo = create(:captain_assistant, account: account, name: 'Atendimento (rascunho)',
+                                          config: { 'ramon_modo_rascunho' => true })
+      copiloto = create(:captain_assistant, account: account, name: 'Copiloto do Escritorio')
+
+      rodar
+      rodar
+
+      expect(antigo.reload.name).to eq('Atendimento')
+      expect(antigo.config).not_to have_key('ramon_modo_rascunho')
+      expect(copiloto.reload.name).to eq('Copiloto do Escritório')
+      expect(account.captain_assistants.count).to eq(2)
     end
 
     it 'e idempotente: rodar duas vezes nao duplica' do
@@ -83,6 +97,20 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       expect(renomeada.reload.title).to eq('Nome novo na tela')
       expect(desligada.reload).not_to be_enabled
       expect(criada.reload).to be_enabled
+    end
+
+    it 'grava fala de exemplo e papeis do yml; skill editada so ganha o que esta vazio (A5)', :aggregate_failures do
+      rodar
+      copiloto = account.captain_assistants.find_by!(name: 'Copiloto do Escritório')
+      skill = copiloto.scenarios.find_by!(seed_titulo: 'Funil hoje')
+      expect(skill).to have_attributes(exemplo: 'Como está o funil hoje?', papeis: ['comercial'])
+
+      skill.update!(edited: true, exemplo: 'Minha fala')
+      skill.update_columns(papeis: []) # rubocop:disable Rails/SkipsModelValidations
+      rodar
+
+      expect(skill.reload).to have_attributes(exemplo: 'Minha fala', papeis: ['comercial'])
+      expect(account.captain_assistants.find_by!(name: 'Atendimento').scenarios.where(exemplo: nil).count).to eq(0)
     end
   end
 end

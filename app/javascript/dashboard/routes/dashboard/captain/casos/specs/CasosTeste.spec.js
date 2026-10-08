@@ -25,6 +25,7 @@ vi.mock('dashboard/api/captain/iaCasos', () => ({
     criar: vi.fn(),
     atualizar: vi.fn(),
     remover: vi.fn(),
+    noturno: vi.fn().mockResolvedValue({ data: { noturno: true } }),
   },
 }));
 
@@ -105,7 +106,7 @@ describe('Casos de teste da IA', () => {
       },
     });
     IaCasosAPI.rodadas.mockResolvedValue({
-      data: { payload: [{ ...RODADA, resultados: undefined }] },
+      data: { payload: [{ ...RODADA, resultados: undefined }], noturno: false },
     });
     IaCasosAPI.rodada.mockResolvedValue({ data: RODADA });
   });
@@ -129,6 +130,15 @@ describe('Casos de teste da IA', () => {
     expect(wrapper.find('[data-testid="casos-historico"]').text()).toContain(
       '2/3'
     );
+  });
+
+  it('liga a rodada da madrugada (I-X6)', async () => {
+    const wrapper = await montar();
+    wrapper
+      .findComponent('[data-testid="casos-noturno-chave"]')
+      .vm.$emit('update:modelValue', true);
+    await flushPromises();
+    expect(IaCasosAPI.noturno).toHaveBeenCalledWith(1, true);
   });
 
   it('busca e filtro de ativos', async () => {

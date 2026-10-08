@@ -13,7 +13,7 @@
 nunca: 'Coisas que NUNCA podem acontecer (varredura em qualquer resposta): promessa de êxito · prazo em meses/dias · honorário ≠ 30% + 3 · desconto/parcelamento · pedido de PIX/depósito · afirmar que contrato/reunião/caso "já existe" · marcar documento como recebido · resposta pública em conversa que está em modo rascunho.'
 
 assistentes:
-  - nome: Atendimento (rascunho)
+  - nome: Atendimento
     nunca: true
     casos:
       - codigo: A1
@@ -193,7 +193,7 @@ assistentes:
         ativo: false
         motivo: 'Sem a tese na conversa, não dá para saber de qual benefício são os documentos.'
 
-  - nome: Copiloto do Escritorio
+  - nome: Copiloto do Escritório
     casos:
       - codigo: C1
         grupo: copiloto

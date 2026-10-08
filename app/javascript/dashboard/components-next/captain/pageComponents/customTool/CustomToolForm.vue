@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
 import { required, maxLength } from '@vuelidate/validators';
 import { useMapGetter } from 'dashboard/composables/store';
+import { TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import CustomToolsAPI from 'dashboard/api/captain/customTools';
 
 import Input from 'dashboard/components-next/input/Input.vue';
@@ -300,11 +301,7 @@ const handleTest = async () => {
       <div
         v-if="testResult"
         class="flex items-center gap-2 px-3 py-2 text-xs rounded-lg"
-        :class="
-          testResult.success
-            ? 'bg-n-teal-2 text-n-teal-11'
-            : 'bg-n-ruby-2 text-n-ruby-11'
-        "
+        :class="testResult.success ? TOM.teal : TOM.ruby"
       >
         <span
           :class="

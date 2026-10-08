@@ -5,9 +5,8 @@
 // mesma tela. Não dispara nada.
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
-import { useStore } from 'dashboard/composables/store';
-import { useAccount } from 'dashboard/composables/useAccount';
+import { useAbrir } from './execucoes';
+import Button from 'dashboard/components-next/button/Button.vue';
 import RamonWatchdogAPI from 'dashboard/api/ramonWatchdog';
 import {
   CARTAO,
@@ -22,9 +21,7 @@ defineOptions({ name: 'CaptainVigiaBloco' });
 const VISIVEIS = 5;
 
 const { t } = useI18n();
-const store = useStore();
-const router = useRouter();
-const { accountScopedRoute } = useAccount();
+const { abrirCaso, abrirConversa } = useAbrir();
 
 const data = ref(null);
 const loading = ref(true);
@@ -55,11 +52,9 @@ const visiveis = computed(() =>
 const fmtData = value =>
   value ? new Date(value).toLocaleDateString('pt-BR') : '—';
 
-// Mesmo padrão das outras telas: abre o Funil e seleciona o caso.
-const openLead = id => {
-  router.push(accountScopedRoute('ramon_funil'));
-  store.dispatch('leads/select', id);
-};
+// I-WD4: a régua de retomada tem 3 ângulos (FollowUpDraftService#angle_for) — da 3ª em diante está no limite.
+const REGUA = 3;
+const tomRegua = tentativas => (tentativas >= REGUA ? TOM.ruby : TOM.amber);
 </script>
 
 <template>
@@ -129,40 +124,64 @@ const openLead = id => {
       </p>
 
       <div v-else class="flex flex-col mt-2">
-        <button
+        <div
           v-for="item in visiveis"
           :key="item.lead_id"
-          type="button"
           data-testid="watchdog-linha"
-          :class="LINHA"
-          @click="openLead(item.lead_id)"
+          class="flex items-start gap-1"
         >
-          <div class="flex items-center gap-2">
-            <span class="font-medium text-n-slate-12">{{ item.name }}</span>
-            <span v-if="item.tentativas" :class="[CHIP, TOM.amber]">
-              {{
-                t('CAPTAIN_RAMON.WATCHDOG.TENTATIVAS', {
-                  count: item.tentativas,
-                })
-              }}
-            </span>
-            <span class="ml-auto text-[11px] text-n-slate-9">
-              {{
-                t('CAPTAIN_RAMON.WATCHDOG.PARADO_HA', {
-                  days: item.dias_parado,
-                })
-              }}
-            </span>
-          </div>
-          <p class="mt-0.5 text-xs text-n-slate-11">
-            {{ item.stage_name }} ·
-            {{ t('CAPTAIN_RAMON.WATCHDOG.ULTIMA') }}
-            {{ fmtData(item.ultima_retomada_em) }}
-            <span v-if="item.tarefa_aberta">
-              · {{ t('CAPTAIN_RAMON.WATCHDOG.COM_TAREFA') }}
-            </span>
-          </p>
-        </button>
+          <button
+            type="button"
+            class="flex-1 min-w-0"
+            :class="LINHA"
+            @click="abrirCaso(item.lead_id)"
+          >
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-n-slate-12">{{ item.name }}</span>
+              <span
+                v-if="item.tentativas"
+                data-testid="watchdog-tentativas"
+                :class="[CHIP, tomRegua(item.tentativas)]"
+                :title="
+                  item.tentativas >= REGUA ? t('INTEL.VIGIA.NO_LIMITE') : ''
+                "
+              >
+                {{
+                  t('CAPTAIN_RAMON.WATCHDOG.TENTATIVAS', {
+                    count: item.tentativas,
+                  })
+                }}
+              </span>
+              <span class="ml-auto text-[11px] text-n-slate-9">
+                {{
+                  t('CAPTAIN_RAMON.WATCHDOG.PARADO_HA', {
+                    days: item.dias_parado,
+                  })
+                }}
+              </span>
+            </div>
+            <p class="mt-0.5 text-xs text-n-slate-11">
+              {{ item.stage_name }} ·
+              {{ t('CAPTAIN_RAMON.WATCHDOG.ULTIMA') }}
+              {{ fmtData(item.ultima_retomada_em) }}
+              <span v-if="item.tarefa_aberta">
+                · {{ t('CAPTAIN_RAMON.WATCHDOG.COM_TAREFA') }}
+              </span>
+            </p>
+          </button>
+          <Button
+            v-if="item.conversa_display_id"
+            data-testid="watchdog-conversa"
+            icon="i-lucide-message-circle"
+            size="xs"
+            variant="ghost"
+            color="slate"
+            class="mt-1 shrink-0"
+            :title="t('INTEL.VIGIA.CONVERSA')"
+            :aria-label="t('INTEL.VIGIA.CONVERSA')"
+            @click="abrirConversa(item.conversa_display_id)"
+          />
+        </div>
         <button
           v-if="items.length > VISIVEIS"
           type="button"

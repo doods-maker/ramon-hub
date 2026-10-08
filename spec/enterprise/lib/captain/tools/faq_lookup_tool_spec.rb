@@ -101,6 +101,36 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
       end
     end
 
+    describe 'contador de uso (I-FQ6)' do
+      let!(:faq) do
+        create(:captain_assistant_response, assistant: assistant, question: 'Quanto custa o honorário?',
+                                            answer: '30% dos atrasados + 3 parcelas do benefício', status: 'approved')
+      end
+
+      def buscar(source)
+        with_modified_env(RAMON_FAQ_BUSCA: 'texto') do
+          tool.perform(Struct.new(:state).new({ source: source }), query: 'honorário')
+        end
+      end
+
+      it 'conta no atendimento de verdade e nao no Testar nem no caso de teste', :aggregate_failures do
+        buscar(nil)
+        buscar('playground')
+        buscar('teste')
+
+        expect(faq.reload.usos).to eq(1)
+        expect(faq.usada_em).to be_present
+        expect(faq.edited).to be(false)
+      end
+
+      it 'ainda devolve a FAQ quando o contador falha' do
+        allow(Captain::AssistantResponse).to receive(:where).and_call_original
+        allow(Captain::AssistantResponse).to receive(:where).with(id: [faq.id]).and_raise(ActiveRecord::StatementInvalid)
+
+        expect(buscar(nil)).to include('Quanto custa o honorário?')
+      end
+    end
+
     context 'with blank query' do
       it 'handles empty query' do
         # Return empty result set

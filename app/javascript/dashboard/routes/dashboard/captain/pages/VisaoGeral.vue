@@ -7,6 +7,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useAccount } from 'dashboard/composables/useAccount';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonInteligenciaAPI from 'dashboard/api/ramonInteligencia';
 import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
@@ -29,6 +30,7 @@ defineOptions({ name: 'CaptainVisaoGeral' });
 const { t } = useI18n();
 const router = useRouter();
 const { accountScopedRoute } = useAccount();
+const { isAdmin } = useAdmin();
 
 const visao = ref(null);
 const assistentes = ref([]);
@@ -78,6 +80,7 @@ const resposta = computed(() => visao.value.primeira_resposta);
 const transferencias = computed(() => visao.value.transferencias);
 const aprovacoes = computed(() => visao.value.aprovacoes);
 const agente = computed(() => visao.value.agente);
+const caderno = computed(() => visao.value.caderno || []);
 
 const faqsPendentes = computed(() =>
   assistentes.value.reduce((soma, item) => soma + item.faqs_pendentes, 0)
@@ -496,6 +499,66 @@ const ir = (name, params = {}, query = {}) =>
                   }}
                 </span>
               </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- I-X6: caderno de provas (última rodada concluída por assistente).
+             Largura cheia, assistentes lado a lado: é o 9º cartão da grade e
+             sozinho na coluna deixava um buraco à direita. -->
+        <section
+          data-testid="vg-caderno"
+          class="lg:col-span-2"
+          :class="[CARTAO]"
+        >
+          <h2 :class="TITULO">
+            {{ t('INTEL.VISAO_GERAL.CADERNO.TITULO') }}
+          </h2>
+          <p v-if="!caderno.length" class="mt-2 text-sm text-n-slate-10">
+            {{ t('INTEL.VISAO_GERAL.CADERNO.NUNCA') }}
+          </p>
+          <ul v-else class="grid gap-2 mt-2 list-none lg:grid-cols-2">
+            <li
+              v-for="item in caderno"
+              :key="item.assistant_id"
+              data-testid="vg-caderno-linha"
+            >
+              <div class="flex flex-wrap items-center gap-2">
+                <span
+                  :class="[
+                    CHIP,
+                    item.passou === item.total ? TOM.teal : TOM.ruby,
+                  ]"
+                >
+                  {{
+                    t('INTEL.VISAO_GERAL.CADERNO.LINHA', {
+                      nome: item.nome,
+                      n: item.passou,
+                      total: item.total,
+                    })
+                  }}
+                </span>
+                <Button
+                  v-if="isAdmin"
+                  size="xs"
+                  variant="ghost"
+                  color="slate"
+                  icon="i-lucide-arrow-right"
+                  :label="t('INTEL.VISAO_GERAL.CADERNO.ABRIR')"
+                  @click="
+                    ir('captain_assistants_casos_teste_index', {
+                      assistantId: item.assistant_id,
+                    })
+                  "
+                />
+              </div>
+              <p class="mt-1 text-xs text-n-slate-10">
+                {{
+                  t('INTEL.VISAO_GERAL.CADERNO.QUANDO', {
+                    quando: fmtHora(item.em * 1000),
+                  })
+                }}
+              </p>
             </li>
           </ul>
         </section>

@@ -12,6 +12,8 @@ import {
   ABA,
   ABA_ATIVA,
   ABA_INATIVA,
+  AVISO,
+  TOM,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 
 const props = defineProps({
@@ -126,6 +128,9 @@ const handleSubmit = async () => {
         :message="urlError"
         :message-type="urlError ? 'error' : 'info'"
       />
+      <p data-testid="documento-link-aviso" :class="[AVISO, TOM.amber]">
+        {{ t('INTEL.DOCUMENTOS.LINK_AVISO') }}
+      </p>
       <Input
         v-model="state.name"
         :label="t('CAPTAIN.DOCUMENTS.FORM.NAME.LABEL')"

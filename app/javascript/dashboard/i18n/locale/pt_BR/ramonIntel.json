@@ -17,7 +17,8 @@
       "TEXTO_LABEL": "Texto",
       "TEXTO_PLACEHOLDER": "Cole aqui o texto (de um PDF, e-mail, manual...)",
       "TEXTO_ERRO": "Cole o texto (até 200 mil caracteres)",
-      "TEXTO_COLADO": "Texto colado"
+      "TEXTO_COLADO": "Texto colado",
+      "LINK_AVISO": "Vai ler esta página e as páginas ligadas a ela no mesmo site — o link da página inicial pode trazer o site inteiro. Para um texto só, use Colar texto."
     },
     "FAQ": {
       "TESE_LABEL": "Tese",
@@ -30,7 +31,10 @@
         "BOTAO": "Testar",
         "NADA": "O assistente não acharia nenhuma FAQ para essa pergunta. Vale criar uma.",
         "ERRO": "Não foi possível testar agora. Tente de novo."
-      }
+      },
+      "USADA": "Usada {n}×",
+      "NUNCA_USADA": "Ainda não usada",
+      "USADA_AJUDA": "Quantas vezes o assistente usou esta FAQ no atendimento de verdade (o Testar não conta). Última vez: {quando}."
     },
     "SKILLS": {
       "ABA_LIGADAS": "Ligadas ({n})",
@@ -40,7 +44,14 @@
       "LIGADA": "Skill ligada: o assistente volta a usar.",
       "DESLIGADA": "Skill desligada: o assistente para de usar.",
       "EDITADA": "Editada aqui",
-      "EDITADA_AJUDA": "Editada na tela: a carga automática das skills não muda nem desliga esta."
+      "EDITADA_AJUDA": "Editada na tela: a carga automática das skills não muda nem desliga esta.",
+      "TESTAR": "Testar esta skill",
+      "USO_30D": "Rodou {n}× em 30 dias",
+      "SEM_USO_30D": "Não rodou em 30 dias",
+      "USO_AJUDA": "Quantas vezes as ferramentas desta skill rodaram no atendimento de verdade nos últimos 30 dias. O Testar e os Casos de teste não contam; ferramenta usada por duas skills conta nas duas.",
+      "EXEMPLO_LABEL": "Fala de exemplo (aparece no Testar)",
+      "EXEMPLO_PLACEHOLDER": "Ex.: O que falta de documento deste caso?",
+      "PAPEIS_LABEL": "Papéis que mais usam (aparecem primeiro no Testar)"
     },
     "EXECUCOES": {
       "ABA_FERRAMENTAS": "Ferramentas da IA",
@@ -65,15 +76,69 @@
         "SEM_RESUMO": "Sem resposta registrada.",
         "ACOES": "O que o agente fez",
         "NENHUMA_ACAO": "Nenhuma escrita (só respondeu na nota)."
-      }
+      },
+      "PERIODO": {
+        "TUDO": "Todo o período",
+        "HOJE": "Hoje",
+        "D7": "Últimos 7 dias",
+        "D30": "Últimos 30 dias"
+      },
+      "SO_ERROS_HOJE": "Só erros de hoje",
+      "CARREGAR_MAIS": "Carregar mais"
     },
     "VISAO_GERAL": {
-      "VER_TRILHA": "Ver a trilha do agente"
+      "VER_TRILHA": "Ver a trilha do agente",
+      "CADERNO": {
+        "TITULO": "Caderno de provas",
+        "LINHA": "{nome}: {n} de {total} ok",
+        "QUANDO": "Última rodada: {quando}",
+        "NUNCA": "Nenhuma rodada concluída ainda.",
+        "ABRIR": "Abrir os casos de teste"
+      }
     },
     "SUGESTOES": {
       "SO_TIPO": "Só: {tipo}",
       "VER_TODAS": "ver todas",
       "NENHUMA_DO_TIPO": "Nenhuma sugestão desse tipo agora."
+    },
+    "TESTAR": {
+      "FERRAMENTAS": "Ferramentas usadas:",
+      "FERRAMENTA_ERRO": "{nome} (erro)",
+      "SUGESTOES": "Experimente (as do seu papel primeiro):",
+      "CASO_PLACEHOLDER": "Testar com o caso… (nome do lead)",
+      "CASO_AJUDA": "Escolher um lead põe o nº do caso na sua mensagem.",
+      "CASO_NENHUM": "Nenhum lead com esse nome."
+    },
+    "CONFIG": {
+      "SO_EQUIPE": "Este assistente fala só com a equipe: mensagens ao cliente, FAQs de conversa e memória do contato não se aplicam a ele.",
+      "MEMORIA_AJUDA": "Ao resolver a conversa, a IA anota no lead (painel → Notas) o que aprendeu: benefício de interesse, trabalho, datas, documentos e objeções. Nunca anota dado de saúde, CPF, telefone ou endereço. Para no dia em que o gasto passa do teto.",
+      "ZONA_RISCO": "Zona de risco",
+      "DIGITE_NOME": "Digite {nome} para liberar a exclusão",
+      "TEXTO_FINAL": "Ver o texto final que o assistente recebe",
+      "TEXTO_FINAL_AJUDA": "Diretrizes, proteções e a lista de skills juntas, do jeito que vão para a IA, e o texto de cada skill ligada. Só leitura.",
+      "TEXTO_FINAL_ASSISTENTE": "Assistente",
+      "TEXTO_FINAL_SKILL": "Skill: {nome}",
+      "TEXTO_FINAL_ERRO": "Não foi possível carregar o texto agora.",
+      "FECHAR": "Fechar"
+    },
+    "CAIXAS": {
+      "TITULO": "Caixas conectadas — {nome}"
+    },
+    "VIGIA": {
+      "CONVERSA": "Abrir a conversa",
+      "NO_LIMITE": "No limite da régua de retomada"
+    },
+    "CASO_IA": {
+      "TITULO": "O que a IA fez neste caso",
+      "AGENTE": "Agente Claude: {nome}",
+      "VAZIO": "A IA ainda não fez nada neste caso.",
+      "ERRO": "Não foi possível carregar agora."
+    },
+    "CADERNO": {
+      "NOTURNO": "Rodar sozinho de madrugada (05:30), se algo mudou",
+      "NOTURNO_AJUDA": "Vale para todos os assistentes. Roda os casos ativos quando uma skill, FAQ, configuração ou caso mudou desde a última rodada, e não roda no dia em que o gasto passou do teto (Uso e custo). Estimativa: {n} por rodada deste assistente.",
+      "NOTURNO_LIGADO": "Rodada da madrugada ligada.",
+      "NOTURNO_DESLIGADO": "Rodada da madrugada desligada."
     }
   }
 }

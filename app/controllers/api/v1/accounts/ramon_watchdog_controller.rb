@@ -46,11 +46,15 @@ class Api::V1::Accounts::RamonWatchdogController < Api::V1::Accounts::BaseContro
   end
 
   # Em alerta = parado no funil, ordenado por quem já levou mais tentativa de
-  # retomada sem responder (é onde a régua está no limite).
+  # retomada sem responder (é onde a régua está no limite). I-WD3: nº da conversa
+  # (o que a rota da tela usa) só das linhas que vão para a tela — 1 consulta.
   def em_alerta
-    parados.map { |lead| row_for(lead) }
-           .sort_by { |row| [-row[:tentativas], -row[:dias_parado]] }
-           .first(LIST_LIMIT)
+    linhas = parados.map { |lead| row_for(lead) }
+                    .sort_by { |row| [-row[:tentativas], -row[:dias_parado]] }
+                    .first(LIST_LIMIT)
+    numeros = Current.account.conversations.where(id: linhas.filter_map { |linha| linha[:conversation_id] })
+                     .pluck(:id, :display_id).to_h
+    linhas.each { |linha| linha[:conversa_display_id] = numeros[linha[:conversation_id]] }
   end
 
   def row_for(lead)

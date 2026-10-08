@@ -490,8 +490,8 @@
           "ERROR": "The name is required"
         },
         "TEMPERATURE": {
-          "LABEL": "Response Temperature",
-          "DESCRIPTION": "Adjust how creative or restrictive the assistant's responses should be. Lower values produce more focused and deterministic responses, while higher values allow for more creative and varied outputs."
+          "LABEL": "Creativity (low = more predictable)",
+          "DESCRIPTION": "Lower: similar answers that stick to the rules. Higher: more varied text. For legal service, prefer 0.2 to 0.4."
         },
         "DESCRIPTION": {
           "LABEL": "Description",
@@ -499,9 +499,9 @@
           "ERROR": "The description is required"
         },
         "PRODUCT_NAME": {
-          "LABEL": "Product Name",
-          "PLACEHOLDER": "Enter product name",
-          "ERROR": "The product name is required"
+          "LABEL": "Firm name",
+          "PLACEHOLDER": "E.g.: Ramon Antonio Advogados",
+          "ERROR": "The firm name is required"
         },
         "WELCOME_MESSAGE": {
           "LABEL": "Welcome Message",
@@ -522,7 +522,7 @@
         "FEATURES": {
           "TITLE": "Features",
           "ALLOW_CONVERSATION_FAQS": "Generate pending FAQs from resolved conversations (they only count after an administrator approves them)",
-          "ALLOW_MEMORIES": "Capture key details as memories from customer interactions.",
+          "ALLOW_MEMORIES": "Contact memory: when the conversation is resolved, note on the lead what the AI learned",
           "ALLOW_CITATIONS": "Include source citations in responses",
           "ALLOW_CONTACT_ATTRIBUTES": "Allow access to contact information"
         }
@@ -570,7 +570,7 @@
       },
       "EMPTY_STATE": {
         "TITLE": "Open assistants from the switcher",
-        "SUBTITLE": "Pick an assistant in the switcher at the top of the FAQs, Skills, Test and Settings screens."
+        "SUBTITLE": "Pick an assistant in the switcher at the top of the Skills, Test and Settings screens. FAQs and Documents always belong to Atendimento."
       },
       "GUARDRAILS": {
         "TITLE": "Guardrails",
@@ -1052,8 +1052,8 @@
       },
       "DELETE": {
         "TITLE": "Are you sure to disconnect the inbox?",
-        "DESCRIPTION": "",
-        "CONFIRM": "Yes, delete",
+        "DESCRIPTION": "The assistant stops acting on this inbox's conversations. You can connect it again anytime.",
+        "CONFIRM": "Yes, disconnect",
         "SUCCESS_MESSAGE": "The inbox was successfully disconnected.",
         "ERROR_MESSAGE": "There was an error disconnecting the inbox, please try again."
       },
@@ -1066,7 +1066,7 @@
       "FORM": {
         "INBOX": {
           "LABEL": "Inbox",
-          "PLACEHOLDER": "Choose the inbox to deploy the assistant.",
+          "PLACEHOLDER": "Choose the inbox where the assistant will work.",
           "ERROR": "An inbox selection is required."
         },
         "AVISO_RASCUNHO": "Once connected, the assistant starts acting in this inbox's conversations. Default mode for new conversations: {modo}. Draft: everything becomes a draft for the team to send. Limited pilot: only logistics goes out on its own. Full pilot: everything goes out on its own. Manual: the assistant does not act."

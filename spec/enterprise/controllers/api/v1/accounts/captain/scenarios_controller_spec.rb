@@ -52,6 +52,24 @@ RSpec.describe 'Api::V1::Accounts::Captain::Scenarios', type: :request do
         expect(json_response[:payload].pluck(:id)).to eq([ligada.id, desligada.id])
         expect(json_response[:payload].pluck(:enabled)).to eq([true, false])
       end
+
+      it 'soma o uso de 30 dias das ferramentas de cada skill, sem Testar nem caso de teste (I-SK7)' do
+        # tools vem da instrução (Captain::Scenario#resolve_tool_references)
+        skill = create(:captain_scenario, assistant: assistant, account: account,
+                                          instruction: 'Use [Mover](tool://mover_etapa) e [FAQ](tool://faq_lookup).')
+        base = { account_id: account.id, assistant_id: assistant.id, status: 'ok' }
+        Captain::ToolRun.create!(base.merge(tool_name: 'mover_etapa'))
+        Captain::ToolRun.create!(base.merge(tool_name: 'faq_lookup'))
+        Captain::ToolRun.create!(base.merge(tool_name: 'faq_lookup', source: 'playground'))
+        Captain::ToolRun.create!(base.merge(tool_name: 'faq_lookup', source: 'teste'))
+        Captain::ToolRun.create!(base.merge(tool_name: 'mover_etapa', created_at: 31.days.ago))
+
+        get "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/scenarios",
+            headers: admin.create_new_auth_token, as: :json
+
+        linha = response.parsed_body['payload'].find { |item| item['id'] == skill.id }
+        expect(linha).to include('uso_30d' => 2, 'papeis' => [], 'exemplo' => nil)
+      end
     end
   end
 

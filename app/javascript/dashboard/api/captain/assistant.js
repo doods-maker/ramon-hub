@@ -32,6 +32,11 @@ class CaptainAssistant extends ApiClient {
       params: { q: pergunta },
     });
   }
+
+  // ramon: texto final que o assistente recebe (I-CF6).
+  textoFinal(assistantId) {
+    return axios.get(`${this.url}/${assistantId}/texto_final`);
+  }
 }
 
 export default new CaptainAssistant();

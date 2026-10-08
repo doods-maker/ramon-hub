@@ -70,4 +70,15 @@ RSpec.describe 'Ramon Agente Execucoes API', type: :request do
 
     expect(response).to have_http_status(:unauthorized)
   end
+
+  it 'filtra pelo caso (I-X8)' do
+    admin = create(:user, account: account, role: :administrator)
+    lead = create(:lead, account: account)
+    account.agente_execucoes.create!(pedido: 'do caso', status: 'ok', lead: lead)
+    account.agente_execucoes.create!(pedido: 'de outro', status: 'ok')
+
+    get url, params: { lead_id: lead.id }, headers: admin.create_new_auth_token, as: :json
+
+    expect(response.parsed_body['items'].pluck('pedido')).to eq(['do caso'])
+  end
 end

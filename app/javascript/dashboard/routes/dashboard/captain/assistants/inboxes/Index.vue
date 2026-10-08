@@ -2,6 +2,7 @@
 import { computed, watch, ref, nextTick } from 'vue';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 
 import DeleteDialog from 'dashboard/components-next/captain/pageComponents/DeleteDialog.vue';
@@ -13,8 +14,18 @@ import InboxPageEmptyState from 'dashboard/components-next/captain/pageComponent
 const store = useStore();
 const dialogType = ref('');
 const route = useRoute();
+const { t } = useI18n();
 
 const assistantId = computed(() => route.params.assistantId);
+
+// I-T4: sem seletor — o título diz de qual assistente são as caixas (a tela abre pelo cartão dele).
+const titulo = computed(() =>
+  t('INTEL.CAIXAS.TITULO', {
+    nome:
+      store.getters['captainAssistants/getRecord'](Number(assistantId.value))
+        ?.name || '',
+  })
+);
 const assistantUiFlags = useMapGetter('captainAssistants/getUIFlags');
 const uiFlags = useMapGetter('captainInboxes/getUIFlags');
 const isFetchingAssistant = computed(() => assistantUiFlags.value.fetchingItem);
@@ -62,7 +73,7 @@ watch(
 
 <template>
   <PageLayout
-    :header-title="$t('CAPTAIN.INBOXES.HEADER')"
+    :header-title="titulo"
     :back-url="{ name: 'captain_assistants_create_index' }"
     :button-label="$t('CAPTAIN.INBOXES.ADD_NEW')"
     :button-policy="['administrator']"
