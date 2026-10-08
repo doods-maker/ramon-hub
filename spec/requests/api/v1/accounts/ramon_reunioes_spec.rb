@@ -113,6 +113,20 @@ RSpec.describe 'Ramon Reunioes API', type: :request do
            headers: agent.create_new_auth_token
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it 'fluxo "Ata da reunião" no comando: Refazer não enfileira pelo código; o fluxo pede o mesmo job (execução nova)' do
+      reuniao = create(:reuniao, account: account, status: 'erro', erro: 'boom')
+      with_modified_env(RAMON_FLUXO_ATA_REUNIAO: 'on') do
+        Ramon::Fluxos::Migracao.semear(account, 'ata_reuniao')
+        Ramon::Fluxos::Migracao.mudar_modo!(account, 'ata_reuniao', 'normal')
+        expect do
+          post "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}/reprocessar", headers: agent.create_new_auth_token
+        end.not_to have_enqueued_job(Ramon::ReuniaoAtaJob)
+      end
+      expect { perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) }.to have_enqueued_job(Ramon::ReuniaoAtaJob).with(reuniao.id)
+      execucao = Ramon::Fluxos::Migracao.fluxo(account, 'ata_reuniao').execucoes.sole
+      expect([execucao.ensaio, execucao.status, execucao.contexto.dig('gatilho', 'evento')]).to eq([false, 'concluida', 'refazer'])
+    end
   end
 
   describe 'DELETE /api/v1/accounts/:id/ramon_reunioes/:id' do

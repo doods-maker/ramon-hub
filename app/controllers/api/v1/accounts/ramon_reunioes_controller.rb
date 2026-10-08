@@ -32,7 +32,7 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
       lead: Current.account.leads.find_by(id: params[:lead_id])
     )
     reuniao.audio.attach(audio)
-    Ramon::ReuniaoAtaJob.perform_later(reuniao.id)
+    pedir_ata(reuniao, 'gravada')
     render json: detalhe(reuniao)
   end
 
@@ -53,11 +53,18 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
     return render_error('Reunião não está com erro') unless @reuniao.status == 'erro'
 
     @reuniao.update!(status: 'transcrevendo', erro: nil)
-    Ramon::ReuniaoAtaJob.perform_later(@reuniao.id)
+    pedir_ata(@reuniao, 'refazer')
     render json: detalhe(@reuniao)
   end
 
   private
+
+  # B5: pelo código (como sempre) ou pelo fluxo "Ata da reunião" (RAMON_FLUXO_ATA_REUNIAO); {evento} = gravada | refazer.
+  def pedir_ata(reuniao, evento)
+    Ramon::Fluxos::Externos.evento('ata_reuniao', 'reuniao_gravada', reuniao, 'evento' => evento) do
+      Ramon::ReuniaoAtaJob.perform_later(reuniao.id)
+    end
+  end
 
   def buscar(reunioes, termo)
     padrao = "%#{ActiveRecord::Base.sanitize_sql_like(termo.to_s.strip)}%"

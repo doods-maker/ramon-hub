@@ -24,6 +24,23 @@ RSpec.describe 'Ramon Chegadas API', type: :request do
     expect(response.parsed_body['destinatario']).to include('id' => brenda.id)
   end
 
+  it 'fluxo "Chegada de cliente" no comando: o código não agenda; o fluxo espera 3 min e escala (o alerta volta ao vivo)' do
+    with_modified_env(RAMON_FLUXO_CHEGADA: 'on') do
+      Ramon::Fluxos::Migracao.semear(account, 'chegada_cliente')
+      Ramon::Fluxos::Migracao.mudar_modo!(account, 'chegada_cliente', 'normal')
+      expect { avisar }.not_to have_enqueued_job(Ramon::ChegadaEscalarJob)
+    end
+    chegada = Chegada.find(response.parsed_body['id'])
+    perform_enqueued_jobs(only: Ramon::FluxoAvancarJob)
+    execucao = Ramon::Fluxos::Migracao.fluxo(account, 'chegada_cliente').execucoes.sole
+    expect(execucao).to have_attributes(status: 'esperando', ensaio: false)
+    expect(execucao.retomar_em).to be_within(10.seconds).of(3.minutes.from_now)
+    travel(3.minutes + 1.second) do
+      perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) { Ramon::FluxoRelogioJob.perform_now }
+    end
+    expect(chegada.reload.estado).to eq('escalado')
+  end
+
   it 'agente fora da recepção não avisa' do
     avisar(outro)
     expect(response).to have_http_status(:unauthorized)
