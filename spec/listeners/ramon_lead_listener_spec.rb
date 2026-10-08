@@ -348,22 +348,16 @@ RSpec.describe RamonLeadListener do
     end
 
     # Cada disparo de fluxo, na ordem: [gatilho, grupo que decidiu (nil = os fluxos comuns), o que `olhar` vê naquela hora].
-    # pela: :disparo grava tudo no Disparo.call (decisão = 'migracao' do evento); pela: :decidir grava a decisão na entrada
-    # do Migracao.decidir e só os fluxos comuns no Disparo.call.
-    # ponytail: no CI, sem fluxo migrado na conta, o espião do Disparo.call não via a chamada vinda do decidir e, com o
-    # decidir espiado, o fluxo migrado não começava — não reproduzimos sem Ruby local; cada exemplo usa o espião que funciona.
-    def gravar_disparos(pela: :disparo, &olhar)
-      ver = olhar
+    # Sem verificação: o verify_partial_doubles (rspec-support 3.13.1) lê o Hash posicional `dados` do Disparo.externo
+    # como keywords do `origem:` e levanta ArgumentError ('caixa_id', 'assumido'… inválidas) — que o rescue do externo
+    # engole: o espião não gravava a decisão e o fluxo migrado não começava.
+    def gravar_disparos(&olhar)
       disparos = []
-      if pela == :decidir
-        allow(Ramon::Fluxos::Migracao).to receive(:decidir).and_wrap_original do |original, nome, gatilho, alvo, dados = {}, &bloco|
-          disparos << [gatilho, nome, ver.call]
-          original.call(nome, gatilho, alvo, dados, &bloco)
+      without_partial_double_verification do
+        allow(Ramon::Fluxos::Disparo).to receive(:call).and_wrap_original do |original, gatilho, alvo, dados = {}, **opcoes|
+          disparos << [gatilho, dados['migracao'], olhar.call]
+          original.call(gatilho, alvo, dados, **opcoes)
         end
-      end
-      allow(Ramon::Fluxos::Disparo).to receive(:call).and_wrap_original do |original, gatilho, alvo, dados = {}, **opcoes|
-        disparos << [gatilho, dados['migracao'], ver.call] unless pela == :decidir && dados.key?('assumido')
-        original.call(gatilho, alvo, dados, **opcoes)
       end
       disparos
     end
@@ -381,7 +375,7 @@ RSpec.describe RamonLeadListener do
     end
 
     it 'código no comando: o lead nasce antes do SLA e dos fluxos comuns de Conversa nova; lead.created sai 1 vez' do
-      disparos = gravar_disparos(pela: :decidir) { lead_da_conversa.present? }
+      disparos = gravar_disparos { lead_da_conversa.present? }
       expect { publicar('conversation.created', conversation: conversation) }
         .to have_enqueued_job(Ramon::FirstResponseSlaJob).with(conversation.id)
         .and have_enqueued_job(EventDispatcherJob).with('lead.created', anything, anything).exactly(:once)
@@ -390,7 +384,7 @@ RSpec.describe RamonLeadListener do
 
     it 'código no comando: a origem é gravada antes dos fluxos comuns de Mensagem recebida' do
       create(:lead, account: account, contact: contact, conversation: conversation, channel: 'outro', source: nil)
-      disparos = gravar_disparos(pela: :decidir) { lead_da_conversa.source }
+      disparos = gravar_disparos { lead_da_conversa.source }
       publicar('message.created', message: mensagem('oi', content_attributes: { referral: anuncio }))
       expect(disparos).to eq([['mensagem_recebida', 'origem_lead', nil], ['mensagem_recebida', nil, 'anuncio-meta: 12034']])
     end
