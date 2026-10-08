@@ -75,7 +75,8 @@ RSpec.describe 'Ramon Inteligencia API', type: :request do
     agora = Time.current
     assistente = inserir('INSERT INTO captain_assistants (name, account_id, created_at, updated_at) VALUES (?, ?, ?, ?) RETURNING id',
                          'Atendimento', account.id, agora, agora)
-    sql = 'INSERT INTO ramon_ia_rodadas (account_id, assistant_id, status, total, passou, falhou, created_at, updated_at) '           "VALUES (?, ?, 'concluida', 43, ?, ?, ?, ?) RETURNING id"
+    sql = 'INSERT INTO ramon_ia_rodadas (account_id, assistant_id, status, total, passou, falhou, created_at, updated_at) ' \
+          "VALUES (?, ?, 'concluida', 43, ?, ?, ?, ?) RETURNING id"
     inserir(sql, account.id, assistente, 40, 3, 2.days.ago, 2.days.ago)
     inserir(sql, account.id, assistente, 41, 2, 1.hour.ago, 1.hour.ago)
 
