@@ -4,7 +4,7 @@ import MenuItem from 'dashboard/components/widgets/conversation/contextMenu/menu
 import VirarFaqMenuItem from 'dashboard/modules/conversations/components/VirarFaqMenuItem.vue';
 
 const COPILOTO = { id: 2, name: 'Copiloto do Escritório' };
-const ASSISTENTES = [{ id: 1, name: 'Atendimento (rascunho)' }, COPILOTO];
+const ASSISTENTES = [{ id: 1, name: 'Atendimento' }, COPILOTO];
 const RESPOSTA = [
   {
     id: 1,

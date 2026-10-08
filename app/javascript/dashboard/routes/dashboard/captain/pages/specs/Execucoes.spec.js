@@ -36,7 +36,7 @@ const RUN = {
   conversation_id: 9,
   conversa_display_id: 482,
   assistant_id: 1,
-  assistente_nome: 'Atendimento (rascunho)',
+  assistente_nome: 'Atendimento',
   created_at: '2026-10-07T12:00:00Z',
 };
 const montar = async (extra = {}) => {
@@ -96,7 +96,7 @@ describe('Execucoes.vue', () => {
       })
     );
     expect(wrapper.find('[data-testid="execucoes-assistente"]').text()).toBe(
-      'Atendimento (rascunho)'
+      'Atendimento'
     );
   });
 

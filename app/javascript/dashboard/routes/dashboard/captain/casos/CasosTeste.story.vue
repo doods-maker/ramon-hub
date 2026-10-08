@@ -22,11 +22,11 @@ const horasAtras = n => new Date(Date.now() - n * HORA).toISOString();
 const ATENDIMENTO = {
   id: 1,
   account_id: 1,
-  name: 'Atendimento (rascunho)',
+  name: 'Atendimento',
   description: 'Responde leads no WhatsApp com rascunhos.',
   config: {},
 };
-const COPILOTO = { ...ATENDIMENTO, id: 2, name: 'Copiloto do Escritorio' };
+const COPILOTO = { ...ATENDIMENTO, id: 2, name: 'Copiloto do Escritório' };
 
 const NUNCA = 'Coisas que NUNCA podem acontecer: promessa de êxito · prazo…';
 const caso = (id, codigo, grupo, fala, criterios = {}, ativo = true) => ({
@@ -239,7 +239,7 @@ const responder = async url => {
       },
     };
   if (path.endsWith('/ia_rodadas'))
-    return { data: { payload: cenario.rodadas } };
+    return { data: { payload: cenario.rodadas, noturno: true } };
   if (/ia_rodadas\/\d+$/.test(path)) return { data: cenario.rodada };
   return { data: { payload: [], meta: {} } };
 };

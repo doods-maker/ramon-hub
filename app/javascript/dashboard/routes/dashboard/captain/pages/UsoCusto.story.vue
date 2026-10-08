@@ -83,7 +83,7 @@ const USO = {
     linha('ata', 22, 80_000, 26_000, 0.26, 2),
   ],
   por_assistente: [
-    linha(1, 1490, 10_800_000, 590_000, 19.9, 5, 'Atendimento (rascunho)'),
+    linha(1, 1490, 10_800_000, 590_000, 19.9, 5, 'Atendimento'),
     linha(2, 140, 1_100_000, 50_000, 1.94, 1, 'Copiloto do Escritório'),
   ],
   por_modelo: [
