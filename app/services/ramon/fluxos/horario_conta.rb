@@ -99,7 +99,7 @@ module Ramon::Fluxos::HorarioConta
     return [] if (alvo == 'conta') == conta
 
     if conta
-      ["Passo #{id}: esta rotina é de um lead — não roda no Horário da conta"]
+      ["Passo #{id}: esta rotina não é da conta (precisa de um lead ou de outro evento) — não roda no Horário da conta"]
     else
       ["Passo #{id}: esta rotina é da conta toda — só roda no gatilho Horário da conta"]
     end
