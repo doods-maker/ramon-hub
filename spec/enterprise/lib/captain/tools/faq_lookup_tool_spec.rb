@@ -122,6 +122,13 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
         expect(faq.usada_em).to be_present
         expect(faq.edited).to be(false)
       end
+
+      it 'ainda devolve a FAQ quando o contador falha' do
+        allow(Captain::AssistantResponse).to receive(:where).and_call_original
+        allow(Captain::AssistantResponse).to receive(:where).with(id: [faq.id]).and_raise(ActiveRecord::StatementInvalid)
+
+        expect(buscar(nil)).to include('Quanto custa o honorário?')
+      end
     end
 
     context 'with blank query' do

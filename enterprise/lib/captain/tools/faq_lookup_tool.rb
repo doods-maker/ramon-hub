@@ -29,6 +29,9 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
 
     ::Captain::AssistantResponse.where(id: responses.map(&:id))
                                 .update_all(['usos = usos + 1, usada_em = ?', Time.current]) # rubocop:disable Rails/SkipsModelValidations
+  rescue StandardError => e
+    # contador é estatística: nunca derruba a resposta da FAQ ao cliente
+    Rails.logger.warn("faq_lookup contar_uso falhou: #{e.message}")
   end
 
   def format_responses(responses)
