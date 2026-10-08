@@ -114,7 +114,8 @@
       "triagem": "Triage",
       "kit": "Closer kit",
       "fluxo": "Automations",
-      "teste": "Test cases"
+      "teste": "Test cases",
+      "memoria_contato": "Contact memory"
     }
   }
 }
