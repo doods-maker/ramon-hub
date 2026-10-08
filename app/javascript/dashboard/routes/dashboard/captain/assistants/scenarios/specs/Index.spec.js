@@ -2,10 +2,13 @@ import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import Index from '../Index.vue';
 
+const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
 vi.mock('vue-router', async importOriginal => ({
   ...(await importOriginal()),
   useRoute: () => ({ params: { assistantId: '1' } }),
+  useRouter: () => ({ push }),
 }));
 vi.mock('dashboard/composables/useUISettings', () => ({
   useUISettings: () => ({
@@ -20,7 +23,7 @@ vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 
 const montar = () => {
   const scenarios = [
-    { id: 1, title: 'A', enabled: true, edited: false },
+    { id: 1, title: 'A', enabled: true, edited: false, exemplo: 'Fala A' },
     { id: 2, title: 'B', enabled: false, edited: false },
   ];
   const store = createStore({
@@ -29,6 +32,11 @@ const montar = () => {
         namespaced: true,
         getters: { getRecords: () => scenarios, getUIFlags: () => ({}) },
         actions: { get: () => {}, update: () => {} },
+      },
+      teams: {
+        namespaced: true,
+        getters: { getTeams: () => [] },
+        actions: { get: () => {} },
       },
       captainTools: {
         namespaced: true,
@@ -69,5 +77,18 @@ describe('Skills — abas e seleção em lote', () => {
       .findAll('[data-testid="skills-abas"] button')[1]
       .trigger('click');
     expect(bulk().attributes('data-n')).toBe('0');
+  });
+});
+
+describe('Skills — Testar esta skill', () => {
+  it('abre o Testar do mesmo assistente com a fala de exemplo', async () => {
+    const wrapper = montar();
+    wrapper.findAllComponents({ name: 'ScenariosCard' })[0].vm.$emit('testar');
+    expect(push).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'captain_assistants_playground_index',
+        query: { fala: 'Fala A' },
+      })
+    );
   });
 });

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, h, ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { picoSearch } from '@scmmishra/pico-search';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
@@ -30,6 +30,7 @@ import {
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const store = useStore();
 const { uiSettings, updateUISettings } = useUISettings();
 const { formatMessage } = useMessageFormatter();
@@ -44,7 +45,7 @@ const catalogo = useMapGetter('captainTools/getRecords');
 const searchQuery = ref('');
 
 const LINK_INSTRUCTION_CLASS =
-  '[&_a[href^="tool://"]]:text-n-iris-11 [&_a:not([href^="tool://"])]:text-n-slate-12 [&_a]:pointer-events-none [&_a]:cursor-default';
+  '[&_a[href^="tool://"]]:text-n-blue-11 [&_a:not([href^="tool://"])]:text-n-slate-12 [&_a]:pointer-events-none [&_a]:cursor-default';
 
 const renderInstruction = instruction => () =>
   h('span', {
@@ -195,6 +196,14 @@ const alternarSkill = async (scenario, ligar) => {
   }
 };
 
+// I-SK6: abre o Testar do mesmo assistente com a fala de exemplo no campo (quem envia é você — N7).
+const testarSkill = scenario =>
+  router.push({
+    name: 'captain_assistants_playground_index',
+    params: { ...route.params },
+    query: { fala: scenario.exemplo },
+  });
+
 // TODO: Add bulk delete endpoint
 const bulkDeleteScenarios = async ids => {
   const idsArray = ids || Array.from(bulkSelectedIds.value);
@@ -248,6 +257,7 @@ onMounted(() => {
     assistantId: assistantId.value,
   });
   store.dispatch('captainTools/getTools');
+  store.dispatch('teams/get');
 });
 </script>
 
@@ -256,6 +266,7 @@ onMounted(() => {
     :header-title="$t('CAPTAIN.ASSISTANTS.SCENARIOS.TITLE')"
     :is-fetching="isFetching"
     :show-pagination-footer="false"
+    show-assistant-switcher
   >
     <template #body>
       <SettingsHeader
@@ -388,6 +399,9 @@ onMounted(() => {
             :enabled="scenario.enabled"
             :edited="scenario.edited"
             :pode-ligar="isAdmin"
+            :exemplo="scenario.exemplo || ''"
+            :papeis="scenario.papeis || []"
+            :uso-mes="scenario.uso_30d ?? null"
             :is-selected="bulkSelectedIds.has(scenario.id)"
             :selectable="
               hoveredCard === scenario.id || bulkSelectedIds.size > 0
@@ -396,6 +410,7 @@ onMounted(() => {
             @delete="deleteScenario(scenario.id)"
             @update="updateScenario"
             @toggle="ligar => alternarSkill(scenario, ligar)"
+            @testar="testarSkill(scenario)"
             @hover="isHovered => handleRuleHover(isHovered, scenario.id)"
           />
         </div>
