@@ -38,6 +38,12 @@ class Chegada < ApplicationRecord
     }
   end
 
+  # Sem resposta e ainda não escalada (Ramon::ChegadaEscalarJob e a rotina do fluxo "Chegada de cliente", B5).
+  def escalavel? = respondido_em.blank? && escalado_em.blank?
+
+  # O update transmite ramon.chegada.updated (after_update_commit): o alerta volta a tocar na tela de quem avisou.
+  def escalar! = escalavel? && update!(escalado_em: Time.current)
+
   private
 
   def transmitir(evento)
