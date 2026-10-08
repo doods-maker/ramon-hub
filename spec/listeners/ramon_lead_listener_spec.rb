@@ -352,10 +352,11 @@ RSpec.describe RamonLeadListener do
     # como keywords do `origem:` e levanta ArgumentError ('caixa_id', 'assumido'… inválidas) — que o rescue do externo
     # engole: o espião não gravava a decisão e o fluxo migrado não começava.
     def gravar_disparos(&olhar)
+      ver = olhar # Performance/RedundantBlockCall: o bloco é chamado depois que o método retorna
       disparos = []
       without_partial_double_verification do
         allow(Ramon::Fluxos::Disparo).to receive(:call).and_wrap_original do |original, gatilho, alvo, dados = {}, **opcoes|
-          disparos << [gatilho, dados['migracao'], olhar.call]
+          disparos << [gatilho, dados['migracao'], ver.call]
           original.call(gatilho, alvo, dados, **opcoes)
         end
       end
