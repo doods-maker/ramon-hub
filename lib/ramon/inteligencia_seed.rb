@@ -1,9 +1,9 @@
 # FORK-PONTO (ramon): seed idempotente da area Inteligencia — assistentes + skills
 # (db/seeds/ramon/inteligencia/assistentes.yml) e FAQ aprovada (faq/<tese>.md, tese = nome do arquivo).
-# Chaves: assistente por name; skill por (assistant, seed_titulo|title), editada na tela fica; FAQ por (assistant Atendimento, question).
+# Chaves: assistente por name (ou antes:); skill por (assistant, seed_titulo|title), editada na tela fica; FAQ por (assistant Atendimento, question).
 class Ramon::InteligenciaSeed
   DIR = Rails.root.join('db/seeds/ramon/inteligencia')
-  ATENDIMENTO = 'Atendimento (rascunho)'.freeze
+  ATENDIMENTO = 'Atendimento'.freeze
   FRONT_MATTER = /\A---\s*\n.*?\n---\s*\n/m
 
   def initialize(account)
@@ -30,16 +30,24 @@ class Ramon::InteligenciaSeed
   private
 
   def seed_assistente(dados)
-    assistant = @account.captain_assistants.find_or_initialize_by(name: dados['name'])
+    assistant = achar_assistente(dados)
     @contagem[assistant.new_record? ? :assistentes_criados : :assistentes_atualizados] += 1
     assistant.assign_attributes(
+      name: dados['name'],
       description: dados['description'],
-      config: (assistant.config || {}).merge(dados['config'] || {}),
+      # ramon_modo_rascunho: marca morta (ninguém lia; o modo é por conversa — I-AS4)
+      config: (assistant.config || {}).except('ramon_modo_rascunho').merge(dados['config'] || {}),
       response_guidelines: dados['response_guidelines'],
       guardrails: dados['guardrails']
     )
     assistant.save!
     seed_skills(assistant, dados['skills'] || [])
+  end
+
+  # Renomear no yml não cria outro assistente: acha pelo nome de hoje ou por um dos antigos (campo antes:).
+  def achar_assistente(dados)
+    @account.captain_assistants.find_by(name: [dados['name'], *dados['antes']]) ||
+      @account.captain_assistants.new(name: dados['name'])
   end
 
   def seed_skills(assistant, skills)

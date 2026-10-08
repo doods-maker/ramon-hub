@@ -8,7 +8,7 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
     subject(:task) { described_class['ramon:inteligencia:seed'] }
 
     let(:account) { create(:account) }
-    let(:atendimento) { account.captain_assistants.find_by!(name: 'Atendimento (rascunho)') }
+    let(:atendimento) { account.captain_assistants.find_by!(name: 'Atendimento') }
     let(:yml) { YAML.safe_load(Rails.root.join('db/seeds/ramon/inteligencia/assistentes.yml').read).fetch('assistentes') }
     let(:total_skills) { yml.sum { |a| a['skills'].size } }
 
@@ -22,6 +22,20 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       expect(account.captain_assistants.pluck(:name)).to match_array(yml.pluck('name'))
       expect(Captain::Scenario.where(account: account).count).to eq(total_skills)
       expect(atendimento.responses.approved.count).to be > 10
+    end
+
+    it 'renomeia o assistente pelo nome antigo e tira a marca morta (I-AS4, I-AS5)', :aggregate_failures do
+      antigo = create(:captain_assistant, account: account, name: 'Atendimento (rascunho)',
+                                          config: { 'ramon_modo_rascunho' => true })
+      copiloto = create(:captain_assistant, account: account, name: 'Copiloto do Escritorio')
+
+      rodar
+      rodar
+
+      expect(antigo.reload.name).to eq('Atendimento')
+      expect(antigo.config).not_to have_key('ramon_modo_rascunho')
+      expect(copiloto.reload.name).to eq('Copiloto do Escritório')
+      expect(account.captain_assistants.count).to eq(2)
     end
 
     it 'e idempotente: rodar duas vezes nao duplica' do

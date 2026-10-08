@@ -8,8 +8,8 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
     subject(:task) { described_class['ramon:ia:importar_caderno'] }
 
     let(:account) { create(:account) }
-    let!(:atendimento) { create(:captain_assistant, account: account, name: 'Atendimento (rascunho)') }
-    let!(:copiloto) { create(:captain_assistant, account: account, name: 'Copiloto do Escritorio') }
+    let!(:atendimento) { create(:captain_assistant, account: account, name: 'Atendimento') }
+    let!(:copiloto) { create(:captain_assistant, account: account, name: 'Copiloto do Escritório') }
     let(:yml) { YAML.safe_load(Rails.root.join('db/seeds/ramon/ia_casos.yml').read) }
 
     def rodar(*)
@@ -48,7 +48,7 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       expect(casos_do(atendimento).count).to eq(0)
       expect(casos_do(copiloto).count).to be > 5
 
-      rodar('Atendimento (rascunho)')
+      rodar('Atendimento')
       expect(casos_do(atendimento).count).to be > 30
     end
   end

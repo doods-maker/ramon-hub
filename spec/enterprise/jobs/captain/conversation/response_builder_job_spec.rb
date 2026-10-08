@@ -210,11 +210,11 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
     end
 
     # ramon: agente de atendimento com humano no meio (Fatia 2 da area de IA)
-    context 'when the ramon draft mode is on' do
+    # ramon: o rascunho vem do modo da conversa (Ramon::CopilotoModo, padrão rascunho) — não de marca no assistente
+    context 'when the conversation uses the default draft mode' do
       before do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
-        assistant.update!(config: assistant.config.merge('ramon_modo_rascunho' => true))
       end
 
       it 'keeps the answer as a private draft note instead of replying to the customer' do

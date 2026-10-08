@@ -1,18 +1,20 @@
 # Assistentes e Skills da área Inteligência (seed idempotente — rake ramon:inteligencia:seed).
 # Chave de identidade: assistente = name; skill = title dentro do assistente.
+# Renomear assistente: troque name e ponha o nome velho em antes: (o seed acha pelos dois).
 # Tools nas instruções: [Rótulo](tool://id). Ids devem existir em config/agents/tools.yml.
 # Regra de identificação usada nas skills internas:
 #   "caso N" / "lead N" = lead_id do hub → passar lead_id=N direto; nome/CPF só pra buscar PROCESSO no AdvBox.
 
 assistentes:
-  - name: Atendimento (rascunho)
+  - name: Atendimento
+    # nome antigo: o seed renomeia em vez de criar outro (I-AS4)
+    antes: ['Atendimento (rascunho)']
     description: >-
       Assistente que fala com o lead pelo WhatsApp com humano no meio: por padrão tudo que escreve
       vira rascunho para o atendente revisar e enviar; em piloto limitado envia sozinho só logística.
     config:
       temperature: 0.4
       product_name: Ramon Antonio Advogados
-      ramon_modo_rascunho: true
     response_guidelines:
       - "Tom de médico de confiança: caloroso, simples, sem juridiquês. Mensagens curtas, estilo WhatsApp, uma ideia por bolha."
       - "Nunca prometa resultado do caso nem prazo do INSS, da Justiça, de perícia ou de pagamento (regra da OAB). Se perguntarem, diga com honestidade que ninguém sério crava prazo."
@@ -123,7 +125,8 @@ assistentes:
           Depois de cobrar, registre [Criar tarefa de cadência](tool://criar_tarefa_esteira) com o título
           "Conferir documentos de <nome>" para daqui a 3 dias.
 
-  - name: Copiloto do Escritorio
+  - name: Copiloto do Escritório
+    antes: ['Copiloto do Escritorio']
     description: >-
       Copiloto interno da equipe: consulta o AdvBox, o motor de cálculos, o funil e os dados do caso no hub.
       Não fala com cliente.
