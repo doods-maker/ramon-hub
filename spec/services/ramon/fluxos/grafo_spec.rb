@@ -127,4 +127,26 @@ RSpec.describe Ramon::Fluxos::Grafo do
   it 'rotina pronta precisa dizer qual rotina (B4.4)' do
     expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['rotina', {}])).erros).to eq(['Passo p1: falta rotina'])
   end
+
+  describe 'Horário da conta (B5)' do
+    def conta(gatilho, *passos) = grafo(grafo_linear({ 'tipo' => 'horario_conta' }.merge(gatilho), *passos)).erros
+
+    it 'precisa de hora ou de a cada N minutos (1 a 1440) e de pelo menos um dia' do
+      parar = ['parar', {}]
+      expect([conta({ 'hora' => '08:00' }, parar), conta({ 'a_cada_minutos' => 1 }, parar)]).to eq([[], []])
+      [{}, { 'a_cada_minutos' => 0 }, { 'a_cada_minutos' => 1441 }, { 'hora' => '08:00', 'dias' => [] },
+       { 'hora' => '08:00', 'dias' => [7] }].each do |gatilho|
+        expect(conta(gatilho, parar)).to eq([Ramon::Fluxos::HorarioConta::QUANDO])
+      end
+    end
+
+    it 'só entram os passos que rodam sem lead; rotina de lead ou desconhecida não publica' do
+      expect(conta({ 'hora' => '08:00' }, ['mover_etapa', { 'etapa_id' => 1 }]))
+        .to eq(['Passo p1: precisa de um lead — no Horário da conta só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta'])
+      expect(conta({ 'hora' => '08:00' }, ['rotina', { 'rotina' => 'dossie_passagem' }]))
+        .to eq(['Passo p1: esta rotina é de um lead — não roda no Horário da conta'])
+      expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['rotina', { 'rotina' => 'xyz' }])).erros)
+        .to eq(['Passo p1: rotina desconhecida (xyz)'])
+    end
+  end
 end

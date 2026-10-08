@@ -24,4 +24,10 @@ RSpec.describe Ramon::FluxoRelogioJob do
     described_class.perform_now
     expect(Ramon::Fluxos::Relogio).to have_received(:disparar_do_dia)
   end
+
+  it 'dispara o Horário da conta (B5)' do
+    allow(Ramon::Fluxos::HorarioConta).to receive(:disparar)
+    described_class.perform_now
+    expect(Ramon::Fluxos::HorarioConta).to have_received(:disparar)
+  end
 end
