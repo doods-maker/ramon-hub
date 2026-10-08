@@ -70,11 +70,12 @@ module Ramon::Fluxos::Rotinas::Conta
     pelo_codigo(fluxo.account, nome) if no_comando || disputa?(fluxo)
   end
 
-  # Ruling F3: fora do comando, o horário do fluxo só vale para o código quando tem o ritmo dele — "por dia" ou a rotina
-  # que o código já roda a cada minuto. Diária num fluxo editado para "a cada N min" em sombra: nem o relógio faz pelo
-  # código nem o cron disputa a vez — o cron faz no horário de sempre, 1 vez no dia.
+  # Ruling F3: fora do comando, o horário do fluxo só vale para o código quando é o ritmo do próprio código — "por dia"
+  # nas diárias, "a cada 1 min" no Publicar peças. Fluxo editado para outro ritmo em sombra: nem o relógio faz pelo
+  # código nem o cron disputa a vez — o cron faz no ritmo de sempre (1 vez no dia; a cada minuto).
   def disputa?(fluxo)
-    A_CADA_MINUTO.include?(fluxo.sistema_chave) || Ramon::Fluxos::HorarioConta.intervalo(Ramon::Fluxos::HorarioConta.config(fluxo)).nil?
+    ritmo = A_CADA_MINUTO.include?(fluxo.sistema_chave) ? 1 : nil
+    Ramon::Fluxos::HorarioConta.intervalo(Ramon::Fluxos::HorarioConta.config(fluxo)) == ritmo
   end
 
   def iniciar(fluxo)

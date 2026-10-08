@@ -67,7 +67,7 @@ RSpec.describe Ramon::Fluxos::Rotinas::Conta do
     let!(:account) { create(:account) }
     let!(:outra) { create(:account) }
 
-    def contas(account_id = nil) = [].tap { |lista| described_class.cada_conta('resumo_do_dia', account_id) { |a| lista << a.id } }
+    def contas(account_id = nil, nome = 'resumo_do_dia') = [].tap { |lista| described_class.cada_conta(nome, account_id) { |a| lista << a.id } }
 
     it 'sem o fluxo: todas as contas, como sempre; com o id: só aquela' do
       expect(contas).to eq([account.id, outra.id])
@@ -95,6 +95,15 @@ RSpec.describe Ramon::Fluxos::Rotinas::Conta do
       expect(Ramon::Fluxos::HorarioConta.reivindicar(novo, sp('2026-10-06 08:00'))).to be(true) # o relógio pegou a vez do bloco
       expect { described_class.decidir(novo) }.not_to have_enqueued_job(Ramon::DailyDigestJob)
       travel_to(sp('2026-10-06 08:00:40')) { expect(contas).to eq([account.id, outra.id]) }
+    end
+
+    it 'publicar peças editado para "a cada 5 min", fora do comando: o cron publica a cada minuto, o relógio nunca pelo código' do
+      novo = Ramon::Fluxos::Migracao.semear(account, 'publicar_pecas').sole
+      allow(Ramon::Fluxos::HorarioConta).to receive(:config).and_return('a_cada_minutos' => 5)
+      expect(Ramon::Fluxos::HorarioConta.reivindicar(novo, sp('2026-10-06 12:00'))).to be(true) # o relógio pegou a vez do bloco
+      expect { described_class.decidir(novo) }.not_to have_enqueued_job(Ramon::PublicarPecasJob)
+      travel_to(sp('2026-10-06 12:00:30')) { expect(contas(nil, 'publicar_pecas')).to eq([account.id, outra.id]) }
+      travel_to(sp('2026-10-06 12:01:30')) { expect(contas(nil, 'publicar_pecas')).to eq([account.id, outra.id]) }
     end
   end
 end
