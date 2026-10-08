@@ -67,6 +67,7 @@ Rails.application.routes.draw do
               member do
                 post :playground
                 get :buscar_faq
+                get :texto_final
               end
               collection do
                 get :tools

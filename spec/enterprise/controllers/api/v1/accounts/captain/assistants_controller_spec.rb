@@ -327,8 +327,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
 
       it 'generates a response with the agent runner service' do
         allow(Captain::Assistant::AgentRunnerService).to receive(:new).with(
-          assistant: assistant,
-          source: 'playground'
+          hash_including(assistant: assistant, source: 'playground')
         ).and_return(agent_runner_service)
         allow(agent_runner_service).to receive(:generate_response).and_return({ response: 'Assistant response' })
         expect(Captain::Llm::AssistantChatService).not_to receive(:new)
@@ -351,8 +350,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
           message_history: [{ role: 'user', content: 'Hello assistant' }]
         }
         allow(Captain::Assistant::AgentRunnerService).to receive(:new).with(
-          assistant: assistant,
-          source: 'playground'
+          hash_including(assistant: assistant, source: 'playground')
         ).and_return(agent_runner_service)
         allow(agent_runner_service).to receive(:generate_response).and_return({ response: 'Assistant response' })
 
@@ -366,6 +364,38 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
           message_history: params_with_latest_message[:message_history]
         )
       end
+
+      it 'devolve as ferramentas que rodaram, com nome e erro (I-PG2)' do
+        allow(Captain::Assistant::AgentRunnerService).to receive(:new) do |**args|
+          coletor = args[:callbacks][:on_tool_complete]
+          coletor.call('captain-tools-mover_etapa', 'movido', nil)
+          coletor.call('captain-tools-checar_prescricao', Captain::Tools::BasePublicTool::ERRO_NA_TOOL, nil)
+          agent_runner_service
+        end
+        allow(agent_runner_service).to receive(:generate_response).and_return({ 'response' => 'ok' })
+
+        post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground",
+             params: valid_params, headers: agent.create_new_auth_token, as: :json
+
+        expect(json_response[:ferramentas]).to eq(
+          [{ id: 'mover_etapa', title: 'Mover de etapa', nivel: 'sugestao', status: 'ok' },
+           { id: 'checar_prescricao', title: 'Checar prescrição', nivel: 'consulta', status: 'erro' }]
+        )
+      end
+    end
+  end
+
+  describe 'GET /api/v1/accounts/{account.id}/captain/assistants/{id}/texto_final' do
+    it 'junta o texto do assistente e o de cada skill ligada (I-CF6)', :aggregate_failures do
+      assistant = create(:captain_assistant, account: account, guardrails: ['Nunca prometa prazo do INSS.'])
+      create(:captain_scenario, assistant: assistant, account: account, title: 'Funil hoje')
+      create(:captain_scenario, assistant: assistant, account: account, title: 'Desligada', enabled: false)
+
+      get "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/texto_final",
+          headers: agent.create_new_auth_token, as: :json
+
+      expect(json_response[:assistente]).to include('Nunca prometa prazo do INSS.')
+      expect(json_response[:skills].pluck(:title)).to eq(['Funil hoje'])
     end
   end
 
