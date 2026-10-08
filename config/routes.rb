@@ -77,7 +77,9 @@ Rails.application.routes.draw do
               resources :scenarios
               # ramon: Casos de teste da IA
               resources :ia_casos, only: [:index, :create, :update, :destroy]
-              resources :ia_rodadas, only: [:index, :show, :create]
+              resources :ia_rodadas, only: [:index, :show, :create] do
+                patch :noturno, on: :collection
+              end
             end
             resources :assistant_responses
             resources :ferramentas, only: [:index]

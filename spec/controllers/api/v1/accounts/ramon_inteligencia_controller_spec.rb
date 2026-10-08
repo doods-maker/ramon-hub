@@ -66,6 +66,23 @@ RSpec.describe 'Ramon Inteligencia API', type: :request do
     end
   end
 
+  # ramon_ia_rodadas e captain_assistants são do enterprise: as linhas entram por SQL (roda no CI FOSS).
+  def inserir(sql, *binds)
+    ActiveRecord::Base.connection.select_value(ActiveRecord::Base.sanitize_sql_array([sql, *binds]))
+  end
+
+  it 'mostra a ultima rodada concluida do caderno por assistente (I-X6)' do
+    agora = Time.current
+    assistente = inserir('INSERT INTO captain_assistants (name, account_id, created_at, updated_at) VALUES (?, ?, ?, ?) RETURNING id',
+                         'Atendimento', account.id, agora, agora)
+    sql = 'INSERT INTO ramon_ia_rodadas (account_id, assistant_id, status, total, passou, falhou, created_at, updated_at) '           "VALUES (?, ?, 'concluida', 43, ?, ?, ?, ?) RETURNING id"
+    inserir(sql, account.id, assistente, 40, 3, 2.days.ago, 2.days.ago)
+    inserir(sql, account.id, assistente, 41, 2, 1.hour.ago, 1.hour.ago)
+
+    expect(visao['caderno']).to match([a_hash_including('assistant_id' => assistente.to_i, 'nome' => 'Atendimento',
+                                                        'passou' => 41, 'total' => 43)])
+  end
+
   it 'conta vazia devolve zeros sem quebrar' do
     body = visao
 
@@ -74,6 +91,7 @@ RSpec.describe 'Ramon Inteligencia API', type: :request do
     expect(body['primeira_resposta']).to eq({})
     expect(body['transferencias']).to eq('total' => 0, 'conversas' => [])
     expect(body['agente']).to include('hoje' => 0, 'ultima_em' => nil)
+    expect(body['caderno']).to eq([])
   end
 
   it 'exige autenticacao' do

@@ -33,6 +33,14 @@ class Api::V1::Accounts::RamonInteligenciaController < Api::V1::Accounts::BaseCo
     WHERE account_id = ? AND iniciada_em >= ? AND handoffs > 0
     ORDER BY iniciada_em DESC
   SQL
+  # I-X6: a última rodada concluída do caderno de provas, por assistente (SQL: ramon_ia_rodadas é do enterprise).
+  SQL_CADERNO = <<~SQL.squish.freeze
+    SELECT DISTINCT ON (r.assistant_id) r.assistant_id, a.name, r.passou, r.total,
+           EXTRACT(EPOCH FROM r.created_at)::bigint AS em
+    FROM ramon_ia_rodadas r JOIN captain_assistants a ON a.id = r.assistant_id
+    WHERE r.account_id = ? AND r.status = 'concluida'
+    ORDER BY r.assistant_id, r.created_at DESC
+  SQL
 
   before_action :current_account
   before_action :check_authorization
@@ -40,7 +48,7 @@ class Api::V1::Accounts::RamonInteligenciaController < Api::V1::Accounts::BaseCo
   def show
     render json: {
       rascunhos: rascunhos, piloto: piloto, primeira_resposta: primeira_resposta,
-      transferencias: transferencias, aprovacoes: aprovacoes, agente: agente
+      transferencias: transferencias, aprovacoes: aprovacoes, agente: agente, caderno: caderno
     }
   end
 
@@ -96,5 +104,12 @@ class Api::V1::Accounts::RamonInteligenciaController < Api::V1::Accounts::BaseCo
       hoje: hoje.consumiu_cota.count, teto: TETO_AGENTE, problemas_hoje: hoje.where.not(status: 'ok').count,
       ultima_em: execucoes.maximum(:created_at)
     }
+  end
+
+  def caderno
+    linhas(SQL_CADERNO, Current.account.id).map do |linha|
+      { assistant_id: linha['assistant_id'].to_i, nome: linha['name'], passou: linha['passou'].to_i,
+        total: linha['total'].to_i, em: linha['em'].to_i }
+    end
   end
 end

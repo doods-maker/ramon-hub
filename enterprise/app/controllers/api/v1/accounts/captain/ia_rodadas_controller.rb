@@ -8,7 +8,7 @@ class Api::V1::Accounts::Captain::IaRodadasController < Api::V1::Accounts::BaseC
   before_action :set_assistant
 
   def index
-    render json: { payload: escopo.recentes.limit(LIMITE).map(&:resumo) }
+    render json: { payload: escopo.recentes.limit(LIMITE).map(&:resumo), noturno: Captain::CadernoNoturno.ligado?(Current.account) }
   end
 
   def show
@@ -28,6 +28,13 @@ class Api::V1::Accounts::Captain::IaRodadasController < Api::V1::Accounts::BaseC
     render json: rodada.resumo
   rescue ActiveRecord::RecordNotUnique
     em_andamento
+  end
+
+  # I-X6: liga/desliga a rodada da madrugada da conta (vale para todos os assistentes).
+  def noturno
+    ligado = ActiveModel::Type::Boolean.new.cast(params[:ligado]) == true
+    Current.account.update!(settings: (Current.account.settings || {}).merge(Ramon::CadernoNoturnoJob::CHAVE => ligado))
+    render json: { noturno: ligado }
   end
 
   private
