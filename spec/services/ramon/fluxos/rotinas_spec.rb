@@ -14,7 +14,10 @@ RSpec.describe Ramon::Fluxos::Rotinas do
     end
   end
 
-  before { allow(described_class).to receive(:modulos).and_return([plano]) }
+  before do
+    Ramon::Fluxos::Migracao.grupo('sla') # M3: a Migracao carrega com o registro real ANTES do stub (senão nasceria sem a conta)
+    allow(described_class).to receive(:modulos).and_return([plano])
+  end
 
   # status concluida: fora do índice único (várias por exemplo)
   def ctx(alvo, ensaio: false)

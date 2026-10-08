@@ -1,0 +1,11 @@
+{
+  "nome": "Publicar peças no Instagram",
+  "descricao": "A cada minuto, no lugar do código (B5): publica no Instagram só as peças já agendadas (com o \"pode postar\") cuja hora chegou — sem peça vencida, o fluxo nem começa. Falhou: aviso no celular, sem nova tentativa, como hoje. Vai para a fila. Se este fluxo não começar (ocupado ou erro), o código faz aquela vez. Enquanto o selo disser \"em sombra\", quem faz é o código, no horário de sempre.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"horario_conta","a_cada_minutos":1},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"Publicar no Instagram as peças agendadas","rotina":"publicar_pecas"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [{"de":"n1","saida":"s","para":"n2"}]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "nome": "Resumo do dia",
+  "descricao": "Todo dia às 08:00, no lugar do código (B5): o resumo do dia de sempre — push \"seu dia\" para a equipe (só se o dia tem algo e com o ntfy ligado) e o e-mail de gestão com os números de ontem (só com SMTP). Horário e dias editáveis no gatilho; dá para pôr um push antes ou depois. Se este fluxo não começar (ocupado ou erro), o código faz aquela vez. Enquanto o selo disser \"em sombra\", quem faz é o código, no horário de sempre.",
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"horario_conta","hora":"08:00"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"rotina","config":{"rotulo":"Resumo do dia (push e e-mail de gestão)","rotina":"resumo_do_dia"},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [{"de":"n1","saida":"s","para":"n2"}]
+  }
+}
