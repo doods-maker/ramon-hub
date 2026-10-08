@@ -71,6 +71,10 @@ const detalhe = computed(() => {
   const c = props.config;
   switch (props.tipo) {
     case 'gatilho':
+      if (c.tipo === 'horario_conta')
+        return c.a_cada_minutos
+          ? t(`${K}.NO.A_CADA`, { n: c.a_cada_minutos })
+          : t(`${K}.NO.AS_HORA`, { quando: c.hora || '—' });
       if (['relogio', 'lead_parado'].includes(c.tipo))
         return t(`${K}.NO.AS_HORA`, {
           quando: c.hora || (c.tipo === 'lead_parado' ? '11:00' : '—'),

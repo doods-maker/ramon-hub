@@ -12,6 +12,7 @@ import {
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { GATILHOS, REGRAS_ADVBOX, gatilhoInfo } from './fluxo';
 import ListaMarcar from './ListaMarcar.vue';
+import ConfigHorarioConta from './ConfigHorarioConta.vue';
 
 const props = defineProps({ config: { type: Object, required: true } });
 const emit = defineEmits(['update:config']);
@@ -54,6 +55,7 @@ const muda = (chave, valor) =>
 const trocaTipo = tipo =>
   emit('update:config', {
     tipo,
+    ...(tipo === 'horario_conta' ? { hora: '08:00' } : {}),
     ...(props.config.rotulo ? { rotulo: props.config.rotulo } : {}),
     ...(props.config.cancelar_se_sair_da_etapa === false
       ? { cancelar_se_sair_da_etapa: false }
@@ -199,11 +201,18 @@ const trocaTipo = tipo =>
       {{ t(`${K}.DOCUMENTO_AJUDA`) }}
     </p>
 
+    <ConfigHorarioConta
+      v-if="config.tipo === 'horario_conta'"
+      :config="config"
+      @update:config="c => emit('update:config', c)"
+    />
+
     <p v-if="config.tipo === 'manual'" class="text-xs text-n-slate-10">
       {{ t(`${K}.MANUAL_AJUDA`) }}
     </p>
 
     <div
+      v-if="alvo !== 'conta'"
       class="flex items-center justify-between border-t border-n-weak py-2 text-[13px] text-n-slate-12"
     >
       {{ t(`${K}.CANCELAR_ETAPA`) }}
