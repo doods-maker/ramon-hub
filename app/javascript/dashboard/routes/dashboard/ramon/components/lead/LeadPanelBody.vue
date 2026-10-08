@@ -19,6 +19,7 @@ import LostReasonModal from '../kanban/LostReasonModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
 import LeadHistory from '../conversation/LeadHistory.vue';
+import LeadIaExecucoes from './LeadIaExecucoes.vue';
 import LeadSugerirResposta from '../conversation/LeadSugerirResposta.vue';
 import LeadPlaybook from '../conversation/LeadPlaybook.vue';
 import LeadSimulador from '../conversation/LeadSimulador.vue';
@@ -1503,6 +1504,7 @@ const discard = async () => {
 
       <div v-else-if="shownTab === 'atividade'" class="flex flex-col gap-3">
         <LeadHistory :lead-id="lead.id" />
+        <LeadIaExecucoes :lead-id="lead.id" />
         <!-- linha do tempo completa mora na ficha (Dossiê) -->
         <router-link v-slot="{ navigate }" custom :to="dossieRoute">
           <Button
