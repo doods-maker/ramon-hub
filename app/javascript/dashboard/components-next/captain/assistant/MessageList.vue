@@ -1,7 +1,6 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 import { ref, watch, nextTick } from 'vue';
-import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { CHIP, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { NIVEL_TOM } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
@@ -30,10 +29,15 @@ const getMessageAlignment = sender =>
 const getMessageDirection = sender =>
   isUserMessage(sender) ? 'flex-row-reverse' : 'flex-row';
 
-const getAvatarName = sender =>
-  isUserMessage(sender)
+// Inicial com o tom do kit: o Avatar colore pelo tamanho do nome e "Você" e
+// "Assistente" caem no índigo (roxo), fora da paleta da área.
+const AVATAR = 'size-6 shrink-0 rounded-full grid place-items-center text-xs';
+const avatarInicial = sender =>
+  (isUserMessage(sender)
     ? t('CAPTAIN.PLAYGROUND.USER')
-    : t('CAPTAIN.PLAYGROUND.ASSISTANT');
+    : t('CAPTAIN.PLAYGROUND.ASSISTANT')
+  ).charAt(0);
+const avatarTom = sender => (isUserMessage(sender) ? TOM.blue : TOM.slate);
 
 const getMessageStyle = sender =>
   isUserMessage(sender)
@@ -75,12 +79,9 @@ watch(() => props.messages.length, scrollToBottom);
         class="flex items-end gap-1.5 max-w-[90%] md:max-w-[60%]"
         :class="getMessageDirection(message.sender)"
       >
-        <Avatar
-          :name="getAvatarName(message.sender)"
-          rounded-full
-          :size="24"
-          class="shrink-0"
-        />
+        <span :class="[AVATAR, avatarTom(message.sender)]">
+          {{ avatarInicial(message.sender) }}
+        </span>
         <div class="flex flex-col gap-1 min-w-0">
           <div
             class="px-4 py-3 text-sm [overflow-wrap:break-word]"
@@ -110,7 +111,9 @@ watch(() => props.messages.length, scrollToBottom);
     </div>
     <div v-if="isLoading" class="flex justify-start">
       <div class="flex items-start gap-1.5">
-        <Avatar :name="getAvatarName('assistant')" rounded-full :size="24" />
+        <span :class="[AVATAR, avatarTom('assistant')]">
+          {{ avatarInicial('assistant') }}
+        </span>
         <div
           class="max-w-sm rounded-lg p-3 text-sm bg-n-alpha-2 text-n-slate-12"
         >
