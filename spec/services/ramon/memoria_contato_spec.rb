@@ -40,7 +40,11 @@ RSpec.describe Ramon::MemoriaContato do
                'Faz acompanhamento psicológico', 'Consulta com ortopedista', 'Perdeu a visão de um olho', 'Perda auditiva',
                'Surdez parcial', 'Tem diabetes e pressão alta', 'Tem HIV', 'Teve derrame', 'Tem epilepsia', 'Tem esquizofrenia',
                'Transtorno bipolar', 'Síndrome do pânico', 'Tem artrose', 'Fibromialgia', 'Rompeu o ligamento', 'Tem hanseníase',
-               'Burnout', 'Está grávida', 'CID10', 'CID-10 M54', 'Laudo com B92']
+               'Burnout', 'Está grávida', 'CID10', 'CID-10 M54', 'Laudo com B92',
+               'Problema no coração', 'É cardíaca', 'Tem asma', 'Problema no pulmão', 'Insuficiência renal', 'Perdeu um rim',
+               'Faz hemodiálise', 'Teve covid-19', 'Alcoolismo', 'Bebe álcool todo dia', 'Alcoólatra', 'Dependência química',
+               'É cadeirante', 'Usa cadeira de rodas', 'Teve acidente vascular cerebral', 'Tem incapacidade para o trabalho',
+               'Ficou incapaz de trabalhar']
 
       expect(saude.reject { |item| described_class.saude?(item) }).to eq([])
     end
@@ -51,6 +55,12 @@ RSpec.describe Ramon::MemoriaContato do
 
       expect(nota.body).to eq("MEMÓRIA DA IA (conversa #7):\n- Trabalha como operador de máquina\n- Mão de obra na construção\n" \
                               "- Recebeu B31\n- Pediu auxílio-doença")
+    end
+
+    it 'aposentadoria por incapacidade e o nome do beneficio, nao saude (sai antes do teste)' do
+      itens = ['Pediu aposentadoria por incapacidade permanente', 'Recebe aposentadoria por invalidez', 'Quer o auxílio-acidente']
+
+      expect(itens.select { |item| described_class.saude?(item) }).to eq([])
     end
 
     it 'no maximo 6 itens e 1000 caracteres', :aggregate_failures do
