@@ -1,8 +1,33 @@
 {
   "nome": "Origem do lead",
   "grupo": "leads_conversas",
-  "descricao": "No código: RamonLeadListener#message_created → Ramon::LeadDaConversa.origem (apply_meta_referral e derive_channel_from_first_contact; decide: o código ou o fluxo migrado \"Origem do lead\").\n\nO desenho não consegue mostrar:\n• lê o anúncio da Meta (click-to-WhatsApp) que chega com a mensagem e grava origem e canal; sem anúncio e sem assinatura de site/LP/bio, o canal vira indicação (ou instagram, se a caixa for do Instagram);\n• grava nas colunas do lead (source, channel) e em custom_attributes.meta_referral — o passo Preencher campo só grava em campos;\n• origem_detectada é só uma chave de exemplo do desenho — não existe campo com esse nome;\n• nunca sobrescreve um canal já definido.",
+  "fixa": true,
+  "descricao": "No código: RamonLeadListener#message_created → Ramon::LeadDaConversa.origem (apply_meta_referral e derive_channel_from_first_contact).\n\nO desenho não consegue mostrar:\n• lê o anúncio da Meta (click-to-WhatsApp) que chega com a mensagem e grava origem e canal; sem anúncio e sem assinatura de site/LP/bio, o canal vira indicação (ou instagram, se a caixa for do Instagram);\n• grava nas colunas do lead (source, channel) e em custom_attributes.meta_referral — o passo Preencher campo só grava em campos;\n• origem_detectada é só uma chave de exemplo do desenho — não existe campo com esse nome;\n• nunca sobrescreve um canal já definido.",
   "resumo": "Quando o lead chega, descobre se veio de anúncio, site ou indicação e anota a origem.",
+  "ficha": {
+    "o_que_faz": "Na mensagem do cliente, descobre de onde o lead veio e anota: anúncio da Meta (clique para o WhatsApp) grava a origem \"anuncio-meta: …\" e o canal meta_ads; as frases das assinaturas do site, das landing pages, da triagem e do Instagram gravam o canal certo; sem nada disso, o canal vira indicação (ou instagram, se a caixa é do Instagram).",
+    "quando": "A cada mensagem do cliente enquanto o canal do lead ainda não foi descoberto, e em toda mensagem que chega com dados de anúncio.",
+    "o_que_mexe": [
+      "Origem e canal do lead, e os dados do anúncio da Meta guardados no lead.",
+      "Não gera linha no histórico nem aviso."
+    ],
+    "travas": [
+      "Sem IA: é comparação do texto com as frases das assinaturas.",
+      "Canal já descoberto não é refeito; origem já preenchida não é trocada (o anúncio só atualiza os dados guardados).",
+      "Atenção: lead que chega por anúncio com a origem vazia fica com o canal meta_ads, mesmo que alguém tenha escolhido outro canal à mão.",
+      "Mudar o texto dos botões de WhatsApp do site ou das LPs quebra a descoberta (as frases precisam bater)."
+    ],
+    "por_que": "É dado de atribuição — de onde vem cada cliente: alimenta o funil por origem e o retorno dos anúncios. Precisa ser igual para todos e acontecer antes dos fluxos de Mensagem recebida. Fica no código por decisão do Eduardo (08/10).",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"inclua a frase <texto> como origem <canal>\" ou \"o canal padrão passa a ser <canal>\".",
+      "arquivos": [
+        "app/services/ramon/lead_da_conversa.rb",
+        "app/services/ramon/source_catalog.rb",
+        "app/listeners/ramon_lead_listener.rb"
+      ],
+      "impacto": "Vale para os leads novos; os antigos não são recalculados. Muda os relatórios por origem daqui para a frente."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida"},"posicao":{"x":0,"y":0}},

@@ -4,6 +4,30 @@
   "fixa": true,
   "descricao": "No código: LeadComercial before_save :stamp_docs_completos (app/models/concerns/lead_comercial.rb).\n\nO desenho não consegue mostrar:\n• roda a cada gravação do lead que mexa nos documentos ou na tese — os fluxos não têm esse gatilho (aqui: Rodar na mão);\n• grava a coluna docs_completos_em (usada no contrato limpo e nos relatórios), não um campo livre, e apaga o carimbo se o checklist voltar a ficar incompleto;\n• só conta o que a equipe confirmou.",
   "resumo": "Quando o checklist de documentos do lead fica completo, registra a data.",
+  "ficha": {
+    "o_que_faz": "Quando todos os documentos do checklist da tese do lead estão marcados como \"recebido\", grava a data em que o checklist ficou completo. Se algum item voltar a ficar pendente, apaga a data; completar de novo grava a data nova.",
+    "quando": "Toda vez que o lead é gravado mexendo no checklist ou na tese — por exemplo, quando alguém marca um documento como recebido no painel do lead ou confirma a sugestão da IA.",
+    "o_que_mexe": [
+      "A data \"documentos completos\" do lead.",
+      "Essa data alimenta o Contrato limpo, o Painel do Time (Closer) e o radar de prescrição."
+    ],
+    "travas": [
+      "Só conta o que uma pessoa marcou como \"recebido\": documento enviado pelo Painel do Cliente ou sugerido pela IA não conta até alguém confirmar.",
+      "Lead sem tese, ou tese sem itens de documento, nunca fica completo.",
+      "Item novo acrescentado na tese só entra na conta na próxima gravação do lead.",
+      "Não manda sino nem push."
+    ],
+    "por_que": "É regra de dado: a data precisa ser exata e sempre igual, porque decide o contrato limpo e, com ele, a variável do SDR e do Closer. Se fosse um fluxo, desligá-lo ou editá-lo mudaria o dinheiro de alguém.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o checklist só conta como completo quando <regra nova>\".",
+      "arquivos": [
+        "app/models/concerns/lead_comercial.rb",
+        "app/models/concerns/lead_docs.rb",
+        "app/javascript/dashboard/routes/dashboard/ramon/components/lead/DocChecklist.vue"
+      ],
+      "impacto": "Muda quem entra no Contrato limpo e, portanto, o extrato da variável dos meses seguintes. Datas já gravadas não mudam sozinhas."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Equipe confirma documento ou muda a tese"},"posicao":{"x":0,"y":0}},

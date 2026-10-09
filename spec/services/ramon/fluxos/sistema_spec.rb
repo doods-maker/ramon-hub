@@ -51,7 +51,7 @@ RSpec.describe Ramon::Fluxos::Sistema do
     expect(described_class.extras(account, 'avisos_painel')).to eq(
       hoje: nil, grupo: 'painel_cliente', alcance: 'fala_com_cliente',
       resumo: 'Todo dia às 8h, avisa o cliente por e-mail das novidades do caso (desligado até aprovarmos os textos).',
-      gatilho_rotulo: 'Todo dia às 08:00 (só com PORTAL_AVISOS=on)', fixa: false
+      gatilho_rotulo: 'Todo dia às 08:00 (só com PORTAL_AVISOS=on)', fixa: true
     )
     expect(described_class.extras(account, 'publicar_pecas')).to include(grupo: 'instagram', alcance: 'publica', hoje: 0)
     expect(described_class.extras(account, 'cadencia')).to include(alcance: nil, gatilho_rotulo: nil)
@@ -87,9 +87,21 @@ RSpec.describe Ramon::Fluxos::Sistema do
     end
   end
 
-  it 'as 5 regras de dado e as etiquetas são "regra fixa" (ficam no código, decisão do Eduardo 07/10)' do
-    account = create(:account)
-    fixas = described_class.desenhos.keys.select { |chave| described_class.extras(account, chave)[:fixa] }
-    expect(fixas).to eq(%w[contrato_limpo contrato_limpo_cancelado docs_completos etiquetas_etapa_tese historico_do_lead sdr_automatico])
+  describe 'regra fixa e ficha (decisão do Eduardo 08/10)' do
+    let(:no_fluxo) { %w[cadencia chegada_cliente eventos_advbox lead_ganho lembretes_reuniao resumo_do_dia sla_primeira_resposta] }
+
+    it '22 regras fixas; as 7 sem o selo são as que rodam no fluxo' do
+      fixas = described_class.desenhos.keys.reject { |chave| described_class.extras(account, chave)[:fixa] }
+      expect(fixas).to eq(no_fluxo)
+    end
+
+    it 'cada ficha cita só arquivos que existem e, nas 7 do fluxo, só desenhos migrados que existem' do
+      described_class.desenhos.each do |chave, d|
+        ficha = d['ficha']
+        sem_arquivo = ficha.dig('mudar', 'arquivos').reject { |a| Rails.root.join(a).exist? }
+        sem_desenho = Array(ficha['fluxos']).reject { |c| Ramon::Fluxos::Migracao::PASTA.join("#{c}.json").exist? }
+        expect([chave, sem_arquivo, sem_desenho, ficha.key?('fluxos')]).to eq([chave, [], [], no_fluxo.include?(chave)])
+      end
+    end
   end
 end

@@ -1,8 +1,34 @@
 {
   "nome": "Fechamento do extrato",
   "grupo": "rotinas_relatorios",
+  "fixa": true,
   "descricao": "No código: Ramon::ExtratoFechamentoJob (todo dia às 00:20; age no 3º dia útil) → Ramon::ExtratoFechamento.\n\nO desenho não consegue mostrar:\n• fecha o extrato da variável do mês anterior (regulamento §6) — é da conta, não de um lead;\n• a tela do Extrato também fecha na 1ª leitura depois da data; o job garante o fechamento mesmo se ninguém abrir.",
   "resumo": "No 3º dia útil, fecha o extrato da variável do mês anterior.",
+  "ficha": {
+    "o_que_faz": "No 3º dia útil do mês, fecha e guarda o extrato da variável do mês anterior de cada pessoa (SDR, Closer e quem teve meta lançada), com os valores do regulamento e os descontos. Depois de fechado, a tela Extrato mostra o que foi guardado e o mês não aceita meta nova.",
+    "quando": "Todo dia às 00:20 (horário de Brasília); só age do 3º dia útil em diante (segunda a sexta, sem contar feriados) e só se o mês ainda não foi guardado. A tela Extrato também fecha o mês na 1ª vez que alguém a abre depois da data.",
+    "o_que_mexe": [
+      "O extrato fechado do mês anterior, um por pessoa.",
+      "Trava o mês: lançar meta nele passa a dar \"mês fechado\"."
+    ],
+    "travas": [
+      "Repetir não duplica nem recalcula um mês já guardado.",
+      "Feriado não conta: o \"3º dia útil\" pode cair num feriado.",
+      "Conta sem ninguém nos times não guarda nada.",
+      "Erro inesperado: o servidor tenta de novo sozinho."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. É fechamento de dinheiro pelo regulamento (§6): tem de acontecer sempre, na data, igual para todos.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o extrato passa a fechar no <N>º dia útil\" ou \"passa a pular feriados\".",
+      "arquivos": [
+        "app/jobs/ramon/extrato_fechamento_job.rb",
+        "app/services/ramon/extrato_fechamento.rb",
+        "app/services/ramon/extrato_variavel.rb",
+        "config/schedule.yml"
+      ],
+      "impacto": "Mexe no pagamento da variável. Mês já fechado não é recalculado. Combine antes com quem recebe (regulamento)."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"00:20","rotulo":"Todo dia às 00:20 (age no 3º dia útil)"},"posicao":{"x":0,"y":0}},

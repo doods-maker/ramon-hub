@@ -2,8 +2,32 @@
   "nome": "Histórico do lead",
   "grupo": "leads_conversas",
   "fixa": true,
-  "descricao": "No código: callbacks de Lead (record_created_activity, record_change_activities), LeadNote e LeadTask (record_*_activity).\n\nO desenho não consegue mostrar:\n• cada mudança do lead (etapa, responsável, valor, motivo de perda…), nota e tarefa vira uma linha no histórico, cada uma com o seu tipo;\n• o mesmo vale para lead criado, nota e tarefa nova — o quadro tem 1 gatilho só.",
+  "descricao": "No código: callbacks de Lead (record_created_activity, record_change_activities), LeadNote e LeadTask (record_*_activity).\n\nO desenho não consegue mostrar:\n• cada mudança do lead (etapa, SDR, Closer, prioridade, tese, valor), nota e tarefa vira uma linha no histórico, cada uma com o seu tipo;\n• o mesmo vale para lead criado, nota e tarefa nova — o quadro tem 1 gatilho só.",
   "resumo": "Registra no histórico do lead cada mudança, nota e tarefa.",
+  "ficha": {
+    "o_que_faz": "Escreve no histórico do lead (aba Atividade) uma linha para cada mudança importante: lead criado; etapa, SDR, Closer, prioridade, tese e valor (de → para); nota nova; tarefa criada ou concluída. Quem mudou aparece com o nome; o que o hub fez sozinho aparece como \"Sistema\".",
+    "quando": "Na hora, sempre que o lead, uma nota ou uma tarefa é gravado — por uma pessoa, por uma automação ou pela API.",
+    "o_que_mexe": [
+      "Linhas do histórico do lead.",
+      "Não manda sino nem push."
+    ],
+    "travas": [
+      "Só os campos da lista viram linha: mudar nome, canal, origem, motivo de perda ou o checklist de documentos não gera linha (o motivo de perda fica só na trilha interna de auditoria).",
+      "Outras partes do hub também escrevem no mesmo histórico (reuniões, ZapSign, ADVBOX, retomadas, o passo \"Registrar atividade\" dos fluxos) — esta regra cuida só das linhas básicas.",
+      "Linha gravada não é apagada nem editada depois."
+    ],
+    "por_que": "É o registro do próprio dado: tem de acontecer em toda gravação, sem exceção e sem depender de um fluxo ligado. Um fluxo pode ser desligado ou filtrado e deixaria buracos no histórico — e o histórico é a prova do que aconteceu com o caso.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"no histórico do lead, registre também quando mudar <campo>\" (ou \"pare de registrar <campo>\").",
+      "arquivos": [
+        "app/models/lead.rb",
+        "app/models/lead_note.rb",
+        "app/models/lead_task.rb",
+        "app/javascript/dashboard/routes/dashboard/ramon/components/conversation/ListaAtividades.vue"
+      ],
+      "impacto": "Muda o que aparece na aba Atividade daqui para a frente; as linhas antigas ficam como estão."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_mudou_etapa"},"posicao":{"x":0,"y":0}},

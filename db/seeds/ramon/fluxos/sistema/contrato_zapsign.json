@@ -1,8 +1,37 @@
 {
   "nome": "Contrato no ZapSign",
   "grupo": "contrato_documentos",
-  "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignLeadStatusJob; também logo depois do envio do contrato (Ramon::ZapsignContractService).\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real (o payload do webhook não é a verdade) e grava o selo em custom_attributes.zapsign — o passo Preencher campo grava em campos;\n• nunca marca o lead como ganho: ganho continua sendo decisão do Closer;\n• é daqui que nascem os gatilhos Contrato assinado e Contrato recusado dos fluxos (o desenho usa o de assinado; recusado faz o mesmo).",
+  "fixa": true,
+  "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignLeadStatusJob; também no \"Gerar de novo\", quando o documento anterior já estava assinado (Ramon::ZapsignContractService).\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real (o payload do webhook não é a verdade) e grava o selo em custom_attributes.zapsign — o passo Preencher campo grava em campos;\n• nunca marca o lead como ganho: ganho continua sendo decisão do Closer;\n• é daqui que nascem os gatilhos Contrato assinado e Contrato recusado dos fluxos (o desenho usa o de assinado; recusado faz o mesmo).",
   "resumo": "Quando o contrato muda no ZapSign, atualiza no lead se foi assinado ou recusado.",
+  "ficha": {
+    "o_que_faz": "Quando o ZapSign avisa que o contrato gerado pelo cartão do lead foi assinado ou recusado, o hub confere o status de verdade no ZapSign, grava o selo no card do lead (assinado ou recusado, com a data), escreve no histórico e toca o sino para todos da conta. Nunca marca o lead como ganho.",
+    "quando": "Na fila, logo depois do aviso (webhook) do ZapSign.",
+    "o_que_mexe": [
+      "Selo do contrato no card do lead (status e data).",
+      "Linha \"contrato assinado\" ou \"contrato recusado\" no histórico do lead.",
+      "Sino para todos os usuários da conta (sem push).",
+      "Dispara os gatilhos \"Contrato assinado\" e \"Contrato recusado\" para os seus fluxos."
+    ],
+    "travas": [
+      "O aviso do ZapSign só é aceito com o segredo combinado (e até 60 por minuto).",
+      "O status vem de uma consulta ao ZapSign, nunca do próprio aviso.",
+      "Só o documento vigente do lead e só a 1ª mudança: documento trocado (\"Gerar de novo\"), cancelado ou já com selo não faz nada de novo.",
+      "ZapSign fora do ar: tenta de novo até 5 vezes.",
+      "Para o selo \"recusado\", o evento de recusa precisa estar cadastrado no ZapSign.",
+      "Ganho continua sendo decisão do Closer."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. A conferência no ZapSign e o selo são o registro do contrato (dado); o histórico e o sino vão junto, para nunca haver contrato sem aviso.",
+    "mudar": {
+      "pedido": "Para acrescentar uma ação, crie um fluxo seu com o gatilho \"Contrato assinado\" (ou \"recusado\") — sem mexer no código. Para mudar o selo, o histórico ou o sino, peça ao Claude: \"quando o contrato for assinado no ZapSign, <mudança>\".",
+      "arquivos": [
+        "app/controllers/public/api/v1/zapsign_webhooks_controller.rb",
+        "app/jobs/ramon/zapsign_lead_status_job.rb",
+        "app/services/ramon/zapsign_contract_service.rb"
+      ],
+      "impacto": "Mexe no card do lead e no sino de todos. Não mexe em ganho nem no funil."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"contrato_assinado","rotulo":"ZapSign: contrato assinado ou recusado"},"posicao":{"x":0,"y":0}},

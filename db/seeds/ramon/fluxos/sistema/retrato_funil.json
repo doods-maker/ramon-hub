@@ -1,8 +1,34 @@
 {
   "nome": "Retrato do funil",
   "grupo": "rotinas_relatorios",
+  "fixa": true,
   "descricao": "No código: Ramon::DailyFunnelSnapshotJob (todo dia às 00:05) → Ramon::FunnelSnapshotService.\n\nO desenho não consegue mostrar:\n• guarda o retrato agregado do funil do dia para os relatórios — é da conta, não de um lead; não há passo de relatório.",
   "resumo": "Todo dia, logo após a meia-noite, guarda uma foto do funil para os relatórios.",
+  "ficha": {
+    "o_que_faz": "Toda noite tira uma \"foto\" do funil: quantos leads e quanto valor há em cada etapa e tese. É dessas fotos que sai o gráfico \"Funil nos últimos 30 dias\" do Centro de Comando.",
+    "quando": "Todo dia às 00:05 (horário de Brasília).",
+    "o_que_mexe": [
+      "O retrato do dia (rodar de novo no mesmo dia substitui o retrato).",
+      "Nada no lead e nenhum aviso."
+    ],
+    "travas": [
+      "Casos de cálculo do ADVBOX ficam de fora.",
+      "Ganhos e perdidos são guardados, mas o gráfico mostra só as etapas abertas.",
+      "A data do retrato é a do servidor: às 00:05 bate com o dia de Brasília (se o horário mudar para depois das 21:00, sai com a data do dia seguinte).",
+      "Erro numa rodada: o servidor tenta de novo sozinho."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. É rotina de relatório, sem escolha a fazer e sem falar com ninguém; o horário faz parte da regra (o retrato tem de ser do dia).",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o retrato do funil passa a guardar também <dado>\" (ou \"rodar às <hora>\").",
+      "arquivos": [
+        "app/jobs/ramon/daily_funnel_snapshot_job.rb",
+        "app/services/ramon/funnel_snapshot_service.rb",
+        "config/schedule.yml",
+        "app/javascript/dashboard/routes/dashboard/ramon/pages/CommandCenter.vue"
+      ],
+      "impacto": "Vale a partir do retrato seguinte; os dias passados não são refeitos — por um mês o gráfico mistura o antigo e o novo."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"00:05","rotulo":"Todo dia às 00:05"},"posicao":{"x":0,"y":0}},

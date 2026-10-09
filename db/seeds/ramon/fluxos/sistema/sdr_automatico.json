@@ -4,6 +4,29 @@
   "fixa": true,
   "descricao": "No código: LeadComercial (app/models/concerns/lead_comercial.rb): before_create :assign_sdr e after_commit :assign_conversation_to_sdr.\n\nO desenho não consegue mostrar:\n• o SDR é o do time com menos leads abertos (Ramon::Papeis.proximo) e só entra se o lead nasce sem SDR; roda antes de o lead existir;\n• a conversa vai para o SDR também quando o SDR muda ou o lead ganha conversa;\n• o passo Atribuir escolhe uma pessoa fixa; aqui é sempre o SDR do lead.",
   "resumo": "Quando nasce um lead sem SDR, escolhe o SDR com menos leads abertos e passa a conversa a ele.",
+  "ficha": {
+    "o_que_faz": "Quando nasce um lead sem SDR, escolhe a pessoa do time \"sdr\" que tem menos leads abertos (empate: quem foi cadastrada antes no hub) e passa a conversa do lead para ela.",
+    "quando": "Na criação de todo lead (conversa nova, landing page, cadastro à mão, API). A conversa também vai para o SDR quando o SDR do lead muda ou o lead ganha uma conversa.",
+    "o_que_mexe": [
+      "O SDR do lead.",
+      "O responsável da conversa (com o aviso de atribuição de sempre do hub)."
+    ],
+    "travas": [
+      "Lead que já nasce com SDR, caso de cálculo do ADVBOX e importação ficam de fora.",
+      "Time \"sdr\" vazio: o lead fica sem SDR.",
+      "Nunca tira a conversa de quem já é o responsável dela.",
+      "Na criação, o histórico mostra só \"lead criado\" (não há uma linha separada de troca de SDR)."
+    ],
+    "por_que": "Roda no instante em que o lead é gravado, antes de ele existir — um fluxo só começaria depois. É regra de dado: todo lead precisa sair com dono, sem brecha.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o SDR automático passa a escolher por <critério>\" (ex.: rodízio, por tese, por caixa).",
+      "arquivos": [
+        "app/models/concerns/lead_comercial.rb",
+        "app/services/ramon/papeis.rb"
+      ],
+      "impacto": "Vale para os leads novos; os já distribuídos não mudam. Afeta a divisão do trabalho e os números por SDR."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_criado"},"posicao":{"x":0,"y":0}},

@@ -1,8 +1,33 @@
 {
   "nome": "Coach de objeção",
   "grupo": "leads_conversas",
-  "descricao": "No código: RamonLeadListener#message_created (decide: o código ou o fluxo migrado \"Coach de objeção\") → Ramon::CoachObjecaoJob → Ramon::CoachObjecaoService (texto com 20 caracteres ou mais, contados no texto sem espaços nas pontas).\n\nO desenho não consegue mostrar:\n• só roda se o lead tem tese com playbook de objeções (elegivel?);\n• no máximo 1 vez a cada 10 min por conversa; qualquer erro = silêncio;\n• as 2 respostas vêm do playbook da tese (objeções) e aparecem num balão de evento — \"Usar →\" só coloca o texto no editor, quem envia é a pessoa.",
+  "fixa": true,
+  "descricao": "No código: RamonLeadListener#message_created → Ramon::CoachObjecaoJob → Ramon::CoachObjecaoService (texto com 20 caracteres ou mais, contados no texto sem espaços nas pontas).\n\nO desenho não consegue mostrar:\n• só roda se o lead tem tese com playbook de objeções (elegivel?);\n• no máximo 1 vez a cada 10 min por lead (a janela começa mesmo sem objeção); qualquer erro = silêncio;\n• as 2 respostas vêm do playbook da tese (objeções) e aparecem num balão de evento — \"Usar →\" só coloca o texto no editor, quem envia é a pessoa.",
   "resumo": "Quando o cliente manda mensagem com uma objeção, sugere 2 respostas para a equipe.",
+  "ficha": {
+    "o_que_faz": "Quando o cliente escreve uma mensagem com objeção (ex.: \"vou pensar\", \"é caro\"), a IA reconhece e mostra na conversa o balão \"Coach do hub: objeção detectada\", com 2 respostas prontas do playbook da tese. \"Usar\" só coloca o texto no editor — quem envia é a pessoa.",
+    "quando": "Na fila, depois de cada mensagem do cliente com 20 caracteres ou mais, se a conversa tem lead com tese.",
+    "o_que_mexe": [
+      "Balão na conversa (só a equipe vê).",
+      "Guarda no lead a hora da última leitura do coach."
+    ],
+    "travas": [
+      "Só tese com playbook de objeções cadastrado.",
+      "No máximo 1 leitura a cada 10 minutos POR LEAD — e a janela começa mesmo quando não acha objeção.",
+      "A IA vê só a mensagem atual, com nome e dados pessoais mascarados; o texto proíbe prometer resultado, valor ou prazo do INSS.",
+      "Qualquer erro = silêncio, sem nova tentativa."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código como está. Já é só sugestão para a equipe (nada vai ao cliente) e a regra de leitura não cabe nos passos do quadro.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o coach de objeção passa a <mudança>\" (ex.: janela de 30 minutos, 3 respostas).",
+      "arquivos": [
+        "app/services/ramon/coach_objecao_service.rb",
+        "app/jobs/ramon/coach_objecao_job.rb",
+        "app/listeners/ramon_lead_listener.rb"
+      ],
+      "impacto": "Muda o balão que a equipe vê e o custo de IA (1 chamada por mensagem elegível; ver Uso e custo). As respostas vêm do playbook da tese, que se edita na Inteligência."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida","rotulo":"Mensagem com texto (20 caracteres ou mais)"},"posicao":{"x":0,"y":0}},

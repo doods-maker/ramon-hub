@@ -1,8 +1,37 @@
 {
   "nome": "Documento enviado pelo Painel",
   "grupo": "painel_cliente",
+  "fixa": true,
   "descricao": "No código: Cliente::PainelController (envio) → Ramon::PortalEnvioJob.\n\nO desenho não consegue mostrar:\n• começa com o cliente enviando um arquivo pelo Painel — os fluxos não têm esse gatilho (aqui: Rodar na mão);\n• antes de tudo o arquivo vai para o Drive (Clientes/<Nome — CPF>), mas só se o Drive estiver configurado (DriveClient.configured?) — sem isso o passo é pulado; não há passo de Drive;\n• o push só sai se NTFY_TOPIC estiver definido (Ramon::NtfyPushJob volta em silêncio sem ele);\n• a 1ª tarefa vai para o responsável do processo no ADVBOX (o desenho mostra o padrão, Eduardo); cada passo é idempotente e o ADVBOX tenta de novo até 5 vezes.",
   "resumo": "Quando o cliente envia um arquivo pelo Painel, guarda no Drive e cria tarefa para o responsável.",
+  "ficha": {
+    "o_que_faz": "Quando o cliente envia um documento pelo Painel do Cliente, o hub guarda o arquivo no Drive (pasta Clientes/‹Nome — CPF›), avisa no celular e cria 2 tarefas no ADVBOX: \"ANALISAR DOCUMENTAÇÃO\" para o responsável do processo e \"ORGANIZAR DOCUMENTOS\" para a recepção.",
+    "quando": "Na fila, logo depois do envio. O cliente vê na hora \"Recebemos seu documento. Obrigado!\".",
+    "o_que_mexe": [
+      "Arquivo no Drive (se o Drive estiver configurado).",
+      "Push no celular (\"Documento do cliente …\").",
+      "2 tarefas no ADVBOX, com o link do Drive no comentário — grava no ADVBOX de verdade.",
+      "Nada no lead do hub nem no checklist: alguém confere e marca.",
+      "Dispara o gatilho \"Cliente enviou documento pelo Painel\" para os seus fluxos (na hora do envio, antes do Drive e do ADVBOX)."
+    ],
+    "travas": [
+      "Só PDF, JPG, PNG ou HEIC, até 10 MB, ligado a um pedido de documento.",
+      "Processo sem responsável: a 1ª tarefa vai para o Eduardo.",
+      "Drive e cada tarefa são feitos uma vez por envio; ADVBOX fora do ar: tenta de novo até 5 vezes; recusa do ADVBOX só vai para o log.",
+      "O push pode se repetir a cada nova tentativa.",
+      "Sem o Drive configurado, pula o Drive; sem o ntfy, não há push."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. Grava no ADVBOX e no Drive com travas de \"uma vez só\" por envio — mais seguro como regra fixa do que como passos editáveis.",
+    "mudar": {
+      "pedido": "Para acrescentar algo (ex.: um aviso a mais), crie um fluxo seu com o gatilho \"Cliente enviou documento pelo Painel\" — sem mexer no código. Para mudar o Drive, o push ou as tarefas do ADVBOX, peça ao Claude: \"documento enviado pelo Painel passa a <mudança>\" (ex.: a tarefa vai para outra pessoa).",
+      "arquivos": [
+        "app/controllers/cliente/painel_controller.rb",
+        "app/jobs/ramon/portal_envio_job.rb",
+        "lib/ramon/drive_client.rb"
+      ],
+      "impacto": "Grava no ADVBOX de verdade: mudar responsável ou tipo de tarefa muda a fila do jurídico."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Cliente envia documento pelo Painel"},"posicao":{"x":0,"y":0}},

@@ -1,8 +1,36 @@
 {
   "nome": "Ata da reunião",
   "grupo": "leads_conversas",
+  "fixa": true,
   "descricao": "No código: RamonReunioesController (gravar e refazer) → Ramon::ReuniaoAtaJob → Ramon::ReuniaoAtaService.\n\nO desenho não consegue mostrar:\n• começa quando a reunião é gravada no hub (ou alguém pede para refazer a ata) — os fluxos não têm esse gatilho (aqui: Rodar na mão);\n• transcreve o áudio no whisper local e a IA escreve a ata na própria reunião (não é nota de conversa); tenta de novo até 3 vezes se o LLM falhar.",
   "resumo": "Depois que a reunião é gravada, transcreve o áudio e escreve a ata na própria reunião.",
+  "ficha": {
+    "o_que_faz": "Quando uma reunião é gravada na área Reuniões do hub (ou alguém clica \"Reprocessar\" numa reunião com erro), o hub transcreve o áudio no servidor da banca e a IA escreve a ata — Participantes, Resumo, Decisões, Pendências — na própria reunião.",
+    "quando": "Na fila, logo depois de gravar (ou de \"Reprocessar\"). A tela avisa \"A transcrição e a ata chegam aqui em alguns minutos\".",
+    "o_que_mexe": [
+      "Transcrição e ata na própria reunião (não é nota de conversa).",
+      "Situação da reunião: transcrevendo → pronta (ou erro, com o botão Reprocessar).",
+      "Dispara o gatilho \"Reunião gravada (ou Refazer ata)\" para os seus fluxos — na hora de gravar ou de Reprocessar, antes de a ata ficar pronta."
+    ],
+    "travas": [
+      "Áudio obrigatório, até 25 MB.",
+      "A transcrição é feita no próprio servidor da banca; \"Reprocessar\" reaproveita a transcrição que já existe.",
+      "Áudio sem fala: ata \"Nenhuma fala detectada no áudio.\", sem IA.",
+      "IA fora do ar: tenta de novo até 3 vezes; qualquer outro erro (inclusive na transcrição) vai direto para \"erro\".",
+      "A IA só roda num provedor liberado para dado sensível."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. É trabalho pesado e longo (a transcrição pode levar muitos minutos) e não fala com ninguém — não há o que editar no quadro.",
+    "mudar": {
+      "pedido": "Para acrescentar algo (ex.: avisar alguém que a reunião foi gravada), crie um fluxo seu com o gatilho \"Reunião gravada (ou Refazer ata)\" — sem mexer no código. Para mudar a ata, peça ao Claude: \"a ata da reunião passa a <mudança>\" (ex.: incluir a seção Próximos passos).",
+      "arquivos": [
+        "app/controllers/api/v1/accounts/ramon_reunioes_controller.rb",
+        "app/jobs/ramon/reuniao_ata_job.rb",
+        "app/services/ramon/reuniao_ata_service.rb",
+        "app/javascript/dashboard/routes/dashboard/ramon/components/reunioes/ReuniaoDetalhe.vue"
+      ],
+      "impacto": "Muda as atas novas; as antigas ficam como estão (Reprocessar só existe para reunião com erro)."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Reunião gravada (ou Refazer ata)"},"posicao":{"x":0,"y":0}},

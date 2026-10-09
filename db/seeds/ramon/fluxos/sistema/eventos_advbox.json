@@ -3,6 +3,39 @@
   "grupo": "contrato_documentos",
   "descricao": "No código: Flowter → webhook do hub → Ramon::AdvboxEventJob → Ramon::AdvboxEventProcessor (acha a regra e o lead) → Ramon::Fluxos::EventosAdvbox (decide: o código ou o fluxo migrado \"Eventos do ADVBOX\") → Ramon::AdvboxEventRegras (cada regra é um método com o nome da chave).\n\nO desenho não consegue mostrar:\n• a regra sai do nome da etapa/tarefa no payload do Flowter, e o lead é achado pelo CPF ou pelo telefone (lead aberto; senão o mais recente do funil) — sem regra ou sem lead o evento fica guardado e nada roda;\n• cada atividade tem um tipo próprio (advbox_contrato_fechado, advbox_indeferido, …) e leva o nome da etapa do ADVBOX;\n• os rascunhos vão para as notas do lead (não para a conversa); a pesquisa NPS de êxito e de concessão usa a trava nps.pedido_exito_em (a do ganho é outra, pedido_em — um lead pode receber 2 rascunhos de NPS); o link do Google vem da variável RAMON_GOOGLE_REVIEW_URL; sem ela o código escreve [link do Google Meu Negócio] (o desenho mostra esse texto);\n• os pushes só saem com o ntfy configurado (NTFY_TOPIC);\n• Contrato fechado move o lead para a etapa de ganho da conta (se ainda não estava), o que grava won_at e dispara também o Lead ganho (dossiê, ADVBOX, NPS e Drive) — não migrar essas ações duas vezes; em Arquivado todas as tarefas abertas do lead são concluídas (no fluxo migrado: a rotina Concluir tarefas).",
   "resumo": "Quando o ADVBOX avisa uma mudança no processo, atualiza o lead e prepara os próximos passos.",
+  "ficha": {
+    "o_que_faz": "Quando o Flowter do ADVBOX avisa uma mudança de etapa ou tarefa num processo, o hub acha o lead (pelo CPF ou pelo telefone) e faz o que a regra daquela etapa manda: contrato fechado marca o lead como ganho; protocolo, decisão, exigência, indeferimento, benefício futuro, êxito, concessão e marcos viram histórico, tarefas de acompanhamento, rascunhos ao cliente nas notas e push; arquivado conclui as tarefas abertas do lead.",
+    "quando": "Na fila, segundos depois do aviso do Flowter.",
+    "o_que_mexe": [
+      "Histórico do lead (um tipo para cada regra).",
+      "Tarefas com prazo (45 dias no protocolo, 1 no indeferimento, 2 na decisão e na exigência, 180 no benefício futuro), com o Closer (sem Closer: o SDR).",
+      "Rascunhos nas notas (INSS negou, exigência, êxito, concessão) e a pesquisa NPS de êxito — nada vai direto ao cliente.",
+      "Etapa de ganho no contrato fechado (o que dispara o Lead ganho).",
+      "Push por regra (sem sino)."
+    ],
+    "travas": [
+      "Só aceita aviso com o token combinado; o mesmo aviso repetido não roda duas vezes.",
+      "O nome da etapa precisa bater exatamente com a lista de cada regra; sem regra ou sem lead, o evento fica guardado e nada roda.",
+      "Lead escolhido: o aberto do contato; senão, o mais recente do funil (pode ser ganho ou perdido).",
+      "NPS de êxito uma vez só por lead.",
+      "Se o fluxo não começar (ex.: outra execução viva no mesmo lead), o código faz aquele evento (reserva).",
+      "Erro no processamento: o evento fica com situação \"erro\", sem nova tentativa."
+    ],
+    "por_que": "Roda pelo fluxo \"Eventos do ADVBOX\": textos, tarefas, prazos e avisos de cada regra se editam na tela. Achar a regra e o lead continua no código.",
+    "mudar": {
+      "pedido": "Textos, prazos e avisos: no fluxo (botão abaixo). Nome de etapa novo no ADVBOX ou outra forma de achar o lead: peça ao Claude \"<mudança>\".",
+      "arquivos": [
+        "app/services/ramon/advbox_event_processor.rb",
+        "app/services/ramon/fluxos/eventos_advbox.rb",
+        "app/services/ramon/advbox_event_regras.rb",
+        "app/controllers/public/api/v1/advbox_webhooks_controller.rb"
+      ],
+      "impacto": "Mudar o fluxo vale no próximo evento. Etapa nova no ADVBOX só é reconhecida depois de o Claude acrescentar o nome na lista."
+    },
+    "fluxos": [
+      "eventos_advbox"
+    ]
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"evento_advbox"},"posicao":{"x":0,"y":0}},

@@ -3,6 +3,32 @@
   "grupo": "leads_conversas",
   "descricao": "No código: RamonChegadasController#create agenda Ramon::ChegadaEscalarJob para 3 min depois (Chegada::ESCALAR_APOS).\n\nO desenho não consegue mostrar:\n• o aviso de chegada é feito pela recepção no hub — os fluxos não têm esse gatilho (aqui: Rodar na mão com o rótulo do evento real);\n• só escala se ninguém respondeu; o alerta volta a tocar na tela de quem avisou (ao vivo, não é o sino).",
   "resumo": "Se ninguém atende o cliente que chegou ao escritório em 3 minutos, avisa a equipe.",
+  "ficha": {
+    "o_que_faz": "Quando a recepção avisa no hub que um cliente chegou e, em 3 minutos, ninguém respondeu o aviso, o alerta volta a tocar na tela de quem avisou (\"sem resposta\") até a pessoa clicar \"Entendi\".",
+    "quando": "3 a 4 minutos depois do aviso de chegada (o relógio dos fluxos anda de minuto em minuto).",
+    "o_que_mexe": [
+      "Marca a chegada como escalada e faz o alerta tocar ao vivo na tela de quem avisou (não é sino nem push)."
+    ],
+    "travas": [
+      "Só escala se ninguém respondeu e se ainda não foi escalada (uma vez só).",
+      "Se o fluxo não começar, o código escala em exatos 3 minutos (reserva).",
+      "Falha do fluxo: só o push \"Fluxo falhou\" (a chegada não tem lead)."
+    ],
+    "por_que": "Roda pelo fluxo \"Chegada de cliente\": o tempo de espera e avisos extras se editam na tela. A escalada em si é a rotina pronta \"Escalar a chegada\" (código).",
+    "mudar": {
+      "pedido": "Tempo e avisos: no fluxo (botão abaixo). Quem recebe o alerta ou como ele toca: peça ao Claude \"<mudança>\".",
+      "arquivos": [
+        "app/models/chegada.rb",
+        "app/controllers/api/v1/accounts/ramon_chegadas_controller.rb",
+        "app/jobs/ramon/chegada_escalar_job.rb",
+        "app/javascript/dashboard/stores/chegadas.js"
+      ],
+      "impacto": "Mudar o fluxo vale para os próximos avisos. Desligar o fluxo devolve a escalada ao código (3 minutos)."
+    },
+    "fluxos": [
+      "chegada_cliente"
+    ]
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Recepção avisa a chegada do cliente"},"posicao":{"x":0,"y":0}},

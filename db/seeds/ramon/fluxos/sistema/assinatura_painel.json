@@ -1,8 +1,35 @@
 {
   "nome": "Assinatura pelo Painel do Cliente",
   "grupo": "painel_cliente",
+  "fixa": true,
   "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignStatusJob.\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real e marca a assinatura do Painel (PortalAssinatura) — não é lead nem conversa, e os fluxos não têm esse gatilho (aqui: Rodar na mão).",
   "resumo": "Quando o cliente assina pelo ZapSign, confere a assinatura e marca no Painel do Cliente.",
+  "ficha": {
+    "o_que_faz": "Quando o cliente assina pelo ZapSign um documento pedido no Painel do Cliente, o hub confere o status no ZapSign e atualiza a assinatura no Painel: ela sai das pendentes, vai para as assinadas e o download fica liberado.",
+    "quando": "Na fila, logo depois do aviso (webhook) do ZapSign.",
+    "o_que_mexe": [
+      "A assinatura no Painel do Cliente (status e data da assinatura).",
+      "Nada no lead: sem histórico, sino ou push.",
+      "Dispara o gatilho \"Assinatura do Painel do Cliente mudou (ZapSign)\" para os seus fluxos — na chegada do aviso, antes da conferência no ZapSign."
+    ],
+    "travas": [
+      "O aviso do ZapSign só é aceito com o segredo combinado.",
+      "O status vem de uma consulta ao ZapSign, nunca do próprio aviso.",
+      "Assinatura cancelada no hub não muda.",
+      "ZapSign fora do ar: tenta de novo até 5 vezes.",
+      "Aviso repetido de um documento já assinado regrava a data da assinatura com a hora nova."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. É a atualização de um registro do Painel do Cliente a partir do ZapSign, sem escolha a fazer — não há o que desenhar.",
+    "mudar": {
+      "pedido": "Para acrescentar algo (ex.: tocar o sino do responsável), crie um fluxo seu com o gatilho \"Assinatura do Painel do Cliente mudou (ZapSign)\" — sem mexer no código. Para mudar a conferência ou o que o Painel mostra, peça ao Claude: \"quando o cliente assinar pelo Painel, <mudança>\".",
+      "arquivos": [
+        "app/controllers/public/api/v1/zapsign_webhooks_controller.rb",
+        "app/jobs/ramon/zapsign_status_job.rb",
+        "app/models/portal_assinatura.rb"
+      ],
+      "impacto": "Mexe no que o cliente vê no Painel do Cliente."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"ZapSign: documento do Painel assinado"},"posicao":{"x":0,"y":0}},

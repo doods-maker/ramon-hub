@@ -3,6 +3,35 @@
   "grupo": "rotinas_relatorios",
   "descricao": "No código: Ramon::DailyDigestJob (todo dia às 08:00) → Ramon::DailyDigestService; o e-mail sai pelo AdministratorNotifications::RamonDigestMailer.\n\nO desenho não consegue mostrar:\n• roda uma vez por conta, não uma vez por lead como o gatilho Relógio;\n• o push só sai se o dia tem algo (tarefas vencidas, conversas fora do SLA, reunião ainda hoje ou valor em jogo) e só com o ntfy configurado;\n• o passo do e-mail é só uma representação: a ação real é um e-mail de gestão, que o quadro não tem como passo;\n• o e-mail de gestão (leads novos, ganhos, perdidos e 1ª resposta de ontem) só sai com SMTP configurado — o quadro não tem passo de e-mail.",
   "resumo": "Todo dia às 8h, avisa a equipe do que precisa de atenção hoje.",
+  "ficha": {
+    "o_que_faz": "Todo dia de manhã manda o push \"Ramon Hub · seu dia\" com o que precisa de atenção hoje (tarefas vencidas, conversas fora do SLA, reunião ainda hoje, valor de benefício em jogo) e o e-mail de gestão aos administradores com os números de ontem (leads novos, ganhos, perdidos e tempo médio da 1ª resposta).",
+    "quando": "Todo dia às 08:00 (horário de Brasília) — é o horário do fluxo, que você muda na tela.",
+    "o_que_mexe": [
+      "Push no celular (um tópico para a banca toda; só sai se o dia tem algo).",
+      "E-mail aos administradores da conta (sai mesmo num dia sem pendências).",
+      "Não grava nada."
+    ],
+    "travas": [
+      "Push só com o ntfy configurado; e-mail só com o SMTP configurado.",
+      "Casos de cálculo do ADVBOX ficam de fora.",
+      "\"Em jogo\" = soma do valor MENSAL do benefício dos leads com tarefa vencida ou parados.",
+      "Se o fluxo não começar (erro do motor ou a execução anterior ainda viva), o código faz naquele dia (reserva)."
+    ],
+    "por_que": "Roda pelo fluxo \"Resumo do dia\" (gatilho Horário da conta): você muda o horário e os dias, liga e desliga e pode pôr avisos antes ou depois. O conteúdo do push e do e-mail é a rotina pronta \"Resumo do dia\" (código).",
+    "mudar": {
+      "pedido": "Horário, dias e liga/desliga: no fluxo (botão abaixo). Conteúdo: peça ao Claude \"o resumo do dia passa a mostrar <dado>\".",
+      "arquivos": [
+        "app/services/ramon/daily_digest_service.rb",
+        "app/jobs/ramon/daily_digest_job.rb",
+        "app/mailers/administrator_notifications/ramon_digest_mailer.rb",
+        "app/views/mailers/administrator_notifications/ramon_digest_mailer/daily_digest.html.erb"
+      ],
+      "impacto": "Mudar o fluxo vale na hora, sem deploy. Desligar o fluxo devolve o resumo ao código (às 08:00) — nunca fica sem."
+    },
+    "fluxos": [
+      "resumo_do_dia"
+    ]
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"08:00","rotulo":"Todo dia às 08:00 (1 vez por conta)"},"posicao":{"x":0,"y":0}},

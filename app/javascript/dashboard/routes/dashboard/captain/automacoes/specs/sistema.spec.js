@@ -131,19 +131,37 @@ describe('fluxos do sistema', () => {
     titulos.forEach(t => expect(t).not.toMatch(/24h/));
   });
 
-  it('as 5 regras de dado e as etiquetas são regra fixa (decisão do Eduardo 07/10)', () => {
+  it('22 regras fixas; as 7 sem o selo são as que rodam no fluxo (decisão do Eduardo 08/10)', () => {
     expect(
-      DESENHOS.filter(([, d]) => d.fixa)
+      DESENHOS.filter(([, d]) => !d.fixa)
         .map(([chave]) => chave)
         .sort()
     ).toEqual([
-      'contrato_limpo',
-      'contrato_limpo_cancelado',
-      'docs_completos',
-      'etiquetas_etapa_tese',
-      'historico_do_lead',
-      'sdr_automatico',
+      'cadencia',
+      'chegada_cliente',
+      'eventos_advbox',
+      'lead_ganho',
+      'lembretes_reuniao',
+      'resumo_do_dia',
+      'sla_primeira_resposta',
     ]);
     DESENHOS.forEach(([, d]) => expect([undefined, true]).toContain(d.fixa));
   });
+
+  it.each(DESENHOS)(
+    '%s: ficha completa — o que faz, quando, o que mexe, travas, por quê e como mudar',
+    (_chave, d) => {
+      const f = d.ficha;
+      ['o_que_faz', 'quando', 'por_que'].forEach(k =>
+        expect(f[k].length).toBeGreaterThan(20)
+      );
+      expect(f.o_que_mexe.length).toBeGreaterThan(0);
+      expect(f.travas.length).toBeGreaterThan(0);
+      expect(f.mudar.pedido).toMatch(/Claude|fluxo/);
+      expect(f.mudar.arquivos.length).toBeGreaterThan(0);
+      expect(f.mudar.impacto.length).toBeGreaterThan(10);
+      // só as 7 do fluxo apontam os fluxos de verdade (o botão "Abrir o fluxo")
+      expect(Array.isArray(f.fluxos)).toBe(!d.fixa);
+    }
+  );
 });

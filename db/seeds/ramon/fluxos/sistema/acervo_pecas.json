@@ -1,8 +1,35 @@
 {
   "nome": "Acervo das peças (Drive e Notion)",
   "grupo": "instagram",
+  "fixa": true,
   "descricao": "No código: Ramon::ConteudoDriveJob (depois de publicar) e Ramon::NotionEspelhoJob (Peca after_update_commit quando o status muda).\n\nO desenho não consegue mostrar:\n• copia a peça publicada (JPEGs + legenda) para Posts Instagram/<tipo>/<rodada — gancho> no Drive e espelha o status no kanban Peças do Notion (só com RAMON_NOTION_TOKEN) — não há passo de Drive nem de Notion;\n• best-effort: erro não volta; não é lead nem conversa.",
   "resumo": "Quando uma peça é publicada, guarda uma cópia no Drive e atualiza o quadro de peças no Notion.",
+  "ficha": {
+    "o_que_faz": "Quando uma peça do Instagram é publicada, copia as imagens e um legenda.txt para o Drive (Posts Instagram/‹Carrossel ou Estático›/‹data — gancho›). E, a cada mudança de status da peça, atualiza o status no quadro Peças do Notion.",
+    "quando": "Drive: logo depois de a peça virar publicada. Notion: a cada mudança de status.",
+    "o_que_mexe": [
+      "Pasta e arquivos no Drive; a peça guarda o endereço da pasta.",
+      "Status da página da peça no Notion (agendado aparece como \"montado\"; montando, publicando, falhou e reprovado não são espelhados).",
+      "Dispara os gatilhos \"Peça publicada no Instagram\" e \"Peça mudou de status\" para os seus fluxos."
+    ],
+    "travas": [
+      "Drive só com as 3 chaves do Drive configuradas; tenta 3 vezes — uma nova tentativa depois de um envio pela metade pode duplicar arquivos na pasta.",
+      "Notion só com o token do Notion e a peça ligada a uma página; erro só vai para o log.",
+      "Não é lead nem conversa: não aparece no funil.",
+      "Mudanças de status em rajada (publicando → publicado): um fluxo seu ainda rodando na mesma peça não começa de novo."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. É cópia de arquivo e espelho de status, sem escolha a fazer.",
+    "mudar": {
+      "pedido": "Para acrescentar algo, crie um fluxo seu com o gatilho \"Peça publicada no Instagram\" ou \"Peça mudou de status\" — sem mexer no código. Para mudar o acervo, peça ao Claude: \"o acervo das peças passa a <mudança>\" (ex.: outra pasta, espelhar também \"falhou\" no Notion).",
+      "arquivos": [
+        "app/jobs/ramon/conteudo_drive_job.rb",
+        "app/jobs/ramon/notion_espelho_job.rb",
+        "app/models/peca.rb",
+        "lib/ramon/drive_client.rb"
+      ],
+      "impacto": "Muda onde o acervo fica no Drive e o que o quadro do Notion mostra; peças antigas não são movidas."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Peça publicada ou status mudou"},"posicao":{"x":0,"y":0}},

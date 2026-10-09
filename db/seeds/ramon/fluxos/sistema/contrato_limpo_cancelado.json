@@ -4,6 +4,31 @@
   "fixa": true,
   "descricao": "No código: LeadComercial after_save :cancelar_contrato_limpo (app/models/concerns/lead_comercial.rb).\n\nO desenho não consegue mostrar:\n• só quando o ganho é desfeito (won_at volta a vazio) e o lead já tinha o carimbo de limpo;\n• apaga a coluna contrato_limpo_em e carimba contrato_cancelado_em; se o mês já fechou, o desconto entra na apuração seguinte (Ramon::ExtratoDescontos).",
   "resumo": "Quando um ganho é desfeito, tira a marca de contrato limpo e registra o cancelamento.",
+  "ficha": {
+    "o_que_faz": "Quando um lead que já era contrato limpo sai de Fechado (o ganho é desfeito), apaga a marca de limpo e grava a data do cancelamento. Se o mês em que aquele contrato foi pago já está fechado no extrato, o desconto entra na apuração seguinte.",
+    "quando": "Na hora em que o lead sai da etapa de ganho para qualquer outra (inclusive Perdido).",
+    "o_que_mexe": [
+      "Apaga a data \"contrato limpo\" e grava a data \"contrato cancelado\" do lead.",
+      "Extrato da variável: linha de desconto (o valor da unidade, negativo) e, se a saída derrubar bônus ou degrau do Closer, a linha de desconto do bônus.",
+      "Separado disso, toda saída de Fechado (mesmo antes de limpo) deixa a linha \"contrato cancelado\" no histórico do lead."
+    ],
+    "travas": [
+      "Só age se o lead já tinha a marca de contrato limpo.",
+      "Nunca desconta em dobro: só desconta enquanto houver unidade paga sem desconto.",
+      "Mês ainda aberto: o lead só sai da contagem, sem desconto.",
+      "Se o lead voltar a fechar, ganha data nova de ganho e pode ser carimbado de novo."
+    ],
+    "por_que": "É o par do Contrato limpo e mexe em dinheiro: precisa acontecer sempre, junto com a mudança de etapa, sem depender de um fluxo ligado.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"quando um contrato limpo for cancelado, <regra nova de desconto>\".",
+      "arquivos": [
+        "app/models/concerns/lead_comercial.rb",
+        "app/models/lead.rb",
+        "app/services/ramon/extrato_descontos.rb"
+      ],
+      "impacto": "Muda os descontos do extrato a partir da próxima apuração. É regra do regulamento da variável."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_mudou_etapa","rotulo":"Lead sai de Fechado depois de limpo"},"posicao":{"x":0,"y":0}},
