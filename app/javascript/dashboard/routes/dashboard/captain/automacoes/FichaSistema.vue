@@ -31,14 +31,6 @@ const tomDoFluxo = f => {
     class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3.5"
   >
     <template v-if="fluxo.ficha">
-      <span
-        data-testid="ficha-selo"
-        :class="[CHIP, fluxo.fixa ? TOM.slate : TOM.teal]"
-        class="self-start font-mono"
-      >
-        {{ fluxo.fixa ? t(`${K}.SELO_FIXA`) : t(`${K}.SELO_FLUXO`) }}
-      </span>
-
       <section data-testid="ficha-o-que-faz">
         <h4 :class="TITULO" class="mb-1">{{ t(`${K}.O_QUE_FAZ`) }}</h4>
         <p class="text-[13.5px] leading-relaxed text-n-slate-12">

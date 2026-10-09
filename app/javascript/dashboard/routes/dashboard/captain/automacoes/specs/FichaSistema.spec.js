@@ -32,11 +32,9 @@ const montar = fluxo =>
   });
 
 describe('FichaSistema', () => {
-  it('regra fixa: as 6 seções, o selo da regra fixa e sem botão de fluxo', () => {
+  it('regra fixa: as 6 seções, sem selo repetido (fica só o do cabeçalho) e sem botão de fluxo', () => {
     const w = montar({ fixa: true, ficha: FICHA });
-    expect(w.get('[data-testid="ficha-selo"]').text()).toBe(
-      'fixed rule · stays in code'
-    );
+    expect(w.find('[data-testid="ficha-selo"]').exists()).toBe(false);
     expect(w.get('[data-testid="ficha-o-que-faz"]').text()).toContain(
       'Faz uma coisa.'
     );
@@ -63,7 +61,6 @@ describe('FichaSistema', () => {
       { id: 9, nome: 'Lembretes de reunião', modo: 'sombra', ativo: false },
     ];
     const w = montar({ fixa: false, ficha: { ...FICHA, fluxos } });
-    expect(w.get('[data-testid="ficha-selo"]').text()).toBe('runs in a flow');
     expect(w.get('[data-testid="ficha-por-que"]').text()).toContain(
       'In a flow'
     );

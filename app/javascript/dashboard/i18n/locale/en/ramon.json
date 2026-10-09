@@ -2193,8 +2193,6 @@
         "FIXA_DICA": "Stays in code on purpose (decision of 10/08). Open the sheet to see why and how to ask for a change."
       },
       "FICHA": {
-        "SELO_FIXA": "fixed rule · stays in code",
-        "SELO_FLUXO": "runs in a flow",
         "O_QUE_FAZ": "What it does",
         "QUANDO": "When",
         "O_QUE_MEXE": "What it touches",
