@@ -88,6 +88,15 @@ RSpec.describe Ramon::Fluxos::Migracao do
     end
   end
 
+  it 'os 9 desenhos migrados (db/seeds/ramon/fluxos/migrados) seguem válidos, cada um no gatilho do seu grupo' do
+    fluxos = described_class::GRUPOS.keys.flat_map { |nome| described_class.semear(account, nome) }
+    expect(fluxos.map(&:sistema_chave)).to match_array(described_class::PASTA.glob('*.json').map { |f| f.basename('.json').to_s })
+    expect(fluxos.size).to eq(9)
+    erros = fluxos.to_h { |f| [f.sistema_chave, Ramon::Fluxos::Grafo.new(f.versao_publicada.grafo).erros] }
+    expect(erros.reject { |_chave, lista| lista.empty? }).to eq({})
+    expect(fluxos.to_h { |f| [f.sistema_chave, f.gatilho_tipo] }).to eq(described_class::GRUPOS.values.map { |g| g[:fluxos] }.reduce(:merge))
+  end
+
   it 'as 16 regras fixas de 08/10 não são mais migração; sobram as 7 que rodam no fluxo' do
     fixas = %w[criar_lead origem_lead sugestao_doc coach agente retrato_funil fechamento_extrato espelho_painel
                copiloto_noturno publicar_pecas avisos_painel assinatura_painel contrato_zapsign documento_painel
