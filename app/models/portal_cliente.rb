@@ -96,7 +96,7 @@ class PortalCliente < ApplicationRecord
   # [[processo, doc]] ainda não enviados, dos processos ativos (o que falta de verdade).
   # ponytail: 1 consulta de envios por processo; agrupar numa só se a lista crescer.
   def a_enviar
-    @a_enviar ||= processos.reject { |p| Ramon::PortalTexto.encerrado?(p['fase']) }
+    @a_enviar ||= processos.reject { |p| Ramon::PortalTexto.encerrado?(p) }
                            .flat_map { |p| pendentes_com_status(p).reject { |d| d['enviado'] }.map { |d| [p, d] } }
   end
 

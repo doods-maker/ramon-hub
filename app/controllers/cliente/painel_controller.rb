@@ -17,7 +17,7 @@ class Cliente::PainelController < Cliente::BaseController
   helper_method :pendencias, :a_enviar
 
   def show
-    @ativos, @encerrados = current_cliente.processos.partition { |p| !Ramon::PortalTexto.encerrado?(p['fase']) }
+    @ativos, @encerrados = current_cliente.processos.partition { |p| !Ramon::PortalTexto.encerrado?(p) }
     @assinaturas = current_cliente.assinaturas.pendentes
     tons = @ativos.map { |p| Ramon::PortalTexto.status(p).first }
     @resumo = { fazer: pendencias, andamento: tons.count { |t| %w[andamento analise].include?(t) }, aprovado: tons.count('aprovado') }

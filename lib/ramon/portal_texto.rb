@@ -3,7 +3,8 @@
 # Calculado no render: mudar o YAML não exige re-sincronizar o espelho.
 # PORTAL_TEXTOS_V2=on troca pelo dicionário v2 (portal_etapas_v2.yml: fases, linha do
 # tempo, flag de e-mail) — desligado até o "aprovado" do Eduardo nos textos.
-module Ramon::PortalTexto
+# ponytail: um módulo só pra toda a tradução do painel; separar a parte do tribunal se crescer mais.
+module Ramon::PortalTexto # rubocop:disable Metrics/ModuleLength
   FASE_ENCERRADA = 'ARQUIVAMENTO'.freeze
   PADRAO_V1 = { 'titulo' => 'Em andamento', 'o_que_esperar' => 'Nossa equipe está cuidando do seu caso.' }.freeze
   # Degrau opcional da linha do tempo → [fases atuais que o revelam, steps do ADVBOX que o revelam].
@@ -16,7 +17,8 @@ module Ramon::PortalTexto
 
   def self.carregar(arquivo)
     dados = YAML.load_file(Rails.root.join('config/ramon', arquivo))
-    dados.merge('marcos' => dados['marcos'].map { |m| m.merge('re' => Regexp.new(m['regex'], Regexp::IGNORECASE)) }).freeze
+    compilar = ->(regras) { Array(regras).map { |m| m.merge('re' => Regexp.new(m['regex'], Regexp::IGNORECASE)) } }
+    dados.merge('marcos' => compilar.call(dados['marcos']), 'tribunal' => compilar.call(dados['tribunal'])).freeze
   end
 
   V1 = carregar('portal_etapas.yml')
@@ -70,9 +72,47 @@ module Ramon::PortalTexto
     dados['etapas'].dig(normalizar(stage), 'email') != false
   end
 
-  def encerrado?(step)
-    normalizar(step) == FASE_ENCERRADA
+  # Encerrado = a equipe arquivou (grupo ARQUIVAMENTO) ou o tribunal deu baixa definitiva.
+  def encerrado?(processo)
+    normalizar(processo['fase']) == FASE_ENCERRADA || PortalCliente.etapa_cliente(processo) == ARQUIVADO
   end
+
+  ARQUIVADO = 'ARQUIVADO/ENCERRADO'.freeze
+  # Tarefa do ADVBOX com data (espelho 'agenda') → etapa do painel: [processo na Justiça, pedido no INSS].
+  AGENDA = { 'audiencia' => ['PAINEL AUDIENCIA MARCADA', 'PAINEL AUDIENCIA MARCADA'],
+             'pericia' => ['PAINEL PERICIA MARCADA', 'PERICIA AGENDADA'] }.freeze
+
+  # Etapa que o cliente vê (v2): do tribunal e das tarefas, nunca da coluna "etapa" do ADVBOX, que a equipe
+  # esquece de mover (Siemes/Ademir, 08/10). Exceção: arquivado pela equipe mostra o motivo (a etapa).
+  def etapa_real(processo)
+    return processo['etapa'] if normalizar(processo['fase']) == FASE_ENCERRADA
+
+    tribunal = processo.dig('tribunal', 'etapa')
+    agenda = Array(processo['agenda']).first
+    return tribunal if tribunal == ARQUIVADO
+    return AGENDA[agenda['tipo']][cnj?(processo) ? 0 : 1] if agenda
+
+    tribunal || etapa_sem_andamento(processo)
+  end
+
+  def etapa_sem_andamento(processo)
+    return 'ACAO PROTOCOLADA' if cnj?(processo)
+    return 'REQUERIMENTO PROTOCOLADO' if processo['protocolo'].present?
+
+    'DOCUMENTOS SOLICITADOS - MKT' if Array(processo['docs_pendentes']).any?
+  end
+
+  # Andamento mais recente que casa com uma regra de `tribunal` → { 'etapa', 'data' }; no mesmo dia vence a
+  # regra de cima. Guarda o do espelho anterior enquanto nada mais novo casar (o andamento sai da janela).
+  def tribunal(andamentos, anterior = nil)
+    achados = Array(andamentos).filter_map do |a|
+      regra = V2['tribunal'].find { |r| r['re'].match?(I18n.transliterate(a['titulo'].to_s)) }
+      { 'etapa' => regra['etapa'], 'data' => a['data'].to_s } if regra
+    end
+    (achados + [anterior].compact).max_by { |t| [t['data'], -V2['tribunal'].index { |r| r['etapa'] == t['etapa'] }.to_i] }
+  end
+
+  def cnj?(processo) = processo['numero'].to_s.gsub(/\D/, '').size == 20
 
   # Tipo do ADVBOX que só diz o procedimento, não o assunto: o painel não inventa título.
   TIPOS_SEM_ASSUNTO = ['PROCEDIMENTO DO JUIZADO ESPECIAL CIVEL', 'CUMPRIMENTO DE SENTENCA CONTRA FAZENDA PUBLICA',
@@ -89,7 +129,7 @@ module Ramon::PortalTexto
 
   # Nº com 20 dígitos = padrão CNJ; sem número, o grupo do ADVBOX decide.
   def onde(processo)
-    justica = processo['numero'].to_s.gsub(/\D/, '').size == 20 || DEGRAUS_OPCIONAIS['justica'][1].include?(normalizar(processo['fase']))
+    justica = cnj?(processo) || DEGRAUS_OPCIONAIS['justica'][1].include?(normalizar(processo['fase']))
     justica ? 'Processo na Justiça' : 'Pedido no INSS'
   end
 
@@ -105,7 +145,7 @@ module Ramon::PortalTexto
 
   # [tom, rótulo] do selo: aprovado (verde) · analise/concluido (pedra) · andamento (ouro).
   def status(processo)
-    return %w[concluido Concluído] if encerrado?(processo['fase'])
+    return %w[concluido Concluído] if encerrado?(processo)
 
     stage = normalizar(PortalCliente.etapa_cliente(processo))
     return ['aprovado', ETAPAS_POSITIVAS[stage]] if ETAPAS_POSITIVAS.key?(stage)
@@ -132,14 +172,15 @@ module Ramon::PortalTexto
   # Guardar as fases vistas no espelho (PortalNovidades) resolve, se incomodar.
   def linha_do_tempo(processo)
     atual = fase_de(PortalCliente.etapa_cliente(processo), processo['fase']) || 'documentos'
-    fases = V2['fases'].select { |f| degrau_visivel?(f['chave'], atual, processo['fase']) }
+    fases = V2['fases'].select { |f| degrau_visivel?(f['chave'], atual, processo) }
     posicao = fases.index { |f| f['chave'] == atual }
     fases.each_with_index.map { |f, i| f.slice('chave', 'nome', 'frase').merge('estado' => estado(i, posicao)) }
   end
 
-  def degrau_visivel?(chave, atual, step)
+  # Processo com nº CNJ passou pela Justiça mesmo que o degrau atual já seja outro (ex.: pagamento).
+  def degrau_visivel?(chave, atual, processo)
     fases, steps = DEGRAUS_OPCIONAIS[chave]
-    fases.nil? || fases.include?(atual) || steps.include?(normalizar(step))
+    fases.nil? || fases.include?(atual) || steps.include?(normalizar(processo['fase'])) || (chave == 'justica' && cnj?(processo))
   end
 
   def estado(indice, posicao)

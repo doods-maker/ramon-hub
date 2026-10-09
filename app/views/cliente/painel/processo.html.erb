@@ -34,6 +34,11 @@
         <p class="eyebrow">Seu caso agora</p>
         <h1><%= @etapa['titulo'] %></h1>
         <p class="texto"><%= @etapa['o_que_esperar'] %></p>
+        <% Array(@processo['agenda']).each do |a| %>
+          <% quando = Time.zone.parse(a['quando']) %>
+          <p class="texto"><strong><%= a['tipo'] == 'audiencia' ? 'Audiência' : 'Perícia' %>:</strong>
+            <%= quando.strftime('%d/%m/%Y') %><% if quando.strftime('%H:%M') != '00:00' %> às <%= quando.strftime('%-Hh%M').delete_suffix('00') %><% end %><%= " · #{a['formato']}" if a['formato'] %></p>
+        <% end %>
         <% if @novidades.any? %><span class="badge badge-novo">Novidade</span><% end %>
       </div>
     </section>

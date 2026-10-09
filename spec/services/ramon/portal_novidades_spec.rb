@@ -44,6 +44,32 @@ RSpec.describe Ramon::PortalNovidades do
     expect(p['novidades'].map { |n| [n['tipo'], n['titulo']] }).to eq([%w[marco Perícia]])
   end
 
+  context 'with PORTAL_TEXTOS_V2=on (etapa do tribunal e das tarefas)' do
+    around { |ex| with_modified_env(PORTAL_TEXTOS_V2: 'on') { ex.run } }
+
+    let(:cnj) { '0000498-04.2012.8.24.0044' }
+    let(:audiencia) { [{ 'tipo' => 'audiencia', 'quando' => '2027-03-09 16:00:00', 'formato' => 'presencial' }] }
+
+    def judicial(extra = {}) = { 'id' => 1, 'etapa' => 'FASE DE INSTRUÇÃO', 'fase' => 'JUDICIAL', 'numero' => cnj, 'andamentos' => [] }.merge(extra)
+
+    it 'a coluna do ADVBOX não manda: audiência marcada aparece mesmo com a etapa em instrução' do
+      expect(described_class.aplicar(nil, judicial('agenda' => audiencia))['etapa_cliente']).to eq 'PAINEL AUDIENCIA MARCADA'
+    end
+
+    it '1º sync com a regra nova não avisa a troca; depois, audiência nova vira novidade com e-mail' do
+      migrado = described_class.aplicar(anterior, judicial)
+      expect(migrado['novidades']).to eq([])
+      p = described_class.aplicar(migrado, judicial('agenda' => audiencia))
+      expect(p['novidades'].map { |n| n.slice('tipo', 'titulo', 'email') })
+        .to eq([{ 'tipo' => 'etapa', 'titulo' => 'Audiência marcada', 'email' => true }])
+    end
+
+    it 'o achado do tribunal fica no espelho quando o andamento sai da janela' do
+      p = described_class.aplicar(nil, judicial('andamentos' => [{ 'data' => '2025-09-25', 'titulo' => 'Baixa Definitiva' }]))
+      expect(described_class.aplicar(p, judicial)['etapa_cliente']).to eq 'ARQUIVADO/ENCERRADO'
+    end
+  end
+
   it 'descarta novidade vista e avisada há mais de 30 dias' do
     velha = { 'tipo' => 'etapa', 'vista' => true, 'avisada' => true, 'em' => 40.days.ago.iso8601 }
     recente = velha.merge('em' => 1.day.ago.iso8601)

@@ -60,9 +60,10 @@ RSpec.describe Ramon::PortalTexto do
     expect(described_class.status({ 'etapa' => 'ARQUIVADO/ENCERRADO', 'fase' => 'ARQUIVAMENTO' })).to eq %w[concluido Concluído]
   end
 
-  it 'encerrado só na fase ARQUIVAMENTO' do
-    expect(described_class.encerrado?('ARQUIVAMENTO')).to be true
-    expect(described_class.encerrado?('RH/FINANCEIRO')).to be false
+  it 'encerrado: equipe arquivou (ARQUIVAMENTO) ou o tribunal deu baixa definitiva' do
+    expect(described_class.encerrado?({ 'fase' => 'ARQUIVAMENTO' })).to be true
+    expect(described_class.encerrado?({ 'fase' => 'RH/FINANCEIRO' })).to be false
+    expect(described_class.encerrado?({ 'fase' => 'JUDICIAL', 'etapa_cliente' => 'ARQUIVADO/ENCERRADO' })).to be true
   end
 
   it 'sem a chave v2 toda etapa manda e-mail (v1 não tem a flag)' do
@@ -137,6 +138,73 @@ RSpec.describe Ramon::PortalTexto do
     it 'linha do tempo segue a etapa exibida ao cliente, não a interna' do
       p = processo('NEGADO / AVISAR CLIENTE', 'JUDICIAL').merge('etapa_cliente' => 'ACAO PROTOCOLADA')
       expect(described_class.linha_do_tempo(p).find { |d| d['estado'] == 'current' }['nome']).to eq 'Justiça'
+    end
+
+    # Títulos reais do ADVBOX (TRF4/TJSC) dos casos que o Eduardo achou errados em 08/10.
+    def andamento(data, titulo) = { 'data' => data, 'titulo' => titulo }
+
+    it 'tribunal: cumprimento de sentença contra a Fazenda vira Pagamento, mesmo com sentença no mesmo dia' do
+      andamentos = [
+        andamento('2026-06-10', 'Expedida/certificada a intimação eletrônica - Acordo Homologado (EXEQUENTE - SIEMES ELISEU LINS) Prazo: 5 dias'),
+        andamento('2026-06-10', 'Classe Processual alterada - DE: PROCEDIMENTO COMUM PARA: Cumprimento de Sentença contra a Fazenda Pública'),
+        andamento('2026-09-09', 'Expedida/certificada a intimação eletrônica (EXEQUENTE - SIEMES ELISEU LINS) Prazo: 5 dias')
+      ]
+      expect(described_class.tribunal(andamentos)).to eq('etapa' => 'EXECUCAO COMO EXEQUENTE', 'data' => '2026-06-10')
+    end
+
+    it 'tribunal: baixa definitiva encerra; recurso julgado vence a sentença de antes' do
+      expect(described_class.tribunal([andamento('2025-09-25', 'Baixa Definitiva')])['etapa']).to eq 'ARQUIVADO/ENCERRADO'
+      andamentos = [andamento('2026-07-15', 'Julgado improcedente o pedido'),
+                    andamento('2026-08-27', 'Remetidos os Autos em grau de recurso para TR - Órgão Julgador: SCFLPTR02B'),
+                    andamento('2026-09-25', 'Sentença confirmada - por unanimidade')]
+      expect(described_class.tribunal(andamentos.first(2))['etapa']).to eq 'AGUARDANDO JULGAMENTO DO RECURSO'
+      expect(described_class.tribunal(andamentos)['etapa']).to eq 'RECURSO JULGADO'
+    end
+
+    it 'tribunal: andamento comum não muda nada e o achado do espelho anterior fica' do
+      comuns = [andamento('2026-09-23', 'Conclusos para decisão'), andamento('2026-08-30', 'PETIÇÃO - Refer. aos Eventos: 604, 605'),
+                andamento('2026-07-10', 'Juntada de Petição - EXECUÇÃO/CUMPRIMENTO DE SENTENÇA'),
+                andamento('2026-07-08', 'Expedida/certificada a intimação eletrônica - Requisição - Cumprimento - Implantar Benefício')]
+      expect(described_class.tribunal(comuns)).to be_nil
+      anterior = { 'etapa' => 'EXECUCAO COMO EXEQUENTE', 'data' => '2026-06-10' }
+      expect(described_class.tribunal(comuns, anterior)).to eq anterior
+    end
+
+    it 'marco Decisão não dispara com "Cumprimento de Sentença"' do
+      titulo = 'Classe Processual alterada - DE: PROCEDIMENTO COMUM PARA: Cumprimento de Sentença contra a Fazenda Pública'
+      expect(described_class.marcos([andamento('2026-06-10', titulo)])).to be_empty
+    end
+
+    it 'etapa real ignora a coluna do ADVBOX: agenda > tribunal > nº CNJ > protocolo INSS' do
+      ademir = { 'etapa' => 'FASE DE INSTRUÇÃO', 'fase' => 'JUDICIAL', 'numero' => '0000498-04.2012.8.24.0044',
+                 'agenda' => [{ 'tipo' => 'audiencia', 'quando' => '2027-03-09 16:00:00', 'formato' => 'presencial' }] }
+      expect(described_class.etapa_real(ademir)).to eq 'PAINEL AUDIENCIA MARCADA'
+      expect(described_class.etapa(described_class.etapa_real(ademir))['titulo']).to eq 'Audiência marcada'
+      expect(described_class.etapa_real(ademir.except('agenda'))).to eq 'ACAO PROTOCOLADA'
+
+      siemes = { 'etapa' => 'SENTENÇA PROFERIDA', 'fase' => 'JUDICIAL', 'numero' => '5000939-49.2025.4.04.7216',
+                 'tribunal' => { 'etapa' => 'EXECUCAO COMO EXEQUENTE', 'data' => '2026-06-10' } }
+      expect(described_class.etapa_real(siemes)).to eq 'EXECUCAO COMO EXEQUENTE'
+
+      inss = { 'etapa' => 'PERICIA AGENDADA', 'fase' => 'ADMINISTRATIVO', 'numero' => nil, 'protocolo' => '547629991' }
+      expect(described_class.etapa_real(inss)).to eq 'REQUERIMENTO PROTOCOLADO'
+      expect(described_class.etapa_real(inss.merge('agenda' => [{ 'tipo' => 'pericia', 'quando' => '2026-11-03 09:00:00' }])))
+        .to eq 'PERICIA AGENDADA'
+    end
+
+    it 'etapa real: baixa no tribunal encerra; arquivado pela equipe mostra o motivo' do
+      baixa = { 'etapa' => 'FASE DE INSTRUÇÃO', 'fase' => 'JUDICIAL', 'numero' => '5000384-66.2024.4.04.7216',
+                'tribunal' => { 'etapa' => 'ARQUIVADO/ENCERRADO', 'data' => '2025-09-25' } }
+      expect(described_class.etapa_real(baixa)).to eq 'ARQUIVADO/ENCERRADO'
+      equipe = { 'etapa' => 'ANALISADO E NÃO DISTRIBUÍDO', 'fase' => 'ARQUIVAMENTO', 'numero' => '5006509-72.2013.4.04.7204' }
+      expect(described_class.etapa_real(equipe)).to eq 'ANALISADO E NÃO DISTRIBUÍDO'
+    end
+
+    it 'linha do tempo do cumprimento de sentença: passou pela Justiça e está no Pagamento' do
+      p = processo('SENTENÇA PROFERIDA', 'JUDICIAL').merge('numero' => '5000939-49.2025.4.04.7216', 'etapa_cliente' => 'EXECUCAO COMO EXEQUENTE')
+      linha = described_class.linha_do_tempo(p)
+      expect(linha.pluck('nome')).to eq(['Documentos', 'Pedido no INSS', 'Justiça', 'Pagamento', 'Concluído'])
+      expect(linha.find { |d| d['estado'] == 'current' }['nome']).to eq 'Pagamento'
     end
   end
 end

@@ -5,8 +5,11 @@
 class Ramon::PortalSyncService
   TAREFA_SOLICITAR = 'SOLICITAR DOCUMENTOS'.freeze
   LIMITE_PROCESSOS = 10
-  LIMITE_ANDAMENTOS = 30
+  LIMITE_ANDAMENTOS = 100 # mesma 1 chamada; janela maior pra achar o andamento que define a fase
   LIMITE_TAREFAS = 50
+  # Tipos de tarefa do ADVBOX que são compromisso do cliente (os "ACOMPANHAR/AVISAR…" são internos).
+  TAREFAS_AGENDA = { 'AUDIENCIA DE INSTRUCAO/JULGAMENTO' => 'audiencia', 'AUDIENCIA DE CONCILIACAO' => 'audiencia',
+                     'PERICIA AGENDADA' => 'pericia' }.freeze
   # Sem autorização da IA (LGPD art. 33, VIII) o pedido aparece resumido.
   ITEM_SEM_IA = 'Documentos pedidos pela equipe (confira a lista com a equipe no WhatsApp)'.freeze
 
@@ -26,9 +29,11 @@ class Ramon::PortalSyncService
 
   def espelho(lawsuit)
     id = lawsuit['id']
+    tarefas = lista(Ramon::AdvboxClient.posts(lawsuit_id: id, limit: LIMITE_TAREFAS))
     {
       'id' => id,
       'numero' => lawsuit['process_number'],
+      'protocolo' => lawsuit['protocol_number'],
       'tipo' => lawsuit['type'],
       'inicio' => lawsuit['process_date'] || lawsuit['date'],
       'responsavel' => lawsuit['responsible'],
@@ -36,8 +41,28 @@ class Ramon::PortalSyncService
       'etapa' => lawsuit['stage'],
       'fase' => lawsuit['step'],
       'andamentos' => andamentos(id),
-      'docs_pendentes' => docs_pendentes(id)
+      'docs_pendentes' => docs_pendentes(tarefas),
+      'agenda' => agenda(tarefas)
     }
+  end
+
+  # Audiência/perícia marcada pela equipe, ainda por acontecer → mostrada ao cliente com data e formato.
+  def agenda(tarefas)
+    hoje = Date.current.iso8601
+    tarefas.filter_map do |p|
+      tipo = TAREFAS_AGENDA[Ramon::PortalTexto.normalizar(p['task'])]
+      next unless tipo && aberta?(p) && p['date'].to_s[0, 10] >= hoje
+
+      { 'tipo' => tipo, 'quando' => p['date'].to_s, 'formato' => formato(p['notes']) }
+    end.sort_by { |a| a['quando'] }
+  end
+
+  # ponytail: formato lido das observações da tarefa ("PRESENCIAL"); sem a palavra, o painel não diz.
+  def formato(notes)
+    texto = Ramon::PortalTexto.normalizar(notes)
+    return 'por vídeo' if texto.match?(/VIRTUAL|VIDEO|ONLINE|TELEPRESENCIAL/)
+
+    'presencial' if texto.include?('PRESENCIAL')
   end
 
   def andamentos(id)
@@ -49,8 +74,8 @@ class Ramon::PortalSyncService
   # tarefa, mas tolerante (acento/maiúscula/espaço) em vez de igualdade exata.
   # Os itens saem do LLM (Ramon::PortalDocsService); `digest` das observações
   # guarda o resultado no espelho pra não pagar a chamada de novo toda noite.
-  def docs_pendentes(id)
-    lista(Ramon::AdvboxClient.posts(lawsuit_id: id, limit: LIMITE_TAREFAS))
+  def docs_pendentes(tarefas)
+    tarefas
       .select { |p| Ramon::PortalTexto.normalizar(p['task']).include?(TAREFA_SOLICITAR) && aberta?(p) }
       .flat_map do |p|
         digest = Digest::SHA256.hexdigest("#{usa_ia? ? 'ia' : 'sem-ia'}#{p['notes']}")[0, 16]

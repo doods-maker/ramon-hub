@@ -297,6 +297,29 @@ etapas:
     email: true
     titulo: 'Processo concluído'
     o_que_esperar: 'Este processo foi concluído. Obrigado pela confiança. Se precisar de algo, fale com a equipe.'
+  # Etapas do PAINEL (não existem no ADVBOX): vêm da agenda (tarefa de audiência/perícia judicial com data).
+  'PAINEL AUDIENCIA MARCADA':
+    fase: justica
+    email: true
+    titulo: 'Audiência marcada'
+    o_que_esperar: 'A Justiça marcou uma audiência no seu processo. A data está logo abaixo. Antes dela, a equipe vai falar com você para explicar como vai ser e como se preparar.'
+  'PAINEL PERICIA MARCADA':
+    fase: justica
+    email: true
+    titulo: 'Perícia marcada'
+    o_que_esperar: 'A Justiça marcou uma perícia médica no seu processo. A data está logo abaixo. No dia, chegue cedo e leve documento com foto, laudos, exames e receitas. A equipe vai falar com você antes para orientar.'
+# A etapa que o cliente vê vem do TRIBUNAL e das TAREFAS, nunca da coluna do ADVBOX (decisão Eduardo, 08/10:
+# a equipe não move a etapa e o painel mostrava fase velha). Andamento → etapa do dicionário; vale o andamento
+# mais recente que casar; no mesmo dia, a regra de cima (mais avançada) vence. Sem regra: nº CNJ → Justiça.
+tribunal:
+  - { etapa: 'ARQUIVADO/ENCERRADO',              regex: 'baixa definitiva|arquivad[oa] definitivamente|arquivamento definitivo' }
+  - { etapa: 'RPV / PRECATORIO EMITIDO',          regex: '\bRPV\b|precat[óo]rio|requisi[çc][ãa]o de (pequeno valor|pagamento)' }
+  # Só a Fazenda/INSS pagando: cumprimento civil pode ser contra o cliente.
+  - { etapa: 'EXECUCAO COMO EXEQUENTE',           regex: 'contra a fazenda|execu[çc][ãa]o invertida' }
+  - { etapa: 'RECURSO JULGADO',                   regex: 'senten[çc]a (confirmada|reformada|anulada)|ac[óo]rd[ãa]o' }
+  - { etapa: 'AGUARDANDO JULGAMENTO DO RECURSO',  regex: 'em grau de recurso|recurso inominado|apela[çc][ãa]o|inclus[ãa]o em pauta' }
+  - { etapa: 'SENTENCA PROFERIDA',                regex: '(?<!cumprimento de )senten[çc]a|julgad[oa]s? (parcialmente )?(im)?procedente|acordo homologado|extint[oa] o processo' }
+  - { etapa: 'AUDIENCIA / PERICIA REALIZADA',     regex: 'laudo pericial|audi[êe]ncia.* realizada' }
 marcos:
   # Concessão NÃO é marco: "deferido/concedido" aparece em gratuidade, prazo, juntada…
   # (falso "Benefício concedido" no teste de 03/10). Concessão real = etapa
@@ -304,4 +327,4 @@ marcos:
   - { tipo: pericia,   regex: 'per[ií]cia',                    titulo: 'Perícia',            explicacao: 'Avaliação com um médico do INSS ou da Justiça para verificar a sua condição de saúde.' }
   - { tipo: audiencia, regex: 'audi[êe]ncia',                  titulo: 'Audiência',          explicacao: 'Encontro com o juiz. Ele ouve você e, se houver, as suas testemunhas.' }
   - { tipo: protocolo, regex: 'distribu[ií]d|protocol|autuad', titulo: 'Pedido entregue',    explicacao: 'O seu pedido foi entregue oficialmente, ao INSS ou à Justiça.' }
-  - { tipo: sentenca,  regex: 'senten[çc]a|ac[óo]rd[ãa]o',      titulo: 'Decisão',            explicacao: 'Saiu uma decisão no processo. A equipe explica o resultado para você.', delicada: true }
+  - { tipo: sentenca,  regex: '(?<!cumprimento de )senten[çc]a|ac[óo]rd[ãa]o', titulo: 'Decisão',            explicacao: 'Saiu uma decisão no processo. A equipe explica o resultado para você.', delicada: true }
