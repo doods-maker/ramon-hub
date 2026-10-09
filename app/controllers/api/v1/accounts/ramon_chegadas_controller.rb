@@ -15,9 +15,12 @@ class Api::V1::Accounts::RamonChegadasController < Api::V1::Accounts::BaseContro
       chegada_params.merge(criado_por: Current.user, destinatario: Current.account.users.find(params[:destinatario_id]))
     )
     # B5: pelo código (como sempre) ou pelo fluxo "Chegada de cliente" — espera do motor (3 a 4 min) — (RAMON_FLUXO_CHEGADA).
-    Ramon::Fluxos::Externos.evento('chegada_cliente', 'chegada_cliente', chegada) do
+    # A decisão é lida UMA vez (Migracao.decidir: o migrado com 'assumido', o código se ele não pegou); depois os fluxos
+    # comuns do gatilho, sem 'assumido' (Disparo::DUAS_VEZES).
+    Ramon::Fluxos::Migracao.decidir('chegada_cliente', 'chegada_cliente', chegada) do
       Ramon::ChegadaEscalarJob.set(wait: Chegada::ESCALAR_APOS).perform_later(chegada.id)
     end
+    Ramon::Fluxos::Disparo.externo('chegada_cliente', chegada)
     render json: chegada.push_event_data
   end
 
