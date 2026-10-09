@@ -78,14 +78,16 @@ module Ramon::PortalTexto # rubocop:disable Metrics/ModuleLength
   end
 
   ARQUIVADO = 'ARQUIVADO/ENCERRADO'.freeze
+  CONCEDIDO = 'BENEFICIO CONCEDIDO / IMPLANTACAO'.freeze
   # Tarefa do ADVBOX com data (espelho 'agenda') → etapa do painel: [processo na Justiça, pedido no INSS].
   AGENDA = { 'audiencia' => ['PAINEL AUDIENCIA MARCADA', 'PAINEL AUDIENCIA MARCADA'],
              'pericia' => ['PAINEL PERICIA MARCADA', 'PERICIA AGENDADA'] }.freeze
 
   # Etapa que o cliente vê (v2): do tribunal e das tarefas, nunca da coluna "etapa" do ADVBOX, que a equipe
-  # esquece de mover (Siemes/Ademir, 08/10). Exceção: arquivado pela equipe mostra o motivo (a etapa).
+  # esquece de mover (Siemes/Ademir, 08/10). Exceções (a etapa vale): arquivado pela equipe mostra o motivo, e o
+  # benefício concedido pelo INSS — pedido administrativo não tem andamento no ADVBOX (Eduardo, 08/10).
   def etapa_real(processo)
-    return processo['etapa'] if normalizar(processo['fase']) == FASE_ENCERRADA
+    return processo['etapa'] if normalizar(processo['fase']) == FASE_ENCERRADA || normalizar(processo['etapa']) == CONCEDIDO
 
     tribunal = processo.dig('tribunal', 'etapa')
     agenda = Array(processo['agenda']).first

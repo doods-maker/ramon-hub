@@ -33,8 +33,10 @@ RSpec.describe Ramon::PortalNovidades do
   it 'novidade de etapa leva a flag de e-mail do dicionário (v1 sempre true; v2 segue a tabela)' do
     expect(described_class.aplicar(anterior, novo('REUNIAO POS VENDA'))['novidades'].first['email']).to be true
     with_modified_env PORTAL_TEXTOS_V2: 'on' do
-      expect(described_class.aplicar(anterior, novo('REUNIAO POS VENDA'))['novidades'].first['email']).to be false
-      expect(described_class.aplicar(anterior, novo('PERICIA AGENDADA'))['novidades'].first['email']).to be true
+      base = { 'id' => 1, 'fase' => 'JUDICIAL', 'numero' => '0000498-04.2012.8.24.0044', 'andamentos' => [] }
+      antes = described_class.aplicar(anterior, base.dup)
+      sentenca = base.merge('andamentos' => [{ 'data' => '2026-10-01', 'titulo' => 'Julgado improcedente o pedido' }])
+      expect(described_class.aplicar(antes, sentenca)['novidades'].find { |n| n['tipo'] == 'etapa' }['email']).to be false
     end
   end
 

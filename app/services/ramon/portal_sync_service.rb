@@ -49,12 +49,13 @@ class Ramon::PortalSyncService
   # Audiência/perícia marcada pela equipe, ainda por acontecer → mostrada ao cliente com data e formato.
   def agenda(tarefas)
     hoje = Date.current.iso8601
-    tarefas.filter_map do |p|
+    itens = tarefas.filter_map do |p|
       tipo = TAREFAS_AGENDA[Ramon::PortalTexto.normalizar(p['task'])]
       next unless tipo && aberta?(p) && p['date'].to_s[0, 10] >= hoje
 
       { 'tipo' => tipo, 'quando' => p['date'].to_s, 'formato' => formato(p['notes']) }
-    end.sort_by { |a| a['quando'] }
+    end
+    itens.sort_by { |a| a['quando'] }
   end
 
   # ponytail: formato lido das observações da tarefa ("PRESENCIAL"); sem a palavra, o painel não diz.
