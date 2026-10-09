@@ -49,10 +49,14 @@ module Ramon::Fluxos::Relogio
     agora >= agora.change(hour: hora, min: minuto)
   end
 
-  # Marca o dia ANTES de disparar, num UPDATE condicional: dois relógios no mesmo minuto não duplicam.
-  def reivindicar_dia(fluxo, agora)
-    Fluxo.where(id: fluxo.id).where('ultimo_disparo_em IS NULL OR ultimo_disparo_em < ?', agora.beginning_of_day)
-         .update_all(ultimo_disparo_em: agora) == 1 # rubocop:disable Rails/SkipsModelValidations
+  def reivindicar_dia(fluxo, agora) = reivindicar(Fluxo.where(id: fluxo.id), agora, agora.beginning_of_day)
+
+  # Marca a vez ANTES de disparar, num UPDATE condicional: dois relógios no mesmo minuto não duplicam. `vez` = o fluxo
+  # (Fluxo.where(id:), com o filtro a mais de quem chama); a vez anterior tem de ser de antes de `desde`. Também o
+  # Horário da conta (HorarioConta.reivindicar) e o cron da cadência (DailyFollowUpJob, via reivindicar_dia).
+  def reivindicar(vez, agora, desde)
+    vez.where('ultimo_disparo_em IS NULL OR ultimo_disparo_em < ?', desde)
+       .update_all(ultimo_disparo_em: agora) == 1 # rubocop:disable Rails/SkipsModelValidations
   end
 
   def grupo(fluxo, config, agora)

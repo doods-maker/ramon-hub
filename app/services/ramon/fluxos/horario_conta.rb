@@ -46,19 +46,14 @@ module Ramon::Fluxos::HorarioConta
     intervalo(config).present? || agora >= hora_de_hoje(config, agora)
   end
 
-  # ponytail: o predicado "por dia" repete o de Ramon::Fluxos::Relogio.reivindicar_dia (B4.3), de propósito para não
-  # mexer na B4.3 — 2 lugares com a mesma regra; unificar aqui se o relógio dos leads for revisto.
+  # O mesmo UPDATE condicional do relógio dos leads (Ramon::Fluxos::Relogio.reivindicar).
   def reivindicar(fluxo, agora)
     config = config(fluxo)
     n = intervalo(config)
     vez = Fluxo.where(id: fluxo.id)
-    vez = if n
-            vez.where('ultimo_disparo_em IS NULL OR ultimo_disparo_em < ?', agora.beginning_of_minute - (n - 1).minutes)
-          else
-            vez.where(created_at: ...hora_de_hoje(config, agora))
-               .where('ultimo_disparo_em IS NULL OR ultimo_disparo_em < ?', agora.beginning_of_day)
-          end
-    vez.update_all(ultimo_disparo_em: agora) == 1 # rubocop:disable Rails/SkipsModelValidations
+    return Ramon::Fluxos::Relogio.reivindicar(vez, agora, agora.beginning_of_minute - (n - 1).minutes) if n
+
+    Ramon::Fluxos::Relogio.reivindicar(vez.where(created_at: ...hora_de_hoje(config, agora)), agora, agora.beginning_of_day)
   end
 
   def dias(config) = config.key?('dias') ? Array(config['dias']).map(&:to_i) : DIAS
