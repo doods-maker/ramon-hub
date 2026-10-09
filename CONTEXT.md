@@ -152,6 +152,7 @@ _Avoid_: ação automática
 **Execução**:
 O registro auditável de uma Tool invocada: quando, com o quê, o que voltou,
 quanto demorou.
+_Avoid_: confundir com Execução de fluxo (a passada de um Fluxo, ver Automações)
 
 **Modo do Copiloto**:
 O grau de autonomia da IA numa conversa específica: manual (não age),
@@ -167,6 +168,105 @@ Página da web ou texto colado que o administrador cadastra para **gerar FAQs
 pendentes**. O *Assistente* não lê o documento: ele só usa as FAQs depois de
 aprovadas (decisão D4, 16/08/2026). Distinto de Documento do cliente no Checklist.
 _Avoid_: usar "documento" sem qualificar quando o contexto for pós-venda
+
+**Memória do contato**:
+A nota "MEMÓRIA DA IA" que a IA grava no Lead ao resolver uma conversa, com o
+que vale lembrar da pessoa (benefício de interesse, trabalho, datas,
+documentos, objeções). Nunca guarda dado de saúde nem dado pessoal (ADR 0007).
+Não é a Colheita (que extrai os dados do caso durante a conversa) nem uma Nota
+escrita por pessoa.
+_Avoid_: memória (sem qualificar), resumo da conversa
+
+### Automações
+
+**Fluxo**:
+Uma automação desenhada no quadro da Inteligência: um Gatilho e os Passos
+ligados por setas, de cima para baixo. Só administrador monta; mensagem ao
+cliente sai sempre como rascunho. Não é a Automação nativa do Chatwoot (saiu do
+menu) nem a Cadência (o ritmo de follow-up, que um fluxo executa).
+_Avoid_: automação (sem qualificar), regra, workflow, n8n
+
+**Gatilho**:
+O evento que começa um Fluxo — exatamente um por fluxo (conversa nova, lead
+parado, reunião marcada, Horário da conta, rodar na mão…). Define o alvo da
+execução: lead, conversa, a conta ou o registro de um evento de fora do funil.
+_Avoid_: evento, trigger
+
+**Passo**:
+Uma caixinha do Fluxo depois do Gatilho: condição (se, escolha), espera,
+controle ou ação (mover etapa, rascunho, sino, tarefa, Rotina pronta…).
+_Avoid_: nó, etapa (Etapa é do Funil), ação (ação é um tipo de passo)
+
+**Rotina pronta**:
+Um Passo que chama um pedaço do código do hub como está (dossiê de passagem,
+NPS, abrir caso no ADVBOX, resumo do dia, escalar a chegada). Encaixa no
+fluxo, mas o que ela faz por dentro não se edita na tela.
+_Avoid_: rotina (sem qualificar), job
+
+**Execução de fluxo**:
+Uma passada de um Fluxo por um alvo, com a Trilha dos passos por onde andou.
+Roda na versão publicada em que começou. O **ensaio** é a execução de mentira:
+avalia as condições num alvo real, descreve as ações e não executa nada.
+_Avoid_: Execução (é o registro de uma Tool da IA), teste, simulação
+
+**Fluxo do sistema**:
+O desenho só-leitura, na aba "Do sistema", de uma das 29 automações que
+vivem no código. Nunca roda pelo motor; existe para mostrar e para levar a
+Ficha. Cada um tem um selo: "roda no fluxo" (há um Fluxo migrado que roda) ou
+"regra fixa".
+_Avoid_: fluxo padrão, modelo (modelo é ponto de partida de fluxo novo)
+
+**Fluxo migrado**:
+Um Fluxo comum que assumiu uma automação do código, marcado com a chave da
+automação que substitui (`sistema_chave`). Editável como qualquer fluxo, mas
+só age quando a Chave está virada; senão, quem faz é o código.
+_Avoid_: fluxo do sistema (é o desenho só-leitura)
+
+**Modo sombra / normal**:
+O modo de um Fluxo. Em **normal** ele age; em **sombra** cada execução é
+ensaio — no Fluxo migrado, sombra quer dizer "o código está no comando".
+Não é ligado/desligado: um fluxo desligado não roda nem em sombra.
+_Avoid_: rascunho (rascunho é a mensagem ao cliente ou o desenho não publicado)
+
+**Chave (de migração)**:
+A condição para um Fluxo migrado estar no comando: a variável de ambiente da
+automação ligada **e** os fluxos dela ligados, publicados, em modo normal, com
+o gatilho certo e sem limite do dia. Qualquer peça fora devolve o comando ao
+código. Vira e volta por comando na VPS, sem deploy.
+_Avoid_: flag, interruptor (o interruptor da tela é só "ligado")
+
+**Reserva pelo código**:
+Quando o Fluxo migrado está no comando mas não começou aquele evento (ocupado
+com o mesmo alvo, filtro editado, erro do motor), o código faz o evento como
+antes — nunca em dobro, nunca nenhum (ADR 0005). Execução que começou e falhou
+não aciona a reserva.
+_Avoid_: fallback, plano B
+
+**Regra fixa**:
+Uma das automações do sistema que fica no código de propósito (22 das 29),
+com o selo "regra fixa" na aba Do sistema. Não vira fluxo; para mudar, pede-se
+ao Claude. Para acrescentar comportamento ao mesmo evento, usa-se um Fluxo
+comum no mesmo Gatilho (ADR 0006).
+_Avoid_: legado, "ainda não migrada"
+
+**Ficha**:
+O cartão em linguagem simples de cada uma das 29 automações do sistema: o que
+faz, quando, o que mexe, travas, por que está onde está e como pedir mudança;
+nas que rodam no fluxo, o link para o Fluxo de verdade.
+_Avoid_: documentação, "Como roda hoje" (é o detalhe técnico, por baixo da ficha)
+
+**Gatilho de fora do funil**:
+Gatilho cujo alvo não é lead nem conversa, e sim o registro de um evento
+(assinatura e documento pelo Painel, reunião gravada, peça publicada, peça
+mudou de status). Existe para os fluxos comuns do Eduardo; só aceita Passos que
+rodam sem lead.
+_Avoid_: gatilho externo, webhook
+
+**Horário da conta**:
+O Gatilho de relógio cujo alvo é a própria conta: uma vez por dia a partir de
+uma hora, ou a cada N minutos, nos dias escolhidos (fuso de São Paulo). Também
+só aceita Passos sem lead.
+_Avoid_: cron, agendamento (agendamento é o de reunião)
 
 ### Atendimento do escritório
 
