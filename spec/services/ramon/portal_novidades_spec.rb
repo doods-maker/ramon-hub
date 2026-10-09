@@ -66,6 +66,24 @@ RSpec.describe Ramon::PortalNovidades do
         .to eq([{ 'tipo' => 'etapa', 'titulo' => 'Audiência marcada', 'email' => true }])
     end
 
+    it 'audiência que passou (agenda sai) não vira novidade nem e-mail de "Processo na Justiça"' do
+      marcada = described_class.aplicar(described_class.aplicar(anterior, judicial), judicial('agenda' => audiencia))
+      expect(described_class.aplicar(marcada, judicial)['novidades'].count { |n| n['tipo'] == 'etapa' }).to eq 1
+    end
+
+    it 'processo que ganhou nº CNJ (saiu de documentos) é novidade com e-mail' do
+      docs = described_class.aplicar(anterior, judicial('numero' => nil, 'fase' => 'MARKETING', 'docs_pendentes' => [{ 'item' => 'RG' }]))
+      novidade = described_class.aplicar(docs, judicial)['novidades'].first
+      expect(novidade.slice('titulo', 'email')).to eq('titulo' => 'Processo na Justiça', 'email' => true)
+    end
+
+    it 'baixa no tribunal aparece, mas sem e-mail (só a equipe arquivando manda o "concluído")' do
+      migrado = described_class.aplicar(anterior, judicial)
+      baixa = judicial('andamentos' => [{ 'data' => '2026-10-01', 'titulo' => 'Baixa Definitiva' }])
+      expect(described_class.aplicar(migrado, baixa)['novidades'].first.slice('titulo', 'email'))
+        .to eq('titulo' => 'Processo concluído', 'email' => false)
+    end
+
     it 'o achado do tribunal fica no espelho quando o andamento sai da janela' do
       p = described_class.aplicar(nil, judicial('andamentos' => [{ 'data' => '2025-09-25', 'titulo' => 'Baixa Definitiva' }]))
       expect(described_class.aplicar(p, judicial)['etapa_cliente']).to eq 'ARQUIVADO/ENCERRADO'

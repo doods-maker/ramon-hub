@@ -149,25 +149,58 @@ RSpec.describe Ramon::PortalTexto do
         andamento('2026-06-10', 'Classe Processual alterada - DE: PROCEDIMENTO COMUM PARA: Cumprimento de Sentença contra a Fazenda Pública'),
         andamento('2026-09-09', 'Expedida/certificada a intimação eletrônica (EXEQUENTE - SIEMES ELISEU LINS) Prazo: 5 dias')
       ]
-      expect(described_class.tribunal(andamentos)).to eq('etapa' => 'EXECUCAO COMO EXEQUENTE', 'data' => '2026-06-10')
+      expect(described_class.achado_do_tribunal(andamentos)).to eq('etapa' => 'EXECUCAO COMO EXEQUENTE', 'data' => '2026-06-10',
+                                                                   'titulo' => andamentos[1]['titulo'])
     end
 
     it 'tribunal: baixa definitiva encerra; recurso julgado vence a sentença de antes' do
-      expect(described_class.tribunal([andamento('2025-09-25', 'Baixa Definitiva')])['etapa']).to eq 'ARQUIVADO/ENCERRADO'
+      expect(described_class.achado_do_tribunal([andamento('2025-09-25', 'Baixa Definitiva')])['etapa']).to eq 'ARQUIVADO/ENCERRADO'
       andamentos = [andamento('2026-07-15', 'Julgado improcedente o pedido'),
                     andamento('2026-08-27', 'Remetidos os Autos em grau de recurso para TR - Órgão Julgador: SCFLPTR02B'),
                     andamento('2026-09-25', 'Sentença confirmada - por unanimidade')]
-      expect(described_class.tribunal(andamentos.first(2))['etapa']).to eq 'AGUARDANDO JULGAMENTO DO RECURSO'
-      expect(described_class.tribunal(andamentos)['etapa']).to eq 'RECURSO JULGADO'
+      expect(described_class.achado_do_tribunal(andamentos.first(2))['etapa']).to eq 'AGUARDANDO JULGAMENTO DO RECURSO'
+      expect(described_class.achado_do_tribunal(andamentos)['etapa']).to eq 'RECURSO JULGADO'
     end
 
     it 'tribunal: andamento comum não muda nada e o achado do espelho anterior fica' do
       comuns = [andamento('2026-09-23', 'Conclusos para decisão'), andamento('2026-08-30', 'PETIÇÃO - Refer. aos Eventos: 604, 605'),
                 andamento('2026-07-10', 'Juntada de Petição - EXECUÇÃO/CUMPRIMENTO DE SENTENÇA'),
                 andamento('2026-07-08', 'Expedida/certificada a intimação eletrônica - Requisição - Cumprimento - Implantar Benefício')]
-      expect(described_class.tribunal(comuns)).to be_nil
-      anterior = { 'etapa' => 'EXECUCAO COMO EXEQUENTE', 'data' => '2026-06-10' }
-      expect(described_class.tribunal(comuns, anterior)).to eq anterior
+      expect(described_class.achado_do_tribunal(comuns)).to be_nil
+      anterior = { 'etapa' => 'EXECUCAO COMO EXEQUENTE', 'data' => '2026-06-10',
+                   'titulo' => 'Classe alterada para Cumprimento de Sentença contra a Fazenda' }
+      expect(described_class.achado_do_tribunal(comuns, anterior)).to eq anterior
+    end
+
+    it 'tribunal: "conclusos para sentença" e "audiência não realizada" não mudam a fase nem viram marco' do
+      ['Conclusos para sentença', 'Audiência de instrução não realizada', 'Intimação para manifestação sobre laudo pericial'].each do |t|
+        expect(described_class.achado_do_tribunal([andamento('2026-10-01', t)])).to be_nil
+      end
+      expect(described_class.marcos([andamento('2026-10-01', 'Conclusos para sentença')])).to be_empty
+    end
+
+    it 'tribunal: no pagamento, sentença ou acórdão depois não devolve a fase; RPV e baixa avançam' do
+      cumprimento = andamento('2026-06-10', 'Classe Processual alterada - PARA: Cumprimento de Sentença contra a Fazenda Pública')
+      depois = [andamento('2026-08-01', 'Expedida/certificada a intimação eletrônica - Sentença (EXEQUENTE - FULANO)'),
+                andamento('2026-08-05', 'Juntada de Relatório/Voto/Acórdão')]
+      expect(described_class.achado_do_tribunal([cumprimento] + depois)['etapa']).to eq 'EXECUCAO COMO EXEQUENTE'
+      rpv = andamento('2026-09-01', 'Expedida Requisição de Pequeno Valor - RPV')
+      expect(described_class.achado_do_tribunal([cumprimento, rpv] + depois)['etapa']).to eq 'RPV / PRECATORIO EMITIDO'
+      expect(described_class.achado_do_tribunal([cumprimento, andamento('2026-10-01', 'Baixa Definitiva')])['etapa']).to eq 'ARQUIVADO/ENCERRADO'
+    end
+
+    it 'tribunal: achado gravado com regra antiga é reavaliado pelo título (corrigir o YAML corrige o espelho)' do
+      errado = { 'etapa' => 'SENTENCA PROFERIDA', 'data' => '2026-09-01', 'titulo' => 'Conclusos para sentença' }
+      expect(described_class.achado_do_tribunal([], errado)).to be_nil
+      expect(described_class.achado_do_tribunal([], errado.except('titulo'))).to be_nil
+    end
+
+    it 'etapa real: baixa definitiva com andamento depois (autos voltaram à origem) não encerra' do
+      p = { 'etapa' => 'X', 'fase' => 'JUDICIAL', 'numero' => '5000384-66.2024.4.04.7216',
+            'tribunal' => { 'etapa' => 'ARQUIVADO/ENCERRADO', 'data' => '2025-09-25' },
+            'andamentos' => [andamento('2025-10-02', 'Recebidos os autos'), andamento('2025-09-25', 'Baixa Definitiva')] }
+      expect(described_class.etapa_real(p)).to eq 'ACAO PROTOCOLADA'
+      expect(described_class.etapa_real(p.merge('andamentos' => p['andamentos'].last(1)))).to eq 'ARQUIVADO/ENCERRADO'
     end
 
     it 'marco Decisão não dispara com "Cumprimento de Sentença"' do
