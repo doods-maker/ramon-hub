@@ -34,7 +34,6 @@ class Peca < ApplicationRecord
   end
 
   # FluxoExecucao#alvo_nome
-
   def nome_de_alvo = "Peça: #{gancho}"
 
   def publicacao_ambigua?

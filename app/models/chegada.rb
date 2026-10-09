@@ -39,7 +39,6 @@ class Chegada < ApplicationRecord
   end
 
   # FluxoExecucao#alvo_nome
-
   def nome_de_alvo = "Chegada: #{cliente_nome}"
 
   # Sem resposta e ainda não escalada (Ramon::ChegadaEscalarJob e a rotina do fluxo "Chegada de cliente", B5).
