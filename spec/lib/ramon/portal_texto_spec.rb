@@ -188,11 +188,14 @@ RSpec.describe Ramon::PortalTexto do
 
       inss = { 'etapa' => 'PERICIA AGENDADA', 'fase' => 'ADMINISTRATIVO', 'numero' => nil, 'protocolo' => '547629991' }
       expect(described_class.etapa_real(inss)).to eq 'REQUERIMENTO PROTOCOLADO'
-      concedido = inss.merge('etapa' => 'BENEFÍCIO CONCEDIDO / IMPLANTAÇÃO')
-      expect(described_class.etapa_real(concedido)).to eq 'BENEFÍCIO CONCEDIDO / IMPLANTAÇÃO'
-      expect(described_class.status(concedido.merge('etapa_cliente' => described_class.etapa_real(concedido)))).to eq %w[aprovado Aprovado]
       expect(described_class.etapa_real(inss.merge('agenda' => [{ 'tipo' => 'pericia', 'quando' => '2026-11-03 09:00:00' }])))
         .to eq 'PERICIA AGENDADA'
+    end
+
+    it 'etapa real: benefício concedido marcado pela equipe vale (selo verde)' do
+      concedido = { 'etapa' => 'BENEFÍCIO CONCEDIDO / IMPLANTAÇÃO', 'fase' => 'ADMINISTRATIVO', 'numero' => nil, 'protocolo' => '547629991' }
+      expect(described_class.etapa_real(concedido)).to eq 'BENEFÍCIO CONCEDIDO / IMPLANTAÇÃO'
+      expect(described_class.status(concedido.merge('etapa_cliente' => described_class.etapa_real(concedido)))).to eq %w[aprovado Aprovado]
     end
 
     it 'etapa real: baixa no tribunal encerra; arquivado pela equipe mostra o motivo' do
