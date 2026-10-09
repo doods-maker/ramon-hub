@@ -9,10 +9,15 @@
 module Ramon::Fluxos::HorarioConta
   GATILHO = 'horario_conta'.freeze
   PASSOS = %w[se escolha esperar parar avisar_push rotina].freeze # os que rodam sem lead
+  # Gatilhos sem lead → alvo: a conta (Horário da conta) ou o registro de um evento de fora do funil (B5-externos —
+  # FluxoExecucao.lead_de não dá lead). Neles só entram os PASSOS, e só rotina do mesmo alvo.
+  SEM_LEAD_ALVOS = { GATILHO => 'conta' }.merge(
+    %w[assinatura_painel documento_painel chegada_cliente reuniao_gravada peca_publicada peca_mudou_status].index_with('outro')
+  ).freeze
   DIAS = (0..6).to_a.freeze
   INTERVALO = (1..1440)
   QUANDO = 'O Horário da conta precisa de uma hora (HH:MM) ou de "a cada N minutos" (1 a 1440), e de pelo menos um dia'.freeze
-  SEM_LEAD = 'precisa de um lead — no Horário da conta só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta'.freeze
+  SEM_LEAD = 'precisa de um lead — neste gatilho só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta'.freeze
 
   module_function
 
@@ -71,12 +76,13 @@ module Ramon::Fluxos::HorarioConta
     agora.change(hour: hora, min: minuto)
   end
 
-  # Publicar (Grafo#erros): o "quando" do Horário da conta, os passos que rodam sem lead e a rotina do alvo certo.
+  # Publicar (Grafo#erros): o "quando" do Horário da conta; nos gatilhos sem lead, só os passos que rodam sem lead;
+  # em todos, a rotina do alvo certo.
   def erros(grafo)
     gatilho = grafo.gatilho || {}
-    conta = gatilho.dig('config', 'tipo') == GATILHO
-    erros = conta && !quando_valido?(gatilho['config']) ? [QUANDO] : []
-    erros + grafo.nos.flat_map { |passo| erros_no(passo, conta) }
+    tipo = gatilho.dig('config', 'tipo')
+    erros = tipo == GATILHO && !quando_valido?(gatilho['config']) ? [QUANDO] : []
+    erros + grafo.nos.flat_map { |passo| erros_no(passo, SEM_LEAD_ALVOS[tipo]) }
   end
 
   def quando_valido?(config)
@@ -85,23 +91,26 @@ module Ramon::Fluxos::HorarioConta
     ok && (!config.key?('dias') || (dias(config).any? && (dias(config) - DIAS).empty?))
   end
 
-  def erros_no(passo, conta)
+  # alvo = 'conta' | 'outro' (gatilho sem lead) | nil (lead/conversa)
+  def erros_no(passo, alvo)
     return [] if passo['tipo'] == 'gatilho'
-    return ["Passo #{passo['id']}: #{SEM_LEAD}"] if conta && PASSOS.exclude?(passo['tipo'])
+    return ["Passo #{passo['id']}: #{SEM_LEAD}"] if alvo && PASSOS.exclude?(passo['tipo'])
 
     nome = passo.dig('config', 'rotina')
-    passo['tipo'] == 'rotina' && nome.present? ? erros_rotina(passo['id'], nome, conta) : []
+    passo['tipo'] == 'rotina' && nome.present? ? erros_rotina(passo['id'], nome, alvo) : []
   end
 
-  def erros_rotina(id, nome, conta)
+  def erros_rotina(id, nome, alvo_gatilho)
     alvo = Ramon::Fluxos::Rotinas.alvo(nome)
     return ["Passo #{id}: rotina desconhecida (#{nome})"] if alvo.nil?
-    return [] if (alvo == 'conta') == conta
+    return [] if (SEM_LEAD_ALVOS.value?(alvo) ? alvo : nil) == alvo_gatilho
 
-    if conta
+    if alvo_gatilho == 'conta'
       ["Passo #{id}: esta rotina não é da conta (precisa de um lead ou de outro evento) — não roda no Horário da conta"]
-    else
+    elsif alvo == 'conta'
       ["Passo #{id}: esta rotina é da conta toda — só roda no gatilho Horário da conta"]
+    else
+      ["Passo #{id}: esta rotina é de outro alvo (lead ou evento de fora do funil) — não roda neste gatilho"]
     end
   end
 end

@@ -142,11 +142,32 @@ RSpec.describe Ramon::Fluxos::Grafo do
 
     it 'só entram os passos que rodam sem lead; rotina de lead ou desconhecida não publica' do
       expect(conta({ 'hora' => '08:00' }, ['mover_etapa', { 'etapa_id' => 1 }]))
-        .to eq(['Passo p1: precisa de um lead — no Horário da conta só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta'])
+        .to eq(['Passo p1: precisa de um lead — neste gatilho só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta'])
       expect(conta({ 'hora' => '08:00' }, ['rotina', { 'rotina' => 'dossie_passagem' }]))
         .to eq(['Passo p1: esta rotina não é da conta (precisa de um lead ou de outro evento) — não roda no Horário da conta'])
       expect(grafo(grafo_linear({ 'tipo' => 'manual' }, ['rotina', { 'rotina' => 'xyz' }])).erros)
         .to eq(['Passo p1: rotina desconhecida (xyz)'])
+    end
+  end
+
+  describe 'gatilhos de fora do funil (alvo outro, sem lead)' do
+    def erros_de(tipo, *passos) = grafo(grafo_linear({ 'tipo' => tipo }, *passos)).erros
+
+    it 'passo que precisa de lead não publica (o sino numa peça publicada falharia em toda execução)' do
+      expect(erros_de('peca_publicada', ['avisar_sino', { 'texto' => 'oi' }]))
+        .to eq(['Passo p1: precisa de um lead — neste gatilho só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta'])
+      expect(erros_de('assinatura_painel', ['avisar_push', { 'texto' => 'oi' }], ['parar', {}])).to eq([])
+    end
+
+    it 'só rotina do mesmo alvo: de lead não entra aqui, a da chegada não entra em gatilho de lead' do
+      outro_alvo = ['Passo p1: esta rotina é de outro alvo (lead ou evento de fora do funil) — não roda neste gatilho']
+      expect(erros_de('chegada_cliente', ['rotina', { 'rotina' => 'dossie_passagem' }])).to eq(outro_alvo)
+      expect(erros_de('manual', ['rotina', { 'rotina' => 'escalar_chegada' }])).to eq(outro_alvo)
+    end
+
+    it 'o desenho da Chegada de cliente (no ar: esperar → escalar a chegada) segue válido' do
+      desenho = JSON.parse(Rails.root.join('db/seeds/ramon/fluxos/migrados/chegada_cliente.json').read)['desenho']
+      expect(grafo(desenho).erros).to eq([])
     end
   end
 

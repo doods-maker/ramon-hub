@@ -163,6 +163,7 @@ describe('textos das automações', () => {
       'ROTINA_DESCONHECIDA',
       'ROTINA_DE_LEAD',
       'ROTINA_DA_CONTA',
+      'ROTINA_OUTRO_ALVO',
     ].forEach(c => expect(FLUXOS_PT.ERROS[c]).toBeTruthy());
   });
 });

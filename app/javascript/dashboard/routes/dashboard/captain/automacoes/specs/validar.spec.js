@@ -360,5 +360,35 @@ describe('validar (espelho do Grafo#erros)', () => {
         params: { nome: 'xyz' },
       });
     });
+
+    it('gatilho de fora do funil (alvo outro): sem passo de lead e só rotina do mesmo alvo', () => {
+      const peca = { tipo: 'peca_publicada' };
+      expect(
+        codigos(conta(peca, p('p1', 'avisar_sino', { texto: 'oi' })))
+      ).toEqual([['p1', 'CONTA_PASSO']]);
+      expect(
+        validar(conta(peca, p('p1', 'avisar_push', { texto: 'oi' })))
+      ).toEqual([]);
+      expect(
+        codigos(
+          conta(
+            { tipo: 'chegada_cliente' },
+            p('p1', 'esperar', { quantidade: 3, unidade: 'minutos' }),
+            p('p2', 'rotina', { rotina: 'escalar_chegada' })
+          )
+        )
+      ).toEqual([]);
+      expect(
+        codigos(
+          conta(
+            { tipo: 'chegada_cliente' },
+            p('p1', 'rotina', { rotina: 'dossie_passagem' })
+          )
+        )
+      ).toEqual([['p1', 'ROTINA_OUTRO_ALVO']]);
+      expect(
+        codigos(linear(p('p1', 'rotina', { rotina: 'escalar_chegada' })))
+      ).toEqual([['p1', 'ROTINA_OUTRO_ALVO']]);
+    });
   });
 });

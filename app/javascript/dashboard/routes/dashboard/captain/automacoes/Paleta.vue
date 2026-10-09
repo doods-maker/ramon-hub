@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { onClickOutside } from '@vueuse/core';
 import { MENU, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { PALETA, PASSOS, PASSOS_CONTA } from './fluxo';
+import { PALETA, PASSOS, PASSOS_CONTA, semLead } from './fluxo';
 
 const props = defineProps({ alvo: { type: String, default: 'lead' } });
 const emit = defineEmits(['escolher', 'fechar']);
@@ -12,9 +12,9 @@ const { t } = useI18n();
 const raiz = ref(null);
 onClickOutside(raiz, () => emit('fechar'));
 
-// B5: no Horário da conta só os passos que rodam sem lead (grupo vazio some)
+// B5: no Horário da conta e nos gatilhos de fora do funil só os passos que rodam sem lead (grupo vazio some)
 const grupos = computed(() =>
-  props.alvo === 'conta'
+  semLead(props.alvo)
     ? PALETA.map(g => ({
         ...g,
         itens: g.itens.filter(i => PASSOS_CONTA.includes(i.tipo)),

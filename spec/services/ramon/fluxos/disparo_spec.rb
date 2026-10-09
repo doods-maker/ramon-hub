@@ -166,7 +166,7 @@ RSpec.describe Ramon::Fluxos::Disparo do
     lead # o lead da conversa existe
     chegada = account.chegadas.create!(id: conversa.id, criado_por: create(:user, account: account),
                                        destinatario: create(:user, account: account), cliente_nome: 'Maria')
-    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'chegada_cliente' }, nota))
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'chegada_cliente' }, ['parar', {}]))
     described_class.call('chegada_cliente', chegada)
     execucao = fluxo.execucoes.sole
     expect([execucao.alvo, execucao.lead, execucao.contexto['etapa_inicial_id']]).to eq([chegada, nil, nil])
@@ -174,7 +174,7 @@ RSpec.describe Ramon::Fluxos::Disparo do
 
   it 'assinatura do Painel (gatilho comum, N1 = B): a conta vem do cliente do Painel' do
     assinatura = create(:portal_assinatura, portal_cliente: create(:portal_cliente, account: account))
-    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'assinatura_painel' }, nota))
+    fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'assinatura_painel' }, ['parar', {}]))
     described_class.call('assinatura_painel', assinatura)
     expect(fluxo.execucoes.sole).to have_attributes(account_id: account.id, alvo_type: 'PortalAssinatura')
   end

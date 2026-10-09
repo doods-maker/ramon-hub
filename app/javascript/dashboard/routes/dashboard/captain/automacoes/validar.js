@@ -10,6 +10,7 @@ import {
   PASSOS_CONTA,
   alcancaveis,
   rotinaAlvo,
+  semLead,
 } from './fluxo';
 
 export const OBRIGATORIOS = {
@@ -261,7 +262,8 @@ const errosPasso = (no, setas) => {
   return [...faltas, ...errosEspecificos(no, config, setas)];
 };
 
-// = Ramon::Fluxos::HorarioConta.erros: o "quando" do Horário da conta, o que roda sem lead e a rotina do alvo certo
+// = Ramon::Fluxos::HorarioConta.erros: o "quando" do Horário da conta, o que roda sem lead (conta e fora do funil)
+// e a rotina do alvo certo
 const quandoValido = c => {
   const n = c.a_cada_minutos;
   const ok =
@@ -273,24 +275,32 @@ const quandoValido = c => {
   return dias.length > 0 && dias.every(d => d >= 0 && d <= 6);
 };
 
-const errosNoConta = (no, conta) => {
+// alvo = 'conta' | 'outro' (gatilho sem lead) | null (lead/conversa)
+const errosNoConta = (no, alvo) => {
   if (no.tipo === 'gatilho') return [];
-  if (conta && !PASSOS_CONTA.includes(no.tipo))
+  if (alvo && !PASSOS_CONTA.includes(no.tipo))
     return [erro(no.id, 'CONTA_PASSO')];
   const nome = no.config?.rotina;
   if (no.tipo !== 'rotina' || vazio(nome)) return [];
-  const alvo = rotinaAlvo(nome);
-  if (!alvo) return [erro(no.id, 'ROTINA_DESCONHECIDA', { nome })];
-  if ((alvo === 'conta') === conta) return [];
-  return [erro(no.id, conta ? 'ROTINA_DE_LEAD' : 'ROTINA_DA_CONTA')];
+  const daRotina = rotinaAlvo(nome);
+  if (!daRotina) return [erro(no.id, 'ROTINA_DESCONHECIDA', { nome })];
+  if ((semLead(daRotina) ? daRotina : null) === alvo) return [];
+  if (alvo === 'conta') return [erro(no.id, 'ROTINA_DE_LEAD')];
+  if (daRotina === 'conta') return [erro(no.id, 'ROTINA_DA_CONTA')];
+  return [erro(no.id, 'ROTINA_OUTRO_ALVO')];
 };
 
 const errosConta = (gatilho, nos) => {
   const c = gatilho.config || {};
-  const conta = c.tipo === 'horario_conta';
   const quando =
-    conta && !quandoValido(c) ? [erro(gatilho.id, 'CONTA_QUANDO')] : [];
-  return [...quando, ...nos.flatMap(n => errosNoConta(n, conta))];
+    c.tipo === 'horario_conta' && !quandoValido(c)
+      ? [erro(gatilho.id, 'CONTA_QUANDO')]
+      : [];
+  const alvo = GATILHOS.find(x => x.tipo === c.tipo)?.alvo;
+  return [
+    ...quando,
+    ...nos.flatMap(n => errosNoConta(n, semLead(alvo) ? alvo : null)),
+  ];
 };
 
 export const validar = ({ nos = [], setas = [] } = {}) => {
