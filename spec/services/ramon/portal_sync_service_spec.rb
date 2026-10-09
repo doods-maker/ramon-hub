@@ -20,7 +20,7 @@ RSpec.describe Ramon::PortalSyncService do
 
   before do
     allow(Ramon::AdvboxClient).to receive(:lawsuits).with(identification: '12345678901', limit: 10).and_return(lawsuits)
-    allow(Ramon::AdvboxClient).to receive(:movements).with(14_039_119, limit: 30).and_return(movements)
+    allow(Ramon::AdvboxClient).to receive(:movements).with(14_039_119, limit: 100).and_return(movements)
     allow(Ramon::AdvboxClient).to receive(:posts).with(lawsuit_id: 14_039_119, limit: 50).and_return(posts)
     allow(Ramon::PortalDocsService).to receive(:itens).and_return(['CNIS atualizado', 'Laudo médico'])
     allow(Ramon::AdvboxClient).to receive(:customer).and_return({ 'cellphone' => '(48) 99999-0000' })
@@ -54,6 +54,20 @@ RSpec.describe Ramon::PortalSyncService do
 Laudo médico
 ", nome: cliente.nome, account: cliente.account)
     expect(cliente.reload.sincronizado_em).to be_present
+  end
+
+  it 'agenda: só audiência/perícia aberta e ainda por vir, com o formato das observações; 1 chamada de tarefas' do
+    posts['data'] += [
+      { 'id' => 4, 'task' => 'AUDIÊNCIA DE INSTRUÇÃO/JULGAMENTO', 'date' => '2099-03-09 16:00:00', 'notes' => 'PRESENCIAL',
+        'users' => [{ 'completed' => nil }] },
+      { 'id' => 5, 'task' => 'AUDIÊNCIA DE CONCILIAÇÃO', 'date' => '2020-01-10 14:00:00', 'notes' => nil, 'users' => [{ 'completed' => nil }] },
+      { 'id' => 6, 'task' => 'AVISAR CLIENTE DA AUDIÊNCIA', 'date' => '2099-03-01 00:00:00', 'notes' => nil, 'users' => [{ 'completed' => nil }] }
+    ]
+    lawsuits['data'].first['protocol_number'] = '547629991'
+    p = described_class.new(cliente).perform.first
+    expect(p['agenda']).to eq([{ 'tipo' => 'audiencia', 'quando' => '2099-03-09 16:00:00', 'formato' => 'presencial' }])
+    expect(p['protocolo']).to eq '547629991'
+    expect(Ramon::AdvboxClient).to have_received(:posts).once
   end
 
   it 'com os textos v2 ligados, sem autorização da IA o pedido vira 1 item resumido e a IA não é chamada' do

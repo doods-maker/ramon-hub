@@ -1,5 +1,6 @@
 # Novidades do Painel do Cliente: o que mudou entre o espelho de ontem e o de hoje.
-# - etapa "interna" (ex.: NEGADO / AVISAR CLIENTE) não aparece pro cliente: o painel
+# - v2: a etapa do cliente vem do tribunal e das tarefas (Ramon::PortalTexto.etapa_real), não da coluna do ADVBOX;
+# - v1: etapa "interna" (ex.: NEGADO / AVISAR CLIENTE) não aparece pro cliente: o painel
 #   segue na etapa anterior até a equipe mover o processo (notícia ruim chega por pessoa);
 # - etapa/marco "delicada" (resultado) aparece com texto neutro, mas sem e-mail
 #   automático — vai só pro resumo da equipe, com alerta;
@@ -11,7 +12,12 @@ module Ramon::PortalNovidades
   module_function
 
   def aplicar(anterior, novo, agora: Time.current)
-    novo['etapa_cliente'] = etapa_cliente(anterior, novo['etapa'])
+    if Ramon::PortalTexto.v2?
+      novo['tribunal'] = Ramon::PortalTexto.tribunal(novo['andamentos'], anterior&.dig('tribunal'))
+      novo['etapa_cliente'] = Ramon::PortalTexto.etapa_real(novo)
+    else
+      novo['etapa_cliente'] = etapa_cliente(anterior, novo['etapa'])
+    end
     novo['novidades'] = antigas(anterior) + (anterior ? detectar(anterior, novo, agora.iso8601) : [])
     novo
   end
@@ -42,6 +48,9 @@ module Ramon::PortalNovidades
   end
 
   def novidade_de_etapa(anterior, novo)
+    # 1º sync com a etapa vinda do tribunal (espelho sem 'tribunal'): a troca de regra não é novidade do caso.
+    return [] if novo.key?('tribunal') && !anterior.key?('tribunal')
+
     atual = novo['etapa_cliente']
     return [] if atual.blank? || Ramon::PortalTexto.normalizar(atual) == Ramon::PortalTexto.normalizar(etapa_exibida(anterior))
 
