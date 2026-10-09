@@ -20,7 +20,7 @@
     ],
     "por_que": "Decisão do Eduardo (08/10): fica no código. É cópia de arquivo e espelho de status, sem escolha a fazer.",
     "mudar": {
-      "pedido": "Para acrescentar algo, crie um fluxo seu com o gatilho \"Peça publicada no Instagram\" ou \"Peça mudou de status\" — sem mexer no código. Para mudar o acervo, peça ao Claude: \"o acervo das peças passa a <mudança>\" (ex.: outra pasta, espelhar também \"falhou\" no Notion).",
+      "pedido": "Para acrescentar algo (ex.: um push no celular), crie um fluxo seu com o gatilho \"Peça publicada no Instagram\" ou \"Peça mudou de status\" — sem mexer no código. Nesses gatilhos não há lead: os passos do lead (sino, tarefa, etapa) não estão disponíveis — use Push, Esperar, Se. Para mudar o acervo, peça ao Claude: \"o acervo das peças passa a <mudança>\" (ex.: outra pasta, espelhar também \"falhou\" no Notion).",
       "arquivos": [
         "app/jobs/ramon/conteudo_drive_job.rb",
         "app/jobs/ramon/notion_espelho_job.rb",

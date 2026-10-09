@@ -23,7 +23,7 @@
     ],
     "por_que": "Decisão do Eduardo (08/10): fica no código. Grava no ADVBOX e no Drive com travas de \"uma vez só\" por envio — mais seguro como regra fixa do que como passos editáveis.",
     "mudar": {
-      "pedido": "Para acrescentar algo (ex.: um aviso a mais), crie um fluxo seu com o gatilho \"Cliente enviou documento pelo Painel\" — sem mexer no código. Para mudar o Drive, o push ou as tarefas do ADVBOX, peça ao Claude: \"documento enviado pelo Painel passa a <mudança>\" (ex.: a tarefa vai para outra pessoa).",
+      "pedido": "Para acrescentar algo (ex.: um push a mais no celular), crie um fluxo seu com o gatilho \"Cliente enviou documento pelo Painel\" — sem mexer no código. Nesse gatilho não há lead: os passos do lead (sino, tarefa, etapa) não estão disponíveis — use Push, Esperar, Se. Para mudar o Drive, o push ou as tarefas do ADVBOX, peça ao Claude: \"documento enviado pelo Painel passa a <mudança>\" (ex.: a tarefa vai para outra pessoa).",
       "arquivos": [
         "app/controllers/cliente/painel_controller.rb",
         "app/jobs/ramon/portal_envio_job.rb",
