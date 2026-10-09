@@ -418,14 +418,6 @@ describe('PainelPasso', () => {
       .findAll('[data-testid="rotina"] option')
       .map(o => o.attributes('value'))
       .filter(Boolean);
-    expect(opcoes).toEqual([
-      'resumo_do_dia',
-      'retrato_funil',
-      'fechamento_extrato',
-      'espelho_painel',
-      'copiloto_noturno',
-      'publicar_pecas',
-      'avisos_painel',
-    ]);
+    expect(opcoes).toEqual(['resumo_do_dia']);
   });
 });

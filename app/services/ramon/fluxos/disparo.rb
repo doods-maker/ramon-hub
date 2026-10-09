@@ -47,7 +47,7 @@ class Ramon::Fluxos::Disparo
   end
 
   # Nos gatilhos DUAS_VEZES: com 'assumido' só os migrados (B5: do grupo que decidiu, quando o evento diz 'migracao' — vários
-  # grupos dividem conversa_criada e mensagem_recebida); sem, só os demais. Em reuniao_marcada/cancelada o disparo com
+  # grupos dividem conversa_criada); sem, só os demais. Em reuniao_marcada/cancelada o disparo com
   # 'assumido' vem antes dos efeitos do código (o ensaio vê o lead como estava).
   def self.da_vez?(fluxo, dados)
     return true if DUAS_VEZES.exclude?(fluxo.gatilho_tipo)
