@@ -162,31 +162,6 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect(execucao.contexto).not_to have_key('etapa_inicial_id')
   end
 
-  it 'B5-leads: dois grupos migrados no mesmo gatilho — cada decisão só inicia o fluxo do seu grupo' do
-    sla = fluxo_publicado(account, grafo_linear({ 'tipo' => 'conversa_criada' }, nota), sistema_chave: 'sla_primeira_resposta')
-    criar = fluxo_publicado(account, grafo_linear({ 'tipo' => 'conversa_criada' }, nota), sistema_chave: 'criar_lead_da_conversa')
-    comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'conversa_criada' }, nota))
-    expect(described_class.call('conversa_criada', conversa, { 'assumido' => false, 'migracao' => 'sla' }).map(&:fluxo)).to eq([sla])
-    expect(described_class.call('conversa_criada', conversa, { 'assumido' => false, 'migracao' => 'criar_lead' }).map(&:fluxo)).to eq([criar])
-    expect(described_class.call('conversa_criada', conversa, { 'caixa_id' => conversa.inbox_id }).map(&:fluxo)).to eq([comum])
-  end
-
-  it 'B5-leads: criar lead e origem migrados rodam na hora (dentro do ouvinte); coach, documento e SLA seguem pelo job' do
-    origem = fluxo_publicado(account, grafo_linear({ 'tipo' => 'mensagem_recebida' }, nota), sistema_chave: 'origem_do_lead')
-    coach = fluxo_publicado(account, grafo_linear({ 'tipo' => 'mensagem_recebida' }, nota), sistema_chave: 'coach_objecao')
-    described_class.call('mensagem_recebida', conversa, { 'assumido' => true, 'migracao' => 'origem_lead' })
-    expect { described_class.call('mensagem_recebida', conversa, { 'assumido' => true, 'migracao' => 'coach' }) }
-      .to have_enqueued_job(Ramon::FluxoAvancarJob)
-    expect([origem.execucoes.sole.status, coach.execucoes.sole.status]).to eq(%w[concluida esperando])
-  end
-
-  it 'B5-leads: nota privada escrita dispara 2 vezes — com a decisão só o migrado; sem, só os comuns' do
-    migrado = fluxo_publicado(account, grafo_linear({ 'tipo' => 'nota_escrita' }, nota), sistema_chave: 'agente_hub')
-    comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'nota_escrita' }, nota))
-    expect(described_class.call('nota_escrita', conversa, { 'assumido' => true, 'migracao' => 'agente' }).map(&:fluxo)).to eq([migrado])
-    expect(described_class.call('nota_escrita', conversa, { 'texto' => 'oi' }).map(&:fluxo)).to eq([comum])
-  end
-
   it 'alvo de fora do funil (B5): a execução é do próprio registro, sem lead nem etapa — mesmo com id igual ao de uma conversa' do
     lead # o lead da conversa existe
     chegada = account.chegadas.create!(id: conversa.id, criado_por: create(:user, account: account),
@@ -202,5 +177,11 @@ RSpec.describe Ramon::Fluxos::Disparo do
     fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'assinatura_painel' }, nota))
     described_class.call('assinatura_painel', assinatura)
     expect(fluxo.execucoes.sole).to have_attributes(account_id: account.id, alvo_type: 'PortalAssinatura')
+  end
+
+  it 'regra fixa (08/10): mensagem recebida e nota escrita disparam uma vez só, para todos os fluxos com o gatilho' do
+    comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'nota_escrita' }, nota))
+    expect(described_class::DUAS_VEZES).not_to include('mensagem_recebida', 'nota_escrita')
+    expect(described_class.call('nota_escrita', conversa, { 'texto' => 'oi' }).map(&:fluxo)).to eq([comum])
   end
 end

@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
-# Criar lead da conversa e origem do lead — o código de sempre, que morava no RamonLeadListener (mudou de arquivo na
-# B5-leads, sem mudar nada). Quem chama: o ouvinte (código no comando, ou a reserva) e as rotinas prontas criar_lead /
-# origem_do_lead (Ramon::Fluxos::Rotinas::Leads), quando o fluxo migrado está no comando.
+# Criar lead da conversa e origem do lead — regra fixa (decisão do Eduardo 08/10), chamada pelo RamonLeadListener.
+# É o código de sempre, que morava no ouvinte (mudou de arquivo na B5-leads, sem mudar nada).
 module Ramon::LeadDaConversa
   module_function
 
@@ -23,10 +22,6 @@ module Ramon::LeadDaConversa
       conversation_id: conversation.id
     )
   end
-
-  # Há o que anotar? Anúncio da Meta na mensagem, ou canal ainda não derivado ('outro'). Sem isso o código não faz nada —
-  # e o fluxo de origem nem começa (1 execução por lead, não por mensagem).
-  def origem_pendente?(lead, message) = referral_da(message).present? || lead.channel == 'outro'
 
   def origem(lead, message)
     apply_meta_referral(lead, message)
