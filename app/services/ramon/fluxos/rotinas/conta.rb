@@ -2,26 +2,26 @@
 # só para esta conta (perform(account_id)). Decisão do Eduardo 08/10: é a única rotina da conta que roda no fluxo; as
 # outras 6 (retrato do funil, fechamento do extrato, espelho e avisos do Painel, copiloto noturno, publicar peças) são
 # regra fixa — ficam no cron de sempre (config/schedule.yml), sem chave.
-# :agora roda dentro do passo (o "depois" do fluxo é depois de verdade).
+# Roda dentro do passo (perform_now: o "depois" do fluxo é depois de verdade).
 # A chave é a da migração genérica (Migracao junta os GRUPOS daqui): RAMON_FLUXO_ROTINAS=on E o fluxo (origem usuario,
 # sistema_chave = resumo_do_dia) ligado, publicado, em modo normal e no Horário da conta.
 # Na carga este módulo não cita Ramon::Fluxos::Migracao (ela carrega este arquivo: autoload circular) — só dentro dos métodos.
 module Ramon::Fluxos::Rotinas::Conta
-  # nome → [job de hoje, :agora | :fila, env da chave, o que faz]
+  # nome → [job de hoje, env da chave, o que faz]
   JOBS = {
-    'resumo_do_dia' => ['Ramon::DailyDigestJob', :agora, 'RAMON_FLUXO_ROTINAS', 'o resumo do dia']
+    'resumo_do_dia' => ['Ramon::DailyDigestJob', 'RAMON_FLUXO_ROTINAS', 'o resumo do dia']
   }.freeze
   ROTINAS = JOBS.transform_values { 'conta' }.freeze
-  GRUPOS = JOBS.to_h { |nome, (_job, _modo, env, faz)| [nome, { env: env, faz: faz, fluxos: { nome => 'horario_conta' }.freeze }] }.freeze
+  GRUPOS = JOBS.to_h { |nome, (_job, env, faz)| [nome, { env: env, faz: faz, fluxos: { nome => 'horario_conta' }.freeze }] }.freeze
 
   module_function
 
   def rodar(nome, ctx)
-    job, modo, _env, faz = JOBS.fetch(nome)
-    return "faria: #{faz}#{' (na fila)' if modo == :fila}" if ctx.ensaio?
+    job, _env, faz = JOBS.fetch(nome)
+    return "faria: #{faz}" if ctx.ensaio?
 
-    job.constantize.public_send(modo == :fila ? :perform_later : :perform_now, ctx.execucao.alvo_id)
-    modo == :fila ? "pôs na fila: #{faz}" : "fez: #{faz}"
+    job.constantize.perform_now(ctx.execucao.alvo_id)
+    "fez: #{faz}"
   end
 
   def migrado?(fluxo) = fluxo.origem == 'usuario' && JOBS.key?(fluxo.sistema_chave)

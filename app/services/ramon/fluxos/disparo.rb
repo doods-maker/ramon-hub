@@ -14,8 +14,7 @@ class Ramon::Fluxos::Disparo
   # B4.1/B4.2/B4.4: gatilhos que o código dispara 2 vezes — com 'assumido' (a decisão do evento) só os fluxos migrados ouvem;
   # sem (o ouvinte de sempre), só os demais. conversa_criada: o RamonLeadListener manda a decisão do SLA da 1ª resposta;
   # lead_ganho: o callback do Lead (Ramon::Fluxos::LeadGanho) manda com, o RamonFluxoListener sem.
-  # B5-externos: a chegada de cliente (Ramon::Fluxos::Externos.evento manda com e sem a decisão). Regra fixa (08/10):
-  # mensagem_recebida e nota_escrita saíram — ninguém mais decide nelas.
+  # B5-externos: a chegada de cliente (Ramon::Fluxos::Externos.evento manda com e sem a decisão).
   DUAS_VEZES = (NA_HORA + %w[conversa_criada lead_ganho] + Ramon::Fluxos::Externos.gatilhos).freeze
 
   def self.call(gatilho_tipo, alvo, dados = {}, origem: nil)
