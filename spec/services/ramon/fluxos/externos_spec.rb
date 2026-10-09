@@ -17,7 +17,7 @@ RSpec.describe Ramon::Fluxos::Externos do
 
   def migrado = Ramon::Fluxos::Migracao.fluxo(account, 'chegada_cliente')
 
-  it 'criar = os 8 fluxos dos 6 grupos, em sombra, ligados, publicados, cada um com o seu gatilho' do
+  it 'criar = o fluxo da chegada (o único de fora do funil no fluxo, 08/10), em sombra, ligado e publicado' do
     fluxos = grupos.keys.flat_map { |grupo| Ramon::Fluxos::Migracao.semear(account, grupo) }
     expect(fluxos.map { |f| [f.sistema_chave, f.gatilho_tipo] }).to eq(grupos.values.flat_map { |g| g[:fluxos].to_a })
     expect(fluxos.map { |f| [f.origem, f.modo, f.ativo, f.versao_publicada.present?] }.uniq).to eq([['usuario', 'sombra', true, true]])
@@ -54,17 +54,5 @@ RSpec.describe Ramon::Fluxos::Externos do
     end
     expect(codigo).to eq([chegada.id, outra.id])
     expect(migrado.execucoes.count).to eq(1) # só a viva; nenhum dos 2 eventos criou outra
-  end
-
-  it 'grupo de 2 fluxos (acervo das peças): um desligado na tela devolve os dois pontos ao código' do
-    peca = create(:peca, account: account)
-    feitos = []
-    with_modified_env(RAMON_FLUXO_ACERVO_PECAS: 'on') do
-      Ramon::Fluxos::Migracao.semear(account, 'acervo_pecas')
-      Ramon::Fluxos::Migracao.mudar_modo!(account, 'acervo_pecas', 'normal')
-      Ramon::Fluxos::Migracao.fluxo(account, 'acervo_pecas_notion').update!(ativo: false)
-      described_class.evento('acervo_pecas', 'peca_publicada', peca) { feitos << 'drive' }
-    end
-    expect(feitos).to eq(['drive'])
   end
 end

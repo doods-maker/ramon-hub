@@ -172,7 +172,7 @@ RSpec.describe Ramon::Fluxos::Disparo do
     expect([execucao.alvo, execucao.lead, execucao.contexto['etapa_inicial_id']]).to eq([chegada, nil, nil])
   end
 
-  it 'assinatura do Painel (B5): a conta vem do cliente do Painel' do
+  it 'assinatura do Painel (gatilho comum, N1 = B): a conta vem do cliente do Painel' do
     assinatura = create(:portal_assinatura, portal_cliente: create(:portal_cliente, account: account))
     fluxo = fluxo_publicado(account, grafo_linear({ 'tipo' => 'assinatura_painel' }, nota))
     described_class.call('assinatura_painel', assinatura)

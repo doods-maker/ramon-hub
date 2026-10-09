@@ -38,8 +38,8 @@ class Ramon::PublicarPecasJob < ApplicationJob
   end
 
   def pos_publicacao(peca)
-    # B5: pelo código (como sempre) ou pelo fluxo "Acervo das peças no Drive" (RAMON_FLUXO_ACERVO_PECAS).
-    Ramon::Fluxos::Externos.evento('acervo_pecas', 'peca_publicada', peca) { Ramon::ConteudoDriveJob.perform_later(peca.id) }
+    Ramon::ConteudoDriveJob.perform_later(peca.id)
+    Ramon::Fluxos::Disparo.externo('peca_publicada', peca) # N1 = B: só os fluxos comuns
     avisar("Publicado no Instagram: #{peca.gancho}", peca.permalink || 'link indisponível — ver no app')
   end
 

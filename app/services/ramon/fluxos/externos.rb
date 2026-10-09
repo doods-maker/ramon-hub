@@ -1,12 +1,13 @@
-# B5 (spec §8): as automações que começam FORA do funil — webhook do ZapSign, Painel do Cliente, recepção, gravação de
-# reunião, peças do Instagram — cada uma com a chave da B4.1 (env própria + os fluxos do grupo em modo normal). Os 6
-# grupos moram em Ramon::Fluxos::Rotinas::Externos::GRUPOS (o registro os junta em Migracao::GRUPOS).
+# B5 (spec §8): a automação que começa FORA do funil e roda no fluxo — a chegada de cliente (recepção), com a chave da
+# B4.1 (env própria + o fluxo em modo normal). As outras 5 viraram regra fixa (decisão do Eduardo 08/10); os gatilhos
+# delas seguem para fluxos comuns (N1 = B: cada ponto chama Disparo.externo direto). O grupo mora em
+# Ramon::Fluxos::Rotinas::Externos::GRUPOS (o registro o junta em Migracao::GRUPOS).
 # A decisão é do evento, lida UMA vez em `evento`:
 # 1) Migracao.decidir: os fluxos migrados do grupo, com 'assumido' (agem, ou ensaiam), e o código (o bloco) se o fluxo
 #    não está no comando OU não começou este evento (ocupado com o mesmo alvo, erro do motor, desligado no meio) — nada
 #    se perde, nada em dobro;
 # 2) os fluxos comuns desse gatilho, sem 'assumido', como sempre.
-# O alvo é o registro do evento (PortalAssinatura, PortalEnvio, Chegada, Reuniao, Peca) — só o contrato é do lead.
+# O alvo é o registro do evento (a Chegada).
 module Ramon::Fluxos::Externos
   module_function
 

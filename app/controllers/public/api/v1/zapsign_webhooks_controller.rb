@@ -19,9 +19,10 @@ class Public::Api::V1::ZapsignWebhooksController < PublicController
 
   private
 
-  # B5: pelo código (como sempre) ou pelo fluxo "Assinatura pelo Painel do Cliente" (RAMON_FLUXO_ASSINATURA_PAINEL).
+  # Regra fixa (08/10): a conferência de sempre; o gatilho "Assinatura do Painel" só avisa os fluxos comuns (N1 = B).
   def conferir(assinatura)
-    Ramon::Fluxos::Externos.evento('assinatura_painel', 'assinatura_painel', assinatura) { Ramon::ZapsignStatusJob.perform_later(assinatura.id) }
+    Ramon::ZapsignStatusJob.perform_later(assinatura.id)
+    Ramon::Fluxos::Disparo.externo('assinatura_painel', assinatura)
   end
 
   def verify_secret

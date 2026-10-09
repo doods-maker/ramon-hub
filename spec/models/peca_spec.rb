@@ -32,16 +32,11 @@ RSpec.describe Peca do
     expect { peca.update!(status: 'aprovado') }.to have_enqueued_job(Ramon::NotionEspelhoJob).with(peca.id)
   end
 
-  it 'fluxo "Espelho das peças no Notion" no comando: a mudança de status vai pelo fluxo, que pede o mesmo job' do
+  it 'gatilho comum (N1 = B): mudar de status espelha no Notion como sempre e o fluxo comum de "Peça mudou de status" ouve' do
     peca = create(:peca)
-    with_modified_env(RAMON_FLUXO_ACERVO_PECAS: 'on') do
-      Ramon::Fluxos::Migracao.semear(peca.account, 'acervo_pecas')
-      Ramon::Fluxos::Migracao.mudar_modo!(peca.account, 'acervo_pecas', 'normal')
-      expect { peca.update!(status: 'reprovado') }.not_to have_enqueued_job(Ramon::NotionEspelhoJob)
-    end
-    expect { perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) }.to have_enqueued_job(Ramon::NotionEspelhoJob).with(peca.id)
-    execucao = Ramon::Fluxos::Migracao.fluxo(peca.account, 'acervo_pecas_notion').execucoes.sole
-    expect(execucao.contexto.dig('gatilho', 'evento')).to eq('reprovado')
+    comum = fluxo_publicado(peca.account, grafo_linear({ 'tipo' => 'peca_mudou_status' }))
+    expect { peca.update!(status: 'reprovado') }.to have_enqueued_job(Ramon::NotionEspelhoJob).with(peca.id)
+    expect(comum.execucoes.sole.contexto.dig('gatilho', 'evento')).to eq('reprovado')
   end
 
   it 'travada? quando montando há mais de 15 min' do

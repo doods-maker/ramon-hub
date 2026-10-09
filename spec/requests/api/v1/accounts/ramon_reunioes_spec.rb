@@ -114,18 +114,13 @@ RSpec.describe 'Ramon Reunioes API', type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
     end
 
-    it 'fluxo "Ata da reunião" no comando: Refazer não enfileira pelo código; o fluxo pede o mesmo job (execução nova)' do
+    it 'gatilho comum (N1 = B): Refazer enfileira a ata de sempre e o fluxo comum de "Reunião gravada" ouve (evento refazer)' do
       reuniao = create(:reuniao, account: account, status: 'erro', erro: 'boom')
-      with_modified_env(RAMON_FLUXO_ATA_REUNIAO: 'on') do
-        Ramon::Fluxos::Migracao.semear(account, 'ata_reuniao')
-        Ramon::Fluxos::Migracao.mudar_modo!(account, 'ata_reuniao', 'normal')
-        expect do
-          post "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}/reprocessar", headers: agent.create_new_auth_token
-        end.not_to have_enqueued_job(Ramon::ReuniaoAtaJob)
-      end
-      expect { perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) }.to have_enqueued_job(Ramon::ReuniaoAtaJob).with(reuniao.id)
-      execucao = Ramon::Fluxos::Migracao.fluxo(account, 'ata_reuniao').execucoes.sole
-      expect([execucao.ensaio, execucao.status, execucao.contexto.dig('gatilho', 'evento')]).to eq([false, 'concluida', 'refazer'])
+      comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_gravada' }))
+      expect do
+        post "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}/reprocessar", headers: agent.create_new_auth_token
+      end.to have_enqueued_job(Ramon::ReuniaoAtaJob).with(reuniao.id)
+      expect(comum.execucoes.sole.contexto.dig('gatilho', 'evento')).to eq('refazer')
     end
   end
 

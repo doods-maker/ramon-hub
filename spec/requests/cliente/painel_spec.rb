@@ -189,17 +189,12 @@ RSpec.describe 'Painel do cliente — painel', type: :request do
       expect(response).to redirect_to('/cliente/processos/1')
     end
 
-    it 'fluxo "Documento enviado pelo Painel" no comando: o código não enfileira; o fluxo pede o mesmo job' do
+    it 'gatilho comum (N1 = B): enfileira o job de sempre e o fluxo comum de "Documento pelo Painel" ouve' do
       entrar
-      with_modified_env(RAMON_FLUXO_DOCUMENTO_PAINEL: 'on') do
-        Ramon::Fluxos::Migracao.semear(account, 'documento_painel')
-        Ramon::Fluxos::Migracao.mudar_modo!(account, 'documento_painel', 'normal')
-        expect { post '/cliente/processos/1/envios', params: { file: pdf, item: 'CNIS atualizado', post_id: 9 } }
-          .not_to have_enqueued_job(Ramon::PortalEnvioJob)
-      end
-      envio = PortalEnvio.last
-      expect { perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) }.to have_enqueued_job(Ramon::PortalEnvioJob).with(envio.id)
-      expect(response).to redirect_to('/cliente/processos/1')
+      comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'documento_painel' }))
+      expect { post '/cliente/processos/1/envios', params: { file: pdf, item: 'CNIS atualizado', post_id: 9 } }
+        .to have_enqueued_job(Ramon::PortalEnvioJob)
+      expect(comum.execucoes.sole.alvo).to eq(PortalEnvio.last)
     end
   end
 
