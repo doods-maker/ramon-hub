@@ -33,7 +33,9 @@ class Peca < ApplicationRecord
     end
   end
 
-  def nome_de_alvo = "Peça: #{gancho}" # FluxoExecucao#alvo_nome
+  # FluxoExecucao#alvo_nome
+
+  def nome_de_alvo = "Peça: #{gancho}"
 
   def publicacao_ambigua?
     status == 'falhou' && AMBIGUA.match?(erro.to_s)

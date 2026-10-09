@@ -62,7 +62,7 @@ module Ramon::Fluxos::Migracao
 
   def ligada?(nome)
     g = grupo(nome)
-    (ENV[g[:env]].presence || (ENV[g[:env_antiga]] if g[:env_antiga])) == 'on'
+    (ENV.fetch(g[:env], nil).presence || (ENV.fetch(g[:env_antiga], nil) if g[:env_antiga])) == 'on'
   end
 
   # limite_devolve (padrão true): limite do dia num fluxo do grupo devolve o comando ao código — com limite, o Disparo

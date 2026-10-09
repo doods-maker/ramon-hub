@@ -8,5 +8,7 @@ class PortalEnvio < ApplicationRecord
 
   validates :item, presence: true
 
-  def nome_de_alvo = "Documento do Painel: #{portal_cliente.nome}" # FluxoExecucao#alvo_nome
+  # FluxoExecucao#alvo_nome
+
+  def nome_de_alvo = "Documento do Painel: #{portal_cliente.nome}"
 end

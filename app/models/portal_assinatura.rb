@@ -8,7 +8,9 @@ class PortalAssinatura < ApplicationRecord
 
   scope :pendentes, -> { where(status: 'pendente') }
 
-  def nome_de_alvo = "Assinatura do Painel: #{portal_cliente.nome}" # FluxoExecucao#alvo_nome
+  # FluxoExecucao#alvo_nome
+
+  def nome_de_alvo = "Assinatura do Painel: #{portal_cliente.nome}"
 
   def sign_url = "https://app.zapsign.com.br/verificar/#{signer_token}"
 end
