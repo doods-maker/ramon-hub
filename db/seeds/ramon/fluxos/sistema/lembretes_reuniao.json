@@ -22,7 +22,7 @@
     ],
     "por_que": "Roda por 3 fluxos seus: \"Reunião marcada\", \"Reunião cancelada\" e \"Lembretes de reunião\". Textos, avisos, quem recebe e os horários dos lembretes se editam na tela. Mover a tarefa no remarcar e a ligação com o Cal.com continuam no código.",
     "mudar": {
-      "pedido": "Textos, avisos e lembretes: nos fluxos (botões abaixo). Regras do Cal.com ou do \"reunião de pé\": peça ao Claude \"<mudança>\".",
+      "pedido": "Textos, avisos e lembretes: nos fluxos (botões acima). Regras do Cal.com ou do \"reunião de pé\": peça ao Claude \"<mudança>\".",
       "arquivos": [
         "app/services/ramon/reuniao_agendamento.rb",
         "app/services/ramon/fluxos/reunioes.rb",

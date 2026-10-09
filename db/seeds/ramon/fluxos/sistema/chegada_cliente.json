@@ -16,7 +16,7 @@
     ],
     "por_que": "Roda pelo fluxo \"Chegada de cliente\": o tempo de espera e avisos extras se editam na tela. A escalada em si é a rotina pronta \"Escalar a chegada\" (código).",
     "mudar": {
-      "pedido": "Tempo e avisos: no fluxo (botão abaixo). Quem recebe o alerta ou como ele toca: peça ao Claude \"<mudança>\".",
+      "pedido": "Tempo e avisos: no fluxo (botão acima). Quem recebe o alerta ou como ele toca: peça ao Claude \"<mudança>\".",
       "arquivos": [
         "app/models/chegada.rb",
         "app/controllers/api/v1/accounts/ramon_chegadas_controller.rb",

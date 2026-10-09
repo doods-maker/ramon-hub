@@ -23,7 +23,7 @@
     ],
     "por_que": "Roda pelo fluxo \"Eventos do ADVBOX\": textos, tarefas, prazos e avisos de cada regra se editam na tela. Achar a regra e o lead continua no código.",
     "mudar": {
-      "pedido": "Textos, prazos e avisos: no fluxo (botão abaixo). Nome de etapa novo no ADVBOX ou outra forma de achar o lead: peça ao Claude \"<mudança>\".",
+      "pedido": "Textos, prazos e avisos: no fluxo (botão acima). Nome de etapa novo no ADVBOX ou outra forma de achar o lead: peça ao Claude \"<mudança>\".",
       "arquivos": [
         "app/services/ramon/advbox_event_processor.rb",
         "app/services/ramon/fluxos/eventos_advbox.rb",

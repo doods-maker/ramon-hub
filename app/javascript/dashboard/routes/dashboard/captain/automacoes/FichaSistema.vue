@@ -116,7 +116,9 @@ const tomDoFluxo = f => {
           {{ fluxo.ficha.mudar.pedido }}
         </p>
         <h5 :class="TITULO" class="mb-1 mt-2.5">{{ t(`${K}.ARQUIVOS`) }}</h5>
-        <ul class="space-y-0.5 font-mono text-[11.5px] text-n-slate-11">
+        <ul
+          class="list-none space-y-0.5 pl-0 font-mono text-[11.5px] text-n-slate-11"
+        >
           <li
             v-for="arquivo in fluxo.ficha.mudar.arquivos"
             :key="arquivo"

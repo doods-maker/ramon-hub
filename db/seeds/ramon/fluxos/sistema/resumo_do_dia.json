@@ -19,7 +19,7 @@
     ],
     "por_que": "Roda pelo fluxo \"Resumo do dia\" (gatilho Horário da conta): você muda o horário e os dias, liga e desliga e pode pôr avisos antes ou depois. O conteúdo do push e do e-mail é a rotina pronta \"Resumo do dia\" (código).",
     "mudar": {
-      "pedido": "Horário, dias e liga/desliga: no fluxo (botão abaixo). Conteúdo: peça ao Claude \"o resumo do dia passa a mostrar <dado>\".",
+      "pedido": "Horário, dias e liga/desliga: no fluxo (botão acima). Conteúdo: peça ao Claude \"o resumo do dia passa a mostrar <dado>\".",
       "arquivos": [
         "app/services/ramon/daily_digest_service.rb",
         "app/jobs/ramon/daily_digest_job.rb",

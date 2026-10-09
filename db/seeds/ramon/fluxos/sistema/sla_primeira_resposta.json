@@ -19,7 +19,7 @@
     ],
     "por_que": "Roda pelo fluxo \"SLA da 1ª resposta\": prazos, horário e quem recebe se editam na tela. O prazo de cada caixa vem do cadastro da caixa.",
     "mudar": {
-      "pedido": "Prazos, horário e avisos: no fluxo (botão abaixo); o prazo de uma caixa: no cadastro da caixa. Outra regra: peça ao Claude \"<mudança>\".",
+      "pedido": "Prazos, horário e avisos: no fluxo (botão acima); o prazo de uma caixa: no cadastro da caixa. Outra regra: peça ao Claude \"<mudança>\".",
       "arquivos": [
         "app/listeners/ramon_lead_listener.rb",
         "app/jobs/ramon/first_response_sla_job.rb",

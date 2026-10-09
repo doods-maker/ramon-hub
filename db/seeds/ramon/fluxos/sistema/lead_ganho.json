@@ -20,7 +20,7 @@
     ],
     "por_que": "Roda pelo fluxo \"Lead ganho\": ordem, avisos e passos extras se editam na tela. Dossiê, NPS e ADVBOX são rotinas prontas (código). O Drive ficou no código porque roda a cada atualização dos documentos, não só no ganho.",
     "mudar": {
-      "pedido": "Ordem e passos extras: no fluxo (botão abaixo). Texto do dossiê ou da NPS, ou os dados enviados ao ADVBOX: peça ao Claude \"<mudança>\".",
+      "pedido": "Ordem e passos extras: no fluxo (botão acima). Texto do dossiê ou da NPS, ou os dados enviados ao ADVBOX: peça ao Claude \"<mudança>\".",
       "arquivos": [
         "app/services/ramon/fluxos/lead_ganho.rb",
         "app/services/ramon/fluxos/passos/rotina.rb",

@@ -22,7 +22,7 @@
     ],
     "por_que": "Roda pelo fluxo \"Cadência de retomada\" (gatilho Lead parado): horário, limite do dia, texto da IA e avisos se editam na tela.",
     "mudar": {
-      "pedido": "Horário, limite, texto e avisos: no fluxo (botão abaixo). Quem pode ser retomado (5 dias, tarefa aberta): peça ao Claude \"<mudança>\".",
+      "pedido": "Horário, limite, texto e avisos: no fluxo (botão acima). Quem pode ser retomado (5 dias, tarefa aberta): peça ao Claude \"<mudança>\".",
       "arquivos": [
         "app/services/ramon/fluxos/retomada.rb",
         "app/services/ramon/fluxos/relogio.rb",
