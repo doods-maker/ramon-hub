@@ -78,8 +78,8 @@ RSpec.describe Ramon::Fluxos::HorarioConta do
                              .tap { |f| f.update_column(:created_at, sp('2026-10-01 00:00')) } # rubocop:disable Rails/SkipsModelValidations
     end
 
-    def cron(texto, nome = 'resumo_do_dia')
-      [].tap { |l| travel_to(sp(texto)) { Ramon::Fluxos::Rotinas::Conta.cada_conta(nome) { |a| l << a.id } } }
+    def cron(texto)
+      [].tap { |l| travel_to(sp(texto)) { Ramon::Fluxos::ResumoDoDia.cada_conta { |a| l << a.id } } }
     end
 
     it 'no comando: o fluxo faz (de verdade, com assumido), chamando o mesmo job só para a conta; o cron pula' do

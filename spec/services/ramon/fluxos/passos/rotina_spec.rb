@@ -100,6 +100,39 @@ RSpec.describe Ramon::Fluxos::Passos::Rotina do
   end
 
   it 'rotina desconhecida falha na hora (não adianta repetir)' do
-    expect { rodar('apagar_tudo') }.to raise_error(Ramon::Fluxos::PassoImpossivel, /rotina desconhecida/)
+    expect { rodar('apagar_tudo') }.to raise_error(Ramon::Fluxos::PassoImpossivel, 'rotina desconhecida: apagar_tudo')
+    expect(described_class::ROTINAS.values_at('dossie_passagem', 'xyz')).to eq(['lead', nil])
+  end
+
+  describe 'escalar a chegada (B5-externos: o alvo é a chegada, sem lead)' do
+    let(:chegada) do
+      account.chegadas.create!(criado_por: create(:user, account: account), destinatario: create(:user, account: account),
+                               cliente_nome: 'Maria')
+    end
+
+    # ensaio pode repetir no mesmo exemplo; execução de verdade, 1 por alvo por exemplo (índice único)
+    def escalar(alvo, ensaio: false)
+      ctx = Ramon::Fluxos::Contexto.new(fluxo.execucoes.create!(account: account, alvo: alvo, ensaio: ensaio))
+      described_class.rotina({ 'rotina' => 'escalar_chegada' }, ctx)
+    end
+
+    it 'escala como o job (o alerta volta ao vivo para quem avisou); já escalada não mexe' do
+      expect(escalar(chegada, ensaio: true)).to eq(saida: 's', resumo: 'faria: escalar — o alerta volta a tocar na tela de quem avisou')
+      expect { escalar(chegada) }.to have_enqueued_job(ActionCableBroadcastJob)
+      expect(chegada.reload.estado).to eq('escalado')
+      expect(escalar(chegada, ensaio: true)[:resumo]).to eq('chegada já respondida (ou já escalada): não escala')
+    end
+
+    it 'respondida dentro dos 3 min: não escala' do
+      chegada.update!(resposta: 'Já vou', respondido_em: Time.current)
+      expect(escalar(chegada)[:resumo]).to eq('chegada já respondida (ou já escalada): não escala')
+      expect(chegada.reload.escalado_em).to be_nil
+    end
+
+    it 'com o alvo errado ("Testar com um lead…") falha na hora, dizendo com o que roda; as regras fixas não são rotina' do
+      expect { escalar(create(:lead, account: account), ensaio: true) }
+        .to raise_error(Ramon::Fluxos::PassoImpossivel, /uma chegada de cliente/)
+      expect(described_class::ROTINAS['aviso_contrato']).to be_nil # regra fixa (08/10)
+    end
   end
 end

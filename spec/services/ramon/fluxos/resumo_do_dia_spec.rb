@@ -1,22 +1,22 @@
 require 'rails_helper'
 
-RSpec.describe Ramon::Fluxos::Rotinas::Conta do
+RSpec.describe Ramon::Fluxos::ResumoDoDia do
   let(:account) { create(:account) }
   let(:fluxo) { fluxo_publicado(account, grafo_linear({ 'tipo' => 'horario_conta', 'hora' => '08:00' })) }
-  let(:todas) { described_class::JOBS.keys }
 
   def sp(texto) = Time.find_zone!('America/Sao_Paulo').parse(texto)
 
   # status concluida: fora do índice único (várias por exemplo)
-  def ctx(ensaio: false)
-    Ramon::Fluxos::Contexto.new(fluxo.execucoes.create!(account: account, alvo: account, ensaio: ensaio, status: 'concluida'))
+  def ctx(ensaio: false, alvo: account)
+    Ramon::Fluxos::Contexto.new(fluxo.execucoes.create!(account: account, alvo: alvo, ensaio: ensaio, status: 'concluida'))
   end
 
+  def rodar(contexto) = Ramon::Fluxos::Passos::Rotina.rotina({ 'rotina' => 'resumo_do_dia' }, contexto)
+
   it 'só o resumo do dia segue como rotina da conta no fluxo (as outras 6 são regra fixa, 08/10)' do
-    expect(todas).to eq(['resumo_do_dia'])
-    expect(Ramon::Fluxos::Rotinas.alvo('resumo_do_dia')).to eq('conta')
+    expect(Ramon::Fluxos::Passos::Rotina::ROTINAS.select { |_nome, alvo| alvo == 'conta' }.keys).to eq(['resumo_do_dia'])
     expect(Ramon::Fluxos::Migracao.grupo('resumo_do_dia')).to include(env: 'RAMON_FLUXO_ROTINAS', fluxos: { 'resumo_do_dia' => 'horario_conta' })
-    expect(Ramon::Fluxos::Rotinas.alvo('publicar_pecas')).to be_nil
+    expect(Ramon::Fluxos::Passos::Rotina::ROTINAS['publicar_pecas']).to be_nil
   end
 
   it 'criar: nasce em sombra, ligado, publicado, às 08:00 (o horário do código)' do
@@ -25,12 +25,17 @@ RSpec.describe Ramon::Fluxos::Rotinas::Conta do
     expect([novo.modo, novo.ativo, novo.gatilho_tipo, novo.limite_dia]).to eq(['sombra', true, 'horario_conta', nil])
   end
 
-  it 'rodar: roda o job de hoje só para esta conta; o ensaio só descreve' do
+  it 'a rotina pronta (passo Rotina): roda o job de hoje só para esta conta; o ensaio só descreve' do
     allow(Ramon::DailyDigestJob).to receive(:perform_now)
-    expect(described_class.rodar('resumo_do_dia', ctx(ensaio: true))).to eq('faria: o resumo do dia')
+    expect(rodar(ctx(ensaio: true))).to eq(saida: 's', resumo: 'faria: o resumo do dia')
     expect(Ramon::DailyDigestJob).not_to have_received(:perform_now)
-    expect(described_class.rodar('resumo_do_dia', ctx)).to eq('fez: o resumo do dia')
+    expect(rodar(ctx)).to eq(saida: 's', resumo: 'fez: o resumo do dia')
     expect(Ramon::DailyDigestJob).to have_received(:perform_now).with(account.id)
+  end
+
+  it 'a rotina da conta com um lead de alvo é passo impossível (falha na hora)' do
+    expect { rodar(ctx(alvo: create(:lead, account: account))) }
+      .to raise_error(Ramon::Fluxos::PassoImpossivel, 'esta rotina é da conta toda (gatilho Horário da conta)')
   end
 
   it 'rotina da conta num fluxo de lead não publica' do
@@ -43,7 +48,7 @@ RSpec.describe Ramon::Fluxos::Rotinas::Conta do
     let!(:account) { create(:account) }
     let!(:outra) { create(:account) }
 
-    def contas(account_id = nil, nome = 'resumo_do_dia') = [].tap { |lista| described_class.cada_conta(nome, account_id) { |a| lista << a.id } }
+    def contas(account_id = nil) = [].tap { |lista| described_class.cada_conta(account_id) { |a| lista << a.id } }
 
     it 'sem o fluxo: todas as contas, como sempre; com o id: só aquela' do
       expect(contas).to eq([account.id, outra.id])

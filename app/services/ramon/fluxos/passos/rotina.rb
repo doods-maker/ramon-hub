@@ -8,20 +8,51 @@
 #   guardado assim que nasce (a nova tentativa do motor retoma dali). Fora do ar sobe o erro → o motor tenta de novo em
 #   1/5/15 min; recusa (4xx) fica anotada no lead (advbox.erro), como hoje, e o fluxo segue.
 # - concluir_tarefas: conclui as tarefas abertas do lead (ADVBOX arquivado)
-# B5: os demais nomes vêm do registro Ramon::Fluxos::Rotinas (um arquivo por plano em rotinas/).
+# B5 (decisão do Eduardo 08/10 — as demais rotinas da conta e de fora do funil são regra fixa):
+# - resumo_do_dia: Ramon::DailyDigestJob só desta conta (perform_now: o "depois" do fluxo é depois de verdade); só no
+#   gatilho Horário da conta (Ramon::Fluxos::ResumoDoDia decide quem faz a vez)
+# - escalar_chegada: Chegada#escalar! (o alerta volta a tocar na tela de quem avisou); só com uma chegada de alvo
 module Ramon::Fluxos::Passos::Rotina
-  ROTINAS = %w[dossie_passagem pesquisa_nps pesquisa_nps_exito abrir_caso_advbox concluir_tarefas].freeze
+  # nome → alvo: 'lead' (lead ou conversa) | 'conta' (gatilho Horário da conta) | 'outro' (o registro de um evento de fora
+  # do funil — Ramon::Fluxos::HorarioConta::SEM_LEAD_ALVOS). = ROTINAS_INFO em automacoes/fluxo.js.
+  ROTINAS = {
+    'dossie_passagem' => 'lead', 'pesquisa_nps' => 'lead', 'pesquisa_nps_exito' => 'lead', 'abrir_caso_advbox' => 'lead',
+    'concluir_tarefas' => 'lead', 'resumo_do_dia' => 'conta', 'escalar_chegada' => 'outro'
+  }.freeze
   FASE_NPS = { 'pesquisa_nps' => 'comercial', 'pesquisa_nps_exito' => 'exito' }.freeze
 
   module_function
 
   def rotina(config, ctx)
     nome = config['rotina'].to_s
-    return Ramon::Fluxos::Rotinas.rodar(nome, ctx) unless ROTINAS.include?(nome) # B5: as rotinas dos planos (e o "desconhecida")
+    raise Ramon::Fluxos::PassoImpossivel, "rotina desconhecida: #{nome}" unless ROTINAS.key?(nome)
 
+    { saida: 's', resumo: ROTINAS[nome] == 'lead' ? de_lead(nome, ctx) : public_send(nome, ctx) }
+  end
+
+  def de_lead(nome, ctx)
     lead = Ramon::Fluxos::Passos::Lead.exigir_lead(ctx)
-    resumo = FASE_NPS.key?(nome) ? nps(lead, FASE_NPS[nome], ctx.ensaio?) : public_send(nome, lead, ctx.ensaio?)
-    { saida: 's', resumo: resumo }
+    FASE_NPS.key?(nome) ? nps(lead, FASE_NPS[nome], ctx.ensaio?) : public_send(nome, lead, ctx.ensaio?)
+  end
+
+  def resumo_do_dia(ctx)
+    raise Ramon::Fluxos::PassoImpossivel, 'esta rotina é da conta toda (gatilho Horário da conta)' unless ctx.execucao.alvo.is_a?(Account)
+    return 'faria: o resumo do dia' if ctx.ensaio?
+
+    Ramon::DailyDigestJob.perform_now(ctx.execucao.alvo_id)
+    'fez: o resumo do dia'
+  end
+
+  def escalar_chegada(ctx)
+    chegada = ctx.execucao.alvo
+    unless chegada.is_a?(Chegada)
+      raise Ramon::Fluxos::PassoImpossivel, 'esta rotina só roda com uma chegada de cliente (o Testar com um lead não serve aqui)'
+    end
+    return 'chegada já respondida (ou já escalada): não escala' unless chegada.escalavel?
+    return 'faria: escalar — o alerta volta a tocar na tela de quem avisou' if ctx.ensaio?
+
+    chegada.escalar!
+    'escalou: o alerta voltou a tocar na tela de quem avisou'
   end
 
   def dossie_passagem(lead, ensaio)

@@ -6,7 +6,7 @@ RSpec.describe Ramon::Fluxos::Externos do
   let(:chegada) { account.chegadas.create!(criado_por: recepcao, destinatario: recepcao, cliente_nome: 'Maria') }
   let(:outra) { account.chegadas.create!(criado_por: recepcao, destinatario: recepcao, cliente_nome: 'Ana') }
   let(:codigo) { [] }
-  let(:grupos) { Ramon::Fluxos::Rotinas::Externos::GRUPOS }
+  let(:grupos) { Ramon::Fluxos::Migracao::GRUPOS.slice('chegada_cliente') }
 
   def evento(alvo = chegada) = described_class.evento('chegada_cliente', 'chegada_cliente', alvo) { codigo << alvo.id }
 
