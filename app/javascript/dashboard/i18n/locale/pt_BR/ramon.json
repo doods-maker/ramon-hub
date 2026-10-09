@@ -2170,7 +2170,7 @@
       "VAZIO": "Nenhum fluxo ainda. Comece por um modelo pronto em Novo fluxo.",
       "ERRO_CRIAR": "Não consegui criar o fluxo.",
       "SISTEMA": {
-        "EXPLICA": "Estas automações rodam hoje pelo código do hub, não pelo quadro. Aqui você vê o desenho de cada uma, só para leitura, para conferir o que o hub faz sozinho. Elas vão virar fluxos editáveis uma a uma: primeiro rodam lado a lado em modo ensaio, comparamos com o código e, se baterem, o fluxo assume.",
+        "EXPLICA": "Estas são as 29 automações que o hub faz sozinho. 7 rodam por fluxos seus (selo \"roda no fluxo\"): a ficha tem o botão Abrir o fluxo, para editar. As outras 22 são regra fixa e ficam no código de propósito (decisão de 08/10). Clique em qualquer uma para ver a ficha: o que faz, quando, o que mexe, as travas e como pedir uma mudança.",
         "SEM_CONTADOR": "Sem contador barato para hoje",
         "HOJE_DE": {
           "cadencia": "rascunhos de retomada criados hoje",
@@ -2195,7 +2195,27 @@
           "fala_com_cliente": "fala com o cliente",
           "publica": "publica"
         },
-        "FIXA_DICA": "Regra de dado do hub: fica no código de propósito e não vira fluxo editável."
+        "FIXA_DICA": "Fica no código de propósito (decisão de 08/10). Abra a ficha para ver por quê e como pedir uma mudança."
+      },
+      "FICHA": {
+        "SELO_FIXA": "regra fixa · fica no código",
+        "SELO_FLUXO": "roda no fluxo",
+        "O_QUE_FAZ": "O que faz",
+        "QUANDO": "Quando",
+        "O_QUE_MEXE": "O que mexe",
+        "TRAVAS": "Travas e garantias",
+        "POR_QUE_CODIGO": "Por que fica no código",
+        "NO_FLUXO": "No fluxo",
+        "ABRIR_FLUXO": "Abrir o fluxo",
+        "SEM_FLUXO": "O fluxo ainda não foi criado nesta conta: quem faz é o código.",
+        "MODO": {
+          "normal": "no comando",
+          "sombra": "em sombra"
+        },
+        "DESLIGADO": "desligado",
+        "MUDAR": "Se quiser mudar",
+        "ARQUIVOS": "Arquivos principais",
+        "IMPACTO": "Impacto"
       },
       "RODAR": {
         "ITEM": "Rodar fluxo…",
@@ -2231,7 +2251,7 @@
         "OK": "ok",
         "FALHOU": "{n} falhou",
         "DESLIGADO": "desligado",
-        "NO_CODIGO": "roda no código",
+        "NO_FLUXO": "roda no fluxo",
         "SOMBRA": "em sombra",
         "REGRA_FIXA": "regra fixa (fica no código)"
       },
@@ -2385,7 +2405,7 @@
         "EXECUCOES": "Execuções recentes",
         "SEM_EXECUCOES": "Nenhuma execução ainda. Use Testar com um lead… para ver o caminho.",
         "SELECIONE": "Clique num passo para configurar.",
-        "COMO_RODA": "Como roda hoje",
+        "COMO_RODA": "Como roda no código (detalhes técnicos)",
         "TESTAR_CONTA": "Testar na conta…"
       },
       "NO": {

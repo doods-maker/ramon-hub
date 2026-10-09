@@ -4,7 +4,7 @@
 // desenho só-leitura das 29 automações que ainda rodam no código, em grupos —
 // sem chave liga/desliga, selo em quem sai para fora sem uma pessoa no meio e
 // "Hoje" só onde o código tem contador barato (senão "—").
-// B5: regra de dado ganha o selo "regra fixa (fica no código)" — não migra.
+// 08/10: 22 com o selo "regra fixa (fica no código)"; as 7 do fluxo, "roda no fluxo". Clique = a ficha.
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -415,10 +415,11 @@ const hojeTitulo = f =>
                 </span>
                 <span
                   v-else
-                  :class="[CHIP, TOM.blue]"
+                  data-testid="sistema-no-fluxo"
+                  :class="[CHIP, TOM.teal]"
                   class="whitespace-nowrap font-mono"
                 >
-                  {{ t(`${K}.SELO.NO_CODIGO`) }}
+                  {{ t(`${K}.SELO.NO_FLUXO`) }}
                 </span>
               </td>
             </tr>

@@ -2165,7 +2165,7 @@
       "VAZIO": "No flows yet. Start from a template in New flow.",
       "ERRO_CRIAR": "Could not create the flow.",
       "SISTEMA": {
-        "EXPLICA": "These automations run today in the hub code, not on the board. Here you see each one drawn, read-only, so you can check what the hub does on its own. They will become editable flows one by one: first they run side by side as a dry run, we compare them with the code and, if they match, the flow takes over.",
+        "EXPLICA": "These are the 29 automations the hub runs on its own. 7 run through your flows (\"runs in a flow\" badge): the sheet has an Open the flow button to edit it. The other 22 are fixed rules and stay in code on purpose (decision of 10/08). Click any of them to see its sheet: what it does, when, what it touches, its locks and how to ask for a change.",
         "SEM_CONTADOR": "No cheap counter for today",
         "HOJE_DE": {
           "cadencia": "follow-up drafts created today",
@@ -2190,7 +2190,27 @@
           "fala_com_cliente": "talks to the client",
           "publica": "publishes"
         },
-        "FIXA_DICA": "Hub data rule: stays in code on purpose and does not become an editable flow."
+        "FIXA_DICA": "Stays in code on purpose (decision of 10/08). Open the sheet to see why and how to ask for a change."
+      },
+      "FICHA": {
+        "SELO_FIXA": "fixed rule · stays in code",
+        "SELO_FLUXO": "runs in a flow",
+        "O_QUE_FAZ": "What it does",
+        "QUANDO": "When",
+        "O_QUE_MEXE": "What it touches",
+        "TRAVAS": "Locks and guarantees",
+        "POR_QUE_CODIGO": "Why it stays in code",
+        "NO_FLUXO": "In a flow",
+        "ABRIR_FLUXO": "Open the flow",
+        "SEM_FLUXO": "The flow has not been created in this account yet: the code does it.",
+        "MODO": {
+          "normal": "in command",
+          "sombra": "in shadow"
+        },
+        "DESLIGADO": "off",
+        "MUDAR": "If you want to change it",
+        "ARQUIVOS": "Main files",
+        "IMPACTO": "Impact"
       },
       "RODAR": {
         "ITEM": "Run flow…",
@@ -2226,7 +2246,7 @@
         "OK": "ok",
         "FALHOU": "{n} failed",
         "DESLIGADO": "off",
-        "NO_CODIGO": "runs in code",
+        "NO_FLUXO": "runs in a flow",
         "SOMBRA": "shadow",
         "REGRA_FIXA": "fixed rule (stays in code)"
       },
@@ -2380,7 +2400,7 @@
         "EXECUCOES": "Recent runs",
         "SEM_EXECUCOES": "No runs yet. Use Test with a lead… to see the path.",
         "SELECIONE": "Click a step to configure it.",
-        "COMO_RODA": "How it runs today",
+        "COMO_RODA": "How it runs in code (technical details)",
         "TESTAR_CONTA": "Test on the account…"
       },
       "NO": {
