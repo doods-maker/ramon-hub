@@ -85,7 +85,7 @@ RSpec.describe Ramon::Fluxos::HorarioConta do
     it 'no comando: o fluxo faz (de verdade, com assumido), chamando o mesmo job só para a conta; o cron pula' do
       resumo
       allow(Ramon::DailyDigestJob).to receive(:perform_now)
-      with_modified_env(RAMON_FLUXO_ROTINAS: 'on') do
+      with_modified_env(RAMON_FLUXO_RESUMO_DIA: 'on') do
         Ramon::Fluxos::Migracao.mudar_modo!(account, 'resumo_do_dia', 'normal')
         expect { rodar('2026-10-06 08:00') }.not_to have_enqueued_job(Ramon::DailyDigestJob)
         expect(cron('2026-10-06 08:00:30')).to eq([])
@@ -107,7 +107,7 @@ RSpec.describe Ramon::Fluxos::HorarioConta do
     it 'virar a chave depois da hora não roda a vez de novo (o cron já pegou)' do
       resumo
       expect(cron('2026-10-06 08:00')).to eq([account.id])
-      with_modified_env(RAMON_FLUXO_ROTINAS: 'on') do
+      with_modified_env(RAMON_FLUXO_RESUMO_DIA: 'on') do
         Ramon::Fluxos::Migracao.mudar_modo!(account, 'resumo_do_dia', 'normal')
         expect { rodar('2026-10-06 10:00') }.not_to have_enqueued_job(Ramon::DailyDigestJob)
       end
@@ -127,7 +127,7 @@ RSpec.describe Ramon::Fluxos::HorarioConta do
 
     it 'no comando mas ocupado (a execução de ontem ainda viva): o código faz a vez de hoje (reserva)' do
       resumo.execucoes.create!(account: account, alvo: account, status: 'esperando', retomar_em: 1.hour.from_now)
-      with_modified_env(RAMON_FLUXO_ROTINAS: 'on') do
+      with_modified_env(RAMON_FLUXO_RESUMO_DIA: 'on') do
         Ramon::Fluxos::Migracao.mudar_modo!(account, 'resumo_do_dia', 'normal')
         expect { rodar('2026-10-06 08:00') }.to have_enqueued_job(Ramon::DailyDigestJob).with(account.id)
       end
@@ -137,7 +137,7 @@ RSpec.describe Ramon::Fluxos::HorarioConta do
     it 'erro do motor ao criar a execução: o código faz (reserva)' do
       resumo
       allow(Ramon::Fluxos::Disparo).to receive(:new).and_raise(StandardError, 'motor')
-      with_modified_env(RAMON_FLUXO_ROTINAS: 'on') do
+      with_modified_env(RAMON_FLUXO_RESUMO_DIA: 'on') do
         Ramon::Fluxos::Migracao.mudar_modo!(account, 'resumo_do_dia', 'normal')
         expect { rodar('2026-10-06 08:00') }.to have_enqueued_job(Ramon::DailyDigestJob).with(account.id)
       end

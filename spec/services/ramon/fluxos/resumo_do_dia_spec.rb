@@ -15,8 +15,17 @@ RSpec.describe Ramon::Fluxos::ResumoDoDia do
 
   it 'só o resumo do dia segue como rotina da conta no fluxo (as outras 6 são regra fixa, 08/10)' do
     expect(Ramon::Fluxos::Passos::Rotina::ROTINAS.select { |_nome, alvo| alvo == 'conta' }.keys).to eq(['resumo_do_dia'])
-    expect(Ramon::Fluxos::Migracao.grupo('resumo_do_dia')).to include(env: 'RAMON_FLUXO_ROTINAS', fluxos: { 'resumo_do_dia' => 'horario_conta' })
+    expect(Ramon::Fluxos::Migracao.grupo('resumo_do_dia')).to include(env: 'RAMON_FLUXO_RESUMO_DIA', fluxos: { 'resumo_do_dia' => 'horario_conta' })
     expect(Ramon::Fluxos::Passos::Rotina::ROTINAS['publicar_pecas']).to be_nil
+  end
+
+  it 'a chave é RAMON_FLUXO_RESUMO_DIA; o nome antigo (RAMON_FLUXO_ROTINAS) vale só enquanto o novo não existe' do
+    ligada = -> { Ramon::Fluxos::Migracao.ligada?('resumo_do_dia') }
+    expect(ligada.call).to be(false)
+    with_modified_env(RAMON_FLUXO_RESUMO_DIA: 'on') { expect(ligada.call).to be(true) }
+    with_modified_env(RAMON_FLUXO_ROTINAS: 'on') { expect(ligada.call).to be(true) }
+    with_modified_env(RAMON_FLUXO_RESUMO_DIA: 'off', RAMON_FLUXO_ROTINAS: 'on') { expect(ligada.call).to be(false) }
+    with_modified_env(RAMON_FLUXO_ROTINAS: 'on') { expect(Ramon::Fluxos::Migracao.ligada?('chegada_cliente')).to be(false) }
   end
 
   it 'criar: nasce em sombra, ligado, publicado, às 08:00 (o horário do código)' do
@@ -55,7 +64,7 @@ RSpec.describe Ramon::Fluxos::ResumoDoDia do
       expect(contas(outra.id)).to eq([outra.id])
     end
 
-    it 'fluxo no comando: a conta fica de fora' do
+    it 'fluxo no comando (com o nome antigo da chave, como a VPS antes da troca): a conta fica de fora' do
       Ramon::Fluxos::Migracao.semear(account, 'resumo_do_dia')
       with_modified_env(RAMON_FLUXO_ROTINAS: 'on') do
         Ramon::Fluxos::Migracao.mudar_modo!(account, 'resumo_do_dia', 'normal')

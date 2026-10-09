@@ -37,9 +37,11 @@ module Ramon::Fluxos::Migracao
       fluxos: { 'eventos_advbox' => 'evento_advbox' }.freeze,
       preparar: ->(account, desenho) { Ramon::Fluxos::Migracao.com_etapa(desenho, account.lead_stages.find_by!(is_won: true).id) }
     },
-    # B5-conta: o Resumo do dia (Ramon::Fluxos::ResumoDoDia), no gatilho Horário da conta.
+    # B5-conta: o Resumo do dia (Ramon::Fluxos::ResumoDoDia), no gatilho Horário da conta. env_antiga: o nome de antes,
+    # lido só sem o novo — a imagem nova sobe antes da troca na VPS sem virar a chave.
+    # ponytail: apagar env_antiga quando a VPS tiver RAMON_FLUXO_RESUMO_DIA.
     'resumo_do_dia' => {
-      env: 'RAMON_FLUXO_ROTINAS', faz: 'o resumo do dia',
+      env: 'RAMON_FLUXO_RESUMO_DIA', env_antiga: 'RAMON_FLUXO_ROTINAS', faz: 'o resumo do dia',
       fluxos: { 'resumo_do_dia' => 'horario_conta' }.freeze
     },
     # B5-externos: a chegada de cliente, decidida no RamonChegadasController.
@@ -58,7 +60,10 @@ module Ramon::Fluxos::Migracao
   # Fluxo que substitui código (spec §14: fluxo próprio, origem 'usuario'), de qualquer migração.
   def migrado?(fluxo) = fluxo.origem == 'usuario' && GRUPOS.values.any? { |g| g[:fluxos].key?(fluxo.sistema_chave) }
 
-  def ligada?(nome) = ENV.fetch(grupo(nome)[:env], nil) == 'on'
+  def ligada?(nome)
+    g = grupo(nome)
+    ENV.fetch(g[:env]) { ENV.fetch(g[:env_antiga], nil) if g[:env_antiga] } == 'on'
+  end
 
   # limite_devolve (padrão true): limite do dia num fluxo do grupo devolve o comando ao código — com limite, o Disparo
   # pularia o fluxo depois do N-ésimo evento e ninguém faria. Grupo cujo código também tem teto (a cadência: 15/dia)
