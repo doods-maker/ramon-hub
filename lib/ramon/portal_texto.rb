@@ -120,10 +120,13 @@ module Ramon::PortalTexto # rubocop:disable Metrics/ModuleLength
   # novo pelo título, então corrigir uma regra no YAML corrige também o que já estava gravado.
   def achado_do_tribunal(andamentos, anterior = nil)
     achados = (Array(andamentos) + [anterior].compact).filter_map { |a| achado(a['titulo'], a['data']) }
-    escolhido = achados.sort_by { |t| [t['data'], -t['ordem']] }.reduce(nil) do |atual, t|
+    mais_recente(achados)&.slice('etapa', 'data', 'titulo')
+  end
+
+  def mais_recente(achados)
+    achados.sort_by { |t| [t['data'], -t['ordem']] }.reduce(nil) do |atual, t|
       atual && atual['sem_volta'] && t['ordem'] > atual['ordem'] ? atual : t
     end
-    escolhido&.slice('etapa', 'data', 'titulo')
   end
 
   def achado(titulo, data)
