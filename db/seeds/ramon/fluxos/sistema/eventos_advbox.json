@@ -11,11 +11,11 @@
       "Tarefas com prazo (45 dias no protocolo, 1 no indeferimento, 2 na decisão e na exigência, 180 no benefício futuro), com o Closer (sem Closer: o SDR).",
       "Rascunhos nas notas (INSS negou, exigência, êxito, concessão) e a pesquisa NPS de êxito — nada vai direto ao cliente.",
       "Etapa de ganho no contrato fechado (o que dispara o Lead ganho).",
-      "Push por regra (sem sino)."
+      "Push no celular por regra, com exceção de benefício futuro e arquivado, que não avisam (sem sino)."
     ],
     "travas": [
       "Só aceita aviso com o token combinado; o mesmo aviso repetido não roda duas vezes.",
-      "O nome da etapa precisa bater exatamente com a lista de cada regra; sem regra ou sem lead, o evento fica guardado e nada roda.",
+      "O nome da etapa precisa ser um dos nomes da lista de cada regra (acento, maiúsculas e espaços a mais não importam); sem regra ou sem lead, o evento fica guardado e nada roda.",
       "Lead escolhido: o aberto do contato; senão, o mais recente do funil (pode ser ganho ou perdido).",
       "NPS de êxito uma vez só por lead.",
       "Se o fluxo não começar (ex.: outra execução viva no mesmo lead), o código faz aquele evento (reserva).",

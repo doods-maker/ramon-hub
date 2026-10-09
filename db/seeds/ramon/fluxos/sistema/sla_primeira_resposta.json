@@ -15,7 +15,7 @@
       "Fora do horário pula o aviso, mas ainda faz a escalada se ela cair dentro do horário.",
       "Só conversa com lead.",
       "Se o fluxo não pegar a conversa (filtro editado, erro do motor), o código vigia aquela conversa (reserva).",
-      "Push só com o ntfy configurado."
+      "O push no celular só sai com ele configurado."
     ],
     "por_que": "Roda pelo fluxo \"SLA da 1ª resposta\": prazos, horário e quem recebe se editam na tela. O prazo de cada caixa vem do cadastro da caixa.",
     "mudar": {

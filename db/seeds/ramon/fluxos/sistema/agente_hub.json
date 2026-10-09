@@ -17,7 +17,7 @@
       "Até 30 pedidos por dia; se a assinatura atingir o limite de uso, pausa até o dia seguinte.",
       "Ferramentas só de leitura (pasta da sede e ADVBOX); até 6 minutos por pedido. #pesado aumenta o esforço; #tese:… escolhe a tese.",
       "O contexto enviado ao agente NÃO é mascarado (inclui CPF) — fica dentro da VPS da banca.",
-      "Falha de rede ao chamar o agente só vai para o log, sem nova tentativa."
+      "Falha de rede ao chamar o agente fica registrado só no registro técnico do servidor (ninguém é avisado), sem nova tentativa."
     ],
     "por_que": "Decisão do Eduardo (08/10): fica no código. A trava (só o Eduardo, só @claude) é de segurança e não pode virar algo editável na tela.",
     "mudar": {

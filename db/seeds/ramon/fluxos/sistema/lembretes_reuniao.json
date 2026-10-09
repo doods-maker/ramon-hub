@@ -18,7 +18,7 @@
       "Lead com reunião aberta: marcar outra pede confirmação.",
       "Cal.com: só aviso com assinatura válida, e o mesmo aviso uma vez por dia; contato novo vira lead novo (origem calcom-agenda).",
       "Sem reserva pelo código: se o fluxo não começar (ex.: outra execução viva no mesmo lead), ninguém faz — confira em Execuções.",
-      "Push só com o ntfy configurado."
+      "O push no celular só sai com ele configurado."
     ],
     "por_que": "Roda por 3 fluxos seus: \"Reunião marcada\", \"Reunião cancelada\" e \"Lembretes de reunião\". Textos, avisos, quem recebe e os horários dos lembretes se editam na tela. Mover a tarefa no remarcar e a ligação com o Cal.com continuam no código.",
     "mudar": {

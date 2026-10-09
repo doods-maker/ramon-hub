@@ -14,7 +14,7 @@
     ],
     "travas": [
       "Drive só com as 3 chaves do Drive configuradas; tenta 3 vezes — uma nova tentativa depois de um envio pela metade pode duplicar arquivos na pasta.",
-      "Notion só com o token do Notion e a peça ligada a uma página; erro só vai para o log.",
+      "Notion só com o token do Notion e a peça ligada a uma página; erro fica registrado só no registro técnico do servidor (ninguém é avisado).",
       "Não é lead nem conversa: não aparece no funil.",
       "Mudanças de status em rajada (publicando → publicado): um fluxo seu ainda rodando na mesma peça não começa de novo."
     ],

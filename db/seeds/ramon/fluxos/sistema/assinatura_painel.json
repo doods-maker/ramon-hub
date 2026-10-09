@@ -2,7 +2,7 @@
   "nome": "Assinatura pelo Painel do Cliente",
   "grupo": "painel_cliente",
   "fixa": true,
-  "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignStatusJob.\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real e marca a assinatura do Painel (PortalAssinatura) — não é lead nem conversa, e os fluxos não têm esse gatilho (aqui: Rodar na mão).",
+  "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignStatusJob.\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real e marca a assinatura do Painel (PortalAssinatura) — não é lead nem conversa, e o gatilho existe para os seus fluxos; aqui o desenho usa Rodar na mão.",
   "resumo": "Quando o cliente assina pelo ZapSign, confere a assinatura e marca no Painel do Cliente.",
   "ficha": {
     "o_que_faz": "Quando o cliente assina pelo ZapSign um documento pedido no Painel do Cliente, o hub confere o status no ZapSign e atualiza a assinatura no Painel: ela sai das pendentes, vai para as assinadas e o download fica liberado.",

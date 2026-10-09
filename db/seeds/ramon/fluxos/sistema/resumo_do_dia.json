@@ -12,7 +12,7 @@
       "Não grava nada."
     ],
     "travas": [
-      "Push só com o ntfy configurado; e-mail só com o SMTP configurado.",
+      "O push no celular só sai com ele configurado; e-mail só com o SMTP configurado.",
       "Casos de cálculo do ADVBOX ficam de fora.",
       "\"Em jogo\" = soma do valor MENSAL do benefício dos leads com tarefa vencida ou parados.",
       "Se o fluxo não começar (erro do motor ou a execução anterior ainda viva), o código faz naquele dia (reserva)."
