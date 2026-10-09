@@ -13,7 +13,7 @@ module Ramon::PortalNovidades
 
   def aplicar(anterior, novo, agora: Time.current)
     if Ramon::PortalTexto.v2?
-      novo['tribunal'] = Ramon::PortalTexto.tribunal(novo['andamentos'], anterior&.dig('tribunal'))
+      novo['tribunal'] = Ramon::PortalTexto.achado_do_tribunal(novo['andamentos'], anterior&.dig('tribunal'))
       novo['etapa_cliente'] = Ramon::PortalTexto.etapa_real(novo)
     else
       novo['etapa_cliente'] = etapa_cliente(anterior, novo['etapa'])
@@ -43,20 +43,36 @@ module Ramon::PortalNovidades
   end
 
   def detectar(anterior, novo, quando)
+    # ponytail: 1º sync com a regra do tribunal (espelho sem 'tribunal', só até a noite de 09/10/2026): a troca de
+    # regra e a janela maior de andamentos (30 → 100) não são novidade do caso. Pode sair depois dessa noite.
+    return [] if novo.key?('tribunal') && !anterior.key?('tribunal')
+
     (novidade_de_etapa(anterior, novo) + marcos_novos(anterior, novo))
       .map { |n| n.merge('em' => quando, 'vista' => false, 'avisada' => false) }
   end
 
   def novidade_de_etapa(anterior, novo)
-    # 1º sync com a etapa vinda do tribunal (espelho sem 'tribunal'): a troca de regra não é novidade do caso.
-    return [] if novo.key?('tribunal') && !anterior.key?('tribunal')
-
     atual = novo['etapa_cliente']
-    return [] if atual.blank? || Ramon::PortalTexto.normalizar(atual) == Ramon::PortalTexto.normalizar(etapa_exibida(anterior))
+    return [] if atual.blank? || mesma_noticia?(atual, anterior, novo)
 
     texto = Ramon::PortalTexto.etapa(atual)
     [{ 'tipo' => 'etapa', 'titulo' => texto['titulo'], 'o_que_esperar' => texto['o_que_esperar'], 'delicada' => texto['delicada'] == true,
-       'email' => Ramon::PortalTexto.email?(atual) }]
+       'email' => Ramon::PortalTexto.email?(atual) && !encerrado_pelo_tribunal?(atual, novo) }]
+  end
+
+  # Mesma etapa, ou (v2) etapa sem notícia própria na mesma fase — ex.: a audiência passou e a agenda saiu.
+  def mesma_noticia?(atual, anterior, novo)
+    texto = Ramon::PortalTexto
+    antes = etapa_exibida(anterior)
+    return true if texto.normalizar(atual) == texto.normalizar(antes)
+
+    texto.v2? && Ramon::PortalTexto::SEM_NOTICIA.include?(atual) && texto.fase_de(atual, novo['fase']) == texto.fase_de(antes, anterior['fase'])
+  end
+
+  # Baixa no tribunal aparece no painel, mas sem e-mail: em caso perdido seria notícia ruim automática (o e-mail de
+  # "concluído" fica pra quando a equipe arquiva).
+  def encerrado_pelo_tribunal?(atual, novo)
+    atual == Ramon::PortalTexto::ARQUIVADO && Ramon::PortalTexto.normalizar(novo['fase']) != Ramon::PortalTexto::FASE_ENCERRADA
   end
 
   def marcos_novos(anterior, novo)

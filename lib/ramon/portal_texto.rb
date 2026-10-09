@@ -72,16 +72,18 @@ module Ramon::PortalTexto # rubocop:disable Metrics/ModuleLength
     dados['etapas'].dig(normalizar(stage), 'email') != false
   end
 
+  ARQUIVADO = 'ARQUIVADO/ENCERRADO'.freeze
+  CONCEDIDO = 'BENEFICIO CONCEDIDO / IMPLANTACAO'.freeze
+  # Tarefa do ADVBOX com data (espelho 'agenda') → etapa do painel, por [tipo][processo na Justiça?].
+  AGENDA = { 'audiencia' => { true => 'PAINEL AUDIENCIA MARCADA', false => 'PAINEL AUDIENCIA MARCADA' },
+             'pericia' => { true => 'PAINEL PERICIA MARCADA', false => 'PERICIA AGENDADA' } }.freeze
+  # Etapas sem notícia própria (só o nº CNJ ou o protocolo): mudar pra elas dentro da mesma fase não é novidade.
+  SEM_NOTICIA = ['ACAO PROTOCOLADA', 'REQUERIMENTO PROTOCOLADO'].freeze
+
   # Encerrado = a equipe arquivou (grupo ARQUIVAMENTO) ou o tribunal deu baixa definitiva.
   def encerrado?(processo)
     normalizar(processo['fase']) == FASE_ENCERRADA || PortalCliente.etapa_cliente(processo) == ARQUIVADO
   end
-
-  ARQUIVADO = 'ARQUIVADO/ENCERRADO'.freeze
-  CONCEDIDO = 'BENEFICIO CONCEDIDO / IMPLANTACAO'.freeze
-  # Tarefa do ADVBOX com data (espelho 'agenda') → etapa do painel: [processo na Justiça, pedido no INSS].
-  AGENDA = { 'audiencia' => ['PAINEL AUDIENCIA MARCADA', 'PAINEL AUDIENCIA MARCADA'],
-             'pericia' => ['PAINEL PERICIA MARCADA', 'PERICIA AGENDADA'] }.freeze
 
   # Etapa que o cliente vê (v2): do tribunal e das tarefas, nunca da coluna "etapa" do ADVBOX, que a equipe
   # esquece de mover (Siemes/Ademir, 08/10). Exceções (a etapa vale): arquivado pela equipe mostra o motivo, e o
@@ -89,12 +91,20 @@ module Ramon::PortalTexto # rubocop:disable Metrics/ModuleLength
   def etapa_real(processo)
     return processo['etapa'] if normalizar(processo['fase']) == FASE_ENCERRADA || normalizar(processo['etapa']) == CONCEDIDO
 
-    tribunal = processo.dig('tribunal', 'etapa')
+    tribunal = etapa_do_tribunal(processo)
     agenda = Array(processo['agenda']).first
     return tribunal if tribunal == ARQUIVADO
-    return AGENDA[agenda['tipo']][cnj?(processo) ? 0 : 1] if agenda
+    return AGENDA[agenda['tipo']][cnj?(processo)] if agenda
 
     tribunal || etapa_sem_andamento(processo)
+  end
+
+  # Baixa definitiva só encerra se nada andou depois: no eproc ela também marca a volta dos autos à origem.
+  def etapa_do_tribunal(processo)
+    achado = processo['tribunal']
+    return if achado.nil? || (achado['etapa'] == ARQUIVADO && Array(processo['andamentos']).any? { |a| a['data'].to_s > achado['data'] })
+
+    achado['etapa']
   end
 
   def etapa_sem_andamento(processo)
@@ -104,14 +114,24 @@ module Ramon::PortalTexto # rubocop:disable Metrics/ModuleLength
     'DOCUMENTOS SOLICITADOS - MKT' if Array(processo['docs_pendentes']).any?
   end
 
-  # Andamento mais recente que casa com uma regra de `tribunal` → { 'etapa', 'data' }; no mesmo dia vence a
-  # regra de cima. Guarda o do espelho anterior enquanto nada mais novo casar (o andamento sai da janela).
-  def tribunal(andamentos, anterior = nil)
-    achados = Array(andamentos).filter_map do |a|
-      regra = V2['tribunal'].find { |r| r['re'].match?(I18n.transliterate(a['titulo'].to_s)) }
-      { 'etapa' => regra['etapa'], 'data' => a['data'].to_s } if regra
+  # Andamento que define a fase → { 'etapa', 'data', 'titulo' }, em ordem cronológica: o mais recente vence (no
+  # mesmo dia, a regra de cima), exceto que regra `sem_volta` (pagamento) não volta pra uma de baixo — sentença ou
+  # acórdão depois do cumprimento não devolve o caso pra "O juiz decidiu". O achado do espelho anterior entra de
+  # novo pelo título, então corrigir uma regra no YAML corrige também o que já estava gravado.
+  def achado_do_tribunal(andamentos, anterior = nil)
+    achados = (Array(andamentos) + [anterior].compact).filter_map { |a| achado(a['titulo'], a['data']) }
+    escolhido = achados.sort_by { |t| [t['data'], -t['ordem']] }.reduce(nil) do |atual, t|
+      atual && atual['sem_volta'] && t['ordem'] > atual['ordem'] ? atual : t
     end
-    (achados + [anterior].compact).max_by { |t| [t['data'], -V2['tribunal'].index { |r| r['etapa'] == t['etapa'] }.to_i] }
+    escolhido&.slice('etapa', 'data', 'titulo')
+  end
+
+  def achado(titulo, data)
+    ordem = V2['tribunal'].index { |r| r['re'].match?(I18n.transliterate(titulo.to_s)) }
+    return if ordem.nil?
+
+    regra = V2['tribunal'][ordem]
+    { 'etapa' => regra['etapa'], 'data' => data.to_s, 'titulo' => titulo, 'ordem' => ordem, 'sem_volta' => regra['sem_volta'] == true }
   end
 
   def cnj?(processo) = processo['numero'].to_s.gsub(/\D/, '').size == 20
