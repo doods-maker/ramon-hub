@@ -9,7 +9,7 @@ module Ramon::MemoriaContato
   MAX_ITENS = 6
   ANTERIORES = 3
   # Nome/espécie de benefício não é dado de saúde: sai do item antes do teste (senão "auxílio-doença" cairia por "doença").
-  BENEFICIO = /aux[ií]lio[-\s]?(?:doen[cç]a|acidente)|aposentadoria\s+por\s+(?:incapacidade|invalidez)|\bBPC\b|\bLOAS\b/i
+  BENEFICIO = /aux[ií]lio[-\s]?(?:doen[cç]a|acidente)|(?:aposentadoria|aux[ií]lio|benef[ií]cio)\s+por\s+(?:incapacidade|invalidez)|\bBPC\b|\bLOAS\b/i
   # Espécie do INSS (B31, B91…). Algumas também são código CID (B91, B92…): perto de laudo/atestado/perícia, não sai.
   ESPECIE = /\bB\s?(?:31|32|36|41|42|46|87|88|91|92|93|94)\b/i
   DOC_MEDICO = /laudo|atestado|per[ií]cia/i

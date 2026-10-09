@@ -58,7 +58,8 @@ RSpec.describe Ramon::MemoriaContato do
     end
 
     it 'aposentadoria por incapacidade e o nome do beneficio, nao saude (sai antes do teste)' do
-      itens = ['Pediu aposentadoria por incapacidade permanente', 'Recebe aposentadoria por invalidez', 'Quer o auxílio-acidente']
+      itens = ['Pediu aposentadoria por incapacidade permanente', 'Recebe aposentadoria por invalidez', 'Quer o auxílio-acidente',
+               'Pediu auxílio por incapacidade temporária', 'Benefício por incapacidade negado']
 
       expect(itens.select { |item| described_class.saude?(item) }).to eq([])
     end
