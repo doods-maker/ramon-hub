@@ -4,8 +4,8 @@
 # A vez é reivindicada ANTES de rodar, num UPDATE condicional em ultimo_disparo_em (o "reivindicar o dia" da B4.3):
 # - por dia: 1 vez no dia; fluxo que nasceu depois da hora de hoje começa amanhã (nunca repete a vez que o código já fez);
 # - a cada N min: 1 vez por bloco de N minutos.
-# O job do código (Ramon::Fluxos::Rotinas::Conta.cada_conta) disputa a MESMA vez do fluxo migrado: quem pega faz.
-# Fluxo migrado de uma rotina do código (Rotinas::Conta): no comando o fluxo faz; não começou ou fora do comando, o código faz.
+# O job do código (Ramon::Fluxos::Rotinas::Conta.cada_conta — hoje só o Resumo do dia) disputa a MESMA vez do fluxo
+# migrado: quem pega faz. No comando o fluxo faz; não começou ou fora do comando, o código faz.
 module Ramon::Fluxos::HorarioConta
   GATILHO = 'horario_conta'.freeze
   PASSOS = %w[se escolha esperar parar avisar_push rotina].freeze # os que rodam sem lead

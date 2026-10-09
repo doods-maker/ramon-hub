@@ -4,13 +4,11 @@
 class Ramon::ExtratoFechamentoJob < ApplicationJob
   queue_as :scheduled_jobs
 
-  # B5-conta: sem conta = o cron (as contas cujo fluxo "Fechamento do extrato" não assumiu); com conta = o fluxo ou a reserva.
-  def perform(account_id = nil)
+  # Regra fixa (decisão do Eduardo 08/10): todas as contas, todo dia às 00:20 (config/schedule.yml).
+  def perform
     mes = Ramon::ExtratoFechamento.hoje.prev_month.beginning_of_month
     return unless Ramon::ExtratoFechamento.fechado?(mes)
 
-    Ramon::Fluxos::Rotinas::Conta.cada_conta('fechamento_extrato', account_id) do |account|
-      Ramon::ExtratoFechamento.fechar!(account, mes)
-    end
+    Account.find_each { |account| Ramon::ExtratoFechamento.fechar!(account, mes) }
   end
 end

@@ -14,13 +14,4 @@ RSpec.describe Ramon::PortalSyncJob do
     expect(Ramon::PortalSyncService).to have_received(:new).twice
     expect(Ramon::PortalSyncService).to have_received(:new).with(outro)
   end
-
-  it 'B5: conta com o fluxo no comando fica de fora do cron; com o id, só ela' do
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).and_call_original
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).with(cliente.account, 'espelho_painel').and_return(true)
-    described_class.perform_now
-    expect(Ramon::PortalSyncService).not_to have_received(:new)
-    described_class.perform_now(cliente.account_id)
-    expect(Ramon::PortalSyncService).to have_received(:new).with(cliente)
-  end
 end

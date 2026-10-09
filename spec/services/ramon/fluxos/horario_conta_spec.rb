@@ -142,27 +142,5 @@ RSpec.describe Ramon::Fluxos::HorarioConta do
         expect { rodar('2026-10-06 08:00') }.to have_enqueued_job(Ramon::DailyDigestJob).with(account.id)
       end
     end
-
-    it 'publicar peças: sem peça vencida o fluxo nem começa (nem gasta a vez); com peça, o fluxo faz' do
-      publicar = Ramon::Fluxos::Migracao.semear(account, 'publicar_pecas').sole
-      with_modified_env(RAMON_FLUXO_PUBLICAR_PECAS: 'on') do
-        Ramon::Fluxos::Migracao.mudar_modo!(account, 'publicar_pecas', 'normal')
-        rodar('2026-10-06 12:00')
-        expect([publicar.execucoes.count, publicar.reload.ultimo_disparo_em]).to eq([0, nil])
-        create(:peca, account: account, status: 'agendado', agendado_para: sp('2026-10-06 11:59'), imagens: ['u1'])
-        rodar('2026-10-06 12:01')
-      end
-      expect(publicar.execucoes.sole.ensaio).to be(false)
-    end
-
-    it 'publicar peças em sombra: 1 vez por minuto — quem pega o minuto (relógio ou cron) faz, o outro pula' do
-      publicar = Ramon::Fluxos::Migracao.semear(account, 'publicar_pecas').sole
-      create(:peca, account: account, status: 'agendado', agendado_para: sp('2026-10-06 11:59'), imagens: ['u1'])
-      expect { rodar('2026-10-06 12:00') }.to have_enqueued_job(Ramon::PublicarPecasJob).with(account.id)
-      expect(cron('2026-10-06 12:00:30', 'publicar_pecas')).to eq([])
-      expect(cron('2026-10-06 12:01:00', 'publicar_pecas')).to eq([account.id])
-      expect { rodar('2026-10-06 12:01:20') }.not_to have_enqueued_job(Ramon::PublicarPecasJob)
-      expect(publicar.execucoes.count).to eq(0)
-    end
   end
 end

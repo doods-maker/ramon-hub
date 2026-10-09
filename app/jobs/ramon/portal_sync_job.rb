@@ -2,11 +2,10 @@
 class Ramon::PortalSyncJob < ApplicationJob
   queue_as :scheduled_jobs
 
-  # B5-conta: sem conta = o cron (as contas cujo fluxo "Espelho do Painel" não assumiu, + o expurgo de acessos, que é da
-  # instalação toda); com conta = o fluxo ou a reserva pediram aquela conta.
-  def perform(account_id = nil)
-    PortalAcesso.expurgar! if account_id.nil?
-    Ramon::Fluxos::Rotinas::Conta.cada_conta('espelho_painel', account_id) { |account| espelhar(account) }
+  # Regra fixa (decisão do Eduardo 08/10): o expurgo dos acessos (Marco Civil) e todas as contas, às 00:30.
+  def perform
+    PortalAcesso.expurgar!
+    Account.find_each { |account| espelhar(account) }
   end
 
   private

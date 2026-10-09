@@ -23,16 +23,4 @@ RSpec.describe Ramon::NightCopilotJob do
     expect { described_class.perform_now }.not_to raise_error
     expect(healthy).to have_received(:perform)
   end
-
-  it 'B5: conta com o fluxo no comando fica de fora do cron; com o id, só ela' do
-    service = instance_double(Ramon::NightCopilotService, perform: 0)
-    allow(Ramon::NightCopilotService).to receive(:new).and_return(service)
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).and_call_original
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).with(account, 'copiloto_noturno').and_return(true)
-    described_class.perform_now
-    expect(Ramon::NightCopilotService).not_to have_received(:new).with(account: account)
-    expect(Ramon::NightCopilotService).to have_received(:new).with(account: other_account)
-    described_class.perform_now(account.id)
-    expect(Ramon::NightCopilotService).to have_received(:new).with(account: account)
-  end
 end

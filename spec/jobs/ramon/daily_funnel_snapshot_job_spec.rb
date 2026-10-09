@@ -13,15 +13,11 @@ RSpec.describe Ramon::DailyFunnelSnapshotJob do
     expect(row.value_sum).to eq(1200)
   end
 
-  it 'B5: conta com o fluxo no comando fica de fora do cron; com o id, só ela' do
-    account = create(:account)
+  it 'regra fixa (08/10): o cron roda todas as contas, sem perguntar a fluxo nenhum' do
     outra = create(:account)
-    [account, outra].each { |a| create(:lead, account: a, lead_stage: a.lead_stages.find_by(name: 'Novo')) }
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).and_call_original
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).with(account, 'retrato_funil').and_return(true)
+    allow(Ramon::FunnelSnapshotService).to receive(:new).and_call_original
     described_class.perform_now
-    expect([FunnelSnapshot.where(account: account).count, FunnelSnapshot.where(account: outra).count]).to eq([0, 1])
-    described_class.perform_now(account.id)
-    expect(FunnelSnapshot.where(account: account).count).to eq(1)
+    expect(Ramon::FunnelSnapshotService).to have_received(:new).with(account: outra)
+    expect(described_class.instance_method(:perform).arity).to eq(0) # sem "só esta conta": não há fluxo que peça
   end
 end

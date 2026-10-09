@@ -80,16 +80,4 @@ RSpec.describe Ramon::PublicarPecasJob do
     described_class.perform_now
     expect(andando.reload.status).to eq 'publicando'
   end
-
-  it 'B5: pendente? só com peça vencida ou presa; fluxo no comando tira a conta do cron; com o id, só ela' do
-    peca
-    expect(described_class.pendente?(peca.account)).to be(true)
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).and_call_original
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).with(peca.account, 'publicar_pecas').and_return(true)
-    described_class.perform_now
-    expect(publisher).not_to have_received(:publicar)
-    described_class.perform_now(peca.account_id)
-    expect(peca.reload.status).to eq('publicado')
-    expect(described_class.pendente?(peca.account)).to be(false)
-  end
 end
