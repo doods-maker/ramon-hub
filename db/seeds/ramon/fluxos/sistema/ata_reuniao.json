@@ -21,7 +21,7 @@
     ],
     "por_que": "Decisão do Eduardo (08/10): fica no código. É trabalho pesado e longo (a transcrição pode levar muitos minutos) e não fala com ninguém — não há o que editar no quadro.",
     "mudar": {
-      "pedido": "Para acrescentar algo (ex.: avisar alguém que a reunião foi gravada), crie um fluxo seu com o gatilho \"Reunião gravada (ou Refazer ata)\" — sem mexer no código. Para mudar a ata, peça ao Claude: \"a ata da reunião passa a <mudança>\" (ex.: incluir a seção Próximos passos).",
+      "pedido": "Para acrescentar algo (ex.: um push no celular avisando que a reunião foi gravada), crie um fluxo seu com o gatilho \"Reunião gravada (ou Refazer ata)\" — sem mexer no código. Nesse gatilho não há lead: os passos do lead (sino, tarefa, etapa) não estão disponíveis — use Push, Esperar, Se. Para mudar a ata, peça ao Claude: \"a ata da reunião passa a <mudança>\" (ex.: incluir a seção Próximos passos).",
       "arquivos": [
         "app/controllers/api/v1/accounts/ramon_reunioes_controller.rb",
         "app/jobs/ramon/reuniao_ata_job.rb",

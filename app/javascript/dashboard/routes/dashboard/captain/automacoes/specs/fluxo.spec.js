@@ -317,8 +317,9 @@ describe('rotinas prontas (registro por plano, B5)', () => {
       'pesquisa_nps_exito',
       'abrir_caso_advbox',
       'concluir_tarefas',
-      'escalar_chegada',
     ]);
+    expect(rotinasPara('conversa')).toEqual(rotinasPara('lead'));
+    expect(rotinasPara('outro')).toEqual(['escalar_chegada']);
     expect(rotinasPara('conta')).toEqual(['resumo_do_dia']);
     expect(new Set(ROTINAS).size).toBe(ROTINAS.length);
     expect(rotinaAlvo('xyz')).toBeUndefined();

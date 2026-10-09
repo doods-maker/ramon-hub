@@ -257,6 +257,18 @@ describe Webhooks::InstagramEventsJob do
         expect(instagram_inbox.messages.last.content_attributes['is_unsupported']).to be_nil
       end
 
+      # ramon: em produção a Meta manda "lido" e reação sem sender/recipient — o job quebrava (NoMethodError) e morria no Sidekiq.
+      it 'ignores read and reaction events that come without sender and recipient' do
+        entries = [
+          { time: 1_791_504_969_634, id: 'chatwoot-app-user-id-1',
+            messaging: [{ timestamp: 1_791_504_969_088, reaction: { mid: 'm-1', action: 'react', reaction: 'laugh', emoji: '😂' } }] },
+          { time: 1_791_504_916_079, id: 'chatwoot-app-user-id-1', messaging: [{ timestamp: 1_791_504_915_707, read: { mid: 'm-2' } }] }
+        ].map(&:with_indifferent_access)
+
+        expect { instagram_webhook.perform_now(entries) }.not_to raise_error
+        expect(instagram_inbox.messages.count).to eq 0
+      end
+
       it 'sets correct instagram attributes on contact' do
         dm_event = build(:instagram_message_create_event).with_indifferent_access
         instagram_webhook.perform_now(dm_event[:entry])

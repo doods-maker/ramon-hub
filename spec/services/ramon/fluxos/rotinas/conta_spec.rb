@@ -25,7 +25,7 @@ RSpec.describe Ramon::Fluxos::Rotinas::Conta do
     expect([novo.modo, novo.ativo, novo.gatilho_tipo, novo.limite_dia]).to eq(['sombra', true, 'horario_conta', nil])
   end
 
-  it 'rodar: "agora" roda o job de hoje só para esta conta; o ensaio só descreve' do
+  it 'rodar: roda o job de hoje só para esta conta; o ensaio só descreve' do
     allow(Ramon::DailyDigestJob).to receive(:perform_now)
     expect(described_class.rodar('resumo_do_dia', ctx(ensaio: true))).to eq('faria: o resumo do dia')
     expect(Ramon::DailyDigestJob).not_to have_received(:perform_now)

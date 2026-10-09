@@ -2700,10 +2700,11 @@
         "WEBHOOK_ULTIMO": "The webhook must be the last step.",
         "CAMPO_CHAVE": "Field name only with lowercase letters, numbers and _, and not a name the hub already uses (nome, etapa, telefone…).",
         "CONTA_QUANDO": "Choose a time or \"every N minutes\" (1 to 1440) and at least one day.",
-        "CONTA_PASSO": "This step needs a lead. On the account schedule only If, Choose, Wait, Stop, Push and Ready routine are allowed.",
+        "CONTA_PASSO": "This step needs a lead. On this trigger only If, Choose, Wait, Stop, Push and Ready routine are allowed.",
         "ROTINA_DESCONHECIDA": "Unknown routine ({nome}).",
         "ROTINA_DE_LEAD": "This routine is not an account routine (it needs a lead or another event): it does not run on the account schedule.",
-        "ROTINA_DA_CONTA": "This routine is for the whole account: it only runs on the Account schedule trigger."
+        "ROTINA_DA_CONTA": "This routine is for the whole account: it only runs on the Account schedule trigger.",
+        "ROTINA_OUTRO_ALVO": "This routine is for another target (a lead, or an event outside the funnel): it does not run on this trigger."
       },
       "TESTAR": {
         "TITULO": "Test with a lead",

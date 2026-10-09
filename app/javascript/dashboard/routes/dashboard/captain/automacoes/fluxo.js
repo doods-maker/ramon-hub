@@ -347,12 +347,15 @@ export const ROTINAS_INFO = [
 export const ROTINAS = ROTINAS_INFO.map(r => r.chave);
 export const rotinaAlvo = chave =>
   ROTINAS_INFO.find(r => r.chave === chave)?.alvo;
-// o select do passo: no Horário da conta só as da conta; nos demais gatilhos, só as de lead/conversa
+// = Ramon::Fluxos::HorarioConta::SEM_LEAD_ALVOS: alvos sem lead ('conta' | 'outro'); lead e conversa = um grupo só
+export const semLead = alvo => ['conta', 'outro'].includes(alvo);
+const grupoDoAlvo = alvo => (semLead(alvo) ? alvo : 'lead');
+// o select do passo: só as rotinas do mesmo alvo do gatilho (conta, evento de fora do funil, ou lead/conversa)
 export const rotinasPara = alvo =>
-  ROTINAS_INFO.filter(r => (r.alvo === 'conta') === (alvo === 'conta')).map(
+  ROTINAS_INFO.filter(r => grupoDoAlvo(r.alvo) === grupoDoAlvo(alvo)).map(
     r => r.chave
   );
-// = Ramon::Fluxos::HorarioConta::PASSOS — o que roda sem lead (gatilho Horário da conta)
+// = Ramon::Fluxos::HorarioConta::PASSOS — o que roda sem lead (Horário da conta e gatilhos de fora do funil)
 export const PASSOS_CONTA = [
   'se',
   'escolha',

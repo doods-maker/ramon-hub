@@ -9,13 +9,14 @@ module Ramon::MemoriaContato
   MAX_ITENS = 6
   ANTERIORES = 3
   # Nome/espécie de benefício não é dado de saúde: sai do item antes do teste (senão "auxílio-doença" cairia por "doença").
-  BENEFICIO = /aux[ií]lio[-\s]?(?:doen[cç]a|acidente)|aposentadoria\s+por\s+(?:incapacidade|invalidez)|\bBPC\b|\bLOAS\b/i
+  BENEFICIO = /aux[ií]lio[-\s]?(?:doen[cç]a|acidente)|(?:aposentadoria|aux[ií]lio|benef[ií]cio)\s+por\s+(?:incapacidade|invalidez)|\bBPC\b|\bLOAS\b/i
   # Espécie do INSS (B31, B91…). Algumas também são código CID (B91, B92…): perto de laudo/atestado/perícia, não sai.
   ESPECIE = /\bB\s?(?:31|32|36|41|42|46|87|88|91|92|93|94)\b/i
   DOC_MEDICO = /laudo|atestado|per[ií]cia/i
   # ponytail: lista de palavras — cobre o comum (doença, código CID tipo M54/F32, parte do corpo, condições do BPC); a
   # regra principal é o PROMPT. Se escapar algo, somar aqui. LER só em maiúsculas ("não sabe ler" não é saúde);
-  # "operador" e "mão de obra" passam.
+  # "operador" e "mão de obra" passam. "incapa…" pega incapacidade/incapaz; o nome do benefício
+  # ("aposentadoria por incapacidade") já saiu antes, pelo BENEFICIO.
   # Borda da palavra por lookaround com \p{L} (e não \b + \w): no Ruby o \w é só ASCII e o \b é Unicode, então
   # "depress\w*\b" NÃO casaria "depressão". O lookbehind fica fora do /i (case fold de \p{L} no lookbehind pode não compilar).
   SAUDE = /(?-i:(?<![\p{L}\d]))(?:
@@ -28,7 +29,9 @@ module Ramon::MemoriaContato
             hiv|aids|derrame|avc|infarto|epilep\p{L}*|hansen\p{L}*|gr[aá]vid\p{L}*|gesta[cçn]\p{L}*|(?-i:LER)|dort|
             olhos?|vis[aã]o|ceg(?:[oa]s?|ueira)|surd\p{L}*|auditiv\p{L}*|coluna|lombar|cervical|joelho\p{L}*|ombro\p{L}*|
             bra[cç]o\p{L}*|perna\p{L}*|m[aã]os?(?!\s+de\s+obra)|p[eé]s?|dedo\p{L}*|punho\p{L}*|quadril|tornozelo\p{L}*|
-            costas|sa[uú]de
+            costas|sa[uú]de|cora[cç][aã]o|card[ií]ac\p{L}*|cardiopat\p{L}*|pulm[aã]o|pulm[oõ]es|pulmonar\p{L}*|asma|asm[aá]tic\p{L}*|
+            rim|rins|renal|renais|hemodi[aá]lise|di[aá]lise|covid\p{L}*|[aá]lcool\p{L}*|alco[oó]latra\p{L}*|depend[eê]ncia\s+qu[ií]mica|
+            cadeirante\p{L}*|cadeira\s+de\s+rodas|acidente\s+vascular|incapa\p{L}*
           )(?![\p{L}\d])/ix
   PROMPT = <<~TXT.freeze
     Você lê o fim de uma conversa de WhatsApp entre um escritório de advocacia previdenciária e trabalhista

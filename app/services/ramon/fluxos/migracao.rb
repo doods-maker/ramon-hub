@@ -4,7 +4,8 @@
 # por conta. A chave: env ligada E todos os fluxos do grupo ligados, publicados, em modo normal, com o gatilho esperado
 # (e sem limite do dia, salvo limite_devolve: false) → os fluxos fazem e o código para; qualquer peça fora → o código
 # faz e os fluxos só ensaiam.
-# Migração nova (B4.3+): uma entrada em GRUPOS + o(s) JSON + o código lendo assumiu? UMA vez por evento.
+# Migração nova (B4.3+): uma entrada em GRUPOS (B5: no GRUPOS do módulo do plano em rotinas/) + o(s) JSON + o código
+# lendo assumiu? UMA vez por evento.
 module Ramon::Fluxos::Migracao
   PASTA = Rails.root.join('db/seeds/ramon/fluxos/migrados')
   GRUPOS = {

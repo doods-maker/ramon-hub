@@ -2705,10 +2705,11 @@
         "WEBHOOK_ULTIMO": "O webhook tem que ser o último passo.",
         "CAMPO_CHAVE": "Nome do campo só com letras minúsculas, números e _, e diferente dos nomes que o hub já usa (nome, etapa, telefone…).",
         "CONTA_QUANDO": "Escolha uma hora ou \"a cada N minutos\" (1 a 1440) e pelo menos um dia.",
-        "CONTA_PASSO": "Este passo precisa de um lead. No Horário da conta só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta.",
+        "CONTA_PASSO": "Este passo precisa de um lead. Neste gatilho só entram Se, Escolha, Esperar, Parar, Push e Rotina pronta.",
         "ROTINA_DESCONHECIDA": "Rotina desconhecida ({nome}).",
         "ROTINA_DE_LEAD": "Esta rotina não é da conta (precisa de um lead ou de outro evento): não roda no Horário da conta.",
-        "ROTINA_DA_CONTA": "Esta rotina é da conta toda: só roda no gatilho Horário da conta."
+        "ROTINA_DA_CONTA": "Esta rotina é da conta toda: só roda no gatilho Horário da conta.",
+        "ROTINA_OUTRO_ALVO": "Esta rotina é de outro alvo (lead ou evento de fora do funil): não roda neste gatilho."
       },
       "TESTAR": {
         "TITULO": "Testar com um lead",
