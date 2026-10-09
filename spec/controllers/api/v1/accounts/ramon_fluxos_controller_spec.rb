@@ -121,4 +121,20 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
     expect(response.parsed_body).to include('status' => 'concluida', 'ensaio' => true, 'alvo_type' => 'Account', 'alvo_id' => account.id)
     expect(response.parsed_body['trilha'].last['resumo']).to eq('faria: push "oi"')
   end
+
+  it 'o desenho do sistema aberto traz a ficha (a lista não); a do fluxo aponta o fluxo de verdade (decisão 08/10)' do
+    get url, headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['payload'].filter_map { |f| f['ficha'] }).to eq([])
+    do_sistema = ->(chave) { account.fluxos.find_by!(origem: 'sistema', sistema_chave: chave) }
+
+    get "#{url}/#{do_sistema.call('contrato_limpo').id}", headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body).to include('fixa' => true, 'ficha' => include('travas' => be_present, 'fluxos' => []))
+
+    proprio = fluxo_publicado(account, grafo, sistema_chave: 'lead_ganho', modo: 'normal')
+    get "#{url}/#{do_sistema.call('lead_ganho').id}", headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['ficha']['fluxos']).to eq([{ 'id' => proprio.id, 'nome' => 'Fluxo de teste', 'modo' => 'normal', 'ativo' => true }])
+
+    get "#{url}/#{proprio.id}", headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['ficha']).to be_nil
+  end
 end

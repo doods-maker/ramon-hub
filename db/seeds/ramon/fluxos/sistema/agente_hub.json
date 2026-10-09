@@ -1,8 +1,36 @@
 {
   "nome": "Agente do hub (@claude)",
   "grupo": "leads_conversas",
-  "descricao": "No código: RamonAgenteListener#message_created → Ramon::AgenteNotifyJob (decide: o código ou o fluxo migrado \"Agente do hub\").\n\nO desenho não consegue mostrar:\n• só nota privada começando com @claude, escrita pelo e-mail do Eduardo (RAMON_AGENTE_EDUARDO_EMAIL) e com RAMON_AGENTE_RUNNER_URL — trava fixa (Ramon::AgenteNotifyJob.chamado?), que a tela não edita;\n• quem responde é o agente na VPS, também como nota privada; falha de rede só vai para o log.",
+  "fixa": true,
+  "descricao": "No código: RamonAgenteListener#message_created → Ramon::AgenteNotifyJob.\n\nO desenho não consegue mostrar:\n• só nota privada começando com @claude, escrita pelo e-mail do Eduardo (RAMON_AGENTE_EDUARDO_EMAIL) e com RAMON_AGENTE_RUNNER_URL — trava fixa (Ramon::AgenteNotifyJob.chamado?), que a tela não edita;\n• quem responde é o agente na VPS, também como nota privada; falha de rede só vai para o log.",
   "resumo": "Quando o Eduardo escreve @claude numa nota privada, o assistente da VPS responde na própria nota.",
+  "ficha": {
+    "o_que_faz": "Quando o Eduardo escreve uma nota privada começando com @claude, o hub chama o assistente Claude na VPS; ele lê a conversa e o dossiê do lead e responde como nota privada (\"🤖 Claude · …\"). Ele também pode salvar um arquivo .md na pasta do cliente no Drive e criar uma tarefa no ADVBOX.",
+    "quando": "Na hora da nota; a resposta chega em segundos ou minutos (um pedido por vez, em fila).",
+    "o_que_mexe": [
+      "Nota privada de resposta na conversa (sempre — também em erro ou limite atingido).",
+      "Opcional: arquivo .md no Drive do cliente e tarefa no ADVBOX (padrão: ANÁLISE DO CASO, para o Eduardo).",
+      "Registro da execução, com o custo."
+    ],
+    "travas": [
+      "Trava fixa: só nota privada que começa com @claude, escrita pelo e-mail do Eduardo — nota de outra pessoa nunca chama o agente, e a resposta do próprio Claude não dispara de novo.",
+      "Até 30 pedidos por dia; se a assinatura atingir o limite de uso, pausa até o dia seguinte.",
+      "Ferramentas só de leitura (pasta da sede e ADVBOX); até 6 minutos por pedido. #pesado aumenta o esforço; #tese:… escolhe a tese.",
+      "O contexto enviado ao agente NÃO é mascarado (inclui CPF) — fica dentro da VPS da banca.",
+      "Falha de rede ao chamar o agente fica registrado só no registro técnico do servidor (ninguém é avisado), sem nova tentativa."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. A trava (só o Eduardo, só @claude) é de segurança e não pode virar algo editável na tela.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o agente do hub passa a <mudança>\" (ex.: outro limite por dia, aceitar @claude de outra pessoa).",
+      "arquivos": [
+        "app/listeners/ramon_agente_listener.rb",
+        "app/jobs/ramon/agente_notify_job.rb",
+        "app/services/ramon/agente_contexto_service.rb",
+        "deploy/agente-hub/agente_hub.py"
+      ],
+      "impacto": "Mexe em quem pode acionar o agente e no custo dele. Mudança no agente_hub.py exige atualizar o serviço na VPS, não só o deploy do hub."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"nota_escrita","rotulo":"Nota privada @claude do Eduardo"},"posicao":{"x":0,"y":0}},

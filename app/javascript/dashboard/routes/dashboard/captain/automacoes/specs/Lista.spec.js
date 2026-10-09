@@ -273,6 +273,8 @@ describe('Lista de automações', () => {
     const fixas = wrapper.findAll('[data-testid="sistema-fixa"]');
     expect(fixas).toHaveLength(1);
     expect(fixas[0].text()).toContain('fixed rule (stays in code)');
-    expect(wrapper.text()).toContain('runs in code');
+    expect(wrapper.get('[data-testid="sistema-no-fluxo"]').text()).toBe(
+      'runs in a flow'
+    );
   });
 });

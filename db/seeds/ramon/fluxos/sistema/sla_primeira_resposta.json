@@ -3,6 +3,34 @@
   "grupo": "leads_conversas",
   "descricao": "No código: RamonLeadListener#conversation_created (caixas com Criar lead ligado) agenda Ramon::FirstResponseSlaJob para N minutos depois; o próprio job agenda a escalada de 60 minutos.\n\nO desenho não consegue mostrar:\n• o tempo vem do SLA de cada caixa (padrão de 5 min no env RAMON_SLA_FIRST_RESPONSE_MINUTES) e a escalada conta 60 min desde a criação da conversa;\n• \"ainda sem 1ª resposta\" não tem campo — o Se só confere se a conversa segue aberta; o código também desiste se a conversa não tem lead;\n• o horário do código é das 7h às 21h, todos os dias — diferente do horário comercial dos fluxos (seg–sex, 8h–18h);\n• a escalada é agendada mesmo fora do horário; só o aviso respeita o horário;\n• o push (ntfy) só sai com NTFY_TOPIC configurado;\n• o sino vai para o SDR do lead (sem SDR, para os gestores) e, na escalada, para os gestores — o passo Sino não escolhe por papel.",
   "resumo": "Se o lead fica sem primeira resposta no prazo da caixa, avisa o SDR e, depois, os gestores.",
+  "ficha": {
+    "o_que_faz": "Quando chega uma conversa nova numa caixa que cria lead, espera o prazo de 1ª resposta da caixa; se ninguém respondeu e a conversa segue aberta, avisa o SDR do lead (sem SDR: os administradores) no sino e no celular. Aos 60 minutos da chegada, se ainda sem resposta, avisa os administradores no sino.",
+    "quando": "Conta a partir da criação da conversa: o prazo da caixa (padrão 5 minutos) e depois 60 minutos. Avisos só das 7h às 21h, todos os dias.",
+    "o_que_mexe": [
+      "Sino do SDR (ou dos administradores) e push \"Lead aguardando 1ª resposta\".",
+      "Sino dos administradores na escalada dos 60 minutos (sem push)."
+    ],
+    "travas": [
+      "Respondeu antes do prazo ou a conversa foi fechada: nada.",
+      "Fora do horário pula o aviso, mas ainda faz a escalada se ela cair dentro do horário.",
+      "Só conversa com lead.",
+      "Se o fluxo não pegar a conversa (filtro editado, erro do motor), o código vigia aquela conversa (reserva).",
+      "O push no celular só sai com ele configurado."
+    ],
+    "por_que": "Roda pelo fluxo \"SLA da 1ª resposta\": prazos, horário e quem recebe se editam na tela. O prazo de cada caixa vem do cadastro da caixa.",
+    "mudar": {
+      "pedido": "Prazos, horário e avisos: no fluxo (botão acima); o prazo de uma caixa: no cadastro da caixa. Outra regra: peça ao Claude \"<mudança>\".",
+      "arquivos": [
+        "app/listeners/ramon_lead_listener.rb",
+        "app/jobs/ramon/first_response_sla_job.rb",
+        "app/services/ramon/cadencia.rb"
+      ],
+      "impacto": "Mudar o fluxo vale na hora para as conversas novas. Desligar o fluxo devolve o SLA ao código (mesma regra, textos do código)."
+    },
+    "fluxos": [
+      "sla_primeira_resposta"
+    ]
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"conversa_criada"},"posicao":{"x":0,"y":0}},

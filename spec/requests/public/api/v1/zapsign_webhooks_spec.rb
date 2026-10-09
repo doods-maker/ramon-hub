@@ -33,18 +33,9 @@ RSpec.describe 'Public ZapSign Webhooks API', type: :request do
     expect { post_webhook({ token: '' }) }.not_to have_enqueued_job(Ramon::ZapsignLeadStatusJob)
   end
 
-  it 'fluxo "Assinatura pelo Painel" no comando: o código não enfileira; o fluxo pede a mesma conferência' do
-    account = assinatura.portal_cliente.account
-    with_modified_env(ZAPSIGN_WEBHOOK_SECRET: secret, RAMON_FLUXO_ASSINATURA_PAINEL: 'on') do
-      Ramon::Fluxos::Migracao.semear(account, 'assinatura_painel')
-      Ramon::Fluxos::Migracao.mudar_modo!(account, 'assinatura_painel', 'normal')
-      expect do
-        post '/public/api/v1/zapsign_webhooks', params: { token: 'doc-1' }.to_json,
-                                                headers: { 'CONTENT_TYPE' => 'application/json', 'X-Ramon-Secret' => secret }
-      end.not_to have_enqueued_job(Ramon::ZapsignStatusJob)
-    end
-    expect(response).to have_http_status(:ok)
-    expect { perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) }.to have_enqueued_job(Ramon::ZapsignStatusJob).with(assinatura.id)
-    expect(Ramon::Fluxos::Migracao.fluxo(account, 'assinatura_painel').execucoes.sole).to have_attributes(ensaio: false, status: 'concluida')
+  it 'gatilho comum (N1 = B): enfileira a conferência de sempre e o fluxo comum de "Assinatura do Painel" ouve' do
+    comum = fluxo_publicado(assinatura.portal_cliente.account, grafo_linear({ 'tipo' => 'assinatura_painel' }))
+    expect { post_webhook({ token: 'doc-1' }) }.to have_enqueued_job(Ramon::ZapsignStatusJob).with(assinatura.id)
+    expect(comum.execucoes.sole).to have_attributes(alvo: assinatura, ensaio: false)
   end
 end

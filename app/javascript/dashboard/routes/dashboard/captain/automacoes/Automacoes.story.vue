@@ -174,6 +174,22 @@ const HOJE_SISTEMA = {
   chegada_cliente: 0,
   publicar_pecas: 1,
 };
+// 08/10: o "Abrir o fluxo" da ficha — fluxos FICTÍCIOS no lugar das chaves (a API troca pelos da conta).
+const NOMES_FLUXO = {
+  reuniao_marcada: 'Reunião marcada',
+  reuniao_cancelada: 'Reunião cancelada',
+  lembretes_reuniao: 'Lembretes de reunião',
+};
+const comFluxos = (d, i) =>
+  d.ficha && {
+    ...d.ficha,
+    fluxos: (d.ficha.fluxos || []).map((chave, j) => ({
+      id: 300 + i * 3 + j,
+      nome: NOMES_FLUXO[chave] || d.nome,
+      modo: 'normal',
+      ativo: true,
+    })),
+  };
 const SISTEMA = Object.entries(DESENHOS_SISTEMA).map(([arquivo, d], i) => {
   const chave = arquivo.split('/').pop().replace('.json', '');
   const gatilho = d.desenho.nos.find(n => n.tipo === 'gatilho').config;
@@ -187,6 +203,8 @@ const SISTEMA = Object.entries(DESENHOS_SISTEMA).map(([arquivo, d], i) => {
     gatilho_rotulo: gatilho.rotulo ?? null,
     grupo: d.grupo,
     alcance: d.alcance ?? null,
+    fixa: d.fixa === true,
+    ficha: comFluxos(d, i),
     ativo: false,
     limite_dia: d.limite_dia ?? null,
     origem: 'sistema',
@@ -504,6 +522,14 @@ const rodarFluxo = () => {
       <div class="h-screen"><Editor /></div>
     </Variant>
     <Variant title="SistemaAvisos" :init-state="abreSistema('avisos_painel')">
+      <div class="h-screen"><Editor /></div>
+    </Variant>
+    <Variant
+      v-for="f in SISTEMA"
+      :key="f.sistema_chave"
+      :title="`Ficha ${f.sistema_chave}`"
+      :init-state="abreSistema(f.sistema_chave)"
+    >
       <div class="h-screen"><Editor /></div>
     </Variant>
     <Variant title="RodarFluxo" :init-state="rodarFluxo">

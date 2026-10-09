@@ -3,7 +3,7 @@
 class Ramon::AgenteNotifyJob < ApplicationJob
   queue_as :default
 
-  # Quem chama o agente — a trava de sempre, num lugar só (RamonAgenteListener e a rotina agente_hub; a tela não a edita):
+  # Quem chama o agente — a trava de sempre, num lugar só (o RamonAgenteListener; regra fixa, a tela não a edita):
   # nota privada começando com "@claude", escrita pelo Eduardo (RAMON_AGENTE_EDUARDO_EMAIL), com o runner configurado.
   def self.chamado?(message)
     message.private? && message.content.to_s.lstrip.downcase.start_with?('@claude') &&

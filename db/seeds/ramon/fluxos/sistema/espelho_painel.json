@@ -1,8 +1,37 @@
 {
   "nome": "Espelho do Painel do Cliente",
   "grupo": "painel_cliente",
+  "fixa": true,
   "descricao": "No código: Ramon::PortalSyncJob (todo dia às 00:30) → Ramon::PortalSyncService.\n\nO desenho não consegue mostrar:\n• roda 1 vez por noite para todos os clientes do Painel, não por lead; falha de um cliente não derruba os outros;\n• copia do ADVBOX processos, andamentos e pedidos de documento — não há passo que leia do ADVBOX.",
   "resumo": "Toda noite, copia do ADVBOX os andamentos e pedidos de documento para o Painel do Cliente.",
+  "ficha": {
+    "o_que_faz": "Toda noite copia do ADVBOX, para cada cliente convidado do Painel do Cliente, os processos, andamentos e pedidos de documento; a IA traduz os pedidos \"SOLICITAR DOCUMENTOS\" numa lista simples para o cliente. Marca as novidades (etapa nova, marco novo) que os Avisos do Painel usam de manhã. Também apaga os registros de acesso ao Painel com mais de 6 meses (Marco Civil).",
+    "quando": "Todo dia às 00:30 (horário de Brasília).",
+    "o_que_mexe": [
+      "O que o cliente vê no Painel do Cliente (processos, andamentos, documentos pedidos) e o telefone do cliente, se faltava.",
+      "As novidades do caso (guardadas por 30 dias).",
+      "Apaga os registros de acesso com mais de 6 meses."
+    ],
+    "travas": [
+      "Precisa do token do ADVBOX; ADVBOX fora do ar num cliente: pula para o próximo.",
+      "Cliente suspenso continua sendo espelhado (só os avisos o deixam de fora).",
+      "Etapa interna não aparece para o cliente; o 1º espelho de um processo não gera novidade.",
+      "A IA recebe os dados mascarados e roda uma vez por pedido (guarda o resultado); com os textos v2 ligados e sem o consentimento do cliente, mostra um item genérico em vez da IA.",
+      "Gasta chamadas do ADVBOX (limite de 500 por dia por rota): 1 + 2 por processo, por cliente."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. É a cópia do ADVBOX para o Painel, longa e cheia de regras do dicionário de etapas; não há escolha a desenhar.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o espelho do Painel passa a <mudança>\" (ex.: mostrar mais andamentos).",
+      "arquivos": [
+        "app/jobs/ramon/portal_sync_job.rb",
+        "app/services/ramon/portal_sync_service.rb",
+        "app/services/ramon/portal_novidades.rb",
+        "app/services/ramon/portal_docs_service.rb",
+        "lib/ramon/portal_texto.rb"
+      ],
+      "impacto": "Muda o que o cliente vê no Painel e o consumo do limite diário do ADVBOX. O expurgo de 6 meses é obrigação legal: não tire."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"relogio","hora":"00:30","rotulo":"Toda noite às 00:30 (todos os clientes)"},"posicao":{"x":0,"y":0}},

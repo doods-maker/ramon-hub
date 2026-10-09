@@ -37,6 +37,7 @@ import Quadro from './Quadro.vue';
 import Paleta from './Paleta.vue';
 import PainelPasso from './PainelPasso.vue';
 import TestarComLead from './TestarComLead.vue';
+import FichaSistema from './FichaSistema.vue';
 
 defineOptions({ name: 'CaptainAutomacaoEditor' });
 
@@ -108,6 +109,13 @@ onMounted(() => {
   if (!etapas.value.length) store.dispatch('leadConfig/get');
   if (!pessoas.value.length) store.dispatch('agents/get');
   if (!teses.value.length) store.dispatch('theses/get');
+  abrirFluxo();
+});
+// "Abrir o fluxo" (ficha do sistema) navega de um editor para outro: a rota é a mesma, o Vue reaproveita a tela.
+// Sem id (a rota saindo do editor): nada a carregar.
+watch(fluxoId, id => {
+  if (!id) return;
+  selecionado.value = null;
   abrirFluxo();
 });
 // fluxo do sistema (D7): só leitura — o back recusa salvar, publicar e rodar
@@ -347,6 +355,14 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
         >
           {{ t(`${K}.SELO.REGRA_FIXA`) }}
         </span>
+        <span
+          v-else-if="somenteLeitura"
+          data-testid="sistema-no-fluxo"
+          :class="[CHIP, TOM.teal]"
+          class="shrink-0 font-mono"
+        >
+          {{ t(`${K}.SELO.NO_FLUXO`) }}
+        </span>
 
         <div class="ml-auto flex items-center gap-2">
           <span
@@ -505,7 +521,8 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
       </div>
 
       <aside
-        class="flex w-[340px] shrink-0 flex-col border-l border-n-weak bg-n-solid-1"
+        class="flex shrink-0 flex-col border-l border-n-weak bg-n-solid-1"
+        :class="somenteLeitura ? 'w-[420px]' : 'w-[340px]'"
       >
         <PainelPasso
           v-if="noSelecionado"
@@ -517,22 +534,7 @@ const haQuanto = iso => dynamicTime(Math.floor(new Date(iso).getTime() / 1000));
           @duplicar="duplicar"
           @excluir="excluirPasso"
         />
-        <div
-          v-else-if="somenteLeitura"
-          data-testid="sistema-descricao"
-          class="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-3.5"
-        >
-          <h4
-            class="mb-2 text-[11px] font-medium uppercase tracking-wider text-n-slate-10"
-          >
-            {{ t(`${K}.EDITOR.COMO_RODA`) }}
-          </h4>
-          <p
-            class="whitespace-pre-line text-[13px] leading-relaxed text-n-slate-11"
-          >
-            {{ fluxo.descricao }}
-          </p>
-        </div>
+        <FichaSistema v-else-if="somenteLeitura" :fluxo="fluxo" />
         <div v-else class="flex min-h-0 flex-1 flex-col px-4 py-3.5">
           <p class="mb-3 text-xs text-n-slate-10">
             {{ t(`${K}.EDITOR.SELECIONE`) }}

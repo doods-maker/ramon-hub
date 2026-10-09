@@ -1,12 +1,17 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import RamonFluxosAPI from 'dashboard/api/ramonFluxos';
+import { useRoute } from 'vue-router';
 import Editor from '../Editor.vue';
 
-vi.mock('vue-router', () => ({
-  useRoute: () => ({ params: { fluxoId: '5' } }),
-  useRouter: () => ({ push: vi.fn() }),
-  onBeforeRouteLeave: vi.fn(),
-}));
+vi.mock('vue-router', async () => {
+  const { reactive } = await import('vue');
+  const rota = reactive({ params: { fluxoId: '5' } });
+  return {
+    useRoute: () => rota,
+    useRouter: () => ({ push: vi.fn() }),
+    onBeforeRouteLeave: vi.fn(),
+  };
+});
 vi.mock('dashboard/composables/useAccount', () => ({
   useAccount: () => ({
     accountScopedRoute: (name, params, query) => ({ name, params, query }),
@@ -28,6 +33,7 @@ const SISTEMA = {
   descricao: 'No código: Ramon::DailyFollowUpJob (todo dia às 11:00)',
   alcance: 'fala_com_cliente',
   grupo: 'leads_conversas',
+  fixa: true,
   ativo: false,
   versao: null,
   versoes: [],
@@ -41,6 +47,19 @@ const SISTEMA = {
       },
     ],
     setas: [],
+  },
+  ficha: {
+    o_que_faz: 'Prepara rascunhos de retomada.',
+    quando: 'Todo dia às 11:00.',
+    o_que_mexe: ['Notas do lead.'],
+    travas: ['Até 15 por dia.'],
+    por_que: 'Porque sim.',
+    mudar: {
+      pedido: 'Peça ao Claude.',
+      arquivos: ['app/x.rb'],
+      impacto: 'Nenhum.',
+    },
+    fluxos: [],
   },
 };
 
@@ -63,7 +82,9 @@ describe('Editor — desenho do sistema', () => {
     await flushPromises();
 
     const descricao = wrapper.get('[data-testid="sistema-descricao"]');
-    expect(descricao.text()).toContain('How it runs today');
+    expect(descricao.text()).toContain(
+      'How it runs in code (technical details)'
+    );
     expect(descricao.text()).toContain('Ramon::DailyFollowUpJob');
     expect(wrapper.get('[data-testid="sistema-alcance"]').text()).toContain(
       'talks to the client'
@@ -76,6 +97,26 @@ describe('Editor — desenho do sistema', () => {
       query: { aba: 'sistema' },
     });
     expect(RamonFluxosAPI.update).not.toHaveBeenCalled();
+    expect(wrapper.get('[data-testid="ficha-o-que-faz"]').text()).toContain(
+      'Prepara rascunhos de retomada.'
+    );
+  });
+
+  it('trocar de fluxo pela rota (Abrir o fluxo) recarrega o editor', async () => {
+    RamonFluxosAPI.show.mockResolvedValue({ data: SISTEMA });
+    RamonFluxosAPI.execucoes.mockResolvedValue({ data: { payload: [] } });
+    mount(Editor, {
+      global: {
+        stubs: { Quadro: true, RouterLink: { template: '<a><slot /></a>' } },
+      },
+    });
+    await flushPromises();
+    RamonFluxosAPI.show.mockClear();
+    useRoute().params.fluxoId = '9';
+    await flushPromises();
+    expect(RamonFluxosAPI.show).toHaveBeenCalledWith(9); // useFluxoEditor.carregar(id) → RamonFluxosAPI.show(id)
+    useRoute().params.fluxoId = '5';
+    await flushPromises();
   });
 
   it('fluxo do usuário: Versões e Testar com um lead presentes; Voltar vai à lista sem aba', async () => {

@@ -41,10 +41,11 @@ class Peca < ApplicationRecord
     status == 'montando' && montagem_iniciada_em.present? && montagem_iniciada_em < TRAVA.ago
   end
 
-  # Público (B5): o PublicarPecasJob chama depois de update_columns (que pula o callback). Pelo código (como sempre) ou
-  # pelo fluxo "Espelho das peças no Notion" (RAMON_FLUXO_ACERVO_PECAS); {evento} = o status novo.
+  # Público: o PublicarPecasJob chama depois de update_columns (que pula o callback). N1 = B: o gatilho "Peça mudou
+  # de status" ({evento} = o status novo) só avisa os fluxos comuns.
   def espelhar_notion
-    Ramon::Fluxos::Externos.evento('acervo_pecas', 'peca_mudou_status', self, 'evento' => status) { Ramon::NotionEspelhoJob.perform_later(id) }
+    Ramon::NotionEspelhoJob.perform_later(id)
+    Ramon::Fluxos::Disparo.externo('peca_mudou_status', self, 'evento' => status)
   end
 
   private

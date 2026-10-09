@@ -59,11 +59,10 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
 
   private
 
-  # B5: pelo código (como sempre) ou pelo fluxo "Ata da reunião" (RAMON_FLUXO_ATA_REUNIAO); {evento} = gravada | refazer.
+  # Regra fixa (08/10): a ata de sempre; o gatilho "Reunião gravada" ({evento} = gravada | refazer) só avisa os fluxos comuns.
   def pedir_ata(reuniao, evento)
-    Ramon::Fluxos::Externos.evento('ata_reuniao', 'reuniao_gravada', reuniao, 'evento' => evento) do
-      Ramon::ReuniaoAtaJob.perform_later(reuniao.id)
-    end
+    Ramon::ReuniaoAtaJob.perform_later(reuniao.id)
+    Ramon::Fluxos::Disparo.externo('reuniao_gravada', reuniao, 'evento' => evento)
   end
 
   def buscar(reunioes, termo)

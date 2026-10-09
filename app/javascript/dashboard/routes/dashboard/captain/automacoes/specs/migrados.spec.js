@@ -10,25 +10,7 @@ import cadencia from '../../../../../../../../db/seeds/ramon/fluxos/migrados/cad
 import ganho from '../../../../../../../../db/seeds/ramon/fluxos/migrados/lead_ganho.json';
 import eventos from '../../../../../../../../db/seeds/ramon/fluxos/migrados/eventos_advbox.json';
 import resumoDoDia from '../../../../../../../../db/seeds/ramon/fluxos/migrados/resumo_do_dia.json';
-import retratoFunil from '../../../../../../../../db/seeds/ramon/fluxos/migrados/retrato_funil.json';
-import fechamentoExtrato from '../../../../../../../../db/seeds/ramon/fluxos/migrados/fechamento_extrato.json';
-import espelhoPainel from '../../../../../../../../db/seeds/ramon/fluxos/migrados/espelho_painel.json';
-import copilotoNoturno from '../../../../../../../../db/seeds/ramon/fluxos/migrados/copiloto_noturno.json';
-import publicarPecas from '../../../../../../../../db/seeds/ramon/fluxos/migrados/publicar_pecas.json';
-import avisosPainel from '../../../../../../../../db/seeds/ramon/fluxos/migrados/avisos_painel.json';
-import criarLead from '../../../../../../../../db/seeds/ramon/fluxos/migrados/criar_lead_da_conversa.json';
-import origemLead from '../../../../../../../../db/seeds/ramon/fluxos/migrados/origem_do_lead.json';
-import sugestaoDoc from '../../../../../../../../db/seeds/ramon/fluxos/migrados/sugestao_documento.json';
-import coach from '../../../../../../../../db/seeds/ramon/fluxos/migrados/coach_objecao.json';
-import agente from '../../../../../../../../db/seeds/ramon/fluxos/migrados/agente_hub.json';
-import assinaturaPainel from '../../../../../../../../db/seeds/ramon/fluxos/migrados/assinatura_painel.json';
-import contratoAssinado from '../../../../../../../../db/seeds/ramon/fluxos/migrados/contrato_zapsign_assinado.json';
-import contratoRecusado from '../../../../../../../../db/seeds/ramon/fluxos/migrados/contrato_zapsign_recusado.json';
-import documentoPainel from '../../../../../../../../db/seeds/ramon/fluxos/migrados/documento_painel.json';
 import chegada from '../../../../../../../../db/seeds/ramon/fluxos/migrados/chegada_cliente.json';
-import ata from '../../../../../../../../db/seeds/ramon/fluxos/migrados/ata_reuniao.json';
-import acervoDrive from '../../../../../../../../db/seeds/ramon/fluxos/migrados/acervo_pecas_drive.json';
-import acervoNotion from '../../../../../../../../db/seeds/ramon/fluxos/migrados/acervo_pecas_notion.json';
 
 const semEtapa = d =>
   validar(d.desenho).filter(
@@ -333,116 +315,31 @@ describe('fluxos migrados: lead ganho e eventos do ADVBOX (B4.4/B4.5)', () => {
   });
 });
 
-const CONTA = {
-  resumo_do_dia: resumoDoDia,
-  retrato_funil: retratoFunil,
-  fechamento_extrato: fechamentoExtrato,
-  espelho_painel: espelhoPainel,
-  copiloto_noturno: copilotoNoturno,
-  publicar_pecas: publicarPecas,
-  avisos_painel: avisosPainel,
-};
-
-describe('fluxos migrados: rotinas da conta (B5-conta)', () => {
-  it.each(Object.entries(CONTA))(
-    '%s: publica, no Horário da conta, com a rotina de mesmo nome',
-    (chave, d) => {
-      expect(validar(d.desenho)).toEqual([]);
-      expect(d.desenho.nos.map(n => n.tipo)).toEqual(['gatilho', 'rotina']);
-      expect(d.desenho.nos[0].config.tipo).toBe('horario_conta');
-      expect(d.desenho.nos[1].config.rotina).toBe(chave);
-      expect(rotinaAlvo(chave)).toBe('conta');
-    }
-  );
-
-  it('no horário de hoje do código (config/schedule.yml, em São Paulo)', () => {
-    const quandoRoda = Object.fromEntries(
-      Object.entries(CONTA).map(([k, d]) => {
-        const c = d.desenho.nos[0].config;
-        return [k, c.hora || `${c.a_cada_minutos} min`];
-      })
-    );
-    expect(quandoRoda).toEqual({
-      resumo_do_dia: '08:00',
-      retrato_funil: '00:05',
-      fechamento_extrato: '00:20',
-      espelho_painel: '00:30',
-      copiloto_noturno: '05:00',
-      publicar_pecas: '1 min',
-      avisos_painel: '08:00',
+// Decisão do Eduardo 08/10: das rotinas da conta, só o resumo do dia segue no fluxo.
+describe('fluxo migrado: resumo do dia (B5-conta)', () => {
+  it('publica no Horário da conta às 08:00 (o horário do código), com a rotina de mesmo nome', () => {
+    expect(validar(resumoDoDia.desenho)).toEqual([]);
+    expect(resumoDoDia.desenho.nos.map(n => n.tipo)).toEqual([
+      'gatilho',
+      'rotina',
+    ]);
+    expect(resumoDoDia.desenho.nos[0].config).toMatchObject({
+      tipo: 'horario_conta',
+      hora: '08:00',
     });
+    expect(resumoDoDia.desenho.nos[1].config.rotina).toBe('resumo_do_dia');
+    expect(rotinaAlvo('resumo_do_dia')).toBe('conta');
   });
 });
 
-describe('fluxos migrados: leads e conversas (B5-leads)', () => {
-  it.each([
-    ['criar lead', criarLead, 'conversa_criada', 'criar_lead'],
-    ['origem', origemLead, 'mensagem_recebida', 'origem_do_lead'],
-    ['documento', sugestaoDoc, 'mensagem_recebida', 'sugestao_documento'],
-    ['coach', coach, 'mensagem_recebida', 'coach_objecao'],
-    ['agente', agente, 'nota_escrita', 'agente_hub'],
-  ])(
-    '%s: publica; gatilho certo sem cancelar por etapa; 1 rotina pronta do hub',
-    (_nome, d, gatilho, rotina) => {
-      expect(validar(d.desenho)).toEqual([]);
-      expect(d.desenho.nos[0].config).toEqual({
-        tipo: gatilho,
-        cancelar_se_sair_da_etapa: false,
-      });
-      expect(d.desenho.nos.map(n => n.tipo)).toEqual(['gatilho', 'rotina']);
-      expect(d.desenho.nos[1].config.rotina).toBe(rotina);
-      expect(ROTINAS).toContain(rotina);
-      expect(rotinaAlvo(rotina)).toBe('conversa');
-    }
-  );
-});
-
-// = a ordem do semear dos 8 desenhos B5-externos
-const EXTERNOS = [
-  assinaturaPainel,
-  contratoAssinado,
-  contratoRecusado,
-  documentoPainel,
-  chegada,
-  ata,
-  acervoDrive,
-  acervoNotion,
-];
-
-describe('fluxos migrados: automações de fora do funil (B5-externos)', () => {
-  it('os 8 publicam, cada um com o seu gatilho e sem cancelar por etapa', () => {
-    EXTERNOS.forEach(d => expect(validar(d.desenho)).toEqual([]));
-    expect(EXTERNOS.map(d => d.desenho.nos[0].config.tipo)).toEqual([
-      'assinatura_painel',
-      'contrato_assinado',
-      'contrato_recusado',
-      'documento_painel',
-      'chegada_cliente',
-      'reuniao_gravada',
-      'peca_publicada',
-      'peca_mudou_status',
-    ]);
-    EXTERNOS.forEach(d =>
-      expect(d.desenho.nos[0].config.cancelar_se_sair_da_etapa).toBe(false)
-    );
-  });
-
-  it('cada um chama a rotina pronta de hoje; só a chegada espera (3 minutos) antes', () => {
-    const rotinas = EXTERNOS.map(d =>
-      doTipo(d, 'rotina').map(n => n.config.rotina)
-    );
-    expect(rotinas).toEqual([
-      ['conferir_assinatura_painel'],
-      ['aviso_contrato'],
-      ['aviso_contrato'],
-      ['processar_envio_painel'],
-      ['escalar_chegada'],
-      ['escrever_ata'],
-      ['acervo_drive'],
-      ['espelho_notion'],
-    ]);
-    rotinas.flat().forEach(r => expect(rotinaAlvo(r)).toBeDefined());
-    expect(ROTINAS).toEqual(expect.arrayContaining(rotinas.flat()));
+// Decisão do Eduardo 08/10: de fora do funil, só a chegada de cliente segue no fluxo.
+describe('fluxo migrado: chegada de cliente (B5-externos)', () => {
+  it('publica, nasce da chegada sem cancelar por etapa, espera 3 minutos e escala', () => {
+    expect(validar(chegada.desenho)).toEqual([]);
+    expect(chegada.desenho.nos[0].config).toMatchObject({
+      tipo: 'chegada_cliente',
+      cancelar_se_sair_da_etapa: false,
+    });
     expect(chegada.desenho.nos.map(n => n.tipo)).toEqual([
       'gatilho',
       'esperar',
@@ -452,14 +349,30 @@ describe('fluxos migrados: automações de fora do funil (B5-externos)', () => {
       quantidade: 3,
       unidade: 'minutos',
     });
+    expect(doTipo(chegada, 'rotina')[0].config.rotina).toBe('escalar_chegada');
+    expect(ROTINAS).toContain('escalar_chegada');
   });
+});
 
-  it('nenhum fala com o cliente: só gatilho, espera e rotina pronta', () => {
-    const tipos = EXTERNOS.flatMap(d => d.desenho.nos.map(n => n.tipo));
-    expect([...new Set(tipos)].sort()).toEqual([
-      'esperar',
-      'gatilho',
-      'rotina',
+describe('regra fixa (08/10): sobram só os desenhos das 7 automações no fluxo', () => {
+  it('a pasta tem os 9 desenhos (as reuniões são 3)', () => {
+    const arquivos = Object.keys(
+      import.meta.glob(
+        '../../../../../../../../db/seeds/ramon/fluxos/migrados/*.json'
+      )
+    )
+      .map(c => c.split('/').pop().replace('.json', ''))
+      .sort();
+    expect(arquivos).toEqual([
+      'cadencia',
+      'chegada_cliente',
+      'eventos_advbox',
+      'lead_ganho',
+      'lembretes_reuniao',
+      'resumo_do_dia',
+      'reuniao_cancelada',
+      'reuniao_marcada',
+      'sla_primeira_resposta',
     ]);
   });
 });

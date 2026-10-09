@@ -1,8 +1,37 @@
 {
   "nome": "Sugestão de documento",
   "grupo": "contrato_documentos",
-  "descricao": "No código: RamonLeadListener#message_created (decide: o código ou o fluxo migrado \"Sugestão de documento\") → Ramon::DocMatchJob → Ramon::DocMatchService (anexo de imagem ou arquivo).\n\nO desenho não consegue mostrar:\n• a IA compara o anexo com o checklist da tese e grava uma sugestão (custom_attributes.doc_sugestao) — quem confirma é a equipe, no painel;\n• o aviso na conversa é um balão de evento (não nota privada);\n• é daqui que nasce o gatilho Documento recebido dos fluxos.",
+  "fixa": true,
+  "descricao": "No código: RamonLeadListener#message_created → Ramon::DocMatchJob → Ramon::DocMatchService (anexo de imagem ou arquivo).\n\nO desenho não consegue mostrar:\n• a IA compara o anexo com o checklist da tese e grava uma sugestão (custom_attributes.doc_sugestao) — quem confirma é a equipe, no painel;\n• o aviso na conversa é um balão de evento (não nota privada);\n• é daqui que nasce o gatilho Documento recebido dos fluxos.",
   "resumo": "Quando o cliente manda um anexo, sugere a qual documento do checklist ele corresponde.",
+  "ficha": {
+    "o_que_faz": "Quando o cliente manda uma imagem ou um arquivo, a IA compara com os itens pendentes do checklist da tese e, se reconhecer, mostra na conversa o balão \"IA do hub leu o anexo e sugeriu: é ‹item›\", com Confirmar e Dispensar. Quem confirma é a equipe — no balão ou na aba Documentos.",
+    "quando": "Na fila, logo depois da mensagem do cliente com anexo (imagem ou arquivo), se a conversa tem lead.",
+    "o_que_mexe": [
+      "Uma sugestão guardada no lead (só uma pendente por vez: a nova substitui a anterior).",
+      "Balão na conversa (só a equipe vê).",
+      "Dispara o gatilho \"Documento recebido\" dos fluxos — já na SUGESTÃO, antes de alguém confirmar.",
+      "Ao confirmar: o item vira \"recebido\", com o anexo vinculado (pode completar o checklist e mandar ao Drive, se o lead já é ganho)."
+    ],
+    "travas": [
+      "Só lead com tese e item de documento pendente.",
+      "A IA não abre o arquivo: vê o nome e o tipo do arquivo e as últimas 10 mensagens, com nome, CPF, RG, telefone, e-mail e endereço mascarados.",
+      "Na dúvida a IA não sugere nada; resposta estranha é ignorada.",
+      "IA fora do ar: tenta de novo até 3 vezes; depois desiste em silêncio.",
+      "Nada vai para o cliente."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código como está. Já tem a pessoa no meio (é só sugestão), e a leitura com IA + checklist + balão com botões não cabe nos passos do quadro.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"a sugestão de documento passa a <mudança>\" (ex.: só disparar o gatilho Documento recebido depois da confirmação).",
+      "arquivos": [
+        "app/services/ramon/doc_match_service.rb",
+        "app/jobs/ramon/doc_match_job.rb",
+        "app/listeners/ramon_lead_listener.rb",
+        "app/javascript/dashboard/routes/dashboard/ramon/composables/useDocSugestao.js"
+      ],
+      "impacto": "Muda o que a equipe vê ao receber anexos e, se mexer no gatilho, os fluxos que usam \"Documento recebido\". Custo de IA: 1 chamada por anexo (aparece em Uso e custo)."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"mensagem_recebida","rotulo":"Mensagem com anexo (imagem ou arquivo)"},"posicao":{"x":0,"y":0}},

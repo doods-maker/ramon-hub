@@ -12,20 +12,11 @@ RSpec.describe Ramon::PublicarPecasJob do
     expect(peca.reload).to have_attributes(status: 'publicado', ig_media_id: 'm9', permalink: 'https://ig/p/x', erro: nil)
   end
 
-  it 'fluxos do acervo no comando: o Drive sai pelo fluxo; a rajada de status (publicando → publicado) não perde o Notion' do
+  it 'gatilho comum (N1 = B): publicada → o acervo no Drive de sempre e o fluxo comum de "Peça publicada" ouve' do
     peca
-    account = peca.account
-    with_modified_env(RAMON_FLUXO_ACERVO_PECAS: 'on') do
-      Ramon::Fluxos::Migracao.semear(account, 'acervo_pecas')
-      Ramon::Fluxos::Migracao.mudar_modo!(account, 'acervo_pecas', 'normal')
-      # 'publicando' cria a execução do espelho (ainda na fila); 'publicado' bate no índice único → o código espelha (reserva)
-      expect { described_class.perform_now }
-        .to have_enqueued_job(Ramon::NotionEspelhoJob).with(peca.id).exactly(:once)
-    end
-    expect(Ramon::Fluxos::Migracao.fluxo(account, 'acervo_pecas_notion').execucoes.count).to eq(1)
-    expect { perform_enqueued_jobs(only: Ramon::FluxoAvancarJob) }
-      .to have_enqueued_job(Ramon::ConteudoDriveJob).with(peca.id).and have_enqueued_job(Ramon::NotionEspelhoJob).with(peca.id)
-    expect(peca.reload.status).to eq('publicado')
+    comum = fluxo_publicado(peca.account, grafo_linear({ 'tipo' => 'peca_publicada' }))
+    expect { described_class.perform_now }.to have_enqueued_job(Ramon::ConteudoDriveJob).with(peca.id)
+    expect(comum.execucoes.sole.alvo).to eq(peca)
   end
 
   it 'não mexe em peça agendada pro futuro' do
@@ -79,17 +70,5 @@ RSpec.describe Ramon::PublicarPecasJob do
     andando = create(:peca, status: 'publicando', publicacao_iniciada_em: 20.minutes.ago)
     described_class.perform_now
     expect(andando.reload.status).to eq 'publicando'
-  end
-
-  it 'B5: pendente? só com peça vencida ou presa; fluxo no comando tira a conta do cron; com o id, só ela' do
-    peca
-    expect(described_class.pendente?(peca.account)).to be(true)
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).and_call_original
-    allow(Ramon::Fluxos::Migracao).to receive(:assumiu?).with(peca.account, 'publicar_pecas').and_return(true)
-    described_class.perform_now
-    expect(publisher).not_to have_received(:publicar)
-    described_class.perform_now(peca.account_id)
-    expect(peca.reload.status).to eq('publicado')
-    expect(described_class.pendente?(peca.account)).to be(false)
   end
 end

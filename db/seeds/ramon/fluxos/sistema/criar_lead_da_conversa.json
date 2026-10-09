@@ -1,8 +1,33 @@
 {
   "nome": "Criar lead da conversa",
   "grupo": "leads_conversas",
-  "descricao": "No código: RamonLeadListener#conversation_created → Ramon::LeadDaConversa.criar_ou_ligar, só em caixas com Criar lead ligado (decide: o código ou o fluxo migrado \"Criar lead da conversa\").\n\nO desenho não consegue mostrar:\n• cria o lead na 1ª etapa do funil ou liga a conversa ao lead aberto do mesmo contato — não há passo que crie lead;\n• o mesmo ouvinte agenda o SLA da 1ª resposta (ver \"SLA da 1ª resposta\").",
+  "fixa": true,
+  "descricao": "No código: RamonLeadListener#conversation_created → Ramon::LeadDaConversa.criar_ou_ligar, só em caixas com Criar lead ligado.\n\nO desenho não consegue mostrar:\n• cria o lead na 1ª etapa do funil ou liga a conversa ao lead aberto do mesmo contato — não há passo que crie lead;\n• o mesmo ouvinte agenda o SLA da 1ª resposta (ver \"SLA da 1ª resposta\").",
   "resumo": "Quando chega uma conversa nova numa caixa de atendimento, cria o lead no funil.",
+  "ficha": {
+    "o_que_faz": "Quando chega uma conversa nova numa caixa com \"Criar lead\" ligado, liga a conversa ao lead aberto do mesmo contato ou, se não houver, cria o lead na 1ª etapa do funil, com o nome do contato (sem nome: o telefone).",
+    "quando": "Na hora em que a conversa nova é criada.",
+    "o_que_mexe": [
+      "Lead novo — ou a conversa nova ligada ao lead aberto (a conversa antiga perde o vínculo).",
+      "No lead novo, as regras fixas de sempre: SDR automático, canal inicial \"outro\", histórico \"lead criado\", etiquetas."
+    ],
+    "travas": [
+      "Só em caixa com \"Criar lead\" ligado e conversa com contato.",
+      "Lead fechado (ganho ou perdido) não conta: o contato ganha um lead novo (pessoa ≠ caso).",
+      "Caso de cálculo do ADVBOX não conta como lead aberto.",
+      "Logo depois, no mesmo instante, começa o SLA da 1ª resposta (essa parte roda no fluxo)."
+    ],
+    "por_que": "É a porta de entrada do funil: todos os números do funil saem daqui. Precisa acontecer sempre e antes de tudo (antes do SLA e dos fluxos de Conversa nova). Fica no código por decisão do Eduardo (08/10).",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"criar lead da conversa passa a <regra nova>\" (ex.: outra etapa inicial).",
+      "arquivos": [
+        "app/listeners/ramon_lead_listener.rb",
+        "app/services/ramon/lead_da_conversa.rb",
+        "app/models/lead.rb"
+      ],
+      "impacto": "Muda a entrada de todo lead novo das caixas — e, com ela, o funil, o SDR automático e os relatórios."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"conversa_criada","rotulo":"Conversa nova numa caixa com Criar lead"},"posicao":{"x":0,"y":0}},

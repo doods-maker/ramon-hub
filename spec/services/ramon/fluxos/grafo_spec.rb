@@ -149,4 +149,11 @@ RSpec.describe Ramon::Fluxos::Grafo do
         .to eq(['Passo p1: rotina desconhecida (xyz)'])
     end
   end
+
+  it 'N1 = B (08/10): os gatilhos de fora do funil seguem na paleta para fluxos comuns' do
+    %w[assinatura_painel documento_painel reuniao_gravada peca_publicada peca_mudou_status].each do |tipo|
+      expect(described_class.new(grafo_linear({ 'tipo' => tipo })).erros).to eq([])
+    end
+    expect(described_class::GATILHOS).to include('chegada_cliente', 'contrato_assinado', 'contrato_recusado', 'nota_escrita')
+  end
 end

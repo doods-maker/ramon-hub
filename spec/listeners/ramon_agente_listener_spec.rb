@@ -26,28 +26,4 @@ RSpec.describe RamonAgenteListener do
     m3 = create(:message, account: account, conversation: conversation, private: true, sender: outro, content: '@claude x')
     [m1, m2, m3].each { |m| expect { listener.message_created(event_for(m)) }.not_to have_enqueued_job(Ramon::AgenteNotifyJob) }
   end
-
-  describe 'pelo fluxo (B5-leads: RAMON_FLUXO_AGENTE=on + o fluxo "Agente do hub" em modo normal)' do
-    around { |ex| with_modified_env(RAMON_FLUXO_AGENTE: 'on') { ex.run } }
-
-    before do
-      Ramon::Fluxos::Migracao.semear(account, 'agente')
-      Ramon::Fluxos::Migracao.mudar_modo!(account, 'agente', 'normal')
-      allow(HTTParty).to receive(:post)
-    end
-
-    it 'o ouvinte não enfileira o job; o fluxo avisa o runner 1 vez, com a mesma mensagem' do
-      msg = create(:message, account: account, conversation: conversation, private: true, sender: eduardo, content: '@claude resume')
-      expect { listener.message_created(event_for(msg)) }.not_to have_enqueued_job(Ramon::AgenteNotifyJob)
-      perform_enqueued_jobs(only: Ramon::FluxoAvancarJob)
-      expect(HTTParty).to have_received(:post).with('http://runner/hub', hash_including(body: include(%("message_id":#{msg.id})))).once
-    end
-
-    it 'nota @claude de outra pessoa: nem fluxo nem job (a trava vem antes da decisão)' do
-      outro = create(:user, account: account, email: 'o@x.com')
-      msg = create(:message, account: account, conversation: conversation, private: true, sender: outro, content: '@claude x')
-      expect { listener.message_created(event_for(msg)) }.not_to have_enqueued_job
-      expect(FluxoExecucao.count).to eq(0)
-    end
-  end
 end

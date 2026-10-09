@@ -3,6 +3,36 @@
   "grupo": "contrato_documentos",
   "descricao": "No código: callback do Lead quando won_at muda (app/models/lead.rb) → Ramon::Fluxos::LeadGanho.ganhou (decide: o código, em Ramon::Fluxos::LeadGanho.pelo_codigo, ou o fluxo migrado \"Lead ganho\"); o Drive segue no callback (enqueue_drive_export).\n\nO desenho não consegue mostrar:\n• as 4 ações são independentes e rodam ao mesmo tempo (o quadro só desenha fila), cada uma com a sua trava;\n• o dossiê vai para as notas do lead e não se repete se já houver um dos últimos 5 minutos;\n• no ADVBOX o código cria o cliente, o processo (etapa CONTRATO FECHADO) e a tarefa 1º CONTATO COM O LEAD (Ramon::AdvboxClosingService) — o passo ADVBOX dos fluxos só cria tarefa num processo que já existe; só roda com o token do ADVBOX e tenta de novo até 3 vezes se o ADVBOX estiver fora;\n• a pesquisa NPS vai para as notas do lead; a trava do ganho é nps.pedido_em (a do êxito/concessão é outra, pedido_exito_em — um lead pode receber 2 rascunhos de NPS, um do ganho e um do êxito); o link do Google vem da variável RAMON_GOOGLE_REVIEW_URL; sem ela o código escreve [link do Google Meu Negócio] (o desenho mostra esse texto);\n• o passo \"Drive\" é só uma representação: a ação real é exportar para o Google Drive, e só roda com o Drive configurado e roda de novo a cada atualização dos documentos de um lead já ganho.",
   "resumo": "Quando o lead é ganho, prepara o dossiê, abre o caso no ADVBOX, pede a avaliação e exporta ao Drive.",
+  "ficha": {
+    "o_que_faz": "Quando o lead vira ganho, faz em sequência: o dossiê de passagem para o jurídico (nota \"📋 DOSSIÊ\" no lead), o rascunho da pesquisa NPS nas notas (com o link do Google) e a abertura do caso no ADVBOX (cliente, processo na etapa CONTRATO FECHADO e a tarefa 1º CONTATO COM O LEAD). À parte, o código exporta ao Drive os documentos já conferidos.",
+    "quando": "Na hora em que o lead entra numa etapa de ganho (inclusive pelo evento \"contrato fechado\" do ADVBOX). Lead criado já ganho não dispara.",
+    "o_que_mexe": [
+      "Nota do dossiê e rascunho da NPS no lead.",
+      "ADVBOX: cliente, processo (tipo pela tese, valor do caso) e tarefa — grava de verdade.",
+      "Drive (pelo código): documentos recebidos e, quando o checklist fecha, a pasta \"— COMPLETO\" e a tarefa de documentos no ADVBOX.",
+      "Balão \"⚙ Fluxo Lead ganho\" na conversa."
+    ],
+    "travas": [
+      "Cada passo confere antes se o lead ainda está ganho.",
+      "Dossiê não se repete em 5 minutos; NPS do ganho uma vez só (a do êxito é outra); caso no ADVBOX uma vez só e só com o token do ADVBOX.",
+      "ADVBOX fora do ar: o fluxo tenta de novo em 1, 5 e 15 minutos; recusa fica anotada no lead.",
+      "Se o fluxo não começar, o código faz (reserva)."
+    ],
+    "por_que": "Roda pelo fluxo \"Lead ganho\": ordem, avisos e passos extras se editam na tela. Dossiê, NPS e ADVBOX são rotinas prontas (código). O Drive ficou no código porque roda a cada atualização dos documentos, não só no ganho.",
+    "mudar": {
+      "pedido": "Ordem e passos extras: no fluxo (botão acima). Texto do dossiê ou da NPS, ou os dados enviados ao ADVBOX: peça ao Claude \"<mudança>\".",
+      "arquivos": [
+        "app/services/ramon/fluxos/lead_ganho.rb",
+        "app/services/ramon/fluxos/passos/rotina.rb",
+        "app/services/ramon/advbox_closing_service.rb",
+        "app/services/ramon/drive_export_service.rb"
+      ],
+      "impacto": "Grava no ADVBOX de verdade. Desligar o fluxo devolve tudo ao código (as 3 ações em paralelo, como antes)."
+    },
+    "fluxos": [
+      "lead_ganho"
+    ]
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_ganho"},"posicao":{"x":0,"y":0}},

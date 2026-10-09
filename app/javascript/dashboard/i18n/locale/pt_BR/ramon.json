@@ -2170,7 +2170,7 @@
       "VAZIO": "Nenhum fluxo ainda. Comece por um modelo pronto em Novo fluxo.",
       "ERRO_CRIAR": "Não consegui criar o fluxo.",
       "SISTEMA": {
-        "EXPLICA": "Estas automações rodam hoje pelo código do hub, não pelo quadro. Aqui você vê o desenho de cada uma, só para leitura, para conferir o que o hub faz sozinho. Elas vão virar fluxos editáveis uma a uma: primeiro rodam lado a lado em modo ensaio, comparamos com o código e, se baterem, o fluxo assume.",
+        "EXPLICA": "Estas são as 29 automações que o hub faz sozinho. 7 rodam por fluxos seus (selo \"roda no fluxo\"): a ficha tem o botão Abrir o fluxo, para editar. As outras 22 são regra fixa e ficam no código de propósito (decisão de 08/10). Clique em qualquer uma para ver a ficha: o que faz, quando, o que mexe, as travas e como pedir uma mudança.",
         "SEM_CONTADOR": "Sem contador barato para hoje",
         "HOJE_DE": {
           "cadencia": "rascunhos de retomada criados hoje",
@@ -2195,7 +2195,25 @@
           "fala_com_cliente": "fala com o cliente",
           "publica": "publica"
         },
-        "FIXA_DICA": "Regra de dado do hub: fica no código de propósito e não vira fluxo editável."
+        "FIXA_DICA": "Fica no código de propósito (decisão de 08/10). Abra a ficha para ver por quê e como pedir uma mudança."
+      },
+      "FICHA": {
+        "O_QUE_FAZ": "O que faz",
+        "QUANDO": "Quando",
+        "O_QUE_MEXE": "O que mexe",
+        "TRAVAS": "Travas e garantias",
+        "POR_QUE_CODIGO": "Por que fica no código",
+        "NO_FLUXO": "No fluxo",
+        "ABRIR_FLUXO": "Abrir o fluxo",
+        "SEM_FLUXO": "O fluxo ainda não foi criado nesta conta: quem faz é o código.",
+        "MODO": {
+          "normal": "no comando",
+          "sombra": "em sombra"
+        },
+        "DESLIGADO": "desligado",
+        "MUDAR": "Se quiser mudar",
+        "ARQUIVOS": "Arquivos principais",
+        "IMPACTO": "Impacto"
       },
       "RODAR": {
         "ITEM": "Rodar fluxo…",
@@ -2231,7 +2249,7 @@
         "OK": "ok",
         "FALHOU": "{n} falhou",
         "DESLIGADO": "desligado",
-        "NO_CODIGO": "roda no código",
+        "NO_FLUXO": "roda no fluxo",
         "SOMBRA": "em sombra",
         "REGRA_FIXA": "regra fixa (fica no código)"
       },
@@ -2385,7 +2403,7 @@
         "EXECUCOES": "Execuções recentes",
         "SEM_EXECUCOES": "Nenhuma execução ainda. Use Testar com um lead… para ver o caminho.",
         "SELECIONE": "Clique num passo para configurar.",
-        "COMO_RODA": "Como roda hoje",
+        "COMO_RODA": "Como roda no código (detalhes técnicos)",
         "TESTAR_CONTA": "Testar na conta…"
       },
       "NO": {
@@ -2619,24 +2637,7 @@
         "abrir_caso_advbox": "Abrir o caso no ADVBOX (cliente, processo e tarefa 1º contato)",
         "concluir_tarefas": "Concluir as tarefas abertas do lead",
         "resumo_do_dia": "Resumo do dia (push e e-mail de gestão)",
-        "retrato_funil": "Retrato do funil (para os relatórios)",
-        "fechamento_extrato": "Fechamento do extrato da variável",
-        "espelho_painel": "Espelho do Painel do Cliente (ADVBOX)",
-        "copiloto_noturno": "Copiloto noturno (sugestões no Cockpit)",
-        "publicar_pecas": "Publicar no Instagram as peças agendadas",
-        "avisos_painel": "Avisos do Painel do Cliente (e-mail ao cliente)",
-        "criar_lead": "Criar o lead da conversa (ou ligar ao lead aberto do contato)",
-        "origem_do_lead": "Anotar a origem e o canal do lead",
-        "sugestao_documento": "Sugerir o documento do checklist (a IA lê o anexo)",
-        "coach_objecao": "Coach de objeção (2 respostas do playbook)",
-        "agente_hub": "Avisar o agente do hub (nota arroba claude do Eduardo)",
-        "conferir_assinatura_painel": "Conferir no ZapSign e marcar a assinatura no Painel",
-        "aviso_contrato": "Histórico e sino do contrato (assinado ou recusado)",
-        "processar_envio_painel": "Documento do Painel: Drive, push e tarefas no ADVBOX",
-        "escalar_chegada": "Escalar a chegada (se ninguém respondeu)",
-        "escrever_ata": "Transcrever e escrever a ata da reunião",
-        "acervo_drive": "Copiar a peça publicada para o Drive",
-        "espelho_notion": "Espelhar o status da peça no Notion"
+        "escalar_chegada": "Escalar a chegada (se ninguém respondeu)"
       },
       "ROTINAS_AJUDA": {
         "dossie_passagem": "O mesmo dossiê do código. Não repete se já há um dos últimos 5 minutos.",
@@ -2645,24 +2646,7 @@
         "abrir_caso_advbox": "Grava no ADVBOX de verdade: cliente, processo na etapa CONTRATO FECHADO e a tarefa 1º CONTATO COM O LEAD. Só com o token do ADVBOX; nunca abre o mesmo caso duas vezes; ADVBOX fora do ar, tenta de novo em 1, 5 e 15 min.",
         "concluir_tarefas": "Conclui todas as tarefas abertas do lead na Esteira.",
         "resumo_do_dia": "O mesmo resumo do código: push \"seu dia\" para a equipe (só se o dia tem algo e com o ntfy ligado) e o e-mail de gestão com os números de ontem (só com SMTP).",
-        "retrato_funil": "Guarda a foto do funil do dia (etapas, teses e valores) para os relatórios. Rodar de novo no mesmo dia refaz a foto.",
-        "fechamento_extrato": "No 3º dia útil, fecha o extrato da variável do mês anterior (regulamento §6). Nos outros dias não faz nada; já fechado, não refaz.",
-        "espelho_painel": "Copia do ADVBOX processos, andamentos e pedidos de documento de todos os clientes do Painel. Vai para a fila (demora): o passo seguinte não espera terminar.",
-        "copiloto_noturno": "Prepara sugestões para até 15 leads parados (rascunho, mover etapa ou alerta), que a equipe aprova no Cockpit. Nada vai ao cliente. Vai para a fila.",
-        "publicar_pecas": "Publica no Instagram só as peças já agendadas (com o pode postar) cuja hora chegou. Sem peça vencida, o fluxo nem começa. Falhou: aviso no celular, sem nova tentativa. Vai para a fila.",
-        "avisos_painel": "E-mail DIRETO ao cliente com as novidades do espelho da noite (etapas delicadas nunca) e o resumo da equipe com o WhatsApp pronto. Só com PORTAL_AVISOS ligado — hoje desligado até aprovar os textos.",
-        "criar_lead": "O mesmo código de hoje: só em caixa com Criar lead ligado e conversa com contato. Liga a conversa ao lead aberto do mesmo contato ou cria o lead na 1ª etapa do funil. Os números do funil saem daqui.",
-        "origem_do_lead": "Lê o anúncio da Meta que chega com a mensagem e grava origem e canal; sem anúncio e sem assinatura de site, LP ou bio, o canal vira indicação (ou instagram, na caixa do Instagram). Nunca troca um canal já definido. Precisa da mensagem do gatilho.",
-        "sugestao_documento": "A IA compara o anexo com o checklist da tese e grava uma sugestão; quem confirma é a equipe, no painel. Quando casa, nasce o gatilho Documento recebido. IA fora do ar: tenta de novo em 1, 5 e 15 min e depois desiste em silêncio. Precisa da mensagem do gatilho.",
-        "coach_objecao": "Se a mensagem tem objeção e a tese tem playbook, mostra 2 respostas num balão (Usar só coloca o texto no editor). No máximo 1 vez a cada 10 min por conversa; erro = silêncio. Precisa da mensagem do gatilho.",
-        "agente_hub": "Avisa o agente do hub na VPS, que responde como nota privada. Trava fixa: só nota privada que começa com arroba claude, escrita pelo e-mail do Eduardo — nenhuma edição aqui tira isso.",
-        "conferir_assinatura_painel": "O mesmo de hoje: pergunta ao ZapSign o status real e marca no Painel do Cliente. Assinatura cancelada no hub não muda. ZapSign fora do ar: tenta de novo sozinho. Só serve no gatilho Assinatura do Painel.",
-        "aviso_contrato": "O mesmo de hoje: linha no histórico do lead e sino para todos. Nunca marca o lead como ganho. O selo no card e a conferência no ZapSign continuam no código.",
-        "processar_envio_painel": "O mesmo de hoje: guarda o arquivo no Drive (se configurado), push no celular e 2 tarefas no ADVBOX. Grava no ADVBOX de verdade, uma vez por documento; ADVBOX fora do ar, tenta de novo até 5 vezes. Só serve no gatilho Documento do Painel.",
-        "escalar_chegada": "Se ninguém respondeu, o alerta volta a tocar na tela de quem avisou (ao vivo, não é o sino). Já respondida: não faz nada. Ponha depois de uma espera. Só serve no gatilho Chegada de cliente.",
-        "escrever_ata": "O mesmo de hoje: transcreve o áudio e a IA escreve a ata na reunião, na fila de sempre (tenta até 3 vezes; se não der, a reunião fica com erro e o botão Refazer). Só serve no gatilho Reunião gravada.",
-        "acervo_drive": "O mesmo de hoje: imagens e legenda em Posts Instagram, no Drive. Só serve no gatilho Peça publicada.",
-        "espelho_notion": "O mesmo de hoje: atualiza o status da peça no quadro Peças do Notion (só com o token do Notion). Só serve nos gatilhos de peça."
+        "escalar_chegada": "Se ninguém respondeu, o alerta volta a tocar na tela de quem avisou (ao vivo, não é o sino). Já respondida: não faz nada. Ponha depois de uma espera. Só serve no gatilho Chegada de cliente."
       },
       "TIPOS_TAREFA": {
         "follow_up": "Retorno",

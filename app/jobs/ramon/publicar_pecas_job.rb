@@ -6,19 +6,9 @@ class Ramon::PublicarPecasJob < ApplicationJob
   # Carrossel de até 20 imagens com a Meta lenta passa de 15 min; varrer publicação ainda viva abriria janela de post em dobro.
   INTERROMPIDA = 30.minutes
 
-  # B5-conta: o Horário da conta só começa o fluxo "Publicar peças" quando há o que fazer (Rotinas::Conta::PENDENTE).
-  def self.pendente?(account) = vencidas(account).exists? || presas(account).exists?
-
-  def self.vencidas(account) = Peca.where(account: account, status: 'agendado').where(agendado_para: ..Time.current)
-
-  def self.presas(account) = Peca.where(account: account, status: 'publicando').where(publicacao_iniciada_em: ...INTERROMPIDA.ago)
-
-  # B5-conta: sem conta = o cron (as contas cujo fluxo "Publicar peças" não assumiu); com conta = o fluxo ou a reserva.
-  def perform(account_id = nil)
-    Ramon::Fluxos::Rotinas::Conta.cada_conta('publicar_pecas', account_id) do |account|
-      self.class.presas(account).find_each { |peca| interromper(peca) }
-      self.class.vencidas(account).find_each { |peca| publicar(peca) }
-    end
+  def perform
+    marcar_interrompidas
+    Peca.where(status: 'agendado').where(agendado_para: ..Time.current).find_each { |peca| publicar(peca) }
   end
 
   private
@@ -48,8 +38,8 @@ class Ramon::PublicarPecasJob < ApplicationJob
   end
 
   def pos_publicacao(peca)
-    # B5: pelo código (como sempre) ou pelo fluxo "Acervo das peças no Drive" (RAMON_FLUXO_ACERVO_PECAS).
-    Ramon::Fluxos::Externos.evento('acervo_pecas', 'peca_publicada', peca) { Ramon::ConteudoDriveJob.perform_later(peca.id) }
+    Ramon::ConteudoDriveJob.perform_later(peca.id)
+    Ramon::Fluxos::Disparo.externo('peca_publicada', peca) # N1 = B: só os fluxos comuns
     avisar("Publicado no Instagram: #{peca.gancho}", peca.permalink || 'link indisponível — ver no app')
   end
 
@@ -61,6 +51,10 @@ class Ramon::PublicarPecasJob < ApplicationJob
     pos_publicacao(peca)
   rescue StandardError => e
     Rails.logger.warn("PublicarPecasJob: peça #{peca.id} no ar, aviso/acervo não saiu: #{e.message}")
+  end
+
+  def marcar_interrompidas
+    Peca.where(status: 'publicando').where(publicacao_iniciada_em: ...INTERROMPIDA.ago).find_each { |peca| interromper(peca) }
   end
 
   def interromper(peca)

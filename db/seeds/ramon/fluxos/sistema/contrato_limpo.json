@@ -4,6 +4,31 @@
   "fixa": true,
   "descricao": "No código: Ramon::ContratoLimpoJob (toda hora, aos 10 min — config/schedule.yml).\n\nO desenho não consegue mostrar:\n• roda de hora em hora para todos os leads ganhos, não 1 vez por lead — aqui o gatilho é Rodar na mão com o rótulo do horário real;\n• o passo Se é só um substituto: a regra real exige won_at preenchido, docs_completos_em preenchido e nenhum cancelamento (cancelar em até 7 dias tira o lead de Fechado e nunca carimba);\n• o carimbo é GREATEST(won_at + 7 dias, docs_completos_em), gravado só quando esse momento já passou, e não muda mais (vale para o extrato da variável);\n• grava a coluna contrato_limpo_em, não um campo livre.",
   "resumo": "De hora em hora, marca como \"limpo\" o contrato ganho que ficou 7 dias sem cancelamento.",
+  "ficha": {
+    "o_que_faz": "Marca como \"contrato limpo\" o lead ganho que passou 7 dias sem cancelar e está com os documentos completos. A data gravada é o momento exato em que ficou limpo: o mais tarde entre a data do ganho + 7 dias e a data dos documentos completos.",
+    "quando": "De hora em hora, aos 10 minutos (09:10, 10:10…), para todos os leads ganhos.",
+    "o_que_mexe": [
+      "A data \"contrato limpo\" do lead.",
+      "Extrato da variável: a unidade de contrato do Closer e do SDR (a do SDR só se a reunião foi registrada), no mês dessa data.",
+      "Painel do Time (Closer): a coluna dos que aguardam."
+    ],
+    "travas": [
+      "Carimba uma vez só e depois não muda mais — nem se os documentos voltarem a ficar incompletos.",
+      "Cancelar antes dos 7 dias tira o lead de Fechado e ele nunca é carimbado; se fechar de novo, conta a partir da data nova.",
+      "Casos de cálculo do ADVBOX ficam de fora.",
+      "Não gera histórico, sino nem push."
+    ],
+    "por_que": "É regra de dado que mexe em dinheiro (regulamento da variável): tem de ser exata, igual para todos e não pode ser desligada sem querer numa tela.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o contrato limpo passa a valer depois de <N> dias\" ou \"passa a exigir <condição>\".",
+      "arquivos": [
+        "app/jobs/ramon/contrato_limpo_job.rb",
+        "config/schedule.yml",
+        "app/services/ramon/extrato_variavel.rb"
+      ],
+      "impacto": "Muda o extrato da variável a partir do mês em que entrar no ar; meses já fechados não mudam. É regra do regulamento: combine antes com quem recebe a variável."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"Toda hora, aos 10 minutos"},"posicao":{"x":0,"y":0}},

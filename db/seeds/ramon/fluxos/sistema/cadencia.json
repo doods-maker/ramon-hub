@@ -4,6 +4,37 @@
   "descricao": "No código: Ramon::DailyFollowUpJob (todo dia às 11:00) → Ramon::FollowUpDraftService; também roda na hora pelo botão Preparar retomada do painel do lead (Ramon::FollowUpDraftJob).\n\nO desenho não consegue mostrar:\n• o Se só confere se há conversa; as outras regras (nenhuma tarefa de retomada aberta e a última retomada há mais de 5 dias) estão só no rótulo;\n• o código roda todo dia para quem segue parado (o gatilho Lead parado dos fluxos dispara 1 vez por parada);\n• o teto é de 15 retomadas por dia por conta, na ordem do radar de parados;\n• o rascunho vai para as notas do lead (não para a conversa) e, se a IA falhar, entra um texto fixo de retomada;\n• o contador de tentativas fica em custom_attributes.follow_up (o passo Preencher campo grava em campos);\n• o aviso na conversa é um balão de evento (não nota privada) e o push é um só por conta, com o total do lote, e só sai com NTFY_TOPIC configurado.",
   "resumo": "Todo dia às 11h, prepara rascunhos de retomada para leads parados.",
   "limite_dia": 15,
+  "ficha": {
+    "o_que_faz": "Todo dia às 11h, para cada lead parado que pode ser retomado, a IA escreve nas notas do lead o rascunho da retomada nº N (tom de médico de confiança; o ângulo muda a cada tentativa), conta a tentativa e cria a tarefa \"Retomada nº N\" para hoje com o Closer (sem Closer: o SDR). Um push por dia avisa que há rascunhos para revisar. O botão \"Preparar retomada\" do painel do lead faz o mesmo só para aquele lead.",
+    "quando": "Todo dia a partir das 11:00 (horário de Brasília); se o hub estava fora do ar, quando voltar, no mesmo dia. O botão, na hora.",
+    "o_que_mexe": [
+      "Rascunho nas notas do lead (quem envia ao cliente é uma pessoa).",
+      "Contador de tentativas do lead.",
+      "Tarefa de retomada para hoje.",
+      "Push \"Retomadas prontas pra revisar\" (um por dia)."
+    ],
+    "travas": [
+      "Só lead parado (há mais dias na etapa do que o limite da etapa), com conversa, sem tarefa de retomada aberta e com a última retomada há 5 dias ou mais.",
+      "Até 15 por dia (o limite do fluxo; as do botão contam nesse limite).",
+      "Se a IA falhar, entra o texto fixo de retomada; a cota de IA dos fluxos é de 200 por dia.",
+      "Regras da OAB no texto: sem prometer resultado nem prazo.",
+      "Sem reserva pelo código: com o fluxo ligado, o código não faz o lote."
+    ],
+    "por_que": "Roda pelo fluxo \"Cadência de retomada\" (gatilho Lead parado): horário, limite do dia, texto da IA e avisos se editam na tela.",
+    "mudar": {
+      "pedido": "Horário, limite, texto e avisos: no fluxo (botão acima). Quem pode ser retomado (5 dias, tarefa aberta): peça ao Claude \"<mudança>\".",
+      "arquivos": [
+        "app/services/ramon/fluxos/retomada.rb",
+        "app/services/ramon/fluxos/relogio.rb",
+        "app/jobs/ramon/daily_follow_up_job.rb",
+        "app/services/ramon/follow_up_draft_service.rb"
+      ],
+      "impacto": "Mudar o fluxo vale no próximo lote. Desligar o fluxo devolve a cadência ao código (lote das 11h, texto do código)."
+    },
+    "fluxos": [
+      "cadencia"
+    ]
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_parado","hora":"11:00"},"posicao":{"x":0,"y":0}},

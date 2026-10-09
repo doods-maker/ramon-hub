@@ -1,9 +1,36 @@
 {
   "nome": "Copiloto noturno",
   "grupo": "rotinas_relatorios",
+  "fixa": true,
   "descricao": "No código: Ramon::NightCopilotJob (todo dia às 05:00) → Ramon::NightCopilotService.\n\nO desenho não consegue mostrar:\n• varre os leads parados todo dia (no máximo RAMON_NIGHT_COPILOT_LIMIT, padrão 15) — o gatilho Lead parado dos fluxos dispara 1 vez por parada;\n• o resultado é uma sugestão pendente no Cockpit (rascunho de mensagem, mover etapa ou alerta) que uma pessoa aprova de manhã — não é nota na conversa.",
   "resumo": "Toda madrugada, prepara sugestões para os leads parados, que a equipe aprova de manhã.",
   "limite_dia": 15,
+  "ficha": {
+    "o_que_faz": "Toda madrugada, a IA olha os leads parados (há mais dias na etapa do que o limite da etapa) e prepara uma sugestão para cada um: rascunho de mensagem de retomada, mudar de etapa ou um alerta. A equipe vê de manhã no Centro de Comando, no cartão \"Enquanto você dormia\", e aplica ou arquiva.",
+    "quando": "Todo dia às 05:00 (horário de Brasília).",
+    "o_que_mexe": [
+      "Sugestões pendentes (até 15 por noite).",
+      "Ao aplicar: o rascunho vira nota no lead (\"RASCUNHO (revisar antes de enviar) — copiloto noturno\"); mover etapa só para uma etapa aberta; alerta só arquiva."
+    ],
+    "travas": [
+      "Nada vai para o cliente.",
+      "Lead que já tem sugestão pendente fica de fora; etapa sem limite de \"parado\" nunca entra.",
+      "A IA recebe os dados mascarados e o texto proíbe prometer resultado ou prazo do INSS. O modelo é o escolhido em Inteligência → Uso e custo (copiloto).",
+      "\"Aplicar todas\" não move etapa.",
+      "Falha da IA num lead: pula aquele lead."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. Já tem a pessoa no meio (tudo é sugestão a aprovar) e é uma varredura da conta inteira, não um evento de um lead.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"o copiloto noturno passa a <mudança>\" (ex.: até 30 leads, outro horário).",
+      "arquivos": [
+        "app/jobs/ramon/night_copilot_job.rb",
+        "app/services/ramon/night_copilot_service.rb",
+        "app/models/copilot_suggestion.rb",
+        "app/javascript/dashboard/routes/dashboard/ramon/components/command/NightCopilot.vue"
+      ],
+      "impacto": "Mais leads = mais custo de IA (1 chamada por lead; ver Uso e custo). O limite de 15 também muda sem código, pela chave RAMON_NIGHT_COPILOT_LIMIT no servidor."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_parado","hora":"05:00"},"posicao":{"x":0,"y":0}},

@@ -1,9 +1,37 @@
 {
   "nome": "Publicar peças no Instagram",
   "grupo": "instagram",
+  "fixa": true,
   "alcance": "publica",
   "descricao": "No código: Ramon::PublicarPecasJob (a cada minuto) → Ramon::InstagramPublisher (API oficial da Meta).\n\nO desenho não consegue mostrar:\n• publica no Instagram da banca as peças com status agendado e data já vencida; o job só confere isso — a aprovação (\"pode postar\") acontece antes, ao agendar;\n• peças presas em publicando há mais de 30 min são marcadas como interrompidas (falhou, ou publicado se o id da Meta já estava gravado);\n• roda a cada minuto, não 1 vez por dia (aqui: Rodar na mão com o rótulo do horário real); não é lead nem conversa;\n• sem nova tentativa automática: falhou → status falhou + push, e o Eduardo decide tentar de novo.",
   "resumo": "A cada minuto, publica no Instagram as peças agendadas cuja hora chegou.",
+  "ficha": {
+    "o_que_faz": "A cada minuto, publica no Instagram da banca (só no feed) as peças agendadas cuja hora chegou, pela API oficial da Meta. Também resolve peças presas em \"publicando\" há mais de 30 minutos.",
+    "quando": "A cada minuto. Os botões \"Publicar agora\" e \"Tentar de novo\" da tela Conteúdo também chamam.",
+    "o_que_mexe": [
+      "Publica a peça no Instagram (com até 3 colaboradores citados na legenda).",
+      "Status e link da peça; push \"Publicado no Instagram: …\" ou \"Publicação falhou: …\".",
+      "Depois de publicada: o acervo no Drive e o espelho no Notion."
+    ],
+    "travas": [
+      "Só publica peça que um administrador aprovou e agendou na tela Conteúdo (o \"pode postar\").",
+      "Sem nova tentativa automática: falhou, fica \"falhou\" + push, e o Eduardo decide tentar de novo.",
+      "Peça que já tem o número do Instagram nunca é enviada de novo; falha no último passo diz \"Pode ter ido ao ar — conferir no Instagram\" e exige marcar conferido.",
+      "Presa há mais de 30 minutos sem o número do Instagram: vira \"falhou\", com o aviso de conferir.",
+      "O token do Instagram fica na configuração do super admin e é renovado toda segunda."
+    ],
+    "por_que": "Decisão do Eduardo (08/10): fica no código. Publica para o público: a trava (só peça aprovada e agendada) não pode virar algo editável no quadro.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"a publicação das peças passa a <mudança>\" (ex.: publicar também nos stories).",
+      "arquivos": [
+        "app/jobs/ramon/publicar_pecas_job.rb",
+        "app/services/ramon/instagram_publisher.rb",
+        "app/models/peca.rb",
+        "app/controllers/api/v1/accounts/ramon_conteudo_controller.rb"
+      ],
+      "impacto": "Fala com o público: qualquer mudança precisa do \"aprovado\" do Eduardo antes de ir ao ar."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"manual","rotulo":"A cada minuto: peças agendadas que venceram"},"posicao":{"x":0,"y":0}},

@@ -1,6 +1,6 @@
 # Fluxos do sistema (spec §8, D7; decisão do Eduardo 06/10: as 29 automações do código): o desenho
 # só-leitura de cada automação que ainda roda no código. Fonte = db/seeds/ramon/fluxos/sistema/<chave>.json
-# ({nome, grupo, alcance?, fixa?, descricao, limite_dia?, desenho}). Cada conta tem 1 Fluxo origem 'sistema' por
+# ({nome, grupo, alcance?, fixa?, descricao, resumo, ficha, limite_dia?, desenho}). Cada conta tem 1 Fluxo origem 'sistema' por
 # arquivo (sistema_chave = nome do arquivo), criado ou atualizado quando a lista abre. O motor nunca os
 # executa (Fluxo.executaveis e Disparo#iniciar) e a API recusa editar, publicar, ensaiar e rodar.
 module Ramon::Fluxos::Sistema
@@ -54,6 +54,16 @@ module Ramon::Fluxos::Sistema
       fixa: desenho['fixa'] == true, resumo: desenho['resumo'],
       gatilho_rotulo: Ramon::Fluxos::Grafo.new(desenho['desenho']).gatilho&.dig('config', 'rotulo')
     }
+  end
+
+  # Decisão do Eduardo (08/10): a ficha de cada automação (texto do JSON, PT-BR) — só no desenho aberto. Nas 7 que rodam
+  # no fluxo, 'fluxos' (chaves de migrados/) vira os fluxos de verdade da conta: o botão "Abrir o fluxo". Fixa: [].
+  def ficha(account, chave)
+    ficha = desenhos.dig(chave, 'ficha')
+    return if ficha.nil?
+
+    reais = account.fluxos.where(origem: 'usuario', sistema_chave: Array(ficha['fluxos'])).order(:id)
+    ficha.merge('fluxos' => reais.map { |f| { 'id' => f.id, 'nome' => f.nome, 'modo' => f.modo, 'ativo' => f.ativo } })
   end
 
   def em_dia?(account)

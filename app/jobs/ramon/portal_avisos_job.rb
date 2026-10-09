@@ -7,11 +7,10 @@ class Ramon::PortalAvisosJob < ApplicationJob
 
   EQUIPE_PADRAO = 'ramonantonio.comercial@gmail.com'.freeze # teste antes da Gabriela (decisão Eduardo 28/09)
 
-  def perform(account_id = nil)
+  def perform
     return unless ENV['PORTAL_AVISOS'] == 'on'
 
-    # B5-conta: sem conta = o cron (as contas cujo fluxo "Avisos do Painel" não assumiu); com conta = o fluxo ou a reserva.
-    Ramon::Fluxos::Rotinas::Conta.cada_conta('avisos_painel', account_id) { |account| avisar_conta(account) }
+    Account.find_each { |account| avisar_conta(account) } # regra fixa (08/10): todas as contas, às 08:00
   end
 
   private

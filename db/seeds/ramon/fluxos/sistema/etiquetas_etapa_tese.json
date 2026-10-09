@@ -4,6 +4,30 @@
   "fixa": true,
   "descricao": "No código: RamonLeadListener#lead_created, #lead_updated e #conversation_updated → Ramon::StageLabelSync e Ramon::TeseLabelSync.\n\nO desenho não consegue mostrar:\n• põe na conversa a etiqueta fase-<etapa> e tese-<tese> do lead (e tira a antiga); a etiqueta da etapa sai do campo label da etapa (não do nome), o passo usa etiqueta fixa;\n• no sentido contrário, etiqueta fase-* posta à mão na conversa move o lead — os fluxos não têm gatilho de etiqueta;\n• também roda quando o lead é criado.",
   "resumo": "Mantém nas conversas as etiquetas da etapa e da tese do lead, sempre atualizadas.",
+  "ficha": {
+    "o_que_faz": "Mantém na conversa uma etiqueta da etapa do lead (fase-…, tirada do campo \"etiqueta\" da etapa) e uma da tese (tese-…), tirando as antigas. No sentido contrário, se alguém põe à mão uma etiqueta fase-… na conversa, o lead muda para aquela etapa.",
+    "quando": "Toda vez que o lead é criado ou gravado (qualquer mudança, não só de etapa) e quando as etiquetas da conversa mudam.",
+    "o_que_mexe": [
+      "Etiquetas da conversa (cria a etiqueta se ainda não existir).",
+      "A etapa do lead, quando alguém põe uma etiqueta fase-… à mão (se for Perdido, o motivo fica \"Automação: etiqueta … na conversa\")."
+    ],
+    "travas": [
+      "Só etiqueta fase-… ACRESCENTADA move o lead; tirar uma não faz nada.",
+      "Etiqueta tese-… mexida à mão não muda o lead: na próxima gravação a certa volta.",
+      "Etiqueta sem etapa correspondente é ignorada.",
+      "O hub compara antes de gravar, para não entrar em laço (lead ↔ conversa)."
+    ],
+    "por_que": "É sincronia de dado nos dois sentidos e roda a cada gravação do lead; o quadro de fluxos não tem gatilho de etiqueta, e um fluxo desligado deixaria conversa e funil desencontrados.",
+    "mudar": {
+      "pedido": "Peça ao Claude: \"as etiquetas da conversa passam a <regra nova>\" (ex.: incluir o SDR, não mexer na tese).",
+      "arquivos": [
+        "app/services/ramon/stage_label_sync.rb",
+        "app/services/ramon/tese_label_sync.rb",
+        "app/listeners/ramon_lead_listener.rb"
+      ],
+      "impacto": "Muda as etiquetas das conversas a partir da próxima gravação de cada lead; filtros e visões salvas que usam fase-… ou tese-… podem mudar."
+    }
+  },
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"lead_mudou_etapa"},"posicao":{"x":0,"y":0}},

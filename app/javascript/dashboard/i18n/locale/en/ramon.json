@@ -2165,7 +2165,7 @@
       "VAZIO": "No flows yet. Start from a template in New flow.",
       "ERRO_CRIAR": "Could not create the flow.",
       "SISTEMA": {
-        "EXPLICA": "These automations run today in the hub code, not on the board. Here you see each one drawn, read-only, so you can check what the hub does on its own. They will become editable flows one by one: first they run side by side as a dry run, we compare them with the code and, if they match, the flow takes over.",
+        "EXPLICA": "These are the 29 automations the hub runs on its own. 7 run through your flows (\"runs in a flow\" badge): the sheet has an Open the flow button to edit it. The other 22 are fixed rules and stay in code on purpose (decision of 10/08). Click any of them to see its sheet: what it does, when, what it touches, its locks and how to ask for a change.",
         "SEM_CONTADOR": "No cheap counter for today",
         "HOJE_DE": {
           "cadencia": "follow-up drafts created today",
@@ -2190,7 +2190,25 @@
           "fala_com_cliente": "talks to the client",
           "publica": "publishes"
         },
-        "FIXA_DICA": "Hub data rule: stays in code on purpose and does not become an editable flow."
+        "FIXA_DICA": "Stays in code on purpose (decision of 10/08). Open the sheet to see why and how to ask for a change."
+      },
+      "FICHA": {
+        "O_QUE_FAZ": "What it does",
+        "QUANDO": "When",
+        "O_QUE_MEXE": "What it touches",
+        "TRAVAS": "Locks and guarantees",
+        "POR_QUE_CODIGO": "Why it stays in code",
+        "NO_FLUXO": "In a flow",
+        "ABRIR_FLUXO": "Open the flow",
+        "SEM_FLUXO": "The flow has not been created in this account yet: the code does it.",
+        "MODO": {
+          "normal": "in command",
+          "sombra": "in shadow"
+        },
+        "DESLIGADO": "off",
+        "MUDAR": "If you want to change it",
+        "ARQUIVOS": "Main files",
+        "IMPACTO": "Impact"
       },
       "RODAR": {
         "ITEM": "Run flow…",
@@ -2226,7 +2244,7 @@
         "OK": "ok",
         "FALHOU": "{n} failed",
         "DESLIGADO": "off",
-        "NO_CODIGO": "runs in code",
+        "NO_FLUXO": "runs in a flow",
         "SOMBRA": "shadow",
         "REGRA_FIXA": "fixed rule (stays in code)"
       },
@@ -2380,7 +2398,7 @@
         "EXECUCOES": "Recent runs",
         "SEM_EXECUCOES": "No runs yet. Use Test with a lead… to see the path.",
         "SELECIONE": "Click a step to configure it.",
-        "COMO_RODA": "How it runs today",
+        "COMO_RODA": "How it runs in code (technical details)",
         "TESTAR_CONTA": "Test on the account…"
       },
       "NO": {
@@ -2614,24 +2632,7 @@
         "abrir_caso_advbox": "Open the case in ADVBOX (client, lawsuit and 1st contact task)",
         "concluir_tarefas": "Complete the open tasks of the lead",
         "resumo_do_dia": "Daily summary (push and management e-mail)",
-        "retrato_funil": "Funnel snapshot (for reports)",
-        "fechamento_extrato": "Variable pay statement closing",
-        "espelho_painel": "Client Portal mirror (ADVBOX)",
-        "copiloto_noturno": "Night copilot (suggestions in the Cockpit)",
-        "publicar_pecas": "Publish scheduled pieces on Instagram",
-        "avisos_painel": "Client Portal notices (e-mail to the client)",
-        "criar_lead": "Create the lead from the conversation (or link it to the contact open lead)",
-        "origem_do_lead": "Record the lead source and channel",
-        "sugestao_documento": "Suggest the checklist document (AI reads the attachment)",
-        "coach_objecao": "Objection coach (2 replies from the playbook)",
-        "agente_hub": "Notify the hub agent (Eduardo at-claude note)",
-        "conferir_assinatura_painel": "Check on ZapSign and mark the Portal signature",
-        "aviso_contrato": "Contract history and bell (signed or refused)",
-        "processar_envio_painel": "Portal document: Drive, push and ADVBOX tasks",
-        "escalar_chegada": "Escalate the arrival (if nobody answered)",
-        "escrever_ata": "Transcribe and write the meeting minutes",
-        "acervo_drive": "Copy the published post to Drive",
-        "espelho_notion": "Mirror the post status on Notion"
+        "escalar_chegada": "Escalate the arrival (if nobody answered)"
       },
       "ROTINAS_AJUDA": {
         "dossie_passagem": "The same dossier the code writes. Not repeated if there is one from the last 5 minutes.",
@@ -2640,24 +2641,7 @@
         "abrir_caso_advbox": "Writes to ADVBOX for real: client, lawsuit in the CONTRATO FECHADO stage and the 1º CONTATO COM O LEAD task. Only with the ADVBOX token; never opens a case twice; if ADVBOX is down, tries again in 1, 5 and 15 min.",
         "concluir_tarefas": "Completes every open task of the lead in the pipeline.",
         "resumo_do_dia": "The same summary as the code: \"your day\" push to the team (only if the day has something and ntfy is on) and the management e-mail with yesterday's numbers (only with SMTP).",
-        "retrato_funil": "Saves the day's funnel snapshot (stages, theses and values) for reports. Running again on the same day redoes it.",
-        "fechamento_extrato": "On the 3rd business day, closes last month's variable pay statement. On other days it does nothing; once closed, it is not redone.",
-        "espelho_painel": "Copies cases, updates and document requests of all Portal clients from ADVBOX. Goes to the queue (slow): the next step does not wait for it to finish.",
-        "copiloto_noturno": "Prepares suggestions for up to 15 stalled leads (draft, move stage or alert) for the team to approve in the Cockpit. Nothing goes to the client. Goes to the queue.",
-        "publicar_pecas": "Publishes on Instagram only pieces already scheduled (approved to post) whose time has come. With no piece due, the flow does not start. Failed: phone alert, no retry. Goes to the queue.",
-        "avisos_painel": "DIRECT e-mail to the client with the news from the nightly mirror (sensitive stages never) and the team summary with the WhatsApp text ready. Only with PORTAL_AVISOS on — off until the texts are approved.",
-        "criar_lead": "Same code as today: only in inboxes with Create lead on and conversations with a contact. Links the conversation to the contact open lead or creates the lead in the first pipeline stage. The pipeline numbers come from here.",
-        "origem_do_lead": "Reads the Meta ad that comes with the message and stores source and channel; with no ad and no site, LP or bio signature, the channel becomes referral (or instagram, in the Instagram inbox). Never changes a channel already set. Needs the trigger message.",
-        "sugestao_documento": "AI compares the attachment with the case checklist and stores a suggestion; the team confirms it in the panel. When it matches, the Document received trigger fires. AI down: tries again in 1, 5 and 15 min, then gives up silently. Needs the trigger message.",
-        "coach_objecao": "If the message has an objection and the case type has a playbook, shows 2 replies in a bubble (Use only fills the editor). At most once every 10 min per conversation; errors are silent. Needs the trigger message.",
-        "agente_hub": "Notifies the hub agent on the VPS, which replies as a private note. Fixed lock: only private notes starting with at-claude, written by Eduardo e-mail — no edit here removes it.",
-        "conferir_assinatura_painel": "Same as today: asks ZapSign for the real status and marks it on the Client Portal. A signature cancelled in the hub does not change. ZapSign down: tries again by itself. Only for the Portal signature trigger.",
-        "aviso_contrato": "Same as today: a line in the lead history and a bell to everyone. Never marks the lead as won. The badge on the card and the ZapSign check stay in the code.",
-        "processar_envio_painel": "Same as today: saves the file on Drive (if set up), push on the phone and 2 ADVBOX tasks. Writes to ADVBOX for real, once per document; ADVBOX down, tries again up to 5 times. Only for the Portal document trigger.",
-        "escalar_chegada": "If nobody answered, the alert rings again on the screen of who announced it (live, not the bell). Already answered: does nothing. Put it after a wait. Only for the client arrival trigger.",
-        "escrever_ata": "Same as today: transcribes the audio and the AI writes the minutes in the meeting, in the usual queue (tries up to 3 times; if it fails, the meeting shows the error and the Redo button). Only for the recorded meeting trigger.",
-        "acervo_drive": "Same as today: images and caption in Posts Instagram, on Drive. Only for the published post trigger.",
-        "espelho_notion": "Same as today: updates the post status on the Notion board (only with the Notion token). Only for the post triggers."
+        "escalar_chegada": "If nobody answered, the alert rings again on the screen of who announced it (live, not the bell). Already answered: does nothing. Put it after a wait. Only for the client arrival trigger."
       },
       "TIPOS_TAREFA": {
         "follow_up": "Follow-up",
