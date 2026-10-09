@@ -7,4 +7,6 @@ class PortalEnvio < ApplicationRecord
   has_one_attached :arquivo
 
   validates :item, presence: true
+
+  def nome_de_alvo = "Documento do Painel: #{portal_cliente.nome}" # FluxoExecucao#alvo_nome
 end

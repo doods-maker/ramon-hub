@@ -24,4 +24,13 @@ RSpec.describe FluxoExecucao do
     expect(execucao.resumo_json).to include(alvo_nome: 'Peça: Auxílio-acidente: quem tem direito', lead_id: nil,
                                             conversation_display_id: nil)
   end
+
+  it 'cada alvo de fora do funil tem o seu nome na lista de execuções' do
+    cliente = PortalCliente.new(nome: 'Ana')
+    alvos = [Chegada.new(cliente_nome: 'Maria'), Peca.new(gancho: 'Gancho'), Reuniao.new(titulo: 'Ata'),
+             PortalAssinatura.new(portal_cliente: cliente), PortalEnvio.new(portal_cliente: cliente)]
+    expect(alvos.map { |alvo| described_class.new(alvo: alvo).resumo_json[:alvo_nome] })
+      .to eq(['Chegada: Maria', 'Peça: Gancho', 'Reunião gravada: Ata', 'Assinatura do Painel: Ana', 'Documento do Painel: Ana'])
+    expect(described_class.new(alvo: lead).resumo_json[:alvo_nome]).to eq(lead.name)
+  end
 end
