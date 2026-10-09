@@ -3,17 +3,13 @@
 # ligada, se o gasto do dia mais o custo estimado da rodada não passa do teto e se algo mudou desde a última rodada
 # concluída (decisão N3). Sem disparado_por = rodada da madrugada.
 class Captain::CadernoNoturno
-  def self.ligado?(account)
-    ActiveModel::Type::Boolean.new.cast(account.settings&.dig(Ramon::CadernoNoturnoJob::CHAVE)) == true
-  end
-
   def initialize(account)
     @account = account
     @previsto = nil
   end
 
   def perform
-    return [] unless self.class.ligado?(@account)
+    return [] unless Ramon::CadernoNoturnoJob.ligado?(@account)
     return [] if Ramon::IaGastoAlerta.passou_do_teto?(@account)
 
     Captain::Assistant.for_account(@account.id).order(:id).filter_map { |assistant| enfileirar(assistant) }

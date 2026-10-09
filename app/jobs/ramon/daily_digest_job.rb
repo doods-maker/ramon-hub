@@ -5,9 +5,9 @@ class Ramon::DailyDigestJob < ApplicationJob
   queue_as :scheduled_jobs
 
   # B5-conta: sem conta = o cron (as contas cujo fluxo "Resumo do dia" não assumiu); com conta = o fluxo ou a reserva
-  # pediram aquela conta (Ramon::Fluxos::Rotinas::Conta.cada_conta).
+  # pediram aquela conta (Ramon::Fluxos::ResumoDoDia.cada_conta).
   def perform(account_id = nil)
-    Ramon::Fluxos::Rotinas::Conta.cada_conta('resumo_do_dia', account_id) do |account|
+    Ramon::Fluxos::ResumoDoDia.cada_conta(account_id) do |account|
       deliver(account)
     rescue StandardError => e
       # uma conta com dado venenoso não pode abortar as demais nem virar retry-loop

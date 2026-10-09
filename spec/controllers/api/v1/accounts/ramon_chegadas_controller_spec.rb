@@ -41,6 +41,40 @@ RSpec.describe 'Ramon Chegadas API', type: :request do
     expect(chegada.reload.estado).to eq('escalado')
   end
 
+  describe 'a decisão da chegada (Migracao.decidir + Disparo.externo — B5-externos)' do
+    def migrado = Ramon::Fluxos::Migracao.fluxo(account, 'chegada_cliente')
+    def chegada = Chegada.find(response.parsed_body['id'])
+
+    it 'criar = o fluxo da chegada (o único de fora do funil no fluxo, 08/10), em sombra, ligado e publicado' do
+      fluxos = Ramon::Fluxos::Migracao.semear(account, 'chegada_cliente')
+      expect(fluxos.map { |f| [f.sistema_chave, f.gatilho_tipo, f.origem, f.modo, f.ativo, f.versao_publicada.present?] })
+        .to eq([['chegada_cliente', 'chegada_cliente', 'usuario', 'sombra', true, true]])
+      expect(Ramon::Fluxos::Migracao.descrever(account, 'chegada_cliente')).to include('o CÓDIGO faz a escalada da chegada de cliente')
+      expect(Ramon::Fluxos::Disparo::DUAS_VEZES).to include('chegada_cliente')
+    end
+
+    it 'código no comando (padrão): o código agenda; o migrado só ensaia; o fluxo comum do gatilho ouve sem a decisão' do
+      Ramon::Fluxos::Migracao.semear(account, 'chegada_cliente')
+      comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'chegada_cliente' }))
+      avisar
+      expect(Ramon::ChegadaEscalarJob).to have_been_enqueued.with(chegada.id).once
+      expect(migrado.execucoes.pluck(:ensaio)).to eq([true])
+      expect(comum.execucoes.map { |e| [e.ensaio, e.contexto['gatilho'].key?('assumido')] }).to eq([[false, false]])
+    end
+
+    it 'fluxo no comando mas o motor falhou: o código agenda aquela chegada (reserva) — nunca nenhum' do
+      with_modified_env(RAMON_FLUXO_CHEGADA: 'on') do
+        Ramon::Fluxos::Migracao.semear(account, 'chegada_cliente')
+        Ramon::Fluxos::Migracao.mudar_modo!(account, 'chegada_cliente', 'normal')
+        allow(Ramon::Fluxos::Disparo).to receive(:call).and_raise(StandardError, 'motor')
+        avisar
+      end
+      expect(response).to have_http_status(:success)
+      expect(Ramon::ChegadaEscalarJob).to have_been_enqueued.with(chegada.id).once
+      expect(migrado.execucoes.count).to eq(0)
+    end
+  end
+
   it 'agente fora da recepção não avisa' do
     avisar(outro)
     expect(response).to have_http_status(:unauthorized)

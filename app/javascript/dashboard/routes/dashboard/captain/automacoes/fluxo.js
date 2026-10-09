@@ -326,12 +326,7 @@ export const TIPOS_ATIVIDADE = [
   'advbox_concessao',
   'advbox_arquivado',
 ];
-// Rotinas prontas do hub (= Ramon::Fluxos::Rotinas): as 5 da B4.4/B4.5 (de lead) + as de cada plano B5, um arquivo por
-// plano em ./rotinas/<plano>.js = [{ chave, alvo: 'conta' | 'lead' | 'conversa' | 'outro' }] (= ROTINAS do módulo do plano).
-const PLANOS = import.meta.glob('./rotinas/*.js', {
-  eager: true,
-  import: 'default',
-});
+// Rotinas prontas do hub (= Ramon::Fluxos::Passos::Rotina::ROTINAS): nome → alvo ('conta' | 'lead' | 'outro')
 export const ROTINAS_INFO = [
   ...[
     'dossie_passagem',
@@ -340,9 +335,8 @@ export const ROTINAS_INFO = [
     'abrir_caso_advbox',
     'concluir_tarefas',
   ].map(chave => ({ chave, alvo: 'lead' })),
-  ...Object.keys(PLANOS)
-    .sort()
-    .flatMap(arquivo => PLANOS[arquivo]),
+  { chave: 'resumo_do_dia', alvo: 'conta' },
+  { chave: 'escalar_chegada', alvo: 'outro' },
 ];
 export const ROTINAS = ROTINAS_INFO.map(r => r.chave);
 export const rotinaAlvo = chave =>

@@ -14,6 +14,9 @@ class Reuniao < ApplicationRecord
 
   scope :recentes, -> { order(created_at: :desc) }
 
+  # FluxoExecucao#alvo_nome
+  def nome_de_alvo = "Reunião gravada: #{titulo_exibicao}"
+
   # Hora do escritório (o servidor roda em UTC).
   def titulo_exibicao
     titulo.presence || "Reunião de #{created_at.in_time_zone('America/Sao_Paulo').strftime('%d/%m %H:%M')}"

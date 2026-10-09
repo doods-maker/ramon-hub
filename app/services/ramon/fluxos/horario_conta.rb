@@ -4,7 +4,7 @@
 # A vez é reivindicada ANTES de rodar, num UPDATE condicional em ultimo_disparo_em (o "reivindicar o dia" da B4.3):
 # - por dia: 1 vez no dia; fluxo que nasceu depois da hora de hoje começa amanhã (nunca repete a vez que o código já fez);
 # - a cada N min: 1 vez por bloco de N minutos.
-# O job do código (Ramon::Fluxos::Rotinas::Conta.cada_conta — hoje só o Resumo do dia) disputa a MESMA vez do fluxo
+# O job do código (Ramon::Fluxos::ResumoDoDia.cada_conta — hoje só o Resumo do dia) disputa a MESMA vez do fluxo
 # migrado: quem pega faz. No comando o fluxo faz; não começou ou fora do comando, o código faz.
 module Ramon::Fluxos::HorarioConta
   GATILHO = 'horario_conta'.freeze
@@ -31,8 +31,8 @@ module Ramon::Fluxos::HorarioConta
   end
 
   def disparar_fluxo(fluxo, agora)
-    return unless na_hora?(config(fluxo), agora) && tem_o_que_fazer?(fluxo) && reivindicar(fluxo, agora)
-    return Ramon::Fluxos::Rotinas::Conta.decidir(fluxo) if Ramon::Fluxos::Rotinas::Conta.migrado?(fluxo) # B5: a vez é da rotina
+    return unless na_hora?(config(fluxo), agora) && reivindicar(fluxo, agora)
+    return Ramon::Fluxos::ResumoDoDia.decidir(fluxo) if Ramon::Fluxos::ResumoDoDia.migrado?(fluxo) # B5: a vez é da rotina
     return if fluxo.modo == 'normal' && fluxo.limite_atingido?
 
     Ramon::Fluxos::Disparo.new(fluxo, fluxo.account, {}, nil).iniciar
@@ -46,25 +46,14 @@ module Ramon::Fluxos::HorarioConta
     intervalo(config).present? || agora >= hora_de_hoje(config, agora)
   end
 
-  # ponytail: o predicado "por dia" repete o de Ramon::Fluxos::Relogio.reivindicar_dia (B4.3), de propósito para não
-  # mexer na B4.3 — 2 lugares com a mesma regra; unificar aqui se o relógio dos leads for revisto.
+  # O mesmo UPDATE condicional do relógio dos leads (Ramon::Fluxos::Relogio.reivindicar).
   def reivindicar(fluxo, agora)
     config = config(fluxo)
     n = intervalo(config)
     vez = Fluxo.where(id: fluxo.id)
-    vez = if n
-            vez.where('ultimo_disparo_em IS NULL OR ultimo_disparo_em < ?', agora.beginning_of_minute - (n - 1).minutes)
-          else
-            vez.where(created_at: ...hora_de_hoje(config, agora))
-               .where('ultimo_disparo_em IS NULL OR ultimo_disparo_em < ?', agora.beginning_of_day)
-          end
-    vez.update_all(ultimo_disparo_em: agora) == 1 # rubocop:disable Rails/SkipsModelValidations
-  end
+    return Ramon::Fluxos::Relogio.reivindicar(vez, agora, agora.beginning_of_minute - (n - 1).minutes) if n
 
-  # Rotinas que dizem "nada a fazer" (Rotinas.pendente == false) em TODOS os passos rotina: o fluxo nem começa (nem gasta a vez).
-  def tem_o_que_fazer?(fluxo)
-    nomes = Ramon::Fluxos::Grafo.new(fluxo.versao_publicada.grafo).nos.select { |n| n['tipo'] == 'rotina' }.map { |n| n.dig('config', 'rotina') }
-    nomes.empty? || nomes.any? { |nome| Ramon::Fluxos::Rotinas.pendente(nome, fluxo.account) != false }
+    Ramon::Fluxos::Relogio.reivindicar(vez.where(created_at: ...hora_de_hoje(config, agora)), agora, agora.beginning_of_day)
   end
 
   def dias(config) = config.key?('dias') ? Array(config['dias']).map(&:to_i) : DIAS
@@ -101,7 +90,7 @@ module Ramon::Fluxos::HorarioConta
   end
 
   def erros_rotina(id, nome, alvo_gatilho)
-    alvo = Ramon::Fluxos::Rotinas.alvo(nome)
+    alvo = Ramon::Fluxos::Passos::Rotina::ROTINAS[nome]
     return ["Passo #{id}: rotina desconhecida (#{nome})"] if alvo.nil?
     return [] if (SEM_LEAD_ALVOS.value?(alvo) ? alvo : nil) == alvo_gatilho
 

@@ -309,7 +309,7 @@ describe('erros do back e caminho aceso', () => {
   });
 });
 
-describe('rotinas prontas (registro por plano, B5)', () => {
+describe('rotinas prontas', () => {
   it('as 5 de lead da B4.4 + a da chegada; da conta, só o resumo do dia (regra fixa, 08/10); os gatilhos de fora do funil ficam', () => {
     expect(rotinasPara('lead')).toEqual([
       'dossie_passagem',

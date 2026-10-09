@@ -8,12 +8,10 @@
 module Ramon::Fluxos::LeadGanho
   module_function
 
+  # ponytail: ocupado = a execução viva (ADVBOX esperando nova tentativa) e o AdvboxClosingJob da reserva podem correr juntos — a
+  # mesma janela de hoje com 2 ganhos seguidos (sincronizado_em + id guardado a cada passo); lock por lead se acontecer.
   def ganhou(lead)
-    assumido = Ramon::Fluxos::Migracao.assumiu?(lead.account, 'lead_ganho')
-    feitas = Ramon::Fluxos::Disparo.externo('lead_ganho', lead, { 'assumido' => assumido, 'para_etapa_id' => lead.lead_stage_id })
-    # ponytail: ocupado = a execução viva (ADVBOX esperando nova tentativa) e o AdvboxClosingJob da reserva podem correr juntos — a
-    # mesma janela de hoje com 2 ganhos seguidos (sincronizado_em + id guardado a cada passo); lock por lead se acontecer.
-    pelo_codigo(lead) unless assumido && feitas.any?
+    Ramon::Fluxos::Migracao.decidir('lead_ganho', 'lead_ganho', lead, { 'para_etapa_id' => lead.lead_stage_id }) { pelo_codigo(lead) }
   end
 
   # O caminho de hoje, como morava nos callbacks do Lead (e a reserva do fluxo). Na ordem em que os callbacks rodavam

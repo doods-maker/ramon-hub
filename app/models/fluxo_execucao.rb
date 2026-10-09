@@ -5,14 +5,6 @@ class FluxoExecucao < ApplicationRecord
   self.table_name = 'ramon_fluxo_execucoes'
 
   STATUS = %w[rodando esperando concluida falhou cancelada].freeze
-  # B5: alvos de fora do funil aparecem com o que são (a lista e a tela de execução não têm outra coluna).
-  NOMES_ALVO = {
-    'Chegada' => ->(alvo) { "Chegada: #{alvo.cliente_nome}" },
-    'Peca' => ->(alvo) { "Peça: #{alvo.gancho}" },
-    'Reuniao' => ->(alvo) { "Reunião gravada: #{alvo.titulo_exibicao}" },
-    'PortalAssinatura' => ->(alvo) { "Assinatura do Painel: #{alvo.portal_cliente.nome}" },
-    'PortalEnvio' => ->(alvo) { "Documento do Painel: #{alvo.portal_cliente.nome}" }
-  }.freeze
 
   belongs_to :account
   belongs_to :fluxo
@@ -48,10 +40,7 @@ class FluxoExecucao < ApplicationRecord
 
   private
 
-  def alvo_nome
-    externo = NOMES_ALVO[alvo_type]
-    return externo.call(alvo) if externo && alvo
-
-    alvo.try(:name) || alvo.try(:contact)&.name || lead&.name
-  end
+  # B5: alvos de fora do funil (Chegada, Peca, Reuniao, PortalAssinatura, PortalEnvio) dizem o que são em nome_de_alvo
+  # (a lista e a tela de execução não têm outra coluna).
+  def alvo_nome = alvo.try(:nome_de_alvo) || alvo.try(:name) || alvo.try(:contact)&.name || lead&.name
 end

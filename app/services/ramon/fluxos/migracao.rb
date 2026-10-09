@@ -4,7 +4,7 @@
 # por conta. A chave: env ligada E todos os fluxos do grupo ligados, publicados, em modo normal, com o gatilho esperado
 # (e sem limite do dia, salvo limite_devolve: false) → os fluxos fazem e o código para; qualquer peça fora → o código
 # faz e os fluxos só ensaiam.
-# Migração nova (B4.3+): uma entrada em GRUPOS (B5: no GRUPOS do módulo do plano em rotinas/) + o(s) JSON + o código
+# Migração nova (B4.3+): uma entrada em GRUPOS + o(s) JSON + o código
 # lendo assumiu? UMA vez por evento.
 module Ramon::Fluxos::Migracao
   PASTA = Rails.root.join('db/seeds/ramon/fluxos/migrados')
@@ -36,9 +36,20 @@ module Ramon::Fluxos::Migracao
       env: 'RAMON_FLUXO_EVENTOS_ADVBOX', faz: 'os eventos do ADVBOX',
       fluxos: { 'eventos_advbox' => 'evento_advbox' }.freeze,
       preparar: ->(account, desenho) { Ramon::Fluxos::Migracao.com_etapa(desenho, account.lead_stages.find_by!(is_won: true).id) }
+    },
+    # B5-conta: o Resumo do dia (Ramon::Fluxos::ResumoDoDia), no gatilho Horário da conta. env_antiga: o nome de antes,
+    # lido só sem o novo — a imagem nova sobe antes da troca na VPS sem virar a chave.
+    # ponytail: apagar env_antiga quando a VPS tiver RAMON_FLUXO_RESUMO_DIA.
+    'resumo_do_dia' => {
+      env: 'RAMON_FLUXO_RESUMO_DIA', env_antiga: 'RAMON_FLUXO_ROTINAS', faz: 'o resumo do dia',
+      fluxos: { 'resumo_do_dia' => 'horario_conta' }.freeze
+    },
+    # B5-externos: a chegada de cliente, decidida no RamonChegadasController.
+    'chegada_cliente' => {
+      env: 'RAMON_FLUXO_CHEGADA', faz: 'a escalada da chegada de cliente',
+      fluxos: { 'chegada_cliente' => 'chegada_cliente' }.freeze
     }
-    # B5: as migrações dos planos B5 vêm do registro de rotinas (o GRUPOS de cada Ramon::Fluxos::Rotinas::<Plano>).
-  }.merge(Ramon::Fluxos::Rotinas.grupos) { |chave| raise ArgumentError, "Migração repetida: #{chave}" }.freeze
+  }.freeze
 
   module_function
 
@@ -49,7 +60,10 @@ module Ramon::Fluxos::Migracao
   # Fluxo que substitui código (spec §14: fluxo próprio, origem 'usuario'), de qualquer migração.
   def migrado?(fluxo) = fluxo.origem == 'usuario' && GRUPOS.values.any? { |g| g[:fluxos].key?(fluxo.sistema_chave) }
 
-  def ligada?(nome) = ENV.fetch(grupo(nome)[:env], nil) == 'on'
+  def ligada?(nome)
+    g = grupo(nome)
+    (ENV.fetch(g[:env], nil).presence || (ENV.fetch(g[:env_antiga], nil) if g[:env_antiga])) == 'on'
+  end
 
   # limite_devolve (padrão true): limite do dia num fluxo do grupo devolve o comando ao código — com limite, o Disparo
   # pularia o fluxo depois do N-ésimo evento e ninguém faria. Grupo cujo código também tem teto (a cadência: 15/dia)
