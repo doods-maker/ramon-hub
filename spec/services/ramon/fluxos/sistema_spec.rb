@@ -104,4 +104,16 @@ RSpec.describe Ramon::Fluxos::Sistema do
       end
     end
   end
+
+  it 'ficha: o texto do JSON; nas do fluxo, os fluxos de verdade da conta no lugar das chaves' do
+    expect(described_class.ficha(account, 'contrato_limpo')).to include('o_que_faz' => be_present, 'fluxos' => [])
+    expect(described_class.ficha(account, 'lembretes_reuniao')['fluxos']).to eq([]) # ainda não criados nesta conta
+    marcada = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }), sistema_chave: 'reuniao_marcada')
+    lembretes = fluxo_publicado(account, grafo_linear({ 'tipo' => 'manual' }), sistema_chave: 'lembretes_reuniao', ativo: false)
+    expect(described_class.ficha(account, 'lembretes_reuniao')['fluxos']).to eq(
+      [{ 'id' => marcada.id, 'nome' => 'Fluxo de teste', 'modo' => marcada.modo, 'ativo' => true },
+       { 'id' => lembretes.id, 'nome' => 'Fluxo de teste', 'modo' => lembretes.modo, 'ativo' => false }]
+    )
+    expect(described_class.ficha(account, 'xyz')).to be_nil
+  end
 end

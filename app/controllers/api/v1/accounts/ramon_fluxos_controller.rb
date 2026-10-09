@@ -11,7 +11,7 @@ class Api::V1::Accounts::RamonFluxosController < Api::V1::Accounts::BaseControll
   end
 
   def show
-    render json: item(@fluxo).merge(rascunho: @fluxo.rascunho,
+    render json: item(@fluxo).merge(rascunho: @fluxo.rascunho, ficha: ficha,
                                     versoes: @fluxo.versoes.order(numero: :desc).map { |v| { numero: v.numero, created_at: v.created_at } })
   end
 
@@ -106,4 +106,7 @@ class Api::V1::Accounts::RamonFluxosController < Api::V1::Accounts::BaseControll
       esperando: payload.sum { |f| f[:esperando] }, falharam_24h: payload.sum { |f| f[:falharam_24h] }
     }
   end
+
+  # Decisão do Eduardo (08/10): a ficha da automação do sistema, só no desenho aberto (a lista não carrega 29 textos).
+  def ficha = @fluxo.origem == 'sistema' ? Ramon::Fluxos::Sistema.ficha(Current.account, @fluxo.sistema_chave) : nil
 end
