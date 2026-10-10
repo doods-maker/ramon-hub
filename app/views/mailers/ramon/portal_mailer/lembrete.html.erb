@@ -1,0 +1,11 @@
+<%# app/views/mailers/ramon/portal_mailer/lembrete.html.erb — texto = Ramon::PortalLembretes (aprovado pelo Eduardo 09/10/2026) %>
+<p><%= @texto %></p>
+<p>Para ver todos os detalhes, entre no Painel do Cliente com o seu CPF e a sua senha:</p>
+<p><a href="<%= @url %>"><%= @url %></a></p>
+<p>Um abraço,<br>Equipe Ramon Antonio Advogados</p>
+<p style="font-size:12px;color:#6b6259">
+  Esta é uma mensagem automática. Por favor, não responda este e-mail.<br>
+  Para falar com a equipe, chame no WhatsApp <%= ENV.fetch('PORTAL_WHATSAPP', '5548988554077') %>.<br>
+  A nossa equipe nunca pede a sua senha por e-mail, telefone ou WhatsApp.<br>
+  Se não quiser mais receber estes avisos, é só avisar a equipe.
+</p>

@@ -26,6 +26,15 @@ class Ramon::PortalMailer < ApplicationMailer
     mail(to: @cliente.email, subject: format(ASSUNTO_NOVIDADE, nome: @cliente.primeiro_nome)) { |f| f.html { render layout: false } }
   end
 
+  # Lembrete de audiência/perícia (Ramon::PortalLembretes, textos aprovados 09/10/2026); o título vira o assunto.
+  def lembrete
+    return unless smtp_config_set_or_development?
+
+    @texto = params[:texto]
+    @url = url_painel
+    mail(to: params[:cliente].email, subject: params[:titulo]) { |f| f.html { render layout: false } }
+  end
+
   # Interno: 1 linha por novidade, com texto pronto de WhatsApp e link wa.me.
   def resumo_equipe
     return unless smtp_config_set_or_development?
