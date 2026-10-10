@@ -120,6 +120,13 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    // Agente também entra (marca); aplicar no ADVBOX só o admin — o backend barra.
+    path: frontendURL('accounts/:accountId/ramon/conferencia-de-fases'),
+    name: 'ramon_conferencia_fases',
+    component: () => import('./pages/ConferenciaFases.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/relatorios'),
     name: 'ramon_relatorios',
     component: () => import('./pages/Relatorios.vue'),

@@ -17,7 +17,12 @@ describe('secoesIntranet', () => {
           ['agenda', ['ramon_agenda', 'ramon_reunioes']],
           [
             'clientes',
-            ['ramon_pessoas', 'ramon_portal_clientes', 'ramon_calculos'],
+            [
+              'ramon_pessoas',
+              'ramon_portal_clientes',
+              'ramon_conferencia_fases',
+              'ramon_calculos',
+            ],
           ],
         ],
       ],
@@ -63,6 +68,7 @@ describe('grupoDaRota', () => {
     ['ramon_linha_da_vida', 'clientes'],
     ['ramon_lead_dossie', 'clientes'],
     ['ramon_calculos_lead', 'clientes'],
+    ['ramon_conferencia_fases', 'clientes'],
     ['ramon_relatorios', 'resultados'],
     ['ramon_playbooks', 'configuracoes'],
     ['ramon_registro_acoes', 'configuracoes'],

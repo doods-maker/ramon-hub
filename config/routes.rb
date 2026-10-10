@@ -367,6 +367,9 @@ Rails.application.routes.draw do
           end
           resource :ramon_painel_time, only: [:show], controller: 'ramon_painel_time'
           resources :ramon_registro_acoes, only: [:index], controller: 'ramon_registro_acoes'
+          resources :ramon_conferencia_fases, only: [:index, :update], controller: 'ramon_conferencia_fases' do
+            post :aplicar, on: :collection
+          end
           resources :captain_tool_runs, only: [:index]
           resources :ramon_agente_execucoes, only: [:index], controller: 'ramon_agente_execucoes'
           resource :ramon_ia_uso, only: [:show, :update], controller: 'ramon_ia_uso'
