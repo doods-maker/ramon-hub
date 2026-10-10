@@ -47,6 +47,7 @@ const SECOES = [
             acende: ['ramon_linha_da_vida', 'ramon_lead_dossie'],
           }),
           aba('ramon_portal_clientes', 'PORTAL'),
+          aba('ramon_conferencia_fases', 'CONFERENCIA_FASES'),
           aba('ramon_calculos', 'CALCULOS', {
             acende: ['ramon_calculos_lead'],
           }),

@@ -13,6 +13,31 @@ class Ramon::PortalSyncService
   # Sem autorização da IA (LGPD art. 33, VIII) o pedido aparece resumido.
   ITEM_SEM_IA = 'Documentos pedidos pela equipe (confira a lista com a equipe no WhatsApp)'.freeze
 
+  # Audiência/perícia marcada pela equipe, ainda por acontecer → mostrada ao cliente com data e formato.
+  # De classe: a Conferência de fases (Ramon::ConferenciaFases) usa a mesma regra.
+  def self.agenda(tarefas)
+    hoje = Date.current.iso8601
+    itens = tarefas.filter_map do |p|
+      tipo = TAREFAS_AGENDA[Ramon::PortalTexto.normalizar(p['task'])]
+      next unless tipo && aberta?(p) && p['date'].to_s[0, 10] >= hoje
+
+      { 'tipo' => tipo, 'quando' => p['date'].to_s, 'formato' => formato(p['notes']) }
+    end
+    itens.sort_by { |a| a['quando'] }
+  end
+
+  # ponytail: formato lido das observações da tarefa ("PRESENCIAL"); sem a palavra, o painel não diz.
+  def self.formato(notes)
+    texto = Ramon::PortalTexto.normalizar(notes)
+    return 'por vídeo' if texto.match?(/VIRTUAL|VIDEO|ONLINE|TELEPRESENCIAL/)
+
+    'presencial' if texto.include?('PRESENCIAL')
+  end
+
+  def self.aberta?(post)
+    Array(post['users']).none? { |u| u['completed'].present? }
+  end
+
   def initialize(cliente)
     @cliente = cliente
   end
@@ -42,28 +67,8 @@ class Ramon::PortalSyncService
       'fase' => lawsuit['step'],
       'andamentos' => andamentos(id),
       'docs_pendentes' => docs_pendentes(tarefas),
-      'agenda' => agenda(tarefas)
+      'agenda' => self.class.agenda(tarefas)
     }
-  end
-
-  # Audiência/perícia marcada pela equipe, ainda por acontecer → mostrada ao cliente com data e formato.
-  def agenda(tarefas)
-    hoje = Date.current.iso8601
-    itens = tarefas.filter_map do |p|
-      tipo = TAREFAS_AGENDA[Ramon::PortalTexto.normalizar(p['task'])]
-      next unless tipo && aberta?(p) && p['date'].to_s[0, 10] >= hoje
-
-      { 'tipo' => tipo, 'quando' => p['date'].to_s, 'formato' => formato(p['notes']) }
-    end
-    itens.sort_by { |a| a['quando'] }
-  end
-
-  # ponytail: formato lido das observações da tarefa ("PRESENCIAL"); sem a palavra, o painel não diz.
-  def formato(notes)
-    texto = Ramon::PortalTexto.normalizar(notes)
-    return 'por vídeo' if texto.match?(/VIRTUAL|VIDEO|ONLINE|TELEPRESENCIAL/)
-
-    'presencial' if texto.include?('PRESENCIAL')
   end
 
   def andamentos(id)
@@ -77,7 +82,7 @@ class Ramon::PortalSyncService
   # guarda o resultado no espelho pra não pagar a chamada de novo toda noite.
   def docs_pendentes(tarefas)
     tarefas
-      .select { |p| Ramon::PortalTexto.normalizar(p['task']).include?(TAREFA_SOLICITAR) && aberta?(p) }
+      .select { |p| Ramon::PortalTexto.normalizar(p['task']).include?(TAREFA_SOLICITAR) && self.class.aberta?(p) }
       .flat_map do |p|
         digest = Digest::SHA256.hexdigest("#{usa_ia? ? 'ia' : 'sem-ia'}#{p['notes']}")[0, 16]
         itens = itens_anteriores[[p['id'], digest]] || itens_do_pedido(p['notes'])
@@ -111,10 +116,6 @@ class Ramon::PortalSyncService
     dados.is_a?(Hash) ? dados['cellphone'].to_s.delete('^0-9').presence : nil
   rescue Ramon::AdvboxClient::UnavailableError, Ramon::AdvboxClient::RequestError
     nil
-  end
-
-  def aberta?(post)
-    Array(post['users']).none? { |u| u['completed'].present? }
   end
 
   # Envelope das listas do ADVBOX: { offset, limit, totalCount, data } — nunca Array.

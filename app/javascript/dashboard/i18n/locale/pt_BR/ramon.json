@@ -1729,6 +1729,76 @@
       "FECHADO": "Fechado em {data}",
       "DESCONTOS": "Descontos"
     },
+    "CONFERENCIA": {
+      "TITLE": "Conferência de fases",
+      "SUBTITLE": "Etapa do ADVBOX ao lado do que o Painel do Cliente mostra, calculado pelo andamento do tribunal.",
+      "ATUALIZADO_EM": "Atualizado em {data} às {hora}",
+      "RESUMO": {
+        "atrasada": "{n} etapa atrasada | {n} etapas atrasadas",
+        "baixa": "{n} baixa no tribunal | {n} baixas no tribunal",
+        "diferente": "{n} fase diferente | {n} fases diferentes",
+        "igual": "{n} mesma fase | {n} mesma fase",
+        "conferidos": "{n} conferido | {n} conferidos",
+        "errados": "{n} painel errado | {n} painéis errados",
+        "para_aplicar": "{n} para atualizar no ADVBOX | {n} para atualizar no ADVBOX"
+      },
+      "GRUPO": {
+        "atrasada": "Etapa atrasada",
+        "baixa": "Baixa no tribunal",
+        "diferente": "Fase diferente",
+        "igual": "Mesma fase"
+      },
+      "TODOS": "Todos",
+      "RESPONSAVEL": "Responsável",
+      "TODOS_RESPONSAVEIS": "Todos os responsáveis",
+      "BUSCA": "Cliente ou processo",
+      "BUSCA_PLACEHOLDER": "Buscar cliente ou nº do processo",
+      "LADO": {
+        "ADVBOX": "No ADVBOX",
+        "PAINEL": "No painel do cliente"
+      },
+      "FASE": {
+        "documentos": "Documentos",
+        "inss": "Pedido no INSS",
+        "justica": "Justiça",
+        "recurso": "Recurso",
+        "pagamento": "Pagamento",
+        "concluido": "Concluído"
+      },
+      "DECIDIU_TRIBUNAL": "Decidiu: {titulo} ({data})",
+      "DECIDIU_AGENDA": "Decidiu: tarefa de {tipo} em {data}",
+      "AGENDA": {
+        "audiencia": "audiência",
+        "pericia": "perícia"
+      },
+      "SEM_ANDAMENTO": "Sem andamento que defina a fase: o painel usa só o nº do processo.",
+      "ULTIMO_ANDAMENTO": "último andamento {data}",
+      "PAINEL_CERTO": "O painel está certo?",
+      "MARCA": {
+        "certo": "Certo",
+        "errado": "Errado"
+      },
+      "ATUALIZAR": "Atualizar etapa no ADVBOX para {etapa}",
+      "AVISO_BAIXA": "Arquivar: confira honorários e pendências antes.",
+      "OBS": "Observação",
+      "CONFERIDO_POR": "Conferido por {quem} em {data} {hora}",
+      "APLICADO_POR": "Aplicado no ADVBOX por {quem} em {data} {hora}",
+      "ERRO_APLICACAO": "Erro ao aplicar: {erro}",
+      "APLICAR": "Aplicar {n} marcadas no ADVBOX",
+      "CONFIRMAR_TITULO": "Aplicar no ADVBOX",
+      "CONFIRMAR": "Isto altera a etapa de {n} processos no ADVBOX (até 400 por vez). Automações do ADVBOX ligadas à mudança de etapa podem disparar. Confirmar?",
+      "CONFIRMAR_BOTAO": "Aplicar",
+      "ENVIADOS": "{n} processos enviados para o ADVBOX. Recarregue em alguns minutos para ver o resultado.",
+      "ERRO_SALVAR": "Não foi possível salvar a marcação. Tente de novo.",
+      "ERRO_APLICAR": "Não foi possível enviar para o ADVBOX. Tente de novo.",
+      "NAO_MONTADA": "A conferência ainda não foi montada. Ela é refeita toda noite a partir do ADVBOX; a primeira carga completa leva algumas noites.",
+      "NENHUM": "Nenhum processo neste filtro.",
+      "LOAD_ERROR": "Não foi possível carregar a conferência.",
+      "RETRY": "Tentar de novo",
+      "PAGINACAO": "página {pagina} de {paginas}",
+      "ANTERIOR": "Anterior",
+      "PROXIMA": "Próxima"
+    },
     "REGISTRO": {
       "TITLE": "Registro de ações",
       "SUBTITLE": "Quem fez o quê, quando e o que era antes. Ninguém apaga esta trilha; ela fica guardada por 5 anos.",
@@ -1896,6 +1966,7 @@
       "REUNIOES": "Reuniões",
       "CONTEUDO": "Conteúdo",
       "PORTAL": "Painel do cliente",
+      "CONFERENCIA_FASES": "Conferência de fases",
       "RADAR": "Radar de prescrição",
       "POS_VENDA": "Pós-venda",
       "TV": "Placar da TV",

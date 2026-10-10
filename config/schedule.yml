@@ -117,6 +117,13 @@ ramon_portal_sync_job:
   class: 'Ramon::PortalSyncJob'
   queue: scheduled_jobs
 
+# executed daily at 0430 UTC = 01:30 America/Sao_Paulo — Conferência de fases (ADVBOX × Painel do Cliente),
+# depois do espelho do painel; incremental (só busca o que andou), até 400 processos por noite
+ramon_conferencia_fases_job:
+  cron: '30 4 * * *'
+  class: 'Ramon::ConferenciaFasesJob'
+  queue: scheduled_jobs
+
 # Conteúdo do Instagram: publica as peças agendadas que venceram (spec 2026-10-02).
 ramon_publicar_pecas_job:
   cron: '* * * * *'

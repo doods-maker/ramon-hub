@@ -91,6 +91,7 @@ class Account < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :fluxos, class_name: 'Fluxo', dependent: :destroy_async
   has_many :pecas, class_name: 'Peca', dependent: :destroy_async
   has_many :portal_clientes, dependent: :destroy_async
+  has_many :ramon_conferencias_fase, class_name: 'RamonConferenciaFase', dependent: :delete_all
   has_many :lead_activities, dependent: :destroy_async
   has_many :lead_notes, dependent: :destroy_async
   has_many :lead_priorities, dependent: :destroy_async

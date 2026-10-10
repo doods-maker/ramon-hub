@@ -1724,6 +1724,76 @@
       "FECHADO": "Closed on {data}",
       "DESCONTOS": "Deductions"
     },
+    "CONFERENCIA": {
+      "TITLE": "Phase review",
+      "SUBTITLE": "ADVBOX stage next to what the Client Panel shows, computed from court movements.",
+      "ATUALIZADO_EM": "Updated on {data} at {hora}",
+      "RESUMO": {
+        "atrasada": "{n} stage behind | {n} stages behind",
+        "baixa": "{n} closed in court | {n} closed in court",
+        "diferente": "{n} different phase | {n} different phases",
+        "igual": "{n} same phase | {n} same phase",
+        "conferidos": "{n} reviewed | {n} reviewed",
+        "errados": "{n} panel wrong | {n} panels wrong",
+        "para_aplicar": "{n} to update in ADVBOX | {n} to update in ADVBOX"
+      },
+      "GRUPO": {
+        "atrasada": "Stage behind",
+        "baixa": "Closed in court",
+        "diferente": "Different phase",
+        "igual": "Same phase"
+      },
+      "TODOS": "All",
+      "RESPONSAVEL": "Owner",
+      "TODOS_RESPONSAVEIS": "All owners",
+      "BUSCA": "Client or case",
+      "BUSCA_PLACEHOLDER": "Search client or case number",
+      "LADO": {
+        "ADVBOX": "In ADVBOX",
+        "PAINEL": "In the client panel"
+      },
+      "FASE": {
+        "documentos": "Documents",
+        "inss": "INSS request",
+        "justica": "Court",
+        "recurso": "Appeal",
+        "pagamento": "Payment",
+        "concluido": "Completed"
+      },
+      "DECIDIU_TRIBUNAL": "Decided by: {titulo} ({data})",
+      "DECIDIU_AGENDA": "Decided by: {tipo} task on {data}",
+      "AGENDA": {
+        "audiencia": "hearing",
+        "pericia": "medical exam"
+      },
+      "SEM_ANDAMENTO": "No movement defines the phase: the panel only uses the case number.",
+      "ULTIMO_ANDAMENTO": "last movement {data}",
+      "PAINEL_CERTO": "Is the panel right?",
+      "MARCA": {
+        "certo": "Right",
+        "errado": "Wrong"
+      },
+      "ATUALIZAR": "Update ADVBOX stage to {etapa}",
+      "AVISO_BAIXA": "Archive: check fees and pending items first.",
+      "OBS": "Note",
+      "CONFERIDO_POR": "Reviewed by {quem} on {data} {hora}",
+      "APLICADO_POR": "Applied in ADVBOX by {quem} on {data} {hora}",
+      "ERRO_APLICACAO": "Failed to apply: {erro}",
+      "APLICAR": "Apply {n} marked in ADVBOX",
+      "CONFIRMAR_TITULO": "Apply in ADVBOX",
+      "CONFIRMAR": "This changes the stage of {n} cases in ADVBOX (up to 400 at a time). ADVBOX automations tied to stage changes may fire. Confirm?",
+      "CONFIRMAR_BOTAO": "Apply",
+      "ENVIADOS": "{n} cases sent to ADVBOX. Reload in a few minutes to see the result.",
+      "ERRO_SALVAR": "Could not save the mark. Try again.",
+      "ERRO_APLICAR": "Could not send to ADVBOX. Try again.",
+      "NAO_MONTADA": "The review has not been built yet. It is rebuilt every night from ADVBOX; the first full load takes a few nights.",
+      "NENHUM": "No cases in this filter.",
+      "LOAD_ERROR": "Could not load the review.",
+      "RETRY": "Try again",
+      "PAGINACAO": "page {pagina} of {paginas}",
+      "ANTERIOR": "Previous",
+      "PROXIMA": "Next"
+    },
     "REGISTRO": {
       "TITLE": "Action log",
       "SUBTITLE": "Who did what, when, and what it was before. Nobody can erase this trail; it is kept for 5 years.",
@@ -1891,6 +1961,7 @@
       "REUNIOES": "Meetings",
       "CONTEUDO": "Content",
       "PORTAL": "Client portal",
+      "CONFERENCIA_FASES": "Phase review",
       "RADAR": "Prescription radar",
       "POS_VENDA": "Post-sale",
       "TV": "TV scoreboard",

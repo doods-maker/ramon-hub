@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_07_800002) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_09_100001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1486,6 +1486,36 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_07_800002) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "created_at"], name: "index_ramon_chegadas_on_account_id_and_created_at"
+  end
+
+  create_table "ramon_conferencias_fase", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "lawsuit_id", null: false
+    t.string "numero"
+    t.string "cliente"
+    t.string "responsavel"
+    t.string "etapa_advbox"
+    t.string "fase_advbox"
+    t.string "painel_titulo"
+    t.string "fase_painel"
+    t.bigint "etapa_advbox_id"
+    t.string "grupo", null: false
+    t.jsonb "tribunal"
+    t.jsonb "agenda", default: [], null: false
+    t.date "ultimo_andamento"
+    t.jsonb "sugestao"
+    t.string "painel_marca"
+    t.boolean "atualizar", default: false, null: false
+    t.text "obs"
+    t.bigint "marcado_por_id"
+    t.datetime "marcado_em"
+    t.datetime "aplicado_em"
+    t.bigint "aplicado_por_id"
+    t.string "erro_aplicacao"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "grupo"], name: "index_ramon_conferencias_fase_on_account_id_and_grupo"
+    t.index ["account_id", "lawsuit_id"], name: "index_ramon_conferencias_fase_on_account_id_and_lawsuit_id", unique: true
   end
 
   create_table "ramon_extratos_fechados", force: :cascade do |t|
