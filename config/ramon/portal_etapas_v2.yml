@@ -312,15 +312,19 @@ etapas:
 # a equipe não move a etapa e o painel mostrava fase velha). Andamento → etapa do dicionário; vale o andamento
 # mais recente que casar; no mesmo dia, a regra de cima (mais avançada) vence. Sem regra: nº CNJ → Justiça.
 tribunal:
-  - { etapa: 'ARQUIVADO/ENCERRADO',              regex: 'baixa definitiva|arquivad[oa] definitivamente|arquivamento definitivo' }
+  # "Baixa Definitiva - Declinada Competência - Processo distribuído" = o processo mudou de juízo, não acabou.
+  # TJ (eSAJ/Themis) escreve "Arquivamento / Data de arquivamento / Tipo de arquivamento: Definitivo" em várias linhas.
+  - { etapa: 'ARQUIVADO/ENCERRADO',              regex: 'baixa definitiva(?!.*(compet[êe]ncia|redistribu|distribu[íi]do|remetid))|arquivad[oa] definitivamente|arquivamento definitivo|\Aarquivamento[\s\S]*definitiv' }
   # sem_volta: depois de chegar aqui, andamento de regra de baixo (sentença, acórdão…) não devolve a fase.
-  - { etapa: 'RPV / PRECATORIO EMITIDO',          sem_volta: true, regex: '\bRPV\b|precat[óo]rio|requisi[çc][ãa]o de (pequeno valor|pagamento)' }
+  # Impugnação do INSS ao cálculo e RPV cancelada NÃO são ordem de pagamento (calibragem 09/10, carteira inteira).
+  - { etapa: 'RPV / PRECATORIO EMITIDO',          sem_volta: true, regex: '\A(?![\s\S]*(impugna|cancelad))[\s\S]*(\bRPV\b|precat[óo]rio|requisi[çc][ãa]o de (pequeno valor|pagamento))' }
   # Só a Fazenda/INSS pagando: cumprimento civil pode ser contra o cliente.
-  - { etapa: 'EXECUCAO COMO EXEQUENTE',           sem_volta: true, regex: 'contra a fazenda|execu[çc][ãa]o invertida' }
+  - { etapa: 'EXECUCAO COMO EXEQUENTE',           sem_volta: true, regex: 'contra a fazenda|execu[çc][ãa]o invertida|impugna[çc][ãa]o[\s\S]*(\bRPV\b|precat[óo]rio)' }
   - { etapa: 'RECURSO JULGADO',                   regex: 'senten[çc]a (confirmada|reformada|anulada)|ac[óo]rd[ãa]o' }
   - { etapa: 'AGUARDANDO JULGAMENTO DO RECURSO',  regex: 'em grau de recurso|recurso inominado|apela[çc][ãa]o|inclus[ãa]o em pauta' }
-  # "Conclusos/autos PARA sentença" é o juiz ainda por decidir — não pode virar "O juiz decidiu".
-  - { etapa: 'SENTENCA PROFERIDA',                regex: '(?<!cumprimento de )(?<!para )senten[çc]a|julgad[oa]s? (parcialmente )?(im)?procedente|acordo homologado|extint[oa] o processo' }
+  # "Conclusos/autos PARA sentença" e "Proferir sentença" são o juiz ainda por decidir — não podem virar "O juiz
+  # decidiu"; "cumprimento da/de sentença" e "execução de sentença" são a fase de pagamento, não a decisão.
+  - { etapa: 'SENTENCA PROFERIDA',                regex: '(?<!cumprimento d[ae] )(?<!para )(?<!proferir )(?<!execu[çc][ãa]o de )senten[çc]a|julgad[oa]s? (parcialmente )?(im)?procedente|acordo homologado|extint[oa] o processo' }
   - { etapa: 'AUDIENCIA / PERICIA REALIZADA',     regex: 'juntad[ao].*laudo pericial|audi[êe]ncia.* (?<!n[ãa]o )realizada' }
 marcos:
   # Concessão NÃO é marco: "deferido/concedido" aparece em gratuidade, prazo, juntada…
@@ -329,4 +333,4 @@ marcos:
   - { tipo: pericia,   regex: 'per[ií]cia',                    titulo: 'Perícia',            explicacao: 'Avaliação com um médico do INSS ou da Justiça para verificar a sua condição de saúde.' }
   - { tipo: audiencia, regex: 'audi[êe]ncia',                  titulo: 'Audiência',          explicacao: 'Encontro com o juiz. Ele ouve você e, se houver, as suas testemunhas.' }
   - { tipo: protocolo, regex: 'distribu[ií]d|protocol|autuad', titulo: 'Pedido entregue',    explicacao: 'O seu pedido foi entregue oficialmente, ao INSS ou à Justiça.' }
-  - { tipo: sentenca,  regex: '(?<!cumprimento de )(?<!para )senten[çc]a|ac[óo]rd[ãa]o', titulo: 'Decisão',            explicacao: 'Saiu uma decisão no processo. A equipe explica o resultado para você.', delicada: true }
+  - { tipo: sentenca,  regex: '(?<!cumprimento d[ae] )(?<!para )(?<!proferir )(?<!execu[çc][ãa]o de )senten[çc]a|ac[óo]rd[ãa]o', titulo: 'Decisão',            explicacao: 'Saiu uma decisão no processo. A equipe explica o resultado para você.', delicada: true }

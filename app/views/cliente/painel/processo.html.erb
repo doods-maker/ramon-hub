@@ -39,6 +39,8 @@
           <p class="texto"><strong><%= a['tipo'] == 'audiencia' ? 'Audiência' : 'Perícia' %>:</strong>
             <%= quando.strftime('%d/%m/%Y') %><% if quando.strftime('%H:%M') != '00:00' %> às <%= quando.strftime('%-Hh%M').delete_suffix('00') %><% end %><%= " · #{a['formato']}" if a['formato'] %></p>
         <% end %>
+        <% ultimo = Array(@processo['andamentos']).pluck('data').compact.max %>
+        <p class="muted" style="margin-top: 10px; font-size: 13px"><% if ultimo.present? %>Última movimentação na Justiça: <%= data_br(ultimo) %> · <% end %>Atualizado em <%= current_cliente.sincronizado_em ? current_cliente.sincronizado_em.in_time_zone('America/Sao_Paulo').strftime('%d/%m às %H:%M') : '—' %></p>
         <% if @novidades.any? %><span class="badge badge-novo">Novidade</span><% end %>
       </div>
     </section>
