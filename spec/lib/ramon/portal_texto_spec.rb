@@ -173,7 +173,9 @@ RSpec.describe Ramon::PortalTexto do
     end
 
     it 'tribunal: "conclusos para sentença" e "audiência não realizada" não mudam a fase nem viram marco' do
-      ['Conclusos para sentença', 'Audiência de instrução não realizada', 'Intimação para manifestação sobre laudo pericial'].each do |t|
+      ['Conclusos para sentença', 'Audiência de instrução não realizada', 'Intimação para manifestação sobre laudo pericial',
+       'Baixa Definitiva - Declinada Competência - Processo distribuído. Local', 'Conclusos os autos para julgamento Proferir sentença',
+       'Extinta a execução ou o cumprimento da sentença - tipo B', 'Requisição de Pequeno Valor cancelada'].each do |t|
         expect(described_class.achado_do_tribunal([andamento('2026-10-01', t)])).to be_nil
       end
       expect(described_class.marcos([andamento('2026-10-01', 'Conclusos para sentença')])).to be_empty
@@ -187,6 +189,14 @@ RSpec.describe Ramon::PortalTexto do
       rpv = andamento('2026-09-01', 'Expedida Requisição de Pequeno Valor - RPV')
       expect(described_class.achado_do_tribunal([cumprimento, rpv] + depois)['etapa']).to eq 'RPV / PRECATORIO EMITIDO'
       expect(described_class.achado_do_tribunal([cumprimento, andamento('2026-10-01', 'Baixa Definitiva')])['etapa']).to eq 'ARQUIVADO/ENCERRADO'
+    end
+
+    it 'tribunal: impugnação do INSS ao cálculo é cobrança (não ordem de pagamento); arquivamento definitivo do TJ encerra' do
+      impugnacao = 'Expedida/certificada a intimação eletrônica - Impugnação (art. 535, CPC) - Precatório (EXEQUENTE - X) Prazo: 15 dias'
+      expect(described_class.achado_do_tribunal([andamento('2026-09-01', impugnacao)])['etapa']).to eq 'EXECUCAO COMO EXEQUENTE'
+      tj = "Arquivamento\nData de arquivamento: 01/02/2026\nTipo de arquivamento: Definitivo"
+      expect(described_class.achado_do_tribunal([andamento('2026-02-01', tj)])['etapa']).to eq 'ARQUIVADO/ENCERRADO'
+      expect(described_class.achado_do_tribunal([andamento('2026-02-01', tj.sub('Definitivo', 'Provisório'))])).to be_nil
     end
 
     it 'tribunal: achado gravado com regra antiga é reavaliado pelo título (corrigir o YAML corrige o espelho)' do
