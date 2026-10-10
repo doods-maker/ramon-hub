@@ -11,7 +11,7 @@ RSpec.describe Ramon::PortalAvisosJob do
                                           'novidades' => [novidade, delicada] }])
   end
   let(:mail) { instance_double(ActionMailer::MessageDelivery, deliver_now: true) }
-  let(:mailer) { double(novidade: mail, resumo_equipe: mail) } # rubocop:disable RSpec/VerifiedDoubles
+  let(:mailer) { double(novidade: mail, resumo_equipe: mail, lembrete: mail) } # rubocop:disable RSpec/VerifiedDoubles
 
   before { allow(Ramon::PortalMailer).to receive(:with).and_return(mailer) }
 
@@ -52,6 +52,20 @@ RSpec.describe Ramon::PortalAvisosJob do
     expect(Ramon::PortalMailer).to have_received(:with).with(hash_including(:linhas)) do |args|
       expect(args[:linhas].map { |l| [l['titulo'], l['email']] })
         .to eq([['Perícia agendada', 'Já recebeu por e-mail hoje.'], ['Conversa de boas-vindas', 'Não recebeu: etapa sem e-mail automático.']])
+    end
+  end
+
+  it 'audiência daqui a 7 dias: lembrete por e-mail ao cliente e linha com WhatsApp no resumo da equipe' do
+    quando = "#{7.days.from_now.to_date.iso8601} 16:00:00"
+    cliente.update!(processos: [{ 'id' => 1, 'tipo' => 'AUXÍLIO-ACIDENTE (B94)', 'fase' => 'JUDICIAL', 'responsavel' => 'DRA X',
+                                  'agenda' => [{ 'tipo' => 'audiencia', 'quando' => quando, 'formato' => 'presencial' }] }])
+    with_modified_env PORTAL_AVISOS: 'on' do
+      described_class.perform_now
+    end
+    expect(Ramon::PortalMailer).to have_received(:with).with(hash_including(cliente: cliente, texto: start_with('Olá, Maria. Sua audiência')))
+    expect(Ramon::PortalMailer).to have_received(:with).with(hash_including(:linhas)) do |args|
+      expect(args[:linhas].first['texto_whatsapp']).to include('Aqui é a Gabriela').and include('às 16h (presencial)')
+      expect(args[:linhas].first['email']).to eq 'Já recebeu por e-mail hoje.'
     end
   end
 

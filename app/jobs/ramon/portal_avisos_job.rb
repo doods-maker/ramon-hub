@@ -1,6 +1,7 @@
 # 8h (BRT): avisa as novidades do espelho noturno. Cliente com e-mail recebe 1 e-mail
 # detalhado (etapas "delicadas" nunca vão por e-mail); a equipe recebe 1 resumo com o
 # texto pronto de WhatsApp e o link wa.me de cada cliente — quem manda é uma pessoa.
+# Também manda o lembrete de audiência/perícia 7 e 1 dia antes (Ramon::PortalLembretes), pelos mesmos dois canais.
 # Desligado até o Eduardo aprovar os textos: PORTAL_AVISOS=on liga (texto = gate dele).
 class Ramon::PortalAvisosJob < ApplicationJob
   queue_as :scheduled_jobs
@@ -28,15 +29,34 @@ class Ramon::PortalAvisosJob < ApplicationJob
   end
 
   def avisar(cliente)
+    avisar_novidades(cliente) + avisar_lembretes(cliente)
+  rescue StandardError => e
+    Rails.logger.warn("[Ramon::PortalAvisosJob] cliente=#{cliente.id} #{e.class}: #{e.message}")
+    []
+  end
+
+  def avisar_novidades(cliente)
     pendentes = pendentes(cliente)
     return [] if pendentes.empty?
 
     por_email = enviar_email(cliente, pendentes)
     marcar_avisadas!(cliente)
     pendentes.map { |p, n| linha(cliente, p, n, por_email && por_email?(n)) }
-  rescue StandardError => e
-    Rails.logger.warn("[Ramon::PortalAvisosJob] cliente=#{cliente.id} #{e.class}: #{e.message}")
-    []
+  end
+
+  # Audiência/perícia daqui a 7 ou 1 dia (Ramon::PortalLembretes): e-mail ao cliente + linha no resumo da equipe.
+  def avisar_lembretes(cliente)
+    Ramon::PortalLembretes.devidos(cliente).map do |p, l|
+      Ramon::PortalMailer.with(cliente: cliente, titulo: l['titulo'], texto: l['texto']).lembrete.deliver_now if cliente.email.present?
+      linha_lembrete(cliente, p, l)
+    end
+  end
+
+  def linha_lembrete(cliente, processo, lembrete)
+    texto = "Olá, #{cliente.primeiro_nome}! Tudo bem? Aqui é a Gabriela, do escritório Ramon Antonio Advogados.\n#{lembrete['corpo']}"
+    { 'tipo' => tipo_amigavel(processo['tipo']), 'titulo' => lembrete['titulo'], 'o_que_esperar' => lembrete['corpo'],
+      'nome' => cliente.nome, 'responsavel' => processo['responsavel'], 'delicada' => false,
+      'email' => status_email(cliente, {}, cliente.email.present?), 'texto_whatsapp' => texto, 'link_wa' => link_wa(cliente.telefone, texto) }
   end
 
   def pendentes(cliente)
