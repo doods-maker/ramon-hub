@@ -17,7 +17,7 @@ class Ramon::ConferenciaFases
   end
 
   def atualizar!
-    existentes = @account.ramon_conferencias_fase.index_by(&:lawsuit_id)
+    existentes = @account.ramon_conferencias_fase.reload.index_by(&:lawsuit_id) # reload: marcação feita desde a última leitura
     ultimas = ultimas_movimentacoes
     @buscas = 0
     carteira_judicial_ativa.each do |lawsuit|
