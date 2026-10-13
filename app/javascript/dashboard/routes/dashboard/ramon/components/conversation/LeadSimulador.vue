@@ -1042,13 +1042,7 @@ if (props.inicial?.tipo === 'honorario' && canSimulate.value)
             `~${money(honorario.valor)}`
           }}</span>
           <span class="text-xs text-n-slate-10">
-            ({{
-              $t('RAMON.SIMULADOR.HONORARIO_FORMULA', {
-                percentual: honorario.percentual,
-                n: honorario.n_mensalidades,
-                tese: honorario.tese,
-              })
-            }})
+            ({{ honorario.descricao }} · {{ honorario.tese }})
           </span>
         </p>
         <p

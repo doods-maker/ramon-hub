@@ -40,6 +40,7 @@ const resultado = {
     valor: '10200.00',
     percentual: 30,
     n_mensalidades: 3,
+    descricao: '30% dos atrasados + 3 benefícios',
     tese: 'Auxílio-acidente (B36)',
   },
   avisos: ['qualidade de segurado não é aferida pelo motor'],
@@ -154,6 +155,9 @@ describe('LeadSimulador.vue', () => {
     );
     expect(wrapper.find('[data-testid="sim-honorario"]').text()).toContain(
       '10.200,00'
+    );
+    expect(wrapper.find('[data-testid="sim-honorario"]').text()).toContain(
+      '30% dos atrasados + 3 benefícios'
     );
     expect(
       wrapper.find('[data-testid="sim-aviso-qualidade"]').text()
