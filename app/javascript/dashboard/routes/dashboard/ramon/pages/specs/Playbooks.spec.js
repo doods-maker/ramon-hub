@@ -65,6 +65,29 @@ describe('Playbooks.vue', () => {
     });
   });
 
+  it('salva mínimo, base e "na tabela" da tese', async () => {
+    const { wrapper, store } = mountPlaybooks();
+    await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
+    await wrapper
+      .find('[data-testid="playbooks-honorario-na-tabela"]')
+      .setValue(true);
+    await wrapper
+      .find('[data-testid="playbooks-honorario-minimo-qtd-input"]')
+      .setValue('3');
+    await wrapper
+      .find('[data-testid="playbooks-honorario-minimo-base"]')
+      .setValue('sm');
+    expect(store.dispatch).toHaveBeenLastCalledWith(
+      'theses/update',
+      expect.objectContaining({
+        id: 1,
+        honorario_minimo_qtd: 3,
+        honorario_minimo_base: 'sm',
+        honorario_na_tabela: true,
+      })
+    );
+  });
+
   it('shows the empty detail state when no thesis is selected', () => {
     const { wrapper } = mountPlaybooks();
     expect(

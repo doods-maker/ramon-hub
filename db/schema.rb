@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_09_100001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_13_100001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1830,6 +1830,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_09_100001) do
     t.datetime "updated_at", null: false
     t.decimal "honorario_percentual", precision: 5, scale: 2
     t.integer "honorario_n_mensalidades"
+    t.integer "honorario_minimo_qtd"
+    t.string "honorario_minimo_base"
+    t.boolean "honorario_na_tabela", default: false, null: false
     t.index ["account_id", "name"], name: "index_theses_on_account_id_and_name", unique: true
   end
 

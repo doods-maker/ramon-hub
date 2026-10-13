@@ -8,7 +8,10 @@ theses:
     area: "previdenciario"
     position: 1
     honorario_percentual: 30
-    honorario_n_mensalidades: 3
+    honorario_n_mensalidades:
+    honorario_minimo_qtd: 1
+    honorario_minimo_base: sb
+    honorario_na_tabela: true
     items:
       - section: "abertura"
         title: "Quebra-gelo (afastado por doença)"
@@ -76,7 +79,10 @@ theses:
     area: "previdenciario"
     position: 2
     honorario_percentual: 30
-    honorario_n_mensalidades: 3
+    honorario_n_mensalidades:
+    honorario_minimo_qtd: 3
+    honorario_minimo_base: sb
+    honorario_na_tabela: true
     items:
       - section: "abertura"
         title: "Quebra-gelo"
@@ -141,6 +147,9 @@ theses:
     position: 3
     honorario_percentual: 30
     honorario_n_mensalidades: 3
+    honorario_minimo_qtd: 3
+    honorario_minimo_base: sm
+    honorario_na_tabela: true
     items:
       - section: "abertura"
         title: "Quebra-gelo"
@@ -406,8 +415,9 @@ theses:
     description: "Benefício assistencial de 1 salário mínimo a pessoa com deficiência de baixa renda. NÃO exige contribuição ao INSS. Lei 8.742/93, art. 20."
     area: "previdenciario"
     position: 4
-    honorario_percentual: 30
-    honorario_n_mensalidades: 3
+    honorario_percentual:
+    honorario_n_mensalidades:
+    honorario_na_tabela: false
     items:
       - section: "abertura"
         title: "Quebra-gelo"
@@ -470,8 +480,9 @@ theses:
     description: "Adicional de 25% sobre a aposentadoria por incapacidade permanente quando o segurado precisa de ajuda permanente de outra pessoa. Lei 8.213/91, art. 45."
     area: "previdenciario"
     position: 5
-    honorario_percentual: 30
-    honorario_n_mensalidades: 3
+    honorario_percentual:
+    honorario_n_mensalidades:
+    honorario_na_tabela: false
     items:
       - section: "abertura"
         title: "Quebra-gelo"

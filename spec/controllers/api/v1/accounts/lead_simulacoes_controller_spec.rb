@@ -3,7 +3,9 @@ require 'rails_helper'
 RSpec.describe 'Lead Simulacoes API', type: :request do
   let(:account) { create(:account) }
   let(:admin) { create(:user, account: account, role: :administrator) }
-  let(:thesis) { create(:thesis, account: account, honorario_percentual: 30, honorario_n_mensalidades: 3) }
+  let(:thesis) do
+    create(:thesis, account: account, honorario_percentual: 30, honorario_n_mensalidades: 3, honorario_na_tabela: true)
+  end
   let(:lead) { create(:lead, account: account, thesis: thesis) }
   let(:der) { 10.months.ago.to_date }
   let(:simulacao_params) do
@@ -55,7 +57,8 @@ RSpec.describe 'Lead Simulacoes API', type: :request do
       end
       # 30% × 17000.00 + 3 × 1700.00 = 5100.00 + 5100.00
       expect(response.parsed_body['honorario']).to include(
-        'valor' => '10200.00', 'percentual' => 30.0, 'n_mensalidades' => 3, 'tese' => thesis.name
+        'valor' => '10200.00', 'percentual' => 30.0, 'n_mensalidades' => 3, 'tese' => thesis.name,
+        'descricao' => '30% dos atrasados + 3 benefícios (cada um de pelo menos 1 salário mínimo)'
       )
     end
 
@@ -123,6 +126,14 @@ RSpec.describe 'Lead Simulacoes API', type: :request do
       end
       expect(response.parsed_body['honorario']['valor']).to be_nil
       expect(response.parsed_body['honorario']['motivo']).to be_present
+    end
+
+    it 'tese fora da tabela devolve o motivo sem valor' do
+      lead.update!(thesis: create(:thesis, account: account, name: 'Fora', honorario_percentual: 30))
+      with_modified_env MOTOR_CALCULOS_URL: motor_url do
+        simulate
+      end
+      expect(response.parsed_body['honorario']).to eq('valor' => nil, 'motivo' => Ramon::Honorario::FORA_DA_TABELA)
     end
   end
 

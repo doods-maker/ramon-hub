@@ -18,7 +18,7 @@ Em regra, 12 contribuições. Mas a carência é dispensada quando a incapacidad
 Não necessariamente. Se você ficou um período afastado, sem receber, e tinha direito, esses valores atrasados podem ser cobrados.
 
 ## Quanto custa? Quanto vocês cobram no auxílio-doença?
-Você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, mais 3 parcelas do benefício — sem entrada, sem mensalidade, sem custo escondido.
+Você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, com mínimo de 1 benefício — sem entrada, sem mensalidade, sem custo escondido.
 
 ## Quanto tempo demora no auxílio-doença?
 Depende do INSS e, se precisar, da Justiça — e ninguém sério crava prazo. Você acompanha cada passo pelo WhatsApp com a gente.

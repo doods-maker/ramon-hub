@@ -130,7 +130,7 @@ RSpec.describe Ramon::FaqDeConversa do
   end
 
   it 'o prompt traz a regra do honorário e proíbe dado pessoal', :aggregate_failures do
-    expect(described_class::PROMPT).to include('30% dos atrasados + 3 parcelas do benefício')
+    expect(described_class::PROMPT).to include('exatamente como o atendente falou')
     expect(described_class::PROMPT).to include('sem nome, CPF')
   end
 end

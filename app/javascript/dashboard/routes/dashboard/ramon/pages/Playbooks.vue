@@ -42,6 +42,9 @@ const detail = reactive({
   active: true,
   honorarioPercentual: '',
   honorarioNMensalidades: '',
+  honorarioMinimoQtd: '',
+  honorarioMinimoBase: '',
+  honorarioNaTabela: false,
 });
 
 const syncDetail = () => {
@@ -53,6 +56,9 @@ const syncDetail = () => {
   detail.active = thesis.active !== false;
   detail.honorarioPercentual = thesis.honorario_percentual ?? '';
   detail.honorarioNMensalidades = thesis.honorario_n_mensalidades ?? '';
+  detail.honorarioMinimoQtd = thesis.honorario_minimo_qtd ?? '';
+  detail.honorarioMinimoBase = thesis.honorario_minimo_base ?? '';
+  detail.honorarioNaTabela = !!thesis.honorario_na_tabela;
 };
 
 // Observa só o ID: resposta de PATCH mutando o record no store não pode
@@ -140,6 +146,9 @@ const saveDetail = () => {
       area: detail.area,
       honorario_percentual: detail.honorarioPercentual,
       honorario_n_mensalidades: detail.honorarioNMensalidades,
+      honorario_minimo_qtd: detail.honorarioMinimoQtd,
+      honorario_minimo_base: detail.honorarioMinimoBase || null,
+      honorario_na_tabela: detail.honorarioNaTabela,
     })
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
@@ -470,6 +479,47 @@ onMounted(() => store.dispatch('theses/get'));
                     :placeholder="$t('RAMON.PLAYBOOKS.HONORARIO_INSTALLMENTS')"
                     @blur="saveDetail"
                   />
+                </label>
+              </div>
+              <div class="grid gap-3 md:grid-cols-3">
+                <label :class="ROTULO">
+                  {{ $t('RAMON.PLAYBOOKS.HONORARIO_MINIMO') }}
+                  <input
+                    v-model="detail.honorarioMinimoQtd"
+                    type="number"
+                    min="0"
+                    step="1"
+                    data-testid="playbooks-honorario-minimo-qtd-input"
+                    class="font-mono"
+                    :class="CAMPO"
+                    @blur="saveDetail"
+                  />
+                </label>
+                <label :class="ROTULO">
+                  {{ $t('RAMON.PLAYBOOKS.HONORARIO_MINIMO_BASE') }}
+                  <select
+                    v-model="detail.honorarioMinimoBase"
+                    data-testid="playbooks-honorario-minimo-base"
+                    :class="CAMPO"
+                    @change="saveDetail"
+                  >
+                    <option value="">—</option>
+                    <option value="sm">
+                      {{ $t('RAMON.PLAYBOOKS.BASE_SM') }}
+                    </option>
+                    <option value="sb">
+                      {{ $t('RAMON.PLAYBOOKS.BASE_SB') }}
+                    </option>
+                  </select>
+                </label>
+                <label :class="ROTULO" class="flex items-center gap-2 self-end">
+                  <input
+                    v-model="detail.honorarioNaTabela"
+                    type="checkbox"
+                    data-testid="playbooks-honorario-na-tabela"
+                    @change="saveDetail"
+                  />
+                  {{ $t('RAMON.PLAYBOOKS.HONORARIO_NA_TABELA') }}
                 </label>
               </div>
               <p

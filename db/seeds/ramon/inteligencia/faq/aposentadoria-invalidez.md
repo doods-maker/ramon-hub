@@ -21,7 +21,7 @@ A análise deve ser do conjunto, não de cada doença isolada. A soma das limita
 Muda: quem depende de terceiros de forma permanente pode ter direito a um acréscimo de 25% sobre a aposentadoria.
 
 ## Quanto custa? Quanto vocês cobram na aposentadoria por invalidez?
-Você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, mais 3 parcelas do benefício — sem entrada, sem mensalidade, sem custo escondido.
+Você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, com mínimo de 3 benefícios — sem entrada, sem mensalidade, sem custo escondido.
 
 ## Quanto tempo demora na aposentadoria por invalidez?
 Depende do INSS e, se precisar, da Justiça — ninguém sério crava prazo. Você acompanha cada passo pelo WhatsApp com a gente.

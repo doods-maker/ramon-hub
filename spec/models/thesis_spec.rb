@@ -63,4 +63,17 @@ RSpec.describe Thesis do
     expect(negativa).not_to be_valid
     expect(fracionada).not_to be_valid
   end
+
+  it 'nasce fora da tabela de honorários' do
+    expect(account.theses.create!(name: 'Tese Nova JUR-02').honorario_na_tabela).to be false
+  end
+
+  it 'aceita só sm ou sb como base do mínimo' do
+    expect(account.theses.build(name: 'Base Ruim', honorario_minimo_base: 'xx')).not_to be_valid
+    expect(account.theses.build(name: 'Base SM', honorario_minimo_base: 'sm')).to be_valid
+  end
+
+  it 'rejeita mínimo negativo' do
+    expect(account.theses.build(name: 'Min Neg', honorario_minimo_qtd: -1)).not_to be_valid
+  end
 end

@@ -40,6 +40,7 @@ const resultado = {
     valor: '10200.00',
     percentual: 30,
     n_mensalidades: 3,
+    descricao: '30% dos atrasados + 3 benefícios',
     tese: 'Auxílio-acidente (B36)',
   },
   avisos: ['qualidade de segurado não é aferida pelo motor'],
@@ -155,6 +156,9 @@ describe('LeadSimulador.vue', () => {
     expect(wrapper.find('[data-testid="sim-honorario"]').text()).toContain(
       '10.200,00'
     );
+    expect(wrapper.find('[data-testid="sim-honorario"]').text()).toContain(
+      '30% dos atrasados + 3 benefícios'
+    );
     expect(
       wrapper.find('[data-testid="sim-aviso-qualidade"]').text()
     ).toContain('qualidade de segurado');
@@ -163,6 +167,22 @@ describe('LeadSimulador.vue', () => {
     expect(mensal).toContain('RAMON.SIMULADOR.MENSAL_ESTIMADO');
     expect(mensal).toContain('~R$');
     expect(mensal).toContain('1.700,00');
+  });
+
+  it('tese fora da tabela mostra o aviso próprio em vez de "sem honorário configurado"', async () => {
+    LeadsAPI.simulate.mockResolvedValue({
+      data: {
+        ...resultado,
+        honorario: { valor: null, motivo: 'tese fora da tabela de honorários' },
+      },
+    });
+    const wrapper = mountSim();
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="sim-sem-honorario"]').text()).toContain(
+      'RAMON.SIMULADOR.FEE_OFF_TABLE'
+    );
   });
 
   it('mostra o banner de qualidade em risco quando o aviso cita o art. 27-A', async () => {

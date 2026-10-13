@@ -15,7 +15,7 @@ Hoje é um ponto sensível: o STF entendeu que, sem lei específica, o acréscim
 É 25% todo mês, pra sempre, mais os atrasados. Pra quem tem gasto com cuidador e remédio, faz diferença real — e o trâmite fica por nossa conta.
 
 ## Quanto custa? Quanto vocês cobram no acréscimo de 25%?
-Você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, mais 3 parcelas do benefício — sem entrada, sem mensalidade, sem custo escondido.
+O honorário desse tipo de caso o advogado explica na conversa, olhando a sua situação. Quer que eu já peça para ele falar com você?
 
 ## Quais documentos vocês precisam pro acréscimo de 25%?
 Documento com foto e CPF; carta de concessão da aposentadoria; laudos e exames que mostrem a necessidade de assistência permanente de outra pessoa; e, se tiver, declaração do cuidador ou familiar que ajuda.

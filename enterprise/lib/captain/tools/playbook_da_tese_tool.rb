@@ -50,14 +50,8 @@ class Captain::Tools::PlaybookDaTeseTool < Captain::Tools::BasePublicTool
   def cabecalho(thesis)
     linhas = ["Tese: #{thesis.name}"]
     linhas << "Descricao: #{thesis.description}" if thesis.description.present?
-    linhas << "Honorario: #{honorario(thesis)}"
+    linhas << "Honorario: #{::Ramon::Honorario.descricao(thesis) || 'nao configurado'}"
     linhas.join("\n")
-  end
-
-  def honorario(thesis)
-    return 'nao configurado' if thesis.honorario_percentual.blank? && thesis.honorario_n_mensalidades.blank?
-
-    "#{thesis.honorario_percentual.to_f}% dos atrasados + #{thesis.honorario_n_mensalidades.to_i} mensalidades"
   end
 
   def bloco_secao(thesis, secao)
