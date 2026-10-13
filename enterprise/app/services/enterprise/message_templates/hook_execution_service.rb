@@ -53,14 +53,19 @@ module Enterprise::MessageTemplates::HookExecutionService
     return unless conversation.pending?
 
     Rails.logger.info("Captain limit exceeded, performing handoff mid-conversation for conversation: #{conversation.id}")
-    conversation.messages.create!(
-      message_type: :outgoing,
-      account_id: conversation.account.id,
-      inbox_id: conversation.inbox.id,
-      content: 'Transferring to another agent for further assistance.'
-    )
+    agendar_aviso_de_handoff if Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversation))
     conversation.bot_handoff!
     send_out_of_office_message_after_handoff
+  end
+
+  # ramon: limite de respostas da IA estourado → mesmo texto do handoff normal (config do assistente,
+  # senão i18n na língua da conta) e mesmo atraso do piloto. Fora do piloto nada vai pro cliente.
+  # ponytail: o aviso sai mesmo se um humano responder durante a espera — caso raro (limite de 100 mil)
+  def agendar_aviso_de_handoff
+    content = inbox.captain_assistant.config['handoff_message'].presence ||
+              I18n.with_locale(conversation.account.locale) { I18n.t('conversations.captain.handoff') }
+    params = { message_type: :outgoing, account_id: conversation.account_id, inbox_id: conversation.inbox_id, content: content }
+    Conversations::ActivityMessageJob.set(wait: atraso_resposta_ia).perform_later(conversation, params)
   end
 
   def send_out_of_office_message_after_handoff
