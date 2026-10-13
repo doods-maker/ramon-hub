@@ -21,7 +21,7 @@ Precisa. O CadÚnico atualizado é requisito do BPC. Se você não tem, esse é 
 Em regra o BPC não acumula com a maioria dos benefícios do INSS. Me conta o que você recebe hoje que a gente confere.
 
 ## Quanto custa? Quanto vocês cobram no BPC/LOAS?
-Você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, mais 3 parcelas do benefício — sem entrada, sem mensalidade, sem custo escondido.
+O honorário desse tipo de caso o advogado explica na conversa, olhando a sua situação. Quer que eu já peça para ele falar com você?
 
 ## Quanto tempo demora no BPC/LOAS?
 Depende do INSS e, se precisar, da Justiça — ninguém sério crava prazo. Você acompanha cada passo pelo WhatsApp com a gente.
