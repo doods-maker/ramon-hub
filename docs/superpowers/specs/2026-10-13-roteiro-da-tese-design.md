@@ -27,7 +27,7 @@ agentes. Critérios de sucesso (Eduardo, 13/10 — os três):
 | Modos por conversa (`manual/rascunho/piloto_limitado/piloto_total`) | `enterprise/lib/ramon/copiloto_modo.rb`, `response_builder_job.rb` | Ganha 3 modos "sozinho até…" |
 | Lead nasce da conversa | `app/services/ramon/lead_da_conversa.rb` | Ganha a definição automática da tese |
 | Qualificação viva (`qualificacao_status`) | `QualificacaoViva.vue`, `registrar_qualificacao_tool.rb` | Fica para teses **sem** roteiro; com roteiro, o painel mostra o roteiro |
-| Honorário, Cal.com, ZapSign, triagem da LP, FAQ por tese | tools `simular_honorario`, `link_agendamento`, `preparar_contrato_zapsign`, `triagem_da_lp`, `faq_lookup` | Seguem como estão (ZapSign ganha aplicação automática só no modo "até contrato") |
+| Honorário, Cal.com, ZapSign, triagem da LP, FAQ por tese | tools `simular_honorario`, `link_agendamento`, `preparar_contrato_zapsign`, `triagem_da_lp`, `faq_lookup` | Seguem (honorário passa a seguir o JUR-02 — 3.11; ZapSign ganha aplicação automática só no modo "até contrato") |
 | Sino + push (`Ramon::NtfyPushJob`), etapa Perdido, etiquetas | — | Efeitos das saídas |
 | Cadência (fluxo #36) | Automações | Faz o papel do follow-up por status da LiderHub — fora do escopo |
 
@@ -175,9 +175,31 @@ param**, motivos de desqualificação, quantos chegaram a cada limite.
 - **Eduardo revisa** uma versão legível (md) dos 3 roteiros antes de o seed rodar em produção. Regra do hub: texto
   que fala com cliente (orientações, mensagens das saídas, regras globais novas) só é **ativado** com o aprovado
   dele — o código sobe antes; os modos "sozinho até…" só são ligados numa caixa a pedido dele.
-- **Decidir na revisão:** (a) maternidade R$ 6.848 × R$ 6.484; (b) honorário maternidade "4 parcelas + 30%" ×
-  regra 30% + 3 em todas as teses (D12); (c) se o roteiro de auxílio-acidente leva tudo do FER MAR26 ou só o
-  Teste Agosto.
+- **Decidido 13/10** (análise em `comercial\docs\2026-10-13-roteiros-decisoes-pendentes.md`, citações
+  verificadas):
+  - Maternidade: R$ 6.848 era erro; R$ 6.484 = 4 × salário mínimo é o **mínimo**, não o máximo ("até" proibido);
+    valor sai da calculadora. Roteiro de 7 passos do documento; **mãe rural/pescadora → humano**; carteira ativa
+    no parto → humano (trabalhista).
+  - Honorário: **fonte da verdade = POP JUR-02** (3.11). Maternidade está fora da tabela → IA não cita valor.
+  - Auxílio-acidente: **meio-termo** — espinha do Teste Agosto + regime próprio, aposentado (atrasados até a
+    véspera da aposentadoria), nexo da doença e sequela mínima comprovada do FER; situação no INSS e laudo viram
+    dado para a reunião.
+  - Os itens `[CONFERIR]` do documento são lidos na fonte oficial antes de o texto do roteiro ser ativado.
+
+### 3.11 Honorário pela tabela do POP JUR-02 (decisão 13/10)
+
+Hoje: `theses.honorario_percentual` + `honorario_n_mensalidades` só expressam "X% + N", e todas as FAQs + a
+diretriz global + o guardrail do Atendimento dizem "30% + 3" (D12, 16/08). O POP JUR-02 (aprovado 06/10) diverge:
+auxílio-doença adm. = 30% com mínimo 1 SB; invalidez adm. = 30% com mínimo 3 SB; BPC online, acréscimo de 25% e
+salário-maternidade **fora da tabela**.
+
+- `theses` ganha: `honorario_formula` (`soma` = "% + N" · `ou` = "% ou N" · `percentual`), `honorario_minimo_qtd`
+  + `honorario_minimo_base` (`sm`/`sb`) e `honorario_na_tabela` (bool). Os valores de cada tese = a linha
+  **online/tráfego** do JUR-02 (é quem fala com a IA); balcão/via judicial ficam com o advogado no JUR-02.
+- `simular_honorario` e `playbook_da_tese` passam a ler esses campos. Tese com `honorario_na_tabela = false` →
+  a IA **não cita valor** e passa para humano ("o advogado explica o honorário na conversa").
+- Diretriz global e guardrail do Atendimento deixam de cravar "30% + 3" e passam a mandar consultar a tese.
+  FAQs por tese reescritas conforme o JUR-02 (texto = gate do Eduardo).
 
 ## 4. Fora do escopo
 
@@ -197,6 +219,9 @@ existe) · vários agentes por tese · reunião pelo Google Calendar (Cal.com se
 
 ## 6. Entrega em fatias (cada uma com PR, CI, smoke)
 
+0. **F0 — Honorário pelo JUR-02 (antes de tudo; corrige o que está no ar):** campos de honorário da tese (3.11),
+   `simular_honorario`/`playbook_da_tese`, diretriz + guardrail + FAQs reescritos (rascunho → aprovado do Eduardo
+   → seed), rake que preenche as teses pela tabela.
 1. **F1 — Motor:** migração (`roteiro_passos`, `theses.palavras_chave`, `inboxes.ramon_thesis_id`,
    `inboxes.ramon_copiloto_modo`), `Ramon::Roteiro`, calculadoras, `SalarioMinimo`, tools `roteiro_passo_atual` /
    `roteiro_registrar`, skill de triagem + regras globais no seed. Specs unitários das calculadoras e do motor;
