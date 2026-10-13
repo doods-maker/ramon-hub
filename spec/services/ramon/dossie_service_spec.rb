@@ -36,7 +36,7 @@ RSpec.describe Ramon::DossieService do
       tese = described_class.new(lead: lead).perform[:tese]
 
       expect(tese[:name]).to eq(thesis.name)
-      expect(tese[:honorario_text]).to eq('30% dos atrasados + 3 benefícios')
+      expect(tese[:honorario_text]).to eq('30% dos atrasados + 3 benefícios (cada um de pelo menos 1 salário mínimo)')
       expect(tese[:objecoes]).to eq([{ title: 'É caro', content: 'Só paga se ganhar.' }])
     end
 

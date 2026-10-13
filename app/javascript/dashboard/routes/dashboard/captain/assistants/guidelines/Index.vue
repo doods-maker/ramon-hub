@@ -55,7 +55,7 @@ const guidelinesExample = [
   {
     id: 1,
     content:
-      'Honorário é sempre o padrão da banca, em todas as teses: 30% dos atrasados + 3 benefícios, sem valor inicial e sem outra cobrança. Exceção, só com o advogado.',
+      'Honorário: só o que o playbook da tese informar; tese fora da tabela, nenhum valor.',
   },
   {
     id: 2,

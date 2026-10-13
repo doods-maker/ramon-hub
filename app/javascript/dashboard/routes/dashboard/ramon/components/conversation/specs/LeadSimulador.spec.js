@@ -169,6 +169,22 @@ describe('LeadSimulador.vue', () => {
     expect(mensal).toContain('1.700,00');
   });
 
+  it('tese fora da tabela mostra o aviso próprio em vez de "sem honorário configurado"', async () => {
+    LeadsAPI.simulate.mockResolvedValue({
+      data: {
+        ...resultado,
+        honorario: { valor: null, motivo: 'tese fora da tabela de honorários' },
+      },
+    });
+    const wrapper = mountSim();
+    await fillForm(wrapper);
+    await wrapper.find('[data-testid="sim-run"]').trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[data-testid="sim-sem-honorario"]').text()).toContain(
+      'RAMON.SIMULADOR.FEE_OFF_TABLE'
+    );
+  });
+
   it('mostra o banner de qualidade em risco quando o aviso cita o art. 27-A', async () => {
     LeadsAPI.simulate.mockResolvedValue({
       data: { ...resultado, avisos: ['risco pelo art. 27-A da Lei 8.213/91'] },

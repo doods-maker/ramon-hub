@@ -21,7 +21,7 @@ Empregado com carteira, trabalhador doméstico, avulso e segurado especial (rura
 Não. O auxílio-acidente não exige carência. O que precisa é estar filiado ao INSS quando o acidente aconteceu.
 
 ## Quanto custa? Quanto vocês cobram no auxílio-acidente?
-Você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, mais o equivalente a 3 benefícios — nunca menos que 3 salários mínimos no total —, sem entrada, sem mensalidade, sem custo escondido. Se não vier nada, você não paga nada.
+Você só paga se receber. Nosso combinado é 30% do valor atrasado que vier, mais 3 benefícios (cada um de pelo menos 1 salário mínimo) — sem entrada, sem mensalidade, sem custo escondido. Se não vier nada, você não paga nada.
 
 ## Quanto vou receber?
 O auxílio-acidente vale 50% do salário de benefício (uma média das suas contribuições). O valor certo depende do seu histórico no INSS — na conversa a gente faz uma estimativa honesta com o seu CNIS, mas quem define é o INSS ou a Justiça.

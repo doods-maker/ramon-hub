@@ -20,7 +20,7 @@ module Ramon::FaqDeConversa
     - Pergunta genérica, como outro lead perguntaria; resposta curta, só com o que o atendente disse.
     - Nada do caso concreto: sem nome, CPF, telefone, endereço, datas ou valores da pessoa; não copie marcadores como [nome].
     - Nunca prometa resultado nem prazo do INSS ou da Justiça.
-    - Honorário só se o atendente falou, e sempre como 30% dos atrasados + 3 parcelas do benefício.
+    - Honorário: exatamente como o atendente falou na conversa; se ele não citou valor, não cite.
     - No máximo 3 FAQs. Se nada servir para outros leads, responda {"faqs": []}.
     - Escreva em português do Brasil.
   TXT

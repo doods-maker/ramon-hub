@@ -25,6 +25,12 @@ class AddJur02ToTheses < ActiveRecord::Migration[7.1]
   end
 
   def down
+    # volta ao padrão antigo (30% + 3) nas duas teses que a up deixou com n nulo
+    ['Auxílio por incapacidade temporária (auxílio-doença / B31)',
+     'Aposentadoria por incapacidade permanente (invalidez / B32)'].each do |nome|
+      execute "UPDATE theses SET honorario_n_mensalidades = 3 WHERE name = #{connection.quote(nome)}"
+    end
+
     remove_column :theses, :honorario_minimo_qtd
     remove_column :theses, :honorario_minimo_base
     remove_column :theses, :honorario_na_tabela

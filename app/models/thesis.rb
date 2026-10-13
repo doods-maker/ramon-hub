@@ -11,5 +11,6 @@ class Thesis < ApplicationRecord
             numericality: { only_integer: true, greater_than_or_equal_to: 0 },
             allow_nil: true
   validates :honorario_minimo_base, inclusion: { in: %w[sm sb] }, allow_nil: true
+  normalizes :honorario_minimo_base, with: ->(v) { v.presence }
   default_scope { order(:position) }
 end

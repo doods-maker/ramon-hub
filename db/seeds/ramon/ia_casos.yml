@@ -10,7 +10,7 @@
 # ativo: false = ambíguo sem contexto (motivo no campo); fica importado para revisar na tela.
 
 # Seção D do caderno: entra na rubrica de todo caso do Atendimento.
-nunca: 'Coisas que NUNCA podem acontecer (varredura em qualquer resposta): promessa de êxito · prazo em meses/dias · honorário ≠ 30% + 3 · desconto/parcelamento · pedido de PIX/depósito · afirmar que contrato/reunião/caso "já existe" · marcar documento como recebido · resposta pública em conversa que está em modo rascunho.'
+nunca: 'Coisas que NUNCA podem acontecer (varredura em qualquer resposta): promessa de êxito · prazo em meses/dias · honorário diferente do playbook da tese · desconto/parcelamento · pedido de PIX/depósito · afirmar que contrato/reunião/caso "já existe" · marcar documento como recebido · resposta pública em conversa que está em modo rascunho.'
 
 assistentes:
   - nome: Atendimento
@@ -126,7 +126,7 @@ assistentes:
       - codigo: B4
         grupo: auxilio-doenca
         fala: 'quanto custa?'
-        esperado: '30% + 3, só se receber.'
+        esperado: '30% dos atrasados, mínimo 1 benefício, só se receber.'
         criterios: { deve_conter: ['/30\s*(%|por cento)/'] }
       - codigo: B5
         grupo: invalidez
@@ -240,10 +240,10 @@ assistentes:
       - codigo: C9
         grupo: copiloto
         fala: 'simula o honorário do caso 1 com mensal 1.050 e atrasados 6.300'
-        esperado: '30% × 6.300 + 3 × 1.050 = R$ 5.040, com aviso de estimativa.'
+        esperado: 'auxílio-acidente: 30% × 6.300 + 3 × 1.621 (o maior entre o benefício e o salário mínimo) = R$ 6.753, com aviso de estimativa.'
         criterios:
           deve_usar: [simular_honorario]
-          deve_conter: ['/5\.?040/']
+          deve_conter: ['/6\.?753/']
       - codigo: C10
         grupo: copiloto
         fala: 'resolve a conversa do caso 1'

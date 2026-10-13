@@ -57,25 +57,34 @@ RSpec.describe Leads::SeedDefaultConfigService do
     expect(tese.thesis_items.pluck(:section).uniq).to match_array(ThesisItem::SECTIONS)
   end
 
-  it 'seeda o honorário padrão do auxílio-acidente (30% + 3 mensalidades)' do
-    tese = account.theses.find_by!(name: 'Auxílio-acidente (B36)')
-    expect(tese.honorario_percentual).to eq(30)
-    expect(tese.honorario_n_mensalidades).to eq(3)
+  {
+    'Auxílio-acidente (B36)' => { pct: 30, n: 3, min: 3, base: 'sm' },
+    'Auxílio por incapacidade temporária (auxílio-doença / B31)' => { pct: 30, n: nil, min: 1, base: 'sb' },
+    'Aposentadoria por incapacidade permanente (invalidez / B32)' => { pct: 30, n: nil, min: 3, base: 'sb' }
+  }.each do |nome, v|
+    it "seeda a linha JUR-02 de #{nome}" do
+      tese = account.theses.find_by!(name: nome)
+      expect(tese).to have_attributes(honorario_percentual: v[:pct], honorario_n_mensalidades: v[:n],
+                                      honorario_minimo_qtd: v[:min], honorario_minimo_base: v[:base],
+                                      honorario_na_tabela: true)
+    end
   end
 
-  it 'seeda honorário 30% + 3 mensalidades em TODAS as teses (decisão Eduardo 14/08)' do
-    expect(account.theses.pluck(:honorario_percentual)).to all(eq(30))
-    expect(account.theses.pluck(:honorario_n_mensalidades)).to all(eq(3))
+  ['BPC/LOAS por deficiência', 'Acréscimo de 25% (grande invalidez)'].each do |nome|
+    it "deixa #{nome} fora da tabela, sem honorário" do
+      tese = account.theses.find_by!(name: nome)
+      expect(tese).to have_attributes(honorario_percentual: nil, honorario_n_mensalidades: nil, honorario_na_tabela: false)
+    end
   end
 
   it 'preenche o honorário no re-seed quando a tese existente está com os dois campos nulos' do
-    tese = account.theses.find_by!(name: 'BPC/LOAS por deficiência')
+    tese = account.theses.find_by!(name: 'Auxílio por incapacidade temporária (auxílio-doença / B31)')
     tese.update!(honorario_percentual: nil, honorario_n_mensalidades: nil)
 
     described_class.new(account).perform
 
     expect(tese.reload.honorario_percentual).to eq(30)
-    expect(tese.reload.honorario_n_mensalidades).to eq(3)
+    expect(tese.honorario_n_mensalidades).to be_nil
   end
 
   it 'NÃO sobrescreve honorário customizado da tese no re-seed' do

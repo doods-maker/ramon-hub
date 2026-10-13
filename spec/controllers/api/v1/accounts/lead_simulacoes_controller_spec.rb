@@ -58,7 +58,7 @@ RSpec.describe 'Lead Simulacoes API', type: :request do
       # 30% × 17000.00 + 3 × 1700.00 = 5100.00 + 5100.00
       expect(response.parsed_body['honorario']).to include(
         'valor' => '10200.00', 'percentual' => 30.0, 'n_mensalidades' => 3, 'tese' => thesis.name,
-        'descricao' => '30% dos atrasados + 3 benefícios'
+        'descricao' => '30% dos atrasados + 3 benefícios (cada um de pelo menos 1 salário mínimo)'
       )
     end
 

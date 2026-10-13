@@ -1262,6 +1262,7 @@
       "ULTIMA_HINT": "Its parameters are already in the form — click Simulate to recalculate.",
       "ATRASADOS": "Estimated back pay",
       "HONORARIO": "Estimated fee",
+      "FEE_OFF_TABLE": "Thesis off the fee table (POP JUR-02) — Dr. Ramon sets the fee.",
       "NO_FEE_CONFIG": "The lead's thesis has no fee configured (% and monthly benefits) — set it up in Playbooks.",
       "ESTIMATIVA_BASE": "Back pay = monthly value × {meses} months between the DER and today (estimate).",
       "MOTOR_DOWN": "Calculation engine unavailable right now — the simulator comes back when the service is up (MOTOR_CALCULOS_URL).",

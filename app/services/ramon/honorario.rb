@@ -32,7 +32,7 @@ class Ramon::Honorario
   def self.parte_mensalidades(tese)
     n = tese.honorario_n_mensalidades.to_i
     if n.positive?
-      " + #{n} #{n == 1 ? 'benefício' : 'benefícios'}"
+      " + #{n} #{n == 1 ? 'benefício (de' : 'benefícios (cada um de'} pelo menos 1 salário mínimo)"
     else
       ''
     end

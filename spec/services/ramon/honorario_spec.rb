@@ -51,7 +51,14 @@ RSpec.describe Ramon::Honorario do
   describe '.descricao' do
     it 'auxílio-acidente (online)' do
       t = tese(honorario_percentual: 30, honorario_n_mensalidades: 3, honorario_minimo_qtd: 3, honorario_minimo_base: 'sm')
-      expect(described_class.descricao(t)).to eq('30% dos atrasados + 3 benefícios, mínimo 3 salários mínimos')
+      expect(described_class.descricao(t)).to eq(
+        '30% dos atrasados + 3 benefícios (cada um de pelo menos 1 salário mínimo), mínimo 3 salários mínimos'
+      )
+    end
+
+    it 'singular quando n = 1' do
+      t = tese(honorario_percentual: 30, honorario_n_mensalidades: 1)
+      expect(described_class.descricao(t)).to eq('30% dos atrasados + 1 benefício (de pelo menos 1 salário mínimo)')
     end
 
     it 'só percentual com mínimo de 1 benefício' do

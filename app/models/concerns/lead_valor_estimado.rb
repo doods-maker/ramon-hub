@@ -39,10 +39,11 @@ module LeadValorEstimado
     simulado = honorario_simulado
     return [simulado, 'simulacao'] if simulado
 
-    n = thesis&.honorario_n_mensalidades
-    return [nil, nil] if n.blank? || n.zero? || benefit_monthly_value.blank?
+    return [nil, nil] if thesis.nil? || benefit_monthly_value.blank?
 
-    [benefit_monthly_value * n, 'mensalidades']
+    # piso da tabela JUR-02 (sem atrasados); tese fora da tabela/sem config => valor nil
+    valor = Ramon::Honorario.calcular(thesis, atrasados: 0, mensal: benefit_monthly_value)[:valor]
+    [valor && BigDecimal(valor), valor && 'mensalidades']
   end
 
   def honorario_simulado

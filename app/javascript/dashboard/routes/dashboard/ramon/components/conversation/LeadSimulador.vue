@@ -113,6 +113,10 @@ const canSimulate = computed(() =>
 );
 
 const honorario = computed(() => resultado.value?.honorario || null);
+// prefixo do motivo de Ramon::Honorario::FORA_DA_TABELA
+const foraDaTabela = computed(() =>
+  honorario.value?.motivo?.startsWith('tese fora da tabela')
+);
 const motorInfo = computed(() => resultado.value?.motor || {});
 const avisosQualidade = computed(() =>
   (resultado.value?.avisos || []).filter(a =>
@@ -1053,7 +1057,9 @@ if (props.inicial?.tipo === 'honorario' && canSimulate.value)
           {{
             casoDeCalculo
               ? $t('RAMON.SIMULADOR.TESE_ESCOLHA')
-              : $t('RAMON.SIMULADOR.NO_FEE_CONFIG')
+              : foraDaTabela
+                ? $t('RAMON.SIMULADOR.FEE_OFF_TABLE')
+                : $t('RAMON.SIMULADOR.NO_FEE_CONFIG')
           }}
         </p>
         <p class="mb-0 text-xs text-n-slate-10">

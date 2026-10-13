@@ -246,7 +246,7 @@ RSpec.describe Lead do
   end
 
   describe 'valor estimado automático' do
-    let(:thesis) { create(:thesis, account: account, honorario_percentual: 30, honorario_n_mensalidades: 3) }
+    let(:thesis) { create(:thesis, account: account, honorario_percentual: 30, honorario_n_mensalidades: 3, honorario_na_tabela: true) }
 
     it 'preenche pelo piso das mensalidades quando o benefício mensal é conhecido' do
       lead = create(:lead, account: account, thesis: thesis, benefit_monthly_value: 2000)
@@ -280,6 +280,12 @@ RSpec.describe Lead do
       lead = create(:lead, account: account, thesis: thesis, value: 500)
       lead.update!(benefit_monthly_value: 2000)
       expect(lead.reload.value).to eq(500)
+    end
+
+    it 'tese fora da tabela de honorarios, nao estima valor automatico' do
+      fora = create(:thesis, account: account, honorario_percentual: 30, honorario_n_mensalidades: 3, honorario_na_tabela: false)
+      lead = create(:lead, account: account, thesis: fora, benefit_monthly_value: 2000)
+      expect(lead.value).to be_nil
     end
 
     it 'sem honorario configurado na tese, nao estima' do

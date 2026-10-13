@@ -1262,6 +1262,7 @@
       "ULTIMA_HINT": "Parâmetros dela já estão no formulário — clique em Simular para recalcular.",
       "ATRASADOS": "Atrasados estimados",
       "HONORARIO": "Honorário estimado",
+      "FEE_OFF_TABLE": "Tese fora da tabela de honorários (POP JUR-02) — o Dr. Ramon define o valor.",
       "NO_FEE_CONFIG": "A tese do lead está sem honorário configurado (% e nº de mensalidades) — cadastre em Playbooks.",
       "ESTIMATIVA_BASE": "Atrasados = valor mensal × {meses} meses entre a DER e hoje (estimativa).",
       "MOTOR_DOWN": "Motor de cálculos indisponível agora — o simulador volta quando o serviço subir (MOTOR_CALCULOS_URL).",

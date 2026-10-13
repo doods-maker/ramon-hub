@@ -10,7 +10,7 @@ module Ramon::Fluxos::Passos::Ia
   TETO_PADRAO = 200
   REGRAS = <<~TXT.freeze
     Regras obrigatórias (Provimento 205/2021 da OAB): nunca prometa resultado, prazo ou valor do INSS; não pressione nem ofereça vantagem;
-    não cite valor de honorário diferente de 30% dos atrasados + 3 parcelas do benefício (o mesmo em todas as teses).
+    honorário só como o playbook ou o simulador da tese informar; tese fora da tabela: não cite nenhum valor.
     Não invente fatos que não estejam no contexto. Para o nome do cliente escreva exatamente [nome].
   TXT
   SISTEMA_PERGUNTA = <<~TXT.freeze
