@@ -10,7 +10,7 @@ class Api::V1::Accounts::ThesesController < Api::V1::Accounts::BaseController
   def show; end
 
   def create
-    @thesis = Current.account.theses.new(permitted_params.reverse_merge(Thesis::HONORARIO_PADRAO))
+    @thesis = Current.account.theses.new(permitted_params)
     @thesis.position = next_position
     @thesis.save!
     render :show
@@ -58,6 +58,7 @@ class Api::V1::Accounts::ThesesController < Api::V1::Accounts::BaseController
   end
 
   def permitted_params
-    params.permit(:name, :description, :area, :active, :honorario_percentual, :honorario_n_mensalidades)
+    params.permit(:name, :description, :area, :active, :honorario_percentual, :honorario_n_mensalidades,
+                  :honorario_minimo_qtd, :honorario_minimo_base, :honorario_na_tabela)
   end
 end

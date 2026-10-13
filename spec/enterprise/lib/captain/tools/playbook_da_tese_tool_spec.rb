@@ -7,7 +7,7 @@ RSpec.describe Captain::Tools::PlaybookDaTeseTool, type: :model do
   let(:tool_context) { Struct.new(:state).new({}) }
   let(:thesis) do
     create(:thesis, account: account, name: 'Auxílio-doença', description: 'Incapacidade temporária',
-                    honorario_percentual: 30, honorario_n_mensalidades: 3)
+                    honorario_percentual: 30, honorario_n_mensalidades: 3, honorario_na_tabela: true)
   end
 
   describe '#perform' do
@@ -20,7 +20,7 @@ RSpec.describe Captain::Tools::PlaybookDaTeseTool, type: :model do
       texto = tool.perform(tool_context, tese: 'auxílio')
 
       expect(texto).to include('Tese: Auxílio-doença', 'Descricao: Incapacidade temporária',
-                               'Honorario: 30.0% dos atrasados + 3 mensalidades',
+                               'Honorario: 30% dos atrasados + 3 benefícios',
                                "## abertura (1)\n- Saudação: Bom dia, tudo bem?", "## objecao (1)\n- Advogado é caro?")
     end
 
@@ -48,9 +48,15 @@ RSpec.describe Captain::Tools::PlaybookDaTeseTool, type: :model do
     end
 
     it 'diz honorario nao configurado' do
-      create(:thesis, account: account, name: 'BPC')
+      create(:thesis, account: account, name: 'BPC', honorario_na_tabela: true)
 
       expect(tool.perform(tool_context, tese: 'BPC')).to include('Honorario: nao configurado')
+    end
+
+    it 'tese fora da tabela manda nao citar valor' do
+      create(:thesis, account: account, name: 'Maternidade')
+
+      expect(tool.perform(tool_context, tese: 'Maternidade')).to include('Honorario: tese fora da tabela', 'não cite valor')
     end
 
     it 'recusa secao invalida' do

@@ -30,6 +30,8 @@ class Leads::SeedDefaultConfigService
   ].freeze
 
   THESES_SEED_PATH = Rails.root.join('db/seeds/ramon/theses_seed.yml')
+  THESIS_HONORARIO_KEYS = %w[honorario_percentual honorario_n_mensalidades honorario_minimo_qtd
+                             honorario_minimo_base honorario_na_tabela].freeze
   TRIAGE_AGENTS_SEED_PATH = Rails.root.join('db/seeds/ramon/triage_agents_seed.yml')
 
   def initialize(account)
@@ -134,8 +136,8 @@ class Leads::SeedDefaultConfigService
         t.description = thesis_attrs['description']
         t.area = thesis_attrs['area']
         t.position = thesis_attrs['position']
-        t.honorario_percentual = thesis_attrs['honorario_percentual']
-        t.honorario_n_mensalidades = thesis_attrs['honorario_n_mensalidades']
+        t.assign_attributes(thesis_attrs.slice(*THESIS_HONORARIO_KEYS))
+        t.honorario_na_tabela ||= false
       end
       reconcile_thesis_honorario(thesis, thesis_attrs)
       seed_thesis_items(thesis, thesis_attrs['items'] || [])

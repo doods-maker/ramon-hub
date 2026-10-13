@@ -28,19 +28,21 @@ RSpec.describe Ramon::DossieService do
     end
 
     it 'monta a tese com honorário formatado e objeções do playbook' do
-      thesis = create(:thesis, account: account, honorario_percentual: 30, honorario_n_mensalidades: 3)
+      thesis = create(:thesis, account: account, honorario_percentual: 30, honorario_n_mensalidades: 3,
+                               honorario_na_tabela: true)
       create(:thesis_item, thesis: thesis, section: 'objecao', title: 'É caro', content: 'Só paga se ganhar.')
       lead = create(:lead, account: account, lead_stage: stage, thesis: thesis)
 
       tese = described_class.new(lead: lead).perform[:tese]
 
       expect(tese[:name]).to eq(thesis.name)
-      expect(tese[:honorario_text]).to eq('30% dos atrasados + 3 mensalidades')
+      expect(tese[:honorario_text]).to eq('30% dos atrasados + 3 benefícios')
       expect(tese[:objecoes]).to eq([{ title: 'É caro', content: 'Só paga se ganhar.' }])
     end
 
     it 'formata percentual fracionado com vírgula e omite mensalidades zeradas' do
-      thesis = create(:thesis, account: account, honorario_percentual: 12.5, honorario_n_mensalidades: 0)
+      thesis = create(:thesis, account: account, honorario_percentual: 12.5, honorario_n_mensalidades: 0,
+                               honorario_na_tabela: true)
       lead = create(:lead, account: account, lead_stage: stage, thesis: thesis)
       expect(described_class.new(lead: lead).perform[:tese][:honorario_text]).to eq('12,5% dos atrasados')
     end

@@ -36,6 +36,7 @@ RSpec.describe 'Theses API', type: :request do
       body = response.parsed_body
       expect(body['honorario_percentual'].to_f).to eq(30.0)
       expect(body['honorario_n_mensalidades']).to eq(3)
+      expect(body).to include('honorario_na_tabela' => false, 'honorario_minimo_qtd' => nil)
     end
   end
 
@@ -48,12 +49,13 @@ RSpec.describe 'Theses API', type: :request do
       expect(response.parsed_body['position']).to eq(6)
     end
 
-    it 'nasce com o honorário padrão do escritório (30% + 3)', :aggregate_failures do
+    it 'nasce sem honorário e fora da tabela (JUR-02: alinhar com o Dr. Ramon)', :aggregate_failures do
       post "/api/v1/accounts/#{account.id}/theses",
            params: { name: 'Tese Padrão' }, headers: admin.create_new_auth_token
       body = response.parsed_body
-      expect(body['honorario_percentual'].to_f).to eq(30.0)
-      expect(body['honorario_n_mensalidades']).to eq(3)
+      expect(body['honorario_percentual']).to be_nil
+      expect(body['honorario_n_mensalidades']).to be_nil
+      expect(body['honorario_na_tabela']).to be false
     end
 
     it 'respeita o honorário enviado na criação' do
@@ -94,6 +96,19 @@ RSpec.describe 'Theses API', type: :request do
       expect(response).to have_http_status(:success)
       expect(thesis.reload.honorario_percentual).to eq(30)
       expect(thesis.reload.honorario_n_mensalidades).to eq(3)
+    end
+
+    it 'grava mínimo e tabela; mínimo vazio vira nil', :aggregate_failures do
+      thesis = account.theses.create!(name: 'Tese Min', position: 60)
+      patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}",
+            params: { honorario_minimo_qtd: '3', honorario_minimo_base: 'sm', honorario_na_tabela: true },
+            headers: admin.create_new_auth_token
+      expect(response.parsed_body).to include('honorario_minimo_qtd' => 3, 'honorario_minimo_base' => 'sm',
+                                              'honorario_na_tabela' => true)
+      patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}",
+            params: { honorario_minimo_qtd: '' }, headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:success)
+      expect(thesis.reload.honorario_minimo_qtd).to be_nil
     end
   end
 

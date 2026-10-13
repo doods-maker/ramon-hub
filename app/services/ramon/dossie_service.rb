@@ -106,18 +106,9 @@ class Ramon::DossieService
     }
   end
 
-  # "30% dos atrasados + 3 mensalidades" — fórmula única da casa, varia % e N por tese.
+  # Texto único do honorário da tese (POP JUR-02) — o mesmo que o agente lê.
   def honorario_text
-    pct = @thesis.honorario_percentual
-    return nil if pct.blank?
-
-    pct_text = (pct % 1).zero? ? pct.to_i.to_s : pct.to_f.to_s.tr('.', ',')
-    text = "#{pct_text}% dos atrasados"
-    n = @thesis.honorario_n_mensalidades.to_i
-    return text unless n.positive?
-
-    palavra = n == 1 ? 'mensalidade' : 'mensalidades'
-    "#{text} + #{n} #{palavra}"
+    Ramon::Honorario.descricao(@thesis)
   end
 
   def thesis_items_by_section(section)
