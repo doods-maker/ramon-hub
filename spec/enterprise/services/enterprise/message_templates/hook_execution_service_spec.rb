@@ -22,9 +22,8 @@ RSpec.describe MessageTemplates::HookExecutionService do
       end
 
       it 'schedules captain response job for incoming messages on pending conversations' do
-        expect(Captain::Conversation::ResponseBuilderJob).to receive(:perform_later).with(conversation, assistant)
-
-        create(:message, conversation: conversation, message_type: :incoming, account: account)
+        expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
+          .to have_enqueued_job(Captain::Conversation::ResponseBuilderJob).with(conversation, assistant, kind_of(Integer))
       end
     end
 
@@ -41,9 +40,8 @@ RSpec.describe MessageTemplates::HookExecutionService do
       end
 
       it 'schedules captain response job outside business hours (Captain always responds when configured)' do
-        expect(Captain::Conversation::ResponseBuilderJob).to receive(:perform_later).with(conversation, assistant)
-
-        create(:message, conversation: conversation, message_type: :incoming, account: account)
+        expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
+          .to have_enqueued_job(Captain::Conversation::ResponseBuilderJob).with(conversation, assistant, kind_of(Integer))
       end
 
       it 'performs captain handoff when quota is exceeded (OOO template will kick in after handoff)' do
@@ -73,10 +71,20 @@ RSpec.describe MessageTemplates::HookExecutionService do
         inbox.update!(working_hours_enabled: false)
       end
 
-      it 'schedules captain response job regardless of time' do
-        expect(Captain::Conversation::ResponseBuilderJob).to receive(:perform_later).with(conversation, assistant)
+      it 'no piloto, agenda a resposta da IA com atraso aleatório de 30s a 3min' do
+        conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
 
-        create(:message, conversation: conversation, message_type: :incoming, account: account)
+        freeze_time do
+          create(:message, conversation: conversation, message_type: :incoming, account: account)
+
+          job = ActiveJob::Base.queue_adapter.enqueued_jobs.find { |j| j[:job] == Captain::Conversation::ResponseBuilderJob }
+          expect(job[:at]).to be_between(30.seconds.from_now.to_f, 180.seconds.from_now.to_f)
+        end
+      end
+
+      it 'schedules captain response job regardless of time' do
+        expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
+          .to have_enqueued_job(Captain::Conversation::ResponseBuilderJob).with(conversation, assistant, kind_of(Integer))
       end
     end
 
@@ -108,9 +116,8 @@ RSpec.describe MessageTemplates::HookExecutionService do
     end
 
     it 'does not schedule captain response job' do
-      expect(Captain::Conversation::ResponseBuilderJob).not_to receive(:perform_later)
-
-      create(:message, conversation: conversation, message_type: :incoming, account: account)
+      expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
+        .not_to have_enqueued_job(Captain::Conversation::ResponseBuilderJob)
     end
   end
 
@@ -120,17 +127,15 @@ RSpec.describe MessageTemplates::HookExecutionService do
     end
 
     it 'does not schedule captain response job' do
-      expect(Captain::Conversation::ResponseBuilderJob).not_to receive(:perform_later)
-
-      create(:message, conversation: conversation, message_type: :incoming, account: account)
+      expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
+        .not_to have_enqueued_job(Captain::Conversation::ResponseBuilderJob)
     end
   end
 
   context 'when message is outgoing' do
     it 'does not schedule captain response job' do
-      expect(Captain::Conversation::ResponseBuilderJob).not_to receive(:perform_later)
-
-      create(:message, conversation: conversation, message_type: :outgoing, account: account)
+      expect { create(:message, conversation: conversation, message_type: :outgoing, account: account) }
+        .not_to have_enqueued_job(Captain::Conversation::ResponseBuilderJob)
     end
   end
 
@@ -243,9 +248,8 @@ RSpec.describe MessageTemplates::HookExecutionService do
     let(:campaign_conversation) { create(:conversation, inbox: inbox, account: account, contact: contact, status: :pending, campaign: campaign) }
 
     it 'schedules captain response job for incoming messages on pending campaign conversations' do
-      expect(Captain::Conversation::ResponseBuilderJob).to receive(:perform_later).with(campaign_conversation, assistant)
-
-      create(:message, conversation: campaign_conversation, message_type: :incoming, account: account)
+      expect { create(:message, conversation: campaign_conversation, message_type: :incoming, account: account) }
+        .to have_enqueued_job(Captain::Conversation::ResponseBuilderJob).with(campaign_conversation, assistant, kind_of(Integer))
     end
 
     it 'does not send greeting template on campaign conversations' do

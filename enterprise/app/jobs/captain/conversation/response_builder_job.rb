@@ -5,12 +5,12 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   retry_on ActiveStorage::FileNotFoundError, attempts: 3, wait: 2.seconds
   retry_on Faraday::BadRequestError, attempts: 3, wait: 2.seconds
 
-  def perform(conversation, assistant)
+  def perform(conversation, assistant, message_id = nil)
     @conversation = conversation
     @inbox = conversation.inbox
     @assistant = assistant
 
-    return unless conversation_pending?
+    return if !conversation_pending? || mensagem_superada?(message_id)
 
     @copiloto_modo = Ramon::CopilotoModo.of(@conversation)
     return if @copiloto_modo == 'manual' # IA quieta: nem gasta LLM
@@ -227,6 +227,11 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       "[CAPTAIN][ResponseBuilderJob] V1 handoff requested but not executed for account=#{account.id} " \
       "conversation=#{@conversation.display_id}"
     )
+  end
+
+  # ramon: cliente mandou outra mensagem durante o atraso aleatório → o job dela responde tudo
+  def mensagem_superada?(message_id)
+    message_id.present? && @conversation.messages.incoming.exists?(['id > ?', message_id])
   end
 
   def conversation_pending?
