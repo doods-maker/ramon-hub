@@ -321,6 +321,22 @@ RSpec.describe MessageTemplates::HookExecutionService do
       )
     end
 
+    let(:aviso_handoff) { hash_including(content: I18n.t('conversations.captain.handoff')) }
+
+    it 'no piloto, agenda o aviso de handoff traduzido em vez do texto fixo em inglês' do
+      conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+
+      expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
+        .to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)
+      expect(conversation.reload.status).to eq('open')
+    end
+
+    it 'fora do piloto, abre a conversa sem mandar aviso ao cliente' do
+      expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
+        .not_to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)
+      expect(conversation.reload.status).to eq('open')
+    end
+
     context 'when outside business hours' do
       before do
         inbox.update!(
