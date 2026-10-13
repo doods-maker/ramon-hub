@@ -47,6 +47,15 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(conversation.messages.last.content).to eq('Hey, welcome to Captain Specs')
       end
 
+      it 'não responde quando o cliente mandou outra mensagem durante o atraso' do
+        primeira = conversation.messages.incoming.last
+        create(:message, conversation: conversation, content: 'Oi?', message_type: :incoming)
+
+        described_class.perform_now(conversation, assistant, primeira.id)
+
+        expect(conversation.messages.outgoing.count).to eq(0)
+      end
+
       it 'increments usage response' do
         described_class.perform_now(conversation, assistant)
         account.reload

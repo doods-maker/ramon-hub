@@ -1,5 +1,6 @@
 module Enterprise::MessageTemplates::HookExecutionService
-  MAX_ATTACHMENT_WAIT_SECONDS = 4
+  RESPOSTA_IA_ATRASO = 30..180 # segundos, sorteado a cada resposta no piloto
+  ATRASO_ANEXO = 5.seconds # tempo pro anexo terminar de subir antes da IA ler
 
   def trigger_templates
     super
@@ -29,24 +30,19 @@ module Enterprise::MessageTemplates::HookExecutionService
 
   private
 
+  # ramon: no piloto (IA envia sozinha) a resposta sai com atraso aleatório (30s–3min) pra
+  # não ter ritmo de robô. Rascunho/manual: sem espera (quem envia é a pessoa). O id da
+  # mensagem vai junto: se o cliente mandar outra antes, só o job da mais nova responde.
   def schedule_captain_response
-    job_args = [conversation, conversation.inbox.captain_assistant]
-
-    if message.attachments.blank?
-      Captain::Conversation::ResponseBuilderJob.perform_later(*job_args)
-    else
-      wait_time = calculate_attachment_wait_time
-      Captain::Conversation::ResponseBuilderJob.set(wait: wait_time).perform_later(*job_args)
-    end
+    job = Captain::Conversation::ResponseBuilderJob.set(wait: atraso_resposta_ia)
+    job.perform_later(conversation, conversation.inbox.captain_assistant, message.id)
   end
 
-  def calculate_attachment_wait_time
-    attachment_count = message.attachments.size
-    base_wait = 1.second
+  # ponytail: o modo é lido no agendamento; trocar de modo durante a espera não muda o atraso
+  def atraso_resposta_ia
+    return rand(RESPOSTA_IA_ATRASO).seconds if Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversation))
 
-    # Wait longer for more attachments or larger files
-    additional_wait = [attachment_count * 1, MAX_ATTACHMENT_WAIT_SECONDS].min.seconds
-    base_wait + additional_wait
+    message.attachments.present? ? ATRASO_ANEXO : 0
   end
 
   def should_process_captain_response?
