@@ -25,7 +25,12 @@ module Ramon::ContratoAutomatico
   def faltando(lead, modelo)
     return ['modelo de contrato da tese'] if modelo.blank?
 
-    vazios = Ramon::ZapsignContractService.new(lead, template_id: modelo).preview['faltando']
+    dados_faltando(lead)
+  end
+
+  # O que falta no cadastro para o contrato sair sozinho — também guia a IA que coleta os dados (Ramon::DadosContrato).
+  # A prévia não depende do modelo (variaveis é igual para todos); quem já tem os vazios passa e não calcula de novo.
+  def dados_faltando(lead, vazios = Ramon::ZapsignContractService.new(lead).preview['faltando'])
     (lead.nome_completo? ? [] : ['nome completo']) + OBRIGATORIOS.slice(*vazios).values
   end
 

@@ -104,6 +104,13 @@
   nivel: sugestao
   sistema: zapsign
 
+- id: registrar_dados_contrato
+  title: 'Gravar dados do contrato'
+  description: 'Grava no cadastro do lead nome completo, CPF, endereço, estado civil e profissão; devolve o que falta para o contrato'
+  icon: 'person-add'
+  nivel: interna
+  sistema: funil
+
 - id: preparar_caso_advbox
   title: 'Abrir caso no AdvBox'
   description: 'Sugere abrir cliente, caso e primeira tarefa no AdvBox (o humano aprova antes)'

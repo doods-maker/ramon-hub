@@ -33,6 +33,9 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   # AgentRunnerService devolve 'ferramenta_falhou' e o ResponseBuilderJob faz a resposta do turno virar rascunho.
   FALHOU = :ramon_ferramenta_falhou
 
+  # ramon (roteiro F5, LGPD): dado pessoal fora da tela Execuções.
+  PARAMS_SENSIVEIS = %i[cpf].freeze
+
   # ramon: modo teste (Casos de teste da IA). Com source 'teste' no estado, so
   # as consultas rodam; o resto devolve o que faria, sem executar nada.
   SOURCE_TESTE = 'teste'.freeze
@@ -77,7 +80,7 @@ class Captain::Tools::BasePublicTool < Agents::Tool
       account_id: @assistant&.account_id, assistant_id: @assistant&.id, **origem(tool_context),
       lead_id: Integer(params[:lead_id].to_s, exception: false),
       tool_name: id_catalogo, status: status,
-      params: params.except(:lead_id).transform_values(&:to_s),
+      params: params.except(:lead_id).to_h { |chave, valor| [chave, PARAMS_SENSIVEIS.include?(chave) ? '***' : valor.to_s] },
       resultado: resultado.to_s.truncate(::Captain::ToolRun::MAX_RESULTADO),
       duration_ms: ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - inicio) * 1000).round
     )
