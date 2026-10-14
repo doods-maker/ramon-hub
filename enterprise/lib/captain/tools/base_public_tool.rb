@@ -33,7 +33,7 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   # AgentRunnerService devolve 'ferramenta_falhou' e o ResponseBuilderJob faz a resposta do turno virar rascunho.
   FALHOU = :ramon_ferramenta_falhou
 
-  # ramon (roteiro F5, LGPD): dado pessoal fora da tela Execuções.
+  # ramon (roteiro F5, LGPD): dado pessoal fora da tela Execuções. A tool que recebe mais dado pessoal redefine a lista.
   PARAMS_SENSIVEIS = %i[cpf].freeze
 
   # ramon: modo teste (Casos de teste da IA). Com source 'teste' no estado, so
@@ -45,8 +45,9 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   end
 
   # CPF etc. viram '***' tanto no registro de Execuções quanto na simulação do teste (que também vai para o ToolRun).
+  # self:: = a lista da tool que chamou (sem ele, o escopo léxico daria sempre a da base).
   def self.mascarar(params)
-    params.to_h { |chave, valor| [chave, PARAMS_SENSIVEIS.include?(chave.to_sym) ? '***' : valor.to_s] }
+    params.to_h { |chave, valor| [chave, self::PARAMS_SENSIVEIS.include?(chave.to_sym) ? '***' : valor.to_s] }
   end
 
   def self.simulacao(nome, params)

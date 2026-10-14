@@ -44,6 +44,52 @@ RSpec.describe 'Ramon::DadosContrato' do
     expect(Ramon::DadosContrato.texto(res)).not_to include('529')
   end
 
+  # Revisão final F5, I2: contato que já tem CPF não troca por outro.
+  it 'contato com outro CPF: não sobrescreve, avisa a equipe sem o número e manda a IA passar para humano' do
+    contact.update!(cpf: '52998224725')
+    res = gravar(cpf: '111.444.777-35', rua: 'Rua A')
+
+    expect(res[:recusado]).to eq('cpf' => Ramon::DadosContrato::CPF_DIFERENTE)
+    expect(contact.reload.cpf).to eq('52998224725')
+    expect(contact.custom_attributes['endereco']).to include('rua' => 'Rua A')
+    aviso = Notification.find_by!(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso')
+    expect(aviso.meta['label']).to include('CPF diferente')
+    expect(aviso.meta['label']).not_to match(/111|529/)
+    expect(Ramon::DadosContrato.texto(res)).to include('passe para humano')
+    expect(Ramon::DadosContrato.texto(res)).not_to include('111')
+  end
+
+  it 'o mesmo CPF de novo, com pontos, não é recusado' do
+    contact.update!(cpf: '52998224725')
+    expect(gravar(cpf: '529.982.247-25')[:recusado]).to eq({})
+  end
+
+  # Revisão final F5, I4: a mensagem do banco (que traz o CPF) não sai daqui.
+  it 'corrida no índice único de CPF: vira CPF em uso e grava o resto' do
+    chamadas = 0
+    allow(lead.contact).to receive(:save!).and_wrap_original do |original, *args|
+      chamadas += 1
+      raise ActiveRecord::RecordNotUnique, 'Key (account_id, cpf)=(1, 52998224725) already exists' if chamadas == 1
+
+      original.call(*args)
+    end
+    res = gravar(cpf: '529.982.247-25', rua: 'Rua A')
+
+    expect(res[:recusado]).to eq('cpf' => Ramon::DadosContrato::CPF_EM_USO)
+    expect(contact.reload.cpf).to be_nil
+    expect(contact.custom_attributes['endereco']).to include('rua' => 'Rua A')
+    expect(Ramon::DadosContrato.texto(res)).to include('passe para humano')
+    expect(Ramon::DadosContrato.texto(res)).not_to include('529')
+  end
+
+  # Revisão final F5, M4: CEP sem dígito é como branco — não apaga o CEP do painel.
+  it 'CEP sem nenhum dígito não apaga o CEP gravado' do
+    res = gravar(cep: 'não sei', rua: 'Rua A')
+
+    expect(res[:gravado]).to eq(['rua'])
+    expect(contact.reload.custom_attributes['endereco']).to include('cep' => '88701000', 'rua' => 'Rua A')
+  end
+
   it 'lead sem contato: erro para a IA, nada gravado' do
     expect(Ramon::DadosContrato.gravar(create(:lead, account: account), cpf: '52998224725')).to include(:erro)
   end
