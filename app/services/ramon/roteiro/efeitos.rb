@@ -103,13 +103,14 @@ module Ramon::Roteiro::Efeitos
     Ramon::NtfyPushJob.perform_later(lead.id, title: "IA passou para a equipe: #{lead.name}", body: motivo.to_s.truncate(200))
   end
 
-  # Guarda o modo de antes para o reabrir devolver (decisão 13/10).
+  # Guarda o modo de antes para o reabrir devolver (decisão 13/10); o 1º modo vale até o reabrir.
   def modo(lead, valor)
     conversa = lead.conversation
     return if conversa.nil?
 
     attrs = conversa.custom_attributes || {}
-    conversa.update!(custom_attributes: attrs.merge(MODO_ANTES => attrs['copiloto_modo'], 'copiloto_modo' => valor))
+    antes = attrs.key?(MODO_ANTES) ? {} : { MODO_ANTES => attrs['copiloto_modo'] }
+    conversa.update!(custom_attributes: attrs.merge(antes).merge('copiloto_modo' => valor))
   end
 
   def resumo(saida)
