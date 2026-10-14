@@ -8,6 +8,7 @@ import {
   conversaDe,
   garantirConversa,
   limparConversa,
+  pedidoDoRoteiro,
   roteiroDe,
 } from './testarConversas';
 
@@ -58,8 +59,9 @@ const sendMessage = async () => {
     timestamp: new Date().toISOString(),
   };
   const conversa = conversaDe(assistantId);
-  // roteiro em teste (tese escolhida no Testar): vai o estado, volta o novo — nada é gravado (F2)
+  // roteiro em teste (seleção do Testar): vai o estado e o modo, volta o novo — nada é gravado (F2/F5)
   const roteiro = roteiroDe(assistantId);
+  const selecaoEnviada = roteiro?.selecao;
   conversa.push(userMessage);
   const historico = formatMessagesForApi();
   const currentMessage = newMessage.value;
@@ -71,16 +73,12 @@ const sendMessage = async () => {
       assistantId,
       messageContent: currentMessage,
       messageHistory: historico,
-      roteiro: roteiro?.thesisId
-        ? { thesis_id: roteiro.thesisId, estado: roteiro.estado }
-        : null,
+      roteiro: pedidoDoRoteiro(roteiro),
     });
-    if (
-      data.roteiro &&
-      roteiro &&
-      data.roteiro.thesis_id === roteiro.thesisId
-    ) {
+    // resposta atrasada de outra seleção não grava o estado; a tese pode ter vindo do "assunto"
+    if (data.roteiro && roteiro && roteiro.selecao === selecaoEnviada) {
       Object.assign(roteiro, {
+        thesisId: data.roteiro.thesis_id,
         estado: data.roteiro.estado,
         painel: data.roteiro.painel,
       });

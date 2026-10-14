@@ -11,6 +11,8 @@ import { useMapGetter, useStore } from 'dashboard/composables/store';
 import PageLayout from 'dashboard/components-next/captain/PageLayout.vue';
 import AssistantPlayground from 'dashboard/components-next/captain/assistant/AssistantPlayground.vue';
 import {
+  SEM_TESE,
+  escolherRoteiro,
   garantirConversa,
   roteiroDe,
 } from 'dashboard/components-next/captain/assistant/testarConversas';
@@ -59,13 +61,13 @@ onMounted(async () => {
 
 const usarCaso = lead => playground.value?.anexar(referenciaCaso(lead));
 
-// Trocar a tese recomeça o roteiro do teste (a conversa fica — limpe-a para começar do zero).
-const escolherTese = evento => {
-  Object.assign(roteiro.value, {
-    thesisId: Number(evento.target.value) || null,
-    estado: null,
-    painel: null,
-  });
+// Modos que o Testar simula (sem conversa, os "sozinha até…" não se aplicam): rascunho = etapa e Perdido viram
+// sugestão; piloto total = aplicados na hora, no lead descartável.
+const MODOS_DO_TESTE = ['rascunho', 'piloto_total'];
+const escolherSelecao = evento =>
+  escolherRoteiro(assistantId.value, evento.target.value);
+const escolherModo = evento => {
+  roteiro.value.modo = evento.target.value;
 };
 </script>
 
@@ -86,16 +88,37 @@ const escolherTese = evento => {
             data-testid="testar-roteiro-tese"
             class="!w-60 shrink-0"
             :class="SELECT"
-            :value="roteiro?.thesisId || ''"
+            :value="roteiro?.selecao || ''"
             :title="t('RAMON.ROTEIRO_IA.TESTAR.AJUDA')"
             :aria-label="t('RAMON.ROTEIRO_IA.TESTAR.AJUDA')"
-            @change="escolherTese"
+            @change="escolherSelecao"
           >
             <option value="">
               {{ t('RAMON.ROTEIRO_IA.TESTAR.SEM_TESE') }}
             </option>
-            <option v-for="tese in teses" :key="tese.id" :value="tese.id">
+            <option :value="SEM_TESE">
+              {{ t('RAMON.ROTEIRO_IA.TESTAR.LEAD_SEM_TESE') }}
+            </option>
+            <option
+              v-for="tese in teses"
+              :key="tese.id"
+              :value="String(tese.id)"
+            >
               {{ tese.name }}
+            </option>
+          </select>
+          <select
+            v-if="roteiro?.selecao"
+            data-testid="testar-roteiro-modo"
+            class="!w-48 shrink-0"
+            :class="SELECT"
+            :value="roteiro.modo"
+            :title="t('RAMON.ROTEIRO_IA.TESTAR.MODO_AJUDA')"
+            :aria-label="t('RAMON.ROTEIRO_IA.TESTAR.MODO_AJUDA')"
+            @change="escolherModo"
+          >
+            <option v-for="modo in MODOS_DO_TESTE" :key="modo" :value="modo">
+              {{ t(`RAMON.COPILOTO.MODOS.${modo}.NOME`) }}
             </option>
           </select>
           <div

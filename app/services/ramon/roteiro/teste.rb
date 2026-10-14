@@ -1,18 +1,29 @@
 # Testar com tese (spec §3.8.5): o motor de verdade num lead descartável, dentro de uma transação desfeita — nada
 # fica gravado (lead, respostas, histórico, sugestões, sino). As tools do roteiro passam pelo mesmo caminho do lead
 # real (Captain::Tools::RamonBaseTool#no_roteiro): só o lead muda. O estado do roteiro vai e volta pelo Testar.
-# teste = { 'thesis_id' => id, 'estado' => estado do roteiro ou nil }
+# teste = { 'thesis_id' => id ou nil (lead sem tese), 'estado' => estado do roteiro ou nil, 'modo' => modo simulado }
 # ponytail: o push do ntfy (perform_later) sai da transação, acha o lead apagado e não envia.
 module Ramon::Roteiro::Teste
   NOME = 'Teste do roteiro'.freeze
 
   module_function
 
-  # Do corpo do playground: só tese da conta; estado vira Hash simples (chaves texto).
+  # Do corpo do playground. nil = Testar sem roteiro (ou tese de outra conta). thesis_id vazio = lead sem tese: roda os
+  # passos comuns, inclusive o "assunto". modo = o simulado (rascunho; piloto_total aplica etapa/Perdido na hora).
+  # Qualquer modo válido é aceito: os caminhos do limite ("sozinha até…") e do contrato automático exigem conversa e
+  # não disparam no lead descartável (inofensivo).
   def de_params(account, roteiro)
-    roteiro = (roteiro || {}).to_h.with_indifferent_access
+    roteiro = roteiro.to_h.with_indifferent_access # nil.to_h = {}
+    return if roteiro.empty?
+
     tese = account.theses.find_by(id: roteiro[:thesis_id]) if roteiro[:thesis_id].present?
-    tese && { 'thesis_id' => tese.id, 'estado' => roteiro[:estado].presence&.to_hash }
+    return if roteiro[:thesis_id].present? && tese.nil?
+
+    { 'thesis_id' => tese&.id, 'estado' => roteiro[:estado].presence&.to_hash, 'modo' => modo_simulado(roteiro[:modo]) }
+  end
+
+  def modo_simulado(modo)
+    Ramon::CopilotoModo::MODOS.include?(modo) ? modo : Ramon::CopilotoModo::DEFAULT
   end
 
   # Roda o bloco com o lead descartável e devolve o resultado dele; o estado do roteiro depois volta para o teste.
@@ -22,8 +33,12 @@ module Ramon::Roteiro::Teste
     ActiveRecord::Base.transaction(requires_new: true) do
       lead = account.leads.create!(name: NOME, thesis_id: teste['thesis_id'], lead_stage: etapa_aberta(account),
                                    custom_attributes: { 'roteiro' => teste['estado'] }.compact)
+      lead.copiloto_modo_simulado = teste['modo']
       resultado = yield lead
-      teste['estado'] = lead.reload.custom_attributes['roteiro']
+      lead.reload
+      # o "assunto" pode ter escolhido a tese do lead sem tese: ela vale nas próximas mensagens do Testar
+      teste['estado'] = lead.custom_attributes['roteiro']
+      teste['thesis_id'] = lead.thesis_id
       raise ActiveRecord::Rollback
     end
     resultado

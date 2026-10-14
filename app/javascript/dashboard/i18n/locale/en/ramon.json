@@ -1606,8 +1606,10 @@
         "REMOVER_SAIDA": "Remove outcome"
       },
       "TESTAR": {
-        "SEM_TESE": "No thesis script",
-        "AJUDA": "Pick a thesis for the AI to follow its script. The script really runs, but nothing is saved."
+        "SEM_TESE": "No script",
+        "LEAD_SEM_TESE": "Lead without a thesis (shared steps, incl. subject)",
+        "AJUDA": "Pick a thesis (or a lead without one) for the AI to follow the script. The script really runs, but nothing is saved.",
+        "MODO_AJUDA": "Mode simulated in the test: in Draft, stage changes and Lost become suggestions; in Full autopilot they apply on the spot. Nothing is saved."
       }
     },
 

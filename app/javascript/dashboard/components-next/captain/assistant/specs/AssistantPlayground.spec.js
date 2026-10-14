@@ -1,7 +1,13 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import CaptainAssistant from 'dashboard/api/captain/assistant';
 import AssistantPlayground from '../AssistantPlayground.vue';
-import { conversaDe, limparConversa, roteiroDe } from '../testarConversas';
+import {
+  SEM_TESE,
+  conversaDe,
+  escolherRoteiro,
+  limparConversa,
+  roteiroDe,
+} from '../testarConversas';
 
 vi.mock('dashboard/api/captain/assistant', () => ({
   default: { playground: vi.fn() },
@@ -101,17 +107,19 @@ describe('AssistantPlayground', () => {
       },
     });
     const wrapper = mount(AssistantPlayground, { props: { assistantId: 1 } });
-    roteiroDe(1).thesisId = 3;
+    escolherRoteiro(1, '3');
     await enviar(wrapper, 'não tenho advogado');
     await flushPromises();
     expect(CaptainAssistant.playground).toHaveBeenCalledWith(
-      expect.objectContaining({ roteiro: { thesis_id: 3, estado: null } })
+      expect.objectContaining({
+        roteiro: { thesis_id: 3, estado: null, modo: 'rascunho' },
+      })
     );
     expect(roteiroDe(1).estado).toEqual({
       respostas: { tem_advogado: { valor: 'nao' } },
     });
     expect(roteiroDe(1).painel).toEqual({ passos: [] });
-    roteiroDe(1).thesisId = null;
+    escolherRoteiro(1, '');
   });
 
   it('roteiro em teste: resposta atrasada de outra tese não grava o estado', async () => {
@@ -122,9 +130,9 @@ describe('AssistantPlayground', () => {
       })
     );
     const wrapper = mount(AssistantPlayground, { props: { assistantId: 1 } });
-    roteiroDe(1).thesisId = 3;
+    escolherRoteiro(1, '3');
     await enviar(wrapper, 'olá');
-    roteiroDe(1).thesisId = 4;
+    escolherRoteiro(1, '4');
     responder({
       data: {
         response: 'Oi',
@@ -138,6 +146,31 @@ describe('AssistantPlayground', () => {
     await flushPromises();
     expect(roteiroDe(1).estado).not.toEqual({ velho: true });
     expect(roteiroDe(1).painel).not.toEqual({ velho: 1 });
-    roteiroDe(1).thesisId = null;
+    expect(roteiroDe(1).thesisId).toBe(4);
+    escolherRoteiro(1, '');
+  });
+
+  it('lead sem tese: manda thesis_id nulo e guarda a tese que o assunto escolheu', async () => {
+    CaptainAssistant.playground.mockResolvedValue({
+      data: {
+        response: 'Entendi!',
+        roteiro: {
+          thesis_id: 9,
+          estado: { tese_id: 9 },
+          painel: { passos: [] },
+        },
+      },
+    });
+    const wrapper = mount(AssistantPlayground, { props: { assistantId: 1 } });
+    escolherRoteiro(1, SEM_TESE);
+    await enviar(wrapper, 'sofri um acidente de trabalho');
+    await flushPromises();
+    expect(CaptainAssistant.playground).toHaveBeenCalledWith(
+      expect.objectContaining({
+        roteiro: { thesis_id: null, estado: null, modo: 'rascunho' },
+      })
+    );
+    expect(roteiroDe(1)).toMatchObject({ selecao: SEM_TESE, thesisId: 9 });
+    escolherRoteiro(1, '');
   });
 });

@@ -45,10 +45,40 @@ RSpec.describe 'Ramon::Roteiro::Teste' do
     expect(teste['estado']).to be_nil
   end
 
-  it 'de_params: só tese da conta; sem tese = sem teste; estado vira Hash simples' do
+  it 'de_params: tese da conta ou lead sem tese; tese de outra conta ou nada = sem teste; modo do Testar' do
     expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: create(:thesis, account: create(:account)).id })).to be_nil
     expect(Ramon::Roteiro::Teste.de_params(account, nil)).to be_nil
     expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: thesis.id, estado: { 'respostas' => {} } }))
-      .to eq('thesis_id' => thesis.id, 'estado' => { 'respostas' => {} })
+      .to eq('thesis_id' => thesis.id, 'estado' => { 'respostas' => {} }, 'modo' => 'rascunho')
+    expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: '', modo: 'piloto_total' }))
+      .to eq('thesis_id' => nil, 'estado' => nil, 'modo' => 'piloto_total')
+    expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: thesis.id, modo: 'xablau' })['modo']).to eq('rascunho')
+  end
+
+  # Revisão F5 item 9 + Review Focus 5: lead sem tese roda os comuns; a tese que o "assunto" escolhe volta no teste.
+  it 'sem tese: o assunto escolhe a tese e as próximas mensagens seguem nela' do
+    thesis.update!(palavras_chave: ['xablau'])
+    create(:roteiro_passo, account: account, thesis: nil, chave: 'assunto', position: 0, titulo: 'Assunto', tipo_resposta: 'texto')
+    sem_tese = Ramon::Roteiro::Teste.de_params(account, { thesis_id: '' })
+    expect(atual(sem_tese)).to include('chave: assunto')
+
+    registrar(sem_tese, chave: 'assunto', valor: 'quero saber do xablau')
+    expect(sem_tese['thesis_id']).to eq(thesis.id)
+    expect(atual(sem_tese)).to include('Passo atual: Recebeu')
+    expect([Lead.count, thesis.leads.count]).to eq([0, 0])
+  end
+
+  it 'modo simulado: em piloto total o Perdido vale na hora (sem aguardar a equipe); em rascunho vira sugestão' do
+    outra = create(:thesis, account: account)
+    create(:roteiro_passo, account: account, thesis: outra, chave: 'advogado', position: 0, titulo: 'Advogado',
+                           saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'desqualificar', 'motivo' => 'tem advogado' }])
+    direto = Ramon::Roteiro::Teste.de_params(account, { thesis_id: outra.id, modo: 'piloto_total' })
+    rascunho = Ramon::Roteiro::Teste.de_params(account, { thesis_id: outra.id })
+
+    registrar(direto, chave: 'advogado', valor: 'sim')
+    registrar(rascunho, chave: 'advogado', valor: 'sim')
+    expect(direto['estado']).not_to have_key('aguarda_equipe')
+    expect(rascunho['estado']).to include('aguarda_equipe' => true)
+    expect([Lead.count, CopilotSuggestion.count]).to eq([0, 0])
   end
 end

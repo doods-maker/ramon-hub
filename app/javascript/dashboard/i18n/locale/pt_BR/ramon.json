@@ -1606,8 +1606,10 @@
         "REMOVER_SAIDA": "Remover saída"
       },
       "TESTAR": {
-        "SEM_TESE": "Sem roteiro de tese",
-        "AJUDA": "Escolha uma tese para a IA seguir o roteiro dela. O roteiro roda de verdade, mas nada fica gravado."
+        "SEM_TESE": "Sem roteiro",
+        "LEAD_SEM_TESE": "Lead sem tese (passos comuns, inclusive o assunto)",
+        "AJUDA": "Escolha uma tese (ou um lead sem tese) para a IA seguir o roteiro. O roteiro roda de verdade, mas nada fica gravado.",
+        "MODO_AJUDA": "Modo simulado no teste: no Rascunho, mudança de etapa e Perdido viram sugestão; no Piloto total valem na hora. Nada fica gravado."
       }
     },
 
