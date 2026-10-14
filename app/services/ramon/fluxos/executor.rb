@@ -101,7 +101,9 @@ class Ramon::Fluxos::Executor
   end
 
   def executar(passo)
-    resultado = PASSOS.fetch(passo['tipo']).public_send(passo['tipo'], passo['config'] || {}, Ramon::Fluxos::Contexto.new(@execucao))
+    # .name.constantize: pega a constante atual (o CI recarrega o código no meio; o módulo guardado no PASSOS pode ser o velho)
+    modulo = PASSOS.fetch(passo['tipo']).name.constantize
+    resultado = modulo.public_send(passo['tipo'], passo['config'] || {}, Ramon::Fluxos::Contexto.new(@execucao))
     @execucao.tentativas = 0
     @execucao.contexto = @execucao.contexto.merge('vars' => (@execucao.contexto['vars'] || {}).merge(resultado[:vars] || {}))
     resultado
