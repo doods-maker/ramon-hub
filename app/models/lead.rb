@@ -51,7 +51,9 @@ class Lead < ApplicationRecord
   after_create_commit :dispatch_create_event
   # Declarado antes dos demais de propósito: after_commit roda na ordem inversa e o update! do reabrir sobrescreveria
   # saved_changes (etapa) para dispatch_update_event/record_change_activities, que rodariam depois.
-  after_update_commit :reabrir_roteiro, if: -> { saved_change_to_lost_at? && lost_at.nil? }
+  # Limite: os after_commit dos concerns (lead_comercial) rodam depois e veem o saved_changes do update aninhado; só
+  # importa no save raro que tira do Perdido e troca tese/contato/sdr/conversa.
+  after_update_commit :reabrir_roteiro, if: -> { saved_change_to_lost_at? && lost_at.nil? && won_at.nil? }
   after_update_commit :dispatch_update_event
   after_create_commit :record_created_activity
   after_update_commit :record_change_activities

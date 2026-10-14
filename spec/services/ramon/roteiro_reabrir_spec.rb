@@ -64,4 +64,15 @@ RSpec.describe Ramon::Roteiro, '.reabrir' do
     outra.dismiss!
     expect(described_class.atual(lead.reload)[:estado]['desfecho']).to eq('desqualificado')
   end
+
+  it 'recusar uma sugestão do roteiro já aplicada não reabre nada' do
+    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_limitado' })
+    sugestao = desqualificar!
+    sugestao.apply!
+    sugestao.dismiss!
+
+    expect(sugestao.reload.status).to eq('applied')
+    expect(lead.reload.lost_at).to be_present
+    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('manual')
+  end
 end
