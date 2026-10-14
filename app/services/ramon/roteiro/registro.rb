@@ -9,7 +9,7 @@ class Ramon::Roteiro::Registro
     @estado = Ramon::Roteiro.estado(lead)
   end
 
-  # @return { erro: } | { estado:, proximo:, calc:, mensagem: }
+  # @return { erro: } | { estado:, proximo:, calc:, mensagem:, handoff: }
   def call(chave:, valor: nil, saida_id: nil)
     @passo = @passos.find { |p| p.chave == chave.to_s }
     erro = motivo_da_recusa(chave)
@@ -91,7 +91,13 @@ class Ramon::Roteiro::Registro
       @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @estado))
       Ramon::Roteiro::Efeitos.aplicar(@lead, @passo, saida)
     end
-    { estado: @estado, proximo: proximo, calc: calc, mensagem: saida['mensagem'] }
+    { estado: @estado, proximo: proximo, calc: calc, mensagem: saida['mensagem'], handoff: handoff? }
+  end
+
+  # O roteiro acabou de passar o caso para a equipe com a conversa ligada (Efeitos.humano fez o bot_handoff!): a tool
+  # sinaliza o handoff ao runner pelo state — nada depende do texto devolvido à IA.
+  def handoff?
+    @estado['desfecho'] == Ramon::Roteiro::HUMANO && @lead.conversation.present?
   end
 
   def guardar_resposta(valor, calc, saida)

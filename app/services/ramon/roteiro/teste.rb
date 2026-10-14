@@ -1,6 +1,6 @@
 # Testar com tese (spec §3.8.5): o motor de verdade num lead descartável, dentro de uma transação desfeita — nada
-# fica gravado (lead, respostas, histórico, sugestões, sino). Sem conversa = fora do piloto total (Perdido vira
-# sugestão, como em rascunho). O estado do roteiro vai e volta pelo Testar a cada mensagem.
+# fica gravado (lead, respostas, histórico, sugestões, sino). As tools do roteiro passam pelo mesmo caminho do lead
+# real (Captain::Tools::RamonBaseTool#no_roteiro): só o lead muda. O estado do roteiro vai e volta pelo Testar.
 # teste = { 'thesis_id' => id, 'estado' => estado do roteiro ou nil }
 # ponytail: o push do ntfy (perform_later) sai da transação, acha o lead apagado e não envia.
 module Ramon::Roteiro::Teste
@@ -15,42 +15,27 @@ module Ramon::Roteiro::Teste
     tese && { 'thesis_id' => tese.id, 'estado' => roteiro[:estado].presence&.to_hash }
   end
 
-  # Texto do passo atual para a IA; nil = a tese não tem roteiro.
-  def atual(account, teste)
-    rodar(account, teste) do |lead|
-      atual = Ramon::Roteiro.atual(lead)
-      Ramon::Roteiro.descrever(atual[:passo], atual[:estado]) if atual
-    end.first
-  end
-
-  # @return [texto para a IA, estado depois]
-  def registrar(account, teste, chave:, valor: nil, saida_id: nil)
-    rodar(account, teste) do |lead|
-      res = Ramon::Roteiro.registrar(lead, chave: chave, valor: valor, saida_id: saida_id)
-      res[:erro] || Ramon::Roteiro.resumo(res)
+  # Roda o bloco com o lead descartável e devolve o resultado dele; o estado do roteiro depois volta para o teste.
+  # Erro no bloco desfaz tudo e sobe (a tool trata, como no lead real).
+  def com_lead(account, teste)
+    resultado = nil
+    ActiveRecord::Base.transaction(requires_new: true) do
+      lead = account.leads.create!(name: NOME, thesis_id: teste['thesis_id'], lead_stage: etapa_aberta(account),
+                                   custom_attributes: { 'roteiro' => teste['estado'] }.compact)
+      resultado = yield lead
+      teste['estado'] = lead.reload.custom_attributes['roteiro']
+      raise ActiveRecord::Rollback
     end
+    resultado
   end
 
-  def painel(account, teste)
-    rodar(account, teste) { |lead| Ramon::Roteiro::Painel.montar(lead) }.first
+  def etapa_aberta(account)
+    account.lead_stages.where(is_won: false, is_lost: false).order(:position).first
   end
 
   # O que o Testar recebe de volta: o estado (vai de novo na próxima mensagem) e o passo a passo para a tela.
   def resposta(account, teste)
-    { 'thesis_id' => teste['thesis_id'], 'estado' => teste['estado'], 'painel' => painel(account, teste) }
-  end
-
-  # @return [resultado do bloco, estado do roteiro depois]
-  def rodar(account, teste)
-    saida = nil
-    ActiveRecord::Base.transaction(requires_new: true) do
-      etapa = account.lead_stages.where(is_won: false, is_lost: false).order(:position).first
-      lead = account.leads.create!(name: NOME, thesis_id: teste['thesis_id'], lead_stage: etapa,
-                                   custom_attributes: { 'roteiro' => teste['estado'] }.compact)
-      resultado = yield lead
-      saida = [resultado, lead.reload.custom_attributes['roteiro']]
-      raise ActiveRecord::Rollback
-    end
-    saida
+    painel = com_lead(account, teste) { |lead| Ramon::Roteiro::Painel.montar(lead) }
+    { 'thesis_id' => teste['thesis_id'], 'estado' => teste['estado'], 'painel' => painel }
   end
 end

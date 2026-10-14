@@ -64,6 +64,12 @@ module Ramon::Roteiro
     { passo: est['desfecho'] ? nil : proximo(lista, est), estado: est }
   end
 
+  # Texto do passo atual para a IA (tool roteiro_passo_atual, no lead real ou no Testar); nil = sem roteiro.
+  def texto_atual(lead)
+    atual = atual(lead)
+    atual && descrever(atual[:passo], atual[:estado])
+  end
+
   def registrar(lead, chave:, valor: nil, saida_id: nil)
     Registro.new(lead).call(chave: chave, valor: valor, saida_id: saida_id)
   end
