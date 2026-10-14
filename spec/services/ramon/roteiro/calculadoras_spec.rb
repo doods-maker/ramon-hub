@@ -53,6 +53,14 @@ RSpec.describe Ramon::Roteiro::Calculadoras do
     expect(calc('renda_per_capita', renda_total: '1621', moradores: '0')[:resultado]).to eq('depende')
   end
 
+  it 'prescricao_2_anos em três faixas' do
+    expect(calc('prescricao_2_anos', saida: '2025-01-14')[:resultado]).to eq('dentro')
+    expect(calc('prescricao_2_anos', saida: '2025-01-13')[:resultado]).to eq('ultimos_meses')
+    expect(calc('prescricao_2_anos', saida: '13/10/2024')[:resultado]).to eq('ultimos_meses')
+    expect(calc('prescricao_2_anos', saida: '2024-10-12')[:resultado]).to eq('prescrito')
+    expect(calc('prescricao_2_anos', saida: '')[:resultado]).to eq('depende')
+  end
+
   it 'prescricao_5_anos em três faixas' do
     expect(calc('prescricao_5_anos', data: '2023-01-01')[:resultado]).to eq('dentro')
     expect(calc('prescricao_5_anos', data: '2022-01-01')[:resultado]).to eq('ultimo_ano')

@@ -79,6 +79,30 @@ A avaliação inicial de viabilidade do lead — pelo quiz da LP e/ou pelo
 agente de IA sobre a conversa — antes do toque humano.
 _Avoid_: qualificação (qualificação é a etapa inteira; triagem é o primeiro filtro)
 
+**Roteiro (da tese)**:
+A sequência de perguntas que a IA faz ao lead dentro de uma Tese. Cada
+resposta leva a uma saída: seguir, pular, desqualificar, chamar humano ou
+concluir. A IA pergunta e entende a resposta; a consequência é regra fixa.
+A tese vem do número (caixa) ou da LP e não muda dentro do roteiro: caso que
+pertence a outra tese → humano.
+_Avoid_: agente, fluxo (um Fluxo é automação; o roteiro é a conversa)
+
+**Passo do roteiro**:
+Uma pergunta do Roteiro, com as suas saídas. Passos comuns valem antes do
+roteiro de qualquer tese.
+_Avoid_: "passo" sozinho (Passo é a caixinha do Fluxo)
+
+**Desfecho**:
+Como o Roteiro terminou para o lead: qualificado, desqualificado (com motivo)
+ou humano (com motivo).
+
+**Consulta de andamento**:
+Quando quem escreve diz que já é cliente, a IA confere CPF + data de
+nascimento no ADVBOX e responde a fase do processo em linguagem simples, com o
+link do Painel do Cliente. Não confere ou pergunta específica (valor, data de
+pagamento) → humano.
+_Avoid_: tratar cliente como Lead (cliente não entra no Roteiro)
+
 **Cadência**:
 O ritmo de follow-up planejado sobre um lead: as tarefas com prazo que
 impedem o lead de ficar Parado sem dono.

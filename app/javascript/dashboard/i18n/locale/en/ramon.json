@@ -1572,6 +1572,7 @@
           "PERIODO_DE_GRACA": "Grace period",
           "RENDA_PER_CAPITA": "Income per person",
           "PRESCRICAO_5_ANOS": "5-year limitation",
+          "PRESCRICAO_2_ANOS": "2-year limit (labor)",
           "MESES_ATE_65": "Months until 65",
           "DATA_PREVISTA_PARTO": "Expected birth date",
           "PRAZO_INSS": "INSS deadline"

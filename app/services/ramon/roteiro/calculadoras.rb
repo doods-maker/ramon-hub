@@ -1,12 +1,13 @@
 # Contas exatas do roteiro da tese (spec 2026-10-13 §3.3). Cada uma recebe os campos já respondidos — como o motor
 # grava: 'sim'/'nao', datas ISO, números em texto — e devolve { resultado:, detalhe: }. Campo faltando = 'depende'
 # (a saída configurada no passo decide; normalmente equipe).
-module Ramon::Roteiro::Calculadoras # rubocop:disable Metrics/ModuleLength -- 6 contas + catálogo; separar não ajuda a leitura
+module Ramon::Roteiro::Calculadoras # rubocop:disable Metrics/ModuleLength -- 7 contas + catálogo; separar não ajuda a leitura
   # Campos que cada conta lê e resultados que devolve: a tela do roteiro (F2) mostra e a Conferencia valida.
   CATALOGO = {
     'periodo_de_graca' => { campos: %w[ultimo_vinculo evento mais_de_120 desemprego facultativa], resultados: %w[dentro fora depende] },
     'renda_per_capita' => { campos: %w[renda_total moradores], resultados: %w[abaixo acima depende] },
     'prescricao_5_anos' => { campos: %w[data], resultados: %w[dentro ultimo_ano prescrito depende] },
+    'prescricao_2_anos' => { campos: %w[saida], resultados: %w[dentro ultimos_meses prescrito depende] },
     'meses_ate_65' => { campos: %w[nascimento], resultados: %w[ja_tem_65 menos_de_65 depende] },
     'data_prevista_parto' => { campos: %w[semanas], resultados: %w[ja_pode_pedir aguardar depende] },
     'prazo_inss' => { campos: %w[requerimento pericia], resultados: %w[aguardar forcar_julgamento depende] }
@@ -81,6 +82,17 @@ module Ramon::Roteiro::Calculadoras # rubocop:disable Metrics/ModuleLength -- 6 
     return res('ultimo_ano', 'entre 4 e 5 anos') if quando >= hoje.prev_year(5)
 
     res('prescrito', 'mais de 5 anos')
+  end
+
+  # Ação trabalhista até 2 anos depois do fim do contrato (CF art. 7º, XXIX); de 21 a 24 meses = urgente, a saída decide.
+  # ponytail: conta da data de saída informada; projeção do aviso prévio fica com a equipe (cai na faixa urgente).
+  def prescricao_2_anos(campos, hoje)
+    saida = data(campos['saida'])
+    return DEPENDE if saida.nil?
+    return res('dentro', 'saiu há menos de 21 meses') if saida > hoje.prev_month(21)
+    return res('ultimos_meses', "prazo de 2 anos vence em #{saida.next_year(2).strftime('%d/%m/%Y')}") if saida >= hoje.prev_year(2)
+
+    res('prescrito', 'saiu há mais de 2 anos')
   end
 
   def meses_ate_65(campos, hoje)
