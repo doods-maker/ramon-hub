@@ -78,14 +78,24 @@ module Ramon::Roteiro::Efeitos
     Ramon::CopilotoModo.trocar(lead.conversation, 'manual') if lead.conversation
   end
 
-  # Roteiro reaberto (Ramon::Roteiro.reabrir): devolve o modo de antes e tira a etiqueta de desqualificado.
-  def reabrir(lead)
+  # Roteiro reaberto (Ramon::Roteiro.reabrir): devolve o modo de antes, desfaz o limite "qualificação" que o desfecho
+  # causou e tira a etiqueta de desqualificado; o caso que tinha ido para a equipe volta ao robô. No fim confere o
+  # limite do modo de novo — o lead pode já estar além dele (ex.: tirado do Perdido direto para "Reunião agendada").
+  def reabrir(lead, desfecho)
     conversa = lead.conversation
     if conversa
       Ramon::CopilotoModo.restaurar(conversa)
+      Ramon::CopilotoLimite.desfazer(conversa, Ramon::CopilotoLimite::QUALIFICACAO) if desfecho == Ramon::Roteiro::QUALIFICADO
       tirar_etiqueta(conversa)
+      devolver_ao_robo(conversa) if desfecho == Ramon::Roteiro::HUMANO
     end
     anotar(lead, 'roteiro reaberto')
+    Ramon::CopilotoLimite.verificar(lead)
+  end
+
+  # A equipe recebeu o caso pelo handoff (conversa aberta): volta ao robô se o modo restaurado deixa a IA responder.
+  def devolver_ao_robo(conversa)
+    conversa.update!(status: :pending) if conversa.open? && Ramon::CopilotoModo.of(conversa) != 'manual'
   end
 
   def tirar_etiqueta(conversa)

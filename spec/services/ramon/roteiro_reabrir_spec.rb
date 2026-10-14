@@ -82,4 +82,52 @@ RSpec.describe Ramon::Roteiro, '.reabrir' do
     expect(lead.reload.lost_at).to be_present
     expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('manual')
   end
+
+  # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
+  # Revisão F5 3a: tirar do Perdido direto para "Reunião agendada" no "até reunião" não volta a enviar direto.
+  it 'tirar do Perdido para além do limite devolve o modo e o limite já encerra' do
+    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_ate_reuniao' })
+    Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'sim') # modo direto: Perdido + IA calada
+    expect(lead.reload.lost_at).to be_present
+
+    lead.update!(lead_stage: account.lead_stages.find_by!(name: 'Reunião agendada'))
+
+    expect(conversation.reload.custom_attributes).to include('copiloto_modo' => 'rascunho',
+                                                             'copiloto_limite' => include('limite' => 'reuniao'))
+  end
+
+  # Revisão F5 3b: quem foi para a equipe saiu do robô (bot_handoff!); reabrir devolve ao robô no modo de antes.
+  it 'reabrir quem foi para a equipe devolve a conversa ao robô no modo de antes' do
+    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_limitado' })
+    Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'nao')
+    Ramon::Roteiro.registrar(lead.reload, chave: 'sequela', valor: 'nao sei') # nada casa → equipe
+    expect(conversation.reload.status).to eq('open')
+
+    expect(Ramon::Roteiro.reabrir(lead.reload)).to be(true)
+    expect(conversation.reload.status).to eq('pending')
+    expect(conversation.custom_attributes['copiloto_modo']).to eq('piloto_limitado')
+  end
+
+  # Review Focus 2: modo de antes manual = a equipe segue com a conversa.
+  it 'reabrir quem foi para a equipe com modo de antes manual deixa a conversa com o humano' do
+    conversation.update!(custom_attributes: { 'copiloto_modo' => 'manual' })
+    Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'nao')
+    Ramon::Roteiro.registrar(lead.reload, chave: 'sequela', valor: 'nao sei')
+
+    Ramon::Roteiro.reabrir(lead.reload)
+    expect(conversation.reload.status).to eq('open')
+    expect(conversation.custom_attributes['copiloto_modo']).to eq('manual')
+  end
+
+  # Revisão F5 3c: reabrir um qualificado desfaz o limite que ele causou.
+  it 'reabrir um qualificado no "até qualificar" apaga o carimbo e volta o modo' do
+    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_ate_qualificacao' })
+    Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'nao')
+    Ramon::Roteiro.registrar(lead.reload, chave: 'sequela', saida_id: 'ficou')
+    expect(conversation.reload.custom_attributes['copiloto_limite']).to include('limite' => 'qualificacao')
+
+    Ramon::Roteiro.reabrir(lead.reload)
+    expect(conversation.reload.custom_attributes).to eq('copiloto_modo' => 'piloto_ate_qualificacao')
+  end
+  # rubocop:enable RSpec/DescribedClass
 end

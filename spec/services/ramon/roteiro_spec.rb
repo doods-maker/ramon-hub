@@ -251,6 +251,23 @@ RSpec.describe Ramon::Roteiro do
     expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
   end
 
+  # Revisão F5 item 5: o estado gravado zera na troca (o limite dos modos e a bi_roteiro leem o atributo cru).
+  it 'trocar a tese depois do desfecho zera o roteiro gravado na hora, mantendo os comuns' do
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'sim')
+    registrar('sequela', 'ficou', saida_id: 'ficou')
+    expect(lead.reload.desfecho_roteiro).to eq('qualificado')
+
+    bpc = create(:thesis, account: account)
+    create(:roteiro_passo, account: account, thesis: bpc, chave: 'renda', position: 1)
+    lead.update!(thesis: bpc)
+
+    salvo = lead.reload.custom_attributes['roteiro']
+    expect(salvo).to include('tese_id' => bpc.id, 'passo' => 'renda')
+    expect(salvo.keys).not_to include('desfecho', 'motivo', 'decisivo')
+    expect(salvo['respostas'].keys).to eq(['tem_advogado'])
+  end
+
   # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
   it 'descrever mostra o passo, as saídas do texto e o que já foi respondido' do
     registrar('tem_advogado', 'nao')

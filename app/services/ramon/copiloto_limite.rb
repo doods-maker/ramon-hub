@@ -32,6 +32,15 @@ module Ramon::CopilotoLimite
     limite
   end
 
+  # Reabrir o roteiro desfaz o limite que o desfecho causou: volta o modo de antes do carimbo e apaga o carimbo.
+  def desfazer(conversa, limite)
+    attrs = conversa.reload.custom_attributes || {}
+    carimbo = attrs['copiloto_limite']
+    return unless carimbo.is_a?(Hash) && carimbo['limite'] == limite && Ramon::CopilotoModo::MODOS.include?(carimbo['modo'])
+
+    conversa.update!(custom_attributes: attrs.except('copiloto_limite').merge('copiloto_modo' => carimbo['modo']))
+  end
+
   def atingido?(limite, lead)
     alcancado = nivel(lead)
     !alcancado.nil? && NIVEIS.index(alcancado) >= NIVEIS.index(limite)

@@ -85,7 +85,7 @@ module Ramon::Roteiro
     novo = est.except('desfecho', 'motivo', 'decisivo', 'aguarda_equipe')
     novo['passo'] = proximo(passos(lead), novo)&.chave # bi_roteiro: mesmo valor que Registro#gravar escreveria
     lead.update!(custom_attributes: (lead.custom_attributes || {}).merge('roteiro' => novo))
-    Efeitos.reabrir(lead)
+    Efeitos.reabrir(lead, est['desfecho'])
     true
   end
 
