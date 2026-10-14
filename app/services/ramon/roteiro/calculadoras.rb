@@ -1,8 +1,17 @@
 # Contas exatas do roteiro da tese (spec 2026-10-13 §3.3). Cada uma recebe os campos já respondidos — como o motor
 # grava: 'sim'/'nao', datas ISO, números em texto — e devolve { resultado:, detalhe: }. Campo faltando = 'depende'
 # (a saída configurada no passo decide; normalmente equipe).
-module Ramon::Roteiro::Calculadoras
-  NOMES = %w[periodo_de_graca renda_per_capita prescricao_5_anos meses_ate_65 data_prevista_parto prazo_inss].freeze
+module Ramon::Roteiro::Calculadoras # rubocop:disable Metrics/ModuleLength -- 6 contas + catálogo; separar não ajuda a leitura
+  # Campos que cada conta lê e resultados que devolve: a tela do roteiro (F2) mostra e a Conferencia valida.
+  CATALOGO = {
+    'periodo_de_graca' => { campos: %w[ultimo_vinculo evento mais_de_120 desemprego facultativa], resultados: %w[dentro fora depende] },
+    'renda_per_capita' => { campos: %w[renda_total moradores], resultados: %w[abaixo acima depende] },
+    'prescricao_5_anos' => { campos: %w[data], resultados: %w[dentro ultimo_ano prescrito depende] },
+    'meses_ate_65' => { campos: %w[nascimento], resultados: %w[ja_tem_65 menos_de_65 depende] },
+    'data_prevista_parto' => { campos: %w[semanas], resultados: %w[ja_pode_pedir aguardar depende] },
+    'prazo_inss' => { campos: %w[requerimento pericia], resultados: %w[aguardar forcar_julgamento depende] }
+  }.freeze
+  NOMES = CATALOGO.keys.freeze
   DEPENDE = { resultado: 'depende', detalhe: 'falta dado para a conta' }.freeze
 
   module_function

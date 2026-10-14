@@ -435,6 +435,9 @@ Rails.application.routes.draw do
               collection { post :reorder }
             end
           end
+          resources :roteiro_passos, only: [:index, :create, :update, :destroy] do
+            collection { post :reorder }
+          end
           resources :triage_agents, except: [:new, :edit]
           resources :benefit_types, only: [:create, :update, :destroy] do
             collection { post :reorder }
