@@ -1641,7 +1641,8 @@ c) Na skill `Triagem e qualificação do lead novo`, **antes** do parágrafo "An
 - [ ] **Step 4: Lint + commit** (o arquivo `.md` do comercial fica fora do repo do hub)
 
 ```bash
-rubocop-vps enterprise/lib/captain/tools/roteiro_passo_atual_tool.rb enterprise/lib/captain/tools/roteiro_registrar_tool.rb \n  enterprise/app/services/captain/assistant/agent_runner_service.rb
+rubocop-vps enterprise/lib/captain/tools/roteiro_passo_atual_tool.rb enterprise/lib/captain/tools/roteiro_registrar_tool.rb \
+  enterprise/app/services/captain/assistant/agent_runner_service.rb
 git add enterprise/lib/captain/tools/roteiro_passo_atual_tool.rb enterprise/lib/captain/tools/roteiro_registrar_tool.rb \
   enterprise/app/services/captain/assistant/agent_runner_service.rb config/agents/tools.yml db/seeds/ramon/inteligencia/assistentes.yml
 git commit -m "feat(inteligencia): tools do roteiro da tese e triagem guiada pelo roteiro (texto aguarda aprovação)"
