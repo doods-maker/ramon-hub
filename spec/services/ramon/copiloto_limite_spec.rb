@@ -38,10 +38,28 @@ RSpec.describe Ramon::CopilotoLimite do
     expect(described_class.atingido?('reuniao', lead.reload)).to be(true)
   end
 
-  it 'link do ZapSign no lead encerra o "até contrato" e, pela ordem dos limites, também o "até reunião"' do
+  it 'link do ZapSign no lead encerra o "até reunião" (contrato é nível acima)' do
     modo!('piloto_ate_reuniao')
     lead.update!(custom_attributes: { 'zapsign' => { 'sign_url' => 'https://zap/x' } })
     expect(conversation.reload.custom_attributes['copiloto_limite']).to include('limite' => 'reuniao')
+  end
+
+  it 'lead ganho encerra o "até contrato"' do
+    modo!('piloto_ate_contrato')
+    lead.update_columns(lead_stage_id: account.lead_stages.find_by!(is_won: true).id, won_at: Time.current) # rubocop:disable Rails/SkipsModelValidations -- sem o fluxo "Lead ganho"
+    expect(described_class.verificar(lead.reload)).to eq('contrato')
+    expect(conversation.reload.custom_attributes).to include('copiloto_modo' => 'rascunho')
+  end
+
+  it 'lead já além do limite religado a uma conversa nova em modo "até…" encerra na hora' do
+    lead.update!(lead_stage: etapa('Reunião agendada'))
+    nova = create(:conversation, account: account, status: :pending,
+                                 custom_attributes: { 'copiloto_modo' => 'piloto_ate_reuniao' })
+
+    lead.update!(conversation: nova)
+
+    expect(nova.reload.custom_attributes).to include('copiloto_modo' => 'rascunho',
+                                                     'copiloto_limite' => include('limite' => 'reuniao'))
   end
 
   it 'até qualificar: roteiro qualificado muda a etapa direto e depois encerra o modo' do

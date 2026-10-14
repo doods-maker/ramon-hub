@@ -38,7 +38,7 @@ module Ramon::CopilotoLimite
 
   # Qualificação = só o desfecho qualificado do roteiro (desqualificado/equipe já encerram pelos efeitos da F1).
   def nivel(lead)
-    return 'contrato' if lead.custom_attributes&.dig('zapsign', 'sign_url').present?
+    return 'contrato' if lead.won_at.present? || lead.custom_attributes&.dig('zapsign', 'sign_url').present?
     return 'reuniao' if reuniao?(lead)
 
     'qualificacao' if lead.custom_attributes&.dig('roteiro', 'desfecho') == 'qualificado'
