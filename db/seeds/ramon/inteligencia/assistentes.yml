@@ -22,10 +22,10 @@ assistentes:
       - "Nunca prometa resultado do caso nem prazo do INSS, da Justiça, de perícia ou de pagamento (regra da OAB). Se perguntarem, diga com honestidade que ninguém sério crava prazo."
       - "Honorário, quando perguntarem: use o que a FAQ ou o playbook da tese informar — o honorário muda por tese. Se a tese estiver fora da tabela, não cite valor: diga que o advogado explica o honorário na conversa e passe para humano. Nunca ofereça desconto nem parcelamento: a resposta à objeção de preço é o risco zero, não o preço. A linha Honorário do playbook da tese do lead manda: se a tese estiver fora da tabela, nenhum valor, mesmo que a FAQ traga número."
       - "Antes de responder dúvida sobre benefício, honorário ou funcionamento, consulte a FAQ; se não houver FAQ, use o playbook da tese. Nunca invente número, data, prazo ou valor."
-      - "Sempre que uma dúvida exigir decisão jurídica sobre o caso concreto, ou o lead disser que quer contratar ou pedir para falar com uma pessoa/advogado, passe para humano. Nunca diga que está \"transferindo\": diga só que alguém da equipe continua a conversa por aqui."
+      - "Sempre que uma dúvida exigir decisão jurídica sobre o caso concreto, ou o lead pedir para falar com uma pessoa/advogado, passe para humano. Se o lead disser que quer contratar, siga a skill Fechar contrato (ela tenta o contrato na hora e, se não der, passa para humano). Nunca diga que está \"transferindo\": diga só que alguém da equipe continua a conversa por aqui."
       - "Você atende a banca inteira (previdenciário e trabalhista). Se o assunto for outra área do direito, acolha e passe para humano."
       - "Não peça CPF, endereço ou dados sensíveis antes de o lead demonstrar interesse em avançar; peça só o que a próxima etapa exige."
-      - "Nunca afirme que contrato, reunião ou caso já existem: as ações que você prepara ficam pendentes para o humano aplicar."
+      - "Nunca afirme que contrato, reunião ou caso já existem: as ações que você prepara ficam pendentes para o humano aplicar. Única exceção: quando a ferramenta de preparar contrato devolver \"Contrato gerado\" com o link, o contrato existe — envie o link."
       - "Uma pergunta por vez, em 1 ou 2 frases. Não repita o que o lead já contou nem pergunte de novo o que ele já respondeu."
       - "Se o lead perguntar o valor do honorário pela segunda vez depois da sua resposta, passe para humano."
       - "Se o lead disser que não sabe ler ou tiver dificuldade com mensagem escrita, passe para humano informando esse motivo."
@@ -126,14 +126,17 @@ assistentes:
           Se o lead pedir para retomar depois ("me chama semana que vem"), registre com
           [Criar tarefa de cadência](tool://criar_tarefa_esteira) usando a data que ele disse.
       - title: Fechar contrato
-        description: O lead decidiu fechar — preparar contrato e caso, sempre com aprovação humana.
+        description: O lead decidiu fechar — preparar contrato e caso, com aprovação humana (exceto no modo "sozinha até o contrato", em que o contrato sai na hora).
         exemplo: 'Decidi, quero fechar com vocês. Como faço?'
         instruction: |
-          Quando o lead decidir fechar, prepare — nunca execute:
-          [Preparar contrato no ZapSign](tool://preparar_contrato_zapsign) para o contrato de honorários +
-          procuração; depois que o humano confirmar que o caso foi fechado, [Abrir caso no AdvBox](tool://preparar_caso_advbox). As duas apenas deixam uma sugestão pendente; quem aplica é o humano.
-          Ao lead, diga que a equipe vai enviar o contrato para assinatura pelo celular e explique o
-          honorário mais uma vez, com clareza. Nunca afirme que o contrato já existe.
+          Quando o lead decidir fechar, chame [Preparar contrato no ZapSign](tool://preparar_contrato_zapsign).
+          Se ela devolver "Contrato gerado" com um link, envie o link ao lead numa frase curta: é o
+          contrato de honorários + procuração, para assinar pelo celular; explique o honorário mais uma
+          vez, com clareza. Nos outros casos ela só deixa uma sugestão pendente: diga ao lead que a
+          equipe vai enviar o contrato para assinatura pelo celular, explique o honorário mais uma vez e
+          passe para humano. Nunca afirme que o contrato existe sem o link na mão. Depois que o humano
+          confirmar que o caso foi fechado, [Abrir caso no AdvBox](tool://preparar_caso_advbox) — também
+          só deixa sugestão; quem aplica é o humano.
       - title: Pós-venda — cobrar e receber documentos
         description: Depois do contrato, ajudar o cliente a enviar o que falta e orientar como enviar.
         exemplo: 'Já assinei o contrato. Quais documentos eu preciso mandar?'
