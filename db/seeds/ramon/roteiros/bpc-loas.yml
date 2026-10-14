@@ -1,0 +1,132 @@
+# Conteúdo APROVADO pelo Eduardo em 14/10/2026 ("pode continuar") — fonte: comercial/docs/2026-10-13-roteiros-f4-rascunho.md §3,
+# corrigido pela conferência de citações (…-roteiros-f4-citacoes.md). Mudar texto aqui = novo aprovado dele.
+tese: "BPC/LOAS (idoso ou pessoa com deficiência)" # D19: o roteiro cobre também o idoso 65+
+antes: ["BPC/LOAS por deficiência"] # nome antigo (theses_seed.yml): o seed acha a tese por ele e renomeia
+passos:
+  - chave: para_quem
+    titulo: "Para quem é o pedido"
+    orientacao: "Pergunte se o benefício é para a própria pessoa ou para um familiar. Se for para outra pessoa, faça as próximas perguntas sobre ela."
+    tipo_resposta: escolha
+    opcoes: ["Para a própria pessoa", "Para um familiar"]
+
+  - chave: recebe_beneficio
+    titulo: "Já recebe benefício"
+    orientacao: "Pergunte se a pessoa já recebe aposentadoria, pensão, BPC ou outro benefício do INSS. Bolsa Família não conta aqui." # D25 (conferido 13/10)
+    tipo_resposta: sim_nao
+    saidas:
+      - id: sim
+        quando: "sim"
+        acao: desqualificar
+        motivo: "já recebe benefício (não acumula com o BPC)"
+        mensagem: "Entendi. O BPC não pode ser pago junto com outro benefício do INSS, então neste caso não há como pedir."
+      - id: nao
+        quando: "nao"
+        acao: seguir
+
+  - chave: cadunico
+    titulo: "CadÚnico"
+    orientacao: "Pergunte se a família está inscrita no CadÚnico (o cadastro do CRAS). Se não estiver, diga só que a equipe orienta esse passo; não mande ir ao CRAS sozinho."
+    tipo_resposta: escolha
+    opcoes: ["Sim, atualizado", "Sim, mas desatualizado", "Não", "Não sabe"]
+
+  - chave: nascimento
+    titulo: "Data de nascimento"
+    orientacao: "Pergunte a data de nascimento da pessoa que vai receber o benefício."
+    tipo_resposta: data
+    calculadora: meses_ate_65
+    calculadora_campos: { nascimento: nascimento }
+    saidas:
+      - id: idoso
+        quando: "ja_tem_65"
+        acao: ir_para
+        alvo: moradores
+        efeitos: { etiqueta: "idoso" }
+      - id: menos_de_65
+        quando: "*"
+        acao: seguir
+
+  - chave: deficiencia
+    titulo: "Doença ou deficiência"
+    orientacao: "Pergunte qual é a doença ou deficiência e o que ela atrapalha no dia a dia ou no trabalho. Para criança, pergunte o que a limita nas atividades da idade."
+    tipo_resposta: texto
+    saidas:
+      - id: tem
+        quando: "tem doença ou deficiência que atrapalha a vida ou o trabalho"
+        acao: seguir
+      - id: nao_tem
+        quando: "não tem doença nem deficiência"
+        acao: desqualificar
+        motivo: "menos de 65 anos e sem doença ou deficiência" # D27
+        mensagem: "Obrigado por explicar. O BPC é para quem tem 65 anos ou mais, ou tem uma deficiência ou doença de longa duração. Pelo que você contou, hoje o caso não se encaixa."
+      - id: nao_sabe
+        quando: "não soube dizer"
+        acao: humano
+        motivo: "não ficou clara a doença ou deficiência"
+
+  - chave: duracao
+    titulo: "Há quanto tempo atrapalha"
+    orientacao: "Pergunte há quanto tempo a doença ou deficiência atrapalha a vida ou o trabalho."
+    tipo_resposta: escolha
+    opcoes: ["2 anos ou mais", "Criança ou nunca conseguiu trabalhar", "Menos de 2 anos"]
+    saidas:
+      - id: menos_de_2
+        quando: "Menos de 2 anos"
+        acao: humano
+        motivo: "limitação há menos de 2 anos: avaliar se é de longo prazo" # D20: Lei 8.742, art. 20 §10 (conferido 13/10)
+      - id: longo_prazo
+        quando: "*"
+        acao: seguir
+
+  - chave: laudo
+    titulo: "Laudo médico"
+    orientacao: "Pergunte se tem laudo ou relatório médico. Diga que não precisa ter agora."
+    tipo_resposta: escolha
+    opcoes: ["Tem", "Não tem", "Não sabe"]
+    saidas:
+      - id: nao_tem
+        quando: "Não tem"
+        acao: seguir
+        efeitos: { etiqueta: "falta-laudo" }
+      - id: outro
+        quando: "*"
+        acao: seguir
+
+  - chave: moradores
+    titulo: "Moradores da casa"
+    orientacao: "Pergunte quantas pessoas moram na casa, contando a pessoa do benefício. Conte só cônjuge ou companheiro, pai e mãe (padrasto ou madrasta só quando falta um dos dois), irmãos solteiros, filhos e enteados solteiros e menores tutelados que moram juntos." # D24: Lei 8.742, art. 20 §1º (conferido 13/10)
+    tipo_resposta: numero
+
+  - chave: renda_total
+    titulo: "Renda total da casa"
+    orientacao: "Pergunte quanto entra por mês na casa somando todos: salários, bicos, pensão alimentícia, benefícios do INSS e o Bolsa Família. Não some: BPC de outra pessoa da casa; benefício de até 1 salário mínimo de outro idoso de 65+ ou de pessoa com deficiência da casa. Antes de registrar, confirme o resumo com o lead (quantas pessoas e quanto entra)." # D22 (Decreto 12.534/2025: Bolsa Família entra) · D23 (conferido 13/10)
+    tipo_resposta: numero
+    calculadora: renda_per_capita
+    calculadora_campos: { renda_total: renda_total, moradores: moradores }
+    saidas:
+      - id: abaixo
+        quando: "abaixo"
+        acao: concluir
+        mensagem: "Pelo que você me contou, o caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etapa: "Qualificação" }
+      - id: acima
+        quando: "acima"
+        acao: seguir
+      - id: depende
+        quando: "*"
+        acao: humano
+        motivo: "faltou dado para a conta da renda por pessoa"
+
+  - chave: gastos_saude
+    titulo: "Gastos com saúde"
+    orientacao: "Pergunte se a família gasta todo mês com remédio, fralda, alimentação especial ou tratamento que o SUS não dá."
+    tipo_resposta: sim_nao
+    saidas:
+      - id: sim
+        quando: "sim"
+        acao: humano
+        motivo: "renda por pessoa acima de 1/4 do salário mínimo, mas com gastos de saúde: avaliar" # D21
+      - id: nao
+        quando: "nao"
+        acao: desqualificar
+        motivo: "renda por pessoa acima de 1/4 do salário mínimo"
+        mensagem: "Obrigado por confirmar. Pelo que você contou, a renda da casa por pessoa fica acima do limite do BPC, então hoje o caso não se encaixa. Se a situação da casa mudar, pode me chamar."

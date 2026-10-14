@@ -1,0 +1,314 @@
+# Conteúdo APROVADO pelo Eduardo em 14/10/2026 ("pode continuar") — fonte: comercial/docs/2026-10-13-roteiros-f4-rascunho.md §3,
+# corrigido pela conferência de citações (…-roteiros-f4-citacoes.md). Mudar texto aqui = novo aprovado dele.
+tese: "Auxílio-acidente (B36)"
+passos:
+  - chave: evento
+    titulo: "Acidente ou doença"
+    orientacao: "Pergunte o que aconteceu: um acidente (de qualquer tipo: trabalho, trânsito, em casa) ou uma doença. Se for doença, entenda se tem ligação com o trabalho antes de escolher; se não ficar claro, peça um pouco mais de contexto."
+    tipo_resposta: escolha
+    opcoes: ["Acidente", "Doença ligada ao trabalho", "Doença sem ligação com o trabalho", "Perda de audição", "Não ficou claro"]
+    saidas:
+      - id: acidente
+        quando: "Acidente"
+        acao: ir_para
+        alvo: data_evento
+        efeitos: { etiqueta: "acidente" }
+      - id: doenca_trabalho
+        quando: "Doença ligada ao trabalho"
+        acao: seguir
+        efeitos: { etiqueta: "doenca" }
+      - id: doenca_comum
+        quando: "Doença sem ligação com o trabalho"
+        acao: desqualificar
+        motivo: "doença comum, sem ligação com o trabalho" # D15: Lei 8.213, arts. 20 e 21 (conferido 13/10)
+        mensagem: "Obrigado por explicar. O auxílio-acidente é para quem sofreu um acidente ou tem doença ligada ao trabalho; pelo que você contou, este caso não se encaixa."
+      - id: perda_auditiva
+        quando: "Perda de audição"
+        acao: humano
+        motivo: "perda auditiva: regra própria (art. 86 §4º)"
+      - id: nao_claro
+        quando: "*"
+        acao: humano
+        motivo: "não ficou claro se foi acidente ou doença do trabalho"
+
+  - chave: nexo
+    titulo: "Ligação da doença com o trabalho"
+    orientacao: "Só para doença. Pergunte que trabalho fazia e como a doença começou ou piorou. Escolha pela história contada (ex.: dor por movimento repetitivo no serviço = causou)."
+    tipo_resposta: escolha
+    opcoes: ["O trabalho causou", "O trabalho piorou", "Não tem certeza", "Sem relação com o trabalho"]
+    saidas:
+      - id: causou
+        quando: "O trabalho causou"
+        acao: seguir
+      - id: piorou
+        quando: "O trabalho piorou"
+        acao: seguir
+      - id: sem_relacao
+        quando: "Sem relação com o trabalho"
+        acao: desqualificar
+        motivo: "doença sem ligação com o trabalho"
+        mensagem: "Obrigado por explicar. Pelo que você contou, a doença não tem ligação com o trabalho, e o auxílio-acidente depende disso."
+      - id: duvidoso
+        quando: "*"
+        acao: humano
+        motivo: "ligação da doença com o trabalho duvidosa"
+
+  - chave: data_evento
+    titulo: "Data do acidente ou da doença"
+    orientacao: "Pergunte quando foi o acidente (ou, na doença, quando precisou parar de trabalhar por causa dela). Só mês e ano: registre o dia 15."
+    tipo_resposta: data
+
+  - chave: auxilio_doenca
+    titulo: "Recebeu auxílio-doença"
+    orientacao: "Pergunte se recebeu auxílio-doença do INSS por causa disso. Licença paga pela prefeitura ou pelo estado não conta."
+    tipo_resposta: sim_nao
+    saidas:
+      - id: sim
+        quando: "sim"
+        acao: ir_para
+        alvo: aposentado
+      - id: nao
+        quando: "nao"
+        acao: seguir
+
+  - chave: regime
+    titulo: "Como trabalhava na época"
+    orientacao: "Pergunte como trabalhava na data do acidente (ou quando a doença começou): carteira assinada, na roça ou na pesca, autônomo/MEI, servidor público ou desempregado. Doméstica com carteira e trabalhador avulso contam como carteira assinada."
+    tipo_resposta: escolha
+    opcoes: ["Carteira assinada", "Rural ou pescador", "Servidor público", "Autônomo ou MEI", "Desempregado", "Não sabe"]
+    saidas:
+      - id: carteira
+        quando: "Carteira assinada"
+        acao: ir_para
+        alvo: aposentado
+      - id: rural
+        quando: "Rural ou pescador"
+        acao: ir_para
+        alvo: aposentado
+      - id: servidor
+        quando: "Servidor público"
+        acao: seguir
+      - id: autonomo
+        quando: "Autônomo ou MEI"
+        acao: ir_para
+        alvo: autonomo_carteira_antes # D10: Lei 8.213, art. 18 §1º
+      - id: desempregado
+        quando: "Desempregado"
+        acao: ir_para
+        alvo: teve_carteira_antes
+      - id: nao_sabe
+        quando: "*"
+        acao: humano
+        motivo: "não soube dizer como trabalhava na época"
+
+  - chave: servidor_regime
+    titulo: "Servidor: CLT, INSS ou regime próprio"
+    orientacao: "Pergunte se era contratado pela CLT (carteira) ou concursado, e, se concursado, se a previdência dele é um regime próprio do município ou do estado (no contracheque o desconto vai para um instituto ou fundo próprio, e não para o INSS). Na dúvida, escolha 'Não sabe'."
+    tipo_resposta: escolha
+    opcoes: ["CLT", "Concursado que paga o INSS", "Concursado com regime próprio de previdência", "Não sabe"]
+    saidas:
+      - id: clt
+        quando: "CLT"
+        acao: ir_para
+        alvo: aposentado
+      - id: concursado_inss
+        quando: "Concursado que paga o INSS"
+        acao: ir_para
+        alvo: aposentado # D14: município sem regime próprio mantém o servidor no INSS
+      - id: regime_proprio
+        quando: "Concursado com regime próprio de previdência"
+        acao: desqualificar
+        motivo: "servidor com regime próprio: sem auxílio-acidente do INSS" # D14: Lei 8.213, art. 12
+        mensagem: "Entendi. Quem é concursado com regime próprio de previdência fica fora do INSS, então o auxílio-acidente do INSS não se aplica ao seu caso."
+      - id: nao_sabe
+        quando: "*"
+        acao: humano
+        motivo: "servidor sem saber se tem regime próprio ou paga o INSS"
+
+  - chave: autonomo_carteira_antes
+    titulo: "Autônomo: tinha carteira assinada antes"
+    orientacao: "Pergunte se, antes de trabalhar por conta própria, tinha trabalhado de carteira assinada."
+    tipo_resposta: sim_nao
+    saidas:
+      - id: sim
+        quando: "sim"
+        acao: humano
+        motivo: "autônomo/MEI na data do acidente, com carteira anterior: avaliar" # D10
+      - id: nao
+        quando: "nao"
+        acao: desqualificar
+        motivo: "autônomo/MEI sem carteira anterior: contribuinte individual não tem auxílio-acidente" # D10: Lei 8.213, art. 18 §1º
+        motivo_perda: "Sem viabilidade"
+        mensagem: "Entendi. Pela lei, o auxílio-acidente do INSS é para quem trabalha de carteira, na roça ou na pesca; quem trabalha por conta própria não tem esse benefício. Pelo que você contou, este caso não se encaixa."
+
+  - chave: teve_carteira_antes
+    titulo: "Desempregado: teve carteira assinada antes"
+    orientacao: "Pergunte se antes do acidente já tinha trabalhado de carteira assinada."
+    tipo_resposta: sim_nao
+    saidas:
+      - id: sim
+        quando: "sim"
+        acao: seguir
+      - id: nao
+        quando: "nao"
+        acao: desqualificar
+        motivo: "desempregado sem carteira antes: sem vínculo que dê direito"
+        mensagem: "Entendi. O auxílio-acidente do INSS é para quem trabalha de carteira, na roça ou na pesca. Pelo que você contou, este caso não se encaixa."
+
+  - chave: ultimo_vinculo
+    titulo: "Saída do último emprego de carteira"
+    orientacao: "Pergunte quando saiu do último emprego de carteira assinada. Só mês e ano: registre o dia 15."
+    tipo_resposta: data
+    calculadora: periodo_de_graca
+    calculadora_campos: { ultimo_vinculo: ultimo_vinculo, evento: data_evento }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: humano
+        motivo: "desempregado no período de graça na data do acidente: avaliar se mantém o direito" # D10
+      - id: fora
+        quando: "fora"
+        acao: desqualificar
+        motivo: "fora do período de graça na data do acidente"
+        mensagem: "Pelo que você contou, na data do acidente já fazia muito tempo que você estava sem contribuir para o INSS, e isso impede o auxílio-acidente."
+      - id: depende
+        quando: "depende"
+        acao: seguir
+
+  - chave: mais_de_120
+    titulo: "Mais de 10 anos pagando o INSS"
+    orientacao: "Pergunte se, somando todos os empregos de carteira, tem mais de 10 anos pagando o INSS, sem ficar muito tempo parado." # D16
+    tipo_resposta: escolha
+    opcoes: ["Sim", "Não", "Não sabe"]
+    calculadora: periodo_de_graca
+    calculadora_campos: { ultimo_vinculo: ultimo_vinculo, evento: data_evento, mais_de_120: mais_de_120 }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: humano
+        motivo: "desempregado no período de graça na data do acidente: avaliar se mantém o direito" # D10
+      - id: fora
+        quando: "fora"
+        acao: desqualificar
+        motivo: "fora do período de graça na data do acidente"
+        mensagem: "Pelo que você contou, na data do acidente já fazia muito tempo que você estava sem contribuir para o INSS, e isso impede o auxílio-acidente."
+      - id: depende
+        quando: "depende"
+        acao: seguir
+
+  - chave: desemprego
+    titulo: "Desemprego comprovado"
+    orientacao: "Pergunte se, depois que saiu do emprego, recebeu seguro-desemprego ou se cadastrou no SINE." # D17
+    tipo_resposta: escolha
+    opcoes: ["Sim", "Não", "Não sabe"]
+    calculadora: periodo_de_graca
+    calculadora_campos: { ultimo_vinculo: ultimo_vinculo, evento: data_evento, mais_de_120: mais_de_120, desemprego: desemprego }
+    saidas: # D10 e D17: desempregado que chega aqui sempre vai para a equipe; a conta fica registrada para ela
+      - id: dentro
+        quando: "dentro"
+        acao: humano
+        motivo: "desempregado no período de graça na data do acidente: avaliar se mantém o direito"
+      - id: fora
+        quando: "fora"
+        acao: humano
+        motivo: "sem seguro-desemprego/SINE: ver outra prova de desemprego (Súmula 27 TNU)"
+      - id: depende
+        quando: "*"
+        acao: humano
+        motivo: "período de graça depende dos 10 anos pagando o INSS ou da prova de desemprego"
+
+  - chave: aposentado
+    titulo: "Recebe aposentadoria"
+    orientacao: "Pergunte se recebe alguma aposentadoria hoje."
+    tipo_resposta: sim_nao
+    saidas:
+      - id: nao
+        quando: "nao"
+        acao: ir_para
+        alvo: sequela
+      - id: sim
+        quando: "sim"
+        acao: seguir
+
+  - chave: aposentadoria_quando
+    titulo: "Aposentou antes ou depois do acidente"
+    orientacao: "Pergunte se se aposentou antes ou depois do acidente (ou da doença). Para escolher entre as opções de 'depois', use a resposta do auxílio-doença que ele já deu, sem perguntar de novo."
+    tipo_resposta: escolha
+    opcoes: ["Antes do acidente", "Depois, e tinha recebido auxílio-doença", "Aposentadoria por invalidez por causa deste acidente", "Depois, sem ter recebido auxílio-doença", "Não sabe"]
+    saidas:
+      - id: antes
+        quando: "Antes do acidente"
+        acao: desqualificar
+        motivo: "aposentado antes do acidente"
+        mensagem: "Entendi. O auxílio-acidente não pode ser pago junto com uma aposentadoria que já existia antes do acidente, então neste caso não há o que pedir."
+      - id: invalidez_do_acidente
+        quando: "Aposentadoria por invalidez por causa deste acidente"
+        acao: humano
+        motivo: "aposentadoria por invalidez decorrente do próprio acidente: avaliar se houve intervalo com auxílio-acidente" # D12: sem acórdão achado (STJ/TRF4), por isso equipe
+      - id: depois_com_ad
+        quando: "Depois, e tinha recebido auxílio-doença"
+        acao: seguir
+      - id: outro
+        quando: "*"
+        acao: humano
+        motivo: "aposentado depois do acidente sem auxílio-doença, ou não sabe quando aposentou"
+
+  - chave: aposentadoria_data
+    titulo: "Data da aposentadoria"
+    orientacao: "Pergunte quando se aposentou. Só mês e ano: registre o dia 15."
+    tipo_resposta: data
+    calculadora: prescricao_5_anos
+    calculadora_campos: { data: aposentadoria_data }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: seguir
+      - id: ultimo_ano
+        quando: "ultimo_ano"
+        acao: humano
+        motivo: "aposentou há 4 a 5 anos: atrasados perto de prescrever"
+      - id: prescrito
+        quando: "*"
+        acao: humano
+        motivo: "aposentou há mais de 5 anos: ver se houve pedido que suspenda a prescrição" # D11
+
+  - chave: sequela
+    titulo: "Sequela"
+    orientacao: "Pergunte se ficou alguma limitação depois do acidente ou da doença, mesmo pequena: dor, perda de força ou de movimento, dificuldade para fazer o serviço como antes. Antes de escolher 'recuperado', confirme: 'Então hoje você faz tudo como antes, sem nenhuma limitação?'"
+    tipo_resposta: texto
+    saidas:
+      - id: limitacao
+        quando: "ficou alguma limitação, mesmo pequena"
+        acao: seguir
+      - id: recuperado
+        quando: "confirmou que voltou 100% ao que era antes"
+        acao: desqualificar
+        motivo: "sem sequela: voltou 100%"
+        mensagem: "Que bom que você se recuperou totalmente! O auxílio-acidente é para quem ficou com alguma sequela. Se algo mudar, pode me chamar."
+      - id: incerto
+        quando: "ainda em tratamento ou não sabe dizer"
+        acao: humano
+        motivo: "sequela incerta ou ainda em tratamento" # D13
+
+  - chave: ja_pediu_inss
+    titulo: "Já pediu no INSS"
+    orientacao: "Pergunte se já pediu o auxílio-acidente no INSS e como está. É só para a reunião: não muda nada no roteiro."
+    tipo_resposta: escolha
+    opcoes: ["Não pediu", "Pediu e foi negado", "Pediu e está em análise", "Não sabe"]
+
+  - chave: laudo
+    titulo: "Laudo ou exame"
+    orientacao: "Pergunte se tem laudo, exame ou relatório médico do acidente ou da doença. Diga que não precisa ter agora."
+    tipo_resposta: escolha
+    opcoes: ["Tem", "Não tem", "Não sabe"]
+    saidas:
+      - id: nao_tem
+        quando: "Não tem"
+        acao: seguir
+        mensagem: "Pelo que você me contou, seu caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etiqueta: "falta-laudo", etapa: "Qualificação" }
+      - id: outro
+        quando: "*"
+        acao: seguir
+        mensagem: "Pelo que você me contou, seu caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etapa: "Qualificação" }

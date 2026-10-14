@@ -1,0 +1,221 @@
+# Conteúdo APROVADO pelo Eduardo em 14/10/2026 ("pode continuar") — fonte: comercial/docs/2026-10-13-roteiros-f4-rascunho.md §3,
+# corrigido pela conferência de citações (…-roteiros-f4-citacoes.md). Mudar texto aqui = novo aprovado dele.
+tese: "Salário-maternidade" # D32: o seed cria a tese
+passos:
+  - chave: para_quem
+    titulo: "É a mãe ou fala por ela"
+    orientacao: "Pergunte se quem está falando é a mãe ou alguém da família. Se for outra pessoa, faça as próximas perguntas sobre a mãe."
+    tipo_resposta: escolha
+    opcoes: ["É a mãe", "Fala pela mãe"]
+
+  - chave: situacao
+    titulo: "Situação"
+    orientacao: "Pergunte se está grávida, se o bebê já nasceu, ou se é adoção ou guarda. Na guarda, confirme se é para fins de adoção." # D34: sem limite de idade da criança
+    tipo_resposta: escolha
+    opcoes: ["Grávida", "Bebê já nasceu", "Bebê nasceu sem vida", "Adoção ou guarda para adoção", "Guarda que não é para adoção", "Perdeu o bebê (aborto)"]
+    saidas:
+      - id: gravida
+        quando: "Grávida"
+        acao: seguir
+      - id: guarda_sem_adocao
+        quando: "Guarda que não é para adoção"
+        acao: desqualificar
+        motivo: "guarda que não é para fins de adoção"
+        mensagem: "Entendi. O salário-maternidade vale para parto, adoção ou guarda para fins de adoção. Guarda com outra finalidade não dá direito a ele."
+      - id: aborto
+        quando: "Perdeu o bebê (aborto)"
+        acao: humano
+        motivo: "aborto: benefício de 2 semanas, equipe avalia" # D29
+      - id: nascido
+        quando: "*"
+        acao: ir_para
+        alvo: ja_recebeu
+
+  - chave: semanas
+    titulo: "Semanas de gestação"
+    orientacao: "Pergunte de quantas semanas está."
+    tipo_resposta: numero
+    calculadora: data_prevista_parto
+    calculadora_campos: { semanas: semanas }
+    saidas:
+      - id: depende
+        quando: "depende"
+        acao: humano
+        motivo: "semanas de gestação fora do normal"
+      - id: ok
+        quando: "*"
+        acao: ir_para
+        alvo: data_parto
+
+  - chave: ja_recebeu
+    titulo: "Já recebeu por este parto"
+    orientacao: "Pergunte se já recebeu salário-maternidade por este parto (ou por esta criança, na adoção)."
+    tipo_resposta: sim_nao
+    saidas:
+      - id: sim
+        quando: "sim"
+        acao: desqualificar
+        motivo: "já recebeu salário-maternidade por este parto"
+        mensagem: "Entendi. Como você já recebeu o salário-maternidade por esse parto, não há o que pedir de novo."
+      - id: nao
+        quando: "nao"
+        acao: seguir
+
+  - chave: data_parto
+    titulo: "Data do parto"
+    orientacao: "Grávida: NÃO pergunte — registre a data do 'parto previsto' que a conta das semanas devolveu (ou a data provável que o médico deu, se ela contou). Já nasceu: pergunte a data do parto. Adoção: a data da adoção ou da guarda." # D28
+    tipo_resposta: data
+    calculadora: prescricao_5_anos
+    calculadora_campos: { data: data_parto }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: ir_para
+        alvo: trabalho
+      - id: ultimo_ano
+        quando: "ultimo_ano"
+        acao: humano
+        motivo: "parto há 4 a 5 anos: risco de prazo"
+      - id: prescrito
+        quando: "*"
+        acao: seguir
+
+  - chave: pediu_antes_5_anos
+    titulo: "Pediu no INSS dentro dos 5 anos"
+    orientacao: "Pergunte se ela já tinha pedido o salário-maternidade no INSS antes." # D35 (conferido 13/10)
+    tipo_resposta: sim_nao
+    saidas:
+      - id: sim
+        quando: "sim"
+        acao: humano
+        motivo: "parto há mais de 5 anos, com pedido anterior no INSS"
+      - id: nao
+        quando: "nao"
+        acao: desqualificar
+        motivo: "parto há mais de 5 anos, sem pedido anterior"
+        mensagem: "Entendi. O prazo para pedir o salário-maternidade é de 5 anos depois do parto, e esse prazo já passou."
+
+  - chave: trabalho
+    titulo: "Como trabalhava na data do parto"
+    orientacao: "Pergunte como ela trabalhava na data do parto (grávida: como trabalha hoje). Carteira assinada em empresa comum: quem paga é a empresa. Demitida antes do parto entra como 'saiu do emprego'." # D33
+    tipo_resposta: escolha
+    opcoes: ["Carteira assinada em empresa", "Doméstica, empregada de MEI ou intermitente", "Paga o INSS por conta e está em dia", "Saiu do emprego e ficou desempregada", "Parou de pagar o carnê ou o MEI", "Trabalhadora rural ou pescadora", "Nunca pagou o INSS", "Não sabe"]
+    saidas:
+      - id: carteira_empresa
+        quando: "Carteira assinada em empresa"
+        acao: humano
+        motivo: "carteira ativa no parto: quem paga é a empresa, avaliar caso trabalhista"
+      - id: inss_paga
+        quando: "Doméstica, empregada de MEI ou intermitente"
+        acao: ir_para
+        alvo: ja_pediu_inss
+      - id: em_dia
+        quando: "Paga o INSS por conta e está em dia"
+        acao: ir_para
+        alvo: ja_pediu_inss
+      - id: desempregada
+        quando: "Saiu do emprego e ficou desempregada"
+        acao: ir_para
+        alvo: ultima_contribuicao
+      - id: parou_carne
+        quando: "Parou de pagar o carnê ou o MEI"
+        acao: seguir
+      - id: rural
+        quando: "Trabalhadora rural ou pescadora"
+        acao: humano
+        motivo: "mãe rural ou pescadora: prova da atividade" # decisão 13/10
+      - id: nunca_pagou
+        quando: "Nunca pagou o INSS"
+        acao: desqualificar
+        motivo: "nunca contribuiu e não é rural"
+        mensagem: "Entendi. Pelo INSS, o salário-maternidade é para quem contribui (ou contribuiu há pouco tempo) ou trabalha na roça ou na pesca. Pelo que você contou, hoje o caso não se encaixa."
+      - id: nao_sabe
+        quando: "*"
+        acao: humano
+        motivo: "não soube dizer como trabalhava na data do parto"
+
+  - chave: facultativa
+    titulo: "Pagava como dona de casa ou estudante"
+    orientacao: "Pergunte se, quando pagava o carnê, ela pagava como dona de casa ou estudante (sem ter trabalho próprio)."
+    tipo_resposta: sim_nao
+
+  - chave: ultima_contribuicao
+    titulo: "Última contribuição"
+    orientacao: "Pergunte quando foi a última contribuição ao INSS (ou a saída do último emprego de carteira). Só mês e ano: registre o dia 15."
+    tipo_resposta: data
+    calculadora: periodo_de_graca
+    calculadora_campos: { ultimo_vinculo: ultima_contribuicao, evento: data_parto, facultativa: facultativa }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: ir_para
+        alvo: ja_pediu_inss
+      - id: fora
+        quando: "fora"
+        acao: desqualificar
+        motivo: "fora do período de graça na data do parto"
+        mensagem: "Pelo que você contou, na data do parto já tinha passado o prazo em que o INSS ainda protege quem parou de contribuir, então hoje o caso não se encaixa."
+      - id: depende
+        quando: "depende"
+        acao: seguir
+
+  - chave: mais_de_120
+    titulo: "Mais de 10 anos pagando o INSS"
+    orientacao: "Pergunte se, somando tudo, ela tem mais de 10 anos pagando o INSS, sem ficar muito tempo parada." # D16
+    tipo_resposta: escolha
+    opcoes: ["Sim", "Não", "Não sabe"]
+    calculadora: periodo_de_graca
+    calculadora_campos: { ultimo_vinculo: ultima_contribuicao, evento: data_parto, mais_de_120: mais_de_120 }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: ir_para
+        alvo: ja_pediu_inss
+      - id: fora
+        quando: "fora"
+        acao: desqualificar
+        motivo: "fora do período de graça na data do parto"
+        mensagem: "Pelo que você contou, na data do parto já tinha passado o prazo em que o INSS ainda protege quem parou de contribuir, então hoje o caso não se encaixa."
+      - id: depende
+        quando: "depende"
+        acao: seguir
+
+  - chave: desemprego
+    titulo: "Desemprego comprovado"
+    orientacao: "Pergunte se, depois que saiu do emprego, ela recebeu seguro-desemprego ou se cadastrou no SINE." # D17
+    tipo_resposta: escolha
+    opcoes: ["Sim", "Não", "Não sabe"]
+    calculadora: periodo_de_graca
+    calculadora_campos: { ultimo_vinculo: ultima_contribuicao, evento: data_parto, mais_de_120: mais_de_120, desemprego: desemprego }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: seguir
+      - id: fora
+        quando: "fora"
+        acao: humano
+        motivo: "sem seguro-desemprego/SINE: ver outra prova de desemprego (Súmula 27 TNU)" # D17: aqui "fora" só vem de resposta "não"
+      - id: depende
+        quando: "*"
+        acao: humano
+        motivo: "período de graça depende dos 10 anos pagando o INSS ou da prova de desemprego"
+
+  - chave: ja_pediu_inss
+    titulo: "Já pediu no INSS"
+    orientacao: "Pergunte se ela já pediu o salário-maternidade no INSS e como está." # D30
+    tipo_resposta: escolha
+    opcoes: ["Não pediu", "Pediu há menos de 30 dias e está em análise", "Pediu há mais de 30 dias e não saiu", "Pediu e foi negado", "Não sabe"]
+    saidas:
+      - id: parado
+        quando: "Pediu há mais de 30 dias e não saiu"
+        acao: humano
+        motivo: "pedido parado no INSS há mais de 30 dias"
+      - id: negado
+        quando: "Pediu e foi negado"
+        acao: humano
+        motivo: "pedido negado no INSS"
+      - id: qualificada
+        quando: "*"
+        acao: concluir
+        mensagem: "Pelo que você me contou, o seu caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etapa: "Qualificação" }
