@@ -4,7 +4,7 @@
 
 **Goal:** a IA do Atendimento passa a qualificar o lead seguindo um roteiro de passos da tese (cadastro), e as consequências de cada resposta (segue, pula, desqualifica, chama a equipe, qualificado) são aplicadas por regra fixa no código — não pela IA.
 
-**Architecture:** tabela `ramon_roteiro_passos` (passos por tese; `thesis_id` nulo = passo comum da conta). Quatro peças em `app/services/ramon/roteiro/`: `Calculadoras` (contas exatas), `Resposta` (normaliza a resposta e casa com o "quando" das saídas), `Efeitos` (etiqueta, etapa, Perdido, equipe + sino) e `Registro` (grava, calcula, escolhe a saída, avança). `Ramon::Roteiro` é a porta de entrada (`atual`, `registrar`, textos para a IA). Duas tools novas do Captain (`roteiro_passo_atual`, `roteiro_registrar`) chamam o motor. A skill de triagem e as regras globais mudam no seed, mas só são **ativadas** com o aprovado do Eduardo.
+**Architecture:** tabela `ramon_roteiro_passos` (passos por tese; `thesis_id` nulo = passo comum da conta). Quatro peças em `app/services/ramon/roteiro/`: `Calculadoras` (contas exatas), `Resposta` (normaliza a resposta e casa com o "quando" das saídas), `Efeitos` (etiqueta, etapa, Perdido, equipe + sino — etapa e Perdido viram sugestão no Cockpit fora do piloto total) e `Registro` (grava, calcula, escolhe a saída, avança). `Ramon::Roteiro` é a porta de entrada (`atual`, `registrar`, `reabrir`, textos para a IA). Recusar o Perdido sugerido pelo roteiro, ou tirar o lead do Perdido no Kanban, reabre o roteiro no passo que decidiu. Duas tools novas do Captain (`roteiro_passo_atual`, `roteiro_registrar`) chamam o motor. A skill de triagem e as regras globais mudam no seed, mas só são **ativadas** com o aprovado do Eduardo.
 
 **Tech Stack:** Rails 7.1 (Chatwoot 4.15 fork), RSpec, Captain tools (`enterprise/lib/captain/tools/`).
 
@@ -16,11 +16,12 @@
 - Tabela nova com prefixo `ramon_` (convenção do fork: `ramon_reunioes`, `ramon_fluxos`…): `ramon_roteiro_passos`, model `RoteiroPasso` com `self.table_name`.
 - `db/schema.rb` editado à mão (não há Postgres local), versão do topo `2026_10_13_200001`.
 - Sem Ruby local (Smart App Control): Ruby é validado pelo **CI**; lint antes do push com `rubocop-vps` (Git Bash, ~10 s). Limites: `Metrics/MethodLength` 19, `Metrics/AbcSize` 26, linha 150.
-- **Specs em `spec/enterprise` não rodam no CI FOSS** (o CI apaga `enterprise/`). Por isso toda a lógica fica em `app/services/ramon/roteiro/` (testada no CI) e as tools são finas; a prova delas é o `rails runner` da Task 6.
+- **Specs em `spec/enterprise` não rodam no CI FOSS** (o CI apaga `enterprise/`). Por isso toda a lógica fica em `app/services/ramon/roteiro/` (testada no CI) e as tools são finas; a prova delas é o `rails runner` da Task 7. Pelo mesmo motivo o motor **não** usa `Ramon::CopilotoModo` (vive em `enterprise/lib`): lê `conversation.custom_attributes['copiloto_modo']` direto.
+- **Toda conta nasce com o funil e os motivos de perda padrão** (`Account after_create` → `Leads::SeedDefaultConfigService`: etapas Novo, Qualificação, …, Fechado (ganho), Perdido; motivos Sem viabilidade, Outro, …; e as teses do `theses_seed.yml`). Specs usam as etapas semeadas (`account.lead_stages.find_by!(name: 'Novo')`) — criar outra "Novo"/"Perdido" quebra a unicidade. Teses dos specs com o nome padrão da factory.
 - Definição compacta (`module Ramon::Roteiro::Resposta`) **não** põe `Ramon::Roteiro` na nesting: dentro de `Resposta`, `Efeitos` e `Registro`, referenciar outras peças pelo nome completo (`Ramon::Roteiro::Calculadoras`).
 - Salário mínimo só por `Ramon::SalarioMinimo.vigente(data)` (já existe, F0).
 - Texto que fala com cliente (skill de triagem, regras globais) só é **ativado** (`rake 'ramon:inteligencia:seed[2]'`) depois do aprovado do Eduardo. O código sobe antes.
-- Os efeitos do motor valem em qualquer modo da conversa (rascunho inclusive): são regra configurada pelo admin no passo. Sem passos cadastrados (até a F4), nada muda em produção.
+- Efeitos por modo da conversa (grilling 13/10): **etiqueta** e **passar para a equipe** valem direto em qualquer modo; **mudar etapa** e **Perdido** só direto em `piloto_total` — em rascunho, piloto limitado, manual ou lead sem conversa viram `CopilotSuggestion` (`move_stage` / `acao: perdido`) com `payload['origem'] = 'roteiro'`. O desfecho do roteiro é gravado em qualquer modo. Sem passos cadastrados (até a F4), nada muda em produção.
 - i18n: `en/ramon.json` **e** `pt_BR/ramon.json`.
 - Commits: Conventional Commits + rodapé de atribuição da sessão.
 
@@ -32,12 +33,22 @@
 5. `LeadActivity` só quando a saída tem efeito ou encerra o roteiro (não em todo "seguir", para não poluir o histórico).
 6. Validar `ir_para` com destino existente fica para o salvar da tela (F2); no motor, destino inexistente → equipe com motivo "roteiro sem saída".
 
+**Decisões do grilling (Eduardo, 13/10) — valem sobre a spec onde divergirem:**
+- Q1/Q9 — Perdido e mudança de etapa: direto só em `piloto_total` (e nos modos "sozinho até…" da F3); nos outros modos viram sugestão no Cockpit. Q5 — passar para a equipe: direto em qualquer modo. Q8 — etiquetas: direto.
+- Q2 — desqualificado: a conversa **fica com o robô, calada** (modo manual, sem `bot_handoff!`).
+- Q6 — com a sugestão de Perdido pendente a IA não faz mais perguntas do roteiro (o desfecho já está gravado, com `aguarda_equipe`). **Aprovar** → Perdido + etiqueta `desqualificado-ia` + IA calada. **Recusar** → o roteiro reabre.
+- Q3/Q7/Q12 — `Ramon::Roteiro.reabrir`: apaga só a resposta do **passo que decidiu** (`decisivo`), volta a perguntar dali e devolve a conversa ao **modo de antes** (guardado em `conversation.custom_attributes['copiloto_modo_antes_roteiro']`) e tira a etiqueta. Também reabre quando o lead **sai do Perdido no Kanban** (só desfecho desqualificado). O botão no painel fica para a F2 (lá entra o "reiniciar", se fizer falta).
+- Q10 — motivo de perda: a saída pode trazer `motivo_perda` (nome do catálogo `lost_reasons` da conta; padrão "Sem viabilidade"); o texto `motivo` vai para o histórico e o estado.
+- Q11 — passos comuns rodam em **toda tese**. Tese sem passos próprios: ao fim dos comuns o roteiro **não conclui** — a IA recebe "passos comuns concluídos, siga a triagem de sempre".
+- Q13 — correção: registrar de novo um passo já respondido vale a nova resposta e o roteiro volta a seguir **dali** (passos pulados antes passam a ser perguntados). Depois do desfecho, só reabrindo.
+- Q4 — a prova da F1 é motor + tools no `rails runner`; a IA conversando de verdade fica para a caixa Teste (F4).
+
 ## Review Focus
 
-1. **Lead adianta uma resposta** ("já tenho advogado, e o acidente foi em janeiro") → o passo respondido não é perguntado de novo e o passo atual não pula os que faltam (Task 4, spec "resposta adiantada").
+1. **Lead adianta uma resposta** ("já tenho advogado, e o acidente foi em janeiro") → o passo respondido não é perguntado de novo e o passo atual não pula os que faltam; **corrigir** uma resposta volta a seguir dali (Task 4).
 2. **A IA manda o valor num formato de gente** ("Sim!", "12/03/2025", "R$ 1.200,50") → normaliza; formato inválido (31/02, "talvez" num sim/não) → erro de volta para a IA e **nada é gravado** (Task 3 e Task 4).
 3. **Saída sem casar ou `ir_para` para chave inexistente** → o lead vai para a equipe com motivo "roteiro sem saída" e o responsável recebe o sino, em vez de travar a conversa (Task 4).
-4. **A IA insiste depois do desfecho** (registra outro passo num roteiro encerrado) → recusa, nada muda; **lead já ganho** desqualificado → não volta para Perdido (Task 4).
+4. **A IA insiste depois do desfecho** (registra outro passo ou corrige um, num roteiro encerrado) → recusa, nada muda; **lead já ganho** desqualificado → não volta para Perdido nem vira sugestão (Task 4).
 5. **Trocar a tese do lead no meio** → o roteiro recomeça na tese nova e as respostas dos passos comuns ficam (Task 4).
 
 ---
@@ -330,7 +341,7 @@ git add app/services/ramon/roteiro/calculadoras.rb spec/services/ramon/roteiro/c
 git commit -m "feat(roteiro): calculadoras exatas do roteiro da tese (graça, renda, prescrição, 65 anos, parto, prazo INSS)"
 ```
 
-(O spec roda no CI — Task 6. Se o `rubocop-vps -a` corrigir algo, re-adicionar.)
+(O spec roda no CI — Task 7. Se o `rubocop-vps -a` corrigir algo, re-adicionar.)
 
 ---
 
@@ -347,7 +358,7 @@ git commit -m "feat(roteiro): calculadoras exatas do roteiro da tese (graça, re
 **Interfaces:**
 - Consumes: `Ramon::Roteiro::Calculadoras::NOMES` (Task 1)
 - Produces:
-  - `RoteiroPasso` (`account`, `thesis` opcional, `position`, `chave`, `titulo`, `orientacao`, `tipo_resposta`, `opcoes` (Array), `calculadora`, `calculadora_campos` (Hash campo → chave), `saidas` (Array de Hash com chaves String: `id`, `quando`, `acao`, `alvo`, `motivo`, `mensagem`, `efeitos` → `{ 'etiqueta', 'etapa' }`), `edited`)
+  - `RoteiroPasso` (`account`, `thesis` opcional, `position`, `chave`, `titulo`, `orientacao`, `tipo_resposta`, `opcoes` (Array), `calculadora`, `calculadora_campos` (Hash campo → chave), `saidas` (Array de Hash com chaves String: `id`, `quando`, `acao`, `alvo`, `motivo`, `motivo_perda` (nome do catálogo `lost_reasons`), `mensagem`, `efeitos` → `{ 'etiqueta', 'etapa' }`), `edited`)
   - `RoteiroPasso::TIPOS`, `RoteiroPasso::ACOES`, scope `RoteiroPasso.comuns`, default order `position, id`
   - `Thesis#roteiro_passos`
   - factory `:roteiro_passo`
@@ -409,6 +420,15 @@ RSpec.describe RoteiroPasso do
 
   it 'chave só com minúsculas, números e _' do
     expect(build(:roteiro_passo, account: account, thesis: thesis, chave: 'Tem Advogado')).not_to be_valid
+  end
+
+  it 'motivo de perda só do catálogo da conta (Sem viabilidade nasce com a conta)' do
+    ok = { 'id' => 'a', 'acao' => 'desqualificar', 'motivo' => 'x', 'motivo_perda' => 'Sem viabilidade' }
+    expect(build(:roteiro_passo, account: account, thesis: thesis, saidas: [ok])).to be_valid
+
+    passo = build(:roteiro_passo, account: account, thesis: thesis, saidas: [ok.merge('motivo_perda' => 'Inventado')])
+    expect(passo).not_to be_valid
+    expect(passo.errors[:saidas].join).to include('fora do catálogo')
   end
 end
 ```
@@ -500,7 +520,8 @@ Bloco novo, logo depois do `end` de `create_table "ramon_reunioes"` (antes de `c
 # Um passo do roteiro de qualificação da tese (spec 2026-10-13 §3.1). thesis nil = passo comum da conta, roda antes
 # do roteiro de qualquer tese. saidas (avaliadas em ordem, a 1ª que casa vale):
 #   [{ 'id', 'quando' (valor, faixa '< 64', resultado da calculadora ou '*'), 'acao', 'alvo' (ir_para),
-#      'motivo' (desqualificar/humano), 'mensagem' (base da resposta), 'efeitos' => { 'etiqueta', 'etapa' } }]
+#      'motivo' (desqualificar/humano), 'motivo_perda' (catálogo lost_reasons; padrão Sem viabilidade),
+#      'mensagem' (base da resposta), 'efeitos' => { 'etiqueta', 'etapa' } }]
 class RoteiroPasso < ApplicationRecord
   self.table_name = 'ramon_roteiro_passos'
 
@@ -526,13 +547,20 @@ class RoteiroPasso < ApplicationRecord
   def saidas_validas
     return errors.add(:saidas, 'deve ser uma lista') unless saidas.is_a?(Array)
 
-    saidas.each.with_index(1) do |saida, n|
-      acao = saida['acao']
-      errors.add(:saidas, "#{n}: falta o id") if saida['id'].blank?
-      errors.add(:saidas, "#{n}: ação inválida (#{acao})") unless ACOES.include?(acao)
-      errors.add(:saidas, "#{n}: motivo obrigatório") if %w[desqualificar humano].include?(acao) && saida['motivo'].blank?
-      errors.add(:saidas, "#{n}: falta o passo de destino") if acao == 'ir_para' && saida['alvo'].blank?
-    end
+    saidas.each.with_index(1) { |saida, n| erros_da_saida(saida).each { |erro| errors.add(:saidas, "#{n}: #{erro}") } }
+  end
+
+  def erros_da_saida(saida)
+    acao = saida['acao']
+    [('falta o id' if saida['id'].blank?),
+     ("ação inválida (#{acao})" unless ACOES.include?(acao)),
+     ('motivo obrigatório' if %w[desqualificar humano].include?(acao) && saida['motivo'].blank?),
+     ('falta o passo de destino' if acao == 'ir_para' && saida['alvo'].blank?),
+     ("motivo de perda fora do catálogo (#{saida['motivo_perda']})" if motivo_perda_invalido?(saida['motivo_perda']))].compact
+  end
+
+  def motivo_perda_invalido?(motivo)
+    motivo.present? && !account&.lost_reasons&.exists?(name: motivo)
   end
 end
 ```
@@ -569,10 +597,14 @@ git commit -m "feat(roteiro): tabela de passos do roteiro da tese (comuns e por 
   - `Ramon::Roteiro::Resposta.normalizar(passo, valor) -> [valor_normalizado (String|nil), erro (String|nil)]` — vazio → `[nil, nil]`
   - `Ramon::Roteiro::Resposta.casa?(quando, valor) -> Boolean`
   - `Ramon::Roteiro::Efeitos.aplicar(lead, passo, saida) -> void` (saida = Hash com chaves String)
-  - `Ramon::Roteiro::Efeitos::ETIQUETA_DESQUALIFICADO = 'desqualificado-ia'`
+  - `Ramon::Roteiro::Efeitos.direto?(lead) -> Boolean` (conversa em `piloto_total`)
+  - `Ramon::Roteiro::Efeitos.calar(lead) -> void` (etiqueta `desqualificado-ia` + modo manual guardando o de antes; usada também ao aprovar a sugestão — Task 5)
+  - `Ramon::Roteiro::Efeitos.reabrir(lead) -> void` (devolve o modo de antes, tira a etiqueta, anota "roteiro reaberto")
+  - `Ramon::Roteiro::Efeitos::ETIQUETA_DESQUALIFICADO = 'desqualificado-ia'`, `MOTIVO_PERDA_PADRAO = 'Sem viabilidade'`, `MODO_ANTES = 'copiloto_modo_antes_roteiro'`
+  - Sugestões criadas: `kind: 'move_stage'` (`payload`: `etapa_sugerida`, `justificativa`) e `kind: 'acao'` (`payload`: `acao: 'perdido'`, `lost_reason`, `texto`), ambas com `origem: 'roteiro'`, `lead_name`, `stage_name`
   - `LeadActivity` `kind: 'roteiro'`, `to_value: "<título do passo> → <resumo>"`
 
-Os efeitos são testados pelo motor na Task 4 (cenário completo com conversa, etapas e sino).
+Os efeitos são testados pelo motor na Task 4 (cenário completo com conversa, etapas, sugestões e sino) e na Task 5 (reabrir).
 
 - [ ] **Step 1: Spec da resposta (falha)**
 
@@ -681,10 +713,13 @@ Atenção: `BigDecimal('1200.50').to_s('F')` = `"1200.5"` — o spec espera `'12
 
 ```ruby
 # Consequências fixas de uma saída do roteiro (spec 2026-10-13 §3.4) — configuradas pelo admin no passo; a IA não
-# decide. Etiqueta e etapa (só aberta) em qualquer saída; desqualificar → Perdido + etiqueta + conversa em manual;
-# humano → conversa sai do bot, volta a rascunho e o responsável é avisado. Histórico do lead: LeadActivity 'roteiro'.
+# decide. Por modo da conversa (decisões 13/10): etiqueta e "passar para a equipe" valem direto em qualquer modo;
+# etapa (só aberta) e Perdido só direto em piloto total — nos outros modos, e sem conversa, viram sugestão no Cockpit.
+# Perdido de verdade = etiqueta desqualificado-ia + IA calada (a conversa fica com o robô). Histórico: LeadActivity 'roteiro'.
 module Ramon::Roteiro::Efeitos
   ETIQUETA_DESQUALIFICADO = 'desqualificado-ia'.freeze
+  MOTIVO_PERDA_PADRAO = 'Sem viabilidade'.freeze
+  MODO_ANTES = 'copiloto_modo_antes_roteiro'.freeze
   ENCERRA = %w[desqualificar humano concluir].freeze
 
   module_function
@@ -692,10 +727,16 @@ module Ramon::Roteiro::Efeitos
   def aplicar(lead, passo, saida)
     efeitos = saida['efeitos'] || {}
     etiquetar(lead, efeitos['etiqueta'])
-    mover(lead, efeitos['etapa'])
-    desqualificar(lead, saida['motivo']) if saida['acao'] == 'desqualificar'
+    mover(lead, efeitos['etapa'], passo)
+    desqualificar(lead, passo, saida) if saida['acao'] == 'desqualificar'
     humano(lead, saida['motivo']) if saida['acao'] == 'humano'
     anotar(lead, "#{passo.titulo} → #{resumo(saida)}") if ENCERRA.include?(saida['acao']) || efeitos.values.any?(&:present?)
+  end
+
+  # ponytail: lê só o atributo da conversa (Ramon::CopilotoModo vive em enterprise/, fora do CI); se o
+  # RAMON_COPILOTO_MODO_DEFAULT um dia virar piloto_total, considerar o default aqui também.
+  def direto?(lead)
+    lead.conversation&.custom_attributes&.[]('copiloto_modo') == 'piloto_total'
   end
 
   # Label do Chatwoot é minúscula (Label#title.downcase).
@@ -706,21 +747,63 @@ module Ramon::Roteiro::Efeitos
   end
 
   # Só etapa aberta: ganho nunca; perdido só pela saída desqualificar.
-  def mover(lead, nome)
+  def mover(lead, nome, passo)
     return if nome.blank?
 
     etapa = lead.account.lead_stages.find_by(name: nome, is_won: false, is_lost: false)
     return anotar(lead, "etapa '#{nome}' nao existe no funil") if etapa.nil?
+    return if lead.lead_stage_id == etapa.id
+    return lead.update!(lead_stage: etapa) if direto?(lead)
 
-    lead.update!(lead_stage: etapa) unless lead.lead_stage_id == etapa.id
+    sugerir(lead, 'move_stage', 'etapa_sugerida' => etapa.name, 'justificativa' => "roteiro da IA: #{passo.titulo}")
+  end
+
+  def desqualificar(lead, passo, saida)
+    return if lead.won_at || lead.lost_at
+
+    motivo_perda = saida['motivo_perda'].presence || MOTIVO_PERDA_PADRAO
+    return perder(lead, motivo_perda) if direto?(lead)
+
+    sugerir(lead, 'acao', 'acao' => 'perdido', 'lost_reason' => motivo_perda,
+                          'texto' => "Marcar como perdido (#{motivo_perda}) - roteiro: #{passo.titulo}, #{saida['motivo']}")
+  end
+
+  def perder(lead, motivo_perda)
+    perdido = lead.account.lead_stages.find_by(is_lost: true)
+    lead.update!(lead_stage: perdido, lost_reason: motivo_perda) if perdido
+    calar(lead)
   end
 
   # A mensagem de encerramento desta resposta ainda sai: o ResponseBuilderJob guarda o modo do início da resposta.
-  def desqualificar(lead, motivo)
-    perdido = lead.account.lead_stages.find_by(is_lost: true)
-    lead.update!(lead_stage: perdido, lost_reason: motivo) if perdido && lead.won_at.nil? && lead.lost_at.nil?
+  # Também chamada ao aprovar o Perdido sugerido pelo roteiro (CopilotSuggestion#marcar_perdido).
+  def calar(lead)
     etiquetar(lead, ETIQUETA_DESQUALIFICADO)
     modo(lead, 'manual')
+  end
+
+  # Roteiro reaberto (Ramon::Roteiro.reabrir): devolve o modo de antes e tira a etiqueta de desqualificado.
+  def reabrir(lead)
+    restaurar(lead.conversation) if lead.conversation
+    anotar(lead, 'roteiro reaberto')
+  end
+
+  def restaurar(conversa)
+    attrs = conversa.custom_attributes || {}
+    conversa.update!(custom_attributes: attrs.except(MODO_ANTES).merge('copiloto_modo' => attrs[MODO_ANTES])) if attrs.key?(MODO_ANTES)
+    return unless conversa.label_list.include?(ETIQUETA_DESQUALIFICADO)
+
+    conversa.update_labels(conversa.label_list - [ETIQUETA_DESQUALIFICADO])
+  end
+
+  # Como as tools de escrita: pendente igual (mesmo caso, mesmo tipo/ação) não vira duas.
+  def sugerir(lead, kind, payload)
+    pendentes = lead.account.copilot_suggestions.pending.where(lead_id: lead.id, kind: kind)
+    return if pendentes.any? { |s| s.payload['acao'] == payload['acao'] }
+
+    lead.account.copilot_suggestions.create!(
+      lead: lead, kind: kind, status: 'pending', run_at: Time.current,
+      payload: payload.merge('origem' => 'roteiro', 'lead_name' => lead.name, 'stage_name' => lead.lead_stage&.name)
+    )
   end
 
   # Mesmo caminho da tool handoff (bot_handoff!); sino ao closer/SDR do lead, sem eles aos gestores.
@@ -734,11 +817,13 @@ module Ramon::Roteiro::Efeitos
     Ramon::NtfyPushJob.perform_later(lead.id, title: "IA passou para a equipe: #{lead.name}", body: motivo.to_s.truncate(200))
   end
 
+  # Guarda o modo de antes para o reabrir devolver (decisão 13/10).
   def modo(lead, valor)
     conversa = lead.conversation
     return if conversa.nil?
 
-    conversa.update!(custom_attributes: (conversa.custom_attributes || {}).merge('copiloto_modo' => valor))
+    attrs = conversa.custom_attributes || {}
+    conversa.update!(custom_attributes: attrs.merge(MODO_ANTES => attrs['copiloto_modo'], 'copiloto_modo' => valor))
   end
 
   def resumo(saida)
@@ -778,7 +863,7 @@ Em `en/ramon.json`, no mesmo lugar, depois de `"DOSSIE_ENTREGUE": "marked the do
 rubocop-vps app/services/ramon/roteiro/resposta.rb app/services/ramon/roteiro/efeitos.rb spec/services/ramon/roteiro/resposta_spec.rb
 git add app/services/ramon/roteiro/resposta.rb app/services/ramon/roteiro/efeitos.rb spec/services/ramon/roteiro/resposta_spec.rb \
   app/javascript/dashboard/i18n/locale/en/ramon.json app/javascript/dashboard/i18n/locale/pt_BR/ramon.json
-git commit -m "feat(roteiro): leitura da resposta e efeitos fixos das saídas (etapa, Perdido, equipe)"
+git commit -m "feat(roteiro): leitura da resposta e efeitos fixos das saídas (etapa e Perdido por modo, equipe)"
 ```
 
 ---
@@ -793,13 +878,14 @@ git commit -m "feat(roteiro): leitura da resposta e efeitos fixos das saídas (e
 **Interfaces:**
 - Consumes: `RoteiroPasso` (Task 2), `Ramon::Roteiro::Resposta`, `Ramon::Roteiro::Efeitos` (Task 3), `Ramon::Roteiro::Calculadoras.calcular` (Task 1)
 - Produces:
-  - `Ramon::Roteiro.passos(lead) -> Array<RoteiroPasso>` (comuns + tese; `[]` = sem roteiro)
+  - `Ramon::Roteiro.passos(lead) -> Array<RoteiroPasso>` (comuns da conta + os da tese, em **toda** tese; lead sem tese ou nenhum passo = `[]` = sem roteiro)
   - `Ramon::Roteiro.estado(lead) -> Hash` (cópia; `'respostas'` sempre presente)
   - `Ramon::Roteiro.proximo(lista, estado) -> RoteiroPasso | nil`
-  - `Ramon::Roteiro.atual(lead) -> nil | { passo: RoteiroPasso|nil, estado: Hash }` (passo nil = encerrado)
+  - `Ramon::Roteiro.atual(lead) -> nil | { passo: RoteiroPasso|nil, estado: Hash }` (passo nil = encerrado, ou comuns concluídos numa tese sem passos próprios)
   - `Ramon::Roteiro.registrar(lead, chave:, valor: nil, saida_id: nil) -> { erro: String } | { estado: Hash, proximo: RoteiroPasso|nil, calc: Hash|nil, mensagem: String|nil }`
+  - `Ramon::Roteiro.reabrir(lead, se: nil) -> Boolean` (`se: 'desqualificado'` = só reabre esse desfecho; false = nada a reabrir)
   - `Ramon::Roteiro.descrever(passo, estado) -> String` e `Ramon::Roteiro.resumo(resultado) -> String` (textos que as tools devolvem à IA)
-  - estado gravado em `lead.custom_attributes['roteiro']`: `{ 'tese_id', 'cursor', 'desfecho', 'motivo', 'respostas' => { chave => { 'valor', 'calc', 'saida', 'em' } } }`
+  - estado gravado em `lead.custom_attributes['roteiro']`: `{ 'tese_id', 'cursor', 'desfecho', 'motivo', 'decisivo' (chave do passo que encerrou), 'aguarda_equipe' (Perdido virou sugestão), 'respostas' => { chave => { 'valor', 'calc', 'saida', 'em' } } }`
 
 - [ ] **Step 1: Spec do motor (falha)**
 
@@ -810,10 +896,11 @@ require 'rails_helper'
 
 RSpec.describe Ramon::Roteiro do
   let(:account) { create(:account) }
-  let(:thesis) { create(:thesis, account: account, name: 'Auxilio-acidente') }
-  let!(:novo) { create(:lead_stage, account: account, name: 'Novo', position: 0) }
-  let!(:qualificado) { create(:lead_stage, account: account, name: 'Qualificado', position: 1) }
-  let!(:perdido) { create(:lead_stage, account: account, name: 'Perdido', is_lost: true, position: 9) }
+  let(:thesis) { create(:thesis, account: account) }
+  # Toda conta nasce com o funil e os motivos de perda padrão (Leads::SeedDefaultConfigService).
+  let(:novo) { account.lead_stages.find_by!(name: 'Novo') }
+  let(:qualificacao) { account.lead_stages.find_by!(name: 'Qualificação') }
+  let(:perdido) { account.lead_stages.find_by!(is_lost: true) }
   let(:conversation) { create(:conversation, account: account, status: :pending) }
   let(:lead) { create(:lead, account: account, thesis: thesis, lead_stage: novo, conversation: conversation) }
 
@@ -825,10 +912,15 @@ RSpec.describe Ramon::Roteiro do
     described_class.registrar(lead.reload, chave: chave, valor: valor, saida_id: saida_id)
   end
 
+  def piloto_total!
+    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+  end
+
   before do
     create(:roteiro_passo, account: account, thesis: nil, chave: 'tem_advogado', position: 0, titulo: 'Tem advogado',
                            saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'desqualificar', 'motivo' => 'tem advogado',
-                                      'mensagem' => 'Que bom que ja tem quem cuide.', 'efeitos' => { 'etiqueta' => 'TemAdvogado' } },
+                                      'motivo_perda' => 'Outro', 'mensagem' => 'Que bom que ja tem quem cuide.',
+                                      'efeitos' => { 'etiqueta' => 'TemAdvogado' } },
                                     { 'id' => 'nao', 'quando' => 'nao', 'acao' => 'seguir' }])
     passo('recebeu_auxilio', 1, saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'ir_para', 'alvo' => 'sequela' },
                                          { 'id' => 'nao', 'quando' => 'nao', 'acao' => 'seguir' }])
@@ -840,14 +932,24 @@ RSpec.describe Ramon::Roteiro do
                                { 'id' => 'outro', 'quando' => '*', 'acao' => 'humano', 'motivo' => 'graca depende' }])
     passo('sequela', 4, tipo_resposta: 'texto',
                         saidas: [{ 'id' => 'ficou', 'quando' => 'ficou alguma limitacao', 'acao' => 'concluir',
-                                   'efeitos' => { 'etapa' => 'Qualificado' } },
+                                   'efeitos' => { 'etapa' => 'Qualificação' } },
                                  { 'id' => 'voltou_100', 'quando' => 'voltou 100%', 'acao' => 'desqualificar', 'motivo' => 'sem sequela' }])
   end
 
-  it 'sem passos na tese = sem roteiro' do
+  it 'lead sem tese fica sem roteiro (tese automática = F3)' do
+    sem_tese = create(:lead, account: account, lead_stage: novo)
+    expect(described_class.atual(sem_tese)).to be_nil
+    expect(described_class.registrar(sem_tese, chave: 'tem_advogado', valor: 'nao')).to eq(erro: 'Este caso nao tem roteiro.')
+  end
+
+  it 'tese sem passos próprios roda os comuns e devolve para a triagem de sempre' do
     outro = create(:lead, account: account, thesis: create(:thesis, account: account), lead_stage: novo)
-    expect(described_class.atual(outro)).to be_nil
-    expect(described_class.registrar(outro, chave: 'tem_advogado', valor: 'nao')).to eq(erro: 'Este caso nao tem roteiro.')
+    expect(described_class.atual(outro)[:passo].chave).to eq('tem_advogado')
+
+    res = described_class.registrar(outro, chave: 'tem_advogado', valor: 'nao')
+    expect(res[:proximo]).to be_nil
+    expect(res[:estado]['desfecho']).to be_nil
+    expect(described_class.resumo(res)).to include('siga a triagem de sempre')
   end
 
   it 'começa pelos comuns e segue a ordem' do
@@ -856,34 +958,61 @@ RSpec.describe Ramon::Roteiro do
     expect(lead.reload.custom_attributes.dig('roteiro', 'respostas', 'tem_advogado', 'valor')).to eq('nao')
   end
 
-  it 'ir_para pula etapas e concluir qualifica e move a etapa' do
+  it 'ir_para pula etapas; concluir qualifica e, fora do piloto total, sugere a etapa no Cockpit' do
     registrar('tem_advogado', 'nao')
     expect(registrar('recebeu_auxilio', 'sim')[:proximo].chave).to eq('sequela')
 
     res = registrar('sequela', 'ficou com dor no punho', saida_id: 'ficou')
-    expect(res[:estado]['desfecho']).to eq('qualificado')
+    expect(res[:estado]).to include('desfecho' => 'qualificado', 'decisivo' => 'sequela')
     expect(res[:proximo]).to be_nil
-    expect(lead.reload.lead_stage).to eq(qualificado)
+    expect(lead.reload.lead_stage).to eq(novo)
+    sugestao = account.copilot_suggestions.pending.find_by!(lead: lead, kind: 'move_stage')
+    expect(sugestao.payload).to include('etapa_sugerida' => 'Qualificação', 'origem' => 'roteiro')
     expect(lead.lead_activities.where(kind: 'roteiro').last.to_value).to eq('Sequela → qualificado')
   end
 
-  it 'a calculadora decide: fora do período de graça desqualifica' do
+  it 'em piloto total a etapa muda direto' do
+    piloto_total!
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'sim')
+    registrar('sequela', 'ficou com dor no punho', saida_id: 'ficou')
+    expect(lead.reload.lead_stage).to eq(qualificacao)
+    expect(account.copilot_suggestions.count).to eq(0)
+  end
+
+  it 'a calculadora decide; fora do piloto total o Perdido vira sugestão e a IA não é calada' do
     registrar('tem_advogado', 'nao')
     registrar('recebeu_auxilio', 'nao')
     registrar('data_acidente', '10/01/2026')
     res = registrar('graca', '2022-01-01') # 36 meses mantêm só até 15/03/2025
 
     expect(res[:calc][:resultado]).to eq('fora')
-    expect(res[:estado]).to include('desfecho' => 'desqualificado', 'motivo' => 'fora do periodo de graca')
-    expect(lead.reload).to have_attributes(lead_stage: perdido, lost_reason: 'fora do periodo de graca')
-    expect(conversation.reload.label_list).to include('desqualificado-ia')
-    expect(conversation.custom_attributes['copiloto_modo']).to eq('manual')
+    expect(res[:estado]).to include('desfecho' => 'desqualificado', 'motivo' => 'fora do periodo de graca',
+                                    'decisivo' => 'graca', 'aguarda_equipe' => true)
+    expect(lead.reload.lead_stage).to eq(novo)
+    sugestao = account.copilot_suggestions.pending.find_by!(lead: lead, kind: 'acao')
+    expect(sugestao.payload).to include('acao' => 'perdido', 'lost_reason' => 'Sem viabilidade', 'origem' => 'roteiro')
+    expect(conversation.reload.label_list).not_to include('desqualificado-ia')
+    expect(conversation.custom_attributes['copiloto_modo']).to be_nil
+    expect(described_class.descrever(nil, res[:estado])).to include('aguardando a equipe')
   end
 
-  it 'desqualificar devolve a mensagem-base e aplica a etiqueta da saída' do
+  it 'em piloto total desqualifica direto: motivo do catálogo, etiquetas e IA calada com o robô, guardando o modo' do
+    piloto_total!
     res = registrar('tem_advogado', 'sim')
+
     expect(res[:mensagem]).to eq('Que bom que ja tem quem cuide.')
+    expect(res[:estado]).not_to have_key('aguarda_equipe')
+    expect(lead.reload).to have_attributes(lead_stage: perdido, lost_reason: 'Outro')
     expect(conversation.reload.label_list).to include('temadvogado', 'desqualificado-ia')
+    expect(conversation.custom_attributes).to include('copiloto_modo' => 'manual', 'copiloto_modo_antes_roteiro' => 'piloto_total')
+    expect(conversation.status).to eq('pending')
+  end
+
+  it 'a etiqueta da saída vale em qualquer modo' do
+    registrar('tem_advogado', 'sim')
+    expect(conversation.reload.label_list).to include('temadvogado')
+    expect(conversation.label_list).not_to include('desqualificado-ia')
   end
 
   it 'resposta adiantada não é perguntada de novo nem pula o passo atual' do
@@ -892,6 +1021,15 @@ RSpec.describe Ramon::Roteiro do
 
     registrar('tem_advogado', 'nao')
     expect(registrar('recebeu_auxilio', 'nao')[:proximo].chave).to eq('graca')
+  end
+
+  it 'corrigir um passo já respondido vale a nova resposta e volta a seguir dali' do
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'sim') # pulou para sequela
+    res = registrar('recebeu_auxilio', 'nao')
+
+    expect(res[:proximo].chave).to eq('data_acidente')
+    expect(res[:estado].dig('respostas', 'recebeu_auxilio', 'valor')).to eq('nao')
   end
 
   it 'nada casando vai para a equipe com sino ao gestor' do
@@ -922,23 +1060,25 @@ RSpec.describe Ramon::Roteiro do
     expect(lead.reload.custom_attributes['roteiro']).to be_nil
   end
 
-  it 'depois do desfecho recusa e não mexe em nada' do
+  it 'depois do desfecho recusa (inclusive correção) e não mexe em nada' do
     registrar('tem_advogado', 'sim')
     expect(registrar('recebeu_auxilio', 'nao')[:erro]).to include('ja terminou')
-    expect(lead.reload.custom_attributes.dig('roteiro', 'respostas').keys).to eq(['tem_advogado'])
+    expect(registrar('tem_advogado', 'nao')[:erro]).to include('ja terminou')
+    expect(lead.reload.custom_attributes.dig('roteiro', 'respostas')).to eq('tem_advogado' => a_hash_including('valor' => 'sim'))
   end
 
-  it 'lead ganho não volta para Perdido' do
-    ganho = create(:lead_stage, account: account, name: 'Fechado', is_won: true, position: 8)
+  it 'lead ganho não volta para Perdido nem vira sugestão' do
+    ganho = account.lead_stages.find_by!(is_won: true)
     lead.update_columns(lead_stage_id: ganho.id, won_at: Time.current) # rubocop:disable Rails/SkipsModelValidations -- sem disparar o fluxo "Lead ganho"
     registrar('tem_advogado', 'sim')
     expect(lead.reload.lead_stage).to eq(ganho)
+    expect(account.copilot_suggestions.count).to eq(0)
   end
 
   it 'trocar a tese recomeça o roteiro e mantém os comuns' do
     registrar('tem_advogado', 'nao')
     registrar('recebeu_auxilio', 'nao')
-    bpc = create(:thesis, account: account, name: 'BPC')
+    bpc = create(:thesis, account: account)
     create(:roteiro_passo, account: account, thesis: bpc, chave: 'renda', position: 1)
     lead.update!(thesis: bpc)
 
@@ -967,23 +1107,24 @@ end
 # Motor do roteiro da tese (spec docs/superpowers/specs/2026-10-13-roteiro-da-tese-design.md §3.2–3.4).
 # Regra fixa: a IA pergunta e informa a resposta; aqui se grava, se faz a conta e se escolhe a saída.
 # Estado em lead.custom_attributes['roteiro']:
-#   tese_id · cursor (chave; muda no ir_para) · desfecho (qualificado|desqualificado|humano) · motivo ·
-#   respostas { chave => { valor, calc, saida, em } }
+#   tese_id · cursor (chave; muda no ir_para e na correção) · desfecho (qualificado|desqualificado|humano) · motivo ·
+#   decisivo (passo que encerrou) · aguarda_equipe (Perdido virou sugestão) · respostas { chave => { valor, calc, saida, em } }
 # Passo atual = o 1º sem resposta a partir do cursor: resposta adiantada pelo lead não é perguntada de novo.
 # ponytail: last-write-wins no custom_attributes (duas respostas no mesmo instante); with_lock se aparecer corrida.
 module Ramon::Roteiro
   TIPOS = { 'sim_nao' => 'sim ou nao', 'escolha' => 'uma das opcoes', 'numero' => 'numero',
             'data' => 'data AAAA-MM-DD', 'texto' => 'texto livre + saida_id' }.freeze
+  COMUNS_OK = 'Passos comuns concluidos e esta tese nao tem roteiro proprio: siga a triagem de sempre ' \
+              '(playbook da tese e registrar qualificacao).'.freeze
 
   module_function
 
-  # Comuns da conta e depois os da tese. Tese sem passos = sem roteiro (triagem de sempre).
+  # Comuns da conta (em toda tese) e depois os da tese. Nenhum passo = sem roteiro (triagem de sempre).
   # ponytail: lead sem tese fica sem roteiro até a F3 (tese automática + passo comum "assunto").
   def passos(lead)
-    da_tese = lead.thesis_id ? RoteiroPasso.where(thesis_id: lead.thesis_id).to_a : []
-    return [] if da_tese.empty?
+    return [] if lead.thesis_id.nil?
 
-    RoteiroPasso.comuns.where(account_id: lead.account_id).to_a + da_tese
+    RoteiroPasso.comuns.where(account_id: lead.account_id).to_a + RoteiroPasso.where(thesis_id: lead.thesis_id).to_a
   end
 
   # Trocar a tese reinicia o roteiro; as respostas dos passos comuns ficam.
@@ -1012,9 +1153,23 @@ module Ramon::Roteiro
     Registro.new(lead).call(chave: chave, valor: valor, saida_id: saida_id)
   end
 
+  # Reabre no passo que decidiu (as outras respostas ficam) e devolve a conversa ao modo de antes (decisões 13/10).
+  # Chamado ao recusar o Perdido sugerido pelo roteiro, ao tirar o lead do Perdido no Kanban e, na F2, pelo painel.
+  def reabrir(lead, se: nil)
+    est = estado(lead)
+    return false if est['desfecho'].nil? || (se && est['desfecho'] != se)
+
+    est['respostas'].delete(est['decisivo'])
+    est['cursor'] = est['decisivo']
+    novo = est.except('desfecho', 'motivo', 'decisivo', 'aguarda_equipe')
+    lead.update!(custom_attributes: (lead.custom_attributes || {}).merge('roteiro' => novo))
+    Efeitos.reabrir(lead)
+    true
+  end
+
   # Texto para a IA: o passo a perguntar (ou o desfecho) e o que já foi respondido.
   def descrever(passo, est)
-    return "Roteiro encerrado: #{est['desfecho']}#{" (#{est['motivo']})" if est['motivo']}. Nao faca mais perguntas do roteiro." if passo.nil?
+    return encerrado(est) if passo.nil?
 
     linhas = ["Passo atual: #{passo.titulo} (chave: #{passo.chave}; resposta: #{TIPOS[passo.tipo_resposta]})"]
     linhas << "Como perguntar: #{passo.orientacao}" if passo.orientacao.present?
@@ -1023,6 +1178,14 @@ module Ramon::Roteiro
     respondidas = est['respostas'].map { |chave, r| "#{chave}=#{r['valor'] || r['saida']}" }
     linhas << "Ja respondido: #{respondidas.join('; ')}" if respondidas.any?
     linhas.join("\n")
+  end
+
+  def encerrado(est)
+    return COMUNS_OK if est['desfecho'].nil?
+
+    motivo = " (#{est['motivo']})" if est['motivo']
+    espera = ' - aguardando a equipe confirmar' if est['aguarda_equipe']
+    "Roteiro encerrado: #{est['desfecho']}#{motivo}#{espera}. Nao faca mais perguntas do roteiro."
   end
 
   # Texto para a IA depois de registrar.
@@ -1098,16 +1261,20 @@ class Ramon::Roteiro::Registro
   end
 
   def gravar(valor, calc, saida)
+    # Correção de um passo já respondido: vale a nova resposta e o roteiro volta a seguir dali (decisão 13/10).
+    @est['cursor'] = @passo.chave if @est['respostas'].key?(@passo.chave)
     @est['respostas'][@passo.chave] = { 'valor' => valor, 'calc' => calc&.stringify_keys, 'saida' => saida['id'],
                                         'em' => Time.zone.now.iso8601 }.compact
     saida = avancar(saida)
+    @est['aguarda_equipe'] = true if saida['acao'] == 'desqualificar' && !Ramon::Roteiro::Efeitos.direto?(@lead)
     @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @est))
     Ramon::Roteiro::Efeitos.aplicar(@lead, @passo, saida)
     { estado: @est, proximo: @est['desfecho'] ? nil : Ramon::Roteiro.proximo(@lista, @est), calc: calc,
       mensagem: saida['mensagem'] }
   end
 
-  # ir_para move o cursor; seguir/ir_para sem passo pela frente = concluir (qualificado).
+  # ir_para move o cursor; seguir/ir_para sem passo pela frente = concluir (qualificado) — menos numa tese sem
+  # passos próprios: ao fim dos comuns a IA volta para a triagem de sempre, sem desfecho (decisão 13/10).
   def avancar(saida)
     if saida['acao'] == 'ir_para'
       return avancar(sem_saida("destino #{saida['alvo']} nao existe")) if @lista.none? { |p| p.chave == saida['alvo'] }
@@ -1115,7 +1282,7 @@ class Ramon::Roteiro::Registro
       @est['cursor'] = saida['alvo']
     end
     fim = %w[seguir ir_para].include?(saida['acao']) && Ramon::Roteiro.proximo(@lista, @est).nil?
-    saida = saida.merge('acao' => 'concluir') if fim
+    saida = saida.merge('acao' => 'concluir') if fim && @lista.any?(&:thesis_id)
     encerrar(saida)
     saida
   end
@@ -1124,8 +1291,7 @@ class Ramon::Roteiro::Registro
     desfecho = DESFECHOS[saida['acao']]
     return if desfecho.nil?
 
-    @est['desfecho'] = desfecho
-    @est['motivo'] = saida['motivo']
+    @est.merge!('desfecho' => desfecho, 'motivo' => saida['motivo'], 'decisivo' => @passo.chave)
   end
 
   def sem_saida(detalhe)
@@ -1142,11 +1308,169 @@ git add app/services/ramon/roteiro.rb app/services/ramon/roteiro/registro.rb spe
 git commit -m "feat(roteiro): motor do roteiro da tese (passo atual, registrar, desfecho por regra fixa)"
 ```
 
-Se o `rubocop-vps` acusar `Metrics/*` em `descrever` ou `call`, extrair um método privado/auxiliar (ex.: `linhas_de_saida(passo)`) — não desligar o cop.
+Se o `rubocop-vps` acusar `Metrics/*` em `descrever`, `call` ou `gravar`, extrair um método privado/auxiliar (ex.: `linhas_de_saida(passo)`, `gravar_resposta(valor, calc, saida)`) — não desligar o cop.
 
 ---
 
-### Task 5: Tools do agente + skill de triagem e regras globais (seed)
+### Task 5: Aprovar, recusar e tirar do Perdido (Cockpit e Kanban)
+
+**Files:**
+- Modify: `app/models/copilot_suggestion.rb` (`marcar_perdido` cala a IA quando a origem é o roteiro; `dismiss!` novo)
+- Modify: `app/controllers/api/v1/accounts/copilot_suggestions_controller.rb` (`dismiss` chama `dismiss!`)
+- Modify: `app/models/lead.rb` (callback: saiu do Perdido → reabre o roteiro desqualificado)
+- Create: `spec/services/ramon/roteiro_reabrir_spec.rb`
+
+**Interfaces:**
+- Consumes: `Ramon::Roteiro.reabrir(lead, se:)`, `Ramon::Roteiro.registrar`, `Ramon::Roteiro.atual` (Task 4), `Ramon::Roteiro::Efeitos.calar` (Task 3)
+- Produces: `CopilotSuggestion#dismiss! -> void` (o controller passa a usar; o request spec `dismisses a suggestion` continua valendo)
+
+- [ ] **Step 1: Spec (falha)**
+
+`spec/services/ramon/roteiro_reabrir_spec.rb`:
+
+```ruby
+require 'rails_helper'
+
+RSpec.describe Ramon::Roteiro, '.reabrir' do
+  let(:account) { create(:account) }
+  let(:thesis) { create(:thesis, account: account) }
+  let(:novo) { account.lead_stages.find_by!(name: 'Novo') }
+  let(:conversation) { create(:conversation, account: account, status: :pending) }
+  let(:lead) { create(:lead, account: account, thesis: thesis, lead_stage: novo, conversation: conversation) }
+
+  before do
+    create(:roteiro_passo, account: account, thesis: thesis, chave: 'tem_advogado', position: 0, titulo: 'Tem advogado',
+                           saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'desqualificar', 'motivo' => 'tem advogado' },
+                                    { 'id' => 'nao', 'quando' => 'nao', 'acao' => 'seguir' }])
+    create(:roteiro_passo, account: account, thesis: thesis, chave: 'sequela', position: 1, titulo: 'Sequela', tipo_resposta: 'texto',
+                           saidas: [{ 'id' => 'ficou', 'quando' => 'ficou', 'acao' => 'concluir' }])
+  end
+
+  # Fora do piloto total o Perdido do roteiro vira sugestão no Cockpit.
+  def desqualificar!
+    described_class.registrar(lead, chave: 'tem_advogado', valor: 'sim')
+    account.copilot_suggestions.pending.find_by!(lead: lead, kind: 'acao')
+  end
+
+  it 'recusar o Perdido sugerido reabre no passo que decidiu' do
+    desqualificar!.dismiss!
+
+    atual = described_class.atual(lead.reload)
+    expect(atual[:passo].chave).to eq('tem_advogado')
+    expect(atual[:estado].keys).not_to include('desfecho', 'decisivo', 'aguarda_equipe')
+    expect(lead.lead_activities.where(kind: 'roteiro').last.to_value).to eq('roteiro reaberto')
+  end
+
+  it 'aprovar marca Perdido e cala a IA; tirar do Perdido no Kanban reabre e devolve o modo de antes' do
+    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_limitado' })
+    expect(desqualificar!.apply!).to be(true)
+    expect(lead.reload.lost_reason).to eq('Sem viabilidade')
+    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('manual')
+    expect(conversation.label_list).to include('desqualificado-ia')
+
+    lead.update!(lead_stage: novo)
+
+    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('piloto_limitado')
+    expect(conversation.label_list).not_to include('desqualificado-ia')
+    expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
+  end
+
+  it 'Kanban e recusa só reabrem desqualificado; reabrir sem filtro volta no passo que decidiu' do
+    described_class.registrar(lead, chave: 'tem_advogado', valor: 'nao')
+    described_class.registrar(lead, chave: 'sequela', saida_id: 'ficou')
+    expect(described_class.reabrir(lead.reload, se: 'desqualificado')).to be(false)
+
+    lead.update!(lead_stage: account.lead_stages.find_by!(is_lost: true))
+    lead.update!(lead_stage: novo)
+    expect(described_class.atual(lead.reload)[:estado]['desfecho']).to eq('qualificado')
+
+    expect(described_class.reabrir(lead)).to be(true)
+    expect(described_class.atual(lead.reload)[:passo].chave).to eq('sequela')
+  end
+
+  it 'recusar sugestão que não é do roteiro não mexe no roteiro' do
+    described_class.registrar(lead, chave: 'tem_advogado', valor: 'sim')
+    outra = account.copilot_suggestions.create!(lead: lead, kind: 'acao', status: 'pending',
+                                                payload: { 'acao' => 'perdido', 'texto' => 'sumiu' })
+    outra.dismiss!
+    expect(described_class.atual(lead.reload)[:estado]['desfecho']).to eq('desqualificado')
+  end
+end
+```
+
+- [ ] **Step 2: `CopilotSuggestion`**
+
+Em `app/models/copilot_suggestion.rb`:
+
+a) Logo depois de `apply!` (método público):
+
+```ruby
+  # Recusar o Perdido sugerido pelo roteiro da tese reabre o roteiro no passo que decidiu (decisão 13/10).
+  def dismiss!
+    update!(status: 'dismissed')
+    Ramon::Roteiro.reabrir(lead, se: 'desqualificado') if perdido_do_roteiro?
+  end
+```
+
+b) Em `marcar_perdido`, trocar a última linha
+`lead.update!(lead_stage: etapa, lost_reason: payload['lost_reason'].presence || 'Sugerido pelo agente')`
+por:
+
+```ruby
+    lead.update!(lead_stage: etapa, lost_reason: payload['lost_reason'].presence || 'Sugerido pelo agente')
+    # Perdido do roteiro aprovado: etiqueta e IA calada; a conversa fica com o robô (decisão 13/10).
+    Ramon::Roteiro::Efeitos.calar(lead) if perdido_do_roteiro?
+    true
+```
+
+c) Na seção `private`, antes de `criar_nota`:
+
+```ruby
+  def perdido_do_roteiro?
+    kind == 'acao' && payload['acao'] == 'perdido' && payload['origem'] == 'roteiro'
+  end
+```
+
+- [ ] **Step 3: Controller**
+
+Em `app/controllers/api/v1/accounts/copilot_suggestions_controller.rb`, no `dismiss`, trocar `@copilot_suggestion.update!(status: 'dismissed')` por:
+
+```ruby
+    @copilot_suggestion.dismiss!
+```
+
+- [ ] **Step 4: `Lead`**
+
+Em `app/models/lead.rb`, depois de `after_update_commit :ganhou, if: :saved_change_to_won_at?`:
+
+```ruby
+  after_update_commit :reabrir_roteiro, if: -> { saved_change_to_lost_at? && lost_at.nil? }
+```
+
+E na seção privada, depois do método `ganhou`:
+
+```ruby
+  # Tirar do Perdido no Kanban reabre o roteiro da tese desqualificado (decisão 13/10).
+  def reabrir_roteiro
+    Ramon::Roteiro.reabrir(self, se: 'desqualificado')
+  end
+```
+
+(`track_stage_cycle` zera `lost_at` quando o lead sai da etapa de perdido; o `update!` do `reabrir` só mexe em `custom_attributes`, então o callback não se repete.)
+
+- [ ] **Step 5: Lint + commit**
+
+```bash
+rubocop-vps app/models/copilot_suggestion.rb app/controllers/api/v1/accounts/copilot_suggestions_controller.rb app/models/lead.rb \
+  spec/services/ramon/roteiro_reabrir_spec.rb
+git add app/models/copilot_suggestion.rb app/controllers/api/v1/accounts/copilot_suggestions_controller.rb app/models/lead.rb \
+  spec/services/ramon/roteiro_reabrir_spec.rb
+git commit -m "feat(roteiro): aprovar o Perdido do roteiro cala a IA; recusar ou tirar do Perdido reabre o roteiro"
+```
+
+---
+
+### Task 6: Tools do agente + skill de triagem e regras globais (seed)
 
 **Files:**
 - Create: `enterprise/lib/captain/tools/roteiro_passo_atual_tool.rb`
@@ -1259,16 +1583,18 @@ c) Na skill `Triagem e qualificação do lead novo`, **antes** do parágrafo "An
           descreve a resposta). Se o lead já respondeu um passo antes de você perguntar, registre sem perguntar de
           novo. Repita até o roteiro encerrar. Quando vier "Base para a resposta", use esse texto como base, com as
           suas palavras. Encerrado como qualificado → siga para a reunião (skill de agendamento); desqualificado →
-          explique com gentileza e honestidade, sem prometer nada; humano → diga que alguém da equipe continua a
-          conversa por aqui. As consequências (etapa, etiqueta, equipe) quem aplica é o roteiro — não use Mover de
-          etapa nem Marcar como perdido para isso.
-          Sem roteiro ("Esta tese nao tem roteiro"), siga o restante desta instrução.
+          explique com gentileza e honestidade, sem prometer nada — mas, se vier "aguardando a equipe confirmar",
+          não diga que o caso não tem viabilidade: diga só que a equipe vai analisar e retorna por aqui; humano →
+          diga que alguém da equipe continua a conversa por aqui. As consequências (etapa, etiqueta, equipe) quem
+          aplica é o roteiro — não use Mover de etapa nem Marcar como perdido para isso.
+          Sem roteiro ("Esta tese nao tem roteiro") ou com os passos comuns concluídos ("siga a triagem de sempre"),
+          siga o restante desta instrução.
 
 ```
 
 - [ ] **Step 3: Doc dos textos para o Eduardo (gate)**
 
-`C:\Users\dudsl\RAdvogados\comercial\docs\2026-10-13-roteiro-f1-textos.md` — rascunho para aprovação, com: (1) as 3 regras globais novas e a regra reescrita (texto exato do Step 2), (2) o parágrafo novo da skill de triagem, (3) o aviso: "nada disso muda o atendimento enquanto nenhuma tese tiver passos de roteiro (F4); ativar = rodar o seed depois do aprovado", (4) uma pergunta: *"quer contratar → passar para humano" (spec §3.5) vale também nas conversas em rascunho, onde hoje a skill Fechar contrato prepara o ZapSign para você aprovar? A F3 refina isso no modo 'sozinho até contrato'.*
+`C:\Users\dudsl\RAdvogados\comercial\docs\2026-10-13-roteiro-f1-textos.md` — rascunho para aprovação, com: (1) as 3 regras globais novas e a regra reescrita (texto exato do Step 2), (2) o parágrafo novo da skill de triagem, (3) o aviso: "nada disso muda o atendimento enquanto nenhuma tese tiver passos de roteiro (F4); ativar = rodar o seed depois do aprovado", (4) o destaque da frase do desqualificado **aguardando a equipe** (em rascunho e piloto limitado o Perdido vira sugestão; a IA não diz ao lead que não tem viabilidade antes de você aprovar — confirmar se é isso), (5) uma pergunta: *"quer contratar → passar para humano" (spec §3.5) vale também nas conversas em rascunho, onde hoje a skill Fechar contrato prepara o ZapSign para você aprovar? A F3 refina isso no modo 'sozinho até contrato'.*
 
 - [ ] **Step 4: Lint + commit** (o arquivo `.md` do comercial fica fora do repo do hub)
 
@@ -1281,7 +1607,7 @@ git commit -m "feat(inteligencia): tools do roteiro da tese e triagem guiada pel
 
 ---
 
-### Task 6: PR, CI, merge, deploy, prova e registro
+### Task 7: PR, CI, merge, deploy, prova e registro
 
 **Files:**
 - Modify: `C:\Users\dudsl\.claude\projects\C--Users-dudsl-RAdvogados\memory\roteiro-da-tese.md`
@@ -1293,7 +1619,7 @@ git push -u origin feat/roteiro-f1-motor
 gh pr create --base ramon --title "feat(roteiro): motor do roteiro da tese (F1)" --body-file <corpo>
 ```
 
-Corpo: parágrafo de produto ("a IA passa a qualificar seguindo os passos cadastrados da tese; as consequências são regra fixa; sem passos cadastrados nada muda"); os 6 desvios deliberados deste plano; "Como testar" = a prova do Step 4; o aviso de que a skill/regras novas só são ativadas com o seed após o aprovado; rodapé de atribuição.
+Corpo: parágrafo de produto ("a IA passa a qualificar seguindo os passos cadastrados da tese; as consequências são regra fixa; sem passos cadastrados nada muda"); os 6 desvios deliberados e as decisões do grilling (etapa/Perdido por modo, reabrir, comuns em toda tese, correção); "Como testar" = a prova do Step 4; o aviso de que a skill/regras novas só são ativadas com o seed após o aprovado; rodapé de atribuição.
 
 - [ ] **Step 2: CI 100% verde** — spec/lint vermelho → corrigir, `rubocop-vps`, novo commit (sem amend). 429/503 baixando actions = re-rodar o job.
 
@@ -1328,6 +1654,15 @@ ActiveRecord::Base.transaction do
   p lead.lead_activities.where(kind: 'roteiro').pluck(:to_value)                   # ["Sequela → qualificado"]
   puts atual.perform(ctx, lead_id: a.leads.where.not(thesis_id: t.id).where.not(thesis_id: nil).first.id.to_s)
   # => Esta tese nao tem roteiro (tese real sem passos: produção segue igual)
+
+  # Lead sem conversa = fora do piloto total: o Perdido vira sugestão; recusar reabre no passo que decidiu.
+  l2 = a.leads.create!(name: 'Prova roteiro 2', thesis: t, lead_stage: etapa)
+  puts reg.perform(ctx, lead_id: l2.id.to_s, chave: 'sequela', valor: 'voltou 100%', saida_id: 'voltou')
+  # => Roteiro encerrado: desqualificado (sem sequela) - aguardando a equipe confirmar
+  s = a.copilot_suggestions.pending.find_by!(lead: l2, kind: 'acao')
+  p s.payload                                    # acao perdido, lost_reason Sem viabilidade, origem roteiro
+  s.dismiss!
+  puts atual.perform(ctx, lead_id: l2.id.to_s)   # => Passo atual: Sequela
   raise ActiveRecord::Rollback
 end
 puts RoteiroPasso.count # => 0
