@@ -14,11 +14,22 @@ class Captain::Tools::RoteiroRegistrarTool < Captain::Tools::RamonBaseTool
   param :saida_id, type: 'string', desc: 'Id da saida escolhida (passo de texto livre)', required: false
 
   def perform(tool_context, chave: nil, valor: nil, saida_id: nil, lead_id: nil)
+    teste = tool_context.state&.dig(:roteiro_teste)
+    return registrar_em_teste(teste, chave: chave, valor: valor, saida_id: saida_id) if teste
+
     lead = resolver_lead(tool_context.state, lead_id)
     return SEM_LEAD if lead.blank?
 
     log_tool_usage('roteiro_registrar', { lead_id: lead.id, chave: chave })
     res = ::Ramon::Roteiro.registrar(lead, chave: chave, valor: valor, saida_id: saida_id)
     res[:erro] || ::Ramon::Roteiro.resumo(res)
+  end
+
+  private
+
+  # Testar com tese (F2): o motor roda num lead descartável; o estado novo fica no state e o Testar devolve à tela.
+  def registrar_em_teste(teste, **resposta)
+    texto, teste['estado'] = ::Ramon::Roteiro::Teste.registrar(@assistant.account, teste, **resposta)
+    texto
   end
 end

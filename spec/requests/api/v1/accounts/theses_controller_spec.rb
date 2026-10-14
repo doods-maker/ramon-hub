@@ -152,4 +152,17 @@ RSpec.describe 'Theses API', type: :request do
       expect(response).to have_http_status(:unauthorized)
     end
   end
+
+  describe 'palavras-chave (roteiro da tese, F2)' do
+    it 'grava a lista, devolve no show e aceita lista vazia' do
+      thesis = account.theses.create!(name: 'Tese Palavras', position: 60)
+      patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}", params: { palavras_chave: %w[auxílio-acidente sequela] },
+                                                                  headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['palavras_chave']).to eq(%w[auxílio-acidente sequela])
+
+      patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}", params: { palavras_chave: [] },
+                                                                  headers: admin.create_new_auth_token, as: :json
+      expect(thesis.reload.palavras_chave).to eq([])
+    end
+  end
 end

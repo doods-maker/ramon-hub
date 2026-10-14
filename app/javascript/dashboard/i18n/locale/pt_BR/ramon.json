@@ -1511,6 +1511,102 @@
       "RESPONDIDAS": "✓ {count} respondidas",
       "QUALIFICADO": "Qualificado — {ok}/{total} respondidas"
     },
+    "ROTEIRO_IA": {
+      "TITULO": "Roteiro da IA",
+      "CONTAGEM": "{ok}/{total}",
+      "RESPONDIDOS": "✓ {count} respondidos",
+      "SITUACAO": {
+        "RESPONDIDO": "Respondido",
+        "ATUAL": "Pergunta agora",
+        "PENDENTE": "A perguntar",
+        "FORA": "Não perguntado"
+      },
+      "DESFECHO": {
+        "QUALIFICADO": "Qualificado",
+        "DESQUALIFICADO": "Desqualificado",
+        "HUMANO": "Passou para a equipe"
+      },
+      "AGUARDA_EQUIPE": "O Perdido está sugerido no Cockpit, aguardando a equipe confirmar.",
+      "COMUNS_CONCLUIDOS": "Passos comuns respondidos — a IA segue a triagem de sempre.",
+      "REABRIR": "Reabrir roteiro",
+      "REABRIR_CONFIRMA": "Reabrir o roteiro deste lead?",
+      "REABRIR_AJUDA": "A IA volta a perguntar a partir de \"{passo}\". As outras respostas ficam; as sugestões do roteiro pendentes no Cockpit são descartadas.",
+      "REABERTO": "Roteiro reaberto.",
+      "REABRIR_PERDIDO": "Para reabrir, tire o lead do Perdido no funil.",
+      "REABRIR_GANHO": "Lead ganho: o roteiro não reabre.",
+      "PALAVRAS_CHAVE": "Palavras-chave",
+      "PALAVRAS_CHAVE_AJUDA": "Palavras da 1ª mensagem que indicam esta tese, separadas por vírgula",
+      "EDITOR": {
+        "COMUNS_TITULO": "Passos comuns do roteiro da IA",
+        "COMUNS_AJUDA": "Valem para todas as teses e rodam antes do roteiro de cada uma.",
+        "ABA_PLAYBOOK": "Playbook",
+        "ABA_ROTEIRO": "Roteiro da IA",
+        "ROTEIRO_AJUDA": "A IA pergunta um passo por vez, nesta ordem, depois dos passos comuns. O que acontece com cada resposta (saídas) é regra fixa — a IA não decide.",
+        "VAZIO": "Nenhum passo. Sem passos, a IA segue a triagem de sempre.",
+        "NOVO": "Novo passo",
+        "SALVAR": "Salvar passo",
+        "CANCELAR": "Cancelar",
+        "SALVO": "Passo salvo.",
+        "REMOVER": "Remover passo",
+        "REMOVER_CONFIRMA": "Remover este passo do roteiro?",
+        "MOVER_CIMA": "Subir",
+        "MOVER_BAIXO": "Descer",
+        "N_SAIDAS": "{n} saídas",
+        "TITULO": "O que descobrir",
+        "CHAVE": "Chave",
+        "CHAVE_AJUDA": "Identificador fixo (minúsculas, números e _). Não muda depois de criado.",
+        "FALA_COM_CLIENTE": "A orientação e a base da resposta viram fala da IA com o cliente.",
+        "ORIENTACAO": "Como perguntar (vai para a IA)",
+        "TIPO": "Tipo de resposta",
+        "TIPOS": {
+          "SIM_NAO": "Sim ou não",
+          "ESCOLHA": "Escolha",
+          "NUMERO": "Número",
+          "DATA": "Data",
+          "TEXTO": "Texto livre"
+        },
+        "OPCOES": "Opções (separe por vírgula)",
+        "CALCULADORA": "Calculadora",
+        "SEM_CALCULADORA": "Nenhuma",
+        "CALCULADORAS": {
+          "PERIODO_DE_GRACA": "Período de graça",
+          "RENDA_PER_CAPITA": "Renda por pessoa",
+          "PRESCRICAO_5_ANOS": "Prescrição de 5 anos",
+          "MESES_ATE_65": "Meses até os 65",
+          "DATA_PREVISTA_PARTO": "Data prevista do parto",
+          "PRAZO_INSS": "Prazo do INSS"
+        },
+        "CAMPO_DA_CALCULADORA": "{campo} vem do passo",
+        "ESTE_PASSO": "Este passo",
+        "SAIDAS": "Saídas — a primeira que casa vale",
+        "SAIDAS_AJUDA": "Quando: o valor, uma faixa (< 64, >= 65), o resultado da calculadora ou * para qualquer outro. Sem saídas, o passo só anota e segue.",
+        "SAIDAS_AJUDA_TEXTO": "Texto livre: descreva cada saída em Quando — a IA escolhe a que melhor descreve a resposta.",
+        "QUANDO": "Quando",
+        "ACAO": "Então",
+        "ACOES": {
+          "SEGUIR": "Segue",
+          "IR_PARA": "Vai para o passo",
+          "DESQUALIFICAR": "Desqualifica",
+          "HUMANO": "Passa para a equipe",
+          "CONCLUIR": "Qualificado (fim)"
+        },
+        "ALVO": "Passo de destino",
+        "MOTIVO": "Motivo (vai para o histórico)",
+        "MOTIVO_PERDA": "Motivo de perda",
+        "MOTIVO_PERDA_PADRAO": "Sem viabilidade (padrão)",
+        "MENSAGEM": "Base da resposta da IA (opcional)",
+        "ETIQUETA": "Etiqueta na conversa",
+        "ETAPA": "Mover para a etapa",
+        "SEM_ETAPA": "Não mover",
+        "NOVA_SAIDA": "Saída",
+        "REMOVER_SAIDA": "Remover saída"
+      },
+      "TESTAR": {
+        "SEM_TESE": "Sem roteiro de tese",
+        "AJUDA": "Escolha uma tese para a IA seguir o roteiro dela. O roteiro roda de verdade, mas nada fica gravado."
+      }
+    },
+
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "registrado em {date}",

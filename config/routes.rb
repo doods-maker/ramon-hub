@@ -388,6 +388,8 @@ Rails.application.routes.draw do
               post :portal_link
               post :follow_up_draft
               post :reuniao
+              get :roteiro, to: 'lead_roteiros#show'
+              post :reabrir_roteiro, to: 'lead_roteiros#reabrir'
             end
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :notes, only: [:index, :create], controller: 'lead_notes'
@@ -434,6 +436,9 @@ Rails.application.routes.draw do
             resources :thesis_items, only: [:create, :update, :destroy] do
               collection { post :reorder }
             end
+          end
+          resources :roteiro_passos, only: [:index, :create, :update, :destroy] do
+            collection { post :reorder }
           end
           resources :triage_agents, except: [:new, :edit]
           resources :benefit_types, only: [:create, :update, :destroy] do

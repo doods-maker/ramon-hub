@@ -1,7 +1,7 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import CaptainAssistant from 'dashboard/api/captain/assistant';
 import AssistantPlayground from '../AssistantPlayground.vue';
-import { conversaDe, limparConversa } from '../testarConversas';
+import { conversaDe, limparConversa, roteiroDe } from '../testarConversas';
 
 vi.mock('dashboard/api/captain/assistant', () => ({
   default: { playground: vi.fn() },
@@ -87,5 +87,57 @@ describe('AssistantPlayground', () => {
       'Prepare a reunião deste caso. caso 12 (Maria)'
     );
     expect(CaptainAssistant.playground).not.toHaveBeenCalled();
+  });
+
+  it('roteiro em teste: manda a tese e o estado, guarda o que volta', async () => {
+    CaptainAssistant.playground.mockResolvedValue({
+      data: {
+        response: 'Você recebeu auxílio-doença?',
+        roteiro: {
+          thesis_id: 3,
+          estado: { respostas: { tem_advogado: { valor: 'nao' } } },
+          painel: { passos: [] },
+        },
+      },
+    });
+    const wrapper = mount(AssistantPlayground, { props: { assistantId: 1 } });
+    roteiroDe(1).thesisId = 3;
+    await enviar(wrapper, 'não tenho advogado');
+    await flushPromises();
+    expect(CaptainAssistant.playground).toHaveBeenCalledWith(
+      expect.objectContaining({ roteiro: { thesis_id: 3, estado: null } })
+    );
+    expect(roteiroDe(1).estado).toEqual({
+      respostas: { tem_advogado: { valor: 'nao' } },
+    });
+    expect(roteiroDe(1).painel).toEqual({ passos: [] });
+    roteiroDe(1).thesisId = null;
+  });
+
+  it('roteiro em teste: resposta atrasada de outra tese não grava o estado', async () => {
+    let responder;
+    CaptainAssistant.playground.mockReturnValue(
+      new Promise(resolve => {
+        responder = resolve;
+      })
+    );
+    const wrapper = mount(AssistantPlayground, { props: { assistantId: 1 } });
+    roteiroDe(1).thesisId = 3;
+    await enviar(wrapper, 'olá');
+    roteiroDe(1).thesisId = 4;
+    responder({
+      data: {
+        response: 'Oi',
+        roteiro: {
+          thesis_id: 3,
+          estado: { velho: true },
+          painel: { velho: 1 },
+        },
+      },
+    });
+    await flushPromises();
+    expect(roteiroDe(1).estado).not.toEqual({ velho: true });
+    expect(roteiroDe(1).painel).not.toEqual({ velho: 1 });
+    roteiroDe(1).thesisId = null;
   });
 });

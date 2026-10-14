@@ -131,6 +131,16 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/follow_up_draft`);
   }
 
+  // Roteiro da IA no painel (F2): passo a passo + desfecho; data null = lead sem roteiro.
+  roteiro(leadId) {
+    return axios.get(`${this.url}/${leadId}/roteiro`);
+  }
+
+  // Volta no passo que decidiu; devolve o painel novo (422 se ganho/perdido ou em andamento).
+  reabrirRoteiro(leadId) {
+    return axios.post(`${this.url}/${leadId}/reabrir_roteiro`);
+  }
+
   // resultado: 'qualificada' | 'nao_qualificada' (Closer, base do prêmio do SDR)
   // taskId: a reunião que o "Feito" está fechando (sem ele, o backend fecha
   // a aberta mais antiga até hoje)

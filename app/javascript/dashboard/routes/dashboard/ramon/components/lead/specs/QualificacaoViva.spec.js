@@ -1,8 +1,14 @@
-import { shallowMount } from '@vue/test-utils';
+import { shallowMount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import QualificacaoViva from '../QualificacaoViva.vue';
+import LeadsAPI from 'dashboard/api/leads';
+import RoteiroDoLead from '../RoteiroDoLead.vue';
+
+vi.mock('dashboard/api/leads', () => ({
+  default: { roteiro: vi.fn(() => Promise.resolve({ data: null })) },
+}));
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: k => k }),
@@ -66,6 +72,7 @@ describe('QualificacaoViva.vue', () => {
   beforeEach(() => {
     alertSpy.mockClear();
     clipboardSpy.mockClear();
+    LeadsAPI.roteiro.mockClear();
   });
 
   const criterios = w =>
@@ -191,5 +198,49 @@ describe('QualificacaoViva.vue', () => {
     expect(
       semCriterios.find('[data-testid="panel-card-qualificacao"]').exists()
     ).toBe(false);
+  });
+
+  it('com roteiro na tese mostra o roteiro no lugar do checklist', async () => {
+    LeadsAPI.roteiro.mockResolvedValueOnce({
+      data: {
+        so_comuns: false,
+        passos: [{ chave: 'a', titulo: 'A', situacao: 'atual' }],
+      },
+    });
+    const wrapper = mountQualificacao(baseLead);
+    await flushPromises();
+    expect(LeadsAPI.roteiro).toHaveBeenCalledWith(3);
+    expect(wrapper.findComponent(RoteiroDoLead).exists()).toBe(true);
+    expect(
+      wrapper.find('[data-testid="panel-card-qualificacao"]').exists()
+    ).toBe(false);
+  });
+
+  it('tese só com passos comuns: roteiro e checklist juntos', async () => {
+    LeadsAPI.roteiro.mockResolvedValueOnce({
+      data: {
+        so_comuns: true,
+        passos: [{ chave: 'a', titulo: 'A', situacao: 'respondido' }],
+      },
+    });
+    const wrapper = mountQualificacao(baseLead);
+    await flushPromises();
+    expect(wrapper.findComponent(RoteiroDoLead).exists()).toBe(true);
+    expect(
+      wrapper.find('[data-testid="panel-card-qualificacao"]').exists()
+    ).toBe(true);
+  });
+
+  it('recarrega só quando a roteiro_versao muda', async () => {
+    const wrapper = mountQualificacao({ ...baseLead, roteiro_versao: 'a' });
+    await flushPromises();
+    await wrapper.setProps({
+      lead: { ...baseLead, roteiro_versao: 'a', name: 'Ana Maria' },
+    });
+    await flushPromises();
+    expect(LeadsAPI.roteiro).toHaveBeenCalledTimes(1);
+    await wrapper.setProps({ lead: { ...baseLead, roteiro_versao: 'b' } });
+    await flushPromises();
+    expect(LeadsAPI.roteiro).toHaveBeenCalledTimes(2);
   });
 });

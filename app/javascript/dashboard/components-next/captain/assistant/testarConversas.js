@@ -4,13 +4,21 @@
 import { reactive } from 'vue';
 
 const conversas = reactive({});
+// Roteiro da tese em teste (F2): a tese escolhida e o estado que o servidor devolve a cada resposta (nada é gravado).
+const roteiros = reactive({});
 
 export const garantirConversa = id => {
   if (!conversas[id]) conversas[id] = [];
+  if (!roteiros[id])
+    roteiros[id] = { thesisId: null, estado: null, painel: null };
 };
 
 export const conversaDe = id => conversas[id] || [];
 
+export const roteiroDe = id => roteiros[id];
+
 export const limparConversa = id => {
   conversas[id] = [];
+  // a tese escolhida fica; o roteiro recomeça junto com a conversa
+  if (roteiros[id]) Object.assign(roteiros[id], { estado: null, painel: null });
 };

@@ -7,7 +7,9 @@ import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import Button from 'dashboard/components-next/button/Button.vue';
+import LeadsAPI from 'dashboard/api/leads';
 import { CARTAO, TITULO } from '../../helpers/ui';
+import RoteiroDoLead from './RoteiroDoLead.vue';
 
 const props = defineProps({
   lead: { type: Object, required: true },
@@ -35,6 +37,41 @@ watch(() => props.lead?.thesis_id, ensureItems, { immediate: true });
 const criterios = computed(() =>
   (thesis.value?.items || []).filter(item => item.section === 'qualificacao')
 );
+// Roteiro da IA (F2): com passos na tese, o card mostra o roteiro passo a passo no lugar do checklist (tese só com
+// os passos comuns mostra os dois). Recarrega quando o broadcast do lead traz outra roteiro_versao — a chave em
+// texto evita recarregar a cada broadcast que não mexeu no roteiro.
+const roteiro = ref(null);
+let pedido = 0;
+// painel reaberto: invalida carga em voo, que sobrescreveria o estado novo
+const reaberto = novo => {
+  pedido += 1;
+  roteiro.value = novo;
+};
+const carregarRoteiro = async () => {
+  pedido += 1;
+  const meu = pedido;
+  if (!props.lead?.id || !props.lead?.thesis_id) {
+    roteiro.value = null;
+    return;
+  }
+  try {
+    const { data } = await LeadsAPI.roteiro(props.lead.id);
+    if (meu === pedido) roteiro.value = data?.passos ? data : null;
+  } catch {
+    if (meu === pedido) roteiro.value = null;
+  }
+};
+watch(
+  () =>
+    `${props.lead?.id}|${props.lead?.thesis_id}|${props.lead?.roteiro_versao}`,
+  carregarRoteiro,
+  { immediate: true }
+);
+const bloqueio = computed(() => {
+  if (props.lead?.won_at) return 'ganho';
+  return props.lead?.lost_at ? 'perdido' : '';
+});
+
 const statusMap = computed(
   () => props.lead?.custom_attributes?.qualificacao_status || {}
 );
@@ -98,8 +135,17 @@ const perguntar = async item => {
 <template>
   <!-- compacto: só as pendentes à vista; respondidas recolhidas atrás de um
        toggle (order-* põe o toggle entre as duas listas num v-for só) -->
+  <RoteiroDoLead
+    v-if="roteiro"
+    :roteiro="roteiro"
+    :lead-id="lead.id"
+    :bloqueio="bloqueio"
+    @reaberto="reaberto"
+  />
   <div
-    v-if="lead?.thesis_id && criterios.length"
+    v-if="
+      lead?.thesis_id && criterios.length && (!roteiro || roteiro.so_comuns)
+    "
     :class="CARTAO"
     data-testid="panel-card-qualificacao"
   >
