@@ -19,10 +19,10 @@ module Ramon::Roteiro::Efeitos
     anotar(lead, "#{passo.titulo} → #{resumo(saida)}") if ENCERRA.include?(saida['acao']) || efeitos.values.any?(&:present?)
   end
 
-  # ponytail: lê só o atributo da conversa (Ramon::CopilotoModo vive em enterprise/, fora do CI); se o
-  # RAMON_COPILOTO_MODO_DEFAULT um dia virar piloto_total, considerar o default aqui também.
+  # Etapa e Perdido direto no piloto total e nos modos "sozinha até…" (F3), pelo modo efetivo da conversa
+  # (atributo → caixa → env). Lead sem conversa nunca é direto.
   def direto?(lead)
-    lead.conversation&.custom_attributes&.[]('copiloto_modo') == 'piloto_total'
+    lead.conversation.present? && Ramon::CopilotoModo.direto?(Ramon::CopilotoModo.of(lead.conversation))
   end
 
   # Label do Chatwoot é minúscula (Label#title.downcase).
