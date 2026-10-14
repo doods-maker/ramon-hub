@@ -52,8 +52,16 @@ module LeadComercial
       contrato_limpo_em: contrato_limpo_em&.iso8601,
       # selo do contrato ZapSign no card do funil (o índice é slim, sem o jsonb)
       zapsign_status: custom_attributes&.dig('zapsign', 'status'),
-      zapsign_assinado_em: custom_attributes&.dig('zapsign', 'assinado_em')
+      zapsign_assinado_em: custom_attributes&.dig('zapsign', 'assinado_em'),
+      # o painel recarrega o roteiro quando muda (o broadcast não leva o jsonb)
+      roteiro_versao: roteiro_versao
     }
+  end
+
+  # Assinatura do estado do roteiro da tese (F2): muda a cada resposta registrada ou roteiro reaberto.
+  def roteiro_versao
+    estado = custom_attributes&.dig('roteiro')
+    estado && Digest::MD5.hexdigest(estado.to_json)
   end
 
   private

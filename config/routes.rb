@@ -388,6 +388,8 @@ Rails.application.routes.draw do
               post :portal_link
               post :follow_up_draft
               post :reuniao
+              get :roteiro, to: 'lead_roteiros#show'
+              post :reabrir_roteiro, to: 'lead_roteiros#reabrir'
             end
             resources :activities, only: [:index], controller: 'lead_activities'
             resources :notes, only: [:index, :create], controller: 'lead_notes'
