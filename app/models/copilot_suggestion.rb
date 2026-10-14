@@ -32,6 +32,14 @@ class CopilotSuggestion < ApplicationRecord
     true
   end
 
+  # Recusar o Perdido sugerido pelo roteiro da tese reabre o roteiro no passo que decidiu (decisão 13/10).
+  def dismiss!
+    return unless status == 'pending'
+
+    update!(status: 'dismissed')
+    Ramon::Roteiro.reabrir(lead, se: 'desqualificado') if perdido_do_roteiro? && lead.lost_at.nil?
+  end
+
   private
 
   def executar(user)
@@ -105,6 +113,13 @@ class CopilotSuggestion < ApplicationRecord
     return recusar('Nao ha etapa de perdido configurada no funil') if etapa.blank?
 
     lead.update!(lead_stage: etapa, lost_reason: payload['lost_reason'].presence || 'Sugerido pelo agente')
+    # Perdido do roteiro aprovado: etiqueta e IA calada; a conversa fica com o robô (decisão 13/10).
+    Ramon::Roteiro::Efeitos.calar(lead) if perdido_do_roteiro?
+    true
+  end
+
+  def perdido_do_roteiro?
+    kind == 'acao' && payload['acao'] == 'perdido' && payload['origem'] == 'roteiro'
   end
 
   def criar_nota(user, body)

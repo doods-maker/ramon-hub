@@ -270,7 +270,8 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
             service.send(:track_handoff_usage,
                          Captain::Tools::HandoffTool.new(assistant).name,
                          Captain::Tools::HandoffTool.new(assistant).name,
-                         Struct.new(:context).new({}))
+                         Struct.new(:context).new({}),
+                         false)
             raise error
           end
         end

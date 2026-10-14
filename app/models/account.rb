@@ -99,6 +99,7 @@ class Account < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :lead_tasks, dependent: :destroy_async
   has_many :leads, dependent: :destroy_async
   has_many :lost_reasons, dependent: :destroy_async
+  has_many :roteiro_passos, dependent: :destroy_async
   has_many :theses, dependent: :destroy_async
   has_many :triage_agents, dependent: :destroy_async
   has_many :lead_triages, dependent: :destroy_async

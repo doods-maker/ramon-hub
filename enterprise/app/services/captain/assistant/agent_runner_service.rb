@@ -178,11 +178,14 @@ class Captain::Assistant::AgentRunnerService
 
   def add_usage_metadata_callback(runner)
     handoff_tool_name = Captain::Tools::HandoffTool.new(@assistant).name
+    roteiro_tool_name = Captain::Tools::RoteiroRegistrarTool.new(@assistant).name
 
     # Tool tracking always runs — process_response in the job consumes the resulting
     # handoff_tool_called flag regardless of whether OTEL is enabled.
-    runner.on_tool_complete do |tool_name, _tool_result, context_wrapper|
-      track_handoff_usage(tool_name, handoff_tool_name, context_wrapper)
+    runner.on_tool_complete do |tool_name, tool_result, context_wrapper|
+      # Saída "humano" do roteiro da tese já fez bot_handoff! (Ramon::Roteiro::Efeitos.humano): conta como handoff.
+      roteiro_handoff = tool_name.to_s == roteiro_tool_name && tool_result.to_s.include?(Captain::Tools::RoteiroRegistrarTool::HANDOFF)
+      track_handoff_usage(tool_name, handoff_tool_name, context_wrapper, roteiro_handoff)
     end
 
     if ChatwootApp.otel_enabled?
@@ -193,9 +196,9 @@ class Captain::Assistant::AgentRunnerService
     runner
   end
 
-  def track_handoff_usage(tool_name, handoff_tool_name, context_wrapper)
+  def track_handoff_usage(tool_name, handoff_tool_name, context_wrapper, roteiro_handoff)
     return unless context_wrapper&.context
-    return unless tool_name.to_s == handoff_tool_name
+    return unless tool_name.to_s == handoff_tool_name || roteiro_handoff
 
     # Mirror the flag onto the instance so error_response can surface it even when
     # the runner raises before returning a result (the context is unreachable then).

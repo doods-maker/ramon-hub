@@ -188,6 +188,20 @@
   nivel: interna
   sistema: funil
 
+- id: roteiro_passo_atual
+  title: 'Passo atual do roteiro'
+  description: 'O que perguntar agora no roteiro de qualificação da tese do lead'
+  icon: 'checkmark-circle'
+  nivel: consulta
+  sistema: funil
+
+- id: roteiro_registrar
+  title: 'Registrar no roteiro'
+  description: 'Grava a resposta do lead no roteiro; o motor aplica a consequência (segue, desqualifica, equipe)'
+  icon: 'checkmark-circle'
+  nivel: interna
+  sistema: funil
+
 - id: criar_tarefa_esteira
   title: 'Criar tarefa de cadência'
   description: 'Cria um lembrete interno na Esteira do caso (cobrar, retomar, ligar) com data e hora'
