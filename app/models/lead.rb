@@ -3,6 +3,7 @@ class Lead < ApplicationRecord
   include LeadDocs
   include LeadComercial
   include LeadCasoCalculo
+  include LeadRoteiro
 
   PRESCRIPTION_WINDOW_MONTHS = 60
 
@@ -197,7 +198,7 @@ class Lead < ApplicationRecord
 
   # Tirar do Perdido no Kanban reabre o roteiro da tese desqualificado (decisão 13/10).
   def reabrir_roteiro
-    Ramon::Roteiro.reabrir(self, se: 'desqualificado')
+    Ramon::Roteiro.reabrir(self, se: Ramon::Roteiro::DESQUALIFICADO)
   end
 
   # Ponte Drive (ADR-0002): export incremental dos docs conferidos de lead ganho.

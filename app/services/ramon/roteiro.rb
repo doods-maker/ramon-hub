@@ -12,6 +12,13 @@ module Ramon::Roteiro
               '(playbook da tese e registrar qualificacao).'.freeze
   # Passo comum que descobre a tese do lead que chegou sem (spec §3.6, F3). Chave fixa.
   ASSUNTO = 'assunto'.freeze
+  # Desfechos do roteiro (spec §3.2) — fonte única: a ação da saída que encerra → o desfecho.
+  QUALIFICADO = 'qualificado'.freeze
+  DESQUALIFICADO = 'desqualificado'.freeze
+  HUMANO = 'humano'.freeze
+  DESFECHO_DA_ACAO = { 'concluir' => QUALIFICADO, 'desqualificar' => DESQUALIFICADO, 'humano' => HUMANO }.freeze
+  # Saída que o motor monta quando nada casa ou o destino não existe (spec §5: equipe + aviso ao admin).
+  SEM_SAIDA = 'sem_saida'.freeze
 
   module_function
 

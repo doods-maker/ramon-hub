@@ -4,8 +4,8 @@
 # dos modos "sozinha até…" usam, e o CI testa.
 module Ramon::CopilotoModo
   # "Sozinha até…" (spec roteiro §3.7): envia direto como o piloto total até o limite (Ramon::CopilotoLimite).
-  LIMITES = { 'piloto_ate_qualificacao' => 'qualificacao', 'piloto_ate_reuniao' => 'reuniao',
-              'piloto_ate_contrato' => 'contrato' }.freeze
+  LIMITES = { 'piloto_ate_qualificacao' => Ramon::CopilotoLimite::QUALIFICACAO, 'piloto_ate_reuniao' => Ramon::CopilotoLimite::REUNIAO,
+              'piloto_ate_contrato' => Ramon::CopilotoLimite::CONTRATO }.freeze
   MODOS = (%w[manual rascunho piloto_limitado piloto_total] + LIMITES.keys).freeze
   DEFAULT = 'rascunho'.freeze
 

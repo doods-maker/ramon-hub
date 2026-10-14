@@ -5,25 +5,26 @@
 # Níveis em ordem: chegar a um mais adiante também encerra os de antes. Quem chama: Lead (etapa ou ZapSign mudou),
 # o roteiro (fim de Efeitos.aplicar) e o contrato automático que não saiu (Ramon::ContratoAutomatico).
 module Ramon::CopilotoLimite
-  NIVEIS = %w[qualificacao reuniao contrato].freeze
-  NOMES = { 'qualificacao' => 'lead qualificado', 'reuniao' => 'reunião marcada', 'contrato' => 'contrato enviado' }.freeze
+  QUALIFICACAO = 'qualificacao'.freeze
+  REUNIAO = 'reuniao'.freeze
+  CONTRATO = 'contrato'.freeze
+  NIVEIS = [QUALIFICACAO, REUNIAO, CONTRATO].freeze
+  NOMES = { QUALIFICACAO => 'lead qualificado', REUNIAO => 'reunião marcada', CONTRATO => 'contrato enviado' }.freeze
 
   module_function
 
   # @return [String, nil] o limite encerrado agora
   def verificar(lead)
-    return if lead.conversation.nil?
-
-    limite = Ramon::CopilotoModo::LIMITES[Ramon::CopilotoModo.of(lead.conversation)]
+    limite = Ramon::CopilotoModo::LIMITES[lead.copiloto_modo]
     encerrar(lead, limite) if limite && atingido?(limite, lead)
   end
 
   # Idempotente: fora de um modo "até…" (já encerrado, ou nunca esteve) não faz nada.
   def encerrar(lead, limite, motivo = nil)
-    conversa = lead.conversation
-    modo = conversa && Ramon::CopilotoModo.of(conversa)
-    return unless Ramon::CopilotoModo::LIMITES.key?(modo)
+    modo = lead.copiloto_modo
+    return unless lead.conversation && Ramon::CopilotoModo::LIMITES.key?(modo)
 
+    conversa = lead.conversation
     carimbo = { 'limite' => limite, 'modo' => modo, 'motivo' => motivo, 'em' => Time.zone.now.iso8601 }.compact
     conversa.update!(custom_attributes: (conversa.custom_attributes || {}).merge('copiloto_modo' => 'rascunho',
                                                                                  'copiloto_limite' => carimbo))
@@ -38,10 +39,10 @@ module Ramon::CopilotoLimite
 
   # Qualificação = só o desfecho qualificado do roteiro (desqualificado/equipe já encerram pelos efeitos da F1).
   def nivel(lead)
-    return 'contrato' if lead.won_at.present? || lead.custom_attributes&.dig('zapsign', 'sign_url').present?
-    return 'reuniao' if reuniao?(lead)
+    return CONTRATO if lead.won_at.present? || lead.contrato_enviado?
+    return REUNIAO if reuniao?(lead)
 
-    'qualificacao' if lead.custom_attributes&.dig('roteiro', 'desfecho') == 'qualificado'
+    QUALIFICACAO if lead.desfecho_roteiro == Ramon::Roteiro::QUALIFICADO
   end
 
   # Link do ZapSign mudou no lead (callback do Lead; a mudança só do roteiro NÃO entra, ver Lead).
