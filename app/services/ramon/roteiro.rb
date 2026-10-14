@@ -7,18 +7,23 @@
 # ponytail: last-write-wins no custom_attributes (duas respostas no mesmo instante); with_lock se aparecer corrida.
 module Ramon::Roteiro
   TIPOS = { 'sim_nao' => 'sim ou nao', 'escolha' => 'uma das opcoes', 'numero' => 'numero',
-            'data' => 'data AAAA-MM-DD', 'texto' => 'texto livre + saida_id' }.freeze
+            'data' => 'data AAAA-MM-DD', 'texto' => 'texto livre' }.freeze
   COMUNS_OK = 'Passos comuns concluidos e esta tese nao tem roteiro proprio: siga a triagem de sempre ' \
               '(playbook da tese e registrar qualificacao).'.freeze
+  # Passo comum que descobre a tese do lead que chegou sem (spec §3.6, F3). Chave fixa.
+  ASSUNTO = 'assunto'.freeze
 
   module_function
 
   # Comuns da conta (em toda tese) e depois os da tese. Nenhum passo = sem roteiro (triagem de sempre).
-  # ponytail: lead sem tese fica sem roteiro até a F3 (tese automática + passo comum "assunto").
+  # Lead sem tese (F3): só os comuns, e só se existir o comum "assunto" — é ele que descobre a tese. Com tese, ele sai.
   def passos(lead)
-    return [] if lead.thesis_id.nil?
+    comuns = RoteiroPasso.comuns.where(account_id: lead.account_id).to_a
+    sem_tese = lead.thesis_id.nil?
+    return [] if sem_tese && comuns.none? { |p| p.chave == ASSUNTO }
+    return comuns if sem_tese
 
-    RoteiroPasso.comuns.where(account_id: lead.account_id).to_a + RoteiroPasso.where(thesis_id: lead.thesis_id).to_a
+    comuns.reject { |p| p.chave == ASSUNTO } + RoteiroPasso.where(thesis_id: lead.thesis_id).to_a
   end
 
   # Trocar a tese reinicia o roteiro; as respostas dos passos comuns ficam, menos a que encerrou o roteiro.
@@ -84,7 +89,8 @@ module Ramon::Roteiro
     linhas = ["Passo atual: #{passo.titulo} (chave: #{passo.chave}; resposta: #{TIPOS[passo.tipo_resposta]})"]
     linhas << "Como perguntar: #{passo.orientacao}" if passo.orientacao.present?
     linhas << "Opcoes: #{passo.opcoes.join(' | ')}" if passo.tipo_resposta == 'escolha'
-    linhas << "Saidas (informe saida_id): #{passo.saidas.map { |s| "#{s['id']} = #{s['quando']}" }.join('; ')}" if passo.tipo_resposta == 'texto'
+    saidas = passo.saidas.map { |s| "#{s['id']} = #{s['quando']}" }.join('; ')
+    linhas << "Saidas (informe saida_id): #{saidas}" if passo.tipo_resposta == 'texto' && saidas.present?
     linhas
   end
 

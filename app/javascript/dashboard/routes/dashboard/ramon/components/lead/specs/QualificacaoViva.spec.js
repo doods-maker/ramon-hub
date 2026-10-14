@@ -231,6 +231,19 @@ describe('QualificacaoViva.vue', () => {
     ).toBe(true);
   });
 
+  it('lead sem tese também pede o roteiro (passo assunto)', async () => {
+    LeadsAPI.roteiro.mockResolvedValueOnce({
+      data: {
+        so_comuns: true,
+        passos: [{ chave: 'assunto', titulo: 'Assunto', situacao: 'atual' }],
+      },
+    });
+    const wrapper = mountQualificacao({ ...baseLead, thesis_id: null });
+    await flushPromises();
+    expect(LeadsAPI.roteiro).toHaveBeenCalledWith(3);
+    expect(wrapper.findComponent(RoteiroDoLead).exists()).toBe(true);
+  });
+
   it('recarrega só quando a roteiro_versao muda', async () => {
     const wrapper = mountQualificacao({ ...baseLead, roteiro_versao: 'a' });
     await flushPromises();

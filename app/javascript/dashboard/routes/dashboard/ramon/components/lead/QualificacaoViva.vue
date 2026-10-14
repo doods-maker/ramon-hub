@@ -50,7 +50,7 @@ const reaberto = novo => {
 const carregarRoteiro = async () => {
   pedido += 1;
   const meu = pedido;
-  if (!props.lead?.id || !props.lead?.thesis_id) {
+  if (!props.lead?.id) {
     roteiro.value = null;
     return;
   }
