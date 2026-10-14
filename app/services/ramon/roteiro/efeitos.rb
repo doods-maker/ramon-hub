@@ -29,7 +29,7 @@ module Ramon::Roteiro::Efeitos
   def etiquetar(lead, etiqueta)
     return if etiqueta.blank? || lead.conversation.nil?
 
-    lead.conversation.add_labels([etiqueta.to_s.downcase])
+    lead.conversation.reload.add_labels([etiqueta.to_s.downcase])
   end
 
   # Só etapa aberta: ganho nunca; perdido só pela saída desqualificar.
@@ -74,6 +74,7 @@ module Ramon::Roteiro::Efeitos
   end
 
   def restaurar(conversa)
+    conversa.reload
     attrs = conversa.custom_attributes || {}
     conversa.update!(custom_attributes: attrs.except(MODO_ANTES).merge('copiloto_modo' => attrs[MODO_ANTES])) if attrs.key?(MODO_ANTES)
     return unless conversa.label_list.include?(ETIQUETA_DESQUALIFICADO)

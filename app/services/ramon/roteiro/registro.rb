@@ -62,7 +62,7 @@ class Ramon::Roteiro::Registro
   def gravar(valor, calc, saida)
     guardar_resposta(valor, calc, saida)
     saida = avancar(saida)
-    @est['aguarda_equipe'] = true if saida['acao'] == 'desqualificar' && !Ramon::Roteiro::Efeitos.direto?(@lead)
+    @est['aguarda_equipe'] = true if vira_sugestao_de_perdido?(saida)
     @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @est))
     Ramon::Roteiro::Efeitos.aplicar(@lead, @passo, saida)
     { estado: @est, proximo: @est['desfecho'] ? nil : Ramon::Roteiro.proximo(@lista, @est), calc: calc,
@@ -87,6 +87,11 @@ class Ramon::Roteiro::Registro
     saida = saida.merge('acao' => 'concluir') if acabou?(saida)
     encerrar(saida)
     saida
+  end
+
+  # Só quando Efeitos.desqualificar de fato cria a sugestão (lead ganho/perdido sai cedo, sem ela).
+  def vira_sugestao_de_perdido?(saida)
+    saida['acao'] == 'desqualificar' && !Ramon::Roteiro::Efeitos.direto?(@lead) && @lead.won_at.nil? && @lead.lost_at.nil?
   end
 
   def acabou?(saida)

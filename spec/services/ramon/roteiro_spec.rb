@@ -179,6 +179,7 @@ RSpec.describe Ramon::Roteiro do
     registrar('tem_advogado', 'sim')
     expect(lead.reload.lead_stage).to eq(ganho)
     expect(account.copilot_suggestions.count).to eq(0)
+    expect(lead.custom_attributes.dig('roteiro', 'aguarda_equipe')).to be_nil
   end
 
   it 'trocar a tese recomeça o roteiro e mantém os comuns' do
