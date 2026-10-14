@@ -2,6 +2,7 @@ import {
   conversaDe,
   garantirConversa,
   limparConversa,
+  roteiroDe,
 } from '../testarConversas';
 
 describe('conversas do Testar (I-PG3)', () => {
@@ -25,5 +26,17 @@ describe('conversas do Testar (I-PG3)', () => {
     conversaDe(1).push({ content: 'oi' });
     garantirConversa(1);
     expect(conversaDe(1)).toHaveLength(1);
+  });
+
+  it('roteiro do Testar: limpar a conversa zera o estado e mantém a tese', () => {
+    garantirConversa(1);
+    Object.assign(roteiroDe(1), {
+      thesisId: 3,
+      estado: { a: 1 },
+      painel: { passos: [] },
+    });
+    limparConversa(1);
+    expect(roteiroDe(1)).toEqual({ thesisId: 3, estado: null, painel: null });
+    roteiroDe(1).thesisId = null;
   });
 });

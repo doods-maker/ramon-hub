@@ -27,11 +27,14 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     return render(json: playground_legado) unless captain_v2_enabled?
 
     # ramon (I-PG2): as ferramentas que rodaram nesta resposta vão junto, para o Testar mostrar debaixo dela.
+    # ramon (roteiro F2): com tese escolhida no Testar, o roteiro roda em teste e o estado novo volta junto
+    # (as tools alteram o mesmo `teste` que está no state).
     ferramentas = []
+    teste = Ramon::Roteiro::Teste.de_params(Current.account, params[:roteiro]&.to_unsafe_h)
     coletor = ->(nome, retorno, *) { ferramentas << ferramenta_usada(nome, retorno) }
-    runner = Captain::Assistant::AgentRunnerService.new(assistant: @assistant, source: 'playground',
-                                                        callbacks: { on_tool_complete: coletor })
-    render json: runner.generate_response(message_history: playground_message_history).merge('ferramentas' => ferramentas)
+    resposta = playground_runner(coletor, teste).generate_response(message_history: playground_message_history)
+    resposta = resposta.merge('ferramentas' => ferramentas)
+    render json: teste ? resposta.merge('roteiro' => Ramon::Roteiro::Teste.resposta(Current.account, teste)) : resposta
   end
 
   def tools
@@ -71,6 +74,13 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     Captain::Llm::AssistantChatService.new(assistant: @assistant, source: 'playground').generate_response(
       additional_message: playground_params[:message_content], message_history: message_history
     )
+  end
+
+  def playground_runner(coletor, teste)
+    opcoes = { assistant: @assistant, source: 'playground', callbacks: { on_tool_complete: coletor } }
+    return Captain::Assistant::AgentRunnerService.new(**opcoes) if teste.nil?
+
+    Captain::Assistant::PlaygroundRunnerService.new(roteiro_teste: teste, **opcoes)
   end
 
   # RubyLLM::Tool#name = "captain-tools-<id>"; erro = o aviso que o BasePublicTool devolve quando a ferramenta falha.

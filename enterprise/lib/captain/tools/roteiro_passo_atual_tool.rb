@@ -8,6 +8,10 @@ class Captain::Tools::RoteiroPassoAtualTool < Captain::Tools::RamonBaseTool
   param :lead_id, type: 'string', desc: 'Id do caso (lead). Sem ele, usa o caso da conversa aberta.', required: false
 
   def perform(tool_context, lead_id: nil)
+    # Testar com tese (F2): roteiro em teste, sem lead — nada é gravado.
+    teste = tool_context.state&.dig(:roteiro_teste)
+    return ::Ramon::Roteiro::Teste.atual(@assistant.account, teste) || SEM_ROTEIRO if teste
+
     lead = resolver_lead(tool_context.state, lead_id)
     return SEM_LEAD if lead.blank?
 

@@ -15,10 +15,12 @@ class CaptainAssistant extends ApiClient {
     });
   }
 
-  playground({ assistantId, messageContent, messageHistory }) {
+  // ramon (roteiro F2): roteiro = { thesis_id, estado } quando o Testar escolheu uma tese.
+  playground({ assistantId, messageContent, messageHistory, roteiro }) {
     return axios.post(`${this.url}/${assistantId}/playground`, {
       message_content: messageContent,
       message_history: messageHistory,
+      ...(roteiro ? { roteiro } : {}),
     });
   }
 

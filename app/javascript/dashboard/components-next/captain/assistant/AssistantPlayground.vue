@@ -8,6 +8,7 @@ import {
   conversaDe,
   garantirConversa,
   limparConversa,
+  roteiroDe,
 } from './testarConversas';
 
 const { assistantId } = defineProps({
@@ -57,6 +58,8 @@ const sendMessage = async () => {
     timestamp: new Date().toISOString(),
   };
   const conversa = conversaDe(assistantId);
+  // roteiro em teste (tese escolhida no Testar): vai o estado, volta o novo — nada é gravado (F2)
+  const roteiro = roteiroDe(assistantId);
   conversa.push(userMessage);
   const historico = formatMessagesForApi();
   const currentMessage = newMessage.value;
@@ -68,7 +71,16 @@ const sendMessage = async () => {
       assistantId,
       messageContent: currentMessage,
       messageHistory: historico,
+      roteiro: roteiro?.thesisId
+        ? { thesis_id: roteiro.thesisId, estado: roteiro.estado }
+        : null,
     });
+    if (data.roteiro && roteiro) {
+      Object.assign(roteiro, {
+        estado: data.roteiro.estado,
+        painel: data.roteiro.painel,
+      });
+    }
 
     conversa.push({
       content: data.response,
