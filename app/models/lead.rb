@@ -58,6 +58,10 @@ class Lead < ApplicationRecord
   after_create_commit :record_created_activity
   after_update_commit :record_change_activities
   after_update_commit :ganhou, if: :saved_change_to_won_at?
+  # Modos "sozinha até…" (F3): etapa (reunião) ou contrato do ZapSign mudou → a IA pode ter chegado ao limite. Mudança só
+  # do roteiro NÃO entra: ele confere no fim dos efeitos (Efeitos.aplicar), senão o rascunho entraria antes da etapa/Perdido.
+  after_update_commit -> { Ramon::CopilotoLimite.verificar(self) },
+                      if: -> { saved_change_to_lead_stage_id? || Ramon::CopilotoLimite.contrato_mudou?(self) }
   after_update_commit :enqueue_drive_export, if: -> { saved_change_to_won_at? || saved_change_to_custom_attributes? }
 
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity

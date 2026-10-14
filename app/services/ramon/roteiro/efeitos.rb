@@ -17,6 +17,7 @@ module Ramon::Roteiro::Efeitos
     desqualificar(lead, passo, saida) if saida['acao'] == 'desqualificar'
     humano(lead, saida['motivo']) if saida['acao'] == 'humano'
     anotar(lead, "#{passo.titulo} → #{resumo(saida)}") if ENCERRA.include?(saida['acao']) || efeitos.values.any?(&:present?)
+    Ramon::CopilotoLimite.verificar(lead)
   end
 
   # Etapa e Perdido direto no piloto total e nos modos "sozinha até…" (F3), pelo modo efetivo da conversa
@@ -98,10 +99,15 @@ module Ramon::Roteiro::Efeitos
     conversa = lead.conversation
     conversa.bot_handoff! if conversa&.pending?
     modo(lead, 'rascunho')
+    avisar(lead, "IA passou #{lead.name} para a equipe: #{motivo}", "IA passou para a equipe: #{lead.name}", motivo)
+  end
+
+  # Sino + push ao closer/SDR do lead, sem eles aos gestores (também usado por Ramon::CopilotoLimite).
+  def avisar(lead, label, titulo, corpo)
     ids = [lead.closer_id || lead.sdr_id].compact.presence || Ramon::Papeis.gestor_ids(lead.account)
     Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_fluxo_aviso', user_ids: ids,
-                                       meta: { 'label' => "IA passou #{lead.name} para a equipe: #{motivo}".truncate(200) }).perform
-    Ramon::NtfyPushJob.perform_later(lead.id, title: "IA passou para a equipe: #{lead.name}", body: motivo.to_s.truncate(200))
+                                       meta: { 'label' => label.truncate(200) }).perform
+    Ramon::NtfyPushJob.perform_later(lead.id, title: titulo, body: corpo.to_s.truncate(200))
   end
 
   # Guarda o modo de antes para o reabrir devolver (decisão 13/10); o 1º modo vale até o reabrir.
