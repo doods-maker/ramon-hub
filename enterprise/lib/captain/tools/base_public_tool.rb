@@ -44,8 +44,13 @@ class Captain::Tools::BasePublicTool < Agents::Tool
     tool_context&.state&.dig(:source).to_s == SOURCE_TESTE
   end
 
+  # CPF etc. viram '***' tanto no registro de Execuções quanto na simulação do teste (que também vai para o ToolRun).
+  def self.mascarar(params)
+    params.to_h { |chave, valor| [chave, PARAMS_SENSIVEIS.include?(chave.to_sym) ? '***' : valor.to_s] }
+  end
+
   def self.simulacao(nome, params)
-    "[TESTE] faria #{nome}(#{params.map { |chave, valor| "#{chave}: #{valor}" }.join(', ')})"
+    "[TESTE] faria #{nome}(#{mascarar(params).map { |chave, valor| "#{chave}: #{valor}" }.join(', ')})"
   end
 
   def execute(tool_context, **params)
@@ -80,7 +85,7 @@ class Captain::Tools::BasePublicTool < Agents::Tool
       account_id: @assistant&.account_id, assistant_id: @assistant&.id, **origem(tool_context),
       lead_id: Integer(params[:lead_id].to_s, exception: false),
       tool_name: id_catalogo, status: status,
-      params: params.except(:lead_id).to_h { |chave, valor| [chave, PARAMS_SENSIVEIS.include?(chave) ? '***' : valor.to_s] },
+      params: self.class.mascarar(params.except(:lead_id)),
       resultado: resultado.to_s.truncate(::Captain::ToolRun::MAX_RESULTADO),
       duration_ms: ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - inicio) * 1000).round
     )
