@@ -75,8 +75,13 @@ const sendMessage = async () => {
       messageHistory: historico,
       roteiro: pedidoDoRoteiro(roteiro),
     });
-    // resposta atrasada de outra seleção não grava o estado; a tese pode ter vindo do "assunto"
-    if (data.roteiro && roteiro && roteiro.selecao === selecaoEnviada) {
+    // resposta atrasada de outra seleção (ou de antes do Limpar) não grava o estado; a tese pode ter vindo do "assunto"
+    if (
+      data.roteiro &&
+      roteiro &&
+      roteiro.selecao === selecaoEnviada &&
+      conversaDe(assistantId) === conversa
+    ) {
       Object.assign(roteiro, {
         thesisId: data.roteiro.thesis_id,
         estado: data.roteiro.estado,

@@ -94,8 +94,8 @@ class Ramon::Roteiro::Registro
     { estado: @estado, proximo: proximo, calc: calc, mensagem: saida['mensagem'], handoff: handoff? }
   end
 
-  # O roteiro acabou de passar o caso para a equipe com a conversa ligada (Efeitos.humano fez o bot_handoff!): a tool
-  # sinaliza o handoff ao runner pelo state — nada depende do texto devolvido à IA.
+  # O roteiro acabou de passar o caso para a equipe com a conversa ligada (Efeitos.humano fez o bot_handoff! se a conversa
+  # estava pendente): a tool sinaliza o handoff ao runner pelo state — nada depende do texto devolvido à IA.
   def handoff?
     @estado['desfecho'] == Ramon::Roteiro::HUMANO && @lead.conversation.present?
   end

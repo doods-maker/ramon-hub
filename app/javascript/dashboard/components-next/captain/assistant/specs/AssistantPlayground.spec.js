@@ -150,6 +150,34 @@ describe('AssistantPlayground', () => {
     escolherRoteiro(1, '');
   });
 
+  it('roteiro em teste: resposta atrasada de antes do Limpar não regrava o estado', async () => {
+    let responder;
+    CaptainAssistant.playground.mockReturnValue(
+      new Promise(resolve => {
+        responder = resolve;
+      })
+    );
+    const wrapper = mount(AssistantPlayground, { props: { assistantId: 1 } });
+    escolherRoteiro(1, SEM_TESE);
+    await enviar(wrapper, 'sofri um acidente');
+    limparConversa(1);
+    responder({
+      data: {
+        response: 'Oi',
+        roteiro: { thesis_id: 9, estado: { velho: true }, painel: {} },
+      },
+    });
+    await flushPromises();
+    expect(roteiroDe(1)).toMatchObject({
+      selecao: SEM_TESE,
+      thesisId: null,
+      estado: null,
+      painel: null,
+    });
+    expect(conversaDe(1)).toHaveLength(0);
+    escolherRoteiro(1, '');
+  });
+
   it('lead sem tese: manda thesis_id nulo e guarda a tese que o assunto escolheu', async () => {
     CaptainAssistant.playground.mockResolvedValue({
       data: {

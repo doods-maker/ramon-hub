@@ -129,5 +129,17 @@ RSpec.describe Ramon::Roteiro, '.reabrir' do
     Ramon::Roteiro.reabrir(lead.reload)
     expect(conversation.reload.custom_attributes).to eq('copiloto_modo' => 'piloto_ate_qualificacao')
   end
+
+  # Revisão final F5, M1: o modo que um humano escolheu depois do limite (o seletor mantém o carimbo) vale.
+  it 'reabrir um qualificado que um humano passou para manual depois do limite deixa manual' do
+    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_ate_qualificacao' })
+    Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'nao')
+    Ramon::Roteiro.registrar(lead.reload, chave: 'sequela', saida_id: 'ficou')
+    conversation.update!(custom_attributes: conversation.reload.custom_attributes.merge('copiloto_modo' => 'manual'))
+
+    Ramon::Roteiro.reabrir(lead.reload)
+    expect(conversation.reload.custom_attributes).to include('copiloto_modo' => 'manual',
+                                                             'copiloto_limite' => include('limite' => 'qualificacao'))
+  end
   # rubocop:enable RSpec/DescribedClass
 end

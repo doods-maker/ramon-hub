@@ -47,7 +47,10 @@ RSpec.describe Ramon::ContratoAutomatico do
     contact.update!(cpf: nil, custom_attributes: {})
     expect(Ramon::ZapsignClient).not_to receive(:create_doc_from_template)
 
-    expect(Ramon::ContratoAutomatico.preparar(lead)).to eq(falta: %w[CPF rua número cidade])
+    lead
+    # Revisão final F5, M2: o push leva o limite e o motivo, não só o motivo.
+    expect { expect(Ramon::ContratoAutomatico.preparar(lead)).to eq(falta: %w[CPF rua número cidade]) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(lead.id, hash_including(body: start_with('contrato não saiu na hora: ')))
     # Revisão F5 item 2: contrato que não saiu não conta como "contrato enviado" no Metabase.
     expect(conversation.reload.custom_attributes['copiloto_limite']).to include('limite' => 'contrato_falhou', 'motivo' => include('CPF'))
     expect(Notification.where(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso').count).to eq(1)

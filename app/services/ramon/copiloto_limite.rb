@@ -36,11 +36,13 @@ module Ramon::CopilotoLimite
     limite
   end
 
-  # Reabrir o roteiro desfaz o limite que o desfecho causou: volta o modo de antes do carimbo e apaga o carimbo.
+  # Reabrir o roteiro desfaz o limite que o desfecho causou: volta o modo de antes do carimbo e apaga o carimbo. Só com
+  # a conversa ainda no rascunho em que o limite a deixou — o modo que um humano escolheu depois (o carimbo fica) vale.
   def desfazer(conversa, limite)
     attrs = conversa.reload.custom_attributes || {}
     carimbo = attrs['copiloto_limite']
     return unless carimbo.is_a?(Hash) && carimbo['limite'] == limite && Ramon::CopilotoModo::MODOS.include?(carimbo['modo'])
+    return unless attrs['copiloto_modo'] == 'rascunho'
 
     conversa.update!(custom_attributes: attrs.except('copiloto_limite').merge('copiloto_modo' => carimbo['modo']))
   end
@@ -73,6 +75,6 @@ module Ramon::CopilotoLimite
 
   def avisar(lead, limite, motivo)
     texto = "IA chegou ao limite (#{NOMES[limite]}) com #{lead.name}#{": #{motivo}" if motivo} - conversa em rascunho"
-    Ramon::AvisoDaIa.avisar(lead, texto, "IA chegou ao limite: #{lead.name}", motivo || NOMES[limite])
+    Ramon::AvisoDaIa.avisar(lead, texto, "IA chegou ao limite: #{lead.name}", motivo ? "#{NOMES[limite]}: #{motivo}" : NOMES[limite])
   end
 end
