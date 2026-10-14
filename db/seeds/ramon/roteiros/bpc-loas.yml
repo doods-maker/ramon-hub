@@ -93,6 +93,7 @@ passos:
 
   - chave: moradores
     titulo: "Moradores da casa"
+    # pendente do aprovado do Eduardo (gate da F4) — redação D24 (citações)
     orientacao: "Pergunte quantas pessoas moram na casa, contando a pessoa do benefício. Conte só cônjuge ou companheiro, pai e mãe (padrasto ou madrasta só quando falta um dos dois), irmãos solteiros, filhos e enteados solteiros e menores tutelados que moram juntos." # D24: Lei 8.742, art. 20 §1º (conferido 13/10)
     tipo_resposta: numero
 

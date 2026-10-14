@@ -9,6 +9,7 @@ passos:
 
   - chave: assunto # F3: chave fixa; só roda para lead sem tese (o motor tira este passo quando a tese existe)
     titulo: "Assunto"
+    # pendente do aprovado do Eduardo (gate da F4) — texto do passo assunto
     orientacao: "Só aparece quando ainda não se sabe o assunto. Pergunte, com simpatia, sobre o que a pessoa quer conversar e registre a resposta com as palavras dela (ex.: 'sofri um acidente no trabalho', 'benefício para minha mãe idosa', 'salário-maternidade'). Não ofereça lista de benefícios nem diga se tem direito."
     tipo_resposta: texto
 
