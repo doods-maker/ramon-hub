@@ -26,6 +26,7 @@ module Ramon::LeadDaConversa
   def origem(lead, message)
     apply_meta_referral(lead, message)
     derive_channel_from_first_contact(lead, message)
+    Ramon::TeseAutomatica.definir(lead, message)
   end
 
   def referral_da(message) = message.content_attributes.with_indifferent_access[:referral]

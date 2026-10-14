@@ -380,4 +380,15 @@ RSpec.describe RamonLeadListener do
       expect(disparos).to eq([['mensagem_recebida', nil, 'anuncio-meta: 12034']])
     end
   end
+
+  describe '#message_created -> tese automática (F3)' do
+    it 'lead sem tese recebe a tese padrão da caixa na 1ª mensagem' do
+      tese = account.theses.first
+      inbox.update!(ramon_thesis_id: tese.id)
+      lead = create(:lead, account: account, conversation: conversation, contact: contact)
+      msg = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
+      listener.message_created(Events::Base.new('message.created', Time.zone.now, message: msg))
+      expect(lead.reload.thesis).to eq(tese)
+    end
+  end
 end
