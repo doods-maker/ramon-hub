@@ -79,12 +79,14 @@ RSpec.describe Ramon::FollowUpDraftService do
   end
 
   it 'respeita o teto diário por conta' do
-    stub_const('Ramon::FollowUpDraftService::DAILY_CAP', 1)
+    # rubocop:disable RSpec/DescribedClass -- constante explícita: described_class pode apontar pra classe antiga após recarga
+    allow(Ramon::FollowUpDraftService).to receive(:teto).and_return(1)
     stalled_lead(name: 'Maria da Silva')
     stalled_lead(name: 'João de Souza')
     allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('oi'))
 
-    expect(described_class.new(account: account).perform).to eq(1)
+    expect(Ramon::FollowUpDraftService.new(account: account).perform).to eq(1)
+    # rubocop:enable RSpec/DescribedClass
     expect(account.lead_tasks.where(kind: 'follow_up').count).to eq(1)
   end
 

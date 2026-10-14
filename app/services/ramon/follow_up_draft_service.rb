@@ -19,16 +19,20 @@ class Ramon::FollowUpDraftService
     Responda APENAS com o texto da mensagem, sem aspas, sem comentários e sem assinatura.
   PROMPT
 
+  # ponytail: teto lido por método (não pela constante) para o stub de spec valer mesmo com recarga de código no CI.
+  def self.teto = DAILY_CAP
+
   def initialize(account:)
     @account = account
   end
 
   def perform
+    teto = self.class.teto
     eligible = Ramon::LeadRadar.stalled_leads(@account).select { |lead| eligible?(lead) }
-    if eligible.size > DAILY_CAP
-      Rails.logger.info("FollowUpDraftService: conta #{@account.id} estourou o teto diário (#{eligible.size} elegíveis, teto #{DAILY_CAP})")
+    if eligible.size > teto
+      Rails.logger.info("FollowUpDraftService: conta #{@account.id} estourou o teto diário (#{eligible.size} elegíveis, teto #{teto})")
     end
-    batch = eligible.first(DAILY_CAP)
+    batch = eligible.first(teto)
     batch.each { |lead| draft_for(lead) }
     summary_push(batch)
     batch.size
