@@ -10,6 +10,7 @@ json.honorario_minimo_qtd @thesis.honorario_minimo_qtd
 json.honorario_minimo_base @thesis.honorario_minimo_base
 json.honorario_na_tabela @thesis.honorario_na_tabela
 json.palavras_chave @thesis.palavras_chave
+json.zapsign_template_id @thesis.zapsign_template_id
 
 json.items @thesis.thesis_items do |item|
   json.id item.id

@@ -165,4 +165,17 @@ RSpec.describe 'Theses API', type: :request do
       expect(thesis.reload.palavras_chave).to eq([])
     end
   end
+
+  describe 'modelo de contrato do ZapSign (roteiro F5)' do
+    it 'grava, devolve no show e limpa com vazio' do
+      thesis = account.theses.create!(name: 'Tese Modelo', position: 61)
+      patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}", params: { zapsign_template_id: 'modelo-aa' },
+                                                                  headers: admin.create_new_auth_token, as: :json
+      expect(response.parsed_body['zapsign_template_id']).to eq('modelo-aa')
+
+      patch "/api/v1/accounts/#{account.id}/theses/#{thesis.id}", params: { zapsign_template_id: '' },
+                                                                  headers: admin.create_new_auth_token, as: :json
+      expect(thesis.reload.zapsign_template_id).to be_nil
+    end
+  end
 end

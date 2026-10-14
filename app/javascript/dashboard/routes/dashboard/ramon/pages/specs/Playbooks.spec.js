@@ -40,6 +40,16 @@ vi.mock('dashboard/api/roteiroPassos', () => ({
   },
 }));
 
+vi.mock('dashboard/api/leads', () => ({
+  default: {
+    zapsignTemplates: vi.fn(() =>
+      Promise.resolve({
+        data: [{ token: 'modelo-aa', name: 'Contrato auxílio-acidente' }],
+      })
+    ),
+  },
+}));
+
 const theses = [
   {
     id: 1,
@@ -216,6 +226,20 @@ describe('Playbooks.vue', () => {
         id: 1,
         palavras_chave: ['acidente', 'sequela'],
       })
+    );
+  });
+
+  it('escolhe o modelo de contrato do ZapSign da tese', async () => {
+    const { wrapper, store } = mountPlaybooks();
+    await flushPromises();
+    await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
+    const campo = wrapper.find('[data-testid="playbooks-zapsign-modelo"]');
+    expect(campo.text()).toContain('Contrato auxílio-acidente');
+
+    await campo.setValue('modelo-aa');
+    expect(store.dispatch).toHaveBeenLastCalledWith(
+      'theses/update',
+      expect.objectContaining({ id: 1, zapsign_template_id: 'modelo-aa' })
     );
   });
 });
