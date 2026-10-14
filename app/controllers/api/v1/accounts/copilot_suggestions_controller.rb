@@ -18,7 +18,7 @@ class Api::V1::Accounts::CopilotSuggestionsController < Api::V1::Accounts::BaseC
   end
 
   def dismiss
-    @copilot_suggestion.update!(status: 'dismissed')
+    @copilot_suggestion.dismiss!
     render :apply
   end
 

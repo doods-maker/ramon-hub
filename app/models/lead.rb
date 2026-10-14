@@ -49,6 +49,9 @@ class Lead < ApplicationRecord
   include LeadValorEstimado
 
   after_create_commit :dispatch_create_event
+  # Declarado antes dos demais de propósito: after_commit roda na ordem inversa e o update! do reabrir sobrescreveria
+  # saved_changes (etapa) para dispatch_update_event/record_change_activities, que rodariam depois.
+  after_update_commit :reabrir_roteiro, if: -> { saved_change_to_lost_at? && lost_at.nil? }
   after_update_commit :dispatch_update_event
   after_create_commit :record_created_activity
   after_update_commit :record_change_activities
@@ -184,6 +187,11 @@ class Lead < ApplicationRecord
   # Lead ganho (dossiê, caso no ADVBOX, NPS): pelo código ou pelo fluxo "Lead ganho" — decide Ramon::Fluxos::LeadGanho (B4.4).
   def ganhou
     Ramon::Fluxos::LeadGanho.ganhou(self) if won_at.present?
+  end
+
+  # Tirar do Perdido no Kanban reabre o roteiro da tese desqualificado (decisão 13/10).
+  def reabrir_roteiro
+    Ramon::Roteiro.reabrir(self, se: 'desqualificado')
   end
 
   # Ponte Drive (ADR-0002): export incremental dos docs conferidos de lead ganho.
