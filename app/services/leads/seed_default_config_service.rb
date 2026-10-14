@@ -21,7 +21,7 @@ class Leads::SeedDefaultConfigService
               'Pensão por morte', 'Trabalhista', 'Outro'].freeze
 
   LOST_REASONS = ['Sem viabilidade', 'Sumiu / não respondeu', 'Honorário',
-                  'Foi para concorrente', 'Fora da área', 'Outro'].freeze
+                  'Foi para concorrente', 'Fora da área', 'Já é cliente', 'Outro'].freeze
 
   PRIORITIES = [
     { name: 'Alta', weight: 3 },
