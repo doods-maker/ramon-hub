@@ -1511,6 +1511,102 @@
       "RESPONDIDAS": "✓ {count} answered",
       "QUALIFICADO": "Qualified — {ok}/{total} answered"
     },
+    "ROTEIRO_IA": {
+      "TITULO": "AI script",
+      "CONTAGEM": "{ok}/{total}",
+      "RESPONDIDOS": "✓ {count} answered",
+      "SITUACAO": {
+        "RESPONDIDO": "Answered",
+        "ATUAL": "Asking now",
+        "PENDENTE": "To ask",
+        "FORA": "Not asked"
+      },
+      "DESFECHO": {
+        "QUALIFICADO": "Qualified",
+        "DESQUALIFICADO": "Disqualified",
+        "HUMANO": "Handed to the team"
+      },
+      "AGUARDA_EQUIPE": "Lost is suggested in the Cockpit, waiting for the team to confirm.",
+      "COMUNS_CONCLUIDOS": "Shared steps answered — the AI follows the usual triage.",
+      "REABRIR": "Reopen script",
+      "REABRIR_CONFIRMA": "Reopen this lead's script?",
+      "REABRIR_AJUDA": "The AI asks again from \"{passo}\". Other answers stay; pending script suggestions in the Cockpit are dismissed.",
+      "REABERTO": "Script reopened.",
+      "REABRIR_PERDIDO": "To reopen, move the lead out of Lost in the funnel.",
+      "REABRIR_GANHO": "Won lead: the script does not reopen.",
+      "PALAVRAS_CHAVE": "Keywords",
+      "PALAVRAS_CHAVE_AJUDA": "Words in the first message that point to this thesis, comma-separated",
+      "EDITOR": {
+        "COMUNS_TITULO": "Shared AI script steps",
+        "COMUNS_AJUDA": "Apply to every thesis and run before each thesis' own script.",
+        "ABA_PLAYBOOK": "Playbook",
+        "ABA_ROTEIRO": "AI script",
+        "ROTEIRO_AJUDA": "The AI asks one step at a time, in this order, after the shared steps. What happens with each answer (outcomes) is a fixed rule — the AI does not decide.",
+        "VAZIO": "No steps. Without steps, the AI follows the usual triage.",
+        "NOVO": "New step",
+        "SALVAR": "Save step",
+        "CANCELAR": "Cancel",
+        "SALVO": "Step saved.",
+        "REMOVER": "Remove step",
+        "REMOVER_CONFIRMA": "Remove this step from the script?",
+        "MOVER_CIMA": "Move up",
+        "MOVER_BAIXO": "Move down",
+        "N_SAIDAS": "{n} outcomes",
+        "TITULO": "What to find out",
+        "CHAVE": "Key",
+        "CHAVE_AJUDA": "Fixed identifier (lowercase, numbers and _). Cannot change after creation.",
+        "FALA_COM_CLIENTE": "The guidance and the reply base become what the AI says to the client.",
+        "ORIENTACAO": "How to ask (goes to the AI)",
+        "TIPO": "Answer type",
+        "TIPOS": {
+          "SIM_NAO": "Yes or no",
+          "ESCOLHA": "Choice",
+          "NUMERO": "Number",
+          "DATA": "Date",
+          "TEXTO": "Free text"
+        },
+        "OPCOES": "Options (comma-separated)",
+        "CALCULADORA": "Calculator",
+        "SEM_CALCULADORA": "None",
+        "CALCULADORAS": {
+          "PERIODO_DE_GRACA": "Grace period",
+          "RENDA_PER_CAPITA": "Income per person",
+          "PRESCRICAO_5_ANOS": "5-year limitation",
+          "MESES_ATE_65": "Months until 65",
+          "DATA_PREVISTA_PARTO": "Expected birth date",
+          "PRAZO_INSS": "INSS deadline"
+        },
+        "CAMPO_DA_CALCULADORA": "{campo} comes from step",
+        "ESTE_PASSO": "This step",
+        "SAIDAS": "Outcomes — the first match wins",
+        "SAIDAS_AJUDA": "When: the value, a range (< 64, >= 65), the calculator result or * for anything else. Without outcomes, the step just records and moves on.",
+        "SAIDAS_AJUDA_TEXTO": "Free text: describe each outcome in When — the AI picks the one that best describes the answer.",
+        "QUANDO": "When",
+        "ACAO": "Then",
+        "ACOES": {
+          "SEGUIR": "Continue",
+          "IR_PARA": "Go to step",
+          "DESQUALIFICAR": "Disqualify",
+          "HUMANO": "Hand to the team",
+          "CONCLUIR": "Qualified (end)"
+        },
+        "ALVO": "Target step",
+        "MOTIVO": "Reason (goes to history)",
+        "MOTIVO_PERDA": "Loss reason",
+        "MOTIVO_PERDA_PADRAO": "Sem viabilidade (default)",
+        "MENSAGEM": "AI reply base (optional)",
+        "ETIQUETA": "Conversation label",
+        "ETAPA": "Move to stage",
+        "SEM_ETAPA": "Don't move",
+        "NOVA_SAIDA": "Outcome",
+        "REMOVER_SAIDA": "Remove outcome"
+      },
+      "TESTAR": {
+        "SEM_TESE": "No thesis script",
+        "AJUDA": "Pick a thesis for the AI to follow its script. The script really runs, but nothing is saved."
+      }
+    },
+
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "recorded on {date}",
