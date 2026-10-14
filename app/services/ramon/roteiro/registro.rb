@@ -19,8 +19,10 @@ class Ramon::Roteiro::Registro
     normal, erro = ler(valor, saida_id)
     return { erro: erro } if erro
 
+    return { erro: 'Informe o assunto em texto no valor.' } if assunto? && normal.blank?
+
     calc = calcular(normal)
-    saida = escolher(saida_id, calc ? calc[:resultado] : normal)
+    saida = saida_de(saida_id, normal, calc)
     return { erro: "A saida #{saida_id} nao existe neste passo." } if saida.nil?
 
     gravar(normal, calc, saida)
@@ -57,6 +59,28 @@ class Ramon::Roteiro::Registro
     return @passo.saidas.find { |s| s['id'].to_s == saida_id.to_s } if saida_id.present?
 
     @passo.saidas.find { |s| Ramon::Roteiro::Resposta.casa?(s['quando'], comparado) } || sem_saida('nenhuma saida casou')
+  end
+
+  def saida_de(saida_id, normal, calc)
+    return assunto(normal) if assunto?
+
+    escolher(saida_id, calc ? calc[:resultado] : normal)
+  end
+
+  def assunto?
+    @passo.thesis_id.nil? && @passo.chave == Ramon::Roteiro::ASSUNTO
+  end
+
+  # Passo comum "assunto" (F3): a resposta casa com nome/palavras-chave das teses. Casou com uma → o lead ganha a tese
+  # e o roteiro segue nos passos dela (as respostas dos comuns ficam); nenhuma ou mais de uma → equipe.
+  def assunto(texto)
+    tese = Ramon::TeseAutomatica.por_texto(@lead.account, texto)
+    return { 'id' => 'sem_tese', 'acao' => 'humano', 'motivo' => 'assunto sem tese cadastrada' } if tese.nil?
+
+    @lead.update!(thesis: tese)
+    @lista = Ramon::Roteiro.passos(@lead)
+    @est = Ramon::Roteiro.estado(@lead)
+    { 'id' => 'tese', 'acao' => 'seguir' }
   end
 
   def gravar(valor, calc, saida)

@@ -23,6 +23,12 @@ RSpec.describe RamonLeadListener do
     expect { listener.conversation_created(event) }.not_to(change { account.leads.count })
   end
 
+  it 'carimba o modo padrão da caixa na conversa nova, mesmo sem Criar lead' do
+    inbox.update!(auto_create_lead: false, ramon_copiloto_modo: 'piloto_ate_qualificacao')
+    listener.conversation_created(event)
+    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('piloto_ate_qualificacao')
+  end
+
   it 're-aponta a conversa do lead existente (dedup por contato)' do
     first = create(:conversation, account: account, inbox: inbox, contact: contact)
     listener.conversation_created(Events::Base.new('conversation.created', Time.zone.now, conversation: first))
@@ -372,6 +378,17 @@ RSpec.describe RamonLeadListener do
                              content_attributes: { referral: anuncio })
       publicar('message.created', message: msg)
       expect(disparos).to eq([['mensagem_recebida', nil, 'anuncio-meta: 12034']])
+    end
+  end
+
+  describe '#message_created -> tese automática (F3)' do
+    it 'lead sem tese recebe a tese padrão da caixa na 1ª mensagem' do
+      tese = account.theses.first
+      inbox.update!(ramon_thesis_id: tese.id)
+      lead = create(:lead, account: account, conversation: conversation, contact: contact)
+      msg = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
+      listener.message_created(Events::Base.new('message.created', Time.zone.now, message: msg))
+      expect(lead.reload.thesis).to eq(tese)
     end
   end
 end

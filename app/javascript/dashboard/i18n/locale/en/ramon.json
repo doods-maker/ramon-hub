@@ -1668,6 +1668,18 @@
         "piloto_total": {
           "NOME": "Full autopilot",
           "DESC": "The AI replies to everything on its own. Every message is stamped and you can pause it with 1 click."
+        },
+        "piloto_ate_qualificacao": {
+          "NOME": "On its own until qualified",
+          "DESC": "The AI replies on its own until the thesis script qualifies the lead; then it goes back to Draft and alerts the owner."
+        },
+        "piloto_ate_reuniao": {
+          "NOME": "On its own until the meeting",
+          "DESC": "The AI replies on its own until the meeting is booked; then it goes back to Draft and alerts the owner."
+        },
+        "piloto_ate_contrato": {
+          "NOME": "On its own until the contract",
+          "DESC": "The AI replies on its own and sends the contract link once the client's data is complete; then it goes back to Draft and alerts the owner."
         }
       },
       "CARIMBO": "sent by the autopilot ({modo})",

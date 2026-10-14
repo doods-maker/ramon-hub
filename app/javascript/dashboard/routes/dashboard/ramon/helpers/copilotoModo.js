@@ -1,4 +1,12 @@
-export const MODOS = ['manual', 'rascunho', 'piloto_limitado', 'piloto_total'];
+export const MODOS = [
+  'manual',
+  'rascunho',
+  'piloto_limitado',
+  'piloto_total',
+  'piloto_ate_qualificacao',
+  'piloto_ate_reuniao',
+  'piloto_ate_contrato',
+];
 
 export const modoDefault = () => {
   const m = window.chatwootConfig?.ramonCopilotoModoDefault;

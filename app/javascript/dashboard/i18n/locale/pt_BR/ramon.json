@@ -1668,6 +1668,18 @@
         "piloto_total": {
           "NOME": "Piloto total",
           "DESC": "A IA responde tudo sozinha. Toda mensagem fica carimbada e você pode pausar com 1 clique."
+        },
+        "piloto_ate_qualificacao": {
+          "NOME": "Sozinha até qualificar",
+          "DESC": "A IA responde tudo sozinha até o roteiro da tese qualificar o lead; aí volta para Rascunho e avisa o responsável."
+        },
+        "piloto_ate_reuniao": {
+          "NOME": "Sozinha até a reunião",
+          "DESC": "A IA responde tudo sozinha até a reunião ser marcada; aí volta para Rascunho e avisa o responsável."
+        },
+        "piloto_ate_contrato": {
+          "NOME": "Sozinha até o contrato",
+          "DESC": "A IA responde tudo sozinha e envia o link do contrato quando o cadastro estiver completo; aí volta para Rascunho e avisa o responsável."
         }
       },
       "CARIMBO": "enviada pelo piloto ({modo})",

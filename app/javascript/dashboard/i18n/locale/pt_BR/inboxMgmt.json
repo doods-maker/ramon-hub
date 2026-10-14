@@ -812,6 +812,16 @@
         "SLA_PLACEHOLDER": "15",
         "SLA_SUB_TEXT": "Minutos até o timer do card estourar. Vazio = padrão do sistema."
       },
+      "RAMON_TESE_PADRAO": {
+        "LABEL": "Tese padrão da caixa",
+        "SUB_TEXT": "Lead novo sem tese recebe esta tese quando a 1ª mensagem não traz palavra-chave de nenhuma tese.",
+        "NENHUMA": "Nenhuma (só palavra-chave)"
+      },
+      "RAMON_MODO_PADRAO": {
+        "LABEL": "Modo padrão da IA nesta caixa",
+        "SUB_TEXT": "Vale para as conversas novas desta caixa. Cada conversa ainda pode trocar o modo no botão Copiloto.",
+        "SISTEMA": "Padrão do sistema"
+      },
       "PORTARIA": {
         "LABEL": "Caixa do escritório (atendimento por atribuição)",
         "SUB_TEXT": "A Recepção (membro da caixa) vê tudo e distribui: atribui ao advogado ou ao time da Controladoria. Quem não é membro vê só o que foi atribuído a ele ou ao time dele. A conversa não cria lead; a Recepção encaminha ao comercial por botão."

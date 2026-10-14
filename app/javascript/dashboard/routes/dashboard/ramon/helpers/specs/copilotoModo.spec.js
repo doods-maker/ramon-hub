@@ -23,4 +23,11 @@ describe('copilotoModo', () => {
       copilotoModoDe({ custom_attributes: { copiloto_modo: 'manual' } })
     ).toBe('manual');
   });
+  it('aceita os modos "sozinha até…"', () => {
+    expect(
+      copilotoModoDe({
+        custom_attributes: { copiloto_modo: 'piloto_ate_reuniao' },
+      })
+    ).toBe('piloto_ate_reuniao');
+  });
 });
