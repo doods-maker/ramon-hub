@@ -87,12 +87,13 @@ class Ramon::Roteiro::Registro
     guardar_resposta(valor, calc, saida)
     saida = avancar(saida)
     @est['aguarda_equipe'] = true if vira_sugestao_de_perdido?(saida)
+    proximo = @est['desfecho'] ? nil : Ramon::Roteiro.proximo(@lista, @est)
+    @est['passo'] = proximo&.chave # bi_roteiro (F4): onde o lead parou; ponytail: fica nulo depois do reabrir até o próximo registro
     ActiveRecord::Base.transaction do
       @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @est))
       Ramon::Roteiro::Efeitos.aplicar(@lead, @passo, saida)
     end
-    { estado: @est, proximo: @est['desfecho'] ? nil : Ramon::Roteiro.proximo(@lista, @est), calc: calc,
-      mensagem: saida['mensagem'] }
+    { estado: @est, proximo: proximo, calc: calc, mensagem: saida['mensagem'] }
   end
 
   def guardar_resposta(valor, calc, saida)

@@ -58,6 +58,15 @@ RSpec.describe Ramon::Roteiro do
     expect(described_class.resumo(res)).to include('siga a triagem de sempre')
   end
 
+  it 'grava no estado o próximo passo a perguntar (bi_roteiro) e o limpa no desfecho' do
+    expect(registrar('tem_advogado', 'nao')[:estado]['passo']).to eq('recebeu_auxilio')
+    expect(registrar('recebeu_auxilio', 'sim')[:estado]['passo']).to eq('sequela')
+    expect(lead.reload.custom_attributes.dig('roteiro', 'passo')).to eq('sequela')
+
+    registrar('sequela', 'dor no punho', saida_id: 'ficou')
+    expect(lead.reload.custom_attributes['roteiro']).to include('passo' => nil, 'desfecho' => 'qualificado')
+  end
+
   it 'começa pelos comuns e segue a ordem' do
     expect(described_class.atual(lead)[:passo].chave).to eq('tem_advogado')
     expect(registrar('tem_advogado', 'Não')[:proximo].chave).to eq('recebeu_auxilio')

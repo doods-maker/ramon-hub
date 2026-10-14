@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_13_300001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_14_100001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -2122,6 +2122,34 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_300001) do
             WHERE ((r.conversation_id = b.conversation_id) AND ((r.name)::text = 'conversation_bot_handoff'::text))) AS handoffs
      FROM base b
     WHERE (b.iniciada_em IS NOT NULL);
+  SQL
+  create_view "bi_roteiro", sql_definition: <<-SQL
+      SELECT l.id AS lead_id,
+      l.account_id,
+      l.conversation_id,
+      l.created_at AS lead_criado_em,
+      (l.custom_attributes ? 'roteiro'::text) AS em_roteiro,
+      ((l.custom_attributes #>> '{roteiro,tese_id}'::text[]))::bigint AS thesis_id,
+      t.name AS thesis_name,
+      (l.custom_attributes #>> '{roteiro,passo}'::text[]) AS passo_atual,
+      (l.custom_attributes #>> '{roteiro,desfecho}'::text[]) AS desfecho,
+      (l.custom_attributes #>> '{roteiro,motivo}'::text[]) AS motivo,
+      (l.custom_attributes #>> '{roteiro,decisivo}'::text[]) AS passo_decisivo,
+      COALESCE(((l.custom_attributes #>> '{roteiro,aguarda_equipe}'::text[]))::boolean, false) AS aguarda_equipe,
+      r.respondidos,
+      r.iniciado_em,
+      r.ultima_resposta_em,
+      (c.custom_attributes ->> 'copiloto_modo'::text) AS modo,
+      (c.custom_attributes #>> '{copiloto_limite,limite}'::text[]) AS limite_atingido,
+      ((c.custom_attributes #>> '{copiloto_limite,em}'::text[]))::timestamp with time zone AS limite_em
+     FROM (((leads l
+       LEFT JOIN theses t ON ((t.id = ((l.custom_attributes #>> '{roteiro,tese_id}'::text[]))::bigint)))
+       LEFT JOIN conversations c ON ((c.id = l.conversation_id)))
+       CROSS JOIN LATERAL ( SELECT count(*) AS respondidos,
+              min(((e.v ->> 'em'::text))::timestamp with time zone) AS iniciado_em,
+              max(((e.v ->> 'em'::text))::timestamp with time zone) AS ultima_resposta_em
+             FROM jsonb_each(COALESCE((l.custom_attributes #> '{roteiro,respostas}'::text[]), '{}'::jsonb)) e(chave, v)) r)
+    WHERE ((l.custom_attributes ? 'roteiro'::text) OR (c.custom_attributes ? 'copiloto_limite'::text));
   SQL
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").

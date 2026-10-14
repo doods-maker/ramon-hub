@@ -57,6 +57,13 @@ RSpec.describe Ramon::Roteiro, '.reabrir' do
     expect(described_class.atual(lead.reload)[:passo].chave).to eq('sequela')
   end
 
+  it 'reabrir grava em passo o passo decisivo (bi_roteiro)' do
+    described_class.registrar(lead, chave: 'tem_advogado', valor: 'sim')
+    expect(described_class.reabrir(lead.reload)).to be(true)
+
+    expect(lead.reload.custom_attributes['roteiro']['passo']).to eq('tem_advogado')
+  end
+
   it 'recusar sugestão que não é do roteiro não mexe no roteiro' do
     described_class.registrar(lead, chave: 'tem_advogado', valor: 'sim')
     outra = account.copilot_suggestions.create!(lead: lead, kind: 'acao', status: 'pending',

@@ -1,0 +1,30 @@
+# Conteúdo APROVADO pelo Eduardo em 14/10/2026 ("pode continuar") — fonte: comercial/docs/2026-10-13-roteiros-f4-rascunho.md §3,
+# corrigido pela conferência de citações (…-roteiros-f4-citacoes.md). Mudar texto aqui = novo aprovado dele.
+tese: null # passos comuns: rodam antes do roteiro de qualquer tese
+passos:
+  - chave: nome
+    titulo: "Nome"
+    orientacao: "Se o nome do WhatsApp ou do formulário já é um nome de gente, registre sem perguntar. Senão, pergunte com simpatia como a pessoa se chama. Não use a primeira mensagem como nome."
+    tipo_resposta: texto
+
+  - chave: assunto # F3: chave fixa; só roda para lead sem tese (o motor tira este passo quando a tese existe)
+    titulo: "Assunto"
+    # pendente do aprovado do Eduardo (gate da F4) — texto do passo assunto
+    orientacao: "Só aparece quando ainda não se sabe o assunto. Pergunte, com simpatia, sobre o que a pessoa quer conversar e registre a resposta com as palavras dela (ex.: 'sofri um acidente no trabalho', 'benefício para minha mãe idosa', 'salário-maternidade'). Não ofereça lista de benefícios nem diga se tem direito."
+    tipo_resposta: texto
+
+  - chave: tem_advogado
+    titulo: "Já tem advogado neste caso"
+    orientacao: "Pergunte se algum advogado já cuida deste caso hoje. Advogado de um caso antigo, já encerrado, é não."
+    tipo_resposta: sim_nao
+    saidas:
+      - id: sim
+        quando: "sim"
+        acao: desqualificar
+        motivo: "tem advogado no caso"
+        motivo_perda: "Outro"
+        mensagem: "Entendi! Como você já tem advogado cuidando deste caso, o certo é seguir com ele. Se precisar de nós em outro assunto, é só chamar."
+        efeitos: { etiqueta: "temadvogado" }
+      - id: nao
+        quando: "nao"
+        acao: seguir
