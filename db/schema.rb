@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_13_100001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_13_200001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1030,6 +1030,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_100001) do
     t.boolean "auto_create_lead", default: false, null: false
     t.integer "first_response_sla_minutes"
     t.boolean "portaria_enabled", default: false, null: false
+    t.bigint "ramon_thesis_id"
+    t.string "ramon_copiloto_modo"
     t.index ["account_id"], name: "index_inboxes_on_account_id"
     t.index ["channel_id", "channel_type"], name: "index_inboxes_on_channel_id_and_channel_type"
     t.index ["portal_id"], name: "index_inboxes_on_portal_id"
@@ -1695,6 +1697,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_100001) do
     t.index ["user_id"], name: "index_ramon_reunioes_on_user_id"
   end
 
+  create_table "ramon_roteiro_passos", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "thesis_id"
+    t.integer "position", default: 0, null: false
+    t.string "chave", null: false
+    t.string "titulo", null: false
+    t.text "orientacao"
+    t.string "tipo_resposta", default: "texto", null: false
+    t.jsonb "opcoes", default: [], null: false
+    t.string "calculadora"
+    t.jsonb "calculadora_campos", default: {}, null: false
+    t.jsonb "saidas", default: [], null: false
+    t.boolean "edited", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "chave"], name: "index_ramon_roteiro_passos_comuns_on_chave", unique: true, where: "(thesis_id IS NULL)"
+    t.index ["account_id"], name: "index_ramon_roteiro_passos_on_account_id"
+    t.index ["thesis_id", "chave"], name: "index_ramon_roteiro_passos_on_thesis_and_chave", unique: true, where: "(thesis_id IS NOT NULL)"
+  end
+
   create_table "related_categories", force: :cascade do |t|
     t.bigint "category_id"
     t.bigint "related_category_id"
@@ -1833,6 +1855,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_100001) do
     t.integer "honorario_minimo_qtd"
     t.string "honorario_minimo_base"
     t.boolean "honorario_na_tabela", default: false, null: false
+    t.string "palavras_chave", default: [], null: false, array: true
     t.index ["account_id", "name"], name: "index_theses_on_account_id_and_name", unique: true
   end
 
