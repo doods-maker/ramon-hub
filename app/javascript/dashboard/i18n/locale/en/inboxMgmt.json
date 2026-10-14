@@ -816,6 +816,16 @@
         "SLA_PLACEHOLDER": "15",
         "SLA_SUB_TEXT": "Minutes until the card timer breaches. Empty = system default."
       },
+      "RAMON_TESE_PADRAO": {
+        "LABEL": "Default thesis for this inbox",
+        "SUB_TEXT": "A new lead without a thesis gets this one when the first message has no thesis keyword.",
+        "NENHUMA": "None (keywords only)"
+      },
+      "RAMON_MODO_PADRAO": {
+        "LABEL": "Default AI mode for this inbox",
+        "SUB_TEXT": "Applies to new conversations in this inbox. Each conversation can still change it in the Copilot button.",
+        "SISTEMA": "System default"
+      },
       "PORTARIA": {
         "LABEL": "Office inbox (assignment-based)",
         "SUB_TEXT": "Reception (inbox member) sees everything and assigns to a lawyer or to the Controladoria team. Non-members only see what is assigned to them or their team. Conversations never create a lead; reception forwards to sales with a button."

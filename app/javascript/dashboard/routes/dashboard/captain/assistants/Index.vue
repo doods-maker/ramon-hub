@@ -60,6 +60,9 @@ const MODO_TOM = {
   rascunho: TOM.blue,
   piloto_limitado: TOM.amber,
   piloto_total: TOM.ruby,
+  piloto_ate_qualificacao: TOM.ruby,
+  piloto_ate_reuniao: TOM.ruby,
+  piloto_ate_contrato: TOM.ruby,
 };
 const modoNome = modo => t(`RAMON.COPILOTO.MODOS.${modo}.NOME`);
 const modosDe = cartao =>

@@ -40,6 +40,7 @@ import { LocalStorage } from 'shared/helpers/localStorage';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import ColorPicker from 'dashboard/components-next/colorpicker/ColorPicker.vue';
 import SelectInput from 'dashboard/components-next/select/Select.vue';
+import { MODOS as COPILOTO_MODOS } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 import Widget from 'dashboard/modules/widget-preview/components/Widget.vue';
 import AccessToken from 'dashboard/routes/dashboard/settings/profile/AccessToken.vue';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
@@ -92,6 +93,9 @@ export default {
       autoCreateLead: false,
       portariaEnabled: false,
       firstResponseSlaMinutes: null,
+      ramonThesisId: '',
+      ramonCopilotoModo: '',
+      copilotoModos: COPILOTO_MODOS,
       emailCollectEnabled: false,
       senderNameType: 'friendly',
       businessName: '',
@@ -124,6 +128,7 @@ export default {
       isOnChatwootCloud: 'globalConfig/isOnChatwootCloud',
       uiFlags: 'inboxes/getUIFlags',
       portals: 'portals/allPortals',
+      theses: 'theses/getTheses',
     }),
     isInboundEmailEnabled() {
       return this.isFeatureEnabledonAccount(
@@ -465,6 +470,7 @@ export default {
       this.$store.dispatch('teams/get');
       this.$store.dispatch('labels/get');
       this.$store.dispatch('portals/index');
+      this.$store.dispatch('theses/get');
     },
     syncInboxData() {
       if (!this.inbox || !this.inbox.id) return;
@@ -482,6 +488,10 @@ export default {
       this.autoCreateLead = this.inbox.auto_create_lead;
       this.portariaEnabled = this.inbox.portaria_enabled;
       this.firstResponseSlaMinutes = this.inbox.first_response_sla_minutes;
+      this.ramonThesisId = this.inbox.ramon_thesis_id
+        ? String(this.inbox.ramon_thesis_id)
+        : '';
+      this.ramonCopilotoModo = this.inbox.ramon_copiloto_modo || '';
       this.continuityViaEmail = this.inbox.continuity_via_email;
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
@@ -600,6 +610,10 @@ export default {
           first_response_sla_minutes: this.firstResponseSlaMinutes
             ? Number(this.firstResponseSlaMinutes)
             : null,
+          ramon_thesis_id: this.ramonThesisId
+            ? Number(this.ramonThesisId)
+            : null,
+          ramon_copiloto_modo: this.ramonCopilotoModo || null,
           greeting_enabled: this.greetingEnabled,
           greeting_message: this.greetingMessage || '',
           portal_id: this.selectedPortalSlug
@@ -1225,6 +1239,53 @@ export default {
                   />
                 </template>
               </SettingsToggleSection>
+
+              <SettingsFieldSection
+                v-if="autoCreateLead"
+                :label="$t('INBOX_MGMT.SETTINGS_POPUP.RAMON_TESE_PADRAO.LABEL')"
+                :help-text="
+                  $t('INBOX_MGMT.SETTINGS_POPUP.RAMON_TESE_PADRAO.SUB_TEXT')
+                "
+              >
+                <SelectInput
+                  v-model="ramonThesisId"
+                  :options="[
+                    {
+                      value: '',
+                      label: $t(
+                        'INBOX_MGMT.SETTINGS_POPUP.RAMON_TESE_PADRAO.NENHUMA'
+                      ),
+                    },
+                    ...theses.map(tese => ({
+                      value: String(tese.id),
+                      label: tese.name,
+                    })),
+                  ]"
+                />
+              </SettingsFieldSection>
+
+              <SettingsFieldSection
+                :label="$t('INBOX_MGMT.SETTINGS_POPUP.RAMON_MODO_PADRAO.LABEL')"
+                :help-text="
+                  $t('INBOX_MGMT.SETTINGS_POPUP.RAMON_MODO_PADRAO.SUB_TEXT')
+                "
+              >
+                <SelectInput
+                  v-model="ramonCopilotoModo"
+                  :options="[
+                    {
+                      value: '',
+                      label: $t(
+                        'INBOX_MGMT.SETTINGS_POPUP.RAMON_MODO_PADRAO.SISTEMA'
+                      ),
+                    },
+                    ...copilotoModos.map(modo => ({
+                      value: modo,
+                      label: $t(`RAMON.COPILOTO.MODOS.${modo}.NOME`),
+                    })),
+                  ]"
+                />
+              </SettingsFieldSection>
 
               <SettingsToggleSection
                 v-if="isAWhatsAppChannel"

@@ -23,6 +23,12 @@ RSpec.describe RamonLeadListener do
     expect { listener.conversation_created(event) }.not_to(change { account.leads.count })
   end
 
+  it 'carimba o modo padrão da caixa na conversa nova, mesmo sem Criar lead' do
+    inbox.update!(auto_create_lead: false, ramon_copiloto_modo: 'piloto_ate_qualificacao')
+    listener.conversation_created(event)
+    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('piloto_ate_qualificacao')
+  end
+
   it 're-aponta a conversa do lead existente (dedup por contato)' do
     first = create(:conversation, account: account, inbox: inbox, contact: contact)
     listener.conversation_created(Events::Base.new('conversation.created', Time.zone.now, conversation: first))

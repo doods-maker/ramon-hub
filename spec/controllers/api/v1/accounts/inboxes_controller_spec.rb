@@ -680,6 +680,27 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(inbox.reload.portaria_enabled).to be true
       end
 
+      it 'sets the default thesis and AI mode of the inbox' do
+        thesis = account.theses.first
+        patch "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}",
+              headers: admin.create_new_auth_token,
+              params: valid_params.merge({ ramon_thesis_id: thesis.id, ramon_copiloto_modo: 'piloto_ate_reuniao' }),
+              as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(inbox.reload).to have_attributes(ramon_thesis_id: thesis.id, ramon_copiloto_modo: 'piloto_ate_reuniao')
+      end
+
+      it 'rejects an unknown AI mode' do
+        patch "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}",
+              headers: admin.create_new_auth_token,
+              params: valid_params.merge({ ramon_copiloto_modo: 'xablau' }),
+              as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(inbox.reload.ramon_copiloto_modo).to be_nil
+      end
+
       it 'sets the first-response SLA minutes on the inbox' do
         patch "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}",
               headers: admin.create_new_auth_token,
