@@ -13,7 +13,7 @@ class Captain::Tools::RoteiroRegistrarTool < Captain::Tools::RamonBaseTool
   param :valor, type: 'string', desc: 'Resposta do lead, no formato do passo', required: false
   param :saida_id, type: 'string', desc: 'Id da saida escolhida (passo de texto livre)', required: false
 
-  def perform(tool_context, chave:, valor: nil, saida_id: nil, lead_id: nil)
+  def perform(tool_context, chave: nil, valor: nil, saida_id: nil, lead_id: nil)
     lead = resolver_lead(tool_context.state, lead_id)
     return SEM_LEAD if lead.blank?
 
