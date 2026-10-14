@@ -99,7 +99,7 @@
 
 - id: preparar_contrato_zapsign
   title: 'Preparar contrato no ZapSign'
-  description: 'Sugere gerar contrato + procuração no ZapSign (o humano aprova antes)'
+  description: 'Sugere gerar contrato + procuração no ZapSign (o humano aprova antes); no modo "sozinha até o contrato", gera na hora'
   icon: 'signature'
   nivel: sugestao
   sistema: zapsign
