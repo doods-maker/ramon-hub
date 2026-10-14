@@ -2,6 +2,44 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import Playbooks from '../Playbooks.vue';
 
+vi.mock('dashboard/api/roteiroPassos', () => ({
+  default: {
+    get: vi.fn(() =>
+      Promise.resolve({
+        data: {
+          calculadoras: {},
+          payload: [
+            {
+              id: 1,
+              thesis_id: null,
+              position: 0,
+              chave: 'tem_advogado',
+              titulo: 'Tem advogado',
+              tipo_resposta: 'sim_nao',
+              opcoes: [],
+              calculadora: null,
+              calculadora_campos: {},
+              saidas: [],
+            },
+            {
+              id: 2,
+              thesis_id: 1,
+              position: 0,
+              chave: 'sequela',
+              titulo: 'Sequela',
+              tipo_resposta: 'texto',
+              opcoes: [],
+              calculadora: null,
+              calculadora_campos: {},
+              saidas: [],
+            },
+          ],
+        },
+      })
+    ),
+  },
+}));
+
 const theses = [
   {
     id: 1,
@@ -138,5 +176,46 @@ describe('Playbooks.vue', () => {
       id: 1,
       active: false,
     });
+  });
+
+  it('mostra os passos comuns no topo', async () => {
+    const { wrapper } = mountPlaybooks();
+    await flushPromises();
+    const comuns = wrapper.find('[data-testid="roteiro-comuns"]');
+    expect(comuns.text()).toContain('Tem advogado');
+    expect(comuns.text()).not.toContain('Sequela');
+  });
+
+  it('aba Roteiro da IA mostra só os passos da tese', async () => {
+    const { wrapper } = mountPlaybooks();
+    await flushPromises();
+    await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
+    await wrapper
+      .find('[data-testid="playbooks-aba-roteiro"]')
+      .trigger('click');
+    const passos = wrapper.findAll(
+      '[data-testid="playbooks-roteiro"] [data-testid="roteiro-passo-abrir"]'
+    );
+    expect(passos.map(p => p.text())).toEqual(['Sequela']);
+    expect(wrapper.find('[data-testid="playbooks-section"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('salva as palavras-chave como lista', async () => {
+    const { wrapper, store } = mountPlaybooks();
+    await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
+    const campo = wrapper.find(
+      '[data-testid="playbooks-palavras-chave-input"]'
+    );
+    await campo.setValue('acidente, sequela ');
+    await campo.trigger('blur');
+    expect(store.dispatch).toHaveBeenLastCalledWith(
+      'theses/update',
+      expect.objectContaining({
+        id: 1,
+        palavras_chave: ['acidente', 'sequela'],
+      })
+    );
   });
 });

@@ -59,6 +59,6 @@ class Api::V1::Accounts::ThesesController < Api::V1::Accounts::BaseController
 
   def permitted_params
     params.permit(:name, :description, :area, :active, :honorario_percentual, :honorario_n_mensalidades,
-                  :honorario_minimo_qtd, :honorario_minimo_base, :honorario_na_tabela)
+                  :honorario_minimo_qtd, :honorario_minimo_base, :honorario_na_tabela, palavras_chave: [])
   end
 end

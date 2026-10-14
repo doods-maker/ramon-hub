@@ -8,6 +8,9 @@ import ConfirmModal from '../components/ConfirmModal.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { THESIS_SECTIONS as SECTIONS } from '../helpers/sections';
 import { mensagemErro } from '../helpers/erro';
+import RoteiroPassosAPI from 'dashboard/api/roteiroPassos';
+import RoteiroEditor from '../components/roteiro/RoteiroEditor.vue';
+import { listaParaTexto, textoParaLista } from '../helpers/roteiro';
 import {
   CARTAO,
   SECAO,
@@ -19,6 +22,9 @@ import {
   CHIP,
   TOM,
   AVISO,
+  ABA,
+  ABA_ATIVA,
+  ABA_INATIVA,
 } from '../helpers/ui';
 
 const store = useStore();
@@ -45,6 +51,7 @@ const detail = reactive({
   honorarioMinimoQtd: '',
   honorarioMinimoBase: '',
   honorarioNaTabela: false,
+  palavrasChave: '',
 });
 
 const syncDetail = () => {
@@ -59,6 +66,7 @@ const syncDetail = () => {
   detail.honorarioMinimoQtd = thesis.honorario_minimo_qtd ?? '';
   detail.honorarioMinimoBase = thesis.honorario_minimo_base ?? '';
   detail.honorarioNaTabela = !!thesis.honorario_na_tabela;
+  detail.palavrasChave = listaParaTexto(thesis.palavras_chave);
 };
 
 // Observa só o ID: resposta de PATCH mutando o record no store não pode
@@ -149,6 +157,7 @@ const saveDetail = () => {
       honorario_minimo_qtd: detail.honorarioMinimoQtd,
       honorario_minimo_base: detail.honorarioMinimoBase || null,
       honorario_na_tabela: detail.honorarioNaTabela,
+      palavras_chave: textoParaLista(detail.palavrasChave),
     })
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
@@ -280,13 +289,56 @@ const MARCADOR_NOME = '{{nome}}';
 const sectionLabelKey = section =>
   `RAMON.PLAYBOOKS.SECTIONS.${section.toUpperCase()}`;
 
-onMounted(() => store.dispatch('theses/get'));
+// Roteiro da IA (F2): todos os passos da conta numa busca só; cada editor filtra o seu escopo.
+const passos = ref([]);
+const calculadoras = ref({});
+const carregarPassos = async () => {
+  try {
+    const { data } = await RoteiroPassosAPI.get();
+    passos.value = data.payload || [];
+    calculadoras.value = data.calculadoras || {};
+  } catch (e) {
+    useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR')));
+  }
+};
+const abaDetalhe = ref('playbook');
+const passosDaTese = computed(
+  () => passos.value.filter(p => p.thesis_id === selectedId.value).length
+);
+
+onMounted(() => {
+  store.dispatch('theses/get');
+  // etapas e motivos de perda das saídas do roteiro
+  store.dispatch('leadConfig/get');
+  carregarPassos();
+});
 </script>
 
 <template>
   <div class="h-full w-full overflow-y-auto bg-n-background p-4 sm:p-8">
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-5">
       <RamonPageHeader class="!mb-0" :title="$t('RAMON.PLAYBOOKS.TITLE')" />
+
+      <section
+        class="flex flex-col gap-3 !p-4"
+        :class="CARTAO"
+        data-testid="roteiro-comuns"
+      >
+        <div>
+          <h2 class="m-0" :class="TITULO">
+            {{ $t('RAMON.ROTEIRO_IA.EDITOR.COMUNS_TITULO') }}
+          </h2>
+          <p class="m-0 mt-1 text-xs text-n-slate-10">
+            {{ $t('RAMON.ROTEIRO_IA.EDITOR.COMUNS_AJUDA') }}
+          </p>
+        </div>
+        <RoteiroEditor
+          :thesis-id="null"
+          :passos="passos"
+          :calculadoras="calculadoras"
+          @mudou="carregarPassos"
+        />
+      </section>
 
       <div class="flex flex-col items-start gap-5 md:flex-row">
         <!-- Teses: cartão fixo à esquerda enquanto o detalhe rola -->
@@ -440,6 +492,19 @@ onMounted(() => store.dispatch('theses/get'));
                   @blur="saveDetail"
                 />
               </label>
+              <label
+                :class="ROTULO"
+                :title="$t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE_AJUDA')"
+              >
+                {{ $t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE') }}
+                <input
+                  v-model="detail.palavrasChave"
+                  data-testid="playbooks-palavras-chave-input"
+                  :class="CAMPO"
+                  :placeholder="$t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE_AJUDA')"
+                  @blur="saveDetail"
+                />
+              </label>
               <div class="grid gap-3 md:grid-cols-3">
                 <label :class="ROTULO">
                   {{ $t('RAMON.PLAYBOOKS.AREA') }}
@@ -530,153 +595,205 @@ onMounted(() => store.dispatch('theses/get'));
               </p>
             </div>
 
-            <p
-              data-testid="playbooks-nome-hint"
-              class="m-0 flex items-center gap-1.5 text-xs text-n-slate-10"
+            <nav
+              class="flex gap-1 border-b border-n-weak"
+              data-testid="playbooks-abas"
             >
-              <span class="i-lucide-info size-3.5 shrink-0" />
-              {{ $t('RAMON.PLAYBOOKS.NOME_HINT', { marcador: MARCADOR_NOME }) }}
-            </p>
-
-            <!-- Seções em coluna única: roteiro longo pede linha larga (lado a lado
-                 o campo de novo item ficava estreito demais) -->
-            <div class="flex flex-col gap-5">
-              <section
-                v-for="section in SECTIONS"
-                :key="section"
-                class="flex flex-col gap-3 !p-4"
-                :class="CARTAO"
-                data-testid="playbooks-section"
+              <button
+                type="button"
+                data-testid="playbooks-aba-playbook"
+                :class="[
+                  ABA,
+                  abaDetalhe === 'playbook' ? ABA_ATIVA : ABA_INATIVA,
+                ]"
+                @click="abaDetalhe = 'playbook'"
               >
-                <div>
-                  <h3 class="m-0" :class="TITULO">
-                    {{ $t(sectionLabelKey(section)) }}
-                  </h3>
-                  <!-- onde o item desta seção é usado (conferido no código) -->
-                  <p
-                    data-testid="playbooks-section-uso"
-                    class="m-0 mt-1 text-xs text-n-slate-10"
-                  >
-                    {{ $t(sectionUsoKey(section)) }}
-                  </p>
-                </div>
-                <p
-                  v-if="section === 'documento'"
-                  data-testid="playbooks-documento-aviso"
-                  class="m-0"
-                  :class="[AVISO, TOM.amber]"
-                >
-                  {{ $t('RAMON.PLAYBOOKS.DOCUMENTO_CLIENTE') }}
-                </p>
+                {{ $t('RAMON.ROTEIRO_IA.EDITOR.ABA_PLAYBOOK') }}
+              </button>
+              <button
+                type="button"
+                data-testid="playbooks-aba-roteiro"
+                :class="[
+                  ABA,
+                  abaDetalhe === 'roteiro' ? ABA_ATIVA : ABA_INATIVA,
+                ]"
+                @click="abaDetalhe = 'roteiro'"
+              >
+                {{ $t('RAMON.ROTEIRO_IA.EDITOR.ABA_ROTEIRO') }}
+                <span class="font-mono text-[11px]">{{ passosDaTese }}</span>
+              </button>
+            </nav>
 
-                <!-- itens separados por linha, sem caixa dentro do cartão -->
-                <ul
-                  class="m-0 flex list-none flex-col divide-y divide-n-weak p-0"
+            <section
+              v-if="abaDetalhe === 'roteiro'"
+              class="flex flex-col gap-3 !p-4"
+              :class="CARTAO"
+              data-testid="playbooks-roteiro"
+            >
+              <p class="m-0 text-xs text-n-slate-10">
+                {{ $t('RAMON.ROTEIRO_IA.EDITOR.ROTEIRO_AJUDA') }}
+              </p>
+              <RoteiroEditor
+                :thesis-id="selectedThesis.id"
+                :passos="passos"
+                :calculadoras="calculadoras"
+                @mudou="carregarPassos"
+              />
+            </section>
+
+            <template v-else>
+              <p
+                data-testid="playbooks-nome-hint"
+                class="m-0 flex items-center gap-1.5 text-xs text-n-slate-10"
+              >
+                <span class="i-lucide-info size-3.5 shrink-0" />
+                {{
+                  $t('RAMON.PLAYBOOKS.NOME_HINT', { marcador: MARCADOR_NOME })
+                }}
+              </p>
+
+              <!-- Seções em coluna única: roteiro longo pede linha larga (lado a lado
+                 o campo de novo item ficava estreito demais) -->
+              <div class="flex flex-col gap-5">
+                <section
+                  v-for="section in SECTIONS"
+                  :key="section"
+                  class="flex flex-col gap-3 !p-4"
+                  :class="CARTAO"
+                  data-testid="playbooks-section"
                 >
-                  <li
-                    v-for="(item, itemIndex) in itemsBySection[section]"
-                    :key="item.id"
-                    data-testid="playbooks-item-row"
-                    class="flex flex-col gap-1.5 py-3 first:pt-0"
+                  <div>
+                    <h3 class="m-0" :class="TITULO">
+                      {{ $t(sectionLabelKey(section)) }}
+                    </h3>
+                    <!-- onde o item desta seção é usado (conferido no código) -->
+                    <p
+                      data-testid="playbooks-section-uso"
+                      class="m-0 mt-1 text-xs text-n-slate-10"
+                    >
+                      {{ $t(sectionUsoKey(section)) }}
+                    </p>
+                  </div>
+                  <p
+                    v-if="section === 'documento'"
+                    data-testid="playbooks-documento-aviso"
+                    class="m-0"
+                    :class="[AVISO, TOM.amber]"
                   >
-                    <div class="flex items-center gap-1">
-                      <input
-                        v-model="itemDrafts[item.id].title"
-                        data-testid="playbooks-item-title-input"
-                        class="flex-1 font-medium"
-                        :class="CAMPO"
+                    {{ $t('RAMON.PLAYBOOKS.DOCUMENTO_CLIENTE') }}
+                  </p>
+
+                  <!-- itens separados por linha, sem caixa dentro do cartão -->
+                  <ul
+                    class="m-0 flex list-none flex-col divide-y divide-n-weak p-0"
+                  >
+                    <li
+                      v-for="(item, itemIndex) in itemsBySection[section]"
+                      :key="item.id"
+                      data-testid="playbooks-item-row"
+                      class="flex flex-col gap-1.5 py-3 first:pt-0"
+                    >
+                      <div class="flex items-center gap-1">
+                        <input
+                          v-model="itemDrafts[item.id].title"
+                          data-testid="playbooks-item-title-input"
+                          class="flex-1 font-medium"
+                          :class="CAMPO"
+                          :placeholder="
+                            $t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')
+                          "
+                          @blur="saveItem(item)"
+                        />
+                        <Button
+                          data-testid="playbooks-item-move-up"
+                          xs
+                          ghost
+                          slate
+                          icon="i-lucide-chevron-up"
+                          :aria-label="$t('RAMON.PLAYBOOKS.MOVE_UP')"
+                          :disabled="itemIndex === 0"
+                          @click="moveItem(section, itemIndex, -1)"
+                        />
+                        <Button
+                          data-testid="playbooks-item-move-down"
+                          xs
+                          ghost
+                          slate
+                          icon="i-lucide-chevron-down"
+                          :aria-label="$t('RAMON.PLAYBOOKS.MOVE_DOWN')"
+                          :disabled="
+                            itemIndex === itemsBySection[section].length - 1
+                          "
+                          @click="moveItem(section, itemIndex, 1)"
+                        />
+                        <Button
+                          data-testid="playbooks-item-remove-item"
+                          xs
+                          ghost
+                          slate
+                          icon="i-lucide-trash-2"
+                          :aria-label="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
+                          :title="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
+                          @click="removeItem(item)"
+                        />
+                      </div>
+                      <!-- field-sizing: auto-cresce com o roteiro (fallback = rows fixo) -->
+                      <textarea
+                        v-model="itemDrafts[item.id].content"
+                        data-testid="playbooks-item-content-input"
+                        rows="2"
+                        class="max-h-64 min-h-16 [field-sizing:content]"
+                        :class="TEXTAREA"
                         :placeholder="
-                          $t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')
+                          $t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')
                         "
                         @blur="saveItem(item)"
                       />
-                      <Button
-                        data-testid="playbooks-item-move-up"
-                        xs
-                        ghost
-                        slate
-                        icon="i-lucide-chevron-up"
-                        :aria-label="$t('RAMON.PLAYBOOKS.MOVE_UP')"
-                        :disabled="itemIndex === 0"
-                        @click="moveItem(section, itemIndex, -1)"
-                      />
-                      <Button
-                        data-testid="playbooks-item-move-down"
-                        xs
-                        ghost
-                        slate
-                        icon="i-lucide-chevron-down"
-                        :aria-label="$t('RAMON.PLAYBOOKS.MOVE_DOWN')"
-                        :disabled="
-                          itemIndex === itemsBySection[section].length - 1
-                        "
-                        @click="moveItem(section, itemIndex, 1)"
-                      />
-                      <Button
-                        data-testid="playbooks-item-remove-item"
-                        xs
-                        ghost
-                        slate
-                        icon="i-lucide-trash-2"
-                        :aria-label="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
-                        :title="$t('RAMON.PLAYBOOKS.ITEM_DELETE')"
-                        @click="removeItem(item)"
-                      />
-                    </div>
-                    <!-- field-sizing: auto-cresce com o roteiro (fallback = rows fixo) -->
-                    <textarea
-                      v-model="itemDrafts[item.id].content"
-                      data-testid="playbooks-item-content-input"
-                      rows="2"
-                      class="max-h-64 min-h-16 [field-sizing:content]"
-                      :class="TEXTAREA"
+                    </li>
+                    <li
+                      v-if="!itemsBySection[section].length"
+                      class="text-xs text-n-slate-10"
+                    >
+                      {{ $t('RAMON.PLAYBOOKS.ITEM_EMPTY') }}
+                    </li>
+                  </ul>
+
+                  <div class="flex gap-2" :class="SECAO">
+                    <input
+                      v-model="newItemDrafts[section].title"
+                      data-testid="playbooks-item-add-title"
+                      class="!w-40 shrink-0"
+                      :class="CAMPO"
+                      :placeholder="
+                        $t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')
+                      "
+                      @keyup.enter="addItem(section)"
+                    />
+                    <input
+                      v-model="newItemDrafts[section].content"
+                      data-testid="playbooks-item-add-content"
+                      class="min-w-0 flex-1"
+                      :class="CAMPO"
                       :placeholder="
                         $t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')
                       "
-                      @blur="saveItem(item)"
+                      @keyup.enter="addItem(section)"
                     />
-                  </li>
-                  <li
-                    v-if="!itemsBySection[section].length"
-                    class="text-xs text-n-slate-10"
-                  >
-                    {{ $t('RAMON.PLAYBOOKS.ITEM_EMPTY') }}
-                  </li>
-                </ul>
-
-                <div class="flex gap-2" :class="SECAO">
-                  <input
-                    v-model="newItemDrafts[section].title"
-                    data-testid="playbooks-item-add-title"
-                    class="!w-40 shrink-0"
-                    :class="CAMPO"
-                    :placeholder="$t('RAMON.PLAYBOOKS.ITEM_TITLE_PLACEHOLDER')"
-                    @keyup.enter="addItem(section)"
-                  />
-                  <input
-                    v-model="newItemDrafts[section].content"
-                    data-testid="playbooks-item-add-content"
-                    class="min-w-0 flex-1"
-                    :class="CAMPO"
-                    :placeholder="
-                      $t('RAMON.PLAYBOOKS.ITEM_CONTENT_PLACEHOLDER')
-                    "
-                    @keyup.enter="addItem(section)"
-                  />
-                  <Button
-                    data-testid="playbooks-item-add"
-                    sm
-                    faded
-                    slate
-                    icon="i-lucide-plus"
-                    class="shrink-0"
-                    :label="$t('RAMON.PLAYBOOKS.ITEM_ADD')"
-                    :disabled="addingItem === section"
-                    @click="addItem(section)"
-                  />
-                </div>
-              </section>
-            </div>
+                    <Button
+                      data-testid="playbooks-item-add"
+                      sm
+                      faded
+                      slate
+                      icon="i-lucide-plus"
+                      class="shrink-0"
+                      :label="$t('RAMON.PLAYBOOKS.ITEM_ADD')"
+                      :disabled="addingItem === section"
+                      @click="addItem(section)"
+                    />
+                  </div>
+                </section>
+              </div>
+            </template>
           </template>
         </div>
       </div>
