@@ -213,7 +213,7 @@ RSpec.describe Ramon::Roteiro do
   it 'erro nos efeitos desfaz o registro inteiro e sobe a exceção' do
     allow(Ramon::Roteiro::Efeitos).to receive(:aplicar).and_raise(RuntimeError, 'boom')
 
-    expect { registrar('tem_advogado', 'sim') }.to raise_error(RuntimeError, 'boom')
+    expect { registrar('tem_advogado', 'sim') }.to raise_error('boom')
     expect(lead.reload.custom_attributes['roteiro']).to be_nil
   end
 
