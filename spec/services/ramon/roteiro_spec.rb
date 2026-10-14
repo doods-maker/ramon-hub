@@ -138,6 +138,12 @@ RSpec.describe Ramon::Roteiro do
     expect(res[:estado].dig('respostas', 'recebeu_auxilio', 'valor')).to eq('nao')
   end
 
+  it 'corrigir uma resposta adiantada não pula os passos anteriores' do
+    registrar('data_acidente', '10/01/2026')
+    registrar('data_acidente', '11/01/2026')
+    expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
+  end
+
   it 'nada casando vai para a equipe com sino ao gestor' do
     admin = create(:user, account: account, role: :administrator)
     registrar('tem_advogado', 'nao')
@@ -192,6 +198,12 @@ RSpec.describe Ramon::Roteiro do
     atual = described_class.atual(lead.reload)
     expect(atual[:passo].chave).to eq('renda')
     expect(atual[:estado]['respostas'].keys).to eq(['tem_advogado'])
+  end
+
+  it 'trocar a tese depois de desqualificar num comum pergunta o comum de novo' do
+    registrar('tem_advogado', 'sim')
+    lead.update!(thesis: create(:thesis, account: account))
+    expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
   end
 
   it 'descrever mostra o passo, as saídas do texto e o que já foi respondido' do

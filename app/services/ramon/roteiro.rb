@@ -21,18 +21,27 @@ module Ramon::Roteiro
     RoteiroPasso.comuns.where(account_id: lead.account_id).to_a + RoteiroPasso.where(thesis_id: lead.thesis_id).to_a
   end
 
-  # Trocar a tese reinicia o roteiro; as respostas dos passos comuns ficam.
+  # Trocar a tese reinicia o roteiro; as respostas dos passos comuns ficam, menos a que encerrou o roteiro.
   def estado(lead)
     salvo = (lead.custom_attributes || {})['roteiro'].deep_dup || {}
     return salvo.reverse_merge('respostas' => {}) if salvo['tese_id'] == lead.thesis_id
 
     comuns = RoteiroPasso.comuns.where(account_id: lead.account_id).pluck(:chave)
-    { 'tese_id' => lead.thesis_id, 'respostas' => (salvo['respostas'] || {}).slice(*comuns) }
+    { 'tese_id' => lead.thesis_id, 'respostas' => (salvo['respostas'] || {}).slice(*comuns).except(salvo['decisivo']) }
   end
 
   def proximo(lista, est)
-    inicio = lista.index { |p| p.chave == est['cursor'] } || 0
-    lista[inicio..].find { |p| !est['respostas'].key?(p.chave) }
+    lista[indice(lista, est['cursor'])..].find { |p| !est['respostas'].key?(p.chave) }
+  end
+
+  # cursor nil (ou passo que sumiu) = 1º passo.
+  def indice(lista, chave)
+    lista.index { |p| p.chave == chave } || 0
+  end
+
+  # Correção e reabrir só VOLTAM o cursor: ir para frente pularia passos anteriores ainda sem resposta.
+  def voltar_cursor(lista, est, chave)
+    est['cursor'] = chave if indice(lista, chave) < indice(lista, est['cursor'])
   end
 
   def atual(lead)
@@ -54,7 +63,7 @@ module Ramon::Roteiro
     return false if est['desfecho'].nil? || (se && est['desfecho'] != se)
 
     est['respostas'].delete(est['decisivo'])
-    est['cursor'] = est['decisivo']
+    voltar_cursor(passos(lead), est, est['decisivo'])
     novo = est.except('desfecho', 'motivo', 'decisivo', 'aguarda_equipe')
     lead.update!(custom_attributes: (lead.custom_attributes || {}).merge('roteiro' => novo))
     Efeitos.reabrir(lead)

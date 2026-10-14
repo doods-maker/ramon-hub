@@ -37,5 +37,11 @@ RSpec.describe Ramon::Roteiro::Resposta do
       expect(described_class.casa?('*', nil)).to be(true)
       expect(described_class.casa?('sim', 'nao')).to be(false)
     end
+
+    it 'valor exato num passo de número compara como número; texto com número segue texto' do
+      expect(described_class.casa?('2', '2.0')).to be(true)
+      expect(described_class.casa?('2', '3')).to be(false)
+      expect(described_class.casa?('voltou 100%', 'ficou 100 dias')).to be(false)
+    end
   end
 end

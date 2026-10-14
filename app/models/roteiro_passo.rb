@@ -15,7 +15,9 @@ class RoteiroPasso < ApplicationRecord
   normalizes :calculadora, with: ->(v) { v.presence }
 
   validates :titulo, presence: true
+  # rubocop:disable Rails/UniqueValidationWithoutIndex -- coberta pelos 2 índices únicos parciais (por tese e comuns)
   validates :chave, presence: true, format: { with: /\A[a-z0-9_]+\z/ }, uniqueness: { scope: %i[account_id thesis_id] }
+  # rubocop:enable Rails/UniqueValidationWithoutIndex
   validates :tipo_resposta, inclusion: { in: TIPOS }
   validates :calculadora, inclusion: { in: Ramon::Roteiro::Calculadoras::NOMES }, allow_nil: true
   validate :saidas_validas

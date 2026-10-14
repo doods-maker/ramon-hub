@@ -32,13 +32,13 @@ module Ramon::Roteiro::Efeitos
     lead.conversation.reload.add_labels([etiqueta.to_s.downcase])
   end
 
-  # Só etapa aberta: ganho nunca; perdido só pela saída desqualificar.
+  # Só etapa aberta: ganho nunca; perdido só pela saída desqualificar. Nunca para trás (como registrar_reuniao!).
   def mover(lead, nome, passo)
     return if nome.blank?
 
     etapa = lead.account.lead_stages.find_by(name: nome, is_won: false, is_lost: false)
     return anotar(lead, "etapa '#{nome}' nao existe no funil") if etapa.nil?
-    return if lead.lead_stage_id == etapa.id
+    return if lead.lead_stage.position >= etapa.position
     return lead.update!(lead_stage: etapa) if direto?(lead)
 
     sugerir(lead, 'move_stage', 'etapa_sugerida' => etapa.name, 'justificativa' => "roteiro da IA: #{passo.titulo}")

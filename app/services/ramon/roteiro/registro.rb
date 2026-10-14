@@ -63,15 +63,18 @@ class Ramon::Roteiro::Registro
     guardar_resposta(valor, calc, saida)
     saida = avancar(saida)
     @est['aguarda_equipe'] = true if vira_sugestao_de_perdido?(saida)
-    @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @est))
-    Ramon::Roteiro::Efeitos.aplicar(@lead, @passo, saida)
+    ActiveRecord::Base.transaction do
+      @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @est))
+      Ramon::Roteiro::Efeitos.aplicar(@lead, @passo, saida)
+    end
     { estado: @est, proximo: @est['desfecho'] ? nil : Ramon::Roteiro.proximo(@lista, @est), calc: calc,
       mensagem: saida['mensagem'] }
   end
 
   def guardar_resposta(valor, calc, saida)
-    # Correção de um passo já respondido: vale a nova resposta e o roteiro volta a seguir dali (decisão 13/10).
-    @est['cursor'] = @passo.chave if @est['respostas'].key?(@passo.chave)
+    # Correção de um passo já respondido: vale a nova resposta e o roteiro volta a seguir dali (decisão 13/10) —
+    # se o passo estiver antes do cursor; resposta adiantada corrigida não pula os anteriores.
+    Ramon::Roteiro.voltar_cursor(@lista, @est, @passo.chave) if @est['respostas'].key?(@passo.chave)
     @est['respostas'][@passo.chave] = { 'valor' => valor, 'calc' => calc&.stringify_keys, 'saida' => saida['id'],
                                         'em' => Time.zone.now.iso8601 }.compact
   end

@@ -2,6 +2,7 @@
 # saídas (spec 2026-10-13 §3.1). Formato que não serve volta como erro para a IA — nada é gravado.
 module Ramon::Roteiro::Resposta
   FAIXA = /\A(<=|>=|<|>)\s*(-?\d+(?:[.,]\d+)?)\z/
+  NUMERO = /\A(R\$)?\s*-?[\d.,]+\z/
 
   module_function
 
@@ -28,10 +29,25 @@ module Ramon::Roteiro::Resposta
     return true if regra == '*'
 
     faixa = FAIXA.match(regra)
-    return normal(regra) == normal(valor) if faixa.nil?
+    return igual?(regra, valor) if faixa.nil?
 
     numero = Ramon::Roteiro::Calculadoras.numero(valor)
     !numero.nil? && numero.public_send(faixa[1], BigDecimal(faixa[2].tr(',', '.')))
+  end
+
+  # Passo de número grava '2.0': quando os dois lados são só número, compara como número.
+  def igual?(regra, valor)
+    a = numero_puro(regra)
+    b = numero_puro(valor)
+    return a == b if a && b
+
+    normal(regra) == normal(valor)
+  end
+
+  # Só texto que é número ("2", "R$ 1.200,50"): "voltou 100%" é texto, não 100.
+  def numero_puro(texto)
+    texto = texto.to_s.strip
+    Ramon::Roteiro::Calculadoras.numero(texto) if texto.match?(NUMERO)
   end
 
   def opcao(passo, texto)
