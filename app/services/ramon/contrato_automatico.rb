@@ -30,7 +30,7 @@ module Ramon::ContratoAutomatico
   end
 
   def parar(lead, falta)
-    Ramon::CopilotoLimite.encerrar(lead, Ramon::CopilotoLimite::CONTRATO, "contrato nao saiu na hora: falta #{falta.join(', ')}")
+    Ramon::CopilotoLimite.encerrar(lead, Ramon::CopilotoLimite::CONTRATO_FALHOU, falta.join(', '))
     { falta: falta }
   end
 end

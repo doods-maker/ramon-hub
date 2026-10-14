@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_14_100001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_14_200001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -2135,13 +2135,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_14_100001) do
       (l.custom_attributes #>> '{roteiro,desfecho}'::text[]) AS desfecho,
       (l.custom_attributes #>> '{roteiro,motivo}'::text[]) AS motivo,
       (l.custom_attributes #>> '{roteiro,decisivo}'::text[]) AS passo_decisivo,
-      COALESCE(((l.custom_attributes #>> '{roteiro,aguarda_equipe}'::text[]))::boolean, false) AS aguarda_equipe,
+      (COALESCE(((l.custom_attributes #>> '{roteiro,aguarda_equipe}'::text[]))::boolean, false) AND (l.lost_at IS NULL)) AS aguarda_equipe,
       r.respondidos,
       r.iniciado_em,
       r.ultima_resposta_em,
       (c.custom_attributes ->> 'copiloto_modo'::text) AS modo,
       (c.custom_attributes #>> '{copiloto_limite,limite}'::text[]) AS limite_atingido,
-      ((c.custom_attributes #>> '{copiloto_limite,em}'::text[]))::timestamp with time zone AS limite_em
+      ((c.custom_attributes #>> '{copiloto_limite,em}'::text[]))::timestamp with time zone AS limite_em,
+      (c.custom_attributes #>> '{copiloto_limite,motivo}'::text[]) AS limite_motivo
      FROM (((leads l
        LEFT JOIN theses t ON ((t.id = ((l.custom_attributes #>> '{roteiro,tese_id}'::text[]))::bigint)))
        LEFT JOIN conversations c ON ((c.id = l.conversation_id)))

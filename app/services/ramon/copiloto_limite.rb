@@ -9,7 +9,11 @@ module Ramon::CopilotoLimite
   REUNIAO = 'reuniao'.freeze
   CONTRATO = 'contrato'.freeze
   NIVEIS = [QUALIFICACAO, REUNIAO, CONTRATO].freeze
-  NOMES = { QUALIFICACAO => 'lead qualificado', REUNIAO => 'reunião marcada', CONTRATO => 'contrato enviado' }.freeze
+  # O contrato automático não saiu (falta dado ou o ZapSign falhou): encerra o modo como um limite, mas conta à parte
+  # (bi_roteiro, card de limites) — 'contrato' fica só para o contrato que de fato saiu.
+  CONTRATO_FALHOU = 'contrato_falhou'.freeze
+  NOMES = { QUALIFICACAO => 'lead qualificado', REUNIAO => 'reunião marcada', CONTRATO => 'contrato enviado',
+            CONTRATO_FALHOU => 'contrato não saiu na hora' }.freeze
 
   module_function
 
