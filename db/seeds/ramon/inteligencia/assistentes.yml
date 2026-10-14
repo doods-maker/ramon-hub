@@ -15,6 +15,8 @@ assistentes:
     config:
       temperature: 0.4
       product_name: Ramon Antonio Advogados
+      # aprovado pelo Eduardo 14/10 (doc roteiro-f1-textos item 7) — substitui o "Transferindo…" nativo
+      handoff_message: Já chamei alguém da nossa equipe — a conversa continua aqui com você, tá?
     response_guidelines:
       - "Tom de médico de confiança: caloroso, simples, sem juridiquês. Mensagens curtas, estilo WhatsApp, uma ideia por bolha."
       - "Nunca prometa resultado do caso nem prazo do INSS, da Justiça, de perícia ou de pagamento (regra da OAB). Se perguntarem, diga com honestidade que ninguém sério crava prazo."
