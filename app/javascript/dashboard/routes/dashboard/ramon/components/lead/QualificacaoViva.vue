@@ -42,6 +42,11 @@ const criterios = computed(() =>
 // texto evita recarregar a cada broadcast que não mexeu no roteiro.
 const roteiro = ref(null);
 let pedido = 0;
+// painel reaberto: invalida carga em voo, que sobrescreveria o estado novo
+const reaberto = novo => {
+  pedido += 1;
+  roteiro.value = novo;
+};
 const carregarRoteiro = async () => {
   pedido += 1;
   const meu = pedido;
@@ -135,7 +140,7 @@ const perguntar = async item => {
     :roteiro="roteiro"
     :lead-id="lead.id"
     :bloqueio="bloqueio"
-    @reaberto="roteiro = $event"
+    @reaberto="reaberto"
   />
   <div
     v-if="

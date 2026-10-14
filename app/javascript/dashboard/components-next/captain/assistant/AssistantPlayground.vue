@@ -75,7 +75,11 @@ const sendMessage = async () => {
         ? { thesis_id: roteiro.thesisId, estado: roteiro.estado }
         : null,
     });
-    if (data.roteiro && roteiro) {
+    if (
+      data.roteiro &&
+      roteiro &&
+      data.roteiro.thesis_id === roteiro.thesisId
+    ) {
       Object.assign(roteiro, {
         estado: data.roteiro.estado,
         painel: data.roteiro.painel,

@@ -19,11 +19,9 @@ RSpec.describe Ramon::Fluxos::Migracao do
   end
 
   it 'grupo com limite_devolve: false segue no comando mesmo com limite do dia (o código também tem teto)' do
-    teste = { env: 'RAMON_FLUXO_TESTE', faz: 'o teste', fluxos: { 'teste_limite' => 'lead_criado' }.freeze, limite_devolve: false }
-    stub_const("#{described_class}::GRUPOS", described_class::GRUPOS.merge('teste' => teste))
-    grafo = grafo_linear({ 'tipo' => 'lead_criado' }, ['parar', {}])
-    fluxo_publicado(account, grafo, sistema_chave: 'teste_limite', modo: 'normal', limite_dia: 15)
-    with_modified_env(RAMON_FLUXO_TESTE: 'on') { expect(described_class.assumiu?(account, 'teste')).to be(true) }
+    grafo = grafo_linear({ 'tipo' => 'lead_parado' }, ['parar', {}])
+    fluxo_publicado(account, grafo, sistema_chave: 'cadencia', modo: 'normal', limite_dia: 15)
+    with_modified_env(RAMON_FLUXO_CADENCIA: 'on') { expect(described_class.assumiu?(account, 'cadencia')).to be(true) }
   end
 
   it 'SLA (B4.2): criar = 1 fluxo em sombra, ligado e publicado; virar exige RAMON_FLUXO_SLA; cada migração tem a sua chave' do

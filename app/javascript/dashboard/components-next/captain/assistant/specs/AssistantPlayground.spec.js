@@ -113,4 +113,31 @@ describe('AssistantPlayground', () => {
     expect(roteiroDe(1).painel).toEqual({ passos: [] });
     roteiroDe(1).thesisId = null;
   });
+
+  it('roteiro em teste: resposta atrasada de outra tese não grava o estado', async () => {
+    let responder;
+    CaptainAssistant.playground.mockReturnValue(
+      new Promise(resolve => {
+        responder = resolve;
+      })
+    );
+    const wrapper = mount(AssistantPlayground, { props: { assistantId: 1 } });
+    roteiroDe(1).thesisId = 3;
+    await enviar(wrapper, 'olá');
+    roteiroDe(1).thesisId = 4;
+    responder({
+      data: {
+        response: 'Oi',
+        roteiro: {
+          thesis_id: 3,
+          estado: { velho: true },
+          painel: { velho: 1 },
+        },
+      },
+    });
+    await flushPromises();
+    expect(roteiroDe(1).estado).not.toEqual({ velho: true });
+    expect(roteiroDe(1).painel).not.toEqual({ velho: 1 });
+    roteiroDe(1).thesisId = null;
+  });
 });
