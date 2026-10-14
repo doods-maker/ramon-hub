@@ -1040,7 +1040,8 @@
           "VOU_PENSAR": "marked that the client will think it over",
           "CONTRATO_CANCELADO": "contract cancelled (left Closed)",
           "REGISTRO_COMPLETO": "record complete (thesis, CPF, birth date and SDR note)",
-          "DOSSIE_ENTREGUE": "marked the dossier as delivered to the legal team"
+          "DOSSIE_ENTREGUE": "marked the dossier as delivered to the legal team",
+          "ROTEIRO": "AI script"
         }
       },
       "LOADING": "Loading lead…",
