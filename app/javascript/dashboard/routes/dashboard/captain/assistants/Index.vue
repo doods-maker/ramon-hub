@@ -23,7 +23,7 @@ import {
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import {
   MODOS,
-  modoDefault,
+  tomDoModo,
 } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 
 const { t } = useI18n();
@@ -54,17 +54,12 @@ const isEmpty = computed(
   () => !loading.value && !error.value && !cartoes.value.length
 );
 
-// rascunho = azul (nada sai sem humano); piloto = âmbar/vermelho (a IA envia).
-const MODO_TOM = {
-  manual: TOM.slate,
-  rascunho: TOM.blue,
-  piloto_limitado: TOM.amber,
-  piloto_total: TOM.ruby,
-  piloto_ate_qualificacao: TOM.ruby,
-  piloto_ate_reuniao: TOM.ruby,
-  piloto_ate_contrato: TOM.ruby,
-};
 const modoNome = modo => t(`RAMON.COPILOTO.MODOS.${modo}.NOME`);
+// Modo em que as conversas novas nascem: o padrão de cada caixa do assistente (Ramon::CopilotoModo.default).
+const modosPadrao = cartao =>
+  [...new Set(cartao.caixas.map(caixa => caixa.modo_padrao))]
+    .map(modoNome)
+    .join(', ');
 const modosDe = cartao =>
   MODOS.filter(modo => cartao.conversas_por_modo[modo]).map(modo => ({
     modo,
@@ -201,7 +196,7 @@ const handleAfterCreate = newAssistant => {
             <p class="mt-1 text-sm text-n-slate-12">
               {{
                 t('CAPTAIN_RAMON.ASSISTENTES.MODO.PADRAO', {
-                  modo: modoNome(modoDefault()),
+                  modo: modosPadrao(cartao),
                 })
               }}
             </p>
@@ -209,7 +204,7 @@ const handleAfterCreate = newAssistant => {
               <span
                 v-for="item in modosDe(cartao)"
                 :key="item.modo"
-                :class="[CHIP, MODO_TOM[item.modo]]"
+                :class="[CHIP, tomDoModo(item.modo)]"
               >
                 {{
                   t('CAPTAIN_RAMON.ASSISTENTES.MODO.CONTAGEM', {

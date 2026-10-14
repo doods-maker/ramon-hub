@@ -10,12 +10,16 @@ defineOptions({ name: 'PilotoCarimbo' });
 const { t } = useI18n();
 const store = useStore();
 const currentChat = useMapGetter('getSelectedChat');
+const getInbox = useMapGetter('inboxes/getInbox');
 const { contentAttributes } = useMessageContext();
 
 const piloto = computed(() => contentAttributes.value?.ramonPiloto || null);
 const pausando = ref(false);
 const aindaEmPiloto = computed(() =>
-  copilotoModoDe(currentChat.value).startsWith('piloto_')
+  copilotoModoDe(
+    currentChat.value,
+    getInbox.value?.(currentChat.value?.inbox_id)
+  ).startsWith('piloto_')
 );
 
 const pausar = async () => {

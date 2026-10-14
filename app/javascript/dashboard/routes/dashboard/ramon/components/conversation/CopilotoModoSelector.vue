@@ -10,11 +10,18 @@ defineOptions({ name: 'CopilotoModoSelector' });
 const { t } = useI18n();
 const store = useStore();
 const currentChat = useMapGetter('getSelectedChat');
+const getInbox = useMapGetter('inboxes/getInbox');
 
 const open = ref(false);
 const saving = ref(false);
 
-const modo = computed(() => copilotoModoDe(currentChat.value));
+// Sem atributo vale o padrão da caixa — o mesmo que o servidor usa (Ramon::CopilotoModo.of).
+const modo = computed(() =>
+  copilotoModoDe(
+    currentChat.value,
+    getInbox.value?.(currentChat.value?.inbox_id)
+  )
+);
 
 const escolher = async novoModo => {
   // Comparar com o valor CRU (não normalizado) — com um valor inválido salvo

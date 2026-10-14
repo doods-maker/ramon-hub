@@ -58,6 +58,15 @@ module Ramon::CopilotoModo
     conversation.update!(custom_attributes: attrs.merge('copiloto_modo' => modo))
   end
 
+  # Conversas por modo efetivo, em lote (tela Assistentes): atributo válido → padrão da caixa → env — o mesmo que .of.
+  def contar(conversas)
+    padroes = Inbox.where(id: conversas.distinct.pluck(:inbox_id)).to_h { |caixa| [caixa.id, default(caixa)] }
+    conversas.group(:inbox_id, Arel.sql("conversations.custom_attributes->>'copiloto_modo'")).count
+             .each_with_object(Hash.new(0)) do |((caixa, modo), total), soma|
+      soma[MODOS.include?(modo) ? modo : padroes.fetch(caixa) { default }] += total
+    end
+  end
+
   # Troca o modo da conversa guardando o de antes (o 1º vale até o restaurar) — desqualificado/equipe do roteiro.
   def trocar(conversa, valor)
     attrs = conversa.custom_attributes || {}

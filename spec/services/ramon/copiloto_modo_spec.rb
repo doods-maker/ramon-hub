@@ -93,5 +93,24 @@ RSpec.describe Ramon::CopilotoModo do
     expect(Ramon::CopilotoModo.envia?('piloto_total', handoff: true, logistica_ok: nil, falhou: true)).to be(true)
     expect(Ramon::CopilotoModo.envia?('piloto_total', handoff: false, logistica_ok: true, falhou: true)).to be(false)
   end
+
+  # Revisão F5 item 4: tela Assistentes conta pelo modo efetivo, com o padrão de cada caixa.
+  it 'contar: conversas pelo modo efetivo, com o padrão de cada caixa' do
+    outra = create(:inbox, account: inbox.account, ramon_copiloto_modo: 'piloto_total')
+    create(:conversation, account: inbox.account, inbox: inbox)
+    create(:conversation, account: inbox.account, inbox: outra)
+    create(:conversation, account: inbox.account, inbox: outra, custom_attributes: { 'copiloto_modo' => 'manual' })
+
+    with_modified_env RAMON_COPILOTO_MODO_DEFAULT: 'piloto_limitado' do
+      expect(Ramon::CopilotoModo.contar(inbox.account.conversations))
+        .to eq('piloto_limitado' => 1, 'piloto_total' => 1, 'manual' => 1)
+    end
+  end
+
+  # Front (helpers/copilotoModo.js) e backend com a mesma lista: a tela mostra o que o servidor faz.
+  it 'a lista de modos do front é a mesma do backend' do
+    js = Rails.root.join('app/javascript/dashboard/routes/dashboard/ramon/helpers/copilotoModo.js').read
+    expect(js[/export const MODOS = \[(.*?)\];/m, 1].scan(/'([a-z_]+)'/).flatten).to eq(Ramon::CopilotoModo::MODOS)
+  end
   # rubocop:enable RSpec/DescribedClass
 end
