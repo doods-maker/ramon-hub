@@ -202,6 +202,13 @@
   nivel: interna
   sistema: funil
 
+- id: consulta_andamento
+  title: 'Consulta de andamento'
+  description: 'Quem já é cliente: confere CPF + nascimento no AdvBox e devolve a fase do processo (a do Painel do Cliente) e o link do Painel'
+  icon: 'search'
+  nivel: consulta
+  sistema: advbox
+
 - id: criar_tarefa_esteira
   title: 'Criar tarefa de cadência'
   description: 'Cria um lembrete interno na Esteira do caso (cobrar, retomar, ligar) com data e hora'
