@@ -1,5 +1,6 @@
 require 'rails_helper'
 
+# rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
 RSpec.describe Ramon::ContratoAutomatico do
   let(:account) { create(:account) }
   let(:thesis) { account.theses.find_by!(name: 'Auxílio-acidente (B36)') }
@@ -29,7 +30,7 @@ RSpec.describe Ramon::ContratoAutomatico do
            .to_return(status: 200, headers: { 'Content-Type' => 'application/json' },
                       body: { 'token' => 'doc-1', 'signers' => [{ 'sign_url' => 'https://zap/assinar' }] }.to_json)
 
-    expect(described_class.preparar(lead)).to eq(link: 'https://zap/assinar')
+    expect(Ramon::ContratoAutomatico.preparar(lead)).to eq(link: 'https://zap/assinar')
     expect(stub).to have_been_requested
     expect(conversation.reload.custom_attributes).to include('copiloto_modo' => 'rascunho',
                                                              'copiloto_limite' => include('limite' => 'contrato'))
@@ -39,32 +40,38 @@ RSpec.describe Ramon::ContratoAutomatico do
   it 'fora do modo não gera nada (segue a sugestão de sempre)' do
     conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
     expect(Ramon::ZapsignClient).not_to receive(:create_doc_from_template)
-    expect(described_class.preparar(lead)).to be_nil
+    expect(Ramon::ContratoAutomatico.preparar(lead)).to be_nil
   end
 
   it 'cadastro incompleto: não gera, diz o que falta, encerra o modo e avisa' do
     contact.update!(cpf: nil, custom_attributes: {})
     expect(Ramon::ZapsignClient).not_to receive(:create_doc_from_template)
 
-    expect(described_class.preparar(lead)).to eq(falta: %w[CPF rua número cidade])
-    expect(conversation.reload.custom_attributes['copiloto_limite']).to include('limite' => 'contrato', 'motivo' => include('CPF'))
+    lead
+    # Revisão final F5, M2: o push leva o limite e o motivo, não só o motivo.
+    expect { expect(Ramon::ContratoAutomatico.preparar(lead)).to eq(falta: %w[CPF rua número cidade]) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(lead.id, hash_including(body: start_with('contrato não saiu na hora: ')))
+    # Revisão F5 item 2: contrato que não saiu não conta como "contrato enviado" no Metabase.
+    expect(conversation.reload.custom_attributes['copiloto_limite']).to include('limite' => 'contrato_falhou', 'motivo' => include('CPF'))
     expect(Notification.where(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso').count).to eq(1)
   end
 
   it 'endereço só da colheita não basta; nome de uma palavra também não' do
     contact.update!(name: 'João', custom_attributes: {})
     lead.update!(custom_attributes: { 'colheita' => { 'dados' => { 'cliente' => { 'endereco' => 'Rua X, 10, Centro, Tubarão/SC' } } } })
-    expect(described_class.preparar(lead)).to eq(falta: ['nome completo', 'número', 'cidade'])
+    expect(Ramon::ContratoAutomatico.preparar(lead)).to eq(falta: ['nome completo', 'número', 'cidade'])
   end
 
   it 'tese sem modelo de contrato não gera' do
     thesis.update!(zapsign_template_id: nil)
-    expect(described_class.preparar(lead)).to eq(falta: ['modelo de contrato da tese'])
+    expect(Ramon::ContratoAutomatico.preparar(lead)).to eq(falta: ['modelo de contrato da tese'])
   end
 
   it 'ZapSign fora do ar: não quebra, encerra o modo com o motivo' do
     allow(Ramon::ZapsignClient).to receive(:create_doc_from_template).and_raise(Ramon::ZapsignClient::UnavailableError, 'fora do ar')
-    expect(described_class.preparar(lead)[:falta].first).to include('fora do ar')
+    expect(Ramon::ContratoAutomatico.preparar(lead)[:falta].first).to include('fora do ar')
     expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('rascunho')
+    expect(conversation.custom_attributes['copiloto_limite']).to include('limite' => 'contrato_falhou')
   end
 end
+# rubocop:enable RSpec/DescribedClass

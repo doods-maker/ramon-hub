@@ -60,4 +60,57 @@ RSpec.describe Ramon::CopilotoModo do
     expect(Ramon::Roteiro::Efeitos.direto?(lead.reload)).to be(true)
     expect(Ramon::Roteiro::Efeitos.direto?(create(:lead, account: inbox.account))).to be(false)
   end
+
+  # Revisão F5 item 4: modo de antes vazio não vira nil gravado — volta a valer o padrão da caixa.
+  # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
+  it 'trocar guarda o 1º modo de antes; restaurar devolve, e sem modo de antes tira o atributo' do
+    conversation.update!(custom_attributes: {})
+    inbox.update!(ramon_copiloto_modo: 'piloto_ate_reuniao')
+
+    Ramon::CopilotoModo.trocar(conversation, 'manual')
+    Ramon::CopilotoModo.trocar(conversation, 'rascunho')
+    expect(conversation.reload.custom_attributes).to eq('copiloto_modo' => 'rascunho', Ramon::CopilotoModo::MODO_ANTES => nil)
+
+    Ramon::CopilotoModo.restaurar(conversation)
+    expect(conversation.reload.custom_attributes).to eq({})
+    expect(Ramon::CopilotoModo.of(conversation)).to eq('piloto_ate_reuniao')
+  end
+
+  # Spec roteiro §5 (fail-safe): ferramenta que falhou no turno → rascunho em qualquer modo; a mensagem de handoff
+  # (logística) ainda sai. Review Focus 1.
+  it 'envia? com ferramenta que falhou: nunca envia texto livre direto, só o handoff' do
+    (Ramon::CopilotoModo::MODOS - %w[manual rascunho]).each do |modo|
+      expect(Ramon::CopilotoModo.envia?(modo, handoff: false, logistica_ok: true, falhou: true)).to be(false)
+      expect(Ramon::CopilotoModo.envia?(modo, handoff: true, logistica_ok: nil, falhou: true)).to be(true)
+    end
+    expect(Ramon::CopilotoModo.envia?('rascunho', handoff: true, logistica_ok: true, falhou: false)).to be(false)
+    expect(Ramon::CopilotoModo.envia?('piloto_total', handoff: false, logistica_ok: nil)).to be(true)
+  end
+
+  # T11/D6: handoff + ferramenta falhou no mesmo turno → o handoff vence. O job só chama envia? com handoff: true
+  # para a mensagem fixa de handoff; o texto livre da IA (handoff: false) segue como rascunho.
+  it 'handoff e ferramenta falhou no mesmo turno: a mensagem fixa de handoff sai e o texto livre vira rascunho' do
+    expect(Ramon::CopilotoModo.envia?('piloto_total', handoff: true, logistica_ok: nil, falhou: true)).to be(true)
+    expect(Ramon::CopilotoModo.envia?('piloto_total', handoff: false, logistica_ok: true, falhou: true)).to be(false)
+  end
+
+  # Revisão F5 item 4: tela Assistentes conta pelo modo efetivo, com o padrão de cada caixa.
+  it 'contar: conversas pelo modo efetivo, com o padrão de cada caixa' do
+    outra = create(:inbox, account: inbox.account, ramon_copiloto_modo: 'piloto_total')
+    create(:conversation, account: inbox.account, inbox: inbox)
+    create(:conversation, account: inbox.account, inbox: outra)
+    create(:conversation, account: inbox.account, inbox: outra, custom_attributes: { 'copiloto_modo' => 'manual' })
+
+    with_modified_env RAMON_COPILOTO_MODO_DEFAULT: 'piloto_limitado' do
+      expect(Ramon::CopilotoModo.contar(inbox.account.conversations))
+        .to eq('piloto_limitado' => 1, 'piloto_total' => 1, 'manual' => 1)
+    end
+  end
+
+  # Front (helpers/copilotoModo.js) e backend com a mesma lista: a tela mostra o que o servidor faz.
+  it 'a lista de modos do front é a mesma do backend' do
+    js = Rails.root.join('app/javascript/dashboard/routes/dashboard/ramon/helpers/copilotoModo.js').read
+    expect(js[/export const MODOS = \[(.*?)\];/m, 1].scan(/'([a-z_]+)'/).flatten).to eq(Ramon::CopilotoModo::MODOS)
+  end
+  # rubocop:enable RSpec/DescribedClass
 end

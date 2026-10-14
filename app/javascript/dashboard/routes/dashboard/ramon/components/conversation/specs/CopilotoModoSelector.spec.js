@@ -32,12 +32,16 @@ vi.mock('vue-i18n', () => ({
 
 const mountSelector = ({
   chat = { id: 42, custom_attributes: {} },
+  inbox = {},
   updateCustomAttributes = vi.fn().mockResolvedValue(),
   toggleStatus = vi.fn().mockResolvedValue(),
 } = {}) => {
   const store = createStore({
     state: () => ({ chat }),
-    getters: { getSelectedChat: state => state.chat },
+    getters: {
+      getSelectedChat: state => state.chat,
+      'inboxes/getInbox': () => () => inbox,
+    },
     actions: { updateCustomAttributes, toggleStatus },
   });
   const wrapper = mount(CopilotoModoSelector, {
@@ -169,6 +173,15 @@ describe('CopilotoModoSelector.vue', () => {
     };
     await nextTick();
 
+    expect(wrapper.find('[data-testid="copiloto-modo-btn"]').text()).toContain(
+      'Piloto total'
+    );
+  });
+  it('sem atributo mostra o modo padrão da caixa (o mesmo que o servidor usa)', () => {
+    const { wrapper } = mountSelector({
+      chat: { id: 42, inbox_id: 7, custom_attributes: {} },
+      inbox: { id: 7, ramon_copiloto_modo: 'piloto_total' },
+    });
     expect(wrapper.find('[data-testid="copiloto-modo-btn"]').text()).toContain(
       'Piloto total'
     );

@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import ConnectInboxForm from '../ConnectInboxForm.vue';
+import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
@@ -8,7 +9,7 @@ vi.mock('vue-i18n', () => ({
   }),
 }));
 
-const montar = () => {
+const montar = (inboxes = []) => {
   const store = createStore({
     modules: {
       captainInboxes: {
@@ -18,7 +19,7 @@ const montar = () => {
           getRecords: () => [],
         },
       },
-      inboxes: { namespaced: true, getters: { getInboxes: () => [] } },
+      inboxes: { namespaced: true, getters: { getInboxes: () => inboxes } },
     },
   });
   return mount(ConnectInboxForm, {
@@ -43,5 +44,16 @@ describe('ConnectInboxForm — aviso ao conectar', () => {
     expect(
       montar().find('[data-testid="aviso-conectar-caixa"]').text()
     ).toContain('RAMON.COPILOTO.MODOS.rascunho.NOME');
+  });
+
+  it('com a caixa escolhida, avisa com o modo padrão dela', async () => {
+    window.chatwootConfig = { ramonCopilotoModoDefault: 'piloto_limitado' };
+    const wrapper = montar([
+      { id: 7, name: 'Teste', ramon_copiloto_modo: 'piloto_ate_reuniao' },
+    ]);
+    await wrapper.findComponent(ComboBox).vm.$emit('update:modelValue', 7);
+    expect(
+      wrapper.find('[data-testid="aviso-conectar-caixa"]').text()
+    ).toContain('RAMON.COPILOTO.MODOS.piloto_ate_reuniao.NOME');
   });
 });

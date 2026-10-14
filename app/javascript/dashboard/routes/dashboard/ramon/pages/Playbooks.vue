@@ -9,6 +9,7 @@ import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { THESIS_SECTIONS as SECTIONS } from '../helpers/sections';
 import { mensagemErro } from '../helpers/erro';
 import RoteiroPassosAPI from 'dashboard/api/roteiroPassos';
+import LeadsAPI from 'dashboard/api/leads';
 import RoteiroEditor from '../components/roteiro/RoteiroEditor.vue';
 import { listaParaTexto, textoParaLista } from '../helpers/roteiro';
 import {
@@ -52,6 +53,7 @@ const detail = reactive({
   honorarioMinimoBase: '',
   honorarioNaTabela: false,
   palavrasChave: '',
+  zapsignTemplateId: '',
 });
 
 const syncDetail = () => {
@@ -67,6 +69,7 @@ const syncDetail = () => {
   detail.honorarioMinimoBase = thesis.honorario_minimo_base ?? '';
   detail.honorarioNaTabela = !!thesis.honorario_na_tabela;
   detail.palavrasChave = listaParaTexto(thesis.palavras_chave);
+  detail.zapsignTemplateId = thesis.zapsign_template_id || '';
 };
 
 // Observa só o ID: resposta de PATCH mutando o record no store não pode
@@ -158,6 +161,7 @@ const saveDetail = () => {
       honorario_minimo_base: detail.honorarioMinimoBase || null,
       honorario_na_tabela: detail.honorarioNaTabela,
       palavras_chave: textoParaLista(detail.palavrasChave),
+      zapsign_template_id: detail.zapsignTemplateId || null,
     })
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
@@ -171,6 +175,26 @@ const saveActive = () => {
     })
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
+
+// Modelos do ZapSign (a mesma lista do painel do lead) — o modo "sozinha até o contrato" usa o da tese. Valor salvo que
+// não vier na lista (ZapSign fora do ar, modelo apagado) aparece pelo id.
+const modelosZapsign = ref([]);
+const modelosErro = ref(false);
+const carregarModelos = async () => {
+  try {
+    const { data } = await LeadsAPI.zapsignTemplates();
+    modelosZapsign.value = data;
+  } catch {
+    modelosErro.value = true;
+  }
+};
+const opcoesModelo = computed(() => {
+  const atual = detail.zapsignTemplateId;
+  const lista = modelosZapsign.value;
+  return atual && !lista.some(tpl => tpl.token === atual)
+    ? [...lista, { token: atual, name: atual }]
+    : lista;
+});
 
 const itemsBySection = computed(() => {
   const items = selectedThesis.value?.items || [];
@@ -310,6 +334,7 @@ onMounted(() => {
   store.dispatch('theses/get');
   // etapas e motivos de perda das saídas do roteiro
   store.dispatch('leadConfig/get');
+  carregarModelos();
   carregarPassos();
 });
 </script>
@@ -592,6 +617,36 @@ onMounted(() => {
                 class="m-0 text-xs text-n-slate-10"
               >
                 {{ $t('RAMON.PLAYBOOKS.HONORARIO_PADRAO') }}
+              </p>
+              <label
+                :class="ROTULO"
+                :title="$t('RAMON.PLAYBOOKS.ZAPSIGN_MODELO_AJUDA')"
+              >
+                {{ $t('RAMON.PLAYBOOKS.ZAPSIGN_MODELO') }}
+                <select
+                  v-model="detail.zapsignTemplateId"
+                  data-testid="playbooks-zapsign-modelo"
+                  :class="CAMPO"
+                  @change="saveDetail"
+                >
+                  <option value="">
+                    {{ $t('RAMON.PLAYBOOKS.ZAPSIGN_SEM_MODELO') }}
+                  </option>
+                  <option
+                    v-for="tpl in opcoesModelo"
+                    :key="tpl.token"
+                    :value="tpl.token"
+                  >
+                    {{ tpl.name }}
+                  </option>
+                </select>
+              </label>
+              <p
+                v-if="modelosErro"
+                data-testid="playbooks-zapsign-erro"
+                :class="[AVISO, TOM.amber]"
+              >
+                {{ $t('RAMON.PLAYBOOKS.ZAPSIGN_MODELOS_ERRO') }}
               </p>
             </div>
 

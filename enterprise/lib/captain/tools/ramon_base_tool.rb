@@ -18,6 +18,18 @@ class Captain::Tools::RamonBaseTool < Captain::Tools::BasePublicTool
     account_scoped(::Lead).find_by(conversation_id: conversation.id)
   end
 
+  # Roteiro do caso — ou, no Testar com roteiro (F2), o lead descartável de Ramon::Roteiro::Teste: as tools do roteiro
+  # rodam pelo mesmo caminho e só o lead muda (nada fica gravado no teste).
+  def no_roteiro(tool_context, lead_id, &)
+    teste = tool_context.state&.dig(:roteiro_teste)
+    return ::Ramon::Roteiro::Teste.com_lead(@assistant.account, teste, &) if teste
+
+    lead = resolver_lead(tool_context.state, lead_id)
+    return SEM_LEAD if lead.blank?
+
+    yield lead
+  end
+
   def data_iso(valor)
     Date.iso8601(valor.to_s)
   rescue ArgumentError, TypeError

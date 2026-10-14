@@ -4,6 +4,9 @@ class Thesis < ApplicationRecord
   has_many :leads, dependent: :nullify
   has_many :roteiro_passos, dependent: :destroy
 
+  # Modelo do ZapSign do modo "sozinha até o contrato" (F3); vazio na tela = sem modelo.
+  normalizes :zapsign_template_id, with: ->(v) { v.presence }
+
   validates :name, presence: true, uniqueness: { scope: :account_id }
   validates :honorario_percentual,
             numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 },

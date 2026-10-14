@@ -33,7 +33,8 @@ const dispatch = vi.fn(async (action, { customAttributes }) => {
 });
 vi.mock('dashboard/composables/store', () => ({
   useStore: () => ({ dispatch: (...args) => dispatch(...args) }),
-  useMapGetter: () => currentChat,
+  useMapGetter: nome =>
+    nome === 'inboxes/getInbox' ? ref(() => ({})) : currentChat,
 }));
 
 const useAlert = vi.fn();

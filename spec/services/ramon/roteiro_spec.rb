@@ -15,7 +15,7 @@ RSpec.describe Ramon::Roteiro do
   end
 
   def registrar(chave, valor = nil, saida_id: nil)
-    described_class.registrar(lead.reload, chave: chave, valor: valor, saida_id: saida_id)
+    Ramon::Roteiro.registrar(lead.reload, chave: chave, valor: valor, saida_id: saida_id)
   end
 
   def piloto_total!
@@ -166,6 +166,33 @@ RSpec.describe Ramon::Roteiro do
     expect(Notification.where(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso').count).to eq(1)
   end
 
+  # Spec §5: roteiro sem saída = configuração quebrada → além do responsável, os administradores ficam sabendo.
+  it 'roteiro sem saída avisa o SDR do lead e também os administradores' do
+    admin = create(:user, account: account, role: :administrator)
+    sdr = create(:user, account: account, role: :agent)
+    lead.update_columns(sdr_id: sdr.id) # rubocop:disable Rails/SkipsModelValidations -- sem atribuir a conversa
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'sim')
+    registrar('sequela', 'nao sei dizer')
+
+    avisados = Notification.where(primary_actor: lead, notification_type: 'ramon_fluxo_aviso').pluck(:user_id)
+    expect(avisados).to contain_exactly(sdr.id, admin.id)
+  end
+
+  # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
+  # Revisão F5 item 12: o handoff do roteiro é um sinal no resultado (a tool o põe no state), não um texto.
+  it 'o resultado sinaliza handoff só quando o roteiro acabou de passar para a equipe com conversa' do
+    expect(registrar('tem_advogado', 'nao')[:handoff]).to be(false)
+    registrar('recebeu_auxilio', 'sim')
+    expect(registrar('sequela', 'nao sei dizer')[:handoff]).to be(true)
+
+    sem_conversa = create(:lead, account: account, thesis: thesis, lead_stage: novo)
+    Ramon::Roteiro.registrar(sem_conversa, chave: 'tem_advogado', valor: 'nao')
+    Ramon::Roteiro.registrar(sem_conversa.reload, chave: 'recebeu_auxilio', valor: 'sim')
+    expect(Ramon::Roteiro.registrar(sem_conversa.reload, chave: 'sequela', valor: 'nao sei')[:handoff]).to be(false)
+  end
+  # rubocop:enable RSpec/DescribedClass
+
   it 'ir_para para passo inexistente vai para a equipe' do
     RoteiroPasso.find_by(chave: 'recebeu_auxilio').update!(saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'ir_para', 'alvo' => 'sumiu' }])
     registrar('tem_advogado', 'nao')
@@ -178,6 +205,15 @@ RSpec.describe Ramon::Roteiro do
     expect(registrar('sequela')[:erro]).to include('saida_id')
     expect(registrar('sequela', 'x', saida_id: 'nao_tem')[:erro]).to include('nao existe')
     expect(registrar('xablau', 'sim')[:erro]).to include('tem_advogado, recebeu_auxilio')
+    expect(lead.reload.custom_attributes['roteiro']).to be_nil
+  end
+
+  # Spec §5: erro no meio do registro desfaz tudo e sobe para a tool — o BasePublicTool marca o turno (falhou) e a
+  # resposta vira rascunho.
+  it 'erro nos efeitos desfaz o registro inteiro e sobe a exceção' do
+    allow(Ramon::Roteiro::Efeitos).to receive(:aplicar).and_raise(RuntimeError, 'boom')
+
+    expect { registrar('tem_advogado', 'sim') }.to raise_error('boom')
     expect(lead.reload.custom_attributes['roteiro']).to be_nil
   end
 
@@ -215,13 +251,33 @@ RSpec.describe Ramon::Roteiro do
     expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
   end
 
+  # Revisão F5 item 5: o estado gravado zera na troca (o limite dos modos e a bi_roteiro leem o atributo cru).
+  it 'trocar a tese depois do desfecho zera o roteiro gravado na hora, mantendo os comuns' do
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'sim')
+    registrar('sequela', 'ficou', saida_id: 'ficou')
+    expect(lead.reload.desfecho_roteiro).to eq('qualificado')
+
+    bpc = create(:thesis, account: account)
+    create(:roteiro_passo, account: account, thesis: bpc, chave: 'renda', position: 1)
+    lead.update!(thesis: bpc)
+
+    salvo = lead.reload.custom_attributes['roteiro']
+    expect(salvo).to include('tese_id' => bpc.id, 'passo' => 'renda')
+    expect(salvo.keys).not_to include('desfecho', 'motivo', 'decisivo')
+    expect(salvo['respostas'].keys).to eq(['tem_advogado'])
+  end
+
+  # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
   it 'descrever mostra o passo, as saídas do texto e o que já foi respondido' do
     registrar('tem_advogado', 'nao')
     registrar('recebeu_auxilio', 'sim')
-    texto = described_class.descrever(*described_class.atual(lead.reload).values_at(:passo, :estado))
+    texto = Ramon::Roteiro.descrever(*Ramon::Roteiro.atual(lead.reload).values_at(:passo, :estado))
     expect(texto).to include('Passo atual: Sequela (chave: sequela')
       .and include('ficou = ficou alguma limitacao').and include('tem_advogado=nao')
-    expect(described_class.descrever(nil, { 'desfecho' => 'humano', 'motivo' => 'x', 'respostas' => {} }))
+    expect(Ramon::Roteiro.texto_atual(lead.reload)).to eq(texto)
+    expect(Ramon::Roteiro.descrever(nil, { 'desfecho' => 'humano', 'motivo' => 'x', 'respostas' => {} }))
       .to include('Roteiro encerrado: humano (x)')
   end
+  # rubocop:enable RSpec/DescribedClass
 end

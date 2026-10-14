@@ -34,4 +34,21 @@ RSpec.describe 'view bi_roteiro' do # rubocop:disable RSpec/DescribeClass
     expect(linha(sem_nada)).to be_nil
     expect(linha(so_limite)).to include('em_roteiro' => false, 'limite_atingido' => 'reuniao', 'respondidos' => 0, 'desfecho' => nil)
   end
+
+  # Revisão F5 item 6: Perdido aprovado não fica "aguardando a equipe" (como o painel do lead).
+  it 'aguarda_equipe só enquanto o lead não está perdido' do
+    roteiro = { 'tese_id' => thesis.id, 'desfecho' => 'desqualificado', 'aguarda_equipe' => true, 'respostas' => {} }
+    lead = create(:lead, account: account, thesis: thesis, lead_stage: novo, custom_attributes: { 'roteiro' => roteiro })
+    expect(linha(lead)['aguarda_equipe']).to be(true)
+
+    lead.update!(lead_stage: account.lead_stages.find_by!(is_lost: true), lost_reason: 'Sem viabilidade')
+    expect(linha(lead)['aguarda_equipe']).to be(false)
+  end
+
+  # Revisão F5 item 2: contrato que não saiu tem limite próprio e o motivo aparece.
+  it 'contrato que não saiu aparece como limite próprio, com o motivo' do
+    limite = { 'limite' => 'contrato_falhou', 'modo' => 'piloto_ate_contrato', 'motivo' => 'CPF, rua', 'em' => '2026-10-14T11:00:00-03:00' }
+    lead = create(:lead, account: account, thesis: thesis, lead_stage: novo, conversation: conversa('copiloto_limite' => limite))
+    expect(linha(lead)).to include('limite_atingido' => 'contrato_falhou', 'limite_motivo' => 'CPF, rua')
+  end
 end

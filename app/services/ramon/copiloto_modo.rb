@@ -4,10 +4,12 @@
 # dos modos "sozinha até…" usam, e o CI testa.
 module Ramon::CopilotoModo
   # "Sozinha até…" (spec roteiro §3.7): envia direto como o piloto total até o limite (Ramon::CopilotoLimite).
-  LIMITES = { 'piloto_ate_qualificacao' => 'qualificacao', 'piloto_ate_reuniao' => 'reuniao',
-              'piloto_ate_contrato' => 'contrato' }.freeze
+  LIMITES = { 'piloto_ate_qualificacao' => Ramon::CopilotoLimite::QUALIFICACAO, 'piloto_ate_reuniao' => Ramon::CopilotoLimite::REUNIAO,
+              'piloto_ate_contrato' => Ramon::CopilotoLimite::CONTRATO }.freeze
   MODOS = (%w[manual rascunho piloto_limitado piloto_total] + LIMITES.keys).freeze
   DEFAULT = 'rascunho'.freeze
+  # Modo de antes do roteiro (decisão 13/10): o 1º guardado vale até o reabrir devolver.
+  MODO_ANTES = 'copiloto_modo_antes_roteiro'.freeze
 
   module_function
 
@@ -36,10 +38,10 @@ module Ramon::CopilotoModo
     modo == 'piloto_total' || LIMITES.key?(modo)
   end
 
-  # Handoff é logística por definição (constraint global) — nunca vira rascunho
-  # em piloto_limitado. logistica_ok nil (não classificado) é fail-safe: rascunho.
-  def envia?(modo, handoff:, logistica_ok:)
-    piloto?(modo) && (handoff || modo != 'piloto_limitado' || logistica_ok == true)
+  # Handoff é logística por definição (constraint global) — nunca vira rascunho. logistica_ok nil (não classificado)
+  # é fail-safe: rascunho. falhou = uma ferramenta falhou no turno (spec roteiro §5): rascunho em qualquer modo.
+  def envia?(modo, handoff:, logistica_ok:, falhou: false)
+    piloto?(modo) && (handoff || (!falhou && (modo != 'piloto_limitado' || logistica_ok == true)))
   end
 
   def carimbo(modo)
@@ -54,5 +56,31 @@ module Ramon::CopilotoModo
     return if modo.blank? || attrs.key?('copiloto_modo')
 
     conversation.update!(custom_attributes: attrs.merge('copiloto_modo' => modo))
+  end
+
+  # Conversas por modo efetivo, em lote (tela Assistentes): atributo válido → padrão da caixa → env — o mesmo que .of.
+  def contar(conversas)
+    padroes = Inbox.where(id: conversas.distinct.pluck(:inbox_id)).to_h { |caixa| [caixa.id, default(caixa)] }
+    conversas.group(:inbox_id, Arel.sql("conversations.custom_attributes->>'copiloto_modo'")).count
+             .each_with_object(Hash.new(0)) do |((caixa, modo), total), soma|
+      soma[MODOS.include?(modo) ? modo : padroes.fetch(caixa) { default }] += total
+    end
+  end
+
+  # Troca o modo da conversa guardando o de antes (o 1º vale até o restaurar) — desqualificado/equipe do roteiro.
+  def trocar(conversa, valor)
+    attrs = conversa.custom_attributes || {}
+    antes = attrs.key?(MODO_ANTES) ? {} : { MODO_ANTES => attrs['copiloto_modo'] }
+    conversa.update!(custom_attributes: attrs.merge(antes).merge('copiloto_modo' => valor))
+  end
+
+  # Devolve o modo guardado por trocar. Sem modo de antes, tira o atributo: volta a valer o padrão da caixa/env.
+  def restaurar(conversa)
+    attrs = conversa.reload.custom_attributes || {}
+    return unless attrs.key?(MODO_ANTES)
+
+    antes = attrs[MODO_ANTES]
+    sem = attrs.except(MODO_ANTES, 'copiloto_modo')
+    conversa.update!(custom_attributes: antes ? sem.merge('copiloto_modo' => antes) : sem)
   end
 end

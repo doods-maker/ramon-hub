@@ -102,4 +102,8 @@ RSpec.describe Ramon::CopilotoLimite do
     expect(described_class.encerrar(lead, 'contrato', 'x')).to be_nil
     expect(avisos.count).to eq(0)
   end
+
+  it 'os níveis seguem a ordem dos modos "sozinha até…" (fonte única)' do
+    expect(Ramon::CopilotoModo::LIMITES.values).to eq(Ramon::CopilotoLimite::NIVEIS)
+  end
 end

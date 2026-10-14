@@ -78,7 +78,8 @@ WHERE account_id = {ACCOUNT_ID} AND desfecho IN ('desqualificado', 'humano')
   AND ultima_resposta_em > now() - interval '30 days'
 GROUP BY 1, 2, 3, 4 ORDER BY leads DESC"""),
     "Roteiro: limites atingidos nos modos 'sozinha até…' (30d)": dict(display="bar", sql=f"""
-SELECT limite_atingido AS limite, COUNT(DISTINCT conversation_id) AS conversas
+SELECT CASE limite_atingido WHEN 'contrato_falhou' THEN 'contrato não saiu' ELSE limite_atingido END AS limite,
+       COUNT(DISTINCT conversation_id) AS conversas
 FROM bi_roteiro
 WHERE account_id = {ACCOUNT_ID} AND limite_atingido IS NOT NULL AND limite_em > now() - interval '30 days'
 GROUP BY 1 ORDER BY 1"""),

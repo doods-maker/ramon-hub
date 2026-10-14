@@ -29,6 +29,13 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   # fica registrado com status 'erro' na tela Execucoes.
   ERRO_NA_TOOL = 'A ferramenta falhou agora. Siga sem ela e avise que esse dado nao pode ser consultado no momento.'.freeze
 
+  # ramon (roteiro F5, spec §5 fail-safe): a ferramenta que falhou marca o turno no state da execução; o
+  # AgentRunnerService devolve 'ferramenta_falhou' e o ResponseBuilderJob faz a resposta do turno virar rascunho.
+  FALHOU = :ramon_ferramenta_falhou
+
+  # ramon (roteiro F5, LGPD): dado pessoal fora da tela Execuções. A tool que recebe mais dado pessoal redefine a lista.
+  PARAMS_SENSIVEIS = %i[cpf].freeze
+
   # ramon: modo teste (Casos de teste da IA). Com source 'teste' no estado, so
   # as consultas rodam; o resto devolve o que faria, sem executar nada.
   SOURCE_TESTE = 'teste'.freeze
@@ -37,8 +44,14 @@ class Captain::Tools::BasePublicTool < Agents::Tool
     tool_context&.state&.dig(:source).to_s == SOURCE_TESTE
   end
 
+  # CPF etc. viram '***' tanto no registro de Execuções quanto na simulação do teste (que também vai para o ToolRun).
+  # self:: = a lista da tool que chamou (sem ele, o escopo léxico daria sempre a da base).
+  def self.mascarar(params)
+    params.to_h { |chave, valor| [chave, self::PARAMS_SENSIVEIS.include?(chave.to_sym) ? '***' : valor.to_s] }
+  end
+
   def self.simulacao(nome, params)
-    "[TESTE] faria #{nome}(#{params.map { |chave, valor| "#{chave}: #{valor}" }.join(', ')})"
+    "[TESTE] faria #{nome}(#{mascarar(params).map { |chave, valor| "#{chave}: #{valor}" }.join(', ')})"
   end
 
   def execute(tool_context, **params)
@@ -48,6 +61,7 @@ class Captain::Tools::BasePublicTool < Agents::Tool
     resultado
   rescue StandardError => e
     Rails.logger.error("#{self.class.name}: falhou (#{e.class}: #{e.message})")
+    tool_context&.state&.store(FALHOU, true)
     registrar_execucao(tool_context, params, "#{e.class}: #{e.message}", 'erro', inicio)
     ERRO_NA_TOOL
   end
@@ -72,7 +86,7 @@ class Captain::Tools::BasePublicTool < Agents::Tool
       account_id: @assistant&.account_id, assistant_id: @assistant&.id, **origem(tool_context),
       lead_id: Integer(params[:lead_id].to_s, exception: false),
       tool_name: id_catalogo, status: status,
-      params: params.except(:lead_id).transform_values(&:to_s),
+      params: self.class.mascarar(params.except(:lead_id)),
       resultado: resultado.to_s.truncate(::Captain::ToolRun::MAX_RESULTADO),
       duration_ms: ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - inicio) * 1000).round
     )

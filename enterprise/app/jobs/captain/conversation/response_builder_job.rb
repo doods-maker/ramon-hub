@@ -173,7 +173,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
     # `||`: belt-and-suspenders pro caso de um caller futuro pular `perform`.
     modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
-    return create_draft_note(message_content) unless Ramon::CopilotoModo.envia?(modo, handoff: @enviando_handoff, logistica_ok: @logistica_ok)
+    # ramon (roteiro F5, spec §5): ferramenta que falhou no turno → a resposta vira rascunho em qualquer modo.
+    return create_draft_note(message_content) unless Ramon::CopilotoModo.envia?(modo, handoff: @enviando_handoff, logistica_ok: @logistica_ok,
+                                                                                      falhou: @response&.dig('ferramenta_falhou') == true)
 
     additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
 

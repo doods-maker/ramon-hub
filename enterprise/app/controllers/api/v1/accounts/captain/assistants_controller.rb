@@ -96,8 +96,9 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   end
 
   def cartao(assistant)
-    caixas = assistant.inboxes.order(:id).pluck(:id, :name, :channel_type)
-                      .map { |id, name, tipo| { id: id, name: name, channel_type: tipo } }
+    caixas = assistant.inboxes.order(:id).map do |caixa|
+      { id: caixa.id, name: caixa.name, channel_type: caixa.channel_type, modo_padrao: Ramon::CopilotoModo.default(caixa) }
+    end
     {
       id: assistant.id, name: assistant.name, description: assistant.description,
       # ponytail: público pela caixa — com caixa fala com o lead; sem caixa, só pela tela Testar (equipe).
@@ -108,14 +109,9 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     }
   end
 
-  # Conversas abertas nas caixas do assistente pelo modo efetivo (como Ramon::CopilotoModo.of):
-  # sem atributo ou com valor fora da lista conta no padrão do servidor.
+  # Conversas abertas nas caixas do assistente pelo modo efetivo, com o padrão de cada caixa (Ramon::CopilotoModo.contar).
   def conversas_por_modo(inbox_ids)
-    abertas = Current.account.conversations.where(status: :open, inbox_id: inbox_ids)
-    contagem = abertas.group(Arel.sql("custom_attributes->>'copiloto_modo'")).count
-    contagem.each_with_object(Hash.new(0)) do |(modo, total), soma|
-      soma[Ramon::CopilotoModo::MODOS.include?(modo) ? modo : Ramon::CopilotoModo.default] += total
-    end
+    Ramon::CopilotoModo.contar(Current.account.conversations.where(status: :open, inbox_id: inbox_ids))
   end
 
   def assistant_params

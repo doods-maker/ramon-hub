@@ -1185,6 +1185,10 @@
       "BASE_SM": "salários mínimos",
       "BASE_SB": "benefícios",
       "HONORARIO_NA_TABELA": "Na tabela de honorários (a IA pode citar)",
+      "ZAPSIGN_MODELO": "Modelo de contrato (ZapSign)",
+      "ZAPSIGN_MODELO_AJUDA": "Usado pelo modo \"sozinha até o contrato\" para gerar o contrato na hora. Sem modelo = o contrato não sai automático para esta tese.",
+      "ZAPSIGN_SEM_MODELO": "Sem modelo",
+      "ZAPSIGN_MODELOS_ERRO": "Não deu para carregar os modelos do ZapSign agora — o modelo salvo é mantido.",
       "DELETE_IN_USE": "1 lead usa esta tese — desative em vez de excluir | {count} leads usam esta tese — desative em vez de excluir",
       "DELETE_IN_USE_HINT": "Desativada, a tese continua nos leads que já a usam e sai da escolha de tese dos leads novos.",
       "DEACTIVATE": "Desativar tese",
@@ -1603,8 +1607,10 @@
         "REMOVER_SAIDA": "Remover saída"
       },
       "TESTAR": {
-        "SEM_TESE": "Sem roteiro de tese",
-        "AJUDA": "Escolha uma tese para a IA seguir o roteiro dela. O roteiro roda de verdade, mas nada fica gravado."
+        "SEM_TESE": "Sem roteiro",
+        "LEAD_SEM_TESE": "Lead sem tese (passos comuns, inclusive o assunto)",
+        "AJUDA": "Escolha uma tese (ou um lead sem tese) para a IA seguir o roteiro. O roteiro roda de verdade, mas nada fica gravado.",
+        "MODO_AJUDA": "Modo simulado no teste: no Rascunho, mudança de etapa e Perdido viram sugestão; no Piloto total valem na hora. Nada fica gravado."
       }
     },
 

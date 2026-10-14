@@ -2,23 +2,21 @@
 # os efeitos (spec 2026-10-13 §3.4 e §5). Porta de entrada: Ramon::Roteiro.registrar.
 class Ramon::Roteiro::Registro
   SEGUIR = { 'id' => 'seguir', 'acao' => 'seguir' }.freeze
-  DESFECHOS = { 'concluir' => 'qualificado', 'desqualificar' => 'desqualificado', 'humano' => 'humano' }.freeze
 
   def initialize(lead)
     @lead = lead
-    @lista = Ramon::Roteiro.passos(lead)
-    @est = Ramon::Roteiro.estado(lead)
+    @passos = Ramon::Roteiro.passos(lead)
+    @estado = Ramon::Roteiro.estado(lead)
   end
 
-  # @return { erro: } | { estado:, proximo:, calc:, mensagem: }
+  # @return { erro: } | { estado:, proximo:, calc:, mensagem:, handoff: }
   def call(chave:, valor: nil, saida_id: nil)
-    @passo = @lista.find { |p| p.chave == chave.to_s }
-    erro = recusa(chave)
+    @passo = @passos.find { |p| p.chave == chave.to_s }
+    erro = motivo_da_recusa(chave)
     return { erro: erro } if erro
 
-    normal, erro = ler(valor, saida_id)
+    normal, erro = normalizar_resposta(valor, saida_id)
     return { erro: erro } if erro
-
     return { erro: 'Informe o assunto em texto no valor.' } if assunto? && normal.blank?
 
     calc = calcular(normal)
@@ -30,17 +28,17 @@ class Ramon::Roteiro::Registro
 
   private
 
-  def ler(valor, saida_id)
+  def normalizar_resposta(valor, saida_id)
     normal, erro = Ramon::Roteiro::Resposta.normalizar(@passo, valor)
     erro ||= 'Informe o valor da resposta ou o saida_id.' if normal.nil? && saida_id.blank?
     [normal, erro]
   end
 
-  def recusa(chave)
-    return 'Este caso nao tem roteiro.' if @lista.empty?
-    return "O roteiro ja terminou (#{@est['desfecho']}). Nao registre mais passos." if @est['desfecho']
+  def motivo_da_recusa(chave)
+    return 'Este caso nao tem roteiro.' if @passos.empty?
+    return "O roteiro ja terminou (#{@estado['desfecho']}). Nao registre mais passos." if @estado['desfecho']
 
-    "Passo #{chave} nao existe. Passos: #{@lista.map(&:chave).join(', ')}." if @passo.nil?
+    "Passo #{chave} nao existe. Passos: #{@passos.map(&:chave).join(', ')}." if @passo.nil?
   end
 
   # Campos da calculadora vêm das respostas; o do próprio passo, da resposta de agora.
@@ -48,7 +46,7 @@ class Ramon::Roteiro::Registro
     return if @passo.calculadora.blank?
 
     campos = @passo.calculadora_campos.transform_values do |chave|
-      chave == @passo.chave ? valor : @est.dig('respostas', chave, 'valor')
+      chave == @passo.chave ? valor : @estado.dig('respostas', chave, 'valor')
     end
     Ramon::Roteiro::Calculadoras.calcular(@passo.calculadora, campos)
   end
@@ -78,62 +76,68 @@ class Ramon::Roteiro::Registro
     return { 'id' => 'sem_tese', 'acao' => 'humano', 'motivo' => 'assunto sem tese cadastrada' } if tese.nil?
 
     @lead.update!(thesis: tese)
-    @lista = Ramon::Roteiro.passos(@lead)
-    @est = Ramon::Roteiro.estado(@lead)
+    @passos = Ramon::Roteiro.passos(@lead)
+    @estado = Ramon::Roteiro.estado(@lead)
     { 'id' => 'tese', 'acao' => 'seguir' }
   end
 
   def gravar(valor, calc, saida)
     guardar_resposta(valor, calc, saida)
     saida = avancar(saida)
-    @est['aguarda_equipe'] = true if vira_sugestao_de_perdido?(saida)
-    proximo = @est['desfecho'] ? nil : Ramon::Roteiro.proximo(@lista, @est)
-    @est['passo'] = proximo&.chave # bi_roteiro (F4): onde o lead parou; ponytail: fica nulo depois do reabrir até o próximo registro
+    @estado['aguarda_equipe'] = true if aguarda_equipe?(saida)
+    proximo = @estado['desfecho'] ? nil : Ramon::Roteiro.proximo(@passos, @estado)
+    @estado['passo'] = proximo&.chave # bi_roteiro (F4): onde o lead parou
     ActiveRecord::Base.transaction do
-      @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @est))
+      @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @estado))
       Ramon::Roteiro::Efeitos.aplicar(@lead, @passo, saida)
     end
-    { estado: @est, proximo: proximo, calc: calc, mensagem: saida['mensagem'] }
+    { estado: @estado, proximo: proximo, calc: calc, mensagem: saida['mensagem'], handoff: handoff? }
+  end
+
+  # O roteiro acabou de passar o caso para a equipe com a conversa ligada (Efeitos.humano fez o bot_handoff! se a conversa
+  # estava pendente): a tool sinaliza o handoff ao runner pelo state — nada depende do texto devolvido à IA.
+  def handoff?
+    @estado['desfecho'] == Ramon::Roteiro::HUMANO && @lead.conversation.present?
   end
 
   def guardar_resposta(valor, calc, saida)
     # Correção de um passo já respondido: vale a nova resposta e o roteiro volta a seguir dali (decisão 13/10) —
     # se o passo estiver antes do cursor; resposta adiantada corrigida não pula os anteriores.
-    Ramon::Roteiro.voltar_cursor(@lista, @est, @passo.chave) if @est['respostas'].key?(@passo.chave)
-    @est['respostas'][@passo.chave] = { 'valor' => valor, 'calc' => calc&.stringify_keys, 'saida' => saida['id'],
-                                        'em' => Time.zone.now.iso8601 }.compact
+    Ramon::Roteiro.voltar_cursor(@passos, @estado, @passo.chave) if @estado['respostas'].key?(@passo.chave)
+    @estado['respostas'][@passo.chave] = { 'valor' => valor, 'calc' => calc&.stringify_keys, 'saida' => saida['id'],
+                                           'em' => Time.zone.now.iso8601 }.compact
   end
 
   # ir_para move o cursor; seguir/ir_para sem passo pela frente = concluir (qualificado) — menos numa tese sem
   # passos próprios: ao fim dos comuns a IA volta para a triagem de sempre, sem desfecho (decisão 13/10).
   def avancar(saida)
     if saida['acao'] == 'ir_para'
-      return avancar(sem_saida("destino #{saida['alvo']} nao existe")) if @lista.none? { |p| p.chave == saida['alvo'] }
+      return avancar(sem_saida("destino #{saida['alvo']} nao existe")) if @passos.none? { |p| p.chave == saida['alvo'] }
 
-      @est['cursor'] = saida['alvo']
+      @estado['cursor'] = saida['alvo']
     end
     saida = saida.merge('acao' => 'concluir') if acabou?(saida)
     encerrar(saida)
     saida
   end
 
-  # Só quando Efeitos.desqualificar de fato cria a sugestão (lead ganho/perdido sai cedo, sem ela).
-  def vira_sugestao_de_perdido?(saida)
-    saida['acao'] == 'desqualificar' && !Ramon::Roteiro::Efeitos.direto?(@lead) && @lead.won_at.nil? && @lead.lost_at.nil?
+  # O Perdido vai virar sugestão (aguardando a equipe) — o mesmo predicado que os Efeitos usam para decidir.
+  def aguarda_equipe?(saida)
+    saida['acao'] == 'desqualificar' && Ramon::Roteiro::Efeitos.desqualificacao(@lead) == :sugerir
   end
 
   def acabou?(saida)
-    %w[seguir ir_para].include?(saida['acao']) && Ramon::Roteiro.proximo(@lista, @est).nil? && @lista.any?(&:thesis_id)
+    %w[seguir ir_para].include?(saida['acao']) && Ramon::Roteiro.proximo(@passos, @estado).nil? && @passos.any?(&:thesis_id)
   end
 
   def encerrar(saida)
-    desfecho = DESFECHOS[saida['acao']]
+    desfecho = Ramon::Roteiro::DESFECHO_DA_ACAO[saida['acao']]
     return if desfecho.nil?
 
-    @est.merge!('desfecho' => desfecho, 'motivo' => saida['motivo'], 'decisivo' => @passo.chave)
+    @estado.merge!('desfecho' => desfecho, 'motivo' => saida['motivo'], 'decisivo' => @passo.chave)
   end
 
   def sem_saida(detalhe)
-    { 'id' => 'sem_saida', 'acao' => 'humano', 'motivo' => "roteiro sem saida no passo #{@passo.chave} (#{detalhe})" }
+    { 'id' => Ramon::Roteiro::SEM_SAIDA, 'acao' => 'humano', 'motivo' => "roteiro sem saida no passo #{@passo.chave} (#{detalhe})" }
   end
 end

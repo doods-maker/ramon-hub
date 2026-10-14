@@ -37,7 +37,7 @@ class CopilotSuggestion < ApplicationRecord
     return unless status == 'pending'
 
     update!(status: 'dismissed')
-    Ramon::Roteiro.reabrir(lead, se: 'desqualificado') if perdido_do_roteiro? && lead.lost_at.nil?
+    Ramon::Roteiro.reabrir(lead, se: Ramon::Roteiro::DESQUALIFICADO) if perdido_do_roteiro? && lead.lost_at.nil?
   end
 
   private

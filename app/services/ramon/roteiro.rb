@@ -12,6 +12,13 @@ module Ramon::Roteiro
               '(playbook da tese e registrar qualificacao).'.freeze
   # Passo comum que descobre a tese do lead que chegou sem (spec §3.6, F3). Chave fixa.
   ASSUNTO = 'assunto'.freeze
+  # Desfechos do roteiro (spec §3.2) — fonte única: a ação da saída que encerra → o desfecho.
+  QUALIFICADO = 'qualificado'.freeze
+  DESQUALIFICADO = 'desqualificado'.freeze
+  HUMANO = 'humano'.freeze
+  DESFECHO_DA_ACAO = { 'concluir' => QUALIFICADO, 'desqualificar' => DESQUALIFICADO, 'humano' => HUMANO }.freeze
+  # Saída que o motor monta quando nada casa ou o destino não existe (spec §5: equipe + aviso ao admin).
+  SEM_SAIDA = 'sem_saida'.freeze
 
   module_function
 
@@ -57,6 +64,12 @@ module Ramon::Roteiro
     { passo: est['desfecho'] ? nil : proximo(lista, est), estado: est }
   end
 
+  # Texto do passo atual para a IA (tool roteiro_passo_atual, no lead real ou no Testar); nil = sem roteiro.
+  def texto_atual(lead)
+    atual = atual(lead)
+    atual && descrever(atual[:passo], atual[:estado])
+  end
+
   def registrar(lead, chave:, valor: nil, saida_id: nil)
     Registro.new(lead).call(chave: chave, valor: valor, saida_id: saida_id)
   end
@@ -72,7 +85,7 @@ module Ramon::Roteiro
     novo = est.except('desfecho', 'motivo', 'decisivo', 'aguarda_equipe')
     novo['passo'] = proximo(passos(lead), novo)&.chave # bi_roteiro: mesmo valor que Registro#gravar escreveria
     lead.update!(custom_attributes: (lead.custom_attributes || {}).merge('roteiro' => novo))
-    Efeitos.reabrir(lead)
+    Efeitos.reabrir(lead, est['desfecho'])
     true
   end
 

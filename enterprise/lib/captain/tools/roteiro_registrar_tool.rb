@@ -1,9 +1,9 @@
 # Escrita interna (nada sai para o cliente): grava a resposta do lead num passo do roteiro. O motor faz a conta,
 # escolhe a saida e aplica as consequencias fixas (etiqueta, etapa, Perdido, passar para a equipe).
 class Captain::Tools::RoteiroRegistrarTool < Captain::Tools::RamonBaseTool
-  # Texto que Ramon::Roteiro.descrever devolve quando o roteiro acaba de passar o caso para a equipe; o
-  # AgentRunnerService trata isso como handoff (a conversa já saiu do bot e a resposta do turno não publicaria).
-  HANDOFF = 'Roteiro encerrado: humano'.freeze
+  # Sinal no state da execucao: o roteiro acabou de passar o caso para a equipe (Efeitos.humano ja fez bot_handoff!).
+  # O AgentRunnerService le o sinal e trata como handoff — nada depende do texto devolvido a IA.
+  HANDOFF = :ramon_roteiro_handoff
 
   description 'Registra a resposta do lead a um passo do roteiro da tese. Informe a chave do passo e o valor ' \
               '(sim/nao, uma das opcoes, numero, data AAAA-MM-DD ou texto). Em passo de texto livre, informe tambem ' \
@@ -14,22 +14,10 @@ class Captain::Tools::RoteiroRegistrarTool < Captain::Tools::RamonBaseTool
   param :saida_id, type: 'string', desc: 'Id da saida escolhida (passo de texto livre)', required: false
 
   def perform(tool_context, chave: nil, valor: nil, saida_id: nil, lead_id: nil)
-    teste = tool_context.state&.dig(:roteiro_teste)
-    return registrar_em_teste(teste, chave: chave, valor: valor, saida_id: saida_id) if teste
+    res = no_roteiro(tool_context, lead_id) { |lead| ::Ramon::Roteiro.registrar(lead, chave: chave, valor: valor, saida_id: saida_id) }
+    return res if res.is_a?(String) # SEM_LEAD
 
-    lead = resolver_lead(tool_context.state, lead_id)
-    return SEM_LEAD if lead.blank?
-
-    log_tool_usage('roteiro_registrar', { lead_id: lead.id, chave: chave })
-    res = ::Ramon::Roteiro.registrar(lead, chave: chave, valor: valor, saida_id: saida_id)
+    tool_context.state[HANDOFF] = true if res[:handoff]
     res[:erro] || ::Ramon::Roteiro.resumo(res)
-  end
-
-  private
-
-  # Testar com tese (F2): o motor roda num lead descartável; o estado novo fica no state e o Testar devolve à tela.
-  def registrar_em_teste(teste, **resposta)
-    texto, teste['estado'] = ::Ramon::Roteiro::Teste.registrar(@assistant.account, teste, **resposta)
-    texto
   end
 end
