@@ -60,6 +60,6 @@ module Ramon::CopilotoLimite
 
   def avisar(lead, limite, motivo)
     texto = "IA chegou ao limite (#{NOMES[limite]}) com #{lead.name}#{": #{motivo}" if motivo} - conversa em rascunho"
-    Ramon::Roteiro::Efeitos.avisar(lead, texto, "IA chegou ao limite: #{lead.name}", motivo || NOMES[limite])
+    Ramon::AvisoDaIa.avisar(lead, texto, "IA chegou ao limite: #{lead.name}", motivo || NOMES[limite])
   end
 end

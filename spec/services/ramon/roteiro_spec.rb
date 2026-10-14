@@ -15,7 +15,7 @@ RSpec.describe Ramon::Roteiro do
   end
 
   def registrar(chave, valor = nil, saida_id: nil)
-    described_class.registrar(lead.reload, chave: chave, valor: valor, saida_id: saida_id)
+    Ramon::Roteiro.registrar(lead.reload, chave: chave, valor: valor, saida_id: saida_id)
   end
 
   def piloto_total!
@@ -164,6 +164,19 @@ RSpec.describe Ramon::Roteiro do
     expect(conversation.reload.status).to eq('open')
     expect(conversation.custom_attributes['copiloto_modo']).to eq('rascunho')
     expect(Notification.where(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso').count).to eq(1)
+  end
+
+  # Spec §5: roteiro sem saída = configuração quebrada → além do responsável, os administradores ficam sabendo.
+  it 'roteiro sem saída avisa o SDR do lead e também os administradores' do
+    admin = create(:user, account: account, role: :administrator)
+    sdr = create(:user, account: account, role: :agent)
+    lead.update_columns(sdr_id: sdr.id) # rubocop:disable Rails/SkipsModelValidations -- sem atribuir a conversa
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'sim')
+    registrar('sequela', 'nao sei dizer')
+
+    avisados = Notification.where(primary_actor: lead, notification_type: 'ramon_fluxo_aviso').pluck(:user_id)
+    expect(avisados).to contain_exactly(sdr.id, admin.id)
   end
 
   it 'ir_para para passo inexistente vai para a equipe' do

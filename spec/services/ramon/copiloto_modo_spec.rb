@@ -60,4 +60,20 @@ RSpec.describe Ramon::CopilotoModo do
     expect(Ramon::Roteiro::Efeitos.direto?(lead.reload)).to be(true)
     expect(Ramon::Roteiro::Efeitos.direto?(create(:lead, account: inbox.account))).to be(false)
   end
+
+  # Revisão F5 item 4: modo de antes vazio não vira nil gravado — volta a valer o padrão da caixa.
+  # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
+  it 'trocar guarda o 1º modo de antes; restaurar devolve, e sem modo de antes tira o atributo' do
+    conversation.update!(custom_attributes: {})
+    inbox.update!(ramon_copiloto_modo: 'piloto_ate_reuniao')
+
+    Ramon::CopilotoModo.trocar(conversation, 'manual')
+    Ramon::CopilotoModo.trocar(conversation, 'rascunho')
+    expect(conversation.reload.custom_attributes).to eq('copiloto_modo' => 'rascunho', Ramon::CopilotoModo::MODO_ANTES => nil)
+
+    Ramon::CopilotoModo.restaurar(conversation)
+    expect(conversation.reload.custom_attributes).to eq({})
+    expect(Ramon::CopilotoModo.of(conversation)).to eq('piloto_ate_reuniao')
+  end
+  # rubocop:enable RSpec/DescribedClass
 end

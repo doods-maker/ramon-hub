@@ -8,6 +8,8 @@ module Ramon::CopilotoModo
               'piloto_ate_contrato' => Ramon::CopilotoLimite::CONTRATO }.freeze
   MODOS = (%w[manual rascunho piloto_limitado piloto_total] + LIMITES.keys).freeze
   DEFAULT = 'rascunho'.freeze
+  # Modo de antes do roteiro (decisão 13/10): o 1º guardado vale até o reabrir devolver.
+  MODO_ANTES = 'copiloto_modo_antes_roteiro'.freeze
 
   module_function
 
@@ -54,5 +56,22 @@ module Ramon::CopilotoModo
     return if modo.blank? || attrs.key?('copiloto_modo')
 
     conversation.update!(custom_attributes: attrs.merge('copiloto_modo' => modo))
+  end
+
+  # Troca o modo da conversa guardando o de antes (o 1º vale até o restaurar) — desqualificado/equipe do roteiro.
+  def trocar(conversa, valor)
+    attrs = conversa.custom_attributes || {}
+    antes = attrs.key?(MODO_ANTES) ? {} : { MODO_ANTES => attrs['copiloto_modo'] }
+    conversa.update!(custom_attributes: attrs.merge(antes).merge('copiloto_modo' => valor))
+  end
+
+  # Devolve o modo guardado por trocar. Sem modo de antes, tira o atributo: volta a valer o padrão da caixa/env.
+  def restaurar(conversa)
+    attrs = conversa.reload.custom_attributes || {}
+    return unless attrs.key?(MODO_ANTES)
+
+    antes = attrs[MODO_ANTES]
+    sem = attrs.except(MODO_ANTES, 'copiloto_modo')
+    conversa.update!(custom_attributes: antes ? sem.merge('copiloto_modo' => antes) : sem)
   end
 end
