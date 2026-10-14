@@ -38,10 +38,10 @@ module Ramon::CopilotoModo
     modo == 'piloto_total' || LIMITES.key?(modo)
   end
 
-  # Handoff é logística por definição (constraint global) — nunca vira rascunho
-  # em piloto_limitado. logistica_ok nil (não classificado) é fail-safe: rascunho.
-  def envia?(modo, handoff:, logistica_ok:)
-    piloto?(modo) && (handoff || modo != 'piloto_limitado' || logistica_ok == true)
+  # Handoff é logística por definição (constraint global) — nunca vira rascunho. logistica_ok nil (não classificado)
+  # é fail-safe: rascunho. falhou = uma ferramenta falhou no turno (spec roteiro §5): rascunho em qualquer modo.
+  def envia?(modo, handoff:, logistica_ok:, falhou: false)
+    piloto?(modo) && (handoff || (!falhou && (modo != 'piloto_limitado' || logistica_ok == true)))
   end
 
   def carimbo(modo)

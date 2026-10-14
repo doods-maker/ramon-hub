@@ -29,6 +29,10 @@ class Captain::Tools::BasePublicTool < Agents::Tool
   # fica registrado com status 'erro' na tela Execucoes.
   ERRO_NA_TOOL = 'A ferramenta falhou agora. Siga sem ela e avise que esse dado nao pode ser consultado no momento.'.freeze
 
+  # ramon (roteiro F5, spec §5 fail-safe): a ferramenta que falhou marca o turno no state da execução; o
+  # AgentRunnerService devolve 'ferramenta_falhou' e o ResponseBuilderJob faz a resposta do turno virar rascunho.
+  FALHOU = :ramon_ferramenta_falhou
+
   # ramon: modo teste (Casos de teste da IA). Com source 'teste' no estado, so
   # as consultas rodam; o resto devolve o que faria, sem executar nada.
   SOURCE_TESTE = 'teste'.freeze
@@ -48,6 +52,7 @@ class Captain::Tools::BasePublicTool < Agents::Tool
     resultado
   rescue StandardError => e
     Rails.logger.error("#{self.class.name}: falhou (#{e.class}: #{e.message})")
+    tool_context&.state&.store(FALHOU, true)
     registrar_execucao(tool_context, params, "#{e.class}: #{e.message}", 'erro', inicio)
     ERRO_NA_TOOL
   end

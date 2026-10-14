@@ -208,6 +208,15 @@ RSpec.describe Ramon::Roteiro do
     expect(lead.reload.custom_attributes['roteiro']).to be_nil
   end
 
+  # Spec §5: erro no meio do registro desfaz tudo e sobe para a tool — o BasePublicTool marca o turno (falhou) e a
+  # resposta vira rascunho.
+  it 'erro nos efeitos desfaz o registro inteiro e sobe a exceção' do
+    allow(Ramon::Roteiro::Efeitos).to receive(:aplicar).and_raise(RuntimeError, 'boom')
+
+    expect { registrar('tem_advogado', 'sim') }.to raise_error(RuntimeError, 'boom')
+    expect(lead.reload.custom_attributes['roteiro']).to be_nil
+  end
+
   it 'depois do desfecho recusa (inclusive correção) e não mexe em nada' do
     registrar('tem_advogado', 'sim')
     expect(registrar('recebeu_auxilio', 'nao')[:erro]).to include('ja terminou')

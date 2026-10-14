@@ -75,5 +75,23 @@ RSpec.describe Ramon::CopilotoModo do
     expect(conversation.reload.custom_attributes).to eq({})
     expect(Ramon::CopilotoModo.of(conversation)).to eq('piloto_ate_reuniao')
   end
+
+  # Spec roteiro §5 (fail-safe): ferramenta que falhou no turno → rascunho em qualquer modo; a mensagem de handoff
+  # (logística) ainda sai. Review Focus 1.
+  it 'envia? com ferramenta que falhou: nunca envia texto livre direto, só o handoff' do
+    (Ramon::CopilotoModo::MODOS - %w[manual rascunho]).each do |modo|
+      expect(Ramon::CopilotoModo.envia?(modo, handoff: false, logistica_ok: true, falhou: true)).to be(false)
+      expect(Ramon::CopilotoModo.envia?(modo, handoff: true, logistica_ok: nil, falhou: true)).to be(true)
+    end
+    expect(Ramon::CopilotoModo.envia?('rascunho', handoff: true, logistica_ok: true, falhou: false)).to be(false)
+    expect(Ramon::CopilotoModo.envia?('piloto_total', handoff: false, logistica_ok: nil)).to be(true)
+  end
+
+  # T11/D6: handoff + ferramenta falhou no mesmo turno → o handoff vence. O job só chama envia? com handoff: true
+  # para a mensagem fixa de handoff; o texto livre da IA (handoff: false) segue como rascunho.
+  it 'handoff e ferramenta falhou no mesmo turno: a mensagem fixa de handoff sai e o texto livre vira rascunho' do
+    expect(Ramon::CopilotoModo.envia?('piloto_total', handoff: true, logistica_ok: nil, falhou: true)).to be(true)
+    expect(Ramon::CopilotoModo.envia?('piloto_total', handoff: false, logistica_ok: true, falhou: true)).to be(false)
+  end
   # rubocop:enable RSpec/DescribedClass
 end

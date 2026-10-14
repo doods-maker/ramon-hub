@@ -99,6 +99,7 @@ class Captain::Assistant::AgentRunnerService
     response = output.is_a?(Hash) ? output.with_indifferent_access : { 'response' => output.to_s, 'reasoning' => 'Processed by agent' }
     response['agent_name'] = result.context&.dig(:current_agent)
     response['handoff_tool_called'] = result.context&.dig(:captain_v2_handoff_tool_called) || false
+    response['ferramenta_falhou'] = result.context&.dig(:state, Captain::Tools::BasePublicTool::FALHOU) || false
     response
   end
 
