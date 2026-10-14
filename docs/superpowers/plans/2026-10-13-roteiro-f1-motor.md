@@ -1476,6 +1476,7 @@ git commit -m "feat(roteiro): aprovar o Perdido do roteiro cala a IA; recusar ou
 - Create: `enterprise/lib/captain/tools/roteiro_passo_atual_tool.rb`
 - Create: `enterprise/lib/captain/tools/roteiro_registrar_tool.rb`
 - Modify: `config/agents/tools.yml` (2 entradas, depois de `registrar_qualificacao`)
+- Modify: `enterprise/app/services/captain/assistant/agent_runner_service.rb` (saída humano do roteiro conta como handoff — Step 1b)
 - Modify: `db/seeds/ramon/inteligencia/assistentes.yml` (Atendimento: `response_guidelines` + skill "Triagem e qualificação do lead novo")
 - Create: `C:\Users\dudsl\RAdvogados\comercial\docs\2026-10-13-roteiro-f1-textos.md` (gate do Eduardo)
 
@@ -1553,6 +1554,47 @@ end
   sistema: funil
 ```
 
+- [ ] **Step 1b: Handoff do roteiro no meio do turno (ruling 13/10, achado na execução)**
+
+Quando `roteiro_registrar` encerra como `humano`, `Efeitos.humano` chama `bot_handoff!` no meio do turno da IA. O `ResponseBuilderJob#process_response` só publica a resposta se a conversa ainda está `pending`, e o sinal `handoff_tool_called` só é ligado pela `HandoffTool` — então a resposta do turno some e o lead fica sem nada. Correção: o runner trata a saída humano do roteiro como handoff, e o job manda a mensagem de handoff do assistente (rascunho fora do piloto, como no handoff nativo).
+
+Em `enterprise/lib/captain/tools/roteiro_registrar_tool.rb`, dentro da classe, antes de `description`:
+
+```ruby
+  # Texto que Ramon::Roteiro.descrever devolve quando o roteiro acaba de passar o caso para a equipe; o
+  # AgentRunnerService trata isso como handoff (a conversa já saiu do bot e a resposta do turno não publicaria).
+  HANDOFF = 'Roteiro encerrado: humano'.freeze
+```
+
+Em `enterprise/app/services/captain/assistant/agent_runner_service.rb`:
+
+a) em `add_usage_metadata_callback`, trocar o bloco `runner.on_tool_complete do |tool_name, _tool_result, context_wrapper|` por:
+
+```ruby
+    runner.on_tool_complete do |tool_name, tool_result, context_wrapper|
+      track_handoff_usage(tool_name, handoff_tool_name, context_wrapper, tool_result)
+    end
+```
+
+b) em `track_handoff_usage`, mudar a assinatura e a guarda:
+
+```ruby
+  def track_handoff_usage(tool_name, handoff_tool_name, context_wrapper, tool_result = nil)
+    return unless context_wrapper&.context
+    return unless tool_name.to_s == handoff_tool_name || roteiro_handoff?(tool_name, tool_result)
+```
+
+(o resto do método igual) e, logo depois dele:
+
+```ruby
+  # Saída "humano" do roteiro da tese já fez bot_handoff! (Ramon::Roteiro::Efeitos.humano): mesmo caminho do handoff nativo.
+  def roteiro_handoff?(tool_name, tool_result)
+    tool_name.to_s == 'roteiro_registrar' && tool_result.to_s.include?(Captain::Tools::RoteiroRegistrarTool::HANDOFF)
+  end
+```
+
+Antes de editar, confira no código real o nome que o runner usa para a tool (`Captain::Tools::RoteiroRegistrarTool.new(assistant).name` — se não for `'roteiro_registrar'`, compare com esse nome como o método já faz com a HandoffTool). Um registro que bate num roteiro já encerrado devolve "O roteiro ja terminou (humano)…" — não contém `HANDOFF`, então não dispara de novo.
+
 - [ ] **Step 2: Seed — regras globais e skill de triagem**
 
 Em `db/seeds/ramon/inteligencia/assistentes.yml`, assistente **Atendimento**:
@@ -1599,9 +1641,9 @@ c) Na skill `Triagem e qualificação do lead novo`, **antes** do parágrafo "An
 - [ ] **Step 4: Lint + commit** (o arquivo `.md` do comercial fica fora do repo do hub)
 
 ```bash
-rubocop-vps enterprise/lib/captain/tools/roteiro_passo_atual_tool.rb enterprise/lib/captain/tools/roteiro_registrar_tool.rb
+rubocop-vps enterprise/lib/captain/tools/roteiro_passo_atual_tool.rb enterprise/lib/captain/tools/roteiro_registrar_tool.rb \n  enterprise/app/services/captain/assistant/agent_runner_service.rb
 git add enterprise/lib/captain/tools/roteiro_passo_atual_tool.rb enterprise/lib/captain/tools/roteiro_registrar_tool.rb \
-  config/agents/tools.yml db/seeds/ramon/inteligencia/assistentes.yml
+  enterprise/app/services/captain/assistant/agent_runner_service.rb config/agents/tools.yml db/seeds/ramon/inteligencia/assistentes.yml
 git commit -m "feat(inteligencia): tools do roteiro da tese e triagem guiada pelo roteiro (texto aguarda aprovação)"
 ```
 
