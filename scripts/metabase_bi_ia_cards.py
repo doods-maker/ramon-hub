@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Cria/atualiza o bloco "Inteligência" (metrica D8) no dashboard Análise Comercial do Metabase.
+"""Cria/atualiza o bloco "Inteligência" (metrica D8 + roteiro da tese) no dashboard Análise Comercial do Metabase.
 
-Cards nativos sobre as views bi_ia_rascunhos / bi_ia_conversas (Onda 4). Idempotente: casa os
+Cards nativos sobre as views bi_ia_rascunhos / bi_ia_conversas (Onda 4) e bi_roteiro (F4). Idempotente: casa os
 cards por nome (cria se faltar, atualiza o SQL se mudou) e so acrescenta ao dashboard os que
 ainda nao estao la.
 
@@ -48,6 +48,44 @@ GROUP BY 1 ORDER BY 1"""),
 }
 # ponytail: handoffs e 0/1 por conversa (o listener dedupa) — por isso "conversas com handoff", nao "numero de handoffs".
 
+HEADING_ROTEIRO = "Inteligência — roteiro da tese"
+ROW0_ROTEIRO = 97      # abaixo do bloco do agente (metabase_agente_cards.py: ROW0=80, heading + 2 linhas de 8 = ate 96)
+
+# "Parado" = 2 dias sem resposta: o mesmo prazo de parado da etapa Novo (stalled_after_days).
+CARDS_ROTEIRO = {
+    "Roteiro: funil por tese (leads dos últimos 30d)": dict(display="table", sql=f"""
+SELECT COALESCE(thesis_name, '(sem tese)') AS tese, COUNT(*) AS entraram,
+       COUNT(*) FILTER (WHERE desfecho = 'qualificado') AS qualificados,
+       COUNT(*) FILTER (WHERE desfecho = 'desqualificado') AS desqualificados,
+       COUNT(*) FILTER (WHERE desfecho = 'humano') AS para_equipe,
+       COUNT(*) FILTER (WHERE desfecho IS NULL) AS em_andamento
+FROM bi_roteiro
+WHERE account_id = {ACCOUNT_ID} AND em_roteiro AND lead_criado_em > now() - interval '30 days'
+  AND (desfecho IS NOT NULL OR passo_atual IS NOT NULL)
+GROUP BY 1 ORDER BY entraram DESC"""),
+    "Roteiro: onde param (sem desfecho, parados há 2+ dias)": dict(display="table", sql=f"""
+SELECT COALESCE(thesis_name, '(sem tese)') AS tese, passo_atual AS passo,
+       COUNT(*) AS leads
+FROM bi_roteiro
+WHERE account_id = {ACCOUNT_ID} AND em_roteiro AND desfecho IS NULL AND passo_atual IS NOT NULL
+  AND ultima_resposta_em < now() - interval '2 days' AND lead_criado_em > now() - interval '60 days'
+GROUP BY 1, 2 ORDER BY leads DESC"""),
+    "Roteiro: motivos de desqualificação e de equipe (30d)": dict(display="table", sql=f"""
+SELECT CASE desfecho WHEN 'humano' THEN 'equipe' ELSE desfecho END AS desfecho,
+       COALESCE(thesis_name, '(sem tese)') AS tese, passo_decisivo, motivo, COUNT(*) AS leads
+FROM bi_roteiro
+WHERE account_id = {ACCOUNT_ID} AND desfecho IN ('desqualificado', 'humano')
+  AND ultima_resposta_em > now() - interval '30 days'
+GROUP BY 1, 2, 3, 4 ORDER BY leads DESC"""),
+    "Roteiro: limites atingidos nos modos 'sozinha até…' (30d)": dict(display="bar", sql=f"""
+SELECT limite_atingido AS limite, COUNT(DISTINCT conversation_id) AS conversas
+FROM bi_roteiro
+WHERE account_id = {ACCOUNT_ID} AND limite_atingido IS NOT NULL AND limite_em > now() - interval '30 days'
+GROUP BY 1 ORDER BY 1"""),
+}
+
+BLOCOS = [(HEADING, ROW0, CARDS), (HEADING_ROTEIRO, ROW0_ROTEIRO, CARDS_ROTEIRO)]
+
 
 def api(method, path, body=None):
     url = os.environ["METABASE_URL"].rstrip("/") + "/api" + path
@@ -71,11 +109,11 @@ def sql_atual(card):
     return dq.get("native", {}).get("query", "")
 
 
-def ensure_cards(apply_):
+def ensure_cards(cards, apply_):
     """Devolve {nome: card_id} criando/atualizando conforme preciso."""
     existing = {c["name"]: c for c in api("GET", f"/card?f=all") if c.get("collection_id") == COLLECTION_ID}
     ids = {}
-    for name, spec in CARDS.items():
+    for name, spec in cards.items():
         card = existing.get(name)
         if card is None:
             print(f"[CRIAR] {name}")
@@ -95,21 +133,21 @@ def ensure_cards(apply_):
     return ids
 
 
-def ensure_dashcards(ids, apply_):
+def ensure_dashcards(ids, cards, heading, row0, apply_):
     dash = api("GET", f"/dashboard/{DASHBOARD_ID}")
     dashcards = dash["dashcards"]
     present_cards = {dc["card_id"] for dc in dashcards if dc.get("card_id")}
-    has_heading = any((dc.get("visualization_settings") or {}).get("text") == HEADING for dc in dashcards)
+    has_heading = any((dc.get("visualization_settings") or {}).get("text") == heading for dc in dashcards)
     novos = []
     if not has_heading:
-        novos.append({"id": -1, "card_id": None, "row": ROW0, "col": 0, "size_x": 24, "size_y": 1,
-                      "visualization_settings": {"virtual_card": {"display": "heading"}, "text": HEADING},
+        novos.append({"id": -1, "card_id": None, "row": row0, "col": 0, "size_x": 24, "size_y": 1,
+                      "visualization_settings": {"virtual_card": {"display": "heading"}, "text": heading},
                       "parameter_mappings": []})
-    for i, name in enumerate(CARDS):
+    for i, name in enumerate(cards):
         cid = ids.get(name)
         if cid is None or cid in present_cards:
             continue
-        novos.append({"id": -(i + 2), "card_id": cid, "row": ROW0 + 1 + 8 * (i // 2), "col": 12 * (i % 2),
+        novos.append({"id": -(i + 2), "card_id": cid, "row": row0 + 1 + 8 * (i // 2), "col": 12 * (i % 2),
                       "size_x": 12, "size_y": 8, "parameter_mappings": [], "visualization_settings": {}})
     if not novos:
         print("[DASHBOARD JA OK]")
@@ -126,8 +164,10 @@ def main():
     apply_ = "--apply" in sys.argv
     if not os.environ.get("METABASE_URL") or not os.environ.get("METABASE_ADMIN_KEY"):
         sys.exit("faltam METABASE_URL e/ou METABASE_ADMIN_KEY no ambiente.")
-    ids = ensure_cards(apply_)
-    ensure_dashcards(ids, apply_)
+    for heading, row0, cards in BLOCOS:
+        print(f"== {heading}")
+        ids = ensure_cards(cards, apply_)
+        ensure_dashcards(ids, cards, heading, row0, apply_)
 
 
 if __name__ == "__main__":
