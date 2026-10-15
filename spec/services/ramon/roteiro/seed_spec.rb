@@ -93,7 +93,7 @@ RSpec.describe Ramon::Roteiro::Seed do
 
     expect(semear).to include(teses_criadas: 2)
     tese = account.theses.find_by!(name: 'Trabalhista — rescisão indireta')
-    expect(tese).to have_attributes(area: 'trabalhista', honorario_percentual: 25, honorario_na_tabela: true)
+    expect(tese).to have_attributes(area: 'trabalhista', honorario_percentual: 30, honorario_na_tabela: true)
     expect(tese.thesis_items).not_to be_empty
   end
 end

@@ -72,7 +72,7 @@ RSpec.describe Ramon::Honorario do
     end
 
     it 'trabalhista: percentual do êxito, não dos atrasados' do
-      expect(described_class.descricao(tese(area: 'trabalhista', honorario_percentual: 25))).to eq('25% do que o cliente receber no processo')
+      expect(described_class.descricao(tese(area: 'trabalhista', honorario_percentual: 30))).to eq('30% do que o cliente receber no processo')
     end
 
     it 'fora da tabela' do

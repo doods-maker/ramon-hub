@@ -531,12 +531,12 @@ theses:
 
   # APROVADO pelo Eduardo 14/10 (comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §1).
   # 4 teses trabalhistas (spec 2026-10-14-teses-liderhub §2.1): cada uma com seu número e LP; o roteiro de cada uma
-  # está em db/seeds/ramon/roteiros/trabalhista-*.yml. Honorário = POP JUR-02, linha Trabalhista: 25% do êxito, sem mínimo.
+  # está em db/seeds/ramon/roteiros/trabalhista-*.yml. Honorário trabalhista: 30% do êxito, sem mínimo (decisão do Eduardo 15/10; antes 25% do JUR-02).
   - name: "Trabalhista — acidente ou doença do trabalho"
     description: "Indenização da empresa para quem sofreu acidente do trabalho ou tem doença causada ou piorada pelo trabalho e ficou com sequela: danos morais, materiais, estéticos e pensão."
     area: "trabalhista"
     position: 6
-    honorario_percentual: 25
+    honorario_percentual: 30
     honorario_n_mensalidades:
     honorario_na_tabela: true
     items:
@@ -566,7 +566,7 @@ theses:
     description: "Para quem ainda trabalha na empresa e sofre falta grave do empregador (salário atrasado, FGTS sem depósito, assédio, risco sem proteção): pede-se na Justiça o fim do contrato com as verbas de uma demissão sem justa causa."
     area: "trabalhista"
     position: 7
-    honorario_percentual: 25
+    honorario_percentual: 30
     honorario_n_mensalidades:
     honorario_na_tabela: true
     items:
@@ -593,7 +593,7 @@ theses:
     description: "Para quem trabalhou sem carteira assinada (ou como PJ/MEI) do jeito de um empregado e saiu há até 2 anos: reconhecimento do vínculo e os direitos do período (férias, 13º, FGTS, verbas da saída)."
     area: "trabalhista"
     position: 8
-    honorario_percentual: 25
+    honorario_percentual: 30
     honorario_n_mensalidades:
     honorario_na_tabela: true
     items:
@@ -619,7 +619,7 @@ theses:
     description: "Para quem tinha carteira assinada, saiu há até 2 anos e ficou com direito sem pagar: verbas da rescisão, horas extras, adicionais, FGTS, desvio de função, salário por fora, assédio."
     area: "trabalhista"
     position: 9
-    honorario_percentual: 25
+    honorario_percentual: 30
     honorario_n_mensalidades:
     honorario_na_tabela: true
     items:

@@ -29,7 +29,7 @@ class Ramon::Honorario
     "#{numero(tese.honorario_percentual || 0)}% #{base(tese)}#{parte_mensalidades(tese)}#{parte_minimo(tese)}"
   end
 
-  # Trabalhista (JUR-02 "25% do êxito"): o percentual é do que o processo render, não de atrasados de benefício.
+  # Trabalhista (30% do êxito, decisão 15/10): o percentual é do que o processo render, não de atrasados de benefício.
   def self.base(tese)
     tese.area == 'trabalhista' ? 'do que o cliente receber no processo' : 'dos atrasados'
   end

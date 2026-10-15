@@ -61,7 +61,7 @@ RSpec.describe Leads::SeedDefaultConfigService do
     'Auxílio-acidente (B36)' => { pct: 30, n: 3, min: 3, base: 'sm' },
     'Auxílio por incapacidade temporária (auxílio-doença / B31)' => { pct: 30, n: nil, min: 1, base: 'sb' },
     'Aposentadoria por incapacidade permanente (invalidez / B32)' => { pct: 30, n: nil, min: 3, base: 'sb' },
-    'Trabalhista — rescisão indireta' => { pct: 25, n: nil, min: nil, base: nil }
+    'Trabalhista — rescisão indireta' => { pct: 30, n: nil, min: nil, base: nil }
   }.each do |nome, v|
     it "seeda a linha JUR-02 de #{nome}" do
       tese = account.theses.find_by!(name: nome)
