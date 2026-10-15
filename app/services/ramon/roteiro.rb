@@ -24,13 +24,14 @@ module Ramon::Roteiro
 
   # Comuns da conta (em toda tese) e depois os da tese. Nenhum passo = sem roteiro (triagem de sempre).
   # Lead sem tese (F3): só os comuns, e só se existir o comum "assunto" — é ele que descobre a tese. Com tese, ele sai.
-  def passos(lead)
-    comuns = RoteiroPasso.comuns.where(account_id: lead.account_id).to_a
-    sem_tese = lead.thesis_id.nil?
-    return [] if sem_tese && comuns.none? { |p| p.chave == ASSUNTO }
-    return comuns if sem_tese
+  def passos(lead) = passos_de(lead.account_id, lead.thesis_id)
 
-    comuns.reject { |p| p.chave == ASSUNTO } + RoteiroPasso.where(thesis_id: lead.thesis_id).to_a
+  def passos_de(account_id, thesis_id)
+    comuns = RoteiroPasso.comuns.where(account_id: account_id).to_a
+    return [] if thesis_id.nil? && comuns.none? { |p| p.chave == ASSUNTO }
+    return comuns if thesis_id.nil?
+
+    comuns.reject { |p| p.chave == ASSUNTO } + RoteiroPasso.where(thesis_id: thesis_id).to_a
   end
 
   # Trocar a tese reinicia o roteiro; as respostas dos passos comuns ficam, menos a que encerrou o roteiro.
@@ -95,12 +96,24 @@ module Ramon::Roteiro
 
     respondidas = est['respostas'].map { |chave, r| "#{chave}=#{r['valor'] || r['saida']}" }
     linhas = linhas_do_passo(passo)
+    seguinte = junto(passo, est)
+    linhas << "Pode perguntar junto, na mesma mensagem: #{linhas_do_passo(seguinte, 'Passo seguinte').join(' / ')}" if seguinte
     linhas << "Ja respondido: #{respondidas.join('; ')}" if respondidas.any?
     linhas.join("\n")
   end
 
-  def linhas_do_passo(passo)
-    linhas = ["Passo atual: #{passo.titulo} (chave: #{passo.chave}; resposta: #{TIPOS[passo.tipo_resposta]})"]
+  # Perguntas em bloco (custo da Meta, decisão 15/10): passo sem saída não decide nada, então o seguinte é sempre o
+  # próximo sem resposta da lista. Passo que manda não perguntar (ex.: enquadramento) não entra no bloco.
+  def junto(passo, est)
+    return if passo.saidas.present?
+
+    lista = passos_de(passo.account_id, est['tese_id'])
+    seguinte = lista[(lista.index { |p| p.id == passo.id } || lista.size)..].drop(1).find { |p| !est['respostas'].key?(p.chave) }
+    seguinte unless seguinte.nil? || seguinte.orientacao.to_s.match?(/n(ã|Ã|a)o pergunte/i)
+  end
+
+  def linhas_do_passo(passo, rotulo = 'Passo atual')
+    linhas = ["#{rotulo}: #{passo.titulo} (chave: #{passo.chave}; resposta: #{TIPOS[passo.tipo_resposta]})"]
     linhas << "Como perguntar: #{passo.orientacao}" if passo.orientacao.present?
     linhas << "Opcoes: #{passo.opcoes.join(' | ')}" if passo.tipo_resposta == 'escolha'
     saidas = passo.saidas.map { |s| "#{s['id']} = #{s['quando']}" }.join('; ')

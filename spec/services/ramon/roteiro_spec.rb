@@ -274,8 +274,23 @@ RSpec.describe Ramon::Roteiro do
     expect(texto).to include('Passo atual: Sequela (chave: sequela')
       .and include('ficou = ficou alguma limitacao').and include('tem_advogado=nao')
     expect(Ramon::Roteiro.texto_atual(lead.reload)).to eq(texto)
+    expect(texto).not_to include('Pode perguntar junto') # sequela tem saídas: decide o caminho
     expect(Ramon::Roteiro.descrever(nil, { 'desfecho' => 'humano', 'motivo' => 'x', 'respostas' => {} }))
       .to include('Roteiro encerrado: humano (x)')
+  end
+
+  it 'descrever junta o passo seguinte quando o atual não decide nada (perguntas em bloco)' do
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'nao')
+    texto = Ramon::Roteiro.texto_atual(lead.reload)
+    expect(texto).to include('Passo atual: Data acidente').and include('Pode perguntar junto, na mesma mensagem: Passo seguinte: Graca (chave: graca')
+  end
+
+  it 'não junta o passo que manda não perguntar' do
+    RoteiroPasso.find_by!(thesis: thesis, chave: 'graca').update!(orientacao: 'Não pergunte nada ao lead neste passo.')
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'nao')
+    expect(Ramon::Roteiro.texto_atual(lead.reload)).not_to include('Pode perguntar junto')
   end
 end
 # rubocop:enable RSpec/DescribedClass
