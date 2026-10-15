@@ -6,7 +6,8 @@ RSpec.describe Ramon::Fluxos::CompararAgendamentos do
   let(:lead) do
     create(:lead, account: account, lead_stage: account.lead_stages.order(:position).first, closer: closer, name: 'João Pereira')
   end
-  let(:agora) { Time.zone.parse('2026-10-07T12:00:00Z') }
+  # Relativo ao relógio real: com data fixa o teste quebrava 8 dias depois (retenção do rastro contra o relógio de verdade).
+  let(:agora) { Time.current.beginning_of_hour + 2.days }
   let(:inicio) { agora + 10.hours }
 
   before do
