@@ -1,6 +1,7 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import Playbooks from '../Playbooks.vue';
+import TagInput from 'dashboard/components-next/taginput/TagInput.vue';
 
 vi.mock('dashboard/api/roteiroPassos', () => ({
   default: {
@@ -212,21 +213,27 @@ describe('Playbooks.vue', () => {
     );
   });
 
-  it('salva as palavras-chave como lista', async () => {
+  it('salva as palavras-chave das etiquetas, separando vírgulas e repetidas', async () => {
     const { wrapper, store } = mountPlaybooks();
     await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
-    const campo = wrapper.find(
-      '[data-testid="playbooks-palavras-chave-input"]'
-    );
-    await campo.setValue('acidente, sequela ');
-    await campo.trigger('blur');
+    const etiquetas = wrapper.findComponent(TagInput);
+    await etiquetas.vm.$emit('update:modelValue', [
+      'acidente',
+      ' sequela, b36',
+      'acidente',
+    ]);
     expect(store.dispatch).toHaveBeenLastCalledWith(
       'theses/update',
       expect.objectContaining({
         id: 1,
-        palavras_chave: ['acidente', 'sequela'],
+        palavras_chave: ['acidente', 'sequela', 'b36'],
       })
     );
+    expect(etiquetas.props('modelValue')).toEqual([
+      'acidente',
+      'sequela',
+      'b36',
+    ]);
   });
 
   it('escolhe o modelo de contrato do ZapSign da tese', async () => {

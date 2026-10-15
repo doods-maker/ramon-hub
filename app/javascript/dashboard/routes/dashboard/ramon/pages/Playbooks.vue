@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
+import TagInput from 'dashboard/components-next/taginput/TagInput.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import { THESIS_SECTIONS as SECTIONS } from '../helpers/sections';
@@ -11,7 +12,7 @@ import { mensagemErro } from '../helpers/erro';
 import RoteiroPassosAPI from 'dashboard/api/roteiroPassos';
 import LeadsAPI from 'dashboard/api/leads';
 import RoteiroEditor from '../components/roteiro/RoteiroEditor.vue';
-import { listaParaTexto, textoParaLista } from '../helpers/roteiro';
+import { textoParaLista } from '../helpers/roteiro';
 import {
   CARTAO,
   SECAO,
@@ -52,7 +53,7 @@ const detail = reactive({
   honorarioMinimoQtd: '',
   honorarioMinimoBase: '',
   honorarioNaTabela: false,
-  palavrasChave: '',
+  palavrasChave: [],
   zapsignTemplateId: '',
 });
 
@@ -68,7 +69,7 @@ const syncDetail = () => {
   detail.honorarioMinimoQtd = thesis.honorario_minimo_qtd ?? '';
   detail.honorarioMinimoBase = thesis.honorario_minimo_base ?? '';
   detail.honorarioNaTabela = !!thesis.honorario_na_tabela;
-  detail.palavrasChave = listaParaTexto(thesis.palavras_chave);
+  detail.palavrasChave = [...(thesis.palavras_chave || [])];
   detail.zapsignTemplateId = thesis.zapsign_template_id || '';
 };
 
@@ -160,10 +161,16 @@ const saveDetail = () => {
       honorario_minimo_qtd: detail.honorarioMinimoQtd,
       honorario_minimo_base: detail.honorarioMinimoBase || null,
       honorario_na_tabela: detail.honorarioNaTabela,
-      palavras_chave: textoParaLista(detail.palavrasChave),
+      palavras_chave: detail.palavrasChave,
       zapsign_template_id: detail.zapsignTemplateId || null,
     })
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
+};
+
+// Etiqueta colada com vírgulas vira várias; repetida some.
+const salvarPalavrasChave = lista => {
+  detail.palavrasChave = [...new Set(textoParaLista(lista.join(',')))];
+  saveDetail();
 };
 
 const saveActive = () => {
@@ -517,19 +524,23 @@ onMounted(() => {
                   @blur="saveDetail"
                 />
               </label>
-              <label
-                :class="ROTULO"
-                :title="$t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE_AJUDA')"
-              >
+              <div :class="ROTULO">
                 {{ $t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE') }}
-                <input
-                  v-model="detail.palavrasChave"
-                  data-testid="playbooks-palavras-chave-input"
-                  :class="CAMPO"
-                  :placeholder="$t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE_AJUDA')"
-                  @blur="saveDetail"
-                />
-              </label>
+                <div
+                  class="rounded-xl border border-n-weak px-3 py-2"
+                  data-testid="playbooks-palavras-chave"
+                >
+                  <TagInput
+                    :model-value="detail.palavrasChave"
+                    :placeholder="
+                      $t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE_PLACEHOLDER')
+                    "
+                    :auto-open-dropdown="false"
+                    @update:model-value="salvarPalavrasChave"
+                  />
+                </div>
+                {{ $t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE_AJUDA') }}
+              </div>
               <div class="grid gap-3 md:grid-cols-3">
                 <label :class="ROTULO">
                   {{ $t('RAMON.PLAYBOOKS.AREA') }}

@@ -1539,7 +1539,8 @@
       "REABRIR_PERDIDO": "To reopen, move the lead out of Lost in the funnel.",
       "REABRIR_GANHO": "Won lead: the script does not reopen.",
       "PALAVRAS_CHAVE": "Keywords",
-      "PALAVRAS_CHAVE_AJUDA": "Words in the first message that point to this thesis, comma-separated",
+      "PALAVRAS_CHAVE_AJUDA": "Words or phrases in the first message (or ad/LP) that point to this thesis. Type and press Enter; click × to remove. Avoid words that also fit another thesis.",
+      "PALAVRAS_CHAVE_PLACEHOLDER": "Type a keyword and press Enter",
       "EDITOR": {
         "COMUNS_TITULO": "Shared AI script steps",
         "COMUNS_AJUDA": "Apply to every thesis and run before each thesis' own script.",
