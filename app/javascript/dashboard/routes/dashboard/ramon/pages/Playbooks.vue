@@ -167,6 +167,7 @@ const saveDetail = () => {
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
 
+// O TagInput muda a lista no lugar e não emite update:modelValue (mesma referência) — grava pelos eventos add/remove.
 // Etiqueta colada com vírgulas vira várias; repetida some.
 const salvarPalavrasChave = lista => {
   detail.palavrasChave = [...new Set(textoParaLista(lista.join(',')))];
@@ -536,7 +537,12 @@ onMounted(() => {
                       $t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE_PLACEHOLDER')
                     "
                     :auto-open-dropdown="false"
-                    @update:model-value="salvarPalavrasChave"
+                    allow-create
+                    @add="
+                      ({ value }) =>
+                        salvarPalavrasChave([...detail.palavrasChave, value])
+                    "
+                    @remove="salvarPalavrasChave(detail.palavrasChave)"
                   />
                 </div>
                 {{ $t('RAMON.ROTEIRO_IA.PALAVRAS_CHAVE_AJUDA') }}
