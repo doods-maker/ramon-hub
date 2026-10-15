@@ -1,0 +1,94 @@
+# APROVADO pelo Eduardo 14/10. Fonte: comercial/docs/2026-10-14-tese-isencao-ir-rascunho.md §3
+# (itens [CONFERIR] lidos na fonte oficial antes de ativar). Mudar texto aqui depois do aprovado = novo aprovado dele.
+tese: "Isenção de IR por doença grave" # mesmo nome do theses_seed.yml (o seed acha a tese pelo nome)
+passos:
+  - chave: aposentado
+    titulo: "Aposentado ou pensionista"
+    orientacao: "Pergunte se a pessoa recebe aposentadoria ou pensão, e de onde: do INSS ou de um regime próprio de servidor público (prefeitura, estado, União). Se estiver perguntando por outra pessoa (pai, mãe, cônjuge), faça esta e as próximas perguntas sobre quem recebe a aposentadoria ou pensão."
+    tipo_resposta: escolha
+    opcoes: ["Aposentado ou pensionista do INSS", "Servidor público aposentado ou pensionista de regime próprio", "Não é aposentado nem pensionista", "Outra fonte ou não sabe"]
+    saidas:
+      - id: inss
+        quando: "Aposentado ou pensionista do INSS"
+        acao: seguir
+        efeitos: { etiqueta: "isencao-ir" }
+      - id: regime_proprio
+        quando: "Servidor público aposentado ou pensionista de regime próprio"
+        acao: desqualificar
+        motivo: "servidor inativo ou pensionista de regime próprio: fora do atendimento desta tese" # decisão Eduardo 14/10
+        motivo_perda: "Fora da área"
+        mensagem: "Entendi, obrigado por explicar. Hoje o escritório atende este pedido só para quem recebe aposentadoria ou pensão do INSS, então neste caso não vamos conseguir te ajudar. Se precisar de nós em outro assunto, é só chamar."
+        efeitos: { etiqueta: "isencao-ir" }
+      - id: nao_aposentado
+        quando: "Não é aposentado nem pensionista"
+        acao: desqualificar
+        motivo: "não é aposentado nem pensionista" # Tema 1.037 STJ: a isenção não alcança quem está na ativa
+        mensagem: "Obrigado por explicar. A isenção do Imposto de Renda por doença grave vale para aposentadoria e pensão; o salário de quem ainda trabalha não entra nela. Pelo que você contou, hoje o caso não se encaixa. Se a situação mudar, pode me chamar."
+        efeitos: { etiqueta: "isencao-ir" }
+      - id: outro
+        quando: "*"
+        acao: humano
+        motivo: "aposentadoria ou pensão de outra fonte (ex.: só previdência privada, militar) ou não soube dizer"
+        efeitos: { etiqueta: "isencao-ir" }
+
+  - chave: renda
+    titulo: "Valor da aposentadoria ou pensão"
+    orientacao: "Pergunte com delicadeza, sem pressa, quanto a pessoa recebe por mês de aposentadoria ou pensão (somando, se tiver mais de uma). Ex.: 'Para eu entender se o imposto pesa no seu caso, posso te perguntar quanto você recebe por mês, mais ou menos?' Valor aproximado serve ('uns 4 mil' = 4000). Se não quiser dizer o valor, não insista: pergunte só se passa de R$ 5 mil por mês e registre 5001 (passa) ou 5000 (não passa)."
+    tipo_resposta: numero
+    saidas:
+      # Corte R$ 5.000 [CONFERIR]: Lei 15.270/2025 (Lei 9.250, art. 3º-A) zera o imposto mensal de quem tem até
+      # R$ 5.000 de rendimentos tributáveis desde jan/2026 — abaixo disso, o ganho é a restituição dos anos anteriores.
+      # A LiderHub usava R$ 3.500 (regra antiga).
+      - id: abaixo_do_corte
+        quando: "<= 5000"
+        acao: humano
+        motivo: "renda abaixo do corte: avaliar restituição dos últimos 5 anos"
+      - id: acima_do_corte
+        quando: "*"
+        acao: seguir
+
+  - chave: doenca
+    titulo: "Doença grave da lista da lei"
+    orientacao: "Pergunte com carinho se a pessoa tem ou já teve alguma doença grave; ela pode responder por áudio. A doença tem que ser de quem recebe a aposentadoria ou pensão. Lista da lei: câncer (neoplasia maligna), cardiopatia grave, doença de Parkinson, esclerose múltipla, alienação mental, cegueira (inclusive de um olho só), paralisia irreversível e incapacitante, nefropatia grave, hepatopatia grave, tuberculose ativa, hanseníase, espondiloartrose anquilosante, doença de Paget em estado avançado, contaminação por radiação, AIDS e fibrose cística. Doença que já foi tratada ou curada (ex.: câncer operado) também conta. Não encaixe doença de outro nome na lista (ex.: AVC, Alzheimer, diabetes, depressão, doença causada pelo trabalho): nesses casos, e quando não souber a gravidade, use 'nao_tem_certeza'. Não diga se a pessoa tem ou não direito; registre a doença com as palavras dela."
+    tipo_resposta: texto
+    saidas:
+      - id: da_lista
+        quando: "tem ou teve doença que está na lista da lei"
+        acao: seguir
+      - id: fora_da_lista
+        quando: "não tem doença grave, ou a doença claramente não está na lista"
+        acao: desqualificar
+        motivo: "sem doença da lista legal (art. 6º, XIV, Lei 7.713/88)"
+        mensagem: "Obrigado por me contar. A isenção do Imposto de Renda vale só para as doenças que a lei lista, e pelo que você me disse este caso não se encaixa. Se surgir alguma dúvida ou a situação mudar, pode me chamar."
+      - id: nao_tem_certeza
+        quando: "não tem certeza do nome ou da gravidade da doença, ou a doença pode se encaixar mas tem outro nome"
+        acao: humano
+        motivo: "doença sem certeza se está na lista legal"
+
+  - chave: diagnostico
+    titulo: "Quando a doença foi descoberta"
+    orientacao: "Pergunte quando a doença foi descoberta (a data do diagnóstico). É só para a reunião. Só mês e ano: registre o dia 15. Só o ano: registre 15 de junho daquele ano."
+    tipo_resposta: data
+
+  - chave: ja_pediu
+    titulo: "Já pediu a isenção"
+    orientacao: "Pergunte se já pediu a isenção ao INSS ou à Receita. É só para a reunião: não muda nada no roteiro."
+    tipo_resposta: escolha
+    opcoes: ["Nunca pediu", "Pediu e foi negado", "Já tem a isenção", "Não sabe"]
+
+  - chave: laudo
+    titulo: "Laudo ou relatório médico"
+    orientacao: "Pergunte se tem laudo, exame ou relatório médico da doença. Diga que não precisa ter agora. Nunca peça senha do gov.br, login nem CPF."
+    tipo_resposta: escolha
+    opcoes: ["Tem", "Não tem", "Não sabe"]
+    saidas:
+      - id: nao_tem
+        quando: "Não tem"
+        acao: concluir
+        mensagem: "Pelo que você me contou, seu caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etiqueta: "falta-laudo", etapa: "Qualificação" }
+      - id: outro
+        quando: "*"
+        acao: concluir
+        mensagem: "Pelo que você me contou, seu caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etapa: "Qualificação" }

@@ -12,6 +12,7 @@ RSpec.describe 'Ramon::Roteiro (roteiros semeados)' do # rubocop:disable RSpec/D
   let(:trab_ri) { 'Trabalhista — rescisão indireta' }
   let(:trab_vinculo) { 'Trabalhista — reconhecimento de vínculo' }
   let(:trab_ds) { 'Trabalhista — direito suprimido' }
+  let(:ir) { 'Isenção de IR por doença grave' }
 
   before do
     travel_to Time.zone.local(2026, 10, 14, 12)
@@ -33,14 +34,14 @@ RSpec.describe 'Ramon::Roteiro (roteiros semeados)' do # rubocop:disable RSpec/D
 
   def comuns = [%w[nome Maria], %w[tem_advogado não]]
 
-  it 'semeia 3 passos comuns, 17/10/12 nas previdenciárias e 7/5/14/7 nas trabalhistas; rodar de novo não cria nada' do
+  it 'semeia 3 passos comuns, 17/10/12 nas previdenciárias, 6 na de IR e 7/5/14/7 nas trabalhistas; rodar de novo não cria nada' do
     contar = ->(nome) { RoteiroPasso.where(account: account, thesis: nome && account.theses.find_by!(name: nome)).count }
 
-    expect([nil, acidente, bpc, maternidade].map(&contar)).to eq([3, 17, 10, 12])
+    expect([nil, acidente, bpc, maternidade, ir].map(&contar)).to eq([3, 17, 10, 12, 6])
     expect([trab_acidente, trab_ri, trab_vinculo, trab_ds].map(&contar)).to eq([7, 5, 14, 7])
 
     de_novo = Ramon::Roteiro::Seed.new(account).run
-    expect(de_novo).to include(passos_atualizados: 75)
+    expect(de_novo).to include(passos_atualizados: 81)
     expect(de_novo).not_to have_key(:passos_criados)
   end
 
@@ -161,5 +162,30 @@ RSpec.describe 'Ramon::Roteiro (roteiros semeados)' do # rubocop:disable RSpec/D
 
     expect(nenhuma[:estado]).to include('desfecho' => 'desqualificado')
     expect(urgente[:estado]).to include('desfecho' => 'humano', 'motivo' => start_with('URGENTE'))
+  end
+
+  it 'isenção de IR: aposentado do INSS acima do corte, com doença da lista e laudo → qualificado' do
+    lead = lead_da(ir)
+    res = responder(lead, *comuns, ['aposentado', 'Aposentado ou pensionista do INSS'], ['renda', 'R$ 6.500,00'],
+                    ['doenca', 'câncer de mama, operei em 2022', 'da_lista'], %w[diagnostico 2022-03-15],
+                    ['ja_pediu', 'Nunca pediu'], %w[laudo Tem])
+
+    expect(res[:estado]).to include('desfecho' => 'qualificado')
+    expect(res[:estado].dig('respostas', 'doenca', 'valor')).to include('câncer')
+    expect(lead.conversation.reload.label_list).to include('isencao-ir')
+  end
+
+  it 'isenção de IR: renda até o corte vai para a equipe; regime próprio e doença fora da lista são desqualificados' do
+    inss = [*comuns, ['aposentado', 'Aposentado ou pensionista do INSS']]
+    corte = responder(lead_da(ir), *inss, %w[renda 5000])
+    lead_servidor = lead_da(ir)
+    servidor = responder(lead_servidor, *comuns, ['aposentado', 'Servidor público aposentado ou pensionista de regime próprio'])
+    fora = responder(lead_da(ir), *inss, %w[renda 7000], ['doenca', 'pressão alta controlada', 'fora_da_lista'])
+
+    expect(corte[:estado]).to include('desfecho' => 'humano', 'motivo' => include('restituição'))
+    expect(servidor[:estado]).to include('desfecho' => 'desqualificado')
+    expect(account.copilot_suggestions.pending.find_by!(lead: lead_servidor, kind: 'acao').payload)
+      .to include('lost_reason' => 'Fora da área')
+    expect(fora[:estado]).to include('desfecho' => 'desqualificado', 'motivo' => include('lista legal'))
   end
 end

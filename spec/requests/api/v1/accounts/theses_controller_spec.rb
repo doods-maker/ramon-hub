@@ -5,14 +5,14 @@ RSpec.describe 'Theses API', type: :request do
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:agent) { create(:user, account: account, role: :agent) }
 
-  # A conta recém-criada já vem semeada com as 9 teses nativas do playbook (5 previdenciárias + 4 trabalhistas)
+  # A conta recém-criada já vem semeada com as 10 teses nativas do playbook (5 previdenciárias + 4 trabalhistas + isenção de IR)
   # (Leads::SeedDefaultConfigService), então os testes usam nomes que não
   # colidem com o seed e levam em conta essa contagem inicial.
   describe 'GET index' do
     it 'lista as teses da conta (agent pode ler)' do
       get "/api/v1/accounts/#{account.id}/theses", headers: agent.create_new_auth_token
       expect(response).to have_http_status(:success)
-      expect(response.parsed_body.size).to eq(9)
+      expect(response.parsed_body.size).to eq(10)
     end
   end
 
@@ -46,7 +46,7 @@ RSpec.describe 'Theses API', type: :request do
            params: { name: 'Tese Nova', area: 'previdenciario' },
            headers: admin.create_new_auth_token
       expect(response).to have_http_status(:success)
-      expect(response.parsed_body['position']).to eq(10)
+      expect(response.parsed_body['position']).to eq(11)
     end
 
     it 'nasce sem honorário e fora da tabela (JUR-02: alinhar com o Dr. Ramon)', :aggregate_failures do

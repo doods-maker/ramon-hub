@@ -640,3 +640,66 @@ theses:
         title: "Cartões de ponto, mensagens e nomes de testemunhas"
         content: "Provam a jornada real, a função exercida e o que aconteceu no trabalho."
         position: 2
+
+  # APROVADO pelo Eduardo 14/10 (comercial/docs/2026-10-14-tese-isencao-ir-rascunho.md §1 e §4).
+  # Mesmo nome do roteiro (roteiros/isencao-ir.yml). Honorário do JUR-02 = faixa definida caso a caso → fora da tabela.
+  - name: "Isenção de IR por doença grave"
+    description: "Isenção do Imposto de Renda sobre aposentadoria e pensão de quem tem doença grave da lista da lei, e restituição do imposto retido nos últimos 5 anos. Lei 7.713/88, art. 6º, XIV e XXI; Lei 9.250/95, art. 30."
+    area: "tributario"
+    position: 10
+    honorario_percentual:
+    honorario_n_mensalidades:
+    honorario_na_tabela: false
+    items:
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você quer entender a isenção do Imposto de Renda por doença grave. Posso te fazer algumas perguntas rápidas para entender o seu caso?"
+        position: 0
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        content: "Quem recebe aposentadoria ou pensão e tem (ou já teve) uma das doenças graves da lista da lei pode ficar isento do Imposto de Renda sobre esse benefício (Lei 7.713/88, art. 6º, XIV e XXI). Além de parar o desconto, pode haver restituição do imposto retido desde o diagnóstico, limitada aos últimos 5 anos. A lei não exige que os sintomas continuem (Súmula 627 do STJ). Salário de quem ainda trabalha não entra (Tema 1.037 do STJ). Nada de prometer valor: o advogado confere os informes de rendimentos e os laudos na reunião."
+        position: 0
+      - section: "qualificacao"
+        title: "Você recebe aposentadoria ou pensão do INSS?"
+        content: "Qualificado: aposentado ou pensionista do INSS. Servidor inativo de regime próprio fica fora do atendimento desta tese (decisão 14/10)."
+        position: 0
+      - section: "qualificacao"
+        title: "Quanto recebe por mês, mais ou menos?"
+        content: "Acima de R$ 5 mil: o imposto ainda é retido e a isenção faz diferença todo mês. Até R$ 5 mil: desde jan/2026 o imposto mensal já é zero (Lei 15.270/2025) — a equipe avalia a restituição dos anos anteriores."
+        position: 1
+      - section: "qualificacao"
+        title: "Você tem ou já teve alguma doença grave? Quando foi descoberta?"
+        content: "Qualificado: doença da lista legal (art. 6º, XIV, Lei 7.713/88 + fibrose cística, Lei 9.250/95, art. 30 §2º). A data do diagnóstico define desde quando cabe restituição (até 5 anos)."
+        position: 2
+      - section: "objecao"
+        title: "Isso de isenção do Imposto de Renda é golpe?"
+        content: "A isenção está na lei (Lei 7.713/88, art. 6º, XIV). Somos um escritório de advocacia em Tubarão/SC, com registro na OAB, e podemos conversar por vídeo ou pessoalmente. Nunca pedimos senha do gov.br nem pagamento para 'liberar' restituição."
+        position: 0
+      - section: "objecao"
+        title: "Já tratei a doença, estou curado. Não adianta mais."
+        content: "A lei não exige que os sintomas continuem para manter a isenção (Súmula 627 do STJ). Vale o advogado olhar o seu caso."
+        position: 1
+      - section: "objecao"
+        title: "Não tenho laudo de médico do SUS ou perícia oficial."
+        content: "Não precisa ter agora. Na Justiça, o laudo oficial não é obrigatório se a doença estiver bem provada por outros documentos (Súmula 598 do STJ). O advogado vê o que você já tem."
+        position: 2
+      - section: "objecao"
+        title: "Vocês precisam da minha senha do gov.br?"
+        content: "Não. Ninguém do escritório pede senha do gov.br. Se precisar de algum documento do Meu INSS ou da Receita, a equipe explica como você mesmo baixa."
+        position: 3
+      - section: "documento"
+        title: "Documento com foto e CPF"
+        content: "Identificação de quem recebe a aposentadoria ou pensão."
+        position: 0
+      - section: "documento"
+        title: "Laudos, exames e relatórios médicos com o CID e a data do diagnóstico"
+        content: "Provam a doença e desde quando ela existe (marco da restituição)."
+        position: 1
+      - section: "documento"
+        title: "Informes de rendimentos dos últimos 5 anos (Meu INSS) e declarações do IR"
+        content: "Mostram o imposto retido, base para a restituição."
+        position: 2
+      - section: "documento"
+        title: "Carta de concessão da aposentadoria ou pensão"
+        content: "Data de início do benefício (se a doença é anterior, a isenção conta da aposentadoria)."
+        position: 3
