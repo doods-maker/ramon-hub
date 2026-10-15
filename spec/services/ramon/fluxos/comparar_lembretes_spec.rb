@@ -5,7 +5,8 @@ RSpec.describe Ramon::Fluxos::CompararLembretes do
   let(:closer) { create(:user, account: account, name: 'Carla Closer') }
   let(:sdr) { create(:user, account: account, name: 'Sérgio SDR') }
   let(:lead) { create(:lead, account: account, closer: closer, name: 'João Pereira') }
-  let(:agora) { Time.zone.parse('2026-10-07T14:00:00Z') }
+  # Relativo ao relógio real (mesmo horário, 14h UTC): com data fixa o teste quebrava 8 dias depois (retenção do rastro).
+  let(:agora) { (Time.current.utc.beginning_of_day + 2.days + 14.hours).in_time_zone }
 
   before do
     travel_to(agora - 1.day) { Ramon::Fluxos::Reunioes.semear(account) }
