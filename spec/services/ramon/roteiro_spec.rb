@@ -1,5 +1,6 @@
 require 'rails_helper'
 
+# rubocop:disable RSpec/DescribedClass -- constante explícita: no CI a recarga de código deixa o described_class velho (lição F5)
 RSpec.describe Ramon::Roteiro do
   let(:account) { create(:account) }
   let(:thesis) { create(:thesis, account: account) }
@@ -44,18 +45,18 @@ RSpec.describe Ramon::Roteiro do
 
   it 'lead sem tese fica sem roteiro (tese automática = F3)' do
     sem_tese = create(:lead, account: account, lead_stage: novo)
-    expect(described_class.atual(sem_tese)).to be_nil
-    expect(described_class.registrar(sem_tese, chave: 'tem_advogado', valor: 'nao')).to eq(erro: 'Este caso nao tem roteiro.')
+    expect(Ramon::Roteiro.atual(sem_tese)).to be_nil
+    expect(Ramon::Roteiro.registrar(sem_tese, chave: 'tem_advogado', valor: 'nao')).to eq(erro: 'Este caso nao tem roteiro.')
   end
 
   it 'tese sem passos próprios roda os comuns e devolve para a triagem de sempre' do
     outro = create(:lead, account: account, thesis: create(:thesis, account: account), lead_stage: novo)
-    expect(described_class.atual(outro)[:passo].chave).to eq('tem_advogado')
+    expect(Ramon::Roteiro.atual(outro)[:passo].chave).to eq('tem_advogado')
 
-    res = described_class.registrar(outro, chave: 'tem_advogado', valor: 'nao')
+    res = Ramon::Roteiro.registrar(outro, chave: 'tem_advogado', valor: 'nao')
     expect(res[:proximo]).to be_nil
     expect(res[:estado]['desfecho']).to be_nil
-    expect(described_class.resumo(res)).to include('siga a triagem de sempre')
+    expect(Ramon::Roteiro.resumo(res)).to include('siga a triagem de sempre')
   end
 
   it 'grava no estado o próximo passo a perguntar (bi_roteiro) e o limpa no desfecho' do
@@ -68,7 +69,7 @@ RSpec.describe Ramon::Roteiro do
   end
 
   it 'começa pelos comuns e segue a ordem' do
-    expect(described_class.atual(lead)[:passo].chave).to eq('tem_advogado')
+    expect(Ramon::Roteiro.atual(lead)[:passo].chave).to eq('tem_advogado')
     expect(registrar('tem_advogado', 'Não')[:proximo].chave).to eq('recebeu_auxilio')
     expect(lead.reload.custom_attributes.dig('roteiro', 'respostas', 'tem_advogado', 'valor')).to eq('nao')
   end
@@ -109,7 +110,7 @@ RSpec.describe Ramon::Roteiro do
     expect(sugestao.payload).to include('acao' => 'perdido', 'lost_reason' => 'Sem viabilidade', 'origem' => 'roteiro')
     expect(conversation.reload.label_list).not_to include('desqualificado-ia')
     expect(conversation.custom_attributes['copiloto_modo']).to be_nil
-    expect(described_class.descrever(nil, res[:estado])).to include('aguardando a equipe')
+    expect(Ramon::Roteiro.descrever(nil, res[:estado])).to include('aguardando a equipe')
   end
 
   it 'em piloto total desqualifica direto: motivo do catálogo, etiquetas e IA calada com o robô, guardando o modo' do
@@ -132,7 +133,7 @@ RSpec.describe Ramon::Roteiro do
 
   it 'resposta adiantada não é perguntada de novo nem pula o passo atual' do
     registrar('data_acidente', '10/01/2026')
-    expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
+    expect(Ramon::Roteiro.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
 
     registrar('tem_advogado', 'nao')
     expect(registrar('recebeu_auxilio', 'nao')[:proximo].chave).to eq('graca')
@@ -150,7 +151,7 @@ RSpec.describe Ramon::Roteiro do
   it 'corrigir uma resposta adiantada não pula os passos anteriores' do
     registrar('data_acidente', '10/01/2026')
     registrar('data_acidente', '11/01/2026')
-    expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
+    expect(Ramon::Roteiro.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
   end
 
   it 'nada casando vai para a equipe com sino ao gestor' do
@@ -179,7 +180,6 @@ RSpec.describe Ramon::Roteiro do
     expect(avisados).to contain_exactly(sdr.id, admin.id)
   end
 
-  # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
   # Revisão F5 item 12: o handoff do roteiro é um sinal no resultado (a tool o põe no state), não um texto.
   it 'o resultado sinaliza handoff só quando o roteiro acabou de passar para a equipe com conversa' do
     expect(registrar('tem_advogado', 'nao')[:handoff]).to be(false)
@@ -191,7 +191,6 @@ RSpec.describe Ramon::Roteiro do
     Ramon::Roteiro.registrar(sem_conversa.reload, chave: 'recebeu_auxilio', valor: 'sim')
     expect(Ramon::Roteiro.registrar(sem_conversa.reload, chave: 'sequela', valor: 'nao sei')[:handoff]).to be(false)
   end
-  # rubocop:enable RSpec/DescribedClass
 
   it 'ir_para para passo inexistente vai para a equipe' do
     RoteiroPasso.find_by(chave: 'recebeu_auxilio').update!(saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'ir_para', 'alvo' => 'sumiu' }])
@@ -240,7 +239,7 @@ RSpec.describe Ramon::Roteiro do
     create(:roteiro_passo, account: account, thesis: bpc, chave: 'renda', position: 1)
     lead.update!(thesis: bpc)
 
-    atual = described_class.atual(lead.reload)
+    atual = Ramon::Roteiro.atual(lead.reload)
     expect(atual[:passo].chave).to eq('renda')
     expect(atual[:estado]['respostas'].keys).to eq(['tem_advogado'])
   end
@@ -248,7 +247,7 @@ RSpec.describe Ramon::Roteiro do
   it 'trocar a tese depois de desqualificar num comum pergunta o comum de novo' do
     registrar('tem_advogado', 'sim')
     lead.update!(thesis: create(:thesis, account: account))
-    expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
+    expect(Ramon::Roteiro.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
   end
 
   # Revisão F5 item 5: o estado gravado zera na troca (o limite dos modos e a bi_roteiro leem o atributo cru).
@@ -268,7 +267,6 @@ RSpec.describe Ramon::Roteiro do
     expect(salvo['respostas'].keys).to eq(['tem_advogado'])
   end
 
-  # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
   it 'descrever mostra o passo, as saídas do texto e o que já foi respondido' do
     registrar('tem_advogado', 'nao')
     registrar('recebeu_auxilio', 'sim')
@@ -279,5 +277,5 @@ RSpec.describe Ramon::Roteiro do
     expect(Ramon::Roteiro.descrever(nil, { 'desfecho' => 'humano', 'motivo' => 'x', 'respostas' => {} }))
       .to include('Roteiro encerrado: humano (x)')
   end
-  # rubocop:enable RSpec/DescribedClass
 end
+# rubocop:enable RSpec/DescribedClass
