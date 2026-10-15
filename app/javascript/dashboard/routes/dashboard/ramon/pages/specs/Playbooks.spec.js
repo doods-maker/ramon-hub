@@ -1,7 +1,6 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import Playbooks from '../Playbooks.vue';
-import TagInput from 'dashboard/components-next/taginput/TagInput.vue';
 
 vi.mock('dashboard/api/roteiroPassos', () => ({
   default: {
@@ -213,15 +212,20 @@ describe('Playbooks.vue', () => {
     );
   });
 
-  it('salva as palavras-chave das etiquetas, separando vírgulas e repetidas', async () => {
+  it('grava as palavras-chave ao incluir e ao tirar etiqueta (Enter e ×)', async () => {
     const { wrapper, store } = mountPlaybooks();
     await wrapper.findAll('[data-testid="playbooks-item"]')[0].trigger('click');
-    const etiquetas = wrapper.findComponent(TagInput);
-    await etiquetas.vm.$emit('update:modelValue', [
-      'acidente',
-      ' sequela, b36',
-      'acidente',
-    ]);
+    await flushPromises();
+    const caixa = wrapper.find('[data-testid="playbooks-palavras-chave"]');
+    const incluir = async texto => {
+      await caixa.find('[tabindex="0"]').trigger('click');
+      const campo = caixa.find('input');
+      await campo.setValue(texto);
+      await campo.trigger('keydown', { key: 'Enter' });
+      await flushPromises();
+    };
+    await incluir('acidente');
+    await incluir(' sequela, b36');
     expect(store.dispatch).toHaveBeenLastCalledWith(
       'theses/update',
       expect.objectContaining({
@@ -229,11 +233,13 @@ describe('Playbooks.vue', () => {
         palavras_chave: ['acidente', 'sequela', 'b36'],
       })
     );
-    expect(etiquetas.props('modelValue')).toEqual([
-      'acidente',
-      'sequela',
-      'b36',
-    ]);
+
+    await caixa.findAll('.i-lucide-x')[0].trigger('click');
+    await flushPromises();
+    expect(store.dispatch).toHaveBeenLastCalledWith(
+      'theses/update',
+      expect.objectContaining({ id: 1, palavras_chave: ['sequela', 'b36'] })
+    );
   });
 
   it('escolhe o modelo de contrato do ZapSign da tese', async () => {
