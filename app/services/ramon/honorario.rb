@@ -26,7 +26,12 @@ class Ramon::Honorario
     return FORA_DA_TABELA unless tese.honorario_na_tabela
     return nil unless configurada?(tese)
 
-    "#{numero(tese.honorario_percentual || 0)}% dos atrasados#{parte_mensalidades(tese)}#{parte_minimo(tese)}"
+    "#{numero(tese.honorario_percentual || 0)}% #{base(tese)}#{parte_mensalidades(tese)}#{parte_minimo(tese)}"
+  end
+
+  # Trabalhista (JUR-02 "25% do êxito"): o percentual é do que o processo render, não de atrasados de benefício.
+  def self.base(tese)
+    tese.area == 'trabalhista' ? 'do que o cliente receber no processo' : 'dos atrasados'
   end
 
   def self.parte_mensalidades(tese)
@@ -61,5 +66,5 @@ class Ramon::Honorario
 
     qtd == 1 ? 'benefício' : 'benefícios'
   end
-  private_class_method :configurada?, :parte_mensalidades, :parte_minimo, :minimo, :numero, :unidade
+  private_class_method :configurada?, :base, :parte_mensalidades, :parte_minimo, :minimo, :numero, :unidade
 end

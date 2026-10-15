@@ -1,0 +1,125 @@
+# APROVADO pelo Eduardo 14/10. Fonte: comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §2.4
+# (itens [CONFERIR] lidos na fonte oficial antes de ativar). Mudar texto aqui depois do aprovado = novo aprovado dele.
+tese: "Trabalhista — direito suprimido" # mesmo nome do theses_seed.yml (o seed acha a tese pelo nome)
+passos:
+  - chave: processo_anterior
+    titulo: "Já entrou na Justiça por isso"
+    orientacao: "Pergunte se já entrou com algum processo contra a empresa por causa disso. Processo sobre outro assunto não conta. Se o processo foi arquivado sem julgamento (ex.: faltou à audiência), escolha 'Sim, foi arquivado sem julgamento'."
+    tipo_resposta: escolha
+    opcoes: ["Não", "Sim, e perdeu", "Sim, foi arquivado sem julgamento", "Sim, em andamento, com acordo ou ganhou", "Não sabe"]
+    saidas:
+      - id: nao
+        quando: "Não"
+        acao: seguir
+      - id: perdeu
+        quando: "Sim, e perdeu"
+        acao: desqualificar
+        motivo: "já entrou na Justiça contra a empresa e perdeu"
+        mensagem: "Entendi, obrigado por me contar. Como esse caso já passou pela Justiça, infelizmente não conseguimos ajudar com ele. Se precisar de nós em outro assunto, é só chamar."
+      - id: outro
+        quando: "*"
+        acao: humano
+        motivo: "já houve processo contra a empresa (arquivado, em andamento, acordo ou ganho) ou não sabe: avaliar"
+
+  - chave: situacao
+    titulo: "Tinha carteira e já saiu"
+    orientacao: "Confirme, uma coisa de cada vez, se tinha carteira assinada e se já saiu da empresa."
+    tipo_resposta: escolha
+    opcoes: ["Tinha carteira e já saiu", "Ainda trabalha lá", "Trabalhou sem carteira", "Não ficou claro"]
+    saidas:
+      - id: saiu
+        quando: "Tinha carteira e já saiu"
+        acao: seguir
+        efeitos: { etiqueta: "direito-suprimido" }
+      - id: ainda_trabalha
+        quando: "Ainda trabalha lá"
+        acao: humano
+        motivo: "caso de outra tese: ainda trabalha na empresa (rescisão indireta)"
+      - id: sem_carteira
+        quando: "Trabalhou sem carteira"
+        acao: humano
+        motivo: "caso de outra tese: trabalhou sem carteira (reconhecimento de vínculo)"
+      - id: nao_claro
+        quando: "*"
+        acao: humano
+        motivo: "não ficou claro se tinha carteira ou se já saiu"
+
+  - chave: data_saida
+    titulo: "Data da saída da empresa"
+    # [CONFERIR] CF art. 7º, XXIX (2 anos) e OJ 82/83 SDI-1 TST (data da baixa na carteira inclui o aviso prévio)
+    orientacao: "Pergunte a data de saída anotada na carteira de trabalho; se não souber, o último dia de trabalho. Só mês e ano: registre o dia 15."
+    tipo_resposta: data
+    calculadora: prescricao_2_anos
+    calculadora_campos: { saida: data_saida }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: seguir
+      - id: ultimos_meses
+        quando: "ultimos_meses"
+        acao: humano
+        motivo: "URGENTE: prazo de 2 anos vencendo (saída da empresa)"
+      - id: prescrito
+        quando: "prescrito"
+        acao: desqualificar
+        motivo: "saiu há mais de 2 anos: prazo para entrar na Justiça vencido"
+        mensagem: "Obrigado por me contar. Pela lei, o pedido na Justiça do Trabalho precisa ser feito em até 2 anos depois que o trabalho termina, e esse prazo já passou no seu caso. Sinto muito não poder ajudar com isso."
+      - id: depende
+        quando: "*"
+        acao: humano
+        motivo: "não deu para calcular o prazo de 2 anos da saída"
+
+  - chave: funcao
+    titulo: "Função na empresa"
+    orientacao: "Pergunte qual era a função dele na empresa."
+    tipo_resposta: texto
+
+  - chave: tipo_saida
+    titulo: "Como saiu da empresa"
+    orientacao: "Pergunte como foi a saída: se foi demitido (com ou sem justa causa), pediu demissão, fez acordo com a empresa ou foi fim de contrato. É só para a reunião."
+    tipo_resposta: escolha
+    opcoes: ["Demitido sem justa causa", "Demitido por justa causa", "Pediu demissão", "Acordo com a empresa", "Fim de contrato (experiência ou temporário)", "Não sabe"]
+
+  - chave: queixa
+    titulo: "O que a empresa deixou de pagar ou fez de errado"
+    orientacao: "Descubra o que a empresa ficou devendo ou fez de errado. Pergunte uma coisa por vez e pare quando aparecer um problema claro e a pessoa já tiver contado os detalhes: qual a sua maior reclamação da empresa? · faltou receber alguma coisa da rescisão (13º, férias, FGTS com a multa)? · fazia hora extra sem receber certo? · recebia salário por fora ou menos do que o combinado? · fazia função diferente da registrada ou acumulava funções sem ganhar a mais? · trabalhava exposto a risco ou insalubridade sem adicional? · teve descontos errados no salário ou na rescisão? · sofreu humilhação, assédio ou discriminação? · teve acidente ou doença por causa do serviço? · sofreu pressão ou injustiça na saída? Antes de registrar, pergunte uma vez: 'teve mais alguma coisa que a empresa deixou de pagar ou fez de errado?'. Registre no valor um resumo com as palavras da pessoa."
+    tipo_resposta: texto
+
+  - chave: hipotese
+    titulo: "Enquadramento do direito"
+    orientacao: "Não pergunte nada ao lead neste passo. Com o que ele contou, escolha a hipótese que melhor descreve o problema; se houver mais de uma, a de maior valor ou mais grave. 'Nenhuma' só quando nada do que ele contou é direito a cobrar da empresa; se há uma queixa que você não sabe encaixar, 'Não tem certeza'."
+    tipo_resposta: escolha
+    opcoes:
+      - "Verbas da rescisão não pagas ou pagas erradas"
+      - "FGTS sem depósito"
+      - "Hora extra, adicional noturno, domingo ou feriado sem pagar"
+      - "Insalubridade ou periculosidade sem adicional ou sem EPI"
+      - "Desvio ou acúmulo de função sem pagar a mais"
+      - "Salário por fora ou carteira com dados errados"
+      - "Contratado como PJ ou MEI, mas era empregado"
+      - "Salário atrasado com frequência"
+      - "Descontos indevidos ou benefício cortado"
+      - "Assédio, humilhação, discriminação ou agressão"
+      - "Acidente ou doença do trabalho"
+      - "Justa causa sem motivo ou saída forçada"
+      - "Nenhuma"
+      - "Não tem certeza"
+    saidas:
+      - id: nenhuma
+        quando: "Nenhuma"
+        acao: desqualificar
+        motivo: "direito suprimido: nenhum direito a cobrar no relato"
+        mensagem: "Obrigado por responder com sinceridade. Com o que você me contou, a princípio não encontramos um direito a cobrar da empresa. Se lembrar de mais alguma coisa, pode me chamar."
+      - id: duvida
+        quando: "Não tem certeza"
+        acao: humano
+        motivo: "direito suprimido: queixa sem enquadramento claro"
+      - id: pejotizacao
+        quando: "Contratado como PJ ou MEI, mas era empregado"
+        acao: humano
+        motivo: "pejotização (PJ/MEI): tema em discussão no STF (Tema 1.389), equipe avalia" # Tema 1.389: suspensão nacional 14/04/2025, tramitação liberada na 1ª instância e nos TRTs em 18/06/2026, TST suspenso, mérito pendente — reconferir no STF no dia do seed
+      - id: enquadrou
+        quando: "*"
+        acao: concluir
+        mensagem: "Pelo que você me contou, seu caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etapa: "Qualificação" }

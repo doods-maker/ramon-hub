@@ -528,3 +528,115 @@ theses:
         title: "Laudos atestando a necessidade de ajuda permanente de terceiros"
         content: "Documento central do pedido."
         position: 2
+
+  # APROVADO pelo Eduardo 14/10 (comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §1).
+  # 4 teses trabalhistas (spec 2026-10-14-teses-liderhub §2.1): cada uma com seu número e LP; o roteiro de cada uma
+  # está em db/seeds/ramon/roteiros/trabalhista-*.yml. Honorário = POP JUR-02, linha Trabalhista: 25% do êxito, sem mínimo.
+  - name: "Trabalhista — acidente ou doença do trabalho"
+    description: "Indenização da empresa para quem sofreu acidente do trabalho ou tem doença causada ou piorada pelo trabalho e ficou com sequela: danos morais, materiais, estéticos e pensão."
+    area: "trabalhista"
+    position: 6
+    honorario_percentual: 25
+    honorario_n_mensalidades:
+    honorario_na_tabela: true
+    items:
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        # [CONFERIR] CF art. 7º, XXVIII (culpa do empregador); CC art. 927, parágrafo único, e STF Tema 932 (atividade de risco)
+        content: "Quando o acidente ou a doença têm ligação com o trabalho e a empresa teve culpa (falta de EPI, de treinamento, de pausa, máquina sem proteção, assédio) — ou a atividade é de risco —, a empresa pode ter de indenizar: danos morais, materiais (tratamento, salários perdidos), estéticos e pensão quando a sequela reduz a capacidade de trabalho. A falta de CAT não impede o pedido. Se o prazo contra a empresa já passou, pode haver auxílio-acidente no INSS. Nunca prometer resultado nem valor."
+        position: 0
+      - section: "documento"
+        title: "Documento de identidade, CPF e carteira de trabalho"
+        content: "Identificação e prova do contrato com a empresa."
+        position: 0
+      - section: "documento"
+        title: "CAT, atestados, laudos e exames"
+        content: "Provam o acidente ou a doença, a sequela e a ligação com o trabalho. Sem CAT o direito pode existir."
+        position: 1
+      - section: "documento"
+        title: "Cartas do INSS (auxílio-doença) e ASO"
+        content: "Afastamento, alta e exames ocupacionais (admissional, periódico, demissional)."
+        position: 2
+      - section: "documento"
+        title: "Fotos, vídeos, mensagens e nomes de testemunhas"
+        content: "Mostram como o acidente aconteceu e as condições de trabalho (falta de EPI, de treinamento)."
+        position: 3
+
+  - name: "Trabalhista — rescisão indireta"
+    description: "Para quem ainda trabalha na empresa e sofre falta grave do empregador (salário atrasado, FGTS sem depósito, assédio, risco sem proteção): pede-se na Justiça o fim do contrato com as verbas de uma demissão sem justa causa."
+    area: "trabalhista"
+    position: 7
+    honorario_percentual: 25
+    honorario_n_mensalidades:
+    honorario_na_tabela: true
+    items:
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        # CLT art. 483 (o §3º garante continuar trabalhando só nas alíneas "d" e "g"; nas demais, não sair é cautela do advogado);
+        # FGTS: TST Tema Repetitivo 70 (24/02/2025)
+        content: "A rescisão indireta é a 'justa causa da empresa': quando o empregador comete falta grave (atraso de salário, FGTS sem depósito, assédio, exigir serviço além do contrato, risco sem proteção), o trabalhador pede na Justiça o fim do contrato e recebe as verbas como se tivesse sido demitido sem justa causa. Orientação importante: não pedir demissão nem deixar de ir ao trabalho antes de falar com o advogado — sair por conta própria pode virar pedido de demissão."
+        position: 0
+      - section: "documento"
+        title: "Documento de identidade, CPF e carteira de trabalho"
+        content: "Identificação e prova do contrato."
+        position: 0
+      - section: "documento"
+        title: "Contracheques e extrato do FGTS"
+        content: "Mostram atraso de salário, salário por fora e falta de depósito do FGTS."
+        position: 1
+      - section: "documento"
+        title: "Mensagens, áudios, fotos e nomes de testemunhas"
+        content: "Provam assédio, ordens fora da função, jornada e condições de risco."
+        position: 2
+
+  - name: "Trabalhista — reconhecimento de vínculo"
+    description: "Para quem trabalhou sem carteira assinada (ou como PJ/MEI) do jeito de um empregado e saiu há até 2 anos: reconhecimento do vínculo e os direitos do período (férias, 13º, FGTS, verbas da saída)."
+    area: "trabalhista"
+    position: 8
+    honorario_percentual: 25
+    honorario_n_mensalidades:
+    honorario_na_tabela: true
+    items:
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        # [CONFERIR] CLT arts. 2º e 3º; CF art. 7º, XXIX; STF Tema 1.389 (pejotização: reconferir no STF no dia do seed)
+        content: "Quem trabalhou como empregado sem carteira assinada pode pedir na Justiça o reconhecimento do vínculo e os direitos do período. O que conta é como o trabalho acontecia na prática: era sempre a pessoa (não mandava outro), com frequência, recebendo pagamento e com ordens/horário. O pedido tem de ser feito em até 2 anos depois da saída. Caso de PJ/MEI: tema em discussão no STF — sempre com a equipe."
+        position: 0
+      - section: "documento"
+        title: "Documento de identidade e CPF"
+        content: "Identificação."
+        position: 0
+      - section: "documento"
+        title: "Comprovantes de pagamento (PIX, recibos, extratos)"
+        content: "Mostram que recebia com frequência pelo trabalho."
+        position: 1
+      - section: "documento"
+        title: "Mensagens, fotos, crachá, uniforme e nomes de testemunhas"
+        content: "Provam a rotina, as ordens e o horário — o coração do vínculo."
+        position: 2
+
+  - name: "Trabalhista — direito suprimido"
+    description: "Para quem tinha carteira assinada, saiu há até 2 anos e ficou com direito sem pagar: verbas da rescisão, horas extras, adicionais, FGTS, desvio de função, salário por fora, assédio."
+    area: "trabalhista"
+    position: 9
+    honorario_percentual: 25
+    honorario_n_mensalidades:
+    honorario_na_tabela: true
+    items:
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        # CF art. 7º, XXIX e Súmula 308, I, TST (até 2 anos da saída; alcança os 5 anos anteriores ao ajuizamento)
+        content: "Quem saiu da empresa pode cobrar na Justiça o que ficou sem pagar durante o contrato e na saída: verbas rescisórias, horas extras, adicionais (insalubridade, periculosidade, noturno), FGTS, diferença por desvio de função ou salário por fora, e indenização por assédio. O pedido tem de ser feito em até 2 anos depois da saída e alcança os 5 anos anteriores à entrada da ação. Nunca prometer resultado nem valor."
+        position: 0
+      - section: "documento"
+        title: "Carteira de trabalho e termo de rescisão (TRCT)"
+        content: "Datas, salário registrado e o que foi pago na saída."
+        position: 0
+      - section: "documento"
+        title: "Contracheques e extrato do FGTS"
+        content: "Mostram horas extras, adicionais e depósitos que faltaram."
+        position: 1
+      - section: "documento"
+        title: "Cartões de ponto, mensagens e nomes de testemunhas"
+        content: "Provam a jornada real, a função exercida e o que aconteceu no trabalho."
+        position: 2

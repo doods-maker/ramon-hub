@@ -1,0 +1,92 @@
+# APROVADO pelo Eduardo 14/10. Fonte: comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §2.2
+# (itens [CONFERIR] lidos na fonte oficial antes de ativar). Mudar texto aqui depois do aprovado = novo aprovado dele.
+tese: "Trabalhista — rescisão indireta" # mesmo nome do theses_seed.yml (o seed acha a tese pelo nome)
+passos:
+  - chave: processo_anterior
+    titulo: "Já entrou na Justiça por isso"
+    orientacao: "Pergunte se já entrou com algum processo contra a empresa por causa disso. Processo sobre outro assunto não conta. Se o processo foi arquivado sem julgamento (ex.: faltou à audiência), escolha 'Sim, foi arquivado sem julgamento'."
+    tipo_resposta: escolha
+    opcoes: ["Não", "Sim, e perdeu", "Sim, foi arquivado sem julgamento", "Sim, em andamento, com acordo ou ganhou", "Não sabe"]
+    saidas:
+      - id: nao
+        quando: "Não"
+        acao: seguir
+      - id: perdeu
+        quando: "Sim, e perdeu"
+        acao: desqualificar
+        motivo: "já entrou na Justiça contra a empresa e perdeu"
+        mensagem: "Entendi, obrigado por me contar. Como esse caso já passou pela Justiça, infelizmente não conseguimos ajudar com ele. Se precisar de nós em outro assunto, é só chamar."
+      - id: outro
+        quando: "*"
+        acao: humano
+        motivo: "já houve processo contra a empresa (arquivado, em andamento, acordo ou ganho) ou não sabe: avaliar"
+
+  - chave: ainda_trabalha
+    titulo: "Ainda trabalha na empresa"
+    orientacao: "Pergunte se ainda trabalha na empresa (afastado pelo INSS ou de férias também conta como ainda trabalhando) ou se já saiu."
+    tipo_resposta: escolha
+    opcoes: ["Ainda trabalha lá", "Já saiu", "Não ficou claro"]
+    saidas:
+      - id: trabalha
+        quando: "Ainda trabalha lá"
+        acao: seguir
+        efeitos: { etiqueta: "rescisao-indireta" }
+      - id: saiu
+        quando: "Já saiu"
+        acao: humano
+        motivo: "caso de outra tese: já saiu da empresa (direito suprimido ou reconhecimento de vínculo)"
+      - id: nao_claro
+        quando: "*"
+        acao: humano
+        motivo: "não ficou claro se ainda trabalha na empresa"
+
+  - chave: funcao
+    titulo: "Função na empresa"
+    orientacao: "Pergunte em qual função trabalha na empresa."
+    tipo_resposta: texto
+
+  - chave: queixa
+    titulo: "O que está acontecendo na empresa"
+    orientacao: "Descubra o problema com a empresa. Pergunte uma coisa por vez, nesta ordem, e pare quando a pessoa contar uma queixa: qual a sua maior reclamação da empresa? · está recebendo o salário em dia? · teve acidente ou doença por causa do serviço? · já sofreu pressão demais, constrangimento ou humilhação de algum chefe? · colocaram você em função diferente da contratada ou mudaram seu local de trabalho? · trabalha exposto a risco sem receber adicional de insalubridade ou periculosidade? · faz muita hora extra, e pagam certo? · as últimas férias foram pagas no prazo, com o terço a mais? · a empresa cortou algum benefício de costume, como plano de saúde ou vale-refeição? Quando aparecer a queixa, peça: 'pode me contar um pouco mais sobre isso?'. Registre no valor um resumo da queixa com as palavras da pessoa."
+    tipo_resposta: texto
+
+  - chave: hipotese
+    titulo: "Enquadramento da queixa"
+    # CLT art. 483 (faltas graves do empregador); FGTS: TST Tema Repetitivo 70 (24/02/2025). "3 meses" no rótulo é só triagem
+    # interna (base: art. 483, "d"; o TST já aceitou 2 meses de atraso) — nenhum texto ao lead diz que a lei exige 3 meses.
+    orientacao: "Não pergunte nada ao lead neste passo. Com o que ele contou, escolha a hipótese que melhor descreve a queixa; se houver mais de uma, a mais grave. 'Nenhuma' só quando nada do que ele contou é problema com a empresa; se há uma queixa que você não sabe encaixar, 'Não tem certeza'."
+    tipo_resposta: escolha
+    opcoes:
+      - "Salário atrasado (3 meses ou atraso todo mês)"
+      - "Férias, 13º ou FGTS sem pagar ou sem depositar"
+      - "Salário por fora ou sem carteira assinada"
+      - "Contratado como PJ ou MEI, mas trabalha como empregado"
+      - "Desvio ou acúmulo de função sem pagar a mais"
+      - "Redução de salário, corte de benefício ou mudança imposta de função, local ou horário"
+      - "Insalubridade ou periculosidade sem adicional, sem EPI ou com risco grave"
+      - "Jornada exaustiva, hora extra sem pagar ou sem intervalo"
+      - "Assédio moral, humilhação, ofensa ou agressão"
+      - "Assédio sexual"
+      - "Acidente ou doença do trabalho sem suporte da empresa"
+      - "Exigência de fazer algo ilegal"
+      - "Nenhuma"
+      - "Não tem certeza"
+    saidas:
+      - id: nenhuma
+        quando: "Nenhuma"
+        acao: desqualificar
+        motivo: "rescisão indireta: nenhuma falta grave da empresa no relato"
+        mensagem: "Obrigado por responder com sinceridade. Com o que você me contou, a princípio não há base para pedir a rescisão indireta. Se acontecer alguma irregularidade no trabalho, pode me chamar."
+      - id: duvida
+        quando: "Não tem certeza"
+        acao: humano
+        motivo: "rescisão indireta: queixa sem enquadramento claro"
+      - id: pejotizacao
+        quando: "Contratado como PJ ou MEI, mas trabalha como empregado"
+        acao: humano
+        motivo: "pejotização (PJ/MEI): tema em discussão no STF (Tema 1.389), equipe avalia" # Tema 1.389: suspensão nacional 14/04/2025, tramitação liberada na 1ª instância e nos TRTs em 18/06/2026, TST suspenso, mérito pendente — reconferir no STF no dia do seed
+      - id: enquadrou
+        quando: "*"
+        acao: concluir
+        mensagem: "Pelo que você me contou, seu caso tem pontos que vale a pena um advogado olhar com calma. Até conversar com ele, não peça demissão nem deixe de ir ao trabalho por conta própria: o advogado orienta o caminho certo."
+        efeitos: { etapa: "Qualificação" }

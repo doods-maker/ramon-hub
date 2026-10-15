@@ -6,6 +6,7 @@ export const TESES = [
   'aposentadoria-invalidez',
   'bpc-loas',
   'acrescimo-25',
+  'trabalhista',
   'geral',
 ];
 // Valor do filtro para as FAQs sem tese (ex.: geradas de documento).

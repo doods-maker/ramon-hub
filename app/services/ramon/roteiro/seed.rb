@@ -1,6 +1,7 @@
 # Seed dos roteiros da tese (spec 2026-10-13 §3.10, F4): db/seeds/ramon/roteiros/*.yml, comuns.yml primeiro.
-# Idempotente: passo achado por (tese, chave); editado na tela (edited, F2) fica como está. Tese que falta é criada fora da
-# tabela de honorário (a IA não cita valor); `antes:` acha a tese pelo nome antigo e renomeia (D19), sem trocar o id.
+# Idempotente: passo achado por (tese, chave); editado na tela (edited, F2) fica como está. Tese que falta é criada pelo
+# theses_seed.yml quando está lá (área, honorário, playbook); senão fora da tabela de honorário (a IA não cita valor);
+# `antes:` acha a tese pelo nome antigo e renomeia (D19), sem trocar o id.
 # Tudo numa transação: no fim a Conferencia da tela (F2) roda nos passos do seed e qualquer erro desfaz tudo.
 # Posições 0-based, como o reorder da tela (F2). ponytail: passo que sai do YAML não é apagado — apaga-se pela tela.
 class Ramon::Roteiro::Seed
@@ -39,11 +40,18 @@ class Ramon::Roteiro::Seed
   end
 
   def tese_de(dados)
-    tese = @account.theses.find_by(name: [dados['tese'], *dados['antes']]) ||
-           @account.theses.new(area: 'previdenciario', position: @account.theses.maximum(:position).to_i + 1)
-    @contagem[:teses_criadas] += 1 if tese.new_record?
+    tese = @account.theses.find_by(name: [dados['tese'], *dados['antes']]) || tese_nova(dados['tese'])
     tese.update!(name: dados['tese'])
     tese
+  end
+
+  # Tese que falta na conta: a do theses_seed.yml (área, honorário e playbook) se estiver lá; senão previdenciária fora da tabela.
+  def tese_nova(nome)
+    @contagem[:teses_criadas] += 1
+    cadastro = Leads::SeedDefaultConfigService.tese_do_seed(nome)
+    return Leads::SeedDefaultConfigService.new(@account).seed_thesis(cadastro) if cadastro
+
+    @account.theses.new(area: 'previdenciario', position: @account.theses.maximum(:position).to_i + 1)
   end
 
   def semear_passo(tese, attrs, posicao)
