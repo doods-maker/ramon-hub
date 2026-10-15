@@ -411,7 +411,9 @@ theses:
         content: "Medos, experiência ruim anterior, pressa, família — vai no dossiê."
         position: 26
 
-  - name: "BPC/LOAS por deficiência"
+  # Nome atual (o roteiro renomeou em 14/10, roteiros/bpc-loas.yml). Itens do idoso: RASCUNHO 15/10
+  # (comercial/docs/2026-10-15-playbook-teses-rascunho.md §3) — só valem com o aprovado do Eduardo.
+  - name: "BPC/LOAS (idoso ou pessoa com deficiência)"
     description: "Benefício assistencial de 1 salário mínimo a pessoa com deficiência de baixa renda. NÃO exige contribuição ao INSS. Lei 8.742/93, art. 20."
     area: "previdenciario"
     position: 4
@@ -474,6 +476,27 @@ theses:
       - section: "documento"
         title: "Comprovante de residência e gastos com saúde"
         content: "Embasa a despesa que reduz a renda disponível."
+        position: 4
+      - section: "abertura"
+        title: "Quebra-gelo (idoso 65+)"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. O benefício é para alguém com 65 anos ou mais? Se a renda da casa for baixa, pode haver direito a um salário mínimo por mês, mesmo sem nunca ter contribuído para o INSS."
+        position: 1
+      - section: "apresentacao"
+        title: "Como apresentar a tese (idoso 65+)"
+        # Lei 8.742/93, art. 20 caput e §3º (conferido 13/10, roteiros-f4-citacoes.md)
+        content: "O BPC também vale para quem tem 65 anos ou mais e baixa renda, sem precisar de deficiência nem de contribuição ao INSS. A regra da renda é a mesma: em regra, até 1/4 do salário mínimo por pessoa da casa, e o benefício do INSS ou o BPC de até 1 salário mínimo de outro idoso (65 anos ou mais) ou de pessoa com deficiência da casa não entra na conta."
+        position: 1
+      - section: "qualificacao"
+        title: "A pessoa do benefício tem 65 anos ou mais?"
+        content: "Qualificado: 65 anos ou mais dispensa a deficiência; segue para renda, CadÚnico e outro benefício. Menos de 65: precisa de deficiência de longo prazo."
+        position: 4
+      - section: "objecao"
+        title: "Tenho mais de 65 anos, mas nunca paguei o INSS."
+        content: "O BPC do idoso é justamente para isso: é para quem tem 65 anos ou mais e baixa renda, mesmo sem nunca ter contribuído."
+        position: 3
+      - section: "objecao"
+        title: "Meu marido já é aposentado, então eu não tenho direito."
+        content: "Depende do valor: o benefício do INSS ou o BPC de até 1 salário mínimo de outro idoso (65 anos ou mais) ou de pessoa com deficiência da casa não entra na conta da renda. A equipe faz a conta com você."
         position: 4
 
   - name: "Acréscimo de 25% (grande invalidez)"
@@ -561,6 +584,40 @@ theses:
         title: "Fotos, vídeos, mensagens e nomes de testemunhas"
         content: "Mostram como o acidente aconteceu e as condições de trabalho (falta de EPI, de treinamento)."
         position: 3
+      # Abertura, qualificação e objeções: RASCUNHO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §2).
+      # Objeções = as FAQs trabalhistas aprovadas em 14/10, no formato do Playbook.
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você quer saber sobre acidente ou doença do trabalho. Me conta o que aconteceu, quando foi e se você ainda trabalha na empresa?"
+        position: 0
+      - section: "qualificacao"
+        title: "O acidente ou a doença tem ligação com o trabalho?"
+        content: "Qualificado: acidente no serviço (ou no caminho do trabalho) ou doença que o trabalho causou ou piorou, com culpa da empresa (falta de EPI, de treinamento, de pausa, máquina sem proteção) ou atividade de risco."
+        position: 0
+      - section: "qualificacao"
+        title: "Ficou alguma sequela ou limitação?"
+        content: "Qualificado: sequela física ou emocional que limita o trabalho ou a vida. Sem sequela, o caso enfraquece (o roteiro decide)."
+        position: 1
+      - section: "qualificacao"
+        title: "Ainda trabalha na empresa? Se saiu, quando?"
+        content: "Qualificado: ainda trabalha, ou saiu há menos de 2 anos e o acidente (ou o começo dos sintomas) foi há menos de 5 anos. Fora do prazo contra a empresa: ver auxílio-acidente no INSS."
+        position: 2
+      - section: "objecao"
+        title: "A empresa não abriu a CAT, então não dá para pedir."
+        content: "A falta da CAT não impede o pedido: atestados, laudos, mensagens e testemunhas também ajudam a provar o que aconteceu."
+        position: 0
+      - section: "objecao"
+        title: "O acidente foi há anos, já passou o prazo."
+        content: "Depende de duas datas: quando saiu da empresa (até 2 anos) e quando aconteceu o acidente ou começaram os sintomas (até 5 anos). A gente confere essas datas. E mesmo quando o prazo contra a empresa passou, pode haver auxílio-acidente no INSS."
+        position: 1
+      - section: "objecao"
+        title: "Tenho medo de a empresa ficar sabendo e me mandar embora."
+        content: "A conversa com o escritório é sigilosa: a empresa só fica sabendo se o processo for proposto. Quem ficou afastado pelo INSS por acidente do trabalho, em regra, tem 12 meses de estabilidade depois do fim do benefício. O advogado orienta o melhor jeito de agir."
+        position: 2
+      - section: "objecao"
+        title: "Achei caro o honorário de 30%."
+        content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
+        position: 3
 
   - name: "Trabalhista — rescisão indireta"
     description: "Para quem ainda trabalha na empresa e sofre falta grave do empregador (salário atrasado, FGTS sem depósito, assédio, risco sem proteção): pede-se na Justiça o fim do contrato com as verbas de uma demissão sem justa causa."
@@ -588,6 +645,35 @@ theses:
         title: "Mensagens, áudios, fotos e nomes de testemunhas"
         content: "Provam assédio, ordens fora da função, jornada e condições de risco."
         position: 2
+      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você está passando por problema na empresa onde trabalha. Me conta o que está acontecendo e há quanto tempo você está lá?"
+        position: 0
+      - section: "qualificacao"
+        title: "Ainda trabalha na empresa?"
+        content: "Qualificado: ainda trabalha (afastado pelo INSS ou de férias conta). Quem já saiu vai para direito suprimido."
+        position: 0
+      - section: "qualificacao"
+        title: "Qual a falta da empresa?"
+        content: "Qualificado: falta grave, como salário atrasado, FGTS sem depósito, assédio, serviço fora do contrato ou risco sem proteção."
+        position: 1
+      - section: "qualificacao"
+        title: "Já entrou na Justiça por isso?"
+        content: "Qualificado: não. Processo arquivado sem julgamento: equipe avalia."
+        position: 2
+      - section: "objecao"
+        title: "Vou pedir demissão e depois eu processo."
+        content: "Antes de falar com o advogado, não peça demissão nem deixe de ir ao trabalho: sair do jeito errado pode virar pedido de demissão e você perder direitos. O advogado orienta o caminho e o momento certo."
+        position: 0
+      - section: "objecao"
+        title: "Tenho medo de a empresa descobrir que procurei advogado."
+        content: "A conversa com o escritório é sigilosa: a empresa só fica sabendo se o processo for proposto. O advogado orienta o melhor jeito de agir enquanto você ainda trabalha lá."
+        position: 1
+      - section: "objecao"
+        title: "Achei caro o honorário de 30%."
+        content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
+        position: 2
 
   - name: "Trabalhista — reconhecimento de vínculo"
     description: "Para quem trabalhou sem carteira assinada (ou como PJ/MEI) do jeito de um empregado e saiu há até 2 anos: reconhecimento do vínculo e os direitos do período (férias, 13º, FGTS, verbas da saída)."
@@ -613,6 +699,35 @@ theses:
       - section: "documento"
         title: "Mensagens, fotos, crachá, uniforme e nomes de testemunhas"
         content: "Provam a rotina, as ordens e o horário — o coração do vínculo."
+        position: 2
+      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você trabalhou sem carteira assinada. Me conta o que você fazia lá, por quanto tempo e quando saiu?"
+        position: 0
+      - section: "qualificacao"
+        title: "Trabalhou sem carteira e já saiu? Quando?"
+        content: "Qualificado: trabalhou sem carteira (ou como PJ/MEI) e saiu há menos de 2 anos."
+        position: 0
+      - section: "qualificacao"
+        title: "Era sempre você, com frequência, recebendo e seguindo ordens e horário?"
+        content: "Qualificado: os 4 pontos do vínculo — era sempre a pessoa (não mandava outro), trabalho frequente, pagamento e ordens ou horário. O roteiro avalia."
+        position: 1
+      - section: "qualificacao"
+        title: "Prestava o serviço como pessoa física ou por PJ/MEI?"
+        content: "Atenção: PJ/MEI é tema em discussão no STF; sempre com a equipe."
+        position: 2
+      - section: "objecao"
+        title: "Não tenho nada por escrito, então não tenho como provar."
+        content: "Não precisa de contrato escrito: PIX, recibos, mensagens, fotos, crachá, uniforme e colegas que viram o trabalho provam a rotina. A equipe vê o que você tem."
+        position: 0
+      - section: "objecao"
+        title: "Eu era MEI ou PJ, então não tenho direito."
+        content: "Pode contar, porque o que vale é como o trabalho acontecia na prática. Mas esse tipo de caso está em discussão no Supremo, então um advogado da equipe olha com atenção antes de qualquer passo."
+        position: 1
+      - section: "objecao"
+        title: "Achei caro o honorário de 30%."
+        content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 2
 
   - name: "Trabalhista — direito suprimido"
@@ -640,6 +755,39 @@ theses:
         title: "Cartões de ponto, mensagens e nomes de testemunhas"
         content: "Provam a jornada real, a função exercida e o que aconteceu no trabalho."
         position: 2
+      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você saiu da empresa e acha que ficou sem receber algum direito. Me conta o que aconteceu e quando você saiu?"
+        position: 0
+      - section: "qualificacao"
+        title: "Tinha carteira e já saiu? Quando?"
+        content: "Qualificado: tinha carteira e saiu há menos de 2 anos. Sem carteira: reconhecimento de vínculo. Ainda trabalha: rescisão indireta."
+        position: 0
+      - section: "qualificacao"
+        title: "O que a empresa deixou de pagar ou fez de errado?"
+        content: "Qualificado: um direito claro, como verbas da saída, horas extras, adicional, FGTS, desvio de função, salário por fora ou assédio."
+        position: 1
+      - section: "qualificacao"
+        title: "Como saiu da empresa?"
+        content: "Só para a reunião: demitido, pediu demissão, acordo ou fim de contrato. Qualquer resposta segue."
+        position: 2
+      - section: "objecao"
+        title: "Pedi demissão, então não tenho direito a nada."
+        content: "Mesmo quem pede demissão pode ter valores a receber, como hora extra sem pagar, FGTS não depositado, adicional ou salário por fora. O que muda são algumas verbas da saída. O advogado confere o seu caso."
+        position: 0
+      - section: "objecao"
+        title: "Assinei a rescisão, então não dá para cobrar mais nada."
+        content: "Assinar o termo de rescisão não impede, em regra, de cobrar o que não foi pago ou foi pago a menos. O advogado confere item por item."
+        position: 1
+      - section: "objecao"
+        title: "Quero saber quanto vou receber antes de decidir."
+        content: "O valor depende dos documentos (carteira, contracheques, rescisão, FGTS) e do que for provado. Quem faz essa conta é o advogado, olhando os seus papéis; por aqui não dá para dar um número sem chutar."
+        position: 2
+      - section: "objecao"
+        title: "Achei caro o honorário de 30%."
+        content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
+        position: 3
 
   # APROVADO pelo Eduardo 14/10 (comercial/docs/2026-10-14-tese-isencao-ir-rascunho.md §1 e §4).
   # Mesmo nome do roteiro (roteiros/isencao-ir.yml). Honorário do JUR-02 = faixa definida caso a caso → fora da tabela.
@@ -703,3 +851,93 @@ theses:
         title: "Carta de concessão da aposentadoria ou pensão"
         content: "Data de início do benefício (se a doença é anterior, a isenção conta da aposentadoria)."
         position: 3
+
+  # RASCUNHO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §1) — só vale com o aprovado do Eduardo.
+  # Mesmo nome do roteiro (roteiros/salario-maternidade.yml). Fora da tabela do JUR-02: a IA não cita valor.
+  # Base: Lei 8.213/91, arts. 71, 71-A, 72 e 73; ADI 2.110 (STF) + IN PRES/INSS 188/2025 (sem carência);
+  # IN 128/2022, art. 357 §5º (5 anos) e art. 358 I (natimorto); rural: art. 39 p.ú. (12 meses de atividade) — revisor 15/10
+  # (comercial/docs/2026-10-15-playbook-teses-citacoes.md).
+  - name: "Salário-maternidade"
+    description: "Pago por 120 dias à mãe que tem bebê, adota ou recebe guarda para fins de adoção. Sem carência desde a ADI 2.110. Lei 8.213/91, arts. 71 a 73."
+    area: "previdenciario"
+    position: 11
+    honorario_percentual:
+    honorario_n_mensalidades:
+    honorario_na_tabela: false
+    items:
+      - section: "abertura"
+        title: "Quebra-gelo"
+        content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você quer saber do salário-maternidade. Você está grávida ou o bebê já nasceu? E como você trabalhava nessa época?"
+        position: 0
+      - section: "abertura"
+        title: "Quebra-gelo (pedido negado)"
+        content: "Olá {{nome}}! O INSS negou o seu salário-maternidade? Muitas vezes isso tem solução. Me conta quando o bebê nasceu e o que o INSS respondeu."
+        position: 1
+      - section: "apresentacao"
+        title: "Como apresentar a tese"
+        content: "O salário-maternidade é pago por 120 dias a quem tem bebê (também quando o bebê nasce sem vida), adota ou recebe a guarda para fins de adoção; em aborto não criminoso, são 2 semanas. Quem tem carteira em empresa recebe pela empresa. Doméstica, empregada de MEI, intermitente, MEI, autônoma, quem paga o carnê como dona de casa, a desempregada ainda protegida pelo INSS e a trabalhadora rural ou pescadora recebem direto do INSS. O INSS não exige mais os 10 meses de contribuição de quem paga o INSS (decisão do STF); a trabalhadora rural ou pescadora não paga carnê, mas precisa provar a atividade nos 12 meses antes do parto. O pedido pode ser feito em até 5 anos depois do parto. Nunca prometer resultado; honorário fora da tabela: o advogado explica."
+        position: 0
+      - section: "qualificacao"
+        title: "Está grávida, o bebê já nasceu ou é adoção?"
+        content: "Qualificado: gravidez, parto (inclusive bebê que nasceu sem vida), adoção ou guarda para fins de adoção. Guarda com outra finalidade não dá direito. Aborto: equipe avalia."
+        position: 0
+      - section: "qualificacao"
+        title: "Quando foi (ou vai ser) o parto?"
+        content: "Qualificado: parto previsto ou há menos de 5 anos. Entre 4 e 5 anos: equipe, pelo risco de prazo. Mais de 5 anos: só se já tinha pedido no INSS."
+        position: 1
+      - section: "qualificacao"
+        title: "Como você trabalhava na data do parto?"
+        content: "Qualificado: doméstica, empregada de MEI, intermitente, MEI ou autônoma em dia, dona de casa que paga o carnê, desempregada dentro do período de graça, ou rural/pescadora com atividade nos 12 meses antes do parto (equipe). Carteira em empresa: quem paga é a empresa; equipe vê se há caso trabalhista. Nunca contribuiu e não é rural: não se encaixa."
+        position: 2
+      - section: "qualificacao"
+        title: "Já recebeu ou já pediu o salário-maternidade por este parto?"
+        content: "Qualificado: não recebeu. Pedido negado ou parado há mais de 30 dias: equipe."
+        position: 3
+      - section: "objecao"
+        title: "Não paguei 10 meses de INSS, então não tenho direito."
+        content: "Essa exigência caiu: o STF decidiu que não pode cobrar os 10 meses, e o INSS já segue. O que importa é estar contribuindo, ou ainda protegida pelo INSS, na data do parto."
+        position: 0
+      - section: "objecao"
+        title: "Estou desempregada, então não tenho direito."
+        content: "Quem sai do emprego continua protegida pelo INSS por um tempo, em regra 12 meses, que pode passar disso. Se o parto foi dentro desse prazo, o INSS paga direto. A gente confere as datas com você."
+        position: 1
+      - section: "objecao"
+        title: "O bebê já tem mais de um ano, já passou o prazo."
+        content: "O pedido pode ser feito em até 5 anos depois do parto. Me conta a data que a gente confere."
+        position: 2
+      - section: "objecao"
+        title: "Sou MEI ou autônoma, achei que só quem tem carteira recebe."
+        content: "Quem paga o INSS como MEI, autônoma ou mesmo como dona de casa também tem direito, e recebe direto do INSS."
+        position: 3
+      - section: "objecao"
+        title: "Trabalho na roça e não tenho como provar."
+        content: "Dá para provar com os papéis do dia a dia dos 12 meses antes do parto: bloco de produtor, notas de venda da produção, contrato de arrendamento, declaração do Imposto de Renda com renda rural; ficha do sindicato e carteira de pescadora também ajudam. A equipe olha o que você tem."
+        position: 4
+      - section: "objecao"
+        title: "O INSS negou, então não adianta."
+        content: "A negativa do INSS não é a palavra final. Muitas caem por erro na análise das contribuições ou das datas; dá para recorrer ou ir à Justiça com a documentação certa."
+        position: 5
+      - section: "documento"
+        title: "Documento de identidade e CPF da mãe"
+        content: "Identificação da segurada."
+        position: 0
+      - section: "documento"
+        title: "Certidão de nascimento do bebê (ou termo de guarda ou adoção)"
+        content: "Prova o fato e a data. Grávida: atestado médico com a data provável do parto."
+        position: 1
+      - section: "documento"
+        title: "Carteira de trabalho, CNIS e guias pagas (carnê ou DAS do MEI)"
+        content: "Mostram como contribuía e se ainda estava protegida pelo INSS na data do parto."
+        position: 2
+      - section: "documento"
+        title: "Termo de rescisão e seguro-desemprego (se saiu do emprego)"
+        content: "Data da saída e prova do desemprego, que pode estender a proteção do INSS."
+        position: 3
+      - section: "documento"
+        title: "Carta de indeferimento ou protocolo do INSS (se já pediu)"
+        content: "Mostra o motivo da negativa e a data do pedido."
+        position: 4
+      - section: "documento"
+        title: "Documentos da atividade rural ou da pesca (se for o caso)"
+        content: "Dos 12 meses antes do parto: bloco de produtor, notas de venda da produção, contrato de arrendamento ou parceria, declaração do Imposto de Renda com renda rural; carteira de pescadora (RGP) e ficha do sindicato também ajudam."
+        position: 5

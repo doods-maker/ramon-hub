@@ -8,6 +8,7 @@ export const TESES = [
   'acrescimo-25',
   'trabalhista',
   'isencao-ir',
+  'salario-maternidade',
   'geral',
 ];
 // Valor do filtro para as FAQs sem tese (ex.: geradas de documento).

@@ -34,7 +34,7 @@ class Captain::AssistantResponse < ApplicationRecord
 
   # FORK-PONTO (ramon): tese da FAQ (I-FQ1) = nome do arquivo do seed; nil = sem tese.
   # Mesma lista e ordem de captain/responses/teses.js (front).
-  TESES = %w[auxilio-acidente auxilio-doenca aposentadoria-invalidez bpc-loas acrescimo-25 trabalhista isencao-ir geral].freeze
+  TESES = %w[auxilio-acidente auxilio-doenca aposentadoria-invalidez bpc-loas acrescimo-25 trabalhista isencao-ir salario-maternidade geral].freeze
 
   validates :question, presence: true
   validates :answer, presence: true

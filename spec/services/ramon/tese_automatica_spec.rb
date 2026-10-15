@@ -9,7 +9,7 @@ RSpec.describe Ramon::TeseAutomatica do
   let!(:acidente) do
     account.theses.find_by!(name: 'Auxílio-acidente (B36)').tap { |t| t.update!(palavras_chave: ['auxílio-acidente', 'acidente de trabalho']) }
   end
-  let!(:bpc) { account.theses.find_by!(name: 'BPC/LOAS por deficiência').tap { |t| t.update!(palavras_chave: %w[bpc loas]) } }
+  let!(:bpc) { account.theses.find_by!(name: 'BPC/LOAS (idoso ou pessoa com deficiência)').tap { |t| t.update!(palavras_chave: %w[bpc loas]) } }
 
   def mensagem(texto, **attrs)
     create(:message, account: account, conversation: conversation, message_type: :incoming, content: texto, **attrs)
