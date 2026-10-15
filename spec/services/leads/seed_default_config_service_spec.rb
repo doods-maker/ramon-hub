@@ -47,8 +47,8 @@ RSpec.describe Leads::SeedDefaultConfigService do
     expect(novo.reload.color).to eq('#6b7280')
   end
 
-  it 'semeia as 5 teses de incapacidade, as 4 trabalhistas e a de isenção de IR, com mais de 60 itens de playbook' do
-    expect(account.theses.count).to eq(10)
+  it 'semeia as 5 teses de incapacidade, as 4 trabalhistas, a de isenção de IR e a de salário-maternidade, com mais de 60 itens de playbook' do
+    expect(account.theses.count).to eq(11)
     expect(ThesisItem.where(thesis: account.theses).count).to be > 60
   end
 
@@ -71,7 +71,8 @@ RSpec.describe Leads::SeedDefaultConfigService do
     end
   end
 
-  ['BPC/LOAS por deficiência', 'Acréscimo de 25% (grande invalidez)', 'Isenção de IR por doença grave'].each do |nome|
+  ['BPC/LOAS (idoso ou pessoa com deficiência)', 'Acréscimo de 25% (grande invalidez)', 'Isenção de IR por doença grave',
+   'Salário-maternidade'].each do |nome|
     it "deixa #{nome} fora da tabela, sem honorário" do
       tese = account.theses.find_by!(name: nome)
       expect(tese).to have_attributes(honorario_percentual: nil, honorario_n_mensalidades: nil, honorario_na_tabela: false)
@@ -89,7 +90,7 @@ RSpec.describe Leads::SeedDefaultConfigService do
   end
 
   it 'NÃO sobrescreve honorário customizado da tese no re-seed' do
-    tese = account.theses.find_by!(name: 'BPC/LOAS por deficiência')
+    tese = account.theses.find_by!(name: 'BPC/LOAS (idoso ou pessoa com deficiência)')
     tese.update!(honorario_percentual: 25, honorario_n_mensalidades: 2)
 
     described_class.new(account).perform

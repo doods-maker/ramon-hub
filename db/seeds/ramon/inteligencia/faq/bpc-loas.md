@@ -1,5 +1,5 @@
 ---
-tese: BPC/LOAS por deficiência
+tese: BPC/LOAS (idoso ou pessoa com deficiência)
 ---
 
 ## O que é o BPC/LOAS?

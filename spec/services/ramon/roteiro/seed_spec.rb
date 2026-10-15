@@ -10,6 +10,8 @@ RSpec.describe Ramon::Roteiro::Seed do
   def semear = Ramon::Roteiro::Seed.new(account, dir: dir).run
 
   before do
+    # Conta de antes de 15/10: o theses_seed.yml criava o BPC com o nome antigo, que o roteiro renomeia.
+    account.theses.find_by!(name: 'BPC/LOAS (idoso ou pessoa com deficiência)').update!(name: 'BPC/LOAS por deficiência')
     arquivo('comuns.yml', <<~YAML)
       tese: null
       passos:
