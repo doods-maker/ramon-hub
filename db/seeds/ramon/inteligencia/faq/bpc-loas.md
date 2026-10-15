@@ -3,7 +3,10 @@ tese: BPC/LOAS por deficiência
 ---
 
 ## O que é o BPC/LOAS?
-É um benefício assistencial de 1 salário mínimo por mês pra pessoa com deficiência de baixa renda. Não precisa ter contribuído pro INSS. Exige dois pontos: deficiência de longo prazo (efeitos por pelo menos 2 anos) e renda familiar baixa.
+É um benefício assistencial de 1 salário mínimo por mês pra quem tem 65 anos ou mais, ou pra pessoa com deficiência de longo prazo (efeitos por pelo menos 2 anos), com renda familiar baixa. Não precisa ter contribuído pro INSS.
+
+## Tenho mais de 65 anos e nunca paguei o INSS. Tenho direito ao BPC?
+Pode ter, sim. O BPC do idoso é pra quem tem 65 anos ou mais e baixa renda, mesmo sem nunca ter contribuído e sem precisar ter deficiência. Me conta quantas pessoas moram com você e quanto entra por mês na casa que a gente confere.
 
 ## Nunca contribuí pro INSS. Tenho direito ao BPC?
 No BPC é exatamente ao contrário: ele foi feito pra quem não contribuiu. O que conta é a deficiência e a baixa renda, não as contribuições.
