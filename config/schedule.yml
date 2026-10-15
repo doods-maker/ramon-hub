@@ -97,6 +97,12 @@ ramon_night_copilot_job:
   class: 'Ramon::NightCopilotJob'
   queue: scheduled_jobs
 
+# de hora em hora: avisa o SDR antes de fechar a janela grátis do WhatsApp (custo da Meta, frente D)
+ramon_janela_whatsapp_job:
+  cron: '7 * * * *'
+  class: 'Ramon::JanelaWhatsappJob'
+  queue: scheduled_jobs
+
 # a cada minuto: retoma execuções de fluxo cuja espera venceu (Automações em fluxo)
 ramon_fluxo_relogio_job:
   cron: '*/1 * * * *'
