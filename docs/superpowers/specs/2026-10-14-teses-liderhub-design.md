@@ -33,7 +33,7 @@ FAQ/objeções da tese, reescritas dentro do Provimento 205/2021.
     URGENTE · `prescrito` → desqualifica.
   - acidente/doença: `prescricao_5_anos` (existente) — `dentro` segue · `ultimo_ano` (4–5 anos) → humano ·
     `prescrito` com sequela → humano, motivo "aux.-acidente (trabalhista prescrito)".
-- Honorário: **25% do êxito** (POP JUR-02) — `honorario_formula: percentual`, a IA pode citar.
+- Honorário: **30% do êxito** (decisão do Eduardo 15/10; o JUR-02 dizia 25%) — `honorario_formula: percentual`, a IA pode citar.
 - Limite do modo "sozinha até…": **até reunião** (não há modelo ZapSign trabalhista ainda).
 - Humano → responsável do lead (comercial); a Dra. Rafaela entra na reunião.
 

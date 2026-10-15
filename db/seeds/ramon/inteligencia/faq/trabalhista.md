@@ -6,9 +6,9 @@ tese: Trabalhista (acidente ou doença do trabalho · rescisão indireta · reco
 ---
 
 ## Quanto custa o processo trabalhista? Quanto vocês cobram?
-Você não paga nada para começar. O nosso honorário é 25% do valor que você receber no processo, e só existe se você receber. Sem entrada e sem mensalidade. Na conversa com o advogado, ele também explica se o processo pode ter algum outro custo no seu caso.
+Você não paga nada para começar. O nosso honorário é 30% do valor que você receber no processo, e só existe se você receber. Sem entrada e sem mensalidade. Na conversa com o advogado, ele também explica se o processo pode ter algum outro custo no seu caso.
 
-## Achei caro o honorário de 25% no trabalhista.
+## Achei caro o honorário de 30% no trabalhista.
 Entendo, é natural querer saber para onde vai cada real. O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. Se quiser, o advogado explica na conversa, com calma, como funciona no seu caso.
 
 ## O escritório é de outra cidade. Dá para fazer tudo à distância?
