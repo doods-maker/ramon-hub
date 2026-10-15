@@ -484,7 +484,7 @@ theses:
       - section: "apresentacao"
         title: "Como apresentar a tese (idoso 65+)"
         # Lei 8.742/93, art. 20 caput e §3º (conferido 13/10, roteiros-f4-citacoes.md)
-        content: "O BPC também vale para quem tem 65 anos ou mais e baixa renda, sem precisar de deficiência nem de contribuição ao INSS. A regra da renda é a mesma: em regra, até 1/4 do salário mínimo por pessoa da casa, e a aposentadoria ou o BPC de até 1 salário mínimo de outro idoso (65 anos ou mais) ou de pessoa com deficiência da casa não entra na conta."
+        content: "O BPC também vale para quem tem 65 anos ou mais e baixa renda, sem precisar de deficiência nem de contribuição ao INSS. A regra da renda é a mesma: em regra, até 1/4 do salário mínimo por pessoa da casa, e o benefício do INSS ou o BPC de até 1 salário mínimo de outro idoso (65 anos ou mais) ou de pessoa com deficiência da casa não entra na conta."
         position: 1
       - section: "qualificacao"
         title: "A pessoa do benefício tem 65 anos ou mais?"
@@ -496,7 +496,7 @@ theses:
         position: 3
       - section: "objecao"
         title: "Meu marido já é aposentado, então eu não tenho direito."
-        content: "Depende do valor: a aposentadoria ou o BPC de até 1 salário mínimo de outro idoso (65 anos ou mais) ou de pessoa com deficiência da casa não entra na conta da renda. A equipe faz a conta com você."
+        content: "Depende do valor: o benefício do INSS ou o BPC de até 1 salário mínimo de outro idoso (65 anos ou mais) ou de pessoa com deficiência da casa não entra na conta da renda. A equipe faz a conta com você."
         position: 4
 
   - name: "Acréscimo de 25% (grande invalidez)"
@@ -612,7 +612,7 @@ theses:
         position: 1
       - section: "objecao"
         title: "Tenho medo de a empresa ficar sabendo e me mandar embora."
-        content: "A conversa com o escritório é sigilosa: a empresa só fica sabendo se o processo for proposto. Quem ficou afastado pelo INSS por acidente do trabalho, em regra, tem 12 meses de estabilidade depois da volta. O advogado orienta o melhor jeito de agir."
+        content: "A conversa com o escritório é sigilosa: a empresa só fica sabendo se o processo for proposto. Quem ficou afastado pelo INSS por acidente do trabalho, em regra, tem 12 meses de estabilidade depois do fim do benefício. O advogado orienta o melhor jeito de agir."
         position: 2
       - section: "objecao"
         title: "Achei caro o honorário de 30%."
@@ -855,7 +855,8 @@ theses:
   # RASCUNHO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §1) — só vale com o aprovado do Eduardo.
   # Mesmo nome do roteiro (roteiros/salario-maternidade.yml). Fora da tabela do JUR-02: a IA não cita valor.
   # Base: Lei 8.213/91, arts. 71, 71-A, 72 e 73; ADI 2.110 (STF) + IN PRES/INSS 188/2025 (sem carência);
-  # IN 128/2022, art. 357 §5º (5 anos) — conferidos em roteiros-f4-citacoes.md; o resto no revisor de 15/10.
+  # IN 128/2022, art. 357 §5º (5 anos) e art. 358 I (natimorto); rural: art. 39 p.ú. (12 meses de atividade) — revisor 15/10
+  # (comercial/docs/2026-10-15-playbook-teses-citacoes.md).
   - name: "Salário-maternidade"
     description: "Pago por 120 dias à mãe que tem bebê, adota ou recebe guarda para fins de adoção. Sem carência desde a ADI 2.110. Lei 8.213/91, arts. 71 a 73."
     area: "previdenciario"
@@ -874,7 +875,7 @@ theses:
         position: 1
       - section: "apresentacao"
         title: "Como apresentar a tese"
-        content: "O salário-maternidade é pago por 120 dias a quem tem bebê (também quando o bebê nasce sem vida), adota ou recebe a guarda para fins de adoção; em aborto não criminoso, são 2 semanas. Quem tem carteira em empresa recebe pela empresa. Doméstica, empregada de MEI, intermitente, MEI, autônoma, quem paga o carnê como dona de casa, a desempregada ainda protegida pelo INSS e a trabalhadora rural ou pescadora recebem direto do INSS. O INSS não exige mais os 10 meses de contribuição (decisão do STF). O pedido pode ser feito em até 5 anos depois do parto. Nunca prometer resultado; honorário fora da tabela: o advogado explica."
+        content: "O salário-maternidade é pago por 120 dias a quem tem bebê (também quando o bebê nasce sem vida), adota ou recebe a guarda para fins de adoção; em aborto não criminoso, são 2 semanas. Quem tem carteira em empresa recebe pela empresa. Doméstica, empregada de MEI, intermitente, MEI, autônoma, quem paga o carnê como dona de casa, a desempregada ainda protegida pelo INSS e a trabalhadora rural ou pescadora recebem direto do INSS. O INSS não exige mais os 10 meses de contribuição de quem paga o INSS (decisão do STF); a trabalhadora rural ou pescadora não paga carnê, mas precisa provar a atividade nos 12 meses antes do parto. O pedido pode ser feito em até 5 anos depois do parto. Nunca prometer resultado; honorário fora da tabela: o advogado explica."
         position: 0
       - section: "qualificacao"
         title: "Está grávida, o bebê já nasceu ou é adoção?"
@@ -886,7 +887,7 @@ theses:
         position: 1
       - section: "qualificacao"
         title: "Como você trabalhava na data do parto?"
-        content: "Qualificado: doméstica, empregada de MEI, intermitente, MEI ou autônoma em dia, dona de casa que paga o carnê, desempregada dentro do período de graça, ou rural/pescadora (equipe). Carteira em empresa: quem paga é a empresa; equipe vê se há caso trabalhista. Nunca contribuiu e não é rural: não se encaixa."
+        content: "Qualificado: doméstica, empregada de MEI, intermitente, MEI ou autônoma em dia, dona de casa que paga o carnê, desempregada dentro do período de graça, ou rural/pescadora com atividade nos 12 meses antes do parto (equipe). Carteira em empresa: quem paga é a empresa; equipe vê se há caso trabalhista. Nunca contribuiu e não é rural: não se encaixa."
         position: 2
       - section: "qualificacao"
         title: "Já recebeu ou já pediu o salário-maternidade por este parto?"
@@ -910,7 +911,7 @@ theses:
         position: 3
       - section: "objecao"
         title: "Trabalho na roça e não tenho como provar."
-        content: "Dá para provar com os papéis do dia a dia: bloco de produtor, contrato de arrendamento, ficha do sindicato, documentos que mostram que mora e trabalha na área rural. A equipe olha o que você tem."
+        content: "Dá para provar com os papéis do dia a dia dos 12 meses antes do parto: bloco de produtor, notas de venda da produção, contrato de arrendamento, declaração do Imposto de Renda com renda rural; ficha do sindicato e carteira de pescadora também ajudam. A equipe olha o que você tem."
         position: 4
       - section: "objecao"
         title: "O INSS negou, então não adianta."
@@ -938,5 +939,5 @@ theses:
         position: 4
       - section: "documento"
         title: "Documentos da atividade rural ou da pesca (se for o caso)"
-        content: "Bloco de produtor, ITR, contrato de arrendamento, carteira de pescadora (RGP), ficha do sindicato."
+        content: "Dos 12 meses antes do parto: bloco de produtor, notas de venda da produção, contrato de arrendamento ou parceria, declaração do Imposto de Renda com renda rural; carteira de pescadora (RGP) e ficha do sindicato também ajudam."
         position: 5

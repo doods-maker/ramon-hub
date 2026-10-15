@@ -23,7 +23,7 @@ Tem, se estava pagando o INSS. Quem paga como MEI, autônoma ou até como dona d
 Dá, sim. O pedido pode ser feito em até 5 anos depois do parto. Me conta a data que a gente confere.
 
 ## Trabalho na roça. Tenho direito ao salário-maternidade?
-Pode ter, mesmo sem nunca ter pago o INSS, se você trabalha na roça ou na pesca com a família. A prova é feita com os papéis do dia a dia, como bloco de produtor, contrato de arrendamento ou ficha do sindicato. A equipe olha o que você tem.
+Pode ter, mesmo sem nunca ter pago o INSS, se você trabalhou na roça ou na pesca nos 12 meses antes do parto. A prova é feita com os papéis do dia a dia, como bloco de produtor, notas de venda da produção ou contrato de arrendamento. A equipe olha o que você tem.
 
 ## Adotei uma criança. Tenho direito ao salário-maternidade?
 Tem, sim: na adoção ou na guarda para fins de adoção também são 120 dias, sem limite de idade da criança.
