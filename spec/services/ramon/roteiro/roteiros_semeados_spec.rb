@@ -8,6 +8,11 @@ RSpec.describe 'Ramon::Roteiro (roteiros semeados)' do # rubocop:disable RSpec/D
   let(:acidente) { 'Auxílio-acidente (B36)' }
   let(:bpc) { 'BPC/LOAS (idoso ou pessoa com deficiência)' }
   let(:maternidade) { 'Salário-maternidade' }
+  let(:trab_acidente) { 'Trabalhista — acidente ou doença do trabalho' }
+  let(:trab_ri) { 'Trabalhista — rescisão indireta' }
+  let(:trab_vinculo) { 'Trabalhista — reconhecimento de vínculo' }
+  let(:trab_ds) { 'Trabalhista — direito suprimido' }
+  let(:ir) { 'Isenção de IR por doença grave' }
 
   before do
     travel_to Time.zone.local(2026, 10, 14, 12)
@@ -29,13 +34,14 @@ RSpec.describe 'Ramon::Roteiro (roteiros semeados)' do # rubocop:disable RSpec/D
 
   def comuns = [%w[nome Maria], %w[tem_advogado não]]
 
-  it 'semeia 3 passos comuns e 17/10/12 nas teses; rodar de novo não cria nada' do
+  it 'semeia 3 passos comuns, 17/10/12 nas previdenciárias, 6 na de IR e 7/5/14/7 nas trabalhistas; rodar de novo não cria nada' do
     contar = ->(nome) { RoteiroPasso.where(account: account, thesis: nome && account.theses.find_by!(name: nome)).count }
 
-    expect([nil, acidente, bpc, maternidade].map(&contar)).to eq([3, 17, 10, 12])
+    expect([nil, acidente, bpc, maternidade, ir].map(&contar)).to eq([3, 17, 10, 12, 6])
+    expect([trab_acidente, trab_ri, trab_vinculo, trab_ds].map(&contar)).to eq([7, 5, 14, 7])
 
     de_novo = Ramon::Roteiro::Seed.new(account).run
-    expect(de_novo).to include(passos_atualizados: 42)
+    expect(de_novo).to include(passos_atualizados: 81)
     expect(de_novo).not_to have_key(:passos_criados)
   end
 
@@ -113,5 +119,73 @@ RSpec.describe 'Ramon::Roteiro (roteiros semeados)' do # rubocop:disable RSpec/D
 
     expect(fora[:estado]).to include('desfecho' => 'desqualificado')
     expect(rural[:estado]).to include('desfecho' => 'humano', 'motivo' => include('rural'))
+  end
+
+  # Teses trabalhistas (rascunho 14/10): prazos pelas calculadoras, a tese não muda dentro do roteiro.
+  it 'trabalhista acidente: sequela da lista e dentro dos prazos → qualificado; saiu há mais de 2 anos → equipe (aux.-acidente)' do
+    base = [*comuns, %w[processo_anterior Não], ['evento', 'Acidente no trabalho ou no trajeto'],
+            ['sequela', 'perdeu força na mão', 'na_lista'], ['ainda_trabalha', 'Já saiu']]
+    lead = lead_da(trab_acidente)
+    ok = responder(lead, *base, %w[data_saida 2025-10-15], %w[data_evento 2024-10-15], ['cat_afastamento', 'Só a CAT'])
+    prescrito = responder(lead_da(trab_acidente), *base, %w[data_saida 2023-06-15])
+
+    expect(ok[:estado]).to include('desfecho' => 'qualificado')
+    expect(lead.conversation.reload.label_list).to include('trab-acidente')
+    expect(prescrito[:estado]).to include('desfecho' => 'humano', 'motivo' => include('aux.-acidente'))
+  end
+
+  it 'trabalhista rescisão indireta: queixa enquadrada → qualificado; quem já saiu vai para a equipe (outra tese)' do
+    base = [*comuns, %w[processo_anterior Não]]
+    ri = responder(lead_da(trab_ri), *base, ['ainda_trabalha', 'Ainda trabalha lá'], %w[funcao pedreiro],
+                   ['queixa', 'o salário atrasa todo mês'], ['hipotese', 'Salário atrasado (3 meses ou atraso todo mês)'])
+    saiu = responder(lead_da(trab_ri), *base, ['ainda_trabalha', 'Já saiu'])
+
+    expect(ri[:estado]).to include('desfecho' => 'qualificado')
+    expect(saiu[:estado]).to include('desfecho' => 'humano', 'motivo' => include('outra tese'))
+  end
+
+  it 'trabalhista vínculo: a IA julga no fim; saiu há mais de 2 anos é desqualificado' do
+    base = [*comuns, %w[processo_anterior Não], ['situacao', 'Sem carteira e já saiu']]
+    perguntas = %w[funcao pf_ou_pj horario pagamento tempo_servico dias_semana faltas punicoes ordens substituto].map { |c| [c, 'resposta'] }
+    vinculo = responder(lead_da(trab_vinculo), *base, %w[data_saida 2026-03-15], *perguntas, ['julgamento', 'os 4 aparecem', 'vinculo'])
+    prescrito = responder(lead_da(trab_vinculo), *base, %w[data_saida 2024-01-15])
+
+    expect(vinculo[:estado]).to include('desfecho' => 'qualificado')
+    expect(prescrito[:estado]).to include('desfecho' => 'desqualificado')
+  end
+
+  it 'trabalhista direito suprimido: nenhuma hipótese → desqualificado; prazo de 2 anos vencendo → equipe URGENTE' do
+    base = [*comuns, %w[processo_anterior Não], ['situacao', 'Tinha carteira e já saiu']]
+    nenhuma = responder(lead_da(trab_ds), *base, %w[data_saida 2026-01-15], %w[funcao vendedor], ['tipo_saida', 'Pediu demissão'],
+                        ['queixa', 'nada de errado'], %w[hipotese Nenhuma])
+    urgente = responder(lead_da(trab_ds), *base, %w[data_saida 2024-12-15])
+
+    expect(nenhuma[:estado]).to include('desfecho' => 'desqualificado')
+    expect(urgente[:estado]).to include('desfecho' => 'humano', 'motivo' => start_with('URGENTE'))
+  end
+
+  it 'isenção de IR: aposentado do INSS acima do corte, com doença da lista e laudo → qualificado' do
+    lead = lead_da(ir)
+    res = responder(lead, *comuns, ['aposentado', 'Aposentado ou pensionista do INSS'], ['renda', 'R$ 6.500,00'],
+                    ['doenca', 'câncer de mama, operei em 2022', 'da_lista'], %w[diagnostico 2022-03-15],
+                    ['ja_pediu', 'Nunca pediu'], %w[laudo Tem])
+
+    expect(res[:estado]).to include('desfecho' => 'qualificado')
+    expect(res[:estado].dig('respostas', 'doenca', 'valor')).to include('câncer')
+    expect(lead.conversation.reload.label_list).to include('isencao-ir')
+  end
+
+  it 'isenção de IR: renda até o corte vai para a equipe; regime próprio e doença fora da lista são desqualificados' do
+    inss = [*comuns, ['aposentado', 'Aposentado ou pensionista do INSS']]
+    corte = responder(lead_da(ir), *inss, %w[renda 5000])
+    lead_servidor = lead_da(ir)
+    servidor = responder(lead_servidor, *comuns, ['aposentado', 'Servidor público aposentado ou pensionista de regime próprio'])
+    fora = responder(lead_da(ir), *inss, %w[renda 7000], ['doenca', 'pressão alta controlada', 'fora_da_lista'])
+
+    expect(corte[:estado]).to include('desfecho' => 'humano', 'motivo' => include('restituição'))
+    expect(servidor[:estado]).to include('desfecho' => 'desqualificado')
+    expect(account.copilot_suggestions.pending.find_by!(lead: lead_servidor, kind: 'acao').payload)
+      .to include('lost_reason' => 'Fora da área')
+    expect(fora[:estado]).to include('desfecho' => 'desqualificado', 'motivo' => include('lista legal'))
   end
 end

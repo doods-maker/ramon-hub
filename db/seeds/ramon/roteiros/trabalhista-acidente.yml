@@ -1,0 +1,141 @@
+# APROVADO pelo Eduardo 14/10. Fonte: comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §2.1
+# (itens [CONFERIR] lidos na fonte oficial antes de ativar). Mudar texto aqui depois do aprovado = novo aprovado dele.
+tese: "Trabalhista — acidente ou doença do trabalho" # mesmo nome do theses_seed.yml (o seed acha a tese pelo nome)
+passos:
+  - chave: processo_anterior
+    titulo: "Já entrou na Justiça por isso"
+    orientacao: "Pergunte se já entrou com algum processo contra a empresa por causa disso. Processo sobre outro assunto não conta. Se o processo foi arquivado sem julgamento (ex.: faltou à audiência), escolha 'Sim, foi arquivado sem julgamento'."
+    tipo_resposta: escolha
+    opcoes: ["Não", "Sim, e perdeu", "Sim, foi arquivado sem julgamento", "Sim, em andamento, com acordo ou ganhou", "Não sabe"]
+    saidas:
+      - id: nao
+        quando: "Não"
+        acao: seguir
+      - id: perdeu
+        quando: "Sim, e perdeu"
+        acao: desqualificar
+        motivo: "já entrou na Justiça contra a empresa e perdeu"
+        mensagem: "Entendi, obrigado por me contar. Como esse caso já passou pela Justiça, infelizmente não conseguimos ajudar com ele. Se precisar de nós em outro assunto, é só chamar."
+      - id: outro
+        quando: "*"
+        acao: humano
+        motivo: "já houve processo contra a empresa (arquivado, em andamento, acordo ou ganho) ou não sabe: avaliar"
+
+  - chave: evento
+    titulo: "Acidente ou doença ligada ao trabalho"
+    orientacao: "Peça para a pessoa contar o que aconteceu. Escolha pela história: acidente no serviço ou no caminho de casa para o trabalho (ou na volta), ou doença que o trabalho causou ou piorou (ex.: dor por movimento repetitivo, problema de coluna por carregar peso, perda de audição por barulho, depressão ou ansiedade por assédio). Se não ficar claro, pergunte com jeito: 'isso começou ou piorou por causa do serviço?'"
+    tipo_resposta: escolha
+    opcoes: ["Acidente no trabalho ou no trajeto", "Doença causada ou piorada pelo trabalho", "Sem ligação com o trabalho", "Não ficou claro"]
+    saidas:
+      - id: acidente
+        quando: "Acidente no trabalho ou no trajeto"
+        acao: seguir
+        efeitos: { etiqueta: "trab-acidente" }
+      - id: doenca
+        quando: "Doença causada ou piorada pelo trabalho"
+        acao: seguir
+        efeitos: { etiqueta: "trab-acidente" }
+      - id: sem_ligacao
+        quando: "Sem ligação com o trabalho"
+        acao: humano
+        motivo: "caso de outra tese: acidente ou doença sem ligação com o trabalho (ver auxílio-acidente ou benefício do INSS)"
+      - id: nao_claro
+        quando: "*"
+        acao: humano
+        motivo: "não ficou claro se o acidente ou a doença tem ligação com o trabalho"
+
+  - chave: sequela
+    titulo: "Sequela ou limitação"
+    orientacao: "Pergunte se hoje ficou alguma limitação ou sequela, física ou emocional, por causa disso, e peça para explicar qual. Compare com esta lista: amputação; perda de visão ou cegueira parcial; perda auditiva ou zumbido crônico; limitação de movimento ou rigidez nas juntas; redução de força; deformidade óssea ou artrose depois de fratura; hérnia de disco crônica; paresia, neuropatia ou tremores permanentes; queimadura extensa ou cicatriz que repuxa; dermatite crônica; silicose, asbestose ou bronquite ocupacional; trombose ou varizes graves; depressão crônica, ansiedade permanente, burnout ou estresse pós-traumático; pinos ou próteses. Registre no valor a sequela com as palavras da pessoa. Não peça documentos aqui."
+    tipo_resposta: texto
+    saidas:
+      - id: na_lista
+        quando: "ficou sequela que está na lista"
+        acao: seguir
+      - id: fora_da_lista
+        quando: "sequela fora da lista, ou só sente dor"
+        acao: humano
+        motivo: "sequela fora da lista ou só dor: equipe analisa e pede os documentos médicos"
+      - id: em_tratamento
+        quando: "ainda em tratamento ou não sabe dizer se ficou sequela"
+        acao: humano
+        motivo: "sequela incerta ou ainda em tratamento"
+      - id: sem_sequela
+        quando: "não ficou nenhuma sequela"
+        acao: humano
+        motivo: "sem sequela: pode ter outro direito trabalhista"
+        mensagem: "Que bom que você se recuperou! Mesmo assim, vale alguém da equipe olhar se tem outro ponto do seu trabalho para analisar."
+
+  - chave: ainda_trabalha
+    titulo: "Ainda trabalha na empresa"
+    orientacao: "Pergunte se ainda trabalha na empresa onde aconteceu (afastado pelo INSS também conta como ainda trabalhando) ou se já saiu."
+    tipo_resposta: escolha
+    opcoes: ["Ainda trabalha lá", "Já saiu"]
+    saidas:
+      - id: trabalha
+        quando: "Ainda trabalha lá"
+        acao: ir_para
+        alvo: data_evento
+      - id: saiu
+        quando: "Já saiu"
+        acao: seguir
+
+  - chave: data_saida
+    titulo: "Data da saída da empresa"
+    # [CONFERIR] CF art. 7º, XXIX (2 anos) e OJ 82/83 SDI-1 TST (data da baixa na carteira inclui o aviso prévio)
+    orientacao: "Pergunte quando saiu da empresa. Se tinha carteira, peça a data de saída anotada na carteira de trabalho; se não souber, o último dia de trabalho. Só mês e ano: registre o dia 15."
+    tipo_resposta: data
+    calculadora: prescricao_2_anos
+    calculadora_campos: { saida: data_saida }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: seguir
+      - id: ultimos_meses
+        quando: "ultimos_meses"
+        acao: humano
+        motivo: "URGENTE: prazo de 2 anos vencendo (saída da empresa)"
+      - id: prescrito
+        quando: "prescrito"
+        acao: humano
+        motivo: "aux.-acidente (trabalhista prescrito): saiu da empresa há mais de 2 anos"
+      - id: depende
+        quando: "*"
+        acao: humano
+        motivo: "não deu para calcular o prazo de 2 anos da saída"
+
+  - chave: data_evento
+    titulo: "Data do acidente ou do início dos sintomas"
+    # [CONFERIR] CF art. 7º, XXIX (5 anos) e Súmula 278 STJ (prazo conta da ciência da incapacidade)
+    orientacao: "Pergunte quando foi o acidente; na doença, quando começaram os sintomas. Só mês e ano: registre o dia 15."
+    tipo_resposta: data
+    calculadora: prescricao_5_anos
+    calculadora_campos: { data: data_evento }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: seguir
+      - id: ultimo_ano
+        quando: "ultimo_ano"
+        acao: humano
+        motivo: "acidente ou início dos sintomas há 4 a 5 anos: prazo de 5 anos perto de vencer"
+      - id: prescrito
+        quando: "prescrito"
+        acao: humano
+        motivo: "aux.-acidente (trabalhista prescrito)"
+      - id: depende
+        quando: "*"
+        acao: humano
+        motivo: "não deu para calcular o prazo de 5 anos do acidente"
+
+  - chave: cat_afastamento
+    titulo: "CAT e afastamento pelo INSS"
+    orientacao: "Pergunte se a empresa fez o registro do acidente (a CAT) e se chegou a ficar afastado pelo INSS (auxílio-doença) por causa disso. É só para a reunião: qualquer resposta segue."
+    tipo_resposta: escolha
+    opcoes: ["CAT e afastamento", "Só a CAT", "Só o afastamento", "Nenhum dos dois", "Não sabe"]
+    saidas:
+      - id: qualificado
+        quando: "*"
+        acao: concluir
+        mensagem: "Pelo que você me contou, seu caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etapa: "Qualificação" }

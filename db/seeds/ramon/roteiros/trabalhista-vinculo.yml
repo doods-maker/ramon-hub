@@ -1,0 +1,141 @@
+# APROVADO pelo Eduardo 14/10. Fonte: comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §2.3
+# (itens [CONFERIR] lidos na fonte oficial antes de ativar). Mudar texto aqui depois do aprovado = novo aprovado dele.
+tese: "Trabalhista — reconhecimento de vínculo" # mesmo nome do theses_seed.yml (o seed acha a tese pelo nome)
+passos:
+  - chave: processo_anterior
+    titulo: "Já entrou na Justiça por isso"
+    orientacao: "Pergunte se já entrou com algum processo contra a empresa por causa disso. Processo sobre outro assunto não conta. Se o processo foi arquivado sem julgamento (ex.: faltou à audiência), escolha 'Sim, foi arquivado sem julgamento'."
+    tipo_resposta: escolha
+    opcoes: ["Não", "Sim, e perdeu", "Sim, foi arquivado sem julgamento", "Sim, em andamento, com acordo ou ganhou", "Não sabe"]
+    saidas:
+      - id: nao
+        quando: "Não"
+        acao: seguir
+      - id: perdeu
+        quando: "Sim, e perdeu"
+        acao: desqualificar
+        motivo: "já entrou na Justiça contra a empresa e perdeu"
+        mensagem: "Entendi, obrigado por me contar. Como esse caso já passou pela Justiça, infelizmente não conseguimos ajudar com ele. Se precisar de nós em outro assunto, é só chamar."
+      - id: outro
+        quando: "*"
+        acao: humano
+        motivo: "já houve processo contra a empresa (arquivado, em andamento, acordo ou ganho) ou não sabe: avaliar"
+
+  - chave: situacao
+    titulo: "Trabalhou sem carteira e já saiu"
+    orientacao: "Confirme, uma coisa de cada vez, se trabalhava sem carteira assinada e se já saiu do serviço."
+    tipo_resposta: escolha
+    opcoes: ["Sem carteira e já saiu", "Sem carteira e ainda trabalha lá", "Tinha carteira assinada", "Não ficou claro"]
+    saidas:
+      - id: saiu
+        quando: "Sem carteira e já saiu"
+        acao: seguir
+        efeitos: { etiqueta: "vinculo" }
+      - id: ainda_trabalha
+        quando: "Sem carteira e ainda trabalha lá"
+        acao: humano
+        motivo: "caso de outra tese: ainda trabalha sem carteira (rescisão indireta)"
+      - id: carteira
+        quando: "Tinha carteira assinada"
+        acao: humano
+        motivo: "caso de outra tese: tinha carteira assinada (direito suprimido)"
+      - id: nao_claro
+        quando: "*"
+        acao: humano
+        motivo: "não ficou claro se trabalhava sem carteira ou se já saiu"
+
+  - chave: data_saida
+    titulo: "Quando parou de trabalhar lá"
+    # [CONFERIR] CF art. 7º, XXIX (2 anos depois do fim do contrato)
+    orientacao: "Pergunte quando parou de trabalhar lá (o último dia). Só mês e ano: registre o dia 15."
+    tipo_resposta: data
+    calculadora: prescricao_2_anos
+    calculadora_campos: { saida: data_saida }
+    saidas:
+      - id: dentro
+        quando: "dentro"
+        acao: seguir
+      - id: ultimos_meses
+        quando: "ultimos_meses"
+        acao: humano
+        motivo: "URGENTE: prazo de 2 anos vencendo (saída do serviço)"
+      - id: prescrito
+        quando: "prescrito"
+        acao: desqualificar
+        motivo: "saiu há mais de 2 anos: prazo para entrar na Justiça vencido"
+        mensagem: "Obrigado por me contar. Pela lei, o pedido na Justiça do Trabalho precisa ser feito em até 2 anos depois que o trabalho termina, e esse prazo já passou no seu caso. Sinto muito não poder ajudar com isso."
+      - id: depende
+        quando: "*"
+        acao: humano
+        motivo: "não deu para calcular o prazo de 2 anos da saída"
+
+  - chave: funcao
+    titulo: "Função"
+    orientacao: "Pergunte qual era a função dele lá."
+    tipo_resposta: texto
+
+  - chave: pf_ou_pj
+    titulo: "Pessoa física ou PJ/MEI"
+    orientacao: "Pergunte, sem julgar, se prestava o serviço como pessoa física ou por meio de uma empresa (PJ ou MEI) aberta no nome dele."
+    tipo_resposta: texto
+
+  - chave: horario
+    titulo: "Horário de trabalho"
+    orientacao: "Pergunte se tinha que cumprir um horário de trabalho e qual era."
+    tipo_resposta: texto
+
+  - chave: pagamento
+    titulo: "Como era o pagamento"
+    orientacao: "Pergunte como era o pagamento: valor fixo por mês, por dia, por hora, por tarefa ou comissão."
+    tipo_resposta: texto
+
+  - chave: tempo_servico
+    titulo: "Quanto tempo trabalhou"
+    orientacao: "Pergunte por quanto tempo trabalhou lá (meses ou anos)."
+    tipo_resposta: texto
+
+  - chave: dias_semana
+    titulo: "Dias por semana"
+    orientacao: "Pergunte quantos dias por semana trabalhava lá."
+    tipo_resposta: texto
+
+  - chave: faltas
+    titulo: "Justificar faltas e atrasos"
+    orientacao: "Pergunte se precisava avisar ou justificar quando faltava ou se atrasava."
+    tipo_resposta: texto
+
+  - chave: punicoes
+    titulo: "Advertência ou desconto"
+    orientacao: "Pergunte se levava advertência, desconto ou bronca quando não cumpria uma ordem ou um prazo."
+    tipo_resposta: texto
+
+  - chave: ordens
+    titulo: "Recebia ordens"
+    orientacao: "Pergunte se recebia ordens durante o trabalho e de quem."
+    tipo_resposta: texto
+
+  - chave: substituto
+    titulo: "Podia mandar outra pessoa"
+    orientacao: "Pergunte se era sempre ele que ia trabalhar ou se podia mandar outra pessoa no lugar, e se isso já aconteceu."
+    tipo_resposta: texto
+
+  - chave: julgamento
+    titulo: "Avaliação do vínculo"
+    # [CONFERIR] CLT arts. 2º e 3º (requisitos do vínculo); LC 150/2015, art. 1º (doméstico: mais de 2 dias por semana); STF Tema 1.389 (reconferir no STF no dia do seed)
+    orientacao: "Não pergunte nada ao lead neste passo. Com as respostas, veja os 4 requisitos do vínculo de emprego: (1) pessoalidade: era sempre ele, não mandava outra pessoa no lugar; (2) não eventualidade: trabalho frequente e contínuo, não um bico de vez em quando (em casa de família, como doméstica, caseiro ou babá, precisa ser mais de 2 dias por semana); (3) onerosidade: recebia pagamento pelo trabalho; (4) subordinação: recebia ordens, tinha horário, prestava contas ou levava punição. Registre no valor uma linha por requisito (sim, não ou dúvida). Se prestava o serviço por PJ ou MEI aberto no nome dele, escolha a saída de dúvida mesmo que os 4 apareçam."
+    tipo_resposta: texto
+    saidas:
+      - id: vinculo
+        quando: "os 4 requisitos aparecem com clareza e não era PJ nem MEI"
+        acao: concluir
+        mensagem: "Pelo que você me contou, seu caso tem pontos que vale a pena um advogado olhar com calma."
+        efeitos: { etapa: "Qualificação" }
+      - id: sem_vinculo
+        quando: "falta claramente pelo menos um requisito (ex.: mandava outra pessoa no lugar, trabalhava só de vez em quando, não tinha ordens nem horário)"
+        acao: desqualificar
+        motivo: "vínculo: falta requisito do emprego (pessoalidade, frequência, pagamento ou subordinação)"
+        mensagem: "Obrigado por responder com sinceridade. Pelo que você me contou, o trabalho tinha mais jeito de serviço por conta própria do que de emprego, e o pedido de vínculo depende disso. Por isso, a princípio não conseguimos seguir com este caso."
+      - id: duvida
+        quando: "algum requisito em dúvida, ou prestava o serviço por PJ ou MEI"
+        acao: humano
+        motivo: "vínculo: dúvida sobre os requisitos ou pejotização (PJ/MEI)"

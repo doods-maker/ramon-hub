@@ -47,8 +47,8 @@ RSpec.describe Leads::SeedDefaultConfigService do
     expect(novo.reload.color).to eq('#6b7280')
   end
 
-  it 'semeia as 5 teses de incapacidade com mais de 60 itens de playbook' do
-    expect(account.theses.count).to eq(5)
+  it 'semeia as 5 teses de incapacidade, as 4 trabalhistas e a de isenção de IR, com mais de 60 itens de playbook' do
+    expect(account.theses.count).to eq(10)
     expect(ThesisItem.where(thesis: account.theses).count).to be > 60
   end
 
@@ -60,7 +60,8 @@ RSpec.describe Leads::SeedDefaultConfigService do
   {
     'Auxílio-acidente (B36)' => { pct: 30, n: 3, min: 3, base: 'sm' },
     'Auxílio por incapacidade temporária (auxílio-doença / B31)' => { pct: 30, n: nil, min: 1, base: 'sb' },
-    'Aposentadoria por incapacidade permanente (invalidez / B32)' => { pct: 30, n: nil, min: 3, base: 'sb' }
+    'Aposentadoria por incapacidade permanente (invalidez / B32)' => { pct: 30, n: nil, min: 3, base: 'sb' },
+    'Trabalhista — rescisão indireta' => { pct: 25, n: nil, min: nil, base: nil }
   }.each do |nome, v|
     it "seeda a linha JUR-02 de #{nome}" do
       tese = account.theses.find_by!(name: nome)
@@ -70,7 +71,7 @@ RSpec.describe Leads::SeedDefaultConfigService do
     end
   end
 
-  ['BPC/LOAS por deficiência', 'Acréscimo de 25% (grande invalidez)'].each do |nome|
+  ['BPC/LOAS por deficiência', 'Acréscimo de 25% (grande invalidez)', 'Isenção de IR por doença grave'].each do |nome|
     it "deixa #{nome} fora da tabela, sem honorário" do
       tese = account.theses.find_by!(name: nome)
       expect(tese).to have_attributes(honorario_percentual: nil, honorario_n_mensalidades: nil, honorario_na_tabela: false)

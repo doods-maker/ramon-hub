@@ -55,6 +55,28 @@ class Leads::SeedDefaultConfigService
     STAGES.find { |s| s[:label] == label }&.dig(:color) || '#1f93ff'
   end
 
+  # Cadastro de uma tese no theses_seed.yml, pelo nome (nil se não estiver lá). Usado pelo seed dos roteiros
+  # (Ramon::Roteiro::Seed) para criar, numa conta que já existe, a tese que ainda falta.
+  def self.tese_do_seed(nome)
+    return unless File.exist?(THESES_SEED_PATH)
+
+    YAML.safe_load_file(THESES_SEED_PATH)['theses'].find { |t| t['name'] == nome }
+  end
+
+  # Uma tese do theses_seed.yml com honorário e playbook (idempotente por nome e por item).
+  def seed_thesis(thesis_attrs)
+    thesis = @account.theses.find_or_create_by!(name: thesis_attrs['name']) do |t|
+      t.description = thesis_attrs['description']
+      t.area = thesis_attrs['area']
+      t.position = thesis_attrs['position']
+      t.assign_attributes(thesis_attrs.slice(*THESIS_HONORARIO_KEYS))
+      t.honorario_na_tabela ||= false
+    end
+    reconcile_thesis_honorario(thesis, thesis_attrs)
+    seed_thesis_items(thesis, thesis_attrs['items'] || [])
+    thesis
+  end
+
   private
 
   def seed_stages
@@ -131,17 +153,7 @@ class Leads::SeedDefaultConfigService
       return
     end
 
-    YAML.safe_load_file(THESES_SEED_PATH)['theses'].each do |thesis_attrs|
-      thesis = @account.theses.find_or_create_by!(name: thesis_attrs['name']) do |t|
-        t.description = thesis_attrs['description']
-        t.area = thesis_attrs['area']
-        t.position = thesis_attrs['position']
-        t.assign_attributes(thesis_attrs.slice(*THESIS_HONORARIO_KEYS))
-        t.honorario_na_tabela ||= false
-      end
-      reconcile_thesis_honorario(thesis, thesis_attrs)
-      seed_thesis_items(thesis, thesis_attrs['items'] || [])
-    end
+    YAML.safe_load_file(THESES_SEED_PATH)['theses'].each { |thesis_attrs| seed_thesis(thesis_attrs) }
   end
 
   # find_or_create_by! só roda o bloco na criação — tese já existente (ex.: seed

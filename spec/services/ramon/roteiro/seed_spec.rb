@@ -81,4 +81,19 @@ RSpec.describe Ramon::Roteiro::Seed do
     expect(account.theses.where(name: ['Tese quebrada', 'Tese nova do seed']).count).to eq(0)
     expect(account.theses.where(name: 'BPC/LOAS por deficiência').count).to eq(1)
   end
+
+  # Conta que já existia antes da tese entrar no theses_seed.yml (produção): nasce com área, honorário e playbook de lá.
+  it 'tese que falta na conta e está no theses_seed.yml nasce pelo cadastro de lá' do
+    account.theses.find_by!(name: 'Trabalhista — rescisão indireta').destroy!
+    arquivo('trab.yml', <<~YAML)
+      tese: "Trabalhista — rescisão indireta"
+      passos:
+        - { chave: funcao, titulo: "Função", tipo_resposta: texto }
+    YAML
+
+    expect(semear).to include(teses_criadas: 2)
+    tese = account.theses.find_by!(name: 'Trabalhista — rescisão indireta')
+    expect(tese).to have_attributes(area: 'trabalhista', honorario_percentual: 25, honorario_na_tabela: true)
+    expect(tese.thesis_items).not_to be_empty
+  end
 end
