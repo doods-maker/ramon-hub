@@ -26,10 +26,14 @@ RSpec.describe Ramon::JanelaWhatsappJob do
     expect(avisos.first.meta['label']).to include('a janela grátis do WhatsApp fecha às')
   end
 
-  it 'não avisa quando a janela ainda está longe de fechar ou já fechou' do
+  it 'não avisa quando a janela ainda está longe de fechar' do
     cliente_escreveu(10.hours)
     rodar
-    conversation.messages.delete_all
+
+    expect(avisos.count).to eq(0)
+  end
+
+  it 'não avisa quando a janela já fechou' do
     cliente_escreveu(30.hours)
     rodar
 
