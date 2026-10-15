@@ -1539,7 +1539,8 @@
       "REABRIR_PERDIDO": "Para reabrir, tire o lead do Perdido no funil.",
       "REABRIR_GANHO": "Lead ganho: o roteiro não reabre.",
       "PALAVRAS_CHAVE": "Palavras-chave",
-      "PALAVRAS_CHAVE_AJUDA": "Palavras da 1ª mensagem que indicam esta tese, separadas por vírgula",
+      "PALAVRAS_CHAVE_AJUDA": "Palavras ou frases da 1ª mensagem (ou do anúncio/LP) que indicam esta tese. Digite e aperte Enter; clique no × para tirar. Evite palavras que sirvam também para outra tese.",
+      "PALAVRAS_CHAVE_PLACEHOLDER": "Digite uma palavra-chave e aperte Enter",
       "EDITOR": {
         "COMUNS_TITULO": "Passos comuns do roteiro da IA",
         "COMUNS_AJUDA": "Valem para todas as teses e rodam antes do roteiro de cada uma.",
