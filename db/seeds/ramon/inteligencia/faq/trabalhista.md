@@ -45,7 +45,7 @@ Dá para analisar, sim. A falta da CAT não impede o pedido: atestados, laudos, 
 Depende de duas datas: quando você saiu da empresa (o pedido tem de ser feito em até 2 anos depois da saída) e quando aconteceu o acidente ou começaram os sintomas (até 5 anos). A gente confere essas datas com você. E mesmo quando o prazo contra a empresa já passou, pode haver um benefício do INSS, como o auxílio-acidente.
 
 ## Tenho estabilidade no emprego depois do acidente de trabalho?
-Em regra, quem fica afastado pelo INSS por acidente do trabalho (mais de 15 dias, com auxílio-doença acidentário) tem 12 meses de estabilidade depois que volta. O advogado confere se isso vale no seu caso.
+Em regra, quem fica afastado pelo INSS por acidente do trabalho (mais de 15 dias, com auxílio-doença acidentário) tem 12 meses de estabilidade depois que volta. Em doença causada pelo trabalho, o TST entende que a estabilidade pode existir mesmo sem esse afastamento, se for reconhecido que a doença tem relação com o trabalho, inclusive depois da demissão. O advogado confere se isso vale no seu caso.
 
 ## O que é rescisão indireta?
 É quando a empresa comete uma falta grave (por exemplo, atrasa salário, não deposita o FGTS, há assédio) e o trabalhador pede na Justiça para encerrar o contrato como se tivesse sido demitido sem justa causa, recebendo as verbas dessa demissão.
