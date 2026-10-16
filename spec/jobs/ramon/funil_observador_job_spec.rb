@@ -60,4 +60,17 @@ RSpec.describe Ramon::FunilObservadorJob do
     expect { described_class.perform_now(msg.id) }.not_to raise_error
     expect(tracker).to have_received(:capture_exception)
   end
+
+  it 'erro transitório do LLM não é engolido: agenda nova tentativa' do
+    msg = mensagem
+    allow(observador).to receive(:perform).and_raise(Ramon::LlmClient::TransientError, 'timeout')
+    expect { described_class.perform_now(msg.id) }.to have_enqueued_job(described_class).with(msg.id)
+  end
+
+  it 'mensagem apagada: sai sem erro' do
+    msg = mensagem
+    msg.destroy!
+    expect { described_class.perform_now(msg.id) }.not_to raise_error
+    expect(observador).not_to have_received(:perform)
+  end
 end

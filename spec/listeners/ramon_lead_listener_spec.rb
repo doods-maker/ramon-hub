@@ -140,7 +140,9 @@ RSpec.describe RamonLeadListener do
     end
 
     it 'mensagem enviada (outgoing) enfileira com espera de 10 minutos' do
-      expect { disparar(:outgoing) }.to have_enqueued_job(Ramon::FunilObservadorJob).at(10.minutes.from_now)
+      freeze_time do
+        expect { disparar(:outgoing) }.to have_enqueued_job(Ramon::FunilObservadorJob).at(10.minutes.from_now)
+      end
     end
 
     it 'mensagem recebida enfileira' do
