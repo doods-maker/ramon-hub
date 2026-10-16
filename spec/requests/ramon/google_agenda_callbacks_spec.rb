@@ -15,7 +15,7 @@ RSpec.describe 'Ramon Google Agenda callback', type: :request do
   def stub_troca(refresh: 'rt-novo')
     corpo = { access_token: 'at-novo', expires_in: 3600, token_type: 'Bearer', id_token: id_token }
     corpo[:refresh_token] = refresh if refresh
-    stub_request(:post, %r{oauth2.googleapis.com/o/oauth2/token}).to_return(
+    stub_request(:post, %r{accounts.google.com/o/oauth2/token}).to_return(
       status: 200, body: corpo.to_json, headers: { 'Content-Type' => 'application/json' }
     )
   end
@@ -64,7 +64,7 @@ RSpec.describe 'Ramon Google Agenda callback', type: :request do
   end
 
   it 'falha na troca do code redireciona com erro' do
-    stub_request(:post, %r{oauth2.googleapis.com/o/oauth2/token}).to_return(status: 400, body: { error: 'invalid_grant' }.to_json)
+    stub_request(:post, %r{accounts.google.com/o/oauth2/token}).to_return(status: 400, body: { error: 'invalid_grant' }.to_json)
     chamar(state_de(user))
     expect(response).to redirect_to("#{destino}?google=erro")
     expect(GoogleAgendaConta.count).to eq(0)
