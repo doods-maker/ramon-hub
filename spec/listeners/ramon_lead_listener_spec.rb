@@ -122,6 +122,50 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe '#message_created -> observador do funil' do
+    let(:lead) do
+      create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
+                    conversation: conversation, contact: contact)
+    end
+
+    def disparar(tipo, **attrs)
+      message = create(:message, account: account, conversation: conversation, message_type: tipo, content: 'oi', **attrs)
+      listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message))
+      message
+    end
+
+    before do
+      lead
+      Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'ensaio')
+    end
+
+    it 'mensagem enviada (outgoing) enfileira com espera de 10 minutos' do
+      expect { disparar(:outgoing) }.to have_enqueued_job(Ramon::FunilObservadorJob).at(10.minutes.from_now)
+    end
+
+    it 'mensagem recebida enfileira' do
+      expect { disparar(:incoming) }.to have_enqueued_job(Ramon::FunilObservadorJob)
+    end
+
+    it 'nota privada não enfileira' do
+      expect { disparar(:outgoing, private: true) }.not_to have_enqueued_job(Ramon::FunilObservadorJob)
+    end
+
+    it 'mensagem de atividade não enfileira' do
+      expect { disparar(:activity) }.not_to have_enqueued_job(Ramon::FunilObservadorJob)
+    end
+
+    it 'lead fechado não enfileira' do
+      lead.update_columns(lost_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
+      expect { disparar(:incoming) }.not_to have_enqueued_job(Ramon::FunilObservadorJob)
+    end
+
+    it 'peças todas off não enfileira' do
+      Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
+      expect { disparar(:incoming) }.not_to have_enqueued_job(Ramon::FunilObservadorJob)
+    end
+  end
+
   describe '#message_created -> IA casa anexo com item do checklist' do
     let(:lead) do
       create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
