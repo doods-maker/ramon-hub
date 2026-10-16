@@ -44,7 +44,7 @@ class Ramon::FunilTempoJob < ApplicationJob
       lead.with_lock { yield lead if parado?(lead, etapa) }
     rescue StandardError => e
       ChatwootExceptionTracker.new(e, account: account).capture_exception
-      Rails.logger.error("FunilTempoJob: lead #{lead.id} falhou (#{e.class}: #{e.message})")
+      Rails.logger.error("FunilTempoJob: lead #{lead.id} falhou (#{e.class})") # sem e.message: pode ter dado do lead (LGPD)
     end
   end
 

@@ -108,7 +108,7 @@ RSpec.describe Ramon::FunilRegras do
       expect(described_class.contrato_assinado(lead)).to be_nil
 
       expect(ChatwootExceptionTracker).to have_received(:new).with(an_instance_of(StandardError), account: account)
-      expect(Rails.logger).to have_received(:error).with(/StandardError: boom/)
+      expect(Rails.logger).to have_received(:error).with("FunilRegras falhou no lead #{lead.id}: StandardError")
     end
 
     it 'com a peça off não muda nada' do

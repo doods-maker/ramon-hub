@@ -49,7 +49,7 @@ class Ramon::FunilRegras
     yield
   rescue StandardError => e
     ChatwootExceptionTracker.new(e, account: lead.account).capture_exception
-    Rails.logger.error("FunilRegras falhou no lead #{lead.id}: #{e.class}: #{e.message}")
+    Rails.logger.error("FunilRegras falhou no lead #{lead.id}: #{e.class}") # sem e.message: pode ter dado do lead (LGPD)
     nil
   end
   private_class_method :marcar_ganho, :seguro
