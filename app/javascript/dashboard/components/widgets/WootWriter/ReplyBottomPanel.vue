@@ -11,10 +11,11 @@ import VideoCallButton from '../VideoCallButton.vue';
 import { INBOX_TYPES } from 'dashboard/helper/inbox';
 import { mapGetters } from 'vuex';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import BotaoSugerirHorarios from 'dashboard/routes/dashboard/ramon/components/conversation/BotaoSugerirHorarios.vue';
 
 export default {
   name: 'ReplyBottomPanel',
-  components: { NextButton, FileUpload, VideoCallButton },
+  components: { NextButton, FileUpload, VideoCallButton, BotaoSugerirHorarios },
   mixins: [inboxMixin],
   props: {
     isNote: {
@@ -395,6 +396,7 @@ export default {
         sm
         @click="toggleInsertArticle"
       />
+      <BotaoSugerirHorarios v-if="!isNote && !isEditorDisabled" />
     </div>
     <div class="right-wrap">
       <NextButton

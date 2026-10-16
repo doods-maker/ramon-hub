@@ -18,8 +18,54 @@ class Ramon::ReuniaoAgendamento
 
   # title = nome da reunião (atividade, sino); task_title = título da tarefa
   # (o Cal.com prefixa "Reunião Cal.com:" — o cancel/reschedule acham por ele).
-  def self.call(lead:, starts_at:, title:, task_title: title, user: nil, formato: 'video') # rubocop:disable Metrics/ParameterLists
-    new(lead, starts_at, title, user, formato).call(task_title)
+  # automatico: marcada pela IA (Captain) — com RAMON_AGENDA_CONFIRMACAO=on e modo piloto, a confirmação sai sozinha.
+  def self.call(lead:, starts_at:, title:, task_title: title, user: nil, formato: 'video', automatico: false) # rubocop:disable Metrics/ParameterLists
+    novo = new(lead, starts_at, title, user, formato)
+    novo.automatico = automatico
+    novo.call(task_title)
+  end
+
+  # Confirmação da reunião ao cliente (texto APROVADO 16/10): vira rascunho nas notas (NUNCA enviado) — ou, só se a IA marcou,
+  # RAMON_AGENDA_CONFIRMACAO=on e a conversa está em modo piloto, sai direto na conversa (sem o prefixo RASCUNHO).
+  def self.confirmar(task, automatico: false)
+    lead = task.lead
+    texto = confirmacao_texto(task)
+    return if automatico && enviar_confirmacao(lead, texto)
+
+    lead.lead_notes.create!(account: lead.account, body: "RASCUNHO (revisar antes de enviar) — confirmação de reunião:
+\"#{texto}\"".truncate(1000))
+  end
+
+  def self.confirmacao_texto(task)
+    convite = Ramon::Agenda::Convite.new(task)
+    linha = if task.formato == 'whatsapp' then Ramon::Agenda::Convite::MEIO_WHATSAPP
+            elsif task.meet_url.present? then "É por vídeo, neste link: #{task.meet_url}."
+            end
+    ["Oi #{task.lead.name.to_s.split.first.presence || 'cliente'}! Nossa conversa está confirmada pra #{quando(task.due_at)}.", linha,
+     "Pra salvar na sua agenda: #{convite.link_google}",
+     'Se não puder comparecer, me avise com antecedência que a gente remarca sem problema.'].compact.join(' ')
+  end
+
+  # true se mandou. Chave off (padrão), modo que não é piloto ou lead sem conversa: false → vira rascunho.
+  def self.enviar_confirmacao(lead, texto)
+    conversa = lead.conversation
+    return false unless conversa && chave_confirmacao_on? && Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversa))
+
+    conversa.messages.create!(message_type: :outgoing, account_id: conversa.account_id, inbox_id: conversa.inbox_id,
+                              sender: conversa.inbox.try(:captain_assistant), content: texto)
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
+
+  # ENV direto (padrão dos RAMON_FLUXO_*): GlobalConfigService.load gravaria o default no banco e passaria a ignorar o ENV.
+  def self.chave_confirmacao_on? = ENV.fetch('RAMON_AGENDA_CONFIRMACAO', 'off') == 'on'
+
+  # A confirmação de uma reunião marcada pela IA sai sozinha? (chave on + piloto + Google conectado do Closer, o caminho do job)
+  def self.envia_sozinha?(lead)
+    conversa = lead.conversation
+    conversa.present? && chave_confirmacao_on? && Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversa)) &&
+      lead.closer.present? && GoogleAgendaConta.de(lead.closer).present? && !Ramon::Fluxos::Reunioes.assumiu?(lead.account)
   end
 
   # Sem colisão na agenda de quem vai receber a reunião (o dono da tarefa; antes de existir, o Closer do lead ou o próximo da fila).
@@ -68,6 +114,8 @@ class Ramon::ReuniaoAgendamento
     "#{title} em #{when_text}".strip.truncate(255)
   end
 
+  attr_writer :automatico
+
   def initialize(lead, starts_at, title, user, formato = nil)
     @formato = formato
     @lead = lead
@@ -90,7 +138,7 @@ class Ramon::ReuniaoAgendamento
     task.update!({ due_at: @starts_at, formato: @formato }.compact)
     assumido = assumido?
     disparar('reuniao_marcada', dados('remarcada', assumido, 'resumo_antes' => self.class.resumo(@title, de)))
-    efeitos_da_remarcacao(de) unless assumido
+    efeitos_da_remarcacao(task, de) unless assumido
     Ramon::Fluxos::Reunioes.na_agenda(task, assumido)
     depois('reuniao_marcada')
     task
@@ -129,19 +177,20 @@ class Ramon::ReuniaoAgendamento
     @lead.lead_activities.create!(account: @lead.account, user: @user, kind: 'meeting_scheduled',
                                   to_value: self.class.resumo(@title, @starts_at))
     task = @lead.lead_tasks.create!(account: @lead.account, user: @user, title: task_title.truncate(255), kind: 'meeting',
-                                    due_at: @starts_at, formato: @formato || 'video')
+                                    due_at: @starts_at, formato: @formato || 'video', confirmacao_automatica: @automatico)
     advance_stage
     Ramon::Papeis.atribuir_closer!(@lead)
-    confirmation_draft
+    # com conta Google o rascunho nasce no GoogleAgendaPushJob, depois do Meet
+    self.class.confirmar(task, automatico: @automatico) unless task.rascunho_no_job?
     enqueue_reminders
     notify('ramon_meeting_scheduled', 'marcada', 'tarefa' => task.title) # a comparação lê a tarefa daqui (a viva pode mudar)
     Ramon::Fluxos::Reunioes.na_agenda(task, false)
   end
 
-  def efeitos_da_remarcacao(antes)
+  def efeitos_da_remarcacao(task, antes)
     @lead.lead_activities.create!(account: @lead.account, user: @user, kind: 'meeting_rescheduled',
                                   from_value: self.class.resumo(@title, antes), to_value: self.class.resumo(@title, @starts_at))
-    confirmation_draft
+    self.class.confirmar(task)
     enqueue_reminders
     # sino reaproveita o tipo "reunião marcada" (texto: com o horário novo)
     notify('ramon_meeting_scheduled', 'remarcada')
@@ -172,14 +221,6 @@ class Ramon::ReuniaoAgendamento
     return if stage.blank? || @lead.lead_stage.position >= stage.position
 
     @lead.update!(lead_stage: stage)
-  end
-
-  # Rascunho de confirmação (gatilho do compromisso) — estático, sem LLM. O fluxo "Reunião marcada" copia este texto.
-  def confirmation_draft
-    @lead.lead_notes.create!(account: @lead.account, body: <<~NOTA.strip.truncate(1000))
-      RASCUNHO (revisar antes de enviar) — confirmação de reunião:
-      "Oi #{primeiro_nome}! Nossa conversa está confirmada pra #{self.class.quando(@starts_at)}. Vou te esperar, tá? Se não puder comparecer, me avise com antecedência que a gente remarca sem problema."
-    NOTA
   end
 
   # Lembretes anti no-show: só offsets ainda no futuro; cancel/reschedule não

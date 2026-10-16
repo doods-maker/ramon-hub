@@ -8,6 +8,9 @@ json.formato task.formato
 json.meet_url task.meet_url
 json.completed_at task.completed_at
 json.created_at task.created_at
+# dono da agenda da reunião: chip e cor da pessoa na Agenda
+json.agenda_user_id task.agenda_user_id
+json.agenda_user_name task.agenda_user&.name
 json.lead_name task.lead.name
 # donos do lead: filtro "Minhas | Time" da Agenda
 json.sdr_id task.lead.sdr_id

@@ -49,6 +49,12 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     render json: { url: "#{ENV.fetch('FRONTEND_URL', '')}/portal/#{@lead.ensure_portal_token!}" }
   end
 
+  # "Sugerir horários" da caixa de resposta: livres do Closer do lead; sem Closer ou sem vaga → vazio.
+  def horarios_livres
+    livres = Ramon::Agenda::Disponibilidade.livres_do_lead(@lead, fixar: false)
+    render json: { horarios: livres.map(&:iso8601), texto: livres.empty? ? '' : Ramon::Agenda::Disponibilidade.texto(livres) }
+  end
+
   # Retomada W4 sob demanda (Onda D): botão "Preparar retomada" do painel.
   # Resultado (nota RASCUNHO + tarefa) chega pelos broadcasts de sempre.
   # Inelegível → 422 com o motivo (reason) pro painel explicar, sem enfileirar.

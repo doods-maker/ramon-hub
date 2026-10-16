@@ -28,8 +28,9 @@ RSpec.describe Ramon::Fluxos::CompararAgendamentos do
     travel_to(agora + 10.minutes) { Ramon::ReuniaoAgendamento.remarcar(task: tarefa, starts_at: inicio + 1.day) }
     travel_to(agora + 20.minutes) { Ramon::ReuniaoAgendamento.cancelar(task: tarefa.reload) }
     c = comparar
-    expect(c.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada igual], %w[remarcada igual], %w[cancelada igual]])
-    expect(c.relatorio).to include('Resultado: BATEU', '1 marcada(s) · 1 remarcada(s) · 1 cancelada(s)')
+    # O rascunho do código difere do texto do fluxo (decisão: a divergência fica até o dono decidir); o resto bate.
+    expect(c.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada diferente], %w[remarcada diferente], %w[cancelada igual]])
+    expect(c.relatorio).to include('1 marcada(s) · 1 remarcada(s) · 1 cancelada(s)')
   end
 
   it 'o que só um dos lados fez aparece na linha (e não bate)' do
@@ -46,7 +47,8 @@ RSpec.describe Ramon::Fluxos::CompararAgendamentos do
     marcar
     tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
     travel_to(agora + 30.seconds) { Ramon::ReuniaoAgendamento.remarcar(task: tarefa, starts_at: inicio + 1.day) }
-    expect(comparar.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada igual], %w[remarcada igual]])
+    # só o rascunho diverge (ver acima)
+    expect(comparar.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada diferente], %w[remarcada diferente]])
   end
 
   it 'evento que o fluxo não viu aparece como só no código' do

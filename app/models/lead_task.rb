@@ -5,6 +5,8 @@ class LeadTask < ApplicationRecord
 
   # Mudança que veio do Google: o hub aplica sem empurrar de volta (senão o cliente recebe o aviso do Google de novo).
   attr_accessor :sem_push_google
+  # Marcada pela IA (piloto): a confirmação ao cliente pode sair sozinha (Ramon::ReuniaoAgendamento.confirmar).
+  attr_accessor :confirmacao_automatica
 
   belongs_to :account
   belongs_to :lead
@@ -27,6 +29,15 @@ class LeadTask < ApplicationRecord
   after_create_commit :empurrar_para_google_criar, if: :reuniao_do_hub?
   after_update_commit :empurrar_para_google_atualizar, if: -> { reuniao_do_hub? && saved_changes.keys.intersect?(%w[due_at formato]) }
   after_destroy_commit :empurrar_para_google_cancelar, if: :reuniao_do_hub?
+
+  # O rascunho de confirmação espera o Meet: a reunião vai pro Google de um dono com conta conectada (o job cria o rascunho).
+  # ponytail: a conta é lida na marcação e de novo ao enfileirar; desconectar entre os dois é raro e o job cobre (cria sem Meet).
+  def rascunho_no_job?
+    # Fluxos de reunião no comando: o rascunho é do fluxo (texto dele) — o job não cria outro (evita dois rascunhos).
+    return false if Ramon::Fluxos::Reunioes.assumiu?(account)
+
+    reuniao_do_hub? && !sem_push_google && agenda_user.present? && GoogleAgendaConta.de(agenda_user).present?
+  end
 
   # no_show: reunião em que o cliente não veio — conclui sem resultado de
   # reunião (o prêmio do SDR só conta a qualificada) e registra o no-show.
@@ -52,7 +63,11 @@ class LeadTask < ApplicationRecord
 
   # Reunião do hub vive no Google do dono (job: sem conta Google, sai calado). A linha some no destroy → dados vão no job.
   def empurrar_para_google_criar
-    Ramon::GoogleAgendaPushJob.perform_later('criar', { 'task_id' => id }) unless sem_push_google
+    Ramon::GoogleAgendaPushJob.perform_later('criar', dados_do_push_criar) unless sem_push_google
+  end
+
+  def dados_do_push_criar
+    { 'task_id' => id, 'rascunho' => (true if rascunho_no_job?), 'automatico' => (true if confirmacao_automatica) }.compact
   end
 
   def empurrar_para_google_atualizar

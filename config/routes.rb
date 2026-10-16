@@ -376,6 +376,7 @@ Rails.application.routes.draw do
           resource :ramon_google_agenda, only: [:show, :destroy], controller: 'ramon_google_agenda' do
             post :autorizacao
           end
+          get 'ramon_agenda/google', to: 'ramon_agenda#google'
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'
           resources :leads, only: [:index, :show, :create, :update, :destroy] do
@@ -389,6 +390,7 @@ Rails.application.routes.draw do
               get :dossie, to: 'lead_dossies#show'
               post :dossie_entregue, to: 'lead_dossies#entregue'
               post :portal_link
+              get :horarios_livres
               post :follow_up_draft
               post :reuniao
               get :roteiro, to: 'lead_roteiros#show'
@@ -766,6 +768,9 @@ Rails.application.routes.draw do
 
         # Ramon — webhook do Cal.com (agenda); assinatura HMAC no header X-Cal-Signature-256
         post 'calcom_webhooks', to: 'calcom_webhooks#create'
+
+        # Ramon — .ics da reunião (token assinado; o token pode ter ponto, por isso a restrição em vez de :token.ics)
+        get 'agenda/:token', to: 'agenda_ics#show', constraints: { token: %r{[^/]+\.ics} }, format: false
 
         # Ramon — webhook do Flowter/ADVBOX (Bearer estático — o Flowter não assina HMAC)
         post 'advbox_webhooks', to: 'advbox_webhooks#create'

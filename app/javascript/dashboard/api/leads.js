@@ -17,6 +17,10 @@ class LeadsAPI extends ApiClient {
     });
   }
 
+  horariosLivres(leadId) {
+    return axios.get(`${this.url}/${leadId}/horarios_livres`);
+  }
+
   getActivities(leadId) {
     return axios.get(`${this.url}/${leadId}/activities`);
   }

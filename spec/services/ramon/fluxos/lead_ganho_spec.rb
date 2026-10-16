@@ -60,16 +60,18 @@ RSpec.describe Ramon::Fluxos::LeadGanho do
       expect(dossies).to eq(1)
     end
 
+    # Sem espião no módulo: com cache_classes=false um spec anterior pode recarregar as constantes (travel_to + request),
+    # e o espião ficaria no módulo velho. O efeito (1 dossiê, 1 NPS, 1 ADVBOX) prova a decisão única.
     it 'fluxo no comando mas ocupado com o mesmo lead: o código faz este ganho (reserva) — uma decisão só' do
-      allow(described_class).to receive(:pelo_codigo).and_call_original
       with_modified_env(ADVBOX_API_TOKEN: 'tok', RAMON_FLUXO_LEAD_GANHO: 'on') do
         fluxo = Ramon::Fluxos::Migracao.semear(account, 'lead_ganho').first
         Ramon::Fluxos::Migracao.mudar_modo!(account, 'lead_ganho', 'normal')
         fluxo.execucoes.create!(account: account, alvo: lead, status: 'esperando', retomar_em: 5.minutes.from_now)
-        expect { lead.update!(lead_stage: ganho) }.to have_enqueued_job(Ramon::AdvboxClosingJob).with(lead.id)
+        expect { lead.update!(lead_stage: ganho) }
+          .to have_enqueued_job(Ramon::AdvboxClosingJob).with(lead.id).exactly(:once)
+          .and have_enqueued_job(Ramon::NpsDraftJob).with(lead.id).exactly(:once)
         expect(fluxo.execucoes.count).to eq(1) # a viva; este evento não criou outra
       end
-      expect(described_class).to have_received(:pelo_codigo).once
       expect(dossies).to eq(1)
     end
 

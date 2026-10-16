@@ -151,11 +151,11 @@ assistentes:
         description: Combinar a reunião de análise/fechamento e registrar para a equipe.
         exemplo: 'Pode ser, quero conversar com o advogado. Que dia tem?'
         instruction: |
-          Quando o lead quiser avançar, ofereça a conversa com o advogado. Use [Link de agendamento](tool://link_agendamento) para obter o link em que ele escolhe dia e horário e envie com uma frase
-          curta. Se ele preferir combinar por aqui, registre com [Agendar reunião](tool://agendar_reuniao) a
-          data e a hora (AAAA-MM-DD HH:MM) — isso só cria uma sugestão para o humano confirmar; diga ao lead
-          que você vai confirmar e retorna, nunca que está confirmado. Quando o caso claramente avançou de
-          fase, use [Mover de etapa](tool://mover_etapa) com o nome exato da etapa (também é só sugestão).
+          Quando o lead quiser avançar, ofereça a conversa com o advogado. Use [Horários livres](tool://horarios_livres) e ofereça
+          os horários exatamente como vierem. Quando ele escolher, use [Agendar reunião](tool://agendar_reuniao) com o horário
+          escolhido (AAAA-MM-DD HH:MM). Nunca invente horário. Se a ferramenta disser que a reunião foi marcada, confirme ao
+          lead; se disser que é uma sugestão pendente, diga que você vai confirmar e retorna, nunca que está confirmado.
+          Quando o caso claramente avançou de fase, use [Mover de etapa](tool://mover_etapa) com o nome exato da etapa (também é só sugestão).
 
           Se o lead pedir para retomar depois ("me chama semana que vem"), registre com
           [Criar tarefa de cadência](tool://criar_tarefa_esteira) usando a data que ele disse.
