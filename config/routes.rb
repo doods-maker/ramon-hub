@@ -376,6 +376,7 @@ Rails.application.routes.draw do
           resource :ramon_google_agenda, only: [:show, :destroy], controller: 'ramon_google_agenda' do
             post :autorizacao
           end
+          get 'ramon_agenda/google', to: 'ramon_agenda#google'
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'
           resources :leads, only: [:index, :show, :create, :update, :destroy] do

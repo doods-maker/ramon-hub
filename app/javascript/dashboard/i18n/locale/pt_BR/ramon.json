@@ -37,6 +37,14 @@
       "HOJE": "Hoje"
     },
     "AGENDA": {
+      "PESSOAS": "Pessoas",
+      "TODAS_PESSOAS": "Todas",
+      "GOOGLE": "Google",
+      "CONECTAR_GOOGLE": "Conectar meu Google",
+      "GOOGLE_CONECTADO": "Google conectado.",
+      "GOOGLE_ERRO": "Não foi possível carregar ou conectar o Google.",
+      "MEET": "Meet",
+      "WHATSAPP": "Ligação WhatsApp",
       "SUGERIR_HORARIOS": "Sugerir horários",
       "ERRO": "Não foi possível buscar os horários — tente de novo.",
       "SEM_HORARIOS": "Sem horário livre nos próximos 5 dias úteis.",

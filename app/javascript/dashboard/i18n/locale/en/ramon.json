@@ -37,6 +37,14 @@
       "HOJE": "Today"
     },
     "AGENDA": {
+      "PESSOAS": "People",
+      "TODAS_PESSOAS": "All",
+      "GOOGLE": "Google",
+      "CONECTAR_GOOGLE": "Connect my Google",
+      "GOOGLE_CONECTADO": "Google connected.",
+      "GOOGLE_ERRO": "Could not load or connect Google.",
+      "MEET": "Meet",
+      "WHATSAPP": "WhatsApp call",
       "SUGERIR_HORARIOS": "Suggest times",
       "ERRO": "Could not load available times — try again.",
       "SEM_HORARIOS": "No free slot in the next 5 business days.",
