@@ -66,7 +66,7 @@ RSpec.describe Ramon::GoogleAgendaPushJob do
 
       described_class.perform_now('criar', { 'task_id' => task.id })
 
-      expect(cliente).to have_received(:criar).with(hash_including(meet: false, descricao: include('Ligação pelo WhatsApp')))
+      expect(cliente).to have_received(:criar).with(hash_including(meet: false, descricao: include('Eu te ligo no WhatsApp')))
     end
 
     it 'contato sem e-mail não convida ninguém' do
@@ -166,7 +166,7 @@ RSpec.describe Ramon::GoogleAgendaPushJob do
 
       described_class.perform_now('atualizar', { 'task_id' => task.id })
 
-      expect(cliente).to have_received(:atualizar).with('ev1', hash_including(meet: false, descricao: include('Ligação pelo WhatsApp')))
+      expect(cliente).to have_received(:atualizar).with('ev1', hash_including(meet: false, descricao: include('Eu te ligo no WhatsApp')))
       expect(task.reload.meet_url).to be_nil
     end
 
