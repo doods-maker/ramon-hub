@@ -55,6 +55,15 @@ RSpec.describe Ramon::Agenda::Disponibilidade do
       expect(disp.livre?(hora('2026-10-22T16:30:00-03:00'))).to be(true)
     end
 
+    it 'ignora evento do Google que é reunião do hub (hub_task_id): já entra pelo hub, sem contar em dobro nem colidir na remarcação' do
+      conta = conectar_google
+      cliente = instance_double(Ramon::GoogleAgenda::Cliente)
+      allow(Ramon::GoogleAgenda::Cliente).to receive(:new).with(conta).and_return(cliente)
+      stub_eventos(cliente, [{ id: 'hubtask1', inicio: hora('2026-10-22T15:00:00-03:00'), fim: hora('2026-10-22T15:30:00-03:00'),
+                               cancelado: false, hub_task_id: 1 }])
+      expect(disp.livre?(hora('2026-10-22T15:00:00-03:00'))).to be(true)
+    end
+
     it 'ignora evento cancelado do Google' do
       conta = conectar_google
       cliente = instance_double(Ramon::GoogleAgenda::Cliente)

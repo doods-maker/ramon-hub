@@ -62,9 +62,18 @@ RSpec.describe LeadTask do
         .with('cancelar', { 'task_id' => task.id, 'google_event_id' => 'ev1', 'agenda_user_id' => closer.id })
     end
 
-    it 'reunião do Cal.com (mesmo ReuniaoAgendamento) também enfileira criar' do
-      expect { Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: 3.days.from_now, title: 'Cal', task_title: 'Reunião Cal.com: Cal') }
-        .to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('criar', anything)
+    it 'destroy sem google_event_id enfileira cancelar com o id fixo da criação (evento órfão)' do
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+      expect { task.destroy! }.to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+        .with('cancelar', { 'task_id' => task.id, 'google_event_id' => "hubtask#{task.id}", 'agenda_user_id' => closer.id })
+    end
+
+    it 'reunião do Cal.com não vai ao Google (criar, atualizar e cancelar)', :aggregate_failures do
+      task = nil
+      expect { task = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião Cal.com: Cal') }
+        .not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+      expect { task.update!(due_at: 3.days.from_now, formato: 'whatsapp') }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+      expect { task.destroy! }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
     end
   end
 

@@ -109,6 +109,18 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
       expect(lead.lead_activities.where(kind: 'meeting_rescheduled')).to exist
     end
 
+    it 'só o formato mudou (mesmo horário): troca o formato sem remarcar', :aggregate_failures do
+      agendar(starts_at: starts_at.iso8601)
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+      allow(Ramon::ReuniaoAgendamento).to receive(:remarcar)
+      remarcar(task, starts_at: (starts_at + 20.seconds).iso8601, formato: 'whatsapp')
+
+      expect(response).to have_http_status(:success)
+      expect(Ramon::ReuniaoAgendamento).not_to have_received(:remarcar)
+      expect(task.reload.formato).to eq('whatsapp')
+      expect(task.due_at).to eq starts_at
+    end
+
     it 'não remarca tarefa que não é reunião' do
       task = create(:lead_task, account: account, lead: lead, kind: 'follow_up')
       remarcar(task)

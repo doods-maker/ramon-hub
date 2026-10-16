@@ -84,6 +84,15 @@ RSpec.describe Ramon::GoogleAgenda::Cliente do
       expect(stub).to have_been_requested
     end
 
+    it 'meet: false tira o Meet do evento (conferenceData nulo, versão 1)' do
+      stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query.merge('conferenceDataVersion' => '1')) do |req|
+        corpo = JSON.parse(req.body)
+        corpo.key?('conferenceData') && corpo['conferenceData'].nil?
+      end.to_return(json({}))
+      expect(cliente.atualizar('ev1', inicio: inicio, fim: fim, meet: false)).to be(true)
+      expect(stub).to have_been_requested
+    end
+
     it 'atualiza a descrição quando informada' do
       stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query, body: hash_including('description' => 'Nova')).to_return(json({}))
       cliente.atualizar('ev1', inicio: inicio, fim: fim, descricao: 'Nova')

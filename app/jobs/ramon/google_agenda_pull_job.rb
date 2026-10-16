@@ -43,6 +43,7 @@ class Ramon::GoogleAgendaPullJob < ApplicationJob
     return if evento[:atualizado_em] && evento[:atualizado_em] <= task.updated_at
 
     if evento[:cancelado]
+      task.touch # rubocop:disable Rails/SkipsModelValidations -- fluxo no comando pode não apagar a tarefa: o próximo pull cai no guard acima e não repete o gatilho
       Ramon::ReuniaoAgendamento.cancelar(task: task, sem_google: true)
     elsif evento[:inicio] && (evento[:inicio] - task.due_at).abs > TOLERANCIA
       Ramon::ReuniaoAgendamento.remarcar(task: task, starts_at: evento[:inicio], sem_google: true)

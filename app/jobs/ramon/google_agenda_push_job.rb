@@ -82,7 +82,7 @@ class Ramon::GoogleAgendaPushJob < ApplicationJob
     if task.formato == 'video' && task.meet_url.blank?
       task.update_columns(meet_url: cliente.atualizar(id, **base, meet: true, descricao: descricao(task))) # rubocop:disable Rails/SkipsModelValidations
     elsif task.formato == 'whatsapp' && task.meet_url.present?
-      cliente.atualizar(id, **base, descricao: descricao(task))
+      cliente.atualizar(id, **base, meet: false, descricao: descricao(task))
       task.update_columns(meet_url: nil) # rubocop:disable Rails/SkipsModelValidations
     else
       cliente.atualizar(id, **base)

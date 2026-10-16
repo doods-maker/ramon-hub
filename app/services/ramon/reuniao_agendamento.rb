@@ -119,7 +119,7 @@ class Ramon::ReuniaoAgendamento
     {
       'evento' => evento, 'assumido' => assumido, 'quando' => quando_texto, 'inicio' => @starts_at&.iso8601,
       'titulo' => @title, 'resumo' => self.class.resumo(@title, @starts_at), 'primeiro_nome' => primeiro_nome,
-      'quem_marcou_id' => @user&.id
+      'quem_marcou_id' => @user&.id, 'formato' => @formato
     }.merge(extra).compact
   end
 

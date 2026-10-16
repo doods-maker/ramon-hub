@@ -19,6 +19,9 @@ class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::Ba
 
   def update
     task = meeting_task
+    # Mesmo horário e formato novo: só troca o formato (não é remarcação; o callback do model empurra ao Google).
+    return trocar_formato(task) if formato && (starts_at - task.due_at).abs <= 60
+
     return render_ocupado unless force_ocupado? || Ramon::ReuniaoAgendamento.livre?(@lead, starts_at, task: task)
 
     @lead_task = Ramon::ReuniaoAgendamento.remarcar(task: task, starts_at: starts_at, user: Current.user, formato: formato)
@@ -30,6 +33,11 @@ class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::Ba
   end
 
   private
+
+  def trocar_formato(task)
+    task.update!(formato: formato)
+    @lead_task = task
+  end
 
   def set_lead
     @lead = Current.account.leads.find(params[:lead_id])

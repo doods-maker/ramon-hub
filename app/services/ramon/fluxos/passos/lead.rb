@@ -39,10 +39,17 @@ module Ramon::Fluxos::Passos::Lead
     return { saida: 's', resumo: "faria: tarefa \"#{titulo}\" para #{Ramon::Fluxos::Passos::Logica.hora(prazo)}" } if ctx.ensaio?
 
     responsavel = responsavel_da_tarefa(lead, config, ctx)
-    tarefa = lead.lead_tasks.create!(account: lead.account, kind: kind_da_tarefa(config), title: titulo, due_at: prazo, user: responsavel)
+    kind = kind_da_tarefa(config)
+    tarefa = lead.lead_tasks.create!(account: lead.account, kind: kind, title: titulo, due_at: prazo, user: responsavel,
+                                     **formato_da_reuniao(kind, ctx))
     # B4.1: a tarefa da própria reunião põe a reunião na agenda → começa o ciclo de lembretes dela
     Ramon::Fluxos::Reunioes.na_agenda(tarefa, decisao_do_evento(ctx, lead)) if config['prazo'] == 'reuniao' && tarefa.kind == 'meeting'
     { saida: 's', resumo: "tarefa \"#{titulo}\" · #{responsavel&.name || 'sem responsável'}" }
+  end
+
+  # O formato escolhido na marcação viaja no gatilho (senão a reunião nasceria sempre em vídeo).
+  def formato_da_reuniao(kind, ctx)
+    kind == 'meeting' ? { formato: ctx.gatilho('formato').presence_in(LeadTask::FORMATOS) || 'video' } : {}
   end
 
   # Quem faz o ciclo de lembretes: a decisão do evento que trouxe a reunião ('assumido'); fluxo comum (gatilho sem ela),

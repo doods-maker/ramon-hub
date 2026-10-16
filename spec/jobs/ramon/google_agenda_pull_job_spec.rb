@@ -48,6 +48,14 @@ RSpec.describe Ramon::GoogleAgendaPullJob do
     expect(Ramon::ReuniaoAgendamento).to have_received(:cancelar).with(task: task, sem_google: true).once
   end
 
+  it 'cancelamento: toca a tarefa antes, e o pull seguinte (tarefa ainda viva) não repete o gatilho' do
+    travel_to(1.hour.from_now) do
+      pull(evento(cancelado: true, atualizado_em: Time.current)) # o Google cancelou agora (> updated_at da tarefa)
+      pull(evento(cancelado: true, atualizado_em: Time.current)) # a tarefa (mock não apaga) foi tocada: updated_at == agora
+    end
+    expect(Ramon::ReuniaoAgendamento).to have_received(:cancelar).once
+  end
+
   it 'cancelado mínimo (só id, sem hub_task_id) acha a reunião pelo google_event_id' do
     task.update_columns(google_event_id: 'ev1') # rubocop:disable Rails/SkipsModelValidations
     pull({ id: 'ev1', inicio: nil, fim: nil, cancelado: true, hub_task_id: nil })

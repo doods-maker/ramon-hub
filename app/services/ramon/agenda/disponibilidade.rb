@@ -94,14 +94,19 @@ class Ramon::Agenda::Disponibilidade
             .pluck(:due_at).map { |due| [due, due + PASSO] }
   end
 
+  # Evento da reunião do hub (hub_task_id) fica de fora: já entra por do_hub (e remarcar não colide com o próprio evento).
   def do_google(de, ate) # rubocop:disable Naming/MethodParameterName
     conta = GoogleAgendaConta.de(@user)
     return [] unless conta
 
     Ramon::GoogleAgenda::Cliente.new(conta).eventos(de: de, ate: ate)
-                                .reject { |e| e[:cancelado] || e[:inicio].nil? || e[:fim].nil? }.map { |e| [e[:inicio], e[:fim]] }
+                                .select { |e| ocupa?(e) }.map { |e| [e[:inicio], e[:fim]] }
   rescue Ramon::GoogleAgenda::Cliente::SemConexao, Ramon::GoogleAgenda::Cliente::Erro, Ramon::GoogleAgenda::Token::Transitorio => e
     Rails.logger.warn("[Agenda] Google indisponível (#{e.class}) user_id=#{@user.id}; usando só a agenda do hub")
     []
+  end
+
+  def ocupa?(evento)
+    !evento[:cancelado] && evento[:inicio] && evento[:fim] && evento[:hub_task_id].nil?
   end
 end

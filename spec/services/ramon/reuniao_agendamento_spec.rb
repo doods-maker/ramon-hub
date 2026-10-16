@@ -267,6 +267,15 @@ RSpec.describe Ramon::ReuniaoAgendamento do
         expect(Ramon::Fluxos::Reunioes).to have_received(:assumiu?).once # o evento decide uma vez só
       end
 
+      it 'marcar com WhatsApp: o passo "Criar tarefa" do fluxo cria a reunião com formato whatsapp (o gatilho leva o formato)' do
+        marcada = Fluxo.find_by!(account: account, sistema_chave: Ramon::Fluxos::Reunioes::GATILHOS.key('reuniao_marcada'))
+        marcada.update!(rascunho: grafo_linear({ 'tipo' => 'reuniao_marcada' },
+                                               ['criar_tarefa', { 'titulo' => 'Reunião', 'tipo' => 'meeting', 'prazo' => 'reuniao' }]))
+        marcada.publicar!(nil)
+        agendar(formato: 'whatsapp')
+        expect(lead.lead_tasks.where(kind: 'meeting').pluck(:formato)).to eq(['whatsapp'])
+      end
+
       it 'chave ligada: um fluxo comum em reunião marcada segue disparando 1 vez, depois do fluxo migrado' do
         comum = fluxo_publicado(account, grafo_linear({ 'tipo' => 'reuniao_marcada' }, ['parar', {}]))
         agendar
