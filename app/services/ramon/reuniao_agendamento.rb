@@ -52,7 +52,7 @@ class Ramon::ReuniaoAgendamento
     return false unless conversa && chave_confirmacao_on? && Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversa))
 
     conversa.messages.create!(message_type: :outgoing, account_id: conversa.account_id, inbox_id: conversa.inbox_id,
-                              sender: conversa.inbox.captain_assistant, content: texto)
+                              sender: conversa.inbox.try(:captain_assistant), content: texto)
     true
   rescue ActiveRecord::RecordInvalid
     false
