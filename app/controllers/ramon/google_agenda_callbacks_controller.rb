@@ -22,6 +22,7 @@ class Ramon::GoogleAgendaCallbacksController < ActionController::Base # rubocop:
   end
 
   def conectar(user, account_id)
+    exigir_cifra!
     token = Ramon::GoogleAgenda::Token.oauth_client.auth_code.get_token(
       params[:code], redirect_uri: "#{ENV.fetch('FRONTEND_URL', nil)}/ramon/google_agenda/callback"
     )
@@ -35,5 +36,10 @@ class Ramon::GoogleAgendaCallbacksController < ActionController::Base # rubocop:
 
   def redirecionar(account_id, resultado)
     redirect_to "#{ENV.fetch('FRONTEND_URL', nil)}/app/accounts/#{account_id.to_i}/ramon/agenda?google=#{resultado}", allow_other_host: true
+  end
+
+  # Sem as chaves de cifra o token iria em claro (e ficaria assim): recusa conectar.
+  def exigir_cifra!
+    raise 'cifra ausente' if Rails.env.production? && !Chatwoot.encryption_configured?
   end
 end

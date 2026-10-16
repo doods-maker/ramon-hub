@@ -76,7 +76,9 @@ class Ramon::GoogleAgenda::Cliente
   def hora(campo)
     return nil if campo.blank?
 
-    campo['dateTime'] ? Time.zone.parse(campo['dateTime']) : Time.zone.parse(campo['date'].to_s)&.beginning_of_day
+    return Time.zone.parse(campo['dateTime']) if campo['dateTime']
+
+    Time.find_zone!('America/Sao_Paulo').parse(campo['date'].to_s)&.beginning_of_day # dia inteiro = dia de Brasília
   end
 
   def meet_url(evento)
@@ -102,6 +104,8 @@ class Ramon::GoogleAgenda::Cliente
       end
       return tratar(resposta, ignorar)
     end
+  rescue ::OAuth2::Error
+    raise Erro, 'oauth' # ex.: invalid_client na renovação — quem chama trata um tipo só
   end
 
   def tratar(resposta, ignorar)

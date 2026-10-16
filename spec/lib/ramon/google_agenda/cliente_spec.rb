@@ -4,7 +4,7 @@ RSpec.describe Ramon::GoogleAgenda::Cliente do
   let(:conta) { instance_double(GoogleAgendaConta) }
   let(:cliente) { described_class.new(conta) }
   let(:url) { 'https://www.googleapis.com/calendar/v3/calendars/primary/events' }
-  let(:inicio) { Time.zone.parse('2026-10-20 10:00') }
+  let(:inicio) { Time.zone.parse('2026-10-20T10:00:00-03:00') }
   let(:fim) { inicio + 30.minutes }
   let(:cancelar_query) { { 'sendUpdates' => 'all' } }
 
@@ -28,7 +28,8 @@ RSpec.describe Ramon::GoogleAgenda::Cliente do
                                    headers: { 'Authorization' => 'Bearer tok' }).to_return(json(items: itens))
       a, b, c = cliente.eventos(de: inicio, ate: inicio + 1.day)
       expect(a).to include(id: 'a', titulo: 'Reunião', cancelado: false, hub_task_id: 42, inicio: inicio, fim: fim)
-      expect(b).to include(cancelado: true, hub_task_id: nil, inicio: Time.zone.parse('2026-10-21'), fim: Time.zone.parse('2026-10-22'))
+      expect(b).to include(cancelado: true, hub_task_id: nil, inicio: Time.zone.parse('2026-10-21T00:00:00-03:00'),
+                           fim: Time.zone.parse('2026-10-22T00:00:00-03:00'))
       expect(c).to include(id: 'c', cancelado: true, inicio: nil, fim: nil, hub_task_id: nil)
     end
   end

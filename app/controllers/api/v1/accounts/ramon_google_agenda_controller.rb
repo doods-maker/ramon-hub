@@ -20,7 +20,8 @@ class Api::V1::Accounts::RamonGoogleAgendaController < Api::V1::Accounts::BaseCo
   def destroy
     conta = GoogleAgendaConta.find_by(user_id: Current.user.id)
     if conta
-      revogar(conta.refresh_token || conta.access_token)
+      # Mesmo cliente OAuth da caixa Gmail: revogar derrubaria a caixa do mesmo e-mail.
+      revogar(conta.refresh_token || conta.access_token) unless Channel::Email.exists?(provider: 'google', email: conta.email)
       conta.destroy!
     end
     head :no_content
