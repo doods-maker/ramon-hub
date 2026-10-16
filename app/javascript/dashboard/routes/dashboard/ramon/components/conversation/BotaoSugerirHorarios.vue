@@ -40,13 +40,14 @@ const sugerir = async () => {
       montarRascunho(data.texto)
     );
   } catch (error) {
-    useAlert(error?.response?.data?.error || t('RAMON.AGENDA.SEM_HORARIOS'));
+    useAlert(t('RAMON.AGENDA.ERRO'));
   } finally {
     loading.value = false;
   }
 };
 </script>
 
+<!-- eslint-disable-next-line vue/no-root-v-if -->
 <template>
   <NextButton
     v-if="lead"

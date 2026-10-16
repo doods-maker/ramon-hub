@@ -38,6 +38,7 @@
     },
     "AGENDA": {
       "SUGERIR_HORARIOS": "Sugerir horários",
+      "ERRO": "Não foi possível buscar os horários — tente de novo.",
       "SEM_HORARIOS": "Sem horário livre nos próximos 5 dias úteis.",
       "TITLE": "Agenda",
       "TODAY": "Hoje",

@@ -38,6 +38,7 @@
     },
     "AGENDA": {
       "SUGERIR_HORARIOS": "Suggest times",
+      "ERRO": "Could not load available times — try again.",
       "SEM_HORARIOS": "No free slot in the next 5 business days.",
       "TITLE": "Agenda",
       "TODAY": "Today",
