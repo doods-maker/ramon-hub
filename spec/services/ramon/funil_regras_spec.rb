@@ -75,7 +75,7 @@ RSpec.describe Ramon::FunilRegras do
 
       described_class.contrato_assinado(lead)
 
-      expect(FunilAcao.last.desfazer).to eq('etapa_id' => perdido.id, 'lost_reason' => 'Honorário')
+      expect(FunilAcao.last.desfazer).to eq('etapa_id' => perdido.id, 'etapa_produzida_id' => lead.reload.lead_stage_id, 'lost_reason' => 'Honorário')
     end
 
     it 'saindo de etapa aberta, o desfazer só leva a etapa' do
@@ -84,7 +84,7 @@ RSpec.describe Ramon::FunilRegras do
 
       described_class.contrato_assinado(lead)
 
-      expect(FunilAcao.last.desfazer).to eq('etapa_id' => anterior)
+      expect(FunilAcao.last.desfazer).to eq('etapa_id' => anterior, 'etapa_produzida_id' => account.lead_stages.find_by(is_won: true).id)
     end
 
     it 'lead velho em memória não regrava o won_at de um Ganho já gravado' do

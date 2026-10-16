@@ -20,7 +20,7 @@ class Ramon::FunilRegras
       next if lead.lead_stage.is_won
 
       # saindo de Perdido, o desfazer guarda o motivo: voltar a Perdido sem ele dá 422
-      desfazer = { 'etapa_id' => lead.lead_stage_id, 'lost_reason' => lead.lost_reason }.compact
+      desfazer = { 'etapa_id' => lead.lead_stage_id, 'etapa_produzida_id' => ganho.id, 'lost_reason' => lead.lost_reason }.compact
       Ramon::FunilAutomatico.executar(lead, peca: 'zapsign_ganho', acao: 'marcar_ganho', motivo: 'contrato assinado no ZapSign',
                                             alvo: ganho.name, desfazer: desfazer) do
         lead.update!(lead_stage: ganho)
@@ -38,7 +38,7 @@ class Ramon::FunilRegras
       next if atual.is_won || atual.is_lost || atual.position >= etapa.position
 
       Ramon::FunilAutomatico.executar(lead, peca: peca, acao: 'mover_etapa', motivo: motivo, alvo: etapa.name,
-                                            desfazer: { 'etapa_id' => atual.id }) do
+                                            desfazer: { 'etapa_id' => atual.id, 'etapa_produzida_id' => etapa.id }) do
         lead.update!(lead_stage: etapa)
       end
     end

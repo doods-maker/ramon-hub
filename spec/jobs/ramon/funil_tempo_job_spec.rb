@@ -28,7 +28,8 @@ RSpec.describe Ramon::FunilTempoJob do
     lead = lead_parado(negociacao, negociacao.stalled_after_days + 1)
     described_class.perform_now
     expect(lead.reload.lead_stage).to eq(ultima_chance)
-    expect(FunilAcao.find_by(lead: lead, peca: 'tempo_ultima_chance').desfazer['etapa_id']).to eq(negociacao.id)
+    desfazer = FunilAcao.find_by(lead: lead, peca: 'tempo_ultima_chance').desfazer
+    expect(desfazer).to eq('etapa_id' => negociacao.id, 'etapa_produzida_id' => ultima_chance.id)
   end
 
   it 'Última chance parada vai para Perdido com o motivo do catálogo e desfazer' do
@@ -37,7 +38,8 @@ RSpec.describe Ramon::FunilTempoJob do
     lead.reload
     expect(lead.lead_stage).to be_is_lost
     expect(lead.lost_reason).to eq('Sumiu / não respondeu')
-    expect(FunilAcao.find_by(lead: lead, peca: 'tempo_perdido').desfazer['etapa_id']).to eq(ultima_chance.id)
+    desfazer = FunilAcao.find_by(lead: lead, peca: 'tempo_perdido').desfazer
+    expect(desfazer).to eq('etapa_id' => ultima_chance.id, 'etapa_produzida_id' => lead.lead_stage_id)
   end
 
   it 'não anda duas etapas no mesmo dia' do

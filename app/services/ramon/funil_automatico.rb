@@ -11,6 +11,9 @@ class Ramon::FunilAutomatico
     MODOS.include?(valor) ? valor : 'off'
   end
 
+  # Alguma peça fora de off (só lê settings): sem isso, nem consulta FunilAcao no push do card.
+  def self.algum_ligado?(account) = PECAS.any? { |peca| modo(account, peca) != 'off' }
+
   def self.mudar!(account, peca, modo)
     raise ArgumentError, "peça inválida: #{peca}" unless PECAS.include?(peca.to_s)
     raise ArgumentError, "modo inválido: #{modo}" unless MODOS.include?(modo.to_s)
@@ -39,8 +42,10 @@ class Ramon::FunilAutomatico
   end
 
   # Alguém desfez esta ação e o lead não escreveu de novo desde então: a IA não deve refazer.
-  def self.desfeita_recente?(lead, acao:, alvo:)
-    desfeitas = FunilAcao.where(lead: lead, acao: acao, alvo: alvo&.to_s).where.not(desfeita_em: nil)
+  # alvo nil = qualquer alvo (o Perdido: o motivo escolhido pelo LLM varia de uma pausa para outra).
+  def self.desfeita_recente?(lead, acao:, alvo: nil)
+    desfeitas = FunilAcao.where(lead: lead, acao: acao).where.not(desfeita_em: nil)
+    desfeitas = desfeitas.where(alvo: alvo.to_s) unless alvo.nil?
     ultima = lead.conversation&.last_incoming_message
     desfeitas = desfeitas.where('desfeita_em > ?', ultima.created_at) if ultima
     desfeitas.exists?

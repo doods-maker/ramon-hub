@@ -191,6 +191,12 @@ export const actions = {
     });
     commit(types.EDIT_LEAD, response.data);
   },
+  // Desfazer só de modo/tarefa não mexe em coluna do lead (sem broadcast): aplica o lead devolvido.
+  desfazerFunilAcao: async ({ commit }, { id, acaoId }) => {
+    const response = await LeadsAPI.desfazerFunilAcao(id, acaoId);
+    commit(types.EDIT_LEAD, response.data);
+    return response.data;
+  },
   upsert: ({ commit }, lead) => {
     // Caso de cálculo (tela Cálculos ← AdvBox) não entra no board: o index já
     // filtra no server, mas o broadcast re-injetaria o card aqui.

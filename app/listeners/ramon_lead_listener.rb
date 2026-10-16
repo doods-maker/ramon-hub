@@ -25,6 +25,7 @@ class RamonLeadListener < BaseListener
   # caracteres). Colheita NÃO é automática (decisão 20/07).
   def message_created(event)
     message = event.data[:message]
+    agendar_observador(message)
     return unless message.incoming?
 
     lead = message.account.leads.find_by(conversation_id: message.conversation_id)
@@ -33,6 +34,17 @@ class RamonLeadListener < BaseListener
     Ramon::LeadDaConversa.origem(lead, message)
     Ramon::DocMatchJob.perform_later(message.id) if message.attachments.any? { |a| TIPOS_ANEXO.include?(a.file_type) }
     Ramon::CoachObjecaoJob.perform_later(message.id) if message.content.to_s.strip.length >= Ramon::CoachObjecaoService::MIN_CHARS
+  end
+
+  # Funil automático: incoming ou outgoing público de lead aberto agenda o observador (10 min, debounce no job).
+  def agendar_observador(message)
+    return if message.private? || !message.message_type.in?(%w[incoming outgoing])
+    return unless Ramon::FunilObservadorJob.ativo?(message.account)
+
+    lead = message.account.leads.find_by(conversation_id: message.conversation_id, won_at: nil, lost_at: nil)
+    return if lead.blank?
+
+    Ramon::FunilObservadorJob.set(wait: Ramon::FunilObservadorJob::ESPERA).perform_later(message.id)
   end
 
   def lead_created(event)

@@ -83,5 +83,18 @@ RSpec.describe Ramon::FunilAutomatico do
     it 'é false para outra ação/alvo' do
       expect(described_class.desfeita_recente?(lead, acao: 'mover', alvo: 'fase-negociacao')).to be(false)
     end
+
+    it 'sem alvo vale qualquer alvo da ação' do
+      expect(described_class.desfeita_recente?(lead, acao: 'mover')).to be(true)
+      expect(described_class.desfeita_recente?(lead, acao: 'perdido')).to be(false)
+    end
+  end
+
+  describe '.algum_ligado?' do
+    it 'false com tudo off; true com qualquer peça em ensaio ou on' do
+      expect(described_class.algum_ligado?(account)).to be(false)
+      described_class.mudar!(account, 'reativacao', 'ensaio')
+      expect(described_class.algum_ligado?(account)).to be(true)
+    end
   end
 end

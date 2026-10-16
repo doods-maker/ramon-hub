@@ -21,7 +21,7 @@ class Ramon::FunilTempoJob < ApplicationJob
 
     cada_parado(account, 'fase-ultima-chance') do |lead|
       Ramon::FunilAutomatico.executar(lead, peca: 'tempo_perdido', acao: 'mover_etapa', motivo: MOTIVO_PERDA, alvo: perdido.name,
-                                            desfazer: { 'etapa_id' => lead.lead_stage_id }) do
+                                            desfazer: { 'etapa_id' => lead.lead_stage_id, 'etapa_produzida_id' => perdido.id }) do
         lead.update!(lead_stage: perdido, lost_reason: MOTIVO_PERDA)
       end
     end

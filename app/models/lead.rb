@@ -23,6 +23,7 @@ class Lead < ApplicationRecord
   has_many :lead_activities, dependent: :delete_all
   has_many :calculos, dependent: :delete_all
   has_many :lead_notes, dependent: :delete_all
+  has_many :funil_acoes, class_name: 'FunilAcao', dependent: :delete_all
   has_many :lead_tasks, dependent: :destroy_async, inverse_of: :lead
   has_many :lead_triages, dependent: :destroy_async
   has_many :copilot_suggestions, dependent: :delete_all
@@ -93,7 +94,8 @@ class Lead < ApplicationRecord
       latest_triage: latest_triage&.slice(:id, :status, :viability, :kit_status),
       # espelho do jbuilder — inteiros, JSON-nativos (Sidekiq strict_args rejeita BigDecimal)
       docs_received: docs[:received],
-      docs_total: docs[:total]
+      docs_total: docs[:total],
+      funil_acao: (FunilAcao.chip(self) if Ramon::FunilAutomatico.algum_ligado?(account))
     }.merge(cadence_event_data).merge(comercial_event_data)
   end
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
