@@ -73,6 +73,23 @@ theses:
         title: "Comprovante do requerimento (número do protocolo / DER)"
         content: "Data de entrada do pedido no INSS."
         position: 4
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "O INSS é como um seguro que você paga todo mês: a doença que afasta do trabalho é justamente a hora de usar o que você pagou."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Uma costureira com dor no ombro foi afastada, a perícia negou e ela achou que tinha acabado. Com os laudos certos, o pedido pôde ser refeito e analisado de novo. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "Os atrasados só podem ser cobrados dos últimos 5 anos, e quem parou de contribuir fica protegido pelo INSS só por um tempo: quanto antes o advogado olhar o caso, menos se perde."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "O benefício é o aluguel, o remédio e o mercado do mês enquanto a pessoa se trata."
+        position: 5
 
   - name: "Aposentadoria por incapacidade permanente (invalidez / B32)"
     description: "Para o segurado total e permanentemente incapaz, insuscetível de reabilitação. Lei 8.213/91, arts. 42 a 47."
@@ -140,6 +157,23 @@ theses:
         title: "Laudo atestando necessidade de cuidador (se houver)"
         content: "Embasa o pedido do acréscimo de 25%."
         position: 4
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "É como um carro que não passa mais na vistoria: não adianta mandar voltar a rodar. A lei olha a doença junto com a idade, o estudo e o trabalho que a pessoa sempre fez."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Um pedreiro de 58 anos, com a coluna comprometida, recebia auxílio-doença havia anos e sempre ouvia \"volta a trabalhar\". Olhando idade, estudo e profissão juntos, o caso dele pode ser de aposentadoria. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "Os atrasados só podem ser cobrados dos últimos 5 anos: o mês que passa desse limite não volta."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "A aposentadoria é a tranquilidade de saber que o dinheiro do mês não depende da próxima perícia."
+        position: 5
 
   - name: "Auxílio-acidente (B36)"
     description: "Indenização por sequela permanente que reduz a capacidade de trabalho. Lei 8.213/91, art. 86. Cumulável com salário."
@@ -410,9 +444,26 @@ theses:
         title: "Sensibilidades do cliente"
         content: "Medos, experiência ruim anterior, pressa, família — vai no dossiê."
         position: 26
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "É como a indenização de um seguro: o acidente deixou uma marca no corpo, e o INSS paga por essa perda mesmo com a pessoa trabalhando."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Um soldador que machucou a mão numa queda de moto voltou ao serviço, mas nunca mais pegou peso como antes. Muita gente assim nem sabe que pode receber todo mês, além do salário. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "Os atrasados só podem ser cobrados dos últimos 5 anos: para quem teve o acidente há muito tempo, cada mês de espera é um mês que sai da conta."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "É um dinheiro a mais todo mês, junto com o salário, até a aposentadoria."
+        position: 5
 
-  # Nome atual (o roteiro renomeou em 14/10, roteiros/bpc-loas.yml). Itens do idoso: RASCUNHO 15/10
-  # (comercial/docs/2026-10-15-playbook-teses-rascunho.md §3) — só valem com o aprovado do Eduardo.
+  # Nome atual (o roteiro renomeou em 14/10, roteiros/bpc-loas.yml). Itens do idoso: APROVADO 15/10
+  # (comercial/docs/2026-10-15-playbook-teses-rascunho.md §3).
   - name: "BPC/LOAS (idoso ou pessoa com deficiência)"
     description: "Benefício assistencial de 1 salário mínimo a pessoa com deficiência de baixa renda. NÃO exige contribuição ao INSS. Lei 8.742/93, art. 20."
     area: "previdenciario"
@@ -498,6 +549,23 @@ theses:
         title: "Meu marido já é aposentado, então eu não tenho direito."
         content: "Depende do valor: o benefício do INSS ou o BPC de até 1 salário mínimo de outro idoso (65 anos ou mais) ou de pessoa com deficiência da casa não entra na conta da renda. A equipe faz a conta com você."
         position: 4
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "O BPC é uma rede de proteção: foi feito para segurar quem não conseguiu contribuir, por idade ou por deficiência."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Uma senhora de 67 anos que cuidou da casa a vida inteira e nunca pagou o INSS mora com o marido de 70 anos, aposentado com um salário mínimo. Pela regra, a aposentadoria dele não entra na conta, e ela pode ter direito. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "Em regra, o BPC é pago desde o dia do pedido no INSS: o mês em que não se pede é um mês que não volta."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "É um salário mínimo todo mês para o remédio, a comida e a dignidade da pessoa."
+        position: 5
 
   - name: "Acréscimo de 25% (grande invalidez)"
     description: "Adicional de 25% sobre a aposentadoria por incapacidade permanente quando o segurado precisa de ajuda permanente de outra pessoa. Lei 8.213/91, art. 45."
@@ -551,6 +619,23 @@ theses:
         title: "Laudos atestando a necessidade de ajuda permanente de terceiros"
         content: "Documento central do pedido."
         position: 2
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "É como um reforço para quem precisa de acompanhante: a lei reconhece que depender de outra pessoa no dia a dia custa mais."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Um aposentado por invalidez que depois de um AVC precisa da filha para tomar banho e comer. A família faz esse cuidado sem saber que a aposentadoria pode ter 25% a mais. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "Os atrasados só podem ser cobrados dos últimos 5 anos e, em muitos casos, o adicional só vale a partir do pedido: quanto antes se pede, menos se perde."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "Os 25% ajudam a pagar quem cuida: o cuidador, a fralda, o remédio."
+        position: 5
 
   # APROVADO pelo Eduardo 14/10 (comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §1).
   # 4 teses trabalhistas (spec 2026-10-14-teses-liderhub §2.1): cada uma com seu número e LP; o roteiro de cada uma
@@ -584,7 +669,7 @@ theses:
         title: "Fotos, vídeos, mensagens e nomes de testemunhas"
         content: "Mostram como o acidente aconteceu e as condições de trabalho (falta de EPI, de treinamento)."
         position: 3
-      # Abertura, qualificação e objeções: RASCUNHO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §2).
+      # Abertura, qualificação e objeções: APROVADO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §2).
       # Objeções = as FAQs trabalhistas aprovadas em 14/10, no formato do Playbook.
       - section: "abertura"
         title: "Quebra-gelo"
@@ -618,6 +703,23 @@ theses:
         title: "Achei caro o honorário de 30%."
         content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 3
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "Quando a empresa falha na segurança, é como um motorista que bate por descuido: quem causou o dano responde por ele."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Um operador de máquina perdeu parte de um dedo numa prensa sem proteção. Além do INSS, a empresa pode ter de indenizar pela sequela e pelo que ele deixou de ganhar. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "Quem saiu da empresa tem até 2 anos para entrar com o pedido, e o acidente ou o começo dos sintomas conta até 5 anos: quanto antes o advogado olhar as datas, mais seguro."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "A indenização é o reconhecimento do que a pessoa perdeu: a saúde, a força, a profissão."
+        position: 5
 
   - name: "Trabalhista — rescisão indireta"
     description: "Para quem ainda trabalha na empresa e sofre falta grave do empregador (salário atrasado, FGTS sem depósito, assédio, risco sem proteção): pede-se na Justiça o fim do contrato com as verbas de uma demissão sem justa causa."
@@ -645,7 +747,7 @@ theses:
         title: "Mensagens, áudios, fotos e nomes de testemunhas"
         content: "Provam assédio, ordens fora da função, jornada e condições de risco."
         position: 2
-      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      # Abertura, qualificação e objeções: APROVADO 15/10 (…-playbook-teses-rascunho.md §2).
       - section: "abertura"
         title: "Quebra-gelo"
         content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você está passando por problema na empresa onde trabalha. Me conta o que está acontecendo e há quanto tempo você está lá?"
@@ -674,6 +776,23 @@ theses:
         title: "Achei caro o honorário de 30%."
         content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 2
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "É a justa causa ao contrário: quando quem erra é a empresa, o trabalhador sai com os direitos de quem foi demitido."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Uma auxiliar de cozinha com 3 meses de salário atrasado queria pedir demissão. Se saísse por conta própria, perderia a multa do FGTS e o seguro-desemprego; pelo caminho certo, se a Justiça reconhecer a falta da empresa, pode buscar esses direitos. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "Os direitos contam 5 anos para trás da data da ação: cada mês de espera é um mês mais antigo que sai da conta."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "Sair com os direitos é sair de cabeça erguida, com o que é seu para recomeçar."
+        position: 5
 
   - name: "Trabalhista — reconhecimento de vínculo"
     description: "Para quem trabalhou sem carteira assinada (ou como PJ/MEI) do jeito de um empregado e saiu há até 2 anos: reconhecimento do vínculo e os direitos do período (férias, 13º, FGTS, verbas da saída)."
@@ -700,7 +819,7 @@ theses:
         title: "Mensagens, fotos, crachá, uniforme e nomes de testemunhas"
         content: "Provam a rotina, as ordens e o horário — o coração do vínculo."
         position: 2
-      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      # Abertura, qualificação e objeções: APROVADO 15/10 (…-playbook-teses-rascunho.md §2).
       - section: "abertura"
         title: "Quebra-gelo"
         content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você trabalhou sem carteira assinada. Me conta o que você fazia lá, por quanto tempo e quando saiu?"
@@ -729,6 +848,23 @@ theses:
         title: "Achei caro o honorário de 30%."
         content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 2
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "A carteira é a certidão de nascimento do emprego: o trabalho existiu, mas no papel não. O pedido na Justiça é o registro que ficou atrasado."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Um ajudante de pedreiro trabalhou 2 anos na mesma obra, todo dia, recebendo por semana, sem carteira. Esse tempo pode virar férias, 13º e FGTS. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "O pedido tem de ser feito em até 2 anos depois que o trabalho terminou: passou disso, o direito se perde."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "É o nome no registro: o trabalho que a pessoa fez passa a contar."
+        position: 5
 
   - name: "Trabalhista — direito suprimido"
     description: "Para quem tinha carteira assinada, saiu há até 2 anos e ficou com direito sem pagar: verbas da rescisão, horas extras, adicionais, FGTS, desvio de função, salário por fora, assédio."
@@ -755,7 +891,7 @@ theses:
         title: "Cartões de ponto, mensagens e nomes de testemunhas"
         content: "Provam a jornada real, a função exercida e o que aconteceu no trabalho."
         position: 2
-      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      # Abertura, qualificação e objeções: APROVADO 15/10 (…-playbook-teses-rascunho.md §2).
       - section: "abertura"
         title: "Quebra-gelo"
         content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você saiu da empresa e acha que ficou sem receber algum direito. Me conta o que aconteceu e quando você saiu?"
@@ -788,6 +924,23 @@ theses:
         title: "Achei caro o honorário de 30%."
         content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 3
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "É como um troco que ficou faltando: o trabalho foi entregue, e parte do pagamento ficou para trás."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Um motorista fazia 2 horas extras por dia que nunca apareciam no contracheque. Em alguns anos, isso vira uma conta que a empresa ficou devendo. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "O pedido tem de ser feito em até 2 anos depois da saída e alcança só os 5 anos antes da ação: cada mês de espera é um mês que sai da conta."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "Hora extra é tempo de vida longe da família: cobrar é receber pelo que já foi dado."
+        position: 5
 
   # APROVADO pelo Eduardo 14/10 (comercial/docs/2026-10-14-tese-isencao-ir-rascunho.md §1 e §4).
   # Mesmo nome do roteiro (roteiros/isencao-ir.yml). Honorário do JUR-02 = faixa definida caso a caso → fora da tabela.
@@ -851,8 +1004,25 @@ theses:
         title: "Carta de concessão da aposentadoria ou pensão"
         content: "Data de início do benefício (se a doença é anterior, a isenção conta da aposentadoria)."
         position: 3
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "É como um desconto que nunca devia ter sido cobrado: a lei isenta, mas o desconto só para quando alguém pede."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Um aposentado tratou um câncer há 3 anos e continuou com o imposto descontado todo mês. Além de parar o desconto, ele pode pedir de volta o que foi retido. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "A restituição alcança só os últimos 5 anos: cada mês de espera é um mês de imposto que não volta mais."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "É a aposentadoria inteira no bolso, sem o desconto do imposto."
+        position: 5
 
-  # RASCUNHO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §1) — só vale com o aprovado do Eduardo.
+  # APROVADO pelo Eduardo 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §1).
   # Mesmo nome do roteiro (roteiros/salario-maternidade.yml). Fora da tabela do JUR-02: a IA não cita valor.
   # Base: Lei 8.213/91, arts. 71, 71-A, 72 e 73; ADI 2.110 (STF) + IN PRES/INSS 188/2025 (sem carência);
   # IN 128/2022, art. 357 §5º (5 anos) e art. 358 I (natimorto); rural: art. 39 p.ú. (12 meses de atividade) — revisor 15/10
@@ -940,4 +1110,21 @@ theses:
       - section: "documento"
         title: "Documentos da atividade rural ou da pesca (se for o caso)"
         content: "Dos 12 meses antes do parto: bloco de produtor, notas de venda da produção, contrato de arrendamento ou parceria, declaração do Imposto de Renda com renda rural; carteira de pescadora (RGP) e ficha do sindicato também ajudam."
+        position: 5
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      - section: "apresentacao"
+        title: "Analogia"
+        content: "É a licença paga pelo INSS: em regra, 120 dias para cuidar do bebê, para a mãe segurada (de carteira, MEI, autônoma, desempregada há pouco tempo ou da roça), também na adoção."
+        position: 2
+      - section: "apresentacao"
+        title: "História (exemplo ilustrativo)"
+        content: "Uma manicure MEI pagava o INSS em dia, teve o bebê e achou que só quem tem carteira recebia. Muitas mães nessa situação têm direito e não sabem. Diga sempre que é um exemplo, nunca um caso de cliente."
+        position: 3
+      - section: "apresentacao"
+        title: "Escassez real (prazo que corre)"
+        content: "O pedido pode ser feito em até 5 anos depois do parto: passou disso, o direito se perde."
+        position: 4
+      - section: "apresentacao"
+        title: "Símbolo"
+        content: "São 4 meses com dinheiro para cuidar do bebê sem a preocupação das contas."
         position: 5

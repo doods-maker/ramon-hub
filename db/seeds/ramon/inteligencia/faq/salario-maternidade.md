@@ -1,6 +1,6 @@
 ---
 tese: Salário-maternidade
-# RASCUNHO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §1) — só vale com o aprovado do Eduardo.
+# APROVADO pelo Eduardo 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §1).
 # Honorário fora da tabela do JUR-02: a IA não cita valor.
 ---
 
