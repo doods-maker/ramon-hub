@@ -34,6 +34,40 @@ RSpec.describe LeadTask do
     expect(task.agenda_user_id).to eq(closer.id)
   end
 
+  describe 'agenda no Google' do
+    let(:closer) { create(:user) }
+
+    before { lead.update!(closer: closer) }
+
+    it 'reunião criada enfileira criar' do
+      expect { create(:lead_task, account: account, lead: lead, kind: 'meeting') }
+        .to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('criar', hash_including('task_id' => kind_of(Integer)))
+    end
+
+    it 'follow-up não enfileira nada' do
+      expect { create(:lead_task, account: account, lead: lead, kind: 'follow_up') }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+
+    it 'mudar due_at ou formato enfileira atualizar; outro campo não' do
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+      expect { task.update!(due_at: 3.days.from_now) }.to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('atualizar', anything)
+      expect { task.update!(formato: 'whatsapp') }.to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('atualizar', anything)
+      expect { task.update!(title: 'Outro') }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+
+    it 'destroy enfileira cancelar com o id do evento e o dono' do
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+      task.update_columns(google_event_id: 'ev1') # rubocop:disable Rails/SkipsModelValidations
+      expect { task.destroy! }.to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+        .with('cancelar', { 'task_id' => task.id, 'google_event_id' => 'ev1', 'agenda_user_id' => closer.id })
+    end
+
+    it 'reunião do Cal.com (mesmo ReuniaoAgendamento) também enfileira criar' do
+      expect { Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: 3.days.from_now, title: 'Cal', task_title: 'Reunião Cal.com: Cal') }
+        .to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('criar', anything)
+    end
+  end
+
   describe 'scopes' do
     # Comparação por id (não por objeto): igualdade de AR depende de identidade
     # de classe, que quebra em shard com reload (ver nota de specs no AGENTS.md).

@@ -91,11 +91,15 @@ export const actions = {
     return data;
   },
 
-  remarcarReuniao: async ({ commit }, { leadId, taskId, startsAt }) => {
+  remarcarReuniao: async (
+    { commit },
+    { leadId, taskId, startsAt, formato, force }
+  ) => {
     const { data } = await LeadTasksAPI.remarcarReuniao(
       leadId,
       taskId,
-      startsAt
+      startsAt,
+      { formato, force }
     );
     commit(types.MERGE_LEAD_TASK, data);
     return data;

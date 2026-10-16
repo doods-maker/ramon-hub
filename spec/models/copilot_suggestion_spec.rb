@@ -54,6 +54,17 @@ RSpec.describe CopilotSuggestion do
   end
 
   describe '#apply! com acao reuniao' do
+    before { allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(true) }
+
+    it 'recusa quando o horário ficou ocupado' do
+      allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(false)
+      suggestion = sugestao('reuniao', 'quando' => 1.week.from_now.iso8601)
+
+      expect(suggestion.apply!).to be(false)
+      expect(suggestion.motivo_da_recusa).to eq('Esse horário ficou ocupado — escolha outro')
+      expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
+    end
+
     it 'cria a tarefa de reuniao na esteira' do
       suggestion = sugestao('reuniao', 'quando' => 1.week.from_now.iso8601, 'titulo' => 'Fechamento')
 

@@ -61,6 +61,20 @@ RSpec.describe Ramon::GoogleAgenda::Cliente do
       expect(stub).to have_been_requested
     end
 
+    it 'atualiza pedindo Meet novo e devolve o link' do
+      stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query.merge('conferenceDataVersion' => '1'),
+                                                     body: hash_including('conferenceData' => hash_including('createRequest')))
+                                               .to_return(json(hangoutLink: 'https://meet.google.com/abc'))
+      expect(cliente.atualizar('ev1', inicio: inicio, fim: fim, meet: true)).to eq('https://meet.google.com/abc')
+      expect(stub).to have_been_requested
+    end
+
+    it 'atualiza a descrição quando informada' do
+      stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query, body: hash_including('description' => 'Nova')).to_return(json({}))
+      cliente.atualizar('ev1', inicio: inicio, fim: fim, descricao: 'Nova')
+      expect(stub).to have_been_requested
+    end
+
     it 'cancelar com 410 conta como sucesso' do
       stub_request(:delete, "#{url}/ev1").with(query: cancelar_query).to_return(status: 410)
       expect(cliente.cancelar('ev1')).to be(true)

@@ -7,17 +7,21 @@ class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::Ba
   before_action :check_starts_at, only: [:create, :update]
 
   def create
-    return render_conflito if reuniao_aberta && !ActiveModel::Type::Boolean.new.cast(params[:force])
+    return render_conflito if reuniao_aberta && !force?
+    return render_ocupado unless force? || Ramon::ReuniaoAgendamento.livre?(@lead, starts_at)
 
     title = params[:title].to_s.strip.presence || 'Reunião'
-    Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: starts_at, title: title, user: Current.user)
+    Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: starts_at, title: title, user: Current.user, formato: formato || 'video')
     # leads/show usa o partial pelo nome curto, que não resolve fora do
     # LeadsController — template próprio aponta o partial pelo caminho cheio.
     @lead.reload
   end
 
   def update
-    @lead_task = Ramon::ReuniaoAgendamento.remarcar(task: meeting_task, starts_at: starts_at, user: Current.user)
+    task = meeting_task
+    return render_ocupado unless force? || Ramon::ReuniaoAgendamento.livre?(@lead, starts_at, task: task)
+
+    @lead_task = Ramon::ReuniaoAgendamento.remarcar(task: task, starts_at: starts_at, user: Current.user, formato: formato)
   end
 
   def destroy
@@ -33,7 +37,19 @@ class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::Ba
   end
 
   def check_starts_at
-    render json: { error: 'STARTS_AT_INVALIDO' }, status: :unprocessable_entity if starts_at.blank?
+    return render json: { error: 'STARTS_AT_INVALIDO' }, status: :unprocessable_entity if starts_at.blank?
+
+    render json: { error: 'FORMATO_INVALIDO' }, status: :unprocessable_entity if params[:formato].present? && formato.nil?
+  end
+
+  def force? = ActiveModel::Type::Boolean.new.cast(params[:force])
+
+  # nil = não veio (ou veio inválido, barrado no check_starts_at).
+  def formato = params[:formato].presence_in(LeadTask::FORMATOS)
+
+  def render_ocupado
+    render json: { error: 'HORARIO_OCUPADO', message: 'Esse horário está ocupado na agenda do Closer. Escolha outro ou marque mesmo assim.' },
+           status: :conflict
   end
 
   def reuniao_aberta

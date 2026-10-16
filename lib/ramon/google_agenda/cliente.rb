@@ -47,10 +47,14 @@ class Ramon::GoogleAgenda::Cliente
     { id: evento['id'], meet_url: meet_url(evento) }
   end
 
-  def atualizar(id, inicio:, fim:)
+  # meet: true pede um Meet novo (WhatsApp → vídeo) e devolve o link; descricao: troca o texto quando informada.
+  def atualizar(id, inicio:, fim:, meet: nil, descricao: nil)
     corpo = { start: { dateTime: inicio.iso8601 }, end: { dateTime: fim.iso8601 } }
-    requisitar(:patch, "/#{ERB::Util.url_encode(id)}", query: { sendUpdates: 'all' }, body: corpo)
-    true
+    corpo[:description] = descricao if descricao
+    corpo[:conferenceData] = { createRequest: { requestId: "hub-#{id}-#{SecureRandom.hex(4)}" } } if meet
+    query = meet ? { sendUpdates: 'all', conferenceDataVersion: 1 } : { sendUpdates: 'all' }
+    evento = requisitar(:patch, "/#{ERB::Util.url_encode(id)}", query: query, body: corpo)
+    meet ? meet_url(evento) : true
   end
 
   def cancelar(id)

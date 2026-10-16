@@ -13,6 +13,31 @@ RSpec.describe Ramon::ReuniaoAgendamento do
     described_class.call(lead: lead, starts_at: starts_at, title: 'Primeiro Atendimento', user: user, **)
   end
 
+  it 'grava o formato escolhido (padrão vídeo)', :aggregate_failures do
+    agendar(formato: 'whatsapp')
+    expect(lead.lead_tasks.find_by!(kind: 'meeting').formato).to eq 'whatsapp'
+  end
+
+  describe '.livre?' do
+    it 'sem Closer no time não há agenda para conferir: livre' do
+      expect(described_class.livre?(lead, starts_at)).to be(true)
+    end
+
+    it 'confere a agenda do Closer do lead; remarcando, ignora a própria reunião', :aggregate_failures do
+      closer = create(:user, account: account)
+      lead.update!(closer: closer)
+      disponibilidade = instance_double(Ramon::Agenda::Disponibilidade, livre?: false)
+      allow(Ramon::Agenda::Disponibilidade).to receive(:new).with(user: closer, account: account).and_return(disponibilidade)
+
+      expect(described_class.livre?(lead, starts_at)).to be(false)
+      expect(disponibilidade).to have_received(:livre?).with(starts_at, ignorar_task_id: nil)
+
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+      described_class.livre?(lead, starts_at, task: task)
+      expect(disponibilidade).to have_received(:livre?).with(starts_at, ignorar_task_id: task.id)
+    end
+  end
+
   it 'cria a tarefa de reunião, a atividade e anda o lead pra Reunião agendada', :aggregate_failures do
     agendar
 

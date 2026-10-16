@@ -6,6 +6,7 @@ import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import TaskBellMenu from '../kanban/TaskBellMenu.vue';
 import ConfirmModal from '../ConfirmModal.vue';
+import FormatoReuniao from './FormatoReuniao.vue';
 import {
   AVISO,
   CAMPO,
@@ -119,20 +120,34 @@ const paraCampo = date =>
     .slice(0, 16);
 const remarcarAberto = ref(false);
 const novoHorario = ref('');
+const novoFormato = ref('video');
+// 409 HORARIO_OCUPADO: mensagem no alerta da janela, com "Marcar mesmo assim"
+const horarioOcupado = ref('');
 const minHorario = ref('');
 const abrirRemarcar = () => {
   novoHorario.value = paraCampo(new Date(task.value.due_at));
   minHorario.value = paraCampo(new Date());
+  novoFormato.value = task.value.formato || 'video';
+  horarioOcupado.value = '';
   remarcarAberto.value = true;
 };
-const remarcar = () =>
+const remarcar = (force = false) =>
   run(async () => {
     if (!novoHorario.value) return;
-    await store.dispatch('leadTasks/remarcarReuniao', {
-      leadId: props.leadId,
-      taskId: task.value.id,
-      startsAt: new Date(novoHorario.value).toISOString(),
-    });
+    horarioOcupado.value = '';
+    try {
+      await store.dispatch('leadTasks/remarcarReuniao', {
+        leadId: props.leadId,
+        taskId: task.value.id,
+        startsAt: new Date(novoHorario.value).toISOString(),
+        formato: novoFormato.value,
+        force: force === true,
+      });
+    } catch (e) {
+      if (e?.response?.data?.error !== 'HORARIO_OCUPADO') throw e;
+      horarioOcupado.value = e.response.data.message || '-';
+      return;
+    }
     remarcarAberto.value = false;
     emit('notesChanged');
     useAlert(t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCADA'));
@@ -415,6 +430,15 @@ const reschedule = ({ dueAt }) =>
             :class="CAMPO"
             class="font-mono"
           />
+          <FormatoReuniao v-model="novoFormato" class="mt-3" />
+          <p
+            v-if="horarioOcupado"
+            data-testid="remarcar-ocupado"
+            :class="[AVISO, TOM.amber]"
+            class="mt-3 mb-0"
+          >
+            {{ horarioOcupado }}
+          </p>
           <p
             v-if="isCalcom"
             data-testid="remarcar-calcom"
@@ -437,9 +461,13 @@ const reschedule = ({ dueAt }) =>
             <Button
               data-testid="remarcar-confirmar"
               sm
-              :label="$t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCAR')"
+              :label="
+                horarioOcupado
+                  ? $t('RAMON.TASKS.MEETING_CONFLICT_CONFIRM')
+                  : $t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCAR')
+              "
               :disabled="busy || !novoHorario"
-              @click="remarcar"
+              @click="remarcar(Boolean(horarioOcupado))"
             />
           </div>
         </div>

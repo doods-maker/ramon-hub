@@ -83,8 +83,10 @@ class Ramon::FunilObservador::Aplicar
     end
   end
 
-  # false = a marcação não aconteceu (ex.: o fluxo falhou): sem registro nem atividade de IA.
+  # false = a marcação não aconteceu (ex.: horário ocupado ou o fluxo falhou): sem registro nem atividade de IA.
   def agendar_reuniao(inicio, desfazer)
+    return false unless Ramon::ReuniaoAgendamento.livre?(@lead, inicio) # horário pego no meio: pula, sem registro
+
     antes = @lead.lead_stage_id
     Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: inicio, title: 'Reunião', user: nil)
     tarefa = @lead.lead_tasks.open_tasks.where(kind: 'meeting').order(:id).last

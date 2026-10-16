@@ -11,6 +11,8 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
     post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao_agendada", params: params, headers: headers, as: :json
   end
 
+  before { allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(true) }
+
   it 'sem login responde 401' do
     agendar({ starts_at: starts_at.iso8601 }, {})
     expect(response).to have_http_status(:unauthorized)
@@ -36,6 +38,55 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
   it 'sem data/hora válida dá 422 sem criar nada', :aggregate_failures do
     expect { agendar(starts_at: 'amanhã') }.not_to change(LeadTask, :count)
     expect(response).to have_http_status(:unprocessable_entity)
+  end
+
+  describe 'horário ocupado' do
+    it 'responde 409 HORARIO_OCUPADO com a mensagem e não marca', :aggregate_failures do
+      allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(false)
+
+      expect { agendar(starts_at: starts_at.iso8601) }.not_to change(LeadTask, :count)
+      expect(response).to have_http_status(:conflict)
+      expect(response.parsed_body).to include('error' => 'HORARIO_OCUPADO', 'message' => be_present)
+    end
+
+    it 'com force=true marca mesmo assim (201)' do
+      allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(false)
+
+      expect { agendar(starts_at: starts_at.iso8601, force: true) }.to change(LeadTask, :count).by(1)
+      expect(response).to have_http_status(:success)
+    end
+
+    it 'remarcar para horário ocupado dá 409, e com force remarca', :aggregate_failures do
+      agendar(starts_at: starts_at.iso8601)
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+      allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(false)
+      novo = 4.days.from_now.change(usec: 0)
+      url = "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao_agendada"
+
+      patch url, params: { task_id: task.id, starts_at: novo.iso8601 }, headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:conflict)
+      expect(task.reload.due_at).to eq starts_at
+
+      patch url, params: { task_id: task.id, starts_at: novo.iso8601, force: true }, headers: agent.create_new_auth_token, as: :json
+      expect(task.reload.due_at).to eq novo
+    end
+  end
+
+  describe 'formato' do
+    it 'aceita whatsapp' do
+      agendar(starts_at: starts_at.iso8601, formato: 'whatsapp')
+      expect(lead.lead_tasks.find_by!(kind: 'meeting').formato).to eq('whatsapp')
+    end
+
+    it 'sem formato fica em vídeo' do
+      agendar(starts_at: starts_at.iso8601)
+      expect(lead.lead_tasks.find_by!(kind: 'meeting').formato).to eq('video')
+    end
+
+    it 'formato inválido dá 422' do
+      expect { agendar(starts_at: starts_at.iso8601, formato: 'fax') }.not_to change(LeadTask, :count)
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
   end
 
   describe 'PATCH (Remarcar)' do

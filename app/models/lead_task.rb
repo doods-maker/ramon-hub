@@ -21,6 +21,9 @@ class LeadTask < ApplicationRecord
   before_create :atribuir_agenda_user, if: -> { kind == 'meeting' }
   after_create_commit :record_created_activity, :touch_lead
   after_update_commit :touch_lead
+  after_create_commit :empurrar_para_google_criar, if: -> { kind == 'meeting' }
+  after_update_commit :empurrar_para_google_atualizar, if: -> { kind == 'meeting' && saved_changes.keys.intersect?(%w[due_at formato]) }
+  after_destroy_commit :empurrar_para_google_cancelar, if: -> { kind == 'meeting' && google_event_id.present? }
 
   # no_show: reunião em que o cliente não veio — conclui sem resultado de
   # reunião (o prêmio do SDR só conta a qualificada) e registra o no-show.
@@ -37,6 +40,17 @@ class LeadTask < ApplicationRecord
   # Dono da agenda da reunião: o Closer do lead ou o próximo da fila.
   def atribuir_agenda_user
     self.agenda_user_id ||= lead.closer_id || Ramon::Papeis.proximo(account, 'closer')&.id
+  end
+
+  # Reunião do hub vive no Google do dono (job: sem conta Google, sai calado). A linha some no destroy → dados vão no job.
+  def empurrar_para_google_criar = Ramon::GoogleAgendaPushJob.perform_later('criar', { 'task_id' => id })
+
+  def empurrar_para_google_atualizar = Ramon::GoogleAgendaPushJob.perform_later('atualizar', { 'task_id' => id })
+
+  def empurrar_para_google_cancelar
+    Ramon::GoogleAgendaPushJob.perform_later(
+      'cancelar', { 'task_id' => id, 'google_event_id' => google_event_id, 'agenda_user_id' => agenda_user_id }
+    )
   end
 
   def record_created_activity

@@ -480,7 +480,10 @@
       "MEETING_ERROR": "Could not schedule the meeting — try again",
       "MEETING_CONFLICT_TITLE": "There is an open meeting",
       "MEETING_CONFLICT": "There is already an open meeting on {quando} — book another one anyway?",
-      "MEETING_CONFLICT_CONFIRM": "Book anyway"
+      "MEETING_CONFLICT_CONFIRM": "Book anyway",
+      "FORMATO_VIDEO": "Video (Google Meet)",
+      "FORMATO_WHATSAPP": "WhatsApp call",
+      "BUSY_TITLE": "Time slot busy"
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",
