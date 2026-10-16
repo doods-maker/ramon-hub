@@ -1,7 +1,7 @@
 # Contrato do lead (cartão ZapSign do painel): confere no ZapSign o status real
 # do doc (o payload do webhook não é a verdade) e grava o selo assinado/recusado
-# em custom_attributes['zapsign'] + histórico + sino. NUNCA marca o lead como
-# ganho: ganho dispara AdvBox/Drive/NPS e continua sendo decisão do closer.
+# em custom_attributes['zapsign'] + histórico + sino. Ganho automático só atrás da chave zapsign_ganho
+# (Ramon::FunilRegras; decisão do Eduardo 16/10, revoga a de 08/10 de nunca marcar ganho).
 # Regra fixa (decisão do Eduardo 08/10): selo, histórico e sino sempre aqui; os fluxos comuns ouvem Contrato assinado/recusado.
 class Ramon::ZapsignLeadStatusJob < ApplicationJob
   queue_as :low
@@ -25,6 +25,7 @@ class Ramon::ZapsignLeadStatusJob < ApplicationJob
     zapsign = lead.custom_attributes['zapsign'].merge('status' => doc['status'], chave => data_do_evento(doc))
     lead.update!(custom_attributes: lead.custom_attributes.merge('zapsign' => zapsign))
     self.class.avisar(lead, doc['status'])
+    Ramon::FunilRegras.contrato_assinado(lead) if doc['status'] == 'signed'
     Ramon::Fluxos::Disparo.externo(gatilho, lead)
   end
 

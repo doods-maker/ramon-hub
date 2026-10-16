@@ -34,6 +34,8 @@ class Ramon::ZapsignContractService
       'criado_em' => Time.zone.now.iso8601
     }
     gravar(stored)
+    Ramon::FunilRegras.contrato_criado(@lead) # só doc novo: a regravação de status não passa por aqui
+    stored
   end
 
   # Prévia sem chamar o ZapSign: o que sairia em branco + os dados atuais pro

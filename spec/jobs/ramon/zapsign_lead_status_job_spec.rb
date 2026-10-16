@@ -9,7 +9,7 @@ RSpec.describe Ramon::ZapsignLeadStatusJob do
            })
   end
 
-  it 'assinado: grava status/data, histórico e sino — sem marcar ganho' do
+  it 'assinado: grava status/data, histórico e sino — sem marcar ganho (peça zapsign_ganho off)' do
     doc = { 'status' => 'signed', 'signers' => [{ 'signed_at' => '2026-10-03T14:00:00Z' }] }
     allow(Ramon::ZapsignClient).to receive(:doc).with('doc-1').and_return(doc)
     allow(Ramon::Fluxos::Disparo).to receive(:externo).and_return([])
@@ -22,6 +22,16 @@ RSpec.describe Ramon::ZapsignLeadStatusJob do
     expect(lead.lead_activities.pluck(:kind)).to include('zapsign_signed')
     expect(Notification.where(notification_type: 'ramon_contract_status', user: user, primary_actor: lead)).to exist
     expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('contrato_assinado', lead).once # só os fluxos comuns
+  end
+
+  it 'assinado com a peça zapsign_ganho on: marca o lead como ganho' do
+    Ramon::FunilAutomatico.mudar!(account, 'zapsign_ganho', 'on')
+    allow(Ramon::ZapsignClient).to receive(:doc).with('doc-1').and_return('status' => 'signed', 'signers' => [])
+    allow(Ramon::Fluxos::Disparo).to receive(:externo).and_return([])
+
+    described_class.perform_now(lead.id, 'doc-1')
+
+    expect(lead.reload.won_at).to be_present
   end
 
   it 'recusado: grava status e data da recusa' do
