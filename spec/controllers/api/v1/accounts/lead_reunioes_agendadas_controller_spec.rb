@@ -46,13 +46,14 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
 
       expect { agendar(starts_at: starts_at.iso8601) }.not_to change(LeadTask, :count)
       expect(response).to have_http_status(:conflict)
-      expect(response.parsed_body).to include('error' => 'HORARIO_OCUPADO', 'message' => be_present)
+      expect(response.parsed_body).to eq('error' => 'HORARIO_OCUPADO')
     end
 
-    it 'com force=true marca mesmo assim (201)' do
+    it 'com force_ocupado=true marca mesmo assim (201); force sozinho não libera o horário ocupado', :aggregate_failures do
       allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(false)
 
-      expect { agendar(starts_at: starts_at.iso8601, force: true) }.to change(LeadTask, :count).by(1)
+      expect { agendar(starts_at: starts_at.iso8601, force: true) }.not_to change(LeadTask, :count)
+      expect { agendar(starts_at: starts_at.iso8601, force_ocupado: true) }.to change(LeadTask, :count).by(1)
       expect(response).to have_http_status(:success)
     end
 
@@ -67,7 +68,7 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
       expect(response).to have_http_status(:conflict)
       expect(task.reload.due_at).to eq starts_at
 
-      patch url, params: { task_id: task.id, starts_at: novo.iso8601, force: true }, headers: agent.create_new_auth_token, as: :json
+      patch url, params: { task_id: task.id, starts_at: novo.iso8601, force_ocupado: true }, headers: agent.create_new_auth_token, as: :json
       expect(task.reload.due_at).to eq novo
     end
   end

@@ -26,15 +26,15 @@ RSpec.describe Ramon::ReuniaoAgendamento do
     it 'confere a agenda do Closer do lead; remarcando, ignora a própria reunião', :aggregate_failures do
       closer = create(:user, account: account)
       lead.update!(closer: closer)
-      disponibilidade = instance_double(Ramon::Agenda::Disponibilidade, livre?: false)
+      disponibilidade = instance_double(Ramon::Agenda::Disponibilidade, colide?: true)
       allow(Ramon::Agenda::Disponibilidade).to receive(:new).with(user: closer, account: account).and_return(disponibilidade)
 
       expect(described_class.livre?(lead, starts_at)).to be(false)
-      expect(disponibilidade).to have_received(:livre?).with(starts_at, ignorar_task_id: nil)
+      expect(disponibilidade).to have_received(:colide?).with(starts_at, ignorar_task_id: nil)
 
       task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
       described_class.livre?(lead, starts_at, task: task)
-      expect(disponibilidade).to have_received(:livre?).with(starts_at, ignorar_task_id: task.id)
+      expect(disponibilidade).to have_received(:colide?).with(starts_at, ignorar_task_id: task.id)
     end
   end
 

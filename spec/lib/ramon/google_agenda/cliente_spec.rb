@@ -54,6 +54,21 @@ RSpec.describe Ramon::GoogleAgenda::Cliente do
     end
   end
 
+  describe '#criar com id e #evento' do
+    it 'manda o id escolhido no corpo' do
+      stub = stub_request(:post, url).with(query: hash_including({}), body: hash_including('id' => 'hubtask7'))
+                                     .to_return(json(id: 'hubtask7'))
+      expect(cliente.criar(inicio: inicio, fim: fim, titulo: 'T', descricao: 'D', meet: false, hub_task_id: 7, id: 'hubtask7'))
+        .to include(id: 'hubtask7')
+      expect(stub).to have_been_requested
+    end
+
+    it 'busca um evento pelo id' do
+      stub_request(:get, "#{url}/hubtask7").to_return(json(id: 'hubtask7', hangoutLink: 'https://meet.google.com/q'))
+      expect(cliente.evento('hubtask7')).to eq(id: 'hubtask7', meet_url: 'https://meet.google.com/q')
+    end
+  end
+
   describe '#atualizar e #cancelar' do
     it 'atualiza com PATCH' do
       stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query).to_return(json({}))

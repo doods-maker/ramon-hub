@@ -175,13 +175,16 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
                                             'etapa_produzida_id' => lead.lead_stage_id)
     end
 
-    it 'horário ocupado pula: sem tarefa e sem registro' do
+    it 'horário ocupado pula: sem tarefa nem FunilAcao, com rastro no histórico (uma vez só)', :aggregate_failures do
       allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(false)
 
-      aplicar(decisao)
+      2.times { aplicar(decisao) }
 
       expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
       expect(FunilAcao.count).to eq(0)
+      atividades = lead.lead_activities.where(kind: 'funil_auto')
+      expect(atividades.count).to eq(1)
+      expect(atividades.last.to_value).to eq("Reunião pedida para #{Ramon::ReuniaoAgendamento.quando(inicio)} não marcada: horário ocupado na agenda")
     end
 
     it 'data no passado não faz nada' do

@@ -35,7 +35,7 @@ class LeadTasksAPI extends ApiClient {
       task_id: taskId,
       starts_at: startsAt,
       ...(formato ? { formato } : {}),
-      ...(force ? { force: true } : {}),
+      ...(force ? { force_ocupado: true } : {}),
     });
   }
 

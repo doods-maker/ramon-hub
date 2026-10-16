@@ -41,7 +41,13 @@ class Ramon::Agenda::Disponibilidade
     return false unless util?(dia) && inicio >= @agora + ANTECEDENCIA
     return false unless janelas(dia).any? { |abre, fecha| inicio >= abre && inicio + PASSO <= fecha }
 
-    livre_na_grade?(inicio, ocupados(de: inicio - 1.day, ate: inicio + 1.day, ignorar: ignorar_task_id))
+    !colide?(inicio, ignorar_task_id: ignorar_task_id)
+  end
+
+  # Só a colisão com reunião do hub ou compromisso do Google (com a folga), sem as regras da oferta (janela, antecedência, dia útil).
+  # É o que a marcação confere: a janela comercial vale para o que se oferece, não para o que a pessoa escolhe.
+  def colide?(inicio, ignorar_task_id: nil)
+    !livre_na_grade?(inicio, ocupados(de: inicio - 1.day, ate: inicio + 1.day, ignorar: ignorar_task_id))
   end
 
   private

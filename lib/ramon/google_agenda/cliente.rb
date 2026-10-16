@@ -37,14 +37,20 @@ class Ramon::GoogleAgenda::Cliente
     itens
   end
 
-  def criar(inicio:, fim:, titulo:, descricao:, meet:, hub_task_id:, convidado_email: nil) # rubocop:disable Metrics/ParameterLists
+  def criar(inicio:, fim:, titulo:, descricao:, meet:, hub_task_id:, convidado_email: nil, id: nil) # rubocop:disable Metrics/ParameterLists
     corpo = { summary: titulo, description: descricao, start: { dateTime: inicio.iso8601 }, end: { dateTime: fim.iso8601 },
               extendedProperties: { private: { hub_task_id: hub_task_id.to_s } } }
+    corpo[:id] = id if id # id escolhido por nós: nova tentativa da mesma criação dá 409 em vez de evento duplicado
     corpo[:attendees] = [{ email: convidado_email }] if convidado_email.present?
     corpo[:conferenceData] = { createRequest: { requestId: "hub-#{hub_task_id}" } } if meet
     query = { conferenceDataVersion: 1, sendUpdates: convidado_email.present? ? 'all' : 'none' }
     evento = requisitar(:post, '', query: query, body: corpo)
     { id: evento['id'], meet_url: meet_url(evento) }
+  end
+
+  def evento(id)
+    corpo = requisitar(:get, "/#{ERB::Util.url_encode(id)}")
+    { id: corpo['id'], meet_url: meet_url(corpo) }
   end
 
   # meet: true pede um Meet novo (WhatsApp → vídeo) e devolve o link; descricao: troca o texto quando informada.

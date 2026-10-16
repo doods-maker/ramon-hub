@@ -483,7 +483,8 @@
       "MEETING_CONFLICT_CONFIRM": "Marcar mesmo assim",
       "FORMATO_VIDEO": "Vídeo (Google Meet)",
       "FORMATO_WHATSAPP": "Ligação pelo WhatsApp",
-      "BUSY_TITLE": "Horário ocupado"
+      "BUSY_TITLE": "Horário ocupado",
+      "BUSY_MESSAGE": "Esse horário está ocupado na agenda do Closer. Escolha outro ou marque mesmo assim."
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",

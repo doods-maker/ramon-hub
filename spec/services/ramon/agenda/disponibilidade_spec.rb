@@ -96,6 +96,19 @@ RSpec.describe Ramon::Agenda::Disponibilidade do
     end
   end
 
+  describe '#colide?' do
+    it 'sábado às 10h sem nada na agenda não colide (janela e dia útil são regras da oferta)' do
+      expect(disp.colide?(hora('2026-10-24T10:00:00-03:00'))).to be(false)
+    end
+
+    it 'colide com reunião do hub e com a folga; ignora a própria reunião' do
+      task = reuniao_as('2026-10-22T14:00:00-03:00')
+      expect(disp.colide?(hora('2026-10-22T14:00:00-03:00'))).to be(true)
+      expect(disp.colide?(hora('2026-10-22T14:30:00-03:00'))).to be(true) # folga de 15 min
+      expect(disp.colide?(hora('2026-10-22T14:00:00-03:00'), ignorar_task_id: task.id)).to be(false)
+    end
+  end
+
   describe '.texto' do
     it 'junta horários do mesmo dia com "ou"' do
       txt = described_class.texto([hora('2026-10-22T14:00:00-03:00'), hora('2026-10-23T09:00:00-03:00'), hora('2026-10-23T10:30:00-03:00')])

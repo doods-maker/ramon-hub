@@ -22,11 +22,11 @@ class Ramon::ReuniaoAgendamento
     new(lead, starts_at, title, user, formato).call(task_title)
   end
 
-  # Horário livre na agenda de quem vai receber a reunião (o dono da tarefa; antes de existir, o Closer do lead ou o próximo da fila).
-  # Sem dono não há agenda para conferir: livre. Remarcando, a própria reunião não conta como ocupada.
+  # Sem colisão na agenda de quem vai receber a reunião (o dono da tarefa; antes de existir, o Closer do lead ou o próximo da fila).
+  # Confere só a colisão, não a janela comercial (essa é regra da oferta). Sem dono não há agenda: livre. Remarcando, ignora a própria.
   def self.livre?(lead, inicio, task: nil)
     dono = task&.agenda_user || lead.closer || Ramon::Papeis.proximo(lead.account, Ramon::Papeis::CLOSER)
-    dono.nil? || Ramon::Agenda::Disponibilidade.new(user: dono, account: lead.account).livre?(inicio, ignorar_task_id: task&.id)
+    dono.nil? || !Ramon::Agenda::Disponibilidade.new(user: dono, account: lead.account).colide?(inicio, ignorar_task_id: task&.id)
   end
 
   # Remarcar (painel do lead): a mesma reunião em outro horário — lembretes do

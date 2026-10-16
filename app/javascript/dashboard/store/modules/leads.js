@@ -172,12 +172,13 @@ export const actions = {
   // Devolve o lead já na etapa nova; a tarefa de reunião recarrega no painel.
   agendarReuniao: async (
     { commit, dispatch },
-    { id, startsAt, title, force, formato }
+    { id, startsAt, title, force, forceOcupado, formato }
   ) => {
     const response = await LeadsAPI.agendarReuniao(id, {
       startsAt,
       title,
       force,
+      forceOcupado,
       formato,
     });
     commit(types.EDIT_LEAD, response.data);

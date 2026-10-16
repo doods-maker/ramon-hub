@@ -386,7 +386,10 @@ const savingTask = ref(false);
 // reunião aberta devolvida pelo 409: pergunta antes de marcar outra
 const reuniaoAberta = ref(null);
 // horário ocupado na agenda do Closer (409 HORARIO_OCUPADO): mostra a mensagem e oferece marcar mesmo assim
-const horarioOcupado = ref('');
+const horarioOcupado = ref(false);
+// o que o usuário já confirmou nesta marcação (cada aviso tem a sua confirmação)
+const okAberta = ref(false);
+const okOcupado = ref(false);
 const reuniaoAbertaQuando = computed(() => {
   if (!reuniaoAberta.value?.due_at) return '';
   return new Date(reuniaoAberta.value.due_at).toLocaleString('pt-BR', {
@@ -396,10 +399,10 @@ const reuniaoAbertaQuando = computed(() => {
     minute: '2-digit',
   });
 });
-const addTask = async (force = false) => {
+const addTask = async () => {
   if (savingTask.value || (isMeetingForm.value && !taskDate.value)) return;
   reuniaoAberta.value = null;
-  horarioOcupado.value = '';
+  horarioOcupado.value = false;
   savingTask.value = true;
   const title = taskTitle.value.trim();
   const due = taskDate.value ? new Date(taskDate.value) : tomorrowAt9();
@@ -410,7 +413,8 @@ const addTask = async (force = false) => {
         startsAt: due.toISOString(),
         title,
         formato: taskFormato.value,
-        force: force === true,
+        force: okAberta.value,
+        forceOcupado: okOcupado.value,
       });
       notesTick.value += 1;
       useAlert(t('RAMON.TASKS.MEETING_SCHEDULED'));
@@ -425,12 +429,14 @@ const addTask = async (force = false) => {
     taskTitle.value = '';
     taskDate.value = '';
     taskFormato.value = 'video';
+    okAberta.value = false;
+    okOcupado.value = false;
     taskKind.value = 'follow_up';
     taskFormOpen.value = false;
   } catch (e) {
     if (isMeetingForm.value && e?.response?.status === 409) {
       if (e.response.data?.error === 'HORARIO_OCUPADO') {
-        horarioOcupado.value = e.response.data.message || '-';
+        horarioOcupado.value = true;
       } else {
         reuniaoAberta.value = e.response.data?.task || {};
       }
@@ -446,6 +452,15 @@ const addTask = async (force = false) => {
   } finally {
     savingTask.value = false;
   }
+};
+
+const confirmarAberta = () => {
+  okAberta.value = true;
+  addTask();
+};
+const confirmarOcupado = () => {
+  okOcupado.value = true;
+  addTask();
 };
 
 // ----- Reunião (Closer): Qualificada / Não qualificada no Andamento quando
@@ -880,7 +895,7 @@ const discard = async () => {
             "
             :confirm-label="$t('RAMON.TASKS.MEETING_CONFLICT_CONFIRM')"
             confirm-color="blue"
-            @confirm="addTask(true)"
+            @confirm="confirmarAberta"
             @cancel="reuniaoAberta = null"
           />
         </Teleport>
@@ -890,11 +905,11 @@ const discard = async () => {
             v-if="horarioOcupado"
             data-testid="horario-ocupado"
             :title="$t('RAMON.TASKS.BUSY_TITLE')"
-            :message="horarioOcupado"
+            :message="$t('RAMON.TASKS.BUSY_MESSAGE')"
             :confirm-label="$t('RAMON.TASKS.MEETING_CONFLICT_CONFIRM')"
             confirm-color="blue"
-            @confirm="addTask(true)"
-            @cancel="horarioOcupado = ''"
+            @confirm="confirmarOcupado"
+            @cancel="horarioOcupado = false"
           />
         </Teleport>
 

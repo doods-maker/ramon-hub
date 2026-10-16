@@ -36,7 +36,7 @@ RSpec.describe Ramon::GoogleAgendaPushJob do
 
       expect(cliente).to have_received(:criar).with(
         inicio: inicio, fim: inicio + 30.minutes, titulo: 'Conversa com Ramon Antonio Advogados', meet: true,
-        convidado_email: 'maria@example.com', hub_task_id: task.id,
+        convidado_email: 'maria@example.com', hub_task_id: task.id, id: "hubtask#{task.id}",
         descricao: a_string_starting_with('Olá, Maria! Esta é a nossa conversa sobre o seu caso, com Dr. Eduardo.')
                      .and(include('link do Google Meet'))
       )
@@ -95,6 +95,23 @@ RSpec.describe Ramon::GoogleAgendaPushJob do
       expect(cliente).not_to have_received(:criar)
     end
 
+    it 'Google responde 409 (evento já existe): busca o evento e grava o id e o Meet' do
+      task = reuniao
+      allow(cliente).to receive(:criar).and_raise(Ramon::GoogleAgenda::Cliente::Erro.new(409))
+      allow(cliente).to receive(:evento).with("hubtask#{task.id}").and_return({ id: "hubtask#{task.id}", meet_url: 'https://meet.google.com/z' })
+
+      described_class.perform_now('criar', { 'task_id' => task.id })
+
+      expect(task.reload).to have_attributes(google_event_id: "hubtask#{task.id}", meet_url: 'https://meet.google.com/z')
+    end
+
+    it 'Transitorio sobe para o retry_on' do
+      task = reuniao
+      allow(cliente).to receive(:criar).and_raise(Ramon::GoogleAgenda::Token::Transitorio)
+
+      expect { described_class.perform_now('criar', { 'task_id' => task.id }) }.to have_enqueued_job(described_class)
+    end
+
     it 'SemConexao sai em silêncio' do
       task = reuniao
       allow(cliente).to receive(:criar).and_raise(Ramon::GoogleAgenda::Cliente::SemConexao)
@@ -131,6 +148,15 @@ RSpec.describe Ramon::GoogleAgendaPushJob do
       described_class.perform_now('atualizar', { 'task_id' => task.id })
 
       expect(task.reload.google_event_id).to eq('ev2')
+    end
+
+    it 'sem evento e com a reunião concluída não cria' do
+      task = reuniao(completed_at: Time.current)
+      allow(cliente).to receive(:criar)
+
+      described_class.perform_now('atualizar', { 'task_id' => task.id })
+
+      expect(cliente).not_to have_received(:criar)
     end
 
     it 'de vídeo para WhatsApp: descrição com a ligação e Meet limpo', :aggregate_failures do

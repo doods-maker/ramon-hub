@@ -483,7 +483,8 @@
       "MEETING_CONFLICT_CONFIRM": "Book anyway",
       "FORMATO_VIDEO": "Video (Google Meet)",
       "FORMATO_WHATSAPP": "WhatsApp call",
-      "BUSY_TITLE": "Time slot busy"
+      "BUSY_TITLE": "Time slot busy",
+      "BUSY_MESSAGE": "This time is busy on the Closer's calendar. Pick another or book anyway."
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",

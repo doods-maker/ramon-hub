@@ -122,19 +122,23 @@ const remarcarAberto = ref(false);
 const novoHorario = ref('');
 const novoFormato = ref('video');
 // 409 HORARIO_OCUPADO: mensagem no alerta da janela, com "Marcar mesmo assim"
-const horarioOcupado = ref('');
+const horarioOcupado = ref(false);
 const minHorario = ref('');
 const abrirRemarcar = () => {
   novoHorario.value = paraCampo(new Date(task.value.due_at));
   minHorario.value = paraCampo(new Date());
   novoFormato.value = task.value.formato || 'video';
-  horarioOcupado.value = '';
+  horarioOcupado.value = false;
   remarcarAberto.value = true;
 };
+// trocou o horário depois do aviso: o aviso (e o "marcar mesmo assim") não vale mais
+watch(novoHorario, () => {
+  horarioOcupado.value = false;
+});
 const remarcar = (force = false) =>
   run(async () => {
     if (!novoHorario.value) return;
-    horarioOcupado.value = '';
+    horarioOcupado.value = false;
     try {
       await store.dispatch('leadTasks/remarcarReuniao', {
         leadId: props.leadId,
@@ -145,7 +149,7 @@ const remarcar = (force = false) =>
       });
     } catch (e) {
       if (e?.response?.data?.error !== 'HORARIO_OCUPADO') throw e;
-      horarioOcupado.value = e.response.data.message || '-';
+      horarioOcupado.value = true;
       return;
     }
     remarcarAberto.value = false;
@@ -437,7 +441,7 @@ const reschedule = ({ dueAt }) =>
             :class="[AVISO, TOM.amber]"
             class="mt-3 mb-0"
           >
-            {{ horarioOcupado }}
+            {{ $t('RAMON.TASKS.BUSY_MESSAGE') }}
           </p>
           <p
             v-if="isCalcom"

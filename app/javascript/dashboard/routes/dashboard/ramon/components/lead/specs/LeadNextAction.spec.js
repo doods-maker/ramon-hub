@@ -247,6 +247,8 @@ describe('LeadNextAction', () => {
         leadId: 7,
         taskId: 3,
         startsAt: new Date('2026-12-10T15:30').toISOString(),
+        formato: 'video',
+        force: false,
       });
       expect(wrapper.emitted('notesChanged')).toHaveLength(1);
       expect(wrapper.find('[data-testid="remarcar-janela"]').exists()).toBe(

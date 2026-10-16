@@ -8,7 +8,7 @@ class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::Ba
 
   def create
     return render_conflito if reuniao_aberta && !force?
-    return render_ocupado unless force? || Ramon::ReuniaoAgendamento.livre?(@lead, starts_at)
+    return render_ocupado unless force_ocupado? || Ramon::ReuniaoAgendamento.livre?(@lead, starts_at)
 
     title = params[:title].to_s.strip.presence || 'Reunião'
     Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: starts_at, title: title, user: Current.user, formato: formato || 'video')
@@ -19,7 +19,7 @@ class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::Ba
 
   def update
     task = meeting_task
-    return render_ocupado unless force? || Ramon::ReuniaoAgendamento.livre?(@lead, starts_at, task: task)
+    return render_ocupado unless force_ocupado? || Ramon::ReuniaoAgendamento.livre?(@lead, starts_at, task: task)
 
     @lead_task = Ramon::ReuniaoAgendamento.remarcar(task: task, starts_at: starts_at, user: Current.user, formato: formato)
   end
@@ -42,14 +42,16 @@ class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::Ba
     render json: { error: 'FORMATO_INVALIDO' }, status: :unprocessable_entity if params[:formato].present? && formato.nil?
   end
 
+  # force libera só o aviso de reunião aberta; force_ocupado, só o de horário ocupado.
   def force? = ActiveModel::Type::Boolean.new.cast(params[:force])
+
+  def force_ocupado? = ActiveModel::Type::Boolean.new.cast(params[:force_ocupado])
 
   # nil = não veio (ou veio inválido, barrado no check_starts_at).
   def formato = params[:formato].presence_in(LeadTask::FORMATOS)
 
   def render_ocupado
-    render json: { error: 'HORARIO_OCUPADO', message: 'Esse horário está ocupado na agenda do Closer. Escolha outro ou marque mesmo assim.' },
-           status: :conflict
+    render json: { error: 'HORARIO_OCUPADO' }, status: :conflict
   end
 
   def reuniao_aberta
