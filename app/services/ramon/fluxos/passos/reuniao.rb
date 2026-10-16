@@ -1,4 +1,4 @@
-# Passo da reunião cancelada (B4.1): apaga a(s) tarefa(s) de reunião do evento — as que o painel ou o Cal.com mandaram
+# Passo da reunião cancelada (B4.1): apaga a(s) tarefa(s) de reunião do evento — as que o painel mandou
 # no gatilho ('tarefa_ids'), só do próprio lead. Apagar a tarefa também encerra o ciclo de lembretes dela (alvo apagado).
 module Ramon::Fluxos::Passos::Reuniao
   module_function

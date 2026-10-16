@@ -49,7 +49,7 @@ const applyNoteTemplate = e => {
 };
 
 // Cabeçalho que o backend põe nas notas-rascunho (retomada, AdvBox, copiloto
-// noturno, Cal.com): 1ª linha "RASCUNHO (revisar antes de enviar) — <motivo>:",
+// noturno): 1ª linha "RASCUNHO (revisar antes de enviar) — <motivo>:",
 // texto da mensagem nas linhas seguintes.
 const RASCUNHO_PREFIXO = 'RASCUNHO (revisar antes de enviar)';
 const isRascunho = note => note.body?.startsWith(RASCUNHO_PREFIXO);

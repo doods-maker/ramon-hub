@@ -10,7 +10,7 @@
 #                      (classes RamonEscritaTool e AdvboxMcpEscritaTool — o spec confere)
 #   rascunho (verde) = devolve texto pronto pro cliente; quem envia é o humano
 # sistema: em qual sistema a ferramenta mexe — define a seção na tela Ferramentas:
-#   funil (casos do hub) · advbox · motor (cálculos) · zapsign · calcom · faq · conversa
+#   funil (casos do hub) · advbox · motor (cálculos) · zapsign · agenda · faq · conversa
 #######################################################
 
 - id: add_contact_note
@@ -166,13 +166,6 @@
   icon: 'calendar'
   nivel: consulta
   sistema: agenda
-
-- id: link_agendamento
-  title: 'Link de agendamento'
-  description: 'Link para o lead escolher dia e horário da conversa'
-  icon: 'calendar'
-  nivel: consulta
-  sistema: calcom
 
 - id: agenda_do_escritorio
   title: 'Agenda do escritório'

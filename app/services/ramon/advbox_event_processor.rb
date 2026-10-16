@@ -111,7 +111,7 @@ class Ramon::AdvboxEventProcessor
     I18n.transliterate(raw.to_s).upcase.squish
   end
 
-  # mesma régua do Cal.com/import: BR de 10-11 dígitos vira +55
+  # mesma régua do import: BR de 10-11 dígitos vira +55
   def normalize_phone(raw)
     digits = raw.to_s.gsub(/\D/, '')
     return "+#{digits}" if [12, 13].include?(digits.length) && digits.start_with?('55')

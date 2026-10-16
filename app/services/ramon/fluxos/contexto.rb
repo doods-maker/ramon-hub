@@ -46,7 +46,7 @@ class Ramon::Fluxos::Contexto
     @reuniao_em = iso.present? ? Time.zone.parse(iso) : proxima_reuniao
   end
 
-  # Quem marcou/remarcou/cancelou (o usuário do painel; Cal.com = ninguém) — dono da tarefa e da atividade, como no código.
+  # Quem marcou/remarcou/cancelou (o usuário do painel; legado = ninguém) — dono da tarefa e da atividade, como no código.
   def quem_marcou
     id = gatilho('quem_marcou_id')
     return if id.blank? || lead.nil?

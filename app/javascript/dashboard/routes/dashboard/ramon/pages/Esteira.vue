@@ -182,7 +182,7 @@ const markDone = async () => {
   }
 };
 
-// Reunião não se adia (perderia lembretes e o horário do Cal.com): o item
+// Reunião não se adia (perderia lembretes e o horário no Google): o item
 // mostra "Remarcar", que abre o lead no Funil — o painel tem o Remarcar.
 const isMeetingItem = computed(() => current.value?.task_kind === 'meeting');
 const openLeadToReschedule = () => {

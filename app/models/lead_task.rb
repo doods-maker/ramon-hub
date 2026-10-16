@@ -56,7 +56,7 @@ class LeadTask < ApplicationRecord
     self.agenda_user_id ||= lead.closer_id || Ramon::Papeis.proximo(account, 'closer')&.id
   end
 
-  # ponytail: sai na Fase D (Cal.com aposentado) — o cliente já recebe o convite do Cal.com e a remarcação dele é destroy+create.
+  # ponytail: legado do Cal.com, apagar quando não houver mais tarefas com o prefixo
   def reuniao_do_hub?
     kind == 'meeting' && !title.to_s.start_with?(Ramon::ReuniaoAgendamento::CALCOM_PREFIX)
   end

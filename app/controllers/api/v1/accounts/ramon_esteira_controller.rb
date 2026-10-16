@@ -16,7 +16,7 @@ class Api::V1::Accounts::RamonEsteiraController < Api::V1::Accounts::BaseControl
   end
 
   # "Adiar": empurra a task do item pra frente; sem task, cria follow-up amanhã.
-  # Reunião não se adia (perderia lembretes e o horário do Cal.com): Remarcar
+  # Reunião não se adia (perderia lembretes e o horário no Google): Remarcar
   # no painel do lead.
   def snooze
     task = @lead.lead_tasks.open_tasks.find_by(id: params[:task_id])

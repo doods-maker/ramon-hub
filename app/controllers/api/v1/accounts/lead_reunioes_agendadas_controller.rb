@@ -1,5 +1,5 @@
 # "+ Tarefa" → Reunião no painel do lead: o mesmo efeito da reunião marcada
-# pelo Cal.com (Ramon::ReuniaoAgendamento). Nada é enviado ao cliente — a
+# pelo hub (Ramon::ReuniaoAgendamento). Nada é enviado ao cliente — a
 # confirmação nasce como nota RASCUNHO. update = Remarcar (task_id + starts_at);
 # destroy = Cancelar (task_id). Lead com reunião aberta: 409 até force=true.
 class Api::V1::Accounts::LeadReunioesAgendadasController < Api::V1::Accounts::BaseController

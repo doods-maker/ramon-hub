@@ -1,5 +1,5 @@
 # Receiver dos HTTP Requests do Flowter (ADVBOX). O Flowter só suporta um
-# header de Authorization estático (não assina HMAC como o Cal.com), então a
+# header de Authorization estático, então a
 # auth é Bearer fixo + rate-limit no rack_attack. Responde rápido e processa
 # assíncrono (o Flowter não deve esperar).
 class Public::Api::V1::AdvboxWebhooksController < PublicController
@@ -28,7 +28,7 @@ class Public::Api::V1::AdvboxWebhooksController < PublicController
     head :unauthorized
   end
 
-  # Mesma conta única dos endpoints de leads/Cal.com.
+  # Mesma conta única dos endpoints de leads.
   def account
     @account ||= Account.find_by(id: ENV.fetch('RAMON_LEAD_CAPTURE_ACCOUNT_ID', nil))
   end

@@ -131,7 +131,7 @@ const RESULTADOS = [
     5,
     'Que bom! O próximo passo é uma conversa com o advogado. Escolha um horário aqui: …',
     [
-      { nome: 'link_agendamento', resultado: 'https://agenda…/ramon' },
+      { nome: 'horarios_livres', resultado: 'qui 14:00, sex 10:30' },
       {
         nome: 'agendar_reuniao',
         resultado: '[TESTE] faria agendar_reuniao(motivo: lead quer seguir)',
@@ -215,7 +215,7 @@ const cenario = {
 const CATALOGO = [
   { id: 'faq_lookup', title: 'Buscar nas FAQs' },
   { id: 'handoff', title: 'Passar para um humano' },
-  { id: 'link_agendamento', title: 'Link de agendamento' },
+  { id: 'horarios_livres', title: 'Horários livres' },
   { id: 'agendar_reuniao', title: 'Agendar reunião' },
 ];
 

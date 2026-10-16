@@ -101,7 +101,7 @@ class CopilotSuggestion < ApplicationRecord
 
     return recusar('Esse horário ficou ocupado — escolha outro') unless Ramon::ReuniaoAgendamento.livre?(lead, horario)
 
-    # mesmo caminho do painel/Cal.com: etapa, Closer, rascunho de confirmação, lembretes e sino
+    # mesmo caminho do painel: etapa, Closer, rascunho de confirmação, lembretes e sino
     Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: horario, title: payload['titulo'].presence || 'Reunião de fechamento', user: user)
     true
   end

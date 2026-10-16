@@ -1,4 +1,4 @@
-# Reunião marcada — mesmo efeito venha do Cal.com (webhook) ou do painel do
+# Reunião marcada — mesmo efeito venha do painel do
 # lead ("+ Tarefa" → Reunião): tarefa kind meeting, lead anda pra "Reunião
 # agendada" (só pra frente), Closer automático, rascunho de confirmação nas
 # notas (NUNCA enviado — quem envia é a pessoa), lembretes internos (sino +
@@ -13,11 +13,11 @@ class Ramon::ReuniaoAgendamento
   TIME_ZONE = 'America/Sao_Paulo'.freeze
   DIAS_SEMANA = %w[domingo segunda terça quarta quinta sexta sábado].freeze
   STAGE_LABEL = 'fase-reuniao-agendada'.freeze
-  # Prefixo do título da tarefa que veio do Cal.com (o webhook acha por ele).
+  # ponytail: legado do Cal.com, apagar quando não houver mais tarefas com o prefixo
   CALCOM_PREFIX = 'Reunião Cal.com'.freeze
 
   # title = nome da reunião (atividade, sino); task_title = título da tarefa
-  # (o Cal.com prefixa "Reunião Cal.com:" — o cancel/reschedule acham por ele).
+  # (legado: "Reunião Cal.com:" prefixava).
   # automatico: marcada pela IA (Captain) — com RAMON_AGENDA_CONFIRMACAO=on e modo piloto, a confirmação sai sozinha.
   def self.call(lead:, starts_at:, title:, task_title: title, user: nil, formato: 'video', automatico: false) # rubocop:disable Metrics/ParameterLists
     novo = new(lead, starts_at, title, user, formato)
@@ -92,12 +92,7 @@ class Ramon::ReuniaoAgendamento
     new(task.lead, task.due_at, titulo_de(task), user).cancelar([task])
   end
 
-  # Cancelar pelo Cal.com: as tarefas Cal.com abertas daquele horário (pode não haver nenhuma).
-  def self.cancelar_tarefas(lead:, tarefas:, starts_at:, title:)
-    new(lead, starts_at, title, nil).cancelar(tarefas)
-  end
-
-  # "Reunião Cal.com: Primeiro Atendimento" → "Primeiro Atendimento"
+  # "Reunião Cal.com: Primeiro Atendimento" → "Primeiro Atendimento" (ponytail: legado do Cal.com)
   def self.titulo_de(task)
     task.title.delete_prefix("#{CALCOM_PREFIX}: ")
   end

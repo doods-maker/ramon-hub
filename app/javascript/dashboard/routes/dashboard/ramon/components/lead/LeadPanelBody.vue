@@ -361,8 +361,8 @@ const confirmWonStage = () => {
 };
 const skipWonStage = () => commitStage(stageId.value);
 
-// ----- + Tarefa: form inline. Tipo Reunião = mesmo efeito do Cal.com no
-// backend (etapa, Closer, rascunho de confirmação, lembretes internos) -----
+// ----- + Tarefa: form inline. Tipo Reunião = no backend: etapa,
+// Closer, Google (rascunho de confirmação, lembretes internos) -----
 const TASK_KINDS = [
   { kind: 'follow_up', id: 'task', label: 'KIND_TASK' },
   { kind: 'meeting', id: 'meeting', label: 'KIND_MEETING' },

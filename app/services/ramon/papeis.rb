@@ -32,7 +32,7 @@ module Ramon::Papeis
     User.find_by(id: ids.min_by { |id| [carga[id] || 0, id] })
   end
 
-  # Reunião marcada (Cal.com) sem Closer → membro do time `closer`.
+  # Reunião marcada sem Closer → membro do time `closer`.
   def atribuir_closer!(lead)
     return if lead.closer_id.present?
 

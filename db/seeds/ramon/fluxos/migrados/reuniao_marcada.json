@@ -1,6 +1,6 @@
 {
   "nome": "Reunião marcada",
-  "descricao": "Reunião marcada ou remarcada (painel do lead ou Cal.com), no lugar do código (B4.1): atividade, tarefa da reunião, etapa (só para a frente), Closer automático, rascunho de confirmação nas notas do lead, sino para a conta e push. Remarcar refaz a atividade, o rascunho e o sino, sem tarefa nova, etapa ou Closer. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
+  "descricao": "Reunião marcada ou remarcada (painel do lead), no lugar do código (B4.1): atividade, tarefa da reunião, etapa (só para a frente), Closer automático, rascunho de confirmação nas notas do lead, sino para a conta e push. Remarcar refaz a atividade, o rascunho e o sino, sem tarefa nova, etapa ou Closer. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"reuniao_marcada","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},
