@@ -309,6 +309,49 @@ RSpec.describe 'Leads API', type: :request do
       response.parsed_body['payload'].map { |l| l['id'] }
     end
 
+    describe 'ordem=fila (Fila do dia)' do
+      def temp(nivel)
+        { 'temperatura' => { 'nivel' => nivel } }
+      end
+
+      def conversa_esperando(desde)
+        create(:conversation, account: account).tap { |c| c.update_column(:waiting_since, desde) } # rubocop:disable Rails/SkipsModelValidations
+      end
+
+      def fila
+        get "/api/v1/accounts/#{account.id}/leads", params: { ordem: 'fila' }, headers: admin.create_new_auth_token
+        ids(response)
+      end
+
+      it 'ordena quente, frio, sem temperatura e expõe a temperatura no slim' do
+        sem = account.leads.create!(name: 'Sem', lead_stage: novo)
+        frio = account.leads.create!(name: 'Frio', lead_stage: novo, custom_attributes: temp('frio'))
+        quente = account.leads.create!(name: 'Quente', lead_stage: novo, custom_attributes: temp('quente'))
+        expect(fila).to eq([quente.id, frio.id, sem.id])
+        expect(response.parsed_body['payload'].pluck('temperatura')).to eq(['quente', 'frio', nil])
+      end
+
+      it 'exclui ganhos e perdidos' do
+        aberto = account.leads.create!(name: 'Aberto', lead_stage: novo, custom_attributes: temp('frio'))
+        account.leads.create!(name: 'Perdido', lead_stage: perdido, lost_reason: 'x',
+                              custom_attributes: temp('quente'))
+        account.leads.create!(name: 'Ganho', lead_stage: account.lead_stages.find_by(is_won: true), custom_attributes: temp('quente'))
+        expect(fila).to eq([aberto.id])
+        # includes continua em queries separadas (sem JOIN de lead_stage virando eager_load cartesiano)
+        expect(controller.instance_variable_get(:@leads).eager_loading?).to be(false)
+      end
+
+      it 'na mesma temperatura, quem espera resposta há mais tempo vem primeiro; sem espera vai depois' do
+        recente = account.leads.create!(name: 'Recente', lead_stage: novo, custom_attributes: temp('quente'),
+                                        conversation: conversa_esperando(1.hour.ago))
+        antigo = account.leads.create!(name: 'Antigo', lead_stage: novo, custom_attributes: temp('quente'),
+                                       conversation: conversa_esperando(2.days.ago))
+        respondido = account.leads.create!(name: 'Respondido', lead_stage: novo, custom_attributes: temp('quente'),
+                                           conversation: conversa_esperando(nil))
+        expect(fila).to eq([antigo.id, recente.id, respondido.id])
+      end
+    end
+
     it 'sem params retorna todos os leads' do
       a = account.leads.create!(name: 'A', lead_stage: novo)
       b = account.leads.create!(name: 'B', lead_stage: novo)
@@ -389,6 +432,14 @@ RSpec.describe 'Leads API', type: :request do
       row = response.parsed_body['payload'].first
       expect(row['docs_received']).to eq(1)
       expect(row['docs_total']).to eq(1)
+      expect(row).not_to have_key('custom_attributes')
+    end
+
+    it 'expõe pendencias_docs no índice slim sem custom_attributes (chip Aguardando)' do
+      account.leads.create!(name: 'A', lead_stage: novo, custom_attributes: { 'pendencias_docs' => %w[laudo CNIS] })
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['pendencias_docs']).to eq(%w[laudo CNIS])
       expect(row).not_to have_key('custom_attributes')
     end
 

@@ -9,15 +9,27 @@ class FunilAcao < ApplicationRecord
   scope :reais, -> { where(ensaio: false) }
   scope :vivas, -> { reais.where(desfeita_em: nil) }
 
-  # Texto curto do chip do card ("IA: …"): a ação do histórico, sem o prefixo técnico.
-  def texto = [acao.to_s.tr('_', ' '), alvo].compact_blank.join(' → ')
+  # Rótulo de cada ação (chip do card e resumo das 8h); %s = o alvo. Sem %s, o alvo não diz nada a quem lê (id, dias).
+  ROTULOS = { 'mover_etapa' => 'moveu para %s', 'marcar_ganho' => 'marcou Ganho', 'perdido' => 'marcou Perdido (%s)',
+              'marcar_reuniao' => 'marcou reunião para %s', 'promessa' => 'criou cobrança (%s)',
+              'promessa_cumprida' => 'concluiu cobrança', 'avisar_no_show' => 'avisou no-show',
+              'reativar' => 'rascunho de retomada' }.freeze
+
+  # Texto curto do chip do card ("IA: …") e do resumo. Ação sem rótulo cai no nome técnico.
+  def texto
+    rotulo = ROTULOS[acao.to_s]
+    return [acao.to_s.tr('_', ' '), alvo].compact_blank.join(' → ') if rotulo.nil?
+
+    rotulo.include?('%s') ? format(rotulo, alvo_legivel) : rotulo
+  end
 
   # Última ação viva do lead nas últimas 24h, para o chip do card (nil = sem chip).
   def self.chip(lead) = chips([lead.id])[lead.id]
 
   # Em lote (índice do Kanban): UMA query para todos os leads → { lead_id => { id:, texto: } }.
+  # Só ação que se desfaz: um aviso (no-show, cobrança concluída) não tira do card o "Desfazer" de antes.
   def self.chips(lead_ids)
-    ultimas = vivas.where(lead_id: lead_ids, created_at: 24.hours.ago..).order(:id).index_by(&:lead_id)
+    ultimas = vivas.where(lead_id: lead_ids, created_at: 24.hours.ago..).where("desfazer <> '{}'::jsonb").order(:id).index_by(&:lead_id)
     ultimas.transform_values { |a| { id: a.id, texto: a.texto } }
   end
 
@@ -47,6 +59,13 @@ class FunilAcao < ApplicationRecord
   end
 
   private
+
+  # Início de reunião é gravado em ISO 8601: quem lê vê "20/10 14:00" (horário de São Paulo).
+  def alvo_legivel
+    return alvo.to_s unless alvo.to_s.match?(/\A\d{4}-\d{2}-\d{2}T/)
+
+    Time.zone.parse(alvo).in_time_zone('America/Sao_Paulo').strftime('%d/%m %H:%M')
+  end
 
   def etapa_produzida
     case acao

@@ -45,19 +45,56 @@ RSpec.describe Ramon::FunilObservadorJob do
     expect(observador).not_to have_received(:perform)
   end
 
-  it 'só peça ainda não implementada no observador (reuniao_ia) ou temperatura em ensaio: não roda' do
+  it 'só temperatura em ensaio: não roda' do
     msg = mensagem
     Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
-    Ramon::FunilAutomatico.mudar!(account, 'reuniao_ia', 'on')
     Ramon::FunilAutomatico.mudar!(account, 'temperatura', 'ensaio')
     described_class.perform_now(msg.id)
     expect(observador).not_to have_received(:perform)
+  end
+
+  it 'reuniao_ia sozinha (inclusive em ensaio): roda' do
+    msg = mensagem
+    Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
+    Ramon::FunilAutomatico.mudar!(account, 'reuniao_ia', 'ensaio')
+    described_class.perform_now(msg.id)
+    expect(observador).to have_received(:perform).once
   end
 
   it 'temperatura on sozinha: roda' do
     msg = mensagem
     Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
     Ramon::FunilAutomatico.mudar!(account, 'temperatura', 'on')
+    described_class.perform_now(msg.id)
+    expect(observador).to have_received(:perform).once
+  end
+
+  it 'só colheita em ensaio: não roda; on: roda' do
+    msg = mensagem
+    Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
+    Ramon::FunilAutomatico.mudar!(account, 'colheita', 'ensaio')
+    described_class.perform_now(msg.id)
+    expect(observador).not_to have_received(:perform)
+    Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
+    described_class.perform_now(msg.id)
+    expect(observador).to have_received(:perform).once
+  end
+
+  it 'promessas sozinha (inclusive em ensaio): roda' do
+    msg = mensagem
+    Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
+    Ramon::FunilAutomatico.mudar!(account, 'promessas', 'ensaio')
+    described_class.perform_now(msg.id)
+    expect(observador).to have_received(:perform).once
+  end
+
+  it 'só pendencias em ensaio: não roda; on: roda' do
+    msg = mensagem
+    Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
+    Ramon::FunilAutomatico.mudar!(account, 'pendencias', 'ensaio')
+    described_class.perform_now(msg.id)
+    expect(observador).not_to have_received(:perform)
+    Ramon::FunilAutomatico.mudar!(account, 'pendencias', 'on')
     described_class.perform_now(msg.id)
     expect(observador).to have_received(:perform).once
   end

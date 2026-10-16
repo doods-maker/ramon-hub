@@ -11,7 +11,7 @@ class Ramon::FunilObservador
      "reuniao": {"inicio": "AAAA-MM-DDTHH:MM", "frase": "1 frase"} | null,
      "promessas": [{"o_que": "texto curto", "prazo": "AAAA-MM-DD", "documento": true}],
      "promessas_cumpridas": [<id da tarefa>],
-     "pendencias": ["laudo", "CNIS"],
+     "pendencias": ["<nome curto do documento>"],
      "temperatura": "quente" | "morno" | "frio", "temperatura_motivo": "1 frase"}
 
     Regras obrigatórias:
@@ -22,6 +22,8 @@ class Ramon::FunilObservador
     - "perdido" só com recusa clara do cliente; o motivo é o nome exato de um item da lista fornecida.
     - "reuniao" só com dia e hora exatos aceitos pelos dois, no fuso de São Paulo.
     - Promessa com data vaga: use o 1º dia útil citado.
+    - Não repita promessa que já está nas tarefas "Cobrar:" listadas.
+    - "pendencias" = só documentos que o cliente disse que vai mandar e ainda não mandou; não copie a checklist nem o exemplo.
     - "promessas_cumpridas" só com ids das tarefas "Cobrar:" listadas, quando a conversa mostra que foram cumpridas.
     - Nunca prometa resultado do caso nem prazo do INSS.
   PROMPT
@@ -35,13 +37,23 @@ class Ramon::FunilObservador
     return nil if texto.blank?
 
     decisao = decidir(texto)
-    return nil if decisao.nil?
-
-    Aplicar.new(@lead, decisao).perform
+    Aplicar.new(@lead, decisao).perform if decisao
+    colher
     decisao
   end
 
   private
+
+  # A colheita não depende da decisão do LLM (nem de ela existir), mas não roda em lead que o Aplicar acabou de ganhar/perder.
+  # Como temperatura: sem FunilAcao (ruído no chip e no resumo) e só com a peça on — em ensaio não faz nada.
+  # Em job próprio (com retry): um TransientError aqui faria o observador repetir e pagar a decisão de novo.
+  # Tese sem colheita: o serviço não faz nada (extractable?).
+  def colher
+    return unless Ramon::FunilAutomatico.modo(account, 'colheita') == 'on'
+    return if @lead.reload.won_at.present? || @lead.lost_at.present?
+
+    Ramon::ColheitaExtractionJob.perform_later(lead_id: @lead.id)
+  end
 
   def account = @lead.account
 

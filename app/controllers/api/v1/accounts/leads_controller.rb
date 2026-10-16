@@ -1,12 +1,22 @@
 class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   ASSIGNMENT_KEYS = %w[sdr_id closer_id].freeze
 
+  # Fila do dia: só abertos; quente > morno > frio > sem temperatura; dentro da temperatura, quem espera
+  # resposta há mais tempo (conversations.waiting_since, que o Chatwoot zera ao responder) vem primeiro.
+  FILA_ORDEM = Arel.sql(<<~SQL.squish).freeze
+    CASE leads.custom_attributes->'temperatura'->>'nivel'
+      WHEN 'quente' THEN 0 WHEN 'morno' THEN 1 WHEN 'frio' THEN 2 ELSE 3 END,
+    (SELECT conversations.waiting_since FROM conversations WHERE conversations.id = leads.conversation_id) ASC NULLS LAST,
+    leads.id ASC
+  SQL
+
   before_action :current_account
   before_action :fetch_lead, except: [:index, :create, :for_conversation, :encaminhar_comercial]
   before_action :check_authorization
 
   def index
     @leads = filtered_leads
+    @leads = fila_do_dia(@leads) if params[:ordem] == 'fila'
   end
 
   def show; end
@@ -147,6 +157,11 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     leads = apply_cadence_filters(apply_period_filters(leads))
     leads = search_leads(leads, params[:q]) if params[:q].present?
     leads
+  end
+
+  # Subconsulta de etapas, não .open: o joins(:lead_stage) do .open somado ao includes vira um LEFT JOIN cartesiano.
+  def fila_do_dia(leads)
+    leads.where(lead_stage_id: Current.account.lead_stages.where(is_won: false, is_lost: false).select(:id)).reorder(FILA_ORDEM)
   end
 
   def apply_equality_filters(leads)

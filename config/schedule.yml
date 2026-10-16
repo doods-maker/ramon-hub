@@ -173,3 +173,15 @@ ramon_funil_tempo_job:
   cron: '0 14 * * *'
   class: 'Ramon::FunilTempoJob'
   queue: scheduled_jobs
+
+# funil automático: reunião sem registro há 2h → sino pro Closer + rascunho de remarcação (nunca envia nem marca a falta)
+ramon_funil_no_show_job:
+  cron: '*/30 * * * *'
+  class: 'Ramon::FunilNoShowJob'
+  queue: scheduled_jobs
+
+# funil automático: perdido por sumiço há 30/60 dias → nota-rascunho de retomada + tarefa pro SDR (10h SP, seg-sex; nunca envia)
+ramon_funil_reativacao_job:
+  cron: '0 13 * * 1-5'
+  class: 'Ramon::FunilReativacaoJob'
+  queue: scheduled_jobs

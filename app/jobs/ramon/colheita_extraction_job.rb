@@ -1,8 +1,8 @@
 # Extrai a colheita da conversa. Dois disparos: (1) quando o Whisper termina de
 # transcrever um áudio (enterprise Messages::AudioTranscriptionService), por
 # message_id; (2) sob demanda pelo botão do painel do lead (RamonColheita
-# controller), por lead_id. NÃO roda mais automático a cada mensagem de chat
-# (decisão do Eduardo 20/07: colheita só sob demanda — evita re-extração O(n²)).
+# controller), por lead_id. Não roda a cada mensagem de chat (decisão do Eduardo 20/07: evita
+# re-extração O(n²)); só na pausa da conversa, pelo Ramon::FunilObservador, com a chave 'colheita' do funil automático ligada.
 class Ramon::ColheitaExtractionJob < ApplicationJob
   queue_as :low
   retry_on Ramon::LlmClient::TransientError, wait: :polynomially_longer, attempts: 3

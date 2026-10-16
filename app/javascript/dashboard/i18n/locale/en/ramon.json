@@ -1132,7 +1132,14 @@
       "ERROR": "Could not generate the portal link — try again"
     },
     "FUNIL_AUTO": {
+      "FILA_DO_DIA": "Today's queue",
+      "TEMPERATURA": {
+        "QUENTE": "Hot",
+        "MORNO": "Warm",
+        "FRIO": "Cold"
+      },
       "IA_MOVEU": "AI: {texto}",
+      "AGUARDANDO": "Waiting: {itens}",
       "DESFAZER": "Undo",
       "ERRO": "Could not undo the action"
     },

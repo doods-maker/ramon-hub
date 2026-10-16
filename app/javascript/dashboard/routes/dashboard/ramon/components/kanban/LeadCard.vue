@@ -37,6 +37,13 @@ watch(
 
 const { t } = useI18n();
 
+// Temperatura da IA (peça `temperatura`): fundos translúcidos, regra visual do hub.
+const TEMPERATURA_CLASSES = {
+  quente: 'bg-n-ruby-9/15 text-n-ruby-11',
+  morno: 'bg-n-amber-9/15 text-n-amber-11',
+  frio: 'bg-n-blue-9/15 text-n-blue-11',
+};
+
 // useStore não lança fora de um app com store (retorna undefined); leituras de
 // getters/dispatch ficam defensivas para o card renderizar em testes sem store.
 const store = useStore();
@@ -370,6 +377,16 @@ const onSchedule = async ({ dueAt, title }) => {
         <span class="i-lucide-history size-3" />{{ lead.follow_up_count }}
       </span>
       <span
+        v-if="TEMPERATURA_CLASSES[lead.temperatura]"
+        data-testid="temperatura-chip"
+        class="inline-flex items-center rounded-md px-1.5 py-0.5"
+        :class="TEMPERATURA_CLASSES[lead.temperatura]"
+      >
+        {{
+          $t(`RAMON.FUNIL_AUTO.TEMPERATURA.${lead.temperatura.toUpperCase()}`)
+        }}
+      </span>
+      <span
         v-if="lead.funil_acao"
         data-testid="funil-acao-chip"
         class="inline-flex items-center gap-1 rounded-md bg-n-iris-9/15 px-1.5 py-0.5 text-n-iris-11"
@@ -403,6 +420,18 @@ const onSchedule = async ({ dueAt, title }) => {
       >
         <span class="i-lucide-file-check size-3" />{{ lead.docs_received }}/{{
           lead.docs_total
+        }}
+      </span>
+      <span
+        v-if="lead.pendencias_docs?.length"
+        data-testid="pendencias-docs-chip"
+        class="inline-flex items-center gap-1 rounded-md bg-n-amber-9/15 px-1.5 py-0.5 text-n-amber-11"
+      >
+        <span class="i-lucide-file-clock size-3 shrink-0" />
+        {{
+          $t('RAMON.FUNIL_AUTO.AGUARDANDO', {
+            itens: lead.pendencias_docs.join(', '),
+          })
         }}
       </span>
       <span

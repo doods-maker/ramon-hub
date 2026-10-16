@@ -61,6 +61,13 @@ RSpec.describe CopilotSuggestion do
       expect(lead.lead_tasks.last).to have_attributes(kind: 'meeting', title: 'Fechamento')
     end
 
+    it 'leva o lead a Reunião agendada e enfileira os lembretes' do
+      suggestion = sugestao('reuniao', 'quando' => 1.week.from_now.iso8601)
+
+      expect { suggestion.apply! }.to have_enqueued_job(Ramon::MeetingReminderJob).at_least(:once)
+      expect(lead.reload.lead_stage.label).to eq('fase-reuniao-agendada')
+    end
+
     it 'recusa quando a data nao veio na sugestao' do
       suggestion = sugestao('reuniao')
 

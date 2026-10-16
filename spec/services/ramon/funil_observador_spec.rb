@@ -97,4 +97,51 @@ RSpec.describe Ramon::FunilObservador do
       expect(enviado[:system]).to include('decida só por fatos do cliente posteriores a esse desfazer')
     end
   end
+
+  it 'o system prompt proíbe repetir cobrança listada e copiar checklist/exemplo em pendencias' do
+    expect(described_class::SYSTEM_PROMPT).to include(
+      'Não repita promessa que já está nas tarefas "Cobrar:" listadas.',
+      '"pendencias" = só documentos que o cliente disse que vai mandar e ainda não mandou; não copie a checklist nem o exemplo.'
+    )
+    expect(described_class::SYSTEM_PROMPT).not_to include('"laudo", "CNIS"')
+  end
+
+  describe 'colheita na pausa' do
+    before do
+      lead
+      mensagem('Oi')
+      allow(Ramon::LlmClient).to receive(:complete).and_return(resultado('{"etapa":null}'))
+    end
+
+    it 'on: enfileira o job da colheita (retry próprio), sem FunilAcao nem atividade' do
+      Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
+
+      expect { described_class.new(lead).perform }.to have_enqueued_job(Ramon::ColheitaExtractionJob).with(lead_id: lead.id).exactly(:once)
+      expect(FunilAcao.count).to eq(0)
+      expect(lead.lead_activities.where(kind: 'funil_auto')).to be_none
+    end
+
+    it 'roda também quando o LLM não devolve decisão' do
+      Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
+      allow(Ramon::LlmClient).to receive(:complete).and_return(resultado('não sei'))
+
+      expect { described_class.new(lead).perform }.to have_enqueued_job(Ramon::ColheitaExtractionJob)
+    end
+
+    %w[off ensaio].each do |modo|
+      it "#{modo}: não enfileira e não registra" do
+        Ramon::FunilAutomatico.mudar!(account, 'colheita', modo)
+
+        expect { described_class.new(lead).perform }.not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
+        expect(FunilAcao.count).to eq(0)
+      end
+    end
+
+    it 'lead que ficou perdido não é colhido' do
+      Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
+      allow(aplicar).to receive(:perform) { lead.update_columns(lost_at: Time.current) } # rubocop:disable Rails/SkipsModelValidations
+
+      expect { described_class.new(lead).perform }.not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
+    end
+  end
 end

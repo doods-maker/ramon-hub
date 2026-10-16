@@ -59,11 +59,11 @@ class Ramon::ColheitaExtractionService
     Rails.logger.error("ColheitaExtraction: falha no lead #{@lead.id}: #{e.message}")
   end
 
-  private
-
   def extractable?
     @lead.thesis&.name&.match?(THESIS_MATCH) && @lead.conversation.present?
   end
+
+  private
 
   def provider
     ENV.fetch('RAMON_COLHEITA_PROVIDER', 'deepseek')

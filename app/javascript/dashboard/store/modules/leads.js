@@ -6,7 +6,7 @@ import BulkActionsAPI from '../../api/bulkActions';
 
 const FILTERS_KEY = 'ramon_lead_filters';
 
-const toParams = (filters = {}) => {
+export const toParams = (filters = {}) => {
   const map = {
     benefit_type_id: filters.benefitTypeId,
     lead_priority_id: filters.leadPriorityId,

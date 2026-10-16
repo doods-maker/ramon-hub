@@ -1132,7 +1132,14 @@
       "ERROR": "Não foi possível gerar o link do portal — tente de novo"
     },
     "FUNIL_AUTO": {
+      "FILA_DO_DIA": "Fila do dia",
+      "TEMPERATURA": {
+        "QUENTE": "Quente",
+        "MORNO": "Morno",
+        "FRIO": "Frio"
+      },
       "IA_MOVEU": "IA: {texto}",
+      "AGUARDANDO": "Aguardando: {itens}",
       "DESFAZER": "Desfazer",
       "ERRO": "Não foi possível desfazer a ação"
     },

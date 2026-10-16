@@ -9,14 +9,14 @@ class Ramon::FunilObservadorJob < ApplicationJob
   end
 
   # Só as peças de IA já implementadas pelo observador (cada fase acrescenta as suas): peça sem efeito não paga LLM.
-  OBSERVADOR_PECAS = %w[etapa_ia perdido_recusa temperatura].freeze
+  OBSERVADOR_PECAS = %w[etapa_ia perdido_recusa reuniao_ia temperatura colheita promessas pendencias].freeze
   ESPERA = 10.minutes
 
-  # Temperatura em ensaio não grava nada (Aplicar#gravar_temperatura): só conta ligada.
+  # Temperatura, pendências e colheita em ensaio não fazem nada (Aplicar/colher): só contam ligadas.
   def self.ativo?(account)
     OBSERVADOR_PECAS.any? do |peca|
       modo = Ramon::FunilAutomatico.modo(account, peca)
-      peca == 'temperatura' ? modo == 'on' : modo != 'off'
+      %w[temperatura pendencias colheita].include?(peca) ? modo == 'on' : modo != 'off'
     end
   end
 

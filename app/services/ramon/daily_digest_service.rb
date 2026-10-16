@@ -4,7 +4,6 @@
 # cadência de mudança).
 class Ramon::DailyDigestService
   TIME_ZONE = 'America/Sao_Paulo'.freeze
-  ACOES = { 'mover_etapa' => 'moveu para', 'marcar_ganho' => 'marcou Ganho' }.freeze
   FUNIL_AUTO_LIMITE = 50
   WDAYS = %w[domingo segunda terça quarta quinta sexta sábado].freeze
   MONTHS = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
@@ -126,16 +125,11 @@ class Ramon::DailyDigestService
   end
 
   def funil_auto_item(acao)
-    texto = "#{acao_legivel(acao)}: #{acao.motivo}"
+    texto = "#{acao.texto}: #{acao.motivo}"
     texto = "faria: #{texto}" if acao.ensaio
     texto += ' (desfeita)' if acao.desfeita_em
     { lead_id: acao.lead_id, lead_name: acao.lead.name, conversation_id: acao.lead.conversation&.display_id,
       texto: texto, ensaio: acao.ensaio }
-  end
-
-  def acao_legivel(acao)
-    base = ACOES.fetch(acao.acao, acao.acao)
-    acao.acao == 'mover_etapa' && acao.alvo.present? ? "#{base} #{acao.alvo}" : base
   end
 
   # ---- Formatação (fuso do escritório) ------------------------------------

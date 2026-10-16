@@ -17,7 +17,13 @@ class Ramon::FunilObservador::Aplicar
 
     mover_etapa
     perder_por_recusa
+    return if @lead.lost_at # perdido agora: reunião, cobranças e pendências seriam trabalho para um lead encerrado
+
+    marcar_reuniao
     gravar_temperatura
+    promessas
+    promessas_cumpridas
+    pendencias
   end
 
   private
@@ -63,6 +69,43 @@ class Ramon::FunilObservador::Aplicar
     desfazer
   end
 
+  # Reunião combinada na conversa (dia e hora exatos): mesmo caminho do painel/Cal.com (etapa, Closer, lembretes, sino).
+  # O desfazer é preenchido dentro do bloco (a tarefa só existe depois da chamada); em ensaio o bloco não roda.
+  def marcar_reuniao
+    inicio = reuniao_inicio
+    return if inicio.nil? || @lead.lead_tasks.open_tasks.exists?(kind: 'meeting') ||
+              Ramon::FunilAutomatico.desfeita_recente?(@lead, acao: 'marcar_reuniao', alvo: inicio.iso8601)
+
+    desfazer = {}
+    Ramon::FunilAutomatico.executar(@lead, peca: 'reuniao_ia', acao: 'marcar_reuniao', alvo: inicio.iso8601, desfazer: desfazer,
+                                           motivo: @decisao['reuniao']['frase'].presence || 'reunião combinada na conversa') do
+      agendar_reuniao(inicio, desfazer)
+    end
+  end
+
+  # false = a marcação não aconteceu (ex.: o fluxo falhou): sem registro nem atividade de IA.
+  def agendar_reuniao(inicio, desfazer)
+    antes = @lead.lead_stage_id
+    Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: inicio, title: 'Reunião', user: nil)
+    tarefa = @lead.lead_tasks.open_tasks.where(kind: 'meeting').order(:id).last
+    return false if tarefa.nil?
+
+    desfazer['task_id'] = tarefa.id
+    # só se a marcação moveu a etapa; desfazer devolve a etapa e cancela a reunião
+    desfazer.merge!('etapa_id' => antes, 'etapa_produzida_id' => @lead.lead_stage_id) if @lead.lead_stage_id != antes
+  end
+
+  # Só Hash com início válido e no futuro (o LLM às vezes devolve texto solto).
+  def reuniao_inicio
+    reuniao = @decisao['reuniao']
+    return unless reuniao.is_a?(Hash) && reuniao['inicio'].present?
+
+    inicio = Time.find_zone!('America/Sao_Paulo').parse(reuniao['inicio'].to_s)
+    inicio if inicio&.future?
+  rescue ArgumentError
+    nil
+  end
+
   # Sem FunilAcao (ruído no resumo); só com a peça on — em ensaio não grava.
   def gravar_temperatura
     nivel = @decisao['temperatura']
@@ -72,4 +115,83 @@ class Ramon::FunilObservador::Aplicar
       'temperatura' => { 'nivel' => nivel, 'motivo' => @decisao['temperatura_motivo'].to_s.truncate(250), 'em' => Time.current.iso8601 }
     ))
   end
+
+  # Promessa do cliente vira follow-up do SDR ("Cobrar: …") no dia prometido, 10h de São Paulo.
+  # Prazo inválido ou que já passou = item ignorado (cobrar no passado é ruído); o mesmo título aberto não duplica.
+  def promessas
+    itens(@decisao['promessas']).each do |item|
+      titulo = "Cobrar: #{item['o_que']}".truncate(255)
+      prazo = prazo_promessa(item['prazo'])
+      next if item['o_que'].blank? || prazo.nil? || @lead.lead_tasks.open_tasks.exists?(title: titulo) || ja_registrada?(titulo)
+
+      criar_cobranca(titulo, prazo, item)
+    end
+  end
+
+  # A promessa continua na conversa a cada pausa: a FunilAcao (ensaio ou real, desfeita ou não) é a memória — tarefa
+  # apagada, concluída ou desfeita por gente não renasce.
+  def ja_registrada?(titulo)
+    registros = FunilAcao.where(lead: @lead, acao: 'promessa', alvo: titulo)
+    # ligada de verdade, o que só foi visto em ensaio ainda não virou tarefa
+    registros = registros.reais if Ramon::FunilAutomatico.modo(account, 'promessas') == 'on'
+    registros.exists?(['created_at > ?', 30.days.ago]) ||
+      Ramon::FunilAutomatico.desfeita_recente?(@lead, acao: 'promessa', alvo: titulo)
+  end
+
+  def criar_cobranca(titulo, prazo, item)
+    desfazer = {}
+    Ramon::FunilAutomatico.executar(@lead, peca: 'promessas', acao: 'promessa', alvo: titulo, desfazer: desfazer,
+                                           motivo: "cliente prometeu: #{item['o_que']}") do
+      tarefa = @lead.lead_tasks.create!(account: account, user: @lead.sdr || @lead.closer, kind: 'follow_up',
+                                        title: titulo, due_at: prazo)
+      desfazer['task_id'] = tarefa.id
+    end
+  end
+
+  # 'AAAA-MM-DD' → esse dia às 10h (SP). Hoje já depois das 10h = daqui a 1h ("mando hoje" não se perde); dia passado = nil.
+  def prazo_promessa(prazo)
+    return unless prazo.to_s.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+
+    data = Time.find_zone!('America/Sao_Paulo').parse("#{prazo} 10:00")
+    return if data.nil?
+
+    data.future? ? data : (1.hour.from_now if data.to_date == Time.current.in_time_zone('America/Sao_Paulo').to_date)
+  rescue ArgumentError
+    nil
+  end
+
+  # Só conclui "Cobrar:" aberta DESTE lead (o id vem do LLM); ids soltos/alheios são ignorados.
+  def promessas_cumpridas
+    ids = Array(@decisao['promessas_cumpridas']).filter_map { |id| Integer(id, exception: false) }.uniq
+    return if ids.empty?
+
+    # em ensaio, o "faria" já registrado não se repete; ligada, o que só foi visto em ensaio ainda precisa ser concluído
+    ensaio = Ramon::FunilAutomatico.modo(account, 'promessas') == 'ensaio'
+    @lead.lead_tasks.open_tasks.where(id: ids).where('title LIKE ?', 'Cobrar:%').find_each do |task|
+      next if FunilAcao.exists?(lead: @lead, acao: 'promessa_cumprida', alvo: task.id.to_s, ensaio: ensaio)
+
+      Ramon::FunilAutomatico.executar(@lead, peca: 'promessas', acao: 'promessa_cumprida', alvo: task.id.to_s,
+                                             motivo: "cumprida: #{task.title}") { task.complete!(nil) }
+    end
+  end
+
+  # Documentos que o cliente ainda deve (chip no card). Sem FunilAcao; só com a peça on — em ensaio não grava.
+  # A lista substitui a anterior a cada pausa; vazia remove a chave.
+  def pendencias
+    return unless @decisao.key?('pendencias') && Ramon::FunilAutomatico.modo(account, 'pendencias') == 'on'
+
+    lista = lista_pendencias
+    return if lista == Array(@lead.custom_attributes&.dig('pendencias_docs'))
+
+    atributos = (@lead.custom_attributes || {}).except('pendencias_docs')
+    atributos['pendencias_docs'] = lista if lista.any?
+    @lead.update!(custom_attributes: atributos)
+  end
+
+  def lista_pendencias
+    Array.wrap(@decisao['pendencias']).grep(String).map { |i| i.strip.truncate(40) }.compact_blank.first(5)
+  end
+
+  # Só Array de Hashes conta; item malformado é pulado.
+  def itens(valor) = Array.wrap(valor).grep(Hash)
 end
