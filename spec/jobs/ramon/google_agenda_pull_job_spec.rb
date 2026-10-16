@@ -11,7 +11,7 @@ RSpec.describe Ramon::GoogleAgendaPullJob do
 
   def evento(**attrs)
     { id: 'ev1', inicio: inicio, fim: inicio + 30.minutes, titulo: 'Conversa', cancelado: false, hub_task_id: task.id,
-      atualizado_em: Time.current }.merge(attrs)
+      atualizado_em: 1.minute.from_now }.merge(attrs)
   end
 
   def pull(*eventos)
@@ -30,6 +30,11 @@ RSpec.describe Ramon::GoogleAgendaPullJob do
     novo = inicio + 1.day
     pull(evento(inicio: novo))
     expect(Ramon::ReuniaoAgendamento).to have_received(:remarcar).with(task: task, starts_at: novo, sem_google: true).once
+  end
+
+  it 'Google mais velho que a tarefa (push do hub ainda a caminho) não desfaz a remarcação do hub' do
+    pull(evento(inicio: inicio + 1.day, atualizado_em: task.updated_at - 1.minute))
+    expect(Ramon::ReuniaoAgendamento).not_to have_received(:remarcar)
   end
 
   it 'evento igual ao hub (dentro de 60 s) não faz nada' do
