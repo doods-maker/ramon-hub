@@ -41,6 +41,12 @@ RSpec.describe Ramon::GoogleAgenda::Token do
       expect(conta.reload.status).to eq('desconectada')
     end
 
+    it 'erro 503 do Google levanta Transitorio' do
+      stub_request(:post, url).to_return(status: 503, headers: json, body: { error: 'unavailable' }.to_json)
+      expect { described_class.valido(conta) }.to raise_error(described_class::Transitorio)
+      expect(conta.reload.status).to eq('conectada')
+    end
+
     it 'erro de rede levanta Transitorio' do
       stub_request(:post, url).to_timeout
       expect { described_class.valido(conta) }.to raise_error(described_class::Transitorio)
