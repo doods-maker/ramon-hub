@@ -1186,6 +1186,13 @@
       "BASE_SB": "benefícios",
       "HONORARIO_NA_TABELA": "Na tabela de honorários (a IA pode citar)",
       "ZAPSIGN_MODELO": "Modelo de contrato (ZapSign)",
+      "OPCOES_BOTOES": "Opções em botões no WhatsApp",
+      "OPCOES_BOTOES_AJUDA": "Nas perguntas de escolha e de sim/não do roteiro, a IA manda as opções para o lead tocar (até 3 botões ou uma lista de até 10). O lead pode sempre responder digitando. No teste A/B, metade dos leads recebe botões e a outra metade só texto, para comparar.",
+      "OPCOES_BOTOES_MODO": {
+        "desligado": "Desligado (só texto)",
+        "ligado": "Ligado (todos os leads)",
+        "teste_ab": "Teste A/B (metade dos leads)"
+      },
       "ZAPSIGN_MODELO_AJUDA": "Usado pelo modo \"sozinha até o contrato\" para gerar o contrato na hora. Sem modelo = o contrato não sai automático para esta tese.",
       "ZAPSIGN_SEM_MODELO": "Sem modelo",
       "ZAPSIGN_MODELOS_ERRO": "Não deu para carregar os modelos do ZapSign agora — o modelo salvo é mantido.",

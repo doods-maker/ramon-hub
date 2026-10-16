@@ -55,6 +55,7 @@ const detail = reactive({
   honorarioNaTabela: false,
   palavrasChave: [],
   zapsignTemplateId: '',
+  opcoesBotoes: 'desligado',
 });
 
 const syncDetail = () => {
@@ -71,6 +72,7 @@ const syncDetail = () => {
   detail.honorarioNaTabela = !!thesis.honorario_na_tabela;
   detail.palavrasChave = [...(thesis.palavras_chave || [])];
   detail.zapsignTemplateId = thesis.zapsign_template_id || '';
+  detail.opcoesBotoes = thesis.opcoes_botoes || 'desligado';
 };
 
 // Observa só o ID: resposta de PATCH mutando o record no store não pode
@@ -163,6 +165,7 @@ const saveDetail = () => {
       honorario_na_tabela: detail.honorarioNaTabela,
       palavras_chave: detail.palavrasChave,
       zapsign_template_id: detail.zapsignTemplateId || null,
+      opcoes_botoes: detail.opcoesBotoes,
     })
     .catch(() => useAlert(t('RAMON.FUNIL.SAVE_ERROR')));
 };
@@ -665,6 +668,26 @@ onMounted(() => {
               >
                 {{ $t('RAMON.PLAYBOOKS.ZAPSIGN_MODELOS_ERRO') }}
               </p>
+              <label
+                :class="ROTULO"
+                :title="$t('RAMON.PLAYBOOKS.OPCOES_BOTOES_AJUDA')"
+              >
+                {{ $t('RAMON.PLAYBOOKS.OPCOES_BOTOES') }}
+                <select
+                  v-model="detail.opcoesBotoes"
+                  data-testid="playbooks-opcoes-botoes"
+                  :class="CAMPO"
+                  @change="saveDetail"
+                >
+                  <option
+                    v-for="modo in ['desligado', 'ligado', 'teste_ab']"
+                    :key="modo"
+                    :value="modo"
+                  >
+                    {{ $t(`RAMON.PLAYBOOKS.OPCOES_BOTOES_MODO.${modo}`) }}
+                  </option>
+                </select>
+              </label>
             </div>
 
             <nav

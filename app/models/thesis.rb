@@ -15,6 +15,8 @@ class Thesis < ApplicationRecord
             numericality: { only_integer: true, greater_than_or_equal_to: 0 },
             allow_nil: true
   validates :honorario_minimo_base, inclusion: { in: %w[sm sb] }, allow_nil: true
+  # Opções do roteiro como botões/lista no WhatsApp (Ramon::Roteiro::Opcoes).
+  validates :opcoes_botoes, inclusion: { in: %w[desligado ligado teste_ab] }
   normalizes :honorario_minimo_base, with: ->(v) { v.presence }
   default_scope { order(:position) }
 end
