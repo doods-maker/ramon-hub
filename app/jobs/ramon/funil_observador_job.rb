@@ -9,7 +9,7 @@ class Ramon::FunilObservadorJob < ApplicationJob
   end
 
   # Só as peças de IA já implementadas pelo observador (cada fase acrescenta as suas): peça sem efeito não paga LLM.
-  OBSERVADOR_PECAS = %w[etapa_ia perdido_recusa reuniao_ia temperatura].freeze
+  OBSERVADOR_PECAS = %w[etapa_ia perdido_recusa reuniao_ia temperatura colheita].freeze
   ESPERA = 10.minutes
 
   # Temperatura em ensaio não grava nada (Aplicar#gravar_temperatura): só conta ligada.

@@ -97,4 +97,61 @@ RSpec.describe Ramon::FunilObservador do
       expect(enviado[:system]).to include('decida só por fatos do cliente posteriores a esse desfazer')
     end
   end
+
+  describe 'colheita na pausa' do
+    let(:servico) { instance_double(Ramon::ColheitaExtractionService, perform: nil) }
+
+    before do
+      mensagem('Oi')
+      allow(Ramon::LlmClient).to receive(:complete).and_return(resultado('{"etapa":null}'))
+      allow(Ramon::ColheitaExtractionService).to receive(:new).with(lead).and_return(servico)
+    end
+
+    it 'on: roda o serviço uma vez, fora de transação, e registra a ação' do
+      Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
+      fora = ActiveRecord::Base.connection.open_transactions
+      durante = nil
+      allow(servico).to receive(:perform) { durante = ActiveRecord::Base.connection.open_transactions }
+
+      described_class.new(lead).perform
+
+      expect(servico).to have_received(:perform).once
+      expect(durante).to eq(fora)
+      expect(FunilAcao.where(lead: lead, peca: 'colheita', acao: 'colher', ensaio: false).count).to eq(1)
+    end
+
+    it 'roda também quando o LLM não devolve decisão' do
+      Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
+      allow(Ramon::LlmClient).to receive(:complete).and_return(resultado('não sei'))
+
+      described_class.new(lead).perform
+
+      expect(servico).to have_received(:perform).once
+    end
+
+    it 'off: não roda e não registra' do
+      described_class.new(lead).perform
+
+      expect(servico).not_to have_received(:perform)
+      expect(FunilAcao.where(peca: 'colheita')).to be_empty
+    end
+
+    it 'ensaio: não roda, só registra a ação de ensaio' do
+      Ramon::FunilAutomatico.mudar!(account, 'colheita', 'ensaio')
+
+      described_class.new(lead).perform
+
+      expect(servico).not_to have_received(:perform)
+      expect(FunilAcao.where(lead: lead, peca: 'colheita', ensaio: true).count).to eq(1)
+    end
+
+    it 'lead que ficou perdido não é colhido' do
+      Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
+      allow(aplicar).to receive(:perform) { lead.update_columns(lost_at: Time.current) } # rubocop:disable Rails/SkipsModelValidations
+
+      described_class.new(lead).perform
+
+      expect(servico).not_to have_received(:perform)
+    end
+  end
 end

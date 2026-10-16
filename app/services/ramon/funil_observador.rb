@@ -35,13 +35,22 @@ class Ramon::FunilObservador
     return nil if texto.blank?
 
     decisao = decidir(texto)
-    return nil if decisao.nil?
-
-    Aplicar.new(@lead, decisao).perform
+    Aplicar.new(@lead, decisao).perform if decisao
+    colher
     decisao
   end
 
   private
+
+  # A colheita não depende da decisão do LLM (nem de ela existir), mas não roda em lead que o Aplicar acabou de ganhar/perder.
+  # Fora de transação: o serviço faz a própria chamada ao LLM; executar só registra (bloco trivial).
+  def colher
+    modo = Ramon::FunilAutomatico.modo(account, 'colheita')
+    return if modo == 'off' || @lead.reload.won_at.present? || @lead.lost_at.present?
+
+    Ramon::ColheitaExtractionService.new(@lead).perform if modo == 'on'
+    Ramon::FunilAutomatico.executar(@lead, peca: 'colheita', acao: 'colher', motivo: 'pausa na conversa') { true }
+  end
 
   def account = @lead.account
 
