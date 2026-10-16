@@ -54,10 +54,48 @@ RSpec.describe Ramon::GoogleAgenda::Cliente do
     end
   end
 
+  describe '#criar com id e #evento' do
+    it 'manda o id escolhido no corpo' do
+      stub = stub_request(:post, url).with(query: hash_including({}), body: hash_including('id' => 'hubtask7'))
+                                     .to_return(json(id: 'hubtask7'))
+      expect(cliente.criar(inicio: inicio, fim: fim, titulo: 'T', descricao: 'D', meet: false, hub_task_id: 7, id: 'hubtask7'))
+        .to include(id: 'hubtask7')
+      expect(stub).to have_been_requested
+    end
+
+    it 'busca um evento pelo id' do
+      stub_request(:get, "#{url}/hubtask7").to_return(json(id: 'hubtask7', hangoutLink: 'https://meet.google.com/q'))
+      expect(cliente.evento('hubtask7')).to eq(id: 'hubtask7', meet_url: 'https://meet.google.com/q')
+    end
+  end
+
   describe '#atualizar e #cancelar' do
     it 'atualiza com PATCH' do
       stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query).to_return(json({}))
       expect(cliente.atualizar('ev1', inicio: inicio, fim: fim)).to be(true)
+      expect(stub).to have_been_requested
+    end
+
+    it 'atualiza pedindo Meet novo e devolve o link' do
+      stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query.merge('conferenceDataVersion' => '1'),
+                                                     body: hash_including('conferenceData' => hash_including('createRequest')))
+                                               .to_return(json(hangoutLink: 'https://meet.google.com/abc'))
+      expect(cliente.atualizar('ev1', inicio: inicio, fim: fim, meet: true)).to eq('https://meet.google.com/abc')
+      expect(stub).to have_been_requested
+    end
+
+    it 'meet: false tira o Meet do evento (conferenceData nulo, versão 1)' do
+      stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query.merge('conferenceDataVersion' => '1')) do |req|
+        corpo = JSON.parse(req.body)
+        corpo.key?('conferenceData') && corpo['conferenceData'].nil?
+      end.to_return(json({}))
+      expect(cliente.atualizar('ev1', inicio: inicio, fim: fim, meet: false)).to be(true)
+      expect(stub).to have_been_requested
+    end
+
+    it 'atualiza a descrição quando informada' do
+      stub = stub_request(:patch, "#{url}/ev1").with(query: cancelar_query, body: hash_including('description' => 'Nova')).to_return(json({}))
+      cliente.atualizar('ev1', inicio: inicio, fim: fim, descricao: 'Nova')
       expect(stub).to have_been_requested
     end
 

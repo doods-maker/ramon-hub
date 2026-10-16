@@ -27,7 +27,8 @@ class Ramon::DailyDigestService
       lost: lost_stats,
       first_response_label: first_response_label,
       funil_auto: funil_auto_acoes.first(FUNIL_AUTO_LIMITE).map { |acao| funil_auto_item(acao) },
-      funil_auto_restantes: [funil_auto_acoes.size - FUNIL_AUTO_LIMITE, 0].max
+      funil_auto_restantes: [funil_auto_acoes.size - FUNIL_AUTO_LIMITE, 0].max,
+      agenda_sem_google: agenda_sem_google
     }
   end
 
@@ -130,6 +131,13 @@ class Ramon::DailyDigestService
     texto += ' (desfeita)' if acao.desfeita_em
     { lead_id: acao.lead_id, lead_name: acao.lead.name, conversation_id: acao.lead.conversation&.display_id,
       texto: texto, ensaio: acao.ensaio }
+  end
+
+  # Membros do comercial (times sdr/closer) sem Google conectado: só os nomes, em ordem alfabética.
+  def agenda_sem_google
+    ids = [Ramon::Papeis::SDR, Ramon::Papeis::CLOSER].flat_map { |papel| Ramon::Papeis.membro_ids(@account, papel) }.uniq
+    conectados = GoogleAgendaConta.conectadas.where(user_id: ids).pluck(:user_id)
+    User.where(id: ids - conectados).order(:name).pluck(:name)
   end
 
   # ---- Formatação (fuso do escritório) ------------------------------------

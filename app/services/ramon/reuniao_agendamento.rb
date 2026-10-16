@@ -18,20 +18,31 @@ class Ramon::ReuniaoAgendamento
 
   # title = nome da reunião (atividade, sino); task_title = título da tarefa
   # (o Cal.com prefixa "Reunião Cal.com:" — o cancel/reschedule acham por ele).
-  def self.call(lead:, starts_at:, title:, task_title: title, user: nil)
-    new(lead, starts_at, title, user).call(task_title)
+  def self.call(lead:, starts_at:, title:, task_title: title, user: nil, formato: 'video') # rubocop:disable Metrics/ParameterLists
+    new(lead, starts_at, title, user, formato).call(task_title)
+  end
+
+  # Sem colisão na agenda de quem vai receber a reunião (o dono da tarefa; antes de existir, o Closer do lead ou o próximo da fila).
+  # Confere só a colisão, não a janela comercial (essa é regra da oferta). Sem dono não há agenda: livre. Remarcando, ignora a própria.
+  def self.livre?(lead, inicio, task: nil)
+    dono = task&.agenda_user || lead.closer || Ramon::Papeis.proximo(lead.account, Ramon::Papeis::CLOSER)
+    dono.nil? || !Ramon::Agenda::Disponibilidade.new(user: dono, account: lead.account).colide?(inicio, ignorar_task_id: task&.id)
   end
 
   # Remarcar (painel do lead): a mesma reunião em outro horário — lembretes do
   # horário novo (os do antigo viram órfãos e o job descarta), atividade
   # de→para, novo rascunho de confirmação (não enviado) e aviso no sino.
-  def self.remarcar(task:, starts_at:, user: nil)
-    new(task.lead, starts_at, titulo_de(task), user).remarcar(task)
+  # formato nil = mantém o da reunião.
+  # sem_google: a mudança veio do Google — não empurra de volta (senão o cliente recebe o aviso do Google duas vezes).
+  def self.remarcar(task:, starts_at:, user: nil, formato: nil, sem_google: false)
+    task.sem_push_google = sem_google
+    new(task.lead, starts_at, titulo_de(task), user, formato).remarcar(task)
   end
 
   # Cancelar (painel do lead): atividade meeting_cancelled, a tarefa sai e sino/ntfy. Os lembretes já
   # enfileirados viram órfãos e o guard do MeetingReminderJob descarta.
-  def self.cancelar(task:, user: nil)
+  def self.cancelar(task:, user: nil, sem_google: false)
+    task.sem_push_google = sem_google
     new(task.lead, task.due_at, titulo_de(task), user).cancelar([task])
   end
 
@@ -57,7 +68,8 @@ class Ramon::ReuniaoAgendamento
     "#{title} em #{when_text}".strip.truncate(255)
   end
 
-  def initialize(lead, starts_at, title, user)
+  def initialize(lead, starts_at, title, user, formato = nil)
+    @formato = formato
     @lead = lead
     @starts_at = starts_at
     @title = title
@@ -75,7 +87,7 @@ class Ramon::ReuniaoAgendamento
   # Mover a tarefa é a remarcação em si e fica sempre aqui; o resto é do código ou dos fluxos.
   def remarcar(task)
     de = task.due_at
-    task.update!(due_at: @starts_at)
+    task.update!({ due_at: @starts_at, formato: @formato }.compact)
     assumido = assumido?
     disparar('reuniao_marcada', dados('remarcada', assumido, 'resumo_antes' => self.class.resumo(@title, de)))
     efeitos_da_remarcacao(de) unless assumido
@@ -107,7 +119,7 @@ class Ramon::ReuniaoAgendamento
     {
       'evento' => evento, 'assumido' => assumido, 'quando' => quando_texto, 'inicio' => @starts_at&.iso8601,
       'titulo' => @title, 'resumo' => self.class.resumo(@title, @starts_at), 'primeiro_nome' => primeiro_nome,
-      'quem_marcou_id' => @user&.id
+      'quem_marcou_id' => @user&.id, 'formato' => @formato
     }.merge(extra).compact
   end
 
@@ -117,7 +129,7 @@ class Ramon::ReuniaoAgendamento
     @lead.lead_activities.create!(account: @lead.account, user: @user, kind: 'meeting_scheduled',
                                   to_value: self.class.resumo(@title, @starts_at))
     task = @lead.lead_tasks.create!(account: @lead.account, user: @user, title: task_title.truncate(255), kind: 'meeting',
-                                    due_at: @starts_at)
+                                    due_at: @starts_at, formato: @formato || 'video')
     advance_stage
     Ramon::Papeis.atribuir_closer!(@lead)
     confirmation_draft

@@ -927,7 +927,9 @@ describe('LeadPanelBody', () => {
         id: 7,
         startsAt: new Date('2026-10-06T14:00').toISOString(),
         title: 'Reunião',
+        formato: 'video',
         force: false,
+        forceOcupado: false,
       });
       expect(useAlert).toHaveBeenCalledWith('RAMON.TASKS.MEETING_SCHEDULED');
       // rascunho de confirmação nasce no backend: notas recarregam

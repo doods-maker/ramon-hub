@@ -37,9 +37,10 @@ class Ramon::GoogleAgenda::Cliente
     itens
   end
 
-  def criar(inicio:, fim:, titulo:, descricao:, meet:, hub_task_id:, convidado_email: nil) # rubocop:disable Metrics/ParameterLists
+  def criar(inicio:, fim:, titulo:, descricao:, meet:, hub_task_id:, convidado_email: nil, id: nil) # rubocop:disable Metrics/ParameterLists
     corpo = { summary: titulo, description: descricao, start: { dateTime: inicio.iso8601 }, end: { dateTime: fim.iso8601 },
               extendedProperties: { private: { hub_task_id: hub_task_id.to_s } } }
+    corpo[:id] = id if id # id escolhido por nós: nova tentativa da mesma criação dá 409 em vez de evento duplicado
     corpo[:attendees] = [{ email: convidado_email }] if convidado_email.present?
     corpo[:conferenceData] = { createRequest: { requestId: "hub-#{hub_task_id}" } } if meet
     query = { conferenceDataVersion: 1, sendUpdates: convidado_email.present? ? 'all' : 'none' }
@@ -47,10 +48,21 @@ class Ramon::GoogleAgenda::Cliente
     { id: evento['id'], meet_url: meet_url(evento) }
   end
 
-  def atualizar(id, inicio:, fim:)
+  def evento(id)
+    corpo = requisitar(:get, "/#{ERB::Util.url_encode(id)}")
+    { id: corpo['id'], meet_url: meet_url(corpo) }
+  end
+
+  # meet: true pede um Meet novo (WhatsApp → vídeo) e devolve o link; meet: false tira o Meet do evento (vídeo → WhatsApp);
+  # descricao: troca o texto quando informada.
+  def atualizar(id, inicio:, fim:, meet: nil, descricao: nil)
     corpo = { start: { dateTime: inicio.iso8601 }, end: { dateTime: fim.iso8601 } }
-    requisitar(:patch, "/#{ERB::Util.url_encode(id)}", query: { sendUpdates: 'all' }, body: corpo)
-    true
+    corpo[:description] = descricao if descricao
+    corpo[:conferenceData] = { createRequest: { requestId: "hub-#{id}-#{SecureRandom.hex(4)}" } } if meet
+    corpo[:conferenceData] = nil if meet == false
+    query = meet.nil? ? { sendUpdates: 'all' } : { sendUpdates: 'all', conferenceDataVersion: 1 }
+    evento = requisitar(:patch, "/#{ERB::Util.url_encode(id)}", query: query, body: corpo)
+    meet ? meet_url(evento) : true
   end
 
   def cancelar(id)

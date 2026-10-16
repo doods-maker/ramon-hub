@@ -17,6 +17,7 @@ import LeadQuizResumo from './LeadQuizResumo.vue';
 import LeadZapsignCard from './LeadZapsignCard.vue';
 import LostReasonModal from '../kanban/LostReasonModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
+import FormatoReuniao from './FormatoReuniao.vue';
 import LeadCopilot from '../conversation/LeadCopilot.vue';
 import LeadHistory from '../conversation/LeadHistory.vue';
 import LeadIaExecucoes from './LeadIaExecucoes.vue';
@@ -370,6 +371,7 @@ const taskFormOpen = ref(false);
 const taskKind = ref('follow_up');
 const taskTitle = ref('');
 const taskDate = ref('');
+const taskFormato = ref('video');
 const isMeetingForm = computed(() => taskKind.value === 'meeting');
 // nota-rascunho de confirmação nasce no backend: recarrega as notas
 const notesTick = ref(0);
@@ -383,6 +385,16 @@ const tomorrowAt9 = () => {
 const savingTask = ref(false);
 // reunião aberta devolvida pelo 409: pergunta antes de marcar outra
 const reuniaoAberta = ref(null);
+// horário ocupado na agenda do Closer (409 HORARIO_OCUPADO): mostra a mensagem e oferece marcar mesmo assim
+const horarioOcupado = ref(false);
+// o que o usuário já confirmou nesta marcação (cada aviso tem a sua confirmação)
+const okAberta = ref(false);
+const okOcupado = ref(false);
+// outro horário = outra marcação: as confirmações anteriores não valem
+watch(taskDate, () => {
+  okAberta.value = false;
+  okOcupado.value = false;
+});
 const reuniaoAbertaQuando = computed(() => {
   if (!reuniaoAberta.value?.due_at) return '';
   return new Date(reuniaoAberta.value.due_at).toLocaleString('pt-BR', {
@@ -392,9 +404,10 @@ const reuniaoAbertaQuando = computed(() => {
     minute: '2-digit',
   });
 });
-const addTask = async (force = false) => {
+const addTask = async () => {
   if (savingTask.value || (isMeetingForm.value && !taskDate.value)) return;
   reuniaoAberta.value = null;
+  horarioOcupado.value = false;
   savingTask.value = true;
   const title = taskTitle.value.trim();
   const due = taskDate.value ? new Date(taskDate.value) : tomorrowAt9();
@@ -404,7 +417,9 @@ const addTask = async (force = false) => {
         id: props.lead.id,
         startsAt: due.toISOString(),
         title,
-        force: force === true,
+        formato: taskFormato.value,
+        force: okAberta.value,
+        forceOcupado: okOcupado.value,
       });
       notesTick.value += 1;
       useAlert(t('RAMON.TASKS.MEETING_SCHEDULED'));
@@ -418,11 +433,18 @@ const addTask = async (force = false) => {
     }
     taskTitle.value = '';
     taskDate.value = '';
+    taskFormato.value = 'video';
+    okAberta.value = false;
+    okOcupado.value = false;
     taskKind.value = 'follow_up';
     taskFormOpen.value = false;
   } catch (e) {
     if (isMeetingForm.value && e?.response?.status === 409) {
-      reuniaoAberta.value = e.response.data?.task || {};
+      if (e.response.data?.error === 'HORARIO_OCUPADO') {
+        horarioOcupado.value = true;
+      } else {
+        reuniaoAberta.value = e.response.data?.task || {};
+      }
       return;
     }
     useAlert(
@@ -435,6 +457,15 @@ const addTask = async (force = false) => {
   } finally {
     savingTask.value = false;
   }
+};
+
+const confirmarAberta = () => {
+  okAberta.value = true;
+  addTask();
+};
+const confirmarOcupado = () => {
+  okOcupado.value = true;
+  addTask();
 };
 
 // ----- Reunião (Closer): Qualificada / Não qualificada no Andamento quando
@@ -869,8 +900,21 @@ const discard = async () => {
             "
             :confirm-label="$t('RAMON.TASKS.MEETING_CONFLICT_CONFIRM')"
             confirm-color="blue"
-            @confirm="addTask(true)"
+            @confirm="confirmarAberta"
             @cancel="reuniaoAberta = null"
+          />
+        </Teleport>
+
+        <Teleport to="body">
+          <ConfirmModal
+            v-if="horarioOcupado"
+            data-testid="horario-ocupado"
+            :title="$t('RAMON.TASKS.BUSY_TITLE')"
+            :message="$t('RAMON.TASKS.BUSY_MESSAGE')"
+            :confirm-label="$t('RAMON.TASKS.MEETING_CONFLICT_CONFIRM')"
+            confirm-color="blue"
+            @confirm="confirmarOcupado"
+            @cancel="horarioOcupado = false"
           />
         </Teleport>
 
@@ -977,6 +1021,7 @@ const discard = async () => {
             class="font-mono"
             :class="CAMPO"
           />
+          <FormatoReuniao v-if="isMeetingForm" v-model="taskFormato" />
           <p v-if="isMeetingForm" class="text-xs text-n-slate-10">
             {{ $t('RAMON.TASKS.MEETING_HINT') }}
           </p>

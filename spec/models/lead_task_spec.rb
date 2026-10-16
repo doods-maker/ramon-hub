@@ -22,6 +22,61 @@ RSpec.describe LeadTask do
     expect(described_class.new(account: account, lead: lead, title: 'x', kind: 'follow_up', due_at: nil)).not_to be_valid
   end
 
+  it 'rejects an unknown formato' do
+    task = described_class.new(account: account, lead: lead, title: 'x', kind: 'meeting', formato: 'fax', due_at: 1.day.from_now)
+    expect(task).not_to be_valid
+  end
+
+  it 'fills agenda_user_id with the lead closer on a new meeting' do
+    closer = create(:user)
+    lead.update!(closer: closer)
+    task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+    expect(task.agenda_user_id).to eq(closer.id)
+  end
+
+  describe 'agenda no Google' do
+    let(:closer) { create(:user) }
+
+    before { lead.update!(closer: closer) }
+
+    it 'reunião criada enfileira criar' do
+      expect { create(:lead_task, account: account, lead: lead, kind: 'meeting') }
+        .to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('criar', hash_including('task_id' => kind_of(Integer)))
+    end
+
+    it 'follow-up não enfileira nada' do
+      expect { create(:lead_task, account: account, lead: lead, kind: 'follow_up') }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+
+    it 'mudar due_at ou formato enfileira atualizar; outro campo não' do
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+      expect { task.update!(due_at: 3.days.from_now) }.to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('atualizar', anything)
+      expect { task.update!(formato: 'whatsapp') }.to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('atualizar', anything)
+      expect { task.update!(title: 'Outro') }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+
+    it 'destroy enfileira cancelar com o id do evento e o dono' do
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+      task.update_columns(google_event_id: 'ev1') # rubocop:disable Rails/SkipsModelValidations
+      expect { task.destroy! }.to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+        .with('cancelar', { 'task_id' => task.id, 'google_event_id' => 'ev1', 'agenda_user_id' => closer.id })
+    end
+
+    it 'destroy sem google_event_id enfileira cancelar com o id fixo da criação (evento órfão)' do
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+      expect { task.destroy! }.to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+        .with('cancelar', { 'task_id' => task.id, 'google_event_id' => "hubtask#{task.id}", 'agenda_user_id' => closer.id })
+    end
+
+    it 'reunião do Cal.com não vai ao Google (criar, atualizar e cancelar)', :aggregate_failures do
+      task = nil
+      expect { task = create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião Cal.com: Cal') }
+        .not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+      expect { task.update!(due_at: 3.days.from_now, formato: 'whatsapp') }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+      expect { task.destroy! }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+  end
+
   describe 'scopes' do
     # Comparação por id (não por objeto): igualdade de AR depende de identidade
     # de classe, que quebra em shard com reload (ver nota de specs no AGENTS.md).

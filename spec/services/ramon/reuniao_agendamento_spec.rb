@@ -13,6 +13,31 @@ RSpec.describe Ramon::ReuniaoAgendamento do
     described_class.call(lead: lead, starts_at: starts_at, title: 'Primeiro Atendimento', user: user, **)
   end
 
+  it 'grava o formato escolhido (padrão vídeo)', :aggregate_failures do
+    agendar(formato: 'whatsapp')
+    expect(lead.lead_tasks.find_by!(kind: 'meeting').formato).to eq 'whatsapp'
+  end
+
+  describe '.livre?' do
+    it 'sem Closer no time não há agenda para conferir: livre' do
+      expect(described_class.livre?(lead, starts_at)).to be(true)
+    end
+
+    it 'confere a agenda do Closer do lead; remarcando, ignora a própria reunião', :aggregate_failures do
+      closer = create(:user, account: account)
+      lead.update!(closer: closer)
+      disponibilidade = instance_double(Ramon::Agenda::Disponibilidade, colide?: true)
+      allow(Ramon::Agenda::Disponibilidade).to receive(:new).with(user: closer, account: account).and_return(disponibilidade)
+
+      expect(described_class.livre?(lead, starts_at)).to be(false)
+      expect(disponibilidade).to have_received(:colide?).with(starts_at, ignorar_task_id: nil)
+
+      task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+      described_class.livre?(lead, starts_at, task: task)
+      expect(disponibilidade).to have_received(:colide?).with(starts_at, ignorar_task_id: task.id)
+    end
+  end
+
   it 'cria a tarefa de reunião, a atividade e anda o lead pra Reunião agendada', :aggregate_failures do
     agendar
 
@@ -103,6 +128,35 @@ RSpec.describe Ramon::ReuniaoAgendamento do
 
       expect { remarcar(task) }.not_to change(Message, :count)
       expect(Notification.where(notification_type: 'ramon_meeting_scheduled').last.meta['quando']).to eq 'sexta, 17/07 às 14:30'
+    end
+  end
+
+  describe 'sem_google (mudança que veio do Google não volta para lá)' do
+    let(:task) do
+      agendar
+      lead.lead_tasks.find_by!(kind: 'meeting')
+    end
+
+    it 'remarcar com sem_google: true não enfileira o push' do
+      task
+      expect { described_class.remarcar(task: task, starts_at: starts_at + 1.day, user: user, sem_google: true) }
+        .not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+
+    it 'remarcar sem o kwarg enfileira o push' do
+      task
+      expect { described_class.remarcar(task: task, starts_at: starts_at + 1.day, user: user) }
+        .to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('atualizar', anything)
+    end
+
+    it 'cancelar com sem_google: true não enfileira o push' do
+      task.update_columns(google_event_id: 'ev1') # rubocop:disable Rails/SkipsModelValidations
+      expect { described_class.cancelar(task: task, user: user, sem_google: true) }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+
+    it 'cancelar sem o kwarg enfileira o push' do
+      task.update_columns(google_event_id: 'ev1') # rubocop:disable Rails/SkipsModelValidations
+      expect { described_class.cancelar(task: task, user: user) }.to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('cancelar', anything)
     end
   end
 
@@ -211,6 +265,15 @@ RSpec.describe Ramon::ReuniaoAgendamento do
         expect(task.reload.due_at).to eq(starts_at + 1.day)
         expect(lead.lead_activities.where(kind: 'meeting_rescheduled')).to be_empty
         expect(Ramon::Fluxos::Reunioes).to have_received(:assumiu?).once # o evento decide uma vez só
+      end
+
+      it 'marcar com WhatsApp: o passo "Criar tarefa" do fluxo cria a reunião com formato whatsapp (o gatilho leva o formato)' do
+        marcada = Fluxo.find_by!(account: account, sistema_chave: Ramon::Fluxos::Reunioes::GATILHOS.key('reuniao_marcada'))
+        marcada.update!(rascunho: grafo_linear({ 'tipo' => 'reuniao_marcada' },
+                                               ['criar_tarefa', { 'titulo' => 'Reunião', 'tipo' => 'meeting', 'prazo' => 'reuniao' }]))
+        marcada.publicar!(nil)
+        agendar(formato: 'whatsapp')
+        expect(lead.lead_tasks.where(kind: 'meeting').pluck(:formato)).to eq(['whatsapp'])
       end
 
       it 'chave ligada: um fluxo comum em reunião marcada segue disparando 1 vez, depois do fluxo migrado' do

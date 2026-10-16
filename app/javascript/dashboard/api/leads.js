@@ -162,11 +162,13 @@ class LeadsAPI extends ApiClient {
   // Reunião marcada pelo painel: mesmo efeito do Cal.com (etapa, Closer,
   // rascunho de confirmação nas notas, lembretes internos). Nada vai ao cliente.
   // force: marca mesmo com outra reunião aberta (sem ele o backend dá 409)
-  agendarReuniao(leadId, { startsAt, title, force }) {
+  agendarReuniao(leadId, { startsAt, title, force, forceOcupado, formato }) {
     return axios.post(`${this.url}/${leadId}/reuniao_agendada`, {
       starts_at: startsAt,
       title,
+      ...(formato ? { formato } : {}),
       ...(force ? { force: true } : {}),
+      ...(forceOcupado ? { force_ocupado: true } : {}),
     });
   }
 

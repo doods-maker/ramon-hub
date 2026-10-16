@@ -4,6 +4,8 @@ json.user_id task.user_id
 json.title task.title
 json.kind task.kind
 json.due_at task.due_at
+json.formato task.formato
+json.meet_url task.meet_url
 json.completed_at task.completed_at
 json.created_at task.created_at
 json.lead_name task.lead.name

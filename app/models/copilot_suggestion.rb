@@ -99,6 +99,8 @@ class CopilotSuggestion < ApplicationRecord
     end
     return recusar('A sugestão não trouxe data válida para a reunião') if horario.blank?
 
+    return recusar('Esse horário ficou ocupado — escolha outro') unless Ramon::ReuniaoAgendamento.livre?(lead, horario)
+
     # mesmo caminho do painel/Cal.com: etapa, Closer, rascunho de confirmação, lembretes e sino
     Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: horario, title: payload['titulo'].presence || 'Reunião de fechamento', user: user)
     true

@@ -10,6 +10,8 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
 
   def aplicar(decisao) = described_class.new(lead, decisao).perform
 
+  before { allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(true) }
+
   describe 'etapa' do
     before { ligar('etapa_ia') }
 
@@ -171,6 +173,18 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       expect(FunilAcao.last).to have_attributes(peca: 'reuniao_ia', acao: 'marcar_reuniao', motivo: 'quinta às 14h está ótimo')
       expect(FunilAcao.last.desfazer).to eq('task_id' => tarefa.id, 'etapa_id' => account.lead_stages.find_by(label: 'fase-novo').id,
                                             'etapa_produzida_id' => lead.lead_stage_id)
+    end
+
+    it 'horário ocupado pula: sem tarefa nem FunilAcao, com rastro no histórico (uma vez só)', :aggregate_failures do
+      allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(false)
+
+      2.times { aplicar(decisao) }
+
+      expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
+      expect(FunilAcao.count).to eq(0)
+      atividades = lead.lead_activities.where(kind: 'funil_auto')
+      expect(atividades.count).to eq(1)
+      expect(atividades.last.to_value).to eq("Reunião pedida para #{Ramon::ReuniaoAgendamento.quando(inicio)} não marcada: horário ocupado na agenda")
     end
 
     it 'data no passado não faz nada' do

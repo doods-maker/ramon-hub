@@ -75,12 +75,26 @@ class Ramon::FunilObservador::Aplicar
     inicio = reuniao_inicio
     return if inicio.nil? || @lead.lead_tasks.open_tasks.exists?(kind: 'meeting') ||
               Ramon::FunilAutomatico.desfeita_recente?(@lead, acao: 'marcar_reuniao', alvo: inicio.iso8601)
+    return reuniao_ocupada(inicio) unless Ramon::FunilAutomatico.modo(account, 'reuniao_ia') == 'off' || livre?(inicio)
 
     desfazer = {}
     Ramon::FunilAutomatico.executar(@lead, peca: 'reuniao_ia', acao: 'marcar_reuniao', alvo: inicio.iso8601, desfazer: desfazer,
                                            motivo: @decisao['reuniao']['frase'].presence || 'reunião combinada na conversa') do
       agendar_reuniao(inicio, desfazer)
     end
+  end
+
+  # Conferência fora da transação do executar (faz HTTP ao Google). Só liga/ensaio importam: desligada, nada acontece.
+  def livre?(inicio) = Ramon::ReuniaoAgendamento.livre?(@lead, inicio)
+
+  # Horário pego: não marca e deixa o rastro no histórico do lead (sem FunilAcao; uma vez por horário). Em ensaio não grava.
+  def reuniao_ocupada(inicio)
+    return unless Ramon::FunilAutomatico.modo(account, 'reuniao_ia') == 'on'
+
+    texto = "Reunião pedida para #{Ramon::ReuniaoAgendamento.quando(inicio)} não marcada: horário ocupado na agenda"
+    return if @lead.lead_activities.exists?(kind: 'funil_auto', to_value: texto)
+
+    LeadActivity.create!(account: account, lead: @lead, user: nil, kind: 'funil_auto', to_value: texto)
   end
 
   # false = a marcação não aconteceu (ex.: o fluxo falhou): sem registro nem atividade de IA.
