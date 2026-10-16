@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_16_120001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_17_120001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1584,6 +1584,24 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_120001) do
     t.index ["account_id", "gatilho_tipo"], name: "index_ramon_fluxos_on_account_id_and_gatilho_tipo"
   end
 
+  create_table "ramon_funil_acoes", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "lead_id", null: false
+    t.string "peca", null: false
+    t.string "acao", null: false
+    t.string "motivo", limit: 250
+    t.string "alvo"
+    t.jsonb "desfazer", default: {}, null: false
+    t.boolean "ensaio", default: false, null: false
+    t.datetime "desfeita_em"
+    t.bigint "desfeita_por_id"
+    t.datetime "created_at", null: false
+    t.index ["account_id", "created_at"], name: "index_ramon_funil_acoes_on_account_id_and_created_at"
+    t.index ["account_id"], name: "index_ramon_funil_acoes_on_account_id"
+    t.index ["desfeita_por_id"], name: "index_ramon_funil_acoes_on_desfeita_por_id"
+    t.index ["lead_id"], name: "index_ramon_funil_acoes_on_lead_id"
+  end
+
   create_table "ramon_ia_casos", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "assistant_id", null: false
@@ -2005,6 +2023,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_120001) do
   add_foreign_key "portal_assinaturas", "portal_clientes"
   add_foreign_key "portal_clientes", "accounts"
   add_foreign_key "portal_envios", "portal_clientes"
+  add_foreign_key "ramon_funil_acoes", "accounts", on_delete: :cascade
+  add_foreign_key "ramon_funil_acoes", "leads", on_delete: :cascade
+  add_foreign_key "ramon_funil_acoes", "users", column: "desfeita_por_id", on_delete: :nullify
   add_foreign_key "ramon_pecas", "accounts"
   add_foreign_key "ramon_reunioes", "accounts"
   add_foreign_key "ramon_reunioes", "leads"

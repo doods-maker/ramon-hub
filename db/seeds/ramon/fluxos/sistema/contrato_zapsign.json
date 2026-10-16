@@ -2,10 +2,10 @@
   "nome": "Contrato no ZapSign",
   "grupo": "contrato_documentos",
   "fixa": true,
-  "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignLeadStatusJob; também no \"Gerar de novo\", quando o documento anterior já estava assinado (Ramon::ZapsignContractService).\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real (o payload do webhook não é a verdade) e grava o selo em custom_attributes.zapsign — o passo Preencher campo grava em campos;\n• nunca marca o lead como ganho: ganho continua sendo decisão do Closer;\n• é daqui que nascem os gatilhos Contrato assinado e Contrato recusado dos fluxos (o desenho usa o de assinado; recusado faz o mesmo).",
+  "descricao": "No código: webhook do ZapSign (Public::Api::V1::ZapsignWebhooksController) → Ramon::ZapsignLeadStatusJob; também no \"Gerar de novo\", quando o documento anterior já estava assinado (Ramon::ZapsignContractService).\n\nO desenho não consegue mostrar:\n• confere no ZapSign o status real (o payload do webhook não é a verdade) e grava o selo em custom_attributes.zapsign — o passo Preencher campo grava em campos;\n• contrato criado → leva o lead a Negociação, e contrato assinado → marca o lead como ganho, cada um atrás da sua chave (zapsign_negociacao e zapsign_ganho; padrão desligada);\n• é daqui que nascem os gatilhos Contrato assinado e Contrato recusado dos fluxos (o desenho usa o de assinado; recusado faz o mesmo).",
   "resumo": "Quando o contrato muda no ZapSign, atualiza no lead se foi assinado ou recusado.",
   "ficha": {
-    "o_que_faz": "Quando o ZapSign avisa que o contrato gerado pelo cartão do lead foi assinado ou recusado, o hub confere o status de verdade no ZapSign, grava o selo no card do lead (assinado ou recusado, com a data), escreve no histórico e toca o sino para todos da conta. Nunca marca o lead como ganho.",
+    "o_que_faz": "Quando o ZapSign avisa que o contrato gerado pelo cartão do lead foi assinado ou recusado, o hub confere o status de verdade no ZapSign, grava o selo no card do lead (assinado ou recusado, com a data), escreve no histórico e toca o sino para todos da conta. Se as chaves do funil automático estiverem ligadas: ao criar o contrato leva o lead a Negociação (só avança, nunca volta) e, ao assinar, marca o lead como ganho (mesmo que estivesse em Perdido).",
     "quando": "Na fila, logo depois do aviso (webhook) do ZapSign.",
     "o_que_mexe": [
       "Selo do contrato no card do lead (status e data).",
@@ -19,9 +19,9 @@
       "Só o documento vigente do lead e só a 1ª mudança: documento trocado (\"Gerar de novo\"), cancelado ou já com selo não faz nada de novo.",
       "ZapSign fora do ar: tenta de novo até 5 vezes.",
       "Para o selo \"recusado\", o evento de recusa precisa estar cadastrado no ZapSign.",
-      "Ganho continua sendo decisão do Closer."
+      "Negociação e Ganho automáticos só acontecem com a chave da peça ligada (zapsign_negociacao, zapsign_ganho); desligadas, o hub só registra o selo."
     ],
-    "por_que": "Decisão do Eduardo (08/10): fica no código. A conferência no ZapSign e o selo são o registro do contrato (dado); o histórico e o sino vão junto, para nunca haver contrato sem aviso.",
+    "por_que": "Decisão do Eduardo (08/10): fica no código. Em 16/10 ele autorizou Negociação e Ganho automáticos, atrás de chaves. A conferência no ZapSign e o selo são o registro do contrato (dado); o histórico e o sino vão junto, para nunca haver contrato sem aviso.",
     "mudar": {
       "pedido": "Para acrescentar uma ação, crie um fluxo seu com o gatilho \"Contrato assinado\" (ou \"recusado\") — sem mexer no código. Para mudar o selo, o histórico ou o sino, peça ao Claude: \"quando o contrato for assinado no ZapSign, <mudança>\".",
       "arquivos": [
@@ -29,7 +29,7 @@
         "app/jobs/ramon/zapsign_lead_status_job.rb",
         "app/services/ramon/zapsign_contract_service.rb"
       ],
-      "impacto": "Mexe no card do lead e no sino de todos. Não mexe em ganho nem no funil."
+      "impacto": "Mexe no card do lead e no sino de todos. Com as chaves ligadas, também muda a etapa do lead (Negociação) e o ganho."
     }
   },
   "desenho": {

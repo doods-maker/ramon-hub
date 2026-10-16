@@ -1,0 +1,49 @@
+{
+  "nome": "Funil automático",
+  "grupo": "leads_conversas",
+  "fixa": true,
+  "descricao": "No código: Ramon::FunilAutomatico (ponto único: lê a chave da peça, registra em FunilAcao e só então aplica), Ramon::FunilRegras (ZapSign) e Ramon::FunilTempoJob (todo dia às 11h, horário de Brasília).\n\nO desenho mostra só o caminho do Ganho pelo ZapSign. O que ele não consegue mostrar:\n• cada peça tem a sua chave (off, ensaio ou on) em account.settings['funil_automatico'] — tudo sobe desligado;\n• em ensaio a peça só registra \"faria: …\" e não mexe em nada;\n• toda ação real vira atividade no histórico do lead, com o motivo e a marca de que foi a IA, e pode ser desfeita em 1 clique.",
+  "resumo": "O kanban se move sozinho: regras fixas (ZapSign, tempo) e, depois, a leitura da conversa. Cada peça tem chave própria.",
+  "ficha": {
+    "o_que_faz": "Mantém o funil em dia sem trabalho manual. São 13 peças, cada uma com a sua chave. Hoje existem 4, de regra fixa (sem IA): (1) zapsign_negociacao: contrato criado no ZapSign leva o lead para Negociação; (2) zapsign_ganho: contrato assinado leva o lead para Ganho, até se ele estava em Perdido; (3) tempo_ultima_chance: lead parado em Negociação além do prazo da etapa vai para Última chance; (4) tempo_perdido: lead parado em Última chance além do prazo vai para Perdido com o motivo \"Sumiu / não respondeu\". As outras 9 chegam na próxima entrega, junto com o observador (rotina que lê a conversa depois de uns 10 minutos de pausa): (5) etapa_ia: move o lead para a frente quando a conversa mostra que ele avançou (Novo → Qualificação, ou → Última chance se travou numa objeção); (6) perdido_recusa: Perdido quando o cliente recusa claramente; (7) reuniao_ia: marca a reunião quando SDR e cliente combinaram dia e hora exatos; (8) colheita: preenche os dados do caso na pausa da conversa; (9) promessas: promessa com data vira tarefa de cobrança para o SDR; (10) pendencias: mostra no card os documentos que o cliente ficou de mandar; (11) temperatura: dá ao lead quente, morno ou frio, para a fila \"fale primeiro com estes\"; (12) no_show: reunião que passou sem registro avisa o Closer e deixa rascunho de remarcação; (13) reativacao: perdido por sumiço ganha rascunho de retomada aos 30 e 60 dias. Essas 9 ainda não fazem nada, mesmo ligadas: chega na próxima entrega.",
+    "quando": "ZapSign: na hora em que o contrato é criado ou assinado. Regras de tempo: todo dia às 11h (horário de Brasília). Observador: chega na próxima entrega.",
+    "o_que_mexe": [
+      "A etapa do lead (sempre para a frente; a exceção é o contrato assinado, que tira o lead de Perdido para Ganho).",
+      "O histórico do lead: cada ação real grava uma atividade com o motivo em uma frase e a marca \"IA\".",
+      "O registro de ações do funil (aparece como \"faria: …\" quando a peça está em ensaio) e a seção \"O que a IA mexeu ontem\" no resumo das 8h, só para administradores.",
+      "Ganho pelo ZapSign usa o valor estimado do lead, sem tarefa e sem confirmação, e dispara a cascata de sempre (ADVBOX, Drive, NPS)."
+    ],
+    "travas": [
+      "Nunca volta etapa. Única exceção: contrato assinado com o lead em Perdido vira Ganho.",
+      "A IA nunca marca Ganho. O Ganho só vem do contrato assinado no ZapSign, que é regra fixa.",
+      "Nada vai ao cliente por aqui. Remarcação e reativação são rascunhos nas notas (\"RASCUNHO (revisar antes de enviar)\"); quem envia é uma pessoa.",
+      "Desfazer em 1 clique para cada ação da IA. Depois de desfazer, o observador não refaz a mesma ação com base nas mesmas mensagens: só uma conversa nova pode levar a ela de novo.",
+      "Só leads abertos e ligados a uma conversa; Ganho e Perdido o observador não lê.",
+      "Convive com o roteiro da tese: se o roteiro já moveu, só segue para a frente.",
+      "Chaves por peça com padrão desligado. O deploy sobe tudo off; ligar é ação do Eduardo.",
+      "Sem dado sensível em log."
+    ],
+    "por_que": "Pedido do Eduardo (16/10): o time comercial (1 SDR + 1 Closer) começa em 16/11 e mover card, marcar reunião, preencher dados e fechar lead perdido é trabalho que atrapalha quem deveria conversar e fechar. Ganho pelo ZapSign revoga a regra de 08/10 por decisão dele. Desenho completo em docs/superpowers/specs/2026-10-16-funil-automatico-design.md.",
+    "mudar": {
+      "pedido": "Para ligar ou desligar: peça ao Claude ou rode no servidor rake ramon:funil:modo[account_id,peca,modo], com modo off (desligada), ensaio (só registra \"faria: …\", não mexe) ou on (aplica de verdade). Ex.: ramon:funil:modo[1,tempo_perdido,ensaio]. Para mudar o comportamento: \"o funil automático passa a <mudança>\".",
+      "arquivos": [
+        "app/services/ramon/funil_automatico.rb",
+        "app/services/ramon/funil_regras.rb",
+        "app/jobs/ramon/funil_tempo_job.rb",
+        "app/models/funil_acao.rb",
+        "app/services/ramon/daily_digest_service.rb",
+        "lib/tasks/ramon_funil.rake"
+      ],
+      "impacto": "Ligar em on muda etapa de lead de verdade (e o Ganho dispara ADVBOX e NPS). Comece pelo ensaio, confira o \"faria: …\" no resumo das 8h por uns dias e só então ligue. As regras de tempo usam o prazo de parado de cada etapa (Cadência)."
+    }
+  },
+  "desenho": {
+    "nos": [
+      {"id":"n1","tipo":"gatilho","config":{"tipo":"contrato_assinado"},"posicao":{"x":0,"y":0}},
+      {"id":"n2","tipo":"mover_etapa","config":{"rotulo":"Mover para Ganho (chave zapsign_ganho; até saindo de Perdido)","etapa_id":null},"posicao":{"x":0,"y":140}}
+    ],
+    "setas": [
+      {"de":"n1","saida":"s","para":"n2"}
+    ]
+  }
+}

@@ -7,8 +7,8 @@ RSpec.describe Ramon::Fluxos::Sistema do
 
   def do_sistema(chave) = account.fluxos.find_by(origem: 'sistema', sistema_chave: chave)
 
-  it 'os 29 desenhos passam no Grafo (só a etapa fica em aberto: é do funil de cada conta)' do
-    expect(described_class.desenhos.size).to eq(29)
+  it 'os 30 desenhos passam no Grafo (só a etapa fica em aberto: é do funil de cada conta)' do
+    expect(described_class.desenhos.size).to eq(30)
     described_class.desenhos.each do |chave, d|
       erros = Ramon::Fluxos::Grafo.new(d['desenho']).erros.grep_v(/: falta etapa_id\z/)
       expect([chave, d['nome'].present?, d['grupo'].present?, erros]).to eq([chave, true, true, []])
@@ -90,7 +90,7 @@ RSpec.describe Ramon::Fluxos::Sistema do
   describe 'regra fixa e ficha (decisão do Eduardo 08/10)' do
     let(:no_fluxo) { %w[cadencia chegada_cliente eventos_advbox lead_ganho lembretes_reuniao resumo_do_dia sla_primeira_resposta] }
 
-    it '22 regras fixas; as 7 sem o selo são as que rodam no fluxo' do
+    it '23 regras fixas; as 7 sem o selo são as que rodam no fluxo' do
       sem_selo = described_class.desenhos.keys.reject { |chave| described_class.extras(account, chave)[:fixa] }
       expect(sem_selo).to eq(no_fluxo)
     end
