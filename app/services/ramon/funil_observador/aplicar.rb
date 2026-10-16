@@ -17,6 +17,8 @@ class Ramon::FunilObservador::Aplicar
 
     mover_etapa
     perder_por_recusa
+    return if @lead.lost_at # perdido agora: reunião, cobranças e pendências seriam trabalho para um lead encerrado
+
     marcar_reuniao
     gravar_temperatura
     promessas
@@ -163,8 +165,10 @@ class Ramon::FunilObservador::Aplicar
     ids = Array(@decisao['promessas_cumpridas']).filter_map { |id| Integer(id, exception: false) }.uniq
     return if ids.empty?
 
+    # em ensaio, o "faria" já registrado não se repete; ligada, o que só foi visto em ensaio ainda precisa ser concluído
+    ensaio = Ramon::FunilAutomatico.modo(account, 'promessas') == 'ensaio'
     @lead.lead_tasks.open_tasks.where(id: ids).where('title LIKE ?', 'Cobrar:%').find_each do |task|
-      next if FunilAcao.exists?(lead: @lead, acao: 'promessa_cumprida', alvo: task.id.to_s, ensaio: true)
+      next if FunilAcao.exists?(lead: @lead, acao: 'promessa_cumprida', alvo: task.id.to_s, ensaio: ensaio)
 
       Ramon::FunilAutomatico.executar(@lead, peca: 'promessas', acao: 'promessa_cumprida', alvo: task.id.to_s,
                                              motivo: "cumprida: #{task.title}") { task.complete!(nil) }

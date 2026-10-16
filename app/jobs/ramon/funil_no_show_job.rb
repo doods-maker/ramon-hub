@@ -7,7 +7,7 @@ class Ramon::FunilNoShowJob < ApplicationJob
     Account.find_each do |account|
       next if Ramon::FunilAutomatico.modo(account, 'no_show') == 'off'
 
-      LeadTask.where(account: account, kind: 'meeting').open_tasks.where(due_at: 2.days.ago...2.hours.ago).includes(:lead).find_each do |task|
+      reunioes_passadas(account).find_each do |task|
         avisar(task)
       rescue StandardError => e
         ChatwootExceptionTracker.new(e, account: account).capture_exception
@@ -17,6 +17,12 @@ class Ramon::FunilNoShowJob < ApplicationJob
   end
 
   private
+
+  # Só de lead aberto: ganho ou perdido não tem remarcação a fazer.
+  def reunioes_passadas(account)
+    LeadTask.where(account: account, kind: 'meeting').open_tasks.where(due_at: 2.days.ago...2.hours.ago)
+            .joins(:lead).where(leads: { lost_at: nil, won_at: nil }).includes(:lead)
+  end
 
   # Conta o ensaio também: senão o ensaio registraria de novo a cada 30 min.
   def avisar(task)
@@ -31,10 +37,11 @@ class Ramon::FunilNoShowJob < ApplicationJob
     end
   end
 
+  # Aviso genérico de automação ("Automação: … (nome)"): o texto do lembrete de reunião pede "hora de confirmar".
   def notificar(lead, quando)
     destinatarios = [lead.closer_id].compact.presence || Ramon::Papeis.gestor_ids(lead.account)
-    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_meeting_reminder', user_ids: destinatarios,
-                                       meta: { 'quando' => quando, 'label' => 'sem registro' }).perform
+    Ramon::LeadNotificationBuilder.new(lead: lead, notification_type: 'ramon_fluxo_aviso', user_ids: destinatarios,
+                                       meta: { 'label' => "reunião de #{quando} passou sem registro" }).perform
   end
 
   def rascunho(lead, quando)

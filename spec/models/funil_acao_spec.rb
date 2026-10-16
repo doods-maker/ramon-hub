@@ -23,6 +23,33 @@ RSpec.describe FunilAcao do
     expect(acao(desfazer: { 'etapa' => 'fase-novo' }).reload.desfazer).to eq('etapa' => 'fase-novo')
   end
 
+  describe '#texto' do
+    it 'usa o rótulo em português; início de reunião em dd/mm HH:MM (São Paulo); id de tarefa não aparece' do
+      expect(acao(acao: 'mover_etapa', alvo: 'Qualificação').texto).to eq('moveu para Qualificação')
+      expect(acao(acao: 'marcar_reuniao', alvo: '2026-10-20T14:00:00-03:00').texto).to eq('marcou reunião para 20/10 14:00')
+      expect(acao(acao: 'promessa', alvo: 'Cobrar: laudo').texto).to eq('criou cobrança (Cobrar: laudo)')
+      expect(acao(acao: 'promessa_cumprida', alvo: '42').texto).to eq('concluiu cobrança')
+      expect(acao(acao: 'avisar_no_show', alvo: '42').texto).to eq('avisou no-show')
+      expect(acao(acao: 'reativar', alvo: '30').texto).to eq('rascunho de retomada')
+      expect(acao(acao: 'outra_coisa', alvo: 'x').texto).to eq('outra coisa → x')
+    end
+  end
+
+  describe '.chips' do
+    it 'ação sem desfazer (aviso, cobrança concluída) não substitui o chip da ação desfazível' do
+      movida = acao(acao: 'mover_etapa', alvo: 'Qualificação', desfazer: { 'etapa_id' => 1 })
+      acao(acao: 'avisar_no_show', alvo: '42')
+
+      expect(described_class.chip(lead)).to eq(id: movida.id, texto: 'moveu para Qualificação')
+    end
+
+    it 'só ações sem desfazer: sem chip' do
+      acao(acao: 'promessa_cumprida', alvo: '42')
+
+      expect(described_class.chip(lead)).to be_nil
+    end
+  end
+
   describe '#desfazer!' do
     let(:user) { create(:user, account: account) }
     let(:novo) { account.lead_stages.find_by(label: 'fase-novo') }

@@ -337,6 +337,8 @@ RSpec.describe 'Leads API', type: :request do
                               custom_attributes: temp('quente'))
         account.leads.create!(name: 'Ganho', lead_stage: account.lead_stages.find_by(is_won: true), custom_attributes: temp('quente'))
         expect(fila).to eq([aberto.id])
+        # includes continua em queries separadas (sem JOIN de lead_stage virando eager_load cartesiano)
+        expect(controller.instance_variable_get(:@leads).eager_loading?).to be(false)
       end
 
       it 'na mesma temperatura, quem espera resposta há mais tempo vem primeiro; sem espera vai depois' do

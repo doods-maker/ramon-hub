@@ -159,8 +159,9 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     leads
   end
 
+  # Subconsulta de etapas, não .open: o joins(:lead_stage) do .open somado ao includes vira um LEFT JOIN cartesiano.
   def fila_do_dia(leads)
-    leads.open.reorder(FILA_ORDEM)
+    leads.where(lead_stage_id: Current.account.lead_stages.where(is_won: false, is_lost: false).select(:id)).reorder(FILA_ORDEM)
   end
 
   def apply_equality_filters(leads)

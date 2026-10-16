@@ -98,62 +98,42 @@ RSpec.describe Ramon::FunilObservador do
     end
   end
 
-  describe 'colheita na pausa' do
-    let(:servico) { instance_double(Ramon::ColheitaExtractionService, perform: nil, extractable?: true) }
+  it 'o system prompt proíbe repetir cobrança listada e copiar checklist/exemplo em pendencias' do
+    expect(described_class::SYSTEM_PROMPT).to include(
+      'Não repita promessa que já está nas tarefas "Cobrar:" listadas.',
+      '"pendencias" = só documentos que o cliente disse que vai mandar e ainda não mandou; não copie a checklist nem o exemplo.'
+    )
+    expect(described_class::SYSTEM_PROMPT).not_to include('"laudo", "CNIS"')
+  end
 
+  describe 'colheita na pausa' do
     before do
+      lead
       mensagem('Oi')
       allow(Ramon::LlmClient).to receive(:complete).and_return(resultado('{"etapa":null}'))
-      allow(Ramon::ColheitaExtractionService).to receive(:new).with(lead).and_return(servico)
     end
 
-    it 'on: roda o serviço uma vez, fora de transação, e registra a ação' do
+    it 'on: enfileira o job da colheita (retry próprio), sem FunilAcao nem atividade' do
       Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
-      fora = ActiveRecord::Base.connection.open_transactions
-      durante = nil
-      allow(servico).to receive(:perform) { durante = ActiveRecord::Base.connection.open_transactions }
 
-      described_class.new(lead).perform
-
-      expect(servico).to have_received(:perform).once
-      expect(durante).to eq(fora)
-      expect(FunilAcao.where(lead: lead, peca: 'colheita', acao: 'colher', ensaio: false).count).to eq(1)
+      expect { described_class.new(lead).perform }.to have_enqueued_job(Ramon::ColheitaExtractionJob).with(lead_id: lead.id).exactly(:once)
+      expect(FunilAcao.count).to eq(0)
+      expect(lead.lead_activities.where(kind: 'funil_auto')).to be_none
     end
 
     it 'roda também quando o LLM não devolve decisão' do
       Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
       allow(Ramon::LlmClient).to receive(:complete).and_return(resultado('não sei'))
 
-      described_class.new(lead).perform
-
-      expect(servico).to have_received(:perform).once
+      expect { described_class.new(lead).perform }.to have_enqueued_job(Ramon::ColheitaExtractionJob)
     end
 
-    it 'off: não roda e não registra' do
-      described_class.new(lead).perform
-
-      expect(servico).not_to have_received(:perform)
-      expect(FunilAcao.where(peca: 'colheita')).to be_empty
-    end
-
-    it 'ensaio: não roda, só registra a ação de ensaio' do
-      Ramon::FunilAutomatico.mudar!(account, 'colheita', 'ensaio')
-
-      described_class.new(lead).perform
-
-      expect(servico).not_to have_received(:perform)
-      expect(FunilAcao.where(lead: lead, peca: 'colheita', ensaio: true).count).to eq(1)
-    end
-
-    %w[on ensaio].each do |modo|
-      it "#{modo}: tese sem colheita não chama o serviço nem registra ação" do
+    %w[off ensaio].each do |modo|
+      it "#{modo}: não enfileira e não registra" do
         Ramon::FunilAutomatico.mudar!(account, 'colheita', modo)
-        allow(servico).to receive(:extractable?).and_return(false)
 
-        described_class.new(lead).perform
-
-        expect(servico).not_to have_received(:perform)
-        expect(FunilAcao.where(peca: 'colheita')).to be_empty
+        expect { described_class.new(lead).perform }.not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
+        expect(FunilAcao.count).to eq(0)
       end
     end
 
@@ -161,9 +141,7 @@ RSpec.describe Ramon::FunilObservador do
       Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
       allow(aplicar).to receive(:perform) { lead.update_columns(lost_at: Time.current) } # rubocop:disable Rails/SkipsModelValidations
 
-      described_class.new(lead).perform
-
-      expect(servico).not_to have_received(:perform)
+      expect { described_class.new(lead).perform }.not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
     end
   end
 end

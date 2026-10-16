@@ -69,10 +69,13 @@ RSpec.describe Ramon::FunilObservadorJob do
     expect(observador).to have_received(:perform).once
   end
 
-  it 'colheita sozinha (inclusive em ensaio): roda' do
+  it 'só colheita em ensaio: não roda; on: roda' do
     msg = mensagem
     Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
     Ramon::FunilAutomatico.mudar!(account, 'colheita', 'ensaio')
+    described_class.perform_now(msg.id)
+    expect(observador).not_to have_received(:perform)
+    Ramon::FunilAutomatico.mudar!(account, 'colheita', 'on')
     described_class.perform_now(msg.id)
     expect(observador).to have_received(:perform).once
   end

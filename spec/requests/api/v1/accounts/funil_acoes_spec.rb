@@ -69,6 +69,6 @@ RSpec.describe 'Funil Ações API', type: :request do
     get "/api/v1/accounts/#{account.id}/leads", headers: agent.create_new_auth_token, as: :json
 
     chip = response.parsed_body['payload'].find { |l| l['id'] == lead.id }['funil_acao']
-    expect(chip).to eq('id' => acao.id, 'texto' => 'mover etapa → Qualificação')
+    expect(chip).to eq('id' => acao.id, 'texto' => 'moveu para Qualificação')
   end
 end

@@ -12,11 +12,11 @@ class Ramon::FunilObservadorJob < ApplicationJob
   OBSERVADOR_PECAS = %w[etapa_ia perdido_recusa reuniao_ia temperatura colheita promessas pendencias].freeze
   ESPERA = 10.minutes
 
-  # Temperatura e pendências em ensaio não gravam nada (Aplicar): só contam ligadas.
+  # Temperatura, pendências e colheita em ensaio não fazem nada (Aplicar/colher): só contam ligadas.
   def self.ativo?(account)
     OBSERVADOR_PECAS.any? do |peca|
       modo = Ramon::FunilAutomatico.modo(account, peca)
-      %w[temperatura pendencias].include?(peca) ? modo == 'on' : modo != 'off'
+      %w[temperatura pendencias colheita].include?(peca) ? modo == 'on' : modo != 'off'
     end
   end
 

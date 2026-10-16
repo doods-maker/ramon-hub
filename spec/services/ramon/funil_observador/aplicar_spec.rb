@@ -120,6 +120,21 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       expect(lead.lost_reason).to start_with('Automação:')
     end
 
+    it 'perdido junto com reunião, promessa e pendência: só perde, sem reunião, cobrança nem pendência' do
+      %w[reuniao_ia promessas pendencias].each { |peca| ligar(peca) }
+      inicio = 3.days.from_now.in_time_zone('America/Sao_Paulo').change(hour: 14)
+
+      aplicar('perdido' => { 'motivo' => 'Honorário', 'frase' => 'não quero' },
+              'reuniao' => { 'inicio' => inicio.strftime('%Y-%m-%dT%H:%M'), 'frase' => 'x' },
+              'promessas' => [{ 'o_que' => 'mandar o laudo', 'prazo' => 5.days.from_now.to_date.iso8601 }],
+              'pendencias' => ['laudo'])
+
+      expect(lead.reload.lead_stage).to be_is_lost
+      expect(lead.lead_tasks.where(kind: 'meeting').or(lead.lead_tasks.where('title LIKE ?', 'Cobrar:%'))).to be_none
+      expect(lead.custom_attributes['pendencias_docs']).to be_nil
+      expect(FunilAcao.pluck(:acao)).to eq(['perdido'])
+    end
+
     it 'em ensaio só registra' do
       ligar('perdido_recusa', 'ensaio')
 
@@ -362,6 +377,18 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       2.times { aplicar('promessas_cumpridas' => [tarefa.id]) }
 
       expect(FunilAcao.where(acao: 'promessa_cumprida').count).to eq(1)
+    end
+
+    it 'visto em ensaio e depois ligado: conclui a tarefa' do
+      ligar('promessas', 'ensaio')
+      tarefa = create(:lead_task, account: account, lead: lead, title: 'Cobrar: laudo')
+      aplicar('promessas_cumpridas' => [tarefa.id])
+      ligar('promessas')
+
+      aplicar('promessas_cumpridas' => [tarefa.id])
+
+      expect(tarefa.reload.completed_at).to be_present
+      expect(FunilAcao.where(acao: 'promessa_cumprida', ensaio: false).count).to eq(1)
     end
   end
 
