@@ -253,7 +253,7 @@ Vue 3 `<script setup>` + Tailwind, RSpec.
   - entrega a decisão a `Ramon::FunilObservador::Aplicar.new(lead, decisao).perform` (Task 7);
   - devolve a decisão. JSON inválido → `nil` e log `warn`.
   - O texto do usuário inclui a ficha (etapa atual, tese, docs pendentes do checklist), a lista de `LostReason` da
-    conta, as tarefas abertas "Cobrar:" com id (Task 12) e a transcrição. Tudo passa por `Ramon::Pseudonymizer.mask`.
+    conta, as tarefas abertas "Cobrar:" com id (Task 11) e a transcrição. Tudo passa por `Ramon::Pseudonymizer.mask`.
 - O formato do JSON (no `SYSTEM_PROMPT`, que é interno e não fala com o cliente):
 
 ```json
