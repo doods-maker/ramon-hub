@@ -25,7 +25,7 @@ class FunilAcao < ApplicationRecord
   def desfazer!(user)
     lead.with_lock do
       reload
-      next false if desfeita_em
+      next false if desfeita_em || movida_depois?
 
       restaurar_etapa
       restaurar_modo
@@ -35,7 +35,20 @@ class FunilAcao < ApplicationRecord
     end
   end
 
+  # Um humano mexeu na etapa depois da IA: desfazer sobrescreveria a decisão dele (só vale p/ ações que mudam etapa).
+  def movida_depois?
+    produzida = etapa_produzida
+    desfazer['etapa_id'].present? && produzida.present? && lead.lead_stage_id != produzida.id
+  end
+
   private
+
+  def etapa_produzida
+    case acao
+    when 'mover_etapa', 'marcar_ganho' then account.lead_stages.find_by(name: alvo)
+    when 'perdido' then account.lead_stages.find_by(is_lost: true)
+    end
+  end
 
   def restaurar_etapa
     return if desfazer['etapa_id'].blank?

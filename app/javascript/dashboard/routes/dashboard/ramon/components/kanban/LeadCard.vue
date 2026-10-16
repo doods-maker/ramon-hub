@@ -7,7 +7,6 @@ import { formatBrl, brlCompact } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
 import { slaApplies } from '../../helpers/stage';
-import LeadsAPI from 'dashboard/api/leads';
 import { nextActionInfo } from '../../helpers/nextAction';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, CHIP, TOM, FILETE, BOTAO_COMPACTO } from '../../helpers/ui';
@@ -38,22 +37,25 @@ watch(
 
 const { t } = useI18n();
 
+// useStore não lança fora de um app com store (retorna undefined); leituras de
+// getters/dispatch ficam defensivas para o card renderizar em testes sem store.
+const store = useStore();
+
 // Chip "IA: …": o desfazer devolve o lead e o broadcast redesenha o card (funil_acao some)
 const desfazendo = ref(false);
 const desfazerIa = async () => {
   desfazendo.value = true;
   try {
-    await LeadsAPI.desfazerFunilAcao(props.lead.id, props.lead.funil_acao.id);
-  } catch {
-    useAlert(t('RAMON.FUNIL_AUTO.ERRO'));
+    await store.dispatch('leads/desfazerFunilAcao', {
+      id: props.lead.id,
+      acaoId: props.lead.funil_acao.id,
+    });
+  } catch (error) {
+    useAlert(error?.response?.data?.message || t('RAMON.FUNIL_AUTO.ERRO'));
   } finally {
     desfazendo.value = false;
   }
 };
-
-// useStore não lança fora de um app com store (retorna undefined); leituras de
-// getters/dispatch ficam defensivas para o card renderizar em testes sem store.
-const store = useStore();
 
 // Valor compacto azul ("R$ 38 mil") — traço quando não há valor.
 const compactValue = computed(() => {

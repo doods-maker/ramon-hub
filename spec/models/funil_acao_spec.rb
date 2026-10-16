@@ -63,6 +63,23 @@ RSpec.describe FunilAcao do
       expect(lead.reload).to have_attributes(lead_stage: perdido, lost_reason: 'Honorário')
     end
 
+    it 'se um humano moveu o lead depois da IA, recusa e não mexe em nada' do
+      lead.update!(lead_stage: account.lead_stages.find_by(label: 'fase-negociacao'))
+      a = acao(acao: 'mover_etapa', alvo: qualificacao.name, desfazer: { 'etapa_id' => novo.id })
+
+      expect(a.desfazer!(user)).to be(false)
+      expect(lead.reload.lead_stage.label).to eq('fase-negociacao')
+      expect(a.reload.desfeita_em).to be_nil
+    end
+
+    it 'mover_etapa ainda na etapa produzida desfaz normalmente' do
+      lead.update!(lead_stage: qualificacao)
+      a = acao(acao: 'mover_etapa', alvo: qualificacao.name, desfazer: { 'etapa_id' => novo.id })
+
+      expect(a.desfazer!(user)).to be(true)
+      expect(lead.reload.lead_stage).to eq(novo)
+    end
+
     it 'tarefa de follow-up criada pela ação é apagada' do
       task = create(:lead_task, account: account, lead: lead, kind: 'follow_up')
 

@@ -31,6 +31,25 @@ RSpec.describe 'Funil Ações API', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
+  it 'ação só de tarefa: 200 e o lead volta com funil_acao nil' do
+    task = create(:lead_task, account: account, lead: lead, kind: 'follow_up')
+    so_tarefa = FunilAcao.create!(account: account, lead: lead, peca: 'promessas', acao: 'criar_tarefa', ensaio: false,
+                                  desfazer: { 'task_id' => task.id })
+    desfazer(lead, so_tarefa)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body['funil_acao']).to be_nil
+    expect(LeadTask.exists?(task.id)).to be(false)
+  end
+
+  it 'lead movido por humano depois da ação dá 422 com mensagem' do
+    lead.update!(lead_stage: account.lead_stages.find_by(label: 'fase-negociacao'))
+    desfazer(lead, acao)
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body['message']).to include('já foi movido')
+  end
+
   it 'lead de outra conta dá 404' do
     estranho = create(:lead)
     outra = FunilAcao.create!(account: estranho.account, lead: estranho, peca: 'etapa_ia', acao: 'mover_etapa', ensaio: false)
