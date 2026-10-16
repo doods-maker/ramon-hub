@@ -2,7 +2,6 @@
 class Api::V1::Accounts::RamonAgendaController < Api::V1::Accounts::BaseController
   CACHE_TTL = 2.minutes
   MAX_DIAS = 70
-  ERROS = [Ramon::GoogleAgenda::Cliente::SemConexao, Ramon::GoogleAgenda::Cliente::Erro, Ramon::GoogleAgenda::Cliente::Transitorio].freeze
 
   before_action :check_acesso
   before_action :parse_periodo
@@ -20,7 +19,7 @@ class Api::V1::Accounts::RamonAgendaController < Api::V1::Accounts::BaseControll
     erros = []
     contas.find_each do |conta|
       payload.concat(eventos_de(conta))
-    rescue *ERROS, StandardError => e
+    rescue StandardError => e
       # LGPD: só a classe e os ids, nunca título nem mensagem. StandardError: uma pessoa nunca derruba as outras.
       Rails.logger.warn "Ramon agenda: google falhou (#{e.class}) user=#{conta.user_id}"
       erros << conta.user_id

@@ -51,7 +51,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   # "Sugerir horários" da caixa de resposta: livres do Closer do lead; sem Closer ou sem vaga → vazio.
   def horarios_livres
-    livres = Ramon::Agenda::Disponibilidade.livres_do_lead(@lead)
+    livres = Ramon::Agenda::Disponibilidade.livres_do_lead(@lead, fixar: false)
     render json: { horarios: livres.map(&:iso8601), texto: livres.empty? ? '' : Ramon::Agenda::Disponibilidade.texto(livres) }
   end
 

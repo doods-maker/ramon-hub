@@ -49,13 +49,23 @@ class Ramon::ReuniaoAgendamento
   # true se mandou. Chave off (padrão), modo que não é piloto ou lead sem conversa: false → vira rascunho.
   def self.enviar_confirmacao(lead, texto)
     conversa = lead.conversation
-    return false unless conversa && GlobalConfigService.load('RAMON_AGENDA_CONFIRMACAO', 'off').to_s == 'on'
-    return false unless Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversa))
+    return false unless conversa && chave_confirmacao_on? && Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversa))
 
-    conversa.messages.create!(message_type: :outgoing, account_id: conversa.account_id, inbox_id: conversa.inbox_id, content: texto)
+    conversa.messages.create!(message_type: :outgoing, account_id: conversa.account_id, inbox_id: conversa.inbox_id,
+                              sender: conversa.inbox.captain_assistant, content: texto)
     true
   rescue ActiveRecord::RecordInvalid
     false
+  end
+
+  # ENV direto (padrão dos RAMON_FLUXO_*): GlobalConfigService.load gravaria o default no banco e passaria a ignorar o ENV.
+  def self.chave_confirmacao_on? = ENV.fetch('RAMON_AGENDA_CONFIRMACAO', 'off') == 'on'
+
+  # A confirmação de uma reunião marcada pela IA sai sozinha? (chave on + piloto + Google conectado do Closer, o caminho do job)
+  def self.envia_sozinha?(lead)
+    conversa = lead.conversation
+    conversa.present? && chave_confirmacao_on? && Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversa)) &&
+      lead.closer.present? && GoogleAgendaConta.de(lead.closer).present? && !Ramon::Fluxos::Reunioes.assumiu?(lead.account)
   end
 
   # Sem colisão na agenda de quem vai receber a reunião (o dono da tarefa; antes de existir, o Closer do lead ou o próximo da fila).

@@ -32,16 +32,17 @@ class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
 
   def com_closer?(lead)
     Ramon::Papeis.atribuir_closer!(lead)
-    lead.closer.present?
+    lead.closer.present? && GoogleAgendaConta.de(lead.closer).present? # sem Google conectado, só sugere
   end
 
   # Nenhum HTTP do Google dentro de transacao: livre? (que le o Google) roda antes do call.
   def marcar(lead, horario, titulo)
-    return 'Esse horário acabou de ser ocupado — ofereça outro.' unless
+    return 'Esse horário não está disponível — ofereça um dos Horários livres.' unless
       Ramon::Agenda::Disponibilidade.new(user: lead.closer, account: lead.account).livre?(horario)
 
     Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: horario, title: titulo, automatico: true)
-    "Reunião marcada para #{Ramon::ReuniaoAgendamento.quando(horario)}."
+    aviso = ' A confirmação já foi enviada ao cliente — não repita.' if Ramon::ReuniaoAgendamento.envia_sozinha?(lead)
+    "Reunião marcada para #{Ramon::ReuniaoAgendamento.quando(horario)}.#{aviso}"
   end
 
   # O horario vem em Sao Paulo (de horarios_livres ou do LLM); o Time.zone do app e UTC.

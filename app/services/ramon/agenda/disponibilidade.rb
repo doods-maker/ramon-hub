@@ -15,12 +15,13 @@ class Ramon::Agenda::Disponibilidade
     end.join('; ')
   end
 
-  # Horários livres do Closer do lead (fixa o Closer se faltar). Sem Closer → [].
-  def self.livres_do_lead(lead, qtd: 3)
-    Ramon::Papeis.atribuir_closer!(lead)
-    return [] if lead.closer.blank?
+  # Horários livres do Closer do lead. fixar: true (tool da IA) grava o Closer se faltar; false (GET) só olha o próximo da fila.
+  def self.livres_do_lead(lead, qtd: 3, fixar: true)
+    Ramon::Papeis.atribuir_closer!(lead) if fixar
+    closer = lead.closer || (Ramon::Papeis.proximo(lead.account, Ramon::Papeis::CLOSER) unless fixar)
+    return [] if closer.blank?
 
-    new(user: lead.closer, account: lead.account).livres(qtd: qtd)
+    new(user: closer, account: lead.account).livres(qtd: qtd)
   end
 
   def initialize(user:, account:, agora: Time.current)

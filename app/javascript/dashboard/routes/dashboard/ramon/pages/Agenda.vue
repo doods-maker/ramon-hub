@@ -130,11 +130,11 @@ const matchesKind = task => {
   return task.kind !== 'meeting';
 };
 
-// Pessoa da tarefa: dono da agenda da reunião; senão SDR/Closer do lead ou quem criou.
-const pessoasDaTarefa = task => {
-  if (task.agenda_user_id) return [task.agenda_user_id];
-  return [task.sdr_id, task.closer_id, task.user_id].filter(Boolean);
-};
+// Pessoa da tarefa: dono da agenda da reunião, SDR/Closer do lead ou quem criou.
+const pessoasDaTarefa = task =>
+  [task.agenda_user_id, task.sdr_id, task.closer_id, task.user_id].filter(
+    Boolean
+  );
 const matchesPessoa = task => {
   if (task.google) return true; // já filtrado no servidor
   if (!pessoas.value.length) return true;
