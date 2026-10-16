@@ -37,6 +37,13 @@ watch(
 
 const { t } = useI18n();
 
+// Temperatura da IA (peça `temperatura`): fundos translúcidos, regra visual do hub.
+const TEMPERATURA_CLASSES = {
+  quente: 'bg-n-ruby-9/15 text-n-ruby-11',
+  morno: 'bg-n-amber-9/15 text-n-amber-11',
+  frio: 'bg-n-blue-9/15 text-n-blue-11',
+};
+
 // useStore não lança fora de um app com store (retorna undefined); leituras de
 // getters/dispatch ficam defensivas para o card renderizar em testes sem store.
 const store = useStore();
@@ -368,6 +375,16 @@ const onSchedule = async ({ dueAt, title }) => {
         class="inline-flex items-center gap-0.5 font-mono text-n-slate-10"
       >
         <span class="i-lucide-history size-3" />{{ lead.follow_up_count }}
+      </span>
+      <span
+        v-if="TEMPERATURA_CLASSES[lead.temperatura]"
+        data-testid="temperatura-chip"
+        class="inline-flex items-center rounded-md px-1.5 py-0.5"
+        :class="TEMPERATURA_CLASSES[lead.temperatura]"
+      >
+        {{
+          $t(`RAMON.FUNIL_AUTO.TEMPERATURA.${lead.temperatura.toUpperCase()}`)
+        }}
       </span>
       <span
         v-if="lead.funil_acao"

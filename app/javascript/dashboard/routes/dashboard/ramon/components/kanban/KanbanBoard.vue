@@ -6,6 +6,7 @@ import Draggable from 'vuedraggable';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { downloadCsvFile } from 'dashboard/helper/downloadHelper';
+import LeadsAPI from 'dashboard/api/leads';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { CAMPO } from '../../helpers/ui';
@@ -17,6 +18,7 @@ import FilterChips from './FilterChips.vue';
 import SavedViews from './SavedViews.vue';
 import SwimlaneBoard from './SwimlaneBoard.vue';
 import LeadListView from './LeadListView.vue';
+import LeadCard from './LeadCard.vue';
 import BulkActionsBar from './BulkActionsBar.vue';
 import LeadDrawer from './LeadDrawer.vue';
 import ConversationDock from './ConversationDock.vue';
@@ -293,6 +295,20 @@ watch([viewMode, groupBy], ([view, group]) => {
   }
 });
 
+// Fila do dia: lista ordenada pelo back (?ordem=fila), fora do store do board — busca a cada vez que liga.
+const filaAberta = ref(false);
+const filaLeads = ref([]);
+const toggleFila = async () => {
+  filaAberta.value = !filaAberta.value;
+  if (!filaAberta.value) return;
+  try {
+    filaLeads.value = (await LeadsAPI.get({ ordem: 'fila' })).data.payload;
+  } catch (e) {
+    filaAberta.value = false;
+    useAlert(t('RAMON.FUNIL.LOAD_ERROR'));
+  }
+};
+
 // Aplicar um quadro remonta as colunas (:key) para relerem o colapso salvo.
 const columnsKey = ref(0);
 const onApplyBoard = board => {
@@ -553,6 +569,18 @@ const exportCsv = () => {
           {{ $t(`RAMON.KANBAN.VIEW.${mode.toUpperCase()}`) }}
         </button>
       </div>
+      <button
+        data-testid="fila-toggle"
+        class="px-3 py-1 text-xs rounded-md"
+        :class="
+          filaAberta
+            ? 'bg-n-blue-9/[0.08] dark:bg-n-blue-9/[0.16] font-medium text-n-blue-11'
+            : 'bg-n-alpha-2 text-n-slate-10 hover:text-n-slate-12'
+        "
+        @click="toggleFila"
+      >
+        {{ $t('RAMON.FUNIL_AUTO.FILA_DO_DIA') }}
+      </button>
       <!-- mock 2b: "agrupar por: tese · dono · canal · prioridade" inline,
            ativo em azul — sem select (o CSS global de select desalinha) -->
       <div
@@ -614,6 +642,20 @@ const exportCsv = () => {
         v-for="n in 4"
         :key="n"
         class="w-72 h-full flex-shrink-0 rounded-xl bg-n-alpha-2 animate-pulse"
+      />
+    </div>
+    <div
+      v-else-if="filaAberta"
+      data-testid="fila-lista"
+      class="flex flex-col flex-1 min-h-0 gap-2 px-4 pb-4 overflow-y-auto"
+    >
+      <LeadCard
+        v-for="lead in filaLeads"
+        :key="lead.id"
+        :lead="lead"
+        @open-conversation="onOpenConversation"
+        @open-lead="onOpenLead"
+        @open-dossie="onOpenDossie"
       />
     </div>
     <!-- min-h-0 permite a faixa encolher dentro do flex pai; sem isso a coluna

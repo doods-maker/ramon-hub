@@ -309,6 +309,47 @@ RSpec.describe 'Leads API', type: :request do
       response.parsed_body['payload'].map { |l| l['id'] }
     end
 
+    describe 'ordem=fila (Fila do dia)' do
+      def temp(nivel)
+        { 'temperatura' => { 'nivel' => nivel } }
+      end
+
+      def conversa_esperando(desde)
+        create(:conversation, account: account, waiting_since: desde)
+      end
+
+      def fila
+        get "/api/v1/accounts/#{account.id}/leads", params: { ordem: 'fila' }, headers: admin.create_new_auth_token
+        ids(response)
+      end
+
+      it 'ordena quente, frio, sem temperatura e expõe a temperatura no slim' do
+        sem = account.leads.create!(name: 'Sem', lead_stage: novo)
+        frio = account.leads.create!(name: 'Frio', lead_stage: novo, custom_attributes: temp('frio'))
+        quente = account.leads.create!(name: 'Quente', lead_stage: novo, custom_attributes: temp('quente'))
+        expect(fila).to eq([quente.id, frio.id, sem.id])
+        expect(response.parsed_body['payload'].pluck('temperatura')).to eq(['quente', 'frio', nil])
+      end
+
+      it 'exclui ganhos e perdidos' do
+        aberto = account.leads.create!(name: 'Aberto', lead_stage: novo, custom_attributes: temp('frio'))
+        account.leads.create!(name: 'Perdido', lead_stage: perdido, lost_reason: 'x',
+                              custom_attributes: temp('quente'))
+        account.leads.create!(name: 'Ganho', lead_stage: account.lead_stages.find_by(is_won: true), custom_attributes: temp('quente'))
+        expect(fila).to eq([aberto.id])
+      end
+
+      it 'na mesma temperatura, quem espera resposta há mais tempo vem primeiro; sem espera vai depois' do
+        recente = account.leads.create!(name: 'Recente', lead_stage: novo, custom_attributes: temp('quente'),
+                                        conversation: conversa_esperando(1.hour.ago))
+        antigo = account.leads.create!(name: 'Antigo', lead_stage: novo, custom_attributes: temp('quente'),
+                                       conversation: conversa_esperando(2.days.ago))
+        respondido = account.leads.create!(name: 'Respondido', lead_stage: novo, custom_attributes: temp('quente'),
+                                           conversation: conversa_esperando(nil))
+        expect(fila).to eq([antigo.id, recente.id, respondido.id])
+      end
+    end
+
     it 'sem params retorna todos os leads' do
       a = account.leads.create!(name: 'A', lead_stage: novo)
       b = account.leads.create!(name: 'B', lead_stage: novo)

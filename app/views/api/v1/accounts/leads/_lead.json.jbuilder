@@ -27,6 +27,8 @@ json.pendencias_docs Array(lead.custom_attributes&.dig('pendencias_docs'))
 # Chip "IA: …" do card (slim TAMBÉM): última ação automática viva das últimas 24h — a query é por lead
 # (o índice passa `funil_acoes` já agrupado: 1 query, sem N+1).
 json.funil_acao(local_assigns[:funil_acoes] ? local_assigns[:funil_acoes][lead.id] : FunilAcao.chip(lead))
+# Chip de temperatura do card (slim TAMBÉM): só o nível gravado pela peça `temperatura`.
+json.temperatura lead.custom_attributes&.dig('temperatura', 'nivel')
 # SLA de 1ª resposta (slim TAMBÉM: o timer do card precisa dele no índice).
 if (sla = lead.sla_info)
   json.sla do

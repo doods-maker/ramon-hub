@@ -96,6 +96,7 @@ class Lead < ApplicationRecord
       docs_received: docs[:received],
       docs_total: docs[:total],
       pendencias_docs: Array(custom_attributes&.dig('pendencias_docs')),
+      temperatura: custom_attributes&.dig('temperatura', 'nivel'),
       funil_acao: (FunilAcao.chip(self) if Ramon::FunilAutomatico.algum_ligado?(account))
     }.merge(cadence_event_data).merge(comercial_event_data)
   end
