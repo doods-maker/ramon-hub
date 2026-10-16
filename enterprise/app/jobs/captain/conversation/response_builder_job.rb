@@ -186,7 +186,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       sender: @assistant,
       content: message_content,
       additional_attributes: additional_attrs,
-      content_attributes: Ramon::CopilotoModo.carimbo(modo),
+      # ramon (15/10): content_type + content_attributes; pergunta de escolha do roteiro vai com botões se a tese pedir
+      **Ramon::Roteiro::Opcoes.atributos(@conversation, message_content, Ramon::CopilotoModo.carimbo(modo), handoff: @enviando_handoff),
       preserve_waiting_since: preserve_waiting_since
     )
   end

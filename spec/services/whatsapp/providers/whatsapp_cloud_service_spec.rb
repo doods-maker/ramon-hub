@@ -184,6 +184,31 @@ describe Whatsapp::Providers::WhatsappCloudService do
           ).to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
         expect(service.send_message('+123456789', message)).to eq 'message_id'
       end
+
+      # ramon: botão só aceita título de até 20 letras; opção longa vai como lista, com a descrição da linha
+      it 'sends a list with row description when an item title is longer than 20 characters' do
+        items = [{ title: 'Paga o INSS por conta', value: 'Paga o INSS por conta e está em dia', description: 'Paga o INSS por conta e está em dia' },
+                 { title: 'Não sabe', value: 'Não sabe' }]
+        message = create(:message, message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox,
+                                   content_type: 'input_select', content_attributes: { items: items })
+
+        expected_action = {
+          button: I18n.t('conversations.messages.whatsapp.list_button_label'),
+          sections: [{ rows: [{ id: 'Paga o INSS por conta e está em dia', title: 'Paga o INSS por conta',
+                                description: 'Paga o INSS por conta e está em dia' },
+                              { id: 'Não sabe', title: 'Não sabe' }] }]
+        }.to_json
+
+        stub_request(:post, 'https://graph.facebook.com/v13.0/123456789/messages')
+          .with(
+            body: {
+              messaging_product: 'whatsapp', to: '+123456789',
+              interactive: { type: 'list', body: { text: 'test' }, action: expected_action },
+              type: 'interactive'
+            }.to_json
+          ).to_return(status: 200, body: whatsapp_response.to_json, headers: response_headers)
+        expect(service.send_message('+123456789', message)).to eq 'message_id'
+      end
     end
   end
 

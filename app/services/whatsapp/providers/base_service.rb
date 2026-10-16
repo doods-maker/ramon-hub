@@ -67,6 +67,7 @@ class Whatsapp::Providers::BaseService
     rows = []
     items.each do |item|
       row = { 'id' => item['value'], 'title' => item['title'] }
+      row['description'] = item['description'] if item['description'].present?
       rows << row
     end
     rows
@@ -83,7 +84,9 @@ class Whatsapp::Providers::BaseService
   end
 
   def create_payload_based_on_items(message)
-    if message.content_attributes['items'].length <= 3
+    items = message.content_attributes['items']
+    # ramon: botão do WhatsApp aceita título de até 20 letras; maior que isso vai como lista (até 24 + descrição)
+    if items.length <= 3 && items.all? { |item| item['title'].to_s.length <= 20 }
       create_button_payload(message)
     else
       create_list_payload(message)

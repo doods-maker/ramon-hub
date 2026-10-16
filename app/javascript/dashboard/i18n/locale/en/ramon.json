@@ -1186,6 +1186,13 @@
       "BASE_SB": "benefits",
       "HONORARIO_NA_TABELA": "On the fee table (AI may quote it)",
       "ZAPSIGN_MODELO": "Contract template (ZapSign)",
+      "OPCOES_BOTOES": "Options as WhatsApp buttons",
+      "OPCOES_BOTOES_AJUDA": "In the script's choice and yes/no questions, the AI sends the options for the lead to tap (up to 3 buttons or a list of up to 10). The lead can always type instead. In the A/B test, half of the leads get buttons and the other half text only, to compare.",
+      "OPCOES_BOTOES_MODO": {
+        "desligado": "Off (text only)",
+        "ligado": "On (all leads)",
+        "teste_ab": "A/B test (half of the leads)"
+      },
       "ZAPSIGN_MODELO_AJUDA": "Used by \"on its own until the contract\" to generate the contract on the spot. No template = the contract never goes out automatically for this thesis.",
       "ZAPSIGN_SEM_MODELO": "No template",
       "ZAPSIGN_MODELOS_ERRO": "Couldn't load the ZapSign templates right now — the saved one is kept.",
