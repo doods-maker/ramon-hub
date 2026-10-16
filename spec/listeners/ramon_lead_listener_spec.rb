@@ -167,9 +167,9 @@ RSpec.describe RamonLeadListener do
       expect { disparar(:incoming) }.not_to have_enqueued_job(Ramon::FunilObservadorJob)
     end
 
-    it 'só peça que o observador ainda não aplica (reuniao_ia) não enfileira' do
+    it 'só peça que não é do observador (no_show) não enfileira' do
       Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
-      Ramon::FunilAutomatico.mudar!(account, 'reuniao_ia', 'on')
+      Ramon::FunilAutomatico.mudar!(account, 'no_show', 'on')
       expect { disparar(:incoming) }.not_to have_enqueued_job(Ramon::FunilObservadorJob)
     end
   end
