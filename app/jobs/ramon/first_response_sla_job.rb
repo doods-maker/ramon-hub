@@ -7,6 +7,8 @@ class Ramon::FirstResponseSlaJob < ApplicationJob
   queue_as :low
 
   TIME_ZONE = 'America/Sao_Paulo'.freeze
+  # Horas cheias em que os avisos ao time saem (07h00–20h59). O aviso da janela do WhatsApp usa o mesmo.
+  EXPEDIENTE = (7..20)
   ESCALADA = 60.minutes
 
   def perform(conversation_id, escalada = false) # rubocop:disable Style/OptionalBooleanParameter
@@ -50,6 +52,6 @@ class Ramon::FirstResponseSlaJob < ApplicationJob
   # Só alerta entre 07–21 do escritório: fora disso ninguém responde mesmo —
   # a manhã seguinte é coberta pelo /bom-dia.
   def business_hours?
-    Time.current.in_time_zone(TIME_ZONE).hour.between?(7, 20)
+    EXPEDIENTE.cover?(Time.current.in_time_zone(TIME_ZONE).hour)
   end
 end

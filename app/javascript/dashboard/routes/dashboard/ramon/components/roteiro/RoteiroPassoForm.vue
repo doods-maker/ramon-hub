@@ -59,6 +59,7 @@ const rascunho = reactive({
   titulo: original.titulo || '',
   chave: original.chave || '',
   orientacao: original.orientacao || '',
+  sem_perguntar: !!original.sem_perguntar,
   tipo_resposta: original.tipo_resposta || 'sim_nao',
   opcoesTexto: listaParaTexto(original.opcoes),
   calculadora: original.calculadora || '',
@@ -148,6 +149,15 @@ const salvar = () =>
         class="max-h-48 min-h-16 [field-sizing:content]"
         :class="TEXTAREA"
       />
+    </label>
+    <label class="flex items-center gap-2 text-sm text-n-slate-12">
+      <input
+        v-model="rascunho.sem_perguntar"
+        type="checkbox"
+        class="m-0 accent-n-brand"
+        data-testid="roteiro-sem-perguntar"
+      />
+      {{ $t('RAMON.ROTEIRO_IA.EDITOR.SEM_PERGUNTAR') }}
     </label>
     <div class="grid gap-3 md:grid-cols-3">
       <label :class="ROTULO">

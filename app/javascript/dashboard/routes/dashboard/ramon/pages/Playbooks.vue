@@ -29,6 +29,9 @@ import {
   ABA_INATIVA,
 } from '../helpers/ui';
 
+// os mesmos de Thesis::OPCOES_BOTOES (backend); cada um tem rótulo em RAMON.PLAYBOOKS.OPCOES_BOTOES_MODO
+const OPCOES_BOTOES = ['desligado', 'ligado', 'teste_ab'];
+
 const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
@@ -680,7 +683,7 @@ onMounted(() => {
                   @change="saveDetail"
                 >
                   <option
-                    v-for="modo in ['desligado', 'ligado', 'teste_ab']"
+                    v-for="modo in OPCOES_BOTOES"
                     :key="modo"
                     :value="modo"
                   >

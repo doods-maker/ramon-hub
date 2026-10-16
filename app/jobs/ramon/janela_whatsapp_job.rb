@@ -2,20 +2,20 @@
 # avisa o SDR do lead (sem SDR: os gestores) quando faltam até 4h para fechar a janela grátis do WhatsApp. Depois dela,
 # falar com o cliente só por modelo pago. A janela fecha 24h depois da última mensagem do cliente; a que veio de anúncio
 # (referral da Meta na mensagem) vale também 72h (free entry point da Meta). 1 aviso por prazo.
-# Avisa das 7h às 21h, como o SLA; na última rodada (20h), avisa também o prazo que vence de madrugada.
+# Avisa no horário do SLA (Ramon::FirstResponseSlaJob::EXPEDIENTE); na última rodada, avisa também o prazo que vence de
+# madrugada.
 class Ramon::JanelaWhatsappJob < ApplicationJob
   queue_as :scheduled_jobs
 
   ANTES = 4.hours
-  TIME_ZONE = 'America/Sao_Paulo'.freeze
-  INICIO = 7
-  ULTIMA = 20
+  TIME_ZONE = Ramon::FirstResponseSlaJob::TIME_ZONE
+  EXPEDIENTE = Ramon::FirstResponseSlaJob::EXPEDIENTE
 
   def perform
     agora = Time.current.in_time_zone(TIME_ZONE)
-    return unless agora.hour.between?(INICIO, ULTIMA)
+    return unless EXPEDIENTE.cover?(agora.hour)
 
-    ate = agora.hour == ULTIMA ? agora.tomorrow.change(hour: INICIO) : agora + ANTES
+    ate = agora.hour == EXPEDIENTE.end ? agora.tomorrow.change(hour: EXPEDIENTE.begin) : agora + ANTES
     candidatos.find_each do |lead|
       fim = prazo(lead)
       avisar(lead, fim) if fim && (agora..ate).cover?(fim) && lead.custom_attributes['janela_avisada'] != fim.iso8601

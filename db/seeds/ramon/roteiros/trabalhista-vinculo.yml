@@ -123,6 +123,7 @@ passos:
     titulo: "Avaliação do vínculo"
     # [CONFERIR] CLT arts. 2º e 3º (requisitos do vínculo); LC 150/2015, art. 1º (doméstico: mais de 2 dias por semana); STF Tema 1.389 (reconferir no STF no dia do seed)
     orientacao: "Não pergunte nada ao lead neste passo. Com as respostas, veja os 4 requisitos do vínculo de emprego: (1) pessoalidade: era sempre ele, não mandava outra pessoa no lugar; (2) não eventualidade: trabalho frequente e contínuo, não um bico de vez em quando (em casa de família, como doméstica, caseiro ou babá, precisa ser mais de 2 dias por semana); (3) onerosidade: recebia pagamento pelo trabalho; (4) subordinação: recebia ordens, tinha horário, prestava contas ou levava punição. Registre no valor uma linha por requisito (sim, não ou dúvida). Se prestava o serviço por PJ ou MEI aberto no nome dele, escolha a saída de dúvida mesmo que os 4 apareçam."
+    sem_perguntar: true
     tipo_resposta: texto
     saidas:
       - id: vinculo

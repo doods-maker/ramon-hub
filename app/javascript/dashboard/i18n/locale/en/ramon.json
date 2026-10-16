@@ -1569,6 +1569,7 @@
         "CHAVE_AJUDA": "Fixed identifier (lowercase, numbers and _). Cannot change after creation.",
         "FALA_COM_CLIENTE": "The guidance and the reply base become what the AI says to the client.",
         "ORIENTACAO": "How to ask (goes to the AI)",
+        "SEM_PERGUNTAR": "The AI infers it from the conversation, without asking the lead (not grouped with other questions, no buttons)",
         "TIPO": "Answer type",
         "TIPOS": {
           "SIM_NAO": "Yes or no",

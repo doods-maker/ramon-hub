@@ -83,6 +83,7 @@ export const payloadDoPasso = (rascunho, campos) => ({
   titulo: rascunho.titulo.trim(),
   chave: rascunho.chave,
   orientacao: rascunho.orientacao,
+  sem_perguntar: !!rascunho.sem_perguntar,
   tipo_resposta: rascunho.tipo_resposta,
   opcoes:
     rascunho.tipo_resposta === 'escolha'

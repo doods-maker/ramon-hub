@@ -124,6 +124,7 @@ describe('helpers do roteiro da IA', () => {
       titulo: 'Renda',
       chave: 'renda',
       orientacao: '',
+      sem_perguntar: false,
       tipo_resposta: 'numero',
       opcoes: [],
       calculadora: '',

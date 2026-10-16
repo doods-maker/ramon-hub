@@ -293,9 +293,9 @@ RSpec.describe Ramon::Roteiro do
     expect(Ramon::Roteiro.texto_atual(lead.reload)).not_to include('Pode perguntar junto')
   end
 
-  it 'não junta o passo que manda não perguntar' do
+  it 'não junta o passo que a IA deduz sem perguntar' do
     graca = RoteiroPasso.find_by!(thesis: thesis, chave: 'graca')
-    graca.update!(saidas: [], calculadora: nil, calculadora_campos: {}, orientacao: 'Não pergunte nada ao lead neste passo.')
+    graca.update!(saidas: [], calculadora: nil, calculadora_campos: {}, sem_perguntar: true)
     registrar('tem_advogado', 'nao')
     registrar('recebeu_auxilio', 'nao')
     expect(Ramon::Roteiro.texto_atual(lead.reload)).not_to include('Pode perguntar junto')
