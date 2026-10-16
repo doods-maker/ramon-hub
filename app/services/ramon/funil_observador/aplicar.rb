@@ -129,7 +129,10 @@ class Ramon::FunilObservador::Aplicar
   # A promessa continua na conversa a cada pausa: a FunilAcao (ensaio ou real, desfeita ou não) é a memória — tarefa
   # apagada, concluída ou desfeita por gente não renasce.
   def ja_registrada?(titulo)
-    FunilAcao.where(lead: @lead, acao: 'promessa', alvo: titulo).exists?(['created_at > ?', 30.days.ago]) ||
+    registros = FunilAcao.where(lead: @lead, acao: 'promessa', alvo: titulo)
+    # ligada de verdade, o que só foi visto em ensaio ainda não virou tarefa
+    registros = registros.reais if Ramon::FunilAutomatico.modo(account, 'promessas') == 'on'
+    registros.exists?(['created_at > ?', 30.days.ago]) ||
       Ramon::FunilAutomatico.desfeita_recente?(@lead, acao: 'promessa', alvo: titulo)
   end
 

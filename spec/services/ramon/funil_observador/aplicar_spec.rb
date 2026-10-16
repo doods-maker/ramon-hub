@@ -308,9 +308,21 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
     end
 
     it 'prazo hoje já depois das 10h vira daqui a 1 hora' do
-      aplicar('promessas' => [{ 'o_que' => 'mandar hoje', 'prazo' => '2026-10-16' }])
+      travel_back # o before já congelou o relógio; travel_to aninhado com bloco é proibido
+      agora = Time.find_zone!('America/Sao_Paulo').parse('2026-10-16 14:00')
+      travel_to(agora) { aplicar('promessas' => [{ 'o_que' => 'mandar hoje', 'prazo' => '2026-10-16' }]) }
 
-      expect(lead.lead_tasks.last.due_at).to be_within(1.minute).of(1.hour.from_now)
+      expect(lead.lead_tasks.last.due_at).to eq(agora + 1.hour)
+    end
+
+    it 'visto em ensaio e depois ligado: vira tarefa uma vez' do
+      ligar('promessas', 'ensaio')
+      aplicar(decisao)
+      ligar('promessas')
+
+      2.times { aplicar(decisao) }
+
+      expect(lead.lead_tasks.count).to eq(1)
     end
 
     it 'promessas que não é lista é ignorada' do
