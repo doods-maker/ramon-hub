@@ -32,6 +32,17 @@ RSpec.describe Ramon::ZapsignLeadStatusJob do
     described_class.perform_now(lead.id, 'doc-1')
 
     expect(lead.reload.won_at).to be_present
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('contrato_assinado', lead).once
+  end
+
+  it 'falha na regra do funil não derruba o job nem os fluxos' do
+    allow(Ramon::ZapsignClient).to receive(:doc).and_return('status' => 'signed', 'signers' => [])
+    allow(Ramon::Fluxos::Disparo).to receive(:externo).and_return([])
+    allow(Ramon::FunilAutomatico).to receive(:executar).and_raise(StandardError, 'boom')
+    Ramon::FunilAutomatico.mudar!(account, 'zapsign_ganho', 'on')
+
+    expect { described_class.perform_now(lead.id, 'doc-1') }.not_to raise_error
+    expect(Ramon::Fluxos::Disparo).to have_received(:externo).with('contrato_assinado', lead).once
   end
 
   it 'recusado: grava status e data da recusa' do

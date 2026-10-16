@@ -52,6 +52,30 @@ RSpec.describe Ramon::ZapsignContractService do
     expect(zapsign['sign_url']).to eq('https://app.zapsign.com.br/verificar/abc')
   end
 
+  describe 'regra do funil' do
+    before do
+      stub_request(:post, 'https://api.zapsign.com.br/api/v1/models/create-doc/')
+        .to_return(status: 200, body: zapsign_response, headers: { 'Content-Type' => 'application/json' })
+    end
+
+    it 'chama contrato_criado uma vez para o doc novo' do
+      allow(Ramon::FunilRegras).to receive(:contrato_criado)
+
+      described_class.new(lead).perform
+
+      expect(Ramon::FunilRegras).to have_received(:contrato_criado).once
+    end
+
+    it 'erro na regra não derruba o perform (o link volta)' do
+      Ramon::FunilAutomatico.mudar!(account, 'zapsign_negociacao', 'on')
+      allow(Ramon::FunilAutomatico).to receive(:executar).and_raise(StandardError, 'boom')
+
+      result = described_class.new(lead).perform
+
+      expect(result['sign_url']).to eq('https://app.zapsign.com.br/verificar/abc')
+    end
+  end
+
   it 'lista as variáveis que ficaram em branco (e manda linha em branco no doc)' do
     stub_request(:post, 'https://api.zapsign.com.br/api/v1/models/create-doc/')
       .to_return(status: 200, body: zapsign_response, headers: { 'Content-Type' => 'application/json' })

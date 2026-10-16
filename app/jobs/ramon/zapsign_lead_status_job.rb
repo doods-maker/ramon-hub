@@ -25,8 +25,8 @@ class Ramon::ZapsignLeadStatusJob < ApplicationJob
     zapsign = lead.custom_attributes['zapsign'].merge('status' => doc['status'], chave => data_do_evento(doc))
     lead.update!(custom_attributes: lead.custom_attributes.merge('zapsign' => zapsign))
     self.class.avisar(lead, doc['status'])
-    Ramon::FunilRegras.contrato_assinado(lead) if doc['status'] == 'signed'
     Ramon::Fluxos::Disparo.externo(gatilho, lead)
+    Ramon::FunilRegras.contrato_assinado(lead) if doc['status'] == 'signed' # depois dos fluxos: nunca os atrapalha
   end
 
   # Histórico + sino para todos da conta.

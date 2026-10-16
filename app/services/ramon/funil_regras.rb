@@ -2,11 +2,15 @@
 class Ramon::FunilRegras
   # Contrato criado no ZapSign → Negociação (só avança, nunca volta).
   def self.contrato_criado(lead)
-    mover_para_frente(lead, 'fase-negociacao', peca: 'zapsign_negociacao', motivo: 'contrato enviado pelo ZapSign')
+    seguro(lead) { mover_para_frente(lead, 'fase-negociacao', peca: 'zapsign_negociacao', motivo: 'contrato enviado pelo ZapSign') }
   end
 
   # Contrato assinado → Ganho, até saindo de Perdido (assinatura vale mais que tudo). O value estimado congela sozinho.
   def self.contrato_assinado(lead)
+    seguro(lead) { marcar_ganho(lead) }
+  end
+
+  def self.marcar_ganho(lead)
     ganho = lead.account.lead_stages.find_by(is_won: true)
     return if ganho.nil? || lead.lead_stage.is_won
 
@@ -28,4 +32,13 @@ class Ramon::FunilRegras
       lead.update!(lead_stage: etapa)
     end
   end
+
+  # Efeito opcional atrás de chave nunca derruba a ação principal (contrato já criado/assinado e fluxos).
+  def self.seguro(lead)
+    yield
+  rescue StandardError => e
+    Rails.logger.error("FunilRegras falhou no lead #{lead.id}: #{e.class}")
+    nil
+  end
+  private_class_method :marcar_ganho, :seguro
 end
