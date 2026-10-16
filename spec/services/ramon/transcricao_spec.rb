@@ -24,7 +24,7 @@ RSpec.describe Ramon::Transcricao do
   end
 
   it 'com_hora prefixa cada linha com dia/hora de São Paulo' do
-    travel_to Time.zone.parse('2026-10-16 14:30:00 -03:00') { msg(:incoming, 'Oi') }
+    travel_to(Time.zone.parse('2026-10-16 14:30:00 -03:00')) { msg(:incoming, 'Oi') }
 
     expect(described_class.de(conversa, com_hora: true)).to eq("Conversa (WhatsApp/chat):\n[16/10 14:30] Cliente: Oi")
   end
