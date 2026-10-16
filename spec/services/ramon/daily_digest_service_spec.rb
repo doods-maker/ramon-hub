@@ -93,6 +93,32 @@ RSpec.describe Ramon::DailyDigestService do
       expect(stats[:first_response_label]).to be_nil
     end
 
+    describe 'agenda_sem_google' do
+      let(:sdr_team) { create(:team, account: account, name: 'sdr') }
+      let(:closer_team) { create(:team, account: account, name: 'closer') }
+      let(:ana) { create(:user, account: account, name: 'Ana') }
+      let(:caio) { create(:user, account: account, name: 'Caio') }
+
+      before do
+        create(:team_member, team: sdr_team, user: ana)
+        create(:team_member, team: closer_team, user: caio)
+      end
+
+      it 'lista quem não tem Google conectado e some quando todos conectaram' do
+        GoogleAgendaConta.create!(user: ana, account: account, refresh_token: 'rt', access_token: 'at')
+        expect(service.yesterday_stats[:agenda_sem_google]).to eq(['Caio'])
+
+        GoogleAgendaConta.create!(user: caio, account: account, refresh_token: 'rt', access_token: 'at')
+        expect(service.yesterday_stats[:agenda_sem_google]).to eq([])
+      end
+
+      it 'conta desconectada conta como sem Google' do
+        GoogleAgendaConta.create!(user: ana, account: account, refresh_token: 'rt', access_token: 'at', status: 'desconectada')
+        GoogleAgendaConta.create!(user: caio, account: account, refresh_token: 'rt', access_token: 'at')
+        expect(service.yesterday_stats[:agenda_sem_google]).to eq(['Ana'])
+      end
+    end
+
     describe 'funil_auto (o que a IA mexeu ontem)' do
       let(:lead) { create(:lead, account: account, lead_stage: stage_novo, name: 'Maria') }
 

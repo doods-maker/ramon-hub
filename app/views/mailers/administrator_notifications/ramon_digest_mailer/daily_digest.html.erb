@@ -51,6 +51,13 @@
                 </table>
               </td>
             </tr>
+            <% if @stats[:agenda_sem_google].present? %>
+              <tr>
+                <td style="padding:10px 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#6b5f52;">
+                  Sem Google conectado: <%= @stats[:agenda_sem_google].join(', ') %>
+                </td>
+              </tr>
+            <% end %>
             <% if @stats[:funil_auto].present? %>
               <tr>
                 <td style="padding:14px 20px 0;">

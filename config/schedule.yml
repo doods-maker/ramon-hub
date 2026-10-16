@@ -185,3 +185,9 @@ ramon_funil_reativacao_job:
   cron: '0 13 * * 1-5'
   class: 'Ramon::FunilReativacaoJob'
   queue: scheduled_jobs
+
+# agenda no hub: reunião movida/cancelada no Google volta para o hub (a cada 5 min)
+ramon_google_agenda_pull_job:
+  cron: '*/5 * * * *'
+  class: 'Ramon::GoogleAgendaPullJob'
+  queue: scheduled_jobs

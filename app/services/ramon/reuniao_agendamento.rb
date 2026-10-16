@@ -33,13 +33,16 @@ class Ramon::ReuniaoAgendamento
   # horário novo (os do antigo viram órfãos e o job descarta), atividade
   # de→para, novo rascunho de confirmação (não enviado) e aviso no sino.
   # formato nil = mantém o da reunião.
-  def self.remarcar(task:, starts_at:, user: nil, formato: nil)
+  # sem_google: a mudança veio do Google — não empurra de volta (senão o cliente recebe o aviso do Google duas vezes).
+  def self.remarcar(task:, starts_at:, user: nil, formato: nil, sem_google: false)
+    task.sem_push_google = sem_google
     new(task.lead, starts_at, titulo_de(task), user, formato).remarcar(task)
   end
 
   # Cancelar (painel do lead): atividade meeting_cancelled, a tarefa sai e sino/ntfy. Os lembretes já
   # enfileirados viram órfãos e o guard do MeetingReminderJob descarta.
-  def self.cancelar(task:, user: nil)
+  def self.cancelar(task:, user: nil, sem_google: false)
+    task.sem_push_google = sem_google
     new(task.lead, task.due_at, titulo_de(task), user).cancelar([task])
   end
 

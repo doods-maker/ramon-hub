@@ -3,6 +3,9 @@ class LeadTask < ApplicationRecord
   FORMATOS = %w[video whatsapp].freeze
   DURACAO = 30.minutes
 
+  # Mudança que veio do Google: o hub aplica sem empurrar de volta (senão o cliente recebe o aviso do Google de novo).
+  attr_accessor :sem_push_google
+
   belongs_to :account
   belongs_to :lead
   belongs_to :user, optional: true
@@ -43,11 +46,17 @@ class LeadTask < ApplicationRecord
   end
 
   # Reunião do hub vive no Google do dono (job: sem conta Google, sai calado). A linha some no destroy → dados vão no job.
-  def empurrar_para_google_criar = Ramon::GoogleAgendaPushJob.perform_later('criar', { 'task_id' => id })
+  def empurrar_para_google_criar
+    Ramon::GoogleAgendaPushJob.perform_later('criar', { 'task_id' => id }) unless sem_push_google
+  end
 
-  def empurrar_para_google_atualizar = Ramon::GoogleAgendaPushJob.perform_later('atualizar', { 'task_id' => id })
+  def empurrar_para_google_atualizar
+    Ramon::GoogleAgendaPushJob.perform_later('atualizar', { 'task_id' => id }) unless sem_push_google
+  end
 
   def empurrar_para_google_cancelar
+    return if sem_push_google
+
     Ramon::GoogleAgendaPushJob.perform_later(
       'cancelar', { 'task_id' => id, 'google_event_id' => google_event_id, 'agenda_user_id' => agenda_user_id }
     )

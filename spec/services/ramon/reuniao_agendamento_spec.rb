@@ -131,6 +131,35 @@ RSpec.describe Ramon::ReuniaoAgendamento do
     end
   end
 
+  describe 'sem_google (mudança que veio do Google não volta para lá)' do
+    let(:task) do
+      agendar
+      lead.lead_tasks.find_by!(kind: 'meeting')
+    end
+
+    it 'remarcar com sem_google: true não enfileira o push' do
+      task
+      expect { described_class.remarcar(task: task, starts_at: starts_at + 1.day, user: user, sem_google: true) }
+        .not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+
+    it 'remarcar sem o kwarg enfileira o push' do
+      task
+      expect { described_class.remarcar(task: task, starts_at: starts_at + 1.day, user: user) }
+        .to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('atualizar', anything)
+    end
+
+    it 'cancelar com sem_google: true não enfileira o push' do
+      task.update_columns(google_event_id: 'ev1') # rubocop:disable Rails/SkipsModelValidations
+      expect { described_class.cancelar(task: task, user: user, sem_google: true) }.not_to have_enqueued_job(Ramon::GoogleAgendaPushJob)
+    end
+
+    it 'cancelar sem o kwarg enfileira o push' do
+      task.update_columns(google_event_id: 'ev1') # rubocop:disable Rails/SkipsModelValidations
+      expect { described_class.cancelar(task: task, user: user) }.to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('cancelar', anything)
+    end
+  end
+
   describe '.cancelar' do
     it 'tira a tarefa, registra o cancelamento e avisa no sino', :aggregate_failures do
       create(:user, account: account, role: :administrator)
