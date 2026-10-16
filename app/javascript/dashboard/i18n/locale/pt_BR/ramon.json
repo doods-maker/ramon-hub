@@ -1861,7 +1861,7 @@
     },
     "CONFERENCIA": {
       "TITLE": "Conferência de fases",
-      "SUBTITLE": "Etapa do ADVBOX ao lado do que o Painel do Cliente mostra, calculado pelo andamento do tribunal.",
+      "SUBTITLE": "Etapa cadastrada no ADVBOX ao lado da fase calculada pelos andamentos do tribunal (é a fase que o Painel do Cliente mostra).",
       "ATUALIZADO_EM": "Atualizado em {data} às {hora}",
       "RESUMO": {
         "atrasada": "{n} etapa atrasada | {n} etapas atrasadas",
@@ -1869,7 +1869,7 @@
         "diferente": "{n} fase diferente | {n} fases diferentes",
         "igual": "{n} mesma fase | {n} mesma fase",
         "conferidos": "{n} conferido | {n} conferidos",
-        "errados": "{n} painel errado | {n} painéis errados",
+        "errados": "{n} fase errada | {n} fases erradas",
         "para_aplicar": "{n} para atualizar no ADVBOX | {n} para atualizar no ADVBOX"
       },
       "GRUPO": {
@@ -1884,8 +1884,8 @@
       "BUSCA": "Cliente ou processo",
       "BUSCA_PLACEHOLDER": "Buscar cliente ou nº do processo",
       "LADO": {
-        "ADVBOX": "No ADVBOX",
-        "PAINEL": "No painel do cliente"
+        "ADVBOX": "Etapa no ADVBOX",
+        "PAINEL": "Fase pelo andamento do tribunal"
       },
       "FASE": {
         "documentos": "Documentos",
@@ -1901,9 +1901,9 @@
         "audiencia": "audiência",
         "pericia": "perícia"
       },
-      "SEM_ANDAMENTO": "Sem andamento que defina a fase: o painel usa só o nº do processo.",
+      "SEM_ANDAMENTO": "Sem andamento que defina a fase: vale só o nº do processo.",
       "ULTIMO_ANDAMENTO": "último andamento {data}",
-      "PAINEL_CERTO": "O painel está certo?",
+      "PAINEL_CERTO": "A fase pelo tribunal está certa?",
       "MARCA": {
         "certo": "Certo",
         "errado": "Errado"

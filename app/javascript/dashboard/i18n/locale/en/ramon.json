@@ -1856,7 +1856,7 @@
     },
     "CONFERENCIA": {
       "TITLE": "Phase review",
-      "SUBTITLE": "ADVBOX stage next to what the Client Panel shows, computed from court movements.",
+      "SUBTITLE": "Stage registered in ADVBOX next to the phase computed from court movements (the phase the Client Panel shows).",
       "ATUALIZADO_EM": "Updated on {data} at {hora}",
       "RESUMO": {
         "atrasada": "{n} stage behind | {n} stages behind",
@@ -1864,7 +1864,7 @@
         "diferente": "{n} different phase | {n} different phases",
         "igual": "{n} same phase | {n} same phase",
         "conferidos": "{n} reviewed | {n} reviewed",
-        "errados": "{n} panel wrong | {n} panels wrong",
+        "errados": "{n} wrong phase | {n} wrong phases",
         "para_aplicar": "{n} to update in ADVBOX | {n} to update in ADVBOX"
       },
       "GRUPO": {
@@ -1879,8 +1879,8 @@
       "BUSCA": "Client or case",
       "BUSCA_PLACEHOLDER": "Search client or case number",
       "LADO": {
-        "ADVBOX": "In ADVBOX",
-        "PAINEL": "In the client panel"
+        "ADVBOX": "Stage in ADVBOX",
+        "PAINEL": "Phase from court movements"
       },
       "FASE": {
         "documentos": "Documents",
@@ -1896,9 +1896,9 @@
         "audiencia": "hearing",
         "pericia": "medical exam"
       },
-      "SEM_ANDAMENTO": "No movement defines the phase: the panel only uses the case number.",
+      "SEM_ANDAMENTO": "No movement defines the phase: only the case number counts.",
       "ULTIMO_ANDAMENTO": "last movement {data}",
-      "PAINEL_CERTO": "Is the panel right?",
+      "PAINEL_CERTO": "Is the court phase right?",
       "MARCA": {
         "certo": "Right",
         "errado": "Wrong"
