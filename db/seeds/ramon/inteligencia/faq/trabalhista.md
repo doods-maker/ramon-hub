@@ -3,6 +3,7 @@ tese: Trabalhista (acidente ou doença do trabalho · rescisão indireta · reco
 # APROVADO pelo Eduardo 14/10 (comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §3).
 # Itens [CONFERIR] do rascunho lidos na fonte oficial antes de ativar. As objeções da LiderHub (preço, distância,
 # "vou pensar", "depois") foram reescritas dentro do Provimento 205/2021: sem comparar colegas, sem pressão, sem urgência artificial.
+# 15/10 (RASCUNHO, venda emocional 1:1): "Vou pensar" ganha a escassez real (prazo da lei) e o convite com horário.
 ---
 
 ## Quanto custa o processo trabalhista? Quanto vocês cobram?
@@ -15,7 +16,7 @@ Entendo, é natural querer saber para onde vai cada real. O honorário só exist
 Dá, sim. A conversa com o advogado pode ser pelo WhatsApp ou por videochamada, e você manda os documentos por aqui mesmo. O processo trabalhista corre pela internet. Se preferir conversar pessoalmente, nosso escritório fica em Tubarão/SC e você é bem-vindo.
 
 ## Vou pensar e depois te falo sobre o processo trabalhista.
-Claro, a decisão é sua e não precisa ser agora. Se quiser, posso te deixar um resumo do que conversamos para mostrar em casa, ou combinar um dia para eu te chamar. Se ficou alguma dúvida, pode me perguntar que eu explico.
+Claro, a decisão é sua. Só para você ter a informação: o pedido tem prazo (até 2 anos depois da saída da empresa) e os valores alcançam só os 5 anos antes da ação, então cada mês de espera tira um mês da conta. Se quiser, já deixo um horário com o advogado para tirar as dúvidas com calma.
 
 ## Agora não dá, prefiro ver isso mais para frente.
 Sem problema. Qual o melhor dia para eu te chamar de novo? Só um lembrete honesto, para você ter a informação: quem já saiu da empresa tem até 2 anos depois da saída para entrar com o pedido na Justiça do Trabalho.

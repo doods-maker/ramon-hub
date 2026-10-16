@@ -459,7 +459,7 @@ theses:
         position: 4
       - section: "apresentacao"
         title: "Símbolo"
-        content: "É um dinheiro a mais todo mês, junto com o salário, enquanto a pessoa trabalha."
+        content: "É um dinheiro a mais todo mês, junto com o salário, até a aposentadoria."
         position: 5
 
   # Nome atual (o roteiro renomeou em 14/10, roteiros/bpc-loas.yml). Itens do idoso: RASCUNHO 15/10
@@ -556,11 +556,11 @@ theses:
         position: 2
       - section: "apresentacao"
         title: "História (exemplo ilustrativo)"
-        content: "Uma senhora de 67 anos que cuidou da casa a vida inteira e nunca pagou o INSS mora com o marido, também idoso, aposentado com um salário mínimo. Pela regra, a aposentadoria dele não entra na conta, e ela pode ter direito. Diga sempre que é um exemplo, nunca um caso de cliente."
+        content: "Uma senhora de 67 anos que cuidou da casa a vida inteira e nunca pagou o INSS mora com o marido de 70 anos, aposentado com um salário mínimo. Pela regra, a aposentadoria dele não entra na conta, e ela pode ter direito. Diga sempre que é um exemplo, nunca um caso de cliente."
         position: 3
       - section: "apresentacao"
         title: "Escassez real (prazo que corre)"
-        content: "O BPC conta a partir do dia do pedido no INSS: o mês em que não se pede é um mês que não volta."
+        content: "Em regra, o BPC é pago desde o dia do pedido no INSS: o mês em que não se pede é um mês que não volta."
         position: 4
       - section: "apresentacao"
         title: "Símbolo"
@@ -630,7 +630,7 @@ theses:
         position: 3
       - section: "apresentacao"
         title: "Escassez real (prazo que corre)"
-        content: "Os atrasados só podem ser cobrados dos últimos 5 anos: quanto antes se pede, menos se perde."
+        content: "Os atrasados só podem ser cobrados dos últimos 5 anos e, em muitos casos, o adicional só vale a partir do pedido: quanto antes se pede, menos se perde."
         position: 4
       - section: "apresentacao"
         title: "Símbolo"
@@ -714,7 +714,7 @@ theses:
         position: 3
       - section: "apresentacao"
         title: "Escassez real (prazo que corre)"
-        content: "Quem saiu da empresa tem até 2 anos para entrar com o pedido, e os valores alcançam só os 5 anos antes da ação: cada mês de espera tira um mês da conta."
+        content: "Quem saiu da empresa tem até 2 anos para entrar com o pedido, e o acidente ou o começo dos sintomas conta até 5 anos: quanto antes o advogado olhar as datas, mais seguro."
         position: 4
       - section: "apresentacao"
         title: "Símbolo"
@@ -783,7 +783,7 @@ theses:
         position: 2
       - section: "apresentacao"
         title: "História (exemplo ilustrativo)"
-        content: "Uma auxiliar de cozinha com 3 meses de salário atrasado queria pedir demissão. Se saísse por conta própria, perderia a multa do FGTS e o seguro-desemprego; pelo caminho certo, pode buscar esses direitos. Diga sempre que é um exemplo, nunca um caso de cliente."
+        content: "Uma auxiliar de cozinha com 3 meses de salário atrasado queria pedir demissão. Se saísse por conta própria, perderia a multa do FGTS e o seguro-desemprego; pelo caminho certo, se a Justiça reconhecer a falta da empresa, pode buscar esses direitos. Diga sempre que é um exemplo, nunca um caso de cliente."
         position: 3
       - section: "apresentacao"
         title: "Escassez real (prazo que corre)"
@@ -791,7 +791,7 @@ theses:
         position: 4
       - section: "apresentacao"
         title: "Símbolo"
-        content: "Sair com os direitos é sair de cabeça erguida: FGTS, multa e seguro-desemprego para recomeçar."
+        content: "Sair com os direitos é sair de cabeça erguida, com o que é seu para recomeçar."
         position: 5
 
   - name: "Trabalhista — reconhecimento de vínculo"
@@ -1114,7 +1114,7 @@ theses:
       # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
-        content: "É a licença paga pelo INSS: os 120 dias de cuidar do bebê que a mãe que contribui (ou trabalha na roça) tem por direito."
+        content: "É a licença paga pelo INSS: em regra, 120 dias para cuidar do bebê, para a mãe segurada (de carteira, MEI, autônoma, desempregada há pouco tempo ou da roça), também na adoção."
         position: 2
       - section: "apresentacao"
         title: "História (exemplo ilustrativo)"
