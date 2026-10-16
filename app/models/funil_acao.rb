@@ -21,24 +21,29 @@ class FunilAcao < ApplicationRecord
     ultimas.transform_values { |a| { id: a.id, texto: a.texto } }
   end
 
-  # Reverte o que a ação fez (payload `desfazer`). false = já desfeita. Tudo ou nada, sob lock do lead.
+  # Reverte o que a ação fez (payload `desfazer`). false = já desfeita. O banco volta tudo ou nada sob o lock do lead;
+  # cancelar a reunião (sino, Disparo, push) só depois do commit — um aviso não sai de um desfazer que deu rollback.
   def desfazer!(user)
-    lead.with_lock do
+    reuniao = nil
+    feito = lead.with_lock do
       reload
       next false if desfeita_em || movida_depois?
 
       restaurar_etapa
       restaurar_modo
-      desfazer_tarefa(user)
+      reuniao = desfazer_tarefa
       update!(desfeita_em: Time.current, desfeita_por: user)
       true
     end
+    Ramon::ReuniaoAgendamento.cancelar(task: reuniao, user: user) if feito && reuniao
+    feito
   end
 
   # Um humano mexeu na etapa depois da IA: desfazer sobrescreveria a decisão dele (só vale p/ ações que mudam etapa).
+  # etapa_produzida_id vem no payload; ações antigas, sem ele, caem na busca pelo nome/tipo.
   def movida_depois?
-    produzida = etapa_produzida
-    desfazer['etapa_id'].present? && produzida.present? && lead.lead_stage_id != produzida.id
+    produzida_id = desfazer['etapa_produzida_id'] || etapa_produzida&.id
+    desfazer['etapa_id'].present? && produzida_id.present? && lead.lead_stage_id != produzida_id
   end
 
   private
@@ -55,19 +60,38 @@ class FunilAcao < ApplicationRecord
 
     # lost_reason só existe no payload quando a etapa de volta é Perdido; senão o lead zera o motivo
     lead.update!(lead_stage_id: desfazer['etapa_id'], lost_reason: desfazer['lost_reason'])
+    desfazer_limite
   end
 
+  # O avanço pode ter encerrado um modo "sozinha até…" (Lead → CopilotoLimite.verificar). Carimbo desta ação (não
+  # anterior a ela) e o lead, de volta, sem alcançar o limite: devolve o modo (o desfazer confere carimbo e rascunho).
+  def desfazer_limite
+    conversa = lead.conversation
+    carimbo = conversa&.custom_attributes&.[]('copiloto_limite')
+    return unless carimbo.is_a?(Hash) && Ramon::CopilotoLimite::NIVEIS.include?(carimbo['limite'])
+    return if Time.zone.parse(carimbo['em'].to_s).to_i < created_at.to_i || Ramon::CopilotoLimite.atingido?(carimbo['limite'], lead)
+
+    Ramon::CopilotoLimite.desfazer(conversa, carimbo['limite'])
+  end
+
+  # O inverso do calar (que guardou o modo de antes em CopilotoModo::MODO_ANTES). Sem o guardado (já restaurado por
+  # outro caminho, ou ação antiga), vale o 'modo' gravado na ação.
   def restaurar_modo
-    return if desfazer['modo'].blank? || lead.conversation.nil?
+    conversa = lead.conversation
+    return if desfazer['modo'].blank? || conversa.nil?
 
-    Ramon::CopilotoModo.trocar(lead.conversation, desfazer['modo'])
-    Ramon::Roteiro::Efeitos.tirar_etiqueta(lead.conversation)
+    Ramon::CopilotoModo.restaurar(conversa) ||
+      conversa.update!(custom_attributes: (conversa.custom_attributes || {}).merge('copiloto_modo' => desfazer['modo']))
+    Ramon::Roteiro::Efeitos.tirar_etiqueta(conversa)
   end
 
-  def desfazer_tarefa(user)
+  # Follow-up some aqui (dentro do lock); a reunião volta para ser cancelada depois do commit.
+  def desfazer_tarefa
     task = lead.lead_tasks.find_by(id: desfazer['task_id'])
     return if task.nil?
+    return task if task.kind == 'meeting'
 
-    task.kind == 'meeting' ? Ramon::ReuniaoAgendamento.cancelar(task: task, user: user) : task.destroy!
+    task.destroy!
+    nil
   end
 end

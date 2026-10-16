@@ -67,6 +67,21 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       aplicar('etapa' => 'qualificacao', 'etapa_motivo' => 'x')
       expect(lead.reload.lead_stage.label).to eq('fase-qualificacao')
     end
+
+    it 'Perdido desfeito não volta na pausa seguinte, nem com outro motivo; com mensagem nova do cliente, volta' do
+      ligar('perdido_recusa')
+      aplicar('perdido' => { 'motivo' => 'Honorário', 'frase' => 'não tenho como pagar' })
+      FunilAcao.last.desfazer!(create(:user, account: account))
+      expect(lead.reload.lead_stage).not_to be_is_lost
+
+      aplicar('perdido' => { 'motivo' => 'Já tem advogado', 'frase' => 'não quero' })
+      expect(lead.reload.lead_stage).not_to be_is_lost
+      expect(FunilAcao.where(acao: 'perdido').count).to eq(1)
+
+      create(:message, account: account, conversation: conversa, inbox: conversa.inbox, message_type: :incoming)
+      aplicar('perdido' => { 'motivo' => 'Honorário', 'frase' => 'não quero mesmo' })
+      expect(lead.reload.lead_stage).to be_is_lost
+    end
   end
 
   describe 'perdido' do
@@ -81,7 +96,21 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       expect(conversa.reload.label_list).to include('desqualificado-ia')
       expect(Ramon::CopilotoModo.of(conversa)).to eq('manual')
       expect(FunilAcao.last).to have_attributes(peca: 'perdido_recusa', acao: 'perdido', alvo: 'Honorário')
-      expect(FunilAcao.last.desfazer).to include('etapa_id' => account.lead_stages.find_by(label: 'fase-novo').id, 'modo' => 'rascunho')
+      expect(FunilAcao.last.desfazer).to include('etapa_id' => account.lead_stages.find_by(label: 'fase-novo').id, 'modo' => 'rascunho',
+                                                 'etapa_produzida_id' => lead.lead_stage_id)
+    end
+
+    it 'perdido que não é Hash com motivo ou frase é ignorado' do
+      ['não', 'null', {}, { 'motivo' => '', 'frase' => '' }].each { |valor| aplicar('perdido' => valor) }
+
+      expect(lead.reload.lead_stage).not_to be_is_lost
+      expect(FunilAcao.count).to eq(0)
+    end
+
+    it 'frase vazia vira "recusa clara"' do
+      aplicar('perdido' => { 'motivo' => 'Honorário', 'frase' => '' })
+
+      expect(FunilAcao.last.motivo).to eq('recusa clara')
     end
 
     it 'motivo inventado vira Perdido com motivo de Automação' do

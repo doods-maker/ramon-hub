@@ -46,6 +46,18 @@ RSpec.describe Lead do
     expect(data.keys).to include(:benefit_type_name, :lead_priority_name, :sdr_name, :closer_name, :contact_name)
   end
 
+  it 'push_event_data só consulta o chip da IA com alguma peça do funil fora de off' do
+    lead = create(:lead, account: account)
+    allow(FunilAcao).to receive(:chip).and_return(nil)
+
+    expect(lead.push_event_data[:funil_acao]).to be_nil
+    expect(FunilAcao).not_to have_received(:chip)
+
+    Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'ensaio')
+    lead.push_event_data
+    expect(FunilAcao).to have_received(:chip).with(lead)
+  end
+
   it 'push_event_data serializa value como Float (BigDecimal quebra o broadcast no Sidekiq)' do
     lead = create(:lead, account: account, value: 5000)
     expect(lead.push_event_data[:value]).to be_a(Float)

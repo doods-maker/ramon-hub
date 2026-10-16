@@ -34,26 +34,31 @@ class Ramon::FunilObservador::Aplicar
     Ramon::FunilRegras.mover_para_frente(@lead, destino, peca: 'etapa_ia', motivo: @decisao['etapa_motivo'])
   end
 
+  # Desfeito há pouco = não refaz, com qualquer motivo: o motivo escolhido pelo LLM varia de uma pausa para outra.
   def perder_por_recusa
-    recusa = @decisao['perdido']
-    return if recusa.blank?
-
+    recusa = recusa_valida
     perdido = account.lead_stages.find_by(is_lost: true)
-    return if perdido.nil?
+    return if recusa.nil? || perdido.nil? || Ramon::FunilAutomatico.desfeita_recente?(@lead, acao: 'perdido')
 
+    @lead.with_lock { perder(recusa, perdido) unless @lead.lead_stage.is_won || @lead.lead_stage.is_lost }
+  end
+
+  # Só Hash com motivo ou frase conta (o LLM às vezes devolve "não"/"null" em texto).
+  def recusa_valida
+    recusa = @decisao['perdido']
+    recusa if recusa.is_a?(Hash) && (recusa['motivo'].present? || recusa['frase'].present?)
+  end
+
+  def perder(recusa, perdido)
     motivo = recusa['motivo'].presence_in(account.lost_reasons.pluck(:name))
-    @lead.with_lock do
-      next if @lead.lead_stage.is_won || @lead.lead_stage.is_lost
-
-      Ramon::FunilAutomatico.executar(@lead, peca: 'perdido_recusa', acao: 'perdido', motivo: recusa['frase'] || 'recusa clara',
-                                             alvo: motivo || 'recusa', desfazer: desfazer_perdido) do
-        Ramon::Roteiro::Efeitos.perder(@lead, motivo)
-      end
+    Ramon::FunilAutomatico.executar(@lead, peca: 'perdido_recusa', acao: 'perdido', motivo: recusa['frase'].presence || 'recusa clara',
+                                           alvo: motivo || 'recusa', desfazer: desfazer_perdido(perdido)) do
+      Ramon::Roteiro::Efeitos.perder(@lead, motivo)
     end
   end
 
-  def desfazer_perdido
-    desfazer = { 'etapa_id' => @lead.lead_stage_id }
+  def desfazer_perdido(perdido)
+    desfazer = { 'etapa_id' => @lead.lead_stage_id, 'etapa_produzida_id' => perdido.id }
     desfazer['modo'] = Ramon::CopilotoModo.of(@lead.conversation) if @lead.conversation
     desfazer
   end

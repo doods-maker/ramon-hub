@@ -16,6 +16,7 @@ class Ramon::FunilObservador
 
     Regras obrigatórias:
     - Decida só pelo que está escrito na conversa.
+    - Se a ficha lista uma ação que a equipe desfez, decida só por fatos do cliente posteriores a esse desfazer.
     - "qualificacao" só quando o cliente respondeu a triagem e o caso cabe na tese.
     - "ultima_chance" só depois da reunião, com objeção ("vou pensar", preço, família).
     - "perdido" só com recusa clara do cliente; o motivo é o nome exato de um item da lista fornecida.
@@ -30,7 +31,7 @@ class Ramon::FunilObservador
   end
 
   def perform
-    texto = Ramon::Transcricao.de(@lead.conversation)
+    texto = Ramon::Transcricao.de(@lead.conversation, com_hora: true)
     return nil if texto.blank?
 
     decisao = decidir(texto)
@@ -70,11 +71,25 @@ class Ramon::FunilObservador
   end
 
   def ficha
-    ["Etapa atual: #{@lead.lead_stage&.name || 'não informada'}.",
+    ["Hoje: #{agora} (horário de São Paulo).",
+     "Etapa atual: #{@lead.lead_stage&.name || 'não informada'}.",
      "Tese/benefício: #{@lead.thesis&.name || @lead.benefit_type&.name || 'não informado'}.",
      "Documentos pendentes: #{lista(docs_pendentes, ', ', 'nenhum')}.",
      "Motivos de perda (use o nome exato): #{account.lost_reasons.pluck(:name).join('; ')}.",
-     "Tarefas \"Cobrar:\" abertas (id — título): #{lista(cobrancas, '; ', 'nenhuma')}."].join("\n")
+     "Tarefas \"Cobrar:\" abertas (id — título): #{lista(cobrancas, '; ', 'nenhuma')}.", *desfeitas].join("\n")
+  end
+
+  def agora
+    hoje = Time.current.in_time_zone(Ramon::ReuniaoAgendamento::TIME_ZONE)
+    "#{Ramon::ReuniaoAgendamento::DIAS_SEMANA[hoje.wday]} #{hoje.strftime('%d/%m/%Y %H:%M')}"
+  end
+
+  # O que a equipe desfez (30 dias): sem isso o LLM, relendo a mesma conversa, decide igual de novo.
+  def desfeitas
+    @lead.funil_acoes.where(desfeita_em: 30.days.ago..).order(:desfeita_em).map do |a|
+      quando = a.desfeita_em.in_time_zone(Ramon::ReuniaoAgendamento::TIME_ZONE).strftime('%d/%m %H:%M')
+      "A equipe desfez '#{[a.acao, a.alvo].compact_blank.join(': ')}' em #{quando}; só repita se houver fato novo do cliente depois disso."
+    end
   end
 
   def lista(itens, separador, vazio) = itens.empty? ? vazio : itens.join(separador)

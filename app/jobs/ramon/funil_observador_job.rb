@@ -2,13 +2,22 @@
 # só o último da rajada roda (debounce). Peças todas off = não gasta LLM.
 class Ramon::FunilObservadorJob < ApplicationJob
   queue_as :low
-  retry_on Ramon::LlmClient::TransientError, wait: :polynomially_longer, attempts: 3
+  # Esgotadas as tentativas: log + rastreio e descarta — o retry do Sidekiq pagaria o LLM de novo a cada vez.
+  retry_on Ramon::LlmClient::TransientError, wait: :polynomially_longer, attempts: 3 do |job, erro|
+    Rails.logger.warn("[FunilObservadorJob] #{erro.class} esgotou as tentativas message=#{job.arguments.first}")
+    ChatwootExceptionTracker.new(erro).capture_exception
+  end
 
-  PECAS = %w[etapa_ia perdido_recusa reuniao_ia colheita promessas pendencias temperatura].freeze
+  # Só as peças de IA já implementadas pelo observador (cada fase acrescenta as suas): peça sem efeito não paga LLM.
+  OBSERVADOR_PECAS = %w[etapa_ia perdido_recusa temperatura].freeze
   ESPERA = 10.minutes
 
+  # Temperatura em ensaio não grava nada (Aplicar#gravar_temperatura): só conta ligada.
   def self.ativo?(account)
-    PECAS.any? { |peca| Ramon::FunilAutomatico.modo(account, peca) != 'off' }
+    OBSERVADOR_PECAS.any? do |peca|
+      modo = Ramon::FunilAutomatico.modo(account, peca)
+      peca == 'temperatura' ? modo == 'on' : modo != 'off'
+    end
   end
 
   def perform(message_id)

@@ -95,7 +95,7 @@ class Lead < ApplicationRecord
       # espelho do jbuilder — inteiros, JSON-nativos (Sidekiq strict_args rejeita BigDecimal)
       docs_received: docs[:received],
       docs_total: docs[:total],
-      funil_acao: FunilAcao.chip(self)
+      funil_acao: (FunilAcao.chip(self) if Ramon::FunilAutomatico.algum_ligado?(account))
     }.merge(cadence_event_data).merge(comercial_event_data)
   end
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity

@@ -75,4 +75,26 @@ RSpec.describe Ramon::FunilObservador do
     expect(enviado[:user]).to include('[cpf]', 'Etapa atual: Novo', 'Sumiu / não respondeu', "#{tarefa.id} — Cobrar: laudo")
     expect(enviado).to include(funcao: 'funil_observador', account_id: account.id, lead_id: lead.id)
   end
+
+  it 'manda hoje, a hora de cada mensagem e o que a equipe desfez (30 dias), com a regra no system prompt' do
+    travel_to Time.zone.parse('2026-10-16 14:30:00 -03:00') do
+      mensagem('Não quero mais')
+      FunilAcao.create!(account: account, lead: lead, peca: 'perdido_recusa', acao: 'perdido', alvo: 'Honorário', ensaio: false,
+                        desfeita_em: Time.zone.parse('2026-10-15 09:05:00 -03:00'))
+      FunilAcao.create!(account: account, lead: lead, peca: 'etapa_ia', acao: 'mover_etapa', alvo: 'Qualificação', ensaio: false,
+                        desfeita_em: 40.days.ago)
+      enviado = nil
+      allow(Ramon::LlmClient).to receive(:complete) do |**args|
+        enviado = args
+        resultado('{"etapa":null}')
+      end
+
+      described_class.new(lead).perform
+
+      expect(enviado[:user]).to include('Hoje: sexta 16/10/2026 14:30', '[16/10 14:30] Cliente: Não quero mais',
+                                        "A equipe desfez 'perdido: Honorário' em 15/10 09:05; só repita se houver fato novo")
+      expect(enviado[:user]).not_to include("desfez 'mover_etapa")
+      expect(enviado[:system]).to include('decida só por fatos do cliente posteriores a esse desfazer')
+    end
+  end
 end

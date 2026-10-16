@@ -45,6 +45,34 @@ RSpec.describe Ramon::FunilObservadorJob do
     expect(observador).not_to have_received(:perform)
   end
 
+  it 'só peça ainda não implementada no observador (reuniao_ia) ou temperatura em ensaio: não roda' do
+    msg = mensagem
+    Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
+    Ramon::FunilAutomatico.mudar!(account, 'reuniao_ia', 'on')
+    Ramon::FunilAutomatico.mudar!(account, 'temperatura', 'ensaio')
+    described_class.perform_now(msg.id)
+    expect(observador).not_to have_received(:perform)
+  end
+
+  it 'temperatura on sozinha: roda' do
+    msg = mensagem
+    Ramon::FunilAutomatico.mudar!(account, 'etapa_ia', 'off')
+    Ramon::FunilAutomatico.mudar!(account, 'temperatura', 'on')
+    described_class.perform_now(msg.id)
+    expect(observador).to have_received(:perform).once
+  end
+
+  it 'esgotadas as 3 tentativas do erro transitório: rastreia e descarta, sem re-lançar' do
+    msg = mensagem
+    allow(observador).to receive(:perform).and_raise(Ramon::LlmClient::TransientError, 'timeout')
+    tracker = instance_double(ChatwootExceptionTracker, capture_exception: nil)
+    allow(ChatwootExceptionTracker).to receive(:new).and_return(tracker)
+
+    expect { perform_enqueued_jobs { described_class.perform_later(msg.id) } }.not_to raise_error
+    expect(observador).to have_received(:perform).exactly(3).times
+    expect(tracker).to have_received(:capture_exception).once
+  end
+
   it 'lead perdido: não roda' do
     msg = mensagem
     lead.update_columns(lost_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
