@@ -121,6 +121,29 @@ RSpec.describe Ramon::DailyDigestService do
           expect(textos).to eq(['moveu para Perdido: sem resposta (desfeita)', 'faria: moveu para Perdido: sem resposta'])
         end
       end
+
+      it 'a mesma ação repetida no mesmo lead aparece uma vez só' do
+        travel_to noon_brt(23) do
+          2.times { |i| acao(created_at: noon_brt(22) + i.hours, ensaio: true) }
+
+          stats = service.yesterday_stats
+          expect(stats[:funil_auto].size).to eq(1)
+          expect(stats[:funil_auto_restantes]).to eq(0)
+        end
+      end
+
+      it 'além do limite, mostra só os primeiros e conta o resto' do
+        travel_to noon_brt(23) do
+          (described_class::FUNIL_AUTO_LIMITE + 2).times do |i|
+            outro = create(:lead, account: account, lead_stage: stage_novo)
+            acao(created_at: noon_brt(22) + i.minutes, lead: outro)
+          end
+
+          stats = service.yesterday_stats
+          expect(stats[:funil_auto].size).to eq(described_class::FUNIL_AUTO_LIMITE)
+          expect(stats[:funil_auto_restantes]).to eq(2)
+        end
+      end
     end
   end
 end

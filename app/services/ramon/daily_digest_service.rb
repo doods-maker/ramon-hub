@@ -27,7 +27,8 @@ class Ramon::DailyDigestService
       won: won_stats,
       lost: lost_stats,
       first_response_label: first_response_label,
-      funil_auto: funil_auto
+      funil_auto: funil_auto_acoes.first(FUNIL_AUTO_LIMITE).map { |acao| funil_auto_item(acao) },
+      funil_auto_restantes: [funil_auto_acoes.size - FUNIL_AUTO_LIMITE, 0].max
     }
   end
 
@@ -118,9 +119,10 @@ class Ramon::DailyDigestService
   end
 
   # "O que a IA mexeu ontem" (só admins veem: o e-mail já vai só pra eles). Ensaio aparece como "faria:".
-  def funil_auto
-    FunilAcao.where(account: @account, created_at: yesterday_range).includes(lead: :conversation)
-             .order(:created_at).limit(FUNIL_AUTO_LIMITE).map { |acao| funil_auto_item(acao) }
+  # A mesma ação repetida no mesmo lead (ex.: o "faria:" que o ensaio regrava) sai uma vez só; além do limite, vira "+N".
+  def funil_auto_acoes
+    @funil_auto_acoes ||= FunilAcao.where(account: @account, created_at: yesterday_range).includes(lead: :conversation)
+                                   .order(:created_at).to_a.uniq { |acao| [acao.lead_id, acao.acao, acao.alvo, acao.ensaio] }
   end
 
   def funil_auto_item(acao)

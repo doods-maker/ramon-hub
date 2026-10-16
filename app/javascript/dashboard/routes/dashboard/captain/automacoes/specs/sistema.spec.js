@@ -1,5 +1,5 @@
 // Trava dos desenhos do sistema (db/seeds/ramon/fluxos/sistema/*.json, spec §8 +
-// decisão do Eduardo 06/10: as 29 automações do código): o quadro abre cada um e a
+// decisão do Eduardo 06/10: as automações do código; 30 desde o funil automático): o quadro abre cada um e a
 // validação (espelho do Grafo) só deixa passar a etapa em aberto — a etapa é do
 // funil de cada conta e a B4 escolhe ao migrar.
 import { ALCANCES, GRUPOS_SISTEMA } from '../fluxo';
@@ -15,7 +15,7 @@ const DESENHOS = Object.entries(ARQUIVOS).map(([caminho, d]) => [
 ]);
 
 describe('fluxos do sistema', () => {
-  it('são as 29 automações do código', () => {
+  it('são as 30 automações do código', () => {
     expect(DESENHOS.map(([chave]) => chave).sort()).toEqual([
       'acervo_pecas',
       'agente_hub',
@@ -36,6 +36,7 @@ describe('fluxos do sistema', () => {
       'etiquetas_etapa_tese',
       'eventos_advbox',
       'fechamento_extrato',
+      'funil_automatico',
       'historico_do_lead',
       'lead_ganho',
       'lembretes_reuniao',
@@ -131,7 +132,7 @@ describe('fluxos do sistema', () => {
     titulos.forEach(t => expect(t).not.toMatch(/24h/));
   });
 
-  it('22 regras fixas; as 7 sem o selo são as que rodam no fluxo (decisão do Eduardo 08/10)', () => {
+  it('23 regras fixas; as 7 sem o selo são as que rodam no fluxo (decisão do Eduardo 08/10)', () => {
     expect(
       DESENHOS.filter(([, d]) => !d.fixa)
         .map(([chave]) => chave)

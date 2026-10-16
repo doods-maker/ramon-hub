@@ -45,6 +45,15 @@ RSpec.describe Ramon::FunilAutomatico do
       expect(LeadActivity.find_by(kind: 'funil_auto').to_value).to eq('mover: pediu reunião')
     end
 
+    it 'em on, a marca no histórico sai sem usuário mesmo com alguém logado (é da automação)' do
+      ligar('on')
+      Current.user = create(:user, account: account)
+      described_class.executar(lead, **args) { true }
+      expect(LeadActivity.find_by(kind: 'funil_auto').user_id).to be_nil
+    ensure
+      Current.reset
+    end
+
     it 'em on, bloco que devolve false não grava nada' do
       ligar('on')
       expect(described_class.executar(lead, **args) { false }).to be_nil

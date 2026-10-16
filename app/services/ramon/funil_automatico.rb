@@ -31,8 +31,8 @@ class Ramon::FunilAutomatico
     FunilAcao.transaction do
       next if yield == false
 
-      # a "marca de que foi a IA" no histórico do lead
-      LeadActivity.create!(account: lead.account, lead: lead, user: Current.user, kind: 'funil_auto',
+      # a "marca de que foi a IA" no histórico do lead: sempre sem usuário, mesmo vindo de clique humano (ruling 16/10)
+      LeadActivity.create!(account: lead.account, lead: lead, user: nil, kind: 'funil_auto',
                            to_value: "#{acao}: #{motivo}".truncate(250))
       FunilAcao.create!(**dados, ensaio: false)
     end

@@ -2023,9 +2023,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_17_120001) do
   add_foreign_key "portal_assinaturas", "portal_clientes"
   add_foreign_key "portal_clientes", "accounts"
   add_foreign_key "portal_envios", "portal_clientes"
-  add_foreign_key "ramon_funil_acoes", "accounts"
-  add_foreign_key "ramon_funil_acoes", "leads"
-  add_foreign_key "ramon_funil_acoes", "users", column: "desfeita_por_id"
+  add_foreign_key "ramon_funil_acoes", "accounts", on_delete: :cascade
+  add_foreign_key "ramon_funil_acoes", "leads", on_delete: :cascade
+  add_foreign_key "ramon_funil_acoes", "users", column: "desfeita_por_id", on_delete: :nullify
   add_foreign_key "ramon_pecas", "accounts"
   add_foreign_key "ramon_reunioes", "accounts"
   add_foreign_key "ramon_reunioes", "leads"

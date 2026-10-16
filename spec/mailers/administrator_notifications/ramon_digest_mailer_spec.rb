@@ -24,6 +24,18 @@ RSpec.describe AdministratorNotifications::RamonDigestMailer do
       end
     end
 
+    it 'na seção da IA, mostra "+N" quando passou do limite' do
+      item = { lead_id: 1, lead_name: 'Maria', conversation_id: nil, texto: 'moveu para Perdido: sem resposta', ensaio: false }
+      allow(digest).to receive(:yesterday_stats).and_wrap_original do |original|
+        original.call.merge(funil_auto: [item], funil_auto_restantes: 3)
+      end
+
+      body = described_class.with(account: account).daily_digest(digest).body.decoded
+
+      expect(body).to include('O que a IA mexeu ontem')
+      expect(body).to include('+3 ações')
+    end
+
     it 'no-op sem SMTP configurado' do
       allow(class_instance).to receive(:smtp_config_set_or_development?).and_return(false)
 
