@@ -37,6 +37,8 @@
       "HOJE": "Today"
     },
     "AGENDA": {
+      "SUGERIR_HORARIOS": "Suggest times",
+      "SEM_HORARIOS": "No free slot in the next 5 business days.",
       "TITLE": "Agenda",
       "TODAY": "Today",
       "EMPTY": "No appointments this week.",

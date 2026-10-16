@@ -15,6 +15,14 @@ class Ramon::Agenda::Disponibilidade
     end.join('; ')
   end
 
+  # Horários livres do Closer do lead (fixa o Closer se faltar). Sem Closer → [].
+  def self.livres_do_lead(lead, qtd: 3)
+    Ramon::Papeis.atribuir_closer!(lead)
+    return [] if lead.closer.blank?
+
+    new(user: lead.closer, account: lead.account).livres(qtd: qtd)
+  end
+
   def initialize(user:, account:, agora: Time.current)
     @user = user
     @account = account

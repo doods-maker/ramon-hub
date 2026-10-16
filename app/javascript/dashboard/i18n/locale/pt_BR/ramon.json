@@ -37,6 +37,8 @@
       "HOJE": "Hoje"
     },
     "AGENDA": {
+      "SUGERIR_HORARIOS": "Sugerir horários",
+      "SEM_HORARIOS": "Sem horário livre nos próximos 5 dias úteis.",
       "TITLE": "Agenda",
       "TODAY": "Hoje",
       "EMPTY": "Nenhum compromisso nesta semana.",

@@ -12,10 +12,7 @@ class Captain::Tools::HorariosLivresTool < Captain::Tools::RamonBaseTool
     return SEM_LEAD if lead.blank?
 
     log_tool_usage('horarios_livres', { lead_id: lead.id })
-    Ramon::Papeis.atribuir_closer!(lead)
-    return SEM_HORARIO if lead.closer.blank?
-
-    livres = Ramon::Agenda::Disponibilidade.new(user: lead.closer, account: lead.account).livres(qtd: 3)
+    livres = Ramon::Agenda::Disponibilidade.livres_do_lead(lead)
     return SEM_HORARIO if livres.empty?
 
     "Horários livres com #{lead.closer.name}: #{Ramon::Agenda::Disponibilidade.texto(livres)}. " \
