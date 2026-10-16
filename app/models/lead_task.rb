@@ -1,19 +1,24 @@
 class LeadTask < ApplicationRecord
   KINDS = %w[follow_up document meeting other].freeze
+  FORMATOS = %w[video whatsapp].freeze
+  DURACAO = 30.minutes
 
   belongs_to :account
   belongs_to :lead
   belongs_to :user, optional: true
+  belongs_to :agenda_user, class_name: 'User', optional: true
 
   validates :title, presence: true, length: { maximum: 255 }
   validates :kind, inclusion: { in: KINDS }
   validates :due_at, presence: true
+  validates :formato, inclusion: { in: FORMATOS }
 
   scope :open_tasks, -> { where(completed_at: nil) }
   scope :overdue, -> { open_tasks.where(due_at: ...Time.current) }
   # "Hoje" no fuso do escritório (o servidor roda em UTC).
   scope :due_today, -> { open_tasks.where(due_at: Time.current.in_time_zone('America/Sao_Paulo').all_day) }
 
+  before_create :atribuir_agenda_user, if: -> { kind == 'meeting' }
   after_create_commit :record_created_activity, :touch_lead
   after_update_commit :touch_lead
 
@@ -28,6 +33,11 @@ class LeadTask < ApplicationRecord
   end
 
   private
+
+  # Dono da agenda da reunião: o Closer do lead ou o próximo da fila.
+  def atribuir_agenda_user
+    self.agenda_user_id ||= lead.closer_id || Ramon::Papeis.proximo(account, 'closer')&.id
+  end
 
   def record_created_activity
     lead.lead_activities.create!(account: account, user: Current.user, kind: 'task_created', to_value: title)

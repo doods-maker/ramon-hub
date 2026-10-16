@@ -22,6 +22,18 @@ RSpec.describe LeadTask do
     expect(described_class.new(account: account, lead: lead, title: 'x', kind: 'follow_up', due_at: nil)).not_to be_valid
   end
 
+  it 'rejects an unknown formato' do
+    task = described_class.new(account: account, lead: lead, title: 'x', kind: 'meeting', formato: 'fax', due_at: 1.day.from_now)
+    expect(task).not_to be_valid
+  end
+
+  it 'fills agenda_user_id with the lead closer on a new meeting' do
+    closer = create(:user)
+    lead.update!(closer: closer)
+    task = create(:lead_task, account: account, lead: lead, kind: 'meeting')
+    expect(task.agenda_user_id).to eq(closer.id)
+  end
+
   describe 'scopes' do
     # Comparação por id (não por objeto): igualdade de AR depende de identidade
     # de classe, que quebra em shard com reload (ver nota de specs no AGENTS.md).

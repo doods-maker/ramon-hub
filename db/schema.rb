@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_18_120001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_18_120002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1136,7 +1136,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_18_120001) do
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "agenda_user_id"
+    t.string "google_event_id"
+    t.string "meet_url"
+    t.string "formato", default: "video", null: false
     t.index ["account_id", "due_at"], name: "index_lead_tasks_on_account_id_and_due_at"
+    t.index ["agenda_user_id"], name: "index_lead_tasks_on_agenda_user_id"
     t.index ["lead_id", "completed_at"], name: "index_lead_tasks_on_lead_id_and_completed_at"
     t.index ["lead_id"], name: "index_lead_tasks_on_lead_id"
     t.index ["user_id"], name: "index_lead_tasks_on_user_id"
@@ -2032,6 +2037,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_18_120001) do
   add_foreign_key "lead_notes", "accounts"
   add_foreign_key "lead_notes", "leads"
   add_foreign_key "lead_notes", "users"
+  add_foreign_key "lead_tasks", "users", column: "agenda_user_id", on_delete: :nullify
   add_foreign_key "lead_triages", "leads", on_delete: :cascade
   add_foreign_key "lead_triages", "triage_agents", on_delete: :nullify
   add_foreign_key "leads", "theses", on_delete: :nullify
