@@ -315,6 +315,22 @@ describe Whatsapp::IncomingMessageService do
         expect(whatsapp_channel.inbox.messages.first.content).to eq('First Button')
         expect(whatsapp_channel.inbox.messages.first.content_attributes['interactive_reply_id']).to eq('1')
       end
+
+      # ramon: opção do roteiro com título cortado ("…") chega como a opção inteira (descrição da linha)
+      it 'uses the row description when the tapped list title was shortened' do
+        params = {
+          'contacts' => [{ 'profile' => { 'name' => 'Sojan Jose' }, 'wa_id' => '2423423243' }],
+          'messages' => [{ 'from' => '2423423243', 'id' => 'SDFADSf23sfasdafasdfb',
+                           :interactive => {
+                             'list_reply': { 'id': 'Paga o INSS por conta e está em dia', 'title': 'Paga o INSS por conta e…',
+                                             'description': 'Paga o INSS por conta e está em dia' },
+                             'type': 'list_reply'
+                           },
+                           'timestamp' => '1633034394', 'type' => 'interactive' }]
+        }.with_indifferent_access
+        described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
+        expect(whatsapp_channel.inbox.messages.first.content).to eq('Paga o INSS por conta e está em dia')
+      end
     end
 
     # ref: https://github.com/chatwoot/chatwoot/issues/3795#issuecomment-1018057318
