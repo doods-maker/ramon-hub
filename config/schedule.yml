@@ -167,3 +167,9 @@ ramon_caderno_noturno_job:
   cron: '30 8 * * *'
   class: 'Ramon::CadernoNoturnoJob'
   queue: scheduled_jobs
+
+# funil automático: Negociação parada → Última chance; Última chance parada → Perdido (11h SP; cada regra atrás da sua chave)
+ramon_funil_tempo_job:
+  cron: '0 14 * * *'
+  class: 'Ramon::FunilTempoJob'
+  queue: low
