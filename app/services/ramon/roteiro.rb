@@ -1,5 +1,7 @@
 # Motor do roteiro da tese (spec docs/superpowers/specs/2026-10-13-roteiro-da-tese-design.md §3.2–3.4).
 # Regra fixa: a IA pergunta e informa a resposta; aqui se grava, se faz a conta e se escolhe a saída.
+# Constantes irmãs sempre com o nome completo (Ramon::Roteiro::Registro): no CI a recarga de código deixa o módulo
+# velho nas mãos do spec, e a busca curta ali dá NameError.
 # Estado em lead.custom_attributes['roteiro']:
 #   tese_id · cursor (chave; muda no ir_para e na correção) · desfecho (qualificado|desqualificado|humano) · motivo ·
 #   decisivo (passo que encerrou) · aguarda_equipe (Perdido virou sugestão) · respostas { chave => { valor, calc, saida, em } }
@@ -71,7 +73,7 @@ module Ramon::Roteiro
   end
 
   def registrar(lead, chave:, valor: nil, saida_id: nil)
-    Registro.new(lead).call(chave: chave, valor: valor, saida_id: saida_id)
+    Ramon::Roteiro::Registro.new(lead).call(chave: chave, valor: valor, saida_id: saida_id)
   end
 
   # Reabre no passo que decidiu (as outras respostas ficam) e devolve a conversa ao modo de antes (decisões 13/10).
@@ -85,7 +87,7 @@ module Ramon::Roteiro
     novo = est.except('desfecho', 'motivo', 'decisivo', 'aguarda_equipe')
     novo['passo'] = proximo(passos(lead), novo)&.chave # bi_roteiro: mesmo valor que Registro#gravar escreveria
     lead.update!(custom_attributes: (lead.custom_attributes || {}).merge('roteiro' => novo))
-    Efeitos.reabrir(lead, est['desfecho'])
+    Ramon::Roteiro::Efeitos.reabrir(lead, est['desfecho'])
     true
   end
 
