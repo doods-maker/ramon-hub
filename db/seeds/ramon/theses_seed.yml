@@ -462,8 +462,8 @@ theses:
         content: "É um dinheiro a mais todo mês, junto com o salário, até a aposentadoria."
         position: 5
 
-  # Nome atual (o roteiro renomeou em 14/10, roteiros/bpc-loas.yml). Itens do idoso: RASCUNHO 15/10
-  # (comercial/docs/2026-10-15-playbook-teses-rascunho.md §3) — só valem com o aprovado do Eduardo.
+  # Nome atual (o roteiro renomeou em 14/10, roteiros/bpc-loas.yml). Itens do idoso: APROVADO 15/10
+  # (comercial/docs/2026-10-15-playbook-teses-rascunho.md §3).
   - name: "BPC/LOAS (idoso ou pessoa com deficiência)"
     description: "Benefício assistencial de 1 salário mínimo a pessoa com deficiência de baixa renda. NÃO exige contribuição ao INSS. Lei 8.742/93, art. 20."
     area: "previdenciario"
@@ -669,7 +669,7 @@ theses:
         title: "Fotos, vídeos, mensagens e nomes de testemunhas"
         content: "Mostram como o acidente aconteceu e as condições de trabalho (falta de EPI, de treinamento)."
         position: 3
-      # Abertura, qualificação e objeções: RASCUNHO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §2).
+      # Abertura, qualificação e objeções: APROVADO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §2).
       # Objeções = as FAQs trabalhistas aprovadas em 14/10, no formato do Playbook.
       - section: "abertura"
         title: "Quebra-gelo"
@@ -747,7 +747,7 @@ theses:
         title: "Mensagens, áudios, fotos e nomes de testemunhas"
         content: "Provam assédio, ordens fora da função, jornada e condições de risco."
         position: 2
-      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      # Abertura, qualificação e objeções: APROVADO 15/10 (…-playbook-teses-rascunho.md §2).
       - section: "abertura"
         title: "Quebra-gelo"
         content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você está passando por problema na empresa onde trabalha. Me conta o que está acontecendo e há quanto tempo você está lá?"
@@ -819,7 +819,7 @@ theses:
         title: "Mensagens, fotos, crachá, uniforme e nomes de testemunhas"
         content: "Provam a rotina, as ordens e o horário — o coração do vínculo."
         position: 2
-      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      # Abertura, qualificação e objeções: APROVADO 15/10 (…-playbook-teses-rascunho.md §2).
       - section: "abertura"
         title: "Quebra-gelo"
         content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você trabalhou sem carteira assinada. Me conta o que você fazia lá, por quanto tempo e quando saiu?"
@@ -891,7 +891,7 @@ theses:
         title: "Cartões de ponto, mensagens e nomes de testemunhas"
         content: "Provam a jornada real, a função exercida e o que aconteceu no trabalho."
         position: 2
-      # Abertura, qualificação e objeções: RASCUNHO 15/10 (…-playbook-teses-rascunho.md §2).
+      # Abertura, qualificação e objeções: APROVADO 15/10 (…-playbook-teses-rascunho.md §2).
       - section: "abertura"
         title: "Quebra-gelo"
         content: "Olá {{nome}}, tudo bem? Aqui é da equipe do Ramon Antonio Advogados. Vi que você saiu da empresa e acha que ficou sem receber algum direito. Me conta o que aconteceu e quando você saiu?"
@@ -1022,7 +1022,7 @@ theses:
         content: "É a aposentadoria inteira no bolso, sem o desconto do imposto."
         position: 5
 
-  # RASCUNHO 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §1) — só vale com o aprovado do Eduardo.
+  # APROVADO pelo Eduardo 15/10 (comercial/docs/2026-10-15-playbook-teses-rascunho.md §1).
   # Mesmo nome do roteiro (roteiros/salario-maternidade.yml). Fora da tabela do JUR-02: a IA não cita valor.
   # Base: Lei 8.213/91, arts. 71, 71-A, 72 e 73; ADI 2.110 (STF) + IN PRES/INSS 188/2025 (sem carência);
   # IN 128/2022, art. 357 §5º (5 anos) e art. 358 I (natimorto); rural: art. 39 p.ú. (12 meses de atividade) — revisor 15/10
