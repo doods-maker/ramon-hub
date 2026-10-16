@@ -6,8 +6,8 @@ import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
 import ramonAgendaAPI from 'dashboard/api/ramonAgenda';
-import ramonGoogleAgendaAPI from 'dashboard/api/ramonGoogleAgenda';
 import Button from 'dashboard/components-next/button/Button.vue';
+import ConexaoGoogle from '../components/agenda/ConexaoGoogle.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import {
   ABA,
@@ -68,7 +68,6 @@ const pessoas = ref(loadPessoas());
 const membros = ref([]);
 const googleItems = ref([]);
 const googleErro = ref(false);
-const googleConectado = ref(true);
 
 watch([view, kindFilter], () => {
   try {
@@ -263,30 +262,12 @@ const reload = () => {
   });
 };
 
-const carregarStatusGoogle = async () => {
-  try {
-    const { data } = await ramonGoogleAgendaAPI.status();
-    googleConectado.value = Boolean(data.conectada);
-  } catch (e) {
-    googleConectado.value = true; // sem status, não oferece conectar
-  }
-};
-const conectarGoogle = async () => {
-  try {
-    const { data } = await ramonGoogleAgendaAPI.autorizacao();
-    window.location.href = data.url;
-  } catch (e) {
-    useAlert(t('RAMON.AGENDA.GOOGLE_ERRO'));
-  }
-};
-
 onMounted(() => {
   // volta do OAuth: ?google=ok|erro
   const retorno = route.query?.google;
   if (retorno === 'ok') useAlert(t('RAMON.AGENDA.GOOGLE_CONECTADO'));
   else if (retorno === 'erro') useAlert(t('RAMON.AGENDA.GOOGLE_ERRO'));
   if (retorno) router.replace({ query: {} });
-  carregarStatusGoogle();
   reload();
 });
 
@@ -452,16 +433,7 @@ watch(
             :title="t('RAMON.AGENDA.NEXT')"
             @click="shift(1)"
           />
-          <Button
-            v-if="!googleConectado"
-            sm
-            faded
-            blue
-            icon="i-lucide-calendar-plus"
-            data-testid="agenda-conectar-google"
-            :label="t('RAMON.AGENDA.CONECTAR_GOOGLE')"
-            @click="conectarGoogle"
-          />
+          <ConexaoGoogle compacto />
         </template>
       </RamonPageHeader>
 

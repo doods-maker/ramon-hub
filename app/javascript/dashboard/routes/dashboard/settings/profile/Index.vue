@@ -21,6 +21,7 @@ import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import AccessToken from './AccessToken.vue';
 import MfaSettingsCard from './MfaSettingsCard.vue';
 import ActiveSessions from './ActiveSessions.vue';
+import ConexaoGoogle from 'dashboard/routes/dashboard/ramon/components/agenda/ConexaoGoogle.vue';
 import Policy from 'dashboard/components/policy.vue';
 import RadioCard from 'dashboard/components-next/radioCard/RadioCard.vue';
 import {
@@ -44,6 +45,7 @@ export default {
     AccessToken,
     MfaSettingsCard,
     ActiveSessions,
+    ConexaoGoogle,
     BaseSettingsHeader,
   },
   setup() {
@@ -315,6 +317,13 @@ export default {
       :description="$t('PROFILE_SETTINGS.FORM.SESSIONS_SECTION.NOTE')"
     >
       <ActiveSessions />
+    </SectionLayout>
+    <SectionLayout
+      with-border
+      :title="$t('RAMON.AGENDA.GOOGLE_CARD_TITULO')"
+      :description="$t('RAMON.AGENDA.GOOGLE_CARD_DESCRICAO')"
+    >
+      <ConexaoGoogle />
     </SectionLayout>
     <Policy :permissions="audioNotificationPermissions">
       <SectionLayout

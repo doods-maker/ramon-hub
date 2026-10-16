@@ -11,8 +11,12 @@ class RamonGoogleAgendaAPI extends ApiClient {
     return axios.get(this.url);
   }
 
-  autorizacao() {
+  autorizar() {
     return axios.post(`${this.url}/autorizacao`);
+  }
+
+  desconectar() {
+    return axios.delete(this.url);
   }
 }
 
