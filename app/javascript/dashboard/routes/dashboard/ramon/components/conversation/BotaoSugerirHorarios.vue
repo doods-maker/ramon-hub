@@ -12,7 +12,7 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 // Só aparece quando a conversa tem lead; quem revisa e envia é a pessoa.
 defineOptions({ name: 'BotaoSugerirHorarios' });
 
-// ponytail: texto aguarda ok do Eduardo
+// texto aprovado pelo Eduardo (16/10)
 const montarRascunho = texto =>
   `Posso te atender em: ${texto}. Qual fica melhor pra você?`;
 
