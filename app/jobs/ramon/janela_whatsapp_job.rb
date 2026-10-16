@@ -38,7 +38,8 @@ class Ramon::JanelaWhatsappJob < ApplicationJob
     ultima = recebidas.maximum(:created_at)
     return if ultima.nil?
 
-    anuncio = recebidas.where("(content_attributes::jsonb) ? 'referral'").maximum(:created_at)
+    # content_attributes é um store (texto JSON na coluna): o referral se lê no Ruby. Só as últimas 72h podem abrir janela.
+    anuncio = recebidas.where(created_at: 72.hours.ago..).select { |m| m.content_attributes['referral'].present? }.map(&:created_at).max
     [ultima + 24.hours, anuncio && (anuncio + 72.hours)].compact.max
   end
 
