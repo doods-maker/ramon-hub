@@ -99,7 +99,7 @@ RSpec.describe Ramon::FunilObservador do
   end
 
   describe 'colheita na pausa' do
-    let(:servico) { instance_double(Ramon::ColheitaExtractionService, perform: nil) }
+    let(:servico) { instance_double(Ramon::ColheitaExtractionService, perform: nil, extractable?: true) }
 
     before do
       mensagem('Oi')
@@ -143,6 +143,18 @@ RSpec.describe Ramon::FunilObservador do
 
       expect(servico).not_to have_received(:perform)
       expect(FunilAcao.where(lead: lead, peca: 'colheita', ensaio: true).count).to eq(1)
+    end
+
+    %w[on ensaio].each do |modo|
+      it "#{modo}: tese sem colheita não chama o serviço nem registra ação" do
+        Ramon::FunilAutomatico.mudar!(account, 'colheita', modo)
+        allow(servico).to receive(:extractable?).and_return(false)
+
+        described_class.new(lead).perform
+
+        expect(servico).not_to have_received(:perform)
+        expect(FunilAcao.where(peca: 'colheita')).to be_empty
+      end
     end
 
     it 'lead que ficou perdido não é colhido' do

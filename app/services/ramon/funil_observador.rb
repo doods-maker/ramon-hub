@@ -48,7 +48,10 @@ class Ramon::FunilObservador
     modo = Ramon::FunilAutomatico.modo(account, 'colheita')
     return if modo == 'off' || @lead.reload.won_at.present? || @lead.lost_at.present?
 
-    Ramon::ColheitaExtractionService.new(@lead).perform if modo == 'on'
+    servico = Ramon::ColheitaExtractionService.new(@lead)
+    return unless servico.extractable? # tese sem colheita: nada a fazer, nem registro (ruído no resumo)
+
+    servico.perform if modo == 'on'
     Ramon::FunilAutomatico.executar(@lead, peca: 'colheita', acao: 'colher', motivo: 'pausa na conversa') { true }
   end
 
