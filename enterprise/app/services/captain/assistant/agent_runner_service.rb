@@ -100,6 +100,8 @@ class Captain::Assistant::AgentRunnerService
     response['agent_name'] = result.context&.dig(:current_agent)
     response['handoff_tool_called'] = result.context&.dig(:captain_v2_handoff_tool_called) || false
     response['ferramenta_falhou'] = result.context&.dig(:state, Captain::Tools::BasePublicTool::FALHOU) || false
+    # ramon: o passo do roteiro mostrado à IA neste turno (só a pergunta dele ganha botões, Ramon::Roteiro::Opcoes)
+    response['roteiro_passo'] = result.context.to_h.dig(:state, Captain::Tools::RoteiroPassoAtualTool::MOSTRADO)
     response
   end
 

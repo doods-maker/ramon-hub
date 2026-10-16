@@ -1569,6 +1569,7 @@
         "CHAVE_AJUDA": "Identificador fixo (minúsculas, números e _). Não muda depois de criado.",
         "FALA_COM_CLIENTE": "A orientação e a base da resposta viram fala da IA com o cliente.",
         "ORIENTACAO": "Como perguntar (vai para a IA)",
+        "SEM_PERGUNTAR": "A IA deduz da conversa, sem perguntar ao lead (não entra no bloco de perguntas nem ganha botões)",
         "TIPO": "Tipo de resposta",
         "TIPOS": {
           "SIM_NAO": "Sim ou não",

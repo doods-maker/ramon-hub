@@ -6,8 +6,9 @@
 # Posições 0-based, como o reorder da tela (F2). ponytail: passo que sai do YAML não é apagado — apaga-se pela tela.
 class Ramon::Roteiro::Seed
   DIR = Rails.root.join('db/seeds/ramon/roteiros')
-  CAMPOS = %w[titulo orientacao tipo_resposta opcoes calculadora calculadora_campos saidas].freeze
-  VAZIO = { 'orientacao' => nil, 'opcoes' => [], 'calculadora' => nil, 'calculadora_campos' => {}, 'saidas' => [] }.freeze
+  CAMPOS = %w[titulo orientacao tipo_resposta opcoes calculadora calculadora_campos saidas sem_perguntar].freeze
+  VAZIO = { 'orientacao' => nil, 'opcoes' => [], 'calculadora' => nil, 'calculadora_campos' => {}, 'saidas' => [],
+            'sem_perguntar' => false }.freeze
 
   def initialize(account, dir: DIR)
     @account = account

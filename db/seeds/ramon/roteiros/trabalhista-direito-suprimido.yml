@@ -88,6 +88,7 @@ passos:
   - chave: hipotese
     titulo: "Enquadramento do direito"
     orientacao: "Não pergunte nada ao lead neste passo. Com o que ele contou, escolha a hipótese que melhor descreve o problema; se houver mais de uma, a de maior valor ou mais grave. 'Nenhuma' só quando nada do que ele contou é direito a cobrar da empresa; se há uma queixa que você não sabe encaixar, 'Não tem certeza'."
+    sem_perguntar: true
     tipo_resposta: escolha
     opcoes:
       - "Verbas da rescisão não pagas ou pagas erradas"

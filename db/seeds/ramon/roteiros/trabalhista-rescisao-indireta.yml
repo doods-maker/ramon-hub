@@ -55,6 +55,7 @@ passos:
     # CLT art. 483 (faltas graves do empregador); FGTS: TST Tema Repetitivo 70 (24/02/2025). "3 meses" no rótulo é só triagem
     # interna (base: art. 483, "d"; o TST já aceitou 2 meses de atraso) — nenhum texto ao lead diz que a lei exige 3 meses.
     orientacao: "Não pergunte nada ao lead neste passo. Com o que ele contou, escolha a hipótese que melhor descreve a queixa; se houver mais de uma, a mais grave. 'Nenhuma' só quando nada do que ele contou é problema com a empresa; se há uma queixa que você não sabe encaixar, 'Não tem certeza'."
+    sem_perguntar: true
     tipo_resposta: escolha
     opcoes:
       - "Salário atrasado (3 meses ou atraso todo mês)"

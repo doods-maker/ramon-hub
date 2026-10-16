@@ -18,6 +18,7 @@ class Captain::Tools::RoteiroRegistrarTool < Captain::Tools::RamonBaseTool
     return res if res.is_a?(String) # SEM_LEAD
 
     tool_context.state[HANDOFF] = true if res[:handoff]
+    tool_context.state[Captain::Tools::RoteiroPassoAtualTool::MOSTRADO] = res[:proximo]&.chave unless res[:erro]
     res[:erro] || ::Ramon::Roteiro.resumo(res)
   end
 end

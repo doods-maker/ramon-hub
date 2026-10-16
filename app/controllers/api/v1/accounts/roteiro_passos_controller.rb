@@ -2,7 +2,7 @@
 # Salvar passa pela Ramon::Roteiro::Conferencia; editado na tela = edited (o seed da F4 não sobrescreve).
 # A chave não muda depois de criada: respostas dos leads e "vai para" apontam por ela.
 class Api::V1::Accounts::RoteiroPassosController < Api::V1::Accounts::BaseController
-  CAMPOS = %w[id thesis_id position chave titulo orientacao tipo_resposta opcoes calculadora calculadora_campos saidas edited].freeze
+  CAMPOS = %w[id thesis_id position chave titulo orientacao tipo_resposta opcoes calculadora calculadora_campos saidas sem_perguntar edited].freeze
 
   before_action :check_authorization
   before_action :fetch_passo, only: [:update, :destroy]
@@ -70,7 +70,7 @@ class Api::V1::Accounts::RoteiroPassosController < Api::V1::Accounts::BaseContro
   end
 
   def passo_params
-    params.permit(:titulo, :chave, :orientacao, :tipo_resposta, :calculadora,
+    params.permit(:titulo, :chave, :orientacao, :tipo_resposta, :calculadora, :sem_perguntar,
                   opcoes: [], calculadora_campos: {},
                   saidas: [:id, :quando, :acao, :alvo, :motivo, :motivo_perda, :mensagem, { efeitos: %i[etiqueta etapa] }]).to_h
   end

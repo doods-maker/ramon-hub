@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_15_210001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_16_120001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1712,6 +1712,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_15_210001) do
     t.boolean "edited", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "sem_perguntar", default: false, null: false
     t.index ["account_id", "chave"], name: "index_ramon_roteiro_passos_comuns_on_chave", unique: true, where: "(thesis_id IS NULL)"
     t.index ["account_id"], name: "index_ramon_roteiro_passos_on_account_id"
     t.index ["thesis_id", "chave"], name: "index_ramon_roteiro_passos_on_thesis_and_chave", unique: true, where: "(thesis_id IS NOT NULL)"
