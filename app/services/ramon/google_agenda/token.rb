@@ -34,13 +34,17 @@ module Ramon::GoogleAgenda::Token
                   expira_em: Time.zone.at(novo.expires_at))
     conta.access_token
   rescue ::OAuth2::Error => e
-    http = e.response&.status.to_i
-    raise Transitorio if http >= 500 || http == 429
+    raise Transitorio if transitorio?(e)
     raise unless e.code == 'invalid_grant'
 
     conta.update!(status: 'desconectada')
     nil
   rescue Faraday::ConnectionFailed, Faraday::TimeoutError
     raise Transitorio
+  end
+
+  def transitorio?(erro)
+    http = (erro.response&.status || 0).to_i
+    http >= 500 || http == 429
   end
 end
