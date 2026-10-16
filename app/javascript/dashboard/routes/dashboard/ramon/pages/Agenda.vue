@@ -88,11 +88,13 @@ watch(pessoas, () => {
 
 // Cor estável por pessoa: índice na lista ordenada de ids dos membros.
 const TONS_PESSOA = [TOM.blue, TOM.teal, TOM.amber, TOM.iris, TOM.ruby];
-const tomDe = userId => {
+const tonsPorId = computed(() => {
   const ids = membros.value.map(m => m.id).sort((a, b) => a - b);
-  const i = ids.indexOf(userId);
-  return i < 0 ? TOM.slate : TONS_PESSOA[i % TONS_PESSOA.length];
-};
+  return Object.fromEntries(
+    ids.map((id, i) => [id, TONS_PESSOA[i % TONS_PESSOA.length]])
+  );
+});
+const tomDe = userId => tonsPorId.value[userId] || TOM.slate;
 const nomeDe = userId => membros.value.find(m => m.id === userId)?.name;
 const primeiroNome = name => (name || '').split(' ')[0];
 
@@ -218,6 +220,12 @@ const loadGoogle = async (ini, fim) => {
     });
     if (seq !== googleSeq) return;
     membros.value = data.membros || [];
+    if (membros.value.length) {
+      // ids que saíram do comercial somem da seleção (vazio = Todas)
+      const validos = membros.value.map(m => m.id);
+      const filtrados = pessoas.value.filter(id => validos.includes(id));
+      if (filtrados.length !== pessoas.value.length) pessoas.value = filtrados;
+    }
     googleErro.value = Boolean(data.erros?.length);
     googleItems.value = (data.payload || []).map((e, i) => ({
       id: `g-${e.user_id}-${i}`,
@@ -226,6 +234,7 @@ const loadGoogle = async (ini, fim) => {
       user_id: e.user_id,
       title: `${t('RAMON.AGENDA.GOOGLE')} · ${e.titulo}`,
       due_at: e.inicio,
+      fim_at: e.fim,
     }));
   } catch (e) {
     if (seq !== googleSeq) return;
@@ -234,13 +243,18 @@ const loadGoogle = async (ini, fim) => {
   }
 };
 
+const periodo = () => {
+  const ini = new Date(days.value[0]);
+  const fim = new Date(days.value[days.value.length - 1]);
+  fim.setHours(23, 59, 59, 999);
+  return { ini, fim };
+};
+
 // Período visível inteiro (abertas + feitas hoje + vencidas); o store troca
 // as tarefas do período pelas do servidor — o que foi concluído ou cancelado
 // em outra tela some sem F5. Filtros de tipo e dono são client-side.
 const reload = () => {
-  const ini = new Date(days.value[0]);
-  const fim = new Date(days.value[days.value.length - 1]);
-  fim.setHours(23, 59, 59, 999);
+  const { ini, fim } = periodo();
   loadGoogle(ini, fim);
   return store.dispatch('leadTasks/fetchAccountScope', {
     scope: 'agenda',
@@ -309,10 +323,24 @@ const chipTom = task => {
   return task.kind === 'meeting' ? TOM.blue : TOM.slate;
 };
 // vencida mostra o dia de origem junto da hora
-const horaDe = task =>
-  isOverdue(task)
-    ? `${dateLabel(new Date(task.due_at))} ${timeLabel(task.due_at)}`
-    : timeLabel(task.due_at);
+// evento de dia inteiro do Google: começa 00:00 e dura ≥ 24h
+const isDiaTodo = task => {
+  const ini = new Date(task.due_at);
+  return (
+    task.google &&
+    ini.getHours() === 0 &&
+    ini.getMinutes() === 0 &&
+    task.fim_at &&
+    new Date(task.fim_at) - ini >= 86400000
+  );
+};
+const horaDe = task => {
+  if (isDiaTodo(task)) return t('RAMON.AGENDA.DIA_TODO');
+  if (isOverdue(task)) {
+    return `${dateLabel(new Date(task.due_at))} ${timeLabel(task.due_at)}`;
+  }
+  return timeLabel(task.due_at);
+};
 const chipIcone = task => {
   if (task.google) return 'i-lucide-calendar';
   if (task.completed_at) return 'i-lucide-check';
@@ -384,7 +412,10 @@ const hasVisibleTasks = computed(() =>
 );
 
 // trocou a seleção de pessoas → refaz só o Google (as tarefas filtram no cliente)
-watch(pessoas, () => reload());
+watch(pessoas, () => {
+  const { ini, fim } = periodo();
+  loadGoogle(ini, fim);
+});
 
 // trocou o período (navegação, visão, mês) → busca o período novo
 watch(
@@ -644,8 +675,11 @@ watch(
                   v-else-if="task.kind === 'meeting' && task.meet_url"
                   :class="[CHIP, TOM.blue]"
                   class="cursor-pointer"
+                  role="link"
+                  tabindex="0"
                   data-testid="agenda-meet"
                   @click.stop="abrirMeet(task)"
+                  @keydown.enter.stop="abrirMeet(task)"
                 >
                   {{ t('RAMON.AGENDA.MEET') }}
                 </span>
@@ -760,8 +794,11 @@ watch(
                     v-else-if="task.kind === 'meeting' && task.meet_url"
                     :class="[CHIP, TOM.blue]"
                     class="cursor-pointer"
+                    role="link"
+                    tabindex="0"
                     data-testid="agenda-meet"
                     @click.stop="abrirMeet(task)"
+                    @keydown.enter.stop="abrirMeet(task)"
                   >
                     {{ t('RAMON.AGENDA.MEET') }}
                   </span>

@@ -365,11 +365,11 @@ const visao = v => () => {
 };
 const dono = valor => () => {
   visao('week')();
-  localStorage.setItem('ramon_agenda_owner', valor);
+  localStorage.setItem('ramon_agenda_pessoas', valor === 'mine' ? '[1]' : '[]');
 };
 const diaDoTime = () => {
   visao('day')();
-  localStorage.setItem('ramon_agenda_owner', 'team');
+  localStorage.setItem('ramon_agenda_pessoas', '[]');
 };
 const vazia = () => {
   visao('week')();
