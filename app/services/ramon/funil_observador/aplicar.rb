@@ -74,10 +74,20 @@ class Ramon::FunilObservador::Aplicar
     desfazer = {}
     Ramon::FunilAutomatico.executar(@lead, peca: 'reuniao_ia', acao: 'marcar_reuniao', alvo: inicio.iso8601, desfazer: desfazer,
                                            motivo: @decisao['reuniao']['frase'].presence || 'reunião combinada na conversa') do
-      Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: inicio, title: 'Reunião', user: nil)
-      tarefa = @lead.lead_tasks.open_tasks.where(kind: 'meeting').order(:id).last
-      desfazer['task_id'] = tarefa.id if tarefa
+      agendar_reuniao(inicio, desfazer)
     end
+  end
+
+  # false = a marcação não aconteceu (ex.: o fluxo falhou): sem registro nem atividade de IA.
+  def agendar_reuniao(inicio, desfazer)
+    antes = @lead.lead_stage_id
+    Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: inicio, title: 'Reunião', user: nil)
+    tarefa = @lead.lead_tasks.open_tasks.where(kind: 'meeting').order(:id).last
+    return false if tarefa.nil?
+
+    desfazer['task_id'] = tarefa.id
+    # só se a marcação moveu a etapa; desfazer devolve a etapa e cancela a reunião
+    desfazer.merge!('etapa_id' => antes, 'etapa_produzida_id' => @lead.lead_stage_id) if @lead.lead_stage_id != antes
   end
 
   # Só Hash com início válido e no futuro (o LLM às vezes devolve texto solto).

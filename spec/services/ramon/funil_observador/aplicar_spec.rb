@@ -154,7 +154,8 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       expect(tarefa.due_at).to eq(inicio)
       expect(lead.reload.lead_stage.label).to eq('fase-reuniao-agendada')
       expect(FunilAcao.last).to have_attributes(peca: 'reuniao_ia', acao: 'marcar_reuniao', motivo: 'quinta às 14h está ótimo')
-      expect(FunilAcao.last.desfazer).to eq('task_id' => tarefa.id)
+      expect(FunilAcao.last.desfazer).to eq('task_id' => tarefa.id, 'etapa_id' => account.lead_stages.find_by(label: 'fase-novo').id,
+                                            'etapa_produzida_id' => lead.lead_stage_id)
     end
 
     it 'data no passado não faz nada' do
@@ -187,6 +188,24 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
 
       expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
       expect(FunilAcao.last).to be_ensaio
+    end
+
+    it 'desfazer devolve a etapa e cancela a reunião' do
+      aplicar(decisao)
+
+      expect(FunilAcao.last.desfazer!(create(:user, account: account))).to be(true)
+
+      expect(lead.reload.lead_stage.label).to eq('fase-novo')
+      expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
+    end
+
+    it 'sem tarefa criada pela marcação não registra FunilAcao nem atividade' do
+      allow(Ramon::ReuniaoAgendamento).to receive(:call)
+
+      aplicar(decisao)
+
+      expect(FunilAcao.count).to eq(0)
+      expect(lead.lead_activities.where(kind: 'funil_auto')).to be_none
     end
 
     it 'desfeita há pouco não marca de novo' do
