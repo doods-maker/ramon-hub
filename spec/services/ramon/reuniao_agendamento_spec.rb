@@ -118,6 +118,12 @@ RSpec.describe Ramon::ReuniaoAgendamento do
       expect(lead.lead_notes.where("body LIKE 'RASCUNHO%'")).to be_empty
     end
 
+    it 'com os fluxos no comando e Google conectado, o rascunho também espera o job', :aggregate_failures do
+      GoogleAgendaConta.create!(user: closer, account: account, refresh_token: 'rt', access_token: 'at')
+      allow(Ramon::Fluxos::Reunioes).to receive(:assumiu?).and_return(true)
+      expect(create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'X', due_at: starts_at).rascunho_no_job?).to be(true)
+    end
+
     it 'confirmar com Meet inclui o link do vídeo' do
       agendar
       task = lead.lead_tasks.find_by!(kind: 'meeting')

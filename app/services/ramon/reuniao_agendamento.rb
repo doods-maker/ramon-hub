@@ -122,18 +122,18 @@ class Ramon::ReuniaoAgendamento
   def call(task_title)
     assumido = assumido?
     disparar('reuniao_marcada', dados('marcada', assumido, 'titulo_tarefa' => task_title.truncate(255)))
-    efeitos_da_marcacao(task_title) unless assumido
+    assumido ? confirmar_tarefa_do_fluxo : efeitos_da_marcacao(task_title)
     depois('reuniao_marcada')
     @lead
   end
 
-  # Mover a tarefa é a remarcação em si e fica sempre aqui; o resto é do código ou dos fluxos.
+  # Mover a tarefa é a remarcação em si e fica sempre aqui; o resto é do código ou dos fluxos (menos a confirmação: sempre aqui).
   def remarcar(task)
     de = task.due_at
     task.update!({ due_at: @starts_at, formato: @formato }.compact)
     assumido = assumido?
     disparar('reuniao_marcada', dados('remarcada', assumido, 'resumo_antes' => self.class.resumo(@title, de)))
-    efeitos_da_remarcacao(task, de) unless assumido
+    assumido ? self.class.confirmar(task) : efeitos_da_remarcacao(task, de)
     Ramon::Fluxos::Reunioes.na_agenda(task, assumido)
     depois('reuniao_marcada')
     task
@@ -167,6 +167,13 @@ class Ramon::ReuniaoAgendamento
   end
 
   def primeiro_nome = @lead.name.to_s.split.first.presence || 'cliente'
+
+  # Fluxos no comando: a tarefa nasce no fluxo; a confirmação ao cliente é sempre do código (decisão do dono, 16/10).
+  # Com Google o rascunho nasce no GoogleAgendaPushJob, depois do Meet (task.rascunho_no_job?); senão, aqui.
+  def confirmar_tarefa_do_fluxo
+    task = @lead.lead_tasks.where(kind: 'meeting', due_at: @starts_at).order(:id).last
+    self.class.confirmar(task, automatico: @automatico) if task && !task.rascunho_no_job?
+  end
 
   def efeitos_da_marcacao(task_title)
     @lead.lead_activities.create!(account: @lead.account, user: @user, kind: 'meeting_scheduled',

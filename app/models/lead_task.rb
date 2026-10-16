@@ -33,9 +33,6 @@ class LeadTask < ApplicationRecord
   # O rascunho de confirmação espera o Meet: a reunião vai pro Google de um dono com conta conectada (o job cria o rascunho).
   # ponytail: a conta é lida na marcação e de novo ao enfileirar; desconectar entre os dois é raro e o job cobre (cria sem Meet).
   def rascunho_no_job?
-    # Fluxos de reunião no comando: o rascunho é do fluxo (texto dele) — o job não cria outro (evita dois rascunhos).
-    return false if Ramon::Fluxos::Reunioes.assumiu?(account)
-
     reuniao_do_hub? && !sem_push_google && agenda_user.present? && GoogleAgendaConta.de(agenda_user).present?
   end
 

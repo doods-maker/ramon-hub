@@ -28,15 +28,13 @@ RSpec.describe Ramon::Fluxos::CompararAgendamentos do
     travel_to(agora + 10.minutes) { Ramon::ReuniaoAgendamento.remarcar(task: tarefa, starts_at: inicio + 1.day) }
     travel_to(agora + 20.minutes) { Ramon::ReuniaoAgendamento.cancelar(task: tarefa.reload) }
     c = comparar
-    # O rascunho do código difere do texto do fluxo (decisão: a divergência fica até o dono decidir); o resto bate.
+    # O rascunho de confirmação é só do código (o fluxo não o tem mais): aparece como só no código; o resto bate.
     expect(c.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada diferente], %w[remarcada diferente], %w[cancelada igual]])
     expect(c.relatorio).to include('1 marcada(s) · 1 remarcada(s) · 1 cancelada(s)')
   end
 
   it 'o que só um dos lados fez aparece na linha (e não bate)' do
     marcar
-    ensaio = FluxoExecucao.where(fluxo: Ramon::Fluxos::Reunioes.fluxo(account, 'reuniao_marcada')).last
-    ensaio.update!(trilha: ensaio.trilha.reject { |t| t['tipo'] == 'rascunho_texto' })
     linha = comparar.linhas.first
     expect(linha[:situacao]).to eq('diferente')
     expect(linha[:so_no_codigo]).to contain_exactly(a_string_starting_with('rascunho "'))
