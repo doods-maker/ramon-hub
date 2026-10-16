@@ -5,7 +5,7 @@ class Captain::Tools::HorariosLivresTool < Captain::Tools::RamonBaseTool
               'dia e hora com o cliente e ofereca exatamente estes horarios.'
   param :lead_id, type: 'string', desc: 'Id do caso (lead) no hub. Sem ele, usa o caso da conversa aberta.', required: false
 
-  SEM_HORARIO = 'Sem horario livre nos proximos 5 dias uteis — passe para a equipe.'.freeze
+  SEM_HORARIO = 'Sem horário livre nos próximos 5 dias úteis — passe para a equipe.'.freeze
 
   def perform(tool_context, lead_id: nil)
     lead = resolver_lead(tool_context.state, lead_id)
@@ -18,7 +18,7 @@ class Captain::Tools::HorariosLivresTool < Captain::Tools::RamonBaseTool
     livres = Ramon::Agenda::Disponibilidade.new(user: lead.closer, account: lead.account).livres(qtd: 3)
     return SEM_HORARIO if livres.empty?
 
-    "Horarios livres com #{lead.closer.name}: #{Ramon::Agenda::Disponibilidade.texto(livres)}. " \
-      'Ofereca estes ao cliente e espere ele escolher.'
+    "Horários livres com #{lead.closer.name}: #{Ramon::Agenda::Disponibilidade.texto(livres)}. " \
+      'Ofereça estes ao cliente e espere ele escolher.'
   end
 end

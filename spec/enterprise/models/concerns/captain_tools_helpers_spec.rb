@@ -133,7 +133,7 @@ RSpec.describe Concerns::CaptainToolsHelpers, type: :concern do
     let(:ferramentas) { Captain::Assistant.built_in_agent_tools }
 
     it 'toda ferramenta diz em qual sistema mexe' do
-      expect(ferramentas.pluck(:sistema).uniq).to match_array(%w[funil advbox motor zapsign calcom faq conversa])
+      expect(ferramentas.pluck(:sistema).uniq).to match_array(%w[funil advbox motor zapsign calcom agenda faq conversa])
     end
 
     it 'toda ferramenta *_advbox mexe no AdvBox' do

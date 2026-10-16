@@ -14,7 +14,7 @@ RSpec.describe Captain::Tools::AgendarReuniaoTool, type: :model do
       sugestao = account.copilot_suggestions.pending.last
       expect(sugestao.payload['acao']).to eq('reuniao')
       expect(sugestao.payload['titulo']).to eq('Fechamento')
-      expect(Time.zone.parse(sugestao.payload['quando']).hour).to eq(14)
+      expect(Time.zone.parse(sugestao.payload['quando']).in_time_zone('America/Sao_Paulo').hour).to eq(14)
       expect(lead.lead_tasks.count).to eq(0)
     end
 
@@ -48,7 +48,7 @@ RSpec.describe Captain::Tools::AgendarReuniaoTool, type: :model do
 
         inicio = Time.find_zone!('America/Sao_Paulo').parse('2027-03-10 14:30')
         expect(Ramon::ReuniaoAgendamento).to have_received(:call).with(lead: lead, starts_at: inicio, title: 'Fechamento')
-        expect(resposta).to eq("Reuniao marcada para #{Ramon::ReuniaoAgendamento.quando(inicio)}.")
+        expect(resposta).to eq("Reunião marcada para #{Ramon::ReuniaoAgendamento.quando(inicio)}.")
         expect(lead.reload.closer).to eq(bia)
         expect(account.copilot_suggestions.count).to eq(0)
       end

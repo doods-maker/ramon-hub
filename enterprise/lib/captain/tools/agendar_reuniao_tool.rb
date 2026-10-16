@@ -2,8 +2,7 @@
 # Closer, so se o horario passa na regra completa de Disponibilidade (a IA marca o que ela mesma ofereceu);
 # nos demais, sugestao pendente — aplicar cria a tarefa na Esteira, e quem confirma a data com o cliente e o humano.
 class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
-  description 'Prepara o agendamento da reuniao de fechamento do caso. NAO marca nada na agenda do cliente: cria ' \
-              'uma sugestao pendente que, aprovada pelo humano, vira tarefa na Esteira com data e hora.'
+  description 'No modo direto marca a reuniao na agenda; nos demais cria uma sugestao pendente para a equipe confirmar.'
   param :lead_id, type: 'string', desc: 'Id do caso (lead) no hub. Sem ele, usa o caso da conversa aberta.', required: false
   param :quando, type: 'string', desc: 'Data e hora propostas, no formato AAAA-MM-DD HH:MM', required: true
   param :assunto, type: 'string', desc: 'Assunto da reuniao, em uma linha', required: false
@@ -13,7 +12,7 @@ class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
     return SEM_LEAD if lead.blank?
 
     direto = Ramon::CopilotoModo.direto?(lead.copiloto_modo)
-    horario = horario_de(quando, direto: direto)
+    horario = horario_de(quando)
     return "Nao entendi a data (hoje e #{hoje_br}). Use o formato AAAA-MM-DD HH:MM." if horario.blank?
     return "A data proposta ja passou (hoje e #{hoje_br}). Sugira uma data futura." if horario < Time.current
 
@@ -38,16 +37,16 @@ class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
 
   # Nenhum HTTP do Google dentro de transacao: livre? (que le o Google) roda antes do call.
   def marcar(lead, horario, titulo)
-    return 'Esse horario acabou de ser ocupado — ofereca outro.' unless
+    return 'Esse horário acabou de ser ocupado — ofereça outro.' unless
       Ramon::Agenda::Disponibilidade.new(user: lead.closer, account: lead.account).livre?(horario)
 
     Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: horario, title: titulo)
-    "Reuniao marcada para #{Ramon::ReuniaoAgendamento.quando(horario)}."
+    "Reunião marcada para #{Ramon::ReuniaoAgendamento.quando(horario)}."
   end
 
-  # No modo direto o horario vem de horarios_livres, em Sao Paulo (o Time.zone do app e UTC).
-  def horario_de(quando, direto: false)
-    (direto ? Time.find_zone!(Ramon::HorarioComercial::TIME_ZONE) : Time.zone).parse(quando.to_s)
+  # O horario vem em Sao Paulo (de horarios_livres ou do LLM); o Time.zone do app e UTC.
+  def horario_de(quando)
+    Time.find_zone!(Ramon::HorarioComercial::TIME_ZONE).parse(quando.to_s)
   rescue ArgumentError
     nil
   end

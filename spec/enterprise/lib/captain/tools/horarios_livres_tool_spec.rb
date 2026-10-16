@@ -22,8 +22,8 @@ RSpec.describe Captain::Tools::HorariosLivresTool, type: :model do
       resposta = tool.perform(tool_context, lead_id: lead.id.to_s)
 
       expect(lead.reload.closer).to eq(bia)
-      expect(resposta).to eq("Horarios livres com Bia Closer: #{Ramon::Agenda::Disponibilidade.texto(livres)}. " \
-                             'Ofereca estes ao cliente e espere ele escolher.')
+      expect(resposta).to eq("Horários livres com Bia Closer: #{Ramon::Agenda::Disponibilidade.texto(livres)}. " \
+                             'Ofereça estes ao cliente e espere ele escolher.')
     end
 
     it 'manda passar para a equipe quando nao ha horario' do
