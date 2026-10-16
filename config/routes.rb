@@ -373,6 +373,9 @@ Rails.application.routes.draw do
           resources :captain_tool_runs, only: [:index]
           resources :ramon_agente_execucoes, only: [:index], controller: 'ramon_agente_execucoes'
           resource :ramon_ia_uso, only: [:show, :update], controller: 'ramon_ia_uso'
+          resource :ramon_google_agenda, only: [:show, :destroy], controller: 'ramon_google_agenda' do
+            post :autorizacao
+          end
           get 'contacts/:contact_id/linha_da_vida', to: 'linha_da_vida#show'
           get 'contacts/:contact_id/titular_export', to: 'titular_exports#show'
           resources :leads, only: [:index, :show, :create, :update, :destroy] do
@@ -793,6 +796,8 @@ Rails.application.routes.draw do
 
   # Ramon — Portal do cliente: página HTML pública com link mágico por lead
   # (fora do namespace :public, que força format json; a página é server-rendered ERB)
+  # Retorno do OAuth do Google Agenda (público; segurança no state)
+  get 'ramon/google_agenda/callback', to: 'ramon/google_agenda_callbacks#show'
   get 'portal/:token', to: 'public/portal#show', as: :ramon_portal
   post 'portal/:token/upload', to: 'public/portal#upload', as: :ramon_portal_upload
 
