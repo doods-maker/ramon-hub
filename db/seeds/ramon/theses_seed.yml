@@ -73,7 +73,7 @@ theses:
         title: "Comprovante do requerimento (número do protocolo / DER)"
         content: "Data de entrada do pedido no INSS."
         position: 4
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "O INSS é como um seguro que você paga todo mês: a doença que afasta do trabalho é justamente a hora de usar o que você pagou."
@@ -157,7 +157,7 @@ theses:
         title: "Laudo atestando necessidade de cuidador (se houver)"
         content: "Embasa o pedido do acréscimo de 25%."
         position: 4
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "É como um carro que não passa mais na vistoria: não adianta mandar voltar a rodar. A lei olha a doença junto com a idade, o estudo e o trabalho que a pessoa sempre fez."
@@ -444,7 +444,7 @@ theses:
         title: "Sensibilidades do cliente"
         content: "Medos, experiência ruim anterior, pressa, família — vai no dossiê."
         position: 26
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "É como a indenização de um seguro: o acidente deixou uma marca no corpo, e o INSS paga por essa perda mesmo com a pessoa trabalhando."
@@ -549,7 +549,7 @@ theses:
         title: "Meu marido já é aposentado, então eu não tenho direito."
         content: "Depende do valor: o benefício do INSS ou o BPC de até 1 salário mínimo de outro idoso (65 anos ou mais) ou de pessoa com deficiência da casa não entra na conta da renda. A equipe faz a conta com você."
         position: 4
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "O BPC é uma rede de proteção: foi feito para segurar quem não conseguiu contribuir, por idade ou por deficiência."
@@ -619,7 +619,7 @@ theses:
         title: "Laudos atestando a necessidade de ajuda permanente de terceiros"
         content: "Documento central do pedido."
         position: 2
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "É como um reforço para quem precisa de acompanhante: a lei reconhece que depender de outra pessoa no dia a dia custa mais."
@@ -703,7 +703,7 @@ theses:
         title: "Achei caro o honorário de 30%."
         content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 3
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "Quando a empresa falha na segurança, é como um motorista que bate por descuido: quem causou o dano responde por ele."
@@ -776,7 +776,7 @@ theses:
         title: "Achei caro o honorário de 30%."
         content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 2
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "É a justa causa ao contrário: quando quem erra é a empresa, o trabalhador sai com os direitos de quem foi demitido."
@@ -848,7 +848,7 @@ theses:
         title: "Achei caro o honorário de 30%."
         content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 2
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "A carteira é a certidão de nascimento do emprego: o trabalho existiu, mas no papel não. O pedido na Justiça é o registro que ficou atrasado."
@@ -924,7 +924,7 @@ theses:
         title: "Achei caro o honorário de 30%."
         content: "O honorário só existe se você receber: não tem entrada, nem mensalidade, nem custo escondido. O advogado explica na conversa, com calma, como funciona no seu caso."
         position: 3
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "É como um troco que ficou faltando: o trabalho foi entregue, e parte do pagamento ficou para trás."
@@ -1004,7 +1004,7 @@ theses:
         title: "Carta de concessão da aposentadoria ou pensão"
         content: "Data de início do benefício (se a doença é anterior, a isenção conta da aposentadoria)."
         position: 3
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "É como um desconto que nunca devia ter sido cobrado: a lei isenta, mas o desconto só para quando alguém pede."
@@ -1111,7 +1111,7 @@ theses:
         title: "Documentos da atividade rural ou da pesca (se for o caso)"
         content: "Dos 12 meses antes do parto: bloco de produtor, notas de venda da produção, contrato de arrendamento ou parceria, declaração do Imposto de Renda com renda rural; carteira de pescadora (RGP) e ficha do sindicato também ajudam."
         position: 5
-      # Venda emocional (4 pilares, conversa 1:1): RASCUNHO 15/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
+      # Venda emocional (4 pilares, conversa 1:1): APROVADO 16/10 (comercial/docs/2026-10-15-venda-emocional-textos.md).
       - section: "apresentacao"
         title: "Analogia"
         content: "É a licença paga pelo INSS: em regra, 120 dias para cuidar do bebê, para a mãe segurada (de carteira, MEI, autônoma, desempregada há pouco tempo ou da roça), também na adoção."
