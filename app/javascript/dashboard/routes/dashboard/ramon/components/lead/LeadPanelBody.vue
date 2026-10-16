@@ -390,6 +390,11 @@ const horarioOcupado = ref(false);
 // o que o usuário já confirmou nesta marcação (cada aviso tem a sua confirmação)
 const okAberta = ref(false);
 const okOcupado = ref(false);
+// outro horário = outra marcação: as confirmações anteriores não valem
+watch(taskDate, () => {
+  okAberta.value = false;
+  okOcupado.value = false;
+});
 const reuniaoAbertaQuando = computed(() => {
   if (!reuniaoAberta.value?.due_at) return '';
   return new Date(reuniaoAberta.value.due_at).toLocaleString('pt-BR', {
