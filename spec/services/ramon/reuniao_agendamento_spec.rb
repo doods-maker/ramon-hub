@@ -92,6 +92,73 @@ RSpec.describe Ramon::ReuniaoAgendamento do
     expect(note.body).to include('quarta, 15/07 às 11:00')
   end
 
+  describe 'confirmação (texto aprovado 16/10)' do
+    let(:closer) { create(:user, account: account) }
+    let(:meet) { 'https://meet.google.com/abc-defg' }
+    let(:agenda) { 'Pra salvar na sua agenda: https://calendar.google.com/calendar/render?action=TEMPLATE' }
+
+    before { lead.update!(closer: closer) }
+
+    def nota = lead.lead_notes.find_by!("body LIKE 'RASCUNHO%'").body
+
+    it 'WhatsApp: a ligação no lugar do Meet, com o link da agenda', :aggregate_failures do
+      agendar(formato: 'whatsapp')
+      expect(nota).to include("Oi João! Nossa conversa está confirmada pra quarta, 15/07 às 11:00. Eu te ligo no WhatsApp nesse horário. #{agenda}")
+      expect(nota).to end_with('Se não puder comparecer, me avise com antecedência que a gente remarca sem problema."')
+    end
+
+    it 'vídeo sem Google (sem Meet): omite a linha do formato' do
+      agendar
+      expect(nota).to include("às 11:00. #{agenda}")
+    end
+
+    it 'com conta Google conectada o rascunho espera o job (não nasce na marcação)', :aggregate_failures do
+      GoogleAgendaConta.create!(user: closer, account: account, refresh_token: 'rt', access_token: 'at')
+      expect { agendar }.to have_enqueued_job(Ramon::GoogleAgendaPushJob).with('criar', { 'task_id' => kind_of(Integer), 'rascunho' => true })
+      expect(lead.lead_notes.where("body LIKE 'RASCUNHO%'")).to be_empty
+    end
+
+    it 'confirmar com Meet inclui o link do vídeo' do
+      agendar
+      task = lead.lead_tasks.find_by!(kind: 'meeting')
+      task.update_columns(meet_url: meet) # rubocop:disable Rails/SkipsModelValidations
+      described_class.confirmar(task)
+      expect(lead.lead_notes.order(:id).last.body).to include("É por vídeo, neste link: #{meet}. #{agenda}")
+    end
+
+    describe 'envio automático pela IA' do
+      let(:conversa) { create(:conversation, account: account) }
+
+      before do
+        lead.update!(conversation: conversa)
+        conversa.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+      end
+
+      it 'chave on + piloto + marcada pela IA: manda na conversa, sem rascunho nem prefixo', :aggregate_failures do
+        with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { agendar(automatico: true) }
+        msg = conversa.messages.outgoing.last
+        expect(msg.content).to start_with('Oi João! Nossa conversa está confirmada pra quarta')
+        expect(msg.content).not_to include('RASCUNHO')
+        expect(lead.lead_notes.where("body LIKE 'RASCUNHO%'")).to be_empty
+      end
+
+      it 'chave off (padrão): rascunho, nada enviado', :aggregate_failures do
+        expect { agendar(automatico: true) }.not_to(change { conversa.messages.count })
+        expect(nota).to include('Oi João!')
+      end
+
+      it 'chave on mas marcada por pessoa: rascunho' do
+        with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { expect { agendar }.not_to(change { conversa.messages.count }) }
+      end
+
+      it 'chave on mas modo rascunho: rascunho', :aggregate_failures do
+        conversa.update!(custom_attributes: { 'copiloto_modo' => 'rascunho' })
+        with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { expect { agendar(automatico: true) }.not_to(change { conversa.messages.count }) }
+        expect(nota).to include('Oi João!')
+      end
+    end
+  end
+
   it 'avisa no sino da conta com o horário humano' do
     create(:user, account: account, role: :administrator)
 

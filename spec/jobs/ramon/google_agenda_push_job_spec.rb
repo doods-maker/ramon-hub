@@ -128,6 +128,47 @@ RSpec.describe Ramon::GoogleAgendaPushJob do
     end
   end
 
+  describe 'rascunho de confirmação (dados rascunho)' do
+    before { conectar }
+
+    def rascunhos(task) = task.lead.lead_notes.where("body LIKE 'RASCUNHO%'")
+
+    it 'nasce depois do Meet, com o link do vídeo, uma vez só' do
+      task = reuniao
+      allow(cliente).to receive(:criar).and_return({ id: 'ev1', meet_url: 'https://meet.google.com/abc' })
+
+      described_class.perform_now('criar', { 'task_id' => task.id, 'rascunho' => true })
+
+      expect(rascunhos(task).pluck(:body)).to contain_exactly(include('É por vídeo, neste link: https://meet.google.com/abc.'))
+    end
+
+    it 'sem a marca rascunho (reunião fora do fluxo novo) não cria' do
+      task = reuniao
+      allow(cliente).to receive(:criar).and_return({ id: 'ev1', meet_url: 'https://meet.google.com/abc' })
+      described_class.perform_now('criar', { 'task_id' => task.id })
+      expect(rascunhos(task)).to be_empty
+    end
+
+    it 'Google sem conexão: rascunho sem a linha do Meet' do
+      task = reuniao
+      allow(cliente).to receive(:criar).and_raise(Ramon::GoogleAgenda::Cliente::SemConexao)
+
+      described_class.perform_now('criar', { 'task_id' => task.id, 'rascunho' => true })
+
+      expect(rascunhos(task).pluck(:body)).to contain_exactly(satisfy { |b| b.exclude?('É por vídeo') && b.include?('Pra salvar na sua agenda') })
+    end
+
+    it 'erro do Google: rascunho sem a linha do Meet' do
+      task = reuniao
+      allow(cliente).to receive(:criar).and_raise(Ramon::GoogleAgenda::Cliente::Erro.new(400))
+      allow(ChatwootExceptionTracker).to receive(:new).and_return(instance_double(ChatwootExceptionTracker, capture_exception: nil))
+
+      described_class.perform_now('criar', { 'task_id' => task.id, 'rascunho' => true })
+
+      expect(rascunhos(task).count).to eq 1
+    end
+  end
+
   describe 'atualizar' do
     before { conectar }
 

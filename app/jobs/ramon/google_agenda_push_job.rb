@@ -1,37 +1,35 @@
 # Leva a reunião do hub (LeadTask meeting) para o Google do dono da agenda: criar, atualizar ou cancelar.
 # Sem dono ou sem conta Google conectada, sai calado (a reunião vive só no hub). Logs: só classe e ids (LGPD).
+# Marcação com conta Google: o rascunho de confirmação nasce aqui, depois do Meet (dados 'rascunho'); se o Google falhar, nasce sem Meet.
 class Ramon::GoogleAgendaPushJob < ApplicationJob
   queue_as :default
 
   Cliente = Ramon::GoogleAgenda::Cliente
 
-  TITULO = 'Conversa com Ramon Antonio Advogados'.freeze
-  # Texto do convite APROVADO pelo Eduardo em 16/10 (parágrafo do Meet sai na ligação pelo WhatsApp).
-  CONVITE = <<~TEXTO.strip.freeze
-    Olá, %<primeiro_nome>s! Esta é a nossa conversa sobre o seu caso, com %<nome_do_closer>s.
-
-    %<meio>s
-
-    Se não puder comparecer, avise pelo WhatsApp que a gente remarca sem problema.
-  TEXTO
-  MEIO_VIDEO = 'Para entrar, é só tocar no link do Google Meet no horário marcado. Se preferir, a gente liga no seu WhatsApp.'.freeze
-  # ponytail: frase aprovada da confirmação (variante WhatsApp); uso no convite aguarda o ok do Eduardo
-  MEIO_WHATSAPP = 'Eu te ligo no WhatsApp nesse horário.'.freeze
+  Convite = Ramon::Agenda::Convite
 
   retry_on Ramon::GoogleAgenda::Token::Transitorio, wait: 1.minute, attempts: 3 do |job, erro|
     Rails.logger.error("GoogleAgendaPushJob: #{erro.class} esgotou as tentativas task_id=#{job.arguments.last['task_id']}")
+    job.rascunho_sem_meet
   end
 
   def perform(acao, dados)
     @dados = dados
     acao == 'cancelar' ? cancelar : empurrar(acao)
   rescue Cliente::SemConexao
-    nil
+    rascunho_sem_meet
   rescue Ramon::GoogleAgenda::Token::Transitorio
     raise # o retry_on cuida
   rescue StandardError => e
     Rails.logger.error("GoogleAgendaPushJob: #{e.class} #{acao} task_id=#{dados['task_id']}")
     ChatwootExceptionTracker.new(e).capture_exception
+    rascunho_sem_meet
+  end
+
+  # A pessoa nunca fica sem rascunho: Google fora do ar → confirmação sem a linha do Meet.
+  def rascunho_sem_meet
+    task = @dados && LeadTask.find_by(id: @dados['task_id'])
+    rascunhar(task) if task
   end
 
   private
@@ -44,7 +42,7 @@ class Ramon::GoogleAgendaPushJob < ApplicationJob
   def empurrar(acao)
     task = LeadTask.find_by(id: @dados['task_id'])
     conta = task && conta_de(task.agenda_user)
-    return if conta.nil?
+    return rascunho_sem_meet if conta.nil?
 
     cliente = Cliente.new(conta)
     return criar(cliente, task) if acao == 'criar' && task.google_event_id.blank? && task.completed_at.nil?
@@ -55,8 +53,21 @@ class Ramon::GoogleAgendaPushJob < ApplicationJob
   def conta_de(user) = user && GoogleAgendaConta.de(user)
 
   def criar(cliente, task)
-    evento = cliente.criar(inicio: task.due_at, fim: task.due_at + LeadTask::DURACAO, titulo: TITULO, descricao: descricao(task),
-                           meet: task.formato == 'video', convidado_email: task.lead.contact&.email.presence, hub_task_id: task.id,
+    criar_evento(cliente, task)
+    rascunhar(task)
+  end
+
+  def rascunhar(task)
+    return unless @dados['rascunho'] && !@rascunhado
+
+    @rascunhado = true
+    Ramon::ReuniaoAgendamento.confirmar(task, automatico: @dados['automatico'] == true)
+  end
+
+  def criar_evento(cliente, task)
+    evento = cliente.criar(inicio: task.due_at, fim: task.due_at + LeadTask::DURACAO, titulo: Convite::TITULO,
+                           descricao: Convite.new(task).descricao, meet: task.formato == 'video',
+                           convidado_email: task.lead.contact&.email.presence, hub_task_id: task.id,
                            id: "hubtask#{task.id}") # base32hex (0-9a-v, 5+): repetir a criação não duplica o evento
     gravar_evento(task, evento)
   rescue Cliente::Erro => e
@@ -80,17 +91,13 @@ class Ramon::GoogleAgendaPushJob < ApplicationJob
   def mover(cliente, task, id)
     base = { inicio: task.due_at, fim: task.due_at + LeadTask::DURACAO }
     if task.formato == 'video' && task.meet_url.blank?
-      task.update_columns(meet_url: cliente.atualizar(id, **base, meet: true, descricao: descricao(task))) # rubocop:disable Rails/SkipsModelValidations
+      meet = cliente.atualizar(id, **base, meet: true, descricao: Convite.new(task).descricao)
+      task.update_columns(meet_url: meet) # rubocop:disable Rails/SkipsModelValidations
     elsif task.formato == 'whatsapp' && task.meet_url.present?
-      cliente.atualizar(id, **base, meet: false, descricao: descricao(task))
+      cliente.atualizar(id, **base, meet: false, descricao: Convite.new(task).descricao)
       task.update_columns(meet_url: nil) # rubocop:disable Rails/SkipsModelValidations
     else
       cliente.atualizar(id, **base)
     end
-  end
-
-  def descricao(task)
-    format(CONVITE, primeiro_nome: task.lead.name.to_s.split.first.presence || 'cliente', nome_do_closer: task.agenda_user.name,
-                    meio: task.formato == 'video' ? MEIO_VIDEO : MEIO_WHATSAPP)
   end
 end

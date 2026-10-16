@@ -40,7 +40,7 @@ class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
     return 'Esse horário acabou de ser ocupado — ofereça outro.' unless
       Ramon::Agenda::Disponibilidade.new(user: lead.closer, account: lead.account).livre?(horario)
 
-    Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: horario, title: titulo)
+    Ramon::ReuniaoAgendamento.call(lead: lead, starts_at: horario, title: titulo, automatico: true)
     "Reunião marcada para #{Ramon::ReuniaoAgendamento.quando(horario)}."
   end
 
