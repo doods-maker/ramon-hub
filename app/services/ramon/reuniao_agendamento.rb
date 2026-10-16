@@ -171,8 +171,9 @@ class Ramon::ReuniaoAgendamento
   # Fluxos no comando: a tarefa nasce no fluxo; a confirmação ao cliente é sempre do código (decisão do dono, 16/10).
   # Com Google o rascunho nasce no GoogleAgendaPushJob, depois do Meet (task.rascunho_no_job?); senão, aqui.
   def confirmar_tarefa_do_fluxo
-    task = @lead.lead_tasks.where(kind: 'meeting', due_at: @starts_at).order(:id).last
-    self.class.confirmar(task, automatico: @automatico) if task && !task.rascunho_no_job?
+    task = @lead.lead_tasks.where(kind: 'meeting', due_at: @starts_at.change(usec: 0)).order(:id).last
+    # sempre rascunho (automatico: false): a confirmação sozinha da IA não vale com os fluxos no comando (ver envia_sozinha?)
+    self.class.confirmar(task) if task && !task.rascunho_no_job?
   end
 
   def efeitos_da_marcacao(task_title)

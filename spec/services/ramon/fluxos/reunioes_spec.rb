@@ -128,9 +128,9 @@ RSpec.describe Ramon::Fluxos::Reunioes do
         'faria: tarefa "Primeiro Atendimento" para 07/10 19:00',
         "faria: mover para #{agendada.name}",
         'closer: já tem Carla Closer',
-        a_string_starting_with('faria: rascunho ""Oi João! Nossa conversa está confirmada pra quarta, 07/10 às 19:00.'),
         a_string_starting_with('faria: sino para Carla Closer: "Reunião marcada com João Pereira')
       )
+      expect(trilha('reuniao_marcada').grep(/rascunho/)).to be_empty # a confirmação é só do hub
       expect(FluxoExecucao.where(fluxo: fluxos['lembretes_reuniao']).pluck(:alvo_type, :ensaio)).to eq([['LeadTask', true]])
     end
 
