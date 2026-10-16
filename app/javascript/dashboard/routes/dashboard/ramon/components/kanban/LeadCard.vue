@@ -406,6 +406,18 @@ const onSchedule = async ({ dueAt, title }) => {
         }}
       </span>
       <span
+        v-if="lead.pendencias_docs?.length"
+        data-testid="pendencias-docs-chip"
+        class="inline-flex items-center gap-1 rounded-md bg-n-amber-9/15 px-1.5 py-0.5 text-n-amber-11"
+      >
+        <span class="i-lucide-file-clock size-3 shrink-0" />
+        {{
+          $t('RAMON.FUNIL_AUTO.AGUARDANDO', {
+            itens: lead.pendencias_docs.join(', '),
+          })
+        }}
+      </span>
+      <span
         v-if="contrato"
         data-testid="contrato-limpo-badge"
         :title="$t(`RAMON.CONTRATO.${contrato.key}`, { count: contrato.count })"

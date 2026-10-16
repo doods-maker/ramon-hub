@@ -392,6 +392,14 @@ RSpec.describe 'Leads API', type: :request do
       expect(row).not_to have_key('custom_attributes')
     end
 
+    it 'expõe pendencias_docs no índice slim sem custom_attributes (chip Aguardando)' do
+      account.leads.create!(name: 'A', lead_stage: novo, custom_attributes: { 'pendencias_docs' => %w[laudo CNIS] })
+      get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token
+      row = response.parsed_body['payload'].first
+      expect(row['pendencias_docs']).to eq(%w[laudo CNIS])
+      expect(row).not_to have_key('custom_attributes')
+    end
+
     it 'lead sem tese expõe docs_received e docs_total zerados' do
       account.leads.create!(name: 'A', lead_stage: novo)
       get "/api/v1/accounts/#{account.id}/leads", headers: admin.create_new_auth_token

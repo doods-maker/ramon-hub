@@ -19,6 +19,9 @@ class Ramon::FunilObservador::Aplicar
     perder_por_recusa
     marcar_reuniao
     gravar_temperatura
+    promessas
+    promessas_cumpridas
+    pendencias
   end
 
   private
@@ -110,4 +113,65 @@ class Ramon::FunilObservador::Aplicar
       'temperatura' => { 'nivel' => nivel, 'motivo' => @decisao['temperatura_motivo'].to_s.truncate(250), 'em' => Time.current.iso8601 }
     ))
   end
+
+  # Promessa do cliente vira follow-up do SDR ("Cobrar: …") no dia prometido, 10h de São Paulo.
+  # Prazo inválido ou que já passou = item ignorado (cobrar no passado é ruído); o mesmo título aberto não duplica.
+  def promessas
+    itens(@decisao['promessas']).each do |item|
+      titulo = "Cobrar: #{item['o_que']}".truncate(255)
+      prazo = prazo_promessa(item['prazo'])
+      next if item['o_que'].blank? || prazo.nil? || @lead.lead_tasks.open_tasks.exists?(title: titulo)
+
+      criar_cobranca(titulo, prazo, item)
+    end
+  end
+
+  def criar_cobranca(titulo, prazo, item)
+    desfazer = {}
+    Ramon::FunilAutomatico.executar(@lead, peca: 'promessas', acao: 'promessa', alvo: titulo, desfazer: desfazer,
+                                           motivo: "cliente prometeu: #{item['o_que']}") do
+      tarefa = @lead.lead_tasks.create!(account: account, user: @lead.sdr || @lead.closer, kind: 'follow_up',
+                                        title: titulo, due_at: prazo)
+      desfazer['task_id'] = tarefa.id
+    end
+  end
+
+  # 'AAAA-MM-DD' → esse dia às 10h (SP), só se ainda for futuro.
+  def prazo_promessa(prazo)
+    return unless prazo.to_s.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+
+    data = Time.find_zone!('America/Sao_Paulo').parse("#{prazo} 10:00")
+    data if data&.future?
+  rescue ArgumentError
+    nil
+  end
+
+  # Só conclui "Cobrar:" aberta DESTE lead (o id vem do LLM); ids soltos/alheios são ignorados.
+  def promessas_cumpridas
+    ids = Array(@decisao['promessas_cumpridas']).filter_map { |id| Integer(id, exception: false) }.uniq
+    return if ids.empty?
+
+    @lead.lead_tasks.open_tasks.where(id: ids).where('title LIKE ?', 'Cobrar:%').find_each do |task|
+      Ramon::FunilAutomatico.executar(@lead, peca: 'promessas', acao: 'promessa_cumprida', alvo: task.id.to_s,
+                                             motivo: "cumprida: #{task.title}") { task.complete!(nil) }
+    end
+  end
+
+  # Documentos que o cliente ainda deve (chip no card). Sem FunilAcao; só com a peça on — em ensaio não grava.
+  # A lista substitui a anterior a cada pausa; vazia remove a chave.
+  def pendencias
+    return unless @decisao.key?('pendencias') && Ramon::FunilAutomatico.modo(account, 'pendencias') == 'on'
+
+    atributos = (@lead.custom_attributes || {}).except('pendencias_docs')
+    lista = lista_pendencias
+    atributos['pendencias_docs'] = lista if lista.any?
+    @lead.update!(custom_attributes: atributos)
+  end
+
+  def lista_pendencias
+    Array.wrap(@decisao['pendencias']).grep(String).map { |i| i.strip.truncate(40) }.compact_blank.first(5)
+  end
+
+  # Só Array de Hashes conta; item malformado é pulado.
+  def itens(valor) = Array.wrap(valor).grep(Hash)
 end

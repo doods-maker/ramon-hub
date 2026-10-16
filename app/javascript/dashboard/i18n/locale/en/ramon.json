@@ -1133,6 +1133,7 @@
     },
     "FUNIL_AUTO": {
       "IA_MOVEU": "AI: {texto}",
+      "AGUARDANDO": "Waiting: {itens}",
       "DESFAZER": "Undo",
       "ERRO": "Could not undo the action"
     },

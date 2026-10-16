@@ -22,6 +22,8 @@ json.follow_up_last_at lead.custom_attributes&.dig('follow_up', 'ultima_em')
 docs = lead.docs_counts
 json.docs_received docs[:received]
 json.docs_total docs[:total]
+# Chip "Aguardando: …" (slim TAMBÉM): documentos que o cliente ainda deve, gravados pela peça `pendencias`.
+json.pendencias_docs Array(lead.custom_attributes&.dig('pendencias_docs'))
 # Chip "IA: …" do card (slim TAMBÉM): última ação automática viva das últimas 24h — a query é por lead
 # (o índice passa `funil_acoes` já agrupado: 1 query, sem N+1).
 json.funil_acao(local_assigns[:funil_acoes] ? local_assigns[:funil_acoes][lead.id] : FunilAcao.chip(lead))

@@ -1133,6 +1133,7 @@
     },
     "FUNIL_AUTO": {
       "IA_MOVEU": "IA: {texto}",
+      "AGUARDANDO": "Aguardando: {itens}",
       "DESFAZER": "Desfazer",
       "ERRO": "Não foi possível desfazer a ação"
     },

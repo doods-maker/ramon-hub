@@ -247,4 +247,95 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       expect(lead.reload.custom_attributes['temperatura']).to be_nil
     end
   end
+
+  describe 'promessas' do
+    let(:sdr) { create(:user, account: account) }
+    let(:decisao) { { 'promessas' => [{ 'o_que' => 'mandar o laudo', 'prazo' => '2026-10-20', 'documento' => true }] } }
+
+    before do
+      travel_to Time.zone.parse('2026-10-16 12:00')
+      lead.update!(sdr: sdr)
+      ligar('promessas')
+    end
+
+    it 'vira follow-up do SDR no dia prometido às 10h de São Paulo, com desfazer' do
+      aplicar(decisao)
+
+      tarefa = lead.lead_tasks.last
+      expect(tarefa).to have_attributes(kind: 'follow_up', title: 'Cobrar: mandar o laudo', user_id: sdr.id)
+      expect(tarefa.due_at).to eq(Time.zone.parse('2026-10-20 10:00 -03:00'))
+      expect(FunilAcao.last).to have_attributes(acao: 'promessa', desfazer: { 'task_id' => tarefa.id })
+    end
+
+    it 'a mesma promessa duas vezes gera uma tarefa só' do
+      2.times { aplicar(decisao) }
+
+      expect(lead.lead_tasks.where(title: 'Cobrar: mandar o laudo').count).to eq(1)
+    end
+
+    it 'prazo inválido ou no passado e item malformado são ignorados' do
+      aplicar('promessas' => [{ 'o_que' => 'a', 'prazo' => '2026-10-10' }, { 'o_que' => 'b', 'prazo' => 'amanhã' },
+                              'texto solto', { 'prazo' => '2026-10-20' }, nil])
+
+      expect(lead.lead_tasks.count).to eq(0)
+    end
+
+    it 'promessas que não é lista é ignorada' do
+      aplicar('promessas' => 'nenhuma')
+
+      expect(lead.lead_tasks.count).to eq(0)
+    end
+  end
+
+  describe 'promessas_cumpridas' do
+    before { ligar('promessas') }
+
+    it 'conclui a tarefa Cobrar: aberta do lead' do
+      tarefa = create(:lead_task, account: account, lead: lead, title: 'Cobrar: laudo')
+
+      aplicar('promessas_cumpridas' => [tarefa.id])
+
+      expect(tarefa.reload.completed_at).to be_present
+      expect(FunilAcao.last).to have_attributes(acao: 'promessa_cumprida', alvo: tarefa.id.to_s)
+    end
+
+    it 'ignora tarefa de outro lead, que não é Cobrar: ou ids inválidos' do
+      alheia = create(:lead_task, account: account, title: 'Cobrar: laudo')
+      outra = create(:lead_task, account: account, lead: lead, title: 'Ligar')
+
+      aplicar('promessas_cumpridas' => [alheia.id, outra.id, 'x', nil])
+
+      expect([alheia, outra].map { |t| t.reload.completed_at }).to all(be_nil)
+    end
+  end
+
+  describe 'pendencias' do
+    it 'grava a lista (até 5, 40 caracteres) só com a peça on, sem FunilAcao' do
+      ligar('pendencias')
+
+      aplicar('pendencias' => ['laudo', 'x' * 60, 'a', 'b', 'c', 'd', 3, ''])
+
+      lista = lead.reload.custom_attributes['pendencias_docs']
+      expect(lista.size).to eq(5)
+      expect(lista[1].length).to eq(40)
+      expect(FunilAcao.count).to eq(0)
+    end
+
+    it 'lista vazia remove a chave' do
+      ligar('pendencias')
+      lead.update!(custom_attributes: { 'pendencias_docs' => ['laudo'], 'outra' => 1 })
+
+      aplicar('pendencias' => [])
+
+      expect(lead.reload.custom_attributes).to eq('outra' => 1)
+    end
+
+    it 'não grava em ensaio' do
+      ligar('pendencias', 'ensaio')
+
+      aplicar('pendencias' => ['laudo'])
+
+      expect(lead.reload.custom_attributes['pendencias_docs']).to be_nil
+    end
+  end
 end
