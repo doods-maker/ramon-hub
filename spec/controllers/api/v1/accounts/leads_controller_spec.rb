@@ -315,7 +315,7 @@ RSpec.describe 'Leads API', type: :request do
       end
 
       def conversa_esperando(desde)
-        create(:conversation, account: account, waiting_since: desde)
+        create(:conversation, account: account).tap { |c| c.update_column(:waiting_since, desde) } # rubocop:disable Rails/SkipsModelValidations
       end
 
       def fila

@@ -7,6 +7,7 @@ import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { downloadCsvFile } from 'dashboard/helper/downloadHelper';
 import LeadsAPI from 'dashboard/api/leads';
+import { toParams } from 'dashboard/store/modules/leads';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { CAMPO } from '../../helpers/ui';
@@ -298,16 +299,23 @@ watch([viewMode, groupBy], ([view, group]) => {
 // Fila do dia: lista ordenada pelo back (?ordem=fila), fora do store do board — busca a cada vez que liga.
 const filaAberta = ref(false);
 const filaLeads = ref([]);
-const toggleFila = async () => {
-  filaAberta.value = !filaAberta.value;
-  if (!filaAberta.value) return;
+const loadFila = async () => {
   try {
-    filaLeads.value = (await LeadsAPI.get({ ordem: 'fila' })).data.payload;
+    const params = { ...toParams(filters.value), ordem: 'fila' };
+    filaLeads.value = (await LeadsAPI.get(params)).data.payload;
   } catch (e) {
     filaAberta.value = false;
     useAlert(t('RAMON.FUNIL.LOAD_ERROR'));
   }
 };
+const toggleFila = () => {
+  filaAberta.value = !filaAberta.value;
+  if (filaAberta.value) loadFila();
+};
+// A fila respeita busca/filtros do quadro: mudou o filtro, busca de novo.
+watch(filters, () => {
+  if (filaAberta.value) loadFila();
+});
 
 // Aplicar um quadro remonta as colunas (:key) para relerem o colapso salvo.
 const columnsKey = ref(0);
