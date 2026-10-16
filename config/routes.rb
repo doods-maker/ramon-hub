@@ -392,6 +392,9 @@ Rails.application.routes.draw do
               post :reabrir_roteiro, to: 'lead_roteiros#reabrir'
             end
             resources :activities, only: [:index], controller: 'lead_activities'
+            resources :funil_acoes, only: [] do
+              post :desfazer, on: :member
+            end
             resources :notes, only: [:index, :create], controller: 'lead_notes'
             resources :tasks, only: [:index, :create, :update, :destroy], controller: 'lead_tasks' do
               member { post :complete }

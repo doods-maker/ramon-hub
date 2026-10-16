@@ -52,6 +52,23 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
     end
   end
 
+  describe 'depois de desfazer' do
+    before { ligar('etapa_ia') }
+
+    it 'a mesma decisão sem mensagem nova não move de novo; com mensagem nova, move' do
+      aplicar('etapa' => 'qualificacao', 'etapa_motivo' => 'x')
+      FunilAcao.last.desfazer!(create(:user, account: account))
+      expect(lead.reload.lead_stage.label).to eq('fase-novo')
+
+      aplicar('etapa' => 'qualificacao', 'etapa_motivo' => 'x')
+      expect(lead.reload.lead_stage.label).to eq('fase-novo')
+
+      create(:message, account: account, conversation: conversa, inbox: conversa.inbox, message_type: :incoming)
+      aplicar('etapa' => 'qualificacao', 'etapa_motivo' => 'x')
+      expect(lead.reload.lead_stage.label).to eq('fase-qualificacao')
+    end
+  end
+
   describe 'perdido' do
     before { ligar('perdido_recusa') }
 

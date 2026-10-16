@@ -38,6 +38,11 @@ class LeadsAPI extends ApiClient {
     return axios.post(`${this.url}/${leadId}/dossie_entregue`);
   }
 
+  // Desfaz uma ação automática do funil (chip "IA: …" do card); devolve o lead completo
+  desfazerFunilAcao(leadId, acaoId) {
+    return axios.post(`${this.url}/${leadId}/funil_acoes/${acaoId}/desfazer`);
+  }
+
   simulate(leadId, payload) {
     return axios.post(`${this.url}/${leadId}/simulacao`, payload);
   }

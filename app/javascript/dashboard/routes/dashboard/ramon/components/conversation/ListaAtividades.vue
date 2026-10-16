@@ -56,6 +56,7 @@ const GRUPO = {
   contrato_cancelado: 'perda',
   registro_completo: 'campo',
   dossie_entregue: 'campo',
+  funil_auto: 'etapa',
 };
 const grupoDe = activity => {
   if (activity.kind !== 'stage_changed') return GRUPO[activity.kind] || 'outro';

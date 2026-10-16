@@ -1041,6 +1041,7 @@
           "CONTRATO_CANCELADO": "contrato cancelado (saiu de Fechado)",
           "REGISTRO_COMPLETO": "registro completo (tese, CPF, nascimento e nota do SDR)",
           "DOSSIE_ENTREGUE": "marcou o dossiê como entregue ao jurídico",
+          "FUNIL_AUTO": "IA do funil",
           "ROTEIRO": "roteiro da IA"
         }
       },
@@ -1129,6 +1130,11 @@
       "COPY_LINK": "Copiar link",
       "COPIED": "Link do portal copiado",
       "ERROR": "Não foi possível gerar o link do portal — tente de novo"
+    },
+    "FUNIL_AUTO": {
+      "IA_MOVEU": "IA: {texto}",
+      "DESFAZER": "Desfazer",
+      "ERRO": "Não foi possível desfazer a ação"
     },
     "DOCS": {
       "TITLE": "Documentos",

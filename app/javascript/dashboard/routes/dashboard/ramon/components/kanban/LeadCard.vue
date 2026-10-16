@@ -7,6 +7,7 @@ import { formatBrl, brlCompact } from '../../helpers/currency';
 import { prescriptionInfo } from '../../helpers/prescription';
 import { contratoLimpoStatus } from '../../helpers/contratoLimpo';
 import { slaApplies } from '../../helpers/stage';
+import LeadsAPI from 'dashboard/api/leads';
 import { nextActionInfo } from '../../helpers/nextAction';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, CHIP, TOM, FILETE, BOTAO_COMPACTO } from '../../helpers/ui';
@@ -36,6 +37,20 @@ watch(
 );
 
 const { t } = useI18n();
+
+// Chip "IA: …": o desfazer devolve o lead e o broadcast redesenha o card (funil_acao some)
+const desfazendo = ref(false);
+const desfazerIa = async () => {
+  desfazendo.value = true;
+  try {
+    await LeadsAPI.desfazerFunilAcao(props.lead.id, props.lead.funil_acao.id);
+  } catch {
+    useAlert(t('RAMON.FUNIL_AUTO.ERRO'));
+  } finally {
+    desfazendo.value = false;
+  }
+};
+
 // useStore não lança fora de um app com store (retorna undefined); leituras de
 // getters/dispatch ficam defensivas para o card renderizar em testes sem store.
 const store = useStore();
@@ -351,6 +366,23 @@ const onSchedule = async ({ dueAt, title }) => {
         class="inline-flex items-center gap-0.5 font-mono text-n-slate-10"
       >
         <span class="i-lucide-history size-3" />{{ lead.follow_up_count }}
+      </span>
+      <span
+        v-if="lead.funil_acao"
+        data-testid="funil-acao-chip"
+        class="inline-flex items-center gap-1 rounded-md bg-n-iris-9/15 px-1.5 py-0.5 text-n-iris-11"
+      >
+        <span class="i-lucide-sparkles size-3 shrink-0" />
+        {{ $t('RAMON.FUNIL_AUTO.IA_MOVEU', { texto: lead.funil_acao.texto }) }}
+        <button
+          type="button"
+          data-testid="funil-acao-desfazer"
+          class="underline hover:no-underline disabled:opacity-50"
+          :disabled="desfazendo"
+          @click.stop="desfazerIa"
+        >
+          {{ $t('RAMON.FUNIL_AUTO.DESFAZER') }}
+        </button>
       </span>
       <span
         v-if="lead.docs_total > 0"

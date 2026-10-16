@@ -1041,6 +1041,7 @@
           "CONTRATO_CANCELADO": "contract cancelled (left Closed)",
           "REGISTRO_COMPLETO": "record complete (thesis, CPF, birth date and SDR note)",
           "DOSSIE_ENTREGUE": "marked the dossier as delivered to the legal team",
+          "FUNIL_AUTO": "Funnel AI",
           "ROTEIRO": "AI script"
         }
       },
@@ -1129,6 +1130,11 @@
       "COPY_LINK": "Copy link",
       "COPIED": "Portal link copied",
       "ERROR": "Could not generate the portal link — try again"
+    },
+    "FUNIL_AUTO": {
+      "IA_MOVEU": "AI: {texto}",
+      "DESFAZER": "Undo",
+      "ERRO": "Could not undo the action"
     },
     "DOCS": {
       "TITLE": "Documents",
