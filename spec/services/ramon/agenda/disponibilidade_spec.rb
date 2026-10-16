@@ -36,10 +36,11 @@ RSpec.describe Ramon::Agenda::Disponibilidade do
       expect(locais.map { |t| [t.to_date, t.hour < 12] }.uniq.size).to eq(3)
     end
 
-    it 'trata reunião do hub às 14h como ocupada (13h30–14h30 fora)' do
-      reuniao_as('2026-10-22T14:00:00-03:00')
-      locais = disp.livres(qtd: 10).map { |t| t.in_time_zone(zona) }
-      expect(locais.select { |t| t.to_date == Date.new(2026, 10, 22) && t.hour >= 13 }).to be_empty
+    it 'trata reunião do hub às 14h como ocupada (13h30–14h30 fora, 15h livre)' do
+      task = reuniao_as('2026-10-22T14:00:00-03:00')
+      %w[13:30 14:00 14:30].each { |h| expect(disp.livre?(hora("2026-10-22T#{h}:00-03:00"))).to be(false) }
+      expect(disp.livre?(hora('2026-10-22T15:00:00-03:00'))).to be(true)
+      expect(disp.livre?(hora('2026-10-22T14:30:00-03:00'), ignorar_task_id: task.id)).to be(true)
     end
 
     it 'trata evento do Google 15h–16h como ocupado (14h45–16h15)' do

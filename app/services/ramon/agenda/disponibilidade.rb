@@ -22,8 +22,8 @@ class Ramon::Agenda::Disponibilidade
     @zona = Time.find_zone!(Ramon::HorarioComercial::TIME_ZONE)
   end
 
-  def ocupados(de:, ate:) # rubocop:disable Naming/MethodParameterName
-    (do_hub(de, ate) + do_google(de, ate)).map { |i, f| (i - FOLGA)...(f + FOLGA) }
+  def ocupados(de:, ate:, ignorar: nil) # rubocop:disable Naming/MethodParameterName
+    (do_hub(de, ate, ignorar) + do_google(de, ate)).map { |i, f| (i - FOLGA)...(f + FOLGA) }
   end
 
   def livres(qtd: 3)
@@ -34,13 +34,14 @@ class Ramon::Agenda::Disponibilidade
     candidatos(dias).select { |inicio, _| livre_na_grade?(inicio, busy) }.uniq { |_, periodo| periodo }.first(qtd).map(&:first)
   end
 
-  def livre?(inicio)
+  # Reconferência de um horário escolhido: sem o limite de 5 dias (remarcação pode ir além). ignorar = a própria reunião.
+  def livre?(inicio, ignorar_task_id: nil)
     inicio = inicio.in_time_zone(@zona)
     dia = inicio.to_date
     return false unless util?(dia) && inicio >= @agora + ANTECEDENCIA
     return false unless janelas(dia).any? { |abre, fecha| inicio >= abre && inicio + PASSO <= fecha }
 
-    livre_na_grade?(inicio, ocupados(de: inicio - 1.day, ate: inicio + 1.day))
+    livre_na_grade?(inicio, ocupados(de: inicio - 1.day, ate: inicio + 1.day, ignorar: ignorar_task_id))
   end
 
   private
@@ -71,7 +72,7 @@ class Ramon::Agenda::Disponibilidade
   def candidatos(dias)
     dias.flat_map do |dia|
       janelas(dia).each_with_index.flat_map do |(abre, fecha), idx|
-        (abre.to_i...fecha.to_i).step(PASSO).map { |t| [@zona.at(t), [dia, idx]] }
+        (abre.to_i...fecha.to_i).step(PASSO.to_i).map { |t| [@zona.at(t), [dia, idx]] }
                                 .select { |ini, _| ini + PASSO <= fecha && ini >= @agora + ANTECEDENCIA }
       end
     end
@@ -82,8 +83,8 @@ class Ramon::Agenda::Disponibilidade
     busy.none? { |r| inicio < r.end && fim > r.begin }
   end
 
-  def do_hub(de, ate) # rubocop:disable Naming/MethodParameterName
-    LeadTask.open_tasks.where(kind: 'meeting', agenda_user_id: @user.id, due_at: (de - PASSO)..ate)
+  def do_hub(de, ate, ignorar) # rubocop:disable Naming/MethodParameterName
+    LeadTask.open_tasks.where(kind: 'meeting', agenda_user_id: @user.id, due_at: (de - PASSO)..ate).where.not(id: ignorar)
             .pluck(:due_at).map { |due| [due, due + PASSO] }
   end
 
