@@ -103,7 +103,9 @@ class Whatsapp::Providers::BaseService
     rows = create_rows(message.content_attributes['items'])
     section1 = { 'rows' => rows }
     sections = [section1]
-    json_hash = { :button => I18n.t('conversations.messages.whatsapp.list_button_label'), 'sections' => sections }
+    # ramon: o envio roda num job sem o idioma da conta — o botão da lista saía em inglês ("Choose an item")
+    rotulo = I18n.with_locale(message.account&.locale || I18n.default_locale) { I18n.t('conversations.messages.whatsapp.list_button_label') }
+    json_hash = { :button => rotulo, 'sections' => sections }
     create_payload('list', message.outgoing_content, JSON.generate(json_hash))
   end
 end
