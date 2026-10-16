@@ -29,8 +29,15 @@ module Whatsapp::IncomingMessageServiceHelpers
     message.dig(:text, :body) ||
       message.dig(:button, :text) ||
       message.dig(:interactive, :button_reply, :title) ||
-      message.dig(:interactive, :list_reply, :title) ||
+      lista_tocada(message.dig(:interactive, :list_reply)) ||
       message.dig(:name, :formatted_name)
+  end
+
+  # ramon: opção do roteiro com título cortado ("…") traz a opção inteira na descrição da linha (Ramon::Roteiro::Opcoes)
+  def lista_tocada(reply)
+    return if reply.blank?
+
+    reply[:title].to_s.end_with?('…') && reply[:description].present? ? reply[:description] : reply[:title]
   end
 
   def file_content_type(file_type)

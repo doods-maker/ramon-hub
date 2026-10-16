@@ -105,13 +105,14 @@ module Ramon::Roteiro
   end
 
   # Perguntas em bloco (custo da Meta, decisão 15/10): passo sem saída não decide nada, então o seguinte é sempre o
-  # próximo sem resposta da lista. Passo que manda não perguntar (ex.: enquadramento) não entra no bloco.
+  # próximo sem resposta da lista. O seguinte também não pode decidir nada ("tem advogado?" vai sozinho), nem mandar
+  # não perguntar (ex.: enquadramento).
   def junto(passo, est)
     return if passo.saidas.present?
 
     lista = passos_de(passo.account_id, est['tese_id'])
     seguinte = lista[(lista.index { |p| p.id == passo.id } || lista.size)..].drop(1).find { |p| !est['respostas'].key?(p.chave) }
-    seguinte unless seguinte.nil? || seguinte.orientacao.to_s.match?(/n(ã|Ã|a)o pergunte/i)
+    seguinte unless seguinte.nil? || seguinte.saidas.present? || seguinte.orientacao.to_s.match?(/n[ãa]o pergunte/i)
   end
 
   def linhas_do_passo(passo, rotulo = 'Passo atual')

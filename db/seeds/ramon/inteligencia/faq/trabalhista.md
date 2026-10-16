@@ -3,7 +3,7 @@ tese: Trabalhista (acidente ou doença do trabalho · rescisão indireta · reco
 # APROVADO pelo Eduardo 14/10 (comercial/docs/2026-10-14-teses-trabalhistas-rascunho.md §3).
 # Itens [CONFERIR] do rascunho lidos na fonte oficial antes de ativar. As objeções da LiderHub (preço, distância,
 # "vou pensar", "depois") foram reescritas dentro do Provimento 205/2021: sem comparar colegas, sem pressão, sem urgência artificial.
-# 16/10 (APROVADO, venda emocional 1:1): "Vou pensar" ganha a escassez real (prazo da lei) e o convite com horário.
+# 15/10 (APROVADO, venda emocional 1:1): "Vou pensar" ganha a escassez real (prazo da lei) e o convite com horário.
 ---
 
 ## Quanto custa o processo trabalhista? Quanto vocês cobram?

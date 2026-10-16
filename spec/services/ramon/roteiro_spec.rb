@@ -279,15 +279,23 @@ RSpec.describe Ramon::Roteiro do
       .to include('Roteiro encerrado: humano (x)')
   end
 
-  it 'descrever junta o passo seguinte quando o atual não decide nada (perguntas em bloco)' do
+  it 'descrever junta o passo seguinte quando nenhum dos dois decide nada (perguntas em bloco)' do
+    RoteiroPasso.find_by!(thesis: thesis, chave: 'graca').update!(saidas: [], calculadora: nil, calculadora_campos: {})
     registrar('tem_advogado', 'nao')
     registrar('recebeu_auxilio', 'nao')
     texto = Ramon::Roteiro.texto_atual(lead.reload)
     expect(texto).to include('Passo atual: Data acidente').and include('Pode perguntar junto, na mesma mensagem: Passo seguinte: Graca (chave: graca')
   end
 
+  it 'não junta o passo seguinte que decide (vai sozinho)' do
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'nao')
+    expect(Ramon::Roteiro.texto_atual(lead.reload)).not_to include('Pode perguntar junto')
+  end
+
   it 'não junta o passo que manda não perguntar' do
-    RoteiroPasso.find_by!(thesis: thesis, chave: 'graca').update!(orientacao: 'Não pergunte nada ao lead neste passo.')
+    graca = RoteiroPasso.find_by!(thesis: thesis, chave: 'graca')
+    graca.update!(saidas: [], calculadora: nil, calculadora_campos: {}, orientacao: 'Não pergunte nada ao lead neste passo.')
     registrar('tem_advogado', 'nao')
     registrar('recebeu_auxilio', 'nao')
     expect(Ramon::Roteiro.texto_atual(lead.reload)).not_to include('Pode perguntar junto')

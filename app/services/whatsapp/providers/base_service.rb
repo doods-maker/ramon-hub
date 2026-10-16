@@ -11,6 +11,8 @@
 class Whatsapp::Providers::BaseService
   pattr_initialize [:whatsapp_channel!]
 
+  BOTAO_MAX = 20 # ramon: título de botão do WhatsApp; maior que isso vai como lista
+
   def send_message(_phone_number, _message)
     raise 'Overwrite this method in child class'
   end
@@ -85,8 +87,7 @@ class Whatsapp::Providers::BaseService
 
   def create_payload_based_on_items(message)
     items = message.content_attributes['items']
-    # ramon: botão do WhatsApp aceita título de até 20 letras; maior que isso vai como lista (até 24 + descrição)
-    if items.length <= 3 && items.all? { |item| item['title'].to_s.length <= 20 }
+    if items.length <= 3 && items.all? { |item| item['title'].to_s.length <= BOTAO_MAX }
       create_button_payload(message)
     else
       create_list_payload(message)
@@ -104,7 +105,7 @@ class Whatsapp::Providers::BaseService
     section1 = { 'rows' => rows }
     sections = [section1]
     # ramon: o envio roda num job sem o idioma da conta — o botão da lista saía em inglês ("Choose an item")
-    rotulo = I18n.with_locale(whatsapp_channel.account.locale || I18n.default_locale) { I18n.t('conversations.messages.whatsapp.list_button_label') }
+    rotulo = I18n.with_locale(whatsapp_channel.account.locale) { I18n.t('conversations.messages.whatsapp.list_button_label') }
     json_hash = { :button => rotulo, 'sections' => sections }
     create_payload('list', message.outgoing_content, JSON.generate(json_hash))
   end

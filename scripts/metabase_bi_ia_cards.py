@@ -83,6 +83,15 @@ SELECT CASE limite_atingido WHEN 'contrato_falhou' THEN 'contrato não saiu' ELS
 FROM bi_roteiro
 WHERE account_id = {ACCOUNT_ID} AND limite_atingido IS NOT NULL AND limite_em > now() - interval '30 days'
 GROUP BY 1 ORDER BY 1"""),
+    # 15/10: teste A/B das opções em botões no WhatsApp (Playbooks → tese = Teste A/B; bi_roteiro v03.opcoes_grupo)
+    "Roteiro: botões × texto no teste A/B (60d)": dict(display="table", sql=f"""
+SELECT COALESCE(thesis_name, '(sem tese)') AS tese, opcoes_grupo AS grupo, COUNT(*) AS leads,
+       ROUND(AVG(respondidos), 1) AS passos_respondidos,
+       COUNT(*) FILTER (WHERE desfecho = 'qualificado') AS qualificados,
+       ROUND(100.0 * COUNT(*) FILTER (WHERE desfecho IS NOT NULL) / COUNT(*), 1) AS pct_concluiu
+FROM bi_roteiro
+WHERE account_id = {ACCOUNT_ID} AND opcoes_grupo IS NOT NULL AND lead_criado_em > now() - interval '60 days'
+GROUP BY 1, 2 ORDER BY 1, 2"""),
 }
 
 BLOCOS = [(HEADING, ROW0, CARDS), (HEADING_ROTEIRO, ROW0_ROTEIRO, CARDS_ROTEIRO)]

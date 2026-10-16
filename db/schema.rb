@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_15_200001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_15_210001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -2143,7 +2143,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_15_200001) do
       (c.custom_attributes ->> 'copiloto_modo'::text) AS modo,
       (c.custom_attributes #>> '{copiloto_limite,limite}'::text[]) AS limite_atingido,
       ((c.custom_attributes #>> '{copiloto_limite,em}'::text[]))::timestamp with time zone AS limite_em,
-      (c.custom_attributes #>> '{copiloto_limite,motivo}'::text[]) AS limite_motivo
+      (c.custom_attributes #>> '{copiloto_limite,motivo}'::text[]) AS limite_motivo,
+      (l.custom_attributes ->> 'roteiro_opcoes'::text) AS opcoes_grupo
      FROM (((leads l
        LEFT JOIN theses t ON ((t.id = ((l.custom_attributes #>> '{roteiro,tese_id}'::text[]))::bigint)))
        LEFT JOIN conversations c ON ((c.id = l.conversation_id)))

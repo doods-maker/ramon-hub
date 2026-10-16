@@ -1,9 +1,9 @@
 # Opções do passo do roteiro como botões ou lista no WhatsApp (decisão do Eduardo 15/10). Cada tese escolhe:
 # desligado | ligado | teste_ab. No teste A/B, lead de id par recebe botões e ímpar recebe só texto. O grupo fica no lead
-# (custom_attributes['roteiro_opcoes'] = botoes|texto) para o BI comparar.
+# (custom_attributes['roteiro_opcoes'] = botoes|texto; bi_roteiro.opcoes_grupo) só durante o teste, para o BI comparar.
 # Só passo de escolha (até 10 opções, o máximo da lista do WhatsApp) ou de sim/não. O lead pode sempre responder digitando.
 module Ramon::Roteiro::Opcoes
-  BOTAO = 20 # título de botão do WhatsApp
+  BOTAO = Whatsapp::Providers::BaseService::BOTAO_MAX
   LINHA = 24 # título de linha da lista
   DESCRICAO = 72 # descrição da linha da lista
   MAX = 10 # linhas da lista
@@ -27,12 +27,19 @@ module Ramon::Roteiro::Opcoes
     itens(conversation.account.leads.find_by(conversation_id: conversation.id))
   end
 
-  # Itens do input_select do passo atual do lead; nil = só texto.
+  # Itens do input_select do passo atual do lead; nil = só texto. Efeito colateral: no teste A/B, marca o grupo no lead.
   def itens(lead)
     return if lead&.thesis.nil? || grupo(lead) != 'botoes'
 
-    opcoes = opcoes_do(Ramon::Roteiro.atual(lead)&.dig(:passo))
+    opcoes = opcoes_do(passo_sozinho(lead))
     opcoes&.map { |o| item(o, limite(opcoes)) }
+  end
+
+  # O passo atual, se a IA pergunta só ele: com "Pode perguntar junto" a mensagem leva 2 perguntas e vai só em texto.
+  def passo_sozinho(lead)
+    atual = Ramon::Roteiro.atual(lead)
+    passo = atual&.dig(:passo)
+    passo unless passo.nil? || Ramon::Roteiro.junto(passo, atual[:estado])
   end
 
   def limite(opcoes) = opcoes.size <= 3 && opcoes.all? { |o| o.size <= BOTAO } ? BOTAO : LINHA
@@ -52,15 +59,16 @@ module Ramon::Roteiro::Opcoes
 
   def grupo(lead)
     case lead.thesis.opcoes_botoes
-    when 'ligado' then marcar(lead, 'botoes')
+    when 'ligado' then 'botoes'
     when 'teste_ab' then marcar(lead, lead.id.even? ? 'botoes' : 'texto')
     end
   end
 
+  # Grava o grupo do teste na 1ª vez e não troca depois: a tese sair do teste não apaga o histórico do A/B.
   def marcar(lead, grupo)
-    return grupo if lead.custom_attributes&.dig('roteiro_opcoes') == grupo
+    return grupo if lead.custom_attributes.key?('roteiro_opcoes')
 
-    lead.update_columns(custom_attributes: (lead.custom_attributes || {}).merge('roteiro_opcoes' => grupo)) # rubocop:disable Rails/SkipsModelValidations
+    lead.update_columns(custom_attributes: lead.custom_attributes.merge('roteiro_opcoes' => grupo)) # rubocop:disable Rails/SkipsModelValidations
     grupo
   end
 end
