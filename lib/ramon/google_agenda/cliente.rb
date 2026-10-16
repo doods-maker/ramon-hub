@@ -60,13 +60,15 @@ class Ramon::GoogleAgenda::Cliente
 
   private
 
+  # Cancelado pode vir só com id/status (sem horário): volta com inicio/fim nil — quem sincroniza casa pelo id.
   def mapear(evento)
     inicio = hora(evento['start'])
     fim = hora(evento['end'])
-    return nil unless inicio && fim
+    cancelado = evento['status'] == 'cancelled'
+    return nil unless cancelado || (inicio && fim)
 
-    { id: evento['id'], inicio: inicio, fim: fim, titulo: evento['summary'], cancelado: evento['status'] == 'cancelled',
-      hub_task_id: evento.dig('extendedProperties', 'private', 'hub_task_id')&.to_i,
+    { id: evento['id'], inicio: inicio, fim: fim, titulo: evento['summary'], cancelado: cancelado,
+      hub_task_id: evento.dig('extendedProperties', 'private', 'hub_task_id').presence&.to_i,
       atualizado_em: Time.zone.parse(evento['updated'].to_s) }
   end
 

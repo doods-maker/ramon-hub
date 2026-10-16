@@ -21,13 +21,15 @@ RSpec.describe Ramon::GoogleAgenda::Cliente do
           start: { dateTime: '2026-10-20T10:00:00-03:00' }, end: { dateTime: '2026-10-20T10:30:00-03:00' },
           extendedProperties: { private: { hub_task_id: '42' } } },
         { id: 'b', status: 'cancelled', summary: 'Férias', updated: '2026-10-16T12:00:00Z',
-          start: { date: '2026-10-21' }, end: { date: '2026-10-22' } }
+          start: { date: '2026-10-21' }, end: { date: '2026-10-22' } },
+        { id: 'c', status: 'cancelled' }
       ]
       stub_request(:get, url).with(query: hash_including('singleEvents' => 'true', 'orderBy' => 'startTime', 'showDeleted' => 'true'),
                                    headers: { 'Authorization' => 'Bearer tok' }).to_return(json(items: itens))
-      a, b = cliente.eventos(de: inicio, ate: inicio + 1.day)
+      a, b, c = cliente.eventos(de: inicio, ate: inicio + 1.day)
       expect(a).to include(id: 'a', titulo: 'Reunião', cancelado: false, hub_task_id: 42, inicio: inicio, fim: fim)
       expect(b).to include(cancelado: true, hub_task_id: nil, inicio: Time.zone.parse('2026-10-21'), fim: Time.zone.parse('2026-10-22'))
+      expect(c).to include(id: 'c', cancelado: true, inicio: nil, fim: nil, hub_task_id: nil)
     end
   end
 
