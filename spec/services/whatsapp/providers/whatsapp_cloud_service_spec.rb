@@ -185,6 +185,16 @@ describe Whatsapp::Providers::WhatsappCloudService do
         expect(service.send_message('+123456789', message)).to eq 'message_id'
       end
 
+      it 'uses the account locale for the list button label' do
+        whatsapp_channel.account.update!(locale: 'pt_BR')
+        items = %w[Burito Pasta Sushi Salad].map { |i| { title: i, value: i } }
+        message = create(:message, message_type: :outgoing, content: 'test', inbox: whatsapp_channel.inbox,
+                                   content_type: 'input_select', content_attributes: { items: items })
+
+        payload = service.send(:create_payload_based_on_items, message)
+        expect(JSON.parse(payload[:action])['button']).to eq('Escolha um item')
+      end
+
       # ramon: botão só aceita título de até 20 letras; opção longa vai como lista, com a descrição da linha
       it 'sends a list with row description when an item title is longer than 20 characters' do
         items = [{ title: 'Paga o INSS por conta', value: 'Paga o INSS por conta e está em dia', description: 'Paga o INSS por conta e está em dia' },
