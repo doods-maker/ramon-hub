@@ -280,6 +280,39 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       expect(lead.lead_tasks.count).to eq(0)
     end
 
+    it 'em ensaio, duas pausas registram uma FunilAcao só' do
+      ligar('promessas', 'ensaio')
+
+      2.times { aplicar(decisao) }
+
+      expect(FunilAcao.where(acao: 'promessa').count).to eq(1)
+      expect(lead.lead_tasks.count).to eq(0)
+    end
+
+    it 'tarefa concluída por gente não é recriada na pausa seguinte' do
+      aplicar(decisao)
+      lead.lead_tasks.last.complete!(nil)
+
+      aplicar(decisao)
+
+      expect(lead.lead_tasks.count).to eq(1)
+    end
+
+    it 'promessa desfeita não volta sem mensagem nova do cliente' do
+      aplicar(decisao)
+      FunilAcao.last.desfazer!(create(:user, account: account))
+
+      aplicar(decisao)
+
+      expect(lead.lead_tasks.count).to eq(0)
+    end
+
+    it 'prazo hoje já depois das 10h vira daqui a 1 hora' do
+      aplicar('promessas' => [{ 'o_que' => 'mandar hoje', 'prazo' => '2026-10-16' }])
+
+      expect(lead.lead_tasks.last.due_at).to be_within(1.minute).of(1.hour.from_now)
+    end
+
     it 'promessas que não é lista é ignorada' do
       aplicar('promessas' => 'nenhuma')
 
@@ -309,7 +342,28 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
     end
   end
 
+  describe 'promessas_cumpridas em ensaio' do
+    it 'não repete o registro para a mesma tarefa' do
+      ligar('promessas', 'ensaio')
+      tarefa = create(:lead_task, account: account, lead: lead, title: 'Cobrar: laudo')
+
+      2.times { aplicar('promessas_cumpridas' => [tarefa.id]) }
+
+      expect(FunilAcao.where(acao: 'promessa_cumprida').count).to eq(1)
+    end
+  end
+
   describe 'pendencias' do
+    it 'lista igual à gravada não atualiza o lead' do
+      ligar('pendencias')
+      lead.update!(custom_attributes: { 'pendencias_docs' => ['laudo'] })
+      antes = lead.reload.updated_at
+
+      travel_to(1.hour.from_now) { aplicar('pendencias' => ['laudo']) }
+
+      expect(lead.reload.updated_at).to eq(antes)
+    end
+
     it 'grava a lista (até 5, 40 caracteres) só com a peça on, sem FunilAcao' do
       ligar('pendencias')
 

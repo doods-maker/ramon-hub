@@ -120,10 +120,17 @@ class Ramon::FunilObservador::Aplicar
     itens(@decisao['promessas']).each do |item|
       titulo = "Cobrar: #{item['o_que']}".truncate(255)
       prazo = prazo_promessa(item['prazo'])
-      next if item['o_que'].blank? || prazo.nil? || @lead.lead_tasks.open_tasks.exists?(title: titulo)
+      next if item['o_que'].blank? || prazo.nil? || @lead.lead_tasks.open_tasks.exists?(title: titulo) || ja_registrada?(titulo)
 
       criar_cobranca(titulo, prazo, item)
     end
+  end
+
+  # A promessa continua na conversa a cada pausa: a FunilAcao (ensaio ou real, desfeita ou não) é a memória — tarefa
+  # apagada, concluída ou desfeita por gente não renasce.
+  def ja_registrada?(titulo)
+    FunilAcao.where(lead: @lead, acao: 'promessa', alvo: titulo).exists?(['created_at > ?', 30.days.ago]) ||
+      Ramon::FunilAutomatico.desfeita_recente?(@lead, acao: 'promessa', alvo: titulo)
   end
 
   def criar_cobranca(titulo, prazo, item)
@@ -136,12 +143,14 @@ class Ramon::FunilObservador::Aplicar
     end
   end
 
-  # 'AAAA-MM-DD' → esse dia às 10h (SP), só se ainda for futuro.
+  # 'AAAA-MM-DD' → esse dia às 10h (SP). Hoje já depois das 10h = daqui a 1h ("mando hoje" não se perde); dia passado = nil.
   def prazo_promessa(prazo)
     return unless prazo.to_s.match?(/\A\d{4}-\d{2}-\d{2}\z/)
 
     data = Time.find_zone!('America/Sao_Paulo').parse("#{prazo} 10:00")
-    data if data&.future?
+    return if data.nil?
+
+    data.future? ? data : (1.hour.from_now if data.to_date == Time.current.in_time_zone('America/Sao_Paulo').to_date)
   rescue ArgumentError
     nil
   end
@@ -152,6 +161,8 @@ class Ramon::FunilObservador::Aplicar
     return if ids.empty?
 
     @lead.lead_tasks.open_tasks.where(id: ids).where('title LIKE ?', 'Cobrar:%').find_each do |task|
+      next if FunilAcao.exists?(lead: @lead, acao: 'promessa_cumprida', alvo: task.id.to_s, ensaio: true)
+
       Ramon::FunilAutomatico.executar(@lead, peca: 'promessas', acao: 'promessa_cumprida', alvo: task.id.to_s,
                                              motivo: "cumprida: #{task.title}") { task.complete!(nil) }
     end
@@ -162,8 +173,10 @@ class Ramon::FunilObservador::Aplicar
   def pendencias
     return unless @decisao.key?('pendencias') && Ramon::FunilAutomatico.modo(account, 'pendencias') == 'on'
 
-    atributos = (@lead.custom_attributes || {}).except('pendencias_docs')
     lista = lista_pendencias
+    return if lista == Array(@lead.custom_attributes&.dig('pendencias_docs'))
+
+    atributos = (@lead.custom_attributes || {}).except('pendencias_docs')
     atributos['pendencias_docs'] = lista if lista.any?
     @lead.update!(custom_attributes: atributos)
   end
