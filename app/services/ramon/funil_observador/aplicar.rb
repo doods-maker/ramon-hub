@@ -17,6 +17,7 @@ class Ramon::FunilObservador::Aplicar
 
     mover_etapa
     perder_por_recusa
+    marcar_reuniao
     gravar_temperatura
   end
 
@@ -61,6 +62,33 @@ class Ramon::FunilObservador::Aplicar
     desfazer = { 'etapa_id' => @lead.lead_stage_id, 'etapa_produzida_id' => perdido.id }
     desfazer['modo'] = Ramon::CopilotoModo.of(@lead.conversation) if @lead.conversation
     desfazer
+  end
+
+  # Reunião combinada na conversa (dia e hora exatos): mesmo caminho do painel/Cal.com (etapa, Closer, lembretes, sino).
+  # O desfazer é preenchido dentro do bloco (a tarefa só existe depois da chamada); em ensaio o bloco não roda.
+  def marcar_reuniao
+    inicio = reuniao_inicio
+    return if inicio.nil? || @lead.lead_tasks.open_tasks.exists?(kind: 'meeting') ||
+              Ramon::FunilAutomatico.desfeita_recente?(@lead, acao: 'marcar_reuniao', alvo: inicio.iso8601)
+
+    desfazer = {}
+    Ramon::FunilAutomatico.executar(@lead, peca: 'reuniao_ia', acao: 'marcar_reuniao', alvo: inicio.iso8601, desfazer: desfazer,
+                                           motivo: @decisao['reuniao']['frase'].presence || 'reunião combinada na conversa') do
+      Ramon::ReuniaoAgendamento.call(lead: @lead, starts_at: inicio, title: 'Reunião', user: nil)
+      tarefa = @lead.lead_tasks.open_tasks.where(kind: 'meeting').order(:id).last
+      desfazer['task_id'] = tarefa.id if tarefa
+    end
+  end
+
+  # Só Hash com início válido e no futuro (o LLM às vezes devolve texto solto).
+  def reuniao_inicio
+    reuniao = @decisao['reuniao']
+    return unless reuniao.is_a?(Hash) && reuniao['inicio'].present?
+
+    inicio = Time.find_zone!('America/Sao_Paulo').parse(reuniao['inicio'].to_s)
+    inicio if inicio&.future?
+  rescue ArgumentError
+    nil
   end
 
   # Sem FunilAcao (ruído no resumo); só com a peça on — em ensaio não grava.

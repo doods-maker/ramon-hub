@@ -141,6 +141,65 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
     expect(FunilAcao.count).to eq(0)
   end
 
+  describe 'reunião' do
+    let(:inicio) { 3.days.from_now.in_time_zone('America/Sao_Paulo').change(hour: 14, min: 0) }
+    let(:decisao) { { 'reuniao' => { 'inicio' => inicio.strftime('%Y-%m-%dT%H:%M'), 'frase' => 'quinta às 14h está ótimo' } } }
+
+    before { ligar('reuniao_ia') }
+
+    it 'data futura vira tarefa de reunião, etapa Reunião agendada e desfazer com a tarefa' do
+      aplicar(decisao)
+
+      tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
+      expect(tarefa.due_at).to eq(inicio)
+      expect(lead.reload.lead_stage.label).to eq('fase-reuniao-agendada')
+      expect(FunilAcao.last).to have_attributes(peca: 'reuniao_ia', acao: 'marcar_reuniao', motivo: 'quinta às 14h está ótimo')
+      expect(FunilAcao.last.desfazer).to eq('task_id' => tarefa.id)
+    end
+
+    it 'data no passado não faz nada' do
+      aplicar('reuniao' => { 'inicio' => 2.days.ago.strftime('%Y-%m-%dT%H:%M'), 'frase' => 'x' })
+
+      expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
+      expect(FunilAcao.count).to eq(0)
+    end
+
+    it 'início inválido ou reuniao que não é Hash não faz nada' do
+      ['amanhã de manhã', 'não', {}, { 'inicio' => 'quando der', 'frase' => 'x' }].each { |valor| aplicar('reuniao' => valor) }
+
+      expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
+      expect(FunilAcao.count).to eq(0)
+    end
+
+    it 'já existindo reunião aberta não faz nada' do
+      create(:lead_task, account: account, lead: lead, kind: 'meeting', due_at: 5.days.from_now)
+
+      aplicar(decisao)
+
+      expect(lead.lead_tasks.where(kind: 'meeting').count).to eq(1)
+      expect(FunilAcao.count).to eq(0)
+    end
+
+    it 'em ensaio só registra' do
+      ligar('reuniao_ia', 'ensaio')
+
+      aplicar(decisao)
+
+      expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
+      expect(FunilAcao.last).to be_ensaio
+    end
+
+    it 'desfeita há pouco não marca de novo' do
+      aplicar(decisao)
+      FunilAcao.last.desfazer!(create(:user, account: account))
+      expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
+
+      aplicar(decisao)
+
+      expect(lead.lead_tasks.where(kind: 'meeting')).to be_none
+    end
+  end
+
   describe 'temperatura' do
     let(:decisao) { { 'temperatura' => 'quente', 'temperatura_motivo' => 'quer fechar' } }
 
