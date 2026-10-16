@@ -30,6 +30,7 @@ export const SISTEMAS = [
   'motor',
   'zapsign',
   'calcom',
+  'agenda',
   'faq',
   'conversa',
 ];

@@ -120,7 +120,7 @@
 
 - id: agendar_reuniao
   title: 'Agendar reunião'
-  description: 'Sugere data da reunião de fechamento; aprovada, vira tarefa na Esteira'
+  description: 'Marca a reunião na agenda (modo direto) ou sugere a data; aprovada, vira tarefa na Esteira'
   icon: 'calendar'
   nivel: sugestao
   sistema: funil
@@ -159,6 +159,13 @@
   icon: 'clipboard'
   nivel: consulta
   sistema: funil
+
+- id: horarios_livres
+  title: 'Horários livres'
+  description: 'Horários livres do advogado para a conversa, nos próximos 5 dias úteis'
+  icon: 'calendar'
+  nivel: consulta
+  sistema: agenda
 
 - id: link_agendamento
   title: 'Link de agendamento'
