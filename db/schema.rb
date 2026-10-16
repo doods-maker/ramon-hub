@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_17_120001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_18_120001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1602,6 +1602,21 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_17_120001) do
     t.index ["lead_id"], name: "index_ramon_funil_acoes_on_lead_id"
   end
 
+  create_table "ramon_google_agendas", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "user_id", null: false
+    t.string "email"
+    t.text "access_token"
+    t.text "refresh_token"
+    t.datetime "expira_em"
+    t.string "status", default: "conectada", null: false
+    t.datetime "ultima_sincronizacao_em"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_ramon_google_agendas_on_account_id"
+    t.index ["user_id"], name: "index_ramon_google_agendas_on_user_id", unique: true
+  end
+
   create_table "ramon_ia_casos", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "assistant_id", null: false
@@ -2026,6 +2041,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_17_120001) do
   add_foreign_key "ramon_funil_acoes", "accounts", on_delete: :cascade
   add_foreign_key "ramon_funil_acoes", "leads", on_delete: :cascade
   add_foreign_key "ramon_funil_acoes", "users", column: "desfeita_por_id", on_delete: :nullify
+  add_foreign_key "ramon_google_agendas", "accounts", on_delete: :cascade
+  add_foreign_key "ramon_google_agendas", "users", on_delete: :cascade
   add_foreign_key "ramon_pecas", "accounts"
   add_foreign_key "ramon_reunioes", "accounts"
   add_foreign_key "ramon_reunioes", "leads"
