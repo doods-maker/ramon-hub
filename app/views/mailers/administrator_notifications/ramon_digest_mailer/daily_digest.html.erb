@@ -51,6 +51,23 @@
                 </table>
               </td>
             </tr>
+            <% if @stats[:funil_auto].present? %>
+              <tr>
+                <td style="padding:14px 20px 0;">
+                  <p style="margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;color:#3b2a1c;">O que a IA mexeu ontem</p>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <% @stats[:funil_auto].each do |item| %>
+                      <tr>
+                        <td valign="top" style="padding:4px 10px 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.4;color:#3b2a1c;white-space:nowrap;">
+                          <a href="<%= item[:conversation_id] ? "#{@frontend_url}/app/accounts/#{@account_id}/conversations/#{item[:conversation_id]}" : @funil_url %>" style="color:#7d5432;text-decoration:none;font-weight:bold;"><%= item[:lead_name] %></a>
+                        </td>
+                        <td valign="top" style="padding:4px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.4;color:<%= item[:ensaio] ? '#6b5f52' : '#3b2a1c' %>;"><%= item[:texto] %></td>
+                      </tr>
+                    <% end %>
+                  </table>
+                </td>
+              </tr>
+            <% end %>
             <tr>
               <td style="padding:14px 20px 18px;">
                 <a href="<%= @command_center_url %>" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;color:#7d5432;text-decoration:none;">Abrir o Centro de Comando →</a>

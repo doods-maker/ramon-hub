@@ -7,8 +7,8 @@ RSpec.describe Ramon::Fluxos::Sistema do
 
   def do_sistema(chave) = account.fluxos.find_by(origem: 'sistema', sistema_chave: chave)
 
-  it 'os 29 desenhos passam no Grafo (só a etapa fica em aberto: é do funil de cada conta)' do
-    expect(described_class.desenhos.size).to eq(29)
+  it 'os 30 desenhos passam no Grafo (só a etapa fica em aberto: é do funil de cada conta)' do
+    expect(described_class.desenhos.size).to eq(30)
     described_class.desenhos.each do |chave, d|
       erros = Ramon::Fluxos::Grafo.new(d['desenho']).erros.grep_v(/: falta etapa_id\z/)
       expect([chave, d['nome'].present?, d['grupo'].present?, erros]).to eq([chave, true, true, []])

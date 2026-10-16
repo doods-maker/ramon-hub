@@ -4,6 +4,8 @@
 # cadência de mudança).
 class Ramon::DailyDigestService
   TIME_ZONE = 'America/Sao_Paulo'.freeze
+  ACOES = { 'mover_etapa' => 'moveu para', 'marcar_ganho' => 'marcou Ganho' }.freeze
+  FUNIL_AUTO_LIMITE = 50
   WDAYS = %w[domingo segunda terça quarta quinta sexta sábado].freeze
   MONTHS = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
 
@@ -24,7 +26,8 @@ class Ramon::DailyDigestService
       new_leads: leads_funil.where(created_at: yesterday_range).reorder(nil).count,
       won: won_stats,
       lost: lost_stats,
-      first_response_label: first_response_label
+      first_response_label: first_response_label,
+      funil_auto: funil_auto
     }
   end
 
@@ -112,6 +115,25 @@ class Ramon::DailyDigestService
     replied = sla_conversations(yesterday_range).where.not(first_reply_created_at: nil)
     avg = replied.average(Arel.sql('EXTRACT(EPOCH FROM (first_reply_created_at - conversations.created_at)) / 60.0'))
     "#{avg.to_f.round}min" if avg.present?
+  end
+
+  # "O que a IA mexeu ontem" (só admins veem: o e-mail já vai só pra eles). Ensaio aparece como "faria:".
+  def funil_auto
+    FunilAcao.where(account: @account, created_at: yesterday_range).includes(lead: :conversation)
+             .order(:created_at).limit(FUNIL_AUTO_LIMITE).map { |acao| funil_auto_item(acao) }
+  end
+
+  def funil_auto_item(acao)
+    texto = "#{acao_legivel(acao)}: #{acao.motivo}"
+    texto = "faria: #{texto}" if acao.ensaio
+    texto += ' (desfeita)' if acao.desfeita_em
+    { lead_id: acao.lead_id, lead_name: acao.lead.name, conversation_id: acao.lead.conversation&.display_id,
+      texto: texto, ensaio: acao.ensaio }
+  end
+
+  def acao_legivel(acao)
+    base = ACOES.fetch(acao.acao, acao.acao)
+    acao.acao == 'mover_etapa' && acao.alvo.present? ? "#{base} #{acao.alvo}" : base
   end
 
   # ---- Formatação (fuso do escritório) ------------------------------------

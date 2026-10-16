@@ -172,4 +172,4 @@ ramon_caderno_noturno_job:
 ramon_funil_tempo_job:
   cron: '0 14 * * *'
   class: 'Ramon::FunilTempoJob'
-  queue: low
+  queue: scheduled_jobs

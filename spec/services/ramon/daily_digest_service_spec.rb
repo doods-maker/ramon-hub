@@ -92,5 +92,35 @@ RSpec.describe Ramon::DailyDigestService do
       expect(stats[:lost]).to eq(count: 0, reason: nil)
       expect(stats[:first_response_label]).to be_nil
     end
+
+    describe 'funil_auto (o que a IA mexeu ontem)' do
+      let(:lead) { create(:lead, account: account, lead_stage: stage_novo, name: 'Maria') }
+
+      def acao(created_at:, **attrs)
+        FunilAcao.create!({ account: account, lead: lead, peca: 'tempo_perdido', acao: 'mover_etapa', motivo: 'sem resposta',
+                            alvo: 'Perdido', ensaio: false, created_at: created_at }.merge(attrs))
+      end
+
+      it 'traz a ação de ontem e ignora a de hoje' do
+        travel_to noon_brt(23) do
+          acao(created_at: noon_brt(22))
+          acao(created_at: noon_brt(23), motivo: 'de hoje')
+
+          expect(service.yesterday_stats[:funil_auto]).to eq(
+            [{ lead_id: lead.id, lead_name: 'Maria', conversation_id: nil, texto: 'moveu para Perdido: sem resposta', ensaio: false }]
+          )
+        end
+      end
+
+      it 'marca a ação desfeita e o ensaio' do
+        travel_to noon_brt(23) do
+          acao(created_at: noon_brt(22), desfeita_em: noon_brt(22) + 1.hour)
+          acao(created_at: noon_brt(22) + 1.minute, ensaio: true)
+
+          textos = service.yesterday_stats[:funil_auto].pluck(:texto)
+          expect(textos).to eq(['moveu para Perdido: sem resposta (desfeita)', 'faria: moveu para Perdido: sem resposta'])
+        end
+      end
+    end
   end
 end
