@@ -3,8 +3,6 @@
 # etapa ou alerta. Tudo vira CopilotSuggestion pendente pro humano aprovar de
 # manhã no Cockpit. NADA é enviado ao cliente por aqui.
 class Ramon::NightCopilotService
-  MAX_MESSAGES = 200
-
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você é o copiloto noturno de um escritório de advocacia previdenciária no Brasil.
     Receberá a ficha e a conversa de UM lead parado no funil comercial. Analise e devolva
@@ -90,7 +88,7 @@ class Ramon::NightCopilotService
 
   # Pseudonimizado (LGPD, mesmo padrão do Copilot): o texto só sai daqui mascarado.
   def user_prompt(lead)
-    text = [lead_sheet(lead), transcript(lead.conversation)].compact_blank.join("\n\n")
+    text = [lead_sheet(lead), Ramon::Transcricao.de(lead.conversation)].compact_blank.join("\n\n")
     Ramon::Pseudonymizer.mask(text, names: [lead.name, lead.contact&.name])
   end
 
@@ -109,21 +107,6 @@ class Ramon::NightCopilotService
     return 0 if lead.stage_entered_at.blank?
 
     (Time.zone.today - lead.stage_entered_at.to_date).to_i
-  end
-
-  # ponytail: espelha FollowUpDraftService#transcript; extrair helper comum se surgir um 5º consumidor.
-  def transcript(conversation)
-    return nil if conversation.blank?
-
-    messages = conversation.messages.where(message_type: [:incoming, :outgoing], private: false)
-                           .order(:created_at).last(MAX_MESSAGES)
-    lines = messages.filter_map do |m|
-      text = m.content_for_llm
-      next if text.blank? || text == '[Attachment]'
-
-      "#{m.incoming? ? 'Cliente' : 'Atendimento'}: #{text}"
-    end
-    lines.presence && "Conversa (WhatsApp/chat):\n#{lines.join("\n")}"
   end
 
   def restore_name(lead, content)
