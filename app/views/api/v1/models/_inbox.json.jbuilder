@@ -23,7 +23,6 @@ json.auto_create_lead resource.auto_create_lead
 json.first_response_sla_minutes resource.first_response_sla_minutes
 json.portaria_enabled resource.portaria_enabled
 json.ramon_thesis_id resource.ramon_thesis_id
-json.ramon_copiloto_modo resource.ramon_copiloto_modo
 
 if resource.portal.present?
   json.help_center do

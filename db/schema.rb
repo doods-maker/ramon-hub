@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_19_120002) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_20_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1031,7 +1031,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_120002) do
     t.integer "first_response_sla_minutes"
     t.boolean "portaria_enabled", default: false, null: false
     t.bigint "ramon_thesis_id"
-    t.string "ramon_copiloto_modo"
     t.index ["account_id"], name: "index_inboxes_on_account_id"
     t.index ["channel_id", "channel_type"], name: "index_inboxes_on_channel_id_and_channel_type"
     t.index ["portal_id"], name: "index_inboxes_on_portal_id"
@@ -2221,7 +2220,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_120002) do
       r.respondidos,
       r.iniciado_em,
       r.ultima_resposta_em,
-      (c.custom_attributes ->> 'copiloto_modo'::text) AS modo,
+      (c.custom_attributes ->> 'ia_pausa'::text) AS modo,
       (c.custom_attributes #>> '{copiloto_limite,limite}'::text[]) AS limite_atingido,
       ((c.custom_attributes #>> '{copiloto_limite,em}'::text[]))::timestamp with time zone AS limite_em,
       (c.custom_attributes #>> '{copiloto_limite,motivo}'::text[]) AS limite_motivo,

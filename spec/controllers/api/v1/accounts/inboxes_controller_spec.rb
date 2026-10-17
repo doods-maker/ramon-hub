@@ -688,7 +688,7 @@ RSpec.describe 'Inboxes API', type: :request do
               as: :json
 
         expect(response).to have_http_status(:success)
-        expect(inbox.reload).to have_attributes(ramon_thesis_id: thesis.id, ramon_copiloto_modo: nil)
+        expect(inbox.reload).to have_attributes(ramon_thesis_id: thesis.id)
       end
 
       it 'sets the first-response SLA minutes on the inbox' do
