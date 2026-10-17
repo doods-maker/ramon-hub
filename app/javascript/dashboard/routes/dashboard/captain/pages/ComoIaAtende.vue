@@ -16,6 +16,7 @@ import {
   efetivo,
   estadoDaEtapa,
   marcadorDe,
+  paraGravar,
 } from 'dashboard/routes/dashboard/ramon/helpers/perfilIa';
 import ListaAlvos from './comoIaAtende/ListaAlvos.vue';
 import Trilha from './comoIaAtende/Trilha.vue';
@@ -160,7 +161,7 @@ const mudarGatilhos = (etapa, lista) =>
 const salvar = async () => {
   const corpo = {};
   mudados.value.forEach(id => {
-    const cfg = cfgs.value[id];
+    const cfg = paraGravar(cfgs.value[id], prontos.value, etapas.value);
     if (id === 'padrao') {
       corpo.padrao = cfg;
       return;

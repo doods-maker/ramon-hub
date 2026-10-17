@@ -16,8 +16,8 @@ export const TOM_DO_ESTADO = {
   rascunho: TOM.amber,
   nunca: TOM.ruby,
 };
-// Logística é justamente o que sai sozinho depois do Marcador (logistica_sai?): o Marcador não a limita.
-const SEM_TETO = ['logistica'];
+// Fora do horário vale em toda Etapa (segura, no Ruby): o Marcador não o limita.
+const SEM_TETO = ['fora_do_horario'];
 
 export const baseDe = cfg => cfg.base || 'cautelosa';
 
@@ -82,18 +82,29 @@ export const ajustes = (cfg, prontos, etapas) => {
   return (atual.marcador === pronto.marcador ? 0 : 1) + acoes + gatilhos;
 };
 
-// O Marcador é teto: depois dele, sozinha vira rascunho (nunca continua nunca).
+// O Marcador é teto: depois dele, sozinha vira rascunho (limitadoPeloMarcador; rascunho e nunca ficam).
+// Logística segue o logistica_sai?: antes do Marcador tudo sai sozinho (liberadoPeloMarcador); depois, a própria.
 export const permissaoEfetiva = (acao, etapa, cfg, prontos, etapas) => {
   const propria = PERMISSAO[efetivo(cfg, prontos, etapas).permissoes[acao]];
-  const limitadoPeloMarcador =
-    !SEM_TETO.includes(acao) &&
-    propria !== 'nunca' &&
+  const depois =
     estadoDaEtapa(etapa, marcadorDe(cfg, prontos, etapas), etapas) ===
-      'rascunho';
+    'rascunho';
+  if (acao === 'logistica') {
+    const liberadoPeloMarcador = !depois && propria !== 'sozinha';
+    return {
+      valor: depois ? propria : 'sozinha',
+      propria,
+      limitadoPeloMarcador: false,
+      liberadoPeloMarcador,
+    };
+  }
+  const limitadoPeloMarcador =
+    !SEM_TETO.includes(acao) && depois && propria === 'sozinha';
   return {
     valor: limitadoPeloMarcador ? 'rascunho' : propria,
     propria,
     limitadoPeloMarcador,
+    liberadoPeloMarcador: false,
   };
 };
 
@@ -118,4 +129,22 @@ export const frase = (marcador, etapas, t) => {
     ate: etapas[posicao - 1].nome,
     depois: etapas[posicao].nome,
   });
+};
+
+// O que vai no PATCH: o servidor recusa Marcador e Gatilhos de Etapa que saiu da Trilha (gravacao.rb).
+// Marcador velho vira o da base (se ainda estiver na Trilha) ou _inicio; gatilhos de Etapa velha saem.
+export const paraGravar = (cfg, prontos, etapas) => {
+  if (!cfg) return cfg;
+  const chaves = etapas.map(e => e.chave);
+  const validos = [INICIO, FIM, ...chaves];
+  const limpo = { ...cfg };
+  if (cfg.marcador !== undefined && !validos.includes(cfg.marcador)) {
+    const daBase = prontos[baseDe(cfg)].marcador;
+    limpo.marcador = validos.includes(daBase) ? daBase : INICIO;
+  }
+  if (cfg.gatilhos)
+    limpo.gatilhos = Object.fromEntries(
+      Object.entries(cfg.gatilhos).filter(([chave]) => chaves.includes(chave))
+    );
+  return limpo;
 };

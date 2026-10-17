@@ -87,6 +87,7 @@
         "DICA": "Click the state to change it.",
         "TROCAR": "Change the permission for {acao} (now: {valor})",
         "LIMITADO": "limited by the marker (setting: {valor})",
+        "LIBERADO": "before the marker everything goes out on its own (setting: {valor})",
         "AJUSTADO": "Adjusted by hand",
         "CONFIRMACAO": "Meeting confirmation: set in the Meetings flow",
         "ABRIR_FLUXOS": "Open the flows →",
@@ -98,7 +99,7 @@
         "PENDENTE_SUFIXO": "· text pending"
       },
       "ACOES": {
-        "fora_do_horario": "Reply outside business hours",
+        "fora_do_horario": "Reply outside business hours (applies to every stage)",
         "pedir_documentos": "Ask for documents (CNIS, medical reports)",
         "desqualificar": "Disqualify the lead",
         "mover_etapa": "Move the lead to another stage",

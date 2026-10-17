@@ -76,6 +76,9 @@ const gatilhosAjustados = computed(
     ligados.value.some(g => !pronto.value.gatilhos.includes(g))
 );
 
+// Pendente (sem texto aprovado) nunca entra no prompt: aparece desligado mesmo se a lista o traz.
+const ligado = gatilho =>
+  !gatilho.pendente && ligados.value.includes(gatilho.chave);
 const estado = valor => t(`RAMON.COMO_IA.ESTADO.${valor}`);
 const trocar = linha =>
   emit(
@@ -127,6 +130,12 @@ const alternar = gatilho =>
           class="text-[11.5px] text-n-slate-10"
         >
           {{ t(`${K}.LIMITADO`, { valor: estado(linha.propria) }) }}
+        </span>
+        <span
+          v-if="linha.liberadoPeloMarcador"
+          class="text-[11.5px] text-n-slate-10"
+        >
+          {{ t(`${K}.LIBERADO`, { valor: estado(linha.propria) }) }}
         </span>
         <button
           type="button"
@@ -213,13 +222,13 @@ const alternar = gatilho =>
             type="button"
             :data-testid="`gatilho-${gatilho.chave}`"
             :disabled="travado || gatilho.pendente"
-            :aria-pressed="ligados.includes(gatilho.chave)"
+            :aria-pressed="ligado(gatilho)"
             :title="
               gatilho.pendente ? t(`${K}.PENDENTE`) : t(`${K}.GATILHOS_DICA`)
             "
             class="inline-flex items-center gap-1 rounded-full border border-solid px-2.5 py-1 text-xs disabled:cursor-not-allowed"
             :class="[
-              ligados.includes(gatilho.chave)
+              ligado(gatilho)
                 ? `border-transparent font-medium ${TOM.ruby}`
                 : 'border-n-weak text-n-slate-11 hover:border-n-slate-8',
               gatilho.pendente ? 'opacity-60' : '',
@@ -227,7 +236,7 @@ const alternar = gatilho =>
             @click="alternar(gatilho)"
           >
             <span
-              v-if="ligados.includes(gatilho.chave)"
+              v-if="ligado(gatilho)"
               class="i-lucide-check size-3"
               aria-hidden="true"
             />

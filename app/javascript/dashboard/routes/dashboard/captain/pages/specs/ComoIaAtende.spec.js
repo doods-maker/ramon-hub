@@ -103,18 +103,33 @@ describe('Como a IA atende', () => {
     await clicar(wrapper, 'etapa-fase-reuniao-agendada');
     expect(achar(wrapper, 'limite-confirmacao').exists()).toBe(true);
     const log = () => permissao(wrapper, 'logistica');
+    // antes do Marcador tudo sai sozinho: o ajuste aparece só na nota
     expect(log().text()).toBe('On its own');
     await log().trigger('click');
+    expect(log().text()).toBe('On its own');
+    expect(achar(wrapper, 'limite-logistica').text()).toContain(
+      'before the marker everything goes out on its own (setting: Draft)'
+    );
+
+    // Marcador antes de Reunião agendada: logística vale a própria e pula Nunca
+    await achar(wrapper, 'marcador').trigger('keydown', { key: 'ArrowLeft' });
     expect(log().text()).toBe('Draft');
     await log().trigger('click');
     expect(log().text()).toBe('On its own');
+    await log().trigger('click');
+    expect(log().text()).toBe('Draft');
   });
 
   it('depois do Marcador mostra o valor efetivo; desconto travado; gatilho pendente não liga', async () => {
     const wrapper = await montar();
     await clicar(wrapper, 'etapa-fase-negociacao');
-    expect(achar(wrapper, 'limite-contrato_zapsign').text()).toContain(
-      'limited by the marker'
+    const contrato = () => achar(wrapper, 'limite-contrato_zapsign');
+    expect(contrato().text()).not.toContain('limited by the marker');
+    await permissao(wrapper, 'contrato_zapsign').trigger('click');
+    await permissao(wrapper, 'contrato_zapsign').trigger('click');
+    expect(permissao(wrapper, 'contrato_zapsign').text()).toBe('Draft');
+    expect(contrato().text()).toContain(
+      'limited by the marker (setting: On its own)'
     );
     expect(achar(wrapper, 'limite-desconto').text()).toContain(
       'Never · office rule'
@@ -122,13 +137,18 @@ describe('Como a IA atende', () => {
     expect(
       achar(wrapper, 'gatilho-irritado').attributes('disabled')
     ).toBeDefined();
-    expect(achar(wrapper, 'gatilho-irritado').text()).toContain('text pending');
+    // pendente nunca chega ao prompt: desligado mesmo com a Equilibrada trazendo
+    const irritado = achar(wrapper, 'gatilho-irritado');
+    expect(irritado.text()).toContain('text pending');
+    expect(irritado.attributes('aria-pressed')).toBe('false');
+    expect(irritado.find('.i-lucide-check').exists()).toBe(false);
 
     await clicar(wrapper, 'gatilho-nao_le');
     expect(achar(wrapper, 'gatilho-nao_le').attributes('aria-pressed')).toBe(
       'true'
     );
-    expect(achar(wrapper, 'selo').text()).toContain('1 adjustment');
+    // contrato (1) + nao_le (1)
+    expect(achar(wrapper, 'selo').text()).toContain('2 adjustments');
   });
 
   it('"Personalizar só esta" numa tese copia o padrão; "Voltar a seguir o padrão" desfaz', async () => {
@@ -171,6 +191,35 @@ describe('Como a IA atende', () => {
     });
     expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
     expect(achar(wrapper, 'selo').text()).toBe('Profile Cautious');
+  });
+
+  it('salvar troca Marcador velho e tira gatilhos de Etapa que saiu da Trilha', async () => {
+    const corpo = dados();
+    corpo.teses.push({
+      id: 4,
+      nome: 'Tese antiga',
+      cfg: {
+        base: 'equilibrada',
+        marcador: 'fase-apagada',
+        gatilhos: { 'fase-apagada': ['juridica'], 'fase-novo': ['juridica'] },
+      },
+    });
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    RamonIaAtendimentoAPI.salvar.mockResolvedValue({ data: corpo });
+    const wrapper = await montar();
+    await clicar(wrapper, 'alvo-tese:4');
+    await clicar(wrapper, 'gatilho-pediu_pessoa');
+    await clicar(wrapper, 'salvar');
+    await flushPromises();
+    expect(RamonIaAtendimentoAPI.salvar).toHaveBeenCalledWith({
+      teses: {
+        4: {
+          base: 'equilibrada',
+          marcador: 'fase-reuniao-agendada',
+          gatilhos: { 'fase-novo': ['pediu_pessoa', 'juridica'] },
+        },
+      },
+    });
   });
 
   it('erro 422 do salvar vira alerta com a mensagem do servidor', async () => {

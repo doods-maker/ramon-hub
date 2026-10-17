@@ -87,6 +87,7 @@
         "DICA": "Clique no estado pra trocar.",
         "TROCAR": "Trocar a permissão de {acao} (agora: {valor})",
         "LIMITADO": "limitado pelo marcador (ajuste: {valor})",
+        "LIBERADO": "antes do marcador tudo sai sozinho (ajuste: {valor})",
         "AJUSTADO": "Ajustado à mão",
         "CONFIRMACAO": "Confirmação da reunião: definida no fluxo Reuniões",
         "ABRIR_FLUXOS": "Abrir os fluxos →",
@@ -98,7 +99,7 @@
         "PENDENTE_SUFIXO": "· texto pendente"
       },
       "ACOES": {
-        "fora_do_horario": "Responder fora do horário comercial",
+        "fora_do_horario": "Responder fora do horário comercial (vale em todas as etapas)",
         "pedir_documentos": "Pedir documentos (CNIS, laudos)",
         "desqualificar": "Desqualificar o lead",
         "mover_etapa": "Mover o lead de etapa",

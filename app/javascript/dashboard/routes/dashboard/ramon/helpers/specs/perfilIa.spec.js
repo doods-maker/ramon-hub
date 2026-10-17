@@ -6,6 +6,7 @@ import {
   frase,
   marcadorDaPosicao,
   marcadorDe,
+  paraGravar,
   permissaoEfetiva,
   posicaoDoMarcador,
   proximaPermissao,
@@ -63,25 +64,79 @@ describe('perfilIa (espelho do Ramon::PerfilIa)', () => {
     expect(marcadorDaPosicao(6, ETAPAS)).toBe('_fim');
   });
 
-  it('o Marcador é teto (menos para logística e nunca)', () => {
+  it('o Marcador é teto: só limita quem está em sozinha depois dele', () => {
+    const eq = permissoes => ({ base: 'equilibrada', permissoes });
+    expect(pe('contrato_zapsign', 'fase-negociacao', eq())).toMatchObject({
+      valor: 'rascunho',
+      limitadoPeloMarcador: false,
+    });
     expect(
-      pe('contrato_zapsign', 'fase-negociacao', { base: 'equilibrada' })
-    ).toMatchObject({ valor: 'rascunho', limitadoPeloMarcador: true });
+      pe('contrato_zapsign', 'fase-negociacao', eq({ contrato_zapsign: 's' }))
+    ).toEqual({
+      valor: 'rascunho',
+      propria: 'sozinha',
+      limitadoPeloMarcador: true,
+      liberadoPeloMarcador: false,
+    });
     expect(
       pe('contrato_zapsign', 'fase-negociacao', { base: 'acelerada' })
     ).toMatchObject({ valor: 'sozinha', limitadoPeloMarcador: false });
     expect(
       pe('citar_honorario', 'fase-negociacao', { base: 'cautelosa' })
     ).toMatchObject({ valor: 'nunca', limitadoPeloMarcador: false });
-    expect(pe('logistica', 'fase-reuniao-agendada', inicial)).toMatchObject({
+  });
+
+  it('fora do horário vale em toda Etapa: o Marcador não o limita', () => {
+    expect(pe('fora_do_horario', 'fase-novo', inicial)).toMatchObject({
       valor: 'sozinha',
+      propria: 'sozinha',
       limitadoPeloMarcador: false,
     });
-    expect(pe('fora_do_horario', 'fase-novo', inicial)).toEqual({
-      valor: 'rascunho',
-      propria: 'sozinha',
-      limitadoPeloMarcador: true,
+  });
+
+  it('logística: antes do Marcador sai sozinha; depois, a própria', () => {
+    expect(
+      pe('logistica', 'fase-reuniao-agendada', {
+        base: 'equilibrada',
+        permissoes: { logistica: 'r' },
+      })
+    ).toEqual({
+      valor: 'sozinha',
+      propria: 'rascunho',
+      limitadoPeloMarcador: false,
+      liberadoPeloMarcador: true,
     });
+    expect(pe('logistica', 'fase-reuniao-agendada', inicial)).toMatchObject({
+      valor: 'sozinha',
+      liberadoPeloMarcador: false,
+    });
+    expect(
+      pe('logistica', 'fase-reuniao-agendada', { base: 'cautelosa' })
+    ).toMatchObject({ valor: 'rascunho', liberadoPeloMarcador: false });
+  });
+
+  it('paraGravar troca Marcador velho e tira gatilhos de Etapa velha', () => {
+    const cfg = {
+      base: 'equilibrada',
+      marcador: 'fase-apagada',
+      gatilhos: { 'fase-apagada': ['juridica'], 'fase-novo': ['juridica'] },
+    };
+    expect(paraGravar(cfg, PRONTOS, ETAPAS)).toEqual({
+      base: 'equilibrada',
+      marcador: 'fase-reuniao-agendada',
+      gatilhos: { 'fase-novo': ['juridica'] },
+    });
+    expect(
+      paraGravar(
+        { base: 'equilibrada', marcador: 'x' },
+        PRONTOS,
+        ETAPAS.slice(0, 2)
+      ).marcador
+    ).toBe('_inicio');
+    expect(paraGravar({ base: 'acelerada' }, PRONTOS, ETAPAS)).toEqual({
+      base: 'acelerada',
+    });
+    expect(paraGravar(null, PRONTOS, ETAPAS)).toBeNull();
   });
 
   it('proximaPermissao: S → R → N → S; sem nunca pula o N', () => {
