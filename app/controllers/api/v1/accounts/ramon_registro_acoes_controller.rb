@@ -1,6 +1,6 @@
 # Registro de ações: quem fez o quê, quando, e o que era antes — a trilha
 # somente-inclusão (audits) da conta, filtrada e paginada. Só administrador.
-# ?desde=&ate= (AAAA-MM-DD, fuso SP) &user_id= &tipo=lead|contato|conversa|dinheiro|acesso
+# ?desde=&ate= (AAAA-MM-DD, fuso SP) &user_id= &tipo=lead|contato|conversa|dinheiro|acesso|ia
 # &q= (nome do lead/contato) &page= &todos=1 (CSV, até Ramon::RegistroAcoes::LIMITE_CSV)
 class Api::V1::Accounts::RamonRegistroAcoesController < Api::V1::Accounts::BaseController
   before_action :check_authorization

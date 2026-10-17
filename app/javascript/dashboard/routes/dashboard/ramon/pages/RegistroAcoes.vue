@@ -2,11 +2,15 @@
 // Registro de ações (só administrador): quem fez o quê, quando, e o que era
 // antes — a trilha somente-inclusão (audits), guardada por 5 anos (LGPD).
 // Filtros vão pro backend; a frase em pt-BR sai de helpers/registroAcoes.
+// ?tipo=ia (botão Histórico da tela Como a IA atende) já abre filtrado; linha da IA tem Desfazer por alvo.
 import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import { useAccount } from 'dashboard/composables/useAccount';
 import RamonRegistroAcoesAPI from 'dashboard/api/ramonRegistroAcoes';
+import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
+import { mensagemErro } from '../helpers/erro';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import {
@@ -23,6 +27,7 @@ import {
   TOM_DO_TIPO,
   fraseDoRegistro,
   linhaCsv,
+  mudancasDaIa,
   mudancasDoRegistro,
   paraCsv,
   quandoSp,
@@ -34,8 +39,16 @@ defineOptions({ name: 'RamonRegistroAcoes' });
 
 const { t } = useI18n();
 const { accountScopedRoute } = useAccount();
+const route = useRoute();
 
-const filtros = ref({ desde: '', ate: '', user_id: '', tipo: '', q: '' });
+const tipoInicial = TIPOS.includes(route.query.tipo) ? route.query.tipo : '';
+const filtros = ref({
+  desde: '',
+  ate: '',
+  user_id: '',
+  tipo: tipoInicial,
+  q: '',
+});
 const pagina = ref(1);
 const registros = ref([]);
 const pessoas = ref([]);
@@ -106,6 +119,21 @@ const exportarCsv = async () => {
     useAlert(t('RAMON.REGISTRO.CSV_ERRO'));
   } finally {
     exportando.value = false;
+  }
+};
+
+// Desfazer (linha da IA): regrava o valor de antes só naquele alvo — vira outra linha do registro.
+const desfazendo = ref(false);
+const desfazer = async (registro, alvo) => {
+  desfazendo.value = true;
+  try {
+    await RamonIaAtendimentoAPI.desfazer(registro.id, alvo);
+    useAlert(t('RAMON.REGISTRO.IA.DESFEITO'));
+    await carregar();
+  } catch (e) {
+    useAlert(mensagemErro(e, t('RAMON.REGISTRO.IA.ERRO')));
+  } finally {
+    desfazendo.value = false;
   }
 };
 
@@ -262,6 +290,33 @@ onMounted(carregar);
               >
                 {{ r.alvo.nome }}
               </span>
+              <ul
+                v-if="r.ia"
+                class="m-0 flex list-none flex-col gap-1.5 p-0 text-xs"
+              >
+                <li
+                  v-for="grupo in mudancasDaIa(r, t)"
+                  :key="grupo.alvo"
+                  data-testid="registro-ia"
+                  class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
+                >
+                  <span class="font-medium text-n-slate-12">
+                    {{ `${grupo.nome}:` }}
+                  </span>
+                  <span class="min-w-0 flex-1 text-n-slate-11">
+                    {{ grupo.frases.join(' · ') }}
+                  </span>
+                  <button
+                    type="button"
+                    data-testid="registro-desfazer"
+                    class="font-medium text-n-blue-11 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="desfazendo"
+                    @click="desfazer(r, grupo.alvo)"
+                  >
+                    {{ t('RAMON.REGISTRO.IA.DESFAZER') }}
+                  </button>
+                </li>
+              </ul>
             </div>
             <ul class="m-0 flex list-none flex-col gap-0.5 p-0 text-xs">
               <li

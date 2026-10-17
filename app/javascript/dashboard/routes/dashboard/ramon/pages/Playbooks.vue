@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -35,6 +36,7 @@ const OPCOES_BOTOES = ['desligado', 'ligado', 'teste_ab'];
 const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
+const route = useRoute();
 
 const theses = computed(() => getters['theses/getTheses'].value);
 const uiFlags = computed(() => getters['theses/getUIFlags'].value);
@@ -344,8 +346,16 @@ const passosDaTese = computed(
   () => passos.value.filter(p => p.thesis_id === selectedId.value).length
 );
 
+// ?tese=<id>&aba=roteiro (avisos da tela Como a IA atende): já abre na tese e na aba.
+const abrirDaQuery = () => {
+  const tese = theses.value.find(x => String(x.id) === route.query.tese);
+  if (!tese) return;
+  selectThesis(tese);
+  if (route.query.aba === 'roteiro') abaDetalhe.value = 'roteiro';
+};
+
 onMounted(() => {
-  store.dispatch('theses/get');
+  store.dispatch('theses/get').then(abrirDaQuery);
   // etapas e motivos de perda das saídas do roteiro
   store.dispatch('leadConfig/get');
   carregarModelos();

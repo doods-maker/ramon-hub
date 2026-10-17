@@ -32,9 +32,13 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
     ferramentas = []
     teste = Ramon::Roteiro::Teste.de_params(Current.account, params[:roteiro]&.to_unsafe_h)
     coletor = ->(nome, retorno, *) { ferramentas << ferramenta_usada(nome, retorno) }
-    resposta = playground_runner(coletor, teste).generate_response(message_history: playground_message_history)
-    resposta = resposta.merge('ferramentas' => ferramentas)
-    render json: teste ? resposta.merge('roteiro' => Ramon::Roteiro::Teste.resposta(Current.account, teste)) : resposta
+    runner = playground_runner(coletor, teste)
+    resposta = runner.generate_response(message_history: playground_message_history).merge('ferramentas' => ferramentas)
+    return render(json: resposta) unless teste
+
+    # ramon (Perfil da IA): a decisão do perfil do teste (início do turno) debaixo da resposta
+    render json: resposta.merge(Ramon::Roteiro::Teste.decisao(runner.perfil, resposta),
+                                'roteiro' => Ramon::Roteiro::Teste.resposta(Current.account, teste))
   end
 
   def tools

@@ -2,6 +2,9 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createStore } from 'vuex';
 import Playbooks from '../Playbooks.vue';
 
+const rota = vi.hoisted(() => ({ query: {} }));
+vi.mock('vue-router', () => ({ useRoute: () => rota }));
+
 vi.mock('dashboard/api/roteiroPassos', () => ({
   default: {
     get: vi.fn(() =>
@@ -95,6 +98,17 @@ describe('Playbooks.vue', () => {
     expect(items).toHaveLength(2);
     expect(wrapper.text()).toContain('Auxílio-acidente');
     expect(wrapper.text()).toContain('BPC/LOAS');
+  });
+
+  it('?tese=&aba=roteiro (aviso da tela Como a IA atende) abre na tese e na aba do roteiro', async () => {
+    rota.query = { tese: '1', aba: 'roteiro' };
+    const { wrapper } = mountPlaybooks();
+    await flushPromises();
+    rota.query = {};
+
+    expect(wrapper.find('[data-testid="playbooks-roteiro"]').exists()).toBe(
+      true
+    );
   });
 
   it('fetches theses on mount', () => {

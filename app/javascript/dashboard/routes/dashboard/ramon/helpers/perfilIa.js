@@ -148,3 +148,53 @@ export const paraGravar = (cfg, etapas) => {
     );
   return limpo;
 };
+
+// Limites gerais na forma de comparar (dias ordenados, números como números, chaves em ordem fixa): religar um dia ou
+// redigitar o mesmo valor não conta como mudança. Só as chaves editáveis (agente_dia e retomadas_no_fluxo são do servidor).
+const numero = valor => (valor === '' || valor == null ? null : Number(valor));
+export const limitesParaComparar = l => ({
+  horario: {
+    dias: [...l.horario.dias].map(Number).sort((a, b) => a - b),
+    janelas: l.horario.janelas.map(par => [...par]),
+  },
+  atraso: { min: numero(l.atraso.min), max: numero(l.atraso.max) },
+  fluxo_ia_dia: numero(l.fluxo_ia_dia),
+  retomadas_dia: numero(l.retomadas_dia),
+  retomada_intervalo_dias: numero(l.retomada_intervalo_dias),
+  teto_usd: numero(l.teto_usd),
+});
+
+// "Passar pra Sozinha?" (números da Etapa): o Marcador vai para logo depois da Etapa — ela e as de antes ficam Sozinha.
+export const marcadorDepoisDe = (chave, etapas) =>
+  marcadorDaPosicao(etapas.findIndex(e => e.chave === chave) + 1, etapas);
+
+// "Testar este perfil" sai da tela sem salvar: o que não foi salvo fica guardado e volta na próxima carga, se
+// for de menos de 30 minutos (mais velho, descarta). ponytail: memória da página (F5 perde, como as conversas do Testar).
+export const VALIDADE_DA_TELA_MS = 30 * 60 * 1000;
+let telaGuardada = null;
+export const guardarTela = tela => {
+  telaGuardada = { tela: JSON.parse(JSON.stringify(tela)), em: Date.now() };
+};
+export const retomarTela = () => {
+  const guardada = telaGuardada;
+  telaGuardada = null;
+  return guardada && Date.now() - guardada.em < VALIDADE_DA_TELA_MS
+    ? guardada.tela
+    : null;
+};
+
+// Aviso de dependência (Ramon::PerfilIa::Avisos) → para onde o link leva. A tese abre nos Playbooks (o Roteiro da IA
+// na aba dela); Caixas = Assistente → Caixas do último assistente aberto.
+export const rotaDoAviso = (aviso, alvoId) => {
+  const [tipo, id] = alvoId.split(':');
+  const tese = tipo === 'tese' ? { tese: id } : {};
+  return {
+    playbooks: { name: 'ramon_playbooks', query: tese },
+    roteiro: { name: 'ramon_playbooks', query: { ...tese, aba: 'roteiro' } },
+    agenda: { name: 'ramon_agenda' },
+    caixas: {
+      name: 'captain_assistants_index',
+      params: { navigationPath: 'captain_assistants_inboxes_index' },
+    },
+  }[aviso.link];
+};

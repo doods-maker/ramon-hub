@@ -79,7 +79,7 @@ class Ramon::IaUsoResumo
   # Contador e teto que o passo de IA dos fluxos usa (Ramon::Fluxos::Passos::Ia#cota!) — só leitura.
   def fluxos
     chave = "RAMON::FLUXO_IA::#{@account.id}::#{Time.find_zone!(Fluxo::ZONA).today}"
-    { hoje: Redis::Alfred.get(chave).to_i, teto: ENV.fetch('RAMON_FLUXO_IA_DIA', Ramon::Fluxos::Passos::Ia::TETO_PADRAO).to_i }
+    { hoje: Redis::Alfred.get(chave).to_i, teto: Ramon::IaLimites.de(@account)[:fluxo_ia_dia] }
   end
 
   def escolhas

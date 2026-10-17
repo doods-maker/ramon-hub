@@ -77,4 +77,26 @@ RSpec.describe 'Ramon Registro de ações API', type: :request do
     expect(linha).to include('comentario' => 'anonimizado', 'quem' => { 'id' => admin.id, 'nome' => 'Ana Gestora' })
     expect(linha['alvo']).to eq('contato_id' => contato.id, 'nome' => "Titular anonimizado ##{contato.id}")
   end
+
+  # No CI a Account não é auditada (enterprise/): as linhas vêm como o enterprise grava.
+  it 'tipo ia: só as mudanças do Perfil da IA, com o que mudou em cada alvo', :aggregate_failures do
+    tese = create(:thesis, account: account, name: 'BPC/LOAS')
+    perfil = lambda do |valor|
+      { 'ia_atendimento' => { 'teses' => { tese.id.to_s => { 'base' => 'cautelosa', 'permissoes' => { 'marcar_reuniao' => valor } } } } }
+    end
+    # a 3ª muda o settings mas não o que a IA faz (padrão gravado = o INICIAL, como a migração): sem frase, não aparece
+    inicial = { 'ia_atendimento' => { 'padrao' => Ramon::PerfilIa::INICIAL } }
+    [[perfil.call('r'), perfil.call('s')], [{ 'auto_resolve_after' => nil }, { 'auto_resolve_after' => 60 }], [{}, inicial]].each do |antes, depois|
+      Audited.audit_class.create!(auditable: account, associated: account, action: 'update', user: admin,
+                                  audited_changes: { 'settings' => [antes, depois] })
+    end
+
+    registros = listar(tipo: 'ia')['registros']
+    expect(registros.size).to eq(1)
+    expect(registros.first).to include('tipo' => 'ia', 'modelo' => 'Account', 'mudancas' => {}, 'alvo' => nil,
+                                       'quem' => { 'id' => admin.id, 'nome' => 'Ana Gestora' })
+    expect(registros.first['ia']).to eq([{ 'alvo' => "tese:#{tese.id}", 'nome_alvo' => 'BPC/LOAS', 'campo' => 'permissao',
+                                           'acao_ou_etapa' => 'marcar_reuniao', 'de' => 'rascunho', 'para' => 'sozinha' }])
+    expect(listar['registros'].count { |registro| registro['modelo'] == 'Account' }).to eq(1)
+  end
 end

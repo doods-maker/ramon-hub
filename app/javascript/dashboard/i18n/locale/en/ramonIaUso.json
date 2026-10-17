@@ -35,7 +35,7 @@
     "FLUXOS": {
       "TITULO": "AI in automations",
       "HOJE": "{n} of {teto} calls today",
-      "NOTA": "The daily automation cap comes from the server (RAMON_FLUXO_IA_DIA)."
+      "NOTA": "The daily automation cap is set in \"How the AI works\" (Office-wide limits); the default comes from the server."
     },
     "TABELA": {
       "TITULO": "Breakdown",

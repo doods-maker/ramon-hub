@@ -76,8 +76,8 @@ class Ramon::PerfilIa
   # A caixa tem assistente (Captain é enterprise: sem ele, nunca). Sem IA na caixa, nada de aviso do Marcador nem perfil migrado.
   def self.com_ia?(inbox) = inbox.try(:captain_assistant).present?
 
-  # Grava os alvos enviados (recusa o inválido com ArgumentError): ver Gravacao.
-  def self.gravar!(account, alvos) = Gravacao.gravar!(account, alvos)
+  # Grava os alvos enviados (recusa o inválido com ArgumentError): ver Gravacao. extra = pedaço de settings gravado junto (limites).
+  def self.gravar!(account, alvos, extra = {}) = Gravacao.gravar!(account, alvos, extra)
 
   # Tese manda (a própria ou o padrão); a caixa só vale para lead sem tese.
   def self.alvo_e_cfg(account, lead, conversa)
@@ -224,7 +224,8 @@ class Ramon::PerfilIa
   # O turno do ResponseBuilderJob: Etapa do início do turno, Tools e falha da resposta do agente, relógio de agora.
   def decidir_turno(resposta, logistica:, handoff:)
     self.class.decidir(self, etapa: @etapa, tools_usadas: resposta&.dig('tools_usadas') || [], logistica: logistica, handoff: handoff,
-                             falhou: resposta&.dig('ferramenta_falhou') == true, fora_do_horario: !Ramon::HorarioComercial.aberto?(Time.current))
+                             falhou: resposta&.dig('ferramenta_falhou') == true,
+                             fora_do_horario: !Ramon::HorarioComercial.aberto?(Time.current, @account))
   end
 
   # De qual perfil veio a mensagem da IA: rastro vai na nota-rascunho (ramon_ia_rascunho); carimbo, na enviada (bi_ia conta).
@@ -242,9 +243,7 @@ class Ramon::PerfilIa
   def pronto = PRONTOS[base]
 
   # Etapas abertas da conta na ordem do Funil (default_scope por position).
-  def abertas
-    @abertas ||= @account.lead_stages.where(is_won: false, is_lost: false).to_a
-  end
+  def abertas = @abertas ||= @account.lead_stages.where(is_won: false, is_lost: false).to_a
 
   def chaves = @chaves ||= abertas.map { |e| self.class.chave_da_etapa(e) }
 

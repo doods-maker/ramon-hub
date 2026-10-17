@@ -37,9 +37,11 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
     expect(body['etapas'].pluck('chave')).not_to include(account.lead_stages.find_by(is_won: true).label.to_s)
     # a conta já vem com teses do seed (cfg nil); o cfg salvo volta normalizado (listas vazias de permissões/gatilhos)
     linhas = body['teses'].index_by { |t| t['id'] }
-    expect(linhas[tese.id]).to include('nome' => tese.name, 'cfg' => include('base' => 'acelerada'))
+    expect(linhas[tese.id]).to include('nome' => tese.name, 'cfg' => include('base' => 'acelerada'), 'assistente_id' => nil)
     expect(linhas.except(tese.id).values.pluck('cfg').uniq).to eq([nil])
     expect(body['caixas']).to eq([])
+    # Números por Etapa (sem carimbo = sem dados) e o assistente do "Testar este perfil" (sem Captain no CI = nil)
+    expect(body).to include('numeros' => {}, 'assistente_id' => nil)
   end
 
   it 'PATCH válido grava só os alvos enviados e devolve o corpo do GET', :aggregate_failures do
@@ -61,6 +63,25 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
     expect(ler['padrao']['base']).to eq('equilibrada')
   end
 
+  it 'GET traz os limites gerais; PATCH grava junto com o perfil (um save) e recusa o inválido', :aggregate_failures do
+    get url, headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['limites']).to include(
+      'atraso' => { 'min' => 30, 'max' => 180 }, 'retomadas_dia' => 15, 'retomada_intervalo_dias' => 5, 'teto_usd' => nil,
+      'agente_dia' => AgenteExecucao::TETO_DIA, 'horario' => { 'dias' => [1, 2, 3, 4, 5], 'janelas' => [%w[08:30 12:00], %w[13:30 18:00]] }
+    )
+
+    alterar({ padrao: { base: 'acelerada' }, limites: { atraso: { min: 10, max: 90 }, retomadas_dia: 25, teto_usd: 3 } })
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body['limites']).to include('atraso' => { 'min' => 10, 'max' => 90 }, 'retomadas_dia' => 25, 'teto_usd' => 3.0)
+    expect(ler['padrao']['base']).to eq('acelerada')
+
+    antes = account.reload.settings
+    alterar({ padrao: { base: 'equilibrada' }, limites: { atraso: { min: 10, max: 200 } } })
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body['error']).to be_present
+    expect(account.reload.settings).to eq(antes)
+  end
+
   it 'PATCH inválido dá 422 e não grava nada', :aggregate_failures do
     estranha = create(:thesis, account: create(:account))
     antes = account.reload.settings
@@ -77,6 +98,53 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body['error']).to be_present
       expect(account.reload.settings).to eq(antes)
+    end
+  end
+
+  it 'GET traz os avisos de dependência e a caixa com perfil mesmo sem assistente', :aggregate_failures do
+    tese # criada antes do GET (let preguiçoso)
+    caixa = create(:inbox, account: account)
+    account.update!(settings: { 'ia_atendimento' => { 'caixas' => { caixa.id.to_s => { 'base' => 'cautelosa' } } } })
+
+    get url, headers: admin.create_new_auth_token, as: :json
+
+    body = response.parsed_body
+    expect(body['caixas']).to eq([{ 'id' => caixa.id, 'nome' => caixa.name, 'cfg' => { 'base' => 'cautelosa', 'permissoes' => {}, 'gatilhos' => {} },
+                                    'assistente_id' => nil }])
+    expect(body['avisos']["caixa:#{caixa.id}"]).to eq([{ 'acao' => nil, 'tipo' => 'sem_assistente', 'link' => 'caixas' }])
+    expect(body['avisos']["tese:#{tese.id}"].pluck('tipo')).to eq(%w[sem_zapsign fora_da_tabela])
+  end
+
+  describe 'POST desfazer' do
+    let(:antes) { { 'ia_atendimento' => { 'teses' => { tese.id.to_s => { 'base' => 'acelerada' } } } } }
+    let(:depois) { { 'ia_atendimento' => { 'teses' => { tese.id.to_s => { 'base' => 'equilibrada' } } } } }
+
+    def auditar(conta = account, settings_antes = antes)
+      Audited.audit_class.create!(auditable: conta, associated: conta, action: 'update', audited_changes: { 'settings' => [settings_antes, depois] })
+    end
+
+    def desfazer(audit, alvo, usuario = admin)
+      post "#{url}/desfazer", params: { audit_id: audit.id, alvo: alvo }, headers: usuario.create_new_auth_token, as: :json
+    end
+
+    it 'regrava o valor de antes do alvo' do
+      account.update!(settings: depois)
+      desfazer(auditar, "tese:#{tese.id}")
+
+      expect(response).to have_http_status(:no_content)
+      expect(ler['teses'][tese.id.to_s]).to eq('base' => 'acelerada')
+    end
+
+    it 'agente não desfaz; linha de outra conta = 404; valor que não vale mais = 422 com a mensagem', :aggregate_failures do
+      desfazer(auditar, "tese:#{tese.id}", agente)
+      expect(response).to have_http_status(:unauthorized)
+
+      desfazer(auditar(create(:account)), "tese:#{tese.id}")
+      expect(response).to have_http_status(:not_found)
+
+      desfazer(auditar(account, { 'ia_atendimento' => { 'teses' => { tese.id.to_s => { 'base' => 'xablau' } } } }), "tese:#{tese.id}")
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to include('base desconhecida')
     end
   end
 end

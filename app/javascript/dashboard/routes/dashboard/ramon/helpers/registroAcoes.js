@@ -6,13 +6,21 @@ import { formatBrl } from './currency';
 const P = 'RAMON.REGISTRO';
 const FUSO = 'America/Sao_Paulo';
 
-export const TIPOS = ['lead', 'contato', 'conversa', 'dinheiro', 'acesso'];
+export const TIPOS = [
+  'lead',
+  'contato',
+  'conversa',
+  'dinheiro',
+  'acesso',
+  'ia',
+];
 export const TOM_DO_TIPO = {
   lead: 'blue',
   contato: 'iris',
   conversa: 'teal',
   dinheiro: 'amber',
   acesso: 'ruby',
+  ia: 'slate',
 };
 
 // Campos que são número/data: vão em font-mono na tela.
@@ -170,6 +178,7 @@ const fraseAcesso = (r, t, pessoa) => {
 };
 
 const POR_MODELO = {
+  Account: () => ['IA_MUDOU'],
   Lead: fraseLead,
   Contact: fraseContato,
   Conversation: fraseConversa,
@@ -198,6 +207,89 @@ export const mudancasDoRegistro = (r, t) => {
   }));
 };
 
+// Perfil da IA (tipo ia): o backend manda cada mudança por alvo; aqui vira frase com os textos da tela
+// Como a IA atende ("Marcar a reunião na Agenda: Rascunho → Sozinha").
+const IA = `${P}.IA`;
+const C = 'RAMON.COMO_IA';
+const ROTULO_DO_LIMITE = {
+  horario: 'HORARIO',
+  atraso: 'ATRASO',
+  fluxo_ia_dia: 'fluxo_ia_dia',
+  retomadas_dia: 'retomadas_dia',
+  retomada_intervalo_dias: 'retomada_intervalo_dias',
+  teto_usd: 'TETO_USD',
+};
+const valorDoLimite = (campo, v, t) => {
+  if (v === null || v === undefined) return t(`${IA}.PADRAO`);
+  if (campo === 'atraso') return t(`${IA}.SEGUNDOS`, v);
+  if (campo === 'horario') {
+    const dias = v.dias.map(d => t(`${C}.GERAIS.DIAS.${d}`)).join(', ');
+    return `${dias} · ${v.janelas.map(j => j.join('–')).join(', ')}`;
+  }
+  return String(v);
+};
+const MARCADOR = { _inicio: 'NADA', _fim: 'FIM' };
+const nomeDoMarcador = (v, t) =>
+  MARCADOR[v] ? t(`${C}.TRILHA.${MARCADOR[v]}`) : v;
+const nomesOuNenhum = (nomes, t) =>
+  nomes.length ? nomes.join(', ') : t(`${IA}.NENHUM`);
+const deParaCom = (m, formatar) => ({
+  de: formatar(m.de),
+  para: formatar(m.para),
+});
+const FRASE_IA = {
+  segue_padrao: (m, t) => t(`${IA}.${m.para ? 'SEGUE_PADRAO' : 'PROPRIO'}`),
+  base: (m, t) =>
+    t(
+      `${IA}.BASE`,
+      deParaCom(m, v => t(`${C}.PERFIS.${v}.NOME`))
+    ),
+  marcador: (m, t) =>
+    t(
+      `${IA}.MARCADOR`,
+      deParaCom(m, v => nomeDoMarcador(v, t))
+    ),
+  permissao: (m, t) =>
+    t(`${IA}.PERMISSAO`, {
+      acao: t(`${C}.ACOES.${m.acao_ou_etapa}`),
+      ...deParaCom(m, v => t(`${C}.ESTADO.${v}`)),
+    }),
+  gatilho: (m, t) =>
+    t(`${IA}.GATILHO`, {
+      etapa: m.acao_ou_etapa,
+      ...deParaCom(m, v => nomesOuNenhum(v, t)),
+    }),
+  limite: (m, t) => {
+    const rotulo = ROTULO_DO_LIMITE[m.acao_ou_etapa];
+    return t(`${IA}.LIMITE`, {
+      rotulo: rotulo ? t(`${C}.GERAIS.${rotulo}`) : m.acao_ou_etapa,
+      ...deParaCom(m, v => valorDoLimite(m.acao_ou_etapa, v, t)),
+    });
+  },
+};
+const nomeDoAlvoIa = (m, t) => {
+  if (m.alvo === 'padrao') return t(`${C}.PADRAO`);
+  if (m.alvo === 'limites') return t(`${C}.GERAIS.TITULO`);
+  return m.nome_alvo || `#${m.alvo.split(':')[1]}`;
+};
+
+// [{ alvo, nome, frases }] na ordem em que o backend mandou; cada alvo tem o seu Desfazer.
+export const mudancasDaIa = (r, t) => {
+  const grupos = new Map();
+  (r.ia || []).forEach(m => {
+    if (!grupos.has(m.alvo)) {
+      grupos.set(m.alvo, {
+        alvo: m.alvo,
+        nome: nomeDoAlvoIa(m, t),
+        frases: [],
+      });
+    }
+    const frase = FRASE_IA[m.campo];
+    grupos.get(m.alvo).frases.push(frase ? frase(m, t) : m.campo);
+  });
+  return [...grupos.values()];
+};
+
 export const quemFez = (r, t) => r.quem?.nome || t(`${P}.AUTOMACAO`);
 
 // Para onde a linha leva: o dossiê do lead ou a Linha da Vida do contato.
@@ -220,9 +312,12 @@ export const linhaCsv = (r, t) => [
   t(`${P}.TIPO.${r.tipo}`),
   fraseDoRegistro(r, t),
   r.alvo?.nome || '',
-  mudancasDoRegistro(r, t)
-    .map(m => `${m.rotulo}: ${m.antes} → ${m.depois}`)
-    .join('; '),
+  [
+    ...mudancasDoRegistro(r, t).map(
+      m => `${m.rotulo}: ${m.antes} → ${m.depois}`
+    ),
+    ...mudancasDaIa(r, t).map(g => `${g.nome}: ${g.frases.join(', ')}`),
+  ].join('; '),
 ];
 
 // CSV com ; e BOM (o Excel pt-BR abre direto), como o do Extrato.

@@ -1,5 +1,4 @@
 module Enterprise::MessageTemplates::HookExecutionService
-  RESPOSTA_IA_ATRASO = 30..180 # segundos, sorteado a cada resposta no piloto
   ATRASO_ANEXO = 5.seconds # tempo pro anexo terminar de subir antes da IA ler
 
   def trigger_templates
@@ -40,7 +39,8 @@ module Enterprise::MessageTemplates::HookExecutionService
 
   # ponytail: o perfil é lido no agendamento; mudar perfil/Etapa/Pausa durante a espera não muda o atraso
   def atraso_resposta_ia
-    return rand(RESPOSTA_IA_ATRASO).seconds if Ramon::PerfilIa.de(conversation).logistica_sai_agora?
+    # sorteio em segundos a cada resposta no piloto (faixa: Ramon::IaLimites, tela Como a IA atende)
+    return rand(Ramon::IaLimites.de(conversation.account)[:atraso]).seconds if Ramon::PerfilIa.de(conversation).logistica_sai_agora?
 
     message.attachments.present? ? ATRASO_ANEXO : 0
   end

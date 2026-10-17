@@ -42,4 +42,25 @@ RSpec.describe Ramon::HorarioComercial do
     expect(described_class.aberto?(sp('2026-10-06 12:00'))).to be(false)
     expect(described_class.aberto?(sp('2026-10-10 10:00'))).to be(false) # sábado
   end
+
+  describe 'com os limites da conta' do
+    let(:account) { create(:account) }
+
+    before do
+      account.update!(settings: { 'ia_limites' => { 'horario' => { 'dias' => [1, 6], 'janelas' => [%w[10:00 11:00]] } } }) # segunda e sábado, 10h–11h
+    end
+
+    it 'aberto? usa os dias e as faixas da conta; sem conta vale o padrão', :aggregate_failures do
+      expect(described_class.aberto?(sp('2026-10-10 10:30'), account)).to be(true) # sábado
+      expect(described_class.aberto?(sp('2026-10-06 10:30'), account)).to be(false) # terça fechada
+      expect(described_class.aberto?(sp('2026-10-05 09:00'), account)).to be(false) # fora da faixa
+      expect(described_class.aberto?(sp('2026-10-06 10:30'))).to be(true)
+    end
+
+    it 'minutos_entre e janelas seguem a conta', :aggregate_failures do
+      expect(described_class.minutos_entre(sp('2026-10-05 09:00'), sp('2026-10-10 12:00'), account)).to eq(120)
+      expect(described_class.janelas(account)).to eq([[[10, 0], [11, 0]]])
+      expect(described_class.janelas).to eq(described_class::JANELAS)
+    end
+  end
 end

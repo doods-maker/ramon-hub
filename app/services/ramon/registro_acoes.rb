@@ -8,7 +8,8 @@ class Ramon::RegistroAcoes
     'contato' => %w[Contact],
     'conversa' => %w[Conversation],
     'dinheiro' => %w[ExtratoFechado MetaComercial],
-    'acesso' => %w[AccountUser]
+    'acesso' => %w[AccountUser],
+    'ia' => %w[Account]
   }.freeze
   TIPO_DO_MODELO = TIPOS.flat_map { |tipo, modelos| modelos.map { |modelo| [modelo, tipo] } }.to_h.freeze
   # campo do audited_changes → modelo cujo nome a tela mostra no lugar do id
@@ -34,7 +35,8 @@ class Ramon::RegistroAcoes
     @registros = carregar(audits)
     @nomes = nomes(audits)
     {
-      registros: audits.map { |audit| linha(audit) },
+      # linha da conta sem nada mudado no Perfil (ex.: a migração INICIAL) não é "mudou como a IA atende": sai da página
+      registros: audits.map { |audit| linha(audit) }.reject { |registro| registro[:ia] == [] },
       total: escopo.count, pagina: pagina, por_pagina: POR_PAGINA,
       pessoas: @account.users.order(:name).map { |user| { id: user.id, nome: user.name } }
     }
@@ -48,11 +50,13 @@ class Ramon::RegistroAcoes
 
   # Contato: a criação (todo contato novo do WhatsApp) não é ação sensível.
   # Acesso: só papel e entrada na conta (disponibilidade online/offline é ruído).
+  # Conta: só o que mexeu no Perfil da IA, nos limites gerais ou no teto (Ramon::PerfilIa::Historico).
   def base
     Audited.audit_class
            .where(associated_type: 'Account', associated_id: @account.id, auditable_type: TIPOS.fetch(@params[:tipo], TIPOS.values.flatten))
            .where.not("audits.auditable_type = 'Contact' AND audits.action = 'create'")
            .where.not("audits.auditable_type = 'AccountUser' AND audits.action = 'update' AND audits.audited_changes->'role' IS NULL")
+           .where.not("audits.auditable_type = 'Account' AND NOT #{Ramon::PerfilIa::Historico::SQL}")
   end
 
   def por_periodo(scope)
@@ -122,12 +126,14 @@ class Ramon::RegistroAcoes
     audit.comment.to_s[/\Amesclado:(\d+)\z/, 1]&.to_i
   end
 
+  # Linha da conta (tipo ia): o settings inteiro não vai; vai o que mudou em cada alvo do Perfil da IA.
   def linha(audit)
+    conta = audit.auditable_type == 'Account'
     {
       id: audit.id, quando: audit.created_at.iso8601, tipo: TIPO_DO_MODELO[audit.auditable_type],
       modelo: audit.auditable_type, acao: audit.action, comentario: audit.comment,
-      quem: quem(audit.user), alvo: alvo(audit), mudancas: mudancas(audit)
-    }
+      quem: quem(audit.user), alvo: conta ? nil : alvo(audit), mudancas: conta ? {} : mudancas(audit)
+    }.merge(conta ? { ia: (@historico ||= Ramon::PerfilIa::Historico.new(@account)).mudancas(audit) } : {})
   end
 
   # Sem autor = automação (job, webhook, auto-atribuição).

@@ -382,6 +382,23 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
            { id: 'checar_prescricao', title: 'Checar prescrição', nivel: 'consulta', status: 'erro' }]
         )
       end
+
+      it 'Testar este perfil: o cfg da tela (não salvo) vai ao runner e a decisão do perfil volta com a resposta' do
+        tese = create(:thesis, account: account)
+        allow(Captain::Assistant::PlaygroundRunnerService).to receive(:new).and_wrap_original do |original, **args|
+          original.call(**args).tap do |runner|
+            allow(runner).to receive(:generate_response).and_return({ 'response' => 'Fica R$ 3.000', 'tools_usadas' => ['simular_honorario'] })
+          end
+        end
+        perfil = { base: 'acelerada', permissoes: { citar_honorario: 'r', contrato_zapsign: 'n' } }
+
+        post "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/playground",
+             params: valid_params.merge(roteiro: { thesis_id: tese.id, perfil: perfil }), headers: agent.create_new_auth_token, as: :json
+
+        expect(json_response[:decisao]).to eq(valor: 'rascunho', motivo: 'acao:citar_honorario')
+        expect(json_response[:bloqueadas]).to eq(['preparar_contrato_zapsign'])
+        expect(json_response[:roteiro]).to include(thesis_id: tese.id)
+      end
     end
   end
 

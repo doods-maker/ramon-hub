@@ -1,13 +1,19 @@
 import { mount, flushPromises } from '@vue/test-utils';
-import { useRoute } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
 import { dados } from 'dashboard/routes/dashboard/ramon/helpers/specs/perfilIaDados';
+import { retomarTela } from 'dashboard/routes/dashboard/ramon/helpers/perfilIa';
 import ComoIaAtende from '../ComoIaAtende.vue';
 
 vi.mock('vue-router', () => {
   const rota = { query: {} };
-  return { useRoute: () => rota, onBeforeRouteLeave: vi.fn() };
+  const roteador = { push: vi.fn(() => Promise.resolve()) };
+  return {
+    useRoute: () => rota,
+    useRouter: () => roteador,
+    onBeforeRouteLeave: vi.fn(),
+  };
 });
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('dashboard/composables/useAccount', () => ({
@@ -23,7 +29,7 @@ const montar = async () => {
       stubs: {
         RouterLink: {
           name: 'RouterLink',
-          template: '<a><slot /></a>',
+          template: '<a :data-to="JSON.stringify(to)"><slot /></a>',
           props: ['to'],
         },
       },
@@ -40,6 +46,7 @@ const permissao = (wrapper, acao) =>
 describe('Como a IA atende', () => {
   beforeEach(() => {
     useRoute().query = {};
+    retomarTela(); // nada guardado de um teste anterior
     RamonIaAtendimentoAPI.get.mockResolvedValue({ data: dados() });
   });
 
@@ -234,10 +241,204 @@ describe('Como a IA atende', () => {
     expect(achar(wrapper, 'nao-salvas').text()).toBe('1 unsaved change');
   });
 
+  it('limites gerais só no Padrão; editar conta como alteração e salvar manda os limites sem o teto do agente', async () => {
+    const resposta = dados();
+    resposta.limites.atraso = { min: 10, max: 60 };
+    RamonIaAtendimentoAPI.salvar.mockResolvedValue({ data: resposta });
+    const wrapper = await montar();
+    expect(achar(wrapper, 'limites-gerais').exists()).toBe(true);
+    expect(achar(wrapper, 'agente-dia').text()).toBe('30');
+    expect(achar(wrapper, 'limites-gerais').text()).toContain(
+      'changes on the VPS runner (CAP_DIA)'
+    );
+
+    await clicar(wrapper, 'alvo-tese:1');
+    expect(achar(wrapper, 'limites-gerais').exists()).toBe(false);
+    await clicar(wrapper, 'alvo-padrao');
+
+    await achar(wrapper, 'dia-6').trigger('click');
+    await achar(wrapper, 'atraso-min').setValue('10');
+    await achar(wrapper, 'atraso-max').setValue('60');
+    await achar(wrapper, 'lim-teto_usd').setValue('2.5');
+    await achar(wrapper, 'segunda-faixa').trigger('click');
+    expect(achar(wrapper, 'faixa-1-ini').exists()).toBe(false);
+    expect(achar(wrapper, 'nao-salvas').text()).toBe('1 unsaved change');
+
+    await clicar(wrapper, 'salvar');
+    await flushPromises();
+    expect(RamonIaAtendimentoAPI.salvar).toHaveBeenCalledWith({
+      limites: {
+        horario: { dias: [1, 2, 3, 4, 5, 6], janelas: [['08:30', '12:00']] },
+        atraso: { min: 10, max: 60 },
+        fluxo_ia_dia: 200,
+        retomadas_dia: 15,
+        retomada_intervalo_dias: 5,
+        teto_usd: '2.5',
+      },
+    });
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
+  });
+
+  it('religar um dia ou redigitar o mesmo valor não conta como alteração não salva', async () => {
+    const wrapper = await montar();
+    await achar(wrapper, 'dia-3').trigger('click');
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(true);
+    await achar(wrapper, 'dia-3').trigger('click'); // volta com [1,2,4,5,3]
+    await achar(wrapper, 'lim-retomadas_dia').setValue('15'); // número digitado = o salvo
+    await achar(wrapper, 'atraso-min').setValue('30');
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
+    expect(achar(wrapper, 'salvar').attributes('disabled')).toBeDefined();
+  });
+
+  it('avisa em "Retomadas por dia" quando o fluxo de cadência está no comando', async () => {
+    let wrapper = await montar();
+    expect(achar(wrapper, 'retomadas-no-fluxo').exists()).toBe(false);
+
+    const corpo = dados();
+    corpo.limites.retomadas_no_fluxo = true;
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    wrapper = await montar();
+    expect(achar(wrapper, 'retomadas-no-fluxo').text()).toContain(
+      'cadence flow decides'
+    );
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
+  });
+
+  it('alvo que segue o padrão: os números dizem onde estão, em vez de "sem dados"', async () => {
+    const wrapper = await montar();
+    expect(achar(wrapper, 'numeros-vazio').text()).toBe('No data yet.');
+    await clicar(wrapper, 'alvo-tese:1');
+    expect(achar(wrapper, 'numeros-vazio').text()).toContain(
+      'Follows the default'
+    );
+  });
+
+  it('"Histórico" abre o Registro de ações filtrado no tipo ia', async () => {
+    const wrapper = await montar();
+    await clicar(wrapper, 'historico');
+    expect(useRouter().push).toHaveBeenLastCalledWith({
+      name: 'ramon_registro_acoes',
+      params: {},
+      query: { tipo: 'ia' },
+    });
+  });
+
+  it('avisos de dependência: o da ação na linha dela, o do alvo no topo, com o link', async () => {
+    const corpo = dados();
+    corpo.avisos = {
+      'tese:1': [
+        { acao: 'marcar_reuniao', tipo: 'sem_google', link: 'agenda' },
+        { acao: null, tipo: 'sem_qualificado', link: 'roteiro' },
+      ],
+    };
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    useRoute().query = { alvo: 'tese:1' };
+    const wrapper = await montar();
+
+    const doAlvo = achar(wrapper, 'aviso-alvo');
+    expect(doAlvo.text()).toContain('Qualified');
+    expect(JSON.parse(doAlvo.find('a').attributes('data-to'))).toEqual({
+      name: 'ramon_playbooks',
+      query: { tese: '1', aba: 'roteiro' },
+      params: {},
+    });
+    await clicar(wrapper, 'etapa-fase-qualificacao');
+    const daAcao = wrapper.find(
+      '[data-testid="limite-marcar_reuniao"] [data-testid="aviso-acao"]'
+    );
+    expect(daAcao.text()).toContain('Google');
+    expect(wrapper.findAll('[data-testid="aviso-acao"]')).toHaveLength(1);
+
+    await clicar(wrapper, 'alvo-padrao');
+    expect(achar(wrapper, 'aviso-alvo').exists()).toBe(false);
+  });
+
   it('?alvo= abre o alvo pedido', async () => {
     useRoute().query = { alvo: 'tese:2' };
     const wrapper = await montar();
     expect(achar(wrapper, 'alvo-nome').text()).toBe('Auxílio-acidente');
     expect(achar(wrapper, 'selo').text()).toBe('Profile Fast');
+  });
+
+  it('números da Etapa: sem dados ainda; "Passar pra Sozinha" move o Marcador para depois dela (ajuste não salvo)', async () => {
+    const corpo = dados();
+    corpo.numeros = {
+      padrao: {
+        'fase-negociacao': {
+          enviadas: 2,
+          rascunhos: { igual: 19, editado: 1, descartado: 0 },
+          chamou_equipe: 3,
+          sugerir_sozinha: true,
+        },
+      },
+    };
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    const wrapper = await montar();
+    expect(achar(wrapper, 'numeros-vazio').exists()).toBe(true);
+
+    await clicar(wrapper, 'etapa-fase-negociacao');
+    expect(achar(wrapper, 'numeros-linha').text()).toContain(
+      '19 unchanged · 1 edited · 0 discarded'
+    );
+    expect(achar(wrapper, 'etapa-fase-negociacao').text()).toContain('Draft');
+    await clicar(wrapper, 'passar-sozinha');
+    expect(achar(wrapper, 'etapa-fase-negociacao').text()).toContain(
+      'On its own'
+    );
+    expect(achar(wrapper, 'etapa-fase-ultima-chance').text()).toContain(
+      'Draft'
+    );
+    expect(achar(wrapper, 'sugestao-sozinha').exists()).toBe(false);
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(true);
+  });
+
+  it('"Testar este perfil": sem IA fica desligado; com IA abre o Testar com o cfg da tela (não salvo) e a tese', async () => {
+    let wrapper = await montar();
+    expect(
+      achar(wrapper, 'testar-perfil').attributes('disabled')
+    ).toBeDefined();
+
+    // tese → o assistente da caixa dela (o servidor já cai no global); padrão → o global
+    const corpo = { ...dados(), assistente_id: 7 };
+    corpo.teses[1].assistente_id = 9;
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    useRoute().query = { alvo: 'tese:2' };
+    wrapper = await montar();
+    await clicar(wrapper, 'perfil-cautelosa');
+    await clicar(wrapper, 'testar-perfil');
+    expect(useRouter().push).toHaveBeenLastCalledWith({
+      name: 'captain_assistants_playground_index',
+      params: { assistantId: 9 },
+      state: { perfilTeste: { base: 'cautelosa' }, thesisId: 2 },
+    });
+
+    // volta do Testar: o não salvo reaparece (no alvo em que estava)
+    useRoute().query = {};
+    wrapper = await montar();
+    expect(achar(wrapper, 'alvo-nome').text()).toBe('Auxílio-acidente');
+    expect(achar(wrapper, 'selo').text()).toBe('Profile Cautious');
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(true);
+
+    await clicar(wrapper, 'alvo-padrao');
+    await clicar(wrapper, 'testar-perfil');
+    expect(useRouter().push.mock.lastCall[0].params.assistantId).toBe(7);
+  });
+
+  it('"Testar este perfil" abortado: o guard de saída volta a perguntar e nada fica guardado', async () => {
+    RamonIaAtendimentoAPI.get.mockResolvedValue({
+      data: { ...dados(), assistente_id: 7 },
+    });
+    useRouter().push.mockResolvedValueOnce({ type: 4 }); // NavigationFailure (aborted)
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const wrapper = await montar();
+    const guard = onBeforeRouteLeave.mock.lastCall[0];
+    await clicar(wrapper, 'perfil-cautelosa');
+    await clicar(wrapper, 'testar-perfil');
+    await flushPromises();
+
+    expect(guard()).toBe(false);
+    expect(confirmar).toHaveBeenCalled();
+    expect(retomarTela()).toBeNull();
+    confirmar.mockRestore();
   });
 });

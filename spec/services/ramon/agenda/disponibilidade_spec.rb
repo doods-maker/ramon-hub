@@ -27,6 +27,13 @@ RSpec.describe Ramon::Agenda::Disponibilidade do
   end
 
   describe '#livres' do
+    it 'usa o horário gravado nos limites da conta (só a tarde, 14h–18h)', :aggregate_failures do
+      account.update!(settings: { 'ia_limites' => { 'horario' => { 'dias' => [1, 2, 3, 4, 5], 'janelas' => [%w[14:00 18:00]] } } })
+      locais = described_class.new(user: user, account: account, agora: agora).livres.map { |t| t.in_time_zone(zona) }
+      expect(locais).not_to be_empty
+      expect(locais.map(&:hour).min).to be >= 14
+    end
+
     it 'com agenda vazia devolve 3 horários, um por meio-período, o primeiro depois das 11h' do
       livres = disp.livres
       locais = livres.map { |t| t.in_time_zone(zona) }

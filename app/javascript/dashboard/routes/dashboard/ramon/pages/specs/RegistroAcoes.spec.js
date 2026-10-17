@@ -1,6 +1,13 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import RegistroAcoes from '../RegistroAcoes.vue';
 import RamonRegistroAcoesAPI from 'dashboard/api/ramonRegistroAcoes';
+import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
+
+const rota = vi.hoisted(() => ({ query: {} }));
+vi.mock('vue-router', () => ({ useRoute: () => rota }));
+vi.mock('dashboard/api/ramonIaAtendimento', () => ({
+  default: { desfazer: vi.fn() },
+}));
 
 const t = (key, params) =>
   params ? `${key} ${Object.values(params).join(' ')}` : key;
@@ -123,6 +130,48 @@ describe('RegistroAcoes.vue', () => {
 
     expect(RamonRegistroAcoesAPI.listar).toHaveBeenLastCalledWith({ todos: 1 });
     expect(URL.createObjectURL).toHaveBeenCalled();
+  });
+
+  it('?tipo=ia já abre filtrado; linha da IA mostra as frases por alvo e desfaz um alvo', async () => {
+    rota.query = { tipo: 'ia' };
+    const ia = {
+      id: 9,
+      quando: '2026-10-17T12:00:00Z',
+      tipo: 'ia',
+      modelo: 'Account',
+      acao: 'update',
+      comentario: null,
+      quem: { id: 1, nome: 'Eduardo' },
+      alvo: null,
+      mudancas: {},
+      ia: [
+        {
+          alvo: 'tese:3',
+          nome_alvo: 'BPC/LOAS',
+          campo: 'permissao',
+          acao_ou_etapa: 'marcar_reuniao',
+          de: 'rascunho',
+          para: 'sozinha',
+        },
+      ],
+    };
+    RamonIaAtendimentoAPI.desfazer.mockResolvedValue({});
+    const wrapper = await mountPage({ registros: [ia], total: 1 });
+    rota.query = {};
+
+    expect(RamonRegistroAcoesAPI.listar).toHaveBeenCalledWith({
+      tipo: 'ia',
+      page: 1,
+    });
+    const grupo = wrapper.find('[data-testid="registro-ia"]');
+    expect(grupo.text()).toContain('BPC/LOAS');
+    expect(grupo.text()).toContain('RAMON.REGISTRO.IA.PERMISSAO');
+
+    await grupo.find('[data-testid="registro-desfazer"]').trigger('click');
+    await flushPromises();
+    expect(RamonIaAtendimentoAPI.desfazer).toHaveBeenCalledWith(9, 'tese:3');
+    expect(alertSpy).toHaveBeenCalledWith('RAMON.REGISTRO.IA.DESFEITO');
+    expect(RamonRegistroAcoesAPI.listar).toHaveBeenCalledTimes(2);
   });
 
   it('sem resultado mostra o vazio', async () => {

@@ -3,8 +3,6 @@
 # custom_attributes.follow_up. Nada é enviado ao cliente — nota nasce RASCUNHO
 # e quem revisa e manda é o Eduardo.
 class Ramon::FollowUpDraftService
-  DAILY_CAP = Ramon::Fluxos::Retomada::TETO
-  MIN_GAP_DAYS = Ramon::Fluxos::Retomada::INTERVALO_DIAS
   MAX_MESSAGES = 200
 
   SYSTEM_PROMPT = <<~PROMPT.freeze
@@ -20,14 +18,14 @@ class Ramon::FollowUpDraftService
   PROMPT
 
   # ponytail: teto lido por método (não pela constante) para o stub de spec valer mesmo com recarga de código no CI.
-  def self.teto = DAILY_CAP
+  def self.teto(account = nil) = Ramon::IaLimites.de(account)[:retomadas_dia]
 
   def initialize(account:)
     @account = account
   end
 
   def perform
-    teto = self.class.teto
+    teto = self.class.teto(@account)
     eligible = Ramon::LeadRadar.stalled_leads(@account).select { |lead| eligible?(lead) }
     if eligible.size > teto
       Rails.logger.info("FollowUpDraftService: conta #{@account.id} estourou o teto diário (#{eligible.size} elegíveis, teto #{teto})")

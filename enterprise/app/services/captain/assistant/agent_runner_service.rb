@@ -137,11 +137,13 @@ class Captain::Assistant::AgentRunnerService
     record.attributes.symbolize_keys.slice(*keys)
   end
 
-  # ramon: Permissão "nunca" no Perfil da IA = a Tool nem é oferecida ao modelo (Testar sem conversa: nada bloqueado).
+  # ramon: Permissão "nunca" no Perfil da IA = a Tool nem é oferecida ao modelo (Testar sem conversa: nada bloqueado;
+  # Testar com roteiro: o perfil do teste, PlaygroundRunnerService).
+  def tools_bloqueadas = @tools_bloqueadas ||= @conversation ? Ramon::PerfilIa.de(@conversation).tools_bloqueadas : []
+
   def build_and_wire_agents
-    bloqueadas = @conversation ? Ramon::PerfilIa.de(@conversation).tools_bloqueadas : []
-    assistant_agent = @assistant.agent(sem_tools: bloqueadas)
-    scenario_agents = @assistant.scenarios.enabled.map { |scenario| scenario.agent(sem_tools: bloqueadas) }
+    assistant_agent = @assistant.agent(sem_tools: tools_bloqueadas)
+    scenario_agents = @assistant.scenarios.enabled.map { |scenario| scenario.agent(sem_tools: tools_bloqueadas) }
 
     assistant_agent.register_handoffs(*scenario_agents) if scenario_agents.any?
     scenario_agents.each { |scenario_agent| scenario_agent.register_handoffs(assistant_agent) }

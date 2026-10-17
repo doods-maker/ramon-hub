@@ -1,9 +1,10 @@
 # Caminho de escrita do Perfil da IA (a leitura normaliza em silêncio; aqui o que é inválido é recusado).
 # Um account.update! só = uma linha de auditoria por save. alvos parcial: seção ausente fica como está.
+# extra: pedaço de settings que vai junto no mesmo save (limites gerais, Ramon::IaLimites).
 module Ramon::PerfilIa::Gravacao
   CHAVES_DO_CFG = %w[base marcador permissoes gatilhos].freeze
 
-  def self.gravar!(account, alvos)
+  def self.gravar!(account, alvos, extra = {})
     raise ArgumentError, 'corpo inválido' unless alvos.is_a?(Hash)
 
     etapas = account.lead_stages.where(is_won: false, is_lost: false).map { |e| Ramon::PerfilIa.chave_da_etapa(e) }
@@ -11,7 +12,7 @@ module Ramon::PerfilIa::Gravacao
     atual = Hash(settings[Ramon::PerfilIa::CHAVE])
     novo = atual.merge(alvos.slice('teses', 'caixas').to_h { |tipo, secao| [tipo, mesclar(atual[tipo], tipo, secao, account, etapas)] })
     novo['padrao'] = cfg_valido!(alvos['padrao'], etapas) if alvos.key?('padrao')
-    account.update!(settings: settings.merge(Ramon::PerfilIa::CHAVE => novo))
+    account.update!(settings: settings.merge(Ramon::PerfilIa::CHAVE => novo).merge(extra))
   end
 
   # Seção atual com os alvos enviados por cima (nil tira o alvo).

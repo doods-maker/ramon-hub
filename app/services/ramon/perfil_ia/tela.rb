@@ -16,8 +16,15 @@ class Ramon::PerfilIa::Tela
   def corpo
     { prontos: Ramon::PerfilIa::PRONTOS, inicial: Ramon::PerfilIa::INICIAL, acoes: acoes, gatilhos: gatilhos,
       etapas: etapas, padrao: Ramon::PerfilIa.cfg_salvo(@account, 'padrao') || Ramon::PerfilIa::INICIAL,
-      teses: @account.theses.map { |t| { id: t.id, nome: t.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'teses', t.id) } },
-      caixas: caixas }
+      teses: teses, caixas: caixas, limites: Ramon::IaLimites.corpo(@account), numeros: Ramon::PerfilIa::Numeros.todos(@account),
+      assistente_id: assistente_global, avisos: Ramon::PerfilIa::Avisos.de(@account) }
+  end
+
+  # Caixas sem tese (a de tese segue a tese) que se configuram aqui: as com IA e as que têm perfil salvo sem IA
+  # (o aviso "A IA não está conectada nesta caixa" precisa da linha).
+  def self.caixas(account)
+    account.inboxes.where(ramon_thesis_id: nil).order(:id)
+           .select { |i| Ramon::PerfilIa.com_ia?(i) || Ramon::PerfilIa.cfg_salvo(account, 'caixas', i.id) }
   end
 
   private
@@ -36,10 +43,23 @@ class Ramon::PerfilIa::Tela
     @account.lead_stages.where(is_won: false, is_lost: false).map { |e| { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name } }
   end
 
-  # Caixa de tese (ramon_thesis_id) segue a tese; só as que têm IA (captain_assistant, enterprise) configuram aqui.
+  # "Testar este perfil" da tese: o assistente da caixa dela (ramon_thesis_id) ou, sem caixa com IA, o global.
+  def teses
+    @account.theses.map do |t|
+      caixa = com_ia.find { |i| i.ramon_thesis_id == t.id }
+      { id: t.id, nome: t.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'teses', t.id),
+        assistente_id: caixa ? caixa.captain_assistant.id : assistente_global }
+    end
+  end
+
+  def assistente_global = com_ia.first&.captain_assistant&.id
+
+  # Caixas com IA (captain_assistant, enterprise), na ordem: a 1ª é a do "Testar este perfil" do padrão e das teses.
+  def com_ia = @com_ia ||= @account.inboxes.order(:id).select { |i| Ramon::PerfilIa.com_ia?(i) }
+
   def caixas
-    @account.inboxes.where(ramon_thesis_id: nil).select { |i| i.try(:captain_assistant).present? }.map do |i|
-      { id: i.id, nome: i.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'caixas', i.id) }
+    self.class.caixas(@account).map do |i|
+      { id: i.id, nome: i.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'caixas', i.id), assistente_id: i.try(:captain_assistant)&.id }
     end
   end
 end

@@ -2,30 +2,45 @@
 // Como a IA atende (Inteligência, só admin): o Perfil da IA do padrão do escritório, de cada tese e de cada
 // caixa sem tese — perfil pronto, Marcador na Trilha, Permissões e Gatilhos por Etapa (spec 2026-10-17).
 // Tudo é rascunho na tela até "Salvar alterações", que manda só os alvos mudados (cfg inteiro; null = segue o padrão).
+// Números por Etapa com o "Passar pra Sozinha?" e "Testar este perfil" (abre o Testar com o cfg da tela, não salvo).
+// Avisos de dependência (âmbar, do que está salvo) e o Histórico = Registro de ações filtrado no tipo ia.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { onBeforeRouteLeave, useRoute } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
-import { CARTAO, CHIP, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import {
+  AVISO,
+  CARTAO,
+  CHIP,
+  TOM,
+} from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import {
   COR_DO_ESTADO,
   ajustes,
   baseDe,
   efetivo,
   estadoDaEtapa,
+  guardarTela,
+  limitesParaComparar,
   marcadorDe,
+  marcadorDepoisDe,
   paraGravar,
+  retomarTela,
+  rotaDoAviso,
 } from 'dashboard/routes/dashboard/ramon/helpers/perfilIa';
 import ListaAlvos from './comoIaAtende/ListaAlvos.vue';
 import Trilha from './comoIaAtende/Trilha.vue';
 import LimitesDaEtapa from './comoIaAtende/LimitesDaEtapa.vue';
+import LimitesGerais from './comoIaAtende/LimitesGerais.vue';
+import NumerosDaEtapa from './comoIaAtende/NumerosDaEtapa.vue';
 
 defineOptions({ name: 'CaptainComoIaAtende' });
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const K = 'RAMON.COMO_IA';
 const PERFIS = ['cautelosa', 'equilibrada', 'acelerada'];
 
@@ -35,6 +50,9 @@ const salvando = ref(false);
 // alvo ('padrao' | 'tese:<id>' | 'caixa:<id>') → cfg | null (segue o padrão): o do servidor e o da tela
 const salvos = ref({});
 const cfgs = ref({});
+// limites gerais do escritório (só no Padrão): o do servidor e o da tela
+const limitesSalvos = ref(null);
+const limites = ref(null);
 const alvoId = ref('padrao');
 const etapaSel = ref('');
 
@@ -47,6 +65,8 @@ const aplicar = corpo => {
     ...Object.fromEntries(corpo.caixas.map(x => [`caixa:${x.id}`, x.cfg])),
   };
   cfgs.value = copia(salvos.value);
+  limitesSalvos.value = corpo.limites;
+  limites.value = copia(corpo.limites);
   if (!etapaSel.value) etapaSel.value = corpo.etapas[0]?.chave ?? '';
 };
 
@@ -55,6 +75,14 @@ const carregar = async () => {
   try {
     const { data } = await RamonIaAtendimentoAPI.get();
     aplicar(data);
+    // volta do "Testar este perfil": o que não foi salvo reaparece
+    const volta = retomarTela();
+    if (volta) {
+      Object.assign(cfgs.value, volta.cfgs);
+      if (volta.limites) limites.value = volta.limites;
+      alvoId.value = volta.alvoId;
+      etapaSel.value = volta.etapaSel;
+    }
     if (route.query.alvo in cfgs.value) alvoId.value = route.query.alvo;
   } catch (e) {
     erro.value = true;
@@ -122,8 +150,17 @@ const etapaAtual = computed(() =>
 );
 
 // Mudou = o que a IA faria (ou o "segue o padrão") é outro que o salvo.
-const chave = cfg =>
-  cfg ? JSON.stringify(efetivo(cfg, prontos.value, etapas.value)) : 'null';
+// Gatilhos em ordem fixa: tirar e pôr de volta um gatilho não é mudança.
+const chave = cfg => {
+  if (!cfg) return 'null';
+  const ef = efetivo(cfg, prontos.value, etapas.value);
+  return JSON.stringify({
+    ...ef,
+    gatilhos: Object.fromEntries(
+      Object.entries(ef.gatilhos).map(([e, lista]) => [e, [...lista].sort()])
+    ),
+  });
+};
 const mudados = computed(() =>
   dados.value
     ? Object.keys(cfgs.value).filter(
@@ -131,10 +168,19 @@ const mudados = computed(() =>
       )
     : []
 );
+const limitesMudaram = computed(
+  () =>
+    !!limites.value &&
+    JSON.stringify(limitesParaComparar(limites.value)) !==
+      JSON.stringify(limitesParaComparar(limitesSalvos.value))
+);
+const nMudancas = computed(
+  () => mudados.value.length + (limitesMudaram.value ? 1 : 0)
+);
 const naoSalvas = computed(() =>
-  mudados.value.length === 1
+  nMudancas.value === 1
     ? t(`${K}.NAO_SALVAS_UMA`)
-    : t(`${K}.NAO_SALVAS`, { n: mudados.value.length })
+    : t(`${K}.NAO_SALVAS`, { n: nMudancas.value })
 );
 
 const definir = cfg => {
@@ -158,6 +204,81 @@ const mudarGatilhos = (etapa, lista) =>
     cfg.gatilhos = { ...cfg.gatilhos, [etapa]: lista };
   });
 
+// Números da Etapa selecionada (só deste alvo); a sugestão some se a Etapa já está Sozinha na tela.
+const numerosDaEtapa = computed(
+  () => dados.value.numeros?.[alvoId.value]?.[etapaSel.value] ?? null
+);
+const sugerirSozinha = computed(
+  () =>
+    !segue.value &&
+    !!numerosDaEtapa.value?.sugerir_sozinha &&
+    estadoDaEtapa(etapaSel.value, marcadorAtual.value, etapas.value) ===
+      'rascunho'
+);
+// Avisos do alvo (Ramon::PerfilIa::Avisos): os da ação vão na linha dela (LimitesDaEtapa); os do alvo todo, no topo.
+const avisos = computed(() =>
+  (dados.value.avisos?.[alvoId.value] ?? []).map(aviso => {
+    const destino = rotaDoAviso(aviso, alvoId.value);
+    return {
+      ...aviso,
+      rota: { ...destino, params: { ...route.params, ...destino.params } },
+    };
+  })
+);
+const avisosDoAlvo = computed(() => avisos.value.filter(a => !a.acao));
+const avisosDasAcoes = computed(() => avisos.value.filter(a => a.acao));
+const abrirHistorico = () =>
+  router.push({
+    name: 'ramon_registro_acoes',
+    params: { ...route.params },
+    query: { tipo: 'ia' },
+  });
+
+const passarSozinha = () =>
+  mudarMarcador(marcadorDepoisDe(etapaSel.value, etapas.value));
+
+// Testar: caixa → o assistente dela; tese → o da caixa da tese (o servidor já cai no global); padrão → o da 1ª
+// caixa com IA. Nenhum = botão desligado.
+const assistenteDoTeste = computed(() => {
+  if (!dados.value) return null;
+  const { tipo } = atual.value;
+  if (tipo === 'padrao') return dados.value.assistente_id ?? null;
+  const lista = tipo === 'tese' ? dados.value.teses : dados.value.caixas;
+  const linha = lista.find(x => `${tipo}:${x.id}` === alvoId.value);
+  return linha?.assistente_id ?? null;
+});
+const dicaTestar = computed(() =>
+  t(`${K}.TESTAR.${assistenteDoTeste.value ? 'DICA' : 'SEM_IA'}`)
+);
+let indoTestar = false;
+const testar = () => {
+  // só o que mudou: o resto volta do servidor
+  guardarTela({
+    cfgs: Object.fromEntries(mudados.value.map(id => [id, cfgs.value[id]])),
+    limites: limitesMudaram.value ? limites.value : null,
+    alvoId: alvoId.value,
+    etapaSel: etapaSel.value,
+  });
+  indoTestar = true;
+  const [tipo, numero] = alvoId.value.split(':');
+  // navegação abortada/falha (outro guard, erro): fica na tela — o guard de saída volta a valer e nada fica guardado
+  const desistir = () => {
+    indoTestar = false;
+    retomarTela();
+  };
+  router
+    .push({
+      name: 'captain_assistants_playground_index',
+      params: { ...route.params, assistantId: assistenteDoTeste.value },
+      state: {
+        perfilTeste: copia(paraGravar(cfgAtual.value, etapas.value)),
+        thesisId: tipo === 'tese' ? Number(numero) : null,
+      },
+    })
+    .then(falha => falha && desistir())
+    .catch(desistir);
+};
+
 const salvar = async () => {
   const corpo = {};
   mudados.value.forEach(id => {
@@ -170,6 +291,14 @@ const salvar = async () => {
     const secao = tipo === 'tese' ? 'teses' : 'caixas';
     corpo[secao] = { ...corpo[secao], [numero]: cfg };
   });
+  if (limitesMudaram.value) {
+    const {
+      agente_dia: _somenteLeitura,
+      retomadas_no_fluxo: _tambem,
+      ...editaveis
+    } = limites.value;
+    corpo.limites = editaveis;
+  }
   salvando.value = true;
   try {
     const { data } = await RamonIaAtendimentoAPI.salvar(corpo);
@@ -183,7 +312,7 @@ const salvar = async () => {
 };
 
 const avisarSaida = e => {
-  if (!mudados.value.length) return;
+  if (!nMudancas.value) return;
   e.preventDefault();
   e.returnValue = '';
 };
@@ -193,8 +322,9 @@ onMounted(() => {
 });
 onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSaida));
 // ponytail: window.confirm de propósito — o guard de rota precisa de resposta síncrona.
+// Indo ao Testar o não salvo fica guardado (guardarTela): sem pergunta.
 onBeforeRouteLeave(
-  () => !mudados.value.length || window.confirm(t(`${K}.SAIR`))
+  () => indoTestar || !nMudancas.value || window.confirm(t(`${K}.SAIR`))
 );
 </script>
 
@@ -211,17 +341,39 @@ onBeforeRouteLeave(
       </h1>
       <div class="flex items-center gap-3 ml-auto">
         <span
-          v-if="mudados.length"
+          v-if="nMudancas"
           data-testid="nao-salvas"
           class="text-xs text-n-slate-10"
         >
           {{ naoSalvas }}
         </span>
         <Button
+          v-if="dados"
+          size="sm"
+          variant="outline"
+          color="slate"
+          icon="i-lucide-history"
+          :label="t(`${K}.HISTORICO`)"
+          data-testid="historico"
+          @click="abrirHistorico"
+        />
+        <span v-if="dados" :title="dicaTestar">
+          <Button
+            size="sm"
+            variant="outline"
+            color="slate"
+            icon="i-lucide-flask-conical"
+            :label="t(`${K}.TESTAR.BOTAO`)"
+            :disabled="!assistenteDoTeste"
+            data-testid="testar-perfil"
+            @click="testar"
+          />
+        </span>
+        <Button
           size="sm"
           icon="i-lucide-check"
           :label="t(`${K}.SALVAR`)"
-          :disabled="!mudados.length || salvando"
+          :disabled="!nMudancas || salvando"
           :is-loading="salvando"
           data-testid="salvar"
           @click="salvar"
@@ -303,6 +455,25 @@ onBeforeRouteLeave(
               @click="voltarAoPadrao"
             />
           </div>
+
+          <p
+            v-for="aviso in avisosDoAlvo"
+            :key="aviso.tipo"
+            data-testid="aviso-alvo"
+            class="flex flex-wrap items-center gap-2 mt-4"
+            :class="[AVISO, TOM.amber]"
+          >
+            <span
+              class="i-lucide-triangle-alert size-3.5 shrink-0"
+              aria-hidden="true"
+            />
+            <span class="flex-1 min-w-0">
+              {{ t(`${K}.AVISOS.${aviso.tipo}`) }}
+            </span>
+            <router-link :to="aviso.rota" class="font-medium hover:underline">
+              {{ t(`${K}.AVISOS.LINK.${aviso.link}`) }}
+            </router-link>
+          </p>
 
           <div
             v-if="segue"
@@ -411,9 +582,21 @@ onBeforeRouteLeave(
               :cfg="cfgAtual"
               :dados="dados"
               :travado="segue"
+              :avisos="avisosDasAcoes"
               @permissao="mudarPermissao"
               @gatilhos="mudarGatilhos"
             />
+            <NumerosDaEtapa
+              :etapa="etapaAtual"
+              :numeros="numerosDaEtapa"
+              :sugerir="sugerirSozinha"
+              :segue="segue"
+              @sozinha="passarSozinha"
+            />
+          </section>
+
+          <section v-if="alvoId === 'padrao' && limites" class="mt-9">
+            <LimitesGerais v-model="limites" />
           </section>
         </div>
       </main>
