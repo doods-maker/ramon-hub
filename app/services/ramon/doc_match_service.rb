@@ -3,8 +3,8 @@
 # Com ANTHROPIC_API_KEY no servidor, foto/PDF vão pro Claude Haiku 5.5, que VÊ o
 # arquivo; sem ela (ou outro tipo/grande demais), o copiloto só tem nome + tipo +
 # fim da conversa. Assinatura do Claude (VPS) fica fora — termos, ver LlmEscolha.
-# Grava a sugestão em custom_attributes['doc_sugestao']; confirmação humana
-# fica pro painel (Task 6).
+# Com visão marca o item como recebido direto; sem visão grava só a sugestão em
+# custom_attributes['doc_sugestao'] pra confirmação humana no painel.
 class Ramon::DocMatchService
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você recebe um checklist de documentos de um caso previdenciário, os dados de um
@@ -27,19 +27,22 @@ class Ramon::DocMatchService
     return if lead.blank? || lead.thesis_id.blank? || attachment.blank?
 
     itens = pendentes(lead)
-    return if itens.empty?
+    item = itens.presence && escolher(lead, itens)
+    return if item.blank?
 
+    visao? ? marcar_recebido(lead, item) : gravar_sugestao(lead, item)
+  end
+
+  private
+
+  def escolher(lead, itens)
     item_id = ask_llm(lead, itens, attachment)
     item = itens.find { |i| i.id == item_id }
     if item.blank?
       Rails.logger.info("[Ramon::DocMatchService] item fora do checklist pendente ou nulo, item_id=#{item_id.inspect}, message=#{@message.id}")
-      return
     end
-
-    gravar_sugestao(lead, item, attachment)
+    item
   end
-
-  private
 
   def attachment
     @attachment ||= @message.attachments.detect { |a| %w[image file].include?(a.file_type) }
@@ -51,18 +54,19 @@ class Ramon::DocMatchService
   end
 
   def ask_llm(lead, itens, attachment)
-    ve = visao?(attachment)
     result = Ramon::LlmClient.complete(
-      **(ve ? VISAO : Ramon::LlmEscolha.para(lead.account, 'copiloto')),
-      system: SYSTEM_PROMPT, user: prompt_usuario(lead, itens, attachment), anexo: (attachment.file if ve),
+      **(visao? ? VISAO : Ramon::LlmEscolha.para(lead.account, 'copiloto')),
+      system: SYSTEM_PROMPT, user: prompt_usuario(lead, itens, attachment), anexo: (attachment.file if visao?),
       funcao: 'doc_match', account_id: lead.account_id, lead_id: lead.id, conversation_id: lead.conversation_id
     )
     parse_item_id(result.content)
   end
 
-  def visao?(attachment)
+  def visao?
+    return @visao if defined?(@visao)
+
     limite = VISAO_LIMITE[attachment.file.content_type]
-    limite.present? && attachment.file.byte_size <= limite && Ramon::LlmEscolha.chave?('anthropic')
+    @visao = limite.present? && attachment.file.byte_size <= limite && Ramon::LlmEscolha.chave?('anthropic')
   end
 
   def prompt_usuario(lead, itens, attachment)
@@ -93,17 +97,30 @@ class Ramon::DocMatchService
         .reject { |t| t == '[Attachment]' }.join("\n")
   end
 
-  def gravar_sugestao(lead, item, attachment)
+  # Haiku VIU o arquivo → marca direto (decisão Eduardo 17/10): o mesmo que o
+  # "Confirmar" grava (useDocSugestao); desfazer = desmarcar na aba Documentos.
+  def marcar_recebido(lead, item)
+    gravar(lead, item, 'doc_status' => { item.id.to_s => 'recebido' }, 'doc_anexos' => { item.id.to_s => attachment.id })
+  end
+
+  # Sem visão (só nome + conversa) é chute demais pra marcar: fica a sugestão.
+  def gravar_sugestao(lead, item)
+    gravar(lead, item, 'doc_sugestao' => { 'item_id' => item.id, 'attachment_id' => attachment.id,
+                                           'message_id' => @message.id, 'em' => Time.zone.now.iso8601,
+                                           'resolvida' => false })
+  end
+
+  def gravar(lead, item, patch)
     lead.reload # padrão advbox: merge sobre o estado atual, só a chave nova
-    lead.update!(custom_attributes: lead.custom_attributes.to_h.merge(
-      'doc_sugestao' => { 'item_id' => item.id, 'attachment_id' => attachment.id,
-                          'message_id' => @message.id, 'em' => Time.zone.now.iso8601,
-                          'resolvida' => false }
-    ))
+    lead.update!(custom_attributes: lead.custom_attributes.to_h.deep_merge(patch))
     titulo = item.title.presence || item.content
     Ramon::EventoInline.registrar(
       @message.conversation,
-      "✦ IA do hub leu o anexo e sugeriu: é \"#{titulo}\" — confirme aqui ou na aba Documentos.",
+      if visao?
+        "✦ IA do hub leu o anexo: é \"#{titulo}\" — já marcado como recebido na aba Documentos."
+      else
+        "✦ IA do hub sugeriu pelo nome do arquivo: é \"#{titulo}\" — confirme aqui ou na aba Documentos."
+      end,
       tipo: 'doc_match',
       extra: { 'item_id' => item.id, 'attachment_id' => attachment.id, 'lead_id' => lead.id }
     )
