@@ -66,4 +66,44 @@ RSpec.describe Ramon::PerfilIa do
     expect(perfil.direto?('marcar_reuniao')).to be(true)
     expect(perfil.direto?('mover_etapa')).to be(false)
   end
+
+  describe '.decidir' do
+    def d(perfil, **)
+      described_class.decidir(perfil, etapa: etapa['fase-novo'], tools_usadas: [], logistica: nil, handoff: false,
+                                      falhou: false, fora_do_horario: false, **)
+    end
+    let(:equilibrada) { gravar('padrao' => { 'base' => 'equilibrada' }) && described_class.de(conversa) }
+    let(:inicial) { described_class.de(conversa) }
+
+    it 'antes do Marcador sai; Tool de texto em rascunho segura a resposta toda' do
+      expect(d(equilibrada)).to eq([:envia, 'antes_do_marcador'])
+      expect(d(equilibrada, tools_usadas: ['simular_honorario'])).to eq([:rascunho, 'acao:citar_honorario'])
+      expect(d(equilibrada, tools_usadas: ['mover_etapa'])).to eq([:envia, 'antes_do_marcador'])
+    end
+
+    it 'depois do Marcador: só logística, só com logistica sozinha, e Tool de texto é teto' do
+      depois = etapa['fase-negociacao']
+      expect(d(equilibrada, etapa: depois, logistica: true)).to eq([:envia, 'logistica'])
+      expect(d(equilibrada, etapa: depois, logistica: nil)).to eq([:rascunho, 'depois_do_marcador'])
+      expect(d(equilibrada, etapa: depois, logistica: true, tools_usadas: ['solicitar_documento']))
+        .to eq([:rascunho, 'acao:pedir_documentos'])
+    end
+
+    it 'INICIAL = piloto limitado de hoje' do
+      expect(d(inicial, logistica: true)).to eq([:envia, 'logistica'])
+      expect(d(inicial, logistica: false)).to eq([:rascunho, 'depois_do_marcador'])
+      expect(d(inicial, handoff: true, falhou: true)).to eq([:envia, 'handoff'])
+      expect(d(inicial, logistica: true, fora_do_horario: true)).to eq([:envia, 'logistica'])
+    end
+
+    it 'pausa rascunho, Fechado, fora do horário em rascunho e falha de Tool viram rascunho' do
+      conversa.update!(custom_attributes: { 'ia_pausa' => 'rascunho' })
+      expect(d(described_class.de(conversa), handoff: true)).to eq([:rascunho, 'pausa'])
+      conversa.update!(custom_attributes: {})
+      expect(d(equilibrada, etapa: account.lead_stages.find_by(is_won: true))).to eq([:rascunho, 'fechado'])
+      gravar('padrao' => { 'base' => 'cautelosa', 'marcador' => '_fim' })
+      expect(d(described_class.de(conversa), fora_do_horario: true)).to eq([:rascunho, 'fora_do_horario'])
+      expect(d(equilibrada, falhou: true)).to eq([:rascunho, 'ferramenta_falhou'])
+    end
+  end
 end

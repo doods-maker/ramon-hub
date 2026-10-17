@@ -35,4 +35,11 @@ RSpec.describe Ramon::HorarioComercial do
     expect(described_class.minutos_entre(inicio, inicio + 10.minutes)).to eq(10)
     expect(described_class.minutos_entre(nil, inicio)).to eq(0)
   end
+
+  it 'aberto? só em dia útil dentro da janela (fim exclusivo)', :aggregate_failures do
+    expect(described_class.aberto?(sp('2026-10-06 10:00'))).to be(true) # terça
+    expect(described_class.aberto?(sp('2026-10-06 12:30'))).to be(false)
+    expect(described_class.aberto?(sp('2026-10-06 12:00'))).to be(false)
+    expect(described_class.aberto?(sp('2026-10-10 10:00'))).to be(false) # sábado
+  end
 end

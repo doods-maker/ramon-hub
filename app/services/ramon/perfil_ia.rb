@@ -98,6 +98,45 @@ class Ramon::PerfilIa
   end
   private_class_method :alvo_e_cfg, :normalizar, :permissoes_validas, :gatilhos_validos
 
+  # Decisão pura do envio: [:envia | :rascunho, motivo]. A ordem é a decisão; etapa = a do início do turno.
+  # logistica: true = o turno só tratou de logística; handoff: a IA chamou a equipe; falhou: Tool com erro.
+  def self.decidir(perfil, etapa:, tools_usadas:, logistica:, handoff:, falhou:, fora_do_horario:) # rubocop:disable Metrics/ParameterLists
+    estado = perfil.estado(etapa)
+    segura = segura(perfil, estado, fora_do_horario)
+    return segura if segura
+    return handoff_decisao(perfil, etapa) if handoff
+    return [:rascunho, 'ferramenta_falhou'] if falhou
+
+    textos = tools_usadas.filter_map { |tool| ACAO_DA_TOOL_DE_TEXTO[tool] }
+    estado == :sozinha ? antes_do_marcador(perfil, textos) : depois_do_marcador(perfil, etapa, textos, logistica)
+  end
+
+  # Pausa, Fechado e fora do horário (com permissão rascunho) seguram tudo, até o handoff.
+  def self.segura(perfil, estado, fora_do_horario)
+    return [:rascunho, 'pausa'] if perfil.pausa || estado == :pausada
+    return [:rascunho, 'fechado'] if estado == :fechado
+
+    [:rascunho, 'fora_do_horario'] if fora_do_horario && perfil.permissao('fora_do_horario') == :rascunho
+  end
+
+  def self.handoff_decisao(perfil, etapa)
+    perfil.logistica_sai?(etapa) ? [:envia, 'handoff'] : [:rascunho, 'depois_do_marcador']
+  end
+
+  def self.antes_do_marcador(perfil, textos)
+    acao = textos.find { |a| perfil.permissao(a) == :rascunho }
+    acao ? [:rascunho, "acao:#{acao}"] : [:envia, 'antes_do_marcador']
+  end
+
+  # Tool de texto é teto; logística só sai com a permissão sozinha e o turno só de logística.
+  def self.depois_do_marcador(perfil, etapa, textos, logistica)
+    return [:rascunho, "acao:#{textos.first}"] if textos.any?
+    return [:envia, 'logistica'] if logistica == true && perfil.logistica_sai?(etapa)
+
+    [:rascunho, 'depois_do_marcador']
+  end
+  private_class_method :segura, :handoff_decisao, :antes_do_marcador, :depois_do_marcador
+
   def initialize(conversa, lead, alvo, cfg, origem)
     @conversa = conversa
     @lead = lead

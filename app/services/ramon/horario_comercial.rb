@@ -9,6 +9,15 @@ module Ramon::HorarioComercial
   TIME_ZONE = 'America/Sao_Paulo'.freeze
   JANELAS = [[[8, 30], [12, 0]], [[13, 30], [18, 0]]].freeze
 
+  # Dia útil e dentro de uma janela (fim exclusivo), no fuso do escritório.
+  def aberto?(momento)
+    local = momento.in_time_zone(TIME_ZONE)
+    return false if local.saturday? || local.sunday?
+
+    minuto = (local.hour * 60) + local.min
+    JANELAS.any? { |(hora_ini, min_ini), (hora_fim, min_fim)| minuto >= (hora_ini * 60) + min_ini && minuto < (hora_fim * 60) + min_fim }
+  end
+
   # Minutos (Float) de [inicio, fim] que caem dentro das janelas.
   def minutos_entre(inicio, fim)
     return 0.0 if inicio.blank? || fim.blank? || fim <= inicio
