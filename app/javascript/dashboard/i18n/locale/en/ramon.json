@@ -1770,7 +1770,6 @@
         "MODO_AJUDA": "Mode simulated in the test: in Draft, stage changes and Lost become suggestions; in Full autopilot they apply on the spot. Nothing is saved."
       }
     },
-
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "recorded on {date}",
@@ -1811,6 +1810,28 @@
       "TICKER_NOW": "Now:",
       "TICKER": "{closer} closed {lead} — {value} · {benefit}",
       "STALE": "out of date for {min} min"
+    },
+    "IA_CONVERSA": {
+      "BTN": "AI: {perfil} ({origem}) · {etapa}",
+      "BTN_SEM_ETAPA": "AI: {perfil} ({origem})",
+      "ORIGEM": {
+        "tese": "from the thesis",
+        "caixa": "from the inbox",
+        "padrao": "from the default",
+        "teste": "from the test"
+      },
+      "PAUSADA": "AI paused",
+      "RASCUNHO": "Draft only",
+      "TITULO": "AI — this conversation only",
+      "PAUSAR": "Pause the AI in this conversation",
+      "SO_RASCUNHO": "Draft only in this conversation",
+      "VOLTAR": "Follow the profile again",
+      "TRILHA": "See in the track",
+      "ASSUMIR": "Take over",
+      "CARIMBO": "sent by the AI ({perfil})",
+      "PAUSAR_CARIMBO": "Pause",
+      "PAUSADO": "AI set to draft only in this conversation.",
+      "PAUSA_FALHOU": "Couldn't pause — try again."
     },
     "COPILOTO": {
       "BTN": "Copilot: {modo}",

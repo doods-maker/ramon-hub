@@ -1770,7 +1770,6 @@
         "MODO_AJUDA": "Modo simulado no teste: no Rascunho, mudança de etapa e Perdido viram sugestão; no Piloto total valem na hora. Nada fica gravado."
       }
     },
-
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "registrado em {date}",
@@ -1811,6 +1810,28 @@
       "TICKER_NOW": "Agora:",
       "TICKER": "{closer} fechou {lead} — {value} · {benefit}",
       "STALE": "desatualizado há {min} min"
+    },
+    "IA_CONVERSA": {
+      "BTN": "IA: {perfil} ({origem}) · {etapa}",
+      "BTN_SEM_ETAPA": "IA: {perfil} ({origem})",
+      "ORIGEM": {
+        "tese": "da tese",
+        "caixa": "da caixa",
+        "padrao": "do padrão",
+        "teste": "do teste"
+      },
+      "PAUSADA": "IA pausada",
+      "RASCUNHO": "Só rascunho",
+      "TITULO": "IA — só nesta conversa",
+      "PAUSAR": "Pausar a IA nesta conversa",
+      "SO_RASCUNHO": "Só rascunho nesta conversa",
+      "VOLTAR": "Voltar a seguir o perfil",
+      "TRILHA": "Ver na trilha",
+      "ASSUMIR": "Assumir",
+      "CARIMBO": "enviada pela IA ({perfil})",
+      "PAUSAR_CARIMBO": "Pausar",
+      "PAUSADO": "IA em só rascunho nesta conversa.",
+      "PAUSA_FALHOU": "Não consegui pausar — tente de novo."
     },
     "COPILOTO": {
       "BTN": "Copiloto: {modo}",
