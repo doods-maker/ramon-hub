@@ -91,13 +91,13 @@ RSpec.describe Ramon::MetaCapi::Cliente do
       around { |ex| with_modified_env(RAMON_META_DATASET_ID: nil) { ex.run } }
 
       it 'lê o dataset da WABA' do
-        stub_request(:get, "#{base}/waba1/dataset").with(query: { access_token: 'tok' })
+        stub_request(:get, "#{base}/waba1/dataset").with(headers: { 'Authorization' => 'Bearer tok' })
                                                    .to_return(json(data: [{ dataset_id: 'dsX' }]))
         expect(cliente.dataset_id).to eq('dsX')
       end
 
       it 'com lista vazia, cria o dataset por POST' do
-        stub_request(:get, "#{base}/waba1/dataset").with(query: { access_token: 'tok' }).to_return(json(data: []))
+        stub_request(:get, "#{base}/waba1/dataset").with(headers: { 'Authorization' => 'Bearer tok' }).to_return(json(data: []))
         post = stub_request(:post, "#{base}/waba1/dataset").to_return(json(id: 'dsNovo'))
         expect(cliente.dataset_id).to eq('dsNovo')
         expect(post).to have_been_requested

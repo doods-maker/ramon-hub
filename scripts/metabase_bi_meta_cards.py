@@ -28,7 +28,7 @@ CARDS = {
 WITH g AS (
   SELECT ad_id, MAX(ad_name) AS anuncio, SUM(spend) AS gasto
   FROM bi_meta_gastos
-  WHERE account_id = {ACCOUNT_ID} AND data > current_date - 30
+  WHERE account_id = {ACCOUNT_ID} AND data >= current_date - 30
   GROUP BY ad_id
 ), reu AS (
   SELECT DISTINCT st.lead_id
@@ -39,7 +39,7 @@ WITH g AS (
          COUNT(*) FILTER (WHERE b.won_at IS NOT NULL) AS contratos
   FROM bi_leads b
   LEFT JOIN reu ON reu.lead_id = b.id
-  WHERE b.account_id = {ACCOUNT_ID} AND b.meta_ad_id IS NOT NULL AND b.created_at > now() - interval '30 days'
+  WHERE b.account_id = {ACCOUNT_ID} AND b.meta_source_type = 'ad' AND b.meta_ad_id IS NOT NULL AND b.created_at > now() - interval '30 days'
   GROUP BY b.meta_ad_id
 )
 SELECT COALESCE(g.anuncio, g.ad_id, l.ad_id) AS anuncio, ROUND(COALESCE(g.gasto, 0), 2) AS gasto,
@@ -51,7 +51,7 @@ ORDER BY gasto DESC"""),
     "Meta: gasto por campanha (30d)": dict(display="bar", sql=f"""
 SELECT COALESCE(campaign_name, campaign_id) AS campanha, ROUND(SUM(spend), 2) AS gasto
 FROM bi_meta_gastos
-WHERE account_id = {ACCOUNT_ID} AND data > current_date - 30
+WHERE account_id = {ACCOUNT_ID} AND data >= current_date - 30
 GROUP BY 1 ORDER BY gasto DESC"""),
     "Meta: avisos enviados × com erro (7d)": dict(display="bar", sql=f"""
 SELECT status, COUNT(*) AS avisos

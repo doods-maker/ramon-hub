@@ -29,12 +29,13 @@ class Ramon::MetaCapi::Cliente
   private
 
   def descobrir_dataset
-    achado = Array(requisitar(:get, "#{@waba_id}/dataset", query: { access_token: @token })['data']).first
-    (achado && achado['dataset_id']) || requisitar(:post, "#{@waba_id}/dataset", body: { access_token: @token }.to_json)['id']
+    achado = Array(requisitar(:get, "#{@waba_id}/dataset")['data']).first
+    (achado && achado['dataset_id']) || requisitar(:post, "#{@waba_id}/dataset", body: '{}')['id']
   end
 
   def requisitar(verb, caminho, query: nil, body: nil)
-    opts = { headers: { 'Accept' => 'application/json' }, open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT }
+    opts = { headers: { 'Accept' => 'application/json', 'Authorization' => "Bearer #{@token}" },
+             open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT }
     opts[:query] = query if query
     if body
       opts[:body] = body

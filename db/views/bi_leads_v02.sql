@@ -24,8 +24,7 @@ SELECT
   (l.custom_attributes #>> '{valor_estimado,origem}') AS valor_origem,
   (l.custom_attributes #>> '{meta_referral,source_id}') AS meta_ad_id,
   (l.custom_attributes #>> '{meta_referral,source_type}') AS meta_source_type,
-  (l.custom_attributes #>> '{meta_referral,ctwa_clid}') IS NOT NULL AS veio_de_anuncio_whatsapp,
-  l.lead_stage_id
+  (l.custom_attributes #>> '{meta_referral,ctwa_clid}') IS NOT NULL AS veio_de_anuncio_whatsapp
 FROM leads l
 LEFT JOIN theses t ON t.id = l.thesis_id
 LEFT JOIN lead_stages s ON s.id = l.lead_stage_id

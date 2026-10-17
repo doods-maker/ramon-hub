@@ -15,9 +15,11 @@ class Ramon::MetaGastoJob < ApplicationJob
   # Ignora a chave (o rake usa direto). Devolve o nº de linhas gravadas, ou nil se faltar configuração.
   def sincronizar(dias)
     ad_account_id = ENV['RAMON_META_AD_ACCOUNT_ID'].presence
+    return if ad_account_id.nil?
+
     account = Account.find(ENV.fetch('RAMON_META_ACCOUNT_ID', 2))
     token = token_de(account)
-    return if ad_account_id.nil? || token.blank?
+    return if token.blank?
 
     hoje = Time.zone.today
     linhas = Ramon::MetaCapi::Insights.new(token: token, ad_account_id: ad_account_id)

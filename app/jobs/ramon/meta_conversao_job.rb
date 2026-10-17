@@ -6,13 +6,20 @@ class Ramon::MetaConversaoJob < ApplicationJob
     job.arguments.first.then { |id| MetaEvento.find_by(id: id)&.update(status: 'erro', erro: erro.class.name.truncate(255)) }
   end
 
+  # WABA e token saem do MESMO canal: o da caixa do clique (WABA do referral) ou, de reserva, o da conversa do lead.
+  def self.credenciais(lead, referral)
+    clique = lead.account.inboxes.find_by(id: referral['inbox_id'])&.channel
+    config = (clique || lead.conversation&.inbox&.channel).try(:provider_config).to_h
+    [(clique && referral['waba_id'].presence) || config['business_account_id'], config['api_key']]
+  end
+
   def perform(meta_evento_id)
     evento = MetaEvento.find_by(id: meta_evento_id)
     return if evento.nil? || evento.status != 'pendente'
 
     lead = evento.lead
     referral = lead.custom_attributes.to_h['meta_referral'].to_h
-    waba, token = credenciais(lead, referral)
+    waba, token = self.class.credenciais(lead, referral)
     return encerrar(evento, 'ignorado', 'sem_waba') if waba.blank?
     return encerrar(evento, 'ignorado', 'sem_token') if token.blank?
 
@@ -33,15 +40,5 @@ class Ramon::MetaConversaoJob < ApplicationJob
 
   def encerrar(evento, status, erro)
     evento.update!(status: status, erro: erro.to_s.truncate(255))
-  end
-
-  # WABA e token saem do MESMO canal: o da caixa do clique ou, de reserva, o da conversa do lead.
-  def credenciais(lead, referral)
-    config = canal(lead, referral).try(:provider_config).to_h
-    [referral['waba_id'].presence || config['business_account_id'], config['api_key']]
-  end
-
-  def canal(lead, referral)
-    lead.account.inboxes.find_by(id: referral['inbox_id'])&.channel || lead.conversation&.inbox&.channel
   end
 end

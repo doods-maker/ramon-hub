@@ -38,6 +38,16 @@ RSpec.describe Ramon::MetaConversaoJob do
     expect(Ramon::MetaCapi::Cliente).to have_received(:new).with(token: 'tok2', waba_id: 'w-outro')
   end
 
+  it 'caixa do clique apagada ignora o waba_id do referral e usa WABA e token da conversa' do
+    outro = create(:channel_whatsapp, account: account, sync_templates: false, validate_provider_config: false,
+                                      provider_config: { 'api_key' => 'tok2', 'phone_number_id' => 'p2', 'business_account_id' => 'w-outro' })
+    lead.update!(custom_attributes: { 'meta_referral' => { 'ctwa_clid' => 'clid-1', 'inbox_id' => 0, 'waba_id' => 'w-clique' } },
+                 conversation: create(:conversation, account: account, inbox: outro.inbox))
+    allow(cliente).to receive(:enviar).and_return(true)
+    described_class.perform_now(evento.id)
+    expect(Ramon::MetaCapi::Cliente).to have_received(:new).with(token: 'tok2', waba_id: 'w-outro')
+  end
+
   it 'erro transitório re-enfileira e o evento continua pendente' do
     allow(cliente).to receive(:enviar).and_raise(Ramon::MetaCapi::Transitorio)
     expect { described_class.perform_now(evento.id) }.to have_enqueued_job(described_class).with(evento.id)
