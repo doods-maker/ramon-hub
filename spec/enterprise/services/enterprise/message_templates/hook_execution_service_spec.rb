@@ -93,6 +93,17 @@ RSpec.describe MessageTemplates::HookExecutionService do
         end
       end
 
+      it 'fora do horário do escritório com a permissão em rascunho (Cautelosa), agenda sem espera' do
+        account.update!(settings: account.settings.to_h.merge('ia_atendimento' => { 'padrao' => { 'base' => 'cautelosa' } }))
+        allow(Ramon::HorarioComercial).to receive(:aberto?).and_return(false)
+
+        freeze_time do
+          create(:message, conversation: conversation, message_type: :incoming, account: account)
+
+          expect(job_da_ia[:at].to_f).to be <= Time.current.to_f
+        end
+      end
+
       it 'schedules captain response job regardless of time' do
         expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
           .to have_enqueued_job(Captain::Conversation::ResponseBuilderJob).with(conversation, assistant, kind_of(Integer))
@@ -342,6 +353,15 @@ RSpec.describe MessageTemplates::HookExecutionService do
 
     it 'com a Pausa "só rascunho", abre a conversa sem mandar aviso ao cliente' do
       conversation.update!(custom_attributes: { 'ia_pausa' => 'rascunho' })
+
+      expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
+        .not_to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)
+      expect(conversation.reload.status).to eq('open')
+    end
+
+    it 'fora do horário do escritório com a permissão em rascunho (Cautelosa), abre a conversa sem aviso' do
+      account.update!(settings: account.settings.to_h.merge('ia_atendimento' => { 'padrao' => { 'base' => 'cautelosa' } }))
+      allow(Ramon::HorarioComercial).to receive(:aberto?).and_return(false)
 
       expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
         .not_to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)

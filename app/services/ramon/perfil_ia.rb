@@ -190,7 +190,12 @@ class Ramon::PerfilIa
   end
 
   # De qual perfil veio a mensagem da IA: rastro vai na nota-rascunho (ramon_ia_rascunho); carimbo, na enviada (bi_ia conta).
-  def rastro(handoff) = { 'alvo' => @alvo, 'etapa' => self.class.chave_da_etapa(@etapa), 'handoff' => handoff == true }
+  # Sem lead/etapa, a decisão usa a 1ª Etapa aberta (posicao): o rastro carimba a mesma.
+  def rastro(handoff) = { 'alvo' => @alvo, 'etapa' => self.class.chave_da_etapa(@etapa || abertas.first), 'handoff' => handoff == true }
+
+  # Uma resposta só de logística (ou o aviso de handoff) sairia sozinha agora? Mesma regra do job, com o relógio
+  # (fora do horário em rascunho segura). Usado no atraso da resposta e no aviso de cota estourada (HookExecutionService).
+  def logistica_sai_agora?(handoff: false) = decidir_turno(nil, logistica: true, handoff: handoff).first == :envia
 
   def carimbo(handoff) = { 'ramon_piloto' => { 'perfil' => nome, **rastro(handoff), 'em' => Time.zone.now.iso8601 } }
 

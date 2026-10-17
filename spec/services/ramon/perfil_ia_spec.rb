@@ -129,5 +129,32 @@ RSpec.describe Ramon::PerfilIa do
       expect(perfil.carimbo(true)['ramon_piloto']).to include('perfil' => 'Equilibrada', 'alvo' => 'padrao',
                                                               'etapa' => 'fase-qualificacao', 'handoff' => true, 'em' => kind_of(String))
     end
+
+    it 'sem lead, o rastro carimba a 1ª Etapa aberta (a mesma que a decisão usa)' do
+      expect(described_class.de(conversa).rastro(false)).to include('etapa' => 'fase-novo')
+    end
+  end
+
+  # Atraso da resposta e aviso de cota estourada (HookExecutionService) seguem a regra do envio de logística/handoff do job.
+  describe '#logistica_sai_agora?' do
+    it 'fora do horário com a permissão em rascunho, logística e handoff não saem sozinhos' do
+      gravar('padrao' => { 'base' => 'cautelosa' }) # fora_do_horario 'r'; sem lead = antes do Marcador
+      perfil = described_class.de(conversa)
+      allow(Ramon::HorarioComercial).to receive(:aberto?).and_return(false)
+      expect(perfil.decidir_turno(nil, logistica: true, handoff: true)).to eq([:rascunho, 'fora_do_horario'])
+      expect(perfil.logistica_sai_agora?(handoff: true)).to be(false)
+      expect(perfil.logistica_sai_agora?).to be(false)
+
+      allow(Ramon::HorarioComercial).to receive(:aberto?).and_return(true)
+      expect(perfil.logistica_sai_agora?(handoff: true)).to be(true)
+      expect(perfil.logistica_sai_agora?).to be(true)
+    end
+
+    it 'INICIAL (fora do horário sozinha) sai mesmo de madrugada; Pausa rascunho nunca' do
+      allow(Ramon::HorarioComercial).to receive(:aberto?).and_return(false)
+      expect(described_class.de(conversa).logistica_sai_agora?(handoff: true)).to be(true)
+      conversa.update!(custom_attributes: { 'ia_pausa' => 'rascunho' })
+      expect(described_class.de(conversa).logistica_sai_agora?).to be(false)
+    end
   end
 end

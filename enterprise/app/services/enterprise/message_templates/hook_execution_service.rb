@@ -30,7 +30,7 @@ module Enterprise::MessageTemplates::HookExecutionService
 
   private
 
-  # ramon: quando a resposta pode sair sozinha (Perfil da IA: ao menos a logística sai) ela vai com atraso
+  # ramon: quando a resposta pode sair sozinha (Perfil da IA: ao menos a logística sai agora) ela vai com atraso
   # aleatório (30s–3min) pra não ter ritmo de robô. Só rascunho: sem espera (quem envia é a pessoa). O id da
   # mensagem vai junto: se o cliente mandar outra antes, só o job da mais nova responde.
   def schedule_captain_response
@@ -40,7 +40,7 @@ module Enterprise::MessageTemplates::HookExecutionService
 
   # ponytail: o perfil é lido no agendamento; mudar perfil/Etapa/Pausa durante a espera não muda o atraso
   def atraso_resposta_ia
-    return rand(RESPOSTA_IA_ATRASO).seconds if Ramon::PerfilIa.de(conversation).logistica_sai?
+    return rand(RESPOSTA_IA_ATRASO).seconds if Ramon::PerfilIa.de(conversation).logistica_sai_agora?
 
     message.attachments.present? ? ATRASO_ANEXO : 0
   end
@@ -53,13 +53,13 @@ module Enterprise::MessageTemplates::HookExecutionService
     return unless conversation.pending?
 
     Rails.logger.info("Captain limit exceeded, performing handoff mid-conversation for conversation: #{conversation.id}")
-    agendar_aviso_de_handoff if Ramon::PerfilIa.de(conversation).logistica_sai?
+    agendar_aviso_de_handoff if Ramon::PerfilIa.de(conversation).logistica_sai_agora?(handoff: true)
     conversation.bot_handoff!
     send_out_of_office_message_after_handoff
   end
 
   # ramon: limite de respostas da IA estourado → mesmo texto do handoff normal (config do assistente,
-  # senão i18n na língua da conta) e mesmo atraso. Se a logística não sai sozinha, nada vai pro cliente.
+  # senão i18n na língua da conta) e mesmo atraso. Mesma regra do handoff no job (inclui fora do horário em rascunho).
   # ponytail: o aviso sai mesmo se um humano responder durante a espera — caso raro (limite de 100 mil)
   def agendar_aviso_de_handoff
     content = inbox.captain_assistant.config['handoff_message'].presence ||
