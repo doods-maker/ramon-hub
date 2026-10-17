@@ -39,7 +39,7 @@ class Ramon::PainelTimeSdr < Ramon::PainelTimeBase
     tempos = ReportingEvent.where(account_id: account.id, name: 'first_response', event_start_time: periodo,
                                   conversation_id: dos_sdrs.select(:conversation_id))
                            .pluck(:event_start_time, :event_end_time)
-                           .map { |inicio, fim| Ramon::HorarioComercial.minutos_entre(inicio, fim) }
+                           .map { |inicio, fim| Ramon::HorarioComercial.minutos_entre(inicio, fim, account) }
     { valor: mediana(tempos), num: tempos.size, den: nil }
   end
 
@@ -50,7 +50,7 @@ class Ramon::PainelTimeSdr < Ramon::PainelTimeBase
     esperando = account.conversations.open.joins(:inbox)
                        .where(inboxes: { auto_create_lead: true }, first_reply_created_at: nil)
                        .where(id: dos_sdrs.select(:conversation_id)).pluck(:created_at)
-    atrasadas = esperando.count { |desde| Ramon::HorarioComercial.minutos_entre(desde, agora) > LIMITE_SEM_RESPOSTA }
+    atrasadas = esperando.count { |desde| Ramon::HorarioComercial.minutos_entre(desde, agora, account) > LIMITE_SEM_RESPOSTA }
     { valor: atrasadas, num: atrasadas, den: esperando.size }
   end
 

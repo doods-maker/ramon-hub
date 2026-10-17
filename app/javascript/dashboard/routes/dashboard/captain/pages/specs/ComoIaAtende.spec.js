@@ -234,6 +234,44 @@ describe('Como a IA atende', () => {
     expect(achar(wrapper, 'nao-salvas').text()).toBe('1 unsaved change');
   });
 
+  it('limites gerais só no Padrão; editar conta como alteração e salvar manda os limites sem o teto do agente', async () => {
+    const resposta = dados();
+    resposta.limites.atraso = { min: 10, max: 60 };
+    RamonIaAtendimentoAPI.salvar.mockResolvedValue({ data: resposta });
+    const wrapper = await montar();
+    expect(achar(wrapper, 'limites-gerais').exists()).toBe(true);
+    expect(achar(wrapper, 'agente-dia').text()).toBe('30');
+    expect(achar(wrapper, 'limites-gerais').text()).toContain(
+      'changes on the VPS runner (CAP_DIA)'
+    );
+
+    await clicar(wrapper, 'alvo-tese:1');
+    expect(achar(wrapper, 'limites-gerais').exists()).toBe(false);
+    await clicar(wrapper, 'alvo-padrao');
+
+    await achar(wrapper, 'dia-6').trigger('click');
+    await achar(wrapper, 'atraso-min').setValue('10');
+    await achar(wrapper, 'atraso-max').setValue('60');
+    await achar(wrapper, 'lim-teto_usd').setValue('2.5');
+    await achar(wrapper, 'segunda-faixa').trigger('click');
+    expect(achar(wrapper, 'faixa-1-ini').exists()).toBe(false);
+    expect(achar(wrapper, 'nao-salvas').text()).toBe('1 unsaved change');
+
+    await clicar(wrapper, 'salvar');
+    await flushPromises();
+    expect(RamonIaAtendimentoAPI.salvar).toHaveBeenCalledWith({
+      limites: {
+        horario: { dias: [1, 2, 3, 4, 5, 6], janelas: [['08:30', '12:00']] },
+        atraso: { min: 10, max: 60 },
+        fluxo_ia_dia: 200,
+        retomadas_dia: 15,
+        retomada_intervalo_dias: 5,
+        teto_usd: '2.5',
+      },
+    });
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
+  });
+
   it('?alvo= abre o alvo pedido', async () => {
     useRoute().query = { alvo: 'tese:2' };
     const wrapper = await montar();

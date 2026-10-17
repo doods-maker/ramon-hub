@@ -98,6 +98,27 @@
         "PENDENTE": "Texto pendente de aprovação: ainda não dá para ligar.",
         "PENDENTE_SUFIXO": "· texto pendente"
       },
+      "GERAIS": {
+        "TITULO": "Limites gerais do escritório",
+        "DICA": "Valem para todas as teses e caixas.",
+        "HORARIO": "Horário de atendimento",
+        "DIAS": { "0": "Dom", "1": "Seg", "2": "Ter", "3": "Qua", "4": "Qui", "5": "Sex", "6": "Sáb" },
+        "FAIXA": "Faixa {n}",
+        "ATE": "até",
+        "ADICIONAR_FAIXA": "+ Adicionar segunda faixa",
+        "REMOVER_FAIXA": "Remover a segunda faixa",
+        "HORARIO_NOTA": "Vale também para os horários livres da Agenda e o painel do SDR.",
+        "ATRASO": "Atraso da resposta da IA",
+        "SEGUNDOS": "segundos",
+        "ATRASO_NOTA": "Sorteado a cada resposta; no máximo {max} segundos.",
+        "fluxo_ia_dia": "Chamadas de IA dos fluxos por dia",
+        "retomadas_dia": "Retomadas por dia",
+        "retomada_intervalo_dias": "Dias entre retomadas do mesmo lead",
+        "TETO_USD": "Teto de gasto por dia (US$)",
+        "TETO_USD_NOTA": "Vazio = sem alerta.",
+        "AGENTE": "Execuções do agente por dia",
+        "AGENTE_NOTA": "Só leitura: muda no runner da VPS (CAP_DIA)."
+      },
       "ACOES": {
         "fora_do_horario": "Responder fora do horário comercial (vale em todas as etapas)",
         "pedir_documentos": "Pedir documentos pela ferramenta",

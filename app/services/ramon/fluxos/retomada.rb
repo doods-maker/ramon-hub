@@ -15,10 +15,11 @@ module Ramon::Fluxos::Retomada
     return { reason: 'open_follow_up' } if lead.lead_tasks.open_tasks.exists?(kind: 'follow_up')
 
     ultima = ultima_em(lead)
-    return if ultima.nil? || ultima <= INTERVALO_DIAS.days.ago
+    intervalo = Ramon::IaLimites.de(lead.account)[:retomada_intervalo_dias]
+    return if ultima.nil? || ultima <= intervalo.days.ago
 
     { reason: 'recent_follow_up', last_at: ultima.iso8601,
-      days_ago: (Time.zone.today - ultima.to_date).to_i, min_gap_days: INTERVALO_DIAS }
+      days_ago: (Time.zone.today - ultima.to_date).to_i, min_gap_days: intervalo }
   end
 
   # Data venenosa (a API grava qualquer coisa no jsonb) → nil, tratada como "nunca".
@@ -68,8 +69,8 @@ module Ramon::Fluxos::Retomada
 
   def descrever(account) = Ramon::Fluxos::Migracao.descrever(account, GRUPO)
 
-  # O teto em vigor (Watchdog): com o fluxo no comando, o limite do dia dele (nil = sem teto); senão, o do código.
-  def teto(account) = assumiu?(account) ? fluxo(account).limite_dia : TETO
+  # O teto em vigor (Watchdog): com o fluxo no comando, o limite do dia dele (nil = sem teto); senão, o dos limites do escritório (padrão 15).
+  def teto(account) = assumiu?(account) ? fluxo(account).limite_dia : Ramon::IaLimites.de(account)[:retomadas_dia]
 
   # Botão "Preparar retomada" com o fluxo no comando: roda o fluxo para ESTE lead, sem o teto, revendo a regra (clique
   # duplo). 'assumido': fluxo migrado sem ele nasce ensaio (Disparo#sombra?); 'botao': o push 1 por dia fica para o lote

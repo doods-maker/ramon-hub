@@ -62,7 +62,7 @@ class Ramon::Agenda::Disponibilidade
   private
 
   def util?(dia)
-    !dia.saturday? && !dia.sunday? && !Ramon::Agenda::Feriados.feriado?(dia)
+    Ramon::HorarioComercial.dias(@account).include?(dia.wday) && !Ramon::Agenda::Feriados.feriado?(dia)
   end
 
   def grade(dia, hora, min)
@@ -70,7 +70,7 @@ class Ramon::Agenda::Disponibilidade
   end
 
   def janelas(dia)
-    Ramon::HorarioComercial::JANELAS.map { |(hi, mi), (hf, mf)| [grade(dia, hi, mi), grade(dia, hf, mf)] }
+    Ramon::HorarioComercial.janelas(@account).map { |(hi, mi), (hf, mf)| [grade(dia, hi, mi), grade(dia, hf, mf)] }
   end
 
   def dias_uteis

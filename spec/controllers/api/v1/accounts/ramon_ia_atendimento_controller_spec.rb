@@ -61,6 +61,25 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
     expect(ler['padrao']['base']).to eq('equilibrada')
   end
 
+  it 'GET traz os limites gerais; PATCH grava junto com o perfil (um save) e recusa o inválido', :aggregate_failures do
+    get url, headers: admin.create_new_auth_token, as: :json
+    expect(response.parsed_body['limites']).to include(
+      'atraso' => { 'min' => 30, 'max' => 180 }, 'retomadas_dia' => 15, 'retomada_intervalo_dias' => 5, 'teto_usd' => nil,
+      'agente_dia' => AgenteExecucao::TETO_DIA, 'horario' => { 'dias' => [1, 2, 3, 4, 5], 'janelas' => [%w[08:30 12:00], %w[13:30 18:00]] }
+    )
+
+    alterar({ padrao: { base: 'acelerada' }, limites: { atraso: { min: 10, max: 90 }, retomadas_dia: 25, teto_usd: 3 } })
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body['limites']).to include('atraso' => { 'min' => 10, 'max' => 90 }, 'retomadas_dia' => 25, 'teto_usd' => 3.0)
+    expect(ler['padrao']['base']).to eq('acelerada')
+
+    antes = account.reload.settings
+    alterar({ padrao: { base: 'equilibrada' }, limites: { atraso: { min: 10, max: 200 } } })
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body['error']).to be_present
+    expect(account.reload.settings).to eq(antes)
+  end
+
   it 'PATCH inválido dá 422 e não grava nada', :aggregate_failures do
     estranha = create(:thesis, account: create(:account))
     antes = account.reload.settings

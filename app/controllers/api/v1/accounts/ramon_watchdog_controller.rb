@@ -24,7 +24,7 @@ class Api::V1::Accounts::RamonWatchdogController < Api::V1::Accounts::BaseContro
   def thresholds
     {
       teto_diario: Ramon::Fluxos::Retomada.teto(Current.account),
-      intervalo_minimo_dias: Ramon::Fluxos::Retomada::INTERVALO_DIAS,
+      intervalo_minimo_dias: Ramon::IaLimites.de(Current.account)[:retomada_intervalo_dias],
       teto_copiloto_noturno: ENV.fetch('RAMON_NIGHT_COPILOT_LIMIT', '15').to_i,
       horario_retomada: '11:00 (BRT)',
       horario_copiloto: '05:00 (BRT)'

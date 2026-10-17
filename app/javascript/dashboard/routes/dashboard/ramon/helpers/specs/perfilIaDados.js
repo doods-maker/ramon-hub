@@ -116,4 +116,19 @@ export const dados = () => ({
     { id: 2, nome: 'Auxílio-acidente', cfg: { base: 'acelerada' } },
   ],
   caixas: [{ id: 3, nome: 'Instagram Direct', cfg: null }],
+  limites: {
+    horario: {
+      dias: [1, 2, 3, 4, 5],
+      janelas: [
+        ['08:30', '12:00'],
+        ['13:30', '18:00'],
+      ],
+    },
+    atraso: { min: 30, max: 180 },
+    fluxo_ia_dia: 200,
+    retomadas_dia: 15,
+    retomada_intervalo_dias: 5,
+    teto_usd: null,
+    agente_dia: 30,
+  },
 });

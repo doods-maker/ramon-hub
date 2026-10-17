@@ -98,6 +98,27 @@
         "PENDENTE": "Text pending approval: can't be turned on yet.",
         "PENDENTE_SUFIXO": "· text pending"
       },
+      "GERAIS": {
+        "TITULO": "Office-wide limits",
+        "DICA": "They apply to every thesis and inbox.",
+        "HORARIO": "Business hours",
+        "DIAS": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+        "FAIXA": "Range {n}",
+        "ATE": "to",
+        "ADICIONAR_FAIXA": "+ Add a second range",
+        "REMOVER_FAIXA": "Remove the second range",
+        "HORARIO_NOTA": "Also used for the free slots in the Agenda and the SDR panel.",
+        "ATRASO": "AI reply delay",
+        "SEGUNDOS": "seconds",
+        "ATRASO_NOTA": "Drawn at random for each reply; at most {max} seconds.",
+        "fluxo_ia_dia": "Flow AI calls per day",
+        "retomadas_dia": "Follow-ups per day",
+        "retomada_intervalo_dias": "Days between follow-ups of the same lead",
+        "TETO_USD": "Daily spend cap (US$)",
+        "TETO_USD_NOTA": "Empty = no alert.",
+        "AGENTE": "Agent runs per day",
+        "AGENTE_NOTA": "Read-only: changes on the VPS runner (CAP_DIA)."
+      },
       "ACOES": {
         "fora_do_horario": "Reply outside business hours (applies to every stage)",
         "pedir_documentos": "Request documents via tool",

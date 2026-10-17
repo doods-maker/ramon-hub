@@ -21,6 +21,7 @@ import {
 import ListaAlvos from './comoIaAtende/ListaAlvos.vue';
 import Trilha from './comoIaAtende/Trilha.vue';
 import LimitesDaEtapa from './comoIaAtende/LimitesDaEtapa.vue';
+import LimitesGerais from './comoIaAtende/LimitesGerais.vue';
 
 defineOptions({ name: 'CaptainComoIaAtende' });
 
@@ -35,6 +36,9 @@ const salvando = ref(false);
 // alvo ('padrao' | 'tese:<id>' | 'caixa:<id>') → cfg | null (segue o padrão): o do servidor e o da tela
 const salvos = ref({});
 const cfgs = ref({});
+// limites gerais do escritório (só no Padrão): o do servidor e o da tela
+const limitesSalvos = ref(null);
+const limites = ref(null);
 const alvoId = ref('padrao');
 const etapaSel = ref('');
 
@@ -47,6 +51,8 @@ const aplicar = corpo => {
     ...Object.fromEntries(corpo.caixas.map(x => [`caixa:${x.id}`, x.cfg])),
   };
   cfgs.value = copia(salvos.value);
+  limitesSalvos.value = corpo.limites;
+  limites.value = copia(corpo.limites);
   if (!etapaSel.value) etapaSel.value = corpo.etapas[0]?.chave ?? '';
 };
 
@@ -131,10 +137,18 @@ const mudados = computed(() =>
       )
     : []
 );
+const limitesMudaram = computed(
+  () =>
+    !!limites.value &&
+    JSON.stringify(limites.value) !== JSON.stringify(limitesSalvos.value)
+);
+const nMudancas = computed(
+  () => mudados.value.length + (limitesMudaram.value ? 1 : 0)
+);
 const naoSalvas = computed(() =>
-  mudados.value.length === 1
+  nMudancas.value === 1
     ? t(`${K}.NAO_SALVAS_UMA`)
-    : t(`${K}.NAO_SALVAS`, { n: mudados.value.length })
+    : t(`${K}.NAO_SALVAS`, { n: nMudancas.value })
 );
 
 const definir = cfg => {
@@ -170,6 +184,10 @@ const salvar = async () => {
     const secao = tipo === 'tese' ? 'teses' : 'caixas';
     corpo[secao] = { ...corpo[secao], [numero]: cfg };
   });
+  if (limitesMudaram.value) {
+    const { agente_dia: _somenteLeitura, ...editaveis } = limites.value;
+    corpo.limites = editaveis;
+  }
   salvando.value = true;
   try {
     const { data } = await RamonIaAtendimentoAPI.salvar(corpo);
@@ -183,7 +201,7 @@ const salvar = async () => {
 };
 
 const avisarSaida = e => {
-  if (!mudados.value.length) return;
+  if (!nMudancas.value) return;
   e.preventDefault();
   e.returnValue = '';
 };
@@ -193,9 +211,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSaida));
 // ponytail: window.confirm de propósito — o guard de rota precisa de resposta síncrona.
-onBeforeRouteLeave(
-  () => !mudados.value.length || window.confirm(t(`${K}.SAIR`))
-);
+onBeforeRouteLeave(() => !nMudancas.value || window.confirm(t(`${K}.SAIR`)));
 </script>
 
 <template>
@@ -211,7 +227,7 @@ onBeforeRouteLeave(
       </h1>
       <div class="flex items-center gap-3 ml-auto">
         <span
-          v-if="mudados.length"
+          v-if="nMudancas"
           data-testid="nao-salvas"
           class="text-xs text-n-slate-10"
         >
@@ -221,7 +237,7 @@ onBeforeRouteLeave(
           size="sm"
           icon="i-lucide-check"
           :label="t(`${K}.SALVAR`)"
-          :disabled="!mudados.length || salvando"
+          :disabled="!nMudancas || salvando"
           :is-loading="salvando"
           data-testid="salvar"
           @click="salvar"
@@ -414,6 +430,10 @@ onBeforeRouteLeave(
               @permissao="mudarPermissao"
               @gatilhos="mudarGatilhos"
             />
+          </section>
+
+          <section v-if="alvoId === 'padrao' && limites" class="mt-9">
+            <LimitesGerais v-model="limites" />
           </section>
         </div>
       </main>

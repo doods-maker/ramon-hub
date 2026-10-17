@@ -17,7 +17,7 @@ class Ramon::PerfilIa::Tela
     { prontos: Ramon::PerfilIa::PRONTOS, inicial: Ramon::PerfilIa::INICIAL, acoes: acoes, gatilhos: gatilhos,
       etapas: etapas, padrao: Ramon::PerfilIa.cfg_salvo(@account, 'padrao') || Ramon::PerfilIa::INICIAL,
       teses: @account.theses.map { |t| { id: t.id, nome: t.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'teses', t.id) } },
-      caixas: caixas }
+      caixas: caixas, limites: Ramon::IaLimites.corpo(@account) }
   end
 
   private

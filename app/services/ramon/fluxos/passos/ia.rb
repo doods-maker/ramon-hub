@@ -6,7 +6,7 @@
 module Ramon::Fluxos::Passos::Ia
   PROVIDER = 'deepseek'.freeze
   LIMITE_CONVERSA = 8_000 # caracteres do fim da conversa
-  # chamadas de IA de fluxo por conta por dia (env RAMON_FLUXO_IA_DIA) — valor é decisão do Eduardo
+  # chamadas de IA de fluxo por conta por dia (env RAMON_FLUXO_IA_DIA; a tela Como a IA atende pode trocar) — valor é decisão do Eduardo
   TETO_PADRAO = 200
   REGRAS = <<~TXT.freeze
     Regras obrigatórias (Provimento 205/2021 da OAB): nunca prometa resultado, prazo ou valor do INSS; não pressione nem ofereça vantagem;
@@ -117,7 +117,7 @@ module Ramon::Fluxos::Passos::Ia
 
   # Teto por conta/dia (fuso SP) contado no Redis; estourou → falha na hora + sino de falha.
   def cota!(ctx)
-    teto = ENV.fetch('RAMON_FLUXO_IA_DIA', TETO_PADRAO).to_i
+    teto = Ramon::IaLimites.de(ctx.execucao.account)[:fluxo_ia_dia]
     chave = "RAMON::FLUXO_IA::#{ctx.execucao.account_id}::#{Time.find_zone!(Fluxo::ZONA).today}"
     usadas = Redis::Alfred.incr(chave)
     Redis::Alfred.expire(chave, 2.days.to_i) if usadas == 1
