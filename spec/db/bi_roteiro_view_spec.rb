@@ -17,7 +17,7 @@ RSpec.describe 'view bi_roteiro' do # rubocop:disable RSpec/DescribeClass
                                  'sequela' => { 'valor' => 'dor no ombro', 'saida' => 'limitacao', 'em' => '2026-10-14T10:04:00-03:00' } } }
     limite = { 'limite' => 'qualificacao', 'modo' => 'piloto_ate_qualificacao', 'em' => '2026-10-14T10:05:00-03:00' }
     lead = create(:lead, account: account, thesis: thesis, lead_stage: novo, custom_attributes: { 'roteiro' => roteiro },
-                         conversation: conversa('copiloto_modo' => 'rascunho', 'copiloto_limite' => limite))
+                         conversation: conversa('ia_pausa' => 'rascunho', 'copiloto_limite' => limite))
 
     expect(linha(lead)).to include('thesis_name' => thesis.name, 'desfecho' => 'qualificado', 'passo_decisivo' => 'sequela',
                                    'respondidos' => 2, 'em_roteiro' => true, 'aguarda_equipe' => false,
