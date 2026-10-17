@@ -1,6 +1,119 @@
 {
   "RAMON": {
     "NOTA_PRIVADA_ROTULO": "Nota privada",
+    "COMO_IA": {
+      "INTELIGENCIA": "Inteligência /",
+      "TITULO": "Como a IA atende",
+      "CARREGANDO": "Carregando…",
+      "ERRO": "Não deu para carregar a configuração da IA.",
+      "TENTAR": "Tentar de novo",
+      "SALVAR": "Salvar alterações",
+      "SALVO": "Alterações salvas.",
+      "ERRO_SALVAR": "Não deu para salvar. Tente de novo.",
+      "NAO_SALVAS": "{n} alterações não salvas",
+      "NAO_SALVAS_UMA": "1 alteração não salva",
+      "SAIR": "Há alterações não salvas em Como a IA atende. Sair mesmo assim?",
+      "PADRAO": "Padrão do escritório",
+      "TIPO": {
+        "padrao": "Escritório",
+        "tese": "Tese",
+        "caixa": "Caixa"
+      },
+      "LISTA": {
+        "BUSCAR": "Buscar tese ou caixa",
+        "VAZIO": "Nada encontrado.",
+        "SEGUE": "segue o padrão",
+        "AJUSTES": "{perfil} · {n} ajustes",
+        "AJUSTES_UM": "{perfil} · 1 ajuste",
+        "GRUPO": {
+          "padrao": "Escritório",
+          "tese": "Teses",
+          "caixa": "Caixas sem tese"
+        }
+      },
+      "VALE_TUDO": "Vale pra toda tese e caixa que segue o padrão.",
+      "SELO": {
+        "PERFIL": "Perfil {perfil}",
+        "PERSONALIZADO": "Personalizado · base {perfil} · {n} ajustes",
+        "PERSONALIZADO_UM": "Personalizado · base {perfil} · 1 ajuste"
+      },
+      "DESFAZER": "Desfazer ajustes",
+      "VOLTAR_PADRAO": "Voltar a seguir o padrão",
+      "PERSONALIZAR": "Personalizar só esta",
+      "HERDA": {
+        "tese": "Esta tese segue o Padrão do escritório ({perfil}). O que mudar lá, muda aqui.",
+        "caixa": "Esta caixa segue o Padrão do escritório ({perfil}). O que mudar lá, muda aqui."
+      },
+      "PERFIL": {
+        "TITULO": "Perfil",
+        "DICA": "Ponto de partida. Dá pra ajustar tudo embaixo.",
+        "RECOMENDADO": "recomendado"
+      },
+      "PERFIS": {
+        "cautelosa": {
+          "NOME": "Cautelosa",
+          "DESCRICAO": "Pra fase de testes. A IA recebe o lead e faz a qualificação; daí em diante, tudo passa pela equipe."
+        },
+        "equilibrada": {
+          "NOME": "Equilibrada",
+          "DESCRICAO": "Qualifica e marca a reunião sozinha. Honorário só da tabela, em rascunho. O fechamento fica com a equipe."
+        },
+        "acelerada": {
+          "NOME": "Acelerada",
+          "DESCRICAO": "Pra tese já testada e com modelo no ZapSign. Vai até o contrato, mas a reunião é sempre com uma pessoa e desconto, nunca."
+        }
+      },
+      "TRILHA": {
+        "TITULO": "Até onde a IA vai sozinha",
+        "DICA": "Arraste o marcador. Clique numa etapa pra ver os limites dela.",
+        "ROTULO": "Até onde a IA vai sozinha",
+        "NENHUMA": "nenhuma etapa",
+        "NADA": "IA não manda nada",
+        "ATE_AQUI": "IA vai até aqui",
+        "FIM": "IA vai até o fim"
+      },
+      "ESTADO": {
+        "sozinha": "Sozinha",
+        "rascunho": "Rascunho",
+        "nunca": "Nunca"
+      },
+      "FRASE": {
+        "NADA": "A IA não manda nada sozinha. Tudo vira rascunho pra equipe aprovar.",
+        "TUDO": "A IA conduz sozinha até o contrato e só chama a equipe quando bate num limite.",
+        "ATE": "A IA conduz sozinha até {ate}. Quando o lead chega em {depois}, ela passa a escrever rascunhos e avisa o responsável."
+      },
+      "LIMITES": {
+        "TITULO": "Limites em {etapa}",
+        "DICA": "Clique no estado pra trocar.",
+        "TROCAR": "Trocar a permissão de {acao} (agora: {valor})",
+        "LIMITADO": "limitado pelo marcador (ajuste: {valor})",
+        "AJUSTADO": "Ajustado à mão",
+        "CONFIRMACAO": "Confirmação da reunião: definida no fluxo Reuniões",
+        "ABRIR_FLUXOS": "Abrir os fluxos →",
+        "DESCONTO": "Dar desconto",
+        "REGRA": "Nunca · regra do escritório",
+        "GATILHOS": "Para e chama a equipe quando",
+        "GATILHOS_DICA": "Orientação à IA, não garantia.",
+        "PENDENTE": "Texto pendente de aprovação: ainda não dá para ligar.",
+        "PENDENTE_SUFIXO": "· texto pendente"
+      },
+      "ACOES": {
+        "fora_do_horario": "Responder fora do horário comercial",
+        "pedir_documentos": "Pedir documentos (CNIS, laudos)",
+        "desqualificar": "Desqualificar o lead",
+        "mover_etapa": "Mover o lead de etapa",
+        "marcar_reuniao": "Marcar a reunião na Agenda",
+        "citar_honorario": "Citar o honorário da tabela",
+        "logistica": "Responder sobre a logística da reunião",
+        "contrato_zapsign": "Mandar o contrato (ZapSign)"
+      },
+      "LEGENDA": {
+        "sozinha": "Sozinha: a IA manda",
+        "rascunho": "Rascunho: a equipe aprova antes",
+        "nunca": "Nunca: só uma pessoa",
+        "ajustado": "Ajustado à mão"
+      }
+    },
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",
       "SEM_RESPOSTA": "{quem} não respondeu em 3 min",

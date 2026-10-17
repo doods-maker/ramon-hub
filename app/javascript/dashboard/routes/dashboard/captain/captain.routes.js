@@ -143,6 +143,13 @@ const assistantRoutes = [
     name: 'captain_visao_geral_index',
     meta,
   },
+  // ramon: Como a IA atende — Perfil da IA por alvo (só admin); ?alvo=padrao|tese:<id>|caixa:<id>.
+  {
+    path: frontendURL('accounts/:accountId/captain/como-a-ia-atende'),
+    component: () => import('./pages/ComoIaAtende.vue'),
+    name: 'captain_como_ia_atende_index',
+    meta: metaAdmin,
+  },
   // ramon: Uso e custo da IA — custo, provedor/modelo por função e alerta (só admin).
   {
     path: frontendURL('accounts/:accountId/captain/uso-e-custo'),

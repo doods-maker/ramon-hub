@@ -1,6 +1,119 @@
 {
   "RAMON": {
     "NOTA_PRIVADA_ROTULO": "Private note",
+    "COMO_IA": {
+      "INTELIGENCIA": "Intelligence /",
+      "TITULO": "How the AI works",
+      "CARREGANDO": "Loading…",
+      "ERRO": "Couldn't load the AI settings.",
+      "TENTAR": "Try again",
+      "SALVAR": "Save changes",
+      "SALVO": "Changes saved.",
+      "ERRO_SALVAR": "Couldn't save. Try again.",
+      "NAO_SALVAS": "{n} unsaved changes",
+      "NAO_SALVAS_UMA": "1 unsaved change",
+      "SAIR": "There are unsaved changes in How the AI works. Leave anyway?",
+      "PADRAO": "Office default",
+      "TIPO": {
+        "padrao": "Office",
+        "tese": "Thesis",
+        "caixa": "Inbox"
+      },
+      "LISTA": {
+        "BUSCAR": "Search thesis or inbox",
+        "VAZIO": "Nothing found.",
+        "SEGUE": "follows the default",
+        "AJUSTES": "{perfil} · {n} adjustments",
+        "AJUSTES_UM": "{perfil} · 1 adjustment",
+        "GRUPO": {
+          "padrao": "Office",
+          "tese": "Theses",
+          "caixa": "Inboxes without thesis"
+        }
+      },
+      "VALE_TUDO": "Applies to every thesis and inbox that follows the default.",
+      "SELO": {
+        "PERFIL": "Profile {perfil}",
+        "PERSONALIZADO": "Custom · based on {perfil} · {n} adjustments",
+        "PERSONALIZADO_UM": "Custom · based on {perfil} · 1 adjustment"
+      },
+      "DESFAZER": "Undo adjustments",
+      "VOLTAR_PADRAO": "Follow the default again",
+      "PERSONALIZAR": "Customize just this one",
+      "HERDA": {
+        "tese": "This thesis follows the Office default ({perfil}). What changes there changes here.",
+        "caixa": "This inbox follows the Office default ({perfil}). What changes there changes here."
+      },
+      "PERFIL": {
+        "TITULO": "Profile",
+        "DICA": "Starting point. Everything below can be adjusted.",
+        "RECOMENDADO": "recommended"
+      },
+      "PERFIS": {
+        "cautelosa": {
+          "NOME": "Cautious",
+          "DESCRICAO": "For the testing phase. The AI receives the lead and qualifies it; from then on, everything goes through the team."
+        },
+        "equilibrada": {
+          "NOME": "Balanced",
+          "DESCRICAO": "Qualifies and books the meeting on its own. Fee only from the table, as a draft. Closing stays with the team."
+        },
+        "acelerada": {
+          "NOME": "Fast",
+          "DESCRICAO": "For a tested thesis with a ZapSign template. Goes up to the contract, but the meeting is always with a person and discounts, never."
+        }
+      },
+      "TRILHA": {
+        "TITULO": "How far the AI goes on its own",
+        "DICA": "Drag the marker. Click a stage to see its limits.",
+        "ROTULO": "How far the AI goes on its own",
+        "NENHUMA": "no stage",
+        "NADA": "AI sends nothing",
+        "ATE_AQUI": "AI goes up to here",
+        "FIM": "AI goes to the end"
+      },
+      "ESTADO": {
+        "sozinha": "On its own",
+        "rascunho": "Draft",
+        "nunca": "Never"
+      },
+      "FRASE": {
+        "NADA": "The AI sends nothing on its own. Everything becomes a draft for the team to approve.",
+        "TUDO": "The AI leads on its own up to the contract and only calls the team when it hits a limit.",
+        "ATE": "The AI leads on its own up to {ate}. When the lead reaches {depois}, it starts writing drafts and alerts the owner."
+      },
+      "LIMITES": {
+        "TITULO": "Limits in {etapa}",
+        "DICA": "Click the state to change it.",
+        "TROCAR": "Change the permission for {acao} (now: {valor})",
+        "LIMITADO": "limited by the marker (setting: {valor})",
+        "AJUSTADO": "Adjusted by hand",
+        "CONFIRMACAO": "Meeting confirmation: set in the Meetings flow",
+        "ABRIR_FLUXOS": "Open the flows →",
+        "DESCONTO": "Give a discount",
+        "REGRA": "Never · office rule",
+        "GATILHOS": "Stops and calls the team when",
+        "GATILHOS_DICA": "Guidance for the AI, not a guarantee.",
+        "PENDENTE": "Text pending approval: can't be turned on yet.",
+        "PENDENTE_SUFIXO": "· text pending"
+      },
+      "ACOES": {
+        "fora_do_horario": "Reply outside business hours",
+        "pedir_documentos": "Ask for documents (CNIS, medical reports)",
+        "desqualificar": "Disqualify the lead",
+        "mover_etapa": "Move the lead to another stage",
+        "marcar_reuniao": "Book the meeting in the Agenda",
+        "citar_honorario": "Quote the fee from the table",
+        "logistica": "Answer about the meeting logistics",
+        "contrato_zapsign": "Send the contract (ZapSign)"
+      },
+      "LEGENDA": {
+        "sozinha": "On its own: the AI sends",
+        "rascunho": "Draft: the team approves first",
+        "nunca": "Never: only a person",
+        "ajustado": "Adjusted by hand"
+      }
+    },
     "CHEGADA": {
       "CHEGOU": "{quem}: a client has arrived",
       "SEM_RESPOSTA": "{quem} didn't answer in 3 min",
