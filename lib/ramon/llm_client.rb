@@ -24,7 +24,8 @@ class Ramon::LlmClient
        .split(',').map(&:strip).reject(&:empty?)
   end
 
-  # opcoes: sensitive (trava LGPD) e, para a tela Uso e custo, funcao/account_id/lead_id/
+  # opcoes: sensitive (trava LGPD), anexo (arquivo que o modelo VÊ — ActiveStorage, via
+  # RubyLLM `with:`) e, para a tela Uso e custo, funcao/account_id/lead_id/
   # conversation_id/origem — sem elas, Ramon::LlmUso deduz pelo chamador (fluxos).
   def self.complete(provider:, model:, system:, user:, **opcoes)
     if opcoes[:sensitive] && sensitive_ok_providers.exclude?(provider)
@@ -38,7 +39,7 @@ class Ramon::LlmClient
     uso = Ramon::LlmUso.contexto(caller_locations(1, 1).first&.path)
                        .merge(opcoes.slice(*USO).compact, provider: provider, model: model)
     Ramon::LlmUso.medir(uso) do
-      message = ask(provider: provider, model: model, system: system, user: user)
+      message = ask(provider: provider, model: model, system: system, user: user, anexo: opcoes[:anexo])
       Result.new(content: message.content, input_tokens: message.input_tokens, output_tokens: message.output_tokens)
     end
   end
@@ -48,7 +49,7 @@ class Ramon::LlmClient
   # 90s cobre a colheita de 200 msgs (roda em job) sem prender o request interativo.
   REQUEST_TIMEOUT = 90
 
-  def self.ask(provider:, model:, system:, user:)
+  def self.ask(provider:, model:, system:, user:, anexo: nil)
     context = RubyLLM.context do |config|
       config.deepseek_api_key = ENV.fetch('DEEPSEEK_API_KEY', nil)
       config.anthropic_api_key = ENV.fetch('ANTHROPIC_API_KEY', nil)
@@ -56,7 +57,7 @@ class Ramon::LlmClient
       config.request_timeout = REQUEST_TIMEOUT
     end
     chat = context.chat(model: model, provider: provider.to_sym, assume_model_exists: true)
-    chat.with_instructions(system).ask(user)
+    chat.with_instructions(system).ask(user, with: anexo)
   rescue StandardError => e
     raise TransientError, e.message if transient?(e)
 
