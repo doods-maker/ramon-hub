@@ -1,13 +1,14 @@
 import { mount, flushPromises } from '@vue/test-utils';
-import { useRoute, useRouter } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
 import { dados } from 'dashboard/routes/dashboard/ramon/helpers/specs/perfilIaDados';
+import { retomarTela } from 'dashboard/routes/dashboard/ramon/helpers/perfilIa';
 import ComoIaAtende from '../ComoIaAtende.vue';
 
 vi.mock('vue-router', () => {
   const rota = { query: {} };
-  const roteador = { push: vi.fn() };
+  const roteador = { push: vi.fn(() => Promise.resolve()) };
   return {
     useRoute: () => rota,
     useRouter: () => roteador,
@@ -45,6 +46,7 @@ const permissao = (wrapper, acao) =>
 describe('Como a IA atende', () => {
   beforeEach(() => {
     useRoute().query = {};
+    retomarTela(); // nada guardado de um teste anterior
     RamonIaAtendimentoAPI.get.mockResolvedValue({ data: dados() });
   });
 
@@ -322,17 +324,47 @@ describe('Como a IA atende', () => {
       achar(wrapper, 'testar-perfil').attributes('disabled')
     ).toBeDefined();
 
-    RamonIaAtendimentoAPI.get.mockResolvedValue({
-      data: { ...dados(), assistente_id: 7 },
-    });
+    // tese → o assistente da caixa dela (o servidor já cai no global); padrão → o global
+    const corpo = { ...dados(), assistente_id: 7 };
+    corpo.teses[1].assistente_id = 9;
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
     useRoute().query = { alvo: 'tese:2' };
     wrapper = await montar();
     await clicar(wrapper, 'perfil-cautelosa');
     await clicar(wrapper, 'testar-perfil');
-    expect(useRouter().push).toHaveBeenCalledWith({
+    expect(useRouter().push).toHaveBeenLastCalledWith({
       name: 'captain_assistants_playground_index',
-      params: { assistantId: 7 },
+      params: { assistantId: 9 },
       state: { perfilTeste: { base: 'cautelosa' }, thesisId: 2 },
     });
+
+    // volta do Testar: o não salvo reaparece (no alvo em que estava)
+    useRoute().query = {};
+    wrapper = await montar();
+    expect(achar(wrapper, 'alvo-nome').text()).toBe('Auxílio-acidente');
+    expect(achar(wrapper, 'selo').text()).toBe('Profile Cautious');
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(true);
+
+    await clicar(wrapper, 'alvo-padrao');
+    await clicar(wrapper, 'testar-perfil');
+    expect(useRouter().push.mock.lastCall[0].params.assistantId).toBe(7);
+  });
+
+  it('"Testar este perfil" abortado: o guard de saída volta a perguntar e nada fica guardado', async () => {
+    RamonIaAtendimentoAPI.get.mockResolvedValue({
+      data: { ...dados(), assistente_id: 7 },
+    });
+    useRouter().push.mockResolvedValueOnce({ type: 4 }); // NavigationFailure (aborted)
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const wrapper = await montar();
+    const guard = onBeforeRouteLeave.mock.lastCall[0];
+    await clicar(wrapper, 'perfil-cautelosa');
+    await clicar(wrapper, 'testar-perfil');
+    await flushPromises();
+
+    expect(guard()).toBe(false);
+    expect(confirmar).toHaveBeenCalled();
+    expect(retomarTela()).toBeNull();
+    confirmar.mockRestore();
   });
 });

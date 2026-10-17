@@ -4,12 +4,14 @@ import {
   estadoDaEtapa,
   efetivo,
   frase,
+  guardarTela,
   marcadorDaPosicao,
   marcadorDe,
   paraGravar,
   permissaoEfetiva,
   posicaoDoMarcador,
   proximaPermissao,
+  retomarTela,
 } from '../perfilIa';
 import { ETAPAS, PRONTOS, dados } from './perfilIaDados';
 
@@ -157,5 +159,19 @@ describe('perfilIa (espelho do Ramon::PerfilIa)', () => {
     expect(frase('fase-qualificacao', ETAPAS, t)).toBe(
       'RAMON.COMO_IA.FRASE.ATE Qualificação > Reunião agendada'
     );
+  });
+
+  it('tela guardada pro Testar: volta uma vez se tiver menos de 30 minutos; mais velha é descartada', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-17T10:00:00'));
+    guardarTela({ alvoId: 'tese:2' });
+    vi.setSystemTime(new Date('2026-10-17T10:29:00'));
+    expect(retomarTela()).toEqual({ alvoId: 'tese:2' });
+    expect(retomarTela()).toBeNull();
+
+    guardarTela({ alvoId: 'tese:2' });
+    vi.setSystemTime(new Date('2026-10-17T10:59:30'));
+    expect(retomarTela()).toBeNull();
+    vi.useRealTimers();
   });
 });

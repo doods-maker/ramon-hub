@@ -200,12 +200,15 @@ const sugerirSozinha = computed(
 const passarSozinha = () =>
   mudarMarcador(marcadorDepoisDe(etapaSel.value, etapas.value));
 
-// Testar: o assistente da caixa (alvo caixa) ou o da 1ª caixa com IA (padrão e teses); nenhum = botão desligado.
+// Testar: caixa → o assistente dela; tese → o da caixa da tese (o servidor já cai no global); padrão → o da 1ª
+// caixa com IA. Nenhum = botão desligado.
 const assistenteDoTeste = computed(() => {
   if (!dados.value) return null;
-  if (atual.value.tipo !== 'caixa') return dados.value.assistente_id ?? null;
-  const caixa = dados.value.caixas.find(c => `caixa:${c.id}` === alvoId.value);
-  return caixa?.assistente_id ?? null;
+  const { tipo } = atual.value;
+  if (tipo === 'padrao') return dados.value.assistente_id ?? null;
+  const lista = tipo === 'tese' ? dados.value.teses : dados.value.caixas;
+  const linha = lista.find(x => `${tipo}:${x.id}` === alvoId.value);
+  return linha?.assistente_id ?? null;
 });
 const dicaTestar = computed(() =>
   t(`${K}.TESTAR.${assistenteDoTeste.value ? 'DICA' : 'SEM_IA'}`)
@@ -221,14 +224,22 @@ const testar = () => {
   });
   indoTestar = true;
   const [tipo, numero] = alvoId.value.split(':');
-  router.push({
-    name: 'captain_assistants_playground_index',
-    params: { ...route.params, assistantId: assistenteDoTeste.value },
-    state: {
-      perfilTeste: copia(paraGravar(cfgAtual.value, etapas.value)),
-      thesisId: tipo === 'tese' ? Number(numero) : null,
-    },
-  });
+  // navegação abortada/falha (outro guard, erro): fica na tela — o guard de saída volta a valer e nada fica guardado
+  const desistir = () => {
+    indoTestar = false;
+    retomarTela();
+  };
+  router
+    .push({
+      name: 'captain_assistants_playground_index',
+      params: { ...route.params, assistantId: assistenteDoTeste.value },
+      state: {
+        perfilTeste: copia(paraGravar(cfgAtual.value, etapas.value)),
+        thesisId: tipo === 'tese' ? Number(numero) : null,
+      },
+    })
+    .then(falha => falha && desistir())
+    .catch(desistir);
 };
 
 const salvar = async () => {

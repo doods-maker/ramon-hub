@@ -23,10 +23,18 @@ module Ramon::PerfilIa::Numeros
   def de(account, alvo) = todos(account).fetch(alvo, {})
 
   # { alvo => { etapa => ... } } numa consulta só (agrupada por alvo e Etapa).
+  # Um content_attributes que não é JSON quebra o cast na consulta: a tela fica sem números ("sem dados ainda"), não cai.
   def todos(account)
+    contar(account, linhas(account))
+  rescue ActiveRecord::StatementInvalid, JSON::ParserError => e
+    Rails.logger.warn("[Ramon::PerfilIa::Numeros] sem números (conta #{account.id}): #{e.class}: #{e.message}")
+    {}
+  end
+
+  def contar(account, linhas)
     etapas = account.lead_stages.where(is_won: false, is_lost: false).index_by { |e| Ramon::PerfilIa.chave_da_etapa(e) }
     perfis = Hash.new { |h, alvo| h[alvo] = perfil(account, alvo) }
-    linhas(account).each_with_object({}) do |(alvo, etapa, *contagens), saida|
+    linhas.each_with_object({}) do |(alvo, etapa, *contagens), saida|
       (saida[alvo] ||= {})[etapa] = numeros(*contagens).tap do |n|
         n[:sugerir_sozinha] = sugerir?(perfis[alvo], etapas[etapa], n[:rascunhos])
       end
@@ -34,8 +42,9 @@ module Ramon::PerfilIa::Numeros
   end
 
   # [alvo, etapa, enviadas, igual, editado, descartado, chamou_equipe] por alvo e Etapa.
+  # unscope(:order): o default_scope do Message ordena por created_at, que o GROUP BY não aceita.
   def linhas(account)
-    account.messages.where(created_at: JANELA.ago..).where("#{CARIMBO}->>'alvo' IS NOT NULL")
+    account.messages.unscope(:order).where(created_at: JANELA.ago..).where("#{CARIMBO}->>'alvo' IS NOT NULL")
            .group(COLUNAS[0], COLUNAS[1]).pluck(*COLUNAS)
   end
 

@@ -153,14 +153,17 @@ export const paraGravar = (cfg, etapas) => {
 export const marcadorDepoisDe = (chave, etapas) =>
   marcadorDaPosicao(etapas.findIndex(e => e.chave === chave) + 1, etapas);
 
-// "Testar este perfil" sai da tela sem salvar: o que não foi salvo fica guardado e volta na próxima carga.
-// ponytail: memória da página (F5 perde, como as conversas do Testar).
+// "Testar este perfil" sai da tela sem salvar: o que não foi salvo fica guardado e volta na próxima carga, se
+// for de menos de 30 minutos (mais velho, descarta). ponytail: memória da página (F5 perde, como as conversas do Testar).
+export const VALIDADE_DA_TELA_MS = 30 * 60 * 1000;
 let telaGuardada = null;
 export const guardarTela = tela => {
-  telaGuardada = JSON.parse(JSON.stringify(tela));
+  telaGuardada = { tela: JSON.parse(JSON.stringify(tela)), em: Date.now() };
 };
 export const retomarTela = () => {
-  const tela = telaGuardada;
+  const guardada = telaGuardada;
   telaGuardada = null;
-  return tela;
+  return guardada && Date.now() - guardada.em < VALIDADE_DA_TELA_MS
+    ? guardada.tela
+    : null;
 };

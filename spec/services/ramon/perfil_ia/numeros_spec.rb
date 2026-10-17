@@ -19,10 +19,21 @@ RSpec.describe Ramon::PerfilIa::Numeros do
     { 'ramon_rascunho_ia' => { 'nota_id' => 1, 'desfecho' => desfecho, 'similaridade' => 1.0, 'alvo' => alvo, 'etapa' => etapa } }
   end
 
+  # Todos os exemplos rodam a consulta de verdade (GROUP BY sem o ORDER BY do default_scope do Message).
   it 'sem carimbo com alvo e Etapa = sem dados ainda (chave ausente)' do
+    expect(described_class.todos(account)).to eq({}) # sem linha nenhuma
     carimbar({ 'ramon_piloto' => { 'modo' => 'piloto_limitado' } }, {})
 
     expect(described_class.de(account, 'padrao')).to eq({})
+  end
+
+  it 'consulta que quebra (content_attributes que não é JSON) = sem números, com aviso no log' do
+    allow(described_class).to receive(:linhas).and_raise(ActiveRecord::StatementInvalid, 'PG::InvalidTextRepresentation')
+    allow(Rails.logger).to receive(:warn)
+
+    expect(described_class.todos(account)).to eq({})
+    expect(described_class.de(account, 'padrao')).to eq({})
+    expect(Rails.logger).to have_received(:warn).with(/Numeros.*StatementInvalid/).twice
   end
 
   it 'conta por alvo e Etapa nos 30 dias; 20 revisados com 19 iguais numa Etapa em rascunho sugerem Sozinha', :aggregate_failures do
