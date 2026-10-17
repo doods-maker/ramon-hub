@@ -7,7 +7,7 @@ export const nextActionInfo = (lead, t) => {
   const due = new Date(raw);
   if (Number.isNaN(due.getTime())) return null;
   const title = lead.next_task_title || '';
-  // Reunião marcada (Cal.com/agendar_reuniao): data e hora absolutas, não "em 3d".
+  // Reunião marcada (painel/agendar_reuniao): data e hora absolutas, não "em 3d".
   if (lead.next_task_kind === 'meeting' && due.getTime() >= Date.now())
     return {
       dot: 'bg-n-blue-9',

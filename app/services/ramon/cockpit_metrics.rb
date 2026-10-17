@@ -47,7 +47,7 @@ class Ramon::CockpitMetrics
   # Reuniões de hoje, abertas ou não (o Cockpit mostra o dia inteiro; feita
   # vem apagada), + as vencidas ainda abertas da última semana, fixadas no
   # topo. Quem aparece é o dono da reunião: Closer, senão SDR, senão quem
-  # criou a tarefa (a do Cal.com nasce sem criador).
+  # criou a tarefa (a do legado Cal.com nasce sem criador).
   # ponytail: vencida só de 7 dias — backlog antigo não come o limite de hoje.
   def agenda_today
     meetings = @account.lead_tasks.where(kind: 'meeting')

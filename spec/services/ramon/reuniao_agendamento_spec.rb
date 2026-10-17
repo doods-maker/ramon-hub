@@ -334,6 +334,35 @@ RSpec.describe Ramon::ReuniaoAgendamento do
         expect(Ramon::Fluxos::Reunioes).to have_received(:assumiu?).once # o evento decide uma vez só
       end
 
+      def fluxo_cria_a_tarefa
+        marcada = Fluxo.find_by!(account: account, sistema_chave: Ramon::Fluxos::Reunioes::GATILHOS.key('reuniao_marcada'))
+        marcada.update!(rascunho: grafo_linear({ 'tipo' => 'reuniao_marcada' },
+                                               ['criar_tarefa', { 'titulo' => 'Reunião', 'tipo' => 'meeting', 'prazo' => 'reuniao' }]))
+        marcada.publicar!(nil)
+      end
+
+      it 'Google do Closer conectado: exatamente 1 rascunho, criado pelo job (Meet no texto)', :aggregate_failures do
+        closer = create(:user, account: account)
+        lead.update!(closer: closer)
+        GoogleAgendaConta.create!(user: closer, account: account, refresh_token: 'rt', access_token: 'at')
+        cliente = instance_double(Ramon::GoogleAgenda::Cliente, criar: { id: 'ev1', meet_url: 'https://meet.google.com/abc' })
+        allow(Ramon::GoogleAgenda::Cliente).to receive(:new).and_return(cliente)
+        fluxo_cria_a_tarefa
+        perform_enqueued_jobs(only: Ramon::GoogleAgendaPushJob) { agendar }
+        notas = lead.lead_notes.where("body LIKE 'RASCUNHO%'")
+        expect(notas.count).to eq(1)
+        expect(notas.first.body).to include('https://meet.google.com/abc')
+      end
+
+      it 'sem Google, IA em modo direto e chave on: rascunho (nada enviado)', :aggregate_failures do
+        conversa = create(:conversation, account: account)
+        lead.update!(conversation: conversa)
+        conversa.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+        fluxo_cria_a_tarefa
+        expect { with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { agendar(automatico: true) } }.not_to(change { conversa.messages.count })
+        expect(lead.lead_notes.where("body LIKE 'RASCUNHO%'").count).to eq(1)
+      end
+
       it 'marcar com WhatsApp: o passo "Criar tarefa" do fluxo cria a reunião com formato whatsapp (o gatilho leva o formato)' do
         marcada = Fluxo.find_by!(account: account, sistema_chave: Ramon::Fluxos::Reunioes::GATILHOS.key('reuniao_marcada'))
         marcada.update!(rascunho: grafo_linear({ 'tipo' => 'reuniao_marcada' },

@@ -1,6 +1,6 @@
 {
   "nome": "Reunião cancelada",
-  "descricao": "Reunião cancelada (painel do lead ou Cal.com), no lugar do código (B4.1): atividade, a tarefa da reunião apagada (o que também encerra os lembretes dela), sino para a conta e push. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
+  "descricao": "Reunião cancelada (painel do lead), no lugar do código (B4.1): atividade, a tarefa da reunião apagada (o que também encerra os lembretes dela), sino para a conta e push. Enquanto o selo disser \"em sombra\", só ensaia: quem faz ainda é o código.",
   "desenho": {
     "nos": [
       {"id":"n1","tipo":"gatilho","config":{"tipo":"reuniao_cancelada","cancelar_se_sair_da_etapa":false},"posicao":{"x":0,"y":0}},

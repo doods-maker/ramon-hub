@@ -235,9 +235,6 @@ describe('LeadNextAction', () => {
       await wrapper
         .find('[data-testid="next-action-remarcar"]')
         .trigger('click');
-      expect(wrapper.find('[data-testid="remarcar-calcom"]').exists()).toBe(
-        false
-      );
       await wrapper
         .find('[data-testid="remarcar-data"]')
         .setValue('2026-12-10T15:30');
@@ -259,17 +256,13 @@ describe('LeadNextAction', () => {
     it('Cancelar reunião pede confirmação e cancela pela store', async () => {
       const cancelarReuniao = vi.fn().mockResolvedValue({});
       const wrapper = mountCard({
-        tasks: [{ ...reuniao, title: 'Reunião Cal.com: Consulta' }],
+        tasks: [reuniao],
         cancelarReuniao,
       });
       await wrapper
         .find('[data-testid="next-action-cancelar"]')
         .trigger('click');
       expect(cancelarReuniao).not.toHaveBeenCalled();
-      // mensagem leva o aviso do Cal.com
-      expect(wrapper.text()).toContain(
-        'RAMON.LEAD_PANEL.NEXT_ACTION.CALCOM_CANCELAR'
-      );
       await wrapper
         .find('[data-testid="confirm-modal-confirm"]')
         .trigger('click');
@@ -278,18 +271,6 @@ describe('LeadNextAction', () => {
         leadId: 7,
         taskId: 3,
       });
-    });
-
-    it('reunião do Cal.com avisa pra remarcar lá também', async () => {
-      const wrapper = mountCard({
-        tasks: [{ ...reuniao, title: 'Reunião Cal.com: Consulta' }],
-      });
-      await wrapper
-        .find('[data-testid="next-action-remarcar"]')
-        .trigger('click');
-      expect(wrapper.find('[data-testid="remarcar-calcom"]').exists()).toBe(
-        true
-      );
     });
   });
 });

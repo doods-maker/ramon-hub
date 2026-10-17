@@ -17,8 +17,6 @@ const semEtapa = d =>
     e => !(e.codigo === 'FALTA' && e.params.campo === 'etapa_id')
   );
 const doTipo = (d, tipo) => d.desenho.nos.filter(n => n.tipo === tipo);
-const RASCUNHO =
-  '"Oi {primeiro_nome}! Nossa conversa está confirmada pra {quando}. Vou te esperar, tá? Se não puder comparecer, me avise com antecedência que a gente remarca sem problema."';
 
 describe('fluxos migrados: agendamento de reuniões (B4.1)', () => {
   it('os 3 publicam (só falta a etapa, que o semear põe por conta)', () => {
@@ -34,7 +32,7 @@ describe('fluxos migrados: agendamento de reuniões (B4.1)', () => {
     ]);
   });
 
-  it('marcada faz tudo; remarcada só a atividade; os dois juntam no rascunho, sino e push', () => {
+  it('marcada faz tudo; remarcada só a atividade; os dois juntam no sino e push', () => {
     const { setas } = marcada.desenho;
     const de = (id, saida) =>
       setas.find(s => s.de === id && s.saida === saida)?.para;
@@ -44,13 +42,12 @@ describe('fluxos migrados: agendamento de reuniões (B4.1)', () => {
       de('n4', 's'),
       de('n5', 's'),
       de('n6', 's'),
-    ]).toEqual(['n3', 'n4', 'n5', 'n6', 'n8']);
-    expect([
-      de('n2', 'c2'),
-      de('n7', 's'),
-      de('n8', 's'),
-      de('n9', 's'),
-    ]).toEqual(['n7', 'n8', 'n9', 'n10']);
+    ]).toEqual(['n3', 'n4', 'n5', 'n6', 'n9']);
+    expect([de('n2', 'c2'), de('n7', 's'), de('n9', 's')]).toEqual([
+      'n7',
+      'n9',
+      'n10',
+    ]);
     expect(doTipo(marcada, 'criar_tarefa')[0].config).toMatchObject({
       tipo: 'meeting',
       prazo: 'reuniao',
@@ -62,12 +59,8 @@ describe('fluxos migrados: agendamento de reuniões (B4.1)', () => {
     });
   });
 
-  it('o rascunho de confirmação é o texto do código, nas notas do lead e com o título do código', () => {
-    expect(doTipo(marcada, 'rascunho_texto')[0].config).toMatchObject({
-      onde: 'notas_do_lead',
-      titulo: 'confirmação de reunião',
-      texto: RASCUNHO,
-    });
+  it('o rascunho de confirmação não está no fluxo: é sempre do hub', () => {
+    expect(doTipo(marcada, 'rascunho_texto')).toEqual([]);
   });
 
   it('cancelada: atividade, apagar a tarefa, sino e push, nesta ordem', () => {
@@ -113,7 +106,7 @@ describe('fluxos migrados: agendamento de reuniões (B4.1)', () => {
     expect(naos).toEqual(esperas.slice(1));
   });
 
-  it('nenhum dos 3 fala com o cliente: o único texto ao cliente é o rascunho', () => {
+  it('nenhum dos 3 fala com o cliente', () => {
     const tipos = [marcada, cancelada, lembretes].flatMap(d =>
       d.desenho.nos.map(n => n.tipo)
     );
@@ -126,7 +119,6 @@ describe('fluxos migrados: agendamento de reuniões (B4.1)', () => {
       'esperar',
       'gatilho',
       'mover_etapa',
-      'rascunho_texto',
       'registrar_atividade',
       'se',
       'trocar_responsavel',

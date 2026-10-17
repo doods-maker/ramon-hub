@@ -29,7 +29,6 @@ export const SISTEMAS = [
   'advbox',
   'motor',
   'zapsign',
-  'calcom',
   'agenda',
   'faq',
   'conversa',

@@ -109,10 +109,6 @@ const snooze = () =>
 
 // ----- Reunião: não se adia — Remarcar passa pelo agendamento (lembretes do
 // horário novo, atividade de→para, novo rascunho de confirmação, sino).
-// Reunião do Cal.com: o hub não mexe no Cal.com — avisa pra remarcar lá.
-const isCalcom = computed(() =>
-  Boolean(task.value?.title?.startsWith('Reunião Cal.com'))
-);
 // datetime-local trabalha em hora local (YYYY-MM-DDTHH:mm)
 const paraCampo = date =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -199,8 +195,7 @@ const onDone = () => {
   resultadoAberto.value = true;
 };
 
-// Cancelar: mesmo efeito do cancel do Cal.com (atividade + sino); nada vai ao
-// cliente. Os lembretes já enfileirados morrem no guard do job.
+// Cancelar: atividade + sino; nada vai ao cliente. Os lembretes já enfileirados morrem no guard do job.
 const cancelarAberto = ref(false);
 const cancelar = () =>
   run(async () => {
@@ -212,14 +207,9 @@ const cancelar = () =>
     useAlert(t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELADA'));
   });
 const mensagemCancelar = computed(() =>
-  [
-    t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR_CONFIRM', {
-      quando: meetingWhen.value,
-    }),
-    isCalcom.value ? t('RAMON.LEAD_PANEL.NEXT_ACTION.CALCOM_CANCELAR') : '',
-  ]
-    .filter(Boolean)
-    .join(' ')
+  t('RAMON.LEAD_PANEL.NEXT_ACTION.CANCELAR_CONFIRM', {
+    quando: meetingWhen.value,
+  })
 );
 
 // Reagendar via TaskBellMenu: só a data muda — o título da tarefa fica.
@@ -442,14 +432,6 @@ const reschedule = ({ dueAt }) =>
             class="mt-3 mb-0"
           >
             {{ $t('RAMON.TASKS.BUSY_MESSAGE') }}
-          </p>
-          <p
-            v-if="isCalcom"
-            data-testid="remarcar-calcom"
-            :class="[AVISO, TOM.amber]"
-            class="mt-3 mb-0"
-          >
-            {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.CALCOM_REMARCAR') }}
           </p>
           <p class="mt-3 mb-0 text-xs text-n-slate-10">
             {{ $t('RAMON.LEAD_PANEL.NEXT_ACTION.REMARCAR_HINT') }}

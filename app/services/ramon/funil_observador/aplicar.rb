@@ -69,7 +69,7 @@ class Ramon::FunilObservador::Aplicar
     desfazer
   end
 
-  # Reunião combinada na conversa (dia e hora exatos): mesmo caminho do painel/Cal.com (etapa, Closer, lembretes, sino).
+  # Reunião combinada na conversa (dia e hora exatos): mesmo caminho do painel (etapa, Closer, lembretes, sino).
   # O desfazer é preenchido dentro do bloco (a tarefa só existe depois da chamada); em ensaio o bloco não roda.
   def marcar_reuniao
     inicio = reuniao_inicio

@@ -5,7 +5,6 @@
 class Ramon::Fluxos::CompararAgendamentos
   JANELA = 1.minute
   KINDS = { 'marcada' => 'meeting_scheduled', 'remarcada' => 'meeting_rescheduled', 'cancelada' => 'meeting_cancelled' }.freeze
-  RASCUNHO = Ramon::Fluxos::Passos::Conversa.cabecalho('titulo' => 'confirmação de reunião')
 
   attr_reader :de, :ate
 
@@ -67,11 +66,11 @@ class Ramon::Fluxos::CompararAgendamentos
       situacao: 'so_codigo', so_no_codigo: [], so_no_fluxo: [] }
   end
 
-  # O ensaio: as linhas "faria: …", menos o push (o código não deixa rastro dele); o sino vira "sino para <pessoas>".
+  # O ensaio: as linhas "faria: …", menos push e rascunho (a confirmação é só do hub); o sino vira "sino para <pessoas>".
   def do_fluxo(execucao)
     execucao.trilha.filter_map do |t|
       resumo = t['resumo'].to_s
-      next unless resumo.start_with?('faria: ') && t['tipo'] != 'avisar_push'
+      next unless resumo.start_with?('faria: ') && %w[avisar_push rascunho_texto].exclude?(t['tipo'])
 
       t['tipo'] == 'avisar_sino' ? sino(resumo[Ramon::Fluxos::CompararLembretes::PESSOAS, 1].split(', ')) : resumo.delete_prefix('faria: ')
     end
@@ -80,7 +79,7 @@ class Ramon::Fluxos::CompararAgendamentos
   # Os rastros do código na janela do evento, na mesma frase do ensaio.
   def do_codigo(execucao, janela)
     lead = execucao.alvo
-    atividades(lead, janela) + tarefas(lead, janela) + rascunhos(lead, janela) + sinos(lead, janela) + apagadas(execucao)
+    atividades(lead, janela) + tarefas(lead, janela) + sinos(lead, janela) + apagadas(execucao)
   end
 
   def atividades(lead, janela)
@@ -98,11 +97,6 @@ class Ramon::Fluxos::CompararAgendamentos
   def tarefas(lead, janela)
     do_rastro(lead, janela).select { |r| r['tipo'] == 'marcada' }
                            .map { |r| "tarefa \"#{r['tarefa']}\" para #{hora(Time.zone.parse(r['inicio']))}" }
-  end
-
-  def rascunhos(lead, janela)
-    lead.lead_notes.where(created_at: janela).where('body LIKE ?', "#{RASCUNHO}%")
-        .map { |n| "rascunho \"#{n.body.split("\n", 2).last.to_s.truncate(120)}\"" }
   end
 
   # O sino de marcada/remarcada/cancelada que o Ramon::ReuniaoAgendamento gravou no rastro (quem recebeu).

@@ -128,9 +128,9 @@ RSpec.describe Ramon::Fluxos::Reunioes do
         'faria: tarefa "Primeiro Atendimento" para 07/10 19:00',
         "faria: mover para #{agendada.name}",
         'closer: já tem Carla Closer',
-        a_string_starting_with('faria: rascunho ""Oi João! Nossa conversa está confirmada pra quarta, 07/10 às 19:00.'),
         a_string_starting_with('faria: sino para Carla Closer: "Reunião marcada com João Pereira')
       )
+      expect(trilha('reuniao_marcada').grep(/rascunho/)).to be_empty # a confirmação é só do hub
       expect(FluxoExecucao.where(fluxo: fluxos['lembretes_reuniao']).pluck(:alvo_type, :ensaio)).to eq([['LeadTask', true]])
     end
 
@@ -186,9 +186,10 @@ RSpec.describe Ramon::Fluxos::Reunioes do
         tarefa = novo.lead_tasks.find_by!(kind: 'meeting')
         expect([tarefa.title, tarefa.due_at, novo.reload.lead_stage, novo.closer]).to eq(['Primeiro Atendimento', inicio, agendada, closer])
         expect(novo.lead_activities.find_by!(kind: 'meeting_scheduled').to_value).to eq('Primeiro Atendimento em 07/10/2026 19:00')
+        # a confirmação é sempre do hub (texto aprovado 16/10): 1 rascunho só, mesmo com os fluxos no comando
+        expect(novo.lead_notes.count).to eq(1)
         expect(novo.lead_notes.last.body).to eq(
-          "RASCUNHO (revisar antes de enviar) — confirmação de reunião:\n\"Oi Ana! Nossa conversa está confirmada pra quarta, " \
-          '07/10 às 19:00. Vou te esperar, tá? Se não puder comparecer, me avise com antecedência que a gente remarca sem problema."'
+          "RASCUNHO (revisar antes de enviar) — confirmação de reunião:\n\"#{Ramon::ReuniaoAgendamento.confirmacao_texto(tarefa)}\""
         )
         expect(Notification.where(notification_type: 'ramon_fluxo_aviso').pluck(:user_id)).to contain_exactly(closer.id, admin.id)
         expect(FluxoExecucao.where(fluxo: fluxos['lembretes_reuniao'], alvo: tarefa).pluck(:ensaio)).to eq([false])

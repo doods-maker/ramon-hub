@@ -766,9 +766,6 @@ Rails.application.routes.draw do
         post 'ramon_leads', to: 'ramon_leads#create'
         post 'ramon_leads/:capture_token', to: 'ramon_leads#create'
 
-        # Ramon — webhook do Cal.com (agenda); assinatura HMAC no header X-Cal-Signature-256
-        post 'calcom_webhooks', to: 'calcom_webhooks#create'
-
         # Ramon — .ics da reunião (token assinado; o token pode ter ponto, por isso a restrição em vez de :token.ics)
         get 'agenda/:token', to: 'agenda_ics#show', constraints: { token: %r{[^/]+\.ics} }, format: false
 

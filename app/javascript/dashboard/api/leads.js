@@ -163,7 +163,7 @@ class LeadsAPI extends ApiClient {
     });
   }
 
-  // Reunião marcada pelo painel: mesmo efeito do Cal.com (etapa, Closer,
+  // Reunião marcada pelo painel (etapa, Closer,
   // rascunho de confirmação nas notas, lembretes internos). Nada vai ao cliente.
   // force: marca mesmo com outra reunião aberta (sem ele o backend dá 409)
   agendarReuniao(leadId, { startsAt, title, force, forceOcupado, formato }) {

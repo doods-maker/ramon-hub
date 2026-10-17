@@ -28,18 +28,18 @@ RSpec.describe Ramon::Fluxos::CompararAgendamentos do
     travel_to(agora + 10.minutes) { Ramon::ReuniaoAgendamento.remarcar(task: tarefa, starts_at: inicio + 1.day) }
     travel_to(agora + 20.minutes) { Ramon::ReuniaoAgendamento.cancelar(task: tarefa.reload) }
     c = comparar
-    # O rascunho do código difere do texto do fluxo (decisão: a divergência fica até o dono decidir); o resto bate.
-    expect(c.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada diferente], %w[remarcada diferente], %w[cancelada igual]])
+    # O rascunho de confirmação é só do hub: fica fora da comparação dos dois lados.
+    expect(c.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada igual], %w[remarcada igual], %w[cancelada igual]])
     expect(c.relatorio).to include('1 marcada(s) · 1 remarcada(s) · 1 cancelada(s)')
   end
 
   it 'o que só um dos lados fez aparece na linha (e não bate)' do
     marcar
     ensaio = FluxoExecucao.where(fluxo: Ramon::Fluxos::Reunioes.fluxo(account, 'reuniao_marcada')).last
-    ensaio.update!(trilha: ensaio.trilha.reject { |t| t['tipo'] == 'rascunho_texto' })
+    ensaio.update!(trilha: ensaio.trilha.reject { |t| t['tipo'] == 'mover_etapa' })
     linha = comparar.linhas.first
     expect(linha[:situacao]).to eq('diferente')
-    expect(linha[:so_no_codigo]).to contain_exactly(a_string_starting_with('rascunho "'))
+    expect(linha[:so_no_codigo]).to contain_exactly(a_string_starting_with('mover para '))
     expect(comparar.relatorio).to include('Resultado: NÃO BATEU')
   end
 
@@ -47,8 +47,7 @@ RSpec.describe Ramon::Fluxos::CompararAgendamentos do
     marcar
     tarefa = lead.lead_tasks.find_by!(kind: 'meeting')
     travel_to(agora + 30.seconds) { Ramon::ReuniaoAgendamento.remarcar(task: tarefa, starts_at: inicio + 1.day) }
-    # só o rascunho diverge (ver acima)
-    expect(comparar.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada diferente], %w[remarcada diferente]])
+    expect(comparar.linhas.map { |l| [l[:evento], l[:situacao]] }).to eq([%w[marcada igual], %w[remarcada igual]])
   end
 
   it 'evento que o fluxo não viu aparece como só no código' do

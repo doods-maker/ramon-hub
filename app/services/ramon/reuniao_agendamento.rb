@@ -1,4 +1,4 @@
-# Reunião marcada — mesmo efeito venha do Cal.com (webhook) ou do painel do
+# Reunião marcada — mesmo efeito venha do painel do
 # lead ("+ Tarefa" → Reunião): tarefa kind meeting, lead anda pra "Reunião
 # agendada" (só pra frente), Closer automático, rascunho de confirmação nas
 # notas (NUNCA enviado — quem envia é a pessoa), lembretes internos (sino +
@@ -13,11 +13,11 @@ class Ramon::ReuniaoAgendamento
   TIME_ZONE = 'America/Sao_Paulo'.freeze
   DIAS_SEMANA = %w[domingo segunda terça quarta quinta sexta sábado].freeze
   STAGE_LABEL = 'fase-reuniao-agendada'.freeze
-  # Prefixo do título da tarefa que veio do Cal.com (o webhook acha por ele).
+  # ponytail: legado do Cal.com, apagar quando não houver mais tarefas com o prefixo
   CALCOM_PREFIX = 'Reunião Cal.com'.freeze
 
   # title = nome da reunião (atividade, sino); task_title = título da tarefa
-  # (o Cal.com prefixa "Reunião Cal.com:" — o cancel/reschedule acham por ele).
+  # (legado: "Reunião Cal.com:" prefixava).
   # automatico: marcada pela IA (Captain) — com RAMON_AGENDA_CONFIRMACAO=on e modo piloto, a confirmação sai sozinha.
   def self.call(lead:, starts_at:, title:, task_title: title, user: nil, formato: 'video', automatico: false) # rubocop:disable Metrics/ParameterLists
     novo = new(lead, starts_at, title, user, formato)
@@ -92,12 +92,7 @@ class Ramon::ReuniaoAgendamento
     new(task.lead, task.due_at, titulo_de(task), user).cancelar([task])
   end
 
-  # Cancelar pelo Cal.com: as tarefas Cal.com abertas daquele horário (pode não haver nenhuma).
-  def self.cancelar_tarefas(lead:, tarefas:, starts_at:, title:)
-    new(lead, starts_at, title, nil).cancelar(tarefas)
-  end
-
-  # "Reunião Cal.com: Primeiro Atendimento" → "Primeiro Atendimento"
+  # "Reunião Cal.com: Primeiro Atendimento" → "Primeiro Atendimento" (ponytail: legado do Cal.com)
   def self.titulo_de(task)
     task.title.delete_prefix("#{CALCOM_PREFIX}: ")
   end
@@ -127,18 +122,18 @@ class Ramon::ReuniaoAgendamento
   def call(task_title)
     assumido = assumido?
     disparar('reuniao_marcada', dados('marcada', assumido, 'titulo_tarefa' => task_title.truncate(255)))
-    efeitos_da_marcacao(task_title) unless assumido
+    assumido ? confirmar_tarefa_do_fluxo : efeitos_da_marcacao(task_title)
     depois('reuniao_marcada')
     @lead
   end
 
-  # Mover a tarefa é a remarcação em si e fica sempre aqui; o resto é do código ou dos fluxos.
+  # Mover a tarefa é a remarcação em si e fica sempre aqui; o resto é do código ou dos fluxos (menos a confirmação: sempre aqui).
   def remarcar(task)
     de = task.due_at
     task.update!({ due_at: @starts_at, formato: @formato }.compact)
     assumido = assumido?
     disparar('reuniao_marcada', dados('remarcada', assumido, 'resumo_antes' => self.class.resumo(@title, de)))
-    efeitos_da_remarcacao(task, de) unless assumido
+    assumido ? self.class.confirmar(task) : efeitos_da_remarcacao(task, de)
     Ramon::Fluxos::Reunioes.na_agenda(task, assumido)
     depois('reuniao_marcada')
     task
@@ -172,6 +167,14 @@ class Ramon::ReuniaoAgendamento
   end
 
   def primeiro_nome = @lead.name.to_s.split.first.presence || 'cliente'
+
+  # Fluxos no comando: a tarefa nasce no fluxo; a confirmação ao cliente é sempre do código (decisão do dono, 16/10).
+  # Com Google o rascunho nasce no GoogleAgendaPushJob, depois do Meet (task.rascunho_no_job?); senão, aqui.
+  def confirmar_tarefa_do_fluxo
+    task = @lead.lead_tasks.where(kind: 'meeting', due_at: @starts_at.change(usec: 0)).order(:id).last
+    # sempre rascunho (automatico: false): a confirmação sozinha da IA não vale com os fluxos no comando (ver envia_sozinha?)
+    self.class.confirmar(task) if task && !task.rascunho_no_job?
+  end
 
   def efeitos_da_marcacao(task_title)
     @lead.lead_activities.create!(account: @lead.account, user: @user, kind: 'meeting_scheduled',

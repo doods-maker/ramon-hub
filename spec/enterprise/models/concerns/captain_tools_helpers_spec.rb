@@ -111,6 +111,11 @@ RSpec.describe Concerns::CaptainToolsHelpers, type: :concern do
       ferramentas.select { |tool| tool[:nivel] == nivel }.pluck(:id)
     end
 
+    it 'todo id do tools.yml resolve para uma classe (classify singularizava "horarios_livres" e a tool sumia)' do
+      ids = YAML.load_file(Rails.root.join('config/agents/tools.yml')).pluck('id')
+      expect(ids.reject { |id| Captain::Assistant.resolve_tool_class(id) }).to be_empty
+    end
+
     it 'toda ferramenta tem um dos quatro niveis' do
       expect(ferramentas.pluck(:nivel).uniq).to match_array(%w[consulta interna sugestao rascunho])
     end
@@ -133,7 +138,7 @@ RSpec.describe Concerns::CaptainToolsHelpers, type: :concern do
     let(:ferramentas) { Captain::Assistant.built_in_agent_tools }
 
     it 'toda ferramenta diz em qual sistema mexe' do
-      expect(ferramentas.pluck(:sistema).uniq).to match_array(%w[funil advbox motor zapsign calcom agenda faq conversa])
+      expect(ferramentas.pluck(:sistema).uniq).to match_array(%w[funil advbox motor zapsign agenda faq conversa])
     end
 
     it 'toda ferramenta *_advbox mexe no AdvBox' do
