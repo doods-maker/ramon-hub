@@ -10,6 +10,11 @@ class Ramon::MetaConversoes
     return unless ligado? && lead.custom_attributes.to_h.dig('meta_referral', 'ctwa_clid').present?
 
     eventos_de(lead).filter_map { |evento| criar(lead, evento) }.last
+  rescue StandardError => e
+    # O aviso nunca pode derrubar o update! do lead.
+    ChatwootExceptionTracker.new(e, account: lead.account).capture_exception
+    Rails.logger.error("Ramon::MetaConversoes #{e.class} lead_id=#{lead.id}")
+    nil
   end
 
   def self.eventos_de(lead)
@@ -21,9 +26,16 @@ class Ramon::MetaConversoes
   def self.criar(lead, evento)
     registro = MetaEvento.create!(account_id: lead.account_id, lead_id: lead.id, evento: evento,
                                   event_id: "lead-#{lead.id}-#{evento}", ocorrido_em: Time.current)
-    Ramon::MetaConversaoJob.perform_later(registro.id)
-    registro
+    enfileirar(registro)
   rescue ActiveRecord::RecordNotUnique
     nil
+  end
+
+  def self.enfileirar(registro)
+    Ramon::MetaConversaoJob.perform_later(registro.id)
+    registro
+  rescue StandardError
+    registro.update(status: 'erro', erro: 'fila_indisponivel') # não deixa pendente órfão
+    registro
   end
 end

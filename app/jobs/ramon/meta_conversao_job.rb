@@ -35,12 +35,13 @@ class Ramon::MetaConversaoJob < ApplicationJob
     evento.update!(status: status, erro: erro.to_s.truncate(255))
   end
 
+  # WABA e token saem do MESMO canal: o da caixa do clique ou, de reserva, o da conversa do lead.
   def credenciais(lead, referral)
-    config = (canal_clique(referral) || canal_conversa(lead)).try(:provider_config).to_h
-    [referral['waba_id'].presence || canal_conversa(lead).try(:provider_config).to_h['business_account_id'], config['api_key']]
+    config = canal(lead, referral).try(:provider_config).to_h
+    [referral['waba_id'].presence || config['business_account_id'], config['api_key']]
   end
 
-  def canal_clique(referral) = Inbox.find_by(id: referral['inbox_id'])&.channel
-
-  def canal_conversa(lead) = lead.conversation&.inbox&.channel
+  def canal(lead, referral)
+    lead.account.inboxes.find_by(id: referral['inbox_id'])&.channel || lead.conversation&.inbox&.channel
+  end
 end

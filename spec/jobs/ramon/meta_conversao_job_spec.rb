@@ -28,11 +28,20 @@ RSpec.describe Ramon::MetaConversaoJob do
     expect(evento.enviado_em).to be_present
   end
 
-  it 'sem waba_id no clique usa o WABA da conversa' do
-    lead.update!(conversation: create(:conversation, account: account, inbox: canal.inbox))
+  it 'sem caixa do clique usa WABA e token do canal da conversa' do
+    outro = create(:channel_whatsapp, account: account, sync_templates: false, validate_provider_config: false,
+                                      provider_config: { 'api_key' => 'tok2', 'phone_number_id' => 'p2', 'business_account_id' => 'w-outro' })
+    lead.update!(custom_attributes: { 'meta_referral' => { 'ctwa_clid' => 'clid-1', 'inbox_id' => 0 } },
+                 conversation: create(:conversation, account: account, inbox: outro.inbox))
     allow(cliente).to receive(:enviar).and_return(true)
     described_class.perform_now(evento.id)
-    expect(Ramon::MetaCapi::Cliente).to have_received(:new).with(token: 'tok', waba_id: 'w-conversa')
+    expect(Ramon::MetaCapi::Cliente).to have_received(:new).with(token: 'tok2', waba_id: 'w-outro')
+  end
+
+  it 'erro transitório re-enfileira e o evento continua pendente' do
+    allow(cliente).to receive(:enviar).and_raise(Ramon::MetaCapi::Transitorio)
+    expect { described_class.perform_now(evento.id) }.to have_enqueued_job(described_class).with(evento.id)
+    expect(evento.reload.status).to eq('pendente')
   end
 
   it 'recusa (400) grava erro e não tenta de novo' do

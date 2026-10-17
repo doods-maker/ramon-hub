@@ -29,9 +29,9 @@ RSpec.describe Ramon::MetaConversoes do
   end
 
   it 'avisa QualifiedLead uma única vez, mesmo com o card indo e voltando' do
-    lead.update!(lead_stage: etapa('fase-reuniao-agendada'))
+    expect { lead.update!(lead_stage: etapa('fase-reuniao-agendada')) }.to have_enqueued_job(Ramon::MetaConversaoJob)
     lead.update!(lead_stage: etapa('fase-qualificacao'))
-    lead.update!(lead_stage: etapa('fase-reuniao-agendada'))
+    expect { lead.update!(lead_stage: etapa('fase-reuniao-agendada')) }.not_to have_enqueued_job(Ramon::MetaConversaoJob)
     expect(eventos('QualifiedLead').count).to eq(1)
     expect(eventos('QualifiedLead').first).to have_attributes(status: 'pendente', event_id: "lead-#{lead.id}-QualifiedLead")
   end
