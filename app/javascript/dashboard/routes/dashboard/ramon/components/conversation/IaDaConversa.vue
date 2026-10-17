@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 import RamonIaConversasAPI from 'dashboard/api/ramonIaConversas';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, LINHA } from '../../helpers/ui';
@@ -13,6 +14,7 @@ const store = useStore();
 const router = useRouter();
 const currentChat = useMapGetter('getSelectedChat');
 const currentUser = useMapGetter('getCurrentUser');
+const { isAdmin } = useAdmin();
 
 const open = ref(false);
 const saving = ref(false);
@@ -22,24 +24,38 @@ const pausa = computed(
   () => currentChat.value?.custom_attributes?.ia_pausa || null
 );
 
+const ler = async () => {
+  const id = currentChat.value?.id;
+  if (!id) return;
+  try {
+    const { data } = await RamonIaConversasAPI.get(id);
+    if (id === currentChat.value?.id) info.value = data;
+  } catch (e) {
+    // fica o rótulo de antes (ou nenhum) até a próxima leitura
+  }
+};
+
 // Refaz a leitura ao trocar de conversa e quando a pausa muda (aqui ou por outro agente).
+// Na mesma conversa o rótulo antigo fica até a resposta (sem piscar); só a troca de conversa apaga.
 watch(
   () => [currentChat.value?.id, pausa.value],
-  async ([id]) => {
-    info.value = null;
-    if (!id) return;
-    try {
-      const { data } = await RamonIaConversasAPI.get(id);
-      if (id === currentChat.value?.id) info.value = data;
-    } catch (e) {
-      // sem rótulo: o botão some até a próxima leitura
-    }
+  ([id], antes) => {
+    if (id !== antes?.[0]) info.value = null;
+    ler();
   },
   { immediate: true }
 );
 
+// Abrir o menu relê: a Etapa pode ter mudado desde a última leitura.
+const alternar = () => {
+  open.value = !open.value;
+  if (open.value) ler();
+};
+
 const rotulo = computed(() => {
-  if (pausa.value === 'pausada') return t('RAMON.IA_CONVERSA.PAUSADA');
+  // lead em Perdido também cala a IA: o servidor responde pausa = pausada
+  if (pausa.value === 'pausada' || info.value.pausa === 'pausada')
+    return t('RAMON.IA_CONVERSA.PAUSADA');
   if (pausa.value === 'rascunho') return t('RAMON.IA_CONVERSA.RASCUNHO');
   const { perfil, origem, etapa } = info.value;
   const params = { perfil, origem: t(`RAMON.IA_CONVERSA.ORIGEM.${origem}`) };
@@ -105,7 +121,7 @@ const verNaTrilha = () => {
       faded
       slate
       icon="i-lucide-sparkles"
-      @click="open = !open"
+      @click="alternar"
     >
       <span class="min-w-0 truncate">{{ rotulo }}</span>
       <span class="i-lucide-chevron-down size-3.5 shrink-0" />
@@ -155,6 +171,7 @@ const verNaTrilha = () => {
         {{ t('RAMON.IA_CONVERSA.ASSUMIR') }}
       </button>
       <button
+        v-if="isAdmin"
         type="button"
         data-testid="ia-conversa-trilha"
         :class="LINHA"

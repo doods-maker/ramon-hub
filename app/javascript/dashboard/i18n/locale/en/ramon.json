@@ -56,7 +56,7 @@
         },
         "equilibrada": {
           "NOME": "Balanced",
-          "DESCRICAO": "Qualifies and books the meeting on its own. Fee only from the table, as a draft. Closing stays with the team."
+          "DESCRICAO": "Qualifies and books the meeting on its own. Fee simulation only as a draft. Closing stays with the team."
         },
         "acelerada": {
           "NOME": "Fast",
@@ -100,11 +100,11 @@
       },
       "ACOES": {
         "fora_do_horario": "Reply outside business hours (applies to every stage)",
-        "pedir_documentos": "Ask for documents (CNIS, medical reports)",
+        "pedir_documentos": "Request documents via tool",
         "desqualificar": "Disqualify the lead",
         "mover_etapa": "Move the lead to another stage",
         "marcar_reuniao": "Book the meeting in the Agenda",
-        "citar_honorario": "Quote the fee from the table",
+        "citar_honorario": "Simulate fee (calculation)",
         "logistica": "Answer about the meeting logistics",
         "contrato_zapsign": "Send the contract (ZapSign)"
       },
@@ -1832,7 +1832,13 @@
       "PAUSADO": "AI set to draft only in this conversation.",
       "PAUSA_FALHOU": "Couldn't pause — try again."
     },
-    "COPILOTO": {},
+    "COPILOTO": {
+      "RASCUNHO_IA": {
+        "igual": "AI draft sent as it was",
+        "editado": "AI draft, edited",
+        "descartado": "AI draft discarded"
+      }
+    },
     "REUNIAO": {
       "TITULO": "Meeting (Closer)",
       "QUALIFICADA": "Qualified",

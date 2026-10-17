@@ -43,6 +43,7 @@ const comita = ({ state }, { customAttributes }) => {
 const montar = ({
   chat = { id: 42, status: 'open', custom_attributes: { foo: 'bar' } },
   updateCustomAttributes = vi.fn(comita),
+  role = 'administrator',
 } = {}) => {
   const toggleStatus = vi.fn();
   const assignAgent = vi.fn();
@@ -51,6 +52,7 @@ const montar = ({
     getters: {
       getSelectedChat: state => state.chat,
       getCurrentUser: () => ({ id: 7 }),
+      getCurrentRole: () => role,
     },
     actions: { updateCustomAttributes, toggleStatus, assignAgent },
   });
@@ -159,6 +161,53 @@ describe('IaDaConversa.vue', () => {
       name: 'captain_como_ia_atende_index',
       query: { alvo: 'tese:3' },
     });
+  });
+
+  it('Ver na trilha só para administrador', async () => {
+    const { wrapper } = montar({ role: 'agent' });
+    await abrir(wrapper);
+
+    expect(wrapper.find('[data-testid="ia-conversa-trilha"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('lead em Perdido (pausa do servidor) mostra IA pausada', async () => {
+    get.mockResolvedValue({ data: { ...INFO, pausa: 'pausada' } });
+    const { wrapper } = montar();
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="ia-conversa-btn"]').text()).toBe(
+      'IA pausada'
+    );
+  });
+
+  it('abrir o menu relê a etapa', async () => {
+    const { wrapper } = montar();
+    await flushPromises();
+    get.mockResolvedValue({ data: { ...INFO, etapa: 'Negociação' } });
+    await abrir(wrapper);
+    await flushPromises();
+
+    expect(get).toHaveBeenCalledTimes(2);
+    expect(wrapper.find('[data-testid="ia-conversa-btn"]').text()).toBe(
+      'IA: Equilibrada (da tese) · Negociação'
+    );
+  });
+
+  it('na mesma conversa o botão fica durante a releitura; trocar de conversa apaga', async () => {
+    const { wrapper, store } = montar();
+    await flushPromises();
+    get.mockReturnValue(new Promise(() => {})); // releitura pendente
+    store.state.chat = { id: 42, custom_attributes: { ia_pausa: 'rascunho' } };
+    await nextTick();
+    expect(wrapper.find('[data-testid="ia-conversa-btn"]').exists()).toBe(true);
+
+    store.state.chat = { id: 43, custom_attributes: {} };
+    await nextTick();
+    expect(wrapper.find('[data-testid="ia-conversa-btn"]').exists()).toBe(
+      false
+    );
   });
 
   it('Assumir atribui a mim e pausa a IA', async () => {

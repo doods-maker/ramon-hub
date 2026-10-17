@@ -56,7 +56,7 @@
         },
         "equilibrada": {
           "NOME": "Equilibrada",
-          "DESCRICAO": "Qualifica e marca a reunião sozinha. Honorário só da tabela, em rascunho. O fechamento fica com a equipe."
+          "DESCRICAO": "Qualifica e marca a reunião sozinha. Simulação de honorário só em rascunho. O fechamento fica com a equipe."
         },
         "acelerada": {
           "NOME": "Acelerada",
@@ -100,11 +100,11 @@
       },
       "ACOES": {
         "fora_do_horario": "Responder fora do horário comercial (vale em todas as etapas)",
-        "pedir_documentos": "Pedir documentos (CNIS, laudos)",
+        "pedir_documentos": "Pedir documentos pela ferramenta",
         "desqualificar": "Desqualificar o lead",
         "mover_etapa": "Mover o lead de etapa",
         "marcar_reuniao": "Marcar a reunião na Agenda",
-        "citar_honorario": "Citar o honorário da tabela",
+        "citar_honorario": "Simular honorário (cálculo)",
         "logistica": "Responder sobre a logística da reunião",
         "contrato_zapsign": "Mandar o contrato (ZapSign)"
       },
