@@ -24,12 +24,20 @@ module Concerns::Agentable
         contact: config['feature_contact_attributes'].present? ? state[:contact] : nil,
         campaign: state[:campaign] || {}
       )
+      enhanced_context = com_gatilhos(enhanced_context, state[:ramon_gatilhos])
     end
 
     Captain::PromptRenderer.render(template_name, enhanced_context.with_indifferent_access)
   end
 
   private
+
+  # ramon: Gatilhos de equipe ligados na Etapa da conversa (Ramon::PerfilIa#textos_dos_gatilhos) entram nas diretrizes.
+  def com_gatilhos(contexto, gatilhos)
+    return contexto if gatilhos.blank?
+
+    contexto.merge(response_guidelines: Array(contexto[:response_guidelines]) + gatilhos)
+  end
 
   def agent_name
     raise NotImplementedError, "#{self.class} must implement agent_name"

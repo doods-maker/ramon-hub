@@ -14,19 +14,17 @@ class Ramon::PerfilIa
   PAUSA = 'ia_pausa'.freeze
   # Pausa de antes do roteiro/Perdido (Ramon::Roteiro::Efeitos): a 1ª guardada vale até o restaurar_pausa devolver.
   PAUSA_ANTES = 'ia_pausa_antes_roteiro'.freeze
-  # ponytail: só as chaves, em ordem; os textos para o prompt entram com a montagem dos gatilhos (Task 7)
-  GATILHOS = %w[pediu_pessoa juridica outra_area fora_do_tema honorario_de_novo nao_le irritado tem_advogado desconto
-                clausula].freeze
+  GATILHOS = Gatilhos::TODOS
   PERMISSOES = { 's' => :sozinha, 'r' => :rascunho, 'n' => :nunca }.freeze
 
   PRONTOS = {
     'cautelosa' => {
-      'marcador' => 'fase-qualificacao', 'gatilhos' => GATILHOS,
+      'marcador' => 'fase-qualificacao', 'gatilhos' => GATILHOS.keys.freeze,
       'permissoes' => { 'fora_do_horario' => 'r', 'pedir_documentos' => 's', 'desqualificar' => 'r', 'mover_etapa' => 'r',
                         'marcar_reuniao' => 'r', 'citar_honorario' => 'n', 'logistica' => 'r', 'contrato_zapsign' => 'n' }
     },
     'equilibrada' => {
-      'marcador' => 'fase-reuniao-agendada', 'gatilhos' => (GATILHOS - %w[nao_le]).freeze,
+      'marcador' => 'fase-reuniao-agendada', 'gatilhos' => (GATILHOS.keys - %w[nao_le]).freeze,
       'permissoes' => { 'fora_do_horario' => 's', 'pedir_documentos' => 's', 'desqualificar' => 'r', 'mover_etapa' => 's',
                         'marcar_reuniao' => 's', 'citar_honorario' => 'r', 'logistica' => 's', 'contrato_zapsign' => 'r' }
     },
@@ -96,7 +94,7 @@ class Ramon::PerfilIa
   def self.gatilhos_validos(gatilhos)
     return {} unless gatilhos.is_a?(Hash)
 
-    gatilhos.select { |_, lista| lista.is_a?(Array) }.transform_values { |lista| GATILHOS & lista }
+    gatilhos.select { |_, lista| lista.is_a?(Array) }.transform_values { |lista| GATILHOS.keys & lista }
   end
   private_class_method :alvo_e_cfg, :permissoes_validas, :gatilhos_validos
 
@@ -196,6 +194,9 @@ class Ramon::PerfilIa
   def tools_bloqueadas = TOOLS_DA_ACAO.filter_map { |acao, tools| tools if permissao(acao) == :nunca }.flatten
 
   def gatilhos(etapa = @etapa) = @cfg.dig('gatilhos', self.class.chave_da_etapa(etapa || abertas.first)) || pronto['gatilhos']
+
+  # Textos (prompt da conversa) dos gatilhos ligados na Etapa, na ordem de GATILHOS; pendente (texto nil) fica de fora.
+  def textos_dos_gatilhos(etapa = @etapa) = GATILHOS.filter_map { |chave, g| g['texto'] if gatilhos(etapa).include?(chave) }
 
   def direto?(acao) = @pausa.nil? && permissao(acao) == :sozinha && estado == :sozinha
 

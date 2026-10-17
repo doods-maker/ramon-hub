@@ -158,6 +158,41 @@ RSpec.describe Ramon::PerfilIa do
     end
   end
 
+  describe '#textos_dos_gatilhos' do
+    let(:textos) { described_class::GATILHOS.slice(*%w[pediu_pessoa juridica outra_area fora_do_tema honorario_de_novo nao_le]) }
+
+    def perfil_em_qualificacao
+      lead = create(:lead, account: account, conversation: conversa, lead_stage: etapa['fase-qualificacao'])
+      described_class.de(lead)
+    end
+
+    it 'Cautelosa em Qualificação: os 6 textos aprovados, na ordem de GATILHOS (pendentes ficam de fora)' do
+      gravar('padrao' => { 'base' => 'cautelosa' })
+      expect(perfil_em_qualificacao.textos_dos_gatilhos).to eq(textos.values.pluck('texto'))
+      expect(described_class::GATILHOS.values.pluck('texto').compact.size).to eq(6)
+    end
+
+    it 'Acelerada não tem honorario_de_novo nem nao_le' do
+      gravar('padrao' => { 'base' => 'acelerada' })
+      perfil = perfil_em_qualificacao
+      quatro = described_class::GATILHOS.values_at('pediu_pessoa', 'juridica', 'outra_area', 'fora_do_tema')
+      expect(perfil.textos_dos_gatilhos).to eq(quatro.pluck('texto'))
+    end
+
+    it 'lista da Etapa gravada no cfg manda; valor fora de GATILHOS cai; gatilho sem texto não vira linha' do
+      gravar('padrao' => { 'base' => 'cautelosa', 'gatilhos' => { 'fase-qualificacao' => %w[xablau irritado juridica] } })
+      expect(perfil_em_qualificacao.textos_dos_gatilhos).to eq([described_class::GATILHOS.dig('juridica', 'texto')])
+    end
+
+    it 'o seed do Atendimento não repete nas diretrizes os textos que viraram gatilho e mantém o resto da linha dividida' do
+      yml = YAML.load_file(Rails.root.join('db/seeds/ramon/inteligencia/assistentes.yml'))
+      diretrizes = yml['assistentes'].find { |a| a['name'] == 'Atendimento' }['response_guidelines']
+      expect(diretrizes & described_class::GATILHOS.values.pluck('texto').compact).to be_empty
+      expect(diretrizes.join).not_to include('falar com uma pessoa/advogado', 'decisão jurídica sobre o caso concreto')
+      expect(diretrizes).to include(a_string_starting_with('Se o lead disser que quer contratar, siga a skill Fechar contrato'))
+    end
+  end
+
   # Atraso da resposta e aviso de cota estourada (HookExecutionService) seguem a regra do envio de logística/handoff do job.
   describe '#logistica_sai_agora?' do
     it 'fora do horário com a permissão em rascunho, logística e handoff não saem sozinhos' do
