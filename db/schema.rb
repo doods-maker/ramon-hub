@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_18_120003) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_19_120001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1674,6 +1674,36 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_18_120003) do
     t.index ["account_id", "created_at"], name: "index_ramon_llm_chamadas_on_account_id_and_created_at"
   end
 
+  create_table "ramon_meta_eventos", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "lead_id", null: false
+    t.string "evento", null: false
+    t.string "event_id", null: false
+    t.string "status", default: "pendente", null: false
+    t.string "erro"
+    t.datetime "enviado_em"
+    t.datetime "ocorrido_em", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "status"], name: "index_ramon_meta_eventos_on_account_id_and_status"
+    t.index ["lead_id", "evento"], name: "index_ramon_meta_eventos_on_lead_id_and_evento", unique: true
+  end
+
+  create_table "ramon_meta_gastos", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.date "data", null: false
+    t.string "ad_id", null: false
+    t.string "ad_name"
+    t.string "campaign_id"
+    t.string "campaign_name"
+    t.decimal "spend", precision: 12, scale: 2, default: "0.0"
+    t.bigint "impressions", default: 0
+    t.bigint "clicks", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "ad_id", "data"], name: "index_ramon_meta_gastos_on_account_id_and_ad_id_and_data", unique: true
+  end
+
   create_table "ramon_metas_comerciais", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "user_id", null: false
@@ -2049,6 +2079,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_18_120003) do
   add_foreign_key "ramon_funil_acoes", "users", column: "desfeita_por_id", on_delete: :nullify
   add_foreign_key "ramon_google_agendas", "accounts", on_delete: :cascade
   add_foreign_key "ramon_google_agendas", "users", on_delete: :cascade
+  add_foreign_key "ramon_meta_eventos", "accounts", on_delete: :cascade
+  add_foreign_key "ramon_meta_eventos", "leads", on_delete: :cascade
+  add_foreign_key "ramon_meta_gastos", "accounts", on_delete: :cascade
   add_foreign_key "ramon_pecas", "accounts"
   add_foreign_key "ramon_reunioes", "accounts"
   add_foreign_key "ramon_reunioes", "leads"
