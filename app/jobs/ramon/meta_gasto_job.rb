@@ -42,7 +42,7 @@ class Ramon::MetaGastoJob < ApplicationJob
 
     agora = Time.current
     registros = linhas.map { |l| l.merge(account_id: account.id, created_at: agora, updated_at: agora) }
-    colunas = %i[ad_name campaign_id campaign_name spend impressions clicks updated_at]
+    colunas = %i[ad_name campaign_id campaign_name spend impressions clicks] # updated_at: o upsert_all do Rails 7.1 já atualiza (record_timestamps)
     MetaGasto.upsert_all(registros, unique_by: %i[account_id ad_id data], update_only: colunas) # rubocop:disable Rails/SkipsModelValidations
     linhas.size
   end
