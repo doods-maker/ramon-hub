@@ -161,7 +161,7 @@ const mudarGatilhos = (etapa, lista) =>
 const salvar = async () => {
   const corpo = {};
   mudados.value.forEach(id => {
-    const cfg = paraGravar(cfgs.value[id], prontos.value, etapas.value);
+    const cfg = paraGravar(cfgs.value[id], etapas.value);
     if (id === 'padrao') {
       corpo.padrao = cfg;
       return;

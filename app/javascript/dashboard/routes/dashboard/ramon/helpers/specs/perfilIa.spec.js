@@ -115,28 +115,22 @@ describe('perfilIa (espelho do Ramon::PerfilIa)', () => {
     ).toMatchObject({ valor: 'rascunho', liberadoPeloMarcador: false });
   });
 
-  it('paraGravar troca Marcador velho e tira gatilhos de Etapa velha', () => {
+  it('paraGravar grava o que a tela mostra: Marcador velho = _inicio, sem gatilhos de Etapa velha', () => {
     const cfg = {
       base: 'equilibrada',
       marcador: 'fase-apagada',
       gatilhos: { 'fase-apagada': ['juridica'], 'fase-novo': ['juridica'] },
     };
-    expect(paraGravar(cfg, PRONTOS, ETAPAS)).toEqual({
+    expect(marcadorDe(cfg, PRONTOS, ETAPAS)).toBe('_inicio');
+    expect(paraGravar(cfg, ETAPAS)).toEqual({
       base: 'equilibrada',
-      marcador: 'fase-reuniao-agendada',
+      marcador: '_inicio',
       gatilhos: { 'fase-novo': ['juridica'] },
     });
-    expect(
-      paraGravar(
-        { base: 'equilibrada', marcador: 'x' },
-        PRONTOS,
-        ETAPAS.slice(0, 2)
-      ).marcador
-    ).toBe('_inicio');
-    expect(paraGravar({ base: 'acelerada' }, PRONTOS, ETAPAS)).toEqual({
+    expect(paraGravar({ base: 'acelerada' }, ETAPAS)).toEqual({
       base: 'acelerada',
     });
-    expect(paraGravar(null, PRONTOS, ETAPAS)).toBeNull();
+    expect(paraGravar(null, ETAPAS)).toBeNull();
   });
 
   it('proximaPermissao: S → R → N → S; sem nunca pula o N', () => {

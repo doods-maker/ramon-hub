@@ -215,7 +215,7 @@ describe('Como a IA atende', () => {
       teses: {
         4: {
           base: 'equilibrada',
-          marcador: 'fase-reuniao-agendada',
+          marcador: '_inicio',
           gatilhos: { 'fase-novo': ['pediu_pessoa', 'juridica'] },
         },
       },

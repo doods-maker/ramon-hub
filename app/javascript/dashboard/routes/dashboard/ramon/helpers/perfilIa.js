@@ -132,16 +132,16 @@ export const frase = (marcador, etapas, t) => {
 };
 
 // O que vai no PATCH: o servidor recusa Marcador e Gatilhos de Etapa que saiu da Trilha (gravacao.rb).
-// Marcador velho vira o da base (se ainda estiver na Trilha) ou _inicio; gatilhos de Etapa velha saem.
-export const paraGravar = (cfg, prontos, etapas) => {
+// Grava o que a tela mostra: Marcador velho vira _inicio (como o marcadorDe); gatilhos de Etapa velha saem.
+export const paraGravar = (cfg, etapas) => {
   if (!cfg) return cfg;
   const chaves = etapas.map(e => e.chave);
-  const validos = [INICIO, FIM, ...chaves];
   const limpo = { ...cfg };
-  if (cfg.marcador !== undefined && !validos.includes(cfg.marcador)) {
-    const daBase = prontos[baseDe(cfg)].marcador;
-    limpo.marcador = validos.includes(daBase) ? daBase : INICIO;
-  }
+  if (
+    cfg.marcador !== undefined &&
+    ![INICIO, FIM, ...chaves].includes(cfg.marcador)
+  )
+    limpo.marcador = INICIO;
   if (cfg.gatilhos)
     limpo.gatilhos = Object.fromEntries(
       Object.entries(cfg.gatilhos).filter(([chave]) => chaves.includes(chave))
