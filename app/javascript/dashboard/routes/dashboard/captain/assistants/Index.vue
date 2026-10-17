@@ -1,7 +1,6 @@
 <script setup>
 // Tela Assistentes (I-AS1/I-AS2/I-AS3): um cartão por assistente real — pra
-// quem fala, skills, FAQs, caixas conectadas (antes item do menu) e, pra quem
-// fala com o lead, o modo das conversas (só leitura). Atalhos levam às telas.
+// quem fala, skills, FAQs, caixas conectadas (antes item do menu). Atalhos levam às telas.
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
@@ -21,10 +20,6 @@ import {
   TITULO,
   TOM,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import {
-  MODOS,
-  tomDoModo,
-} from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -53,18 +48,6 @@ onMounted(fetchData);
 const isEmpty = computed(
   () => !loading.value && !error.value && !cartoes.value.length
 );
-
-const modoNome = modo => t(`RAMON.COPILOTO.MODOS.${modo}.NOME`);
-// Modo em que as conversas novas nascem: o padrão de cada caixa do assistente (Ramon::CopilotoModo.default).
-const modosPadrao = cartao =>
-  [...new Set(cartao.caixas.map(caixa => caixa.modo_padrao))]
-    .map(modoNome)
-    .join(', ');
-const modosDe = cartao =>
-  MODOS.filter(modo => cartao.conversas_por_modo[modo]).map(modo => ({
-    modo,
-    n: cartao.conversas_por_modo[modo],
-  }));
 
 const ATALHOS = [
   {
@@ -187,42 +170,6 @@ const handleAfterCreate = newAssistant => {
                 })
               }}
             </span>
-          </div>
-
-          <div v-if="cartao.publico === 'lead'" class="mt-3" :class="[SECAO]">
-            <p :class="TITULO">
-              {{ t('CAPTAIN_RAMON.ASSISTENTES.MODO.TITULO') }}
-            </p>
-            <p class="mt-1 text-sm text-n-slate-12">
-              {{
-                t('CAPTAIN_RAMON.ASSISTENTES.MODO.PADRAO', {
-                  modo: modosPadrao(cartao),
-                })
-              }}
-            </p>
-            <div class="flex flex-wrap gap-1.5 mt-2">
-              <span
-                v-for="item in modosDe(cartao)"
-                :key="item.modo"
-                :class="[CHIP, tomDoModo(item.modo)]"
-              >
-                {{
-                  t('CAPTAIN_RAMON.ASSISTENTES.MODO.CONTAGEM', {
-                    modo: modoNome(item.modo),
-                    n: item.n,
-                  })
-                }}
-              </span>
-              <span
-                v-if="!modosDe(cartao).length"
-                class="text-xs text-n-slate-10"
-              >
-                {{ t('CAPTAIN_RAMON.ASSISTENTES.MODO.SEM_CONVERSAS') }}
-              </span>
-            </div>
-            <p class="mt-2 text-xs text-n-slate-10">
-              {{ t('CAPTAIN_RAMON.ASSISTENTES.MODO.SO_LEITURA') }}
-            </p>
           </div>
 
           <div class="mt-3" :class="[SECAO]" data-testid="assistente-caixas">

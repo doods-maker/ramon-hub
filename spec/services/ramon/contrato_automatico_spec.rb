@@ -61,6 +61,7 @@ RSpec.describe Ramon::ContratoAutomatico do
 
   it 'tese sem modelo de contrato não gera' do
     thesis.update!(zapsign_template_id: nil)
+    expect(Ramon::CopilotoLimite).to receive(:falhou).with(lead, 'modelo de contrato da tese')
     expect(Ramon::ContratoAutomatico.preparar(lead)).to eq(falta: ['modelo de contrato da tese'])
   end
 

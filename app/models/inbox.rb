@@ -54,9 +54,6 @@ class Inbox < ApplicationRecord
   validates :greeting_message, length: { maximum: Limits::GREETING_MESSAGE_MAX_LENGTH }
   # SLA de 1ª resposta por inbox (fork): nil = usa o padrão do env
   validates :first_response_sla_minutes, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
-  # ramon (F3 do roteiro): modo padrão da IA nas conversas desta caixa; vazio = padrão do sistema (env).
-  validates :ramon_copiloto_modo, inclusion: { in: Ramon::CopilotoModo::MODOS }, allow_nil: true
-  normalizes :ramon_copiloto_modo, with: ->(v) { v.presence }
   validate :ensure_valid_max_assignment_limit
 
   belongs_to :account

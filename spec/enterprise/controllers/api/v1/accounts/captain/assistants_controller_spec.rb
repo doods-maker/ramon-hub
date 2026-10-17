@@ -400,7 +400,7 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
   end
 
   describe 'GET /api/v1/accounts/{account.id}/captain/assistants/stats' do
-    it 'devolve um cartao por assistente com skills, FAQs, caixas e conversas abertas por modo' do
+    it 'devolve um cartao por assistente com skills, FAQs e caixas' do
       atendimento = create(:captain_assistant, account: account, name: 'Atendimento')
       copiloto = create(:captain_assistant, account: account, name: 'Copiloto')
       inbox = create(:inbox, account: account)
@@ -409,21 +409,15 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
       create(:captain_scenario, assistant: atendimento, account: account, enabled: false)
       create(:captain_assistant_response, assistant: atendimento, account: account)
       create(:captain_assistant_response, assistant: atendimento, account: account, status: :pending)
-      create(:conversation, account: account, inbox: inbox, custom_attributes: { 'copiloto_modo' => 'manual' })
-      create(:conversation, account: account, inbox: inbox)
-      create(:conversation, account: account, inbox: inbox, custom_attributes: { 'copiloto_modo' => 'xyz' })
       create(:conversation, account: account, inbox: inbox, status: :resolved)
 
-      with_modified_env RAMON_COPILOTO_MODO_DEFAULT: 'piloto_limitado' do
-        get "/api/v1/accounts/#{account.id}/captain/assistants/stats", headers: agent.create_new_auth_token, as: :json
-      end
+      get "/api/v1/accounts/#{account.id}/captain/assistants/stats", headers: agent.create_new_auth_token, as: :json
 
       expect(response).to have_http_status(:success)
       cartoes = json_response[:payload].index_by { |cartao| cartao[:id] }
-      expect(cartoes[atendimento.id]).to include(publico: 'lead', skills_ativas: 1, faqs_aprovadas: 1, faqs_pendentes: 1,
-                                                 conversas_por_modo: { manual: 1, piloto_limitado: 2 })
+      expect(cartoes[atendimento.id]).to include(publico: 'lead', skills_ativas: 1, faqs_aprovadas: 1, faqs_pendentes: 1)
       expect(cartoes[atendimento.id][:caixas].pluck(:id)).to eq([inbox.id])
-      expect(cartoes[copiloto.id]).to include(publico: 'equipe', skills_ativas: 0, caixas: [], conversas_por_modo: {})
+      expect(cartoes[copiloto.id]).to include(publico: 'equipe', skills_ativas: 0, caixas: [])
     end
 
     it 'exige autenticacao' do

@@ -35,7 +35,7 @@ module Ramon::ContratoAutomatico
   end
 
   def parar(lead, falta)
-    Ramon::CopilotoLimite.encerrar(lead, Ramon::CopilotoLimite::CONTRATO_FALHOU, falta.join(', '))
+    Ramon::CopilotoLimite.falhou(lead, falta.join(', '))
     { falta: falta }
   end
 end

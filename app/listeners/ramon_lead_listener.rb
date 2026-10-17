@@ -9,8 +9,6 @@ class RamonLeadListener < BaseListener
 
   def conversation_created(event)
     conversation = event.data[:conversation]
-    # F3: modo padrão da IA da caixa vira atributo da conversa (o front lê o atributo). Vale com ou sem "Criar lead".
-    Ramon::CopilotoModo.carimbar_padrao(conversation)
     return unless Ramon::LeadDaConversa.cabe?(conversation)
 
     Ramon::LeadDaConversa.criar_ou_ligar(conversation)
