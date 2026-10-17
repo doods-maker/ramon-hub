@@ -67,8 +67,8 @@ class Ramon::PerfilIa
     normalizar(bruto) if bruto.is_a?(Hash)
   end
 
-  # O label da Etapa: estável a renomeação.
-  def self.chave_da_etapa(lead_stage) = lead_stage ? lead_stage.label.to_s : ''
+  # O label da Etapa (estável a renomeação); etapa sem label = "id-<id>". Marcador e gatilhos usam a mesma chave.
+  def self.chave_da_etapa(lead_stage) = lead_stage ? lead_stage.label.presence || "id-#{lead_stage.id}" : ''
 
   # Tese manda (a própria ou o padrão); a caixa só vale para lead sem tese.
   def self.alvo_e_cfg(account, lead, conversa)
@@ -111,10 +111,10 @@ class Ramon::PerfilIa
 
   def base = @cfg['base'] || 'cautelosa'
 
-  # Label de uma Etapa aberta, _inicio ou _fim; label que não está na Trilha (etapa apagada) = _inicio.
+  # Chave de uma Etapa aberta, _inicio ou _fim; chave que não está na Trilha (etapa apagada) = _inicio.
   def marcador
     valor = @cfg['marcador'] || pronto['marcador']
-    [INICIO, FIM, *abertas.map(&:label)].include?(valor) ? valor : INICIO
+    [INICIO, FIM, *chaves].include?(valor) ? valor : INICIO
   end
 
   def permissao(acao)
@@ -153,11 +153,13 @@ class Ramon::PerfilIa
     @abertas ||= @account.lead_stages.where(is_won: false, is_lost: false).to_a
   end
 
+  def chaves = @chaves ||= abertas.map { |e| self.class.chave_da_etapa(e) }
+
   def indice_do_marcador
     case marcador
     when INICIO then -1
     when FIM then abertas.size - 1
-    else abertas.index { |e| e.label == marcador }
+    else chaves.index(marcador)
     end
   end
 

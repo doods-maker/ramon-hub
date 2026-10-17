@@ -48,6 +48,16 @@ RSpec.describe Ramon::PerfilIa do
     expect(perfil.permissao('logistica')).to eq(:rascunho) # o da Cautelosa
   end
 
+  it 'etapa sem label tem a chave "id-<id>" e serve de Marcador' do
+    account.lead_stages.where('position >= 2').each { |s| s.update!(position: s.position + 1) }
+    nova = create(:lead_stage, account: account, position: 2) # depois de Qualificação, sem label
+    gravar('padrao' => { 'base' => 'cautelosa', 'marcador' => "id-#{nova.id}" })
+    perfil = described_class.de(conversa)
+    expect(described_class.chave_da_etapa(nova)).to eq("id-#{nova.id}")
+    expect(perfil.estado(nova)).to eq(:sozinha)
+    expect(perfil.estado(etapa['fase-reuniao-agendada'])).to eq(:rascunho)
+  end
+
   it 'nunca tira as Tools da ação; direto? exige sozinha E Etapa antes do Marcador' do
     gravar('padrao' => { 'base' => 'cautelosa', 'marcador' => '_fim', 'permissoes' => { 'marcar_reuniao' => 's' } })
     lead = create(:lead, account: account, conversation: conversa, lead_stage: etapa['fase-qualificacao'])
