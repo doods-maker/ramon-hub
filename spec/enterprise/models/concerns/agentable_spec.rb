@@ -130,6 +130,18 @@ RSpec.describe Concerns::Agentable do
       dummy_instance.agent_instructions(context_double)
     end
 
+    it 'soma os gatilhos de equipe (state[:ramon_gatilhos]) às response_guidelines' do
+      allow(dummy_instance).to receive(:prompt_context).and_return(response_guidelines: ['Tom de médico'])
+      context_double = instance_double(Agents::RunContext, context: { state: { ramon_gatilhos: ['Passe para humano.'] } })
+
+      expect(Captain::PromptRenderer).to receive(:render).with(
+        'dummy_class',
+        hash_including(response_guidelines: ['Tom de médico', 'Passe para humano.'])
+      )
+
+      dummy_instance.agent_instructions(context_double)
+    end
+
     it 'handles context without state' do
       context_double = instance_double(Agents::RunContext, context: {})
 

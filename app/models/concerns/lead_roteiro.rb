@@ -1,22 +1,16 @@
-# Leituras do roteiro da tese e do modo da IA no lead — fonte única para Ramon::CopilotoLimite,
+# Leituras do roteiro da tese no lead — fonte única para Ramon::CopilotoLimite,
 # Ramon::ContratoAutomatico e Ramon::Roteiro::Efeitos (F5, revisão integrada item 13).
 module LeadRoteiro
   extend ActiveSupport::Concern
 
   included do
-    # Spec §3.2: trocar a tese reinicia o roteiro na hora (as respostas dos comuns ficam) — o limite dos modos e a
-    # bi_roteiro leem o estado gravado, não o calculado. O modo da conversa não muda.
+    # Spec §3.2: trocar a tese reinicia o roteiro na hora (as respostas dos comuns ficam) — o aviso do Marcador e a
+    # bi_roteiro leem o estado gravado, não o calculado.
     before_save :reiniciar_roteiro, if: -> { persisted? && will_save_change_to_thesis_id? && custom_attributes&.key?('roteiro') }
 
-    # Testar (Ramon::Roteiro::Teste): o lead descartável não tem conversa; o modo simulado faz etapa e Perdido se
-    # comportarem como no modo escolhido.
-    attr_accessor :copiloto_modo_simulado
-  end
-
-  # Modo efetivo da IA na conversa do lead (Ramon::CopilotoModo.of: atributo → caixa → env); sem conversa, o modo
-  # simulado do Testar (nil fora dele).
-  def copiloto_modo
-    conversation ? Ramon::CopilotoModo.of(conversation) : copiloto_modo_simulado
+    # Testar (Ramon::Roteiro::Teste): o lead descartável não tem conversa; o Perfil da IA (Ramon::PerfilIa.de) usa o cfg da
+    # tela, salvo ou não.
+    attr_accessor :perfil_ia_simulado
   end
 
   def contrato_enviado?

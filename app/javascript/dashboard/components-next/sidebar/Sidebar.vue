@@ -458,6 +458,12 @@ const menuItems = computed(() => {
           to: accountScopedRoute('captain_visao_geral_index'),
         },
         {
+          name: 'ComoIaAtende',
+          label: t('SIDEBAR.CAPTAIN_COMO_IA'),
+          activeOn: ['captain_como_ia_atende_index'],
+          to: accountScopedRoute('captain_como_ia_atende_index'),
+        },
+        {
           name: 'Automacoes',
           label: t('SIDEBAR.CAPTAIN_AUTOMACOES'),
           activeOn: [

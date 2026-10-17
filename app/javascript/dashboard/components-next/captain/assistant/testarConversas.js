@@ -4,7 +4,7 @@
 import { reactive } from 'vue';
 
 const conversas = reactive({});
-// Roteiro em teste (F2/F5): a seleção ('' = sem roteiro · SEM_TESE = lead sem tese · id da tese), o modo simulado e
+// Roteiro em teste (F2/F5): a seleção ('' = sem roteiro · SEM_TESE = lead sem tese · id da tese) e
 // o que o servidor devolve a cada resposta (nada é gravado). thesisId muda quando o "assunto" escolhe a tese.
 const roteiros = reactive({});
 export const SEM_TESE = 'sem_tese';
@@ -16,7 +16,6 @@ export const garantirConversa = id => {
   if (!roteiros[id])
     roteiros[id] = {
       selecao: '',
-      modo: 'rascunho',
       thesisId: null,
       estado: null,
       painel: null,
@@ -43,13 +42,12 @@ export const pedidoDoRoteiro = roteiro =>
     ? {
         thesis_id: roteiro.thesisId,
         estado: roteiro.estado,
-        modo: roteiro.modo,
       }
     : null;
 
 export const limparConversa = id => {
   conversas[id] = [];
-  // a seleção e o modo ficam; o roteiro recomeça junto com a conversa (inclusive a tese que o "assunto" escolheu)
+  // a seleção fica; o roteiro recomeça junto com a conversa (inclusive a tese que o "assunto" escolheu)
   const roteiro = roteiros[id];
   if (roteiro)
     Object.assign(roteiro, {

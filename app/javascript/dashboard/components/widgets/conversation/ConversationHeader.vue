@@ -10,7 +10,7 @@ import Avatar from 'next/avatar/Avatar.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
 import ConversationCallButton from './ConversationCallButton.vue';
 import LeadPanelToggle from 'dashboard/routes/dashboard/ramon/components/conversation/LeadPanelToggle.vue';
-import CopilotoModoSelector from 'dashboard/routes/dashboard/ramon/components/conversation/CopilotoModoSelector.vue';
+import IaDaConversa from 'dashboard/routes/dashboard/ramon/components/conversation/IaDaConversa.vue';
 import wootConstants from 'dashboard/constants/globals';
 import { conversationListPageURL } from 'dashboard/helper/URLHelper';
 import { snoozedReopenTime } from 'dashboard/helper/snoozeHelpers';
@@ -175,7 +175,7 @@ const copyConversationId = async () => {
         class="hidden md:flex"
       />
       <LeadPanelToggle />
-      <CopilotoModoSelector v-if="currentChat.id" />
+      <IaDaConversa v-if="currentChat.id" />
       <ConversationCallButton :inbox="inbox" :chat="currentChat" />
       <MoreActions :conversation-id="currentChat.id" />
     </div>

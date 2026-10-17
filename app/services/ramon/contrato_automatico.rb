@@ -1,16 +1,16 @@
-# Modo "sozinha até o contrato" (spec roteiro §3.7, F3): o contrato sai na hora, sem a sugestão no Cockpit — só nesse
-# modo, só com modelo de contrato na tese e com o cadastro confirmado (nome completo, CPF e rua/número/cidade do
-# "Dados do contrato" do painel). Gerou → o link volta para a IA enviar; o callback do Lead (zapsign mudou) encerra o
-# modo. Faltou algo ou o ZapSign falhou → o modo encerra com o motivo e a tool deixa a sugestão de sempre.
+# Contrato na hora (Perfil da IA, ação contrato_zapsign): sai sem a sugestão no Cockpit — só com a Permissão sozinha e
+# a Etapa antes do Marcador (PerfilIa#direto?), com conversa, com modelo de contrato na tese e com o cadastro confirmado
+# (nome completo, CPF e rua/número/cidade do "Dados do contrato" do painel). Gerou → o link volta para a IA enviar.
+# Faltou algo ou o ZapSign falhou → { falta: } com o motivo e a tool deixa a sugestão de sempre.
 module Ramon::ContratoAutomatico
   # Endereço da colheita vem numa string só (vai inteiro na rua): sem número e cidade não conta como confirmado.
   OBRIGATORIOS = { '{{CPF}}' => 'CPF', '{{rua}}' => 'rua', '{{número}}' => 'número', '{{cidade}}' => 'cidade' }.freeze
 
   module_function
 
-  # @return nil (fora do modo) | { link: } | { falta: [..] }
+  # @return nil (o perfil não deixa) | { link: } | { falta: [..] }
   def preparar(lead)
-    return unless lead.conversation && Ramon::CopilotoModo::LIMITES[lead.copiloto_modo] == Ramon::CopilotoLimite::CONTRATO
+    return unless lead.conversation && Ramon::PerfilIa.de(lead).direto?('contrato_zapsign')
 
     modelo = lead.thesis&.zapsign_template_id
     falta = faltando(lead, modelo)
@@ -35,7 +35,7 @@ module Ramon::ContratoAutomatico
   end
 
   def parar(lead, falta)
-    Ramon::CopilotoLimite.encerrar(lead, Ramon::CopilotoLimite::CONTRATO_FALHOU, falta.join(', '))
+    Ramon::CopilotoLimite.falhou(lead, falta.join(', '))
     { falta: falta }
   end
 end

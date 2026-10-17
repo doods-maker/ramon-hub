@@ -513,7 +513,7 @@
         "PICK_AGENTS": "Escolha agentes para a caixa de entrada",
         "ASSISTANT_TITLE": "Assistente de IA nesta caixa",
         "ASSISTANT_NONE": "Nenhum — só atendimento humano",
-        "ASSISTANT_HINT_ON": "O assistente entra em toda conversa nova desta caixa no modo padrão \"{modo}\". Dá pra mudar por conversa ou desligar em Inteligência → Assistente → Caixas.",
+        "ASSISTANT_HINT_ON": "O assistente entra em toda conversa nova desta caixa. O quanto ele faz sozinho se decide em \"Como a IA atende\".",
         "ASSISTANT_HINT_OFF": "A IA não atua nesta caixa. Você pode ligar depois em Inteligência → Assistente → Caixas."
       },
       "DETAILS": {
@@ -817,10 +817,8 @@
         "SUB_TEXT": "Lead novo sem tese recebe esta tese quando a 1ª mensagem não traz palavra-chave de nenhuma tese.",
         "NENHUMA": "Nenhuma (só palavra-chave)"
       },
-      "RAMON_MODO_PADRAO": {
-        "LABEL": "Modo padrão da IA nesta caixa",
-        "SUB_TEXT": "Vale para as conversas novas desta caixa. Cada conversa ainda pode trocar o modo no botão Copiloto.",
-        "SISTEMA": "Padrão do sistema"
+      "RAMON_IA_ATENDE": {
+        "LINK": "Configurar em Como a IA atende"
       },
       "PORTARIA": {
         "LABEL": "Caixa do escritório (atendimento por atribuição)",

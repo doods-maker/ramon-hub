@@ -1069,7 +1069,7 @@
           "PLACEHOLDER": "Choose the inbox where the assistant will work.",
           "ERROR": "An inbox selection is required."
         },
-        "AVISO_RASCUNHO": "Once connected, the assistant starts acting in this inbox's conversations. Default mode for new conversations: {modo}. Draft: everything becomes a draft for the team to send. Limited pilot: only logistics goes out on its own. Full pilot: everything goes out on its own. Manual: the assistant does not act."
+        "AVISO_COMO_IA_ATENDE": "Once connected, the assistant starts acting in this inbox. How much it does on its own is set in \"How the AI handles it\"."
       },
       "EMPTY_STATE": {
         "TITLE": "No connected inboxes",

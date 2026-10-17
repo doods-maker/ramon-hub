@@ -99,18 +99,17 @@ class Captain::Assistant::AgentRunnerService
     response = output.is_a?(Hash) ? output.with_indifferent_access : { 'response' => output.to_s, 'reasoning' => 'Processed by agent' }
     response['agent_name'] = result.context&.dig(:current_agent)
     response['handoff_tool_called'] = result.context&.dig(:captain_v2_handoff_tool_called) || false
-    response['ferramenta_falhou'] = result.context&.dig(:state, Captain::Tools::BasePublicTool::FALHOU) || false
+    estado = Hash(result.context.to_h[:state])
+    response['ferramenta_falhou'] = estado[Captain::Tools::BasePublicTool::FALHOU] || false
     # ramon: o passo do roteiro mostrado à IA neste turno (só a pergunta dele ganha botões, Ramon::Roteiro::Opcoes)
-    response['roteiro_passo'] = result.context.to_h.dig(:state, Captain::Tools::RoteiroPassoAtualTool::MOSTRADO)
+    response['roteiro_passo'] = estado[Captain::Tools::RoteiroPassoAtualTool::MOSTRADO]
+    response['tools_usadas'] = Array(estado[:ramon_tools_usadas]) # ramon: Tools do turno, para o Ramon::PerfilIa.decidir
     response
   end
 
+  # ramon: numa linha só — a classe está no teto do Metrics/ClassLength.
   def error_response(error_message)
-    {
-      'response' => 'conversation_handoff',
-      'reasoning' => "Error occurred: #{error_message}",
-      'handoff_tool_called' => @handoff_tool_called
-    }
+    { 'response' => 'conversation_handoff', 'reasoning' => "Error occurred: #{error_message}", 'handoff_tool_called' => @handoff_tool_called }
   end
 
   def build_state
@@ -122,6 +121,7 @@ class Captain::Assistant::AgentRunnerService
     state[:source] = @source if @source.present?
 
     build_conversation_state(state) if @conversation
+    state[:ramon_gatilhos] = Ramon::PerfilIa.textos_do_turno(@conversation, @assistant.account) # ramon: gatilhos da Etapa no prompt
     state
   end
 
@@ -137,9 +137,11 @@ class Captain::Assistant::AgentRunnerService
     record.attributes.symbolize_keys.slice(*keys)
   end
 
+  # ramon: Permissão "nunca" no Perfil da IA = a Tool nem é oferecida ao modelo (Testar sem conversa: nada bloqueado).
   def build_and_wire_agents
-    assistant_agent = @assistant.agent
-    scenario_agents = @assistant.scenarios.enabled.map(&:agent)
+    bloqueadas = @conversation ? Ramon::PerfilIa.de(@conversation).tools_bloqueadas : []
+    assistant_agent = @assistant.agent(sem_tools: bloqueadas)
+    scenario_agents = @assistant.scenarios.enabled.map { |scenario| scenario.agent(sem_tools: bloqueadas) }
 
     assistant_agent.register_handoffs(*scenario_agents) if scenario_agents.any?
     scenario_agents.each { |scenario_agent| scenario_agent.register_handoffs(assistant_agent) }
@@ -186,6 +188,7 @@ class Captain::Assistant::AgentRunnerService
     # handoff_tool_called flag regardless of whether OTEL is enabled.
     runner.on_tool_complete do |tool_name, _tool_result, context_wrapper|
       track_handoff_usage(tool_name, handoff_tool_name, context_wrapper)
+      anotar_tool_usada(tool_name, context_wrapper)
     end
 
     if ChatwootApp.otel_enabled?

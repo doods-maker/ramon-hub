@@ -40,7 +40,6 @@ import { LocalStorage } from 'shared/helpers/localStorage';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import ColorPicker from 'dashboard/components-next/colorpicker/ColorPicker.vue';
 import SelectInput from 'dashboard/components-next/select/Select.vue';
-import { MODOS as COPILOTO_MODOS } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 import Widget from 'dashboard/modules/widget-preview/components/Widget.vue';
 import AccessToken from 'dashboard/routes/dashboard/settings/profile/AccessToken.vue';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
@@ -94,8 +93,6 @@ export default {
       portariaEnabled: false,
       firstResponseSlaMinutes: null,
       ramonThesisId: '',
-      ramonCopilotoModo: '',
-      copilotoModos: COPILOTO_MODOS,
       emailCollectEnabled: false,
       senderNameType: 'friendly',
       businessName: '',
@@ -491,7 +488,6 @@ export default {
       this.ramonThesisId = this.inbox.ramon_thesis_id
         ? String(this.inbox.ramon_thesis_id)
         : '';
-      this.ramonCopilotoModo = this.inbox.ramon_copiloto_modo || '';
       this.continuityViaEmail = this.inbox.continuity_via_email;
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
@@ -613,7 +609,6 @@ export default {
           ramon_thesis_id: this.ramonThesisId
             ? Number(this.ramonThesisId)
             : null,
-          ramon_copiloto_modo: this.ramonCopilotoModo || null,
           greeting_enabled: this.greetingEnabled,
           greeting_message: this.greetingMessage || '',
           portal_id: this.selectedPortalSlug
@@ -1264,28 +1259,17 @@ export default {
                 />
               </SettingsFieldSection>
 
-              <SettingsFieldSection
-                :label="$t('INBOX_MGMT.SETTINGS_POPUP.RAMON_MODO_PADRAO.LABEL')"
-                :help-text="
-                  $t('INBOX_MGMT.SETTINGS_POPUP.RAMON_MODO_PADRAO.SUB_TEXT')
-                "
-              >
-                <SelectInput
-                  v-model="ramonCopilotoModo"
-                  :options="[
-                    {
-                      value: '',
-                      label: $t(
-                        'INBOX_MGMT.SETTINGS_POPUP.RAMON_MODO_PADRAO.SISTEMA'
-                      ),
-                    },
-                    ...copilotoModos.map(modo => ({
-                      value: modo,
-                      label: $t(`RAMON.COPILOTO.MODOS.${modo}.NOME`),
-                    })),
-                  ]"
-                />
-              </SettingsFieldSection>
+              <p class="text-sm text-n-slate-11">
+                <router-link
+                  :to="{
+                    name: 'captain_como_ia_atende_index',
+                    query: { alvo: `caixa:${inbox.id}` },
+                  }"
+                  class="text-n-brand hover:underline"
+                >
+                  {{ $t('INBOX_MGMT.SETTINGS_POPUP.RAMON_IA_ATENDE.LINK') }}
+                </router-link>
+              </p>
 
               <SettingsToggleSection
                 v-if="isAWhatsAppChannel"

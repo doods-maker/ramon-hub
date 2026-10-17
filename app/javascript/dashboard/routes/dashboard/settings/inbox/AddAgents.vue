@@ -6,7 +6,6 @@ import { useAlert } from 'dashboard/composables';
 import InboxMembersAPI from '../../../../api/inboxMembers';
 // FORK-PONTO (ramon): assistente de IA escolhido já na criação da caixa (Eduardo 17/08)
 import CaptainInboxesAPI from 'dashboard/api/captain/inboxes';
-import { modoDefault } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import TagInput from 'dashboard/components-next/taginput/TagInput.vue';
 import router from '../../../index';
@@ -42,10 +41,6 @@ export default {
       agentList: 'agents/getAgents',
       assistants: 'captainAssistants/getRecords',
     }),
-    // rótulo do modo padrão vigente (env RAMON_COPILOTO_MODO_DEFAULT) pra avisar o que a IA vai fazer
-    modoDefaultLabel() {
-      return this.$t(`RAMON.COPILOTO.MODOS.${modoDefault()}.NOME`);
-    },
     selectedAgentNames() {
       return this.selectedAgentIds.map(
         id => this.agentList.find(a => a.id === id)?.name ?? ''
@@ -155,11 +150,15 @@ export default {
             <span class="text-xs text-n-slate-11">
               {{
                 selectedAssistantId
-                  ? $t('INBOX_MGMT.ADD.AGENTS.ASSISTANT_HINT_ON', {
-                      modo: modoDefaultLabel,
-                    })
+                  ? $t('INBOX_MGMT.ADD.AGENTS.ASSISTANT_HINT_ON')
                   : $t('INBOX_MGMT.ADD.AGENTS.ASSISTANT_HINT_OFF')
               }}
+              <router-link
+                :to="{ name: 'captain_como_ia_atende_index' }"
+                class="text-n-brand hover:underline"
+              >
+                {{ $t('INBOX_MGMT.SETTINGS_POPUP.RAMON_IA_ATENDE.LINK') }}
+              </router-link>
             </span>
           </label>
         </div>

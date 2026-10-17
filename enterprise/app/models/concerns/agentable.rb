@@ -1,11 +1,12 @@
 module Concerns::Agentable
   extend ActiveSupport::Concern
 
-  def agent
+  # ramon: sem_tools = ids do catálogo que o Perfil da IA bloqueia no turno (Ramon::PerfilIa#tools_bloqueadas).
+  def agent(sem_tools: [])
     Agents::Agent.new(
       name: agent_name,
       instructions: ->(context) { agent_instructions(context) },
-      tools: agent_tools,
+      tools: agent_tools(sem_tools),
       model: agent_model,
       temperature: temperature.to_f || 0.7,
       response_schema: agent_response_schema
@@ -23,12 +24,20 @@ module Concerns::Agentable
         contact: config['feature_contact_attributes'].present? ? state[:contact] : nil,
         campaign: state[:campaign] || {}
       )
+      enhanced_context = com_gatilhos(enhanced_context, state[:ramon_gatilhos])
     end
 
     Captain::PromptRenderer.render(template_name, enhanced_context.with_indifferent_access)
   end
 
   private
+
+  # ramon: Gatilhos de equipe ligados na Etapa da conversa (Ramon::PerfilIa#textos_dos_gatilhos) entram nas diretrizes.
+  def com_gatilhos(contexto, gatilhos)
+    return contexto if gatilhos.blank?
+
+    contexto.merge(response_guidelines: Array(contexto[:response_guidelines]) + gatilhos)
+  end
 
   def agent_name
     raise NotImplementedError, "#{self.class} must implement agent_name"
@@ -38,7 +47,7 @@ module Concerns::Agentable
     self.class.name.demodulize.underscore
   end
 
-  def agent_tools
+  def agent_tools(_sem_tools = [])
     []  # Default implementation, override if needed
   end
 

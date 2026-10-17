@@ -97,7 +97,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
 
   def cartao(assistant)
     caixas = assistant.inboxes.order(:id).map do |caixa|
-      { id: caixa.id, name: caixa.name, channel_type: caixa.channel_type, modo_padrao: Ramon::CopilotoModo.default(caixa) }
+      { id: caixa.id, name: caixa.name, channel_type: caixa.channel_type }
     end
     {
       id: assistant.id, name: assistant.name, description: assistant.description,
@@ -105,13 +105,8 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
       publico: caixas.any? ? 'lead' : 'equipe',
       skills_ativas: assistant.scenarios.enabled.count,
       faqs_aprovadas: assistant.responses.approved.count, faqs_pendentes: assistant.responses.pending.count,
-      caixas: caixas, conversas_por_modo: conversas_por_modo(caixas.pluck(:id))
+      caixas: caixas
     }
-  end
-
-  # Conversas abertas nas caixas do assistente pelo modo efetivo, com o padrão de cada caixa (Ramon::CopilotoModo.contar).
-  def conversas_por_modo(inbox_ids)
-    Ramon::CopilotoModo.contar(Current.account.conversations.where(status: :open, inbox_id: inbox_ids))
   end
 
   def assistant_params

@@ -19,8 +19,14 @@ RSpec.describe Ramon::Roteiro do
     Ramon::Roteiro.registrar(lead.reload, chave: chave, valor: valor, saida_id: saida_id)
   end
 
-  def piloto_total!
-    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+  # Perfil da IA do escritório (Ramon::PerfilIa): Acelerada = tudo sozinha até a última Etapa aberta.
+  def perfil!(cfg) = account.update!(settings: { 'ia_atendimento' => { 'padrao' => cfg } })
+  def acelerada! = perfil!('base' => 'acelerada')
+
+  def concluir!
+    registrar('tem_advogado', 'nao')
+    registrar('recebeu_auxilio', 'sim')
+    registrar('sequela', 'ficou com dor no punho', saida_id: 'ficou')
   end
 
   before do
@@ -74,7 +80,7 @@ RSpec.describe Ramon::Roteiro do
     expect(lead.reload.custom_attributes.dig('roteiro', 'respostas', 'tem_advogado', 'valor')).to eq('nao')
   end
 
-  it 'ir_para pula etapas; concluir qualifica e, fora do piloto total, sugere a etapa no Cockpit' do
+  it 'ir_para pula etapas; concluir qualifica e, com mover_etapa em rascunho (padrão), sugere a etapa no Cockpit' do
     registrar('tem_advogado', 'nao')
     expect(registrar('recebeu_auxilio', 'sim')[:proximo].chave).to eq('sequela')
 
@@ -87,16 +93,35 @@ RSpec.describe Ramon::Roteiro do
     expect(lead.lead_activities.where(kind: 'roteiro').last.to_value).to eq('Sequela → qualificado')
   end
 
-  it 'em piloto total a etapa muda direto' do
-    piloto_total!
-    registrar('tem_advogado', 'nao')
-    registrar('recebeu_auxilio', 'sim')
-    registrar('sequela', 'ficou com dor no punho', saida_id: 'ficou')
+  it 'mover_etapa sozinha com a Etapa antes do Marcador: a etapa muda direto' do
+    acelerada!
+    concluir!
     expect(lead.reload.lead_stage).to eq(qualificacao)
     expect(account.copilot_suggestions.count).to eq(0)
   end
 
-  it 'a calculadora decide; fora do piloto total o Perdido vira sugestão e a IA não é calada' do
+  it 'mover_etapa em rascunho vira sugestão mesmo antes do Marcador' do
+    perfil!('base' => 'acelerada', 'permissoes' => { 'mover_etapa' => 'r' })
+    concluir!
+    expect(lead.reload.lead_stage).to eq(novo)
+    expect(account.copilot_suggestions.pending.where(lead: lead, kind: 'move_stage').count).to eq(1)
+  end
+
+  it 'mover_etapa sozinha mas a Etapa depois do Marcador (o Marcador é teto): sugestão' do
+    perfil!('base' => 'acelerada', 'marcador' => '_inicio')
+    concluir!
+    expect(lead.reload.lead_stage).to eq(novo)
+    expect(account.copilot_suggestions.pending.where(lead: lead, kind: 'move_stage').count).to eq(1)
+  end
+
+  it 'mover_etapa nunca: nem move nem sugere' do
+    perfil!('base' => 'acelerada', 'permissoes' => { 'mover_etapa' => 'n' })
+    concluir!
+    expect(lead.reload.lead_stage).to eq(novo)
+    expect(account.copilot_suggestions.count).to eq(0)
+  end
+
+  it 'a calculadora decide; com desqualificar em rascunho (padrão) o Perdido vira sugestão e a IA não é pausada' do
     registrar('tem_advogado', 'nao')
     registrar('recebeu_auxilio', 'nao')
     registrar('data_acidente', '10/01/2026')
@@ -109,23 +134,38 @@ RSpec.describe Ramon::Roteiro do
     sugestao = account.copilot_suggestions.pending.find_by!(lead: lead, kind: 'acao')
     expect(sugestao.payload).to include('acao' => 'perdido', 'lost_reason' => 'Sem viabilidade', 'origem' => 'roteiro')
     expect(conversation.reload.label_list).not_to include('desqualificado-ia')
-    expect(conversation.custom_attributes['copiloto_modo']).to be_nil
+    expect(conversation.custom_attributes['ia_pausa']).to be_nil
     expect(Ramon::Roteiro.descrever(nil, res[:estado])).to include('aguardando a equipe')
   end
 
-  it 'em piloto total desqualifica direto: motivo do catálogo, etiquetas e IA calada com o robô, guardando o modo' do
-    piloto_total!
+  it 'desqualificar sozinha antes do Marcador: Perdido direto, motivo do catálogo, etiquetas e IA pausada com o robô' do
+    acelerada!
     res = registrar('tem_advogado', 'sim')
 
     expect(res[:mensagem]).to eq('Que bom que ja tem quem cuide.')
     expect(res[:estado]).not_to have_key('aguarda_equipe')
     expect(lead.reload).to have_attributes(lead_stage: perdido, lost_reason: 'Outro')
     expect(conversation.reload.label_list).to include('temadvogado', 'desqualificado-ia')
-    expect(conversation.custom_attributes).to include('copiloto_modo' => 'manual', 'copiloto_modo_antes_roteiro' => 'piloto_total')
+    expect(conversation.custom_attributes).to include('ia_pausa' => 'pausada', 'ia_pausa_antes_roteiro' => nil)
     expect(conversation.status).to eq('pending')
   end
 
-  it 'a etiqueta da saída vale em qualquer modo' do
+  it 'desqualificar nunca: chama a equipe (handoff, Pausa rascunho e aviso) e o roteiro aguarda a equipe' do
+    admin = create(:user, account: account, role: :administrator)
+    perfil!('base' => 'acelerada', 'permissoes' => { 'desqualificar' => 'n' })
+    res = registrar('tem_advogado', 'sim')
+
+    expect(res[:estado]).to include('desfecho' => 'desqualificado', 'aguarda_equipe' => true)
+    expect(res[:handoff]).to be(true)
+    expect(lead.reload.lead_stage).to eq(novo)
+    expect(account.copilot_suggestions.count).to eq(0)
+    expect(conversation.reload.status).to eq('open')
+    expect(conversation.custom_attributes['ia_pausa']).to eq('rascunho')
+    aviso = Notification.find_by!(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso')
+    expect(aviso.meta['label']).to include('não permite desqualificar')
+  end
+
+  it 'a etiqueta da saída vale em qualquer perfil' do
     registrar('tem_advogado', 'sim')
     expect(conversation.reload.label_list).to include('temadvogado')
     expect(conversation.label_list).not_to include('desqualificado-ia')
@@ -163,7 +203,7 @@ RSpec.describe Ramon::Roteiro do
     expect(res[:estado]['desfecho']).to eq('humano')
     expect(res[:estado]['motivo']).to include('roteiro sem saida no passo sequela')
     expect(conversation.reload.status).to eq('open')
-    expect(conversation.custom_attributes['copiloto_modo']).to eq('rascunho')
+    expect(conversation.custom_attributes['ia_pausa']).to eq('rascunho')
     expect(Notification.where(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso').count).to eq(1)
   end
 

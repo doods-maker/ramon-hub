@@ -20,8 +20,10 @@ module Ramon::RascunhoCarimbo
     texto_nota = normal(nota.content.delete_prefix(PREFIXO))
     sim = similaridade(texto_nota, message.content)
     desfecho = desfecho_de(texto_nota, message.content, sim)
+    # ramon: alvo e Etapa do Perfil da IA que escreveu a nota (ramon_ia_rascunho), quando ela os tem
+    perfil = nota.content_attributes['ramon_ia_rascunho'].to_h.slice('alvo', 'etapa')
     message.content_attributes = message.content_attributes.merge(
-      CHAVE => { 'nota_id' => nota.id, 'desfecho' => desfecho, 'similaridade' => sim.round(2) }
+      CHAVE => { 'nota_id' => nota.id, 'desfecho' => desfecho, 'similaridade' => sim.round(2), **perfil }
     )
   end
 

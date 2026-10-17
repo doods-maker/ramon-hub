@@ -6,19 +6,11 @@
 # roda igual no CI FOSS.
 class Api::V1::Accounts::RamonInteligenciaController < Api::V1::Accounts::BaseController
   JANELA = 30.days
-  # D7: o padrão vira piloto_limitado depois de ~20 conversas revisadas.
-  META_PILOTO = 20
   TETO_AGENTE = AgenteExecucao::TETO_DIA
-  REVISADOS = %w[igual editado descartado].freeze
 
   SQL_RASCUNHOS = <<~SQL.squish.freeze
     SELECT desfecho, COUNT(*) AS total FROM bi_ia_rascunhos
     WHERE account_id = ? AND criado_em >= ? GROUP BY desfecho
-  SQL
-  SQL_PILOTO = <<~SQL.squish.freeze
-    SELECT COUNT(DISTINCT conversation_id) AS conversas, COUNT(*) AS revisados,
-           COUNT(*) FILTER (WHERE desfecho = 'igual') AS iguais
-    FROM bi_ia_rascunhos WHERE account_id = ? AND desfecho IN (?)
   SQL
   # Mediana, não média: uma conversa que chegou de madrugada não distorce.
   SQL_RESPOSTA = <<~SQL.squish.freeze
@@ -47,7 +39,7 @@ class Api::V1::Accounts::RamonInteligenciaController < Api::V1::Accounts::BaseCo
 
   def show
     render json: {
-      rascunhos: rascunhos, piloto: piloto, primeira_resposta: primeira_resposta,
+      rascunhos: rascunhos, primeira_resposta: primeira_resposta,
       transferencias: transferencias, aprovacoes: aprovacoes, agente: agente, caderno: caderno
     }
   end
@@ -66,16 +58,6 @@ class Api::V1::Accounts::RamonInteligenciaController < Api::V1::Accounts::BaseCo
   # desfecho => quantos: igual, editado, descartado, sem_resposta, pendente.
   def rascunhos
     linhas(SQL_RASCUNHOS, Current.account.id, JANELA.ago).to_h { |linha| [linha['desfecho'], linha['total'].to_i] }
-  end
-
-  # Régua da D7 (desde sempre): conversas com rascunho revisado e % enviado sem correção.
-  def piloto
-    linha = linhas(SQL_PILOTO, Current.account.id, REVISADOS).first
-    revisados = linha['revisados'].to_i
-    {
-      conversas: linha['conversas'].to_i, meta: META_PILOTO,
-      sem_correcao_pct: revisados.zero? ? nil : (linha['iguais'].to_i * 100.0 / revisados).round
-    }
   end
 
   def primeira_resposta

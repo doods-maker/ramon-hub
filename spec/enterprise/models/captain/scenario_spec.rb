@@ -329,6 +329,16 @@ RSpec.describe Captain::Scenario, type: :model do
         expect(tools.first).to be_a(Captain::Tools::HttpTool)
       end
 
+      it 'deixa de fora as Tools bloqueadas pelo Perfil da IA (sem_tools)' do
+        scenario = create(:captain_scenario,
+                          assistant: assistant,
+                          account: account,
+                          instruction: 'Use [@Nota](tool://add_contact_note), [@Agenda](tool://horarios_livres) e [@Marcar](tool://agendar_reuniao)')
+
+        tools = scenario.send(:agent_tools, %w[agendar_reuniao horarios_livres])
+        expect(tools.map(&:class)).to eq([Captain::Tools::AddContactNoteTool])
+      end
+
       it 'excludes disabled custom tools from execution' do
         custom_tool = create(:captain_custom_tool, account: account, slug: 'custom_fetch-order', enabled: true)
         scenario = create(:captain_scenario,

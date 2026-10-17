@@ -1,7 +1,7 @@
 # Escrita com aprovacao: propoe gerar contrato + procuracao no ZapSign. O documento so nasce quando o humano aplica a
-# sugestao no Cockpit — exceto no modo "sozinha ate o contrato", em que Ramon::ContratoAutomatico gera na hora.
+# sugestao no Cockpit — exceto quando o Perfil da IA deixa o contrato sair sozinho (Ramon::ContratoAutomatico gera na hora).
 class Captain::Tools::PrepararContratoZapsignTool < Captain::Tools::RamonEscritaTool
-  description 'Prepara o contrato de honorarios + procuracao do caso no ZapSign. No modo "sozinha ate o contrato", com ' \
+  description 'Prepara o contrato de honorarios + procuracao do caso no ZapSign. Quando o perfil da IA permite, com ' \
               'o cadastro completo, gera na hora e devolve o link de assinatura para voce enviar ao lead. Nos outros ' \
               'casos cria uma sugestao pendente para o humano aprovar no Cockpit. Use quando o cliente decidir fechar.'
   param :lead_id, type: 'string', desc: 'Id do caso (lead) no hub. Sem ele, usa o caso da conversa aberta.', required: false

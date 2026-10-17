@@ -96,9 +96,9 @@ RSpec.describe Ramon::FunilObservador::Aplicar do
       expect(lead.lead_stage).to be_is_lost
       expect(lead.lost_reason).to eq('Honorário')
       expect(conversa.reload.label_list).to include('desqualificado-ia')
-      expect(Ramon::CopilotoModo.of(conversa)).to eq('manual')
+      expect(conversa.custom_attributes['ia_pausa']).to eq('pausada')
       expect(FunilAcao.last).to have_attributes(peca: 'perdido_recusa', acao: 'perdido', alvo: 'Honorário')
-      expect(FunilAcao.last.desfazer).to include('etapa_id' => account.lead_stages.find_by(label: 'fase-novo').id, 'modo' => 'rascunho',
+      expect(FunilAcao.last.desfazer).to include('etapa_id' => account.lead_stages.find_by(label: 'fase-novo').id, 'pausa' => nil,
                                                  'etapa_produzida_id' => lead.lead_stage_id)
     end
 

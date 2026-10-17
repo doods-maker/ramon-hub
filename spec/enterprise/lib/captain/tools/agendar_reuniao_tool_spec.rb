@@ -26,15 +26,16 @@ RSpec.describe Captain::Tools::AgendarReuniaoTool, type: :model do
       expect(tool.perform(tool_context, lead_id: lead.id.to_s, quando: 'semana que vem')).to include('Nao entendi a data')
     end
 
-    context 'with a IA em modo de piloto' do
+    context 'with marcar_reuniao direto no Perfil da IA' do
       let(:bia) { create(:user, account: account, name: 'Bia Closer') }
-      let(:conversa) { create(:conversation, account: account, custom_attributes: { 'copiloto_modo' => modo }) }
+      let(:conversa) { create(:conversation, account: account) }
       let(:lead) { create(:lead, account: account, name: 'Maria das Dores', conversation: conversa) }
       let(:disponibilidade) { instance_double(Ramon::Agenda::Disponibilidade) }
-      let(:modo) { 'piloto_total' }
+      let(:perfil) { { 'base' => 'acelerada' } }
       let(:com_google) { true }
 
       before do
+        account.update!(settings: { 'ia_atendimento' => { 'padrao' => perfil } })
         create(:team_member, team: create(:team, account: account, name: 'closer'), user: bia)
         GoogleAgendaConta.create!(user: bia, account: account, refresh_token: 'rt', access_token: 'at') if com_google
         allow(Ramon::Agenda::Disponibilidade).to receive(:new).and_return(disponibilidade)
@@ -90,8 +91,8 @@ RSpec.describe Captain::Tools::AgendarReuniaoTool, type: :model do
         end
       end
 
-      context 'when o modo e rascunho' do
-        let(:modo) { 'rascunho' }
+      context 'when marcar_reuniao e rascunho' do
+        let(:perfil) { { 'base' => 'acelerada', 'permissoes' => { 'marcar_reuniao' => 'r' } } }
 
         it 'so sugere, como antes' do
           travel_to(Time.zone.parse('2027-03-01 12:00')) do

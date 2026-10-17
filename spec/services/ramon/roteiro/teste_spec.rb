@@ -45,14 +45,17 @@ RSpec.describe 'Ramon::Roteiro::Teste' do
     expect(teste['estado']).to be_nil
   end
 
-  it 'de_params: tese da conta ou lead sem tese; tese de outra conta ou nada = sem teste; modo do Testar' do
+  it 'de_params: tese da conta ou lead sem tese; tese de outra conta ou nada = sem teste; perfil da tela normalizado' do
     expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: create(:thesis, account: create(:account)).id })).to be_nil
     expect(Ramon::Roteiro::Teste.de_params(account, nil)).to be_nil
     expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: thesis.id, estado: { 'respostas' => {} } }))
-      .to eq('thesis_id' => thesis.id, 'estado' => { 'respostas' => {} }, 'modo' => 'rascunho')
+      .to eq('thesis_id' => thesis.id, 'estado' => { 'respostas' => {} }, 'perfil' => nil)
+    # o 'modo' que o front de hoje ainda manda é ignorado
     expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: '', modo: 'piloto_total' }))
-      .to eq('thesis_id' => nil, 'estado' => nil, 'modo' => 'piloto_total')
-    expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: thesis.id, modo: 'xablau' })['modo']).to eq('rascunho')
+      .to eq('thesis_id' => nil, 'estado' => nil, 'perfil' => nil)
+    perfil = { 'base' => 'acelerada', 'permissoes' => { 'desqualificar' => 'x', 'mover_etapa' => 'n' }, 'xablau' => 1 }
+    expect(Ramon::Roteiro::Teste.de_params(account, { thesis_id: thesis.id, perfil: perfil })['perfil'])
+      .to eq('base' => 'acelerada', 'permissoes' => { 'mover_etapa' => 'n' }, 'gatilhos' => {})
   end
 
   # Revisão F5 item 9 + Review Focus 5: lead sem tese roda os comuns; a tese que o "assunto" escolhe volta no teste.
@@ -68,17 +71,22 @@ RSpec.describe 'Ramon::Roteiro::Teste' do
     expect([Lead.count, thesis.leads.count]).to eq([0, 0])
   end
 
-  it 'modo simulado: em piloto total o Perdido vale na hora (sem aguardar a equipe); em rascunho vira sugestão' do
+  it 'perfil simulado: Acelerada faz o Perdido na hora (sem aguardar a equipe); sem perfil vale o da tese, senão o padrão' do
     outra = create(:thesis, account: account)
     create(:roteiro_passo, account: account, thesis: outra, chave: 'advogado', position: 0, titulo: 'Advogado',
                            saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'desqualificar', 'motivo' => 'tem advogado' }])
-    direto = Ramon::Roteiro::Teste.de_params(account, { thesis_id: outra.id, modo: 'piloto_total' })
-    rascunho = Ramon::Roteiro::Teste.de_params(account, { thesis_id: outra.id })
+    direto = Ramon::Roteiro::Teste.de_params(account, { thesis_id: outra.id, perfil: { 'base' => 'acelerada' } })
+    padrao = Ramon::Roteiro::Teste.de_params(account, { thesis_id: outra.id, modo: 'piloto_total' })
 
     registrar(direto, chave: 'advogado', valor: 'sim')
-    registrar(rascunho, chave: 'advogado', valor: 'sim')
+    registrar(padrao, chave: 'advogado', valor: 'sim')
     expect(direto['estado']).not_to have_key('aguarda_equipe')
-    expect(rascunho['estado']).to include('aguarda_equipe' => true)
+    expect(padrao['estado']).to include('aguarda_equipe' => true) # INICIAL: desqualificar em rascunho = sugestão
+
+    account.update!(settings: { 'ia_atendimento' => { 'teses' => { outra.id.to_s => { 'base' => 'acelerada' } } } })
+    da_tese = Ramon::Roteiro::Teste.de_params(account, { thesis_id: outra.id })
+    registrar(da_tese, chave: 'advogado', valor: 'sim')
+    expect(da_tese['estado']).not_to have_key('aguarda_equipe')
     expect([Lead.count, CopilotSuggestion.count]).to eq([0, 0])
   end
 end

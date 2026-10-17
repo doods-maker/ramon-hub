@@ -66,19 +66,33 @@ RSpec.describe FunilAcao do
       expect(a.desfazer!(user)).to be(false)
     end
 
-    it 'perdido devolve a etapa, tira a etiqueta e restaura o modo' do
-      conversa = create(:conversation, account: account)
+    it 'perdido devolve a etapa, tira a etiqueta e restaura a Pausa de antes' do
+      conversa = create(:conversation, account: account, custom_attributes: { 'ia_pausa' => 'rascunho' })
       lead.update!(conversation: conversa)
-      Ramon::CopilotoModo.trocar(conversa, 'rascunho')
       lead.update!(lead_stage: account.lead_stages.find_by(is_lost: true), lost_reason: 'Honorário')
       Ramon::Roteiro::Efeitos.calar(lead)
-      a = acao(desfazer: { 'etapa_id' => qualificacao.id, 'modo' => 'rascunho' })
+      a = acao(desfazer: { 'etapa_id' => qualificacao.id, 'pausa' => 'rascunho' })
 
       expect(a.desfazer!(user)).to be(true)
       expect(lead.reload.lead_stage).to eq(qualificacao)
       expect(lead.lost_reason).to be_nil
       expect(conversa.reload.label_list).not_to include('desqualificado-ia')
-      expect(Ramon::CopilotoModo.of(conversa)).to eq('rascunho')
+      expect(conversa.custom_attributes).to include('ia_pausa' => 'rascunho')
+      expect(conversa.custom_attributes).not_to have_key('ia_pausa_antes_roteiro')
+    end
+
+    it 'perdido sem a Pausa guardada vale a gravada na ação; ação antiga (só modo) não mexe na Pausa' do
+      conversa = create(:conversation, account: account, custom_attributes: { 'ia_pausa' => 'pausada' })
+      lead.update!(conversation: conversa, lead_stage: account.lead_stages.find_by(is_lost: true), lost_reason: 'Honorário')
+      antiga = acao(acao: 'perdido', desfazer: { 'etapa_id' => qualificacao.id, 'modo' => 'rascunho' })
+
+      expect(antiga.desfazer!(user)).to be(true)
+      expect(conversa.reload.custom_attributes['ia_pausa']).to eq('pausada')
+
+      # reload: o desfazer devolveu a etapa por outra instância do lead; a desta, ainda em Perdido, não gravaria nada
+      lead.reload.update!(lead_stage: account.lead_stages.find_by(is_lost: true), lost_reason: 'Honorário')
+      expect(acao(acao: 'perdido', desfazer: { 'etapa_id' => qualificacao.id, 'pausa' => nil }).desfazer!(user)).to be(true)
+      expect(conversa.reload.custom_attributes).not_to have_key('ia_pausa')
     end
 
     it 'Ganho que veio de Perdido volta a Perdido com o motivo guardado' do
@@ -126,41 +140,28 @@ RSpec.describe FunilAcao do
       expect(durante).to eq(fora)
     end
 
-    it 'perdido devolve o modo guardado pelo calar (CopilotoModo.restaurar), não o gravado na ação' do
-      conversa = create(:conversation, account: account, custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+    it 'perdido devolve a Pausa guardada pelo calar (PerfilIa.restaurar_pausa), não a gravada na ação' do
+      conversa = create(:conversation, account: account)
       lead.update!(conversation: conversa, lead_stage: qualificacao)
       lead.update!(lead_stage: account.lead_stages.find_by(is_lost: true), lost_reason: 'Honorário')
       Ramon::Roteiro::Efeitos.calar(lead)
-      a = acao(acao: 'perdido', desfazer: { 'etapa_id' => qualificacao.id, 'modo' => 'rascunho' })
+      a = acao(acao: 'perdido', desfazer: { 'etapa_id' => qualificacao.id, 'pausa' => 'rascunho' })
 
       expect(a.desfazer!(user)).to be(true)
-      expect(Ramon::CopilotoModo.of(conversa.reload)).to eq('piloto_total')
-      expect(conversa.custom_attributes).not_to have_key(Ramon::CopilotoModo::MODO_ANTES)
+      expect(conversa.reload.custom_attributes).not_to have_key('ia_pausa')
+      expect(conversa.custom_attributes).not_to have_key(Ramon::PerfilIa::PAUSA_ANTES)
     end
 
-    it 'desfazer o avanço que encerrou um modo "sozinha até…" devolve o modo' do
-      Ramon::FunilAutomatico.mudar!(account, 'zapsign_negociacao', 'on')
-      conversa = create(:conversation, account: account, custom_attributes: { 'copiloto_modo' => 'piloto_ate_reuniao' })
-      lead.update!(conversation: conversa, lead_stage: qualificacao)
-      Ramon::FunilRegras.contrato_criado(lead)
-      expect(Ramon::CopilotoModo.of(conversa.reload)).to eq('rascunho')
-
-      expect(described_class.last.desfazer!(user)).to be(true)
-      expect(lead.reload.lead_stage).to eq(qualificacao)
-      expect(Ramon::CopilotoModo.of(conversa.reload)).to eq('piloto_ate_reuniao')
-      expect(conversa.custom_attributes).not_to have_key('copiloto_limite')
-    end
-
-    it 'limite encerrado antes da ação não é desfeito' do
-      conversa = create(:conversation, account: account, custom_attributes: {
-                          'copiloto_modo' => 'rascunho',
-                          'copiloto_limite' => { 'limite' => 'reuniao', 'modo' => 'piloto_ate_reuniao', 'em' => 1.day.ago.iso8601 }
-                        })
+    # O Marcador recalcula a cada turno pela Etapa: desfazer um avanço não tem modo nem carimbo a devolver.
+    it 'desfazer um avanço não mexe na conversa' do
+      atributos = { 'copiloto_limite' => { 'limite' => 'reuniao', 'em' => 1.day.ago.iso8601 } }
+      conversa = create(:conversation, account: account, custom_attributes: atributos)
       lead.update!(conversation: conversa, lead_stage: qualificacao)
       a = acao(acao: 'mover_etapa', alvo: qualificacao.name, desfazer: { 'etapa_id' => novo.id })
 
       expect(a.desfazer!(user)).to be(true)
-      expect(Ramon::CopilotoModo.of(conversa.reload)).to eq('rascunho')
+      expect(lead.reload.lead_stage).to eq(novo)
+      expect(conversa.reload.custom_attributes).to eq(atributos.deep_stringify_keys)
     end
 
     it 'prefere etapa_produzida_id ao nome do alvo (etapa renomeada depois)' do

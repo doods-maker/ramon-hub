@@ -15,7 +15,7 @@ RSpec.describe Ramon::Roteiro, '.reabrir' do
                            saidas: [{ 'id' => 'ficou', 'quando' => 'ficou', 'acao' => 'concluir' }])
   end
 
-  # Fora do piloto total o Perdido do roteiro vira sugestão no Cockpit.
+  # Com desqualificar em rascunho (o perfil padrão) o Perdido do roteiro vira sugestão no Cockpit.
   def desqualificar!
     described_class.registrar(lead, chave: 'tem_advogado', valor: 'sim')
     account.copilot_suggestions.pending.find_by!(lead: lead, kind: 'acao')
@@ -30,16 +30,16 @@ RSpec.describe Ramon::Roteiro, '.reabrir' do
     expect(lead.lead_activities.where(kind: 'roteiro').last.to_value).to eq('roteiro reaberto')
   end
 
-  it 'aprovar marca Perdido e cala a IA; tirar do Perdido no Kanban reabre e devolve o modo de antes' do
-    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_limitado' })
+  it 'aprovar marca Perdido e pausa a IA; tirar do Perdido no Kanban reabre e devolve a Pausa de antes' do
+    conversation.update!(custom_attributes: { 'ia_pausa' => 'rascunho' })
     expect(desqualificar!.apply!).to be(true)
     expect(lead.reload.lost_reason).to eq('Sem viabilidade')
-    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('manual')
+    expect(conversation.reload.custom_attributes['ia_pausa']).to eq('pausada')
     expect(conversation.label_list).to include('desqualificado-ia')
 
     lead.update!(lead_stage: novo)
 
-    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('piloto_limitado')
+    expect(conversation.reload.custom_attributes.slice('ia_pausa', 'ia_pausa_antes_roteiro')).to eq('ia_pausa' => 'rascunho')
     expect(conversation.label_list).not_to include('desqualificado-ia')
     expect(described_class.atual(lead.reload)[:passo].chave).to eq('tem_advogado')
   end
@@ -73,73 +73,73 @@ RSpec.describe Ramon::Roteiro, '.reabrir' do
   end
 
   it 'recusar uma sugestão do roteiro já aplicada não reabre nada' do
-    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_limitado' })
     sugestao = desqualificar!
     sugestao.apply!
     sugestao.dismiss!
 
     expect(sugestao.reload.status).to eq('applied')
     expect(lead.reload.lost_at).to be_present
-    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('manual')
+    expect(conversation.reload.custom_attributes['ia_pausa']).to eq('pausada')
   end
 
   # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
-  # Revisão F5 3a: tirar do Perdido direto para "Reunião agendada" no "até reunião" não volta a enviar direto.
-  it 'tirar do Perdido para além do limite devolve o modo e o limite já encerra' do
-    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_ate_reuniao' })
-    Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'sim') # modo direto: Perdido + IA calada
+  # Revisão F5 3a: tirar do Perdido direto para uma Etapa depois do Marcador não volta a enviar direto (o perfil
+  # recalcula pela Etapa).
+  it 'tirar do Perdido para além do Marcador tira a Pausa e a Etapa já não vai sozinha' do
+    account.update!(settings: { 'ia_atendimento' => { 'padrao' => { 'base' => 'acelerada', 'marcador' => 'fase-qualificacao' } } })
+    Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'sim') # sozinha antes do Marcador: Perdido + IA pausada
     expect(lead.reload.lost_at).to be_present
+    expect(conversation.reload.custom_attributes['ia_pausa']).to eq('pausada')
 
     lead.update!(lead_stage: account.lead_stages.find_by!(name: 'Reunião agendada'))
 
-    expect(conversation.reload.custom_attributes).to include('copiloto_modo' => 'rascunho',
-                                                             'copiloto_limite' => include('limite' => 'reuniao'))
+    expect(conversation.reload.custom_attributes).not_to have_key('ia_pausa')
+    expect(Ramon::PerfilIa.de(conversation).estado).to eq(:rascunho)
   end
 
-  # Revisão F5 3b: quem foi para a equipe saiu do robô (bot_handoff!); reabrir devolve ao robô no modo de antes.
-  it 'reabrir quem foi para a equipe devolve a conversa ao robô no modo de antes' do
-    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_limitado' })
+  # Revisão F5 3b: quem foi para a equipe saiu do robô (bot_handoff!); reabrir devolve ao robô na Pausa de antes.
+  it 'reabrir quem foi para a equipe devolve a conversa ao robô sem Pausa' do
     Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'nao')
     Ramon::Roteiro.registrar(lead.reload, chave: 'sequela', valor: 'nao sei') # nada casa → equipe
     expect(conversation.reload.status).to eq('open')
+    expect(conversation.custom_attributes['ia_pausa']).to eq('rascunho')
 
     expect(Ramon::Roteiro.reabrir(lead.reload)).to be(true)
     expect(conversation.reload.status).to eq('pending')
-    expect(conversation.custom_attributes['copiloto_modo']).to eq('piloto_limitado')
+    expect(conversation.custom_attributes).not_to have_key('ia_pausa')
   end
 
-  # Review Focus 2: modo de antes manual = a equipe segue com a conversa.
-  it 'reabrir quem foi para a equipe com modo de antes manual deixa a conversa com o humano' do
-    conversation.update!(custom_attributes: { 'copiloto_modo' => 'manual' })
+  # Review Focus 2: Pausa de antes = pausada → a equipe segue com a conversa.
+  it 'reabrir quem foi para a equipe com a IA pausada antes deixa a conversa com o humano' do
+    conversation.update!(custom_attributes: { 'ia_pausa' => 'pausada' })
     Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'nao')
     Ramon::Roteiro.registrar(lead.reload, chave: 'sequela', valor: 'nao sei')
 
     Ramon::Roteiro.reabrir(lead.reload)
     expect(conversation.reload.status).to eq('open')
-    expect(conversation.custom_attributes['copiloto_modo']).to eq('manual')
+    expect(conversation.custom_attributes).to include('ia_pausa' => 'pausada')
+    expect(conversation.custom_attributes).not_to have_key('ia_pausa_antes_roteiro')
   end
 
-  # Revisão F5 3c: reabrir um qualificado desfaz o limite que ele causou.
-  it 'reabrir um qualificado no "até qualificar" apaga o carimbo e volta o modo' do
-    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_ate_qualificacao' })
+  # Revisão F5 3c: o qualificado não mexe na conversa (o Marcador recalcula a cada turno) — reabrir também não.
+  it 'qualificar e reabrir não mexem na conversa' do
     Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'nao')
     Ramon::Roteiro.registrar(lead.reload, chave: 'sequela', saida_id: 'ficou')
-    expect(conversation.reload.custom_attributes['copiloto_limite']).to include('limite' => 'qualificacao')
+    antes = conversation.reload.custom_attributes
 
     Ramon::Roteiro.reabrir(lead.reload)
-    expect(conversation.reload.custom_attributes).to eq('copiloto_modo' => 'piloto_ate_qualificacao')
+    expect(conversation.reload.custom_attributes).to eq(antes)
+    expect(antes).not_to have_key('ia_pausa')
   end
 
-  # Revisão final F5, M1: o modo que um humano escolheu depois do limite (o seletor mantém o carimbo) vale.
-  it 'reabrir um qualificado que um humano passou para manual depois do limite deixa manual' do
-    conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_ate_qualificacao' })
+  # Revisão final F5, M1: a Pausa que um humano escolheu depois (sem nada guardado pelo roteiro) vale.
+  it 'reabrir um qualificado que um humano pausou depois deixa a Pausa' do
     Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'nao')
     Ramon::Roteiro.registrar(lead.reload, chave: 'sequela', saida_id: 'ficou')
-    conversation.update!(custom_attributes: conversation.reload.custom_attributes.merge('copiloto_modo' => 'manual'))
+    conversation.update!(custom_attributes: conversation.reload.custom_attributes.merge('ia_pausa' => 'pausada'))
 
     Ramon::Roteiro.reabrir(lead.reload)
-    expect(conversation.reload.custom_attributes).to include('copiloto_modo' => 'manual',
-                                                             'copiloto_limite' => include('limite' => 'qualificacao'))
+    expect(conversation.reload.custom_attributes['ia_pausa']).to eq('pausada')
   end
   # rubocop:enable RSpec/DescribedClass
 end

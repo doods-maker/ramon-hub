@@ -1,7 +1,8 @@
 # Testar com tese (spec §3.8.5): o motor de verdade num lead descartável, dentro de uma transação desfeita — nada
 # fica gravado (lead, respostas, histórico, sugestões, sino). As tools do roteiro passam pelo mesmo caminho do lead
 # real (Captain::Tools::RamonBaseTool#no_roteiro): só o lead muda. O estado do roteiro vai e volta pelo Testar.
-# teste = { 'thesis_id' => id ou nil (lead sem tese), 'estado' => estado do roteiro ou nil, 'modo' => modo simulado }
+# teste = { 'thesis_id' => id ou nil (lead sem tese), 'estado' => estado do roteiro ou nil,
+#           'perfil' => cfg do Perfil da IA da tela (salvo ou não) ou nil (vale o da tese do lead, ou o padrão) }
 # ponytail: o push do ntfy (perform_later) sai da transação, acha o lead apagado e não envia.
 module Ramon::Roteiro::Teste
   NOME = 'Teste do roteiro'.freeze
@@ -9,9 +10,9 @@ module Ramon::Roteiro::Teste
   module_function
 
   # Do corpo do playground. nil = Testar sem roteiro (ou tese de outra conta). thesis_id vazio = lead sem tese: roda os
-  # passos comuns, inclusive o "assunto". modo = o simulado (rascunho; piloto_total aplica etapa/Perdido na hora).
-  # Qualquer modo válido é aceito: os caminhos do limite ("sozinha até…") e do contrato automático exigem conversa e
-  # não disparam no lead descartável (inofensivo).
+  # passos comuns, inclusive o "assunto". perfil = o cfg da tela, normalizado (sozinha antes do Marcador aplica
+  # etapa/Perdido na hora); sem ele, Ramon::PerfilIa.de usa o cfg em vigor para a tese do lead. O 'modo' antigo do
+  # front é ignorado. O contrato automático exige conversa e não dispara no lead descartável (inofensivo).
   def de_params(account, roteiro)
     roteiro = roteiro.to_h.with_indifferent_access # nil.to_h = {}
     return if roteiro.empty?
@@ -19,11 +20,11 @@ module Ramon::Roteiro::Teste
     tese = account.theses.find_by(id: roteiro[:thesis_id]) if roteiro[:thesis_id].present?
     return if roteiro[:thesis_id].present? && tese.nil?
 
-    { 'thesis_id' => tese&.id, 'estado' => roteiro[:estado].presence&.to_hash, 'modo' => modo_simulado(roteiro[:modo]) }
+    { 'thesis_id' => tese&.id, 'estado' => roteiro[:estado].presence&.to_hash, 'perfil' => perfil_da_tela(roteiro[:perfil]) }
   end
 
-  def modo_simulado(modo)
-    Ramon::CopilotoModo::MODOS.include?(modo) ? modo : Ramon::CopilotoModo::DEFAULT
+  def perfil_da_tela(perfil)
+    Ramon::PerfilIa.normalizar(perfil.to_hash) if perfil.is_a?(Hash)
   end
 
   # Roda o bloco com o lead descartável e devolve o resultado dele; o estado do roteiro depois volta para o teste.
@@ -31,9 +32,13 @@ module Ramon::Roteiro::Teste
   def com_lead(account, teste)
     resultado = nil
     ActiveRecord::Base.transaction(requires_new: true) do
-      lead = account.leads.create!(name: NOME, thesis_id: teste['thesis_id'], lead_stage: etapa_aberta(account),
-                                   custom_attributes: { 'roteiro' => teste['estado'] }.compact)
-      lead.copiloto_modo_simulado = teste['modo']
+      # Conta própria: o lead e o que nasce dele (sugestões via lead.account) ficam no cache de associação dela, não no
+      # account de quem chamou — depois do rollback voltariam como registros novos e o próximo save daquele account os
+      # gravaria de novo (autosave do has_many).
+      conta = Account.find(account.id)
+      lead = conta.leads.create!(name: NOME, thesis_id: teste['thesis_id'], lead_stage: etapa_aberta(conta),
+                                 custom_attributes: { 'roteiro' => teste['estado'] }.compact)
+      lead.perfil_ia_simulado = teste['perfil']
       resultado = yield lead
       lead.reload
       # o "assunto" pode ter escolhido a tese do lead sem tese: ela vale nas próximas mensagens do Testar

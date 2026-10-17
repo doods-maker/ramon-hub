@@ -373,6 +373,8 @@ Rails.application.routes.draw do
           resources :captain_tool_runs, only: [:index]
           resources :ramon_agente_execucoes, only: [:index], controller: 'ramon_agente_execucoes'
           resource :ramon_ia_uso, only: [:show, :update], controller: 'ramon_ia_uso'
+          resource :ramon_ia_atendimento, only: [:show, :update], controller: 'ramon_ia_atendimento'
+          get 'ramon_ia_conversas/:conversation_id', to: 'ramon_ia_conversas#show'
           resource :ramon_google_agenda, only: [:show, :destroy], controller: 'ramon_google_agenda' do
             post :autorizacao
           end

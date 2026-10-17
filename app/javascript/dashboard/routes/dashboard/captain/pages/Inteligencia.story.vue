@@ -30,9 +30,6 @@ import {
 
 const { locale } = useI18n({ useScope: 'global' });
 locale.value = 'pt_BR';
-// Produção desde 17/08 (D7): conversas novas começam em Piloto com limites.
-window.chatwootConfig = { ramonCopilotoModoDefault: 'piloto_limitado' };
-
 const DIA = 86400000;
 const diasAtras = n => new Date(Date.now() - n * DIA).toISOString();
 const unix = n => Math.floor((Date.now() - n * DIA) / 1000);
@@ -334,7 +331,6 @@ const STATS = {
           channel_type: 'Channel::Whatsapp',
         },
       ],
-      conversas_por_modo: { rascunho: 2, piloto_limitado: 5 },
     },
     {
       id: 2,
@@ -345,7 +341,6 @@ const STATS = {
       faqs_aprovadas: 0,
       faqs_pendentes: 0,
       caixas: [],
-      conversas_por_modo: {},
     },
   ],
 };
@@ -416,7 +411,6 @@ const API = {
       sem_resposta: 1,
       pendente: 1,
     },
-    piloto: { conversas: 14, meta: 20, sem_correcao_pct: 53 },
     primeira_resposta: {
       com_ia: { conversas: 12, mediana_min: 3.5 },
       sem_ia: { conversas: 20, mediana_min: 42 },
@@ -581,11 +575,6 @@ const abaAgente = () => {
   rota.query = { aba: 'agente' };
 };
 
-// Visão geral com o padrão antigo (antes da D7): título "Rumo ao piloto".
-const modoRascunho = () => {
-  window.chatwootConfig = { ramonCopilotoModoDefault: 'rascunho' };
-};
-
 // Testar com a conversa já respondida (I-PG2): mensagens na memória da página.
 const testarRespondido = () => {
   garantirConversa(1);
@@ -711,9 +700,6 @@ const abrirZona = () =>
       <div class="h-screen"><Execucoes /></div>
     </Variant>
     <Variant title="Visao geral">
-      <div class="h-screen"><VisaoGeral /></div>
-    </Variant>
-    <Variant title="Visao geral rascunho" :init-state="modoRascunho">
       <div class="h-screen"><VisaoGeral /></div>
     </Variant>
     <Variant title="Testar respondeu" :init-state="testarRespondido">

@@ -6,6 +6,11 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
   let(:assistant) { create(:captain_assistant, account: account) }
   let(:captain_inbox_association) { create(:captain_inbox, captain_assistant: assistant, inbox: inbox) }
 
+  # ramon: Perfil da IA do escritório (Ramon::PerfilIa). Acelerada = tudo sai sozinho (Marcador '_fim').
+  def perfil!(cfg)
+    account.update!(settings: account.settings.to_h.merge('ia_atendimento' => { 'padrao' => cfg }))
+  end
+
   describe '#perform' do
     let(:conversation) { create(:conversation, inbox: inbox, account: account, status: :pending) }
     let(:mock_llm_chat_service) { instance_double(Captain::Llm::AssistantChatService) }
@@ -22,14 +27,16 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       allow(mock_agent_runner_service).to receive(:generate_response).and_return({ 'response' => 'Hey, welcome to Captain V2' })
       allow(Captain::Llm::AssistantActionClassifierService).to receive(:new).and_return(mock_action_classifier_service)
       allow(mock_action_classifier_service).to receive(:classify).and_return({ 'action' => 'continue' })
+      # o classificador de logística é LLM: nunca de verdade no spec
+      allow(Ramon::PilotoLogisticaService).to receive(:logistica?).and_return(false)
     end
 
     context 'when captain_v2 is disabled' do
       before do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(false)
-        # exemplos legados testam o caminho de envio público — opt-in explícito no piloto (Onda C: default é rascunho)
-        conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('copiloto_modo' => 'piloto_total'))
+        # exemplos legados testam o caminho de envio público — perfil que manda tudo sozinho (o INICIAL segura)
+        perfil!('base' => 'acelerada')
       end
 
       it 'uses Captain::Llm::AssistantChatService' do
@@ -177,8 +184,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       before do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
-        # exemplos legados testam o caminho de envio público — opt-in explícito no piloto (Onda C: default é rascunho)
-        conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('copiloto_modo' => 'piloto_total'))
+        # exemplos legados testam o caminho de envio público — perfil que manda tudo sozinho (o INICIAL segura)
+        perfil!('base' => 'acelerada')
       end
 
       it 'uses Captain::Assistant::AgentRunnerService' do
@@ -219,7 +226,7 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
     end
 
     # ramon: agente de atendimento com humano no meio (Fatia 2 da area de IA)
-    # ramon: o rascunho vem do modo da conversa (Ramon::CopilotoModo, padrão rascunho) — não de marca no assistente
+    # ramon: o rascunho vem do Perfil da IA (Ramon::PerfilIa; INICIAL = só logística sai) — não de marca no assistente
     context 'when the conversation uses the default draft mode' do
       before do
         allow(account).to receive(:feature_enabled?).and_return(false)
@@ -235,60 +242,92 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       end
     end
 
-    describe 'modos do copiloto por conversa (Onda C)' do
+    describe 'Perfil da IA' do
+      let(:etapa) { ->(label) { account.lead_stages.find_by(label: label) } }
+
       before do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
       end
 
-      def definir_modo(modo)
-        conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('copiloto_modo' => modo))
+      def lead_em(label)
+        create(:lead, account: account, conversation: conversation, lead_stage: etapa[label])
       end
 
-      it 'manual: não chama o LLM nem cria mensagem' do
-        definir_modo('manual')
+      it 'Pausa "pausada": não chama o LLM nem responde, e a conversa vai para a fila humana' do
+        conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('ia_pausa' => 'pausada'))
         # Este contexto roda com captain_integration_v2 habilitado (before acima),
         # então o serviço em jogo é o AgentRunnerService, não o AssistantChatService.
         expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
         expect { described_class.perform_now(conversation, assistant) }
-          .not_to change(conversation.messages, :count)
+          .not_to change(conversation.messages.outgoing, :count)
+        expect(conversation.reload.status).to eq('open')
       end
 
-      it 'rascunho (default, chave ausente): resposta vira nota privada RASCUNHO' do
+      it 'lead em Perdido: não chama o LLM nem responde, e a conversa vai para a fila humana' do
+        perfil!('base' => 'acelerada')
+        lead_em('fase-perdido')
+        expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
+        expect { described_class.perform_now(conversation, assistant) }
+          .not_to change(conversation.messages.outgoing, :count)
+        expect(conversation.reload.status).to eq('open')
+      end
+
+      it 'Equilibrada, lead em Qualificação, sem Tool: sai pública com o carimbo do perfil' do
+        perfil!('base' => 'equilibrada')
+        lead_em('fase-qualificacao')
+        described_class.perform_now(conversation, assistant)
+        msg = conversation.messages.last
+        expect(msg).to have_attributes(message_type: 'outgoing', private: false)
+        expect(msg.content_attributes['ramon_piloto']).to include('perfil' => 'Equilibrada', 'alvo' => 'padrao',
+                                                                  'etapa' => 'fase-qualificacao', 'handoff' => false)
+      end
+
+      it 'Equilibrada com a Tool de honorário no turno: vira nota RASCUNHO com o motivo' do
+        perfil!('base' => 'equilibrada')
+        lead_em('fase-qualificacao')
+        allow(mock_agent_runner_service).to receive(:generate_response)
+          .and_return({ 'response' => 'Pela simulação, o honorário fica em 30%.', 'tools_usadas' => ['simular_honorario'] })
         described_class.perform_now(conversation, assistant)
         nota = conversation.messages.last
         expect(nota).to have_attributes(private: true)
         expect(nota.content).to start_with('RASCUNHO')
+        expect(nota.content_attributes['ramon_ia_rascunho']).to include('motivo' => 'acao:citar_honorario', 'alvo' => 'padrao',
+                                                                        'etapa' => 'fase-qualificacao', 'handoff' => false)
       end
 
-      it 'piloto_total: resposta sai outgoing pública com carimbo ramon_piloto' do
-        definir_modo('piloto_total')
+      it 'turno que cruza o Marcador: vale a Etapa do início do turno e a resposta sai pública' do
+        perfil!('base' => 'equilibrada') # Marcador depois de Reunião agendada
+        lead = lead_em('fase-reuniao-agendada')
+        allow(mock_agent_runner_service).to receive(:generate_response) do
+          lead.update!(lead_stage: etapa['fase-reuniao-realizada'])
+          { 'response' => 'Combinado, até a reunião!' }
+        end
         described_class.perform_now(conversation, assistant)
         msg = conversation.messages.last
-        expect(msg).to have_attributes(message_type: 'outgoing', private: false)
-        expect(msg.content_attributes['ramon_piloto']).to include('modo' => 'piloto_total')
+        expect(msg).to have_attributes(private: false, content: 'Combinado, até a reunião!')
+        expect(msg.content_attributes.dig('ramon_piloto', 'etapa')).to eq('fase-reuniao-agendada')
       end
 
-      it 'valor inválido em copiloto_modo comporta como rascunho' do
-        definir_modo('xablau')
+      it 'INICIAL (nada gravado): resposta que não é só logística vira rascunho' do
         described_class.perform_now(conversation, assistant)
+        expect(Ramon::PilotoLogisticaService).to have_received(:logistica?)
         expect(conversation.messages.last.private).to be(true)
       end
 
-      it 'piloto_limitado: logística sai, não-logística vira rascunho' do
-        definir_modo('piloto_limitado')
-        allow(Ramon::PilotoLogisticaService).to receive(:logistica?).and_return(false)
-        described_class.perform_now(conversation, assistant)
-        expect(conversation.messages.last.private).to be(true)
-      end
-
-      it 'piloto_limitado: logística sai outgoing pública com carimbo ramon_piloto' do
-        definir_modo('piloto_limitado')
+      it 'INICIAL: logística sai outgoing pública com carimbo ramon_piloto' do
         allow(Ramon::PilotoLogisticaService).to receive(:logistica?).and_return(true)
         described_class.perform_now(conversation, assistant)
         msg = conversation.messages.last
         expect(msg).to have_attributes(message_type: 'outgoing', private: false)
-        expect(msg.content_attributes['ramon_piloto']).to include('modo' => 'piloto_limitado')
+        expect(msg.content_attributes['ramon_piloto']).to include('alvo' => 'padrao', 'handoff' => false)
+      end
+
+      it 'antes do Marcador não chama o classificador de logística (custo)' do
+        perfil!('base' => 'equilibrada')
+        expect(Ramon::PilotoLogisticaService).not_to receive(:logistica?)
+        described_class.perform_now(conversation, assistant)
+        expect(conversation.messages.last.private).to be(false)
       end
     end
 
@@ -296,8 +335,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       before do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(true)
-        # exemplos legados testam o caminho de envio público — opt-in explícito no piloto (Onda C: default é rascunho)
-        conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('copiloto_modo' => 'piloto_total'))
+        # exemplos legados testam o caminho de envio público — perfil que manda tudo sozinho (o INICIAL segura)
+        perfil!('base' => 'acelerada')
       end
 
       it 'creates a public handoff message visible to the customer' do
@@ -390,8 +429,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         allow(account).to receive(:feature_enabled?).and_return(false)
         allow(account).to receive(:feature_enabled?).with('captain_integration_v2').and_return(false)
         allow(mock_llm_chat_service).to receive(:generate_response).and_return({ 'response' => 'conversation_handoff' })
-        # exemplos legados testam o caminho de envio público — opt-in explícito no piloto (Onda C: default é rascunho)
-        conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('copiloto_modo' => 'piloto_total'))
+        # exemplos legados testam o caminho de envio público — perfil que manda tudo sozinho (o INICIAL segura)
+        perfil!('base' => 'acelerada')
       end
 
       it 'sets waiting_since to approximately the handoff time' do
@@ -457,8 +496,8 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       allow(Captain::OpenAiMessageBuilderService).to receive(:new).with(message: anything).and_return(mock_message_builder)
       allow(mock_message_builder).to receive(:generate_content).and_return('Hello with image')
       allow(mock_llm_chat_service).to receive(:generate_response).and_return({ 'response' => 'Test response' })
-      # exemplos legados testam o caminho de envio público — opt-in explícito no piloto (Onda C: default é rascunho)
-      conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('copiloto_modo' => 'piloto_total'))
+      # exemplos legados testam o caminho de envio público — perfil que manda tudo sozinho (o INICIAL segura)
+      perfil!('base' => 'acelerada')
     end
 
     context 'when ActiveStorage::FileNotFoundError occurs' do

@@ -3,23 +3,19 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
-import { copilotoModoDe } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 import { useMessageContext } from './provider.js';
 
 defineOptions({ name: 'PilotoCarimbo' });
 const { t } = useI18n();
 const store = useStore();
 const currentChat = useMapGetter('getSelectedChat');
-const getInbox = useMapGetter('inboxes/getInbox');
 const { contentAttributes } = useMessageContext();
 
+// ramon_piloto = { perfil, alvo, etapa, handoff, em } (Ramon::PerfilIa#carimbo)
 const piloto = computed(() => contentAttributes.value?.ramonPiloto || null);
 const pausando = ref(false);
-const aindaEmPiloto = computed(() =>
-  copilotoModoDe(
-    currentChat.value,
-    getInbox.value?.(currentChat.value?.inbox_id)
-  ).startsWith('piloto_')
+const jaPausada = computed(
+  () => !!currentChat.value?.custom_attributes?.ia_pausa
 );
 
 const pausar = async () => {
@@ -30,17 +26,14 @@ const pausar = async () => {
       conversationId: currentChat.value.id,
       customAttributes: {
         ...(currentChat.value.custom_attributes || {}),
-        copiloto_modo: 'rascunho',
+        ia_pausa: 'rascunho',
       },
     });
     // updateCustomAttributes engole erro de PATCH sem rejeitar a Promise — só a
-    // mutation confirma sucesso. Ler o estado ao vivo em vez de assumir que o
-    // dispatch funcionou.
-    if (aindaEmPiloto.value) {
-      useAlert(t('RAMON.COPILOTO.PAUSA_FALHOU'));
-    } else {
-      useAlert(t('RAMON.COPILOTO.PAUSADO'));
-    }
+    // mutation confirma sucesso. Ler o estado ao vivo em vez de assumir.
+    useAlert(
+      t(`RAMON.IA_CONVERSA.${jaPausada.value ? 'PAUSADO' : 'PAUSA_FALHOU'}`)
+    );
   } finally {
     pausando.value = false;
   }
@@ -55,23 +48,18 @@ const pausar = async () => {
   >
     <!-- eslint-disable vue/no-bare-strings-in-template -->
     <span
-      >✦
-      {{
-        t('RAMON.COPILOTO.CARIMBO', {
-          modo: t(`RAMON.COPILOTO.MODOS.${piloto.modo}.NOME`),
-        })
-      }}</span
+      >✦ {{ t('RAMON.IA_CONVERSA.CARIMBO', { perfil: piloto.perfil }) }}</span
     >
     <!-- eslint-enable vue/no-bare-strings-in-template -->
     <button
-      v-if="aindaEmPiloto"
+      v-if="!jaPausada"
       type="button"
       data-testid="piloto-pausar"
       class="font-semibold underline disabled:opacity-50"
       :disabled="pausando"
       @click="pausar"
     >
-      {{ t('RAMON.COPILOTO.PAUSAR') }}
+      {{ t('RAMON.IA_CONVERSA.PAUSAR_CARIMBO') }}
     </button>
   </div>
 </template>

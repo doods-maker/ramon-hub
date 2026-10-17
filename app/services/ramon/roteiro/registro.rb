@@ -84,20 +84,22 @@ class Ramon::Roteiro::Registro
   def gravar(valor, calc, saida)
     guardar_resposta(valor, calc, saida)
     saida = avancar(saida)
-    @estado['aguarda_equipe'] = true if aguarda_equipe?(saida)
+    perda = desqualificacao(saida)
+    @estado['aguarda_equipe'] = true if %i[sugerir equipe].include?(perda)
     proximo = @estado['desfecho'] ? nil : Ramon::Roteiro.proximo(@passos, @estado)
     @estado['passo'] = proximo&.chave # bi_roteiro (F4): onde o lead parou
     ActiveRecord::Base.transaction do
       @lead.update!(custom_attributes: (@lead.custom_attributes || {}).merge('roteiro' => @estado))
       Ramon::Roteiro::Efeitos.aplicar(@lead, @passo, saida)
     end
-    { estado: @estado, proximo: proximo, calc: calc, mensagem: saida['mensagem'], handoff: handoff? }
+    { estado: @estado, proximo: proximo, calc: calc, mensagem: saida['mensagem'], handoff: handoff?(perda) }
   end
 
   # O roteiro acabou de passar o caso para a equipe com a conversa ligada (Efeitos.humano fez o bot_handoff! se a conversa
-  # estava pendente): a tool sinaliza o handoff ao runner pelo state — nada depende do texto devolvido à IA.
-  def handoff?
-    @estado['desfecho'] == Ramon::Roteiro::HUMANO && @lead.conversation.present?
+  # estava pendente) — saída "humano" ou desqualificação que o perfil não permite: a tool sinaliza o handoff ao runner
+  # pelo state — nada depende do texto devolvido à IA.
+  def handoff?(perda)
+    @lead.conversation.present? && (@estado['desfecho'] == Ramon::Roteiro::HUMANO || perda == :equipe)
   end
 
   def guardar_resposta(valor, calc, saida)
@@ -121,9 +123,10 @@ class Ramon::Roteiro::Registro
     saida
   end
 
-  # O Perdido vai virar sugestão (aguardando a equipe) — o mesmo predicado que os Efeitos usam para decidir.
-  def aguarda_equipe?(saida)
-    saida['acao'] == 'desqualificar' && Ramon::Roteiro::Efeitos.desqualificacao(@lead) == :sugerir
+  # O que a desqualificação vai fazer (nil fora dela) — o mesmo predicado que os Efeitos usam para decidir: Perdido em
+  # sugestão ou a equipe chamada = aguardando a equipe.
+  def desqualificacao(saida)
+    Ramon::Roteiro::Efeitos.desqualificacao(@lead) if saida['acao'] == 'desqualificar'
   end
 
   def acabou?(saida)

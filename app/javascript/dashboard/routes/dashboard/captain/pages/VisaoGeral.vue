@@ -13,7 +13,6 @@ import RamonInteligenciaAPI from 'dashboard/api/ramonInteligencia';
 import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
 import CaptainToolRunsAPI from 'dashboard/api/captainToolRuns';
 import {
-  AVISO,
   CARTAO,
   CARTAO_STATUS,
   CHIP,
@@ -22,7 +21,6 @@ import {
   TOM,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import { ferramentaInfo } from 'dashboard/routes/dashboard/ramon/helpers/ferramentas';
-import { modoDefault } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 import VigiaBloco from './VigiaBloco.vue';
 
 defineOptions({ name: 'CaptainVisaoGeral' });
@@ -74,8 +72,6 @@ const rascunhos = computed(() => visao.value.rascunhos);
 const totalRascunhos = computed(() =>
   Object.values(rascunhos.value).reduce((soma, n) => soma + n, 0)
 );
-const piloto = computed(() => visao.value.piloto);
-const pilotoEmVigor = computed(() => modoDefault().startsWith('piloto_'));
 const resposta = computed(() => visao.value.primeira_resposta);
 const transferencias = computed(() => visao.value.transferencias);
 const aprovacoes = computed(() => visao.value.aprovacoes);
@@ -219,42 +215,6 @@ const ir = (name, params = {}, query = {}) =>
               "
             />
           </div>
-        </section>
-
-        <!-- I-VG2: régua da D7 -->
-        <section data-testid="vg-piloto" :class="CARTAO">
-          <h2 :class="TITULO">
-            {{
-              pilotoEmVigor
-                ? t('CAPTAIN_RAMON.VISAO_GERAL.PILOTO.TITULO_EM_VIGOR')
-                : t('CAPTAIN_RAMON.VISAO_GERAL.PILOTO.TITULO_RUMO')
-            }}
-          </h2>
-          <p class="mt-2 text-sm text-n-slate-12">
-            {{
-              t('CAPTAIN_RAMON.VISAO_GERAL.PILOTO.REGUA', {
-                conversas: piloto.conversas,
-                meta: piloto.meta,
-              })
-            }}
-          </p>
-          <progress
-            :class="BARRA"
-            :value="piloto.conversas"
-            :max="piloto.meta"
-          />
-          <p class="mt-2 text-xs text-n-slate-11">
-            {{
-              piloto.sem_correcao_pct === null
-                ? t('CAPTAIN_RAMON.VISAO_GERAL.PILOTO.SEM_DADOS')
-                : t('CAPTAIN_RAMON.VISAO_GERAL.PILOTO.SEM_CORRECAO', {
-                    pct: piloto.sem_correcao_pct,
-                  })
-            }}
-          </p>
-          <p v-if="pilotoEmVigor" class="mt-2" :class="[AVISO, TOM.teal]">
-            {{ t('CAPTAIN_RAMON.VISAO_GERAL.PILOTO.EM_VIGOR') }}
-          </p>
         </section>
 
         <!-- rascunhos da IA -->

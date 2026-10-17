@@ -65,7 +65,7 @@ class Ramon::FunilObservador::Aplicar
 
   def desfazer_perdido(perdido)
     desfazer = { 'etapa_id' => @lead.lead_stage_id, 'etapa_produzida_id' => perdido.id }
-    desfazer['modo'] = Ramon::CopilotoModo.of(@lead.conversation) if @lead.conversation
+    desfazer['pausa'] = @lead.conversation.custom_attributes&.[](Ramon::PerfilIa::PAUSA) if @lead.conversation
     desfazer
   end
 

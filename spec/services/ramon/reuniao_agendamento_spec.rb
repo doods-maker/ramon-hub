@@ -129,12 +129,13 @@ RSpec.describe Ramon::ReuniaoAgendamento do
     describe 'envio automático pela IA' do
       let(:conversa) { create(:conversation, account: account) }
 
+      # Perfil Acelerada: logística sozinha a qualquer hora (fora_do_horario sozinha).
       before do
         lead.update!(conversation: conversa)
-        conversa.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+        account.update!(settings: { 'ia_atendimento' => { 'padrao' => { 'base' => 'acelerada' } } })
       end
 
-      it 'chave on + piloto + marcada pela IA: manda na conversa, sem rascunho nem prefixo', :aggregate_failures do
+      it 'chave on + logística sozinha + marcada pela IA: manda na conversa, sem rascunho nem prefixo', :aggregate_failures do
         with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { agendar(automatico: true) }
         msg = conversa.messages.outgoing.last
         expect(msg.content).to start_with('Oi João! Nossa conversa está confirmada pra quarta')
@@ -151,8 +152,16 @@ RSpec.describe Ramon::ReuniaoAgendamento do
         with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { expect { agendar }.not_to(change { conversa.messages.count }) }
       end
 
-      it 'chave on mas modo rascunho: rascunho', :aggregate_failures do
-        conversa.update!(custom_attributes: { 'copiloto_modo' => 'rascunho' })
+      it 'chave on mas Pausa rascunho na conversa: rascunho', :aggregate_failures do
+        conversa.update!(custom_attributes: { 'ia_pausa' => 'rascunho' })
+        with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { expect { agendar(automatico: true) }.not_to(change { conversa.messages.count }) }
+        expect(nota).to include('Oi João!')
+      end
+
+      # Mesma regra do job (PerfilIa#logistica_sai_agora?): fora do horário com a permissão em rascunho segura a logística.
+      it 'chave on mas fora do horário com fora_do_horario em rascunho: rascunho', :aggregate_failures do
+        account.update!(settings: { 'ia_atendimento' => { 'padrao' => { 'base' => 'acelerada', 'permissoes' => { 'fora_do_horario' => 'r' } } } })
+        allow(Ramon::HorarioComercial).to receive(:aberto?).and_return(false)
         with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { expect { agendar(automatico: true) }.not_to(change { conversa.messages.count }) }
         expect(nota).to include('Oi João!')
       end
@@ -354,10 +363,10 @@ RSpec.describe Ramon::ReuniaoAgendamento do
         expect(notas.first.body).to include('https://meet.google.com/abc')
       end
 
-      it 'sem Google, IA em modo direto e chave on: rascunho (nada enviado)', :aggregate_failures do
+      it 'sem Google, IA com logística sozinha e chave on: rascunho (nada enviado)', :aggregate_failures do
         conversa = create(:conversation, account: account)
         lead.update!(conversation: conversa)
-        conversa.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+        account.update!(settings: { 'ia_atendimento' => { 'padrao' => { 'base' => 'acelerada' } } })
         fluxo_cria_a_tarefa
         expect { with_modified_env(RAMON_AGENDA_CONFIRMACAO: 'on') { agendar(automatico: true) } }.not_to(change { conversa.messages.count })
         expect(lead.lead_notes.where("body LIKE 'RASCUNHO%'").count).to eq(1)

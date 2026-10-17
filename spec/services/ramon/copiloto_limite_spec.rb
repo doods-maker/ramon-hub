@@ -4,106 +4,83 @@ RSpec.describe Ramon::CopilotoLimite do
   let(:account) { create(:account) }
   let(:thesis) { create(:thesis, account: account) }
   let(:conversation) { create(:conversation, account: account, status: :pending) }
-  let(:lead) { create(:lead, account: account, thesis: thesis, lead_stage: etapa('Novo'), conversation: conversation) }
+  let(:lead) { create(:lead, account: account, thesis: thesis, lead_stage: etapa('Reunião agendada'), conversation: conversation) }
   let!(:admin) { create(:user, account: account, role: :administrator) }
 
   def etapa(nome) = account.lead_stages.find_by!(name: nome)
-  def modo!(modo) = conversation.update!(custom_attributes: { 'copiloto_modo' => modo })
+  def perfil!(cfg) = account.update!(settings: { 'ia_atendimento' => { 'padrao' => cfg } })
   def avisos = Notification.where(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso')
+  def carimbo = conversation.reload.custom_attributes['copiloto_limite']
 
-  # Review Focus 4: sem handoff (a resposta do turno ainda sai) e aviso uma vez só.
-  it 'até reunião: Reunião agendada volta a conversa para rascunho, carimba e avisa uma vez, sem handoff' do
-    modo!('piloto_ate_reuniao')
-    lead.update!(lead_stage: etapa('Qualificação'))
-    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('piloto_ate_reuniao')
+  before { perfil!('base' => 'equilibrada') } # Marcador = Reunião agendada
 
-    lead.update!(lead_stage: etapa('Reunião agendada'))
-    expect(conversation.reload.custom_attributes).to include(
-      'copiloto_modo' => 'rascunho', 'copiloto_limite' => include('limite' => 'reuniao', 'modo' => 'piloto_ate_reuniao')
-    )
-    expect(conversation.status).to eq('pending')
+  describe '.verificar' do
+    # Captain (assistente da caixa) é enterprise: aqui a caixa "tem IA" pelo stub.
+    before { allow(Ramon::PerfilIa).to receive(:com_ia?).and_return(true) }
 
-    lead.update!(lead_stage: etapa('Negociação'))
-    expect(avisos.count).to eq(1)
+    it 'cruzar o Marcador carimba, avisa uma vez e não mexe na conversa' do
+      lead.update!(lead_stage: etapa('Reunião realizada'))
+
+      expect(carimbo).to include('limite' => 'marcador', 'marcador' => 'fase-reuniao-agendada', 'etapa' => 'fase-reuniao-realizada')
+      expect(conversation.custom_attributes.keys).to contain_exactly('copiloto_limite')
+      expect(conversation.status).to eq('pending')
+      expect(avisos.count).to eq(1)
+
+      lead.update!(lead_stage: etapa('Negociação'))
+      expect(avisos.count).to eq(1)
+    end
+
+    it 'mudar o Marcador na conta e cruzar de novo avisa de novo' do
+      lead.update!(lead_stage: etapa('Reunião realizada'))
+      perfil!('base' => 'equilibrada', 'marcador' => 'fase-qualificacao')
+      lead.update!(lead_stage: etapa('Negociação'))
+
+      expect(carimbo).to include('marcador' => 'fase-qualificacao')
+      expect(avisos.count).to eq(2)
+    end
+
+    it 'antes do Marcador, em Perdido ou na Pausa não avisa' do
+      lead.update!(lead_stage: etapa('Qualificação'))
+      lead.update!(lead_stage: account.lead_stages.find_by!(is_lost: true))
+      expect(carimbo).to be_nil
+
+      conversation.update!(custom_attributes: { 'ia_pausa' => 'pausada' })
+      lead.update!(lead_stage: etapa('Negociação'))
+      expect(avisos.count).to eq(0)
+    end
+
+    it 'Marcador _inicio nunca avisa' do
+      perfil!('base' => 'equilibrada', 'marcador' => '_inicio')
+      lead.update!(lead_stage: etapa('Reunião realizada'))
+      expect(carimbo).to be_nil
+      expect(avisos.count).to eq(0)
+    end
+
+    it 'caixa sem assistente: cruzar o Marcador não carimba nem avisa' do
+      allow(Ramon::PerfilIa).to receive(:com_ia?).with(conversation.inbox).and_return(false)
+      lead.update!(lead_stage: etapa('Reunião realizada'))
+      expect(carimbo).to be_nil
+      expect(avisos.count).to eq(0)
+    end
+
+    it 'lead sem conversa não faz nada' do
+      sem = create(:lead, account: account, thesis: thesis, lead_stage: etapa('Negociação'))
+      expect(described_class.verificar(sem)).to be_nil
+    end
   end
 
-  # Review Focus 5.
-  it 'Perdido não conta como reunião; ganho conta' do
-    modo!('piloto_ate_reuniao')
-    lead.update!(lead_stage: account.lead_stages.find_by!(is_lost: true))
-    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('piloto_ate_reuniao')
+  describe '.falhou' do
+    it 'carimba o motivo, põe a conversa em rascunho (Pausa) e avisa' do
+      described_class.falhou(lead, 'CPF, rua')
 
-    ganho = account.lead_stages.find_by!(is_won: true)
-    lead.update_columns(lead_stage_id: ganho.id, won_at: Time.current) # rubocop:disable Rails/SkipsModelValidations -- sem o fluxo "Lead ganho"
-    expect(described_class.atingido?('reuniao', lead.reload)).to be(true)
-  end
+      expect(carimbo).to include('limite' => 'contrato_falhou', 'motivo' => 'CPF, rua')
+      expect(conversation.custom_attributes).to include('ia_pausa' => 'rascunho')
+      expect(avisos.count).to eq(1)
+    end
 
-  it 'link do ZapSign no lead encerra o "até reunião" (contrato é nível acima)' do
-    modo!('piloto_ate_reuniao')
-    lead.update!(custom_attributes: { 'zapsign' => { 'sign_url' => 'https://zap/x' } })
-    expect(conversation.reload.custom_attributes['copiloto_limite']).to include('limite' => 'reuniao')
-  end
-
-  it 'lead ganho encerra o "até contrato"' do
-    modo!('piloto_ate_contrato')
-    lead.update_columns(lead_stage_id: account.lead_stages.find_by!(is_won: true).id, won_at: Time.current) # rubocop:disable Rails/SkipsModelValidations -- sem o fluxo "Lead ganho"
-    expect(described_class.verificar(lead.reload)).to eq('contrato')
-    expect(conversation.reload.custom_attributes).to include('copiloto_modo' => 'rascunho')
-  end
-
-  it 'lead já além do limite religado a uma conversa nova em modo "até…" encerra na hora' do
-    lead.update!(lead_stage: etapa('Reunião agendada'))
-    nova = create(:conversation, account: account, status: :pending,
-                                 custom_attributes: { 'copiloto_modo' => 'piloto_ate_reuniao' })
-
-    lead.update!(conversation: nova)
-
-    expect(nova.reload.custom_attributes).to include('copiloto_modo' => 'rascunho',
-                                                     'copiloto_limite' => include('limite' => 'reuniao'))
-  end
-
-  it 'até qualificar: roteiro qualificado muda a etapa direto e depois encerra o modo' do
-    modo!('piloto_ate_qualificacao')
-    create(:roteiro_passo, account: account, thesis: thesis, chave: 'sequela', titulo: 'Sequela',
-                           saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'concluir', 'efeitos' => { 'etapa' => 'Qualificação' } }])
-
-    Ramon::Roteiro.registrar(lead, chave: 'sequela', valor: 'sim')
-
-    expect(lead.reload.lead_stage).to eq(etapa('Qualificação'))
-    expect(account.copilot_suggestions.count).to eq(0)
-    expect(conversation.reload.custom_attributes).to include('copiloto_modo' => 'rascunho',
-                                                             'copiloto_limite' => include('limite' => 'qualificacao'))
-    expect(avisos.count).to eq(1)
-  end
-
-  # Review Focus 5: desqualificado não é limite — segue o Perdido direto e a IA calada (F1).
-  it 'até qualificar: desqualificado vai direto para Perdido com a IA calada, sem carimbo de limite' do
-    modo!('piloto_ate_qualificacao')
-    create(:roteiro_passo, account: account, thesis: thesis, chave: 'tem_advogado', titulo: 'Tem advogado',
-                           saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'desqualificar', 'motivo' => 'tem advogado' }])
-
-    Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'sim')
-
-    expect(lead.reload.lead_stage).to eq(account.lead_stages.find_by!(is_lost: true))
-    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('manual')
-    expect(conversation.custom_attributes).not_to have_key('copiloto_limite')
-  end
-
-  it 'até qualificar numa tese sem roteiro: para na reunião' do
-    modo!('piloto_ate_qualificacao')
-    lead.update!(lead_stage: etapa('Reunião agendada'))
-    expect(conversation.reload.custom_attributes['copiloto_limite']).to include('limite' => 'qualificacao')
-  end
-
-  it 'fora dos modos "sozinha até…" nada muda' do
-    modo!('piloto_total')
-    lead.update!(lead_stage: etapa('Reunião agendada'))
-    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('piloto_total')
-    expect(described_class.encerrar(lead, 'contrato', 'x')).to be_nil
-    expect(avisos.count).to eq(0)
-  end
-
-  it 'os níveis seguem a ordem dos modos "sozinha até…" (fonte única)' do
-    expect(Ramon::CopilotoModo::LIMITES.values).to eq(Ramon::CopilotoLimite::NIVEIS)
+    it 'sem conversa só retorna' do
+      sem = create(:lead, account: account, thesis: thesis)
+      expect { described_class.falhou(sem, 'x') }.not_to raise_error
+    end
   end
 end

@@ -1,6 +1,120 @@
 {
   "RAMON": {
     "NOTA_PRIVADA_ROTULO": "Nota privada",
+    "COMO_IA": {
+      "INTELIGENCIA": "Inteligência /",
+      "TITULO": "Como a IA atende",
+      "CARREGANDO": "Carregando…",
+      "ERRO": "Não deu para carregar a configuração da IA.",
+      "TENTAR": "Tentar de novo",
+      "SALVAR": "Salvar alterações",
+      "SALVO": "Alterações salvas.",
+      "ERRO_SALVAR": "Não deu para salvar. Tente de novo.",
+      "NAO_SALVAS": "{n} alterações não salvas",
+      "NAO_SALVAS_UMA": "1 alteração não salva",
+      "SAIR": "Há alterações não salvas em Como a IA atende. Sair mesmo assim?",
+      "PADRAO": "Padrão do escritório",
+      "TIPO": {
+        "padrao": "Escritório",
+        "tese": "Tese",
+        "caixa": "Caixa"
+      },
+      "LISTA": {
+        "BUSCAR": "Buscar tese ou caixa",
+        "VAZIO": "Nada encontrado.",
+        "SEGUE": "segue o padrão",
+        "AJUSTES": "{perfil} · {n} ajustes",
+        "AJUSTES_UM": "{perfil} · 1 ajuste",
+        "GRUPO": {
+          "padrao": "Escritório",
+          "tese": "Teses",
+          "caixa": "Caixas sem tese"
+        }
+      },
+      "VALE_TUDO": "Vale pra toda tese e caixa que segue o padrão.",
+      "SELO": {
+        "PERFIL": "Perfil {perfil}",
+        "PERSONALIZADO": "Personalizado · base {perfil} · {n} ajustes",
+        "PERSONALIZADO_UM": "Personalizado · base {perfil} · 1 ajuste"
+      },
+      "DESFAZER": "Desfazer ajustes",
+      "VOLTAR_PADRAO": "Voltar a seguir o padrão",
+      "PERSONALIZAR": "Personalizar só esta",
+      "HERDA": {
+        "tese": "Esta tese segue o Padrão do escritório ({perfil}). O que mudar lá, muda aqui.",
+        "caixa": "Esta caixa segue o Padrão do escritório ({perfil}). O que mudar lá, muda aqui."
+      },
+      "PERFIL": {
+        "TITULO": "Perfil",
+        "DICA": "Ponto de partida. Dá pra ajustar tudo embaixo.",
+        "RECOMENDADO": "recomendado"
+      },
+      "PERFIS": {
+        "cautelosa": {
+          "NOME": "Cautelosa",
+          "DESCRICAO": "Pra fase de testes. A IA recebe o lead e faz a qualificação; daí em diante, tudo passa pela equipe."
+        },
+        "equilibrada": {
+          "NOME": "Equilibrada",
+          "DESCRICAO": "Qualifica e marca a reunião sozinha. Simulação de honorário só em rascunho. O fechamento fica com a equipe."
+        },
+        "acelerada": {
+          "NOME": "Acelerada",
+          "DESCRICAO": "Pra tese já testada e com modelo no ZapSign. Vai até o contrato, mas a reunião é sempre com uma pessoa e desconto, nunca."
+        }
+      },
+      "TRILHA": {
+        "TITULO": "Até onde a IA vai sozinha",
+        "DICA": "Arraste o marcador. Clique numa etapa pra ver os limites dela.",
+        "ROTULO": "Até onde a IA vai sozinha",
+        "NENHUMA": "nenhuma etapa",
+        "NADA": "IA não manda nada",
+        "ATE_AQUI": "IA vai até aqui",
+        "FIM": "IA vai até o fim"
+      },
+      "ESTADO": {
+        "sozinha": "Sozinha",
+        "rascunho": "Rascunho",
+        "nunca": "Nunca"
+      },
+      "FRASE": {
+        "NADA": "A IA não manda nada sozinha. Tudo vira rascunho pra equipe aprovar.",
+        "TUDO": "A IA conduz sozinha até o contrato e só chama a equipe quando bate num limite.",
+        "ATE": "A IA conduz sozinha até {ate}. Quando o lead chega em {depois}, ela passa a escrever rascunhos e avisa o responsável."
+      },
+      "LIMITES": {
+        "TITULO": "Limites em {etapa}",
+        "DICA": "Clique no estado pra trocar.",
+        "TROCAR": "Trocar a permissão de {acao} (agora: {valor})",
+        "LIMITADO": "limitado pelo marcador (ajuste: {valor})",
+        "LIBERADO": "antes do marcador tudo sai sozinho (ajuste: {valor})",
+        "AJUSTADO": "Ajustado à mão",
+        "CONFIRMACAO": "Confirmação da reunião: definida no fluxo Reuniões",
+        "ABRIR_FLUXOS": "Abrir os fluxos →",
+        "DESCONTO": "Dar desconto",
+        "REGRA": "Nunca · regra do escritório",
+        "GATILHOS": "Para e chama a equipe quando",
+        "GATILHOS_DICA": "Orientação à IA, não garantia.",
+        "PENDENTE": "Texto pendente de aprovação: ainda não dá para ligar.",
+        "PENDENTE_SUFIXO": "· texto pendente"
+      },
+      "ACOES": {
+        "fora_do_horario": "Responder fora do horário comercial (vale em todas as etapas)",
+        "pedir_documentos": "Pedir documentos pela ferramenta",
+        "desqualificar": "Desqualificar o lead",
+        "mover_etapa": "Mover o lead de etapa",
+        "marcar_reuniao": "Marcar a reunião na Agenda",
+        "citar_honorario": "Simular honorário (cálculo)",
+        "logistica": "Responder sobre a logística da reunião",
+        "contrato_zapsign": "Mandar o contrato (ZapSign)"
+      },
+      "LEGENDA": {
+        "sozinha": "Sozinha: a IA manda",
+        "rascunho": "Rascunho: a equipe aprova antes",
+        "nunca": "Nunca: só uma pessoa",
+        "ajustado": "Ajustado à mão"
+      }
+    },
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",
       "SEM_RESPOSTA": "{quem} não respondeu em 3 min",
@@ -1652,11 +1766,9 @@
       "TESTAR": {
         "SEM_TESE": "Sem roteiro",
         "LEAD_SEM_TESE": "Lead sem tese (passos comuns, inclusive o assunto)",
-        "AJUDA": "Escolha uma tese (ou um lead sem tese) para a IA seguir o roteiro. O roteiro roda de verdade, mas nada fica gravado.",
-        "MODO_AJUDA": "Modo simulado no teste: no Rascunho, mudança de etapa e Perdido viram sugestão; no Piloto total valem na hora. Nada fica gravado."
+        "AJUDA": "Escolha uma tese (ou um lead sem tese) para a IA seguir o roteiro. O roteiro roda de verdade, mas nada fica gravado."
       }
     },
-
     "NPS": {
       "LABEL": "NPS (0–10)",
       "RECORDED_AT": "registrado em {date}",
@@ -1698,44 +1810,29 @@
       "TICKER": "{closer} fechou {lead} — {value} · {benefit}",
       "STALE": "desatualizado há {min} min"
     },
-    "COPILOTO": {
-      "BTN": "Copiloto: {modo}",
-      "TITULO": "Modo do copiloto — só nesta conversa",
-      "MODOS": {
-        "manual": {
-          "NOME": "Manual",
-          "DESC": "A IA não sugere nada. Você escreve tudo."
-        },
-        "rascunho": {
-          "NOME": "Rascunho",
-          "DESC": "A IA prepara respostas; nada sai sem você apertar Enviar."
-        },
-        "piloto_limitado": {
-          "NOME": "Piloto com limites",
-          "DESC": "A IA envia sozinha SÓ mensagens de logística: cobrança de documentos, confirmação de horário, mensagem de cadência.",
-          "NOTA": "Nunca envia: valores, análise do caso, promessas. Toda mensagem enviada fica marcada na conversa e você pode pausar com 1 clique."
-        },
-        "piloto_total": {
-          "NOME": "Piloto total",
-          "DESC": "A IA responde tudo sozinha. Toda mensagem fica carimbada e você pode pausar com 1 clique."
-        },
-        "piloto_ate_qualificacao": {
-          "NOME": "Sozinha até qualificar",
-          "DESC": "A IA responde tudo sozinha até o roteiro da tese qualificar o lead; aí volta para Rascunho e avisa o responsável."
-        },
-        "piloto_ate_reuniao": {
-          "NOME": "Sozinha até a reunião",
-          "DESC": "A IA responde tudo sozinha até a reunião ser marcada; aí volta para Rascunho e avisa o responsável."
-        },
-        "piloto_ate_contrato": {
-          "NOME": "Sozinha até o contrato",
-          "DESC": "A IA responde tudo sozinha e envia o link do contrato quando o cadastro estiver completo; aí volta para Rascunho e avisa o responsável."
-        }
+    "IA_CONVERSA": {
+      "BTN": "IA: {perfil} ({origem}) · {etapa}",
+      "BTN_SEM_ETAPA": "IA: {perfil} ({origem})",
+      "ORIGEM": {
+        "tese": "da tese",
+        "caixa": "da caixa",
+        "padrao": "do padrão",
+        "teste": "do teste"
       },
-      "CARIMBO": "enviada pelo piloto ({modo})",
-      "PAUSAR": "Pausar piloto",
-      "PAUSADO": "Piloto pausado — voltou pro modo Rascunho.",
-      "PAUSA_FALHOU": "Não consegui pausar — tente de novo.",
+      "PAUSADA": "IA pausada",
+      "RASCUNHO": "Só rascunho",
+      "TITULO": "IA — só nesta conversa",
+      "PAUSAR": "Pausar a IA nesta conversa",
+      "SO_RASCUNHO": "Só rascunho nesta conversa",
+      "VOLTAR": "Voltar a seguir o perfil",
+      "TRILHA": "Ver na trilha",
+      "ASSUMIR": "Assumir",
+      "CARIMBO": "enviada pela IA ({perfil})",
+      "PAUSAR_CARIMBO": "Pausar",
+      "PAUSADO": "IA em só rascunho nesta conversa.",
+      "PAUSA_FALHOU": "Não consegui pausar — tente de novo."
+    },
+    "COPILOTO": {
       "RASCUNHO_IA": {
         "igual": "rascunho da IA enviado como estava",
         "editado": "rascunho da IA, editado",
@@ -2335,13 +2432,6 @@
       "FAQS": "FAQs aprovadas: {n}",
       "FAQS_PENDENTES": "FAQs pendentes: {n}",
       "CAIXAS_N": "Caixas: {n}",
-      "MODO": {
-        "TITULO": "Modo das conversas",
-        "PADRAO": "Conversas novas começam em: {modo}",
-        "CONTAGEM": "{modo}: {n}",
-        "SEM_CONVERSAS": "Nenhuma conversa aberta nas caixas deste assistente.",
-        "SO_LEITURA": "Só leitura. O modo de cada conversa se troca dentro da própria conversa."
-      },
       "CAIXAS": {
         "TITULO": "Caixas de entrada",
         "NENHUMA": "Nenhuma caixa conectada: este assistente só conversa pela tela Testar.",
@@ -2375,14 +2465,6 @@
         "ABRIR_SUGESTOES": "Abrir no Centro de Comando",
         "FAQS": "FAQs pendentes: {n}",
         "ABRIR_FAQS": "Revisar FAQs pendentes"
-      },
-      "PILOTO": {
-        "TITULO_RUMO": "Rumo ao piloto limitado",
-        "TITULO_EM_VIGOR": "Piloto com limites em vigor",
-        "REGUA": "{conversas} de {meta} conversas com rascunho revisado",
-        "SEM_CORRECAO": "{pct}% dos rascunhos enviados sem correção",
-        "SEM_DADOS": "Ainda não há rascunho revisado.",
-        "EM_VIGOR": "Conversas novas já começam em Piloto com limites (decisão D7). A régua continua aqui para acompanhar a qualidade dos rascunhos."
       },
       "RASCUNHOS": {
         "TITULO": "Rascunhos da IA · 30 dias",

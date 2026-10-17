@@ -1,8 +1,9 @@
-# Reuniao de fechamento conforme o modo da IA: no modo direto (Ramon::CopilotoModo.direto?) marca na agenda do
-# Closer, so se o horario passa na regra completa de Disponibilidade (a IA marca o que ela mesma ofereceu);
-# nos demais, sugestao pendente — aplicar cria a tarefa na Esteira, e quem confirma a data com o cliente e o humano.
+# Reuniao de fechamento conforme o Perfil da IA: com marcar_reuniao direto (Ramon::PerfilIa#direto?: sozinha e Etapa
+# antes do Marcador) marca na agenda do Closer, so se o horario passa na regra completa de Disponibilidade (a IA marca
+# o que ela mesma ofereceu); senao, sugestao pendente — aplicar cria a tarefa na Esteira, e quem confirma a data com o
+# cliente e o humano.
 class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
-  description 'No modo direto marca a reuniao na agenda; nos demais cria uma sugestao pendente para a equipe confirmar.'
+  description 'Marca a reuniao na agenda quando o perfil da IA permite; senao cria uma sugestao pendente para a equipe confirmar.'
   param :lead_id, type: 'string', desc: 'Id do caso (lead) no hub. Sem ele, usa o caso da conversa aberta.', required: false
   param :quando, type: 'string', desc: 'Data e hora propostas, no formato AAAA-MM-DD HH:MM', required: true
   param :assunto, type: 'string', desc: 'Assunto da reuniao, em uma linha', required: false
@@ -11,7 +12,7 @@ class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
     lead = resolver_lead(tool_context.state, lead_id)
     return SEM_LEAD if lead.blank?
 
-    direto = Ramon::CopilotoModo.direto?(lead.copiloto_modo)
+    direto = ::Ramon::PerfilIa.de(lead).direto?('marcar_reuniao')
     horario = horario_de(quando)
     return "Nao entendi a data (hoje e #{hoje_br}). Use o formato AAAA-MM-DD HH:MM." if horario.blank?
     return "A data proposta ja passou (hoje e #{hoje_br}). Sugira uma data futura." if horario < Time.current

@@ -38,7 +38,6 @@ RSpec.describe 'Ramon Inteligencia API', type: :request do
 
     expect(response).to have_http_status(:success)
     expect(body['rascunhos']).to include('igual' => 1, 'editado' => 1, 'descartado' => 1)
-    expect(body['piloto']).to eq('conversas' => 3, 'meta' => 20, 'sem_correcao_pct' => 33)
     expect(body['primeira_resposta']['com_ia']['conversas']).to eq(3)
     expect(body['primeira_resposta']['com_ia']['mediana_min']).to be_between(9, 11)
   end
@@ -88,7 +87,6 @@ RSpec.describe 'Ramon Inteligencia API', type: :request do
     body = visao
 
     expect(body['rascunhos']).to eq({})
-    expect(body['piloto']).to eq('conversas' => 0, 'meta' => 20, 'sem_correcao_pct' => nil)
     expect(body['primeira_resposta']).to eq({})
     expect(body['transferencias']).to eq('total' => 0, 'conversas' => [])
     expect(body['agente']).to include('hoje' => 0, 'ultima_em' => nil)
