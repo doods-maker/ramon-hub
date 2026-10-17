@@ -71,6 +71,20 @@ RSpec.describe RamonLeadListener do
       expect(lead.custom_attributes['meta_referral']).to include('ctwa_clid' => 'clid-abc', 'source_id' => '12034')
     end
 
+    it 'grava inbox_id e waba_id da caixa WhatsApp Cloud no clique' do
+      channel = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud', sync_templates: false,
+                                          validate_provider_config: false)
+      channel.update_column(:provider_config, channel.provider_config.merge('business_account_id' => 'waba1')) # rubocop:disable Rails/SkipsModelValidations
+      wa_inbox = channel.inbox
+      wa_conversation = create(:conversation, account: account, inbox: wa_inbox, contact: contact)
+      wa_lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
+                              conversation: wa_conversation, contact: contact)
+      wa_message = create(:message, account: account, conversation: wa_conversation, inbox: wa_inbox, message_type: :incoming,
+                                    content: 'oi', content_attributes: { referral: referral })
+      listener.message_created(Events::Base.new('message.created', Time.zone.now, message: wa_message))
+      expect(wa_lead.reload.custom_attributes['meta_referral']).to include('inbox_id' => wa_inbox.id, 'waba_id' => 'waba1')
+    end
+
     it 'não sobrescreve source já preenchido, mas guarda o referral' do
       lead.update!(source: 'bpc-loas')
       listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message))

@@ -36,7 +36,9 @@ module Ramon::LeadDaConversa
     referral = referral_da(message)
     return if referral.blank?
 
-    meta = referral.slice('source_id', 'source_type', 'source_url', 'headline', 'ctwa_clid').compact_blank
+    meta = referral.slice('source_id', 'source_type', 'source_url', 'headline', 'ctwa_clid')
+                   .merge('inbox_id' => message.inbox_id,
+                          'waba_id' => message.inbox&.channel.try(:provider_config)&.dig('business_account_id')).compact_blank
     attrs = { custom_attributes: lead.custom_attributes.merge('meta_referral' => meta) }
     if lead.source.blank?
       attrs[:source] = referral_source_label(referral)

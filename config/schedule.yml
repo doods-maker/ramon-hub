@@ -191,3 +191,9 @@ ramon_google_agenda_pull_job:
   cron: '*/5 * * * *'
   class: 'Ramon::GoogleAgendaPullJob'
   queue: scheduled_jobs
+
+# meta: gasto por anúncio dos últimos 7 dias (6h em Brasília; desligado por RAMON_META_GASTO)
+ramon_meta_gasto_job:
+  cron: '0 9 * * *'
+  class: 'Ramon::MetaGastoJob'
+  queue: scheduled_jobs

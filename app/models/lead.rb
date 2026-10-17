@@ -1,4 +1,4 @@
-class Lead < ApplicationRecord
+class Lead < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include LeadCadence
   include LeadDocs
   include LeadComercial
@@ -64,6 +64,8 @@ class Lead < ApplicationRecord
   # do roteiro NÃO entra: ele confere no fim dos efeitos (Efeitos.aplicar), senão o rascunho entraria antes da etapa/Perdido.
   after_update_commit -> { Ramon::CopilotoLimite.verificar(self) },
                       if: -> { saved_change_to_lead_stage_id? || saved_change_to_conversation_id? || Ramon::CopilotoLimite.contrato_mudou?(self) }
+  # Aqui e não em concern: after_commit roda na ordem inversa e o update! aninhado do ganhou mexeria no saved_changes.
+  after_update_commit -> { Ramon::MetaConversoes.registrar(self) }, if: -> { saved_change_to_lead_stage_id? || saved_change_to_won_at? }
   after_update_commit :enqueue_drive_export, if: -> { saved_change_to_won_at? || saved_change_to_custom_attributes? }
 
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
