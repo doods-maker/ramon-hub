@@ -89,7 +89,8 @@ RSpec.describe FunilAcao do
       expect(antiga.desfazer!(user)).to be(true)
       expect(conversa.reload.custom_attributes['ia_pausa']).to eq('pausada')
 
-      lead.update!(lead_stage: account.lead_stages.find_by(is_lost: true), lost_reason: 'Honorário')
+      # reload: o desfazer devolveu a etapa por outra instância do lead; a desta, ainda em Perdido, não gravaria nada
+      lead.reload.update!(lead_stage: account.lead_stages.find_by(is_lost: true), lost_reason: 'Honorário')
       expect(acao(acao: 'perdido', desfazer: { 'etapa_id' => qualificacao.id, 'pausa' => nil }).desfazer!(user)).to be(true)
       expect(conversa.reload.custom_attributes).not_to have_key('ia_pausa')
     end

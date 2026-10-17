@@ -32,8 +32,12 @@ module Ramon::Roteiro::Teste
   def com_lead(account, teste)
     resultado = nil
     ActiveRecord::Base.transaction(requires_new: true) do
-      lead = account.leads.create!(name: NOME, thesis_id: teste['thesis_id'], lead_stage: etapa_aberta(account),
-                                   custom_attributes: { 'roteiro' => teste['estado'] }.compact)
+      # Conta própria: o lead e o que nasce dele (sugestões via lead.account) ficam no cache de associação dela, não no
+      # account de quem chamou — depois do rollback voltariam como registros novos e o próximo save daquele account os
+      # gravaria de novo (autosave do has_many).
+      conta = Account.find(account.id)
+      lead = conta.leads.create!(name: NOME, thesis_id: teste['thesis_id'], lead_stage: etapa_aberta(conta),
+                                 custom_attributes: { 'roteiro' => teste['estado'] }.compact)
       lead.perfil_ia_simulado = teste['perfil']
       resultado = yield lead
       lead.reload
