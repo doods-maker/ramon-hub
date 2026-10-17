@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_19_120001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_19_120002) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -2110,7 +2110,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_120001) do
       s.is_won,
       s.is_lost,
       (l.custom_attributes #>> '{utm,utm_campaign}'::text[]) AS utm_campaign,
-      (l.custom_attributes #>> '{valor_estimado,origem}'::text[]) AS valor_origem
+      (l.custom_attributes #>> '{valor_estimado,origem}'::text[]) AS valor_origem,
+      (l.custom_attributes #>> '{meta_referral,source_id}'::text[]) AS meta_ad_id,
+      (l.custom_attributes #>> '{meta_referral,source_type}'::text[]) AS meta_source_type,
+      ((l.custom_attributes #>> '{meta_referral,ctwa_clid}'::text[]) IS NOT NULL) AS veio_de_anuncio_whatsapp,
+      l.lead_stage_id
      FROM ((leads l
        LEFT JOIN theses t ON ((t.id = l.thesis_id)))
        LEFT JOIN lead_stages s ON ((s.id = l.lead_stage_id)))
@@ -2231,6 +2235,28 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_120001) do
               max(((e.v ->> 'em'::text))::timestamp with time zone) AS ultima_resposta_em
              FROM jsonb_each(COALESCE((l.custom_attributes #> '{roteiro,respostas}'::text[]), '{}'::jsonb)) e(chave, v)) r)
     WHERE ((l.custom_attributes ? 'roteiro'::text) OR (c.custom_attributes ? 'copiloto_limite'::text));
+  SQL
+  create_view "bi_meta_gastos", sql_definition: <<-SQL
+      SELECT account_id,
+      data,
+      ad_id,
+      ad_name,
+      campaign_id,
+      campaign_name,
+      spend,
+      impressions,
+      clicks
+     FROM ramon_meta_gastos;
+  SQL
+  create_view "bi_meta_eventos", sql_definition: <<-SQL
+      SELECT account_id,
+      lead_id,
+      evento,
+      status,
+      erro,
+      ocorrido_em,
+      enviado_em
+     FROM ramon_meta_eventos;
   SQL
   create_trigger("accounts_after_insert_row_tr", :generated => true, :compatibility => 1).
       on("accounts").
