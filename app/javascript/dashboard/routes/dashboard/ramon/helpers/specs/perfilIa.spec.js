@@ -12,6 +12,7 @@ import {
   posicaoDoMarcador,
   proximaPermissao,
   retomarTela,
+  rotaDoAviso,
 } from '../perfilIa';
 import { ETAPAS, PRONTOS, dados } from './perfilIaDados';
 
@@ -173,5 +174,25 @@ describe('perfilIa (espelho do Ramon::PerfilIa)', () => {
     vi.setSystemTime(new Date('2026-10-17T10:59:30'));
     expect(retomarTela()).toBeNull();
     vi.useRealTimers();
+  });
+});
+
+describe('rotaDoAviso', () => {
+  it('tese → Playbooks (ou a aba do roteiro) da tese; agenda e caixas', () => {
+    expect(rotaDoAviso({ link: 'playbooks' }, 'tese:3')).toEqual({
+      name: 'ramon_playbooks',
+      query: { tese: '3' },
+    });
+    expect(rotaDoAviso({ link: 'roteiro' }, 'tese:3').query).toEqual({
+      tese: '3',
+      aba: 'roteiro',
+    });
+    expect(rotaDoAviso({ link: 'agenda' }, 'padrao')).toEqual({
+      name: 'ramon_agenda',
+    });
+    expect(rotaDoAviso({ link: 'caixas' }, 'caixa:5')).toEqual({
+      name: 'captain_assistants_index',
+      params: { navigationPath: 'captain_assistants_inboxes_index' },
+    });
   });
 });

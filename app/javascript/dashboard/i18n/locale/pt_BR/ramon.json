@@ -144,6 +144,20 @@
         "SUGESTAO": "Passar pra Sozinha? {igual} dos últimos {n} rascunhos em {etapa} saíram sem edição. O botão move o Marcador para logo depois de {etapa} (ela e as Etapas antes dela ficam Sozinha); fica como ajuste não salvo até você clicar em Salvar alterações.",
         "PASSAR": "Passar pra Sozinha"
       },
+      "HISTORICO": "Histórico",
+      "AVISOS": {
+        "sem_zapsign": "Esta tese não tem modelo no ZapSign; o contrato não sai automático",
+        "fora_da_tabela": "Esta tese está fora da tabela; a IA não cita valor e chama a equipe",
+        "sem_google": "Ninguém do comercial conectou o Google; a reunião vira sugestão",
+        "sem_qualificado": "O roteiro desta tese não termina em Qualificado",
+        "sem_assistente": "A IA não está conectada nesta caixa",
+        "LINK": {
+          "playbooks": "Abrir os Playbooks →",
+          "roteiro": "Abrir o Roteiro da IA →",
+          "agenda": "Abrir a Agenda →",
+          "caixas": "Assistente → Caixas →"
+        }
+      },
       "TESTAR": {
         "BOTAO": "Testar este perfil",
         "DICA": "Abre o Testar com o perfil do jeito que está na tela, mesmo sem salvar",
@@ -2129,7 +2143,8 @@
         "contato": "Contato",
         "conversa": "Conversa",
         "dinheiro": "Dinheiro",
-        "acesso": "Acesso"
+        "acesso": "Acesso",
+        "ia": "IA"
       },
       "PAPEL_CONTA": {
         "AGENTE": "Agente",
@@ -2193,7 +2208,23 @@
         "ACESSO_ADICIONOU": "adicionou {pessoa} à conta como {papel}",
         "ACESSO_PAPEL": "mudou o papel de {pessoa} de {de} para {para}",
         "ACESSO_EDITOU": "alterou o acesso de {pessoa}",
-        "EDITOU": "alterou um registro"
+        "EDITOU": "alterou um registro",
+        "IA_MUDOU": "mudou como a IA atende"
+      },
+      "IA": {
+        "DESFAZER": "Desfazer",
+        "DESFEITO": "Desfeito: o valor de antes voltou (fica no registro).",
+        "ERRO": "Não deu para desfazer.",
+        "PADRAO": "o de sempre",
+        "SEGUNDOS": "{min}–{max} s",
+        "NENHUM": "nenhum",
+        "SEGUE_PADRAO": "voltou a seguir o padrão",
+        "PROPRIO": "passou a ter perfil próprio",
+        "BASE": "perfil {de} → {para}",
+        "MARCADOR": "até onde vai sozinha: {de} → {para}",
+        "PERMISSAO": "{acao}: {de} → {para}",
+        "GATILHO": "chama a equipe em {etapa}: {de} → {para}",
+        "LIMITE": "{rotulo}: {de} → {para}"
       },
       "CSV": {
         "QUANDO": "quando",

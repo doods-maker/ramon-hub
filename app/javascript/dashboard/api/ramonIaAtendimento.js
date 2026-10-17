@@ -15,6 +15,11 @@ class RamonIaAtendimentoAPI extends ApiClient {
   salvar(alvos) {
     return axios.patch(this.url, alvos);
   }
+
+  // Registro de ações (tipo ia): volta o valor de antes daquela linha só no alvo ('padrao' | 'tese:<id>' | 'caixa:<id>' | 'limites').
+  desfazer(auditId, alvo) {
+    return axios.post(`${this.url}/desfazer`, { audit_id: auditId, alvo });
+  }
 }
 
 export default new RamonIaAtendimentoAPI();

@@ -2,6 +2,7 @@ import {
   formatarValor,
   fraseDoRegistro,
   linhaCsv,
+  mudancasDaIa,
   mudancasDoRegistro,
   paraCsv,
   quandoSp,
@@ -210,5 +211,73 @@ describe('CSV', () => {
     const csv = paraCsv([linha]);
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     expect(csv).toContain('"Ana ""Gestora"""');
+  });
+});
+
+describe('mudancasDaIa (tipo ia)', () => {
+  const I = 'RAMON.REGISTRO.IA';
+  const C = 'RAMON.COMO_IA';
+  const m = (alvo, campo, de, para, extra = {}) => ({
+    alvo,
+    nome_alvo: alvo.startsWith('tese') ? 'BPC/LOAS' : null,
+    campo,
+    de,
+    para,
+    ...extra,
+  });
+
+  it('agrupa por alvo, com uma frase por mudança', () => {
+    const r = {
+      modelo: 'Account',
+      ia: [
+        m('tese:3', 'permissao', 'rascunho', 'sozinha', {
+          acao_ou_etapa: 'marcar_reuniao',
+        }),
+        m('tese:3', 'base', 'cautelosa', 'equilibrada'),
+        m('padrao', 'marcador', '_inicio', 'Qualificação'),
+        m('caixa:5', 'segue_padrao', false, true, { nome_alvo: null }),
+        m(
+          'limites',
+          'limite',
+          null,
+          { min: 10, max: 90 },
+          {
+            acao_ou_etapa: 'atraso',
+          }
+        ),
+        m('padrao', 'gatilho', ['A'], [], { acao_ou_etapa: 'Novo' }),
+      ],
+    };
+
+    expect(fraseDoRegistro(r, t)).toBe(`${F}.IA_MUDOU`);
+    expect(mudancasDaIa(r, t)).toEqual([
+      {
+        alvo: 'tese:3',
+        nome: 'BPC/LOAS',
+        frases: [
+          `${I}.PERMISSAO ${C}.ACOES.marcar_reuniao | ${C}.ESTADO.rascunho | ${C}.ESTADO.sozinha`,
+          `${I}.BASE ${C}.PERFIS.cautelosa.NOME | ${C}.PERFIS.equilibrada.NOME`,
+        ],
+      },
+      {
+        alvo: 'padrao',
+        nome: `${C}.PADRAO`,
+        frases: [
+          `${I}.MARCADOR ${C}.TRILHA.NADA | Qualificação`,
+          `${I}.GATILHO Novo | A | ${I}.NENHUM`,
+        ],
+      },
+      { alvo: 'caixa:5', nome: '#5', frases: [`${I}.SEGUE_PADRAO`] },
+      {
+        alvo: 'limites',
+        nome: `${C}.GERAIS.TITULO`,
+        frases: [
+          `${I}.LIMITE ${C}.GERAIS.ATRASO | ${I}.PADRAO | ${I}.SEGUNDOS 10 | 90`,
+        ],
+      },
+    ]);
+    expect(
+      linhaCsv({ ...r, quando: '2026-10-17T12:00:00Z', tipo: 'ia' }, t)[5]
+    ).toContain('BPC/LOAS: ');
   });
 });

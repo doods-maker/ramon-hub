@@ -1,10 +1,10 @@
 <script setup>
 // "Limites em {etapa}": a Permissão de cada ação da Etapa (clique alterna) e os Gatilhos de equipe.
-// Emite o valor novo; quem grava no cfg é a página.
+// Emite o valor novo; quem grava no cfg é a página. Aviso de dependência da ação (âmbar) vai embaixo da linha dela.
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
-import { CHIP, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { AVISO, CHIP, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import {
   TOM_DO_ESTADO,
   alternarGatilho,
@@ -20,6 +20,8 @@ const props = defineProps({
   // corpo do GET (prontos, etapas, acoes, gatilhos)
   dados: { type: Object, required: true },
   travado: { type: Boolean, default: false },
+  // [{ acao, tipo, link, rota }] do alvo (a página já resolveu a rota)
+  avisos: { type: Array, default: () => [] },
 });
 const emit = defineEmits(['permissao', 'gatilhos']);
 const { t } = useI18n();
@@ -69,6 +71,7 @@ const linhas = computed(() =>
         pronto.value.permissoes[acao.chave],
     }))
 );
+const avisosDe = acao => props.avisos.filter(a => a.acao === acao);
 const ligados = computed(() => atual.value.gatilhos[props.etapa.chave]);
 const gatilhosAjustados = computed(
   () =>
@@ -157,6 +160,24 @@ const alternar = gatilho =>
           </span>
           <span class="i-lucide-chevrons-up-down size-3 opacity-70" />
         </button>
+        <p
+          v-for="aviso in avisosDe(linha.chave)"
+          :key="aviso.tipo"
+          data-testid="aviso-acao"
+          class="flex w-full flex-wrap items-center gap-2"
+          :class="[AVISO, TOM.amber]"
+        >
+          <span
+            class="i-lucide-triangle-alert size-3.5 shrink-0"
+            aria-hidden="true"
+          />
+          <span class="min-w-0 flex-1">
+            {{ t(`RAMON.COMO_IA.AVISOS.${aviso.tipo}`) }}
+          </span>
+          <router-link :to="aviso.rota" class="font-medium hover:underline">
+            {{ t(`RAMON.COMO_IA.AVISOS.LINK.${aviso.link}`) }}
+          </router-link>
+        </p>
       </li>
       <li
         v-if="etapa.chave === REUNIAO"

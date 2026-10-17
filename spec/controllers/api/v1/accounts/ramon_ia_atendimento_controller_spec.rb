@@ -100,4 +100,50 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
       expect(account.reload.settings).to eq(antes)
     end
   end
+
+  it 'GET traz os avisos de dependência e a caixa com perfil mesmo sem assistente', :aggregate_failures do
+    caixa = create(:inbox, account: account)
+    account.update!(settings: { 'ia_atendimento' => { 'caixas' => { caixa.id.to_s => { 'base' => 'cautelosa' } } } })
+
+    get url, headers: admin.create_new_auth_token, as: :json
+
+    body = response.parsed_body
+    expect(body['caixas']).to eq([{ 'id' => caixa.id, 'nome' => caixa.name, 'cfg' => { 'base' => 'cautelosa', 'permissoes' => {}, 'gatilhos' => {} },
+                                    'assistente_id' => nil }])
+    expect(body['avisos']["caixa:#{caixa.id}"]).to eq([{ 'acao' => nil, 'tipo' => 'sem_assistente', 'link' => 'caixas' }])
+    expect(body['avisos']["tese:#{tese.id}"].pluck('tipo')).to eq(%w[sem_zapsign fora_da_tabela])
+  end
+
+  describe 'POST desfazer' do
+    let(:antes) { { 'ia_atendimento' => { 'teses' => { tese.id.to_s => { 'base' => 'acelerada' } } } } }
+    let(:depois) { { 'ia_atendimento' => { 'teses' => { tese.id.to_s => { 'base' => 'equilibrada' } } } } }
+
+    def auditar(conta = account, settings_antes = antes)
+      Audited.audit_class.create!(auditable: conta, associated: conta, action: 'update', audited_changes: { 'settings' => [settings_antes, depois] })
+    end
+
+    def desfazer(audit, alvo, usuario = admin)
+      post "#{url}/desfazer", params: { audit_id: audit.id, alvo: alvo }, headers: usuario.create_new_auth_token, as: :json
+    end
+
+    it 'regrava o valor de antes do alvo' do
+      account.update!(settings: depois)
+      desfazer(auditar, "tese:#{tese.id}")
+
+      expect(response).to have_http_status(:no_content)
+      expect(ler['teses'][tese.id.to_s]).to eq('base' => 'acelerada')
+    end
+
+    it 'agente não desfaz; linha de outra conta = 404; valor que não vale mais = 422 com a mensagem', :aggregate_failures do
+      desfazer(auditar, "tese:#{tese.id}", agente)
+      expect(response).to have_http_status(:unauthorized)
+
+      desfazer(auditar(create(:account)), "tese:#{tese.id}")
+      expect(response).to have_http_status(:not_found)
+
+      desfazer(auditar(account, { 'ia_atendimento' => { 'teses' => { tese.id.to_s => { 'base' => 'xablau' } } } }), "tese:#{tese.id}")
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to include('base desconhecida')
+    end
+  end
 end

@@ -17,7 +17,14 @@ class Ramon::PerfilIa::Tela
     { prontos: Ramon::PerfilIa::PRONTOS, inicial: Ramon::PerfilIa::INICIAL, acoes: acoes, gatilhos: gatilhos,
       etapas: etapas, padrao: Ramon::PerfilIa.cfg_salvo(@account, 'padrao') || Ramon::PerfilIa::INICIAL,
       teses: teses, caixas: caixas, limites: Ramon::IaLimites.corpo(@account), numeros: Ramon::PerfilIa::Numeros.todos(@account),
-      assistente_id: assistente_global }
+      assistente_id: assistente_global, avisos: Ramon::PerfilIa::Avisos.de(@account) }
+  end
+
+  # Caixas sem tese (a de tese segue a tese) que se configuram aqui: as com IA e as que têm perfil salvo sem IA
+  # (o aviso "A IA não está conectada nesta caixa" precisa da linha).
+  def self.caixas(account)
+    account.inboxes.where(ramon_thesis_id: nil).order(:id)
+           .select { |i| Ramon::PerfilIa.com_ia?(i) || Ramon::PerfilIa.cfg_salvo(account, 'caixas', i.id) }
   end
 
   private
@@ -50,10 +57,9 @@ class Ramon::PerfilIa::Tela
   # Caixas com IA (captain_assistant, enterprise), na ordem: a 1ª é a do "Testar este perfil" do padrão e das teses.
   def com_ia = @com_ia ||= @account.inboxes.order(:id).select { |i| Ramon::PerfilIa.com_ia?(i) }
 
-  # Caixa de tese (ramon_thesis_id) segue a tese; só as que têm IA configuram aqui.
   def caixas
-    com_ia.select { |i| i.ramon_thesis_id.nil? }.map do |i|
-      { id: i.id, nome: i.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'caixas', i.id), assistente_id: i.captain_assistant.id }
+    self.class.caixas(@account).map do |i|
+      { id: i.id, nome: i.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'caixas', i.id), assistente_id: i.try(:captain_assistant)&.id }
     end
   end
 end

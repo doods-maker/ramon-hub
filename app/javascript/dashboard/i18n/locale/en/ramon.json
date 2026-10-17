@@ -144,6 +144,20 @@
         "SUGESTAO": "Switch to On its own? {igual} of the last {n} drafts in {etapa} went out unchanged. The button moves the marker to right after {etapa} (it and the stages before it become On its own); it stays an unsaved adjustment until you click Save changes.",
         "PASSAR": "Switch to On its own"
       },
+      "HISTORICO": "History",
+      "AVISOS": {
+        "sem_zapsign": "This thesis has no ZapSign template; the contract won't go out automatically",
+        "fora_da_tabela": "This thesis is off the fee table; the AI won't quote a value and calls the team",
+        "sem_google": "No one in sales has connected Google; the meeting becomes a suggestion",
+        "sem_qualificado": "This thesis's script doesn't end in Qualified",
+        "sem_assistente": "The AI isn't connected in this inbox",
+        "LINK": {
+          "playbooks": "Open Playbooks →",
+          "roteiro": "Open the AI script →",
+          "agenda": "Open the Calendar →",
+          "caixas": "Assistant → Inboxes →"
+        }
+      },
       "TESTAR": {
         "BOTAO": "Test this profile",
         "DICA": "Opens Test with the profile as it is on screen, even unsaved",
@@ -2129,7 +2143,8 @@
         "contato": "Contact",
         "conversa": "Conversation",
         "dinheiro": "Money",
-        "acesso": "Access"
+        "acesso": "Access",
+        "ia": "AI"
       },
       "PAPEL_CONTA": {
         "AGENTE": "Agent",
@@ -2193,7 +2208,23 @@
         "ACESSO_ADICIONOU": "added {pessoa} to the account as {papel}",
         "ACESSO_PAPEL": "changed the role of {pessoa} from {de} to {para}",
         "ACESSO_EDITOU": "changed the access of {pessoa}",
-        "EDITOU": "changed a record"
+        "EDITOU": "changed a record",
+        "IA_MUDOU": "changed how the AI works"
+      },
+      "IA": {
+        "DESFAZER": "Undo",
+        "DESFEITO": "Undone: the previous value is back (it stays in the log).",
+        "ERRO": "Couldn't undo.",
+        "PADRAO": "the default",
+        "SEGUNDOS": "{min}–{max} s",
+        "NENHUM": "none",
+        "SEGUE_PADRAO": "went back to following the default",
+        "PROPRIO": "got its own profile",
+        "BASE": "profile {de} → {para}",
+        "MARCADOR": "how far it goes on its own: {de} → {para}",
+        "PERMISSAO": "{acao}: {de} → {para}",
+        "GATILHO": "calls the team in {etapa}: {de} → {para}",
+        "LIMITE": "{rotulo}: {de} → {para}"
       },
       "CSV": {
         "QUANDO": "when",

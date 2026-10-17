@@ -167,3 +167,19 @@ export const retomarTela = () => {
     ? guardada.tela
     : null;
 };
+
+// Aviso de dependência (Ramon::PerfilIa::Avisos) → para onde o link leva. A tese abre nos Playbooks (o Roteiro da IA
+// na aba dela); Caixas = Assistente → Caixas do último assistente aberto.
+export const rotaDoAviso = (aviso, alvoId) => {
+  const [tipo, id] = alvoId.split(':');
+  const tese = tipo === 'tese' ? { tese: id } : {};
+  return {
+    playbooks: { name: 'ramon_playbooks', query: tese },
+    roteiro: { name: 'ramon_playbooks', query: { ...tese, aba: 'roteiro' } },
+    agenda: { name: 'ramon_agenda' },
+    caixas: {
+      name: 'captain_assistants_index',
+      params: { navigationPath: 'captain_assistants_inboxes_index' },
+    },
+  }[aviso.link];
+};

@@ -29,7 +29,7 @@ const montar = async () => {
       stubs: {
         RouterLink: {
           name: 'RouterLink',
-          template: '<a><slot /></a>',
+          template: '<a :data-to="JSON.stringify(to)"><slot /></a>',
           props: ['to'],
         },
       },
@@ -277,6 +277,46 @@ describe('Como a IA atende', () => {
       },
     });
     expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
+  });
+
+  it('"Histórico" abre o Registro de ações filtrado no tipo ia', async () => {
+    const wrapper = await montar();
+    await clicar(wrapper, 'historico');
+    expect(useRouter().push).toHaveBeenLastCalledWith({
+      name: 'ramon_registro_acoes',
+      params: {},
+      query: { tipo: 'ia' },
+    });
+  });
+
+  it('avisos de dependência: o da ação na linha dela, o do alvo no topo, com o link', async () => {
+    const corpo = dados();
+    corpo.avisos = {
+      'tese:1': [
+        { acao: 'marcar_reuniao', tipo: 'sem_google', link: 'agenda' },
+        { acao: null, tipo: 'sem_qualificado', link: 'roteiro' },
+      ],
+    };
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    useRoute().query = { alvo: 'tese:1' };
+    const wrapper = await montar();
+
+    const doAlvo = achar(wrapper, 'aviso-alvo');
+    expect(doAlvo.text()).toContain('Qualified');
+    expect(JSON.parse(doAlvo.find('a').attributes('data-to'))).toEqual({
+      name: 'ramon_playbooks',
+      query: { tese: '1', aba: 'roteiro' },
+      params: {},
+    });
+    await clicar(wrapper, 'etapa-fase-qualificacao');
+    const daAcao = wrapper.find(
+      '[data-testid="limite-marcar_reuniao"] [data-testid="aviso-acao"]'
+    );
+    expect(daAcao.text()).toContain('Google');
+    expect(wrapper.findAll('[data-testid="aviso-acao"]')).toHaveLength(1);
+
+    await clicar(wrapper, 'alvo-padrao');
+    expect(achar(wrapper, 'aviso-alvo').exists()).toBe(false);
   });
 
   it('?alvo= abre o alvo pedido', async () => {

@@ -3,13 +3,19 @@
 // caixa sem tese — perfil pronto, Marcador na Trilha, Permissões e Gatilhos por Etapa (spec 2026-10-17).
 // Tudo é rascunho na tela até "Salvar alterações", que manda só os alvos mudados (cfg inteiro; null = segue o padrão).
 // Números por Etapa com o "Passar pra Sozinha?" e "Testar este perfil" (abre o Testar com o cfg da tela, não salvo).
+// Avisos de dependência (âmbar, do que está salvo) e o Histórico = Registro de ações filtrado no tipo ia.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
-import { CARTAO, CHIP, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import {
+  AVISO,
+  CARTAO,
+  CHIP,
+  TOM,
+} from 'dashboard/routes/dashboard/ramon/helpers/ui';
 import {
   COR_DO_ESTADO,
   ajustes,
@@ -21,6 +27,7 @@ import {
   marcadorDepoisDe,
   paraGravar,
   retomarTela,
+  rotaDoAviso,
 } from 'dashboard/routes/dashboard/ramon/helpers/perfilIa';
 import ListaAlvos from './comoIaAtende/ListaAlvos.vue';
 import Trilha from './comoIaAtende/Trilha.vue';
@@ -197,6 +204,25 @@ const sugerirSozinha = computed(
     estadoDaEtapa(etapaSel.value, marcadorAtual.value, etapas.value) ===
       'rascunho'
 );
+// Avisos do alvo (Ramon::PerfilIa::Avisos): os da ação vão na linha dela (LimitesDaEtapa); os do alvo todo, no topo.
+const avisos = computed(() =>
+  (dados.value.avisos?.[alvoId.value] ?? []).map(aviso => {
+    const destino = rotaDoAviso(aviso, alvoId.value);
+    return {
+      ...aviso,
+      rota: { ...destino, params: { ...route.params, ...destino.params } },
+    };
+  })
+);
+const avisosDoAlvo = computed(() => avisos.value.filter(a => !a.acao));
+const avisosDasAcoes = computed(() => avisos.value.filter(a => a.acao));
+const abrirHistorico = () =>
+  router.push({
+    name: 'ramon_registro_acoes',
+    params: { ...route.params },
+    query: { tipo: 'ia' },
+  });
+
 const passarSozinha = () =>
   mudarMarcador(marcadorDepoisDe(etapaSel.value, etapas.value));
 
@@ -306,6 +332,16 @@ onBeforeRouteLeave(
         >
           {{ naoSalvas }}
         </span>
+        <Button
+          v-if="dados"
+          size="sm"
+          variant="outline"
+          color="slate"
+          icon="i-lucide-history"
+          :label="t(`${K}.HISTORICO`)"
+          data-testid="historico"
+          @click="abrirHistorico"
+        />
         <span v-if="dados" :title="dicaTestar">
           <Button
             size="sm"
@@ -404,6 +440,25 @@ onBeforeRouteLeave(
               @click="voltarAoPadrao"
             />
           </div>
+
+          <p
+            v-for="aviso in avisosDoAlvo"
+            :key="aviso.tipo"
+            data-testid="aviso-alvo"
+            class="flex flex-wrap items-center gap-2 mt-4"
+            :class="[AVISO, TOM.amber]"
+          >
+            <span
+              class="i-lucide-triangle-alert size-3.5 shrink-0"
+              aria-hidden="true"
+            />
+            <span class="flex-1 min-w-0">
+              {{ t(`${K}.AVISOS.${aviso.tipo}`) }}
+            </span>
+            <router-link :to="aviso.rota" class="font-medium hover:underline">
+              {{ t(`${K}.AVISOS.LINK.${aviso.link}`) }}
+            </router-link>
+          </p>
 
           <div
             v-if="segue"
@@ -512,6 +567,7 @@ onBeforeRouteLeave(
               :cfg="cfgAtual"
               :dados="dados"
               :travado="segue"
+              :avisos="avisosDasAcoes"
               @permissao="mudarPermissao"
               @gatilhos="mudarGatilhos"
             />
