@@ -110,7 +110,25 @@
       "SUGESTOES": "Try one (your role's first):",
       "CASO_PLACEHOLDER": "Test with the case… (lead name)",
       "CASO_AJUDA": "Picking a lead adds the case number to your message.",
-      "CASO_NENHUM": "No lead with that name."
+      "CASO_NENHUM": "No lead with that name.",
+      "PERFIL": {
+        "BANNER": "Testing the profile on screen (unsaved). Logistics is not classified in Test: after the marker, a logistics reply shows as a draft.",
+        "PARAR": "Stop testing the profile",
+        "SAIRIA": "Would go out on its own ({motivo})",
+        "RASCUNHO": "Would become a draft ({motivo})",
+        "BLOQUEADAS": "Tool blocked (never): {nomes}",
+        "MOTIVO": {
+          "antes_do_marcador": "stage before the marker",
+          "acao": "{acao} is set to Draft",
+          "logistica": "logistics only",
+          "depois_do_marcador": "stage after the marker",
+          "handoff": "called the team",
+          "pausa": "AI paused in the conversation",
+          "fechado": "lead closed: drafts only",
+          "fora_do_horario": "outside business hours",
+          "ferramenta_falhou": "a tool failed"
+        }
+      }
     },
     "CONFIG": {
       "SO_EQUIPE": "This assistant only talks to the team: customer messages, conversation FAQs and contact memory do not apply to it.",

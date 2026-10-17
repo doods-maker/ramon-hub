@@ -7,6 +7,7 @@ import {
   escolherRoteiro,
   limparConversa,
   roteiroDe,
+  testarPerfil,
 } from '../testarConversas';
 
 vi.mock('dashboard/api/captain/assistant', () => ({
@@ -199,6 +200,32 @@ describe('AssistantPlayground', () => {
       })
     );
     expect(roteiroDe(1)).toMatchObject({ selecao: SEM_TESE, thesisId: 9 });
+    escolherRoteiro(1, '');
+  });
+
+  it('Testar este perfil: manda o cfg da tela e mostra a decisão e as Tools bloqueadas debaixo da resposta', async () => {
+    CaptainAssistant.playground.mockResolvedValue({
+      data: {
+        response: 'Fica R$ 3.000',
+        decisao: { valor: 'rascunho', motivo: 'acao:citar_honorario' },
+        bloqueadas: ['preparar_contrato_zapsign'],
+      },
+    });
+    const wrapper = mount(AssistantPlayground, { props: { assistantId: 1 } });
+    testarPerfil(1, { base: 'acelerada' }, 3);
+    await enviar(wrapper, 'quanto custa?');
+    await flushPromises();
+    expect(CaptainAssistant.playground).toHaveBeenCalledWith(
+      expect.objectContaining({
+        roteiro: { thesis_id: 3, estado: null, perfil: { base: 'acelerada' } },
+      })
+    );
+    expect(wrapper.find('[data-testid="testar-decisao"]').text()).toContain(
+      'INTEL.TESTAR.PERFIL.RASCUNHO'
+    );
+    expect(wrapper.find('[data-testid="testar-bloqueadas"]').text()).toBe(
+      'INTEL.TESTAR.PERFIL.BLOQUEADAS'
+    );
     escolherRoteiro(1, '');
   });
 });

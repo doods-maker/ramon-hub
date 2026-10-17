@@ -110,7 +110,25 @@
       "SUGESTOES": "Experimente (as do seu papel primeiro):",
       "CASO_PLACEHOLDER": "Testar com o caso… (nome do lead)",
       "CASO_AJUDA": "Escolher um lead põe o nº do caso na sua mensagem.",
-      "CASO_NENHUM": "Nenhum lead com esse nome."
+      "CASO_NENHUM": "Nenhum lead com esse nome.",
+      "PERFIL": {
+        "BANNER": "Testando o perfil da tela (não salvo). A logística não é classificada no Testar: depois do Marcador, resposta de logística aparece como rascunho.",
+        "PARAR": "Parar de testar o perfil",
+        "SAIRIA": "Sairia sozinha ({motivo})",
+        "RASCUNHO": "Viraria rascunho ({motivo})",
+        "BLOQUEADAS": "Tool bloqueada (nunca): {nomes}",
+        "MOTIVO": {
+          "antes_do_marcador": "Etapa antes do Marcador",
+          "acao": "{acao} está em Rascunho",
+          "logistica": "só logística",
+          "depois_do_marcador": "Etapa depois do Marcador",
+          "handoff": "chamou a equipe",
+          "pausa": "IA pausada na conversa",
+          "fechado": "lead Fechado: só rascunho",
+          "fora_do_horario": "fora do horário comercial",
+          "ferramenta_falhou": "uma ferramenta falhou"
+        }
+      }
     },
     "CONFIG": {
       "SO_EQUIPE": "Este assistente fala só com a equipe: mensagens ao cliente, FAQs de conversa e memória do contato não se aplicam a ele.",

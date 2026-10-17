@@ -1,5 +1,5 @@
 import { mount, flushPromises } from '@vue/test-utils';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
 import { dados } from 'dashboard/routes/dashboard/ramon/helpers/specs/perfilIaDados';
@@ -7,7 +7,12 @@ import ComoIaAtende from '../ComoIaAtende.vue';
 
 vi.mock('vue-router', () => {
   const rota = { query: {} };
-  return { useRoute: () => rota, onBeforeRouteLeave: vi.fn() };
+  const roteador = { push: vi.fn() };
+  return {
+    useRoute: () => rota,
+    useRouter: () => roteador,
+    onBeforeRouteLeave: vi.fn(),
+  };
 });
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
 vi.mock('dashboard/composables/useAccount', () => ({
@@ -277,5 +282,57 @@ describe('Como a IA atende', () => {
     const wrapper = await montar();
     expect(achar(wrapper, 'alvo-nome').text()).toBe('Auxílio-acidente');
     expect(achar(wrapper, 'selo').text()).toBe('Profile Fast');
+  });
+
+  it('números da Etapa: sem dados ainda; "Passar pra Sozinha" move o Marcador para depois dela (ajuste não salvo)', async () => {
+    const corpo = dados();
+    corpo.numeros = {
+      padrao: {
+        'fase-negociacao': {
+          enviadas: 2,
+          rascunhos: { igual: 19, editado: 1, descartado: 0 },
+          chamou_equipe: 3,
+          sugerir_sozinha: true,
+        },
+      },
+    };
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    const wrapper = await montar();
+    expect(achar(wrapper, 'numeros-vazio').exists()).toBe(true);
+
+    await clicar(wrapper, 'etapa-fase-negociacao');
+    expect(achar(wrapper, 'numeros-linha').text()).toContain(
+      '19 unchanged · 1 edited · 0 discarded'
+    );
+    expect(achar(wrapper, 'etapa-fase-negociacao').text()).toContain('Draft');
+    await clicar(wrapper, 'passar-sozinha');
+    expect(achar(wrapper, 'etapa-fase-negociacao').text()).toContain(
+      'On its own'
+    );
+    expect(achar(wrapper, 'etapa-fase-ultima-chance').text()).toContain(
+      'Draft'
+    );
+    expect(achar(wrapper, 'sugestao-sozinha').exists()).toBe(false);
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(true);
+  });
+
+  it('"Testar este perfil": sem IA fica desligado; com IA abre o Testar com o cfg da tela (não salvo) e a tese', async () => {
+    let wrapper = await montar();
+    expect(
+      achar(wrapper, 'testar-perfil').attributes('disabled')
+    ).toBeDefined();
+
+    RamonIaAtendimentoAPI.get.mockResolvedValue({
+      data: { ...dados(), assistente_id: 7 },
+    });
+    useRoute().query = { alvo: 'tese:2' };
+    wrapper = await montar();
+    await clicar(wrapper, 'perfil-cautelosa');
+    await clicar(wrapper, 'testar-perfil');
+    expect(useRouter().push).toHaveBeenCalledWith({
+      name: 'captain_assistants_playground_index',
+      params: { assistantId: 7 },
+      state: { perfilTeste: { base: 'cautelosa' }, thesisId: 2 },
+    });
   });
 });

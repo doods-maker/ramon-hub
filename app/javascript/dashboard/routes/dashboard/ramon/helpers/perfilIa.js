@@ -148,3 +148,19 @@ export const paraGravar = (cfg, etapas) => {
     );
   return limpo;
 };
+
+// "Passar pra Sozinha?" (números da Etapa): o Marcador vai para logo depois da Etapa — ela e as de antes ficam Sozinha.
+export const marcadorDepoisDe = (chave, etapas) =>
+  marcadorDaPosicao(etapas.findIndex(e => e.chave === chave) + 1, etapas);
+
+// "Testar este perfil" sai da tela sem salvar: o que não foi salvo fica guardado e volta na próxima carga.
+// ponytail: memória da página (F5 perde, como as conversas do Testar).
+let telaGuardada = null;
+export const guardarTela = tela => {
+  telaGuardada = JSON.parse(JSON.stringify(tela));
+};
+export const retomarTela = () => {
+  const tela = telaGuardada;
+  telaGuardada = null;
+  return tela;
+};

@@ -4,8 +4,10 @@ import {
   escolherRoteiro,
   garantirConversa,
   limparConversa,
+  pararTesteDoPerfil,
   pedidoDoRoteiro,
   roteiroDe,
+  testarPerfil,
 } from '../testarConversas';
 
 describe('conversas do Testar (I-PG3)', () => {
@@ -42,6 +44,7 @@ describe('conversas do Testar (I-PG3)', () => {
       thesisId: null,
       estado: null,
       painel: null,
+      perfil: null,
     });
     escolherRoteiro(1, '');
   });
@@ -57,5 +60,29 @@ describe('conversas do Testar (I-PG3)', () => {
     escolherRoteiro(1, SEM_TESE);
     expect(pedidoDoRoteiro(roteiroDe(1)).thesis_id).toBeNull();
     escolherRoteiro(1, '');
+  });
+
+  it('Testar este perfil: recomeça a conversa na tese do alvo e o cfg vai no pedido até parar', () => {
+    garantirConversa(1);
+    conversaDe(1).push({ content: 'velha' });
+    testarPerfil(1, { base: 'acelerada' }, 4);
+    expect(conversaDe(1)).toHaveLength(0);
+    expect(pedidoDoRoteiro(roteiroDe(1))).toEqual({
+      thesis_id: 4,
+      estado: null,
+      perfil: { base: 'acelerada' },
+    });
+    limparConversa(1);
+    expect(roteiroDe(1).perfil).toEqual({ base: 'acelerada' });
+    pararTesteDoPerfil(1);
+    expect(pedidoDoRoteiro(roteiroDe(1))).toEqual({
+      thesis_id: 4,
+      estado: null,
+    });
+
+    testarPerfil(1, { base: 'cautelosa' }, null);
+    expect(roteiroDe(1).selecao).toBe(SEM_TESE);
+    escolherRoteiro(1, '');
+    expect(roteiroDe(1).perfil).toBeNull();
   });
 });

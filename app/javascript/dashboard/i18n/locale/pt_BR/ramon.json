@@ -134,6 +134,20 @@
         "rascunho": "Rascunho: a equipe aprova antes",
         "nunca": "Nunca: só uma pessoa",
         "ajustado": "Ajustado à mão"
+      },
+      "NUMEROS": {
+        "TITULO": "Últimos 30 dias em {etapa} (só deste alvo)",
+        "SEM_DADOS": "Sem dados ainda.",
+        "ENVIADAS": "{n} enviadas sozinhas",
+        "RASCUNHOS": "Rascunhos: {igual} sem edição · {editado} editados · {descartado} descartados",
+        "EQUIPE": "Chamou a equipe {n} vezes",
+        "SUGESTAO": "Passar pra Sozinha? {igual} dos últimos {n} rascunhos em {etapa} saíram sem edição. O botão move o Marcador para logo depois de {etapa} (ela e as Etapas antes dela ficam Sozinha); fica como ajuste não salvo até você clicar em Salvar alterações.",
+        "PASSAR": "Passar pra Sozinha"
+      },
+      "TESTAR": {
+        "BOTAO": "Testar este perfil",
+        "DICA": "Abre o Testar com o perfil do jeito que está na tela, mesmo sem salvar",
+        "SEM_IA": "Nenhuma caixa tem a IA conectada (Assistente → Caixas)"
       }
     },
     "CHEGADA": {

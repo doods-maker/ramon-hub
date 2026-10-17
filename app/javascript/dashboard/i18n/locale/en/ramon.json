@@ -134,6 +134,20 @@
         "rascunho": "Draft: the team approves first",
         "nunca": "Never: only a person",
         "ajustado": "Adjusted by hand"
+      },
+      "NUMEROS": {
+        "TITULO": "Last 30 days in {etapa} (this target only)",
+        "SEM_DADOS": "No data yet.",
+        "ENVIADAS": "{n} sent on its own",
+        "RASCUNHOS": "Drafts: {igual} unchanged · {editado} edited · {descartado} discarded",
+        "EQUIPE": "Called the team {n} times",
+        "SUGESTAO": "Switch to On its own? {igual} of the last {n} drafts in {etapa} went out unchanged. The button moves the marker to right after {etapa} (it and the stages before it become On its own); it stays an unsaved adjustment until you click Save changes.",
+        "PASSAR": "Switch to On its own"
+      },
+      "TESTAR": {
+        "BOTAO": "Test this profile",
+        "DICA": "Opens Test with the profile as it is on screen, even unsaved",
+        "SEM_IA": "No inbox has the AI connected (Assistant → Inboxes)"
       }
     },
     "CHEGADA": {

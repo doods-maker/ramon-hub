@@ -2,9 +2,10 @@
 // Como a IA atende (Inteligência, só admin): o Perfil da IA do padrão do escritório, de cada tese e de cada
 // caixa sem tese — perfil pronto, Marcador na Trilha, Permissões e Gatilhos por Etapa (spec 2026-10-17).
 // Tudo é rascunho na tela até "Salvar alterações", que manda só os alvos mudados (cfg inteiro; null = segue o padrão).
+// Números por Etapa com o "Passar pra Sozinha?" e "Testar este perfil" (abre o Testar com o cfg da tela, não salvo).
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { onBeforeRouteLeave, useRoute } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
 import RamonIaAtendimentoAPI from 'dashboard/api/ramonIaAtendimento';
@@ -15,18 +16,23 @@ import {
   baseDe,
   efetivo,
   estadoDaEtapa,
+  guardarTela,
   marcadorDe,
+  marcadorDepoisDe,
   paraGravar,
+  retomarTela,
 } from 'dashboard/routes/dashboard/ramon/helpers/perfilIa';
 import ListaAlvos from './comoIaAtende/ListaAlvos.vue';
 import Trilha from './comoIaAtende/Trilha.vue';
 import LimitesDaEtapa from './comoIaAtende/LimitesDaEtapa.vue';
 import LimitesGerais from './comoIaAtende/LimitesGerais.vue';
+import NumerosDaEtapa from './comoIaAtende/NumerosDaEtapa.vue';
 
 defineOptions({ name: 'CaptainComoIaAtende' });
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const K = 'RAMON.COMO_IA';
 const PERFIS = ['cautelosa', 'equilibrada', 'acelerada'];
 
@@ -61,6 +67,14 @@ const carregar = async () => {
   try {
     const { data } = await RamonIaAtendimentoAPI.get();
     aplicar(data);
+    // volta do "Testar este perfil": o que não foi salvo reaparece
+    const volta = retomarTela();
+    if (volta) {
+      Object.assign(cfgs.value, volta.cfgs);
+      if (volta.limites) limites.value = volta.limites;
+      alvoId.value = volta.alvoId;
+      etapaSel.value = volta.etapaSel;
+    }
     if (route.query.alvo in cfgs.value) alvoId.value = route.query.alvo;
   } catch (e) {
     erro.value = true;
@@ -172,6 +186,51 @@ const mudarGatilhos = (etapa, lista) =>
     cfg.gatilhos = { ...cfg.gatilhos, [etapa]: lista };
   });
 
+// Números da Etapa selecionada (só deste alvo); a sugestão some se a Etapa já está Sozinha na tela.
+const numerosDaEtapa = computed(
+  () => dados.value.numeros?.[alvoId.value]?.[etapaSel.value] ?? null
+);
+const sugerirSozinha = computed(
+  () =>
+    !segue.value &&
+    !!numerosDaEtapa.value?.sugerir_sozinha &&
+    estadoDaEtapa(etapaSel.value, marcadorAtual.value, etapas.value) ===
+      'rascunho'
+);
+const passarSozinha = () =>
+  mudarMarcador(marcadorDepoisDe(etapaSel.value, etapas.value));
+
+// Testar: o assistente da caixa (alvo caixa) ou o da 1ª caixa com IA (padrão e teses); nenhum = botão desligado.
+const assistenteDoTeste = computed(() => {
+  if (!dados.value) return null;
+  if (atual.value.tipo !== 'caixa') return dados.value.assistente_id ?? null;
+  const caixa = dados.value.caixas.find(c => `caixa:${c.id}` === alvoId.value);
+  return caixa?.assistente_id ?? null;
+});
+const dicaTestar = computed(() =>
+  t(`${K}.TESTAR.${assistenteDoTeste.value ? 'DICA' : 'SEM_IA'}`)
+);
+let indoTestar = false;
+const testar = () => {
+  // só o que mudou: o resto volta do servidor
+  guardarTela({
+    cfgs: Object.fromEntries(mudados.value.map(id => [id, cfgs.value[id]])),
+    limites: limitesMudaram.value ? limites.value : null,
+    alvoId: alvoId.value,
+    etapaSel: etapaSel.value,
+  });
+  indoTestar = true;
+  const [tipo, numero] = alvoId.value.split(':');
+  router.push({
+    name: 'captain_assistants_playground_index',
+    params: { ...route.params, assistantId: assistenteDoTeste.value },
+    state: {
+      perfilTeste: copia(paraGravar(cfgAtual.value, etapas.value)),
+      thesisId: tipo === 'tese' ? Number(numero) : null,
+    },
+  });
+};
+
 const salvar = async () => {
   const corpo = {};
   mudados.value.forEach(id => {
@@ -211,7 +270,10 @@ onMounted(() => {
 });
 onBeforeUnmount(() => window.removeEventListener('beforeunload', avisarSaida));
 // ponytail: window.confirm de propósito — o guard de rota precisa de resposta síncrona.
-onBeforeRouteLeave(() => !nMudancas.value || window.confirm(t(`${K}.SAIR`)));
+// Indo ao Testar o não salvo fica guardado (guardarTela): sem pergunta.
+onBeforeRouteLeave(
+  () => indoTestar || !nMudancas.value || window.confirm(t(`${K}.SAIR`))
+);
 </script>
 
 <template>
@@ -232,6 +294,18 @@ onBeforeRouteLeave(() => !nMudancas.value || window.confirm(t(`${K}.SAIR`)));
           class="text-xs text-n-slate-10"
         >
           {{ naoSalvas }}
+        </span>
+        <span v-if="dados" :title="dicaTestar">
+          <Button
+            size="sm"
+            variant="outline"
+            color="slate"
+            icon="i-lucide-flask-conical"
+            :label="t(`${K}.TESTAR.BOTAO`)"
+            :disabled="!assistenteDoTeste"
+            data-testid="testar-perfil"
+            @click="testar"
+          />
         </span>
         <Button
           size="sm"
@@ -429,6 +503,12 @@ onBeforeRouteLeave(() => !nMudancas.value || window.confirm(t(`${K}.SAIR`)));
               :travado="segue"
               @permissao="mudarPermissao"
               @gatilhos="mudarGatilhos"
+            />
+            <NumerosDaEtapa
+              :etapa="etapaAtual"
+              :numeros="numerosDaEtapa"
+              :sugerir="sugerirSozinha"
+              @sozinha="passarSozinha"
             />
           </section>
 

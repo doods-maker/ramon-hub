@@ -54,6 +54,19 @@ const rotuloFerramenta = ferramenta =>
     ? t('INTEL.TESTAR.FERRAMENTA_ERRO', { nome: ferramenta.title })
     : ferramenta.title;
 
+// Perfil da IA no Testar: "sairia sozinha" / "viraria rascunho" com o motivo do Ramon::PerfilIa.decidir.
+const P = 'INTEL.TESTAR.PERFIL';
+const motivoLegivel = motivo => {
+  const [codigo, acao] = motivo.split(':');
+  return codigo === 'acao'
+    ? t(`${P}.MOTIVO.acao`, { acao: t(`RAMON.COMO_IA.ACOES.${acao}`) })
+    : t(`${P}.MOTIVO.${codigo}`);
+};
+const rotuloDecisao = ({ valor, motivo }) =>
+  t(`${P}.${valor === 'envia' ? 'SAIRIA' : 'RASCUNHO'}`, {
+    motivo: motivoLegivel(motivo),
+  });
+
 const scrollToBottom = async () => {
   await nextTick();
   if (messageContainer.value) {
@@ -104,6 +117,29 @@ watch(() => props.messages.length, scrollToBottom);
               :class="[CHIP, tomFerramenta(ferramenta)]"
             >
               {{ rotuloFerramenta(ferramenta) }}
+            </span>
+          </div>
+          <div
+            v-if="message.decisao"
+            data-testid="testar-decisao"
+            class="flex flex-wrap items-center gap-1"
+          >
+            <span
+              :class="[
+                CHIP,
+                message.decisao.valor === 'envia' ? TOM.teal : TOM.amber,
+              ]"
+            >
+              {{ rotuloDecisao(message.decisao) }}
+            </span>
+            <span
+              v-if="message.bloqueadas?.length"
+              data-testid="testar-bloqueadas"
+              :class="[CHIP, TOM.ruby]"
+            >
+              {{
+                t(`${P}.BLOQUEADAS`, { nomes: message.bloqueadas.join(', ') })
+              }}
             </span>
           </div>
         </div>

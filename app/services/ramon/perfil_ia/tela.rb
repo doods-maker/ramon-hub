@@ -17,7 +17,8 @@ class Ramon::PerfilIa::Tela
     { prontos: Ramon::PerfilIa::PRONTOS, inicial: Ramon::PerfilIa::INICIAL, acoes: acoes, gatilhos: gatilhos,
       etapas: etapas, padrao: Ramon::PerfilIa.cfg_salvo(@account, 'padrao') || Ramon::PerfilIa::INICIAL,
       teses: @account.theses.map { |t| { id: t.id, nome: t.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'teses', t.id) } },
-      caixas: caixas, limites: Ramon::IaLimites.corpo(@account) }
+      caixas: caixas, limites: Ramon::IaLimites.corpo(@account), numeros: Ramon::PerfilIa::Numeros.todos(@account),
+      assistente_id: com_ia.first&.captain_assistant&.id }
   end
 
   private
@@ -36,10 +37,13 @@ class Ramon::PerfilIa::Tela
     @account.lead_stages.where(is_won: false, is_lost: false).map { |e| { chave: Ramon::PerfilIa.chave_da_etapa(e), nome: e.name } }
   end
 
-  # Caixa de tese (ramon_thesis_id) segue a tese; só as que têm IA (captain_assistant, enterprise) configuram aqui.
+  # Caixas com IA (captain_assistant, enterprise), na ordem: a 1ª é a do "Testar este perfil" do padrão e das teses.
+  def com_ia = @com_ia ||= @account.inboxes.order(:id).select { |i| Ramon::PerfilIa.com_ia?(i) }
+
+  # Caixa de tese (ramon_thesis_id) segue a tese; só as que têm IA configuram aqui.
   def caixas
-    @account.inboxes.where(ramon_thesis_id: nil).select { |i| i.try(:captain_assistant).present? }.map do |i|
-      { id: i.id, nome: i.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'caixas', i.id) }
+    com_ia.select { |i| i.ramon_thesis_id.nil? }.map do |i|
+      { id: i.id, nome: i.name, cfg: Ramon::PerfilIa.cfg_salvo(@account, 'caixas', i.id), assistente_id: i.captain_assistant.id }
     end
   end
 end

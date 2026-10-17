@@ -49,6 +49,23 @@ module Ramon::Roteiro::Teste
     resultado
   end
 
+  # O Perfil do turno no Testar (spec, sugestão 2): o do lead descartável no início do turno — 1ª Etapa aberta, tese do
+  # teste e o cfg da tela (não salvo) ou, sem ele, o em vigor. Dá as Tools bloqueadas e os gatilhos do prompt do turno.
+  # account_id (não account): o lead não entra no cache account.leads (ver com_lead).
+  def perfil(account, teste)
+    lead = Lead.new(account_id: account.id, thesis_id: teste['thesis_id'], lead_stage: etapa_aberta(account))
+    lead.perfil_ia_simulado = teste['perfil']
+    Ramon::PerfilIa.de(lead)
+  end
+
+  # O que o Perfil faria com a resposta do playground: a mesma decisão do ResponseBuilderJob (decidir_turno, com o
+  # relógio de agora). ponytail: logística não é classificada no Testar (o classificador custa LLM) — vai nil.
+  def decisao(perfil, resposta)
+    handoff = resposta['handoff_tool_called'] == true || resposta['response'] == 'conversation_handoff' || resposta['action'] == 'handoff'
+    valor, motivo = perfil.decidir_turno(resposta, logistica: nil, handoff: handoff)
+    { 'decisao' => { 'valor' => valor.to_s, 'motivo' => motivo }, 'bloqueadas' => perfil.tools_bloqueadas }
+  end
+
   def etapa_aberta(account)
     account.lead_stages.where(is_won: false, is_lost: false).order(:position).first
   end

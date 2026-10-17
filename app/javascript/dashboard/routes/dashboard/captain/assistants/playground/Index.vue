@@ -4,6 +4,7 @@
 // (?fala=, I-SK6). Nada é enviado sozinho: os atalhos só escrevem no campo (N7).
 // Roteiro da tese (F2): escolher a tese faz a IA seguir o roteiro dela; o roteiro roda de verdade, nada é
 // gravado, e o passo a passo aparece ao lado da conversa.
+// Testar este perfil (Como a IA atende): a tela manda o cfg dela (não salvo) no history.state; lido uma vez.
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -14,7 +15,9 @@ import {
   SEM_TESE,
   escolherRoteiro,
   garantirConversa,
+  pararTesteDoPerfil,
   roteiroDe,
+  testarPerfil,
 } from 'dashboard/components-next/captain/assistant/testarConversas';
 import RoteiroDoLead from 'dashboard/routes/dashboard/ramon/components/lead/RoteiroDoLead.vue';
 import AbasTestar from '../../casos/AbasTestar.vue';
@@ -52,7 +55,19 @@ watch(
   { immediate: true }
 );
 
+// Lido uma vez: tirado do history.state para voltar/avançar não recomeçar a conversa.
+const lerPerfilDaTela = () => {
+  const { perfilTeste, thesisId } = window.history.state || {};
+  if (!perfilTeste) return;
+  testarPerfil(assistantId.value, perfilTeste, thesisId);
+  window.history.replaceState(
+    { ...window.history.state, perfilTeste: null, thesisId: null },
+    ''
+  );
+};
+
 onMounted(async () => {
+  lerPerfilDaTela();
   store.dispatch('teams/get');
   store.dispatch('theses/get');
   await nextTick();
@@ -120,6 +135,28 @@ const escolherSelecao = evento =>
               {{ skill.title }}
             </button>
           </div>
+        </div>
+        <div
+          v-if="roteiro?.perfil"
+          data-testid="testar-perfil-banner"
+          class="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-[13px] rounded-xl"
+          :class="TOM.blue"
+        >
+          <span
+            class="i-lucide-flask-conical size-4 shrink-0"
+            aria-hidden="true"
+          />
+          <span class="flex-1 min-w-0 text-n-slate-12">
+            {{ t('INTEL.TESTAR.PERFIL.BANNER') }}
+          </span>
+          <button
+            type="button"
+            data-testid="testar-perfil-parar"
+            class="text-xs font-medium text-n-blue-11 hover:underline"
+            @click="pararTesteDoPerfil(assistantId)"
+          >
+            {{ t('INTEL.TESTAR.PERFIL.PARAR') }}
+          </button>
         </div>
         <div class="flex flex-1 min-h-0 gap-3">
           <AssistantPlayground

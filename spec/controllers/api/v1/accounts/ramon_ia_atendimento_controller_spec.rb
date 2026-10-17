@@ -40,6 +40,8 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
     expect(linhas[tese.id]).to include('nome' => tese.name, 'cfg' => include('base' => 'acelerada'))
     expect(linhas.except(tese.id).values.pluck('cfg').uniq).to eq([nil])
     expect(body['caixas']).to eq([])
+    # Números por Etapa (sem carimbo = sem dados) e o assistente do "Testar este perfil" (sem Captain no CI = nil)
+    expect(body).to include('numeros' => {}, 'assistente_id' => nil)
   end
 
   it 'PATCH válido grava só os alvos enviados e devolve o corpo do GET', :aggregate_failures do

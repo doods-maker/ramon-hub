@@ -94,6 +94,9 @@ const sendMessage = async () => {
       sender: 'assistant',
       agentName: data.agent_name,
       ferramentas: data.ferramentas || [],
+      // Perfil da IA (só com roteiro): o que ele faria com esta resposta e as Tools que ele nem oferece
+      decisao: data.decisao,
+      bloqueadas: data.bloqueadas || [],
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

@@ -89,4 +89,19 @@ RSpec.describe 'Ramon::Roteiro::Teste' do
     expect(da_tese['estado']).not_to have_key('aguarda_equipe')
     expect([Lead.count, CopilotSuggestion.count]).to eq([0, 0])
   end
+
+  # Testar este perfil (sugestão 2): a decisão é a mesma do ResponseBuilderJob, com o cfg da tela (não salvo).
+  it 'perfil do teste: Tools bloqueadas, gatilhos da 1ª Etapa e a decisão de cada resposta', :aggregate_failures do
+    cfg = { 'base' => 'acelerada', 'permissoes' => { 'citar_honorario' => 'r', 'contrato_zapsign' => 'n' },
+            'gatilhos' => { 'fase-novo' => %w[pediu_pessoa] } }
+    perfil = Ramon::Roteiro::Teste.perfil(account, Ramon::Roteiro::Teste.de_params(account, { thesis_id: thesis.id, perfil: cfg }))
+
+    expect([perfil.origem, perfil.alvo]).to eq([:teste, 'padrao'])
+    expect(perfil.textos_dos_gatilhos).to eq([Ramon::PerfilIa::GATILHOS['pediu_pessoa']['texto']])
+    expect(Ramon::Roteiro::Teste.decisao(perfil, { 'response' => 'Fica R$ 3.000', 'tools_usadas' => ['simular_honorario'] }))
+      .to eq('decisao' => { 'valor' => 'rascunho', 'motivo' => 'acao:citar_honorario' }, 'bloqueadas' => %w[preparar_contrato_zapsign])
+    expect(Ramon::Roteiro::Teste.decisao(perfil, { 'response' => 'Oi!', 'tools_usadas' => [] })['decisao'])
+      .to eq('valor' => 'envia', 'motivo' => 'antes_do_marcador')
+    expect(Lead.count).to eq(0)
+  end
 end
