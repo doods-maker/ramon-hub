@@ -35,7 +35,10 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
     expect(body['gatilhos'].find { |g| g['chave'] == 'irritado' }).to include('pendente' => true)
     expect(body['etapas'].pluck('chave')).to include('fase-novo', 'fase-qualificacao')
     expect(body['etapas'].pluck('chave')).not_to include(account.lead_stages.find_by(is_won: true).label.to_s)
-    expect(body['teses']).to eq([{ 'id' => tese.id, 'nome' => tese.name, 'cfg' => { 'base' => 'acelerada' } }])
+    # a conta já vem com teses do seed (cfg nil); o cfg salvo volta normalizado (listas vazias de permissões/gatilhos)
+    linhas = body['teses'].index_by { |t| t['id'] }
+    expect(linhas[tese.id]).to include('nome' => tese.name, 'cfg' => include('base' => 'acelerada'))
+    expect(linhas.except(tese.id).values.pluck('cfg').uniq).to eq([nil])
     expect(body['caixas']).to eq([])
   end
 
