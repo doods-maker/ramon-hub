@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Como a IA atende</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<style>
+/* tokens do hub-v2 (aprovados 03/10) */
+[data-theme="light"]{
+  --bg:#FFFFFF; --bg-2:#FAFAFA; --hover:#F4F4F4; --active:#EFEFEF;
+  --line:#EBEBEB; --line-2:#DCDCDC;
+  --text:#111111; --text-2:#666666; --text-3:#999999;
+  --act:#2563EB; --on-act:#FFFFFF; --act-text:#1D4ED8; --act-tint:rgb(37 99 235 / .08);
+  --ok:#15803D; --ok-bg:rgb(34 197 94 / .13); --ok-solid:#22C55E;
+  --warn:#B45309; --warn-bg:rgb(234 179 8 / .14); --warn-solid:#EAB308;
+  --bad:#DC2626; --bad-bg:rgb(239 68 68 / .09);
+  --off:#94A3B8; --off-bg:rgb(100 116 139 / .12);
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#000000; --bg-2:#0A0A0A; --hover:#141414; --active:#1C1C1C;
+  --line:#1F1F1F; --line-2:#2E2E2E;
+  --text:#EDEDED; --text-2:#A1A1A1; --text-3:#6B6B6B;
+  --act:#2563EB; --on-act:#FFFFFF; --act-text:#60A5FA; --act-tint:rgb(59 130 246 / .16);
+  --ok:#4ADE80; --ok-bg:rgb(34 197 94 / .15); --ok-solid:#22C55E;
+  --warn:#FBBF24; --warn-bg:rgb(234 179 8 / .13); --warn-solid:#EAB308;
+  --bad:#F87171; --bad-bg:rgb(239 68 68 / .14);
+  --off:#64748B; --off-bg:rgb(148 163 184 / .14);
+  color-scheme:dark;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:14px/1.5 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:"Geist Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--act);outline-offset:2px;border-radius:6px}
+svg.lucide{width:16px;height:16px;stroke-width:1.75;flex-shrink:0}
+
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:7px;padding:5px 10px;font-size:12.5px;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.cheio{background:var(--act);color:var(--on-act);border-color:var(--act);font-weight:500}
+.btn.cheio:hover{filter:brightness(1.1)}
+.btn.tint{background:var(--act-tint);border-color:transparent;color:var(--act-text);font-weight:500}
+.btn.so-icone{padding:5px 7px}
+
+/* cabeçalho da página */
+.cab{height:56px;display:flex;align-items:center;gap:10px;padding:0 28px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.cab .trilho-pag{color:var(--text-3);font-size:13px}
+.cab h1{font-size:15px;font-weight:600}
+.cab .dir{margin-left:auto;display:flex;gap:8px;align-items:center}
+.cab .pend{font-size:12px;color:var(--text-3)}
+
+.app{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 56px)}
+
+/* lista à esquerda */
+.lado{border-right:1px solid var(--line);padding:14px 10px 30px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+.busca{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--text-3);margin:0 4px 6px}
+.busca input{flex:1;min-width:0;font-size:13px;color:var(--text);outline:0}
+.grupo{font-size:11.5px;font-weight:500;color:var(--text-3);padding:14px 10px 6px;display:flex;justify-content:space-between}
+.alvo{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:8px}
+.alvo:hover{background:var(--hover)}
+.alvo.on{background:var(--act-tint)}
+.alvo .nm{font-size:13px;font-weight:500;line-height:1.3;display:block}
+.alvo.on .nm{color:var(--act-text)}
+.alvo .linha2{display:flex;align-items:center;gap:8px;margin-top:5px}
+.alvo .est{font-size:11.5px;color:var(--text-3);white-space:nowrap}
+.alvo .est.pers{color:var(--act-text);font-weight:500}
+.mini{display:flex;gap:2px;flex:1;max-width:96px;margin-left:auto}
+.mini i{flex:1;height:4px;border-radius:2px}
+.m-s{background:var(--ok-solid)} .m-r{background:var(--warn-solid)} .m-n{background:var(--line-2)}
+
+/* editor */
+.ed{padding:26px 36px 64px;max-width:980px;width:100%}
+.ed-cab{display:flex;align-items:flex-start;gap:16px}
+.ed-cab .tit{flex:1;min-width:0}
+.ed-cab .tipo{font-size:12px;color:var(--text-3);margin-bottom:2px}
+.ed-cab h2{font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+.selo{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;line-height:1;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.selo svg.lucide{width:12px;height:12px}
+.selo.act{background:var(--act-tint);color:var(--act-text)}
+.selo.neutro{background:var(--active);color:var(--text-2)}
+.estado{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;font-size:12.5px;color:var(--text-2)}
+.estado a{color:var(--act-text);font-weight:500;cursor:pointer}
+
+.herda{display:flex;align-items:center;gap:12px;margin-top:18px;padding:12px 14px;border-radius:10px;background:var(--act-tint);color:var(--text);font-size:13px}
+.herda svg.lucide{color:var(--act-text)}
+.herda .btn{margin-left:auto}
+
+.sec{margin-top:28px}
+.sec-cab{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.sec-cab h3{font-size:14.5px;font-weight:600}
+.sec-cab .dica{font-size:12.5px;color:var(--text-3)}
+
+/* perfis */
+.perfis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pf{text-align:left;border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,background .15s}
+.pf:hover{border-color:var(--line-2);background:var(--bg-2)}
+.pf.on{border-color:var(--act);background:var(--act-tint);box-shadow:0 0 0 1px var(--act) inset}
+.pf .t{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px}
+.pf .t .selo{margin-left:auto}
+.pf p{font-size:12.5px;color:var(--text-2);line-height:1.4}
+.pf .mini{max-width:none;margin:4px 0 0}
+.travado{opacity:.45;pointer-events:none;filter:saturate(.6)}
+
+/* TRILHA — assinatura */
+.trilha{border:1px solid var(--line);border-radius:12px;padding:22px 22px 0;background:var(--bg-2)}
+.trilho{position:relative;height:44px;margin:0 0 4px;touch-action:none;cursor:pointer}
+.trilho .base{position:absolute;left:0;right:0;top:20px;height:4px;border-radius:2px;display:flex;overflow:hidden}
+.trilho .base i{flex:1}
+.trilho .no{position:absolute;top:15px;width:14px;height:14px;margin-left:-7px;border-radius:50%;border:3px solid var(--bg-2);transition:background .2s}
+.alca{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;cursor:grab;transition:left .18s ease}
+.alca.arrastando{cursor:grabbing;transition:none}
+.alca .pino{width:4px;height:30px;border-radius:2px;background:var(--text);margin-top:7px}
+.alca .rot{position:absolute;bottom:40px;white-space:nowrap;background:var(--text);color:var(--bg);font-size:11.5px;font-weight:500;padding:4px 9px;border-radius:999px;display:flex;align-items:center;gap:5px}
+.alca .rot svg.lucide{width:12px;height:12px}
+.trilha-pad{padding-top:30px}
+.etapas{display:grid;grid-template-columns:repeat(6,1fr)}
+.etapa{padding:10px 6px 14px;text-align:center;border-bottom:2px solid transparent;transition:border-color .15s}
+.etapa:hover{border-bottom-color:var(--line-2)}
+.etapa.on{border-bottom-color:var(--text)}
+.etapa b{display:block;font-size:13px;font-weight:500}
+.etapa.on b{font-weight:600}
+.etq{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;line-height:1;padding:4px 9px;border-radius:999px;white-space:nowrap;color:var(--c);background:var(--cb);margin-top:6px}
+.etq::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.k-s{--c:var(--ok);--cb:var(--ok-bg)} .k-r{--c:var(--warn);--cb:var(--warn-bg)} .k-n{--c:var(--bad);--cb:var(--bad-bg)} .k-o{--c:var(--text-2);--cb:var(--off-bg)}
+
+.frase{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:13.5px;color:var(--text-2);line-height:1.5}
+.frase svg.lucide{margin-top:2px;color:var(--text-3)}
+.frase b{color:var(--text);font-weight:500}
+
+/* limites */
+.lims{border-top:1px solid var(--line)}
+.lim{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);min-height:52px}
+.lim:hover{background:var(--hover)}
+.lim > svg.lucide{color:var(--text-3)}
+.lim .tx{flex:1;font-size:13.5px;display:flex;align-items:center;gap:8px}
+.mud-p{width:6px;height:6px;border-radius:50%;background:var(--act);flex:none}
+.estado-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;line-height:1;padding:6px 8px 6px 10px;border-radius:999px;color:var(--c);background:var(--cb);min-width:104px;justify-content:space-between}
+.estado-btn .bol{display:inline-flex;align-items:center;gap:6px}
+.estado-btn .bol::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.estado-btn svg.lucide{width:12px;height:12px;opacity:.7}
+.estado-btn:hover{filter:brightness(.97)}
+.passo{display:inline-flex;align-items:center;border:1px solid var(--line-2);border-radius:999px;overflow:hidden}
+.passo button{width:30px;height:28px;display:grid;place-items:center;color:var(--text-2)}
+.passo button:hover{background:var(--hover);color:var(--text)}
+.passo button svg.lucide{width:14px;height:14px}
+.passo .v{min-width:44px;text-align:center;font-size:13px;font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:62%}
+.chip{font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--text-2);display:inline-flex;align-items:center;gap:5px}
+.chip:hover{border-color:var(--text-3)}
+.chip.on{background:var(--bad-bg);border-color:transparent;color:var(--bad);font-weight:500}
+.chip svg.lucide{width:12px;height:12px}
+.legenda{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--text-3)}
+.legenda span{display:inline-flex;align-items:center;gap:6px}
+.legenda i{width:8px;height:8px;border-radius:50%}
+
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .lado{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .ed{padding:20px 16px 48px}
+  .perfis{grid-template-columns:1fr}
+  .etapa b{font-size:11.5px}
+  .chips{max-width:none}
+  .lim{flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<header class="cab">
+  <span class="trilho-pag">Inteligência /</span><h1>Como a IA atende</h1>
+  <div class="dir">
+    <span class="pend" id="pend"></span>
+    <button class="btn so-icone" id="tema" title="Trocar tema claro/escuro"><i data-lucide="sun-moon"></i></button>
+    <button class="btn cheio"><i data-lucide="check"></i>Salvar alterações</button>
+  </div>
+</header>
+<div class="app">
+  <aside class="lado">
+    <label class="busca"><i data-lucide="search"></i><input id="q" placeholder="Buscar tese ou caixa"></label>
+    <div id="lista"></div>
+  </aside>
+  <main class="ed" id="ed"></main>
+</div>
+
+<script>
+(function(){
+  const raiz=document.documentElement;
+  try{ if(matchMedia('(prefers-color-scheme: dark)').matches) raiz.dataset.theme='dark'; }catch(e){}
+  document.getElementById('tema').onclick=()=>{raiz.dataset.theme=raiz.dataset.theme=='dark'?'light':'dark'};
+
+  const ET=['1º contato','Qualificação','Agendar reunião','Reunião','Negociação','Contrato'];
+  const ESTR=[
+    [['p','moon','Responder fora do horário comercial'],['p','banknote','Falar de honorário'],['q','message-circle','Mensagens seguidas sem resposta do lead','']],
+    [['p','list-checks','Fazer as perguntas do roteiro'],['p','file-text','Pedir documentos (CNIS, laudos)'],['p','user-x','Desqualificar o lead'],['q','rotate-ccw','Retomadas se o lead sumir','']],
+    [['p','calendar-search','Oferecer horários da Agenda'],['p','calendar-check','Confirmar o horário'],['p','calendar-sync','Remarcar'],['p','banknote','Citar o honorário da tabela'],['q','message-circle','Mensagens seguidas sem resposta do lead','']],
+    [['p','notebook-pen','Resumo do caso pro advogado'],['p','send','Resumo do combinado pro lead'],['p','user','Conduzir a reunião']],
+    [['p','banknote','Explicar o honorário da tabela'],['p','message-square-warning','Responder objeção de preço'],['p','percent','Dar desconto'],['q','hourglass',' Prazo pro lead decidir',' h']],
+    [['p','file-signature','Mandar o contrato (ZapSign)'],['p','bell-ring','Cobrar a assinatura'],['q','bell','Lembretes de assinatura','']],
+  ];
+  const C=[['Pediu pra falar com uma pessoa','Fora do tema','Menor de idade','Áudio longo'],['Dúvida jurídica complicada','Lead irritado','Já tem advogado'],['Lead irritado','Pediu humano','Faltou à reunião'],['Faltou à reunião','Pediu outro advogado'],['Pediu desconto','Pediu humano','Comparou preço'],['Quer mudar cláusula','Tese sem modelo no ZapSign']];
+  const P={
+    cautelosa:{nome:'Cautelosa',desc:'Pra fase de testes. A IA recebe o lead e faz o roteiro; daí em diante, tudo passa pela equipe.',m:2,
+      v:[['R','N',1],['S','R','N',1],['R','R','N','N',2],['R','R','N'],['R','R','N',24],['N','R',1]],c:[[1,1,1,1],[1,1,1],[1,1,1],[1,1],[1,1,1],[1,1]]},
+    equilibrada:{nome:'Equilibrada',desc:'Qualifica e marca a reunião sozinha. Honorário só da tabela, em rascunho. O fechamento fica com a equipe.',m:3,rec:1,
+      v:[['S','N',2],['S','S','R',2],['S','S','R','R',3],['S','R','N'],['R','R','N',48],['R','S',3]],c:[[1,1,1,0],[1,1,1],[1,1,0],[1,1],[1,1,0],[1,1]]},
+    acelerada:{nome:'Acelerada',desc:'Pra tese já testada e com modelo no ZapSign. Vai até o contrato, mas a reunião é sempre com uma pessoa e desconto, nunca.',m:6,
+      v:[['S','R',3],['S','S','S',3],['S','S','S','S',3],['S','S','N'],['S','R','N',72],['S','S',3]],c:[[1,0,1,0],[1,0,1],[0,1,0],[1,0],[1,0,0],[1,1]]},
+  };
+  const cp=o=>JSON.parse(JSON.stringify(o));
+  const novo=k=>({base:k,m:P[k].m,v:cp(P[k].v),c:cp(P[k].c)});
+  const A=[
+    {g:'Escritório',nm:'Padrão do escritório',cfg:novo('equilibrada')},
+    {g:'Teses',nm:'Auxílio por incapacidade temporária (B31)',herda:1},
+    {g:'Teses',nm:'Aposentadoria por incapacidade permanente (B32)',herda:1},
+    {g:'Teses',nm:'Auxílio-acidente (B36)',cfg:(()=>{const x=novo('acelerada');x.v[4][2]='R';return x})()},
+    {g:'Teses',nm:'BPC/LOAS',cfg:novo('cautelosa')},
+    {g:'Teses',nm:'Acréscimo de 25% (grande invalidez)',herda:1},
+    {g:'Teses',nm:'Salário-maternidade',cfg:novo('acelerada')},
+    {g:'Teses',nm:'Isenção de IR por doença grave',cfg:novo('cautelosa')},
+    {g:'Teses',nm:'Trabalhista: acidente ou doença do trabalho',herda:1},
+    {g:'Teses',nm:'Trabalhista: rescisão indireta',herda:1},
+    {g:'Teses',nm:'Trabalhista: reconhecimento de vínculo',herda:1},
+    {g:'Teses',nm:'Trabalhista: direito suprimido',herda:1},
+    {g:'Caixas sem tese',nm:'WhatsApp: número geral',herda:1},
+    {g:'Caixas sem tese',nm:'Instagram Direct',cfg:novo('cautelosa')},
+  ];
+  const NOME={S:'Sozinha',R:'Rascunho',N:'Nunca'}, K={S:'k-s',R:'k-r',N:'k-n'}, CYC={S:'R',R:'N',N:'S'};
+  let at=0, sel=2, q='', alteracoes=0;
+  const cfgDe=a=>a.herda?A[0].cfg:a.cfg;
+  function nMud(x){const b=P[x.base];let n=x.m!=b.m?1:0;x.v.forEach((r,e)=>r.forEach((v,i)=>{if(v!==b.v[e][i])n++}));x.c.forEach((r,e)=>r.forEach((v,i)=>{if(v!=b.c[e][i])n++}));return n;}
+  const est=(i,m)=> i<m?'s':(i==5&&m<6?'n':'r');
+  const mini=m=>'<span class="mini">'+[0,1,2,3,4,5].map(i=>'<i class="m-'+est(i,m)+'"></i>').join('')+'</span>';
+  const ic=n=>'<i data-lucide="'+n+'"></i>';
+
+  function lista(){
+    let h='',g='';
+    A.forEach((a,i)=>{
+      if(q && !a.nm.toLowerCase().includes(q)) return;
+      if(a.g!=g){g=a.g;h+='<div class="grupo"><span>'+g+'</span></div>';}
+      const x=cfgDe(a), n=a.herda?0:nMud(x);
+      const e = i==0 ? P[x.base].nome+(n?' · personalizado':'') : a.herda ? 'segue o padrão' : P[x.base].nome+(n?' · '+n+' ajuste'+(n>1?'s':''):'');
+      h+='<button class="alvo'+(i==at?' on':'')+'" data-a="'+i+'"><span class="nm">'+a.nm+'</span><span class="linha2"><span class="est'+(n?' pers':'')+'">'+e+'</span>'+mini(x.m)+'</span></button>';
+    });
+    document.getElementById('lista').innerHTML=h||'<div class="grupo">Nada encontrado.</div>';
+  }
+
+  function editor(){
+    const a=A[at], x=cfgDe(a), b=P[x.base], n=a.herda?0:nMud(x), tipo= at==0?'Escritório':(a.g=='Teses'?'Tese':'Caixa');
+    let h='<div class="ed-cab"><div class="tit"><div class="tipo">'+tipo+'</div><h2>'+a.nm+'</h2><div class="estado">';
+    if(at==0) h+='<span>Vale pra toda tese e caixa que segue o padrão.</span>';
+    if(!a.herda) h+= n ? '<span class="selo act">'+ic('sliders-horizontal')+'Personalizado · base '+b.nome+' · '+n+' ajuste'+(n>1?'s':'')+'</span><a data-reset="1">Desfazer ajustes</a>'
+                       : '<span class="selo neutro">Perfil '+b.nome+'</span>';
+    h+='</div></div>';
+    if(at!=0 && !a.herda) h+='<button class="btn" data-herda="1">'+ic('undo-2')+'Voltar a seguir o padrão</button>';
+    h+='</div>';
+    if(a.herda) h+='<div class="herda">'+ic('git-branch')+'<span>Esta '+tipo.toLowerCase()+' segue o <b>Padrão do escritório</b> ('+P[A[0].cfg.base].nome+'). O que mudar lá, muda aqui.</span><button class="btn tint" data-own="1">'+ic('pencil')+'Personalizar só esta</button></div>';
+
+    const tr = a.herda?' travado':'';
+    h+='<section class="sec'+tr+'"><div class="sec-cab"><h3>Perfil</h3><span class="dica">Ponto de partida. Dá pra ajustar tudo embaixo.</span></div><div class="perfis">'+
+      Object.entries(P).map(([k,p])=>'<button class="pf'+(k==x.base?' on':'')+'" data-pf="'+k+'"><span class="t">'+p.nome+(p.rec?'<span class="selo act">recomendado</span>':'')+'</span><p>'+p.desc+'</p>'+mini(p.m)+'</button>').join('')+'</div></section>';
+
+    h+='<section class="sec'+tr+'"><div class="sec-cab"><h3>Até onde a IA vai sozinha</h3><span class="dica">Arraste o marcador. Clique numa etapa pra ver os limites dela.</span></div><div class="trilha"><div class="trilha-pad"><div class="trilho" id="trilho" ><div class="base">'+
+      [0,1,2,3,4,5].map(i=>'<i class="m-'+est(i,x.m)+'"></i>').join('')+'</div>'+
+      [0,1,2,3,4,5].map(i=>'<span class="no m-'+est(i,x.m)+'" style="left:'+((i+.5)/6*100)+'%"></span>').join('')+
+      '<div class="alca" id="alca" role="slider" tabindex="0" aria-label="Até onde a IA vai sozinha" aria-valuemin="0" aria-valuemax="6" aria-valuenow="'+x.m+'" aria-valuetext="'+(x.m?ET[x.m-1]:'nenhuma etapa')+'" style="left:'+(x.m/6*100)+'%"><span class="rot">'+ic('bot')+(x.m==0?'IA não manda nada':x.m==6?'IA vai até o fim':'IA vai até aqui')+'</span><span class="pino"></span></div></div></div>'+
+      '<div class="etapas">'+ET.map((e,i)=>{const s=est(i,x.m);return '<button class="etapa'+(i==sel?' on':'')+'" data-i="'+i+'"><b>'+e+'</b><span class="etq '+({s:'k-s',r:'k-r',n:'k-o'})[s]+'">'+({s:'Sozinha',r:'Rascunho',n:'Só equipe'})[s]+'</span></button>'}).join('')+'</div></div>';
+    h+='<div class="frase">'+ic('message-square-text')+'<span>'+(x.m==0?'A IA <b>não manda nada sozinha</b>. Tudo vira rascunho pra equipe aprovar.':x.m==6?'A IA conduz <b>sozinha até o contrato</b> e só chama a equipe quando bate num limite.':'A IA conduz sozinha até <b>'+ET[x.m-1].toLowerCase()+'</b>. Quando o lead chega em <b>'+ET[x.m].toLowerCase()+'</b>, ela passa a escrever rascunhos e avisa o responsável.')+'</span></div></section>';
+
+    h+='<section class="sec'+tr+'"><div class="sec-cab"><h3>Limites em '+ET[sel].toLowerCase()+'</h3><span class="dica">Clique no estado pra trocar.</span></div><div class="lims">';
+    ESTR[sel].forEach((l,li)=>{const v=x.v[sel][li], m=!a.herda&&v!==b.v[sel][li];
+      h+='<div class="lim">'+ic(l[1])+'<span class="tx">'+(m?'<span class="mud-p" title="Ajustado"></span>':'')+l[2]+'</span>'+
+        (l[0]=='p' ? '<button class="estado-btn '+K[v]+'" data-p="'+li+'" title="Trocar"><span class="bol">'+NOME[v]+'</span>'+ic('chevrons-up-down')+'</button>'
+                   : '<span class="passo"><button data-q="'+li+'" data-d="-1" aria-label="Diminuir">'+ic('minus')+'</button><span class="v mono">'+v+l[3]+'</span><button data-q="'+li+'" data-d="1" aria-label="Aumentar">'+ic('plus')+'</button></span>')+'</div>'});
+    const mc=C[sel].some((c,ci)=>!a.herda&&x.c[sel][ci]!=b.c[sel][ci]);
+    h+='<div class="lim">'+ic('hand')+'<span class="tx">'+(mc?'<span class="mud-p"></span>':'')+'Para e chama a equipe quando</span><span class="chips">'+C[sel].map((c,ci)=>'<button class="chip'+(x.c[sel][ci]?' on':'')+'" data-c="'+ci+'">'+(x.c[sel][ci]?ic('check'):'')+c+'</button>').join('')+'</span></div></div>';
+    h+='<div class="legenda"><span><i style="background:var(--ok-solid)"></i>Sozinha: a IA manda</span><span><i style="background:var(--warn-solid)"></i>Rascunho: a equipe aprova antes</span><span><i style="background:var(--bad)"></i>Nunca: só uma pessoa</span><span><i style="background:var(--act)"></i>Ajustado à mão</span></div></section>';
+
+    document.getElementById('ed').innerHTML=h;
+    document.getElementById('pend').textContent = alteracoes ? alteracoes+' alteração'+(alteracoes>1?'ões':'')+' não salva'+(alteracoes>1?'s':'') : '';
+    lucide.createIcons();
+    ligarTrilho();
+  }
+  function render(){lista();editor();}
+
+  function setM(m){const a=A[at]; if(a.herda) return; const x=a.cfg; m=Math.max(0,Math.min(6,m)); if(m!=x.m){x.m=m;alteracoes++;render();}}
+  function ligarTrilho(){
+    const t=document.getElementById('trilho'), al=document.getElementById('alca'); if(!t) return;
+    const pos=ev=>{const r=t.getBoundingClientRect();return Math.round((ev.clientX-r.left)/r.width*6);};
+    let arr=false;
+    t.addEventListener('pointerdown',ev=>{arr=true;al.classList.add('arrastando');t.setPointerCapture(ev.pointerId);mover(ev);});
+    t.addEventListener('pointermove',ev=>{if(arr)mover(ev);});
+    t.addEventListener('pointerup',ev=>{arr=false;setM(pos(ev));});
+    function mover(ev){const r=t.getBoundingClientRect();const p=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));al.style.left=(p*100)+'%';}
+    al.addEventListener('keydown',ev=>{const x=cfgDe(A[at]);if(ev.key=='ArrowRight'){setM(x.m+1);ev.preventDefault();}if(ev.key=='ArrowLeft'){setM(x.m-1);ev.preventDefault();}if(ev.type&&document.getElementById('alca'))document.getElementById('alca').focus();});
+  }
+
+  document.getElementById('lista').addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(t){at=+t.dataset.a;render()}});
+  document.getElementById('q').addEventListener('input',e=>{q=e.target.value.toLowerCase().trim();lista();lucide.createIcons();});
+  document.getElementById('ed').addEventListener('click',ev=>{
+    const a=A[at], t=ev.target.closest('[data-pf],[data-own],[data-herda],[data-reset],[data-i],[data-p],[data-q],[data-c]'); if(!t) return;
+    if(t.dataset.i!==undefined){sel=+t.dataset.i;render();return;}
+    if(t.dataset.own){a.cfg=cp(A[0].cfg);delete a.herda;}
+    else if(t.dataset.herda){a.herda=1;delete a.cfg;}
+    else if(a.herda) return;
+    else if(t.dataset.pf){a.cfg=novo(t.dataset.pf);}
+    else if(t.dataset.reset){a.cfg=novo(a.cfg.base);}
+    else {const x=a.cfg;
+      if(t.dataset.p!==undefined){const i=+t.dataset.p;x.v[sel][i]=CYC[x.v[sel][i]];}
+      else if(t.dataset.q!==undefined){const i=+t.dataset.q;x.v[sel][i]=Math.max(0,x.v[sel][i]+(+t.dataset.d));}
+      else if(t.dataset.c!==undefined){const i=+t.dataset.c;x.c[sel][i]=x.c[sel][i]?0:1;}
+    }
+    alteracoes++; render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

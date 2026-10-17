@@ -165,8 +165,9 @@ _Avoid_: cenário, scenario
 
 **Tool**:
 Uma capacidade que o Assistente pode invocar (calcular benefício, buscar no
-ADVBOX…). Tool de leitura responde; Tool de escrita nunca executa — gera uma
-Sugestão pendente.
+ADVBOX…). Tool de leitura responde; Tool de escrita gera uma Sugestão
+pendente. Exceção: marcar reunião e o contrato automático executam quando o
+Perfil da IA dá Permissão *sozinha* e o lead está antes do Marcador.
 
 **Sugestão**:
 Uma ação proposta pela IA à espera do clique humano (rascunho, alerta, mover
@@ -178,10 +179,37 @@ O registro auditável de uma Tool invocada: quando, com o quê, o que voltou,
 quanto demorou.
 _Avoid_: confundir com Execução de fluxo (a passada de um Fluxo, ver Automações)
 
-**Modo do Copiloto**:
-O grau de autonomia da IA numa conversa específica: manual (não age),
-rascunho (propõe, humano envia), piloto limitado (envia sozinha só logística),
-piloto total. Padrão é rascunho.
+**Perfil da IA**:
+O conjunto de regras de até onde a IA conduz o lead sozinha: um Marcador na
+Trilha, a Permissão de cada ação e os Gatilhos de equipe. Vale para uma Tese,
+uma caixa ou o escritório (o Padrão do escritório); quem manda é a conversa,
+depois a Tese, depois a caixa, depois o padrão. Nasce de um dos três perfis
+prontos (Cautelosa, Equilibrada, Acelerada) e vira *personalizado* quando ajustado.
+_Avoid_: modo do copiloto, piloto, "sozinha até…" (eram os 7 modos antigos)
+
+**Trilha**:
+As Etapas abertas do Funil, em ordem, vistas como o caminho que a IA percorre
+com o lead.
+
+**Marcador**:
+O ponto da Trilha até onde a IA responde sozinha. Nas Etapas depois dele, a
+resposta vira rascunho e o responsável é avisado.
+_Avoid_: limite (limite é o nome genérico de qualquer regra do Perfil)
+
+**Permissão**:
+O que o Perfil deixa a IA fazer com uma ação (marcar reunião, citar
+honorário, mandar contrato…): *sozinha* (executa), *rascunho* (vira Sugestão
+ou rascunho para uma pessoa aprovar) ou *nunca*. A mais restrita vence.
+
+**Gatilho de equipe**:
+Situação em que a IA para e chama uma pessoa (pediu humano, lead irritado,
+fora do tema…), escolhida por Etapa no Perfil.
+_Avoid_: handoff, transbordo
+
+**Pausa da conversa**:
+A exceção de uma conversa ao Perfil: *IA pausada* (não age) ou *só rascunho*.
+Feita por pessoa no botão da conversa ou por regra (Perdido pausa; roteiro
+que chama humano põe em só rascunho).
 
 **FAQ**:
 Pergunta que o *lead* faz e a resposta aprovada da banca, por Tese; o
