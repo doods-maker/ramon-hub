@@ -65,7 +65,7 @@ onMounted(() => {
   <!-- overflow-x-hidden + min-w-0: o painel NUNCA rola na horizontal; conteúdo
        largo (tabelas) rola dentro do próprio bloco, que já tem overflow-x-auto -->
   <div
-    class="flex flex-col h-full min-w-0 max-w-full overflow-x-hidden"
+    class="flex flex-col flex-1 h-full min-w-0 max-w-full overflow-x-hidden"
     data-testid="lead-conversation-panel"
   >
     <div class="flex items-center gap-2 border-b border-n-weak px-3 py-2">

@@ -761,7 +761,7 @@ const discard = async () => {
     <!-- corpo da aba ativa -->
     <div
       data-testid="lead-panel-corpo"
-      class="flex flex-col flex-1 gap-3 min-w-0 overflow-y-auto overflow-x-hidden p-3"
+      class="flex flex-col flex-1 gap-3 min-w-0 overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] p-3"
     >
       <template v-if="shownTab === 'resumo'">
         <!-- identidade: foto, nome (+ ficha e ⋯), telefone, desde quando -->
