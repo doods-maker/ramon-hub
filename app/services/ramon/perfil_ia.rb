@@ -70,6 +70,9 @@ class Ramon::PerfilIa
   # O label da Etapa (estável a renomeação); etapa sem label = "id-<id>". Marcador e gatilhos usam a mesma chave.
   def self.chave_da_etapa(lead_stage) = lead_stage ? lead_stage.label.presence || "id-#{lead_stage.id}" : ''
 
+  # Grava os alvos enviados (recusa o inválido com ArgumentError): ver Gravacao.
+  def self.gravar!(account, alvos) = Gravacao.gravar!(account, alvos)
+
   # Tese manda (a própria ou o padrão); a caixa só vale para lead sem tese.
   def self.alvo_e_cfg(account, lead, conversa)
     tipo, id, prefixo = lead&.thesis_id ? ['teses', lead.thesis_id, 'tese'] : ['caixas', conversa&.inbox_id, 'caixa']
