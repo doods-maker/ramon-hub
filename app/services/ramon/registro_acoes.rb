@@ -35,7 +35,8 @@ class Ramon::RegistroAcoes
     @registros = carregar(audits)
     @nomes = nomes(audits)
     {
-      registros: audits.map { |audit| linha(audit) },
+      # linha da conta sem nada mudado no Perfil (ex.: a migração INICIAL) não é "mudou como a IA atende": sai da página
+      registros: audits.map { |audit| linha(audit) }.reject { |registro| registro[:ia] == [] },
       total: escopo.count, pagina: pagina, por_pagina: POR_PAGINA,
       pessoas: @account.users.order(:name).map { |user| { id: user.id, nome: user.name } }
     }

@@ -279,6 +279,40 @@ describe('Como a IA atende', () => {
     expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
   });
 
+  it('religar um dia ou redigitar o mesmo valor não conta como alteração não salva', async () => {
+    const wrapper = await montar();
+    await achar(wrapper, 'dia-3').trigger('click');
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(true);
+    await achar(wrapper, 'dia-3').trigger('click'); // volta com [1,2,4,5,3]
+    await achar(wrapper, 'lim-retomadas_dia').setValue('15'); // número digitado = o salvo
+    await achar(wrapper, 'atraso-min').setValue('30');
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
+    expect(achar(wrapper, 'salvar').attributes('disabled')).toBeDefined();
+  });
+
+  it('avisa em "Retomadas por dia" quando o fluxo de cadência está no comando', async () => {
+    let wrapper = await montar();
+    expect(achar(wrapper, 'retomadas-no-fluxo').exists()).toBe(false);
+
+    const corpo = dados();
+    corpo.limites.retomadas_no_fluxo = true;
+    RamonIaAtendimentoAPI.get.mockResolvedValue({ data: corpo });
+    wrapper = await montar();
+    expect(achar(wrapper, 'retomadas-no-fluxo').text()).toContain(
+      'cadence flow decides'
+    );
+    expect(achar(wrapper, 'nao-salvas').exists()).toBe(false);
+  });
+
+  it('alvo que segue o padrão: os números dizem onde estão, em vez de "sem dados"', async () => {
+    const wrapper = await montar();
+    expect(achar(wrapper, 'numeros-vazio').text()).toBe('No data yet.');
+    await clicar(wrapper, 'alvo-tese:1');
+    expect(achar(wrapper, 'numeros-vazio').text()).toContain(
+      'Follows the default'
+    );
+  });
+
   it('"Histórico" abre o Registro de ações filtrado no tipo ia', async () => {
     const wrapper = await montar();
     await clicar(wrapper, 'historico');

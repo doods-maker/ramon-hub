@@ -23,6 +23,7 @@ import {
   efetivo,
   estadoDaEtapa,
   guardarTela,
+  limitesParaComparar,
   marcadorDe,
   marcadorDepoisDe,
   paraGravar,
@@ -149,8 +150,17 @@ const etapaAtual = computed(() =>
 );
 
 // Mudou = o que a IA faria (ou o "segue o padrão") é outro que o salvo.
-const chave = cfg =>
-  cfg ? JSON.stringify(efetivo(cfg, prontos.value, etapas.value)) : 'null';
+// Gatilhos em ordem fixa: tirar e pôr de volta um gatilho não é mudança.
+const chave = cfg => {
+  if (!cfg) return 'null';
+  const ef = efetivo(cfg, prontos.value, etapas.value);
+  return JSON.stringify({
+    ...ef,
+    gatilhos: Object.fromEntries(
+      Object.entries(ef.gatilhos).map(([e, lista]) => [e, [...lista].sort()])
+    ),
+  });
+};
 const mudados = computed(() =>
   dados.value
     ? Object.keys(cfgs.value).filter(
@@ -161,7 +171,8 @@ const mudados = computed(() =>
 const limitesMudaram = computed(
   () =>
     !!limites.value &&
-    JSON.stringify(limites.value) !== JSON.stringify(limitesSalvos.value)
+    JSON.stringify(limitesParaComparar(limites.value)) !==
+      JSON.stringify(limitesParaComparar(limitesSalvos.value))
 );
 const nMudancas = computed(
   () => mudados.value.length + (limitesMudaram.value ? 1 : 0)
@@ -281,7 +292,11 @@ const salvar = async () => {
     corpo[secao] = { ...corpo[secao], [numero]: cfg };
   });
   if (limitesMudaram.value) {
-    const { agente_dia: _somenteLeitura, ...editaveis } = limites.value;
+    const {
+      agente_dia: _somenteLeitura,
+      retomadas_no_fluxo: _tambem,
+      ...editaveis
+    } = limites.value;
     corpo.limites = editaveis;
   }
   salvando.value = true;
@@ -575,6 +590,7 @@ onBeforeRouteLeave(
               :etapa="etapaAtual"
               :numeros="numerosDaEtapa"
               :sugerir="sugerirSozinha"
+              :segue="segue"
               @sozinha="passarSozinha"
             />
           </section>

@@ -63,7 +63,15 @@ module Ramon::Roteiro::Teste
   def decisao(perfil, resposta)
     handoff = resposta['handoff_tool_called'] == true || resposta['response'] == 'conversation_handoff' || resposta['action'] == 'handoff'
     valor, motivo = perfil.decidir_turno(resposta, logistica: nil, handoff: handoff)
-    { 'decisao' => { 'valor' => valor.to_s, 'motivo' => motivo }, 'bloqueadas' => perfil.tools_bloqueadas }
+    { 'decisao' => { 'valor' => valor.to_s, 'motivo' => motivo }.merge(limitada_pelo_marcador(perfil, motivo)),
+      'bloqueadas' => perfil.tools_bloqueadas }
+  end
+
+  # Depois do Marcador a Tool de texto vira rascunho mesmo com a permissão da ação em Sozinha ("acao:x" no motivo): a tela diz
+  # que quem limitou foi o Marcador, não a ação.
+  def limitada_pelo_marcador(perfil, motivo)
+    acao = motivo.to_s[/\Aacao:(.+)\z/, 1]
+    acao && perfil.permissao(acao) != :rascunho ? { 'limitado' => true } : {}
   end
 
   def etapa_aberta(account)

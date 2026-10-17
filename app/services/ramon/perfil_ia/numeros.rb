@@ -18,11 +18,8 @@ module Ramon::PerfilIa::Numeros
 
   module_function
 
-  # { etapa_chave => { enviadas:, rascunhos: { igual:, editado:, descartado: }, chamou_equipe:, sugerir_sozinha: } };
-  # Etapa sem nada = chave ausente.
-  def de(account, alvo) = todos(account).fetch(alvo, {})
-
-  # { alvo => { etapa => ... } } numa consulta só (agrupada por alvo e Etapa).
+  # { alvo => { etapa_chave => { enviadas:, rascunhos: { igual:, editado:, descartado: }, chamou_equipe:, sugerir_sozinha: } } }
+  # numa consulta só (agrupada por alvo e Etapa); alvo/Etapa sem nada = chave ausente.
   # Um content_attributes que não é JSON quebra o cast na consulta: a tela fica sem números ("sem dados ainda"), não cai.
   def todos(account)
     contar(account, linhas(account))

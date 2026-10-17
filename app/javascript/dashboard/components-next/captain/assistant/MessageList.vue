@@ -56,15 +56,17 @@ const rotuloFerramenta = ferramenta =>
 
 // Perfil da IA no Testar: "sairia sozinha" / "viraria rascunho" com o motivo do Ramon::PerfilIa.decidir.
 const P = 'INTEL.TESTAR.PERFIL';
-const motivoLegivel = motivo => {
+// limitado: a ação em si está em Sozinha; quem a segura em rascunho é o Marcador (a Tool de texto é teto depois dele).
+const motivoLegivel = (motivo, limitado) => {
   const [codigo, acao] = motivo.split(':');
-  return codigo === 'acao'
-    ? t(`${P}.MOTIVO.acao`, { acao: t(`RAMON.COMO_IA.ACOES.${acao}`) })
-    : t(`${P}.MOTIVO.${codigo}`);
+  if (codigo !== 'acao') return t(`${P}.MOTIVO.${codigo}`);
+  return t(`${P}.MOTIVO.${limitado ? 'acao_limitada' : 'acao'}`, {
+    acao: t(`RAMON.COMO_IA.ACOES.${acao}`),
+  });
 };
-const rotuloDecisao = ({ valor, motivo }) =>
+const rotuloDecisao = ({ valor, motivo, limitado }) =>
   t(`${P}.${valor === 'envia' ? 'SAIRIA' : 'RASCUNHO'}`, {
-    motivo: motivoLegivel(motivo),
+    motivo: motivoLegivel(motivo, limitado),
   });
 
 const scrollToBottom = async () => {

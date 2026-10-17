@@ -11,6 +11,8 @@ const props = defineProps({
   // { enviadas, rascunhos: { igual, editado, descartado }, chamou_equipe, sugerir_sozinha } ou null = sem dados
   numeros: { type: Object, default: null },
   sugerir: { type: Boolean, default: false },
+  // o alvo segue o padrão: os carimbos das mensagens dele ficam no alvo 'padrao'
+  segue: { type: Boolean, default: false },
 });
 const emit = defineEmits(['sozinha']);
 const { t } = useI18n();
@@ -31,7 +33,7 @@ const revisados = computed(() =>
       data-testid="numeros-vazio"
       class="text-[12.5px] text-n-slate-10"
     >
-      {{ t(`${K}.SEM_DADOS`) }}
+      {{ t(`${K}.${segue ? 'SEGUE' : 'SEM_DADOS'}`) }}
     </p>
     <div
       v-else

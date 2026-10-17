@@ -113,6 +113,7 @@
         "ATRASO_NOTA": "Sorteado a cada resposta; no máximo {max} segundos.",
         "fluxo_ia_dia": "Chamadas de IA dos fluxos por dia",
         "retomadas_dia": "Retomadas por dia",
+        "RETOMADAS_NO_FLUXO": "Hoje quem decide é o fluxo de cadência (limite do fluxo).",
         "retomada_intervalo_dias": "Dias entre retomadas do mesmo lead",
         "TETO_USD": "Teto de gasto por dia (US$)",
         "TETO_USD_NOTA": "Vazio = sem alerta.",
@@ -138,6 +139,7 @@
       "NUMEROS": {
         "TITULO": "Últimos 30 dias em {etapa} (só deste alvo)",
         "SEM_DADOS": "Sem dados ainda.",
+        "SEGUE": "Segue o padrão — os números estão no Padrão do escritório.",
         "ENVIADAS": "{n} enviadas sozinhas",
         "RASCUNHOS": "Rascunhos: {igual} sem edição · {editado} editados · {descartado} descartados",
         "EQUIPE": "Chamou a equipe {n} vezes",

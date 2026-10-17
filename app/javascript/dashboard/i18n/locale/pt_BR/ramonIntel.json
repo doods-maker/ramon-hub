@@ -120,6 +120,7 @@
         "MOTIVO": {
           "antes_do_marcador": "Etapa antes do Marcador",
           "acao": "{acao} está em Rascunho",
+          "acao_limitada": "{acao} está em Sozinha, mas a etapa vem depois do marcador: limitado pelo marcador",
           "logistica": "só logística",
           "depois_do_marcador": "Etapa depois do Marcador",
           "handoff": "chamou a equipe",

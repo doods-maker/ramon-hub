@@ -149,6 +149,21 @@ export const paraGravar = (cfg, etapas) => {
   return limpo;
 };
 
+// Limites gerais na forma de comparar (dias ordenados, números como números, chaves em ordem fixa): religar um dia ou
+// redigitar o mesmo valor não conta como mudança. Só as chaves editáveis (agente_dia e retomadas_no_fluxo são do servidor).
+const numero = valor => (valor === '' || valor == null ? null : Number(valor));
+export const limitesParaComparar = l => ({
+  horario: {
+    dias: [...l.horario.dias].map(Number).sort((a, b) => a - b),
+    janelas: l.horario.janelas.map(par => [...par]),
+  },
+  atraso: { min: numero(l.atraso.min), max: numero(l.atraso.max) },
+  fluxo_ia_dia: numero(l.fluxo_ia_dia),
+  retomadas_dia: numero(l.retomadas_dia),
+  retomada_intervalo_dias: numero(l.retomada_intervalo_dias),
+  teto_usd: numero(l.teto_usd),
+});
+
 // "Passar pra Sozinha?" (números da Etapa): o Marcador vai para logo depois da Etapa — ela e as de antes ficam Sozinha.
 export const marcadorDepoisDe = (chave, etapas) =>
   marcadorDaPosicao(etapas.findIndex(e => e.chave === chave) + 1, etapas);

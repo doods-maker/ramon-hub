@@ -47,7 +47,7 @@ RSpec.describe Ramon::HorarioComercial do
     let(:account) { create(:account) }
 
     before do
-      Ramon::IaLimites.gravar!(account, { 'horario' => { 'dias' => [1, 6], 'janelas' => [%w[10:00 11:00]] } }) # segunda e sábado, 10h–11h
+      account.update!(settings: { 'ia_limites' => { 'horario' => { 'dias' => [1, 6], 'janelas' => [%w[10:00 11:00]] } } }) # segunda e sábado, 10h–11h
     end
 
     it 'aberto? usa os dias e as faixas da conta; sem conta vale o padrão', :aggregate_failures do

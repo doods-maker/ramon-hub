@@ -120,6 +120,7 @@
         "MOTIVO": {
           "antes_do_marcador": "stage before the marker",
           "acao": "{acao} is set to Draft",
+          "acao_limitada": "{acao} is On its own, but the stage is after the marker: limited by the marker",
           "logistica": "logistics only",
           "depois_do_marcador": "stage after the marker",
           "handoff": "called the team",

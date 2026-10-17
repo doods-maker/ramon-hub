@@ -35,7 +35,7 @@
     "FLUXOS": {
       "TITULO": "Fluxos com IA",
       "HOJE": "{n} de {teto} chamadas hoje",
-      "NOTA": "O teto diário dos fluxos vem do servidor (RAMON_FLUXO_IA_DIA)."
+      "NOTA": "O teto diário dos fluxos é definido em \"Como a IA atende\" (Limites gerais do escritório); o padrão vem do servidor."
     },
     "TABELA": {
       "TITULO": "Detalhe",

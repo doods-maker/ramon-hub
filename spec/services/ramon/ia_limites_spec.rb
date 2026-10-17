@@ -5,6 +5,9 @@ RSpec.describe Ramon::IaLimites do
 
   def salvar(valor) = account.update!(settings: { 'ia_limites' => valor })
 
+  # o caminho da escrita: o fragmento validado entra no settings (a tela faz isso junto com o Perfil, em Ramon::PerfilIa.gravar!)
+  def gravar!(limites) = account.update!(settings: Hash(account.settings).merge(described_class.fragmento!(account, limites)))
+
   describe '.de' do
     it 'sem nada salvo (ou sem conta) devolve os valores de hoje', :aggregate_failures do
       padrao = { horario: { 'dias' => [1, 2, 3, 4, 5], 'janelas' => [%w[08:30 12:00], %w[13:30 18:00]] }, atraso: 30..180,
@@ -25,15 +28,23 @@ RSpec.describe Ramon::IaLimites do
     end
   end
 
-  describe '.gravar!' do
+  describe '.corpo' do
+    it 'diz se o fluxo de cadência está no comando (retomadas_dia deixa de valer)', :aggregate_failures do
+      expect(described_class.corpo(account)).to include(retomadas_no_fluxo: false)
+      allow(Ramon::Fluxos::Retomada).to receive(:assumiu?).with(account).and_return(true)
+      expect(described_class.corpo(account)).to include(retomadas_no_fluxo: true)
+    end
+  end
+
+  describe '.fragmento!' do
     it 'grava parcial sem apagar o resto e o teto em US$ na chave do alerta', :aggregate_failures do
-      described_class.gravar!(account, { 'retomadas_dia' => 20 })
-      described_class.gravar!(account, { 'atraso' => { 'min' => 10, 'max' => 60 }, 'teto_usd' => '2,5' })
+      gravar!({ 'retomadas_dia' => 20 })
+      gravar!({ 'atraso' => { 'min' => 10, 'max' => 60 }, 'teto_usd' => '2,5' })
       account.reload
       expect(account.settings['ia_limites']).to eq('retomadas_dia' => 20, 'atraso' => { 'min' => 10, 'max' => 60 })
       expect(Ramon::IaGastoAlerta.teto(account)).to eq(2.5)
 
-      described_class.gravar!(account, { 'teto_usd' => nil })
+      gravar!({ 'teto_usd' => nil })
       expect(Ramon::IaGastoAlerta.teto(account.reload)).to be_nil
     end
 
@@ -53,13 +64,19 @@ RSpec.describe Ramon::IaLimites do
         { 'teto_usd' => -1 }, { 'teto_usd' => 'caro' }, 'nada'
       ]
       invalidos.each do |corpo|
-        expect { described_class.gravar!(account, corpo) }.to raise_error(ArgumentError, /\S/)
+        expect { gravar!(corpo) }.to raise_error(ArgumentError, /\S/)
       end
       expect(account.reload.settings['ia_limites']).to be_nil
     end
 
+    it 'valor salvo que não é Hash não derruba a escrita' do
+      salvar('texto solto')
+      gravar!({ 'retomadas_dia' => 20 })
+      expect(account.reload.settings['ia_limites']).to eq('retomadas_dia' => 20)
+    end
+
     it 'duas faixas encostadas (fim = início) valem' do
-      described_class.gravar!(account, { 'horario' => { 'dias' => [6, 0, 6], 'janelas' => [%w[08:00 12:00], %w[12:00 14:00]] } })
+      gravar!({ 'horario' => { 'dias' => [6, 0, 6], 'janelas' => [%w[08:00 12:00], %w[12:00 14:00]] } })
       expect(described_class.de(account.reload)[:horario]).to eq('dias' => [0, 6], 'janelas' => [%w[08:00 12:00], %w[12:00 14:00]])
     end
   end

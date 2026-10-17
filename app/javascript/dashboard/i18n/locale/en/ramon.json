@@ -113,6 +113,7 @@
         "ATRASO_NOTA": "Drawn at random for each reply; at most {max} seconds.",
         "fluxo_ia_dia": "Flow AI calls per day",
         "retomadas_dia": "Follow-ups per day",
+        "RETOMADAS_NO_FLUXO": "Today the cadence flow decides (the flow's own limit).",
         "retomada_intervalo_dias": "Days between follow-ups of the same lead",
         "TETO_USD": "Daily spend cap (US$)",
         "TETO_USD_NOTA": "Empty = no alert.",
@@ -138,6 +139,7 @@
       "NUMEROS": {
         "TITULO": "Last 30 days in {etapa} (this target only)",
         "SEM_DADOS": "No data yet.",
+        "SEGUE": "Follows the default: the numbers are in the Office default.",
         "ENVIADAS": "{n} sent on its own",
         "RASCUNHOS": "Drafts: {igual} unchanged · {editado} edited · {descartado} discarded",
         "EQUIPE": "Called the team {n} times",

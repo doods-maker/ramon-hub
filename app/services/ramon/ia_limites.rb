@@ -20,25 +20,24 @@ module Ramon::IaLimites
       .merge(INTEIROS.keys.to_h { |k| [k.to_sym, valido(salvo[k], padrao_inteiro(k)) { |v| inteiro!(k, v) }] })
   end
 
-  # Corpo do GET da tela: os limites + o teto em US$ (nil = sem alerta) + o teto do agente @claude (só leitura).
+  # Corpo do GET da tela: os limites + o teto em US$ (nil = sem alerta) + o teto do agente @claude (só leitura) + se o fluxo
+  # de cadência está no comando (então retomadas_dia não vale: quem decide é o limite do fluxo — a tela avisa).
   def corpo(account)
     limites = de(account)
     limites.merge(atraso: { min: limites[:atraso].min, max: limites[:atraso].max },
-                  teto_usd: Ramon::IaGastoAlerta.teto(account), agente_dia: AgenteExecucao::TETO_DIA)
+                  teto_usd: Ramon::IaGastoAlerta.teto(account), agente_dia: AgenteExecucao::TETO_DIA,
+                  retomadas_no_fluxo: Ramon::Fluxos::Retomada.assumiu?(account))
   end
 
   # Valida o que veio da tela (chaves em string; parcial vale) e devolve o fragmento de settings a mesclar. ArgumentError = 422.
   def fragmento!(account, limites)
     raise ArgumentError, 'limites inválidos' unless limites.is_a?(Hash)
 
-    novo = Hash(account.settings&.dig(CHAVE)).merge(validados!(limites))
+    salvo = account.settings&.dig(CHAVE)
+    novo = (salvo.is_a?(Hash) ? salvo : {}).merge(validados!(limites))
     fragmento = { CHAVE => novo }
     fragmento[Ramon::IaGastoAlerta::CHAVE_TETO] = teto!(limites['teto_usd']) if limites.key?('teto_usd')
     fragmento
-  end
-
-  def gravar!(account, limites)
-    account.update!(settings: Hash(account.settings).merge(fragmento!(account, limites)))
   end
 
   def validados!(limites)

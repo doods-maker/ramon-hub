@@ -3,8 +3,6 @@
 # custom_attributes.follow_up. Nada é enviado ao cliente — nota nasce RASCUNHO
 # e quem revisa e manda é o Eduardo.
 class Ramon::FollowUpDraftService
-  DAILY_CAP = Ramon::Fluxos::Retomada::TETO
-  MIN_GAP_DAYS = Ramon::Fluxos::Retomada::INTERVALO_DIAS
   MAX_MESSAGES = 200
 
   SYSTEM_PROMPT = <<~PROMPT.freeze

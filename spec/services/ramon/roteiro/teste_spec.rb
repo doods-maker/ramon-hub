@@ -104,4 +104,14 @@ RSpec.describe 'Ramon::Roteiro::Teste' do
       .to eq('valor' => 'envia', 'motivo' => 'antes_do_marcador')
     expect(Lead.count).to eq(0)
   end
+
+  it 'decisão depois do Marcador com a ação em Sozinha vem marcada como limitada pelo marcador', :aggregate_failures do
+    cfg = { 'base' => 'acelerada', 'marcador' => '_inicio', 'permissoes' => { 'citar_honorario' => 's' } }
+    perfil = Ramon::Roteiro::Teste.perfil(account, Ramon::Roteiro::Teste.de_params(account, { thesis_id: thesis.id, perfil: cfg }))
+    resposta = { 'response' => 'Fica R$ 3.000', 'tools_usadas' => ['simular_honorario'] }
+
+    expect(Ramon::Roteiro::Teste.decisao(perfil, resposta)['decisao'])
+      .to eq('valor' => 'rascunho', 'motivo' => 'acao:citar_honorario', 'limitado' => true)
+    expect(Ramon::Roteiro::Teste.decisao(perfil, { 'response' => 'Oi!', 'tools_usadas' => [] })['decisao']).not_to include('limitado')
+  end
 end

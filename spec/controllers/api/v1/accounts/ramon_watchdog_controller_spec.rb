@@ -23,7 +23,7 @@ RSpec.describe 'Ramon Watchdog API', type: :request do
     body = response.parsed_body
     expect(body['items'].pluck('lead_id')).to eq([insistido.id, parado.id])
     expect(body['items'].first).to include('tentativas' => 2, 'dias_parado' => 10)
-    expect(body['thresholds']).to include('teto_diario' => Ramon::FollowUpDraftService::DAILY_CAP)
+    expect(body['thresholds']).to include('teto_diario' => Ramon::Fluxos::Retomada.teto(account))
     expect(body['counters']).to include('parados_agora' => 2)
   end
 

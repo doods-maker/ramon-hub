@@ -5,7 +5,8 @@ import { useI18n } from 'vue-i18n';
 import { CAMPO, ROTULO } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 
 const props = defineProps({
-  // corpo.limites do GET: horario, atraso, fluxo_ia_dia, retomadas_dia, retomada_intervalo_dias, teto_usd, agente_dia
+  // corpo.limites do GET: horario, atraso, fluxo_ia_dia, retomadas_dia, retomada_intervalo_dias, teto_usd, agente_dia,
+  // retomadas_no_fluxo (o fluxo de cadência está no comando: retomadas_dia não vale)
   modelValue: { type: Object, required: true },
 });
 const emit = defineEmits(['update:modelValue']);
@@ -168,6 +169,15 @@ const mudarTeto = valor => mudar({ teto_usd: valor === '' ? null : valor });
             :value="modelValue[item.chave]"
             @input="mudar({ [item.chave]: $event.target.valueAsNumber })"
           />
+          <span
+            v-if="
+              item.chave === 'retomadas_dia' && modelValue.retomadas_no_fluxo
+            "
+            data-testid="retomadas-no-fluxo"
+            class="text-n-amber-11"
+          >
+            {{ t(`${K}.RETOMADAS_NO_FLUXO`) }}
+          </span>
         </label>
       </div>
 

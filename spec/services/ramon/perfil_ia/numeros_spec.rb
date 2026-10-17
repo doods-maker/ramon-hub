@@ -24,7 +24,7 @@ RSpec.describe Ramon::PerfilIa::Numeros do
     expect(described_class.todos(account)).to eq({}) # sem linha nenhuma
     carimbar({ 'ramon_piloto' => { 'modo' => 'piloto_limitado' } }, {})
 
-    expect(described_class.de(account, 'padrao')).to eq({})
+    expect(described_class.todos(account).fetch('padrao', {})).to eq({})
   end
 
   it 'consulta que quebra (content_attributes que não é JSON) = sem números, com aviso no log' do
@@ -32,7 +32,7 @@ RSpec.describe Ramon::PerfilIa::Numeros do
     allow(Rails.logger).to receive(:warn)
 
     expect(described_class.todos(account)).to eq({})
-    expect(described_class.de(account, 'padrao')).to eq({})
+    expect(described_class.todos(account).fetch('padrao', {})).to eq({})
     expect(Rails.logger).to have_received(:warn).with(/Numeros.*StatementInvalid/).twice
   end
 
@@ -46,7 +46,7 @@ RSpec.describe Ramon::PerfilIa::Numeros do
     create(:message, account: account, inbox: inbox, conversation: conversation, message_type: :outgoing,
                      content_attributes: { 'ramon_piloto' => { 'alvo' => 'padrao', 'etapa' => 'fase-qualificacao', 'handoff' => false } })
 
-    numeros = described_class.de(account, 'padrao')
+    numeros = described_class.todos(account).fetch('padrao', {})
     expect(numeros['fase-novo']).to eq(enviadas: 1, rascunhos: { igual: 19, editado: 1, descartado: 0 }, chamou_equipe: 2,
                                        sugerir_sozinha: true)
     expect(numeros['fase-qualificacao']).to include(enviadas: 1, chamou_equipe: 0, sugerir_sozinha: false)
@@ -57,10 +57,10 @@ RSpec.describe Ramon::PerfilIa::Numeros do
 
   it 'não sugere com menos de 20 revisados nem com a Etapa já Sozinha' do
     carimbar(*Array.new(19) { revisado('igual') })
-    expect(described_class.de(account, 'padrao')['fase-novo'][:sugerir_sozinha]).to be(false)
+    expect(described_class.todos(account).fetch('padrao', {})['fase-novo'][:sugerir_sozinha]).to be(false)
 
     carimbar(revisado('igual'))
     account.update!(settings: { 'ia_atendimento' => { 'padrao' => { 'base' => 'cautelosa', 'marcador' => 'fase-novo' } } })
-    expect(described_class.de(account, 'padrao')['fase-novo'][:sugerir_sozinha]).to be(false)
+    expect(described_class.todos(account).fetch('padrao', {})['fase-novo'][:sugerir_sozinha]).to be(false)
   end
 end

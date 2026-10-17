@@ -84,7 +84,9 @@ RSpec.describe 'Ramon Registro de ações API', type: :request do
     perfil = lambda do |valor|
       { 'ia_atendimento' => { 'teses' => { tese.id.to_s => { 'base' => 'cautelosa', 'permissoes' => { 'marcar_reuniao' => valor } } } } }
     end
-    [[perfil.call('r'), perfil.call('s')], [{ 'auto_resolve_after' => nil }, { 'auto_resolve_after' => 60 }]].each do |antes, depois|
+    # a 3ª muda o settings mas não o que a IA faz (padrão gravado = o INICIAL, como a migração): sem frase, não aparece
+    inicial = { 'ia_atendimento' => { 'padrao' => Ramon::PerfilIa::INICIAL } }
+    [[perfil.call('r'), perfil.call('s')], [{ 'auto_resolve_after' => nil }, { 'auto_resolve_after' => 60 }], [{}, inicial]].each do |antes, depois|
       Audited.audit_class.create!(auditable: account, associated: account, action: 'update', user: admin,
                                   audited_changes: { 'settings' => [antes, depois] })
     end

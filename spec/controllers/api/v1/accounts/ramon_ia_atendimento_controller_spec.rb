@@ -102,6 +102,7 @@ RSpec.describe 'Ramon IA Atendimento API', type: :request do
   end
 
   it 'GET traz os avisos de dependência e a caixa com perfil mesmo sem assistente', :aggregate_failures do
+    tese # criada antes do GET (let preguiçoso)
     caixa = create(:inbox, account: account)
     account.update!(settings: { 'ia_atendimento' => { 'caixas' => { caixa.id.to_s => { 'base' => 'cautelosa' } } } })
 
