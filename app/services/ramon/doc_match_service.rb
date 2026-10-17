@@ -1,16 +1,22 @@
 # Anexo (imagem/arquivo) chega numa conversa com lead + checklist de docs
-# pendente → pergunta ao LLM qual item do checklist o arquivo provavelmente é
-# (deepseek sem visão: a pista é nome do arquivo + tipo + fim da conversa).
+# pendente → pergunta ao LLM qual item do checklist o arquivo provavelmente é.
+# Com ANTHROPIC_API_KEY no servidor, foto/PDF vão pro Claude Haiku 5.5, que VÊ o
+# arquivo; sem ela (ou outro tipo/grande demais), o copiloto só tem nome + tipo +
+# fim da conversa. Assinatura do Claude (VPS) fica fora — termos, ver LlmEscolha.
 # Grava a sugestão em custom_attributes['doc_sugestao']; confirmação humana
 # fica pro painel (Task 6).
 class Ramon::DocMatchService
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você recebe um checklist de documentos de um caso previdenciário, os dados de um
-    arquivo que o cliente acabou de enviar e o fim da conversa. Aponte QUAL item do
-    checklist o arquivo provavelmente é. Responda APENAS um JSON válido (sem markdown):
-    {"item_id": <id do item>} ou {"item_id": null} se não der pra afirmar.
-    Na dúvida, responda null — nunca chute.
+    arquivo que o cliente acabou de enviar (às vezes o próprio arquivo) e o fim da
+    conversa. Aponte QUAL item do checklist o arquivo provavelmente é. Responda APENAS
+    um JSON válido (sem markdown): {"item_id": <id do item>} ou {"item_id": null} se
+    não der pra afirmar. Na dúvida, responda null — nunca chute.
   PROMPT
+  VISAO = { provider: 'anthropic', model: 'claude-haiku-5-5' }.freeze
+  # tipos que a API da Anthropic aceita; imagem até 5 MB em base64 (~3,75 MB crus)
+  VISAO_LIMITE = { 'image/jpeg' => 3.75.megabytes, 'image/png' => 3.75.megabytes, 'image/webp' => 3.75.megabytes,
+                   'image/gif' => 3.75.megabytes, 'application/pdf' => 30.megabytes }.freeze
 
   def initialize(message)
     @message = message
@@ -45,12 +51,18 @@ class Ramon::DocMatchService
   end
 
   def ask_llm(lead, itens, attachment)
+    ve = visao?(attachment)
     result = Ramon::LlmClient.complete(
-      **Ramon::LlmEscolha.para(lead.account, 'copiloto'),
-      system: SYSTEM_PROMPT, user: prompt_usuario(lead, itens, attachment),
+      **(ve ? VISAO : Ramon::LlmEscolha.para(lead.account, 'copiloto')),
+      system: SYSTEM_PROMPT, user: prompt_usuario(lead, itens, attachment), anexo: (attachment.file if ve),
       funcao: 'doc_match', account_id: lead.account_id, lead_id: lead.id, conversation_id: lead.conversation_id
     )
     parse_item_id(result.content)
+  end
+
+  def visao?(attachment)
+    limite = VISAO_LIMITE[attachment.file.content_type]
+    limite.present? && attachment.file.byte_size <= limite && Ramon::LlmEscolha.chave?('anthropic')
   end
 
   def prompt_usuario(lead, itens, attachment)

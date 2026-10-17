@@ -65,6 +65,21 @@ RSpec.describe Ramon::DocMatchService do
     expect(lead.reload.custom_attributes.dig('doc_sugestao', 'item_id')).to eq(rg.id)
   end
 
+  it 'com chave da Anthropic, manda a foto pro Claude Haiku 5.5 ver' do
+    resposta = Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1)
+    allow(Ramon::LlmClient).to receive(:complete).and_return(resposta)
+    with_modified_env(ANTHROPIC_API_KEY: 'sk-test') { described_class.new(message).perform }
+    expect(Ramon::LlmClient).to have_received(:complete)
+      .with(hash_including(provider: 'anthropic', model: 'claude-haiku-5-5', anexo: kind_of(ActiveStorage::Attached::One)))
+  end
+
+  it 'sem chave da Anthropic, segue o copiloto sem anexo' do
+    resposta = Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1)
+    allow(Ramon::LlmClient).to receive(:complete).and_return(resposta)
+    with_modified_env(ANTHROPIC_API_KEY: nil) { described_class.new(message).perform }
+    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(anexo: nil))
+  end
+
   it 'nao grava com item fora do checklist' do
     allow(Ramon::LlmClient).to receive(:complete)
       .and_return(Ramon::LlmClient::Result.new(content: '{"item_id": 999999}', input_tokens: 1, output_tokens: 1))
