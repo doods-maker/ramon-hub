@@ -11,6 +11,8 @@ module LeadRoteiro
     # Testar (Ramon::Roteiro::Teste): o lead descartável não tem conversa; o modo simulado faz etapa e Perdido se
     # comportarem como no modo escolhido.
     attr_accessor :copiloto_modo_simulado
+    # O mesmo para o Perfil da IA (Ramon::PerfilIa.de): o cfg da tela, salvo ou não.
+    attr_accessor :perfil_ia_simulado
   end
 
   # Modo efetivo da IA na conversa do lead (Ramon::CopilotoModo.of: atributo → caixa → env); sem conversa, o modo
