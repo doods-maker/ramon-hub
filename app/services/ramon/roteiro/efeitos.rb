@@ -1,8 +1,9 @@
 # Consequências fixas de uma saída do roteiro (spec 2026-10-13 §3.4) — configuradas pelo admin no passo; a IA não
-# decide. Por modo da conversa (decisões 13/10): etiqueta e "passar para a equipe" valem direto em qualquer modo;
-# etapa (só aberta) e Perdido só direto nos modos diretos (piloto total e "sozinha até…") — nos outros, e sem
-# conversa, viram sugestão no Cockpit. Perdido de verdade = etiqueta desqualificado-ia + IA calada (a conversa fica com
-# o robô). Histórico: LeadActivity 'roteiro'. Modo da conversa: Ramon::CopilotoModo; avisos: Ramon::AvisoDaIa.
+# decide. Pelo Perfil da IA (spec 2026-10-17, Catálogo de ações): etiqueta e "passar para a equipe" valem direto
+# sempre; etapa (só aberta) e Perdido só direto com a Permissão sozinha e a Etapa antes do Marcador — senão viram
+# sugestão no Cockpit ("nunca": etapa nem sugere; Perdido chama a equipe). Perdido de verdade = etiqueta
+# desqualificado-ia + IA pausada (a conversa fica com o robô). Histórico: LeadActivity 'roteiro'. Pausa da conversa:
+# Ramon::PerfilIa.pausar; avisos: Ramon::AvisoDaIa.
 module Ramon::Roteiro::Efeitos
   ETIQUETA_DESQUALIFICADO = 'desqualificado-ia'.freeze
   MOTIVO_PERDA_PADRAO = 'Sem viabilidade'.freeze
@@ -23,17 +24,16 @@ module Ramon::Roteiro::Efeitos
     Ramon::Roteiro::DESFECHO_DA_ACAO.key?(saida['acao']) || efeitos.values.any?(&:present?)
   end
 
-  # Etapa e Perdido direto no piloto total e nos modos "sozinha até…" (F3), pelo modo efetivo da conversa do lead.
-  def direto?(lead)
-    Ramon::CopilotoModo.direto?(lead.copiloto_modo)
-  end
-
-  # O que a desqualificação faz agora — predicado único (o Registro marca aguarda_equipe com ele):
-  # :nada (lead ganho ou perdido), :perder (modo direto) ou :sugerir (o Perdido vira sugestão no Cockpit).
+  # O que a desqualificação faz agora — predicado único (o Registro marca aguarda_equipe e o handoff com ele):
+  # :nada (lead ganho ou perdido), :perder (sozinha e antes do Marcador), :equipe (Permissão nunca) ou :sugerir
+  # (o Perdido vira sugestão no Cockpit).
   def desqualificacao(lead)
     return :nada if lead.won_at || lead.lost_at
 
-    direto?(lead) ? :perder : :sugerir
+    perfil = Ramon::PerfilIa.de(lead)
+    return :perder if perfil.direto?('desqualificar')
+
+    perfil.permissao('desqualificar') == :nunca ? :equipe : :sugerir
   end
 
   # Label do Chatwoot é minúscula (Label#title.downcase).
@@ -44,13 +44,15 @@ module Ramon::Roteiro::Efeitos
   end
 
   # Só etapa aberta: ganho nunca; perdido só pela saída desqualificar. Nunca para trás (como registrar_reuniao!).
+  # Permissão nunca: nem move, nem sugere, nem anota.
   def mover(lead, nome, passo)
-    return if nome.blank?
+    perfil = Ramon::PerfilIa.de(lead) if nome.present?
+    return if perfil.nil? || perfil.permissao('mover_etapa') == :nunca
 
     etapa = lead.account.lead_stages.find_by(name: nome, is_won: false, is_lost: false)
     return anotar(lead, "etapa '#{nome}' nao existe no funil") if etapa.nil?
     return if lead.lead_stage.position >= etapa.position
-    return lead.update!(lead_stage: etapa) if direto?(lead)
+    return lead.update!(lead_stage: etapa) if perfil.direto?('mover_etapa')
 
     sugerir(lead, 'move_stage', 'etapa_sugerida' => etapa.name, 'justificativa' => "roteiro da IA: #{passo.titulo}")
   end
@@ -59,6 +61,7 @@ module Ramon::Roteiro::Efeitos
     motivo_perda = saida['motivo_perda'].presence || MOTIVO_PERDA_PADRAO
     case desqualificacao(lead)
     when :perder then perder(lead, motivo_perda)
+    when :equipe then humano(lead, saida.merge('motivo' => "desqualificaria (#{saida['motivo']}), mas o Perfil da IA não permite desqualificar"))
     when :sugerir
       sugerir(lead, 'acao', 'acao' => 'perdido', 'lost_reason' => motivo_perda,
                             'texto' => "Marcar como perdido (#{motivo_perda}) - roteiro: #{passo.titulo}, #{saida['motivo']}")
@@ -71,21 +74,19 @@ module Ramon::Roteiro::Efeitos
     calar(lead)
   end
 
-  # A mensagem de encerramento desta resposta ainda sai: o ResponseBuilderJob guarda o modo do início da resposta.
+  # A mensagem de encerramento desta resposta ainda sai: o ResponseBuilderJob lê o perfil no início da resposta.
   # Também chamada ao aprovar o Perdido sugerido pelo roteiro (CopilotSuggestion#marcar_perdido).
   def calar(lead)
     etiquetar(lead, ETIQUETA_DESQUALIFICADO)
-    Ramon::CopilotoModo.trocar(lead.conversation, 'manual') if lead.conversation
+    Ramon::PerfilIa.pausar(lead.conversation, 'pausada') if lead.conversation
   end
 
-  # Roteiro reaberto (Ramon::Roteiro.reabrir): devolve o modo de antes, desfaz o limite "qualificação" que o desfecho
-  # causou e tira a etiqueta de desqualificado; o caso que tinha ido para a equipe volta ao robô. No fim confere o
-  # limite do modo de novo — o lead pode já estar além dele (ex.: tirado do Perdido direto para "Reunião agendada").
+  # Roteiro reaberto (Ramon::Roteiro.reabrir): devolve a Pausa de antes e tira a etiqueta de desqualificado; o caso que
+  # tinha ido para a equipe volta ao robô. Etapa além do Marcador não precisa de nada: o perfil recalcula a cada turno.
   def reabrir(lead, desfecho)
     conversa = lead.conversation
     if conversa
-      Ramon::CopilotoModo.restaurar(conversa)
-      Ramon::CopilotoLimite.desfazer(conversa, Ramon::CopilotoLimite::QUALIFICACAO) if desfecho == Ramon::Roteiro::QUALIFICADO
+      Ramon::PerfilIa.restaurar_pausa(conversa)
       tirar_etiqueta(conversa)
       devolver_ao_robo(conversa) if desfecho == Ramon::Roteiro::HUMANO
     end
@@ -93,9 +94,9 @@ module Ramon::Roteiro::Efeitos
     Ramon::CopilotoLimite.verificar(lead)
   end
 
-  # A equipe recebeu o caso pelo handoff (conversa aberta): volta ao robô se o modo restaurado deixa a IA responder.
+  # A equipe recebeu o caso pelo handoff (conversa aberta): volta ao robô se a Pausa restaurada deixa a IA responder.
   def devolver_ao_robo(conversa)
-    conversa.update!(status: :pending) if conversa.open? && Ramon::CopilotoModo.of(conversa) != 'manual'
+    conversa.update!(status: :pending) if conversa.open? && conversa.custom_attributes&.[](Ramon::PerfilIa::PAUSA) != 'pausada'
   end
 
   def tirar_etiqueta(conversa)
@@ -120,7 +121,7 @@ module Ramon::Roteiro::Efeitos
   def humano(lead, saida)
     conversa = lead.conversation
     conversa.bot_handoff! if conversa&.pending?
-    Ramon::CopilotoModo.trocar(conversa, 'rascunho') if conversa
+    Ramon::PerfilIa.pausar(conversa, 'rascunho') if conversa
     motivo = saida['motivo']
     Ramon::AvisoDaIa.avisar(lead, "IA passou #{lead.name} para a equipe: #{motivo}", "IA passou para a equipe: #{lead.name}",
                             motivo, admins: saida['id'] == Ramon::Roteiro::SEM_SAIDA)

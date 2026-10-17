@@ -18,7 +18,8 @@ class Ramon::ReuniaoAgendamento
 
   # title = nome da reunião (atividade, sino); task_title = título da tarefa
   # (legado: "Reunião Cal.com:" prefixava).
-  # automatico: marcada pela IA (Captain) — com RAMON_AGENDA_CONFIRMACAO=on e modo piloto, a confirmação sai sozinha.
+  # automatico: marcada pela IA (Captain) — com RAMON_AGENDA_CONFIRMACAO=on e a logística saindo sozinha no Perfil da IA,
+  # a confirmação sai sozinha.
   def self.call(lead:, starts_at:, title:, task_title: title, user: nil, formato: 'video', automatico: false) # rubocop:disable Metrics/ParameterLists
     novo = new(lead, starts_at, title, user, formato)
     novo.automatico = automatico
@@ -26,7 +27,8 @@ class Ramon::ReuniaoAgendamento
   end
 
   # Confirmação da reunião ao cliente (texto APROVADO 16/10): vira rascunho nas notas (NUNCA enviado) — ou, só se a IA marcou,
-  # RAMON_AGENDA_CONFIRMACAO=on e a conversa está em modo piloto, sai direto na conversa (sem o prefixo RASCUNHO).
+  # RAMON_AGENDA_CONFIRMACAO=on e uma resposta de logística sairia sozinha agora (PerfilIa#logistica_sai_agora?, a regra
+  # do job, com o fora do horário), sai direto na conversa (sem o prefixo RASCUNHO).
   def self.confirmar(task, automatico: false)
     lead = task.lead
     texto = confirmacao_texto(task)
@@ -46,10 +48,10 @@ class Ramon::ReuniaoAgendamento
      'Se não puder comparecer, me avise com antecedência que a gente remarca sem problema.'].compact.join(' ')
   end
 
-  # true se mandou. Chave off (padrão), modo que não é piloto ou lead sem conversa: false → vira rascunho.
+  # true se mandou. Chave off (padrão), logística que não sairia sozinha ou lead sem conversa: false → vira rascunho.
   def self.enviar_confirmacao(lead, texto)
     conversa = lead.conversation
-    return false unless conversa && chave_confirmacao_on? && Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversa))
+    return false unless conversa && chave_confirmacao_on? && Ramon::PerfilIa.de(conversa).logistica_sai_agora?
 
     conversa.messages.create!(message_type: :outgoing, account_id: conversa.account_id, inbox_id: conversa.inbox_id,
                               sender: conversa.inbox.try(:captain_assistant), content: texto)
@@ -61,10 +63,11 @@ class Ramon::ReuniaoAgendamento
   # ENV direto (padrão dos RAMON_FLUXO_*): GlobalConfigService.load gravaria o default no banco e passaria a ignorar o ENV.
   def self.chave_confirmacao_on? = ENV.fetch('RAMON_AGENDA_CONFIRMACAO', 'off') == 'on'
 
-  # A confirmação de uma reunião marcada pela IA sai sozinha? (chave on + piloto + Google conectado do Closer, o caminho do job)
+  # A confirmação de uma reunião marcada pela IA sai sozinha? (chave on + logística sozinha + Google conectado do Closer,
+  # o caminho do job)
   def self.envia_sozinha?(lead)
     conversa = lead.conversation
-    conversa.present? && chave_confirmacao_on? && Ramon::CopilotoModo.piloto?(Ramon::CopilotoModo.of(conversa)) &&
+    conversa.present? && chave_confirmacao_on? && Ramon::PerfilIa.de(conversa).logistica_sai_agora? &&
       lead.closer.present? && GoogleAgendaConta.de(lead.closer).present? && !Ramon::Fluxos::Reunioes.assumiu?(lead.account)
   end
 

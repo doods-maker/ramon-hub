@@ -42,7 +42,7 @@ class FunilAcao < ApplicationRecord
       next false if desfeita_em || movida_depois?
 
       restaurar_etapa
-      restaurar_modo
+      restaurar_pausa
       reuniao = desfazer_tarefa
       update!(desfeita_em: Time.current, desfeita_por: user)
       true
@@ -78,29 +78,18 @@ class FunilAcao < ApplicationRecord
     return if desfazer['etapa_id'].blank?
 
     # lost_reason só existe no payload quando a etapa de volta é Perdido; senão o lead zera o motivo
+    # nenhum modo volta: o Marcador do Perfil da IA recalcula a cada turno pela Etapa
     lead.update!(lead_stage_id: desfazer['etapa_id'], lost_reason: desfazer['lost_reason'])
-    desfazer_limite
   end
 
-  # O avanço pode ter encerrado um modo "sozinha até…" (Lead → CopilotoLimite.verificar). Carimbo desta ação (não
-  # anterior a ela) e o lead, de volta, sem alcançar o limite: devolve o modo (o desfazer confere carimbo e rascunho).
-  def desfazer_limite
+  # O inverso do calar (que guardou a Pausa de antes em PerfilIa::PAUSA_ANTES). Sem a guardada (já restaurada por
+  # outro caminho), vale a 'pausa' gravada na ação (nil = sem Pausa). Ação antiga, com 'modo' e sem 'pausa': ignorada.
+  def restaurar_pausa
     conversa = lead.conversation
-    carimbo = conversa&.custom_attributes&.[]('copiloto_limite')
-    return unless carimbo.is_a?(Hash) && Ramon::CopilotoLimite::NIVEIS.include?(carimbo['limite'])
-    return if Time.zone.parse(carimbo['em'].to_s).to_i < created_at.to_i || Ramon::CopilotoLimite.atingido?(carimbo['limite'], lead)
+    return if conversa.nil? || !desfazer.key?('pausa')
 
-    Ramon::CopilotoLimite.desfazer(conversa, carimbo['limite'])
-  end
-
-  # O inverso do calar (que guardou o modo de antes em CopilotoModo::MODO_ANTES). Sem o guardado (já restaurado por
-  # outro caminho, ou ação antiga), vale o 'modo' gravado na ação.
-  def restaurar_modo
-    conversa = lead.conversation
-    return if desfazer['modo'].blank? || conversa.nil?
-
-    Ramon::CopilotoModo.restaurar(conversa) ||
-      conversa.update!(custom_attributes: (conversa.custom_attributes || {}).merge('copiloto_modo' => desfazer['modo']))
+    Ramon::PerfilIa.restaurar_pausa(conversa) ||
+      conversa.update!(custom_attributes: Ramon::PerfilIa.com_pausa(conversa.custom_attributes || {}, desfazer['pausa']))
     Ramon::Roteiro::Efeitos.tirar_etiqueta(conversa)
   end
 

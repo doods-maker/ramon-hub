@@ -12,6 +12,8 @@ class Ramon::PerfilIa
   FIM = '_fim'.freeze
   PAUSAS = %w[pausada rascunho].freeze
   PAUSA = 'ia_pausa'.freeze
+  # Pausa de antes do roteiro/Perdido (Ramon::Roteiro::Efeitos): a 1ª guardada vale até o restaurar_pausa devolver.
+  PAUSA_ANTES = 'ia_pausa_antes_roteiro'.freeze
   # ponytail: só as chaves, em ordem; os textos para o prompt entram com a montagem dos gatilhos (Task 7)
   GATILHOS = %w[pediu_pessoa juridica outra_area fora_do_tema honorario_de_novo nao_le irritado tem_advogado desconto
                 clausula].freeze
@@ -96,7 +98,29 @@ class Ramon::PerfilIa
 
     gatilhos.select { |_, lista| lista.is_a?(Array) }.transform_values { |lista| GATILHOS & lista }
   end
-  private_class_method :alvo_e_cfg, :normalizar, :permissoes_validas, :gatilhos_validos
+  private_class_method :alvo_e_cfg, :permissoes_validas, :gatilhos_validos
+
+  # Pausa da conversa (valor em PAUSAS; nil tira), guardando a de antes só se ainda não houver (nil = não havia).
+  def self.pausar(conversa, valor)
+    attrs = conversa.custom_attributes || {}
+    antes = attrs.key?(PAUSA_ANTES) ? {} : { PAUSA_ANTES => attrs[PAUSA] }
+    conversa.update!(custom_attributes: com_pausa(attrs.merge(antes), valor))
+  end
+
+  # Devolve a Pausa guardada por pausar (guardada nil = tira a Pausa) e apaga a chave; nil = nada guardado.
+  def self.restaurar_pausa(conversa)
+    attrs = conversa.reload.custom_attributes || {}
+    return unless attrs.key?(PAUSA_ANTES)
+
+    conversa.update!(custom_attributes: com_pausa(attrs.except(PAUSA_ANTES), attrs[PAUSA_ANTES]))
+    true
+  end
+
+  # custom_attributes com a Pausa trocada; valor fora de PAUSAS (nil incluso) tira a chave.
+  def self.com_pausa(attrs, valor)
+    pausa = valor.presence_in(PAUSAS)
+    pausa ? attrs.merge(PAUSA => pausa) : attrs.except(PAUSA)
+  end
 
   # Decisão pura do envio: [:envia | :rascunho, motivo]. A ordem é a decisão; etapa = a do início do turno.
   # logistica: true = o turno só tratou de logística; handoff: a IA chamou a equipe; falhou: Tool com erro.

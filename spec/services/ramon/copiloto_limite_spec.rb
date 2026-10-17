@@ -9,6 +9,7 @@ RSpec.describe Ramon::CopilotoLimite do
 
   def etapa(nome) = account.lead_stages.find_by!(name: nome)
   def modo!(modo) = conversation.update!(custom_attributes: { 'copiloto_modo' => modo })
+  def acelerada! = account.update!(settings: { 'ia_atendimento' => { 'padrao' => { 'base' => 'acelerada' } } })
   def avisos = Notification.where(user: admin, primary_actor: lead, notification_type: 'ramon_fluxo_aviso')
 
   # Review Focus 4: sem handoff (a resposta do turno ainda sai) e aviso uma vez só.
@@ -64,6 +65,7 @@ RSpec.describe Ramon::CopilotoLimite do
 
   it 'até qualificar: roteiro qualificado muda a etapa direto e depois encerra o modo' do
     modo!('piloto_ate_qualificacao')
+    acelerada! # quem faz a etapa ir direto é o Perfil da IA
     create(:roteiro_passo, account: account, thesis: thesis, chave: 'sequela', titulo: 'Sequela',
                            saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'concluir', 'efeitos' => { 'etapa' => 'Qualificação' } }])
 
@@ -77,15 +79,16 @@ RSpec.describe Ramon::CopilotoLimite do
   end
 
   # Review Focus 5: desqualificado não é limite — segue o Perdido direto e a IA calada (F1).
-  it 'até qualificar: desqualificado vai direto para Perdido com a IA calada, sem carimbo de limite' do
+  it 'até qualificar: desqualificado vai direto para Perdido com a IA pausada, sem carimbo de limite' do
     modo!('piloto_ate_qualificacao')
+    acelerada!
     create(:roteiro_passo, account: account, thesis: thesis, chave: 'tem_advogado', titulo: 'Tem advogado',
                            saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'desqualificar', 'motivo' => 'tem advogado' }])
 
     Ramon::Roteiro.registrar(lead, chave: 'tem_advogado', valor: 'sim')
 
     expect(lead.reload.lead_stage).to eq(account.lead_stages.find_by!(is_lost: true))
-    expect(conversation.reload.custom_attributes['copiloto_modo']).to eq('manual')
+    expect(conversation.reload.custom_attributes['ia_pausa']).to eq('pausada')
     expect(conversation.custom_attributes).not_to have_key('copiloto_limite')
   end
 

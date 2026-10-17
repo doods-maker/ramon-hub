@@ -135,6 +135,29 @@ RSpec.describe Ramon::PerfilIa do
     end
   end
 
+  # Pausa da conversa pelo roteiro/Perdido: a 1ª de antes guardada vale até o restaurar (como o MODO_ANTES de hoje).
+  describe '.pausar e .restaurar_pausa' do
+    it 'guarda a de antes uma vez só; restaurar devolve e apaga a chave; sem nada guardado, nil' do
+      expect(described_class.restaurar_pausa(conversa)).to be_nil
+      described_class.pausar(conversa, 'rascunho')
+      described_class.pausar(conversa, 'pausada')
+      expect(conversa.reload.custom_attributes).to include('ia_pausa' => 'pausada', 'ia_pausa_antes_roteiro' => nil)
+
+      expect(described_class.restaurar_pausa(conversa)).to be(true)
+      expect(conversa.reload.custom_attributes).not_to have_key('ia_pausa')
+      expect(conversa.custom_attributes).not_to have_key('ia_pausa_antes_roteiro')
+    end
+
+    it 'a Pausa de antes volta; pausar com nil tira a Pausa e ainda guarda a de antes' do
+      conversa.update!(custom_attributes: { 'ia_pausa' => 'rascunho', 'outro' => 1 })
+      described_class.pausar(conversa, nil)
+      expect(conversa.reload.custom_attributes).to eq('outro' => 1, 'ia_pausa_antes_roteiro' => 'rascunho')
+
+      described_class.restaurar_pausa(conversa)
+      expect(conversa.reload.custom_attributes).to eq('outro' => 1, 'ia_pausa' => 'rascunho')
+    end
+  end
+
   # Atraso da resposta e aviso de cota estourada (HookExecutionService) seguem a regra do envio de logística/handoff do job.
   describe '#logistica_sai_agora?' do
     it 'fora do horário com a permissão em rascunho, logística e handoff não saem sozinhos' do

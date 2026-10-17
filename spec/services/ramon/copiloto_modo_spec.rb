@@ -52,15 +52,6 @@ RSpec.describe Ramon::CopilotoModo do
     expect(escolhida.reload.custom_attributes['copiloto_modo']).to eq('manual')
   end
 
-  it 'o roteiro aplica direto nos modos "sozinha até…", inclusive pelo padrão da caixa; lead sem conversa nunca' do
-    lead = create(:lead, account: inbox.account, conversation: conversation)
-    expect(Ramon::Roteiro::Efeitos.direto?(lead)).to be(false)
-
-    inbox.update!(ramon_copiloto_modo: 'piloto_ate_contrato')
-    expect(Ramon::Roteiro::Efeitos.direto?(lead.reload)).to be(true)
-    expect(Ramon::Roteiro::Efeitos.direto?(create(:lead, account: inbox.account))).to be(false)
-  end
-
   # Revisão F5 item 4: modo de antes vazio não vira nil gravado — volta a valer o padrão da caixa.
   # rubocop:disable RSpec/DescribedClass -- constante explícita (regra da F5: reload no CI)
   it 'trocar guarda o 1º modo de antes; restaurar devolve, e sem modo de antes tira o atributo' do
