@@ -39,5 +39,11 @@ RSpec.describe 'Ramon IA da conversa API', type: :request do
       ler
       expect(response.parsed_body).to include('perfil' => 'Acelerada', 'origem' => 'tese', 'alvo' => "tese:#{tese.id}", 'etapa' => etapa.name)
     end
+
+    it 'lead em Perdido sem Pausa gravada: pausa = pausada' do
+      create(:lead, account: account, conversation: conversa, lead_stage: account.lead_stages.find_by(is_lost: true))
+      ler
+      expect(response.parsed_body).to include('pausa' => 'pausada')
+    end
   end
 end

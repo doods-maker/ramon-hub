@@ -517,6 +517,8 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
         expect(state).not_to have_key(:conversation)
         expect(state).not_to have_key(:contact)
         expect(state).not_to have_key(:campaign)
+        # ramon: Testar sem conversa leva os gatilhos do padrão (1ª Etapa aberta)
+        expect(state[:ramon_gatilhos]).to eq(Ramon::PerfilIa.textos_do_turno(nil, account)).and be_present
       end
     end
   end

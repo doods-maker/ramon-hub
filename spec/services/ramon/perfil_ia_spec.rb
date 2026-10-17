@@ -193,6 +193,42 @@ RSpec.describe Ramon::PerfilIa do
     end
   end
 
+  describe '.textos_do_turno' do
+    it 'Testar sem conversa: os gatilhos do padrão na 1ª Etapa aberta; com conversa, os do perfil dela' do
+      gravar('padrao' => { 'base' => 'cautelosa', 'gatilhos' => { 'fase-novo' => %w[juridica] } },
+             'teses' => { tese.id.to_s => { 'base' => 'cautelosa', 'gatilhos' => { 'fase-novo' => %w[pediu_pessoa] } } })
+      expect(described_class.textos_do_turno(nil, account)).to eq([described_class::GATILHOS.dig('juridica', 'texto')])
+      create(:lead, account: account, conversation: conversa, thesis: tese, lead_stage: etapa['fase-novo'])
+      expect(described_class.textos_do_turno(conversa, account)).to eq([described_class::GATILHOS.dig('pediu_pessoa', 'texto')])
+    end
+  end
+
+  describe '.com_ia?' do
+    it 'caixa sem assistente não tem IA' do
+      expect(described_class.com_ia?(inbox)).to be(false)
+    end
+  end
+
+  # ResponseBuilderJob: Pausa ou Perdido não gasta LLM e a conversa pendente cai na fila humana.
+  describe '#entregar_se_pausada!' do
+    let(:conversa) { create(:conversation, account: account, inbox: inbox, status: :pending) }
+
+    it 'pausada: abre a conversa (bot_handoff!) e devolve true; sem Pausa: false e segue pendente' do
+      expect(described_class.de(conversa).entregar_se_pausada!).to be(false)
+      expect(conversa.reload.status).to eq('pending')
+
+      conversa.update!(custom_attributes: { 'ia_pausa' => 'pausada' })
+      expect(described_class.de(conversa).entregar_se_pausada!).to be(true)
+      expect(conversa.reload.status).to eq('open')
+    end
+
+    it 'lead em Perdido também entrega' do
+      create(:lead, account: account, conversation: conversa, lead_stage: account.lead_stages.find_by(is_lost: true))
+      expect(described_class.de(conversa).entregar_se_pausada!).to be(true)
+      expect(conversa.reload.status).to eq('open')
+    end
+  end
+
   # Atraso da resposta e aviso de cota estourada (HookExecutionService) seguem a regra do envio de logística/handoff do job.
   describe '#logistica_sai_agora?' do
     it 'fora do horário com a permissão em rascunho, logística e handoff não saem sozinhos' do

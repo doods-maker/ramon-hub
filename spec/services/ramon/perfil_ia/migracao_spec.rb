@@ -46,6 +46,15 @@ RSpec.describe Ramon::PerfilIa::Migracao do
     expect(resultado[:descartadas]).to eq([{ caixa: segunda.id, modo: 'piloto_ate_reuniao', motivo: 'tese já tinha perfil' }])
   end
 
+  it 'caixa manual com assistente vai para descartadas (desligar no Assistente) sem gravar perfil; sem assistente, nada' do
+    com_ia = caixa('manual')
+    caixa('manual')
+    allow(Ramon::PerfilIa).to receive(:com_ia?) { |inbox| inbox.id == com_ia.id }
+    resultado = described_class.rodar(account)
+    expect(perfis.call.keys).to eq(['padrao'])
+    expect(resultado[:descartadas]).to eq([{ caixa: com_ia.id, modo: 'manual', motivo: 'desligar o assistente em Assistente → Caixas' }])
+  end
+
   it 'mantém perfil já gravado de caixa e do padrão, e informa o descarte' do
     outra = caixa('piloto_total')
     account.update!(settings: { 'ia_atendimento' => { 'padrao' => { 'base' => 'equilibrada' },
@@ -64,15 +73,15 @@ RSpec.describe Ramon::PerfilIa::Migracao do
     expect(resultado).to include(conversas_pausadas: 1, conversas_rascunho: 0)
   end
 
-  it 'conversa rascunho vira Pausa rascunho, com ou sem modo guardado, salvo se veio de limite' do
+  it 'conversa rascunho vira Pausa rascunho, com ou sem modo guardado e com ou sem carimbo de limite' do
     com = conversa('copiloto_modo' => 'rascunho', 'copiloto_modo_antes_roteiro' => 'piloto_total')
     sem = conversa('copiloto_modo' => 'rascunho')
     limite = conversa('copiloto_modo' => 'rascunho', 'copiloto_limite' => { 'limite' => 'x' })
     resultado = described_class.rodar(account)
     expect(com.reload.custom_attributes).to eq('ia_pausa' => 'rascunho', 'ia_pausa_antes_roteiro' => nil)
     expect(sem.reload.custom_attributes).to eq('ia_pausa' => 'rascunho')
-    expect(limite.reload.custom_attributes).to eq('copiloto_limite' => { 'limite' => 'x' })
-    expect(resultado).to include(conversas_pausadas: 0, conversas_rascunho: 2)
+    expect(limite.reload.custom_attributes).to eq('ia_pausa' => 'rascunho', 'copiloto_limite' => { 'limite' => 'x' })
+    expect(resultado).to include(conversas_pausadas: 0, conversas_rascunho: 3)
   end
 
   it 'leva o modo de antes do roteiro para a Pausa guardada' do

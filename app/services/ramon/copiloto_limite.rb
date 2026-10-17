@@ -10,10 +10,11 @@ module Ramon::CopilotoLimite
   module_function
 
   # Idempotente por Marcador: avisa uma vez por valor do Marcador da conta. Mudar o Marcador e cruzar de novo avisa.
+  # Caixa sem assistente (sem IA) não avisa nem carimba.
   # @return [String, nil] a chave do Marcador avisado
   def verificar(lead)
     conversa = lead.conversation
-    return unless conversa
+    return unless conversa && Ramon::PerfilIa.com_ia?(conversa.inbox)
 
     perfil = Ramon::PerfilIa.de(lead)
     marcador = perfil.marcador

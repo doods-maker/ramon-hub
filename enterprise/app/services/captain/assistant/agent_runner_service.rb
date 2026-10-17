@@ -121,6 +121,7 @@ class Captain::Assistant::AgentRunnerService
     state[:source] = @source if @source.present?
 
     build_conversation_state(state) if @conversation
+    state[:ramon_gatilhos] = Ramon::PerfilIa.textos_do_turno(@conversation, @assistant.account) # ramon: gatilhos da Etapa no prompt
     state
   end
 
@@ -130,7 +131,6 @@ class Captain::Assistant::AgentRunnerService
     state[:contact] = slice_attrs(@conversation.contact, CONTACT_STATE_ATTRIBUTES) if @conversation.contact
     state[:campaign] = slice_attrs(@conversation.campaign, CAMPAIGN_STATE_ATTRIBUTES) if @conversation.campaign
     state[:contact_inbox] = slice_attrs(@conversation.contact_inbox, CONTACT_INBOX_STATE_ATTRIBUTES) if @conversation.contact_inbox
-    state[:ramon_gatilhos] = Ramon::PerfilIa.de(@conversation).textos_dos_gatilhos # ramon: gatilhos da Etapa no prompt
   end
 
   def slice_attrs(record, keys)

@@ -254,21 +254,23 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         create(:lead, account: account, conversation: conversation, lead_stage: etapa[label])
       end
 
-      it 'Pausa "pausada": não chama o LLM nem cria mensagem' do
+      it 'Pausa "pausada": não chama o LLM nem responde, e a conversa vai para a fila humana' do
         conversation.update!(custom_attributes: conversation.custom_attributes.to_h.merge('ia_pausa' => 'pausada'))
         # Este contexto roda com captain_integration_v2 habilitado (before acima),
         # então o serviço em jogo é o AgentRunnerService, não o AssistantChatService.
         expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
         expect { described_class.perform_now(conversation, assistant) }
-          .not_to change(conversation.messages, :count)
+          .not_to change(conversation.messages.outgoing, :count)
+        expect(conversation.reload.status).to eq('open')
       end
 
-      it 'lead em Perdido: não chama o LLM nem cria mensagem' do
+      it 'lead em Perdido: não chama o LLM nem responde, e a conversa vai para a fila humana' do
         perfil!('base' => 'acelerada')
         lead_em('fase-perdido')
         expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
         expect { described_class.perform_now(conversation, assistant) }
-          .not_to change(conversation.messages, :count)
+          .not_to change(conversation.messages.outgoing, :count)
+        expect(conversation.reload.status).to eq('open')
       end
 
       it 'Equilibrada, lead em Qualificação, sem Tool: sai pública com o carimbo do perfil' do

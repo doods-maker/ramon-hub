@@ -70,6 +70,12 @@ class Ramon::PerfilIa
   # O label da Etapa (estável a renomeação); etapa sem label = "id-<id>". Marcador e gatilhos usam a mesma chave.
   def self.chave_da_etapa(lead_stage) = lead_stage ? lead_stage.label.presence || "id-#{lead_stage.id}" : ''
 
+  # Gatilhos do prompt do turno (AgentRunnerService). Testar sem conversa: lead em branco = os do padrão na 1ª Etapa aberta.
+  def self.textos_do_turno(conversa, account) = de(conversa || Lead.new(account: account)).textos_dos_gatilhos
+
+  # A caixa tem assistente (Captain é enterprise: sem ele, nunca). Sem IA na caixa, nada de aviso do Marcador nem perfil migrado.
+  def self.com_ia?(inbox) = inbox.try(:captain_assistant).present?
+
   # Grava os alvos enviados (recusa o inválido com ArgumentError): ver Gravacao.
   def self.gravar!(account, alvos) = Gravacao.gravar!(account, alvos)
 
@@ -200,6 +206,10 @@ class Ramon::PerfilIa
 
   # Textos (prompt da conversa) dos gatilhos ligados na Etapa, na ordem de GATILHOS; pendente (texto nil) fica de fora.
   def textos_dos_gatilhos(etapa = @etapa) = GATILHOS.filter_map { |chave, g| g['texto'] if gatilhos(etapa).include?(chave) }
+
+  # Pausa ou lead em Perdido: a IA fica quieta (nem gasta LLM) e a conversa pendente vai para a fila humana.
+  # @return [Boolean] true = pausada (o ResponseBuilderJob para aqui)
+  def entregar_se_pausada! = (estado == :pausada).tap { |pausada| @conversa.bot_handoff! if pausada && @conversa.pending? }
 
   def direto?(acao) = @pausa.nil? && permissao(acao) == :sozinha && estado == :sozinha
 

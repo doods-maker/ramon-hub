@@ -5,6 +5,7 @@ class Api::V1::Accounts::RamonIaConversasController < Api::V1::Accounts::BaseCon
     conversa = Current.account.conversations.find_by!(display_id: params[:conversation_id])
     authorize conversa, :show?
     perfil = Ramon::PerfilIa.de(conversa)
-    render json: { perfil: perfil.nome, origem: perfil.origem, etapa: perfil.etapa&.name, pausa: perfil.pausa, alvo: perfil.alvo }
+    pausa = perfil.estado == :pausada ? 'pausada' : perfil.pausa # lead em Perdido também cala a IA
+    render json: { perfil: perfil.nome, origem: perfil.origem, etapa: perfil.etapa&.name, pausa: pausa, alvo: perfil.alvo }
   end
 end

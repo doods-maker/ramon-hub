@@ -15,6 +15,9 @@ RSpec.describe Ramon::CopilotoLimite do
   before { perfil!('base' => 'equilibrada') } # Marcador = Reunião agendada
 
   describe '.verificar' do
+    # Captain (assistente da caixa) é enterprise: aqui a caixa "tem IA" pelo stub.
+    before { allow(Ramon::PerfilIa).to receive(:com_ia?).and_return(true) }
+
     it 'cruzar o Marcador carimba, avisa uma vez e não mexe na conversa' do
       lead.update!(lead_stage: etapa('Reunião realizada'))
 
@@ -48,6 +51,13 @@ RSpec.describe Ramon::CopilotoLimite do
 
     it 'Marcador _inicio nunca avisa' do
       perfil!('base' => 'equilibrada', 'marcador' => '_inicio')
+      lead.update!(lead_stage: etapa('Reunião realizada'))
+      expect(carimbo).to be_nil
+      expect(avisos.count).to eq(0)
+    end
+
+    it 'caixa sem assistente: cruzar o Marcador não carimba nem avisa' do
+      allow(Ramon::PerfilIa).to receive(:com_ia?).with(conversation.inbox).and_return(false)
       lead.update!(lead_stage: etapa('Reunião realizada'))
       expect(carimbo).to be_nil
       expect(avisos.count).to eq(0)

@@ -14,7 +14,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
     # ramon: Perfil da IA lido no início do turno (lead, Etapa e Pausa de agora valem até o envio)
     @perfil = Ramon::PerfilIa.de(@conversation)
-    return if @perfil.estado == :pausada # Pausa ou lead em Perdido: IA quieta, nem gasta LLM
+    return if @perfil.entregar_se_pausada! # Pausa ou lead em Perdido: sem LLM, a conversa vai para a fila humana
 
     Current.executed_by = @assistant
 
