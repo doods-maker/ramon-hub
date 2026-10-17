@@ -33,18 +33,18 @@ RSpec.describe Ramon::RascunhoCarimbo do
     let(:agent) { create(:user, account: account) }
     let(:prefixo) { 'RASCUNHO (revisar antes de enviar):' }
 
-    def do_assistente(texto, privada:)
+    def do_assistente(texto, privada:, attrs: {})
       # rubocop:disable Rails/SkipsModelValidations
       id = Message.insert_all([{ account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id,
                                  message_type: 1, private: privada, sender_type: 'Captain::Assistant', sender_id: 1,
-                                 content: texto, created_at: Time.current, updated_at: Time.current }],
+                                 content: texto, content_attributes: attrs, created_at: Time.current, updated_at: Time.current }],
                               returning: :id).first['id']
       # rubocop:enable Rails/SkipsModelValidations
       Message.find(id)
     end
 
-    def rascunho(texto)
-      do_assistente("#{prefixo}\n#{texto}", privada: true)
+    def rascunho(texto, attrs = {})
+      do_assistente("#{prefixo}\n#{texto}", privada: true, attrs: attrs)
     end
 
     def humano(texto)
@@ -57,6 +57,14 @@ RSpec.describe Ramon::RascunhoCarimbo do
       msg = humano('Ola Maria, tudo bem?  Preciso do seu CNIS. ')
 
       expect(msg.content_attributes['ramon_rascunho_ia']).to include('nota_id' => nota.id, 'desfecho' => 'igual')
+    end
+
+    it 'copia o alvo e a Etapa do Perfil da IA que a nota guardou (ramon_ia_rascunho)' do
+      rascunho('Ola Maria, tudo bem?', { 'ramon_ia_rascunho' => { 'alvo' => 'padrao', 'etapa' => 'fase-novo', 'motivo' => 'pausa' } })
+      msg = humano('Ola Maria, tudo bem?')
+
+      expect(msg.content_attributes['ramon_rascunho_ia']).to include('desfecho' => 'igual', 'alvo' => 'padrao', 'etapa' => 'fase-novo')
+      expect(msg.content_attributes['ramon_rascunho_ia']).not_to have_key('motivo')
     end
 
     it 'carimba editado quando muda parte e descartado quando escreve do zero' do

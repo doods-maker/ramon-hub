@@ -106,4 +106,28 @@ RSpec.describe Ramon::PerfilIa do
       expect(d(equilibrada, falhou: true)).to eq([:rascunho, 'ferramenta_falhou'])
     end
   end
+
+  # O que o ResponseBuilderJob usa: a decisão do turno com a resposta do agente, o rastro e o carimbo.
+  describe '#decidir_turno, #rastro e #carimbo' do
+    before { gravar('padrao' => { 'base' => 'equilibrada' }) }
+
+    it 'decide com a Etapa do início do turno, as Tools e a falha da resposta' do
+      lead = create(:lead, account: account, conversation: conversa, lead_stage: etapa['fase-reuniao-agendada'])
+      perfil = described_class.de(conversa)
+      lead.update!(lead_stage: etapa['fase-negociacao']) # o lead anda durante o turno
+      expect(perfil.decidir_turno({ 'response' => 'oi' }, logistica: nil, handoff: false)).to eq([:envia, 'antes_do_marcador'])
+      expect(perfil.decidir_turno({ 'tools_usadas' => ['simular_honorario'] }, logistica: nil, handoff: false))
+        .to eq([:rascunho, 'acao:citar_honorario'])
+      expect(perfil.decidir_turno({ 'ferramenta_falhou' => true }, logistica: nil, handoff: false)).to eq([:rascunho, 'ferramenta_falhou'])
+      expect(perfil.decidir_turno(nil, logistica: nil, handoff: true)).to eq([:envia, 'handoff'])
+    end
+
+    it 'rastro e carimbo dizem de qual perfil, alvo e Etapa veio a mensagem' do
+      create(:lead, account: account, conversation: conversa, lead_stage: etapa['fase-qualificacao'])
+      perfil = described_class.de(conversa)
+      expect(perfil.rastro(nil)).to eq('alvo' => 'padrao', 'etapa' => 'fase-qualificacao', 'handoff' => false)
+      expect(perfil.carimbo(true)['ramon_piloto']).to include('perfil' => 'Equilibrada', 'alvo' => 'padrao',
+                                                              'etapa' => 'fase-qualificacao', 'handoff' => true, 'em' => kind_of(String))
+    end
+  end
 end

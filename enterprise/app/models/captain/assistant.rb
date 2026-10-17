@@ -36,7 +36,7 @@ class Captain::Assistant < ApplicationRecord
   has_many :copilot_threads, dependent: :destroy_async
   has_many :scenarios, class_name: 'Captain::Scenario', dependent: :destroy_async
 
-  # ramon: o modo (rascunho / piloto) é por conversa — Ramon::CopilotoModo; não há marca no assistente.
+  # ramon: até onde a IA vai sozinha é do Perfil da IA (Ramon::PerfilIa, por tese/caixa/padrão); não há marca no assistente.
   store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_contact_attributes, :product_name
 
   validates :name, presence: true
@@ -97,7 +97,8 @@ class Captain::Assistant < ApplicationRecord
   # depende de embeddings da OpenAI e aqui so ha credencial de DeepSeek. O
   # agente estava gastando o turno numa tool que sempre falha em vez de
   # responder com o que sabe.
-  def agent_tools
+  # sem_tools (Perfil da IA) não se aplica: handoff e faq_lookup nunca são bloqueadas.
+  def agent_tools(_sem_tools = [])
     tools = [self.class.resolve_tool_class('handoff').new(self)]
     tools.unshift(self.class.resolve_tool_class('faq_lookup').new(self)) if responses.exists?
     tools

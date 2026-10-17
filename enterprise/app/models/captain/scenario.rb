@@ -97,8 +97,9 @@ class Captain::Scenario < ApplicationRecord
     MAX_AGENT_NAME_LENGTH - handoff_id_key.length - HANDOFF_KEY_SUFFIX.length - 2
   end
 
-  def agent_tools
-    resolved_tools.map { |tool| resolve_tool_instance(tool) }
+  # ramon: Tool com Permissão "nunca" no Perfil da IA fica de fora (o modelo nem a vê no turno).
+  def agent_tools(sem_tools = [])
+    resolved_tools.reject { |tool| sem_tools.include?(tool[:id]) }.map { |tool| resolve_tool_instance(tool) }
   end
 
   def resolved_instructions

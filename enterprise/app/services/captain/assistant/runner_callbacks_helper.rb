@@ -19,6 +19,13 @@ module Captain::Assistant::RunnerCallbacksHelper
     end
   end
 
+  # ramon: id do catálogo ("captain-tools-<id>") de cada Tool que rodou no turno — volta em response['tools_usadas']
+  # (AgentRunnerService#process_agent_result) e o Ramon::PerfilIa.decidir segura a resposta de Tool de texto.
+  def anotar_tool_usada(tool_name, context_wrapper)
+    state = context_wrapper&.context&.dig(:state)
+    (state[:ramon_tools_usadas] ||= []) << tool_name.to_s.split('-').last if state
+  end
+
   def add_agent_thinking_callback(runner)
     runner.on_agent_thinking do |*args|
       @callbacks[:on_agent_thinking].call(*args)

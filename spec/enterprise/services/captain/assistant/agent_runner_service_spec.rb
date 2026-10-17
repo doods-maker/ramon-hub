@@ -167,7 +167,7 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
     it 'processes and formats agent result' do
       result = service.generate_response(message_history: message_history)
 
-      expect(result).to eq({ 'response' => 'Test response', 'agent_name' => nil, 'handoff_tool_called' => false })
+      expect(result).to include('response' => 'Test response', 'agent_name' => nil, 'handoff_tool_called' => false, 'tools_usadas' => [])
     end
 
     context 'when handoff tool was called during agent execution' do
@@ -179,11 +179,41 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       it 'includes handoff_tool_called flag in response' do
         result = service.generate_response(message_history: message_history)
 
-        expect(result).to eq({
-                               'response' => 'Let me connect you',
-                               'agent_name' => nil,
-                               'handoff_tool_called' => true
-                             })
+        expect(result).to include('response' => 'Let me connect you', 'agent_name' => nil, 'handoff_tool_called' => true)
+      end
+    end
+
+    # ramon: Permissão "nunca" no Perfil da IA tira a Tool do turno (Ramon::PerfilIa#tools_bloqueadas)
+    context 'when the Perfil da IA never lets the AI book meetings' do
+      let(:sem_reuniao) { array_including('agendar_reuniao', 'horarios_livres') }
+
+      before do
+        cfg = { 'base' => 'equilibrada', 'permissoes' => { 'marcar_reuniao' => 'n' } }
+        account.update!(settings: account.settings.to_h.merge('ia_atendimento' => { 'padrao' => cfg }))
+      end
+
+      it 'builds every agent without the meeting tools' do
+        expect(assistant).to receive(:agent).with(sem_tools: sem_reuniao).and_return(mock_agent)
+        expect(scenario).to receive(:agent).with(sem_tools: sem_reuniao).and_return(mock_scenario_agent)
+
+        service.generate_response(message_history: message_history)
+      end
+    end
+
+    it 'blocks no tool without a conversation (Testar)' do
+      expect(assistant).to receive(:agent).with(sem_tools: []).and_return(mock_agent)
+      expect(scenario).to receive(:agent).with(sem_tools: []).and_return(mock_scenario_agent)
+
+      described_class.new(assistant: assistant).generate_response(message_history: message_history)
+    end
+
+    context 'when tools ran during the turn' do
+      let(:mock_result) do
+        instance_double(Agents::RunResult, output: { 'response' => 'Ok' }, context: { state: { ramon_tools_usadas: ['simular_honorario'] } })
+      end
+
+      it 'returns their catalog ids in tools_usadas' do
+        expect(service.generate_response(message_history: message_history)['tools_usadas']).to eq(['simular_honorario'])
       end
     end
 
@@ -208,12 +238,8 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       it 'formats string response correctly' do
         result = service.generate_response(message_history: message_history)
 
-        expect(result).to eq({
-                               'response' => 'Simple string response',
-                               'reasoning' => 'Processed by agent',
-                               'agent_name' => nil,
-                               'handoff_tool_called' => false
-                             })
+        expect(result).to include('response' => 'Simple string response', 'reasoning' => 'Processed by agent',
+                                  'agent_name' => nil, 'handoff_tool_called' => false)
       end
     end
 
@@ -544,6 +570,25 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       tool_complete_callback.call(Captain::Tools::HandoffTool.new(assistant).name, 'ok', context_wrapper)
 
       expect(context_wrapper.context[:captain_v2_handoff_tool_called]).to be true
+    end
+
+    it 'anota no state do turno o id do catálogo de cada Tool que rodou' do
+      service = described_class.new(assistant: assistant, conversation: conversation)
+      runner = instance_double(Agents::AgentRunner)
+      tool_complete_callback = nil
+
+      allow(ChatwootApp).to receive(:otel_enabled?).and_return(false)
+      allow(runner).to receive(:on_tool_complete) do |&block|
+        tool_complete_callback = block
+        runner
+      end
+
+      service.send(:add_usage_metadata_callback, runner)
+      context_wrapper = Struct.new(:context).new({ state: {} })
+      tool_complete_callback.call('captain-tools-simular_honorario', 'ok', context_wrapper)
+      tool_complete_callback.call('captain-tools-agendar_reuniao', 'ok', context_wrapper)
+
+      expect(context_wrapper.context[:state][:ramon_tools_usadas]).to eq(%w[simular_honorario agendar_reuniao])
     end
 
     it 'does not register OTEL run callback when OTEL is disabled' do

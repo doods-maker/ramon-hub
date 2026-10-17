@@ -12,8 +12,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
     return if !conversation_pending? || mensagem_superada?(message_id)
 
-    @copiloto_modo = Ramon::CopilotoModo.of(@conversation)
-    return if @copiloto_modo == 'manual' # IA quieta: nem gasta LLM
+    # ramon: Perfil da IA lido no início do turno (lead, Etapa e Pausa de agora valem até o envio)
+    @perfil = Ramon::PerfilIa.de(@conversation)
+    return if @perfil.estado == :pausada # Pausa ou lead em Perdido: IA quieta, nem gasta LLM
 
     Current.executed_by = @assistant
 
@@ -84,8 +85,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     end
   end
 
+  # ramon: o classificador custa LLM — só roda depois do Marcador e quando a logística pode sair sozinha.
   def memoizar_logistica(content)
-    return unless @copiloto_modo == 'piloto_limitado'
+    return unless @perfil.estado == :rascunho && @perfil.logistica_sai?
 
     @logistica_ok = Ramon::PilotoLogisticaService.logistica?(content, account: @conversation.account)
   end
@@ -154,9 +156,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def create_handoff_message(preserve_waiting_since: false)
-    # Handoff é logística por definição (constraint global) — nunca vira rascunho
-    # em piloto_limitado. Único call site (v1 e v2 passam por aqui), então o flag
-    # é setado uma vez só, imediatamente antes da chamada.
+    # Handoff é logística por definição (constraint global): sai sempre que a
+    # logística sai (PerfilIa.decidir). Único call site (v1 e v2 passam por aqui),
+    # então o flag é setado uma vez só, imediatamente antes da chamada.
     @enviando_handoff = true
     create_outgoing_message(
       @assistant.config['handoff_message'].presence || I18n.t('conversations.captain.handoff'),
@@ -171,11 +173,11 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   end
 
   def create_outgoing_message(message_content, agent_name: nil, preserve_waiting_since: false)
-    # `||`: belt-and-suspenders pro caso de um caller futuro pular `perform`.
-    modo = @copiloto_modo || Ramon::CopilotoModo.of(@conversation)
-    # ramon (roteiro F5, spec §5): ferramenta que falhou no turno → a resposta vira rascunho em qualquer modo.
-    return create_draft_note(message_content) unless Ramon::CopilotoModo.envia?(modo, handoff: @enviando_handoff, logistica_ok: @logistica_ok,
-                                                                                      falhou: @response&.dig('ferramenta_falhou') == true)
+    # `||=`: belt-and-suspenders pro caso de um caller futuro pular `perform`.
+    @perfil ||= Ramon::PerfilIa.de(@conversation)
+    # ramon: quem decide é o Perfil da IA (Ramon::PerfilIa.decidir), com a Etapa do início do turno.
+    decisao, motivo = @perfil.decidir_turno(@response, logistica: @logistica_ok, handoff: @enviando_handoff == true)
+    return create_draft_note(message_content, motivo) if decisao == :rascunho
 
     additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
 
@@ -187,19 +189,19 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
       content: message_content,
       additional_attributes: additional_attrs,
       # ramon (15/10): content_type + content_attributes; pergunta de escolha do roteiro vai com botões se a tese pedir
-      **Ramon::Roteiro::Opcoes.atributos(@conversation, message_content, Ramon::CopilotoModo.carimbo(modo), @response, handoff: @enviando_handoff),
+      **Ramon::Roteiro::Opcoes.atributos(@conversation, message_content, @perfil.carimbo(@enviando_handoff), @response, handoff: @enviando_handoff),
       preserve_waiting_since: preserve_waiting_since
     )
   end
 
   # ramon: agente de atendimento com humano no meio (Fatia 2 da area de IA).
-  # Com o modo rascunho ligado no assistente, NADA que ele escreve chega ao
-  # cliente: a resposta vira nota privada no proprio painel da conversa, com o
-  # mesmo prefixo RASCUNHO do resto do hub, e quem revisa e envia e o atendente.
-  def create_draft_note(message_content)
+  # Quando o Perfil da IA segura a resposta, NADA chega ao cliente: ela vira nota
+  # privada no proprio painel da conversa, com o mesmo prefixo RASCUNHO do resto
+  # do hub, e quem revisa e envia e o atendente. O motivo vai junto (ramon_ia_rascunho).
+  def create_draft_note(message_content, motivo)
     @conversation.messages.create!(message_type: :outgoing, private: true, account_id: account.id,
-                                   inbox_id: inbox.id, sender: @assistant,
-                                   content: "RASCUNHO (revisar antes de enviar):\n#{message_content}")
+                                   inbox_id: inbox.id, sender: @assistant, content: "#{Ramon::RascunhoCarimbo::PREFIXO}\n#{message_content}",
+                                   content_attributes: { 'ramon_ia_rascunho' => @perfil.rastro(@enviando_handoff).merge('motivo' => motivo) })
   end
 
   def handle_error(error)

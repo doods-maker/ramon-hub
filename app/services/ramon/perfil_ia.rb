@@ -183,6 +183,17 @@ class Ramon::PerfilIa
 
   def nome = personalizado? ? 'Personalizado' : base.capitalize
 
+  # O turno do ResponseBuilderJob: Etapa do início do turno, Tools e falha da resposta do agente, relógio de agora.
+  def decidir_turno(resposta, logistica:, handoff:)
+    self.class.decidir(self, etapa: @etapa, tools_usadas: resposta&.dig('tools_usadas') || [], logistica: logistica, handoff: handoff,
+                             falhou: resposta&.dig('ferramenta_falhou') == true, fora_do_horario: !Ramon::HorarioComercial.aberto?(Time.current))
+  end
+
+  # De qual perfil veio a mensagem da IA: rastro vai na nota-rascunho (ramon_ia_rascunho); carimbo, na enviada (bi_ia conta).
+  def rastro(handoff) = { 'alvo' => @alvo, 'etapa' => self.class.chave_da_etapa(@etapa), 'handoff' => handoff == true }
+
+  def carimbo(handoff) = { 'ramon_piloto' => { 'perfil' => nome, **rastro(handoff), 'em' => Time.zone.now.iso8601 } }
+
   private
 
   def pronto = PRONTOS[base]

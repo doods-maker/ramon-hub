@@ -71,14 +71,25 @@ RSpec.describe MessageTemplates::HookExecutionService do
         inbox.update!(working_hours_enabled: false)
       end
 
-      it 'no piloto, agenda a resposta da IA com atraso aleatório de 30s a 3min' do
-        conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
+      def job_da_ia
+        ActiveJob::Base.queue_adapter.enqueued_jobs.find { |j| j[:job] == Captain::Conversation::ResponseBuilderJob }
+      end
+
+      it 'quando a resposta pode sair sozinha (Perfil da IA), agenda com atraso aleatório de 30s a 3min' do
+        freeze_time do
+          create(:message, conversation: conversation, message_type: :incoming, account: account) # INICIAL: logística sai
+
+          expect(job_da_ia[:at]).to be_between(30.seconds.from_now.to_f, 180.seconds.from_now.to_f)
+        end
+      end
+
+      it 'com a Pausa "só rascunho", agenda sem espera (quem envia é a pessoa)' do
+        conversation.update!(custom_attributes: { 'ia_pausa' => 'rascunho' })
 
         freeze_time do
           create(:message, conversation: conversation, message_type: :incoming, account: account)
 
-          job = ActiveJob::Base.queue_adapter.enqueued_jobs.find { |j| j[:job] == Captain::Conversation::ResponseBuilderJob }
-          expect(job[:at]).to be_between(30.seconds.from_now.to_f, 180.seconds.from_now.to_f)
+          expect(job_da_ia[:at].to_f).to be <= Time.current.to_f
         end
       end
 
@@ -323,15 +334,15 @@ RSpec.describe MessageTemplates::HookExecutionService do
 
     let(:aviso_handoff) { hash_including(content: I18n.t('conversations.captain.handoff')) }
 
-    it 'no piloto, agenda o aviso de handoff traduzido em vez do texto fixo em inglês' do
-      conversation.update!(custom_attributes: { 'copiloto_modo' => 'piloto_total' })
-
+    it 'quando a logística sai sozinha, agenda o aviso de handoff traduzido em vez do texto fixo em inglês' do
       expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
         .to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)
       expect(conversation.reload.status).to eq('open')
     end
 
-    it 'fora do piloto, abre a conversa sem mandar aviso ao cliente' do
+    it 'com a Pausa "só rascunho", abre a conversa sem mandar aviso ao cliente' do
+      conversation.update!(custom_attributes: { 'ia_pausa' => 'rascunho' })
+
       expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
         .not_to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)
       expect(conversation.reload.status).to eq('open')

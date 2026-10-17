@@ -1,11 +1,12 @@
 module Concerns::Agentable
   extend ActiveSupport::Concern
 
-  def agent
+  # ramon: sem_tools = ids do catálogo que o Perfil da IA bloqueia no turno (Ramon::PerfilIa#tools_bloqueadas).
+  def agent(sem_tools: [])
     Agents::Agent.new(
       name: agent_name,
       instructions: ->(context) { agent_instructions(context) },
-      tools: agent_tools,
+      tools: agent_tools(sem_tools),
       model: agent_model,
       temperature: temperature.to_f || 0.7,
       response_schema: agent_response_schema
@@ -38,7 +39,7 @@ module Concerns::Agentable
     self.class.name.demodulize.underscore
   end
 
-  def agent_tools
+  def agent_tools(_sem_tools = [])
     []  # Default implementation, override if needed
   end
 
