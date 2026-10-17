@@ -8,7 +8,6 @@ import { useMapGetter } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import { AVISO, TOM } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { copilotoModoDe } from 'dashboard/routes/dashboard/ramon/helpers/copilotoModo';
 
 const props = defineProps({
   assistantId: {
@@ -51,17 +50,6 @@ const inboxList = computed(() => {
 const v$ = useVuelidate(validationRules, state);
 
 const isLoading = computed(() => formState.uiFlags.value.creatingItem);
-
-// Conectar liga a IA na caixa na hora — o aviso diz em que modo as conversas novas nascem: o padrão da caixa
-// escolhida, senão o do servidor (Ramon::CopilotoModo.default).
-const avisoConexao = computed(() => {
-  const caixa = formState.inboxes.value.find(
-    inbox => inbox.id === state.inboxId
-  );
-  return t('CAPTAIN.INBOXES.FORM.AVISO_RASCUNHO', {
-    modo: t(`RAMON.COPILOTO.MODOS.${copilotoModoDe({}, caixa)}.NOME`),
-  });
-});
 
 const getErrorMessage = (field, errorKey) => {
   return v$.value[field].$error
@@ -112,7 +100,13 @@ const handleSubmit = async () => {
       class="mb-0"
       :class="[AVISO, TOM.amber]"
     >
-      {{ avisoConexao }}
+      {{ t('CAPTAIN.INBOXES.FORM.AVISO_COMO_IA_ATENDE') }}
+      <router-link
+        :to="{ name: 'captain_como_ia_atende_index' }"
+        class="underline"
+      >
+        {{ t('INBOX_MGMT.SETTINGS_POPUP.RAMON_IA_ATENDE.LINK') }}
+      </router-link>
     </p>
 
     <div class="flex items-center justify-between w-full gap-3">

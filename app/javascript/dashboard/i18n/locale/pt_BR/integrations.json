@@ -1068,7 +1068,7 @@
           "PLACEHOLDER": "Escolha a caixa onde o assistente vai atuar.",
           "ERROR": "É obrigatório selecionar uma caixa de entrada."
         },
-        "AVISO_RASCUNHO": "Ao conectar, o assistente passa a atuar nas conversas desta caixa. Modo das conversas novas: {modo}. Rascunho: tudo vira rascunho para a equipe enviar. Piloto com limites: só logística sai sozinha. Piloto total: tudo sai sozinho. Manual: o assistente não age."
+        "AVISO_COMO_IA_ATENDE": "Ao conectar, o assistente passa a atuar nas conversas desta caixa. O quanto ele faz sozinho se decide em \"Como a IA atende\"."
       },
       "EMPTY_STATE": {
         "TITLE": "Nenhuma caixa conectada",

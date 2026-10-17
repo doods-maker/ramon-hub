@@ -112,7 +112,7 @@ describe('AssistantPlayground', () => {
     await flushPromises();
     expect(CaptainAssistant.playground).toHaveBeenCalledWith(
       expect.objectContaining({
-        roteiro: { thesis_id: 3, estado: null, modo: 'rascunho' },
+        roteiro: { thesis_id: 3, estado: null },
       })
     );
     expect(roteiroDe(1).estado).toEqual({
@@ -195,7 +195,7 @@ describe('AssistantPlayground', () => {
     await flushPromises();
     expect(CaptainAssistant.playground).toHaveBeenCalledWith(
       expect.objectContaining({
-        roteiro: { thesis_id: null, estado: null, modo: 'rascunho' },
+        roteiro: { thesis_id: null, estado: null },
       })
     );
     expect(roteiroDe(1)).toMatchObject({ selecao: SEM_TESE, thesisId: 9 });

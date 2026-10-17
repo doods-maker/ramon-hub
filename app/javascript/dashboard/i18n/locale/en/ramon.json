@@ -1766,8 +1766,7 @@
       "TESTAR": {
         "SEM_TESE": "No script",
         "LEAD_SEM_TESE": "Lead without a thesis (shared steps, incl. subject)",
-        "AJUDA": "Pick a thesis (or a lead without one) for the AI to follow the script. The script really runs, but nothing is saved.",
-        "MODO_AJUDA": "Mode simulated in the test: in Draft, stage changes and Lost become suggestions; in Full autopilot they apply on the spot. Nothing is saved."
+        "AJUDA": "Pick a thesis (or a lead without one) for the AI to follow the script. The script really runs, but nothing is saved."
       }
     },
     "NPS": {
@@ -1833,45 +1832,7 @@
       "PAUSADO": "AI set to draft only in this conversation.",
       "PAUSA_FALHOU": "Couldn't pause — try again."
     },
-    "COPILOTO": {
-      "BTN": "Copilot: {modo}",
-      "TITULO": "Copilot mode — this conversation only",
-      "MODOS": {
-        "manual": {
-          "NOME": "Manual",
-          "DESC": "The AI suggests nothing. You write everything."
-        },
-        "rascunho": {
-          "NOME": "Draft",
-          "DESC": "The AI prepares replies; nothing goes out until you hit Send."
-        },
-        "piloto_limitado": {
-          "NOME": "Limited autopilot",
-          "DESC": "The AI sends on its own ONLY logistics messages: requesting documents, confirming a time, cadence messages.",
-          "NOTA": "Never sends: amounts, case analysis, promises. Every sent message is flagged in the conversation and you can pause it with 1 click."
-        },
-        "piloto_total": {
-          "NOME": "Full autopilot",
-          "DESC": "The AI replies to everything on its own. Every message is stamped and you can pause it with 1 click."
-        },
-        "piloto_ate_qualificacao": {
-          "NOME": "On its own until qualified",
-          "DESC": "The AI replies on its own until the thesis script qualifies the lead; then it goes back to Draft and alerts the owner."
-        },
-        "piloto_ate_reuniao": {
-          "NOME": "On its own until the meeting",
-          "DESC": "The AI replies on its own until the meeting is booked; then it goes back to Draft and alerts the owner."
-        },
-        "piloto_ate_contrato": {
-          "NOME": "On its own until the contract",
-          "DESC": "The AI replies on its own and sends the contract link once the client's data is complete; then it goes back to Draft and alerts the owner."
-        }
-      },
-      "CARIMBO": "sent by the autopilot ({modo})",
-      "PAUSAR": "Pause autopilot",
-      "PAUSADO": "Autopilot paused — back to Draft mode.",
-      "PAUSA_FALHOU": "Couldn't pause — try again."
-    },
+    "COPILOTO": {},
     "REUNIAO": {
       "TITULO": "Meeting (Closer)",
       "QUALIFICADA": "Qualified",
@@ -2465,13 +2426,6 @@
       "FAQS": "Approved FAQs: {n}",
       "FAQS_PENDENTES": "Pending FAQs: {n}",
       "CAIXAS_N": "Inboxes: {n}",
-      "MODO": {
-        "TITULO": "Conversation mode",
-        "PADRAO": "New conversations start in: {modo}",
-        "CONTAGEM": "{modo}: {n}",
-        "SEM_CONVERSAS": "No open conversation in this assistant's inboxes.",
-        "SO_LEITURA": "Read only. Each conversation's mode is changed inside the conversation."
-      },
       "CAIXAS": {
         "TITULO": "Inboxes",
         "NENHUMA": "No inbox connected: this assistant only talks through the Test screen.",
@@ -2505,14 +2459,6 @@
         "ABRIR_SUGESTOES": "Open in Command Center",
         "FAQS": "Pending FAQs: {n}",
         "ABRIR_FAQS": "Review pending FAQs"
-      },
-      "PILOTO": {
-        "TITULO_RUMO": "Towards limited pilot",
-        "TITULO_EM_VIGOR": "Limited pilot in effect",
-        "REGUA": "{conversas} of {meta} conversations with a reviewed draft",
-        "SEM_CORRECAO": "{pct}% of drafts sent without changes",
-        "SEM_DADOS": "No reviewed draft yet.",
-        "EM_VIGOR": "New conversations already start in Limited pilot (decision D7). The gauge stays here to track draft quality."
       },
       "RASCUNHOS": {
         "TITULO": "AI drafts · 30 days",

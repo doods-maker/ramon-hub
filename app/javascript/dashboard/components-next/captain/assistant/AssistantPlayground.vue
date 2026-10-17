@@ -59,7 +59,7 @@ const sendMessage = async () => {
     timestamp: new Date().toISOString(),
   };
   const conversa = conversaDe(assistantId);
-  // roteiro em teste (seleção do Testar): vai o estado e o modo, volta o novo — nada é gravado (F2/F5)
+  // roteiro em teste (seleção do Testar): vai o estado, volta o novo — nada é gravado (F2/F5)
   const roteiro = roteiroDe(assistantId);
   const selecaoEnviada = roteiro?.selecao;
   conversa.push(userMessage);

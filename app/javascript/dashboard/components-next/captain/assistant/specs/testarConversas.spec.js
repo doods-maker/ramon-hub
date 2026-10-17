@@ -39,7 +39,6 @@ describe('conversas do Testar (I-PG3)', () => {
     limparConversa(1);
     expect(roteiroDe(1)).toEqual({
       selecao: SEM_TESE,
-      modo: 'rascunho',
       thesisId: null,
       estado: null,
       painel: null,
@@ -47,19 +46,16 @@ describe('conversas do Testar (I-PG3)', () => {
     escolherRoteiro(1, '');
   });
 
-  it('pedidoDoRoteiro: nada sem seleção; lead sem tese manda thesis_id nulo e o modo', () => {
+  it('pedidoDoRoteiro: nada sem seleção; lead sem tese manda thesis_id nulo', () => {
     garantirConversa(1);
     expect(pedidoDoRoteiro(roteiroDe(1))).toBeNull();
     escolherRoteiro(1, '5');
-    roteiroDe(1).modo = 'piloto_total';
     expect(pedidoDoRoteiro(roteiroDe(1))).toEqual({
       thesis_id: 5,
       estado: null,
-      modo: 'piloto_total',
     });
     escolherRoteiro(1, SEM_TESE);
     expect(pedidoDoRoteiro(roteiroDe(1)).thesis_id).toBeNull();
     escolherRoteiro(1, '');
-    roteiroDe(1).modo = 'rascunho';
   });
 });

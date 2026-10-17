@@ -513,7 +513,7 @@
         "PICK_AGENTS": "Pick agents for the inbox",
         "ASSISTANT_TITLE": "AI assistant for this inbox",
         "ASSISTANT_NONE": "None — humans only",
-        "ASSISTANT_HINT_ON": "The assistant joins every new conversation in this inbox in the default mode \"{modo}\". You can change it per conversation or disconnect under Intelligence → Assistant → Inboxes.",
+        "ASSISTANT_HINT_ON": "The assistant joins every new conversation in this inbox. How much it does on its own is set in \"How the AI handles it\".",
         "ASSISTANT_HINT_OFF": "AI is off for this inbox. You can enable it later under Intelligence → Assistant → Inboxes."
       },
       "DETAILS": {
@@ -821,10 +821,8 @@
         "SUB_TEXT": "A new lead without a thesis gets this one when the first message has no thesis keyword.",
         "NENHUMA": "None (keywords only)"
       },
-      "RAMON_MODO_PADRAO": {
-        "LABEL": "Default AI mode for this inbox",
-        "SUB_TEXT": "Applies to new conversations in this inbox. Each conversation can still change it in the Copilot button.",
-        "SISTEMA": "System default"
+      "RAMON_IA_ATENDE": {
+        "LINK": "Configure in How the AI handles it"
       },
       "PORTARIA": {
         "LABEL": "Office inbox (assignment-based)",

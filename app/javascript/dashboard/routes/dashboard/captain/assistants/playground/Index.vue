@@ -61,14 +61,8 @@ onMounted(async () => {
 
 const usarCaso = lead => playground.value?.anexar(referenciaCaso(lead));
 
-// Modos que o Testar simula (sem conversa, os "sozinha até…" não se aplicam): rascunho = etapa e Perdido viram
-// sugestão; piloto total = aplicados na hora, no lead descartável.
-const MODOS_DO_TESTE = ['rascunho', 'piloto_total'];
 const escolherSelecao = evento =>
   escolherRoteiro(assistantId.value, evento.target.value);
-const escolherModo = evento => {
-  roteiro.value.modo = evento.target.value;
-};
 </script>
 
 <template>
@@ -105,20 +99,6 @@ const escolherModo = evento => {
               :value="String(tese.id)"
             >
               {{ tese.name }}
-            </option>
-          </select>
-          <select
-            v-if="roteiro?.selecao"
-            data-testid="testar-roteiro-modo"
-            class="!w-48 shrink-0"
-            :class="SELECT"
-            :value="roteiro.modo"
-            :title="t('RAMON.ROTEIRO_IA.TESTAR.MODO_AJUDA')"
-            :aria-label="t('RAMON.ROTEIRO_IA.TESTAR.MODO_AJUDA')"
-            @change="escolherModo"
-          >
-            <option v-for="modo in MODOS_DO_TESTE" :key="modo" :value="modo">
-              {{ t(`RAMON.COPILOTO.MODOS.${modo}.NOME`) }}
             </option>
           </select>
           <div

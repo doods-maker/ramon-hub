@@ -1766,8 +1766,7 @@
       "TESTAR": {
         "SEM_TESE": "Sem roteiro",
         "LEAD_SEM_TESE": "Lead sem tese (passos comuns, inclusive o assunto)",
-        "AJUDA": "Escolha uma tese (ou um lead sem tese) para a IA seguir o roteiro. O roteiro roda de verdade, mas nada fica gravado.",
-        "MODO_AJUDA": "Modo simulado no teste: no Rascunho, mudança de etapa e Perdido viram sugestão; no Piloto total valem na hora. Nada fica gravado."
+        "AJUDA": "Escolha uma tese (ou um lead sem tese) para a IA seguir o roteiro. O roteiro roda de verdade, mas nada fica gravado."
       }
     },
     "NPS": {
@@ -1834,43 +1833,6 @@
       "PAUSA_FALHOU": "Não consegui pausar — tente de novo."
     },
     "COPILOTO": {
-      "BTN": "Copiloto: {modo}",
-      "TITULO": "Modo do copiloto — só nesta conversa",
-      "MODOS": {
-        "manual": {
-          "NOME": "Manual",
-          "DESC": "A IA não sugere nada. Você escreve tudo."
-        },
-        "rascunho": {
-          "NOME": "Rascunho",
-          "DESC": "A IA prepara respostas; nada sai sem você apertar Enviar."
-        },
-        "piloto_limitado": {
-          "NOME": "Piloto com limites",
-          "DESC": "A IA envia sozinha SÓ mensagens de logística: cobrança de documentos, confirmação de horário, mensagem de cadência.",
-          "NOTA": "Nunca envia: valores, análise do caso, promessas. Toda mensagem enviada fica marcada na conversa e você pode pausar com 1 clique."
-        },
-        "piloto_total": {
-          "NOME": "Piloto total",
-          "DESC": "A IA responde tudo sozinha. Toda mensagem fica carimbada e você pode pausar com 1 clique."
-        },
-        "piloto_ate_qualificacao": {
-          "NOME": "Sozinha até qualificar",
-          "DESC": "A IA responde tudo sozinha até o roteiro da tese qualificar o lead; aí volta para Rascunho e avisa o responsável."
-        },
-        "piloto_ate_reuniao": {
-          "NOME": "Sozinha até a reunião",
-          "DESC": "A IA responde tudo sozinha até a reunião ser marcada; aí volta para Rascunho e avisa o responsável."
-        },
-        "piloto_ate_contrato": {
-          "NOME": "Sozinha até o contrato",
-          "DESC": "A IA responde tudo sozinha e envia o link do contrato quando o cadastro estiver completo; aí volta para Rascunho e avisa o responsável."
-        }
-      },
-      "CARIMBO": "enviada pelo piloto ({modo})",
-      "PAUSAR": "Pausar piloto",
-      "PAUSADO": "Piloto pausado — voltou pro modo Rascunho.",
-      "PAUSA_FALHOU": "Não consegui pausar — tente de novo.",
       "RASCUNHO_IA": {
         "igual": "rascunho da IA enviado como estava",
         "editado": "rascunho da IA, editado",
@@ -2470,13 +2432,6 @@
       "FAQS": "FAQs aprovadas: {n}",
       "FAQS_PENDENTES": "FAQs pendentes: {n}",
       "CAIXAS_N": "Caixas: {n}",
-      "MODO": {
-        "TITULO": "Modo das conversas",
-        "PADRAO": "Conversas novas começam em: {modo}",
-        "CONTAGEM": "{modo}: {n}",
-        "SEM_CONVERSAS": "Nenhuma conversa aberta nas caixas deste assistente.",
-        "SO_LEITURA": "Só leitura. O modo de cada conversa se troca dentro da própria conversa."
-      },
       "CAIXAS": {
         "TITULO": "Caixas de entrada",
         "NENHUMA": "Nenhuma caixa conectada: este assistente só conversa pela tela Testar.",
@@ -2510,14 +2465,6 @@
         "ABRIR_SUGESTOES": "Abrir no Centro de Comando",
         "FAQS": "FAQs pendentes: {n}",
         "ABRIR_FAQS": "Revisar FAQs pendentes"
-      },
-      "PILOTO": {
-        "TITULO_RUMO": "Rumo ao piloto limitado",
-        "TITULO_EM_VIGOR": "Piloto com limites em vigor",
-        "REGUA": "{conversas} de {meta} conversas com rascunho revisado",
-        "SEM_CORRECAO": "{pct}% dos rascunhos enviados sem correção",
-        "SEM_DADOS": "Ainda não há rascunho revisado.",
-        "EM_VIGOR": "Conversas novas já começam em Piloto com limites (decisão D7). A régua continua aqui para acompanhar a qualidade dos rascunhos."
       },
       "RASCUNHOS": {
         "TITULO": "Rascunhos da IA · 30 dias",
