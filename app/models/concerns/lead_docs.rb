@@ -3,6 +3,12 @@
 module LeadDocs
   extend ActiveSupport::Concern
 
+  # Perdido: o link mágico do portal (/portal/:token) morre; se o lead reabrir, outro nasce sob demanda.
+  # Ganho mantém: o portal segue recebendo os documentos que faltam depois do contrato (Lead#enqueue_drive_export).
+  included do
+    before_save -> { self.portal_token = nil }, if: -> { will_save_change_to_lead_stage_id? && lead_stage&.is_lost }
+  end
+
   # Contagem do checklist de documentos.
   # Loaded-aware: o índice do Kanban precarrega thesis_items — sem query por lead.
   def docs_counts
