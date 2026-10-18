@@ -8,6 +8,8 @@
 # limite 500/dia por rota; não há DELETE nem edição/conclusão de tarefa na API.
 class Ramon::AdvboxClient
   class UnavailableError < StandardError; end
+  # 404 continua sendo UnavailableError pra quem já trata; publications usa pra devolver lista vazia.
+  class NotFoundError < UnavailableError; end
 
   # 4xx com corpo — o chamador decide (ex.: 422 de CPF duplicado no POST /customers).
   class RequestError < StandardError
@@ -47,7 +49,9 @@ class Ramon::AdvboxClient
 
   # Processo sem publicação: o AdvBox responde 404 em vez de lista vazia.
   def self.publications(lawsuit_id, limit: 2)
-    get("/publications/#{lawsuit_id}", { limit: limit }, vazio_se_404: true)
+    get("/publications/#{lawsuit_id}", limit: limit)
+  rescue NotFoundError
+    []
   end
 
   def self.history(lawsuit_id)
@@ -129,14 +133,13 @@ class Ramon::AdvboxClient
     put("/transactions/#{id}", body)
   end
 
-  def self.get(path, params = {}, vazio_se_404: false)
+  def self.get(path, params = {})
     response = HTTParty.get("#{BASE}#{path}",
                             query: params,
                             headers: headers,
                             open_timeout: OPEN_TIMEOUT,
                             read_timeout: READ_TIMEOUT)
-    return [] if vazio_se_404 && response.code == 404
-
+    raise NotFoundError, 'AdvBox respondeu HTTP 404' if response.code == 404
     raise UnavailableError, "AdvBox respondeu HTTP #{response.code}" unless response.success?
 
     response.parsed_response
