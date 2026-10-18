@@ -41,7 +41,8 @@ class Ramon::PortalConvite
     # deliver_now: a senha não vai como argumento de job para o Redis (retry/dead do Sidekiq) nem para o log.
     Ramon::PortalMailer.with(account: @cliente.account, cliente: @cliente, senha: senha).convite.deliver_now
     { status: 'enviado', para: @cliente.email }
-  rescue Net::SMTPError, Net::OpenTimeout, Net::ReadTimeout, SocketError, SystemCallError => e # SMTP fora: a senha já vale e a equipe repassa pelo WhatsApp (a resposta diz que falhou)
+  # SMTP fora: a senha já vale e a equipe repassa pelo WhatsApp (a resposta diz que falhou)
+  rescue Net::SMTPError, Net::OpenTimeout, Net::ReadTimeout, SocketError, SystemCallError => e
     Rails.logger.warn("[Ramon::PortalConvite] e-mail do convite falhou (#{e.class}: #{e.message})")
     { status: 'falhou', para: @cliente.email }
   end
