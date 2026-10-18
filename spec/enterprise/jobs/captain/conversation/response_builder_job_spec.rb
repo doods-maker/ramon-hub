@@ -69,6 +69,16 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(account.usage_limits[:captain][:responses][:consumed]).to eq(1)
       end
 
+      it 'não responde de novo quando o assistente já respondeu depois da mensagem (retry/deploy)' do
+        primeira = conversation.messages.incoming.last
+        described_class.perform_now(conversation, assistant, primeira.id)
+        expect(conversation.messages.outgoing.count).to eq(1)
+
+        described_class.perform_now(conversation, assistant, primeira.id)
+
+        expect(conversation.messages.outgoing.count).to eq(1)
+      end
+
       it 'does not run the action classifier when the classifier feature is disabled' do
         expect(Captain::Llm::AssistantActionClassifierService).not_to receive(:new)
 
@@ -273,6 +283,61 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(conversation.reload.status).to eq('open')
       end
 
+      describe 'conversa atribuída' do
+        let(:pessoa) { create(:user, account: account, role: :agent) }
+
+        it 'a uma pessoa da equipe: não chama o LLM nem responde, e a conversa vai para a fila humana' do
+          conversation.update!(assignee: pessoa)
+          expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
+          expect { described_class.perform_now(conversation, assistant) }
+            .not_to change(conversation.messages.outgoing, :count)
+          expect(conversation.reload.status).to eq('open')
+        end
+
+        it 'ao SDR do lead (atribuição automática do lead novo): a IA segue respondendo' do
+          perfil!('base' => 'acelerada')
+          create(:lead, account: account, conversation: conversation, lead_stage: etapa['fase-qualificacao'], sdr: pessoa)
+          expect(conversation.reload.assignee_id).to eq(pessoa.id)
+          described_class.perform_now(conversation, assistant)
+          expect(conversation.messages.last).to have_attributes(message_type: 'outgoing', private: false)
+        end
+      end
+
+      describe 'freio de custo' do
+        before { perfil!('base' => 'acelerada') }
+
+        it 'gasto do dia no teto da conta: não chama o LLM e a conversa vai para a fila humana' do
+          account.update!(settings: account.settings.to_h.merge(Ramon::IaGastoAlerta::CHAVE_TETO => '1.00'))
+          LlmChamada.create!(account: account, funcao: 'copiloto', custo_usd: 2, created_at: Time.current)
+          expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
+          described_class.perform_now(conversation, assistant)
+          expect(conversation.reload.status).to eq('open')
+        end
+
+        it 'a IA já respondeu mais de 15 vezes na conversa na última hora: não chama o LLM' do
+          agora = Time.current
+          linhas = Array.new(Ramon::IaFreio::RESPOSTAS_POR_HORA + 1) do
+            { account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id, message_type: 1, content: 'oi',
+              sender_type: 'Captain::Assistant', sender_id: assistant.id, created_at: agora, updated_at: agora }
+          end
+          Message.insert_all(linhas) # rubocop:disable Rails/SkipsModelValidations -- só a contagem importa
+          expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
+          described_class.perform_now(conversation, assistant)
+          expect(conversation.reload.status).to eq('open')
+        end
+
+        it '15 respostas na última hora ainda deixam a IA responder' do
+          agora = Time.current
+          linhas = Array.new(Ramon::IaFreio::RESPOSTAS_POR_HORA) do
+            { account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id, message_type: 1, content: 'oi',
+              sender_type: 'Captain::Assistant', sender_id: assistant.id, created_at: agora, updated_at: agora }
+          end
+          Message.insert_all(linhas) # rubocop:disable Rails/SkipsModelValidations -- só a contagem importa
+          described_class.perform_now(conversation, assistant)
+          expect(conversation.messages.last).to have_attributes(content: 'Hey, welcome to Captain V2', private: false)
+        end
+      end
+
       it 'Equilibrada, lead em Qualificação, sem Tool: sai pública com o carimbo do perfil' do
         perfil!('base' => 'equilibrada')
         lead_em('fase-qualificacao')
@@ -294,6 +359,17 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(nota.content).to start_with('RASCUNHO')
         expect(nota.content_attributes['ramon_ia_rascunho']).to include('motivo' => 'acao:citar_honorario', 'alvo' => 'padrao',
                                                                         'etapa' => 'fase-qualificacao', 'handoff' => false)
+      end
+
+      it 'rascunho avisa o responsável do lead (a nota privada sozinha não notifica)' do
+        perfil!('base' => 'equilibrada')
+        lead = lead_em('fase-qualificacao')
+        allow(Ramon::AvisoDaIa).to receive(:rascunho)
+        allow(mock_agent_runner_service).to receive(:generate_response)
+          .and_return({ 'response' => 'Pela simulação, o honorário fica em 30%.', 'tools_usadas' => ['simular_honorario'] })
+        described_class.perform_now(conversation, assistant)
+        expect(conversation.messages.last.private).to be(true)
+        expect(Ramon::AvisoDaIa).to have_received(:rascunho).with(lead)
       end
 
       it 'turno que cruza o Marcador: vale a Etapa do início do turno e a resposta sai pública' do

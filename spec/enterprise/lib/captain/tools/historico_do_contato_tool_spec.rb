@@ -30,6 +30,17 @@ RSpec.describe Captain::Tools::HistoricoDoContatoTool, type: :model do
       expect(tool.perform(tool_context, lead_id: lead.id.to_s)).to include("contact_id #{contact.id}")
     end
 
+    it 'no atendimento ao cliente, contact_id de outra pessoa e ignorado: vale a pessoa da conversa' do
+      outra = create(:contact, account: account, name: 'Outra Pessoa')
+      conversation = create(:conversation, account: account, contact: contact)
+      contexto = Struct.new(:state).new({ conversation: { id: conversation.id }, contact: { id: contact.id } })
+
+      texto = tool.perform(contexto, contact_id: outra.id.to_s)
+
+      expect(texto).to include("Pessoa: Maria (contact_id #{contact.id})")
+      expect(texto).not_to include('Outra Pessoa')
+    end
+
     it 'diz quando nao ha nada' do
       texto = tool.perform(tool_context, contact_id: contact.id.to_s)
 

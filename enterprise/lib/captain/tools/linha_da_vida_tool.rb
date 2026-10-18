@@ -18,13 +18,6 @@ class Captain::Tools::LinhaDaVidaTool < Captain::Tools::RamonBaseTool
 
   private
 
-  def resolver_contato(state, lead_id, contact_id)
-    id = Integer(contact_id.to_s, exception: false)
-    return account_scoped(::Contact).find_by(id: id) if id
-
-    resolver_lead(state, lead_id)&.contact || find_contact(state)
-  end
-
   def pessoa(contact)
     { contact_id: contact.id, nome: contact.name, nascimento: contact.data_nascimento, sexo: contact.sexo,
       cidade: contact.additional_attributes&.dig('city') }

@@ -18,6 +18,24 @@ RSpec.describe Captain::Tools::AgendarReuniaoTool, type: :model do
       expect(lead.lead_tasks.count).to eq(0)
     end
 
+    it 'no atendimento, se uma pessoa assumiu a conversa no meio do turno, nao age' do
+      conversa = create(:conversation, account: account, status: :open)
+      create(:lead, account: account, conversation: conversa)
+      contexto = Struct.new(:state).new({ conversation: { id: conversa.id } })
+
+      expect(tool.perform(contexto, quando: '2027-03-10 14:30')).to eq(described_class::HUMANO_ASSUMIU)
+      expect(account.copilot_suggestions.count).to eq(0)
+    end
+
+    it 'no atendimento com a conversa ainda com a IA (pending), segue normal' do
+      conversa = create(:conversation, account: account, status: :pending)
+      create(:lead, account: account, conversation: conversa)
+      contexto = Struct.new(:state).new({ conversation: { id: conversa.id } })
+
+      tool.perform(contexto, quando: '2027-03-10 14:30')
+      expect(account.copilot_suggestions.pending.last.payload['acao']).to eq('reuniao')
+    end
+
     it 'recusa data no passado' do
       expect(tool.perform(tool_context, lead_id: lead.id.to_s, quando: '2020-01-01 10:00')).to include('ja passou')
     end

@@ -1,6 +1,6 @@
 # Leitura pura: o playbook da tese (o que a Sala de Fechamento mostra) servido
 # ao agente — descricao, honorario configurado e os itens por secao.
-class Captain::Tools::PlaybookDaTeseTool < Captain::Tools::BasePublicTool
+class Captain::Tools::PlaybookDaTeseTool < Captain::Tools::RamonBaseTool
   description 'Playbook de uma tese da banca: descricao, honorario configurado e itens por secao ' \
               '(abertura, apresentacao, qualificacao, objecao, documento, roteiro, colheita). ' \
               'Informe a tese pelo nome (ou parte) ou pelo lead_id do caso; sem tese, lista as teses ativas.'
@@ -11,8 +11,8 @@ class Captain::Tools::PlaybookDaTeseTool < Captain::Tools::BasePublicTool
   TETO = 6000
   TETO_SECAO = 1500
 
-  def perform(_tool_context, tese: nil, lead_id: nil, secao: nil)
-    thesis = resolver_tese(tese, lead_id)
+  def perform(tool_context, tese: nil, lead_id: nil, secao: nil)
+    thesis = resolver_tese(tool_context.state, tese, lead_id)
     return listar_ativas(tese) if thesis.blank?
 
     secoes = secao.present? ? [secao.to_s.downcase.strip] : ::ThesisItem::SECTIONS
@@ -31,9 +31,10 @@ class Captain::Tools::PlaybookDaTeseTool < Captain::Tools::BasePublicTool
     account_scoped(::Thesis).where(active: true)
   end
 
-  def resolver_tese(nome, lead_id)
+  # lead_id passa pelo resolver_lead da base: no atendimento vale so o caso da conversa.
+  def resolver_tese(state, nome, lead_id)
     id = Integer(lead_id.to_s, exception: false)
-    return account_scoped(::Lead).find_by(id: id)&.thesis if id
+    return resolver_lead(state, id)&.thesis if id
     return nil if nome.blank?
 
     teses.find_by('name ILIKE ?', "%#{::Thesis.sanitize_sql_like(nome.to_s.strip)}%")

@@ -28,10 +28,8 @@ class Cliente::SessoesController < Cliente::BaseController
   def codigo
     @cpf = cpf_param
     cliente = PortalCliente.from_cpf(@cpf)
-    if pode_entrar?(cliente) && cliente.email.present?
-      codigo = cliente.gerar_codigo!
-      Ramon::PortalMailer.with(account: cliente.account, cliente: cliente, codigo: codigo).codigo.deliver_later
-    end
+    # O código nasce dentro do e-mail (Ramon::PortalMailer#codigo): nunca vira argumento de job no Redis nem no log.
+    Ramon::PortalMailer.with(account: cliente.account, cliente: cliente).codigo.deliver_later if pode_entrar?(cliente) && cliente.email.present?
     flash.now[:portal_notice] = MENSAGEM_NEUTRA
     render :codigo
   end

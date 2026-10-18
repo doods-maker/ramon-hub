@@ -1,6 +1,6 @@
 # Gera a senha provisória do Painel do Cliente e diz como ela chega ao cliente:
 # - e-mail de convite, só se houver e-mail E servidor de e-mail (SMTP_ADDRESS) —
-#   a resposta diz qual dos três aconteceu (enviado | sem_email | sem_servidor);
+#   a resposta diz o que aconteceu (enviado | sem_email | sem_servidor | falhou);
 # - mensagem pronta pra equipe copiar ou abrir no WhatsApp (wa.me): quem aperta
 #   enviar é sempre uma pessoa, nada sai sozinho.
 # Texto da mensagem aprovado pelo Eduardo (05/10/2026) — mudar só com novo aprovado.
@@ -38,8 +38,13 @@ class Ramon::PortalConvite
     return { status: 'sem_email' } if @cliente.email.blank?
     return { status: 'sem_servidor', para: @cliente.email } unless self.class.email_configurado?
 
-    Ramon::PortalMailer.with(account: @cliente.account, cliente: @cliente, senha: senha).convite.deliver_later
+    # deliver_now: a senha não vai como argumento de job para o Redis (retry/dead do Sidekiq) nem para o log.
+    Ramon::PortalMailer.with(account: @cliente.account, cliente: @cliente, senha: senha).convite.deliver_now
     { status: 'enviado', para: @cliente.email }
+  # SMTP fora: a senha já vale e a equipe repassa pelo WhatsApp (a resposta diz que falhou)
+  rescue Net::SMTPError, Net::OpenTimeout, Net::ReadTimeout, SocketError, SystemCallError => e
+    Rails.logger.warn("[Ramon::PortalConvite] e-mail do convite falhou (#{e.class}: #{e.message})")
+    { status: 'falhou', para: @cliente.email }
   end
 
   def mensagem(senha)

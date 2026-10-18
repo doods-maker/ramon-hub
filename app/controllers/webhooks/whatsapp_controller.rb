@@ -33,12 +33,10 @@ class Webhooks::WhatsappController < ActionController::API
     @whatsapp_channel ||= whatsapp_business_payload_channel || Channel::Whatsapp.find_by(phone_number: params[:phone_number])
   end
 
+  # ramon: Cloud exige assinatura sempre — caixa criada à mão sem app_secret aceitava POST forjado (cria lead, aciona a IA).
+  # O segredo vem do app_secret da caixa (provider_config) ou do WHATSAPP_APP_SECRET global (super admin).
   def meta_signature_verification_required?
-    return true if whatsapp_channel.blank?
-    return false unless whatsapp_channel.provider == 'whatsapp_cloud'
-    return true if channel_meta_app_secrets(whatsapp_channel).present?
-
-    whatsapp_channel.provider_config['source'] == 'embedded_signup'
+    whatsapp_channel.blank? || whatsapp_channel.provider == 'whatsapp_cloud'
   end
 
   def whatsapp_business_payload_channel

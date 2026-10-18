@@ -958,6 +958,7 @@
       "EMAIL_SENT": "E-mail com a senha enviado para {email}.",
       "EMAIL_NOT_SENT_NO_EMAIL": "E-mail NÃO enviado: cliente sem e-mail cadastrado. Repasse a senha pelo WhatsApp ou em mãos.",
       "EMAIL_NOT_SENT_NO_SERVER": "E-mail NÃO enviado para {email}: o servidor está sem e-mail configurado. Repasse a senha pelo WhatsApp ou em mãos.",
+      "EMAIL_NOT_SENT_FAILED": "E-mail NÃO enviado para {email}: o servidor de e-mail recusou. Repasse a senha pelo WhatsApp ou em mãos.",
       "READY_MESSAGE": "Mensagem pronta",
       "COPY_MESSAGE": "Copiar mensagem pronta",
       "MESSAGE_COPIED": "Mensagem copiada.",

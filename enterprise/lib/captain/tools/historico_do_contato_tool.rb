@@ -25,13 +25,6 @@ class Captain::Tools::HistoricoDoContatoTool < Captain::Tools::RamonBaseTool
 
   private
 
-  def resolver_contato(state, lead_id, contact_id)
-    id = Integer(contact_id.to_s, exception: false)
-    return account_scoped(::Contact).find_by(id: id) if id
-
-    resolver_lead(state, lead_id)&.contact || find_contact(state)
-  end
-
   def casos(leads)
     return 'Casos: nenhum.' if leads.empty?
 

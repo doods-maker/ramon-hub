@@ -14,7 +14,9 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
     # ramon: Perfil da IA lido no início do turno (lead, Etapa e Pausa de agora valem até o envio)
     @perfil = Ramon::PerfilIa.de(@conversation)
-    return if @perfil.entregar_se_pausada! # Pausa ou lead em Perdido: sem LLM, a conversa vai para a fila humana
+    # Pausa ou lead em Perdido; ou o freio (atribuída a uma pessoa, teto de gasto, respostas demais na hora — Ramon::IaFreio):
+    # sem LLM, a conversa vai para a fila humana
+    return if @perfil.entregar_se_pausada! || Ramon::IaFreio.entregar!(@conversation, @perfil.lead)
 
     Current.executed_by = @assistant
 
@@ -202,6 +204,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     @conversation.messages.create!(message_type: :outgoing, private: true, account_id: account.id,
                                    inbox_id: inbox.id, sender: @assistant, content: "#{Ramon::RascunhoCarimbo::PREFIXO}\n#{message_content}",
                                    content_attributes: { 'ramon_ia_rascunho' => @perfil.rastro(@enviando_handoff).merge('motivo' => motivo) })
+    Ramon::AvisoDaIa.rascunho(@perfil.lead) # nota privada não notifica: sino + push ao responsável (1×/10 min)
   end
 
   def handle_error(error)
@@ -221,9 +224,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     error.class.name.underscore.tr('/', '_')
   end
 
-  def captain_v2_enabled?
-    account.feature_enabled?('captain_integration_v2')
-  end
+  # ramon: numa linha só — a classe está no teto do Metrics/ClassLength.
+  def captain_v2_enabled? = account.feature_enabled?('captain_integration_v2')
 
   def report_v1_handoff_not_executed
     error = StandardError.new("Captain V1 handoff requested but conversation #{@conversation.display_id} is still pending")
@@ -234,9 +236,11 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     )
   end
 
-  # ramon: cliente mandou outra mensagem durante o atraso aleatório → o job dela responde tudo
+  # ramon: cliente mandou outra mensagem durante o atraso aleatório → o job dela responde tudo. Retry/deploy no meio do
+  # turno: o assistente já respondeu (ou deixou rascunho) depois desta mensagem → não responde de novo.
   def mensagem_superada?(message_id)
-    message_id.present? && @conversation.messages.incoming.exists?(['id > ?', message_id])
+    novas = @conversation.messages.where('id > ?', message_id)
+    message_id.present? && (novas.incoming.exists? || novas.exists?(sender_type: 'Captain::Assistant'))
   end
 
   def conversation_pending?

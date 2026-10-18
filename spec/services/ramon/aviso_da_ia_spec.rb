@@ -23,4 +23,19 @@ RSpec.describe 'Ramon::AvisoDaIa' do
     Ramon::AvisoDaIa.avisar(lead.reload, 'x', 't', 'c', admins: true)
     expect(avisados).to contain_exactly(sdr.id, admin.id)
   end
+
+  it 'rascunho da IA: avisa o responsável uma vez por conversa a cada 10 min' do
+    conversa = create(:conversation, account: account)
+    lead.update_columns(conversation_id: conversa.id) # rubocop:disable Rails/SkipsModelValidations -- sem atribuir a conversa
+    Redis::Alfred.delete("RAMON::IA_RASCUNHO::#{conversa.id}")
+
+    2.times { Ramon::AvisoDaIa.rascunho(lead.reload) }
+
+    expect(avisados).to eq([admin.id])
+    expect(Redis::Alfred.ttl("RAMON::IA_RASCUNHO::#{conversa.id}")).to be_between(1, 600)
+  end
+
+  it 'rascunho sem lead não avisa nem quebra' do
+    expect { Ramon::AvisoDaIa.rascunho(nil) }.not_to change(Notification, :count)
+  end
 end
