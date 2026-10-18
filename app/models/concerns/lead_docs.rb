@@ -3,6 +3,14 @@
 module LeadDocs
   extend ActiveSupport::Concern
 
+  # Perdido: o link mágico do portal (/portal/:token) morre; se o lead reabrir, outro nasce sob demanda.
+  # Ganho mantém: o portal segue recebendo os documentos que faltam depois do contrato (Lead#enqueue_drive_export).
+  included do
+    before_save -> { self.portal_token = nil }, if: -> { will_save_change_to_lead_stage_id? && lead_stage&.is_lost }
+    # Desmarcar "recebido" solta o anexo e o vínculo do Drive daquele item (o arquivo no Drive fica: é do cliente).
+    before_save :soltar_docs_desmarcados, if: :custom_attributes_changed?
+  end
+
   # Contagem do checklist de documentos.
   # Loaded-aware: o índice do Kanban precarrega thesis_items — sem query por lead.
   def docs_counts
@@ -24,6 +32,15 @@ module LeadDocs
   end
 
   private
+
+  def soltar_docs_desmarcados
+    attrs = custom_attributes.to_h.deep_dup
+    recebidos = ->(mapa) { mapa.select { |key, _| attrs.dig('doc_status', key.to_s) == 'recebido' } }
+    attrs['doc_anexos'] = recebidos.call(attrs['doc_anexos']) if attrs['doc_anexos'].is_a?(Hash)
+    itens = attrs.dig('drive', 'itens')
+    attrs['drive']['itens'] = recebidos.call(itens) if itens.is_a?(Hash)
+    self.custom_attributes = attrs if attrs != custom_attributes.to_h
+  end
 
   def doc_items
     if thesis.association(:thesis_items).loaded?

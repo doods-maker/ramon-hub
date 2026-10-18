@@ -228,11 +228,13 @@ class Rack::Attack
 
   ## Ramon — Painel do Cliente: senha (6 dígitos) + código por e-mail (força bruta) ###
   CLIENTE_LOGIN_PATHS = %w[/cliente/codigo /cliente/entrar /cliente/entrar-codigo].freeze
+  # CPF + IP: quem sabe o CPF de alguém não trava a conta dele de outro lugar.
   throttle('cliente/codigo/cpf', limit: 5, period: 15.minutes) do |req|
     next unless req.post? && req.ramon_path.in?(CLIENTE_LOGIN_PATHS)
 
     # params do Rails (não só os do Rack) — CPF num corpo JSON também conta
-    ActionDispatch::Request.new(req.env).params['cpf'].to_s.delete('^0-9').presence
+    cpf = ActionDispatch::Request.new(req.env).params['cpf'].to_s.delete('^0-9').presence
+    "#{cpf}:#{req.ip}" if cpf
   end
   throttle('cliente/codigo/ip', limit: 10, period: 15.minutes) do |req|
     req.ip if req.post? && req.ramon_path.in?(CLIENTE_LOGIN_PATHS)

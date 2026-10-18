@@ -347,7 +347,7 @@ RSpec.describe MessageTemplates::HookExecutionService do
 
     it 'quando a logística sai sozinha, agenda o aviso de handoff traduzido em vez do texto fixo em inglês' do
       expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
-        .to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)
+        .to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff, kind_of(Integer))
       expect(conversation.reload.status).to eq('open')
     end
 
@@ -355,7 +355,7 @@ RSpec.describe MessageTemplates::HookExecutionService do
       conversation.update!(custom_attributes: { 'ia_pausa' => 'rascunho' })
 
       expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
-        .not_to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)
+        .not_to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff, kind_of(Integer))
       expect(conversation.reload.status).to eq('open')
     end
 
@@ -364,7 +364,7 @@ RSpec.describe MessageTemplates::HookExecutionService do
       allow(Ramon::HorarioComercial).to receive(:aberto?).and_return(false)
 
       expect { create(:message, conversation: conversation, message_type: :incoming, account: account) }
-        .not_to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff)
+        .not_to have_enqueued_job(Conversations::ActivityMessageJob).with(conversation, aviso_handoff, kind_of(Integer))
       expect(conversation.reload.status).to eq('open')
     end
 

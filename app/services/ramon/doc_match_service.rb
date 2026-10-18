@@ -14,9 +14,10 @@ class Ramon::DocMatchService
     não der pra afirmar. Na dúvida, responda null — nunca chute.
   PROMPT
   VISAO = { provider: 'anthropic', model: 'claude-haiku-5-5' }.freeze
-  # tipos que a API da Anthropic aceita; imagem até 5 MB em base64 (~3,75 MB crus)
+  # tipos que a API da Anthropic aceita; imagem até 5 MB em base64 (~3,75 MB crus); PDF: pedido até 32 MB
+  # já em base64 (~24 MB crus) — 20 MB deixa folga. Acima de 100 páginas a API recusa: ver rescue do ask_llm.
   VISAO_LIMITE = { 'image/jpeg' => 3.75.megabytes, 'image/png' => 3.75.megabytes, 'image/webp' => 3.75.megabytes,
-                   'image/gif' => 3.75.megabytes, 'application/pdf' => 30.megabytes }.freeze
+                   'image/gif' => 3.75.megabytes, 'application/pdf' => 20.megabytes }.freeze
 
   def initialize(message)
     @message = message
@@ -63,6 +64,13 @@ class Ramon::DocMatchService
       funcao: 'doc_match', account_id: lead.account_id, lead_id: lead.id, conversation_id: lead.conversation_id
     )
     parse_item_id(result.content)
+  rescue RubyLLM::Error => e
+    # Visão recusou o arquivo (PDF com +100 páginas etc.): cai na sugestão sem visão, nunca morre sem deixar nada.
+    raise unless visao?
+
+    Rails.logger.warn("[Ramon::DocMatchService] visão recusou o anexo (#{e.message}); seguindo sem visão, message=#{@message.id}")
+    @visao = false
+    retry
   end
 
   def visao?

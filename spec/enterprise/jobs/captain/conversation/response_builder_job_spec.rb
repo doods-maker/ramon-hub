@@ -228,6 +228,24 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(conversation.messages.last.content).to eq('Hey, welcome to Captain V2')
       end
 
+      it 'manda ao LLM só as últimas 40 mensagens, em ordem' do
+        base = 1.hour.ago
+        linhas = Array.new(45) do |idx|
+          { account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id, message_type: 0, content: "m#{idx}",
+            created_at: base + idx.seconds, updated_at: base + idx.seconds }
+        end
+        Message.insert_all(linhas) # rubocop:disable Rails/SkipsModelValidations -- só o histórico importa
+        historico = nil
+        allow(mock_agent_runner_service).to receive(:generate_response) do |message_history:|
+          historico = message_history
+          { 'response' => 'ok' }
+        end
+        described_class.perform_now(conversation, assistant)
+        expect(historico.size).to eq(40)
+        expect(historico.first[:content]).to eq('m6')
+        expect(historico.last[:content]).to eq('Hello')
+      end
+
       it 'increments usage response' do
         described_class.perform_now(conversation, assistant)
         account.reload

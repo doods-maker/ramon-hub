@@ -126,6 +126,23 @@ RSpec.describe 'Painel do cliente — sessões', type: :request do
     expect(%w[/cliente/entrar /cliente/entrar/ /cliente/entrar.json //cliente//entrar].map(&req)).to all(eq('/cliente/entrar'))
   end
 
+  it 'CPF desconhecido também confere um bcrypt (o tempo não revela quem é cliente)' do
+    allow(BCrypt::Password).to receive(:new).and_call_original
+    post '/cliente/entrar', params: { cpf: '99999999999', senha: senha }
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(BCrypt::Password).to have_received(:new).with(Cliente::SessoesController::SENHA_FALSA)
+  end
+
+  it 'a throttle de login por CPF conta CPF + IP (o mesmo CPF de outro IP não trava)' do
+    bloco = Rack::Attack.throttles['cliente/codigo/cpf'].block
+    req = lambda do |ip|
+      env = Rack::MockRequest.env_for('/cliente/entrar', method: 'POST', params: { cpf: '123.456.789-01' })
+      Rack::Attack::Request.new(env.merge('REMOTE_ADDR' => ip))
+    end
+    expect(bloco.call(req.call('1.1.1.1'))).to eq '12345678901:1.1.1.1'
+    expect(bloco.call(req.call('2.2.2.2'))).to eq '12345678901:2.2.2.2'
+  end
+
   it 'trocar senha sem sessão redireciona pro login' do
     get '/cliente/senha/edit'
     expect(response).to redirect_to('/cliente')
@@ -134,6 +151,15 @@ RSpec.describe 'Painel do cliente — sessões', type: :request do
   it 'sair apaga a sessão' do
     post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
     delete '/cliente/sair'
+    get '/cliente/inicio'
+    expect(response).to redirect_to('/cliente')
+  end
+
+  it 'sair invalida um cookie copiado antes' do
+    post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
+    copiado = cookies[:ramon_cliente]
+    delete '/cliente/sair'
+    cookies[:ramon_cliente] = copiado
     get '/cliente/inicio'
     expect(response).to redirect_to('/cliente')
   end

@@ -88,6 +88,22 @@ RSpec.describe Ramon::DocMatchService do
     expect(attrs.dig('doc_sugestao', 'item_id')).to eq(rg.id)
   end
 
+  it 'visão recusa o anexo (PDF com +100 páginas): cai na sugestão sem visão' do
+    resposta = Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1)
+    anexos = []
+    allow(Ramon::LlmClient).to receive(:complete) do |**args|
+      anexos << args[:anexo].present?
+      raise RubyLLM::Error.new(nil, 'A maximum of 100 PDF pages may be provided') if args[:anexo]
+
+      resposta
+    end
+    with_modified_env(ANTHROPIC_API_KEY: 'sk-test') { described_class.new(message).perform }
+    expect(anexos).to eq([true, false])
+    attrs = lead.reload.custom_attributes
+    expect(attrs['doc_status']).to be_blank
+    expect(attrs.dig('doc_sugestao', 'item_id')).to eq(rg.id)
+  end
+
   it 'sem chave da Anthropic, segue o copiloto sem anexo' do
     resposta = Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1)
     allow(Ramon::LlmClient).to receive(:complete).and_return(resposta)

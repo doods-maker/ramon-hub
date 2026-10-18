@@ -170,6 +170,14 @@ RSpec.describe Captain::Assistant::AgentRunnerService do
       expect(result).to include('response' => 'Test response', 'agent_name' => nil, 'handoff_tool_called' => false, 'tools_usadas' => [])
     end
 
+    it 'loga só id e duração do resultado, nunca o texto da conversa' do
+      allow(Rails.logger).to receive(:info)
+      service.generate_response(message_history: message_history)
+
+      expect(Rails.logger).to have_received(:info).with(/\[Captain V2\] Agent result: conversa=#{conversation.id} ms=\d+/)
+      expect(Rails.logger).not_to have_received(:info).with(/Test response/)
+    end
+
     context 'when handoff tool was called during agent execution' do
       let(:runner_context) { { captain_v2_handoff_tool_called: true } }
       let(:mock_result) do

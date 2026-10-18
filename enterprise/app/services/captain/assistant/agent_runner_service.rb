@@ -28,7 +28,8 @@ class Captain::Assistant::AgentRunnerService
     result = runner.run(message_to_process, context: context, max_turns: 100)
     # ramon: uso/custo da execução (tela Uso e custo); nunca quebra a resposta
     Ramon::LlmUso.registrar_agente(assistant: @assistant, result: result, inicio: inicio, source: @source, conversation: @conversation)
-
+    # ramon: só id e duração no log — o result.inspect levava a conversa inteira
+    Rails.logger.info "[Captain V2] Agent result: conversa=#{@conversation&.id} ms=#{Ramon::LlmUso.agora_ms - inicio}"
     process_agent_result(result)
   rescue StandardError => e
     Ramon::LlmUso.registrar_agente(assistant: @assistant, result: nil, inicio: inicio, source: @source, conversation: @conversation)
@@ -94,7 +95,6 @@ class Captain::Assistant::AgentRunnerService
   end
 
   def process_agent_result(result)
-    Rails.logger.info "[Captain V2] Agent result: #{result.inspect}"
     output = result.output
     response = output.is_a?(Hash) ? output.with_indifferent_access : { 'response' => output.to_s, 'reasoning' => 'Processed by agent' }
     response['agent_name'] = result.context&.dig(:current_agent)

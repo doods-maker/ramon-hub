@@ -1,6 +1,28 @@
 class Whatsapp::OneoffCampaignService
   pattr_initialize [:campaign!]
 
+  # Ramon fork (LGPD): opt-out de marketing — o cliente responde só "parar"/"sair"/"pare"/"cancelar" ou a Meta recusa o
+  # envio com 131050 (a pessoa parou de receber marketing). Revoga consent_marketing; só registra, nada sai pro cliente.
+  OPT_OUT = %w[parar sair pare cancelar].freeze
+
+  # Chamado pelo RamonLeadListener: mensagem recebida (palavra) ou envio que falhou (131050).
+  def self.opt_out!(message)
+    origem = origem_opt_out(message)
+    contact = message.conversation.contact
+    return if origem.nil? || contact.blank? || contact.custom_attributes&.dig('consent_marketing', 'granted') == false
+
+    contact.update!(custom_attributes: contact.custom_attributes.to_h.merge(
+      'consent_marketing' => { 'granted' => false, 'at' => Time.current.iso8601, 'source' => "opt_out:#{origem}" }
+    ))
+  end
+
+  def self.origem_opt_out(message)
+    return 'meta_131050' if message.external_error.to_s.include?('131050')
+
+    'resposta' if message.incoming? && OPT_OUT.include?(I18n.transliterate(message.content.to_s.downcase).delete('^a-z'))
+  end
+  private_class_method :origem_opt_out
+
   def perform
     validate_campaign!
     process_audience(extract_audience_labels)
@@ -54,8 +76,8 @@ class Whatsapp::OneoffCampaignService
 
     # Ramon fork (LGPD): por padrão a campanha em massa só dispara pra quem tem
     # consentimento de marketing registrado no contato (custom_attributes.consent_marketing).
-    # O gestor pode desligar o filtro na campanha (consentimento via contrato/procuração).
-    if consent_filter? && !marketing_consent_granted?(contact)
+    # O gestor pode desligar o filtro na campanha (consentimento via contrato/procuração); opt-out vale sempre.
+    if sem_consentimento?(contact)
       @skipped_without_consent += 1
       Rails.logger.info "Skipping contact #{contact.name} - no marketing consent (LGPD)"
       return
@@ -91,6 +113,10 @@ class Whatsapp::OneoffCampaignService
   def marketing_consent_granted?(contact)
     contact.custom_attributes&.dig('consent_marketing', 'granted') == true
   end
+
+  def marketing_opt_out?(contact) = contact.custom_attributes&.dig('consent_marketing', 'granted') == false
+
+  def sem_consentimento?(contact) = !marketing_consent_granted?(contact) && (consent_filter? || marketing_opt_out?(contact))
 
   def process_liquid_template_params(contact)
     liquid_processor = Whatsapp::LiquidTemplateProcessorService.new(campaign: campaign, contact: contact)

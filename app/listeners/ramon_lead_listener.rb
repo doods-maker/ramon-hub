@@ -26,6 +26,8 @@ class RamonLeadListener < BaseListener
     agendar_observador(message)
     return unless message.incoming?
 
+    Whatsapp::OneoffCampaignService.opt_out!(message) # "parar"/"sair"... revoga o marketing (LGPD)
+
     lead = message.account.leads.find_by(conversation_id: message.conversation_id) || lead_da_resposta(message)
     return if lead.blank?
 
@@ -60,6 +62,8 @@ class RamonLeadListener < BaseListener
   def message_updated(event)
     message = event.data[:message]
     return unless event.data[:previous_changes]&.dig('status')&.last == 'failed'
+
+    Whatsapp::OneoffCampaignService.opt_out!(message) # 131050: a pessoa parou de receber marketing na Meta
     return unless message.outgoing? && message.sender_type.in?([nil, 'Captain::Assistant'])
 
     message.conversation.bot_handoff! if message.conversation.pending?

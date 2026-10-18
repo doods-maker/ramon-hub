@@ -768,6 +768,7 @@ Rails.application.routes.draw do
         # Ramon — captação de leads das landing pages (token via header X-Capture-Token;
         # a rota com token no path fica por compatibilidade até as LPs migrarem)
         post 'ramon_leads', to: 'ramon_leads#create'
+        # ramon: legado mantido — token de captação é público (JS das LPs); remover só com log de acesso provando zero uso
         post 'ramon_leads/:capture_token', to: 'ramon_leads#create'
 
         # Ramon — .ics da reunião (token assinado; o token pode ter ponto, por isso a restrição em vez de :token.ics)

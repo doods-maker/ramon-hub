@@ -60,12 +60,12 @@ module Enterprise::MessageTemplates::HookExecutionService
 
   # ramon: limite de respostas da IA estourado → mesmo texto do handoff normal (config do assistente,
   # senão i18n na língua da conta) e mesmo atraso. Mesma regra do handoff no job (inclui fora do horário em rascunho).
-  # ponytail: o aviso sai mesmo se um humano responder durante a espera — caso raro (limite de 100 mil)
+  # O id da mensagem vai junto: se uma pessoa responder durante a espera, o aviso não sai.
   def agendar_aviso_de_handoff
     content = inbox.captain_assistant.config['handoff_message'].presence ||
               I18n.with_locale(conversation.account.locale) { I18n.t('conversations.captain.handoff') }
     params = { message_type: :outgoing, account_id: conversation.account_id, inbox_id: conversation.inbox_id, content: content }
-    Conversations::ActivityMessageJob.set(wait: atraso_resposta_ia).perform_later(conversation, params)
+    Conversations::ActivityMessageJob.set(wait: atraso_resposta_ia).perform_later(conversation, params, message.id)
   end
 
   def send_out_of_office_message_after_handoff

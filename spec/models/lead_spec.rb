@@ -330,6 +330,18 @@ RSpec.describe Lead do
       second = create(:lead, account: account)
       expect(first.ensure_portal_token!).not_to eq(second.ensure_portal_token!)
     end
+
+    it 'o link morre quando o lead vai para Perdido e fica quando vai para Ganho' do
+      perdido = create(:lead, account: account)
+      perdido.ensure_portal_token!
+      perdido.update!(lead_stage: account.lead_stages.find_by!(is_lost: true), lost_reason: 'Honorário')
+      expect(perdido.reload.portal_token).to be_nil
+
+      ganho = create(:lead, account: account)
+      token = ganho.ensure_portal_token!
+      ganho.update!(lead_stage: account.lead_stages.find_by!(is_won: true))
+      expect(ganho.reload.portal_token).to eq(token)
+    end
   end
 
   context 'when entering the lost stage (motivo da perda)' do
