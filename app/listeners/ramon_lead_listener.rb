@@ -26,12 +26,22 @@ class RamonLeadListener < BaseListener
     agendar_observador(message)
     return unless message.incoming?
 
-    lead = message.account.leads.find_by(conversation_id: message.conversation_id)
+    lead = message.account.leads.find_by(conversation_id: message.conversation_id) || lead_da_resposta(message)
     return if lead.blank?
 
     Ramon::LeadDaConversa.origem(lead, message)
     Ramon::DocMatchJob.perform_later(message.id) if message.attachments.any? { |a| TIPOS_ANEXO.include?(a.file_type) }
     Ramon::CoachObjecaoJob.perform_later(message.id) if message.content.to_s.strip.length >= Ramon::CoachObjecaoService::MIN_CHARS
+  end
+
+  # Conversa aberta pelo celular da equipe (Ramon::LeadDaConversa.cabe?) não criou lead; ele nasce na 1ª resposta do cliente.
+  # Sem SLA: o eco já conta como 1ª resposta.
+  def lead_da_resposta(message)
+    conversation = message.conversation
+    return unless Ramon::LeadDaConversa.eco?(conversation.messages.first) && conversation.messages.incoming.where.not(id: message.id).none?
+    return unless Ramon::LeadDaConversa.cabe?(conversation)
+
+    Ramon::LeadDaConversa.criar_ou_ligar(conversation)
   end
 
   # Funil automático: incoming ou outgoing público de lead aberto agenda o observador (10 min, debounce no job).

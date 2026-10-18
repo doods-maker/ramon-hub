@@ -49,6 +49,28 @@ RSpec.describe RamonLeadListener do
     expect(old_lead.reload.conversation_id).to eq(old_conversation.id)
   end
 
+  describe 'conversa aberta pelo celular da equipe (eco da coexistência)' do
+    before do
+      create(:message, :bot_message, account: account, conversation: conversation, content: 'Oi, aqui é do escritório',
+                                     content_attributes: { external_echo: true })
+    end
+
+    it 'não cria lead enquanto o cliente não responde' do
+      expect { listener.conversation_created(event) }.not_to(change { account.leads.count })
+    end
+
+    it 'cria o lead na 1ª resposta do cliente, só uma vez' do
+      listener.conversation_created(event)
+      resposta = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: resposta)) }
+        .to change { account.leads.where(conversation_id: conversation.id).count }.by(1)
+
+      outra = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'tudo bem?')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: outra)) }
+        .not_to(change { account.leads.count })
+    end
+  end
+
   describe '#message_created -> atribuição do referral da Meta' do
     let(:lead) do
       create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
