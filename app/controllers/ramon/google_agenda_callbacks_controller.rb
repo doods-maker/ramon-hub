@@ -2,6 +2,8 @@
 # + o usuário pertencer à conta. Sempre redireciona para a tela da Agenda, nunca mostra erro cru.
 class Ramon::GoogleAgendaCallbacksController < ActionController::Base # rubocop:disable Rails/ApplicationController
   def show
+    return conectar_drive if params[:state].to_s.start_with?('drive:')
+
     user, account_id = usuario_do_state
     return redirecionar(account_id, 'erro') unless user
 
@@ -13,6 +15,15 @@ class Ramon::GoogleAgendaCallbacksController < ActionController::Base # rubocop:
   end
 
   private
+
+  # Conta Google do escritório pro Drive do hub (rake ramon:drive:conectar), no mesmo retorno OAuth da Agenda.
+  def conectar_drive
+    email = Ramon::DriveClient.conectar!(params[:state], params[:code])
+    render plain: email ? "Drive do hub conectado na conta #{email}. Pode fechar esta aba." : 'Link expirado ou inválido. Gere outro.'
+  rescue StandardError => e
+    Rails.logger.error "Ramon drive: callback falhou (#{e.class})"
+    render plain: 'Falhou ao conectar o Drive. Gere outro link.'
+  end
 
   # state = "<sgid>:<account_id>"; rpartition porque o sgid pode ter ':' no meio.
   def usuario_do_state
