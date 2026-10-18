@@ -273,6 +273,26 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(conversation.reload.status).to eq('open')
       end
 
+      describe 'conversa atribuída' do
+        let(:pessoa) { create(:user, account: account, role: :agent) }
+
+        it 'a uma pessoa da equipe: não chama o LLM nem responde, e a conversa vai para a fila humana' do
+          conversation.update!(assignee: pessoa)
+          expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
+          expect { described_class.perform_now(conversation, assistant) }
+            .not_to change(conversation.messages.outgoing, :count)
+          expect(conversation.reload.status).to eq('open')
+        end
+
+        it 'ao SDR do lead (atribuição automática do lead novo): a IA segue respondendo' do
+          perfil!('base' => 'acelerada')
+          create(:lead, account: account, conversation: conversation, lead_stage: etapa['fase-qualificacao'], sdr: pessoa)
+          expect(conversation.reload.assignee_id).to eq(pessoa.id)
+          described_class.perform_now(conversation, assistant)
+          expect(conversation.messages.last).to have_attributes(message_type: 'outgoing', private: false)
+        end
+      end
+
       it 'Equilibrada, lead em Qualificação, sem Tool: sai pública com o carimbo do perfil' do
         perfil!('base' => 'equilibrada')
         lead_em('fase-qualificacao')
