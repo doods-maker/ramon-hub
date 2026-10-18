@@ -152,6 +152,17 @@ describe Whatsapp::OneoffCampaignService do
         described_class.new(campaign: campaign).perform
       end
 
+      it 'skips opted-out contacts even when the campaign turns the consent filter off' do
+        campaign.update!(trigger_rules: { 'only_with_marketing_consent' => false })
+        opt_out = { 'consent_marketing' => { 'granted' => false, 'source' => 'opt_out:resposta' } }
+        contact = create(:contact, :with_phone_number, account: account, custom_attributes: opt_out)
+        contact.update_labels([label1.title])
+
+        expect(whatsapp_channel).not_to receive(:send_template)
+
+        described_class.new(campaign: campaign).perform
+      end
+
       it 'keeps skipping contacts without consent when the filter is explicitly on' do
         campaign.update!(trigger_rules: { 'only_with_marketing_consent' => true })
         contact = create(:contact, :with_phone_number, account: account)

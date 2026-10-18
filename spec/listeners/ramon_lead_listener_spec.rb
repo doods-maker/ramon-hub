@@ -301,6 +301,33 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe 'opt-out de marketing (LGPD)' do
+    def consentimento = contact.reload.custom_attributes['consent_marketing']
+
+    before { contact.update!(custom_attributes: { 'consent_marketing' => { 'granted' => true, 'source' => 'lp:x' } }) }
+
+    it 'cliente responde só "PARE!": revoga o consentimento sem mandar nada' do
+      msg = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'PARE!')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: msg)) }
+        .not_to(change { conversation.messages.outgoing.count })
+      expect(consentimento).to include('granted' => false, 'source' => 'opt_out:resposta')
+    end
+
+    it 'frase com a palavra no meio não revoga' do
+      msg = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'não pare de me ajudar')
+      listener.message_created(Events::Base.new('message.created', Time.zone.now, message: msg))
+      expect(consentimento['granted']).to be(true)
+    end
+
+    it 'a Meta recusa o envio com 131050: revoga o consentimento' do
+      enviada = create(:message, account: account, conversation: conversation, message_type: :outgoing, status: :failed,
+                                 external_error: '131050: User has chosen to stop receiving marketing messages')
+      listener.message_updated(Events::Base.new('message.updated', Time.zone.now, message: enviada,
+                                                                                  previous_changes: { 'status' => %w[sent failed] }))
+      expect(consentimento).to include('granted' => false, 'source' => 'opt_out:meta_131050')
+    end
+  end
+
   describe '#lead_updated -> etiqueta a conversa' do
     it 'aplica a fase-* da etapa do lead na conversa' do
       lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
