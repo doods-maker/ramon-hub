@@ -2,7 +2,7 @@
 // Detalhe de um cliente do Painel do Cliente (lado do escritório): e-mail,
 // recado por processo, documento pra assinatura e envios. Seções (SECAO),
 // nunca cartão dentro do cartão da lista.
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import PortalClientesAPI from 'dashboard/api/portalClientes';
@@ -23,6 +23,7 @@ import {
 const props = defineProps({
   cliente: { type: Object, required: true },
   templates: { type: Array, default: () => [] },
+  podeGerirAcesso: { type: Boolean, default: false },
 });
 const emit = defineEmits(['atualizar', 'recarregar']);
 
@@ -33,6 +34,10 @@ const recadosSalvos = ref({ ...props.cliente.recados });
 const recadoMudou = id =>
   (recados.value[id] || '').trim() !== (recadosSalvos.value[id] || '').trim();
 const emailEdit = ref(props.cliente.email || '');
+// E-mail de quem já foi convidado é a porta do "esqueci a senha": só quem gere acesso troca (o servidor também barra).
+const emailTravado = computed(
+  () => !!props.cliente.convidado_em && !props.podeGerirAcesso
+);
 const aviso = ref('');
 const templateId = ref(null);
 const nomeDocumento = ref('Procuração');
@@ -156,11 +161,13 @@ const dataHora = iso =>
         <input
           v-model="emailEdit"
           type="email"
+          :disabled="emailTravado"
           :class="CAMPO"
           :placeholder="t('RAMON.PORTAL_CLIENTES.EMAIL')"
         />
       </label>
       <Button
+        v-if="!emailTravado"
         sm
         faded
         slate

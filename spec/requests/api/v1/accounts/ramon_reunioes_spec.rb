@@ -79,6 +79,18 @@ RSpec.describe 'Ramon Reunioes API', type: :request do
   end
 
   describe 'PATCH /api/v1/accounts/:id/ramon_reunioes/:id (vincular lead)' do
+    # Comercial tem visão total do funil (LeadPolicy::Scope).
+    before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
+    it 'agente sem visão do lead não vincula a reunião a ele (404)' do
+      advogada = create(:user, account: account, role: :agent)
+      reuniao = create(:reuniao, account: account, user: advogada)
+      patch "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}",
+            params: { lead_id: create(:lead, account: account).id }, headers: advogada.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:not_found)
+      expect(reuniao.reload.lead).to be_nil
+    end
+
     it 'vincula e devolve o lead no detalhe', :aggregate_failures do
       lead = create(:lead, account: account, name: 'Rosângela Vieira')
       reuniao = create(:reuniao, account: account)

@@ -170,13 +170,13 @@ class ActionCableListener < BaseListener # rubocop:disable Metrics/ClassLength
   def lead_created(event)
     lead = event.data[:lead]
     account = lead.account
-    broadcast(account, [account_token(account)], LEAD_CREATED, lead.push_event_data)
+    broadcast(account, lead_tokens(lead), LEAD_CREATED, lead.push_event_data)
   end
 
   def lead_updated(event)
     lead = event.data[:lead]
     account = lead.account
-    broadcast(account, [account_token(account)], LEAD_UPDATED, lead.push_event_data)
+    broadcast(account, lead_tokens(lead), LEAD_UPDATED, lead.push_event_data)
   end
 
   def contact_deleted(event)
@@ -198,6 +198,11 @@ class ActionCableListener < BaseListener # rubocop:disable Metrics/ClassLength
 
   def account_token(account)
     "account_#{account.id}"
+  end
+
+  # ramon: o lead só vai pra quem o vê (LeadPolicy::Scope: admin, visão total ou conversa/contato visível).
+  def lead_tokens(lead)
+    LeadPolicy.quem_ve(lead).map(&:pubsub_token)
   end
 
   def typing_event_listener_tokens(account, conversation, user)

@@ -255,11 +255,19 @@ describe ActionCableListener do
     let(:lead) { create(:lead, account: account, lead_stage: lead_stage) }
     let(:event) { Events::Base.new('lead.created', Time.zone.now, lead: lead) }
 
-    it 'enfileira broadcast account-wide com push_event_data' do
+    it 'lead sem conversa visível vai só pra quem tem visão total (não pra conta toda)' do
       expect(ActionCableBroadcastJob).to receive(:perform_later).with(
-        ["account_#{account.id}"],
+        [admin.pubsub_token],
         'lead.created',
         lead.push_event_data.merge(account_id: account.id)
+      )
+      listener.lead_created(event)
+    end
+
+    it 'lead da conversa que o agente vê vai também pro agente' do
+      lead.update!(conversation: conversation)
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        a_collection_containing_exactly(admin.pubsub_token, agent.pubsub_token), 'lead.created', anything
       )
       listener.lead_created(event)
     end
@@ -270,9 +278,10 @@ describe ActionCableListener do
     let(:lead) { create(:lead, account: account, lead_stage: lead_stage) }
     let(:event) { Events::Base.new('lead.updated', Time.zone.now, lead: lead) }
 
-    it 'enfileira broadcast account-wide com push_event_data' do
+    it 'agente no time sdr (visão total) recebe; agente sem visão não' do
+      create(:team_member, team: create(:team, account: account, name: 'sdr'), user: agent)
       expect(ActionCableBroadcastJob).to receive(:perform_later).with(
-        ["account_#{account.id}"],
+        a_collection_containing_exactly(admin.pubsub_token, agent.pubsub_token),
         'lead.updated',
         lead.push_event_data.merge(account_id: account.id)
       )

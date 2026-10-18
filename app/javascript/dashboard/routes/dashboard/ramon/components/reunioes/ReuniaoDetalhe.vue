@@ -1,9 +1,11 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import ReunioesAPI from 'dashboard/api/reunioes';
 import { useAlert } from 'dashboard/composables';
+import { useMapGetter } from 'dashboard/composables/store';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import ReuniaoVincularLead from './ReuniaoVincularLead.vue';
@@ -21,6 +23,12 @@ const { t } = useI18n();
 const { formatMessage } = useMessageFormatter();
 
 const reuniao = ref(null);
+const currentUser = useMapGetter('getCurrentUser');
+const { isAdmin } = useAdmin();
+// Apagar: só admin ou quem gravou (o servidor também barra).
+const podeApagar = computed(
+  () => isAdmin.value || reuniao.value?.user_id === currentUser.value?.id
+);
 const hasError = ref(false);
 const mostrarTranscricao = ref(false);
 const showDeleteConfirm = ref(false);
@@ -119,6 +127,7 @@ onBeforeUnmount(() => clearInterval(poll));
         </div>
       </div>
       <Button
+        v-if="podeApagar"
         sm
         ghost
         ruby

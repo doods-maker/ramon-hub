@@ -7,6 +7,20 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
   let(:url) { "/api/v1/accounts/#{account.id}/ramon_dashboard" }
   let(:active_stage) { account.lead_stages.find_by(is_won: false, is_lost: false) }
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope): as listas com nome mostram tudo.
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
+  it 'agente sem visão total não recebe nome de lead que não vê (Hoje e agenda), mas os totais do funil seguem', :aggregate_failures do
+    advogada = create(:user, account: account, role: :agent)
+    lead = create(:lead, account: account, lead_stage: active_stage)
+    create(:lead_task, account: account, lead: lead, title: 'Atrasada', due_at: 2.days.ago)
+    create(:lead_task, account: account, lead: lead, kind: 'meeting', title: 'Reunião', due_at: Time.current)
+    get url, headers: advogada.create_new_auth_token, as: :json
+    expect(response.parsed_body['today']['tasks_overdue']).to eq('count' => 0, 'items' => [])
+    expect(response.parsed_body['agenda_today']).to eq([])
+    expect(response.parsed_body['funnel'].find { |r| r['stage_id'] == active_stage.id }['count']).to eq(1)
+  end
+
   it 'lists overdue tasks under today with lead name' do
     lead = create(:lead, account: account, lead_stage: active_stage)
     create(:lead_task, account: account, lead: lead, title: 'Atrasada', due_at: 2.days.ago)

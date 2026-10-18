@@ -664,6 +664,7 @@ onMounted(async () => {
               :key="aberto.id"
               :cliente="aberto"
               :templates="templates"
+              :pode-gerir-acesso="permissoes.gerir_acesso"
               @atualizar="aberto = $event"
               @recarregar="carregar"
             />

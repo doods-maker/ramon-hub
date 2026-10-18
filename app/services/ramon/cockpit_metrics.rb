@@ -5,8 +5,10 @@ class Ramon::CockpitMetrics
   AGENDA_LIMIT = 12
   TIME_ZONE = 'America/Sao_Paulo'.freeze
 
-  def initialize(account)
+  # leads: os que quem pede vê (LeadPolicy::Scope) — a agenda de hoje lista só esses.
+  def initialize(account, leads: account.leads)
     @account = account
+    @leads = leads
   end
 
   # ---- Meta do dia --------------------------------------------------------
@@ -50,7 +52,7 @@ class Ramon::CockpitMetrics
   # criou a tarefa (a do legado Cal.com nasce sem criador).
   # ponytail: vencida só de 7 dias — backlog antigo não come o limite de hoje.
   def agenda_today
-    meetings = @account.lead_tasks.where(kind: 'meeting')
+    meetings = @account.lead_tasks.where(kind: 'meeting', lead_id: @leads.select(:id))
     vencidas = meetings.open_tasks.where(due_at: (today_range.first - 7.days)...today_range.first)
     meetings.where(due_at: today_range).or(vencidas)
             .includes(:user, lead: [:closer, :sdr]).order(:due_at).limit(AGENDA_LIMIT).map { |task| agenda_row(task) }

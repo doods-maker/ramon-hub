@@ -31,8 +31,10 @@ class Ramon::EsteiraBuilder
   # "Hoje" no fuso do escritório — o mesmo dia da meta (Ramon::CockpitMetrics).
   TIME_ZONE = 'America/Sao_Paulo'.freeze
 
-  def initialize(account:)
+  # leads: os que quem pede vê (LeadPolicy::Scope) — a fila só mostra esses.
+  def initialize(account:, leads: account.leads)
     @account = account
+    @leads = leads
     @entries = {} # lead_id => { lead:, reasons: [{key:, params:}], task_id: }
   end
 
@@ -126,7 +128,7 @@ class Ramon::EsteiraBuilder
   end
 
   def build_items
-    entries = @entries.except(*done_today_lead_ids).values
+    entries = @entries.slice(*@leads.where(id: @entries.keys).pluck(:id)).except(*done_today_lead_ids).values
     messages = last_messages_for(entries)
     entries.map { |entry| item_for(entry, messages) }
            .sort_by { |item| [-item[:score], -item[:value].to_f] }

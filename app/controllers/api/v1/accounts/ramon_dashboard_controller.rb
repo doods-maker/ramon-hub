@@ -37,9 +37,15 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
     }
   end
 
-  # count sempre total da relação; items limitado a LIST_LIMIT.
+  # count sempre total da relação; items limitado a LIST_LIMIT. Listas com nome: só leads que a pessoa vê.
   def limited_block(relation)
+    coluna = relation.klass == Lead ? :id : :lead_id
+    relation = relation.where(coluna => leads_visiveis.select(:id))
     { count: relation.count, items: relation.limit(LIST_LIMIT) }
+  end
+
+  def leads_visiveis
+    @leads_visiveis ||= policy_scope(Current.account.leads)
   end
 
   def account_tasks
@@ -132,7 +138,7 @@ class Api::V1::Accounts::RamonDashboardController < Api::V1::Accounts::BaseContr
   # Meta do dia, conversão, time da semana, agenda, perdas por tese e SLA
   # vivem em Ramon::CockpitMetrics (mesmo padrão do Ramon::LeadRadar).
   def cockpit
-    @cockpit ||= Ramon::CockpitMetrics.new(Current.account)
+    @cockpit ||= Ramon::CockpitMetrics.new(Current.account, leads: leads_visiveis)
   end
 
   # Σ weighted_value das etapas abertas — reusa as linhas já calculadas em

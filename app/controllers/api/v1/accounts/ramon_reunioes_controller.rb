@@ -29,7 +29,7 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
       user: Current.user,
       titulo: params[:titulo].presence,
       duracao_segundos: params[:duracao_segundos].to_i,
-      lead: Current.account.leads.find_by(id: params[:lead_id])
+      lead: policy_scope(Current.account.leads).find_by(id: params[:lead_id])
     )
     reuniao.audio.attach(audio)
     pedir_ata(reuniao, 'gravada')
@@ -39,7 +39,7 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
   # Vincular a um lead (gravada pela barra lateral nasce sem lead); lead_id
   # vazio desvincula.
   def update
-    lead = params[:lead_id].present? ? Current.account.leads.find(params[:lead_id]) : nil
+    lead = params[:lead_id].present? ? policy_scope(Current.account.leads).find(params[:lead_id]) : nil
     @reuniao.update!(lead: lead)
     render json: detalhe(@reuniao)
   end
@@ -98,6 +98,7 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
       status: reuniao.status,
       duracao_segundos: reuniao.duracao_segundos,
       created_at: reuniao.created_at.iso8601,
+      user_id: reuniao.user_id,
       user_name: reuniao.user&.name,
       lead_id: reuniao.lead_id,
       lead_name: reuniao.lead&.name

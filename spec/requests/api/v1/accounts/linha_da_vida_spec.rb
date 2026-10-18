@@ -8,6 +8,16 @@ RSpec.describe 'Linha da Vida API', type: :request do
                      data_nascimento: Date.new(1970, 3, 15), sexo: 'F')
   end
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
+  it 'agente sem visão do lead não recebe o caso em aberto do contato' do
+    advogada = create(:user, account: account, role: :agent)
+    create(:lead, account: account, contact: contact, name: 'Interesse novo')
+    get "/api/v1/accounts/#{account.id}/contacts/#{contact.id}/linha_da_vida", headers: advogada.create_new_auth_token
+    expect(response.parsed_body['leads']).to eq([])
+  end
+
   it 'devolve pessoa, casos e marcos etários' do
     won_stage = account.lead_stages.find_by(is_won: true)
     open_stage = account.lead_stages.order(:position).first

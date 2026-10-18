@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Ramon::ZapsignLeadStatusJob do
   let(:account) { create(:account) }
-  let!(:user) { create(:user, account: account) }
+  let!(:user) { create(:user, account: account, role: :administrator) } # o sino vai pra quem vê o lead
   let(:lead) do
     create(:lead, account: account, custom_attributes: {
              'zapsign' => { 'doc_token' => 'doc-1', 'sign_url' => 'https://x', 'template_name' => 'Contrato' }

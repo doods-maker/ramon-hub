@@ -75,6 +75,23 @@ RSpec.describe 'Calculos API', type: :request do
     end
   end
 
+  describe 'visibilidade: agente sem visão do lead' do
+    let(:advogada) { create(:user, account: account, role: :agent) }
+
+    it 'não lista nem reabre cálculo de lead que não vê', :aggregate_failures do
+      calculo = cria_calculo(snapshot_cnis: cnis)
+      lead.update!(cnis: nil)
+
+      get "/api/v1/accounts/#{account.id}/calculos", headers: advogada.create_new_auth_token, as: :json
+      expect(response.parsed_body['payload']).to eq([])
+
+      post "/api/v1/accounts/#{account.id}/calculos/#{calculo.id}/reabrir",
+           params: { destino: 'rascunho' }, headers: advogada.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(Lead.rascunho_de!(account, advogada).cnis).to be_nil
+    end
+  end
+
   describe 'DELETE /calculos/:id' do
     it 'apaga o registro' do
       calculo = cria_calculo
