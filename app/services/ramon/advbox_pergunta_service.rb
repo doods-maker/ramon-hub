@@ -60,7 +60,7 @@ class Ramon::AdvboxPerguntaService
   def montar_contexto
     raise SemClienteError, 'Conversa sem contato/lead com nome para buscar no AdvBox' if nome_cliente.blank?
 
-    processos = Ramon::AdvboxClient.lawsuits(name: nome_cliente)['data'].to_a.first(MAX_PROCESSOS)
+    processos = lista(Ramon::AdvboxClient.lawsuits(name: nome_cliente)).first(MAX_PROCESSOS)
     raise SemProcessoError, "Nenhum processo no AdvBox para \"#{nome_cliente}\"" if processos.empty?
 
     blocos = processos.map { |p| bloco_processo(p) }
@@ -79,7 +79,7 @@ class Ramon::AdvboxPerguntaService
   end
 
   def andamentos_de(lawsuit_id)
-    movs = Ramon::AdvboxClient.movements(lawsuit_id, limit: MAX_ANDAMENTOS)['data'].to_a
+    movs = lista(Ramon::AdvboxClient.movements(lawsuit_id, limit: MAX_ANDAMENTOS))
     return nil if movs.empty?
 
     itens = movs.map { |m| "- #{m['date']}: #{m['title']} (#{m['header']})" }
@@ -87,7 +87,7 @@ class Ramon::AdvboxPerguntaService
   end
 
   def publicacoes_de(lawsuit_id)
-    pubs = Ramon::AdvboxClient.publications(lawsuit_id, limit: MAX_PUBLICACOES)['data'].to_a
+    pubs = lista(Ramon::AdvboxClient.publications(lawsuit_id, limit: MAX_PUBLICACOES))
     return nil if pubs.empty?
 
     itens = pubs.map do |p|
@@ -96,6 +96,9 @@ class Ramon::AdvboxPerguntaService
     end
     "Publicações recentes:\n#{itens.join("\n")}"
   end
+
+  # AdvBox devolve {data: [...]}, lista crua ou corpo vazio (processo sem andamento) conforme o endpoint.
+  def lista(resposta) = Array(resposta.is_a?(Hash) ? resposta['data'] : resposta)
 
   def user_prompt
     partes = [@contexto]
