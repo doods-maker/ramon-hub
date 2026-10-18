@@ -98,6 +98,7 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
       status: reuniao.status,
       duracao_segundos: reuniao.duracao_segundos,
       created_at: reuniao.created_at.iso8601,
+      user_id: reuniao.user_id,
       user_name: reuniao.user&.name,
       lead_id: reuniao.lead_id,
       lead_name: reuniao.lead&.name

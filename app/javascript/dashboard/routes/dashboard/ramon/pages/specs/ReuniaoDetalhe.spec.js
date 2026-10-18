@@ -12,6 +12,21 @@ vi.mock('dashboard/api/reunioes', () => ({
   },
 }));
 vi.mock('dashboard/composables', () => ({ useAlert: vi.fn() }));
+const usuario = vi.hoisted(() => ({ id: 7, role: 'agent' }));
+vi.mock('dashboard/composables/store', () => ({
+  useMapGetter: () => ({
+    get value() {
+      return { id: usuario.id };
+    },
+  }),
+  useStoreGetters: () => ({
+    getCurrentRole: {
+      get value() {
+        return usuario.role;
+      },
+    },
+  }),
+}));
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: key => key }) }));
 vi.mock('shared/composables/useMessageFormatter', () => ({
   useMessageFormatter: () => ({ formatMessage: texto => `<p>${texto}</p>` }),
@@ -25,12 +40,16 @@ const detalhe = extra => ({
   transcricao: 'fala',
   audio_url: null,
   erro: null,
+  user_id: 7,
   user_name: 'Ramon',
   ...extra,
 });
 
 describe('ReuniaoDetalhe', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    usuario.role = 'agent';
+  });
 
   it('renders the ata when pronta', async () => {
     ReunioesAPI.show.mockResolvedValue({ data: detalhe() });
@@ -89,6 +108,18 @@ describe('ReuniaoDetalhe', () => {
 
     expect(ReunioesAPI.delete).toHaveBeenCalledWith(1);
     expect(wrapper.emitted('deleted')).toBeTruthy();
+  });
+
+  it('apagar só aparece pro autor ou pro admin', async () => {
+    ReunioesAPI.show.mockResolvedValue({ data: detalhe({ user_id: 99 }) });
+    const deOutro = mount(ReuniaoDetalhe, { props: { reuniaoId: 1 } });
+    await flushPromises();
+    expect(deOutro.find('[data-testid="reuniao-delete"]').exists()).toBe(false);
+
+    usuario.role = 'administrator';
+    const doAdmin = mount(ReuniaoDetalhe, { props: { reuniaoId: 1 } });
+    await flushPromises();
+    expect(doAdmin.find('[data-testid="reuniao-delete"]').exists()).toBe(true);
   });
 
   describe('lead da reunião', () => {
