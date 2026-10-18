@@ -55,6 +55,16 @@ class RamonLeadListener < BaseListener
     Ramon::FunilObservadorJob.set(wait: Ramon::FunilObservadorJob::ESPERA).perform_later(message.id)
   end
 
+  # Envio da IA (ou sem autor) que falhou — a Meta recusou na hora ou devolveu "failed" depois — com a conversa ainda com a
+  # IA: abre para a equipe pelo caminho da tool de handoff (bot_handoff! avisa a caixa). Senão o lead fica sem resposta.
+  def message_updated(event)
+    message = event.data[:message]
+    return unless event.data[:previous_changes]&.dig('status')&.last == 'failed'
+    return unless message.outgoing? && message.sender_type.in?([nil, 'Captain::Assistant'])
+
+    message.conversation.bot_handoff! if message.conversation.pending?
+  end
+
   def lead_created(event)
     Ramon::StageLabelSync.apply_to_conversation(event.data[:lead])
     Ramon::TeseLabelSync.apply_to_conversation(event.data[:lead])

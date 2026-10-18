@@ -252,6 +252,22 @@ describe Whatsapp::IncomingMessageService do
         expect(message.reload.status).to eq('read')
       end
 
+      # ramon: a Meta pode agrupar status no mesmo webhook
+      it 'updates every status in the payload, not only the first' do
+        message = Message.find_by!(source_id: from)
+        other = create(:message, account: message.account, inbox: message.inbox, conversation: message.conversation,
+                                 message_type: :outgoing, source_id: 'wamid.segunda')
+        status_params = {
+          'statuses' => [{ 'recipient_id' => from, 'id' => from, 'status' => 'read' },
+                         { 'recipient_id' => from, 'id' => 'wamid.segunda', 'status' => 'delivered' }]
+        }.with_indifferent_access
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: status_params).perform
+
+        expect(message.reload.status).to eq('read')
+        expect(other.reload.status).to eq('delivered')
+      end
+
       it 'stores BSUID source ids from status contacts' do
         bsuid = 'IN.2081978709342942'
         parent_bsuid = 'IN.ENT.9081726354'

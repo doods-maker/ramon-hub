@@ -275,6 +275,32 @@ RSpec.describe RamonLeadListener do
     end
   end
 
+  describe '#message_updated -> envio da IA que falhou abre a conversa para a equipe' do
+    let(:falhou) { { 'status' => %w[sent failed] } }
+
+    before { conversation.update!(status: :pending) }
+
+    def atualizada(message, changes) = Events::Base.new('message.updated', Time.zone.now, message: message, previous_changes: changes)
+
+    it 'mensagem sem autor (IA/automação) que falhou faz o handoff' do
+      enviada = create(:message, :bot_message, account: account, conversation: conversation, status: :failed)
+      listener.message_updated(atualizada(enviada, falhou))
+      expect(conversation.reload.status).to eq('open')
+    end
+
+    it 'mensagem de humano que falhou não mexe na conversa' do
+      enviada = create(:message, account: account, conversation: conversation, message_type: :outgoing, status: :failed)
+      listener.message_updated(atualizada(enviada, falhou))
+      expect(conversation.reload.status).to eq('pending')
+    end
+
+    it 'outra mudança de status (entregue) não mexe na conversa' do
+      enviada = create(:message, :bot_message, account: account, conversation: conversation, status: :delivered)
+      listener.message_updated(atualizada(enviada, { 'status' => %w[sent delivered] }))
+      expect(conversation.reload.status).to eq('pending')
+    end
+  end
+
   describe '#lead_updated -> etiqueta a conversa' do
     it 'aplica a fase-* da etapa do lead na conversa' do
       lead = create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),

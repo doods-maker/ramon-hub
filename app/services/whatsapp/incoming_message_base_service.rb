@@ -54,8 +54,10 @@ class Whatsapp::IncomingMessageBaseService
     raise
   end
 
-  def process_statuses
-    status = @processed_params[:statuses].first
+  # ramon: a Meta pode mandar vários status no mesmo webhook — processa todos, não só o 1º
+  def process_statuses = @processed_params[:statuses].each { |status| process_status(status) }
+
+  def process_status(status)
     return unless find_message_by_source_id(status[:id])
 
     update_whatsapp_identifiers_from_status(status)
