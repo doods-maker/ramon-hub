@@ -3,6 +3,9 @@ class Cliente::SessoesController < Cliente::BaseController
   MENSAGEM_NEUTRA = 'Se houver um e-mail cadastrado para este CPF, você recebe um código em instantes. ' \
                     'Sem e-mail? Fale com a equipe pelo WhatsApp para receber uma senha nova.'.freeze
   MSG_CODIGO_INVALIDO = 'Código inválido ou vencido. Peça um novo código.'.freeze
+  # CPF desconhecido confere contra este digest: gasta o mesmo bcrypt e o tempo não revela quem é cliente.
+  SENHA_FALSA = BCrypt::Password.create(SecureRandom.hex,
+                                        cost: ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST : BCrypt::Engine.cost)
 
   def new
     redirect_to cliente_inicio_path if current_cliente
@@ -11,7 +14,7 @@ class Cliente::SessoesController < Cliente::BaseController
   # CPF + senha. Mesma mensagem para CPF desconhecido e senha errada.
   def create
     cliente = PortalCliente.from_cpf(params[:cpf])
-    if pode_entrar?(cliente) && cliente.authenticate_senha(params[:senha].to_s)
+    if senha_confere?(cliente, params[:senha].to_s)
       entrar!(cliente)
       redirect_to cliente_inicio_path
     else
@@ -61,4 +64,11 @@ class Cliente::SessoesController < Cliente::BaseController
 
   # Suspenso recebe a mesma resposta de senha errada (não revela a suspensão).
   def pode_entrar?(cliente) = cliente&.convidado_em.present? && !cliente.suspenso?
+
+  def senha_confere?(cliente, senha)
+    return cliente.authenticate_senha(senha).present? if pode_entrar?(cliente)
+
+    BCrypt::Password.new(SENHA_FALSA).is_password?(senha) # só pelo tempo
+    false
+  end
 end
