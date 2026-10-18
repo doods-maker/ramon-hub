@@ -43,7 +43,7 @@ class Public::Api::V1::RamonLeadsController < PublicController
     expected = ENV.fetch('RAMON_LEAD_CAPTURE_TOKEN', nil)
     return head :unauthorized if expected.blank? || account.blank?
 
-    provided = request.headers['X-Capture-Token'].to_s
+    provided = request.headers['X-Capture-Token'].presence || params[:capture_token].to_s
     return if ActiveSupport::SecurityUtils.secure_compare(provided, expected)
 
     head :unauthorized

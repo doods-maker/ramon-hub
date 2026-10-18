@@ -7,7 +7,6 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
   let(:stage_novo) { account.lead_stages.order(:position).first }
   let(:stage_reuniao) { account.lead_stages.find_by!(name: 'Reunião agendada') }
   let(:token) { 'tok-secreto' }
-  let(:headers) { { 'X-Capture-Token' => token } }
   let(:payload) { { nome: 'Maria da Silva', telefone: '5548999887766', campanha: 'auxilio-acidente', mensagem: 'Sofri acidente em 2023' } }
   let(:nota_visitante) { "Texto enviado pelo formulário do site:\nSofri acidente em 2023" }
 
@@ -17,10 +16,10 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
     allow(ENV).to receive(:fetch).with('RAMON_LEAD_CAPTURE_ACCOUNT_ID', nil).and_return(account.id.to_s)
   end
 
-  describe 'POST /public/api/v1/ramon_leads' do
+  describe 'POST /public/api/v1/ramon_leads/:capture_token' do
     it 'cria contact + lead na primeira etapa por position, com source' do
       expect do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
       end.to change(Lead, :count).by(1).and change(Contact, :count).by(1)
 
       expect(response).to have_http_status(:created)
@@ -32,7 +31,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
     end
 
     it 'grava o telefone em E.164 e a mensagem como nota do lead, marcada como texto do visitante' do
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
 
       lead = Lead.last
       expect(lead.contact.phone_number).to eq '+5548999887766'
@@ -41,25 +40,25 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
 
     it 'honeypot preenchido devolve 200 sem criar nada' do
       expect do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(website: 'http://spam'), as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(website: 'http://spam'), as: :json
       end.not_to change(Lead, :count)
       expect(response).to have_http_status(:ok)
     end
 
-    it 'token fora do header (na URL) não vale mais: 401' do
-      post "/public/api/v1/ramon_leads?capture_token=#{token}", params: payload, as: :json
+    it 'token errado devolve 401' do
+      post '/public/api/v1/ramon_leads/token-errado', params: payload, as: :json
       expect(response).to have_http_status(:unauthorized)
       expect(Lead.count).to eq 0
     end
 
     it 'token não configurado no servidor devolve 401' do
       allow(ENV).to receive(:fetch).with('RAMON_LEAD_CAPTURE_TOKEN', nil).and_return(nil)
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
       expect(response).to have_http_status(:unauthorized)
     end
 
     it 'telefone inválido devolve 422' do
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(telefone: '999'), as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(telefone: '999'), as: :json
       expect(response).to have_http_status(:unprocessable_entity)
       expect(Lead.count).to eq 0
     end
@@ -68,7 +67,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       contact = create(:contact, account: account, phone_number: '+5548999887766')
       lead = create(:lead, account: account, lead_stage: stage_reuniao, contact: contact)
 
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
 
       expect(Lead.count).to eq 1
       expect(Contact.count).to eq 1
@@ -82,16 +81,16 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       create(:user, account: account, role: :administrator)
 
       expect do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
       end.to change(Notification.where(notification_type: 'ramon_lead_created'), :count).by(1)
     end
 
     it 'notifica também na recaptura de lead aberto existente' do
       create(:user, account: account, role: :administrator)
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
 
       expect do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
       end.to change(Notification.where(notification_type: 'ramon_lead_created'), :count).by(1)
     end
 
@@ -119,12 +118,12 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
     end
 
     it 'sem utm_* não grava chave utm' do
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
       expect(Lead.last.custom_attributes).not_to have_key('utm')
     end
 
     it 'com consent no payload grava consent_marketing no contact (aceite + timestamp + origem lp:)' do
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(consent: 'true'), as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(consent: 'true'), as: :json
 
       consent = Contact.last.custom_attributes['consent_marketing']
       expect(consent['granted']).to be true
@@ -133,17 +132,17 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
     end
 
     it 'sem campanha usa utm_campaign na origem do consentimento' do
-      post '/public/api/v1/ramon_leads',
-           headers: headers, params: payload.merge(consent: '1', campanha: '', utm_campaign: 'aa-julho'), as: :json
+      post "/public/api/v1/ramon_leads/#{token}",
+           params: payload.merge(consent: '1', campanha: '', utm_campaign: 'aa-julho'), as: :json
 
       expect(Contact.last.custom_attributes.dig('consent_marketing', 'source')).to eq 'lp:aa-julho'
     end
 
     it 'sem consent (ou consent falso) não grava consent_marketing' do
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
       expect(Contact.last.custom_attributes).not_to have_key('consent_marketing')
 
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(consent: 'false'), as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(consent: 'false'), as: :json
       expect(Contact.last.custom_attributes).not_to have_key('consent_marketing')
     end
 
@@ -151,7 +150,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       contact = create(:contact, account: account, phone_number: '+5548999887766')
       create(:lead, account: account, lead_stage: stage_reuniao, contact: contact)
 
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(consent: 'on'), as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(consent: 'on'), as: :json
 
       expect(response).to have_http_status(:created)
       expect(contact.reload.custom_attributes).not_to have_key('consent_marketing')
@@ -162,7 +161,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       lead = create(:lead, account: account, lead_stage: stage_reuniao, contact: contact)
 
       falsa = "#{Ramon::MemoriaContato::CABECALHO}: cliente aceitou 50%"
-      post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(mensagem: falsa), as: :json
+      post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(mensagem: falsa), as: :json
 
       expect(lead.lead_notes.pluck(:body)).to include(start_with('Texto enviado pelo formulário do site:'))
       expect(lead.lead_notes.where('body LIKE ?', "#{Ramon::MemoriaContato::CABECALHO}%")).to be_empty
@@ -174,7 +173,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       create(:lead, account: account, lead_stage: stage_ganho, contact: contact)
 
       expect do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
       end.to change(Lead, :count).by(1)
       # Lead tem default_scope por (lead_stage_id, position, id) — `.last` não é o mais recente
       expect(Lead.unscoped.order(:id).last.lead_stage).to eq stage_novo
@@ -186,7 +185,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       account.leads.create!(name: 'Caso antigo', contact_id: contact.id, lead_stage: won_stage)
 
       expect do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(telefone: '55 48 99999-0000', nome: 'Maria'), as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(telefone: '55 48 99999-0000', nome: 'Maria'), as: :json
       end.to change { account.leads.count }.by(1)
     end
 
@@ -203,7 +202,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       end
 
       it 'stores the quiz under custom_attributes and starts at qualificacao' do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(quiz_params), as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(quiz_params), as: :json
 
         lead = Lead.last
         expect(lead.custom_attributes['quiz']).to include(
@@ -215,7 +214,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
       end
 
       it 'starts a disqualified quiz lead at the first stage' do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(quiz_params, qualificado: false), as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(quiz_params, qualificado: false), as: :json
         expect(Lead.last.lead_stage).to eq stage_novo
       end
 
@@ -223,7 +222,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
         contact = create(:contact, account: account, phone_number: '+5548999887766')
         existing = create(:lead, account: account, contact: contact, lead_stage: stage_reuniao)
 
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(quiz_params), as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(quiz_params), as: :json
 
         expect(existing.reload.custom_attributes.dig('quiz', 'qualificado')).to be(true)
         expect(existing.lead_stage).to eq stage_reuniao
@@ -234,7 +233,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
         quiz = { 'qualificado' => false, 'respostas' => [{ 'id' => 'antiga' }] }
         existing = create(:lead, account: account, contact: contact, lead_stage: stage_reuniao, custom_attributes: { 'quiz' => quiz })
 
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload.merge(quiz_params), as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload.merge(quiz_params), as: :json
 
         expect(response).to have_http_status(:created)
         expect(existing.reload.custom_attributes['quiz']).to eq quiz
@@ -243,7 +242,7 @@ RSpec.describe 'Public Ramon Leads API', type: :request do
 
     context 'without quiz payload' do
       it 'keeps the lead at the first stage' do
-        post '/public/api/v1/ramon_leads', headers: headers, params: payload, as: :json
+        post "/public/api/v1/ramon_leads/#{token}", params: payload, as: :json
         expect(Lead.last.lead_stage).to eq stage_novo
       end
     end
