@@ -69,6 +69,16 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         expect(account.usage_limits[:captain][:responses][:consumed]).to eq(1)
       end
 
+      it 'não responde de novo quando o assistente já respondeu depois da mensagem (retry/deploy)' do
+        primeira = conversation.messages.incoming.last
+        described_class.perform_now(conversation, assistant, primeira.id)
+        expect(conversation.messages.outgoing.count).to eq(1)
+
+        described_class.perform_now(conversation, assistant, primeira.id)
+
+        expect(conversation.messages.outgoing.count).to eq(1)
+      end
+
       it 'does not run the action classifier when the classifier feature is disabled' do
         expect(Captain::Llm::AssistantActionClassifierService).not_to receive(:new)
 

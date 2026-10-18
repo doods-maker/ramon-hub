@@ -236,9 +236,11 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     )
   end
 
-  # ramon: cliente mandou outra mensagem durante o atraso aleatório → o job dela responde tudo
+  # ramon: cliente mandou outra mensagem durante o atraso aleatório → o job dela responde tudo. Retry/deploy no meio do
+  # turno: o assistente já respondeu (ou deixou rascunho) depois desta mensagem → não responde de novo.
   def mensagem_superada?(message_id)
-    message_id.present? && @conversation.messages.incoming.exists?(['id > ?', message_id])
+    novas = @conversation.messages.where('id > ?', message_id)
+    message_id.present? && (novas.incoming.exists? || novas.exists?(sender_type: 'Captain::Assistant'))
   end
 
   def conversation_pending?
