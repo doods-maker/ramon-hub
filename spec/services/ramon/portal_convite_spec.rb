@@ -34,6 +34,7 @@ RSpec.describe Ramon::PortalConvite do
 
   it 'e-mail sai na hora (a senha não vira argumento de job); se o servidor recusar, a senha vale e a resposta diz falhou' do
     cliente.update!(email: 'maria@exemplo.com')
+    allow(Ramon::PortalMailer).to receive(:delivery_method).and_return(:test) # o initializer põe :sendmail no CI
     with_modified_env SMTP_ADDRESS: 'smtp.exemplo.com' do
       expect { described_class.new(cliente).perform }.to change(ActionMailer::Base.deliveries, :count).by(1)
 

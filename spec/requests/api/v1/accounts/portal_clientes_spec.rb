@@ -14,7 +14,11 @@ RSpec.describe 'Portal Clientes API', type: :request do
     create(:team_member, team: time, user: user)
   end
 
-  before { allow(Ramon::PortalSyncService).to receive(:new).and_return(instance_double(Ramon::PortalSyncService, perform: [])) }
+  before do
+    allow(Ramon::PortalSyncService).to receive(:new).and_return(instance_double(Ramon::PortalSyncService, perform: []))
+    # config/initializers/mailer.rb troca pra :sendmail sem SMTP_ADDRESS no boot (vale no CI); o convite sai com deliver_now
+    allow(Ramon::PortalMailer).to receive(:delivery_method).and_return(:test)
+  end
 
   it 'exige autenticação' do
     get base
