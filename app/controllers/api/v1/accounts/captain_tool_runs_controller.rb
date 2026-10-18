@@ -31,9 +31,17 @@ class Api::V1::Accounts::CaptainToolRunsController < Api::V1::Accounts::BaseCont
 
   # I-EX3/I-X8: ferramenta, status, caso, período e "carregar mais" (antes_de = id da última linha da tela).
   def escopo
-    runs = Captain::ToolRun.fora_de_teste.where(account_id: Current.account.id)
+    runs = visiveis(Captain::ToolRun.fora_de_teste.where(account_id: Current.account.id))
     FILTROS.each { |campo| runs = runs.where(campo => params[campo]) if params[campo].present? }
     pagina(periodo(runs))
+  end
+
+  # Sem visão total do funil: só execuções de lead ou de conversa que a pessoa vê (LeadPolicy::Scope; ADR 0004).
+  def visiveis(runs)
+    return runs if LeadPolicy.visao_total?(Current.user, Current.account, Current.account_user)
+
+    conversas = Conversations::PermissionFilterService.new(Current.account.conversations, Current.user, Current.account).perform
+    runs.where(lead_id: policy_scope(Current.account.leads).select(:id)).or(runs.where(conversation_id: conversas.select(:id)))
   end
 
   def periodo(runs) = PERIODOS.key?(params[:periodo]) ? runs.where(created_at: PERIODOS[params[:periodo]].call) : runs

@@ -320,7 +320,7 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
           account.id,
           admin.id,
           hash_including(
-            'ids' => [lead.id.to_s],
+            'ids' => [lead.id],
             'fields' => { 'sdr_id' => agent_1.id.to_s },
             'task' => hash_including('due_at' => '2026-08-01T12:00:00Z'),
             'triage' => 'true'
@@ -340,6 +340,15 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
         end.to have_enqueued_job(Ramon::LeadBulkActionJob).with(
           account.id, agent.id, hash_including('fields' => { 'lead_stage_id' => '7' })
         )
+      end
+
+      it 'agente sem visão total do funil só age nos leads que vê (LeadPolicy::Scope)' do
+        lead = create(:lead, account: account)
+
+        expect do
+          post "/api/v1/accounts/#{account.id}/bulk_actions",
+               headers: agent.create_new_auth_token, params: { type: 'Lead', ids: [lead.id], fields: { lead_stage_id: 7 } }
+        end.to have_enqueued_job(Ramon::LeadBulkActionJob).with(account.id, agent.id, hash_including('ids' => []))
       end
     end
   end

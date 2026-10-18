@@ -15,8 +15,9 @@ class ReuniaoPolicy < ApplicationPolicy
     index?
   end
 
+  # Apagar gravação/ata só admin ou quem gravou (ver e editar seguem abertos a todos — 28/07).
   def destroy?
-    index?
+    @account_user.administrator? || record.user_id == @user.id
   end
 
   def reprocessar?

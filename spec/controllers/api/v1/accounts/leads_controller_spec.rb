@@ -713,9 +713,57 @@ RSpec.describe 'Leads API', type: :request do
     end
   end
 
+  describe 'visibilidade do lead (LeadPolicy::Scope)' do
+    let(:agent) { create(:user, account: account, role: :agent) }
+    let(:inbox) { create(:inbox, account: account) }
+    let!(:alheio) { create(:lead, account: account, lead_stage: novo, name: 'Alheio') }
+    let!(:da_caixa) { create(:lead, account: account, lead_stage: novo, conversation: create(:conversation, account: account, inbox: inbox)) }
+
+    def listar(user)
+      get "/api/v1/accounts/#{account.id}/leads", headers: user.create_new_auth_token, as: :json
+      response.parsed_body['payload'].pluck('id')
+    end
+
+    it 'agente sem visão total lista, abre e altera só o lead da conversa que ele vê', :aggregate_failures do
+      create(:inbox_member, inbox: inbox, user: agent)
+      expect(listar(agent)).to include(da_caixa.id)
+      expect(listar(agent)).not_to include(alheio.id)
+
+      get "/api/v1/accounts/#{account.id}/leads/#{alheio.id}", headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      patch "/api/v1/accounts/#{account.id}/leads/#{alheio.id}", params: { name: 'X' }, headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(alheio.reload.name).to eq 'Alheio'
+
+      get "/api/v1/accounts/#{account.id}/leads/#{da_caixa.id}", headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+    end
+
+    it 'cliente ganho fica visível pro jurídico (passagem do caso)' do
+      alheio.update_column(:won_at, Time.current) # rubocop:disable Rails/SkipsModelValidations -- sem os efeitos do ganho
+      get "/api/v1/accounts/#{account.id}/leads/#{alheio.id}", headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:success)
+    end
+
+    it 'SDR e admin veem todos', :aggregate_failures do
+      create(:team_member, team: create(:team, account: account, name: 'sdr'), user: agent)
+      expect(listar(agent)).to include(alheio.id, da_caixa.id)
+      expect(listar(admin)).to include(alheio.id, da_caixa.id)
+    end
+
+    it 'não abre o lead de conversa que o agente não vê (nem cria lead nela)' do
+      post "/api/v1/accounts/#{account.id}/leads/for_conversation",
+           params: { conversation_id: da_caixa.conversation.display_id }, headers: agent.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   describe 'papéis: só o gestor troca SDR/Closer' do
     let(:agent) { create(:user, account: account, role: :agent) }
     let(:lead) { create(:lead, account: account, lead_stage: novo) }
+
+    # Comercial tem visão total do funil (LeadPolicy); sdr/closer mexeriam na distribuição automática.
+    before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
 
     it 'agente recebe 403 ao trocar o SDR', :aggregate_failures do
       patch "/api/v1/accounts/#{account.id}/leads/#{lead.id}",

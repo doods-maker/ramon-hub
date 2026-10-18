@@ -11,7 +11,11 @@ RSpec.describe 'Lead Reunião Agendada API', type: :request do
     post "/api/v1/accounts/#{account.id}/leads/#{lead.id}/reuniao_agendada", params: params, headers: headers, as: :json
   end
 
-  before { allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(true) }
+  before do
+    allow(Ramon::ReuniaoAgendamento).to receive(:livre?).and_return(true)
+    # Comercial tem visão total do funil (LeadPolicy::Scope).
+    create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent)
+  end
 
   it 'sem login responde 401' do
     agendar({ starts_at: starts_at.iso8601 }, {})

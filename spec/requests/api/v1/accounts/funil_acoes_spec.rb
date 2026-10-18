@@ -10,6 +10,9 @@ RSpec.describe 'Funil Ações API', type: :request do
                       ensaio: false, desfazer: { 'etapa_id' => novo.id })
   end
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
   def desfazer(alvo_lead, alvo_acao, headers: agent.create_new_auth_token)
     post "/api/v1/accounts/#{account.id}/leads/#{alvo_lead.id}/funil_acoes/#{alvo_acao.id}/desfazer", headers: headers, as: :json
   end

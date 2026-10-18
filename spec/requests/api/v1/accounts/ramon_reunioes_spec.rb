@@ -125,12 +125,23 @@ RSpec.describe 'Ramon Reunioes API', type: :request do
   end
 
   describe 'DELETE /api/v1/accounts/:id/ramon_reunioes/:id' do
-    it 'destroys the reuniao' do
-      reuniao = create(:reuniao, account: account)
+    it 'destroys the reuniao recorded by the agent' do
+      reuniao = create(:reuniao, account: account, user: agent)
       delete "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}",
              headers: agent.create_new_auth_token
       expect(response).to have_http_status(:no_content)
       expect(Reuniao.exists?(reuniao.id)).to be(false)
+    end
+
+    it 'só admin ou o autor apaga: outro agente recebe 401, admin apaga' do
+      reuniao = create(:reuniao, account: account, user: create(:user, account: account, role: :agent))
+      delete "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}", headers: agent.create_new_auth_token
+      expect(response).to have_http_status(:unauthorized)
+      expect(Reuniao.exists?(reuniao.id)).to be(true)
+
+      admin = create(:user, account: account, role: :administrator)
+      delete "/api/v1/accounts/#{account.id}/ramon_reunioes/#{reuniao.id}", headers: admin.create_new_auth_token
+      expect(response).to have_http_status(:no_content)
     end
   end
 end

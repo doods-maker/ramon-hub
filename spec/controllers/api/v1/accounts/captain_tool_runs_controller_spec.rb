@@ -5,6 +5,9 @@ RSpec.describe 'Captain Tool Runs API', type: :request do
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:url) { "/api/v1/accounts/#{account.id}/captain_tool_runs" }
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
   def registrar(tool_name, status: 'ok', conta: account)
     Captain::ToolRun.create!(account_id: conta.id, tool_name: tool_name, status: status,
                              params: { 'lead' => '1' }, resultado: 'resultado', duration_ms: 12)
@@ -84,6 +87,20 @@ RSpec.describe 'Captain Tool Runs API', type: :request do
     get url, headers: agent.create_new_auth_token, as: :json
 
     expect(response.parsed_body['items'].first['assistente_nome']).to eq('Atendimento')
+  end
+
+  it 'agente sem visão total só vê execução de lead/conversa que ele vê' do
+    advogada = create(:user, account: account, role: :agent)
+    inbox = create(:inbox, account: account)
+    create(:inbox_member, inbox: inbox, user: advogada)
+    da_caixa = Captain::ToolRun.create!(account_id: account.id, tool_name: 'mover_etapa', status: 'ok',
+                                        conversation_id: create(:conversation, account: account, inbox: inbox).id)
+    Captain::ToolRun.create!(account_id: account.id, tool_name: 'mover_etapa', status: 'ok', lead_id: create(:lead, account: account).id)
+    registrar('checar_prescricao')
+
+    get url, headers: advogada.create_new_auth_token, as: :json
+
+    expect(response.parsed_body['items'].pluck('id')).to eq([da_caixa.id])
   end
 
   it 'exige autenticacao' do

@@ -8,6 +8,9 @@ RSpec.describe 'Lead horários livres API', type: :request do
   let(:base) { "/api/v1/accounts/#{account.id}/leads" }
   let(:inicio) { Time.find_zone!('America/Sao_Paulo').local(2026, 10, 22, 14, 0) }
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
   def stub_livres(horarios)
     disp = instance_double(Ramon::Agenda::Disponibilidade, livres: horarios)
     allow(Ramon::Agenda::Disponibilidade).to receive(:new).with(user: closer, account: account).and_return(disp)

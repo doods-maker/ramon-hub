@@ -79,7 +79,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   def for_conversation
     # o front manda o id do objeto de conversa da SPA, que é o display_id (por conta)
-    conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])
+    conversation = conversa_visivel
     # readonly: só consulta (banner da conversa) — nunca cria nem adota lead.
     # Caixa com Portaria (setores do escritório) também nunca cria lead ao abrir:
     # lead lá só nasce pelo "Encaminhar ao comercial".
@@ -92,7 +92,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   # Portaria: a Recepção manda um lead orgânico pro comercial — time Comercial + lead no funil.
   def encaminhar_comercial
-    conversation = Current.account.conversations.find_by!(display_id: params[:conversation_id])
+    conversation = conversa_visivel
     conversation.update!(team: Current.account.teams.find_by!(name: 'comercial'))
     @lead = find_or_create_lead_for(conversation)
     # quem chega sem anúncio presume-se indicado (glossário: Indicação); não pisa em canal já derivado
@@ -103,10 +103,13 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
 
   private
 
-  # reuniao? depende do lead (quem é o Closer dele) — o resto autoriza pela classe.
+  # Ação de um lead autoriza pelo registro (LeadPolicy: visibilidade, Closer da reunião); lista e criar, pela classe.
   def check_authorization
-    super(action_name == 'reuniao' ? @lead : nil)
+    super(@lead)
   end
+
+  # Só a conversa que a pessoa vê (ConversationPolicy): nem abre, nem cria, nem adota lead nas outras.
+  def conversa_visivel = Current.account.conversations.find_by!(display_id: params[:conversation_id]).tap { |conversa| authorize(conversa, :show?) }
 
   def find_readonly_lead_for(conversation)
     lead = Current.account.leads.find_by(conversation_id: conversation.id)

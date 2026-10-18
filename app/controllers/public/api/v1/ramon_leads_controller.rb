@@ -1,4 +1,8 @@
 class Public::Api::V1::RamonLeadsController < PublicController
+  # O token da LP é público (vai no bundle): o texto livre entra marcado como do visitante, e o prefixo na frente
+  # impede que ele se passe por nota de sistema (ex.: "MEMÓRIA DA IA", que a IA lê de volta).
+  NOTA_VISITANTE = 'Texto enviado pelo formulário do site:'.freeze
+
   before_action :verify_capture_token
 
   def create
@@ -8,7 +12,8 @@ class Public::Api::V1::RamonLeadsController < PublicController
     return head :unprocessable_entity if phone.blank?
 
     contact = find_or_create_contact(phone)
-    record_marketing_consent(contact) if consent_given?
+    # Consentimento só nasce com o contato: o formulário não liga marketing de quem já existe.
+    record_marketing_consent(contact) if consent_given? && contact.previously_new_record?
     register_lead(contact, phone)
 
     head :created
@@ -23,13 +28,13 @@ class Public::Api::V1::RamonLeadsController < PublicController
     if lead
       # Lead ainda vivo no funil → não duplica: registra atividade na Linha da Vida.
       lead.lead_activities.create!(account: account, kind: 'lp_recaptured', to_value: recapture_source)
-      # Triagem nova vale registrar; a etapa NÃO anda sozinha (um lead em
-      # Negociação não pode regredir porque refez o quiz).
-      lead.update!(custom_attributes: lead.custom_attributes.merge(quiz_attributes)) if quiz_attributes.present?
+      # Triagem só preenche quem ainda não tem (o que o lead já tem vence: o formulário não
+      # sobrescreve); a etapa NÃO anda sozinha (um lead em Negociação não regride porque refez o quiz).
+      lead.update!(custom_attributes: quiz_attributes.merge(lead.custom_attributes))
     else
       lead = create_lead(contact, phone)
     end
-    lead.lead_notes.create!(account: account, body: params[:mensagem].to_s.truncate(1000)) if params[:mensagem].present?
+    lead.lead_notes.create!(account: account, body: "#{NOTA_VISITANTE}\n#{params[:mensagem]}".truncate(1000)) if params[:mensagem].present?
     Ramon::LeadNotificationBuilder.new(lead: lead).perform
     lead
   end

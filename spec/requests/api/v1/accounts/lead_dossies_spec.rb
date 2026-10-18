@@ -5,6 +5,9 @@ RSpec.describe 'Lead Dossiê API', type: :request do
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:lead) { create(:lead, account: account) }
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
   describe 'GET /api/v1/accounts/:account_id/leads/:id/dossie' do
     it 'retorna o dossiê agregado do lead' do
       get "/api/v1/accounts/#{account.id}/leads/#{lead.id}/dossie",
