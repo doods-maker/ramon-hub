@@ -5,6 +5,15 @@ RSpec.describe 'Lead Tasks API', type: :request do
   let(:agent) { create(:user, account: account, role: :agent) }
   let(:lead) { create(:lead, account: account) }
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
+  it 'agente sem visão do lead não lista nem cria tarefa nele (404)' do
+    advogada = create(:user, account: account, role: :agent)
+    get "/api/v1/accounts/#{account.id}/leads/#{lead.id}/tasks", headers: advogada.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:not_found)
+  end
+
   it 'lists a lead tasks ordered by due date' do
     lead.lead_tasks.create!(account: account, title: 'depois', kind: 'follow_up', due_at: 3.days.from_now)
     lead.lead_tasks.create!(account: account, title: 'antes', kind: 'meeting', due_at: 1.day.from_now)

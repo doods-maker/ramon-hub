@@ -39,11 +39,11 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
   end
 
   def enqueue_lead_job
-    # .to_h: hash simples serializa no ActiveJob sem depender de Parameters.
+    # .to_h: hash simples serializa no ActiveJob sem depender de Parameters. Só os leads que a pessoa vê (LeadPolicy::Scope).
     Ramon::LeadBulkActionJob.perform_later(
       @current_account.id,
       current_user.id,
-      lead_params.to_h
+      lead_params.to_h.merge('ids' => policy_scope(@current_account.leads).where(id: lead_params[:ids]).pluck(:id))
     )
   end
 

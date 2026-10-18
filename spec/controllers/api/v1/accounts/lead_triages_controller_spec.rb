@@ -5,6 +5,9 @@ RSpec.describe 'Lead Triages API', type: :request do
   let(:agent_user) { create(:user, account: account, role: :agent) }
   let(:lead) { create(:lead, account: account) }
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent_user) }
+
   describe 'POST /api/v1/accounts/:account_id/leads/:lead_id/triages' do
     it 'cria a triagem pending com o agente default e enfileira o job' do
       expect do

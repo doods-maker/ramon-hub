@@ -35,7 +35,7 @@ class Api::V1::Accounts::RamonEsteiraController < Api::V1::Accounts::BaseControl
   private
 
   def set_lead
-    @lead = Current.account.leads.find(params[:lead_id])
+    @lead = policy_scope(Current.account.leads).find(params[:lead_id])
   end
 
   def check_authorization

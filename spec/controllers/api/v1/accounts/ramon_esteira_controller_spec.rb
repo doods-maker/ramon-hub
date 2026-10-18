@@ -6,6 +6,9 @@ RSpec.describe 'Ramon Esteira API', type: :request do
   let(:url) { "/api/v1/accounts/#{account.id}/ramon_esteira" }
   let(:active_stage) { account.lead_stages.find_by(is_won: false, is_lost: false) }
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
   describe 'GET /ramon_esteira' do
     it 'returns the queue with items and the board' do
       lead = create(:lead, account: account, lead_stage: active_stage, value: 2000)

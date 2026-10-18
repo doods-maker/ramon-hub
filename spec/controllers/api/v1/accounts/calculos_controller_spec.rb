@@ -14,6 +14,9 @@ RSpec.describe 'Calculos API', type: :request do
     }
   end
 
+  # Comercial tem visão total do funil (LeadPolicy::Scope).
+  before { create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent) }
+
   def cria_calculo(nome: 'MARIA DAS DORES', tipo: 'painel', snapshot_cnis: nil)
     Calculo.create!(account: account, lead: lead, user: agent, tipo: tipo, segurado_nome: nome,
                     segurado_cpf: '52998224725', der: '2026-03-10',

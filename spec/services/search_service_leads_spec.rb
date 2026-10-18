@@ -17,7 +17,9 @@ RSpec.describe SearchService do
     contact = create(:contact, account: account, name: 'Maria Oliveira', phone_number: '+5548988887777')
     stage = account.lead_stages.order(:position).first
     lead = create(:lead, account: account, contact: contact, lead_stage: stage, name: 'Auxílio Maria')
+    expect(search('Auxílio Maria')[:leads]).not_to include(lead) # sem visão total e sem a conversa (LeadPolicy::Scope)
 
+    create(:team_member, team: create(:team, account: account, name: 'sdr'), user: user)
     expect(search('Auxílio Maria')[:leads]).to include(lead)
     expect(search('Oliveira')[:leads]).to include(lead)
     expect(search('48988887777')[:leads]).to include(lead)

@@ -9,6 +9,8 @@ RSpec.describe 'Lead roteiro API', type: :request do
   let(:base) { "/api/v1/accounts/#{account.id}/leads/#{lead.id}" }
 
   before do
+    # Comercial tem visão total do funil (LeadPolicy::Scope).
+    create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent)
     create(:roteiro_passo, account: account, thesis: thesis, chave: 'tem_advogado', position: 0, titulo: 'Tem advogado',
                            saidas: [{ 'id' => 'sim', 'quando' => 'sim', 'acao' => 'desqualificar', 'motivo' => 'tem advogado' },
                                     { 'id' => 'nao', 'quando' => 'nao', 'acao' => 'seguir' }])

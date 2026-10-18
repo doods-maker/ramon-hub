@@ -27,7 +27,7 @@ class Api::V1::Accounts::LeadTriagesController < Api::V1::Accounts::BaseControll
   private
 
   def fetch_lead
-    @lead = Current.account.leads.find(params[:lead_id])
+    @lead = policy_scope(Current.account.leads).find(params[:lead_id])
   end
 
   def fetch_agent
