@@ -202,6 +202,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     @conversation.messages.create!(message_type: :outgoing, private: true, account_id: account.id,
                                    inbox_id: inbox.id, sender: @assistant, content: "#{Ramon::RascunhoCarimbo::PREFIXO}\n#{message_content}",
                                    content_attributes: { 'ramon_ia_rascunho' => @perfil.rastro(@enviando_handoff).merge('motivo' => motivo) })
+    Ramon::AvisoDaIa.rascunho(@perfil.lead) # nota privada não notifica: sino + push ao responsável (1×/10 min)
   end
 
   def handle_error(error)
@@ -221,9 +222,8 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     error.class.name.underscore.tr('/', '_')
   end
 
-  def captain_v2_enabled?
-    account.feature_enabled?('captain_integration_v2')
-  end
+  # ramon: numa linha só — a classe está no teto do Metrics/ClassLength.
+  def captain_v2_enabled? = account.feature_enabled?('captain_integration_v2')
 
   def report_v1_handoff_not_executed
     error = StandardError.new("Captain V1 handoff requested but conversation #{@conversation.display_id} is still pending")

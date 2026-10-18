@@ -296,6 +296,17 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
                                                                         'etapa' => 'fase-qualificacao', 'handoff' => false)
       end
 
+      it 'rascunho avisa o responsável do lead (a nota privada sozinha não notifica)' do
+        perfil!('base' => 'equilibrada')
+        lead = lead_em('fase-qualificacao')
+        allow(Ramon::AvisoDaIa).to receive(:rascunho)
+        allow(mock_agent_runner_service).to receive(:generate_response)
+          .and_return({ 'response' => 'Pela simulação, o honorário fica em 30%.', 'tools_usadas' => ['simular_honorario'] })
+        described_class.perform_now(conversation, assistant)
+        expect(conversation.messages.last.private).to be(true)
+        expect(Ramon::AvisoDaIa).to have_received(:rascunho).with(lead)
+      end
+
       it 'turno que cruza o Marcador: vale a Etapa do início do turno e a resposta sai pública' do
         perfil!('base' => 'equilibrada') # Marcador depois de Reunião agendada
         lead = lead_em('fase-reuniao-agendada')
