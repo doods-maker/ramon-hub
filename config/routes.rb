@@ -765,8 +765,11 @@ Rails.application.routes.draw do
 
         resources :csat_survey, only: [:show, :update]
 
-        # Ramon — captação de leads das landing pages (token só no header X-Capture-Token: na URL ia pro log)
+        # Ramon — captação de leads das landing pages (token via header X-Capture-Token;
+        # a rota com token no path fica por compatibilidade até as LPs migrarem)
         post 'ramon_leads', to: 'ramon_leads#create'
+        # ramon: legado mantido — token de captação é público (JS das LPs); remover só com log de acesso provando zero uso
+        post 'ramon_leads/:capture_token', to: 'ramon_leads#create'
 
         # Ramon — .ics da reunião (token assinado; o token pode ter ponto, por isso a restrição em vez de :token.ics)
         get 'agenda/:token', to: 'agenda_ics#show', constraints: { token: %r{[^/]+\.ics} }, format: false

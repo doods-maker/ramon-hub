@@ -1,7 +1,7 @@
 # Endpoint MCP (custom connector dos projetos Claude Cowork) — consulta e
 # escrita na API do AdvBox via Ramon::AdvboxMcpService. O claude.ai não
 # envia header customizado em connector sem OAuth, então a auth é um token
-# longo no path + rate-limit no
+# longo no path (mesmo padrão do ramon_leads/:capture_token) + rate-limit no
 # rack_attack. Transporte streamable HTTP sem SSE: GET responde 405.
 class Public::Api::V1::McpController < PublicController
   before_action :verify_token
