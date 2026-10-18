@@ -69,4 +69,23 @@ RSpec.describe 'Ramon Google Agenda callback', type: :request do
     expect(response).to redirect_to("#{destino}?google=erro")
     expect(GoogleAgendaConta.count).to eq(0)
   end
+
+  describe 'conta do escritório pro Drive (state drive:)' do
+    def state_drive = Ramon::DriveClient.url_conexao[/state=([^&]+)/, 1].then { |s| CGI.unescape(s) }
+
+    it 'grava o refresh token na configuração e não mexe na Agenda' do
+      stub_troca
+      state = with_modified_env('FRONTEND_URL' => front, 'GOOGLE_OAUTH_CLIENT_ID' => 'cid') { state_drive }
+      chamar(state)
+      expect(response.body).to include('eduardo@gmail.com')
+      expect(InstallationConfig.find_by(name: 'RAMON_DRIVE_REFRESH_TOKEN').value).to eq('rt-novo')
+      expect(GoogleAgendaConta.count).to eq(0)
+    end
+
+    it 'state adulterado não grava' do
+      chamar('drive:lixo')
+      expect(response.body).to include('inválido')
+      expect(InstallationConfig.find_by(name: 'RAMON_DRIVE_REFRESH_TOKEN')).to be_nil
+    end
+  end
 end
