@@ -3,7 +3,10 @@
 module LeadDocs
   extend ActiveSupport::Concern
 
+  # Perdido: o link mágico do portal (/portal/:token) morre; se o lead reabrir, outro nasce sob demanda.
+  # Ganho mantém: o portal segue recebendo os documentos que faltam depois do contrato (Lead#enqueue_drive_export).
   included do
+    before_save -> { self.portal_token = nil }, if: -> { will_save_change_to_lead_stage_id? && lead_stage&.is_lost }
     # Desmarcar "recebido" solta o anexo e o vínculo do Drive daquele item (o arquivo no Drive fica: é do cliente).
     before_save :soltar_docs_desmarcados, if: :custom_attributes_changed?
   end

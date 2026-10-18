@@ -50,7 +50,7 @@
 | `app/javascript/dashboard/i18n/locale/en/inboxMgmt.json` e `pt_BR/inboxMgmt.json` | +`AUTO_CREATE_LEAD.LABEL`/`SUB_TEXT` dentro de `SETTINGS_POPUP` | i18n do toggle | 2D |
 | `app/views/api/v1/accounts/leads/_lead.json.jbuilder` | -`json.notes lead.notes` (removida, coluna dropada; notas viraram `lead_notes`) | fim do blob `leads.notes` | 1b-ii |
 | `app/controllers/api/v1/accounts/leads_controller.rb` | -`:notes` removido de `permitted_params` | fim do blob `leads.notes` | 1b-ii |
-| `config/routes.rb` | `post 'ramon_leads/:capture_token'` no namespace `public/api/v1` (ao lado de `csat_survey`) | captação de leads das landing pages | A-leads |
+| `config/routes.rb` | `post 'ramon_leads'` no namespace `public/api/v1` (ao lado de `csat_survey`); token só no header `X-Capture-Token` | captação de leads das landing pages | A-leads |
 | `config/initializers/rack_attack.rb` | throttle `public/ramon_leads` (5 POST/min por IP) | anti-abuso do endpoint público | A-leads |
 | `app/models/notification.rb` | `ramon_lead_created: 9` no enum NOTIFICATION_TYPES + título/corpo em `push_message_title`/`push_message_body` (branch para `Lead`, não `Conversation`) | notificação nativa do tipo lead | A-notif |
 | `config/locales/en.yml` | +`ramon_lead_created: 'New lead from landing page: %{name}'` no bloco `notifications.notification_title` | título da notificação (inglês) | A-notif |
