@@ -16,4 +16,9 @@ class Whatsapp::MessageDedupLock
   def acquire!
     ::Redis::Alfred.set(@key, true, nx: true, ex: @ttl)
   end
+
+  # ramon: solta o lock quando o processamento falha, pro retry reprocessar a mensagem
+  def release!
+    ::Redis::Alfred.delete(@key)
+  end
 end

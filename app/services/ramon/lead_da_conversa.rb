@@ -5,8 +5,15 @@
 module Ramon::LeadDaConversa
   module_function
 
-  # Só caixas com "Criar lead" ligado e conversa com contato.
-  def cabe?(conversation) = conversation.inbox&.auto_create_lead? && conversation.contact.present?
+  # Só caixas com "Criar lead" ligado e conversa com contato. Conversa que a equipe abriu pelo celular (eco da coexistência)
+  # não vira lead enquanto o cliente não responde: fornecedor, familiar, cliente antigo (o RamonLeadListener cria na resposta).
+  def cabe?(conversation)
+    conversation.inbox&.auto_create_lead? && conversation.contact.present? && !aberta_pelo_celular?(conversation)
+  end
+
+  def aberta_pelo_celular?(conversation) = eco?(conversation.messages.first) && conversation.messages.incoming.none?
+
+  def eco?(message) = message.present? && message.content_attributes['external_echo'].present?
 
   # Liga a conversa ao lead aberto do mesmo contato (pessoa ≠ caso: lead fechado não conta) ou cria o lead na 1ª etapa.
   def criar_ou_ligar(conversation)

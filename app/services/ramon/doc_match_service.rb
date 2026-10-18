@@ -3,8 +3,8 @@
 # Com ANTHROPIC_API_KEY no servidor, foto/PDF vão pro Claude Haiku 5.5, que VÊ o
 # arquivo; sem ela (ou outro tipo/grande demais), o copiloto só tem nome + tipo +
 # fim da conversa. Assinatura do Claude (VPS) fica fora — termos, ver LlmEscolha.
-# Com visão marca o item como recebido direto; sem visão grava só a sugestão em
-# custom_attributes['doc_sugestao'] pra confirmação humana no painel.
+# Com visão marca o item como recebido direto; sem visão — ou em lead ganho — grava
+# só a sugestão em custom_attributes['doc_sugestao'] pra confirmação humana no painel.
 class Ramon::DocMatchService
   SYSTEM_PROMPT = <<~PROMPT.freeze
     Você recebe um checklist de documentos de um caso previdenciário, os dados de um
@@ -30,10 +30,13 @@ class Ramon::DocMatchService
     item = itens.presence && escolher(lead, itens)
     return if item.blank?
 
-    visao? ? marcar_recebido(lead, item) : gravar_sugestao(lead, item)
+    marcar_direto?(lead) ? marcar_recebido(lead, item) : gravar_sugestao(lead, item)
   end
 
   private
+
+  # Lead ganho só ganha sugestão (decisão Eduardo 18/10): lá marcar sobe pro Drive e pode ir pro ADVBOX.
+  def marcar_direto?(lead) = visao? && lead.won_at.blank?
 
   def escolher(lead, itens)
     item_id = ask_llm(lead, itens, attachment)
@@ -116,10 +119,10 @@ class Ramon::DocMatchService
     titulo = item.title.presence || item.content
     Ramon::EventoInline.registrar(
       @message.conversation,
-      if visao?
+      if patch.key?('doc_status')
         "✦ IA do hub leu o anexo: é \"#{titulo}\" — já marcado como recebido na aba Documentos."
       else
-        "✦ IA do hub sugeriu pelo nome do arquivo: é \"#{titulo}\" — confirme aqui ou na aba Documentos."
+        "✦ IA do hub sugeriu #{visao? ? 'lendo o anexo' : 'pelo nome do arquivo'}: é \"#{titulo}\" — confirme aqui ou na aba Documentos."
       end,
       tipo: 'doc_match',
       extra: { 'item_id' => item.id, 'attachment_id' => attachment.id, 'lead_id' => lead.id }

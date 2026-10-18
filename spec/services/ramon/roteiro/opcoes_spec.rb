@@ -29,6 +29,22 @@ RSpec.describe Ramon::Roteiro::Opcoes do
     expect(curta).to eq('title' => 'Não sabe', 'value' => 'Não sabe')
   end
 
+  it 'opção vazia, com espaços ou repetida sai antes (a Meta recusaria o interativo inteiro)' do
+    passo(tipo_resposta: 'escolha', opcoes: [' Sim ', '', 'Sim', 'Não  ', '   '])
+
+    expect(botoes).to eq([{ 'title' => 'Sim', 'value' => 'Sim' }, { 'title' => 'Não', 'value' => 'Não' }])
+  end
+
+  it 'escolha só com opções vazias segue só em texto' do
+    passo(tipo_resposta: 'escolha', opcoes: ['', '  '])
+    expect(botoes).to be_nil
+  end
+
+  it 'o id da linha respeita o limite da Meta' do
+    passo(tipo_resposta: 'escolha', opcoes: ['a' * 250, 'Não sabe'])
+    expect(botoes.first['value'].size).to eq(200)
+  end
+
   it 'texto, data, número e escolha com mais de 10 opções seguem só em texto' do
     passo(tipo_resposta: 'escolha', opcoes: (1..11).map(&:to_s))
     expect(botoes).to be_nil

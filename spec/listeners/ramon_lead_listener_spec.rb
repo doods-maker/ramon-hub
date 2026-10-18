@@ -49,6 +49,28 @@ RSpec.describe RamonLeadListener do
     expect(old_lead.reload.conversation_id).to eq(old_conversation.id)
   end
 
+  describe 'conversa aberta pelo celular da equipe (eco da coexistência)' do
+    before do
+      create(:message, :bot_message, account: account, conversation: conversation, content: 'Oi, aqui é do escritório',
+                                     content_attributes: { external_echo: true })
+    end
+
+    it 'não cria lead enquanto o cliente não responde' do
+      expect { listener.conversation_created(event) }.not_to(change { account.leads.count })
+    end
+
+    it 'cria o lead na 1ª resposta do cliente, só uma vez' do
+      listener.conversation_created(event)
+      resposta = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'oi')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: resposta)) }
+        .to change { account.leads.where(conversation_id: conversation.id).count }.by(1)
+
+      outra = create(:message, account: account, conversation: conversation, message_type: :incoming, content: 'tudo bem?')
+      expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: outra)) }
+        .not_to(change { account.leads.count })
+    end
+  end
+
   describe '#message_created -> atribuição do referral da Meta' do
     let(:lead) do
       create(:lead, account: account, lead_stage: account.lead_stages.find_by(label: 'fase-novo'),
@@ -250,6 +272,32 @@ RSpec.describe RamonLeadListener do
       create(:lead, account: account, thesis: thesis, conversation: conversation, contact: contact)
       expect { listener.message_created(Events::Base.new('message.created', Time.zone.now, message: message)) }
         .not_to have_enqueued_job(Ramon::ColheitaExtractionJob)
+    end
+  end
+
+  describe '#message_updated -> envio da IA que falhou abre a conversa para a equipe' do
+    let(:falhou) { { 'status' => %w[sent failed] } }
+
+    before { conversation.update!(status: :pending) }
+
+    def atualizada(message, changes) = Events::Base.new('message.updated', Time.zone.now, message: message, previous_changes: changes)
+
+    it 'mensagem sem autor (IA/automação) que falhou faz o handoff' do
+      enviada = create(:message, :bot_message, account: account, conversation: conversation, status: :failed)
+      listener.message_updated(atualizada(enviada, falhou))
+      expect(conversation.reload.status).to eq('open')
+    end
+
+    it 'mensagem de humano que falhou não mexe na conversa' do
+      enviada = create(:message, account: account, conversation: conversation, message_type: :outgoing, status: :failed)
+      listener.message_updated(atualizada(enviada, falhou))
+      expect(conversation.reload.status).to eq('pending')
+    end
+
+    it 'outra mudança de status (entregue) não mexe na conversa' do
+      enviada = create(:message, :bot_message, account: account, conversation: conversation, status: :delivered)
+      listener.message_updated(atualizada(enviada, { 'status' => %w[sent delivered] }))
+      expect(conversation.reload.status).to eq('pending')
     end
   end
 

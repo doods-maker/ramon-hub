@@ -12,3 +12,10 @@ ADVBOX ganhar upload um dia, a ponte manual é o único pedaço a substituir.
 
 Automação de navegador sobre a interface do ADVBOX foi rejeitada: frágil,
 quebra a cada mudança de tela deles.
+
+**Quem marca "recebido" (17/10 e 18/10/2026).** Em 17/10 o doc-match passou a
+marcar o item direto quando a IA *vê* o arquivo (foto/PDF no Claude Haiku);
+sem visão, só sugere. Em 18/10 o Eduardo restringiu: em lead **ganho** a IA só
+sugere, mesmo com visão — ali marcar sobe o arquivo para o Drive, cria o atalho
+em `A enviar ao ADVBOX` e pode fechar o checklist, então um erro da IA vira
+arquivo errado no cliente. Antes do Ganho continua marcando direto.

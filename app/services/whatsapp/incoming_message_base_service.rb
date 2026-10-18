@@ -36,6 +36,10 @@ class Whatsapp::IncomingMessageBaseService
     return if find_message_by_source_id(messages_data.first[:id])
     return unless lock_message_source_id!
 
+    create_contact_conversation_and_messages
+  end
+
+  def create_contact_conversation_and_messages
     set_contact
     return unless @contact
     return if @contact.blocked? && !outgoing_echo
@@ -44,10 +48,16 @@ class Whatsapp::IncomingMessageBaseService
       set_conversation
       create_messages
     end
+  rescue StandardError
+    # ramon: erro no meio (ex.: timeout no download da mídia) solta o lock — senão o retry do job o encontra e descarta a mensagem
+    Whatsapp::MessageDedupLock.new(messages_data.first[:id]).release!
+    raise
   end
 
-  def process_statuses
-    status = @processed_params[:statuses].first
+  # ramon: a Meta pode mandar vários status no mesmo webhook — processa todos, não só o 1º
+  def process_statuses = @processed_params[:statuses].each { |status| process_status(status) }
+
+  def process_status(status)
     return unless find_message_by_source_id(status[:id])
 
     update_whatsapp_identifiers_from_status(status)
@@ -113,12 +123,14 @@ class Whatsapp::IncomingMessageBaseService
   end
 
   def set_conversation
+    # Scope reuse to the contact across all its contact_inboxes in this inbox: WhatsApp coexistence
+    # gives one contact multiple source_ids (phone + BSUID), so reopen must not be limited to a single contact_inbox.
+    conversations = @contact.conversations.where(inbox_id: @inbox.id)
     # if lock to single conversation is disabled, we will create a new conversation if previous conversation is resolved
     @conversation = if @inbox.lock_to_single_conversation
-                      @contact_inbox.conversations.last
+                      conversations.last
                     else
-                      @contact_inbox.conversations
-                                    .where.not(status: :resolved).last
+                      conversations.where.not(status: :resolved).last
                     end
     return if @conversation
 
