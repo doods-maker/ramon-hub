@@ -14,6 +14,8 @@ class Captain::Tools::RoteiroRegistrarTool < Captain::Tools::RamonBaseTool
   param :saida_id, type: 'string', desc: 'Id da saida escolhida (passo de texto livre)', required: false
 
   def perform(tool_context, chave: nil, valor: nil, saida_id: nil, lead_id: nil)
+    return HUMANO_ASSUMIU if humano_assumiu?(tool_context.state)
+
     res = no_roteiro(tool_context, lead_id) { |lead| ::Ramon::Roteiro.registrar(lead, chave: chave, valor: valor, saida_id: saida_id) }
     return res if res.is_a?(String) # SEM_LEAD
 

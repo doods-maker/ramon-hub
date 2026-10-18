@@ -8,8 +8,8 @@ class Captain::Tools::PrepararContratoZapsignTool < Captain::Tools::RamonEscrita
   param :motivo, type: 'string', desc: 'Por que o contrato deve ser preparado agora', required: false
 
   def perform(tool_context, lead_id: nil, motivo: nil)
-    lead = resolver_lead(tool_context.state, lead_id)
-    return SEM_LEAD if lead.blank?
+    lead = lead_para_agir(tool_context.state, lead_id)
+    return lead if lead.is_a?(String)
 
     pronto = lead.custom_attributes&.dig('zapsign', 'sign_url')
     return "O caso #{lead.name} ja tem contrato preparado no ZapSign: #{pronto}" if pronto.present?

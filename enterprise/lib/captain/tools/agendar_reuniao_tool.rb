@@ -9,8 +9,8 @@ class Captain::Tools::AgendarReuniaoTool < Captain::Tools::RamonEscritaTool
   param :assunto, type: 'string', desc: 'Assunto da reuniao, em uma linha', required: false
 
   def perform(tool_context, quando: nil, lead_id: nil, assunto: nil)
-    lead = resolver_lead(tool_context.state, lead_id)
-    return SEM_LEAD if lead.blank?
+    lead = lead_para_agir(tool_context.state, lead_id)
+    return lead if lead.is_a?(String)
 
     direto = ::Ramon::PerfilIa.de(lead).direto?('marcar_reuniao')
     horario = horario_de(quando)
