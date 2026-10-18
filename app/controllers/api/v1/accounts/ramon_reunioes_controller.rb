@@ -75,7 +75,7 @@ class Api::V1::Accounts::RamonReunioesController < Api::V1::Accounts::BaseContro
   end
 
   def check_authorization
-    authorize(:reuniao, :"#{action_name}?")
+    authorize(@reuniao || :reuniao, :"#{action_name}?")
   end
 
   def render_error(mensagem)
