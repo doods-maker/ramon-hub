@@ -14,6 +14,9 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
   ADVBOX_FORA = 'O AdvBox nao respondeu agora. Passe para humano.'.freeze
   SEM_PAINEL = 'Este cliente ainda nao tem acesso ao Painel do Cliente: nao mande o link.'.freeze
   JA_CLIENTE = 'Já é cliente'.freeze
+  # 3 conferências que falham por conversa em 1h: para de consultar (enumeração de CPF + cota do ADVBOX).
+  LIMITE_FALHAS = 3
+  LIMITE = 'LIMITE: tentativas demais nesta conversa, nao consulte de novo. Passe para humano.'.freeze
 
   description 'Consulta de andamento para quem ja e cliente: confere CPF + data de nascimento no cadastro do escritorio ' \
               'e devolve a fase de cada processo em linguagem simples e o link do Painel do Cliente. Nao conferiu: humano.'
@@ -21,10 +24,13 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
   param :nascimento, type: 'string', desc: 'Data de nascimento informada pelo cliente, AAAA-MM-DD', required: true
 
   def perform(tool_context, cpf:, nascimento:)
+    chave = chave_falhas(tool_context)
+    return LIMITE if estourou?(chave)
+
     digitos = cpf.to_s.delete('^0-9')
     conferiu = digitos.size == 11 && cadastro_confere?(digitos, data(nascimento))
     log_tool_usage('consulta_andamento', { conferiu: conferiu })
-    return NAO_CONFERIU unless conferiu
+    return contar_falha(chave) unless conferiu
 
     marcar_cliente(tool_context)
     processos = lista(Ramon::AdvboxClient.lawsuits(identification: digitos, limit: SYNC::LIMITE_PROCESSOS))
@@ -36,6 +42,19 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
   end
 
   private
+
+  # Sem conversa (Testar no hub) não conta.
+  def chave_falhas(tool_context)
+    id = tool_context&.state&.dig(:conversation, :id)
+    "RAMON::CONSULTA_ANDAMENTO::FALHAS::#{id}" if id
+  end
+
+  def estourou?(chave) = chave.present? && Redis::Alfred.get(chave).to_i >= LIMITE_FALHAS
+
+  def contar_falha(chave)
+    Redis::Alfred.expire(chave, 1.hour.to_i) if chave && Redis::Alfred.incr(chave) == 1
+    NAO_CONFERIU
+  end
 
   # Execuções guarda só os nomes dos campos: CPF e nascimento nunca ficam gravados.
   def registrar_execucao(tool_context, params, *)
