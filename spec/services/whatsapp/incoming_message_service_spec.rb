@@ -386,6 +386,22 @@ describe Whatsapp::IncomingMessageService do
         described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
         expect(whatsapp_channel.inbox.messages.first.content).to eq('Paga o INSS por conta e está em dia')
       end
+
+      # ramon: opção maior que a descrição (72) chega inteira pelo id da linha
+      it 'uses the row id when the tapped option is longer than the description' do
+        opcao = 'Contribui como autônomo pelo carnê e paga o INSS em dia todos os meses desde 2019 sem atraso'
+        params = {
+          'contacts' => [{ 'profile' => { 'name' => 'Sojan Jose' }, 'wa_id' => '2423423243' }],
+          'messages' => [{ 'from' => '2423423243', 'id' => 'SDFADSf23sfasdafasdfc',
+                           :interactive => {
+                             'list_reply': { 'id': opcao, 'title': 'Contribui como autônomo…', 'description': opcao.truncate(72) },
+                             'type': 'list_reply'
+                           },
+                           'timestamp' => '1633034394', 'type' => 'interactive' }]
+        }.with_indifferent_access
+        described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
+        expect(whatsapp_channel.inbox.messages.first.content).to eq(opcao)
+      end
     end
 
     # ref: https://github.com/chatwoot/chatwoot/issues/3795#issuecomment-1018057318

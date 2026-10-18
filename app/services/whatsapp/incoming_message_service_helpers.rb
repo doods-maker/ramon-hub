@@ -33,11 +33,15 @@ module Whatsapp::IncomingMessageServiceHelpers
       message.dig(:name, :formatted_name)
   end
 
-  # ramon: opção do roteiro com título cortado ("…") traz a opção inteira na descrição da linha (Ramon::Roteiro::Opcoes)
+  # ramon: opção do roteiro com título cortado ("…") vem inteira no id da linha (até Ramon::Roteiro::Opcoes::ID);
+  # a descrição corta em 72. Id que não começa pelo título (lista de outra origem) não vale.
   def lista_tocada(reply)
     return if reply.blank?
 
-    reply[:title].to_s.end_with?('…') && reply[:description].present? ? reply[:description] : reply[:title]
+    titulo = reply[:title].to_s
+    return reply[:title] unless titulo.end_with?('…')
+
+    reply[:id].to_s.start_with?(titulo.delete_suffix('…')) ? reply[:id] : reply[:description].presence || reply[:title]
   end
 
   def file_content_type(file_type)
