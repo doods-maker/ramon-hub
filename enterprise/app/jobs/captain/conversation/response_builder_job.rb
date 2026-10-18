@@ -98,7 +98,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
     @conversation
       .messages
       .where(message_type: [:incoming, :outgoing])
-      .where(private: false)
+      .where(private: false).last(40) # ramon: só o fim da conversa (laudo/áudio pesam a cada turno); memória vem pela tool
       .map do |message|
       message_hash = {
         content: Captain::OpenAiMessageBuilderService.new(message: message).generate_content,
