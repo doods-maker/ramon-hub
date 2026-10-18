@@ -58,6 +58,16 @@ RSpec.describe Captain::Tools::ConsultaAndamentoTool, type: :model do
     expect(tool.perform(tool_context, cpf: cpf, nascimento: '1980-05-10')).to eq(described_class::NAO_CONFERIU)
   end
 
+  it '3 conferencias que falham na conversa: a 4a nem consulta o AdvBox e manda passar para humano' do
+    conversa = create(:conversation, account: account)
+    contexto = Struct.new(:state).new({ conversation: { id: conversa.id } })
+    Redis::Alfred.delete("RAMON::CONSULTA_ANDAMENTO::FALHAS::#{conversa.id}")
+    3.times { expect(tool.perform(contexto, cpf: cpf, nascimento: '1980-05-11')).to eq(described_class::NAO_CONFERIU) }
+
+    expect(Ramon::AdvboxClient).not_to receive(:customers)
+    expect(tool.perform(contexto, cpf: cpf, nascimento: '1980-05-10')).to eq(described_class::LIMITE)
+  end
+
   it 'nao grava CPF nem nascimento na tela Execucoes' do
     tool.execute(tool_context, cpf: cpf, nascimento: '1980-05-10')
 
