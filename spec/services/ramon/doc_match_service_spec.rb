@@ -78,6 +78,16 @@ RSpec.describe Ramon::DocMatchService do
     expect(lead.docs_completos_em).to be_present
   end
 
+  it 'em lead ganho, mesmo com visão, só sugere (marcar sobe pro Drive/ADVBOX)' do
+    lead.update_column(:won_at, Time.current) # rubocop:disable Rails/SkipsModelValidations
+    resposta = Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1)
+    allow(Ramon::LlmClient).to receive(:complete).and_return(resposta)
+    with_modified_env(ANTHROPIC_API_KEY: 'sk-test') { described_class.new(message).perform }
+    attrs = lead.reload.custom_attributes
+    expect(attrs['doc_status']).to be_blank
+    expect(attrs.dig('doc_sugestao', 'item_id')).to eq(rg.id)
+  end
+
   it 'sem chave da Anthropic, segue o copiloto sem anexo' do
     resposta = Ramon::LlmClient::Result.new(content: %({"item_id": #{rg.id}}), input_tokens: 1, output_tokens: 1)
     allow(Ramon::LlmClient).to receive(:complete).and_return(resposta)

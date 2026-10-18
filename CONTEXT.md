@@ -125,8 +125,9 @@ controller quando preciso); só então o trabalho vira do jurídico.
 
 **Checklist de Documentos**:
 A lista, definida por Tese, dos documentos que o caso exige, com o status de
-cada um (pendente, solicitado, recebido). "Recebido" é sempre veredito humano —
-a IA no máximo sugere; é o que o ADR-0002 chama de documento "conferido".
+cada um (pendente, solicitado, recebido). No lead ganho, "Recebido" é sempre
+veredito humano — a IA no máximo sugere; é o que o ADR-0002 chama de documento
+"conferido". Antes do Ganho, a IA que viu o arquivo marca direto (ADR-0002).
 _Avoid_: conferido como quarto status (é sinônimo de recebido)
 
 **Coleta de Documentos**:
