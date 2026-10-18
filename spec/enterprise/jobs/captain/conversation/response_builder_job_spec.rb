@@ -293,6 +293,41 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
         end
       end
 
+      describe 'freio de custo' do
+        before { perfil!('base' => 'acelerada') }
+
+        it 'gasto do dia no teto da conta: não chama o LLM e a conversa vai para a fila humana' do
+          account.update!(settings: account.settings.to_h.merge(Ramon::IaGastoAlerta::CHAVE_TETO => '1.00'))
+          LlmChamada.create!(account: account, funcao: 'copiloto', custo_usd: 2, created_at: Time.current)
+          expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
+          described_class.perform_now(conversation, assistant)
+          expect(conversation.reload.status).to eq('open')
+        end
+
+        it 'a IA já respondeu mais de 15 vezes na conversa na última hora: não chama o LLM' do
+          agora = Time.current
+          linhas = Array.new(Ramon::IaFreio::RESPOSTAS_POR_HORA + 1) do
+            { account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id, message_type: 1, content: 'oi',
+              sender_type: 'Captain::Assistant', sender_id: assistant.id, created_at: agora, updated_at: agora }
+          end
+          Message.insert_all(linhas) # rubocop:disable Rails/SkipsModelValidations -- só a contagem importa
+          expect(Captain::Assistant::AgentRunnerService).not_to receive(:new)
+          described_class.perform_now(conversation, assistant)
+          expect(conversation.reload.status).to eq('open')
+        end
+
+        it '15 respostas na última hora ainda deixam a IA responder' do
+          agora = Time.current
+          linhas = Array.new(Ramon::IaFreio::RESPOSTAS_POR_HORA) do
+            { account_id: account.id, inbox_id: inbox.id, conversation_id: conversation.id, message_type: 1, content: 'oi',
+              sender_type: 'Captain::Assistant', sender_id: assistant.id, created_at: agora, updated_at: agora }
+          end
+          Message.insert_all(linhas) # rubocop:disable Rails/SkipsModelValidations -- só a contagem importa
+          described_class.perform_now(conversation, assistant)
+          expect(conversation.messages.last).to have_attributes(content: 'Hey, welcome to Captain V2', private: false)
+        end
+      end
+
       it 'Equilibrada, lead em Qualificação, sem Tool: sai pública com o carimbo do perfil' do
         perfil!('base' => 'equilibrada')
         lead_em('fase-qualificacao')
