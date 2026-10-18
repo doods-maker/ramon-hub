@@ -6,7 +6,7 @@ class Api::V1::Accounts::RamonEsteiraController < Api::V1::Accounts::BaseControl
   before_action :set_lead, only: [:done, :snooze]
 
   def show
-    render json: Ramon::EsteiraBuilder.new(account: Current.account).perform
+    render json: Ramon::EsteiraBuilder.new(account: Current.account, leads: policy_scope(Current.account.leads)).perform
   end
 
   # "Feito": registra a atividade e o builder tira o lead da fila do dia.

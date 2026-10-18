@@ -21,6 +21,15 @@ RSpec.describe 'Ramon Esteira API', type: :request do
       expect(response.parsed_body['board']).to include('total' => 1, 'value_sum' => 2000.0, 'done_today' => 0)
     end
 
+    it 'agente sem visão total não recebe na fila o lead que não vê', :aggregate_failures do
+      advogada = create(:user, account: account, role: :agent)
+      lead = create(:lead, account: account, lead_stage: active_stage, value: 2000)
+      create(:lead_task, account: account, lead: lead, title: 'Ligar', due_at: 2.days.ago)
+      get url, headers: advogada.create_new_auth_token, as: :json
+      expect(response.parsed_body['items']).to eq([])
+      expect(response.parsed_body['board']).to include('total' => 0, 'value_sum' => 0)
+    end
+
     it 'denies a user without access to the account' do
       stranger = create(:user)
       get url, headers: stranger.create_new_auth_token, as: :json

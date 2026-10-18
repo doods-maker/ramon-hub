@@ -9,7 +9,9 @@ class Api::V1::Accounts::CalculosController < Api::V1::Accounts::BaseController
   before_action :check_authorization
 
   def index
-    calculos = Current.account.calculos.recentes.includes(:user, :lead).limit(LIMIT)
+    # só cálculos de leads que a pessoa vê (LeadPolicy::Scope; rascunhos e casos de cálculo entram)
+    calculos = Current.account.calculos.where(lead_id: policy_scope(Current.account.leads).select(:id))
+                      .recentes.includes(:user, :lead).limit(LIMIT)
     calculos = calculos.do_cliente(params[:q].to_s.strip) if params[:q].present?
     render json: { payload: calculos.map { |calculo| linha(calculo) } }
   end
@@ -26,6 +28,7 @@ class Api::V1::Accounts::CalculosController < Api::V1::Accounts::BaseController
   # rascunho e deixa o lead intacto; sem destino, restaura no próprio lead (a
   # tela pergunta antes quando isso troca um CNIS diferente).
   def reabrir
+    authorize(@calculo.lead, :update?) # o CNIS do lead volta pra tela (ou é sobrescrito nele)
     destino = abrir_no_rascunho? ? rascunho_com_tese : @calculo.lead
     destino.update!(cnis: @calculo.cnis_snapshot) if @calculo.cnis_snapshot.present?
     render json: reaberto(destino)
