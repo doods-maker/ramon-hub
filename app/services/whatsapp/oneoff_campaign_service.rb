@@ -23,6 +23,12 @@ class Whatsapp::OneoffCampaignService
   end
   private_class_method :origem_opt_out
 
+  def perform
+    validate_campaign!
+    process_audience(extract_audience_labels)
+    campaign.completed!
+  end
+
   private
 
   delegate :inbox, to: :campaign
