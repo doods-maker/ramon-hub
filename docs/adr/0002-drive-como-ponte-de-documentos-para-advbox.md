@@ -19,3 +19,5 @@ sem visão, só sugere. Em 18/10 o Eduardo restringiu: em lead **ganho** a IA s�
 sugere, mesmo com visão — ali marcar sobe o arquivo para o Drive, cria o atalho
 em `A enviar ao ADVBOX` e pode fechar o checklist, então um erro da IA vira
 arquivo errado no cliente. Antes do Ganho continua marcando direto.
+
+Desmarcar um "recebido" (18/10/2026) solta o anexo e o vínculo do Drive daquele item (`doc_anexos`, `drive.itens`); o arquivo já enviado ao Drive **não** é apagado — é documento do cliente.
