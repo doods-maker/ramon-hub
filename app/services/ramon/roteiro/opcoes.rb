@@ -10,6 +10,7 @@ module Ramon::Roteiro::Opcoes
   DESCRICAO = 72 # descrição da linha da lista
   MAX = 10 # linhas da lista
   CORPO = 1024 # corpo da mensagem interativa
+  ID = 200 # id da linha da lista (o do botão aceita 256)
 
   module_function
 
@@ -56,9 +57,12 @@ module Ramon::Roteiro::Opcoes
 
   def limite(opcoes) = opcoes.size <= 3 && opcoes.all? { |o| o.size <= BOTAO } ? BOTAO : LINHA
 
+  # Opção vazia ou repetida faz a Meta recusar o interativo inteiro (e a pergunta não chega): sai antes.
   def opcoes_do(passo)
     case passo&.tipo_resposta
-    when 'escolha' then passo.opcoes if passo.opcoes.size.between?(1, MAX)
+    when 'escolha'
+      opcoes = passo.opcoes.map { |o| o.to_s.strip }.compact_blank.uniq
+      opcoes if opcoes.size.between?(1, MAX)
     when 'sim_nao' then %w[Sim Não]
     end
   end
@@ -66,7 +70,7 @@ module Ramon::Roteiro::Opcoes
   def item(opcao, limite)
     return { 'title' => opcao, 'value' => opcao } if opcao.size <= limite
 
-    { 'title' => opcao.truncate(limite, separator: ' ', omission: '…'), 'value' => opcao, 'description' => opcao.truncate(DESCRICAO) }
+    { 'title' => opcao.truncate(limite, separator: ' ', omission: '…'), 'value' => opcao.first(ID), 'description' => opcao.truncate(DESCRICAO) }
   end
 
   # O lead recebe botões? O "!" avisa que grava: no teste A/B, a 1ª pergunta com botões possíveis grava o grupo do
