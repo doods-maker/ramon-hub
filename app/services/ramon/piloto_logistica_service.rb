@@ -13,7 +13,15 @@ class Ramon::PilotoLogisticaService
     Na dúvida, responda false.
   PROMPT
 
+  # Trava determinística ANTES do LLM (ele lê texto que o cliente pode manipular): valor, percentual, garantia, prazo ou
+  # texto longo nunca saem sozinhos. "INSS" fica fora da lista: pedido de documento cita "Meu INSS"/"carta do INSS" o
+  # tempo todo — promessa sobre o INSS segue com o classificador (o prompt já veta "prazo do INSS").
+  RISCO = /R\$|%|garant|prazo/i
+  MAX_CHARS = 400
+
   def self.logistica?(texto, account: nil)
+    return false if texto.to_s.length > MAX_CHARS || texto.to_s.match?(RISCO)
+
     result = Ramon::LlmClient.complete(
       **Ramon::LlmEscolha.para(account, 'copiloto'),
       system: SYSTEM_PROMPT, user: "Resposta a auditar:\n#{texto}", funcao: 'piloto_logistica', account_id: account&.id
