@@ -373,6 +373,24 @@ describe Whatsapp::IncomingMessageService do
         expect(whatsapp_channel.inbox.messages.first.content).to eq('Check out my product!')
         expect(whatsapp_channel.inbox.messages.first.attachments.present?).to be true
       end
+
+      # ramon: o lock de dedup não pode sobreviver ao erro, senão o retry do job descarta a mensagem
+      it 'releases the dedup lock when the media download fails so the retry creates the message' do
+        stub_request(:get, whatsapp_channel.media_url('b1c68f38-8734-4ad3-b4a1-ef0c10d683'))
+          .to_timeout.then.to_return(status: 200, body: File.read('spec/assets/sample.png'), headers: {})
+        params = {
+          'contacts' => [{ 'profile' => { 'name' => 'Sojan Jose' }, 'wa_id' => '2423423243' }],
+          'messages' => [{ 'from' => '2423423243', 'id' => 'wamid.retry_midia',
+                           'image' => { 'id' => 'b1c68f38-8734-4ad3-b4a1-ef0c10d683', 'mime_type' => 'image/jpeg' },
+                           'timestamp' => '1633034394', 'type' => 'image' }]
+        }.with_indifferent_access
+
+        expect { described_class.new(inbox: whatsapp_channel.inbox, params: params).perform }.to raise_error(Down::Error)
+        described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
+
+        message = whatsapp_channel.inbox.messages.find_by!(source_id: 'wamid.retry_midia')
+        expect(message.attachments.present?).to be true
+      end
     end
 
     context 'when valid location message params' do

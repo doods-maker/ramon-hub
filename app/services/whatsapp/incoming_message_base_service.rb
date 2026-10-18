@@ -36,6 +36,10 @@ class Whatsapp::IncomingMessageBaseService
     return if find_message_by_source_id(messages_data.first[:id])
     return unless lock_message_source_id!
 
+    create_contact_conversation_and_messages
+  end
+
+  def create_contact_conversation_and_messages
     set_contact
     return unless @contact
     return if @contact.blocked? && !outgoing_echo
@@ -44,6 +48,10 @@ class Whatsapp::IncomingMessageBaseService
       set_conversation
       create_messages
     end
+  rescue StandardError
+    # ramon: erro no meio (ex.: timeout no download da mídia) solta o lock — senão o retry do job o encontra e descarta a mensagem
+    Whatsapp::MessageDedupLock.new(messages_data.first[:id]).release!
+    raise
   end
 
   def process_statuses
