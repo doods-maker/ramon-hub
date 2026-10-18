@@ -45,8 +45,9 @@ class Ramon::AdvboxClient
     get("/movements/#{lawsuit_id}", limit: limit)
   end
 
+  # Processo sem publicação: o AdvBox responde 404 em vez de lista vazia.
   def self.publications(lawsuit_id, limit: 2)
-    get("/publications/#{lawsuit_id}", limit: limit)
+    get("/publications/#{lawsuit_id}", { limit: limit }, vazio_se_404: true)
   end
 
   def self.history(lawsuit_id)
@@ -128,12 +129,14 @@ class Ramon::AdvboxClient
     put("/transactions/#{id}", body)
   end
 
-  def self.get(path, params = {})
+  def self.get(path, params = {}, vazio_se_404: false)
     response = HTTParty.get("#{BASE}#{path}",
                             query: params,
                             headers: headers,
                             open_timeout: OPEN_TIMEOUT,
                             read_timeout: READ_TIMEOUT)
+    return [] if vazio_se_404 && response.code == 404
+
     raise UnavailableError, "AdvBox respondeu HTTP #{response.code}" unless response.success?
 
     response.parsed_response
