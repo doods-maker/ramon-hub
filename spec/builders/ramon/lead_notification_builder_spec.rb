@@ -7,9 +7,20 @@ RSpec.describe Ramon::LeadNotificationBuilder do
   let(:lead) { create(:lead, account: account, name: 'Maria da LP') }
 
   describe '#perform' do
-    it 'cria uma notificação ramon_lead_created para cada usuário da conta' do
-      expect { described_class.new(lead: lead).perform }.to change(Notification, :count).by(2)
+    it 'lead sem conversa visível: só quem tem visão total recebe (não a conta toda)' do
+      expect { described_class.new(lead: lead).perform }.to change(Notification, :count).by(1)
+      expect(Notification.pluck(:user_id)).to eq([admin.id])
+    end
+
+    it 'agente que vê o lead (time comercial) também recebe' do
+      create(:team_member, team: create(:team, account: account, name: 'comercial'), user: agent)
+      described_class.new(lead: lead).perform
       expect(Notification.pluck(:user_id)).to contain_exactly(admin.id, agent.id)
+    end
+
+    it 'com user_ids explícitos só esses recebem, mesmo sem ver o lead' do
+      described_class.new(lead: lead, notification_type: 'ramon_sla_breach', user_ids: [agent.id]).perform
+      expect(Notification.pluck(:user_id)).to eq([agent.id])
     end
 
     it 'aponta o lead como primary_actor e usa o tipo novo' do

@@ -21,6 +21,15 @@ class LeadPolicy < ApplicationPolicy
     account_user&.administrator? || user.teams.exists?(account_id: account.id, name: EQUIPES_VISAO_TOTAL)
   end
 
+  # Usuários da conta que têm o lead no Scope (tempo real e sino do lead).
+  # ponytail: 1–2 consultas por usuário da conta (~20 hoje); se a conta crescer, resolver o Scope em lote.
+  def self.quem_ve(lead)
+    lead.account.account_users.includes(:user).filter_map do |account_user|
+      contexto = { user: account_user.user, account: lead.account, account_user: account_user }
+      account_user.user if Scope.new(contexto, Lead.where(id: lead.id)).resolve.exists?
+    end
+  end
+
   def index?
     @account_user.administrator? || @account_user.agent?
   end

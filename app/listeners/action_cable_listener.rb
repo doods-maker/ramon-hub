@@ -201,12 +201,8 @@ class ActionCableListener < BaseListener # rubocop:disable Metrics/ClassLength
   end
 
   # ramon: o lead só vai pra quem o vê (LeadPolicy::Scope: admin, visão total ou conversa/contato visível).
-  # ponytail: 1–2 consultas por usuário da conta (~20 hoje); se a conta crescer, resolver o Scope em lote.
   def lead_tokens(lead)
-    lead.account.account_users.includes(:user).filter_map do |account_user|
-      contexto = { user: account_user.user, account: lead.account, account_user: account_user }
-      account_user.user.pubsub_token if LeadPolicy::Scope.new(contexto, Lead.where(id: lead.id)).resolve.exists?
-    end
+    LeadPolicy.quem_ve(lead).map(&:pubsub_token)
   end
 
   def typing_event_listener_tokens(account, conversation, user)
