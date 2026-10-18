@@ -49,10 +49,9 @@ RSpec.describe 'Painel do cliente — sessões', type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
-  it 'esqueci a senha: CPF com e-mail gera código e enfileira o e-mail' do
+  it 'esqueci a senha: CPF com e-mail enfileira o e-mail sem o código nos argumentos (ele nasce na entrega)' do
     expect { post '/cliente/codigo', params: { cpf: '123.456.789-01' } }
-      .to have_enqueued_mail(Ramon::PortalMailer, :codigo)
-    expect(cliente.reload.codigo_digest).to be_present
+      .to have_enqueued_mail(Ramon::PortalMailer, :codigo).with(params: { account: account, cliente: cliente }, args: [])
     expect(response.body).to include('Digite o código')
   end
 

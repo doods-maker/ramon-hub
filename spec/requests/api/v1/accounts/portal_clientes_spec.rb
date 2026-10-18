@@ -34,7 +34,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
       expect do
         post base, headers: headers,
                    params: { advbox_customer_id: 14_688_380, nome: 'Venicio Schmidt', cpf: '123.456.789-01', email: 'v@exemplo.com' }
-      end.to have_enqueued_mail(Ramon::PortalMailer, :convite)
+      end.to change(ActionMailer::Base.deliveries, :count).by(1)
     end
     expect(response).to have_http_status(:success)
     expect(response.parsed_body['email']).to eq('status' => 'enviado', 'para' => 'v@exemplo.com')
@@ -90,7 +90,7 @@ RSpec.describe 'Portal Clientes API', type: :request do
     expect(response.parsed_body['payload'].first['id']).to eq cliente.id
 
     with_modified_env SMTP_ADDRESS: 'smtp.exemplo.com' do
-      expect { post "#{base}/#{cliente.id}/convidar", headers: headers }.to have_enqueued_mail(Ramon::PortalMailer, :convite)
+      expect { post "#{base}/#{cliente.id}/convidar", headers: headers }.to change(ActionMailer::Base.deliveries, :count).by(1)
     end
     expect(cliente.reload.authenticate_senha(response.parsed_body['senha_provisoria'])).to be_truthy
     patch "#{base}/#{cliente.id}", params: { recados: { '7' => 'Leve os exames' } }, headers: headers, as: :json

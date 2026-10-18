@@ -12,7 +12,7 @@ class Ramon::PortalMailer < ApplicationMailer
     return unless smtp_config_set_or_development?
 
     @cliente = params[:cliente]
-    @codigo = params[:codigo]
+    @codigo = @cliente.gerar_codigo! # gerado aqui, na entrega: o código não passa pelo Redis (args do job) nem pelo log
     mail(to: @cliente.email, subject: Ramon::PortalTexto.v2? ? ASSUNTO_CODIGO_V2 : ASSUNTO_CODIGO) { |f| f.html { render layout: false } }
   end
 

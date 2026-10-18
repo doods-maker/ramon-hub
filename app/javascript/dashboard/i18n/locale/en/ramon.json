@@ -958,6 +958,7 @@
       "EMAIL_SENT": "E-mail with the password sent to {email}.",
       "EMAIL_NOT_SENT_NO_EMAIL": "E-mail NOT sent: the client has no e-mail on file. Hand over the password by WhatsApp or in person.",
       "EMAIL_NOT_SENT_NO_SERVER": "E-mail NOT sent to {email}: the server has no e-mail configured. Hand over the password by WhatsApp or in person.",
+      "EMAIL_NOT_SENT_FAILED": "E-mail NOT sent to {email}: the e-mail server refused it. Hand over the password by WhatsApp or in person.",
       "READY_MESSAGE": "Ready-to-send message",
       "COPY_MESSAGE": "Copy ready message",
       "MESSAGE_COPIED": "Message copied.",
