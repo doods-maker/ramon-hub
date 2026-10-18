@@ -154,4 +154,13 @@ RSpec.describe 'Painel do cliente — sessões', type: :request do
     get '/cliente/inicio'
     expect(response).to redirect_to('/cliente')
   end
+
+  it 'sair invalida um cookie copiado antes' do
+    post '/cliente/entrar', params: { cpf: '12345678901', senha: senha }
+    copiado = cookies[:ramon_cliente]
+    delete '/cliente/sair'
+    cookies[:ramon_cliente] = copiado
+    get '/cliente/inicio'
+    expect(response).to redirect_to('/cliente')
+  end
 end

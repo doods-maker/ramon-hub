@@ -60,7 +60,9 @@ class Cliente::BaseController < ActionController::Base
     @current_cliente = cliente
   end
 
+  # Chave nova: um cookie copiado antes do "sair" não entra mais (derruba as outras sessões também).
   def sair!
+    current_cliente&.update!(sessao_chave: SecureRandom.hex(4))
     cookies.delete(COOKIE)
     cookies.delete(TROCA)
   end
