@@ -25,7 +25,7 @@ RSpec.describe Ramon::JanelaWhatsappJob do
     2.times { rodar }
 
     expect(avisos.count).to eq(1)
-    expect(avisos.first.meta['label']).to include('a janela grátis do WhatsApp fecha em')
+    expect(avisos.first.meta['label']).to include('a janela de texto livre do WhatsApp fecha em')
   end
 
   it 'não avisa quando a janela ainda está longe de fechar' do
@@ -42,21 +42,22 @@ RSpec.describe Ramon::JanelaWhatsappJob do
     expect(avisos.count).to eq(0)
   end
 
-  it 'na conversa que veio de anúncio vale a janela de 72h desde a mensagem do anúncio' do
+  # as 72h do anúncio são de preço; texto livre segue 24h desde a última mensagem do cliente
+  it 'lead de anúncio sem mensagem nas últimas 24h não recebe aviso (texto livre já fechou)' do
     cliente_escreveu(70.hours, anuncio: true)
     cliente_escreveu(50.hours)
 
     rodar
 
-    expect(avisos.count).to eq(1)
+    expect(avisos.count).to eq(0)
   end
 
-  it 'não avisa lead de anúncio no meio das 72h' do
+  it 'lead de anúncio também é avisado quando faltam até 4h para fechar as 24h' do
     cliente_escreveu(21.hours, anuncio: true)
 
     rodar
 
-    expect(avisos.count).to eq(0)
+    expect(avisos.count).to eq(1)
   end
 
   it 'na última rodada (20h) avisa também o prazo que vence de madrugada' do
