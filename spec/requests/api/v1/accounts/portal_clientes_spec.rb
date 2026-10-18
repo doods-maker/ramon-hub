@@ -211,6 +211,18 @@ RSpec.describe 'Portal Clientes API', type: :request do
       expect(response.parsed_body['permissoes']).to eq('gerir_acesso' => true, 'excluir' => false)
     end
 
+    it 'agente sem papel não troca o e-mail de quem já foi convidado; admin troca e derruba as sessões', :aggregate_failures do
+      email = cliente.email
+      patch "#{base}/#{cliente.id}", params: { email: 'invasor@exemplo.com', recados: { '7' => 'x' } }, headers: headers, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(cliente.reload.attributes.slice('email', 'recados')).to eq('email' => email, 'recados' => {})
+
+      patch "#{base}/#{cliente.id}", params: { email: 'novo@exemplo.com' }, headers: admin_headers, as: :json
+      expect(response).to have_http_status(:success)
+      expect(cliente.reload.email).to eq 'novo@exemplo.com'
+      expect(cliente.sessao_chave).to be_present
+    end
+
     it 'controladoria também gera senha nova' do
       time = create(:team, account: account, name: 'controladoria')
       create(:team_member, team: time, user: agent)

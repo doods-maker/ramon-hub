@@ -30,7 +30,9 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
   end
 
+  # E-mail de quem já foi convidado é a porta do "esqueci a senha": trocar exige gerir_acesso?.
   def update
+    authorize(:portal_cliente, :gerir_acesso?) if params.key?(:email) && @cliente.convidado_em.present?
     salvar_recados if params.key?(:recados)
     salvar_email if params.key?(:email)
     render json: portal_json.detalhe(@cliente)
@@ -124,8 +126,11 @@ class Api::V1::Accounts::PortalClientesController < Api::V1::Accounts::BaseContr
     registrar('salvou_recado')
   end
 
+  # E-mail trocado derruba as sessões abertas (mesma chave do suspender).
   def salvar_email
-    @cliente.update!(email: params[:email].presence)
+    @cliente.email = params[:email].presence
+    @cliente.sessao_chave = SecureRandom.hex(4) if @cliente.email_changed?
+    @cliente.save!
     registrar('alterou_email', @cliente.email)
   end
 
