@@ -127,8 +127,9 @@ class Webhooks::InstagramEventsJob < MutexApplicationJob
     channel
   end
 
+  # ramon: sem memoizar — no lote, o 1º evento ("lido") mandava as DMs seguintes pro ReadStatusService
   def event_name(messaging)
-    @event_name ||= SUPPORTED_EVENTS.find { |key| messaging.key?(key) }
+    SUPPORTED_EVENTS.find { |key| messaging.key?(key) }
   end
 
   def message(messaging, channel)

@@ -269,6 +269,16 @@ describe Webhooks::InstagramEventsJob do
         expect(instagram_inbox.messages.count).to eq 0
       end
 
+      # ramon: o nome do evento era memorizado no lote — "lido" primeiro mandava a DM seguinte pro ReadStatusService.
+      it 'processes each event of a batch on its own (read first, then a DM)' do
+        seen_event = build(:messaging_seen_event).with_indifferent_access
+        dm_event = build(:instagram_message_create_event).with_indifferent_access
+
+        instagram_webhook.perform_now(seen_event[:entry] + dm_event[:entry])
+
+        expect(instagram_inbox.messages.count).to eq 1
+      end
+
       it 'sets correct instagram attributes on contact' do
         dm_event = build(:instagram_message_create_event).with_indifferent_access
         instagram_webhook.perform_now(dm_event[:entry])
