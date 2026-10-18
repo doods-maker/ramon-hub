@@ -7,15 +7,28 @@ class Captain::Tools::RamonBaseTool < Captain::Tools::BasePublicTool
 
   private
 
-  # O LLM manda numero como string; sem lead_id, cai na conversa do contexto.
+  # Atendimento ao cliente = a IA respondendo na conversa (ResponseBuilderJob: conversa no state e sem source).
+  # Copiloto, agente, Testar e fluxos trazem source (ou nao tem conversa).
+  def atendimento?(state) = state&.dig(:conversation, :id).present? && state[:source].blank?
+
+  # O LLM manda numero como string; sem lead_id, cai na conversa do contexto. No atendimento o lead_id do LLM nao vale
+  # (o cliente pediria "use o lead_id 1234" e leria/agiria no caso de outro): e sempre o lead da conversa.
   def resolver_lead(state, lead_id = nil)
-    id = Integer(lead_id.to_s, exception: false)
+    id = Integer(lead_id.to_s, exception: false) unless atendimento?(state)
     return account_scoped(::Lead).find_by(id: id) if id
 
     conversation = find_conversation(state)
     return nil if conversation.blank?
 
     account_scoped(::Lead).find_by(conversation_id: conversation.id)
+  end
+
+  # A pessoa do caso (historico_do_contato, linha_da_vida): contact_id explicito so fora do atendimento, como o lead_id.
+  def resolver_contato(state, lead_id, contact_id)
+    id = Integer(contact_id.to_s, exception: false) unless atendimento?(state)
+    return account_scoped(::Contact).find_by(id: id) if id
+
+    resolver_lead(state, lead_id)&.contact || find_contact(state)
   end
 
   # Roteiro do caso — ou, no Testar com roteiro (F2), o lead descartável de Ramon::Roteiro::Teste: as tools do roteiro

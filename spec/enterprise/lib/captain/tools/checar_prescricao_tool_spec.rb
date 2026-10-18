@@ -31,6 +31,24 @@ RSpec.describe Captain::Tools::ChecarPrescricaoTool, type: :model do
       expect(JSON.parse(tool.perform(contexto))['lead_id']).to eq(lead.id)
     end
 
+    describe 'lead_id vindo do LLM' do
+      let(:conversation) { create(:conversation, account: account) }
+      let!(:da_conversa) { create(:lead, account: account, conversation: conversation, dcb_em: 1.year.ago.to_date) }
+      let(:outro) { create(:lead, account: account, dcb_em: 2.years.ago.to_date) }
+
+      it 'no atendimento ao cliente, lead_id de outro caso e ignorado: vale o lead da conversa' do
+        contexto = Struct.new(:state).new({ conversation: { id: conversation.id } })
+
+        expect(JSON.parse(tool.perform(contexto, lead_id: outro.id.to_s))['lead_id']).to eq(da_conversa.id)
+      end
+
+      it 'no uso interno (copiloto), o lead_id explicito continua valendo' do
+        contexto = Struct.new(:state).new({ conversation: { id: conversation.id }, source: 'copiloto_painel' })
+
+        expect(JSON.parse(tool.perform(contexto, lead_id: outro.id.to_s))['lead_id']).to eq(outro.id)
+      end
+    end
+
     it 'nao encontra caso de outra conta' do
       alheio = create(:lead, dcb_em: 1.year.ago.to_date)
 
