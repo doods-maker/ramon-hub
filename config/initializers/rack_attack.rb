@@ -228,14 +228,20 @@ class Rack::Attack
 
   ## Ramon — Painel do Cliente: senha (6 dígitos) + código por e-mail (força bruta) ###
   CLIENTE_LOGIN_PATHS = %w[/cliente/codigo /cliente/entrar /cliente/entrar-codigo].freeze
-  # CPF + IP: quem sabe o CPF de alguém não trava a conta dele de outro lugar.
-  throttle('cliente/codigo/cpf', limit: 5, period: 15.minutes) do |req|
-    next unless req.post? && req.ramon_path.in?(CLIENTE_LOGIN_PATHS)
+  def self.cliente_login_cpf(req)
+    return unless req.post? && req.ramon_path.in?(CLIENTE_LOGIN_PATHS)
 
     # params do Rails (não só os do Rack) — CPF num corpo JSON também conta
-    cpf = ActionDispatch::Request.new(req.env).params['cpf'].to_s.delete('^0-9').presence
+    ActionDispatch::Request.new(req.env).params['cpf'].to_s.delete('^0-9').presence
+  end
+
+  # CPF + IP: quem sabe o CPF de alguém não trava a conta dele de outro lugar.
+  throttle('cliente/codigo/cpf', limit: 5, period: 15.minutes) do |req|
+    cpf = cliente_login_cpf(req)
     "#{cpf}:#{req.ip}" if cpf
   end
+  # Teto do CPF sozinho, largo pro cliente: quem tenta a senha de 6 dígitos de vários IPs para em 30/h.
+  throttle('cliente/codigo/cpf-total', limit: 30, period: 1.hour) { |req| cliente_login_cpf(req) }
   throttle('cliente/codigo/ip', limit: 10, period: 15.minutes) do |req|
     req.ip if req.post? && req.ramon_path.in?(CLIENTE_LOGIN_PATHS)
   end
