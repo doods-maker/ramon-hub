@@ -143,6 +143,15 @@ RSpec.describe 'Painel do cliente — sessões', type: :request do
     expect(bloco.call(req.call('2.2.2.2'))).to eq '12345678901:2.2.2.2'
   end
 
+  it 'o teto de 30/h conta só o CPF (vários IPs somam no mesmo balde)' do
+    throttle = Rack::Attack.throttles['cliente/codigo/cpf-total']
+    env = Rack::MockRequest.env_for('/cliente/entrar', method: 'POST', params: { cpf: '123.456.789-01' })
+    expect(throttle.limit).to eq 30
+    expect(throttle.block.call(Rack::Attack::Request.new(env.merge('REMOTE_ADDR' => '3.3.3.3')))).to eq '12345678901'
+    get_env = Rack::MockRequest.env_for('/cliente/entrar', params: { cpf: '123.456.789-01' })
+    expect(throttle.block.call(Rack::Attack::Request.new(get_env))).to be_nil
+  end
+
   it 'trocar senha sem sessão redireciona pro login' do
     get '/cliente/senha/edit'
     expect(response).to redirect_to('/cliente')
