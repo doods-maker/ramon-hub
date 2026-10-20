@@ -1393,6 +1393,7 @@ export default {
       </div>
     </Transition>
 
+    <ChaveManterIa v-if="!isPrivate" v-model="manterIa" />
     <Transition
       mode="out-in"
       enter-active-class="transition-all duration-300 ease-out"
@@ -1402,7 +1403,6 @@ export default {
       leave-from-class="opacity-100 translate-y-0 scale-100"
       leave-to-class="opacity-0 translate-y-2 scale-[0.98]"
     >
-      <ChaveManterIa v-if="!isPrivate" v-model="manterIa" />
       <CopilotReplyBottomPanel
         v-if="copilot.isActive.value"
         key="copilot-bottom-panel"
