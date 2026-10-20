@@ -175,7 +175,6 @@
       "RESPONDER": "Reply",
       "ENTENDI": "Got it",
       "MAIS": "+{n} in queue",
-      "BOTAO": "Client arrived",
       "TITULO": "Announce arrival",
       "ADVBOX_FORA": "ADVBOX is down — type the name and use it as typed.",
       "ERRO_AVISAR": "Couldn't send the alert — try again.",
@@ -199,7 +198,17 @@
       "MOTIVO_OUTRO_PLACEHOLDER": "Describe in a few words",
       "AGENDADO": "scheduled",
       "AVISAR_PESSOA": "Announce to {nome}",
-      "HOJE": "Today"
+      "HOJE": "Today",
+      "ATENDIMENTOS_HOJE": "Today's appointments",
+      "SEM_HORARIO": "Someone arrived without an appointment",
+      "CHEGOU_BOTAO": "Arrived",
+      "SEM_ATENDIMENTOS": "No appointments in ADVBOX today."
+    },
+    "SINO": {
+      "TITULO": "Notifications",
+      "MARCAR_TODAS": "Mark all as read",
+      "VER_TODAS": "See all →",
+      "VAZIO": "No notifications here."
     },
     "AGENDA": {
       "PESSOAS": "People",

@@ -175,7 +175,6 @@
       "RESPONDER": "Responder",
       "ENTENDI": "Entendi",
       "MAIS": "+{n} na fila",
-      "BOTAO": "Chegou cliente",
       "TITULO": "Avisar chegada",
       "ADVBOX_FORA": "ADVBOX fora do ar — digite o nome e use como digitado.",
       "ERRO_AVISAR": "Não consegui avisar — tente de novo.",
@@ -199,7 +198,17 @@
       "MOTIVO_OUTRO_PLACEHOLDER": "Descreva em poucas palavras",
       "AGENDADO": "agendado",
       "AVISAR_PESSOA": "Avisar {nome}",
-      "HOJE": "Hoje"
+      "HOJE": "Hoje",
+      "ATENDIMENTOS_HOJE": "Atendimentos de hoje",
+      "SEM_HORARIO": "Chegou alguém sem horário",
+      "CHEGOU_BOTAO": "Chegou",
+      "SEM_ATENDIMENTOS": "Nenhum atendimento marcado no ADVBOX hoje."
+    },
+    "SINO": {
+      "TITULO": "Notificações",
+      "MARCAR_TODAS": "Marcar todas como lidas",
+      "VER_TODAS": "Ver todas →",
+      "VAZIO": "Nenhuma notificação por aqui."
     },
     "AGENDA": {
       "PESSOAS": "Pessoas",

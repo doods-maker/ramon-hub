@@ -13,6 +13,7 @@ import { EMPTY_FILTERS } from 'dashboard/store/modules/leads';
 import { brlCompact } from '../helpers/currency';
 import { reasonLabel, severityDotClass, tomMotivo } from '../helpers/esteira';
 import AgendaToday from '../components/command/AgendaToday.vue';
+import AtendimentosHoje from '../components/equipe/AtendimentosHoje.vue';
 import NightCopilot from '../components/command/NightCopilot.vue';
 import FunnelConversion from '../components/command/FunnelConversion.vue';
 import TeamWeek from '../components/command/TeamWeek.vue';
@@ -44,6 +45,12 @@ const uiFlags = computed(() => getters['ramonDashboard/getUIFlags'].value);
 const isFetching = computed(() => uiFlags.value.isFetching);
 const isLoading = computed(() => isFetching.value && !data.value);
 const hasError = computed(() => uiFlags.value.hasError);
+// Recepção = time "recepção" (mesmo nome do Chegada::RECEPCAO no backend).
+const ehRecepcao = computed(() =>
+  (getters['teams/getMyTeams']?.value || []).some(
+    time => time.name === 'recepção'
+  )
+);
 
 const money = value =>
   new Intl.NumberFormat('pt-BR', {
@@ -199,7 +206,10 @@ const reload = () => {
   store.dispatch('ramonDashboard/fetch');
   fetchQueue();
 };
-onMounted(reload);
+onMounted(() => {
+  reload();
+  store.dispatch('teams/get');
+});
 
 const current = computed(() => queue.value[0] || null);
 const nextItems = computed(() => queue.value.slice(1, 6));
@@ -381,6 +391,9 @@ useKeyboardEvents({
         />
       </div>
     </header>
+
+    <!-- Recepção: atendimentos de hoje com "Chegou" (opção A, 20/10) -->
+    <AtendimentosHoje v-if="ehRecepcao" />
 
     <!-- Enquanto você dormia (copiloto noturno) — some quando 0 pendentes -->
     <NightCopilot :foco="focoSugestoes" />

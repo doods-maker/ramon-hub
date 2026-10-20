@@ -151,8 +151,9 @@ const limpar = () => {
   sugeridoId.value = null;
 };
 
-const abrir = async () => {
+const abrir = async prefill => {
   limpar();
+  if (prefill) usarAgenda(prefill);
   agenda.value = [];
   erro.value = false;
   advboxFora.value = false;
@@ -167,10 +168,11 @@ const abrir = async () => {
   }
 };
 
-// Também abre por pedido no store (ex.: Hoje); só pra quem pode avisar.
+// Abre por pedido no store (lista "Atendimentos de hoje" na tela Hoje da
+// recepção — opção A, 20/10); só pra quem pode avisar. Sem botão próprio.
 watch(
   () => chegadas.painelPedido,
-  () => chegadas.podeAvisar && abrir()
+  () => chegadas.podeAvisar && abrir(chegadas.painelPrefill)
 );
 
 const avisar = async () => {
@@ -197,15 +199,6 @@ const avisar = async () => {
 <!-- eslint-disable-next-line vue/no-root-v-if -->
 <template>
   <div v-if="chegadas.podeAvisar" class="contents">
-    <button
-      type="button"
-      data-testid="chegou-cliente-botao"
-      class="fixed bottom-4 z-50 flex items-center gap-2 rounded-full bg-n-brand px-4 py-2 font-medium text-white shadow-lg ltr:right-20 rtl:left-20"
-      @click="abrir"
-    >
-      <span class="i-lucide-bell-ring size-4" />
-      {{ t('RAMON.CHEGADA.BOTAO') }}
-    </button>
     <Dialog
       ref="dialogRef"
       width="lg"

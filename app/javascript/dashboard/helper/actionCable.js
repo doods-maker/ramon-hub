@@ -264,6 +264,7 @@ class ActionCableConnector extends BaseActionCableConnector {
 
   onNotificationCreated = data => {
     this.app.$store.dispatch('notifications/addNotification', data);
+    emitter.emit(BUS_EVENTS.RAMON_NOTIFICACAO_NOVA, data.notification);
   };
 
   onNotificationDeleted = data => {
