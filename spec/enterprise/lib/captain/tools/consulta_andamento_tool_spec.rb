@@ -62,7 +62,8 @@ RSpec.describe Captain::Tools::ConsultaAndamentoTool, type: :model do
     conversa = create(:conversation, account: account)
     contexto = Struct.new(:state).new({ conversation: { id: conversa.id } })
     Redis::Alfred.delete("RAMON::CONSULTA_ANDAMENTO::FALHAS::#{conversa.id}")
-    3.times { expect(tool.perform(contexto, cpf: cpf, nascimento: '1980-05-11')).to eq(described_class::NAO_CONFERIU) }
+    expect(tool.perform(contexto, cpf: cpf, nascimento: '1980-05-11')).to eq(described_class::CONFERIR) # 1ª: conferir
+    2.times { expect(tool.perform(contexto, cpf: cpf, nascimento: '1980-05-11')).to eq(described_class::NAO_CONFERIU) }
 
     expect(Ramon::AdvboxClient).not_to receive(:customers)
     expect(tool.perform(contexto, cpf: cpf, nascimento: '1980-05-10')).to eq(described_class::LIMITE)

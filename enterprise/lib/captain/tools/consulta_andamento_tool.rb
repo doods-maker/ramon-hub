@@ -10,6 +10,9 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
   SYNC = Ramon::PortalSyncService
   NAO_CONFERIU = 'NAO CONFERIU: os dados nao conferem com o cadastro do escritorio. Nao diga qual dos dois nao bateu; ' \
                  'passe para humano.'.freeze
+  # 1º desencontro na conversa (decisão Eduardo 20/10): pode ser erro de digitação — pede pra conferir uma vez.
+  CONFERIR = 'NAO CONFERIU (1a tentativa): pode ser erro de digitacao. Peca, com simpatia, que a pessoa confira e mande de ' \
+             'novo o CPF e a data de nascimento. Nao diga qual dos dois nao bateu e nao passe para humano ainda.'.freeze
   SEM_PROCESSO = 'Conferiu, mas nao ha processo no AdvBox para este cliente. Passe para humano.'.freeze
   ADVBOX_FORA = 'O AdvBox nao respondeu agora. Passe para humano.'.freeze
   SEM_PAINEL = 'Este cliente ainda nao tem acesso ao Painel do Cliente: nao mande o link.'.freeze
@@ -51,9 +54,13 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
 
   def estourou?(chave) = chave.present? && Redis::Alfred.get(chave).to_i >= LIMITE_FALHAS
 
+  # 1ª falha da conversa: pede pra conferir; da 2ª em diante: humano. Sem conversa (Testar): humano direto.
   def contar_falha(chave)
-    Redis::Alfred.expire(chave, 1.hour.to_i) if chave && Redis::Alfred.incr(chave) == 1
-    NAO_CONFERIU
+    return NAO_CONFERIU unless chave
+
+    falhas = Redis::Alfred.incr(chave)
+    Redis::Alfred.expire(chave, 1.hour.to_i) if falhas == 1
+    falhas == 1 ? CONFERIR : NAO_CONFERIU
   end
 
   # Execuções guarda só os nomes dos campos: CPF e nascimento nunca ficam gravados.
