@@ -5,6 +5,16 @@ import TestarPergunta from '../TestarPergunta.vue';
 vi.mock('dashboard/api/captain/assistant', () => ({
   default: { buscarFaq: vi.fn() },
 }));
+vi.mock('dashboard/composables/store', async () => {
+  const { ref } = await import('vue');
+  return {
+    useMapGetter: () =>
+      ref([
+        { id: 4, name: 'Auxílio-acidente (B36)' },
+        { id: 5, name: 'BPC/LOAS' },
+      ]),
+  };
+});
 
 const montar = () => mount(TestarPergunta, { props: { assistantId: 1 } });
 const perguntar = async (wrapper, texto) => {
@@ -22,9 +32,16 @@ describe('TestarPergunta.vue', () => {
             id: 7,
             question: 'Posso trabalhar recebendo auxílio-acidente?',
             answer: 'Pode.',
-            tese: 'auxilio-acidente',
+            thesis_ids: [4],
+            geral: false,
           },
-          { id: 3, question: 'Quanto custa?', answer: '30% + 3.', tese: null },
+          {
+            id: 3,
+            question: 'Quanto custa?',
+            answer: '30% + 3.',
+            thesis_ids: [],
+            geral: true,
+          },
         ],
       },
     });
@@ -33,13 +50,26 @@ describe('TestarPergunta.vue', () => {
 
     expect(CaptainAssistantAPI.buscarFaq).toHaveBeenCalledWith(
       1,
-      'posso trabalhar?'
+      'posso trabalhar?',
+      ''
     );
     const itens = wrapper.findAll('[data-testid="testar-pergunta-faq"]');
     expect(itens).toHaveLength(2);
     expect(itens[0].text()).toContain('Posso trabalhar recebendo');
-    expect(itens[0].text()).toContain('Accident benefit');
-    expect(itens[1].text()).toContain('Quanto custa?');
+    expect(itens[0].text()).toContain('Auxílio-acidente (B36)');
+    expect(itens[1].text()).toContain('General');
+  });
+
+  it('busca como para um lead da tese escolhida', async () => {
+    CaptainAssistantAPI.buscarFaq.mockResolvedValue({ data: { payload: [] } });
+    const wrapper = montar();
+    await wrapper.find('[data-testid="testar-pergunta-tese"]').setValue(5);
+    await perguntar(wrapper, 'tenho direito?');
+    expect(CaptainAssistantAPI.buscarFaq).toHaveBeenCalledWith(
+      1,
+      'tenho direito?',
+      5
+    );
   });
 
   it('nenhuma FAQ: avisa que vale criar uma', async () => {

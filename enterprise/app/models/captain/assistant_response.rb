@@ -7,9 +7,11 @@
 #  documentable_type :string
 #  edited            :boolean          default(FALSE), not null
 #  embedding         :vector(1536)
+#  geral             :boolean          default(FALSE), not null
 #  question          :string           not null
 #  status            :integer          default("approved"), not null
 #  tese              :string
+#  thesis_ids        :integer          default([]), not null, is an Array
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  account_id        :bigint           not null
@@ -22,6 +24,7 @@
 #  index_captain_assistant_responses_on_account_id    (account_id)
 #  index_captain_assistant_responses_on_assistant_id  (assistant_id)
 #  index_captain_assistant_responses_on_status        (status)
+#  index_captain_assistant_responses_on_thesis_ids    (thesis_ids) USING gin
 #  vector_idx_knowledge_entries_embedding             (embedding) USING ivfflat
 #
 class Captain::AssistantResponse < ApplicationRecord
@@ -32,17 +35,14 @@ class Captain::AssistantResponse < ApplicationRecord
   belongs_to :documentable, polymorphic: true, optional: true
   has_neighbors :embedding, normalize: true
 
-  # FORK-PONTO (ramon): tese da FAQ (I-FQ1) = nome do arquivo do seed; nil = sem tese.
-  # Mesma lista e ordem de captain/responses/teses.js (front).
-  TESES = %w[auxilio-acidente auxilio-doenca aposentadoria-invalidez bpc-loas acrescimo-25 trabalhista isencao-ir salario-maternidade geral].freeze
-
   validates :question, presence: true
   validates :answer, presence: true
-  validates :tese, inclusion: { in: TESES }, allow_nil: true
-  normalizes :tese, with: ->(valor) { valor.presence }
 
   before_validation :ensure_account
   before_validation :ensure_status
+  # FORK-PONTO (ramon): teses reais da FAQ (thesis_ids, várias) ou Geral (vale para todo caso, sem tese ligada) —
+  # regras em Ramon::FaqTeses. ponytail: a coluna tese (slug antigo) não é mais lida nem gravada; migração futura remove.
+  before_validation -> { self.thesis_ids = [] if geral? }
   before_validation :mark_as_edited, on: :update
   after_commit :update_response_embedding
 

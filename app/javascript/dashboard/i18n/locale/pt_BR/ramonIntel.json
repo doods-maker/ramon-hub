@@ -1,16 +1,5 @@
 {
   "INTEL": {
-    "TESE": {
-      "auxilio-acidente": "Auxílio-acidente",
-      "auxilio-doenca": "Auxílio-doença",
-      "aposentadoria-invalidez": "Aposentadoria por invalidez",
-      "bpc-loas": "BPC/LOAS",
-      "acrescimo-25": "Acréscimo de 25%",
-      "trabalhista": "Trabalhista",
-      "isencao-ir": "Isenção de IR",
-      "salario-maternidade": "Salário-maternidade",
-      "geral": "Geral"
-    },
     "DOCUMENTOS": {
       "MODO_LINK": "Link de página",
       "MODO_TEXTO": "Colar texto",
@@ -27,13 +16,18 @@
       "TESE_LABEL": "Tese",
       "TODAS_TESES": "Todas as teses",
       "SEM_TESE": "Sem tese",
+      "GERAL": "Geral",
+      "GERAL_AJUDA": "Geral — vale para todo caso",
+      "TESE_AJUDA": "Marque todas as teses que esta FAQ responde. Nenhuma marcada = sem tese (o assistente usa com qualquer lead).",
       "TESTAR": {
         "TITULO": "Testar pergunta",
         "AJUDA": "Escreva como o lead perguntaria. A lista mostra as FAQs que o assistente acharia, na ordem em que ele recebe.",
         "PLACEHOLDER": "Ex.: posso trabalhar recebendo auxílio-acidente?",
         "BOTAO": "Testar",
         "NADA": "O assistente não acharia nenhuma FAQ para essa pergunta. Vale criar uma.",
-        "ERRO": "Não foi possível testar agora. Tente de novo."
+        "ERRO": "Não foi possível testar agora. Tente de novo.",
+        "LEAD_SEM_TESE": "Lead sem tese (todas)",
+        "TESE_AJUDA": "Busca como o assistente faria para um lead desta tese: as FAQs dela, as Gerais e as sem tese."
       },
       "USADA": "Usada {n}×",
       "NUNCA_USADA": "Ainda não usada",

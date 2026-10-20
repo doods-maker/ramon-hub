@@ -1,15 +1,10 @@
-// Teses das FAQs (I-FQ1) — mesma lista e ordem de Captain::AssistantResponse::TESES
-// (= arquivos db/seeds/ramon/inteligencia/faq/<tese>.md; a trava IntelI18n confere).
-export const TESES = [
-  'auxilio-acidente',
-  'auxilio-doenca',
-  'aposentadoria-invalidez',
-  'bpc-loas',
-  'acrescimo-25',
-  'trabalhista',
-  'isencao-ir',
-  'salario-maternidade',
-  'geral',
-];
-// Valor do filtro para as FAQs sem tese (ex.: geradas de documento).
+// Teses das FAQs (I-FQ1, revisto 20/10/2026): as teses reais da conta (store theses, a lista do Playbooks — tese nova
+// aparece sozinha) + Geral (vale para todo caso) + Sem tese. Filtro da tela (Ramon::FaqTeses.filtrar): id, 'geral' ou 'sem'.
+export const GERAL = 'geral';
 export const SEM_TESE = 'sem';
+
+// Rótulos da FAQ: o de Geral ou os nomes das teses dela, na ordem do Playbooks (tese apagada some).
+export const rotulosDaFaq = (faq, teses, rotuloGeral) =>
+  faq.geral
+    ? [rotuloGeral]
+    : teses.filter(x => faq.thesis_ids?.includes(x.id)).map(x => x.name);

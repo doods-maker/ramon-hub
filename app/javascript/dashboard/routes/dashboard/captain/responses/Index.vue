@@ -17,7 +17,7 @@ import ResponseCard from 'dashboard/components-next/captain/assistant/ResponseCa
 import CreateResponseDialog from 'dashboard/components-next/captain/pageComponents/response/CreateResponseDialog.vue';
 import ResponsePageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/ResponsePageEmptyState.vue';
 import { SELECT } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { TESES, SEM_TESE } from './teses';
+import { GERAL, SEM_TESE, rotulosDaFaq } from './teses';
 import TestarPergunta from './TestarPergunta.vue';
 
 const router = useRouter();
@@ -26,6 +26,7 @@ const store = useStore();
 const uiFlags = useMapGetter('captainResponses/getUIFlags');
 const responseMeta = useMapGetter('captainResponses/getMeta');
 const responses = useMapGetter('captainResponses/getRecords');
+const teses = useMapGetter('theses/getTheses');
 const isFetching = computed(() => uiFlags.value.fetchingList);
 
 const selectedResponse = ref(null);
@@ -192,6 +193,7 @@ const navigateToPendingFAQs = () => {
 
 onMounted(() => {
   initializeFromURL();
+  if (!teses.value.length) store.dispatch('theses/get');
   store.dispatch(
     'captainResponses/fetchPendingCount',
     selectedAssistantId.value
@@ -236,8 +238,13 @@ onMounted(() => {
             @change="fetchResponses(1)"
           >
             <option value="">{{ $t('INTEL.FAQ.TODAS_TESES') }}</option>
-            <option v-for="tese in TESES" :key="tese" :value="tese">
-              {{ $t(`INTEL.TESE.${tese}`) }}
+            <option :value="GERAL">{{ $t('INTEL.FAQ.GERAL') }}</option>
+            <option
+              v-for="tese in teses"
+              :key="tese.id"
+              :value="String(tese.id)"
+            >
+              {{ tese.name }}
             </option>
             <option :value="SEM_TESE">{{ $t('INTEL.FAQ.SEM_TESE') }}</option>
           </select>
@@ -295,7 +302,7 @@ onMounted(() => {
           :answer="response.answer"
           :assistant="response.assistant"
           :documentable="response.documentable"
-          :tese="response.tese"
+          :teses="rotulosDaFaq(response, teses, t('INTEL.FAQ.GERAL'))"
           :usos="response.usos || 0"
           :usada-em="response.usada_em || null"
           :status="response.status"

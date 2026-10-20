@@ -164,7 +164,8 @@ const FAQS = [
     question: 'Quanto custa o trabalho de vocês?',
     answer:
       'O honorário é 30% dos atrasados + 3 benefícios, sem valor inicial e sem outra cobrança.',
-    tese: 'geral',
+    geral: true,
+    thesis_ids: [],
     status: 'approved',
     assistant: ASSISTENTE_FAQ,
     documentable: null,
@@ -177,7 +178,8 @@ const FAQS = [
     id: 2,
     question: 'Preciso levar algum documento na reunião?',
     answer: 'Traga RG, CPF e os laudos médicos que você tiver.',
-    tese: 'auxilio-acidente',
+    geral: false,
+    thesis_ids: [1],
     status: 'approved',
     assistant: ASSISTENTE_FAQ,
     documentable: { type: 'Conversation', display_id: 482 },
@@ -192,7 +194,8 @@ const PENDENTES = [
     question: 'Quem recebe auxílio-acidente pode continuar trabalhando?',
     answer:
       'Pode. O auxílio-acidente é uma indenização e não impede o trabalho.',
-    tese: null,
+    geral: false,
+    thesis_ids: [],
     status: 'pending',
     assistant: ASSISTENTE_FAQ,
     documentable: {
@@ -356,6 +359,10 @@ const API = {
     { id: 1, name: 'comercial', is_member: true },
     { id: 2, name: 'recepção', is_member: false },
   ],
+  theses: [
+    { id: 1, name: 'Auxílio-acidente (B36)', position: 0 },
+    { id: 2, name: 'BPC/LOAS (idoso ou pessoa com deficiência)', position: 1 },
+  ],
   'captain/assistants/1/texto_final': {
     assistente:
       'Você é o Atendimento da Ramon Antonio Advogados...\n\nProteções:\n- Não dê garantia de êxito nem estimativa de prazo.',
@@ -379,11 +386,12 @@ const API = {
   },
   'captain/documents': { payload: DOCS, meta: { total_count: 2, page: 1 } },
   'captain/assistants/1/buscar_faq': {
-    payload: FAQS.map(({ id, question, answer, tese }) => ({
+    payload: FAQS.map(({ id, question, answer, geral, thesis_ids }) => ({
       id,
       question,
       answer,
-      tese,
+      geral,
+      thesis_ids,
     })),
   },
   ramon_agente_execucoes: {

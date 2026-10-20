@@ -53,12 +53,12 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   end
 
   # ramon: "Testar pergunta" (I-FQ2) — as FAQs que a ferramenta faq_lookup deste
-  # assistente acharia para a pergunta, na mesma ordem (mesma busca, até 5).
+  # assistente acharia para a pergunta, na mesma ordem (mesma busca, até 5); thesis_id = como para um lead dessa tese.
   # Pergunta em branco não busca (no modo vetorial chamaria embedding à toa).
   def buscar_faq
     pergunta = params[:q].to_s.strip
-    faqs = pergunta.present? ? @assistant.responses.approved.search(pergunta).to_a : []
-    render json: { payload: faqs.map { |faq| faq.slice(:id, :question, :answer, :tese) } }
+    faqs = pergunta.present? ? Ramon::FaqTeses.para_tese(@assistant.responses.approved, params[:thesis_id]).search(pergunta).to_a : []
+    render json: { payload: faqs.map { |faq| faq.slice(:id, :question, :answer, :thesis_ids, :geral) } }
   end
 
   # ramon (I-CF6): o texto final que o assistente recebe — o dele (diretrizes, proteções e a lista de skills,

@@ -57,31 +57,43 @@ RSpec.describe Rake::Task, if: ChatwootApp.enterprise? do
       expect(faq.reload.answer).to eq('Resposta editada pelo Eduardo')
     end
 
-    it 'grava a tese pelo arquivo e so preenche tese vazia (editada ou nao)' do
-      rodar
-      arquivos = Dir[Rails.root.join('db/seeds/ramon/inteligencia/faq/*.md')].map { |arquivo| File.basename(arquivo, '.md') }
-      expect(arquivos).to match_array(Captain::AssistantResponse::TESES)
-      expect(atendimento.responses.where(tese: nil)).to be_empty
+    context 'with as teses da conta' do
+      let(:trabalhistas) { %w[acidente vínculo].map { |n| create(:thesis, account: account, name: "Trabalhista — #{n}").id } }
+      let!(:bpc) { create(:thesis, account: account, name: 'BPC/LOAS (idoso ou pessoa com deficiência)') }
 
-      editada = atendimento.responses.find_by!(tese: 'bpc-loas')
-      editada.update!(answer: 'Editada pelo Eduardo', tese: nil)
-      trocada = atendimento.responses.find_by!(tese: 'geral')
-      trocada.update!(tese: 'auxilio-doenca')
-      rodar
+      before { trabalhistas }
 
-      expect(editada.reload).to have_attributes(answer: 'Editada pelo Eduardo', tese: 'bpc-loas')
-      expect(trocada.reload.tese).to eq('auxilio-doenca')
-    end
+      def faq_do(arquivo)
+        pergunta = Rails.root.join("db/seeds/ramon/inteligencia/faq/#{arquivo}.md").read[/^## (.+)$/, 1].strip
+        atendimento.responses.find_by!(question: pergunta)
+      end
 
-    it 'rake de teses so preenche a tese que falta e nao mexe em mais nada' do
-      rodar
-      faq = atendimento.responses.find_by!(tese: 'acrescimo-25')
-      faq.update_columns(tese: nil, answer: 'Resposta mexida') # rubocop:disable Rails/SkipsModelValidations
-      teses = described_class['ramon:inteligencia:teses']
-      teses.reenable
+      it 'grava as teses pelo arquivo (trabalhista = todas as Trabalhista) e so preenche FAQ sem tese', :aggregate_failures do
+        rodar
+        expect(faq_do('bpc-loas').thesis_ids).to eq([bpc.id])
+        expect(faq_do('trabalhista').thesis_ids).to match_array(trabalhistas)
+        expect(faq_do('geral')).to have_attributes(geral: true, thesis_ids: [])
 
-      expect { teses.invoke(account.id.to_s) }.to output(/faq_com_tese_preenchida: 1/).to_stdout
-      expect(faq.reload).to have_attributes(tese: 'acrescimo-25', answer: 'Resposta mexida')
+        editada = faq_do('bpc-loas')
+        editada.update!(answer: 'Editada pelo Eduardo', thesis_ids: [])
+        trocada = faq_do('geral')
+        trocada.update!(geral: false, thesis_ids: [bpc.id])
+        rodar
+
+        expect(editada.reload).to have_attributes(answer: 'Editada pelo Eduardo', thesis_ids: [bpc.id])
+        expect(trocada.reload).to have_attributes(geral: false, thesis_ids: [bpc.id])
+      end
+
+      it 'rake de teses so preenche a tese que falta e nao mexe em mais nada' do
+        rodar
+        faq = faq_do('bpc-loas')
+        faq.update_columns(thesis_ids: [], answer: 'Resposta mexida') # rubocop:disable Rails/SkipsModelValidations
+        teses = described_class['ramon:inteligencia:teses']
+        teses.reenable
+
+        expect { teses.invoke(account.id.to_s) }.to output(/faq_com_tese_preenchida: 1/).to_stdout
+        expect(faq.reload).to have_attributes(thesis_ids: [bpc.id], answer: 'Resposta mexida')
+      end
     end
 
     it 'respeita skill editada, renomeada, desligada ou criada na tela' do
