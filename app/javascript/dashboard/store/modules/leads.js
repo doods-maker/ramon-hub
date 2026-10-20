@@ -8,7 +8,6 @@ const FILTERS_KEY = 'ramon_lead_filters';
 
 export const toParams = (filters = {}) => {
   const map = {
-    benefit_type_id: filters.benefitTypeId,
     lead_priority_id: filters.leadPriorityId,
     agent_id: filters.agentId,
     source: filters.source,
@@ -38,7 +37,6 @@ export const toParams = (filters = {}) => {
 // Funil sem filtro nenhum: base do "Limpar" e dos atalhos do Centro (que
 // zeram os filtros persistidos e ligam só o do KPI clicado).
 export const EMPTY_FILTERS = {
-  benefitTypeId: null,
   leadPriorityId: null,
   agentId: null,
   source: '',

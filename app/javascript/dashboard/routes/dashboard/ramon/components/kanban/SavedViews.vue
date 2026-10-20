@@ -77,7 +77,6 @@ const close = () => {
 // Snapshot completo → o merge do setFilters equivale a substituir tudo,
 // zerando o que o quadro não define.
 const EMPTY_FILTERS = {
-  benefitTypeId: null,
   leadPriorityId: null,
   agentId: null,
   source: '',

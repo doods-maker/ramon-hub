@@ -80,7 +80,6 @@ class Leads::TriageService
 
   def lead_sheet
     parts = ["Lead: #{@lead.name}"]
-    parts << "Benefício de interesse: #{@lead.benefit_type.name}" if @lead.benefit_type
     parts << "Tese: #{@lead.thesis.name}" if @lead.thesis
     parts << "Origem: #{@lead.source}" if @lead.source.present?
     parts.join("\n")

@@ -8,7 +8,6 @@ const buildStore = ({ updateStage = vi.fn() } = {}) =>
       leadConfig: {
         namespaced: true,
         getters: {
-          getBenefitTypes: () => [{ id: 1, name: 'BPC', position: 0 }],
           getPriorities: () => [
             { id: 1, name: 'Alta', weight: 3, position: 0 },
           ],
@@ -32,20 +31,19 @@ const buildStore = ({ updateStage = vi.fn() } = {}) =>
 const mountPage = ({ updateStage } = {}) => {
   const store = buildStore({ updateStage });
   return mount(FunilConfig, {
-    global: { plugins: [store], mocks: { $t: k => k } },
+    global: {
+      plugins: [store],
+      mocks: { $t: k => k },
+      stubs: { RouterLink: true },
+    },
   });
 };
 
-it('adiciona um benefício ao confirmar o nome', async () => {
+it('aponta as teses para Playbooks (sem tipos de benefício)', () => {
   const wrapper = mountPage();
-  wrapper.vm.$store.dispatch = vi.fn().mockResolvedValue({});
-  await wrapper.find('[data-testid="benefit-new-input"]').setValue('Revisão');
-  await wrapper.find('[data-testid="benefit-add"]').trigger('click');
-  expect(wrapper.vm.$store.dispatch).toHaveBeenCalledWith(
-    'leadConfig/createBenefitType',
-    {
-      name: 'Revisão',
-    }
+  expect(wrapper.text()).toContain('RAMON.FUNIL_CONFIG.THESES_HINT');
+  expect(wrapper.find('[data-testid="benefit-new-input"]').exists()).toBe(
+    false
   );
 });
 

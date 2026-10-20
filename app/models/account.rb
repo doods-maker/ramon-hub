@@ -84,7 +84,6 @@ class Account < ApplicationRecord # rubocop:disable Metrics/ClassLength
   has_many :inboxes, dependent: :destroy_async
   has_many :labels, dependent: :destroy_async
   has_many :agente_execucoes, class_name: 'AgenteExecucao', dependent: :destroy_async
-  has_many :benefit_types, dependent: :destroy_async
   has_many :calculos, dependent: :destroy_async
   has_many :reunioes, class_name: 'Reuniao', dependent: :destroy_async
   has_many :chegadas, class_name: 'Chegada', dependent: :destroy_async

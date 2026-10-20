@@ -102,9 +102,9 @@ RSpec.describe 'Leads API', type: :request do
   it 'serializa value/source + nomes desnormalizados + contato', :aggregate_failures do
     contact = create(:contact, account: account, name: 'Cliente X',
                                phone_number: '+5547999990000', email: 'x@cli.com')
-    bt = account.benefit_types.find_by(name: 'Auxílio-acidente')
+    tese = account.theses.find_by!(name: 'Auxílio-acidente (B36)')
     lead = create(:lead, account: account, lead_stage: novo, contact: contact,
-                         benefit_type: bt, value: 12_000.50, source: 'Meta Ads')
+                         thesis: tese, value: 12_000.50, source: 'Meta Ads')
     get "/api/v1/accounts/#{account.id}/leads/#{lead.id}",
         headers: admin.create_new_auth_token, as: :json
     body = response.parsed_body
@@ -112,7 +112,7 @@ RSpec.describe 'Leads API', type: :request do
     expect(body['source']).to eq('Meta Ads')
     expect(body['stage_name']).to eq('Novo')
     expect(body['stage_color']).to eq('#6b7280')
-    expect(body['benefit_type_name']).to eq('Auxílio-acidente')
+    expect(body['thesis_name']).to eq('Auxílio-acidente (B36)')
     expect(body['contact_name']).to eq('Cliente X')
     expect(body['contact_phone']).to eq('+5547999990000')
     expect(body['contact_email']).to eq('x@cli.com')
@@ -303,8 +303,6 @@ RSpec.describe 'Leads API', type: :request do
   end
 
   describe 'GET /api/v1/accounts/{account}/leads (filtros)' do
-    let(:bpc_teste) { account.benefit_types.create!(name: 'BPC-teste') }
-
     def ids(response)
       response.parsed_body['payload'].map { |l| l['id'] }
     end
@@ -475,15 +473,6 @@ RSpec.describe 'Leads API', type: :request do
       account.leads.create!(name: 'B', lead_stage: novo)
       get "/api/v1/accounts/#{account.id}/leads",
           params: { contact_id: contact.id },
-          headers: admin.create_new_auth_token
-      expect(ids(response)).to eq([a.id])
-    end
-
-    it 'filtra por benefit_type_id' do
-      a = account.leads.create!(name: 'A', lead_stage: novo, benefit_type: bpc_teste)
-      account.leads.create!(name: 'B', lead_stage: novo)
-      get "/api/v1/accounts/#{account.id}/leads",
-          params: { benefit_type_id: bpc_teste.id },
           headers: admin.create_new_auth_token
       expect(ids(response)).to eq([a.id])
     end

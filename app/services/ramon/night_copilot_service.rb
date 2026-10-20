@@ -95,7 +95,7 @@ class Ramon::NightCopilotService
   def lead_sheet(lead)
     ["Lead parado há #{days_stalled(lead)} dias sem avanço.",
      "Etapa atual: #{lead.lead_stage&.name || 'não informada'}.",
-     "Tese/benefício: #{lead.thesis&.name || lead.benefit_type&.name || 'não informado'}.",
+     "Tese: #{lead.thesis&.name || 'não informada'}.",
      "Etapas disponíveis no funil: #{stage_names.join(', ')}."].join("\n")
   end
 

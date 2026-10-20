@@ -8,8 +8,7 @@ describe('leadsToCsv', () => {
           name: 'Joao',
           contact_phone: '+554899999',
           stage_name: 'Novo',
-          thesis_name: null,
-          benefit_type_name: 'Auxilio-acidente',
+          thesis_name: 'Auxilio-acidente',
           lead_priority_name: null,
           value: 9800.5,
           source: 'lp-meta',
@@ -25,10 +24,10 @@ describe('leadsToCsv', () => {
     expect(csv.startsWith('\uFEFF')).toBe(true);
     const [header, row] = csv.slice(1).split('\n');
     expect(header).toBe(
-      'nome;telefone;etapa;tese;beneficio;prioridade;valor;origem;canal;sdr;closer;motivo_perda'
+      'nome;telefone;etapa;tese;prioridade;valor;origem;canal;sdr;closer;motivo_perda'
     );
     expect(row).toBe(
-      'Joao;+554899999;Novo;;Auxilio-acidente;;9800.5;lp-meta;Meta Ads;;;'
+      'Joao;+554899999;Novo;Auxilio-acidente;;9800.5;lp-meta;Meta Ads;;;'
     );
   });
 

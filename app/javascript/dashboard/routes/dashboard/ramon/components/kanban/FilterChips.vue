@@ -16,9 +16,6 @@ const emit = defineEmits(['update']);
 const { t } = useI18n();
 const getters = useStoreGetters();
 
-const benefitTypes = computed(
-  () => getters['leadConfig/getBenefitTypes']?.value ?? []
-);
 const priorities = computed(
   () => getters['leadConfig/getPriorities']?.value ?? []
 );
@@ -42,12 +39,6 @@ const chips = computed(() => {
   const list = [];
   const push = (key, label, cleared) => list.push({ key, label, cleared });
   if (f.q) push('q', `"${f.q}"`, { q: '' });
-  if (f.benefitTypeId)
-    push(
-      'benefitTypeId',
-      `${t('RAMON.FUNIL.FILTERS.BENEFIT')}: ${nameOf(benefitTypes.value, f.benefitTypeId)}`,
-      { benefitTypeId: null }
-    );
   if (f.leadPriorityId)
     push(
       'leadPriorityId',

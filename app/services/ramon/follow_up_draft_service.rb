@@ -86,7 +86,7 @@ class Ramon::FollowUpDraftService
   # Pseudonimizado (LGPD, mesmo padrão do Copilot): o texto só sai daqui mascarado.
   def user_prompt(lead, attempt)
     header = ["Tentativa de retomada nº #{attempt} — ângulo: #{angle_for(attempt)}.",
-              "Tese/benefício: #{lead.thesis&.name || lead.benefit_type&.name || 'não informado'}.",
+              "Tese: #{lead.thesis&.name || 'não informada'}.",
               "Lead parado há #{Ramon::Fluxos::Retomada.dias_parado(lead)} dias sem avanço."].join("\n")
     text = [header, transcript(lead.conversation)].compact_blank.join("\n\n")
     Ramon::Pseudonymizer.mask(text, names: [lead.name, lead.contact&.name])

@@ -23,7 +23,6 @@ const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
 
-const benefits = computed(() => getters['leadConfig/getBenefitTypes'].value);
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const stages = computed(() => getters['leadConfig/getStages'].value);
 
@@ -48,37 +47,8 @@ const saveProbability = (stage, raw) => {
     .catch(e => useAlert(mensagemErro(e, t('RAMON.FUNIL.SAVE_ERROR'))));
 };
 
-const newBenefit = ref('');
 const newPriority = ref('');
 const newWeight = ref(1);
-
-const addingBenefit = ref(false);
-const addBenefit = async () => {
-  const name = newBenefit.value.trim();
-  if (!name || addingBenefit.value) return;
-  addingBenefit.value = true;
-  try {
-    await store.dispatch('leadConfig/createBenefitType', { name });
-    newBenefit.value = '';
-  } catch {
-    useAlert(t('RAMON.FUNIL.SAVE_ERROR'));
-  } finally {
-    addingBenefit.value = false;
-  }
-};
-const benefitToRemove = ref(null);
-const removeBenefit = benefit => {
-  benefitToRemove.value = benefit;
-};
-const confirmRemoveBenefit = () => {
-  const benefit = benefitToRemove.value;
-  if (!benefit) return;
-  // Fecha o modal antes do await: sem janela pra duplo-clique despachar 2x.
-  benefitToRemove.value = null;
-  store
-    .dispatch('leadConfig/deleteBenefitType', benefit.id)
-    .catch(() => useAlert(t('RAMON.FUNIL_CONFIG.REMOVE_ERROR')));
-};
 
 const addingPriority = ref(false);
 const addPriority = async () => {
@@ -105,6 +75,7 @@ const removePriority = priority => {
 const confirmRemovePriority = () => {
   const priority = priorityToRemove.value;
   if (!priority) return;
+  // Fecha o modal antes do await: sem janela pra duplo-clique despachar 2x.
   priorityToRemove.value = null;
   store
     .dispatch('leadConfig/deletePriority', priority.id)
@@ -170,51 +141,22 @@ const submitImport = async () => {
         />
       </div>
 
-      <section class="flex flex-col gap-3" :class="CARTAO">
-        <h2 class="m-0" :class="TITULO">
-          {{ $t('RAMON.FUNIL_CONFIG.BENEFITS') }}
-        </h2>
-        <ul class="m-0 flex list-none flex-col divide-y divide-n-weak p-0">
-          <li
-            v-for="b in benefits"
-            :key="b.id"
-            class="flex items-center justify-between py-1.5"
-          >
-            <span class="text-sm text-n-slate-12">{{ b.name }}</span>
-            <Button
-              data-testid="benefit-remove"
-              xs
-              ghost
-              slate
-              icon="i-lucide-trash-2"
-              :aria-label="$t('RAMON.FUNIL_CONFIG.REMOVE')"
-              :title="$t('RAMON.FUNIL_CONFIG.REMOVE')"
-              @click="removeBenefit(b)"
-            />
-          </li>
-          <li v-if="!benefits.length" class="py-1.5 text-sm text-n-slate-10">
-            {{ $t('RAMON.FUNIL_CONFIG.BENEFITS_EMPTY') }}
-          </li>
-        </ul>
-        <div class="flex gap-2" :class="SECAO">
-          <input
-            v-model="newBenefit"
-            data-testid="benefit-new-input"
-            class="flex-1"
-            :class="CAMPO"
-            :placeholder="$t('RAMON.FUNIL_CONFIG.BENEFIT_PLACEHOLDER')"
-            @keyup.enter="addBenefit"
-          />
+      <p class="m-0 flex items-center gap-1 text-sm text-n-slate-11">
+        {{ $t('RAMON.FUNIL_CONFIG.THESES_HINT') }}
+        <router-link
+          v-slot="{ navigate }"
+          custom
+          :to="{ name: 'ramon_playbooks' }"
+        >
           <Button
-            data-testid="benefit-add"
-            sm
-            class="shrink-0"
-            :label="$t('RAMON.FUNIL_CONFIG.ADD')"
-            :disabled="addingBenefit"
-            @click="addBenefit"
+            data-testid="funil-config-playbooks"
+            link
+            xs
+            :label="$t('RAMON.FUNIL_CONFIG.THESES_LINK')"
+            @click="navigate"
           />
-        </div>
-      </section>
+        </router-link>
+      </p>
 
       <section class="flex flex-col gap-3" :class="CARTAO">
         <h2 class="m-0" :class="TITULO">
@@ -383,14 +325,6 @@ const submitImport = async () => {
         </div>
       </section>
     </div>
-    <ConfirmModal
-      v-if="benefitToRemove"
-      :title="$t('RAMON.FUNIL_CONFIG.REMOVE_BENEFIT_CONFIRM')"
-      :message="benefitToRemove.name"
-      :confirm-label="$t('RAMON.FUNIL_CONFIG.REMOVE')"
-      @confirm="confirmRemoveBenefit"
-      @cancel="benefitToRemove = null"
-    />
     <ConfirmModal
       v-if="priorityToRemove"
       :title="$t('RAMON.FUNIL_CONFIG.REMOVE_PRIORITY_CONFIRM')"

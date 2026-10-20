@@ -5,7 +5,6 @@ const buildColumns = channelLabels => [
   ['telefone', l => l.contact_phone],
   ['etapa', l => l.stage_name],
   ['tese', l => l.thesis_name],
-  ['beneficio', l => l.benefit_type_name],
   ['prioridade', l => l.lead_priority_name],
   ['valor', l => l.value],
   ['origem', l => l.source],

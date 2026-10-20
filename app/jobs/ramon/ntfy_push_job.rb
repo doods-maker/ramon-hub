@@ -44,7 +44,7 @@ class Ramon::NtfyPushJob < ApplicationJob
 
   # O corpo pode ter acentos normalmente (é o payload, não header).
   def body_for(lead)
-    parts = [lead.benefit_type&.name || lead.thesis&.name, via_line_for(lead)]
+    parts = [lead.thesis&.name, via_line_for(lead)]
     parts.compact.join(' · ').presence || 'Lead sem detalhes'
   end
 

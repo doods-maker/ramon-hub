@@ -125,7 +125,6 @@ watch(
 const filtersOpen = ref(false);
 const FILTER_KEYS = [
   'q',
-  'benefitTypeId',
   'leadPriorityId',
   'agentId',
   'source',

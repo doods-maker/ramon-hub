@@ -5,11 +5,6 @@ FactoryBot.define do
     position { 0 }
   end
 
-  factory :benefit_type do
-    account
-    sequence(:name) { |n| "Benefício #{n}" }
-  end
-
   factory :lead_priority do
     account
     sequence(:name) { |n| "Prioridade #{n}" }

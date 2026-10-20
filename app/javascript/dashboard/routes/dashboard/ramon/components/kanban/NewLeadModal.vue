@@ -32,7 +32,6 @@ const phone = ref('+55 ');
 onMounted(() => {
   nextTick(() => nameInput.value?.focus());
 });
-const benefitTypeId = ref(null);
 const priorityId = ref(null);
 const source = ref('');
 const channel = ref('');
@@ -45,7 +44,6 @@ const isDirty = computed(
   () =>
     Boolean(name.value.trim()) ||
     phone.value.replace(/\D/g, '') !== '55' ||
-    benefitTypeId.value !== null ||
     priorityId.value !== null ||
     Boolean(source.value.trim()) ||
     Boolean(channel.value) ||
@@ -60,9 +58,6 @@ const onBackdrop = () => {
 };
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
-const benefitTypes = computed(
-  () => getters['leadConfig/getBenefitTypes'].value
-);
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const sources = computed(() => getters['leadConfig/getSources'].value);
 const channels = computed(() => getters['leadConfig/getChannels'].value);
@@ -152,7 +147,6 @@ const submit = async () => {
       const lead = await store.dispatch('leads/create', {
         name: name.value.trim(),
         lead_stage_id: firstStage.id,
-        benefit_type_id: benefitTypeId.value,
         lead_priority_id: priorityId.value,
         source: source.value.trim() || null,
         channel: channel.value || null,
@@ -229,16 +223,6 @@ const submit = async () => {
             @click="openExisting"
           />
         </div>
-
-        <label :class="ROTULO">
-          {{ $t('RAMON.FUNIL.BENEFIT') }}
-          <select v-model="benefitTypeId" :class="SELECT">
-            <option :value="null">—</option>
-            <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-              {{ b.name }}
-            </option>
-          </select>
-        </label>
 
         <label :class="ROTULO">
           {{ $t('RAMON.FUNIL.NEW.SOURCE') }}

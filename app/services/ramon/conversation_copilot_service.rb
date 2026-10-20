@@ -68,7 +68,6 @@ class Ramon::ConversationCopilotService
 
     parts = ["Lead: #{@lead.name}"]
     parts << "Etapa no funil: #{@lead.lead_stage.name}" if @lead.lead_stage
-    parts << "Benefício de interesse: #{@lead.benefit_type.name}" if @lead.benefit_type
     parts << "Tese: #{@lead.thesis.name}" if @lead.thesis
     parts.join("\n")
   end

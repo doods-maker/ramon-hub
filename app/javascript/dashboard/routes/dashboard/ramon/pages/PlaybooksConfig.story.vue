@@ -199,14 +199,6 @@ const ETAPAS = [
 
 const LEAD_CONFIG = {
   stages: ETAPAS,
-  benefit_types: [
-    { id: 1, name: 'Auxílio-acidente' },
-    { id: 2, name: 'BPC/LOAS — deficiência' },
-    { id: 3, name: 'BPC/LOAS — idoso' },
-    { id: 4, name: 'Aposentadoria especial' },
-    { id: 5, name: 'Aposentadoria por idade' },
-    { id: 6, name: 'Auxílio por incapacidade temporária' },
-  ],
   priorities: [
     { id: 1, name: 'Urgente (prescrição)', weight: 10 },
     { id: 2, name: 'Alta', weight: 5 },

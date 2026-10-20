@@ -338,7 +338,6 @@ RSpec.describe Account do
     it 'semeia a configuração de leads ao criar a conta' do
       account = create(:account)
       expect(account.lead_stages.count).to eq(8)
-      expect(account.benefit_types.count).to eq(7)
       expect(account.lead_priorities.count).to eq(3)
     end
   end

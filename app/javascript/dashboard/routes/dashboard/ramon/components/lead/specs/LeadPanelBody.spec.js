@@ -30,7 +30,6 @@ const lead = {
   lead_stage_id: 1,
   conversation_id: 42,
   value: 48000,
-  benefit_type_name: 'B31 · Auxílio-doença',
   thesis_name: 'Restabelecimento B31',
   sdr_name: 'Eduardo',
   closer_name: 'Camila',
@@ -95,7 +94,6 @@ const build = ({
             { id: 6, name: 'Negociação', position: 4 },
           ],
           getLostReasons: () => [],
-          getBenefitTypes: () => [{ id: 31, name: 'B31' }],
           getChannels: () => [{ key: 'whatsapp', label: 'WhatsApp' }],
         },
       },
@@ -839,19 +837,14 @@ describe('LeadPanelBody', () => {
   });
 
   describe('Caso no cabeçalho, editável no lugar', () => {
-    it('tese, benefício e canal salvam no change', async () => {
+    it('tese e canal salvam no change', async () => {
       const update = vi.fn();
       const wrapper = mountBody({ spies: { update } });
       await wrapper.find('[data-testid="field-thesis"]').setValue('5');
-      await wrapper.find('[data-testid="field-benefit"]').setValue('31');
       await wrapper.find('[data-testid="field-channel"]').setValue('whatsapp');
       expect(update).toHaveBeenCalledWith(expect.anything(), {
         id: 7,
         thesis_id: 5,
-      });
-      expect(update).toHaveBeenCalledWith(expect.anything(), {
-        id: 7,
-        benefit_type_id: 31,
       });
       expect(update).toHaveBeenCalledWith(expect.anything(), {
         id: 7,

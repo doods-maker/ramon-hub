@@ -3,7 +3,6 @@ import KanbanFilters from '../KanbanFilters.vue';
 
 const stubStore = {
   getters: {
-    'leadConfig/getBenefitTypes': [{ id: 1, name: 'BPC' }],
     'leadConfig/getPriorities': [{ id: 2, name: 'Alta' }],
     'leadConfig/getSources': ['Meta Ads'],
     'leadConfig/getChannels': [{ key: 'meta_ads', label: 'Meta Ads' }],
@@ -15,7 +14,6 @@ const mountFilters = () =>
   mount(KanbanFilters, {
     props: {
       filters: {
-        benefitTypeId: null,
         leadPriorityId: null,
         agentId: null,
         source: '',
@@ -35,10 +33,10 @@ const mountFilters = () =>
   });
 
 describe('KanbanFilters', () => {
-  it('emite update ao escolher um benefício', async () => {
+  it('emite update ao escolher uma prioridade', async () => {
     const wrapper = mountFilters();
-    await wrapper.find('[data-testid="filter-benefit"]').setValue('1');
-    expect(wrapper.emitted().update[0][0]).toEqual({ benefitTypeId: '1' });
+    await wrapper.find('[data-testid="filter-priority"]').setValue('2');
+    expect(wrapper.emitted().update[0][0]).toEqual({ leadPriorityId: '2' });
   });
 
   it('alterna ganhos/perdidos entre 90 dias e todos', async () => {

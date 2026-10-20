@@ -455,8 +455,8 @@ const onSchedule = async ({ dueAt, title }) => {
       >
         <span class="i-lucide-pen-line size-3" />
       </span>
-      <span v-if="lead.benefit_type_name" class="text-n-slate-10">
-        {{ lead.benefit_type_name }}
+      <span v-if="lead.thesis_name" class="text-n-slate-10">
+        {{ lead.thesis_name }}
       </span>
       <span v-if="owners.length" class="inline-flex gap-1 ms-auto">
         <span

@@ -37,7 +37,6 @@ const buildStore = ({
           getUIFlags: () => ({ isFetching: false }),
           getFilters: () => ({
             q: '',
-            benefitTypeId: null,
             leadPriorityId: null,
             agentId: null,
             source: '',
@@ -53,7 +52,6 @@ const buildStore = ({
             { id: 9, name: 'Perdido', color: '#222', is_lost: true },
           ],
           getLostReasons: () => [],
-          getBenefitTypes: () => [],
           getPriorities: () => [],
           getSources: () => [],
           getChannels: () => [],

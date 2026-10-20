@@ -18,7 +18,6 @@ describe('leadConfig getters', () => {
   it('SET_LEAD_CONFIG popula lostReasons e faz pass-through de probability/stalled_after_days nos stages', () => {
     const state = {
       stages: [],
-      benefitTypes: [],
       priorities: [],
       sources: [],
       lostReasons: [],

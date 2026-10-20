@@ -1,4 +1,4 @@
-class Lead < ApplicationRecord # rubocop:disable Metrics/ClassLength
+class Lead < ApplicationRecord
   include LeadCadence
   include LeadDocs
   include LeadComercial
@@ -11,7 +11,6 @@ class Lead < ApplicationRecord # rubocop:disable Metrics/ClassLength
   belongs_to :lead_stage
   belongs_to :contact, optional: true
   belongs_to :conversation, optional: true
-  belongs_to :benefit_type, optional: true
   belongs_to :lead_priority, optional: true
   belongs_to :thesis, optional: true
   belongs_to :sdr, class_name: 'User', optional: true
@@ -75,7 +74,6 @@ class Lead < ApplicationRecord # rubocop:disable Metrics/ClassLength
       id: id,
       name: name,
       lead_stage_id: lead_stage_id,
-      benefit_type_id: benefit_type_id,
       lead_priority_id: lead_priority_id,
       thesis_id: thesis_id,
       contact_id: contact_id,
@@ -87,7 +85,6 @@ class Lead < ApplicationRecord # rubocop:disable Metrics/ClassLength
       channel: channel,
       stage_name: lead_stage&.name,
       stage_color: lead_stage&.color,
-      benefit_type_name: benefit_type&.name,
       lead_priority_name: lead_priority&.name,
       thesis_name: thesis&.name,
       sdr_name: sdr&.name,

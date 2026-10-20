@@ -157,7 +157,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     # lead_triages (latest_triage) + thesis_items (docs_counts) por lead. Sem
     # isto, board de N leads = ~10N SELECTs.
     leads = policy_scope(Current.account.leads)
-            .includes(:lead_stage, :benefit_type, :lead_priority, { thesis: :thesis_items }, :sdr, :closer, :contact,
+            .includes(:lead_stage, :lead_priority, { thesis: :thesis_items }, :sdr, :closer, :contact,
                       :lead_triages, :lead_tasks, { conversation: :inbox })
     # Caso de cálculo só aparece nas visões por pessoa (Cálculos, gaveta, Linha da Vida).
     leads = leads.funil if params[:contact_id].blank?
@@ -174,7 +174,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def apply_equality_filters(leads)
-    %i[benefit_type_id lead_priority_id lead_stage_id source channel contact_id].each do |key|
+    %i[lead_priority_id lead_stage_id source channel contact_id].each do |key|
       leads = leads.where(key => params[key]) if params[key].present?
     end
     leads
@@ -232,7 +232,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
   end
 
   def permitted_params
-    params.permit(:name, :lead_stage_id, :benefit_type_id, :lead_priority_id, :thesis_id,
+    params.permit(:name, :lead_stage_id, :lead_priority_id, :thesis_id,
                   :contact_id, :conversation_id, :sdr_id, :closer_id,
                   :position, :lost_reason, :value, :source, :channel, :dcb_em, :benefit_monthly_value,
                   custom_attributes: {})

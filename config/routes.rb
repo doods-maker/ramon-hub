@@ -453,9 +453,6 @@ Rails.application.routes.draw do
             collection { post :reorder }
           end
           resources :triage_agents, except: [:new, :edit]
-          resources :benefit_types, only: [:create, :update, :destroy] do
-            collection { post :reorder }
-          end
           resources :lead_priorities, only: [:create, :update, :destroy] do
             collection { post :reorder }
           end

@@ -43,7 +43,7 @@ RSpec.describe Lead do
       value: 5000.0, source: 'Indicação',
       stage_name: 'Negociação', stage_color: '#f59e0b'
     )
-    expect(data.keys).to include(:benefit_type_name, :lead_priority_name, :sdr_name, :closer_name, :contact_name)
+    expect(data.keys).to include(:thesis_name, :lead_priority_name, :sdr_name, :closer_name, :contact_name)
   end
 
   it 'push_event_data só consulta o chip da IA com alguma peça do funil fora de off' do

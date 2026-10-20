@@ -71,7 +71,6 @@ const { t } = useI18n();
 const stages = useMapGetter('leadConfig/getStages');
 const channels = useMapGetter('leadConfig/getChannels');
 const lostReasons = useMapGetter('leadConfig/getLostReasons');
-const benefitTypes = useMapGetter('leadConfig/getBenefitTypes');
 const theses = useMapGetter('theses/getTheses');
 
 // Etapas/motivos só eram buscados pelo Funil: abrir a conversa direto (F5)
@@ -1161,41 +1160,27 @@ const discard = async () => {
             </button>
           </div>
 
-          <!-- caso: tese · benefício; DCB · canal -->
+          <!-- caso: tese; DCB · canal -->
           <div data-testid="panel-caso">
             <p class="mb-1.5" :class="TITULO">
               {{ $t('RAMON.LEAD_PANEL.FIELDS.CASE') }}
             </p>
-            <div class="grid grid-cols-[3fr_2fr] gap-2">
-              <select
-                data-testid="field-thesis"
-                :value="lead.thesis_id ?? ''"
-                :aria-label="$t('RAMON.DRAWER.THESIS')"
-                :class="SELECT_GRANDE"
-                @change="e => saveSelect('thesis_id', e.target.value)"
-              >
-                <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
-                <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
-                <option v-if="thesisFora" :value="lead.thesis_id">
-                  {{ lead.thesis_name }}
-                </option>
-                <option v-for="th in activeTheses" :key="th.id" :value="th.id">
-                  {{ th.name }}
-                </option>
-              </select>
-              <select
-                data-testid="field-benefit"
-                :value="lead.benefit_type_id ?? ''"
-                :aria-label="$t('RAMON.DRAWER.BENEFIT')"
-                :class="SELECT_GRANDE"
-                @change="e => saveSelect('benefit_type_id', e.target.value)"
-              >
-                <option value="">{{ $t('RAMON.DRAWER.BENEFIT') }}</option>
-                <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-                  {{ b.name }}
-                </option>
-              </select>
-            </div>
+            <select
+              data-testid="field-thesis"
+              :value="lead.thesis_id ?? ''"
+              :aria-label="$t('RAMON.DRAWER.THESIS')"
+              :class="SELECT_GRANDE"
+              @change="e => saveSelect('thesis_id', e.target.value)"
+            >
+              <option value="">{{ $t('RAMON.DRAWER.THESIS') }}</option>
+              <!-- tese inativa (ou lista ainda não carregada): mostra a do lead -->
+              <option v-if="thesisFora" :value="lead.thesis_id">
+                {{ lead.thesis_name }}
+              </option>
+              <option v-for="th in activeTheses" :key="th.id" :value="th.id">
+                {{ th.name }}
+              </option>
+            </select>
             <div class="grid grid-cols-[3fr_2fr] gap-2 mt-2">
               <label class="relative block">
                 <span

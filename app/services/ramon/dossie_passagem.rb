@@ -53,7 +53,6 @@ class Ramon::DossiePassagem
   def caso
     {
       tese: @lead.thesis&.name,
-      beneficio: @lead.benefit_type&.name,
       dcb_em: @lead.dcb_em,
       benefit_monthly_value: @lead.benefit_monthly_value&.to_f,
       prescription: prescription

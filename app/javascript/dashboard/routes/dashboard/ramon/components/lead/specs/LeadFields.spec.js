@@ -18,7 +18,6 @@ const lead = {
   value: 100,
   source: 'ig',
   notes: 'x',
-  benefit_type_id: null,
   lead_priority_id: null,
   sdr_id: null,
   closer_id: null,

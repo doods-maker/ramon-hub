@@ -24,11 +24,11 @@ RSpec.describe Ramon::Fluxos::Passos::Ia do
       .with(hash_including(user: satisfy { |u| u.include?('[nome]') && u.exclude?('Maria') }))
   end
 
-  it 'sem tese, o prompt da IA usa o nome do benefício (como o código)' do
-    lead.update!(thesis: nil, benefit_type: create(:benefit_type, account: account, name: 'Benefício Teste B4.3'))
+  it 'sem tese, o prompt da IA diz que a tese não foi informada' do
+    lead.update!(thesis: nil)
     llm('{"resposta": "sim", "justificativa": "ok"}')
     described_class.perguntar_ia({ 'pergunta' => 'x' }, ctx)
-    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(user: include('tese Benefício Teste B4.3')))
+    expect(Ramon::LlmClient).to have_received(:complete).with(hash_including(user: include('tese não informada')))
   end
 
   it 'perguntar_ia: resposta que não é sim sai por não' do

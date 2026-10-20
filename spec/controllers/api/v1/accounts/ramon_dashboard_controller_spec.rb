@@ -258,10 +258,9 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
     let(:won_stage) { account.lead_stages.find_by(is_won: true) }
     let(:thesis) { account.theses.first || create(:thesis, account: account) }
     let(:closer) { create(:user, account: account, role: :agent) }
-    let(:benefit) { account.benefit_types.find_or_create_by!(name: 'Auxílio-acidente') }
     let!(:won) do
       create(:lead, account: account, lead_stage: won_stage, value: 30_000,
-                    closer: closer, thesis: thesis, benefit_type: benefit)
+                    closer: closer, thesis: thesis)
     end
     let!(:meeting) do
       create(:lead_task, account: account, lead: won, kind: 'meeting',
@@ -309,7 +308,7 @@ RSpec.describe 'Ramon Dashboard API', type: :request do
       expect(tv['next_meeting']).to include('lead_name' => won.name, 'user_name' => closer.name)
       expect(Time.zone.parse(tv['next_meeting']['at'])).to be_within(1.minute).of(meeting.due_at)
       expect(tv['last_won']).to include('lead_name' => won.name, 'closer_name' => closer.name,
-                                        'value' => 30_000.0, 'benefit' => 'Auxílio-acidente')
+                                        'value' => 30_000.0, 'benefit' => thesis.name)
     end
   end
 

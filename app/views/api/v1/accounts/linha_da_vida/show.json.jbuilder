@@ -18,7 +18,6 @@ json.leads @leads do |lead|
   json.is_lost lead.lead_stage&.is_lost
   json.stage_name lead.lead_stage&.name
   json.stage_color lead.lead_stage&.color
-  json.benefit_type_name lead.benefit_type&.name
   json.thesis_name lead.thesis&.name
   json.sdr_name lead.sdr&.name
   json.closer_name lead.closer&.name
