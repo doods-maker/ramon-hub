@@ -11,6 +11,7 @@ export const useChegadasStore = defineStore('chegadas', {
     itens: [],
     podeAvisar: false,
     painelPedido: 0,
+    painelPrefill: null,
     vistos: LocalStorage.get(VISTOS_KEY) || [],
   }),
 
@@ -48,8 +49,11 @@ export const useChegadasStore = defineStore('chegadas', {
       const { data } = await ChegadasAPI.responder(id, resposta);
       this.upsert(data);
     },
-    // O botão "Chegou cliente" mora no menu; o painel escuta este contador.
-    pedirPainel() {
+    // Quem pede o painel é a lista "Atendimentos de hoje" (tela Hoje da
+    // recepção); o painel escuta este contador. prefill = linha da agenda do
+    // ADVBOX (cliente e, se casou, quem atende) ou null (sem horário).
+    pedirPainel(prefill = null) {
+      this.painelPrefill = prefill;
       this.painelPedido += 1;
     },
     marcarVisto(id) {

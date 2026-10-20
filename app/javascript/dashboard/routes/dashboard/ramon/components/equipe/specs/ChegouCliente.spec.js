@@ -89,12 +89,32 @@ describe('ChegouCliente.vue', () => {
     expect(dialogOpen).toHaveBeenCalled();
   });
 
-  it('botão flutuante "Chegou cliente" abre o painel', async () => {
+  it('não tem mais botão próprio (fica na lista da tela Hoje)', () => {
     useChegadasStore().podeAvisar = true;
     const wrapper = mount(ChegouCliente);
-    await wrapper.find('[data-testid="chegou-cliente-botao"]').trigger('click');
+    expect(wrapper.find('[data-testid="chegou-cliente-botao"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('pedido com a linha da agenda abre já com cliente e quem atende', async () => {
+    ChegadasAPI.agenda.mockResolvedValue({ data: { payload: [] } });
+    ChegadasAPI.get.mockResolvedValue({
+      data: { payload: [], pode_avisar: true },
+    });
+    const store = useChegadasStore();
+    store.podeAvisar = true;
+    const wrapper = mount(ChegouCliente);
+    store.pedirPainel(agendaMaria);
     await flushPromises();
+
     expect(dialogOpen).toHaveBeenCalled();
+    expect(wrapper.find('[data-testid="cliente-escolhido"]').text()).toContain(
+      'MARIA SILVA'
+    );
+    expect(atendente(wrapper, 'Brenda').attributes('aria-pressed')).toBe(
+      'true'
+    );
   });
 
   it('agendado de hoje escolhe o cliente e já marca quem atende', async () => {

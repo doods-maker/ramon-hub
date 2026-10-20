@@ -19,6 +19,7 @@ const dataRef = ref(null);
 const flagsRef = ref({ isFetching: false, hasError: false });
 const userRef = ref({ name: 'Eduardo Schlata' });
 const roleRef = ref('administrator');
+const teamsRef = ref([]);
 vi.mock('dashboard/composables/store', () => ({
   useStore: () => ({ dispatch: dispatchSpy }),
   useStoreGetters: () => ({
@@ -26,6 +27,7 @@ vi.mock('dashboard/composables/store', () => ({
     'ramonDashboard/getUIFlags': flagsRef,
     getCurrentUser: userRef,
     getCurrentRole: roleRef,
+    'teams/getMyTeams': teamsRef,
   }),
 }));
 
@@ -196,7 +198,10 @@ const mountPage = async (data = payload(), queue = esteira()) => {
   dataRef.value = data;
   RamonEsteiraAPI.get.mockResolvedValue({ data: queue });
   const wrapper = mount(CommandCenter, {
-    global: { mocks: { $t: k => k }, stubs: { NightCopilot: true } },
+    global: {
+      mocks: { $t: k => k },
+      stubs: { NightCopilot: true, AtendimentosHoje: true },
+    },
   });
   await flushPromises();
   return wrapper;
@@ -209,7 +214,22 @@ describe('CommandCenter.vue', () => {
     dataRef.value = null;
     flagsRef.value = { isFetching: false, hasError: false };
     roleRef.value = 'administrator';
+    teamsRef.value = [];
     keyHandlers = {};
+  });
+
+  it('"Atendimentos de hoje" (Chegou) só pra quem é do time recepção', async () => {
+    const admin = await mountPage();
+    expect(dispatchSpy).toHaveBeenCalledWith('teams/get');
+    expect(admin.findComponent({ name: 'AtendimentosHoje' }).exists()).toBe(
+      false
+    );
+
+    teamsRef.value = [{ id: 2, name: 'recepção', is_member: true }];
+    const recepcao = await mountPage();
+    expect(recepcao.findComponent({ name: 'AtendimentosHoje' }).exists()).toBe(
+      true
+    );
   });
 
   it('renders the greeting, daily goal and start-day CTA', async () => {

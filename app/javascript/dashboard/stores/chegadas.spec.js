@@ -64,5 +64,9 @@ describe('useChegadasStore', () => {
     expect(store.painelPedido).toBe(0);
     store.pedirPainel();
     expect(store.painelPedido).toBe(1);
+    expect(store.painelPrefill).toBeNull();
+    store.pedirPainel({ cliente_nome: 'ANA' });
+    expect(store.painelPedido).toBe(2);
+    expect(store.painelPrefill).toEqual({ cliente_nome: 'ANA' });
   });
 });

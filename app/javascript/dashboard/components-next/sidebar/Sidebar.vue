@@ -318,16 +318,8 @@ const reportRoutes = computed(() => newReportRoutes());
 
 const menuItems = computed(() => {
   return [
-    {
-      name: 'Inbox',
-      label: t('SIDEBAR.INBOX'),
-      icon: 'i-lucide-inbox',
-      to: accountScopedRoute('inbox_view'),
-      activeOn: ['inbox_view', 'inbox_view_conversation'],
-      getterKeys: {
-        count: 'notifications/getUnreadCount',
-      },
-    },
+    // FORK(ramon): "Caixa de Entrada" (notificações) saiu do menu — virou o
+    // sino do canto superior direito (SinoNotificacoes, "Ver todas →").
     {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),

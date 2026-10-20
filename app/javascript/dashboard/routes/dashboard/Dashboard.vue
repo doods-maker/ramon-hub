@@ -7,6 +7,7 @@ import IntranetSidebar from './ramon/components/IntranetSidebar.vue';
 import AbasIntranet from './ramon/components/AbasIntranet.vue';
 import AlertaChegada from './ramon/components/equipe/AlertaChegada.vue';
 import ChegouCliente from './ramon/components/equipe/ChegouCliente.vue';
+import SinoNotificacoes from './ramon/components/SinoNotificacoes.vue';
 import WootKeyShortcutModal from 'dashboard/components/widgets/modal/WootKeyShortcutModal.vue';
 import AddAccountModal from 'dashboard/components/app/AddAccountModal.vue';
 import UpgradePage from 'dashboard/routes/dashboard/upgrade/UpgradePage.vue';
@@ -46,6 +47,7 @@ export default {
     FloatingCallWidget,
     AlertaChegada,
     ChegouCliente,
+    SinoNotificacoes,
     MobileSidebarLauncher,
   },
   setup() {
@@ -173,30 +175,39 @@ export default {
           @toggle="toggleMobileSidebar"
         />
       </UpgradePage>
-      <template v-if="!showUpgradePage">
-        <!-- Intranet: faixa de abas do item do menu sobre a página; as páginas
-             usam h-full com rolagem interna, então a coluna dá a altura. -->
+      <!-- FORK(ramon): faixa fina no topo com o sino (todas as telas); abaixo,
+           a página + o copiloto lado a lado, como antes. -->
+      <div v-if="!showUpgradePage" class="flex flex-col flex-1 min-w-0 min-h-0">
         <div
-          v-if="isIntranetWorld"
-          class="flex flex-col flex-1 min-w-0 min-h-0"
+          class="flex flex-shrink-0 items-center justify-end h-10 px-3 border-b border-n-weak"
         >
-          <AbasIntranet />
-          <div class="flex flex-1 min-h-0">
-            <router-view />
-          </div>
+          <SinoNotificacoes />
         </div>
-        <router-view v-else />
-        <CommandBar />
-        <CopilotLauncher />
-        <MobileSidebarLauncher
-          :is-mobile-sidebar-open="isMobileSidebarOpen"
-          @toggle="toggleMobileSidebar"
-        />
-        <CopilotContainer />
-        <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />
-        <AlertaChegada />
-        <ChegouCliente />
-      </template>
+        <div class="flex flex-1 min-w-0 min-h-0">
+          <!-- Intranet: faixa de abas do item do menu sobre a página; as páginas
+               usam h-full com rolagem interna, então a coluna dá a altura. -->
+          <div
+            v-if="isIntranetWorld"
+            class="flex flex-col flex-1 min-w-0 min-h-0"
+          >
+            <AbasIntranet />
+            <div class="flex flex-1 min-h-0">
+              <router-view />
+            </div>
+          </div>
+          <router-view v-else />
+          <CommandBar />
+          <CopilotLauncher />
+          <MobileSidebarLauncher
+            :is-mobile-sidebar-open="isMobileSidebarOpen"
+            @toggle="toggleMobileSidebar"
+          />
+          <CopilotContainer />
+          <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />
+          <AlertaChegada />
+          <ChegouCliente />
+        </div>
+      </div>
       <AddAccountModal
         :show="showCreateAccountModal"
         @close-account-create-modal="closeCreateAccountModal"
