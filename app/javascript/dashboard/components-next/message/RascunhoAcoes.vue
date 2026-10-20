@@ -26,7 +26,8 @@ const texto = computed(() =>
 const enviando = ref(false);
 const enviado = ref(false);
 
-const enviar = async () => {
+// manterIa: "Enviar, IA segue" (a conversa continua com a IA); senão "Enviar e assumir" (resposta humana abre a conversa).
+const enviar = async manterIa => {
   if (enviando.value || enviado.value) return;
   enviando.value = true;
   try {
@@ -34,6 +35,7 @@ const enviar = async () => {
       conversationId: conversationId.value,
       message: texto.value,
       private: false,
+      ...(manterIa && { contentAttributes: { ramon_manter_ia: true } }),
     });
     enviado.value = true;
     emitter.emit(BUS_EVENTS.SCROLL_TO_MESSAGE);
@@ -89,15 +91,25 @@ const copiar = async () => {
     <span v-if="enviado" class="text-n-teal-11">
       {{ t('RAMON.RASCUNHO_ACOES.ENVIADO') }}
     </span>
-    <button
-      v-else
-      type="button"
-      data-testid="rascunho-enviar"
-      class="rounded-full bg-n-brand px-2.5 py-0.5 text-white disabled:opacity-50"
-      :disabled="enviando"
-      @click="enviar"
-    >
-      {{ t('RAMON.RASCUNHO_ACOES.ENVIAR') }}
-    </button>
+    <template v-else>
+      <button
+        type="button"
+        data-testid="rascunho-enviar"
+        class="rounded-full bg-n-brand px-2.5 py-0.5 text-white disabled:opacity-50"
+        :disabled="enviando"
+        @click="enviar(false)"
+      >
+        {{ t('RAMON.RASCUNHO_ACOES.ENVIAR') }}
+      </button>
+      <button
+        type="button"
+        data-testid="rascunho-enviar-ia-segue"
+        class="rounded-full bg-n-teal-9/15 px-2.5 py-0.5 text-n-teal-11 disabled:opacity-50"
+        :disabled="enviando"
+        @click="enviar(true)"
+      >
+        {{ t('RAMON.RASCUNHO_ACOES.ENVIAR_IA_SEGUE') }}
+      </button>
+    </template>
   </div>
 </template>

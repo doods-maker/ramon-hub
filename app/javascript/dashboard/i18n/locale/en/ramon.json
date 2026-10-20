@@ -1884,6 +1884,7 @@
       "PAUSADO": "AI set to draft only in this conversation.",
       "PAUSA_FALHOU": "Couldn't pause — try again.",
       "PERFIL": "Profile: {perfil} ({origem})",
+      "MANTER_IA": "Keep the AI handling (just step in)",
       "DEVOLVER": "Give back to AI",
       "ESTADO": {
         "IA": "AI handling",
@@ -1901,7 +1902,8 @@
       }
     },
     "RASCUNHO_ACOES": {
-      "ENVIAR": "Send to client",
+      "ENVIAR": "Send and take over",
+      "ENVIAR_IA_SEGUE": "Send, AI continues",
       "EDITAR": "Edit",
       "COPIAR": "Copy",
       "COPIADO": "Text copied.",

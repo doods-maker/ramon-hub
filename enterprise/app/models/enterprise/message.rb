@@ -20,6 +20,7 @@ module Enterprise::Message
     return unless human_response?
     return if private?
     return if template_bootstrap_message?
+    return if content_attributes.to_h.with_indifferent_access[:ramon_manter_ia] # ramon: intervenção pontual, a IA segue
 
     previous_user = Current.user
     previous_executed_by = Current.executed_by

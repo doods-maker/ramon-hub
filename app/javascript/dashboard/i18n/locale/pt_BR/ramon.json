@@ -1884,6 +1884,7 @@
       "PAUSADO": "IA em só rascunho nesta conversa.",
       "PAUSA_FALHOU": "Não consegui pausar — tente de novo.",
       "PERFIL": "Perfil: {perfil} ({origem})",
+      "MANTER_IA": "Manter a IA atendendo (só intervir)",
       "DEVOLVER": "Devolver à IA",
       "ESTADO": {
         "IA": "IA atendendo",
@@ -1901,7 +1902,8 @@
       }
     },
     "RASCUNHO_ACOES": {
-      "ENVIAR": "Enviar ao cliente",
+      "ENVIAR": "Enviar e assumir",
+      "ENVIAR_IA_SEGUE": "Enviar, IA segue",
       "EDITAR": "Editar",
       "COPIAR": "Copiar",
       "COPIADO": "Texto copiado.",

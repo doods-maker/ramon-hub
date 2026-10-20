@@ -59,6 +59,21 @@ describe('RascunhoAcoes.vue', () => {
     expect(wrapper.text()).toContain('RAMON.RASCUNHO_ACOES.ENVIADO');
   });
 
+  it('Enviar, IA segue: manda com ramon_manter_ia (a conversa continua com a IA)', async () => {
+    const wrapper = mount(RascunhoAcoes);
+    await wrapper
+      .find('[data-testid="rascunho-enviar-ia-segue"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(dispatch).toHaveBeenCalledWith('createPendingMessageAndSend', {
+      conversationId: 19,
+      message: TEXTO,
+      private: false,
+      contentAttributes: { ramon_manter_ia: true },
+    });
+  });
+
   it('modo enviar: só o botão Enviar (sem lápis/copiar)', () => {
     const wrapper = mount(RascunhoAcoes);
 

@@ -56,6 +56,7 @@ import { isFileTypeAllowedForChannel } from 'shared/helpers/FileHelper';
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { LocalStorage } from 'shared/helpers/localStorage';
 import { emitter } from 'shared/helpers/mitt';
+import ChaveManterIa from 'dashboard/routes/dashboard/ramon/components/conversation/ChaveManterIa.vue';
 const EmojiIconPicker = defineAsyncComponent(
   () =>
     import('dashboard/components-next/emoji-icon-picker/EmojiIconPicker.vue')
@@ -63,6 +64,7 @@ const EmojiIconPicker = defineAsyncComponent(
 
 export default {
   components: {
+    ChaveManterIa,
     ArticleSearchPopover,
     AttachmentPreview,
     AudioRecorder,
@@ -110,6 +112,7 @@ export default {
   },
   data() {
     return {
+      manterIa: false,
       message: '',
       inReplyTo: {},
       isFocused: false,
@@ -1156,6 +1159,13 @@ export default {
       if (this.toEmails && !this.isOnPrivateNote) {
         messagePayload.toEmails = this.toEmails;
       }
+      // ramon: intervenção pontual — a resposta sai sem tirar a IA da conversa (ChaveManterIa)
+      if (this.manterIa && !this.isPrivate) {
+        messagePayload.contentAttributes = {
+          ...messagePayload.contentAttributes,
+          ramon_manter_ia: true,
+        };
+      }
       return messagePayload;
     },
     setCcEmails(value) {
@@ -1392,6 +1402,7 @@ export default {
       leave-from-class="opacity-100 translate-y-0 scale-100"
       leave-to-class="opacity-0 translate-y-2 scale-[0.98]"
     >
+      <ChaveManterIa v-if="!isPrivate" v-model="manterIa" />
       <CopilotReplyBottomPanel
         v-if="copilot.isActive.value"
         key="copilot-bottom-panel"
