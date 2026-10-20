@@ -13,7 +13,12 @@ RSpec.describe Ramon::FaqTeses do
   end
 
   describe '.do_slug' do
-    before { nomes_do_seed.each_with_index { |nome, i| create(:thesis, account: account, name: nome, position: i) } }
+    # a conta nova já pode nascer com teses do seed padrão: cria só as que faltam
+    before do
+      nomes_do_seed.each_with_index do |nome, i|
+        create(:thesis, account: account, name: nome, position: i) unless Thesis.exists?(account_id: account.id, name: nome)
+      end
+    end
 
     def nomes(slug) = Thesis.where(id: described_class.do_slug(account, slug)[:thesis_ids]).pluck(:name)
 
