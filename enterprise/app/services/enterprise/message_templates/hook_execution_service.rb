@@ -29,11 +29,11 @@ module Enterprise::MessageTemplates::HookExecutionService
 
   private
 
-  # ramon: quando a resposta pode sair sozinha (Perfil da IA: ao menos a logística sai agora) ela vai com atraso
-  # aleatório (30s–3min) pra não ter ritmo de robô. Só rascunho: sem espera (quem envia é a pessoa). O id da
-  # mensagem vai junto: se o cliente mandar outra antes, só o job da mais nova responde.
+  # ramon (20/10, decisão Eduardo): a IA responde na hora — rascunho pra equipe nasce na hora; só o que sai sozinho
+  # pro cliente espera o atraso aleatório, no envio (Ramon::RespostaIaAtrasadaJob). Anexo: 5s pro arquivo subir.
+  # O id da mensagem vai junto: se o cliente mandar outra, só a resposta da mais nova é enviada.
   def schedule_captain_response
-    job = Captain::Conversation::ResponseBuilderJob.set(wait: atraso_resposta_ia)
+    job = Captain::Conversation::ResponseBuilderJob.set(wait: message.attachments.present? ? ATRASO_ANEXO : 0)
     job.perform_later(conversation, conversation.inbox.captain_assistant, message.id)
   end
 

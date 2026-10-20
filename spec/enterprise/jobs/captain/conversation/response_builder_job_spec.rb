@@ -29,6 +29,9 @@ RSpec.describe Captain::Conversation::ResponseBuilderJob, type: :job do
       allow(mock_action_classifier_service).to receive(:classify).and_return({ 'action' => 'continue' })
       # o classificador de logística é LLM: nunca de verdade no spec
       allow(Ramon::PilotoLogisticaService).to receive(:logistica?).and_return(false)
+      # o envio que sai sozinho espera o atraso aleatório (RespostaIaAtrasadaJob); aqui ele roda na hora
+      allow(Ramon::RespostaIaAtrasadaJob).to receive(:set).and_return(Ramon::RespostaIaAtrasadaJob)
+      allow(Ramon::RespostaIaAtrasadaJob).to receive(:perform_later) { |*args, **kw| Ramon::RespostaIaAtrasadaJob.perform_now(*args, **kw) }
     end
 
     context 'when captain_v2 is disabled' do
