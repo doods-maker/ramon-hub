@@ -1882,7 +1882,23 @@
       "CARIMBO": "sent by the AI ({perfil})",
       "PAUSAR_CARIMBO": "Pause",
       "PAUSADO": "AI set to draft only in this conversation.",
-      "PAUSA_FALHOU": "Couldn't pause — try again."
+      "PAUSA_FALHOU": "Couldn't pause — try again.",
+      "PERFIL": "Profile: {perfil} ({origem})",
+      "DEVOLVER": "Give back to AI",
+      "ESTADO": {
+        "IA": "AI handling",
+        "IA_ETAPA": "AI handling · {etapa}",
+        "RASCUNHO": "AI drafts only",
+        "RASCUNHO_ETAPA": "AI drafts only · {etapa}",
+        "PESSOA": "{nome} handling · AI stopped",
+        "EQUIPE": "Waiting for the team · AI stopped"
+      },
+      "FAIXA": {
+        "ia": "AI is handling this conversation",
+        "rascunho": "AI is writing drafts only",
+        "pausada": "AI paused in this conversation",
+        "equipe": "Nobody handling · AI stopped"
+      }
     },
     "RASCUNHO_ACOES": {
       "ENVIAR": "Send to client",

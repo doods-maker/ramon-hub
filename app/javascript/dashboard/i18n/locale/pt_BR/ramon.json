@@ -1882,7 +1882,23 @@
       "CARIMBO": "enviada pela IA ({perfil})",
       "PAUSAR_CARIMBO": "Pausar",
       "PAUSADO": "IA em só rascunho nesta conversa.",
-      "PAUSA_FALHOU": "Não consegui pausar — tente de novo."
+      "PAUSA_FALHOU": "Não consegui pausar — tente de novo.",
+      "PERFIL": "Perfil: {perfil} ({origem})",
+      "DEVOLVER": "Devolver à IA",
+      "ESTADO": {
+        "IA": "IA atendendo",
+        "IA_ETAPA": "IA atendendo · {etapa}",
+        "RASCUNHO": "IA só rascunho",
+        "RASCUNHO_ETAPA": "IA só rascunho · {etapa}",
+        "PESSOA": "{nome} atendendo · IA parada",
+        "EQUIPE": "Aguardando a equipe · IA parada"
+      },
+      "FAIXA": {
+        "ia": "IA atendendo esta conversa",
+        "rascunho": "IA escrevendo só rascunhos",
+        "pausada": "IA pausada nesta conversa",
+        "equipe": "Ninguém atendendo · IA parada"
+      }
     },
     "RASCUNHO_ACOES": {
       "ENVIAR": "Enviar ao cliente",
