@@ -183,16 +183,15 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
 
     additional_attrs = agent_name.present? ? { agent_name: agent_name } : {}
 
-    @conversation.messages.create!(
-      message_type: :outgoing,
-      account_id: account.id,
-      inbox_id: inbox.id,
-      sender: @assistant,
-      content: message_content,
-      additional_attributes: additional_attrs,
-      # ramon (15/10): content_type + content_attributes; pergunta de escolha do roteiro vai com botões se a tese pedir
-      **Ramon::Roteiro::Opcoes.atributos(@conversation, message_content, @perfil.carimbo(@enviando_handoff), @response, handoff: @enviando_handoff),
-      preserve_waiting_since: preserve_waiting_since
+    # ramon (20/10): o que sai sozinho espera o atraso aleatório no envio (Ramon::RespostaIaAtrasadaJob); rascunho nasce na hora
+    Ramon::RespostaIaAtrasadaJob.set(wait: rand(Ramon::IaLimites.de(account)[:atraso]).seconds).perform_later(
+      @conversation,
+      { message_type: :outgoing, account_id: account.id, inbox_id: inbox.id, sender: @assistant, content: message_content,
+        additional_attributes: additional_attrs,
+        # ramon (15/10): content_type + content_attributes; pergunta de escolha do roteiro vai com botões se a tese pedir
+        **Ramon::Roteiro::Opcoes.atributos(@conversation, message_content, @perfil.carimbo(@enviando_handoff), @response, handoff: @enviando_handoff),
+        preserve_waiting_since: preserve_waiting_since },
+      @message_id, handoff: @enviando_handoff == true
     )
   end
 
@@ -239,6 +238,7 @@ class Captain::Conversation::ResponseBuilderJob < ApplicationJob
   # ramon: cliente mandou outra mensagem durante o atraso aleatório → o job dela responde tudo. Retry/deploy no meio do
   # turno: o assistente já respondeu (ou deixou rascunho) depois desta mensagem → não responde de novo.
   def mensagem_superada?(message_id)
+    @message_id = message_id || @conversation.messages.incoming.maximum(:id) # o envio atrasado (RespostaIaAtrasadaJob) parte dela
     novas = @conversation.messages.where('id > ?', message_id)
     message_id.present? && (novas.incoming.exists? || novas.exists?(sender_type: 'Captain::Assistant'))
   end

@@ -75,11 +75,11 @@ RSpec.describe MessageTemplates::HookExecutionService do
         ActiveJob::Base.queue_adapter.enqueued_jobs.find { |j| j[:job] == Captain::Conversation::ResponseBuilderJob }
       end
 
-      it 'quando a resposta pode sair sozinha (Perfil da IA), agenda com atraso aleatório de 30s a 3min' do
+      it 'mesmo quando a resposta pode sair sozinha, agenda sem espera (o atraso fica no envio, RespostaIaAtrasadaJob)' do
         freeze_time do
           create(:message, conversation: conversation, message_type: :incoming, account: account) # INICIAL: logística sai
 
-          expect(job_da_ia[:at]).to be_between(30.seconds.from_now.to_f, 180.seconds.from_now.to_f)
+          expect(job_da_ia[:at].to_f).to be <= Time.current.to_f
         end
       end
 
