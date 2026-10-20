@@ -39,7 +39,10 @@ RSpec.describe Ramon::FaqTeses do
     it 'casa o nome sem acento e não olha teses de outra conta' do
       outra = create(:account)
       sem_acento = create(:thesis, account: outra, name: 'Auxilio-acidente')
-      expect(described_class.do_slug(outra, 'auxilio-acidente')[:thesis_ids]).to eq([sem_acento.id])
+      ids = described_class.do_slug(outra, 'auxilio-acidente')[:thesis_ids]
+      # a conta nova pode já ter a tese do seed padrão; o que importa: casa sem acento e só teses desta conta
+      expect(ids).to include(sem_acento.id)
+      expect(Thesis.where(id: ids).pluck(:account_id).uniq).to eq([outra.id])
     end
   end
 
