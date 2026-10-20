@@ -31,7 +31,9 @@ const phone = ref('+55 ');
 
 onMounted(() => {
   nextTick(() => nameInput.value?.focus());
+  if (!getters['theses/getTheses'].value.length) store.dispatch('theses/get');
 });
+const thesisId = ref(null);
 const priorityId = ref(null);
 const source = ref('');
 const channel = ref('');
@@ -44,6 +46,7 @@ const isDirty = computed(
   () =>
     Boolean(name.value.trim()) ||
     phone.value.replace(/\D/g, '') !== '55' ||
+    thesisId.value !== null ||
     priorityId.value !== null ||
     Boolean(source.value.trim()) ||
     Boolean(channel.value) ||
@@ -58,6 +61,10 @@ const onBackdrop = () => {
 };
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
+// só teses ativas (mesmo critério do painel do lead)
+const theses = computed(() =>
+  getters['theses/getTheses'].value.filter(th => th.active)
+);
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const sources = computed(() => getters['leadConfig/getSources'].value);
 const channels = computed(() => getters['leadConfig/getChannels'].value);
@@ -147,6 +154,7 @@ const submit = async () => {
       const lead = await store.dispatch('leads/create', {
         name: name.value.trim(),
         lead_stage_id: firstStage.id,
+        thesis_id: thesisId.value,
         lead_priority_id: priorityId.value,
         source: source.value.trim() || null,
         channel: channel.value || null,
@@ -223,6 +231,20 @@ const submit = async () => {
             @click="openExisting"
           />
         </div>
+
+        <label :class="ROTULO">
+          {{ $t('RAMON.FUNIL.NEW.THESIS') }}
+          <select
+            v-model="thesisId"
+            data-testid="new-lead-thesis"
+            :class="SELECT"
+          >
+            <option :value="null">{{ $t('RAMON.FUNIL.NEW.NO_THESIS') }}</option>
+            <option v-for="th in theses" :key="th.id" :value="th.id">
+              {{ th.name }}
+            </option>
+          </select>
+        </label>
 
         <label :class="ROTULO">
           {{ $t('RAMON.FUNIL.NEW.SOURCE') }}

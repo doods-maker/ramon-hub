@@ -464,7 +464,9 @@
         "INVALID": "Invalid value — numbers only, e.g. 1,500.00"
       },
       "NEW": {
-        "SOURCE": "Source",
+        "THESIS": "Thesis",
+        "NO_THESIS": "No thesis",
+        "SOURCE":"Source",
         "CHANNEL": "Channel",
         "CHANNEL_PLACEHOLDER": "— select —",
         "VALUE": "Value (R$)",

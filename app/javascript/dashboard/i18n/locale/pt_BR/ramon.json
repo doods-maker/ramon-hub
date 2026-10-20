@@ -464,6 +464,8 @@
         "INVALID": "Valor inválido — use números, ex.: 1.500,00"
       },
       "NEW": {
+        "THESIS": "Tese",
+        "NO_THESIS": "Sem tese",
         "SOURCE": "Origem",
         "CHANNEL": "Canal",
         "CHANNEL_PLACEHOLDER": "— selecione —",
