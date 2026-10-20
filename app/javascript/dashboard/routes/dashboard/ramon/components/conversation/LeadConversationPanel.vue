@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import LeadPanelBody from 'dashboard/routes/dashboard/ramon/components/lead/LeadPanelBody.vue';
+import FaixaQuemAtende from './FaixaQuemAtende.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 
@@ -84,6 +85,7 @@ onMounted(() => {
         @click="emit('close')"
       />
     </div>
+    <FaixaQuemAtende />
     <LeadPanelBody
       v-if="lead"
       :lead="lead"

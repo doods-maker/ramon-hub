@@ -59,8 +59,32 @@ describe('RascunhoAcoes.vue', () => {
     expect(wrapper.text()).toContain('RAMON.RASCUNHO_ACOES.ENVIADO');
   });
 
-  it('Editar põe o texto limpo na caixa de resposta, sem enviar', async () => {
+  it('Enviar, IA segue: manda com ramon_manter_ia (a conversa continua com a IA)', async () => {
     const wrapper = mount(RascunhoAcoes);
+    await wrapper
+      .find('[data-testid="rascunho-enviar-ia-segue"]')
+      .trigger('click');
+    await flushPromises();
+
+    expect(dispatch).toHaveBeenCalledWith('createPendingMessageAndSend', {
+      conversationId: 19,
+      message: TEXTO,
+      private: false,
+      contentAttributes: { ramon_manter_ia: true },
+    });
+  });
+
+  it('modo enviar: só o botão Enviar (sem lápis/copiar)', () => {
+    const wrapper = mount(RascunhoAcoes);
+
+    expect(wrapper.find('[data-testid="rascunho-enviar"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="rascunho-editar"]').exists()).toBe(
+      false
+    );
+  });
+
+  it('Editar (lápis) põe o texto limpo na caixa de resposta, sem enviar', async () => {
+    const wrapper = mount(RascunhoAcoes, { props: { modo: 'icones' } });
     await wrapper.find('[data-testid="rascunho-editar"]').trigger('click');
 
     expect(emit).toHaveBeenCalledWith('insertIntoNormalEditor', TEXTO);
@@ -68,7 +92,7 @@ describe('RascunhoAcoes.vue', () => {
   });
 
   it('Copiar copia só o texto', async () => {
-    const wrapper = mount(RascunhoAcoes);
+    const wrapper = mount(RascunhoAcoes, { props: { modo: 'icones' } });
     await wrapper.find('[data-testid="rascunho-copiar"]').trigger('click');
     await flushPromises();
 

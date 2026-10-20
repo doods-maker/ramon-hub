@@ -7,6 +7,7 @@ import { useAdmin } from 'dashboard/composables/useAdmin';
 import RamonIaConversasAPI from 'dashboard/api/ramonIaConversas';
 import Button from 'dashboard/components-next/button/Button.vue';
 import { CARTAO, LINHA } from '../../helpers/ui';
+import { useQuemAtende } from '../../composables/useQuemAtende';
 
 defineOptions({ name: 'IaDaConversa' });
 const { t } = useI18n();
@@ -20,8 +21,8 @@ const open = ref(false);
 const saving = ref(false);
 const info = ref(null);
 
-const pausa = computed(
-  () => currentChat.value?.custom_attributes?.ia_pausa || null
+const { pausa, pessoa, estado, visual, podeDevolver, devolver } = useQuemAtende(
+  computed(() => info.value?.pausa)
 );
 
 const ler = async () => {
@@ -52,17 +53,38 @@ const alternar = () => {
   if (open.value) ler();
 };
 
+// Chip colorido por quem atende (useQuemAtende); o perfil fica no menu.
 const rotulo = computed(() => {
-  // lead em Perdido também cala a IA: o servidor responde pausa = pausada
-  if (pausa.value === 'pausada' || info.value.pausa === 'pausada')
-    return t('RAMON.IA_CONVERSA.PAUSADA');
-  if (pausa.value === 'rascunho') return t('RAMON.IA_CONVERSA.RASCUNHO');
-  const { perfil, origem, etapa } = info.value;
-  const params = { perfil, origem: t(`RAMON.IA_CONVERSA.ORIGEM.${origem}`) };
-  return etapa
-    ? t('RAMON.IA_CONVERSA.BTN', { ...params, etapa })
-    : t('RAMON.IA_CONVERSA.BTN_SEM_ETAPA', params);
+  const etapa = info.value?.etapa;
+  const comEtapa = chave =>
+    etapa
+      ? t(`RAMON.IA_CONVERSA.ESTADO.${chave}_ETAPA`, { etapa })
+      : t(`RAMON.IA_CONVERSA.ESTADO.${chave}`);
+  if (estado.value === 'pessoa')
+    return t('RAMON.IA_CONVERSA.ESTADO.PESSOA', { nome: pessoa.value });
+  if (estado.value === 'pausada') return t('RAMON.IA_CONVERSA.PAUSADA');
+  if (estado.value === 'equipe') return t('RAMON.IA_CONVERSA.ESTADO.EQUIPE');
+  return comEtapa(estado.value === 'rascunho' ? 'RASCUNHO' : 'IA');
 });
+
+const perfilLinha = computed(() => {
+  const { perfil, origem } = info.value;
+  return t('RAMON.IA_CONVERSA.PERFIL', {
+    perfil,
+    origem: t(`RAMON.IA_CONVERSA.ORIGEM.${origem}`),
+  });
+});
+
+const devolverIa = async () => {
+  if (saving.value) return;
+  saving.value = true;
+  try {
+    await devolver();
+    open.value = false;
+  } finally {
+    saving.value = false;
+  }
+};
 
 // O backend SUBSTITUI o hash: manda sempre o merge completo; valor null tira a chave.
 const gravar = async valor => {
@@ -91,14 +113,17 @@ const escolher = async (valor, { assumir = false } = {}) => {
     // Só rascunho / Voltar devolvem à IA a conversa aberta sem responsável (a IA só atende pendente).
     // ponytail: com responsável fica aberta — a IA não responde conversa atribuída a uma pessoa (IaFreio).
     const status = currentChat.value?.status;
-    const devolver =
+    const voltaPraIa =
       valor !== 'pausada' &&
       status === 'open' &&
       !currentChat.value?.meta?.assignee;
-    if (gravou && ((valor === 'pausada' && status === 'pending') || devolver)) {
+    if (
+      gravou &&
+      ((valor === 'pausada' && status === 'pending') || voltaPraIa)
+    ) {
       await store.dispatch('toggleStatus', {
         conversationId: currentChat.value.id,
-        status: devolver ? 'pending' : 'open',
+        status: voltaPraIa ? 'pending' : 'open',
       });
     }
     open.value = false;
@@ -122,8 +147,9 @@ const verNaTrilha = () => {
       data-testid="ia-conversa-btn"
       sm
       faded
-      slate
-      icon="i-lucide-sparkles"
+      :color="visual.tom"
+      :icon="visual.icone"
+      :data-estado="estado"
       @click="alternar"
     >
       <span class="min-w-0 truncate">{{ rotulo }}</span>
@@ -135,9 +161,20 @@ const verNaTrilha = () => {
       class="absolute right-0 top-9 z-50 w-72 shadow-lg"
       :class="CARTAO"
     >
-      <p class="text-xs font-medium text-n-slate-11 mb-2">
+      <p class="text-xs font-medium text-n-slate-11">
         {{ t('RAMON.IA_CONVERSA.TITULO') }}
       </p>
+      <p class="text-xs text-n-slate-10 mb-2">{{ perfilLinha }}</p>
+      <button
+        v-if="podeDevolver"
+        type="button"
+        data-testid="ia-conversa-devolver"
+        :class="LINHA"
+        class="font-semibold text-n-teal-11"
+        @click="devolverIa"
+      >
+        {{ t('RAMON.IA_CONVERSA.DEVOLVER') }}
+      </button>
       <button
         v-if="pausa !== 'pausada'"
         type="button"
@@ -157,7 +194,7 @@ const verNaTrilha = () => {
         {{ t('RAMON.IA_CONVERSA.SO_RASCUNHO') }}
       </button>
       <button
-        v-if="pausa"
+        v-if="pausa === 'rascunho' && !podeDevolver"
         type="button"
         data-testid="ia-conversa-voltar"
         :class="LINHA"
@@ -166,6 +203,7 @@ const verNaTrilha = () => {
         {{ t('RAMON.IA_CONVERSA.VOLTAR') }}
       </button>
       <button
+        v-if="estado !== 'pessoa'"
         type="button"
         data-testid="ia-conversa-assumir"
         :class="LINHA"
