@@ -88,14 +88,17 @@ const escolher = async (valor, { assumir = false } = {}) => {
     }
     const gravou = await gravar(valor);
     // Pausada deixa a conversa pendente parada com o robô: abre pra cair na fila humana.
-    if (
-      gravou &&
-      valor === 'pausada' &&
-      currentChat.value?.status === 'pending'
-    ) {
+    // Só rascunho / Voltar devolvem à IA a conversa aberta sem responsável (a IA só atende pendente).
+    // ponytail: com responsável fica aberta — a IA não responde conversa atribuída a uma pessoa (IaFreio).
+    const status = currentChat.value?.status;
+    const devolver =
+      valor !== 'pausada' &&
+      status === 'open' &&
+      !currentChat.value?.meta?.assignee;
+    if (gravou && ((valor === 'pausada' && status === 'pending') || devolver)) {
       await store.dispatch('toggleStatus', {
         conversationId: currentChat.value.id,
-        status: 'open',
+        status: devolver ? 'pending' : 'open',
       });
     }
     open.value = false;
