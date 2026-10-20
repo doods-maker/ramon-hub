@@ -18,11 +18,11 @@ RSpec.describe Captain::Tools::ConsultaAndamentoTool, type: :model do
     allow(Ramon::AdvboxClient).to receive_messages(movements: { 'data' => [] }, posts: { 'data' => [] })
   end
 
-  it 'confere CPF e nascimento e devolve a fase do painel e o link' do
+  it 'confere o CPF e devolve a fase do painel e o link' do
     create(:portal_cliente, account: account, cpf: cpf, convidado_em: 1.day.ago)
 
     with_modified_env PORTAL_URL: 'https://cliente.exemplo.br' do
-      out = tool.perform(tool_context, cpf: '123.456.789-09', nascimento: '1980-05-10')
+      out = tool.perform(tool_context, cpf: '123.456.789-09')
 
       expect(out).to include('Auxílio-acidente', 'Justiça — Seu caso foi levado para um juiz decidir.')
       expect(out).to include('https://cliente.exemplo.br')
@@ -34,43 +34,40 @@ RSpec.describe Captain::Tools::ConsultaAndamentoTool, type: :model do
     conversa = create(:conversation, account: account)
     lead = create(:lead, account: account, conversation: conversa)
 
-    tool.perform(Struct.new(:state).new({ conversation: { id: conversa.id } }), cpf: cpf, nascimento: '1980-05-10')
+    tool.perform(Struct.new(:state).new({ conversation: { id: conversa.id } }), cpf: cpf)
 
     expect(lead.reload.lost_reason).to eq('Já é cliente')
     expect(lead.lead_stage.is_lost).to be(true)
   end
 
-  it 'nascimento diferente: nao conferiu e nao busca processo' do
+  it 'CPF nao achado no AdvBox: nao conferiu e nao busca processo' do
+    allow(Ramon::AdvboxClient).to receive(:customers).and_return({ 'data' => [] })
     expect(Ramon::AdvboxClient).not_to receive(:lawsuits)
 
-    expect(tool.perform(tool_context, cpf: cpf, nascimento: '1980-05-11')).to eq(described_class::NAO_CONFERIU)
+    expect(tool.perform(tool_context, cpf: cpf)).to eq(described_class::NAO_CONFERIU)
   end
 
-  it 'CPF nao achado no AdvBox: nao conferiu' do
+  it 'filtro do AdvBox casando CPF parecido: nao conferiu' do
+    cadastro['identification'] = '123.456.789-00'
+
+    expect(tool.perform(tool_context, cpf: cpf)).to eq(described_class::NAO_CONFERIU)
+  end
+
+  it '1a falha na conversa pede para conferir; da 2a em diante humano; a 4a nem consulta o AdvBox' do
     allow(Ramon::AdvboxClient).to receive(:customers).and_return({ 'data' => [] })
-
-    expect(tool.perform(tool_context, cpf: cpf, nascimento: '1980-05-10')).to eq(described_class::NAO_CONFERIU)
-  end
-
-  it 'cadastro sem nascimento: nao conferiu' do
-    cadastro['birthdate'] = nil
-
-    expect(tool.perform(tool_context, cpf: cpf, nascimento: '1980-05-10')).to eq(described_class::NAO_CONFERIU)
-  end
-
-  it '3 conferencias que falham na conversa: a 4a nem consulta o AdvBox e manda passar para humano' do
     conversa = create(:conversation, account: account)
     contexto = Struct.new(:state).new({ conversation: { id: conversa.id } })
     Redis::Alfred.delete("RAMON::CONSULTA_ANDAMENTO::FALHAS::#{conversa.id}")
-    3.times { expect(tool.perform(contexto, cpf: cpf, nascimento: '1980-05-11')).to eq(described_class::NAO_CONFERIU) }
+    expect(tool.perform(contexto, cpf: cpf)).to eq(described_class::CONFERIR)
+    2.times { expect(tool.perform(contexto, cpf: cpf)).to eq(described_class::NAO_CONFERIU) }
 
     expect(Ramon::AdvboxClient).not_to receive(:customers)
-    expect(tool.perform(contexto, cpf: cpf, nascimento: '1980-05-10')).to eq(described_class::LIMITE)
+    expect(tool.perform(contexto, cpf: cpf)).to eq(described_class::LIMITE)
   end
 
-  it 'nao grava CPF nem nascimento na tela Execucoes' do
-    tool.execute(tool_context, cpf: cpf, nascimento: '1980-05-10')
+  it 'nao grava o CPF na tela Execucoes' do
+    tool.execute(tool_context, cpf: cpf)
 
-    expect(Captain::ToolRun.last.params).to eq('cpf' => '[oculto]', 'nascimento' => '[oculto]')
+    expect(Captain::ToolRun.last.params).to eq('cpf' => '[oculto]')
   end
 end

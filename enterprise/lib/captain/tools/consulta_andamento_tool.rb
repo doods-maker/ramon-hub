@@ -1,15 +1,16 @@
-# Consulta de andamento (ADR 0008): quem diz que já é cliente informa CPF + data de nascimento; só com os dois
-# conferindo no cadastro do ADVBOX a tool devolve a fase de cada processo em linguagem simples — a mesma regra do
+# Consulta de andamento (ADR 0008, revisada 20/10): quem diz que já é cliente informa o CPF; com o CPF conferindo
+# no cadastro do ADVBOX a tool devolve a fase de cada processo em linguagem simples — a mesma regra do
 # Painel do Cliente e da Conferência de fases (Ramon::PortalTexto.etapa_real: tribunal + tarefas, nunca a etapa do
-# ADVBOX) — e o link do Painel. CPF e nascimento são usados na hora: não vão pro lead/contato, nem pro log, nem pra
-# tela Execuções.
+# ADVBOX) — e o link do Painel. O CPF é usado na hora: não vai pro lead/contato, nem pro log, nem pra tela Execuções.
 # ponytail: ao vivo, 2 chamadas ao ADVBOX por processo (andamentos + tarefas), dividindo o limite de 500/dia/rota
 # com a Conferência de fases da noite; se apertar, ler o espelho do Painel (PortalCliente#processos) primeiro.
 class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
   T = Ramon::PortalTexto
   SYNC = Ramon::PortalSyncService
-  NAO_CONFERIU = 'NAO CONFERIU: os dados nao conferem com o cadastro do escritorio. Nao diga qual dos dois nao bateu; ' \
-                 'passe para humano.'.freeze
+  NAO_CONFERIU = 'NAO CONFERIU: o CPF nao confere com o cadastro do escritorio. Passe para humano.'.freeze
+  # 1º desencontro na conversa (decisão Eduardo 20/10): pode ser erro de digitação — pede pra conferir uma vez.
+  CONFERIR = 'NAO CONFERIU (1a tentativa): pode ser erro de digitacao. Peca, com simpatia, que a pessoa confira e mande de ' \
+             'novo o CPF. Nao passe para humano ainda.'.freeze
   SEM_PROCESSO = 'Conferiu, mas nao ha processo no AdvBox para este cliente. Passe para humano.'.freeze
   ADVBOX_FORA = 'O AdvBox nao respondeu agora. Passe para humano.'.freeze
   SEM_PAINEL = 'Este cliente ainda nao tem acesso ao Painel do Cliente: nao mande o link.'.freeze
@@ -18,17 +19,18 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
   LIMITE_FALHAS = 3
   LIMITE = 'LIMITE: tentativas demais nesta conversa, nao consulte de novo. Passe para humano.'.freeze
 
-  description 'Consulta de andamento para quem ja e cliente: confere CPF + data de nascimento no cadastro do escritorio ' \
+  description 'Consulta de andamento para quem ja e cliente: confere o CPF no cadastro do escritorio ' \
               'e devolve a fase de cada processo em linguagem simples e o link do Painel do Cliente. Nao conferiu: humano.'
   param :cpf, type: 'string', desc: 'CPF informado pelo cliente, com ou sem pontuacao', required: true
-  param :nascimento, type: 'string', desc: 'Data de nascimento informada pelo cliente, AAAA-MM-DD', required: true
 
-  def perform(tool_context, cpf:, nascimento:)
+  # ponytail: só o CPF identifica (decisão Eduardo 20/10, risco aceito: quem tiver o CPF de um cliente vê a fase do
+  # processo). Endurecer = conferir também o número do WhatsApp com o telefone do cadastro.
+  def perform(tool_context, cpf:)
     chave = chave_falhas(tool_context)
     return LIMITE if estourou?(chave)
 
     digitos = cpf.to_s.delete('^0-9')
-    conferiu = digitos.size == 11 && cadastro_confere?(digitos, data(nascimento))
+    conferiu = digitos.size == 11 && cadastro_confere?(digitos)
     log_tool_usage('consulta_andamento', { conferiu: conferiu })
     return contar_falha(chave) unless conferiu
 
@@ -51,12 +53,16 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
 
   def estourou?(chave) = chave.present? && Redis::Alfred.get(chave).to_i >= LIMITE_FALHAS
 
+  # 1ª falha da conversa: pede pra conferir; da 2ª em diante: humano. Sem conversa (Testar): humano direto.
   def contar_falha(chave)
-    Redis::Alfred.expire(chave, 1.hour.to_i) if chave && Redis::Alfred.incr(chave) == 1
-    NAO_CONFERIU
+    return NAO_CONFERIU unless chave
+
+    falhas = Redis::Alfred.incr(chave)
+    Redis::Alfred.expire(chave, 1.hour.to_i) if falhas == 1
+    falhas == 1 ? CONFERIR : NAO_CONFERIU
   end
 
-  # Execuções guarda só os nomes dos campos: CPF e nascimento nunca ficam gravados.
+  # Execuções guarda só os nomes dos campos: o CPF nunca fica gravado.
   def registrar_execucao(tool_context, params, *)
     super(tool_context, params.transform_values { '[oculto]' }, *)
   end
@@ -71,13 +77,9 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
     lead.update!(lead_stage: perdido, lost_reason: JA_CLIENTE) if perdido
   end
 
-  # O filtro do ADVBOX pode casar CPF parcial: só vale cadastro com o mesmo CPF e o mesmo nascimento.
-  def cadastro_confere?(digitos, nascimento)
-    return false if nascimento.nil?
-
-    lista(Ramon::AdvboxClient.customers(identification: digitos)).any? do |c|
-      c['identification'].to_s.delete('^0-9') == digitos && data(c['birthdate']) == nascimento
-    end
+  # O filtro do ADVBOX pode casar CPF parcial: só vale cadastro com o mesmo CPF.
+  def cadastro_confere?(digitos)
+    lista(Ramon::AdvboxClient.customers(identification: digitos)).any? { |c| c['identification'].to_s.delete('^0-9') == digitos }
   end
 
   def linha(lawsuit)
@@ -108,12 +110,6 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
     return SEM_PAINEL unless cliente&.convidado_em.present? && !cliente.suspenso?
 
     "Painel do Cliente (entra com o CPF e a senha dele): #{ENV.fetch('PORTAL_URL', "#{ENV.fetch('FRONTEND_URL', nil)}/cliente")}"
-  end
-
-  def data(valor)
-    Date.parse(valor.to_s)
-  rescue Date::Error
-    nil
   end
 
   # Envelope das listas do ADVBOX: { offset, limit, totalCount, data }.

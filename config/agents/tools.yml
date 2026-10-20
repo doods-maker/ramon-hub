@@ -211,7 +211,7 @@
 
 - id: consulta_andamento
   title: 'Consulta de andamento'
-  description: 'Quem já é cliente: confere CPF + nascimento no AdvBox e devolve a fase do processo (a do Painel do Cliente) e o link do Painel'
+  description: 'Quem já é cliente: confere o CPF no AdvBox e devolve a fase do processo (a do Painel do Cliente) e o link do Painel'
   icon: 'search'
   nivel: consulta
   sistema: advbox
