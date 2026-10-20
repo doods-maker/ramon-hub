@@ -1,5 +1,6 @@
 # FORK-PONTO (ramon): seed idempotente da area Inteligencia — assistentes + skills
-# (db/seeds/ramon/inteligencia/assistentes.yml) e FAQ aprovada (faq/<tese>.md, tese = nome do arquivo).
+# (db/seeds/ramon/inteligencia/assistentes.yml) e FAQ aprovada (faq/<slug>.md; o slug vira as teses reais da conta
+# pelo nome — Ramon::FaqTeses.do_slug; rode depois do seed das teses).
 # Chaves: assistente por name (ou antes:); skill por (assistant, seed_titulo|title), editada na tela fica; FAQ por (assistant Atendimento, question).
 class Ramon::InteligenciaSeed
   DIR = Rails.root.join('db/seeds/ramon/inteligencia')
@@ -18,12 +19,16 @@ class Ramon::InteligenciaSeed
     @contagem
   end
 
-  # So preenche a tese das FAQs do seed que ainda nao tem (rake ramon:inteligencia:teses).
-  # Nao toca em resposta, status nem nas skills — pode rodar em producao sem medo.
+  # So preenche a tese das FAQs do seed que ainda estao sem tese (rake ramon:inteligencia:teses) — ex.: a conta ganhou
+  # as teses depois do seed. Nao toca em resposta, status nem nas skills — pode rodar em producao sem medo.
   # @return [Integer] quantas FAQs ganharam tese
   def preencher_teses
-    faqs_do_seed.sum do |tese, pergunta, _resposta|
-      atendimento.responses.where(question: pergunta, tese: nil).update_all(tese: tese) # rubocop:disable Rails/SkipsModelValidations
+    faqs_do_seed.sum do |slug, pergunta, _resposta|
+      tese = teses_do_slug(slug)
+      next 0 if !tese[:geral] && tese[:thesis_ids].empty? # conta sem a tese: nada a preencher
+
+      atendimento.responses.where(question: pergunta, geral: false).where("thesis_ids = '{}'")
+                 .update_all(tese) # rubocop:disable Rails/SkipsModelValidations
     end
   end
 
@@ -78,29 +83,34 @@ class Ramon::InteligenciaSeed
     @contagem[:skills_puladas_editadas] += 1
   end
 
-  # [[tese, pergunta, resposta], ...] — tese = nome do arquivo (faq/<tese>.md).
+  # [[slug, pergunta, resposta], ...] — slug = nome do arquivo (faq/<slug>.md).
   def faqs_do_seed
     Dir[DIR.join('faq', '*.md').to_s].flat_map do |arquivo|
-      tese = File.basename(arquivo, '.md')
+      slug = File.basename(arquivo, '.md')
       File.read(arquivo).sub(FRONT_MATTER, '').split(/^## /).drop(1).map do |bloco|
         pergunta, resposta = bloco.split("\n", 2)
-        [tese, pergunta.strip, resposta.to_s.strip]
+        [slug, pergunta.strip, resposta.to_s.strip]
       end
     end
   end
 
-  # Tese: so preenche se vazia (a escolhida na tela vale, editada ou nao).
-  def upsert_faq(pergunta, resposta, tese)
+  # Tese: so preenche se a FAQ esta sem tese (a escolhida na tela vale, editada ou nao).
+  def upsert_faq(pergunta, resposta, slug)
     faq = atendimento.responses.find_or_initialize_by(question: pergunta)
+    tese = ::Ramon::FaqTeses.sem_tese?(faq) ? teses_do_slug(slug) : {}
     if faq.persisted? && faq.edited?
-      faq.update_column(:tese, tese) if faq.tese.nil? # rubocop:disable Rails/SkipsModelValidations
+      faq.update_columns(tese) if tese.present? # rubocop:disable Rails/SkipsModelValidations
       return @contagem[:faq_puladas_editadas] += 1
     end
 
     @contagem[faq.new_record? ? :faq_criadas : :faq_atualizadas] += 1
-    faq.update!(answer: resposta, status: :approved, documentable: nil, tese: faq.tese || tese)
+    faq.update!(answer: resposta, status: :approved, documentable: nil, **tese)
     # mark_as_edited marca edited=true quando pergunta ou resposta mudam (aqui a resposta muda); seed nao conta como edicao na UI.
     faq.update_column(:edited, false) if faq.edited? # rubocop:disable Rails/SkipsModelValidations
+  end
+
+  def teses_do_slug(slug)
+    (@teses_do_slug ||= {})[slug] ||= ::Ramon::FaqTeses.do_slug(@account, slug)
   end
 
   def atendimento

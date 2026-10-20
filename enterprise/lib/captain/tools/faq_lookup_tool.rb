@@ -5,8 +5,9 @@ class Captain::Tools::FaqLookupTool < Captain::Tools::BasePublicTool
   def perform(tool_context, query:)
     log_tool_usage('searching', { query: query })
 
-    # Use existing vector search on approved responses
-    responses = @assistant.responses.approved.search(query).to_a
+    # ramon: só as FAQs da tese do lead do turno + Gerais + sem tese (lead sem tese = todas) — Ramon::FaqTeses.
+    tese = ::Ramon::FaqTeses.tese_do_turno(@assistant.account_id, tool_context&.state)
+    responses = ::Ramon::FaqTeses.para_tese(@assistant.responses.approved, tese).search(query).to_a
 
     if responses.empty?
       log_tool_usage('no_results', { query: query })

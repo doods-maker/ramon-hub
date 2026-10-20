@@ -131,6 +131,28 @@ RSpec.describe Captain::Tools::FaqLookupTool, type: :model do
       end
     end
 
+    describe 'tese do lead (ramon)' do
+      let(:acidente) { create(:thesis, account: account) }
+      let(:bpc) { create(:thesis, account: account) }
+      let(:conversa) { create(:conversation, account: account) }
+
+      before do
+        create(:lead, account: account, thesis: acidente, conversation_id: conversa.id)
+        { 'Prazo do acidente?' => { thesis_ids: [acidente.id] }, 'Prazo do BPC?' => { thesis_ids: [bpc.id] },
+          'Prazo geral?' => { geral: true }, 'Prazo sem tese?' => {} }.each do |pergunta, tese|
+          create(:captain_assistant_response, assistant: assistant, question: pergunta, answer: 'x', **tese)
+        end
+      end
+
+      it 'acha só as FAQs da tese do lead, as Gerais e as sem tese' do
+        resultado = with_modified_env(RAMON_FAQ_BUSCA: 'texto') do
+          tool.perform(Struct.new(:state).new({ conversation: { id: conversa.id } }), query: 'prazo')
+        end
+        expect(resultado).to include('Prazo do acidente?', 'Prazo geral?', 'Prazo sem tese?')
+        expect(resultado).not_to include('Prazo do BPC?')
+      end
+    end
+
     context 'with blank query' do
       it 'handles empty query' do
         # Return empty result set

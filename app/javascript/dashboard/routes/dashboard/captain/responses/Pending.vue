@@ -17,6 +17,7 @@ import CaptainPaywall from 'dashboard/components-next/captain/pageComponents/Pay
 import ResponseCard from 'dashboard/components-next/captain/assistant/ResponseCard.vue';
 import CreateResponseDialog from 'dashboard/components-next/captain/pageComponents/response/CreateResponseDialog.vue';
 import ResponsePageEmptyState from 'dashboard/components-next/captain/pageComponents/emptyStates/ResponsePageEmptyState.vue';
+import { rotulosDaFaq } from './teses';
 
 const router = useRouter();
 const route = useRoute();
@@ -34,6 +35,7 @@ const selectedAssistantId = computed(() => route.params.assistantId);
 const dialogType = ref('');
 const searchQuery = ref('');
 const { t } = useI18n();
+const teses = useMapGetter('theses/getTheses');
 
 const createDialog = ref(null);
 
@@ -235,6 +237,7 @@ const initializeFromURL = () => {
 
 onMounted(() => {
   initializeFromURL();
+  if (!teses.value.length) store.dispatch('theses/get');
 });
 </script>
 
@@ -315,7 +318,7 @@ onMounted(() => {
           :answer="response.answer"
           :assistant="response.assistant"
           :documentable="response.documentable"
-          :tese="response.tese"
+          :teses="rotulosDaFaq(response, teses, t('INTEL.FAQ.GERAL'))"
           :status="response.status"
           :created-at="response.created_at"
           :updated-at="response.updated_at"

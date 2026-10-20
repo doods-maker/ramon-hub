@@ -268,35 +268,43 @@ RSpec.describe 'Api::V1::Accounts::Captain::AssistantResponses', type: :request 
     end
   end
 
-  describe 'tese da FAQ (ramon, I-FQ1)' do
+  describe 'teses da FAQ (ramon, I-FQ1: teses reais da conta ou Geral)' do
     let(:url) { "/api/v1/accounts/#{account.id}/captain/assistant_responses" }
+    let(:bpc) { create(:thesis, account: account, name: 'BPC/LOAS') }
+    let(:trab) { create(:thesis, account: account, name: 'Trabalhista — vínculo') }
 
     before do
-      create(:captain_assistant_response, assistant: assistant, account: account, question: 'BPC?', tese: 'bpc-loas')
-      create(:captain_assistant_response, assistant: assistant, account: account, question: 'Geral?', tese: 'geral')
+      create(:captain_assistant_response, assistant: assistant, account: account, question: 'BPC?', thesis_ids: [bpc.id, trab.id])
+      create(:captain_assistant_response, assistant: assistant, account: account, question: 'Geral?', geral: true)
       create(:captain_assistant_response, assistant: assistant, account: account, question: 'Sem?')
     end
 
-    it 'filtra por tese e por sem tese' do
-      get url, params: { tese: 'bpc-loas' }, headers: agent.create_new_auth_token, as: :json
+    it 'filtra por tese, Geral e sem tese' do
+      get url, params: { tese: trab.id }, headers: agent.create_new_auth_token, as: :json
       expect(json_response[:payload].pluck(:question)).to eq(['BPC?'])
-      expect(json_response[:payload].first[:tese]).to eq('bpc-loas')
+      expect(json_response[:payload].first).to include(thesis_ids: [bpc.id, trab.id], geral: false)
+
+      get url, params: { tese: 'geral' }, headers: agent.create_new_auth_token, as: :json
+      expect(json_response[:payload].pluck(:question)).to eq(['Geral?'])
 
       get url, params: { tese: 'sem' }, headers: agent.create_new_auth_token, as: :json
       expect(json_response[:payload].pluck(:question)).to eq(['Sem?'])
     end
 
-    it 'grava a tese escolhida na tela; vazio vira sem tese; tese desconhecida e recusada' do
+    it 'grava as teses escolhidas na tela; Geral solta as teses; nenhuma = sem tese' do
       faq = assistant.responses.find_by!(question: 'Sem?')
-      patch "#{url}/#{faq.id}", params: { assistant_response: { tese: 'auxilio-acidente' } }, headers: admin.create_new_auth_token, as: :json
+      patch "#{url}/#{faq.id}", params: { assistant_response: { thesis_ids: [bpc.id, trab.id] } },
+                                headers: admin.create_new_auth_token, as: :json
       expect(response).to have_http_status(:success)
-      expect(faq.reload.tese).to eq('auxilio-acidente')
+      expect(faq.reload.thesis_ids).to eq([bpc.id, trab.id])
 
-      patch "#{url}/#{faq.id}", params: { assistant_response: { tese: '' } }, headers: admin.create_new_auth_token, as: :json
-      expect(faq.reload.tese).to be_nil
+      patch "#{url}/#{faq.id}", params: { assistant_response: { geral: true, thesis_ids: [bpc.id] } },
+                                headers: admin.create_new_auth_token, as: :json
+      expect(faq.reload).to have_attributes(geral: true, thesis_ids: [])
 
-      patch "#{url}/#{faq.id}", params: { assistant_response: { tese: 'trabalhista' } }, headers: admin.create_new_auth_token, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      patch "#{url}/#{faq.id}", params: { assistant_response: { geral: false, thesis_ids: [] } },
+                                headers: admin.create_new_auth_token, as: :json
+      expect(faq.reload).to have_attributes(geral: false, thesis_ids: [])
     end
   end
 end

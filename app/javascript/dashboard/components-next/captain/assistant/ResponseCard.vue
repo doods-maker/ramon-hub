@@ -37,7 +37,7 @@ const props = defineProps({
     type: Object,
     default: null,
   },
-  tese: { type: String, default: null },
+  teses: { type: Array, default: () => [] }, // rótulos (Geral ou nomes das teses) — rotulosDaFaq
   usos: { type: Number, default: 0 },
   usadaEm: { type: Number, default: null },
   assistant: {
@@ -231,12 +231,13 @@ const handleDocumentableClick = () => {
       >
         <div class="inline-flex items-center gap-3 min-w-0">
           <span
-            v-if="tese"
+            v-for="tese in teses"
+            :key="tese"
             data-testid="faq-tese-chip"
             class="shrink-0"
             :class="[CHIP, TOM.blue]"
           >
-            {{ t(`INTEL.TESE.${tese}`) }}
+            {{ tese }}
           </span>
           <span
             v-if="status === 'approved'"

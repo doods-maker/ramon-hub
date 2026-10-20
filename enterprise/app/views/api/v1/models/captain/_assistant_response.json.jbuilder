@@ -30,6 +30,7 @@ json.question resource.question
 json.updated_at resource.updated_at.to_i
 json.status resource.status
 json.edited resource.edited
-json.tese resource.tese
+json.thesis_ids resource.thesis_ids
+json.geral resource.geral
 json.usos resource.usos
 json.usada_em resource.usada_em&.to_i

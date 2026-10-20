@@ -29,9 +29,10 @@ class CaptainAssistant extends ApiClient {
   }
 
   // ramon: "Testar pergunta" (I-FQ2) — mesma busca do faq_lookup.
-  buscarFaq(assistantId, pergunta) {
+  // thesisId = buscar como para um lead dessa tese (vazio = lead sem tese: todas).
+  buscarFaq(assistantId, pergunta, thesisId = null) {
     return axios.get(`${this.url}/${assistantId}/buscar_faq`, {
-      params: { q: pergunta },
+      params: { q: pergunta, thesis_id: thesisId || undefined },
     });
   }
 

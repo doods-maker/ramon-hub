@@ -8,8 +8,7 @@ import { useMapGetter } from 'dashboard/composables/store';
 import Input from 'dashboard/components-next/input/Input.vue';
 import Editor from 'dashboard/components-next/Editor/Editor.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { ROTULO, SELECT } from 'dashboard/routes/dashboard/ramon/helpers/ui';
-import { TESES } from 'dashboard/routes/dashboard/captain/responses/teses';
+import { ROTULO } from 'dashboard/routes/dashboard/ramon/helpers/ui';
 
 const props = defineProps({
   mode: {
@@ -29,11 +28,14 @@ const { t } = useI18n();
 const formState = {
   uiFlags: useMapGetter('captainResponses/getUIFlags'),
 };
+// ramon (I-FQ1): teses reais da conta (a página da FAQ carrega o store); nenhuma marcada = sem tese.
+const teses = useMapGetter('theses/getTheses');
 
 const initialState = {
   question: '',
   answer: '',
-  tese: '',
+  geral: false,
+  thesisIds: [],
 };
 
 const state = reactive({ ...initialState });
@@ -63,7 +65,8 @@ const handleCancel = () => emit('cancel');
 const prepareDocumentDetails = () => ({
   question: state.question,
   answer: state.answer,
-  tese: state.tese || null,
+  geral: state.geral,
+  thesis_ids: state.geral ? [] : state.thesisIds,
 });
 
 const handleSubmit = async () => {
@@ -78,8 +81,13 @@ const handleSubmit = async () => {
 const updateStateFromResponse = response => {
   if (!response) return;
 
-  const { question, answer, tese } = response;
-  Object.assign(state, { question, answer, tese: tese || '' });
+  const { question, answer, geral, thesis_ids: thesisIds } = response;
+  Object.assign(state, {
+    question,
+    answer,
+    geral: Boolean(geral),
+    thesisIds: [...(thesisIds || [])],
+  });
 };
 
 watch(
@@ -102,15 +110,29 @@ watch(
       :message="formErrors.question"
       :message-type="formErrors.question ? 'error' : 'info'"
     />
-    <label :class="ROTULO">
-      {{ t('INTEL.FAQ.TESE_LABEL') }}
-      <select v-model="state.tese" data-testid="faq-tese" :class="SELECT">
-        <option value="">{{ t('INTEL.FAQ.SEM_TESE') }}</option>
-        <option v-for="tese in TESES" :key="tese" :value="tese">
-          {{ t(`INTEL.TESE.${tese}`) }}
-        </option>
-      </select>
-    </label>
+    <fieldset class="flex flex-col gap-1.5">
+      <legend :class="ROTULO">{{ t('INTEL.FAQ.TESE_LABEL') }}</legend>
+      <label class="flex items-center gap-2 text-sm text-n-slate-12">
+        <input v-model="state.geral" type="checkbox" data-testid="faq-geral" />
+        {{ t('INTEL.FAQ.GERAL_AJUDA') }}
+      </label>
+      <label
+        v-for="tese in teses"
+        :key="tese.id"
+        class="flex items-center gap-2 text-sm"
+        :class="state.geral ? 'text-n-slate-10' : 'text-n-slate-12'"
+      >
+        <input
+          v-model="state.thesisIds"
+          type="checkbox"
+          data-testid="faq-tese"
+          :value="tese.id"
+          :disabled="state.geral"
+        />
+        {{ tese.name }}
+      </label>
+      <p class="text-xs text-n-slate-10">{{ t('INTEL.FAQ.TESE_AJUDA') }}</p>
+    </fieldset>
     <Editor
       v-model="state.answer"
       :label="t('CAPTAIN.RESPONSES.FORM.ANSWER.LABEL')"

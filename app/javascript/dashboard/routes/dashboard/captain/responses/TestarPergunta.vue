@@ -1,9 +1,10 @@
 <script setup>
 // "Testar pergunta" (I-FQ2): digite como o lead perguntaria e veja as FAQs que
-// a ferramenta faq_lookup do assistente acharia, na mesma ordem (até 5).
-// Leitura pura: não grava nada, não chama a IA.
+// a ferramenta faq_lookup do assistente acharia, na mesma ordem (até 5) — para um
+// lead da tese escolhida (vazio = lead sem tese: todas). Leitura pura: não grava nada, não chama a IA.
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useMapGetter } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
 import CaptainAssistantAPI from 'dashboard/api/captain/assistant';
 import {
@@ -11,16 +12,20 @@ import {
   CAMPO,
   CARTAO,
   CHIP,
+  SELECT,
   TITULO,
   TOM,
 } from 'dashboard/routes/dashboard/ramon/helpers/ui';
+import { rotulosDaFaq } from './teses';
 
 const props = defineProps({
   assistantId: { type: Number, required: true },
 });
 
 const { t } = useI18n();
+const teses = useMapGetter('theses/getTheses'); // a página da FAQ carrega
 const pergunta = ref('');
+const teseDoLead = ref('');
 const resultado = ref(null); // null = ainda não testou
 const testando = ref(false);
 const erro = ref(false);
@@ -34,7 +39,8 @@ const testar = async () => {
   try {
     const { data } = await CaptainAssistantAPI.buscarFaq(
       props.assistantId,
-      texto
+      texto,
+      teseDoLead.value
     );
     resultado.value = data.payload;
   } catch (e) {
@@ -59,6 +65,18 @@ const testar = async () => {
         :class="CAMPO"
         :placeholder="t('INTEL.FAQ.TESTAR.PLACEHOLDER')"
       />
+      <select
+        v-model="teseDoLead"
+        data-testid="testar-pergunta-tese"
+        class="!w-56 shrink-0"
+        :class="SELECT"
+        :title="t('INTEL.FAQ.TESTAR.TESE_AJUDA')"
+      >
+        <option value="">{{ t('INTEL.FAQ.TESTAR.LEAD_SEM_TESE') }}</option>
+        <option v-for="tese in teses" :key="tese.id" :value="tese.id">
+          {{ tese.name }}
+        </option>
+      </select>
       <Button
         type="submit"
         class="shrink-0"
@@ -94,8 +112,12 @@ const testar = async () => {
             class="flex flex-wrap items-center gap-1.5 text-sm text-n-slate-12"
           >
             <span class="font-medium">{{ faq.question }}</span>
-            <span v-if="faq.tese" :class="[CHIP, TOM.slate]">
-              {{ t(`INTEL.TESE.${faq.tese}`) }}
+            <span
+              v-for="tese in rotulosDaFaq(faq, teses, t('INTEL.FAQ.GERAL'))"
+              :key="tese"
+              :class="[CHIP, TOM.slate]"
+            >
+              {{ tese }}
             </span>
           </p>
           <p class="text-xs text-n-slate-11 line-clamp-2">{{ faq.answer }}</p>

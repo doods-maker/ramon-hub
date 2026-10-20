@@ -10,7 +10,7 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
   RESULTS_PER_PAGE = 25
 
   def index
-    filtered_query = filtrar_tese(apply_filters(@responses))
+    filtered_query = Ramon::FaqTeses.filtrar(apply_filters(@responses), permitted_params[:tese]) # ramon: 'geral' | 'sem' | id
     @responses_count = filtered_query.count
     @responses = filtered_query.page(@current_page).per(RESULTS_PER_PAGE)
   end
@@ -57,13 +57,6 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
     base_query
   end
 
-  # ramon: filtro por tese (I-FQ1); 'sem' = FAQ sem tese.
-  def filtrar_tese(scope)
-    return scope if permitted_params[:tese].blank?
-
-    scope.where(tese: permitted_params[:tese] == 'sem' ? nil : permitted_params[:tese])
-  end
-
   def set_assistant
     @assistant = Current.account.captain_assistants.find_by(id: params[:assistant_id])
   end
@@ -90,7 +83,8 @@ class Api::V1::Accounts::Captain::AssistantResponsesController < Api::V1::Accoun
       :answer,
       :assistant_id,
       :status,
-      :tese
+      :geral,
+      thesis_ids: []
     )
   end
 end

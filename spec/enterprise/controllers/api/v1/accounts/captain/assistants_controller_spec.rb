@@ -446,11 +446,12 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
 
   describe 'GET /api/v1/accounts/{account.id}/captain/assistants/{id}/buscar_faq' do
     let(:assistant) { create(:captain_assistant, account: account) }
+    let(:tese) { create(:thesis, account: account) }
 
     around { |example| with_modified_env(RAMON_FAQ_BUSCA: 'texto') { example.run } }
 
     before do
-      create(:captain_assistant_response, assistant: assistant, account: account, tese: 'auxilio-acidente',
+      create(:captain_assistant_response, assistant: assistant, account: account, thesis_ids: [tese.id],
                                           question: 'Posso continuar trabalhando recebendo auxílio-acidente?',
                                           answer: 'Pode, é compatível com o trabalho.')
       create(:captain_assistant_response, assistant: assistant, account: account, question: 'Quanto custa?',
@@ -459,9 +460,9 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
                                           question: 'Posso continuar trabalhando e receber o BPC?', answer: 'Depende da renda.')
     end
 
-    def buscar(pergunta)
+    def buscar(pergunta, thesis_id: nil)
       get "/api/v1/accounts/#{account.id}/captain/assistants/#{assistant.id}/buscar_faq",
-          params: { q: pergunta }, headers: agent.create_new_auth_token, as: :json
+          params: { q: pergunta, thesis_id: thesis_id }, headers: agent.create_new_auth_token, as: :json
       json_response[:payload]
     end
 
@@ -470,7 +471,13 @@ RSpec.describe 'Api::V1::Accounts::Captain::Assistants', type: :request do
 
       expect(response).to have_http_status(:success)
       expect(faqs.pluck(:question)).to eq(['Posso continuar trabalhando recebendo auxílio-acidente?'])
-      expect(faqs.first).to include(tese: 'auxilio-acidente', answer: 'Pode, é compatível com o trabalho.')
+      expect(faqs.first).to include(thesis_ids: [tese.id], geral: false, answer: 'Pode, é compatível com o trabalho.')
+    end
+
+    it 'com thesis_id busca como para um lead dessa tese: FAQ de outra tese some' do
+      outra = create(:thesis, account: account)
+      expect(buscar('posso continuar trabalhando', thesis_id: tese.id).size).to eq(1)
+      expect(buscar('posso continuar trabalhando', thesis_id: outra.id)).to eq([])
     end
 
     it 'pergunta vazia ou sem nada parecido volta lista vazia' do

@@ -1,16 +1,5 @@
 {
   "INTEL": {
-    "TESE": {
-      "auxilio-acidente": "Accident benefit",
-      "auxilio-doenca": "Sickness benefit",
-      "aposentadoria-invalidez": "Disability retirement",
-      "bpc-loas": "BPC/LOAS",
-      "acrescimo-25": "25% supplement",
-      "trabalhista": "Labor",
-      "isencao-ir": "Income tax exemption",
-      "salario-maternidade": "Maternity pay",
-      "geral": "General"
-    },
     "DOCUMENTOS": {
       "MODO_LINK": "Page link",
       "MODO_TEXTO": "Paste text",
@@ -27,13 +16,18 @@
       "TESE_LABEL": "Thesis",
       "TODAS_TESES": "All theses",
       "SEM_TESE": "No thesis",
+      "GERAL": "General",
+      "GERAL_AJUDA": "General — applies to every case",
+      "TESE_AJUDA": "Tick every thesis this FAQ answers. None ticked = no thesis (the assistant still uses it for every lead).",
       "TESTAR": {
         "TITULO": "Test a question",
         "AJUDA": "Write it the way a lead would ask. The list shows the FAQs the assistant would find, in the order it gets them.",
         "PLACEHOLDER": "E.g.: can I keep working while on accident benefit?",
         "BOTAO": "Test",
         "NADA": "The assistant would not find any FAQ for this question. Consider creating one.",
-        "ERRO": "Could not test right now. Try again."
+        "ERRO": "Could not test right now. Try again.",
+        "LEAD_SEM_TESE": "Lead without thesis (all)",
+        "TESE_AJUDA": "Search as the assistant would for a lead of this thesis: its FAQs, the General ones and the ones without thesis."
       },
       "USADA": "Used {n}×",
       "NUNCA_USADA": "Not used yet",
