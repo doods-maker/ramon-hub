@@ -106,6 +106,9 @@ assistentes:
           Se conferir: conte a fase de cada processo com as palavras do resultado, em mensagem curta, e mande o
           link do Painel do Cliente quando ele vier no resultado (se vier "nao mande o link", não mande). Não
           repita o CPF na resposta.
+          Se vier "Compromisso marcado" (audiência ou perícia), conte a data, a hora e se é presencial ou online,
+          como veio no resultado, e diga que antes disso a equipe vai falar com a pessoa para explicar como vai ser.
+          Não comente nem oriente sobre o compromisso.
           Se o resultado pedir para conferir (1ª tentativa), peça com simpatia que a pessoa confira e mande o CPF
           de novo — pode ter sido erro de digitação.
           Se não conferir de novo, se não houver processo ou se o AdvBox não responder: diga só que não foi possível
