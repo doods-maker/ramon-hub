@@ -576,7 +576,7 @@ provideMessageContext({
         <Avatar v-bind="avatarInfo" :size="24" />
       </div>
       <div
-        class="[grid-area:bubble] flex min-w-0"
+        class="[grid-area:bubble] flex min-w-0 relative"
         :class="{
           'ltr:ml-8 rtl:mr-8 justify-end': orientation === ORIENTATION.RIGHT,
           'ltr:mr-8 rtl:ml-8': orientation === ORIENTATION.LEFT,
@@ -584,6 +584,11 @@ provideMessageContext({
         @contextmenu="openContextMenu($event)"
       >
         <Component :is="componentToRender" />
+        <RascunhoAcoes
+          v-if="ehRascunho"
+          modo="icones"
+          class="absolute top-1 ltr:right-1 rtl:left-1"
+        />
       </div>
       <div
         v-if="
