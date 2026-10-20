@@ -42,7 +42,7 @@ const payload = () => ({
     {
       lead_id: 1,
       name: 'Maria de Lourdes Souza',
-      benefit_type_name: 'B31',
+      thesis_name: 'B31',
       dcb_em: '2021-03-03',
       stage_name: 'Qualificado',
       is_lost: false,
@@ -55,7 +55,7 @@ const payload = () => ({
     {
       lead_id: 2,
       name: 'Osmar Vieira da Cunha',
-      benefit_type_name: 'B32',
+      thesis_name: 'B32',
       dcb_em: '2020-11-10',
       stage_name: 'Perdido',
       is_lost: true,
@@ -68,7 +68,7 @@ const payload = () => ({
     {
       lead_id: 3,
       name: 'João Batista Ferreira',
-      benefit_type_name: 'B94',
+      thesis_name: 'B94',
       dcb_em: '2021-09-15',
       stage_name: 'Novo',
       is_lost: false,

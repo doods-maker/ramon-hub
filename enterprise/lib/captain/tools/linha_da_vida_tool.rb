@@ -2,7 +2,7 @@
 # marcos etarios (aposentadoria por idade, rural, BPC). Mesmo material da tela
 # Pessoa, servido ao agente.
 class Captain::Tools::LinhaDaVidaTool < Captain::Tools::RamonBaseTool
-  description 'Linha da vida da pessoa: todos os casos dela no hub (etapa, tese, beneficio, valor) e os marcos ' \
+  description 'Linha da vida da pessoa: todos os casos dela no hub (etapa, tese, valor) e os marcos ' \
               'etarios com a data em que cada um vence (aposentadoria por idade urbana e rural, BPC/LOAS). ' \
               'Use quando quiser ver o historico completo da pessoa, nao so um caso.'
   param :lead_id, type: 'string', desc: 'Id de um caso (lead) da pessoa. Sem ele, usa o caso da conversa aberta.', required: false
@@ -24,9 +24,9 @@ class Captain::Tools::LinhaDaVidaTool < Captain::Tools::RamonBaseTool
   end
 
   def casos(contact)
-    account_scoped(::Lead).where(contact_id: contact.id).includes(:lead_stage, :benefit_type, :thesis).map do |lead|
+    account_scoped(::Lead).where(contact_id: contact.id).includes(:lead_stage, :thesis).map do |lead|
       { lead_id: lead.id, nome: lead.name, etapa: lead.lead_stage&.name, tese: lead.thesis&.name,
-        beneficio: lead.benefit_type&.name, valor: lead.value&.to_f, origem: lead.source,
+        valor: lead.value&.to_f, origem: lead.source,
         criado_em: lead.created_at, ganho_em: lead.won_at, perdido_em: lead.lost_at }
     end
   end

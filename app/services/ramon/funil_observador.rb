@@ -85,7 +85,7 @@ class Ramon::FunilObservador
   def ficha
     ["Hoje: #{agora} (horário de São Paulo).",
      "Etapa atual: #{@lead.lead_stage&.name || 'não informada'}.",
-     "Tese/benefício: #{@lead.thesis&.name || @lead.benefit_type&.name || 'não informado'}.",
+     "Tese: #{@lead.thesis&.name || 'não informada'}.",
      "Documentos pendentes: #{lista(docs_pendentes, ', ', 'nenhum')}.",
      "Motivos de perda (use o nome exato): #{account.lost_reasons.pluck(:name).join('; ')}.",
      "Tarefas \"Cobrar:\" abertas (id — título): #{lista(cobrancas, '; ', 'nenhuma')}.", *desfeitas].join("\n")

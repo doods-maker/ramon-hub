@@ -135,10 +135,10 @@ class Ramon::TvMetrics < Ramon::CockpitMetrics
 
   # Último ganho de hoje — alimenta o ticker "Agora: <closer> fechou <lead>".
   def tv_last_won
-    lead = leads_funil.where(won_at: today_range).reorder(won_at: :desc).includes(:closer, :sdr, :benefit_type).first
+    lead = leads_funil.where(won_at: today_range).reorder(won_at: :desc).includes(:closer, :sdr, :thesis).first
     return nil if lead.nil?
 
     { lead_name: lead.name, closer_name: (lead.closer || lead.sdr)&.name,
-      value: lead.value.to_f, benefit: lead.benefit_type&.name, at: lead.won_at }
+      value: lead.value.to_f, benefit: lead.thesis&.name, at: lead.won_at }
   end
 end

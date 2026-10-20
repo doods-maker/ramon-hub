@@ -10,7 +10,6 @@ vi.mock('vue-i18n', () => ({
 
 const stubStore = {
   getters: {
-    'leadConfig/getBenefitTypes': [{ id: 1, name: 'BPC' }],
     'leadConfig/getPriorities': [],
     'leadConfig/getChannels': [{ key: 'whatsapp', label: 'WhatsApp' }],
     'leadConfig/getStages': [
@@ -32,7 +31,6 @@ const stubStore = {
 
 const emptyFilters = {
   q: '',
-  benefitTypeId: null,
   leadPriorityId: null,
   agentId: null,
   source: '',

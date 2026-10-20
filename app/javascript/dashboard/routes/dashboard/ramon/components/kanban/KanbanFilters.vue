@@ -11,9 +11,6 @@ const props = defineProps({
 const emit = defineEmits(['update']);
 
 const getters = useStoreGetters();
-const benefitTypes = computed(
-  () => getters['leadConfig/getBenefitTypes'].value
-);
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const sources = computed(() => getters['leadConfig/getSources'].value);
 const channels = computed(() => getters['leadConfig/getChannels'].value);
@@ -40,17 +37,6 @@ const clearFilters = () => {
 
 <template>
   <div class="flex flex-wrap items-center gap-2 px-4 py-2">
-    <select
-      data-testid="filter-benefit"
-      :class="[ctl, activeClass(filters.benefitTypeId)]"
-      :value="filters.benefitTypeId || ''"
-      @change="emitUpdate({ benefitTypeId: $event.target.value || null })"
-    >
-      <option value="">{{ $t('RAMON.FUNIL.FILTERS.BENEFIT') }}</option>
-      <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-        {{ b.name }}
-      </option>
-    </select>
     <select
       data-testid="filter-priority"
       :class="[ctl, activeClass(filters.leadPriorityId)]"

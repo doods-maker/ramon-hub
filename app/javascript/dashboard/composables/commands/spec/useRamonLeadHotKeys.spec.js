@@ -23,7 +23,7 @@ const LEADS = [
     name: 'Ana Souza',
     value: 5000,
     stage_name: 'Novo',
-    benefit_type_name: 'B31',
+    thesis_name: 'B31',
     contact_phone: '+5548999990000',
   },
   {
@@ -31,7 +31,7 @@ const LEADS = [
     name: 'Bia Lima',
     value: 50000,
     stage_name: 'Qualificado',
-    benefit_type_name: 'B91',
+    thesis_name: 'B91',
   },
   {
     id: 12,

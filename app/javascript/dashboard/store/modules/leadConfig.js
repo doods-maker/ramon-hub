@@ -1,12 +1,10 @@
 import types from '../mutation-types';
 import LeadConfigAPI from '../../api/leadConfig';
 import LeadStagesAPI from '../../api/leadStages';
-import BenefitTypesAPI from '../../api/benefitTypes';
 import LeadPrioritiesAPI from '../../api/leadPriorities';
 
 export const state = {
   stages: [],
-  benefitTypes: [],
   priorities: [],
   sources: [],
   channels: [],
@@ -18,7 +16,6 @@ export const getters = {
   // stages guarda o objeto inteiro do stage → probability e
   // stalled_after_days fazem pass-through sem tratamento extra.
   getStages: _state => _state.stages,
-  getBenefitTypes: _state => _state.benefitTypes,
   getPriorities: _state => _state.priorities,
   getSources: _state => _state.sources,
   getChannels: _state => _state.channels,
@@ -59,25 +56,6 @@ export const actions = {
     commit(types.SET_LEAD_STAGES, data);
   },
 
-  createBenefitType: async ({ commit }, payload) => {
-    const { data } = await BenefitTypesAPI.create(payload);
-    commit(types.ADD_BENEFIT_TYPE, data);
-    return data;
-  },
-  updateBenefitType: async ({ commit }, { id, ...payload }) => {
-    const { data } = await BenefitTypesAPI.update(id, payload);
-    commit(types.EDIT_BENEFIT_TYPE, data);
-    return data;
-  },
-  deleteBenefitType: async ({ commit }, id) => {
-    await BenefitTypesAPI.delete(id);
-    commit(types.DELETE_BENEFIT_TYPE, id);
-  },
-  reorderBenefitTypes: async ({ commit }, ids) => {
-    const { data } = await BenefitTypesAPI.reorder(ids);
-    commit(types.SET_BENEFIT_TYPES, data);
-  },
-
   createPriority: async ({ commit }, payload) => {
     const { data } = await LeadPrioritiesAPI.create(payload);
     commit(types.ADD_LEAD_PRIORITY, data);
@@ -104,7 +82,6 @@ export const mutations = {
   },
   [types.SET_LEAD_CONFIG](_state, data) {
     _state.stages = data.stages || [];
-    _state.benefitTypes = data.benefit_types || [];
     _state.priorities = data.priorities || [];
     _state.sources = data.sources || [];
     _state.channels = data.channels || [];
@@ -124,21 +101,6 @@ export const mutations = {
   },
   [types.DELETE_LEAD_STAGE](_state, id) {
     _state.stages = _state.stages.filter(s => s.id !== id);
-  },
-
-  [types.SET_BENEFIT_TYPES](_state, data) {
-    _state.benefitTypes = [...data].sort(bySortedPosition);
-  },
-  [types.ADD_BENEFIT_TYPE](_state, data) {
-    _state.benefitTypes = [..._state.benefitTypes, data].sort(bySortedPosition);
-  },
-  [types.EDIT_BENEFIT_TYPE](_state, data) {
-    _state.benefitTypes = _state.benefitTypes
-      .map(b => (b.id === data.id ? data : b))
-      .sort(bySortedPosition);
-  },
-  [types.DELETE_BENEFIT_TYPE](_state, id) {
-    _state.benefitTypes = _state.benefitTypes.filter(b => b.id !== id);
   },
 
   [types.SET_LEAD_PRIORITIES](_state, data) {

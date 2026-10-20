@@ -20,7 +20,7 @@ class Ramon::TitularExport
 
   def leads
     @contact.leads
-            .includes(:lead_stage, :thesis, :benefit_type, :lead_activities, :lead_notes, :lead_tasks, :lead_triages)
+            .includes(:lead_stage, :thesis, :lead_activities, :lead_notes, :lead_tasks, :lead_triages)
             .map { |lead| lead_json(lead) }
   end
 
@@ -28,7 +28,6 @@ class Ramon::TitularExport
     lead.as_json.merge(
       etapa: lead.lead_stage&.name,
       tese: lead.thesis&.name,
-      beneficio: lead.benefit_type&.name,
       atividades: lead.lead_activities.as_json,
       notas: lead.lead_notes.as_json,
       tarefas: lead.lead_tasks.as_json,

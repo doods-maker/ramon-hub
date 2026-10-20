@@ -2,12 +2,12 @@ require 'rails_helper'
 
 RSpec.describe Ramon::NtfyPushJob do
   let(:account) { create(:account) }
-  let(:benefit_type) { create(:benefit_type, account: account, name: 'Auxílio-Acidente') }
-  let(:lead) { create(:lead, account: account, name: 'João da Silva', benefit_type: benefit_type) }
+  let(:thesis) { create(:thesis, account: account, name: 'Auxílio-Acidente Teste') }
+  let(:lead) { create(:lead, account: account, name: 'João da Silva', thesis: thesis) }
 
   describe '#perform' do
     context 'when NTFY_TOPIC is set' do
-      it 'faz POST pro tópico com título transliterado e corpo com o benefício' do
+      it 'faz POST pro tópico com título transliterado e corpo com a tese' do
         with_modified_env NTFY_TOPIC: 'ramon-leads' do
           stub = stub_request(:post, 'https://ntfy.sh/ramon-leads')
                  .with(

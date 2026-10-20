@@ -7,7 +7,7 @@ const lead = {
   conversation_id: 99,
   stage_name: 'Negociação',
   stage_color: '#f59e0b',
-  benefit_type_name: 'Auxílio-acidente',
+  thesis_name: 'Auxílio-acidente',
   lead_priority_name: 'Alta',
   value: '12000.50',
   closer_name: 'Eduardo Schlata',

@@ -40,9 +40,9 @@ const isAtRisk = lead => {
   return !Number.isNaN(due) && due < Date.now();
 };
 
-// "<nome> — <etapa> · <benefício> · R$ X" (partes vazias somem).
+// "<nome> — <etapa> · <tese> · R$ X" (partes vazias somem).
 const leadTitle = lead => {
-  const meta = [lead.stage_name, lead.benefit_type_name];
+  const meta = [lead.stage_name, lead.thesis_name];
   if (lead.value !== null && lead.value !== undefined && lead.value !== '') {
     meta.push(brlCompact(lead.value));
   }

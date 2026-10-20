@@ -31,8 +31,9 @@ const phone = ref('+55 ');
 
 onMounted(() => {
   nextTick(() => nameInput.value?.focus());
+  if (!getters['theses/getTheses'].value.length) store.dispatch('theses/get');
 });
-const benefitTypeId = ref(null);
+const thesisId = ref(null);
 const priorityId = ref(null);
 const source = ref('');
 const channel = ref('');
@@ -45,7 +46,7 @@ const isDirty = computed(
   () =>
     Boolean(name.value.trim()) ||
     phone.value.replace(/\D/g, '') !== '55' ||
-    benefitTypeId.value !== null ||
+    thesisId.value !== null ||
     priorityId.value !== null ||
     Boolean(source.value.trim()) ||
     Boolean(channel.value) ||
@@ -60,8 +61,9 @@ const onBackdrop = () => {
 };
 
 const stages = computed(() => getters['leadConfig/getStages'].value);
-const benefitTypes = computed(
-  () => getters['leadConfig/getBenefitTypes'].value
+// só teses ativas (mesmo critério do painel do lead)
+const theses = computed(() =>
+  getters['theses/getTheses'].value.filter(th => th.active)
 );
 const priorities = computed(() => getters['leadConfig/getPriorities'].value);
 const sources = computed(() => getters['leadConfig/getSources'].value);
@@ -152,7 +154,7 @@ const submit = async () => {
       const lead = await store.dispatch('leads/create', {
         name: name.value.trim(),
         lead_stage_id: firstStage.id,
-        benefit_type_id: benefitTypeId.value,
+        thesis_id: thesisId.value,
         lead_priority_id: priorityId.value,
         source: source.value.trim() || null,
         channel: channel.value || null,
@@ -231,11 +233,15 @@ const submit = async () => {
         </div>
 
         <label :class="ROTULO">
-          {{ $t('RAMON.FUNIL.BENEFIT') }}
-          <select v-model="benefitTypeId" :class="SELECT">
-            <option :value="null">—</option>
-            <option v-for="b in benefitTypes" :key="b.id" :value="b.id">
-              {{ b.name }}
+          {{ $t('RAMON.FUNIL.NEW.THESIS') }}
+          <select
+            v-model="thesisId"
+            data-testid="new-lead-thesis"
+            :class="SELECT"
+          >
+            <option :value="null">{{ $t('RAMON.FUNIL.NEW.NO_THESIS') }}</option>
+            <option v-for="th in theses" :key="th.id" :value="th.id">
+              {{ th.name }}
             </option>
           </select>
         </label>

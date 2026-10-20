@@ -437,7 +437,6 @@
       "EXPORT_CSV": "Export CSV",
       "LEAD_NAME": "Lead name",
       "LEAD_PHONE": "Phone",
-      "BENEFIT": "Benefit type",
       "PRIORITY": "Priority",
       "OPEN_CONVERSATION": "Open conversation",
       "LOADING_CONVERSATION": "Loading conversation…",
@@ -465,7 +464,9 @@
         "INVALID": "Invalid value — numbers only, e.g. 1,500.00"
       },
       "NEW": {
-        "SOURCE": "Source",
+        "THESIS": "Thesis",
+        "NO_THESIS": "No thesis",
+        "SOURCE":"Source",
         "CHANNEL": "Channel",
         "CHANNEL_PLACEHOLDER": "— select —",
         "VALUE": "Value (R$)",
@@ -511,7 +512,6 @@
       },
       "FILTERS": {
         "SEARCH": "Search name or contact…",
-        "BENEFIT": "Benefit",
         "PRIORITY": "Priority",
         "AGENT": "Owner",
         "SOURCE": "Source",
@@ -672,10 +672,10 @@
     },
     "FUNIL_CONFIG": {
       "TITLE": "Funnel settings",
-      "BENEFITS": "Benefit types",
+      "THESES_HINT": "A lead is classified by its thesis.",
+      "THESES_LINK": "Theses live in Playbooks",
       "PRIORITIES": "Priorities",
       "ADD": "Add",
-      "BENEFIT_PLACEHOLDER": "New benefit type",
       "PRIORITY_PLACEHOLDER": "New priority",
       "CADENCE": "Stage cadence",
       "CADENCE_HINT": "Days without progress until the lead is flagged as stalled (empty = no limit; twice that turns red)",
@@ -687,9 +687,7 @@
       "WEIGHT_OF": "weight {weight}",
       "LOAD_ERROR": "Could not load funnel settings",
       "REMOVE_ERROR": "Could not remove — try again",
-      "REMOVE_BENEFIT_CONFIRM": "Remove this benefit type?",
       "REMOVE_PRIORITY_CONFIRM": "Remove this priority?",
-      "BENEFITS_EMPTY": "No benefit types yet.",
       "PRIORITIES_EMPTY": "No priorities yet."
     },
     "IMPORT": {
@@ -702,7 +700,6 @@
     },
     "DRAWER": {
       "NAME": "Name",
-      "BENEFIT": "Benefit type",
       "PRIORITY": "Lead priority",
       "SDR": "SDR",
       "CLOSER": "Closer",
@@ -1065,7 +1062,7 @@
         "ENTREGAR_ERRO": "Could not mark the delivery — try again",
         "CPF": "CPF",
         "BIRTH": "Date of birth",
-        "BENEFIT": "Benefit",
+        "THESIS": "Thesis",
         "DCB": "DCB",
         "PRESCRIPTION": "Limitation",
         "CONTRACT": "Contract",

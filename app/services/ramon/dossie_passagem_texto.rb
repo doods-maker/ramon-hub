@@ -31,8 +31,7 @@ class Ramon::DossiePassagemTexto
   end
 
   def caso
-    ['CASO', item('Tese', @dados[:tese]), item('Benefício', @dados[:beneficio]),
-     item('DCB', data(@dados[:dcb_em])), item('Prescrição', prescricao)]
+    ['CASO', item('Tese', @dados[:tese]), item('DCB', data(@dados[:dcb_em])), item('Prescrição', prescricao)]
   end
 
   # Mesmas frases do painel do lead (chip de prescrição).

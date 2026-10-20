@@ -17,9 +17,6 @@ class Leads::SeedDefaultConfigService
     'Fechado' => [100, nil], 'Perdido' => [0, nil]
   }.freeze
 
-  BENEFITS = ['Aposentadoria', 'BPC/LOAS', 'Auxílio-doença', 'Auxílio-acidente',
-              'Pensão por morte', 'Trabalhista', 'Outro'].freeze
-
   LOST_REASONS = ['Sem viabilidade', 'Sumiu / não respondeu', 'Honorário',
                   'Foi para concorrente', 'Fora da área', 'Já é cliente', 'Outro'].freeze
 
@@ -40,7 +37,6 @@ class Leads::SeedDefaultConfigService
 
   def perform
     seed_stages
-    seed_benefits
     seed_priorities
     seed_lost_reasons
     seed_theses
@@ -129,12 +125,6 @@ class Leads::SeedDefaultConfigService
 
     LOST_REASONS.each_with_index do |name, i|
       @account.lost_reasons.find_or_create_by!(name: name) { |r| r.position = i }
-    end
-  end
-
-  def seed_benefits
-    BENEFITS.each_with_index do |name, i|
-      @account.benefit_types.find_or_create_by!(name: name) { |b| b.position = i }
     end
   end
 

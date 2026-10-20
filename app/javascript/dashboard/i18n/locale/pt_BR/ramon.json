@@ -437,7 +437,6 @@
       "EXPORT_CSV": "Exportar CSV",
       "LEAD_NAME": "Nome do lead",
       "LEAD_PHONE": "Telefone",
-      "BENEFIT": "Tipo de benefício",
       "PRIORITY": "Prioridade",
       "OPEN_CONVERSATION": "Abrir conversa",
       "LOADING_CONVERSATION": "Carregando conversa…",
@@ -465,6 +464,8 @@
         "INVALID": "Valor inválido — use números, ex.: 1.500,00"
       },
       "NEW": {
+        "THESIS": "Tese",
+        "NO_THESIS": "Sem tese",
         "SOURCE": "Origem",
         "CHANNEL": "Canal",
         "CHANNEL_PLACEHOLDER": "— selecione —",
@@ -511,7 +512,6 @@
       },
       "FILTERS": {
         "SEARCH": "Buscar nome ou contato…",
-        "BENEFIT": "Benefício",
         "PRIORITY": "Prioridade",
         "AGENT": "Responsável",
         "SOURCE": "Origem",
@@ -672,10 +672,10 @@
     },
     "FUNIL_CONFIG": {
       "TITLE": "Configurações do Funil",
-      "BENEFITS": "Tipos de benefício",
+      "THESES_HINT": "A classificação do lead é a tese.",
+      "THESES_LINK": "As teses ficam em Playbooks",
       "PRIORITIES": "Prioridades",
       "ADD": "Adicionar",
-      "BENEFIT_PLACEHOLDER": "Novo tipo de benefício",
       "PRIORITY_PLACEHOLDER": "Nova prioridade",
       "CADENCE": "Cadência por etapa",
       "CADENCE_HINT": "Dias sem andamento até o lead ser marcado como parado (vazio = sem limite; o dobro fica vermelho)",
@@ -687,9 +687,7 @@
       "WEIGHT_OF": "peso {weight}",
       "LOAD_ERROR": "Não foi possível carregar as configurações do funil",
       "REMOVE_ERROR": "Não foi possível remover — tente de novo",
-      "REMOVE_BENEFIT_CONFIRM": "Remover este tipo de benefício?",
       "REMOVE_PRIORITY_CONFIRM": "Remover esta prioridade?",
-      "BENEFITS_EMPTY": "Nenhum tipo de benefício ainda.",
       "PRIORITIES_EMPTY": "Nenhuma prioridade ainda."
     },
     "IMPORT": {
@@ -702,7 +700,6 @@
     },
     "DRAWER": {
       "NAME": "Nome",
-      "BENEFIT": "Tipo de benefício",
       "PRIORITY": "Prioridade do lead",
       "SDR": "SDR",
       "CLOSER": "Closer",
@@ -1065,7 +1062,7 @@
         "ENTREGAR_ERRO": "Não foi possível marcar a entrega — tente de novo",
         "CPF": "CPF",
         "BIRTH": "Nascimento",
-        "BENEFIT": "Benefício",
+        "THESIS": "Tese",
         "DCB": "DCB",
         "PRESCRIPTION": "Prescrição",
         "CONTRACT": "Contrato",

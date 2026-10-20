@@ -39,7 +39,7 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
     Current.account.leads.funil
            .where.not(dcb_em: nil)
            .joins(:lead_stage).where('lead_stages.is_won = FALSE OR leads.docs_completos_em IS NULL')
-           .includes(:lead_stage, :benefit_type, :contact)
+           .includes(:lead_stage, :thesis, :contact)
   end
 
   # ponytail: cálculo em memória sobre a base com DCB (centenas de leads);
@@ -54,7 +54,7 @@ class Api::V1::Accounts::RamonPrescriptionRadarController < Api::V1::Accounts::B
     {
       lead_id: lead.id,
       name: lead.name,
-      benefit_type_name: lead.benefit_type&.name,
+      thesis_name: lead.thesis&.name,
       dcb_em: lead.dcb_em,
       stage_name: lead.lead_stage.name,
       is_lost: lead.lead_stage.is_lost,

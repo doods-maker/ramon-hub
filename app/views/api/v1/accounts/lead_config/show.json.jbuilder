@@ -21,13 +21,6 @@ json.lost_reasons do
     json.name reason.name
   end
 end
-json.benefit_types do
-  json.array! @benefit_types do |bt|
-    json.id bt.id
-    json.name bt.name
-    json.position bt.position
-  end
-end
 json.priorities do
   json.array! @priorities do |p|
     json.id p.id

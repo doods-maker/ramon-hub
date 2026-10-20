@@ -60,9 +60,7 @@ const leadUrl = lead => {
             <p class="text-xs truncate text-n-slate-10">
               <span v-if="lead.contactName">{{ lead.contactName }} · </span>
               <span v-if="lead.contactPhone">{{ lead.contactPhone }} · </span>
-              <span v-if="lead.benefitTypeName">{{
-                lead.benefitTypeName
-              }}</span>
+              <span v-if="lead.thesisName">{{ lead.thesisName }}</span>
             </p>
           </div>
           <span

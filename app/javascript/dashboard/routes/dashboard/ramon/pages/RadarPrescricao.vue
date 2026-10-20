@@ -205,8 +205,8 @@ const goToCampaigns = async () => {
               class="m-0 mt-0.5 flex min-w-0 items-center gap-1 text-xs text-n-slate-10"
             >
               <span class="truncate">
-                <template v-if="item.benefit_type_name">
-                  {{ item.benefit_type_name }} ·
+                <template v-if="item.thesis_name">
+                  {{ item.thesis_name }} ·
                 </template>
                 {{ t('RAMON.RADAR.DCB', { date: fmtDcb(item.dcb_em) }) }} ·
                 <template v-if="!item.is_lost && !item.is_client">

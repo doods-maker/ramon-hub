@@ -139,8 +139,8 @@ const reuniao = computed(() => p.value.reuniao);
         </dd>
       </div>
       <div>
-        <dt :class="TITULO">{{ $t('RAMON.FICHA.PASSAGEM.BENEFIT') }}</dt>
-        <dd class="mt-1 text-sm text-n-slate-12">{{ p.beneficio || '—' }}</dd>
+        <dt :class="TITULO">{{ $t('RAMON.FICHA.PASSAGEM.THESIS') }}</dt>
+        <dd class="mt-1 text-sm text-n-slate-12">{{ p.tese || '—' }}</dd>
       </div>
       <div>
         <dt :class="TITULO">{{ $t('RAMON.FICHA.PASSAGEM.DCB') }}</dt>

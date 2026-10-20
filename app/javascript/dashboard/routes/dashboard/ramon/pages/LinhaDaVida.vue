@@ -148,10 +148,6 @@ const prescricaoCorrendo = lead =>
     ? prescriptionText(t, lead.prescription, lead.benefit_monthly_value)
     : null;
 
-// benefício · tese do caso aberto (o valor vem à parte, em mono)
-const detalhes = lead =>
-  [lead.benefit_type_name, lead.thesis_name].filter(Boolean).join(' · ');
-
 // Presente = casos vivos no funil; passado = fechados (ganhos e perdidos).
 const openLeads = computed(() =>
   leads.value.filter(l => !l.is_won && !l.is_lost)
@@ -411,9 +407,9 @@ const conversationUrl = lead =>
               </span>
             </div>
             <p class="mt-0.5 text-xs text-n-slate-10">
-              {{ detalhes(lead) }}
+              {{ lead.thesis_name }}
               <template v-if="lead.value">
-                <span v-if="detalhes(lead)"> · </span>
+                <span v-if="lead.thesis_name"> · </span>
                 <span class="font-mono tabular-nums">{{
                   formatBrl(lead.value)
                 }}</span>
@@ -502,11 +498,9 @@ const conversationUrl = lead =>
                 </span>
               </p>
               <p class="mt-0.5 text-xs text-n-slate-10">
-                <span v-if="lead.benefit_type_name">{{
-                  lead.benefit_type_name
-                }}</span>
+                <span v-if="lead.thesis_name">{{ lead.thesis_name }}</span>
                 <template v-if="lead.value">
-                  <span v-if="lead.benefit_type_name"> · </span>
+                  <span v-if="lead.thesis_name"> · </span>
                   <span class="font-mono tabular-nums">{{
                     formatBrl(lead.value)
                   }}</span>

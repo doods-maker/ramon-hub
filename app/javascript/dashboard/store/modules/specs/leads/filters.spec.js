@@ -14,12 +14,12 @@ describe('leads filters', () => {
   });
 
   it('setFilters comita, persiste e re-busca', async () => {
-    await actions.setFilters({ commit, dispatch }, { benefitTypeId: 5 });
+    await actions.setFilters({ commit, dispatch }, { leadPriorityId: 5 });
     expect(commit).toHaveBeenCalledWith(types.SET_LEAD_FILTERS, {
-      benefitTypeId: 5,
+      leadPriorityId: 5,
     });
     expect(JSON.parse(localStorage.getItem('ramon_lead_filters'))).toEqual({
-      benefitTypeId: 5,
+      leadPriorityId: 5,
     });
     expect(dispatch).toHaveBeenCalledWith('get');
   });
@@ -27,11 +27,11 @@ describe('leads filters', () => {
   it('get envia os filtros como params snake_case, omitindo vazios', async () => {
     axios.get.mockResolvedValue({ data: { payload: [] } });
     const state = {
-      filters: { benefitTypeId: 5, agentId: null, source: '', q: 'ana' },
+      filters: { leadPriorityId: 5, agentId: null, source: '', q: 'ana' },
     };
     await actions.get({ commit, state });
     expect(axios.get).toHaveBeenCalledWith(expect.any(String), {
-      params: { benefit_type_id: 5, q: 'ana' },
+      params: { lead_priority_id: 5, q: 'ana' },
     });
   });
 

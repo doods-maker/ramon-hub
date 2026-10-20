@@ -1,10 +1,10 @@
 require 'csv'
 
 # Import CSV de pessoas + casos (item 4c-22 / Base 10.000).
-# Template: nome,telefone,email,cpf,data_nascimento,sexo,beneficio,tese,etapa,valor,ganho_em,canal,origem
+# Template: nome,telefone,email,cpf,data_nascimento,sexo,tese,etapa,valor,ganho_em,canal,origem
 # ponytail: linha a linha (sem bulk); ~10k linhas ok em job :low — activerecord-import se doer.
 class Ramon::LeadsCsvImport
-  CASE_COLUMNS = %w[beneficio tese etapa valor ganho_em].freeze
+  CASE_COLUMNS = %w[tese etapa valor ganho_em].freeze
 
   def initialize(data_import)
     @data_import = data_import
@@ -74,18 +74,17 @@ class Ramon::LeadsCsvImport
   end
 
   def create_case(contact, attrs)
-    benefit = find_by_name!(@account.benefit_types, attrs['beneficio'], 'beneficio')
     thesis = find_by_name!(@account.theses, attrs['tese'], 'tese')
     won_at = parse_date(attrs['ganho_em'], 'ganho_em')
     stage = target_stage(attrs['etapa'], won_at)
-    return if duplicate_case?(contact, benefit, won_at)
+    return if duplicate_case?(contact, thesis, won_at)
 
     # won_at vai no create: track_stage_cycle preserva valor existente e o
     # after_update do dossiê de handoff NÃO dispara (import histórico não
     # deve gerar dossiê de passagem).
     @account.leads.create!(
       name: contact.name, contact_id: contact.id, lead_stage: stage,
-      benefit_type: benefit, thesis: thesis, won_at: won_at,
+      thesis: thesis, won_at: won_at,
       value: parse_decimal(attrs['valor']),
       source: attrs['origem'], channel: valid_channel(attrs['canal']),
       lost_reason: ('Importação de planilha' if stage.is_lost)
@@ -100,8 +99,8 @@ class Ramon::LeadsCsvImport
       raise("etapa desconhecida: #{etapa_name}")
   end
 
-  def duplicate_case?(contact, benefit, won_at)
-    scope = @account.leads.where(contact_id: contact.id, benefit_type: benefit)
+  def duplicate_case?(contact, thesis, won_at)
+    scope = @account.leads.where(contact_id: contact.id, thesis: thesis)
     return scope.exists?(won_at: won_at.all_day) if won_at.present?
 
     scope.open.exists?
@@ -153,7 +152,7 @@ class Ramon::LeadsCsvImport
   def attach_failed_records
     return if @rejected.empty?
 
-    header = "nome,telefone,email,cpf,data_nascimento,sexo,beneficio,tese,etapa,valor,ganho_em,canal,origem,erro\n"
+    header = "nome,telefone,email,cpf,data_nascimento,sexo,tese,etapa,valor,ganho_em,canal,origem,erro\n"
     csv = header + @rejected.map(&:to_csv).join
     @data_import.failed_records.attach(
       io: StringIO.new(csv), filename: "rejeitadas_#{@data_import.id}.csv", content_type: 'text/csv'
