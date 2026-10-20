@@ -152,6 +152,55 @@ describe('IaDaConversa.vue', () => {
     });
   });
 
+  it('Voltar numa conversa aberta sem responsável devolve à IA (pendente)', async () => {
+    const { wrapper, toggleStatus } = montar({
+      chat: {
+        id: 42,
+        status: 'open',
+        custom_attributes: { ia_pausa: 'pausada' },
+      },
+    });
+    await abrir(wrapper);
+    await clicar(wrapper, 'voltar');
+
+    expect(toggleStatus).toHaveBeenCalledWith(expect.anything(), {
+      conversationId: 42,
+      status: 'pending',
+    });
+  });
+
+  it('Só rascunho numa conversa aberta sem responsável devolve à IA (pendente)', async () => {
+    const { wrapper, toggleStatus } = montar({
+      chat: {
+        id: 42,
+        status: 'open',
+        custom_attributes: { ia_pausa: 'pausada' },
+      },
+    });
+    await abrir(wrapper);
+    await clicar(wrapper, 'rascunho');
+
+    expect(toggleStatus).toHaveBeenCalledWith(expect.anything(), {
+      conversationId: 42,
+      status: 'pending',
+    });
+  });
+
+  it('Voltar com responsável não mexe no status', async () => {
+    const { wrapper, toggleStatus } = montar({
+      chat: {
+        id: 42,
+        status: 'open',
+        meta: { assignee: { id: 7 } },
+        custom_attributes: { ia_pausa: 'pausada' },
+      },
+    });
+    await abrir(wrapper);
+    await clicar(wrapper, 'voltar');
+
+    expect(toggleStatus).not.toHaveBeenCalled();
+  });
+
   it('Ver na trilha vai para a tela com ?alvo=', async () => {
     const { wrapper } = montar();
     await abrir(wrapper);

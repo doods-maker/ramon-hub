@@ -1884,6 +1884,14 @@
       "PAUSADO": "AI set to draft only in this conversation.",
       "PAUSA_FALHOU": "Couldn't pause — try again."
     },
+    "RASCUNHO_ACOES": {
+      "ENVIAR": "Send to client",
+      "EDITAR": "Edit",
+      "COPIAR": "Copy",
+      "COPIADO": "Text copied.",
+      "ENVIADO": "Sent ✓",
+      "FALHOU": "Couldn't send — try again."
+    },
     "COPILOTO": {
       "RASCUNHO_IA": {
         "igual": "AI draft sent as it was",
