@@ -46,6 +46,7 @@ import VoiceCallBubble from './bubbles/VoiceCall.vue';
 import MessageError from './MessageError.vue';
 import PilotoCarimbo from './PilotoCarimbo.vue';
 import RascunhoCarimbo from './RascunhoCarimbo.vue';
+import RascunhoAcoes from './RascunhoAcoes.vue';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
 import { useBranding } from 'shared/composables/useBranding';
 
@@ -156,6 +157,13 @@ const { replaceInstallationName } = useBranding();
  * Computes the message variant based on props
  * @type {import('vue').ComputedRef<'user'|'agent'|'activity'|'private'|'bot'|'template'>}
  */
+// ramon: nota-rascunho (IA/automação) ganha Enviar/Editar/Copiar (RascunhoAcoes)
+const ehRascunho = computed(
+  () =>
+    props.private &&
+    (props.content || '').startsWith('RASCUNHO (revisar antes de enviar)')
+);
+
 const variant = computed(() => {
   if (props.private) return MESSAGE_VARIANTS.PRIVATE;
 
@@ -581,7 +589,8 @@ provideMessageContext({
         v-if="
           contentAttributes.externalError ||
           contentAttributes.ramonPiloto ||
-          contentAttributes.ramonRascunhoIa
+          contentAttributes.ramonRascunhoIa ||
+          ehRascunho
         "
         class="[grid-area:meta] flex flex-col gap-0.5"
         :class="{ 'items-end': orientation === ORIENTATION.RIGHT }"
@@ -593,6 +602,7 @@ provideMessageContext({
         />
         <PilotoCarimbo v-if="contentAttributes.ramonPiloto" />
         <RascunhoCarimbo v-if="contentAttributes.ramonRascunhoIa" />
+        <RascunhoAcoes v-if="ehRascunho" />
       </div>
     </div>
     <div v-if="shouldShowContextMenu" class="context-menu-wrap">

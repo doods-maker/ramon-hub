@@ -1884,6 +1884,14 @@
       "PAUSADO": "IA em só rascunho nesta conversa.",
       "PAUSA_FALHOU": "Não consegui pausar — tente de novo."
     },
+    "RASCUNHO_ACOES": {
+      "ENVIAR": "Enviar ao cliente",
+      "EDITAR": "Editar",
+      "COPIAR": "Copiar",
+      "COPIADO": "Texto copiado.",
+      "ENVIADO": "Enviado ✓",
+      "FALHOU": "Não consegui enviar — tente de novo."
+    },
     "COPILOTO": {
       "RASCUNHO_IA": {
         "igual": "rascunho da IA enviado como estava",
