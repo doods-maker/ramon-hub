@@ -86,7 +86,17 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
     processo = processo(lawsuit)
     fase = T.fase_de(T.etapa_real(processo), lawsuit['step']) || 'documentos'
     texto = T::V2['fases'].find { |f| f['chave'] == fase }
-    "- #{T.identificacao(processo).compact.join(' · ')}: #{texto['nome']} — #{texto['frase']}"
+    "- #{T.identificacao(processo).compact.join(' · ')}: #{texto['nome']} — #{texto['frase']}#{compromissos(processo)}"
+  end
+
+  # Audiência/perícia marcada no ADVBOX (decisão Eduardo 20/10): o mesmo que o Painel mostra, no mesmo formato.
+  def compromissos(processo)
+    Array(processo['agenda']).map do |a|
+      quando = Time.zone.parse(a['quando'].to_s)
+      hora = quando.strftime('%H:%M') == '00:00' ? '' : " às #{quando.strftime('%-Hh%M').delete_suffix('00')}"
+      " Compromisso marcado: #{a['tipo'] == 'audiencia' ? 'Audiência' : 'Perícia'} em #{quando.strftime('%d/%m/%Y')}#{hora}" \
+        "#{" (#{a['formato']})" if a['formato']}."
+    end.join
   end
 
   # O processo no formato do espelho do Painel do Cliente (Ramon::PortalSyncService#espelho + PortalNovidades).
@@ -109,7 +119,7 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
     cliente = @assistant.account.portal_clientes.find_by(cpf: digitos)
     return SEM_PAINEL unless cliente&.convidado_em.present? && !cliente.suspenso?
 
-    "Painel do Cliente (entra com o CPF e a senha dele): #{ENV.fetch('PORTAL_URL', "#{ENV.fetch('FRONTEND_URL', nil)}/cliente")}"
+    "Painel do Cliente (a pessoa entra com o CPF e a senha que recebeu): #{ENV.fetch('PORTAL_URL', "#{ENV.fetch('FRONTEND_URL', nil)}/cliente")}"
   end
 
   # Envelope das listas do ADVBOX: { offset, limit, totalCount, data }.

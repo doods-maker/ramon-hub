@@ -18,6 +18,13 @@ RSpec.describe Captain::Tools::ConsultaAndamentoTool, type: :model do
     allow(Ramon::AdvboxClient).to receive_messages(movements: { 'data' => [] }, posts: { 'data' => [] })
   end
 
+  it 'conta a audiencia marcada como o Painel mostra' do
+    allow(Ramon::PortalSyncService).to receive(:agenda)
+      .and_return([{ 'tipo' => 'audiencia', 'quando' => '2027-03-09 16:00:00', 'formato' => 'presencial' }])
+
+    expect(tool.perform(tool_context, cpf: cpf)).to include('Compromisso marcado: Audiência em 09/03/2027 às 16h (presencial).')
+  end
+
   it 'confere o CPF e devolve a fase do painel e o link' do
     create(:portal_cliente, account: account, cpf: cpf, convidado_em: 1.day.ago)
 
