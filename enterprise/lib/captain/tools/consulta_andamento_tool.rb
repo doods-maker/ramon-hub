@@ -109,7 +109,7 @@ class Captain::Tools::ConsultaAndamentoTool < Captain::Tools::BasePublicTool
     cliente = @assistant.account.portal_clientes.find_by(cpf: digitos)
     return SEM_PAINEL unless cliente&.convidado_em.present? && !cliente.suspenso?
 
-    "Painel do Cliente (a pessoa entra com o CPF e a senha que recebeu do escritorio): #{ENV.fetch('PORTAL_URL', "#{ENV.fetch('FRONTEND_URL', nil)}/cliente")}"
+    "Painel do Cliente (a pessoa entra com o CPF e a senha que recebeu): #{ENV.fetch('PORTAL_URL', "#{ENV.fetch('FRONTEND_URL', nil)}/cliente")}"
   end
 
   # Envelope das listas do ADVBOX: { offset, limit, totalCount, data }.
