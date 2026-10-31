@@ -16,6 +16,12 @@ RSpec.describe Ramon::DriveClient do
     expect(api).to have_received(:list_files).with(hash_including(page_size: 200, supports_all_drives: true))
   end
 
+  it 'search escapa barra e aspas' do
+    allow(api).to receive(:list_files).and_return(Google::Apis::DriveV3::FileList.new(files: []))
+    described_class.search("a\\b'c")
+    expect(api).to have_received(:list_files).with(hash_including(q: a_string_including("name contains 'a\\\\b\\'c'")))
+  end
+
   it 'search com menos de 3 letras não chama a API' do
     expect(api).not_to receive(:list_files)
     expect(described_class.search('ab')).to eq([])

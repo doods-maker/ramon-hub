@@ -7,7 +7,7 @@ class Ramon::DriveClient
   FOLDER_MIME = 'application/vnd.google-apps.folder'.freeze
   SHORTCUT_MIME = 'application/vnd.google-apps.shortcut'.freeze
   FILTRO_TIPOS = "(mimeType = '#{FOLDER_MIME}' or mimeType = 'application/pdf' or mimeType = 'image/jpeg' or mimeType = 'image/png')".freeze
-  SCOPE ='https://www.googleapis.com/auth/drive'.freeze
+  SCOPE = 'https://www.googleapis.com/auth/drive'.freeze
 
   class << self
     def configured?
@@ -70,7 +70,7 @@ class Ramon::DriveClient
       texto = texto.to_s.strip
       return [] if texto.length < 3
 
-      listar("name contains '#{texto.gsub("'", "\\\\'")}' and #{FILTRO_TIPOS}", 50)
+      listar("name contains '#{texto.gsub(/[\\']/) { |c| "\\#{c}" }}' and #{FILTRO_TIPOS}", 50)
     end
 
     def parent_of(id)
