@@ -9,17 +9,19 @@ class Ramon::RegistroAcoes
     'conversa' => %w[Conversation],
     'dinheiro' => %w[ExtratoFechado MetaComercial],
     'acesso' => %w[AccountUser],
-    'ia' => %w[Account]
+    'ia' => %w[Account],
+    'peticao' => %w[Peticao PeticaoArquivo]
   }.freeze
   TIPO_DO_MODELO = TIPOS.flat_map { |tipo, modelos| modelos.map { |modelo| [modelo, tipo] } }.to_h.freeze
   # campo do audited_changes → modelo cujo nome a tela mostra no lugar do id
   REFERENCIAS = {
     'lead_stage_id' => 'LeadStage', 'sdr_id' => 'User', 'closer_id' => 'User', 'assignee_id' => 'User',
-    'user_id' => 'User', 'team_id' => 'Team', 'contact_id' => 'Contact'
+    'user_id' => 'User', 'team_id' => 'Team', 'contact_id' => 'Contact',
+    'responsavel_id' => 'User', 'protocolada_por_id' => 'User'
   }.freeze
-  # associação que o alvo da linha precisa (contato do lead/conversa, pessoa da meta)
+  # associação que o alvo da linha precisa (contato do lead/conversa, pessoa da meta, petição do arquivo)
   INCLUI = { 'Lead' => :contact, 'Conversation' => :contact, 'MetaComercial' => :user,
-             'ExtratoFechado' => :user, 'AccountUser' => :user }.freeze
+             'ExtratoFechado' => :user, 'AccountUser' => :user, 'PeticaoArquivo' => :peticao }.freeze
   FUSO = 'America/Sao_Paulo'.freeze
   POR_PAGINA = 50
   # ponytail: teto do CSV; paginar a exportação se a trilha filtrada passar disso
@@ -170,8 +172,21 @@ class Ramon::RegistroAcoes
     when 'Lead' then alvo_lead(audit, registro)
     when 'Contact' then alvo_contato(audit, registro)
     when 'Conversation' then alvo_conversa(registro)
+    when 'Peticao' then alvo_peticao(audit.auditable_id, registro)
+    when 'PeticaoArquivo' then alvo_arquivo(audit, registro)
     else alvo_pessoa(audit, registro)
     end
+  end
+
+  def alvo_peticao(id, peticao)
+    { nome: peticao&.numero_processo.presence || "Petição ##{id}" }
+  end
+
+  # Arquivo do pacote: a petição dele e o nome do arquivo (o removido vem só da trilha).
+  def alvo_arquivo(audit, arquivo)
+    mudancas = audit.audited_changes
+    alvo_peticao(arquivo&.peticao_id || mudancas['peticao_id'], arquivo&.peticao)
+      .merge(arquivo: arquivo&.nome || Array(mudancas['nome']).last)
   end
 
   def alvo_conversa(conversa)
