@@ -1,39 +1,49 @@
-@AGENTS.md
-
 # ramon-hub — contexto da banca (permanente)
 
-Fork pesado do **Chatwoot v4.15.1** operado pela **Ramon Antônio Advogados**.
-É o **pipeline/CRM comercial** da banca (decidido 02/07/2026): funil Kanban de
-leads, painel do lead na conversa, captação das landing pages. Repo:
-`doods-maker/ramon-hub`. Produção na VPS (`ssh root@185.194.216.67`;
-deploy = `git pull` + `docker compose up --build`).
+Fork pesado do **Chatwoot v4.15.1** operado pela **Ramon Antonio Advogados** —
+o **sistema central do escritório**: CRM/funil de leads, atendimento WhatsApp
+com IA, agenda, automações em fluxo, painel do cliente, cálculos, BI.
+Repo: `doods-maker/ramon-hub`, branch principal `ramon`. Produção na VPS
+(`ssh root@185.194.216.67`; deploy = `git pull` + `docker compose up --build`).
 
 ## ⚠️ Regras inegociáveis
 
-- **Merge e deploy autônomos (regime desde 09/07/2026, ordem do Eduardo):**
-  o Claude pode mergear PR com CI 100% verde e deployar na VPS sem OK caso a
-  caso. Contrapartida obrigatória: registrar tudo que foi mergeado/deployado
-  + roteiros de smoke em doc pro Eduardo revisar depois.
-- **Sem ambiente de teste local** → quem valida é **PR + CI**. Não mergear com
-  CI vermelho.
-- **Conteúdo que fala com cliente continua gate do Eduardo** (mensagens,
-  auto-respostas, textos de campanha): o código sobe, o texto só é ativado
-  com aprovação explícita dele.
+- **Merge e deploy autônomos (desde 09/07/2026, ordem do Eduardo):** PR com CI
+  100% verde pode ser mergeado e deployado sem OK caso a caso. Contrapartida:
+  registrar o que subiu + roteiro de smoke em doc pro Eduardo revisar.
+- **Sem ambiente local** (sem Ruby/Postgres na máquina) → quem valida é
+  **PR + CI**. CI vermelho não mergeia.
+- **ssh de escrita na VPS é barrado para o Claude** → comando que altera a VPS
+  vai pronto para o Eduardo rodar com `!`.
+- **Texto que fala com cliente é gate do Eduardo:** o código sobe, o texto só
+  liga com aprovação explícita.
 
-## Lições de engenharia (aprendidas no fork — não reaprender do zero)
+## Código (convenções do Chatwoot que valem aqui)
 
-- **Evento custom Vue SEMPRE camelCase** — kebab-case (ex.: `open-conversation`)
-  NÃO passa no eslint do projeto.
-- **Migração nova → regenerar `db/schema.rb` via scratch DB na VPS** (não há
-  Postgres local).
-- **Componente nativo pesado só monta com estado pronto** — usar `v-if` de
-  readiness (ex.: montar `ConversationBox` só quando ativo).
-- **Action Vuex: não desestruturar `state` cru** (quebra a regra no-shadow).
+- **Lint antes do push:** Ruby → `rubocop-vps` (roda na VPS, ~10 s); JS/Vue →
+  eslint via `node_modules`. RuboCop com linha de até 150 caracteres.
+- **Vue:** Composition API com `<script setup>`; componentes PascalCase;
+  **eventos custom SEMPRE camelCase** (kebab-case quebra o eslint);
+  bolhas de mensagem em `components-next/`.
+- **Estilo:** só classes Tailwind (cores em `tailwind.config.js`).
+- **i18n:** sem string solta no template; editar só `en.yml` (backend) e
+  `en.json` (frontend).
+- **Enterprise:** mudança em núcleo → procurar o par em `enterprise/` e manter
+  compatível.
+- **Commits:** Conventional Commits (`type(scope): assunto`).
+
+## Lições do fork (não reaprender do zero)
+
+- **Migração nova → regenerar `db/schema.rb` via scratch DB na VPS.**
+- **Componente nativo pesado só monta com estado pronto** — `v-if` de
+  readiness (ex.: `ConversationBox` só quando ativo).
+- **Action Vuex: não desestruturar `state` cru** (quebra no-shadow).
 
 ## Onde estão as coisas
 
-- Guidelines técnicas do código Chatwoot: `AGENTS.md` (importado no topo).
-- Planos e specs do projeto: `docs/superpowers/plans/` e `docs/superpowers/specs/`
-  (histórico arquivado em `docs/superpowers/_arquivo/`).
-- Contexto do departamento comercial: `..\..\CLAUDE.md` e
-  `..\..\business-context.md` (§10 = este projeto como pipeline).
+- Planos e specs: `docs/superpowers/plans/` e `docs/superpowers/specs/`
+  (histórico em `docs/superpowers/_arquivo/`). ADRs: `docs/adr/`.
+- Pontos onde o fork toca o Chatwoot: `docs/FORK-PONTOS-DE-REGISTRO.md`.
+- Agente do hub (Claude na VPS): `deploy/agente-hub/` — lê o espelho
+  `/opt/sede` (skill `/sincronizar-sede`).
+- Contexto comercial: `..\..\CLAUDE.md` e `..\..\business-context.md`.
