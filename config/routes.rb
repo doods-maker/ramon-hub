@@ -315,6 +315,13 @@ Rails.application.routes.draw do
             member { post :responder }
             collection { get :agenda }
           end
+          resources :ramon_chat, only: [:index, :show], controller: 'ramon_chat' do
+            member do
+              post :enviar
+              post :ler
+            end
+            collection { post :direto }
+          end
           resources :ramon_conteudo, only: [:index, :show], controller: 'ramon_conteudo' do
             member do
               post :aprovar
