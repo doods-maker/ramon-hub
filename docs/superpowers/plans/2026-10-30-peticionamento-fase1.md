@@ -4,7 +4,7 @@
 
 **Goal:** Aba **Protocolos** no hub: criar petição (cliente, processo CNJ, tribunal deduzido, responsável, prazo), montar o pacote (upload ou Drive, tipo genérico, ordem), conferir contra a regra do tribunal, baixar os arquivos numerados, registrar o protocolo com comprovante e arquivar pacote + comprovante na pasta do cliente no Drive.
 
-**Architecture:** Dois modelos (`Peticao`, `PeticaoArquivo`) com Active Storage, um módulo puro de regras (`Ramon::Peticionamento::Tribunais` + `Cnj`), quatro métodos novos no `Ramon::DriveClient`, um controller `ramon_peticoes` (admin ou time `juridico`), um job de arquivamento no Drive e uma página Vue com lista + detalhe + seletor do Drive.
+**Architecture:** Dois modelos (`Peticao`, `PeticaoArquivo`) com Active Storage, um módulo puro de regras (`Ramon::Peticionamento::Tribunais` + `Cnj`), quatro métodos novos no `Ramon::DriveClient`, um controller `ramon_peticoes` (admin ou time `advogados`), um job de arquivamento no Drive e uma página Vue com lista + detalhe + seletor do Drive.
 
 **Tech Stack:** Rails 7.1 (fork Chatwoot 4.15.1), Active Storage (disco local na VPS), gem `audited` (já instalada), `google-apis-drive_v3` (já instalada), `prawn` (já instalada; imagem → PDF), Vue 3 `<script setup>` + Tailwind, vitest.
 
@@ -24,7 +24,7 @@
   - Tribunais: `trf4` (eproc, `J=4 TR=04`), `tjsc` (eproc, `J=8 TR=24`), `trt12` (pje, `J=5 TR=12`).
   - Limite por arquivo: `trf4` 11 MB *(não publicado; mesmo sistema do TJSC — ajustar se o eproc recusar)*, `tjsc` 11 MB, `trt12` 3 MB. MB = 1024².
   - Prazo "perto": vence em até 2 dias úteis (seg–sex) a partir de hoje (fuso `America/Sao_Paulo`).
-  - Time do jurídico: nome `juridico`.
+  - Time do jurídico: nome `advogados` (time nativo que já existia).
   - Pasta no Drive: `Protocolos/<AAAA-MM-DD> — <numero_processo ou "Inicial"> (#id)` (o `#id` evita colisão: mesmo processo ou duas iniciais no mesmo dia) dentro da pasta-base; sem pasta-base, em `Protocolos sem cliente` na raiz (`RAMON_DRIVE_ROOT_ID`).
 
 ## Review Focus
@@ -32,7 +32,7 @@
 1. **Número CNJ com máscara, sem máscara ou com espaço** — o usuário cola `5001234-56.2026.4.04.7207`, `50012345620264047207` ou com espaços; o hub normaliza para a máscara e valida o dígito. (Task 1, teste `normaliza`.)
 2. **Imagem (jpg/png) no pacote** — vira PDF de uma página antes de contar o tamanho; HEIC/outros formatos são recusados com mensagem, não sobem crus. (Task 3.)
 3. **Arquivar no Drive falha no meio** (Drive fora, token vencido) — o job não apaga nada local e não marca `arquivada_em`; rodar de novo não duplica o que já subiu (guarda `drive_file_id` por arquivo). (Task 5.)
-4. **Usuário fora do `juridico` e não-admin** — todas as rotas devolvem 401 (padrão Pundit do fork), inclusive navegar no Drive. (Task 4.)
+4. **Usuário fora do `advogados` e não-admin** — todas as rotas devolvem 401 (padrão Pundit do fork), inclusive navegar no Drive. (Task 4.)
 5. **Editar o pacote depois de protocolada** — adicionar/remover/reordenar/excluir petição protocolada → 422. (Task 2/4.)
 
 ---
@@ -241,13 +241,13 @@ it 'search com menos de 3 letras não chama a API'
   - `POST /:id/registrar_protocolo` (multipart `numero_evento`, `comprovante`) → **só o responsável ou admin** (senão 401); `registrar_protocolo!`; `RecordInvalid` → 422.
   - `GET /drive?pasta_id=` → `{ pasta_id, pai_id, raiz_id, itens: DriveClient.children }` (sem `pasta_id` → raiz `RAMON_DRIVE_ROOT_ID`; `pai_id` = `nil` na raiz); `GET /drive_busca?q=` → `{ itens: DriveClient.search(q) }`. Sem `DriveClient.configured?` → 503 `{ error: 'DRIVE_OFF' }`.
   - `GET /processos?contact_id=` → `{ processos: [{ numero, tipo }] }` de `PortalCliente.find_by(account:, cpf: contact.cpf)&.processos` (confira o nome da coluna/escopo em `app/models/portal_cliente.rb`); sem CPF/portal → `[]`.
-  - Política `RamonPeticaoPolicy`: toda ação exige `@account_user.administrator? || Ramon::Papeis.membro?(@account, @user, 'juridico')`. Adicione `JURIDICO = 'juridico'.freeze` em `Ramon::Papeis`. A checagem "responsável ou admin" do `registrar_protocolo` fica no controller.
+  - Política `RamonPeticaoPolicy`: toda ação exige `@account_user.administrator? || Ramon::Papeis.membro?(@account, @user, Ramon::Papeis::JURIDICO)`. Adicione `JURIDICO = 'advogados'.freeze` em `Ramon::Papeis`. A checagem "responsável ou admin" do `registrar_protocolo` fica no controller.
 
 - [ ] **Step 1: Spec de request** — no mínimo:
 
 ```ruby
 it 'agente fora do jurídico recebe 401 em index e drive'
-it 'membro do juridico cria com número sem máscara e recebe tribunal trf4'
+it 'membro do time advogados cria com número sem máscara e recebe tribunal trf4'
 it 'create com número inválido → 422'
 it 'upload de PDF entra no pacote; problemas some quando há principal'
 it 'arquivos_drive baixa pelo DriveClient (stub) e grava origem drive'
@@ -325,5 +325,5 @@ it('mensagemProblema sem_principal usa a chave i18n', () => {});
 
 ### Task 7: Fechamento
 
-- [ ] Smoke no consolidado: acrescentar **seção N — Peticionamento Fase 1** em `C:\Users\dudsl\RAdvogados\comercial\docs\2026-09-14-smoke-consolidado.md` (criar time `juridico`; criar petição TRF4 com número real; subir PDF e foto; escolher do Drive; ver aviso de limite com arquivo > 11 MB; baixar todos; registrar protocolo com comprovante; conferir a pasta `Protocolos` no Drive e que os arquivos sumiram do hub).
+- [ ] Smoke no consolidado: acrescentar **seção N — Peticionamento Fase 1** em `C:\Users\dudsl\RAdvogados\comercial\docs\2026-09-14-smoke-consolidado.md` (criar time `advogados`; criar petição TRF4 com número real; subir PDF e foto; escolher do Drive; ver aviso de limite com arquivo > 11 MB; baixar todos; registrar protocolo com comprovante; conferir a pasta `Protocolos` no Drive e que os arquivos sumiram do hub).
 - [ ] Push do branch e `gh workflow run run_foss_spec.yml --ref feat/peticionamento`; esperar verde; corrigir o que o CI pegar. **Não abrir PR** (o Eduardo abre no fim).

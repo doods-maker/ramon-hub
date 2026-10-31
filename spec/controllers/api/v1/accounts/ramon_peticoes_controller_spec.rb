@@ -41,7 +41,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response).to have_http_status(:unauthorized)
   end
 
-  it 'membro do juridico cria com número sem máscara e recebe tribunal trf4' do
+  it 'membro do time advogados cria com número sem máscara e recebe tribunal trf4' do
     criar
     expect(response).to have_http_status(:success)
     expect(response.parsed_body).to include('tribunal' => 'trf4', 'numero_processo' => numero_valido_trf4, 'status' => 'rascunho')

@@ -69,7 +69,7 @@ em `GLOSSARY.md` na raiz. Decisão de arquitetura em `docs/adr/0010-peticionamen
 ### 1. Criar a petição
 
 - **Onde:** uma aba nova **Protocolos** no grupo *Clientes* do menu (lista + "Nova petição"). Quem usa:
-  administradores e membros do time nativo **`juridico`** (mesmo padrão de `Ramon::Papeis`: time do Chatwoot, sem
+  administradores e membros do time nativo **`advogados`** (já existia no hub) (mesmo padrão de `Ramon::Papeis`: time do Chatwoot, sem
   tabela própria); os demais veem "sem acesso". Botão **Peticionar** na ficha do cliente fica para depois da Fase 1.
   *(minha decisão)*
 - **Campos:**
@@ -186,8 +186,8 @@ mais chata: o advogado digita o código do 2FA do tribunal a cada **Protocolar**
 
 | Fase | O que entra | Depende de |
 |---|---|---|
-| **0 — Eduardo, sem código** | E-mail ao dieproc@trf4.jus.br perguntando sobre credencial MNI para escritório (rascunho pronto em `comercial\docs\2026-10-30-email-dieproc-mni-rascunho.md`). Cotar Intima.ai e Legis para o TRT12. Criar o time `juridico` no hub. | — |
-| **1 — Esteira + executor manual** | Tela Protocolos, petição, pacote (upload + Drive), conferência e divisão de PDF, zip, registrar protocolo, comprovante no Drive, auditoria. | nada |
+| **0 — Eduardo, sem código** | E-mail ao dieproc@trf4.jus.br perguntando sobre credencial MNI para escritório (rascunho pronto em `comercial\docs\2026-10-30-email-dieproc-mni-rascunho.md`). Cotar Intima.ai e Legis para o TRT12. Pôr os advogados no time `advogados` do hub. | — |
+| **1 — Esteira + executor manual** | Tela Protocolos, petição, pacote (upload + Drive), conferência de limite (avisa e trava; sem divisão nem zip), registrar protocolo, comprovante no Drive, auditoria. | nada |
 | **2 — Cofre + robô eproc (TRF4/JFSC)** | Cofre (eproc), etapa "conferir no tribunal", protocolo automático, fila, comprovante, conferência de juntada. Começa com volume baixo e 100% dos comprovantes conferidos à mão. Se o TRF4 liberar MNI, o executor MNI substitui o robô no TRF4. | sessão com o Eduardo logado no eproc para mapear as telas; credencial de um advogado |
 | **3 — TJSC** | Mesmo robô, outro endereço e a regra de 11 MB. | Fase 2 estável |
 | **4 — TRT12 (PJe)** | Executor por API contratada (PDF/A e assinatura ficam com o fornecedor). A1 no cofre se o fornecedor pedir. | cotação e contrato |
@@ -217,7 +217,7 @@ mais chata: o advogado digita o código do 2FA do tribunal a cada **Protocolar**
   `usuario`, `senha`, `totp_semente`, `pfx` (binário cifrado), `pfx_senha`, `vence_em`), com `encrypts` em tudo que
   é segredo. Sem `Chatwoot.encryption_configured?` o cofre se recusa a salvar (diferente dos canais, que caem para
   texto puro).
-- **Permissão:** controller sob `api/v1/accounts/ramon_peticoes`; admin ou time `juridico`. Credencial: só o próprio
+- **Permissão:** controller sob `api/v1/accounts/ramon_peticoes`; admin ou time `advogados`. Credencial: só o próprio
   usuário cria/troca.
 
 ## Fora de escopo (por enquanto)
@@ -236,12 +236,12 @@ mais chata: o advogado digita o código do 2FA do tribunal a cada **Protocolar**
 - Robô insistindo em login errado até bloquear a conta do advogado no tribunal.
 - Petição dada como "protocolada" sem comprovante.
 
-## Para o Eduardo revisar (decisões que tomei sozinho)
+## Decisões revisadas (Eduardo aprovou as 12 em 31/10/2026)
 
 1. Drive em vez de Dropbox.
 2. Cofre no próprio hub (criptografia do Rails), sem serviço de cofre separado.
 3. **Guardar a semente do 2FA** (com o risco escrito acima) em vez de digitar o código a cada protocolo.
-4. Time nativo `juridico` define quem vê Protocolos.
+4. Time nativo `advogados` (já existia no hub, vazio) define quem vê Protocolos — em vez de criar um `juridico` igual.
 5. Cada advogado cadastra só a própria credencial.
 6. Sem tarefa no ADVBOX depois do protocolo.
 7. Ordem das fases: esteira manual antes do robô — entrega valor já e o robô entra em cima dela.
@@ -251,8 +251,7 @@ mais chata: o advogado digita o código do 2FA do tribunal a cada **Protocolar**
 11. Drive guarda o pacote definitivo; o hub apaga os arquivos do próprio disco depois de subir.
 12. Seletor do Drive navega e busca em todo o Drive do escritório (os documentos estão em três lugares diferentes).
 
-**Perguntas abertas para o Eduardo (não travam a Fase 1):**
-- As 300–1.000 petições saem no login de cada advogado ou quase todas no do Dr. Ramon? (define de quem é a credencial
-  no cofre da Fase 2)
-- A pasta `Documentação Leads` está dentro da raiz do Drive que o hub enxerga (`RAMON_DRIVE_ROOT_ID`)? Se não, o
-  seletor só a acha pela busca se a conta conectada do escritório tiver acesso.
+**Respostas do Eduardo (31/10/2026):**
+- As petições saem **no login de cada advogado** → cada advogado tem usuário no hub e cadastra a própria credencial no
+  cofre; o lote é sempre de um dono só.
+- A pasta `Documentação Leads` **está dentro da raiz** que o hub enxerga → o seletor chega nela navegando.

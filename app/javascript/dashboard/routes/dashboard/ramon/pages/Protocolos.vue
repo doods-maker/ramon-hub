@@ -2,7 +2,7 @@
 // Protocolos (Peticionamento · Fase 1): lista de petições e, com peticaoId,
 // o detalhe — pacote, conferência contra a regra do tribunal, "Baixar todos"
 // e o registro do protocolo feito à mão no tribunal. Acesso: admin ou time
-// `juridico` (o backend decide; 401 = sem acesso).
+// `advogados` (o backend decide; 401 = sem acesso).
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
