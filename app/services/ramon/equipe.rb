@@ -16,14 +16,20 @@ module Ramon::Equipe
     inbox = caixa(account) || (criar && criar_caixa(account))
     return unless inbox
 
-    conversa(inbox, 'geral', 'Geral', AccountUser.where(account_id: account.id).pluck(:user_id))
+    conversa(inbox, 'geral', 'Geral', usuarios(account))
     canais_de_time(inbox, Team.where(account_id: account.id).to_a)
     inbox
   end
 
-  # Um canal por time (membros do time); canal de time apagado fica sem ninguém.
+  def usuarios(account) = AccountUser.where(account_id: account.id).pluck(:user_id)
+
+  # Um canal por time (membros do time que ainda são da conta — quem sai da conta só some do time depois, num job);
+  # canal de time apagado fica sem ninguém.
   def canais_de_time(inbox, times)
-    times.each { |team| conversa(inbox, "time-#{team.id}", "Setor #{team.name}", TeamMember.where(team_id: team.id).pluck(:user_id)) }
+    times.each do |team|
+      membros = TeamMember.where(team_id: team.id, user_id: usuarios(inbox.account)).pluck(:user_id)
+      conversa(inbox, "time-#{team.id}", "Setor #{team.name}", membros)
+    end
     apagados = inbox.contact_inboxes.where('source_id LIKE ?', 'equipe-time-%').where.not(source_id: times.map { |t| "equipe-time-#{t.id}" })
     apagados.each { |contact_inbox| contact_inbox.conversations.each { |c| participantes(c, []) } }
   end
@@ -91,6 +97,11 @@ module Ramon::Equipe
   def participantes(conversation, user_ids)
     atuais = conversation.conversation_participants.pluck(:user_id)
     conversation.conversation_participants.where(user_id: atuais - user_ids).destroy_all
-    (user_ids - atuais).each { |user_id| conversation.conversation_participants.create!(user_id: user_id) }
+    # Quem entra começa com tudo lido (sem herdar o histórico como não-lido). Dois commits ao mesmo tempo: o outro já criou.
+    (user_ids - atuais).each do |user_id|
+      conversation.conversation_participants.create!(user_id: user_id, last_seen_at: Time.current)
+    rescue ActiveRecord::RecordNotUnique
+      next
+    end
   end
 end

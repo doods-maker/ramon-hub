@@ -4,6 +4,6 @@ module Conversations::RamonEventData
   # Na caixa Equipe a não-lida é por pessoa: o broadcast (igual pra todos) não leva unread_count (ADR 0011).
   def push_data
     data = super.merge(ramon_lead: ramon_lead_slim)
-    inbox.equipe? ? data.except(:unread_count) : data
+    inbox&.equipe? ? data.except(:unread_count) : data
   end
 end

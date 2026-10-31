@@ -29,31 +29,38 @@ describe('useEquipeStore', () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
+  it('na Intranet (caixa ainda não carregada) carrega e avisa', async () => {
+    setActivePinia(createPinia());
+
+    expect(await useEquipeStore().avisar(notificacao())).toBe(true);
+    expect(useEquipeStore().inboxId).toBe(9);
+  });
+
   it('carrega a caixa e as não-lidas da pessoa', () => {
     expect(useEquipeStore()).toMatchObject({ inboxId: 9, naoLidas: 3 });
   });
 
-  it('avisa (som) mensagem de colega numa conversa da Equipe', () => {
-    expect(useEquipeStore().avisar(notificacao())).toBe(true);
+  it('avisa (som) mensagem de colega numa conversa da Equipe', async () => {
+    expect(await useEquipeStore().avisar(notificacao())).toBe(true);
     expect(play).toHaveBeenCalled();
   });
 
-  it('não avisa notificação de outra caixa nem de outro tipo', () => {
+  it('não avisa notificação de outra caixa nem de outro tipo', async () => {
     const store = useEquipeStore();
     const outraCaixa = notificacao({ primary_actor: { id: 7, inbox_id: 1 } });
     const atribuicao = notificacao({
       notification_type: 'conversation_assignment',
     });
 
-    expect(store.avisar(outraCaixa)).toBe(false);
-    expect(store.avisar(atribuicao)).toBe(false);
+    expect(await store.avisar(outraCaixa)).toBe(false);
+    expect(await store.avisar(atribuicao)).toBe(false);
     expect(play).not.toHaveBeenCalled();
   });
 
-  it('não avisa quem está com a conversa aberta e à vista', () => {
+  it('não avisa quem está com a conversa aberta e à vista', async () => {
     window.history.pushState({}, '', '/app/accounts/2/inbox/9/conversations/7');
 
-    expect(useEquipeStore().avisar(notificacao())).toBe(false);
+    expect(await useEquipeStore().avisar(notificacao())).toBe(false);
     expect(play).not.toHaveBeenCalled();
     window.history.pushState({}, '', '/');
   });

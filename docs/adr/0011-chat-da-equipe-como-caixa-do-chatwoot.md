@@ -5,8 +5,8 @@ Chatwoot"), entregue no PR #303.
 
 Em 31/10, com o #303 no ar, o Eduardo decidiu que o chat interno fica **dentro
 da tela de Conversas**, como mais uma caixa: **Equipe**. O ganho é tudo o que a
-conversa nativa já tem e o módulo próprio não tinha (anexo, foto, áudio, busca,
-notas, menções, tempo real, sino). O módulo do #303 saiu inteiro (tabelas
+conversa nativa já tem e o módulo próprio não tinha (anexo, foto, áudio, notas,
+tempo real, sino). O módulo do #303 saiu inteiro (tabelas
 `ramon_chat_*`, vazias em produção, apagadas por migração).
 
 Como fica:
@@ -43,7 +43,22 @@ Alternativas descartadas:
 - **Visibilidade do setor por `team_id`:** ligaria a atribuição automática do
   time e não dá a não-lida/aviso por pessoa; participantes resolvem os dois.
 
-Limites conhecidos: time apagado só some do canal na próxima sincronização
-(qualquer mudança de time ou o comando do deploy); a busca do contato por nome
-acha "Geral"/"Setor …" (sem efeito: não é lead nem cliente); a conversa da
-Equipe não entra em "Todas" — só dentro da caixa.
+Portas laterais fechadas: a API pública de caixa Api recusa a Equipe (o
+`source_id` dos contatos é previsível) e abrir o painel do lead numa conversa
+da Equipe nunca cria lead.
+
+Limites conhecidos:
+
+- **Nunca adicionar colaboradores (membros) na caixa Equipe** nas configurações:
+  membro da caixa vê todas as conversas dela, inclusive 1:1 alheias.
+- Menção (@) de agente não funciona na Equipe (o Chatwoot só aceita membro da
+  caixa ou admin) — de propósito: menção adicionaria a pessoa à conversa.
+- Toda mensagem vira notificação no sino de quem participa (o toast de 6 s é o
+  aviso discreto); e-mail/push só se a pessoa ligar "conversa de que participo".
+- O evento de contato novo vai a toda a conta: o nome "Ana e Bia" revela que a
+  1:1 existe (não o conteúdo). A busca de contato acha esses nomes.
+- Relatórios ao vivo e filtros avançados/pastas do Chatwoot contam as conversas
+  da Equipe como abertas; o BI (Metabase) não.
+- Time apagado só some do canal na próxima sincronização (qualquer mudança de
+  time ou o comando do deploy); nomes de time/pessoa renomeados não mudam o
+  nome da conversa. "Marcar como não lida" não age na Equipe.

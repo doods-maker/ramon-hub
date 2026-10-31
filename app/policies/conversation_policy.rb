@@ -19,7 +19,7 @@ class ConversationPolicy < ApplicationPolicy
 
   # ramon: na caixa Equipe quem participa da conversa vê e responde (ADR 0011)
   def equipe_participant?
-    record.inbox.equipe? && participant?
+    record.inbox&.equipe? && participant?
   end
 
   def administrator?

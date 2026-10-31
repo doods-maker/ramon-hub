@@ -78,6 +78,20 @@ RSpec.describe 'Ramon Equipe API', type: :request do
     end
   end
 
+  describe 'portas laterais' do
+    it 'a API pública de caixa Api não abre a Equipe (source_id previsível)' do
+      get "/public/api/v1/inboxes/#{inbox.channel.identifier}/contacts/equipe-1a1-#{ana.id}-#{bia.id}/conversations"
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'abrir o painel do lead numa conversa da Equipe não cria lead' do
+      post "#{base}/leads/for_conversation", params: { conversation_id: geral.display_id }, headers: admin.create_new_auth_token, as: :json
+
+      expect(account.leads.count).to eq(0)
+    end
+  end
+
   describe 'POST /ramon_equipe/conversa' do
     it 'abre (ou reabre) a 1:1 com o colega' do
       post "#{base}/ramon_equipe/conversa", params: { user_id: bia.id }, headers: ana.create_new_auth_token, as: :json

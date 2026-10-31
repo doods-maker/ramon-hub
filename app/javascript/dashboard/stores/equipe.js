@@ -10,19 +10,22 @@ const TIPOS_AVISO = [
 ];
 
 export const useEquipeStore = defineStore('equipe', {
-  state: () => ({ inboxId: null, naoLidas: 0 }),
+  state: () => ({ inboxId: null, naoLidas: 0, carregado: false }),
 
   actions: {
     async carregar() {
       const { data } = await EquipeAPI.get();
       this.inboxId = data.inbox_id;
       this.naoLidas = data.nao_lidas;
+      this.carregado = true;
     },
     // true = avisou (som + notificação do sistema). Quem está com a conversa
-    // aberta e à vista não é avisado.
-    avisar(notificacao) {
+    // aberta e à vista não é avisado. Na Intranet o menu de Conversas (que
+    // carrega a caixa) não está montado — carrega aqui na 1ª notificação.
+    async avisar(notificacao) {
       const conversa = notificacao?.primary_actor;
       if (!TIPOS_AVISO.includes(notificacao?.notification_type)) return false;
+      if (!this.carregado) await this.carregar().catch(() => {});
       if (!this.inboxId || conversa?.inbox_id !== this.inboxId) return false;
       this.carregar().catch(() => {});
       const aberta =

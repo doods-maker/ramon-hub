@@ -83,7 +83,7 @@ class Api::V1::Accounts::LeadsController < Api::V1::Accounts::BaseController
     # readonly: só consulta (banner da conversa) — nunca cria nem adota lead.
     # Caixa com Portaria (setores do escritório) também nunca cria lead ao abrir:
     # lead lá só nasce pelo "Encaminhar ao comercial".
-    readonly = params[:readonly] || conversation.inbox.portaria_enabled?
+    readonly = params[:readonly] || conversation.inbox.portaria_enabled? || conversation.inbox.equipe? # Equipe: nunca lead
     @lead = readonly ? find_readonly_lead_for(conversation) : find_or_create_lead_for(conversation)
     return head :no_content if @lead.nil?
 
