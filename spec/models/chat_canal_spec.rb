@@ -56,6 +56,14 @@ RSpec.describe ChatCanal do
     expect(canal.membros.pluck(:user_id)).to contain_exactly(brenda.id, gabriela.id)
   end
 
+  it 'quem saiu da equipe (usuário apagado) não quebra a lista nem as mensagens' do
+    canal = described_class.direto!(account, brenda, gabriela)
+    mensagem = canal.mensagens.create!(autor: gabriela, conteudo: 'tchau')
+    gabriela.destroy!
+    expect(described_class.find(canal.id).push_data(admin)).to include(nome: brenda.name)
+    expect(ChatMensagem.find(mensagem.id).push_event_data[:autor]).to eq(id: gabriela.id, name: nil)
+  end
+
   it 'mensagem nova vai ao vivo pros membros e pros administradores' do
     canal = described_class.direto!(account, brenda, gabriela)
     expect { canal.mensagens.create!(autor: brenda, conteudo: 'oi') }

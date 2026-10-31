@@ -43,7 +43,7 @@ class ChatCanal < ApplicationRecord
   def membro_ids
     @membro_ids ||= case tipo
                     when 'geral' then account.account_users.pluck(:user_id)
-                    when 'setor' then team.members.pluck(:id)
+                    when 'setor' then team ? team.members.pluck(:id) : [] # time apagado: ninguém participa
                     else membros.map(&:user_id)
                     end
   end
@@ -64,7 +64,7 @@ class ChatCanal < ApplicationRecord
   def marcar_lido!(user)
     return unless participante?(user)
 
-    membros.find_or_create_by!(user_id: user.id).update!(lido_ate: Time.current)
+    (membros.find_by(user_id: user.id) || membros.create_or_find_by!(user_id: user.id)).update!(lido_ate: Time.current)
   end
 
   # nome nil = Geral (o front traduz). Direto: o outro; visto de fora (admin), os dois.
@@ -78,7 +78,7 @@ class ChatCanal < ApplicationRecord
     case tipo
     when 'geral' then nil
     when 'setor' then team.name
-    else membros.map(&:user).reject { |u| u.id == user.id }.map(&:name).join(' · ')
+    else membros.filter_map(&:user).reject { |u| u.id == user.id }.map(&:name).join(' · ') # quem saiu da equipe (user apagado) some
     end
   end
 end

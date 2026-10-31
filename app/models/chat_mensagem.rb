@@ -13,7 +13,7 @@ class ChatMensagem < ApplicationRecord
   def push_event_data
     {
       id: id, canal_id: canal_id, account_id: canal.account_id, conteudo: conteudo,
-      autor: { id: autor_id, name: autor.name }, created_at: created_at.iso8601
+      autor: { id: autor_id, name: autor&.name }, created_at: created_at.iso8601
     }
   end
 
