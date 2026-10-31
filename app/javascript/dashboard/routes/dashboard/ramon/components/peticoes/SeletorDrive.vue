@@ -7,8 +7,7 @@ import { useI18n } from 'vue-i18n';
 import { onKeyStroke } from '@vueuse/core';
 import RamonPeticoesAPI from 'dashboard/api/ramonPeticoes';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { formatarMB } from './helpers';
-import { mensagemErro } from '../../helpers/erro';
+import { erroPeticao, formatarMB } from './helpers';
 import {
   CAMPO,
   FUNDO_JANELA,
@@ -36,10 +35,7 @@ const erro = ref('');
 const itens = computed(() => encontrados.value || pasta.value?.itens || []);
 
 const falhou = e => {
-  erro.value =
-    e?.response?.data?.error === 'DRIVE_OFF'
-      ? t('RAMON.PETICOES.DRIVE_OFF')
-      : mensagemErro(e, t('RAMON.PETICOES.DRIVE_ERRO'));
+  erro.value = erroPeticao(e, t, 'RAMON.PETICOES.DRIVE_ERRO');
 };
 
 const abrir = async pastaId => {

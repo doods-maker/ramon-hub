@@ -8,13 +8,19 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useAdmin } from 'dashboard/composables/useAdmin';
+import { useAlert } from 'dashboard/composables';
 import RamonPeticoesAPI from 'dashboard/api/ramonPeticoes';
 import Button from 'dashboard/components-next/button/Button.vue';
+import ConfirmButton from 'dashboard/components-next/button/ConfirmButton.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import PeticaoForm from '../components/peticoes/PeticaoForm.vue';
 import PacoteEditor from '../components/peticoes/PacoteEditor.vue';
 import RegistrarProtocolo from '../components/peticoes/RegistrarProtocolo.vue';
-import { baixarTodos, mensagemProblema } from '../components/peticoes/helpers';
+import {
+  baixarTodos,
+  erroPeticao,
+  mensagemProblema,
+} from '../components/peticoes/helpers';
 import { AVISO, CARTAO, CHIP, TITULO, TOM } from '../helpers/ui';
 
 defineOptions({ name: 'RamonProtocolos' });
@@ -81,6 +87,21 @@ const salvo = data => {
   if (nova) abrir(data.id);
   else peticao.value = data;
 };
+
+// Só rascunho (o backend recusa a protocolada); volta para a lista.
+const excluir = async () => {
+  try {
+    await RamonPeticoesAPI.delete(peticao.value.id);
+    voltar();
+  } catch (e) {
+    useAlert(erroPeticao(e, t));
+  }
+};
+
+const baixarPacote = () =>
+  baixarTodos(peticao.value.arquivos, a =>
+    RamonPeticoesAPI.baixarArquivo(a.url)
+  ).catch(e => useAlert(erroPeticao(e, t)));
 
 const registrado = data => {
   registrando.value = false;
@@ -201,15 +222,27 @@ const segmento = ativo => [
                 </span>
               </span>
             </div>
-            <Button
-              v-if="rascunho"
-              xs
-              faded
-              slate
-              icon="i-lucide-pencil"
-              :label="t('RAMON.PETICOES.EDITAR')"
-              @click="form = 'editar'"
-            />
+            <div v-if="rascunho" class="flex gap-2">
+              <Button
+                xs
+                faded
+                slate
+                icon="i-lucide-pencil"
+                :label="t('RAMON.PETICOES.EDITAR')"
+                @click="form = 'editar'"
+              />
+              <ConfirmButton
+                size="xs"
+                variant="faded"
+                color="slate"
+                confirm-color="ruby"
+                icon="i-lucide-trash-2"
+                data-testid="protocolo-excluir"
+                :label="t('RAMON.PETICOES.EXCLUIR')"
+                :confirm-label="t('RAMON.PETICOES.EXCLUIR_CONFIRMA')"
+                @click="excluir"
+              />
+            </div>
           </div>
 
           <!-- Protocolada: registro + comprovante + pasta no Drive -->
@@ -244,7 +277,13 @@ const segmento = ativo => [
             >
               {{ t('RAMON.PETICOES.VER_NO_DRIVE') }}
             </a>
-            <span v-else>{{ t('RAMON.PETICOES.ARQUIVANDO') }}</span>
+            <span v-else>{{
+              t(
+                peticao.drive_ligado
+                  ? 'RAMON.PETICOES.ARQUIVANDO'
+                  : 'RAMON.PETICOES.DRIVE_DESLIGADO'
+              )
+            }}</span>
           </div>
         </section>
 
@@ -285,7 +324,7 @@ const segmento = ativo => [
               data-testid="protocolo-baixar"
               :disabled="problemas.length > 0"
               :label="t('RAMON.PETICOES.BAIXAR_TODOS')"
-              @click="baixarTodos(peticao.arquivos)"
+              @click="baixarPacote"
             />
             <Button
               v-if="podeRegistrar"

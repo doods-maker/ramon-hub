@@ -36,6 +36,12 @@ class RamonPeticoesAPI extends ApiClient {
     return axios.patch(`${this.url}/${id}/ordem`, { ids });
   }
 
+  // `url` = arquivo.url do pacote (…/arquivos/:id/baixar); devolve o Blob do PDF.
+  // eslint-disable-next-line class-methods-use-this
+  baixarArquivo(url) {
+    return axios.get(url, { responseType: 'blob' }).then(({ data }) => data);
+  }
+
   registrarProtocolo(id, numeroEvento, file) {
     const dados = new FormData();
     if (numeroEvento) dados.append('numero_evento', numeroEvento);

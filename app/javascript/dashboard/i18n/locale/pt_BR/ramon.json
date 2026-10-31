@@ -2179,7 +2179,8 @@
         "conversa": "Conversa",
         "dinheiro": "Dinheiro",
         "acesso": "Acesso",
-        "ia": "IA"
+        "ia": "IA",
+        "peticao": "Petição"
       },
       "PAPEL_CONTA": {
         "AGENTE": "Agente",
@@ -2209,7 +2210,22 @@
         "MES": "Mês",
         "META": "Meta",
         "RAMPA": "Rampa",
-        "ROLE": "Papel na conta"
+        "ROLE": "Papel na conta",
+        "STATUS": "Status",
+        "NUMERO_PROCESSO": "Processo",
+        "TRIBUNAL": "Tribunal",
+        "RESPONSAVEL_ID": "Responsável",
+        "PRAZO": "Prazo",
+        "NUMERO_EVENTO": "Número do evento",
+        "PROTOCOLADA_EM": "Protocolada em",
+        "PROTOCOLADA_POR_ID": "Protocolada por",
+        "ARQUIVADA_EM": "Arquivada em",
+        "EXECUTOR": "Executor",
+        "NOME": "Nome do arquivo",
+        "TIPO": "Tipo",
+        "PRINCIPAL": "Principal",
+        "POSICAO": "Posição",
+        "PETICAO_ID": "Petição"
       },
       "FRASE": {
         "LEAD_ETAPA": "mudou a etapa de {de} para {para}",
@@ -2244,7 +2260,15 @@
         "ACESSO_PAPEL": "mudou o papel de {pessoa} de {de} para {para}",
         "ACESSO_EDITOU": "alterou o acesso de {pessoa}",
         "EDITOU": "alterou um registro",
-        "IA_MUDOU": "mudou como a IA atende"
+        "IA_MUDOU": "mudou como a IA atende",
+        "PETICAO_CRIOU": "criou a petição {peticao}",
+        "PETICAO_EXCLUIU": "excluiu a petição {peticao}",
+        "PETICAO_PROTOCOLOU": "registrou o protocolo de {peticao}",
+        "PETICAO_ARQUIVOU": "arquivou no Drive o pacote de {peticao}",
+        "PETICAO_EDITOU": "editou a petição {peticao}",
+        "PACOTE_ADICIONOU": "pôs {arquivo} no pacote de {peticao}",
+        "PACOTE_REMOVEU": "tirou {arquivo} do pacote de {peticao}",
+        "PACOTE_MEXEU": "mexeu em {arquivo} no pacote de {peticao}"
       },
       "IA": {
         "DESFAZER": "Desfazer",
@@ -2383,7 +2407,15 @@
       "DRIVE_VAZIO": "Nada aqui (só aparecem pastas, PDF e imagens).",
       "DRIVE_ADICIONAR": "Adicionar ao pacote ({n})",
       "DRIVE_OFF": "O Drive do escritório não está conectado ao hub.",
-      "DRIVE_ERRO": "Não foi possível abrir o Drive."
+      "DRIVE_ERRO": "Não foi possível abrir o Drive.",
+      "DRIVE_DESLIGADO": "Arquivamento no Drive desligado (o Drive do escritório não está conectado).",
+      "EXCLUIR": "Excluir",
+      "EXCLUIR_CONFIRMA": "Confirmar exclusão",
+      "ERROS": {
+        "FORMATO": "Só arquivos PDF, JPG ou PNG.",
+        "PROTOCOLADA": "Esta petição já foi protocolada e não pode mais ser alterada.",
+        "SO_RESPONSAVEL": "Só o advogado responsável ou um administrador registra o protocolo."
+      }
     },
     "NAV": {
       "TITLE": "Intranet",

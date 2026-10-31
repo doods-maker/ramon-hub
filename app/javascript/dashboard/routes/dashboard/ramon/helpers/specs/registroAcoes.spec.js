@@ -281,3 +281,37 @@ describe('mudancasDaIa (tipo ia)', () => {
     ).toContain('BPC/LOAS: ');
   });
 });
+
+describe('petições no registro', () => {
+  const peticao = (acao, mudancas, modelo = 'Peticao') => ({
+    modelo,
+    tipo: 'peticao',
+    acao,
+    mudancas,
+    alvo: { nome: '5001234-00.2026.4.04.7207', arquivo: '01 Laudo.pdf' },
+  });
+
+  it.each([
+    [peticao('create', {}), `${F}.PETICAO_CRIOU 5001234-00.2026.4.04.7207`],
+    [
+      peticao('update', { status: ['rascunho', 'protocolada'] }),
+      `${F}.PETICAO_PROTOCOLOU`,
+    ],
+    [
+      peticao('update', { arquivada_em: [null, '2026-10-30T12:00:00Z'] }),
+      `${F}.PETICAO_ARQUIVOU`,
+    ],
+    [peticao('update', { prazo: [null, '2026-11-03'] }), `${F}.PETICAO_EDITOU`],
+    [
+      peticao('destroy', {}, 'PeticaoArquivo'),
+      `${F}.PACOTE_REMOVEU 5001234-00.2026.4.04.7207 | 01 Laudo.pdf`,
+    ],
+  ])('frase %#', (registro, esperado) =>
+    expect(fraseDoRegistro(registro, t)).toContain(esperado)
+  );
+
+  it('formata prazo e principal', () => {
+    expect(formatarValor('prazo', '2026-11-03', t)).toBe('03/11/2026');
+    expect(formatarValor('principal', true, t)).toBe('RAMON.REGISTRO.SIM');
+  });
+});

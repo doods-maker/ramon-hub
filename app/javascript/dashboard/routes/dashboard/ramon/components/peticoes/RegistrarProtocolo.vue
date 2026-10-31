@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { onKeyStroke } from '@vueuse/core';
 import RamonPeticoesAPI from 'dashboard/api/ramonPeticoes';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { mensagemErro } from '../../helpers/erro';
+import { erroPeticao } from './helpers';
 import {
   ARQUIVO,
   CAMPO,
@@ -39,7 +39,7 @@ const registrar = async () => {
     );
     emit('registrado', data);
   } catch (e) {
-    erro.value = mensagemErro(e, t('RAMON.PETICOES.ERRO_ACAO'));
+    erro.value = erroPeticao(e, t);
   } finally {
     salvando.value = false;
   }

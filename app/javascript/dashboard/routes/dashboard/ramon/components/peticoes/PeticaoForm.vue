@@ -9,7 +9,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import ContactAPI from 'dashboard/api/contacts';
 import RamonPeticoesAPI from 'dashboard/api/ramonPeticoes';
 import Button from 'dashboard/components-next/button/Button.vue';
-import { mensagemErro } from '../../helpers/erro';
+import { erroPeticao } from './helpers';
 import {
   CAMPO,
   FUNDO_JANELA,
@@ -111,7 +111,7 @@ const salvar = async () => {
       : await RamonPeticoesAPI.create(dados);
     emit('salvo', data);
   } catch (e) {
-    erro.value = mensagemErro(e, t('RAMON.PETICOES.ERRO_ACAO'));
+    erro.value = erroPeticao(e, t);
   } finally {
     salvando.value = false;
   }

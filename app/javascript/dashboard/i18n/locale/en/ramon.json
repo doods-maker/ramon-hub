@@ -2179,7 +2179,8 @@
         "conversa": "Conversation",
         "dinheiro": "Money",
         "acesso": "Access",
-        "ia": "AI"
+        "ia": "AI",
+        "peticao": "Petition"
       },
       "PAPEL_CONTA": {
         "AGENTE": "Agent",
@@ -2209,7 +2210,22 @@
         "MES": "Month",
         "META": "Target",
         "RAMPA": "Ramp-up",
-        "ROLE": "Account role"
+        "ROLE": "Account role",
+        "STATUS": "Status",
+        "NUMERO_PROCESSO": "Case number",
+        "TRIBUNAL": "Court",
+        "RESPONSAVEL_ID": "Responsible",
+        "PRAZO": "Deadline",
+        "NUMERO_EVENTO": "Event number",
+        "PROTOCOLADA_EM": "Filed at",
+        "PROTOCOLADA_POR_ID": "Filed by",
+        "ARQUIVADA_EM": "Archived at",
+        "EXECUTOR": "Executor",
+        "NOME": "File name",
+        "TIPO": "Type",
+        "PRINCIPAL": "Main",
+        "POSICAO": "Position",
+        "PETICAO_ID": "Petition"
       },
       "FRASE": {
         "LEAD_ETAPA": "moved the stage from {de} to {para}",
@@ -2244,7 +2260,15 @@
         "ACESSO_PAPEL": "changed the role of {pessoa} from {de} to {para}",
         "ACESSO_EDITOU": "changed the access of {pessoa}",
         "EDITOU": "changed a record",
-        "IA_MUDOU": "changed how the AI works"
+        "IA_MUDOU": "changed how the AI works",
+        "PETICAO_CRIOU": "created the petition {peticao}",
+        "PETICAO_EXCLUIU": "deleted the petition {peticao}",
+        "PETICAO_PROTOCOLOU": "recorded the filing of {peticao}",
+        "PETICAO_ARQUIVOU": "archived the package of {peticao} to Drive",
+        "PETICAO_EDITOU": "edited the petition {peticao}",
+        "PACOTE_ADICIONOU": "added {arquivo} to the package of {peticao}",
+        "PACOTE_REMOVEU": "removed {arquivo} from the package of {peticao}",
+        "PACOTE_MEXEU": "changed {arquivo} in the package of {peticao}"
       },
       "IA": {
         "DESFAZER": "Undo",
@@ -2383,7 +2407,15 @@
       "DRIVE_VAZIO": "Nothing here (only folders, PDFs and images are shown).",
       "DRIVE_ADICIONAR": "Add to package ({n})",
       "DRIVE_OFF": "The office Drive is not connected to the hub.",
-      "DRIVE_ERRO": "Could not open Drive."
+      "DRIVE_ERRO": "Could not open Drive.",
+      "DRIVE_DESLIGADO": "Drive archiving is off (the office Drive is not connected).",
+      "EXCLUIR": "Delete",
+      "EXCLUIR_CONFIRMA": "Confirm delete",
+      "ERROS": {
+        "FORMATO": "Only PDF, JPG or PNG files.",
+        "PROTOCOLADA": "This petition is already filed and can no longer be changed.",
+        "SO_RESPONSAVEL": "Only the responsible lawyer or an administrator can record the filing."
+      }
     },
     "NAV": {
       "TITLE": "Intranet",

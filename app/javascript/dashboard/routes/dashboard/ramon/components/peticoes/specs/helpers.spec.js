@@ -1,4 +1,9 @@
-import { baixarTodos, formatarMB, mensagemProblema } from '../helpers';
+import {
+  baixarTodos,
+  erroPeticao,
+  formatarMB,
+  mensagemProblema,
+} from '../helpers';
 
 const t = (k, v) => `${k}|${JSON.stringify(v)}`;
 const TJSC = { nome: 'TJSC', limite_bytes: 11 * 1024 * 1024 };
@@ -27,21 +32,42 @@ describe('peticoes/helpers', () => {
       'RAMON.PETICOES.PROBLEMAS.SEM_PRINCIPAL|undefined'
     ));
 
-  it('baixarTodos clica um link por arquivo com url, 400 ms entre eles', () => {
-    vi.useFakeTimers();
+  it('baixarTodos busca cada arquivo com url, em ordem, e salva com o nome numerado', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:x');
+    URL.revokeObjectURL = vi.fn();
+    const nomes = [];
     const clique = vi
       .spyOn(HTMLAnchorElement.prototype, 'click')
-      .mockImplementation(() => {});
-    baixarTodos([
-      { url: '/a', nome_numerado: '01 a.pdf' },
-      { url: null, nome_numerado: '02 b.pdf' },
-      { url: '/c', nome_numerado: '03 c.pdf' },
-    ]);
-    vi.advanceTimersByTime(0);
-    expect(clique).toHaveBeenCalledTimes(1);
-    vi.advanceTimersByTime(400);
-    expect(clique).toHaveBeenCalledTimes(2);
+      .mockImplementation(function registrar() {
+        nomes.push(this.download);
+      });
+    const buscar = vi.fn(async a => new Blob([a.url]));
+    await baixarTodos(
+      [
+        { url: '/a', nome_numerado: '01 a.pdf' },
+        { url: null, nome_numerado: '02 b.pdf' },
+        { url: '/c', nome_numerado: '03 c.pdf' },
+      ],
+      buscar
+    );
+    expect(buscar.mock.calls.map(([a]) => a.url)).toEqual(['/a', '/c']);
+    expect(nomes).toEqual(['01 a.pdf', '03 c.pdf']);
     clique.mockRestore();
-    vi.useRealTimers();
+  });
+
+  it('erroPeticao traduz os códigos do backend e cai na mensagem do servidor', () => {
+    const erro = data => ({ response: { data } });
+    expect(erroPeticao(erro({ error: 'SO_RESPONSAVEL' }), t)).toBe(
+      'RAMON.PETICOES.ERROS.SO_RESPONSAVEL|undefined'
+    );
+    expect(erroPeticao(erro({ error: 'DRIVE_OFF' }), t)).toBe(
+      'RAMON.PETICOES.DRIVE_OFF|undefined'
+    );
+    expect(erroPeticao(erro({ errors: ['Informe o comprovante'] }), t)).toBe(
+      'Informe o comprovante'
+    );
+    expect(erroPeticao({}, t, 'RAMON.PETICOES.DRIVE_ERRO')).toBe(
+      'RAMON.PETICOES.DRIVE_ERRO|undefined'
+    );
   });
 });

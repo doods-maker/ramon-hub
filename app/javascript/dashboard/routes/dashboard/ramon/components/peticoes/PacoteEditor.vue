@@ -8,8 +8,7 @@ import { useAlert } from 'dashboard/composables';
 import RamonPeticoesAPI from 'dashboard/api/ramonPeticoes';
 import Button from 'dashboard/components-next/button/Button.vue';
 import SeletorDrive from './SeletorDrive.vue';
-import { formatarMB } from './helpers';
-import { mensagemErro } from '../../helpers/erro';
+import { baixarTodos, erroPeticao, formatarMB } from './helpers';
 import { CARTAO, CHIP, SELECT, TITULO, TOM } from '../../helpers/ui';
 
 const props = defineProps({
@@ -28,9 +27,14 @@ const executar = async chamada => {
     const { data } = await chamada();
     emit('atualizar', data);
   } catch (e) {
-    useAlert(mensagemErro(e, t('RAMON.PETICOES.ERRO_ACAO')));
+    useAlert(erroPeticao(e, t));
   }
 };
+
+const baixar = arquivo =>
+  baixarTodos([arquivo], a => RamonPeticoesAPI.baixarArquivo(a.url)).catch(e =>
+    useAlert(erroPeticao(e, t))
+  );
 
 const id = () => props.peticao.id;
 
@@ -118,13 +122,14 @@ const adicionadoDoDrive = data => {
         data-testid="pacote-arquivo"
       >
         <span class="flex min-w-0 flex-1 items-center gap-2">
-          <a
+          <button
             v-if="a.url"
-            :href="a.url"
+            type="button"
             class="truncate font-mono text-xs text-n-slate-12 hover:underline"
+            @click="baixar(a)"
           >
             {{ a.nome_numerado }}
-          </a>
+          </button>
           <span v-else class="truncate font-mono text-xs text-n-slate-12">{{
             a.nome_numerado
           }}</span>
