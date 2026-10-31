@@ -37,7 +37,7 @@ class Ramon::FunilObservador
     return nil if texto.blank?
 
     decisao = decidir(texto)
-    Aplicar.new(@lead, decisao).perform if decisao
+    Ramon::FunilObservador::Aplicar.new(@lead, decisao).perform if decisao # nome completo: aguenta o reload do Zeitwerk no CI
     colher
     decisao
   end
