@@ -27,7 +27,8 @@ class Ramon::PeticaoArquivarJob < ApplicationJob
                    Ramon::DriveClient.ensure_folder('Protocolos sem cliente', Ramon::DriveClient.root_id)
                  end
     data = peticao.protocolada_em.in_time_zone(Peticao::ZONA).to_date.iso8601
-    pasta = Ramon::DriveClient.ensure_folder("#{data} — #{peticao.numero_processo || "Inicial #{peticao.id}"}", protocolos)
+    # (#id) no fim: duas petições do mesmo processo (ou duas iniciais) no mesmo dia não caem na mesma pasta.
+    pasta = Ramon::DriveClient.ensure_folder("#{data} — #{peticao.numero_processo.presence || 'Inicial'} (##{peticao.id})", protocolos)
     peticao.update_columns(drive_pasta_id: pasta) # rubocop:disable Rails/SkipsModelValidations
     pasta
   end

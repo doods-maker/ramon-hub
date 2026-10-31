@@ -78,6 +78,24 @@ RSpec.describe 'Ramon Registro de ações API', type: :request do
     expect(linha['alvo']).to eq('contato_id' => contato.id, 'nome' => "Titular anonimizado ##{contato.id}")
   end
 
+  it 'tipo peticao: petição e arquivos do pacote, com nomes no lugar dos ids', :aggregate_failures do
+    peticao = Audited.audit_class.as_user(admin) do
+      account.peticoes.create!(criado_por: admin, responsavel: admin, inicial: true, tribunal: 'tjsc').tap do |p|
+        p.update!(responsavel: agente)
+        p.arquivos.create!(nome: 'Laudo.pdf', tipo: 'laudo_medico', posicao: 1, origem: 'upload', tamanho: 10).destroy!
+      end
+    end
+
+    registros = listar(tipo: 'peticao')['registros']
+    expect(registros.pluck('tipo').uniq).to eq(['peticao'])
+    expect(registros.pluck('modelo', 'acao')).to contain_exactly(%w[Peticao create], %w[Peticao update], %w[PeticaoArquivo create],
+                                                                 %w[PeticaoArquivo destroy])
+    edicao = registros.find { |registro| registro['modelo'] == 'Peticao' && registro['acao'] == 'update' }
+    expect(edicao['mudancas']).to eq('responsavel_id' => ['Ana Gestora', 'Bruno SDR'])
+    expect(edicao['alvo']).to eq('nome' => "Petição ##{peticao.id}")
+    expect(registros.find { |registro| registro['acao'] == 'destroy' }['alvo']).to eq('nome' => "Petição ##{peticao.id}", 'arquivo' => 'Laudo.pdf')
+  end
+
   # No CI a Account não é auditada (enterprise/): as linhas vêm como o enterprise grava.
   it 'tipo ia: só as mudanças do Perfil da IA, com o que mudou em cada alvo', :aggregate_failures do
     tese = create(:thesis, account: account, name: 'BPC/LOAS')

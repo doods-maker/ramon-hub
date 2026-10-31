@@ -11,7 +11,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
   before_action :check_authorization
   before_action :carregar_peticao, except: %i[index create drive drive_busca processos]
   before_action :exigir_editavel, only: %i[update destroy arquivos arquivos_drive atualizar_arquivo remover_arquivo ordem]
-  before_action :exigir_drive, only: %i[drive drive_busca]
+  before_action :exigir_drive, only: %i[drive drive_busca arquivos_drive]
 
   rescue_from ActiveRecord::RecordInvalid do |e|
     render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
@@ -21,11 +21,12 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
   end
 
   def index
-    lista = Current.account.peticoes.includes(:arquivos, :contact, :responsavel, :criado_por)
+    lista = Current.account.peticoes.includes(:contact, :responsavel, :criado_por,
+                                              comprovante_attachment: :blob, arquivos: { file_attachment: :blob })
     lista = lista.where(status: params[:status]) if Peticao::STATUS.include?(params[:status])
     render json: { payload: lista.reorder(Arel.sql(ORDEM)).limit(LIMITE).map { |p| p.as_json_hub.except(:arquivos) },
                    tribunais: Ramon::Peticionamento::Tribunais::TODOS.map { |chave, info| info.merge(chave: chave) },
-                   tipos: Ramon::Peticionamento::Tribunais::TIPOS }
+                   tipos: Ramon::Peticionamento::Tribunais::TIPOS, drive_ligado: Ramon::DriveClient.configured? }
   end
 
   def show
@@ -41,7 +42,9 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
   end
 
   def update
-    @peticao.update!(peticao_atributos)
+    @peticao.assign_attributes(peticao_atributos)
+    @peticao.drive_pasta_base_id = pasta_base(@peticao.contact_id) if @peticao.contact_id_changed?
+    @peticao.save!
     render_peticao
   end
 
@@ -91,6 +94,16 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
     render_peticao
   end
 
+  # PDF do pacote com o nome numerado (o "Baixar todos" chama um por arquivo).
+  def baixar
+    arquivo = @peticao.arquivos.find(params[:arquivo_id])
+    return head :not_found unless arquivo.file.attached?
+
+    arquivo.file.open do |io|
+      send_data io.read, filename: arquivo.nome_numerado, type: 'application/pdf', disposition: 'attachment'
+    end
+  end
+
   def registrar_protocolo
     return render json: { error: 'SO_RESPONSAVEL' }, status: :unauthorized unless responsavel_ou_admin?
 
@@ -120,7 +133,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
   private
 
   def render_peticao
-    render json: @peticao.reload.as_json_hub
+    render json: @peticao.reload.as_json_hub.merge(drive_ligado: Ramon::DriveClient.configured?)
   end
 
   def carregar_peticao

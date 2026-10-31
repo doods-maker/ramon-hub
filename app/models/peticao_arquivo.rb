@@ -4,17 +4,21 @@ class PeticaoArquivo < ApplicationRecord
 
   belongs_to :peticao
   has_one_attached :file
+  delegate :account, to: :peticao
+
+  # Registro de ações: quem mudou o pacote. peticao_id vai junto para nomear a petição quando o arquivo já saiu.
+  audited only: %w[peticao_id nome tipo principal posicao], associated_with: :account
 
   validates :tipo, inclusion: { in: Ramon::Peticionamento::Tribunais::TIPOS }
   validates :origem, inclusion: { in: %w[upload drive] }
 
   def nome_numerado = "#{format('%02d', posicao)} #{nome}"
 
+  # Download autenticado pela API (o front baixa via axios, com os headers do token, e salva com o nome numerado).
   def url
     return unless file.attached?
 
-    ActiveStorage::Current.url_options = Rails.application.routes.default_url_options if ActiveStorage::Current.url_options.blank?
-    Rails.application.routes.url_helpers.rails_blob_url(file, disposition: 'attachment', filename: nome_numerado)
+    "/api/v1/accounts/#{peticao.account_id}/ramon_peticoes/#{peticao_id}/arquivos/#{id}/baixar"
   end
 
   def as_json_hub

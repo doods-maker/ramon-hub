@@ -88,6 +88,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
 
   it 'arquivos_drive baixa pelo DriveClient (stub) e grava origem drive' do
     criar
+    allow(Ramon::DriveClient).to receive(:configured?).and_return(true)
     allow(Ramon::DriveClient).to receive(:download).with('drv1').and_return([File.binread(pdf), 'application/pdf', 'Laudo medico.pdf'])
     post "#{url}/#{account.peticoes.sole.id}/arquivos_drive", params: { file_ids: ['drv1'] }, headers: ana.create_new_auth_token, as: :json
     expect(response).to have_http_status(:success)
@@ -125,6 +126,51 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body).to include('status' => 'protocolada', 'numero_evento' => '15')
   end
 
+  it 'registrar_protocolo sem comprovante (ou comprovante vazio) → 422, não 500' do
+    peticao = peticao_com_principal
+    path = "#{url}/#{peticao.id}/registrar_protocolo"
+    [{ numero_evento: '15' }, { numero_evento: '15', comprovante: '' }].each do |params|
+      post path, params: params, headers: ana.create_new_auth_token
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['errors'].join).to include('comprovante')
+    end
+    expect(peticao.reload.status).to eq('rascunho')
+  end
+
+  it 'baixar devolve o PDF com o nome numerado; outro pacote → 404' do
+    criar
+    peticao = account.peticoes.sole
+    enviar(peticao, ana, tipo: 'peticao')
+    arquivo = response.parsed_body['arquivos'].first
+    expect(arquivo['url']).to eq("/api/v1/accounts/#{account.id}/ramon_peticoes/#{peticao.id}/arquivos/#{arquivo['id']}/baixar")
+
+    get arquivo['url'], headers: ana.create_new_auth_token
+    expect(response).to have_http_status(:success)
+    expect(response.headers['Content-Type']).to start_with('application/pdf')
+    expect(response.headers['Content-Disposition']).to include('attachment', '01 sample.pdf')
+    expect(response.body).to start_with('%PDF')
+
+    outra = peticao_com_principal
+    get "#{url}/#{outra.id}/arquivos/#{arquivo['id']}/baixar", headers: ana.create_new_auth_token
+    expect(response).to have_http_status(:not_found)
+    get arquivo['url'], headers: fora.create_new_auth_token
+    expect(response).to have_http_status(:unauthorized)
+  end
+
+  it 'trocar o cliente no update recalcula a pasta-base do seletor do Drive' do
+    contato = create(:contact, account: account)
+    create(:lead, account: account, contact: contato, custom_attributes: { 'drive' => { 'pasta_id' => 'pasta-cliente' } })
+      .update_column(:won_at, Time.current) # rubocop:disable Rails/SkipsModelValidations
+    criar
+    peticao = account.peticoes.sole
+    allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
+    expect(response.parsed_body['drive_pasta_base_id']).to be_nil
+
+    patch "#{url}/#{peticao.id}", params: { contact_id: contato.id }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+    expect(response.parsed_body).to include('drive_pasta_base_id' => 'pasta-cliente', 'drive_ligado' => false)
+  end
+
   it 'registrar_protocolo com pacote incompleto → 422' do
     criar
     post "#{url}/#{account.peticoes.sole.id}/registrar_protocolo", params: { numero_evento: '1' }, headers: ana.create_new_auth_token
@@ -151,6 +197,10 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body).to include('error' => 'DRIVE_OFF')
     get "#{url}/drive_busca", params: { q: 'laudo' }, headers: ana.create_new_auth_token, as: :json
     expect(response).to have_http_status(:service_unavailable)
+    criar
+    post "#{url}/#{account.peticoes.sole.id}/arquivos_drive", params: { file_ids: ['drv1'] }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:service_unavailable)
+    expect(response.parsed_body).to include('error' => 'DRIVE_OFF')
   end
 
   it 'drive navega: raiz sem pai; subpasta com pai; busca' do
@@ -165,11 +215,11 @@ RSpec.describe 'Ramon Petições API', type: :request do
   end
 
   it 'processos vêm do portal do cliente pelo CPF do contato; sem portal → []' do
-    contato = create(:contact, account: account, cpf: '12345678901')
+    contato = create(:contact, account: account, cpf: '52998224725')
     get "#{url}/processos", params: { contact_id: contato.id }, headers: ana.create_new_auth_token, as: :json
     expect(response.parsed_body).to include('processos' => [])
 
-    create(:portal_cliente, account: account, cpf: '12345678901', processos: [{ 'id' => 1, 'numero' => '5001234-00', 'tipo' => 'Previdenciário' }])
+    create(:portal_cliente, account: account, cpf: '52998224725', processos: [{ 'id' => 1, 'numero' => '5001234-00', 'tipo' => 'Previdenciário' }])
     get "#{url}/processos", params: { contact_id: contato.id }, headers: ana.create_new_auth_token, as: :json
     expect(response.parsed_body['processos']).to eq([{ 'numero' => '5001234-00', 'tipo' => 'Previdenciário' }])
   end

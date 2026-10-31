@@ -58,6 +58,30 @@ RSpec.describe Peticao do
 
   it 'registrar_protocolo! recusa pacote com problema' do
     p = nova.tap(&:save!)
-    expect { p.registrar_protocolo!(usuario: user, numero_evento: '1', comprovante: nil) }.to raise_error(ActiveRecord::RecordInvalid)
+    comprovante = Rack::Test::UploadedFile.new(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf')
+    expect { p.registrar_protocolo!(usuario: user, numero_evento: '1', comprovante: comprovante) }
+      .to raise_error(ActiveRecord::RecordInvalid, /Pacote com problemas/)
+  end
+
+  it 'registrar_protocolo! recusa sem comprovante ou sem número do evento' do
+    p = nova.tap(&:save!)
+    p.arquivos.create!(nome: 'Peticao.pdf', tipo: 'peticao', posicao: 1, principal: true, origem: 'upload', tamanho: 10)
+    comprovante = Rack::Test::UploadedFile.new(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf')
+    [[nil, '15'], ['', '15'], [comprovante, nil]].each do |arquivo, evento|
+      expect { p.registrar_protocolo!(usuario: user, numero_evento: evento, comprovante: arquivo) }
+        .to raise_error(ActiveRecord::RecordInvalid, /comprovante/)
+    end
+    expect(p.reload).to have_attributes(status: 'rascunho', protocolada_em: nil)
+  end
+
+  it 'número em branco vira nil (inicial)' do
+    p = nova(numero_processo: '', inicial: true, tribunal: 'tjsc').tap(&:save!)
+    expect(p.numero_processo).to be_nil
+  end
+
+  it 'mudanças no pacote entram no registro de ações da conta' do
+    p = nova.tap(&:save!)
+    arquivo = p.arquivos.create!(nome: 'Laudo.pdf', tipo: 'laudo_medico', posicao: 1, origem: 'upload', tamanho: 10)
+    expect(arquivo.audits.last).to have_attributes(action: 'create', associated: account)
   end
 end

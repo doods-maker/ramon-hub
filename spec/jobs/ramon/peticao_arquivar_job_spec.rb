@@ -37,7 +37,7 @@ RSpec.describe Ramon::PeticaoArquivarJob do
     expect(peticao.reload.arquivada_em).to be_present
     expect(peticao.arquivos.map(&:drive_file_id)).to eq(%w[f1 f2])
     expect(peticao.arquivos.map { |a| a.file.attached? }).to eq([false, false])
-    expect(peticao.drive_pasta_id).to end_with("2026-10-30 — #{peticao.numero_processo}")
+    expect(peticao.drive_pasta_id).to end_with("2026-10-30 — #{peticao.numero_processo} (##{peticao.id})")
   end
 
   it 'retry depois de falha no 2º arquivo não sobe o 1º de novo' do
@@ -77,6 +77,13 @@ RSpec.describe Ramon::PeticaoArquivarJob do
       described_class.perform_now(peticao.id)
       expect(Ramon::DriveClient).to have_received(:ensure_folder).with('Protocolos', 'base1')
     end
+  end
+
+  it 'inicial: pasta "Inicial (#id)"' do
+    peticao.update_columns(numero_processo: nil, inicial: true, tribunal: 'tjsc') # rubocop:disable Rails/SkipsModelValidations
+    allow(Ramon::DriveClient).to receive(:upload).and_return('f')
+    described_class.perform_now(peticao.id)
+    expect(peticao.reload.drive_pasta_id).to end_with("2026-10-30 — Inicial (##{peticao.id})")
   end
 
   it 'não faz nada sem Drive configurado' do

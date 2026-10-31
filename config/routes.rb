@@ -321,6 +321,7 @@ Rails.application.routes.draw do
               post :arquivos_drive
               patch 'arquivos/:arquivo_id', action: :atualizar_arquivo
               delete 'arquivos/:arquivo_id', action: :remover_arquivo
+              get 'arquivos/:arquivo_id/baixar', action: :baixar
               patch :ordem
               post :registrar_protocolo
             end

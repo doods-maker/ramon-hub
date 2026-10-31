@@ -46,7 +46,7 @@ O trabalhista (PJe) é o caso difícil e fica por último.
    - **API contratada** (Fase 4, TRT12): Intima.ai ou Legis, cotados antes. Construir robô de PJe fica para depois.
 2. **Drive, não Dropbox.** A pasta do cliente já vive no Drive (`Clientes\<Nome — CPF>`), o hub já fala com ele
    (`Ramon::DriveClient`) e o escritório é Google. O hub **lê** os documentos da pasta e **grava** o pacote e o
-   comprovante numa subpasta `Protocolos\<data> — <processo>`. *(minha decisão)*
+   comprovante numa subpasta `Protocolos\<data> — <processo> (#id)`. *(minha decisão)*
 3. **Cofre dentro do hub, com a criptografia nativa do Rails** (Active Record Encryption), que já está ligada na VPS
    e já guarda o 2FA dos usuários e os tokens da Agenda. Sem Vault/Infisical: um serviço a mais para manter não
    compra segurança que a VPS única já não tenha. *(minha decisão)*
@@ -137,7 +137,7 @@ em `GLOSSARY.md` na raiz. Decisão de arquitetura em `docs/adr/0010-peticionamen
 ### 4. Depois do protocolo
 
 - **O Drive é a cópia definitiva.** Ao registrar o protocolo, o hub sobe **o pacote inteiro + o comprovante** para
-  `Protocolos\<AAAA-MM-DD> — <processo>\` dentro da pasta do cliente (a pasta onde o seletor abriu; sem pasta
+  `Protocolos\<AAAA-MM-DD> — <processo ou "Inicial"> (#id)\` dentro da pasta do cliente (a pasta onde o seletor abriu; sem pasta
   conhecida, em `Protocolos sem cliente\` na raiz). Subiu tudo → o hub **apaga os arquivos do pacote** do próprio
   disco (Active Storage é disco local na VPS; 1.000 pacotes/mês encheriam o disco) e guarda só os IDs do Drive e o
   comprovante. Falhou a subida → mantém tudo e tenta de novo. *(minha decisão)*

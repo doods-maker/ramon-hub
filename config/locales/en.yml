@@ -39,6 +39,7 @@ en:
             base:
               ja_protocolada: 'Petição já protocolada'
               pacote_com_problemas: 'Pacote com problemas: confira os avisos'
+              sem_comprovante: 'Informe o número do evento e anexe o comprovante do protocolo'
   inbox:
     reauthorization:
       success: 'Channel reauthorized successfully'

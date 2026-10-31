@@ -15,8 +15,9 @@ class Peticao < ApplicationRecord
   has_one_attached :comprovante
 
   # Registro de ações (o conteúdo dos PDFs fica de fora).
-  audited only: %w[status numero_processo tribunal responsavel_id prazo numero_evento protocolada_em protocolada_por_id arquivada_em],
-          associated_with: :account
+  AUDITADOS = %w[status numero_processo tribunal responsavel_id prazo numero_evento protocolada_em protocolada_por_id arquivada_em
+                 executor].freeze
+  audited only: AUDITADOS, associated_with: :account
 
   before_validation :normalizar_numero
 
@@ -56,14 +57,14 @@ class Peticao < ApplicationRecord
 
   def registrar_protocolo!(usuario:, numero_evento:, comprovante:)
     with_lock do
-      erro = protocolo_bloqueado
+      erro = protocolo_bloqueado(numero_evento, comprovante)
       if erro
         errors.add(:base, erro)
         raise ActiveRecord::RecordInvalid, self
       end
 
       update!(status: 'protocolada', numero_evento: numero_evento, protocolada_em: Time.current, protocolada_por: usuario)
-      self.comprovante.attach(comprovante) if comprovante
+      self.comprovante.attach(comprovante)
     end
     Ramon::PeticaoArquivarJob.perform_later(id)
   end
@@ -71,7 +72,7 @@ class Peticao < ApplicationRecord
   def as_json_hub
     tribunal_info = Ramon::Peticionamento::Tribunais::TODOS[tribunal] || {}
     attributes.symbolize_keys.slice(:id, :numero_processo, :tribunal, :inicial, :prazo, :descricao, :status, :executor,
-                                    :numero_evento, :protocolada_em, :arquivada_em, :drive_pasta_id)
+                                    :numero_evento, :protocolada_em, :arquivada_em, :drive_pasta_id, :drive_pasta_base_id)
               .merge(tribunal_nome: tribunal_info[:nome], sistema: tribunal_info[:sistema], prazo_perto: prazo_perto?,
                      problemas: problemas, arquivos: arquivos.map(&:as_json_hub), comprovante_url: comprovante_url,
                      contato: contact && { id: contact.id, name: contact.name }, responsavel: pessoa(responsavel),
@@ -82,8 +83,10 @@ class Peticao < ApplicationRecord
 
   def pessoa(usuario) = { id: usuario.id, name: usuario.name }
 
-  def protocolo_bloqueado
+  # Anti-objetivo da spec: nada vira "protocolada" sem número do evento e comprovante (arquivo de verdade, não "").
+  def protocolo_bloqueado(numero_evento, comprovante)
     return :ja_protocolada if protocolada?
+    return :sem_comprovante unless numero_evento.present? && comprovante.respond_to?(:read)
 
     :pacote_com_problemas if problemas.any?
   end
@@ -96,6 +99,7 @@ class Peticao < ApplicationRecord
   end
 
   def normalizar_numero
+    self.numero_processo = nil if numero_processo.blank?
     self.numero_processo = Ramon::Peticionamento::Cnj.normalizar(numero_processo) || numero_processo if numero_processo.present?
     self.tribunal = Ramon::Peticionamento::Cnj.tribunal(numero_processo) if tribunal.blank?
   end
