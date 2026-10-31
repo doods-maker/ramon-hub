@@ -39,6 +39,7 @@ class AccountUser < ApplicationRecord
   after_create_commit :notify_creation, :create_notification_setting
   after_destroy :notify_deletion, :remove_user_from_account
   after_save :update_presence_in_redis, if: :saved_change_to_availability?
+  after_commit -> { Ramon::Equipe.sincronizar(account) }, on: [:create, :destroy] # ramon: Geral = todos (ADR 0011)
 
   validates :user_id, uniqueness: { scope: :account_id }
 

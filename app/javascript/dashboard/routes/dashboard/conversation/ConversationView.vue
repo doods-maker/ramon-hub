@@ -72,6 +72,7 @@ export default {
     ...mapGetters({
       chatList: 'getAllConversations',
       currentChat: 'getSelectedChat',
+      getInbox: 'inboxes/getInbox',
     }),
     showConversationList() {
       return this.isOnExpandedLayout ? !this.conversationId : true;
@@ -92,6 +93,8 @@ export default {
       if (!this.currentChat.id) {
         return false;
       }
+      // FORK(ramon): caixa Equipe (chat interno) não tem painel de contato/lead
+      if (this.getInbox(this.currentChat.inbox_id)?.equipe) return false;
 
       const { is_contact_sidebar_open: isContactSidebarOpen } = this.uiSettings;
       return isContactSidebarOpen;

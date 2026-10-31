@@ -13,6 +13,8 @@ class Public::Api::V1::InboxesController < PublicController
     return if params[:inbox_id].blank?
 
     @inbox_channel = ::Channel::Api.find_by!(identifier: params[:inbox_id])
+    # ramon: a caixa Equipe (chat interno) não tem API pública — o source_id dos contatos é previsível (ADR 0011)
+    raise ActiveRecord::RecordNotFound if @inbox_channel.inbox.equipe?
   end
 
   def set_contact_inbox

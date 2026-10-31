@@ -1,13 +1,20 @@
 import { throwErrorMessage } from 'dashboard/store/utils/api';
 import ConversationApi from '../../../../api/inbox/conversation';
 import mutationTypes from '../../../mutation-types';
+import { useEquipeStore } from 'dashboard/stores/equipe';
 
 export default {
-  markMessagesRead: async ({ commit }, data) => {
+  markMessagesRead: async ({ commit, rootGetters }, data) => {
     try {
       const {
-        data: { id, agent_last_seen_at: lastSeen },
+        data: { id, agent_last_seen_at: lastSeen, inbox_id: inboxId },
       } = await ConversationApi.markMessageRead(data);
+      // FORK(ramon): leu conversa da Equipe → atualiza o badge da caixa
+      if (rootGetters?.['inboxes/getInbox']?.(inboxId)?.equipe) {
+        useEquipeStore()
+          .carregar()
+          .catch(() => {});
+      }
       setTimeout(
         () =>
           commit(mutationTypes.UPDATE_MESSAGE_UNREAD_COUNT, { id, lastSeen }),

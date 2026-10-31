@@ -167,18 +167,9 @@
       }
     },
     "EQUIPE": {
+      "NOVA_1A1": "Nova conversa 1:1…",
       "AVISO_ADMIN": "Administradores podem ler as conversas.",
-      "GERAL": "Geral",
-      "CANAIS": "Canais",
-      "CONVERSAS": "Conversas 1:1",
-      "VISAO_ADMIN": "Visão do administrador",
-      "NOVA_CONVERSA": "Nova conversa 1:1…",
-      "ANTERIORES": "Carregar mensagens anteriores",
-      "VAZIO": "Nenhuma mensagem ainda.",
-      "PLACEHOLDER": "Escreva uma mensagem (Enter envia, Shift+Enter quebra linha)",
-      "ENVIAR": "Enviar",
-      "SO_LEITURA": "Você está lendo como administrador — só quem participa escreve aqui.",
-      "ERRO": "Não deu certo — tente de novo."
+      "ERRO": "Algo deu errado — tente de novo."
     },
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",
@@ -2436,7 +2427,6 @@
       "OPERACAO": "Operação",
       "GESTAO": "Gestão",
       "HOJE": "Hoje",
-      "EQUIPE": "Equipe",
       "CLIENTES": "Clientes",
       "RESULTADOS": "Resultados",
       "CONFIGURACOES": "Configurações",

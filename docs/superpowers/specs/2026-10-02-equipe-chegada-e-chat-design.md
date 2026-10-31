@@ -74,7 +74,26 @@ respondido / escalado (sem resposta e `escalado_em`).
 - ⚠️ Autoplay: navegador só toca som após 1 interação na aba — o hub já tem login/clique,
   então na prática ok; documentar no smoke.
 
-## Fatia 2 — Chat da equipe
+## 31/10 — chat vira caixa do Chatwoot
+
+O Eduardo trocou D1 para o chat: ele vive **dentro da tela de Conversas**, como a
+caixa **Equipe** (ADR 0011), e o módulo próprio do #303 saiu. D7 e D9 seguem; D7
+deixa de ser "só texto" (anexo, foto e áudio nativos). D8 vira: não-lida por
+pessoa + som curto + notificação do sistema + toast do sino, só para quem participa.
+
+- Caixa `Channel::Api` sem webhook, `inboxes.equipe`; ninguém é membro dela.
+- Conversas Geral (todos), uma por time (membros) e 1:1 (seletor "Nova conversa
+  1:1" na própria caixa), cada uma com contato sintético.
+- Vê quem participa (`conversation_participants`, ressincronizado quando alguém
+  entra/sai de time ou da conta) + administradores.
+- Hub surdo: só o `NotificationListener` ouve eventos da caixa (guard no
+  `AsyncDispatcher`); sem lead, IA, fluxos, automações, webhooks, CSAT, SLA,
+  relatórios, auto-resolver.
+- Seed/deploy: `rails runner 'Ramon::Equipe.sincronizar(Account.find(2), criar: true)'`.
+
+O desenho abaixo (Fatia 2 em tabelas próprias) é histórico.
+
+## Fatia 2 — Chat da equipe (histórico, substituído em 31/10)
 
 ### Dados
 - `ramon_chat_canais`: `account_id`, `tipo` (`direto`|`setor`|`geral`), `team_id`

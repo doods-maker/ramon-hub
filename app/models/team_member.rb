@@ -18,6 +18,7 @@ class TeamMember < ApplicationRecord
   belongs_to :user
   belongs_to :team
   validates :user_id, uniqueness: { scope: :team_id }
+  after_commit -> { Ramon::Equipe.sincronizar(team&.account) } # ramon: canal do setor = membros do time (ADR 0011)
 end
 
 TeamMember.include_mod_with('Audit::TeamMember')

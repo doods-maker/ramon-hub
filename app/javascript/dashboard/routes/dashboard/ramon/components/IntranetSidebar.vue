@@ -1,13 +1,10 @@
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { secoesIntranet } from '../helpers/navIntranet';
-import { useChatStore } from 'dashboard/stores/chat';
-import { useEmitter } from 'dashboard/composables/emitter';
-import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 defineProps({
   isMobileSidebarOpen: {
@@ -22,14 +19,6 @@ const { t } = useI18n();
 const route = useRoute();
 const { accountScopedRoute } = useAccount();
 const { isAdmin } = useAdmin();
-const chat = useChatStore();
-
-// Não-lidas do chat da equipe no item "Equipe". Fora da Intranet o store se
-// carrega sozinho na 1ª mensagem que chegar (chat.receber).
-onMounted(() => chat.carregar().catch(() => {}));
-useEmitter(BUS_EVENTS.WEBSOCKET_RECONNECT, () =>
-  chat.recarregar().catch(() => {})
-);
 
 // Grupos e abas: helpers/navIntranet.js. O item leva à 1ª aba visível e
 // acende em qualquer rota das suas abas.
@@ -86,13 +75,6 @@ const isActive = grupo => grupo.abas.some(a => a.names.includes(route.name));
         >
           <span :class="grupo.icon" class="flex-shrink-0 size-4" />
           <span class="truncate">{{ t(grupo.label) }}</span>
-          <span
-            v-if="grupo.key === 'equipe' && chat.totalNaoLidas"
-            data-testid="equipe-nao-lidas"
-            class="grid h-4 min-w-4 px-1 ms-auto place-items-center rounded-full bg-n-ruby-9 text-[10px] font-medium leading-none text-white"
-          >
-            {{ chat.totalNaoLidas }}
-          </span>
         </router-link>
       </nav>
     </template>
