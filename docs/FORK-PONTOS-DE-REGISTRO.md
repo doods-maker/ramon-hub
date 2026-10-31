@@ -297,6 +297,7 @@
 | `app/models/team_member.rb` + `app/models/account_user.rb` (1 `after_commit` cada) | `Ramon::Equipe.sincronizar(account)` — canal do setor/Geral acompanha time e conta | ADR 0011 | equipe-chat-caixa 31/10 |
 | `app/views/api/v1/models/_inbox.json.jbuilder` (`equipe`) + migração `20261031100002_equipe_caixa` (`inboxes.equipe`, `conversation_participants.last_seen_at`) | flag da caixa Equipe no front | ADR 0011 | equipe-chat-caixa 31/10 |
 | front: `components/ChatList.vue` (seletor 1:1, aba "Todas"), `ConversationView.vue` (sem painel de contato), `components-next/sidebar/Sidebar.vue` (badge), `store/modules/conversations/actions.js` + `actions/messageReadActions.js` (não-lida local), `helper/actionCable.js` (aviso) | caixa Equipe na tela de Conversas | ADR 0011 | equipe-chat-caixa 31/10 |
+| `app/controllers/public/api/v1/inboxes_controller.rb` (`set_inbox_channel`, 1 linha) + `app/controllers/api/v1/accounts/leads_controller.rb` (`for_conversation` readonly) | API pública recusa a caixa Equipe; painel do lead nunca cria lead nela | ADR 0011 | equipe-chat-caixa 31/10 |
 | NOVOS: `app/services/ramon/equipe.rb`, `RamonEquipeController` (`resource :ramon_equipe` + `post :conversa` em `config/routes.rb`), `stores/equipe.js`, `api/ramonEquipe.js`, `ramon/components/equipe/EquipeNova1a1.vue`; migração `20261031100001_drop_ramon_chat` (sai o módulo do #303) | chat da equipe como caixa | ADR 0011 | equipe-chat-caixa 31/10 |
 
 ## Checklist de rebase (a cada nova release upstream)
