@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_31_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_31_100001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1479,35 +1479,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_31_000001) do
     t.index ["portal_id", "user_id"], name: "index_portals_members_on_portal_id_and_user_id", unique: true
     t.index ["portal_id"], name: "index_portals_members_on_portal_id"
     t.index ["user_id"], name: "index_portals_members_on_user_id"
-  end
-
-  create_table "ramon_chat_canais", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.string "tipo", null: false
-    t.string "chave", null: false
-    t.bigint "team_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id", "chave"], name: "index_ramon_chat_canais_on_account_id_and_chave", unique: true
-  end
-
-  create_table "ramon_chat_membros", force: :cascade do |t|
-    t.bigint "canal_id", null: false
-    t.bigint "user_id", null: false
-    t.datetime "lido_ate"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["canal_id", "user_id"], name: "index_ramon_chat_membros_on_canal_id_and_user_id", unique: true
-    t.index ["user_id"], name: "index_ramon_chat_membros_on_user_id"
-  end
-
-  create_table "ramon_chat_mensagens", force: :cascade do |t|
-    t.bigint "canal_id", null: false
-    t.bigint "autor_id", null: false
-    t.text "conteudo", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["canal_id", "id"], name: "index_ramon_chat_mensagens_on_canal_id_and_id"
   end
 
   create_table "ramon_chegadas", force: :cascade do |t|

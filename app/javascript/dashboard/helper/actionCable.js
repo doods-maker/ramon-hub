@@ -6,7 +6,6 @@ import { emitter } from 'shared/helpers/mitt';
 import { useImpersonation } from 'dashboard/composables/useImpersonation';
 import { useCallsStore } from 'dashboard/stores/calls';
 import { useChegadasStore } from 'dashboard/stores/chegadas';
-import { useChatStore, avisarMensagem } from 'dashboard/stores/chat';
 import {
   applyOutboundAnswer,
   armOutboundRecorder,
@@ -60,7 +59,6 @@ class ActionCableConnector extends BaseActionCableConnector {
       'lead.updated': this.onLeadUpsert,
       'ramon.chegada.created': this.onChegadaUpsert,
       'ramon.chegada.updated': this.onChegadaUpsert,
-      'ramon.chat.message': this.onChatMessage,
     };
   }
 
@@ -76,11 +74,6 @@ class ActionCableConnector extends BaseActionCableConnector {
   // eslint-disable-next-line class-methods-use-this
   onChegadaUpsert = data => {
     useChegadasStore().upsert(data);
-  };
-
-  onChatMessage = async data => {
-    const meuId = this.app.$store.getters.getCurrentUserID;
-    if (await useChatStore().receber(data, meuId)) avisarMensagem(data);
   };
 
   // eslint-disable-next-line class-methods-use-this
