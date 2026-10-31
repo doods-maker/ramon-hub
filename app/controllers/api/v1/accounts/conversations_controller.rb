@@ -112,12 +112,13 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     head :ok
   end
 
-  def update_last_seen
+  def update_last_seen # rubocop:disable Metrics/AbcSize
     # High-traffic accounts generate excessive DB writes when agents frequently switch between conversations.
     # Throttle last_seen updates to once per hour when there are no unread messages to reduce DB load.
     # Always update immediately if there are unread messages to maintain accurate read/unread state.
     # Visiting a conversation should clear any unread inbox notifications for this conversation.
     Notification::MarkConversationReadService.new(user: Current.user, account: Current.account, conversation: @conversation).perform
+    return Ramon::Equipe.marcar_lida(@conversation, Current.user) if @conversation.inbox.equipe? # ramon: lida por pessoa (ADR 0011)
     return update_last_seen_on_conversation(DateTime.now.utc, true) if assignee? && @conversation.assignee_unread_messages.any?
     return update_last_seen_on_conversation(DateTime.now.utc, false) if !assignee? && @conversation.unread_messages.any?
 

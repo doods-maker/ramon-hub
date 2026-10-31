@@ -21,6 +21,12 @@ class Conversations::PermissionFilterService
     conversations.where(inbox: user.inboxes.where(account_id: account.id))
                  .or(conversations.where(assignee_id: user.id))
                  .or(conversations.where(team_id: user.teams.where(account_id: account.id).select(:id)))
+                 .or(conversations.where(id: equipe_participations)) # ramon: caixa Equipe (ADR 0011)
+  end
+
+  def equipe_participations
+    user.conversation_participants.joins(conversation: :inbox).where(inboxes: { equipe: true, account_id: account.id })
+        .select(:conversation_id)
   end
 
   def account_user

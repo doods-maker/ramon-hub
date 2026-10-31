@@ -311,6 +311,9 @@ Rails.application.routes.draw do
           resources :ramon_reunioes, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_reunioes' do
             member { post :reprocessar }
           end
+          resource :ramon_equipe, only: [:show], controller: 'ramon_equipe' do
+            post :conversa
+          end
           resources :ramon_chegadas, only: [:index, :create], controller: 'ramon_chegadas' do
             member { post :responder }
             collection { get :agenda }

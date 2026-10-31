@@ -108,8 +108,8 @@ class ConversationFinder
 
   def find_conversation_by_inbox
     @conversations = current_account.conversations
-
-    return unless params[:inbox_id]
+    # ramon: conversa da Equipe só aparece dentro da caixa Equipe, não em "Todas" (ADR 0011)
+    return @conversations = @conversations.where.not(inbox_id: current_account.inboxes.where(equipe: true).select(:id)) unless params[:inbox_id]
 
     @conversations = @conversations.where(inbox_id: @inbox_ids)
   end

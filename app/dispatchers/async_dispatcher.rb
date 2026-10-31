@@ -5,7 +5,16 @@ class AsyncDispatcher < BaseDispatcher
 
   def publish_event(event_name, timestamp, data)
     event_object = Events::Base.new(event_name, timestamp, data)
+    return publish_equipe(event_object) if Ramon::Equipe.evento?(data)
+
     publish(event_object.method_name, event_object)
+  end
+
+  # ramon: na caixa Equipe (chat interno) o hub fica surdo — lead, fluxo, agente, IA, automação, webhook, CSAT,
+  # relatório. Só o aviso nativo de mensagem a quem participa (NotificationListener) ouve o evento (ADR 0011).
+  def publish_equipe(event_object)
+    listener = NotificationListener.instance
+    listener.public_send(event_object.method_name, event_object) if listener.respond_to?(event_object.method_name)
   end
 
   def listeners

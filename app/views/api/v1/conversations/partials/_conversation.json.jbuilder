@@ -53,7 +53,8 @@ json.created_at conversation.created_at.to_i
 json.updated_at conversation.updated_at.to_f
 json.timestamp conversation.last_activity_at.to_i
 json.first_reply_created_at conversation.first_reply_created_at.to_i
-json.unread_count conversation.unread_incoming_messages.count
+# FORK(ramon): na caixa Equipe a não-lida é de quem pede (ADR 0011)
+json.unread_count conversation.inbox.equipe? ? Ramon::Equipe.nao_lidas(conversation, Current.user) : conversation.unread_incoming_messages.count
 json.last_non_activity_message conversation.messages.where(account_id: conversation.account_id).non_activity_messages.first.try(:push_event_data)
 json.last_activity_at conversation.last_activity_at.to_i
 json.priority conversation.priority

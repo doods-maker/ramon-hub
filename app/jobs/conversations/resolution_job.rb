@@ -22,6 +22,7 @@ class Conversations::ResolutionJob < ApplicationJob
                    account.conversations.resolvable_all(account.auto_resolve_after)
                  end
     # Exclude orphan conversations where contact was deleted but conversation cleanup is pending
-    base_scope.where.not(contact_id: nil)
+    # ramon: a conversa da caixa Equipe (chat interno) não se resolve sozinha (ADR 0011)
+    base_scope.where.not(contact_id: nil).where.not(inbox_id: account.inboxes.where(equipe: true).select(:id))
   end
 end
