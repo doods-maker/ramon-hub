@@ -127,6 +127,19 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    // Admin ou time `juridico`: o backend decide (401 = "sem acesso" na tela).
+    path: frontendURL('accounts/:accountId/ramon/protocolos'),
+    name: 'ramon_protocolos',
+    component: () => import('./pages/Protocolos.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
+    path: frontendURL('accounts/:accountId/ramon/protocolos/:peticaoId'),
+    name: 'ramon_protocolo',
+    component: () => import('./pages/Protocolos.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/relatorios'),
     name: 'ramon_relatorios',
     component: () => import('./pages/Relatorios.vue'),
