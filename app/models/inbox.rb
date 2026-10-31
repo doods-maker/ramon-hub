@@ -170,7 +170,8 @@ class Inbox < ApplicationRecord
 
   def assignable_agents
     # ramon: na caixa do escritório a Recepção atribui a quem não é membro (ADR 0004)
-    return account.users.to_a if portaria_enabled?
+    # ramon: na caixa Equipe qualquer usuário participa das conversas (ADR 0011)
+    return account.users.to_a if portaria_enabled? || equipe?
 
     (account.users.where(id: members.select(:user_id)) + account.administrators).uniq
   end
