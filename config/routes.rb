@@ -315,6 +315,22 @@ Rails.application.routes.draw do
             member { post :responder }
             collection { get :agenda }
           end
+          resources :ramon_peticoes, only: [:index, :show, :create, :update, :destroy], controller: 'ramon_peticoes' do
+            member do
+              post :arquivos
+              post :arquivos_drive
+              patch 'arquivos/:arquivo_id', action: :atualizar_arquivo
+              delete 'arquivos/:arquivo_id', action: :remover_arquivo
+              get 'arquivos/:arquivo_id/baixar', action: :baixar
+              patch :ordem
+              post :registrar_protocolo
+            end
+            collection do
+              get :drive
+              get :drive_busca
+              get :processos
+            end
+          end
           resources :ramon_conteudo, only: [:index, :show], controller: 'ramon_conteudo' do
             member do
               post :aprovar

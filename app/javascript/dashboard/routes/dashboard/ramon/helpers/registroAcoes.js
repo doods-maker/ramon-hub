@@ -13,6 +13,7 @@ export const TIPOS = [
   'dinheiro',
   'acesso',
   'ia',
+  'peticao',
 ];
 export const TOM_DO_TIPO = {
   lead: 'blue',
@@ -21,6 +22,7 @@ export const TOM_DO_TIPO = {
   dinheiro: 'amber',
   acesso: 'ruby',
   ia: 'slate',
+  peticao: 'teal',
 };
 
 // Campos que são número/data: vão em font-mono na tela.
@@ -33,6 +35,12 @@ const MONO = [
   'data_nascimento',
   'cpf',
   'phone_number',
+  'numero_processo',
+  'numero_evento',
+  'prazo',
+  'protocolada_em',
+  'arquivada_em',
+  'posicao',
 ];
 export const ehMono = campo => MONO.includes(campo);
 
@@ -57,6 +65,12 @@ const mesAno = data => data.split('-').slice(0, 2).reverse().join('/');
 const FORMATOS = {
   value: v => formatBrl(v),
   won_at: v => noFuso(v, { day: '2-digit', month: '2-digit', year: 'numeric' }),
+  prazo: v => diaMesAno(String(v)),
+  protocolada_em: v => quandoSp(v),
+  arquivada_em: v => quandoSp(v),
+  principal: (v, t) => t(v ? `${P}.SIM` : `${P}.NAO`),
+  status: (v, t) => t(`RAMON.PETICOES.STATUS.${v}`),
+  tipo: (v, t) => t(`RAMON.PETICOES.TIPOS.${String(v).toUpperCase()}`),
   data_nascimento: v => diaMesAno(String(v)),
   mes: v => mesAno(String(v)),
   competencia: v => mesAno(String(v)),
@@ -177,6 +191,27 @@ const fraseAcesso = (r, t, pessoa) => {
   return ['ACESSO_EDITOU', { pessoa }];
 };
 
+// Petição: o alvo é o processo (ou "Petição #id"); o arquivo do pacote vem em alvo.arquivo.
+const frasePeticao = (r, t, peticao) => {
+  if (r.acao === 'create') return ['PETICAO_CRIOU', { peticao }];
+  if (r.acao === 'destroy') return ['PETICAO_EXCLUIU', { peticao }];
+  if (valor(r, 'status', 1) === 'protocolada') {
+    return ['PETICAO_PROTOCOLOU', { peticao }];
+  }
+  if (valor(r, 'arquivada_em', 1)) return ['PETICAO_ARQUIVOU', { peticao }];
+  return ['PETICAO_EDITOU', { peticao }];
+};
+
+const PACOTE = {
+  create: 'PACOTE_ADICIONOU',
+  destroy: 'PACOTE_REMOVEU',
+  update: 'PACOTE_MEXEU',
+};
+const frasePacote = (r, t, peticao) => [
+  PACOTE[r.acao] || 'PACOTE_MEXEU',
+  { peticao, arquivo: r.alvo?.arquivo || '—' },
+];
+
 const POR_MODELO = {
   Account: () => ['IA_MUDOU'],
   Lead: fraseLead,
@@ -185,6 +220,8 @@ const POR_MODELO = {
   MetaComercial: fraseMeta,
   ExtratoFechado: fraseExtrato,
   AccountUser: fraseAcesso,
+  Peticao: frasePeticao,
+  PeticaoArquivo: frasePacote,
 };
 
 export const fraseDoRegistro = (r, t) => {

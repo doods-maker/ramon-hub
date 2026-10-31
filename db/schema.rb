@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_20_130000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_30_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1747,6 +1747,46 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_20_130000) do
     t.index ["account_id", "slug"], name: "index_ramon_pecas_on_account_id_and_slug", unique: true
     t.index ["account_id"], name: "index_ramon_pecas_on_account_id"
     t.index ["status", "agendado_para"], name: "index_ramon_pecas_on_status_and_agendado_para"
+  end
+
+  create_table "ramon_peticao_arquivos", force: :cascade do |t|
+    t.bigint "peticao_id", null: false
+    t.string "nome", null: false
+    t.string "tipo", null: false
+    t.integer "posicao", null: false
+    t.boolean "principal", default: false, null: false
+    t.string "origem", null: false
+    t.string "drive_origem_id"
+    t.string "drive_file_id"
+    t.bigint "tamanho", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["peticao_id", "posicao"], name: "index_ramon_peticao_arquivos_on_peticao_id_and_posicao"
+  end
+
+  create_table "ramon_peticoes", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "contact_id"
+    t.bigint "criado_por_id", null: false
+    t.bigint "responsavel_id", null: false
+    t.string "numero_processo"
+    t.string "tribunal", null: false
+    t.boolean "inicial", default: false, null: false
+    t.date "prazo"
+    t.string "descricao"
+    t.string "status", default: "rascunho", null: false
+    t.string "executor", default: "manual", null: false
+    t.string "numero_evento"
+    t.datetime "protocolada_em"
+    t.bigint "protocolada_por_id"
+    t.string "drive_pasta_base_id"
+    t.string "drive_pasta_id"
+    t.datetime "arquivada_em"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "prazo"], name: "index_ramon_peticoes_on_account_id_and_prazo"
+    t.index ["account_id", "status"], name: "index_ramon_peticoes_on_account_id_and_status"
+    t.index ["contact_id"], name: "index_ramon_peticoes_on_contact_id"
   end
 
   create_table "ramon_reunioes", force: :cascade do |t|
