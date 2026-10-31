@@ -7,12 +7,13 @@ const mapa = secoes =>
   ]);
 
 describe('secoesIntranet', () => {
-  it('admin: 7 itens em 2 seções, com todas as abas', () => {
+  it('admin: 8 itens em 2 seções, com todas as abas', () => {
     expect(mapa(secoesIntranet(true))).toEqual([
       [
         'RAMON.NAV.OPERACAO',
         [
           ['hoje', ['ramon_index', 'ramon_esteira']],
+          ['equipe', ['ramon_equipe']],
           ['funil', ['ramon_funil', 'ramon_radar', 'ramon_pos_venda']],
           ['agenda', ['ramon_agenda', 'ramon_reunioes']],
           [
@@ -56,7 +57,7 @@ describe('secoesIntranet', () => {
         [['resultados', ['ramon_painel_time', 'ramon_extrato']]],
       ],
     ]);
-    expect(secoesIntranet(false)[0].grupos).toHaveLength(4);
+    expect(secoesIntranet(false)[0].grupos).toHaveLength(5);
   });
 });
 

@@ -166,6 +166,20 @@
         "SEM_IA": "No inbox has the AI connected (Assistant → Inboxes)"
       }
     },
+    "EQUIPE": {
+      "AVISO_ADMIN": "Administrators can read the conversations.",
+      "GERAL": "General",
+      "CANAIS": "Channels",
+      "CONVERSAS": "Direct messages",
+      "VISAO_ADMIN": "Administrator view",
+      "NOVA_CONVERSA": "New direct message…",
+      "ANTERIORES": "Load earlier messages",
+      "VAZIO": "No messages yet.",
+      "PLACEHOLDER": "Write a message (Enter sends, Shift+Enter breaks line)",
+      "ENVIAR": "Send",
+      "SO_LEITURA": "You are reading as administrator — only participants write here.",
+      "ERRO": "Something went wrong — try again."
+    },
     "CHEGADA": {
       "CHEGOU": "{quem}: a client has arrived",
       "SEM_RESPOSTA": "{quem} didn't answer in 3 min",
@@ -2310,6 +2324,7 @@
       "OPERACAO": "Operations",
       "GESTAO": "Management",
       "HOJE": "Today",
+      "EQUIPE": "Team",
       "CLIENTES": "Clients",
       "RESULTADOS": "Results",
       "CONFIGURACOES": "Settings",

@@ -20,6 +20,12 @@ const SECOES = [
         abas: [aba('ramon_index', 'OVERVIEW'), aba('ramon_esteira', 'ESTEIRA')],
       },
       {
+        key: 'equipe',
+        label: 'RAMON.NAV.EQUIPE',
+        icon: 'i-lucide-message-circle',
+        abas: [aba('ramon_equipe', 'EQUIPE')],
+      },
+      {
         key: 'funil',
         label: 'RAMON.NAV.FUNIL',
         icon: 'i-lucide-filter',

@@ -15,6 +15,12 @@ export const routes = [
     meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
   },
   {
+    path: frontendURL('accounts/:accountId/ramon/equipe'),
+    name: 'ramon_equipe',
+    component: () => import('./pages/Equipe.vue'),
+    meta: { permissions: ['administrator', 'agent'], world: 'intranet' },
+  },
+  {
     path: frontendURL('accounts/:accountId/ramon/atalhos'),
     name: 'ramon_external_shortcuts',
     component: () => import('./pages/ExternalShortcuts.vue'),
