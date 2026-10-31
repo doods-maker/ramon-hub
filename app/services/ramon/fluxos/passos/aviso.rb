@@ -34,8 +34,8 @@ module Ramon::Fluxos::Passos::Aviso
   def nomes(ids) = User.where(id: ids).order(:name).pluck(:name).join(', ').presence || 'ninguém (sem responsável)'
 
   def avisar_push(config, ctx)
-    titulo = ctx.interpolar(config['titulo'].presence || ctx.execucao.fluxo.nome)
-    texto = ctx.interpolar(config['texto'])
+    titulo = ctx.interpolar_push(config['titulo'].presence || ctx.execucao.fluxo.nome)
+    texto = ctx.interpolar_push(config['texto'])
     return { saida: 's', resumo: "faria: push \"#{texto.truncate(80)}\"" } if ctx.ensaio?
 
     pulo = pular_push(config, ctx)

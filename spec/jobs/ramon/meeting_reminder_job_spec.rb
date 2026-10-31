@@ -16,7 +16,7 @@ RSpec.describe Ramon::MeetingReminderJob do
     described_class.perform_now(lead.id, start_at.iso8601, '1h antes')
 
     expect(Ramon::NtfyPushJob).to have_received(:perform_now)
-      .with(lead.id, title: 'Reunião Maria da Silva em 1h antes', body: include('confirmação'))
+      .with(lead.id, title: 'Reunião Lead em 1h antes', body: include('confirmação'))
   end
 
   it 'avisa no sino do hub mesmo sem ntfy configurado' do

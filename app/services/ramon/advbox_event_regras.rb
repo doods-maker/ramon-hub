@@ -12,13 +12,13 @@ class Ramon::AdvboxEventRegras
     won_stage = @account.lead_stages.find_by(is_won: true)
     lead.update!(lead_stage: won_stage) if won_stage && !lead.lead_stage.is_won
     activity(lead, 'advbox_contrato_fechado', "ADVBOX: #{name}")
-    notify(lead, 'Contrato fechado no ADVBOX', "#{lead.name}: lead marcado como ganho no hub")
+    notify(lead, 'Contrato fechado no ADVBOX', "#{rotulo(lead)}: lead marcado como ganho no hub")
   end
 
   def requerimento_protocolado(lead, name)
     activity(lead, 'advbox_inss_protocolado', "ADVBOX: #{name} em #{today_br}")
     follow_up(lead, 'Verificar decisão/exigência do INSS (protocolo ADVBOX)', 45.days)
-    notify(lead, 'Requerimento protocolado no INSS', "#{lead.name}: follow-up de 45 dias criado")
+    notify(lead, 'Requerimento protocolado no INSS', "#{rotulo(lead)}: follow-up de 45 dias criado")
   end
 
   def indeferimento(lead, name)
@@ -29,13 +29,13 @@ class Ramon::AdvboxEventRegras
       "Oi #{first_name(lead)}, tudo bem? Saiu a decisão do INSS sobre o seu pedido e, infelizmente, foi negativa.
       Isso não é o fim: muitos casos como o seu são revertidos na Justiça. Posso te explicar os próximos passos?"
     NOTA
-    notify(lead, 'INSS NEGOU - avaliar judicializacao', "#{lead.name}: tarefa na Esteira + rascunho de mensagem no caso")
+    notify(lead, 'INSS NEGOU - avaliar judicializacao', "#{rotulo(lead)}: tarefa na Esteira + rascunho de mensagem no caso")
   end
 
   def decisao(lead, name)
     activity(lead, 'advbox_decisao', "ADVBOX: #{name}")
     follow_up(lead, 'Analisar decisão registrada no ADVBOX', 2.days)
-    notify(lead, 'Decisao proferida (ADVBOX)', "#{lead.name}: analisar e decidir comunicação")
+    notify(lead, 'Decisao proferida (ADVBOX)', "#{rotulo(lead)}: analisar e decidir comunicação")
   end
 
   def exigencia(lead, name)
@@ -45,7 +45,7 @@ class Ramon::AdvboxEventRegras
       RASCUNHO (revisar antes de enviar) — exigência do INSS:
       "Oi #{first_name(lead)}! O INSS pediu um documento a mais no seu processo. Pode me mandar por aqui quando conseguir? Te ajudo com o que precisar."
     NOTA
-    notify(lead, 'Carta de exigencias do INSS', "#{lead.name}: prazo curto — tarefa + rascunho criados")
+    notify(lead, 'Carta de exigencias do INSS', "#{rotulo(lead)}: prazo curto — tarefa + rascunho criados")
   end
 
   def reativacao_futura(lead, name)
@@ -61,7 +61,7 @@ class Ramon::AdvboxEventRegras
       Se puder, sua avaliação no Google ajuda muito outras pessoas a nos encontrarem."
     NOTA
     nps_draft(lead)
-    notify(lead, 'Exito: pagamento no ADVBOX', "#{lead.name}: rascunho de comunicado pronto no caso")
+    notify(lead, 'Exito: pagamento no ADVBOX', "#{rotulo(lead)}: rascunho de comunicado pronto no caso")
   end
 
   def concessao(lead, name)
@@ -71,12 +71,12 @@ class Ramon::AdvboxEventRegras
       "#{first_name(lead)}, notícia boa! 🎉 O INSS CONCEDEU o seu benefício. Agora vamos conferir a implantação e os valores — te aviso de cada passo."
     NOTA
     nps_draft(lead)
-    notify(lead, 'Beneficio CONCEDIDO (ADVBOX)', "#{lead.name}: rascunho de boa notícia pronto no caso")
+    notify(lead, 'Beneficio CONCEDIDO (ADVBOX)', "#{rotulo(lead)}: rascunho de boa notícia pronto no caso")
   end
 
   def marco(lead, name)
     activity(lead, 'advbox_marco', "ADVBOX: #{name}")
-    notify(lead, 'Marco processual (ADVBOX)', "#{lead.name}: #{name}")
+    notify(lead, 'Marco processual (ADVBOX)', "#{rotulo(lead)}: #{name}")
   end
 
   def arquivado(lead, name)
@@ -109,6 +109,8 @@ class Ramon::AdvboxEventRegras
 
     Ramon::NtfyPushJob.perform_later(lead.id, title: title, body: body)
   end
+
+  def rotulo(lead) = Ramon::NtfyPushJob.rotulo(lead)
 
   def first_name(lead)
     lead.name.to_s.split.first.presence || 'cliente'

@@ -20,8 +20,7 @@ class Ramon::PortalEnvioJob < ApplicationJob
     @cliente = @envio.portal_cliente
     @processo = @cliente.processo(@envio.lawsuit_id) || {}
     subir_drive if precisa_drive?
-    Ramon::NtfyPushJob.perform_later(nil, title: "Documento do cliente #{@cliente.nome}",
-                                          body: "#{@envio.item} · processo #{@processo['numero'].presence || @envio.lawsuit_id}")
+    Ramon::NtfyPushJob.perform_later(nil, title: 'Documento recebido pelo Painel', body: "#{@envio.item} — ver a tarefa no ADVBOX")
     abrir_tarefa if @envio.advbox_post_id.blank?
     abrir_juntada if @envio.juntada_post_id.blank?
   end

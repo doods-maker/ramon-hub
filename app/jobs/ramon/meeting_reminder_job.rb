@@ -35,7 +35,7 @@ class Ramon::MeetingReminderJob < ApplicationJob
     return if ENV.fetch('NTFY_TOPIC', nil).blank?
 
     # timing já resolvido pelo wait_until — push direto, sem re-enfileirar
-    Ramon::NtfyPushJob.perform_now(lead_id, title: "Reunião #{lead.name} em #{label}",
+    Ramon::NtfyPushJob.perform_now(lead_id, title: "Reunião #{Ramon::NtfyPushJob.rotulo(lead)} em #{label}",
                                             body: "#{hora} — hora de mandar a mensagem de confirmação pro cliente")
   end
 end

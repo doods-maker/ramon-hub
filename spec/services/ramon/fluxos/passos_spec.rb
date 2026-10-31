@@ -360,6 +360,14 @@ RSpec.describe 'Ramon::Fluxos::Passos' do
     end
   end
 
+  it 'push vai pro ntfy (público) com a tese no lugar do nome e sem telefone' do
+    lead.update!(thesis: create(:thesis, account: account, name: 'Tese do push'))
+    lead.contact.update!(name: 'Maria das Dores', phone_number: '+5548999990000')
+    config = { 'titulo' => 'Novo: {nome}', 'texto' => '{nome_completo} {telefone}· ganho' }
+    expect { Ramon::Fluxos::Passos::Aviso.avisar_push(config, ctx) }
+      .to have_enqueued_job(Ramon::NtfyPushJob).with(title: 'Novo: Tese do push', body: 'Tese do push · ganho')
+  end
+
   describe 'push uma vez por dia (B4.3)' do
     let(:dia) { Time.find_zone!('America/Sao_Paulo').parse('2026-10-07 11:00') }
 

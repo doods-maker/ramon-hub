@@ -20,7 +20,7 @@ RSpec.describe Ramon::DailyDigestService do
         antonio = create(:lead, account: account, lead_stage: stage_novo, name: 'Antônio')
         create(:lead_task, account: account, lead: antonio, kind: 'meeting', due_at: Time.utc(2026, 7, 23, 18, 0, 0))
 
-        expect(service.push_body).to eq('1 tarefa vencida · 1 fora do SLA · reunião 15h (Antônio) · R$ 391 mil em jogo')
+        expect(service.push_body).to eq('1 tarefa vencida · 1 fora do SLA · reunião 15h · R$ 391 mil em jogo')
       end
     end
 
@@ -29,7 +29,7 @@ RSpec.describe Ramon::DailyDigestService do
         lead = create(:lead, account: account, lead_stage: stage_novo, name: 'Maria das Dores')
         create(:lead_task, account: account, lead: lead, kind: 'meeting', due_at: Time.utc(2026, 7, 23, 18, 30, 0))
 
-        expect(service.push_body).to eq('reunião 15h30 (Maria das Dores)')
+        expect(service.push_body).to eq('reunião 15h30')
       end
     end
 
