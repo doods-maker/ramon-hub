@@ -31,6 +31,14 @@
 
 en:
   hello: 'Hello world'
+  activerecord:
+    errors:
+      models:
+        peticao:
+          attributes:
+            base:
+              ja_protocolada: 'Petição já protocolada'
+              pacote_com_problemas: 'Pacote com problemas: confira os avisos'
   inbox:
     reauthorization:
       success: 'Channel reauthorized successfully'

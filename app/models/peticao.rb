@@ -55,13 +55,13 @@ class Peticao < ApplicationRecord
   end
 
   def registrar_protocolo!(usuario:, numero_evento:, comprovante:)
-    erro = protocolo_bloqueado
-    if erro
-      errors.add(:base, erro)
-      raise ActiveRecord::RecordInvalid, self
-    end
+    with_lock do
+      erro = protocolo_bloqueado
+      if erro
+        errors.add(:base, erro)
+        raise ActiveRecord::RecordInvalid, self
+      end
 
-    transaction do
       update!(status: 'protocolada', numero_evento: numero_evento, protocolada_em: Time.current, protocolada_por: usuario)
       self.comprovante.attach(comprovante) if comprovante
     end
@@ -97,7 +97,7 @@ class Peticao < ApplicationRecord
 
   def normalizar_numero
     self.numero_processo = Ramon::Peticionamento::Cnj.normalizar(numero_processo) || numero_processo if numero_processo.present?
-    self.tribunal ||= Ramon::Peticionamento::Cnj.tribunal(numero_processo)
+    self.tribunal = Ramon::Peticionamento::Cnj.tribunal(numero_processo) if tribunal.blank?
   end
 
   def numero_processo_valido

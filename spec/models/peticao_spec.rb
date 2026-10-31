@@ -49,6 +49,11 @@ RSpec.describe Peticao do
       .to have_enqueued_job(Ramon::PeticaoArquivarJob).with(p.id)
     expect(p.reload).to have_attributes(status: 'protocolada', numero_evento: '15', protocolada_por_id: user.id, editavel?: false)
     expect(p.comprovante).to be_attached
+    expect do
+      expect do
+        p.registrar_protocolo!(usuario: user, numero_evento: '15', comprovante: nil)
+      end.to raise_error(ActiveRecord::RecordInvalid, /já protocolada/)
+    end.not_to have_enqueued_job(Ramon::PeticaoArquivarJob)
   end
 
   it 'registrar_protocolo! recusa pacote com problema' do

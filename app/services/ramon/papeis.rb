@@ -6,6 +6,7 @@ module Ramon::Papeis
 
   SDR = 'sdr'.freeze
   CLOSER = 'closer'.freeze
+  JURIDICO = 'juridico'.freeze
   COLUNA = { SDR => :sdr_id, CLOSER => :closer_id }.freeze
 
   def membro_ids(account, papel)
