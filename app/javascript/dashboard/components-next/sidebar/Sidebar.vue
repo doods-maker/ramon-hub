@@ -4,6 +4,7 @@ import { provideSidebarContext, useSidebarResize } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { enxugarMenuConversas } from 'dashboard/routes/dashboard/ramon/helpers/menuConversas'; // FORK(ramon)
+import { useEquipeStore } from 'dashboard/stores/equipe'; // FORK(ramon)
 import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
@@ -203,6 +204,7 @@ const getTeamUnreadCount = useMapGetter(
   'conversationUnreadCounts/getTeamUnreadCount'
 );
 const teams = useMapGetter('teams/getMyTeams');
+const equipe = useEquipeStore(); // FORK(ramon): não-lidas da caixa Equipe são por pessoa (ADR 0011)
 const contactCustomViews = useMapGetter('customViews/getContactCustomViews');
 const conversationCustomViews = useMapGetter(
   'customViews/getConversationCustomViews'
@@ -219,6 +221,7 @@ onMounted(() => {
   store.dispatch('attributes/get');
   store.dispatch('customViews/get', 'conversation');
   store.dispatch('customViews/get', 'contact');
+  equipe.carregar().catch(() => {});
 });
 
 watch([accountId, hasConversationUnreadCounts], fetchConversationUnreadCounts, {
@@ -394,7 +397,9 @@ const menuItems = computed(() => {
           children: sortedInboxes.value.map(inbox => ({
             name: `${inbox.name}-${inbox.id}`,
             label: inbox.name,
-            badgeCount: getInboxUnreadCount.value(inbox.id),
+            badgeCount: inbox.equipe
+              ? equipe.naoLidas
+              : getInboxUnreadCount.value(inbox.id),
             icon: h(ChannelIcon, { inbox, class: 'size-[16px]' }),
             to: accountScopedRoute('inbox_dashboard', { inbox_id: inbox.id }),
             component: leafProps =>

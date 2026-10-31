@@ -6,6 +6,7 @@ import { emitter } from 'shared/helpers/mitt';
 import { useImpersonation } from 'dashboard/composables/useImpersonation';
 import { useCallsStore } from 'dashboard/stores/calls';
 import { useChegadasStore } from 'dashboard/stores/chegadas';
+import { useEquipeStore } from 'dashboard/stores/equipe';
 import {
   applyOutboundAnswer,
   armOutboundRecorder,
@@ -265,6 +266,7 @@ class ActionCableConnector extends BaseActionCableConnector {
   onNotificationCreated = data => {
     this.app.$store.dispatch('notifications/addNotification', data);
     emitter.emit(BUS_EVENTS.RAMON_NOTIFICACAO_NOVA, data.notification);
+    useEquipeStore().avisar(data.notification); // FORK(ramon): som + aviso na caixa Equipe
   };
 
   onNotificationDeleted = data => {

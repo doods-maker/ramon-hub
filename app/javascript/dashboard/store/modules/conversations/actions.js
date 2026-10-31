@@ -31,6 +31,26 @@ export const hasMessageFailedWithExternalError = pendingMessage => {
   return status === MESSAGE_STATUS.FAILED && externalError !== '';
 };
 
+// FORK(ramon): na caixa Equipe a não-lida é por pessoa e o cable (igual para
+// todos) não a traz — mantém a da conversa e soma a mensagem nova de colega.
+const naoLidaEquipe = (conversationState, rootGetters, message, nova) => {
+  const chat = conversationState?.allConversations?.find(
+    c => c.id === message.conversation_id
+  );
+  if (!chat || !rootGetters?.['inboxes/getInbox']?.(chat.inbox_id)?.equipe) {
+    return;
+  }
+  const deColega =
+    nova &&
+    message.sender?.type === 'user' &&
+    message.sender.id !== rootGetters.getCurrentUserID &&
+    !chat.messages?.some(m => m.id === message.id);
+  message.conversation = {
+    ...message.conversation,
+    unread_count: (chat.unread_count || 0) + (deColega ? 1 : 0),
+  };
+};
+
 // actions
 const actions = {
   getConversation: async ({ commit }, conversationId) => {
@@ -320,7 +340,8 @@ const actions = {
     }
   },
 
-  addMessage({ commit, rootGetters }, message) {
+  addMessage({ commit, state: conversationState, rootGetters }, message) {
+    naoLidaEquipe(conversationState, rootGetters, message, true);
     commit(types.ADD_MESSAGE, message);
     if (message.message_type === MESSAGE_TYPE.INCOMING) {
       commit(types.SET_CONVERSATION_CAN_REPLY, {
@@ -336,7 +357,8 @@ const actions = {
     );
   },
 
-  updateMessage({ commit, rootGetters }, message) {
+  updateMessage({ commit, state: conversationState, rootGetters }, message) {
+    naoLidaEquipe(conversationState, rootGetters, message, false);
     commit(types.ADD_MESSAGE, message);
     handleVoiceCallUpdated(
       commit,

@@ -62,13 +62,16 @@ module Ramon::Equipe
   end
 
   # Conversa sempre aberta: some da lista se alguém resolver; a próxima sincronização (ou o 1:1 de novo) reabre.
+  # Conversa nova: o conversation.created saiu antes dos participantes existirem — o updated leva a eles ao vivo.
   def conversa(inbox, chave, nome, user_ids)
     contact_inbox = inbox.contact_inboxes.find_by(source_id: "equipe-#{chave}") || criar_contato(inbox, chave, nome)
-    conversation = contact_inbox.conversations.first ||
-                   Conversation.create!(account_id: inbox.account_id, inbox: inbox, contact_id: contact_inbox.contact_id,
-                                        contact_inbox: contact_inbox)
+    conversation = contact_inbox.conversations.first
+    nova = conversation.nil?
+    conversation ||= Conversation.create!(account_id: inbox.account_id, inbox: inbox, contact_id: contact_inbox.contact_id,
+                                          contact_inbox: contact_inbox)
     conversation.open! unless conversation.open?
     participantes(conversation, user_ids)
+    conversation.dispatch_conversation_updated_event if nova
     conversation
   end
 

@@ -8,6 +8,7 @@ import {
 } from 'dashboard/composables/store.js';
 
 import ChatListHeader from './ChatListHeader.vue';
+import EquipeNova1a1 from 'dashboard/routes/dashboard/ramon/components/equipe/EquipeNova1a1.vue'; // FORK(ramon)
 import ConversationList from './ConversationList.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import ConversationFilter from 'next/filter/ConversationFilter.vue';
@@ -851,6 +852,15 @@ provide('deleteConversation', handleDelete);
 
 watch(activeTeam, () => resetAndFetchData());
 
+// FORK(ramon): na caixa Equipe não há atribuição — a lista é sempre "Todas"
+watch(
+  () => inbox.value?.equipe,
+  equipe => {
+    if (equipe) updateAssigneeTab(wootConstants.ASSIGNEE_TYPE.ALL);
+  },
+  { immediate: true }
+);
+
 watch(
   computed(() => props.conversationInbox),
   () => resetAndFetchData()
@@ -905,6 +915,7 @@ watch(conversationFilters, (newVal, oldVal) => {
       @reset-filters="resetAndFetchData"
       @basic-filter-change="onBasicFilterChange"
     />
+    <EquipeNova1a1 v-if="inbox.equipe" :inbox-id="inbox.id" />
 
     <TeleportWithDirection
       v-if="showAddFoldersModal"
@@ -928,7 +939,7 @@ watch(conversationFilters, (newVal, oldVal) => {
     />
 
     <ChatTypeTabs
-      v-if="!hasAppliedFiltersOrActiveFolders"
+      v-if="!hasAppliedFiltersOrActiveFolders && !inbox.equipe"
       :items="assigneeTabItems"
       :active-tab="activeAssigneeTab"
       is-compact

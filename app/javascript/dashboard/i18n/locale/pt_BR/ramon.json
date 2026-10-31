@@ -166,6 +166,11 @@
         "SEM_IA": "Nenhuma caixa tem a IA conectada (Assistente → Caixas)"
       }
     },
+    "EQUIPE": {
+      "NOVA_1A1": "Nova conversa 1:1…",
+      "AVISO_ADMIN": "Administradores podem ler as conversas.",
+      "ERRO": "Algo deu errado — tente de novo."
+    },
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",
       "SEM_RESPOSTA": "{quem} não respondeu em 3 min",

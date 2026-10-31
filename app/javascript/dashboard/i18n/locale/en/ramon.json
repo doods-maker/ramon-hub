@@ -166,6 +166,11 @@
         "SEM_IA": "No inbox has the AI connected (Assistant → Inboxes)"
       }
     },
+    "EQUIPE": {
+      "NOVA_1A1": "New direct message…",
+      "AVISO_ADMIN": "Administrators can read the conversations.",
+      "ERRO": "Something went wrong — try again."
+    },
     "CHEGADA": {
       "CHEGOU": "{quem}: a client has arrived",
       "SEM_RESPOSTA": "{quem} didn't answer in 3 min",
