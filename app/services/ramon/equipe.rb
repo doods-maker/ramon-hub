@@ -5,8 +5,10 @@
 module Ramon::Equipe
   module_function
 
+  # Consultas frescas (sem as associações do account): no commit de um AccountUser/TeamMember o account.users/teams
+  # carregado antes no mesmo request ainda não tem a pessoa nova.
   def caixa(account)
-    account&.inboxes&.find_by(equipe: true)
+    Inbox.find_by(account_id: account.id, equipe: true) if account
   end
 
   # Deploy/seed: criar: true. Os commits de TeamMember/AccountUser chamam sem criar — só acertam onde a caixa existe.
@@ -14,10 +16,16 @@ module Ramon::Equipe
     inbox = caixa(account) || (criar && criar_caixa(account))
     return unless inbox
 
-    conversa(inbox, 'geral', 'Geral', account.users.ids)
-    account.teams.each { |team| conversa(inbox, "time-#{team.id}", "Setor #{team.name}", team.members.ids) }
-    times_apagados(inbox, account).each { |contact_inbox| contact_inbox.conversations.each { |c| participantes(c, []) } }
+    conversa(inbox, 'geral', 'Geral', AccountUser.where(account_id: account.id).pluck(:user_id))
+    canais_de_time(inbox, Team.where(account_id: account.id).to_a)
     inbox
+  end
+
+  # Um canal por time (membros do time); canal de time apagado fica sem ninguém.
+  def canais_de_time(inbox, times)
+    times.each { |team| conversa(inbox, "time-#{team.id}", "Setor #{team.name}", TeamMember.where(team_id: team.id).pluck(:user_id)) }
+    apagados = inbox.contact_inboxes.where('source_id LIKE ?', 'equipe-time-%').where.not(source_id: times.map { |t| "equipe-time-#{t.id}" })
+    apagados.each { |contact_inbox| contact_inbox.conversations.each { |c| participantes(c, []) } }
   end
 
   def conversa_1a1(account, user, outro)
@@ -57,8 +65,8 @@ module Ramon::Equipe
   end
 
   def criar_caixa(account)
-    account.inboxes.create!(name: 'Equipe', channel: Channel::Api.create!(account: account), equipe: true,
-                            enable_auto_assignment: false, enable_email_collect: false)
+    Inbox.create!(account_id: account.id, name: 'Equipe', channel: Channel::Api.create!(account_id: account.id), equipe: true,
+                  enable_auto_assignment: false, enable_email_collect: false)
   end
 
   # Conversa sempre aberta: some da lista se alguém resolver; a próxima sincronização (ou o 1:1 de novo) reabre.
@@ -84,10 +92,5 @@ module Ramon::Equipe
     atuais = conversation.conversation_participants.pluck(:user_id)
     conversation.conversation_participants.where(user_id: atuais - user_ids).destroy_all
     (user_ids - atuais).each { |user_id| conversation.conversation_participants.create!(user_id: user_id) }
-  end
-
-  def times_apagados(inbox, account)
-    vivos = account.teams.ids.map { |id| "equipe-time-#{id}" }
-    inbox.contact_inboxes.where('source_id LIKE ?', 'equipe-time-%').where.not(source_id: vivos)
   end
 end
