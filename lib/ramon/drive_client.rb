@@ -6,7 +6,8 @@ require 'googleauth'
 class Ramon::DriveClient
   FOLDER_MIME = 'application/vnd.google-apps.folder'.freeze
   SHORTCUT_MIME = 'application/vnd.google-apps.shortcut'.freeze
-  SCOPE = 'https://www.googleapis.com/auth/drive'.freeze
+  FILTRO_TIPOS = "(mimeType = '#{FOLDER_MIME}' or mimeType = 'application/pdf' or mimeType = 'image/jpeg' or mimeType = 'image/png')".freeze
+  SCOPE ='https://www.googleapis.com/auth/drive'.freeze
 
   class << self
     def configured?
@@ -60,7 +61,44 @@ class Ramon::DriveClient
       service.update_file(file_id, { name: name }, fields: 'id')
     end
 
+    # Navegador de arquivos do Drive (Peticionamento): só pastas, PDF e JPG/PNG; pastas primeiro.
+    def children(parent_id)
+      listar("'#{parent_id}' in parents and #{FILTRO_TIPOS}", 200)
+    end
+
+    def search(texto)
+      texto = texto.to_s.strip
+      return [] if texto.length < 3
+
+      listar("name contains '#{texto.gsub("'", "\\\\'")}' and #{FILTRO_TIPOS}", 50)
+    end
+
+    def parent_of(id)
+      service.get_file(id, fields: 'parents', supports_all_drives: true).parents&.first
+    end
+
+    # => [bytes, mime_type, name]
+    def download(file_id)
+      meta = service.get_file(file_id, fields: 'name,mimeType', supports_all_drives: true)
+      io = StringIO.new
+      service.get_file(file_id, download_dest: io, supports_all_drives: true)
+      [io.string, meta.mime_type, meta.name]
+    end
+
     private
+
+    def listar(filtro, page_size)
+      files = service.list_files(
+        q: "#{filtro} and trashed = false", fields: 'files(id,name,mimeType,modifiedTime,size,parents)', page_size: page_size,
+        supports_all_drives: true, include_items_from_all_drives: true
+      ).files.to_a
+      files.map { |f| arquivo_hash(f) }.sort_by { |h| [h[:pasta] ? 0 : 1, h[:name].to_s.downcase] }
+    end
+
+    def arquivo_hash(file)
+      { id: file.id, name: file.name, mime_type: file.mime_type, modified_time: file.modified_time,
+        size: file.size&.to_i, pasta: file.mime_type == FOLDER_MIME }
+    end
 
     def redirect_uri = "#{ENV.fetch('FRONTEND_URL', nil)}/ramon/google_agenda/callback"
 
