@@ -1,5 +1,10 @@
+# O ntfy.sh é um servidor PÚBLICO: quem souber o tópico lê. Título e corpo levam só a tese,
+# o tipo de evento e horários — nome, telefone, CPF e nº de processo ficam no hub.
 class Ramon::NtfyPushJob < ApplicationJob
   queue_as :low
+
+  # Como um lead aparece no push: pela tese (o nome fica no sino do hub).
+  def self.rotulo(lead) = lead&.thesis&.name.presence || 'Lead'
 
   def perform(lead_id = nil, title: nil, body: nil)
     topic = ENV.fetch('NTFY_TOPIC', nil)
@@ -30,7 +35,7 @@ class Ramon::NtfyPushJob < ApplicationJob
     http.read_timeout = 5
 
     req = Net::HTTP::Post.new(uri)
-    req['Title'] = ascii_title(custom_title.presence || "Novo lead: #{lead.name}")
+    req['Title'] = ascii_title(custom_title.presence || 'Novo lead')
     req['Tags'] = 'bell'
     req.body = custom_body.presence || body_for(lead)
     http.request(req)

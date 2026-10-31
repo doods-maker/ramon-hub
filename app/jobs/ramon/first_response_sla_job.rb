@@ -32,7 +32,7 @@ class Ramon::FirstResponseSlaJob < ApplicationJob
     destinatarios = lead.sdr_id ? [lead.sdr_id] : Ramon::Papeis.gestor_ids(lead.account)
     notify(lead, destinatarios, minutes)
     Ramon::NtfyPushJob.perform_now(lead.id, title: 'Lead aguardando 1a resposta',
-                                            body: "Lead aguardando 1ª resposta há #{minutes}min: #{lead.name}")
+                                            body: "Lead aguardando 1ª resposta há #{minutes}min: #{Ramon::NtfyPushJob.rotulo(lead)}")
   end
 
   def escalate(lead)

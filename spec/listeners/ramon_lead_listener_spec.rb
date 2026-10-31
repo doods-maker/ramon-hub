@@ -425,7 +425,7 @@ RSpec.describe RamonLeadListener do
         expect(avisos).to eq([[sdr.id, 'Lead aguardando 1ª resposta há 5 min: Maria'],
                               [gestor.id, 'Lead aguardando 1ª resposta há 60 min: Maria']])
         expect(Ramon::NtfyPushJob).to have_received(:perform_later)
-          .with(title: 'Lead aguardando 1a resposta', body: 'Lead aguardando 1ª resposta há 5min: Maria').once
+          .with(title: 'Lead aguardando 1a resposta', body: 'Lead aguardando 1ª resposta há 5min: Lead').once
         expect(FluxoExecucao.where(fluxo: fluxo).pluck(:ensaio, :status)).to eq([[false, 'concluida']])
       end
 

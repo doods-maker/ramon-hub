@@ -14,7 +14,7 @@ RSpec.describe Ramon::FirstResponseSlaJob do
     end
 
     expect(Ramon::NtfyPushJob).to have_received(:perform_now)
-      .with(lead.id, title: 'Lead aguardando 1a resposta', body: include('Maria da Silva'))
+      .with(lead.id, title: 'Lead aguardando 1a resposta', body: 'Lead aguardando 1ª resposta há 5min: Lead')
   end
 
   it 'usa o SLA da inbox no texto quando configurado' do

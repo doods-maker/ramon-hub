@@ -52,9 +52,8 @@ class Ramon::DailyDigestService
     task = next_meeting
     return if task.nil?
 
-    label = hour_label(task.due_at.in_time_zone(TIME_ZONE))
-    name = task.lead&.name
-    name.present? ? "reunião #{label} (#{name})" : "reunião #{label}"
+    # vai pro ntfy (público): sem o nome do lead
+    "reunião #{hour_label(task.due_at.in_time_zone(TIME_ZONE))}"
   end
 
   def at_stake_part
