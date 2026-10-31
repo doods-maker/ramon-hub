@@ -30,8 +30,14 @@ class Ramon::Fluxos::Contexto
                                    execucao.contexto['vars'] || {})
   end
 
-  def interpolar(texto)
-    texto.to_s.gsub(/\{(\w+)\}/) { dados.key?(Regexp.last_match(1)) ? dados[Regexp.last_match(1)].to_s : Regexp.last_match(0) }
+  def interpolar(texto, valores = dados)
+    texto.to_s.gsub(/\{(\w+)\}/) { valores.key?(Regexp.last_match(1)) ? valores[Regexp.last_match(1)].to_s : Regexp.last_match(0) }
+  end
+
+  # Push vai pro ntfy.sh (servidor público): nome e telefone do lead viram a tese (Ramon::NtfyPushJob.rotulo).
+  def interpolar_push(texto)
+    rotulo = Ramon::NtfyPushJob.rotulo(lead)
+    interpolar(texto, dados.merge('nome' => rotulo, 'nome_completo' => rotulo, 'primeiro_nome' => rotulo, 'telefone' => ''))
   end
 
   # Valor cru que o gatilho trouxe (ids e horários que não viram texto: inicio, quem_marcou_id, tarefa_ids, lead_id).

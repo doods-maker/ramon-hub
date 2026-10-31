@@ -11,7 +11,7 @@ RSpec.describe Ramon::NtfyPushJob do
         with_modified_env NTFY_TOPIC: 'ramon-leads' do
           stub = stub_request(:post, 'https://ntfy.sh/ramon-leads')
                  .with(
-                   headers: { 'Title' => 'Novo lead: Joao da Silva', 'Tags' => 'bell' },
+                   headers: { 'Title' => 'Novo lead', 'Tags' => 'bell' },
                    body: /Auxílio-Acidente/
                  )
                  .to_return(status: 200)
