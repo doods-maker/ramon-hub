@@ -1,13 +1,14 @@
 # Peticionamento: esteira no hub, executor trocável, credenciais no cofre do hub
 
 Queríamos protocolar petições de dentro do hub, como o Legis faz. A via oficial de máquina (MNI) do eproc e do PJe
-não está garantida para escritório particular: o TJSC e o PJe-JT só a oferecem a órgão público conveniado, e no
-TRF4/JFSC o acesso para escritório ainda depende de resposta do dieproc (pesquisa de 30/10/2026). Todo o mercado
+é só para instituições: o TJSC e o PJe-JT a oferecem a órgão público conveniado, e no TRF4 o acesso institucional
+exige convênio, que a Res. TRF4 17/2010 só prevê para órgão público (pesquisas de 30 e 31/10/2026). O Eduardo
+descartou o MNI em 31/10/2026. Todo o mercado
 (Legis, Intima.ai, Oystr, PeticionaMais) protocola com robô usando as credenciais do advogado.
 
 Decidimos: o hub constrói a **esteira** (petição, pacote, regras do tribunal, aprovação do advogado, fila,
 comprovante, auditoria) e o protocolo em si fica com um **executor trocável**: manual primeiro, robô do eproc depois
-(TRF4/JFSC e TJSC são o mesmo sistema e assinam por login + senha, sem certificado), MNI se o TRF4 liberar, e API
+(TRF4/JFSC e TJSC são o mesmo sistema e assinam por login + senha, sem certificado), e API
 contratada para o PJe-JT. Trocar o executor não mexe na esteira.
 
 As credenciais (senha, **semente do 2FA** e, se um dia preciso, o A1) ficam num **cofre dentro do hub**, cifradas com

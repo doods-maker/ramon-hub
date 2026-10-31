@@ -21,10 +21,10 @@ previdenciário, cível e trabalhista.
 | Cível (e acidentário estadual) | TJSC | eproc (mesmo sistema) | login + senha; certificado opcional | obrigatório para advogado desde 2025 | **PDF até 11 MB**; acima disso, dividir |
 | Trabalhista | TRT12 | PJe-JT | **certificado ICP-Brasil (A1 ou A3)** + assinador | login só pela PDPJ; MFA obrigatório desde 03/11/2025 | **PDF/A**; 3 MB por arquivo (ato de 2017, a confirmar) |
 
-- **Via oficial de máquina (MNI):** o eproc da JFSC/TRF4 publica os WSDL do MNI 2.2.2 e libera credencial por e-mail
-  (dieproc@trf4.jus.br), mas não está claro se escritório particular pode usar (um estudo acadêmico diz que só órgão
-  público). TJSC e PJe-JT: MNI só para órgãos públicos com convênio. A API do PDPJ/Jus.br é para tribunais, não para
-  escritórios.
+- **Via oficial de máquina (MNI): descartada (Eduardo, 31/10/2026).** No TRF4 o acesso institucional exige convênio,
+  que a Res. TRF4 17/2010 (art. 58) só prevê para órgão público; TJSC e PJe-JT só oferecem MNI a órgão público
+  conveniado; a API do PDPJ/Jus.br é para tribunais. Nenhuma lawtech protocola por MNI. Pesquisa:
+  `comercial\docs\2026-10-31-pesquisa-mni-acesso-escritorio.md`.
 - **Como o mercado faz:** Legis, Intima.ai, Oystr e PeticionaMais protocolam com **robô usando as credenciais do
   advogado** (login, senha, semente do 2FA e, no PJe, o A1). Só a Intima.ai tem API de protocolo documentada.
 - **A1 está acabando:** o ITI extingue o A1 até 02/03/2029 (Res. CG ICP-Brasil 211/2024). O substituto que roda em
@@ -42,7 +42,6 @@ O trabalhista (PJe) é o caso difícil e fica por último.
      no hub. Funciona hoje, sem credencial nenhuma.
    - **Robô eproc** (Fase 2): navegador automático, com login, senha e 2FA do advogado tirados do cofre. Cobre TRF4,
      JFSC e TJSC de uma vez.
-   - **MNI eproc** (alternativa à Fase 2): só se o TRF4 liberar credencial para escritório. Mais estável que o robô.
    - **API contratada** (Fase 4, TRT12): Intima.ai ou Legis, cotados antes. Construir robô de PJe fica para depois.
 2. **Drive, não Dropbox.** A pasta do cliente já vive no Drive (`Clientes\<Nome — CPF>`), o hub já fala com ele
    (`Ramon::DriveClient`) e o escritório é Google. O hub **lê** os documentos da pasta e **grava** o pacote e o
@@ -186,9 +185,9 @@ mais chata: o advogado digita o código do 2FA do tribunal a cada **Protocolar**
 
 | Fase | O que entra | Depende de |
 |---|---|---|
-| **0 — Eduardo, sem código** | E-mail ao dieproc@trf4.jus.br perguntando sobre credencial MNI para escritório (rascunho pronto em `comercial\docs\2026-10-30-email-dieproc-mni-rascunho.md`). Cotar Intima.ai e Legis para o TRT12. Pôr os advogados no time `advogados` do hub. | — |
+| **0 — Eduardo, sem código** | Cotar Intima.ai e Legis para o TRT12. Usuários dos advogados criados no hub e no time `advogados` (feito em 31/10). | — |
 | **1 — Esteira + executor manual** | Tela Protocolos, petição, pacote (upload + Drive), conferência de limite (avisa e trava; sem divisão nem zip), registrar protocolo, comprovante no Drive, auditoria. | nada |
-| **2 — Cofre + robô eproc (TRF4/JFSC)** | Cofre (eproc), etapa "conferir no tribunal", protocolo automático, fila, comprovante, conferência de juntada. Começa com volume baixo e 100% dos comprovantes conferidos à mão. Se o TRF4 liberar MNI, o executor MNI substitui o robô no TRF4. | sessão com o Eduardo logado no eproc para mapear as telas; credencial de um advogado |
+| **2 — Cofre + robô eproc (TRF4/JFSC)** | Cofre (eproc), etapa "conferir no tribunal", protocolo automático, fila, comprovante, conferência de juntada. Começa com volume baixo e 100% dos comprovantes conferidos à mão. | sessão com o Eduardo logado no eproc para mapear as telas; credencial de um advogado |
 | **3 — TJSC** | Mesmo robô, outro endereço e a regra de 11 MB. | Fase 2 estável |
 | **4 — TRT12 (PJe)** | Executor por API contratada (PDF/A e assinatura ficam com o fornecedor). A1 no cofre se o fornecedor pedir. | cotação e contrato |
 

@@ -32,7 +32,7 @@ _Avoid_: envio, peticionamento (quando se quer dizer o ato)
 O documento do tribunal que prova o protocolo; sem ele a petição não está protocolada.
 
 **Executor**:
-Quem faz o protocolo no tribunal: o próprio advogado (manual), um robô, o MNI ou um fornecedor contratado.
+Quem faz o protocolo no tribunal: o próprio advogado (manual), um robô ou um fornecedor contratado.
 
 **Cofre**:
 O lugar do hub onde ficam, cifradas, as credenciais de cada advogado para os tribunais.
