@@ -15,6 +15,20 @@ RSpec.describe 'Captain Tasks (fork: copiloto da banca)', type: :request do
                      message_type: :incoming, content: 'Sofri um acidente em 2024')
   end
 
+  it 'nada na caixa Equipe aciona IA: 403, sem chamar o LLM', :aggregate_failures do
+    allow(Ramon::LlmClient).to receive(:complete)
+    Ramon::Equipe.sincronizar(account, criar: true)
+    geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+
+    %w[rewrite summarize reply_suggestion label_suggestion follow_up advbox].each do |acao|
+      post "/api/v1/accounts/#{account.id}/captain/tasks/#{acao}",
+           params: { conversation_display_id: geral.display_id, content: 'oi', operation: 'fix_spelling_grammar', message: 'oi' },
+           headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:forbidden), "#{acao}: #{response.status}"
+    end
+    expect(Ramon::LlmClient).not_to have_received(:complete)
+  end
+
   it 'summarize delega ao copiloto da banca (DeepSeek + LGPD)' do
     allow(Ramon::LlmClient).to receive(:complete).and_return(llm_result('resumo estruturado'))
     post "/api/v1/accounts/#{account.id}/captain/tasks/summarize",

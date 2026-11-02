@@ -38,6 +38,9 @@ class CopilotMessage < ApplicationRecord
   end
 
   def enqueue_response_job(conversation_id, user_id)
+    # ramon: o painel é global e manda a conversa aberta; conversa da Equipe nunca vai para a IA (ADR 0011)
+    conversation_id = nil if Ramon::Equipe.inclui_conversa?(account, conversation_id)
+
     Captain::Copilot::ResponseJob.perform_later(
       assistant: copilot_thread.assistant,
       conversation_id: conversation_id,

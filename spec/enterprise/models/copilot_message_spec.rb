@@ -11,6 +11,26 @@ RSpec.describe CopilotMessage, type: :model do
     it { is_expected.to validate_presence_of(:message) }
   end
 
+  # ramon: conversa da Equipe nunca vai para a IA (ADR 0011)
+  describe '#enqueue_response_job' do
+    let(:message) { create(:captain_copilot_message, copilot_thread: copilot_thread, account: account) }
+
+    it 'não leva a conversa da Equipe para a IA' do
+      Ramon::Equipe.sincronizar(account, criar: true)
+      geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+
+      expect { message.enqueue_response_job(geral.display_id, user.id) }
+        .to have_enqueued_job(Captain::Copilot::ResponseJob).with(hash_including(conversation_id: nil))
+    end
+
+    it 'segue levando a conversa de caixa comum' do
+      comum = create(:conversation, account: account)
+
+      expect { message.enqueue_response_job(comum.display_id, user.id) }
+        .to have_enqueued_job(Captain::Copilot::ResponseJob).with(hash_including(conversation_id: comum.display_id))
+    end
+  end
+
   describe 'callbacks' do
     let(:account) { create(:account) }
     let(:user) { create(:user, account: account) }
