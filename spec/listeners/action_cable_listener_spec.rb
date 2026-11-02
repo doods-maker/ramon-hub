@@ -92,6 +92,28 @@ describe ActionCableListener do
     end
   end
 
+  # ramon: na Equipe a digitação chega aos demais participantes, nunca a quem digita nem a quem está de fora (ADR 0011)
+  describe '#typing_on in the Equipe inbox' do
+    let!(:colega) { create(:user, account: account, role: :agent) }
+    let!(:direta) do
+      create(:user, account: account, role: :agent) # de fora: é da conta, mas não participa da 1:1
+      Ramon::Equipe.sincronizar(account, criar: true)
+      Ramon::Equipe.conversa_1a1(account, agent, colega)
+    end
+    let!(:event) { Events::Base.new(:'conversation.typing_on', Time.zone.now, conversation: direta, user: agent, is_private: false) }
+
+    it 'sends to the other participant and account admins, not to the author or outsiders' do
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        a_collection_containing_exactly(
+          colega.pubsub_token, admin.pubsub_token, direta.contact_inbox.pubsub_token
+        ),
+        'conversation.typing_on',
+        anything
+      )
+      listener.conversation_typing_on(event)
+    end
+  end
+
   describe '#typing_on with contact' do
     let(:event_name) { :'conversation.typing_on' }
     let!(:event) { Events::Base.new(event_name, Time.zone.now, conversation: conversation, user: conversation.contact, is_private: false) }

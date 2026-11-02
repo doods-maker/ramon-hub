@@ -1,4 +1,6 @@
 // Regras de tela do chat interno Equipe (puras, sem Vue).
+import MessageFormatter from 'shared/helpers/MessageFormatter';
+
 export const EMOJIS_REACAO = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 const FUSO = 'America/Sao_Paulo';
@@ -91,4 +93,22 @@ export const prefixoPrevia = (message, meuId, tipo) => {
     voce,
     nome: !voce && tipo === 'grupo' ? message?.sender?.name || null : null,
   };
+};
+
+// Citação: a bolha recebe camelCase e a caixa de escrever, snake_case do store.
+export const autorCitacao = (message, meuId, t) => {
+  const { voce, nome } = prefixoPrevia(message, meuId, 'grupo');
+  return voce ? t('RAMON.EQUIPE.VOCE') : nome;
+};
+
+// Apagada: o servidor grava o texto de apagada em content.
+export const textoCitacao = (message, t) => {
+  if (message?.content) {
+    const umaLinha = textoLimpo(message.content).replace(/\s*\n\s*/g, ' ');
+    return new MessageFormatter(umaLinha).plainText.trim();
+  }
+  const anexo = message?.attachments?.[0];
+  return anexo
+    ? t(`CHAT_LIST.ATTACHMENTS.${anexo.fileType ?? anexo.file_type}.CONTENT`)
+    : t('CONVERSATION.REPLY_MESSAGE_NOT_FOUND');
 };

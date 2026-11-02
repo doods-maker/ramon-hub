@@ -5,6 +5,9 @@ import MessagesView from '../MessagesView.vue';
 import ReplyBox from '../ReplyBox.vue';
 import { useEquipeStore } from 'dashboard/stores/equipe';
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
+import inboxMixin from 'shared/mixins/inboxMixin';
+import { LocalStorage } from 'shared/helpers/localStorage';
+import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 
 const estado = {
   equipe: true,
@@ -178,6 +181,22 @@ describe('MessagesView: faixa de só leitura', () => {
   });
 });
 
+describe('MessagesView: responder citando', () => {
+  it('a caixa Equipe (Channel::Api) oferece responder em qualquer mensagem', () => {
+    const inboxHasFeature = feature =>
+      inboxMixin.methods.inboxHasFeature.call(
+        { channelType: 'Channel::Api' },
+        feature
+      );
+    expect(
+      MessagesView.computed.inboxSupportsReplyTo.call({
+        inboxHasFeature,
+        is360DialogWhatsAppChannel: false,
+      })
+    ).toEqual({ incoming: true, outgoing: true });
+  });
+});
+
 describe('MessagesView: sugestão de etiquetas por IA', () => {
   const buscar = async equipe => {
     const ctx = {
@@ -258,6 +277,80 @@ describe('ReplyBox: tecla de envio', () => {
     };
     ReplyBox.watch.currentChat.call(ctx, { id: 2, can_reply: true }, { id: 1 });
     expect(ctx.replyType).toBe(REPLY_EDITOR_MODES.NOTE);
+  });
+
+  describe('citação com o modo NOTE guardado', () => {
+    const CHAVE = LOCAL_STORAGE_KEYS.MESSAGE_REPLY_TO;
+    const trocar = (over, novaConversa, antiga) => {
+      const ctx = {
+        replyType: REPLY_EDITOR_MODES.NOTE,
+        isAPIInbox: true,
+        setCCAndToEmailsFromLastChat: vi.fn(),
+        copilot: { reset: vi.fn() },
+        fetchAndSetReplyTo: ReplyBox.methods.fetchAndSetReplyTo,
+        inReplyTo: { id: 10 },
+        conversationId: novaConversa.id,
+        currentChat: novaConversa,
+        $store: {
+          getters: { 'inboxes/getInbox': id => ({ equipe: id === 7 }) },
+        },
+        ...over,
+      };
+      ReplyBox.watch.currentChat.call(ctx, novaConversa, antiga);
+      return ctx;
+    };
+
+    beforeEach(() => {
+      LocalStorage.clearAll();
+    });
+
+    it('entrando na Equipe, a citação é a da conversa atual', () => {
+      LocalStorage.updateJsonStore(CHAVE, 2, 20);
+      const conversa = { id: 2, inbox_id: 7, messages: [{ id: 20 }] };
+      const ctx = trocar({ equipe: true }, conversa, { id: 1, inbox_id: 3 });
+      expect(ctx.inReplyTo).toEqual({ id: 20 });
+      expect(ctx.replyType).toBe(REPLY_EDITOR_MODES.NOTE);
+    });
+
+    it('entrando na Equipe sem citação guardada, a antiga some', () => {
+      const conversa = { id: 2, inbox_id: 7, messages: [{ id: 10 }] };
+      const ctx = trocar({ equipe: true }, conversa, { id: 1, inbox_id: 3 });
+      expect(ctx.inReplyTo).toBeUndefined();
+    });
+
+    it('saindo da Equipe, a citação dela não acompanha para a conversa do cliente', () => {
+      const conversa = { id: 3, inbox_id: 3, messages: [] };
+      const ctx = trocar({ equipe: false }, conversa, { id: 2, inbox_id: 7 });
+      expect(ctx.inReplyTo).toBeUndefined();
+    });
+
+    it('entre conversas de clientes segue o nativo: não recarrega', () => {
+      const conversa = { id: 3, inbox_id: 3, messages: [] };
+      const ctx = trocar({ equipe: false }, conversa, { id: 1, inbox_id: 3 });
+      expect(ctx.inReplyTo).toEqual({ id: 10 });
+    });
+  });
+
+  it('Equipe mostra a citação na caixa de escrever e a envia como in_reply_to', () => {
+    const inboxHasFeature = feature =>
+      inboxMixin.methods.inboxHasFeature.call(
+        { channelType: 'Channel::Api' },
+        feature
+      );
+    const mostra = ReplyBox.computed.shouldShowReplyToMessage.call({
+      inReplyTo: { id: 9 },
+      isPrivate: false,
+      inboxHasFeature,
+      is360DialogWhatsAppChannel: false,
+      copilot: { isActive: { value: false } },
+    });
+    expect(mostra).toBe(true);
+    expect(
+      ReplyBox.methods.setReplyToInPayload.call(
+        { inReplyTo: { id: 9 } },
+        { content: 'Oi' }
+      )
+    ).toEqual({ content: 'Oi', contentAttributes: { in_reply_to: 9 } });
   });
 
   it('Equipe não envia com assinatura, mesmo com a preferência ligada', () => {

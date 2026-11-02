@@ -484,6 +484,15 @@ export default {
       // FORK(ramon): olha o modo cru, não isOnPrivateNote (falso na Equipe). Trocar replyType aqui faria
       // o conversationIdByRoute guardar o rascunho da nota no rascunho de resposta da conversa anterior.
       if (this.replyType === REPLY_EDITOR_MODES.NOTE) {
+        // FORK(ramon): a Equipe mostra a citação mesmo com o NOTE guardado. Entrando ou saindo dela,
+        // vale a da conversa atual; a citação de um chat interno não vai parar na conversa do cliente.
+        const inboxAnterior = oldConversation?.inbox_id;
+        if (
+          this.equipe ||
+          this.$store.getters['inboxes/getInbox'](inboxAnterior)?.equipe
+        ) {
+          this.fetchAndSetReplyTo();
+        }
         return;
       }
 
@@ -1324,6 +1333,8 @@ export default {
         <ReplyToMessage
           v-if="shouldShowReplyToMessage"
           :message="inReplyTo"
+          :equipe="equipe"
+          :meu-id="currentUser.id"
           @dismiss="resetReplyToMessage"
         />
         <EmojiIconPicker

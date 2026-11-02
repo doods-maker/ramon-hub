@@ -9,6 +9,8 @@ import {
   rotuloDia,
   horaLista,
   prefixoPrevia,
+  autorCitacao,
+  textoCitacao,
 } from '../equipe';
 
 describe('helpers/equipe', () => {
@@ -109,6 +111,34 @@ describe('helpers/equipe', () => {
     ).toEqual({ voce: false, nome: 'Ana' });
     expect(prefixoPrevia({ sender: { id: 2, name: 'Ana' } }, 1, '1a1')).toEqual(
       { voce: false, nome: null }
+    );
+  });
+
+  it('autorCitacao: "Você" se é minha, nome do colega, nada sem autor', () => {
+    const t = k => k;
+    expect(autorCitacao({ sender: { id: 1, name: 'Eu' } }, 1, t)).toBe(
+      'RAMON.EQUIPE.VOCE'
+    );
+    expect(autorCitacao({ sender: { id: 2, name: 'Ana' } }, 1, t)).toBe('Ana');
+    expect(autorCitacao({ sender: null }, 1, t)).toBeNull();
+  });
+
+  it('textoCitacao: texto puro, anexo (snake e camel) e indisponível', () => {
+    const t = k => k;
+    expect(textoCitacao({ content: 'linha 1\nlinha 2 **forte**' }, t)).toBe(
+      'linha 1 linha 2 forte'
+    );
+    expect(
+      textoCitacao({ content: '[@Ana](mention://user/2/Ana) oi' }, t)
+    ).toBe('@Ana oi');
+    expect(textoCitacao({ attachments: [{ file_type: 'image' }] }, t)).toBe(
+      'CHAT_LIST.ATTACHMENTS.image.CONTENT'
+    );
+    expect(textoCitacao({ attachments: [{ fileType: 'file' }] }, t)).toBe(
+      'CHAT_LIST.ATTACHMENTS.file.CONTENT'
+    );
+    expect(textoCitacao({ attachments: [] }, t)).toBe(
+      'CONVERSATION.REPLY_MESSAGE_NOT_FOUND'
     );
   });
 
