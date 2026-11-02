@@ -179,7 +179,12 @@
       "AVISO_ADMIN": "Administradores podem ler as conversas.",
       "ERRO": "Algo deu errado — tente de novo.",
       "HOJE": "Hoje",
-      "ONTEM": "Ontem"
+      "ONTEM": "Ontem",
+      "SO_LEITURA": "Você está lendo como administrador",
+      "MENSAGEM": "Mensagem",
+      "PARTICIPANTES": "{n} participante | {n} participantes",
+      "NESTE_CHAT": "Neste chat",
+      "AVISA_TODOS": "Avisa {n} pessoa deste chat | Avisa os {n} deste chat"
     },
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",

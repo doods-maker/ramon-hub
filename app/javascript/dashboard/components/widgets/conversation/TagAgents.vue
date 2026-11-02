@@ -10,6 +10,11 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  // FORK(ramon): caixa Equipe. A lista vem dos participantes, não de agentes e times.
+  itens: {
+    type: Array,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['selectAgent']);
@@ -24,6 +29,32 @@ const selectedIndex = ref(0);
 
 const items = computed(() => {
   const search = props.searchKey?.trim().toLowerCase() || '';
+
+  if (props.itens) {
+    const outros = props.itens.length - 1;
+    const achados = props.itens
+      .filter(item => item.name.toLowerCase().includes(search))
+      .map(item => ({
+        ...item,
+        displayName: item.name,
+        displayInfo:
+          item.type === 'todos' ? t('RAMON.EQUIPE.AVISA_TODOS', outros) : '',
+      }));
+    const pessoas = achados.filter(item => item.type !== 'todos');
+    return [
+      ...achados.filter(item => item.type === 'todos'),
+      ...(pessoas.length
+        ? [
+            {
+              type: 'header',
+              title: t('RAMON.EQUIPE.NESTE_CHAT'),
+              id: 'neste-chat-header',
+            },
+          ]
+        : []),
+      ...pessoas,
+    ];
+  }
 
   const buildItems = (list, type, infoKey) =>
     list
@@ -118,6 +149,7 @@ const onAgentSelect = index => {
       v-if="items.length"
       ref="tagAgentsRef"
       class="vertical dropdown menu mention--box bg-n-solid-1 p-1 rounded-xl text-sm overflow-auto absolute w-full z-20 shadow-md left-0 leading-[1.2] bottom-full max-h-[12.5rem] border border-solid border-n-strong"
+      :class="{ 'max-w-[18.75rem] mb-2': itens }"
       role="listbox"
     >
       <li
@@ -132,7 +164,8 @@ const onAgentSelect = index => {
         <!-- Section Header -->
         <div
           v-if="item.type === 'header'"
-          class="px-2 py-2 text-xs font-medium tracking-wide capitalize text-n-slate-11"
+          class="px-2 py-2 text-xs font-medium tracking-wide text-n-slate-11"
+          :class="itens ? 'uppercase' : 'capitalize'"
         >
           {{ item.title }}
         </div>
@@ -151,6 +184,9 @@ const onAgentSelect = index => {
             <Avatar
               :src="item.thumbnail"
               :name="item.displayName"
+              :icon-name="
+                item.type === 'todos' ? 'i-lucide-at-sign' : undefined
+              "
               rounded-full
             />
           </div>
@@ -158,8 +194,9 @@ const onAgentSelect = index => {
             class="overflow-hidden flex-1 max-w-full whitespace-nowrap text-ellipsis"
           >
             <h5
-              class="overflow-hidden mb-0 text-sm capitalize whitespace-nowrap text-n-slate-11 text-ellipsis"
+              class="overflow-hidden mb-0 text-sm whitespace-nowrap text-n-slate-11 text-ellipsis"
               :class="{
+                capitalize: item.type !== 'todos',
                 'text-n-slate-12': getSelectableIndex(item) === selectedIndex,
               }"
             >

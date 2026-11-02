@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import EquipeAPI from 'dashboard/api/ramonEquipe';
+import { textoLimpo } from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 // Equipe · chat interno como caixa do Chatwoot (ADR 0011). Guarda a caixa e as
 // não-lidas da pessoa (badge do menu) e dá o aviso discreto: o servidor só cria
@@ -56,11 +57,17 @@ export const useEquipeStore = defineStore('equipe', {
       new Audio('/audio/dashboard/ding.mp3').play().catch(() => {});
       if ('Notification' in window && Notification.permission === 'granted') {
         const mensagem = notificacao.secondary_actor || {};
-        const canal = conversa.meta?.sender?.name;
-        const n = new Notification(
-          [mensagem.sender?.name, canal].filter(Boolean).join(' · '),
-          { body: mensagem.content || '', tag: `equipe-${conversa.id}` }
-        );
+        const nome = mensagem.sender?.name;
+        const marcou = notificacao.notification_type === 'conversation_mention';
+        // ponytail: texto fixo em PT-BR; o store não alcança o i18n (instância criada na entrypoint).
+        const autor = marcou && nome ? `${nome} te marcou` : nome;
+        // Na 1:1 o contato é sintético ("Ana e Bia"): fica só quem escreveu.
+        const canal =
+          conversa.equipe_tipo === '1a1' ? null : conversa.meta?.sender?.name;
+        const n = new Notification([autor, canal].filter(Boolean).join(' · '), {
+          body: textoLimpo(mensagem.content),
+          tag: `equipe-${conversa.id}`,
+        });
         n.onclick = () => {
           window.focus();
           n.close();

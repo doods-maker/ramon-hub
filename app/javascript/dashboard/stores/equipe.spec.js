@@ -67,6 +67,63 @@ describe('useEquipeStore', () => {
     expect(play).toHaveBeenCalled();
   });
 
+  describe('notificação do sistema', () => {
+    let Notificacao;
+    const marcacao = '[@Eduardo](mention://user/1/Eduardo) bom dia';
+    const chat1a1 = {
+      id: 7,
+      inbox_id: 9,
+      equipe_tipo: '1a1',
+      meta: { sender: { name: 'Ana e Bia' } },
+    };
+
+    beforeEach(() => {
+      Notificacao = vi.fn();
+      Notificacao.permission = 'granted';
+      vi.stubGlobal('Notification', Notificacao);
+    });
+
+    it('marcação: "Ana te marcou · Geral", corpo sem mention://', async () => {
+      await useEquipeStore().avisar(
+        notificacao({
+          notification_type: 'conversation_mention',
+          secondary_actor: { content: marcacao, sender: { name: 'Ana' } },
+        })
+      );
+      expect(Notificacao).toHaveBeenCalledWith('Ana te marcou · Geral', {
+        body: '@Eduardo bom dia',
+        tag: 'equipe-7',
+      });
+    });
+
+    it('aviso comum: "Ana · Geral", corpo sem mention://', async () => {
+      await useEquipeStore().avisar(
+        notificacao({
+          secondary_actor: { content: marcacao, sender: { name: 'Ana' } },
+        })
+      );
+      expect(Notificacao).toHaveBeenCalledWith('Ana · Geral', {
+        body: '@Eduardo bom dia',
+        tag: 'equipe-7',
+      });
+    });
+
+    it('1:1: só "Ana te marcou", sem o nome do contato sintético', async () => {
+      await useEquipeStore().avisar(
+        notificacao({
+          notification_type: 'conversation_mention',
+          primary_actor: chat1a1,
+        })
+      );
+      expect(Notificacao.mock.calls[0][0]).toBe('Ana te marcou');
+    });
+
+    it('1:1: aviso comum mostra só o nome da pessoa', async () => {
+      await useEquipeStore().avisar(notificacao({ primary_actor: chat1a1 }));
+      expect(Notificacao.mock.calls[0][0]).toBe('Ana');
+    });
+  });
+
   it('não avisa notificação de outra caixa nem de outro tipo', async () => {
     const store = useEquipeStore();
     const outraCaixa = notificacao({ primary_actor: { id: 7, inbox_id: 1 } });
