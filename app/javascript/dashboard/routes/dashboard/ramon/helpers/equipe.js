@@ -40,7 +40,9 @@ export const listaMarcacao = (participantes, meuId, tipo) => {
 
 // Quem leu = last_seen_at >= createdAt (segundos); nulo conta como não leu.
 export const estadoVisto = ({ createdAt, senderId }, participantes) => {
-  const outros = (participantes || []).filter(p => p.id !== senderId);
+  const outros = (participantes || [])
+    .filter(p => p.id !== senderId)
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const leu = p => !!p.lastSeenAt && p.lastSeenAt >= createdAt;
   const leram = outros.filter(leu).map(p => p.name);
   const faltam = outros.filter(p => !leu(p)).map(p => p.name);
@@ -74,8 +76,15 @@ export const resumoReacoes = (reacoes, participantes, meuId) => {
   return [...grupos.values()];
 };
 
-const dia = ms =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: FUSO }).format(new Date(ms));
+const FORMATO_DIA = new Intl.DateTimeFormat('en-CA', { timeZone: FUSO });
+const FORMATO_HORA = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: FUSO,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+const dia = ms => FORMATO_DIA.format(new Date(ms));
 
 export const rotuloDia = (segundos, agoraMs) => {
   const alvo = dia(segundos * 1000);
@@ -90,12 +99,7 @@ export const rotuloDia = (segundos, agoraMs) => {
 export const horaLista = (segundos, agoraMs) => {
   const rotulo = rotuloDia(segundos, agoraMs);
   if (rotulo !== 'HOJE') return rotulo;
-  return new Intl.DateTimeFormat('pt-BR', {
-    timeZone: FUSO,
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).format(new Date(segundos * 1000));
+  return FORMATO_HORA.format(new Date(segundos * 1000));
 };
 
 export const prefixoPrevia = (message, meuId, tipo) => {

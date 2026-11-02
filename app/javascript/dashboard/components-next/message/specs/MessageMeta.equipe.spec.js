@@ -61,7 +61,10 @@ const montar = (contexto = {}) => {
         }),
       ],
       directives: {
-        tooltip: (el, { value }) => el.setAttribute('data-titulo', value || ''),
+        tooltip: (el, { value }) => {
+          el.setAttribute('data-titulo', value?.content ?? value ?? '');
+          el.setAttribute('data-tooltip-classe', value?.popperClass ?? '');
+        },
       },
     },
   });
@@ -73,6 +76,8 @@ const com = lista => {
 const titulo = w => w.find('[data-titulo]').attributes('data-titulo');
 const iconeDuplo = w => w.find('.i-lucide-check-check');
 const iconeSimples = w => w.find('.i-lucide-check');
+const classeTooltip = w =>
+  w.find('[data-titulo]').attributes('data-tooltip-classe');
 
 describe('MessageMeta: vistos na Equipe', () => {
   beforeEach(() => {
@@ -93,6 +98,7 @@ describe('MessageMeta: vistos na Equipe', () => {
     expect(iconeDuplo(w).classes()).not.toContain('text-n-blue-11');
     expect(iconeDuplo(w).classes()).toContain('text-n-slate-11');
     expect(titulo(w)).toBe('Visto por 1 de 2. Falta: Bia.');
+    expect(classeTooltip(w)).toBe('ramon-tooltip-equipe');
   });
 
   it('título exato com vários faltando', () => {

@@ -85,18 +85,25 @@ const tooltipText = computed(() => {
 
   return statusTextMap[status];
 });
+
+// FORK(ramon): o tooltip padrão é preto e some no tema escuro, também preto.
+const tooltip = computed(() =>
+  equipe
+    ? { content: tooltipText.value, popperClass: 'ramon-tooltip-equipe' }
+    : tooltipText.value
+);
 </script>
 
 <template>
   <Icon
     v-if="status === MESSAGE_STATUS.PROGRESS"
-    v-tooltip.top-start="tooltipText"
+    v-tooltip.top-start="tooltip"
     :icon="progessIcon"
     class="text-n-slate-10"
   />
   <Icon
     v-else
-    v-tooltip.top-start="tooltipText"
+    v-tooltip.top-start="tooltip"
     :icon="statusIcon"
     :class="statusColor"
     class="size-[14px]"

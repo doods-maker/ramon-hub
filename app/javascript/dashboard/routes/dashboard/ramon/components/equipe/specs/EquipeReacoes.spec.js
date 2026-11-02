@@ -46,6 +46,15 @@ describe('EquipeReacoes', () => {
     expect(reza.classes()).not.toContain('border-n-blue-11');
   });
 
+  it('selo clicável é igual ao span: borda sólida e sem o padding do button', () => {
+    selos(montar()).forEach(selo => {
+      expect(selo.element.tagName).toBe('BUTTON');
+      expect(selo.classes()).toEqual(
+        expect.arrayContaining(['border', 'border-solid', 'py-0'])
+      );
+    });
+  });
+
   it('sem reação não há selo', () => {
     expect(selos(montar({ reacoes: [] }))).toHaveLength(0);
   });

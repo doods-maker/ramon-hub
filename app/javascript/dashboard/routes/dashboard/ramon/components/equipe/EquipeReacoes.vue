@@ -80,7 +80,7 @@ const reagir = async emoji => {
         v-for="selo in selos"
         :key="selo.emoji"
         data-testid="selo"
-        class="px-1.5 text-xs border rounded-xl text-n-slate-12"
+        class="px-1.5 py-0 text-xs border border-solid rounded-xl text-n-slate-12"
         :class="[
           selo.minha
             ? 'border-n-blue-11 bg-n-blue-9/[.18]'

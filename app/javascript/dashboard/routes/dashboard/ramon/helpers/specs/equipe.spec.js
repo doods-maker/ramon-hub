@@ -78,6 +78,21 @@ describe('helpers/equipe', () => {
     );
   });
 
+  it('estadoVisto: nomes em ordem alfabética, sem mexer na lista original', () => {
+    const p = [
+      { id: 1, name: 'Eu', lastSeenAt: 0 },
+      { id: 2, name: 'Zeca', lastSeenAt: null },
+      { id: 3, name: 'Ivo', lastSeenAt: 100 },
+      { id: 4, name: 'Ítalo', lastSeenAt: null },
+      { id: 5, name: 'Ana', lastSeenAt: 100 },
+      { id: 6, name: 'Bia', lastSeenAt: null },
+    ];
+    const visto = estadoVisto({ createdAt: 80, senderId: 1 }, p);
+    expect(visto.faltam).toEqual(['Bia', 'Ítalo', 'Zeca']);
+    expect(visto.leram).toEqual(['Ana', 'Ivo']);
+    expect(p[1].name).toBe('Zeca');
+  });
+
   it('identidadeConversa: 1:1 mostra o outro; admin de fora e grupo usam o contato', () => {
     const chat = {
       equipe_tipo: '1a1',
