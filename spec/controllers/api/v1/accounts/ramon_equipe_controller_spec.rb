@@ -67,6 +67,143 @@ RSpec.describe 'Ramon Equipe API', type: :request do
     end
   end
 
+  # Na Equipe só participantes + administradores veem, ponto (ADR 0011). Fora dela: specs de policy, filtro e listener.
+  describe 'atribuição, time e membro de caixa não dão acesso' do
+    def expect_de_fora(user)
+      expect(ids_na_caixa(user)).not_to include(ana_bia.display_id)
+
+      get "#{base}/conversations/#{ana_bia.display_id}", headers: user.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it '1:1 atribuída a um colega de fora segue invisível para ele', :aggregate_failures do
+      ana_bia.update!(assignee: caio)
+
+      expect_de_fora(caio)
+    end
+
+    it '1:1 com o time de um colega de fora segue invisível para ele', :aggregate_failures do
+      create(:team_member, team: advogados, user: caio)
+      ana_bia.update!(team: advogados)
+
+      expect_de_fora(caio)
+    end
+
+    it 'membro da caixa não passa a ver', :aggregate_failures do
+      create(:inbox_member, inbox: inbox, user: caio)
+
+      expect_de_fora(caio)
+    end
+
+    it 'admin de fora segue vendo', :aggregate_failures do
+      ana_bia.update!(assignee: caio)
+
+      expect(ids_na_caixa(admin)).to include(ana_bia.display_id)
+      get "#{base}/conversations/#{ana_bia.display_id}", headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:ok)
+    end
+
+    it 'participante segue vendo a 1:1 atribuída a outro' do
+      ana_bia.update!(assignee: caio)
+
+      expect(ids_na_caixa(ana)).to include(ana_bia.display_id)
+    end
+  end
+
+  describe 'lista do que o HTTP aceita numa conversa da Equipe' do
+    let(:msg) { mensagem_de(ana, ana_bia) }
+
+    def chamar(user, verbo, caminho, corpo = {}, conversation: ana_bia)
+      public_send(verbo, "#{base}/conversations/#{conversation.display_id}#{caminho}",
+                  params: corpo, headers: user.create_new_auth_token, as: :json)
+    end
+
+    def recusadas
+      [[:post, '/participants', { user_ids: [caio.id] }], [:patch, '/participants', { user_ids: [ana.id] }],
+       [:delete, '/participants', { user_ids: [bia.id] }], [:post, '/assignments', { assignee_id: caio.id }],
+       [:post, '/assignments', { team_id: advogados.id }], [:post, '/labels', { labels: ['x'] }],
+       [:post, '/toggle_status', { status: 'resolved' }], [:post, '/toggle_priority', { priority: 'urgent' }],
+       [:post, '/mute'], [:post, '/unmute'], [:post, '/unread'], [:post, '/custom_attributes', { custom_attributes: { a: 1 } }],
+       [:get, '/inbox_assistant'], [:patch, '', { priority: 'urgent' }], [:delete, ''], [:post, '/ramon_copilot', { mode: 'summary' }],
+       [:patch, '/draft_messages', { draft_message: { message: 'x' } }],
+       [:patch, "/messages/#{msg.id}", { status: 'read' }], [:post, "/messages/#{msg.id}/translate", { target_language: 'en' }]]
+    end
+
+    it 'admin de fora e participante recebem 403 no que é de atendimento, e nada muda', :aggregate_failures do
+      expect(Ramon::ConversationCopilotService).not_to receive(:new)
+
+      [admin, ana].each do |user|
+        recusadas.each do |verbo, caminho, corpo|
+          chamar(user, verbo, caminho, corpo || {})
+          expect(response).to have_http_status(:forbidden), "#{verbo} #{caminho}: #{response.status}"
+        end
+      end
+
+      ana_bia.reload
+      expect(ana_bia).to have_attributes(status: 'open', assignee_id: nil, team_id: nil, priority: nil)
+      expect(ana_bia.conversation_participants.pluck(:user_id)).to contain_exactly(ana.id, bia.id)
+      expect(ana_bia.label_list).to be_empty
+      expect(msg.reload.status).to eq('sent')
+    end
+
+    it 'participante abre, lê, digita, marca lida, envia e apaga a própria', :aggregate_failures do
+      [[:get, ''], [:get, '/messages'], [:get, '/attachments'], [:get, '/labels'], [:get, '/participants'], [:post, '/update_last_seen'],
+       [:post, '/toggle_typing_status', { typing_status: 'on' }], [:post, '/messages', { content: 'oi' }],
+       [:delete, "/messages/#{msg.id}"]].each do |verbo, caminho, corpo|
+        chamar(ana, verbo, caminho, corpo || {})
+        expect(response).to have_http_status(:success), "#{verbo} #{caminho}: #{response.status}"
+      end
+      expect(msg.reload.content_attributes['deleted']).to be(true)
+    end
+
+    it 'admin de fora segue lendo', :aggregate_failures do
+      [[:get, ''], [:get, '/messages'], [:get, '/attachments'], [:get, '/labels'], [:get, '/participants']].each do |verbo, caminho|
+        chamar(admin, verbo, caminho)
+        expect(response).to have_http_status(:success), "#{verbo} #{caminho}: #{response.status}"
+      end
+    end
+
+    it 'caixa comum não muda', :aggregate_failures do
+      conversa = create(:conversation, account: account, inbox: create(:inbox, account: account))
+
+      [[:post, '/assignments', { assignee_id: admin.id }], [:post, '/toggle_status', { status: 'resolved' }],
+       [:post, '/participants', { user_ids: [ana.id] }], [:post, '/labels', { labels: ['x'] }], [:post, '/mute'],
+       [:post, '/custom_attributes', { custom_attributes: { a: 1 } }]].each do |verbo, caminho, corpo|
+        chamar(admin, verbo, caminho, corpo || {}, conversation: conversa)
+        expect(response).to have_http_status(:success), "#{verbo} #{caminho}: #{response.status}"
+      end
+    end
+
+    it 'macro que inclui conversa da Equipe: 403, sem enfileirar', :aggregate_failures do
+      macro = create(:macro, account: account, created_by: admin, updated_by: admin, visibility: :global)
+      comum = create(:conversation, account: account, inbox: create(:inbox, account: account))
+
+      expect do
+        post "#{base}/macros/#{macro.id}/execute", params: { conversation_ids: [comum.display_id, ana_bia.display_id] },
+                                                   headers: admin.create_new_auth_token, as: :json
+      end.not_to have_enqueued_job(MacrosExecutionJob)
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it 'ação em massa que inclui conversa da Equipe: 403, sem enfileirar', :aggregate_failures do
+      expect do
+        post "#{base}/bulk_actions", params: { type: 'Conversation', ids: [ana_bia.display_id], fields: { status: 'resolved' } },
+                                     headers: ana.create_new_auth_token, as: :json
+      end.not_to have_enqueued_job(BulkActionsJob)
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it 'não cria conversa na caixa Equipe pela API', :aggregate_failures do
+      contato = create(:contact, account: account)
+
+      post "#{base}/conversations", params: { inbox_id: inbox.id, contact_id: contato.id, source_id: 'qualquer' },
+                                    headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:forbidden)
+      expect(contato.conversations).to be_empty
+    end
+  end
+
   describe 'responder e não-lida por pessoa' do
     it 'participante responde; a mensagem vira não-lida só de quem ainda não leu' do
       mandar(ana, ana_bia, 'bom dia')

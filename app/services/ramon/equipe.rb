@@ -5,6 +5,16 @@
 module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
   EMOJIS_REACAO = %w[👍 ❤️ 😂 😮 😢 🙏].freeze
 
+  # O que o HTTP aceita numa conversa da Equipe, por controller; o resto dá 403, inclusive para admin (ADR 0011).
+  # Quem vê e quem escreve seguem na ConversationPolicy e em pode_escrever?/pode_apagar?. Sincronizar não passa por aqui.
+  # labels#index: a tela busca ao abrir a conversa (ConversationBox). A reação e a lista de vistos ficam em RamonEquipeController.
+  HTTP_PERMITIDO = {
+    'api/v1/accounts/conversations' => %w[show update_last_seen toggle_typing_status attachments transcript],
+    'api/v1/accounts/conversations/messages' => %w[index create destroy retry],
+    'api/v1/accounts/conversations/participants' => %w[show],
+    'api/v1/accounts/conversations/labels' => %w[index]
+  }.freeze
+
   module_function
 
   # Consultas frescas (sem as associações do account): no commit de um AccountUser/TeamMember o account.users/teams
@@ -113,6 +123,15 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
   # Admin de fora só lê. Fora da Equipe nada muda (inclusive AgentBot/usuário nulo).
   def pode_escrever?(conversation, user)
     !conversation.inbox.equipe? || participante?(conversation, user)
+  end
+
+  def http_permitido?(conversation, controller_path, action)
+    !conversation.inbox.equipe? || HTTP_PERMITIDO.fetch(controller_path, []).include?(action)
+  end
+
+  # Ação em lote (macro, ação em massa) que inclui conversa da Equipe. Os ids são display_id.
+  def inclui_conversa?(account, display_ids)
+    account.conversations.joins(:inbox).exists?(display_id: display_ids, inboxes: { equipe: true })
   end
 
   def pode_apagar?(message, user, account_user)
