@@ -112,6 +112,36 @@ RSpec.describe Ramon::Equipe do
     end
   end
 
+  describe '.marcado_nao_lido?' do
+    let(:geral) { described_class.sincronizar(account, criar: true) && conversa('geral') }
+
+    def de_ana(texto)
+      create(:message, conversation: geral, account: account, inbox: geral.inbox, sender: ana, message_type: :outgoing, content: texto)
+    end
+
+    it 'vale para marcação não lida, some ao ler e ignora marcação de outro id', :aggregate_failures do
+      de_ana("oi [@x](mention://user/#{bia.id}0/x)") # id 10x maior, prefixo igual
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(false)
+
+      de_ana("oi [@bia](mention://user/#{bia.id}/bia)")
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(true)
+      expect(described_class.marcado_nao_lido?(geral, admin)).to be(false)
+      expect(described_class.marcado_nao_lido?(geral, nil)).to be(false)
+
+      described_class.marcar_lida(geral, bia)
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(false)
+    end
+
+    it '@todos marca quem não escreveu; mensagem apagada deixa de marcar', :aggregate_failures do
+      msg = de_ana('[@todos](mention://todos/0/todos)')
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(true)
+      expect(described_class.marcado_nao_lido?(geral, ana)).to be(false)
+
+      msg.update!(content: 'This message was deleted', content_attributes: { deleted: true })
+      expect(described_class.marcado_nao_lido?(geral, bia)).to be(false)
+    end
+  end
+
   describe '.evento?' do
     it 'reconhece conversa, mensagem, contato e caixa da Equipe' do
       inbox = described_class.sincronizar(account, criar: true)

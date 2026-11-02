@@ -2,7 +2,7 @@
 # tem a conversa Geral (todos), uma por time (membros do time) e as 1:1, abertas sob demanda. Quem participa da conversa
 # vê, responde e é avisado; administrador vê tudo. Cada conversa tem um contato sintético (additional_attributes.equipe)
 # achado pelo source_id do contact_inbox: equipe-geral, equipe-time-<id>, equipe-1a1-<menor id>-<maior id>.
-module Ramon::Equipe
+module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
   module_function
 
   # Consultas frescas (sem as associações do account): no commit de um AccountUser/TeamMember o account.users/teams
@@ -42,12 +42,33 @@ module Ramon::Equipe
   # Não-lida por pessoa: mensagem de colega depois da última leitura de quem participa. Quem não participa (admin
   # olhando conversa alheia) não tem não-lida.
   def nao_lidas(conversation, user)
+    mensagens_nao_lidas(conversation, user)&.count || 0
+  end
+
+  # Há mensagem não lida que marca a pessoa (@ nela ou @todos). Apagada vira texto padrão, então deixa de casar.
+  def marcado_nao_lido?(conversation, user)
+    mensagens = mensagens_nao_lidas(conversation, user)
+    return false unless mensagens
+
+    mensagens.exists?(['messages.content LIKE ? OR messages.content LIKE ?', "%(mention://user/#{user.id}/%", '%(mention://todos/0/%'])
+  end
+
+  # Título do push de @ na Equipe; nil (título nativo) fora dela ou sem remetente usuário.
+  def titulo_marcacao(notification)
+    conversation = notification.primary_actor
+    return unless notification.notification_type == 'conversation_mention' && conversation.inbox&.equipe?
+
+    quem = notification.secondary_actor.try(:sender).try(:available_name)
+    I18n.t('notifications.notification_title.equipe_mention', quem: quem, canal: conversation.contact&.name) if quem
+  end
+
+  # nil quando a pessoa não participa.
+  def mensagens_nao_lidas(conversation, user)
     participante = user && conversation.conversation_participants.find_by(user_id: user.id)
-    return 0 unless participante
+    return unless participante
 
     mensagens = conversation.messages.where(sender_type: 'User').where.not(sender_id: user.id)
-    mensagens = mensagens.where('messages.created_at > ?', participante.last_seen_at) if participante.last_seen_at
-    mensagens.count
+    participante.last_seen_at ? mensagens.where('messages.created_at > ?', participante.last_seen_at) : mensagens
   end
 
   # ponytail: 1 contagem por conversa de que participa (dezenas); vira um SQL só se a equipe crescer muito.

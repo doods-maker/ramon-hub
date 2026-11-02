@@ -66,6 +66,17 @@ has been assigned to you"
 
       expect(notification.push_message_title).to eq "You have been mentioned in conversation (##{notification.primary_actor.display_id})"
     end
+
+    it 'usa "quem te marcou em canal" para conversation_mention na caixa Equipe' do
+      account = create(:account)
+      ana = create(:user, account: account, name: 'Ana')
+      Ramon::Equipe.sincronizar(account, criar: true)
+      geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+      message = create(:message, conversation: geral, account: account, inbox: geral.inbox, sender: ana, message_type: :outgoing)
+      notification = create(:notification, notification_type: 'conversation_mention', primary_actor: geral, secondary_actor: message)
+
+      expect(I18n.with_locale(:pt_BR) { notification.push_message_title }).to eq 'Ana te marcou em Geral'
+    end
   end
 
   context 'when push_message_body is called' do
