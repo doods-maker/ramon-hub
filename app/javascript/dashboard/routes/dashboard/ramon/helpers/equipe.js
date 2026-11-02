@@ -1,4 +1,6 @@
 // Regras de tela do chat interno Equipe (puras, sem Vue).
+import MessageFormatter from 'shared/helpers/MessageFormatter';
+
 export const EMOJIS_REACAO = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 const FUSO = 'America/Sao_Paulo';
@@ -8,8 +10,19 @@ export const marcaUsuario = (content, userId) =>
   (content.includes('mention://todos/') ||
     content.includes(`mention://user/${userId}/`));
 
-export const textoLimpo = content =>
-  (content || '').replace(/\[(@[^\]]*)\]\(mention:\/\/[^)]*\)/g, '$1');
+const MENCAO = /\[(@[^\]]*)\]\(mention:\/\/[^)]*\)/g;
+
+export const textoLimpo = content => (content || '').replace(MENCAO, '$1');
+
+// Marcadores de uso privado atravessam o markdown; partir o texto antes dele comeria os espaços.
+export const trechosPrevia = content =>
+  new MessageFormatter(
+    (content || '').replace(MENCAO, '\uE000$1\uE001')
+  ).plainText
+    .trim()
+    .split(/[\uE000\uE001]/)
+    .map((texto, i) => ({ texto, marcacao: i % 2 === 1 }))
+    .filter(trecho => trecho.texto);
 
 export const listaMarcacao = (participantes, meuId, tipo) => {
   const pessoas = (participantes || [])
@@ -73,10 +86,40 @@ export const rotuloDia = (segundos, agoraMs) => {
   return `${d}/${m}/${a}`;
 };
 
+// Hora da lista: hoje 'HH:mm'; senão o rótulo do dia ('ONTEM' ou 'dd/MM/yyyy').
+export const horaLista = (segundos, agoraMs) => {
+  const rotulo = rotuloDia(segundos, agoraMs);
+  if (rotulo !== 'HOJE') return rotulo;
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: FUSO,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(segundos * 1000));
+};
+
 export const prefixoPrevia = (message, meuId, tipo) => {
   const voce = message?.sender?.id === meuId;
   return {
     voce,
     nome: !voce && tipo === 'grupo' ? message?.sender?.name || null : null,
   };
+};
+
+// Citação: a bolha recebe camelCase e a caixa de escrever, snake_case do store.
+export const autorCitacao = (message, meuId, t) => {
+  const { voce, nome } = prefixoPrevia(message, meuId, 'grupo');
+  return voce ? t('RAMON.EQUIPE.VOCE') : nome;
+};
+
+// Apagada: o servidor grava o texto de apagada em content.
+export const textoCitacao = (message, t) => {
+  if (message?.content) {
+    const umaLinha = textoLimpo(message.content).replace(/\s*\n\s*/g, ' ');
+    return new MessageFormatter(umaLinha).plainText.trim();
+  }
+  const anexo = message?.attachments?.[0];
+  return anexo
+    ? t(`CHAT_LIST.ATTACHMENTS.${anexo.fileType ?? anexo.file_type}.CONTENT`)
+    : t('CONVERSATION.REPLY_MESSAGE_NOT_FOUND');
 };

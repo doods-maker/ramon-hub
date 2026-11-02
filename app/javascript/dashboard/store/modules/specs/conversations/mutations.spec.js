@@ -38,6 +38,60 @@ describe('#mutations', () => {
       mutations[types.UPDATE_MESSAGE_UNREAD_COUNT](state, { id: 1, lastSeen });
       expect(state.allConversations).toEqual([]);
     });
+
+    it('Equipe: ler apaga o selo @', () => {
+      const state = { allConversations: [{ id: 1, equipe_marcado: true }] };
+      mutations[types.UPDATE_MESSAGE_UNREAD_COUNT](state, {
+        id: 1,
+        lastSeen: 5,
+        equipeMarcado: false,
+      });
+      expect(state.allConversations[0].equipe_marcado).toBe(false);
+    });
+  });
+
+  describe('equipe_marcado na conversa', () => {
+    const mensagem = conversation => ({
+      id: 9,
+      conversation_id: 1,
+      created_at: 1602256198,
+      conversation,
+    });
+
+    it('ADD_MESSAGE copia o campo que naoLidaEquipe calculou', () => {
+      const state = { allConversations: [{ id: 1, messages: [] }] };
+      mutations[types.ADD_MESSAGE](
+        state,
+        mensagem({ unread_count: 1, equipe_marcado: true })
+      );
+      expect(state.allConversations[0].equipe_marcado).toBe(true);
+    });
+
+    it('ADD_MESSAGE sem o campo não cria nem apaga nada', () => {
+      const state = {
+        allConversations: [
+          { id: 1, messages: [] },
+          { id: 2, messages: [], equipe_marcado: true },
+        ],
+      };
+      mutations[types.ADD_MESSAGE](state, mensagem({ unread_count: 1 }));
+      mutations[types.ADD_MESSAGE](state, {
+        ...mensagem({ unread_count: 1 }),
+        conversation_id: 2,
+      });
+      expect(state.allConversations[0]).not.toHaveProperty('equipe_marcado');
+      expect(state.allConversations[1].equipe_marcado).toBe(true);
+    });
+
+    it('conversation.updated sem o campo mantém o valor', () => {
+      const state = {
+        allConversations: [
+          { id: 1, updated_at: 1, messages: [], equipe_marcado: true },
+        ],
+      };
+      mutations[types.UPDATE_CONVERSATION](state, { id: 1, updated_at: 2 });
+      expect(state.allConversations[0].equipe_marcado).toBe(true);
+    });
   });
 
   describe('#CLEAR_CURRENT_CHAT_WINDOW', () => {

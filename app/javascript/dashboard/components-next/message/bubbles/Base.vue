@@ -10,6 +10,10 @@ import { useI18n } from 'vue-i18n';
 import MessageFormatter from 'shared/helpers/MessageFormatter.js';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { MESSAGE_VARIANTS, ORIENTATION } from '../constants';
+import {
+  autorCitacao,
+  textoCitacao,
+} from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 const props = defineProps({
   hideMeta: { type: Boolean, default: false },
@@ -25,6 +29,7 @@ const {
   marcadoEquipe,
   primeiroDoAutor,
   sender,
+  currentUserId,
   content: textoDaMensagem,
   attachments: anexosDaMensagem,
 } = useMessageContext();
@@ -117,6 +122,8 @@ const shouldShowMeta = computed(
 
 const replyToPreview = computed(() => {
   if (!inReplyTo) return '';
+  // FORK(ramon): texto puro, renderizado sem .prose (a reserva da hora é só do conteúdo da mensagem)
+  if (isEquipe.value) return textoCitacao(inReplyTo.value, t);
 
   const { content, attachments } = inReplyTo.value;
 
@@ -130,6 +137,10 @@ const replyToPreview = computed(() => {
 
   return t('CONVERSATION.REPLY_MESSAGE_NOT_FOUND');
 });
+
+const autorDaCitacao = computed(() =>
+  autorCitacao(inReplyTo.value, currentUserId.value, t)
+);
 </script>
 
 <template>
@@ -150,8 +161,20 @@ const replyToPreview = computed(() => {
     >
       {{ sender?.name }}
     </p>
+    <!-- FORK(ramon): .cita do mockup. Autor e fileta azul; usuário apagado não tem nome -->
     <div
-      v-if="inReplyTo"
+      v-if="inReplyTo && isEquipe"
+      class="px-2 py-1 mb-1 text-xs rounded-md cursor-pointer bg-n-slate-9/[.12] shadow-[inset_3px_0_0_rgb(var(--blue-11))]"
+      data-testid="equipe-cita"
+      @click="scrollToMessage"
+    >
+      <span v-if="autorDaCitacao" class="block font-semibold text-n-blue-11">
+        {{ autorDaCitacao }}
+      </span>
+      <span class="line-clamp-2 text-n-slate-11">{{ replyToPreview }}</span>
+    </div>
+    <div
+      v-else-if="inReplyTo"
       class="p-2 -mx-1 mb-2 rounded-lg cursor-pointer bg-n-alpha-black1"
       @click="scrollToMessage"
     >

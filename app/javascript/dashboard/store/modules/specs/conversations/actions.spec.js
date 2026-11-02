@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { createPinia, setActivePinia } from 'pinia';
 import actions, {
   hasMessageFailedWithExternalError,
 } from '../../conversations/actions';
@@ -311,6 +312,115 @@ describe('#actions', () => {
       axios.post.mockRejectedValue({ message: 'Incorrect header' });
       await actions.markMessagesRead({ commit }, { id: 1 });
       expect(commit.mock.calls).toEqual([]);
+    });
+    it('Equipe: ler zera o selo @', async () => {
+      setActivePinia(createPinia());
+      axios.post.mockResolvedValue({
+        data: { id: 1, agent_last_seen_at: 5, inbox_id: 7 },
+      });
+      await actions.markMessagesRead(
+        {
+          commit,
+          rootGetters: { 'inboxes/getInbox': () => ({ equipe: true }) },
+        },
+        { id: 1 }
+      );
+      vi.runAllTimers();
+      expect(commit.mock.calls).toEqual([
+        [
+          types.UPDATE_MESSAGE_UNREAD_COUNT,
+          { id: 1, lastSeen: 5, equipeMarcado: false },
+        ],
+      ]);
+    });
+    it('fora da Equipe não mexe no selo', async () => {
+      axios.post.mockResolvedValue({
+        data: { id: 1, agent_last_seen_at: 5, inbox_id: 7 },
+      });
+      await actions.markMessagesRead(
+        {
+          commit,
+          rootGetters: { 'inboxes/getInbox': () => ({ equipe: false }) },
+        },
+        { id: 1 }
+      );
+      vi.runAllTimers();
+      expect(commit.mock.calls).toEqual([
+        [types.UPDATE_MESSAGE_UNREAD_COUNT, { id: 1, lastSeen: 5 }],
+      ]);
+    });
+  });
+
+  describe('selo @ da Equipe', () => {
+    const MIM = '[@Eu](mention://user/1/Eu) oi';
+    const TODOS = '[@todos](mention://todos/0/todos) oi';
+    const contexto = (chat, equipe = true) => ({
+      commit,
+      state: {
+        allConversations: [
+          {
+            id: 1,
+            inbox_id: 7,
+            unread_count: 0,
+            messages: [],
+            equipe_tipo: 'grupo',
+            ...chat,
+          },
+        ],
+      },
+      rootGetters: {
+        'inboxes/getInbox': () => ({ equipe }),
+        getCurrentUserID: 1,
+      },
+    });
+    const mensagem = (content, senderId = 2) => ({
+      id: 10,
+      message_type: 1,
+      conversation_id: 1,
+      content,
+      sender: { id: senderId, type: 'user' },
+    });
+    const adicionar = (content, chat, senderId) => {
+      const msg = mensagem(content, senderId);
+      actions.addMessage(contexto(chat), msg);
+      return msg.conversation.equipe_marcado;
+    };
+
+    it('mensagem de colega que me marca acende', () => {
+      expect(adicionar(MIM)).toBe(true);
+    });
+    it('marcação de outra pessoa não acende', () => {
+      expect(adicionar('[@Ana](mention://user/12/Ana) oi')).toBe(false);
+    });
+    it('mensagem sem marcação não apaga o selo aceso', () => {
+      expect(adicionar('oi', { equipe_marcado: true })).toBe(true);
+    });
+    it('minha própria mensagem não acende', () => {
+      expect(adicionar(MIM, {}, 1)).toBe(false);
+    });
+    it('@todos acende no grupo', () => {
+      expect(adicionar(TODOS)).toBe(true);
+    });
+    it('@todos não acende na 1:1, mas o @ direto sim', () => {
+      const direta = { equipe_tipo: '1a1' };
+      expect(adicionar(TODOS, direta)).toBe(false);
+      expect(adicionar(MIM, direta)).toBe(true);
+    });
+    it('mensagem repetida não acende', () => {
+      expect(adicionar(MIM, { messages: [{ id: 10 }] })).toBe(false);
+    });
+    it('edição (updateMessage) não acende e mantém o valor', () => {
+      const msg = mensagem(MIM);
+      actions.updateMessage(contexto(), msg);
+      expect(msg.conversation.equipe_marcado).toBe(false);
+      const outra = mensagem('oi');
+      actions.updateMessage(contexto({ equipe_marcado: true }), outra);
+      expect(outra.conversation.equipe_marcado).toBe(true);
+    });
+    it('fora da Equipe a mensagem não ganha o campo', () => {
+      const msg = mensagem(MIM);
+      actions.addMessage(contexto({}, false), msg);
+      expect(msg.conversation).toBeUndefined();
     });
   });
 

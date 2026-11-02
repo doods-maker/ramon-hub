@@ -180,8 +180,9 @@ const onDeleteConversation = () => {
 
 <template>
   <!-- Expanded layout: wide screen + expanded setting -->
+  <!-- FORK(ramon): a caixa Equipe fica sempre no card condensado (linha de WhatsApp) -->
   <ConversationCardExpanded
-    v-if="showExpanded"
+    v-if="showExpanded && !inbox.equipe"
     :chat="source"
     :current-contact="currentContact"
     :assignee="assignee"

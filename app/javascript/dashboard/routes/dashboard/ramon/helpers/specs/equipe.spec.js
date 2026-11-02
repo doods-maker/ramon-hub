@@ -7,7 +7,11 @@ import {
   identidadeConversa,
   resumoReacoes,
   rotuloDia,
+  horaLista,
+  trechosPrevia,
   prefixoPrevia,
+  autorCitacao,
+  textoCitacao,
 } from '../equipe';
 
 describe('helpers/equipe', () => {
@@ -111,6 +115,34 @@ describe('helpers/equipe', () => {
     );
   });
 
+  it('autorCitacao: "Você" se é minha, nome do colega, nada sem autor', () => {
+    const t = k => k;
+    expect(autorCitacao({ sender: { id: 1, name: 'Eu' } }, 1, t)).toBe(
+      'RAMON.EQUIPE.VOCE'
+    );
+    expect(autorCitacao({ sender: { id: 2, name: 'Ana' } }, 1, t)).toBe('Ana');
+    expect(autorCitacao({ sender: null }, 1, t)).toBeNull();
+  });
+
+  it('textoCitacao: texto puro, anexo (snake e camel) e indisponível', () => {
+    const t = k => k;
+    expect(textoCitacao({ content: 'linha 1\nlinha 2 **forte**' }, t)).toBe(
+      'linha 1 linha 2 forte'
+    );
+    expect(
+      textoCitacao({ content: '[@Ana](mention://user/2/Ana) oi' }, t)
+    ).toBe('@Ana oi');
+    expect(textoCitacao({ attachments: [{ file_type: 'image' }] }, t)).toBe(
+      'CHAT_LIST.ATTACHMENTS.image.CONTENT'
+    );
+    expect(textoCitacao({ attachments: [{ fileType: 'file' }] }, t)).toBe(
+      'CHAT_LIST.ATTACHMENTS.file.CONTENT'
+    );
+    expect(textoCitacao({ attachments: [] }, t)).toBe(
+      'CONVERSATION.REPLY_MESSAGE_NOT_FOUND'
+    );
+  });
+
   it('rotuloDia compara dias em São Paulo', () => {
     // 2026-11-02 02:30 UTC = 01/11 23:30 em São Paulo
     const agora = Date.UTC(2026, 10, 2, 2, 30);
@@ -119,5 +151,44 @@ describe('helpers/equipe', () => {
     expect(rotuloDia(seg('2026-11-01T14:00:00Z'), agora)).toBe('HOJE');
     expect(rotuloDia(seg('2026-11-01T01:00:00Z'), agora)).toBe('ONTEM');
     expect(rotuloDia(seg('2026-10-20T15:00:00Z'), agora)).toBe('20/10/2026');
+  });
+
+  it('trechosPrevia separa a marcação, com nome com espaço', () => {
+    expect(
+      trechosPrevia(
+        'oi [@Dr. Ramon Antonio](mention://user/3/Dr.%20Ramon%20Antonio) tudo bem'
+      )
+    ).toEqual([
+      { texto: 'oi ', marcacao: false },
+      { texto: '@Dr. Ramon Antonio', marcacao: true },
+      { texto: ' tudo bem', marcacao: false },
+    ]);
+  });
+
+  it('trechosPrevia: @todos e marcação no começo', () => {
+    expect(trechosPrevia('[@todos](mention://todos/0/todos) reunião')).toEqual([
+      { texto: '@todos', marcacao: true },
+      { texto: ' reunião', marcacao: false },
+    ]);
+  });
+
+  it('trechosPrevia: texto sem marcação vem inteiro e sem markdown', () => {
+    expect(trechosPrevia('**oi** gente')).toEqual([
+      { texto: 'oi gente', marcacao: false },
+    ]);
+    expect(trechosPrevia('')).toEqual([]);
+    expect(trechosPrevia(null)).toEqual([]);
+  });
+
+  it('horaLista: hoje em HH:mm, ontem em rótulo, antes em data, no fuso de São Paulo', () => {
+    // 2026-11-02 02:30 UTC = 01/11 23:30 em São Paulo
+    const agora = Date.UTC(2026, 10, 2, 2, 30);
+    const seg = iso => Date.parse(iso) / 1000;
+    expect(horaLista(seg('2026-11-02T01:00:00Z'), agora)).toBe('22:00');
+    expect(horaLista(seg('2026-11-01T17:32:00Z'), agora)).toBe('14:32');
+    // virada do dia em São Paulo: 00:00 de 01/11 é hoje, 23:59 de 31/10 é ontem
+    expect(horaLista(seg('2026-11-01T03:00:00Z'), agora)).toBe('00:00');
+    expect(horaLista(seg('2026-11-01T02:59:00Z'), agora)).toBe('ONTEM');
+    expect(horaLista(seg('2026-10-20T15:00:00Z'), agora)).toBe('20/10/2026');
   });
 });

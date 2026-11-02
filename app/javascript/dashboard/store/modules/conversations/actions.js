@@ -3,6 +3,7 @@ import ConversationApi from '../../../api/inbox/conversation';
 import MessageApi from '../../../api/inbox/message';
 import { MESSAGE_STATUS, MESSAGE_TYPE } from 'shared/constants/messages';
 import { createPendingMessage } from 'dashboard/helper/commons';
+import { marcaUsuario } from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 import {
   buildConversationList,
   isOnMentionsView,
@@ -31,8 +32,8 @@ export const hasMessageFailedWithExternalError = pendingMessage => {
   return status === MESSAGE_STATUS.FAILED && externalError !== '';
 };
 
-// FORK(ramon): na caixa Equipe a não-lida é por pessoa e o cable (igual para
-// todos) não a traz — mantém a da conversa e soma a mensagem nova de colega.
+// FORK(ramon): na caixa Equipe a não-lida e o selo @ são por pessoa e o cable
+// (igual para todos) não os traz — mantém os da conversa e soma a mensagem nova de colega.
 const naoLidaEquipe = (conversationState, rootGetters, message, nova) => {
   const chat = conversationState?.allConversations?.find(
     c => c.id === message.conversation_id
@@ -45,9 +46,17 @@ const naoLidaEquipe = (conversationState, rootGetters, message, nova) => {
     message.sender?.type === 'user' &&
     message.sender.id !== rootGetters.getCurrentUserID &&
     !chat.messages?.some(m => m.id === message.id);
+  // @todos só vale em grupo: na 1:1 o servidor ignora o token.
+  const conteudo =
+    chat.equipe_tipo === 'grupo'
+      ? message.content
+      : message.content?.replaceAll('mention://todos/', '');
   message.conversation = {
     ...message.conversation,
     unread_count: (chat.unread_count || 0) + (deColega ? 1 : 0),
+    equipe_marcado:
+      !!chat.equipe_marcado ||
+      (deColega && marcaUsuario(conteudo, rootGetters.getCurrentUserID)),
   };
 };
 

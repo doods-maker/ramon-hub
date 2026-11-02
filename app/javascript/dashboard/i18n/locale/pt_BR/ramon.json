@@ -184,7 +184,9 @@
       "MENSAGEM": "Mensagem",
       "PARTICIPANTES": "{n} participante | {n} participantes",
       "NESTE_CHAT": "Neste chat",
-      "AVISA_TODOS": "Avisa {n} pessoa deste chat | Avisa os {n} deste chat"
+      "AVISA_TODOS": "Avisa {n} pessoa deste chat | Avisa os {n} deste chat",
+      "VOCE": "Você",
+      "SELO_MARCACAO": "{'@'}"
     },
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",

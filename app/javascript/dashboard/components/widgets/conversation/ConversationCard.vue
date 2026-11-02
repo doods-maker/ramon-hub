@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { useMapGetter } from 'dashboard/composables/store';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
 import Avatar from 'next/avatar/Avatar.vue';
 import MessagePreview from './MessagePreview.vue';
@@ -13,6 +14,10 @@ import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import LeadLinhaCard from 'dashboard/routes/dashboard/ramon/components/conversation/LeadLinhaCard.vue';
 import { semEtiquetasDoLead } from 'dashboard/routes/dashboard/ramon/helpers/leadNaConversa';
+import {
+  horaLista,
+  identidadeConversa,
+} from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -36,6 +41,32 @@ const emit = defineEmits([
 
 const hovered = ref(false);
 
+// FORK(ramon): caixa Equipe. Linha de WhatsApp: foto, nome, hora, prévia e selos.
+const equipe = computed(() => !!props.inbox?.equipe);
+const meuId = useMapGetter('getCurrentUserID');
+const identidade = computed(() =>
+  equipe.value ? identidadeConversa(props.chat, meuId.value) : null
+);
+const nomeCard = computed(
+  () => identidade.value?.nome ?? props.currentContact.name
+);
+const fotoCard = computed(() =>
+  identidade.value ? identidade.value.foto : props.currentContact.thumbnail
+);
+const marcado = computed(() => equipe.value && !!props.chat.equipe_marcado);
+const previaEquipe = computed(() =>
+  equipe.value ? { meuId: meuId.value, tipo: props.chat.equipe_tipo } : null
+);
+// ponytail: "agora" só recalcula quando a conversa muda; lista aberta na virada do
+// dia mantém a hora até a próxima atividade ou recarga. Timer aqui, se incomodar.
+const horaEquipe = computed(() =>
+  equipe.value ? horaLista(props.chat.timestamp, Date.now()) : ''
+);
+const avatarClass = computed(() => {
+  if (equipe.value) return 'mt-3';
+  return props.showInboxName ? 'mt-8' : 'mt-4';
+});
+
 const unreadCount = computed(() => props.chat.unread_count);
 const hasUnread = computed(() => unreadCount.value > 0);
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
@@ -53,9 +84,10 @@ const voiceCallData = computed(() => {
 
 const showMetaSection = computed(() => {
   return (
-    props.showInboxName ||
-    (props.showAssignee && props.assignee.name) ||
-    props.chat.priority
+    !equipe.value &&
+    (props.showInboxName ||
+      (props.showAssignee && props.assignee.name) ||
+      props.chat.priority)
   );
 });
 
@@ -67,14 +99,21 @@ const cardLabels = computed(() =>
 );
 
 const showLabelsSection = computed(() => {
-  return cardLabels.value.length > 0 || hasSlaPolicyId.value;
+  return !equipe.value && (cardLabels.value.length > 0 || hasSlaPolicyId.value);
 });
 
 const messagePreviewClass = computed(() => {
   return [
-    hasUnread.value ? 'font-medium text-n-slate-12' : 'text-n-slate-11',
-    !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
-    props.compact && hasUnread.value ? 'ltr:pr-6 rtl:pl-6' : '',
+    hasUnread.value && !equipe.value
+      ? 'font-medium text-n-slate-12'
+      : 'text-n-slate-11',
+    marcado.value ? 'ltr:pr-12 rtl:pl-12' : '',
+    !marcado.value && !props.compact && hasUnread.value
+      ? 'ltr:pr-4 rtl:pl-4'
+      : '',
+    !marcado.value && props.compact && hasUnread.value
+      ? 'ltr:pr-6 rtl:pl-6'
+      : '',
   ];
 });
 
@@ -127,16 +166,17 @@ watch(
     >
       <Avatar
         v-if="!hideThumbnail"
-        :name="currentContact.name"
-        :src="currentContact.thumbnail"
-        :size="32"
+        :name="nomeCard"
+        :src="fotoCard"
+        :size="equipe ? 40 : 32"
+        :rounded-full="equipe"
         :status="currentContact.availability_status"
-        :class="!showInboxName ? 'mt-4' : 'mt-8'"
+        :class="avatarClass"
         hide-offline-status
       >
         <template #overlay="{ size }">
           <label
-            v-if="hovered || selected"
+            v-if="!equipe && (hovered || selected)"
             class="flex items-center justify-center rounded-full cursor-pointer absolute inset-0 z-10 backdrop-blur-[2px]"
             :style="{ width: `${size}px`, height: `${size}px` }"
             @click.stop
@@ -177,11 +217,18 @@ watch(
       </div>
       <h4
         class="conversation--user text-sm my-0 mx-2 capitalize pt-0.5 text-ellipsis overflow-hidden whitespace-nowrap flex-1 min-w-0 ltr:pr-16 rtl:pl-16 text-n-slate-12"
-        :class="hasUnread ? 'font-semibold' : 'font-medium'"
+        :class="[
+          hasUnread ? 'font-semibold' : 'font-medium',
+          { '!normal-case': equipe },
+        ]"
       >
-        {{ currentContact.name }}
+        {{ nomeCard }}
       </h4>
-      <LeadLinhaCard :lead="chat.ramon_lead" class="mx-2 ltr:pr-6 rtl:pl-6" />
+      <LeadLinhaCard
+        v-if="!equipe"
+        :lead="chat.ramon_lead"
+        class="mx-2 ltr:pr-6 rtl:pl-6"
+      />
       <VoiceCallStatus
         v-if="voiceCallData.status"
         key="voice-status-row"
@@ -193,6 +240,7 @@ watch(
         v-else-if="lastMessageInChat"
         key="message-preview"
         :message="lastMessageInChat"
+        :equipe="previaEquipe"
         class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm"
         :class="messagePreviewClass"
       />
@@ -216,14 +264,43 @@ watch(
         :class="showMetaSection ? 'top-8' : 'top-4'"
       >
         <span class="ml-auto font-mono font-normal leading-4 text-xxs">
+          <span
+            v-if="equipe"
+            data-equipe-hora
+            :class="
+              hasUnread
+                ? 'text-[rgb(var(--ramon-nao-lida-texto))]'
+                : 'text-n-slate-10'
+            "
+          >
+            {{ horaEquipe === 'ONTEM' ? $t('RAMON.EQUIPE.ONTEM') : horaEquipe }}
+          </span>
           <TimeAgo
+            v-else
             :last-activity-timestamp="chat.timestamp"
             :created-at-timestamp="chat.created_at"
             :conversation-id="chat.id"
           />
         </span>
+        <div
+          v-if="equipe && (marcado || hasUnread)"
+          class="flex items-center gap-1 ltr:ml-auto rtl:mr-auto mt-1"
+        >
+          <span
+            v-if="marcado"
+            data-equipe-selo
+            class="bg-n-blue-9/[.18] rounded-full h-5 min-w-5 px-1.5 font-semibold text-[11px] leading-3 text-n-blue-11 inline-grid place-items-center flex-shrink-0"
+          >
+            {{ $t('RAMON.EQUIPE.SELO_MARCACAO') }}
+          </span>
+          <UnreadBadge
+            v-if="hasUnread"
+            :count="unreadCount"
+            class="!h-5 !min-w-5 !max-w-none !px-1.5 !text-[11px]"
+          />
+        </div>
         <UnreadBadge
-          v-if="hasUnread"
+          v-else-if="hasUnread"
           :count="unreadCount"
           class="ltr:ml-auto rtl:mr-auto mt-1"
         />

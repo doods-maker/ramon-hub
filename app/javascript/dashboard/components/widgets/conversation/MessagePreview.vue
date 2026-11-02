@@ -2,6 +2,10 @@
 import { MESSAGE_TYPE } from 'widget/helpers/constants';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { ATTACHMENT_ICONS } from 'shared/constants/messages';
+import {
+  prefixoPrevia,
+  trechosPrevia,
+} from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 export default {
   name: 'MessagePreview',
@@ -17,6 +21,11 @@ export default {
     defaultEmptyMessage: {
       type: String,
       default: '',
+    },
+    // FORK(ramon): { meuId, tipo } na caixa Equipe.
+    equipe: {
+      type: Object,
+      default: null,
     },
   },
   setup() {
@@ -43,6 +52,19 @@ export default {
       const { email: { subject } = {} } = contentAttributes || {};
       return this.getPlainText(subject || this.message.content);
     },
+    trechosEquipe() {
+      return trechosPrevia(this.message.content);
+    },
+    prefixoEquipe() {
+      if (!this.equipe) return '';
+      const { voce, nome } = prefixoPrevia(
+        this.message,
+        this.equipe.meuId,
+        this.equipe.tipo
+      );
+      const quem = voce ? this.$t('RAMON.EQUIPE.VOCE') : nome;
+      return quem ? `${quem}: ` : '';
+    },
     lastMessageFileType() {
       const [{ file_type: fileType } = {}] = this.message.attachments;
       return fileType;
@@ -62,7 +84,7 @@ export default {
 
 <template>
   <div class="overflow-hidden text-ellipsis whitespace-nowrap">
-    <template v-if="showMessageType">
+    <template v-if="showMessageType && !equipe">
       <fluent-icon
         v-if="isMessagePrivate"
         size="16"
@@ -82,6 +104,7 @@ export default {
         icon="info"
       />
     </template>
+    <span v-if="prefixoEquipe">{{ prefixoEquipe }}</span>
     <span v-if="message.content && isMessageSticker">
       <fluent-icon
         size="16"
@@ -89,6 +112,14 @@ export default {
         icon="image"
       />
       {{ $t('CHAT_LIST.ATTACHMENTS.image.CONTENT') }}
+    </span>
+    <span v-else-if="message.content && equipe">
+      <span
+        v-for="(trecho, indice) in trechosEquipe"
+        :key="indice"
+        :class="{ 'font-semibold text-n-blue-11': trecho.marcacao }"
+        >{{ trecho.texto }}</span
+      >
     </span>
     <span v-else-if="message.content">
       {{ parsedLastMessage }}

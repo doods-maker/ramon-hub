@@ -9,15 +9,19 @@ export default {
       const {
         data: { id, agent_last_seen_at: lastSeen, inbox_id: inboxId },
       } = await ConversationApi.markMessageRead(data);
-      // FORK(ramon): leu conversa da Equipe → atualiza o badge da caixa
-      if (rootGetters?.['inboxes/getInbox']?.(inboxId)?.equipe) {
+      // FORK(ramon): leu conversa da Equipe → atualiza o badge da caixa e apaga o selo @
+      const equipe = rootGetters?.['inboxes/getInbox']?.(inboxId)?.equipe;
+      if (equipe) {
         useEquipeStore()
           .carregar()
           .catch(() => {});
       }
       setTimeout(
         () =>
-          commit(mutationTypes.UPDATE_MESSAGE_UNREAD_COUNT, { id, lastSeen }),
+          commit(
+            mutationTypes.UPDATE_MESSAGE_UNREAD_COUNT,
+            equipe ? { id, lastSeen, equipeMarcado: false } : { id, lastSeen }
+          ),
         4000
       );
     } catch (error) {

@@ -484,6 +484,15 @@ export default {
       // FORK(ramon): olha o modo cru, não isOnPrivateNote (falso na Equipe). Trocar replyType aqui faria
       // o conversationIdByRoute guardar o rascunho da nota no rascunho de resposta da conversa anterior.
       if (this.replyType === REPLY_EDITOR_MODES.NOTE) {
+        // FORK(ramon): a Equipe mostra a citação mesmo com o NOTE guardado. Entrando ou saindo dela,
+        // vale a da conversa atual; a citação de um chat interno não vai parar na conversa do cliente.
+        const inboxAnterior = oldConversation?.inbox_id;
+        if (
+          this.equipe ||
+          this.$store.getters['inboxes/getInbox'](inboxAnterior)?.equipe
+        ) {
+          this.fetchAndSetReplyTo();
+        }
         return;
       }
 
@@ -1286,6 +1295,15 @@ export default {
     :is-on-private-note="isOnPrivateNote"
   />
   <div ref="replyEditor" class="reply-box" :class="replyBoxClass">
+    <!-- FORK(ramon): na Equipe a citação fica acima da linha de escrever, na largura toda -->
+    <ReplyToMessage
+      v-if="equipe && shouldShowReplyToMessage"
+      :message="inReplyTo"
+      equipe
+      :meu-id="currentUser.id"
+      class="basis-full"
+      @dismiss="resetReplyToMessage"
+    />
     <ReplyTopPanel
       v-if="!equipe"
       :mode="replyType"
@@ -1322,7 +1340,7 @@ export default {
     >
       <div :key="copilot.editorTransitionKey.value" class="reply-box__top">
         <ReplyToMessage
-          v-if="shouldShowReplyToMessage"
+          v-if="!equipe && shouldShowReplyToMessage"
           :message="inReplyTo"
           @dismiss="resetReplyToMessage"
         />
@@ -1530,7 +1548,7 @@ export default {
 
 // FORK(ramon): caixa Equipe. Emoji, anexo, áudio, campo e enviar na mesma linha.
 .reply-box--equipe {
-  @apply flex items-end mx-0 mb-0 border-0 border-t border-solid border-n-weak rounded-none bg-n-background py-2.5 px-4 md:px-[8%];
+  @apply flex flex-wrap items-end mx-0 mb-0 border-0 border-t border-solid border-n-weak rounded-none bg-n-background py-2.5 px-4 md:px-[8%];
 
   .reply-box__top {
     @apply order-2 flex-1 min-w-0 mx-1 mt-0 p-0;
