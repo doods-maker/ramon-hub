@@ -38,7 +38,11 @@ vi.mock('shared/composables/useBranding', () => ({
   useBranding: () => ({ replaceInstallationName: s => s }),
 }));
 vi.mock('next/avatar/Avatar.vue', () => ({
-  default: { name: 'AvatarFalso', render: () => null },
+  default: {
+    name: 'AvatarFalso',
+    props: ['size', 'roundedFull'],
+    render: () => null,
+  },
 }));
 vi.mock(
   'dashboard/modules/conversations/components/MessageContextMenu.vue',
@@ -155,6 +159,22 @@ describe('Message na caixa Equipe', () => {
     it('grupo: nome na primeira do bloco', () => {
       expect(nome(montar({ primeiroDoAutor: true })).text()).toBe('Brenda');
       expect(nome(montar({ primeiroDoAutor: false })).exists()).toBe(false);
+    });
+
+    it('foto redonda de 28 px', () => {
+      const avatar = montar({ primeiroDoAutor: true }).findComponent({
+        name: 'AvatarFalso',
+      });
+      expect(avatar.props()).toMatchObject({ size: 28, roundedFull: true });
+    });
+
+    it('fora da Equipe a foto segue quadrada, de 24 px', () => {
+      const avatar = montar({ inboxId: CAIXA_CLIENTE, ...minha }).findComponent(
+        {
+          name: 'AvatarFalso',
+        }
+      );
+      expect(avatar.props()).toMatchObject({ size: 24, roundedFull: false });
     });
 
     it('grupo: foto só na primeira do bloco, junto do nome', () => {
@@ -336,6 +356,44 @@ describe('Message na caixa Equipe', () => {
       expect(hora(w)).not.toContain('absolute');
       expect(hora(w)).toContain('mt-2');
       expect(bolha(w)).not.toContain('after:inline-block');
+    });
+  });
+
+  describe('áudio', () => {
+    const audio = {
+      content: null,
+      attachments: [
+        { id: 1, fileType: 'audio', dataUrl: 'https://x.invalid/a.wav' },
+      ],
+    };
+    const bolhaAudio = w => w.find('[data-bubble-name="audio"]');
+
+    it('colega: dentro da bolha cinza, com a hora dentro', () => {
+      const w = montar(audio);
+      const classes = bolhaAudio(w).classes();
+      expect(classes).toContain('bg-n-slate-4');
+      expect(classes).not.toContain('bg-transparent');
+      expect(bolhaAudio(w).find('time').exists()).toBe(true);
+    });
+
+    it('minha: dentro da bolha verde', () => {
+      const classes = bolhaAudio(montar({ ...audio, ...minha })).classes();
+      expect(classes.join(' ')).toContain('ramon-enviada');
+      expect(classes).not.toContain('bg-transparent');
+    });
+
+    it('o player perde o cartão à parte só na Equipe', () => {
+      const cartao = w =>
+        bolhaAudio(w).find('.skip-context-menu').classes().join(' ');
+      expect(cartao(montar(audio))).toContain('!bg-transparent');
+      expect(
+        cartao(montar({ ...audio, inboxId: CAIXA_CLIENTE }))
+      ).not.toContain('!bg-transparent');
+    });
+
+    it('fora da Equipe segue o cartão transparente', () => {
+      const w = montar({ ...audio, inboxId: CAIXA_CLIENTE });
+      expect(bolhaAudio(w).classes()).toContain('bg-transparent');
     });
   });
 

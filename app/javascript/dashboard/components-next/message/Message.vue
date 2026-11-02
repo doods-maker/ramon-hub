@@ -677,13 +677,17 @@ provideMessageContext({
         gridTemplateAreas: gridTemplate,
       }"
     >
-      <!-- FORK(ramon): na Equipe quem decide a foto é shouldShowAvatar, com 28px -->
+      <!-- FORK(ramon): na Equipe quem decide a foto é shouldShowAvatar, redonda e com 28px -->
       <div
         v-if="(isEquipe || !shouldGroupWithNext) && shouldShowAvatar"
         v-tooltip.left-end="avatarTooltip"
         class="[grid-area:avatar] flex items-end"
       >
-        <Avatar v-bind="avatarInfo" :size="isEquipe ? 28 : 24" />
+        <Avatar
+          v-bind="avatarInfo"
+          :size="isEquipe ? 28 : 24"
+          :rounded-full="isEquipe"
+        />
       </div>
       <div
         class="[grid-area:bubble] flex min-w-0 relative"

@@ -46,6 +46,22 @@ describe('TagAgents', () => {
     });
   });
 
+  it('com itens, nomes na cor normal e altura para @todos + 5 pessoas', () => {
+    const w = montar({ itens: ITENS });
+    w.findAll('h5').forEach(nome => {
+      expect(nome.classes()).toContain('text-n-slate-12');
+    });
+    expect(w.find('ul').classes()).toContain('max-h-[18rem]');
+    expect(w.find('ul').classes()).not.toContain('max-h-[12.5rem]');
+  });
+
+  it('sem itens mantém a altura e o cinza de quem não está selecionado', () => {
+    const w = montar({});
+    expect(w.find('ul').classes()).toContain('max-h-[12.5rem]');
+    expect(w.find('ul').classes()).not.toContain('max-h-[18rem]');
+    expect(w.findAll('h5')[1].classes()).not.toContain('text-n-slate-12');
+  });
+
   it('sem itens mantém agentes e times', () => {
     expect(nomes(montar({}))).toEqual(['Agente', 'Time']);
   });

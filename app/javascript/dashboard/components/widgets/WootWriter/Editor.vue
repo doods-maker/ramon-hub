@@ -1165,6 +1165,11 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
     max-height: 7.5rem !important;
   }
 
+  // Sem a margem de cima do parágrafo, o campo vazio fica com 40 px, como o botão enviar.
+  .ProseMirror p:first-child {
+    margin-top: 0 !important;
+  }
+
   .ProseMirror p:last-child {
     margin-bottom: 0 !important;
   }

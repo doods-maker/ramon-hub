@@ -202,7 +202,8 @@ const getInReplyToMessage = parentMessage => {
 </script>
 
 <template>
-  <ul class="px-4 bg-n-surface-1">
+  <!-- FORK(ramon): na Equipe, a mesma margem da caixa de escrever (.reply-box--equipe) -->
+  <ul class="px-4 bg-n-surface-1" :class="{ 'md:px-[8%]': isEquipe }">
     <slot name="beforeAll" />
     <template v-for="(message, index) in allMessages" :key="message.id">
       <!-- FORK(ramon): separador de dia, só na Equipe -->

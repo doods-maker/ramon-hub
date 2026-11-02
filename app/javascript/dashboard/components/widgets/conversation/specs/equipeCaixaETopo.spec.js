@@ -43,7 +43,7 @@ vi.mock('dashboard/composables/useInbox', () => ({
 const STUBS = {
   Avatar: {
     name: 'AvatarFalso',
-    props: ['name', 'src'],
+    props: ['name', 'src', 'size', 'roundedFull'],
     template: '<i />',
   },
   BackButton: true,
@@ -117,6 +117,19 @@ describe('ConversationHeader', () => {
     expect(avatar.props()).toMatchObject({ name: 'Brenda', src: 'b.png' });
     expect(w.text()).toContain('Brenda');
     expect(w.text()).not.toContain('PARTICIPANTES');
+  });
+
+  it('foto redonda de 40 px só na Equipe', () => {
+    const avatar = w => w.findComponent({ name: 'AvatarFalso' }).props();
+    expect(avatar(montarTopo(grupo))).toMatchObject({
+      size: 40,
+      roundedFull: true,
+    });
+    estado.equipe = false;
+    expect(avatar(montarTopo(grupo))).toMatchObject({
+      size: 32,
+      roundedFull: false,
+    });
   });
 
   it('admin de fora na 1:1 vê o contato', () => {

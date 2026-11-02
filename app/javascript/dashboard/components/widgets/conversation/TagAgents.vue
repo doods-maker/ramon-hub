@@ -148,8 +148,8 @@ const onAgentSelect = index => {
     <ul
       v-if="items.length"
       ref="tagAgentsRef"
-      class="vertical dropdown menu mention--box bg-n-solid-1 p-1 rounded-xl text-sm overflow-auto absolute w-full z-20 shadow-md left-0 leading-[1.2] bottom-full max-h-[12.5rem] border border-solid border-n-strong"
-      :class="{ 'max-w-[18.75rem] mb-2': itens }"
+      class="vertical dropdown menu mention--box bg-n-solid-1 p-1 rounded-xl text-sm overflow-auto absolute w-full z-20 shadow-md left-0 leading-[1.2] bottom-full border border-solid border-n-strong"
+      :class="itens ? 'max-w-[18.75rem] mb-2 max-h-[18rem]' : 'max-h-[12.5rem]'"
       role="listbox"
     >
       <li
@@ -197,7 +197,8 @@ const onAgentSelect = index => {
               class="overflow-hidden mb-0 text-sm whitespace-nowrap text-n-slate-11 text-ellipsis"
               :class="{
                 capitalize: item.type !== 'todos',
-                'text-n-slate-12': getSelectableIndex(item) === selectedIndex,
+                'text-n-slate-12':
+                  !!itens || getSelectableIndex(item) === selectedIndex,
               }"
             >
               {{ item.displayName }}

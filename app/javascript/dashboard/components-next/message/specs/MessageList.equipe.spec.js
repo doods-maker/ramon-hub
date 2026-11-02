@@ -51,6 +51,17 @@ describe('MessageList na caixa Equipe', () => {
     vi.useRealTimers();
   });
 
+  it('margem lateral de 8% só na Equipe', () => {
+    const classes = () =>
+      montar([msg(1, 2, SEG)])
+        .find('ul')
+        .classes();
+    expect(classes()).toContain('md:px-[8%]');
+    selecionada.value = { id: 44, inbox_id: 8 };
+    expect(classes()).not.toContain('md:px-[8%]');
+    expect(classes()).toContain('px-4');
+  });
+
   it('marca a primeira do bloco e agrupa o autor em minutos diferentes', () => {
     const w = montar([
       msg(1, 2, SEG - 600),

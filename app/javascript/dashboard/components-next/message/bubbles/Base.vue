@@ -38,7 +38,7 @@ const ENVIADA = 'bg-[rgb(var(--ramon-enviada))] text-n-slate-12';
 // (.marcado do mockup). O áudio não tem padding próprio para o nome e a hora.
 // ponytail: o destaque vale para todo @ da bolha que me marca; por pessoa exige casar o rótulo.
 const EQUIPE_BOLHA =
-  '[&_.prosemirror-mention-node]:font-semibold [&_.prosemirror-mention-node]:text-n-blue-11 data-[bubble-name=audio]:p-2';
+  '[&_.prosemirror-mention-node]:font-semibold [&_.prosemirror-mention-node]:text-n-blue-11 data-[bubble-name=audio]:px-2.5 data-[bubble-name=audio]:pt-1.5 data-[bubble-name=audio]:pb-[5px]';
 const EQUIPE_MARCADO =
   'shadow-[inset_3px_0_0_rgb(var(--blue-11))] [&_.prosemirror-mention-node]:bg-n-blue-9/[.18] [&_.prosemirror-mention-node]:rounded [&_.prosemirror-mention-node]:px-[3px]';
 // FORK(ramon): hora na última linha do texto (.rodape do mockup). O float não sobe de

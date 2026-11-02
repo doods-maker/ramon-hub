@@ -155,6 +155,7 @@ const copyConversationId = async () => {
         :name="nomeTopo"
         :src="fotoTopo"
         :size="equipe ? 40 : 32"
+        :rounded-full="equipe"
         :status="currentContact.availability_status"
         hide-offline-status
       />
