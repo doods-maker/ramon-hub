@@ -4,6 +4,8 @@ import { createPinia, setActivePinia } from 'pinia';
 import Message from '../Message.vue';
 import MessageMeta from '../MessageMeta.vue';
 import { useEquipeStore } from 'dashboard/stores/equipe';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const CAIXA_EQUIPE = 7;
 const CAIXA_CLIENTE = 8;
@@ -44,6 +46,17 @@ vi.mock('next/avatar/Avatar.vue', () => ({
     render: () => null,
   },
 }));
+vi.mock(
+  'dashboard/routes/dashboard/ramon/components/equipe/EquipeReacoes.vue',
+  () => ({
+    default: {
+      name: 'ReacoesFalsas',
+      props: ['reacoes', 'podeReagir'],
+      emits: ['responder'],
+      render: () => null,
+    },
+  })
+);
 vi.mock(
   'dashboard/modules/conversations/components/MessageContextMenu.vue',
   () => ({
@@ -394,6 +407,62 @@ describe('Message na caixa Equipe', () => {
     it('fora da Equipe segue o cartão transparente', () => {
       const w = montar({ ...audio, inboxId: CAIXA_CLIENTE });
       expect(bolhaAudio(w).classes()).toContain('bg-transparent');
+    });
+  });
+
+  describe('reações', () => {
+    const reacoes = w => w.findComponent({ name: 'ReacoesFalsas' });
+    const com = {
+      contentAttributes: {
+        ramonReacoes: [{ userId: 3, userName: 'Bia', emoji: '🙏' }],
+      },
+    };
+
+    it('quem participa pode reagir e recebe as reações da mensagem', () => {
+      participantes([EU, COLEGA]);
+      const props = reacoes(montar(com)).props();
+      expect(props.podeReagir).toBe(true);
+      expect(props.reacoes).toEqual(com.contentAttributes.ramonReacoes);
+    });
+
+    it('a grade é a âncora e o gatilho da barra', () => {
+      const grade = montar(com).find('.grid');
+      expect(grade.classes()).toEqual(
+        expect.arrayContaining(['relative', 'group/equipe'])
+      );
+      expect(grade.attributes('tabindex')).toBe('-1');
+    });
+
+    it('admin de fora e lista sem carregar não reagem, mas veem', () => {
+      expect(reacoes(montar(com)).props('podeReagir')).toBe(false);
+      participantes([COLEGA, 3]);
+      const w = montar({ ...com, currentUserId: 99 });
+      expect(reacoes(w).props('podeReagir')).toBe(false);
+      expect(reacoes(w).props('reacoes')).toHaveLength(1);
+    });
+
+    it('apagada, em envio ou com falha: nada aparece', () => {
+      const apagada = { contentAttributes: { deleted: true } };
+      expect(reacoes(montar(apagada)).exists()).toBe(false);
+      expect(reacoes(montar({ status: 'progress' })).exists()).toBe(false);
+      expect(reacoes(montar({ status: 'failed' })).exists()).toBe(false);
+    });
+
+    it('a barra da reação responde pelo mesmo caminho do menu', () => {
+      const w = montar();
+      const emite = vi.spyOn(emitter, 'emit');
+      reacoes(w).vm.$emit('responder');
+      expect(emite).toHaveBeenCalledWith(
+        BUS_EVENTS.TOGGLE_REPLY_TO_MESSAGE,
+        expect.objectContaining({ id: 10 })
+      );
+    });
+
+    it('fora da Equipe não monta nem muda a grade', () => {
+      const w = montar({ ...com, inboxId: CAIXA_CLIENTE });
+      expect(reacoes(w).exists()).toBe(false);
+      expect(w.find('.grid').classes()).not.toContain('relative');
+      expect(w.find('.grid').attributes('tabindex')).toBeUndefined();
     });
   });
 

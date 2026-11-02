@@ -11,6 +11,7 @@ import {
   isOnUnattendedView,
   isOnFoldersView,
 } from './helpers/actionHelpers';
+import { findPendingMessageIndex } from './helpers';
 import messageReadActions from './actions/messageReadActions';
 import messageTranslateActions from './actions/messageTranslateActions';
 import * as Sentry from '@sentry/vue';
@@ -32,15 +33,24 @@ export const hasMessageFailedWithExternalError = pendingMessage => {
   return status === MESSAGE_STATUS.FAILED && externalError !== '';
 };
 
+const chatEquipe = (conversationState, rootGetters, conversationId) => {
+  const chat = conversationState?.allConversations?.find(
+    c => c.id === conversationId
+  );
+  const equipe =
+    chat && rootGetters?.['inboxes/getInbox']?.(chat.inbox_id)?.equipe;
+  return equipe ? chat : null;
+};
+
 // FORK(ramon): na caixa Equipe a não-lida e o selo @ são por pessoa e o cable
 // (igual para todos) não os traz — mantém os da conversa e soma a mensagem nova de colega.
 const naoLidaEquipe = (conversationState, rootGetters, message, nova) => {
-  const chat = conversationState?.allConversations?.find(
-    c => c.id === message.conversation_id
+  const chat = chatEquipe(
+    conversationState,
+    rootGetters,
+    message.conversation_id
   );
-  if (!chat || !rootGetters?.['inboxes/getInbox']?.(chat.inbox_id)?.equipe) {
-    return;
-  }
+  if (!chat) return;
   const deColega =
     nova &&
     message.sender?.type === 'user' &&
@@ -368,6 +378,14 @@ const actions = {
 
   updateMessage({ commit, state: conversationState, rootGetters }, message) {
     naoLidaEquipe(conversationState, rootGetters, message, false);
+    // FORK(ramon): reação ou apagar em mensagem antiga, ainda não carregada, não
+    // entra no fim da conversa (ADD_MESSAGE empurraria, mudaria a hora e rolaria).
+    const chat = chatEquipe(
+      conversationState,
+      rootGetters,
+      message.conversation_id
+    );
+    if (chat && findPendingMessageIndex(chat, message) === -1) return;
     commit(types.ADD_MESSAGE, message);
     handleVoiceCallUpdated(
       commit,

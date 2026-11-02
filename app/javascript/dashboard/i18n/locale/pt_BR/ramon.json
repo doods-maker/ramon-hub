@@ -189,7 +189,8 @@
       "SELO_MARCACAO": "{'@'}",
       "VISTO": "Visto",
       "VISTO_TODOS": "Visto por todos",
-      "VISTO_POR": "Visto por {leram} de {total}. Falta: {faltam}."
+      "VISTO_POR": "Visto por {leram} de {total}. Falta: {faltam}.",
+      "RESPONDER": "Responder"
     },
     "CHEGADA": {
       "CHEGOU": "{quem} avisou: chegou cliente",

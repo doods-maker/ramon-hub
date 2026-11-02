@@ -22,6 +22,19 @@ class Api::V1::Accounts::RamonEquipeController < Api::V1::Accounts::BaseControll
     render json: conversation.conversation_participants.includes(:user).order(:user_id).map { |p| participante_json(p) }
   end
 
+  # Só quem participa reage, inclusive admin. A tela atualiza pelo message.updated.
+  def reacao
+    conversation = Current.account.conversations.find_by!(display_id: params.require(:conversation_id))
+    return head :not_found unless conversation.inbox.equipe?
+    return head :forbidden unless Ramon::Equipe.participante?(conversation, Current.user)
+
+    message = conversation.messages.find(params.require(:message_id))
+    return head :unprocessable_entity unless Ramon::Equipe.reacao_valida?(message, params[:emoji])
+
+    Ramon::Equipe.reagir(message, Current.user, params[:emoji])
+    head :ok
+  end
+
   private
 
   def participante_json(participante)

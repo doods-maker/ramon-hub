@@ -3,6 +3,8 @@
 # vê, responde e é avisado; administrador vê tudo. Cada conversa tem um contato sintético (additional_attributes.equipe)
 # achado pelo source_id do contact_inbox: equipe-geral, equipe-time-<id>, equipe-1a1-<menor id>-<maior id>.
 module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
+  EMOJIS_REACAO = %w[👍 ❤️ 😂 😮 😢 🙏].freeze
+
   module_function
 
   # Consultas frescas (sem as associações do account): no commit de um AccountUser/TeamMember o account.users/teams
@@ -118,6 +120,25 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
     return true unless conversation.inbox.equipe?
 
     participante?(conversation, user) && (account_user&.administrator? || (message.sender_type == 'User' && message.sender_id == user.id))
+  end
+
+  def reacao_valida?(message, emoji)
+    EMOJIS_REACAO.include?(emoji) && !message.content_attributes['deleted']
+  end
+
+  # Uma reação por pessoa: emoji novo soma, outro troca, o mesmo tira. O nome fica gravado para sobreviver à saída da
+  # pessoa. Só muda content_attributes: sem mexer em content nem em last_activity_at, e o message.updated é surdo na Equipe.
+  def reagir(message, user, emoji)
+    message.with_lock do
+      next if message.content_attributes['deleted'] # apagada enquanto esperava a trava
+
+      reacoes = message.content_attributes['ramon_reacoes'].to_a
+      repetida = reacoes.any? { |r| r['user_id'] == user.id && r['emoji'] == emoji }
+      reacoes = reacoes.reject { |r| r['user_id'] == user.id }
+      reacoes += [{ 'user_id' => user.id, 'user_name' => user.available_name, 'emoji' => emoji }] unless repetida
+      message.update!(content_attributes: message.content_attributes.merge('ramon_reacoes' => reacoes))
+    end
+    message
   end
 
   def tipo(conversation)

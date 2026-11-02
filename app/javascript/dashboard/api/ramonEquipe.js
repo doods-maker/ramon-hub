@@ -16,6 +16,14 @@ class RamonEquipeAPI extends ApiClient {
       params: { conversation_id: conversationId },
     });
   }
+
+  reagir(conversationId, messageId, emoji) {
+    return axios.post(`${this.url}/reacao`, {
+      conversation_id: conversationId,
+      message_id: messageId,
+      emoji,
+    });
+  }
 }
 
 export default new RamonEquipeAPI();
