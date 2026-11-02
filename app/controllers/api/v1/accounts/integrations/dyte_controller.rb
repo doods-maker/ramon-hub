@@ -23,6 +23,7 @@ class Api::V1::Accounts::Integrations::DyteController < Api::V1::Accounts::BaseC
 
   def authorize_request
     authorize @conversation, :show?
+    head :forbidden unless Ramon::Equipe.http_permitido?(@conversation, controller_path, action_name) # ramon: ADR 0011
   end
 
   def render_response(response)

@@ -325,6 +325,10 @@ Tudo ramifica em `inbox.equipe`; fora da caixa Equipe o comportamento nativo nã
 | `app/controllers/api/v1/accounts/macros_controller.rb` (`execute`) + `bulk_actions_controller.rb` (`create`) | recusam lote que inclua conversa da Equipe (`Ramon::Equipe.inclui_conversa?`) | lista permitida | equipe-whatsapp 02/11 |
 | `app/controllers/api/v1/accounts/captain/tasks_controller.rb` (`recusar_equipe`) | nada na caixa Equipe aciona IA | hub surdo | equipe-whatsapp 02/11 |
 | `enterprise/app/models/copilot_message.rb` (`enqueue_response_job`) | o painel global do copiloto não leva conversa da Equipe para a IA | hub surdo | equipe-whatsapp 02/11 |
+| `enterprise/app/services/captain/tools/copilot/get_conversation_service.rb` + `search_conversations_service.rb` | ferramentas do copiloto não leem conversa da Equipe (`Ramon::Equipe.fora_da_caixa`) | hub surdo | equipe-whatsapp 02/11 |
+| `enterprise/lib/captain/tools/ramon_base_tool.rb` (`resolver_contato`) | `historico_do_contato` e `linha_da_vida` recusam o contato sintético | hub surdo | equipe-whatsapp 02/11 |
+| `app/controllers/api/v1/accounts/integrations/dyte_controller.rb` + `linear_controller.rb` (1 linha cada) | 403 em conversa da Equipe (`http_permitido?`) | lista permitida | equipe-whatsapp 02/11 |
+| `app/controllers/api/v1/accounts/ramon_fluxos_controller.rb` (`alvo`) | rodar/ensaiar não alcançam conversa da Equipe | lista permitida | equipe-whatsapp 02/11 |
 | `app/services/messages/new_message_notification_service.rb` (`notify_conversation_assignee`, 1 linha) | atribuído de fora não recebe o aviso com o texto | só participantes + admin | equipe-whatsapp 02/11 |
 | `app/services/search_service.rb` (`accessable_inbox_ids`) | membro da caixa Equipe não acha conversa por aqui; admin segue achando | só participantes + admin | equipe-whatsapp 02/11 |
 | `app/controllers/api/v1/accounts/ramon_equipe_controller.rb` + `config/routes.rb` (`get :participantes`, `post :reacao`) | participantes com `last_seen_at` (vistos) e reação em `content_attributes` | ✓✓ por pessoa e reações | equipe-whatsapp 02/11 |

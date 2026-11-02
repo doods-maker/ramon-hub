@@ -50,7 +50,7 @@ class Captain::Tools::Copilot::SearchConversationsService < Captain::Tools::Base
 
   def permissible_conversations
     Conversations::PermissionFilterService.new(
-      @assistant.account.conversations,
+      Ramon::Equipe.fora_da_caixa(@assistant.account.conversations), # ramon: conversa da Equipe nunca vai para a IA (ADR 0011)
       @user,
       @assistant.account
     ).perform

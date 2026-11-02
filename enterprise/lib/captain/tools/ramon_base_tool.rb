@@ -34,9 +34,8 @@ class Captain::Tools::RamonBaseTool < Captain::Tools::BasePublicTool
   # A pessoa do caso (historico_do_contato, linha_da_vida): contact_id explicito so fora do atendimento, como o lead_id.
   def resolver_contato(state, lead_id, contact_id)
     id = Integer(contact_id.to_s, exception: false) unless atendimento?(state)
-    return account_scoped(::Contact).find_by(id: id) if id
-
-    resolver_lead(state, lead_id)&.contact || find_contact(state)
+    contato = id ? account_scoped(::Contact).find_by(id: id) : resolver_lead(state, lead_id)&.contact || find_contact(state)
+    contato unless ::Ramon::Equipe.contato?(contato) # ramon: contato sintético da Equipe não é pessoa (ADR 0011)
   end
 
   # Roteiro do caso — ou, no Testar com roteiro (F2), o lead descartável de Ramon::Roteiro::Teste: as tools do roteiro

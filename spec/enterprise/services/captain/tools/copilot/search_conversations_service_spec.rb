@@ -94,6 +94,18 @@ RSpec.describe Captain::Tools::Copilot::SearchConversationsService do
       expect(result).to include(resolved_conversation.to_llm_text(include_contact_details: true))
     end
 
+    # ramon: conversa da Equipe nunca vai para a IA (ADR 0011)
+    it 'leaves the Equipe inbox out, even for an administrator', :aggregate_failures do
+      Ramon::Equipe.sincronizar(account, criar: true)
+      geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+      create(:message, account: account, inbox: geral.inbox, conversation: geral, sender: user, message_type: :outgoing, content: 'sigilo')
+
+      result = service.execute
+      expect(result).to include('Total number of conversations: 2')
+      expect(result).not_to include('sigilo')
+      expect(service.execute(contact_id: geral.contact_id)).to eq('No conversations found')
+    end
+
     it 'filters conversations by status' do
       result = service.execute(status: 'open')
       expect(result).to include('Total number of conversations: 1')

@@ -102,6 +102,17 @@ RSpec.describe Captain::Tools::Copilot::GetConversationService do
       end
     end
 
+    # ramon: conversa da Equipe nunca vai para a IA (ADR 0011)
+    context 'when the conversation is in the Equipe inbox' do
+      it 'answers as not found, even with a message inside' do
+        Ramon::Equipe.sincronizar(account, criar: true)
+        geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+        create(:message, account: account, inbox: geral.inbox, conversation: geral, sender: user, message_type: :outgoing, content: 'sigilo')
+
+        expect(service.execute(conversation_id: geral.display_id)).to eq('Conversation not found')
+      end
+    end
+
     context 'when conversation exists' do
       let(:inbox) { create(:inbox, account: account) }
       let(:conversation) { create(:conversation, account: account, inbox: inbox) }

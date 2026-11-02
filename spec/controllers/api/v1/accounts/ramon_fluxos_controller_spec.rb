@@ -62,6 +62,23 @@ RSpec.describe 'Ramon Fluxos API', type: :request do
     expect(fluxo.execucoes.count).to eq(0)
   end
 
+  # ramon: fluxo pode escrever nota e mandar a conversa para a IA; nunca na caixa Equipe (ADR 0011)
+  it 'rodar e ensaiar não alcançam conversa da Equipe; caixa comum segue', :aggregate_failures do
+    fluxo = fluxo_publicado(account, grafo)
+    Ramon::Equipe.sincronizar(account, criar: true)
+    geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+
+    %w[rodar ensaio].each do |acao|
+      post "#{url}/#{fluxo.id}/#{acao}", params: { conversation_id: geral.display_id }, headers: admin.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:not_found)
+    end
+    expect(fluxo.execucoes.count).to eq(0)
+
+    comum = create(:conversation, account: account)
+    post "#{url}/#{fluxo.id}/rodar", params: { conversation_id: comum.display_id }, headers: admin.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:ok)
+  end
+
   it 'a lista traz os 30 do sistema com Hoje, grupo e selo; os 4 números contam só os meus' do
     fluxo_publicado(account, grafo)
     get url, headers: admin.create_new_auth_token, as: :json

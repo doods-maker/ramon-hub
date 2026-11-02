@@ -82,6 +82,12 @@ Limites conhecidos:
 - Time apagado só some do canal na próxima sincronização (qualquer mudança de
   time ou o comando do deploy); nomes de time/pessoa renomeados não mudam o
   nome da conversa. "Marcar como não lida" é recusado na Equipe.
-- Copiloto e tarefas de IA recusam conversa da Equipe no servidor (403). O painel
-  global do copiloto segue respondendo com uma conversa da Equipe aberta, mas sem ler a
-  conversa (`CopilotMessage#enqueue_response_job` tira o `conversation_id`).
+- **IA não lê conversa da Equipe.** Copiloto da conversa e tarefas de IA dão 403. O painel
+  global segue respondendo com uma conversa da Equipe aberta, mas sem o contexto dela
+  (`CopilotMessage#enqueue_response_job` tira o `conversation_id`). As ferramentas também
+  recusam, inclusive para admin: `get_conversation` responde "não encontrada",
+  `search_conversation` tira a caixa, e `historico_do_contato` e `linha_da_vida` recusam o
+  contato sintético. `get_contact` e `search_contacts` ainda devolvem o nome do contato
+  sintético, como a busca de contato: revela que a 1:1 existe, não o conteúdo.
+- Integrações e fluxos: Dyte e Linear dão 403 em conversa da Equipe (gravariam mensagem ou
+  atividade nela), e `ramon_fluxos#rodar`/`ensaio` não a alcançam (404).

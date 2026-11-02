@@ -129,6 +129,11 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
     !conversation.inbox.equipe? || HTTP_PERMITIDO.fetch(controller_path, []).include?(action)
   end
 
+  # Caminho que pega conversa por id sem política (ferramenta de IA, fluxo na mão): nunca alcança a Equipe.
+  def fora_da_caixa(conversations) = conversations.where.not(inbox_id: Inbox.where(equipe: true).select(:id))
+
+  def contato?(contact) = contact&.additional_attributes.to_h['equipe'].present?
+
   # Ação em lote (macro, ação em massa) que inclui conversa da Equipe. Os ids são display_id.
   def inclui_conversa?(account, display_ids)
     account.conversations.joins(:inbox).exists?(display_id: display_ids, inboxes: { equipe: true })
@@ -174,7 +179,7 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
 
   # Hub surdo (AsyncDispatcher): o evento é da caixa Equipe?
   def evento?(data)
-    return data[:contact].additional_attributes.to_h['equipe'].present? if data[:contact].is_a?(Contact)
+    return contato?(data[:contact]) if data[:contact].is_a?(Contact)
 
     inbox = data[:inbox] || (data[:conversation] || data[:message]&.conversation)&.inbox
     inbox.is_a?(Inbox) && inbox.equipe?

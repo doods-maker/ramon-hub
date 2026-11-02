@@ -114,6 +114,18 @@ RSpec.describe 'Linear Integration API', type: :request do
       }
     end
 
+    # ramon: não leva a conversa da Equipe nem grava atividade nela (ADR 0011)
+    it 'refuses a conversation of the Equipe inbox', :aggregate_failures do
+      Ramon::Equipe.sincronizar(account, criar: true)
+      geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+      expect(processor_service).not_to receive(:create_issue)
+
+      post "/api/v1/accounts/#{account.id}/integrations/linear/create_issue",
+           params: issue_params.merge(conversation_id: geral.display_id), headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
     context 'when it is an authenticated user' do
       context 'when the issue is created successfully' do
         let(:created_issue) { { data: { identifier: 'ENG-123', title: 'Sample Issue' } } }
