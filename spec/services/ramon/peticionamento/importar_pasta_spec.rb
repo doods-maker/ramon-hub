@@ -36,6 +36,9 @@ RSpec.describe Ramon::Peticionamento::ImportarPasta do
 
   def importar = described_class.call(peticao)
 
+  # O endpoint de reler grava `lendo` antes de enfileirar.
+  def voltar_a_lendo = peticao.update!(leitura: peticao.leitura.merge('estado' => 'lendo'))
+
   before do
     allow(Ramon::DriveClient).to receive(:download)
     allow(Ramon::DriveClient).to receive(:nomes_acima).and_return(['Fulano 123.456.789-09', 'Clientes'])
@@ -92,13 +95,44 @@ RSpec.describe Ramon::Peticionamento::ImportarPasta do
   end
 
   it 'reler substitui o pacote em vez de acumular' do
-    2.times { importar }
+    importar
+    voltar_a_lendo
+    importar
     expect(peticao.arquivos.count).to eq(2)
+  end
+
+  it 'petição que não está lendo (lida ou fora da conferência) não é tocada' do
+    importar
+    antes = peticao.arquivos.pluck(:id)
+    importar # estado já é lida
+    peticao.update_columns(status: 'rascunho', leitura: peticao.leitura.merge('estado' => 'lendo')) # rubocop:disable Rails/SkipsModelValidations
+    importar
+    expect(peticao.arquivos.pluck(:id)).to eq(antes)
+  end
+
+  it 'falha no download deixa o pacote antigo inteiro' do
+    importar
+    antes = peticao.arquivos.pluck(:id)
+    voltar_a_lendo
+    allow(Ramon::DriveClient).to receive(:download).with('b').and_raise(Google::Apis::ServerError, 'x')
+    expect { importar }.to raise_error(Google::Apis::ServerError)
+    expect(peticao.arquivos.pluck(:id)).to eq(antes)
+  end
+
+  it 'recusa, corrige a pasta e relê: responsável e descrição vêm da peça' do
+    stub_pasta([item('01 P.docx', docx)])
+    importar
+    expect(peticao.leitura['recusas']).to include('sem_pdf')
+    voltar_a_lendo
+    stub_pasta([item('01 Petição.pdf', pdf, 'a')])
+    importar
+    expect(peticao.reload).to have_attributes(responsavel: brenda, descricao: 'Réplica')
   end
 
   it 'releitura: número e cliente da peça valem, responsável e descrição editados ficam' do
     importar
     peticao.update!(descricao: 'Editada', responsavel: criador)
+    voltar_a_lendo
     importar
     expect(peticao.reload).to have_attributes(descricao: 'Editada', responsavel: criador, numero_processo: numero_valido_trf4)
   end

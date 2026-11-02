@@ -107,16 +107,18 @@ RSpec.describe Peticao do
       expect { p.registrar_protocolo!(usuario: user, numero_evento: '1', comprovante: arquivo) }.to raise_error(ActiveRecord::RecordInvalid)
     end
 
-    it 'confirmar! exige número e tribunal' do
-      p = em_conferencia
-      expect { p.confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
-      expect(p.reload.status).to eq('conferencia')
-    end
-
     def com_pacote(peticao, bytes = nil)
       a = peticao.arquivos.create!(nome: 'A.pdf', tipo: 'peticao', posicao: 1, principal: true, origem: 'drive', tamanho: 4)
       a.file.attach(io: StringIO.new(bytes || Prawn::Document.new { text 'ok' }.render), filename: 'A.pdf', content_type: 'application/pdf')
       peticao
+    end
+
+    it 'confirmar! exige número e tribunal' do
+      p = com_pacote(em_conferencia)
+      expect { p.confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
+      expect(p.errors[:tribunal]).to be_present
+      expect(p.status).to eq('conferencia')
+      expect(p.reload.status).to eq('conferencia')
     end
 
     it 'confirmar! com número e tribunal vira rascunho' do

@@ -20,6 +20,17 @@ RSpec.describe Ramon::PeticaoLerPastaJob do
     expect(peticao.reload.leitura['estado']).to eq('erro')
   end
 
+  it 'tentativas esgotadas com a leitura já resolvida não regravam erro' do
+    allow(Ramon::Peticionamento::ImportarPasta).to receive(:call).and_raise(Google::Apis::ServerError, 'x')
+    peticao.update!(leitura: { 'estado' => 'lida' })
+    begin
+      perform_enqueued_jobs { described_class.perform_later(peticao.id) }
+    rescue StandardError
+      nil
+    end
+    expect(peticao.reload.leitura['estado']).to eq('lida')
+  end
+
   it 'não lê petição protocolada nem apagada' do
     allow(Ramon::Peticionamento::ImportarPasta).to receive(:call)
     peticao.update_columns(status: 'protocolada') # rubocop:disable Rails/SkipsModelValidations

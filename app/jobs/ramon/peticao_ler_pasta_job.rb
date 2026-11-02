@@ -3,7 +3,10 @@ class Ramon::PeticaoLerPastaJob < ApplicationJob
   queue_as :default
   retry_on StandardError, wait: 30.seconds, attempts: 3 do |job, _erro|
     peticao = Peticao.find_by(id: job.arguments.first)
-    peticao&.update_columns(leitura: (peticao.leitura || {}).merge('estado' => 'erro')) if peticao&.editavel? # rubocop:disable Rails/SkipsModelValidations
+    # Só grava erro se a leitura ainda era a desta tentativa (conferência, lendo).
+    if peticao&.conferencia? && peticao.leitura['estado'] == 'lendo'
+      peticao.update_columns(leitura: peticao.leitura.merge('estado' => 'erro')) # rubocop:disable Rails/SkipsModelValidations
+    end
   end
 
   def perform(peticao_id)
