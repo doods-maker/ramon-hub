@@ -124,7 +124,7 @@ RSpec.describe 'Ramon Equipe API', type: :request do
        [:post, '/assignments', { team_id: advogados.id }], [:post, '/labels', { labels: ['x'] }],
        [:post, '/toggle_status', { status: 'resolved' }], [:post, '/toggle_priority', { priority: 'urgent' }],
        [:post, '/mute'], [:post, '/unmute'], [:post, '/unread'], [:post, '/custom_attributes', { custom_attributes: { a: 1 } }],
-       [:get, '/inbox_assistant'], [:patch, '', { priority: 'urgent' }], [:delete, ''], [:post, '/ramon_copilot', { mode: 'summary' }],
+       [:patch, '', { priority: 'urgent' }], [:delete, ''], [:post, '/ramon_copilot', { mode: 'summary' }],
        [:patch, '/draft_messages', { draft_message: { message: 'x' } }],
        [:patch, "/messages/#{msg.id}", { status: 'read' }], [:post, "/messages/#{msg.id}/translate", { target_language: 'en' }]]
     end
@@ -144,6 +144,11 @@ RSpec.describe 'Ramon Equipe API', type: :request do
       expect(ana_bia.conversation_participants.pluck(:user_id)).to contain_exactly(ana.id, bia.id)
       expect(ana_bia.label_list).to be_empty
       expect(msg.reload.status).to eq('sent')
+    end
+
+    # A ação só existe com enterprise: sem ela, a rota dá 404 antes de qualquer before_action (o CI remove enterprise).
+    it 'inbox_assistant fica fora da lista' do
+      expect(Ramon::Equipe.http_permitido?(ana_bia, 'api/v1/accounts/conversations', 'inbox_assistant')).to be(false)
     end
 
     it 'transcript: 403 para admin de fora e participante, sem mandar a conversa por e-mail', :aggregate_failures do
