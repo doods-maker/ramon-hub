@@ -1,5 +1,7 @@
 # Chat da equipe como caixa do Chatwoot (sai o módulo próprio)
 
+Atualizado em 02/11/2026 (Equipe com cara de WhatsApp: PRs #307, #309 e pacote 3+4).
+
 Substitui a decisão de 02/10 ("chat em módulo próprio, isolado das conversas do
 Chatwoot"), entregue no PR #303.
 
@@ -51,9 +53,16 @@ Limites conhecidos:
 
 - **Nunca adicionar colaboradores (membros) na caixa Equipe** nas configurações:
   membro da caixa vê todas as conversas dela, inclusive 1:1 alheias.
-- Menção (@) de agente não funciona na Equipe (o Chatwoot só aceita membro da
-  caixa ou admin) — de propósito: menção adicionaria a pessoa à conversa.
-- Toda mensagem vira notificação no sino de quem participa (o toast de 6 s é o
+- Menção (@): na Equipe só marca participantes da conversa e **nunca adiciona
+  ninguém** (ramo próprio no `MentionService`); `@todos` só em grupo. Vale
+  também em mensagem pública, só nesta caixa. O aviso "te marcou" chega a
+  quem ligou e-mail/push de menção no perfil; os demais veem o sino e o selo.
+- **Admin de fora é só leitura:** vê tudo, mas não escreve, não digita e não
+  vê ✓ (substitui "quem vê também responde" para esse caso). Apagar: só o
+  autor, ou admin que participa.
+- ✓✓ por `conversation_participants.last_seen_at`; reações em
+  `content_attributes` da mensagem (👍 ❤️ 😂 😮 😢 🙏), sem som e sem notificação.
+- Cada mensagem vira notificação no sino de quem participa (o toast de 6 s é o
   aviso discreto); e-mail/push só se a pessoa ligar "conversa de que participo".
 - O evento de contato novo vai a toda a conta: o nome "Ana e Bia" revela que a
   1:1 existe (não o conteúdo). A busca de contato acha esses nomes.

@@ -310,3 +310,32 @@
 3. Resolver conflitos **apenas** nos arquivos da tabela "core editados".
 4. Atualizar a versão fixada acima + a tag da imagem no workflow.
 5. Push → Actions builda → smoke test na VPS (Task 0.5).
+
+## Equipe com cara de WhatsApp (02/11/2026)
+
+Tudo ramifica em `inbox.equipe`; fora da caixa Equipe o comportamento nativo não muda. Ramos novos levam `FORK(ramon)` / `# ramon:`.
+
+| Arquivo | Mudança | Por quê | Onde |
+|---|---|---|---|
+| `app/services/messages/mention_service.rb` | na Equipe: menção só entre participantes, `@todos` só em grupo, não adiciona participante nem vira "Menções"; vale também em mensagem pública | marcação com aviso "te marcou" | equipe-whatsapp 02/11 |
+| `app/models/notification.rb` | título da notificação de marcação via `Ramon::Equipe.titulo_marcacao` (+ rubocop:disable de complexidade) | "Ana te marcou em Geral" | equipe-whatsapp 02/11 |
+| `app/controllers/api/v1/accounts/conversations/messages_controller.rb` | `before_action` `equipe_pode_escrever!` (create/retry) e `equipe_pode_apagar!` (destroy) | admin de fora só lê; apagar só autor ou admin participante | equipe-whatsapp 02/11 |
+| `app/controllers/api/v1/accounts/conversations_controller.rb` | `toggle_typing_status` recusa quem não pode escrever na Equipe (+ `update_last_seen` já registrado) | admin de fora não digita | equipe-whatsapp 02/11 |
+| `app/controllers/api/v1/accounts/ramon_equipe_controller.rb` + `config/routes.rb` (`get :participantes`, `post :reacao`) | participantes com `last_seen_at` (vistos) e reação em `content_attributes` | ✓✓ por pessoa e reações | equipe-whatsapp 02/11 |
+| `app/views/api/v1/conversations/partials/_conversation.json.jbuilder` + `app/presenters/conversations/ramon_event_data.rb` | `equipe_marcado`, `equipe_tipo`, `equipe_pessoas` por pessoa; fora do push_data | lista/cabeçalho e selo @ | equipe-whatsapp 02/11 |
+| `config/locales/{en,pt_BR}.yml` | textos de servidor da marcação | notificação | equipe-whatsapp 02/11 |
+| `components-next/message/Message.vue` | lado/autor/marcação, citação, reações (`EquipeReacoes`), toque abre o menu | bolhas de WhatsApp | equipe-whatsapp 02/11 |
+| `components-next/message/MessageList.vue` | blocos por autor e dia, separador de dia, margem da caixa | idem | equipe-whatsapp 02/11 |
+| `components-next/message/MessageMeta.vue` + `MessageStatus.vue` | só a hora; ✓/✓✓ por `last_seen_at`, sem ✓ para admin de fora | vistos | equipe-whatsapp 02/11 |
+| `components-next/message/bubbles/Base.vue` + `bubbles/Text/Index.vue` + `bubbles/Audio.vue` | @ azul, fundo da marcação, nome do autor, hora na última linha, padding do mockup, player dentro da bolha | bolhas de WhatsApp | equipe-whatsapp 02/11 |
+| `components-next/message/provider.js` | +`isEquipe`, `mostrarAutor`, `marcadoEquipe`, `primeiroDoAutor` no contexto | repasse às bolhas | equipe-whatsapp 02/11 |
+| `modules/conversations/components/MessageContextMenu.vue` | separador condicional (`enabledOptions.equipe`) | menu enxuto na Equipe | equipe-whatsapp 02/11 |
+| `components/widgets/WootWriter/Editor.vue` + `ReplyBottomPanel.vue` | campo em pílula, Enter envia, `@` em mensagem pública, sem `/` e `{{`; só emoji, anexo, áudio e enviar | caixa de escrever de WhatsApp | equipe-whatsapp 02/11 |
+| `components/widgets/conversation/ReplyBox.vue` + `TagAgents.vue` + `ReplyToMessage.vue` | sem nota privada; lista do @ = participantes (+ `@todos` em grupo); citação do mockup | idem | equipe-whatsapp 02/11 |
+| `components/widgets/conversation/MessagesView.vue` | carrega participantes, sem IA/etiquetas, marca lida ao voltar à aba, sem pílula de não lidas | hub surdo e vistos | equipe-whatsapp 02/11 |
+| `components/widgets/conversation/ConversationHeader.vue` | topo: foto, nome, participantes ou quem digita | cabeçalho de WhatsApp | equipe-whatsapp 02/11 |
+| `components/ConversationItem.vue` + `widgets/conversation/ConversationCard.vue` + `MessagePreview.vue` | card sempre condensado; linha: foto, hora, prévia, selos | lista de WhatsApp | equipe-whatsapp 02/11 |
+| `store/modules/conversations/{actions.js,index.js,actions/messageReadActions.js}` | não-lida e selo @ locais; reação/apagar de mensagem não carregada não entra no fim; aba escondida não marca lida | tempo real e vistos | equipe-whatsapp 02/11 |
+| `helper/actionCable.js` | evento `ramon.equipe.lida` → `useEquipeStore().atualizarLeitura` | ✓✓ ao vivo | equipe-whatsapp 02/11 |
+| `shared/helpers/markdownIt/link.js` | regex de menção aceita `todos` | `@todos` | equipe-whatsapp 02/11 |
+| `i18n/locale/{en,pt_BR}/ramon.json` | textos `RAMON.EQUIPE` | telas | equipe-whatsapp 02/11 |
