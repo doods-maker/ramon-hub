@@ -2,7 +2,7 @@
 class Peticao < ApplicationRecord
   self.table_name = 'ramon_peticoes'
 
-  STATUS = %w[rascunho protocolada].freeze
+  STATUS = %w[conferencia rascunho protocolada].freeze
   ZONA = 'America/Sao_Paulo'.freeze
   PRAZO_PERTO_DIAS_UTEIS = 2
 
@@ -21,12 +21,15 @@ class Peticao < ApplicationRecord
 
   before_validation :normalizar_numero
 
-  validates :tribunal, inclusion: { in: Ramon::Peticionamento::Tribunais::TODOS.keys }
+  validates :tribunal, inclusion: { in: Ramon::Peticionamento::Tribunais::TODOS.keys }, unless: :conferencia?
   validates :status, inclusion: { in: STATUS }
-  validates :numero_processo, presence: true, unless: :inicial?
-  validate :numero_processo_valido, unless: :inicial?
+  validates :numero_processo, presence: true, unless: -> { inicial? || conferencia? }
+  validate :numero_processo_valido, unless: -> { inicial? || conferencia? }
+  validates :drive_pasta_id, uniqueness: { scope: :account_id }, if: :pela_pasta?
 
   def protocolada? = status == 'protocolada'
+
+  def conferencia? = status == 'conferencia'
 
   def editavel? = !protocolada?
 
@@ -40,7 +43,7 @@ class Peticao < ApplicationRecord
     out = []
     out << 'sem_principal' if principais.zero?
     out << 'varias_principais' if principais > 1
-    out + lista.select { |a| a.tamanho > limite }.map { |a| "acima_do_limite:#{a.id}" }
+    out + acima_do_limite(lista, limite)
   end
 
   # Vence em até 2 dias úteis (seg–sex) a partir de hoje; vencido também conta.
@@ -53,6 +56,17 @@ class Peticao < ApplicationRecord
       limite += 1 while limite.saturday? || limite.sunday?
     end
     prazo <= limite
+  end
+
+  # Conferência -> rascunho: exige tribunal e número válidos (a Task 6 acrescenta as travas de alertas).
+  def confirmar!(confirmar_alertas: false) # rubocop:disable Lint/UnusedMethodArgument
+    with_lock do
+      self.status = 'rascunho'
+      save!
+    end
+  rescue ActiveRecord::RecordInvalid
+    self.status = 'conferencia'
+    raise
   end
 
   def registrar_protocolo!(usuario:, numero_evento:, comprovante:)
@@ -72,7 +86,8 @@ class Peticao < ApplicationRecord
   def as_json_hub
     tribunal_info = Ramon::Peticionamento::Tribunais::TODOS[tribunal] || {}
     attributes.symbolize_keys.slice(:id, :numero_processo, :tribunal, :inicial, :prazo, :descricao, :status, :executor,
-                                    :numero_evento, :protocolada_em, :arquivada_em, :drive_pasta_id, :drive_pasta_base_id)
+                                    :numero_evento, :protocolada_em, :arquivada_em, :drive_pasta_id, :drive_pasta_base_id,
+                                    :pela_pasta, :leitura)
               .merge(tribunal_nome: tribunal_info[:nome], sistema: tribunal_info[:sistema], prazo_perto: prazo_perto?,
                      problemas: problemas, arquivos: arquivos.map(&:as_json_hub), comprovante_url: comprovante_url,
                      contato: contact && { id: contact.id, name: contact.name }, responsavel: pessoa(responsavel),
@@ -81,10 +96,18 @@ class Peticao < ApplicationRecord
 
   private
 
+  # Sem tribunal ainda (conferência) o limite é 0: não há o que acusar.
+  def acima_do_limite(lista, limite)
+    return [] if limite.zero?
+
+    lista.select { |a| a.tamanho > limite }.map { |a| "acima_do_limite:#{a.id}" }
+  end
+
   def pessoa(usuario) = { id: usuario.id, name: usuario.name }
 
   # Anti-objetivo da spec: nada vira "protocolada" sem número do evento e comprovante (arquivo de verdade, não "").
   def protocolo_bloqueado(numero_evento, comprovante)
+    return :em_conferencia if conferencia?
     return :ja_protocolada if protocolada?
     return :sem_comprovante unless numero_evento.present? && comprovante.respond_to?(:read)
 

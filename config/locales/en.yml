@@ -37,6 +37,7 @@ en:
         peticao:
           attributes:
             base:
+              em_conferencia: 'Petição em conferência: confirme tribunal e número antes de protocolar'
               ja_protocolada: 'Petição já protocolada'
               pacote_com_problemas: 'Pacote com problemas: confira os avisos'
               sem_comprovante: 'Informe o número do evento e anexe o comprovante do protocolo'

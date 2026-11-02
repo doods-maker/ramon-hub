@@ -84,4 +84,48 @@ RSpec.describe Peticao do
     arquivo = p.arquivos.create!(nome: 'Laudo.pdf', tipo: 'laudo_medico', posicao: 1, origem: 'upload', tamanho: 10)
     expect(arquivo.audits.last).to have_attributes(action: 'create', associated: account)
   end
+
+  describe 'em conferência' do
+    def em_conferencia(**attrs)
+      account.peticoes.create!({ criado_por: user, responsavel: user, status: 'conferencia', pela_pasta: true,
+                                 drive_pasta_id: "p#{SecureRandom.hex(2)}" }.merge(attrs))
+    end
+
+    it 'dispensa tribunal e número' do
+      expect(em_conferencia).to be_persisted
+    end
+
+    it 'não deixa a pasta ser usada em duas petições' do
+      em_conferencia(drive_pasta_id: 'x')
+      expect { em_conferencia(drive_pasta_id: 'x') }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+
+    it 'não registra protocolo' do
+      p = em_conferencia(tribunal: 'trf4', numero_processo: numero_valido_trf4)
+      arquivo = Rack::Test::UploadedFile.new(Rails.root.join('spec/assets/sample.pdf'), 'application/pdf')
+      expect { p.registrar_protocolo!(usuario: user, numero_evento: '1', comprovante: arquivo) }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+
+    it 'confirmar! exige número e tribunal' do
+      p = em_conferencia
+      expect { p.confirmar! }.to raise_error(ActiveRecord::RecordInvalid)
+      expect(p.reload.status).to eq('conferencia')
+    end
+
+    it 'confirmar! com número e tribunal vira rascunho' do
+      p = em_conferencia(tribunal: 'trf4', numero_processo: numero_valido_trf4)
+      p.confirmar!
+      expect(p.reload.status).to eq('rascunho')
+    end
+
+    it 'problemas não acusa limite enquanto não há tribunal' do
+      p = em_conferencia
+      p.arquivos.create!(nome: 'A.pdf', tipo: 'peticao', posicao: 1, principal: true, origem: 'drive', tamanho: 12 * 1024 * 1024)
+      expect(p.reload.problemas).to eq([])
+    end
+
+    it 'as_json_hub expõe pela_pasta e leitura' do
+      expect(em_conferencia.as_json_hub).to include(pela_pasta: true, leitura: {})
+    end
+  end
 end
