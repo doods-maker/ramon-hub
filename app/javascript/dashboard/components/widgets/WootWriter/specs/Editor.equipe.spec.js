@@ -129,6 +129,38 @@ describe('Editor na caixa Equipe', () => {
   });
 });
 
+describe('Editor: troca de conversa com a lista do @ aberta', () => {
+  let w;
+
+  afterEach(() => w.unmount());
+
+  it('da Equipe para cliente: avisa o ReplyBox que a lista fechou', async () => {
+    w = montar({ equipe: true, itensMarcacao: ITENS, editorId: 'draft-1' });
+    await digitar('@');
+    expect(w.emitted('toggleUserMention').at(-1)).toEqual([true]);
+
+    await w.setProps({ equipe: false, editorId: 'draft-2' });
+    await nextTick();
+    expect(w.emitted('toggleUserMention').at(-1)).toEqual([false]);
+    expect(lista(w).exists()).toBe(false);
+  });
+
+  it('de cliente para a Equipe: a lista não aparece sem @ digitado', async () => {
+    w = montar({ editorId: 'draft-1' });
+    await digitar('@');
+    expect(lista(w).exists()).toBe(false);
+
+    await w.setProps({
+      equipe: true,
+      itensMarcacao: ITENS,
+      editorId: 'draft-2',
+    });
+    await nextTick();
+    expect(lista(w).exists()).toBe(false);
+    expect(w.emitted('toggleUserMention').at(-1)).toEqual([false]);
+  });
+});
+
 describe('Editor fora da caixa Equipe', () => {
   let w;
 

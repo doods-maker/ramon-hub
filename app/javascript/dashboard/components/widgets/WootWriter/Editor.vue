@@ -812,6 +812,10 @@ watch(
     showEmojiMenu.value = false;
     showVariables.value = false;
     cannedSearchTerm.value = '';
+    // FORK(ramon): reloadState não dispara o onExit. Sem isto a lista do @ sobrevive à troca:
+    // o ReplyBox para de enviar no cliente, e na Equipe a lista abre sem @ digitado.
+    showUserMentions.value = false;
+    mentionSearchKey.value = '';
     reloadState(props.modelValue);
   }
 );
