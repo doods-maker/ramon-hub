@@ -637,6 +637,8 @@ provideMessageContext({
   isBotOrAgentMessage,
   shouldGroupWithNext,
   isEquipe,
+  equipeTipo: computed(() => chatEquipe.value?.equipe_tipo),
+  participaEquipe,
   mostrarAutor,
   marcadoEquipe,
 });

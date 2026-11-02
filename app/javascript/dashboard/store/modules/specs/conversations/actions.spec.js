@@ -333,6 +333,50 @@ describe('#actions', () => {
         ],
       ]);
     });
+    describe('aba escondida', () => {
+      const marcar = equipe =>
+        actions.markMessagesRead(
+          {
+            commit,
+            rootGetters: {
+              getConversationById: id => ({ id, inbox_id: 7 }),
+              'inboxes/getInbox': () => ({ equipe }),
+            },
+          },
+          { id: 1 }
+        );
+
+      beforeEach(() => {
+        setActivePinia(createPinia());
+        axios.post.mockClear();
+        axios.post.mockResolvedValue({
+          data: { id: 1, agent_last_seen_at: 5, inbox_id: 7 },
+        });
+      });
+      afterEach(() => {
+        vi.runAllTimers();
+        commit.mockClear();
+        vi.restoreAllMocks();
+      });
+
+      it('Equipe: não marca lida sem a aba à vista', async () => {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+        await marcar(true);
+        expect(axios.post).not.toHaveBeenCalled();
+      });
+
+      it('Equipe: marca com a aba à vista', async () => {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+        await marcar(true);
+        expect(axios.post).toHaveBeenCalledTimes(1);
+      });
+
+      it('fora da Equipe: marca igual, com a aba escondida', async () => {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+        await marcar(false);
+        expect(axios.post).toHaveBeenCalledTimes(1);
+      });
+    });
     it('fora da Equipe não mexe no selo', async () => {
       axios.post.mockResolvedValue({
         data: { id: 1, agent_last_seen_at: 5, inbox_id: 7 },

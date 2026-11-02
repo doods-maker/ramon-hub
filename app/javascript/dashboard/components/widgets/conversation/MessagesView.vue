@@ -292,6 +292,7 @@ export default {
   },
 
   mounted() {
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
     this.addScrollListener();
     this.fetchAllAttachmentsFromCurrentChat();
     this.fetchSuggestions();
@@ -352,6 +353,13 @@ export default {
     },
     removeBusListeners() {
       emitter.off(BUS_EVENTS.SCROLL_TO_MESSAGE, this.onScrollToMessage);
+      document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    },
+    // FORK(ramon): Equipe marca lida ao voltar para a aba; fora dela nada muda.
+    onVisibilityChange() {
+      if (this.equipe && document.visibilityState === 'visible') {
+        this.makeMessagesRead();
+      }
     },
     onScrollToMessage({ messageId = '' } = {}) {
       this.$nextTick(() => {

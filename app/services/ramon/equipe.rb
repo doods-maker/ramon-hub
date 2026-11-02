@@ -84,8 +84,24 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
     inbox.conversations.where(id: user.conversation_participants.select(:conversation_id)).sum { |c| nao_lidas(c, user) }
   end
 
+  # Quem não participa não grava nem transmite. Só acende os ✓✓ quando havia mensagem de colega por ler: nao_lidas
+  # antes de gravar, senão daria sempre zero.
   def marcar_lida(conversation, user)
-    conversation.conversation_participants.find_by(user_id: user.id)&.update!(last_seen_at: Time.current)
+    participante = conversation.conversation_participants.find_by(user_id: user.id)
+    return unless participante
+
+    havia_nova = nao_lidas(conversation, user).positive?
+    participante.update!(last_seen_at: Time.current)
+    transmitir_leitura(conversation, participante) if havia_nova
+  end
+
+  # Participantes + admins, os mesmos que veem a conversa ao vivo (ActionCableListener#user_tokens).
+  def transmitir_leitura(conversation, participante)
+    pessoas = User.where(id: conversation.conversation_participants.select(:user_id)).pluck(:pubsub_token)
+    tokens = (pessoas + conversation.account.administrators.pluck(:pubsub_token)).uniq
+    payload = { conversation_id: conversation.display_id, user_id: participante.user_id,
+                last_seen_at: participante.last_seen_at.to_i, account_id: conversation.account_id }
+    ActionCableBroadcastJob.perform_later(tokens, 'ramon.equipe.lida', payload)
   end
 
   def participante?(conversation, user)

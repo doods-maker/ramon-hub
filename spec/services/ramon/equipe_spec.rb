@@ -114,6 +114,47 @@ RSpec.describe Ramon::Equipe do
     end
   end
 
+  describe '.marcar_lida' do
+    let(:inbox) { described_class.sincronizar(account, criar: true) }
+    let(:ana_bia) { inbox && described_class.conversa_1a1(account, ana, bia) }
+    let(:leitura) { ana_bia.conversation_participants.find_by!(user_id: bia.id) }
+
+    def transmite_leitura = have_enqueued_job(ActionCableBroadcastJob).with(anything, 'ramon.equipe.lida', anything)
+
+    before do
+      ana_bia
+      travel 1.minute
+      create(:message, conversation: ana_bia, account: account, inbox: inbox, sender: ana, message_type: :outgoing)
+      travel 1.minute
+    end
+
+    it 'transmite leitura quando havia mensagem de colega não lida', :aggregate_failures do
+      expect { described_class.marcar_lida(ana_bia, bia) }.to have_enqueued_job(ActionCableBroadcastJob).with(
+        contain_exactly(ana.pubsub_token, bia.pubsub_token, admin.pubsub_token),
+        'ramon.equipe.lida',
+        { conversation_id: ana_bia.display_id, user_id: bia.id, last_seen_at: Time.current.to_i, account_id: account.id }
+      )
+      expect(leitura.reload.last_seen_at.to_i).to eq(Time.current.to_i)
+    end
+
+    it 'não transmite sem nada novo, mas grava a leitura', :aggregate_failures do
+      described_class.marcar_lida(ana_bia, bia)
+      travel 1.minute
+
+      expect { described_class.marcar_lida(ana_bia, bia) }.not_to transmite_leitura
+      expect(leitura.reload.last_seen_at.to_i).to eq(Time.current.to_i)
+    end
+
+    it 'a própria mensagem não conta como novidade' do
+      expect { described_class.marcar_lida(ana_bia, ana) }.not_to transmite_leitura
+    end
+
+    it 'admin de fora não vira leitor', :aggregate_failures do
+      expect { described_class.marcar_lida(ana_bia, admin) }.not_to transmite_leitura
+      expect(ana_bia.conversation_participants.where(user_id: admin.id)).to be_empty
+    end
+  end
+
   describe '.marcado_nao_lido?' do
     before { described_class.sincronizar(account, criar: true) }
 

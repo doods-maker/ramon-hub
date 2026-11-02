@@ -5,6 +5,15 @@ import { useEquipeStore } from 'dashboard/stores/equipe';
 
 export default {
   markMessagesRead: async ({ commit, rootGetters }, data) => {
+    // FORK(ramon): na Equipe, marcar lida acende o ✓✓ do colega: só com a aba à vista
+    // (MessagesView marca ao voltar). Aqui e não na tela: o sync da reconexão também passa.
+    const conversa = rootGetters?.getConversationById?.(data.id);
+    if (
+      document.visibilityState !== 'visible' &&
+      rootGetters?.['inboxes/getInbox']?.(conversa?.inbox_id)?.equipe
+    ) {
+      return;
+    }
     try {
       const {
         data: { id, agent_last_seen_at: lastSeen, inbox_id: inboxId },

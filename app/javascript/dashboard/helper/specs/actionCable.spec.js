@@ -1,5 +1,7 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
 import ActionCableConnector from '../actionCable';
+import { useEquipeStore } from 'dashboard/stores/equipe';
 
 vi.mock('shared/helpers/mitt', () => ({
   emitter: {
@@ -158,6 +160,34 @@ describe('ActionCableConnector - Copilot Tests', () => {
 
       vi.advanceTimersByTime(4000);
       expect(mockDispatch).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('ramon.equipe.lida', () => {
+    const lida = accountId =>
+      actionCable.onReceived({
+        event: 'ramon.equipe.lida',
+        data: {
+          conversation_id: 43,
+          user_id: 2,
+          last_seen_at: 100,
+          account_id: accountId,
+        },
+      });
+
+    beforeEach(() => {
+      setActivePinia(createPinia());
+      useEquipeStore().participantes[43] = [{ id: 2, lastSeenAt: 50 }];
+    });
+
+    it('onEquipeLida chama atualizarLeitura', () => {
+      lida(1);
+      expect(useEquipeStore().participantes[43][0].lastSeenAt).toBe(100);
+    });
+
+    it('ignora evento de outra conta', () => {
+      lida(2);
+      expect(useEquipeStore().participantes[43][0].lastSeenAt).toBe(50);
     });
   });
 });

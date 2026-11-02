@@ -181,6 +181,56 @@ describe('MessagesView: faixa de só leitura', () => {
   });
 });
 
+describe('MessagesView: marcar lida ao voltar para a aba', () => {
+  const estadoDaAba = valor =>
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(valor);
+  const voltar = over => {
+    const makeMessagesRead = vi.fn();
+    MessagesView.methods.onVisibilityChange.call({
+      equipe: true,
+      makeMessagesRead,
+      ...over,
+    });
+    return makeMessagesRead;
+  };
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('na Equipe, marca quando a aba fica visível', () => {
+    estadoDaAba('visible');
+    expect(voltar()).toHaveBeenCalledTimes(1);
+  });
+
+  it('na Equipe, não marca quando a aba some', () => {
+    estadoDaAba('hidden');
+    expect(voltar()).not.toHaveBeenCalled();
+  });
+
+  it('fora da Equipe, a volta para a aba não marca nada', () => {
+    estadoDaAba('visible');
+    expect(voltar({ equipe: false })).not.toHaveBeenCalled();
+  });
+
+  it('o listener entra no mounted e sai em removeBusListeners', () => {
+    const adiciona = vi.spyOn(document, 'addEventListener');
+    const remove = vi.spyOn(document, 'removeEventListener');
+    const onVisibilityChange = vi.fn();
+    const ctx = {
+      addScrollListener: vi.fn(),
+      fetchAllAttachmentsFromCurrentChat: vi.fn(),
+      fetchSuggestions: vi.fn(),
+      onVisibilityChange,
+    };
+    MessagesView.mounted.call(ctx);
+    expect(adiciona).toHaveBeenCalledWith(
+      'visibilitychange',
+      onVisibilityChange
+    );
+    MessagesView.methods.removeBusListeners.call(ctx);
+    expect(remove).toHaveBeenCalledWith('visibilitychange', onVisibilityChange);
+  });
+});
+
 describe('MessagesView: responder citando', () => {
   it('a caixa Equipe (Channel::Api) oferece responder em qualquer mensagem', () => {
     const inboxHasFeature = feature =>
