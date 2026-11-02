@@ -233,7 +233,8 @@ class Notification < ApplicationRecord
     {
       primary_actor: primary_actor&.push_event_data,
       # TODO: Rename push_message_title to push_message_body
-      push_message_title: push_message_body,
+      # FORK(ramon): o toast do sino usa este campo; na Equipe, "Ana te marcou em Geral"
+      push_message_title: Ramon::Equipe.titulo_marcacao(self) || push_message_body,
       push_message_body: push_message_body
     }
   end

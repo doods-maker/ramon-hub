@@ -89,6 +89,27 @@ has been assigned to you"
 
       expect(I18n.with_locale(:pt_BR) { notification.push_message_title }).to eq 'Ana te marcou'
     end
+
+    it 'o payload do cable (toast do sino) também diz quem marcou na Equipe', :aggregate_failures do
+      account = create(:account)
+      ana = create(:user, account: account, display_name: 'Ana')
+      Ramon::Equipe.sincronizar(account, criar: true)
+      geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
+      message = create(:message, conversation: geral, account: account, inbox: geral.inbox, sender: ana, message_type: :outgoing, content: 'oi')
+      notification = create(:notification, notification_type: 'conversation_mention', primary_actor: geral, secondary_actor: message)
+
+      payload = I18n.with_locale(:pt_BR) { notification.push_event_data }
+      expect(payload[:push_message_title]).to eq 'Ana te marcou em Geral'
+      expect(payload[:push_message_body]).to eq notification.push_message_body
+    end
+
+    it 'fora da Equipe o payload do cable segue com o corpo no título' do
+      message = create(:message, sender: create(:user), content: 'Hey [@John](mention://user/1/john), can you check this ticket?')
+      notification = create(:notification, notification_type: 'conversation_mention', primary_actor: message.conversation,
+                                           secondary_actor: message)
+
+      expect(notification.push_event_data[:push_message_title]).to eq notification.push_message_body
+    end
   end
 
   context 'when push_message_body is called' do
