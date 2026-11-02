@@ -528,6 +528,11 @@ const shouldShowContextMenu = computed(() => {
 });
 
 const shouldRenderMessage = computed(() => {
+  // FORK(ramon): o chat interno não mostra "conversa reaberta" e afins
+  if (isEquipe.value && props.messageType === MESSAGE_TYPES.ACTIVITY) {
+    return false;
+  }
+
   const hasAttachments = !!(props.attachments && props.attachments.length > 0);
   const isEmailContentType = props.contentType === CONTENT_TYPES.INCOMING_EMAIL;
   const isUnsupported = props.contentAttributes?.isUnsupported;

@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
+import ConversationBox from '../ConversationBox.vue';
 import ConversationHeader from '../ConversationHeader.vue';
 import MessagesView from '../MessagesView.vue';
 import ReplyBox from '../ReplyBox.vue';
@@ -150,6 +151,23 @@ describe('ConversationHeader', () => {
     expect(w.findComponent({ name: 'MoreActions' }).exists()).toBe(true);
     expect(w.text()).toContain('Contato');
     expect(w.text()).not.toContain('PARTICIPANTES');
+  });
+});
+
+describe('ConversationBox: Dashboard Apps', () => {
+  const appsDaTela = equipe =>
+    ConversationBox.computed.dashboardApps.call({
+      appsDaConta: [{ id: 9 }],
+      currentChat: { inbox_id: 7 },
+      getInbox: id => ({ id, equipe }),
+    });
+
+  it('não abrem na Equipe: o frame receberia o contexto da conversa', () => {
+    expect(appsDaTela(true)).toEqual([]);
+  });
+
+  it('seguem iguais em caixa comum', () => {
+    expect(appsDaTela(false)).toEqual([{ id: 9 }]);
   });
 });
 

@@ -68,6 +68,8 @@ vi.mock(
   })
 );
 
+const ATIVIDADE = 2;
+
 const montar = (props = {}) =>
   mount(Message, {
     props: {
@@ -108,6 +110,22 @@ describe('Message na caixa Equipe', () => {
     setActivePinia(createPinia());
     papel.value = 'agent';
     conversas[43] = { id: 43, equipe_tipo: 'grupo', equipe_pessoas: [] };
+  });
+
+  describe('mensagem de atividade', () => {
+    it('não aparece na Equipe', () => {
+      const w = montar({ messageType: ATIVIDADE, content: 'Reaberta' });
+      expect(w.find('.message-bubble-container').exists()).toBe(false);
+    });
+
+    it('fora da Equipe segue aparecendo', () => {
+      const w = montar({
+        messageType: ATIVIDADE,
+        content: 'Reaberta',
+        inboxId: CAIXA_CLIENTE,
+      });
+      expect(w.find('.message-bubble-container').exists()).toBe(true);
+    });
   });
 
   describe('lado e cor', () => {

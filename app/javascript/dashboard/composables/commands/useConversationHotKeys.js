@@ -154,6 +154,7 @@ export function useConversationHotKeys() {
   const contextMenuChatId = useMapGetter('getContextMenuChatId');
   const teams = useMapGetter('teams/getTeams');
   const getDraftMessage = useMapGetter('draftMessages/get');
+  const getInbox = useMapGetter('inboxes/getInbox');
 
   const conversationId = computed(() => currentChat.value?.id);
   const draftKey = computed(
@@ -388,6 +389,8 @@ export function useConversationHotKeys() {
   });
 
   const conversationHotKeys = computed(() => {
+    // FORK(ramon): a Equipe não tem atendimento nem IA (ADR 0011)
+    if (getInbox.value?.(currentChat.value?.inbox_id)?.equipe) return [];
     if (shouldShowSnoozeOption.value) {
       return prepareActions(SNOOZE_CONVERSATION_ACTIONS, t);
     }
