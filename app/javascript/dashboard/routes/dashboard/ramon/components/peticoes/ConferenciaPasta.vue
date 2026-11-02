@@ -31,6 +31,8 @@ const emit = defineEmits(['atualizado', 'confirmado']);
 const { t } = useI18n();
 const meuId = useMapGetter('getCurrentUserID');
 
+const RELEITURA_MS = 10 * 60 * 1000; // igual ao RELEITURA_MINUTOS do backend
+
 const CAMPOS_DIST = [
   'partes',
   'classe',
@@ -65,6 +67,13 @@ const problemas = computed(() => {
   );
 });
 const liberado = computed(() => podeConfirmar(props.peticao, conferidos.value));
+// Leitura presa (job morreu) não prende a tela: depois de 10 min, ou sem a data, pode reler.
+// O relógio anda porque o polling troca a petição a cada 3 s.
+const lendoRecente = computed(
+  () =>
+    estado.value === 'lendo' &&
+    Date.now() - Date.parse(leitura.value.lendo_desde) < RELEITURA_MS
+);
 
 const reiniciar = p => {
   contato.value = p.contato;
@@ -134,14 +143,17 @@ const confirmar = () =>
   executar(
     'confirmar',
     async () => {
-      await salvarDados();
+      const { data: salvo } = await salvarDados();
+      emit('atualizado', salvo);
+      // Salvar pode criar alerta novo: ele aparece e a confirmação para aqui.
+      if (!podeConfirmar(salvo, conferidos.value)) return null;
       const { data } = await RamonPeticoesAPI.confirmar(
         props.peticao.id,
-        alertas.value.length > 0
+        salvo.alertas.length > 0
       );
       return data;
     },
-    data => emit('confirmado', data)
+    data => data && emit('confirmado', data)
   );
 
 const reler = () =>
@@ -351,7 +363,7 @@ const marcar = alerta => {
         slate
         icon="i-lucide-refresh-cw"
         data-testid="conferencia-reler"
-        :disabled="estado === 'lendo'"
+        :disabled="lendoRecente"
         :is-loading="ocupado === 'reler'"
         :label="t('RAMON.PETICOES.PASTA.RELER')"
         @click="reler"

@@ -65,7 +65,9 @@ describe('ConferenciaPasta.vue', () => {
   });
 
   it('confirmar salva e depois confirma, avisando os alertas conferidos', async () => {
-    RamonPeticoesAPI.update.mockResolvedValue({ data: {} });
+    RamonPeticoesAPI.update.mockResolvedValue({
+      data: peticao({ alertas: ['cpf_diferente'] }),
+    });
     RamonPeticoesAPI.confirmar.mockResolvedValue({
       data: { id: 7, status: 'rascunho' },
     });
@@ -78,6 +80,85 @@ describe('ConferenciaPasta.vue', () => {
     expect(RamonPeticoesAPI.update).toHaveBeenCalledWith(7, expect.any(Object));
     expect(RamonPeticoesAPI.confirmar).toHaveBeenCalledWith(7, true);
     expect(w.emitted('confirmado')[0][0].status).toBe('rascunho');
+  });
+
+  it('sem alerta depois de salvar: confirma sem confirmar alertas', async () => {
+    RamonPeticoesAPI.update.mockResolvedValue({ data: peticao() });
+    RamonPeticoesAPI.confirmar.mockResolvedValue({
+      data: { id: 7, status: 'rascunho' },
+    });
+    const w = montar(peticao({ alertas: ['cpf_diferente'] }));
+    await w
+      .find('[data-testid="conferencia-alerta-cpf_diferente"]')
+      .setValue(true);
+    await confirmar(w).trigger('click');
+    await flushPromises();
+    expect(RamonPeticoesAPI.confirmar).toHaveBeenCalledWith(7, false);
+  });
+
+  it('alerta novo depois de salvar: não confirma e aparece', async () => {
+    const depois = peticao({ alertas: ['processo_fora_do_cliente'] });
+    RamonPeticoesAPI.update.mockResolvedValue({ data: depois });
+    const w = montar(peticao());
+    await confirmar(w).trigger('click');
+    await flushPromises();
+    expect(RamonPeticoesAPI.confirmar).not.toHaveBeenCalled();
+    expect(w.emitted('confirmado')).toBeUndefined();
+    expect(w.emitted('atualizado')[0][0]).toEqual(depois);
+    await w.setProps({ peticao: w.emitted('atualizado')[0][0] });
+    expect(w.find('[data-testid="conferencia-alertas"]').text()).toContain(
+      'RAMON.PETICOES.PASTA.ALERTA.processo_fora_do_cliente'
+    );
+    expect(confirmar(w).attributes('disabled')).toBeDefined();
+  });
+
+  it('alerta conferido e outro novo depois de salvar: não confirma', async () => {
+    RamonPeticoesAPI.update.mockResolvedValue({
+      data: peticao({ alertas: ['cpf_diferente', 'processo_fora_do_cliente'] }),
+    });
+    const w = montar(peticao({ alertas: ['cpf_diferente'] }));
+    await w
+      .find('[data-testid="conferencia-alerta-cpf_diferente"]')
+      .setValue(true);
+    await confirmar(w).trigger('click');
+    await flushPromises();
+    expect(RamonPeticoesAPI.confirmar).not.toHaveBeenCalled();
+  });
+
+  describe('Reler com a leitura em andamento', () => {
+    const reler = w => w.find('[data-testid="conferencia-reler"]');
+    const lendo = minutos =>
+      peticao(
+        {},
+        {
+          estado: 'lendo',
+          lendo_desde: new Date(Date.now() - minutos * 60 * 1000).toISOString(),
+        }
+      );
+
+    it('há menos de 10 min: desabilitado', () => {
+      expect(reler(montar(lendo(2))).attributes('disabled')).toBeDefined();
+    });
+
+    it('há mais de 10 min: habilitado', () => {
+      expect(reler(montar(lendo(11))).attributes('disabled')).toBeUndefined();
+    });
+
+    it('sem lendo_desde: habilitado', () => {
+      const w = montar(peticao({}, { estado: 'lendo' }));
+      expect(reler(w).attributes('disabled')).toBeUndefined();
+    });
+
+    it('fica habilitado sozinho quando passam os 10 min', async () => {
+      const inicio = lendo(9);
+      const w = montar(inicio);
+      expect(reler(w).attributes('disabled')).toBeDefined();
+      vi.setSystemTime(Date.now() + 2 * 60 * 1000);
+      await w.setProps({
+        peticao: { ...inicio, leitura: { ...inicio.leitura } },
+      });
+      expect(reler(w).attributes('disabled')).toBeUndefined();
+    });
   });
 
   it('lendo: consulta a cada 3 s e para ao desmontar', async () => {

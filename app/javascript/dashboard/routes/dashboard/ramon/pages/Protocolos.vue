@@ -33,9 +33,10 @@ const router = useRouter();
 const { isAdmin } = useAdmin();
 const meuId = useMapGetter('getCurrentUserID');
 
-// ponytail: tirar o isAdmin no lançamento (conferência pela pasta só para admin)
+// Conferência, lista de pastas e apontar: só admin até o lançamento.
+const pastaLiberada = isAdmin; // ponytail: trocar por ref(true) no lançamento
 const STATUS = computed(() =>
-  isAdmin.value
+  pastaLiberada.value
     ? ['conferencia', 'rascunho', 'protocolada']
     : ['rascunho', 'protocolada']
 );
@@ -44,9 +45,9 @@ const TOM_STATUS = {
   rascunho: TOM.amber,
   protocolada: TOM.teal,
 };
-// O sino leva direto à conferência (só admin enquanto a conferência é restrita).
+// O sino leva direto à conferência.
 const status = ref(
-  route.query.status === 'conferencia' && isAdmin.value
+  route.query.status === 'conferencia' && pastaLiberada.value
     ? 'conferencia'
     : 'rascunho'
 );
@@ -75,9 +76,8 @@ const carregarLista = async () => {
   lista.value = data.payload;
   tribunais.value = data.tribunais;
   tipos.value = data.tipos;
-  // ponytail: lista só para admin, junto com a conferência; tirar o isAdmin no lançamento
   pastas.value =
-    isAdmin.value && status.value === 'conferencia'
+    pastaLiberada.value && status.value === 'conferencia'
       ? (await RamonPeticoesAPI.pastasProntas()).data.pastas
       : [];
 };
@@ -143,6 +143,15 @@ const pastaEscolhida = async pastaId => {
   }
 };
 
+// A pasta mudou no Drive: refaz a leitura e a petição volta à conferência.
+const relerPasta = async () => {
+  try {
+    peticao.value = (await RamonPeticoesAPI.relerPasta(peticao.value.id)).data;
+  } catch (e) {
+    useAlert(erroPeticao(e, t));
+  }
+};
+
 const registrado = data => {
   registrando.value = false;
   peticao.value = data;
@@ -167,7 +176,8 @@ const podeRegistrar = computed(
   () => isAdmin.value || peticao.value?.responsavel?.id === meuId.value
 );
 
-const processo = p => p.numero_processo || t('RAMON.PETICOES.INICIAL');
+const processo = p =>
+  p.numero_processo || (p.inicial ? t('RAMON.PETICOES.INICIAL') : '—');
 const cliente = p => p.contato?.name || '—';
 // Prazo perto (até 2 dias úteis, vencido também) só importa no rascunho.
 const corPrazo = p =>
@@ -203,7 +213,7 @@ const segmento = ativo => [
             @click="voltar"
           />
           <Button
-            v-else-if="isAdmin"
+            v-else-if="pastaLiberada"
             sm
             faded
             slate
@@ -382,6 +392,16 @@ const segmento = ativo => [
           </p>
 
           <div class="flex flex-wrap justify-end gap-2">
+            <Button
+              v-if="peticao.pela_pasta"
+              sm
+              faded
+              slate
+              icon="i-lucide-refresh-cw"
+              data-testid="protocolo-reler"
+              :label="t('RAMON.PETICOES.PASTA.RELER')"
+              @click="relerPasta"
+            />
             <Button
               sm
               faded
