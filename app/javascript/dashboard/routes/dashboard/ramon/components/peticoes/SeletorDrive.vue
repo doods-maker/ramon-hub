@@ -2,6 +2,8 @@
 // Seletor do Drive do escritório: abre na pasta do cliente (ou na raiz),
 // navega pastas, busca por nome em todo o Drive e põe os arquivos marcados
 // no pacote (o hub baixa na hora; o pacote não muda se a pasta mudar).
+// Em `modoPasta` não marca arquivos: o botão aponta a pasta aberta (peticionamento
+// pela pasta) e emite `pastaEscolhida`.
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { onKeyStroke } from '@vueuse/core';
@@ -18,10 +20,11 @@ import {
 } from '../../helpers/ui';
 
 const props = defineProps({
-  peticaoId: { type: Number, required: true },
+  peticaoId: { type: Number, default: null },
+  modoPasta: { type: Boolean, default: false },
   pastaInicial: { type: String, default: '' },
 });
-const emit = defineEmits(['adicionado', 'cancel']);
+const emit = defineEmits(['adicionado', 'pastaEscolhida', 'cancel']);
 
 const { t } = useI18n();
 const pasta = ref(null); // { pasta_id, pai_id, raiz_id, itens }
@@ -75,6 +78,7 @@ const clicar = item => {
     abrir(item.id);
     return;
   }
+  if (props.modoPasta) return;
   marcados.value = marcados.value.includes(item.id)
     ? marcados.value.filter(id => id !== item.id)
     : [...marcados.value, item.id];
@@ -109,8 +113,17 @@ onMounted(() => abrir(props.pastaInicial));
         data-testid="seletor-drive"
       >
         <h3 class="!mb-0" :class="TITULO_JANELA">
-          {{ t('RAMON.PETICOES.DRIVE_TITULO') }}
+          {{
+            t(
+              modoPasta
+                ? 'RAMON.PETICOES.PASTA.SELETOR_TITULO'
+                : 'RAMON.PETICOES.DRIVE_TITULO'
+            )
+          }}
         </h3>
+        <p v-if="modoPasta" class="m-0 text-xs text-n-slate-10">
+          {{ t('RAMON.PETICOES.PASTA.SELETOR_AJUDA') }}
+        </p>
         <input
           v-model="busca"
           type="search"
@@ -153,9 +166,11 @@ onMounted(() => abrir(props.pastaInicial));
                 :class="
                   item.pasta
                     ? 'i-lucide-folder'
-                    : marcados.includes(item.id)
-                      ? 'i-lucide-square-check text-n-blue-11'
-                      : 'i-lucide-square'
+                    : modoPasta
+                      ? 'i-lucide-file'
+                      : marcados.includes(item.id)
+                        ? 'i-lucide-square-check text-n-blue-11'
+                        : 'i-lucide-square'
                 "
               />
               <span class="min-w-0 flex-1 truncate text-n-slate-12">{{
@@ -180,6 +195,15 @@ onMounted(() => abrir(props.pastaInicial));
             @click="emit('cancel')"
           />
           <Button
+            v-if="modoPasta"
+            sm
+            data-testid="seletor-drive-usar-pasta"
+            :disabled="!pasta?.pasta_id || !!encontrados"
+            :label="t('RAMON.PETICOES.PASTA.USAR_PASTA')"
+            @click="emit('pastaEscolhida', pasta.pasta_id)"
+          />
+          <Button
+            v-else
             sm
             data-testid="seletor-drive-adicionar"
             :disabled="!marcados.length"

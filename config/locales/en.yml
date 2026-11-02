@@ -37,6 +37,13 @@ en:
         peticao:
           attributes:
             base:
+              em_conferencia: 'Petição em conferência: confirme tribunal e número antes de protocolar'
+              fora_da_conferencia: 'Só uma petição em conferência pode ser confirmada'
+              leitura_em_andamento: 'A leitura da pasta ainda está em andamento'
+              leitura_com_erro: 'A leitura da pasta falhou: leia a pasta de novo'
+              recusa_na_leitura: 'A pasta tem pendências que impedem a petição: corrija a pasta e leia de novo'
+              marcador_na_principal: 'A peça principal tem sobra de rascunho: troque o arquivo'
+              alertas_nao_confirmados: 'Há alertas na conferência: confirme que estão certos para seguir'
               ja_protocolada: 'Petição já protocolada'
               pacote_com_problemas: 'Pacote com problemas: confira os avisos'
               sem_comprovante: 'Informe o número do evento e anexe o comprovante do protocolo'
@@ -267,6 +274,8 @@ en:
       ramon_fluxo_aviso: 'Automation: %{label} (%{name})'
       ramon_fluxo_falhou: 'Automation "%{label}" failed for %{name}'
       ramon_ia_gasto: 'AI spend today is over the cap: %{label}'
+      ramon_pasta_pronta: 'Petition folder ready to review: %{label}'
+    pasta_sem_titulo: 'untitled folder'
     attachment: 'Attachment'
     no_content: 'No content'
   conversations:

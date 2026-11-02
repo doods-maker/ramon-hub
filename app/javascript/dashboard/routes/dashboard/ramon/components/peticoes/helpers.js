@@ -50,6 +50,10 @@ export const baixarTodos = (arquivos, buscar) =>
 const ERROS = {
   formato: 'RAMON.PETICOES.ERROS.FORMATO',
   protocolada: 'RAMON.PETICOES.ERROS.PROTOCOLADA',
+  pasta_invalida: 'RAMON.PETICOES.ERROS.PASTA_INVALIDA',
+  pasta_ja_usada: 'RAMON.PETICOES.ERROS.PASTA_JA_USADA',
+  em_leitura: 'RAMON.PETICOES.ERROS.EM_LEITURA',
+  pacote_da_pasta: 'RAMON.PETICOES.ERROS.PACOTE_DA_PASTA',
   SO_RESPONSAVEL: 'RAMON.PETICOES.ERROS.SO_RESPONSAVEL',
   DRIVE_OFF: 'RAMON.PETICOES.DRIVE_OFF',
 };
@@ -57,3 +61,46 @@ export const erroPeticao = (e, t, padrao = 'RAMON.PETICOES.ERRO_ACAO') => {
   const chave = ERROS[e?.response?.data?.error];
   return chave ? t(chave) : mensagemErro(e, t(padrao));
 };
+
+// Pela pasta: "marcador:[CONFERIR]" → t('…RECUSA.marcador', { detalhe: '[CONFERIR]' }).
+const codigoPasta = (grupo, codigo, t) => {
+  const [chave, ...resto] = codigo.split(':');
+  return t(`RAMON.PETICOES.PASTA.${grupo}.${chave}`, {
+    detalhe: resto.join(':'),
+  });
+};
+export const mensagemRecusa = (codigo, t) => codigoPasta('RECUSA', codigo, t);
+export const mensagemAviso = (codigo, t) => codigoPasta('AVISO', codigo, t);
+export const mensagemAlerta = (codigo, t) => codigoPasta('ALERTA', codigo, t);
+
+// Responsável que a leitura não soube dizer: o advogado confere quem assina.
+export const responsavelIncerto = peticao =>
+  !!peticao.leitura?.incertos?.includes('responsavel') ||
+  !!peticao.avisos?.includes('responsavel_sem_usuario');
+
+// Confirmar só com leitura pronta, sem recusa, alertas (e responsável incerto,
+// chave 'responsavel') conferidos e pacote sem problema (o backend confere de novo).
+export const podeConfirmar = (peticao, conferidos) =>
+  peticao.leitura?.estado === 'lida' &&
+  !peticao.leitura.recusas?.length &&
+  !peticao.problemas?.length &&
+  (peticao.alertas || []).every(a => conferidos.includes(a)) &&
+  (!responsavelIncerto(peticao) || conferidos.includes('responsavel'));
+
+// Estado inicial do formulário de dados (nova = peticao null).
+export const formDaPeticao = (p, meuId) => ({
+  numero_processo: p?.numero_processo || '',
+  inicial: !!p?.inicial,
+  tribunal: p?.inicial ? p.tribunal : '',
+  responsavel_id: p?.responsavel?.id || meuId,
+  prazo: p?.prazo || '',
+  descricao: p?.descricao || '',
+});
+
+// Corpo do create/update. Tribunal vazio = o backend deduz pelo número.
+export const dadosDoForm = (form, contato) => ({
+  ...form,
+  contact_id: contato?.id || '',
+  numero_processo: form.inicial ? '' : form.numero_processo,
+  tribunal: form.inicial ? form.tribunal : '',
+});

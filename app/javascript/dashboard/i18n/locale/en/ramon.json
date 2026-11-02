@@ -102,7 +102,15 @@
         "TITULO": "Office-wide limits",
         "DICA": "They apply to every thesis and inbox.",
         "HORARIO": "Business hours",
-        "DIAS": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+        "DIAS": {
+          "0": "Sun",
+          "1": "Mon",
+          "2": "Tue",
+          "3": "Wed",
+          "4": "Thu",
+          "5": "Fri",
+          "6": "Sat"
+        },
         "FAIXA": "Range {n}",
         "ATE": "to",
         "ADICIONAR_FAIXA": "+ Add a second range",
@@ -480,7 +488,7 @@
       "NEW": {
         "THESIS": "Thesis",
         "NO_THESIS": "No thesis",
-        "SOURCE":"Source",
+        "SOURCE": "Source",
         "CHANNEL": "Channel",
         "CHANNEL_PLACEHOLDER": "— select —",
         "VALUE": "Value (R$)",
@@ -2360,10 +2368,12 @@
       "PROCESSO": "Case",
       "STATUS_COL": "Status",
       "STATUS": {
+        "conferencia": "In review",
         "rascunho": "Draft",
         "protocolada": "Filed"
       },
       "FILTRO": {
+        "conferencia": "In review",
         "rascunho": "Drafts",
         "protocolada": "Filed"
       },
@@ -2419,7 +2429,62 @@
       "ERROS": {
         "FORMATO": "Only PDF, JPG or PNG files.",
         "PROTOCOLADA": "This petition is already filed and can no longer be changed.",
-        "SO_RESPONSAVEL": "Only the responsible lawyer or an administrator can record the filing."
+        "SO_RESPONSAVEL": "Only the responsible lawyer or an administrator can record the filing.",
+        "PASTA_INVALIDA": "That folder was not found in the firm Drive. Pick another one.",
+        "PASTA_JA_USADA": "There is already a petition for that folder.",
+        "EM_LEITURA": "The folder is still being read. Wait for it to finish before reading again.",
+        "PACOTE_DA_PASTA": "The package comes from the Drive folder. To change the files, change the folder and click Read folder again."
+      },
+      "PASTA": {
+        "PRONTAS_TITULO": "Folders ready to review",
+        "SEM_TITULO": "Untitled folder",
+        "SEM_RESPONSAVEL": "no one responsible",
+        "APONTAR": "Point to folder",
+        "SELETOR_TITULO": "Point to the petition folder",
+        "SELETOR_AJUDA": "Open the folder with the petition and attachments (numbered files: 01 is the petition as PDF, then 02, 03...) and click Use this folder.",
+        "USAR_PASTA": "Use this folder",
+        "LENDO": "Reading the folder... This takes a few moments; the screen updates by itself.",
+        "ERRO_LEITURA": "Could not read the folder right now. Click Read folder again to retry.",
+        "RELER": "Read folder again",
+        "CONFIRMAR": "Confirm",
+        "ABRIR_PECA": "Open the petition",
+        "PACOTE_VAZIO": "The folder has no files for the package. Fix the folder and click Read folder again.",
+        "RECUSAS_TITULO": "The folder cannot be used as it is",
+        "ALERTAS_TITULO": "Check before confirming",
+        "CONFERI_RESPONSAVEL": "I checked who signs and files this.",
+        "CONFERI": "I checked and it is correct.",
+        "DADOS": "Data read from the folder",
+        "INCERTOS_AJUDA": "Yellow fields are the ones the reading was not sure about. Check them and fix if needed.",
+        "DISTRIBUICAO": "Filing data",
+        "DIST": {
+          "partes": "Parties",
+          "classe": "Class",
+          "assuntos": "Subjects",
+          "valor_causa": "Claim value",
+          "competencia": "Jurisdiction"
+        },
+        "RECUSA": {
+          "sem_pdf": "The first file in the folder (the lowest number) must be the petition as a PDF. Name it 01 and click Read folder again.",
+          "word_sem_pdf": "The folder has the Word file \"{detalhe}\" but not its PDF. Save the Word file as PDF with the same number and click Read folder again.",
+          "formato": "\"{detalhe}\" is not a PDF, Word, JPG or PNG. Replace that file in the folder and click Read folder again.",
+          "sem_numero": "The file \"{detalhe}\" has no number at the start of its name (01, 02...). Rename it in the folder and click Read folder again.",
+          "numero_repetido": "The number of the file \"{detalhe}\" is already used by another file. Give each file its own number and click Read folder again.",
+          "marcador": "The petition still has the mark \"{detalhe}\". Upload the PDF again without it and click Read folder again.",
+          "muito_grande": "The file \"{detalhe}\" is larger than 30 MB. Make it smaller in the folder and click Read folder again.",
+          "pasta_grande": "The folder is larger than 100 MB in total. Leave in it only what goes to the court and click Read folder again."
+        },
+        "ALERTA": {
+          "cpf_diferente": "The CPF in the petition is not the same as the CPF in the folder name. Check that the folder belongs to this client.",
+          "processo_fora_do_cliente": "This case number is not among the client's cases. Check that the number is correct."
+        },
+        "AVISO": {
+          "espelho_vazio": "There are no cases for this client in ADVBOX to compare with the number in the petition.",
+          "responsavel_sem_usuario": "Could not find in the hub the lawyer who signs the petition. Choose the responsible person.",
+          "leitura_falhou": "The automatic reading of the petition failed. Fill in the data by hand.",
+          "sem_texto": "The petition PDF has no text (it looks scanned). Check the data and the draft mark carefully.",
+          "nao_parece_peticao": "The first file does not look like a petition. Check that the right PDF is 01.",
+          "subpastas": "The subfolders ({detalhe}) were ignored. Only files directly in the folder count."
+        }
       }
     },
     "NAV": {

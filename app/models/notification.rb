@@ -52,7 +52,8 @@ class Notification < ApplicationRecord
     ramon_contract_status: 14,
     ramon_fluxo_aviso: 15,
     ramon_fluxo_falhou: 16,
-    ramon_ia_gasto: 17
+    ramon_ia_gasto: 17,
+    ramon_pasta_pronta: 18
   }.freeze
 
   enum notification_type: NOTIFICATION_TYPES
@@ -113,7 +114,8 @@ class Notification < ApplicationRecord
       'ramon_contract_status' => 'notifications.notification_title.ramon_contract_status',
       'ramon_fluxo_aviso' => 'notifications.notification_title.ramon_fluxo_aviso',
       'ramon_fluxo_falhou' => 'notifications.notification_title.ramon_fluxo_falhou',
-      'ramon_ia_gasto' => 'notifications.notification_title.ramon_ia_gasto'
+      'ramon_ia_gasto' => 'notifications.notification_title.ramon_ia_gasto',
+      'ramon_pasta_pronta' => 'notifications.notification_title.ramon_pasta_pronta'
     }
 
     i18n_key = notification_title_map[notification_type]
@@ -126,6 +128,8 @@ class Notification < ApplicationRecord
       I18n.t(i18n_key, display_id: conversation.display_id)
     elsif notification_type == 'ramon_lead_created'
       I18n.t(i18n_key, name: primary_actor.name)
+    elsif notification_type == 'ramon_pasta_pronta'
+      I18n.t(i18n_key, label: meta['label'].to_s)
     elsif notification_type.start_with?('ramon_meeting_', 'ramon_sla_', 'ramon_contract_', 'ramon_fluxo_', 'ramon_ia_')
       I18n.t(i18n_key, name: primary_actor.name, quando: meta['quando'].to_s, label: meta['label'].to_s, minutos: meta['minutos'].to_s)
     else
@@ -143,7 +147,8 @@ class Notification < ApplicationRecord
     when 'conversation_assignment', 'sla_missed_next_response', 'sla_missed_resolution'
       message_body((conversation.messages.incoming.last || conversation.messages.outgoing.last))
     when 'ramon_lead_created', 'ramon_meeting_scheduled', 'ramon_meeting_reminder', 'ramon_meeting_cancelled', 'ramon_sla_breach',
-         'ramon_contract_status', 'ramon_fluxo_aviso', 'ramon_fluxo_falhou', 'ramon_ia_gasto'
+         'ramon_contract_status', 'ramon_fluxo_aviso', 'ramon_fluxo_falhou', 'ramon_ia_gasto',
+         'ramon_pasta_pronta'
       push_message_title
     else
       ''

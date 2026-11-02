@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_31_100002) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_02_120001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1722,6 +1722,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_31_100002) do
     t.index ["user_id"], name: "index_ramon_metas_comerciais_on_user_id"
   end
 
+  create_table "ramon_pastas_prontas", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "drive_pasta_id", null: false
+    t.string "titulo"
+    t.bigint "responsavel_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "drive_pasta_id"], name: "index_ramon_pastas_prontas_on_conta_e_pasta", unique: true
+    t.index ["responsavel_id"], name: "index_ramon_pastas_prontas_on_responsavel_id"
+  end
+
   create_table "ramon_pecas", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "slug", null: false
@@ -1772,7 +1783,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_31_100002) do
     t.bigint "criado_por_id", null: false
     t.bigint "responsavel_id", null: false
     t.string "numero_processo"
-    t.string "tribunal", null: false
+    t.string "tribunal"
     t.boolean "inicial", default: false, null: false
     t.date "prazo"
     t.string "descricao"
@@ -1786,6 +1797,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_31_100002) do
     t.datetime "arquivada_em"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "pela_pasta", default: false, null: false
+    t.jsonb "leitura", default: {}, null: false
+    t.index ["account_id", "drive_pasta_id"], name: "index_ramon_peticoes_on_conta_e_pasta_unica", unique: true, where: "pela_pasta"
     t.index ["account_id", "prazo"], name: "index_ramon_peticoes_on_account_id_and_prazo"
     t.index ["account_id", "status"], name: "index_ramon_peticoes_on_account_id_and_status"
     t.index ["contact_id"], name: "index_ramon_peticoes_on_contact_id"
@@ -2126,6 +2140,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_31_100002) do
   add_foreign_key "ramon_meta_eventos", "accounts", on_delete: :cascade
   add_foreign_key "ramon_meta_eventos", "leads", on_delete: :cascade
   add_foreign_key "ramon_meta_gastos", "accounts", on_delete: :cascade
+  add_foreign_key "ramon_pastas_prontas", "accounts", on_delete: :cascade
+  add_foreign_key "ramon_pastas_prontas", "users", column: "responsavel_id", on_delete: :nullify
   add_foreign_key "ramon_pecas", "accounts"
   add_foreign_key "ramon_reunioes", "accounts"
   add_foreign_key "ramon_reunioes", "leads"

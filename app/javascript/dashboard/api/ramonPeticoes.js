@@ -49,6 +49,24 @@ class RamonPeticoesAPI extends ApiClient {
     return axios.post(`${this.url}/${id}/registrar_protocolo`, dados);
   }
 
+  pelaPasta(pastaId) {
+    return axios.post(`${this.url}/pela_pasta`, { pasta_id: pastaId });
+  }
+
+  pastasProntas() {
+    return axios.get(`${this.url}/pastas_prontas`);
+  }
+
+  relerPasta(id) {
+    return axios.post(`${this.url}/${id}/reler_pasta`);
+  }
+
+  confirmar(id, confirmarAlertas = false) {
+    return axios.post(`${this.url}/${id}/confirmar`, {
+      confirmar_alertas: confirmarAlertas,
+    });
+  }
+
   drive(pastaId) {
     return axios.get(`${this.url}/drive`, {
       params: pastaId ? { pasta_id: pastaId } : {},

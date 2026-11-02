@@ -54,6 +54,16 @@ export default {
         return;
       }
 
+      // ramon: pasta pronta abre a lista de Protocolos
+      if (notificationType === 'ramon_pasta_pronta') {
+        this.$router.push({
+          name: 'ramon_protocolos',
+          params: { accountId: this.accountId },
+          query: { status: 'conferencia' },
+        });
+        return;
+      }
+
       if (notificationType.startsWith('ramon_')) {
         this.$router.push({
           name: 'kanban_board',

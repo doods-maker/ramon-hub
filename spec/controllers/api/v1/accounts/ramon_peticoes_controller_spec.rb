@@ -19,6 +19,11 @@ RSpec.describe 'Ramon Petições API', type: :request do
     "5001234-#{dd}.2026.4.04.7207"
   end
 
+  def outro_numero_trf4
+    dd = format('%02d', 98 - ('50099992026404720700'.to_i % 97))
+    "5009999-#{dd}.2026.4.04.7207"
+  end
+
   def criar(user = ana, **params)
     post url, params: { numero_processo: numero_valido_trf4.delete('^0-9') }.merge(params), headers: user.create_new_auth_token, as: :json
   end
@@ -63,6 +68,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body['payload'].pluck('id')).to eq([com_prazo.id, sem_prazo.id, feita.id])
     expect(response.parsed_body['tribunais'].pluck('chave')).to include('trf4')
     expect(response.parsed_body['tipos']).to include('peticao')
+    expect(response.parsed_body['payload'].first.keys).not_to include('arquivos', 'leitura')
 
     get url, params: { status: 'protocolada' }, headers: ana.create_new_auth_token, as: :json
     expect(response.parsed_body['payload'].pluck('id')).to eq([feita.id])
@@ -171,6 +177,28 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body).to include('drive_pasta_base_id' => 'pasta-cliente', 'drive_ligado' => false)
   end
 
+  it 'contact_id vazio limpa o cliente no fluxo manual; sem a chave, não mexe' do
+    contato = create(:contact, account: account)
+    peticao = peticao_com_principal.tap { |p| p.update!(contact: contato) }
+
+    patch "#{url}/#{peticao.id}", params: { descricao: 'x' }, headers: ana.create_new_auth_token, as: :json
+    expect(peticao.reload.contact).to eq(contato)
+
+    patch "#{url}/#{peticao.id}", params: { contact_id: '' }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+    expect(peticao.reload).to have_attributes(contact_id: nil, status: 'rascunho')
+  end
+
+  it 'petição manual em rascunho: mudar número ou principal não volta a conferência' do
+    peticao = peticao_com_principal
+    outro = peticao.arquivos.create!(nome: 'Rg.pdf', tipo: 'documento_identificacao', posicao: 2, origem: 'upload', tamanho: 5)
+    patch "#{url}/#{peticao.id}", params: { numero_processo: outro_numero_trf4 }, headers: ana.create_new_auth_token, as: :json
+    expect(peticao.reload).to have_attributes(numero_processo: outro_numero_trf4, status: 'rascunho')
+    patch "#{url}/#{peticao.id}/arquivos/#{outro.id}", params: { principal: true }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+    expect(peticao.reload.status).to eq('rascunho')
+  end
+
   it 'registrar_protocolo com pacote incompleto → 422' do
     criar
     post "#{url}/#{account.peticoes.sole.id}/registrar_protocolo", params: { numero_evento: '1' }, headers: ana.create_new_auth_token
@@ -222,5 +250,284 @@ RSpec.describe 'Ramon Petições API', type: :request do
     create(:portal_cliente, account: account, cpf: '52998224725', processos: [{ 'id' => 1, 'numero' => '5001234-00', 'tipo' => 'Previdenciário' }])
     get "#{url}/processos", params: { contact_id: contato.id }, headers: ana.create_new_auth_token, as: :json
     expect(response.parsed_body['processos']).to eq([{ 'numero' => '5001234-00', 'tipo' => 'Previdenciário' }])
+  end
+
+  describe 'pela pasta' do
+    let(:headers) { ana.create_new_auth_token }
+
+    before { allow(Ramon::DriveClient).to receive_messages(configured?: true, pasta?: true) }
+
+    def da_pasta(pasta_id: 'p1', **attrs)
+      account.peticoes.create!({ criado_por: ana, responsavel: ana, status: 'conferencia', pela_pasta: true, drive_pasta_id: pasta_id,
+                                 leitura: { 'estado' => 'lida', 'campos' => { 'cpf' => '52998224725' } } }.merge(attrs)).tap do |p|
+        p.arquivos.create!(nome: 'Peticao.pdf', tipo: 'peticao', posicao: 1, principal: true, origem: 'drive', tamanho: 10)
+      end
+    end
+
+    it 'apontar cria a petição em conferência e enfileira a leitura, com responsável padrão em quem apontou' do
+      expect { post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json }
+        .to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body).to include('status' => 'conferencia', 'pela_pasta' => true, 'drive_pasta_id' => 'p1',
+                                              'alertas' => [], 'avisos' => [])
+      expect(response.parsed_body['leitura']).to include('estado' => 'lendo')
+      expect(response.parsed_body['leitura']['lendo_desde']).to be_present
+      expect(response.parsed_body['responsavel']).to include('id' => ana.id)
+      expect(account.peticoes.sole.criado_por).to eq(ana)
+    end
+
+    it 'pasta_id em branco → 422' do
+      post "#{url}/pela_pasta", params: { pasta_id: ' ' }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(account.peticoes.count).to eq(0)
+    end
+
+    it 'apontar a pasta tira o item da lista de pastas prontas' do
+      account.pastas_prontas.create!(drive_pasta_id: 'p1', titulo: 'A', responsavel: ana)
+      post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json
+      expect(response).to have_http_status(:success)
+      expect(PastaPronta.where(account: account)).to be_empty
+    end
+
+    it 'apontar a mesma pasta de novo devolve 422 com a petição existente' do
+      existente = da_pasta
+      expect { post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json }
+        .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'pasta_ja_usada', 'peticao_id' => existente.id)
+    end
+
+    it 'pasta_ja_usada também quando a corrida estoura a unicidade na hora de gravar' do
+      existente = da_pasta
+      # a checagem prévia não enxerga a petição (corrida); a gravação estoura a unicidade
+      allow_any_instance_of(Api::V1::Accounts::RamonPeticoesController) # rubocop:disable RSpec/AnyInstance
+        .to receive(:peticao_da_pasta).and_return(nil, existente)
+      post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'pasta_ja_usada', 'peticao_id' => existente.id)
+    end
+
+    it 'pasta inválida (aspas, não é pasta, id inexistente) → 422 pasta_invalida, sem criar nem enfileirar', :aggregate_failures do
+      allow(Ramon::DriveClient).to receive(:pasta?).with('arquivo1').and_return(false)
+      allow(Ramon::DriveClient).to receive(:pasta?).with('nao-existe').and_return(false)
+      ["x' or '1'='1", 'arquivo1', 'nao-existe'].each do |id|
+        expect { post "#{url}/pela_pasta", params: { pasta_id: id }, headers: headers, as: :json }
+          .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body).to include('error' => 'pasta_invalida')
+      end
+      expect(account.peticoes.count).to eq(0)
+      expect(Ramon::DriveClient).not_to have_received(:pasta?).with("x' or '1'='1")
+    end
+
+    it 'apontar sem Drive configurado → 503' do
+      allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
+      post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json
+      expect(response).to have_http_status(:service_unavailable)
+      expect(account.peticoes.count).to eq(0)
+    end
+
+    it 'protocolada depois de carregada (corrida com a trava): 422 protocolada, sem mudar status nem enfileirar' do
+      peticao = da_pasta.tap { |p| p.update!(status: 'protocolada', numero_processo: numero_valido_trf4) }
+      allow_any_instance_of(Peticao).to receive(:editavel?).and_return(true) # rubocop:disable RSpec/AnyInstance
+      expect { post "#{url}/#{peticao.id}/reler_pasta", headers: headers, as: :json }
+        .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'protocolada')
+      expect(peticao.reload.status).to eq('protocolada')
+    end
+
+    it 'agente fora do jurídico recebe 401 em pela_pasta, reler_pasta e confirmar' do
+      peticao = da_pasta
+      outro = fora.create_new_auth_token
+      post "#{url}/pela_pasta", params: { pasta_id: 'p2' }, headers: outro, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      post "#{url}/#{peticao.id}/reler_pasta", headers: outro, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      post "#{url}/#{peticao.id}/confirmar", headers: outro, as: :json
+      expect(response).to have_http_status(:unauthorized)
+      expect(account.peticoes.count).to eq(1)
+    end
+
+    it 'pacote de pasta só muda tipo e principal: arquivos, arquivos_drive, remover_arquivo e ordem dão 42', :aggregate_failures do
+      peticao = da_pasta
+      arquivo = peticao.arquivos.first
+      enviar(peticao)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'pacote_da_pasta')
+      post "#{url}/#{peticao.id}/arquivos_drive", params: { file_ids: ['x'] }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'pacote_da_pasta')
+      delete "#{url}/#{peticao.id}/arquivos/#{arquivo.id}", headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      patch "#{url}/#{peticao.id}/ordem", params: { ids: [arquivo.id] }, headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(peticao.arquivos.reload.pluck(:id)).to eq([arquivo.id])
+
+      patch "#{url}/#{peticao.id}/arquivos/#{arquivo.id}", params: { tipo: 'laudo_medico' }, headers: headers, as: :json
+      expect(response).to have_http_status(:success)
+      expect(arquivo.reload.tipo).to eq('laudo_medico')
+    end
+
+    it 'reler em andamento dá 409; lendo há mais de 10 min pode reler, mantendo os campo', :aggregate_failures do
+      peticao = da_pasta(leitura: { 'estado' => 'lendo', 'lendo_desde' => 2.minutes.ago.iso8601, 'campos' => { 'cpf' => '1' } })
+      expect { post "#{url}/#{peticao.id}/reler_pasta", headers: headers, as: :json }
+        .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+      expect(response).to have_http_status(:conflict)
+      expect(response.parsed_body).to include('error' => 'em_leitura')
+
+      peticao.update!(leitura: peticao.leitura.merge('lendo_desde' => 11.minutes.ago.iso8601))
+      expect { post "#{url}/#{peticao.id}/reler_pasta", headers: headers, as: :json }
+        .to have_enqueued_job(Ramon::PeticaoLerPastaJob).with(peticao.id)
+      expect(response).to have_http_status(:success)
+      leitura = peticao.reload.leitura
+      expect(leitura).to include('estado' => 'lendo', 'campos' => { 'cpf' => '1' })
+      expect(Time.zone.parse(leitura['lendo_desde'])).to be > 1.minute.ago
+    end
+
+    it 'reler um rascunho da pasta volta o status a conferência' do
+      peticao = da_pasta(status: 'rascunho', numero_processo: numero_valido_trf4)
+      post "#{url}/#{peticao.id}/reler_pasta", headers: headers, as: :json
+      expect(response).to have_http_status(:success)
+      expect(peticao.reload.status).to eq('conferencia')
+      expect(peticao.leitura['estado']).to eq('lendo')
+    end
+
+    it 'reler protocolada é recusado; petição que não é da pasta dá 422 nao_e_pela_pasta' do
+      protocolada = da_pasta.tap { |p| p.update!(status: 'protocolada', numero_processo: numero_valido_trf4) }
+      expect { post "#{url}/#{protocolada.id}/reler_pasta", headers: headers, as: :json }
+        .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'protocolada')
+      expect(protocolada.reload.status).to eq('protocolada')
+
+      comum = peticao_com_principal
+      post "#{url}/#{comum.id}/reler_pasta", headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'nao_e_pela_pasta')
+      expect(comum.reload.status).to eq('rascunho')
+    end
+
+    it 'reler sem Drive configurado → 503' do
+      peticao = da_pasta
+      allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
+      post "#{url}/#{peticao.id}/reler_pasta", headers: headers, as: :json
+      expect(response).to have_http_status(:service_unavailable)
+    end
+
+    it 'confirmar sem alertas_confirmados com alerta dá 422 e com confirmação vira rascunho', :aggregate_failures do
+      peticao = da_pasta(numero_processo: numero_valido_trf4,
+                         leitura: { 'estado' => 'lida', 'cpf_pasta' => '111.111.111-11', 'campos' => { 'cpf' => '52998224725' } })
+      post "#{url}/#{peticao.id}/confirmar", headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['errors']).to be_present
+      expect(peticao.reload.status).to eq('conferencia')
+
+      get "#{url}/#{peticao.id}", headers: headers, as: :json
+      expect(response.parsed_body['alertas']).to eq(['cpf_diferente'])
+
+      post "#{url}/#{peticao.id}/confirmar", params: { confirmar_alertas: 'true' }, headers: headers, as: :json
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body).to include('status' => 'rascunho')
+      expect(response.parsed_body).not_to have_key('alertas')
+      expect(peticao.reload.status).to eq('rascunho')
+    end
+
+    it 'confirmar sem alertas vira rascunho; leitura em andamento dá 422' do
+      lendo = da_pasta(pasta_id: 'p9', numero_processo: numero_valido_trf4, leitura: { 'estado' => 'lendo' })
+      post "#{url}/#{lendo.id}/confirmar", headers: headers, as: :json
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      limpa = da_pasta(numero_processo: numero_valido_trf4)
+      post "#{url}/#{limpa.id}/confirmar", headers: headers, as: :json
+      expect(response).to have_http_status(:success)
+      expect(limpa.reload.status).to eq('rascunho')
+    end
+
+    describe 'rascunho da pasta' do
+      let(:peticao) { da_pasta(status: 'rascunho', numero_processo: numero_valido_trf4) }
+
+      it 'trocar o número volta a conferência, com a leitura lida, e confirmar vale de novo' do
+        patch "#{url}/#{peticao.id}", params: { numero_processo: outro_numero_trf4 }, headers: headers, as: :json
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body).to include('status' => 'conferencia', 'alertas' => [])
+        expect(response.parsed_body['leitura']).to include('estado' => 'lida')
+        post "#{url}/#{peticao.id}/confirmar", headers: headers, as: :json
+        expect(response).to have_http_status(:success)
+        expect(peticao.reload.status).to eq('rascunho')
+      end
+
+      it 'limpar o cliente volta a conferência' do
+        peticao.update_columns(contact_id: create(:contact, account: account).id) # rubocop:disable Rails/SkipsModelValidations
+        patch "#{url}/#{peticao.id}", params: { contact_id: '' }, headers: headers, as: :json
+        expect(peticao.reload).to have_attributes(contact_id: nil, status: 'conferencia')
+      end
+
+      it 'trocar a principal volta a conferência; trocar só o tipo, não' do
+        outro = peticao.arquivos.create!(nome: 'Rg.pdf', tipo: 'documento_identificacao', posicao: 2, origem: 'drive', tamanho: 5)
+        patch "#{url}/#{peticao.id}/arquivos/#{outro.id}", params: { tipo: 'laudo_medico' }, headers: headers, as: :json
+        expect(peticao.reload.status).to eq('rascunho')
+        patch "#{url}/#{peticao.id}/arquivos/#{outro.id}", params: { principal: true }, headers: headers, as: :json
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body).to include('status' => 'conferencia')
+        expect(peticao.arquivos.reload.find_by(principal: true)).to eq(outro)
+      end
+
+      it 'número inválido dá 422 e continua em rascunho' do
+        patch "#{url}/#{peticao.id}", params: { numero_processo: '5001234-00.2026.4.04.7207' }, headers: headers, as: :json
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(peticao.reload.status).to eq('rascunho')
+      end
+
+      it 'prazo, descrição e o mesmo formulário (tribunal vazio) não voltam a conferência' do
+        form = { numero_processo: numero_valido_trf4, tribunal: '', contact_id: '', prazo: '2026-12-01', descricao: 'x' }
+        patch "#{url}/#{peticao.id}", params: form, headers: headers, as: :json
+        expect(response).to have_http_status(:success)
+        expect(peticao.reload).to have_attributes(status: 'rascunho', descricao: 'x')
+      end
+    end
+
+    it 'index põe a conferência primeiro, a mais antiga antes, e não calcula alertas' do
+      rascunho = peticao_com_principal
+      nova = da_pasta(pasta_id: 'n').tap { |p| p.update_column(:created_at, 1.hour.ago) } # rubocop:disable Rails/SkipsModelValidations
+      velha = da_pasta(pasta_id: 'v').tap { |p| p.update_column(:created_at, 2.hours.ago) } # rubocop:disable Rails/SkipsModelValidations
+      allow(Ramon::Peticionamento::AlertasDaPasta).to receive(:call).and_call_original
+      get url, headers: headers, as: :json
+      expect(response.parsed_body['payload'].pluck('id')).to eq([velha.id, nova.id, rascunho.id])
+      expect(response.parsed_body['payload'].first).not_to have_key('alertas')
+      expect(Ramon::Peticionamento::AlertasDaPasta).not_to have_received(:call)
+    end
+  end
+
+  describe 'pastas prontas' do
+    let(:admin) { create(:user, account: account, role: :administrator) }
+
+    def pasta(titulo, dono)
+      account.pastas_prontas.create!(drive_pasta_id: "pasta-#{titulo}", titulo: titulo, responsavel: dono)
+    end
+
+    def titulos_de(user)
+      get "#{url}/pastas_prontas", headers: user.create_new_auth_token, as: :json
+      response.parsed_body['pastas'].pluck('titulo')
+    end
+
+    before do
+      pasta('da Ana', ana)
+      pasta('da Bia', bia)
+      pasta('sem dono', nil)
+    end
+
+    it 'responsável vê as dele; agente do time não vê a de outro; admin vê todas, inclusive sem dono' do
+      expect(titulos_de(ana)).to eq(['da Ana'])
+      expect(response.parsed_body['pastas'].first).to include('drive_pasta_id' => 'pasta-da Ana', 'responsavel' => include('id' => ana.id))
+      expect(titulos_de(bia)).to eq(['da Bia'])
+      expect(titulos_de(admin)).to contain_exactly('da Ana', 'da Bia', 'sem dono')
+      expect(response.parsed_body['pastas'].find { |x| x['titulo'] == 'sem dono' }['responsavel']).to be_nil
+    end
+
+    it 'fora do jurídico recebe 401' do
+      get "#{url}/pastas_prontas", headers: fora.create_new_auth_token, as: :json
+      expect(response).to have_http_status(:unauthorized)
+    end
   end
 end

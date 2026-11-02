@@ -7,6 +7,7 @@ class Ramon::DriveClient
   FOLDER_MIME = 'application/vnd.google-apps.folder'.freeze
   SHORTCUT_MIME = 'application/vnd.google-apps.shortcut'.freeze
   FILTRO_TIPOS = "(mimeType = '#{FOLDER_MIME}' or mimeType = 'application/pdf' or mimeType = 'image/jpeg' or mimeType = 'image/png')".freeze
+  MARCADOR_PASTA_PRONTA = '_pasta-pronta.json'.freeze
   SCOPE = 'https://www.googleapis.com/auth/drive'.freeze
 
   class << self
@@ -66,11 +67,60 @@ class Ramon::DriveClient
       listar("'#{parent_id}' in parents and #{FILTRO_TIPOS}", 200)
     end
 
+    # Tudo que está na pasta (sem filtro de tipos), pastas incluídas com pasta: true.
+    def conteudo_da_pasta(pasta_id)
+      ordenados(todas_as_paginas("'#{pasta_id}' in parents and trashed = false", 'files(id,name,mimeType,modifiedTime,size,parents)'))
+    end
+
+    # Marcadores que a esteira deixa na pasta pronta: [{id:, parents:, size:}]; a pasta é o pai do marcador.
+    # Segue as páginas até o fim (qualquer erro sobe: lista parcial nunca vale como completa).
+    def marcadores_de_pasta_pronta
+      todas_as_paginas("name = '#{MARCADOR_PASTA_PRONTA}' and trashed = false", 'files(id,parents,size)')
+        .map { |f| { id: f.id, parents: f.parents, size: f.size&.to_i } }
+    end
+
+    # Marcador já usado: sai da lista (a esteira ignora arquivos _*).
+    def para_lixeira(file_id)
+      service.update_file(file_id, { trashed: true }, fields: 'id', supports_all_drives: true)
+    end
+
+    # A pasta está dentro da raiz do escritório (sobe até `niveis` pais)?
+    def dentro_da_raiz?(pasta_id, niveis: 8)
+      atual = pasta_id
+      niveis.times do
+        return true if atual == root_id
+
+        atual = parent_of(atual)
+        return false if atual.blank?
+      end
+      atual == root_id
+    end
+
+    # Nomes das pastas ancestrais (mais próxima primeiro), até `limite`.
+    def nomes_acima(pasta_id, limite: 4)
+      nomes = []
+      atual = pasta_id
+      limite.times do
+        atual = parent_of(atual)
+        break if atual.blank?
+
+        nomes << service.get_file(atual, fields: 'name', supports_all_drives: true).name
+      end
+      nomes
+    end
+
     def search(texto)
       texto = texto.to_s.strip
       return [] if texto.length < 3
 
       listar("name contains '#{texto.gsub(/[\\']/) { |c| "\\#{c}" }}' and #{FILTRO_TIPOS}", 50)
+    end
+
+    # Só pasta existente: erro de cliente do Drive (404 de id inexistente) é false; erro de servidor sobe.
+    def pasta?(id)
+      service.get_file(id, fields: 'mimeType', supports_all_drives: true).mime_type == FOLDER_MIME
+    rescue Google::Apis::ClientError
+      false
     end
 
     def parent_of(id)
@@ -92,12 +142,27 @@ class Ramon::DriveClient
         q: "#{filtro} and trashed = false", fields: 'files(id,name,mimeType,modifiedTime,size,parents)', page_size: page_size,
         supports_all_drives: true, include_items_from_all_drives: true
       ).files.to_a
-      files.map { |f| arquivo_hash(f) }.sort_by { |h| [h[:pasta] ? 0 : 1, h[:name].to_s.downcase] }
+      ordenados(files)
+    end
+
+    def ordenados(files) = files.map { |f| arquivo_hash(f) }.sort_by { |h| [h[:pasta] ? 0 : 1, h[:name].to_s.downcase] }
+
+    def todas_as_paginas(filtro, campos)
+      arquivos = []
+      token = nil
+      loop do
+        pagina = service.list_files(q: filtro, fields: "nextPageToken,#{campos}", page_size: 200, page_token: token,
+                                    supports_all_drives: true, include_items_from_all_drives: true)
+        arquivos.concat(pagina.files.to_a)
+        token = pagina.next_page_token
+        break if token.blank?
+      end
+      arquivos
     end
 
     def arquivo_hash(file)
       { id: file.id, name: file.name, mime_type: file.mime_type, modified_time: file.modified_time,
-        size: file.size&.to_i, pasta: file.mime_type == FOLDER_MIME }
+        size: file.size&.to_i, parents: file.parents, pasta: file.mime_type == FOLDER_MIME }
     end
 
     def redirect_uri = "#{ENV.fetch('FRONTEND_URL', nil)}/ramon/google_agenda/callback"

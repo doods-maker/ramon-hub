@@ -61,6 +61,7 @@ gem 'image_processing'
 ##-- for the ramon Drive bridge (ADR-0002) --##
 gem 'google-apis-drive_v3', require: false
 gem 'googleauth', require: false
+gem 'pdf-reader', require: false
 gem 'prawn', require: false
 
 ##-- for actionmailbox --##
