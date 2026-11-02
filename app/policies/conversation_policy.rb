@@ -14,12 +14,10 @@ class ConversationPolicy < ApplicationPolicy
   private
 
   def agent_can_view_conversation?
-    inbox_access? || team_access? || assigned_to_user? || equipe_participant?
-  end
+    # ramon: na caixa Equipe só quem participa; atribuição, time e membro de caixa não dão acesso (ADR 0011)
+    return participant? if record.inbox&.equipe?
 
-  # ramon: na caixa Equipe quem participa da conversa vê e responde (ADR 0011)
-  def equipe_participant?
-    record.inbox&.equipe? && participant?
+    inbox_access? || team_access? || assigned_to_user?
   end
 
   def administrator?

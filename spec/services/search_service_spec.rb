@@ -25,6 +25,32 @@ describe SearchService do
     Current.account = nil
   end
 
+  # ramon: na caixa Equipe só participantes + administradores (ADR 0011)
+  describe 'caixa Equipe' do
+    let(:ana) { create(:user, account: account) }
+    let(:bia) { create(:user, account: account) }
+    let!(:par) do
+      Ramon::Equipe.sincronizar(account, criar: true)
+      Ramon::Equipe.conversa_1a1(account, ana, bia)
+    end
+
+    def achadas(quem)
+      described_class.new(current_user: quem, current_account: account, params: { q: 'sigilo' }, search_type: 'Message').perform[:messages]
+    end
+
+    before { create(:message, conversation: par, account: account, inbox: par.inbox, sender: ana, message_type: :outgoing, content: 'sigilo') }
+
+    it 'membro da caixa não acha mensagem da 1:1 alheia' do
+      create(:inbox_member, user: user, inbox: par.inbox)
+
+      expect(achadas(user)).to be_empty
+    end
+
+    it 'administrador segue achando' do
+      expect(achadas(create(:user, account: account, role: :administrator))).not_to be_empty
+    end
+  end
+
   describe '#perform' do
     context 'when search types' do
       let(:params) { { q: 'Potter' } }

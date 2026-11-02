@@ -25,7 +25,12 @@ class SearchService
   private
 
   def accessable_inbox_ids
-    @accessable_inbox_ids ||= @current_user.assigned_inboxes.pluck(:id)
+    @accessable_inbox_ids ||= begin
+      inboxes = @current_user.assigned_inboxes
+      # ramon: membro da caixa Equipe não acha por aqui conversa de que não participa (ADR 0011)
+      inboxes = inboxes.where(equipe: false) unless @current_user.administrator?
+      inboxes.pluck(:id)
+    end
   end
 
   def search_query

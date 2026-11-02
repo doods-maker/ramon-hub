@@ -112,6 +112,21 @@ describe ActionCableListener do
       )
       listener.conversation_typing_on(event)
     end
+
+    it 'leaves out the assignee, team members and inbox members who do not participate' do
+      atribuido, do_time, membro = create_list(:user, 3, account: account, role: :agent)
+      time = create(:team, account: account)
+      [atribuido, do_time].each { |user| create(:team_member, team: time, user: user) }
+      create(:inbox_member, inbox: direta.inbox, user: membro)
+      direta.update!(team: time, assignee: atribuido)
+
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        a_collection_containing_exactly(colega.pubsub_token, admin.pubsub_token, direta.contact_inbox.pubsub_token),
+        'conversation.typing_on',
+        anything
+      )
+      listener.conversation_typing_on(event)
+    end
   end
 
   describe '#typing_on with contact' do

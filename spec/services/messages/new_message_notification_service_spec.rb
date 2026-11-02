@@ -15,6 +15,27 @@ describe Messages::NewMessageNotificationService do
     end
   end
 
+  # ramon: atribuição não dá acesso na Equipe, e o aviso leva o texto da mensagem (ADR 0011)
+  context 'when the conversation is in the Equipe inbox' do
+    let(:account) { create(:account) }
+    let(:ana) { create(:user, account: account) }
+    let(:bia) { create(:user, account: account) }
+    let(:de_fora) { create(:user, account: account) }
+
+    it 'notifies the participants, not the assignee from outside', :aggregate_failures do
+      Ramon::Equipe.sincronizar(account, criar: true)
+      par = Ramon::Equipe.conversa_1a1(account, ana, bia)
+      par.update!(assignee: de_fora)
+      message = create(:message, conversation: par, account: account, inbox: par.inbox, sender: ana, message_type: :outgoing)
+      allow(NotificationBuilder).to receive(:new).and_call_original
+
+      described_class.new(message: message).perform
+
+      expect(NotificationBuilder).not_to have_received(:new).with(hash_including(user: de_fora))
+      expect(NotificationBuilder).to have_received(:new).with(hash_including(user: bia, notification_type: 'participating_conversation_new_message'))
+    end
+  end
+
   context 'when message is notifiable' do
     let(:account) { create(:account) }
     let(:assignee) { create(:user, account: account) }
