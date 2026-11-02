@@ -286,7 +286,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
       account.pastas_prontas.create!(drive_pasta_id: 'p1', titulo: 'A', responsavel: ana)
       post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json
       expect(response).to have_http_status(:success)
-      expect(account.pastas_prontas).to be_empty
+      expect(PastaPronta.where(account: account)).to be_empty
     end
 
     it 'apontar a mesma pasta de novo devolve 422 com a petição existente' do
