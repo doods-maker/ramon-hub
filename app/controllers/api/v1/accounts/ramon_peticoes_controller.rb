@@ -1,17 +1,23 @@
 # Peticionamento · Fase 1: petições a protocolar à mão (pacote de PDFs, seletor do Drive, registro do protocolo).
 class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseController
+  include RamonPeticaoPasta
+
   LIMITE = 200
+  # Conferência primeiro (mais antiga antes), depois rascunhos por prazo, depois protocoladas.
   ORDEM = <<~SQL.squish.freeze
-    CASE WHEN status = 'rascunho' THEN 0 ELSE 1 END,
+    CASE status WHEN 'conferencia' THEN 0 WHEN 'rascunho' THEN 1 ELSE 2 END,
+    CASE WHEN status = 'conferencia' THEN created_at END ASC,
     CASE WHEN status = 'rascunho' THEN prazo END ASC NULLS LAST,
     protocolada_em DESC NULLS LAST
   SQL
 
   before_action :current_account
   before_action :check_authorization
-  before_action :carregar_peticao, except: %i[index create drive drive_busca processos]
-  before_action :exigir_editavel, only: %i[update destroy arquivos arquivos_drive atualizar_arquivo remover_arquivo ordem]
-  before_action :exigir_drive, only: %i[drive drive_busca arquivos_drive]
+  before_action :carregar_peticao, except: %i[index create pela_pasta drive drive_busca processos]
+  before_action :exigir_editavel, only: %i[update destroy arquivos arquivos_drive atualizar_arquivo remover_arquivo ordem reler_pasta]
+  before_action :exigir_pela_pasta, only: :reler_pasta
+  before_action :exigir_pacote_livre, only: %i[arquivos arquivos_drive remover_arquivo ordem]
+  before_action :exigir_drive, only: %i[drive drive_busca arquivos_drive pela_pasta reler_pasta]
 
   rescue_from ActiveRecord::RecordInvalid do |e|
     render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
@@ -39,6 +45,38 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
     peticao.drive_pasta_base_id = pasta_base(peticao.contact_id)
     peticao.save!
     render json: peticao.as_json_hub
+  end
+
+  # Aponta uma pasta do Drive: a petição nasce em conferência e a leitura é enfileirada.
+  def pela_pasta
+    pasta_id = params[:pasta_id].to_s.strip
+    return render json: { error: 'pasta_id' }, status: :unprocessable_entity if pasta_id.blank?
+
+    existente = peticao_da_pasta(pasta_id)
+    return pasta_ja_usada(existente) if existente
+
+    @peticao = criar_da_pasta(pasta_id)
+    Ramon::PeticaoLerPastaJob.perform_later(@peticao.id)
+    render_peticao
+  rescue ActiveRecord::RecordNotUnique
+    pasta_ja_usada(peticao_da_pasta(pasta_id))
+  rescue ActiveRecord::RecordInvalid => e
+    raise unless e.record.errors.of_kind?(:drive_pasta_id, :taken)
+
+    pasta_ja_usada(peticao_da_pasta(pasta_id))
+  end
+
+  # Relê a pasta: guarda os campos da leitura anterior e só o `estado` volta a `lendo`.
+  def reler_pasta
+    return render json: { error: 'em_leitura' }, status: :conflict unless reservar_releitura
+
+    Ramon::PeticaoLerPastaJob.perform_later(@peticao.id)
+    render_peticao
+  end
+
+  def confirmar
+    @peticao.confirmar!(confirmar_alertas: ActiveModel::Type::Boolean.new.cast(params[:confirmar_alertas]) || false)
+    render_peticao
   end
 
   def update
@@ -133,7 +171,9 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
   private
 
   def render_peticao
-    render json: @peticao.reload.as_json_hub.merge(drive_ligado: Ramon::DriveClient.configured?)
+    json = @peticao.reload.as_json_hub.merge(drive_ligado: Ramon::DriveClient.configured?)
+    json.merge!(Ramon::Peticionamento::AlertasDaPasta.call(@peticao)) if @peticao.conferencia?
+    render json: json
   end
 
   def carregar_peticao

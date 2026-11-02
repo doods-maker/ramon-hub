@@ -327,11 +327,14 @@ Rails.application.routes.draw do
               get 'arquivos/:arquivo_id/baixar', action: :baixar
               patch :ordem
               post :registrar_protocolo
+              post :reler_pasta
+              post :confirmar
             end
             collection do
               get :drive
               get :drive_busca
               get :processos
+              post :pela_pasta
             end
           end
           resources :ramon_conteudo, only: [:index, :show], controller: 'ramon_conteudo' do
