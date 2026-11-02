@@ -20,6 +20,9 @@ Limites conhecidos:
 
 - A conta é `RAMON_PETICOES_ACCOUNT_ID` (padrão 2).
 - O responsável é achado pelo nome. Os usuários têm só o primeiro nome, então nome de uma palavra é marcado como incerto
-  e a pessoa precisa confirmar o responsável na conferência.
+  e a pessoa precisa confirmar o responsável na conferência. Esse checkbox existe só na tela: o backend não guarda nem
+  confere a marcação.
+- Tetos de tamanho: arquivo acima de 30 MB ou pasta acima de 100 MB é recusado antes de baixar, porque o job carrega tudo
+  na memória. Tamanho que o Drive não informa conta como 0.
 - A mesma pasta não vira duas petições (índice único por conta e pasta). Apagada a petição em conferência, a pasta pode
   ser apontada de novo.
