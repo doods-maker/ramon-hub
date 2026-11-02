@@ -59,6 +59,43 @@ RSpec.describe Ramon::Equipe do
     end
   end
 
+  describe 'permissões e tipo' do
+    let(:inbox) { described_class.sincronizar(account, criar: true) }
+    let(:geral) { inbox && conversa('geral') }
+    let(:ana_bia) { described_class.conversa_1a1(account, ana, bia) }
+    let(:de_ana) { create(:message, conversation: ana_bia, account: account, inbox: inbox, sender: ana, message_type: :outgoing) }
+
+    it '.pode_escrever? e .participante?: só quem participa na Equipe; livre fora dela', :aggregate_failures do
+      expect(described_class.participante?(ana_bia, ana)).to be(true)
+      expect(described_class.participante?(ana_bia, admin)).to be(false)
+      expect(described_class.participante?(ana_bia, nil)).to be(false)
+      expect(described_class.pode_escrever?(ana_bia, admin)).to be(false)
+      expect(described_class.pode_escrever?(geral, admin)).to be(true)
+
+      comum = create(:conversation, account: account)
+      expect(described_class.pode_escrever?(comum, nil)).to be(true)
+    end
+
+    it '.pode_apagar?: participante autor ou admin participante; fora da Equipe, livre', :aggregate_failures do
+      expect(described_class.pode_apagar?(de_ana, ana, ana.account_users.first)).to be(true)
+      expect(described_class.pode_apagar?(de_ana, bia, bia.account_users.first)).to be(false)
+      expect(described_class.pode_apagar?(de_ana, admin, admin.account_users.first)).to be(false)
+
+      no_geral = create(:message, conversation: geral, account: account, inbox: inbox, sender: ana, message_type: :outgoing)
+      expect(described_class.pode_apagar?(no_geral, admin, admin.account_users.first)).to be(true)
+
+      comum = create(:message, account: account, message_type: :outgoing)
+      expect(described_class.pode_apagar?(comum, nil, nil)).to be(true)
+    end
+
+    it '.tipo e .pessoas_1a1', :aggregate_failures do
+      expect(described_class.tipo(ana_bia)).to eq('1a1')
+      expect(described_class.pessoas_1a1(ana_bia).pluck(:id)).to eq([ana.id, bia.id].sort)
+      expect(described_class.tipo(geral)).to eq('grupo')
+      expect(described_class.pessoas_1a1(geral)).to eq([])
+    end
+  end
+
   describe '.nao_lidas' do
     let(:geral) { described_class.sincronizar(account, criar: true) && conversa('geral') }
 

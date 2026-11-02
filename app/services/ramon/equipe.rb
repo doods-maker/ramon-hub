@@ -62,6 +62,34 @@ module Ramon::Equipe
     conversation.conversation_participants.find_by(user_id: user.id)&.update!(last_seen_at: Time.current)
   end
 
+  def participante?(conversation, user)
+    user.is_a?(User) && conversation.conversation_participants.exists?(user_id: user.id)
+  end
+
+  # Admin de fora só lê. Fora da Equipe nada muda (inclusive AgentBot/usuário nulo).
+  def pode_escrever?(conversation, user)
+    !conversation.inbox.equipe? || participante?(conversation, user)
+  end
+
+  def pode_apagar?(message, user, account_user)
+    conversation = message.conversation
+    return true unless conversation.inbox.equipe?
+
+    participante?(conversation, user) && (account_user&.administrator? || (message.sender_type == 'User' && message.sender_id == user.id))
+  end
+
+  def tipo(conversation)
+    conversation.contact_inbox&.source_id.to_s.start_with?('equipe-1a1-') ? '1a1' : 'grupo'
+  end
+
+  def pessoas_1a1(conversation)
+    return [] unless tipo(conversation) == '1a1'
+
+    User.where(id: conversation.conversation_participants.select(:user_id)).order(:id).map do |u|
+      { id: u.id, name: u.available_name, thumbnail: u.avatar_url }
+    end
+  end
+
   # Hub surdo (AsyncDispatcher): o evento é da caixa Equipe?
   def evento?(data)
     return data[:contact].additional_attributes.to_h['equipe'].present? if data[:contact].is_a?(Contact)

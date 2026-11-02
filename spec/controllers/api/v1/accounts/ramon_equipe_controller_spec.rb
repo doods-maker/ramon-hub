@@ -78,6 +78,92 @@ RSpec.describe 'Ramon Equipe API', type: :request do
     end
   end
 
+  describe 'admin que não participa só lê' do
+    it 'não envia', :aggregate_failures do
+      mandar(admin, ana_bia)
+
+      expect(response).to have_http_status(:forbidden)
+      expect(ana_bia.messages.count).to eq(0)
+    end
+
+    it 'não aparece digitando' do
+      url = "#{base}/conversations/#{ana_bia.display_id}/toggle_typing_status"
+      post url, params: { typing_status: 'on' }, headers: admin.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it 'continua lendo' do
+      expect(ids_na_caixa(admin)).to include(ana_bia.display_id)
+    end
+
+    it 'admin que participa do Geral envia' do
+      mandar(admin, geral)
+
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe 'apagar' do
+    def mensagem_de(user, conversation)
+      create(:message, account: account, inbox: inbox, conversation: conversation, sender: user, message_type: :outgoing, content: 'oi')
+    end
+
+    def apagar(user, message)
+      delete "#{base}/conversations/#{message.conversation.display_id}/messages/#{message.id}",
+             headers: user.create_new_auth_token, as: :json
+    end
+
+    it 'colega não apaga mensagem alheia', :aggregate_failures do
+      msg = mensagem_de(ana, ana_bia)
+      apagar(bia, msg)
+
+      expect(response).to have_http_status(:forbidden)
+      expect(msg.reload.content).to eq('oi')
+    end
+
+    it 'autor apaga a própria', :aggregate_failures do
+      msg = mensagem_de(ana, ana_bia)
+      apagar(ana, msg)
+
+      expect(response).to have_http_status(:ok)
+      expect(msg.reload.content_attributes['deleted']).to be(true)
+    end
+
+    it 'admin que participa apaga no Geral' do
+      apagar(admin, mensagem_de(ana, geral))
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it 'admin de fora não apaga' do
+      apagar(admin, mensagem_de(ana, ana_bia))
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it 'caixa de cliente não muda: agente apaga mensagem de outro numa caixa comum', :aggregate_failures do
+      comum = create(:inbox, account: account)
+      create(:inbox_member, inbox: comum, user: bia)
+      conversa = create(:conversation, account: account, inbox: comum)
+      msg = create(:message, account: account, inbox: comum, conversation: conversa, sender: ana, message_type: :outgoing)
+      apagar(bia, msg)
+
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe 'dados da conversa' do
+    it 'expõe tipo e pessoas', :aggregate_failures do
+      get "#{base}/conversations/#{ana_bia.display_id}", headers: ana.create_new_auth_token, as: :json
+      expect(response.parsed_body['equipe_tipo']).to eq('1a1')
+      expect(response.parsed_body['equipe_pessoas'].pluck('id')).to contain_exactly(ana.id, bia.id)
+
+      get "#{base}/conversations/#{geral.display_id}", headers: ana.create_new_auth_token, as: :json
+      expect(response.parsed_body).to include('equipe_tipo' => 'grupo', 'equipe_pessoas' => [])
+    end
+  end
+
   describe 'portas laterais' do
     it 'a API pública de caixa Api não abre a Equipe (source_id previsível)' do
       get "/public/api/v1/inboxes/#{inbox.channel.identifier}/contacts/equipe-1a1-#{ana.id}-#{bia.id}/conversations"
