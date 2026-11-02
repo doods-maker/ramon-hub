@@ -24,8 +24,9 @@ class Ramon::Peticionamento::AlertasDaPasta
 
   def cpf_diferente?
     pasta = digitos(@leitura['cpf_pasta'])
-    peca = digitos(@leitura.dig('campos', 'cpf'))
-    pasta.present? && peca.present? && pasta != peca
+    return false if pasta.blank?
+
+    [@leitura.dig('campos', 'cpf'), @peticao.contact&.cpf].map { |c| digitos(c) }.any? { |c| c.present? && c != pasta }
   end
 
   def conferir_processo

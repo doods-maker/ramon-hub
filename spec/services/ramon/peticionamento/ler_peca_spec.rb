@@ -42,6 +42,13 @@ RSpec.describe Ramon::Peticionamento::LerPeca do
     expect(ler['falhou']).to be(true)
   end
 
+  it 'trava de LGPD vira falhou, e o log leva só a classe do erro' do
+    allow(Rails.logger).to receive(:warn)
+    allow(Ramon::LlmClient).to receive(:complete).and_raise(Ramon::LlmClient::SensitiveProviderError, 'trecho da peça')
+    expect(ler['falhou']).to be(true)
+    expect(Rails.logger).to have_received(:warn).with('[Ramon::Peticionamento::LerPeca] Ramon::LlmClient::SensitiveProviderError')
+  end
+
   it 'sem chave devolve falhou com todas as chaves vazias' do
     allow(Ramon::LlmEscolha).to receive(:chave?).with('anthropic').and_return(false)
     expect(ler).to include('falhou' => true, 'assinantes' => [], 'marcadores' => [], 'incertos' => [], 'tipo' => nil)

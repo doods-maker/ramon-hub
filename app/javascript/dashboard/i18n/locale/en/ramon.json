@@ -2469,7 +2469,9 @@
           "formato": "\"{detalhe}\" is not a PDF, Word, JPG or PNG. Replace that file in the folder and click Read folder again.",
           "sem_numero": "The file \"{detalhe}\" has no number at the start of its name (01, 02...). Rename it in the folder and click Read folder again.",
           "numero_repetido": "The number of the file \"{detalhe}\" is already used by another file. Give each file its own number and click Read folder again.",
-          "marcador": "The petition still has the mark \"{detalhe}\". Upload the PDF again without it and click Read folder again."
+          "marcador": "The petition still has the mark \"{detalhe}\". Upload the PDF again without it and click Read folder again.",
+          "muito_grande": "The file \"{detalhe}\" is larger than 30 MB. Make it smaller in the folder and click Read folder again.",
+          "pasta_grande": "The folder is larger than 100 MB in total. Leave in it only what goes to the court and click Read folder again."
         },
         "ALERTA": {
           "cpf_diferente": "The CPF in the petition is not the same as the CPF in the folder name. Check that the folder belongs to this client.",

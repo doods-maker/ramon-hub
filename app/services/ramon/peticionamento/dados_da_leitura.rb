@@ -13,7 +13,7 @@ class Ramon::Peticionamento::DadosDaLeitura
   def call
     responsavel, duvida = achar_responsavel
     incertos = Array(@lida['incertos']).map(&:to_s)
-    incertos |= ['responsavel'] if responsavel.nil? || duvida
+    incertos |= ['responsavel'] if responsavel.nil? || duvida || incertos.include?('assinantes')
     {
       inicial: { 'inicial' => true, 'intermediaria' => false }[@lida['tipo']],
       numero_processo: @lida['numero_processo'], tribunal: @lida['tribunal'],

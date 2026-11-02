@@ -14,7 +14,7 @@ module Ramon::Peticionamento::RegrasDaPasta
     words_sem_pdf(words, arquivos, recusas)
     recusas.unshift('sem_pdf') unless arquivos.first&.fetch(:mime_type) == PDF # peça principal não pode ser imagem
 
-    Resultado.new(arquivos: arquivos.map { |a| a.slice(:id, :name, :mime_type, :nome_limpo) }, recusas: recusas,
+    Resultado.new(arquivos: arquivos.map { |a| a.slice(:id, :name, :mime_type, :size, :nome_limpo) }, recusas: recusas,
                   avisos: subpastas.any? ? ["subpastas:#{subpastas.pluck(:name).join(', ')}"] : [])
   end
 

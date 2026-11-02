@@ -4,6 +4,8 @@
 # novo); falha do LLM é absorvida por LerPeca e vira aviso.
 class Ramon::Peticionamento::ImportarPasta
   CPF = /(?<!\d)(?:\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})(?!\d)/
+  MAX_ARQUIVO = 30.megabytes
+  MAX_PASTA = 100.megabytes
   Drive = Ramon::DriveClient
 
   def self.call(peticao) = new(peticao).call
@@ -18,7 +20,8 @@ class Ramon::Peticionamento::ImportarPasta
 
     @releitura = releitura?
     regras = Ramon::Peticionamento::RegrasDaPasta.call(Drive.conteudo_da_pasta(@peticao.drive_pasta_id))
-    return gravar_recusa(regras) if regras.recusas.any?
+    recusas = regras.recusas + recusas_de_tamanho(regras.arquivos)
+    return gravar_recusa(recusas, regras.avisos) if recusas.any?
 
     baixados = regras.arquivos.map { |a| [a, Drive.download(a[:id]).first] }
     ler(regras.avisos, baixados.first.last) if trocar_pacote(baixados)
@@ -34,12 +37,19 @@ class Ramon::Peticionamento::ImportarPasta
     campos.present? && campos['falhou'] != true && campos['e_peticao'] != false
   end
 
-  def gravar_recusa(regras)
+  # Antes de baixar: tudo vai para a memória do job. `size` nil (o Drive nem sempre informa) conta como 0.
+  def recusas_de_tamanho(arquivos)
+    recusas = arquivos.select { |a| a[:size].to_i > MAX_ARQUIVO }.map { |a| "muito_grande:#{a[:name]}" }
+    recusas << 'pasta_grande' if arquivos.sum { |a| a[:size].to_i } > MAX_PASTA
+    recusas
+  end
+
+  def gravar_recusa(recusas, avisos)
     @peticao.with_lock do
       next unless lendo?
 
       limpar_pacote
-      gravar(regras.recusas, regras.avisos, {}, [], nil)
+      gravar(recusas, avisos, {}, [], nil)
     end
   end
 
@@ -80,25 +90,19 @@ class Ramon::Peticionamento::ImportarPasta
     end
   end
 
-  # PDF escaneado não tem texto: vale o que o LLM achou (e, se ele falhou, não há verificação nenhuma).
+  # PDF escaneado não tem texto: vale o que o LLM achou, só o que está na lista fechada (se ele falhou, não há verificação nenhuma).
   def marcadores(bytes, campos, avisos)
     texto = Ramon::Peticionamento::MarcadoresRascunho.texto_do_pdf(bytes)
-    achados = if texto.strip.empty?
-                avisos << 'sem_texto'
-                campos['marcadores']
-              else
-                Ramon::Peticionamento::MarcadoresRascunho.no_texto(texto)
-              end
-    achados.map { |m| "marcador:#{m}" }
+    if texto.strip.empty?
+      avisos << 'sem_texto'
+      texto = Array(campos['marcadores']).join(' ')
+    end
+    Ramon::Peticionamento::MarcadoresRascunho.no_texto(texto).map { |m| "marcador:#{m}" }
   end
 
   # Grava na petição só o que veio não-nil (releitura: o que o advogado editou fica); devolve os campos incertos.
   def aplicar(campos, avisos)
-    if campos['e_peticao'] == false
-      avisos << 'nao_parece_peticao'
-      @peticao.arquivos.update_all(principal: false) # rubocop:disable Rails/SkipsModelValidations
-      return Array(campos['incertos'])
-    end
+    return nao_e_peticao(campos, avisos) if campos['e_peticao'] == false
 
     dados = Ramon::Peticionamento::DadosDaLeitura.call(@peticao.account, campos)
     avisos << 'responsavel_sem_usuario' if dados[:responsavel].nil?
@@ -108,7 +112,21 @@ class Ramon::Peticionamento::ImportarPasta
     attrs[:inicial] = dados[:inicial] unless dados[:inicial].nil?
     attrs[:numero_processo] = nil if dados[:inicial]
     @peticao.update!(attrs) # nunca toca em prazo
-    dados[:incertos]
+    dados[:incertos] | preservados(dados)
+  end
+
+  def nao_e_peticao(campos, avisos)
+    avisos << 'nao_parece_peticao'
+    @peticao.arquivos.update_all(principal: false) # rubocop:disable Rails/SkipsModelValidations
+    Array(campos['incertos']) | ['responsavel'] | preservados({})
+  end
+
+  # O que a petição já tinha e esta leitura não confirmou fica, mas marcado como incerto.
+  def preservados(dados)
+    lista = []
+    lista << 'numero_processo' if @peticao.numero_processo.present? && dados[:numero_processo].nil?
+    lista << 'cpf' if @peticao.contact_id.present? && dados[:contact].nil?
+    lista
   end
 
   def cpf_da_pasta

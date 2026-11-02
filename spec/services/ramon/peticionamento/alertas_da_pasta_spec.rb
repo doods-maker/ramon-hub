@@ -26,6 +26,11 @@ RSpec.describe Ramon::Peticionamento::AlertasDaPasta do
     expect(alertas(p)[:alertas]).to eq(['cpf_diferente'])
   end
 
+  it 'CPF do cliente da petição diferente do CPF da pasta trava, mesmo sem CPF lido' do
+    expect(alertas(peticao(leitura: { 'cpf_pasta' => '11111111111' }, contact: contato))[:alertas]).to eq(['cpf_diferente'])
+    expect(alertas(peticao(leitura: { 'cpf_pasta' => contato.cpf }, contact: contato))[:alertas]).to eq([])
+  end
+
   it 'sem CPF de um dos lados, não trava' do
     expect(alertas(peticao(leitura: { 'cpf_pasta' => '11111111111', 'campos' => {} }))[:alertas]).to eq([])
   end

@@ -87,6 +87,13 @@ RSpec.describe Ramon::Peticionamento::ImportarPasta do
     expect(peticao.leitura['avisos']).to include('sem_texto')
   end
 
+  it 'PDF sem texto: marcador do LLM fora da lista fechada não recusa' do
+    stub_download('a', pdf_sem_texto)
+    stub_ler('marcadores' => ['[sic]', '[...]'])
+    importar
+    expect(peticao.leitura).to include('recusas' => [], 'estado' => 'lida')
+  end
+
   it 'PDF sem texto e LLM fora: os dois avisos' do
     stub_download('a', pdf_sem_texto)
     stub_ler('falhou' => true)
@@ -162,6 +169,71 @@ RSpec.describe Ramon::Peticionamento::ImportarPasta do
     stub_ler('tipo' => 'inicial')
     importar
     expect(peticao.reload).to have_attributes(inicial: true, numero_processo: nil)
+  end
+
+  it 'releitura sem número nem CPF lidos: o que a petição tinha fica, marcado como incerto' do
+    contato = create(:contact, account: account, cpf: '52998224725')
+    importar
+    peticao.update!(contact: contato)
+    voltar_a_lendo
+    stub_ler('numero_processo' => nil, 'tribunal' => nil)
+    importar
+    expect(peticao.reload).to have_attributes(numero_processo: numero_valido_trf4, contact: contato)
+    expect(peticao.leitura['incertos']).to include('numero_processo', 'cpf')
+  end
+
+  it 'leitura que traz número e cliente não marca incerto' do
+    contato = create(:contact, account: account, cpf: '52998224725')
+    stub_ler('cpf' => contato.cpf)
+    importar
+    expect(peticao.reload.contact).to eq(contato)
+    expect(peticao.leitura['incertos']).to eq([])
+  end
+
+  it 'inicial limpa o número sem marcar incerto' do
+    importar
+    voltar_a_lendo
+    stub_ler('tipo' => 'inicial', 'numero_processo' => nil)
+    importar
+    expect(peticao.reload.numero_processo).to be_nil
+    expect(peticao.leitura['incertos']).not_to include('numero_processo')
+  end
+
+  it 'não parece petição: responsável incerto' do
+    stub_ler('e_peticao' => false)
+    importar
+    expect(peticao.leitura['incertos']).to include('responsavel')
+  end
+
+  it 'não parece petição na releitura: número antigo fica marcado como incerto' do
+    importar
+    voltar_a_lendo
+    stub_ler('e_peticao' => false)
+    importar
+    expect(peticao.reload.numero_processo).to eq(numero_valido_trf4)
+    expect(peticao.leitura['incertos']).to include('numero_processo', 'responsavel')
+  end
+
+  it 'arquivo acima de 30 MB é recusado sem baixar nem chamar o LLM' do
+    stub_pasta([item('01 Petição.pdf', pdf, 'a').merge(size: 31.megabytes), item('02 Laudo.pdf', pdf, 'b').merge(size: 1.megabyte)])
+    importar
+    expect(Ramon::DriveClient).not_to have_received(:download)
+    expect(Ramon::Peticionamento::LerPeca).not_to have_received(:call)
+    expect(peticao.leitura['recusas']).to eq(['muito_grande:01 Petição.pdf'])
+  end
+
+  it 'pasta acima de 100 MB é recusada, mesmo com cada arquivo dentro do teto' do
+    stub_pasta((1..4).map { |n| item("0#{n} P.pdf", pdf, n.to_s).merge(size: 26.megabytes) })
+    importar
+    expect(Ramon::DriveClient).not_to have_received(:download)
+    expect(peticao.leitura['recusas']).to eq(['pasta_grande'])
+  end
+
+  it 'tamanho desconhecido conta como 0' do
+    stub_pasta([item('01 Petição.pdf', pdf, 'a').merge(size: nil)])
+    importar
+    expect(peticao.leitura['recusas']).to eq([])
+    expect(peticao.arquivos.count).to eq(1)
   end
 
   it 'erro do Drive sobe, para o job tentar de novo' do

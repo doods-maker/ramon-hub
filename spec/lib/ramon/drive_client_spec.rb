@@ -32,6 +32,15 @@ RSpec.describe Ramon::DriveClient do
     expect(api).to have_received(:list_files).with(hash_including(q: a_string_including("name = '_pasta-pronta.json'"))).twice
   end
 
+  it 'conteudo_da_pasta segue as páginas até o fim, sem filtro de tipos' do
+    pagina1 = Google::Apis::DriveV3::FileList.new(files: [fake('1', 'b.pdf', 'application/pdf')], next_page_token: 'tok')
+    pagina2 = Google::Apis::DriveV3::FileList.new(files: [fake('2', 'a.docx', 'application/msword')])
+    allow(api).to receive(:list_files).and_return(pagina1, pagina2)
+    expect(described_class.conteudo_da_pasta('p').pluck(:id, :size)).to eq([['2', 10], ['1', 10]])
+    expect(api).to have_received(:list_files).with(hash_including(page_token: 'tok', q: "'p' in parents and trashed = false",
+                                                                  fields: a_string_including('nextPageToken', 'size')))
+  end
+
   it 'para_lixeira marca o arquivo como lixo' do
     allow(api).to receive(:update_file)
     described_class.para_lixeira('m1')

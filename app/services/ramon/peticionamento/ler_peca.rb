@@ -31,8 +31,9 @@ class Ramon::Peticionamento::LerPeca
     return vazio(true) unless Ramon::LlmEscolha.chave?('anthropic')
 
     montar(JSON.parse(limpar(pedir.content)))
-  rescue Ramon::LlmClient::TransientError, Ramon::LlmClient::MissingApiKeyError, RubyLLM::Error, JSON::ParserError => e
-    Rails.logger.warn("[Ramon::Peticionamento::LerPeca] #{e.class}: #{e.message}")
+  rescue Ramon::LlmClient::TransientError, Ramon::LlmClient::MissingApiKeyError, Ramon::LlmClient::SensitiveProviderError,
+         RubyLLM::Error, JSON::ParserError => e
+    Rails.logger.warn("[Ramon::Peticionamento::LerPeca] #{e.class}") # só a classe: a mensagem pode trazer trecho da peça (LGPD)
     vazio(true)
   end
 

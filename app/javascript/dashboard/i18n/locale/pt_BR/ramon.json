@@ -2469,7 +2469,9 @@
           "formato": "\"{detalhe}\" não é PDF, Word, JPG nem PNG. Troque esse arquivo na pasta e clique em Reler a pasta.",
           "sem_numero": "O arquivo \"{detalhe}\" está sem número no começo do nome (01, 02...). Renomeie na pasta e clique em Reler a pasta.",
           "numero_repetido": "O número do arquivo \"{detalhe}\" já está em outro arquivo. Dê um número só para cada um e clique em Reler a pasta.",
-          "marcador": "A petição ainda tem a marca \"{detalhe}\". Sobe de novo o PDF sem essa marca e clique em Reler a pasta."
+          "marcador": "A petição ainda tem a marca \"{detalhe}\". Sobe de novo o PDF sem essa marca e clique em Reler a pasta.",
+          "muito_grande": "O arquivo \"{detalhe}\" tem mais de 30 MB. Diminua o arquivo na pasta e clique em Reler a pasta.",
+          "pasta_grande": "A pasta tem mais de 100 MB no total. Deixe nela só o que vai ao tribunal e clique em Reler a pasta."
         },
         "ALERTA": {
           "cpf_diferente": "O CPF da peça não é o mesmo do CPF no nome da pasta. Veja se a pasta é mesmo desse cliente.",

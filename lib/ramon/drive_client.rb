@@ -69,24 +69,14 @@ class Ramon::DriveClient
 
     # Tudo que está na pasta (sem filtro de tipos), pastas incluídas com pasta: true.
     def conteudo_da_pasta(pasta_id)
-      listar("'#{pasta_id}' in parents", 200)
+      ordenados(todas_as_paginas("'#{pasta_id}' in parents and trashed = false", 'files(id,name,mimeType,modifiedTime,size,parents)'))
     end
 
     # Marcadores que a esteira deixa na pasta pronta: [{id:, parents:, size:}]; a pasta é o pai do marcador.
     # Segue as páginas até o fim (qualquer erro sobe: lista parcial nunca vale como completa).
     def marcadores_de_pasta_pronta
-      arquivos = []
-      token = nil
-      loop do
-        pagina = service.list_files(
-          q: "name = '#{MARCADOR_PASTA_PRONTA}' and trashed = false", fields: 'nextPageToken,files(id,parents,size)', page_size: 200,
-          page_token: token, supports_all_drives: true, include_items_from_all_drives: true
-        )
-        arquivos.concat(pagina.files.to_a)
-        token = pagina.next_page_token
-        break if token.blank?
-      end
-      arquivos.map { |f| { id: f.id, parents: f.parents, size: f.size&.to_i } }
+      todas_as_paginas("name = '#{MARCADOR_PASTA_PRONTA}' and trashed = false", 'files(id,parents,size)')
+        .map { |f| { id: f.id, parents: f.parents, size: f.size&.to_i } }
     end
 
     # Marcador já usado: sai da lista (a esteira ignora arquivos _*).
@@ -152,7 +142,22 @@ class Ramon::DriveClient
         q: "#{filtro} and trashed = false", fields: 'files(id,name,mimeType,modifiedTime,size,parents)', page_size: page_size,
         supports_all_drives: true, include_items_from_all_drives: true
       ).files.to_a
-      files.map { |f| arquivo_hash(f) }.sort_by { |h| [h[:pasta] ? 0 : 1, h[:name].to_s.downcase] }
+      ordenados(files)
+    end
+
+    def ordenados(files) = files.map { |f| arquivo_hash(f) }.sort_by { |h| [h[:pasta] ? 0 : 1, h[:name].to_s.downcase] }
+
+    def todas_as_paginas(filtro, campos)
+      arquivos = []
+      token = nil
+      loop do
+        pagina = service.list_files(q: filtro, fields: "nextPageToken,#{campos}", page_size: 200, page_token: token,
+                                    supports_all_drives: true, include_items_from_all_drives: true)
+        arquivos.concat(pagina.files.to_a)
+        token = pagina.next_page_token
+        break if token.blank?
+      end
+      arquivos
     end
 
     def arquivo_hash(file)

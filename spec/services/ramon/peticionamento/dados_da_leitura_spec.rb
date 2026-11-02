@@ -53,6 +53,12 @@ RSpec.describe Ramon::Peticionamento::DadosDaLeitura do
     expect(r[:incertos]).not_to include('responsavel')
   end
 
+  it 'assinantes incertos: o responsável achado fica incerto' do
+    r = dados('assinantes' => [{ 'nome' => 'Brenda Antunes', 'oab' => 'SC 1' }], 'incertos' => ['assinantes'])
+    expect(r[:responsavel]).to eq(brenda)
+    expect(r[:incertos]).to include('responsavel', 'assinantes')
+  end
+
   it 'cliente só pelo CPF, nunca pelo nome' do
     contato = create(:contact, account: account, name: 'João', cpf: cpf_valido)
     expect(dados('cpf' => cpf_valido)[:contact]).to eq(contato)

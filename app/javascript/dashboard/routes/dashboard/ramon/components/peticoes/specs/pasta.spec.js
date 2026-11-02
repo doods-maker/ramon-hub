@@ -24,6 +24,15 @@ describe('peticoes/helpers · pela pasta', () => {
     );
   });
 
+  it('mensagemRecusa traduz as recusas de tamanho', () => {
+    expect(mensagemRecusa('muito_grande:01 P.pdf', t)).toBe(
+      'RAMON.PETICOES.PASTA.RECUSA.muito_grande|01 P.pdf'
+    );
+    expect(mensagemRecusa('pasta_grande', t)).toBe(
+      'RAMON.PETICOES.PASTA.RECUSA.pasta_grande|'
+    );
+  });
+
   it('mensagemAviso e mensagemAlerta usam o próprio grupo', () => {
     expect(mensagemAviso('subpastas:Antigos', t)).toBe(
       'RAMON.PETICOES.PASTA.AVISO.subpastas|Antigos'
