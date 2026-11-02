@@ -10,6 +10,12 @@ class RamonEquipeAPI extends ApiClient {
   conversa(userId) {
     return axios.post(`${this.url}/conversa`, { user_id: userId });
   }
+
+  participantes(conversationId) {
+    return axios.get(`${this.url}/participantes`, {
+      params: { conversation_id: conversationId },
+    });
+  }
 }
 
 export default new RamonEquipeAPI();

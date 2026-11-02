@@ -10,7 +10,12 @@ const TIPOS_AVISO = [
 ];
 
 export const useEquipeStore = defineStore('equipe', {
-  state: () => ({ inboxId: null, naoLidas: 0, carregado: false }),
+  state: () => ({
+    inboxId: null,
+    naoLidas: 0,
+    carregado: false,
+    participantes: {},
+  }),
 
   actions: {
     async carregar() {
@@ -18,6 +23,22 @@ export const useEquipeStore = defineStore('equipe', {
       this.inboxId = data.inbox_id;
       this.naoLidas = data.nao_lidas;
       this.carregado = true;
+    },
+    // last_seen_at vem em segundos (nulo = nunca leu).
+    async carregarParticipantes(conversationId) {
+      const { data } = await EquipeAPI.participantes(conversationId);
+      this.participantes[conversationId] = data.map(p => ({
+        id: p.id,
+        name: p.name,
+        thumbnail: p.thumbnail,
+        lastSeenAt: p.last_seen_at ?? null,
+      }));
+    },
+    atualizarLeitura({ conversationId, userId, lastSeenAt }) {
+      const pessoa = this.participantes[conversationId]?.find(
+        p => p.id === userId
+      );
+      if (pessoa) pessoa.lastSeenAt = lastSeenAt;
     },
     // true = avisou (som + notificação do sistema). Quem está com a conversa
     // aberta e à vista não é avisado. Na Intranet o menu de Conversas (que

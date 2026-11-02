@@ -178,6 +178,40 @@ RSpec.describe 'Ramon Equipe API', type: :request do
     end
   end
 
+  describe 'GET /ramon_equipe/participantes' do
+    def participantes_de(user, conversation)
+      get "#{base}/ramon_equipe/participantes", params: { conversation_id: conversation.display_id },
+                                                headers: user.create_new_auth_token, as: :json
+    end
+
+    it 'participante e admin veem quem está na conversa, com last_seen_at em segundos', :aggregate_failures do
+      ana_bia.conversation_participants.find_by(user: bia).update!(last_seen_at: Time.zone.at(1_700_000_000))
+      ana_bia.conversation_participants.find_by(user: ana).update!(last_seen_at: nil)
+
+      [ana, admin].each do |user|
+        participantes_de(user, ana_bia)
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body.pluck('id')).to contain_exactly(ana.id, bia.id)
+        expect(response.parsed_body.find { |p| p['id'] == bia.id }).to include('last_seen_at' => 1_700_000_000, 'name' => bia.available_name)
+        expect(response.parsed_body.find { |p| p['id'] == ana.id }['last_seen_at']).to be_nil
+      end
+    end
+
+    it 'colega de fora não vê a 1:1 alheia' do
+      participantes_de(caio, ana_bia)
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'conversa de fora da Equipe é 404', :aggregate_failures do
+      comum = create(:inbox, account: account)
+      conversa = create(:conversation, account: account, inbox: comum)
+      participantes_de(admin, conversa)
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe 'POST /ramon_equipe/conversa' do
     it 'abre (ou reabre) a 1:1 com o colega' do
       post "#{base}/ramon_equipe/conversa", params: { user_id: bia.id }, headers: ana.create_new_auth_token, as: :json

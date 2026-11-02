@@ -3,7 +3,7 @@ import { useEquipeStore } from './equipe';
 import EquipeAPI from 'dashboard/api/ramonEquipe';
 
 vi.mock('dashboard/api/ramonEquipe', () => ({
-  default: { get: vi.fn(), conversa: vi.fn() },
+  default: { get: vi.fn(), conversa: vi.fn(), participantes: vi.fn() },
 }));
 
 const notificacao = (over = {}) => ({
@@ -38,6 +38,28 @@ describe('useEquipeStore', () => {
 
   it('carrega a caixa e as não-lidas da pessoa', () => {
     expect(useEquipeStore()).toMatchObject({ inboxId: 9, naoLidas: 3 });
+  });
+
+  it('carrega participantes em camelCase e atualiza só a pessoa certa', async () => {
+    EquipeAPI.participantes.mockResolvedValue({
+      data: [
+        { id: 1, name: 'Eu', thumbnail: 'a', last_seen_at: 10 },
+        { id: 2, name: 'Ana', thumbnail: 'b', last_seen_at: null },
+      ],
+    });
+    const store = useEquipeStore();
+    await store.carregarParticipantes(7);
+    expect(store.participantes[7][1]).toEqual({
+      id: 2,
+      name: 'Ana',
+      thumbnail: 'b',
+      lastSeenAt: null,
+    });
+
+    store.atualizarLeitura({ conversationId: 7, userId: 2, lastSeenAt: 99 });
+    store.atualizarLeitura({ conversationId: 8, userId: 2, lastSeenAt: 5 });
+    expect(store.participantes[7].map(p => p.lastSeenAt)).toEqual([10, 99]);
+    expect(store.participantes[8]).toBeUndefined();
   });
 
   it('avisa (som) mensagem de colega numa conversa da Equipe', async () => {
