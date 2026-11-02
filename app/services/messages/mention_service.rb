@@ -7,7 +7,7 @@ class Messages::MentionService
     validated_mentioned_ids = filter_mentioned_ids_by_inbox
     return if validated_mentioned_ids.blank?
 
-    # ramon: na Equipe o @ só avisa (não vira participante, não entra em "Menções")
+    # FORK(ramon): na Equipe o @ só avisa (não vira participante, não entra em "Menções")
     unless equipe?
       Conversations::UserMentionJob.perform_later(validated_mentioned_ids, message.conversation.id, message.account.id)
       add_mentioned_users_as_participants(validated_mentioned_ids)
@@ -34,7 +34,7 @@ class Messages::MentionService
     (user_mentions + expanded_user_ids + todos_ids).uniq
   end
 
-  # ramon: @todos só vale no canal de grupo da Equipe (o autor é pulado em self_mention?)
+  # FORK(ramon): @todos só vale no canal de grupo da Equipe (o autor é pulado em self_mention?)
   def todos_ids
     return [] unless equipe? && message.content.include?('(mention://todos/0/todos)') && Ramon::Equipe.tipo(message.conversation) == 'grupo'
 

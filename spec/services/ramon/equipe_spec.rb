@@ -132,6 +132,14 @@ RSpec.describe Ramon::Equipe do
       expect(described_class.marcado_nao_lido?(geral, bia)).to be(false)
     end
 
+    it '@todos não marca na 1:1, mesmo com o token', :aggregate_failures do
+      par = described_class.conversa_1a1(account, ana, bia)
+      create(:message, conversation: par, account: account, inbox: par.inbox, sender: ana, message_type: :outgoing,
+                       content: '[@todos](mention://todos/0/todos)')
+
+      expect(described_class.marcado_nao_lido?(par, bia)).to be(false)
+    end
+
     it '@todos marca quem não escreveu; mensagem apagada deixa de marcar', :aggregate_failures do
       msg = de_ana('[@todos](mention://todos/0/todos)')
       expect(described_class.marcado_nao_lido?(geral, bia)).to be(true)

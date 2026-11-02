@@ -69,13 +69,25 @@ has been assigned to you"
 
     it 'usa "quem te marcou em canal" para conversation_mention na caixa Equipe' do
       account = create(:account)
-      ana = create(:user, account: account, name: 'Ana')
+      ana = create(:user, account: account, display_name: 'Ana')
       Ramon::Equipe.sincronizar(account, criar: true)
       geral = Ramon::Equipe.caixa(account).contact_inboxes.find_by!(source_id: 'equipe-geral').conversations.first
       message = create(:message, conversation: geral, account: account, inbox: geral.inbox, sender: ana, message_type: :outgoing)
       notification = create(:notification, notification_type: 'conversation_mention', primary_actor: geral, secondary_actor: message)
 
       expect(I18n.with_locale(:pt_BR) { notification.push_message_title }).to eq 'Ana te marcou em Geral'
+    end
+
+    it 'na 1:1 o título é só "quem te marcou"' do
+      account = create(:account)
+      ana = create(:user, account: account, display_name: 'Ana')
+      bia = create(:user, account: account, display_name: 'Bia')
+      Ramon::Equipe.sincronizar(account, criar: true)
+      par = Ramon::Equipe.conversa_1a1(account, ana, bia)
+      message = create(:message, conversation: par, account: account, inbox: par.inbox, sender: ana, message_type: :outgoing)
+      notification = create(:notification, notification_type: 'conversation_mention', primary_actor: par, secondary_actor: message)
+
+      expect(I18n.with_locale(:pt_BR) { notification.push_message_title }).to eq 'Ana te marcou'
     end
   end
 

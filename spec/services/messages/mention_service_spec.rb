@@ -558,13 +558,11 @@ describe Messages::MentionService do
       expect(no_setor.conversation_participants.pluck(:user_id)).not_to include(caio.id)
     end
 
-    it 'admin de fora não é marcado' do
-      admin_fora = create(:user, account: account, role: :administrator)
-      no_setor.conversation_participants.where(user_id: admin_fora.id).destroy_all
+    it 'admin de fora não é marcado', :aggregate_failures do
+      avisar(escrever(no_setor, "oi (mention://user/#{admin_user.id}/adm) (mention://user/#{bia.id}/bia)"))
 
-      avisar(escrever(no_setor, "oi (mention://user/#{admin_fora.id}/adm)"))
-
-      expect(tipos(admin_fora)).to be_empty
+      expect(tipos(bia)).to eq(['conversation_mention'])
+      expect(tipos(admin_user)).to be_empty
     end
 
     it '@todos marca todos menos quem escreveu', :aggregate_failures do

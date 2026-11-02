@@ -50,7 +50,9 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
     mensagens = mensagens_nao_lidas(conversation, user)
     return false unless mensagens
 
-    mensagens.exists?(['messages.content LIKE ? OR messages.content LIKE ?', "%(mention://user/#{user.id}/%", '%(mention://todos/0/%'])
+    padroes = ["%(mention://user/#{user.id}/%"]
+    padroes << '%(mention://todos/0/todos)%' if tipo(conversation) == 'grupo'
+    mensagens.exists?([(['messages.content LIKE ?'] * padroes.size).join(' OR '), *padroes])
   end
 
   # Título do push de @ na Equipe; nil (título nativo) fora dela ou sem remetente usuário.
@@ -59,7 +61,10 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
     return unless notification.notification_type == 'conversation_mention' && conversation.inbox&.equipe?
 
     quem = notification.secondary_actor.try(:sender).try(:available_name)
-    I18n.t('notifications.notification_title.equipe_mention', quem: quem, canal: conversation.contact&.name) if quem
+    return unless quem
+
+    chave = tipo(conversation) == '1a1' ? 'equipe_mention_1a1' : 'equipe_mention'
+    I18n.t("notifications.notification_title.#{chave}", quem: quem, canal: conversation.contact&.name)
   end
 
   # nil quando a pessoa não participa.
