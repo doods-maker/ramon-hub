@@ -334,6 +334,7 @@ Rails.application.routes.draw do
               get :drive
               get :drive_busca
               get :processos
+              get :pastas_prontas
               post :pela_pasta
             end
           end

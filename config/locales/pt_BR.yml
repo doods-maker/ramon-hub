@@ -252,6 +252,8 @@ pt_BR:
       ramon_fluxo_aviso: 'Automação: %{label} (%{name})'
       ramon_fluxo_falhou: 'Automação "%{label}" falhou para %{name}'
       ramon_ia_gasto: 'Gasto de IA hoje passou do teto: %{label}'
+      ramon_pasta_pronta: 'Pasta pronta para revisar: %{label}'
+    pasta_sem_titulo: 'pasta sem título'
     attachment: 'Anexo'
     no_content: 'Sem conteúdo'
   conversations:

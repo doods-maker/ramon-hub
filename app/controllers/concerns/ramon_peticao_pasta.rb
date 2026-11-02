@@ -4,6 +4,13 @@ module RamonPeticaoPasta
 
   RELEITURA_MINUTOS = 10
 
+  # Pastas que a esteira deixou prontas: o admin vê todas (inclusive sem dono); os demais, só as suas.
+  def pastas_prontas
+    lista = Current.account.pastas_prontas.includes(:responsavel).order(:created_at)
+    lista = lista.where(responsavel_id: Current.user.id) unless Current.account_user.administrator?
+    render json: { pastas: lista.map(&:as_json_hub) }
+  end
+
   private
 
   def peticao_da_pasta(pasta_id)

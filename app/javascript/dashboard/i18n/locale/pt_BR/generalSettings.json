@@ -176,7 +176,8 @@
       "ramon_contract_status": "Contrato assinado/recusado (ZapSign)",
       "ramon_fluxo_aviso": "Aviso de automação",
       "ramon_fluxo_falhou": "Automação falhou",
-      "ramon_ia_gasto": "Gasto de IA acima do teto"
+      "ramon_ia_gasto": "Gasto de IA acima do teto",
+      "ramon_pasta_pronta": "Pasta pronta para revisar"
     }
   },
   "NETWORK": {

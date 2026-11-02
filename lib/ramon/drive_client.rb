@@ -7,6 +7,7 @@ class Ramon::DriveClient
   FOLDER_MIME = 'application/vnd.google-apps.folder'.freeze
   SHORTCUT_MIME = 'application/vnd.google-apps.shortcut'.freeze
   FILTRO_TIPOS = "(mimeType = '#{FOLDER_MIME}' or mimeType = 'application/pdf' or mimeType = 'image/jpeg' or mimeType = 'image/png')".freeze
+  MARCADOR_PASTA_PRONTA = '_pasta-pronta.json'.freeze
   SCOPE = 'https://www.googleapis.com/auth/drive'.freeze
 
   class << self
@@ -71,6 +72,12 @@ class Ramon::DriveClient
       listar("'#{pasta_id}' in parents", 200)
     end
 
+    # Marcadores que a esteira deixa na pasta pronta: [{id:, parents:}]; a pasta é o pai do marcador.
+    # ponytail: uma página de 200; com mais marcadores abertos que isso, paginar.
+    def marcadores_de_pasta_pronta
+      listar("name = '#{MARCADOR_PASTA_PRONTA}'", 200).map { |h| h.slice(:id, :parents) }
+    end
+
     # Nomes das pastas ancestrais (mais próxima primeiro), até `limite`.
     def nomes_acima(pasta_id, limite: 4)
       nomes = []
@@ -122,7 +129,7 @@ class Ramon::DriveClient
 
     def arquivo_hash(file)
       { id: file.id, name: file.name, mime_type: file.mime_type, modified_time: file.modified_time,
-        size: file.size&.to_i, pasta: file.mime_type == FOLDER_MIME }
+        size: file.size&.to_i, parents: file.parents, pasta: file.mime_type == FOLDER_MIME }
     end
 
     def redirect_uri = "#{ENV.fetch('FRONTEND_URL', nil)}/ramon/google_agenda/callback"

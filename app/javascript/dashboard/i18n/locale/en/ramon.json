@@ -2436,6 +2436,9 @@
         "PACOTE_DA_PASTA": "The package comes from the Drive folder. To change the files, change the folder and click Read folder again."
       },
       "PASTA": {
+        "PRONTAS_TITULO": "Folders ready to review",
+        "SEM_TITULO": "Untitled folder",
+        "SEM_RESPONSAVEL": "no one responsible",
         "APONTAR": "Point to folder",
         "SELETOR_TITULO": "Point to the petition folder",
         "SELETOR_AJUDA": "Open the folder with the petition and attachments (numbered files: 01 is the petition as PDF, then 02, 03...) and click Use this folder.",

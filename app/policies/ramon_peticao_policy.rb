@@ -4,7 +4,7 @@ class RamonPeticaoPolicy < ApplicationPolicy
   end
 
   %i[show create update destroy arquivos arquivos_drive atualizar_arquivo remover_arquivo ordem baixar registrar_protocolo drive drive_busca
-     processos pela_pasta reler_pasta confirmar].each do |acao|
+     processos pela_pasta reler_pasta confirmar pastas_prontas].each do |acao|
     define_method(:"#{acao}?") { index? }
   end
 end

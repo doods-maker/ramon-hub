@@ -48,6 +48,7 @@ const status = ref('rascunho');
 const lista = ref([]);
 const tribunais = ref([]);
 const tipos = ref([]);
+const pastas = ref([]); // pastas prontas da esteira (só na conferência)
 const peticao = ref(null);
 const loading = ref(true);
 const erro = ref(''); // chave i18n do erro de carga
@@ -69,6 +70,11 @@ const carregarLista = async () => {
   lista.value = data.payload;
   tribunais.value = data.tribunais;
   tipos.value = data.tipos;
+  // ponytail: lista só para admin, junto com a conferência; tirar o isAdmin no lançamento
+  pastas.value =
+    isAdmin.value && status.value === 'conferencia'
+      ? (await RamonPeticoesAPI.pastasProntas()).data.pastas
+      : [];
 };
 
 // A lista também traz tribunais e tipos, que o detalhe usa.
@@ -410,6 +416,33 @@ const segmento = ativo => [
             {{ t(`RAMON.PETICOES.FILTRO.${s}`) }}
           </button>
         </div>
+
+        <section
+          v-if="pastas.length"
+          :class="CARTAO"
+          class="flex flex-col gap-2"
+          data-testid="protocolos-pastas"
+        >
+          <h2 class="m-0" :class="TITULO">
+            {{ t('RAMON.PETICOES.PASTA.PRONTAS_TITULO') }}
+          </h2>
+          <button
+            v-for="pasta in pastas"
+            :key="pasta.id"
+            type="button"
+            data-testid="protocolos-pasta"
+            class="flex flex-wrap items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-start text-sm hover:bg-n-alpha-2"
+            @click="pastaEscolhida(pasta.drive_pasta_id)"
+          >
+            <span class="text-n-slate-12">{{
+              pasta.titulo || t('RAMON.PETICOES.PASTA.SEM_TITULO')
+            }}</span>
+            <span class="text-xs text-n-slate-10">{{
+              pasta.responsavel?.name ||
+              t('RAMON.PETICOES.PASTA.SEM_RESPONSAVEL')
+            }}</span>
+          </button>
+        </section>
 
         <p
           v-if="!lista.length"

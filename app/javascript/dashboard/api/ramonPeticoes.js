@@ -53,6 +53,10 @@ class RamonPeticoesAPI extends ApiClient {
     return axios.post(`${this.url}/pela_pasta`, { pasta_id: pastaId });
   }
 
+  pastasProntas() {
+    return axios.get(`${this.url}/pastas_prontas`);
+  }
+
   relerPasta(id) {
     return axios.post(`${this.url}/${id}/reler_pasta`);
   }

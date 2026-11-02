@@ -13,7 +13,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   before_action :current_account
   before_action :check_authorization
-  before_action :carregar_peticao, except: %i[index create pela_pasta drive drive_busca processos]
+  before_action :carregar_peticao, except: %i[index create pela_pasta pastas_prontas drive drive_busca processos] # rubocop:disable Rails/LexicallyScopedActionFilter -- pastas_prontas vem do concern
   before_action :exigir_editavel, only: %i[update destroy arquivos arquivos_drive atualizar_arquivo remover_arquivo ordem reler_pasta]
   before_action :exigir_pela_pasta, only: :reler_pasta
   before_action :exigir_pacote_livre, only: %i[arquivos arquivos_drive remover_arquivo ordem]

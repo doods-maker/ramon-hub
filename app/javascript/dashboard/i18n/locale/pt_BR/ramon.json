@@ -2436,6 +2436,9 @@
         "PACOTE_DA_PASTA": "O pacote vem da pasta do Drive. Para mudar os arquivos, altere a pasta e clique em Reler a pasta."
       },
       "PASTA": {
+        "PRONTAS_TITULO": "Pastas prontas para revisar",
+        "SEM_TITULO": "Pasta sem título",
+        "SEM_RESPONSAVEL": "sem responsável",
         "APONTAR": "Apontar pasta",
         "SELETOR_TITULO": "Apontar a pasta da petição",
         "SELETOR_AJUDA": "Abra a pasta que tem a petição e os anexos (arquivos numerados: 01 é a petição em PDF, depois 02, 03...) e clique em Usar esta pasta.",
