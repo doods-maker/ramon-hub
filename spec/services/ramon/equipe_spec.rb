@@ -60,6 +60,8 @@ RSpec.describe Ramon::Equipe do
   end
 
   describe 'permissões e tipo' do
+    before { described_class.sincronizar(account, criar: true) }
+
     let(:inbox) { described_class.sincronizar(account, criar: true) }
     let(:geral) { inbox && conversa('geral') }
     let(:ana_bia) { described_class.conversa_1a1(account, ana, bia) }
@@ -113,6 +115,8 @@ RSpec.describe Ramon::Equipe do
   end
 
   describe '.marcado_nao_lido?' do
+    before { described_class.sincronizar(account, criar: true) }
+
     let(:geral) { described_class.sincronizar(account, criar: true) && conversa('geral') }
 
     def de_ana(texto)
