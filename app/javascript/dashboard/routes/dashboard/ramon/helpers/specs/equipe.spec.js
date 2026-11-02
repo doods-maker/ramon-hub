@@ -7,6 +7,7 @@ import {
   identidadeConversa,
   resumoReacoes,
   rotuloDia,
+  horaLista,
   prefixoPrevia,
 } from '../equipe';
 
@@ -119,5 +120,17 @@ describe('helpers/equipe', () => {
     expect(rotuloDia(seg('2026-11-01T14:00:00Z'), agora)).toBe('HOJE');
     expect(rotuloDia(seg('2026-11-01T01:00:00Z'), agora)).toBe('ONTEM');
     expect(rotuloDia(seg('2026-10-20T15:00:00Z'), agora)).toBe('20/10/2026');
+  });
+
+  it('horaLista: hoje em HH:mm, ontem em rótulo, antes em data, no fuso de São Paulo', () => {
+    // 2026-11-02 02:30 UTC = 01/11 23:30 em São Paulo
+    const agora = Date.UTC(2026, 10, 2, 2, 30);
+    const seg = iso => Date.parse(iso) / 1000;
+    expect(horaLista(seg('2026-11-02T01:00:00Z'), agora)).toBe('22:00');
+    expect(horaLista(seg('2026-11-01T17:32:00Z'), agora)).toBe('14:32');
+    // virada do dia em São Paulo: 00:00 de 01/11 é hoje, 23:59 de 31/10 é ontem
+    expect(horaLista(seg('2026-11-01T03:00:00Z'), agora)).toBe('00:00');
+    expect(horaLista(seg('2026-11-01T02:59:00Z'), agora)).toBe('ONTEM');
+    expect(horaLista(seg('2026-10-20T15:00:00Z'), agora)).toBe('20/10/2026');
   });
 });

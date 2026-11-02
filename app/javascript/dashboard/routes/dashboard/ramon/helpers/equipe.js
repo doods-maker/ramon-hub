@@ -73,6 +73,18 @@ export const rotuloDia = (segundos, agoraMs) => {
   return `${d}/${m}/${a}`;
 };
 
+// Hora da lista: hoje 'HH:mm'; senão o rótulo do dia ('ONTEM' ou 'dd/MM/yyyy').
+export const horaLista = (segundos, agoraMs) => {
+  const rotulo = rotuloDia(segundos, agoraMs);
+  if (rotulo !== 'HOJE') return rotulo;
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: FUSO,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(segundos * 1000));
+};
+
 export const prefixoPrevia = (message, meuId, tipo) => {
   const voce = message?.sender?.id === meuId;
   return {

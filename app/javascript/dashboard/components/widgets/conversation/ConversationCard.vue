@@ -14,7 +14,10 @@ import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import LeadLinhaCard from 'dashboard/routes/dashboard/ramon/components/conversation/LeadLinhaCard.vue';
 import { semEtiquetasDoLead } from 'dashboard/routes/dashboard/ramon/helpers/leadNaConversa';
-import { identidadeConversa } from 'dashboard/routes/dashboard/ramon/helpers/equipe';
+import {
+  horaLista,
+  identidadeConversa,
+} from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -53,6 +56,11 @@ const fotoCard = computed(() =>
 const marcado = computed(() => equipe.value && !!props.chat.equipe_marcado);
 const previaEquipe = computed(() =>
   equipe.value ? { meuId: meuId.value, tipo: props.chat.equipe_tipo } : null
+);
+// ponytail: "agora" só recalcula quando a conversa muda; lista aberta na virada do
+// dia mantém a hora até a próxima atividade ou recarga. Timer aqui, se incomodar.
+const horaEquipe = computed(() =>
+  equipe.value ? horaLista(props.chat.timestamp, Date.now()) : ''
 );
 const avatarClass = computed(() => {
   if (equipe.value) return 'mt-3';
@@ -254,13 +262,22 @@ watch(
         :class="showMetaSection ? 'top-8' : 'top-4'"
       >
         <span class="ml-auto font-mono font-normal leading-4 text-xxs">
+          <span
+            v-if="equipe"
+            data-equipe-hora
+            :class="
+              hasUnread
+                ? 'text-[rgb(var(--ramon-nao-lida-texto))]'
+                : 'text-n-slate-10'
+            "
+          >
+            {{ horaEquipe === 'ONTEM' ? $t('RAMON.EQUIPE.ONTEM') : horaEquipe }}
+          </span>
           <TimeAgo
+            v-else
             :last-activity-timestamp="chat.timestamp"
             :created-at-timestamp="chat.created_at"
             :conversation-id="chat.id"
-            :class="{
-              '!text-[rgb(var(--ramon-nao-lida-texto))]': equipe && hasUnread,
-            }"
           />
         </span>
         <div

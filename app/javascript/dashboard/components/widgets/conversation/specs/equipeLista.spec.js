@@ -1,9 +1,22 @@
 import { mount } from '@vue/test-utils';
+import ConversationItem from 'dashboard/components/ConversationItem.vue';
 import ConversationCard from '../ConversationCard.vue';
 import MessagePreview from '../MessagePreview.vue';
 
+const inboxDoItem = { equipe: true };
+
 vi.mock('dashboard/composables/store', () => ({
   useMapGetter: () => ({ value: 1 }),
+  useStore: () => ({
+    getters: {
+      'inboxes/getInbox': id => ({ id, ...inboxDoItem }),
+      'contacts/getContact': () => ({}),
+    },
+  }),
+}));
+vi.mock('vue-router', async original => ({
+  ...(await original()),
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 const FLUENT = { name: 'FluentIcon', props: ['icon'], template: '<i />' };
@@ -144,6 +157,7 @@ describe('ConversationCard', () => {
       },
     });
   const selo = w => w.find('[data-equipe-selo]');
+  const hora = w => w.find('[data-equipe-hora]');
   const ausentes = ['Prioridade', 'LinhaLead', 'Etiquetas', 'CaixaSelecao'];
 
   it('Equipe: foto redonda de 40, sem meta, lead, etiquetas e seleção', () => {
@@ -183,11 +197,39 @@ describe('ConversationCard', () => {
   });
 
   it('hora verde só com não lida', () => {
-    const hora = chat =>
-      montar(chat).findComponent({ name: 'TimeAgoFalso' }).classes();
-    const verde = '!text-[rgb(var(--ramon-nao-lida-texto))]';
-    expect(hora({ ...chatBase, unread_count: 1 })).toContain(verde);
-    expect(hora(chatBase)).not.toContain(verde);
+    const classes = chat => hora(montar(chat)).classes();
+    const verde = 'text-[rgb(var(--ramon-nao-lida-texto))]';
+    expect(classes({ ...chatBase, unread_count: 1 })).toContain(verde);
+    expect(classes(chatBase)).not.toContain(verde);
+  });
+
+  describe('hora do WhatsApp', () => {
+    // 2026-11-02 18:00 UTC = 02/11 15:00 em São Paulo
+    beforeEach(() => {
+      vi.useFakeTimers({ now: Date.UTC(2026, 10, 2, 18, 0) });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+    const noCard = iso =>
+      montar({ ...chatBase, timestamp: Date.parse(iso) / 1000 });
+
+    it('hoje mostra HH:mm, em mono e sem TimeAgo', () => {
+      const w = noCard('2026-11-02T17:32:00Z');
+      expect(hora(w).text()).toBe('14:32');
+      expect(hora(w).element.parentElement.className).toContain('font-mono');
+      expect(w.findComponent({ name: 'TimeAgoFalso' }).exists()).toBe(false);
+    });
+
+    it('ontem mostra o rótulo traduzido', () => {
+      expect(hora(noCard('2026-11-01T17:32:00Z')).text()).toBe(
+        'RAMON.EQUIPE.ONTEM'
+      );
+    });
+
+    it('antes de ontem mostra a data', () => {
+      expect(hora(noCard('2026-10-20T15:00:00Z')).text()).toBe('20/10/2026');
+    });
   });
 
   it('prévia recebe o contexto da Equipe', () => {
@@ -216,5 +258,41 @@ describe('ConversationCard', () => {
     expect(w.find('.contador').text()).toBe('1');
     expect(w.findComponent(MessagePreview).props('equipe')).toBe(null);
     expect(w.findComponent({ name: 'TimeAgoFalso' }).classes()).toEqual([]);
+    expect(hora(w).exists()).toBe(false);
+  });
+});
+
+describe('ConversationItem', () => {
+  const montarItem = equipe => {
+    inboxDoItem.equipe = equipe;
+    return mount(ConversationItem, {
+      props: {
+        source: { id: 43, inbox_id: 7, meta: {}, labels: [] },
+        showExpanded: true,
+      },
+      global: {
+        provide: { isConversationSelected: () => false },
+        stubs: {
+          ConversationCard: { name: 'CardCondensado', template: '<i />' },
+          ConversationCardExpanded: {
+            name: 'CardExpandido',
+            template: '<i />',
+          },
+        },
+      },
+    });
+  };
+  const usa = (w, name) => w.findComponent({ name }).exists();
+
+  it('layout expandido: a Equipe fica no card condensado', () => {
+    const w = montarItem(true);
+    expect(usa(w, 'CardCondensado')).toBe(true);
+    expect(usa(w, 'CardExpandido')).toBe(false);
+  });
+
+  it('layout expandido: fora da Equipe segue o card expandido', () => {
+    const w = montarItem(false);
+    expect(usa(w, 'CardExpandido')).toBe(true);
+    expect(usa(w, 'CardCondensado')).toBe(false);
   });
 });
