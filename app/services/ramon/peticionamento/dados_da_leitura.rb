@@ -11,9 +11,9 @@ class Ramon::Peticionamento::DadosDaLeitura
   end
 
   def call
-    responsavel = achar_responsavel
+    responsavel, duvida = achar_responsavel
     incertos = Array(@lida['incertos']).map(&:to_s)
-    incertos |= ['responsavel'] if responsavel.nil?
+    incertos |= ['responsavel'] if responsavel.nil? || duvida
     {
       inicial: { 'inicial' => true, 'intermediaria' => false }[@lida['tipo']],
       numero_processo: @lida['numero_processo'], tribunal: @lida['tribunal'],
@@ -29,18 +29,22 @@ class Ramon::Peticionamento::DadosDaLeitura
   end
 
   # Associado (OAB diferente da do Dr. Ramon) tem preferência, o primeiro se houver vários; Dr. Ramon sozinho é ele.
+  # Devolve [usuário, duvida]: dúvida se havia vários associados ou se o nome do usuário tem um token só.
   def achar_responsavel
-    escolhido = escolher_assinante
-    return nil if escolhido.nil?
+    assinantes = Array(@lida['assinantes']).select { |a| a.is_a?(Hash) }
+    escolhido, outros = escolher_assinante(assinantes)
+    return [nil, true] if escolhido.nil?
 
     alvo = tokens(escolhido['nome'])
     candidatos = elegiveis.select { |u| (t = tokens(u.name)).any? && (t - alvo).empty? }
-    candidatos.first if candidatos.size == 1
+    return [nil, true] unless candidatos.size == 1
+
+    [candidatos.first, outros || tokens(candidatos.first.name).size == 1]
   end
 
-  def escolher_assinante
-    assinantes = Array(@lida['assinantes']).select { |a| a.is_a?(Hash) }
-    assinantes.find { |a| a['oab'].to_s.delete('^0-9') != OAB_DR_RAMON } || assinantes.first
+  def escolher_assinante(assinantes)
+    associados = assinantes.reject { |a| a['oab'].to_s.delete('^0-9') == OAB_DR_RAMON }
+    [associados.first || assinantes.first, associados.size > 1]
   end
 
   def elegiveis

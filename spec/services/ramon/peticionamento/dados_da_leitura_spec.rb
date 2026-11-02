@@ -26,9 +26,31 @@ RSpec.describe Ramon::Peticionamento::DadosDaLeitura do
     expect(r[:incertos]).to include('responsavel')
   end
 
-  it 'nome com um só token só casa se for o único candidato' do
+  it 'dois usuários que servem: sem responsável' do
     create(:user, name: 'Brenda Lima', account: account).tap { |u| create(:team_member, team: time, user: u) }
     expect(dados('assinantes' => [{ 'nome' => 'Brenda Antunes Lima', 'oab' => 'SC 1' }])[:responsavel]).to be_nil
+  end
+
+  it 'mais de um associado: o primeiro, e marca incerto' do
+    ana = create(:user, name: 'Ana Souza', account: account).tap { |u| create(:team_member, team: time, user: u) }
+    lida = { 'assinantes' => [{ 'nome' => 'Ana Souza', 'oab' => 'SC 1' }, { 'nome' => 'Brenda Antunes', 'oab' => 'SC 2' }] }
+    r = dados(lida)
+    expect(r[:responsavel]).to eq(ana)
+    expect(r[:incertos]).to include('responsavel')
+  end
+
+  it 'usuária de nome com um só token casa, mas fica incerto' do
+    ana = create(:user, name: 'Ana', account: account).tap { |u| create(:team_member, team: time, user: u) }
+    r = dados('assinantes' => [{ 'nome' => 'Ana Souza', 'oab' => 'SC 1' }])
+    expect(r[:responsavel]).to eq(ana)
+    expect(r[:incertos]).to include('responsavel')
+  end
+
+  it 'usuária com nome completo casa sem incerto' do
+    ana = create(:user, name: 'Ana Souza', account: account).tap { |u| create(:team_member, team: time, user: u) }
+    r = dados('assinantes' => [{ 'nome' => 'Ana Souza', 'oab' => 'SC 1' }])
+    expect(r[:responsavel]).to eq(ana)
+    expect(r[:incertos]).not_to include('responsavel')
   end
 
   it 'cliente só pelo CPF, nunca pelo nome' do
