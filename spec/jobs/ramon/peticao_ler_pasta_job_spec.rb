@@ -5,7 +5,7 @@ RSpec.describe Ramon::PeticaoLerPastaJob do
 
   let(:account) { create(:account) }
   let(:user) { create(:user, account: account, role: :administrator) }
-  let(:peticao) do
+  let!(:peticao) do
     account.peticoes.create!(criado_por: user, responsavel: user, status: 'conferencia', pela_pasta: true, drive_pasta_id: 'pasta',
                              leitura: { 'estado' => 'lendo' })
   end
@@ -13,7 +13,7 @@ RSpec.describe Ramon::PeticaoLerPastaJob do
   it 'esgotadas as tentativas, grava estado erro' do
     allow(Ramon::Peticionamento::ImportarPasta).to receive(:call).and_raise(Google::Apis::ServerError, 'x')
     begin
-      perform_enqueued_jobs { described_class.perform_later(peticao.id) }
+      perform_enqueued_jobs(only: described_class) { described_class.perform_later(peticao.id) }
     rescue StandardError
       nil
     end
@@ -24,7 +24,7 @@ RSpec.describe Ramon::PeticaoLerPastaJob do
     allow(Ramon::Peticionamento::ImportarPasta).to receive(:call).and_raise(Google::Apis::ServerError, 'x')
     peticao.update!(leitura: { 'estado' => 'lida' })
     begin
-      perform_enqueued_jobs { described_class.perform_later(peticao.id) }
+      perform_enqueued_jobs(only: described_class) { described_class.perform_later(peticao.id) }
     rescue StandardError
       nil
     end
