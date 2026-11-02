@@ -2,7 +2,9 @@
 // Pacote da petição: arquivos na ordem do protocolo, com o tipo genérico e o
 // nome que o advogado escolhe no sistema do tribunal ao lado. Cada ação
 // devolve a petição inteira (emit `atualizar`). Protocolada = só leitura.
-import { ref } from 'vue';
+// Pacote fechado (pela pasta): o conteúdo vem da pasta do Drive, então sem
+// upload, Drive, mover nem remover; tipo e principal continuam editáveis.
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import RamonPeticoesAPI from 'dashboard/api/ramonPeticoes';
@@ -14,6 +16,7 @@ import { CARTAO, CHIP, SELECT, TITULO, TOM } from '../../helpers/ui';
 const props = defineProps({
   peticao: { type: Object, required: true },
   tipos: { type: Array, default: () => [] },
+  pacoteFechado: { type: Boolean, default: false },
 });
 const emit = defineEmits(['atualizar']);
 
@@ -21,6 +24,9 @@ const { t } = useI18n();
 const enviando = ref(false);
 const seletorAberto = ref(false);
 const inputArquivo = ref(null);
+const editavel = computed(() =>
+  ['rascunho', 'conferencia'].includes(props.peticao.status)
+);
 
 const executar = async chamada => {
   try {
@@ -81,7 +87,7 @@ const adicionadoDoDrive = data => {
   <section :class="CARTAO" class="flex flex-col gap-3">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <p class="m-0" :class="TITULO">{{ t('RAMON.PETICOES.PACOTE') }}</p>
-      <div v-if="peticao.status === 'rascunho'" class="flex gap-2">
+      <div v-if="editavel && !pacoteFechado" class="flex gap-2">
         <input
           ref="inputArquivo"
           type="file"
@@ -112,7 +118,13 @@ const adicionadoDoDrive = data => {
     </div>
 
     <p v-if="!peticao.arquivos.length" class="m-0 text-sm text-n-slate-10">
-      {{ t('RAMON.PETICOES.PACOTE_VAZIO') }}
+      {{
+        t(
+          pacoteFechado
+            ? 'RAMON.PETICOES.PASTA.PACOTE_VAZIO'
+            : 'RAMON.PETICOES.PACOTE_VAZIO'
+        )
+      }}
     </p>
     <ul v-else class="m-0 flex list-none flex-col divide-y divide-n-weak p-0">
       <li
@@ -141,7 +153,7 @@ const adicionadoDoDrive = data => {
           </span>
         </span>
 
-        <template v-if="peticao.status === 'rascunho'">
+        <template v-if="editavel">
           <select
             :value="a.tipo"
             :class="SELECT"
@@ -166,32 +178,34 @@ const adicionadoDoDrive = data => {
               :label="t('RAMON.PETICOES.MARCAR_PRINCIPAL')"
               @click="marcarPrincipal(a)"
             />
-            <Button
-              xs
-              faded
-              slate
-              icon="i-lucide-arrow-up"
-              :disabled="i === 0"
-              :title="t('RAMON.PETICOES.SUBIR')"
-              @click="mover(i, -1)"
-            />
-            <Button
-              xs
-              faded
-              slate
-              icon="i-lucide-arrow-down"
-              :disabled="i === peticao.arquivos.length - 1"
-              :title="t('RAMON.PETICOES.DESCER')"
-              @click="mover(i, 1)"
-            />
-            <Button
-              xs
-              faded
-              ruby
-              icon="i-lucide-trash-2"
-              :title="t('RAMON.PETICOES.REMOVER')"
-              @click="remover(a)"
-            />
+            <template v-if="!pacoteFechado">
+              <Button
+                xs
+                faded
+                slate
+                icon="i-lucide-arrow-up"
+                :disabled="i === 0"
+                :title="t('RAMON.PETICOES.SUBIR')"
+                @click="mover(i, -1)"
+              />
+              <Button
+                xs
+                faded
+                slate
+                icon="i-lucide-arrow-down"
+                :disabled="i === peticao.arquivos.length - 1"
+                :title="t('RAMON.PETICOES.DESCER')"
+                @click="mover(i, 1)"
+              />
+              <Button
+                xs
+                faded
+                ruby
+                icon="i-lucide-trash-2"
+                :title="t('RAMON.PETICOES.REMOVER')"
+                @click="remover(a)"
+              />
+            </template>
           </div>
         </template>
         <span v-else class="shrink-0 text-xs text-n-slate-11">

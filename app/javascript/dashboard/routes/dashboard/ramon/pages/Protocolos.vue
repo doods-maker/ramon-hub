@@ -15,6 +15,8 @@ import ConfirmButton from 'dashboard/components-next/button/ConfirmButton.vue';
 import RamonPageHeader from '../components/RamonPageHeader.vue';
 import PeticaoForm from '../components/peticoes/PeticaoForm.vue';
 import PacoteEditor from '../components/peticoes/PacoteEditor.vue';
+import ConferenciaPasta from '../components/peticoes/ConferenciaPasta.vue';
+import SeletorDrive from '../components/peticoes/SeletorDrive.vue';
 import RegistrarProtocolo from '../components/peticoes/RegistrarProtocolo.vue';
 import {
   baixarTodos,
@@ -31,7 +33,17 @@ const router = useRouter();
 const { isAdmin } = useAdmin();
 const meuId = useMapGetter('getCurrentUserID');
 
-const STATUS = ['rascunho', 'protocolada'];
+// ponytail: tirar o isAdmin no lançamento (conferência pela pasta só para admin)
+const STATUS = computed(() =>
+  isAdmin.value
+    ? ['conferencia', 'rascunho', 'protocolada']
+    : ['rascunho', 'protocolada']
+);
+const TOM_STATUS = {
+  conferencia: TOM.iris,
+  rascunho: TOM.amber,
+  protocolada: TOM.teal,
+};
 const status = ref('rascunho');
 const lista = ref([]);
 const tribunais = ref([]);
@@ -41,6 +53,7 @@ const loading = ref(true);
 const erro = ref(''); // chave i18n do erro de carga
 const form = ref(null); // 'nova' | 'editar'
 const registrando = ref(false);
+const apontando = ref(false); // seletor de pasta aberto
 
 const peticaoId = computed(() => route.params.peticaoId);
 
@@ -103,6 +116,22 @@ const baixarPacote = () =>
     RamonPeticoesAPI.baixarArquivo(a.url)
   ).catch(e => useAlert(erroPeticao(e, t)));
 
+// Aponta a pasta; se já existe petição dela, abre essa.
+const pastaEscolhida = async pastaId => {
+  try {
+    const { data } = await RamonPeticoesAPI.pelaPasta(pastaId);
+    apontando.value = false;
+    abrir(data.id);
+  } catch (e) {
+    const existente = e?.response?.data?.peticao_id;
+    useAlert(erroPeticao(e, t));
+    if (existente) {
+      apontando.value = false;
+      abrir(existente);
+    }
+  }
+};
+
 const registrado = data => {
   registrando.value = false;
   peticao.value = data;
@@ -117,6 +146,11 @@ const problemas = computed(() =>
   )
 );
 const rascunho = computed(() => peticao.value?.status === 'rascunho');
+const conferencia = computed(() => peticao.value?.status === 'conferencia');
+// Durante a leitura (ou se falhou) ainda não há pacote para mostrar.
+const pacoteVisivel = computed(
+  () => !conferencia.value || peticao.value.leitura?.estado === 'lida'
+);
 // Só o responsável ou o admin registra (o backend também barra).
 const podeRegistrar = computed(
   () => isAdmin.value || peticao.value?.responsavel?.id === meuId.value
@@ -158,7 +192,17 @@ const segmento = ativo => [
             @click="voltar"
           />
           <Button
-            v-else
+            v-else-if="isAdmin"
+            sm
+            faded
+            slate
+            icon="i-lucide-folder-search"
+            data-testid="protocolos-apontar"
+            :label="t('RAMON.PETICOES.PASTA.APONTAR')"
+            @click="apontando = true"
+          />
+          <Button
+            v-if="!peticaoId"
             sm
             icon="i-lucide-plus"
             data-testid="protocolos-nova"
@@ -194,7 +238,7 @@ const segmento = ativo => [
                 <span :class="[CHIP, TOM.slate]">{{
                   peticao.tribunal_nome
                 }}</span>
-                <span :class="[CHIP, rascunho ? TOM.amber : TOM.teal]">
+                <span :class="[CHIP, TOM_STATUS[peticao.status]]">
                   {{ t(`RAMON.PETICOES.STATUS.${peticao.status}`) }}
                 </span>
               </span>
@@ -247,7 +291,7 @@ const segmento = ativo => [
 
           <!-- Protocolada: registro + comprovante + pasta no Drive -->
           <div
-            v-if="!rascunho"
+            v-if="peticao.status === 'protocolada'"
             class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-n-slate-11"
             data-testid="protocolo-registrado"
           >
@@ -287,9 +331,19 @@ const segmento = ativo => [
           </div>
         </section>
 
+        <ConferenciaPasta
+          v-if="conferencia"
+          :peticao="peticao"
+          :tribunais="tribunais"
+          @atualizado="peticao = $event"
+          @confirmado="peticao = $event"
+        />
+
         <PacoteEditor
+          v-if="pacoteVisivel"
           :peticao="peticao"
           :tipos="tipos"
+          :pacote-fechado="!!peticao.pela_pasta"
           @atualizar="peticao = $event"
         />
 
@@ -413,12 +467,7 @@ const segmento = ativo => [
                   {{ dia(p.prazo) }}
                 </td>
                 <td class="border-b border-n-weak px-3 py-2">
-                  <span
-                    :class="[
-                      CHIP,
-                      p.status === 'rascunho' ? TOM.amber : TOM.teal,
-                    ]"
-                  >
+                  <span :class="[CHIP, TOM_STATUS[p.status]]">
                     {{ t(`RAMON.PETICOES.STATUS.${p.status}`) }}
                   </span>
                 </td>
@@ -435,6 +484,12 @@ const segmento = ativo => [
       :tribunais="tribunais"
       @salvo="salvo"
       @cancel="form = null"
+    />
+    <SeletorDrive
+      v-if="apontando"
+      modo-pasta
+      @pasta-escolhida="pastaEscolhida"
+      @cancel="apontando = false"
     />
     <RegistrarProtocolo
       v-if="registrando"

@@ -102,7 +102,15 @@
         "TITULO": "Limites gerais do escritório",
         "DICA": "Valem para todas as teses e caixas.",
         "HORARIO": "Horário de atendimento",
-        "DIAS": { "0": "Dom", "1": "Seg", "2": "Ter", "3": "Qua", "4": "Qui", "5": "Sex", "6": "Sáb" },
+        "DIAS": {
+          "0": "Dom",
+          "1": "Seg",
+          "2": "Ter",
+          "3": "Qua",
+          "4": "Qui",
+          "5": "Sex",
+          "6": "Sáb"
+        },
         "FAIXA": "Faixa {n}",
         "ATE": "até",
         "ADICIONAR_FAIXA": "+ Adicionar segunda faixa",
@@ -2360,10 +2368,12 @@
       "PROCESSO": "Processo",
       "STATUS_COL": "Status",
       "STATUS": {
+        "conferencia": "Em conferência",
         "rascunho": "Rascunho",
         "protocolada": "Protocolada"
       },
       "FILTRO": {
+        "conferencia": "Em conferência",
         "rascunho": "Rascunhos",
         "protocolada": "Protocoladas"
       },
@@ -2419,7 +2429,56 @@
       "ERROS": {
         "FORMATO": "Só arquivos PDF, JPG ou PNG.",
         "PROTOCOLADA": "Esta petição já foi protocolada e não pode mais ser alterada.",
-        "SO_RESPONSAVEL": "Só o advogado responsável ou um administrador registra o protocolo."
+        "SO_RESPONSAVEL": "Só o advogado responsável ou um administrador registra o protocolo.",
+        "PASTA_INVALIDA": "Não achei essa pasta no Drive do escritório. Escolha outra.",
+        "PASTA_JA_USADA": "Já existe uma petição para essa pasta.",
+        "EM_LEITURA": "A pasta ainda está sendo lida. Espere terminar para reler.",
+        "PACOTE_DA_PASTA": "O pacote vem da pasta do Drive. Para mudar os arquivos, altere a pasta e clique em Reler a pasta."
+      },
+      "PASTA": {
+        "APONTAR": "Apontar pasta",
+        "SELETOR_TITULO": "Apontar a pasta da petição",
+        "SELETOR_AJUDA": "Abra a pasta que tem a petição e os anexos (arquivos numerados: 01 é a petição em PDF, depois 02, 03...) e clique em Usar esta pasta.",
+        "USAR_PASTA": "Usar esta pasta",
+        "LENDO": "Lendo a pasta... Isso leva alguns instantes; a tela se atualiza sozinha.",
+        "ERRO_LEITURA": "Não consegui ler a pasta agora. Clique em Reler a pasta para tentar de novo.",
+        "RELER": "Reler a pasta",
+        "CONFIRMAR": "Confirmar",
+        "ABRIR_PECA": "Abrir a peça",
+        "PACOTE_VAZIO": "A pasta não tem arquivos para o pacote. Corrija a pasta e clique em Reler a pasta.",
+        "RECUSAS_TITULO": "Não dá para seguir com a pasta assim",
+        "ALERTAS_TITULO": "Confira antes de confirmar",
+        "CONFERI": "Conferi e está certo.",
+        "DADOS": "Dados lidos da pasta",
+        "INCERTOS_AJUDA": "Os campos em amarelo são os que a leitura não teve certeza. Confira e corrija se precisar.",
+        "DISTRIBUICAO": "Dados para a distribuição",
+        "DIST": {
+          "partes": "Partes",
+          "classe": "Classe",
+          "assuntos": "Assuntos",
+          "valor_causa": "Valor da causa",
+          "competencia": "Competência"
+        },
+        "RECUSA": {
+          "sem_pdf": "O primeiro arquivo da pasta (o de menor número) precisa ser a petição em PDF. Coloque-a como 01 e clique em Reler a pasta.",
+          "word_sem_pdf": "A pasta tem o Word \"{detalhe}\", mas não o PDF dele. Salve o Word como PDF, com o mesmo número, e clique em Reler a pasta.",
+          "formato": "\"{detalhe}\" não é PDF, Word, JPG nem PNG. Troque esse arquivo na pasta e clique em Reler a pasta.",
+          "sem_numero": "O arquivo \"{detalhe}\" está sem número no começo do nome (01, 02...). Renomeie na pasta e clique em Reler a pasta.",
+          "numero_repetido": "O número do arquivo \"{detalhe}\" já está em outro arquivo. Dê um número só para cada um e clique em Reler a pasta.",
+          "marcador": "A petição ainda tem a marca \"{detalhe}\". Sobe de novo o PDF sem essa marca e clique em Reler a pasta."
+        },
+        "ALERTA": {
+          "cpf_diferente": "O CPF da peça não é o mesmo do CPF no nome da pasta. Veja se a pasta é mesmo desse cliente.",
+          "processo_fora_do_cliente": "Esse número de processo não aparece entre os processos do cliente. Veja se o número está certo."
+        },
+        "AVISO": {
+          "espelho_vazio": "Não há processos do cliente no ADVBOX para comparar com o número da peça.",
+          "responsavel_sem_usuario": "Não achei no hub o advogado que assina a peça. Escolha o responsável.",
+          "leitura_falhou": "A leitura automática da peça falhou. Preencha os dados à mão.",
+          "sem_texto": "O PDF da peça não tem texto (parece escaneado). Confira os dados e a marca de rascunho com atenção.",
+          "nao_parece_peticao": "O primeiro arquivo não parece uma petição. Veja se o PDF certo é o 01.",
+          "subpastas": "As subpastas ({detalhe}) foram ignoradas. Só valem os arquivos da própria pasta."
+        }
       }
     },
     "NAV": {
