@@ -12,7 +12,9 @@ O Eduardo quer apontar uma pasta do Drive e dela sair a petição. Decisões de 
   `Ramon::PastasProntasJob` (a cada 5 min) varre o Drive e preenche `ramon_pastas_prontas`. São poucas peças por dia, e
   assim não existe rota pública para a esteira chamar.
 - **Contrato do marcador:** `{"responsavel_email","titulo"}`, gravado dentro da pasta do protocolo, sob
-  `RAMON_DRIVE_ROOT_ID`. O hub manda o marcador para a lixeira quando a petição existe.
+  `RAMON_DRIVE_ROOT_ID`. Quando a petição existe, o hub renomeia o marcador para
+  `_pasta-pronta.usada.json`, e ele sai da busca. Lixeira não serve: no Drive só o dono manda à lixeira, e a esteira pode
+  gravar com outra conta.
 - **Pasta apontada à mão pode estar em qualquer lugar do Drive do escritório.** Já a lista só aceita marcador dentro da
   raiz, para uma pasta alheia não aparecer como pronta.
 

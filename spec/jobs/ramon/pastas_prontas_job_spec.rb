@@ -12,7 +12,7 @@ RSpec.describe Ramon::PastasProntasJob do
     create(:team_member, team: time, user: brenda)
     allow(ENV).to receive(:fetch).and_call_original
     allow(ENV).to receive(:fetch).with('RAMON_PETICOES_ACCOUNT_ID', 2).and_return(account.id)
-    allow(Ramon::DriveClient).to receive_messages(configured?: true, dentro_da_raiz?: true, para_lixeira: nil)
+    allow(Ramon::DriveClient).to receive_messages(configured?: true, dentro_da_raiz?: true, aposentar_marcador: nil)
     allow(Ramon::DriveClient).to receive(:marcadores_de_pasta_pronta) { marcadores }
     allow(Ramon::DriveClient).to receive(:download) { |id| [jsons.fetch(id), 'application/json', '_pasta-pronta.json'] }
   end
@@ -64,7 +64,7 @@ RSpec.describe Ramon::PastasProntasJob do
     expect(Notification.where(notification_type: 'ramon_pasta_pronta').count).to eq(0)
   end
 
-  it 'petição passa a existir: o item sai com o sino e o marcador vai para a lixeira; marcador sumiu: o item sai' do
+  it 'petição passa a existir: o item sai com o sino e o marcador é aposentado; marcador sumiu: o item sai' do
     stub_marcador('m1', pasta: 'p1', json: { responsavel_email: brenda.email })
     stub_marcador('m2', pasta: 'p2', json: { responsavel_email: brenda.email })
     stub_marcador('m3', pasta: 'p3', json: { responsavel_email: brenda.email })
@@ -74,7 +74,7 @@ RSpec.describe Ramon::PastasProntasJob do
     described_class.perform_now
     expect(account.pastas_prontas.pluck(:drive_pasta_id)).to eq(['p3'])
     expect(brenda.notifications.count).to eq(1)
-    expect(Ramon::DriveClient).to have_received(:para_lixeira).once.with('m1')
+    expect(Ramon::DriveClient).to have_received(:aposentar_marcador).once.with('m1')
   end
 
   it 'lista vazia não apaga os itens, mas petição existente ainda tira o dela' do
@@ -87,15 +87,15 @@ RSpec.describe Ramon::PastasProntasJob do
     expect(account.pastas_prontas.pluck(:drive_pasta_id)).to eq(['p2'])
   end
 
-  it 'falha ao mandar o marcador para a lixeira só registra log e o lote segue' do
+  it 'falha ao aposentar o marcador só registra log e o lote segue' do
     account.peticoes.create!(criado_por: brenda, responsavel: brenda, status: 'conferencia', pela_pasta: true, drive_pasta_id: 'p1')
     stub_marcador('m1', pasta: 'p1', json: { titulo: 'A' })
     stub_marcador('m2', pasta: 'p2', json: { titulo: 'B' })
-    allow(Ramon::DriveClient).to receive(:para_lixeira).and_raise(Google::Apis::ServerError.new('fora'))
+    allow(Ramon::DriveClient).to receive(:aposentar_marcador).and_raise(Google::Apis::ServerError.new('fora'))
     allow(Rails.logger).to receive(:warn)
     expect { described_class.perform_now }.not_to raise_error
     expect(account.pastas_prontas.pluck(:drive_pasta_id)).to eq(['p2'])
-    expect(Rails.logger).to have_received(:warn).with(/lixeira falhou.*marcador=m1/)
+    expect(Rails.logger).to have_received(:warn).with(/aposentar marcador falhou.*marcador=m1/)
   end
 
   it 'marcador acima de 64 KB é ignorado com log, sem baixar' do

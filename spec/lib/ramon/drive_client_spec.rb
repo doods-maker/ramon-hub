@@ -41,10 +41,10 @@ RSpec.describe Ramon::DriveClient do
                                                                   fields: a_string_including('nextPageToken', 'size')))
   end
 
-  it 'para_lixeira marca o arquivo como lixo' do
+  it 'aposentar_marcador renomeia, porque lixeira exige ser dono do arquivo' do
     allow(api).to receive(:update_file)
-    described_class.para_lixeira('m1')
-    expect(api).to have_received(:update_file).with('m1', { trashed: true }, hash_including(supports_all_drives: true))
+    described_class.aposentar_marcador('m1')
+    expect(api).to have_received(:update_file).with('m1', { name: '_pasta-pronta.usada.json' }, hash_including(supports_all_drives: true))
   end
 
   describe 'dentro_da_raiz?' do

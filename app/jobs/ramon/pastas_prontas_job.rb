@@ -1,7 +1,7 @@
 # Descobre as pastas que a esteira deixou prontas (arquivo _pasta-pronta.json na pasta do protocolo),
 # lista por advogado e avisa só o responsável pelo sino (sem NtfyPushJob: o título é dado interno).
 # Contrato do marcador: {"responsavel_email": "...", "titulo": "..."}; ambos opcionais.
-# Marcador de pasta que já virou petição vai para a lixeira: marcadores abertos ≈ itens abertos.
+# Marcador de pasta que já virou petição é renomeado e sai da busca: marcadores abertos ≈ itens abertos.
 # Roda a cada 5 min. Logs: só classe e ids (LGPD).
 class Ramon::PastasProntasJob < ApplicationJob
   queue_as :scheduled_jobs
@@ -30,7 +30,7 @@ class Ramon::PastasProntasJob < ApplicationJob
     return if pasta_id.blank?
 
     if com_peticao.include?(pasta_id)
-      lixeira(marcador[:id])
+      aposentar(marcador[:id])
     elsif existentes.exclude?(pasta_id)
       criar(account, pasta_id, marcador)
     end
@@ -40,10 +40,10 @@ class Ramon::PastasProntasJob < ApplicationJob
     pasta_id
   end
 
-  def lixeira(marcador_id)
-    Ramon::DriveClient.para_lixeira(marcador_id)
+  def aposentar(marcador_id)
+    Ramon::DriveClient.aposentar_marcador(marcador_id)
   rescue StandardError => e
-    Rails.logger.warn("PastasProntasJob: lixeira falhou #{e.class} marcador=#{marcador_id}")
+    Rails.logger.warn("PastasProntasJob: aposentar marcador falhou #{e.class} marcador=#{marcador_id}")
   end
 
   # Ignora (com log) marcador grande demais ou de pasta fora da raiz do escritório: a busca é por nome no Drive todo.
