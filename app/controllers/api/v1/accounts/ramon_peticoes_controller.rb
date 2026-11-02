@@ -30,7 +30,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
     lista = Current.account.peticoes.includes(:contact, :responsavel, :criado_por,
                                               comprovante_attachment: :blob, arquivos: { file_attachment: :blob })
     lista = lista.where(status: params[:status]) if Peticao::STATUS.include?(params[:status])
-    render json: { payload: lista.reorder(Arel.sql(ORDEM)).limit(LIMITE).map { |p| p.as_json_hub.except(:arquivos) },
+    render json: { payload: lista.reorder(Arel.sql(ORDEM)).limit(LIMITE).map { |p| p.as_json_hub.except(:arquivos, :leitura) },
                    tribunais: Ramon::Peticionamento::Tribunais::TODOS.map { |chave, info| info.merge(chave: chave) },
                    tipos: Ramon::Peticionamento::Tribunais::TIPOS, drive_ligado: Ramon::DriveClient.configured? }
   end
@@ -113,12 +113,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
   end
 
   def atualizar_arquivo
-    arquivo = @peticao.arquivos.find(params[:arquivo_id])
-    principal = params.key?(:principal) ? ActiveModel::Type::Boolean.new.cast(params[:principal]) : arquivo.principal
-    @peticao.transaction do
-      @peticao.arquivos.where.not(id: arquivo.id).find_each { |a| a.update!(principal: false) } if principal
-      arquivo.update!(tipo: params[:tipo].presence || arquivo.tipo, principal: principal)
-    end
+    gravar_arquivo(@peticao.arquivos.find(params[:arquivo_id]))
     render_peticao
   end
 
@@ -197,7 +192,8 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   def peticao_atributos
     attrs = params.permit(:contact_id, :numero_processo, :inicial, :tribunal, :prazo, :descricao).to_h
-    attrs[:contact] = Current.account.contacts.find(attrs.delete(:contact_id)) if attrs[:contact_id].present?
+    # Chave presente e vazia limpa o cliente; chave ausente não mexe.
+    attrs[:contact] = attrs[:contact_id].presence && Current.account.contacts.find(attrs[:contact_id]) if attrs.key?(:contact_id)
     attrs.delete(:contact_id)
     attrs[:responsavel] = Current.account.users.find(params[:responsavel_id]) if params[:responsavel_id].present?
     attrs

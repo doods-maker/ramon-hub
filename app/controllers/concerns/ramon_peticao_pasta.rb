@@ -13,6 +13,17 @@ module RamonPeticaoPasta
 
   private
 
+  # Uma principal só no pacote; trocar a principal de um rascunho da pasta volta à conferência.
+  def gravar_arquivo(arquivo)
+    principal = params.key?(:principal) ? ActiveModel::Type::Boolean.new.cast(params[:principal]) : arquivo.principal
+    mudou_principal = principal != arquivo.principal
+    @peticao.transaction do
+      @peticao.arquivos.where.not(id: arquivo.id).find_each { |a| a.update!(principal: false) } if principal
+      arquivo.update!(tipo: params[:tipo].presence || arquivo.tipo, principal: principal)
+      @peticao.reabrir_conferencia! if mudou_principal
+    end
+  end
+
   def peticao_da_pasta(pasta_id)
     Current.account.peticoes.find_by(pela_pasta: true, drive_pasta_id: pasta_id)
   end

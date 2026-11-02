@@ -19,6 +19,11 @@ RSpec.describe 'Ramon Petições API', type: :request do
     "5001234-#{dd}.2026.4.04.7207"
   end
 
+  def outro_numero_trf4
+    dd = format('%02d', 98 - ('50099992026404720700'.to_i % 97))
+    "5009999-#{dd}.2026.4.04.7207"
+  end
+
   def criar(user = ana, **params)
     post url, params: { numero_processo: numero_valido_trf4.delete('^0-9') }.merge(params), headers: user.create_new_auth_token, as: :json
   end
@@ -63,6 +68,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body['payload'].pluck('id')).to eq([com_prazo.id, sem_prazo.id, feita.id])
     expect(response.parsed_body['tribunais'].pluck('chave')).to include('trf4')
     expect(response.parsed_body['tipos']).to include('peticao')
+    expect(response.parsed_body['payload'].first.keys).not_to include('arquivos', 'leitura')
 
     get url, params: { status: 'protocolada' }, headers: ana.create_new_auth_token, as: :json
     expect(response.parsed_body['payload'].pluck('id')).to eq([feita.id])
@@ -171,6 +177,28 @@ RSpec.describe 'Ramon Petições API', type: :request do
     expect(response.parsed_body).to include('drive_pasta_base_id' => 'pasta-cliente', 'drive_ligado' => false)
   end
 
+  it 'contact_id vazio limpa o cliente no fluxo manual; sem a chave, não mexe' do
+    contato = create(:contact, account: account)
+    peticao = peticao_com_principal.tap { |p| p.update!(contact: contato) }
+
+    patch "#{url}/#{peticao.id}", params: { descricao: 'x' }, headers: ana.create_new_auth_token, as: :json
+    expect(peticao.reload.contact).to eq(contato)
+
+    patch "#{url}/#{peticao.id}", params: { contact_id: '' }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+    expect(peticao.reload).to have_attributes(contact_id: nil, status: 'rascunho')
+  end
+
+  it 'petição manual em rascunho: mudar número ou principal não volta a conferência' do
+    peticao = peticao_com_principal
+    outro = peticao.arquivos.create!(nome: 'Rg.pdf', tipo: 'documento_identificacao', posicao: 2, origem: 'upload', tamanho: 5)
+    patch "#{url}/#{peticao.id}", params: { numero_processo: outro_numero_trf4 }, headers: ana.create_new_auth_token, as: :json
+    expect(peticao.reload).to have_attributes(numero_processo: outro_numero_trf4, status: 'rascunho')
+    patch "#{url}/#{peticao.id}/arquivos/#{outro.id}", params: { principal: true }, headers: ana.create_new_auth_token, as: :json
+    expect(response).to have_http_status(:success)
+    expect(peticao.reload.status).to eq('rascunho')
+  end
+
   it 'registrar_protocolo com pacote incompleto → 422' do
     criar
     post "#{url}/#{account.peticoes.sole.id}/registrar_protocolo", params: { numero_evento: '1' }, headers: ana.create_new_auth_token
@@ -231,7 +259,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
 
     def da_pasta(pasta_id: 'p1', **attrs)
       account.peticoes.create!({ criado_por: ana, responsavel: ana, status: 'conferencia', pela_pasta: true, drive_pasta_id: pasta_id,
-                                 leitura: { 'estado' => 'ok', 'campos' => { 'cpf' => '52998224725' } } }.merge(attrs)).tap do |p|
+                                 leitura: { 'estado' => 'lida', 'campos' => { 'cpf' => '52998224725' } } }.merge(attrs)).tap do |p|
         p.arquivos.create!(nome: 'Peticao.pdf', tipo: 'peticao', posicao: 1, principal: true, origem: 'drive', tamanho: 10)
       end
     end
@@ -389,7 +417,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
 
     it 'confirmar sem alertas_confirmados com alerta dá 422 e com confirmação vira rascunho', :aggregate_failures do
       peticao = da_pasta(numero_processo: numero_valido_trf4,
-                         leitura: { 'estado' => 'ok', 'cpf_pasta' => '111.111.111-11', 'campos' => { 'cpf' => '52998224725' } })
+                         leitura: { 'estado' => 'lida', 'cpf_pasta' => '111.111.111-11', 'campos' => { 'cpf' => '52998224725' } })
       post "#{url}/#{peticao.id}/confirmar", headers: headers, as: :json
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body['errors']).to be_present
@@ -414,6 +442,49 @@ RSpec.describe 'Ramon Petições API', type: :request do
       post "#{url}/#{limpa.id}/confirmar", headers: headers, as: :json
       expect(response).to have_http_status(:success)
       expect(limpa.reload.status).to eq('rascunho')
+    end
+
+    describe 'rascunho da pasta' do
+      let(:peticao) { da_pasta(status: 'rascunho', numero_processo: numero_valido_trf4) }
+
+      it 'trocar o número volta a conferência, com a leitura lida, e confirmar vale de novo' do
+        patch "#{url}/#{peticao.id}", params: { numero_processo: outro_numero_trf4 }, headers: headers, as: :json
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body).to include('status' => 'conferencia', 'alertas' => [])
+        expect(response.parsed_body['leitura']).to include('estado' => 'lida')
+        post "#{url}/#{peticao.id}/confirmar", headers: headers, as: :json
+        expect(response).to have_http_status(:success)
+        expect(peticao.reload.status).to eq('rascunho')
+      end
+
+      it 'limpar o cliente volta a conferência' do
+        peticao.update_columns(contact_id: create(:contact, account: account).id) # rubocop:disable Rails/SkipsModelValidations
+        patch "#{url}/#{peticao.id}", params: { contact_id: '' }, headers: headers, as: :json
+        expect(peticao.reload).to have_attributes(contact_id: nil, status: 'conferencia')
+      end
+
+      it 'trocar a principal volta a conferência; trocar só o tipo, não' do
+        outro = peticao.arquivos.create!(nome: 'Rg.pdf', tipo: 'documento_identificacao', posicao: 2, origem: 'drive', tamanho: 5)
+        patch "#{url}/#{peticao.id}/arquivos/#{outro.id}", params: { tipo: 'laudo_medico' }, headers: headers, as: :json
+        expect(peticao.reload.status).to eq('rascunho')
+        patch "#{url}/#{peticao.id}/arquivos/#{outro.id}", params: { principal: true }, headers: headers, as: :json
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body).to include('status' => 'conferencia')
+        expect(peticao.arquivos.reload.find_by(principal: true)).to eq(outro)
+      end
+
+      it 'número inválido dá 422 e continua em rascunho' do
+        patch "#{url}/#{peticao.id}", params: { numero_processo: '5001234-00.2026.4.04.7207' }, headers: headers, as: :json
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(peticao.reload.status).to eq('rascunho')
+      end
+
+      it 'prazo, descrição e o mesmo formulário (tribunal vazio) não voltam a conferência' do
+        form = { numero_processo: numero_valido_trf4, tribunal: '', contact_id: '', prazo: '2026-12-01', descricao: 'x' }
+        patch "#{url}/#{peticao.id}", params: form, headers: headers, as: :json
+        expect(response).to have_http_status(:success)
+        expect(peticao.reload).to have_attributes(status: 'rascunho', descricao: 'x')
+      end
     end
 
     it 'index põe a conferência primeiro, a mais antiga antes, e não calcula alertas' do
