@@ -9,7 +9,7 @@ module Ramon::Equipe # rubocop:disable Metrics/ModuleLength
   # Quem vê e quem escreve seguem na ConversationPolicy e em pode_escrever?/pode_apagar?. Sincronizar não passa por aqui.
   # labels#index: a tela busca ao abrir a conversa (ConversationBox). A reação e a lista de vistos ficam em RamonEquipeController.
   HTTP_PERMITIDO = {
-    'api/v1/accounts/conversations' => %w[show update_last_seen toggle_typing_status attachments transcript],
+    'api/v1/accounts/conversations' => %w[show update_last_seen toggle_typing_status attachments],
     'api/v1/accounts/conversations/messages' => %w[index create destroy retry],
     'api/v1/accounts/conversations/participants' => %w[show],
     'api/v1/accounts/conversations/labels' => %w[index]

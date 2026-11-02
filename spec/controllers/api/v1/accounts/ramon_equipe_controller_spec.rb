@@ -146,6 +146,15 @@ RSpec.describe 'Ramon Equipe API', type: :request do
       expect(msg.reload.status).to eq('sent')
     end
 
+    it 'transcript: 403 para admin de fora e participante, sem mandar a conversa por e-mail', :aggregate_failures do
+      expect(ConversationReplyMailer).not_to receive(:with)
+
+      [admin, ana].each do |user|
+        chamar(user, :post, '/transcript', { email: 'fora@example.com' })
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
     it 'participante abre, lê, digita, marca lida, envia e apaga a própria', :aggregate_failures do
       [[:get, ''], [:get, '/messages'], [:get, '/attachments'], [:get, '/labels'], [:get, '/participants'], [:post, '/update_last_seen'],
        [:post, '/toggle_typing_status', { typing_status: 'on' }], [:post, '/messages', { content: 'oi' }],

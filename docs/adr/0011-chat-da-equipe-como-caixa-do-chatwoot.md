@@ -31,9 +31,9 @@ Como fica:
   `ConversationsController`: abrir, ler, marcar lida, digitar, enviar, apagar a própria,
   anexos, participantes (só leitura) e etiquetas (só leitura, a tela busca ao abrir).
   Todo o resto é 403, inclusive para admin: atribuir, etiquetar, status, prioridade, mudar
-  participante, tradução, status de mensagem, copiloto. Macro e ação em massa que incluem
-  conversa da Equipe também são recusadas, e não se cria conversa na caixa pela API. O
-  `transcript` segue permitido porque já é restrito a quem vê. O guard é só do HTTP:
+  participante, tradução, status de mensagem, copiloto e `transcript` (mandaria uma 1:1 a
+  qualquer e-mail). Macro e ação em massa que incluem conversa da Equipe também são
+  recusadas, e não se cria conversa na caixa pela API. O guard é só do HTTP:
   `Ramon::Equipe.sincronizar` continua usando `conversation.open!`.
 - **Hub surdo:** um guard só, no `AsyncDispatcher`: evento de conversa,
   mensagem, contato ou caixa da Equipe vai apenas ao `NotificationListener`
