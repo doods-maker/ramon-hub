@@ -254,12 +254,18 @@ const isBotOrAgentMessage = computed(() => {
   const senderId = props.senderId ?? props.sender?.id;
   const senderType = props.sender?.type ?? props.senderType;
 
+  // FORK(ramon): na Equipe só a minha fica à direita (admin de fora: nenhuma). Sem
+  // autor gravado é usuário apagado (dependent: :nullify), não minha; a falha local
+  // ainda não tem autor. Vem antes do teste nativo, que daria direita a ambas.
+  if (isEquipe.value) {
+    return (
+      props.status === MESSAGE_STATUS.FAILED || senderId === props.currentUserId
+    );
+  }
+
   if (!senderType || !senderId) {
     return true;
   }
-
-  // FORK(ramon): na Equipe só a minha fica à direita (admin de fora: nenhuma).
-  if (isEquipe.value) return senderId === props.currentUserId;
 
   if (
     [SENDER_TYPES.AGENT_BOT, SENDER_TYPES.CAPTAIN_ASSISTANT].includes(
@@ -331,6 +337,7 @@ const gridClass = computed(() => {
 });
 
 const gridTemplate = computed(() => {
+  // FORK(ramon): as áreas acompanham as colunas do gridClass da Equipe
   if (isEquipe.value) {
     return mostrarAutor.value
       ? `
@@ -365,8 +372,11 @@ const shouldGroupWithNext = computed(() => {
 
 const shouldShowAvatar = computed(() => {
   if (props.messageType === MESSAGE_TYPES.ACTIVITY) return false;
-  // FORK(ramon): na Equipe a foto vai na primeira do bloco, junto do nome
-  if (isEquipe.value) return mostrarAutor.value && props.primeiroDoAutor;
+  // FORK(ramon): na Equipe a foto vai na primeira do bloco, junto do nome. Sem autor
+  // gravado, sem foto: avatarInfo daria o avatar de bot.
+  if (isEquipe.value) {
+    return mostrarAutor.value && props.primeiroDoAutor && !!props.sender;
+  }
   if (orientation.value === ORIENTATION.LEFT) return false;
 
   return true;
@@ -486,10 +496,12 @@ const contextMenuEnabledOptions = computed(() => {
 
   // FORK(ramon): Equipe = copiar, responder e apagar (autor ou admin que participa,
   // a mesma regra de Ramon::Equipe.pode_apagar?). Fora do chat, só copiar.
+  // equipe: o menu tira os separadores que ficariam soltos só neste caso.
   const foraDoChat = participaEquipe.value === false;
   const adminDoChat =
     currentRole.value === 'administrator' && participaEquipe.value === true;
   return {
+    equipe: true,
     copy: options.copy,
     replyTo: options.replyTo && !foraDoChat,
     delete: options.delete && !foraDoChat && (souAutor.value || adminDoChat),
@@ -498,12 +510,8 @@ const contextMenuEnabledOptions = computed(() => {
 
 const shouldShowContextMenu = computed(() => {
   // FORK(ramon): na Equipe pode não sobrar opção (anexo sem texto, admin de fora)
-  if (
-    isEquipe.value &&
-    !Object.values(contextMenuEnabledOptions.value).some(Boolean)
-  ) {
-    return false;
-  }
+  const { copy, replyTo, delete: apagar } = contextMenuEnabledOptions.value;
+  if (isEquipe.value && !copy && !replyTo && !apagar) return false;
   return !props.contentAttributes?.isUnsupported;
 });
 
@@ -650,6 +658,7 @@ provideMessageContext({
       },
     ]"
   >
+    <!-- FORK(ramon): na Equipe as bolhas de um bloco ficam mais juntas (mb-0.5) -->
     <div v-if="variant === MESSAGE_VARIANTS.ACTIVITY">
       <RamonEventBubble v-if="contentAttributes.ramonEvent" />
       <ActivityBubble v-else :content="content" />
@@ -668,6 +677,7 @@ provideMessageContext({
         gridTemplateAreas: gridTemplate,
       }"
     >
+      <!-- FORK(ramon): na Equipe quem decide a foto é shouldShowAvatar, com 28px -->
       <div
         v-if="(isEquipe || !shouldGroupWithNext) && shouldShowAvatar"
         v-tooltip.left-end="avatarTooltip"

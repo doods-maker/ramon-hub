@@ -145,6 +145,7 @@ const statusToShow = computed(() => {
     class="flex items-center gap-1.5"
     :class="isEquipe ? 'text-[10px] font-mono' : 'text-xs'"
   >
+    <!-- FORK(ramon): na Equipe, hora pequena e mono (.rodape do mockup) -->
     <div class="inline">
       <time class="inline">{{ readableTime }}</time>
     </div>

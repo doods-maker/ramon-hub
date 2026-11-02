@@ -79,7 +79,7 @@ const flexOrientationClass = computed(() => {
   return map[orientation.value];
 });
 
-// Só em texto puro: anexo vem depois do texto, e a hora iria por cima dele.
+// FORK(ramon): só em texto puro; anexo vem depois do texto, e a hora iria por cima dele.
 const horaNaLinha = computed(
   () =>
     isEquipe.value && !!textoDaMensagem.value && !anexosDaMensagem.value?.length
@@ -142,8 +142,9 @@ const replyToPreview = computed(() => {
       },
     ]"
   >
+    <!-- FORK(ramon): nome do autor na primeira do bloco; usuário apagado não tem nome -->
     <p
-      v-if="mostrarAutor && primeiroDoAutor"
+      v-if="mostrarAutor && primeiroDoAutor && sender?.name"
       class="mb-px text-xs font-semibold text-n-blue-11"
       data-testid="equipe-autor"
     >
@@ -167,6 +168,7 @@ const replyToPreview = computed(() => {
       {{ t('RAMON.NOTA_PRIVADA_ROTULO') }}
     </p>
     <slot />
+    <!-- FORK(ramon): na Equipe a hora fica na linha do texto ou abaixo, à direita -->
     <MessageMeta
       v-if="shouldShowMeta"
       :class="[

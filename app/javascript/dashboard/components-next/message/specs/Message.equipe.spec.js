@@ -79,6 +79,7 @@ const minha = {
   senderId: EU,
   sender: { id: EU, name: 'Eduardo', thumbnail: '', type: 'user' },
 };
+const semAutor = { sender: null, senderId: null, senderType: null };
 const menu = w =>
   w.findComponent({ name: 'MenuFalso' }).props('enabledOptions');
 const participantes = lista => {
@@ -124,6 +125,22 @@ describe('Message na caixa Equipe', () => {
       expect(bolha(w)).toContain('ramon-enviada');
     });
 
+    it('sem autor gravado (usuário apagado) fica à esquerda, no cinza', () => {
+      const w = montar(semAutor);
+      expect(container(w)).toContain('justify-start');
+      expect(bolha(w)).toContain('bg-n-slate-4');
+    });
+
+    it('falha local, ainda sem autor, continua à direita', () => {
+      const w = montar({ ...semAutor, status: 'failed' });
+      expect(container(w)).toContain('justify-end');
+    });
+
+    it('fora da Equipe, mensagem sem autor segue à direita', () => {
+      const w = montar({ ...semAutor, inboxId: CAIXA_CLIENTE });
+      expect(container(w)).toContain('justify-end');
+    });
+
     it('fora da Equipe, agente segue à direita no verde', () => {
       const w = montar({ inboxId: CAIXA_CLIENTE });
       expect(container(w)).toContain('justify-end');
@@ -145,6 +162,12 @@ describe('Message na caixa Equipe', () => {
       const ultima = { primeiroDoAutor: false, groupWithNext: false };
       expect(foto(montar(primeira))).toBe(true);
       expect(foto(montar(ultima))).toBe(false);
+    });
+
+    it('sem autor gravado: sem nome e sem a foto de bot', () => {
+      const w = montar({ ...semAutor, primeiroDoAutor: true });
+      expect(nome(w).exists()).toBe(false);
+      expect(foto(w)).toBe(false);
     });
 
     it('fora da Equipe a foto segue a regra nativa', () => {
@@ -220,6 +243,7 @@ describe('Message na caixa Equipe', () => {
       expect(Object.keys(menu(montar(minha))).sort()).toEqual([
         'copy',
         'delete',
+        'equipe',
         'replyTo',
       ]);
     });
@@ -251,7 +275,12 @@ describe('Message na caixa Equipe', () => {
         currentUserId: 99,
         inboxSupportsReplyTo: { outgoing: true },
       });
-      expect(menu(w)).toEqual({ copy: true, delete: false, replyTo: false });
+      expect(menu(w)).toEqual({
+        equipe: true,
+        copy: true,
+        delete: false,
+        replyTo: false,
+      });
     });
 
     it('responder segue a caixa (Task 7)', () => {
@@ -271,6 +300,7 @@ describe('Message na caixa Equipe', () => {
 
     it('fora da Equipe o menu mantém as opções de atendimento', () => {
       const w = montar({ inboxId: CAIXA_CLIENTE });
+      expect(menu(w).equipe).toBeUndefined();
       expect(menu(w)).toEqual(
         expect.objectContaining({
           copy: true,

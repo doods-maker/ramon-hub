@@ -226,7 +226,8 @@ export default {
           variant="icon"
           @click.stop="handleTranslate"
         />
-        <hr />
+        <!-- FORK(ramon): na Equipe não há nada entre este separador e o de apagar -->
+        <hr v-if="!enabledOptions['equipe']" />
         <MenuItem
           v-if="enabledOptions['copyLink']"
           :option="{

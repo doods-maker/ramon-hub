@@ -155,6 +155,7 @@ const shouldGroupWithNext = (index, searchList) => {
   return Math.floor(next.createdAt / 60) === Math.floor(current.createdAt / 60);
 };
 
+// FORK(ramon): na Equipe o bloco é por autor e dia; fora dela, a regra nativa.
 const agruparComProxima = index =>
   isEquipe.value
     ? allMessages.value[index + 1]?.status !== 'failed' &&
@@ -204,6 +205,7 @@ const getInReplyToMessage = parentMessage => {
   <ul class="px-4 bg-n-surface-1">
     <slot name="beforeAll" />
     <template v-for="(message, index) in allMessages" :key="message.id">
+      <!-- FORK(ramon): separador de dia, só na Equipe -->
       <li
         v-if="separadorDia(index)"
         class="flex justify-center my-2 list-none"
@@ -219,6 +221,7 @@ const getInReplyToMessage = parentMessage => {
         v-if="firstUnreadId && message.id === firstUnreadId"
         name="unreadBadge"
       />
+      <!-- FORK(ramon): a pendente não traz a caixa; sem ela, nasceria fora da Equipe -->
       <Message
         v-bind="message"
         :inbox-id="message.inboxId ?? currentChat?.inbox_id"
