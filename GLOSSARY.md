@@ -37,3 +37,21 @@ Quem faz o protocolo no tribunal: o próprio advogado (manual), um robô ou um f
 **Cofre**:
 O lugar do hub onde ficam, cifradas, as credenciais de cada advogado para os tribunais.
 _Avoid_: senhas, credenciais (quando se quer dizer o lugar)
+
+**Pasta do protocolo**:
+A pasta do Drive que contém só um protocolo: a peça final em PDF e os anexos numerados. É a única entrada que a pessoa
+informa; não é a pasta geral do cliente.
+_Avoid_: pasta do cliente
+
+**Conferência**:
+O status da petição criada a partir de uma pasta, enquanto a pessoa revisa os dados lidos e o pacote. Só depois de
+confirmar ela vira rascunho pronto para protocolar.
+_Avoid_: revisão (é o que o revisor da esteira faz na peça)
+
+**Pasta pronta**:
+Pasta do protocolo que a esteira deixou para um advogado revisar, marcada no Drive por `_pasta-pronta.json`. Aparece na
+lista de Protocolos e no sino, e some quando vira petição.
+
+**Sobra de rascunho**:
+Texto que não pode chegar ao tribunal e ainda está na peça: campo em aberto (`[CONFERIR]`, `[CPF]`…) ou bloco interno da
+esteira (`CONTROLE INTERNO`, `Notas ao advogado`…). O hub recusa a pasta que a tem.
