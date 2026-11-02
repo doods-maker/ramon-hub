@@ -39,7 +39,8 @@ export const useEquipeStore = defineStore('equipe', {
       const pessoa = this.participantes[conversationId]?.find(
         p => p.id === userId
       );
-      if (pessoa) pessoa.lastSeenAt = lastSeenAt;
+      // Job fora de ordem não volta o ✓✓ de azul para cinza.
+      if (pessoa) pessoa.lastSeenAt = Math.max(pessoa.lastSeenAt, lastSeenAt);
     },
     // true = avisou (som + notificação do sistema). Quem está com a conversa
     // aberta e à vista não é avisado. Na Intranet o menu de Conversas (que

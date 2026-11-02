@@ -147,8 +147,7 @@ const vistoEquipe = computed(() => {
   if (!isEquipe.value) return null;
   const visto = estadoVisto(
     { createdAt: createdAt.value, senderId: currentUserId.value },
-    useEquipeStore().participantes[conversationId.value],
-    currentUserId.value
+    useEquipeStore().participantes[conversationId.value]
   );
   if (!visto.total) return { status: MESSAGE_STATUS.SENT, titulo: '' };
 

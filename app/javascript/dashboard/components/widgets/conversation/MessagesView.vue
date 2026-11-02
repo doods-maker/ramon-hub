@@ -284,6 +284,7 @@ export default {
 
   created() {
     emitter.on(BUS_EVENTS.SCROLL_TO_MESSAGE, this.onScrollToMessage);
+    emitter.on(BUS_EVENTS.WEBSOCKET_RECONNECT, this.onWebsocketReconnect);
     // when a message is sent we set the flag to true this hides the label suggestions,
     // until the chat is changed and the flag is reset in the watch for currentChat
     emitter.on(BUS_EVENTS.MESSAGE_SENT, () => {
@@ -353,7 +354,15 @@ export default {
     },
     removeBusListeners() {
       emitter.off(BUS_EVENTS.SCROLL_TO_MESSAGE, this.onScrollToMessage);
+      emitter.off(BUS_EVENTS.WEBSOCKET_RECONNECT, this.onWebsocketReconnect);
       document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    },
+    // FORK(ramon): leitura que passou com o cable caído não chega como evento.
+    async onWebsocketReconnect() {
+      if (!this.equipeConversaId) return;
+      await this.equipeStore
+        .carregarParticipantes(this.equipeConversaId)
+        .catch(() => {});
     },
     // FORK(ramon): Equipe marca lida ao voltar para a aba; fora dela nada muda.
     onVisibilityChange() {

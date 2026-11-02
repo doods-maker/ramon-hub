@@ -74,6 +74,7 @@ const statusColor = computed(() => {
 });
 
 const tooltipText = computed(() => {
+  // FORK(ramon): na Equipe o título vem dos vistos; vazio não abre tooltip.
   if (equipe && status !== MESSAGE_STATUS.PROGRESS) return titulo;
   const statusTextMap = {
     [MESSAGE_STATUS.SENT]: t('CHAT_LIST.SENT'),

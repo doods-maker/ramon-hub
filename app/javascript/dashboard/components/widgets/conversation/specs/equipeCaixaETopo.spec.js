@@ -8,6 +8,8 @@ import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/cons
 import inboxMixin from 'shared/mixins/inboxMixin';
 import { LocalStorage } from 'shared/helpers/localStorage';
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 const estado = {
   equipe: true,
@@ -228,6 +230,50 @@ describe('MessagesView: marcar lida ao voltar para a aba', () => {
     );
     MessagesView.methods.removeBusListeners.call(ctx);
     expect(remove).toHaveBeenCalledWith('visibilitychange', onVisibilityChange);
+  });
+});
+
+describe('MessagesView: participantes na reconexão', () => {
+  const reconectar = equipeConversaId => {
+    const carregarParticipantes = vi.fn(() => Promise.resolve());
+    MessagesView.methods.onWebsocketReconnect.call({
+      equipeConversaId,
+      equipeStore: { carregarParticipantes },
+    });
+    return carregarParticipantes;
+  };
+
+  it('na Equipe, recarrega os participantes da conversa aberta', () => {
+    expect(reconectar(43)).toHaveBeenCalledWith(43);
+  });
+
+  it('fora da Equipe, não busca nada', () => {
+    expect(reconectar(null)).not.toHaveBeenCalled();
+  });
+
+  it('falha na busca não vira erro solto', async () => {
+    const carregarParticipantes = vi.fn(() => Promise.reject(new Error('x')));
+    await expect(
+      MessagesView.methods.onWebsocketReconnect.call({
+        equipeConversaId: 43,
+        equipeStore: { carregarParticipantes },
+      })
+    ).resolves.toBeUndefined();
+  });
+
+  it('assina no created e sai em removeBusListeners', () => {
+    const onWebsocketReconnect = vi.fn();
+    const ctx = { onScrollToMessage: vi.fn(), onWebsocketReconnect };
+    MessagesView.created.call(ctx);
+    emitter.emit(BUS_EVENTS.WEBSOCKET_RECONNECT);
+    expect(onWebsocketReconnect).toHaveBeenCalledTimes(1);
+
+    MessagesView.methods.removeBusListeners.call({
+      ...ctx,
+      onVisibilityChange: vi.fn(),
+    });
+    emitter.emit(BUS_EVENTS.WEBSOCKET_RECONNECT);
+    expect(onWebsocketReconnect).toHaveBeenCalledTimes(1);
   });
 });
 
