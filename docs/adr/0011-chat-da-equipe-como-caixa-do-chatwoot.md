@@ -1,6 +1,6 @@
 # Chat da equipe como caixa do Chatwoot (sai o módulo próprio)
 
-Atualizado em 02/11/2026 (Equipe com cara de WhatsApp: PRs #307, #309 e pacote 3+4).
+Atualizado em 02/11/2026 (Equipe com cara de WhatsApp: PRs #307, #309 e pacote 3+4; revisão final: só participantes + admin e lista permitida).
 
 Substitui a decisão de 02/10 ("chat em módulo próprio, isolado das conversas do
 Chatwoot"), entregue no PR #303.
@@ -20,11 +20,21 @@ Como fica:
   (`additional_attributes.equipe = true`, sem telefone/e-mail — fora da lista de
   contatos), achado pelo `source_id` (`equipe-geral`, `equipe-time-<id>`,
   `equipe-1a1-<a>-<b>`).
-- **Quem vê:** quem participa (`conversation_participants`) — Geral, os times
+- **Quem vê:** só quem participa (`conversation_participants`) — Geral, os times
   dele, as 1:1 dele — e administradores (tudo, inclusive 1:1; avisado na tela).
-  Mesmo desenho do ADR 0004: o agente fica fora da caixa, então caminho
-  esquecido falha para o lado seguro. Os participantes são ressincronizados no
-  commit de `TeamMember` e `AccountUser` (`Ramon::Equipe.sincronizar`).
+  **Atribuição, time e membro de caixa não dão acesso** (decisão de 02/11): nem na
+  lista, nem no `GET` da conversa, nem no tempo real, nem na busca, nem no aviso de
+  mensagem nova. Os participantes são ressincronizados no commit de `TeamMember` e
+  `AccountUser` (`Ramon::Equipe.sincronizar`).
+- **O que o HTTP aceita numa conversa da Equipe:** uma lista permitida, em um lugar só
+  (`Ramon::Equipe::HTTP_PERMITIDO`), checada em `Conversations::BaseController` e
+  `ConversationsController`: abrir, ler, marcar lida, digitar, enviar, apagar a própria,
+  anexos, participantes (só leitura) e etiquetas (só leitura, a tela busca ao abrir).
+  Todo o resto é 403, inclusive para admin: atribuir, etiquetar, status, prioridade, mudar
+  participante, tradução, status de mensagem, copiloto. Macro e ação em massa que incluem
+  conversa da Equipe também são recusadas, e não se cria conversa na caixa pela API. O
+  `transcript` segue permitido porque já é restrito a quem vê. O guard é só do HTTP:
+  `Ramon::Equipe.sincronizar` continua usando `conversation.open!`.
 - **Hub surdo:** um guard só, no `AsyncDispatcher`: evento de conversa,
   mensagem, contato ou caixa da Equipe vai apenas ao `NotificationListener`
   (aviso nativo a quem participa). Lead, fluxos, agente `@claude`, Captain,
@@ -51,8 +61,9 @@ da Equipe nunca cria lead.
 
 Limites conhecidos:
 
-- **Nunca adicionar colaboradores (membros) na caixa Equipe** nas configurações:
-  membro da caixa vê todas as conversas dela, inclusive 1:1 alheias.
+- **Não adicionar colaboradores (membros) na caixa Equipe** nas configurações. Agora é
+  seguro por padrão: ser membro não dá acesso a conversa de que a pessoa não participa.
+  Mas não serve para nada e confunde quem olha a tela de caixas.
 - Menção (@): na Equipe só marca participantes da conversa e **nunca adiciona
   ninguém** (ramo próprio no `MentionService`); `@todos` só em grupo. Vale
   também em mensagem pública, só nesta caixa. O aviso "te marcou" chega a
@@ -70,4 +81,7 @@ Limites conhecidos:
   da Equipe como abertas; o BI (Metabase) não.
 - Time apagado só some do canal na próxima sincronização (qualquer mudança de
   time ou o comando do deploy); nomes de time/pessoa renomeados não mudam o
-  nome da conversa. "Marcar como não lida" não age na Equipe.
+  nome da conversa. "Marcar como não lida" é recusado na Equipe.
+- Copiloto e tarefas de IA recusam conversa da Equipe no servidor (403). O painel
+  global do copiloto segue respondendo com uma conversa da Equipe aberta, mas sem ler a
+  conversa (`CopilotMessage#enqueue_response_job` tira o `conversation_id`).
