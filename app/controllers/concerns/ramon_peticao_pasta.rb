@@ -10,6 +10,11 @@ module RamonPeticaoPasta
     Current.account.peticoes.find_by(pela_pasta: true, drive_pasta_id: pasta_id)
   end
 
+  # O id entra na query do Drive: só caracteres de id; e tem de ser uma pasta de verdade (em qualquer lugar do Drive do escritório).
+  def pasta_valida?(pasta_id)
+    pasta_id.match?(/\A[\w-]+\z/) && Ramon::DriveClient.pasta?(pasta_id)
+  end
+
   def pasta_ja_usada(existente)
     render json: { error: 'pasta_ja_usada', peticao_id: existente&.id }, status: :unprocessable_entity
   end
@@ -20,13 +25,14 @@ module RamonPeticaoPasta
                                      leitura: { 'estado' => 'lendo', 'lendo_desde' => Time.current.iso8601 })
   end
 
-  # Sob trava: false se há leitura em andamento; senão grava `lendo` (mantém os campos da leitura anterior) e volta a conferência.
+  # Sob trava: :protocolada, :em_leitura ou :ok; no :ok grava `lendo` (mantém os campos anteriores) e volta a conferência.
   def reservar_releitura
-    @peticao.with_lock do
-      next false if lendo_recentemente?
+    @peticao.with_lock do # recarrega: o registro pode ter sido protocolado depois do before_action
+      next :protocolada if @peticao.protocolada?
+      next :em_leitura if lendo_recentemente?
 
       @peticao.update!(status: 'conferencia', leitura: @peticao.leitura.merge('estado' => 'lendo', 'lendo_desde' => Time.current.iso8601))
-      true
+      :ok
     end
   end
 

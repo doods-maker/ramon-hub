@@ -51,6 +51,7 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
   def pela_pasta
     pasta_id = params[:pasta_id].to_s.strip
     return render json: { error: 'pasta_id' }, status: :unprocessable_entity if pasta_id.blank?
+    return render json: { error: 'pasta_invalida' }, status: :unprocessable_entity unless pasta_valida?(pasta_id)
 
     existente = peticao_da_pasta(pasta_id)
     return pasta_ja_usada(existente) if existente
@@ -68,7 +69,9 @@ class Api::V1::Accounts::RamonPeticoesController < Api::V1::Accounts::BaseContro
 
   # Relê a pasta: guarda os campos da leitura anterior e só o `estado` volta a `lendo`.
   def reler_pasta
-    return render json: { error: 'em_leitura' }, status: :conflict unless reservar_releitura
+    resultado = reservar_releitura
+    erro = { protocolada: :unprocessable_entity, em_leitura: :conflict }[resultado]
+    return render json: { error: resultado.to_s }, status: erro if erro
 
     Ramon::PeticaoLerPastaJob.perform_later(@peticao.id)
     render_peticao

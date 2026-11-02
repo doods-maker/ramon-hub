@@ -227,7 +227,7 @@ RSpec.describe 'Ramon Petições API', type: :request do
   describe 'pela pasta' do
     let(:headers) { ana.create_new_auth_token }
 
-    before { allow(Ramon::DriveClient).to receive(:configured?).and_return(true) }
+    before { allow(Ramon::DriveClient).to receive_messages(configured?: true, pasta?: true) }
 
     def da_pasta(pasta_id: 'p1', **attrs)
       account.peticoes.create!({ criado_por: ana, responsavel: ana, status: 'conferencia', pela_pasta: true, drive_pasta_id: pasta_id,
@@ -270,6 +270,36 @@ RSpec.describe 'Ramon Petições API', type: :request do
       post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body).to include('error' => 'pasta_ja_usada', 'peticao_id' => existente.id)
+    end
+
+    it 'pasta inválida (aspas, não é pasta, id inexistente) → 422 pasta_invalida, sem criar nem enfileirar', :aggregate_failures do
+      allow(Ramon::DriveClient).to receive(:pasta?).with('arquivo1').and_return(false)
+      allow(Ramon::DriveClient).to receive(:pasta?).with('nao-existe').and_return(false)
+      ["x' or '1'='1", 'arquivo1', 'nao-existe'].each do |id|
+        expect { post "#{url}/pela_pasta", params: { pasta_id: id }, headers: headers, as: :json }
+          .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body).to include('error' => 'pasta_invalida')
+      end
+      expect(account.peticoes.count).to eq(0)
+      expect(Ramon::DriveClient).not_to have_received(:pasta?).with("x' or '1'='1")
+    end
+
+    it 'apontar sem Drive configurado → 503' do
+      allow(Ramon::DriveClient).to receive(:configured?).and_return(false)
+      post "#{url}/pela_pasta", params: { pasta_id: 'p1' }, headers: headers, as: :json
+      expect(response).to have_http_status(:service_unavailable)
+      expect(account.peticoes.count).to eq(0)
+    end
+
+    it 'protocolada depois de carregada (corrida com a trava): 422 protocolada, sem mudar status nem enfileirar' do
+      peticao = da_pasta.tap { |p| p.update!(status: 'protocolada', numero_processo: numero_valido_trf4) }
+      allow_any_instance_of(Peticao).to receive(:editavel?).and_return(true) # rubocop:disable RSpec/AnyInstance
+      expect { post "#{url}/#{peticao.id}/reler_pasta", headers: headers, as: :json }
+        .not_to have_enqueued_job(Ramon::PeticaoLerPastaJob)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to include('error' => 'protocolada')
+      expect(peticao.reload.status).to eq('protocolada')
     end
 
     it 'agente fora do jurídico recebe 401 em pela_pasta, reler_pasta e confirmar' do

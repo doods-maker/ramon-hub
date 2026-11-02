@@ -91,6 +91,13 @@ class Ramon::DriveClient
       listar("name contains '#{texto.gsub(/[\\']/) { |c| "\\#{c}" }}' and #{FILTRO_TIPOS}", 50)
     end
 
+    # Só pasta existente: erro de cliente do Drive (404 de id inexistente) é false; erro de servidor sobe.
+    def pasta?(id)
+      service.get_file(id, fields: 'mimeType', supports_all_drives: true).mime_type == FOLDER_MIME
+    rescue Google::Apis::ClientError
+      false
+    end
+
     def parent_of(id)
       service.get_file(id, fields: 'parents', supports_all_drives: true).parents&.first
     end
