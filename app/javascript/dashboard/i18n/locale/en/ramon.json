@@ -184,7 +184,9 @@
       "MENSAGEM": "Message",
       "PARTICIPANTES": "{n} participant | {n} participants",
       "NESTE_CHAT": "In this chat",
-      "AVISA_TODOS": "Notifies {n} person in this chat | Notifies the {n} in this chat"
+      "AVISA_TODOS": "Notifies {n} person in this chat | Notifies the {n} in this chat",
+      "VOCE": "You",
+      "SELO_MARCACAO": "@"
     },
     "CHEGADA": {
       "CHEGOU": "{quem}: a client has arrived",

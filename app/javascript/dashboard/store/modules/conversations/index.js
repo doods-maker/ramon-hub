@@ -219,8 +219,15 @@ export const mutations = {
     } else {
       chat.messages.push(message);
       chat.timestamp = message.created_at;
-      const { conversation: { unread_count: unreadCount = 0 } = {} } = message;
+      const {
+        conversation: {
+          unread_count: unreadCount = 0,
+          equipe_marcado: equipeMarcado,
+        } = {},
+      } = message;
       chat.unread_count = unreadCount;
+      // FORK(ramon): selo @ da Equipe; só vem de naoLidaEquipe, nunca do cable.
+      if (equipeMarcado !== undefined) chat.equipe_marcado = equipeMarcado;
       if (selectedChatId === conversationId) {
         emitter.emit(BUS_EVENTS.SCROLL_TO_MESSAGE);
       }
@@ -276,12 +283,14 @@ export const mutations = {
 
   [types.UPDATE_MESSAGE_UNREAD_COUNT](
     _state,
-    { id, lastSeen, unreadCount = 0 }
+    { id, lastSeen, unreadCount = 0, equipeMarcado }
   ) {
     const [chat] = _state.allConversations.filter(c => c.id === id);
     if (chat) {
       chat.agent_last_seen_at = lastSeen;
       chat.unread_count = unreadCount;
+      // FORK(ramon): ler a conversa da Equipe apaga o selo @.
+      if (equipeMarcado !== undefined) chat.equipe_marcado = equipeMarcado;
     }
   },
   [types.CHANGE_CHAT_STATUS_FILTER](_state, data) {

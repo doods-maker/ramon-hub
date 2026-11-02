@@ -2,6 +2,10 @@
 import { MESSAGE_TYPE } from 'widget/helpers/constants';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { ATTACHMENT_ICONS } from 'shared/constants/messages';
+import {
+  prefixoPrevia,
+  textoLimpo,
+} from 'dashboard/routes/dashboard/ramon/helpers/equipe';
 
 export default {
   name: 'MessagePreview',
@@ -17,6 +21,11 @@ export default {
     defaultEmptyMessage: {
       type: String,
       default: '',
+    },
+    // FORK(ramon): { meuId, tipo } na caixa Equipe.
+    equipe: {
+      type: Object,
+      default: null,
     },
   },
   setup() {
@@ -41,7 +50,18 @@ export default {
     parsedLastMessage() {
       const { content_attributes: contentAttributes } = this.message;
       const { email: { subject } = {} } = contentAttributes || {};
-      return this.getPlainText(subject || this.message.content);
+      const texto = subject || this.message.content;
+      return this.getPlainText(this.equipe ? textoLimpo(texto) : texto);
+    },
+    prefixoEquipe() {
+      if (!this.equipe) return '';
+      const { voce, nome } = prefixoPrevia(
+        this.message,
+        this.equipe.meuId,
+        this.equipe.tipo
+      );
+      const quem = voce ? this.$t('RAMON.EQUIPE.VOCE') : nome;
+      return quem ? `${quem}: ` : '';
     },
     lastMessageFileType() {
       const [{ file_type: fileType } = {}] = this.message.attachments;
@@ -62,7 +82,7 @@ export default {
 
 <template>
   <div class="overflow-hidden text-ellipsis whitespace-nowrap">
-    <template v-if="showMessageType">
+    <template v-if="showMessageType && !equipe">
       <fluent-icon
         v-if="isMessagePrivate"
         size="16"
@@ -82,6 +102,7 @@ export default {
         icon="info"
       />
     </template>
+    <span v-if="prefixoEquipe">{{ prefixoEquipe }}</span>
     <span v-if="message.content && isMessageSticker">
       <fluent-icon
         size="16"
